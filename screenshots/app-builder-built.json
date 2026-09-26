@@ -1,0 +1,41 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Dawn of Empire",
+      "hasCanvas": true,
+      "bodyTextLen": 57,
+      "bodyTextHash": "af99a1e62c7e2e3bd6bbbb7273f66286447e729be54b73c3b3899f1718b51561",
+      "bodyTextPrefix": "AN ISLAND AT FIRST LIGHT DAWN OF EMPIRE Raising the camp…",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Dawn of Empire",
+      "hasCanvas": true,
+      "bodyTextLen": 57,
+      "bodyTextHash": "af99a1e62c7e2e3bd6bbbb7273f66286447e729be54b73c3b3899f1718b51561",
+      "bodyTextPrefix": "AN ISLAND AT FIRST LIGHT DAWN OF EMPIRE Raising the camp…",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": true,
+  "baselineReasons": [
+    "desktop: body text replaced (similar length, page start changed)",
+    "mobile: body text replaced (similar length, page start changed)"
+  ]
+}

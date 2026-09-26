@@ -1,0 +1,32 @@
+DAWN OF EMPIRE
+An island at first light.
+
+HOW TO PLAY
+  Gatherers work on their own — berries, logs, and stone, whichever is scarce.
+  Assign a job if you want someone locked to it. People are born in the huts
+  when there is food and space. Elders pass only after a long life.
+  Food is eaten every day. Trees grow back slowly. Yields vary.
+  Farms need fertile ground, lumber camps a stand of pines, quarries a stone
+  outcrop. Explore (X) to lift the fog; it returns if you leave.
+
+TRIBES
+  Redcliff and Ashfen start peaceful and will grow — or shrink — with their
+  stores. Click a name, or T, to cycle who you trade with.
+  Strike (or right-click their people) and every hunter marches together.
+
+WEATHER
+  Clear, mist, rain, storm, frost, golden light, flood, and drought.
+  Floods raise the river. Droughts thin the yields. Storms pause building.
+
+CAMERA
+  WASD / arrows   pan
+  Right-drag      rotate
+  Wheel           zoom
+  F               jump to your town hall
+  1–8             choose a building
+  T               cycle trade partner
+  X               send people to explore
+  I               cycle idle gatherers
+  G               train a gatherer
+  Space / P       pause
+  + / −           game speed
