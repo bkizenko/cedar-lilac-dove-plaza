@@ -1,5 +1,5 @@
 import type { Engine } from "./engine";
-import { BUILD_ORDER } from "./constants";
+import { BUILDINGS, BUILD_ORDER } from "./constants";
 
 /** UI focus and world commands share one keyboard, never the same keystroke. */
 export class KeyboardCommands {
@@ -172,9 +172,12 @@ export class KeyboardCommands {
     }
     if (code === "KeyM") e.toggleMute();
     if (n >= 1 && n <= 8) {
-      this.mode = true;
-      this.center();
-      e.setPlacing(BUILD_ORDER[n - 1]);
+      const open = BUILD_ORDER.filter((t) => BUILDINGS[t].age <= g.tribe(0).age);
+      if (n <= open.length) {
+        this.mode = true;
+        this.center();
+        e.setPlacing(open[n - 1]);
+      }
     }
     e.pushHud();
   }

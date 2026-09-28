@@ -19,6 +19,7 @@ export type WorldData = {
   megaliths: { x: number; z: number; ry: number; cache: ResKind; amt: number }[];
   dockSites: { x: number; z: number }[];
   rivers: { pts: { x: number; z: number }[]; w: number }[];
+  biomes: { kind: "plains" | "forest" | "hills"; x: number; z: number }[];
   ridgeNx: number;
   ridgeNz: number;
 };
@@ -292,6 +293,23 @@ export function generateWorld(seed: number): WorldData {
     { x: rival.x, z: rival.z, team: 1 },
     { x: ash.x, z: ash.z, team: 2 },
   ];
+  const biomes: WorldData["biomes"] = [
+    { kind: "plains", x: camps[0].x, z: camps[0].z },
+    { kind: "hills", x: camps[1].x, z: camps[1].z },
+    { kind: "forest", x: camps[2].x, z: camps[2].z },
+  ];
+  const biomeAt = (x: number, z: number) => {
+    let best: WorldData["biomes"][number]["kind"] = "plains";
+    let bd = 1e12;
+    for (const b of biomes) {
+      const d = (b.x - x) ** 2 + (b.z - z) ** 2;
+      if (d < bd) {
+        bd = d;
+        best = b.kind;
+      }
+    }
+    return best;
+  };
 
   for (const c of camps) {
     const bowlR = c.team === 0 ? 44 : c.team === 1 ? 16 : 22;
@@ -345,7 +363,10 @@ export function generateWorld(seed: number): WorldData {
     if (nearCamp(x, z, 9)) continue;
     if (tooClose(trees, x, z, 2.8)) continue;
     const dense = fbm(x * 0.055 + 4, z * 0.055, 3);
-    if (dense < 0.28 && rand() > 0.35) continue;
+    const bio = biomeAt(x, z);
+    if (bio === "plains" && dense < 0.58) continue;
+    if (bio === "hills" && dense < 0.46) continue;
+    if (bio === "forest" && dense < 0.16 && rand() > 0.55) continue;
     const amt = 8 + ((rand() * 8) | 0);
     trees.push(node(nid++, "tree", x, z, h, amt, 0.9 + rand() * 0.7, 0.7 + rand() * 0.6));
   }
@@ -432,6 +453,9 @@ export function generateWorld(seed: number): WorldData {
     const z = (rand() - 0.5) * (MAP - 18);
     const h = sampleHeight(heights, x, z);
     if (h < waterY + 1.0) continue;
+    const bio = biomeAt(x, z);
+    if (bio === "forest" && rand() > 0.18) continue;
+    if (bio === "plains" && rand() > 0.42) continue;
     if (nearCamp(x, z, 26) && camps[0] && Math.hypot(x - camps[0].x, z - camps[0].z) < 26) continue;
     if (tooClose(stones, x, z, 7)) continue;
     if (h < 2.8 && rand() > 0.28) continue;
@@ -444,6 +468,7 @@ export function generateWorld(seed: number): WorldData {
     const z = (rand() - 0.5) * (MAP - 22);
     const h = sampleHeight(heights, x, z);
     if (h < waterY + 1.4) continue;
+    if (biomeAt(x, z) !== "hills" && rand() > 0.28) continue;
     if (tooClose(copper, x, z, 9) || tooClose(stones, x, z, 5)) continue;
     if (nearCamp(x, z, 16)) continue;
     copper.push(
@@ -464,6 +489,7 @@ export function generateWorld(seed: number): WorldData {
     const z = (rand() - 0.5) * (MAP - 22);
     const h = sampleHeight(heights, x, z);
     if (h < waterY + 2.0) continue;
+    if (biomeAt(x, z) !== "hills" && rand() > 0.16) continue;
     if (tooClose(iron, x, z, 10) || tooClose(copper, x, z, 6) || tooClose(stones, x, z, 5))
       continue;
     if (nearCamp(x, z, 18)) continue;
@@ -486,6 +512,9 @@ export function generateWorld(seed: number): WorldData {
     const z = (rand() - 0.5) * (MAP - 18);
     const h = sampleHeight(heights, x, z);
     if (h < waterY + 0.5 || h > 4.2) continue;
+    const bio = biomeAt(x, z);
+    if (bio === "hills" && rand() > 0.32) continue;
+    if (bio === "forest" && rand() > 0.62) continue;
     if (camps[0] && Math.hypot(x - camps[0].x, z - camps[0].z) < 14) continue;
     if (nearCamp(x, z, 8)) continue;
     if (tooClose(forage, x, z, 4.6)) continue;
@@ -684,6 +713,7 @@ export function generateWorld(seed: number): WorldData {
     megaliths,
     dockSites,
     rivers,
+    biomes,
     ridgeNx: ridge.nx,
     ridgeNz: ridge.nz,
   };

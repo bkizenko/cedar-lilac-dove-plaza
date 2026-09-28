@@ -397,19 +397,24 @@ test("truce clears both armies targets and prevents immediate renewed hostility"
   assert.equal(enemy.order, "move");
   assert.ok(g.tribe(1).recoveryUntil >= g.state.time + 600);
 });
-test("selecting a building clears unit selection and trains into its queue while paused", () => {
+test("selecting a building clears unit selection and queues an arming order while paused", () => {
   const g = fixture(),
     hall = g.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
   g.state.units.find((u) => u.team === 0).selected = true;
   g.selectEntity(hall);
   assert.equal(g.selectedUnits().length, 0);
   assert.equal(g.state.selBld, hall);
-  g.state.growthPolicy = "welcome";
-  g.tribe(0).food = 5000;
+  g.tribe(0).food = 4000;
+  g.tribe(0).wood = 80;
+  const bar = g.makeBld("barracks", hall.x + 14, hall.z, 0);
+  g.state.buildings.push(bar);
+  g.state.selBld = bar;
   g.state.paused = true;
   g.trainSelected("worker");
-  assert.equal(hall.queue.length, 1);
-  assert.equal(hall.queue[0].unit, "worker");
+  assert.equal(hall.queue.length, 0);
+  g.trainSelected("spearman");
+  assert.equal(bar.queue.length, 1);
+  assert.equal(bar.queue[0].unit, "spearman");
 });
 test("new world has a wider map and distant settlement starts", async () => {
   const { MAP } = await import("../src/game/constants.ts");
@@ -497,7 +502,7 @@ test("unsolicited settler arrivals stop unless welcomed with adequate reserves",
   assert.equal(g.popNow(0), before);
   g.tribe(0).food = 1000;
   g.landSeaFolk();
-  assert.equal(g.popNow(0), before + 2);
+  assert.equal(g.popNow(0), before + 1);
 });
 test("cropping depletes fertility; a fallow year restores it and is saved", async () => {
   const { crop, farmAvailable } = await import("../src/game/settlement.ts");
@@ -677,4 +682,12 @@ test("marked trees are felled first, and burning a hall takes stores", async () 
   assert.ok(rivalHall.hp <= 0);
   assert.ok(g.tribe(0).food > 10);
   assert.ok(g.tribe(1).food < 100);
+});
+test("unscouted shores stay off the map", () => {
+  const g = fixture();
+  const home = g.campOf(0);
+  const rival = g.campOf(1);
+  assert.equal(g.exploredAt(home.x, home.z), true);
+  assert.equal(g.exploredAt(rival.x, rival.z), false);
+  assert.equal(g.snapshot().camps.filter((c) => c.known).length, 0);
 });

@@ -146,6 +146,7 @@ export type Unit = {
   tx: number;
   tz: number;
   job: ResKind | null;
+  drill?: number;
   node: ResourceNode | Building | Critter | null;
   gatherT: number;
   carry: number;
@@ -339,7 +340,7 @@ export type HudSelection = {
   team?: number;
   queue?: string;
   carry?: string;
-  job?: ResKind | "hold" | null;
+  job?: ResKind | "hold" | "hunt" | "drill" | null;
   canRecycle?: boolean;
 };
 
@@ -393,7 +394,7 @@ export type HudSnapshot = {
   quality: "low" | "med" | "high";
   workerSelected: number;
   militarySelected: number;
-  job: ResKind | "hold" | "hunt" | null;
+  job: ResKind | "hold" | "hunt" | "drill" | null;
   canRaid: boolean;
   trade: {
     rival: string;
@@ -408,12 +409,22 @@ export type HudSnapshot = {
     leader: string;
     leaderTitle: string;
     csType: string;
+    theirs?: { food: number; wood: number; stone: number; copper: number; iron: number };
   } | null;
   rivalX: number;
   rivalZ: number;
   homeX: number;
   homeZ: number;
-  camps: { x: number; z: number; name: string; color: string; alive: boolean; hostile: boolean }[];
+  camps: {
+    x: number;
+    z: number;
+    name: string;
+    color: string;
+    alive: boolean;
+    hostile: boolean;
+    team: number;
+    known: boolean;
+  }[];
   raidName: string | null;
   idleWorkers: number;
   pendingAge: {

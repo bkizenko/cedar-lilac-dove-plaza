@@ -96,6 +96,36 @@
   width: min(28rem, 92%);
   pointer-events: none;
 }
+.hud-toast {
+  pointer-events: none;
+  margin: 0 auto;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.65rem;
+  background: rgba(16, 12, 8, 0.94);
+  color: #f4ead8;
+  border: 1px solid rgba(244, 234, 216, 0.38);
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+.hud-build {
+  grid-area: build;
+  align-self: end;
+  justify-self: center;
+  max-width: min(46rem, 100%);
+  overflow: hidden;
+}
+.hud-build-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  max-height: 8.4rem;
+  overflow: hidden;
+}
 .hud-sel {
   grid-area: sel;
   align-self: end;
@@ -103,12 +133,6 @@
 }
 .hud-trade-mobile {
   display: none;
-}
-.hud-build {
-  grid-area: build;
-  align-self: end;
-  justify-self: center;
-  max-width: min(42rem, 100%);
 }
 .hud-map {
   grid-area: map;

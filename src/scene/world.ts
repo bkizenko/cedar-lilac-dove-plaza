@@ -460,6 +460,21 @@ export class WorldView {
       else if (h > 6.5 || slope > 1.45) b = 4;
       else if (fertile) b = 3;
       else b = 2;
+      const biomes = game.world.biomes || [];
+      if (biomes.length && b !== 0 && b !== 1 && b !== 5 && b !== 6) {
+        let kind: "plains" | "forest" | "hills" = "plains";
+        let bd = 1e12;
+        for (const bio of biomes) {
+          const d = (bio.x - x) ** 2 + (bio.z - z) ** 2;
+          if (d < bd) {
+            bd = d;
+            kind = bio.kind;
+          }
+        }
+        if (kind === "forest") b = 8;
+        else if (kind === "hills" && b !== 7) b = 4;
+        else if (kind === "plains" && b !== 7) b = 3;
+      }
       biome[i] = b;
       const reg = game.regionAt(x, z);
       if (!reg) region[i] = 255;
@@ -1075,7 +1090,7 @@ export class WorldView {
       const n = Math.min(list.length, instCap(mesh));
       for (let i = 0; i < n; i++) {
         const c = list[i];
-        const dead = c.hp <= 0;
+        const dead = c.hp <= 0 || !game.visibleAt(c.x, c.z);
         _p.set(c.x, c.y, c.z);
         _e.set(0, c.facing, 0);
         _q.setFromEuler(_e);
@@ -1100,14 +1115,15 @@ export class WorldView {
     for (let i = 0; i < nTree; i++) {
       const t = game.state.trees[i];
       const stump = t.amount <= 0;
-      const sc = stump ? t.scale * 0.22 : t.scale;
+      const seen = game.exploredAt(t.x, t.z);
+      const sc = !seen ? 0.001 : stump ? t.scale * 0.22 : t.scale;
       _p.set(t.x, t.y, t.z);
       _e.set(0, i * 0.7, 0);
       _q.setFromEuler(_e);
       _s.set(sc, sc, sc);
       _m.compose(_p, _q, _s);
       this.treesTrunk.setMatrixAt(i, _m);
-      _s.set(stump ? 0.001 : sc, stump ? 0.001 : sc, stump ? 0.001 : sc);
+      _s.set(stump || !seen ? 0.001 : sc, stump || !seen ? 0.001 : sc, stump || !seen ? 0.001 : sc);
       _m.compose(_p, _q, _s);
       this.treesLeaf.setMatrixAt(i, _m);
     }
@@ -1115,12 +1131,12 @@ export class WorldView {
     this.treesLeaf.count = nTree;
     this.treesTrunk.instanceMatrix.needsUpdate = true;
     this.treesLeaf.instanceMatrix.needsUpdate = true;
-    if (this.rocks && game.state.stones.length !== this.rockCount) {
+    if (this.rocks) {
       const rockCap = instCap(this.rocks);
       this.rockCount = Math.min(game.state.stones.length, rockCap);
       for (let i = 0; i < this.rockCount; i++) {
         const s = game.state.stones[i];
-        const gone = s.amount <= 0;
+        const gone = s.amount <= 0 || !game.exploredAt(s.x, s.z);
         _p.set(s.x, s.y, s.z);
         _e.set(0, i, 0);
         _q.setFromEuler(_e);
@@ -1142,7 +1158,7 @@ export class WorldView {
         _p.set(s.x, s.y, s.z);
         _e.set(0, i, 0);
         _q.setFromEuler(_e);
-        _s.setScalar(s.amount <= 0 ? 0.001 : s.scale);
+        _s.setScalar(s.amount <= 0 || !game.exploredAt(s.x, s.z) ? 0.001 : s.scale);
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
       }
@@ -1157,7 +1173,7 @@ export class WorldView {
     this.bushCount = nBush;
     for (let i = 0; i < nBush; i++) {
       const b = game.state.forage[i];
-      const gone = b.amount <= 0;
+      const gone = b.amount <= 0 || !game.exploredAt(b.x, b.z);
       _p.set(b.x, b.y, b.z);
       _e.set(0, i, 0);
       _q.setFromEuler(_e);
@@ -1173,7 +1189,7 @@ export class WorldView {
       const t = game.state.time;
       for (let i = 0; i < nFish; i++) {
         const f = game.state.fish[i];
-        const gone = f.amount <= 0;
+        const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z);
         const bob = Math.sin(t * 1.6 + i) * 0.08;
         _p.set(f.x, game.world.waterY + 0.1 + bob, f.z);
         _e.set(0, t * 0.4 + i, 0.12);
@@ -1202,16 +1218,17 @@ export class WorldView {
       const n = Math.min(list.length, cap);
       for (let i = 0; i < n; i++) {
         const b = list[i];
+        const seen = b.team === 0 || game.exploredAt(b.x, b.z);
         const st = TEAM_STYLE[b.team] || TEAM_STYLE[0];
         const done = b.build >= 1;
-        const ys = done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
+        const ys = !seen ? 0.001 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
         _p.set(b.x, b.y, b.z);
         _e.set(0, st.yaw, 0);
         _q.setFromEuler(_e);
-        _s.set(st.sx, ys * st.sy, st.sz);
+        _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
         _m.compose(_p, _q, _s);
         meshes.timber.setMatrixAt(i, _m);
-        if (b.build < 0.55) {
+        if (seen && b.build < 0.55) {
           _s.set(0.001, 0.001, 0.001);
           _m.compose(_p, _q, _s);
         }
@@ -1248,6 +1265,15 @@ export class WorldView {
       const n = Math.min(list.length, cap);
       for (let i = 0; i < n; i++) {
         const u = list[i];
+        const seen = u.team === 0 || game.visibleAt(u.x, u.z);
+        if (!seen) {
+          _p.set(u.x, u.y, u.z);
+          _q.identity();
+          _s.set(0.001, 0.001, 0.001);
+          _m.compose(_p, _q, _s);
+          mesh.setMatrixAt(i, _m);
+          continue;
+        }
         const spd = Math.hypot(u.vx, u.vz);
         const walking = spd > 0.35;
         const chopping =
@@ -1649,7 +1675,7 @@ export class WorldView {
           float v = texture2D(uMap, vUv).r;
           vec4 terr = texture2D(uTerr, vUv);
           float live = smoothstep(0.55, 0.85, v);
-          float shroudA = mix(0.74, 0.40, smoothstep(0.18, 0.45, v)) * (1.0 - live);
+          float shroudA = mix(0.94, 0.58, smoothstep(0.12, 0.55, v)) * (1.0 - live);
           float seen = smoothstep(0.12, 0.28, v);
           float wash = terr.a * seen * (live > 0.5 ? 0.2 : 0.12);
           float a = max(shroudA, wash);
@@ -1660,7 +1686,7 @@ export class WorldView {
     });
     this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP), mat);
     this.fowMesh.rotation.x = -Math.PI / 2;
-    this.fowMesh.position.y = 0.18;
+    this.fowMesh.position.y = 0.45;
     this.fowMesh.renderOrder = 6;
     this.fowMesh.raycast = () => {};
     this.scene.add(this.fowMesh);
@@ -1790,7 +1816,7 @@ export class WorldView {
 
   private paintSeason(game: Game, dt: number) {
     this.seasonAcc += dt;
-    if (this.seasonAcc < 0.4 && this.lastSnow >= 0) return;
+    if (this.seasonAcc < 0.2 && this.lastSnow >= 0) return;
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
@@ -1816,6 +1842,12 @@ export class WorldView {
           0.55 * sn.spring + 0.52 * sn.summer + 0.5 * sn.autumn + 0.48 * sn.winter,
           0.48 * sn.spring + 0.46 * sn.summer + 0.38 * sn.autumn + 0.42 * sn.winter,
           0.28 * sn.spring + 0.26 * sn.summer + 0.2 * sn.autumn + 0.32 * sn.winter,
+        );
+      } else if (b === 8) {
+        c.setRGB(
+          0.2 * sn.spring + 0.18 * sn.summer + 0.26 * sn.autumn + 0.2 * sn.winter,
+          0.36 * sn.spring + 0.32 * sn.summer + 0.24 * sn.autumn + 0.26 * sn.winter,
+          0.14 * sn.spring + 0.12 * sn.summer + 0.1 * sn.autumn + 0.16 * sn.winter,
         );
       } else {
         const gR = 0.42 * sn.spring + 0.36 * sn.summer + 0.48 * sn.autumn + 0.4 * sn.winter;
@@ -1856,6 +1888,17 @@ export class WorldView {
         c.r = c.r + (0.93 - c.r) * cover;
         c.g = c.g + (0.95 - c.g) * cover;
         c.b = c.b + (0.97 - c.b) * cover;
+      }
+      const vx = pos.getX(i);
+      const vz = pos.getZ(i);
+      if (!game.exploredAt(vx, vz)) {
+        c.r *= 0.05;
+        c.g *= 0.05;
+        c.b *= 0.06;
+      } else if (!game.visibleAt(vx, vz)) {
+        c.r *= 0.45;
+        c.g *= 0.45;
+        c.b *= 0.48;
       }
       const o = i * 3;
       arr[o] = c.r;

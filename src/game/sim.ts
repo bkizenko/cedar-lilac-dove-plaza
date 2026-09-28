@@ -32,7 +32,6 @@ import {
   CITY_LEADERS,
   REGION_CLUSTERS,
   TILE,
-  TRADE_OFFERS,
   UNITS,
 } from "./constants";
 import type {
@@ -1184,10 +1183,7 @@ export class Game {
     if (team === 0) {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
       this.onSfx("place");
-      if (b.build < 1) {
-        this.banner("Gatherers will raise the " + d.name, 1.7);
-        this.assignBuilders(b);
-      }
+      if (b.build < 1) this.assignBuilders(b);
     }
     return true;
   }
@@ -1290,6 +1286,12 @@ export class Game {
     const gx = Math.floor(((x + HALF) / MAP) * FOW),
       gz = Math.floor(((z + HALF) / MAP) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] === 2;
+  }
+
+  exploredAt(x: number, z: number) {
+    const gx = Math.floor(((x + HALF) / MAP) * FOW),
+      gz = Math.floor(((z + HALF) / MAP) * FOW);
+    return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] >= 1;
   }
 
   selectEntity(entity: Unit | Building, additive = false) {
@@ -2174,7 +2176,7 @@ export class Game {
     );
   }
 
-  assignJob(job: ResKind | "hold" | "hunt") {
+  assignJob(job: ResKind | "hold" | "hunt" | "drill") {
     const units = this.selectedUnits().filter((u) => u.type === "worker");
     if (!units.length) {
       this.banner("Select gatherers first", 1.4);
@@ -2186,11 +2188,31 @@ export class Game {
         u.job = null;
         u.jobLock = false;
         u.huntOnly = false;
+        u.drill = undefined;
         u.node = null;
         u.target = null;
         u.trade = null;
       }
-      this.banner("Resting", 1.1);
+      this.onSfx("click");
+      return;
+    }
+    if (job === "drill") {
+      if (reserveSeconds(this, 0) < 420) {
+        this.banner("Drill waits on a food surplus. Eat first, then train.", 2);
+        this.onSfx("invalid");
+        return;
+      }
+      for (const u of units) {
+        if (isDependent(this, u)) continue;
+        u.drill = 0;
+        u.job = null;
+        u.jobLock = true;
+        u.huntOnly = false;
+        u.node = null;
+        u.target = null;
+        u.order = "hold";
+        u.workReason = "Drilling";
+      }
       this.onSfx("click");
       return;
     }
@@ -2286,8 +2308,6 @@ export class Game {
       u.target = null;
       u.trade = null;
     }
-    const word = job === "food" ? "berries" : job === "wood" ? "logs" : job;
-    this.banner("Gathering " + word, 1.2);
     this.onSfx("move");
   }
 
@@ -2580,7 +2600,7 @@ export class Game {
   focusIdleWorker() {
     const idle = this.idleWorkers();
     if (!idle.length) {
-      this.banner("Everyone is working. Tap Gatherer to train more.", 2);
+      this.banner("Everyone is already working.", 1.6);
       return null;
     }
     this.idleCursor = (this.idleCursor + 1) % idle.length;
@@ -2790,25 +2810,35 @@ export class Game {
   }
 
   offersFor(spec: ResKind): TradeDeal[] {
-    const all = this.state.deals.length ? this.state.deals : TRADE_OFFERS;
-    const hit = all.filter((d) => d.get === spec || d.give === spec);
+    const you = this.tribe(0);
     const rival = this.pickTradeRival();
-    return (hit.length ? hit : all)
-      .slice(0, 3)
-      .map((d) => {
-        if (!rival) return d;
-        const demand = rival[d.give] < 40 ? 1.3 : 0.9;
-        const supply = rival[d.get] > 80 ? 1.2 : 0.75;
-        const trust = 1 + (rival.trust || 0) * 0.15;
-        return {
-          ...d,
-          getAmt: Math.max(
-            0,
-            Math.min(Math.floor(rival[d.get]), Math.round(d.getAmt * demand * supply * trust)),
-          ),
-        };
-      })
-      .filter((d) => d.getAmt > 0);
+    if (!you || !rival || !rival.alive || rival.hostile) return [];
+    const worth: Record<ResKind, number> = { food: 1, wood: 1.2, stone: 2.2, copper: 4.5, iron: 6.5 };
+    const age = you.age;
+    const goods: ResKind[] = ["food", "wood", "stone"];
+    if (age >= 1) goods.push("copper");
+    if (age >= 2) goods.push("iron");
+    const stock = (t: { food: number; wood: number; stone: number; copper: number; iron: number }, k: ResKind) =>
+      Math.floor(t[k] || 0);
+    const theySell = goods
+      .filter((k) => stock(rival, k) >= 8)
+      .sort((a, b) => stock(rival, b) / worth[b] - stock(rival, a) / worth[a]);
+    if (spec && !theySell.includes(spec) && stock(rival, spec) >= 8) theySell.unshift(spec);
+    const deals: TradeDeal[] = [];
+    for (const get of theySell) {
+      const give = goods.find((k) => k !== get && stock(you, k) >= 10);
+      if (!give) continue;
+      const giveAmt = Math.min(36, Math.max(8, Math.round((10 * worth[get]) / worth[give])));
+      if (stock(you, give) < giveAmt) continue;
+      const getAmt = Math.min(
+        stock(rival, get),
+        Math.max(3, Math.round((giveAmt * worth[give] * 0.8) / worth[get])),
+      );
+      if (getAmt < 2) continue;
+      deals.push({ give, giveAmt, get, getAmt });
+      if (deals.length >= 3) break;
+    }
+    return deals;
   }
 
   tickSea(dt: number) {
@@ -2829,23 +2859,52 @@ export class Game {
     const hall = this.state.buildings.find(
       (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
     );
-    if (!you || !hall || this.state.growthPolicy !== "welcome" || reserveSeconds(this) < 600)
-      return;
-    if (you.food < 24 || this.popNow(0) + 2 > this.popCap(0)) {
-      this.banner("Folk on the tide turn away — no food or huts", 2);
-      return;
-    }
-    you.food -= 20;
-    const a = Math.atan2(hall.x, hall.z) + Math.PI;
-    const d = (this.world.islandR || 140) * 0.82;
-    for (let i = 0; i < 2; i++) {
-      const u = this.spawnUnit("worker", Math.sin(a) * d + i * 3, Math.cos(a) * d, 0);
+    if (!you || !hall) return;
+    const welcome = this.state.growthPolicy === "welcome";
+    const reserve = reserveSeconds(this);
+    if (reserve < (welcome ? 600 : 4000)) return;
+    if (you.food < 16 || this.popNow(0) >= this.popCap(0)) return;
+    const donors = this.state.tribes.filter(
+      (t) => t.id === 1 || t.id === 2,
+    );
+    const thriving = donors.find((t) => t.alive && this.popNow(t.id) > 6 && this.tribeFortune(t.id) > 1.6);
+    const failing = donors.find((t) => t.alive && this.popNow(t.id) > 4 && this.tribeFortune(t.id) < 1);
+    const takeFrom = (tr: (typeof donors)[number] | undefined) => {
+      if (!tr) return null;
+      return (
+        this.state.units.find(
+          (u) => u.team === tr.id && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
+        ) || null
+      );
+    };
+    const roll = Math.random();
+    let label = "A wanderer from the sea stays";
+    const migrant = roll < 0.4 ? takeFrom(thriving) : roll < 0.7 ? takeFrom(failing) : null;
+    if (migrant) {
+      const from = this.tribe(migrant.team);
+      migrant.team = 0;
+      migrant.order = "move";
+      migrant.job = null;
+      migrant.node = null;
+      migrant.target = null;
+      migrant.tx = hall.x + 4;
+      migrant.tz = hall.z + 4;
+      migrant.hp = Math.max(20, migrant.hp);
+      label =
+        roll < 0.4
+          ? "Someone leaves " + (from?.name || "a village") + " and joins you"
+          : "Refugees from " + (from?.name || "a failing village") + " ask to stay";
+    } else {
+      you.food -= 8;
+      const a = Math.atan2(hall.x, hall.z) + Math.PI;
+      const d = (this.world.islandR || 140) * 0.82;
+      const u = this.spawnUnit("worker", Math.sin(a) * d, Math.cos(a) * d, 0);
       u.order = "move";
-      u.tx = hall.x + (i === 0 ? 4 : -4);
+      u.tx = hall.x + 4;
       u.tz = hall.z + 6;
+      label = roll < 0.85 ? "A wanderer from the sea stays" : "Someone walking the shore asks to stay";
     }
-    this.banner("Two from the sea join the camp — 20 berries", 2.2);
-    this.onSfx("train");
+    this.banner(label, 2.2);
   }
 
   landSeaTribe(slot: number) {
@@ -2932,7 +2991,17 @@ export class Game {
   tickPeople(dt: number) {
     this.state.birthT -= dt;
     if (this.state.birthT <= 0) {
-      this.state.birthT = 180 + Math.random() * 60;
+      let richest = 0;
+      for (const tr of this.state.tribes) {
+        if (!tr.alive || tr.id === 3) continue;
+        richest = Math.max(richest, reserveSeconds(this, tr.id));
+      }
+      this.state.birthT =
+        richest > 1800
+          ? 70 + Math.random() * 35
+          : richest > 1100
+            ? 120 + Math.random() * 40
+            : 200 + Math.random() * 55;
       for (const tr of this.state.tribes) {
         if (!tr.alive || tr.id === 3) continue;
         const pop = this.popNow(tr.id);
@@ -2956,11 +3025,7 @@ export class Game {
         u.stature = 0.6;
         u.workReason = "Growing up — supported by the village";
         u.order = "idle";
-        if (tr.id === 0) {
-          this.addFloater(u.x, u.y + 2.2, u.z, "Born", "#c9e8a0");
-          this.banner("A child is born", 1.8);
-          this.onSfx("train");
-        }
+        if (tr.id === 0) this.addFloater(u.x, u.y + 2.2, u.z, "Born", "#c9e8a0");
       }
     }
 
@@ -2985,7 +3050,7 @@ export class Game {
         u.stature = 1;
         u.workReason = "Ready to join the workforce";
         u.order = "idle";
-        if (u.team === 0) this.banner("A young villager joins the workforce", 2);
+        if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Grown", "#c9e8a0");
       }
       const tr = this.tribe(u.team);
       if (!tr) continue;
@@ -3117,6 +3182,11 @@ export class Game {
     if (!tribe) return false;
     if (tribe.age < d.age) {
       if (team === 0) this.banner("Requires " + AGES[d.age] + " Age", 1.4);
+      return false;
+    }
+    if (unitType !== "worker" && reserveSeconds(this, team) < 420) {
+      if (team === 0) this.banner("Arming needs a food surplus. The village eats first.", 2);
+      this.onSfx("invalid");
       return false;
     }
     if (unitType === "worker") {
@@ -3635,6 +3705,10 @@ export class Game {
       u.target = null;
       u.order = "idle";
       u.workReason = "Growing up — supported by the village";
+      return;
+    }
+    if (u.drill != null) {
+      this.drillAI(u, dt);
       return;
     }
     if (u.order === "hold") return;
@@ -4276,6 +4350,53 @@ export class Game {
     }
   }
 
+  drillAI(u: Unit, dt: number) {
+    const tr = this.tribe(u.team);
+    if (!tr || reserveSeconds(this, u.team) < 420) {
+      u.drill = undefined;
+      u.order = "idle";
+      u.jobLock = false;
+      u.workReason = "Drill stopped — the stores are thin";
+      return;
+    }
+    const spot =
+      this.state.buildings.find(
+        (b) => b.team === u.team && b.type === "barracks" && b.hp > 0 && this.finished(b),
+      ) || this.state.buildings.find((b) => b.team === u.team && b.type === "townhall" && b.hp > 0);
+    if (spot && Math.hypot(u.x - spot.x, u.z - spot.z) > 7) {
+      u.tx = spot.x + 3;
+      u.tz = spot.z + 2;
+      this.steer(u, dt);
+      u.workReason = "Walking to drill";
+      return;
+    }
+    u.drill = (u.drill || 0) + dt;
+    tr.food = Math.max(0, tr.food - 0.03 * dt);
+    const need = 36;
+    u.workReason = "Drilling · " + Math.min(100, Math.floor((100 * (u.drill || 0)) / need)) + "%";
+    if ((u.drill || 0) < need) return;
+    if (tr.wood < 4) {
+      u.workReason = "Drill waits on a few logs for a spear";
+      return;
+    }
+    tr.wood -= 4;
+    const d = UNITS.spearman;
+    u.type = "spearman";
+    u.hp = Math.round(d.hp * AGE_STAT[tr.age]);
+    u.maxHp = u.hp;
+    u.speed = d.speed;
+    u.range = d.range;
+    u.dmg = d.dmg * AGE_STAT[tr.age];
+    u.rof = d.rof;
+    u.r = d.r;
+    u.drill = undefined;
+    u.militia = false;
+    u.jobLock = false;
+    u.order = "idle";
+    u.workReason = "Finished the drill";
+    if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Hunter", "#c9e8a0");
+  }
+
   welcomeSoul(team: number, x: number, z: number) {
     if (team === 0 && this.state.growthPolicy !== "welcome") return false;
     if (this.popNow(team) >= this.popCap(team)) return false;
@@ -4433,6 +4554,17 @@ export class Game {
       const th = hall;
       if (th.queue.length < 2 && Math.random() < (growing ? 0.78 : shrinking ? 0.12 : 0.5))
         this.enqueueTrain(th, "worker");
+    }
+    if (growing && reserveSeconds(this, team) > 500 && Math.random() < 0.4) {
+      const adult = this.state.units.find(
+        (u) =>
+          u.team === team &&
+          u.hp > 0 &&
+          u.type === "worker" &&
+          u.drill == null &&
+          !isDependent(this, u),
+      );
+      if (adult) adult.drill = 0;
     }
 
     if (
@@ -4987,9 +5119,11 @@ export class Game {
         type: units[0].type,
         team: 0,
         job:
-          units.find((u) => u.type === "worker")?.order === "hold"
-            ? "hold"
-            : (units.find((u) => u.type === "worker")?.job ?? null),
+          units.some((u) => u.drill != null)
+            ? "drill"
+            : units.find((u) => u.type === "worker")?.order === "hold"
+              ? "hold"
+              : (units.find((u) => u.type === "worker")?.job ?? null),
       };
     } else if (units.length === 1) {
       const u = units[0];
@@ -5081,14 +5215,6 @@ export class Game {
     const age = t.age;
     const next = AGE_COST[age + 1];
     const trainOptions: HudSnapshot["trainOptions"] = [];
-    const hasTH = this.hasBld(0, "townhall");
-    if (hasTH)
-      trainOptions.push({
-        type: "worker",
-        name: UNITS.worker.name,
-        cost: { food: UNITS.worker.food },
-        age: 0,
-      });
     const hasBar = this.hasBld(0, "barracks");
     const hasSt = this.hasBld(0, "stables");
     if (hasBar) {
@@ -5123,7 +5249,7 @@ export class Game {
         age: 4,
       });
 
-    const buildOptions = BUILD_ORDER.map((type) => ({
+    const buildOptions = BUILD_ORDER.filter((type) => BUILDINGS[type].age <= age).map((type) => ({
       type,
       name: BUILDINGS[type].name,
       cost: {
@@ -5190,30 +5316,47 @@ export class Game {
       workerSelected: units.filter((u) => u.type === "worker").length,
       militarySelected: units.filter((u) => u.type !== "worker" && u.type !== "leader").length,
       job:
-        units.find((u) => u.type === "worker")?.order === "hold"
-          ? "hold"
-          : units.find((u) => u.type === "worker" && u.huntOnly)
-            ? "hunt"
-            : (units.find((u) => u.type === "worker")?.job ?? null),
+        units.some((u) => u.type === "worker" && u.drill != null)
+          ? "drill"
+          : units.find((u) => u.type === "worker")?.order === "hold"
+            ? "hold"
+            : units.find((u) => u.type === "worker" && u.huntOnly)
+              ? "hunt"
+              : (units.find((u) => u.type === "worker")?.job ?? null),
       canRaid: this.state.units.some(
         (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
       ),
       trade: (() => {
         const rival = this.pickTradeRival();
         if (!rival) return null;
+        const camp = this.campOf(rival.id);
+        if (!this.exploredAt(camp.x, camp.z)) return null;
         return {
           rival: rival.name,
           hostile: rival.hostile,
           alive: rival.alive,
           cd: rival.tradeCd,
           offers: this.offersFor(rival.spec),
-          canCycle: this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.alive).length > 1,
+          canCycle: this.state.tribes.filter(
+            (t) =>
+              t.id !== 0 &&
+              t.id !== 3 &&
+              t.alive &&
+              this.exploredAt(this.campOf(t.id).x, this.campOf(t.id).z),
+          ).length > 1,
           ally: rival.ally,
           spec: rival.spec,
           canPact: !rival.hostile && !rival.ally && rival.alive,
           leader: rival.leader,
           leaderTitle: rival.leaderTitle,
           csType: rival.csType,
+          theirs: {
+            food: Math.floor(rival.food),
+            wood: Math.floor(rival.wood),
+            stone: Math.floor(rival.stone),
+            copper: Math.floor(rival.copper || 0),
+            iron: Math.floor(rival.iron || 0),
+          },
         };
       })(),
       rivalX: this.campOf(this.tradeTeam || 1).x,
@@ -5227,10 +5370,12 @@ export class Game {
           return {
             x: c.x,
             z: c.z,
+            team: c.team,
             name: tr?.name || TEAM_NAMES[c.team] || "Rival",
             color: tr?.color || TEAM_COLORS[c.team] || "#8a3030",
             alive: tr?.alive ?? false,
             hostile: tr?.hostile ?? false,
+            known: this.exploredAt(c.x, c.z),
           };
         }),
       raidName: this.pickRaidRival()?.name ?? null,

@@ -490,9 +490,15 @@ export class Engine {
   }
 
   focusTribe(id: number) {
-    if (id !== 0) this.game.setTradeTeam(id);
     const camp = this.game.world.camps.find((c) => c.team === id);
-    if (camp) this.view.look.set(camp.x, this.game.height(camp.x, camp.z) + 0.5, camp.z);
+    if (!camp) return;
+    if (id !== 0 && !this.game.exploredAt(camp.x, camp.z)) {
+      this.game.banner("That shore is still in fog. Send someone to explore.", 1.8);
+      this.pushHud();
+      return;
+    }
+    if (id !== 0) this.game.setTradeTeam(id);
+    this.view.look.set(camp.x, this.game.height(camp.x, camp.z) + 0.5, camp.z);
     this.pushHud();
   }
 
@@ -537,10 +543,7 @@ export class Engine {
   }
 
   trainPeople() {
-    this.game.selectTownHall();
-    this.game.trainSelected("worker");
-    const hall = this.game.state.selBld;
-    if (hall) this.view.look.set(hall.x, hall.y + 0.5, hall.z);
+    this.game.assignJob("drill");
     this.pushHud();
   }
 
