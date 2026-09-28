@@ -482,23 +482,23 @@ export const AGE_CHOICES: {
   army: { name: string; hint: string };
 }[] = [
   {
-    econ: { name: "Granaries", hint: "Everyone gathers 15% faster" },
+    econ: { name: "Granaries", hint: "Food storage grows, and surplus spoils more slowly" },
     army: { name: "Hardened hides", hint: "People gain 15% more health" },
   },
   {
-    econ: { name: "Timber rights", hint: "Gather another 12% faster" },
+    econ: { name: "Timber rights", hint: "Woodcutting is quicker. Other work is not" },
     army: { name: "Long spears", hint: "+12% damage" },
   },
   {
-    econ: { name: "Market weights", hint: "Gather another 10% faster" },
+    econ: { name: "Market weights", hint: "Caravans leave sooner and bring a little more home" },
     army: { name: "Watchfires", hint: "A free watchtower at your hall" },
   },
   {
-    econ: { name: "Open fields", hint: "Farms and forage run quicker" },
-    army: { name: "Shield wall", hint: "+10% health and damage" },
+    econ: { name: "Open fields", hint: "Sowing, tending and harvests improve. Soil tires slower" },
+    army: { name: "Shield wall", hint: "Hunters hold a tighter line, with more health and damage" },
   },
   {
-    econ: { name: "Ledgers", hint: "Traders and gatherers hurry" },
+    econ: { name: "Ledgers", hint: "Haulers and traders walk faster on the road" },
     army: { name: "Royal guard", hint: "Two extra hunters at the hall" },
   },
 ];

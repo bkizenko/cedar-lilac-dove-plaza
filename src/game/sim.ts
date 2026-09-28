@@ -666,8 +666,6 @@ export class Game {
   gatherMul(team: number) {
     let m = 1;
     if (this.hasBld(team, "market")) m *= 0.88;
-    const picks = team === 0 ? this.state.agePicks : [];
-    for (const p of picks) if (p === "econ") m *= 0.88;
     if (this.state.weather === "frost") m *= 1.22;
     if (this.state.weather === "storm") m *= 1.24;
     if (this.state.weather === "rain") m *= 0.92;
@@ -1354,6 +1352,45 @@ export class Game {
     }
   }
 
+  slotOffsets(units: Unit[], x: number, z: number) {
+    const line =
+      units.length >= 4 && units.every((u) => u.type !== "worker" && u.type !== "leader");
+    if (!line) {
+      const ring = Math.max(1, Math.ceil(Math.sqrt(units.length)));
+      return units.map((_, i) => ({
+        ox: ((i % ring) - (ring - 1) / 2) * 1.35,
+        oz: (Math.floor(i / ring) - (ring - 1) / 2) * 1.35,
+      }));
+    }
+    let cx = 0;
+    let cz = 0;
+    for (const u of units) {
+      cx += u.x;
+      cz += u.z;
+    }
+    cx /= units.length;
+    cz /= units.length;
+    const len = Math.hypot(x - cx, z - cz) || 1;
+    const fx = (x - cx) / len;
+    const fz = (z - cz) / len;
+    const px = -fz;
+    const pz = fx;
+    const tight = this.state.agePicks[3] === "army";
+    const gap = tight ? 1.15 : 1.7;
+    const ranks = units.length > 8 ? 2 : 1;
+    const cols = Math.ceil(units.length / ranks);
+    return units.map((_, i) => {
+      const rank = Math.floor(i / cols);
+      const col = i % cols;
+      const across = Math.min(cols, units.length - rank * cols);
+      const mid = (across - 1) / 2;
+      return {
+        ox: px * (col - mid) * gap - fx * rank * (tight ? 1.3 : 1.85),
+        oz: pz * (col - mid) * gap - fz * rank * (tight ? 1.3 : 1.85),
+      };
+    });
+  }
+
   issueMove(x: number, z: number, attackMove = false) {
     const units = this.selectedUnits();
     if (!units.length) {
@@ -1362,11 +1399,9 @@ export class Game {
       }
       return;
     }
-    const n = units.length;
-    const ring = Math.ceil(Math.sqrt(n));
+    const slots = this.slotOffsets(units, x, z);
     units.forEach((u, i) => {
-      const ox = ((i % ring) - (ring - 1) / 2) * 1.3;
-      const oz = (Math.floor(i / ring) - (ring - 1) / 2) * 1.3;
+      const { ox, oz } = slots[i];
       u.tx = x + ox;
       u.tz = z + oz;
       u.order = attackMove ? "attackmove" : "move";
@@ -1394,11 +1429,9 @@ export class Game {
       }
     }
     const units = selected;
-    const n = units.length;
-    const ring = Math.max(1, Math.ceil(Math.sqrt(n)));
+    const slots = this.slotOffsets(units, target.x, target.z);
     units.forEach((u, i) => {
-      const ox = ((i % ring) - (ring - 1) / 2) * 1.5;
-      const oz = (Math.floor(i / ring) - (ring - 1) / 2) * 1.5;
+      const { ox, oz } = slots[i];
       u.target = target;
       u.order = "attack";
       u.tx = target.x + ox;
@@ -1418,11 +1451,9 @@ export class Game {
       (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
     );
     if (!mil.length) return false;
-    const n = mil.length;
-    const ring = Math.max(1, Math.ceil(Math.sqrt(n)));
+    const slots = this.slotOffsets(mil, tx, tz);
     mil.forEach((u, i) => {
-      const ox = ((i % ring) - (ring - 1) / 2) * 1.7;
-      const oz = (Math.floor(i / ring) - (ring - 1) / 2) * 1.7;
+      const { ox, oz } = slots[i];
       u.tx = tx + ox;
       u.tz = tz + oz;
       u.order = order;
@@ -1577,6 +1608,32 @@ export class Game {
         !((p.team === team && p.target?.team === 0) || (p.team === 0 && p.target?.team === team)),
     );
     this.banner("Truce agreed with " + rival.name + " — forces withdraw for ten minutes", 4);
+  }
+
+  offerCompact(team: number) {
+    const you = this.tribe(0);
+    const n = this.tribe(team);
+    if (!you || !n || team === 0 || team === 3 || !n.alive || n.hostile) return false;
+    if ((n.compactUntil || 0) > this.state.time) {
+      this.banner("The grazing compact with " + n.name + " still holds", 1.6);
+      return false;
+    }
+    if ((n.trust || 0) < 0.35) {
+      this.banner(n.name + " will not share the pastures yet", 1.8);
+      return false;
+    }
+    if (you.food < 20) {
+      this.banner("Need 20 food to offer grazing rights", 1.6);
+      return false;
+    }
+    you.food -= 20;
+    n.food += 12;
+    n.compactUntil = this.state.time + 480;
+    n.trust = Math.min(1, (n.trust || 0) + 0.06);
+    n.tension = Math.max(0, n.tension - 0.15);
+    n.intent = "trade";
+    this.banner(n.name + " accepts grazing rights — no raid while the compact holds", 2.6);
+    return true;
   }
 
   offerPact(team?: number) {
@@ -2085,7 +2142,7 @@ export class Game {
       }
       if (this.dispatchTrade(worker, r, tr.id)) {
         r.workerId = worker.id;
-        r.t = r.interval;
+        r.t = r.interval * (this.state.agePicks[2] === "econ" ? 0.72 : 1);
         r.status = "Outbound caravan";
       }
     }
@@ -2123,6 +2180,8 @@ export class Game {
     const giveAmt = give === "food" ? 28 : 22;
     let getAmt = get === "copper" ? 6 : get === "stone" ? 12 : 18;
     if (rival.ally) getAmt = Math.round(getAmt * 1.15);
+    if (this.state.agePicks[2] === "econ") getAmt = Math.round(getAmt * 1.12);
+    const weights = this.state.agePicks[2] === "econ";
     this.state.routeOffer = {
       team: rival.id,
       rival: rival.name,
@@ -2130,8 +2189,8 @@ export class Game {
       give,
       giveAmt,
       get: get === give ? "wood" : get,
-      getAmt: get === give ? 16 : getAmt,
-      interval: 42,
+      getAmt: get === give ? (weights ? 18 : 16) : getAmt,
+      interval: weights ? 30 : 42,
     };
     this.state.routePopups += 1;
     this.onSfx("click");
@@ -3035,8 +3094,11 @@ export class Game {
       const pop = counts[tr.id];
       const upkeep = foodDemand(this, tr.id);
       const spoilage =
-        tr.food * (this.hasBld(tr.id, "warehouse") ? 0.000015 : 0.00006) +
-        Math.max(0, tr.food - this.stockCap(tr.id)) * 0.02;
+        tr.food *
+          (this.hasBld(tr.id, "warehouse") ? 0.000015 : 0.00006) *
+          (tr.id === 0 && this.state.agePicks[0] === "econ" ? 0.45 : 1) +
+        Math.max(0, tr.food - this.stockCap(tr.id)) *
+          (tr.id === 0 && this.state.agePicks[0] === "econ" ? 0.01 : 0.02);
       tr.food = Math.max(0, tr.food - (upkeep + spoilage) * dt);
       if (tr.id === 0 && tr.food < 8 && this.state.bannerT <= 0)
         this.banner("The stores run thin", 2);
@@ -3508,6 +3570,8 @@ export class Game {
     if (this.state.weather === "frost" && job === "food") m *= 1.2;
     if (this.state.weather === "drought" && job === "food") m *= 1.28;
     if (this.state.weather === "flood" && job === "food") m *= 1.22;
+    if (u.team === 0 && this.state.agePicks[1] === "econ" && job === "wood") m *= 0.78;
+    if (u.team === 0 && this.state.agePicks[3] === "econ" && job === "food") m *= 0.84;
     const sn = this.seasonMix();
     if (sn.winter > 0.35 && job === "food") m *= 1 + sn.winter * 0.55;
     if (sn.autumn > 0.35 && job === "wood") m *= 1 - sn.autumn * 0.12;
@@ -3615,7 +3679,16 @@ export class Game {
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
     if (d < 0.01) return false;
-    const step = Math.min(u.speed * dt, d);
+    const step = Math.min(
+      u.speed *
+        dt *
+        (u.team === 0 &&
+        this.state.agePicks[4] === "econ" &&
+        (u.order === "return" || u.order === "trade")
+          ? 1.35
+          : 1),
+      d,
+    );
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
     if (!this.canStep(u, nx, nz)) {
@@ -3913,7 +3986,11 @@ export class Game {
     }
     rival[deal.get] -= deal.getAmt;
     rival[deal.give] += deal.giveAmt;
-    u.carry = deal.getAmt;
+    const weighed =
+      u.team === 0 && this.state.agePicks[2] === "econ"
+        ? Math.max(deal.getAmt, Math.round(deal.getAmt * 1.12))
+        : deal.getAmt;
+    u.carry = weighed;
     u.carryType = deal.get;
     u.workReason = "Bringing traded goods home";
     rival.trust = Math.min(1, (rival.trust || 0) + 0.15);
@@ -4683,7 +4760,12 @@ export class Game {
 
     tr.lastRaid -= 2;
     tr.intent = neighborIntent(this, team);
-    if (tr.intent === "raid" && tr.lastRaid <= 0 && !tr.ally) {
+    if (
+      tr.intent === "raid" &&
+      tr.lastRaid <= 0 &&
+      !tr.ally &&
+      this.state.time >= (tr.compactUntil || 0)
+    ) {
       const mil = this.state.units.filter(
         (u) => u.team === team && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
       );
@@ -4913,6 +4995,7 @@ export class Game {
 
   stockCap(team = 0) {
     let cap = 140;
+    if (team === 0 && this.state.agePicks[0] === "econ") cap += 140;
     for (const b of this.state.buildings) {
       if (b.team !== team || !this.finished(b)) continue;
       if (b.type === "warehouse") cap += 160;

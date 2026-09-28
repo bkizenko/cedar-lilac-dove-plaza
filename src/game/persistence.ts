@@ -105,6 +105,7 @@ export function decodeGame(raw: unknown): Game {
   for (const t of s.tribes) {
     if (t.trust !== undefined && (!num(t.trust) || t.trust < 0 || t.trust > 1)) fail();
     if (t.recoveryUntil !== undefined && !num(t.recoveryUntil)) fail();
+    if (t.compactUntil !== undefined && !num(t.compactUntil)) fail();
   }
   const refs = new Map<string, Entity>();
   const add = (e: any, kind?: string) => {

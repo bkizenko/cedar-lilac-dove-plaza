@@ -7,6 +7,7 @@ import {
   isDependent,
   neighborIntent,
 } from "@/game/settlement";
+import { AGE_CHOICES } from "@/game/constants";
 export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const ref = useRef<HTMLDialogElement>(null),
     open = !!engine?.keyboard.ledger;
@@ -60,6 +61,12 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             {people.length - dependents} adults · {dependents} dependents. Children need food and
             shelter before joining the workforce.
           </p>
+          {s.agePicks.length > 0 ? (
+            <p>
+              Paths kept:{" "}
+              {s.agePicks.map((p, i) => AGE_CHOICES[i]?.[p].name).filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
           <details>
             <summary>How food and harvests work</summary>{" "}
             <p>
@@ -139,7 +146,12 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               {Math.round((b.crop?.tended || 0) * 100)}% tended ·{" "}
               {b.crop?.ripened
                 ? `${Math.floor(b.crop.remaining)} food left to harvest`
-                : `up to ${Math.floor((b.crop?.planted || 0) * (160 + 100 * (b.crop?.tended || 0)) * (b.fertility ?? 1))} food expected`}
+                : `up to ${Math.floor(
+                    (b.crop?.planted || 0) *
+                      (160 + 100 * (b.crop?.tended || 0)) *
+                      (b.fertility ?? 1) *
+                      (s.agePicks[3] === "econ" ? 1.2 : 1),
+                  )} food expected`}
               <button
                 disabled={cal.phase !== 0}
                 onClick={() => {
@@ -242,6 +254,19 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             >
               Send 30 food · build trust{n.hostile ? " / seek truce" : ""}
             </button>
+            {!n.hostile ? (
+              <button
+                disabled={t.food < 20 || (n.trust || 0) < 0.35 || (n.compactUntil || 0) > s.time}
+                onClick={() => {
+                  g.offerCompact(n.id);
+                  engine.pushHud();
+                }}
+              >
+                {(n.compactUntil || 0) > s.time
+                  ? `Grazing compact holds · ${Math.ceil(((n.compactUntil || 0) - s.time) / 60)} min`
+                  : "Offer grazing rights · 20 food"}
+              </button>
+            ) : null}
           </section>
         ))}
       <p className="mt-4 text-sm">

@@ -13,6 +13,15 @@ TRIBES
   Redcliff and Ashfen start peaceful and will grow — or shrink — with their
   stores. Click a name, or T, to cycle who you trade with.
   Strike (or right-click their people) and every hunter marches together.
+  Four or more hunters move as a line across the march. Shield wall tightens it.
+  In the village ledger (L), a peaceful neighbor with enough trust will take
+  grazing rights: 20 food, and they will not raid while the compact holds.
+
+AGES
+  Each age asks you to keep one path and lose the other.
+  Granaries store food. Timber rights speed wood only. Market weights hurry
+  caravans. Open fields improve the harvest. Ledgers speed the walk home.
+  The other path hardens people, damage, a watchtower, a tighter line, or a guard.
 
 WEATHER
   Clear, mist, rain, storm, frost, golden light, flood, and drought.

@@ -246,6 +246,7 @@ export type Tribe = {
   lastRaid: number;
   trust?: number;
   recoveryUntil?: number;
+  compactUntil?: number;
   intent?: string;
   thinkT: number;
   alive: boolean;

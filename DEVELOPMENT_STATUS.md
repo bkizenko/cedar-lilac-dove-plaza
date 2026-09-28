@@ -37,6 +37,5 @@ This is a playable mechanics checkpoint, not the completed game described in GAM
 
 ## Remaining work
 - Detailed cohesive 3D environment/character packs, animation and renderer profiling remain undone. Existing procedural visuals are placeholders. This is not a visual-quality milestone.
-- Seasonal population/food balancing needs longer multi-year campaigns. Full household demographics, advanced agricultural technology, formation combat and evolving diplomatic institutions are still backlog work.
-- Keyboard paths are implemented but not every advanced-age campaign branch has been exercised. Mobile checks cover layout, not a touch-only campaign.
-- No deployment, GitHub push or pull request has been performed.
+- Seasonal population/food balancing needs longer multi-year campaigns. Full household demographics beyond the dependent/adult model, and formation combat deeper than a march line, are still backlog.
+- Age paths now change different parts of the village (storage, wood, caravans, fields, hauling) instead of a flat gather bonus. A grazing compact can hold a trusted neighbor off raids. Keyboard paths are implemented but not every advanced-age campaign branch has been exercised. Mobile checks cover layout, not a touch-only campaign.

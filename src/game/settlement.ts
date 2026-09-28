@@ -33,13 +33,22 @@ export function crop(g: Game, b: Building) {
     if (b.crop)
       b.fertility = Math.max(
         0.5,
-        Math.min(1, (b.fertility ?? 1) + (b.crop.planted > 0 ? -0.12 * b.crop.planted : 0.24)),
+        Math.min(
+          1,
+          (b.fertility ?? 1) +
+            (b.crop.planted > 0
+              ? -(b.team === 0 && g.state.agePicks[3] === "econ" ? 0.07 : 0.12) * b.crop.planted
+              : b.team === 0 && g.state.agePicks[3] === "econ"
+                ? 0.3
+                : 0.24),
+        ),
       );
     b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false };
   }
   if (phase === 2 && !b.crop.ripened) {
+    const fields = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.2 : 1;
     b.crop.remaining = Math.floor(
-      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1),
+      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields,
     );
     b.crop.ripened = true;
   }
@@ -68,12 +77,14 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
   }
   u.workReason =
     p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
-  if (p === 0) c.planted = Math.min(1, c.planted + dt / 180);
-  else if (p === 1) c.tended = Math.min(1, c.tended + dt / 220);
+  const open = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1;
+  if (p === 0) c.planted = Math.min(1, c.planted + (dt / 180) * open);
+  else if (p === 1) c.tended = Math.min(1, c.tended + (dt / 220) * open);
   else {
     u.gatherT += dt;
-    if (u.gatherT >= 0.8) {
-      u.gatherT -= 0.8;
+    const pace = 0.8 / open;
+    if (u.gatherT >= pace) {
+      u.gatherT -= pace;
       const n = Math.min(2, c.remaining);
       c.remaining -= n;
       u.carry += n;
@@ -422,6 +433,7 @@ export function neighborIntent(g: Game, team: number): "recover" | "trade" | "de
   const t = g.tribe(team),
     p = g.tribe(0);
   if (g.state.time < (t.recoveryUntil || 0)) return "recover";
+  if (g.state.time < (t.compactUntil || 0) && !t.hostile) return "trade";
   if (
     (g.state.conflict === "quiet" && !t.hostile) ||
     g.state.time < (g.state.conflict === "dangerous" ? 300 : 600) ||
