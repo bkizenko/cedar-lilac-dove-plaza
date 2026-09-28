@@ -112,7 +112,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           {resMin ? (
             <button
               type="button"
-              title="Train a gatherer (G)"
+              title="Welcome kin if the stores can spare them (G)"
               onClick={() => engine?.trainPeople()}
               className="mt-1 flex w-full items-center gap-2 text-[11px] text-parchment-dim hover:text-parchment"
             >
@@ -158,7 +158,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               ) : null}
               <button
                 type="button"
-                title="Train a gatherer (G)"
+                title="Welcome kin if the stores can spare them (G)"
                 onClick={() => engine?.trainPeople()}
                 className="flex w-full items-center gap-2 text-sm leading-7 rounded-md hover:bg-ink-soft"
               >
@@ -172,7 +172,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 disabled={hud.pop >= hud.popCap || !!hud.ended}
                 className="mt-1 min-h-8 w-full rounded-md border border-dawn/40 bg-ink-soft px-2 py-1 text-[11px] text-dawn hover:border-dawn disabled:opacity-40"
               >
-                Train gatherer · 36 food
+                Welcome kin · 36 food
               </button>
               <p className="mt-1.5 text-[9px] uppercase tracking-wide text-parchment-dim">
                 {hud.port ? "Port 3:1" : "Bank 4:1"}
@@ -672,14 +672,18 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {hud.trainOptions.length > 0 && (
               <div className="ml-1 flex gap-1.5 border-l border-parchment/15 pl-2">
                 {hud.trainOptions.map((u) => {
-                  const locked = hud.age < u.age || hud.pop >= hud.popCap;
                   const gatherer = u.type === "worker";
+                  const locked = hud.age < u.age || (gatherer && hud.pop >= hud.popCap);
                   return (
                     <button
                       key={u.type}
                       type="button"
                       disabled={locked || !!hud.ended}
-                      title={gatherer ? "Train a gatherer (G)" : `Train ${u.name}`}
+                      title={
+                        gatherer
+                          ? "Welcome kin if you have food and room (G). People are born."
+                          : `Arm an adult as a ${u.name}`
+                      }
                       onClick={() => engine?.train(u.type)}
                       className={`w-16 shrink-0 rounded-lg border px-1 py-1.5 text-center hover:border-bronze/40 disabled:opacity-40 ${
                         gatherer ? "border-dawn/40 bg-dawn/10" : "border-parchment/15 bg-ink-soft"

@@ -66,6 +66,8 @@ export class Game {
   walk: Uint8Array;
   vision = new Uint8Array(FOW * FOW);
   visAge = new Float32Array(FOW * FOW);
+  territory = new Uint8Array(FOW * FOW);
+  chopMarks = new Set<number>();
   looted = new Set<number>();
   started = false;
   awaitingStart = true;
@@ -249,11 +251,24 @@ export class Game {
     this.visAge.fill(0);
 
     const specRoll = Math.random();
-    this.state.tribes = TEAM_NAMES.map((name, i) => ({
+    const folk = [
+      ["Dunmere", "#6a4e92"],
+      ["Saltborn", "#3a6e92"],
+      ["Greyhaven", "#7a7568"],
+      ["Mossfall", "#3f7a3a"],
+      ["Redcliff", "#c4452a"],
+      ["Ashfen", "#3d7a62"],
+      ["Harrow", "#8a5a28"],
+      ["Kest", "#2f6a6a"],
+    ];
+    const pickFolk = () => folk.splice((Math.random() * folk.length) | 0, 1)[0];
+    this.state.tribes = TEAM_NAMES.map((name, i) => {
+      const rolled = i === 1 || i === 2 ? pickFolk() : null;
+      return {
       id: i,
-      name,
-      short: TEAM_SHORT[i],
-      color: TEAM_COLORS[i],
+      name: rolled ? rolled[0] : name,
+      short: rolled ? rolled[0] : TEAM_SHORT[i],
+      color: rolled ? rolled[1] : TEAM_COLORS[i],
       food: i === 0 ? 72 : i === 3 ? 0 : 55,
       wood: i === 0 ? 58 : i === 3 ? 0 : 42,
       stone: i === 0 ? 16 : i === 3 ? 0 : 10,
@@ -289,7 +304,8 @@ export class Game {
       bows: i === 2 ? 2 : 0,
       blades: i === 1 ? 1 : 0,
       fallenT: 0,
-    }));
+      };
+    });
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3) continue;
       const pool = CITY_LEADERS[tr.spec] || CITY_LEADERS.wood;
@@ -468,6 +484,8 @@ export class Game {
     this.state.richRes = (["food", "wood", "stone"] as ResKind[])[(Math.random() * 3) | 0];
     this.rebuildWalk();
     this.vision.fill(0);
+    this.territory.fill(255);
+    this.chopMarks.clear();
     const home = this.campOf(0);
     this.stampVision(home.x, home.z, 26, 1);
     this.updateVision(0);
@@ -2247,6 +2265,16 @@ export class Game {
       this.issueMove(node.x, node.z);
       return;
     }
+    if (job === "copper" && (this.tribe(0)?.age ?? 0) < 1) {
+      this.banner("Orange copper — it opens in the Bronze Age, then people can haul it", 2.2);
+      this.onSfx("invalid");
+      return;
+    }
+    if (job === "iron" && (this.tribe(0)?.age ?? 0) < 2) {
+      this.banner("Dark iron — the Iron Age, then haul the dark rock. A forge turns it to blades", 2.4);
+      this.onSfx("invalid");
+      return;
+    }
     for (const u of workers) {
       u.selected = true;
       u.job = job;
@@ -2633,12 +2661,16 @@ export class Game {
           this.onSfx("fire");
         }
       } else if (kind === 2) {
-        const u = this.state.units.find((x) => x.team === tr.id && x.hp > 0 && x.type !== "leader");
-        if (u) {
-          u.hp = 0;
-          this.addBurst(u.x, u.y + 1, u.z, "#6a5050", 8);
-          this.banner((tr.id === 0 ? "Sickness" : tr.name + " — sickness") + " takes a soul", 2);
-        }
+        const sick = this.state.units.filter(
+          (x) => x.team === tr.id && x.hp > 0 && x.type !== "leader",
+        );
+        const n = Math.min(sick.length, this.popNow(tr.id) > 8 ? 1 + ((Math.random() * 3) | 0) : 1);
+        for (let i = 0; i < n; i++) sick[i].hp = 0;
+        this.banner(
+          (tr.id === 0 ? "A fever moves through the huts" : tr.name + " — plague") +
+            (n > 1 ? " — " + n + " fall ill" : " takes a soul"),
+          2.2,
+        );
       } else {
         tr.wood = Math.max(0, tr.wood - 12);
         tr.stone = Math.max(0, tr.stone - 6);
@@ -3020,6 +3052,53 @@ export class Game {
         age[i] = Math.min(age[i], 55);
       }
     }
+    this.paintTerritory();
+  }
+
+  paintTerritory() {
+    const terr = this.territory;
+    terr.fill(255);
+    const n = FOW;
+    const cell = MAP / n;
+    const rad: Partial<Record<BldType, number>> = {
+      townhall: 34,
+      hut: 16,
+      farm: 14,
+      lumber: 18,
+      quarry: 16,
+      dock: 12,
+      warehouse: 22,
+      barracks: 18,
+      forge: 15,
+      watchtower: 28,
+      temple: 20,
+      market: 18,
+      keep: 30,
+      stables: 16,
+      university: 20,
+      cairn: 18,
+      grove: 18,
+    };
+    for (const b of this.state.buildings) {
+      if (b.hp <= 0 || b.build < 1 || b.team > 2) continue;
+      const r = rad[b.type] ?? 14;
+      const cx = ((b.x + HALF) / cell) | 0;
+      const cz = ((b.z + HALF) / cell) | 0;
+      const cr = Math.ceil(r / cell);
+      for (let iz = cz - cr; iz <= cz + cr; iz++) {
+        if (iz < 0 || iz >= n) continue;
+        for (let ix = cx - cr; ix <= cx + cr; ix++) {
+          if (ix < 0 || ix >= n) continue;
+          const wx = -HALF + (ix + 0.5) * cell;
+          const wz = -HALF + (iz + 0.5) * cell;
+          if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
+          const i = iz * n + ix;
+          const cur = terr[i];
+          if (cur === 255 || cur === b.team) terr[i] = b.team;
+          else terr[i] = 254;
+        }
+      }
+    }
   }
 
   enqueueTrain(bld: Building, unitType: UnitType) {
@@ -3030,7 +3109,7 @@ export class Game {
     const d = UNITS[unitType];
     if (!d || d.from !== bld.type) {
       if (bld.team === 0 && unitType !== "worker")
-        this.banner("Train people at the hall. Craft weapons, then call them to arms.", 2);
+        this.banner("Arm adults at the barracks — people are born, not trained", 2);
       return false;
     }
     const team = bld.team;
@@ -3040,10 +3119,21 @@ export class Game {
       if (team === 0) this.banner("Requires " + AGES[d.age] + " Age", 1.4);
       return false;
     }
-    if (this.popNow(team) + this.queued(team) >= this.popCap(team)) {
-      if (team === 0) this.banner("Raise more huts — cap is " + this.popCap(team), 1.6);
-      this.onSfx("invalid");
-      return false;
+    if (unitType === "worker") {
+      if (team === 0 && this.state.growthPolicy !== "welcome") {
+        this.banner("People are born, not trained. Set growth to Welcome when you can feed someone new", 2.2);
+        this.onSfx("invalid");
+        return false;
+      }
+      if (reserveSeconds(this, team) < 600) {
+        if (team === 0) this.banner("Need food stored for about ten minutes before someone new can stay", 2);
+        return false;
+      }
+      if (this.popNow(team) + this.queued(team) >= this.popCap(team)) {
+        if (team === 0) this.banner("Raise more huts — cap is " + this.popCap(team), 1.6);
+        this.onSfx("invalid");
+        return false;
+      }
     }
     const cost = { food: d.food, wood: d.wood, stone: d.stone, copper: d.copper, iron: d.iron };
     if (!this.canAfford(team, cost)) {
@@ -3085,7 +3175,15 @@ export class Game {
     const c = AGE_COST[tribe.age + 1];
     if (!c) return;
     if (this.popNow(team) < (c.pop || 0)) {
-      if (team === 0) this.banner("Need " + c.pop + " people — tap Gatherer", 1.8);
+      if (team === 0) this.banner("Need " + c.pop + " people living here — they are born, not trained", 1.8);
+      return;
+    }
+    const kinds = new Set(
+      this.state.buildings.filter((b) => b.team === team && this.finished(b)).map((b) => b.type),
+    );
+    if (kinds.size < tribe.age + 2) {
+      if (team === 0)
+        this.banner("The village is too thin — raise another kind of building before the next age", 2);
       return;
     }
     if (!this.canAfford(team, c)) {
@@ -3209,12 +3307,14 @@ export class Game {
       );
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
+        const marked = this.chopMarks.has(n.id);
         if (
+          !marked &&
           !camps.some((c) => Math.hypot(c.x - n.x, c.z - n.z) < LUMBER_R) &&
           Math.hypot(n.x - this.campOf(u.team).x, n.z - this.campOf(u.team).z) > 28
         )
           continue;
-        consider(n, n.x, n.z);
+        consider(n, n.x, n.z, marked ? -1e7 : 0);
       }
     } else if (job === "stone") {
       const quarries = this.state.buildings.filter(
@@ -3653,6 +3753,7 @@ export class Game {
           node.amount--;
           if (node.amount <= 0) {
             node.amount = 0;
+            if (node.kind === "tree") this.chopMarks.delete(node.id);
             node.regenT =
               node.kind === "tree"
                 ? 170 + Math.random() * 80
@@ -3804,13 +3905,36 @@ export class Game {
     if (target.team === 0 && attacker.team !== 0 && attacker.team !== 3 && this.isArmed(target))
       this.makeHostile(attacker.team);
     if (target.hp <= 0) {
+      if (
+        target.kind === "unit" &&
+        target.type === "worker" &&
+        attacker.team === 0 &&
+        (target.team === 1 || target.team === 2) &&
+        this.popNow(0) < this.popCap(0) &&
+        !isDependent(this, target)
+      ) {
+        target.team = 0;
+        target.hp = Math.max(16, Math.round(target.maxHp * 0.45));
+        target.order = "move";
+        target.pillage = -1;
+        target.target = null;
+        target.job = null;
+        const home = this.campOf(0);
+        target.tx = home.x;
+        target.tz = home.z;
+        this.banner("Taken — they walk to your camp", 1.8);
+        this.onSfx("train");
+        return;
+      }
       target.hp = 0;
-      this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#6a3030", 12);
+      this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
+      if (target.kind === "building" && attacker.team !== target.team)
+        this.lootBuilding(attacker.team, target);
       this.addFloater(
         target.x,
         target.y + 2.4,
         target.z,
-        target.kind === "building" ? "Destroyed" : "Fallen",
+        target.kind === "building" ? (target.type === "townhall" ? "Fallen" : "Burned") : "Fallen",
         "#c44",
       );
       if (target.kind === "building") this.state.walkDirty = true;
@@ -3849,6 +3973,49 @@ export class Game {
     if (from.team === 0 || to.team === 0) this.onSfx("bow");
     if (this.state.projectiles.length > 48)
       this.state.projectiles.splice(0, this.state.projectiles.length - 48);
+  }
+
+  lootBuilding(attackerTeam: number, b: Building) {
+    const victim = this.tribe(b.team);
+    const raider = this.tribe(attackerTeam);
+    if (!victim || !raider || b.team === attackerTeam) return;
+    const take = (
+      key: "food" | "wood" | "stone" | "copper" | "iron",
+      frac: number,
+      cap: number,
+    ) => {
+      const n = Math.min(victim[key], cap, Math.max(0, Math.floor(victim[key] * frac)));
+      if (n <= 0) return 0;
+      victim[key] -= n;
+      raider[key] += n;
+      return n;
+    };
+    let food = 0;
+    let wood = 0;
+    let stone = 0;
+    let copper = 0;
+    let iron = 0;
+    if (b.type === "warehouse" || b.type === "townhall") {
+      food = take("food", 0.18, 80);
+      wood = take("wood", 0.12, 40);
+      stone = take("stone", 0.12, 24);
+    } else if (b.type === "lumber") wood = take("wood", 0.1, 24);
+    else if (b.type === "quarry") stone = take("stone", 0.14, 18);
+    else if (b.type === "farm" || b.type === "hut" || b.type === "dock")
+      food = take("food", 0.08, 20);
+    else if (b.type === "forge") {
+      copper = take("copper", 0.25, 6);
+      iron = take("iron", 0.25, 4);
+    } else food = take("food", 0.05, 12);
+    if (attackerTeam !== 0) return;
+    const bits = [
+      food ? food + " food" : "",
+      wood ? wood + " logs" : "",
+      stone ? stone + " stone" : "",
+      copper ? copper + " copper" : "",
+      iron ? iron + " iron" : "",
+    ].filter(Boolean);
+    this.banner(bits.length ? "Pillaged " + bits.join(", ") : "Burned — the stores were empty", 1.8);
   }
 
   combatAI(u: Unit, dt: number) {
@@ -4062,32 +4229,94 @@ export class Game {
       if (b.hp <= 0 || b.build < 1 || !b.queue.length) continue;
       const q = b.queue[0];
       q.t += dt;
-      if (q.t >= q.max) {
-        b.queue.shift();
-        if (this.popNow(b.team) >= this.popCap(b.team)) {
-          const d = UNITS[q.unit];
-          const tr = this.tribe(b.team);
-          if (tr) {
-            tr.food += d.food;
-            tr.wood += d.wood;
-            tr.stone += d.stone;
-          }
-          continue;
+      if (q.t < q.max) continue;
+      b.queue.shift();
+      const d = UNITS[q.unit];
+      const tr = this.tribe(b.team);
+      const refund = () => {
+        if (!tr || !d) return;
+        tr.food += d.food;
+        tr.wood += d.wood;
+        tr.stone += d.stone;
+        tr.copper += d.copper || 0;
+        tr.iron += d.iron || 0;
+      };
+      if (q.unit === "worker") {
+        if (!this.welcomeSoul(b.team, b.x, b.z)) {
+          refund();
+          if (b.team === 0)
+            this.banner("No one walks in. People are born, welcomed, or taken — not trained", 2.2);
         }
-        const a = Math.random() * Math.PI * 2;
-        const off = Math.max(b.w, b.d) * 0.6 + 1.2;
-        const u = this.spawnUnit(q.unit, b.x + Math.cos(a) * off, b.z + Math.sin(a) * off, b.team);
-        if (b.rally) {
-          u.tx = b.rally.x;
-          u.tz = b.rally.z;
-          u.order = "move";
-        } else if (q.unit === "worker") u.order = "idle";
-        if (b.team === 0) {
-          this.onSfx(q.unit === "worker" ? "birth" : "train");
-          this.addFloater(u.x, u.y + 2, u.z, UNITS[q.unit].name, "#c9e8a0");
-        }
+        continue;
+      }
+      const adult = this.state.units.find(
+        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
+      );
+      if (!adult || this.popNow(b.team) > this.popCap(b.team)) {
+        refund();
+        if (b.team === 0) this.banner("No free adult to arm", 1.6);
+        continue;
+      }
+      adult.type = q.unit;
+      adult.hp = Math.round(d.hp * AGE_STAT[tr?.age ?? 0]);
+      adult.maxHp = adult.hp;
+      adult.speed = d.speed;
+      adult.range = d.range;
+      adult.dmg = d.dmg * AGE_STAT[tr?.age ?? 0];
+      adult.rof = d.rof;
+      adult.r = d.r;
+      adult.order = "idle";
+      adult.job = null;
+      adult.node = null;
+      adult.militia = false;
+      if (b.team === 0) {
+        this.onSfx("train");
+        this.addFloater(adult.x, adult.y + 2, adult.z, d.name, "#c9e8a0");
       }
     }
+  }
+
+  welcomeSoul(team: number, x: number, z: number) {
+    if (team === 0 && this.state.growthPolicy !== "welcome") return false;
+    if (this.popNow(team) >= this.popCap(team)) return false;
+    if (reserveSeconds(this, team) < 600) return false;
+    const u = this.spawnUnit("worker", x + 6, z + 4, team);
+    u.order = "move";
+    u.tx = x;
+    u.tz = z;
+    if (team === 0) {
+      this.banner("Kin from the paths join the village", 1.8);
+      this.onSfx("birth");
+    }
+    return true;
+  }
+
+  markChop(ids: number[]) {
+    let n = 0;
+    for (const id of ids) {
+      const tree = this.state.trees.find((t) => t.id === id && t.amount > 0);
+      if (!tree || this.chopMarks.has(id)) continue;
+      this.chopMarks.add(id);
+      n++;
+    }
+    if (!n) {
+      let cleared = 0;
+      for (const id of ids) if (this.chopMarks.delete(id)) cleared++;
+      if (cleared) this.banner("Cleared the tree marks", 1.2);
+      return 0;
+    }
+    const idle = this.state.units.filter(
+      (u) => u.team === 0 && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
+    );
+    for (const u of idle) {
+      if (u.jobLock && u.job && u.job !== "wood") continue;
+      u.job = "wood";
+      u.order = "idle";
+      u.node = null;
+    }
+    this.banner(n + " trees marked — people will fell them", 1.6);
+    this.onSfx("click");
+    return n;
   }
 
   updateTowers(dt: number) {
@@ -5041,7 +5270,7 @@ export class Game {
         name: r.name,
         res: r.res,
         owner: r.owner,
-        color: r.owner >= 0 ? TEAM_COLORS[r.owner] || "#6a5a48" : "#6a5a48",
+        color: r.owner >= 0 ? this.tribe(r.owner)?.color || "#6a5a48" : "#6a5a48",
         x: r.x,
         z: r.z,
         r: r.r,

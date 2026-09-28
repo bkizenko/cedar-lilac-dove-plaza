@@ -306,10 +306,25 @@ export class Engine {
           maxx = Math.max(this.drag.sx, this.drag.x);
         const miny = Math.min(this.drag.sy, this.drag.y),
           maxy = Math.max(this.drag.sy, this.drag.y);
+        let picked = 0;
         for (const u of this.game.state.units) {
           if (u.team !== 0 || u.hp <= 0) continue;
           const p = this.view.project(u.x, u.y + 0.6, u.z);
-          if (p.x >= minx && p.x <= maxx && p.y >= miny && p.y <= maxy) u.selected = true;
+          if (p.behind) continue;
+          if (p.x >= minx && p.x <= maxx && p.y >= miny && p.y <= maxy) {
+            u.selected = true;
+            picked++;
+          }
+        }
+        if (picked === 0) {
+          const ids: number[] = [];
+          for (const tree of this.game.state.trees) {
+            if (tree.amount <= 0 || !this.game.visibleAt(tree.x, tree.z)) continue;
+            const sp = this.view.project(tree.x, tree.y + 1.2, tree.z);
+            if (sp.behind) continue;
+            if (sp.x >= minx && sp.x <= maxx && sp.y >= miny && sp.y <= maxy) ids.push(tree.id);
+          }
+          if (ids.length) this.game.markChop(ids);
         }
       } else {
         this.leftClick(p.x, p.y, e.shiftKey);
@@ -611,6 +626,7 @@ export class Engine {
         this.game.popNow(),
         dt,
         this.game.state.paused,
+        this.game.seasonMix().name,
       );
       if (this.keys.has("PageUp")) this.view.dist *= Math.exp(-dt);
       if (this.keys.has("PageDown")) this.view.dist *= Math.exp(dt);

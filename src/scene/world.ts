@@ -154,6 +154,8 @@ export class WorldView {
   godrays: THREE.Mesh[] = [];
   fowTex: THREE.DataTexture | null = null;
   fowData = new Uint8Array(FOW * FOW * 4);
+  terrTex: THREE.DataTexture | null = null;
+  terrData = new Uint8Array(FOW * FOW * 4);
   fowMesh: THREE.Mesh | null = null;
   rain: THREE.Points | null = null;
   rainGeo: THREE.BufferGeometry | null = null;
@@ -917,7 +919,11 @@ export class WorldView {
   project(x: number, y: number, z: number) {
     _p.set(x, y, z).project(this.camera);
     const el = this.renderer.domElement;
-    return { x: (_p.x * 0.5 + 0.5) * el.clientWidth, y: (-_p.y * 0.5 + 0.5) * el.clientHeight };
+    return {
+      x: (_p.x * 0.5 + 0.5) * el.clientWidth,
+      y: (-_p.y * 0.5 + 0.5) * el.clientHeight,
+      behind: _p.z > 1,
+    };
   }
 
   sync(game: Game, dt: number) {
@@ -1613,11 +1619,16 @@ export class WorldView {
     this.fowTex.magFilter = THREE.LinearFilter;
     this.fowTex.minFilter = THREE.LinearFilter;
     this.fowTex.needsUpdate = true;
+    this.terrTex = new THREE.DataTexture(this.terrData, FOW, FOW, THREE.RGBAFormat);
+    this.terrTex.magFilter = THREE.LinearFilter;
+    this.terrTex.minFilter = THREE.LinearFilter;
+    this.terrTex.needsUpdate = true;
     const mat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
       uniforms: {
         uMap: { value: this.fowTex },
+        uTerr: { value: this.terrTex },
         uHalf: { value: HALF },
         uSize: { value: MAP },
       },
@@ -1632,11 +1643,19 @@ export class WorldView {
         }`,
       fragmentShader: `
         uniform sampler2D uMap;
+        uniform sampler2D uTerr;
         varying vec2 vUv;
         void main() {
           float v = texture2D(uMap, vUv).r;
-          float a = v > 0.7 ? 0.0 : v > 0.2 ? 0.38 : 0.72;
-          gl_FragColor = vec4(0.05, 0.06, 0.07, a);
+          vec4 terr = texture2D(uTerr, vUv);
+          float live = smoothstep(0.55, 0.85, v);
+          float shroudA = mix(0.74, 0.40, smoothstep(0.18, 0.45, v)) * (1.0 - live);
+          float seen = smoothstep(0.12, 0.28, v);
+          float wash = terr.a * seen * (live > 0.5 ? 0.2 : 0.12);
+          float a = max(shroudA, wash);
+          if (a < 0.012) discard;
+          vec3 col = mix(vec3(0.04, 0.05, 0.06), terr.rgb, wash / max(a, 0.001));
+          gl_FragColor = vec4(col, a);
         }`,
     });
     this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP), mat);
@@ -1688,6 +1707,13 @@ export class WorldView {
   private syncFow(game: Game) {
     if (!this.fowTex) return;
     const src = game.vision;
+    const cols: [number, number, number][] = [];
+    for (let t = 0; t < 3; t++) {
+      const hex = game.tribe(t)?.color || "#c4a060";
+      const n = Number.parseInt(hex.replace("#", ""), 16);
+      cols.push([(n >> 16) & 255, (n >> 8) & 255, n & 255]);
+    }
+    const terr = game.territory;
     for (let i = 0; i < src.length; i++) {
       const v = src[i] === 2 ? 255 : src[i] === 1 ? 90 : 0;
       const o = i * 4;
@@ -1695,8 +1721,28 @@ export class WorldView {
       this.fowData[o + 1] = v;
       this.fowData[o + 2] = v;
       this.fowData[o + 3] = 255;
+      const team = terr ? terr[i] : 255;
+      const seen = src[i] > 0;
+      if (!seen || team === 255 || team === undefined) {
+        this.terrData[o] = 0;
+        this.terrData[o + 1] = 0;
+        this.terrData[o + 2] = 0;
+        this.terrData[o + 3] = 0;
+      } else if (team === 254) {
+        this.terrData[o] = 196;
+        this.terrData[o + 1] = 154;
+        this.terrData[o + 2] = 92;
+        this.terrData[o + 3] = 255;
+      } else {
+        const c = cols[team] || cols[0];
+        this.terrData[o] = c[0];
+        this.terrData[o + 1] = c[1];
+        this.terrData[o + 2] = c[2];
+        this.terrData[o + 3] = 255;
+      }
     }
     this.fowTex.needsUpdate = true;
+    if (this.terrTex) this.terrTex.needsUpdate = true;
   }
 
   private syncRain(game: Game, dt: number) {

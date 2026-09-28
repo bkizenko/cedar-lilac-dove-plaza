@@ -404,7 +404,8 @@ test("selecting a building clears unit selection and trains into its queue while
   g.selectEntity(hall);
   assert.equal(g.selectedUnits().length, 0);
   assert.equal(g.state.selBld, hall);
-  g.tribe(0).food = 100;
+  g.state.growthPolicy = "welcome";
+  g.tribe(0).food = 5000;
   g.state.paused = true;
   g.trainSelected("worker");
   assert.equal(hall.queue.length, 1);
@@ -613,4 +614,67 @@ test("winter exhausts wild food until spring", () => {
   g.state.weather = "clear";
   g.tickRegen(30);
   assert.ok(n.amount > 0);
+});
+
+test("people are born or welcomed, and soldiers are armed adults", () => {
+  const g = fixture(),
+    hall = g.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
+  const before = g.popNow(0);
+  assert.equal(g.enqueueTrain(hall, "worker"), false);
+  assert.equal(g.popNow(0), before);
+  g.state.growthPolicy = "welcome";
+  g.tribe(0).food = 5000;
+  assert.equal(g.enqueueTrain(hall, "worker"), true);
+  hall.queue[0].t = hall.queue[0].max;
+  g.updateTraining(0.01);
+  assert.equal(g.popNow(0), before + 1);
+  const barracks = g.makeBld("barracks", hall.x + 16, hall.z, 0);
+  g.state.buildings.push(barracks);
+  g.tribe(0).food = 500;
+  g.tribe(0).wood = 80;
+  const workers = () => g.state.units.filter((u) => u.team === 0 && u.type === "worker" && u.hp > 0).length;
+  const w0 = workers();
+  const pop = g.popNow(0);
+  assert.equal(g.enqueueTrain(barracks, "spearman"), true);
+  barracks.queue[0].t = barracks.queue[0].max;
+  g.updateTraining(0.01);
+  assert.equal(g.popNow(0), pop);
+  assert.equal(workers(), w0 - 1);
+  assert.ok(g.state.units.some((u) => u.team === 0 && u.type === "spearman" && !u.militia));
+});
+
+test("marked trees are felled first, and burning a hall takes stores", async () => {
+  const { FOW, HALF, MAP } = await import("../src/game/constants.ts");
+  const g = fixture();
+  const home = g.campOf(0);
+  const far = g.state.trees.find((t) => t.amount > 0 && Math.hypot(t.x - home.x, t.z - home.z) > 40);
+  assert.ok(far);
+  assert.equal(g.markChop([far.id]), 1);
+  const u = g.state.units.find((x) => x.team === 0 && x.type === "worker" && x.hp > 0);
+  u.job = "wood";
+  assert.equal(g.findNode(u, "wood"), far);
+  assert.equal(g.markChop([far.id]), 0);
+  assert.equal(g.chopMarks.has(far.id), false);
+  g.updateVision(0);
+  const hall = g.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
+  const cell = MAP / FOW;
+  const ix = ((hall.x + HALF) / cell) | 0;
+  const iz = ((hall.z + HALF) / cell) | 0;
+  assert.equal(g.territory[iz * FOW + ix], 0);
+  const rivalHall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
+  const foe = g.state.units.find((x) => x.team === 1 && x.type === "worker" && x.hp > 0);
+  const atk = g.state.units.find((x) => x.team === 0 && x.type !== "worker" && x.hp > 0);
+  const pop = g.popNow(0);
+  foe.hp = 1;
+  g.dealDamage(atk, foe);
+  assert.equal(foe.team, 0);
+  assert.ok(foe.hp > 0);
+  assert.equal(g.popNow(0), pop + 1);
+  g.tribe(1).food = 100;
+  g.tribe(0).food = 10;
+  rivalHall.hp = 1;
+  g.dealDamage(atk, rivalHall);
+  assert.ok(rivalHall.hp <= 0);
+  assert.ok(g.tribe(0).food > 10);
+  assert.ok(g.tribe(1).food < 100);
 });

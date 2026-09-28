@@ -59,7 +59,7 @@ export const BUILDINGS: Record<
     pop: 8,
     hp: 1100,
     age: 0,
-    hint: "Heart of the tribe. Trains gatherers.",
+    hint: "Heart of the tribe. Children are born here. Welcome kin only when the stores can spare them.",
   },
   hut: {
     name: "Hut",

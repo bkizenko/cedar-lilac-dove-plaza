@@ -196,20 +196,24 @@ export class GameAudio {
     src.stop(now + dur + 0.02);
   }
 
-  setMood(mood: "peace" | "raid" | "pillage", age = 0, population = 0, dt = 0, paused = false) {
-    this.score.update(
-      this.score.calm
-        ? age >= 2
-          ? "adventure"
-          : "village"
-        : mood !== "peace"
-          ? "battle"
-          : age >= 1 || population >= 16
-            ? "adventure"
-            : "village",
-      dt,
-      paused,
-    );
+  setMood(
+    mood: "peace" | "raid" | "pillage",
+    age = 0,
+    population = 0,
+    dt = 0,
+    paused = false,
+    season = "Spring",
+  ) {
+    const battle = !this.score.calm && mood !== "peace";
+    const stage = battle
+      ? "battle"
+      : season === "Autumn"
+        ? "adventure"
+        : season === "Winter" || (age < 2 && population < 24)
+          ? "village"
+          : "adventure";
+    const duck = season === "Winter" ? 0.68 : season === "Autumn" ? 0.84 : 1;
+    this.score.update(stage, dt, paused, duck);
   }
   setMusicVolume(v: number) {
     this.score.setVolume(v);

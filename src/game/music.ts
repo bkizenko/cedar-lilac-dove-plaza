@@ -11,6 +11,7 @@ export class AcousticScore {
   calm = true;
   muted = false;
   error = "";
+  private seasonMul = 1;
   private tracks = new Map<MusicStage, HTMLAudioElement>();
   private levels: Record<MusicStage, number> = { village: 0, adventure: 0, battle: 0 };
   private dwell = 0;
@@ -54,7 +55,7 @@ export class AcousticScore {
       else if (!this.paused) void a.play().catch(this.playbackError);
     }
   };
-  update(requested: MusicStage, dt: number, paused: boolean) {
+  update(requested: MusicStage, dt: number, paused: boolean, seasonMul = 1) {
     if (!this.tracks.size || this.disposed) return;
     if (paused !== this.paused) {
       this.paused = paused;
@@ -81,6 +82,7 @@ export class AcousticScore {
         Math.sign(target - this.levels[stage]) *
         Math.min(Math.abs(target - this.levels[stage]), dt / 4);
     }
+    this.seasonMul = seasonMul;
     this.applyVolume();
   }
   setVolume(v: number) {
@@ -93,7 +95,8 @@ export class AcousticScore {
     this.applyVolume();
   }
   private applyVolume() {
-    for (const [s, a] of this.tracks) a.volume = this.muted ? 0 : this.volume * this.levels[s];
+    for (const [s, a] of this.tracks)
+      a.volume = this.muted ? 0 : this.volume * this.levels[s] * this.seasonMul;
   }
   dispose() {
     this.disposed = true;
