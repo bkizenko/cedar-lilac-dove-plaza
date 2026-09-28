@@ -6,9 +6,9 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   appNameFromHost,
-  createHeadInjector,
+  createHeadInjector as createHeadInjectorImpl,
   grokXCreatorHeadTags,
-  injectGrokPwaHead,
+  injectGrokPwaHead as injectGrokPwaHeadImpl,
   isDocumentPath,
   isInstallQuery,
   publicAppHost,
@@ -20,6 +20,11 @@ import {
 import { renderInstallPage } from "./grok-pwa-plugin.mjs";
 
 const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+// Brand fixtures must not inherit the actual game's site.json or share images.
+const EMPTY_SITE_ROOT = mkdtempSync(join(tmpdir(), "grok-head-fixture-"));
+const injectGrokPwaHead = (html, ctx = {}) => injectGrokPwaHeadImpl(html, { cwd: EMPTY_SITE_ROOT, ...ctx });
+const createHeadInjector = (ctx = {}) => createHeadInjectorImpl({ cwd: EMPTY_SITE_ROOT, ...ctx });
+
 
 test("injects before </head>", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head><body></body></html>");

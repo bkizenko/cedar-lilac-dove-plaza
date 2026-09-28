@@ -1,3 +1,5 @@
+import { SettlementLedger } from "./SettlementLedger";
+import { PlayTools } from "./PlayTools";
 import { useEffect, useRef, useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot } from "@/game/types";
@@ -118,6 +120,8 @@ export function GameApp() {
     <div className="relative h-dvh w-full overflow-hidden bg-ink">
       <canvas
         ref={canvasRef}
+        tabIndex={0}
+        aria-label="Game world. H for keyboard help; L for village ledger; Tab for menus."
         className="absolute inset-0 size-full touch-none"
         style={{ display: "block", cursor: hud.placing ? "crosshair" : "default" }}
       />
@@ -133,13 +137,22 @@ export function GameApp() {
         />
       )}
       <Hud hud={hud} engine={engineRef.current} />
+      <PlayTools engine={engineRef.current} />
+      <SettlementLedger engine={engineRef.current} />
       {hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
-          <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">An island at first light</p>
-          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">DAWN</h1>
-          <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">OF EMPIRE</p>
+          <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">
+            An island at first light
+          </p>
+          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">
+            DAWN
+          </h1>
+          <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">
+            OF EMPIRE
+          </p>
           <p className="mt-8 max-w-sm px-6 text-center text-sm leading-relaxed text-parchment">
-            Click a berry thicket to forage. Raise huts, then a lumber camp among the pines. Trade with the two tribes. Hold the provinces.
+            Select a gatherer with C, cycle resources with brackets, and press R to forage. Raise
+            huts, then a lumber camp among the pines. Trade with the two tribes. Hold the provinces.
           </p>
           <button
             type="button"
@@ -148,14 +161,32 @@ export function GameApp() {
           >
             Enter the island
           </button>
-          <p className="mt-4 text-[11px] text-parchment-dim">Music starts here — click once</p>
+          {engineRef.current?.hasSavedGame() && (
+            <button
+              type="button"
+              className="mt-3 rounded-lg border border-bronze px-6 py-2 text-parchment"
+              onClick={() => engineRef.current?.resumeSaved()}
+            >
+              Resume saved village
+            </button>
+          )}
+          {hud.banner && <p role="status">{hud.banner}</p>}
+          <p className="mt-4 text-[11px] text-parchment-dim">
+            Press Enter to begin · H for keyboard controls
+          </p>
         </div>
       ) : null}
       {!hud.started && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_70%_20%,#6a4a20_0%,#1a160e_55%,#0c0e0a_100%)]">
-          <p className="font-display text-xs tracking-[0.35em] text-bronze uppercase">An island at first light</p>
-          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">DAWN</h1>
-          <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">OF EMPIRE</p>
+          <p className="font-display text-xs tracking-[0.35em] text-bronze uppercase">
+            An island at first light
+          </p>
+          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">
+            DAWN
+          </h1>
+          <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">
+            OF EMPIRE
+          </p>
           <p className="mt-6 max-w-md px-6 text-center text-sm leading-relaxed text-parchment-dim">
             {fail ? fail : "Raising the camp…"}
           </p>

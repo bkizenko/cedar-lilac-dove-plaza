@@ -1,4 +1,5 @@
-export type UnitType = "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
+export type UnitType =
+  "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
   | "townhall"
@@ -20,9 +21,20 @@ export type BldType =
   | "grove";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type Order = "idle" | "move" | "gather" | "return" | "attack" | "attackmove" | "hold" | "trade" | "explore" | "build";
+export type Order =
+  | "idle"
+  | "move"
+  | "gather"
+  | "return"
+  | "attack"
+  | "attackmove"
+  | "hold"
+  | "trade"
+  | "explore"
+  | "build";
 
-export type Weather = "clear" | "mist" | "rain" | "storm" | "frost" | "golden" | "flood" | "drought";
+export type Weather =
+  "clear" | "mist" | "rain" | "storm" | "frost" | "golden" | "flood" | "drought";
 
 export type SeasonName = "Spring" | "Summer" | "Autumn" | "Winter";
 
@@ -36,11 +48,21 @@ export type SeasonMix = {
   yearFrac: number;
 };
 
-export type Cost = { food?: number; wood?: number; stone?: number; copper?: number; iron?: number; pop?: number };
+export type Cost = {
+  food?: number;
+  wood?: number;
+  stone?: number;
+  copper?: number;
+  iron?: number;
+  pop?: number;
+};
 
 export type TradeDeal = { give: ResKind; giveAmt: number; get: ResKind; getAmt: number };
 
 export type TradeRoute = {
+  paused?: boolean;
+  workerId?: number;
+  status?: string;
   id: number;
   team: number;
   rival: string;
@@ -114,6 +136,13 @@ export type Unit = {
   r: number;
   selected: boolean;
   order: Order;
+  maturesAt?: number;
+  workReason?: string;
+  workCheckAt?: number;
+  blockedTask?: number;
+  retryWorkAt?: number;
+  emergency?: { until: number; job: ResKind | null; jobLock: boolean; autoArmed: boolean };
+  attackDestination?: { x: number; z: number } | null;
   tx: number;
   tz: number;
   job: ResKind | null;
@@ -157,6 +186,9 @@ export type Building = {
   cd: number;
   build: number;
   reclaimed: boolean;
+  fertility?: number;
+  fallowYear?: number;
+  crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean };
 };
 
 export type ResourceNode = {
@@ -211,6 +243,9 @@ export type Tribe = {
   expand: number;
   tech: number;
   lastRaid: number;
+  trust?: number;
+  recoveryUntil?: number;
+  intent?: string;
   thinkT: number;
   alive: boolean;
   hostile: boolean;
@@ -242,6 +277,9 @@ export type Particle = {
 };
 
 export type GameState = {
+  growthPolicy?: "stable" | "welcome";
+  laborPolicy?: "balanced" | "food" | "build";
+  conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
   time: number;
   age: number;
@@ -333,7 +371,19 @@ export type HudSnapshot = {
   canAge: boolean;
   ageCost: Cost | null;
   nextAge: string | null;
-  tribes: { id: number; name: string; color: string; age: number; alive: boolean; hostile: boolean; ally: boolean; spec: string; leader: string; csType: string; tension: number }[];
+  tribes: {
+    id: number;
+    name: string;
+    color: string;
+    age: number;
+    alive: boolean;
+    hostile: boolean;
+    ally: boolean;
+    spec: string;
+    leader: string;
+    csType: string;
+    tension: number;
+  }[];
   trainOptions: { type: UnitType; name: string; cost: Cost; age: number }[];
   buildOptions: { type: BldType; name: string; cost: Cost; age: number; hint: string }[];
   fps: number;
@@ -372,9 +422,25 @@ export type HudSnapshot = {
     army: { name: string; hint: string };
   } | null;
   routeOffer: RouteOffer | null;
-  routes: { rival: string; give: ResKind; giveAmt: number; get: ResKind; getAmt: number; t: number }[];
+  routes: {
+    rival: string;
+    give: ResKind;
+    giveAmt: number;
+    get: ResKind;
+    getAmt: number;
+    t: number;
+  }[];
   event: string | null;
-  regions: { name: string; res: ResKind; owner: number; color: string; x: number; z: number; r: number; cluster: string }[];
+  regions: {
+    name: string;
+    res: ResKind;
+    owner: number;
+    color: string;
+    x: number;
+    z: number;
+    r: number;
+    cluster: string;
+  }[];
   richRes: ResKind;
   clusters: { name: string; bonus: string; held: boolean }[];
   prestige: number;

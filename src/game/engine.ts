@@ -1,7 +1,9 @@
+import { decodeGame } from "./persistence";
+import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
-import { saveGame } from "./save";
+import { saveGame, loadRaw, hasSave } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
@@ -25,6 +27,8 @@ export class Engine {
   panDrag: { x: number; y: number } | null = null;
   rotDrag: { x: number; y: number; sx: number; sy: number } | null = null;
   pinch: { d: number; dist: number } | null = null;
+  keyboard = new KeyboardCommands(this);
+  private simAccumulator = 0;
   moveMode = false;
   pointer = { x: 0, y: 0 };
   ghostPos = { x: 0, z: 0 };
@@ -42,7 +46,8 @@ export class Engine {
     this.game.quality = this.view.quality;
     this.game.onSfx = (n) => this.audio.play(n);
     this.view.onContextLost = () => {
-      if (this.game.quality !== "low") this.setQuality(this.game.quality === "high" ? "med" : "low");
+      if (this.game.quality !== "low")
+        this.setQuality(this.game.quality === "high" ? "med" : "low");
     };
     this.view.onContextRestored = () => {
       try {
@@ -63,7 +68,7 @@ export class Engine {
     this.view.resize();
     this.ro = new ResizeObserver(() => this.view.resize());
     this.ro.observe(canvas.parentElement || canvas);
-    this.pushHud();
+    // begin() publishes the first HUD after the tribes and world exist.
     this.installProbe();
     (window as unknown as { __engine?: Engine }).__engine = this;
   }
@@ -103,10 +108,42 @@ export class Engine {
   enterIsland() {
     this.audio.unlock();
     this.game.enterIsland();
+    this.canvas.focus();
+    this.pushHud();
+  }
+
+  hasSavedGame() {
+    return hasSave();
+  }
+  saveNow() {
+    this.game.banner(saveGame(this.game) ? "Village saved" : "Storage unavailable or full", 3);
+    this.pushHud();
+  }
+  resumeSaved() {
+    try {
+      const raw = loadRaw();
+      if (!raw) throw new Error("No compatible save. Older partial saves cannot be restored.");
+      const restored = decodeGame(raw);
+      restored.onSfx = (n) => this.audio.play(n);
+      restored.quality = this.game.quality;
+      restored.muted = this.game.muted;
+      this.game = restored;
+      this.simAccumulator = 0;
+      this.keyboard.groups.clear();
+      this.view.rebuild(restored);
+      this.homeLook();
+      this.audio.unlock();
+      this.canvas.focus();
+      restored.banner("Village restored · P to resume", 4);
+    } catch (error) {
+      this.game.banner(error instanceof Error ? error.message : "Cannot restore save", 4);
+    }
     this.pushHud();
   }
 
   restart() {
+    this.simAccumulator = 0;
+    this.keyboard.groups.clear();
     try {
       this.game.reset();
       this.game.awaitingStart = false;
@@ -142,66 +179,32 @@ export class Engine {
     c.addEventListener("pointermove", this.onPointerMove);
     c.addEventListener("pointerup", this.onPointerUp);
     c.addEventListener("pointercancel", this.onPointerUp);
-    c.addEventListener("wheel", this.onWheel, { passive: false });
+    window.addEventListener("wheel", this.onWheel, { passive: false });
     c.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("visibilitychange", this.onVis);
   }
 
   private onResize = () => this.view.resize();
-  private onBlur = () => this.keys.clear();
+  private onBlur = () => {
+    this.keys.clear();
+    this.simAccumulator = 0;
+  };
   private onVis = () => {
+    this.keys.clear();
+    this.simAccumulator = 0;
     if (document.visibilityState === "hidden") saveGame(this.game);
-    if (document.visibilityState === "visible" && this.audio.ctx?.state === "suspended") void this.audio.ctx.resume();
+    if (document.visibilityState === "visible" && this.audio.ctx?.state === "suspended")
+      void this.audio.ctx.resume();
   };
 
-  private onKeyDown = (e: KeyboardEvent) => {
-    if (e.repeat && (e.code === "Space" || e.code === "KeyP")) return;
-    this.keys.add(e.code);
-    const block = new Set(["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-    if (block.has(e.code)) e.preventDefault();
-    if (!this.game.started) return;
-    if (e.code === "Escape") {
-      this.game.state.placing = null;
-      this.game.state.pendingAge = false;
-      this.view.setGhost(null, 0, 0, 0, false);
-      this.moveMode = false;
-    }
-    if (e.code === "KeyI") this.focusIdle();
-    if (e.code === "KeyG") this.trainPeople();
-    if (e.code === "KeyT") this.cycleTrade();
-    if (e.code === "KeyX") this.explore();
-    if (e.code === "KeyP" || e.code === "Space") {
-      this.game.state.paused = !this.game.state.paused;
-    }
-    if (e.code === "Equal" || e.code === "NumpadAdd") this.game.state.speed = this.game.state.speed >= 2 ? 4 : 2;
-    if (e.code === "Minus" || e.code === "NumpadSubtract") this.game.state.speed = this.game.state.speed >= 4 ? 2 : 1;
-    if (e.code === "KeyF") {
-      const hall = this.game.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
-      if (hall) this.view.look.set(hall.x, hall.y + 0.5, hall.z);
-    }
-    if (e.code === "KeyM") this.toggleMute();
-    const map: Record<string, number> = {
-      Digit1: 0,
-      Digit2: 1,
-      Digit3: 2,
-      Digit4: 3,
-      Digit5: 4,
-      Digit6: 5,
-      Digit7: 6,
-      Digit8: 7,
-    };
-    if (map[e.code] !== undefined && !e.metaKey && !e.ctrlKey) {
-      const type = BUILD_ORDER[map[e.code]];
-      if (type) this.setPlacing(type);
-    }
-    if (e.code === "KeyH") this.game.banner("WASD pan · RMB rotate · wheel zoom · LMB select · RMB move", 3);
-  };
+  private onKeyDown = (e: KeyboardEvent) => this.keyboard.key(e);
 
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.code);
   };
 
   private onWheel = (e: WheelEvent) => {
+    if ((e.target as HTMLElement | null)?.closest("dialog, input, select, textarea")) return;
     e.preventDefault();
     const s = Math.sign(e.deltaY);
     this.view.dist *= s > 0 ? 1.08 : 0.92;
@@ -213,6 +216,8 @@ export class Engine {
   }
 
   private onPointerDown = (e: PointerEvent) => {
+    this.keyboard.mode = false;
+    this.canvas.focus();
     this.canvas.setPointerCapture(e.pointerId);
     const p = this.canvasXY(e);
     this.pointer.x = p.x;
@@ -296,9 +301,16 @@ export class Engine {
       const dx = this.drag.x - this.drag.sx;
       const dy = this.drag.y - this.drag.sy;
       if (Math.hypot(dx, dy) > 8) {
-        const a = this.view.groundAt(this.drag.sx, this.drag.sy);
-        const b = this.view.groundAt(this.drag.x, this.drag.y);
-        if (a && b) this.game.selectBox(a.x, a.z, b.x, b.z);
+        if (!e.shiftKey) this.game.clearSelect();
+        const minx = Math.min(this.drag.sx, this.drag.x),
+          maxx = Math.max(this.drag.sx, this.drag.x);
+        const miny = Math.min(this.drag.sy, this.drag.y),
+          maxy = Math.max(this.drag.sy, this.drag.y);
+        for (const u of this.game.state.units) {
+          if (u.team !== 0 || u.hp <= 0) continue;
+          const p = this.view.project(u.x, u.y + 0.6, u.z);
+          if (p.x >= minx && p.x <= maxx && p.y >= miny && p.y <= maxy) u.selected = true;
+        }
       } else {
         this.leftClick(p.x, p.y, e.shiftKey);
       }
@@ -306,7 +318,7 @@ export class Engine {
     }
   };
 
-  private leftClick(cx: number, cy: number, additive: boolean) {
+  leftClick(cx: number, cy: number, additive: boolean) {
     const g = this.view.groundAt(cx, cy);
     if (!g) {
       if (this.game.state.placing) this.game.banner("Aim at the valley floor", 1.2);
@@ -324,16 +336,13 @@ export class Engine {
       this.moveMode = false;
       return;
     }
-    const node = this.game.resourceAt(g.x, g.z);
-    if (node) {
-      this.game.issueGather(node);
-      this.pushHud();
-      return;
-    }
-    this.game.selectAt(g.x, g.z, additive);
+    const entity = this.view.pickEntity(cx, cy, this.game);
+    if (entity) this.game.selectEntity(entity, additive);
+    else this.game.selectAt(g.x, g.z, additive);
+    this.pushHud();
   }
 
-  private rightClick(cx: number, cy: number) {
+  rightClick(cx: number, cy: number) {
     const g = this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
@@ -341,10 +350,10 @@ export class Engine {
       this.view.setGhost(null, 0, 0, 0, false);
       return;
     }
-    const ent = this.game.entityAt(g.x, g.z);
-    if (ent && ent.team !== 0) this.game.issueAttack(ent);
+    const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
+    if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else {
-      const node = this.game.resourceAt(g.x, g.z);
+      const node = this.game.visibleAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null;
       if (node) this.game.issueGather(node);
       else this.game.issueMove(g.x, g.z);
     }
@@ -409,9 +418,9 @@ export class Engine {
           ? "Fishing Dock — click the white posts by the water"
           : t === "farm"
             ? "Farm — click the open grass near camp"
-          : t === "quarry"
-            ? "Quarry — click a grey outcrop. Costs logs only. People haul stone once it stands."
-            : "Click the valley to raise a " + d.name + "  ·  Esc cancel",
+            : t === "quarry"
+              ? "Quarry — click a grey outcrop. Costs logs only. People haul stone once it stands."
+              : "Click the valley to raise a " + d.name + "  ·  Esc cancel",
         2.6,
       );
     }
@@ -442,6 +451,7 @@ export class Engine {
 
   train(type: Parameters<Game["trainSelected"]>[0]) {
     this.game.trainSelected(type);
+    this.pushHud();
   }
 
   assignJob(job: Parameters<Game["assignJob"]>[0]) {
@@ -586,10 +596,27 @@ export class Engine {
         return;
       }
 
-      this.game.step(dt);
-      this.audio.setMood(this.game.musicMood());
-      this.updateGhost();
+      if (document.hidden) {
+        this.simAccumulator = 0;
+        return;
+      }
+      this.simAccumulator += dt;
+      while (this.simAccumulator >= 1 / 30) {
+        this.game.step(1 / 30);
+        this.simAccumulator -= 1 / 30;
+      }
+      this.audio.setMood(
+        this.game.musicMood(),
+        this.game.tribe(0).age,
+        this.game.popNow(),
+        dt,
+        this.game.state.paused,
+      );
+      if (this.keys.has("PageUp")) this.view.dist *= Math.exp(-dt);
+      if (this.keys.has("PageDown")) this.view.dist *= Math.exp(dt);
       this.view.updateCamera(dt);
+      if (this.keyboard.mode) this.keyboard.center();
+      this.updateGhost();
       this.view.sync(this.game, dt);
       this.view.render();
       this.tuneQuality(dt);
@@ -650,7 +677,8 @@ export class Engine {
   private installProbe() {
     window.__controlsTest = {
       getYaw: () => this.view.yaw,
-      getSpeed: () => Math.hypot(this.view.pan.x, this.view.pan.z) + (this.running ? this.view.dist * 0.001 : 0),
+      getSpeed: () =>
+        Math.hypot(this.view.pan.x, this.view.pan.z) + (this.running ? this.view.dist * 0.001 : 0),
       setKeys: (codes: string[]) => {
         this.keys.clear();
         for (const c of codes) this.keys.add(c);
@@ -672,6 +700,8 @@ export class Engine {
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
+    this.canvas.removeEventListener("pointercancel", this.onPointerUp);
+    window.removeEventListener("wheel", this.onWheel);
     this.view.dispose();
     this.audio.dispose();
   }

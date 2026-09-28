@@ -29,7 +29,16 @@ import {
   type MatKit,
 } from "./meshes";
 
-const UNIT_TYPES: UnitType[] = ["worker", "spearman", "archer", "swordsman", "cavalry", "leader", "warden", "ranger"];
+const UNIT_TYPES: UnitType[] = [
+  "worker",
+  "spearman",
+  "archer",
+  "swordsman",
+  "cavalry",
+  "leader",
+  "warden",
+  "ranger",
+];
 const BLD_TYPES: BldType[] = [
   "townhall",
   "hut",
@@ -108,7 +117,10 @@ export class WorldView {
   bushes!: THREE.InstancedMesh;
   fish: THREE.InstancedMesh | null = null;
   grass: THREE.InstancedMesh | null = null;
-  bldMeshes = new Map<BldType, { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }>();
+  bldMeshes = new Map<
+    BldType,
+    { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
+  >();
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   rings!: THREE.InstancedMesh;
   workRings!: THREE.InstancedMesh;
@@ -172,7 +184,9 @@ export class WorldView {
       preserveDrawingBuffer: false,
       failIfMajorPerformanceCaveat: false,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.quality === "high" ? 1.5 : 1.25));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, this.quality === "high" ? 1.5 : 1.25),
+    );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -195,7 +209,10 @@ export class WorldView {
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(this.quality === "high" ? 1024 : 512, this.quality === "high" ? 1024 : 512);
+    this.sun.shadow.mapSize.set(
+      this.quality === "high" ? 1024 : 512,
+      this.quality === "high" ? 1024 : 512,
+    );
     this.sun.shadow.camera.near = 4;
     this.sun.shadow.camera.far = 280;
     this.sun.shadow.camera.left = -110;
@@ -225,7 +242,12 @@ export class WorldView {
 
     this.sky = new THREE.Mesh(
       skyGeo(),
-      new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, depthWrite: false, side: THREE.BackSide }),
+      new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        fog: false,
+        depthWrite: false,
+        side: THREE.BackSide,
+      }),
     );
     this.sky.renderOrder = -20;
     this.sky.frustumCulled = false;
@@ -269,7 +291,11 @@ export class WorldView {
 
     const arrowGeo = new THREE.ConeGeometry(0.08, 0.55, 5);
     arrowGeo.rotateX(Math.PI / 2);
-    this.arrows = new THREE.InstancedMesh(arrowGeo, new THREE.MeshStandardMaterial({ color: "#3a2a14", roughness: 0.6 }), 40);
+    this.arrows = new THREE.InstancedMesh(
+      arrowGeo,
+      new THREE.MeshStandardMaterial({ color: "#3a2a14", roughness: 0.6 }),
+      40,
+    );
     this.arrows.count = 0;
     this.arrows.frustumCulled = false;
     this.scene.add(this.arrows);
@@ -279,7 +305,13 @@ export class WorldView {
     this.smokeGeo.setAttribute("position", new THREE.BufferAttribute(this.smokePos, 3));
     this.smoke = new THREE.Points(
       this.smokeGeo,
-      new THREE.PointsMaterial({ color: "#e8e0d4", size: 0.55, transparent: true, opacity: 0.38, depthWrite: false }),
+      new THREE.PointsMaterial({
+        color: "#e8e0d4",
+        size: 0.55,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+      }),
     );
     this.scene.add(this.smoke);
 
@@ -306,7 +338,12 @@ export class WorldView {
 
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
-      new THREE.MeshBasicMaterial({ color: "#e8c878", side: THREE.DoubleSide, transparent: true, opacity: 0.9 }),
+      new THREE.MeshBasicMaterial({
+        color: "#e8c878",
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.9,
+      }),
       40,
     );
     this.rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -348,7 +385,9 @@ export class WorldView {
 
   applyQuality(q: "low" | "med" | "high") {
     this.quality = q;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === "low" ? 1 : q === "med" ? 1.25 : 1.5));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, q === "low" ? 1 : q === "med" ? 1.25 : 1.5),
+    );
     this.renderer.shadowMap.enabled = q !== "low";
     this.sun.castShadow = q !== "low";
     const map = q === "high" ? 1024 : 512;
@@ -374,7 +413,8 @@ export class WorldView {
     this.buildUnits();
     this.buildHearths(game);
     this.buildCampDressing(game);
-    const home = game.world.camps.find((c) => c.team === 0) || game.world.camps[0] || { x: 0, z: 0 };
+    const home = game.world.camps.find((c) => c.team === 0) ||
+      game.world.camps[0] || { x: 0, z: 0 };
     this.look.set(home.x, this.sampleY(game, home.x, home.z) + 0.55, home.z);
     this.updateCamera(0);
   }
@@ -399,11 +439,14 @@ export class WorldView {
       const h = game.height(x, z);
       pos.setY(i, h);
       const slope =
-        Math.abs(game.height(x + 2.4, z) - game.height(x - 2.4, z)) + Math.abs(game.height(x, z + 2.4) - game.height(x, z - 2.4));
+        Math.abs(game.height(x + 2.4, z) - game.height(x - 2.4, z)) +
+        Math.abs(game.height(x, z + 2.4) - game.height(x, z - 2.4));
       const dist = Math.hypot(x, z);
       const river = h < game.world.waterY + 0.32;
       const shore = dist > islandR - 10;
-      const pathN = Math.abs(x - home.x - Math.sin((z - home.z) * 0.08) * 1.6) < 1.7 && Math.hypot(x - home.x, z - home.z) < 22;
+      const pathN =
+        Math.abs(x - home.x - Math.sin((z - home.z) * 0.08) * 1.6) < 1.7 &&
+        Math.hypot(x - home.x, z - home.z) < 22;
       const fertile = !river && isFertile(game.world.heights, x, z, water);
       let b = 2;
       if (h < water + 0.08) b = 0;
@@ -446,10 +489,17 @@ export class WorldView {
     const pine = pineGeo();
     const nTree = game.state.trees.length;
     this.treesTrunk = new THREE.InstancedMesh(pine.trunk, this.mats.bark, Math.max(nTree, 1));
-    this.treesLeaf = new THREE.InstancedMesh(pine.canopy, this.mats.leaf.clone(), Math.max(nTree, 1));
+    this.treesLeaf = new THREE.InstancedMesh(
+      pine.canopy,
+      this.mats.leaf.clone(),
+      Math.max(nTree, 1),
+    );
     (this.treesLeaf.material as THREE.MeshStandardMaterial).color.set("#ffffff");
     (this.treesLeaf.material as THREE.MeshStandardMaterial).side = THREE.DoubleSide;
-    this.treesLeaf.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(nTree, 1) * 3), 3);
+    this.treesLeaf.instanceColor = new THREE.InstancedBufferAttribute(
+      new Float32Array(Math.max(nTree, 1) * 3),
+      3,
+    );
     this.treesTrunk.castShadow = this.quality !== "low";
     this.treesLeaf.castShadow = this.quality !== "low";
     this.treesTrunk.receiveShadow = true;
@@ -611,14 +661,21 @@ export class WorldView {
       };
       grassMat.customProgramCacheKey = () => "grass-wind";
       this.grass = new THREE.InstancedMesh(grassGeo(), grassMat, gCount);
-      this.grass.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(gCount * 3), 3);
+      this.grass.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(gCount * 3),
+        3,
+      );
       this.grassRegion = new Uint8Array(gCount);
       let gi = 0;
       const home = game.world.camps.find((c) => c.team === 0) || { x: 0, z: 0 };
       for (let i = 0; i < gCount * 5 && gi < gCount; i++) {
         const nearCamp = i < gCount * 0.35;
-        const x = nearCamp ? home.x + (Math.random() - 0.5) * 30 : (Math.random() - 0.5) * (MAP - 8);
-        const z = nearCamp ? home.z + (Math.random() - 0.5) * 26 : (Math.random() - 0.5) * (MAP - 8);
+        const x = nearCamp
+          ? home.x + (Math.random() - 0.5) * 30
+          : (Math.random() - 0.5) * (MAP - 8);
+        const z = nearCamp
+          ? home.z + (Math.random() - 0.5) * 26
+          : (Math.random() - 0.5) * (MAP - 8);
         const y = game.height(x, z);
         if (y < game.world.waterY + 0.45) continue;
         const reg = game.regionAt(x, z);
@@ -647,7 +704,10 @@ export class WorldView {
     for (const type of BLD_TYPES) {
       const g = geos[type];
       const timber = new THREE.InstancedMesh(g.timber, this.mats.timber, 80);
-      const roofMat = type === "keep" || type === "temple" || type === "university" ? this.mats.tile : this.mats.thatch;
+      const roofMat =
+        type === "keep" || type === "temple" || type === "university"
+          ? this.mats.tile
+          : this.mats.thatch;
       const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), 80);
       timber.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(80 * 3), 3);
@@ -699,7 +759,12 @@ export class WorldView {
     this.pits.receiveShadow = true;
     this.flames = new THREE.InstancedMesh(
       flameGeo(),
-      new THREE.MeshBasicMaterial({ color: "#ffb040", transparent: true, opacity: 0.88, depthWrite: false }),
+      new THREE.MeshBasicMaterial({
+        color: "#ffb040",
+        transparent: true,
+        opacity: 0.88,
+        depthWrite: false,
+      }),
       64,
     );
     this.flames.frustumCulled = false;
@@ -805,6 +870,37 @@ export class WorldView {
     this.camera.lookAt(this.look.x, this.look.y + 1.2, this.look.z);
   }
 
+  pickEntity(cx: number, cy: number, game: Game) {
+    const el = this.renderer.domElement;
+    _ndc.set((cx / (el.clientWidth || 1)) * 2 - 1, (-cy / (el.clientHeight || 1)) * 2 + 1);
+    _ray.setFromCamera(_ndc, this.camera);
+    const sources = new Map<
+      THREE.Object3D,
+      (import("@/game/types").Unit | import("@/game/types").Building)[]
+    >();
+    for (const [type, meshes] of this.bldMeshes) {
+      const entities = game.state.buildings.filter((b) => b.hp > 0 && b.type === type);
+      for (const mesh of [meshes.timber, meshes.roof, meshes.extra])
+        if (mesh) {
+          mesh.computeBoundingSphere();
+          sources.set(mesh, entities);
+        }
+    }
+    for (const [type, mesh] of this.unitMeshes) {
+      mesh.computeBoundingSphere();
+      sources.set(
+        mesh,
+        game.state.units.filter((u) => u.hp > 0 && u.type === type),
+      );
+    }
+    for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
+      if (hit.instanceId === undefined) continue;
+      const entity = sources.get(hit.object)?.[hit.instanceId];
+      if (entity && (entity.team === 0 || game.visibleAt(entity.x, entity.z))) return entity;
+    }
+    return null;
+  }
+
   groundAt(cx: number, cy: number): THREE.Vector3 | null {
     const el = this.renderer.domElement;
     const w = el.clientWidth || 1;
@@ -838,7 +934,8 @@ export class WorldView {
     this.syncFow(game);
     this.syncRain(game, dt);
     this.paintSeason(game, dt);
-    if (this.water) this.water.position.y = game.world.waterY + Math.sin(game.state.time * 0.6) * 0.03;
+    if (this.water)
+      this.water.position.y = game.world.waterY + Math.sin(game.state.time * 0.6) * 0.03;
   }
 
   private updateDay(game: Game, dt = 0.016) {
@@ -892,7 +989,15 @@ export class WorldView {
                 ? "#c8d4ee"
                 : "#fff4d2",
     );
-    this.hemi.color.set(night ? "#c4d0e8" : sn.snow > 0.4 || wx === "frost" ? "#d8e4f0" : sn.autumn > 0.4 ? "#f0d4b0" : "#ffe9c8");
+    this.hemi.color.set(
+      night
+        ? "#c4d0e8"
+        : sn.snow > 0.4 || wx === "frost"
+          ? "#d8e4f0"
+          : sn.autumn > 0.4
+            ? "#f0d4b0"
+            : "#ffe9c8",
+    );
     const fog = new THREE.Color().setStyle(
       night
         ? "#6a7890"
@@ -942,7 +1047,8 @@ export class WorldView {
     this.scene.background = this.litFog;
     (this.scene.fog as THREE.FogExp2).density = this.litFogD;
     this.renderer.toneMappingExposure =
-      (night ? 1.08 : 0.94 + elev * 0.16 + dawn * 0.08 + sn.winter * 0.06) * (wx === "storm" || wx === "flood" ? 0.88 : 1);
+      (night ? 1.08 : 0.94 + elev * 0.16 + dawn * 0.08 + sn.winter * 0.06) *
+      (wx === "storm" || wx === "flood" ? 0.88 : 1);
 
     const sunDir = this.sun.position.clone().sub(this.look).normalize();
     this.sunDisc.position.copy(this.camera.position).add(sunDir.clone().multiplyScalar(180));
@@ -951,7 +1057,8 @@ export class WorldView {
     this.sunGlow.lookAt(this.camera.position);
     const vis = night ? 0.22 : wx === "storm" ? 0.12 : wet ? 0.45 : 0.92;
     (this.sunDisc.material as THREE.MeshBasicMaterial).opacity = vis;
-    (this.sunGlow.material as THREE.MeshBasicMaterial).opacity = (wx === "golden" ? 0.55 : 0.38) * vis;
+    (this.sunGlow.material as THREE.MeshBasicMaterial).opacity =
+      (wx === "golden" ? 0.55 : 0.38) * vis;
     this.sky.position.copy(this.camera.position);
   }
 
@@ -1018,7 +1125,10 @@ export class WorldView {
       this.rocks.count = this.rockCount;
       this.rocks.instanceMatrix.needsUpdate = true;
     }
-    const hideNodes = (mesh: THREE.InstancedMesh | undefined, list: { x: number; z: number; y: number; amount: number; scale: number }[]) => {
+    const hideNodes = (
+      mesh: THREE.InstancedMesh | undefined,
+      list: { x: number; z: number; y: number; amount: number; scale: number }[],
+    ) => {
       if (!mesh) return;
       const n = Math.min(list.length, instCap(mesh));
       for (let i = 0; i < n; i++) {
@@ -1134,18 +1244,30 @@ export class WorldView {
         const u = list[i];
         const spd = Math.hypot(u.vx, u.vz);
         const walking = spd > 0.35;
-        const chopping = !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
+        const chopping =
+          !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
         const phase = u.stride;
-        const bob = walking ? Math.abs(Math.sin(phase)) * 0.16 : chopping ? Math.abs(Math.sin(phase)) * 0.08 : 0;
+        const bob = walking
+          ? Math.abs(Math.sin(phase)) * 0.16
+          : chopping
+            ? Math.abs(Math.sin(phase)) * 0.08
+            : 0;
         const pitch = walking ? Math.sin(phase) * 0.22 : chopping ? Math.sin(phase) * 0.14 : 0;
         const roll = walking ? Math.sin(phase * 2) * 0.12 : 0;
         const yScale = walking ? 1.65 * (1 + Math.sin(phase * 2) * 0.045) : 1.65;
         const st = TEAM_STYLE[u.team] || TEAM_STYLE[0];
-        const body = (u.type === "leader" ? 1.95 : 1.65) * (u.stature || 1) * (u.team === 1 ? 1.12 : u.team === 2 ? 0.92 : 1);
+        const body =
+          (u.type === "leader" ? 1.95 : 1.65) *
+          (u.stature || 1) *
+          (u.team === 1 ? 1.12 : u.team === 2 ? 0.92 : 1);
         _p.set(u.x, u.y + bob, u.z);
         _e.set(pitch, u.facing, roll);
         _q.setFromEuler(_e);
-        _s.set(body * st.sx, (u.type === "leader" ? yScale * 1.18 : yScale) * (u.stature || 1) * st.sy, body * st.sz);
+        _s.set(
+          body * st.sx,
+          (u.type === "leader" ? yScale * 1.18 : yScale) * (u.stature || 1) * st.sy,
+          body * st.sz,
+        );
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
         _c.set(st.unit);
@@ -1183,7 +1305,13 @@ export class WorldView {
     for (const b of game.state.buildings) {
       if (b.hp <= 0 || b.team !== 0) continue;
       const r =
-        b.type === "lumber" ? LUMBER_R : b.type === "quarry" ? QUARRY_R : b.type === "dock" ? 20 : 0;
+        b.type === "lumber"
+          ? LUMBER_R
+          : b.type === "quarry"
+            ? QUARRY_R
+            : b.type === "dock"
+              ? 20
+              : 0;
       if (!r) continue;
       if (b.type !== "lumber" && !b.selected && game.state.placing !== b.type) continue;
       if (wi >= wcap) break;
@@ -1324,7 +1452,12 @@ export class WorldView {
         (b) =>
           b.hp > 0 &&
           game.finished(b) &&
-          (b.type === "townhall" || b.type === "hut" || b.type === "watchtower" || b.type === "keep" || b.type === "lumber" || b.type === "barracks"),
+          (b.type === "townhall" ||
+            b.type === "hut" ||
+            b.type === "watchtower" ||
+            b.type === "keep" ||
+            b.type === "lumber" ||
+            b.type === "barracks"),
       );
       for (const h of torchBlds) {
         if (fi >= 40) break;
@@ -1356,7 +1489,12 @@ export class WorldView {
       this.flames.instanceMatrix.needsUpdate = true;
       const spots: { x: number; y: number; z: number }[] = [];
       for (const h of torchBlds) {
-        if (h.type === "townhall" || h.type === "watchtower" || h.type === "keep" || (night && h.type === "hut")) {
+        if (
+          h.type === "townhall" ||
+          h.type === "watchtower" ||
+          h.type === "keep" ||
+          (night && h.type === "hut")
+        ) {
           spots.push({ x: h.x, y: h.y + 2.2, z: h.z });
         }
       }
@@ -1367,7 +1505,11 @@ export class WorldView {
           return;
         }
         L.position.set(s.x, s.y, s.z);
-        L.intensity = night ? 1.55 + Math.sin(game.state.time * 9 + i) * 0.25 : i === 0 ? 0.45 : 0.12;
+        L.intensity = night
+          ? 1.55 + Math.sin(game.state.time * 9 + i) * 0.25
+          : i === 0
+            ? 0.45
+            : 0.12;
         L.distance = night ? 24 : 14;
       });
     }
@@ -1561,7 +1703,11 @@ export class WorldView {
     if (!this.rain || !this.rainGeo) return;
     const sn = game.seasonMix();
     const flake = sn.snow > 0.35;
-    const wet = flake || game.state.weather === "rain" || game.state.weather === "storm" || game.state.weather === "flood";
+    const wet =
+      flake ||
+      game.state.weather === "rain" ||
+      game.state.weather === "storm" ||
+      game.state.weather === "flood";
     this.rain.visible = wet && this.quality !== "low";
     if (!wet) return;
     const n = this.rainPos.length / 3;
@@ -1654,7 +1800,10 @@ export class WorldView {
       c.r = Math.min(1, c.r + n);
       c.g = Math.min(1, c.g + n * 0.6);
       const snowH = Math.max(0, Math.min(1, (h - 3.2) / 12));
-      let cover = Math.max(0, Math.min(1, sn.snow * (0.35 + snowH * 0.75) + (b === 7 || b === 5 ? sn.winter * 0.25 : 0)));
+      let cover = Math.max(
+        0,
+        Math.min(1, sn.snow * (0.35 + snowH * 0.75) + (b === 7 || b === 5 ? sn.winter * 0.25 : 0)),
+      );
       if (rk === 0) cover = Math.min(1, cover + sn.winter * 0.12);
       if (rk === 1) cover *= 0.72;
       if (cover > 0.02) {
@@ -1674,7 +1823,12 @@ export class WorldView {
       for (let i = 0; i < nTree; i++) {
         const hue = 0.33 * sn.spring + 0.3 * sn.summer + 0.075 * sn.autumn + 0.2 * sn.winter;
         const sat = 0.62 * sn.spring + 0.55 * sn.summer + 0.72 * sn.autumn + 0.16 * sn.winter;
-        const lit = 0.34 * sn.spring + 0.32 * sn.summer + 0.42 * sn.autumn + 0.48 * sn.winter + (i % 6) * 0.02;
+        const lit =
+          0.34 * sn.spring +
+          0.32 * sn.summer +
+          0.42 * sn.autumn +
+          0.48 * sn.winter +
+          (i % 6) * 0.02;
         c.setHSL(hue, sat, lit);
         if (sn.autumn > 0.4) {
           c.r = c.r + (0.62 - c.r) * sn.autumn * 0.55;
@@ -1751,7 +1905,11 @@ export class WorldView {
 
     if (this.bushes) {
       const bm = this.bushes.material as THREE.MeshStandardMaterial;
-      bm.color.setHSL(0.28 * sn.spring + 0.32 * sn.summer + 0.06 * sn.autumn + 0.2 * sn.winter, 0.45, 0.38 + sn.spring * 0.08);
+      bm.color.setHSL(
+        0.28 * sn.spring + 0.32 * sn.summer + 0.06 * sn.autumn + 0.2 * sn.winter,
+        0.45,
+        0.38 + sn.spring * 0.08,
+      );
     }
 
     const waterMat = this.water?.material as THREE.ShaderMaterial | undefined;
@@ -1787,7 +1945,13 @@ export class WorldView {
     const toRemove: THREE.Object3D[] = [];
     this.scene.traverse((o) => {
       if (o === this.scene || keep.has(o) || keep.has(o.parent as THREE.Object3D)) return;
-      if (o.parent === this.scene && o !== this.hemi && o !== this.sun && o !== this.fill && o !== this.sun.target) {
+      if (
+        o.parent === this.scene &&
+        o !== this.hemi &&
+        o !== this.sun &&
+        o !== this.fill &&
+        o !== this.sun.target
+      ) {
         toRemove.push(o);
       }
     });

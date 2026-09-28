@@ -1,0 +1,7 @@
+# 3D art direction
+
+Reuse the muted grass, ochre earth, grey rock, warm timber, straw roofs, bronze/parchment UI and team cloth accents already present. Stylized low-poly silhouettes with restrained rough surfaces; readable at 20–70m camera range. No flat character billboards, photoreal materials, modern clothing or randomly mixed asset packs. Palette changes through seasons rather than unrelated models.
+
+One modular human rig, 1.7m high; work/weapon attachments and cloth colors identify role. Buildings at existing gameplay footprint scale, visible entrance faces +Z. Ground origin at base center, Y up, +Z forward; units use capsule proxy, buildings footprint rectangles, scenery simple trunk/rock collider. Prefer glTF binary (.glb), shared palette material/atlas <=1024², no per-entity textures. LOD0/1/2 at 30/70/120m; billboard only distant noninteractive foliage. Names category_name_variant_lodN.glb; animation names lower_snake_case.
+
+Existing procedural meshes remain during rig/asset import; replace only when new set matches scale and improves screenshots. Kenney Nature Kit is a verified CC0 candidate for later coordinated environment replacements (https://kenney.nl/assets/nature-kit), not justification to import all 330 files. Reuse existing trees/rocks first. Rigged people/buildings need a separate coherent prehistoric set or custom modular authoring after free-source review. Every imported file needs provenance and license evidence.

@@ -1,3 +1,4 @@
+import { AcousticScore } from "./music";
 export class GameAudio {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -5,21 +6,16 @@ export class GameAudio {
   music: GainNode | null = null;
   muted = false;
   unlocked = false;
-  drones: OscillatorNode[] = [];
-  mood: "peace" | "raid" | "pillage" = "peace";
-  private scoreTimer: number | null = null;
-  private scoreStart = 0;
-  private lastBar = -1;
+  score = new AcousticScore();
   private noise: AudioBuffer | null = null;
-  private padOsc: OscillatorNode[] = [];
-  private beat = 60 / 72;
-
   unlock() {
     if (this.unlocked) {
       if (this.ctx?.state === "suspended") void this.ctx.resume();
       return;
     }
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AC =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new AC({ latencyHint: "interactive" });
     this.master = this.ctx.createGain();
     this.sfx = this.ctx.createGain();
@@ -33,14 +29,12 @@ export class GameAudio {
     this.noise = this.makeNoise(this.ctx);
     void this.ctx.resume();
     this.unlocked = true;
-    this.startScore();
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && this.ctx?.state === "suspended") void this.ctx.resume();
-    });
+    this.score.unlock();
   }
 
   setMuted(m: boolean) {
     this.muted = m;
+    this.score.setMuted(m);
     if (this.master && this.ctx) {
       this.master.gain.setTargetAtTime(m ? 0 : 0.58, this.ctx.currentTime, 0.04);
     }
@@ -202,249 +196,30 @@ export class GameAudio {
     src.stop(now + dur + 0.02);
   }
 
-  /** D3 = 146.83 — Skyrim/Whiterun sitting in D minor. */
-  private hz(semi: number) {
-    return 146.83 * Math.pow(2, semi / 12);
+  setMood(mood: "peace" | "raid" | "pillage", age = 0, population = 0, dt = 0, paused = false) {
+    this.score.update(
+      this.score.calm
+        ? age >= 2
+          ? "adventure"
+          : "village"
+        : mood !== "peace"
+          ? "battle"
+          : age >= 1 || population >= 16
+            ? "adventure"
+            : "village",
+      dt,
+      paused,
+    );
   }
-
-  /** Secunda-style piano: slow high sine, long tail. */
-  private piano(time: number, semi: number, dur = 2.4, vol = 0.03) {
-    if (!this.ctx || !this.music) return;
-    const o = this.ctx.createOscillator();
-    const o2 = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = "sine";
-    o2.type = "triangle";
-    o.frequency.value = this.hz(semi + 12);
-    o2.frequency.value = this.hz(semi + 24);
-    o2.detune.value = 4;
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.exponentialRampToValueAtTime(vol, time + 0.018);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-    o.connect(g);
-    o2.connect(g);
-    g.connect(this.music);
-    o.start(time);
-    o2.start(time);
-    o.stop(time + dur + 0.05);
-    o2.stop(time + dur + 0.05);
+  setMusicVolume(v: number) {
+    this.score.setVolume(v);
   }
-
-  /** Lute / Whiterun mid: muted triangle, short. */
-  private lute(time: number, semi: number, dur = 0.7, vol = 0.034) {
-    if (!this.ctx || !this.music) return;
-    const o = this.ctx.createOscillator();
-    const f = this.ctx.createBiquadFilter();
-    const g = this.ctx.createGain();
-    o.type = "triangle";
-    o.frequency.value = this.hz(semi);
-    f.type = "lowpass";
-    f.frequency.setValueAtTime(1800, time);
-    f.frequency.exponentialRampToValueAtTime(420, time + dur);
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.exponentialRampToValueAtTime(vol, time + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-    o.connect(f);
-    f.connect(g);
-    g.connect(this.music);
-    o.start(time);
-    o.stop(time + dur + 0.04);
+  setSfxVolume(v: number) {
+    if (this.sfx) this.sfx.gain.value = Math.max(0, Math.min(1, v));
   }
-
-  /** 2CELLOS / Now We Are Free: singing cello. */
-  private cello(time: number, semi: number, dur = 2.8, vol = 0.032) {
-    if (!this.ctx || !this.music) return;
-    const o = this.ctx.createOscillator();
-    const o2 = this.ctx.createOscillator();
-    const f = this.ctx.createBiquadFilter();
-    const g = this.ctx.createGain();
-    o.type = "triangle";
-    o2.type = "sine";
-    o.frequency.value = this.hz(semi);
-    o2.frequency.value = this.hz(semi) * 2.005;
-    f.type = "lowpass";
-    f.frequency.setValueAtTime(520, time);
-    f.frequency.linearRampToValueAtTime(380, time + dur);
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.linearRampToValueAtTime(vol, time + 0.22);
-    g.gain.linearRampToValueAtTime(vol * 0.72, time + dur * 0.7);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-    o.connect(f);
-    o2.connect(f);
-    f.connect(g);
-    g.connect(this.music);
-    o.start(time);
-    o2.start(time);
-    o.stop(time + dur + 0.05);
-    o2.stop(time + dur + 0.05);
-  }
-
-  private strings(time: number, semi: number, dur = 4.2, vol = 0.018) {
-    if (!this.ctx || !this.music) return;
-    for (const s of [semi, semi + 7, semi + 12]) {
-      const o = this.ctx.createOscillator();
-      const o2 = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      o.type = "sine";
-      o2.type = "triangle";
-      o.frequency.value = this.hz(s);
-      o2.frequency.value = this.hz(s) * 1.004;
-      g.gain.setValueAtTime(0.0001, time);
-      g.gain.linearRampToValueAtTime(vol, time + 0.55);
-      g.gain.linearRampToValueAtTime(vol * 0.7, time + dur * 0.75);
-      g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-      o.connect(g);
-      o2.connect(g);
-      g.connect(this.music);
-      o.start(time);
-      o2.start(time);
-      o.stop(time + dur + 0.05);
-      o2.stop(time + dur + 0.05);
-    }
-  }
-
-  private startPads() {
-    if (!this.ctx || !this.music) return;
-    const parts: { f: number; vol: number }[] = [
-      { f: 73.42, vol: 0.04 },
-      { f: 110.0, vol: 0.022 },
-      { f: 146.83, vol: 0.01 },
-    ];
-    for (const p of parts) {
-      const o = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      const filt = this.ctx.createBiquadFilter();
-      o.type = "sine";
-      o.frequency.value = p.f;
-      filt.type = "lowpass";
-      filt.frequency.value = 480;
-      g.gain.value = p.vol;
-      o.connect(filt);
-      filt.connect(g);
-      g.connect(this.music);
-      o.start();
-      this.drones.push(o);
-      this.padOsc.push(o);
-    }
-    if (this.noise) {
-      const src = this.ctx.createBufferSource();
-      src.buffer = this.noise;
-      src.loop = true;
-      const f = this.ctx.createBiquadFilter();
-      f.type = "lowpass";
-      f.frequency.value = 90;
-      const g = this.ctx.createGain();
-      g.gain.value = 0.008;
-      src.connect(f);
-      f.connect(g);
-      g.connect(this.music);
-      src.start();
-    }
-  }
-
-  setMood(mood: "peace" | "raid" | "pillage") {
-    if (this.mood === mood) return;
-    this.mood = mood;
-    if (!this.ctx || !this.music) return;
-    const now = this.ctx.currentTime;
-    const target = mood === "raid" ? 0.26 : mood === "pillage" ? 0.24 : 0.2;
-    this.music.gain.setTargetAtTime(target, now, 0.2);
-    const freqs = mood === "raid" ? [55, 82.4, 110] : mood === "pillage" ? [61.7, 92.5, 123.5] : [73.42, 110, 146.83];
-    this.padOsc.forEach((o, i) => {
-      try {
-        o.frequency.setTargetAtTime(freqs[i] || freqs[0], now, 0.25);
-      } catch {
-        /* ignore */
-      }
-    });
-    this.beat = mood === "raid" ? 60 / 96 : mood === "pillage" ? 60 / 88 : 60 / 72;
-    this.lastBar = -1;
-    this.scoreStart = now;
-  }
-
-  private drum(time: number, vol = 0.05) {
-    if (!this.ctx || !this.music || !this.noise) return;
-    const src = this.ctx.createBufferSource();
-    src.buffer = this.noise;
-    const f = this.ctx.createBiquadFilter();
-    f.type = "lowpass";
-    f.frequency.setValueAtTime(220, time);
-    f.frequency.exponentialRampToValueAtTime(70, time + 0.18);
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(vol, time);
-    g.gain.exponentialRampToValueAtTime(0.0008, time + 0.22);
-    src.connect(f);
-    f.connect(g);
-    g.connect(this.music);
-    src.start(time);
-    src.stop(time + 0.24);
-  }
-
-  /**
-   * Peace: Whiterun/Secunda. Raid: war drums + low cello. Pillage: lute charge.
-   */
-  private scheduleBar(t0: number, beat: number, bar: number) {
-    const mood = this.mood;
-    if (mood === "raid") {
-      this.strings(t0, bar % 2 === 0 ? 0 : -2, beat * 3.6, 0.016);
-      this.cello(t0, -12, beat * 3.4, 0.03);
-      this.drum(t0, 0.055);
-      this.drum(t0 + beat * 2, 0.04);
-      if (bar % 2 === 1) this.piano(t0 + beat * 0.5, 15, 1.6, 0.018);
-      return;
-    }
-    if (mood === "pillage") {
-      this.strings(t0, 2, beat * 3.8, 0.014);
-      this.lute(t0, 7, 0.28, 0.04);
-      this.lute(t0 + beat, 10, 0.26, 0.036);
-      this.lute(t0 + beat * 2, 12, 0.28, 0.038);
-      this.lute(t0 + beat * 3, 10, 0.24, 0.032);
-      this.drum(t0 + beat * 1.5, 0.03);
-      return;
-    }
-    const phrase = Math.floor(bar / 8) % 4;
-    this.strings(t0, phrase % 2 === 0 ? 0 : -5, beat * 4.2, 0.012);
-    if (bar % 4 === 0) this.cello(t0, phrase % 2 === 0 ? -12 : -7, beat * 3.8, 0.022);
-    if (bar % 4 === 2) {
-      const n = phrase === 1 ? 15 : phrase === 3 ? 19 : 12;
-      this.piano(t0 + beat * 0.25, n, 3.2, 0.024);
-    }
-    if (phrase === 2 && bar % 8 === 4) this.piano(t0 + beat, 22, 3.6, 0.02);
-  }
-
-  startScore() {
-    if (!this.ctx || !this.music) return;
-    this.startPads();
-    this.scoreStart = this.ctx.currentTime + 0.6;
-    this.lastBar = -1;
-    const tick = () => {
-      if (!this.ctx || !this.unlocked) return;
-      const beat = this.beat;
-      const barLen = beat * 4;
-      const now = this.ctx.currentTime;
-      const bar = Math.floor((now - this.scoreStart + 0.45) / barLen);
-      if (bar > this.lastBar && bar >= 0) {
-        this.lastBar = bar;
-        this.scheduleBar(this.scoreStart + bar * barLen, beat, bar);
-      }
-      this.scoreTimer = window.setTimeout(tick, 160);
-    };
-    tick();
-  }
-
   dispose() {
-    if (this.scoreTimer != null) window.clearTimeout(this.scoreTimer);
-    this.scoreTimer = null;
+    this.score.dispose();
     this.unlocked = false;
-    for (const o of this.drones) {
-      try {
-        o.stop();
-      } catch {
-        /* already stopped */
-      }
-    }
-    this.drones = [];
-    this.padOsc = [];
     void this.ctx?.close();
     this.ctx = null;
   }

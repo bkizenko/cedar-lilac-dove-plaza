@@ -1,8 +1,8 @@
 import type { BldType, Cost, ResKind, UnitType } from "./types";
 
-export const MAP = 520;
+export const MAP = 1040;
 export const HALF = MAP / 2;
-export const SEGS = 128;
+export const SEGS = 256;
 export const WATER_Y = 0.42;
 export const TILE = 2;
 export const LUMBER_R = 18;
@@ -83,7 +83,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 200,
     age: 0,
-    hint: "Works on gentle slopes and valley grass.",
+    hint: "Sow in spring, tend in summer, harvest in autumn. Requires workers.",
   },
   lumber: {
     name: "Lumber Camp",
@@ -130,8 +130,8 @@ export const BUILDINGS: Record<
     stone: 0,
     pop: 0,
     hp: 300,
-    age: 1,
-    hint: "Extra resource drop-off.",
+    age: 0,
+    hint: "Adds 160 food storage, reduces spoilage and shortens carrying trips.",
   },
   barracks: {
     name: "Barracks",
@@ -474,15 +474,33 @@ export function costOfUnit(t: UnitType): Cost {
   return { food: d.food, wood: d.wood, stone: d.stone, copper: d.copper, iron: d.iron };
 }
 
-export const SAVE_KEY = "dawn-of-empire-v14";
-export const SAVE_VERSION = 15;
+export const SAVE_KEY = "dawn-of-empire-v17";
+export const SAVE_VERSION = 17;
 
-export const AGE_CHOICES: { econ: { name: string; hint: string }; army: { name: string; hint: string } }[] = [
-  { econ: { name: "Granaries", hint: "Everyone gathers 15% faster" }, army: { name: "Hardened hides", hint: "People gain 15% more health" } },
-  { econ: { name: "Timber rights", hint: "Gather another 12% faster" }, army: { name: "Long spears", hint: "+12% damage" } },
-  { econ: { name: "Market weights", hint: "Gather another 10% faster" }, army: { name: "Watchfires", hint: "A free watchtower at your hall" } },
-  { econ: { name: "Open fields", hint: "Farms and forage run quicker" }, army: { name: "Shield wall", hint: "+10% health and damage" } },
-  { econ: { name: "Ledgers", hint: "Traders and gatherers hurry" }, army: { name: "Royal guard", hint: "Two extra hunters at the hall" } },
+export const AGE_CHOICES: {
+  econ: { name: string; hint: string };
+  army: { name: string; hint: string };
+}[] = [
+  {
+    econ: { name: "Granaries", hint: "Everyone gathers 15% faster" },
+    army: { name: "Hardened hides", hint: "People gain 15% more health" },
+  },
+  {
+    econ: { name: "Timber rights", hint: "Gather another 12% faster" },
+    army: { name: "Long spears", hint: "+12% damage" },
+  },
+  {
+    econ: { name: "Market weights", hint: "Gather another 10% faster" },
+    army: { name: "Watchfires", hint: "A free watchtower at your hall" },
+  },
+  {
+    econ: { name: "Open fields", hint: "Farms and forage run quicker" },
+    army: { name: "Shield wall", hint: "+10% health and damage" },
+  },
+  {
+    econ: { name: "Ledgers", hint: "Traders and gatherers hurry" },
+    army: { name: "Royal guard", hint: "Two extra hunters at the hall" },
+  },
 ];
 
 export const BUILD_TIME: Record<BldType, number> = {
@@ -505,4 +523,4 @@ export const BUILD_TIME: Record<BldType, number> = {
   grove: 16,
 };
 
-export const FOW = 96;
+export const FOW = 192;

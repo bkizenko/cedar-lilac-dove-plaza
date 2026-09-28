@@ -1,29 +1,42 @@
 import { SAVE_KEY, SAVE_VERSION } from "./constants";
 import type { Game } from "./sim";
-
-export function saveGame(game: Game) {
-  if (!game.started) return;
+import { encodeGame, decodeGame } from "./persistence";
+function valid(raw: string | null) {
+  if (!raw) return null;
   try {
-    const blob = JSON.stringify({ ...game.serialize(), version: SAVE_VERSION });
-    localStorage.setItem(SAVE_KEY + ":bak", localStorage.getItem(SAVE_KEY) || "");
-    localStorage.setItem(SAVE_KEY, blob);
-  } catch {
-    /* quota / private mode */
-  }
-}
-
-export function loadRaw() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as { version?: number };
-    if (!data || data.version !== SAVE_VERSION) return null;
-    return data;
+    const d = JSON.parse(raw);
+    decodeGame(d);
+    return d;
   } catch {
     return null;
   }
 }
-
+export function saveGame(g: Game) {
+  if (!g.started || g.awaitingStart) return false;
+  try {
+    const data = JSON.stringify(encodeGame(g)),
+      old = localStorage.getItem(SAVE_KEY);
+    if (valid(old)) localStorage.setItem(SAVE_KEY + ":bak", old!);
+    localStorage.setItem(SAVE_KEY, data);
+    return true;
+  } catch {
+    return false;
+  }
+}
+export function loadRaw() {
+  try {
+    return valid(localStorage.getItem(SAVE_KEY)) || valid(localStorage.getItem(SAVE_KEY + ":bak"));
+  } catch {
+    return null;
+  }
+}
 export function hasSave() {
-  return !!loadRaw();
+  return [SAVE_KEY, SAVE_KEY + ":bak"].some((k) => {
+    try {
+      const d = JSON.parse(localStorage.getItem(k) || "null");
+      return d?.version === SAVE_VERSION && !!d.state;
+    } catch {
+      return false;
+    }
+  });
 }

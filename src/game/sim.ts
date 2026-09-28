@@ -1,4 +1,17 @@
 import {
+  WorkBoard,
+  emergencyResponse,
+  calendar,
+  crop,
+  farmAvailable,
+  farmWork,
+  reserveSeconds,
+  neighborIntent,
+  foodDemand,
+  isDependent,
+} from "./settlement";
+import { findPath } from "./navigation";
+import {
   AGE_CHOICES,
   AGE_COST,
   AGE_STAT,
@@ -43,7 +56,7 @@ import type {
 } from "./types";
 import { generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
 
-const WALK = 112;
+const WALK = 520;
 const DAY_RATE = 96;
 const YEAR_DAYS = 28;
 
@@ -60,15 +73,30 @@ export class Game {
   quality: "low" | "med" | "high" = "high";
   fps = 60;
   idleCursor = 0;
+  workBoard = new WorkBoard();
   tradeTeam = 1;
   onSfx: (name: string) => void = () => {};
+  private navRevision = 0;
+  private navBudget = 4;
+  private paths = new Map<
+    number,
+    {
+      tx: number;
+      tz: number;
+      revision: number;
+      points: { x: number; z: number }[];
+      failed: boolean;
+      retry: number;
+    }
+  >();
   seaT = 180;
-  calamityT = 55 + Math.random() * 40;
+  calamityT = 180 + Math.random() * 120;
 
   constructor() {
     this.world = generateWorld(0xdae1);
     this.walk = new Uint8Array(WALK * WALK);
     this.state = this.blank();
+    this.workBoard.reset();
   }
 
   blank(): GameState {
@@ -138,7 +166,9 @@ export class Game {
   }
 
   campOf(team: number) {
-    return this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team };
+    return (
+      this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
+    );
   }
 
   nearestDockSite(x: number, z: number, r = 12) {
@@ -155,19 +185,65 @@ export class Game {
   }
 
   reset(seed?: number) {
-    const s = seed ?? ((Math.random() * 0xffffffff) | 0);
+    const s = seed ?? (Math.random() * 0xffffffff) | 0;
     this.world = generateWorld(s);
     this.state = this.blank();
+    this.workBoard.reset();
+    this.paths.clear();
     this.state.seed = s;
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
-    this.state.trees = this.world.trees.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
-    this.state.stones = this.world.stones.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
-    this.state.forage = this.world.forage.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
-    this.state.fish = this.world.fish.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
-    this.state.copper = this.world.copper.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
-    this.state.iron = this.world.iron.map((t) => ({ ...t, maxAmt: t.maxAmt || t.amount, regenT: 0, rich: t.rich ?? 1 }));
+    this.state.trees = this.world.trees.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.stones = this.world.stones.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.forage = this.world.forage.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.fish = this.world.fish.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.copper = this.world.copper.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.iron = this.world.iron.map((t) => ({
+      ...t,
+      maxAmt: t.maxAmt || t.amount,
+      regenT: 0,
+      rich: t.rich ?? 1,
+    }));
+    this.state.nextId =
+      Math.max(
+        0,
+        ...[
+          this.state.trees,
+          this.state.stones,
+          this.state.forage,
+          this.state.fish,
+          this.state.copper,
+          this.state.iron,
+        ]
+          .flat()
+          .map((n) => n.id),
+      ) + 1;
     this.tradeTeam = 1;
     this.looted.clear();
     this.visAge.fill(0);
@@ -192,7 +268,17 @@ export class Game {
       alive: true,
       hostile: i === 3,
       ally: false,
-      spec: (i === 1 ? (specRoll < 0.5 ? "stone" : "copper") : i === 2 ? (specRoll < 0.5 ? "wood" : "food") : i === 0 ? "food" : "stone") as import("./types").ResKind,
+      spec: (i === 1
+        ? specRoll < 0.5
+          ? "stone"
+          : "copper"
+        : i === 2
+          ? specRoll < 0.5
+            ? "wood"
+            : "food"
+          : i === 0
+            ? "food"
+            : "stone") as import("./types").ResKind,
       tradeCd: 0,
       leader: TEAM_NAMES[i],
       leaderTitle: "Chieftain",
@@ -240,35 +326,76 @@ export class Game {
       for (let i = 0; i < nHuts; i++) {
         const ox = hutOff[i][0] + (Math.random() - 0.5) * 3;
         const oz = hutOff[i][1] + (Math.random() - 0.5) * 3;
-        this.state.buildings.push(this.makeBld("hut", camp.x + ox, camp.z + oz, camp.team, this.height(camp.x + ox, camp.z + oz)));
+        this.state.buildings.push(
+          this.makeBld(
+            "hut",
+            camp.x + ox,
+            camp.z + oz,
+            camp.team,
+            this.height(camp.x + ox, camp.z + oz),
+          ),
+        );
       }
       if (camp.team !== 0) {
         const lx = camp.team === 1 ? 9 : -10;
         const lz = camp.team === 1 ? -7 : 6;
-        this.state.buildings.push(this.makeBld("lumber", camp.x + lx, camp.z + lz, camp.team, this.height(camp.x + lx, camp.z + lz)));
+        this.state.buildings.push(
+          this.makeBld(
+            "lumber",
+            camp.x + lx,
+            camp.z + lz,
+            camp.team,
+            this.height(camp.x + lx, camp.z + lz),
+          ),
+        );
         const bx = camp.team === 1 ? -9 : 10;
         const bz = camp.team === 1 ? 8 : -8;
-        this.state.buildings.push(this.makeBld("barracks", camp.x + bx, camp.z + bz, camp.team, this.height(camp.x + bx, camp.z + bz)));
+        this.state.buildings.push(
+          this.makeBld(
+            "barracks",
+            camp.x + bx,
+            camp.z + bz,
+            camp.team,
+            this.height(camp.x + bx, camp.z + bz),
+          ),
+        );
       }
 
       const nWork = camp.team === 0 || camp.team === 2 ? 3 : 2;
       for (let i = 0; i < nWork; i++) {
         const a = (i / nWork) * Math.PI * 2;
-        const u = this.spawnUnit("worker", camp.x + Math.cos(a) * 5, camp.z + Math.sin(a) * 5 - 3, camp.team);
+        const u = this.spawnUnit(
+          "worker",
+          camp.x + Math.cos(a) * 5,
+          camp.z + Math.sin(a) * 5 - 3,
+          camp.team,
+        );
         u.order = "idle";
       }
       if (camp.team === 1) {
         this.spawnUnit("warden", camp.x + 6, camp.z + 2, camp.team);
         this.spawnUnit("spearman", camp.x - 5, camp.z + 5, camp.team);
         this.spawnUnit("spearman", camp.x + 3, camp.z - 6, camp.team);
-        const cairn = this.makeBld("cairn", camp.x + 12, camp.z - 6, camp.team, this.height(camp.x + 12, camp.z - 6));
+        const cairn = this.makeBld(
+          "cairn",
+          camp.x + 12,
+          camp.z - 6,
+          camp.team,
+          this.height(camp.x + 12, camp.z - 6),
+        );
         cairn.build = 1;
         this.state.buildings.push(cairn);
       } else if (camp.team === 2) {
         this.spawnUnit("ranger", camp.x - 5, camp.z - 3, camp.team);
         this.spawnUnit("spearman", camp.x + 5, camp.z - 4, camp.team);
         this.spawnUnit("archer", camp.x - 3, camp.z + 6, camp.team);
-        const grove = this.makeBld("grove", camp.x - 11, camp.z + 7, camp.team, this.height(camp.x - 11, camp.z + 7));
+        const grove = this.makeBld(
+          "grove",
+          camp.x - 11,
+          camp.z + 7,
+          camp.team,
+          this.height(camp.x - 11, camp.z + 7),
+        );
         grove.build = 1;
         this.state.buildings.push(grove);
       } else {
@@ -344,13 +471,13 @@ export class Game {
     const home = this.campOf(0);
     this.stampVision(home.x, home.z, 26, 1);
     this.updateVision(0);
-    this.banner("Click a berry thicket — your people will forage", 4.5);
+    this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
   enterIsland() {
     this.awaitingStart = false;
     this.state.paused = false;
-    this.banner("Click a berry thicket — your people will forage", 4.2);
+    this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
   }
 
   makeBld(type: BldType, x: number, z: number, team: number, y?: number): Building {
@@ -383,6 +510,32 @@ export class Game {
 
   spawnUnit(type: UnitType, x: number, z: number, team: number): Unit {
     const d = UNITS[type];
+    // Recruitment and initial camp layouts must never place people inside walls.
+    const free = (px: number, pz: number) =>
+      inBounds(px, pz, 1) &&
+      this.height(px, pz) > this.world.waterY + 0.3 &&
+      !this.state.buildings.some(
+        (b) =>
+          this.solidBuilding(b) &&
+          Math.abs(px - b.x) < b.w * 0.4 + d.r + 0.8 &&
+          Math.abs(pz - b.z) < b.d * 0.4 + d.r + 0.8,
+      );
+    if (!free(x, z)) {
+      const originX = x,
+        originZ = z;
+      search: for (let radius = 2; radius <= 40; radius += 2) {
+        for (let step = 0; step < 24; step++) {
+          const a = (step * Math.PI) / 12,
+            px = originX + Math.cos(a) * radius,
+            pz = originZ + Math.sin(a) * radius;
+          if (free(px, pz)) {
+            x = px;
+            z = pz;
+            break search;
+          }
+        }
+      }
+    }
     const tribe = this.state.tribes[team];
     const mul = AGE_STAT[tribe?.age ?? 0];
     const u: Unit = {
@@ -560,7 +713,12 @@ export class Game {
     }
   }
 
+  private solidBuilding(b: Building) {
+    return b.hp > 0 && !["farm", "quarry", "dock", "lumber", "grove", "cairn"].includes(b.type);
+  }
+
   rebuildWalk() {
+    this.navRevision++;
     const cell = (HALF * 2) / WALK;
     for (let iz = 0; iz < WALK; iz++) {
       for (let ix = 0; ix < WALK; ix++) {
@@ -575,8 +733,8 @@ export class Game {
         }
         if (ok) {
           for (const b of this.state.buildings) {
-            if (b.hp <= 0) continue;
-            if (Math.abs(b.x - x) < b.w * 0.36 && Math.abs(b.z - z) < b.d * 0.36) {
+            if (!this.solidBuilding(b)) continue;
+            if (Math.abs(b.x - x) < b.w * 0.4 + 0.45 && Math.abs(b.z - z) < b.d * 0.4 + 0.45) {
               ok = false;
               break;
             }
@@ -586,6 +744,10 @@ export class Game {
       }
     }
     this.state.walkDirty = false;
+  }
+
+  navigationRevision() {
+    return this.navRevision;
   }
 
   walkable(x: number, z: number) {
@@ -598,13 +760,18 @@ export class Game {
   }
 
   canStep(u: Unit, x: number, z: number) {
-    if (!inBounds(x, z, 1.0)) return false;
+    if (!inBounds(x, z, 1)) return false;
     const h = this.height(x, z);
-    if (h < this.world.waterY - 0.18) return false;
-    if (Math.abs(h - u.y) > 2.55) return false;
-    const attackingBld = u.order === "attack" && u.target && u.target.kind === "building";
-    if (attackingBld) return true;
-    if (h < this.world.waterY + 0.22) return true;
+    if (h < this.world.waterY + 0.12 || Math.abs(h - u.y) > 2.55) return false;
+    for (const b of this.state.buildings) {
+      if (!this.solidBuilding(b)) continue;
+      const w = b.w * 0.4 + u.r,
+        d = b.d * 0.4 + u.r;
+      const depth = Math.min(w - Math.abs(x - b.x), d - Math.abs(z - b.z));
+      if (depth <= 0) continue;
+      const old = Math.min(w - Math.abs(u.x - b.x), d - Math.abs(u.z - b.z));
+      if (old <= 0 || depth >= old) return false;
+    }
     return true;
   }
 
@@ -615,7 +782,8 @@ export class Game {
         const a = (i / 10) * Math.PI * 2;
         const tx = x + Math.sin(a) * dist;
         const tz = z + Math.cos(a) * dist;
-        if (this.canStep(u, tx, tz) && Math.abs(this.height(tx, tz) - u.y) < 2.2) return { x: tx, z: tz };
+        if (this.canStep(u, tx, tz) && Math.abs(this.height(tx, tz) - u.y) < 2.2)
+          return { x: tx, z: tz };
       }
     }
     return { x, z };
@@ -624,14 +792,16 @@ export class Game {
   placementIssue(type: BldType, x: number, z: number, _team = 0): string | null {
     const d = BUILDINGS[type];
     if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
-    if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10) return "Too close to the shore";
+    if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
+      return "Too close to the shore";
     const steps = 4;
     if (type !== "dock") {
       for (let iz = 0; iz <= steps; iz++) {
         for (let ix = 0; ix <= steps; ix++) {
           const px = x - d.w / 2 + (ix / steps) * d.w;
           const pz = z - d.d / 2 + (iz / steps) * d.d;
-          if (this.height(px, pz) < this.world.waterY + 0.28) return "Can't raise that in the water";
+          if (this.height(px, pz) < this.world.waterY + 0.28)
+            return "Can't raise that in the water";
         }
       }
     }
@@ -660,7 +830,7 @@ export class Game {
       }
     }
     for (const b of this.state.buildings) {
-      if (b.hp <= 0) continue;
+      if (b.hp <= 0 || (b.team !== 0 && !this.visibleAt(b.x, b.z))) continue;
       if (Math.abs(b.x - x) < (b.w + d.w) * 0.42 && Math.abs(b.z - z) < (b.d + d.d) * 0.42) {
         return "Too close to another building";
       }
@@ -683,7 +853,8 @@ export class Game {
       if (n < 4) return "A lumber camp needs a stand of pines";
     }
     if (type === "farm") {
-      if (!isFertile(this.world.heights, x, z, this.world.baseWaterY)) return "Farms need fertile, level ground";
+      if (!isFertile(this.world.heights, x, z, this.world.baseWaterY))
+        return "Farms need fertile, level ground";
     }
     if (type === "dock") {
       if (this.height(x, z) < this.world.waterY - 0.12) return "The dock would sink";
@@ -781,22 +952,29 @@ export class Game {
   }
 
   musicMood(): "peace" | "raid" | "pillage" {
-    if (this.state.units.some((u) => u.team === 3 && u.hp > 0)) return "raid";
-    if (this.state.units.some((u) => u.team === 0 && u.hp > 0 && u.pillage >= 0)) return "pillage";
     if (
       this.state.units.some(
         (u) =>
           u.team === 0 &&
           u.hp > 0 &&
-          (u.order === "attack" || u.order === "attackmove") &&
+          u.order === "attack" &&
           u.target &&
           u.target.hp > 0 &&
-          u.target.team !== 0 &&
-          u.target.team !== 3,
+          Math.hypot(u.x - u.target.x, u.z - u.target.z) < 24,
       )
     )
       return "pillage";
-    if (this.state.units.some((u) => u.team === 0 && u.hp > 0 && u.order === "attack")) return "raid";
+    const c = this.campOf(0);
+    if (
+      this.state.units.some(
+        (u) =>
+          u.hp > 0 &&
+          this.isFoe(0, u.team) &&
+          this.visibleAt(u.x, u.z) &&
+          Math.hypot(u.x - c.x, u.z - c.z) < 40,
+      )
+    )
+      return "raid";
     return "peace";
   }
 
@@ -855,7 +1033,10 @@ export class Game {
     const t = this.tribe(team);
     if (!t) return 0;
     let n = 0;
-    const workers = this.state.units.filter((u) => u.team === team && u.hp > 0 && u.type === "worker" && !u.militia);
+    const workers = this.state.units.filter(
+      (u) =>
+        u.team === team && u.hp > 0 && u.type === "worker" && !u.militia && !isDependent(this, u),
+    );
     for (const u of workers) {
       let kind: UnitType | null = null;
       if ((t.blades || 0) > 0) {
@@ -963,7 +1144,9 @@ export class Game {
         z = snap.z;
       }
     }
-    const spot = this.placementValid(type, x, z, team) ? { x, z } : this.findPlaceSpot(type, x, z, team);
+    const spot = this.placementValid(type, x, z, team)
+      ? { x, z }
+      : this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
         this.banner(this.placementIssue(type, x, z, team) || "Can't build there", 1.8);
@@ -994,8 +1177,9 @@ export class Game {
   assignBuilders(b: Building) {
     let n = 0;
     for (const u of this.state.units) {
-      if (u.team !== b.team || u.type !== "worker" || u.hp <= 0) continue;
-      if (u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0) continue;
+      if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
+      if (u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
+        continue;
       if (u.jobLock && u.order === "gather") continue;
       u.order = "build";
       u.node = b;
@@ -1049,7 +1233,9 @@ export class Game {
       b.hp = b.maxHp;
       if (u.team === 0) {
         this.banner(
-          b.type === "quarry" ? "Quarry stands — gatherers will haul stone from the outcrop" : BUILDINGS[b.type].name + " stands",
+          b.type === "quarry"
+            ? "Quarry stands — gatherers will haul stone from the outcrop"
+            : BUILDINGS[b.type].name + " stands",
           1.8,
         );
         this.onSfx("place");
@@ -1082,11 +1268,24 @@ export class Game {
     return this.state.units.filter((u) => u.selected && u.team === 0 && u.hp > 0);
   }
 
+  visibleAt(x: number, z: number) {
+    const gx = Math.floor(((x + HALF) / MAP) * FOW),
+      gz = Math.floor(((z + HALF) / MAP) * FOW);
+    return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] === 2;
+  }
+
+  selectEntity(entity: Unit | Building, additive = false) {
+    if (entity.hp <= 0 || (entity.team !== 0 && !this.visibleAt(entity.x, entity.z))) return;
+    if (!additive || entity.kind === "building") this.clearSelect();
+    entity.selected = true;
+    if (entity.kind === "building") this.state.selBld = entity;
+  }
+
   selectAt(x: number, z: number, additive: boolean) {
     let bestU: Unit | null = null;
     let bd = 2.2;
     for (const u of this.state.units) {
-      if (u.hp <= 0) continue;
+      if (u.hp <= 0 || (u.team !== 0 && !this.visibleAt(u.x, u.z))) continue;
       const d = Math.hypot(u.x - x, u.z - z);
       if (d < bd) {
         bd = d;
@@ -1096,7 +1295,7 @@ export class Game {
     let bestB: Building | null = null;
     let bb = 1e9;
     for (const b of this.state.buildings) {
-      if (b.hp <= 0) continue;
+      if (b.hp <= 0 || (b.team !== 0 && !this.visibleAt(b.x, b.z))) continue;
       if (Math.abs(b.x - x) < b.w * 0.55 && Math.abs(b.z - z) < b.d * 0.55) {
         const d = Math.hypot(b.x - x, b.z - z);
         if (d < bb) {
@@ -1151,6 +1350,7 @@ export class Game {
       u.tx = x + ox;
       u.tz = z + oz;
       u.order = attackMove ? "attackmove" : "move";
+      u.attackDestination = attackMove ? { x: u.tx, z: u.tz } : null;
       u.target = null;
       u.node = null;
     });
@@ -1158,6 +1358,8 @@ export class Game {
   }
 
   issueAttack(target: Unit | Building) {
+    if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
+    for (const u of this.selectedUnits()) u.attackDestination = null;
     const selected = this.selectedUnits();
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
     if (target.kind === "building" && target.team !== 0 && (anyMil || !selected.length)) {
@@ -1186,8 +1388,15 @@ export class Game {
     if (units.length) this.onSfx("move");
   }
 
-  marchMilitary(tx: number, tz: number, target: Unit | Building | null, order: "attack" | "attackmove") {
-    const mil = this.state.units.filter((u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0);
+  marchMilitary(
+    tx: number,
+    tz: number,
+    target: Unit | Building | null,
+    order: "attack" | "attackmove",
+  ) {
+    const mil = this.state.units.filter(
+      (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
+    );
     if (!mil.length) return false;
     const n = mil.length;
     const ring = Math.max(1, Math.ceil(Math.sqrt(n)));
@@ -1197,7 +1406,8 @@ export class Game {
       u.tx = tx + ox;
       u.tz = tz + oz;
       u.order = order;
-      u.target = target;
+      u.attackDestination = order === "attackmove" ? { x: u.tx, z: u.tz } : null;
+      u.target = order === "attackmove" ? null : target;
       u.node = null;
       u.selected = true;
     });
@@ -1244,7 +1454,9 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const mil = this.state.units.filter((u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0);
+    const mil = this.state.units.filter(
+      (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
+    );
     for (const u of mil) u.pillage = target.team;
     if (target.team !== 0 && target.team !== 3) this.makeHostile(target.team);
     const name = this.tribe(target.team)?.name || "the camp";
@@ -1253,7 +1465,9 @@ export class Game {
   }
 
   defendHome(team: number) {
-    const hall = this.state.buildings.find((b) => b.team === team && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === team && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall) return;
     let threat: Unit | Building | null = null;
     let bd = 28 * 28;
@@ -1270,7 +1484,15 @@ export class Game {
       (u) => u.team === team && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     );
     for (const u of mil) {
-      if (u.order === "attack" && u.target && u.target.hp > 0 && Math.hypot(u.x - hall.x, u.z - hall.z) < 22) continue;
+      if (u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
+        continue;
+      if (
+        u.order === "attack" &&
+        u.target &&
+        u.target.hp > 0 &&
+        Math.hypot(u.x - hall.x, u.z - hall.z) < 22
+      )
+        continue;
       if (u.pillage >= 0 && Math.hypot(u.x - hall.x, u.z - hall.z) > 36) {
         u.pillage = -1;
       }
@@ -1286,6 +1508,7 @@ export class Game {
     const tr = this.tribe(team);
     if (!tr || tr.hostile || team === 0) return;
     tr.ally = false;
+    tr.trust = 0;
     tr.hostile = true;
     tr.aggro = team === 1 ? 0.75 : 0.35;
     tr.lastRaid = 50;
@@ -1307,6 +1530,33 @@ export class Game {
     if (a === 0) return !!tb?.hostile;
     if (b === 0) return !!ta?.hostile;
     return false;
+  }
+
+  agreeTruce(team: number) {
+    const rival = this.tribe(team);
+    if (!rival || team === 0 || team === 3) return;
+    rival.hostile = false;
+    rival.tension = 0;
+    rival.trust = Math.max(0.4, rival.trust || 0);
+    rival.recoveryUntil = this.state.time + 600;
+    rival.lastRaid = 600;
+    for (const u of this.state.units) {
+      if (u.team !== team && u.team !== 0) continue;
+      if (u.emergency) u.emergency.until = this.state.time;
+      if (u.type === "worker" && !u.target && u.pillage < 0) continue;
+      u.target = null;
+      u.pillage = -1;
+      u.attackDestination = null;
+      const home = this.campOf(u.team);
+      u.tx = home.x;
+      u.tz = home.z;
+      u.order = "move";
+    }
+    this.state.projectiles = this.state.projectiles.filter(
+      (p) =>
+        !((p.team === team && p.target?.team === 0) || (p.team === 0 && p.target?.team === team)),
+    );
+    this.banner("Truce agreed with " + rival.name + " — forces withdraw for ten minutes", 4);
   }
 
   offerPact(team?: number) {
@@ -1331,8 +1581,12 @@ export class Game {
     rival.aggro = 0;
     this.banner("Pact with " + rival.name + " — we stand together", 2.4);
     this.onSfx("age");
-    const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
-    const theirs = this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+    );
+    const theirs = this.state.buildings.find(
+      (b) => b.team === rival.id && b.type === "townhall" && b.hp > 0,
+    );
     if (hall && theirs) {
       const u = this.spawnUnit("spearman", theirs.x + 4, theirs.z + 3, rival.id);
       u.order = "move";
@@ -1344,7 +1598,9 @@ export class Game {
   callAlliesTo(x: number, z: number) {
     for (const tr of this.state.tribes) {
       if (!tr.ally || tr.hostile || !tr.alive || tr.id === 0 || tr.id === 3) continue;
-      const mil = this.state.units.filter((u) => u.team === tr.id && u.hp > 0 && u.type !== "worker" && u.type !== "leader");
+      const mil = this.state.units.filter(
+        (u) => u.team === tr.id && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
+      );
       for (const u of mil.slice(0, 4)) {
         u.order = "attackmove";
         u.tx = x;
@@ -1380,14 +1636,21 @@ export class Game {
     const d = (this.world.islandR || 140) + 4;
     const sx = Math.sin(a) * d;
     const sz = Math.cos(a) * d;
-    const marks = this.state.buildings.filter((b) => b.team === 0 && b.hp > 0 && b.type !== "townhall" && b.type !== "keep");
+    const marks = this.state.buildings.filter(
+      (b) => b.team === 0 && b.hp > 0 && b.type !== "townhall" && b.type !== "keep",
+    );
     const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
     const goHall = n >= 6 && age >= 3 && Math.random() < 0.35;
     for (let i = 0; i < n; i++) {
       let type: UnitType = "spearman";
       if (age >= 1 && Math.random() < 0.28) type = "archer";
       if (n >= 5 && age >= 2 && i === 0) type = "swordsman";
-      const u = this.spawnUnit(type, sx + (Math.random() - 0.5) * 6, sz + (Math.random() - 0.5) * 6, 3);
+      const u = this.spawnUnit(
+        type,
+        sx + (Math.random() - 0.5) * 6,
+        sz + (Math.random() - 0.5) * 6,
+        3,
+      );
       u.hp = Math.max(20, Math.round(u.hp * frail));
       u.maxHp = u.hp;
       u.dmg *= frail;
@@ -1401,11 +1664,16 @@ export class Game {
     this.onSfx("horn");
     this.callAlliesTo(home.x, home.z);
     this.defendHome(0);
-    this.state.raidT = 38 + Math.random() * 55 + (1 - threat) * 40;
+    this.state.raidT = 480 + Math.random() * 240 + (1 - threat) * 120;
   }
 
   tickRaiders(dt: number) {
-    if (this.state.time < 85) return;
+    if (
+      this.state.conflict === "quiet" ||
+      this.state.time < (this.state.conflict === "dangerous" ? 600 : 1200) ||
+      this.tribe(0).age < 1
+    )
+      return;
     const live = this.state.units.filter((u) => u.team === 3 && u.hp > 0).length;
     if (live > 0) return;
     this.state.raidT -= dt;
@@ -1420,7 +1688,13 @@ export class Game {
     const list: Critter[] = [];
     const r = this.world.islandR || 140;
     const camps = this.world.camps;
-    const kinds: { species: Critter["species"]; n: number; hp: number; scale: number; near: number }[] = [
+    const kinds: {
+      species: Critter["species"];
+      n: number;
+      hp: number;
+      scale: number;
+      near: number;
+    }[] = [
       { species: "deer", n: 6 + ((Math.random() * 5) | 0), hp: 3, scale: 1.15, near: 0 },
       { species: "boar", n: 5 + ((Math.random() * 4) | 0), hp: 4, scale: 1.05, near: 2 },
       { species: "goat", n: 8 + ((Math.random() * 6) | 0), hp: 2, scale: 0.95, near: 1 },
@@ -1438,7 +1712,8 @@ export class Game {
         const z = (home ? home.z : 0) + Math.cos(a) * d;
         const h = this.height(x, z);
         if (k.species !== "bird" && h < this.world.waterY + 0.35) continue;
-        if (this.world.camps.some((c) => Math.hypot(c.x - x, c.z - z) < 12) && k.species !== "goat") continue;
+        if (this.world.camps.some((c) => Math.hypot(c.x - x, c.z - z) < 12) && k.species !== "goat")
+          continue;
         list.push({
           id: this.id(),
           species: k.species,
@@ -1476,13 +1751,41 @@ export class Game {
     const coast = { x: Math.sin(coastA) * ir * 0.58, z: Math.cos(coastA) * ir * 0.58 };
     const pine = { x: (ash.x + high.x) * 0.5, z: (ash.z + p.z) * 0.35 };
     const rad = ir * 0.3;
-    const specs: { name: string; x: number; z: number; res: ResKind; cluster: number; clusterName: string }[] = [
+    const specs: {
+      name: string;
+      x: number;
+      z: number;
+      res: ResKind;
+      cluster: number;
+      clusterName: string;
+    }[] = [
       { name: "Home Vale", x: p.x, z: p.z, res: "food", cluster: 1, clusterName: "Riverlands" },
       { name: "Redridge", x: red.x, z: red.z, res: "stone", cluster: 0, clusterName: "Highlands" },
       { name: "Ashwood", x: ash.x, z: ash.z, res: "wood", cluster: 2, clusterName: "Wildwood" },
-      { name: "Highspire", x: high.x, z: high.z, res: "stone", cluster: 0, clusterName: "Highlands" },
-      { name: "Rivermouth", x: mouth.x, z: mouth.z, res: "food", cluster: 1, clusterName: "Riverlands" },
-      { name: "Copper Coast", x: coast.x, z: coast.z, res: "copper", cluster: 2, clusterName: "Wildwood" },
+      {
+        name: "Highspire",
+        x: high.x,
+        z: high.z,
+        res: "stone",
+        cluster: 0,
+        clusterName: "Highlands",
+      },
+      {
+        name: "Rivermouth",
+        x: mouth.x,
+        z: mouth.z,
+        res: "food",
+        cluster: 1,
+        clusterName: "Riverlands",
+      },
+      {
+        name: "Copper Coast",
+        x: coast.x,
+        z: coast.z,
+        res: "copper",
+        cluster: 2,
+        clusterName: "Wildwood",
+      },
       { name: "Pinehold", x: pine.x, z: pine.z, res: "wood", cluster: 2, clusterName: "Wildwood" },
     ];
     this.state.regions = specs.map((n) => ({
@@ -1594,11 +1897,15 @@ export class Game {
   }
 
   tickInfluence(dt: number) {
-    const hall0 = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
+    const hall0 = this.state.buildings.find(
+      (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall0) return;
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
-      const hall = this.state.buildings.find((b) => b.team === tr.id && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
+      );
       if (!hall) {
         tr.tension = Math.max(0, tr.tension - 0.08 * dt);
         continue;
@@ -1712,22 +2019,55 @@ export class Game {
 
   tickRoutes(dt: number) {
     for (const r of this.state.routes) {
+      if (r.paused) {
+        r.status = "Departures paused; existing cargo continues home";
+        continue;
+      }
       const tr = this.tribe(r.team);
-      if (!tr || !tr.alive || tr.hostile) continue;
+      if (!tr || !tr.alive || tr.hostile) {
+        r.status = "Suspended by conflict";
+        continue;
+      }
+      const active = this.state.units.find((u) => u.id === r.workerId && u.hp > 0);
+      if (active && (active.order === "trade" || active.carry > 0)) {
+        r.status = active.order === "trade" ? "Outbound caravan" : "Cargo returning";
+        continue;
+      }
+      r.workerId = undefined;
       r.t -= dt;
-      if (r.t > 0) continue;
-      r.t = r.interval;
+      if (r.t > 0) {
+        r.status = "Preparing next caravan";
+        continue;
+      }
       const cost = { [r.give]: r.giveAmt } as Cost;
-      if (!this.canAfford(0, cost)) continue;
-      this.spend(0, cost);
-      const pack = this.tribe(0);
-      if (r.get === "food") pack.food += r.getAmt;
-      else if (r.get === "wood") pack.wood += r.getAmt;
-      else if (r.get === "stone") pack.stone += r.getAmt;
-      else if (r.get === "copper") pack.copper += r.getAmt;
-      else pack.iron += r.getAmt;
-      this.addFloater(this.campOf(0).x, this.height(this.campOf(0).x, this.campOf(0).z) + 4, this.campOf(0).z, "Caravan", "#efe4b0");
-      this.onSfx("place");
+      if (!this.canAfford(0, cost) || tr[r.get] < r.getAmt) {
+        r.status = "Waiting for available goods";
+        continue;
+      }
+      if (r.give === "food" && this.tribe(0).food - r.giveAmt < foodDemand(this) * 180) {
+        r.status = "Keeping emergency food reserves";
+        continue;
+      }
+      const worker = this.state.units.find(
+        (u) =>
+          u.team === 0 &&
+          u.type === "worker" &&
+          u.hp > 0 &&
+          !isDependent(this, u) &&
+          !u.emergency &&
+          !u.jobLock &&
+          u.carry === 0 &&
+          (u.order === "idle" || u.order === "gather"),
+      );
+      if (!worker) {
+        r.status = "Waiting for an available adult";
+        continue;
+      }
+      if (this.dispatchTrade(worker, r, tr.id)) {
+        r.workerId = worker.id;
+        r.t = r.interval;
+        r.status = "Outbound caravan";
+      }
     }
     if (this.state.routeOffer) return;
     if (this.state.pendingAge || this.state.ended) return;
@@ -1737,12 +2077,20 @@ export class Game {
     }
     this.state.routeOfferT -= dt;
     if (this.state.routeOfferT > 0) return;
-    if (this.state.time < 55) {
+    if (this.state.time < 180) {
       this.state.routeOfferT = 20;
       return;
     }
     const taken = new Set(this.state.routes.map((r) => r.team));
-    const rivals = this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.alive && !t.hostile && !taken.has(t.id));
+    const rivals = this.state.tribes.filter(
+      (t) =>
+        t.id !== 0 &&
+        t.id !== 3 &&
+        t.alive &&
+        !t.hostile &&
+        !taken.has(t.id) &&
+        ((t.trust || 0) >= 0.3 || this.tribe(0).age >= 1),
+    );
     if (!rivals.length) {
       this.state.routeOfferT = 40;
       return;
@@ -1750,7 +2098,8 @@ export class Game {
     const rival = rivals[(Math.random() * rivals.length) | 0];
     const spec = rival.spec || "wood";
     const give: ResKind = spec === "food" ? "wood" : "food";
-    const get: ResKind = spec === "copper" ? "copper" : spec === "stone" ? "stone" : spec === "wood" ? "wood" : "food";
+    const get: ResKind =
+      spec === "copper" ? "copper" : spec === "stone" ? "stone" : spec === "wood" ? "wood" : "food";
     const giveAmt = give === "food" ? 28 : 22;
     let getAmt = get === "copper" ? 6 : get === "stone" ? 12 : 18;
     if (rival.ally) getAmt = Math.round(getAmt * 1.15);
@@ -1801,7 +2150,10 @@ export class Game {
   }
 
   isArmed(ent: Unit | Building) {
-    return ent.kind === "building" || (ent.kind === "unit" && ent.type !== "worker" && ent.order !== "trade");
+    return (
+      ent.kind === "building" ||
+      (ent.kind === "unit" && ent.type !== "worker" && ent.order !== "trade")
+    );
   }
 
   assignJob(job: ResKind | "hold" | "hunt") {
@@ -1822,16 +2174,6 @@ export class Game {
       }
       this.banner("Resting", 1.1);
       this.onSfx("click");
-      return;
-    }
-    if (job === "stone" && !this.hasBld(0, "quarry")) {
-      this.banner("Raise a quarry on stone first", 1.8);
-      this.onSfx("invalid");
-      return;
-    }
-    if (job === "wood" && !this.hasBld(0, "lumber")) {
-      this.banner("Raise a lumber camp among the pines first", 1.8);
-      this.onSfx("invalid");
       return;
     }
     if (job === "copper" && (this.tribe(0)?.age ?? 0) < 1) {
@@ -1860,7 +2202,10 @@ export class Game {
         u.tz = node.z;
       } else {
         u.order = "idle";
-        this.banner(huntOnly ? "No herds nearby" : "No " + (real === "food" ? "berries" : real) + " nearby", 1.3);
+        this.banner(
+          huntOnly ? "No herds nearby" : "No " + (real === "food" ? "berries" : real) + " nearby",
+          1.3,
+        );
       }
     }
     this.onSfx("move");
@@ -1883,7 +2228,8 @@ export class Game {
     for (const n of this.state.copper) if (n.amount > 0) consider(n, n.x, n.z, 4);
     for (const n of this.state.iron) if (n.amount > 0) consider(n, n.x, n.z, 4);
     for (const b of this.state.buildings) {
-      if (b.hp > 0 && b.team === 0 && b.type === "farm" && this.finished(b)) consider(b, b.x, b.z, Math.max(b.w, b.d) * 0.55);
+      if (b.hp > 0 && b.team === 0 && b.type === "farm" && this.finished(b))
+        consider(b, b.x, b.z, Math.max(b.w, b.d) * 0.55);
     }
     return best;
   }
@@ -1899,16 +2245,6 @@ export class Game {
     const job = this.resKind(node);
     if (!job) {
       this.issueMove(node.x, node.z);
-      return;
-    }
-    if (job === "stone" && !this.hasBld(0, "quarry")) {
-      this.banner("Raise a quarry on stone first", 1.8);
-      this.onSfx("invalid");
-      return;
-    }
-    if (job === "wood" && !this.hasBld(0, "lumber")) {
-      this.banner("Raise a lumber camp among the pines first", 1.8);
-      this.onSfx("invalid");
       return;
     }
     for (const u of workers) {
@@ -1996,7 +2332,10 @@ export class Game {
       this.looted.add(i);
       tr[m.cache] += m.amt;
       this.addFloater(m.x, this.height(m.x, m.z) + 2.4, m.z, "+" + m.amt, "#efe4b0");
-      this.banner("The standing stones hide a cache of " + (m.cache === "food" ? "berries" : m.cache), 2.2);
+      this.banner(
+        "The standing stones hide a cache of " + (m.cache === "food" ? "berries" : m.cache),
+        2.2,
+      );
       this.onSfx("age");
     }
   }
@@ -2022,7 +2361,9 @@ export class Game {
       this.banner("No rival remains", 1.4);
       return;
     }
-    const hall = this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === rival.id && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall) return;
     this.issuePillage(hall);
   }
@@ -2045,7 +2386,9 @@ export class Game {
     let bd = 1e12;
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
-      const hall = this.state.buildings.find((b) => b.team === tr.id && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
+      );
       if (!hall) continue;
       const d = (hall.x - ox) ** 2 + (hall.z - oz) ** 2;
       if (d < bd) {
@@ -2058,7 +2401,8 @@ export class Game {
 
   pickTradeRival(): Tribe | null {
     const focused = this.tribe(this.tradeTeam);
-    if (focused && focused.id !== 0 && focused.id !== 3 && focused.alive && !focused.hostile) return focused;
+    if (focused && focused.id !== 0 && focused.id !== 3 && focused.alive && !focused.hostile)
+      return focused;
     const selU = this.state.units.find((u) => u.selected && u.team !== 0 && u.hp > 0);
     if (selU) {
       const tr = this.tribe(selU.team);
@@ -2119,27 +2463,65 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const hall = this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === rival.id && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall) return;
     let worker =
-      this.selectedUnits().find((u) => u.type === "worker") ||
-      this.state.units.find((u) => u.team === 0 && u.type === "worker" && u.hp > 0 && (u.order === "idle" || u.order === "hold" || u.order === "gather"));
+      this.selectedUnits().find(
+        (u) =>
+          u.type === "worker" &&
+          !isDependent(this, u) &&
+          !u.emergency &&
+          u.carry === 0 &&
+          u.order !== "trade",
+      ) ||
+      this.state.units.find(
+        (u) =>
+          u.team === 0 &&
+          u.type === "worker" &&
+          !isDependent(this, u) &&
+          !u.emergency &&
+          u.carry === 0 &&
+          u.hp > 0 &&
+          (u.order === "idle" || u.order === "hold" || u.order === "gather"),
+      );
     if (!worker) {
       this.banner("Need a gatherer to carry the goods", 1.6);
       return;
     }
-    this.spend(0, cost);
+    if (this.dispatchTrade(worker, deal, rival.id)) {
+      worker.selected = true;
+      this.banner("A trader carries goods to " + rival.name, 1.8);
+      this.onSfx("trade");
+    }
+  }
+
+  dispatchTrade(worker: Unit, deal: TradeDeal, team: number) {
+    const rival = this.tribe(team),
+      hall = this.state.buildings.find((b) => b.team === team && b.type === "townhall" && b.hp > 0);
+    if (
+      !rival ||
+      rival.hostile ||
+      !hall ||
+      worker.carry > 0 ||
+      isDependent(this, worker) ||
+      !this.canAfford(0, { [deal.give]: deal.giveAmt })
+    )
+      return false;
+    this.spend(0, { [deal.give]: deal.giveAmt });
     rival.tradeCd = 32;
     worker.trade = { ...deal };
-    worker.tradeTeam = rival.id;
+    worker.tradeTeam = team;
     worker.order = "trade";
+    worker.carry = deal.giveAmt;
+    worker.carryType = deal.give;
     worker.tx = hall.x;
     worker.tz = hall.z;
     worker.node = null;
     worker.target = null;
-    worker.selected = true;
-    this.banner("A trader walks to " + rival.name, 1.8);
-    this.onSfx("trade");
+    worker.workReason = "Carrying goods to " + rival.name;
+    return true;
   }
 
   haltSelected() {
@@ -2147,6 +2529,7 @@ export class Game {
     if (!units.length) return;
     for (const u of units) {
       u.order = u.type === "worker" ? "hold" : "idle";
+      u.attackDestination = null;
       u.target = null;
       u.node = null;
       u.trade = null;
@@ -2157,7 +2540,12 @@ export class Game {
 
   idleWorkers() {
     return this.state.units.filter(
-      (u) => u.team === 0 && u.hp > 0 && u.type === "worker" && (u.order === "hold" || u.order === "idle"),
+      (u) =>
+        u.team === 0 &&
+        u.hp > 0 &&
+        u.type === "worker" &&
+        !isDependent(this, u) &&
+        (u.order === "hold" || u.order === "idle"),
     );
   }
 
@@ -2176,7 +2564,9 @@ export class Game {
   }
 
   selectTownHall() {
-    const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall) return null;
     this.clearSelect();
     hall.selected = true;
@@ -2206,7 +2596,7 @@ export class Game {
   tickCalamity(dt: number) {
     this.calamityT -= dt;
     if (this.calamityT > 0) return;
-    this.calamityT = 48 + Math.random() * 55;
+    this.calamityT = 240 + Math.random() * 240;
     if (this.state.time < 70) return;
     const live = this.state.tribes.filter((t) => t.alive && t.id !== 3);
     if (!live.length) return;
@@ -2215,19 +2605,31 @@ export class Game {
     const shrinking = fortune < 1;
     const growing = fortune > 2.2;
     const bad = Math.random() < (shrinking ? 0.72 : growing ? 0.38 : 0.52);
-    const hall = this.state.buildings.find((b) => b.team === tr.id && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
+    );
     if (bad) {
       const kind = (Math.random() * 4) | 0;
       if (kind === 0) {
         tr.food = Math.max(0, tr.food - (18 + ((Math.random() * 16) | 0)));
-        this.banner((tr.id === 0 ? "Blight on the stores" : tr.name + " — blight") + ". Berries rot.", 2.2);
+        this.banner(
+          (tr.id === 0 ? "Blight on the stores" : tr.name + " — blight") + ". Berries rot.",
+          2.2,
+        );
       } else if (kind === 1) {
-        const blds = this.state.buildings.filter((b) => b.team === tr.id && b.hp > 0 && b.type !== "townhall");
+        const blds = this.state.buildings.filter(
+          (b) => b.team === tr.id && b.hp > 0 && b.type !== "townhall",
+        );
         const b = blds[(Math.random() * blds.length) | 0];
         if (b) {
           b.hp = Math.max(0, b.hp - 90);
           this.addBurst(b.x, b.y + 2, b.z, "#e07030", 16);
-          this.banner((tr.id === 0 ? "Fire in the camp" : tr.name + " — fire") + " takes a " + (BUILDINGS[b.type]?.name || "building"), 2.2);
+          this.banner(
+            (tr.id === 0 ? "Fire in the camp" : tr.name + " — fire") +
+              " takes a " +
+              (BUILDINGS[b.type]?.name || "building"),
+            2.2,
+          );
           this.onSfx("fire");
         }
       } else if (kind === 2) {
@@ -2240,7 +2642,10 @@ export class Game {
       } else {
         tr.wood = Math.max(0, tr.wood - 12);
         tr.stone = Math.max(0, tr.stone - 6);
-        this.banner((tr.id === 0 ? "A slide in the hills" : tr.name + " — a slide") + " swallows stores", 2);
+        this.banner(
+          (tr.id === 0 ? "A slide in the hills" : tr.name + " — a slide") + " swallows stores",
+          2,
+        );
       }
     } else {
       const kind = (Math.random() * 3) | 0;
@@ -2250,7 +2655,7 @@ export class Game {
       } else if (kind === 1) {
         tr.wood += 16;
         this.banner(tr.id === 0 ? "Driftwood on the tide" : tr.name + " finds driftwood", 1.8);
-      } else if (hall && growing && tr.wood >= 36 && Math.random() < 0.5) {
+      } else if (tr.id !== 0 && hall && growing && tr.wood >= 36 && Math.random() < 0.5) {
         const spot = this.findOpenSpot(hall.x, hall.z, "hut", tr.id);
         if (spot) {
           this.placeBuilding("hut", spot.x, spot.z, tr.id);
@@ -2268,7 +2673,16 @@ export class Game {
     if (this.state.weatherT > 0) return;
     const prev = this.state.weather;
     const sn = this.seasonMix();
-    const cycle: Weather[] = ["clear", "mist", "rain", "storm", "frost", "golden", "flood", "drought"];
+    const cycle: Weather[] = [
+      "clear",
+      "mist",
+      "rain",
+      "storm",
+      "frost",
+      "golden",
+      "flood",
+      "drought",
+    ];
     const weights = [
       0.14 + sn.summer * 0.16 + sn.spring * 0.06,
       0.1 + sn.spring * 0.08 + sn.winter * 0.08,
@@ -2294,7 +2708,8 @@ export class Game {
       return;
     }
     this.state.weather = next;
-    this.state.weatherT = next === "flood" || next === "drought" ? 70 + Math.random() * 40 : 160 + Math.random() * 140;
+    this.state.weatherT =
+      next === "flood" || next === "drought" ? 70 + Math.random() * 40 : 160 + Math.random() * 140;
     if (next === "flood") {
       this.world.waterY = this.world.baseWaterY + 0.55;
       this.rebuildWalk();
@@ -2345,14 +2760,30 @@ export class Game {
   offersFor(spec: ResKind): TradeDeal[] {
     const all = this.state.deals.length ? this.state.deals : TRADE_OFFERS;
     const hit = all.filter((d) => d.get === spec || d.give === spec);
-    return (hit.length ? hit : all).slice(0, 3);
+    const rival = this.pickTradeRival();
+    return (hit.length ? hit : all)
+      .slice(0, 3)
+      .map((d) => {
+        if (!rival) return d;
+        const demand = rival[d.give] < 40 ? 1.3 : 0.9;
+        const supply = rival[d.get] > 80 ? 1.2 : 0.75;
+        const trust = 1 + (rival.trust || 0) * 0.15;
+        return {
+          ...d,
+          getAmt: Math.max(
+            0,
+            Math.min(Math.floor(rival[d.get]), Math.round(d.getAmt * demand * supply * trust)),
+          ),
+        };
+      })
+      .filter((d) => d.getAmt > 0);
   }
 
   tickSea(dt: number) {
     this.seaT -= dt;
     if (this.seaT > 0) return;
-    this.seaT = 110 + Math.random() * 80;
-    if (this.state.time < 200) return;
+    this.seaT = 480 + Math.random() * 240;
+    if (this.state.time < 600) return;
     const dead = this.state.tribes.find((t) => (t.id === 1 || t.id === 2) && !t.alive);
     if (dead && this.state.time - (dead.fallenT || 0) > 90) {
       this.landSeaTribe(dead.id);
@@ -2363,8 +2794,11 @@ export class Game {
 
   landSeaFolk() {
     const you = this.tribe(0);
-    const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
-    if (!you || !hall) return;
+    const hall = this.state.buildings.find(
+      (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+    );
+    if (!you || !hall || this.state.growthPolicy !== "welcome" || reserveSeconds(this) < 600)
+      return;
     if (you.food < 24 || this.popNow(0) + 2 > this.popCap(0)) {
       this.banner("Folk on the tide turn away — no food or huts", 2);
       return;
@@ -2438,6 +2872,8 @@ export class Game {
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
         if (n.amount > 0) continue;
+        // Exhausted wild food does not regrow through winter.
+        if (n.kind === "forage" && calendar(this).phase === 3) continue;
         let rate = 1;
         if (rain && n.kind !== "stone") rate = 1.25;
         if (frost) rate = 0.55;
@@ -2464,19 +2900,29 @@ export class Game {
   tickPeople(dt: number) {
     this.state.birthT -= dt;
     if (this.state.birthT <= 0) {
-      this.state.birthT = 52 + Math.random() * 28;
+      this.state.birthT = 180 + Math.random() * 60;
       for (const tr of this.state.tribes) {
         if (!tr.alive || tr.id === 3) continue;
         const pop = this.popNow(tr.id);
         const cap = this.popCap(tr.id);
         if (pop + this.queued(tr.id) >= cap) continue;
-        if (tr.food < 36) continue;
-        const hall = this.state.buildings.find((b) => b.team === tr.id && b.type === "townhall" && b.hp > 0);
+        if (reserveSeconds(this, tr.id) < 720) continue;
+        const hall = this.state.buildings.find(
+          (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
+        );
         if (!hall) continue;
         tr.food -= 16;
         const a = Math.random() * Math.PI * 2;
-        const u = this.spawnUnit("worker", hall.x + Math.cos(a) * 5.5, hall.z + Math.sin(a) * 5.5, tr.id);
+        const u = this.spawnUnit(
+          "worker",
+          hall.x + Math.cos(a) * 5.5,
+          hall.z + Math.sin(a) * 5.5,
+          tr.id,
+        );
         u.ageT = 0;
+        u.maturesAt = this.state.time + 450;
+        u.stature = 0.6;
+        u.workReason = "Growing up — supported by the village";
         u.order = "idle";
         if (tr.id === 0) {
           this.addFloater(u.x, u.y + 2.2, u.z, "Born", "#c9e8a0");
@@ -2486,25 +2932,36 @@ export class Game {
       }
     }
 
+    const counts = this.state.tribes.map((tr) => this.popNow(tr.id));
     for (const tr of this.state.tribes) {
       if (!tr.alive) continue;
-      const pop = this.popNow(tr.id);
-      let upkeep = pop * 0.028;
-      if (this.state.weather === "drought") upkeep *= 1.4;
-      if (this.state.weather === "frost") upkeep *= 1.15;
-      tr.food = Math.max(0, tr.food - upkeep * dt);
-      if (tr.id === 0 && tr.food < 8 && this.state.bannerT <= 0) this.banner("The stores run thin", 2);
+      const pop = counts[tr.id];
+      const upkeep = foodDemand(this, tr.id);
+      const spoilage =
+        tr.food * (this.hasBld(tr.id, "warehouse") ? 0.000015 : 0.00006) +
+        Math.max(0, tr.food - this.stockCap(tr.id)) * 0.02;
+      tr.food = Math.max(0, tr.food - (upkeep + spoilage) * dt);
+      if (tr.id === 0 && tr.food < 8 && this.state.bannerT <= 0)
+        this.banner("The stores run thin", 2);
     }
 
     for (const u of this.state.units) {
       if (u.hp <= 0) continue;
       u.ageT += dt;
+      if (u.maturesAt !== undefined && !isDependent(this, u)) {
+        u.maturesAt = undefined;
+        u.stature = 1;
+        u.workReason = "Ready to join the workforce";
+        u.order = "idle";
+        if (u.team === 0) this.banner("A young villager joins the workforce", 2);
+      }
       const tr = this.tribe(u.team);
       if (!tr) continue;
-      const pop = this.popNow(u.team);
+      const pop = counts[u.team];
       if (tr.food < 3 && pop > 4 && Math.random() < 0.035 * dt) {
         u.hp -= 8;
-        if (u.hp <= 0 && u.team === 0) this.banner("Hunger takes a " + (u.type === "worker" ? "gatherer" : "hunter"), 2);
+        if (u.hp <= 0 && u.team === 0)
+          this.banner("Hunger takes a " + (u.type === "worker" ? "gatherer" : "hunter"), 2);
       }
       const span = u.type === "worker" ? 1860 + (u.id % 420) : 2280 + (u.id % 360);
       if (u.ageT > span && pop > 4 && Math.random() < 0.06 * dt) {
@@ -2515,6 +2972,7 @@ export class Game {
           this.onSfx("death");
         }
       }
+      if (u.hp <= 0) counts[u.team]--;
     }
   }
 
@@ -2544,7 +3002,12 @@ export class Game {
     for (let i = 0; i < vis.length; i++) if (vis[i] === 2) vis[i] = 1;
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
-      this.stampVision(u.x, u.z, u.type === "archer" || u.type === "ranger" ? 16 : u.type === "worker" ? 11 : 13, 2);
+      this.stampVision(
+        u.x,
+        u.z,
+        u.type === "archer" || u.type === "ranger" ? 16 : u.type === "worker" ? 11 : 13,
+        2,
+      );
     }
     for (const b of this.state.buildings) {
       if (b.team !== 0 || b.hp <= 0) continue;
@@ -2554,10 +3017,7 @@ export class Game {
       if (vis[i] === 2) age[i] = 0;
       else if (vis[i] === 1) {
         age[i] += dt;
-        if (age[i] > 55) {
-          vis[i] = 0;
-          age[i] = 0;
-        }
+        age[i] = Math.min(age[i], 55);
       }
     }
   }
@@ -2569,7 +3029,8 @@ export class Game {
     }
     const d = UNITS[unitType];
     if (!d || d.from !== bld.type) {
-      if (bld.team === 0 && unitType !== "worker") this.banner("Train people at the hall. Craft weapons, then call them to arms.", 2);
+      if (bld.team === 0 && unitType !== "worker")
+        this.banner("Train people at the hall. Craft weapons, then call them to arms.", 2);
       return false;
     }
     const team = bld.team;
@@ -2607,7 +3068,12 @@ export class Game {
         ? this.state.selBld
         : this.state.buildings.find((b) => b.type === prefer && b.team === 0 && this.finished(b));
     if (!bld) {
-      this.banner(unitType === "worker" ? "Need a standing Town Hall" : "Raise a Barracks first, then train hunters", 1.6);
+      this.banner(
+        unitType === "worker"
+          ? "Need a standing Town Hall"
+          : "Raise a Barracks first, then train hunters",
+        1.6,
+      );
       return;
     }
     this.enqueueTrain(bld, unitType);
@@ -2657,14 +3123,18 @@ export class Game {
       u.dmg *= mul * (pick === "army" ? 1.1 : 1);
     }
     if (team === 0 && pick === "army" && tribe.age === 3) {
-      const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+      );
       if (hall && !this.hasBld(0, "watchtower")) {
         const spot = this.findOpenSpot(hall.x, hall.z, "watchtower", 0);
         if (spot) this.placeBuilding("watchtower", spot.x, spot.z, 0);
       }
     }
     if (team === 0 && pick === "army" && tribe.age === 5) {
-      const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
+      );
       if (hall) {
         this.spawnUnit("spearman", hall.x + 3, hall.z - 4, 0);
         this.spawnUnit("spearman", hall.x - 3, hall.z - 4, 0);
@@ -2695,7 +3165,8 @@ export class Game {
   resKind(node: ResourceNode | Building | Critter | null): ResKind | null {
     if (!node) return null;
     if ("species" in node) return node.species === "bird" ? null : "food";
-    if (node.kind === "building") return node.type === "farm" || node.type === "dock" ? "food" : null;
+    if (node.kind === "building")
+      return node.type === "farm" || node.type === "dock" ? "food" : null;
     if (node.kind === "tree") return "wood";
     if (node.kind === "stone") return "stone";
     if (node.kind === "copper") return "copper";
@@ -2716,33 +3187,46 @@ export class Game {
     };
     if (job === "food") {
       for (const b of this.state.buildings) {
-        if (this.finished(b) && b.team === u.team && b.type === "farm") consider(b, b.x, b.z, -40);
+        if (this.finished(b) && b.team === u.team && b.type === "farm" && farmAvailable(this, b))
+          consider(b, b.x, b.z, -40);
         if (this.finished(b) && b.team === u.team && b.type === "dock") consider(b, b.x, b.z, -20);
       }
       for (const n of this.state.forage) if (n.amount > 0) consider(n, n.x, n.z);
       for (const c of this.state.wildlife) {
         if (c.hp > 0 && c.species !== "bird") consider(c, c.x, c.z, u.huntOnly ? -80 : -28);
       }
-      const docks = this.state.buildings.filter((b) => b.team === u.team && b.type === "dock" && this.finished(b));
+      const docks = this.state.buildings.filter(
+        (b) => b.team === u.team && b.type === "dock" && this.finished(b),
+      );
       for (const n of this.state.fish) {
         if (n.amount <= 0) continue;
         const nearDock = docks.some((d) => Math.hypot(d.x - n.x, d.z - n.z) < DOCK_R);
         consider(n, n.x, n.z, nearDock ? -50 : 0);
       }
     } else if (job === "wood") {
-      if (!this.hasBld(u.team, "lumber")) return null;
-      const camps = this.state.buildings.filter((b) => b.team === u.team && b.type === "lumber" && this.finished(b));
+      const camps = this.state.buildings.filter(
+        (b) => b.team === u.team && b.type === "lumber" && this.finished(b),
+      );
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
-        if (!camps.some((c) => Math.hypot(c.x - n.x, c.z - n.z) < LUMBER_R)) continue;
+        if (
+          !camps.some((c) => Math.hypot(c.x - n.x, c.z - n.z) < LUMBER_R) &&
+          Math.hypot(n.x - this.campOf(u.team).x, n.z - this.campOf(u.team).z) > 28
+        )
+          continue;
         consider(n, n.x, n.z);
       }
     } else if (job === "stone") {
-      if (!this.hasBld(u.team, "quarry")) return null;
-      const quarries = this.state.buildings.filter((b) => b.team === u.team && b.type === "quarry" && this.finished(b));
+      const quarries = this.state.buildings.filter(
+        (b) => b.team === u.team && b.type === "quarry" && this.finished(b),
+      );
       for (const n of this.state.stones) {
         if (n.amount <= 0) continue;
-        if (!quarries.some((q) => Math.hypot(q.x - n.x, q.z - n.z) < QUARRY_R)) continue;
+        if (
+          !quarries.some((q) => Math.hypot(q.x - n.x, q.z - n.z) < QUARRY_R) &&
+          Math.hypot(n.x - this.campOf(u.team).x, n.z - this.campOf(u.team).z) > 28
+        )
+          continue;
         consider(n, n.x, n.z);
       }
     } else if (job === "copper") {
@@ -2815,10 +3299,34 @@ export class Game {
 
   campBonus(u: Unit, job: ResKind) {
     let m = this.gatherMul(u.team);
-    const want = job === "wood" ? "lumber" : job === "stone" ? "quarry" : job === "food" ? "dock" : job === "copper" || job === "iron" ? "forge" : null;
+    if (job === "wood" && !this.hasBld(u.team, "lumber")) m *= 2.2;
+    if (job === "stone" && !this.hasBld(u.team, "quarry")) m *= 2.8;
+    const want =
+      job === "wood"
+        ? "lumber"
+        : job === "stone"
+          ? "quarry"
+          : job === "food"
+            ? "dock"
+            : job === "copper" || job === "iron"
+              ? "forge"
+              : null;
     if (want) {
       for (const b of this.state.buildings) {
-        if (b.hp > 0 && b.team === u.team && b.type === want && this.finished(b) && Math.hypot(b.x - u.x, b.z - u.z) < (want === "lumber" ? LUMBER_R : want === "quarry" ? QUARRY_R : want === "forge" ? 16 : DOCK_R)) {
+        if (
+          b.hp > 0 &&
+          b.team === u.team &&
+          b.type === want &&
+          this.finished(b) &&
+          Math.hypot(b.x - u.x, b.z - u.z) <
+            (want === "lumber"
+              ? LUMBER_R
+              : want === "quarry"
+                ? QUARRY_R
+                : want === "forge"
+                  ? 16
+                  : DOCK_R)
+        ) {
           if (want === "dock" && this.height(u.x, u.z) > this.world.waterY + 0.7) continue;
           m *= GATHER[job].campBonus;
           break;
@@ -2847,109 +3355,188 @@ export class Game {
   }
 
   steer(u: Unit, dt: number) {
-    const dx = u.tx - u.x;
-    const dz = u.tz - u.z;
-    const dist = Math.hypot(dx, dz);
-    if (dist < 0.5) {
-      u.wanderT = 0;
+    if (this.state.walkDirty) this.rebuildWalk();
+    let tx = u.tx,
+      tz = u.tz;
+    for (const b of this.state.buildings) {
+      if (
+        !this.solidBuilding(b) ||
+        Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
+        Math.abs(tz - b.z) > b.d * 0.4 + u.r
+      )
+        continue;
+      const a = Math.atan2(u.z - b.z, u.x - b.x),
+        r = Math.max(b.w, b.d) * 0.4 + u.r + 0.65;
+      tx = b.x + Math.cos(a) * r;
+      tz = b.z + Math.sin(a) * r;
+    }
+    const distance = Math.hypot(tx - u.x, tz - u.z);
+    if (distance < 0.5) {
+      this.paths.delete(u.id);
+      u.stuckT = 0;
       return true;
     }
-    const wet = this.height(u.x, u.z) < this.world.waterY + 0.28;
-    const sp = u.speed * (wet ? 0.48 : 1) * dt;
-    const step = Math.min(sp, dist);
-    let nx = u.x + (dx / dist) * step;
-    let nz = u.z + (dz / dist) * step;
+    let route = this.paths.get(u.id);
+    if (
+      !route ||
+      Math.hypot(route.tx - tx, route.tz - tz) > 2 ||
+      route.revision !== this.navRevision ||
+      (route.failed && route.retry < this.state.time)
+    ) {
+      if (this.navBudget <= 0) return false;
+      this.navBudget--;
+      let direct = true;
+      const samples = Math.ceil(distance);
+      for (let i = 1; i <= samples; i++)
+        if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
+          direct = false;
+          break;
+        }
+      let points = [{ x: tx, z: tz }],
+        failed = false;
+      if (!direct) {
+        const cell = MAP / WALK;
+        const index = (x: number, z: number) =>
+          Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell))) * WALK +
+          Math.max(0, Math.min(WALK - 1, Math.floor((x + HALF) / cell)));
+        const goal = index(tx, tz);
+        let end = goal;
+        if (!this.walk[end]) {
+          let best = Infinity;
+          for (let dz = -3; dz <= 3; dz++)
+            for (let dx = -3; dx <= 3; dx++) {
+              const x = (goal % WALK) + dx,
+                z = Math.floor(goal / WALK) + dz;
+              if (x < 0 || z < 0 || x >= WALK || z >= WALK) continue;
+              const n = z * WALK + x,
+                d = dx * dx + dz * dz;
+              if (this.walk[n] && d < best) {
+                best = d;
+                end = n;
+              }
+            }
+        }
+        const path = findPath(this.walk, WALK, index(u.x, u.z), end);
+        if (path) {
+          points = path.map((n) => ({
+            x: -HALF + ((n % WALK) + 0.5) * cell,
+            z: -HALF + (Math.floor(n / WALK) + 0.5) * cell,
+          }));
+          points.push({ x: tx, z: tz });
+        } else {
+          points = [];
+          failed = true;
+        }
+      }
+      route = { tx, tz, revision: this.navRevision, points, failed, retry: this.state.time + 3 };
+      this.paths.set(u.id, route);
+    }
+    while (
+      route.points.length > 1 &&
+      Math.hypot(route.points[0].x - u.x, route.points[0].z - u.z) < 0.6
+    )
+      route.points.shift();
+    const point = route.points[0];
+    if (!point) {
+      u.stuckT += dt;
+      return false;
+    }
+    const dx = point.x - u.x,
+      dz = point.z - u.z,
+      d = Math.hypot(dx, dz);
+    if (d < 0.01) return false;
+    const step = Math.min(u.speed * dt, d);
+    let nx = u.x + (dx / d) * step,
+      nz = u.z + (dz / d) * step;
     if (!this.canStep(u, nx, nz)) {
-      const base = Math.atan2(dx, dz);
       let found = false;
-      for (const off of [0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 2.0, -2.0, 2.6, -2.6, 3.1]) {
-        const a = base + off;
-        const tx = u.x + Math.sin(a) * step;
-        const tz = u.z + Math.cos(a) * step;
-        if (this.canStep(u, tx, tz)) {
-          nx = tx;
-          nz = tz;
+      for (const off of [0.55, -0.55, 1.1, -1.1, 1.6, -1.6]) {
+        const a = Math.atan2(dx, dz) + off,
+          x = u.x + Math.sin(a) * step,
+          z = u.z + Math.cos(a) * step;
+        if (this.canStep(u, x, z)) {
+          nx = x;
+          nz = z;
           found = true;
           break;
         }
       }
       if (!found) {
         u.stuckT += dt;
-        u.wanderT += dt;
-        if (u.stuckT > 0.7 || u.wanderT > 0.45) {
-          u.wanderT = 0;
-          u.stuckT = 0;
-          const toward = Math.atan2(u.tx - u.x, u.tz - u.z);
-          for (const dist of [2.2, 3.4, 5.2, 7.5, 1.2, 10]) {
-            for (const off of [0, 0.55, -0.55, 1.1, -1.1, 1.8, -1.8, 2.5]) {
-              const a = toward + off;
-              const tx = u.x + Math.sin(a) * dist;
-              const tz = u.z + Math.cos(a) * dist;
-              if (this.canStep(u, tx, tz)) {
-                u.x = tx;
-                u.z = tz;
-                u.y = this.height(tx, tz);
-                return false;
-              }
-            }
-          }
-          const drop = this.nearestDrop(u.x, u.z, u.team) || this.campOf(u.team);
-          if (drop) {
-            u.x = drop.x + (Math.random() - 0.5) * 3;
-            u.z = drop.z + (Math.random() - 0.5) * 3;
-            u.y = this.height(u.x, u.z);
-          }
+        if (u.stuckT > 1) {
+          route.failed = true;
+          route.retry = this.state.time + 1;
         }
         return false;
       }
-    } else {
-      u.wanderT = Math.max(0, u.wanderT - dt);
-      u.stuckT = 0;
     }
+    u.vx = (nx - u.x) / dt;
+    u.vz = (nz - u.z) / dt;
     u.x = nx;
     u.z = nz;
     u.y = this.height(nx, nz);
-    if (!Number.isFinite(u.x) || !Number.isFinite(u.z) || !Number.isFinite(u.y)) {
-      const drop = this.campOf(u.team);
-      u.x = drop.x;
-      u.z = drop.z;
-      u.y = this.height(drop.x, drop.z);
-      u.stuckT = 0;
-    }
     u.facing = Math.atan2(dx, dz);
-    u.vx = (dx / dist) * u.speed;
-    u.vz = (dz / dist) * u.speed;
     u.stride += step * 3.6;
+    u.stuckT = 0;
     return false;
   }
 
   separate(dt: number) {
+    // Query nearby buckets instead of comparing every pair across the island.
     const us = this.state.units;
+    const cell = Math.max(2, ...us.map((u) => u.r * 2));
+    const buckets = new Map<string, number[]>();
+    for (let i = 0; i < us.length; i++) {
+      const u = us[i];
+      if (u.hp <= 0) continue;
+      const key = `${Math.floor(u.x / cell)},${Math.floor(u.z / cell)}`;
+      const bucket = buckets.get(key) || [];
+      bucket.push(i);
+      buckets.set(key, bucket);
+    }
     for (let i = 0; i < us.length; i++) {
       const a = us[i];
       if (a.hp <= 0) continue;
-      for (let j = i + 1; j < us.length; j++) {
-        const b = us[j];
-        if (b.hp <= 0) continue;
-        const dx = a.x - b.x;
-        const dz = a.z - b.z;
-        const min = a.r + b.r;
-        const d2 = dx * dx + dz * dz;
-        if (d2 > 0.0001 && d2 < min * min) {
-          const d = Math.sqrt(d2);
-          const push = ((min - d) / 2) * dt * 8;
-          const nx = dx / d;
-          const nz = dz / d;
-          a.x += nx * push;
-          a.z += nz * push;
-          b.x -= nx * push;
-          b.z -= nz * push;
+      const cx = Math.floor(a.x / cell),
+        cz = Math.floor(a.z / cell);
+      for (let z = cz - 1; z <= cz + 1; z++)
+        for (let x = cx - 1; x <= cx + 1; x++) {
+          for (const j of buckets.get(`${x},${z}`) || []) {
+            if (j <= i) continue;
+            const b = us[j];
+            const dx = a.x - b.x,
+              dz = a.z - b.z;
+            const min = a.r + b.r,
+              d2 = dx * dx + dz * dz;
+            if (d2 >= min * min) continue;
+            const d = Math.sqrt(d2);
+            // Coincident spawns need a deterministic direction, too.
+            const nx = d > 0.0001 ? dx / d : 1;
+            const nz = d > 0.0001 ? dz / d : 0;
+            const push = (min - d) * 0.5 * Math.min(1, dt * 8);
+            if (a.order !== "hold" && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
+              a.x += nx * push;
+              a.z += nz * push;
+              a.y = this.height(a.x, a.z);
+            }
+            if (b.order !== "hold" && this.canStep(b, b.x - nx * push, b.z - nz * push)) {
+              b.x -= nx * push;
+              b.z -= nz * push;
+              b.y = this.height(b.x, b.z);
+            }
+          }
         }
-      }
     }
   }
 
   workerAI(u: Unit, dt: number) {
+    if (isDependent(this, u)) {
+      u.node = null;
+      u.target = null;
+      u.order = "idle";
+      u.workReason = "Growing up — supported by the village";
+      return;
+    }
     if (u.order === "hold") return;
     if (u.order === "trade") {
       this.tradeAI(u, dt);
@@ -2967,26 +3554,16 @@ export class Game {
       this.exploreAI(u, dt);
       return;
     }
+    if (u.stuckT > 4 && u.node) {
+      u.blockedTask = u.node.id;
+      u.retryWorkAt = this.state.time + 30;
+      u.node = null;
+      u.order = "idle";
+      u.stuckT = 0;
+      u.workReason = "Route blocked; finding another task";
+    }
     if (u.order === "idle") {
-      if (!u.huntOnly) {
-        const site = this.nearestUnbuilt(u);
-        if (site) {
-          u.order = "build";
-          u.node = site;
-          u.tx = site.x;
-          u.tz = site.z;
-          return;
-        }
-      }
-      const job = u.huntOnly ? "food" : this.pickJob(u);
-      u.job = job;
-      const node = u.huntOnly ? this.findHunt(u) : this.findNode(u, job);
-      if (node) {
-        u.node = node;
-        u.order = "gather";
-        u.tx = node.x;
-        u.tz = node.z;
-      }
+      this.workBoard.assign(this, u);
       return;
     }
     if (u.order === "build") {
@@ -2995,6 +3572,10 @@ export class Game {
     }
     if (u.order === "gather") {
       const node = u.node;
+      if (u.carry > 0 && u.carryType && node && this.resKind(node) !== u.carryType) {
+        u.order = "return";
+        return;
+      }
       if (!node || ("amount" in node && node.amount <= 0) || ("hp" in node && node.hp <= 0)) {
         u.order = "idle";
         u.node = null;
@@ -3005,26 +3586,24 @@ export class Game {
         const spot = this.nearestWalk(u, node.x, node.z);
         u.tx = spot.x;
         u.tz = spot.z;
-        this.steer(u, dt);
+        if (this.steer(u, dt) && Math.hypot(u.x - node.x, u.z - node.z) > reach) {
+          u.blockedTask = node.id;
+          u.retryWorkAt = this.state.time + 60;
+          u.node = null;
+          u.order = "idle";
+          u.workReason = "Cannot reach the work surface; finding another task";
+        }
+        return;
+      }
+      if ("type" in node && node.type === "farm") {
+        farmWork(this, u, node as Building, dt);
         return;
       }
       const t = this.resKind(node) || u.job || "food";
-      if (t === "stone" && !this.hasBld(u.team, "quarry")) {
-        u.order = "idle";
-        u.node = null;
-        u.jobLock = false;
-        if (u.job === "stone") u.job = null;
-        return;
-      }
-      if (t === "wood" && !this.hasBld(u.team, "lumber")) {
-        u.order = "idle";
-        u.node = null;
-        u.jobLock = false;
-        if (u.job === "wood") u.job = null;
-        return;
-      }
       const g = GATHER[t];
-      const period = g.period * this.campBonus(u, t);
+      const winterForage =
+        "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
+      const period = g.period * this.campBonus(u, t) * winterForage;
       u.gatherT += dt;
       u.stride += dt * 9;
       u.facing = Math.atan2(node.x - u.x, node.z - u.z);
@@ -3048,7 +3627,7 @@ export class Game {
           }
           return;
         }
-        const rich = "rich" in node ? (node as ResourceNode).rich ?? 1 : 1;
+        const rich = "rich" in node ? ((node as ResourceNode).rich ?? 1) : 1;
         let gained = 1;
         if (rich < 0.7) {
           gained = Math.random() < 0.42 ? 0 : 1;
@@ -3066,7 +3645,8 @@ export class Game {
           u.carryType = t;
           if (u.team === 0) {
             if (gained > 1) this.addFloater(u.x, u.y + 1.8, u.z, "+" + gained, "#efe4b0");
-            if (Math.random() < 0.35) this.onSfx(node && "kind" in node && node.kind === "fish" ? "splash" : "chop");
+            if (Math.random() < 0.35)
+              this.onSfx(node && "kind" in node && node.kind === "fish" ? "splash" : "chop");
           }
         }
         if ("amount" in node) {
@@ -3081,7 +3661,13 @@ export class Game {
                   : node.kind === "fish"
                     ? 55 + Math.random() * 40
                     : 190 + Math.random() * 80;
-            this.addBurst(node.x, u.y + 1, node.z, t === "wood" ? "#3a5a28" : node.kind === "fish" ? "#7ec8d4" : "#888", 6);
+            this.addBurst(
+              node.x,
+              u.y + 1,
+              node.z,
+              t === "wood" ? "#3a5a28" : node.kind === "fish" ? "#7ec8d4" : "#888",
+              6,
+            );
           }
         }
         if (u.carry >= g.carry || ("amount" in node && node.amount <= 0)) {
@@ -3115,14 +3701,9 @@ export class Game {
         u.carry = 0;
         u.carryType = null;
       }
-      const node = this.findNode(u, u.jobLock && u.job ? u.job : this.pickJob(u));
-      if (node) {
-        if (!u.jobLock) u.job = this.resKind(node) || u.job;
-        u.node = node;
-        u.order = "gather";
-        u.tx = node.x;
-        u.tz = node.z;
-      } else u.order = "idle";
+      u.node = null;
+      u.order = "idle";
+      this.workBoard.assign(this, u);
     }
   }
 
@@ -3137,10 +3718,9 @@ export class Game {
       ? this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0)
       : null;
     if (!rival || !hall || rival.hostile) {
-      this.tribe(0)[deal.give] += deal.giveAmt;
       u.trade = null;
       u.tradeTeam = 0;
-      u.order = "idle";
+      u.order = "return";
       this.banner(rival?.hostile ? "Trade called off" : "The traders turn back", 1.6);
       return;
     }
@@ -3150,8 +3730,19 @@ export class Game {
       this.steer(u, dt);
       return;
     }
-    const tr = this.tribe(0);
-    tr[deal.get] += deal.getAmt;
+    if (rival[deal.get] < deal.getAmt) {
+      u.trade = null;
+      u.order = "return";
+      this.banner("The trader cannot fill the order; bringing supplies home", 3);
+      return;
+    }
+    rival[deal.get] -= deal.getAmt;
+    rival[deal.give] += deal.giveAmt;
+    u.carry = deal.getAmt;
+    u.carryType = deal.get;
+    u.workReason = "Bringing traded goods home";
+    rival.trust = Math.min(1, (rival.trust || 0) + 0.15);
+    rival.tension = Math.max(0, rival.tension - 0.12);
     this.addFloater(u.x, u.y + 2.4, u.z, "+" + deal.getAmt, "#efe4b0");
     this.banner("Traded with " + rival.name, 1.8);
     u.trade = null;
@@ -3169,16 +3760,28 @@ export class Game {
     let best: Unit | Building | null = null;
     let bd = radius * radius;
     for (const o of this.state.units) {
-      if (o.hp <= 0 || o.team === u.team || !this.isFoe(u.team, o.team)) continue;
+      if (
+        o.hp <= 0 ||
+        o.team === u.team ||
+        !this.isFoe(u.team, o.team) ||
+        (u.team === 0 && !this.visibleAt(o.x, o.z))
+      )
+        continue;
       const d = (o.x - u.x) ** 2 + (o.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
         best = o;
       }
     }
-    if (u.team !== 0 || u.order === "attack") {
+    if (u.team !== 0 || u.order === "attack" || u.order === "attackmove") {
       for (const b of this.state.buildings) {
-        if (b.hp <= 0 || b.team === u.team || !this.isFoe(u.team, b.team)) continue;
+        if (
+          b.hp <= 0 ||
+          b.team === u.team ||
+          !this.isFoe(u.team, b.team) ||
+          (u.team === 0 && !this.visibleAt(b.x, b.z))
+        )
+          continue;
         const d = (b.x - u.x) ** 2 + (b.z - u.z) ** 2;
         if (d < bd) {
           bd = d;
@@ -3191,20 +3794,30 @@ export class Game {
 
   dealDamage(attacker: Unit | Building, target: Unit | Building) {
     if (!target || target.hp <= 0) return;
-    const dmg = ("dmg" in attacker ? attacker.dmg : 8) * this.dmgMul(attacker.team, attacker.x, attacker.z);
+    const dmg =
+      ("dmg" in attacker ? attacker.dmg : 8) * this.dmgMul(attacker.team, attacker.x, attacker.z);
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attacker.team === 0 || target.team === 0) this.onSfx("hit");
-    if (attacker.team === 0 && target.team !== 0 && target.team !== 3 && this.isArmed(attacker)) this.makeHostile(target.team);
-    if (target.team === 0 && attacker.team !== 0 && attacker.team !== 3 && this.isArmed(target)) this.makeHostile(attacker.team);
+    if (attacker.team === 0 && target.team !== 0 && target.team !== 3 && this.isArmed(attacker))
+      this.makeHostile(target.team);
+    if (target.team === 0 && attacker.team !== 0 && attacker.team !== 3 && this.isArmed(target))
+      this.makeHostile(attacker.team);
     if (target.hp <= 0) {
       target.hp = 0;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#6a3030", 12);
-      this.addFloater(target.x, target.y + 2.4, target.z, target.kind === "building" ? "Destroyed" : "Fallen", "#c44");
+      this.addFloater(
+        target.x,
+        target.y + 2.4,
+        target.z,
+        target.kind === "building" ? "Destroyed" : "Fallen",
+        "#c44",
+      );
       if (target.kind === "building") this.state.walkDirty = true;
       if (target.kind === "building" && attacker.team === 0) this.tickRegions();
       if (target.kind === "building" && target.team === 0) this.defendHome(0);
-      if (target.kind === "building" && (target.team === 1 || target.team === 2)) this.defendHome(target.team);
+      if (target.kind === "building" && (target.team === 1 || target.team === 2))
+        this.defendHome(target.team);
       if (target.kind === "unit") {
         for (const u of this.state.units) {
           if (u.target === target) u.target = null;
@@ -3234,22 +3847,42 @@ export class Game {
     };
     this.state.projectiles.push(p);
     if (from.team === 0 || to.team === 0) this.onSfx("bow");
-    if (this.state.projectiles.length > 48) this.state.projectiles.splice(0, this.state.projectiles.length - 48);
+    if (this.state.projectiles.length > 48)
+      this.state.projectiles.splice(0, this.state.projectiles.length - 48);
   }
 
   combatAI(u: Unit, dt: number) {
     u.cd = Math.max(0, u.cd - dt);
-    if (u.order === "hold") return;
+    if (u.order === "hold") {
+      const t = this.acquireTarget(u, u.range + 1);
+      if (
+        t &&
+        u.cd <= 0 &&
+        Math.hypot(t.x - u.x, t.z - u.z) <=
+          u.range + (t.kind === "unit" ? t.r + 0.35 : Math.max(t.w, t.d) * 0.55)
+      ) {
+        u.cd = u.rof;
+        u.facing = Math.atan2(t.x - u.x, t.z - u.z);
+        if (u.type === "archer" || u.type === "ranger") this.fireArrow(u, t);
+        else this.dealDamage(u, t);
+      }
+      return;
+    }
     if (u.order === "move") {
       if (this.steer(u, dt)) u.order = "idle";
       return;
     }
     if (u.order === "attackmove") {
-      const t = this.acquireTarget(u, 16) || (u.target && u.target.hp > 0 ? u.target : null);
+      const t =
+        this.acquireTarget(u, 16) ||
+        (u.target && u.target.hp > 0 && (u.team !== 0 || this.visibleAt(u.target.x, u.target.z))
+          ? u.target
+          : null);
       if (t) {
         u.target = t;
         u.order = "attack";
       } else if (this.steer(u, dt)) {
+        u.attackDestination = null;
         u.order = "idle";
       }
     }
@@ -3266,20 +3899,30 @@ export class Game {
     }
     if (u.order === "attack") {
       const t = u.target;
-      if (!t || t.hp <= 0) {
+      if (
+        !t ||
+        t.hp <= 0 ||
+        !this.isFoe(u.team, t.team) ||
+        (u.team === 0 && !this.visibleAt(t.x, t.z))
+      ) {
         u.target = null;
         if (u.pillage >= 0) {
           const next = this.nextPillage(u);
           if (next) {
-            u.target = next;
+            u.target = this.visibleAt(next.x, next.z) ? next : null;
             u.tx = next.x;
             u.tz = next.z;
-            u.order = "attack";
+            u.attackDestination = { x: next.x, z: next.z };
+            u.order = u.target ? "attack" : "attackmove";
             return;
           }
           u.pillage = -1;
         }
-        u.order = "idle";
+        if (u.attackDestination) {
+          u.tx = u.attackDestination.x;
+          u.tz = u.attackDestination.z;
+          u.order = "attackmove";
+        } else u.order = "idle";
         return;
       }
       u.tx = t.x;
@@ -3303,7 +3946,9 @@ export class Game {
     u.wanderT -= dt;
     u.aggroT -= dt;
     if (u.type === "leader") {
-      const hall = this.state.buildings.find((b) => b.team === u.team && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === u.team && b.type === "townhall" && b.hp > 0,
+      );
       const near = this.acquireTarget(u, 10);
       if (near) {
         u.target = near;
@@ -3333,7 +3978,9 @@ export class Game {
       return;
     }
     const tr = this.tribe(u.team);
-    const hall = this.state.buildings.find((b) => b.team === u.team && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === u.team && b.type === "townhall" && b.hp > 0,
+    );
     let near: Unit | Building | null = null;
     if (tr.hostile || tr.ally || u.team === 3) {
       near = this.acquireTarget(u, u.team === 3 ? 22 : 14);
@@ -3341,7 +3988,8 @@ export class Game {
       const campR = 16;
       if (Math.hypot(u.x - hall.x, u.z - hall.z) < campR) {
         near = this.acquireTarget(u, 10);
-        if (near && near.kind === "unit" && (near.type === "worker" || near.order === "trade")) near = null;
+        if (near && near.kind === "unit" && (near.type === "worker" || near.order === "trade"))
+          near = null;
         if (near && Math.hypot(near.x - hall.x, near.z - hall.z) > campR + 2) near = null;
       }
     }
@@ -3357,7 +4005,9 @@ export class Game {
     }
     if (u.wanderT <= 0 || Math.hypot(u.x - u.tx, u.z - u.tz) < 0.8) {
       u.wanderT = 2.5 + Math.random() * 4;
-      const hall = this.state.buildings.find((b) => b.team === u.team && b.type === "townhall" && b.hp > 0);
+      const hall = this.state.buildings.find(
+        (b) => b.team === u.team && b.type === "townhall" && b.hp > 0,
+      );
       const cx = hall ? hall.x : u.x;
       const cz = hall ? hall.z : u.z;
       const a = Math.random() * Math.PI * 2;
@@ -3389,7 +4039,13 @@ export class Game {
             if (t.kind === "building") this.state.walkDirty = true;
           }
           if (p.team === 0 && t.team !== 0 && t.team !== 3) this.makeHostile(t.team);
-          if (p.team !== 0 && p.team !== 3 && t.team === 0 && (t.kind === "building" || t.type !== "worker")) this.makeHostile(p.team);
+          if (
+            p.team !== 0 &&
+            p.team !== 3 &&
+            t.team === 0 &&
+            (t.kind === "building" || t.type !== "worker")
+          )
+            this.makeHostile(p.team);
         }
         ps.splice(i, 1);
         continue;
@@ -3445,7 +4101,9 @@ export class Game {
         if (u.hp <= 0 || u.team === b.team) continue;
         if (b.team !== 0 && !this.tribe(b.team)?.hostile) {
           if (u.type === "worker" || u.order === "trade") continue;
-          const hall = this.state.buildings.find((h) => h.team === b.team && h.type === "townhall" && h.hp > 0);
+          const hall = this.state.buildings.find(
+            (h) => h.team === b.team && h.type === "townhall" && h.hp > 0,
+          );
           if (hall && Math.hypot(u.x - hall.x, u.z - hall.z) > 16) continue;
         }
         const d = (u.x - b.x) ** 2 + (u.z - b.z) ** 2;
@@ -3480,7 +4138,8 @@ export class Game {
           const a = Math.random() * Math.PI * 2;
           const x = Math.round((t.x + Math.cos(a) * 6) / TILE) * TILE;
           const z = Math.round((t.z + Math.sin(a) * 6) / TILE) * TILE;
-          if (this.placementValid(type, x, z, team) && Math.hypot(x - cx, z - cz) < 36) return { x, z };
+          if (this.placementValid(type, x, z, team) && Math.hypot(x - cx, z - cz) < 36)
+            return { x, z };
         }
       }
     }
@@ -3502,7 +4161,9 @@ export class Game {
     if (team === 3) return;
     const tr = this.tribe(team);
     if (!tr || !tr.alive) return;
-    const hall = this.state.buildings.find((b) => b.team === team && b.type === "townhall" && b.hp > 0);
+    const hall = this.state.buildings.find(
+      (b) => b.team === team && b.type === "townhall" && b.hp > 0,
+    );
     if (!hall) {
       tr.alive = false;
       tr.fallenT = this.state.time;
@@ -3516,7 +4177,12 @@ export class Game {
     const costScale = 0.92;
     const pop = this.popNow(team);
     const cap = this.popCap(team);
-    const stage = !tr.hostile && this.state.time < 90 && tr.age < 1 ? 1 : tr.hostile && (tr.age >= 2 || this.state.time > 110) ? 3 : 2;
+    const stage =
+      !tr.hostile && this.state.time < 90 && tr.age < 1
+        ? 1
+        : tr.hostile && (tr.age >= 2 || this.state.time > 110)
+          ? 3
+          : 2;
 
     const fortune = this.tribeFortune(team);
     const growing = fortune > 2.1;
@@ -3524,30 +4190,49 @@ export class Game {
 
     if (tr.age < 5 && pop >= (AGE_COST[tr.age + 1]?.pop || 0) * (growing ? 0.75 : 0.95)) {
       const c = AGE_COST[tr.age + 1];
-      if (c && tr.food > (c.food || 0) * costScale && tr.wood > (c.wood || 0) * costScale && Math.random() < tr.tech + (growing ? 0.38 : 0.08)) {
+      if (
+        c &&
+        tr.food > (c.food || 0) * costScale &&
+        tr.wood > (c.wood || 0) * costScale &&
+        Math.random() < tr.tech + (growing ? 0.38 : 0.08)
+      ) {
         this.tryAgeUp(team);
       }
     }
 
     if (pop + this.queued(team) < cap && tr.food >= (shrinking ? 70 : 36)) {
       const th = hall;
-      if (th.queue.length < 2 && Math.random() < (growing ? 0.78 : shrinking ? 0.12 : 0.5)) this.enqueueTrain(th, "worker");
+      if (th.queue.length < 2 && Math.random() < (growing ? 0.78 : shrinking ? 0.12 : 0.5))
+        this.enqueueTrain(th, "worker");
     }
 
-    if (cap - pop < 3 && tr.wood >= 36 && Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)) {
+    if (
+      cap - pop < 3 &&
+      tr.wood >= 36 &&
+      Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
+    ) {
       const spot = this.findOpenSpot(hall.x, hall.z, "hut", team);
       if (spot) this.placeBuilding("hut", spot.x, spot.z, team);
     }
 
-    const farms = this.state.buildings.filter((b) => b.team === team && b.type === "farm" && b.hp > 0).length;
+    const farms = this.state.buildings.filter(
+      (b) => b.team === team && b.type === "farm" && b.hp > 0,
+    ).length;
     if (team === 1) {
       if (!this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.55) {
         const spot = this.findOpenSpot(hall.x, hall.z, "quarry", team);
         if (spot) this.placeBuilding("quarry", spot.x, spot.z, team);
       }
       if (!this.hasBld(team, "cairn") && tr.stone >= 30 && Math.random() < 0.4) {
-        const st = this.state.stones.find((n) => n.amount > 0 && Math.hypot(n.x - hall.x, n.z - hall.z) < 40);
-        const spot = this.findOpenSpot(st ? st.x : hall.x + 10, st ? st.z : hall.z - 8, "cairn", team);
+        const st = this.state.stones.find(
+          (n) => n.amount > 0 && Math.hypot(n.x - hall.x, n.z - hall.z) < 40,
+        );
+        const spot = this.findOpenSpot(
+          st ? st.x : hall.x + 10,
+          st ? st.z : hall.z - 8,
+          "cairn",
+          team,
+        );
         if (spot) this.placeBuilding("cairn", spot.x, spot.z, team);
       }
     }
@@ -3557,8 +4242,15 @@ export class Game {
         if (spot) this.placeBuilding("farm", spot.x, spot.z, team);
       }
       if (!this.hasBld(team, "grove") && tr.wood >= 30 && Math.random() < 0.45) {
-        const fo = this.state.forage.find((n) => n.amount > 0 && Math.hypot(n.x - hall.x, n.z - hall.z) < 36);
-        const spot = this.findOpenSpot(fo ? fo.x : hall.x - 10, fo ? fo.z : hall.z + 8, "grove", team);
+        const fo = this.state.forage.find(
+          (n) => n.amount > 0 && Math.hypot(n.x - hall.x, n.z - hall.z) < 36,
+        );
+        const spot = this.findOpenSpot(
+          fo ? fo.x : hall.x - 10,
+          fo ? fo.z : hall.z + 8,
+          "grove",
+          team,
+        );
         if (spot) this.placeBuilding("grove", spot.x, spot.z, team);
       }
     }
@@ -3577,7 +4269,9 @@ export class Game {
     }
 
     if (tr.food < 10 && pop > 3 && Math.random() < (shrinking ? 0.7 : 0.35)) {
-      const huts = this.state.buildings.filter((b) => b.team === team && b.type === "hut" && b.hp > 0);
+      const huts = this.state.buildings.filter(
+        (b) => b.team === team && b.type === "hut" && b.hp > 0,
+      );
       if (huts.length > 1) {
         huts[huts.length - 1].hp = 0;
         if (this.state.time > 40) this.banner(tr.name + " abandons a hut", 1.8);
@@ -3604,9 +4298,13 @@ export class Game {
       if (spot) this.placeBuilding("barracks", spot.x, spot.z, team);
     }
 
-    const bar = this.state.buildings.find((b) => b.team === team && b.type === "barracks" && b.hp > 0);
+    const bar = this.state.buildings.find(
+      (b) => b.team === team && b.type === "barracks" && b.hp > 0,
+    );
     if (stage >= 2 && bar && bar.queue.length < 2) {
-      const mil = this.state.units.filter((u) => u.team === team && u.type !== "worker" && u.hp > 0).length;
+      const mil = this.state.units.filter(
+        (u) => u.team === team && u.type !== "worker" && u.hp > 0,
+      ).length;
       if (mil < 3 + tr.age * 2) {
         let kind: UnitType = "spearman";
         if (team === 1) kind = tr.age >= 1 && Math.random() < 0.55 ? "warden" : "spearman";
@@ -3614,21 +4312,29 @@ export class Game {
         else if (tr.age >= 2 && Math.random() < 0.45) kind = "swordsman";
         else if (tr.age >= 1 && Math.random() < 0.4) kind = "archer";
         if (tr.age >= 4 && this.hasBld(team, "stables") && Math.random() < 0.35) {
-          const st = this.state.buildings.find((b) => b.team === team && b.type === "stables" && b.hp > 0);
+          const st = this.state.buildings.find(
+            (b) => b.team === team && b.type === "stables" && b.hp > 0,
+          );
           if (st) this.enqueueTrain(st, "cavalry");
         } else this.enqueueTrain(bar, kind);
       }
     }
 
-    tr.lastRaid -= dt;
-    if (this.state.time > 80 && tr.lastRaid <= 0 && !tr.ally) {
-      const mil = this.state.units.filter((u) => u.team === team && u.type !== "worker" && u.type !== "leader" && u.hp > 0);
+    tr.lastRaid -= 2;
+    tr.intent = neighborIntent(this, team);
+    if (tr.intent === "raid" && tr.lastRaid <= 0 && !tr.ally) {
+      const mil = this.state.units.filter(
+        (u) => u.team === team && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
+      );
       const youThreat = this.raidThreat(0);
       const want = growing ? 0.28 : shrinking ? 0.08 : 0.16;
       if (mil.length >= 2 && Math.random() < want + tr.aggro * 0.25 + youThreat * 0.2) {
         tr.hostile = true;
-        tr.lastRaid = 40 + Math.random() * 50;
-        const targets = this.state.buildings.filter((b) => b.team === 0 && b.hp > 0 && b.type !== "townhall");
+        tr.lastRaid = 360 + Math.random() * 180;
+        tr.recoveryUntil = this.state.time + tr.lastRaid;
+        const targets = this.state.buildings.filter(
+          (b) => b.team === 0 && b.hp > 0 && b.type !== "townhall",
+        );
         if (targets.length) {
           const t = targets[(Math.random() * targets.length) | 0];
           const n = shrinking ? 1 : 1 + ((Math.random() * Math.min(mil.length, 2 + tr.age)) | 0);
@@ -3638,7 +4344,8 @@ export class Game {
             u.order = "attackmove";
             u.target = t;
           }
-          if (this.started) this.banner(tr.name + " strikes your " + (BUILDINGS[t.type]?.name || "camp"), 2);
+          if (this.started)
+            this.banner(tr.name + " strikes your " + (BUILDINGS[t.type]?.name || "camp"), 2);
         }
       } else tr.lastRaid = 14 + Math.random() * 20;
     }
@@ -3653,7 +4360,9 @@ export class Game {
       this.onSfx("lose");
       return;
     }
-    const rivalsAlive = this.state.tribes.filter((t) => t.id === 1 || t.id === 2).filter((t) => t.alive).length;
+    const rivalsAlive = this.state.tribes
+      .filter((t) => t.id === 1 || t.id === 2)
+      .filter((t) => t.alive).length;
     const player = this.tribe(0);
     if (rivalsAlive === 0 && this.state.time > 120) {
       this.state.ended = "win";
@@ -3661,7 +4370,10 @@ export class Game {
       this.onSfx("win");
       return;
     }
-    const armed = this.state.units.filter((u) => u.team === 0 && u.hp > 0 && (u.militia || (u.type !== "worker" && u.type !== "leader"))).length;
+    const armed = this.state.units.filter(
+      (u) =>
+        u.team === 0 && u.hp > 0 && (u.militia || (u.type !== "worker" && u.type !== "leader")),
+    ).length;
     if (player.age >= 5 && this.popNow(0) >= 28 && armed >= 8 && this.state.raidWave >= 4) {
       this.state.ended = "win";
       this.state.endReason = "A Renaissance realm, armed, that has weathered the sea.";
@@ -3670,15 +4382,41 @@ export class Game {
   }
 
   currentObjective() {
+    if (this.state.units.some((u) => u.team === 0 && u.emergency))
+      return "Alarm: civilians seek shelter; armed residents defend";
+    if (reserveSeconds(this) < 120) return "Food reserves are low — prioritize food in Village (L)";
+    const fields = this.state.buildings.filter(
+      (b) => b.team === 0 && b.type === "farm" && this.finished(b),
+    );
+    const season = calendar(this);
+    if (!fields.length) return "Establish a farm for the seasonal harvest; keep foraging";
+    if (season.phase === 0 && fields.some((b) => (b.crop?.planted || 0) < 1))
+      return "Spring: sow your fields while food gatherers sustain the village";
+    if (
+      season.phase === 1 &&
+      fields.some((b) => (b.crop?.planted || 0) > 0 && (b.crop?.tended || 0) < 1)
+    )
+      return "Summer: tend the fields and prepare storage";
+    if (season.phase === 2 && fields.some((b) => (b.crop?.remaining || 0) > 0))
+      return "Autumn: bring the harvest in before winter";
+    if (!this.hasBld(0, "warehouse"))
+      return "Build a storehouse to protect surplus food from spoilage";
+    if (season.year === 0)
+      return "Secure the first winter — review reserves and neighbors in Village (L)";
     const count = (type: BldType) =>
       this.state.buildings.filter((b) => b.type === type && b.team === 0 && b.hp > 0).length;
-    if (this.popNow(0) < 6) return "Train Gatherers — tap Gatherer (50 berries) or the People count";
+    if (this.popNow(0) < 6)
+      return "Train Gatherers — tap Gatherer (50 berries) or the People count";
     if (count("farm") < 1) return "Build a Farm  " + count("farm") + "/1";
     if (count("dock") < 1) return "Fishing Dock — put it on the white posts by the water";
-    if (count("lumber") < 1) return "Build a Lumber Camp among the pines  " + count("lumber") + "/1";
-    if (count("quarry") < 1) return "Raise a Quarry on a grey outcrop (logs only) — then people haul stone";
+    if (count("lumber") < 1)
+      return "Build a Lumber Camp among the pines  " + count("lumber") + "/1";
+    if (count("quarry") < 1)
+      return "Raise a Quarry on a grey outcrop (logs only) — then people haul stone";
     if (count("barracks") < 1) return "Raise a Barracks (40 logs), then train Hunters";
-    const spears = this.state.units.filter((u) => u.team === 0 && u.type === "spearman" && u.hp > 0).length;
+    const spears = this.state.units.filter(
+      (u) => u.team === 0 && u.type === "spearman" && u.hp > 0,
+    ).length;
     if (spears < 2) return "Train hunters — cheap, and they fight raiders";
     if (this.tribe(0).age < 1) return "Advance to Bronze — copper for swordsmen";
     if (count("forge") < 1) return "Raise a Forge near copper";
@@ -3688,7 +4426,9 @@ export class Game {
     if (this.tribe(0).age < 5) return "Found the Renaissance";
     const pop = this.popNow(0);
     if (pop < 28) return "Grow the realm  " + pop + "/28";
-    const fighters = this.state.units.filter((u) => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader").length;
+    const fighters = this.state.units.filter(
+      (u) => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
+    ).length;
     if (fighters < 8) return "Field eight hunters  " + fighters + "/8";
     return "Hold the island — drive the rivals out, or weather the sea";
   }
@@ -3696,8 +4436,7 @@ export class Game {
   seasonMix(): SeasonMix {
     const start = 6 * 3600 + 42 * 60;
     const t = start + this.state.time * DAY_RATE;
-    const yearDay = (t / 86400 + YEAR_DAYS * (this.state.yearOffset || 0.1)) % YEAR_DAYS;
-    const yearFrac = ((yearDay + YEAR_DAYS) % YEAR_DAYS) / YEAR_DAYS;
+    const yearFrac = (this.state.time % 1800) / 1800;
     const w = (center: number) => {
       let d = Math.abs(yearFrac - center);
       if (d > 0.5) d = 1 - d;
@@ -3716,9 +4455,11 @@ export class Game {
     summer /= s;
     autumn /= s;
     winter /= s;
-    const name: SeasonMix["name"] =
-      winter >= 0.42 ? "Winter" : autumn >= 0.42 ? "Autumn" : summer >= 0.42 ? "Summer" : "Spring";
-    const snow = Math.min(1, Math.max(0, winter * 1.2 - 0.08) + (this.state.weather === "frost" ? 0.12 : 0));
+    const name = calendar(this).name as SeasonMix["name"];
+    const snow = Math.min(
+      1,
+      Math.max(0, winter * 1.2 - 0.08) + (this.state.weather === "frost" ? 0.12 : 0),
+    );
     return { name, spring, summer, autumn, winter, snow, yearFrac };
   }
 
@@ -3763,10 +4504,21 @@ export class Game {
     let weather = names[this.state.weather] || "Clear";
     if (sn.snow > 0.55) {
       if (this.state.weather === "storm") weather = "Blizzard";
-      else if (this.state.weather === "clear" || this.state.weather === "mist" || this.state.weather === "frost") weather = "Snow";
+      else if (
+        this.state.weather === "clear" ||
+        this.state.weather === "mist" ||
+        this.state.weather === "frost"
+      )
+        weather = "Snow";
     }
     if (this.state.event === "herd") weather = "Migrating herd";
-    return { day, time: hh + ":" + mm, period, weather: weather + " · " + temp + "°C", season: sn.name };
+    return {
+      day,
+      time: hh + ":" + mm,
+      period,
+      weather: weather + " · " + temp + "°C",
+      season: sn.name,
+    };
   }
 
   dayPhase() {
@@ -3784,7 +4536,15 @@ export class Game {
   nearTorch(x: number, z: number, team: number) {
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.team !== team || !this.finished(b)) continue;
-      if (b.type !== "townhall" && b.type !== "hut" && b.type !== "watchtower" && b.type !== "keep" && b.type !== "lumber" && b.type !== "barracks") continue;
+      if (
+        b.type !== "townhall" &&
+        b.type !== "hut" &&
+        b.type !== "watchtower" &&
+        b.type !== "keep" &&
+        b.type !== "lumber" &&
+        b.type !== "barracks"
+      )
+        continue;
       if (Math.hypot(b.x - x, b.z - z) < 16) return true;
     }
     return false;
@@ -3814,7 +4574,10 @@ export class Game {
     const n = this.hasBld(0, "dock") ? 3 : 4;
     const cost = { [give]: n } as Cost;
     if (!this.canAfford(0, cost)) {
-      this.banner("Need " + n + " " + (give === "food" ? "berries" : give === "wood" ? "logs" : give), 1.5);
+      this.banner(
+        "Need " + n + " " + (give === "food" ? "berries" : give === "wood" ? "logs" : give),
+        1.5,
+      );
       this.onSfx("invalid");
       return;
     }
@@ -3850,61 +4613,67 @@ export class Game {
   step(dt: number) {
     if (!this.started) return;
     const spd = this.state.speed >= 3 ? 4 : this.state.speed === 2 ? 2 : 1;
-    const nightMul = this.isNight() ? 2.4 : 1;
+    const nightMul = 1;
     const sdt = this.state.paused || this.state.ended ? 0 : Math.min(dt * spd * nightMul, 0.34);
     if (this.state.walkDirty) this.rebuildWalk();
 
     if (sdt > 0) {
+      this.navBudget = 4;
       try {
         this.state.time += sdt;
-      for (const tr of this.state.tribes) {
-        if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
-      }
-      for (const u of this.state.units) {
-        if (u.hp <= 0) continue;
-        u.vx = 0;
-        u.vz = 0;
-        try {
-          if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
-          else if (u.team !== 0) this.barbarianAI(u, sdt);
-          else if (u.type === "worker") {
-            if (u.order === "attack" || u.order === "attackmove") this.combatAI(u, sdt);
-            else this.workerAI(u, sdt);
-          } else this.combatAI(u, sdt);
-        } catch {
-          /* skip a bad unit rather than freeze the valley */
+        for (const b of this.state.buildings)
+          if (b.type === "farm" && this.finished(b)) crop(this, b);
+        for (const tr of this.state.tribes) {
+          if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
-      }
-      this.separate(sdt);
-      this.updateProjectiles(sdt);
-      this.updateTraining(sdt);
-      this.updateTowers(sdt);
-      this.tickEvents(sdt);
-      this.tickMarket(sdt);
-      this.tickRaiders(sdt);
-      this.tickSea(sdt);
-      this.defendHome(0);
-      if ((this.state.time | 0) % 2 === 0) {
-        this.defendHome(1);
-        this.defendHome(2);
-      }
-      this.tickWildlife(sdt);
-      this.tickRoutes(sdt);
-      this.tickHarvest();
-      this.tickRegions();
-      this.tickLumber();
-      this.tickYields(sdt);
-      for (const b of this.state.buildings) {
-        if (b.type === "townhall" && b.hp > 0 && b.hp < b.maxHp) b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);
-      }
-      this.tickInfluence(sdt);
-      this.tickRegen(sdt);
-      this.tickPeople(sdt);
-      this.updateVision(sdt);
-      for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
+        for (const u of this.state.units) {
+          if (u.hp <= 0) continue;
+          u.vx = 0;
+          u.vz = 0;
+          try {
+            if (emergencyResponse(this, u, sdt)) continue;
+            if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
+            else if (u.team !== 0) this.barbarianAI(u, sdt);
+            else if (u.type === "worker") {
+              if (u.order === "attack" || u.order === "attackmove") this.combatAI(u, sdt);
+              else this.workerAI(u, sdt);
+            } else this.combatAI(u, sdt);
+          } catch {
+            /* skip a bad unit rather than freeze the valley */
+          }
+        }
+        this.separate(sdt);
+        this.updateProjectiles(sdt);
+        this.updateTraining(sdt);
+        this.updateTowers(sdt);
+        this.tickEvents(sdt);
+        this.tickMarket(sdt);
+        this.tickRaiders(sdt);
+        this.tickSea(sdt);
+        this.defendHome(0);
+        if ((this.state.time | 0) % 2 === 0) {
+          this.defendHome(1);
+          this.defendHome(2);
+        }
+        this.tickWildlife(sdt);
+        this.tickRoutes(sdt);
+        this.tickHarvest();
+        this.tickRegions();
+        this.tickLumber();
+        this.tickYields(sdt);
+        for (const b of this.state.buildings) {
+          if (b.type === "townhall" && b.hp > 0 && b.hp < b.maxHp)
+            b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);
+        }
+        this.tickInfluence(sdt);
+        this.tickRegen(sdt);
+        this.tickPeople(sdt);
+        this.updateVision(sdt);
+        for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
-      this.state.units = this.state.units.filter((u) => u.hp > 0);
-      this.checkVictory();
+        for (const u of this.state.units) if (u.hp <= 0) this.paths.delete(u.id);
+        this.state.units = this.state.units.filter((u) => u.hp > 0);
+        this.checkVictory();
       } catch (err) {
         console.error(err);
       }
@@ -3936,7 +4705,7 @@ export class Game {
     let bestU: Unit | null = null;
     let bd = 2.0;
     for (const u of this.state.units) {
-      if (u.hp <= 0) continue;
+      if (u.hp <= 0 || (u.team !== 0 && !this.visibleAt(u.x, u.z))) continue;
       const d = Math.hypot(u.x - x, u.z - z);
       if (d < bd) {
         bd = d;
@@ -3944,8 +4713,9 @@ export class Game {
       }
     }
     for (const b of this.state.buildings) {
-      if (b.hp <= 0) continue;
-      if (Math.abs(b.x - x) < b.w * 0.55 && Math.abs(b.z - z) < b.d * 0.55) return bestU && bd < 1.2 ? bestU : b;
+      if (b.hp <= 0 || (b.team !== 0 && !this.visibleAt(b.x, b.z))) continue;
+      if (Math.abs(b.x - x) < b.w * 0.55 && Math.abs(b.z - z) < b.d * 0.55)
+        return bestU && bd < 1.2 ? bestU : b;
     }
     return bestU;
   }
@@ -3973,7 +4743,7 @@ export class Game {
     const units = this.selectedUnits();
     let selection: HudSnapshot["selection"] = {
       name: "No selection",
-      info: "Click a person or building",
+      info: "C: people · B: buildings · H: controls",
       hp: 0,
       maxHp: 1,
       kind: "none",
@@ -3987,35 +4757,41 @@ export class Game {
         kind: "units",
         type: units[0].type,
         team: 0,
-        job: units.find((u) => u.type === "worker")?.order === "hold" ? "hold" : units.find((u) => u.type === "worker")?.job ?? null,
+        job:
+          units.find((u) => u.type === "worker")?.order === "hold"
+            ? "hold"
+            : (units.find((u) => u.type === "worker")?.job ?? null),
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info =
-        u.order === "build"
-          ? "Raising a building"
-          : u.order === "gather"
-          ? "Gathering " + (u.job === "food" ? "berries" : u.job || "")
-          : u.order === "return"
-            ? "Returning"
-            : u.order === "attack"
-              ? "Attacking"
-              : u.order === "move"
-                ? "Moving"
-                : u.order === "attackmove"
-                  ? "Advance"
-                  : u.order === "trade"
-                    ? "Trading"
-                    : u.order === "explore"
-                      ? "Exploring"
-                      : u.order === "hold"
-                      ? "Resting"
-                      : u.type === "worker"
-                        ? "Working"
-                        : "Ready — right-click to fight";
+      const info = u.emergency
+        ? u.workReason || "Responding to danger"
+        : u.order === "idle" && u.type === "worker"
+          ? u.workReason || "Looking for useful work"
+          : u.order === "build"
+            ? "Raising a building"
+            : u.order === "gather"
+              ? "Gathering " + (u.job === "food" ? "berries" : u.job || "")
+              : u.order === "return"
+                ? "Returning"
+                : u.order === "attack"
+                  ? "Attacking"
+                  : u.order === "move"
+                    ? "Moving"
+                    : u.order === "attackmove"
+                      ? "Advance"
+                      : u.order === "trade"
+                        ? "Trading"
+                        : u.order === "explore"
+                          ? "Exploring"
+                          : u.order === "hold"
+                            ? "Resting"
+                            : u.type === "worker"
+                              ? "Working"
+                              : "Ready — right-click to fight";
       const cap = u.carryType ? GATHER[u.carryType].carry : 8;
       selection = {
-        name: UNITS[u.type]?.name || u.type,
+        name: isDependent(this, u) ? "Young villager" : UNITS[u.type]?.name || u.type,
         info,
         hp: u.hp,
         maxHp: u.maxHp,
@@ -4028,7 +4804,8 @@ export class Game {
     } else if (this.state.selBld && this.state.selBld.hp > 0) {
       const b = this.state.selBld;
       let info = BUILDINGS[b.type]?.hint || "";
-      if (b.build < 1) info = "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
+      if (b.build < 1)
+        info = "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
       if (b.queue.length) {
         const q = b.queue[0];
         info += " · " + (UNITS[q.unit]?.name || q.unit) + " " + Math.ceil(q.max - q.t) + "s";
@@ -4042,7 +4819,7 @@ export class Game {
         kind: "building",
         type: b.type,
         team: b.team,
-        queue: b.queue.map((q) => q.unit).join(","),
+        queue: b.queue.map((q) => UNITS[q.unit].name).join(", "),
         canRecycle: b.team === 0 && b.type !== "townhall",
       };
     } else {
@@ -4076,20 +4853,46 @@ export class Game {
     const next = AGE_COST[age + 1];
     const trainOptions: HudSnapshot["trainOptions"] = [];
     const hasTH = this.hasBld(0, "townhall");
-    if (hasTH) trainOptions.push({ type: "worker", name: UNITS.worker.name, cost: { food: UNITS.worker.food }, age: 0 });
+    if (hasTH)
+      trainOptions.push({
+        type: "worker",
+        name: UNITS.worker.name,
+        cost: { food: UNITS.worker.food },
+        age: 0,
+      });
     const hasBar = this.hasBld(0, "barracks");
     const hasSt = this.hasBld(0, "stables");
     if (hasBar) {
-      trainOptions.push({ type: "spearman", name: UNITS.spearman.name, cost: { food: UNITS.spearman.food, wood: UNITS.spearman.wood }, age: 0 });
-      trainOptions.push({ type: "archer", name: UNITS.archer.name, cost: { food: UNITS.archer.food, wood: UNITS.archer.wood }, age: 1 });
+      trainOptions.push({
+        type: "spearman",
+        name: UNITS.spearman.name,
+        cost: { food: UNITS.spearman.food, wood: UNITS.spearman.wood },
+        age: 0,
+      });
+      trainOptions.push({
+        type: "archer",
+        name: UNITS.archer.name,
+        cost: { food: UNITS.archer.food, wood: UNITS.archer.wood },
+        age: 1,
+      });
       trainOptions.push({
         type: "swordsman",
         name: UNITS.swordsman.name,
-        cost: { food: UNITS.swordsman.food, wood: UNITS.swordsman.wood, copper: UNITS.swordsman.copper },
+        cost: {
+          food: UNITS.swordsman.food,
+          wood: UNITS.swordsman.wood,
+          copper: UNITS.swordsman.copper,
+        },
         age: 1,
       });
     }
-    if (hasSt) trainOptions.push({ type: "cavalry", name: UNITS.cavalry.name, cost: { food: UNITS.cavalry.food, wood: UNITS.cavalry.wood, iron: UNITS.cavalry.iron }, age: 4 });
+    if (hasSt)
+      trainOptions.push({
+        type: "cavalry",
+        name: UNITS.cavalry.name,
+        cost: { food: UNITS.cavalry.food, wood: UNITS.cavalry.wood, iron: UNITS.cavalry.iron },
+        age: 4,
+      });
 
     const buildOptions = BUILD_ORDER.map((type) => ({
       type,
@@ -4163,7 +4966,9 @@ export class Game {
           : units.find((u) => u.type === "worker" && u.huntOnly)
             ? "hunt"
             : (units.find((u) => u.type === "worker")?.job ?? null),
-      canRaid: this.state.units.some((u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0),
+      canRaid: this.state.units.some(
+        (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
+      ),
       trade: (() => {
         const rival = this.pickTradeRival();
         if (!rival) return null;
@@ -4230,8 +5035,8 @@ export class Game {
                     : this.state.weather === "drought"
                       ? "Drought — yields run thin"
                       : this.state.event === "herd"
-                    ? "Herd — extra food"
-                    : null,
+                        ? "Herd — extra food"
+                        : null,
       regions: this.state.regions.map((r) => ({
         name: r.name,
         res: r.res,
@@ -4256,7 +5061,10 @@ export class Game {
       spears: t.spears || 0,
       bows: t.bows || 0,
       blades: t.blades || 0,
-      armed: this.state.units.filter((u) => u.team === 0 && u.hp > 0 && (u.militia || (u.type !== "worker" && u.type !== "leader"))).length,
+      armed: this.state.units.filter(
+        (u) =>
+          u.team === 0 && u.hp > 0 && (u.militia || (u.type !== "worker" && u.type !== "leader")),
+      ).length,
       raidIn: Math.max(0, this.state.raidT),
     };
   }
