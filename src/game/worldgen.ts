@@ -352,219 +352,129 @@ export function generateWorld(seed: number): WorldData {
   const nearCamp = (x: number, z: number, r: number) =>
     camps.some((c) => Math.hypot(x - c.x, z - c.z) < r);
 
-  const treeTries = 1100 + ((rand() * 180) | 0);
-  for (let i = 0; i < treeTries; i++) {
-    const x = (rand() - 0.5) * (MAP - 16);
-    const z = (rand() - 0.5) * (MAP - 16);
-    const h = sampleHeight(heights, x, z);
-    if (h < waterY + 0.6) continue;
-    if (h > 9.5) continue;
-    if (camps[0] && Math.hypot(x - camps[0].x, z - camps[0].z) < 18) continue;
-    if (nearCamp(x, z, 9)) continue;
-    if (tooClose(trees, x, z, 2.8)) continue;
-    const dense = fbm(x * 0.055 + 4, z * 0.055, 3);
-    const bio = biomeAt(x, z);
-    if (bio === "plains" && dense < 0.58) continue;
-    if (bio === "hills" && dense < 0.46) continue;
-    if (bio === "forest" && dense < 0.16 && rand() > 0.55) continue;
-    const amt = 8 + ((rand() * 8) | 0);
-    trees.push(node(nid++, "tree", x, z, h, amt, 0.9 + rand() * 0.7, 0.7 + rand() * 0.6));
-  }
-  const nGroves = 3 + ((rand() * 4) | 0);
-  for (let g = 0; g < nGroves; g++) {
-    const gx = Math.sin(rand() * 6.28) * islandR * (0.25 + rand() * 0.45);
-    const gz = Math.cos(rand() * 6.28) * islandR * (0.25 + rand() * 0.45);
-    const gr = 14 + rand() * 18;
-    for (let i = 0; i < 40; i++) {
+  const stamp = (
+    list: ResourceNode[],
+    kind: ResourceNode["kind"],
+    cx: number,
+    cz: number,
+    count: number,
+    radius: number,
+    sep: number,
+    amount: () => number,
+  ) => {
+    let placed = 0;
+    for (let n = 0; n < count * 14 && placed < count; n++) {
       const a = rand() * Math.PI * 2;
-      const d = rand() * gr;
-      const x = gx + Math.sin(a) * d;
-      const z = gz + Math.cos(a) * d;
+      const d = Math.sqrt(rand()) * radius;
+      const x = cx + Math.sin(a) * d;
+      const z = cz + Math.cos(a) * d;
       const h = sampleHeight(heights, x, z);
-      if (h < waterY + 0.6 || h > 9) continue;
-      if (nearCamp(x, z, 10)) continue;
-      if (tooClose(trees, x, z, 2.2)) continue;
-      trees.push(
-        node(
-          nid++,
-          "tree",
-          x,
-          z,
-          h,
-          8 + ((rand() * 8) | 0),
-          0.85 + rand() * 0.8,
-          0.7 + rand() * 0.55,
-        ),
-      );
+      if (h < waterY + 0.55 || h > 9.2) continue;
+      if (Math.hypot(x, z) > islandR - 12) continue;
+      if (tooClose(list, x, z, sep)) continue;
+      list.push(node(nid++, kind, x, z, h, amount(), 0.85 + rand() * 0.5, 0.75 + rand() * 0.4));
+      placed++;
     }
-  }
-  const ashC = camps[2];
-  if (ashC) {
-    for (let i = 0; i < 90; i++) {
-      const a = rand() * Math.PI * 2;
-      const d = 12 + rand() * 38;
-      const x = ashC.x + Math.sin(a) * d;
-      const z = ashC.z + Math.cos(a) * d;
-      const h = sampleHeight(heights, x, z);
-      if (h < waterY + 0.6 || h > 8) continue;
-      if (Math.hypot(x - ashC.x, z - ashC.z) < 9) continue;
-      if (tooClose(trees, x, z, 2.4)) continue;
-      trees.push(
-        node(
-          nid++,
-          "tree",
-          x,
-          z,
-          h,
-          8 + ((rand() * 8) | 0),
-          0.9 + rand() * 0.7,
-          0.75 + rand() * 0.5,
-        ),
-      );
+    return placed;
+  };
+  const centers: { x: number; z: number }[] = [];
+  const pickCenter = (
+    minCamp: number,
+    minOther: number,
+    biome?: WorldData["biomes"][number]["kind"],
+  ) => {
+    for (let pass = 0; pass < 2; pass++) {
+      for (let t = 0; t < 48; t++) {
+        const a = rand() * Math.PI * 2;
+        const dist = islandR * (0.22 + rand() * 0.55);
+        const x = Math.sin(a) * dist;
+        const z = Math.cos(a) * dist;
+        const h = sampleHeight(heights, x, z);
+        if (h < waterY + 0.8 || h > 7.2) continue;
+        if (pass === 0 && biome && biomeAt(x, z) !== biome) continue;
+        if (camps.some((c) => Math.hypot(c.x - x, c.z - z) < minCamp)) continue;
+        if (centers.some((c) => Math.hypot(c.x - x, c.z - z) < minOther)) continue;
+        centers.push({ x, z });
+        return { x, z };
+      }
     }
-  }
-  const redC = camps[1];
-  if (redC) {
-    for (let i = 0; i < 22; i++) {
-      const a = rand() * Math.PI * 2;
-      const d = 16 + rand() * 28;
-      const x = redC.x + Math.sin(a) * d;
-      const z = redC.z + Math.cos(a) * d;
-      const h = sampleHeight(heights, x, z);
-      if (h < waterY + 1.2) continue;
-      if (tooClose(stones, x, z, 6)) continue;
-      stones.push(
-        node(
-          nid++,
-          "stone",
-          x,
-          z,
-          h,
-          12 + ((rand() * 10) | 0),
-          0.85 + rand() * 0.45,
-          0.8 + rand() * 0.4,
-        ),
-      );
-    }
-  }
-
-  for (let i = 0; i < 68; i++) {
-    const x = (rand() - 0.5) * (MAP - 18);
-    const z = (rand() - 0.5) * (MAP - 18);
-    const h = sampleHeight(heights, x, z);
-    if (h < waterY + 1.0) continue;
-    const bio = biomeAt(x, z);
-    if (bio === "forest" && rand() > 0.18) continue;
-    if (bio === "plains" && rand() > 0.42) continue;
-    if (nearCamp(x, z, 26) && camps[0] && Math.hypot(x - camps[0].x, z - camps[0].z) < 26) continue;
-    if (tooClose(stones, x, z, 7)) continue;
-    if (h < 2.8 && rand() > 0.28) continue;
-    const amt = 12 + ((rand() * 10) | 0);
-    stones.push(node(nid++, "stone", x, z, h, amt, 0.8 + rand() * 0.5, 0.75 + rand() * 0.5));
-  }
-
-  for (let i = 0; i < 36; i++) {
-    const x = (rand() - 0.5) * (MAP - 22);
-    const z = (rand() - 0.5) * (MAP - 22);
-    const h = sampleHeight(heights, x, z);
-    if (h < waterY + 1.4) continue;
-    if (biomeAt(x, z) !== "hills" && rand() > 0.28) continue;
-    if (tooClose(copper, x, z, 9) || tooClose(stones, x, z, 5)) continue;
-    if (nearCamp(x, z, 16)) continue;
-    copper.push(
-      node(
-        nid++,
-        "copper",
-        x,
-        z,
-        h,
-        8 + ((rand() * 6) | 0),
-        0.75 + rand() * 0.4,
-        0.8 + rand() * 0.4,
-      ),
-    );
-  }
-  for (let i = 0; i < 28; i++) {
-    const x = (rand() - 0.5) * (MAP - 22);
-    const z = (rand() - 0.5) * (MAP - 22);
-    const h = sampleHeight(heights, x, z);
-    if (h < waterY + 2.0) continue;
-    if (biomeAt(x, z) !== "hills" && rand() > 0.16) continue;
-    if (tooClose(iron, x, z, 10) || tooClose(copper, x, z, 6) || tooClose(stones, x, z, 5))
-      continue;
-    if (nearCamp(x, z, 18)) continue;
-    iron.push(
-      node(
-        nid++,
-        "iron",
-        x,
-        z,
-        h,
-        7 + ((rand() * 5) | 0),
-        0.7 + rand() * 0.35,
-        0.75 + rand() * 0.4,
-      ),
-    );
-  }
-
-  for (let i = 0; i < 110; i++) {
-    const x = (rand() - 0.5) * (MAP - 18);
-    const z = (rand() - 0.5) * (MAP - 18);
-    const h = sampleHeight(heights, x, z);
-    if (h < waterY + 0.5 || h > 4.2) continue;
-    const bio = biomeAt(x, z);
-    if (bio === "hills" && rand() > 0.32) continue;
-    if (bio === "forest" && rand() > 0.62) continue;
-    if (camps[0] && Math.hypot(x - camps[0].x, z - camps[0].z) < 14) continue;
-    if (nearCamp(x, z, 8)) continue;
-    if (tooClose(forage, x, z, 4.6)) continue;
-    const amt = 8 + ((rand() * 7) | 0);
-    forage.push(node(nid++, "forage", x, z, h, amt, 0.85 + rand() * 0.35, 0.7 + rand() * 0.55));
-  }
+    return null;
+  };
 
   const home = camps[0];
   if (home) {
-    for (let i = 0; i < 14; i++) {
-      const a = rand() * Math.PI * 2;
-      const d = 16 + rand() * 12;
-      const x = home.x + Math.cos(a) * d;
-      const z = home.z + Math.sin(a) * d;
-      const h = sampleHeight(heights, x, z);
-      if (h < waterY + 0.5 || h > waterY + 2.2) continue;
-      if (tooClose(forage, x, z, 3.2)) continue;
-      forage.push(
-        node(
-          nid++,
-          "forage",
-          x,
-          z,
-          h,
-          10 + ((rand() * 6) | 0),
-          0.9 + rand() * 0.3,
-          0.85 + rand() * 0.4,
-        ),
-      );
+    stamp(forage, "forage", home.x + 18, home.z - 8, 10, 9, 2.4, () => 10 + ((rand() * 6) | 0));
+    stamp(trees, "tree", home.x - 16, home.z + 14, 14, 11, 2.2, () => 8 + ((rand() * 6) | 0));
+    const closeFood = forage.filter((f) => Math.hypot(f.x - home.x, f.z - home.z) < 36).length;
+    if (closeFood < 4) {
+      for (let i = 0; i < 8; i++) {
+        const a = rand() * Math.PI * 2;
+        const x = home.x + Math.cos(a) * (14 + rand() * 8);
+        const z = home.z + Math.sin(a) * (14 + rand() * 8);
+        const h = sampleHeight(heights, x, z);
+        if (h < waterY + 0.4) continue;
+        if (tooClose(forage, x, z, 2.2)) continue;
+        forage.push(node(nid++, "forage", x, z, h, 12, 0.9, 0.8));
+      }
     }
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2 + 0.2;
-      const d = 15 + rand() * 6;
-      const x = home.x + Math.cos(a) * d;
-      const z = home.z + Math.sin(a) * d;
-      const h = sampleHeight(heights, x, z);
-      if (h < waterY + 0.7) continue;
-      if (tooClose(stones, x, z, 5)) continue;
-      stones.push(
-        node(
-          nid++,
-          "stone",
-          x,
-          z,
-          h,
-          14 + ((rand() * 8) | 0),
-          1 + rand() * 0.25,
-          0.95 + rand() * 0.3,
-        ),
-      );
+  }
+  const ashC = camps[2];
+  if (ashC) stamp(trees, "tree", ashC.x + 18, ashC.z, 28, 16, 2.3, () => 8 + ((rand() * 8) | 0));
+  const redC = camps[1];
+  if (redC) stamp(stones, "stone", redC.x, redC.z + 20, 8, 12, 4.5, () => 12 + ((rand() * 8) | 0));
+
+  for (let i = 0; i < 3; i++) {
+    const c = pickCenter(78, 90, "forest");
+    if (c) stamp(trees, "tree", c.x, c.z, 22, 13, 2.2, () => 9 + ((rand() * 7) | 0));
+  }
+  for (let i = 0; i < 3; i++) {
+    const c = pickCenter(90, 100, "hills");
+    if (c) stamp(stones, "stone", c.x, c.z, 7, 10, 4.2, () => 14 + ((rand() * 8) | 0));
+  }
+  for (let i = 0; i < 2; i++) {
+    const c = pickCenter(70, 80, "plains");
+    if (c) stamp(forage, "forage", c.x, c.z, 9, 8, 2.6, () => 9 + ((rand() * 6) | 0));
+  }
+  for (let i = 0; i < 2; i++) {
+    const c = pickCenter(110, 120, "hills");
+    if (c) stamp(copper, "copper", c.x, c.z, 5, 8, 3.4, () => 8 + ((rand() * 5) | 0));
+  }
+  for (let i = 0; i < 2; i++) {
+    const c = pickCenter(120, 130, "hills");
+    if (c) stamp(iron, "iron", c.x, c.z, 4, 7, 3.6, () => 7 + ((rand() * 4) | 0));
+  }
+
+  for (let i = 0; i < 640; i++) {
+    const x = (rand() - 0.5) * (MAP - 28);
+    const z = (rand() - 0.5) * (MAP - 28);
+    if (Math.hypot(x, z) > islandR - 18) continue;
+    const h = sampleHeight(heights, x, z);
+    if (h < waterY + 0.7 || h > 8.6) continue;
+    const bio = biomeAt(x, z);
+    const nearHome = !!home && Math.hypot(x - home.x, z - home.z) < 36;
+    if (bio === "forest") {
+      if (rand() > 0.7 || nearCamp(x, z, 8) || tooClose(trees, x, z, 3.2)) continue;
+      trees.push(node(nid++, "tree", x, z, h, 7 + ((rand() * 6) | 0), 0.85 + rand() * 0.55, 0.75 + rand() * 0.4));
+    } else if (bio === "hills") {
+      if (nearHome) continue;
+      const roll = rand();
+      if (roll < 0.22) {
+        if (h < waterY + 1.2 || tooClose(stones, x, z, 6.2)) continue;
+        stones.push(node(nid++, "stone", x, z, h, 10 + ((rand() * 8) | 0), 0.8 + rand() * 0.4, 0.8));
+      } else if (roll < 0.32) {
+        if (tooClose(copper, x, z, 8) || tooClose(stones, x, z, 4)) continue;
+        copper.push(node(nid++, "copper", x, z, h, 6 + ((rand() * 5) | 0), 0.75 + rand() * 0.3, 0.8));
+      } else if (roll < 0.4) {
+        if (tooClose(iron, x, z, 9) || tooClose(copper, x, z, 5)) continue;
+        iron.push(node(nid++, "iron", x, z, h, 5 + ((rand() * 4) | 0), 0.7 + rand() * 0.3, 0.75));
+      } else if (roll < 0.62 && !tooClose(trees, x, z, 4.8)) {
+        trees.push(node(nid++, "tree", x, z, h, 6 + ((rand() * 4) | 0), 0.8 + rand() * 0.4, 0.7));
+      }
+    } else if (rand() < 0.38) {
+      if (nearCamp(x, z, 9) || tooClose(forage, x, z, 5.2)) continue;
+      forage.push(node(nid++, "forage", x, z, h, 8 + ((rand() * 5) | 0), 0.85 + rand() * 0.3, 0.75));
+    } else if (rand() < 0.08 && !tooClose(trees, x, z, 8)) {
+      trees.push(node(nid++, "tree", x, z, h, 6, 0.8, 0.7));
     }
   }
 

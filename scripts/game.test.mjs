@@ -794,3 +794,61 @@ test("open fields ripen a larger harvest", () => {
   const rich = crop(g, farm).remaining;
   assert.ok(rich > plain);
 });
+test("the band plants a hall on a clump, then a second hall claims distant ground", () => {
+  const g = fixture();
+  const home = g.campOf(0);
+  g.enterAsBand();
+  assert.equal(g.state.founding, true);
+  assert.equal(g.state.ended, null);
+  g.checkVictory();
+  assert.equal(g.state.ended, null);
+  const nearFood = g.state.forage.find((f) => Math.hypot(f.x - home.x, f.z - home.z) < 40);
+  assert.ok(nearFood);
+  let planted = false;
+  for (let i = 0; i < 12 && !planted; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    planted = g.placeBuilding(
+      "townhall",
+      nearFood.x + Math.cos(a) * 8,
+      nearFood.z + Math.sin(a) * 8,
+      0,
+    );
+  }
+  assert.equal(planted, true);
+  assert.equal(g.state.founding, false);
+  const hall = g.state.buildings.find((b) => b.team === 0 && b.type === "townhall" && b.hp > 0);
+  assert.ok(hall);
+  const far = g.state.trees.find((t) => Math.hypot(t.x - hall.x, t.z - hall.z) > 70);
+  assert.ok(far, "timber should sit in distant clumps");
+  g.tribe(0).wood = 200;
+  assert.equal(g.placeBuilding("townhall", hall.x + 8, hall.z, 0), false);
+  let claimed = false;
+  for (let i = 0; i < 16 && !claimed; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    claimed = g.placeBuilding("townhall", far.x + Math.cos(a) * 12, far.z + Math.sin(a) * 12, 0);
+  }
+  assert.equal(claimed, true);
+  assert.equal(g.tribe(0).wood, 130);
+});
+test("stone is a clump, not a ring around the first camp", () => {
+  const g = fixture();
+  const home = g.campOf(0);
+  const near = g.state.stones.filter((s) => Math.hypot(s.x - home.x, s.z - home.z) < 30);
+  assert.equal(near.length, 0);
+  assert.ok(g.state.stones.length >= 4);
+});
+test("berry herds never arrive", () => {
+  const g = fixture();
+  const food = g.tribe(0).food;
+  g.state.event = "herd";
+  g.state.eventT = 0;
+  g.state.time = 400;
+  g.calamityT = 1e9;
+  g.tickEvents(30);
+  assert.equal(g.state.event, "none");
+  assert.equal(g.tribe(0).food, food);
+  g.state.eventT = 0;
+  for (let i = 0; i < 12; i++) g.tickEvents(40);
+  assert.equal(g.state.event, "none");
+  assert.equal(g.tribe(0).food, food);
+});

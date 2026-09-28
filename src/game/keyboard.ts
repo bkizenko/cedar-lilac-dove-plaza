@@ -63,7 +63,7 @@ export class KeyboardCommands {
     if (g.awaitingStart) {
       if (code === "Enter" && !event.repeat) {
         event.preventDefault();
-        e.enterIsland();
+        e.enterAsBand();
       }
       return;
     }

@@ -39,6 +39,7 @@ const EMPTY: HudSnapshot = {
   fps: 0,
   started: false,
   awaitingStart: true,
+  founding: false,
   muted: false,
   quality: "high",
   workerSelected: 0,
@@ -117,13 +118,24 @@ export function GameApp() {
   }, [boot]);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-ink">
+    <div
+      id="game-root"
+      className="game-root relative h-dvh w-full overflow-hidden bg-ink"
+      style={{ height: "100dvh", width: "100%" }}
+    >
       <canvas
         ref={canvasRef}
         tabIndex={0}
         aria-label="Game world. H for keyboard help; L for village ledger; Tab for menus."
         className="absolute inset-0 size-full touch-none"
-        style={{ display: "block", cursor: hud.placing ? "crosshair" : "default" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          display: "block",
+          cursor: hud.placing ? "crosshair" : "default",
+        }}
       />
       {drag && (
         <div
@@ -142,24 +154,24 @@ export function GameApp() {
       {hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
           <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">
-            An island at first light
+            A band on open ground
           </p>
-          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">
-            DAWN
+          <h1 className="mt-3 font-display text-6xl tracking-[0.22em] text-bronze-bright md:text-7xl">
+            HEARTH
           </h1>
           <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">
-            OF EMPIRE
+            WILD
           </p>
           <p className="mt-8 max-w-sm px-6 text-center text-sm leading-relaxed text-parchment">
-            Select a gatherer with C, cycle resources with brackets, and press R to forage. Raise
-            huts, then a lumber camp among the pines. Trade with the two tribes. Hold the provinces.
+            Walk until you find a clump of berries or timber, then plant the hall. Later halls claim
+            new ground. One trade at a time.
           </p>
           <button
             type="button"
-            onClick={() => engineRef.current?.enterIsland()}
+            onClick={() => engineRef.current?.enterAsBand()}
             className="mt-8 min-h-12 rounded-lg border border-bronze bg-ink-soft px-8 py-3 font-display text-lg tracking-[0.18em] text-bronze-bright hover:bg-bronze/20"
           >
-            Enter the island
+            Walk the ground
           </button>
           {engineRef.current?.hasSavedGame() && (
             <button
@@ -177,15 +189,18 @@ export function GameApp() {
         </div>
       ) : null}
       {!hud.started && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_70%_20%,#6a4a20_0%,#1a160e_55%,#0c0e0a_100%)]">
+        <div
+          id="boot"
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_70%_20%,#6a4a20_0%,#1a160e_55%,#0c0e0a_100%)]"
+        >
           <p className="font-display text-xs tracking-[0.35em] text-bronze uppercase">
-            An island at first light
+            A band on open ground
           </p>
-          <h1 className="mt-3 font-display text-6xl tracking-[0.28em] text-bronze-bright md:text-7xl">
-            DAWN
+          <h1 className="mt-3 font-display text-6xl tracking-[0.22em] text-bronze-bright md:text-7xl">
+            HEARTH
           </h1>
           <p className="mt-1 font-display text-xl tracking-[0.42em] text-parchment-dim">
-            OF EMPIRE
+            WILD
           </p>
           <p className="mt-6 max-w-md px-6 text-center text-sm leading-relaxed text-parchment-dim">
             {fail ? fail : "Raising the camp…"}

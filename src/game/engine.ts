@@ -97,6 +97,8 @@ export class Engine {
         this.view.resize();
       } catch (err2) {
         console.error(err2);
+        this.running = false;
+        throw err2 instanceof Error ? err2 : new Error("The camp could not be raised.");
       }
     }
     this.running = true;
@@ -108,6 +110,13 @@ export class Engine {
   enterIsland() {
     this.audio.unlock();
     this.game.enterIsland();
+    this.canvas.focus();
+    this.pushHud();
+  }
+
+  enterAsBand() {
+    this.audio.unlock();
+    this.game.enterAsBand();
     this.canvas.focus();
     this.pushHud();
   }
@@ -192,9 +201,12 @@ export class Engine {
   private onVis = () => {
     this.keys.clear();
     this.simAccumulator = 0;
+    this.last = 0;
     if (document.visibilityState === "hidden") saveGame(this.game);
-    if (document.visibilityState === "visible" && this.audio.ctx?.state === "suspended")
-      void this.audio.ctx.resume();
+    if (document.visibilityState === "visible") {
+      this.view.resize();
+      if (this.audio.ctx?.state === "suspended") void this.audio.ctx.resume();
+    }
   };
 
   private onKeyDown = (e: KeyboardEvent) => this.keyboard.key(e);
@@ -616,12 +628,12 @@ export class Engine {
 
       if (document.hidden) {
         this.simAccumulator = 0;
-        return;
-      }
-      this.simAccumulator += dt;
-      while (this.simAccumulator >= 1 / 30) {
-        this.game.step(1 / 30);
-        this.simAccumulator -= 1 / 30;
+      } else {
+        this.simAccumulator += dt;
+        while (this.simAccumulator >= 1 / 30) {
+          this.game.step(1 / 30);
+          this.simAccumulator -= 1 / 30;
+        }
       }
       this.audio.setMood(
         this.game.musicMood(),

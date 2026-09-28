@@ -181,7 +181,7 @@ export class WorldView {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: this.quality === "high",
-      powerPreference: "high-performance",
+      powerPreference: "default",
       alpha: false,
       preserveDrawingBuffer: false,
       failIfMajorPerformanceCaveat: false,

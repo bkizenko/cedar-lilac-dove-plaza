@@ -310,6 +310,7 @@ export type GameState = {
   walkDirty: boolean;
   agePicks: ("econ" | "army")[];
   pendingAge: boolean;
+  founding?: boolean;
   event: "none" | "herd";
   eventT: number;
   weather: Weather;
@@ -391,6 +392,7 @@ export type HudSnapshot = {
   fps: number;
   started: boolean;
   awaitingStart: boolean;
+  founding: boolean;
   muted: boolean;
   quality: "low" | "med" | "high";
   workerSelected: number;

@@ -123,8 +123,6 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   align-items: center;
-  max-height: 8.4rem;
-  overflow: hidden;
 }
 .hud-sel {
   grid-area: sel;

@@ -424,9 +424,10 @@ export class Game {
     }
 
     for (const camp of this.world.camps) {
+      if (camp.team === 0) continue;
       const hx = camp.x;
       const hz = camp.z;
-      const nExtra = camp.team === 0 ? 6 : 4;
+      const nExtra = 4;
       for (let i = 0; i < nExtra; i++) {
         const x = hx - 8 - (i % 3) * 2.4;
         const z = hz - 9 - Math.floor(i / 3) * 2.2;
@@ -459,23 +460,6 @@ export class Game {
           rich: 0.8 + Math.random() * 0.45,
         });
       }
-      for (let i = 0; i < 4; i++) {
-        const a = (i / 4) * Math.PI * 2 + 0.4;
-        const x = hx + Math.cos(a) * 16;
-        const z = hz + Math.sin(a) * 16;
-        this.state.stones.push({
-          id: this.id(),
-          kind: "stone",
-          x,
-          z,
-          y: this.height(x, z),
-          amount: 16,
-          maxAmt: 16,
-          regenT: 0,
-          scale: 1.05 + Math.random() * 0.2,
-          rich: 0.95 + Math.random() * 0.3,
-        });
-      }
     }
 
     this.spawnWildlife();
@@ -494,7 +478,42 @@ export class Game {
   enterIsland() {
     this.awaitingStart = false;
     this.state.paused = false;
+    this.state.founding = false;
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
+  }
+
+  enterAsBand() {
+    this.enterIsland();
+    for (const b of this.state.buildings) {
+      if (b.team === 0 && (b.type === "townhall" || b.type === "hut")) b.hp = 0;
+    }
+    this.state.walkDirty = true;
+    this.state.founding = true;
+    this.state.placing = "townhall";
+    const home = this.campOf(0);
+    for (const u of this.state.units) {
+      if (u.team !== 0 || u.hp <= 0) continue;
+      u.order = "move";
+      u.tx = home.x + (Math.random() - 0.5) * 6;
+      u.tz = home.z + (Math.random() - 0.5) * 6;
+    }
+    this.banner("The band is still walking. Plant the hall on berries or timber.", 5);
+  }
+
+  nearClump(x: number, z: number) {
+    let trees = 0;
+    let stones = 0;
+    let food = 0;
+    let ore = 0;
+    for (const n of this.state.trees) if (n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 20) trees++;
+    for (const n of this.state.stones)
+      if (n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 18) stones++;
+    for (const n of this.state.forage)
+      if (n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 16) food++;
+    for (const n of this.state.copper)
+      if (n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 16) ore++;
+    for (const n of this.state.iron) if (n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 16) ore++;
+    return trees >= 5 || stones >= 2 || food >= 3 || ore >= 2;
   }
 
   makeBld(type: BldType, x: number, z: number, team: number, y?: number): Building {
@@ -672,7 +691,6 @@ export class Game {
     if (this.state.weather === "golden") m *= 0.9;
     if (this.state.weather === "flood") m *= 1.18;
     if (this.state.weather === "drought") m *= 1.16;
-    if (this.state.event === "herd" && team === 0) m *= 0.78;
     for (const tr of this.state.tribes) {
       if (tr.ally && !tr.hostile && tr.id !== 0 && tr.id !== 3) m *= 0.94;
     }
@@ -1138,7 +1156,36 @@ export class Game {
       if (team === 0) this.banner("Requires " + AGES[d.age] + " Age", 1.4);
       return false;
     }
-    const cost = { food: d.food, wood: d.wood, stone: d.stone };
+    const halls =
+      type === "townhall"
+        ? this.state.buildings.filter((b) => b.team === team && b.type === "townhall" && b.hp > 0)
+        : [];
+    const founding = type === "townhall" && team === 0 && (!!this.state.founding || halls.length === 0);
+    if (type === "townhall" && team === 0) {
+      if (halls.length >= 3) {
+        this.banner("Three halls are enough to hold", 1.6);
+        return false;
+      }
+      if (!founding) {
+        for (const h of halls) {
+          if (Math.hypot(h.x - x, h.z - z) < 64) {
+            this.banner("A new hall needs open ground, away from the last", 1.8);
+            this.onSfx("invalid");
+            return false;
+          }
+        }
+      }
+      if (!this.nearClump(x, z)) {
+        this.banner("Plant the hall on a clump — berries, timber, stone, or ore", 1.8);
+        this.onSfx("invalid");
+        return false;
+      }
+    }
+    const cost = founding
+      ? {}
+      : type === "townhall" && team === 0
+        ? { wood: 70, stone: 0 }
+        : { food: d.food, wood: d.wood, stone: d.stone };
     if (!this.canAfford(team, cost)) {
       if (team === 0) {
         const need = [];
@@ -1171,12 +1218,13 @@ export class Game {
     }
     this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team);
-    if (team === 0 && BUILD_TIME[type] > 0) {
+    if (team === 0 && (BUILD_TIME[type] > 0 || (type === "townhall" && !founding))) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
     this.state.buildings.push(b);
     this.state.walkDirty = true;
+    if (type === "townhall" && team === 0) this.state.founding = false;
     this.addBurst(spot.x, b.y + 1, spot.z, "#c4b494", 10);
     if (team === 0) {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
@@ -2683,20 +2731,8 @@ export class Game {
 
   tickEvents(dt: number) {
     this.tickWeather(dt);
-    this.state.eventT -= dt;
-    if (this.state.event === "herd" && this.state.eventT <= 0) {
-      this.state.event = "none";
-      this.state.eventT = 70 + Math.random() * 40;
-    } else if (this.state.event === "none" && this.state.eventT <= 0 && this.state.time > 50) {
-      if (Math.random() < 0.34) {
-        this.state.event = "herd";
-        this.state.eventT = 26;
-        this.tribe(0).food += 28;
-        this.banner("A herd passes — +28 berries", 2.4);
-      } else {
-        this.state.eventT = 45 + Math.random() * 35;
-      }
-    }
+    if (this.state.event === "herd") this.state.event = "none";
+    this.state.eventT = 120;
     this.tickCalamity(dt);
   }
 
@@ -4796,7 +4832,8 @@ export class Game {
 
   checkVictory() {
     if (this.state.ended) return;
-    const th = this.state.buildings.find((b) => b.type === "townhall" && b.team === 0);
+    if (this.state.founding) return;
+    const th = this.state.buildings.find((b) => b.type === "townhall" && b.team === 0 && b.hp > 0);
     if (!th || th.hp <= 0) {
       this.state.ended = "lose";
       this.state.endReason = "The Town Hall has fallen.";
@@ -4825,6 +4862,7 @@ export class Game {
   }
 
   currentObjective() {
+    if (this.state.founding) return "Plant the hall beside a clump of berries or timber.";
     if (this.state.units.some((u) => u.team === 0 && u.emergency))
       return "Alarm: civilians seek shelter; armed residents defend";
     if (reserveSeconds(this) < 120) return "Food reserves are low — prioritize food in Village (L)";
@@ -4954,7 +4992,6 @@ export class Game {
       )
         weather = "Snow";
     }
-    if (this.state.event === "herd") weather = "Migrating herd";
     return {
       day,
       time: hh + ":" + mm,
@@ -5394,6 +5431,7 @@ export class Game {
       fps: this.fps,
       started: this.started,
       awaitingStart: this.awaitingStart,
+      founding: !!this.state.founding,
       muted: this.muted,
       quality: this.quality,
       workerSelected: units.filter((u) => u.type === "worker").length,
@@ -5491,9 +5529,7 @@ export class Game {
                     ? "Flood — the river takes the banks"
                     : this.state.weather === "drought"
                       ? "Drought — yields run thin"
-                      : this.state.event === "herd"
-                        ? "Herd — extra food"
-                        : null,
+                      : null,
       regions: this.state.regions.map((r) => ({
         name: r.name,
         res: r.res,

@@ -3,7 +3,11 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Dawn of Empire";
+const APP_NAME = "Hearthwild";
+const stylesheet =
+  import.meta.env.DEV && !String(appCss).includes("direct")
+    ? `${appCss}${String(appCss).includes("?") ? "&" : "?"}direct`
+    : appCss;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -17,13 +21,13 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "A 3D real-time civilization. Raise a Stone Age camp into a Renaissance realm while a rival tribe contests the valley.",
+          "A band on open ground. Plant a hall on berries or timber, then found another where the stone sits.",
       },
       { name: "theme-color", content: "#1a1610" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-      { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: stylesheet },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       {
@@ -44,6 +48,12 @@ export const Route = createRootRoute({
   component: () => (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              "html,body{margin:0;height:100%;overflow:hidden;background:#1a1610;color:#e8dcc4}#game-root{position:relative;width:100%;height:100dvh;min-height:100vh;overflow:hidden}#game-root canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#boot{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 70% 20%,#6a4a20 0%,#1a160e 55%,#0c0e0a 100%);color:#e8dcc4;font-family:Georgia,'Times New Roman',serif}",
+          }}
+        />
         <HeadContent />
       </head>
       <body className="bg-ink text-parchment antialiased">
