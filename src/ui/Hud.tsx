@@ -338,8 +338,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <div className="hud-toast">
             {founding
               ? hud.banner || "Click beside a clump of berries or timber."
-              : hud.placing === "townhall"
-                ? "A new hall needs a distant clump — berries, timber, stone, or ore."
+              : hud.placing === "cornerstone"
+                ? "A cornerstone needs a distant clump — berries, timber, stone, or ore."
                 : `Click open grass to raise a ${BUILDINGS[hud.placing].name}.`}
           </div>
         ) : hud.banner ? (
@@ -491,9 +491,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   <button
                     type="button"
                     className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs"
-                    onClick={() => engine?.setPlacing("townhall")}
+                    disabled={(hud.cornerstoneCount || 0) >= 2}
+                    onClick={() => engine?.setPlacing("cornerstone")}
                   >
-                    Found another hall · 70 logs, on a distant clump
+                    {(hud.cornerstoneCount || 0) >= 2 ? "Two cornerstones planted" : `Plant cornerstone · 70 logs · ${hud.cornerstoneCount || 0}/2`}
                   </button>
                 ) : null}
               </div>

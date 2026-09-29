@@ -794,7 +794,7 @@ test("open fields ripen a larger harvest", () => {
   const rich = crop(g, farm).remaining;
   assert.ok(rich > plain);
 });
-test("the band plants a hall on a clump, then a second hall claims distant ground", () => {
+test("the band plants its home hall, then a cornerstone claims distant ground", () => {
   const g = fixture();
   const home = g.campOf(0);
   g.enterAsBand();
@@ -825,7 +825,7 @@ test("the band plants a hall on a clump, then a second hall claims distant groun
   let claimed = false;
   for (let i = 0; i < 16 && !claimed; i++) {
     const a = (i / 16) * Math.PI * 2;
-    claimed = g.placeBuilding("townhall", far.x + Math.cos(a) * 12, far.z + Math.sin(a) * 12, 0);
+    claimed = g.placeBuilding("cornerstone", far.x + Math.cos(a) * 12, far.z + Math.sin(a) * 12, 0);
   }
   assert.equal(claimed, true);
   assert.equal(g.tribe(0).wood, 130);
@@ -851,4 +851,68 @@ test("berry herds never arrive", () => {
   for (let i = 0; i < 12; i++) g.tickEvents(40);
   assert.equal(g.state.event, "none");
   assert.equal(g.tribe(0).food, food);
+});
+
+// A flat, isolated valley keeps travel, construction and hauling deterministic.
+function cornerstoneValley() {
+  const g = fixture();
+  g.world.heights.fill(4);
+  g.state.buildings = [g.makeBld("townhall", 0, 38, 0)];
+  g.state.units = g.state.units.filter((u) => u.team === 0 && u.type === "worker").slice(0, 1);
+  const w = g.state.units[0];
+  Object.assign(w, { x: 8, z: 38, y: 4, order: "idle", job: null, jobLock: false, carry: 0 });
+  const tree = g.state.trees[0];
+  g.state.trees = [140, 230, 320].flatMap((x) => Array.from({length: 6}, (_, i) => ({
+    ...tree, id: g.id(), x: x + (i % 3) * 4 - 4, z: 50 + Math.floor(i / 3) * 4,
+    amount: 100, rich: 1,
+  })));
+  g.state.stones = []; g.state.forage = []; g.state.copper = []; g.state.iron = [];
+  g.state.wildlife = [];
+  g.tribe(0).wood = 500;
+  g.state.weather = "clear";
+  g.rebuildWalk();
+  return { g, w };
+}
+
+test("cornerstones require distant clumps and never create a second hall", () => {
+  const {g} = cornerstoneValley();
+  assert.equal(g.placeBuilding("townhall", 140, 38), false);
+  assert.equal(g.placeBuilding("cornerstone", 20, 38), false);
+  assert.equal(g.placeBuilding("cornerstone", 90, 38), false, "empty ground is not a clump");
+  assert.equal(g.placeBuilding("cornerstone", 140, 38), true);
+  assert.equal(g.placeBuilding("cornerstone", 150, 38), false);
+  assert.equal(g.placeBuilding("cornerstone", 230, 38), true);
+  assert.equal(g.placeBuilding("cornerstone", 320, 38), false, "unfinished markers count toward the limit");
+  assert.equal(g.tribe(0).wood, 360);
+  assert.equal(g.state.buildings.filter(b => b.type === "townhall").length, 1);
+  assert.equal(g.popCap(0), 8, "markers do not create housing or people");
+});
+
+test("workers walk out, build the cornerstone, gather its clump and deliver locally", () => {
+  const {g, w} = cornerstoneValley();
+  assert.equal(g.findNode(w, "wood"), null, "unclaimed distant timber is unavailable");
+  assert.equal(g.placeBuilding("cornerstone", 140, 38), true);
+  const marker = g.state.buildings.find(b => b.type === "cornerstone");
+  assert.equal(g.nearestDrop(140, 38, 0).type, "townhall", "unfinished marker cannot receive goods");
+  const before = g.tribe(0).wood;
+  let delivered = false;
+  for (let i = 0; i < 2400 && !delivered; i++) {
+    g.state.time += 0.1;
+    g.navBudget = 20;
+    if (g.state.walkDirty) { g.rebuildWalk(); g.state.walkDirty = false; }
+    if (w.order === "build") g.buildAI(w, 0.1);
+    else g.workerAI(w, 0.1);
+    delivered = g.tribe(0).wood > before;
+  }
+  assert.equal(marker.build, 1);
+  assert.equal(g.nearestDrop(w.x, w.z, 0), marker);
+  assert.ok(delivered, "real harvesting must credit stock through a local delivery");
+  assert.ok(Math.hypot(w.x - marker.x, w.z - marker.z) < 5);
+  const saved = encodeGame(g);
+  assert.equal(saved.version, 17);
+  const restored = decodeGame(JSON.parse(JSON.stringify(saved)));
+  assert.equal(restored.nearestDrop(140, 38, 0).type, "cornerstone");
+  marker.hp = 0;
+  assert.equal(g.cornerstoneAt(140, 50, 0), undefined);
+  assert.equal(g.nearestDrop(140, 38, 0).type, "townhall");
 });

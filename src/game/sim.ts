@@ -18,6 +18,8 @@ import {
   AGES,
   BUILD_ORDER,
   BUILD_TIME,
+  CORNERSTONE_R,
+  SETTLEMENT_GAP,
   BUILDINGS,
   FOW,
   GATHER,
@@ -747,7 +749,7 @@ export class Game {
   }
 
   private solidBuilding(b: Building) {
-    return b.hp > 0 && !["farm", "quarry", "dock", "lumber", "grove", "cairn"].includes(b.type);
+    return b.hp > 0 && !["farm", "quarry", "dock", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -822,7 +824,32 @@ export class Game {
     return { x, z };
   }
 
+  settlementIssue(type: BldType, x: number, z: number, team = 0): string | null {
+    if (team !== 0 || (type !== "townhall" && type !== "cornerstone")) return null;
+    const settlements = this.state.buildings.filter(
+      (b) => b.team === team && b.hp > 0 && (b.type === "townhall" || b.type === "cornerstone"),
+    );
+    const hall = settlements.find((b) => b.type === "townhall");
+    if (type === "townhall" && hall) return "There is one home hall. Plant a cornerstone from it.";
+    if (type === "cornerstone") {
+      if (!hall || !this.finished(hall)) return "Plant the home hall first";
+      if (settlements.length >= 3) return "The hall and two cornerstones are enough to hold";
+      if (settlements.some((b) => Math.hypot(b.x - x, b.z - z) < SETTLEMENT_GAP))
+        return "A cornerstone needs a distant clump, away from your other settlements";
+    }
+    return this.nearClump(x, z) ? null : "Plant beside a clump — berries, timber, stone, or ore";
+  }
+
+  cornerstoneAt(x: number, z: number, team: number) {
+    return this.state.buildings.find(
+      (b) => b.team === team && b.type === "cornerstone" && this.finished(b) &&
+        Math.hypot(b.x - x, b.z - z) <= CORNERSTONE_R,
+    );
+  }
+
   placementIssue(type: BldType, x: number, z: number, _team = 0): string | null {
+    const issue = this.settlementIssue(type, x, z, _team);
+    if (issue) return issue;
     const d = BUILDINGS[type];
     if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
@@ -1161,31 +1188,15 @@ export class Game {
         ? this.state.buildings.filter((b) => b.team === team && b.type === "townhall" && b.hp > 0)
         : [];
     const founding = type === "townhall" && team === 0 && (!!this.state.founding || halls.length === 0);
-    if (type === "townhall" && team === 0) {
-      if (halls.length >= 3) {
-        this.banner("Three halls are enough to hold", 1.6);
-        return false;
-      }
-      if (!founding) {
-        for (const h of halls) {
-          if (Math.hypot(h.x - x, h.z - z) < 64) {
-            this.banner("A new hall needs open ground, away from the last", 1.8);
-            this.onSfx("invalid");
-            return false;
-          }
-        }
-      }
-      if (!this.nearClump(x, z)) {
-        this.banner("Plant the hall on a clump — berries, timber, stone, or ore", 1.8);
+    const settlementIssue = this.settlementIssue(type, x, z, team);
+    if (settlementIssue) {
+      if (team === 0) {
+        this.banner(settlementIssue, 1.8);
         this.onSfx("invalid");
-        return false;
       }
+      return false;
     }
-    const cost = founding
-      ? {}
-      : type === "townhall" && team === 0
-        ? { wood: 70, stone: 0 }
-        : { food: d.food, wood: d.wood, stone: d.stone };
+    const cost = founding ? {} : { food: d.food, wood: d.wood, stone: d.stone };
     if (!this.canAfford(team, cost)) {
       if (team === 0) {
         const need = [];
@@ -1224,7 +1235,10 @@ export class Game {
     }
     this.state.buildings.push(b);
     this.state.walkDirty = true;
-    if (type === "townhall" && team === 0) this.state.founding = false;
+    if (type === "townhall" && team === 0) {
+      this.state.founding = false;
+      this.state.placing = null;
+    }
     this.addBurst(spot.x, b.y + 1, spot.z, "#c4b494", 10);
     if (team === 0) {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
@@ -3225,6 +3239,7 @@ export class Game {
     const cell = MAP / n;
     const rad: Partial<Record<BldType, number>> = {
       townhall: 34,
+      cornerstone: CORNERSTONE_R,
       hut: 16,
       farm: 14,
       lumber: 18,
@@ -3418,7 +3433,8 @@ export class Game {
     let bd = 1e12;
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.team !== team) continue;
-      if (b.type !== "townhall" && b.type !== "warehouse") continue;
+      if (b.type !== "townhall" && b.type !== "warehouse" && b.type !== "cornerstone") continue;
+      if (b.type === "cornerstone" && !this.finished(b)) continue;
       const d = (b.x - x) ** 2 + (b.z - z) ** 2;
       if (d < bd) {
         bd = d;
@@ -3478,6 +3494,7 @@ export class Game {
         const marked = this.chopMarks.has(n.id);
         if (
           !marked &&
+          !this.cornerstoneAt(n.x, n.z, u.team) &&
           !camps.some((c) => Math.hypot(c.x - n.x, c.z - n.z) < LUMBER_R) &&
           Math.hypot(n.x - this.campOf(u.team).x, n.z - this.campOf(u.team).z) > 28
         )
@@ -3491,6 +3508,7 @@ export class Game {
       for (const n of this.state.stones) {
         if (n.amount <= 0) continue;
         if (
+          !this.cornerstoneAt(n.x, n.z, u.team) &&
           !quarries.some((q) => Math.hypot(q.x - n.x, q.z - n.z) < QUARRY_R) &&
           Math.hypot(n.x - this.campOf(u.team).x, n.z - this.campOf(u.team).z) > 28
         )
@@ -5432,6 +5450,7 @@ export class Game {
       started: this.started,
       awaitingStart: this.awaitingStart,
       founding: !!this.state.founding,
+      cornerstoneCount: this.state.buildings.filter(b => b.team === 0 && b.hp > 0 && b.type === "cornerstone").length,
       muted: this.muted,
       quality: this.quality,
       workerSelected: units.filter((u) => u.type === "worker").length,

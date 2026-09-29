@@ -271,6 +271,12 @@ export function buildingGeos(): Record<BldType, BldGeo> {
 
   return {
     townhall: th,
+    cornerstone: {
+      timber: merge([cyl(0.13, 0.18, 4.8, 0, 0, 0, 8), box(1.7, 0.12, 0.12, 0.75, 4.4, 0)]),
+      roof: merge([box(1.6, 1.1, 0.08, 0.85, 3.3, 0)]),
+      extra: merge([cyl(0.85, 1.15, 0.5, 0, 0, 0, 7)]),
+      extraMat: "stone",
+    },
     hut,
     farm: { timber: merge(farmTimber), roof: merge([box(2.4, 1.2, 2.2, 2.4, 0, 2.2)]), extra: merge(farmExtra), extraMat: "crop" },
     lumber: { timber: merge(lumberT), roof: merge(lumberR) },

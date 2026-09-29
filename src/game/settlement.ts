@@ -207,14 +207,14 @@ export class WorkBoard {
       for (const n of g.state.trees)
         if (
           n.amount > 0 &&
-          (nearby(n, "lumber", LUMBER_R) ||
+          (g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "lumber", LUMBER_R) ||
             Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
         )
           add(n, "wood", 2, Math.max(15, 95 - t.wood * 0.35));
       for (const n of g.state.stones)
         if (
           n.amount > 0 &&
-          (nearby(n, "quarry", QUARRY_R) ||
+          (g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "quarry", QUARRY_R) ||
             Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
         )
           add(n, "stone", 2, Math.max(10, 65 - t.stone * 0.4));
@@ -281,7 +281,9 @@ export class WorkBoard {
       )
         continue;
       const distance = Math.hypot(task.node.x - u.x, task.node.z - u.z);
-      if (distance > 100 || !origin || this.taskComponent(g, task.node) !== origin) continue;
+      const settlementWork = g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
+        (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
+      if ((distance > 100 && !settlementWork) || !origin || this.taskComponent(g, task.node) !== origin) continue;
       if (
         g.state.units.some(
           (e) =>

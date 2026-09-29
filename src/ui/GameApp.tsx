@@ -163,8 +163,8 @@ export function GameApp() {
             WILD
           </p>
           <p className="mt-8 max-w-sm px-6 text-center text-sm leading-relaxed text-parchment">
-            Walk until you find a clump of berries or timber, then plant the hall. Later halls claim
-            new ground. One trade at a time.
+            Walk until you find a clump of berries or timber, then plant the hall. Later cornerstones claim
+            distant resource clumps. One trade at a time.
           </p>
           <button
             type="button"

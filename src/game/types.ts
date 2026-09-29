@@ -3,6 +3,7 @@ export type UnitType =
 
 export type BldType =
   | "townhall"
+  | "cornerstone"
   | "hut"
   | "farm"
   | "lumber"
@@ -347,6 +348,7 @@ export type HudSelection = {
 };
 
 export type HudSnapshot = {
+  cornerstoneCount?: number;
   food: number;
   wood: number;
   stone: number;

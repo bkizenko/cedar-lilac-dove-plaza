@@ -41,6 +41,7 @@ const UNIT_TYPES: UnitType[] = [
 ];
 const BLD_TYPES: BldType[] = [
   "townhall",
+  "cornerstone",
   "hut",
   "farm",
   "lumber",
@@ -722,6 +723,7 @@ export class WorldView {
       const g = geos[type];
       const timber = new THREE.InstancedMesh(g.timber, this.mats.timber, 80);
       const roofMat =
+        type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
           ? this.mats.tile
           : this.mats.thatch;
@@ -1236,7 +1238,7 @@ export class WorldView {
         meshes.extra?.setMatrixAt(i, _m);
         _c.set(st.timber);
         if (meshes.timber.instanceColor) meshes.timber.setColorAt(i, _c);
-        _c.set(st.roof);
+        _c.set(type === "cornerstone" ? game.tribe(b.team).color : st.roof);
         if (meshes.roof.instanceColor) meshes.roof.setColorAt(i, _c);
       }
       meshes.timber.count = n;

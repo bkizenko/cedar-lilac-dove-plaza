@@ -1,3 +1,17 @@
+# Cornerstone checkpoint — 28 September 2026
+
+Continues origin/main 36e4b37. The opening walk, resource clumps, biomes, births, drill, fog and removal of berry herds remain in place.
+
+- The home hall offers two cornerstones, at 70 logs each. A marker must stand beside a living berry, timber, stone or ore clump, at least 64 world units from another player settlement. Unfinished markers count toward the limit.
+- Workers walk out to construct the flag. Finished markers unlock timber and stone work within 28 units and receive nearby gathered supplies through the existing hauling system. Ore still requires its existing age. Markers provide no housing or free population.
+- Markers render with a stone base and tribe-colored flag and project the existing territory tint. They have no second construction menu or technology tree.
+- Save version remains 17; no new required game-state fields. Existing version-17 saves continue loading. Existing buildings in older saves are preserved.
+- Verified: 269 automated tests; additional focused opening/marker checks after the final placement adjustment; type check; production build; desktop/mobile browser render checks.
+
+This completes the cornerstone slice, not the broader game overhaul below.
+
+---
+
 # Rework checkpoint — 27 September 2026
 
 This is a playable mechanics checkpoint, not the completed game described in GAME_DESIGN.md and REWORK_DIRECTION.md.

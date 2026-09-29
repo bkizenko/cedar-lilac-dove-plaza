@@ -8,6 +8,8 @@ export const TILE = 2;
 export const LUMBER_R = 18;
 export const QUARRY_R = 16;
 export const DOCK_R = 20;
+export const CORNERSTONE_R = 28;
+export const SETTLEMENT_GAP = 64;
 
 export const PLAYER_CAMP = { x: 0, z: 38 };
 export const RIVAL_CAMP = { x: 82, z: -86 };
@@ -59,7 +61,12 @@ export const BUILDINGS: Record<
     pop: 8,
     hp: 1100,
     age: 0,
-    hint: "The band's hall. Plant the first one on food or timber. Later halls claim a new clump.",
+    hint: "The band's hall. Plant the first one on food or timber. Plant up to two cornerstones to work distant clumps.",
+  },
+  cornerstone: {
+    name: "Cornerstone",
+    w: 3, d: 3, food: 0, wood: 70, stone: 0, pop: 0, hp: 320, age: 0,
+    hint: "Claims a distant resource clump. Workers gather nearby and deliver here. Two beyond the home hall.",
   },
   hut: {
     name: "Hut",
@@ -505,6 +512,7 @@ export const AGE_CHOICES: {
 
 export const BUILD_TIME: Record<BldType, number> = {
   townhall: 0,
+  cornerstone: 12,
   hut: 8,
   farm: 10,
   lumber: 10,

@@ -3,8 +3,9 @@ A band on open ground.
 
 HOW TO PLAY
   You start walking. Plant the hall on a clump of berries or timber.
-  Another hall, from the first, claims a new clump — wood, stone, or ore —
-  far from the last. Three halls are enough.
+  From the home hall, plant a cornerstone beside a distant resource clump.
+  Workers build the flag, work nearby and haul to it. Keep 64 paces between
+  settlements. One hall and two cornerstones are enough.
   Gatherers work on their own once the hall stands. Assign a job to lock someone.
   People are born when there is food and space. Food is eaten every day.
   Farms need fertile ground, lumber camps a stand of pines, quarries a stone clump.
