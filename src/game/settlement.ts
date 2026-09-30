@@ -210,7 +210,7 @@ export class WorkBoard {
           ((t.id === 0 && g.chopMarks.has(n.id)) || g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "lumber", LUMBER_R) ||
             Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
         )
-          add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 220 : Math.max(15, 95 - t.wood * 0.35));
+          add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 140 : Math.max(15, 95 - t.wood * 0.35));
       for (const n of g.state.stones)
         if (
           n.amount > 0 &&

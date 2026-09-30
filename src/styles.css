@@ -293,3 +293,9 @@ canvas:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+.trade-proposal { margin-top:.75rem; }
+.trade-terms { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin-top:.75rem; }
+.trade-terms label { display:flex; flex-direction:column; gap:.35rem; }
+.trade-terms input,.trade-terms select { width:100%; min-width:0; min-height:2.5rem; padding:.4rem; background:#201f18; color:#e2d5b4; border:1px solid #806847; border-radius:.4rem; }
+@media(max-width:540px) { .trade-terms { grid-template-columns:1fr; } }

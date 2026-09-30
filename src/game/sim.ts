@@ -1,3 +1,4 @@
+import { knownSettlement } from "./barter";
 import {
   WorkBoard,
   emergencyResponse,
@@ -2578,26 +2579,26 @@ export class Game {
 
   pickTradeRival(): Tribe | null {
     const focused = this.tribe(this.tradeTeam);
-    if (focused && focused.id !== 0 && focused.id !== 3 && focused.alive && !focused.hostile)
+    if (focused && focused.id !== 0 && focused.id !== 3 && focused.alive && !focused.hostile && knownSettlement(this,focused.id))
       return focused;
     const selU = this.state.units.find((u) => u.selected && u.team !== 0 && u.hp > 0);
     if (selU) {
       const tr = this.tribe(selU.team);
-      if (tr?.alive && !tr.hostile) {
+      if (tr?.alive && !tr.hostile && knownSettlement(this,tr.id)) {
         this.tradeTeam = tr.id;
         return tr;
       }
     }
     const next =
-      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive && !t.hostile) ||
-      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive) ||
+      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive && !t.hostile && knownSettlement(this,t.id)) ||
+      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive && knownSettlement(this,t.id)) ||
       null;
     if (next) this.tradeTeam = next.id;
     return next;
   }
 
   cycleTrade() {
-    const rivals = this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.alive);
+    const rivals = this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.alive && knownSettlement(this,t.id));
     if (!rivals.length) {
       this.banner("No one left to trade with", 1.4);
       return;

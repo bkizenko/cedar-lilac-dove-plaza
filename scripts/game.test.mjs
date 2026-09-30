@@ -991,3 +991,61 @@ test("raid commands and follow-up targets respect unexplored territory", () => {
   g.vision.fill(1);
   assert.ok(g.nextPillage(army[0]));
 });
+
+
+test("shipment quotes require contact and respond to trust and scarcity", async () => {
+  const {quoteShipment} = await import("../src/game/barter.ts");
+  const g = fixture();
+  Object.assign(g.tribe(0), {food: 200});
+  Object.assign(g.tribe(1), {food: 80, wood: 200, tradeCd: 0, hostile: false, trust: 0, tension: 0});
+  g.vision.fill(0);
+  assert.equal(quoteShipment(g, 1, "food", "wood", 30).deal, null);
+  g.vision.fill(1);
+  const baseline = quoteShipment(g, 1, "food", "wood", 30).deal.getAmt;
+  g.tribe(1).trust = 1;
+  assert.ok(quoteShipment(g, 1, "food", "wood", 30).deal.getAmt > baseline);
+  g.tribe(1).hostile = true;
+  assert.equal(quoteShipment(g, 1, "food", "wood", 30).deal, null);
+});
+
+test("shipment validation rejects invalid quantities and unavailable goods", async () => {
+  const {quoteShipment} = await import("../src/game/barter.ts");
+  const g = fixture(); g.vision.fill(1);
+  Object.assign(g.tribe(0), {food: 30, age: 0});
+  Object.assign(g.tribe(1), {wood: 200, tradeCd: 0, hostile: false});
+  for (const amount of [NaN, Infinity, -1, 0, 1.5, 101, 31])
+    assert.equal(quoteShipment(g, 1, "food", "wood", amount).deal, null);
+  for (const kind of ["food", "iron", "toString"])
+    assert.equal(quoteShipment(g, 1, "food", kind, 20).deal, null);
+  g.tribe(1).wood = 0;
+  assert.equal(quoteShipment(g, 1, "food", "wood", 20).deal, null);
+});
+
+test("negotiated goods travel with a saved carrier instead of arriving instantly", async () => {
+  const {quoteShipment, proposeShipment} = await import("../src/game/barter.ts");
+  const g = fixture(); g.vision.fill(1); g.clearSelect();
+  Object.assign(g.tribe(0), {food: 200});
+  Object.assign(g.tribe(1), {food: 80, wood: 200, tradeCd: 0, hostile: false});
+  const wood = g.tribe(0).wood;
+  const quote = quoteShipment(g, 1, "food", "wood", 30).deal;
+  assert.equal(proposeShipment(g, 1, "food", "wood", 30), true);
+  const carrier = g.state.units.find(u => u.team === 0 && u.order === "trade");
+  assert.deepEqual(carrier.trade, quote);
+  assert.equal(carrier.carry, 30);
+  assert.equal(g.tribe(0).food, 170);
+  assert.equal(g.tribe(0).wood, wood);
+  assert.equal(proposeShipment(g, 1, "food", "wood", 30), false);
+  assert.equal(g.tribe(0).food, 170);
+  const restored = decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
+  assert.equal(restored.state.units.find(u => u.id === carrier.id).carry, 30);
+});
+
+test("urgent food gathering outranks community logging marks", () => {
+  const {g, w} = cornerstoneValley(); g.vision.fill(2); g.tribe(0).food = 0;
+  const berries = {...g.state.trees[0], id: g.id(), kind: "forage", x: 14, z: 38, amount: 100};
+  g.state.forage = [berries];
+  g.markChop([g.state.trees[0].id]);
+  g.workBoard.assign(g, w);
+  assert.equal(w.job, "food");
+  assert.equal(w.node, berries);
+});

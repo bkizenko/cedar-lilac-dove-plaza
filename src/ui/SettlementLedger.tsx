@@ -1,3 +1,5 @@
+import { TradeProposal } from "./TradeProposal";
+import { knownSettlement } from "@/game/barter";
 import { useEffect, useRef } from "react";
 import type { Engine } from "@/game/engine";
 import {
@@ -218,11 +220,13 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         </ul>
       )}
       <h3>Neighbor relations</h3>
+      {!s.tribes.some(n=>n.id>0&&n.id<3&&n.alive&&knownSettlement(g,n.id)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
       {s.tribes
-        .filter((n) => n.id > 0 && n.id < 3 && n.alive)
+        .filter((n) => n.id > 0 && n.id < 3 && n.alive && knownSettlement(g,n.id))
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>
+            <TradeProposal engine={engine} team={n.id} />
             {n.hostile && (
               <button
                 onClick={() => {
