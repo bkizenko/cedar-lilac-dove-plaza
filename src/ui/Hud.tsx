@@ -223,6 +223,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           >
             Village · L
           </button>
+            <button type="button" aria-pressed={!!engine?.loggingMode}
+              className="text-[11px] text-parchment hover:text-bronze-bright"
+              onClick={() => engine?.toggleLogging()}>
+              {engine?.loggingMode ? "Finish tree marks · N" : "Mark trees · N"}
+            </button>
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
@@ -467,7 +472,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               </>
             ) : (
               <p className="mt-1.5 text-[11px] leading-snug text-parchment-dim">
-                Tap Gatherer (or People) to train. Right-click an enemy to fight.
+                People join through birth or migration. Select adults to drill; right-click an enemy to fight.
               </p>
             )}
             {sel.kind === "building" && sel.team === 0 && (
@@ -609,8 +614,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   type="button"
                   title={
                     hud.raidName
-                      ? `Pillage ${hud.raidName} — hunters hit the whole connected camp.`
-                      : "Train hunters, then pillage a camp."
+                      ? `Raid ${hud.raidName} with the selected hunters. Move or stop to withdraw.`
+                      : "Explore a rival settlement and select drilled adults to raid."
                   }
                   onClick={() => engine?.raidRival()}
                   className="flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-blood/40 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-blood"

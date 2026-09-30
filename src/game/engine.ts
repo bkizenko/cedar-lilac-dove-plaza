@@ -30,6 +30,7 @@ export class Engine {
   keyboard = new KeyboardCommands(this);
   private simAccumulator = 0;
   moveMode = false;
+  loggingMode = false;
   pointer = { x: 0, y: 0 };
   ghostPos = { x: 0, z: 0 };
   disposed = false;
@@ -313,14 +314,14 @@ export class Engine {
       const dx = this.drag.x - this.drag.sx;
       const dy = this.drag.y - this.drag.sy;
       if (Math.hypot(dx, dy) > 8) {
-        if (!e.shiftKey) this.game.clearSelect();
+        if (!e.shiftKey && !this.loggingMode) this.game.clearSelect();
         const minx = Math.min(this.drag.sx, this.drag.x),
           maxx = Math.max(this.drag.sx, this.drag.x);
         const miny = Math.min(this.drag.sy, this.drag.y),
           maxy = Math.max(this.drag.sy, this.drag.y);
         let picked = 0;
         for (const u of this.game.state.units) {
-          if (u.team !== 0 || u.hp <= 0) continue;
+          if (this.loggingMode || u.team !== 0 || u.hp <= 0) continue;
           const p = this.view.project(u.x, u.y + 0.6, u.z);
           if (p.behind) continue;
           if (p.x >= minx && p.x <= maxx && p.y >= miny && p.y <= maxy) {
@@ -355,6 +356,15 @@ export class Engine {
       this.updateGhost();
       this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0);
       this.updateGhost();
+      this.pushHud();
+      return;
+    }
+    if (this.loggingMode) {
+      const tree = this.game.state.trees.filter(t => t.amount > 0 && this.game.visibleAt(t.x, t.z))
+        .filter(t => Math.hypot(t.x - g.x, t.z - g.z) < 8)
+        .sort((a, b) => Math.hypot(a.x - g.x, a.z - g.z) - Math.hypot(b.x - g.x, b.z - g.z))[0];
+      if (tree) this.game.markChop([tree.id]);
+      else this.game.banner("Aim at a visible tree, or drag over a stand", 1.8);
       this.pushHud();
       return;
     }
@@ -434,7 +444,17 @@ export class Engine {
     this.view.setGhost(type, x, z, this.game.height(x, z), !issue);
   }
 
+  toggleLogging() {
+    this.loggingMode = !this.loggingMode;
+    this.game.state.placing = null;
+    this.moveMode = false;
+    this.game.banner(this.loggingMode ? "Mark trees: drag over a stand, or aim and press Enter. Repeat to clear marks. Esc to finish." : "Tree marking finished", 3);
+    this.canvas.focus();
+    this.pushHud();
+  }
+
   setPlacing(type: BldType | null) {
+    this.loggingMode = false;
     if (type && this.game.state.ended) return;
     this.game.state.placing = this.game.state.placing === type ? null : type;
     if (this.game.state.placing) {

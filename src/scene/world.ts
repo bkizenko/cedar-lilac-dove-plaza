@@ -1954,6 +1954,7 @@ export class WorldView {
             }
           }
         }
+        if (tree && game.chopMarks.has(tree.id)) c.set("#efb34b");
         this.treesLeaf.setColorAt(i, c);
       }
       this.treesLeaf.instanceColor.needsUpdate = true;

@@ -1,3 +1,10 @@
+# Command checkpoint — 29 September 2026
+
+- N / Mark trees enables explicit forest designation; drag a box even across villagers, or cycle trees with brackets and press Enter. Marked crowns turn amber. Repeating a designation clears it.
+- Marks enter the regular reachable-work scheduler, persist in version-17 saves, and do not recall builders, haulers or soldiers. Rival tribes ignore the player's designations.
+- A selected squad attacks without mobilizing the whole army. Move and hold orders cancel pillage. Undiscovered enemy settlements and buildings cannot be chosen as raid targets; remembered settlements remain reachable through fog.
+- Verified: 273 automated tests, type check, build, desktop/mobile development and production rendering, and interactive mouse/keyboard designation checks.
+
 # Cornerstone checkpoint — 28 September 2026
 
 Continues origin/main 36e4b37. The opening walk, resource clumps, biomes, births, drill, fog and removal of berry herds remain in place.

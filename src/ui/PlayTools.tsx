@@ -21,7 +21,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
       {engine.keyboard.mode && !engine.game.awaitingStart && (
         <div className="world-reticle" aria-hidden="true">
           <span>+</span>
-          <small>{engine.game.state.placing ? "Enter: build" : "Enter: select · R: order"}</small>
+          <small>{engine.game.state.placing ? "Enter: build" : engine.loggingMode ? "Enter: mark tree · [ / ]: next tree" : "Enter: select · R: order"}</small>
         </div>
       )}
       <dialog
@@ -53,7 +53,9 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           <dt>R · Z · period · semicolon</dt>
           <dd>Contextual order · attack-move · stop · hold</dd>
           <dt>1–8 · G · X</dt>
-          <dd>Quick build · recruit worker · explore</dd>
+          <dd>Quick build · drill an adult · explore</dd>
+          <dt>N · [ / ] · Enter</dt>
+          <dd>Mark trees mode · cycle visible trees · mark or clear</dd>
           <dt>Ctrl+1–9 · Alt+1–9</dt>
           <dd>Store group · recall group</dd>
           <dt>P / Space · − / +</dt>

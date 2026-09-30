@@ -362,7 +362,7 @@ test("new seasonal, work and emergency state survives saving", async () => {
 test("raid marches toward an unseen settlement instead of reacquiring it forever", () => {
   const g = fixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
-  g.vision.fill(0);
+  g.vision.fill(1);
   g.issuePillage(hall);
   const army = g.state.units.filter((u) => u.team === 0 && u.type !== "worker");
   assert.ok(army.length);
@@ -385,6 +385,7 @@ test("raid marches toward an unseen settlement instead of reacquiring it forever
 test("truce clears both armies targets and prevents immediate renewed hostility", () => {
   const g = fixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
+  g.vision.fill(1);
   g.issuePillage(hall);
   const enemy = g.state.units.find((u) => u.team === 1 && u.type !== "worker"),
     ours = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
@@ -432,6 +433,7 @@ test("new world has a wider map and distant settlement starts", async () => {
 test("raid crosses the wider island and engages defenders", () => {
   const g = fixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
+  g.vision.fill(1);
   g.issuePillage(hall);
   const u = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
   const defenders = g.state.units.filter((u) => u.team === 1);
@@ -453,6 +455,7 @@ test("raiders attack an undefended settlement instead of stopping beside it", ()
   g.state.units = g.state.units.filter((u) => u.team !== 1);
   const buildings = g.state.buildings.filter((b) => b.team === 1),
     before = buildings.reduce((s, b) => s + b.hp, 0);
+  g.vision.fill(1);
   g.issuePillage(hall);
   const u = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
   for (let i = 0; i < 12000; i++) {
@@ -655,6 +658,7 @@ test("marked trees are felled first, and burning a hall takes stores", async () 
   const home = g.campOf(0);
   const far = g.state.trees.find((t) => t.amount > 0 && Math.hypot(t.x - home.x, t.z - home.z) > 40);
   assert.ok(far);
+  g.vision.fill(2);
   assert.equal(g.markChop([far.id]), 1);
   const u = g.state.units.find((x) => x.team === 0 && x.type === "worker" && x.hp > 0);
   u.job = "wood";
@@ -915,4 +919,75 @@ test("workers walk out, build the cornerstone, gather its clump and deliver loca
   marker.hp = 0;
   assert.equal(g.cornerstoneAt(140, 50, 0), undefined);
   assert.equal(g.nearestDrop(140, 38, 0).type, "townhall");
+});
+
+test("tree designations become reachable work without recalling builders or haulers", () => {
+  const {g, w} = cornerstoneValley();
+  g.vision.fill(2);
+  const tree = g.state.trees[0];
+  w.order = "return"; w.carry = 4; w.carryType = "food";
+  assert.equal(g.markChop([tree.id]), 1);
+  assert.equal(w.order, "return");
+  assert.equal(w.carry, 4);
+  w.carry = 0; w.order = "idle"; w.job = null;
+  g.workBoard.assign(g, w);
+  assert.equal(w.node, tree, "the normal scheduler must claim distant marked trees");
+  assert.equal(w.order, "gather");
+  assert.equal(w.job, "wood");
+  const saved = encodeGame(g);
+  const restored = decodeGame(JSON.parse(JSON.stringify(saved)));
+  assert.ok(restored.chopMarks.has(tree.id));
+  delete saved.chopMarks;
+  assert.equal(decodeGame(saved).chopMarks.size, 0, "earlier version-17 saves still load");
+  g.reset(123456);
+  assert.equal(g.chopMarks.size, 0);
+});
+
+test("tree marks cannot discover unseen timber or redirect another tribe", () => {
+  const {g, w} = cornerstoneValley();
+  const tree = g.state.trees[0];
+  g.vision.fill(0);
+  assert.equal(g.markChop([tree.id]), 0);
+  g.vision.fill(2);
+  g.markChop([tree.id]);
+  w.team = 1;
+  g.workBoard.assign(g, w);
+  assert.notEqual(w.node, tree);
+  const saved = encodeGame(g);
+  saved.chopMarks = ["invalid"];
+  assert.throws(() => decodeGame(saved));
+});
+
+test("a selected squad raids without recalling the home guard, and can withdraw", () => {
+  const g = fixture();
+  g.clearSelect(); g.vision.fill(1);
+  const home = g.campOf(0);
+  const squad = g.spawnUnit("spearman", home.x, home.z, 0);
+  const guard = g.spawnUnit("spearman", home.x + 2, home.z, 0);
+  squad.selected = true; guard.order = "hold";
+  const hall = g.state.buildings.find(b => b.team === 1 && b.type === "townhall");
+  g.issuePillage(hall);
+  assert.equal(squad.pillage, 1);
+  assert.equal(guard.order, "hold");
+  assert.equal(guard.pillage, -1);
+  assert.equal(guard.selected, false);
+  g.issueMove(home.x, home.z);
+  assert.equal(squad.pillage, -1);
+  assert.equal(squad.attackDestination, null);
+  assert.equal(squad.target, null);
+  assert.equal(squad.order, "move");
+});
+
+test("raid commands and follow-up targets respect unexplored territory", () => {
+  const g = fixture();
+  g.vision.fill(0);
+  const hall = g.state.buildings.find(b => b.team === 1 && b.type === "townhall");
+  const army = g.commandedMilitary();
+  g.issuePillage(hall);
+  assert.ok(army.every(u => u.pillage === -1));
+  assert.equal(g.pickRaidRival(), null);
+  army[0].pillage = 1;
+  assert.equal(g.nextPillage(army[0]), null);
+  g.vision.fill(1);
+  assert.ok(g.nextPillage(army[0]));
 });

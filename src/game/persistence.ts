@@ -26,6 +26,7 @@ export function encodeGame(g: Game) {
     vision: Array.from(g.vision),
     visAge: Array.from(g.visAge),
     looted: [...g.looted],
+    chopMarks: [...g.chopMarks],
     seaT: g.seaT,
     calamityT: g.calamityT,
     tradeTeam: g.tradeTeam,
@@ -303,6 +304,10 @@ export function decodeGame(raw: unknown): Game {
   g.vision.set(d.vision);
   g.visAge.set(d.visAge);
   g.looted = new Set(d.looted);
+  if (d.chopMarks !== undefined && (!Array.isArray(d.chopMarks) || d.chopMarks.length > 20000 ||
+    d.chopMarks.some((id: unknown) => !Number.isSafeInteger(id)))) fail();
+  const liveTrees = new Set(g.state.trees.filter(t => t.amount > 0).map(t => t.id));
+  g.chopMarks = new Set((d.chopMarks || []).filter((id: number) => liveTrees.has(id)));
   g.seaT = d.seaT;
   g.calamityT = d.calamityT;
   g.tradeTeam = d.tradeTeam;

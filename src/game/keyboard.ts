@@ -27,6 +27,7 @@ export class KeyboardCommands {
       g.state.placing = null;
       g.state.pendingAge = false;
       e.moveMode = false;
+      e.loggingMode = false;
       e.canvas.focus();
       e.pushHud();
       return;
@@ -103,6 +104,7 @@ export class KeyboardCommands {
     )
       event.preventDefault();
     if (event.repeat) return;
+    if (code === "KeyN") e.toggleLogging();
     if (code === "KeyK") this.mode = !this.mode;
     if (code === "KeyH") this.help = !this.help;
     if (code === "KeyL") this.ledger = !this.ledger;
@@ -130,7 +132,7 @@ export class KeyboardCommands {
     if (code === "BracketLeft" || code === "BracketRight") {
       const s = g.state;
       const nodes = [...s.forage, ...s.trees, ...s.stones, ...s.copper, ...s.iron, ...s.fish]
-        .filter((x) => x.amount > 0 && g.visibleAt(x.x, x.z))
+        .filter((x) => x.amount > 0 && (!e.loggingMode || x.kind === "tree") && g.visibleAt(x.x, x.z))
         .sort((a, b) => a.id - b.id);
       if (nodes.length) {
         const at = nodes.findIndex((x) => x.id === this.cursorId);
@@ -138,7 +140,7 @@ export class KeyboardCommands {
         this.cursorId = next.id;
         e.view.look.set(next.x, next.y - 1.2, next.z);
         this.mode = true;
-        g.banner(`${next.kind} · R to gather`, 2);
+        g.banner(e.loggingMode ? "Tree · Enter to mark or unmark" : `${next.kind} · R to gather`, 2);
       }
     }
     if (["Enter", "KeyR", "KeyZ"].includes(code)) {
@@ -156,6 +158,7 @@ export class KeyboardCommands {
     if (code === "Semicolon")
       for (const u of g.selectedUnits()) {
         u.order = "hold";
+        u.pillage = -1;
         u.target = null;
         u.attackDestination = null;
       }

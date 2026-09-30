@@ -207,10 +207,10 @@ export class WorkBoard {
       for (const n of g.state.trees)
         if (
           n.amount > 0 &&
-          (g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "lumber", LUMBER_R) ||
+          ((t.id === 0 && g.chopMarks.has(n.id)) || g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "lumber", LUMBER_R) ||
             Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
         )
-          add(n, "wood", 2, Math.max(15, 95 - t.wood * 0.35));
+          add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 220 : Math.max(15, 95 - t.wood * 0.35));
       for (const n of g.state.stones)
         if (
           n.amount > 0 &&
@@ -281,7 +281,8 @@ export class WorkBoard {
       )
         continue;
       const distance = Math.hypot(task.node.x - u.x, task.node.z - u.z);
-      const settlementWork = g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
+      const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
+      const settlementWork = markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
       if ((distance > 100 && !settlementWork) || !origin || this.taskComponent(g, task.node) !== origin) continue;
       if (

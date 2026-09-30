@@ -40,3 +40,12 @@ CAMERA
   G               drill selected adults when food is spare
   Space / P       pause
   + / −           game speed
+
+TREE CLEARING
+  N toggles tree marking. Drag a box over visible trees, or use [ / ] and Enter.
+  Amber trees enter the village work queue. Repeat to clear; Escape finishes.
+  Marks survive saving. Builders and haulers finish their current orders.
+
+RAIDS
+  Select a squad before ordering a raid; other soldiers stay home.
+  Explore first. Move or stop orders cancel the squad's pillage mission.

@@ -188,6 +188,7 @@ export class Game {
   }
 
   reset(seed?: number) {
+    this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
     this.world = generateWorld(s);
     this.state = this.blank();
@@ -1466,6 +1467,7 @@ export class Game {
       const { ox, oz } = slots[i];
       u.tx = x + ox;
       u.tz = z + oz;
+      u.pillage = -1;
       u.order = attackMove ? "attackmove" : "move";
       u.attackDestination = attackMove ? { x: u.tx, z: u.tz } : null;
       u.target = null;
@@ -1476,7 +1478,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    for (const u of this.selectedUnits()) u.attackDestination = null;
+    for (const u of this.selectedUnits()) { u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits();
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
     if (target.kind === "building" && target.team !== 0 && (anyMil || !selected.length)) {
@@ -1503,15 +1505,20 @@ export class Game {
     if (units.length) this.onSfx("move");
   }
 
+  commandedMilitary() {
+    const selected = this.selectedUnits();
+    return (selected.length ? selected : this.state.units).filter(
+      u => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
+    );
+  }
+
   marchMilitary(
     tx: number,
     tz: number,
     target: Unit | Building | null,
     order: "attack" | "attackmove",
   ) {
-    const mil = this.state.units.filter(
-      (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
-    );
+    const mil = this.commandedMilitary();
     if (!mil.length) return false;
     const slots = this.slotOffsets(mil, tx, tz);
     mil.forEach((u, i) => {
@@ -1550,7 +1557,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e12;
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== u.pillage) continue;
+      if (b.hp <= 0 || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
       const d = (b.x - u.x) ** 2 + (b.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
@@ -1561,19 +1568,20 @@ export class Game {
   }
 
   issuePillage(target: Building) {
-    const cluster = this.connectedCamp(target);
+    if (target.team === 0 || target.hp <= 0 || !this.exploredAt(target.x, target.z)) {
+      this.banner("Explore a rival settlement before ordering a raid", 1.8);
+      return;
+    }
+    const mil = this.commandedMilitary();
     if (!this.marchMilitary(target.x, target.z, target, "attackmove")) {
-      this.banner("Train hunters, then pillage", 1.8);
+      this.banner("Select drilled adults to raid", 1.8);
       this.onSfx("invalid");
       return;
     }
-    const mil = this.state.units.filter(
-      (u) => u.team === 0 && u.type !== "worker" && u.type !== "leader" && u.hp > 0,
-    );
     for (const u of mil) u.pillage = target.team;
     if (target.team !== 0 && target.team !== 3) this.makeHostile(target.team);
     const name = this.tribe(target.team)?.name || "the camp";
-    this.banner("Pillage " + name + " — " + cluster.length + " buildings in the cluster", 2.2);
+    this.banner(mil.length + " hunters raid " + name + " — move or stop to withdraw", 2.2);
     this.onSfx("pillage");
   }
 
@@ -2527,7 +2535,7 @@ export class Game {
   raidRival() {
     const rival = this.pickRaidRival();
     if (!rival) {
-      this.banner("No rival remains", 1.4);
+      this.banner("Explore to find a rival settlement", 1.4);
       return;
     }
     const hall = this.state.buildings.find(
@@ -2558,7 +2566,7 @@ export class Game {
       const hall = this.state.buildings.find(
         (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
       );
-      if (!hall) continue;
+      if (!hall || !this.exploredAt(hall.x, hall.z)) continue;
       const d = (hall.x - ox) ** 2 + (hall.z - oz) ** 2;
       if (d < bd) {
         bd = d;
@@ -3491,7 +3499,7 @@ export class Game {
       );
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
-        const marked = this.chopMarks.has(n.id);
+        const marked = u.team === 0 && this.chopMarks.has(n.id);
         if (
           !marked &&
           !this.cornerstoneAt(n.x, n.z, u.team) &&
@@ -4547,26 +4555,19 @@ export class Game {
     let n = 0;
     for (const id of ids) {
       const tree = this.state.trees.find((t) => t.id === id && t.amount > 0);
-      if (!tree || this.chopMarks.has(id)) continue;
+      if (!tree || !this.visibleAt(tree.x, tree.z) || this.chopMarks.has(id)) continue;
       this.chopMarks.add(id);
       n++;
     }
     if (!n) {
       let cleared = 0;
       for (const id of ids) if (this.chopMarks.delete(id)) cleared++;
-      if (cleared) this.banner("Cleared the tree marks", 1.2);
+      if (cleared) { this.workBoard.reset(); this.banner("Cleared the tree marks", 1.2); }
       return 0;
     }
-    const idle = this.state.units.filter(
-      (u) => u.team === 0 && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
-    );
-    for (const u of idle) {
-      if (u.jobLock && u.job && u.job !== "wood") continue;
-      u.job = "wood";
-      u.order = "idle";
-      u.node = null;
-    }
-    this.banner(n + " trees marked — people will fell them", 1.6);
+    // This is a work designation, not a recall order for soldiers, builders or haulers.
+    this.workBoard.reset();
+    this.banner(n + (n === 1 ? " tree marked — people will fell it" : " trees marked — people will fell them"), 1.6);
     this.onSfx("click");
     return n;
   }
