@@ -1250,3 +1250,54 @@ test("obsolete worker training queues refund stores instead of creating people",
   assert.equal(g.popNow(0),people); assert.ok(g.tribe(0).food>food);
   assert.equal(hall.queue.length,0);
 });
+
+test("scouting persists beyond five destinations and holds when exploration ends", () => {
+  const g = fixture(), u = g.state.units.find(u => u.team === 0 && u.type === "worker");
+  u.selected = true;
+  g.findExploreTarget = () => ({x: u.x + 20, z: u.z});
+  g.issueExplore();
+  g.steer = () => true;
+  for (let i = 0; i < 12; i++) g.exploreAI(u, 1 / 30);
+  assert.equal(u.order, "explore");
+  g.findExploreTarget = () => null;
+  g.exploreAI(u, 1 / 30);
+  assert.equal(u.order, "hold");
+});
+test("remembered resources accept gathering; undiscovered resources do not", () => {
+  const g = fixture(), u = g.state.units.find(u => u.team === 0 && u.type === "worker");
+  const tree = g.state.trees[0];
+  g.vision.fill(0);
+  assert.equal(g.resourceAt(tree.x, tree.z), null);
+  g.issueGather(tree);
+  assert.notEqual(u.node, tree);
+  g.stampVision(tree.x, tree.z, 10, 1);
+  assert.equal(g.visibleAt(tree.x, tree.z), false);
+  assert.equal(g.resourceAt(tree.x, tree.z), tree);
+  g.clearSelect(); u.selected = true;
+  g.issueGather(tree);
+  assert.equal(u.order, "gather");
+  assert.equal(u.node, tree);
+});
+test("discovery points persist once across ages and reject damaged records", async () => {
+  const {recordDiscoveries, discoveryScore} = await import("../src/game/discovery.ts");
+  const g = fixture();
+  g.vision.fill(0);
+  recordDiscoveries(g);
+  assert.equal(g.state.discoveries.some(h => h.id === "copper"), false);
+  const ore = g.state.copper[0];
+  g.stampVision(ore.x, ore.z, 10, 1);
+  recordDiscoveries(g);
+  const before = discoveryScore(g);
+  g.tribe(0).age = 1;
+  recordDiscoveries(g);
+  assert.equal(discoveryScore(g), before);
+  assert.equal(discoveryScore(g, 1), 0);
+  const restored = decodeGame(encodeGame(g));
+  recordDiscoveries(restored);
+  assert.equal(discoveryScore(restored), before);
+  const bad = encodeGame(g);
+  bad.state.discoveries.push({...bad.state.discoveries[0]});
+  assert.throws(() => decodeGame(bad));
+  const old = encodeGame(g); delete old.state.discoveries;
+  assert.doesNotThrow(() => decodeGame(old));
+});

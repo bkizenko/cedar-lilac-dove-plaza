@@ -1,3 +1,4 @@
+import { DISCOVERIES } from "./discovery";
 import { Game } from "./sim";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
@@ -56,6 +57,16 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "string" && typeof s[name] !== "string") fail();
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
+  }
+  if (s.discoveries !== undefined) {
+    if (!Array.isArray(s.discoveries) || s.discoveries.length > DISCOVERIES.length) fail();
+    const seen = new Set();
+    for (const h of s.discoveries) {
+      if (!obj(h) || !DISCOVERIES.some(d => d.id === h.id) || seen.has(h.id) ||
+          !Number.isInteger(h.age) || h.age < 0 || h.age > 5 ||
+          !num(h.time) || h.time < 0 || h.time > s.time) fail();
+      seen.add(h.id);
+    }
   }
   if (!Number.isInteger(s.seed) || !Number.isInteger(s.nextId) || s.nextId < 1 || s.time < 0)
     fail();

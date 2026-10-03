@@ -132,7 +132,7 @@ export class KeyboardCommands {
     if (code === "BracketLeft" || code === "BracketRight") {
       const s = g.state;
       const nodes = [...s.forage, ...s.trees, ...s.stones, ...s.copper, ...s.iron, ...s.fish]
-        .filter((x) => x.amount > 0 && (!e.loggingMode || x.kind === "tree") && g.visibleAt(x.x, x.z))
+        .filter((x) => x.amount > 0 && (!e.loggingMode || x.kind === "tree") && g.exploredAt(x.x, x.z))
         .sort((a, b) => a.id - b.id);
       if (nodes.length) {
         const at = nodes.findIndex((x) => x.id === this.cursorId);
@@ -169,10 +169,7 @@ export class KeyboardCommands {
     if (code === "KeyP" || code === "Space") g.state.paused = !g.state.paused;
     if (code === "Equal" || code === "NumpadAdd") e.setSpeed(g.state.speed >= 2 ? 4 : 2);
     if (code === "Minus" || code === "NumpadSubtract") e.setSpeed(g.state.speed >= 4 ? 2 : 1);
-    if (code === "KeyF") {
-      const c = g.campOf(0);
-      e.view.look.set(c.x, g.height(c.x, c.z) + 0.5, c.z);
-    }
+    if (code === "KeyF") e.focusHome();
     if (code === "KeyM") e.toggleMute();
     if (n >= 1 && n <= 8) {
       const open = BUILD_ORDER.filter((t) => BUILDINGS[t].age <= g.tribe(0).age);

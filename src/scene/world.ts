@@ -696,11 +696,14 @@ export class WorldView {
       const home = game.world.camps.find((c) => c.team === 0) || { x: 0, z: 0 };
       for (let i = 0; i < gCount * 5 && gi < gCount; i++) {
         const nearCamp = i < gCount * 0.35;
+        // A tapered circular scatter avoids a visible rectangular lawn boundary.
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(-2 * Math.log(Math.max(0.001, Math.random()))) * 28;
         const x = nearCamp
-          ? home.x + (Math.random() - 0.5) * 30
+          ? home.x + Math.cos(angle) * radius
           : (Math.random() - 0.5) * (MAP - 8);
         const z = nearCamp
-          ? home.z + (Math.random() - 0.5) * 26
+          ? home.z + Math.sin(angle) * radius
           : (Math.random() - 0.5) * (MAP - 8);
         const y = game.height(x, z);
         if (y < game.world.waterY + 0.45) continue;

@@ -228,6 +228,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               onClick={() => engine?.toggleLogging()}>
               {engine?.loggingMode ? "Finish tree marks · N" : "Mark trees · N"}
             </button>
+          <button className="px-2 py-2" onClick={() => engine?.focusHome()}>
+            Focus village · F
+          </button>
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
@@ -600,7 +603,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none" ? (
               <button
                 type="button"
-                title="Send people to unexplored ground. Explored terrain stays known. (X)"
+                title="Keep scouting unknown ground until stopped, blocked or threatened. Select scouts and press period to stop. (X)"
                 onClick={() => engine?.explore()}
                 className="mt-1.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-md border border-dawn/30 bg-ink-soft px-2 text-[11px] text-dawn hover:border-dawn"
               >
@@ -902,14 +905,7 @@ function TradeBlock({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   return (
     <div className="space-y-1">
       <TradeHead hud={hud} engine={engine} />
-      {t.theirs ? (
-        <p className="text-[10px] leading-snug text-parchment">
-          They hold {t.theirs.food} food, {t.theirs.wood} logs, {t.theirs.stone} stone
-          {hud.age >= 1 ? `, ${t.theirs.copper} copper` : ""}
-          {hud.age >= 2 ? `, ${t.theirs.iron} iron` : ""}. They sell the surplus. A stone is about two
-          logs.
-        </p>
-      ) : null}
+      <p className="text-xs text-parchment-dim">Their stores are private. These are the goods they are willing to offer.</p>
       {t.cd > 0 ? (
         <p className="text-[10px] text-parchment-dim">Caravan out · {Math.ceil(t.cd)}s</p>
       ) : t.offers.length ? (

@@ -1,3 +1,4 @@
+import { recordDiscoveries } from "./discovery";
 import { foodSpoilage, preserveFood } from "./pantry";
 import { habitatAt } from "./ecology";
 import { knownSettlement } from "./barter";
@@ -2406,6 +2407,7 @@ export class Game {
     let best: ResourceNode | Building | null = null;
     let bd = 5.2;
     const consider = (n: ResourceNode | Building, nx: number, nz: number, reach: number) => {
+      if (!this.exploredAt(nx, nz)) return;
       const d = Math.hypot(nx - x, nz - z);
       if (d < reach && d < bd) {
         bd = d;
@@ -2426,6 +2428,7 @@ export class Game {
   }
 
   issueGather(node: ResourceNode | Building) {
+    if (!this.exploredAt(node.x, node.z)) return;
     let workers = this.selectedUnits().filter((u) => u.type === "worker");
     if (!workers.length) workers = this.idleWorkers().slice(0, 4);
     if (!workers.length) {
@@ -2465,8 +2468,9 @@ export class Game {
   issueExplore() {
     let units = this.selectedUnits();
     if (!units.length) units = this.idleWorkers().slice(0, 2);
+    units = units.filter(u => !isDependent(this, u) && !u.emergency && u.carry === 0 && u.order !== "trade");
     if (!units.length) {
-      this.banner("Select people, then Explore (X)", 1.6);
+      this.banner("Select available adults with empty hands, then Explore (X)", 1.6);
       return;
     }
     let sent = 0;
@@ -2474,6 +2478,10 @@ export class Game {
       const t = this.findExploreTarget(u);
       if (!t) continue;
       u.order = "explore";
+      u.pillage = -1;
+      u.attackDestination = null;
+      u.stuckT = 0;
+      u.workReason = "Exploring until you give another order";
       u.tx = t.x;
       u.tz = t.z;
       u.target = null;
@@ -2511,13 +2519,6 @@ export class Game {
         }
       }
     }
-    if (!best) {
-      for (let i = 0; i < this.world.megaliths.length; i++) {
-        if (this.looted.has(i)) continue;
-        const m = this.world.megaliths[i];
-        if (this.walkable(m.x, m.z) || this.canStep(u, m.x, m.z)) return { x: m.x, z: m.z };
-      }
-    }
     return best;
   }
 
@@ -2541,14 +2542,20 @@ export class Game {
 
   exploreAI(u: Unit, dt: number) {
     this.lootMegaliths(u);
+    if (u.stuckT > 8) {
+      u.order = "hold";
+      u.workReason = "Scouting route blocked — choose a new destination";
+      this.banner(u.workReason, 3);
+      return;
+    }
     if (this.steer(u, dt)) {
-      u.gatherT += 1;
-      const next = u.gatherT < 5 ? this.findExploreTarget(u) : null;
+      const next = this.findExploreTarget(u);
       if (next) {
         u.tx = next.x;
         u.tz = next.z;
       } else {
-        u.order = "idle";
+        u.order = "hold";
+        u.workReason = "No unknown ground found — awaiting orders";
         u.gatherT = 0;
       }
     }
@@ -4593,7 +4600,7 @@ export class Game {
     let n = 0;
     for (const id of ids) {
       const tree = this.state.trees.find((t) => t.id === id && t.amount > 0);
-      if (!tree || !this.visibleAt(tree.x, tree.z) || this.chopMarks.has(id)) continue;
+      if (!tree || !this.exploredAt(tree.x, tree.z) || this.chopMarks.has(id)) continue;
       this.chopMarks.add(id);
       n++;
     }
@@ -5208,6 +5215,7 @@ export class Game {
         this.tickRegen(sdt);
         this.tickPeople(sdt);
         this.updateVision(sdt);
+        if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
         for (const u of this.state.units) if (u.hp <= 0) this.paths.delete(u.id);
@@ -5530,13 +5538,6 @@ export class Game {
           leader: rival.leader,
           leaderTitle: rival.leaderTitle,
           csType: rival.csType,
-          theirs: {
-            food: Math.floor(rival.food),
-            wood: Math.floor(rival.wood),
-            stone: Math.floor(rival.stone),
-            copper: Math.floor(rival.copper || 0),
-            iron: Math.floor(rival.iron || 0),
-          },
         };
       })(),
       rivalX: this.campOf(this.tradeTeam || 1).x,

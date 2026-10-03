@@ -390,7 +390,7 @@ export class Engine {
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else {
-      const node = this.game.visibleAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null;
+      const node = this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null;
       if (node) this.game.issueGather(node);
       else this.game.issueMove(g.x, g.z);
     }
@@ -583,6 +583,12 @@ export class Engine {
     const u = this.game.focusIdleWorker();
     if (u) this.view.look.set(u.x, u.y + 0.5, u.z);
     this.pushHud();
+  }
+
+  focusHome() {
+    const c = this.game.campOf(0);
+    this.view.look.set(c.x, this.game.height(c.x, c.z) + 0.5, c.z);
+    this.canvas.focus();
   }
 
   explore() {

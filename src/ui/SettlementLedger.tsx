@@ -1,3 +1,5 @@
+import { DISCOVERIES, discoveryScore } from "@/game/discovery";
+import { AGES } from "@/game/constants";
 import { foodSpoilage, winterOutlook, storehouses } from "@/game/pantry";
 import { habitatAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
@@ -149,6 +151,18 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </p>
         </section>
       </div>
+      <details>
+        <summary>Exploration chronicle · {discoveryScore(g)} legacy points</summary>
+        <p>{discoveryScore(g, t.age)} earned in this age. Each discovery counts once across the whole game, including your home habitat. Points record your history; they do not yet unlock technologies or advance your age.</p>
+        <ul>
+          {DISCOVERIES.map(d => {
+            const entry = s.discoveries?.find(h => h.id === d.id);
+            return <li key={d.id}><strong>{d.name} · {d.points} points</strong>{" "}
+              {entry ? `Recorded in the ${AGES[entry.age]} Age, year ${Math.floor(entry.time / 1800) + 1}.` : d.hint}
+            </li>;
+          })}
+        </ul>
+      </details>
       <h3>Fields and harvest</h3>
       {farms.length === 0 ? (
         <p>No finished fields. Forage and hunt while you establish your first farm.</p>

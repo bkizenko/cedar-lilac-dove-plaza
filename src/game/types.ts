@@ -282,6 +282,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome";
   laborPolicy?: "balanced" | "food" | "build";
   conflict?: "quiet" | "balanced" | "dangerous";
@@ -416,7 +417,6 @@ export type HudSnapshot = {
     leader: string;
     leaderTitle: string;
     csType: string;
-    theirs?: { food: number; wood: number; stone: number; copper: number; iron: number };
   } | null;
   rivalX: number;
   rivalZ: number;
