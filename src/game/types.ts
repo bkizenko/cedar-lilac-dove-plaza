@@ -137,6 +137,7 @@ export type Unit = {
   r: number;
   selected: boolean;
   order: Order;
+  sickUntil?: number;
   maturesAt?: number;
   workReason?: string;
   workCheckAt?: number;
@@ -188,6 +189,7 @@ export type Building = {
   cd: number;
   build: number;
   reclaimed: boolean;
+  storeCare?: number;
   fertility?: number;
   fallowYear?: number;
   crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean };

@@ -90,7 +90,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 200,
     age: 0,
-    hint: "Sow in spring, tend in summer, harvest in autumn. Requires workers.",
+    hint: "Sow in spring, tend in summer, harvest in autumn. Base full yield: 260 food/year, adjusted by soil and habitat. See Village (L).",
   },
   lumber: {
     name: "Lumber Camp",
@@ -138,7 +138,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 300,
     age: 0,
-    hint: "Adds 160 food storage, reduces spoilage and shortens carrying trips.",
+    hint: "Shelters 160 food. Adults can dry and smoke surplus food here using timber. Also shortens carrying trips.",
   },
   barracks: {
     name: "Barracks",

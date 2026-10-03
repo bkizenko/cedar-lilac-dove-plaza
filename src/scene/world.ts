@@ -1687,7 +1687,7 @@ export class WorldView {
           float v = texture2D(uMap, vUv).r;
           vec4 terr = texture2D(uTerr, vUv);
           float live = smoothstep(0.55, 0.85, v);
-          float shroudA = mix(0.98, 0.30, smoothstep(0.12, 0.55, v)) * (1.0 - live);
+          float shroudA = mix(0.98, 0.10, smoothstep(0.05, 0.32, v)) * (1.0 - live);
           float seen = smoothstep(0.12, 0.28, v);
           float wash = terr.a * seen * (live > 0.5 ? 0.2 : 0.12);
           float a = max(shroudA, wash);
@@ -1907,9 +1907,9 @@ export class WorldView {
       if (!game.exploredAt(vx, vz)) {
         c.setRGB(0.72, 0.79, 0.80);
       } else if (!game.visibleAt(vx, vz)) {
-        c.r += (0.72 - c.r) * 0.38;
-        c.g += (0.79 - c.g) * 0.38;
-        c.b += (0.80 - c.b) * 0.38;
+        c.r += (0.72 - c.r) * 0.10;
+        c.g += (0.79 - c.g) * 0.10;
+        c.b += (0.80 - c.b) * 0.10;
       }
       const o = i * 3;
       arr[o] = c.r;

@@ -1,3 +1,4 @@
+import { foodSpoilage, winterOutlook, storehouses } from "@/game/pantry";
 import { habitatAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
 import { knownSettlement } from "@/game/barter";
@@ -35,6 +36,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const cal = calendar(g),
     people = s.units.filter((u) => u.team === 0 && u.hp > 0),
     farms = s.buildings.filter((b) => b.team === 0 && b.type === "farm" && g.finished(b));
+  const winter = open ? winterOutlook(g) : {needed:0,shortage:0,capacityShortfall:0,seconds:0};
+  const stores = storehouses(g, 0);
   const dependents = people.filter((u) => isDependent(g, u)).length;
   const foodWorkers = people.filter((u) => u.job === "food" && u.order === "gather").length;
   const close = () => {
@@ -58,10 +61,17 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <strong>
             {Math.floor(t.food)} / {g.stockCap(0)} food storage
           </strong>
-          <p>{Math.round(reserveSeconds(g) / 60)} minutes of reserves at current consumption</p>
+          <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
+          <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
+          <p><strong>{cal.phase === 3 ? "Remaining winter" : "Full winter"}: about {winter.needed} food needed.</strong>{" "}
+            {winter.shortage ? `${winter.shortage} more than current stores.` : "Current stores cover this estimate."}
+          </p>
+          {winter.capacityShortfall > 0 && <p>Storage is {winter.capacityShortfall} below that target. Expand storage or plan winter food production.</p>}
+          <p className="text-sm">Estimate assumes current population, weather, adequate capacity and maintained stores, with no new gathering or harvest. It excludes food eaten before winter.</p>
+          {stores.map(b => <p key={b.id}>Storehouse preservation: {Math.round((b.storeCare || 0) * 100)}%. Available adults dry and smoke surplus food using timber.</p>)}
           <p>
             {(foodDemand(g) * 60).toFixed(1)} food consumed per minute · {foodWorkers}/
-            {people.length} people currently producing food
+            {people.length} people currently doing food work
           </p>
           <p>
             {people.length - dependents} adults · {dependents} dependents. Children need food and
@@ -77,7 +87,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <summary>How food and harvests work</summary>{" "}
             <p>
               Fields need spring sowing and summer tending. Harvest must be carried into storage in
-              autumn; uncollected crops are lost in winter. Storehouses increase capacity and reduce
+              autumn; uncollected crops are lost in winter. One worker can maintain each storehouse, using one timber per eight seconds of preparation. Urgent gathering takes priority. Storehouses increase capacity and reduce
               spoilage. Food left above storage capacity spoils quickly. Wild food does not regrow
               in winter, and gathering what remains is slower.
             </p>
@@ -133,9 +143,9 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             </select>
           </label>
           <p>
-            New families require spare housing and twelve minutes of food reserves. Welcoming
-            settlers permits occasional arrivals only with ten minutes of reserves. Dependents join
-            the workforce after one season.
+            Births require spare housing, eight minutes of reserves and adults to support children.
+            Welcoming migrants permits arrivals with six minutes of reserves. Children mature at 16;
+            adult migration supports growth while they grow up.
           </p>
         </section>
       </div>
@@ -146,7 +156,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <ul>
           {farms.map((b) => (
             <li key={b.id}>
-              Field {b.id} · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
+              Field {b.id} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
               {b.fallowYear === cal.year ? "Resting this year" : "In cultivation"}:{" "}
               {Math.round((b.crop?.planted || 0) * 100)}% sown ·{" "}
               {Math.round((b.crop?.tended || 0) * 100)}% tended ·{" "}
@@ -155,7 +165,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
                 : `up to ${Math.floor(
                     (b.crop?.planted || 0) *
                       (160 + 100 * (b.crop?.tended || 0)) *
-                      (b.fertility ?? 1) *
+                      (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops *
                       (s.agePicks[3] === "econ" ? 1.2 : 1),
                   )} food expected`}
               <button
@@ -186,7 +196,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         {people.map((u) => (
           <li key={u.id}>
             {isDependent(g, u) ? "Dependent" : u.type === "worker" ? "Villager" : "Defender"} {u.id}
-            :{" "}
+            · age {Math.floor(u.ageT / 1800)}{u.sickUntil ? " · recovering from fever" : ""}:{" "}
             {u.emergency
               ? u.workReason
               : u.order === "hold"

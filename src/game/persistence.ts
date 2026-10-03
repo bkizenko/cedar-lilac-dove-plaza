@@ -7,6 +7,7 @@ export function encodeGame(g: Game) {
   const s = g.state;
   return {
     version: SAVE_VERSION,
+    demographicVersion: 1,
     state: {
       ...s,
       selBld: null,
@@ -136,6 +137,7 @@ export function decodeGame(raw: unknown): Game {
       )
         fail();
     }
+    if (u.sickUntil !== undefined && !num(u.sickUntil)) fail();
     if (u.workCheckAt !== undefined && !num(u.workCheckAt)) fail();
     if (u.retryWorkAt !== undefined && !num(u.retryWorkAt)) fail();
     if (u.blockedTask !== undefined && !num(u.blockedTask)) fail();
@@ -189,6 +191,7 @@ export function decodeGame(raw: unknown): Game {
   }
   for (const b of s.buildings) {
     add(b, "building");
+    if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();
     if (b.fallowYear !== undefined && (!Number.isInteger(b.fallowYear) || b.fallowYear < 0)) fail();
@@ -290,9 +293,18 @@ export function decodeGame(raw: unknown): Game {
     numbers(p, ["x", "y", "z", "tx", "ty", "tz", "speed", "life", "dmg", "team"]);
     p.target = resolve(p.target);
   }
+  if (d.demographicVersion === undefined) {
+    for (const u of s.units) {
+      if (u.maturesAt !== undefined && u.maturesAt > s.time) {
+        u.ageT = 8 * 1800;
+        u.maturesAt = s.time + 8 * 1800;
+      } else u.ageT = (18 + (u.id % 25)) * 1800;
+    }
+  } else if (d.demographicVersion !== 1) fail();
   g.reset(s.seed);
   g.state = {
     ...s,
+    growthPolicy: s.growthPolicy ?? "welcome",
     selBld: null,
     placing: null,
     pendingAge: false,

@@ -265,6 +265,7 @@ test("task board reserves slots and falls back to other useful work", async () =
   g.state.buildings = [camp];
   g.tribe(0).food = 0;
   const us = Array.from({ length: 4 }, () => g.spawnUnit("worker", 0, 38, 0));
+  g.vision.fill(2);
   for (const u of us) g.workBoard.assign(g, u);
   assert.equal(us.filter((u) => u.node === n).length, 2);
   assert.equal(us.filter((u) => u.node === tree).length, 2);
@@ -283,7 +284,7 @@ test("blocked workers release the task and explain lack of work", () => {
   u.order = "idle";
   g.workBoard.reset();
   g.workerAI(u, 1 / 30);
-  assert.match(u.workReason, /No reachable work/);
+  assert.match(u.workReason, /No known reachable work/);
 });
 test("civilians shelter, armed residents defend, and then resume jobs", async () => {
   const { emergencyResponse } = await import("../src/game/settlement.ts");
@@ -511,6 +512,7 @@ test("growth requires surplus; newborns consume food before joining the workforc
 test("unsolicited settler arrivals stop unless welcomed with adequate reserves", () => {
   const g = fixture(),
     before = g.popNow(0);
+  g.state.growthPolicy = "stable";
   g.tribe(0).food = 1000;
   g.landSeaFolk();
   assert.equal(g.popNow(0), before);
@@ -647,9 +649,8 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   assert.equal(g.popNow(0), before);
   g.state.growthPolicy = "welcome";
   g.tribe(0).food = 5000;
-  assert.equal(g.enqueueTrain(hall, "worker"), true);
-  hall.queue[0].t = hall.queue[0].max;
-  g.updateTraining(0.01);
+  assert.equal(g.enqueueTrain(hall, "worker"), false);
+  g.landSeaFolk();
   assert.equal(g.popNow(0), before + 1);
   const barracks = g.makeBld("barracks", hall.x + 16, hall.z, 0);
   g.state.buildings.push(barracks);
@@ -910,6 +911,7 @@ test("cornerstones require distant clumps and never create a second hall", () =>
 test("workers walk out, build the cornerstone, gather its clump and deliver locally", () => {
   const {g, w} = cornerstoneValley();
   assert.equal(g.findNode(w, "wood"), null, "unclaimed distant timber is unavailable");
+  g.stampVision(140, 50, 20, 1); // A scout has discovered this resource clump.
   assert.equal(g.placeBuilding("cornerstone", 140, 38), true);
   const marker = g.state.buildings.find(b => b.type === "cornerstone");
   assert.equal(g.nearestDrop(140, 38, 0).type, "townhall", "unfinished marker cannot receive goods");
@@ -918,6 +920,7 @@ test("workers walk out, build the cornerstone, gather its clump and deliver loca
   for (let i = 0; i < 2400 && !delivered; i++) {
     g.state.time += 0.1;
     g.navBudget = 20;
+    g.updateVision(0.1);
     if (g.state.walkDirty) { g.rebuildWalk(); g.state.walkDirty = false; }
     if (w.order === "build") g.buildAI(w, 0.1);
     else g.workerAI(w, 0.1);
@@ -1173,4 +1176,77 @@ test("wildlife recovery needs a surviving herd, warm season, unseen dry land", (
   animal.wanderT = 0; g.vision.fill(0);
   g.tickWildlife(1); assert.equal(animal.hp, 3);
   assert.ok(animal.y > g.world.waterY);
+});
+
+
+test("work assignment cannot locate unexplored food or track unseen wildlife", () => {
+  const {g,w} = cornerstoneValley();
+  const berry = {...g.state.trees[0],kind:"forage",x:18,z:38};
+  g.state.forage=[berry]; g.vision.fill(0);
+  assert.equal(g.findNode(w,"food"),null);
+  g.workBoard.assign(g,w); assert.equal(w.node,null);
+  g.vision.fill(1); w.workCheckAt=0; g.workBoard.reset();
+  g.workBoard.assign(g,w); assert.equal(w.node,berry);
+  g.state.wildlife=[{id:g.id(),species:"deer",x:20,z:38,y:4,hp:3,maxHp:3,scale:1,vx:0,vz:0,facing:0,wanderT:10,fly:0}];
+  assert.equal(g.findHunt(w),null);
+  g.vision.fill(2); assert.ok(g.findHunt(w));
+});
+
+test("store preparation uses labor and timber, survives saves, and limits spoilage", async () => {
+  const {foodSpoilage,preserveFood} = await import("../src/game/pantry.ts");
+  const {g,w} = cornerstoneValley();
+  const store=g.makeBld("warehouse",w.x,w.z,0);g.state.buildings.push(store);
+  g.tribe(0).food=300;g.tribe(0).wood=10;
+  const before=foodSpoilage(g);w.gatherT=0;
+  preserveFood(g,w,store,7);assert.equal(g.tribe(0).wood,10);
+  preserveFood(g,w,store,1);assert.equal(g.tribe(0).wood,9);
+  assert.equal(store.storeCare,0.2);assert.ok(foodSpoilage(g)<before);
+  const saved=encodeGame(g), restored=decodeGame(saved);
+  assert.equal(restored.state.buildings.find(b=>b.id===store.id).storeCare,0.2);
+  saved.state.buildings.find(b=>b.id===store.id).storeCare=2;
+  assert.throws(()=>decodeGame(saved));
+  g.tribe(0).food=1;preserveFood(g,w,store,8);assert.equal(g.tribe(0).wood,9);
+});
+
+test("winter estimates include dependents, habitat, capacity and the remaining season", async () => {
+  const {winterOutlook,foodSpoilage} = await import("../src/game/pantry.ts");
+  const g=fixture();g.tribe(0).food=0;
+  const whole=winterOutlook(g);assert.ok(whole.needed>0);
+  g.state.time=1700;assert.ok(winterOutlook(g).needed<whole.needed);
+  assert.ok(foodSpoilage(g,0,200,1)>foodSpoilage(g,0,200,3));
+});
+
+test("healthy adults do not die of old age after three game years", () => {
+  const g=fixture();g.state.birthT=1e9;g.tribe(0).food=10000;
+  const people=g.state.units.filter(u=>u.team===0);
+  for(const u of people)u.ageT=28*1800;
+  g.tickPeople(1);
+  assert.ok(people.every(u=>u.hp>0));
+  assert.equal(g.state.growthPolicy,"welcome");
+  const save=encodeGame(g); delete save.demographicVersion;
+  for(const u of save.state.units)u.ageT=2000;
+  const loaded=decodeGame(save);
+  assert.ok(loaded.state.units.filter(u=>u.team===0).every(u=>u.ageT>=18*1800));
+});
+
+
+test("fever is recoverable instead of randomly killing a villager instantly", () => {
+  const g=fixture(); g.state.time=100; g.calamityT=0; g.state.birthT=1e9;
+  g.tribeFortune=()=>0.5;
+  const random=Math.random;
+  try { Math.random=()=>0.55; g.tickCalamity(1); } finally {Math.random=random;}
+  const sick=g.state.units.find(u=>u.sickUntil);
+  assert.ok(sick); assert.ok(sick.hp>0 && sick.hp<sick.maxHp);
+  g.tribe(sick.team).food=500;g.state.time=sick.sickUntil+1;
+  g.tickPeople(0.1);assert.equal(sick.sickUntil,undefined);assert.equal(sick.hp,sick.maxHp);
+});
+
+
+test("obsolete worker training queues refund stores instead of creating people", () => {
+  const g=fixture(), hall=g.state.buildings.find(b=>b.team===0&&b.type==="townhall");
+  const people=g.popNow(0), food=g.tribe(0).food;
+  hall.queue.push({unit:"worker",t:6,max:6});
+  g.updateTraining(0.1);
+  assert.equal(g.popNow(0),people); assert.ok(g.tribe(0).food>food);
+  assert.equal(hall.queue.length,0);
 });

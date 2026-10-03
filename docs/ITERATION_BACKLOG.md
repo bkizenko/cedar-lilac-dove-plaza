@@ -54,3 +54,23 @@ Implemented:
 Validation: all 283 full-suite tests passed. Final production build and type checks passed. Three diagnostic full-year construction scenarios (same terrain, each habitat profile) completed farms and storage and survived: grassland 10 people/306 food, woodland 11/323, uplands 11/236. These scenarios started with 160 timber to exercise construction and are not proof of unassisted opening balance. Random simulation events mean these are observations, not reproducible balance targets.
 
 Remaining acceptance: visually inspect fog on desktop/mobile and listen to the changed score once the existing browser-access block clears. Continue with survival-year balance across natural seeds, more meaningful tools/preservation, and distinct tribal growth. No claim of full overhaul completion.
+
+## Exploration, growth and winter preparation — 2026-10-03
+
+Implemented this phase:
+- Explored land now has a light veil; thick shrouding remains over unknown terrain.
+- Player work assignments and resource search require discovered resource locations. Hunting requires current sight of the animal and stops tracking a herd after sight is lost. Construction/hauling tests explicitly establish prior scouting knowledge.
+- Felled trees recover over 3–5 game years before habitat/weather modifiers, rather than a few minutes. Minerals remain finite.
+- Winter gradually removes uncollected wild forage; it does not regrow until spring. Winter fishing is slower. Fields still require actual sowing, tending, autumn harvest and delivery.
+- Storehouses shelter limited food quantities. Workers can maintain food preservation with labor and timber when reserves permit; urgent food gathering retains priority. Preparation decays and is saved. Summer spoilage is greater than winter spoilage.
+- Ledger shows food losses, preservation state, full annual field capacity (including habitat/soil), and an estimated winter requirement. The estimate explicitly assumes adequate capacity, current population/weather, maintained stores and no new income; it excludes pre-winter consumption.
+- New games welcome migrants by default. Existing explicit growth choices remain intact. Births require reserves, housing and enough supporting adults; well-provisioned families can attract additional adult kin. Children mature at 16 game years, so migration supports near-term workforce growth.
+- Replaced the old approximately one-year aging cutoff with adult ages of 18–42 initially and old-age thresholds of 58–77, independent of season. Version-17 saves without the new demographic marker migrate into this age scale.
+- Fever no longer randomly kills victims immediately: it causes recoverable damage, with recovery supported by food. Combat and starvation remain threats.
+- Worker training no longer creates people, even when migration is enabled. Obsolete worker queues refund their cost.
+
+Validation: 289 tests passed (257 script/game and 32 application/auth), production build and type checks passed. Three one-year construction diagnostics completed farm/storage and survived; observed final populations were 11/11/9 and food 181/163/40 for grassland/woodland/uplands. These runs used extra starting timber and preceded the final surplus-kin refinement; they are observations, not comprehensive balance proof. Full multi-year natural play, interface/fog visual checks and listening tests remain outstanding.
+
+Browser QA remains blocked. On October 3 the browser inventory showed no tabs; automatic approval review rejected creating a fresh preview tab as a workaround for the earlier cached-page denial. Explicit user approval was requested. Do not attempt alternate browser surfaces or indirect automation while this is unresolved.
+
+Next phases: verify the live interface and full survival loop; deepen equipment/tool production and useful building upgrades; then linked technologies and distinct tribal growth/diplomacy. Full feature parity with the reference games remains far from complete.

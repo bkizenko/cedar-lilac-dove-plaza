@@ -1,3 +1,4 @@
+import { preservationAvailable } from "./pantry";
 import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
@@ -18,11 +19,11 @@ export function calendar(g: Game) {
 export function isDependent(g: Game, u: Unit) {
   return u.maturesAt !== undefined && u.maturesAt > g.state.time;
 }
-export function foodDemand(g: Game, team = 0) {
+export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
     .filter((u) => u.team === team && u.hp > 0)
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) *
-      (calendar(g).phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
+      (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
 }
@@ -204,6 +205,7 @@ export class WorkBoard {
         if (b.type === "farm" && farmAvailable(g, b))
           add(b, "food", 3, calendar(g).phase === 2 ? 200 : 110);
         if (b.type === "dock") add(b, "food", 2, foodUrgency);
+        if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
       for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency);
       for (const n of g.state.trees)
@@ -266,9 +268,13 @@ export class WorkBoard {
     let occupied = false,
       unsafe = false;
     for (const task of list) {
+      if (u.team === 0 && !("type" in task.node) &&
+          ("species" in task.node ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
       const preparingField =
         "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
-      if (task.kind === "food" && !preparingField && g.tribe(u.team).food >= g.stockCap(u.team))
+      const preserving = "type" in task.node && task.node.type === "warehouse";
+      if (preserving && !preservationAvailable(g, task.node as Building)) continue;
+      if (task.kind === "food" && !preparingField && !preserving && g.tribe(u.team).food >= g.stockCap(u.team))
         continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
       if (u.huntOnly && !("species" in task.node)) continue;
@@ -326,7 +332,7 @@ export class WorkBoard {
               ? "All suitable work sites are occupied"
               : u.jobLock
                 ? "No available work for the assigned job"
-                : "No reachable work nearby — check camps and resources";
+                : "No known reachable work — explore for resources or build an outpost";
       return;
     }
     const key = u.team + ":" + best.node.id;
