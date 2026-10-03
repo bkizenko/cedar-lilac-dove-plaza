@@ -289,7 +289,7 @@ export type GameState = {
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome";
-  laborPolicy?: "balanced" | "food" | "build";
+  laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
   time: number;

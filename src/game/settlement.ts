@@ -12,6 +12,7 @@ export function calendar(g: Game) {
   return {
     year,
     phase,
+    month: ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"][Math.floor((g.state.time % YEAR_SECONDS) / (YEAR_SECONDS / 12))],
     name: ["Spring", "Summer", "Autumn", "Winter"][phase],
     remaining: YEAR_SECONDS / 4 - (g.state.time % (YEAR_SECONDS / 4)),
   };
@@ -286,7 +287,8 @@ export class WorkBoard {
         continue;
       const distance = Math.hypot(task.node.x - u.x, task.node.z - u.z);
       const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
-      const settlementWork = markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
+      const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
+      const settlementWork = lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
       if ((distance > 100 && !settlementWork) || !origin || this.taskComponent(g, task.node) !== origin) continue;
       if (
@@ -307,12 +309,14 @@ export class WorkBoard {
       }
       const policy = g.state.laborPolicy;
       const bonus =
-        policy === "food" && task.kind === "food"
+        u.team === 0 && ((policy === "wood" && task.kind === "wood") || (policy === "stone" && task.kind === "stone") || (policy === "hunt" && "species" in task.node))
+          ? 80
+          : policy === "food" && task.kind === "food"
           ? 70
           : policy === "build" && task.kind === "build"
             ? 90
             : 0;
-      const value = task.priority + bonus - distance * 0.8 - count * 15;
+      const value = task.priority + bonus + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
       if (value > score) {
         score = value;
         best = task;

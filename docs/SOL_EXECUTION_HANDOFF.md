@@ -1,3 +1,5 @@
+> Latest requirements: read [REQUEST_AUDIT.md](REQUEST_AUDIT.md). The 2026-10-03 user correction requires natural practical development rather than spending exploration points, traveling trade reports rather than live remote knowledge, and explicitly queues sleep, storms, domestication, named people, dynamic settlements, waterways and administration. It supersedes conflicting older plans.
+
 > Continuation note (2026-10-03): the previously uncommitted handoff/checkpoint was pushed as `53bf156`. Implementation resumed afterward. Read the latest “Sol continuation” section in `ITERATION_BACKLOG.md` before interpreting the older status below: optional lumber camps, persistent manual orders, legacy traditions, stronger age benefits, conservation/willingness trade fixes and finite local raider camps have since been implemented. Browser access is restored. The original completion contract remains in force; these phases are not full completion.
 
 # Execution prompt for GPT-6.1 Sol — Hearthwild non-visual completion

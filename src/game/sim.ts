@@ -73,6 +73,7 @@ export class Game {
   vision = new Uint8Array(FOW * FOW);
   visAge = new Float32Array(FOW * FOW);
   territory = new Uint8Array(FOW * FOW);
+  territoryStrength = new Float32Array(FOW * FOW);
   chopMarks = new Set<number>();
   looted = new Set<number>();
   started = false;
@@ -2081,7 +2082,19 @@ export class Game {
       const dist = Math.hypot(hall.x - hall0.x, hall.z - hall0.z);
       const space = Math.max(0, (dist - 70) / 140);
       tr.tension += overlap * 0.00115 * dt;
-      tr.tension -= (0.032 + space * 0.055) * dt;
+      const trespassers = this.state.units.filter(u => u.team === 0 && u.hp > 0 && u.order === "gather" && u.node &&
+        !("type" in u.node && u.node.team === 0) && Math.hypot(u.node.x-hall.x,u.node.z-hall.z)<45 &&
+        !tr.ally && !((tr.compactUntil || 0)>this.state.time && u.job === "food"));
+      const previous = tr.tension;
+      if (trespassers.length) {
+        tr.tension += (0.025 + Math.min(0.05,trespassers.length*0.012)) * dt;
+        tr.trust = Math.max(0,(tr.trust || 0)-0.008*dt);
+        if (previous < 0.28 && tr.tension >= 0.28) this.banner(tr.name + " warns your gatherers to leave their resources alone",5);
+        if (tr.tension >= 0.75 && !tr.hostile) {
+          tr.hostile = true;
+          this.banner(tr.name + " is defending its land against your continued taking of resources. Withdraw and seek a truce.",6);
+        }
+      } else tr.tension -= (0.032 + space * 0.055) * dt;
       tr.tension = Math.max(0, Math.min(1, tr.tension));
       const band = tr.tension > 0.72 ? 3 : tr.tension > 0.52 ? 2 : tr.tension > 0.28 ? 1 : 0;
       if (band > tr.tensionBand && this.started && band >= 3) {
@@ -2372,6 +2385,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    this.workBoard.reset();
     const huntOnly = job === "hunt";
     const real: ResKind = huntOnly ? "food" : job;
     for (const u of units) {
@@ -2380,20 +2394,13 @@ export class Game {
       u.huntOnly = huntOnly;
       u.trade = null;
       u.target = null;
-      const node = huntOnly ? this.findHunt(u) : this.findNode(u, real);
-      if (node) {
-        u.node = node;
-        u.order = "gather";
-        u.tx = node.x;
-        u.tz = node.z;
-      } else {
-        u.order = "idle";
-        this.banner(
-          huntOnly ? "No herds nearby" : "No " + (real === "food" ? "berries" : real) + " nearby",
-          1.3,
-        );
-      }
+      u.node = null;
+      u.order = "idle";
+      u.workCheckAt = 0;
+      if (u.emergency) u.emergency.resume = undefined;
+
     }
+    for (const u of units) this.workBoard.assign(this, u);
     this.onSfx("move");
   }
 
@@ -2445,17 +2452,21 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    let slots = Math.max(0, 2 - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
+    this.workBoard.reset();
     for (const u of workers) {
-      u.selected = true;
-      u.job = job;
-      u.jobLock = true;
-      u.node = node;
-      u.order = "gather";
-      u.tx = node.x;
-      u.tz = node.z;
-      u.target = null;
-      u.trade = null;
+      u.selected = true; u.job = job; u.jobLock = true; u.huntOnly = false;
+      u.target = null; u.trade = null; u.node = null; u.order = "idle"; u.workCheckAt = 0;
+      if (u.emergency) u.emergency.resume = undefined;
     }
+    for (const u of workers) {
+      if (slots > 0) {
+        slots--; u.node = node; u.order = "gather"; u.tx = node.x; u.tz = node.z;
+      }
+    }
+    this.workBoard.reset();
+    for (const u of workers) if (!u.node) this.workBoard.assign(this, u);
+
     this.onSfx("move");
   }
 
@@ -3263,6 +3274,7 @@ export class Game {
   paintTerritory() {
     const terr = this.territory;
     terr.fill(255);
+    this.territoryStrength.fill(0);
     const n = FOW;
     const cell = MAP / n;
     const rad: Partial<Record<BldType, number>> = {
@@ -3299,6 +3311,7 @@ export class Game {
           const wz = -HALF + (iz + 0.5) * cell;
           if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
           const i = iz * n + ix;
+          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0, 1-Math.hypot(wx-b.x,wz-b.z)/r));
           const cur = terr[i];
           if (cur === 255 || cur === b.team) terr[i] = b.team;
           else terr[i] = 254;

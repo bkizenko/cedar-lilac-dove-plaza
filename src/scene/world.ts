@@ -18,7 +18,6 @@ import {
   deerGeo,
   boarGeo,
   birdGeo,
-  grassGeo,
   makeMaterials,
   pineGeo,
   rockGeo,
@@ -122,6 +121,7 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
+  cargoMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   rings!: THREE.InstancedMesh;
   workRings!: THREE.InstancedMesh;
@@ -670,62 +670,7 @@ export class WorldView {
       this.scene.add(stones);
     }
 
-    const gCount = this.quality === "low" ? 320 : this.quality === "med" ? 900 : 1600;
-    if (gCount) {
-      const grassMat = this.mats.crop.clone();
-      grassMat.color.set("#ffffff");
-      grassMat.onBeforeCompile = (shader) => {
-        shader.uniforms.uTime = this.timeU;
-        shader.vertexShader = "uniform float uTime;\n" + shader.vertexShader;
-        shader.vertexShader = shader.vertexShader.replace(
-          "#include <begin_vertex>",
-          `#include <begin_vertex>
-           float wind = sin(uTime * 1.35 + transformed.x * 0.9 + instanceMatrix[3].x * 0.17);
-           transformed.x += wind * 0.14 * transformed.y;
-           transformed.z += cos(uTime * 1.1 + instanceMatrix[3].z * 0.13) * 0.08 * transformed.y;`,
-        );
-      };
-      grassMat.customProgramCacheKey = () => "grass-wind";
-      this.grass = new THREE.InstancedMesh(grassGeo(), grassMat, gCount);
-      this.grass.instanceColor = new THREE.InstancedBufferAttribute(
-        new Float32Array(gCount * 3),
-        3,
-      );
-      this.grassRegion = new Uint8Array(gCount);
-      let gi = 0;
-      const home = game.world.camps.find((c) => c.team === 0) || { x: 0, z: 0 };
-      for (let i = 0; i < gCount * 5 && gi < gCount; i++) {
-        const nearCamp = i < gCount * 0.35;
-        // A tapered circular scatter avoids a visible rectangular lawn boundary.
-        const angle = Math.random() * Math.PI * 2;
-        const radius = Math.sqrt(-2 * Math.log(Math.max(0.001, Math.random()))) * 28;
-        const x = nearCamp
-          ? home.x + Math.cos(angle) * radius
-          : (Math.random() - 0.5) * (MAP - 8);
-        const z = nearCamp
-          ? home.z + Math.sin(angle) * radius
-          : (Math.random() - 0.5) * (MAP - 8);
-        const y = game.height(x, z);
-        if (y < game.world.waterY + 0.45) continue;
-        const reg = game.regionAt(x, z);
-        const rk = !reg ? 255 : reg.res === "copper" ? 3 : reg.cluster;
-        if (rk === 0 && Math.random() < 0.55) continue;
-        if (rk === 3 && Math.random() < 0.4) continue;
-        _p.set(x, y, z);
-        _e.set(0, Math.random() * 6, 0);
-        _q.setFromEuler(_e);
-        const sc = 0.85 + Math.random() * 1.1;
-        _s.set(sc, sc * (0.9 + Math.random() * 0.4), sc);
-        _m.compose(_p, _q, _s);
-        this.grass.setMatrixAt(gi, _m);
-        _c.setHSL(0.27 + Math.random() * 0.06, 0.55, 0.42 + Math.random() * 0.1);
-        this.grass.setColorAt(gi, _c);
-        this.grassRegion[gi] = rk;
-        gi++;
-      }
-      this.grass.count = gi;
-      this.scene.add(this.grass);
-    }
+    // Decorative grass is disabled: no instance allocation, wind shader or seasonal upload.
   }
 
   private buildBuildings() {
@@ -780,6 +725,10 @@ export class WorldView {
       this.scene.add(mesh);
       this.unitMeshes.set(t, mesh);
     }
+    this.cargoMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.65,0.55,0.75),this.mats.timber.clone(),420);
+    this.cargoMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.cargoMesh.count=0; this.cargoMesh.frustumCulled=false;
+    this.scene.add(this.cargoMesh);
   }
 
   private buildHearths(game: Game) {
@@ -961,6 +910,7 @@ export class WorldView {
     this.syncWildlife(game);
     this.syncBuildings(game);
     this.syncUnits(game);
+    this.syncCargo(game);
     this.syncGhost(game);
     this.syncArrows(game);
     this.syncSmoke(game, dt);
@@ -1261,6 +1211,21 @@ export class WorldView {
       if (meshes.timber.instanceColor) meshes.timber.instanceColor.needsUpdate = true;
       if (meshes.roof.instanceColor) meshes.roof.instanceColor.needsUpdate = true;
     }
+  }
+
+  private syncCargo(game: Game) {
+    const mesh=this.cargoMesh;
+    if (!mesh) return;
+    let i=0;
+    const colors={food:"#c5ad71",wood:"#73502f",stone:"#a2a3a2",copper:"#bc7a4c",iron:"#666e78"};
+    for (const u of game.state.units) {
+      if (u.hp<=0 || u.carry<=0 || !u.carryType || (u.team!==0&&!game.visibleAt(u.x,u.z)) || i>=420) continue;
+      _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
+      _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
+      mesh.setMatrixAt(i,_m);_c.set(colors[u.carryType]);mesh.setColorAt(i,_c);i++;
+    }
+    mesh.count=i;mesh.instanceMatrix.needsUpdate=true;
+    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   }
 
   private syncUnits(game: Game) {
@@ -1775,13 +1740,13 @@ export class WorldView {
         this.terrData[o] = 196;
         this.terrData[o + 1] = 154;
         this.terrData[o + 2] = 92;
-        this.terrData[o + 3] = 255;
+        this.terrData[o + 3] = Math.round(255 * (game.territoryStrength[i] || 0));
       } else {
         const c = cols[team] || cols[0];
         this.terrData[o] = c[0];
         this.terrData[o + 1] = c[1];
         this.terrData[o + 2] = c[2];
-        this.terrData[o + 3] = 255;
+        this.terrData[o + 3] = Math.round(255 * (game.territoryStrength[i] || 0));
       }
     }
     this.fowTex.needsUpdate = true;

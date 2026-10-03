@@ -1,3 +1,5 @@
+> Latest requirements: read [REQUEST_AUDIT.md](REQUEST_AUDIT.md). The 2026-10-03 user correction requires natural practical development rather than spending exploration points, traveling trade reports rather than live remote knowledge, and explicitly queues sleep, storms, domestication, named people, dynamic settlements, waterways and administration. It supersedes conflicting older plans.
+
 # Hearthwild iteration status
 
 ## 2026-09-29 recovery and trade iteration
@@ -101,3 +103,20 @@ Limits / next ordered work:
 7. Full end-to-end survival → developing village → rival trade/war → multi-settlement empire acceptance from `SOL_EXECUTION_HANDOFF.md`, excluding the visual/3D overhaul.
 
 The user plans a separate prompt to inventory historical/cultural/scientific development features. That inventory is intentionally reserved for their next request; do not substitute it for execution now. Keep prioritizing working gameplay and transparent systems over extra feature count.
+
+## Request audit and immediate corrections — 2026-10-03
+
+Read `REQUEST_AUDIT.md` for the consolidated requirements from the original prompt and all visible user requests in this chat. This supersedes contradictory older plans: natural practical development, no point-spending controls, no live border-pressure management, and trader-carried knowledge are explicit requirements.
+
+Implemented in this phase:
+- No decorative grass allocation/wind shader; existing terrain and crop visuals remain. Verified development hardware is M1 MacBook Air with 8 GB shared memory and a 7-core GPU. Remaining performance has not been profiled and is not claimed fixed.
+- Direct group wood orders and clicked resource orders now share job reservation capacity. At most two gatherers are assigned to a tree; surplus workers use other suitable known work sites. Hunting stays a civilian job and uses visible herd tasks.
+- Added wood, stone and hunting village priorities. Finished lumber camps make nearby trees eligible beyond the ordinary local work-distance limit and improve their task priority. Explicit remote workplace staffing/rations/security is still needed; this is not a guarantee that remote work will beat all nearby tasks.
+- Removed the Border pressure selector and exploration point-spending controls from the ledger. Existing save fields and previously adopted benefits remain compatible. Practical experiments and study are still pending.
+- Sustained taking of resources beside a rival hall causes lost trust, warnings and eventually hostility. Visits alone do not trigger this rule; alliances and active food/grazing compacts permit their corresponding activity. Hall-radius claims are provisional until shared settlement influence/perception is complete.
+- Territory tint now fades outward from buildings. Added one instanced cargo-bundle mesh, colored by real carried resource; foreign bundles remain hidden outside vision.
+- Ledger names the month within a season; farm construction timber reduced from 50 to 20.
+
+Validation: 310 tests passed (278 script/game + 32 app/auth); production build and type checks passed. Four new regressions cover group tree capacity, trespass versus visiting, fading territory strength, and new priority persistence. Live visual verification is incomplete: the existing in-app tab is listed but repeatedly times out when attaching. No claim of visual/performance acceptance from successful builds alone.
+
+Next high-priority block: traveler/envoy reports with dated, imperfect information, physical gifts and negotiation; remove current remote-stock quoting. Then provisions/local inventories and sleep/storm shelter, followed by the ordered audit phases. Every requested unfinished feature remains explicitly listed.

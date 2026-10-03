@@ -124,7 +124,7 @@ export function decodeGame(raw: unknown): Game {
     if (!Number.isInteger(t.age) || t.age < 0 || t.age > 5) fail();
   }
   if (s.growthPolicy !== undefined && !["stable", "welcome"].includes(s.growthPolicy)) fail();
-  if (s.laborPolicy !== undefined && !["balanced", "food", "build"].includes(s.laborPolicy)) fail();
+  if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
   for (const t of s.tribes) {
     if (t.trust !== undefined && (!num(t.trust) || t.trust < 0 || t.trust > 1)) fail();

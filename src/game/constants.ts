@@ -85,7 +85,7 @@ export const BUILDINGS: Record<
     w: 8.2,
     d: 8.2,
     food: 0,
-    wood: 50,
+    wood: 20,
     stone: 0,
     pop: 0,
     hp: 200,

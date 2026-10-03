@@ -1443,3 +1443,32 @@ test("territory control cannot create daily stock without harvesting", () => {
   g.state.harvestDay=-1;g.tickHarvest();
   assert.deepEqual([g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone,g.tribe(0).copper,g.tribe(0).iron],before);
 });
+
+test("direct group wood orders reserve at most two workers per tree", () => {
+  const g=fixture();g.vision.fill(1);g.clearSelect();
+  for(const u of g.state.units.filter(u=>u.team===0)){u.selected=true;u.carry=0;u.node=null;u.order="idle";}
+  g.assignJob("wood");
+  const counts=new Map();for(const u of g.selectedUnits())if(u.node?.kind==="tree")counts.set(u.node.id,(counts.get(u.node.id)||0)+1);
+  assert.ok(counts.size>=2);assert.ok([...counts.values()].every(n=>n<=2));
+  g.issueGather(g.state.trees[0]);
+  const after=new Map();for(const u of g.selectedUnits())if(u.node?.kind==="tree")after.set(u.node.id,(after.get(u.node.id)||0)+1);
+  assert.ok([...after.values()].every(n=>n<=2));
+});
+test("continued resource theft in a rival village causes warnings and hostility; visiting does not", () => {
+  const g=fixture(),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),w=g.state.units.find(u=>u.team===0);
+  const tree=g.state.trees[0];tree.x=hall.x+8;tree.z=hall.z;w.node=tree;w.order="hold";w.job="wood";
+  const rival=g.tribe(1);rival.tension=0.1;rival.hostile=false;rival.trust=0.5;
+  g.tickInfluence(5);assert.equal(rival.hostile,false);assert.ok(rival.tension<=0.1);
+  w.order="gather";for(let i=0;i<30;i++)g.tickInfluence(1);
+  assert.equal(rival.hostile,true);assert.ok(rival.trust<0.5);
+  w.order="move";const tension=rival.tension;g.tickInfluence(1);assert.ok(rival.tension<tension);
+});
+test("territory tint fades from occupied buildings instead of a uniform circle", () => {
+  const g=fixture(),hall=g.state.buildings.find(b=>b.team===0&&b.type==="townhall");
+  g.state.buildings=[hall];g.paintTerritory();
+  const strength=Array.from(g.territoryStrength).filter(n=>n>0);
+  assert.ok(strength.some(n=>n>0.7));assert.ok(strength.some(n=>n<0.15));
+});
+test("timber stone and hunting village policies survive save/load", () => {
+  const g=fixture();for(const policy of ["wood","stone","hunt"]){g.state.laborPolicy=policy;assert.equal(decodeGame(encodeGame(g)).state.laborPolicy,policy);}
+});
