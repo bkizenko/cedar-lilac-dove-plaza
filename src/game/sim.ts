@@ -1,8 +1,9 @@
+import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { foodSpoilage, preserveFood } from "./pantry";
 import { habitatAt } from "./ecology";
-import { knownSettlement, shipmentIssue, proposeShipment, quoteShipment } from "./barter";
+import { knownSettlement, shipmentIssue, proposeShipment, reportedQuote } from "./barter";
 import {
   WorkBoard,
   emergencyResponse,
@@ -1474,6 +1475,7 @@ export class Game {
     }
     const slots = this.slotOffsets(units, x, z);
     units.forEach((u, i) => {
+      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
       const { ox, oz } = slots[i];
       u.tx = x + ox;
       u.tz = z + oz;
@@ -1490,7 +1492,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    for (const u of this.selectedUnits()) { u.attackDestination = null; u.pillage = -1; }
+    for (const u of this.selectedUnits()) { u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits();
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
     if (target.kind === "building" && target.team !== 0 && (anyMil || !selected.length)) {
@@ -1499,7 +1501,7 @@ export class Game {
     }
     if (target.team !== 0 && (anyMil || !selected.length)) {
       if (this.marchMilitary(target.x, target.z, target, "attack")) {
-        this.makeHostile(target.team);
+        for(const u of this.commandedMilitary())u.pillage=target.team;
         this.onSfx("move");
         return;
       }
@@ -1513,7 +1515,7 @@ export class Game {
       u.tx = target.x + ox;
       u.tz = target.z + oz;
     });
-    if (target.team !== 0) this.makeHostile(target.team);
+    if (target.team !== 0)for(const u of units)u.pillage=target.team;
     if (units.length) this.onSfx("move");
   }
 
@@ -1592,7 +1594,6 @@ export class Game {
       return;
     }
     for (const u of mil) u.pillage = target.team;
-    if (target.team !== 0 && target.team !== 3) this.makeHostile(target.team);
     const name = this.tribe(target.team)?.name || "the camp";
     this.banner(mil.length + " villagers raid " + name + " — move or stop to withdraw", 2.2);
     this.onSfx("pillage");
@@ -2212,7 +2213,7 @@ export class Game {
         continue;
       }
       const cost = { [r.give]: r.giveAmt } as Cost;
-      if (!this.canAfford(0, cost) || shipmentIssue(this, tr.id, r)) {
+      if (!this.canAfford(0, cost)) {
         r.status = "Waiting for available goods";
         continue;
       }
@@ -2339,6 +2340,7 @@ export class Game {
     }
     if (job === "hold") {
       for (const u of units) {
+        u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
         u.order = "hold";
         u.job = null;
         u.jobLock = false;
@@ -2389,6 +2391,7 @@ export class Game {
     const huntOnly = job === "hunt";
     const real: ResKind = huntOnly ? "food" : job;
     for (const u of units) {
+      u.searchJob=undefined;u.envoy=undefined;
       u.job = real;
       u.jobLock = true;
       u.huntOnly = huntOnly;
@@ -2482,6 +2485,7 @@ export class Game {
     for (const u of units) {
       const t = this.findExploreTarget(u);
       if (!t) continue;
+      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
       u.order = "explore";
       u.pillage = -1;
       u.attackDestination = null;
@@ -2539,6 +2543,11 @@ export class Game {
   }
 
   exploreAI(u: Unit, dt: number) {
+    if(u.searchJob) {
+      this.workBoard.assign(this,u);
+      if(u.order!=="explore")return;
+    }
+
     this.lootMegaliths(u);
     if (u.stuckT > 8) {
       u.order = "hold";
@@ -2557,6 +2566,19 @@ export class Game {
         u.gatherT = 0;
       }
     }
+  }
+
+  soundRecall() {
+    const home=this.campOf(0);
+    for(const u of this.state.units) {
+      if(u.team!==0||u.hp<=0)continue;
+      u.recalled=true;u.envoy=undefined;u.searchJob=undefined;u.target=null;u.node=null;u.trade=null;u.pillage=-1;u.attackDestination=null;
+      u.jobLock=false;u.huntOnly=false;u.drill=undefined;
+      if(u.emergency)u.emergency.resume=undefined;
+      u.tx=home.x+Math.sin(u.id)*7;u.tz=home.z+Math.cos(u.id)*7;
+      u.order="move";u.stationOnArrival=true;u.workReason="Recall horn — returning to the village";
+    }
+    this.banner("Recall horn sounded — everyone returns with what they carry",4);this.onSfx("pillage");
   }
 
   raidRival() {
@@ -2707,7 +2729,6 @@ export class Game {
     if (
       !rival ||
       rival.hostile ||
-      !!shipmentIssue(this, team, deal) ||
       !hall ||
       worker.carry > 0 ||
       isDependent(this, worker) ||
@@ -2733,6 +2754,7 @@ export class Game {
     const units = this.selectedUnits();
     if (!units.length) return;
     for (const u of units) {
+      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
       u.order = u.type === "worker" ? "hold" : "idle";
       u.attackDestination = null;
       u.target = null;
@@ -2940,37 +2962,11 @@ export class Game {
     this.state.deals = deals;
   }
 
-  offersFor(spec: ResKind): TradeDeal[] {
-    const you = this.tribe(0);
-    const rival = this.pickTradeRival();
-    if (!you || !rival || !rival.alive || rival.hostile) return [];
-    const worth: Record<ResKind, number> = { food: 1, wood: 1.2, stone: 2.2, copper: 4.5, iron: 6.5 };
-    const age = you.age;
-    const goods: ResKind[] = ["food", "wood", "stone"];
-    if (age >= 1) goods.push("copper");
-    if (age >= 2) goods.push("iron");
-    const stock = (t: { food: number; wood: number; stone: number; copper: number; iron: number }, k: ResKind) =>
-      Math.floor(t[k] || 0);
-    const theySell = goods
-      .filter((k) => stock(rival, k) >= 8)
-      .sort((a, b) => stock(rival, b) / worth[b] - stock(rival, a) / worth[a]);
-    if (spec && !theySell.includes(spec) && stock(rival, spec) >= 8) theySell.unshift(spec);
-    const deals: TradeDeal[] = [];
-    for (const get of theySell) {
-      const give = goods.find((k) => k !== get && stock(you, k) >= 10);
-      if (!give) continue;
-      const giveAmt = Math.min(36, Math.max(8, Math.round((10 * worth[get]) / worth[give])));
-      if (stock(you, give) < giveAmt) continue;
-      const getAmt = Math.min(
-        stock(rival, get),
-        Math.max(3, Math.round((giveAmt * worth[give] * 0.8) / worth[get])),
-      );
-      if (getAmt < 2) continue;
-      const quote = quoteShipment(this, rival.id, give, get, giveAmt);
-      if (quote.deal) deals.push(quote.deal);
-      if (deals.length >= 3) break;
-    }
-    return deals;
+  offersFor(_spec: ResKind): TradeDeal[] {
+    const rival=this.pickTradeRival();if(!rival)return [];
+    return (this.state.tradeReports?.find(r=>r.team===rival.id)?.offers||[])
+      .map(d=>reportedQuote(this,rival.id,d.give,d.get,d.giveAmt).deal)
+      .filter((d):d is TradeDeal=>!!d).slice(0,3);
   }
 
   tickSea(dt: number) {
@@ -3030,11 +3026,15 @@ export class Game {
       you.food -= 8;
       const a = Math.atan2(hall.x, hall.z) + Math.PI;
       const d = (this.world.islandR || 140) * 0.82;
-      const u = this.spawnUnit("worker", Math.sin(a) * d, Math.cos(a) * d, 0);
-      u.order = "move";
-      u.tx = hall.x + 4;
-      u.tz = hall.z + 6;
-      label = roll < 0.85 ? "A wanderer from the sea stays" : "Someone walking the shore asks to stay";
+      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*3));
+      for(let i=0;i<group;i++) {
+        if(i>0)you.food-=8;
+        const u=this.spawnUnit("worker",Math.sin(a)*d+i*2,Math.cos(a)*d,0);
+        u.order="move";u.tx=hall.x+4+i;u.tz=hall.z+6;
+      }
+      if(group>1)label=`A group of ${group} wanderers is walking toward your village`;
+
+      if(!label.startsWith("A group")) label = roll < 0.85 ? "A wanderer from the sea stays" : "Someone walking the shore asks to stay";
     }
     this.banner(label, 2.2);
   }
@@ -3828,7 +3828,17 @@ export class Game {
     }
   }
 
+  sendDelegation(team:number,kind:"trade"|"peace"|"gift") {return sendDelegation(this,team,kind);}
+
   workerAI(u: Unit, dt: number) {
+    if(u.recalled) {
+      if(this.steer(u,dt)) {
+        if(u.carryType&&u.carry>0){this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;}
+        u.recalled=undefined;u.stationOnArrival=undefined;u.order="hold";u.workReason="Home after the recall horn — awaiting orders";
+      }
+      return;
+    }
+    if(delegationAI(this,u,dt))return;
     if (isDependent(this, u)) {
       u.node = null;
       u.target = null;
@@ -3847,9 +3857,12 @@ export class Game {
     }
     if (u.order === "move") {
       if (this.steer(u, dt)) {
+        if(u.recalled && u.carryType && u.carry>0) {
+          this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;
+        }
         u.order = u.stationOnArrival ? "hold" : "idle";
         if (u.stationOnArrival) u.workReason = "At your destination — waiting for orders";
-        u.stationOnArrival = undefined;
+        u.stationOnArrival = undefined;u.recalled=undefined;
       }
       return;
     }
@@ -4083,6 +4096,7 @@ export class Game {
     let bd = radius * radius;
     for (const o of this.state.units) {
       if (
+        (o.envoy?.kind === "peace" && o.envoy.team === u.team) ||
         o.hp <= 0 ||
         o.team === u.team ||
         !this.isFoe(u.team, o.team) ||
@@ -4240,6 +4254,23 @@ export class Game {
   }
 
   combatAI(u: Unit, dt: number) {
+    if(u.order==="attack"&&u.target&&u.target.team!==u.team&&!this.isFoe(u.team,u.target.team)) {
+      if(Math.hypot(u.x-u.target.x,u.z-u.target.z)>Math.max(8,u.range+2)) {
+        u.tx=u.target.x;u.tz=u.target.z;this.steer(u,dt);return;
+      }
+      this.makeHostile(u.team===0?u.target.team:u.team);
+    }
+
+    if(u.team>0&&u.team!==3&&u.pillage===0) {
+      const home=this.campOf(0);
+      if(Math.hypot(u.x-home.x,u.z-home.z)<30 || (u.target?.team===0 && Math.hypot(u.x-u.target.x,u.z-u.target.z)<20))this.makeHostile(u.team);
+    }
+
+    if(u.team===0 && u.pillage>0 && u.pillage!==3) {
+      const hall=this.state.buildings.find(b=>b.team===u.pillage&&b.type==="townhall"&&b.hp>0);
+      if(hall&&Math.hypot(u.x-hall.x,u.z-hall.z)<30) this.makeHostile(hall.team);
+    }
+
     u.cd = Math.max(0, u.cd - dt);
     if (u.order === "hold") {
       const t = this.acquireTarget(u, u.range + 1);
@@ -4752,7 +4783,7 @@ export class Game {
         if (spot) this.placeBuilding("grove", spot.x, spot.z, team);
       }
     }
-    if (farms < 1 + tr.age && tr.wood >= 50 && Math.random() < (team === 2 ? 0.25 : 0.5)) {
+    if (farms < 1 + tr.age && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
       const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
       if (spot) this.placeBuilding("farm", spot.x, spot.z, team);
     }
@@ -4832,7 +4863,6 @@ export class Game {
       const youThreat = this.raidThreat(0);
       const want = growing ? 0.28 : shrinking ? 0.08 : 0.16;
       if (mil.length >= 2 && Math.random() < want + tr.aggro * 0.25 + youThreat * 0.2) {
-        tr.hostile = true;
         tr.lastRaid = 360 + Math.random() * 180;
         tr.recoveryUntil = this.state.time + tr.lastRaid;
         const targets = this.state.buildings.filter(
@@ -4845,9 +4875,10 @@ export class Game {
             u.tx = t.x;
             u.tz = t.z;
             u.order = "attackmove";
+            u.pillage=0;
             u.target = t;
           }
-          if (this.started)
+          if (this.started && mil.some(u=>this.visibleAt(u.x,u.z)))
             this.banner(tr.name + " strikes your " + (BUILDINGS[t.type]?.name || "camp"), 2);
         }
       } else tr.lastRaid = 14 + Math.random() * 20;
@@ -5120,6 +5151,7 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
+            if(u.recalled){this.workerAI(u,sdt);continue;}
             if (emergencyResponse(this, u, sdt)) continue;
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
             else if (u.team !== 0) this.barbarianAI(u, sdt);

@@ -123,6 +123,19 @@ export function decodeGame(raw: unknown): Game {
     ]);
     if (!Number.isInteger(t.age) || t.age < 0 || t.age > 5) fail();
   }
+  const validateOffers=(offers:unknown)=>{
+    if(!Array.isArray(offers)||offers.length>20)fail();
+    for(const d of offers)if(!obj(d)||!["food","wood","stone","copper","iron"].includes(d.give)||
+      !["food","wood","stone","copper","iron"].includes(d.get)||d.give===d.get||
+      !Number.isSafeInteger(d.giveAmt)||d.giveAmt<1||d.giveAmt>100||!Number.isSafeInteger(d.getAmt)||d.getAmt<1||d.getAmt>200)fail();
+  };
+  if(s.tradeReports!==undefined){
+    if(!Array.isArray(s.tradeReports)||s.tradeReports.length>2)fail();
+    const teams=new Set();for(const r of s.tradeReports){
+      if(!obj(r)||![1,2].includes(r.team)||teams.has(r.team)||!num(r.time)||r.time<0||r.time>s.time)fail();
+      teams.add(r.team);validateOffers(r.offers);
+    }
+  }
   if (s.growthPolicy !== undefined && !["stable", "welcome"].includes(s.growthPolicy)) fail();
   if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
@@ -206,6 +219,14 @@ export function decodeGame(raw: unknown): Game {
     )
       fail();
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
+    if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
+    if(u.searchJob!==undefined&&u.searchJob!=="wood")fail();
+    if(u.envoy!==undefined){
+      const m=u.envoy;
+      if(!obj(m)||u.team!==0||![1,2].includes(m.team)||!["peace","trade","gift"].includes(m.kind)||
+        !["outbound","return"].includes(m.phase)||!num(m.talk)||m.talk<0)fail();
+      if(m.report!==undefined){if(!obj(m.report)||!num(m.report.time)||m.report.time<0||m.report.time>s.time)fail();validateOffers(m.report.offers);}
+    }
     if (u.homeCamp !== undefined && (!Number.isSafeInteger(u.homeCamp) || u.homeCamp < 1 || u.team !== 3)) fail();
     if (u.stationOnArrival !== undefined && typeof u.stationOnArrival !== "boolean") fail();
     if (u.emergency?.resume !== undefined) {

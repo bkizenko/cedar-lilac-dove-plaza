@@ -3,7 +3,7 @@ import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
-import { saveGame, loadRaw, hasSave } from "./save";
+import { saveGame, loadRaw, hasSave, protectGame, exportGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
@@ -129,21 +129,33 @@ export class Engine {
     this.game.banner(saveGame(this.game) ? "Village saved" : "Storage unavailable or full", 3);
     this.pushHud();
   }
-  resumeSaved() {
+  protectVillage() {
+    this.game.banner(protectGame(this.game)?"Protected village checkpoint kept — autosaves will not replace it":"Could not protect the village; storage may be full",4);
+    this.pushHud();
+  }
+  exportVillage() {this.protectVillage();exportGame(this.game);}
+  async importVillage(file:File) {
     try {
-      const raw = loadRaw();
+      const restored=decodeGame(JSON.parse(await file.text()));
+      if(this.game.started&&!this.game.awaitingStart&&!protectGame(this.game))throw new Error("Could not protect your current village. Download it before importing another save.");
+      saveGame(this.game);
+      this.restoreVillage(restored);
+      this.game.banner("Backup imported; previous village kept as a protected checkpoint",5);
+    } catch(error) {this.game.banner(error instanceof Error?error.message:"Invalid village backup",5);}
+    this.pushHud();
+  }
+  private restoreVillage(restored:Game) {
+    restored.onSfx=(n)=>this.audio.play(n);restored.quality=this.game.quality;restored.muted=this.game.muted;
+    this.game=restored;this.simAccumulator=0;this.keyboard.groups.clear();
+    this.view.rebuild(restored);this.homeLook();this.audio.unlock();this.canvas.focus();
+  }
+  resumeSaved(protectedOnly=false) {
+    try {
+      if(protectedOnly && this.game.started && !this.game.awaitingStart && !saveGame(this.game))throw new Error("Could not save the current village before restoring. Download it first.");
+      const raw = loadRaw(protectedOnly);
       if (!raw) throw new Error("No compatible save. Older partial saves cannot be restored.");
       const restored = decodeGame(raw);
-      restored.onSfx = (n) => this.audio.play(n);
-      restored.quality = this.game.quality;
-      restored.muted = this.game.muted;
-      this.game = restored;
-      this.simAccumulator = 0;
-      this.keyboard.groups.clear();
-      this.view.rebuild(restored);
-      this.homeLook();
-      this.audio.unlock();
-      this.canvas.focus();
+      this.restoreVillage(restored);
       restored.banner("Village restored · P to resume", 4);
     } catch (error) {
       this.game.banner(error instanceof Error ? error.message : "Cannot restore save", 4);

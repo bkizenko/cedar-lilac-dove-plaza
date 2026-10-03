@@ -1,13 +1,13 @@
 import { useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { ResKind } from "@/game/types";
-import { quoteShipment, proposeShipment, tradeCarrier } from "@/game/barter";
+import { reportedQuote, proposeShipment, tradeCarrier } from "@/game/barter";
 export function TradeProposal({ engine, team }: { engine: Engine; team: number }) {
   const [give, setGive] = useState<ResKind>("food"),
     [get, setGet] = useState<ResKind>("wood");
   const [amount, setAmount] = useState(20);
   const g = engine.game,
-    quote = quoteShipment(g, team, give, get, amount),
+    quote = reportedQuote(g, team, give, get, amount),
     carrier = tradeCarrier(g);
   const names: Record<ResKind, string> = {
     food: "Food",
@@ -23,7 +23,8 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
   );
   return (
     <details className="trade-proposal">
-      <summary>Negotiate a shipment</summary>
+      <summary>Trade reports and shipments</summary>
+      <button onClick={()=>{g.sendDelegation(team,"trade");engine.pushHud();}}>Send a trade delegation</button>
       <div className="trade-terms">
         <label>
           You offer

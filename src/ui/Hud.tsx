@@ -1,4 +1,4 @@
-import { quoteShipment, tradeCarrier } from "@/game/barter";
+import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Pause,
@@ -235,6 +235,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
+          <button className="px-2 py-2" onClick={()=>engine?.protectVillage()}>Keep checkpoint</button>
+          <button className="px-2 py-2" onClick={()=>engine?.resumeSaved(true)}>Restore checkpoint</button>
+          <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Download village</button>
+          <label className="px-2 py-2">Import backup<input className="sr-only" aria-label="Import village backup" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label>
+          <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
             Load
           </button>
@@ -894,11 +899,11 @@ function TradeBlock({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           onClick={() => {
             if (!engine) return;
             const rival = engine.game.pickTradeRival();
-            if (rival) engine.game.agreeTruce(rival.id);
+            if (rival) engine.game.sendDelegation(rival.id,"peace");
             engine.pushHud();
           }}
         >
-          Agree truce &amp; withdraw
+          Send peace delegation
         </button>
       </div>
     );
@@ -1001,7 +1006,7 @@ function BankBtn({
   engine: Engine | null;
 }) {
   const g = engine?.game, partner = g?.pickTradeRival();
-  const quote = g && partner ? quoteShipment(g, partner.id, give, get, 20) : null;
+  const quote = g && partner ? reportedQuote(g, partner.id, give, get, 20) : null;
   const available = g && !!tradeCarrier(g);
   return (
     <button

@@ -170,6 +170,7 @@ export class KeyboardCommands {
     if (code === "Equal" || code === "NumpadAdd") e.setSpeed(g.state.speed >= 2 ? 4 : 2);
     if (code === "Minus" || code === "NumpadSubtract") e.setSpeed(g.state.speed >= 4 ? 2 : 1);
     if (code === "KeyF") e.focusHome();
+    if (code === "KeyV") g.soundRecall();
     if (code === "KeyM") e.toggleMute();
     if (n >= 1 && n <= 8) {
       const open = BUILD_ORDER.filter((t) => BUILDINGS[t].age <= g.tribe(0).age);

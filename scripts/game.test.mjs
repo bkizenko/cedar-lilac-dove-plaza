@@ -490,7 +490,7 @@ test("growth requires surplus; newborns consume food before joining the workforc
   g.state.birthT = 0;
   const before = g.popNow(0);
   g.tickPeople(0.1);
-  assert.equal(g.popNow(0), before + 1);
+  assert.ok(g.popNow(0)>before && g.popNow(0)<=Math.min(before+3,g.popCap(0)));
   const child = g.state.units.find((u) => u.team === 0 && isDependent(g, u));
   assert.ok(child);
   const demand = foodDemand(g);
@@ -522,7 +522,7 @@ test("unsolicited settler arrivals stop unless welcomed with adequate reserves",
   assert.equal(g.popNow(0), before);
   g.tribe(0).food = 1000;
   g.landSeaFolk();
-  assert.equal(g.popNow(0), before + 1);
+  assert.ok(g.popNow(0)>before && g.popNow(0)<=Math.min(before+3,g.popCap(0)));
 });
 test("cropping depletes fertility; a fallow year restores it and is saved", async () => {
   const { crop, farmAvailable } = await import("../src/game/settlement.ts");
@@ -652,7 +652,7 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   g.tribe(0).food = 5000;
   assert.equal(g.enqueueTrain(hall, "worker"), false);
   g.landSeaFolk();
-  assert.equal(g.popNow(0), before + 1);
+  assert.ok(g.popNow(0)>before && g.popNow(0)<=Math.min(before+3,g.popCap(0)));
   const barracks = g.makeBld("barracks", hall.x + 16, hall.z, 0);
   g.state.buildings.push(barracks);
   g.tribe(0).food = 500;
@@ -1042,12 +1042,13 @@ test("shipment validation rejects invalid quantities and unavailable goods", asy
 });
 
 test("negotiated goods travel with a saved carrier instead of arriving instantly", async () => {
-  const {quoteShipment, proposeShipment} = await import("../src/game/barter.ts");
+  const {reportedQuote, proposeShipment} = await import("../src/game/barter.ts");
   const g = fixture(); g.vision.fill(1); g.clearSelect();
   Object.assign(g.tribe(0), {food: 200});
   Object.assign(g.tribe(1), {food: 80, wood: 200, tradeCd: 0, hostile: false});
   const wood = g.tribe(0).wood;
-  const quote = quoteShipment(g, 1, "food", "wood", 30).deal;
+  g.state.tradeReports=[{team:1,time:g.state.time,offers:[{give:"food",get:"wood",giveAmt:20,getAmt:16}]}];
+  const quote = reportedQuote(g, 1, "food", "wood", 30).deal;
   assert.equal(proposeShipment(g, 1, "food", "wood", 30), true);
   const carrier = g.state.units.find(u => u.team === 0 && u.order === "trade");
   assert.deepEqual(carrier.trade, quote);
@@ -1471,4 +1472,68 @@ test("territory tint fades from occupied buildings instead of a uniform circle",
 });
 test("timber stone and hunting village policies survive save/load", () => {
   const g=fixture();for(const policy of ["wood","stone","hunt"]){g.state.laborPolicy=policy;assert.equal(decodeGame(encodeGame(g)).state.laborPolicy,policy);}
+});
+
+test("protected checkpoint survives autosaves and both rolling save failures", async()=>{
+  const {saveGame,protectGame,loadRaw}=await import("../src/game/save.ts"),{SAVE_KEY}=await import("../src/game/constants.ts");
+  const entries=new Map();globalThis.localStorage={getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,v)};
+  try{const g=fixture();g.tribe(0).food=123;assert.equal(protectGame(g),true);g.tribe(0).food=456;saveGame(g);
+    assert.equal(loadRaw(true).state.tribes[0].food,123);entries.set(SAVE_KEY,"bad");entries.set(SAVE_KEY+":bak","bad");
+    assert.equal(loadRaw().state.tribes[0].food,123);
+  }finally{delete globalThis.localStorage;}
+});
+test("wood orders scout unknown terrain and resume cutting discovered timber",()=>{
+  const g=fixture(),u=g.state.units.find(u=>u.team===0);g.clearSelect();u.selected=true;u.carry=0;g.vision.fill(0);
+  g.findExploreTarget=()=>({x:u.x+20,z:u.z});g.assignJob("wood");assert.equal(u.order,"explore");assert.equal(u.searchJob,"wood");
+  g.vision.fill(1);g.state.time+=2;g.exploreAI(u,0.01);assert.equal(u.order,"gather");assert.equal(u.node.kind,"tree");assert.equal(u.searchJob,undefined);
+});
+test("recall cancels raids and delegations but conserves carried supplies",()=>{
+  const g=fixture(),u=g.state.units.find(u=>u.team===0);u.carry=7;u.carryType="wood";u.pillage=1;u.order="explore";
+  const before=g.tribe(0).wood;g.soundRecall();assert.equal(u.pillage,-1);assert.equal(u.order,"move");assert.equal(u.carry,7);
+  g.steer=()=>true;g.workerAI(u,0.01);assert.equal(u.order,"hold");assert.equal(g.tribe(0).wood,before+7);assert.equal(u.carry,0);
+});
+test("raiding causes hostility at the settlement rather than when the command leaves home",()=>{
+  const g=militaryFixture();g.vision.fill(2);g.clearSelect();const u=g.state.units.find(u=>u.team===0&&u.type==="spearman");u.selected=true;
+  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");g.tribe(1).hostile=false;g.issuePillage(hall);
+  assert.equal(g.tribe(1).hostile,false);g.combatAI(u,0.01);assert.equal(g.tribe(1).hostile,false);
+  u.x=hall.x+20;u.z=hall.z;g.combatAI(u,0.01);assert.equal(g.tribe(1).hostile,true);
+});
+test("trading terms are unknown until a delegation returns and then become stale", async()=>{
+  const {reportedQuote}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
+  assert.equal(reportedQuote(g,1,"food","wood",20).deal,null);assert.equal(g.sendDelegation(1,"trade"),true);
+  const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;
+  g.workerAI(u,21);assert.equal(u.envoy.phase,"return");assert.equal(g.state.tradeReports?.length||0,0);
+  const r=decodeGame(encodeGame(g)),ru=r.state.units.find(x=>x.id===u.id),home=r.state.buildings.find(b=>b.team===0&&b.type==="townhall");ru.x=home.x+Math.max(home.w,home.d)*0.55+1;ru.z=home.z;r.workerAI(ru,1);
+  const quote=reportedQuote(r,1,"food","wood",20).deal;assert.ok(quote);r.tribe(1).wood=0;assert.deepEqual(reportedQuote(r,1,"food","wood",20).deal,quote);
+  r.state.time+=901;assert.equal(reportedQuote(r,1,"food","wood",20).deal,null);
+});
+test("peace proposal travels before affecting relations",()=>{
+  const g=fixture();g.vision.fill(2);g.clearSelect();g.tribe(1).hostile=true;assert.equal(g.sendDelegation(1,"peace"),true);
+  assert.equal(g.tribe(1).hostile,true);const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;
+  g.workerAI(u,21);assert.equal(g.tribe(1).hostile,false);assert.equal(u.envoy.phase,"return");
+});
+test("a well supplied village can welcome an outsider group without exceeding housing",()=>{
+  const g=fixture();Object.assign(g.tribe(0),{food:1000});g.state.growthPolicy="welcome";
+  const old=Math.random;try{Math.random=()=>0.99;const before=g.popNow(0);g.landSeaFolk();assert.ok(g.popNow(0)>before+1);assert.ok(g.popNow(0)<=g.popCap(0));}finally{Math.random=old;}
+});
+test("recall works for children and soldiers and can be cancelled by a new order",()=>{
+  const g=militaryFixture(),child=g.state.units.find(u=>u.team===0&&u.type==="worker");child.maturesAt=g.state.time+100;
+  const soldier=g.state.units.find(u=>u.team===0&&u.type==="spearman");g.soundRecall();g.steer=()=>true;
+  g.workerAI(child,0.01);g.workerAI(soldier,0.01);assert.equal(child.order,"hold");assert.equal(soldier.order,"hold");
+  g.soundRecall();g.clearSelect();soldier.selected=true;g.issueMove(soldier.x+20,soldier.z);assert.equal(soldier.recalled,undefined);
+});
+test("gift carrier transports actual food and only improves trust on delivery",()=>{
+  const g=fixture();g.vision.fill(2);g.clearSelect();const food=g.tribe(0).food,other=g.tribe(1).food,trust=g.tribe(1).trust||0;
+  assert.equal(g.sendDelegation(1,"gift"),true);const u=g.state.units.find(u=>u.envoy);assert.equal(u.carry,30);assert.equal(g.tribe(0).food,food-30);
+  assert.equal(g.tribe(1).food,other);assert.equal(g.tribe(1).trust||0,trust);
+  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;g.workerAI(u,21);
+  assert.equal(g.tribe(1).food,other+30);assert.equal(u.carry,0);assert.ok(g.tribe(1).trust>trust);
+});
+test("seasonal field work outranks berries except during an immediate food emergency",()=>{
+  const g=fixture(),home=g.campOf(0),farm=g.makeBld("farm",home.x+14,home.z,0),u=g.state.units.find(u=>u.team===0);
+  farm.build=1;g.state.buildings.push(farm);g.rebuildWalk();g.vision.fill(2);g.tribe(0).food=200;
+  u.job="food";u.jobLock=true;u.order="idle";u.node=null;u.carry=0;g.workBoard.reset();g.workBoard.assign(g,u);
+  assert.equal(u.node,farm);
+  u.node=null;u.order="idle";u.workCheckAt=0;g.tribe(0).food=5;g.workBoard.reset();g.workBoard.assign(g,u);
+  assert.notEqual(u.node,farm);
 });

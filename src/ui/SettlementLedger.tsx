@@ -152,6 +152,10 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           })}
         </ul>
       </details>
+      <h3>Campaign orders</h3>
+      <p>Select adults for an expedition. Raiding is an explicit campaign; home food and construction workers keep their priorities.</p>
+      <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
+      <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>
       <h3>Fields and harvest</h3>
       {farms.length === 0 ? (
         <p>No finished fields. Forage and hunt while you establish your first farm.</p>
@@ -247,11 +251,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             {n.hostile && (
               <button
                 onClick={() => {
-                  g.agreeTruce(n.id);
+                  g.sendDelegation(n.id,"peace");
                   engine.pushHud();
                 }}
               >
-                Agree truce &amp; withdraw
+                Send peace delegation
               </button>
             )}
             <p>
@@ -261,19 +265,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <button
               disabled={t.food < 30}
               onClick={() => {
-                if (t.food < 30) return;
-                t.food -= 30;
-                n.food += 30;
-                n.trust = Math.min(1, (n.trust || 0) + 0.2);
-                n.tension = Math.max(0, n.tension - 0.2);
-                if (n.hostile && (n.trust || 0) >= 0.4) {
-                  g.agreeTruce(n.id);
-                }
-                g.banner(`Food sent to ${n.name}; relations improve`, 3);
+                g.sendDelegation(n.id,"gift");
                 engine.pushHud();
               }}
             >
-              Send 30 food · build trust{n.hostile ? " / seek truce" : ""}
+              Send gift carrier · 30 food{n.hostile ? " / seek truce" : ""}
             </button>
             {!n.hostile ? (
               <button

@@ -139,6 +139,9 @@ export type Unit = {
   order: Order;
   stationOnArrival?: boolean;
   homeCamp?: number;
+  searchJob?: "wood";
+  recalled?: boolean;
+  envoy?: {team:number; kind:"peace"|"trade"|"gift"; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
   maturesAt?: number;
   workReason?: string;
@@ -286,6 +289,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  tradeReports?: {team:number; time:number; offers:TradeDeal[]}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome";

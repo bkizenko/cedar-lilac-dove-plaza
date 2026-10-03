@@ -15,6 +15,7 @@ export function tradeCarrier(g: Game) {
       u.hp > 0 &&
       !isDependent(g, u) &&
       !u.emergency &&
+      !u.envoy &&
       u.carry === 0 &&
       (u.selected ? u.order !== "trade" : ["idle", "hold", "gather"].includes(u.order)),
   );
@@ -83,6 +84,22 @@ export function quoteShipment(
       "Terms reflect their needs, trust and tension. Goods arrive only after the return journey.",
   };
 }
+/** Home decisions use carried reports, never a live view into a distant stockpile. */
+export function reportedQuote(g:Game,team:number,give:ResKind,get:ResKind,amount:number): {deal:TradeDeal|null;reason:string} {
+  const no=(reason:string)=>({deal:null,reason});
+  const report=g.state.tradeReports?.find(r=>r.team===team);
+  if(!report)return no("Send a trade delegation and wait for its report to return.");
+  if(g.state.time-report.time>900)return no("That report is old. Send a trader to learn current terms.");
+  if(g.tribe(team)?.hostile)return no("Send a peace delegation before trading.");
+  if(!Number.isSafeInteger(amount)||amount<1||amount>100||give===get)return no("Choose different goods and offer 1–100 items.");
+  if(g.tribe(0)[give]<amount)return no("Your stores cannot cover that offer.");
+  if(g.tribe(team).tradeCd>0)return no("Your previous carrier is still on the path.");
+  const offer=report.offers.find(d=>d.give===give&&d.get===get);
+  if(!offer)return no("The trader did not report an offer for those goods. Send another delegation or choose other goods.");
+  const quantity=Math.floor(offer.getAmt*amount/offer.giveAmt);
+  if(quantity<1||quantity>200)return no("Adjust the offered quantity.");
+  return {deal:{give,get,giveAmt:amount,getAmt:quantity},reason:`Last reported ${Math.floor((g.state.time-report.time)/60)} minutes ago. The partner may revise or refuse these terms on arrival.`};
+}
 export function proposeShipment(
   g: Game,
   team: number,
@@ -90,7 +107,7 @@ export function proposeShipment(
   get: ResKind,
   amount: number,
 ) {
-  const quote = quoteShipment(g, team, give, get, amount);
+  const quote = reportedQuote(g, team, give, get, amount);
   if (!quote.deal) {
     g.banner(quote.reason, 2.5);
     return false;

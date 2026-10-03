@@ -204,7 +204,7 @@ export class WorkBoard {
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))
-          add(b, "food", 3, calendar(g).phase === 2 ? 200 : 110);
+          add(b, "food", 3, reserveSeconds(g,t.id)<90 ? 100 : calendar(g).phase === 2 ? 260 : 210);
         if (b.type === "dock") add(b, "food", 2, foodUrgency);
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
@@ -323,6 +323,14 @@ export class WorkBoard {
       }
     }
     if (!best) {
+      if (u.team===0 && u.jobLock && u.job==="wood" && !occupied && !unsafe && u.carry===0) {
+        const destination=u.order==="explore" ? {x:u.tx,z:u.tz} : g.findExploreTarget(u);
+        if(destination) {
+          u.searchJob="wood";u.order="explore";u.node=null;u.tx=destination.x;u.tz=destination.z;
+          u.workReason="Searching unknown ground for timber";return;
+        }
+      }
+
       u.workReason =
         g.tribe(u.team).food >= g.stockCap(u.team) && (u.job === "food" || !u.jobLock)
           ? "Food stores full — build storage or assign another job"
@@ -337,6 +345,7 @@ export class WorkBoard {
     }
     const key = u.team + ":" + best.node.id;
     this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);
+    u.searchJob=undefined;
     u.node = best.node;
     u.order = best.kind === "build" ? "build" : "gather";
     u.job = best.kind === "build" ? null : best.kind;
@@ -354,6 +363,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   // Explicit adult combat orders take precedence over automatic shelter behavior.
   if (u.team === 0 && u.type === "worker" && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
+  if(u.envoy?.kind==="peace")return false;
   const foes = g.state.units.filter(
     (e) =>
       e.hp > 0 &&
