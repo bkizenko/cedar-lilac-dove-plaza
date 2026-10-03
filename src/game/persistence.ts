@@ -1,6 +1,6 @@
 import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
-import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
+import { FOW, SAVE_VERSION, BUILDINGS, UNITS, HALF } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
@@ -57,6 +57,28 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "string" && typeof s[name] !== "string") fail();
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
+  }
+  if(s.communityTimer!==undefined&&(!num(s.communityTimer)||s.communityTimer<0||s.communityTimer>30))fail();
+  if(s.lifeHistory!==undefined){
+    if(!Array.isArray(s.lifeHistory)||s.lifeHistory.length>256)fail();
+    for(const e of s.lifeHistory)if(!obj(e)||![0,1,2,3].includes(e.team)||typeof e.text!=="string"||e.text.length>300||!num(e.time)||e.time<0||e.time>s.time)fail();
+  }
+  if(s.communities!==undefined){
+    if(!Array.isArray(s.communities)||s.communities.length>20000)fail();const halls=new Set();
+    for(const c of s.communities){if(!obj(c)||!Number.isSafeInteger(c.hall)||c.hall<1||halls.has(c.hall)||![0,1,2].includes(c.team)||typeof c.name!=="string"||c.name.length>200||!num(c.founded)||c.founded<0||c.founded>s.time||
+      (c.emptySince!==null&&(!num(c.emptySince)||c.emptySince<0||c.emptySince>s.time))||!["growing","thriving","struggling","abandoned"].includes(c.status))fail();halls.add(c.hall);}
+  }
+  if(s.nightWork!==undefined&&typeof s.nightWork!=="boolean")fail();
+  if(s.scoutTimer!==undefined&&(!num(s.scoutTimer)||s.scoutTimer<0||s.scoutTimer>1000))fail();
+  if(s.trails!==undefined) {
+    if(!Array.isArray(s.trails)||s.trails.length>8192)fail();const cells=new Set();
+    for(const t of s.trails){if(!obj(t)||!Number.isSafeInteger(t.cell)||t.cell<0||t.cell>=65536||cells.has(t.cell)||
+      !num(t.wear)||t.wear<0||t.wear>1||!num(t.last)||t.last<0||t.last>s.time||!num(t.angle)||Math.abs(t.angle)>Math.PI)fail();cells.add(t.cell);}
+  }
+  if(s.rivalKnowledge!==undefined){
+    if(!Array.isArray(s.rivalKnowledge)||s.rivalKnowledge.length>2)fail();const teams=new Set();
+    for(const m of s.rivalKnowledge){if(!obj(m)||![1,2].includes(m.team)||teams.has(m.team)||!Array.isArray(m.cells)||m.cells.length>1024||
+      new Set(m.cells).size!==m.cells.length||m.cells.some((c:unknown)=>!Number.isSafeInteger(c)||Number(c)<0||Number(c)>=1024))fail();teams.add(m.team);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
   if(s.worldgenVersion!==undefined&&![1,2].includes(s.worldgenVersion))fail();
@@ -142,6 +164,7 @@ export function decodeGame(raw: unknown): Game {
   if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
   for (const t of s.tribes) {
+    if(t.lastSettlement!==undefined&&(!num(t.lastSettlement)||t.lastSettlement<0||t.lastSettlement>s.time))fail();
     if (t.trust !== undefined && (!num(t.trust) || t.trust < 0 || t.trust > 1)) fail();
     if (t.recoveryUntil !== undefined && !num(t.recoveryUntil)) fail();
     if (t.compactUntil !== undefined && !num(t.compactUntil)) fail();
@@ -221,6 +244,12 @@ export function decodeGame(raw: unknown): Game {
     )
       fail();
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
+    if(u.homeHall!==undefined&&(!Number.isSafeInteger(u.homeHall)||u.homeHall<1))fail();
+    if(u.parents!==undefined&&(!Array.isArray(u.parents)||u.parents.length>2||new Set(u.parents).size!==u.parents.length||u.parents.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1||id===u.id)))fail();
+    if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean")fail();}
+    if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
+    if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
+    if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();

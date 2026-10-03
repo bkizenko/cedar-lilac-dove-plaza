@@ -1,7 +1,8 @@
+import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES } from "@/game/constants";
 import { foodSpoilage, winterOutlook, storehouses } from "@/game/pantry";
-import { habitatAt } from "@/game/ecology";
+import { habitatAt, soilQuality } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
 import { knownSettlement } from "@/game/barter";
 import { useEffect, useRef } from "react";
@@ -118,6 +119,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             Changing this priority resets adult workers’ assignments and work focus. Carriers finish
             deliveries and delegations before switching.
           </p>
+          <label><input type="checkbox" checked={!!s.nightWork} onChange={e=>{s.nightWork=e.target.checked;engine.pushHud();}}/> Work through the night</label>
+          <p>Workers normally sleep near shelter at night and seek shelter during storms. Night work increases fatigue.</p>
           <label>
             Village growth{" "}
             <select
@@ -162,7 +165,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <ul>
           {farms.map((b) => (
             <li key={b.id}>
-              Field {b.id} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
+              Field {b.id} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
               {b.fallowYear === cal.year ? "Resting this year" : "In cultivation"}:{" "}
               {Math.round((b.crop?.planted || 0) * 100)}% sown ·{" "}
               {Math.round((b.crop?.tended || 0) * 100)}% tended ·{" "}
@@ -171,7 +174,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
                 : `up to ${Math.floor(
                     (b.crop?.planted || 0) *
                       (160 + 100 * (b.crop?.tended || 0)) *
-                      (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops *
+                      (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) *
                       (s.agePicks[3] === "econ" ? 1.2 : 1),
                   )} food expected`}
               <button
@@ -285,6 +288,17 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             ) : null}
           </section>
         ))}
+      <section className="mt-4">
+        <h3>People and hearths</h3>
+        <button disabled={t.wood<20} onClick={()=>{close();engine.setPlacing("townhall");}}>Establish another settlement · 20 logs and construction labor</button>
+        <p>Choose a distant resource clump. Building a hall provides shelter, not new people.</p>
+        {(s.communities || []).filter(c=>c.team===0).map(c=><p key={c.hall}>{c.name} · {c.status} · {people.filter(u=>u.homeHall===c.hall).length} residents</p>)}
+        {people.map(u=>{const traits=predisposition(u);return <p key={u.id}><strong>{personName(u)}</strong> · {isDependent(g,u)?"young":"adult"} · {u.workReason || u.order}
+          {u.expedition && ` · ${u.expedition.food.toFixed(1)} journey food`}
+          {` · pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
+        <h3>Life in the village</h3>
+        {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text}</p>)}
+      </section>
       <p className="mt-4 text-sm">
         Nearby danger triggers sheltering and an armed militia response. Returning militia resume
         civilian work after the danger passes.

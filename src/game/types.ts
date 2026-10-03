@@ -168,6 +168,12 @@ export type Unit = {
   ageT: number;
   hunger?: number;
   customOffer?: boolean;
+  homeHall?: number;
+  parents?: number[];
+  foundingJourney?: {x:number;z:number;leader:boolean};
+  expedition?: {food:number;returning:boolean;forage:number};
+  scout?: {legs:number;returning:boolean};
+  fatigue?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number};
   jobLock: boolean;
   huntOnly: boolean;
@@ -276,6 +282,7 @@ export type Tribe = {
   bows: number;
   blades: number;
   fallenT: number;
+  lastSettlement?: number;
 };
 
 export type Particle = {
@@ -292,6 +299,13 @@ export type Particle = {
 };
 
 export type GameState = {
+  lifeHistory?: {team:number;text:string;time:number}[];
+  communities?: {hall:number;team:number;name:string;founded:number;emptySince:number|null;status:"growing"|"thriving"|"struggling"|"abandoned"}[];
+  communityTimer?: number;
+  trails?: {cell:number;wear:number;last:number;angle:number}[];
+  rivalKnowledge?: {team:number;cells:number[]}[];
+  scoutTimer?: number;
+  nightWork?: boolean;
   visitorTimer?: number;
   worldgenVersion?: number;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]}[];

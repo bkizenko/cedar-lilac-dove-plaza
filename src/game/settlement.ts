@@ -23,7 +23,7 @@ export function isDependent(g: Game, u: Unit) {
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0)
+    .filter((u) => u.team === team && u.hp > 0 && !u.expedition)
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;

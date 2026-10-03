@@ -1,5 +1,9 @@
+import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
+import {beginExpedition,expeditionAI,routineRest} from "./journeys";
+import {wearTrail,pathPace,fadeTrails} from "./trails";
+import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
-import { predisposition } from "./people";
+import { personName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
@@ -66,8 +70,8 @@ import type {
 import { generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
-const DAY_RATE = 96;
-const YEAR_DAYS = 28;
+const YEAR_DAYS = 32;
+const DAY_RATE = (86400 * YEAR_DAYS) / 1800;
 
 export class Game {
   state: GameState;
@@ -182,7 +186,7 @@ export class Game {
 
   campOf(team: number) {
     return (
-      this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
+      this.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&b.hp>0) || this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
     );
   }
 
@@ -847,10 +851,13 @@ export class Game {
       (b) => b.team === team && b.hp > 0 && (b.type === "townhall" || b.type === "cornerstone"),
     );
     const hall = settlements.find((b) => b.type === "townhall");
-    if (type === "townhall" && hall) return "There is one home hall. Plant a cornerstone from it.";
+    if(type==="townhall"&&hall){
+      if(settlements.filter(b=>b.type==="townhall").length>=5)return "Five settlements need regional administration before further expansion";
+      if(settlements.some(b=>Math.hypot(b.x-x,b.z-z)<75))return "A new settlement needs room beyond the current village";
+    }
     if (type === "cornerstone") {
       if (!hall || !this.finished(hall)) return "Plant the home hall first";
-      if (settlements.length >= 3) return "The hall and two cornerstones are enough to hold";
+      if (settlements.filter(b=>b.type==="cornerstone").length >= 2) return "The hall and two cornerstones are enough to hold";
       if (settlements.some((b) => Math.hypot(b.x - x, b.z - z) < SETTLEMENT_GAP))
         return "A cornerstone needs a distant clump, away from your other settlements";
     }
@@ -1246,11 +1253,12 @@ export class Game {
     }
     this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team);
-    if (team === 0 && (BUILD_TIME[type] > 0 || (type === "townhall" && !founding))) {
+    if (BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
     this.state.buildings.push(b);
+    if(team!==0&&b.build<1)this.assignBuilders(b);
     this.state.walkDirty = true;
     if (type === "townhall" && team === 0) {
       this.state.founding = false;
@@ -1269,10 +1277,11 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
-      if (u.envoy || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
+      if (u.envoy || u.scout || u.expedition || u.foundingJourney || u.visit || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
       u.order = "build";
+      if(b.type==="townhall")u.homeHall=b.id;
       u.node = b;
       u.tx = b.x;
       u.tz = b.z;
@@ -2047,11 +2056,8 @@ export class Game {
       }
     };
     reroll(this.state.trees);
-    reroll(this.state.stones);
     reroll(this.state.forage);
     reroll(this.state.fish);
-    reroll(this.state.copper);
-    reroll(this.state.iron);
   }
 
   influenceAt(x: number, z: number, team: number) {
@@ -2514,7 +2520,7 @@ export class Game {
     let sent = 0;
     for (const u of units) {
       const t = this.findExploreTarget(u);
-      if (!t) continue;
+      if (!t || !beginExpedition(this,u)) continue;
       u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
       u.order = "explore";
       u.pillage = -1;
@@ -2533,7 +2539,7 @@ export class Game {
     if (sent) {
       this.banner("Scouting the island", 1.6);
       this.onSfx("move");
-    } else this.banner("The island is already known", 1.4);
+    } else this.banner("No unknown ground found, or not enough food to pack a safe journey", 2.4);
   }
 
   findExploreTarget(u: Unit): { x: number; z: number } | null {
@@ -3006,7 +3012,7 @@ export class Game {
     this.seaT = 480 + Math.random() * 240;
     if (this.state.time < 600) return;
     const dead = this.state.tribes.find((t) => (t.id === 1 || t.id === 2) && !t.alive);
-    if (dead && this.state.time - (dead.fallenT || 0) > 90) {
+    if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
       this.landSeaTribe(dead.id);
       return;
     }
@@ -3199,6 +3205,8 @@ export class Game {
         );
         u.ageT = 0;
         u.maturesAt = this.state.time + 16 * 1800;
+        u.homeHall=hall.id;u.parents=family.filter(p=>!isDependent(this,p)).slice(0,2).map(p=>p.id);
+        lifeEvent(this,tr.id,personName(u)+" was born",hall.x,hall.z);
         u.stature = 0.6;
         u.workReason = "Growing up — supported by the village";
         u.order = "idle";
@@ -3211,7 +3219,7 @@ export class Game {
     }
     const counts = this.state.tribes.map((tr) => this.popNow(tr.id));
     for (const tr of this.state.tribes) {
-      if (!tr.alive) continue;
+      if (!tr.alive && this.popNow(tr.id) === 0) continue;
       const pop = counts[tr.id];
       const upkeep = foodDemand(this, tr.id);
       const spoilage = foodSpoilage(this, tr.id);
@@ -3235,7 +3243,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      const hungry = tr.food < 0.01, previousHunger = u.hunger || 0;
+      const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
         const exposure = Math.max(0, previousHunger + dt - 5) - Math.max(0, previousHunger - 5);
@@ -3770,7 +3778,7 @@ export class Game {
       d = Math.hypot(dx, dz);
     if (d < 0.01) return false;
     const step = Math.min(
-      u.speed * predisposition(u).speed * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.45,1-(u.hunger||0)/220) *
+      u.speed * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.45,1-(u.hunger||0)/220) *
         dt *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
@@ -3806,6 +3814,7 @@ export class Game {
     }
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
+    wearTrail(this,nx,nz,nx-u.x,nz-u.z);
     u.x = nx;
     u.z = nz;
     u.y = this.height(nx, nz);
@@ -3866,6 +3875,8 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift") {return sendDelegation(this,team,kind);}
 
   workerAI(u: Unit, dt: number) {
+    if(foundingJourneyAI(this,u,dt))return;
+    if(scoutAI(this,u,dt))return;
     if(visitorAI(this,u,dt))return;
     if(u.recalled) {
       if(this.steer(u,dt)) {
@@ -4545,7 +4556,7 @@ export class Game {
         continue;
       }
       const adult = this.state.units.find(
-        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
+        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !isDependent(this, u) && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && u.carry===0 && ["idle","gather","hold"].includes(u.order),
       );
       if (!adult || this.popNow(b.team) > this.popCap(b.team)) {
         refund();
@@ -4731,7 +4742,7 @@ export class Game {
     if (!hall) {
       tr.alive = false;
       tr.fallenT = this.state.time;
-      if (this.started) this.banner(tr.name + " has fallen — the sea may bring another", 2.4);
+      if(this.started&&this.visibleAt(this.campOf(team).x,this.campOf(team).z)) this.banner(tr.name + " has lost its hall; survivors may rebuild", 3);
       return;
     }
     tr.thinkT -= dt;
@@ -4775,7 +4786,7 @@ export class Game {
           u.team === team &&
           u.hp > 0 &&
           u.type === "worker" &&
-          u.drill == null &&
+          u.drill == null && !u.scout && !u.visit && !u.foundingJourney && !u.expedition && !u.envoy && !u.emergency && u.carry===0 &&
           !isDependent(this, u),
       );
       if (adult) adult.drill = 0;
@@ -4935,7 +4946,7 @@ export class Game {
     if (this.state.ended) return;
     if (this.state.founding) return;
     const th = this.state.buildings.find((b) => b.type === "townhall" && b.team === 0 && b.hp > 0);
-    if (!th || th.hp <= 0) {
+    if ((!th || th.hp <= 0) && this.popNow(0)===0) {
       this.state.ended = "lose";
       this.state.endReason = "The Town Hall has fallen.";
       this.onSfx("lose");
@@ -4945,7 +4956,7 @@ export class Game {
       .filter((t) => t.id === 1 || t.id === 2)
       .filter((t) => t.alive).length;
     const player = this.tribe(0);
-    if (rivalsAlive === 0 && this.state.time > 120) {
+    if (rivalsAlive === 0 && !this.state.units.some(u=>[1,2].includes(u.team)&&u.hp>0) && this.state.time > 120) {
       this.state.ended = "win";
       this.state.endReason = "The last rival hall has fallen. The island is yours.";
       this.onSfx("win");
@@ -5047,7 +5058,7 @@ export class Game {
   clockState() {
     const start = 6 * 3600 + 42 * 60;
     const t = start + this.state.time * DAY_RATE;
-    const day = 1 + Math.floor(t / 86400);
+    const day = 1 + Math.floor(this.state.time * DAY_RATE / 86400);
     const tod = ((t % 86400) + 86400) % 86400;
     const h = Math.floor(tod / 3600);
     const m = Math.floor((tod % 3600) / 60);
@@ -5199,6 +5210,8 @@ export class Game {
           try {
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if (emergencyResponse(this, u, sdt)) continue;
+            if(expeditionAI(this,u,sdt))continue;
+            if(routineRest(this,u,sdt))continue;
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
             else if (u.team !== 0) this.barbarianAI(u, sdt);
             else if (u.type === "worker") {
@@ -5223,6 +5236,9 @@ export class Game {
           this.defendHome(2);
         }
         this.tickWildlife(sdt);
+        tickCommunities(this,sdt);
+        tickScouts(this,sdt);
+        fadeTrails(this,sdt);
         tickVisitors(this,sdt);
         this.tickRoutes(sdt);
         this.tickHarvest();
@@ -5335,7 +5351,9 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.emergency
+      const info = u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+        ? u.workReason || "Traveling"
+        : u.emergency
         ? u.workReason || "Responding to danger"
         : u.order === "idle" && u.type === "worker"
           ? u.workReason || "Looking for useful work"
@@ -5362,8 +5380,8 @@ export class Game {
                               : "Ready — right-click to fight";
       const cap = u.carryType ? GATHER[u.carryType].carry : 8;
       selection = {
-        name: isDependent(this, u) ? "Young villager" : UNITS[u.type]?.name || u.type,
-        info,
+        name: (isDependent(this, u) ? "Young " : "") + personName(u),
+        info: (u.expedition ? `${info} · journey food ${u.expedition.food.toFixed(1)}` : info) + ((u.fatigue||0)>0.5?" · tired":""),
         hp: u.hp,
         maxHp: u.maxHp,
         kind: "unit",

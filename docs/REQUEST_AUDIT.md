@@ -63,8 +63,8 @@ Conflict must arise from observed actions, incentives, scarcity and history. A l
 | Request | Status and required work |
 |---|---|
 | True exploration: don't know food before finding it; explored fog thinner | Knowledge gates and explored/current/unknown fog implemented. Keep hidden enemy units invisible; validate visuals and knowledge across saves |
-| Persistent explore without button mashing; focus village | Persistent explore/manual destination hold and F focus implemented; contextual return/rations and overrides during danger need tests |
-| Scouts carry food based on journey | Missing expedition provisioning, duration estimates, consumption, camp/return/refill, burden and emergency decisions; no free exploration food |
+| Persistent explore without button mashing; focus village | Persistent explore/manual destination hold, F focus and provision-driven return implemented and tested. More route planning and journey encounters remain |
+| Scouts carry food based on journey | Player scouting now packs actual food, consumes it, camps at night, forages nearby finite patches and returns leftovers. Duration estimates, burden, all other journey types and broader wilderness decisions remain |
 | Find people, living/new villages, old ruins | Current discovery of existing villages/landmarks is partial. Add procedural encounters, migration decisions, finite ruins, survivor histories and safe refusal/rescue choices |
 | Return cultural artifacts/hidden knowledge and study at home | Missing object inventory/transport provenance, rarity/cultural demand, spoilage, study labor/time/materials and uncertain evidence-led discovery. Finding an object must not instantly unlock its tech |
 | Organic technologies depend on material experimentation and community capacity | Missing full linked graph and experimentation/adoption. Density/surplus/contact can help but must not arbitrarily prevent small connected groups learning |
@@ -113,3 +113,10 @@ Visual/3D overhaul remains a separate later phase: cohesive licensed detailed mo
 9. Visual asset overhaul only after mechanics are stable; preserve measured performance and accessibility.
 
 A row leaves partial/missing only when its acceptance is implemented, saved, reachable through the UI, tested and exercised in play. Update this index at each phase instead of shrinking the queue to whichever features were just built. Do the user's later historical feature inventory only when requested; it should refine this index rather than silently replace it.
+
+
+### Verified phase: journeys and community records (2026-10-03)
+
+Civilian rest/storm shelter and night-work fatigue, journey meals/camping/refund, shared traffic paths, independent rival geographic scouting, secondary halls costing 20 timber plus labor, physical resident-led expansion/refounding, abandonment, stable names/traits/parent IDs and village life history are implemented. Mineral grade is persistent. These are bounded foundations: faction stores are still global, scouts share knowledge before arriving home, traders still use legacy contact knowledge, and family/social simulation is incomplete. The full 120-item human-development overhaul remains open. See the catalogue execution table for remaining dependencies.
+
+Validation: 311 script/game checks and 32 application/auth checks passed; after the final mission/urgent-food guards, 20 relevant checks passed. Final typecheck and production build are recorded with this delivery. The old saved village was resumed paused in the browser with its original population and supplies.

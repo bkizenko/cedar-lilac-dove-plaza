@@ -1,3 +1,4 @@
+import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -123,6 +124,8 @@ export class WorldView {
   >();
   cargoMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
+  trailMesh!: THREE.InstancedMesh;
+  private trailSyncAt=-1;
   rings!: THREE.InstancedMesh;
   workRings!: THREE.InstancedMesh;
   ghost: THREE.Group;
@@ -339,6 +342,8 @@ export class WorldView {
     this.floaters = new THREE.Group();
     this.scene.add(this.floaters);
 
+    this.trailMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({color:"#8b714e",transparent:true,opacity:0.65,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
+    this.trailMesh.count=0;this.trailMesh.frustumCulled=false;this.trailMesh.raycast=()=>{};this.scene.add(this.trailMesh);
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
       new THREE.MeshBasicMaterial({
@@ -407,6 +412,7 @@ export class WorldView {
   }
 
   rebuild(game: Game) {
+    this.trailSyncAt=-1;
     if (this.fowMesh) {
       const positions = this.fowMesh.geometry.getAttribute("position") as THREE.BufferAttribute;
       for (let i = 0; i < positions.count; i++) {
@@ -928,6 +934,7 @@ export class WorldView {
     this.syncWildlife(game);
     this.syncBuildings(game);
     this.syncUnits(game);
+    this.syncTrails(game);
     this.syncCargo(game);
     this.syncGhost(game);
     this.syncArrows(game);
@@ -1086,6 +1093,19 @@ export class WorldView {
     stamp(this.boars, "boar");
     stamp(this.wildGoats, "goat");
     stamp(this.birds, "bird");
+  }
+
+  private syncTrails(game:Game) {
+    if(this.trailSyncAt===Math.floor(game.state.time))return;this.trailSyncAt=Math.floor(game.state.time);
+    let i=0;
+    for(const t of game.state.trails||[]) {
+      if(t.wear<0.4||i>=4096)continue;
+      const x=(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-HALF,z=(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-HALF;
+      if(!game.exploredAt(x,z))continue;
+      _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
+      _s.set(0.6+t.wear*0.6,TRAIL_CELL*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+    }
+    this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
   }
 
   private syncNature(game: Game) {
@@ -2022,6 +2042,7 @@ export class WorldView {
       this.smoke,
       this.floaters,
       this.rings,
+      this.trailMesh,
       this.workRings,
       this.hemi,
       this.sun,

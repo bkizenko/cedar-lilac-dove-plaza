@@ -172,3 +172,9 @@ Remaining: substantial overhaul work in the requirements audit/catalogue. Report
 - Loaded trade couriers walk at 75% of normal pace, including the paid return leg; ordinary gathering hauls retain their usual speed. Locally negotiated base exchange terms improved from 0.76 to 0.86 before scarcity/relationship/ability modifiers. River shipping remains unimplemented.
 
 - After courier/price changes: 12 targeted trade, cargo, route and navigation checks passed; final type checking and production build passed. The new blocked-journey regression also passed. Automatic standing-route offers still use the older known-partner system; a general visiting-delegation negotiation interface remains part of the overhaul.
+
+## 2026-10-03 journeys, traffic and communities
+
+Implemented provisions for player exploration, finite wilderness forage, night camps and return/refund; ordinary civilian sleep/storm refuge with fatigue and a night-work setting; independent rival scouting; sparse traffic paths shared by all factions; physical survivor refounding and prospering rival expansion using existing residents and timber; player secondary halls with timber and labor requirements; resident names/traits/parents and village life history. Mineral grades no longer reroll. Save fields remain optional with corruption rejection. The protected current village was resumed paused on port 8086 with its original 5 people and 80/39/16 stores.
+
+Remaining limitations are explicit in HUMAN_DEVELOPMENT_CATALOGUE.md. Scout knowledge is currently shared while away; incoming traders still have a legacy knowledge shortcut. Local community records currently share faction stores; they are not yet independent regional economies. Survival, development, diplomacy and combat still need the remaining accepted chains. Do not claim the 120-item overhaul is complete.

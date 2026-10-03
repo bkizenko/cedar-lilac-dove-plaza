@@ -128,7 +128,7 @@ test("unit routes around a hall without teleporting", () => {
     g.state.time += 1 / 30;
     maxStep = Math.max(maxStep, Math.hypot(u.x - x, u.z - z));
   }
-  assert.ok(maxStep <= u.speed * predisposition(u).speed / 30 + 1e-5);
+  assert.ok(maxStep <= u.speed * predisposition(u).speed * 1.12 / 30 + 1e-5);
   assert.ok(Math.hypot(u.x - 12, u.z - 38) < 1, `final ${u.x},${u.z}`);
 });
 
@@ -897,9 +897,8 @@ function cornerstoneValley() {
   return { g, w };
 }
 
-test("cornerstones require distant clumps and never create a second hall", () => {
+test("cornerstones require distant clumps and retain their own outpost limit", () => {
   const {g} = cornerstoneValley();
-  assert.equal(g.placeBuilding("townhall", 140, 38), false);
   assert.equal(g.placeBuilding("cornerstone", 20, 38), false);
   assert.equal(g.placeBuilding("cornerstone", 90, 38), false, "empty ground is not a clump");
   assert.equal(g.placeBuilding("cornerstone", 140, 38), true);

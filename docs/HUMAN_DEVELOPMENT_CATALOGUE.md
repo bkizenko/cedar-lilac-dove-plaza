@@ -197,3 +197,20 @@ References: [Vitruvius Book I](https://lexundria.com/vitr/1/gw), [medieval calen
 - Village rise, survival, collapse, refugees and refounding remain a required major phase, not implemented by terrain changes or visitor missions. The present fixed major factions must later support multiple persistent settlements with stable identities, ownership and save migration.
 - Never announce undiscovered settlement counts. Larger territory halos and colorful fading edges; village priorities should reset current work assignments, not only future jobs. Villager cycling belongs in the selection panel.
 - Gradual hunger weakness, death after roughly a month without food, recovery and personal food needs. Current season calendar uses a compressed 1800-second year; day/night time and annual day labels still use a different scale and require deliberate harmonization rather than silently changing all saved timers.
+
+## Execution update — 2026-10-03, journeys and communities
+
+All 120 entries remain accepted scope. This delivery implements parts of the catalogue, not the full overhaul:
+
+| Entries | Delivered behavior | Still required |
+|---|---|---|
+| 3 | Stone/copper/iron grades persist through yield cycles and saves | Broader mineral/material families and assay knowledge |
+| 12, 13, 17 | Ordinary workers rest at night and shelter in storms; optional night work causes fatigue. Explorers remove meals from stores, consume their pack, forage nearby finite food, camp at night and return leftovers | Clothing/warmth/fuel, capacity-aware beds, all caravan/refugee journey provisions, robust wilderness route planning |
+| 20 and people/families | Stable citizen names and predispositions; births have parent IDs; a bounded village life history and resident ledger | Family decisions, morale/grief, social relationships and richer distinct cultural naming |
+| Exploration and rival autonomy | Existing rival workers explore using independent coarse geographic memory | Knowledge delivered home, discovery-led visiting trade, ruins/artifacts and transported study objects |
+| Transport | Actual movement by any faction wears shared dirt paths; paths provide bounded speed benefits and fade when unused | River navigation, boats, roads/bridges, pack animals and regional storage/hauling |
+| Settlements/rise and fall | Additional player halls cost timber and require construction; prosperous rivals can send existing residents outward; displaced clans can carry timber to rebuild; empty communities are abandoned | Independent factions, secession, sustained local economies, administrations, abandonment recovery and larger migration decisions |
+
+Compatibility: new fields are optional and validated on load. Existing terrain versions, people, resource balances and village saves remain supported. Geographic and demographic development are not claims of a single universal historical progression.
+
+Next execution order: practical knowledge and experiment labor → tools/clothing and additional material chains → ecology, domestication and biome subsistence → navigation/regional logistics → diplomacy/rival incentives and faction turnover → combat/morale/commanders → health/sanitation/culture/administration → full campaign balance and completion audit. First-person combat and detailed 3D assets remain separate later work.

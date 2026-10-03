@@ -10,7 +10,7 @@ export function tickVisitors(g:Game,dt:number) {
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));if(!home)return;
   const rivals=g.state.tribes.filter(t=>[1,2].includes(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
-    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit);
+    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney);
     if(!u)continue;
     const good:ResKind=t.spec||'wood';
     if((good==='copper'&&t.age<1)||(good==='iron'&&t.age<2))continue;

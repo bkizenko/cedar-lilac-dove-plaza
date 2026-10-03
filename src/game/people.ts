@@ -15,3 +15,9 @@ function calculate(u: Unit) {
     speed:(0.9+bell(301)*0.2)/size, fighting:0.85+bell(401)*0.3,
     trading:0.8+bell(501)*0.4};
 }
+
+export function personName(u:Unit) {
+  const given=["Aren","Bela","Cora","Dara","Eren","Fara","Galen","Hana","Iven","Jora","Kelan","Lina","Maren","Nara","Orin","Pera","Rian","Sela","Taren","Vela"];
+  const family=["Reed","Ash","Stone","Vale","Brook","Pine","Hill","Shore","Moss","Flint"];
+  return `${given[u.id%given.length]} ${family[Math.floor(u.id/given.length)%family.length]}`;
+}
