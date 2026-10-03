@@ -205,7 +205,7 @@ export class GameAudio {
     season = "Spring",
   ) {
     const battle = !this.score.calm && mood !== "peace";
-    const stage = battle ? "battle" : "village";
+    const stage = battle ? "battle" : season === "Autumn" || season === "Winter" ? "adventure" : "village";
     const duck = (season === "Winter" ? 0.5 : season === "Autumn" ? 0.62 : 0.7) * (population > 30 || age > 3 ? 0.9 : 1);
     this.score.update(stage, dt, paused, duck);
   }

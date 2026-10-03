@@ -16,3 +16,16 @@ Existing procedural geometry and branding are inherited from the repository; the
 - five-armies.mp3: SHA-256 `f56746c90756db04675a80ebd29e22253177a6fcc16f56602da62af9eae8d733`
 - celtic-impulse.mp3: SHA-256 `25db9b02ceb9875234f323cc89d38dcdbff2f0bb232d1dd0f662aa9ca5eddd8f`
 - folk-round.mp3: SHA-256 `b4e6aa7d67bb05a269b6f916662355358b6e849d29b81f5185f211a31fdb8051`
+
+## Calm piano score — 2026-10-02
+
+Catalog and free attribution license verified on the composer’s original site; evidence saved in `public/licenses/piano-catalog.json` and `public/licenses/piano-license-evidence.html`. These replace the folk tracks in active playback. Earlier files remain credited above.
+
+| Name | Creator | Source / original URL | License | Attribution requirements | Use | Modified |
+|---|---|---|---|---|---|---|
+| Meditation Impromptu 01 | Kevin MacLeod | [Incompetech](https://incompetech.com/music/royalty-free/mp3-royaltyfree/Meditation%20Impromptu%2001.mp3) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Title, composer, source and license link in Controls & music | public/audio/meditation-impromptu-01.mp3; seasonal piano soundtrack | Recording unchanged; playback volume, fades and silence between pieces |
+| Atlantean Twilight | Kevin MacLeod | [Incompetech](https://incompetech.com/music/royalty-free/mp3-royaltyfree/Atlantean%20Twilight.mp3) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Title, composer, source and license link in Controls & music | public/audio/atlantean-twilight.mp3; seasonal piano soundtrack | Recording unchanged; playback volume, fades and silence between pieces |
+
+SHA-256:
+- meditation-impromptu-01.mp3: `ac1332a12fe020cbeee206c7f33a82e29109d5ce63636e3302454e3bdfc36187`
+- atlantean-twilight.mp3: `a3ad327aa9661d95ab701860e5583dac2a59b710af6d204316ff6043ee7205d3`

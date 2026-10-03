@@ -154,7 +154,7 @@ export function GameApp() {
       {hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
           <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">
-            A band on open ground
+            A home on open ground
           </p>
           <h1 className="mt-3 font-display text-6xl tracking-[0.22em] text-bronze-bright md:text-7xl">
             HEARTH
@@ -163,15 +163,15 @@ export function GameApp() {
             WILD
           </p>
           <p className="mt-8 max-w-sm px-6 text-center text-sm leading-relaxed text-parchment">
-            Walk until you find a clump of berries or timber, then plant the hall. Later cornerstones claim
-            distant resource clumps. One trade at a time.
+            Your hut is ready. Gather food and timber, care for your people, and explore.
+            Later, cornerstones claim distant resource clumps.
           </p>
           <button
             type="button"
-            onClick={() => engineRef.current?.enterAsBand()}
+            onClick={() => engineRef.current?.enterIsland()}
             className="mt-8 min-h-12 rounded-lg border border-bronze bg-ink-soft px-8 py-3 font-display text-lg tracking-[0.18em] text-bronze-bright hover:bg-bronze/20"
           >
-            Walk the ground
+            Begin your settlement
           </button>
           {engineRef.current?.hasSavedGame() && (
             <button
@@ -194,7 +194,7 @@ export function GameApp() {
           className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_70%_20%,#6a4a20_0%,#1a160e_55%,#0c0e0a_100%)]"
         >
           <p className="font-display text-xs tracking-[0.35em] text-bronze uppercase">
-            A band on open ground
+            A home on open ground
           </p>
           <h1 className="mt-3 font-display text-6xl tracking-[0.22em] text-bronze-bright md:text-7xl">
             HEARTH

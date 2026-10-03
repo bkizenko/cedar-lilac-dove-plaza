@@ -1,19 +1,20 @@
 export type MusicStage = "village" | "adventure" | "battle";
 export const TRACKS: Record<MusicStage, { title: string; file: string }> = {
-  village: { title: "Folk Round", file: "/audio/folk-round.mp3" },
-  adventure: { title: "Celtic Impulse", file: "/audio/celtic-impulse.mp3" },
+  village: { title: "Meditation Impromptu 01", file: "/audio/meditation-impromptu-01.mp3" },
+  adventure: { title: "Atlantean Twilight", file: "/audio/atlantean-twilight.mp3" },
   battle: { title: "Five Armies", file: "/audio/five-armies.mp3" },
 };
 /** Streamed acoustic/orchestral recordings. No oscillator-generated music. */
 export class AcousticScore {
   stage: MusicStage = "village";
-  volume = 0.2;
+  volume = 0.15;
   calm = true;
   muted = false;
   error = "";
   private seasonMul = 1;
   private tracks = new Map<MusicStage, HTMLAudioElement>();
   private levels: Record<MusicStage, number> = { village: 0, adventure: 0, battle: 0 };
+  private rests = new Map<MusicStage, number>();
   private dwell = 0;
   private peacefulTime = 0;
   private paused = false;
@@ -23,7 +24,10 @@ export class AcousticScore {
     if (!this.tracks.size) {
       for (const stage of Object.keys(TRACKS) as MusicStage[]) {
         const a = new Audio(TRACKS[stage].file);
-        a.loop = true;
+        a.loop = false;
+        a.addEventListener("ended", () => {
+          this.rests.set(stage, 60 + Math.random() * 45);
+        });
         a.preload = "auto";
         a.volume = 0;
         a.addEventListener("error", () => {
@@ -35,7 +39,8 @@ export class AcousticScore {
       document.addEventListener("visibilitychange", this.visibility);
     } else if (!this.paused && !document.hidden) {
       this.error = "";
-      for (const a of this.tracks.values()) void a.play().catch(this.playbackError);
+      for (const [stage, a] of this.tracks)
+        if (!this.rests.has(stage)) void a.play().catch(this.playbackError);
     }
   }
   private playbackError = (error: unknown) => {
@@ -50,18 +55,18 @@ export class AcousticScore {
     this.error = "Press M twice to enable music";
   };
   private visibility = () => {
-    for (const a of this.tracks.values()) {
+    for (const [stage, a] of this.tracks) {
       if (document.hidden) a.pause();
-      else if (!this.paused) void a.play().catch(this.playbackError);
+      else if (!this.paused && !this.rests.has(stage)) void a.play().catch(this.playbackError);
     }
   };
   update(requested: MusicStage, dt: number, paused: boolean, seasonMul = 1) {
     if (!this.tracks.size || this.disposed) return;
     if (paused !== this.paused) {
       this.paused = paused;
-      for (const a of this.tracks.values()) {
+      for (const [stage, a] of this.tracks) {
         if (paused) a.pause();
-        else if (!document.hidden) void a.play().catch(this.playbackError);
+        else if (!document.hidden && !this.rests.has(stage)) void a.play().catch(this.playbackError);
       }
     }
     if (paused || document.hidden) return;
@@ -76,11 +81,22 @@ export class AcousticScore {
       this.dwell = 0;
       this.tracks.get(requested)!.currentTime = 0;
     }
+    const rest = this.rests.get(this.stage);
+    if (rest !== undefined) {
+      if (rest > dt) this.rests.set(this.stage, rest - dt);
+      else {
+        this.rests.delete(this.stage);
+        const track = this.tracks.get(this.stage)!;
+        track.currentTime = 0;
+        this.levels[this.stage] = 0;
+        void track.play().catch(this.playbackError);
+      }
+    }
     for (const stage of Object.keys(TRACKS) as MusicStage[]) {
       const target = stage === this.stage ? 1 : 0;
       this.levels[stage] +=
         Math.sign(target - this.levels[stage]) *
-        Math.min(Math.abs(target - this.levels[stage]), dt / 4);
+        Math.min(Math.abs(target - this.levels[stage]), dt / 12);
     }
     this.seasonMul = seasonMul;
     this.applyVolume();

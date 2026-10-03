@@ -158,7 +158,8 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
       this.src = src;
       decks.push(this);
     }
-    addEventListener() {}
+    listeners = {};
+    addEventListener(name, callback) { this.listeners[name] = callback; }
     play() {
       this.paused = false;
       return Promise.resolve();
@@ -173,8 +174,8 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   };
   const score = new AcousticScore();
   score.unlock();
-  score.update("village", 4, false);
-  assert.equal(decks[0].volume, 0.2);
+  score.update("village", 12, false);
+  assert.equal(decks[0].volume, 0.15);
   score.update("battle", 2, false);
   assert.equal(score.stage, "battle");
   assert.ok(decks[0].volume > 0 && decks[2].volume > 0);
@@ -182,6 +183,12 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   assert.equal(score.stage, "battle");
   score.update("adventure", 10, false);
   assert.equal(score.stage, "adventure");
+  decks[1].pause();
+  decks[1].listeners.ended();
+  score.update("adventure", 30, false);
+  assert.equal(decks[1].paused, true, "a piece is followed by quiet time");
+  score.update("adventure", 110, false);
+  assert.equal(decks[1].paused, false, "music resumes after the rest");
   score.setMuted(true);
   assert.ok(decks.every((a) => a.volume === 0));
   score.update("adventure", 1, true);
@@ -1048,4 +1055,18 @@ test("urgent food gathering outranks community logging marks", () => {
   g.workBoard.assign(g, w);
   assert.equal(w.job, "food");
   assert.equal(w.node, berries);
+});
+
+
+test("new settlements begin with one completed hut and a clear opening", () => {
+  for (const seed of [12, 345, 6789]) {
+    const g = new Game(); g.reset(seed); g.enterIsland();
+    const huts = g.state.buildings.filter(b => b.team === 0 && b.type === "hut" && b.hp > 0);
+    assert.equal(huts.length, 1);
+    assert.equal(huts[0].build, 1);
+    assert.equal(g.state.founding, false);
+    assert.equal(g.state.weather, "clear");
+    g.tickWeather(299);
+    assert.equal(g.state.weather, "clear");
+  }
 });

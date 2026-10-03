@@ -1778,7 +1778,6 @@ export class WorldView {
     const sn = game.seasonMix();
     const flake = sn.snow > 0.35;
     const wet =
-      flake ||
       game.state.weather === "rain" ||
       game.state.weather === "storm" ||
       game.state.weather === "flood";

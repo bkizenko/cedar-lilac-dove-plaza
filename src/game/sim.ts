@@ -135,8 +135,8 @@ export class Game {
       pendingAge: false,
       event: "none",
       eventT: 80,
-      weather: "mist",
-      weatherT: 200,
+      weather: "clear",
+      weatherT: 300,
       birthT: 42,
       marketT: 28,
       deals: [
@@ -341,7 +341,7 @@ export class Game {
                 [8, 5],
                 [-3, 10],
               ];
-      const nHuts = camp.team === 0 ? 3 : 2;
+      const nHuts = camp.team === 0 ? 1 : 2;
       for (let i = 0; i < nHuts; i++) {
         const ox = hutOff[i][0] + (Math.random() - 0.5) * 3;
         const oz = hutOff[i][1] + (Math.random() - 0.5) * 3;
