@@ -1,3 +1,5 @@
+> Latest scope correction (2026-10-03): all 120 catalogue items, including previously optional extensions, are requested. See the catalogue's consolidated execution order for overlap, new requests and historical interpretation. Trade reports now appear at the destination meeting, superseding return-only reports. This is committed scope, not a completion claim.
+
 > Latest continuation: see `ITERATION_BACKLOG.md` for protected checkpoints/export/import, timber-search orders, seasonal field priorities, group arrivals, recall, traveling trade/peace/gift delegations and dated trade reports. The itemized broader feature catalogue is [HUMAN_DEVELOPMENT_CATALOGUE.md](HUMAN_DEVELOPMENT_CATALOGUE.md). Older status rows below are the audited baseline and must be read with this update.
 
 # Hearthwild: consolidated request audit

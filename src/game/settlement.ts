@@ -1,5 +1,6 @@
+import { predisposition } from "./people";
 import { preservationAvailable } from "./pantry";
-import { habitatAt } from "./ecology";
+import { habitatAt, soilQuality } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, UNITS, MAP, HALF } from "./constants";
@@ -23,7 +24,7 @@ export function isDependent(g: Game, u: Unit) {
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
     .filter((u) => u.team === team && u.hp > 0)
-    .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) *
+    .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
@@ -52,7 +53,7 @@ export function crop(g: Game, b: Building) {
   if (phase === 2 && !b.crop.ripened) {
     const fields = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.2 : 1;
     b.crop.remaining = Math.floor(
-      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops,
+      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5),
     );
     b.crop.ripened = true;
   }
@@ -200,7 +201,7 @@ export class WorkBoard {
         );
       for (const b of buildings) {
         if (!g.finished(b)) {
-          add(b, "build", 2, 75);
+          add(b, "build", 2, reserveSeconds(g,t.id) < 90 ? 120 : 235);
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))

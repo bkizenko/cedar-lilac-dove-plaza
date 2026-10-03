@@ -1,9 +1,10 @@
+import { predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { foodSpoilage, preserveFood } from "./pantry";
-import { habitatAt } from "./ecology";
-import { knownSettlement, shipmentIssue, proposeShipment, reportedQuote } from "./barter";
+import { habitatAt, soilQuality } from "./ecology";
+import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote } from "./barter";
 import {
   WorkBoard,
   emergencyResponse,
@@ -75,6 +76,7 @@ export class Game {
   visAge = new Float32Array(FOW * FOW);
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
+  selectedResource: ResourceNode | null = null;
   chopMarks = new Set<number>();
   looted = new Set<number>();
   started = false;
@@ -631,6 +633,7 @@ export class Game {
       tint: Math.random(),
       militia: false,
     };
+    u.stature = predisposition(u).size;
     if (team === 1 && type !== "worker") {
       u.hp = Math.round(u.hp * 1.15);
       u.maxHp = u.hp;
@@ -1264,7 +1267,7 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
-      if (u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
+      if (u.envoy || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
       u.order = "build";
@@ -1273,7 +1276,7 @@ export class Game {
       u.tz = b.z;
       u.target = null;
       n++;
-      if (n >= 3) break;
+      if (n >= 2) break;
     }
   }
 
@@ -1311,7 +1314,7 @@ export class Game {
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
     const need = BUILD_TIME[b.type] || 16;
-    b.build = Math.min(1, b.build + dt / need);
+    b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
     if (b.build >= 1) {
@@ -1345,6 +1348,7 @@ export class Game {
   }
 
   clearSelect() {
+    this.selectedResource = null;
     for (const u of this.state.units) u.selected = false;
     for (const b of this.state.buildings) b.selected = false;
     this.state.selBld = null;
@@ -1412,6 +1416,8 @@ export class Game {
       return;
     }
     if (!additive) this.clearSelect();
+    const resource = this.exploredAt(x,z) ? this.resourceAt(x,z) : null;
+    this.selectedResource = resource && "amount" in resource ? resource : null;
   }
 
   selectBox(x0: number, z0: number, x1: number, z1: number) {
@@ -2737,6 +2743,7 @@ export class Game {
       return false;
     this.spend(0, { [deal.give]: deal.giveAmt });
     rival.tradeCd = 32;
+    worker.customOffer=undefined;
     worker.trade = { ...deal };
     worker.tradeTeam = team;
     worker.order = "trade";
@@ -3194,7 +3201,7 @@ export class Game {
       u.ageT += dt;
       if (u.maturesAt !== undefined && !isDependent(this, u)) {
         u.maturesAt = undefined;
-        u.stature = 1;
+        u.stature = predisposition(u).size;
         u.workReason = "Ready to join the workforce";
         u.order = "idle";
         if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Grown", "#c9e8a0");
@@ -3202,10 +3209,11 @@ export class Game {
       const tr = this.tribe(u.team);
       if (!tr) continue;
       const pop = counts[u.team];
-      if (tr.food < 3 && pop > 4 && Math.random() < 0.035 * dt) {
-        u.hp -= 8;
-        if (u.hp <= 0 && u.team === 0)
-          this.banner("Hunger takes a " + (u.type === "worker" ? "gatherer" : "villager"), 2);
+      // Everyone needs food; a grace period avoids deaths from a momentary empty store.
+      u.hunger = tr.food < 1 ? Math.min(1200, (u.hunger || 0) + dt) : Math.max(0, (u.hunger || 0) - dt * 3);
+      if (u.hunger > 180 && tr.food < 1) {
+        u.hp -= dt * u.maxHp * predisposition(u).appetite / 600;
+        if (u.hp <= 0 && u.team === 0) this.banner("Hunger takes a villager", 3);
       }
       if (u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
@@ -3735,7 +3743,7 @@ export class Game {
       d = Math.hypot(dx, dz);
     if (d < 0.01) return false;
     const step = Math.min(
-      u.speed *
+      u.speed * predisposition(u).speed *
         dt *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
@@ -4064,6 +4072,15 @@ export class Game {
       this.steer(u, dt);
       return;
     }
+    if(u.customOffer) {
+      const quote=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u);
+      u.customOffer=undefined;
+      if(!quote.deal){u.trade=null;u.order="return";this.banner(quote.reason+" Your trader is bringing the offer home.",5);return;}
+      if(quote.deal.getAmt<deal.getAmt) {
+        deal.getAmt=quote.deal.getAmt;
+        this.banner("They countered with a smaller shipment; your trader accepted the local terms.",5);
+      }
+    }
     const issue = shipmentIssue(this, rival.id, deal);
     if (issue) {
       u.trade = null;
@@ -4131,7 +4148,7 @@ export class Game {
   dealDamage(attacker: Unit | Building, target: Unit | Building) {
     if (!target || target.hp <= 0) return;
     const dmg =
-      ("dmg" in attacker ? attacker.dmg : 8) * this.dmgMul(attacker.team, attacker.x, attacker.z);
+      ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength : 8) * this.dmgMul(attacker.team, attacker.x, attacker.z);
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attacker.team === 0 || target.team === 0) this.onSfx("hit");
@@ -4201,7 +4218,7 @@ export class Game {
       target: to,
       speed: 22,
       life: 1.1,
-      dmg: ("dmg" in from ? from.dmg : 8) * this.dmgMul(from.team, from.x, from.z),
+      dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength : 8) * this.dmgMul(from.team, from.x, from.z),
       team: from.team,
     };
     this.state.projectiles.push(p);

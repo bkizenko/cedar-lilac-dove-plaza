@@ -166,6 +166,8 @@ export type Unit = {
   trade: TradeDeal | null;
   tradeTeam: number;
   ageT: number;
+  hunger?: number;
+  customOffer?: boolean;
   jobLock: boolean;
   huntOnly: boolean;
   stuckT: number;

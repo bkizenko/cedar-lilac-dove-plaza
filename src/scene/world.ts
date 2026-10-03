@@ -880,6 +880,24 @@ export class WorldView {
     return null;
   }
 
+  pickResource(cx:number,cy:number,game:Game) {
+    const el=this.renderer.domElement;
+    _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
+    _ray.setFromCamera(_ndc,this.camera);
+    const sources=new Map<THREE.Object3D,import("@/game/types").ResourceNode[]>();
+    for(const [mesh,nodes] of [[this.treesTrunk,game.state.trees],[this.treesLeaf,game.state.trees],
+      [this.rocks,game.state.stones],[this.bushes,game.state.forage],
+      [this.copper,game.state.copper],[this.iron,game.state.iron]] as const) {
+      if(mesh){mesh.computeBoundingSphere();sources.set(mesh,nodes);}
+    }
+    for(const hit of _ray.intersectObjects([...sources.keys()],false)) {
+      if(hit.instanceId===undefined)continue;
+      const node=sources.get(hit.object)?.[hit.instanceId];
+      if(node&&node.amount>0&&game.exploredAt(node.x,node.z))return node;
+    }
+    return null;
+  }
+
   groundAt(cx: number, cy: number): THREE.Vector3 | null {
     const el = this.renderer.domElement;
     const w = el.clientWidth || 1;
@@ -1307,6 +1325,12 @@ export class WorldView {
       this.rings.setMatrixAt(ri, _m);
       ri++;
     }
+    const resource = game.selectedResource;
+    if (resource && resource.amount > 0 && game.exploredAt(resource.x,resource.z) && ri < 40) {
+      _p.set(resource.x,game.height(resource.x,resource.z)+0.1,resource.z);
+      _e.set(-Math.PI/2,0,0); _q.setFromEuler(_e); _s.set(2,2,1);
+      _m.compose(_p,_q,_s); this.rings.setMatrixAt(ri++,_m);
+    }
     this.rings.count = ri;
     this.rings.instanceMatrix.needsUpdate = true;
 
@@ -1351,7 +1375,7 @@ export class WorldView {
     /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -1359,13 +1383,14 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
-    const key = type + (ok ? "-ok" : "-bad");
+    const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
+    const key = type + (ok ? "-ok" : "-bad") + qualityStep;
     if (this.ghost.userData.key === key) return;
     this.clearGhost();
     this.ghost.userData.key = key;
     const meshes = this.bldMeshes.get(type);
     if (!meshes) return;
-    const tint = ok ? "#6a8a48" : "#8a3a32";
+    const tint = !ok ? "#b53632" : qualityStep === null ? "#6a8a48" : new THREE.Color("#a69b46").lerp(new THREE.Color("#29df51"),qualityStep).getHex();
     const mt = this.mats.timber.clone();
     mt.transparent = true;
     mt.opacity = 0.55;
@@ -1657,7 +1682,8 @@ export class WorldView {
           float live = smoothstep(0.55, 0.85, v);
           float shroudA = mix(0.98, 0.10, smoothstep(0.05, 0.32, v)) * (1.0 - live);
           float seen = smoothstep(0.12, 0.28, v);
-          float wash = terr.a * seen * (live > 0.5 ? 0.2 : 0.12);
+          // Colored land remains visible without concealing terrain detail.
+          float wash = terr.a * seen * (live > 0.5 ? 0.32 : 0.16);
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);

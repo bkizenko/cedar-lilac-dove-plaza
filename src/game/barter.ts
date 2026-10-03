@@ -1,5 +1,6 @@
 import type { Game } from "./sim";
-import type { ResKind, TradeDeal } from "./types";
+import { predisposition } from "./people";
+import type { Unit, ResKind, TradeDeal } from "./types";
 import { isDependent, foodDemand, calendar } from "./settlement";
 
 export function knownSettlement(g: Game, team: number) {
@@ -51,6 +52,7 @@ export function quoteShipment(
   give: ResKind,
   get: ResKind,
   amount: number,
+  visitingTrader?: Unit,
 ): { deal: TradeDeal | null; reason: string } {
   const you = g.tribe(0),
     other = g.tribe(team);
@@ -58,7 +60,7 @@ export function quoteShipment(
   if (!other || team === 0 || team === 3 || !other.alive || !knownSettlement(g, team))
     return no("Explore their settlement first.");
   if (other.hostile) return no("Agree a truce before trading.");
-  if (other.tradeCd > 0) return no("Their traders are still on the path.");
+  if (!visitingTrader && other.tradeCd > 0) return no("Their traders are still on the path.");
   const worth: Record<ResKind, number> = { food: 1, wood: 1.2, stone: 2.2, copper: 4.5, iron: 6.5 };
   if (!Object.hasOwn(worth, give) || !Object.hasOwn(worth, get) || give === get)
     return no("Choose two different goods.");
@@ -67,13 +69,13 @@ export function quoteShipment(
   const age = Math.min(you.age, other.age);
   if (([give, get].includes("copper") && age < 1) || ([give, get].includes("iron") && age < 2))
     return no("Both settlements need the age that unlocks this metal.");
-  if (you[give] < amount) return no("Your stores cannot cover that offer.");
+  if (!visitingTrader && you[give] < amount) return no("Your stores cannot cover that offer.");
   const need = (kind: ResKind) => (kind === "food" ? Math.max(40, g.popNow(team) * 15) : 60);
   const scarcity = (kind: ResKind) =>
     Math.max(0.65, Math.min(1.8, need(kind) / Math.max(10, other[kind])));
   const terms = (g.state.agePicks[2] === "econ" ? 0.95 : 0.76) + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
   const quantity = Math.floor(
-    (amount * worth[give] * scarcity(give) * terms) / (worth[get] * scarcity(get)),
+    (amount * worth[give] * scarcity(give) * terms * (visitingTrader ? predisposition(visitingTrader).trading * (0.95 + (((visitingTrader.id*31+Math.floor(g.state.time/60)*17)%101)/100)*0.1) : 1)) / (worth[get] * scarcity(get)),
   );
   if (quantity < 1) return no("Offer more goods for at least one item in return.");
   const issue = shipmentIssue(g, team, {give, giveAmt:amount, get, getAmt:quantity});
@@ -88,7 +90,7 @@ export function quoteShipment(
 export function reportedQuote(g:Game,team:number,give:ResKind,get:ResKind,amount:number): {deal:TradeDeal|null;reason:string} {
   const no=(reason:string)=>({deal:null,reason});
   const report=g.state.tradeReports?.find(r=>r.team===team);
-  if(!report)return no("Send a trade delegation and wait for its report to return.");
+  if(!report)return no("Send a trade delegation and view its report when it arrives.");
   if(g.state.time-report.time>900)return no("That report is old. Send a trader to learn current terms.");
   if(g.tribe(team)?.hostile)return no("Send a peace delegation before trading.");
   if(!Number.isSafeInteger(amount)||amount<1||amount>100||give===get)return no("Choose different goods and offer 1–100 items.");
@@ -120,4 +122,15 @@ export function proposeShipment(
   if (!g.dispatchTrade(carrier, quote.deal, team)) return false;
   g.banner("A carrier leaves with your offer.", 2.5);
   return true;
+}
+
+/** Send a proposal without consulting distant stocks. It is negotiated only on arrival. */
+export function sendOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {
+  const goods:ResKind[]=["food","wood","stone","copper","iron"];
+  if(!knownSettlement(g,team)||![1,2].includes(team)||!goods.includes(give)||!goods.includes(get)||give===get||
+    !Number.isSafeInteger(amount)||amount<1||amount>100||!Number.isSafeInteger(requested)||requested<1||requested>200)return false;
+  if((give==="iron"||get==="iron")&&g.tribe(0).age<2)return false;
+  if((give==="copper"||get==="copper")&&g.tribe(0).age<1)return false;
+  const u=tradeCarrier(g);if(!u||!g.dispatchTrade(u,{give,get,giveAmt:amount,getAmt:requested},team))return false;
+  u.customOffer=true;g.banner("Your trader carries the proposal. They may accept, counter or refuse at the meeting.",4);return true;
 }

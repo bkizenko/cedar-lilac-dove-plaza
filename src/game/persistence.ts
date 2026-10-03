@@ -219,6 +219,8 @@ export function decodeGame(raw: unknown): Game {
     )
       fail();
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
+    if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
+    if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
     if(u.searchJob!==undefined&&u.searchJob!=="wood")fail();
     if(u.envoy!==undefined){

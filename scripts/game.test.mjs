@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { predisposition } from "../src/game/people.ts";
 import { Game } from "../src/game/sim.ts";
 import { encodeGame, decodeGame } from "../src/game/persistence.ts";
 import { neighborIntent, farmWork, crop } from "../src/game/settlement.ts";
@@ -127,7 +128,7 @@ test("unit routes around a hall without teleporting", () => {
     g.state.time += 1 / 30;
     maxStep = Math.max(maxStep, Math.hypot(u.x - x, u.z - z));
   }
-  assert.ok(maxStep <= u.speed / 30 + 1e-5);
+  assert.ok(maxStep <= u.speed * predisposition(u).speed / 30 + 1e-5);
   assert.ok(Math.hypot(u.x - 12, u.z - 38) < 1, `final ${u.x},${u.z}`);
 });
 
@@ -328,7 +329,8 @@ test("farms require seasonal labor and uncollected harvest expires", async () =>
   g.state.time = 900;
   farmWork(g, u, b, 0.8);
   assert.equal(u.carry, 2);
-  assert.equal(b.crop.remaining, 310);
+  const {soilQuality}=await import("../src/game/ecology.ts");
+  assert.equal(b.crop.remaining, Math.floor(260*1.2*(0.65+soilQuality(g,b.x,b.z)*0.5))-2);
   g.state.time = 1350;
   crop(g, b);
   assert.equal(b.crop.remaining, 0);
@@ -1498,11 +1500,11 @@ test("raiding causes hostility at the settlement rather than when the command le
   assert.equal(g.tribe(1).hostile,false);g.combatAI(u,0.01);assert.equal(g.tribe(1).hostile,false);
   u.x=hall.x+20;u.z=hall.z;g.combatAI(u,0.01);assert.equal(g.tribe(1).hostile,true);
 });
-test("trading terms are unknown until a delegation returns and then become stale", async()=>{
+test("trading terms appear at the meeting and then become stale", async()=>{
   const {reportedQuote}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
   assert.equal(reportedQuote(g,1,"food","wood",20).deal,null);assert.equal(g.sendDelegation(1,"trade"),true);
   const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;
-  g.workerAI(u,21);assert.equal(u.envoy.phase,"return");assert.equal(g.state.tradeReports?.length||0,0);
+  g.workerAI(u,21);assert.equal(u.envoy.phase,"return");assert.equal(g.state.tradeReports?.length,1);
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(x=>x.id===u.id),home=r.state.buildings.find(b=>b.team===0&&b.type==="townhall");ru.x=home.x+Math.max(home.w,home.d)*0.55+1;ru.z=home.z;r.workerAI(ru,1);
   const quote=reportedQuote(r,1,"food","wood",20).deal;assert.ok(quote);r.tribe(1).wood=0;assert.deepEqual(reportedQuote(r,1,"food","wood",20).deal,quote);
   r.state.time+=901;assert.equal(reportedQuote(r,1,"food","wood",20).deal,null);
@@ -1536,4 +1538,42 @@ test("seasonal field work outranks berries except during an immediate food emerg
   assert.equal(u.node,farm);
   u.node=null;u.order="idle";u.workCheckAt=0;g.tribe(0).food=5;g.workBoard.reset();g.workBoard.assign(g,u);
   assert.notEqual(u.node,farm);
+});
+
+test("children in a small village need food, with a grace period and saved hunger",()=>{
+  const g=fixture();g.state.units=g.state.units.filter(u=>u.team!==0).concat(g.state.units.filter(u=>u.team===0).slice(0,2));
+  const u=g.state.units.find(u=>u.team===0);u.maturesAt=g.state.time+10000;g.tribe(0).food=0;
+  const hp=u.hp;g.tickPeople(100);assert.equal(u.hp,hp);g.tickPeople(100);assert.ok(u.hp<hp);
+  const r=decodeGame(encodeGame(g));assert.equal(r.state.units.find(p=>p.id===u.id).hunger,200);
+  g.tribe(0).food=100;g.tickPeople(10);assert.equal(u.hunger,170);
+});
+test("construction does not steal travelers or workers already on another building",()=>{
+  const g=fixture(),h=g.campOf(0),b=g.makeBld("farm",h.x+15,h.z,0),workers=g.state.units.filter(u=>u.team===0);
+  for(const u of workers)u.order="hold";
+  workers[0].order="explore";workers[1].order="build";g.assignBuilders(b);
+  assert.equal(workers[0].order,"explore");assert.notEqual(workers[1].node,b);
+});
+test("river banks improve soil potential and resource selection uses a separate focus",async()=>{
+  const {soilQuality}=await import("../src/game/ecology.ts");const g=fixture();g.height=()=>2;
+  g.world.biomes=[{kind:"plains",x:0,z:0}];g.world.rivers=[{pts:[{x:0,z:-100},{x:0,z:100}],w:4}];
+  assert.ok(soilQuality(g,8,0)>soilQuality(g,80,0));
+  g.state.units=[];g.state.buildings=[];g.vision.fill(2);const tree=g.state.trees[0];g.selectAt(tree.x,tree.z,false);
+  assert.equal(g.selectedResource,tree);g.clearSelect();assert.equal(g.selectedResource,null);
+});
+
+test("personal predispositions are stable, bounded and survive save identity",async()=>{
+  const {predisposition}=await import("../src/game/people.ts");const g=fixture(),r=decodeGame(encodeGame(g));
+  const values=g.state.units.map(u=>predisposition(u));assert.ok(new Set(values.map(v=>v.speed)).size>1);
+  for(let i=0;i<values.length;i++){assert.deepEqual(values[i],predisposition(r.state.units[i]));assert.ok(values[i].speed>0.8&&values[i].speed<1.25);}
+});
+
+test("a custom offer needs no remote report and is negotiated only after travel",async()=>{
+  const {sendOffer}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();
+  Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
+  const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,100),true);
+  const u=g.state.units.find(u=>u.customOffer);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
+  const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),h=r.state.buildings.find(b=>b.team===1&&b.type==="townhall");
+  ru.x=h.x+Math.max(h.w,h.d)*0.55+1;ru.z=h.z;r.tradeAI(ru,1);
+  assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<100);assert.equal(ru.carryType,"wood");
+  assert.equal(r.tribe(1).wood+ru.carry,theirWood);
 });

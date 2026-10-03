@@ -1,3 +1,4 @@
+import { soilQuality } from "./ecology";
 import { decodeGame } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
@@ -387,7 +388,11 @@ export class Engine {
     }
     const entity = this.view.pickEntity(cx, cy, this.game);
     if (entity) this.game.selectEntity(entity, additive);
-    else this.game.selectAt(g.x, g.z, additive);
+    else {
+      const resource=this.view.pickResource(cx,cy,this.game);
+      if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
+      else this.game.selectAt(g.x,g.z,additive);
+    }
     this.pushHud();
   }
 
@@ -402,7 +407,7 @@ export class Engine {
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else {
-      const node = this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null;
+      const node = this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);
       else this.game.issueMove(g.x, g.z);
     }
@@ -453,7 +458,7 @@ export class Engine {
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
-    this.view.setGhost(type, x, z, this.game.height(x, z), !issue);
+    this.view.setGhost(type, x, z, this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined);
   }
 
   toggleLogging() {

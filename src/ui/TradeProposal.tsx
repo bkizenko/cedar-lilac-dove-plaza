@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { ResKind } from "@/game/types";
-import { reportedQuote, proposeShipment, tradeCarrier } from "@/game/barter";
+import { reportedQuote, proposeShipment, tradeCarrier, sendOffer } from "@/game/barter";
 export function TradeProposal({ engine, team }: { engine: Engine; team: number }) {
   const [give, setGive] = useState<ResKind>("food"),
     [get, setGet] = useState<ResKind>("wood");
   const [amount, setAmount] = useState(20);
+  const [requested,setRequested] = useState(20);
   const g = engine.game,
     quote = reportedQuote(g, team, give, get, amount),
     carrier = tradeCarrier(g);
@@ -67,6 +68,14 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
           : quote.reason}
       </p>
       {quote.deal && <p>{quote.reason}</p>}
+      <label>Requested quantity (negotiated at arrival)
+        <input type="number" min={1} max={200} value={requested} onChange={e=>setRequested(Number(e.target.value))}/>
+      </label>
+      <button disabled={!carrier || give===get || g.tribe(0)[give]<amount}
+        onClick={()=>{sendOffer(g,team,give,get,amount,requested);engine.pushHud();}}>
+        Send my proposal and negotiate locally
+      </button>
+      <p>The trader may accept a smaller counteroffer. Refused goods are carried home.</p>
       {!carrier && <p>An available adult with empty hands is needed to carry the goods.</p>}
       <button
         disabled={!quote.deal || !carrier}
