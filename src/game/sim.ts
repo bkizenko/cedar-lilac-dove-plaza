@@ -1,3 +1,4 @@
+import { tickVisitors, visitorAI } from "./visitors";
 import { predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
@@ -198,14 +199,15 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 2 : 1) {
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
-    this.world = generateWorld(s);
+    this.world = generateWorld(s,worldgenVersion);
     this.state = this.blank();
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
+    this.state.worldgenVersion=worldgenVersion;
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
@@ -1352,6 +1354,28 @@ export class Game {
     for (const u of this.state.units) u.selected = false;
     for (const b of this.state.buildings) b.selected = false;
     this.state.selBld = null;
+  }
+
+  setLaborPriority(policy: NonNullable<GameState["laborPolicy"]>) {
+    this.state.laborPolicy=policy;
+    this.workBoard.reset();
+    for(const u of this.state.units) {
+      if(u.team!==0||u.type!=="worker"||u.hp<=0||isDependent(this,u))continue;
+      u.job=null;u.jobLock=false;u.huntOnly=false;u.searchJob=undefined;u.workCheckAt=0;
+      // Deliver cargo and finish diplomatic missions before starting the new focus.
+      if(u.envoy||u.order==="trade"||u.emergency||u.recalled)continue;
+      u.node=null;u.target=null;u.attackDestination=null;u.pillage=-1;
+      u.order=u.carry>0?"return":"idle";
+      if(u.order==="idle")this.workBoard.assign(this,u);
+    }
+  }
+
+  cycleVillager(direction=1) {
+    const people=this.state.units.filter(u=>u.team===0&&u.hp>0).sort((a,b)=>a.id-b.id);
+    if(!people.length)return null;
+    const current=people.findIndex(u=>u.selected);
+    const index=current<0?(direction<0?people.length-1:0):(current+direction+people.length)%people.length;
+    this.selectEntity(people[index]);return people[index];
   }
 
   selectedUnits() {
@@ -3210,9 +3234,12 @@ export class Game {
       if (!tr) continue;
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
-      u.hunger = tr.food < 1 ? Math.min(1200, (u.hunger || 0) + dt) : Math.max(0, (u.hunger || 0) - dt * 3);
-      if (u.hunger > 180 && tr.food < 1) {
-        u.hp -= dt * u.maxHp * predisposition(u).appetite / 600;
+      // A game year is 1800 seconds: one calendar month is 150 seconds.
+      const hungry = tr.food < 0.01, previousHunger = u.hunger || 0;
+      u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
+      if (hungry) {
+        const exposure = Math.max(0, previousHunger + dt - 5) - Math.max(0, previousHunger - 5);
+        u.hp -= exposure * u.maxHp * predisposition(u).appetite / 145;
         if (u.hp <= 0 && u.team === 0) this.banner("Hunger takes a villager", 3);
       }
       if (u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
@@ -3307,7 +3334,7 @@ export class Game {
     };
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.build < 1 || b.team > 2) continue;
-      const r = rad[b.type] ?? 14;
+      const r = (rad[b.type] ?? 14) * 1.45;
       const cx = ((b.x + HALF) / cell) | 0;
       const cz = ((b.z + HALF) / cell) | 0;
       const cr = Math.ceil(r / cell);
@@ -3743,7 +3770,7 @@ export class Game {
       d = Math.hypot(dx, dz);
     if (d < 0.01) return false;
     const step = Math.min(
-      u.speed * predisposition(u).speed *
+      u.speed * predisposition(u).speed * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.45,1-(u.hunger||0)/220) *
         dt *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
@@ -3839,6 +3866,7 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift") {return sendDelegation(this,team,kind);}
 
   workerAI(u: Unit, dt: number) {
+    if(visitorAI(this,u,dt))return;
     if(u.recalled) {
       if(this.steer(u,dt)) {
         if(u.carryType&&u.carry>0){this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;}
@@ -4038,6 +4066,7 @@ export class Game {
         u.carry = 0;
         u.carryType = null;
       }
+      u.tradeTeam = 0;
       u.node = null;
       u.order = "idle";
       this.workBoard.assign(this, u);
@@ -4098,7 +4127,7 @@ export class Game {
     this.addFloater(u.x, u.y + 2.4, u.z, "+" + deal.getAmt, "#efe4b0");
     this.banner("Traded with " + rival.name, 1.8);
     u.trade = null;
-    u.tradeTeam = 0;
+    // Keep the destination marker until payment reaches storage, for courier travel pace.
     const drop = this.nearestDrop(u.x, u.z, 0);
     if (drop) {
       u.order = "return";
@@ -5194,6 +5223,7 @@ export class Game {
           this.defendHome(2);
         }
         this.tickWildlife(sdt);
+        tickVisitors(this,sdt);
         this.tickRoutes(sdt);
         this.tickHarvest();
         this.tickRegions();

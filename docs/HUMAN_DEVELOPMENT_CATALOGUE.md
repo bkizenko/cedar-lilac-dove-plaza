@@ -187,3 +187,13 @@ Vitruvius inspires site suitability, drainage, water access, prevailing winds an
 Irrigation and concentrated fertile corridors create coordination costs, surplus and strategic bottlenecks. Rugged terrain increases travel costs and can encourage local autonomy or bargaining. Institutions also depend on history, technology and incentives: never hardcode river societies as despotic or mountain societies as democratic.
 
 References: [Vitruvius Book I](https://lexundria.com/vitr/1/gw), [medieval calendar agriculture, Metropolitan Museum](https://blog.metmuseum.org/artofillumination/2010/03/10/calendar-pages/), [Mesopotamian water-management research](https://wires.onlinelibrary.wiley.com/doi/10.1002/wat2.1230).
+
+
+### Additional continuation requests
+
+- Larger mountain chains, broad hills, basins/valleys, lakes and multi-direction rivers. Sheltered valleys can support fertile land and reduced wind exposure; do not universally make valleys warm (night-time inversions can occur). Distinguish soil, drainage and flood risk.
+- Varied river widths and navigable reaches; boats should carry more cargo and travel faster than overland transport. Foot trade has meaningful travel cost and scarcity-priced benefits. River navigation/boats and this travel rebalance remain outstanding.
+- Foreign explorers and actual visiting traders. Visiting traders now carry owned cargo and negotiate at the player's village; foreign explorers and independent knowledge maps remain outstanding.
+- Village rise, survival, collapse, refugees and refounding remain a required major phase, not implemented by terrain changes or visitor missions. The present fixed major factions must later support multiple persistent settlements with stable identities, ownership and save migration.
+- Never announce undiscovered settlement counts. Larger territory halos and colorful fading edges; village priorities should reset current work assignments, not only future jobs. Villager cycling belongs in the selection panel.
+- Gradual hunger weakness, death after roughly a month without food, recovery and personal food needs. Current season calendar uses a compressed 1800-second year; day/night time and annual day labels still use a different scale and require deliberate harmonization rather than silently changing all saved timers.

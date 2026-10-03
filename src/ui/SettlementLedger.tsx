@@ -102,8 +102,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <select
               value={s.laborPolicy || "balanced"}
               onChange={(e) => {
-                s.laborPolicy = e.target.value as typeof s.laborPolicy;
-                g.workBoard.reset();
+                g.setLaborPriority(e.target.value as NonNullable<typeof s.laborPolicy>);
                 engine.pushHud();
               }}
             >
@@ -116,8 +115,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             </select>
           </label>
           <p>
-            Workers reserve jobs automatically. Direct assignments stay in effect. Changing
-            priorities affects new tasks.
+            Changing this priority resets adult workers’ assignments and work focus. Carriers finish
+            deliveries and delegations before switching.
           </p>
           <label>
             Village growth{" "}

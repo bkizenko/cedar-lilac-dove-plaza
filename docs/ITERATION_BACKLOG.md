@@ -154,3 +154,21 @@ Remaining: substantial overhaul work in the requirements audit/catalogue. Report
 - Remaining major phases include equipped long expeditions/night camps, worn paths for all factions, hunting expansion, climate/site systems, natural discoveries/domestication, robust combat and richer rival evolution. These are explicitly not completed by this block.
 
 - Preview recovered at the existing port 8086. Resumed the existing save, paused it and explicitly kept a protected checkpoint; UI confirmed autosaves cannot replace it. Did not begin/reseed a game. Screenshot: `.preview/protected-village-oct3.png`. Direct mesh picking was added after observing that canopy clicks otherwise test terrain behind the tree; a fresh renderer visual check remains outstanding.
+
+
+### 2026-10-03 — terrain continuity and visitors
+
+- Versioned map generation: old saves without `worldgenVersion` keep generation 1 exactly; new unseeded games use generation 2 with wider/broader relief, large lakes, wider varied rivers and shuffled starting habitats. Saved versions reconstruct the same terrain. Explicit-seed reset defaults remain generation 1 for backward-compatible callers; opt into generation 2 explicitly.
+- Territorial projection radii increased 45%; added a colorful fading contour band. Visible/remembered map masking still prevents hidden territorial information. Fresh appearance requires visual checking.
+- Village-wide priority changes clear current job locks and assignments, including resting/exploring workers; carried loads and diplomatic missions complete before switching. Children retain dependent status.
+- Added all-villager previous/next buttons, including children; comma/Shift+comma cycle via keyboard without replacing existing bracket resource navigation.
+- Removed hidden village counts from HUD. Renamed checkpoint buttons to Save/Load backup copy with explanatory hints; underlying protected save is preserved.
+- Hunger now steadily affects health and movement after a brief five-second grace period, with approximately 150 simulated seconds (one compressed calendar month) to death at average appetite. Fed people lose hunger three times faster. Day/night and year calendars have a pre-existing scale mismatch that still needs harmonization and is recorded in the catalogue.
+- Foreign traders use existing adult villagers and deduct actual export cargo at departure. They travel, wait up to 120 seconds at the player hall, offer payment-resource choices based on their needs/relationship, and transport payment or unsold goods home. Waiting/return missions validate and round-trip through saves. No new people are manufactured. This is not yet a general diplomacy visit screen or foreign-exploration system.
+- Outstanding: foreign exploration/knowledge maps; river boats/navigation bonuses and walking-trade balance; village foundation/collapse/refugees; warmer/sheltered local climate effects; the rest of the accepted catalogue. No claim of full overhaul completion.
+
+- Verification: full tests passed (330 checks before the final blocked-journey regression); type checking and production build passed. Preview observation timed out, so new visual appearance is not claimed verified. Final visitor fallback preserves cargo and abandons an obstructed trip rather than occupying the visitor slot forever.
+
+- Loaded trade couriers walk at 75% of normal pace, including the paid return leg; ordinary gathering hauls retain their usual speed. Locally negotiated base exchange terms improved from 0.76 to 0.86 before scarcity/relationship/ability modifiers. River shipping remains unimplemented.
+
+- After courier/price changes: 12 targeted trade, cargo, route and navigation checks passed; final type checking and production build passed. The new blocked-journey regression also passed. Automatic standing-route offers still use the older known-partner system; a general visiting-delegation negotiation interface remains part of the overhaul.

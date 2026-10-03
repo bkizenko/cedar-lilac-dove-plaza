@@ -1540,12 +1540,12 @@ test("seasonal field work outranks berries except during an immediate food emerg
   assert.notEqual(u.node,farm);
 });
 
-test("children in a small village need food, with a grace period and saved hunger",()=>{
+test("children in a small village need food, with gradual weakening and saved hunger",()=>{
   const g=fixture();g.state.units=g.state.units.filter(u=>u.team!==0).concat(g.state.units.filter(u=>u.team===0).slice(0,2));
   const u=g.state.units.find(u=>u.team===0);u.maturesAt=g.state.time+10000;g.tribe(0).food=0;
-  const hp=u.hp;g.tickPeople(100);assert.equal(u.hp,hp);g.tickPeople(100);assert.ok(u.hp<hp);
-  const r=decodeGame(encodeGame(g));assert.equal(r.state.units.find(p=>p.id===u.id).hunger,200);
-  g.tribe(0).food=100;g.tickPeople(10);assert.equal(u.hunger,170);
+  const hp=u.hp;g.tickPeople(5);assert.equal(u.hp,hp);g.tickPeople(45);assert.ok(u.hp<hp&&u.hp>0);
+  const r=decodeGame(encodeGame(g));assert.equal(r.state.units.find(p=>p.id===u.id).hunger,50);
+  g.tribe(0).food=100;g.tickPeople(10);assert.equal(u.hunger,20);
 });
 test("construction does not steal travelers or workers already on another building",()=>{
   const g=fixture(),h=g.campOf(0),b=g.makeBld("farm",h.x+15,h.z,0),workers=g.state.units.filter(u=>u.team===0);
@@ -1576,4 +1576,44 @@ test("a custom offer needs no remote report and is negotiated only after travel"
   ru.x=h.x+Math.max(h.w,h.d)*0.55+1;ru.z=h.z;r.tradeAI(ru,1);
   assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<100);assert.equal(ru.carryType,"wood");
   assert.equal(r.tribe(1).wood+ru.carry,theirWood);
+});
+
+test("village priorities clear manual work locks and redirect existing workers",()=>{
+  const g=fixture();g.vision.fill(2);const u=g.state.units.find(u=>u.team===0);u.job="wood";u.jobLock=true;u.order="hold";u.huntOnly=true;
+  g.setLaborPriority("food");assert.equal(u.jobLock,false);assert.equal(u.huntOnly,false);assert.notEqual(u.order,"hold");assert.equal(g.state.laborPolicy,"food");
+});
+test("villager cycling wraps and includes dependents without changing their work",()=>{
+  const g=fixture();g.clearSelect();const people=g.state.units.filter(u=>u.team===0&&u.hp>0).sort((a,b)=>a.id-b.id);
+  const order=people[0].order;assert.equal(g.cycleVillager(),people[0]);assert.equal(g.cycleVillager(-1),people.at(-1));assert.equal(g.cycleVillager(),people[0]);assert.equal(people[0].order,order);
+});
+
+test("richer new terrain is versioned and old saves keep their exact landscape",()=>{
+  const old=fixture(),raw=encodeGame(old);delete raw.state.worldgenVersion;
+  const restored=decodeGame(raw);assert.deepEqual(restored.world.heights,old.world.heights);assert.deepEqual(restored.world.biomes,old.world.biomes);
+  const fresh=new Game();fresh.reset(123456,2);fresh.enterIsland();const copy=decodeGame(encodeGame(fresh));
+  assert.deepEqual(copy.world.heights,fresh.world.heights);assert.deepEqual(copy.world.rivers,fresh.world.rivers);
+  assert.notDeepEqual(fresh.world.heights,old.world.heights);assert.ok(fresh.world.rivers[0].w>old.world.rivers[0].w);
+  assert.ok(fresh.state.units.some(u=>u.team===0&&u.hp>0));
+});
+test("foreign traders carry real stock, negotiate locally and take payment home",async()=>{
+  const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);
+  const t=g.tribe(1);Object.assign(t,{wood:200,food:100,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
+  for(const p of g.state.units.filter(u=>u.team===1)){p.carry=0;p.carryType=null;}
+  const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
+  const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');u.x=home.x+Math.max(home.w,home.d)*0.55+1;u.z=home.z;
+  const offered=u.carry,before=g.tribe(0).wood;visitorAI(g,u,1);assert.equal(u.visit.phase,'waiting');assert.equal(g.tribe(0).wood,before);
+  g.tribe(0).food=300;const price=visitorPrice(g,u,'food');assert.equal(tradeWithVisitor(g,u.id,'food'),true);
+  assert.equal(g.tribe(0).wood,before+offered);assert.equal(g.tribe(0).food,300-price);assert.equal(u.carry,price);
+  const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),hall=r.state.buildings.find(b=>b.team===1&&b.type==='townhall'),food=r.tribe(1).food;
+  ru.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;ru.z=hall.z;visitorAI(r,ru,1);assert.equal(r.tribe(1).food,food+price);assert.equal(ru.visit,undefined);
+});
+test("starvation gradually weakens every age over approximately a calendar month",()=>{
+  const g=fixture(),u=g.state.units.find(u=>u.team===0);g.tribe(0).food=0;u.maturesAt=g.state.time+10000;
+  g.tickPeople(60);assert.ok(u.hp>0&&u.hp<u.maxHp);g.tickPeople(120);assert.ok(u.hp<=0);
+});
+
+test("a blocked visiting trader preserves goods and abandons the expedition",async()=>{
+  const {visitorAI}=await import('../src/game/visitors.ts');const g=fixture(),u=g.state.units.find(u=>u.team===1);
+  u.visit={phase:'outbound',wait:0};u.carry=18;u.carryType='wood';u.stuckT=9;visitorAI(g,u,1);
+  assert.equal(u.visit,undefined);assert.equal(u.order,'return');assert.equal(u.carry,18);
 });

@@ -168,6 +168,7 @@ export type Unit = {
   ageT: number;
   hunger?: number;
   customOffer?: boolean;
+  visit?: {phase:"outbound"|"waiting"|"return";wait:number};
   jobLock: boolean;
   huntOnly: boolean;
   stuckT: number;
@@ -291,6 +292,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  visitorTimer?: number;
+  worldgenVersion?: number;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];

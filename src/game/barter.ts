@@ -73,7 +73,7 @@ export function quoteShipment(
   const need = (kind: ResKind) => (kind === "food" ? Math.max(40, g.popNow(team) * 15) : 60);
   const scarcity = (kind: ResKind) =>
     Math.max(0.65, Math.min(1.8, need(kind) / Math.max(10, other[kind])));
-  const terms = (g.state.agePicks[2] === "econ" ? 0.95 : 0.76) + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
+  const terms = (g.state.agePicks[2] === "econ" ? 0.95 : 0.86) + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
   const quantity = Math.floor(
     (amount * worth[give] * scarcity(give) * terms * (visitingTrader ? predisposition(visitingTrader).trading * (0.95 + (((visitingTrader.id*31+Math.floor(g.state.time/60)*17)%101)/100)*0.1) : 1)) / (worth[get] * scarcity(get)),
   );

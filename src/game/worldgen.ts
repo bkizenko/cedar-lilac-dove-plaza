@@ -89,7 +89,7 @@ function node(
   return { id, kind, x, z, y, amount, maxAmt: amount, regenT: 0, scale, rich };
 }
 
-export function generateWorld(seed: number): WorldData {
+export function generateWorld(seed: number, version = 1): WorldData {
   const rand = mulberry32(seed);
   const n = SEGS + 1;
   const heights = new Float32Array(n * n);
@@ -104,8 +104,8 @@ export function generateWorld(seed: number): WorldData {
     hills.push({
       x: Math.sin(a) * d,
       z: Math.cos(a) * d,
-      r: 12 + rand() * 24,
-      h: (2.4 + rand() * 4.8) * hillScale,
+      r: (12 + rand() * 24) * (version >= 2 ? 2.2 : 1),
+      h: (2.4 + rand() * 4.8) * hillScale * (version >= 2 ? 2 : 1),
     });
   }
   const nPeaks = 1 + ((rand() * 3) | 0);
@@ -115,19 +115,19 @@ export function generateWorld(seed: number): WorldData {
     hills.push({
       x: Math.sin(a) * d,
       z: Math.cos(a) * d,
-      r: 11 + rand() * 14,
-      h: (5.5 + rand() * 5.5) * hillScale,
+      r: (11 + rand() * 14) * (version >= 2 ? 2.6 : 1),
+      h: (5.5 + rand() * 5.5) * hillScale * (version >= 2 ? 3 : 1),
     });
   }
   const ridgeA = rand() * Math.PI * 2;
   const ridge = {
     nx: Math.cos(ridgeA),
     nz: Math.sin(ridgeA),
-    h: 2.8 + rand() * 3.6,
-    w: 12 + rand() * 16,
+    h: (2.8 + rand() * 3.6) * (version >= 2 ? 2.5 : 1),
+    w: (12 + rand() * 16) * (version >= 2 ? 2 : 1),
   };
 
-  const nRivers = 1 + (rand() < 0.55 ? 1 : 0) + (rand() < 0.22 ? 1 : 0);
+  const nRivers = (version >= 2 ? 2 : 1) + (rand() < 0.55 ? 1 : 0) + (rand() < 0.22 ? 1 : 0);
   const rivers: { pts: { x: number; z: number }[]; w: number }[] = [];
   const usedAng: number[] = [];
   for (let i = 0; i < nRivers; i++) {
@@ -141,7 +141,9 @@ export function generateWorld(seed: number): WorldData {
       ang = rand() * Math.PI * 2;
     }
     usedAng.push(ang);
-    rivers.push(makeRiver(rand, islandR, ang));
+    const river=makeRiver(rand,islandR,ang);
+    if(version>=2)river.w*=i===0?3:1.3+(i%3)*0.5;
+    rivers.push(river);
   }
 
   const lobes = 2 + ((rand() * 3) | 0);
@@ -149,11 +151,11 @@ export function generateWorld(seed: number): WorldData {
   const lobeAmp = 0.07 + rand() * 0.18;
   const coastAmp = 12 + rand() * 10;
   const lake =
-    rand() < 0.72
+    (rand() < 0.72 || version >= 2)
       ? {
           x: Math.sin(rand() * 6.28) * islandR * (0.12 + rand() * 0.28),
           z: Math.cos(rand() * 6.28) * islandR * (0.12 + rand() * 0.28),
-          r: 10 + rand() * 16,
+          r: (10 + rand() * 16) * (version >= 2 ? 2.2 : 1),
         }
       : null;
 
@@ -191,7 +193,8 @@ export function generateWorld(seed: number): WorldData {
         const ld = Math.hypot(x - lake.x, z - lake.z);
         if (ld < lake.r) {
           const t = 1 - ld / lake.r;
-          h -= t * t * 2.8;
+          h -= t * t * (version>=2?8:2.8);
+          if(version>=2&&ld<lake.r*0.65)h=Math.min(h,waterY-0.5);
         }
       }
 
@@ -207,7 +210,7 @@ export function generateWorld(seed: number): WorldData {
 
       if (coast < 0.16) h = 0.04;
       else h = Math.max(0.06, h * (0.22 + 0.78 * coast));
-      heights[idx(ix, iz)] = Math.min(h, 13.2);
+      heights[idx(ix, iz)] = Math.min(h, version>=2?42:13.2);
     }
   }
 
@@ -298,6 +301,10 @@ export function generateWorld(seed: number): WorldData {
     { kind: "hills", x: camps[1].x, z: camps[1].z },
     { kind: "forest", x: camps[2].x, z: camps[2].z },
   ];
+  if(version>=2){
+    const kinds=["plains","forest","hills"] as const;
+    for(let i=0;i<biomes.length;i++)biomes[i].kind=kinds[(i+(seed>>>0)%3)%3];
+  }
   const biomeAt = (x: number, z: number) => {
     let best: WorldData["biomes"][number]["kind"] = "plains";
     let bd = 1e12;

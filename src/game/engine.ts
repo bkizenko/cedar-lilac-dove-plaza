@@ -131,7 +131,7 @@ export class Engine {
     this.pushHud();
   }
   protectVillage() {
-    this.game.banner(protectGame(this.game)?"Protected village checkpoint kept — autosaves will not replace it":"Could not protect the village; storage may be full",4);
+    this.game.banner(protectGame(this.game)?"Backup copy saved — automatic saves will not overwrite this copy":"Could not protect the village; storage may be full",4);
     this.pushHud();
   }
   exportVillage() {this.protectVillage();exportGame(this.game);}
@@ -600,6 +600,12 @@ export class Engine {
     const u = this.game.focusIdleWorker();
     if (u) this.view.look.set(u.x, u.y + 0.5, u.z);
     this.pushHud();
+  }
+
+  cycleVillager(direction=1) {
+    const u=this.game.cycleVillager(direction);
+    if(u)this.view.look.set(u.x,u.y+0.5,u.z);
+    this.canvas.focus();this.pushHud();
   }
 
   focusHome() {

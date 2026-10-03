@@ -162,6 +162,7 @@ export class KeyboardCommands {
         u.target = null;
         u.attackDestination = null;
       }
+    if (code === "Comma") e.cycleVillager(event.shiftKey ? -1 : 1);
     if (code === "KeyI") e.focusIdle();
     if (code === "KeyG") e.trainPeople();
     if (code === "KeyT") e.cycleTrade();

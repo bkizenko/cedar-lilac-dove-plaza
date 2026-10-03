@@ -58,6 +58,8 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
+  if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
+  if(s.worldgenVersion!==undefined&&![1,2].includes(s.worldgenVersion))fail();
   if (s.discoveries !== undefined) {
     if (!Array.isArray(s.discoveries) || s.discoveries.length > DISCOVERIES.length) fail();
     const seen = new Set();
@@ -219,6 +221,7 @@ export function decodeGame(raw: unknown): Game {
     )
       fail();
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
+    if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
@@ -354,7 +357,7 @@ export function decodeGame(raw: unknown): Game {
       } else u.ageT = (18 + (u.id % 25)) * 1800;
     }
   } else if (d.demographicVersion !== 1) fail();
-  g.reset(s.seed);
+  g.reset(s.seed,s.worldgenVersion??1);
   g.state = {
     ...s,
     growthPolicy: s.growthPolicy ?? "welcome",

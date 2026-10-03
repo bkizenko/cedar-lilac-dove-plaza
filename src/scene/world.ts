@@ -1683,7 +1683,8 @@ export class WorldView {
           float shroudA = mix(0.98, 0.10, smoothstep(0.05, 0.32, v)) * (1.0 - live);
           float seen = smoothstep(0.12, 0.28, v);
           // Colored land remains visible without concealing terrain detail.
-          float wash = terr.a * seen * (live > 0.5 ? 0.32 : 0.16);
+          float contour = smoothstep(0.08,0.16,terr.a)*(1.0-smoothstep(0.22,0.32,terr.a));
+          float wash = seen * (terr.a*(live > 0.5 ? 0.30 : 0.15) + contour*(live > 0.5 ? 0.55 : 0.22));
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);

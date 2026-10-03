@@ -1,3 +1,4 @@
+import { VisitingTrader } from "./VisitingTrader";
 import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -235,8 +236,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
-          <button className="px-2 py-2" onClick={()=>engine?.protectVillage()}>Keep checkpoint</button>
-          <button className="px-2 py-2" onClick={()=>engine?.resumeSaved(true)}>Restore checkpoint</button>
+          <button className="px-2 py-2" onClick={()=>engine?.protectVillage()} title="Save a separate backup that automatic saves cannot overwrite">Save backup copy</button>
+          <button className="px-2 py-2" onClick={()=>engine?.resumeSaved(true)} title="Return to the backup copy you saved">Load backup copy</button>
           <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Download village</button>
           <label className="px-2 py-2">Import backup<input className="sr-only" aria-label="Import village backup" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
@@ -409,6 +410,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
       ) : null}
 
+      {engine && <VisitingTrader engine={engine}/>}
       {hud.routeOffer && !hud.pendingAge && !founding ? (
         <div className="pointer-events-none absolute bottom-28 right-4 z-20 flex max-w-[calc(100%-2rem)] justify-end">
           <div className="hud-panel pointer-events-auto w-full max-w-xs rounded-xl px-3 py-2">
@@ -525,6 +527,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 </span>
               </button>
             ) : null}
+            <div className="mt-1.5 flex gap-1">
+              <button className="min-h-8 flex-1" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>← Previous</button>
+              <button className="min-h-8 flex-1" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>Next villager →</button>
+            </div>
             {hud.idleWorkers > 0 ? (
               <button
                 type="button"
@@ -785,12 +791,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                     </span>
                   </button>
                 ))}
-              {(hud.camps || []).filter((c) => !c.known).length > 0 ? (
-                <p className="text-[10px] leading-snug text-parchment">
-                  {(hud.camps || []).filter((c) => !c.known).length} shores still in fog. Explore to
-                  find them.
-                </p>
-              ) : null}
+              <p className="text-[10px] leading-snug text-parchment">Explore to discover other communities.</p>
               {(hud.clusters || [])
                 .filter((c) => c.held)
                 .map((c) => (
