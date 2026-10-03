@@ -137,13 +137,16 @@ export type Unit = {
   r: number;
   selected: boolean;
   order: Order;
+  stationOnArrival?: boolean;
+  homeCamp?: number;
   sickUntil?: number;
   maturesAt?: number;
   workReason?: string;
   workCheckAt?: number;
   blockedTask?: number;
   retryWorkAt?: number;
-  emergency?: { until: number; job: ResKind | null; jobLock: boolean; autoArmed: boolean };
+  emergency?: { until: number; job: ResKind | null; jobLock: boolean; autoArmed: boolean;
+    resume?: { order: "move" | "hold" | "explore"; tx: number; tz: number; station: boolean } };
   attackDestination?: { x: number; z: number } | null;
   tx: number;
   tz: number;
@@ -189,6 +192,7 @@ export type Building = {
   cd: number;
   build: number;
   reclaimed: boolean;
+  raiderCamp?: boolean;
   storeCare?: number;
   fertility?: number;
   fallowYear?: number;
@@ -282,6 +286,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome";
   laborPolicy?: "balanced" | "food" | "build";

@@ -74,3 +74,30 @@ Validation: 289 tests passed (257 script/game and 32 application/auth), producti
 Browser QA remains blocked. On October 3 the browser inventory showed no tabs; automatic approval review rejected creating a fresh preview tab as a workaround for the earlier cached-page denial. Explicit user approval was requested. Do not attempt alternate browser surfaces or indirect automation while this is unresolved.
 
 Next phases: verify the live interface and full survival loop; deepen equipment/tool production and useful building upgrades; then linked technologies and distinct tribal growth/diplomacy. Full feature parity with the reference games remains far from complete.
+
+
+## Sol continuation — 2026-10-03: work, exploration rewards and caravan risk
+
+The preceding exploration/checkpoint/handoff changes were committed as `53bf156` and pushed to `main` before this continuation. Browser access is now restored: a fresh in-app preview loaded successfully, the ledger rendered with the new traditions, and a selected villager accepted a Logs order without a lumber camp. Keyboard selection and village focus were exercised. Earlier browser-block notes above are historical; desktop/mobile coverage and long natural survival play remain incomplete.
+
+Implemented:
+- Any discovered, reachable live tree can be cut without a lumber camp. Automatic and locked wood assignments use the same rule. A finished nearby camp still reduces cutting time by 42%; camps elsewhere give no blanket prerequisite/penalty. Removed the mandatory-camp opening objective.
+- Manual move orders wait at their destination. Scouts and stationed adults remember their orders across emergency shelter/militia response and save/load.
+- Standing stones award historical discoveries rather than unexplained food/material caches. Favorable random-event payouts and daily territory stock payouts were removed. Local territory gathering bonuses remain tied to actual work.
+- Nine one-time discovery/preparation milestones earn legacy points. Spend twelve on Pathfinders (scouting/caravan speed), Winter stores (capacity and ordinary spoilage), or Woodcraft (cutting efficiency), at most one per age. These are saved, budget checked and shown in the Village ledger. They do not replace the practical technology graph still to build.
+- Age choices have larger storage, preservation, timber, health and damage benefits. Age commitment now rechecks population, building variety and resources. Removed free people from the final military choice and the hidden watchtower placement; Watchfires actually extend sight.
+- Partners protect seasonal food and basic construction reserves and may refuse unwanted offered goods. Quick exchange now sends a real carrier to a known willing partner. Market knowledge improves terms; the seller loses every unit returned as cargo. Quotes, dispatch, recurring routes and arrival check willingness; damaged outbound shipments return remaining cargo without exchanging missing goods.
+- New games may generate one or two remote land raider camps, with two initial band members each and no replacement spawning. A five-minute grace and Quiet frontier prevent proactive theft. Bands patrol locally, see nearby carriers/stores, steal up to four real goods, haul them back and retaliate against attacks. Destroying the camp scatters survivors. Existing sea raiders retain their separate behavior. Camps and home references persist; old saves are not retrofitted.
+
+Validation: 305 full-suite tests passed (273 scripts/game + 32 application/auth). After removing daily territory payouts and polishing camp descriptions, nine focused tests passed; production build and type checks passed. Live preview shows ledger traditions and wood gathering. This is not a claim that the entire overhaul or late-game balance is complete.
+
+Limits / next ordered work:
+1. Multi-year opening balance across ordinary seeds and each habitat, including consequences of removing passive region income; test manual order overrides during alarms. More UI checks on wide and narrow viewports.
+2. Physical local stores, transport and persistent source materials; raider store theft currently subtracts faction food at a physical warehouse because per-building inventories do not yet exist. Improve escort commands, theft warnings, and injured/surrendering band behavior.
+3. Material/item economy: tools, warm/light clothing, preservation recipes, equipment and useful building upgrade branches. Adapt shelter choices to habitat and season.
+4. Seeded regional resource asymmetry that makes some materials locally scarce while preserving a viable early survival path. Catan-inspired incentives to explore/trade, not an arbitrary universal trade tax. Current terrain deposits and habitat yields vary, but do not yet guarantee this acceptance criterion.
+5. Organic experimentation/technology graph and population/density/material gates; richer era challenges distributed across later ages, with meaningful benefits. The current nine milestones are a first foundation.
+6. Distinct rival goals, economic growth and setbacks; diplomacy terms and counteroffers; refugees/new camps; later regional secession and empire administration. Remove hard-coded faction assumptions before expanding the tribe count.
+7. Full end-to-end survival → developing village → rival trade/war → multi-settlement empire acceptance from `SOL_EXECUTION_HANDOFF.md`, excluding the visual/3D overhaul.
+
+The user plans a separate prompt to inventory historical/cultural/scientific development features. That inventory is intentionally reserved for their next request; do not substitute it for execution now. Keep prioritizing working gameplay and transparent systems over extra feature count.

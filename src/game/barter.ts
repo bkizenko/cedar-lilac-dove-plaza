@@ -1,6 +1,6 @@
 import type { Game } from "./sim";
 import type { ResKind, TradeDeal } from "./types";
-import { isDependent } from "./settlement";
+import { isDependent, foodDemand, calendar } from "./settlement";
 
 export function knownSettlement(g: Game, team: number) {
   return g.state.buildings.some(
@@ -18,6 +18,31 @@ export function tradeCarrier(g: Game) {
       u.carry === 0 &&
       (u.selected ? u.order !== "trade" : ["idle", "hold", "gather"].includes(u.order)),
   );
+}
+/** Trade willingness uses forecast needs; the UI receives a reason, never an inventory total. */
+export function shipmentIssue(g: Game, team: number, deal: TradeDeal): string | null {
+  const other = g.tribe(team);
+  const goods = ["food", "wood", "stone", "copper", "iron"];
+  if (!other || !other.alive || other.hostile) return "They are not willing to trade.";
+  if (!goods.includes(deal.give) || !goods.includes(deal.get) || deal.give === deal.get ||
+      !Number.isSafeInteger(deal.giveAmt) || !Number.isSafeInteger(deal.getAmt) ||
+      deal.giveAmt <= 0 || deal.getAmt <= 0 || deal.giveAmt > 100 || deal.getAmt > 200)
+    return "The shipment needs valid quantities of two different goods.";
+  if (other[deal.get] < deal.getAmt) return "They cannot supply that quantity. Try a smaller offer or different goods.";
+  const {phase, remaining} = calendar(g);
+  const winterFood = foodDemand(g, team, 3);
+  const foodReserve = phase === 2 ? winterFood * 450 + foodDemand(g, team) * remaining :
+    phase === 3 ? winterFood * Math.max(120, remaining) : foodDemand(g, team) * 240;
+  const afterFood = other.food - (deal.get === "food" ? deal.getAmt : 0) + (deal.give === "food" ? deal.giveAmt : 0);
+  if (deal.get === "food" && afterFood < foodReserve)
+    return phase >= 2 ? "They are keeping food for winter. Offer another resource or ask for different goods." :
+      "They need that food for their people. Ask for different goods.";
+  const reserve = deal.get === "wood" ? 24 : deal.get === "stone" ? (other.age >= 1 ? 12 : 4) : 0;
+  if (other[deal.get] - deal.getAmt < reserve) return "They are keeping those materials for village construction. Ask for different goods.";
+  const wanted = deal.give === "food" ? Math.max(40, foodReserve) : deal.give === "wood" ? 60 : 30;
+  if (!other.ally && (other.trust || 0) < 0.5 && other[deal.give] > wanted * 3)
+    return "They already have enough of your offered goods. Try a resource they need.";
+  return null;
 }
 export function quoteShipment(
   g: Game,
@@ -45,17 +70,17 @@ export function quoteShipment(
   const need = (kind: ResKind) => (kind === "food" ? Math.max(40, g.popNow(team) * 15) : 60);
   const scarcity = (kind: ResKind) =>
     Math.max(0.65, Math.min(1.8, need(kind) / Math.max(10, other[kind])));
-  const terms = 0.76 + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
+  const terms = (g.state.agePicks[2] === "econ" ? 0.95 : 0.76) + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
   const quantity = Math.floor(
     (amount * worth[give] * scarcity(give) * terms) / (worth[get] * scarcity(get)),
   );
   if (quantity < 1) return no("Offer more goods for at least one item in return.");
-  if (other[get] < quantity)
-    return no("They cannot supply that quantity. Try a smaller offer or different goods.");
+  const issue = shipmentIssue(g, team, {give, giveAmt:amount, get, getAmt:quantity});
+  if (issue) return no(issue);
   return {
     deal: { give, giveAmt: amount, get, getAmt: quantity },
     reason:
-      "Terms reflect their reserves, trust and tension. Goods arrive only after the return journey.",
+      "Terms reflect their needs, trust and tension. Goods arrive only after the return journey.",
   };
 }
 export function proposeShipment(

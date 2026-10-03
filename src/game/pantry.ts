@@ -1,3 +1,4 @@
+import { hasTradition } from "./discovery";
 import type { Game } from "./sim";
 import type { Building, Unit } from "./types";
 import { calendar, foodDemand, reserveSeconds, isDependent } from "./settlement";
@@ -12,7 +13,7 @@ export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase
   const season = [1, 1.6, 1.1, 0.65][phase];
   const knowledge = team === 0 && g.state.agePicks[0] === "econ";
   return ((food - sheltered) * 0.00012 + (sheltered - prepared) * 0.00003 + prepared * 0.000006) *
-    season * (knowledge ? 0.45 : 1) + (includeOverflow ? Math.max(0, food - g.stockCap(team)) * (knowledge ? 0.01 : 0.02) : 0);
+    season * (team === 0 && hasTradition(g, "winter-stores") ? 0.75 : 1) * (knowledge ? 0.35 : 1) + (includeOverflow ? Math.max(0, food - g.stockCap(team)) * (knowledge ? 0.01 : 0.02) : 0);
 }
 export function preservationAvailable(g: Game, b: Building) {
   return b.type === "warehouse" && g.finished(b) && (b.storeCare || 0) < 0.95 &&

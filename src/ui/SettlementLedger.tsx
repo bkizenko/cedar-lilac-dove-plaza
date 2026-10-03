@@ -1,4 +1,4 @@
-import { DISCOVERIES, discoveryScore } from "@/game/discovery";
+import { DISCOVERIES, discoveryScore, TRADITIONS, TRADITION_COST, unspentLegacy, hasTradition, adoptTradition } from "@/game/discovery";
 import { AGES } from "@/game/constants";
 import { foodSpoilage, winterOutlook, storehouses } from "@/game/pantry";
 import { habitatAt } from "@/game/ecology";
@@ -151,9 +151,20 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </p>
         </section>
       </div>
+      <p><strong>Next age:</strong> {g.ageUpIssue(0) || "Ready — choose a development path in the age panel."}</p>
       <details>
         <summary>Exploration chronicle · {discoveryScore(g)} legacy points</summary>
-        <p>{discoveryScore(g, t.age)} earned in this age. Each discovery counts once across the whole game, including your home habitat. Points record your history; they do not yet unlock technologies or advance your age.</p>
+        <p>{discoveryScore(g, t.age)} earned in this age. Each discovery counts once across the whole game, including your home habitat. Spend 12 points to adopt a lasting tradition; one choice per age. Achievements do not replace practical technology development.</p>
+        <p>{unspentLegacy(g)} unspent points. Traditions already adopted remain in effect.</p>
+        <div className="ledger-grid">
+          {TRADITIONS.map(tradition => <section key={tradition.id}>
+            <h3>{tradition.name}</h3><p>{tradition.hint}</p>
+            <button disabled={hasTradition(g, tradition.id) || !!s.traditions?.some(x => x.age === t.age) || unspentLegacy(g) < TRADITION_COST}
+              onClick={() => {adoptTradition(g, tradition.id); engine.pushHud();}}>
+              {hasTradition(g, tradition.id) ? "Adopted" : `Adopt · ${TRADITION_COST} points`}
+            </button>
+          </section>)}
+        </div>
         <ul>
           {DISCOVERIES.map(d => {
             const entry = s.discoveries?.find(h => h.id === d.id);
@@ -214,7 +225,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             {u.emergency
               ? u.workReason
               : u.order === "hold"
-                ? "Holding position"
+                ? u.workReason || "Holding position"
                 : u.order === "idle"
                   ? u.workReason || (u.type === "worker" ? "Finding work" : "Guarding the village")
                   : u.order === "gather" && u.node && "type" in u.node && u.node.type === "farm"

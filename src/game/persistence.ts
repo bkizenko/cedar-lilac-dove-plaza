@@ -1,4 +1,4 @@
-import { DISCOVERIES } from "./discovery";
+import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
@@ -67,6 +67,17 @@ export function decodeGame(raw: unknown): Game {
           !num(h.time) || h.time < 0 || h.time > s.time) fail();
       seen.add(h.id);
     }
+  }
+  if (s.traditions !== undefined) {
+    if (!Array.isArray(s.traditions) || s.traditions.length > TRADITIONS.length) fail();
+    const kinds = new Set(), ages = new Set();
+    for (const t of s.traditions) {
+      if (!obj(t) || !Number.isInteger(t.age) || t.age < 0 || t.age > 5 ||
+          !TRADITIONS.some(d => d.id === t.kind) || kinds.has(t.kind) || ages.has(t.age)) fail();
+      kinds.add(t.kind); ages.add(t.age);
+    }
+    const points = (s.discoveries || []).reduce((n: number, h: {id:string}) => n + (DISCOVERIES.find(d => d.id === h.id)?.points || 0), 0);
+    if (s.traditions.length * TRADITION_COST > points) fail();
   }
   if (!Number.isInteger(s.seed) || !Number.isInteger(s.nextId) || s.nextId < 1 || s.time < 0)
     fail();
@@ -195,6 +206,13 @@ export function decodeGame(raw: unknown): Game {
     )
       fail();
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
+    if (u.homeCamp !== undefined && (!Number.isSafeInteger(u.homeCamp) || u.homeCamp < 1 || u.team !== 3)) fail();
+    if (u.stationOnArrival !== undefined && typeof u.stationOnArrival !== "boolean") fail();
+    if (u.emergency?.resume !== undefined) {
+      const r = u.emergency.resume;
+      if (!obj(r) || !["move", "hold", "explore"].includes(r.order) ||
+          !num(r.tx) || !num(r.tz) || typeof r.station !== "boolean") fail();
+    }
     if (u.attackDestination != null) {
       if (!obj(u.attackDestination)) fail();
       numbers(u.attackDestination, ["x", "z"]);
@@ -205,6 +223,7 @@ export function decodeGame(raw: unknown): Game {
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();
+    if (b.raiderCamp !== undefined && (typeof b.raiderCamp !== "boolean" || b.team !== 3 || b.type !== "hut")) fail();
     if (b.fallowYear !== undefined && (!Number.isInteger(b.fallowYear) || b.fallowYear < 0)) fail();
     if (b.crop !== undefined) {
       if (!obj(b.crop)) fail();

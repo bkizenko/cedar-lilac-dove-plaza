@@ -209,11 +209,7 @@ export class WorkBoard {
       }
       for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency);
       for (const n of g.state.trees)
-        if (
-          n.amount > 0 &&
-          ((t.id === 0 && g.chopMarks.has(n.id)) || g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "lumber", LUMBER_R) ||
-            Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
-        )
+        if (n.amount > 0)
           add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 140 : Math.max(15, 95 - t.wood * 0.35));
       for (const n of g.state.stones)
         if (
@@ -362,7 +358,9 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
       Math.hypot(e.x - u.x, e.z - u.z) < 17,
   );
   if (foes.length && u.type === "worker" && !u.emergency) {
-    u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false };
+    u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false,
+      resume: u.team === 0 && (u.order === "explore" || (u.order === "move" && u.stationOnArrival) || u.order === "hold")
+        ? { order: u.order, tx: u.tx, tz: u.tz, station: !!u.stationOnArrival } : undefined };
     const t = g.tribe(u.team);
     let type: "spearman" | "archer" | null = null;
     if (!isDependent(g, u) && t.spears > 0) {
@@ -398,6 +396,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
       u.dmg = d.dmg;
       u.rof = d.rof;
     }
+    const resume = u.emergency.resume;
     u.job = u.emergency.job;
     u.jobLock = u.emergency.jobLock;
     u.emergency = undefined;
@@ -405,6 +404,13 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     u.node = null;
     u.order = u.carry > 0 ? "return" : "idle";
     u.workReason = "Returning to village work";
+    if (resume && u.carry === 0) {
+      u.order = resume.order;
+      u.tx = resume.tx; u.tz = resume.tz;
+      u.stationOnArrival = resume.station;
+      u.stuckT = 0;
+      u.workReason = "Danger passed — resuming your expedition orders";
+    }
     return false;
   }
   if (u.emergency.autoArmed) {

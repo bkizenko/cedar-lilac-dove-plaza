@@ -617,6 +617,7 @@ test("war interrupts a trade without creating or teleporting a refund", () => {
   const g = fixture(),
     u = g.state.units.find((u) => u.team === 0 && u.type === "worker");
   g.tribe(0).food = 100;
+  g.tribe(1).stone = 100; // This scenario starts with a willing, sufficiently supplied partner.
   g.dispatchTrade(u, { give: "food", giveAmt: 20, get: "stone", getAmt: 8 }, 1);
   g.tribe(1).hostile = true;
   g.tradeAI(u, 0.1);
@@ -1300,4 +1301,145 @@ test("discovery points persist once across ages and reject damaged records", asy
   assert.throws(() => decodeGame(bad));
   const old = encodeGame(g); delete old.state.discoveries;
   assert.doesNotThrow(() => decodeGame(old));
+});
+
+test("known distant trees need no lumber camp and the camp benefit stays local", () => {
+  const g = fixture(), w = g.state.units.find(u => u.team === 0 && u.type === "worker");
+  const home = g.campOf(0);
+  const tree = {...g.state.trees[0], id:g.id(), x:home.x+60, z:home.z, amount:100};
+  g.state.trees = [tree]; g.vision.fill(1);
+  assert.equal(g.findNode(w, "wood"), tree);
+  w.x = tree.x; w.z = tree.z;
+  const before = g.campBonus(w, "wood");
+  const camp = g.makeBld("lumber", home.x, home.z, 0);camp.build=1;g.state.buildings.push(camp);
+  assert.equal(g.campBonus(w, "wood"), before);
+  camp.x=tree.x;camp.z=tree.z;
+  assert.ok(g.campBonus(w,"wood") < before*0.7);
+});
+test("manual scouting destinations hold on arrival and survive reload", () => {
+  const g=fixture(), w=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  g.clearSelect();w.selected=true;g.issueMove(w.x+20,w.z);
+  const restored=decodeGame(encodeGame(g)), rw=restored.state.units.find(u=>u.id===w.id);
+  restored.steer=()=>true;
+  restored.workerAI(rw,1/30);
+  assert.equal(rw.order,"hold");
+  restored.workerAI(rw,1/30);assert.equal(rw.order,"hold");
+});
+test("standing stones record investigation without creating resources", () => {
+  const g=fixture(), w=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  const m=g.world.megaliths[0];w.x=m.x;w.z=m.z;
+  const before=[g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone];
+  g.lootMegaliths(w);g.lootMegaliths(w);
+  assert.ok(g.looted.has(0));
+  assert.deepEqual([g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone],before);
+});
+test("legacy traditions require earned points, apply without new stock and persist", async () => {
+  const {recordDiscoveries,adoptTradition,unspentLegacy}=await import("../src/game/discovery.ts");
+  const g=fixture();g.vision.fill(1);recordDiscoveries(g);
+  const before=g.stockCap(0), food=g.tribe(0).food;
+  assert.ok(unspentLegacy(g)>=12);
+  assert.equal(adoptTradition(g,"winter-stores"),true);
+  assert.equal(g.stockCap(0),before+80);assert.equal(g.tribe(0).food,food);
+  assert.equal(adoptTradition(g,"winter-stores"),false);
+  assert.equal(adoptTradition(g,"woodcraft"),false);
+  const r=decodeGame(encodeGame(g));assert.equal(r.stockCap(0),g.stockCap(0));
+  r.tribe(0).age=1;assert.equal(adoptTradition(r,"woodcraft"),true);
+  const fresh=fixture();assert.equal(adoptTradition(fresh,"woodcraft"),false);
+});
+test("age commitment revalidates population and buildings instead of bypassing them", () => {
+  const g=fixture();Object.assign(g.tribe(0),{food:1000,wood:1000,stone:1000});
+  const before=g.tribe(0).food;g.commitAge(0,"econ");
+  assert.equal(g.tribe(0).age,0);assert.equal(g.tribe(0).food,before);
+  const home=g.campOf(0);while(g.popNow(0)<8)g.spawnUnit("worker",home.x,home.z,0);
+  g.commitAge(0,"econ");assert.equal(g.tribe(0).age,1);
+});
+
+test("scouts resume their expedition after taking shelter, including across saves", async () => {
+  const {emergencyResponse}=await import("../src/game/settlement.ts");
+  const g=fixture(),w=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  g.tribe(0).spears=0;g.tribe(0).bows=0;
+  w.order="explore";w.tx=w.x+50;w.tz=w.z;
+  const expected=w.tx;const foe=g.spawnUnit("spearman",w.x+2,w.z,3);
+  g.stampVision(foe.x,foe.z,10,2);
+  assert.equal(emergencyResponse(g,w,0.01),true);
+  const r=decodeGame(encodeGame(g)),rw=r.state.units.find(u=>u.id===w.id);
+  r.state.units.find(u=>u.id===foe.id).hp=0;
+  r.state.time=rw.emergency.until+1;
+  emergencyResponse(r,rw,0.01);
+  assert.equal(rw.order,"explore");assert.equal(rw.tx,expected);
+});
+test("favorable random events do not add unexplained goods", () => {
+  const g=fixture();g.state.time=100;g.calamityT=0;
+  const before=g.state.tribes.map(t=>[t.food,t.wood,t.stone]);
+  const rand=Math.random;try {Math.random=()=>0.99;g.tickCalamity(1);} finally {Math.random=rand;}
+  assert.deepEqual(g.state.tribes.map(t=>[t.food,t.wood,t.stone]),before);
+});
+
+test("partners protect winter food and refuse goods they already have in abundance", async () => {
+  const {quoteShipment}=await import("../src/game/barter.ts");
+  const g=fixture();g.vision.fill(1);g.state.time=1350;
+  Object.assign(g.tribe(0),{wood:100,food:200});
+  Object.assign(g.tribe(1),{food:60,wood:60,stone:100,hostile:false,tradeCd:0,trust:0});
+  const winter=quoteShipment(g,1,"wood","food",20);
+  assert.equal(winter.deal,null);assert.match(winter.reason,/winter/);
+  g.state.time=50;g.tribe(1).food=300;
+  const surplus=quoteShipment(g,1,"food","stone",20);
+  assert.equal(surplus.deal,null);assert.match(surplus.reason,/already have enough/);
+});
+test("market knowledge improves quoted terms without generating bonus cargo", async () => {
+  const {quoteShipment}=await import("../src/game/barter.ts");
+  const g=fixture();g.vision.fill(1);g.state.time=50;
+  Object.assign(g.tribe(0),{food:300});
+  Object.assign(g.tribe(1),{food:80,wood:250,hostile:false,tradeCd:0,trust:1});
+  const base=quoteShipment(g,1,"food","wood",20).deal;
+  g.state.agePicks=["econ","econ","econ"];
+  const improved=quoteShipment(g,1,"food","wood",20).deal;assert.ok(improved.getAmt>base.getAmt);
+  const u=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  assert.equal(g.dispatchTrade(u,improved,1),true);
+  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x;u.z=hall.z;
+  const stock=g.tribe(1).wood;g.tradeAI(u,0.1);
+  assert.equal(u.carry,improved.getAmt);assert.equal(g.tribe(1).wood,stock-improved.getAmt);
+});
+test("quick exchange cannot conjure goods without a discovered partner", () => {
+  const g=fixture();g.vision.fill(0);const food=g.tribe(0).food,wood=g.tribe(0).wood;
+  g.bankTrade("food","wood");assert.equal(g.tribe(0).food,food);assert.equal(g.tribe(0).wood,wood);
+});
+
+test("seeded raider camps have finite bands and persist across reloads", () => {
+  const g=fixture(), camps=g.state.buildings.filter(b=>b.raiderCamp);
+  assert.ok(camps.length>=1&&camps.length<=2);
+  const home=g.campOf(0);
+  for(const c of camps)assert.ok(Math.hypot(c.x-home.x,c.z-home.z)>=100);
+  const r=decodeGame(encodeGame(g));
+  assert.equal(r.state.units.filter(u=>u.homeCamp!==undefined).length,camps.length*2);
+  assert.deepEqual(r.state.buildings.filter(b=>b.raiderCamp).map(b=>b.id),camps.map(b=>b.id));
+  const c=r.state.buildings.find(b=>b.raiderCamp),u=r.state.units.find(u=>u.homeCamp===c.id);
+  const count=r.state.units.length;c.hp=0;r.barbarianAI(u,500);
+  assert.equal(u.order,"hold");assert.equal(r.state.units.length,count);
+});
+test("camp raiders steal and haul real cargo but respect the opening grace and quiet mode", () => {
+  const g=fixture(), c=g.state.buildings.find(b=>b.raiderCamp), raider=g.state.units.find(u=>u.homeCamp===c.id);
+  const w=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  w.x=c.x+10;w.z=c.z;w.carry=10;w.carryType="wood";raider.x=w.x+1;raider.z=w.z;
+  g.state.time=100;raider.wanderT=0;g.barbarianAI(raider,0.1);assert.equal(w.carry,10);
+  g.state.time=400;g.state.conflict="quiet";raider.wanderT=0;g.barbarianAI(raider,0.1);assert.equal(w.carry,10);
+  g.state.conflict="balanced";raider.wanderT=0;g.barbarianAI(raider,0.1);
+  assert.equal(w.carry,6);assert.equal(raider.carry,4);
+  const stock=g.tribe(3).wood;raider.x=c.x+3;raider.z=c.z;g.barbarianAI(raider,0.1);
+  assert.equal(g.tribe(3).wood,stock+4);assert.equal(raider.carry,0);
+});
+test("a stolen outbound shipment cannot exchange the missing goods", () => {
+  const g=fixture();g.vision.fill(1);Object.assign(g.tribe(1),{stone:100,hostile:false,tradeCd:0});
+  const w=g.state.units.find(u=>u.team===0&&u.type==="worker");
+  assert.equal(g.dispatchTrade(w,{give:"food",giveAmt:20,get:"stone",getAmt:8},1),true);
+  w.carry-=4;const before=[g.tribe(1).food,g.tribe(1).stone];g.tradeAI(w,0.1);
+  assert.equal(w.order,"return");assert.equal(w.carry,16);assert.equal(w.trade,null);
+  assert.deepEqual([g.tribe(1).food,g.tribe(1).stone],before);
+});
+
+test("territory control cannot create daily stock without harvesting", () => {
+  const g=fixture();for(const r of g.state.regions)r.owner=0;
+  const before=[g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone,g.tribe(0).copper,g.tribe(0).iron];
+  g.state.harvestDay=-1;g.tickHarvest();
+  assert.deepEqual([g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone,g.tribe(0).copper,g.tribe(0).iron],before);
 });

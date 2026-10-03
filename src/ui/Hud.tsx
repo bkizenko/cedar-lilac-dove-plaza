@@ -1,3 +1,4 @@
+import { quoteShipment, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Pause,
@@ -999,16 +1000,18 @@ function BankBtn({
   hud: HudSnapshot;
   engine: Engine | null;
 }) {
-  const n = hud.port ? 3 : 4;
-  const have = give === "food" ? hud.food : give === "wood" ? hud.wood : hud.stone;
+  const g = engine?.game, partner = g?.pickTradeRival();
+  const quote = g && partner ? quoteShipment(g, partner.id, give, get, 20) : null;
+  const available = g && !!tradeCarrier(g);
   return (
     <button
       type="button"
-      disabled={have < n || hud.paused || !!hud.ended}
+      disabled={!quote?.deal || !available || hud.paused || !!hud.ended}
+      title={quote?.reason || "Explore to find trading partners"}
       onClick={() => engine?.bankTrade(give, get)}
       className="rounded border border-parchment/15 bg-ink-soft px-1.5 py-0.5 text-[9px] text-parchment hover:border-bronze/40 disabled:opacity-40"
     >
-      {n} {resWord(give)} → 1 {resWord(get)}
+      {quote?.deal ? `Trade 20 ${resWord(give)} for ${quote.deal.getAmt} ${resWord(get)} · carrier` : "Find a trade partner"}
     </button>
   );
 }

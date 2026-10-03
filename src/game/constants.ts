@@ -102,7 +102,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 220,
     age: 0,
-    hint: "Must stand among pines. Chop only inside the ring. Spent stands return most of the timber.",
+    hint: "Optional workplace: nearby cutting takes 42% less time. Known trees can be cut without it. Spent stands return most of the timber.",
   },
   quarry: {
     name: "Quarry",
@@ -489,16 +489,16 @@ export const AGE_CHOICES: {
   army: { name: string; hint: string };
 }[] = [
   {
-    econ: { name: "Granaries", hint: "Food storage grows, and surplus spoils more slowly" },
-    army: { name: "Hardened hides", hint: "People gain 15% more health" },
+    econ: { name: "Granaries", hint: "+220 food capacity; ordinary spoilage reduced by 65%" },
+    army: { name: "Hardened hides", hint: "People gain 25% more health and 20% more damage" },
   },
   {
-    econ: { name: "Timber rights", hint: "Woodcutting is quicker. Other work is not" },
-    army: { name: "Long spears", hint: "+12% damage" },
+    econ: { name: "Timber rights", hint: "Woodcutting takes 35% less time. Other work is unchanged" },
+    army: { name: "Long spears", hint: "People gain 25% more health and 20% more damage" },
   },
   {
     econ: { name: "Market weights", hint: "Caravans leave sooner and bring a little more home" },
-    army: { name: "Watchfires", hint: "A free watchtower at your hall" },
+    army: { name: "Watchfires", hint: "Watchtower sight grows from 22 to 30 units, plus stronger defenders" },
   },
   {
     econ: { name: "Open fields", hint: "Sowing, tending and harvests improve. Soil tires slower" },
@@ -506,7 +506,7 @@ export const AGE_CHOICES: {
   },
   {
     econ: { name: "Ledgers", hint: "Haulers and traders walk faster on the road" },
-    army: { name: "Royal guard", hint: "Two extra guards at the hall" },
+    army: { name: "Royal guard", hint: "Existing soldiers gain 50% health; civilians gain 25%. No new people are created." },
   },
 ];
 
