@@ -150,7 +150,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 480,
     age: 0,
-    hint: "Train hunters. Archers and swordsmen after Bronze (copper for blades).",
+    hint: "Arm existing adults from the Bronze Age. Early villagers hunt and defend without a separate profession.",
   },
   forge: {
     name: "Forge",
@@ -300,7 +300,7 @@ export const UNITS: Record<
     from: "townhall",
   },
   spearman: {
-    name: "Hunter",
+    name: "Spearman",
     hp: 92,
     speed: 4.8,
     range: 2.6,
@@ -311,7 +311,7 @@ export const UNITS: Record<
     stone: 0,
     train: 5,
     r: 0.6,
-    age: 0,
+    age: 1,
     from: "barracks",
   },
   archer: {
@@ -502,11 +502,11 @@ export const AGE_CHOICES: {
   },
   {
     econ: { name: "Open fields", hint: "Sowing, tending and harvests improve. Soil tires slower" },
-    army: { name: "Shield wall", hint: "Hunters hold a tighter line, with more health and damage" },
+    army: { name: "Shield wall", hint: "Soldiers hold a tighter line, with more health and damage" },
   },
   {
     econ: { name: "Ledgers", hint: "Haulers and traders walk faster on the road" },
-    army: { name: "Royal guard", hint: "Two extra hunters at the hall" },
+    army: { name: "Royal guard", hint: "Two extra guards at the hall" },
   },
 ];
 

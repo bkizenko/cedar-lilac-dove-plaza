@@ -40,3 +40,17 @@ The full requested overhaul is unfinished. A meaningful overall percentage requi
 - Preview HTTP check passed. Interactive visual/listening verification remains outstanding under the previously reported browser access block.
 
 Next survival validation: actively construct farms and storage, harvest through autumn, and test withdrawal/defense during raids. Continue remaining systems in the order above.
+
+## Survival and landscape block — 2026-10-02
+
+Implemented:
+- Pale, slowly moving fog-of-war overlay conforms to terrain. Unexplored ground is mist-colored and remembered land lightly veiled. Visibility/targeting rules remain in place. Reduced normal distance haze, vignette and film grain. First spring no longer inherits winter snow cover.
+- New settlements begin with civilians, including rival camps. Hunting remains a villager assignment. Permanent spear training/drill starts at Bronze with the existing surplus requirement; temporary emergency militia remains available earlier.
+- Explicitly selected adults with empty hands can raid without changing profession. Children and unselected villagers are excluded. Explicit adult combat orders take precedence over automatic shelter behavior.
+- Grassland favors crops; woodland favors gathering/timber; uplands have lower crop yield and greater winter food demand. These are initial tunable habitat effects, not a complete ecological simulation. The village ledger explains the local habitat.
+- Updated obsolete hints about training people and hunters.
+- Exhausted minerals stay depleted. Habitat affects vegetation recovery. Wildlife recovery requires spring/summer, a surviving nearby herd, unseen dry ground and an available depleted population slot. Full extinction no longer magically repopulates from nowhere.
+
+Validation: all 283 full-suite tests passed. Final production build and type checks passed. Three diagnostic full-year construction scenarios (same terrain, each habitat profile) completed farms and storage and survived: grassland 10 people/306 food, woodland 11/323, uplands 11/236. These scenarios started with 160 timber to exercise construction and are not proof of unassisted opening balance. Random simulation events mean these are observations, not reproducible balance targets.
+
+Remaining acceptance: visually inspect fog on desktop/mobile and listen to the changed score once the existing browser-access block clears. Continue with survival-year balance across natural seeds, more meaningful tools/preservation, and distinct tribal growth. No claim of full overhaul completion.

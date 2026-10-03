@@ -407,6 +407,14 @@ export class WorldView {
   }
 
   rebuild(game: Game) {
+    if (this.fowMesh) {
+      const positions = this.fowMesh.geometry.getAttribute("position") as THREE.BufferAttribute;
+      for (let i = 0; i < positions.count; i++) {
+        positions.setZ(i, Math.max(game.world.waterY, game.height(positions.getX(i), -positions.getY(i))) + 0.8);
+      }
+      positions.needsUpdate = true;
+      this.fowMesh.geometry.computeBoundingSphere();
+    }
     this.disposeWorld();
     this.lastSnow = -1;
     this.seasonAcc = 1;
@@ -1048,7 +1056,7 @@ export class WorldView {
                               ? "#c8dcbe"
                               : "#d2dcbe",
     );
-    let dens = night ? 0.004 : 0.003;
+    let dens = night ? 0.003 : 0.0018;
     if (wx === "mist") dens = 0.0078;
     if (wx === "rain") dens = 0.0052;
     if (wx === "storm") dens = 0.009;
@@ -1656,6 +1664,7 @@ export class WorldView {
       depthWrite: false,
       uniforms: {
         uMap: { value: this.fowTex },
+        uTime: this.timeU,
         uTerr: { value: this.terrTex },
         uHalf: { value: HALF },
         uSize: { value: MAP },
@@ -1670,6 +1679,7 @@ export class WorldView {
           gl_Position = projectionMatrix * viewMatrix * w;
         }`,
       fragmentShader: `
+        uniform float uTime;
         uniform sampler2D uMap;
         uniform sampler2D uTerr;
         varying vec2 vUv;
@@ -1677,16 +1687,18 @@ export class WorldView {
           float v = texture2D(uMap, vUv).r;
           vec4 terr = texture2D(uTerr, vUv);
           float live = smoothstep(0.55, 0.85, v);
-          float shroudA = mix(0.94, 0.58, smoothstep(0.12, 0.55, v)) * (1.0 - live);
+          float shroudA = mix(0.98, 0.30, smoothstep(0.12, 0.55, v)) * (1.0 - live);
           float seen = smoothstep(0.12, 0.28, v);
           float wash = terr.a * seen * (live > 0.5 ? 0.2 : 0.12);
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
-          vec3 col = mix(vec3(0.04, 0.05, 0.06), terr.rgb, wash / max(a, 0.001));
+          float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);
+          vec3 mist = mix(vec3(0.69, 0.77, 0.79), vec3(0.88, 0.91, 0.87), 0.5 + cloud * 0.22);
+          vec3 col = mix(mist, terr.rgb, wash / max(a, 0.001));
           gl_FragColor = vec4(col, a);
         }`,
     });
-    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP), mat);
+    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP, 96, 96), mat);
     this.fowMesh.rotation.x = -Math.PI / 2;
     this.fowMesh.position.y = 0.45;
     this.fowMesh.renderOrder = 6;
@@ -1711,7 +1723,7 @@ export class WorldView {
         uniforms: {
           tDiffuse: { value: null },
           offset: { value: 0.85 },
-          darkness: { value: 0.32 },
+          darkness: { value: 0.12 },
         },
         vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
         fragmentShader: `
@@ -1724,7 +1736,7 @@ export class WorldView {
           }`,
       });
       this.composer.addPass(vig);
-      this.composer.addPass(new FilmPass(0.11, false));
+      this.composer.addPass(new FilmPass(0.025, false));
       this.composer.setSize(w, h);
     } catch {
       this.composer = null;
@@ -1893,13 +1905,11 @@ export class WorldView {
       const vx = pos.getX(i);
       const vz = pos.getZ(i);
       if (!game.exploredAt(vx, vz)) {
-        c.r *= 0.05;
-        c.g *= 0.05;
-        c.b *= 0.06;
+        c.setRGB(0.72, 0.79, 0.80);
       } else if (!game.visibleAt(vx, vz)) {
-        c.r *= 0.45;
-        c.g *= 0.45;
-        c.b *= 0.48;
+        c.r += (0.72 - c.r) * 0.38;
+        c.g += (0.79 - c.g) * 0.38;
+        c.b += (0.80 - c.b) * 0.38;
       }
       const o = i * 3;
       arr[o] = c.r;

@@ -1,3 +1,4 @@
+import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, UNITS, MAP, HALF } from "./constants";
@@ -20,7 +21,8 @@ export function isDependent(g: Game, u: Unit) {
 export function foodDemand(g: Game, team = 0) {
   const mouths = g.state.units
     .filter((u) => u.team === team && u.hp > 0)
-    .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1), 0);
+    .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) *
+      (calendar(g).phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
 }
@@ -48,7 +50,7 @@ export function crop(g: Game, b: Building) {
   if (phase === 2 && !b.crop.ripened) {
     const fields = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.2 : 1;
     b.crop.remaining = Math.floor(
-      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields,
+      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops,
     );
     b.crop.ripened = true;
   }
@@ -343,6 +345,9 @@ export class WorkBoard {
 /** Automatic response is local; commanded expeditions are not recalled across the map. */
 export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   if (u.team === 3) return false;
+  // Explicit adult combat orders take precedence over automatic shelter behavior.
+  if (u.team === 0 && u.type === "worker" && !u.emergency && !isDependent(g, u) &&
+      (u.order === "attack" || u.order === "attackmove")) return false;
   const foes = g.state.units.filter(
     (e) =>
       e.hp > 0 &&

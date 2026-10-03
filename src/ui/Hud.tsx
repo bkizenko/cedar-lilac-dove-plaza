@@ -98,7 +98,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   const weatherName = weatherBits[0] || hud.weather;
   const weatherTemp = weatherBits[1] || "";
   const showJobs = !selMin && hud.workerSelected > 0;
-  const showFight = !selMin && hud.militarySelected > 0;
+  const showFight = !selMin && (hud.militarySelected > 0 || hud.workerSelected > 0);
   const speed = hud.speed >= 3 ? 4 : hud.speed === 2 ? 2 : 1;
   const founding = hud.founding;
   const rate = hud.port ? 3 : 4;
@@ -579,14 +579,14 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 >
                   <PawPrint className="size-3.5 text-blood" />
                 </JobBtn>
-                <JobBtn
+                {hud.age >= 1 && <JobBtn
                   active={hud.job === "drill"}
                   label="Drill"
-                  title="Train this adult into a hunter. Only while the village has spare food. Takes a while."
+                  title="Bronze Age: drill this adult as a soldier while the village has spare food. Villagers can already hunt and defend."
                   onClick={() => engine?.assignJob("drill")}
                 >
                   <Sword className="size-3.5 text-bronze" />
-                </JobBtn>
+                </JobBtn>}
                 <JobBtn
                   active={hud.job === "hold"}
                   label="Rest"
@@ -614,8 +614,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   type="button"
                   title={
                     hud.raidName
-                      ? `Raid ${hud.raidName} with the selected hunters. Move or stop to withdraw.`
-                      : "Explore a rival settlement and select drilled adults to raid."
+                      ? `Raid ${hud.raidName} with the selected adults. Move or stop to withdraw.`
+                      : "Explore a rival settlement and select adults with empty hands to raid."
                   }
                   onClick={() => engine?.raidRival()}
                   className="flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-blood/40 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-blood"

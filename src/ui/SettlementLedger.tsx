@@ -1,3 +1,4 @@
+import { habitatAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
 import { knownSettlement } from "@/game/barter";
 import { useEffect, useRef } from "react";
@@ -29,6 +30,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
     s = g.state,
     t = g.tribe(0);
   if (!t) return null;
+  const home = g.campOf(0);
+  const habitat = habitatAt(g, home.x, home.z);
   const cal = calendar(g),
     people = s.units.filter((u) => u.team === 0 && u.hp > 0),
     farms = s.buildings.filter((b) => b.team === 0 && b.type === "farm" && g.finished(b));
@@ -41,6 +44,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   return (
     <dialog ref={ref} className="play-guide settlement-ledger" onCancel={close}>
       <h2 className="font-display text-2xl text-bronze-bright">The village ledger</h2>
+      <p><strong>{habitat.name}</strong> · {habitat.advice}</p>
       <p className="mt-2">
         Year {cal.year + 1} · {cal.name} · {Math.ceil(cal.remaining / 60)} minutes until the next
         season

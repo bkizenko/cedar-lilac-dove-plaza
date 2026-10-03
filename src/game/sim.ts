@@ -1,3 +1,4 @@
+import { habitatAt } from "./ecology";
 import { knownSettlement } from "./barter";
 import {
   WorkBoard,
@@ -392,9 +393,9 @@ export class Game {
         u.order = "idle";
       }
       if (camp.team === 1) {
-        this.spawnUnit("warden", camp.x + 6, camp.z + 2, camp.team);
-        this.spawnUnit("spearman", camp.x - 5, camp.z + 5, camp.team);
-        this.spawnUnit("spearman", camp.x + 3, camp.z - 6, camp.team);
+        this.spawnUnit("worker", camp.x + 6, camp.z + 2, camp.team);
+        this.spawnUnit("worker", camp.x - 5, camp.z + 5, camp.team);
+        this.spawnUnit("worker", camp.x + 3, camp.z - 6, camp.team);
         const cairn = this.makeBld(
           "cairn",
           camp.x + 12,
@@ -405,9 +406,9 @@ export class Game {
         cairn.build = 1;
         this.state.buildings.push(cairn);
       } else if (camp.team === 2) {
-        this.spawnUnit("ranger", camp.x - 5, camp.z - 3, camp.team);
-        this.spawnUnit("spearman", camp.x + 5, camp.z - 4, camp.team);
-        this.spawnUnit("archer", camp.x - 3, camp.z + 6, camp.team);
+        this.spawnUnit("worker", camp.x - 5, camp.z - 3, camp.team);
+        this.spawnUnit("worker", camp.x + 5, camp.z - 4, camp.team);
+        this.spawnUnit("worker", camp.x - 3, camp.z + 6, camp.team);
         const grove = this.makeBld(
           "grove",
           camp.x - 11,
@@ -418,8 +419,8 @@ export class Game {
         grove.build = 1;
         this.state.buildings.push(grove);
       } else {
-        this.spawnUnit("spearman", camp.x + 4, camp.z - 5, camp.team);
-        this.spawnUnit("spearman", camp.x - 5, camp.z - 4, camp.team);
+        this.spawnUnit("worker", camp.x + 4, camp.z - 5, camp.team);
+        this.spawnUnit("worker", camp.x - 5, camp.z - 4, camp.team);
       }
       if (camp.team === 1 || camp.team === 2) {
         const chief = this.spawnUnit("leader", camp.x + 2.2, camp.z + 1.4, camp.team);
@@ -1509,7 +1510,8 @@ export class Game {
   commandedMilitary() {
     const selected = this.selectedUnits();
     return (selected.length ? selected : this.state.units).filter(
-      u => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
+      u => u.team === 0 && u.hp > 0 && u.type !== "leader" && !isDependent(this, u) &&
+        (u.type !== "worker" || (selected.length > 0 && u.carry === 0)),
     );
   }
 
@@ -1575,14 +1577,14 @@ export class Game {
     }
     const mil = this.commandedMilitary();
     if (!this.marchMilitary(target.x, target.z, target, "attackmove")) {
-      this.banner("Select drilled adults to raid", 1.8);
+      this.banner("Select adults with empty hands to raid", 1.8);
       this.onSfx("invalid");
       return;
     }
     for (const u of mil) u.pillage = target.team;
     if (target.team !== 0 && target.team !== 3) this.makeHostile(target.team);
     const name = this.tribe(target.team)?.name || "the camp";
-    this.banner(mil.length + " hunters raid " + name + " — move or stop to withdraw", 2.2);
+    this.banner(mil.length + " villagers raid " + name + " — move or stop to withdraw", 2.2);
     this.onSfx("pillage");
   }
 
@@ -2106,12 +2108,24 @@ export class Game {
       if (c.hp <= 0) {
         c.wanderT -= dt;
         if (c.wanderT <= 0) {
-          c.hp = c.maxHp;
-          const a = Math.random() * Math.PI * 2;
-          const d = 20 + Math.random() * ((this.world.islandR || 140) - 24);
-          c.x = Math.sin(a) * d;
-          c.z = Math.cos(a) * d;
-          c.y = this.height(c.x, c.z) + (c.species === "bird" ? 8 : 0);
+          c.wanderT = 60;
+          // Recovery represents recruitment into a surviving local herd, not instant respawning.
+          if (calendar(this).phase > 1) continue;
+          const herd = this.state.wildlife.find(other =>
+            other !== c && other.species === c.species && other.hp > 0 &&
+            Math.hypot(other.x - c.x, other.z - c.z) < 120);
+          if (!herd) continue;
+          for (let attempt = 0; attempt < 24; attempt++) {
+            const a = Math.random() * Math.PI * 2, d = 8 + Math.random() * 14;
+            const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
+            const y = this.height(x, z);
+            if (y <= this.world.waterY + 0.35 ||
+                Math.hypot(x, z) >= (this.world.islandR || 140) - 6 || this.visibleAt(x, z)) continue;
+            c.hp = c.maxHp;
+            c.x = x; c.z = z; c.y = y + (c.species === "bird" ? 8 : 0);
+            c.vx = 0; c.vz = 0;
+            break;
+          }
         }
         continue;
       }
@@ -2327,6 +2341,10 @@ export class Game {
       return;
     }
     if (job === "drill") {
+      if (this.tribe(0).age < 1) {
+        this.banner("Villagers hunt and defend together. Dedicated soldiers require the Bronze Age.", 3);
+        return;
+      }
       if (reserveSeconds(this, 0) < 420) {
         this.banner("Drill waits on a food surplus. Eat first, then train.", 2);
         this.onSfx("invalid");
@@ -3081,15 +3099,19 @@ export class Game {
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
         if (n.amount > 0) continue;
+        if (n.kind === "stone" || n.kind === "copper" || n.kind === "iron") continue;
         // Exhausted wild food does not regrow through winter.
         if (n.kind === "forage" && calendar(this).phase === 3) continue;
         let rate = 1;
-        if (rain && n.kind !== "stone") rate = 1.25;
+        if (rain) rate = 1.25;
         if (frost) rate = 0.55;
-        if (drought && n.kind !== "stone") rate = 0.42;
+        if (drought) rate = 0.42;
         if (flood && n.kind === "forage") rate = 0.7;
         if (flood && n.kind === "fish") rate = 1.35;
         if (rain && n.kind === "fish") rate = 1.2;
+        const habitat = habitatAt(this, n.x, n.z);
+        if (n.kind === "forage") rate *= habitat.forage;
+        if (n.kind === "tree") rate *= habitat.timber;
         n.regenT -= dt * rate;
         if (n.regenT <= 0) {
           const base = n.maxAmt || (n.kind === "tree" ? 10 : 8);
@@ -3179,7 +3201,7 @@ export class Game {
       if (tr.food < 3 && pop > 4 && Math.random() < 0.035 * dt) {
         u.hp -= 8;
         if (u.hp <= 0 && u.team === 0)
-          this.banner("Hunger takes a " + (u.type === "worker" ? "gatherer" : "hunter"), 2);
+          this.banner("Hunger takes a " + (u.type === "worker" ? "gatherer" : "villager"), 2);
       }
       const span = u.type === "worker" ? 1860 + (u.id % 420) : 2280 + (u.id % 360);
       if (u.ageT > span && pop > 4 && Math.random() < 0.06 * dt) {
@@ -3353,7 +3375,7 @@ export class Game {
       this.banner(
         unitType === "worker"
           ? "Need a standing Town Hall"
-          : "Raise a Barracks first, then train hunters",
+          : "Raise a Barracks first, then train soldiers",
         1.6,
       );
       return;
@@ -3594,6 +3616,9 @@ export class Game {
 
   campBonus(u: Unit, job: ResKind) {
     let m = this.gatherMul(u.team);
+    const habitat = habitatAt(this, u.x, u.z);
+    if (job === "wood") m /= habitat.timber;
+    if (job === "food" && u.node && "kind" in u.node && u.node.kind === "forage") m /= habitat.forage;
     if (job === "wood" && !this.hasBld(u.team, "lumber")) m *= 2.2;
     if (job === "stone" && !this.hasBld(u.team, "quarry")) m *= 2.8;
     const want =
@@ -4492,7 +4517,7 @@ export class Game {
 
   drillAI(u: Unit, dt: number) {
     const tr = this.tribe(u.team);
-    if (!tr || reserveSeconds(this, u.team) < 420) {
+    if (!tr || tr.age < 1 || reserveSeconds(this, u.team) < 420) {
       u.drill = undefined;
       u.order = "idle";
       u.jobLock = false;
@@ -4534,7 +4559,7 @@ export class Game {
     u.jobLock = false;
     u.order = "idle";
     u.workReason = "Finished the drill";
-    if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Hunter", "#c9e8a0");
+    if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Spearman", "#c9e8a0");
   }
 
   welcomeSoul(team: number, x: number, z: number) {
@@ -4907,18 +4932,19 @@ export class Game {
     const count = (type: BldType) =>
       this.state.buildings.filter((b) => b.type === type && b.team === 0 && b.hp > 0).length;
     if (this.popNow(0) < 6)
-      return "Train Gatherers — tap Gatherer (50 berries) or the People count";
+      return "Build food reserves and welcome migrants to grow the village";
     if (count("farm") < 1) return "Build a Farm  " + count("farm") + "/1";
     if (count("dock") < 1) return "Fishing Dock — put it on the white posts by the water";
     if (count("lumber") < 1)
       return "Build a Lumber Camp among the pines  " + count("lumber") + "/1";
     if (count("quarry") < 1)
       return "Raise a Quarry on a grey outcrop (logs only) — then people haul stone";
-    if (count("barracks") < 1) return "Raise a Barracks (40 logs), then train Hunters";
+    if (this.tribe(0).age < 1) return "Build a surplus and advance to Bronze before forming a standing army";
+    if (count("barracks") < 1) return "Raise a Barracks to equip existing adults";
     const spears = this.state.units.filter(
       (u) => u.team === 0 && u.type === "spearman" && u.hp > 0,
     ).length;
-    if (spears < 2) return "Train hunters — cheap, and they fight raiders";
+    if (spears < 2) return "Train soldiers — cheap, and they fight raiders";
     if (this.tribe(0).age < 1) return "Advance to Bronze — copper for swordsmen";
     if (count("forge") < 1) return "Raise a Forge near copper";
     if (this.tribe(0).age < 2) return "Advance to the Iron Age";
@@ -4930,7 +4956,7 @@ export class Game {
     const fighters = this.state.units.filter(
       (u) => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     ).length;
-    if (fighters < 8) return "Field eight hunters  " + fighters + "/8";
+    if (fighters < 8) return "Field eight soldiers  " + fighters + "/8";
     return "Hold the island — drive the rivals out, or weather the sea";
   }
 
@@ -4950,7 +4976,7 @@ export class Game {
     let spring = w(0.125);
     let summer = w(0.375);
     let autumn = w(0.625);
-    let winter = w(0.875);
+    let winter = this.state.time < 450 ? 0 : w(0.875);
     const s = spring + summer + autumn + winter || 1;
     spring /= s;
     summer /= s;

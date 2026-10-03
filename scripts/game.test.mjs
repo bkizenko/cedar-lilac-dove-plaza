@@ -9,6 +9,12 @@ const fixture = () => {
   g.enterIsland();
   return g;
 };
+function militaryFixture() {
+  const g = fixture(), home = g.campOf(0);
+  g.spawnUnit("spearman", home.x + 4, home.z - 5, 0);
+  g.spawnUnit("spearman", home.x - 5, home.z - 4, 0);
+  return g;
+}
 test("save restores full state and object identity", () => {
   const g = fixture(),
     w = g.state.units.find((u) => u.team === 0 && u.type === "worker"),
@@ -58,7 +64,7 @@ test("ten simulated minutes remain finite and saveable", () => {
 });
 test("hold fires in place; attack-move resumes", () => {
   const g = fixture(),
-    a = g.state.units.find((u) => u.team === 0 && u.type === "spearman");
+    a = g.spawnUnit("spearman", g.campOf(0).x, g.campOf(0).z, 0);
   const enemy = g.spawnUnit("spearman", a.x + 1, a.z, 3);
   enemy.hp = 100;
   a.order = "hold";
@@ -321,7 +327,7 @@ test("farms require seasonal labor and uncollected harvest expires", async () =>
   g.state.time = 900;
   farmWork(g, u, b, 0.8);
   assert.equal(u.carry, 2);
-  assert.equal(b.crop.remaining, 258);
+  assert.equal(b.crop.remaining, 310);
   g.state.time = 1350;
   crop(g, b);
   assert.equal(b.crop.remaining, 0);
@@ -367,7 +373,7 @@ test("new seasonal, work and emergency state survives saving", async () => {
 });
 
 test("raid marches toward an unseen settlement instead of reacquiring it forever", () => {
-  const g = fixture(),
+  const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
   g.vision.fill(1);
   g.issuePillage(hall);
@@ -390,7 +396,7 @@ test("raid marches toward an unseen settlement instead of reacquiring it forever
   assert.ok(Math.hypot(u.x - x, u.z - z) > 0.2, `raid stayed at ${x},${z}`);
 });
 test("truce clears both armies targets and prevents immediate renewed hostility", () => {
-  const g = fixture(),
+  const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
   g.vision.fill(1);
   g.issuePillage(hall);
@@ -421,6 +427,7 @@ test("selecting a building clears unit selection and queues an arming order whil
   g.state.paused = true;
   g.trainSelected("worker");
   assert.equal(hall.queue.length, 0);
+  g.tribe(0).age = 1;
   g.trainSelected("spearman");
   assert.equal(bar.queue.length, 1);
   assert.equal(bar.queue[0].unit, "spearman");
@@ -438,7 +445,7 @@ test("new world has a wider map and distant settlement starts", async () => {
 });
 
 test("raid crosses the wider island and engages defenders", () => {
-  const g = fixture(),
+  const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
   g.vision.fill(1);
   g.issuePillage(hall);
@@ -457,7 +464,7 @@ test("raid crosses the wider island and engages defenders", () => {
 });
 
 test("raiders attack an undefended settlement instead of stopping beside it", () => {
-  const g = fixture(),
+  const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
   g.state.units = g.state.units.filter((u) => u.team !== 1);
   const buildings = g.state.buildings.filter((b) => b.team === 1),
@@ -651,6 +658,7 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   const workers = () => g.state.units.filter((u) => u.team === 0 && u.type === "worker" && u.hp > 0).length;
   const w0 = workers();
   const pop = g.popNow(0);
+  g.tribe(0).age = 1;
   assert.equal(g.enqueueTrain(barracks, "spearman"), true);
   barracks.queue[0].t = barracks.queue[0].max;
   g.updateTraining(0.01);
@@ -661,7 +669,7 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
 
 test("marked trees are felled first, and burning a hall takes stores", async () => {
   const { FOW, HALF, MAP } = await import("../src/game/constants.ts");
-  const g = fixture();
+  const g = militaryFixture();
   const home = g.campOf(0);
   const far = g.state.trees.find((t) => t.amount > 0 && Math.hypot(t.x - home.x, t.z - home.z) > 40);
   assert.ok(far);
@@ -989,6 +997,7 @@ test("raid commands and follow-up targets respect unexplored territory", () => {
   const g = fixture();
   g.vision.fill(0);
   const hall = g.state.buildings.find(b => b.team === 1 && b.type === "townhall");
+  g.spawnUnit("spearman", g.campOf(0).x, g.campOf(0).z, 0);
   const army = g.commandedMilitary();
   g.issuePillage(hall);
   assert.ok(army.every(u => u.pillage === -1));
@@ -1066,7 +1075,102 @@ test("new settlements begin with one completed hut and a clear opening", () => {
     assert.equal(huts[0].build, 1);
     assert.equal(g.state.founding, false);
     assert.equal(g.state.weather, "clear");
+    assert.equal(g.seasonMix().snow, 0, "the first spring does not inherit winter snow cover");
     g.tickWeather(299);
     assert.equal(g.state.weather, "clear");
   }
+});
+
+
+test("early villagers hunt without a separate profession and cannot drill a standing army", () => {
+  const g = fixture();
+  assert.ok(g.state.units.filter(u => u.team === 0).every(u => u.type === "worker"));
+  const worker = g.state.units.find(u => u.team === 0);
+  g.clearSelect(); worker.selected = true; g.tribe(0).food = 5000;
+  g.assignJob("hunt");
+  assert.equal(worker.type, "worker");
+  assert.equal(worker.huntOnly, true);
+  g.assignJob("drill");
+  assert.equal(worker.drill, undefined);
+  const hall = g.campOf(0), barracks = g.makeBld("barracks", hall.x + 10, hall.z, 0);
+  assert.equal(g.enqueueTrain(barracks, "spearman"), false);
+  g.tribe(0).age = 1;
+  g.assignJob("drill");
+  assert.equal(worker.drill, 0);
+});
+
+test("biomes affect harvested crops and winter food demand, including after save", async () => {
+  const {foodDemand} = await import("../src/game/settlement.ts");
+  const g = fixture(), home = g.campOf(0);
+  const farm = g.makeBld("farm", home.x, home.z, 0);
+  const originalBiomes = g.world.biomes;
+  const yieldFor = kind => {
+    g.world.biomes = [{kind, x: home.x, z: home.z}];
+    g.state.time = 900;
+    farm.crop = {year:0, planted:1, tended:1, remaining:0, ripened:false};
+    return crop(g, farm).remaining;
+  };
+  const plains = yieldFor("plains"), forest = yieldFor("forest"), hills = yieldFor("hills");
+  assert.ok(plains > forest && forest > hills);
+  g.state.time = 1350;
+  const exposed = foodDemand(g);
+  g.world.biomes[0].kind = "forest";
+  assert.ok(foodDemand(g) < exposed);
+  g.world.biomes = originalBiomes;
+  const restored = decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
+  assert.equal(foodDemand(restored), foodDemand(g));
+});
+
+
+test("selected adult villagers can raid without creating a hunter profession", async () => {
+  const {emergencyResponse} = await import("../src/game/settlement.ts");
+  const g = fixture(); g.clearSelect(); g.vision.fill(1);
+  const adults = g.state.units.filter(u => u.team === 0);
+  adults[0].selected = true;
+  adults[1].selected = true; adults[1].maturesAt = 200;
+  const hall = g.state.buildings.find(b => b.team === 1 && b.type === "townhall");
+  g.issuePillage(hall);
+  assert.equal(adults[0].type, "worker");
+  assert.equal(adults[0].order, "attackmove");
+  assert.equal(adults[0].pillage, 1);
+  const foe = g.spawnUnit("spearman", adults[0].x + 4, adults[0].z, 1);
+  g.vision.fill(2);
+  assert.equal(emergencyResponse(g, adults[0], 0.1), false);
+  assert.equal(adults[0].order, "attackmove");
+  foe.hp = 0;
+  assert.equal(adults[1].pillage, -1);
+  assert.equal(adults[2].pillage, -1);
+  const home = g.campOf(0);
+  g.issueMove(home.x, home.z);
+  assert.equal(adults[0].pillage, -1);
+});
+
+
+test("minerals remain depleted while habitat affects renewable vegetation", () => {
+  const g = fixture(); g.state.weather = "clear";
+  const base = {...g.state.forage[0], amount:0, regenT:100};
+  g.state.stones = [{...base, kind:"stone"}];
+  g.state.copper = [{...base, kind:"copper"}];
+  g.state.iron = [{...base, kind:"iron"}];
+  g.world.biomes = [{kind:"forest", x:base.x, z:base.z}];
+  g.state.forage = [{...base}];
+  g.tickRegen(10);
+  assert.equal(g.state.forage[0].regenT, 88);
+  g.tickRegen(10000);
+  for (const list of [g.state.stones,g.state.copper,g.state.iron]) assert.equal(list[0].amount, 0);
+});
+
+test("wildlife recovery needs a surviving herd, warm season, unseen dry land", () => {
+  const {g} = cornerstoneValley(); g.vision.fill(0);
+  const animal = {id:g.id(),species:"deer",x:0,z:38,y:4,hp:0,maxHp:3,scale:1,vx:0,vz:0,facing:0,wanderT:0,fly:0};
+  g.state.wildlife = [animal];
+  g.tickWildlife(1); assert.equal(animal.hp, 0);
+  g.state.wildlife.push({...animal,id:g.id(),hp:3,wanderT:100});
+  g.state.time = 1350; animal.wanderT = 0;
+  g.tickWildlife(1); assert.equal(animal.hp, 0);
+  g.state.time = 0; animal.wanderT = 0; g.vision.fill(2);
+  g.tickWildlife(1); assert.equal(animal.hp, 0);
+  animal.wanderT = 0; g.vision.fill(0);
+  g.tickWildlife(1); assert.equal(animal.hp, 3);
+  assert.ok(animal.y > g.world.waterY);
 });
