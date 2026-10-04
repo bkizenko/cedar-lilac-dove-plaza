@@ -17,7 +17,8 @@ if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:$DAWN_PORT/"; then
   exit 0
 fi
 mkdir -p .preview
-npm run dev -- --port "$DAWN_PORT" --strictPort >>.preview/dev.log 2>&1 &
+export DAWN_PORT
+node scripts/start-dev.mjs
 i=0
 while [ "$i" -lt 40 ]; do
   if curl -sf -o /dev/null --max-time 1 "http://127.0.0.1:$DAWN_PORT/"; then

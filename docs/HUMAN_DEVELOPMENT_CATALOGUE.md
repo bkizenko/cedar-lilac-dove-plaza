@@ -135,7 +135,7 @@ This is a design catalogue, not a claim that every historical development must o
 ## 11. War, security and organization
 
 101. Stone-age clubs, spears and bows; civilians can hunt/defend.
-102. Observe an armed raid or attack before relations turn hostile.
+102. ~~Observe an armed raid or attack before relations turn hostile.~~ — local arrival/attack recognition is regression-tested; remote orders do not immediately declare war
 103. Shared militia stores, alarms and recall horn.
 104. Responsive selected-unit raids, attack-move, retreat and hold.
 105. Distinct counters, armor, ranges, projectiles and collision/spacing.
@@ -163,3 +163,5 @@ This is a design catalogue, not a claim that every historical development must o
 [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md) is the single current execution queue, architecture guide, acceptance checklist and handoff. All 120 items are accepted scope. Only the numbered struck-through items above are completed at their stated tested scope; everything else is partial or open. Avoid duplicate execution orders in this catalogue.
 
 The current phase adds transported wild crop samples, saved worker-time cultivation trials, grain/pulses/tuber varieties and distinct climate-sensitive food lots. It repairs carrier recovery, building corner interactions, civilian hunting/search, storm shelter, brief severe storms, age shortages, private undiscovered communities and paused-game music. Existing fields/villages remain compatible. These foundations do not complete linked technologies, sustainable advanced rivals, independent faction turnover, generalized storage, drinking water, domestication, prisoners, walls or the larger accepted overhaul. See the canonical queue for the exact remaining work.
+
+The 2026-10-04 weapons/raids phase adds actual civilian weapon-crafting work, Stone Age bows, selecting adults to equip without healing/recruiting, physical barracks practice and saved combat experience. Finite pillage goods pass through ruin caches and carried cargo before delivery. Defender targeting and raids against settlements without a hall are repaired. Items 101, 103–110 remain partial: clubs/durable equipment, counters/armor, full prisoners, defenses, escorts/morale and advanced organization are not complete. The canonical future handoff contains the next execution block.

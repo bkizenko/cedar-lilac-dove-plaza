@@ -150,6 +150,8 @@ export default defineConfig(({ command, isPreview }) => ({
     host: "0.0.0.0",
     port: 8080,
     strictPort: true,
+    // Builds and QA artifacts must not reload an in-progress village.
+    watch: { ignored: ["**/.vercel/**", "**/.preview/**"] },
   },
   preview: {
     host: "127.0.0.1",

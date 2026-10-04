@@ -10,6 +10,8 @@ Dawn of Man survival/production, responsive Age of Empires RTS commands/combat, 
 
 - Seeded versioned terrain preserves old landscape geometry when saves load; new games have more varied relief, lakes, rivers and habitats.
 - Existing adult civilians gather, hunt, sow/tend/harvest, preserve food, construct, carry supplies, trade, explore and defend. No buying new people from queues.
+- Stone spears and bows now require materials and a resident physically working at a hall or barracks; blades require a Bronze Age forge. Progress survives interruption and saves. Selected empty-handed adults equip stored weapons near village buildings without healing or recruiting. Militia stand down at home. Barracks practice uses actual worker time and raises saved combat experience instead of creating a soldier or healing wounds.
+- Raids recognize nearby rival structures, engage defenders before structures, and recover from destroyed targets. Melee and projectiles share damage, capture and destruction rules. Ruined stores hold finite reserved loot; raiders load it, physically return and deliver before it enters faction reserves. Remaining caches can be revisited through the ledger.
 - Births, group migration and slow adult aging; childhood is compressed to six minutes, not sixteen thirty-minute years. Appetite/size/speed/strength/trade traits are stable; new given names depend on world seed and identity. Parent IDs/life notices are foundations, not a finished family simulator.
 - Distinct provisions, berries, fish, meat, grain, pulses and tubers survive transport and saves. Outdoor harvests remain available beyond sheltered capacity; losses depend on food type, temperature, humidity and preservation.
 - Wild crop samples must be gathered and delivered home, then an adult performs a saved, interruptible cultivation trial at a reachable hearth. Grain/pulses/tubers have different yields/soil effects. Existing farms keep their established grain knowledge. This is the first practical-development branch, not the complete technology system.
@@ -24,6 +26,7 @@ Dawn of Man survival/production, responsive Age of Empires RTS commands/combat, 
 
 ## Architecture and files to retain
 
+- src/game/warfare.ts: civilian weapon recipes/work, saved combat experience bonuses and physical ruin-loot recovery. Keep these using the shared navigation and carrier delivery systems.
 - src/game/sim.ts: Game facade, fixed-step systems, commands, combat, construction, ages, movement/navigation and HUD snapshot. Extend modules without wholesale replacement.
 - src/game/types.ts/constants.ts: schemas, finite resource/unit/building types and balance tables.
 - src/game/settlement.ts: seasonal crop labor, WorkBoard job slots/priorities/connected-component navigation, needs and emergency response.
@@ -66,7 +69,7 @@ Desktop and 390-pixel built-release rendering were checked with no captured cons
 
 Rival starvation had several concrete causes: player-fog collision checks allowed unseen buildings to overlap, circular interaction ranges rejected reachable corners, and storms halted all work for 160–300 seconds (more than a month). These are repaired. Severe storms last 20–50 seconds and consecutive severe storms ease into rain/frost. Rival births now reserve meals for children maturing before the next harvest; shortage no longer randomly destroys huts. Continue multi-seed years of real labor, harvest, depletion and trade: the final seeded three-year audit passed with all six societies surviving at 7–11 residents. All remained in Stone and several had no spare timber: resource bottlenecks and advancing into later ages are not complete. Do not mark goal-driven rival economies or dynamic faction turnover finished.
 
-Next inspect surviving rival timber acquisition, sustainable fertility/rotation, winter alternatives, travel loops and field/warehouse staffing. Existing faction-wide storage and fixed identity slots still constrain these systems. Raw fishing nodes are not yet WorkBoard tasks and docks still abstract fish yields; replace infinite fishing with finite reachable grounds when adding that subsistence branch. Incoming traders/scouts still need journey provisions and information delivered home. Loot is conserved, claimed once per destroyed structure and consistent across melee/projectile kills, but credited globally; physical raid cargo and full prisoners remain open. The day/night cycle and annual month calendar use distinct compressed scales: harmonize deliberately without corrupting saved timers.
+Next inspect surviving rival timber acquisition, sustainable fertility/rotation, winter alternatives, travel loops and field/warehouse staffing. Existing faction-wide storage and fixed identity slots still constrain these systems. Raw fishing nodes are not yet WorkBoard tasks and docks still abstract fish yields; replace infinite fishing with finite reachable grounds when adding that subsistence branch. Incoming traders/scouts still need journey provisions and information delivered home. Loot is now conserved across victim stores, ruin caches, carried goods and home delivery, with one claim per destroyed structure. Full prisoners remain open; the current capture conversion is still a temporary foundation. Ruin caches do not yet decay, have a detailed resource mesh, or participate in regional storage. The legacy building arming queue still reserves no particular trainee and needs physical participation, equipment reconciliation and later professional requirements; do not confuse this with the new physical civilian crafting/practice work. The day/night cycle and annual month calendar use distinct compressed scales: harmonize deliberately without corrupting saved timers.
 
 ## Historical interpretation boundaries
 
@@ -161,7 +164,6 @@ Farming has seasonal labor peaks, plus livestock, repairs and storage; it does n
 99. **Accepted extension:** navigation knowledge and seasonal sailing conditions.
 100. **Accepted extension:** warehouses serving regional supply networks.
 101. Stone-age clubs, spears and bows; civilians can hunt/defend.
-102. Observe an armed raid or attack before relations turn hostile.
 103. Shared militia stores, alarms and recall horn.
 104. Responsive selected-unit raids, attack-move, retreat and hold.
 105. Distinct counters, armor, ranges, projectiles and collision/spacing.
@@ -183,3 +185,13 @@ Farming has seasonal labor peaks, plus livestock, repairs and storage; it does n
 ## How to report a checkpoint
 
 State the commit/push, exact tested outcomes, failures or unverified play checks, compatibility decisions and remaining acceptance gaps. Do not invent a percentage. A feature is complete only when its inputs/labor/information, player decision, AI behavior, saves, observable output and meaningful acceptance tests work together. Use one next dependency block, and keep going while execution budget permits.
+
+## Weapons and raids phase — 2026-10-04
+
+Priority requested by the user: restore the preview, then weapons/raids, then continue the broader overhaul. Keep the player's browser village untouched while testing combat on a separate origin. The preview startup now launches the existing npm development script as a detached process with a disk log; foreground mode is retained. Generated build and QA files are excluded from the development watcher to prevent unwanted village reloads. A temporary detached preview remained healthy after the launching shell exited. Local network probes must run outside the restricted shell network sandbox; a sandbox connection failure is not evidence the server stopped.
+
+The civilian weapon/raid controls are exposed in Village (L) and selected-unit actions. In the separate built game, crafting reserved four logs and one stone, took a resident away from food work, increased stored spears from three to four after actual work, and arming consumed those four weapons while preserving the same five people. Narrow-screen rendering had no document overflow; no captured console errors. Automated regressions cover saved/interrupted crafting, Stone Age bows/forge requirements, selection and no healing, barracks practice, local hostility, raid movement, defender prioritization, finite ruin cargo, physical delivery and save/load during return.
+
+Verification: the complete suite passed 395 tests (363 game/tooling plus 32 app/auth), followed by all 10 final warfare tests after adding guards against experience from friendly/dead targets. Final typecheck and production build passed. The earlier three-year rival audit remains the baseline; it was not repeated for this combat phase.
+
+Immediate next combat work: bind legacy building arming queues to real residents and workplaces; reconcile all equipment paths with the armory; replace instant captive conversion with surrender/escort/holding/release/integration decisions; add defensive equipment/counters, palisades/gates and morale/escorts. Then resume sustained rival timber acquisition and age advancement, followed by the remaining dependency-ordered phases above. Raiders returning with loot stay armed and await orders on delivery; user move/horn commands withdraw them. Do not mark the full war branch or the entire nonvisual overhaul complete.

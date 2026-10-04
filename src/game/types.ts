@@ -165,6 +165,8 @@ export type Unit = {
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
+  weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number};
+  combatXP?: number;
   target: Unit | Building | null;
   wanderT: number;
   aggroT: number;
@@ -213,6 +215,8 @@ export type Building = {
   reclaimed: boolean;
   raiderCamp?: boolean;
   lootClaimed?: boolean;
+  raidLoot?: Partial<Record<ResKind,number>>;
+  lootTeam?: number;
   storeCare?: number;
   fertility?: number;
   fallowYear?: number;

@@ -274,6 +274,8 @@ export function decodeGame(raw: unknown): Game {
     if(u.shelterId!==undefined&&(!Number.isSafeInteger(u.shelterId)||u.shelterId<1))fail();
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
+    if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
+    if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>60||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1)fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
@@ -305,6 +307,8 @@ export function decodeGame(raw: unknown): Game {
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();
+    if(b.raidLoot!==undefined){if(!obj(b.raidLoot))fail();for(const [kind,amount] of Object.entries(b.raidLoot))if(!["food","wood","stone","copper","iron"].includes(kind)||!num(amount)||amount<0||amount>200)fail();}
+    if(b.lootTeam!==undefined&&(!Number.isInteger(b.lootTeam)||!s.tribes[b.lootTeam]))fail();
     if(b.lootClaimed!==undefined&&typeof b.lootClaimed!=="boolean")fail();
     if (b.raiderCamp !== undefined && (typeof b.raiderCamp !== "boolean" || b.team !== 3 || b.type !== "hut")) fail();
     if (b.fallowYear !== undefined && (!Number.isInteger(b.fallowYear) || b.fallowYear < 0)) fail();

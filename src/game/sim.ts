@@ -1,3 +1,4 @@
+import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
@@ -1078,63 +1079,18 @@ export class Game {
   }
 
   craftWeapon(kind: "spear" | "bow" | "blade") {
-    const t = this.tribe(0);
-    if (!t) return;
-    if (kind === "spear") {
-      if (t.wood < 14) {
-        this.banner("Need 14 logs for a spear", 1.4);
-        this.onSfx("invalid");
-        return;
-      }
-      t.wood -= 14;
-      t.spears = (t.spears || 0) + 1;
-      this.banner("Spear ready — Call to arms when raiders come", 1.6);
-    } else if (kind === "bow") {
-      if (t.age < 1) {
-        this.banner("Bows need the Bronze Age", 1.4);
-        this.onSfx("invalid");
-        return;
-      }
-      if (t.wood < 18) {
-        this.banner("Need 18 logs for a bow", 1.4);
-        this.onSfx("invalid");
-        return;
-      }
-      t.wood -= 18;
-      t.bows = (t.bows || 0) + 1;
-      this.banner("Bow ready", 1.4);
-    } else {
-      if (t.age < 1) {
-        this.banner("Blades need copper from the Bronze Age", 1.5);
-        this.onSfx("invalid");
-        return;
-      }
-      if (t.age >= 2 && t.iron >= 4) {
-        t.iron -= 4;
-        t.wood = Math.max(0, t.wood - 6);
-        t.blades = (t.blades || 0) + 1;
-        this.banner("Iron blade — copper and iron arm the village", 1.6);
-      } else if (t.copper >= 6 && t.wood >= 8) {
-        t.copper -= 6;
-        t.wood -= 8;
-        t.blades = (t.blades || 0) + 1;
-        this.banner("Bronze blade forged from copper", 1.6);
-      } else {
-        this.banner("Need 6 copper and 8 logs (or 4 iron)", 1.7);
-        this.onSfx("invalid");
-        return;
-      }
-    }
-    this.onSfx("place");
+    return beginWeaponWork(this,kind);
   }
 
   callToArms(team = 0) {
     const t = this.tribe(team);
     if (!t) return 0;
     let n = 0;
-    const workers = this.state.units.filter(
-      (u) =>
-        u.team === team && u.hp > 0 && u.type === "worker" && !u.militia && !isDependent(this, u),
+    const selected = team===0 ? this.selectedUnits() : [];
+    const workers = (selected.length ? selected : this.state.units).filter(
+      u => u.team===team && u.hp>0 && u.type==="worker" && !u.militia && !isDependent(this,u) &&
+        u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork &&
+        this.state.buildings.some(b=>b.team===team && this.finished(b) && ["townhall","warehouse","barracks"].includes(b.type) && Math.hypot(u.x-b.x,u.z-b.z)<20),
     );
     for (const u of workers) {
       let kind: UnitType | null = null;
@@ -1155,12 +1111,13 @@ export class Game {
       u.range = d.range;
       u.dmg = d.dmg * AGE_STAT[t.age];
       u.rof = d.rof;
-      u.maxHp = Math.max(u.maxHp, d.hp);
-      u.hp = Math.min(u.maxHp, u.hp + 20);
+      // Equipping a weapon never heals wounds or creates a new resident.
       u.order = "hold";
-      u.job = null;
+      u.job = null; u.node=null; u.target=null; u.emergency=undefined;
+      u.workReason="Armed civilian — ready to defend or raid";
       n++;
     }
+    if (team===0 && !n) this.banner("Bring empty-handed adults near your hall, store or barracks; craft weapons first",3);
     if (team === 0 && n) this.banner(n + " villagers take up arms", 1.8);
     return n;
   }
@@ -1171,6 +1128,7 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== team || !u.militia || u.hp <= 0) continue;
+      if(u.carry>0 || !this.state.buildings.some(b=>b.team===team&&this.finished(b)&&["townhall","warehouse","barracks"].includes(b.type)&&Math.hypot(u.x-b.x,u.z-b.z)<20))continue;
       if (u.type === "swordsman") t.blades = (t.blades || 0) + 1;
       else if (u.type === "archer") t.bows = (t.bows || 0) + 1;
       else t.spears = (t.spears || 0) + 1;
@@ -1181,9 +1139,10 @@ export class Game {
       u.dmg = d.dmg;
       u.rof = d.rof;
       u.order = "idle";
-      u.target = null;
+      u.target = null; u.pillage=-1; u.emergency=undefined; u.node=null;
       n++;
     }
+    if(team===0&&!n)this.banner("Return militia and their cargo to the village before standing down",3);
     if (team === 0 && n) this.banner(n + " return to work — weapons stay in the armory", 1.7);
   }
 
@@ -1580,7 +1539,8 @@ export class Game {
     const selected = this.selectedUnits();
     return (selected.length ? selected : this.state.units).filter(
       u => u.team === 0 && u.hp > 0 && u.type !== "leader" && !isDependent(this, u) &&
-        (u.type !== "worker" || (selected.length > 0 && u.carry === 0)),
+        u.carry===0 && !u.envoy && !u.expedition && !u.weaponWork &&
+        (u.type !== "worker" || selected.length > 0),
     );
   }
 
@@ -1629,7 +1589,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e12;
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
+      if ((b.hp<=0 && !(b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0))) || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
       const d = (b.x - u.x) ** 2 + (b.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
@@ -1640,7 +1600,7 @@ export class Game {
   }
 
   issuePillage(target: Building) {
-    if (target.team === 0 || target.hp <= 0 || !this.exploredAt(target.x, target.z)) {
+    if (target.team === 0 || (target.hp<=0 && !(target.lootTeam===0&&target.raidLoot&&Object.values(target.raidLoot).some(n=>(n||0)>0))) || !this.exploredAt(target.x, target.z)) {
       this.banner("Explore a rival settlement before ordering a raid", 1.8);
       return;
     }
@@ -3976,6 +3936,7 @@ export class Game {
     }
     if(delegationAI(this,u,dt))return;
     if(cropStudyAI(this,u,dt))return;
+    if(weaponWorkAI(this,u,dt))return;
     if (isDependent(this, u)) {
       u.node = null;
       u.target = null;
@@ -4185,7 +4146,8 @@ export class Game {
       u.tradeTeam = 0;
       u.node = null;
       u.order = "idle";
-      this.workBoard.assign(this, u);
+      if(u.type==="worker")this.workBoard.assign(this, u);
+      else {u.order="hold";u.target=null;u.pillage=-1;u.workReason="Loot delivered — awaiting orders";}
     }
   }
 
@@ -4273,7 +4235,7 @@ export class Game {
         best = o;
       }
     }
-    if (u.team !== 0 || u.order === "attack" || u.order === "attackmove") {
+    if (!best && (u.team !== 0 || u.order === "attack" || u.order === "attackmove")) {
       for (const b of this.state.buildings) {
         if (
           b.hp <= 0 ||
@@ -4298,31 +4260,38 @@ export class Game {
   }
 
   dealDamage(attacker: Unit | Building, target: Unit | Building) {
-    if (!target || target.hp <= 0) return;
-    const dmg =
-      ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength : 8) * this.dmgMul(attacker.team, attacker.x, attacker.z);
+    if(!target||target.hp<=0||target.team===attacker.team)return;
+    const skill=attacker.kind==="unit"?combatPractice(attacker):1;
+    const dmg = ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength * skill : 8) * this.dmgMul(attacker.team,attacker.x,attacker.z);
+    if(attacker.kind==="unit")attacker.combatXP=Math.min(150,(attacker.combatXP||0)+.2);
+    this.applyCombatDamage(attacker.team,target,dmg);
+  }
+
+  applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number) {
+    if(!target || target.hp<=0 || !Number.isFinite(dmg) || dmg<=0 || target.team===attackerTeam)return;
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
-    if (attacker.team === 0 || target.team === 0) this.onSfx("hit");
-    if (attacker.team === 0 && target.team !== 0 && target.team !== 3 && this.isArmed(attacker))
+    if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
+    if (attackerTeam === 0 && target.team !== 0 && target.team !== 3)
       this.makeHostile(target.team);
-    if (target.team === 0 && attacker.team !== 0 && attacker.team !== 3 && this.isArmed(target))
-      this.makeHostile(attacker.team);
+    if (target.team === 0 && attackerTeam !== 0 && attackerTeam !== 3)
+      this.makeHostile(attackerTeam);
     if (target.hp <= 0) {
       if (
         target.kind === "unit" &&
         target.type === "worker" &&
-        attacker.team === 0 &&
+        attackerTeam === 0 &&
         (target.team === 1 || target.team === 2) &&
         this.popNow(0) < this.popCap(0) &&
         !isDependent(this, target)
       ) {
+        if([1,2].includes(target.team))this.state.conquestAt=this.state.time;
         target.team = 0;
         target.hp = Math.max(16, Math.round(target.maxHp * 0.45));
-        target.order = "move";
+        target.order = target.carry>0 ? "return" : "move";
         target.pillage = -1;
         target.target = null;
-        target.job = null;
+        target.job = null;target.scout=undefined;target.envoy=undefined;target.visit=undefined;target.foundingJourney=undefined;target.studyCrop=undefined;target.weaponWork=undefined;target.emergency=undefined;target.drill=undefined;target.trade=null;target.tradeTeam=0;
         const home = this.campOf(0);
         target.tx = home.x;
         target.tz = home.z;
@@ -4331,10 +4300,10 @@ export class Game {
         return;
       }
       target.hp = 0;
-      if(attacker.team===0&&[1,2].includes(target.team))this.state.conquestAt=this.state.time;
+      if(attackerTeam===0&&[1,2].includes(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
-      if (target.kind === "building" && attacker.team !== target.team)
-        this.lootBuilding(attacker.team, target);
+      if (target.kind === "building" && attackerTeam !== target.team)
+        this.lootBuilding(attackerTeam, target);
       this.addFloater(
         target.x,
         target.y + 2.4,
@@ -4343,7 +4312,7 @@ export class Game {
         "#c44",
       );
       if (target.kind === "building") this.state.walkDirty = true;
-      if (target.kind === "building" && attacker.team === 0) this.tickRegions();
+      if (target.kind === "building" && attackerTeam === 0) this.tickRegions();
       if (target.kind === "building" && target.team === 0) this.defendHome(0);
       if (target.kind === "building" && (target.team === 1 || target.team === 2))
         this.defendHome(target.team);
@@ -4356,11 +4325,12 @@ export class Game {
         const tr = this.tribe(target.team);
         if (tr) this.banner(tr.leader + " of " + tr.name + " has fallen", 2.4);
       }
-      if (target.team === 0 || attacker.team === 0) this.onSfx("death");
+      if (target.team === 0 || attackerTeam === 0) this.onSfx("death");
     }
   }
 
   fireArrow(from: Unit | Building, to: Unit | Building) {
+    if(!to||to.hp<=0||to.team===from.team)return;
     const p: Projectile = {
       x: from.x,
       y: from.y + 1.4,
@@ -4371,9 +4341,10 @@ export class Game {
       target: to,
       speed: 22,
       life: 1.1,
-      dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength : 8) * this.dmgMul(from.team, from.x, from.z),
+      dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z),
       team: from.team,
     };
+    if(from.kind==="unit")from.combatXP=Math.min(150,(from.combatXP||0)+.2);
     this.state.projectiles.push(p);
     if (from.team === 0 || to.team === 0) this.onSfx("bow");
     if (this.state.projectiles.length > 48)
@@ -4384,7 +4355,7 @@ export class Game {
     const victim = this.tribe(b.team);
     const raider = this.tribe(attackerTeam);
     if (!victim || !raider || b.team === attackerTeam || b.lootClaimed) return;
-    b.lootClaimed=true;
+    b.lootClaimed=true; b.lootTeam=attackerTeam;
     const take = (
       key: "food" | "wood" | "stone" | "copper" | "iron",
       frac: number,
@@ -4393,7 +4364,8 @@ export class Game {
       const n = Math.min(victim[key], cap, Math.max(0, Math.floor(victim[key] * frac)));
       if (n <= 0) return 0;
       victim[key] -= n;
-      raider[key] += n;
+      b.raidLoot ??= {};
+      b.raidLoot[key]=(b.raidLoot[key]||0)+n;
       return n;
     };
     let food = 0;
@@ -4421,7 +4393,7 @@ export class Game {
       copper ? copper + " copper" : "",
       iron ? iron + " iron" : "",
     ].filter(Boolean);
-    this.banner(bits.length ? "Pillaged " + bits.join(", ") : "Burned — the stores were empty", 1.8);
+    this.banner(bits.length ? "Stores exposed: " + bits.join(", ") + " — raiders must carry them home" : "Burned — the stores were empty", 1.8);
   }
 
   combatAI(u: Unit, dt: number) {
@@ -4438,8 +4410,8 @@ export class Game {
     }
 
     if(u.team===0 && u.pillage>0 && u.pillage!==3) {
-      const hall=this.state.buildings.find(b=>b.team===u.pillage&&b.type==="townhall"&&b.hp>0);
-      if(hall&&Math.hypot(u.x-hall.x,u.z-hall.z)<30) this.makeHostile(hall.team);
+      const observed=this.state.buildings.find(b=>b.team===u.pillage&&b.hp>0&&Math.hypot(u.x-b.x,u.z-b.z)<20);
+      if(observed)this.makeHostile(observed.team);
     }
 
     u.cd = Math.max(0, u.cd - dt);
@@ -4502,7 +4474,7 @@ export class Game {
         if (u.pillage >= 0) {
           const next = this.nextPillage(u);
           if (next) {
-            u.target = this.visibleAt(next.x, next.z) ? next : null;
+            u.target = next.hp>0 && this.visibleAt(next.x, next.z) ? next : null;
             u.tx = next.x;
             u.tz = next.z;
             u.attackDestination = { x: next.x, z: next.z };
@@ -4536,6 +4508,7 @@ export class Game {
   }
 
   barbarianAI(u: Unit, dt: number) {
+    if(u.order==="move" && u.team!==3){this.combatAI(u,dt);return;}
     if (campRaidAI(this, u, dt)) return;
     u.wanderT -= dt;
     u.aggroT -= dt;
@@ -4624,28 +4597,7 @@ export class Game {
       const gz = t && t.hp > 0 ? t.z : p.tz;
       const d = Math.hypot(p.x - gx, p.y - gy, p.z - gz);
       if (d < 0.7 || p.life <= 0) {
-        if (t && t.hp > 0) {
-          t.hp -= p.dmg;
-          this.addBurst(t.x, t.y + 1, t.z, "#c44", 2);
-          if (t.hp <= 0) {
-            t.hp = 0;
-            if(p.team===0&&[1,2].includes(t.team))this.state.conquestAt=this.state.time;
-            this.addBurst(t.x, t.y + 1, t.z, "#6a3030", 10);
-            if (t.kind === "building") {
-              this.state.walkDirty = true;
-              if(p.team!==t.team)this.lootBuilding(p.team,t);
-              this.tickRegions();this.defendHome(t.team);
-            }
-          }
-          if (p.team === 0 && t.team !== 0 && t.team !== 3) this.makeHostile(t.team);
-          if (
-            p.team !== 0 &&
-            p.team !== 3 &&
-            t.team === 0 &&
-            (t.kind === "building" || t.type !== "worker")
-          )
-            this.makeHostile(p.team);
-        }
+        if(t && t.hp>0)this.applyCombatDamage(p.team,t,p.dmg);
         ps.splice(i, 1);
         continue;
       }
@@ -4713,42 +4665,16 @@ export class Game {
       u.workReason = "Drill stopped — the stores are thin";
       return;
     }
-    const spot =
-      this.state.buildings.find(
-        (b) => b.team === u.team && b.type === "barracks" && b.hp > 0 && this.finished(b),
-      ) || this.state.buildings.find((b) => b.team === u.team && b.type === "townhall" && b.hp > 0);
-    if (spot && Math.hypot(u.x - spot.x, u.z - spot.z) > 7) {
-      u.tx = spot.x + 3;
-      u.tz = spot.z + 2;
-      this.steer(u, dt);
-      u.workReason = "Walking to drill";
-      return;
-    }
-    u.drill = (u.drill || 0) + dt;
-    tr.food = Math.max(0, tr.food - 0.03 * dt);
-    const need = 36;
-    u.workReason = "Drilling · " + Math.min(100, Math.floor((100 * (u.drill || 0)) / need)) + "%";
-    if ((u.drill || 0) < need) return;
-    if (tr.wood < 4) {
-      u.workReason = "Drill waits on a few logs for a spear";
-      return;
-    }
-    tr.wood -= 4;
-    const d = UNITS.spearman;
-    u.type = tr.age>=3?"spearman":"worker";
-    u.hp = Math.round(d.hp * AGE_STAT[tr.age]);
-    u.maxHp = u.hp;
-    u.speed = d.speed;
-    u.range = d.range;
-    u.dmg = d.dmg * AGE_STAT[tr.age];
-    u.rof = d.rof;
-    u.r = d.r;
-    u.drill = undefined;
-    u.militia = tr.age<3;
-    u.jobLock = false;
-    u.order = "idle";
-    u.workReason = tr.age<3?"Spear practice complete — returning to civilian work":"Finished the drill";
-    if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Spearman", "#c9e8a0");
+    const spot=this.state.buildings.find(b=>b.team===u.team&&b.type==="barracks"&&this.finished(b));
+    const entrance=spot&&this.interactionSpot(u,spot);
+    if(!spot||!entrance){u.workReason="Practice needs a completed, reachable barracks";return;}
+    if(!this.buildingWorkReached(u,spot)){u.tx=entrance.x;u.tz=entrance.z;this.steer(u,dt);u.workReason="Walking to practice";return;}
+    u.drill=(u.drill||0)+dt;u.stride+=dt*6;tr.food=Math.max(0,tr.food-.03*dt);
+    u.workReason="Combat practice · "+Math.min(100,Math.floor(100*u.drill/36))+"%";
+    if(u.drill<36)return;
+    u.combatXP=Math.min(150,(u.combatXP||0)+6);u.drill=undefined;u.jobLock=false;u.order="idle";
+    u.workReason="Combat practice complete — returning to civilian work";
+    if(u.team===0)this.addFloater(u.x,u.y+2,u.z,"Practice complete","#c9e8a0");
   }
 
   welcomeSoul(team: number, x: number, z: number) {
@@ -5335,7 +5261,8 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
-            if(u.recalled){this.workerAI(u,sdt);continue;}
+            if(u.recalled || (u.team!==3 && u.order==="return" && u.carry>0)){this.workerAI(u,sdt);continue;}
+            if(raidLootAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
             if(expeditionAI(this,u,sdt))continue;
             if(routineRest(this,u,sdt))continue;
@@ -5478,7 +5405,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"

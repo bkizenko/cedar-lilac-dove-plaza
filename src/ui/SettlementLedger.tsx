@@ -1,3 +1,4 @@
+import {WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES } from "@/game/constants";
@@ -311,6 +312,18 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           {` · fatigue ${Math.round((u.fatigue||0)*100)}%, pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
         <h3>Life in the village</h3>
         {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text}</p>)}
+      </section>
+      <section>
+        <h3>Weapons and village defense</h3>
+        <p>{t.spears} spears · {t.bows} bows · {t.blades} blades in stores. Equip empty-handed adults near a hall, store or barracks. They remain members of your village.</p>
+        <p>Crafting takes a resident away from gathering. Stone spears and bows are available immediately; metal blades need a forge and Bronze Age copper.</p>
+        {Object.entries(WEAPONS).map(([kind,w])=><button key={kind} className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" disabled={t.age<w.age||t.wood<w.wood||t.stone<w.stone||t.copper<w.copper} onClick={()=>engine.craftWeapon(kind as keyof typeof WEAPONS)}>Make {w.name.toLowerCase()} · {w.wood} logs{w.stone?` + ${w.stone} stone`:""}{w.copper?` + ${w.copper} copper`:""} · {w.seconds}s work</button>)}
+        {people.filter(u=>u.weaponWork).map(u=><p key={u.id}>{personName(u)} · {WEAPONS[u.weaponWork!.kind].name} {Math.floor(100*u.weaponWork!.progress/u.weaponWork!.duration)}% · {u.order==='hold'?'assigned':'paused by another order'}{u.order!=='hold'&&<button onClick={()=>{u.order="hold";u.node=null;u.target=null;engine.pushHud();}}>Resume weapon making</button>}</p>)}
+        <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>engine.callToArms()}>Arm selected adults (all available if none selected)</button>
+        <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>engine.standDown()}>Stand down militia at home</button>
+        <p>Select a group, then Pillage a discovered camp, or right-click a target. Relations turn hostile when the raid arrives. Move away or sound the recall horn to withdraw. Raiders carry supplies from ruined stores home; supplies are never granted remotely.</p>
+        {s.buildings.filter(b=>b.hp<=0&&b.lootTeam===0&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0)&&g.exploredAt(b.x,b.z)).map(b=><button key={b.id} className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>{g.issuePillage(b);close();engine.pushHud();}}>Recover remaining loot from {g.tribe(b.team).name} ruins</button>)}
+        {people.filter(u=>(u.combatXP||0)>0).map(u=><p key={u.id}>{personName(u)} · combat practice {Math.round((combatPractice(u)-1)*100)}% damage bonus</p>)}
       </section>
       <p className="mt-4 text-sm">
         Nearby danger triggers sheltering and an armed militia response. Returning militia resume

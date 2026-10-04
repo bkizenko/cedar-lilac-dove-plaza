@@ -708,7 +708,8 @@ test("marked trees are felled first, and burning a hall takes stores", async () 
   rivalHall.hp = 1;
   g.dealDamage(atk, rivalHall);
   assert.ok(rivalHall.hp <= 0);
-  assert.ok(g.tribe(0).food > 10);
+  assert.equal(g.tribe(0).food,10);
+  assert.equal(rivalHall.raidLoot.food,35);
   assert.ok(g.tribe(1).food < 100);
 });
 test("unscouted shores stay off the map", () => {

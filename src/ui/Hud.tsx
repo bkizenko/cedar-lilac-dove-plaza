@@ -600,7 +600,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {hud.age >= 1 && <JobBtn
                   active={hud.job === "drill"}
                   label="Drill"
-                  title="Bronze Age: drill this adult as a soldier while the village has spare food. Villagers can already hunt and defend."
+                  title="Practice at a completed barracks: improves this adult’s combat skill and takes time away from work."
                   onClick={() => engine?.assignJob("drill")}
                 >
                   <Sword className="size-3.5 text-bronze" />
@@ -626,6 +626,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 Explore (X)
               </button>
             ) : null}
+            {showFight && hud.workerSelected>0 ? <button className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm" onClick={()=>engine?.callToArms()}>Arm selected adults · {hud.spears+hud.bows+hud.blades} weapons</button> : null}
             {showFight ? (
               <div className="mt-1.5 flex gap-1">
                 <button
