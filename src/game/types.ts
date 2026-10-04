@@ -9,6 +9,7 @@ export type BldType =
   | "lumber"
   | "quarry"
   | "dock"
+  | "bridge"
   | "warehouse"
   | "barracks"
   | "forge"
@@ -209,6 +210,7 @@ export type Building = {
   hp: number;
   maxHp: number;
   selected: boolean;
+  bridge?: {ax:number;az:number;bx:number;bz:number};
   excavation?: {remaining:number;dug:number;quality:number};
   queue: QueueItem[];
   rally: { x: number; z: number } | null;

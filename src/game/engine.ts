@@ -1,3 +1,4 @@
+import {planBridge,bridgeHeight} from './transport';
 import { soilQuality } from "./ecology";
 import { cultivationIssue } from "./cultivation";
 import { decodeGame } from "./persistence";
@@ -460,7 +461,8 @@ export class Engine {
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
-    this.view.setGhost(type, x, z, this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined);
+    const bridge=type==="bridge"?planBridge(this.game,x,z):null;
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge);
   }
 
   toggleLogging() {
@@ -488,7 +490,9 @@ export class Engine {
           : t === "farm"
             ? "Farm — click the open grass near camp"
             : t === "quarry"
-              ? "Quarry — click a grey outcrop. Costs logs only. People haul stone once it stands."
+              ? "Quarry — choose a stone outcrop or gentle mountain slope. Two miners dig and haul stone."
+              : t === "bridge"
+                ? "Bridge — aim at a narrow shallow river. Explore both banks first; builders work from dry land."
               : "Click the valley to raise a " + d.name + "  ·  Esc cancel",
         2.6,
       );

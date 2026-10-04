@@ -1,3 +1,4 @@
+import {bridgeApproach} from './transport';
 import {quarryAvailable} from "./mining";
 import {fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
@@ -307,7 +308,7 @@ export class WorkBoard {
       const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
       const settlementWork = lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
-      if ((distance > 100 && !settlementWork) || !origin || this.taskComponent(g, task.node) !== origin) continue;
+      if ((distance > 100 && !settlementWork) || !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin)) continue;
       if (
         g.state.units.some(
           (e) =>

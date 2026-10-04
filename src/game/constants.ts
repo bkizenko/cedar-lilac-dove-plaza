@@ -129,6 +129,7 @@ export const BUILDINGS: Record<
     age: 0,
     hint: "Two fishers work finite nearby fishing grounds. No food without labor; depleted grounds need time to recover.",
   },
+  bridge: {name:"Timber bridge",w:5.2,d:12,food:0,wood:32,stone:4,pop:0,hp:260,age:0,hint:"Span a narrow shallow river between two gentle banks. Builders work from your bank; people and cargo cross only after completion."},
   warehouse: {
     name: "Storehouse",
     w: 6.6,
@@ -426,6 +427,7 @@ export const BUILD_ORDER: BldType[] = [
   "quarry",
   "warehouse",
   "barracks",
+  "bridge",
   "forge",
   "watchtower",
   "temple",
@@ -520,6 +522,7 @@ export const BUILD_TIME: Record<BldType, number> = {
   lumber: 10,
   workshop: 14,
   dock: 10,
+  bridge: 40,
   quarry: 12,
   warehouse: 12,
   barracks: 12,

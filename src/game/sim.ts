@@ -1,3 +1,4 @@
+import {planBridge,onBridge,bridgeHeight,bridgeApproach} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice} from "./warfare";
@@ -183,6 +184,13 @@ export class Game {
 
   id() {
     return this.state.nextId++;
+  }
+
+  private bridges: Building[] = [];
+
+  travelHeight(x:number,z:number) {
+    for(const b of this.bridges)if(this.finished(b)&&b.bridge&&onBridge(b.bridge,x,z))return bridgeHeight(this,b.bridge,x,z);
+    return this.height(x,z);
   }
 
   height(x: number, z: number) {
@@ -567,16 +575,19 @@ export class Game {
   makeBld(type: BldType, x: number, z: number, team: number, y?: number): Building {
     const d = BUILDINGS[type];
     const hp = d.hp;
+    const bridge=type==="bridge"?planBridge(this,x,z):null;
+    if(bridge){x=(bridge.ax+bridge.bx)/2;z=(bridge.az+bridge.bz)/2;}
     return {
       id: this.id(),
       kind: "building",
       type,
       team,
       x,
-      y: y ?? this.height(x, z),
+      y: bridge?bridgeHeight(this,bridge,x,z):y ?? this.height(x, z),
       z,
-      w: d.w,
-      d: d.d,
+      bridge: bridge || undefined,
+      w: bridge?Math.abs(bridge.bx-bridge.ax)+5.2:d.w,
+      d: bridge?Math.abs(bridge.bz-bridge.az)+5.2:d.d,
       hp,
       maxHp: hp,
       selected: false,
@@ -797,21 +808,22 @@ export class Game {
   }
 
   private solidBuilding(b: Building) {
-    return b.hp > 0 && !["farm", "quarry", "dock", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !["farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
     this.navRevision++;
+    this.bridges=this.state.buildings.filter(b=>b.type==="bridge"&&this.finished(b)&&b.bridge);
     const cell = (HALF * 2) / WALK;
     for (let iz = 0; iz < WALK; iz++) {
       for (let ix = 0; ix < WALK; ix++) {
         const x = -HALF + (ix + 0.5) * cell;
         const z = -HALF + (iz + 0.5) * cell;
-        const h = this.height(x, z);
+        const h = this.travelHeight(x, z);
         let ok = h > this.world.waterY + 0.28 && inBounds(x, z, 1.5);
         if (ok) {
-          const hE = this.height(x + cell, z);
-          const hN = this.height(x, z + cell);
+          const hE = this.travelHeight(x + cell, z);
+          const hN = this.travelHeight(x, z + cell);
           if (Math.abs(h - hE) > 2.45 || Math.abs(h - hN) > 2.45) ok = false;
         }
         if (ok) {
@@ -835,7 +847,9 @@ export class Game {
 
   walkable(x: number, z: number) {
     if (!inBounds(x, z, 1.2)) return false;
-    if (this.height(x, z) < this.world.waterY + 0.22) return false;
+    if (this.travelHeight(x, z) < this.world.waterY + 0.22) return false;
+    // A deck edge can share a coarse cell with water; physical deck points remain safe.
+    if(this.bridges.some(b=>this.finished(b)&&b.bridge&&onBridge(b.bridge,x,z)))return true;
     const cell = (HALF * 2) / WALK;
     const ix = Math.max(0, Math.min(WALK - 1, Math.floor((x + HALF) / cell)));
     const iz = Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell)));
@@ -844,7 +858,7 @@ export class Game {
 
   canStep(u: Unit, x: number, z: number) {
     if (!inBounds(x, z, 1)) return false;
-    const h = this.height(x, z);
+    const h = this.travelHeight(x, z);
     if (h < this.world.waterY + 0.12 || Math.abs(h - u.y) > 2.55) return false;
     for (const b of this.state.buildings) {
       if (!this.solidBuilding(b)) continue;
@@ -902,6 +916,13 @@ export class Game {
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     const d = BUILDINGS[type];
+    if(type==="bridge"){
+      const span=planBridge(this,x,z);
+      if(!span)return "Aim at a narrow shallow river with two gentle, clear banks";
+      if(_team===0&&(!this.exploredAt(span.ax,span.az)||!this.exploredAt(span.bx,span.bz)))return "Explore both banks before planning a crossing";
+      if(!inBounds(span.ax,span.az,4)||!inBounds(span.bx,span.bz,4))return "A bridge needs safe banks inside the map";
+      return null;
+    }
     if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
@@ -1012,6 +1033,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    if(b.type==="bridge"&&b.bridge&&this.state.units.some(u=>u.hp>0&&onBridge(b.bridge!,u.x,u.z))){this.banner("Wait until everyone has left the bridge before reclaiming it",3);return;}
     if (b.type === "townhall") {
       this.banner("The hall cannot be pulled down", 1.5);
       this.onSfx("invalid");
@@ -1306,8 +1328,10 @@ export class Game {
     }
     u.node = b;
     if (!this.buildingWorkReached(u,b)) {
-      u.tx = b.x;
-      u.tz = b.z;
+      const approach=b.type==="bridge"?bridgeApproach(this,u,b):{x:b.x,z:b.z};
+      if(!approach){u.node=null;u.order="idle";u.blockedTask=b.id;u.retryWorkAt=this.state.time+30;u.workReason="No reachable bridge bank — approach from dry land";return;}
+      u.tx = approach.x;
+      u.tz = approach.z;
       this.steer(u, dt);
       return;
     }
@@ -1322,10 +1346,11 @@ export class Game {
     if (b.build >= 1) {
       b.build = 1;
       b.hp = b.maxHp;
+      if(b.type==="bridge"){this.state.walkDirty=true;this.workBoard.reset();}
       if (u.team === 0) {
         this.banner(
           b.type === "quarry"
-            ? "Quarry stands — gatherers will haul stone from the outcrop"
+            ? (this.height(b.x,b.z)>=10?"Quarry stands — two miners can excavate the mountain seam":"Quarry stands — gatherers will haul stone from the outcrop")
             : BUILDINGS[b.type].name + " stands",
           1.8,
         );
@@ -3506,6 +3531,7 @@ export class Game {
 
   interactionSpot(u: Unit, b: Building) {
     if(this.state.walkDirty)this.rebuildWalk();
+    if(b.type==="bridge")return bridgeApproach(this,u,b);
     const cached=this.approachCache.get(u);if(cached&&cached.building===b&&cached.revision===this.navRevision&&this.state.time-cached.time<2)return cached.spot;
     let best:{x:number;z:number}|null=null,score=Infinity;
     // A physically clear frontage can still fall in a coarse blocked cell.
@@ -3530,6 +3556,7 @@ export class Game {
   }
 
   buildingWorkReached(u:Unit,b:Building) {
+    if(b.type==="bridge"){const p=bridgeApproach(this,u,b);return !!p&&Math.hypot(u.x-p.x,u.z-p.z)<=1.2;}
     if(this.attackDistance(u,b)<=u.r+1.8)return true;
     const entrance=this.interactionSpot(u,b);
     return !!entrance&&Math.hypot(u.x-entrance.x,u.z-entrance.z)<=1;
@@ -3766,7 +3793,7 @@ export class Game {
         let probe=u;
         for(let j=1;j<=samples;j++){const px=u.x+(x-u.x)*j/samples,pz=u.z+(z-u.z)*j/samples;
           if(!this.canStep(probe,px,pz)){clear=false;break;}
-          probe={...u,x:px,z:pz,y:this.height(px,pz)};
+          probe={...u,x:px,z:pz,y:this.travelHeight(px,pz)};
         }
         if(!clear)continue;
         escape={x,z};break search;
@@ -3775,7 +3802,7 @@ export class Game {
         const dx=escape.x-u.x,dz=escape.z-u.z,distance=Math.hypot(dx,dz);
         const step=Math.min(distance,this.travelSpeed(u)*dt);
         const nx=u.x+dx/distance*step,nz=u.z+dz/distance*step;
-        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.height(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;u.stuckT=0;this.paths.delete(u.id);return false;}
+        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.travelHeight(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;u.stuckT=0;this.paths.delete(u.id);return false;}
       }
     }
     let tx = u.tx,
@@ -3844,7 +3871,8 @@ export class Game {
             z: -HALF + (Math.floor(n / WALK) + 0.5) * cell,
           }));
           if(end===goal&&this.walkable(tx,tz))points.push({ x: tx, z: tz });
-          else {const final=points.at(-1);if(final){tx=final.x;tz=final.z;}}
+          // Cache against the requested destination even when the route ends on
+          // nearby dry ground. Re-keying to that fallback replanned every frame.
         } else {
           points = [];
           failed = true;
@@ -3897,7 +3925,7 @@ export class Game {
     wearTrail(this,nx,nz,nx-u.x,nz-u.z);
     u.x = nx;
     u.z = nz;
-    u.y = this.height(nx, nz);
+    u.y = this.travelHeight(nx, nz);
     u.facing = Math.atan2(dx, dz);
     u.stride += step * 3.6;
     u.stuckT = 0;
@@ -3940,12 +3968,12 @@ export class Game {
             if (a.order !== "hold" && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
               a.x += nx * push;
               a.z += nz * push;
-              a.y = this.height(a.x, a.z);
+              a.y = this.travelHeight(a.x, a.z);
             }
             if (b.order !== "hold" && this.canStep(b, b.x - nx * push, b.z - nz * push)) {
               b.x -= nx * push;
               b.z -= nz * push;
-              b.y = this.height(b.x, b.z);
+              b.y = this.travelHeight(b.x, b.z);
             }
           }
         }
@@ -5488,6 +5516,7 @@ export class Game {
       const b = this.state.selBld;
       let info = b.raiderCamp ? "Local raider camp. Its finite band patrols nearby paths and steals supplies; destroy the camp to scatter survivors." : BUILDINGS[b.type]?.hint || "";
       if(b.type==="dock"&&this.finished(b))info+=" · "+fishingReport(this,b);
+      if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);
       if (b.build < 1)
         info = "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";

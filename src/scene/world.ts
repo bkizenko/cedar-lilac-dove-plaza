@@ -48,6 +48,7 @@ const BLD_TYPES: BldType[] = [
   "workshop",
   "quarry",
   "dock",
+  "bridge",
   "warehouse",
   "barracks",
   "forge",
@@ -1252,8 +1253,10 @@ export class WorldView {
         const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(b.x,b.z+2)-game.height(b.x,b.z-2))/4))):0;
         const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(b.x+2,b.z)-game.height(b.x-2,b.z))/4))):0;
         _e.set(pitch, st.yaw, roll);
+        if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);}
         _q.setFromEuler(_e);
         _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
+        if(b.bridge){_s.x=seen?1:.001;_s.y=seen?ys:.001;_s.z=seen?Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az)/12:.001;}
         _m.compose(_p, _q, _s);
         meshes.timber.setMatrixAt(i, _m);
         if (seen && b.build < 0.55) {
@@ -1423,7 +1426,7 @@ export class WorldView {
     /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -1431,6 +1434,8 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
+    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(1,1,1);
+    if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep;
     if (this.ghost.userData.key === key) return;
@@ -1465,7 +1470,7 @@ export class WorldView {
     );
     pad.rotation.x = -Math.PI / 2;
     pad.position.y = 0.08;
-    this.ghost.add(pad);
+    if(type!=="bridge")this.ghost.add(pad);else {pad.geometry.dispose();(pad.material as THREE.Material).dispose();}
     if (type === "lumber") {
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(LUMBER_R - 0.5, LUMBER_R + 0.25, 48),

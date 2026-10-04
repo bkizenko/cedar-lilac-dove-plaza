@@ -51,6 +51,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   lumber: <Axe className="size-4" />,
   quarry: <Pickaxe className="size-4" />,
   dock: <Fish className="size-4" />,
+  bridge: <Hammer className="size-4" />,
   warehouse: <Warehouse className="size-4" />,
   barracks: <Shield className="size-4" />,
   workshop: <Hammer className="size-4" />,

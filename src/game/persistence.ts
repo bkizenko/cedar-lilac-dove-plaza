@@ -330,6 +330,12 @@ export function decodeGame(raw: unknown): Game {
       )
         fail();
     }
+    if(b.type==="bridge"&&b.bridge===undefined)fail();
+    if(b.bridge!==undefined){
+      const span=b.bridge;if(b.type!=="bridge"||!obj(span))fail();numbers(span,["ax","az","bx","bz"]);
+      const length=Math.hypot(span.bx-span.ax,span.bz-span.az);
+      if(length<5||length>28||Math.abs((span.ax+span.bx)/2-b.x)>.01||Math.abs((span.az+span.bz)/2-b.z)>.01||[span.ax,span.az,span.bx,span.bz].some(v=>Math.abs(v)>HALF-4))fail();
+    }
     if(b.excavation!==undefined){const e=b.excavation;if(!obj(e)||!num(e.remaining)||!num(e.dug)||!num(e.quality)||e.remaining<0||e.remaining>1200||e.dug<0||e.dug>1200||e.quality<.65||e.quality>1.65)fail();}
     if (!(b.type in BUILDINGS) || !s.tribes[b.team] || !Array.isArray(b.queue)) fail();
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
