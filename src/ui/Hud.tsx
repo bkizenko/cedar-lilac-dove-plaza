@@ -70,6 +70,7 @@ function resWord(k: ResKind) {
 
 export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
   const compact = () => typeof window !== "undefined" && window.innerWidth <= 720;
+  const [interfaceHidden,setInterfaceHidden]=useState(false);
   const [selMin, setSelMin] = useState(compact);
   const [clockMin, setClockMin] = useState(compact);
   const [resMin, setResMin] = useState(compact);
@@ -94,6 +95,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     return () => media.removeEventListener("change", fit);
   }, []);
   if (!hud.started || hud.awaitingStart) return null;
+  if(interfaceHidden)return <button className="fixed bottom-3 right-3 z-50 hud-panel rounded-xl px-3 py-2" onClick={()=>setInterfaceHidden(false)}>Restore interface</button>;
   const sel = hud.selection;
   const hpPct = sel.maxHp > 0 ? Math.round((100 * sel.hp) / sel.maxHp) : 0;
   const weatherBits = hud.weather.split(" · ");
@@ -119,6 +121,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 
   return (
     <div className="hud-shell font-sans text-parchment">
+      <button className="absolute right-3 bottom-3 pointer-events-auto hud-panel rounded-xl px-3 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
       <div className="hud-res">
         <div className="hud-panel rounded-xl px-3 py-2.5 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -140,7 +143,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             <>
               <ResRow
                 icon={<Wheat className="size-3.5 text-blood" />}
-                label="Berries"
+                label="Food"
                 value={hud.food}
               />
               <ResRow
@@ -236,10 +239,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
-          <button className="px-2 py-2" onClick={()=>engine?.protectVillage()} title="Save a separate backup that automatic saves cannot overwrite">Save backup copy</button>
-          <button className="px-2 py-2" onClick={()=>engine?.resumeSaved(true)} title="Return to the backup copy you saved">Load backup copy</button>
-          <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Download village</button>
-          <label className="px-2 py-2">Import backup<input className="sr-only" aria-label="Import village backup" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label>
+          <details><summary className="px-2 py-2 cursor-pointer">Transfer village file</summary>
+          <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Export file</button>
+          <label className="px-2 py-2">Import file<input className="sr-only" aria-label="Import village file" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label></details>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
             Load
@@ -320,14 +322,15 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
         {!clockMin && !founding ? (
           <>
-            {hud.canAge && hud.nextAge ? (
+            {hud.nextAge ? (
               <button
                 type="button"
-                disabled={hud.paused || !!hud.ended}
+                disabled={!hud.canAge || hud.paused || !!hud.ended}
                 onClick={() => engine?.ageUp()}
-                className="hud-panel w-full rounded-xl px-3 py-2 text-xs font-medium text-bronze-bright hover:bg-ink-soft disabled:opacity-40"
+                className="hud-panel w-full rounded-xl px-3 py-2 text-xs font-medium text-bronze-bright hover:bg-ink-soft"
               >
-                Advance to {hud.nextAge}
+                {hud.canAge ? "Advance to" : "Preparing for"} {hud.nextAge}
+                {hud.ageIssue ? <span className="mt-1 block text-[11px] font-normal text-parchment">{hud.ageIssue}</span> : null}
                 {hud.ageCost ? (
                   <span className="mt-0.5 block text-[10px] font-normal text-parchment">
                     {hud.ageCost.food ?? 0} food · {hud.ageCost.wood ?? 0} logs · {hud.ageCost.stone ?? 0}{" "}
@@ -528,8 +531,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               </button>
             ) : null}
             <div className="mt-1.5 flex gap-1">
-              <button className="min-h-8 flex-1" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>← Previous</button>
-              <button className="min-h-8 flex-1" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>Next villager →</button>
+              <button className="min-h-8 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
+              <button className="min-h-8 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
             </div>
             {hud.idleWorkers > 0 ? (
               <button

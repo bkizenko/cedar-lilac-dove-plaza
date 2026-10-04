@@ -3,12 +3,13 @@ import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
-import { personName, predisposition } from "./people";
+import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
-import { foodSpoilage, preserveFood } from "./pantry";
-import { habitatAt, soilQuality } from "./ecology";
+import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed } from "./pantry";
+import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
+import { habitatAt, soilQuality, cropWater } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote } from "./barter";
 import {
   WorkBoard,
@@ -82,6 +83,7 @@ export class Game {
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
   selectedResource: ResourceNode | null = null;
+  private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;spot:{x:number;z:number}|null}>();
   chopMarks = new Set<number>();
   looted = new Set<number>();
   started = false;
@@ -285,11 +287,13 @@ export class Game {
       const rolled = i === 1 || i === 2 ? pickFolk() : null;
       return {
       id: i,
-      name: rolled ? rolled[0] : name,
-      short: rolled ? rolled[0] : TEAM_SHORT[i],
+      name: rolled ? prehistoricName(s,i*977) : name,
+      short: rolled ? prehistoricName(s,i*977) : TEAM_SHORT[i],
       color: rolled ? rolled[1] : TEAM_COLORS[i],
-      food: i === 0 ? 72 : i === 3 ? 0 : 55,
-      wood: i === 0 ? 58 : i === 3 ? 0 : 42,
+      // Neighbor settlements are already established, with finite spring stores.
+      // This is initial provisioning, never an income bonus or periodic refill.
+      food: i === 0 ? 72 : i === 3 ? 0 : 300,
+      wood: i === 0 ? 58 : i === 3 ? 0 : 90,
       stone: i === 0 ? 16 : i === 3 ? 0 : 10,
       copper: i === 0 ? 0 : i === 1 ? 4 : 0,
       iron: 0,
@@ -484,7 +488,16 @@ export class Game {
 
     this.spawnWildlife();
     this.spawnRegions();
+    // Existing neighbors begin with a worked landscape and protected stores.
+    // These are generated starting assets, not supplies granted during play.
+    for (const camp of this.world.camps.filter(c=>[1,2].includes(c.team))) {
+      for (const type of ["warehouse","warehouse","farm","farm","farm"] as BldType[]) {
+        const spot=this.findOpenSpot(camp.x,camp.z,type,camp.team);
+        if(spot)this.state.buildings.push(this.makeBld(type,spot.x,spot.z,camp.team));
+      }
+    }
     this.state.richRes = (["food", "wood", "stone"] as ResKind[])[(Math.random() * 3) | 0];
+    initializeCultivation(this);
     this.rebuildWalk();
     establishRaiderCamps(this);
     this.rebuildWalk();
@@ -649,6 +662,7 @@ export class Game {
       if (type === "worker") u.speed *= 1.1;
       if (type === "archer") u.range += 2;
     }
+    u.name=citizenName(this.state.seed,u.id,team);
     this.state.units.push(u);
     return u;
   }
@@ -790,7 +804,7 @@ export class Game {
         if (ok) {
           for (const b of this.state.buildings) {
             if (!this.solidBuilding(b)) continue;
-            if (Math.abs(b.x - x) < b.w * 0.4 + 0.45 && Math.abs(b.z - z) < b.d * 0.4 + 0.45) {
+            if (Math.abs(b.x - x) < b.w * 0.4 + 0.75 && Math.abs(b.z - z) < b.d * 0.4 + 0.75) {
               ok = false;
               break;
             }
@@ -914,7 +928,8 @@ export class Game {
       }
     }
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || (b.team !== 0 && !this.visibleAt(b.x, b.z))) continue;
+      // Physical footprints exist for every society, independently of player fog.
+      if (b.hp <= 0) continue;
       if (Math.abs(b.x - x) < (b.w + d.w) * 0.42 && Math.abs(b.z - z) < (b.d + d.d) * 0.42) {
         return "Too close to another building";
       }
@@ -937,8 +952,8 @@ export class Game {
       if (n < 4) return "A lumber camp needs a stand of pines";
     }
     if (type === "farm") {
-      if (!isFertile(this.world.heights, x, z, this.world.baseWaterY))
-        return "Farms need fertile, level ground";
+      const slope=Math.max(Math.abs(this.height(x+3,z)-this.height(x-3,z)),Math.abs(this.height(x,z+3)-this.height(x,z-3)))/6;
+      if(slope>0.6)return "This slope is too steep for fields; choose a gentler bank or terrace";
     }
     if (type === "dock") {
       if (this.height(x, z) < this.world.waterY - 0.12) return "The dock would sink";
@@ -1198,6 +1213,9 @@ export class Game {
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
+    if(type==="farm"&&cultivationIssue(this,team)){
+      if(team===0)this.banner(cultivationIssue(this,team)!,5);return false;
+    }
     const same = this.state.buildings.filter((b) => b.type === type && b.hp > 0).length;
     if (same >= 56) {
       if (team === 0) this.banner("The island can't hold more of those", 1.6);
@@ -1253,6 +1271,7 @@ export class Game {
     }
     this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team);
+    if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
     if (BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
@@ -1313,8 +1332,7 @@ export class Game {
       return;
     }
     u.node = b;
-    const reach = Math.max(b.w, b.d) * 0.48 + 0.8;
-    if (Math.hypot(u.x - b.x, u.z - b.z) > reach) {
+    if (!this.buildingWorkReached(u,b)) {
       u.tx = b.x;
       u.tz = b.z;
       this.steer(u, dt);
@@ -2210,6 +2228,11 @@ export class Game {
       }
       c.vx *= 1 - dt * 0.6;
       c.vz *= 1 - dt * 0.6;
+      // Fear accelerates an animal, but must not accumulate unbounded speed.
+      // Primitive hunters can approach within spear reach; deer remain fastest.
+      const fleeSpeed = c.species === "deer" ? 4 : c.species === "boar" ? 2.8 : 2.5;
+      const velocity = Math.hypot(c.vx,c.vz);
+      if (velocity > fleeSpeed) {c.vx *= fleeSpeed/velocity;c.vz *= fleeSpeed/velocity;}
       const nx = c.x + c.vx * dt;
       const nz = c.z + c.vz * dt;
       const h = this.height(nx, nz);
@@ -2554,6 +2577,7 @@ export class Game {
         const wx = -HALF + (ix + 0.5) * cell;
         const wz = -HALF + (iz + 0.5) * cell;
         if (!this.walkable(wx, wz)) continue;
+        if(!this.workBoard.connected(this,u.x,u.z,wx,wz))continue;
         if (Math.hypot(wx, wz) > this.world.islandR - 8) continue;
         const d = Math.hypot(wx - u.x, wz - u.z);
         if (d < 12) continue;
@@ -2586,8 +2610,10 @@ export class Game {
 
     this.lootMegaliths(u);
     if (u.stuckT > 8) {
-      u.order = "hold";
-      u.workReason = "Scouting route blocked — choose a new destination";
+      const next=this.findExploreTarget(u);
+      if(next&&this.workBoard.connected(this,u.x,u.z,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
+      u.order = "return";
+      u.workReason = "Scouting route blocked — returning toward the village";
       this.banner(u.workReason, 3);
       return;
     }
@@ -2779,6 +2805,7 @@ export class Game {
     worker.order = "trade";
     worker.carry = deal.giveAmt;
     worker.carryType = deal.give;
+    worker.carryFood = deal.give==="food"?"provisions":undefined;
     worker.tx = hall.x;
     worker.tz = hall.z;
     worker.node = null;
@@ -2911,6 +2938,8 @@ export class Game {
   }
 
   tickWeather(dt: number) {
+    // Severe storms are brief work interruptions, not months of enforced idleness.
+    if(this.state.weather==="storm")this.state.weatherT=Math.min(50,this.state.weatherT);
     this.state.weatherT -= dt;
     if (this.state.weatherT > 0) return;
     const prev = this.state.weather;
@@ -2945,13 +2974,14 @@ export class Game {
         break;
       }
     }
+    if(next==="storm"&&prev==="storm")next=sn.winter>.35?"frost":"rain";
     if (next === prev) {
       this.state.weatherT = 90 + Math.random() * 80;
       return;
     }
     this.state.weather = next;
     this.state.weatherT =
-      next === "flood" || next === "drought" ? 70 + Math.random() * 40 : 160 + Math.random() * 140;
+      next === "storm" ? 20 + Math.random()*30 : next === "flood" || next === "drought" ? 70 + Math.random() * 40 : 160 + Math.random() * 140;
     if (next === "flood") {
       this.world.waterY = this.world.baseWaterY + 0.55;
       this.rebuildWalk();
@@ -3077,7 +3107,6 @@ export class Game {
   }
 
   landSeaTribe(slot: number) {
-    const names = ["Saltborn", "Greyhaven", "Mossfall", "Dunmere"];
     const specs: ResKind[] = ["food", "wood", "stone", "copper"];
     const tr = this.tribe(slot);
     if (!tr) return;
@@ -3104,7 +3133,7 @@ export class Game {
     tr.spears = 2;
     tr.bows = 1;
     tr.blades = 0;
-    tr.name = names[(Math.random() * names.length) | 0];
+    tr.name = prehistoricName(this.state.seed,slot*977+Math.floor(this.state.time));
     tr.short = tr.name;
     tr.spec = specs[(Math.random() * (tr.age >= 1 ? 4 : 3)) | 0];
     const pool = CITY_LEADERS[tr.spec] || CITY_LEADERS.wood;
@@ -3131,6 +3160,7 @@ export class Game {
     const flood = this.state.weather === "flood";
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
+        if(n.pressure&&!(this.state.units.some(u=>u.hp>0&&u.order==="gather"&&u.node===n)))n.pressure=Math.max(0,n.pressure-dt/7200);
         if (n.kind === "forage" && calendar(this).phase === 3 && n.amount > 0) {
           n.amount = Math.max(0, n.amount - dt * (n.maxAmt || 12) / 180);
           if (n.amount === 0) n.regenT = 100;
@@ -3152,7 +3182,7 @@ export class Game {
         n.regenT -= dt * rate;
         if (n.regenT <= 0) {
           const base = n.maxAmt || (n.kind === "tree" ? 10 : 8);
-          n.amount = Math.max(3, Math.floor(base * (0.5 + Math.random() * 0.35)));
+          n.amount = Math.max(1, Math.floor(base * (0.5 + Math.random() * 0.35)*(1-(n.pressure||0)*0.7)));
           n.regenT = 0;
         }
       }
@@ -3185,6 +3215,9 @@ export class Game {
         const cap = this.popCap(tr.id);
         if (pop + this.queued(tr.id) >= cap) continue;
         if (reserveSeconds(this, tr.id) < 480) continue;
+        if (tr.id !== 0) {
+          if(tr.food<growthFoodNeed(this,tr.id))continue;
+        }
         const family = this.state.units.filter(u => u.team === tr.id && u.hp > 0);
         if (family.filter(u => isDependent(this, u)).length >= Math.ceil(family.filter(u => !isDependent(this, u)).length / 2)) {
           const home = this.campOf(tr.id);
@@ -3204,7 +3237,7 @@ export class Game {
           tr.id,
         );
         u.ageT = 0;
-        u.maturesAt = this.state.time + 16 * 1800;
+        u.maturesAt = this.state.time + 360;
         u.homeHall=hall.id;u.parents=family.filter(p=>!isDependent(this,p)).slice(0,2).map(p=>p.id);
         lifeEvent(this,tr.id,personName(u)+" was born",hall.x,hall.z);
         u.stature = 0.6;
@@ -3222,8 +3255,7 @@ export class Game {
       if (!tr.alive && this.popNow(tr.id) === 0) continue;
       const pop = counts[tr.id];
       const upkeep = foodDemand(this, tr.id);
-      const spoilage = foodSpoilage(this, tr.id);
-      tr.food = Math.max(0, tr.food - (upkeep + spoilage) * dt);
+      consumeAndSpoilFood(this,tr.id,upkeep,dt);
       if (tr.id === 0 && tr.food < 8 && this.state.bannerT <= 0)
         this.banner("The stores run thin", 2);
     }
@@ -3231,6 +3263,7 @@ export class Game {
     for (const u of this.state.units) {
       if (u.hp <= 0) continue;
       u.ageT += dt;
+      if(u.maturesAt!==undefined&&u.maturesAt>this.state.time+360)u.maturesAt=this.state.time+360;
       if (u.maturesAt !== undefined && !isDependent(this, u)) {
         u.maturesAt = undefined;
         u.stature = predisposition(u).size;
@@ -3354,7 +3387,7 @@ export class Game {
           const wz = -HALF + (iz + 0.5) * cell;
           if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
           const i = iz * n + ix;
-          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0, 1-Math.hypot(wx-b.x,wz-b.z)/r));
+          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0,Math.min(1,(1-Math.hypot(wx-b.x,wz-b.z)/r)/0.25)));
           const cur = terr[i];
           if (cur === 255 || cur === b.team) terr[i] = b.team;
           else terr[i] = 254;
@@ -3429,10 +3462,15 @@ export class Game {
     if (!tribe || tribe.age >= 5) return "This society has reached the final age";
     const c = AGE_COST[tribe.age + 1];
     if (!c) return "No next age is available";
-    if (this.popNow(team) < (c.pop || 0)) return `Need ${c.pop} people living here — they are born, not trained`;
+    if (this.popNow(team) < (c.pop || 0)) return `Need ${c.pop} residents — welcome families in Village (L) or raise children`;
     const kinds = new Set(this.state.buildings.filter(b => b.team === team && this.finished(b)).map(b => b.type));
     if (kinds.size < tribe.age + 2) return `Need ${tribe.age + 2} different completed building types`;
-    if (!this.canAfford(team, c)) return "Build reserves to cover the next age's resource cost";
+    if (!this.canAfford(team, c)) {
+      const missing = (["food","wood","stone","copper","iron"] as ResKind[])
+        .filter(k => (c[k] || 0) > tribe[k])
+        .map(k => `${Math.ceil((c[k] || 0)-tribe[k])} ${k === "wood" ? "timber" : k}`);
+      return "Still need " + missing.join(", ");
+    }
     return null;
   }
 
@@ -3479,11 +3517,42 @@ export class Game {
     this.checkVictory();
   }
 
+  interactionSpot(u: Unit, b: Building) {
+    if(this.state.walkDirty)this.rebuildWalk();
+    const cached=this.approachCache.get(u);if(cached&&cached.building===b&&cached.revision===this.navRevision&&this.state.time-cached.time<2)return cached.spot;
+    let best:{x:number;z:number}|null=null,score=Infinity;
+    // A physically clear frontage can still fall in a coarse blocked cell.
+    // Try the nearest ring first, then a little farther out when necessary.
+    for(const margin of [.8,1.2,1.6]) {
+    const w=b.w*0.4+Math.max(u.r,0.45)+margin,d=b.d*0.4+Math.max(u.r,0.45)+margin;
+    for(let i=0;i<32;i++) {
+      const a=i*Math.PI/16,sx=Math.sin(a),sz=Math.cos(a),r=Math.min(w/(Math.abs(sx)||1e-6),d/(Math.abs(sz)||1e-6));
+      const x=b.x+sx*r,z=b.z+sz*r;
+      if(!this.walkable(x,z)||!this.workBoard.connected(this,u.x,u.z,x,z))continue;
+      // A walkable grid cell doesn't guarantee this sub-cell point is clear.
+      // Reject neighboring huts/stores rather than redirecting to their doors.
+      if(this.state.buildings.some(other=>this.solidBuilding(other)&&
+          Math.abs(x-other.x)<other.w*.4+u.r+.15&&Math.abs(z-other.z)<other.d*.4+u.r+.15))continue;
+      if(u.order==="attack"&&u.target===b){const gap=Math.hypot(Math.max(0,Math.abs(x-b.x)-b.w*.4),Math.max(0,Math.abs(z-b.z)-b.d*.4));if(gap>u.range+.4)continue;}
+      const value=Math.hypot(x-u.x,z-u.z);if(value<score){score=value;best={x,z};}
+    }
+    if(best)break;
+    }
+    this.approachCache.set(u,{building:b,revision:this.navRevision,time:this.state.time,spot:best});
+    return best;
+  }
+
+  buildingWorkReached(u:Unit,b:Building) {
+    if(this.attackDistance(u,b)<=u.r+1.8)return true;
+    const entrance=this.interactionSpot(u,b);
+    return !!entrance&&Math.hypot(u.x-entrance.x,u.z-entrance.z)<=1;
+  }
+
   nearestDrop(x: number, z: number, team: number) {
     let best: Building | null = null;
     let bd = 1e12;
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== team) continue;
+      if (b.hp <= 0 || b.team !== team || !this.finished(b)) continue;
       if (b.type !== "townhall" && b.type !== "warehouse" && b.type !== "cornerstone") continue;
       if (b.type === "cornerstone" && !this.finished(b)) continue;
       const d = (b.x - x) ** 2 + (b.z - z) ** 2;
@@ -3686,8 +3755,38 @@ export class Game {
     return Math.max(0.38, m);
   }
 
+  travelSpeed(u: Unit) {
+    return u.speed * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.45,1-(u.hunger||0)/220) *
+        (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
+        (u.team === 0 &&
+        this.state.agePicks[4] === "econ" &&
+        (u.order === "return" || u.order === "trade")
+          ? 1.35
+          : 1);
+  }
+
   steer(u: Unit, dt: number) {
     if (this.state.walkDirty) this.rebuildWalk();
+    // Coarse navigation can mark a citizen's cell blocked after construction.
+    // Walk out through a physically clear segment before asking A* to route.
+    if(!this.walkable(u.x,u.z)){
+      let escape:{x:number;z:number}|null=null;
+      search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
+        const x=u.x+Math.sin(i*Math.PI/12)*radius,z=u.z+Math.cos(i*Math.PI/12)*radius;
+        if(!this.walkable(x,z)||!this.canStep(u,x,z))continue;
+        const samples=Math.ceil(radius*2);
+        let clear=true;
+        for(let j=1;j<=samples;j++)if(!this.canStep(u,u.x+(x-u.x)*j/samples,u.z+(z-u.z)*j/samples)){clear=false;break;}
+        if(!clear)continue;
+        escape={x,z};break search;
+      }
+      if(escape){
+        const dx=escape.x-u.x,dz=escape.z-u.z,distance=Math.hypot(dx,dz);
+        const step=Math.min(distance,this.travelSpeed(u)*dt);
+        const nx=u.x+dx/distance*step,nz=u.z+dz/distance*step;
+        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.height(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;u.stuckT=0;this.paths.delete(u.id);return false;}
+      }
+    }
     let tx = u.tx,
       tz = u.tz;
     for (const b of this.state.buildings) {
@@ -3697,10 +3796,9 @@ export class Game {
         Math.abs(tz - b.z) > b.d * 0.4 + u.r
       )
         continue;
-      const a = Math.atan2(u.z - b.z, u.x - b.x),
-        r = Math.max(b.w, b.d) * 0.4 + u.r + 0.65;
-      tx = b.x + Math.cos(a) * r;
-      tz = b.z + Math.sin(a) * r;
+      const spot=this.interactionSpot(u,b);
+      if(spot){tx=spot.x;tz=spot.z;}
+
     }
     const distance = Math.hypot(tx - u.x, tz - u.z);
     if (distance < 0.5) {
@@ -3754,7 +3852,8 @@ export class Game {
             x: -HALF + ((n % WALK) + 0.5) * cell,
             z: -HALF + (Math.floor(n / WALK) + 0.5) * cell,
           }));
-          points.push({ x: tx, z: tz });
+          if(end===goal&&this.walkable(tx,tz))points.push({ x: tx, z: tz });
+          else {const final=points.at(-1);if(final){tx=final.x;tz=final.z;}}
         } else {
           points = [];
           failed = true;
@@ -3776,18 +3875,8 @@ export class Game {
     const dx = point.x - u.x,
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
-    if (d < 0.01) return false;
-    const step = Math.min(
-      u.speed * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.45,1-(u.hunger||0)/220) *
-        dt *
-        (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
-        (u.team === 0 &&
-        this.state.agePicks[4] === "econ" &&
-        (u.order === "return" || u.order === "trade")
-          ? 1.35
-          : 1),
-      d,
-    );
+    if (d < 0.5 && route.points.length===1) {this.paths.delete(u.id);u.stuckT=0;return true;}
+    const step = Math.min(this.travelSpeed(u)*dt, d);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
     if (!this.canStep(u, nx, nz)) {
@@ -3880,12 +3969,13 @@ export class Game {
     if(visitorAI(this,u,dt))return;
     if(u.recalled) {
       if(this.steer(u,dt)) {
-        if(u.carryType&&u.carry>0){this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;}
+        if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;u.carryFood=undefined;}
         u.recalled=undefined;u.stationOnArrival=undefined;u.order="hold";u.workReason="Home after the recall horn — awaiting orders";
       }
       return;
     }
     if(delegationAI(this,u,dt))return;
+    if(cropStudyAI(this,u,dt))return;
     if (isDependent(this, u)) {
       u.node = null;
       u.target = null;
@@ -3925,7 +4015,7 @@ export class Game {
       u.blockedTask = u.node.id;
       u.retryWorkAt = this.state.time + 30;
       u.node = null;
-      u.order = "idle";
+      u.order = u.carry>0?"return":"idle";
       u.stuckT = 0;
       u.workReason = "Route blocked; finding another task";
     }
@@ -3948,19 +4038,25 @@ export class Game {
         u.node = null;
         return;
       }
+      const foodKind="species" in node?"meat":"type" in node?(node.type==="farm"?node.crop?.kind||node.cropType||"grain":"fish"):node.kind==="fish"?"fish":node.cropCandidate||"berries";
+      if(u.carry>0&&u.carryType==="food"&&u.carryFood&&foodKind!==u.carryFood){u.order="return";return;}
       if (u.team === 0 && "species" in node && !this.visibleAt(node.x, node.z)) {
         u.order = "idle"; u.node = null; u.workReason = "Lost sight of the herd — explore to find it again"; return;
       }
-      const reach = "w" in node ? Math.max(node.w, node.d) * 0.42 + 0.7 : 1.22;
-      if (Math.hypot(u.x - node.x, u.z - node.z) > reach) {
-        const spot = this.nearestWalk(u, node.x, node.z);
+      if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
+        u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
+      }
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:1.22);
+      if (!atSurface()) {
+        const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):this.nearestWalk(u,node.x,node.z);
+        if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}
         u.tx = spot.x;
         u.tz = spot.z;
-        if (this.steer(u, dt) && Math.hypot(u.x - node.x, u.z - node.z) > reach) {
+        if (this.steer(u, dt) && !atSurface()) {
           u.blockedTask = node.id;
           u.retryWorkAt = this.state.time + 60;
           u.node = null;
-          u.order = "idle";
+          u.order = u.carry>0?"return":"idle";
           u.workReason = "Cannot reach the work surface; finding another task";
         }
         return;
@@ -3989,6 +4085,7 @@ export class Game {
           prey.hp -= 1;
           u.carry += 4;
           u.carryType = "food";
+          u.carryFood = "meat";
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "hunt +4", "#efe4b0");
           if (prey.hp <= 0) {
             prey.wanderT = 55 + Math.random() * 40;
@@ -4018,6 +4115,11 @@ export class Game {
         } else {
           u.carry += gained;
           u.carryType = t;
+          u.carryFood=t==="food"?("type" in node&&node.type==="dock"||"kind" in node&&node.kind==="fish"?"fish":"berries"):undefined;
+          if("kind" in node&&node.kind==="forage"){
+            if(node.cropCandidate)u.carryFood=node.cropCandidate;
+            collectSamples(u,node,gained);
+          }
           if (u.team === 0) {
             if (gained > 1) this.addFloater(u.x, u.y + 1.8, u.z, "+" + gained, "#efe4b0");
             if (Math.random() < 0.35)
@@ -4026,6 +4128,7 @@ export class Game {
         }
         if ("amount" in node) {
           node.amount--;
+          if(node.kind==="forage"||node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+0.035);
           if (node.amount <= 0) {
             node.amount = 0;
             if (node.kind === "tree") this.chopMarks.delete(node.id);
@@ -4033,7 +4136,7 @@ export class Game {
               node.kind === "tree"
                 ? 1800 * (3 + Math.random() * 2)
                 : node.kind === "forage"
-                  ? 70 + Math.random() * 50
+                  ? 240 + (node.pressure||0)*900 + Math.random() * 120
                   : node.kind === "fish"
                     ? 55 + Math.random() * 40
                     : 190 + Math.random() * 80;
@@ -4058,24 +4161,26 @@ export class Game {
       return;
     }
     if (u.order === "return") {
-      const drop = this.nearestDrop(u.x, u.z, u.team);
-      if (!drop) {
-        u.order = "idle";
-        return;
-      }
-      u.tx = drop.x;
-      u.tz = drop.z;
-      if (Math.hypot(u.x - drop.x, u.z - drop.z) > Math.max(drop.w, drop.d) * 0.55 + 1.4) {
-        this.steer(u, dt);
-        return;
-      }
+      const candidates=this.state.buildings.filter(b=>b.team===u.team&&this.finished(b)&&["townhall","warehouse","cornerstone"].includes(b.type))
+        .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+      let drop:Building|undefined,spot:{x:number;z:number}|null=null;
+      for(const b of candidates){const p=this.interactionSpot(u,b);if(p){drop=b;spot=p;break;}}
+      if(!drop||!spot){u.workReason="No reachable store — carrying supplies; clear a route or build a local store";return;}
+      u.tx=spot.x;u.tz=spot.z;
+      // Deliver along the reachable store frontage, not one exact shared point.
+      // Otherwise congestion can hold a row of carriers next to the entrance.
+      const dx=Math.abs(u.x-drop.x)-(drop.w*.4+u.r),dz=Math.abs(u.z-drop.z)-(drop.d*.4+u.r);
+      const frontage=(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
+      if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
-        tr[u.carryType] += u.carry;
+        deliverSamples(this,u);
+        if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else tr[u.carryType] += u.carry;
         if (u.team === 0) this.addFloater(drop.x, drop.y + 3, drop.z, "+" + u.carry, "#efe4b0");
         if (u.team === 0) this.onSfx("drop");
         u.carry = 0;
         u.carryType = null;
+        u.carryFood = undefined;
       }
       u.tradeTeam = 0;
       u.node = null;
@@ -4106,9 +4211,10 @@ export class Game {
       this.banner(rival?.hostile ? "Trade called off" : "The traders turn back", 1.6);
       return;
     }
-    u.tx = hall.x;
-    u.tz = hall.z;
-    if (Math.hypot(u.x - hall.x, u.z - hall.z) > Math.max(hall.w, hall.d) * 0.55 + 1.6) {
+    const entrance=this.interactionSpot(u,hall);
+    if(!entrance){u.trade=null;u.order="return";u.workReason="No reachable meeting place — bringing the offer home";return;}
+    u.tx=entrance.x;u.tz=entrance.z;
+    if (!this.buildingWorkReached(u,hall)) {
       this.steer(u, dt);
       return;
     }
@@ -4132,6 +4238,7 @@ export class Game {
     rival[deal.give] += deal.giveAmt;
     u.carry = deal.getAmt; // Every returned unit was deducted from the seller.
     u.carryType = deal.get;
+    u.carryFood = deal.get==="food"?"provisions":undefined;
     u.workReason = "Bringing traded goods home";
     rival.trust = Math.min(1, (rival.trust || 0) + 0.15);
     rival.tension = Math.max(0, rival.tension - 0.12);
@@ -4154,7 +4261,7 @@ export class Game {
     for (const o of this.state.units) {
       if (
         (o.envoy?.kind === "peace" && o.envoy.team === u.team) ||
-        o.hp <= 0 ||
+        o.hp <= 0 || o.shelterId ||
         o.team === u.team ||
         !this.isFoe(u.team, o.team) ||
         (u.team === 0 && !this.visibleAt(o.x, o.z))
@@ -4183,6 +4290,11 @@ export class Game {
       }
     }
     return best;
+  }
+
+  attackDistance(u:Unit,t:Unit|Building){
+    if(t.kind==="unit")return Math.hypot(u.x-t.x,u.z-t.z);
+    return Math.hypot(Math.max(0,Math.abs(u.x-t.x)-t.w*.4),Math.max(0,Math.abs(u.z-t.z)-t.d*.4));
   }
 
   dealDamage(attacker: Unit | Building, target: Unit | Building) {
@@ -4219,6 +4331,7 @@ export class Game {
         return;
       }
       target.hp = 0;
+      if(attacker.team===0&&[1,2].includes(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
       if (target.kind === "building" && attacker.team !== target.team)
         this.lootBuilding(attacker.team, target);
@@ -4270,7 +4383,8 @@ export class Game {
   lootBuilding(attackerTeam: number, b: Building) {
     const victim = this.tribe(b.team);
     const raider = this.tribe(attackerTeam);
-    if (!victim || !raider || b.team === attackerTeam) return;
+    if (!victim || !raider || b.team === attackerTeam || b.lootClaimed) return;
+    b.lootClaimed=true;
     const take = (
       key: "food" | "wood" | "stone" | "copper" | "iron",
       frac: number,
@@ -4288,16 +4402,16 @@ export class Game {
     let copper = 0;
     let iron = 0;
     if (b.type === "warehouse" || b.type === "townhall") {
-      food = take("food", 0.18, 80);
-      wood = take("wood", 0.12, 40);
-      stone = take("stone", 0.12, 24);
-    } else if (b.type === "lumber") wood = take("wood", 0.1, 24);
-    else if (b.type === "quarry") stone = take("stone", 0.14, 18);
+      food = take("food", 0.35, 160);
+      wood = take("wood", 0.3, 80);
+      stone = take("stone", 0.25, 48);
+    } else if (b.type === "lumber") wood = take("wood", 0.3, 48);
+    else if (b.type === "quarry") stone = take("stone", 0.3, 36);
     else if (b.type === "farm" || b.type === "hut" || b.type === "dock")
-      food = take("food", 0.08, 20);
+      food = take("food", 0.15, 36);
     else if (b.type === "forge") {
-      copper = take("copper", 0.25, 6);
-      iron = take("iron", 0.25, 4);
+      copper = take("copper", 0.5, 12);
+      iron = take("iron", 0.5, 8);
     } else food = take("food", 0.05, 12);
     if (attackerTeam !== 0) return;
     const bits = [
@@ -4334,8 +4448,7 @@ export class Game {
       if (
         t &&
         u.cd <= 0 &&
-        Math.hypot(t.x - u.x, t.z - u.z) <=
-          u.range + (t.kind === "unit" ? t.r + 0.35 : Math.max(t.w, t.d) * 0.55)
+        this.attackDistance(u,t) <= u.range + (t.kind === "unit" ? t.r + 0.35 : 0.5)
       ) {
         u.cd = u.rof;
         u.facing = Math.atan2(t.x - u.x, t.z - u.z);
@@ -4374,6 +4487,10 @@ export class Game {
       return;
     }
     if (u.order === "attack") {
+      if(u.target?.kind==="building"){
+        const nearby=this.acquireTarget(u,Math.max(6,u.range+3));
+        if(nearby?.kind==="unit")u.target=nearby;
+      }
       const t = u.target;
       if (
         !t ||
@@ -4403,8 +4520,8 @@ export class Game {
       }
       u.tx = t.x;
       u.tz = t.z;
-      const d = Math.hypot(u.x - t.x, u.z - t.z);
-      const reach = u.range + (t.kind === "building" ? Math.max(t.w, t.d) * 0.55 : t.r + 0.35);
+      const d = this.attackDistance(u,t);
+      const reach = u.range + (t.kind === "building" ? 0.5 : t.r + 0.35);
       if (d > reach) this.steer(u, dt);
       else {
         u.facing = Math.atan2(t.x - u.x, t.z - u.z);
@@ -4512,8 +4629,13 @@ export class Game {
           this.addBurst(t.x, t.y + 1, t.z, "#c44", 2);
           if (t.hp <= 0) {
             t.hp = 0;
+            if(p.team===0&&[1,2].includes(t.team))this.state.conquestAt=this.state.time;
             this.addBurst(t.x, t.y + 1, t.z, "#6a3030", 10);
-            if (t.kind === "building") this.state.walkDirty = true;
+            if (t.kind === "building") {
+              this.state.walkDirty = true;
+              if(p.team!==t.team)this.lootBuilding(p.team,t);
+              this.tickRegions();this.defendHome(t.team);
+            }
           }
           if (p.team === 0 && t.team !== 0 && t.team !== 3) this.makeHostile(t.team);
           if (
@@ -4563,7 +4685,7 @@ export class Game {
         if (b.team === 0) this.banner("No free adult to arm", 1.6);
         continue;
       }
-      adult.type = q.unit;
+      adult.type = q.unit==="spearman"&&tr.age<3?"worker":q.unit;
       adult.hp = Math.round(d.hp * AGE_STAT[tr?.age ?? 0]);
       adult.maxHp = adult.hp;
       adult.speed = d.speed;
@@ -4574,7 +4696,7 @@ export class Game {
       adult.order = "idle";
       adult.job = null;
       adult.node = null;
-      adult.militia = false;
+      adult.militia = q.unit==="spearman"&&tr.age<3;
       if (b.team === 0) {
         this.onSfx("train");
         this.addFloater(adult.x, adult.y + 2, adult.z, d.name, "#c9e8a0");
@@ -4613,7 +4735,7 @@ export class Game {
     }
     tr.wood -= 4;
     const d = UNITS.spearman;
-    u.type = "spearman";
+    u.type = tr.age>=3?"spearman":"worker";
     u.hp = Math.round(d.hp * AGE_STAT[tr.age]);
     u.maxHp = u.hp;
     u.speed = d.speed;
@@ -4622,10 +4744,10 @@ export class Game {
     u.rof = d.rof;
     u.r = d.r;
     u.drill = undefined;
-    u.militia = false;
+    u.militia = tr.age<3;
     u.jobLock = false;
     u.order = "idle";
-    u.workReason = "Finished the drill";
+    u.workReason = tr.age<3?"Spear practice complete — returning to civilian work":"Finished the drill";
     if (u.team === 0) this.addFloater(u.x, u.y + 2, u.z, "Spearman", "#c9e8a0");
   }
 
@@ -4698,6 +4820,7 @@ export class Game {
     if (type === "quarry") {
       for (const s of this.state.stones) {
         if (s.amount <= 0) continue;
+        if (Math.hypot(s.x-cx,s.z-cz)>40) continue;
         for (let i = 0; i < 8; i++) {
           const a = (i / 8) * Math.PI * 2;
           const x = Math.round((s.x + Math.cos(a) * 4.2) / TILE) * TILE;
@@ -4751,6 +4874,8 @@ export class Game {
 
     const costScale = 0.92;
     const pop = this.popNow(team);
+    if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
+      for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}
     const cap = this.popCap(team);
     const stage =
       !tr.hostile && this.state.time < 90 && tr.age < 1
@@ -4762,8 +4887,26 @@ export class Game {
     const fortune = this.tribeFortune(team);
     const growing = fortune > 2.1;
     const shrinking = fortune < 0.95;
+    const reserve = reserveSeconds(this, team);
+    const plannedStorage=this.stockCap(team)+this.state.buildings.filter(b=>b.team===team&&b.type==="warehouse"&&b.hp>0&&!this.finished(b)).length*160;
+    const needsStorage=plannedStorage<foodDemand(this,team)*1800+100;
 
-    if (tr.age < 5 && pop >= (AGE_COST[tr.age + 1]?.pop || 0) * (growing ? 0.75 : 0.95)) {
+    // A shortage changes actual labor before optional investment or travel.
+    if (reserve < 240) {
+      for (const u of this.state.units) {
+        if (u.team !== team || u.type !== "worker" || u.hp <= 0 || isDependent(this,u) ||
+            u.emergency || u.visit || u.scout || u.foundingJourney || u.expedition || u.carry > 0) continue;
+        const field = u.node && "type" in u.node && u.node.type === "farm";
+        const preparingField = field && calendar(this).phase < 2;
+        if (u.order === "build" || (u.order === "gather" && ((!field && u.job !== "food") || (preparingField && reserve < 90)))) {
+          u.order = "idle"; u.node = null; u.jobLock = false; u.drill = undefined;
+          u.workCheckAt = 0;
+          this.workBoard.assign(this,u);
+        }
+      }
+    }
+
+    if (reserve > 600 && tr.age < 5 && pop >= (AGE_COST[tr.age + 1]?.pop || 0) * (growing ? 0.75 : 0.95)) {
       const c = AGE_COST[tr.age + 1];
       if (
         c &&
@@ -4775,12 +4918,7 @@ export class Game {
       }
     }
 
-    if (pop + this.queued(team) < cap && tr.food >= (shrinking ? 70 : 36)) {
-      const th = hall;
-      if (th.queue.length < 2 && Math.random() < (growing ? 0.78 : shrinking ? 0.12 : 0.5))
-        this.enqueueTrain(th, "worker");
-    }
-    if (growing && reserveSeconds(this, team) > 500 && Math.random() < 0.4) {
+    if (tr.age>=1 && !needsStorage && growing && reserveSeconds(this, team) > 1400 && Math.random() < 0.4) {
       const adult = this.state.units.find(
         (u) =>
           u.team === team &&
@@ -4794,6 +4932,7 @@ export class Game {
 
     if (
       cap - pop < 3 &&
+      reserve > 450 &&
       tr.wood >= 36 &&
       Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
     ) {
@@ -4804,7 +4943,11 @@ export class Game {
     const farms = this.state.buildings.filter(
       (b) => b.team === team && b.type === "farm" && b.hp > 0,
     ).length;
-    if (team === 1) {
+    if (needsStorage && tr.wood >= BUILDINGS.warehouse.wood) {
+      const spot=this.findOpenSpot(hall.x,hall.z,"warehouse",team);
+      if(spot)this.placeBuilding("warehouse",spot.x,spot.z,team);
+    }
+    if (team === 1 && reserve > 450 && !needsStorage) {
       if (!this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.55) {
         const spot = this.findOpenSpot(hall.x, hall.z, "quarry", team);
         if (spot) this.placeBuilding("quarry", spot.x, spot.z, team);
@@ -4823,11 +4966,11 @@ export class Game {
       }
     }
     if (team === 2) {
-      if (farms < 2 + tr.age && tr.wood >= 50 && Math.random() < 0.62) {
+      if ((!needsStorage||farms<3) && farms < Math.max(2 + tr.age, Math.ceil(foodDemand(this,team)*1800/130)+1) && tr.wood >= BUILDINGS.farm.wood && Math.random() < 0.62) {
         const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
         if (spot) this.placeBuilding("farm", spot.x, spot.z, team);
       }
-      if (!this.hasBld(team, "grove") && tr.wood >= 30 && Math.random() < 0.45) {
+      if (reserve > 450 && !this.hasBld(team, "grove") && tr.wood >= 30 && Math.random() < 0.45) {
         const fo = this.state.forage.find(
           (n) => n.amount > 0 && Math.hypot(n.x - hall.x, n.z - hall.z) < 36,
         );
@@ -4840,46 +4983,28 @@ export class Game {
         if (spot) this.placeBuilding("grove", spot.x, spot.z, team);
       }
     }
-    if (farms < 1 + tr.age && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
+    if ((!needsStorage||farms<3) && farms < Math.max(1 + tr.age, Math.ceil(foodDemand(this,team)*1800/130)+1) && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
       const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
       if (spot) this.placeBuilding("farm", spot.x, spot.z, team);
     }
 
-    if (!this.hasBld(team, "lumber") && tr.wood >= BUILDINGS.lumber.wood && Math.random() < 0.4) {
+    if (reserve > 450 && !this.hasBld(team, "lumber") && tr.wood >= BUILDINGS.lumber.wood && Math.random() < 0.4) {
       const spot = this.findOpenSpot(hall.x, hall.z, "lumber", team);
       if (spot) this.placeBuilding("lumber", spot.x, spot.z, team);
     }
-    if (!this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.4) {
+    if (!needsStorage && reserve > 450 && !this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.4) {
       const spot = this.findOpenSpot(hall.x, hall.z, "quarry", team);
       if (spot) this.placeBuilding("quarry", spot.x, spot.z, team);
     }
 
-    if (tr.food < 10 && pop > 3 && Math.random() < (shrinking ? 0.7 : 0.35)) {
-      const huts = this.state.buildings.filter(
-        (b) => b.team === team && b.type === "hut" && b.hp > 0,
-      );
-      if (huts.length > 1) {
-        huts[huts.length - 1].hp = 0;
-        if (this.state.time > 40) this.banner(tr.name + " abandons a hut", 1.8);
-      }
-    }
-    if (tr.food < 4 && pop > 3 && Math.random() < (shrinking ? 0.65 : 0.35)) {
-      const w = this.state.units.find((u) => u.team === team && u.type === "worker" && u.hp > 0);
-      if (w) {
-        w.hp = 0;
-        this.addBurst(w.x, w.y + 1, w.z, "#888", 6);
-      }
-    }
-    if (growing && tr.food > 70 && tr.wood > 50 && Math.random() < 0.45) {
+    if (growing && reserve > 700 && tr.wood > 50 && Math.random() < 0.45) {
       const spot = this.findOpenSpot(hall.x, hall.z, "hut", team);
       if (spot) this.placeBuilding("hut", spot.x, spot.z, team);
     }
-    if (shrinking && pop <= 2 && tr.food < 8 && this.state.time > 140 && Math.random() < 0.12) {
-      hall.hp = Math.max(0, hall.hp - 80);
-      if (hall.hp <= 0) this.banner(tr.name + " withers — the hall stands empty", 2.4);
-    }
+    // Hunger affects every person through tickPeople. Empty settlements are
+    // abandoned by tickCommunities after a grace period, not random AI damage.
 
-    if (stage >= 2 && !this.hasBld(team, "barracks") && tr.wood >= 40) {
+    if (reserve > 600 && stage >= 2 && !this.hasBld(team, "barracks") && tr.wood >= 40) {
       const spot = this.findOpenSpot(hall.x, hall.z, "barracks", team);
       if (spot) this.placeBuilding("barracks", spot.x, spot.z, team);
     }
@@ -4887,7 +5012,7 @@ export class Game {
     const bar = this.state.buildings.find(
       (b) => b.team === team && b.type === "barracks" && b.hp > 0,
     );
-    if (stage >= 2 && bar && bar.queue.length < 2) {
+    if (reserve > 700 && pop >= 7 && stage >= 2 && bar && bar.queue.length < 2) {
       const mil = this.state.units.filter(
         (u) => u.team === team && u.type !== "worker" && u.hp > 0,
       ).length;
@@ -4955,22 +5080,14 @@ export class Game {
     const rivalsAlive = this.state.tribes
       .filter((t) => t.id === 1 || t.id === 2)
       .filter((t) => t.alive).length;
-    const player = this.tribe(0);
-    if (rivalsAlive === 0 && !this.state.units.some(u=>[1,2].includes(u.team)&&u.hp>0) && this.state.time > 120) {
+    if (this.state.conquestAt!==undefined && this.state.time-this.state.conquestAt<2 && rivalsAlive === 0 && !this.state.units.some(u=>[1,2].includes(u.team)&&u.hp>0) && this.state.time > 120) {
       this.state.ended = "win";
       this.state.endReason = "The last rival hall has fallen. The island is yours.";
       this.onSfx("win");
       return;
     }
-    const armed = this.state.units.filter(
-      (u) =>
-        u.team === 0 && u.hp > 0 && (u.militia || (u.type !== "worker" && u.type !== "leader")),
-    ).length;
-    if (player.age >= 5 && this.popNow(0) >= 28 && armed >= 8 && this.state.raidWave >= 4) {
-      this.state.ended = "win";
-      this.state.endReason = "A Renaissance realm, armed, that has weathered the sea.";
-      this.onSfx("win");
-    }
+    // Prosperity is a milestone, not a reason to stop an evolving settlement.
+
   }
 
   currentObjective() {
@@ -4982,6 +5099,11 @@ export class Game {
       (b) => b.team === 0 && b.type === "farm" && this.finished(b),
     );
     const season = calendar(this);
+    if (!this.tribe(0).cultivated?.length) {
+      if (this.tribe(0).cropTrial) return "A resident is testing wild seeds — review the trial in Village (L)";
+      if (Object.values(this.tribe(0).cropSamples||{}).some(n=>n>=4)) return "Seeds are home — begin a cultivation trial in Village (L)";
+      return "Forage wild plants and bring seeds home before establishing fields";
+    }
     if (!fields.length) return "Establish a farm for the seasonal harvest; keep foraging";
     if (season.phase === 0 && fields.some((b) => (b.crop?.planted || 0) < 1))
       return "Spring: sow your fields while food gatherers sustain the village";
@@ -5009,7 +5131,7 @@ export class Game {
     const spears = this.state.units.filter(
       (u) => u.team === 0 && u.type === "spearman" && u.hp > 0,
     ).length;
-    if (spears < 2) return "Train soldiers — cheap, and they fight raiders";
+    if (spears < 2) return "Drill adult residents for defense; training takes time away from village work";
     if (this.tribe(0).age < 1) return "Advance to Bronze — copper for swordsmen";
     if (count("forge") < 1) return "Raise a Forge near copper";
     if (this.tribe(0).age < 2) return "Advance to the Iron Age";
@@ -5022,7 +5144,7 @@ export class Game {
       (u) => u.team === 0 && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     ).length;
     if (fighters < 8) return "Field eight soldiers  " + fighters + "/8";
-    return "Hold the island — drive the rivals out, or weather the sea";
+    return "Your realm is established — keep developing, trading and exploring";
   }
 
   seasonMix(): SeasonMix {
@@ -5199,12 +5321,17 @@ export class Game {
       try {
         this.state.time += sdt;
         for (const b of this.state.buildings)
-          if (b.type === "farm" && this.finished(b)) crop(this, b);
+          if (b.type === "farm" && this.finished(b)) {
+            const c=crop(this,b);
+            if(calendar(this).phase<2)c.water=Math.max(.35,Math.min(1,(c.water??1)+
+              (this.state.weather==="drought" ? -(1-cropWater(this,b.x,b.z))*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
+          }
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
         for (const u of this.state.units) {
           if (u.hp <= 0) continue;
+          u.shelterId=undefined;
           u.vx = 0;
           u.vz = 0;
           try {
@@ -5290,7 +5417,7 @@ export class Game {
     let bestU: Unit | null = null;
     let bd = 2.0;
     for (const u of this.state.units) {
-      if (u.hp <= 0 || (u.team !== 0 && !this.visibleAt(u.x, u.z))) continue;
+      if (u.hp <= 0 || u.shelterId || (u.team !== 0 && !this.visibleAt(u.x, u.z))) continue;
       const d = Math.hypot(u.x - x, u.z - z);
       if (d < bd) {
         bd = d;
@@ -5351,7 +5478,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"
@@ -5360,7 +5487,7 @@ export class Game {
           : u.order === "build"
             ? "Raising a building"
             : u.order === "gather"
-              ? "Gathering " + (u.job === "food" ? "berries" : u.job || "")
+              ? (u.workReason || "Gathering " + (u.job === "food" ? "food" : u.job || ""))
               : u.order === "return"
                 ? "Returning"
                 : u.order === "attack"
@@ -5381,13 +5508,13 @@ export class Game {
       const cap = u.carryType ? GATHER[u.carryType].carry : 8;
       selection = {
         name: (isDependent(this, u) ? "Young " : "") + personName(u),
-        info: (u.expedition ? `${info} · journey food ${u.expedition.food.toFixed(1)}` : info) + ((u.fatigue||0)>0.5?" · tired":""),
+        info: (u.expedition ? `${info} · journey food ${u.expedition.food.toFixed(1)}` : info) + ` · fatigue ${Math.round((u.fatigue||0)*100)}%`,
         hp: u.hp,
         maxHp: u.maxHp,
         kind: "unit",
         type: u.type,
         team: u.team,
-        carry: u.carry > 0 && u.carryType ? u.carryType + " " + u.carry + "/" + cap : "",
+        carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?u.carryFood||"provisions":u.carryType) + " " + u.carry + "/" + cap : "",
         job: u.order === "hold" ? "hold" : u.job,
       };
     } else if (this.state.selBld && this.state.selBld.hp > 0) {
@@ -5438,6 +5565,7 @@ export class Game {
       }
     }
 
+    if(!units.length&&!this.state.selBld&&this.selectedResource){const n=this.selectedResource;selection={name:n.cropCandidate?CROP_NAMES[n.cropCandidate]:n.kind==="tree"?"Tree":n.kind,info:`Selected · ${Math.ceil(n.amount)} remaining${n.cropCandidate?" · gather to bring samples home":""}`,hp:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource"};}
     const age = t.age;
     const next = AGE_COST[age + 1];
     const trainOptions: HudSnapshot["trainOptions"] = [];
@@ -5486,7 +5614,7 @@ export class Game {
         iron: BUILDINGS[type].iron,
       },
       age: BUILDINGS[type].age,
-      hint: BUILDINGS[type].hint,
+      hint: type==="farm"?cultivationIssue(this)||BUILDINGS[type].hint:BUILDINGS[type].hint,
     }));
 
     return {
@@ -5515,10 +5643,11 @@ export class Game {
       banner: this.state.bannerT > 0 ? this.state.banner : null,
       selection,
       canAge: this.ageUpIssue(0) === null,
+      ageIssue: this.ageUpIssue(0),
       ageCost: next,
       nextAge: age < 5 ? AGES[age + 1] : null,
       tribes: this.state.tribes
-        .filter((tr) => tr.id !== 3)
+        .filter((tr) => tr.id !== 3 && (tr.id===0 || knownSettlement(this,tr.id)))
         .map((tr) => ({
           id: tr.id,
           name: tr.short,

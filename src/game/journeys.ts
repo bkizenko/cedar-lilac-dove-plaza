@@ -21,7 +21,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
   const home =
     halls.find((b) => b.id === u.homeHall) ||
     halls.sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
-  if (!home) return false;
+  if (!home) {e.food=Math.max(0,e.food-dt*FOOD_PER_PERSON_SECOND);return false;}
   const distance = Math.hypot(u.x - home.x, u.z - home.z);
   if (distance < Math.max(home.w, home.d) * 0.55 + 3 && (e.returning || u.order !== "explore")) {
     g.tribe(u.team).food += e.food;
@@ -48,6 +48,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
       if (e.forage >= 8) {
         e.forage -= 8;
         patch.amount -= 1;
+        patch.pressure=Math.min(1,(patch.pressure||0)+0.035);
         e.food += 1;
       }
       if (e.forage > 0) return true;
@@ -56,11 +57,12 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
   const returnNeed = Math.max(2, (distance / Math.max(1, u.speed)) * FOOD_PER_PERSON_SECOND * 1.4);
   if (e.food <= returnNeed || threat || u.stuckT > 8) e.returning = true;
   const night = g.clockState().period === "Night";
-  if (night && !threat && distance > 18) {
+  if (night && !threat && !e.returning && e.food>2 && distance > 18) {
     u.fatigue = Math.max(0, (u.fatigue || 0) - dt / 15);
     u.workReason = "Night camp — resting with journey provisions";
     return true;
   }
+  if(e.returning&&e.food<2){const patch=g.state.forage.find(n=>n.amount>=1&&Math.hypot(n.x-u.x,n.z-u.z)<4);if(patch){e.forage+=dt;if(e.forage>=8){e.forage=0;patch.amount--;patch.pressure=Math.min(1,(patch.pressure||0)+0.035);e.food++;}}}
   if (e.returning) {
     u.order = "move";
     u.tx = home.x;
@@ -72,6 +74,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
   return false;
 }
 export function routineRest(g: Game, u: Unit, dt: number) {
+  u.shelterId=undefined;
   if (
     u.type !== "worker" ||
     u.foundingJourney ||
@@ -85,13 +88,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
     !["idle", "gather", "build", "return", "hold"].includes(u.order)
   )
     return false;
-  if (
-    u.order === "return" &&
-    u.carryType === "food" &&
-    u.carry > 0 &&
-    reserveSeconds(g, u.team) < 120
-  )
-    return false;
+  if(u.carry>0&&u.order==="return")return false;
   const resting =
     (g.clockState().period === "Night" && !g.state.nightWork) || g.state.weather === "storm";
   if (!resting) {
@@ -101,20 +98,24 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   }
   const shelter = g.state.buildings
     .filter(
-      (b) => b.team === u.team && g.finished(b) && ["hut", "townhall", "keep"].includes(b.type),
+      (b) => b.team === u.team && g.finished(b) && ["hut", "townhall", "keep"].includes(b.type) &&
+        g.state.units.filter(p=>p.hp>0&&p.shelterId===b.id).length < (b.type==="hut"?5:b.type==="keep"?12:8),
     )
     .sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
-  if (!shelter) return false;
-  if (Math.hypot(u.x - shelter.x, u.z - shelter.z) > Math.max(shelter.w, shelter.d) * 0.55 + 2) {
-    u.tx = shelter.x;
-    u.tz = shelter.z;
+  if (!shelter) {u.workReason="No shelter room — build more huts";return false;}
+  const entrance=g.interactionSpot(u,shelter);
+  if(!entrance){u.workReason="Shelter unreachable — seeking a clear entrance";return false;}
+  if (Math.hypot(u.x - entrance.x, u.z - entrance.z) > 1) {
+    u.tx = entrance.x;
+    u.tz = entrance.z;
     g.steer(u, dt);
     u.workReason = "Seeking shelter for rest";
     return true;
   }
   u.fatigue = Math.max(0, (u.fatigue || 0) - dt / 20);
+  u.shelterId=shelter.id;
   u.workReason =
-    g.state.weather === "storm" ? "Sheltering from the storm" : "Sleeping near the hearth";
+    g.state.weather === "storm" ? "Sheltering inside from the storm" : "Sleeping inside by the hearth";
   if (!u.sickUntil && (u.hunger || 0) < 10) u.hp = Math.min(u.maxHp, u.hp + (dt * u.maxHp) / 900);
   return true;
 }

@@ -1,3 +1,5 @@
+> Current remaining-work source: [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md). The chronology below is historical; newer requirements and verified fixes supersede its older missing-feature descriptions.
+
 > Continuation phase: versioned richer terrain for new games; physical foreign trader visits; larger territorial colour contours; village-wide work resets; all-villager cycling; hidden undiscovered settlement counts; clearer backup labels; gradual hunger weakness; slower walking couriers and improved local terms. Village rise/collapse, foreign explorers, navigable river transport and local valley climate are still outstanding. See `ITERATION_BACKLOG.md` for verification and limits.
 
 > Latest scope correction (2026-10-03): all 120 catalogue items, including previously optional extensions, are requested. See the catalogue's consolidated execution order for overlap, new requests and historical interpretation. Trade reports now appear at the destination meeting, superseding return-only reports. This is committed scope, not a completion claim.

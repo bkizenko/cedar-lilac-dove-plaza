@@ -1,3 +1,5 @@
+> Current remaining-work source: [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md). The chronology below is historical; newer requirements and verified fixes supersede its older missing-feature descriptions.
+
 > Latest requirements: read [REQUEST_AUDIT.md](REQUEST_AUDIT.md). The 2026-10-03 user correction requires natural practical development rather than spending exploration points, traveling trade reports rather than live remote knowledge, and explicitly queues sleep, storms, domestication, named people, dynamic settlements, waterways and administration. It supersedes conflicting older plans.
 
 # Hearthwild iteration status

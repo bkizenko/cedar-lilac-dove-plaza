@@ -1,8 +1,9 @@
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES } from "@/game/constants";
-import { foodSpoilage, winterOutlook, storehouses } from "@/game/pantry";
-import { habitatAt, soilQuality } from "@/game/ecology";
+import {CROPS,CROP_NAMES,beginCropTrial,setFieldCrop,cropYield} from "@/game/cultivation";
+import { foodSpoilage, winterOutlook, storehouses, foodInventory, FOOD_KINDS } from "@/game/pantry";
+import { habitatAt, soilQuality, climateAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
 import { knownSettlement } from "@/game/barter";
 import { useEffect, useRef } from "react";
@@ -36,6 +37,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   if (!t) return null;
   const home = g.campOf(0);
   const habitat = habitatAt(g, home.x, home.z);
+  const climate=climateAt(g,home.x,home.z),foods=foodInventory(t);
   const cal = calendar(g),
     people = s.units.filter((u) => u.team === 0 && u.hp > 0),
     farms = s.buildings.filter((b) => b.team === 0 && b.type === "farm" && g.finished(b));
@@ -62,10 +64,12 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <section>
           <h3>Food security</h3>
           <strong>
-            {Math.floor(t.food)} / {g.stockCap(0)} food storage
+            {Math.floor(t.food)} food · {g.stockCap(0)} sheltered capacity
           </strong>
           <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
+          <p>{FOOD_KINDS.filter(k=>foods[k]>=1).map(k=>`${Math.floor(foods[k])} ${k}`).join(" · ") || "No food reserves"}</p>
+          <p>{Math.round(climate.temperature)}°C · {Math.round(climate.humidity*100)}% humidity · {Math.ceil(Math.max(0,t.food-g.stockCap(0)))} food outdoors. Fresh fish and berries keep less well than grain; cool, dry weather slows decay.</p>
           <p><strong>{cal.phase === 3 ? "Remaining winter" : "Full winter"}: about {winter.needed} food needed.</strong>{" "}
             {winter.shortage ? `${winter.shortage} more than current stores.` : "Current stores cover this estimate."}
           </p>
@@ -91,7 +95,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <p>
               Fields need spring sowing and summer tending. Harvest must be carried into storage in
               autumn; uncollected crops are lost in winter. One worker can maintain each storehouse, using one timber per eight seconds of preparation. Urgent gathering takes priority. Storehouses increase capacity and reduce
-              spoilage. Food left above storage capacity spoils quickly. Wild food does not regrow
+              spoilage. Food may remain outdoors, with faster decay in warm, humid weather. Wild food does not regrow
               in winter, and gathering what remains is slower.
             </p>
           </details>
@@ -136,7 +140,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </label>
           <p>
             Births require spare housing, eight minutes of reserves and adults to support children.
-            Welcoming migrants permits arrivals with six minutes of reserves. Children mature at 16;
+            Welcoming migrants permits arrivals with six minutes of reserves. Childhood is compressed into six minutes;
             adult migration supports growth while they grow up.
           </p>
         </section>
@@ -159,13 +163,20 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
       <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>
       <h3>Fields and harvest</h3>
+      <p>Known cultivation: {t.cultivated?.join(", ")||"None yet — forage for wild crop samples and bring them home."}</p>
+      <ul>{CROPS.filter(k=>!t.cultivated?.includes(k)).map(kind=><li key={kind}>
+        {CROP_NAMES[kind]} · {(t.cropSamples?.[kind]||0).toFixed(1)} samples at home
+        {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples, 4 food and 6 timber"}
+        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4||t.wood<6||t.food<4)} onClick={()=>{if(!beginCropTrial(g,kind))g.banner("An available adult and reachable hearth are needed for the trial.",4);engine.pushHud();}}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
+      </li>)}</ul>
+      <p>Trials use an adult’s working time at the hearth. They pause for sleep, storms and urgent food needs. Wild grain, pulses and tubers occur in different habitats; pulses exhaust soil more slowly.</p>
       {farms.length === 0 ? (
         <p>No finished fields. Forage and hunt while you establish your first farm.</p>
       ) : (
         <ul>
           {farms.map((b) => (
             <li key={b.id}>
-              Field {b.id} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
+              Field {b.id} · {b.crop?.kind||b.cropType||"grain"} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * cropYield(g,b) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
               {b.fallowYear === cal.year ? "Resting this year" : "In cultivation"}:{" "}
               {Math.round((b.crop?.planted || 0) * 100)}% sown ·{" "}
               {Math.round((b.crop?.tended || 0) * 100)}% tended ·{" "}
@@ -174,7 +185,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
                 : `up to ${Math.floor(
                     (b.crop?.planted || 0) *
                       (160 + 100 * (b.crop?.tended || 0)) *
-                      (b.fertility ?? 1) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) *
+                      (b.fertility ?? 1) * (b.crop?.water??1) * cropYield(g,b) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) *
                       (s.agePicks[3] === "econ" ? 1.2 : 1),
                   )} food expected`}
               <button
@@ -188,6 +199,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               >
                 {b.fallowYear === cal.year ? "Cultivate this year" : "Rest field this year"}
               </button>
+              <label> Next crop <select value={b.crop?.kind||b.cropType||"grain"} disabled={!!b.crop&&b.crop.year===cal.year&&b.crop.planted>0} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
             </li>
           ))}
         </ul>
@@ -290,12 +302,13 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         ))}
       <section className="mt-4">
         <h3>People and hearths</h3>
+        <p>Village fatigue: {Math.round(people.reduce((sum,u)=>sum+(u.fatigue||0),0)/Math.max(1,people.length)*100)}%</p>
         <button disabled={t.wood<20} onClick={()=>{close();engine.setPlacing("townhall");}}>Establish another settlement · 20 logs and construction labor</button>
         <p>Choose a distant resource clump. Building a hall provides shelter, not new people.</p>
         {(s.communities || []).filter(c=>c.team===0).map(c=><p key={c.hall}>{c.name} · {c.status} · {people.filter(u=>u.homeHall===c.hall).length} residents</p>)}
         {people.map(u=>{const traits=predisposition(u);return <p key={u.id}><strong>{personName(u)}</strong> · {isDependent(g,u)?"young":"adult"} · {u.workReason || u.order}
           {u.expedition && ` · ${u.expedition.food.toFixed(1)} journey food`}
-          {` · pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
+          {` · fatigue ${Math.round((u.fatigue||0)*100)}%, pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
         <h3>Life in the village</h3>
         {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text}</p>)}
       </section>

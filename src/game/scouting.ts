@@ -1,7 +1,7 @@
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { HALF, MAP } from "./constants";
-import { isDependent } from "./settlement";
+import { isDependent, reserveSeconds } from "./settlement";
 const GRID = 32,
   CELL = MAP / GRID;
 export function scoutKnowledge(g: Game, u: Unit) {
@@ -27,7 +27,7 @@ function nextTarget(g: Game, u: Unit) {
     if (memory.cells.includes(i)) continue;
     const x = ((i % GRID) + 0.5) * CELL - HALF,
       z = (Math.floor(i / GRID) + 0.5) * CELL - HALF;
-    if (g.height(x, z) <= g.world.waterY + 0.3) continue;
+    if (g.height(x, z) <= g.world.waterY + 0.3 || !g.workBoard.connected(g,u.x,u.z,x,z)) continue;
     const d = Math.hypot(x - u.x, z - u.z);
     if (d < score) {
       score = d;
@@ -44,6 +44,7 @@ export function tickScouts(g: Game, dt: number) {
     if (
       ![1, 2].includes(t.id) ||
       !t.alive ||
+      reserveSeconds(g,t.id)<450 || g.popNow(t.id)<5 ||
       g.state.units.some((u) => u.team === t.id && u.hp > 0 && u.scout)
     )
       continue;
@@ -80,7 +81,7 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
     u.order = "idle";
     return true;
   }
-  if (u.stuckT > 8 || m.legs >= 5) m.returning = true;
+  if (u.stuckT > 8 || m.legs >= 5 || reserveSeconds(g,u.team)<180) m.returning = true;
   if (m.returning) {
     const h = g.campOf(u.team);
     u.tx = h.x;

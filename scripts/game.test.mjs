@@ -182,7 +182,7 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   const score = new AcousticScore();
   score.unlock();
   score.update("village", 12, false);
-  assert.equal(decks[0].volume, 0.15);
+  assert.equal(decks[0].volume, 0.2);
   score.update("battle", 2, false);
   assert.equal(score.stage, "battle");
   assert.ok(decks[0].volume > 0 && decks[2].volume > 0);
@@ -192,7 +192,7 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   assert.equal(score.stage, "adventure");
   decks[1].pause();
   decks[1].listeners.ended();
-  score.update("adventure", 30, false);
+  score.update("adventure", 10, false);
   assert.equal(decks[1].paused, true, "a piece is followed by quiet time");
   score.update("adventure", 110, false);
   assert.equal(decks[1].paused, false, "music resumes after the rest");
@@ -570,6 +570,7 @@ test("a regular caravan spends outbound cargo and credits goods only after the r
   const g = fixture(),
     rival = g.tribe(1);
   rival.stone = 100;
+  rival.food = 80; // A willing partner who needs the offered food.
   g.tribe(0).food = 300;
   const route = {
     id: g.id(),
@@ -667,8 +668,11 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   barracks.queue[0].t = barracks.queue[0].max;
   g.updateTraining(0.01);
   assert.equal(g.popNow(0), pop);
-  assert.equal(workers(), w0 - 1);
-  assert.ok(g.state.units.some((u) => u.team === 0 && u.type === "spearman" && !u.militia));
+  assert.equal(workers(), w0);
+  assert.ok(g.state.units.some((u) => u.team === 0 && u.type === "worker" && u.militia));
+  g.tribe(0).age=3;g.tribe(0).food=500;g.enqueueTrain(barracks,"spearman");barracks.queue[0].t=barracks.queue[0].max;g.updateTraining(.01);
+  assert.equal(workers(),w0-1);
+  assert.ok(g.state.units.some(u=>u.team===0&&u.type==="spearman"&&!u.militia));
 });
 
 test("marked trees are felled first, and burning a hall takes stores", async () => {
@@ -1352,7 +1356,7 @@ test("age commitment revalidates population and buildings instead of bypassing t
   const g=fixture();Object.assign(g.tribe(0),{food:1000,wood:1000,stone:1000});
   const before=g.tribe(0).food;g.commitAge(0,"econ");
   assert.equal(g.tribe(0).age,0);assert.equal(g.tribe(0).food,before);
-  const home=g.campOf(0);while(g.popNow(0)<8)g.spawnUnit("worker",home.x,home.z,0);
+  const home=g.campOf(0);while(g.popNow(0)<10)g.spawnUnit("worker",home.x,home.z,0);
   g.commitAge(0,"econ");assert.equal(g.tribe(0).age,1);
 });
 
@@ -1572,7 +1576,7 @@ test("a custom offer needs no remote report and is negotiated only after travel"
   const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,100),true);
   const u=g.state.units.find(u=>u.customOffer);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),h=r.state.buildings.find(b=>b.team===1&&b.type==="townhall");
-  ru.x=h.x+Math.max(h.w,h.d)*0.55+1;ru.z=h.z;r.tradeAI(ru,1);
+  const entrance=r.interactionSpot(ru,h);assert.ok(entrance);ru.x=entrance.x;ru.z=entrance.z;r.tradeAI(ru,1);
   assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<100);assert.equal(ru.carryType,"wood");
   assert.equal(r.tribe(1).wood+ru.carry,theirWood);
 });
@@ -1596,7 +1600,7 @@ test("richer new terrain is versioned and old saves keep their exact landscape",
 });
 test("foreign traders carry real stock, negotiate locally and take payment home",async()=>{
   const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);
-  const t=g.tribe(1);Object.assign(t,{wood:200,food:100,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
+  const t=g.tribe(1);Object.assign(t,{wood:200,food:300,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
   for(const p of g.state.units.filter(u=>u.team===1)){p.carry=0;p.carryType=null;}
   const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');u.x=home.x+Math.max(home.w,home.d)*0.55+1;u.z=home.z;

@@ -1,6 +1,6 @@
 import type { Game } from './sim';
 import type { Unit, ResKind } from './types';
-import { isDependent, foodDemand } from './settlement';
+import { isDependent, foodDemand, reserveSeconds } from './settlement';
 const worth:Record<ResKind,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
 export function tickVisitors(g:Game,dt:number) {
   g.state.visitorTimer=(g.state.visitorTimer??300)-dt;
@@ -10,6 +10,7 @@ export function tickVisitors(g:Game,dt:number) {
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));if(!home)return;
   const rivals=g.state.tribes.filter(t=>[1,2].includes(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
+    if(reserveSeconds(g,t.id)<450||g.popNow(t.id)<5)continue;
     const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney);
     if(!u)continue;
     const good:ResKind=t.spec||'wood';

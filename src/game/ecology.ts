@@ -27,3 +27,23 @@ export function soilQuality(g: Game, x: number, z: number) {
   return Math.max(0.25,Math.min(1,0.35+habitatAt(g,x,z).crops*0.3 +
     Math.max(0,1-distance/40)*0.3 - slope*0.08));
 }
+
+/** Rain-fed cultivation remains possible; drought penalizes ground far from water. */
+export function cropWater(g:Game,x:number,z:number) {
+  if(g.state.weather!=="drought")return 1;
+  let near=false;
+  for(const r of g.world.rivers||[])for(const p of r.pts)if(Math.hypot(p.x-x,p.z-z)<24)near=true;
+  return near?0.8:0.4;
+}
+
+/** Local weather drives real spoilage, not merely the calendar label. */
+export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.state.weather) {
+  const habitat=habitatAt(g,x,z),phase=(time%1800)/1800;
+  let temperature=11+15*Math.sin((phase-.07)*Math.PI*2)-Math.max(0,g.height(x,z)-4)*.18;
+  let humidity=habitat===HABITATS.forest?.76:habitat===HABITATS.hills?.47:.6;
+  if(weather==="rain"||weather==="storm"||weather==="flood")humidity+=.2;
+  if(weather==="mist")humidity+=.1;
+  if(weather==="drought"){temperature+=5;humidity-=.28;}
+  if(weather==="frost")temperature-=5;
+  return {temperature,humidity:Math.max(.15,Math.min(1,humidity))};
+}

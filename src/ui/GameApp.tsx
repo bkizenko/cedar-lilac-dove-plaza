@@ -31,6 +31,7 @@ const EMPTY: HudSnapshot = {
   banner: null,
   selection: { name: "No selection", info: "", hp: 0, maxHp: 1, kind: "none" },
   canAge: false,
+  ageIssue: null,
   ageCost: null,
   nextAge: "Bronze",
   tribes: [],

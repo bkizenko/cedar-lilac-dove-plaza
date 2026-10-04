@@ -11,6 +11,7 @@ export class GameAudio {
   unlock() {
     if (this.unlocked) {
       if (this.ctx?.state === "suspended") void this.ctx.resume();
+      this.score.unlock();
       return;
     }
     const AC =

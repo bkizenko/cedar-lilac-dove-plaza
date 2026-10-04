@@ -107,8 +107,10 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           />
         </label>
         <p className="text-sm">
-          Now: {TRACKS[engine.audio.score.stage].title} · {engine.audio.score.stage}
+          Now: {TRACKS[engine.audio.score.stage].title} · {engine.audio.score.status}
         </p>
+        <button onClick={()=>{engine.audio.unlock();engine.game.muted=false;engine.audio.setMuted(false);if(engine.audio.score.volume===0)engine.audio.setMusicVolume(.2);engine.pushHud();}}>Enable music</button>
+        <p className="text-sm">Music continues while you pause or plan. Switching away from the game silences it.</p>
         {engine.audio.score.error && <p role="status">{engine.audio.score.error}</p>}
         <p className="mt-3 text-xs text-parchment-dim">
           “Meditation Impromptu 01”, “Atlantean Twilight”, and “Five Armies” by{" "}

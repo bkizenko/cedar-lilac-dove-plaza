@@ -342,7 +342,7 @@ export class WorldView {
     this.floaters = new THREE.Group();
     this.scene.add(this.floaters);
 
-    this.trailMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({color:"#8b714e",transparent:true,opacity:0.65,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
+    this.trailMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),new THREE.MeshStandardMaterial({color:"#756d52",transparent:true,opacity:0.22,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
     this.trailMesh.count=0;this.trailMesh.frustumCulled=false;this.trailMesh.raycast=()=>{};this.scene.add(this.trailMesh);
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
@@ -1103,7 +1103,7 @@ export class WorldView {
       const x=(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-HALF,z=(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-HALF;
       if(!game.exploredAt(x,z))continue;
       _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
-      _s.set(0.6+t.wear*0.6,TRAIL_CELL*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+      _s.set(0.45+t.wear*0.45,TRAIL_CELL*1.15,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
     }
     this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
   }
@@ -1224,7 +1224,11 @@ export class WorldView {
         const done = b.build >= 1;
         const ys = !seen ? 0.001 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
         _p.set(b.x, b.y, b.z);
-        _e.set(0, st.yaw, 0);
+        const terrainWork=type==="farm"||type==="dock";
+        const limit=type==="farm"?0.5:0.2;
+        const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(b.x,b.z+2)-game.height(b.x,b.z-2))/4))):0;
+        const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(b.x+2,b.z)-game.height(b.x-2,b.z))/4))):0;
+        _e.set(pitch, st.yaw, roll);
         _q.setFromEuler(_e);
         _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
         _m.compose(_p, _q, _s);
@@ -1257,7 +1261,7 @@ export class WorldView {
     let i=0;
     const colors={food:"#c5ad71",wood:"#73502f",stone:"#a2a3a2",copper:"#bc7a4c",iron:"#666e78"};
     for (const u of game.state.units) {
-      if (u.hp<=0 || u.carry<=0 || !u.carryType || (u.team!==0&&!game.visibleAt(u.x,u.z)) || i>=420) continue;
+      if (u.hp<=0 || u.shelterId || u.carry<=0 || !u.carryType || (u.team!==0&&!game.visibleAt(u.x,u.z)) || i>=420) continue;
       _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
       _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       mesh.setMatrixAt(i,_m);_c.set(colors[u.carryType]);mesh.setColorAt(i,_c);i++;
@@ -1281,7 +1285,7 @@ export class WorldView {
       const n = Math.min(list.length, cap);
       for (let i = 0; i < n; i++) {
         const u = list[i];
-        const seen = u.team === 0 || game.visibleAt(u.x, u.z);
+        const seen = !u.shelterId && (u.team === 0 || game.visibleAt(u.x, u.z));
         if (!seen) {
           _p.set(u.x, u.y, u.z);
           _q.identity();
@@ -1529,7 +1533,7 @@ export class WorldView {
         let torches = 0;
         for (const u of game.state.units) {
           if (fi >= instCap(this.flames) || torches >= 12) break;
-          if (u.hp <= 0) continue;
+          if (u.hp <= 0 || u.shelterId) continue;
           const flicker = 0.7 + Math.sin(game.state.time * 14 + u.id) * 0.2;
           _p.set(u.x + Math.sin(u.facing) * 0.35, u.y + 1.15, u.z + Math.cos(u.facing) * 0.35);
           _e.set(0, u.facing, 0);
@@ -1803,12 +1807,14 @@ export class WorldView {
   private syncRain(game: Game, dt: number) {
     if (!this.rain || !this.rainGeo) return;
     const sn = game.seasonMix();
-    const flake = sn.snow > 0.35;
+    const mountain=game.height(this.look.x,this.look.z)>8;
+    const flake=sn.winter>0.3&&(mountain||sn.snow>0.35);
     const wet =
       game.state.weather === "rain" ||
       game.state.weather === "storm" ||
-      game.state.weather === "flood";
-    this.rain.visible = wet && this.quality !== "low";
+      game.state.weather === "flood" || (flake&&Math.sin(game.state.time/24)> (mountain?-0.15:0.5));
+    this.rain.visible = wet;
+    this.rainGeo.setDrawRange(0,this.quality==="low"?96:this.rainPos.length/3);
     if (!wet) return;
     const n = this.rainPos.length / 3;
     const look = this.look;

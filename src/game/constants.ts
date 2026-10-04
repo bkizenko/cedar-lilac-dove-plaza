@@ -25,7 +25,7 @@ export const AGES = ["Stone", "Bronze", "Iron", "Classical", "Medieval", "Renais
 
 export const AGE_COST: (Cost | null)[] = [
   null,
-  { food: 160, wood: 120, stone: 40, pop: 8 },
+  { food: 220, wood: 150, stone: 60, pop: 10 },
   { food: 260, wood: 200, stone: 90, copper: 18, pop: 12 },
   { food: 380, wood: 280, stone: 160, copper: 28, iron: 12, pop: 16 },
   { food: 520, wood: 400, stone: 240, copper: 36, iron: 22, pop: 20 },

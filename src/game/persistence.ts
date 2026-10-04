@@ -1,5 +1,8 @@
 import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
+import { prehistoricName } from "./people";
+import { FOOD_KINDS } from "./pantry";
+import {CROPS,initializeCultivation} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS, HALF } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
@@ -68,6 +71,7 @@ export function decodeGame(raw: unknown): Game {
     for(const c of s.communities){if(!obj(c)||!Number.isSafeInteger(c.hall)||c.hall<1||halls.has(c.hall)||![0,1,2].includes(c.team)||typeof c.name!=="string"||c.name.length>200||!num(c.founded)||c.founded<0||c.founded>s.time||
       (c.emptySince!==null&&(!num(c.emptySince)||c.emptySince<0||c.emptySince>s.time))||!["growing","thriving","struggling","abandoned"].includes(c.status))fail();halls.add(c.hall);}
   }
+  if(s.conquestAt!==undefined&&(!num(s.conquestAt)||s.conquestAt<0||s.conquestAt>s.time))fail();
   if(s.nightWork!==undefined&&typeof s.nightWork!=="boolean")fail();
   if(s.scoutTimer!==undefined&&(!num(s.scoutTimer)||s.scoutTimer<0||s.scoutTimer>1000))fail();
   if(s.trails!==undefined) {
@@ -82,6 +86,12 @@ export function decodeGame(raw: unknown): Game {
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
   if(s.worldgenVersion!==undefined&&![1,2].includes(s.worldgenVersion))fail();
+  if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
+  const cropAmounts=(value:unknown,max:number)=>{
+    if(!obj(value))fail();
+    for(const [kind,amount] of Object.entries(value))
+      if(!CROPS.includes(kind as any)||!num(amount)||amount<0||amount>max)fail();
+  };
   if (s.discoveries !== undefined) {
     if (!Array.isArray(s.discoveries) || s.discoveries.length > DISCOVERIES.length) fail();
     const seen = new Set();
@@ -146,6 +156,17 @@ export function decodeGame(raw: unknown): Game {
       "fallenT",
     ]);
     if (!Number.isInteger(t.age) || t.age < 0 || t.age > 5) fail();
+    if(t.foodLots!==undefined){
+      if(!obj(t.foodLots))fail();
+      for(const [kind,amount] of Object.entries(t.foodLots))
+        if(!FOOD_KINDS.includes(kind as any)||!num(amount)||amount<0||amount>1e9)fail();
+    }
+    if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
+    if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
+    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<180||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
+    if([1,2].includes(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
+      t.name=prehistoricName(s.seed,i*977);t.short=t.name;
+    }
   }
   const validateOffers=(offers:unknown)=>{
     if(!Array.isArray(offers)||offers.length>20)fail();
@@ -163,6 +184,7 @@ export function decodeGame(raw: unknown): Game {
   if (s.growthPolicy !== undefined && !["stable", "welcome"].includes(s.growthPolicy)) fail();
   if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
+  for(const list of [s.trees,s.forage,s.fish,s.stones,s.copper,s.iron])for(const n of list)if(n.pressure!==undefined&&(!num(n.pressure)||n.pressure<0||n.pressure>1))fail();
   for (const t of s.tribes) {
     if(t.lastSettlement!==undefined&&(!num(t.lastSettlement)||t.lastSettlement<0||t.lastSettlement>s.time))fail();
     if (t.trust !== undefined && (!num(t.trust) || t.trust < 0 || t.trust > 1)) fail();
@@ -186,6 +208,7 @@ export function decodeGame(raw: unknown): Game {
   };
   for (const u of s.units) {
     add(u, "unit");
+    if(u.name!==undefined&&(typeof u.name!=="string"||u.name.length>80))fail();
     if (u.maturesAt !== undefined && (!num(u.maturesAt) || u.maturesAt < 0)) fail();
     if (u.emergency !== undefined) {
       if (
@@ -248,13 +271,17 @@ export function decodeGame(raw: unknown): Game {
     if(u.parents!==undefined&&(!Array.isArray(u.parents)||u.parents.length>2||new Set(u.parents).size!==u.parents.length||u.parents.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1||id===u.id)))fail();
     if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean")fail();}
     if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
+    if(u.shelterId!==undefined&&(!Number.isSafeInteger(u.shelterId)||u.shelterId<1))fail();
+    if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
+    if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
+    if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
-    if(u.searchJob!==undefined&&u.searchJob!=="wood")fail();
+    if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){
       const m=u.envoy;
       if(!obj(m)||u.team!==0||![1,2].includes(m.team)||!["peace","trade","gift"].includes(m.kind)||
@@ -278,11 +305,15 @@ export function decodeGame(raw: unknown): Game {
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();
+    if(b.lootClaimed!==undefined&&typeof b.lootClaimed!=="boolean")fail();
     if (b.raiderCamp !== undefined && (typeof b.raiderCamp !== "boolean" || b.team !== 3 || b.type !== "hut")) fail();
     if (b.fallowYear !== undefined && (!Number.isInteger(b.fallowYear) || b.fallowYear < 0)) fail();
+    if(b.cropType!==undefined&&!CROPS.includes(b.cropType))fail();
     if (b.crop !== undefined) {
       if (!obj(b.crop)) fail();
       numbers(b.crop, ["year", "planted", "tended", "remaining"]);
+      if(b.crop.water!==undefined&&(!num(b.crop.water)||b.crop.water<0.35||b.crop.water>1))fail();
+      if(b.crop.kind!==undefined&&!CROPS.includes(b.crop.kind))fail();
       if (
         b.crop.planted < 0 ||
         b.crop.planted > 1 ||
@@ -310,6 +341,7 @@ export function decodeGame(raw: unknown): Game {
       add(n);
       numbers(n, ["amount", "maxAmt", "regenT", "scale", "rich"]);
       if (!["tree", "stone", "forage", "farm", "fish", "copper", "iron"].includes(n.kind)) fail();
+      if(n.cropCandidate!==undefined&&(n.kind!=="forage"||!CROPS.includes(n.cropCandidate)))fail();
     }
   for (const c of s.wildlife) {
     add(c);
@@ -398,6 +430,7 @@ export function decodeGame(raw: unknown): Game {
     particles: [],
     floaters: [],
   } as GameState;
+  initializeCultivation(g,s.cultivationVersion===undefined);
   g.vision.set(d.vision);
   g.visAge.set(d.visAge);
   g.looted = new Set(d.looted);

@@ -1,4 +1,5 @@
 import { soilQuality } from "./ecology";
+import { cultivationIssue } from "./cultivation";
 import { decodeGame } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
@@ -127,7 +128,7 @@ export class Engine {
     return hasSave();
   }
   saveNow() {
-    this.game.banner(saveGame(this.game) ? "Village saved" : "Storage unavailable or full", 3);
+    this.game.banner((saveGame(this.game) && protectGame(this.game)) ? "Village saved" : "Storage unavailable or full", 3);
     this.pushHud();
   }
   protectVillage() {
@@ -391,6 +392,7 @@ export class Engine {
     else {
       const resource=this.view.pickResource(cx,cy,this.game);
       if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
+      else if(!additive&&this.game.selectedUnits().length)this.game.issueMove(g.x,g.z);
       else this.game.selectAt(g.x,g.z,additive);
     }
     this.pushHud();
@@ -473,6 +475,9 @@ export class Engine {
   setPlacing(type: BldType | null) {
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
+    if(type==="farm"&&cultivationIssue(this.game)){
+      this.game.banner(cultivationIssue(this.game)!,5);this.pushHud();return;
+    }
     this.game.state.placing = this.game.state.placing === type ? null : type;
     if (this.game.state.placing) {
       const t = this.game.state.placing;

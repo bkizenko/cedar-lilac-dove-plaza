@@ -22,6 +22,8 @@ export type BldType =
   | "grove";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers";
+export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
   | "move"
@@ -117,6 +119,7 @@ export type Critter = {
 };
 
 export type Unit = {
+  name?: string;
   id: number;
   kind: "unit";
   type: UnitType;
@@ -139,7 +142,7 @@ export type Unit = {
   order: Order;
   stationOnArrival?: boolean;
   homeCamp?: number;
-  searchJob?: "wood";
+  searchJob?: "wood" | "food" | "hunt";
   recalled?: boolean;
   envoy?: {team:number; kind:"peace"|"trade"|"gift"; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
@@ -159,6 +162,9 @@ export type Unit = {
   gatherT: number;
   carry: number;
   carryType: ResKind | null;
+  carryFood?: FoodKind;
+  seedSamples?: Partial<Record<CropKind,number>>;
+  studyCrop?: CropKind;
   target: Unit | Building | null;
   wanderT: number;
   aggroT: number;
@@ -174,6 +180,7 @@ export type Unit = {
   expedition?: {food:number;returning:boolean;forage:number};
   scout?: {legs:number;returning:boolean};
   fatigue?: number;
+  shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number};
   jobLock: boolean;
   huntOnly: boolean;
@@ -205,10 +212,12 @@ export type Building = {
   build: number;
   reclaimed: boolean;
   raiderCamp?: boolean;
+  lootClaimed?: boolean;
   storeCare?: number;
   fertility?: number;
   fallowYear?: number;
-  crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean };
+  cropType?: CropKind;
+  crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean; water?:number; kind?:CropKind };
 };
 
 export type ResourceNode = {
@@ -222,6 +231,8 @@ export type ResourceNode = {
   regenT: number;
   scale: number;
   rich: number;
+  pressure?: number;
+  cropCandidate?: CropKind;
 };
 
 export type Floater = {
@@ -254,6 +265,10 @@ export type Tribe = {
   short: string;
   color: string;
   food: number;
+  foodLots?: Partial<Record<FoodKind,number>>;
+  cropSamples?: Partial<Record<CropKind,number>>;
+  cultivated?: CropKind[];
+  cropTrial?: {kind:CropKind; progress:number; duration:number};
   wood: number;
   stone: number;
   copper: number;
@@ -299,12 +314,14 @@ export type Particle = {
 };
 
 export type GameState = {
+  cultivationVersion?: number;
   lifeHistory?: {team:number;text:string;time:number}[];
   communities?: {hall:number;team:number;name:string;founded:number;emptySince:number|null;status:"growing"|"thriving"|"struggling"|"abandoned"}[];
   communityTimer?: number;
   trails?: {cell:number;wear:number;last:number;angle:number}[];
   rivalKnowledge?: {team:number;cells:number[]}[];
   scoutTimer?: number;
+  conquestAt?: number;
   nightWork?: boolean;
   visitorTimer?: number;
   worldgenVersion?: number;
@@ -369,7 +386,7 @@ export type HudSelection = {
   info: string;
   hp: number;
   maxHp: number;
-  kind: "none" | "unit" | "units" | "building";
+  kind: "none" | "unit" | "units" | "building" | "resource";
   type?: string;
   team?: number;
   queue?: string;
@@ -405,6 +422,7 @@ export type HudSnapshot = {
   banner: string | null;
   selection: HudSelection;
   canAge: boolean;
+  ageIssue: string | null;
   ageCost: Cost | null;
   nextAge: string | null;
   tribes: {

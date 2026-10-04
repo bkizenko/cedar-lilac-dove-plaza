@@ -1,6 +1,7 @@
 import { predisposition } from "./people";
 import { preservationAvailable } from "./pantry";
-import { habitatAt, soilQuality } from "./ecology";
+import {cropYield} from "./cultivation";
+import { habitatAt, soilQuality, cropWater } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, UNITS, MAP, HALF } from "./constants";
@@ -42,18 +43,18 @@ export function crop(g: Game, b: Building) {
           1,
           (b.fertility ?? 1) +
             (b.crop.planted > 0
-              ? -(b.team === 0 && g.state.agePicks[3] === "econ" ? 0.07 : 0.12) * b.crop.planted
+              ? -(b.crop.kind==="pulses"?.03:b.team === 0 && g.state.agePicks[3] === "econ" ? 0.07 : 0.12) * b.crop.planted
               : b.team === 0 && g.state.agePicks[3] === "econ"
                 ? 0.3
                 : 0.24),
         ),
       );
-    b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false };
+    b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false, water:1,kind:b.cropType||"grain" };
   }
   if (phase === 2 && !b.crop.ripened) {
     const fields = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.2 : 1;
     b.crop.remaining = Math.floor(
-      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5),
+      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops * (b.crop.water??1) * cropYield(g,b) * (0.65 + soilQuality(g,b.x,b.z)*0.5),
     );
     b.crop.ripened = true;
   }
@@ -80,6 +81,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
     u.node = null;
     return;
   }
+  u.stride+=dt*8;u.facing=Math.atan2(b.x-u.x,b.z-u.z);
   u.workReason =
     p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
   const open = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1;
@@ -94,6 +96,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
       c.remaining -= n;
       u.carry += n;
       u.carryType = "food";
+      u.carryFood = c.kind||"grain";
       if (u.carry >= 8 || c.remaining === 0) u.order = "return";
     }
   }
@@ -169,6 +172,9 @@ export class WorkBoard {
       }
     return best;
   }
+  connected(g: Game, ax: number, az: number, bx: number, bz: number) {
+    this.labelNavigation(g);const a=this.component(g,ax,az);return a!==0&&a===this.component(g,bx,bz);
+  }
   private taskComponent(g: Game, node: Node) {
     let value = this.nodeComponents.get(node);
     if (value === undefined) {
@@ -191,7 +197,7 @@ export class WorkBoard {
       if (!t.alive || t.id === 3) continue;
       const list: Task[] = [],
         pop = g.popNow(t.id),
-        foodUrgency = reserveSeconds(g, t.id) < 240 ? 180 : 80;
+        foodUrgency = reserveSeconds(g,t.id)<90 ? 320 : reserveSeconds(g, t.id) < 240 ? 180 : 80;
       const buildings = g.state.buildings.filter((b) => b.team === t.id && b.hp > 0);
       const add = (node: Node, kind: Task["kind"], slots: number, priority: number) =>
         list.push({ node, kind, slots, priority });
@@ -205,7 +211,7 @@ export class WorkBoard {
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))
-          add(b, "food", 3, reserveSeconds(g,t.id)<90 ? 100 : calendar(g).phase === 2 ? 260 : 210);
+          add(b, "food", 3, calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
         if (b.type === "dock") add(b, "food", 2, foodUrgency);
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
@@ -225,7 +231,7 @@ export class WorkBoard {
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);
       for (const n of g.state.wildlife)
-        if (n.hp > 0 && n.species !== "bird") add(n, "food", 1, foodUrgency - 30);
+        if (n.hp > 0 && n.species !== "bird") add(n, "food", 1, foodUrgency + (calendar(g).phase===3?35:-10));
       this.tasks.set(t.id, list);
     }
   }
@@ -270,9 +276,10 @@ export class WorkBoard {
           ("species" in task.node ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
       const preparingField =
         "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
+      const harvestingField = "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
       const preserving = "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
-      if (task.kind === "food" && !preparingField && !preserving && g.tribe(u.team).food >= g.stockCap(u.team))
+      if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= g.stockCap(u.team))
         continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
       if (u.huntOnly && !("species" in task.node)) continue;
@@ -287,6 +294,12 @@ export class WorkBoard {
       )
         continue;
       const distance = Math.hypot(task.node.x - u.x, task.node.z - u.z);
+      // Routine labor must not chase a herd or successive trees across the world.
+      // New settlements have their own hall; scouts and traders travel separately.
+      if (u.team !== 0 && !("type" in task.node) &&
+          !g.state.buildings.some(b => b.team === u.team && g.finished(b) &&
+            ["townhall", "cornerstone"].includes(b.type) &&
+            Math.hypot(b.x-task.node.x,b.z-task.node.z)<70)) continue;
       const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
       const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
       const settlementWork = lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
@@ -311,10 +324,10 @@ export class WorkBoard {
       const policy = g.state.laborPolicy;
       const bonus =
         u.team === 0 && ((policy === "wood" && task.kind === "wood") || (policy === "stone" && task.kind === "stone") || (policy === "hunt" && "species" in task.node))
-          ? 80
-          : policy === "food" && task.kind === "food"
+          ? (reserveSeconds(g,u.team)<90?80:240)
+          : u.team===0 && policy === "food" && task.kind === "food"
           ? 70
-          : policy === "build" && task.kind === "build"
+          : u.team===0 && policy === "build" && task.kind === "build"
             ? 90
             : 0;
       const value = task.priority + bonus + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
@@ -324,13 +337,12 @@ export class WorkBoard {
       }
     }
     if (!best) {
-      if (u.team===0 && u.jobLock && u.job==="wood" && !occupied && !unsafe && u.carry===0) {
-        const destination=u.order==="explore" ? {x:u.tx,z:u.tz} : g.findExploreTarget(u);
-        if(destination) {
-          u.searchJob="wood";u.order="explore";u.node=null;u.tx=destination.x;u.tz=destination.z;
-          u.workReason="Searching unknown ground for timber";return;
-        }
+      const search=u.huntOnly||g.state.laborPolicy==="hunt"?"hunt":u.jobLock&&u.job?u.job:g.state.laborPolicy;
+      if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=g.stockCap(u.team))&&!occupied&&!unsafe&&u.carry===0) {
+        const destination=u.order==="explore"?{x:u.tx,z:u.tz}:g.findExploreTarget(u);
+        if(destination){u.searchJob=search as "wood"|"food"|"hunt";u.order="explore";u.node=null;u.tx=destination.x;u.tz=destination.z;u.workReason=`Searching unknown ground for ${search==="hunt"?"herds":search==="wood"?"timber":"food"}`;return;}
       }
+
 
       u.workReason =
         g.tribe(u.team).food >= g.stockCap(u.team) && (u.job === "food" || !u.jobLock)

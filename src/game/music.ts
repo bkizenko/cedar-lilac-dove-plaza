@@ -7,7 +7,7 @@ export const TRACKS: Record<MusicStage, { title: string; file: string }> = {
 /** Streamed acoustic/orchestral recordings. No oscillator-generated music. */
 export class AcousticScore {
   stage: MusicStage = "village";
-  volume = 0.15;
+  volume = 0.2;
   calm = true;
   muted = false;
   error = "";
@@ -17,7 +17,6 @@ export class AcousticScore {
   private rests = new Map<MusicStage, number>();
   private dwell = 0;
   private peacefulTime = 0;
-  private paused = false;
   private disposed = false;
   unlock() {
     if (this.disposed) return;
@@ -26,50 +25,40 @@ export class AcousticScore {
         const a = new Audio(TRACKS[stage].file);
         a.loop = false;
         a.addEventListener("ended", () => {
-          this.rests.set(stage, 60 + Math.random() * 45);
+          if(stage===this.stage)this.rests.set(stage, 20 + Math.random() * 20);
         });
-        a.preload = "auto";
+        a.preload = stage===this.stage?"auto":"metadata";
         a.volume = 0;
         a.addEventListener("error", () => {
           this.error = `Cannot load ${TRACKS[stage].title}`;
         });
         this.tracks.set(stage, a);
-        void a.play().catch(this.playbackError);
       }
       document.addEventListener("visibilitychange", this.visibility);
-    } else if (!this.paused && !document.hidden) {
-      this.error = "";
-      for (const [stage, a] of this.tracks)
-        if (!this.rests.has(stage)) void a.play().catch(this.playbackError);
     }
+    this.error = "";
+    if(!document.hidden&&!this.muted){this.rests.delete(this.stage);this.playCurrent();}
   }
   private playbackError = (error: unknown) => {
     // Opening a paused menu can intentionally cancel a pending play().
     if (
       this.disposed ||
-      this.paused ||
       document.hidden ||
       (error as { name?: string })?.name === "AbortError"
     )
       return;
-    this.error = "Press M twice to enable music";
+    this.error = "Music could not start. Choose Enable music below to retry.";
   };
   private visibility = () => {
     for (const [stage, a] of this.tracks) {
       if (document.hidden) a.pause();
-      else if (!this.paused && !this.rests.has(stage)) void a.play().catch(this.playbackError);
+      else if (stage===this.stage&&!this.muted&&!this.rests.has(stage)) this.playCurrent();
     }
   };
-  update(requested: MusicStage, dt: number, paused: boolean, seasonMul = 1) {
+  update(requested: MusicStage, dt: number, _paused: boolean, seasonMul = 1) {
     if (!this.tracks.size || this.disposed) return;
-    if (paused !== this.paused) {
-      this.paused = paused;
-      for (const [stage, a] of this.tracks) {
-        if (paused) a.pause();
-        else if (!document.hidden && !this.rests.has(stage)) void a.play().catch(this.playbackError);
-      }
-    }
-    if (paused || document.hidden) return;
+    // Planning menus pause the simulation, not the calm soundtrack.
+    if (document.hidden || this.muted) return;
     this.dwell += dt;
     this.peacefulTime = requested === "battle" ? 0 : this.peacefulTime + dt;
     if (
@@ -80,6 +69,7 @@ export class AcousticScore {
       this.stage = requested;
       this.dwell = 0;
       this.tracks.get(requested)!.currentTime = 0;
+      this.rests.delete(requested);this.playCurrent();
     }
     const rest = this.rests.get(this.stage);
     if (rest !== undefined) {
@@ -89,18 +79,24 @@ export class AcousticScore {
         const track = this.tracks.get(this.stage)!;
         track.currentTime = 0;
         this.levels[this.stage] = 0;
-        void track.play().catch(this.playbackError);
+        this.playCurrent();
       }
     }
     for (const stage of Object.keys(TRACKS) as MusicStage[]) {
       const target = stage === this.stage ? 1 : 0;
       this.levels[stage] +=
         Math.sign(target - this.levels[stage]) *
-        Math.min(Math.abs(target - this.levels[stage]), dt / 12);
+        Math.min(Math.abs(target - this.levels[stage]), dt / 6);
+      if(stage!==this.stage&&this.levels[stage]<=0)this.tracks.get(stage)?.pause();
     }
     this.seasonMul = seasonMul;
     this.applyVolume();
   }
+  private playCurrent(){
+    const track=this.tracks.get(this.stage);if(!track)return;
+    void track.play().then(()=>{this.error="";}).catch(this.playbackError);
+  }
+  get status(){const track=this.tracks.get(this.stage);return this.muted?"Muted":this.error?this.error:this.rests.has(this.stage)?"Quiet interval between pieces":!track||track.paused?"Ready — enable music":"Playing";}
   setVolume(v: number) {
     this.volume = Math.max(0, Math.min(1, v));
     this.applyVolume();
@@ -108,6 +104,7 @@ export class AcousticScore {
   setMuted(v: boolean) {
     this.muted = v;
     if (!v) this.unlock();
+    else for(const track of this.tracks.values())track.pause();
     this.applyVolume();
   }
   private applyVolume() {

@@ -21,6 +21,13 @@ export function tradeCarrier(g: Game) {
       (u.selected ? u.order !== "trade" : ["idle", "hold", "gather"].includes(u.order)),
   );
 }
+function protectedReserve(g:Game,team:number,kind:ResKind){
+  if(kind==="wood")return 24;
+  if(kind==="stone")return g.tribe(team).age>=1?12:4;
+  if(kind!=="food")return 0;
+  const {phase,remaining}=calendar(g),winterFood=foodDemand(g,team,3);
+  return phase===2?winterFood*450+foodDemand(g,team)*remaining:phase===3?winterFood*Math.max(120,remaining):foodDemand(g,team)*240;
+}
 /** Trade willingness uses forecast needs; the UI receives a reason, never an inventory total. */
 export function shipmentIssue(g: Game, team: number, deal: TradeDeal): string | null {
   const other = g.tribe(team);
@@ -31,15 +38,13 @@ export function shipmentIssue(g: Game, team: number, deal: TradeDeal): string | 
       deal.giveAmt <= 0 || deal.getAmt <= 0 || deal.giveAmt > 100 || deal.getAmt > 200)
     return "The shipment needs valid quantities of two different goods.";
   if (other[deal.get] < deal.getAmt) return "They cannot supply that quantity. Try a smaller offer or different goods.";
-  const {phase, remaining} = calendar(g);
-  const winterFood = foodDemand(g, team, 3);
-  const foodReserve = phase === 2 ? winterFood * 450 + foodDemand(g, team) * remaining :
-    phase === 3 ? winterFood * Math.max(120, remaining) : foodDemand(g, team) * 240;
+  const {phase} = calendar(g);
+  const foodReserve = protectedReserve(g,team,"food");
   const afterFood = other.food - (deal.get === "food" ? deal.getAmt : 0) + (deal.give === "food" ? deal.giveAmt : 0);
   if (deal.get === "food" && afterFood < foodReserve)
     return phase >= 2 ? "They are keeping food for winter. Offer another resource or ask for different goods." :
       "They need that food for their people. Ask for different goods.";
-  const reserve = deal.get === "wood" ? 24 : deal.get === "stone" ? (other.age >= 1 ? 12 : 4) : 0;
+  const reserve = deal.get==="food"?0:protectedReserve(g,team,deal.get);
   if (other[deal.get] - deal.getAmt < reserve) return "They are keeping those materials for village construction. Ask for different goods.";
   const wanted = deal.give === "food" ? Math.max(40, foodReserve) : deal.give === "wood" ? 60 : 30;
   if (!other.ally && (other.trust || 0) < 0.5 && other[deal.give] > wanted * 3)
@@ -74,16 +79,21 @@ export function quoteShipment(
   const scarcity = (kind: ResKind) =>
     Math.max(0.65, Math.min(1.8, need(kind) / Math.max(10, other[kind])));
   const terms = (g.state.agePicks[2] === "econ" ? 0.95 : 0.86) + Math.max(0, Math.min(1, other.trust || 0)) * 0.18 - other.tension * 0.08;
-  const quantity = Math.floor(
+  const marketQuantity = Math.floor(
     (amount * worth[give] * scarcity(give) * terms * (visitingTrader ? predisposition(visitingTrader).trading * (0.95 + (((visitingTrader.id*31+Math.floor(g.state.time/60)*17)%101)/100)*0.1) : 1)) / (worth[get] * scarcity(get)),
   );
+  // At a physical meeting they can offer a smaller surplus rather than reject
+  // every proposal that would otherwise touch their protected reserves.
+  const surplus=Math.max(0,Math.floor(other[get]-protectedReserve(g,team,get)));
+  const quantity=Math.min(200,marketQuantity,surplus);
+  if(surplus<1)return no(get==="food"&&calendar(g).phase>=2?"They are keeping food for winter. Ask for different goods.":"They have no surplus of those goods to exchange. Try another resource.");
   if (quantity < 1) return no("Offer more goods for at least one item in return.");
   const issue = shipmentIssue(g, team, {give, giveAmt:amount, get, getAmt:quantity});
   if (issue) return no(issue);
   return {
     deal: { give, giveAmt: amount, get, getAmt: quantity },
     reason:
-      "Terms reflect their needs, trust and tension. Goods arrive only after the return journey.",
+      quantity<marketQuantity?"They can only offer a smaller surplus. Goods arrive after the return journey.":"Terms reflect their needs, trust and tension. Goods arrive only after the return journey.",
   };
 }
 /** Home decisions use carried reports, never a live view into a distant stockpile. */
