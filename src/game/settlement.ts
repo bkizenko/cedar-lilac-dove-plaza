@@ -1,3 +1,4 @@
+import {beginExpedition} from "./journeys";
 import {bridgeApproach} from './transport';
 import {quarryAvailable} from "./mining";
 import {fishingGrounds} from "./fishing";
@@ -215,11 +216,11 @@ export class WorkBoard {
         }
         if (b.type === "farm" && farmAvailable(g, b))
           add(b, "food", 3, calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
-        if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency);
+        if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency+65);
         if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
-      for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency);
+      for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency+(n.cropCandidate&&!t.cultivated?.length?35:0));
       for (const n of g.state.trees)
         if (n.amount > 0)
           add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 140 : Math.max(15, 95 - t.wood * 0.35));
@@ -254,6 +255,14 @@ export class WorkBoard {
       u.order = "return";
       u.workReason = "Delivering carried supplies";
       return;
+    }
+    if(u.team===0&&g.state.laborPolicy==="explore"&&!u.jobLock&&reserveSeconds(g)>=240){
+      const adults=g.state.units.filter(p=>p.team===0&&p.hp>0&&p.type==="worker"&&!isDependent(g,p));
+      const active=adults.filter(p=>p.expedition&&!p.expedition.returning).length;
+      const limit=Math.min(3,Math.max(1,Math.floor(adults.length/4)));
+      if(active<limit){const next=g.findExploreTarget(u);if(next&&beginExpedition(g,u)){
+        g.interruptMission(u);u.order="explore";u.tx=next.x;u.tz=next.z;u.node=null;u.target=null;u.job=null;u.pillage=-1;u.attackDestination=null;u.workReason="Village exploration focus — searching for resources and neighbours";return;
+      }}
     }
     if (this.occupiedAt !== g.state.time) {
       this.occupiedAt = g.state.time;

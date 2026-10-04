@@ -1,3 +1,4 @@
+import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
 import { FOOD_KINDS } from "@/game/pantry";
 import { VisitingTrader } from "./VisitingTrader";
@@ -507,6 +508,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="mt-2 flex flex-col gap-1">
+                {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two fishers</button>}
                 {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
                   <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={hud.age<w.age||hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper||!!hud.ended} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>
                     Make {w.name.toLowerCase()} · {w.wood} logs{w.stone?` · ${w.stone} stone`:""}{w.copper?` · ${w.copper} copper`:""} · {w.seconds*(sel.type==="townhall"?3:sel.type==="barracks"?2:1)}s work

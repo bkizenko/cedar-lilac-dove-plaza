@@ -61,6 +61,8 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
+  if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>3||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>![1,2,3].includes(t))))fail();
+  if(s.encounter!==undefined){const e=s.encounter;if(!obj(e)||![1,2,3].includes(e.team)||!Number.isSafeInteger(e.person)||e.person<1||!Number.isSafeInteger(e.stranger)||e.stranger<1||typeof e.resume!=="boolean")fail();}
   if(s.communityTimer!==undefined&&(!num(s.communityTimer)||s.communityTimer<0||s.communityTimer>30))fail();
   if(s.lifeHistory!==undefined){
     if(!Array.isArray(s.lifeHistory)||s.lifeHistory.length>256)fail();
@@ -183,8 +185,8 @@ export function decodeGame(raw: unknown): Game {
       teams.add(r.team);validateOffers(r.offers);
     }
   }
-  if (s.growthPolicy !== undefined && !["stable", "welcome"].includes(s.growthPolicy)) fail();
-  if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt"].includes(s.laborPolicy)) fail();
+  if (s.growthPolicy !== undefined && !["stable", "welcome", "eager"].includes(s.growthPolicy)) fail();
+  if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt", "explore"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
   for(const list of [s.trees,s.forage,s.fish,s.stones,s.copper,s.iron])for(const n of list)if(n.pressure!==undefined&&(!num(n.pressure)||n.pressure<0||n.pressure>1))fail();
   for (const t of s.tribes) {

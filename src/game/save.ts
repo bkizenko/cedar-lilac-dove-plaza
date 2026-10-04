@@ -11,26 +11,32 @@ function valid(raw: string | null) {
     return null;
   }
 }
-export function saveGame(g: Game) {
+export function saveGame(g: Game, deliberate=false) {
   if (!g.started || g.awaitingStart) return false;
   try {
-    const data = JSON.stringify(encodeGame(g)),
-      old = localStorage.getItem(SAVE_KEY);
-    if (!localStorage.getItem(SAVE_KEY + ":protected")) localStorage.setItem(SAVE_KEY + ":protected", valid(old) ? old! : data);
-    if (valid(old)) localStorage.setItem(SAVE_KEY + ":bak", old!);
-    localStorage.setItem(SAVE_KEY, data);
+    const old=localStorage.getItem(SAVE_KEY),previous=valid(old);
+    // A stale tab/engine must not roll the active village backwards on autosave.
+    if(!deliberate&&previous?.state.seed===g.state.seed&&previous.state.time>g.state.time)return true;
+    const data=JSON.stringify({...encodeGame(g),savedAt:Date.now()});
+    // Primary is the essential write. Optional copies cannot block it at quota.
+    localStorage.setItem(SAVE_KEY,data);
+    try {if(previous)localStorage.setItem(SAVE_KEY+":bak",old!);} catch {/* primary is durable */}
+    try {if(!localStorage.getItem(SAVE_KEY+":protected"))localStorage.setItem(SAVE_KEY+":protected",previous?old!:data);} catch {/* primary is durable */}
     return true;
-  } catch {
-    return false;
-  }
+  } catch {return false;}
 }
 export function loadRaw(protectedOnly=false) {
   try {
     if(protectedOnly)return valid(localStorage.getItem(SAVE_KEY+":protected"));
-    return valid(localStorage.getItem(SAVE_KEY)) || valid(localStorage.getItem(SAVE_KEY + ":bak")) || valid(localStorage.getItem(SAVE_KEY + ":protected"));
-  } catch {
-    return null;
-  }
+    const copies=[SAVE_KEY,SAVE_KEY+":bak",SAVE_KEY+":protected"].map(k=>valid(localStorage.getItem(k))).filter(Boolean);
+    const active=copies[0];if(!active)return null;
+    const same=copies.filter(d=>d.state.seed===active.state.seed);
+    return same.reduce((best,d)=>{
+      const stamp=(v:typeof d)=>typeof v.savedAt==="number"&&Number.isFinite(v.savedAt)?v.savedAt:0;
+      const newer=stamp(d)||stamp(best)?stamp(d)>stamp(best):d.state.time>best.state.time;
+      return newer?d:best;
+    },active);
+  } catch {return null;}
 }
 export function hasSave() {
   return [SAVE_KEY, SAVE_KEY + ":bak", SAVE_KEY + ":protected"].some((k) => {
@@ -46,7 +52,7 @@ export function hasSave() {
 /** Explicit durable checkpoint; autosaves never replace this slot. */
 export function protectGame(g: Game) {
   if (!g.started || g.awaitingStart) return false;
-  try {localStorage.setItem(SAVE_KEY+":protected",JSON.stringify(encodeGame(g)));return true;} catch {return false;}
+  try {localStorage.setItem(SAVE_KEY+":protected",JSON.stringify({...encodeGame(g),savedAt:Date.now()}));return true;} catch {return false;}
 }
 export function exportGame(g: Game) {
   const blob=new Blob([JSON.stringify(encodeGame(g))],{type:"application/json"});

@@ -1,3 +1,4 @@
+import {villageAppeal} from "@/game/migration";
 import {WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
@@ -23,7 +24,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   useEffect(() => {
     if (!engine || !open) return;
     const paused = engine.game.state.paused;
-    engine.game.state.paused = true;
+    engine.setPaused(true);
     ref.current?.showModal();
     return () => {
       ref.current?.close();
@@ -117,7 +118,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               <option value="build">Finish construction</option>
               <option value="wood">Gather timber</option>
               <option value="stone">Gather stone</option>
-              <option value="hunt">Hunt visible herds</option>
+              <option value="hunt">Find and hunt herds</option>
+              <option value="explore">Explore and make contact</option>
             </select>
           </label>
           <p>
@@ -131,19 +133,21 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <select
               value={s.growthPolicy || "stable"}
               onChange={(e) => {
-                s.growthPolicy = e.target.value as typeof s.growthPolicy;
+                g.setGrowthPolicy(e.target.value as NonNullable<typeof s.growthPolicy>);
                 engine.pushHud();
               }}
             >
               <option value="stable">Consolidate the village</option>
               <option value="welcome">Welcome settlers when reserves allow</option>
+              <option value="eager">Enthusiastically welcome settlers</option>
             </select>
           </label>
           <p>
             Births require spare housing, eight minutes of reserves and adults to support children.
-            Welcoming migrants permits arrivals with six minutes of reserves. Childhood is compressed into six minutes;
+            Welcoming migrants permits arrivals with six minutes of reserves; enthusiastic welcomes need four and invite groups sooner. Food, shelter, health, rest and relations affect attraction. Childhood is compressed into six minutes;
             adult migration supports growth while they grow up.
           </p>
+          <p>Settler attraction: {Math.round(villageAppeal(g)*100)}% · improve food security, spare housing, rest and peaceful relations. Exploration focus sends up to a quarter of adults (at most three); the others keep the village working.</p>
         </section>
       </div>
       <p><strong>Next age:</strong> {g.ageUpIssue(0) || "Ready — choose a development path in the age panel."}</p>
@@ -164,6 +168,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
       <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>
       <h3>Fields and harvest</h3>
+      <p>Gather wild grain, pulses or tubers and carry them home: every four food carries one sample. Four samples (sixteen gathered food), six timber and four food start a trial at the hearth. After the trial, place your first field.</p>
       <p>Known cultivation: {t.cultivated?.join(", ")||"None yet — forage for wild crop samples and bring them home."}</p>
       <ul>{CROPS.filter(k=>!t.cultivated?.includes(k)).map(kind=><li key={kind}>
         {CROP_NAMES[kind]} · {(t.cropSamples?.[kind]||0).toFixed(1)} samples at home

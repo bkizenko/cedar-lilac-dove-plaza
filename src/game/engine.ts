@@ -1,5 +1,6 @@
 import {planBridge,bridgeHeight} from './transport';
 import { soilQuality } from "./ecology";
+import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
 import { decodeGame } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
@@ -83,8 +84,9 @@ export class Engine {
       return;
     }
     try {
-      this.game.reset();
-      this.game.awaitingStart = true;
+      const saved=loadRaw();
+      if(saved){this.game=decodeGame(saved);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
+      else {this.game.reset();this.game.awaitingStart = true;}
       this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();
@@ -129,7 +131,8 @@ export class Engine {
     return hasSave();
   }
   saveNow() {
-    this.game.banner((saveGame(this.game) && protectGame(this.game)) ? "Village saved" : "Storage unavailable or full", 3);
+    const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
+    this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
     this.pushHud();
   }
   protectVillage() {
@@ -143,6 +146,7 @@ export class Engine {
       if(this.game.started&&!this.game.awaitingStart&&!protectGame(this.game))throw new Error("Could not protect your current village. Download it before importing another save.");
       saveGame(this.game);
       this.restoreVillage(restored);
+      if(!saveGame(restored,true))throw new Error("Village imported but local saving failed. Keep the original file.");
       this.game.banner("Backup imported; previous village kept as a protected checkpoint",5);
     } catch(error) {this.game.banner(error instanceof Error?error.message:"Invalid village backup",5);}
     this.pushHud();
@@ -159,6 +163,7 @@ export class Engine {
       if (!raw) throw new Error("No compatible save. Older partial saves cannot be restored.");
       const restored = decodeGame(raw);
       this.restoreVillage(restored);
+      if(protectedOnly)saveGame(restored,true);
       restored.banner("Village restored · P to resume", 4);
     } catch (error) {
       this.game.banner(error instanceof Error ? error.message : "Cannot restore save", 4);
@@ -200,6 +205,8 @@ export class Engine {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
+    window.addEventListener("pagehide",this.onPageHide);
+    window.addEventListener("beforeunload",this.onPageHide);
     c.addEventListener("pointerdown", this.onPointerDown);
     c.addEventListener("pointermove", this.onPointerMove);
     c.addEventListener("pointerup", this.onPointerUp);
@@ -214,6 +221,8 @@ export class Engine {
     this.keys.clear();
     this.simAccumulator = 0;
   };
+  private onPageHide = () => {if(!this.disposed)saveGame(this.game);};
+
   private onVis = () => {
     this.keys.clear();
     this.simAccumulator = 0;
@@ -630,6 +639,7 @@ export class Engine {
 
   setPaused(p: boolean) {
     this.game.state.paused = p;
+    if(p)saveGame(this.game);
   }
 
   setSpeed(s: number) {
@@ -777,6 +787,8 @@ export class Engine {
   }
 
   dispose() {
+    if(this.disposed)return;
+    saveGame(this.game);
     this.disposed = true;
     this.running = false;
     this.view.renderer.setAnimationLoop(null);
@@ -785,6 +797,8 @@ export class Engine {
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.onBlur);
+    window.removeEventListener("pagehide",this.onPageHide);
+    window.removeEventListener("beforeunload",this.onPageHide);
     document.removeEventListener("visibilitychange", this.onVis);
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);

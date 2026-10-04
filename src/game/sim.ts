@@ -1,6 +1,8 @@
+import {tickEncounters} from "./encounters";
+import {villageAppeal} from "./migration";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
-import {fishingGrounds,fishingBank,fishingReport,catchDockFish} from "./fishing";
+import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
@@ -1381,6 +1383,11 @@ export class Game {
     this.state.selBld = null;
   }
 
+  setGrowthPolicy(policy:NonNullable<GameState["growthPolicy"]>){
+    this.state.growthPolicy=policy;
+    if(policy==="eager")this.seaT=Math.min(this.seaT,120);
+  }
+
   setLaborPriority(policy: NonNullable<GameState["laborPolicy"]>) {
     this.state.laborPolicy=policy;
     this.workBoard.reset();
@@ -1388,7 +1395,8 @@ export class Game {
       if(u.team!==0||u.type!=="worker"||u.hp<=0||isDependent(this,u))continue;
       u.job=null;u.jobLock=false;u.huntOnly=false;u.searchJob=undefined;u.workCheckAt=0;
       // Deliver cargo and finish diplomatic missions before starting the new focus.
-      if(u.envoy||u.order==="trade"||u.emergency||u.recalled)continue;
+      if(u.envoy||u.order==="trade"||u.emergency||u.recalled||u.scout||u.visit||u.foundingJourney||u.studyCrop||u.weaponWork)continue;
+      if(u.expedition){if(policy!=="explore"){u.expedition.returning=true;const h=this.campOf(0);u.order="move";u.tx=h.x;u.tz=h.z;}continue;}
       u.node=null;u.target=null;u.attackDestination=null;u.pillage=-1;
       u.order=u.carry>0?"return":"idle";
       if(u.order==="idle")this.workBoard.assign(this,u);
@@ -2639,14 +2647,13 @@ export class Game {
   }
 
   soundRecall() {
-    const home=this.campOf(0);
     for(const u of this.state.units) {
       if(u.team!==0||u.hp<=0)continue;
-      u.recalled=true;u.envoy=undefined;u.searchJob=undefined;u.target=null;u.node=null;u.trade=null;u.pillage=-1;u.attackDestination=null;
-      u.jobLock=false;u.huntOnly=false;u.drill=undefined;
-      if(u.emergency)u.emergency.resume=undefined;
-      u.tx=home.x+Math.sin(u.id)*7;u.tz=home.z+Math.cos(u.id)*7;
-      u.order="move";u.stationOnArrival=true;u.workReason="Recall horn — returning to the village";
+      this.interruptMission(u);
+      u.recalled=true;u.target=null;u.node=null;u.pillage=-1;u.attackDestination=null;
+      u.jobLock=false;u.huntOnly=false;
+      u.order="move";u.stationOnArrival=true;u.workCheckAt=0;
+      u.workReason="Recall horn — returning to the village";
     }
     this.banner("Recall horn sounded — everyone returns with what they carry",4);this.onSfx("pillage");
   }
@@ -3050,7 +3057,7 @@ export class Game {
   tickSea(dt: number) {
     this.seaT -= dt;
     if (this.seaT > 0) return;
-    this.seaT = 480 + Math.random() * 240;
+    this.seaT = (this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240;
     if (this.state.time < 600) return;
     const dead = this.state.tribes.find((t) => (t.id === 1 || t.id === 2) && !t.alive);
     if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
@@ -3066,10 +3073,11 @@ export class Game {
       (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
     );
     if (!you || !hall) return;
-    const welcome = this.state.growthPolicy === "welcome";
+    const welcome = this.state.growthPolicy !== "stable";
+    const eager=this.state.growthPolicy==="eager",appeal=villageAppeal(this);
     const reserve = reserveSeconds(this);
-    if (reserve < (welcome ? 360 : 4000)) return;
-    if (you.food < 16 || this.popNow(0) >= this.popCap(0)) return;
+    if (reserve < (eager?240:welcome ? 360 : 4000)||appeal<.5) return;
+    if (you.food < 16 || this.popNow(0) >= this.popCap(0)||!this.finished(hall)) return;
     const donors = this.state.tribes.filter(
       (t) => t.id === 1 || t.id === 2,
     );
@@ -3079,7 +3087,7 @@ export class Game {
       if (!tr) return null;
       return (
         this.state.units.find(
-          (u) => u.team === tr.id && u.hp > 0 && u.type === "worker" && !isDependent(this, u),
+          (u) => u.team === tr.id && u.hp > 0 && u.type === "worker" && !isDependent(this, u)&&!u.visit&&!u.scout&&!u.envoy&&!u.expedition&&!u.foundingJourney&&this.workBoard.connected(this,u.x,u.z,hall.x,hall.z),
         ) || null
       );
     };
@@ -3088,6 +3096,7 @@ export class Game {
     const migrant = roll < 0.4 ? takeFrom(thriving) : roll < 0.7 ? takeFrom(failing) : null;
     if (migrant) {
       const from = this.tribe(migrant.team);
+      this.interruptMission(migrant);
       migrant.team = 0;
       migrant.order = "move";
       migrant.job = null;
@@ -3101,14 +3110,19 @@ export class Game {
           ? "Someone leaves " + (from?.name || "a village") + " and joins you"
           : "Refugees from " + (from?.name || "a failing village") + " ask to stay";
     } else {
-      you.food -= 8;
-      const a = Math.atan2(hall.x, hall.z) + Math.PI;
-      const d = (this.world.islandR || 140) * 0.82;
-      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*3));
+      // Arrivals begin on a reachable dry approach, never in deep water across the map.
+      const arrivals:{x:number;z:number}[]=[];
+      const start=Math.random()*Math.PI*2;
+      for(let i=0;i<32;i++){
+        const a=start+i*Math.PI/16,x=hall.x+Math.sin(a)*45,z=hall.z+Math.cos(a)*45;
+        if(this.walkable(x,z)&&this.workBoard.connected(this,x,z,hall.x,hall.z))arrivals.push({x,z});
+      }
+      if(!arrivals.length)return;
+      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*(eager?4:3)));
       for(let i=0;i<group;i++) {
-        if(i>0)you.food-=8;
-        const u=this.spawnUnit("worker",Math.sin(a)*d+i*2,Math.cos(a)*d,0);
-        u.order="move";u.tx=hall.x+4+i;u.tz=hall.z+6;
+        you.food-=8;
+        const at=arrivals[i%arrivals.length],u=this.spawnUnit("worker",at.x,at.z,0);
+        u.homeHall=hall.id;u.recalled=true;u.order="move";u.workReason="Walking to the welcoming village hearth";
       }
       if(group>1)label=`A group of ${group} wanderers is walking toward your village`;
 
@@ -3171,6 +3185,7 @@ export class Game {
     const flood = this.state.weather === "flood";
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
+        if(n.kind==="fish"){renewFish(this,n,dt);continue;}
         if(n.pressure&&!(this.state.units.some(u=>u.hp>0&&u.order==="gather"&&u.node===n)))n.pressure=Math.max(0,n.pressure-dt/7200);
         if (n.kind === "forage" && calendar(this).phase === 3 && n.amount > 0) {
           n.amount = Math.max(0, n.amount - dt * (n.maxAmt || 12) / 180);
@@ -3185,8 +3200,6 @@ export class Game {
         if (frost) rate = 0.55;
         if (drought) rate = 0.42;
         if (flood && n.kind === "forage") rate = 0.7;
-        if (flood && n.kind === "fish") rate = 1.35;
-        if (rain && n.kind === "fish") rate = 1.2;
         const habitat = habitatAt(this, n.x, n.z);
         if (n.kind === "forage") rate *= habitat.forage;
         if (n.kind === "tree") rate *= habitat.timber;
@@ -3346,7 +3359,7 @@ export class Game {
     }
     for (const b of this.state.buildings) {
       if (b.team !== 0 || b.hp <= 0) continue;
-      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : 12, 2);
+      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : 12, 2);
     }
     for (let i = 0; i < vis.length; i++) {
       if (vis[i] === 2) age[i] = 0;
@@ -3983,16 +3996,23 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift") {return sendDelegation(this,team,kind);}
 
   workerAI(u: Unit, dt: number) {
+    // The horn overrides every mission, including foreign visits and settlement journeys.
+    if(u.recalled) {
+      const homes=this.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&this.finished(b))
+        .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+      let home:Building|undefined,spot:{x:number;z:number}|null=null;
+      for(const h of homes){const p=this.interactionSpot(u,h);if(p){home=h;spot=p;break;}}
+      if(!home||!spot){u.workReason="Recall: no reachable hearth — a crossing or clear route is needed";return;}
+      u.tx=spot.x;u.tz=spot.z;
+      if(!this.buildingWorkReached(u,home)){this.steer(u,dt);return;}
+      if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;u.carryFood=undefined;}
+      if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
+      u.recalled=undefined;u.stationOnArrival=undefined;u.order="hold";u.workReason="Home after the recall horn — awaiting orders";
+      return;
+    }
     if(foundingJourneyAI(this,u,dt))return;
     if(scoutAI(this,u,dt))return;
     if(visitorAI(this,u,dt))return;
-    if(u.recalled) {
-      if(this.steer(u,dt)) {
-        if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;u.carryFood=undefined;}
-        u.recalled=undefined;u.stationOnArrival=undefined;u.order="hold";u.workReason="Home after the recall horn — awaiting orders";
-      }
-      return;
-    }
     if(delegationAI(this,u,dt))return;
     if(cropStudyAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
@@ -4014,9 +4034,6 @@ export class Game {
     }
     if (u.order === "move") {
       if (this.steer(u, dt)) {
-        if(u.recalled && u.carryType && u.carry>0) {
-          this.tribe(u.team)[u.carryType]+=u.carry;u.carry=0;u.carryType=null;
-        }
         u.order = u.stationOnArrival ? "hold" : "idle";
         if (u.stationOnArrival) u.workReason = "At your destination — waiting for orders";
         u.stationOnArrival = undefined;u.recalled=undefined;
@@ -4093,7 +4110,7 @@ export class Game {
       const g = GATHER[t];
       const winterForage =
         "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
-      const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 2.5 : 1;
+      const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 1.65 : 1;
       const period = g.period * this.campBonus(u, t) * winterForage * winterFishing;
       u.gatherT += dt;
       u.stride += dt * 9;
@@ -4132,6 +4149,7 @@ export class Game {
           if (roll < 0.1) gained = 0;
           else if (roll > 0.93) gained = 2;
         }
+        if("kind" in node&&node.kind==="fish")gained=Math.min(gained,Math.floor(node.amount));
         if (gained <= 0) {
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "thin", "#b8a888");
         } else {
@@ -4150,7 +4168,7 @@ export class Game {
         }
         if ("amount" in node) {
           node.amount--;
-          if(node.kind==="forage"||node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+0.035);
+          if(node.kind==="forage"||node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+(node.kind==="fish"?.4/Math.max(1,node.maxAmt||8):.035));
           if (node.amount <= 0) {
             node.amount = 0;
             if (node.kind === "tree") this.chopMarks.delete(node.id);
@@ -4743,7 +4761,7 @@ export class Game {
   }
 
   welcomeSoul(team: number, x: number, z: number) {
-    if (team === 0 && this.state.growthPolicy !== "welcome") return false;
+    if (team === 0 && this.state.growthPolicy === "stable") return false;
     if (this.popNow(team) >= this.popCap(team)) return false;
     if (reserveSeconds(this, team) < 600) return false;
     const u = this.spawnUnit("worker", x + 6, z + 4, team);
@@ -5375,6 +5393,7 @@ export class Game {
         this.tickRegen(sdt);
         this.tickPeople(sdt);
         this.updateVision(sdt);
+        tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 

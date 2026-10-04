@@ -322,6 +322,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  contacts?:number[];
+  encounter?:{team:number;person:number;stranger:number;resume:boolean};
   cultivationVersion?: number;
   lifeHistory?: {team:number;text:string;time:number}[];
   communities?: {hall:number;team:number;name:string;founded:number;emptySince:number|null;status:"growing"|"thriving"|"struggling"|"abandoned"}[];
@@ -336,8 +338,8 @@ export type GameState = {
   tradeReports?: {team:number; time:number; offers:TradeDeal[]}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
-  growthPolicy?: "stable" | "welcome";
-  laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt";
+  growthPolicy?: "stable" | "welcome" | "eager";
+  laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
   time: number;

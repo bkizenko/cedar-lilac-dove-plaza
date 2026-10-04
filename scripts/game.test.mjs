@@ -1496,7 +1496,7 @@ test("wood orders scout unknown terrain and resume cutting discovered timber",()
 test("recall cancels raids and delegations but conserves carried supplies",()=>{
   const g=fixture(),u=g.state.units.find(u=>u.team===0);u.carry=7;u.carryType="wood";u.pillage=1;u.order="explore";
   const before=g.tribe(0).wood;g.soundRecall();assert.equal(u.pillage,-1);assert.equal(u.order,"move");assert.equal(u.carry,7);
-  g.steer=()=>true;g.workerAI(u,0.01);assert.equal(u.order,"hold");assert.equal(g.tribe(0).wood,before+7);assert.equal(u.carry,0);
+  const hall=g.state.buildings.find(b=>b.team===0&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;g.workerAI(u,0.01);assert.equal(u.order,"hold");assert.equal(g.tribe(0).wood,before+7);assert.equal(u.carry,0);
 });
 test("raiding causes hostility at the settlement rather than when the command leaves home",()=>{
   const g=militaryFixture();g.vision.fill(2);g.clearSelect();const u=g.state.units.find(u=>u.team===0&&u.type==="spearman");u.selected=true;
@@ -1524,7 +1524,7 @@ test("a well supplied village can welcome an outsider group without exceeding ho
 });
 test("recall works for children and soldiers and can be cancelled by a new order",()=>{
   const g=militaryFixture(),child=g.state.units.find(u=>u.team===0&&u.type==="worker");child.maturesAt=g.state.time+100;
-  const soldier=g.state.units.find(u=>u.team===0&&u.type==="spearman");g.soundRecall();g.steer=()=>true;
+  const soldier=g.state.units.find(u=>u.team===0&&u.type==="spearman");g.soundRecall();const hall=g.state.buildings.find(b=>b.team===0&&b.type==="townhall");for(const u of [child,soldier]){const entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;}
   g.workerAI(child,0.01);g.workerAI(soldier,0.01);assert.equal(child.order,"hold");assert.equal(soldier.order,"hold");
   g.soundRecall();g.clearSelect();soldier.selected=true;g.issueMove(soldier.x+20,soldier.z);assert.equal(soldier.recalled,undefined);
 });

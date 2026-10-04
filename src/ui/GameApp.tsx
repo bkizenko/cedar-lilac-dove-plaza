@@ -1,3 +1,4 @@
+import {EncounterDialog} from "./EncounterDialog";
 import { SettlementLedger } from "./SettlementLedger";
 import { PlayTools } from "./PlayTools";
 import { useEffect, useRef, useState } from "react";
@@ -152,6 +153,7 @@ export function GameApp() {
       <Hud hud={hud} engine={engineRef.current} />
       <PlayTools engine={engineRef.current} />
       <SettlementLedger engine={engineRef.current} />
+      <EncounterDialog engine={engineRef.current} />
       {hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
           <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">

@@ -19,7 +19,12 @@
     "test": "node --import ./scripts/game-loader.mjs --test --test-concurrency=2 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/auth/gate-identity.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:game": "node --import ./scripts/game-loader.mjs --test scripts/game.test.mjs"
+    "test:game": "node --import ./scripts/game-loader.mjs --test scripts/game.test.mjs",
+    "play": "node scripts/play.mjs start",
+    "play:publish": "node scripts/play.mjs publish",
+    "play:status": "node scripts/play.mjs status",
+    "play:stop": "node scripts/play.mjs stop",
+    "play:service": "node scripts/install-play-service.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",

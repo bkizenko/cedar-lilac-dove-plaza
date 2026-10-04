@@ -167,7 +167,7 @@ export class KeyboardCommands {
     if (code === "KeyG") e.trainPeople();
     if (code === "KeyT") e.cycleTrade();
     if (code === "KeyX") e.explore();
-    if (code === "KeyP" || code === "Space") g.state.paused = !g.state.paused;
+    if (code === "KeyP" || code === "Space") e.setPaused(!g.state.paused);
     if (code === "Equal" || code === "NumpadAdd") e.setSpeed(g.state.speed >= 2 ? 4 : 2);
     if (code === "Minus" || code === "NumpadSubtract") e.setSpeed(g.state.speed >= 4 ? 2 : 1);
     if (code === "KeyF") e.focusHome();

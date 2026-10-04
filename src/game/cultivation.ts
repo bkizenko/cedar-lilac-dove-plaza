@@ -42,7 +42,7 @@ export function deliverSamples(g:Game,u:Unit){
   u.seedSamples=undefined;
 }
 export function cultivationIssue(g:Game,team=0){
-  return g.tribe(team).cultivated?.length?null:"Forage for wild crop samples, bring them home, then test cultivation in the village ledger.";
+  return g.tribe(team).cultivated?.length?null:"Gather wild grain, pulses or tubers: bring home 16 food for 4 samples, then test cultivation in the village ledger (L).";
 }
 export function beginCropTrial(g:Game,kind:CropKind,team=0){
   const t=g.tribe(team);
