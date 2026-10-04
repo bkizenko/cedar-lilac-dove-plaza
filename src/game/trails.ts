@@ -2,7 +2,7 @@ import type { Game } from "./sim";
 import { HALF, MAP } from "./constants";
 export const TRAIL_GRID = 256,
   TRAIL_CELL = MAP / TRAIL_GRID;
-export type Trail = { cell: number; wear: number; last: number; angle: number };
+export type Trail = { cell: number; wear: number; last: number; angle: number; x?:number; z?:number };
 const caches = new WeakMap<Game, { source: Trail[]; map: Map<number, Trail> }>();
 export function trailCell(x: number, z: number) {
   const ix = Math.floor((x + HALF) / TRAIL_CELL),
@@ -30,10 +30,16 @@ export function wearTrail(g: Game, x: number, z: number, dx: number, dz: number)
   let t = roads.get(cell);
   if (!t) {
     if (roads.size >= 8192) return;
-    t = { cell, wear: 0, last: g.state.time, angle: Math.atan2(dx, dz) };
+    t = { cell, wear: 0, last: g.state.time, angle: Math.atan2(dx, dz), x, z };
     roads.set(cell, t);
     g.state.trails!.push(t);
   }
+  // Keep the visual mark on the actual route instead of snapping to a four-metre tile.
+  const blend=t.x===undefined?1:Math.min(.15,distance/4);
+  t.x=(t.x??x)+(x-(t.x??x))*blend;t.z=(t.z??z)+(z-(t.z??z))*blend;
+  const angle=Math.atan2(dx,dz);
+  t.angle+=Math.atan2(Math.sin(angle-t.angle),Math.cos(angle-t.angle))*blend;
+  t.angle=Math.atan2(Math.sin(t.angle),Math.cos(t.angle));
   t.wear = Math.min(1, t.wear + distance / 16);
   t.last = g.state.time;
 }

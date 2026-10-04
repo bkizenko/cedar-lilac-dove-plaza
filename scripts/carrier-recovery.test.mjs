@@ -34,3 +34,34 @@ test('severe storms are bounded interruptions, including loaded old storms',()=>
 test('preservation work proceeds from a reachable warehouse corner',()=>{const g=fixture(),u=g.state.units[0],b=g.makeBld('warehouse',30,38,0);g.state.buildings.push(b);g.tribe(0).food=150;g.tribe(0).wood=40;g.rebuildWalk();Object.assign(u,{x:40,z:50,y:4,order:'gather',node:b,job:'food',gatherT:0});for(let i=0;i<900&&!b.storeCare;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}assert.ok(b.storeCare>0);assert.equal(g.tribe(0).wood,39);});
 
 test('projectile destruction transfers finite loot exactly once',()=>{const g=fixture(),u=g.state.units[0],b=g.makeBld('warehouse',15,38,1);g.state.buildings.push(b);b.hp=.1;g.tribe(1).food=100;const food=g.tribe(0).food;g.fireArrow(u,b);for(let i=0;i<100;i++)g.updateProjectiles(.1);assert.equal(b.hp,0);assert.equal(g.tribe(0).food,food);assert.equal(b.raidLoot.food,35);assert.equal(g.tribe(1).food,65);g.lootBuilding(0,b);assert.equal(b.raidLoot.food,35);});
+
+test('loaded villagers obey direct movement and raid orders without losing supplies',()=>{
+  const g=fixture(),u=g.state.units[0];Object.assign(u,{x:0,z:60,y:4,selected:true,carry:8,carryType:'wood',order:'return',drill:1,weaponWork:{kind:'spear',progress:3,duration:24,workplace:g.state.buildings[0].id},expedition:{food:4,returning:true,forage:0}});
+  g.issueMove(25,70);assert.equal(u.drill,undefined);assert.equal(u.expedition.returning,false);
+  for(let i=0;i<300;i++){g.navBudget=10;g.workerAI(u,.1);}
+  assert.equal(u.order,'hold');assert.ok(Math.hypot(u.x-25,u.z-70)<1);assert.equal(u.carry,8);assert.equal(u.weaponWork.progress,3);
+  const rival=g.makeBld('townhall',80,38,1);g.state.buildings.push(rival);g.vision.fill(2);g.issuePillage(rival);assert.equal(u.order,'attackmove');assert.equal(u.pillage,1);assert.equal(u.carry,8);
+});
+test('summer never rolls a hard frost and legacy summer frosts clear immediately',()=>{
+  const g=fixture();g.state.time=600;g.state.weather='frost';g.state.weatherT=200;g.tickWeather(.1);assert.equal(g.state.weather,'clear');
+  const random=Math.random;try{for(let i=0;i<100;i++){Math.random=()=>i/100;g.state.weatherT=0;g.tickWeather(.1);assert.notEqual(g.state.weather,'frost');}}finally{Math.random=random;}
+});
+test('carriers walk off a conservative blocked uphill cell before retrying delivery',()=>{
+  const g=fixture(),u=g.state.units[0];g.state.buildings=[g.makeBld('townhall',38,38,0)];
+  for(const z of [31,45]){const wall=g.makeBld('barracks',0,z,0);wall.w=70;wall.d=5;g.state.buildings.push(wall);}
+  g.height=(x,z)=>4+Math.min(8,Math.abs(x)*.5);g.rebuildWalk();
+  const width=Math.sqrt(g.walk.length),cell=1040/width;
+  for(let iz=0;iz<width;iz++)for(let ix=0;ix<width;ix++){const x=-520+(ix+.5)*cell,z=-520+(iz+.5)*cell;if(Math.abs(x)<7&&Math.abs(z-38)<8)g.walk[iz*width+ix]=0;}
+  g.workBoard.reset();Object.assign(u,{x:0,z:38,y:4,order:'return',node:null,carry:8,carryType:'wood'});
+  drive(g,u,180);assert.equal(u.carry,0);assert.ok(u.x>20,'carrier physically reaches the store');
+});
+test('store reports expose separate food lots and lumber camps cost sixteen logs',async()=>{
+  const {BUILDINGS}=await import('../src/game/constants.ts');const {receiveFood}=await import('../src/game/pantry.ts');
+  const g=fixture();g.tribe(0).food=0;g.tribe(0).foodLots={};receiveFood(g,0,12,'fish');receiveFood(g,0,7,'berries');
+  assert.equal(g.snapshot().foodLots.fish,12);assert.equal(g.snapshot().foodLots.berries,7);assert.equal(BUILDINGS.lumber.wood,16);
+});
+test('trail positions follow actual footsteps and survive new and legacy saves',async()=>{
+  const {wearTrail}=await import('../src/game/trails.ts');const g=fixture();wearTrail(g,1.1,38.2,.2,.1);
+  const trail=g.state.trails[0];assert.equal(trail.x,1.1);assert.equal(trail.z,38.2);
+  assert.equal(decodeGame(encodeGame(g)).state.trails[0].x,1.1);delete trail.x;delete trail.z;assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});

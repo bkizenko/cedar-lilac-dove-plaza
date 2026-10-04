@@ -12,6 +12,7 @@ export type BldType =
   | "warehouse"
   | "barracks"
   | "forge"
+  | "workshop"
   | "watchtower"
   | "temple"
   | "market"
@@ -165,7 +166,7 @@ export type Unit = {
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
-  weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number};
+  weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
   target: Unit | Building | null;
   wanderT: number;
@@ -208,6 +209,7 @@ export type Building = {
   hp: number;
   maxHp: number;
   selected: boolean;
+  excavation?: {remaining:number;dug:number;quality:number};
   queue: QueueItem[];
   rally: { x: number; z: number } | null;
   cd: number;
@@ -322,7 +324,7 @@ export type GameState = {
   lifeHistory?: {team:number;text:string;time:number}[];
   communities?: {hall:number;team:number;name:string;founded:number;emptySince:number|null;status:"growing"|"thriving"|"struggling"|"abandoned"}[];
   communityTimer?: number;
-  trails?: {cell:number;wear:number;last:number;angle:number}[];
+  trails?: {cell:number;wear:number;last:number;angle:number;x?:number;z?:number}[];
   rivalKnowledge?: {team:number;cells:number[]}[];
   scoutTimer?: number;
   conquestAt?: number;
@@ -397,9 +399,12 @@ export type HudSelection = {
   carry?: string;
   job?: ResKind | "hold" | "hunt" | "drill" | null;
   canRecycle?: boolean;
+  buildingId?: number;
+  completed?: boolean;
 };
 
 export type HudSnapshot = {
+  foodLots?: Partial<Record<FoodKind,number>>;
   cornerstoneCount?: number;
   food: number;
   wood: number;

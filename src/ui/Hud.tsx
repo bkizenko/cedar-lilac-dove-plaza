@@ -1,3 +1,5 @@
+import { WEAPONS } from "@/game/warfare";
+import { FOOD_KINDS } from "@/game/pantry";
 import { VisitingTrader } from "./VisitingTrader";
 import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
@@ -51,6 +53,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   dock: <Fish className="size-4" />,
   warehouse: <Warehouse className="size-4" />,
   barracks: <Shield className="size-4" />,
+  workshop: <Hammer className="size-4" />,
   forge: <Hammer className="size-4" />,
   watchtower: <Eye className="size-4" />,
   temple: <Church className="size-4" />,
@@ -61,7 +64,7 @@ const BLD_ICON: Record<string, ReactNode> = {
 };
 
 function resWord(k: ResKind) {
-  if (k === "food") return "berries";
+  if (k === "food") return "food";
   if (k === "wood") return "logs";
   if (k === "copper") return "copper";
   if (k === "iron") return "iron";
@@ -76,6 +79,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   const [resMin, setResMin] = useState(compact);
   const [buildMin, setBuildMin] = useState(compact);
   const [mapMin, setMapMin] = useState(compact);
+  const [toolsMin,setToolsMin]=useState(true);
   const [techOpen, setTechOpen] = useState(false);
   useEffect(() => {
     if (hud.selection.kind !== "none") setSelMin(false);
@@ -146,6 +150,12 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 label="Food"
                 value={hud.food}
               />
+              <details className="mb-1 text-[11px] text-parchment-dim">
+                <summary className="cursor-pointer py-1">Food in stores</summary>
+                <dl className="grid grid-cols-2 gap-x-2 px-2 py-1">
+                  {FOOD_KINDS.map(kind=><div key={kind} className="contents"><dt className="capitalize">{kind}</dt><dd className="text-right tabular">{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}
+                </dl>
+              </details>
               <ResRow
                 icon={<TreePine className="size-3.5 text-ok" />}
                 label="Logs"
@@ -205,7 +215,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 
       <div className="hud-clock">
         {founding ? null : (
-        <div className="hud-panel flex flex-wrap gap-2 rounded-xl p-2 text-xs">
+        <div className="hud-panel rounded-xl p-2 text-xs">
+          <button type="button" aria-expanded={!toolsMin} aria-controls="village-controls" className="flex w-full items-center justify-between px-2 py-1.5" onClick={()=>setToolsMin(v=>!v)}>
+            Controls & save {toolsMin?<ChevronDown className="size-4"/>:<ChevronUp className="size-4"/>}
+          </button>
+          {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
           <button
             className="px-2 py-2"
             onClick={() => {
@@ -246,6 +260,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
             Load
           </button>
+          </div>}
         </div>
         )}
         <div className="hud-panel rounded-xl px-3 py-2 text-right">
@@ -491,16 +506,22 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="mt-2 flex flex-col gap-1">
+                {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
+                  <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={hud.age<w.age||hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper||!!hud.ended} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>
+                    Make {w.name.toLowerCase()} · {w.wood} logs{w.stone?` · ${w.stone} stone`:""}{w.copper?` · ${w.copper} copper`:""} · {w.seconds*(sel.type==="townhall"?3:sel.type==="barracks"?2:1)}s work
+                  </button>
+                ))}
+                {sel.completed&&["townhall","barracks","workshop"].includes(sel.type||"")?<button className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>engine?.callToArms()}>Arm available adults from stores</button>:null}
                 {hud.trainOptions
                   .filter((option) => UNITS[option.type].from === sel.type)
                   .map((option) => (
                     <button
                       key={option.type}
                       className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
-                      disabled={hud.age < option.age || hud.pop >= hud.popCap || !!hud.ended}
+                      disabled={hud.age < option.age || !!hud.ended}
                       onClick={() => engine?.train(option.type)}
                     >
-                      Train {option.name} · {option.cost.food || 0} food
+                      Equip adult as {option.name} · {option.cost.food || 0} food
                       {option.cost.wood ? ` · ${option.cost.wood} logs` : ""}
                       {hud.age < option.age ? " · later age required" : ""}
                     </button>

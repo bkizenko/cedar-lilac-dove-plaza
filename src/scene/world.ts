@@ -45,6 +45,7 @@ const BLD_TYPES: BldType[] = [
   "hut",
   "farm",
   "lumber",
+  "workshop",
   "quarry",
   "dock",
   "warehouse",
@@ -167,8 +168,10 @@ export class WorldView {
   lost = false;
   onContextLost: (() => void) | null = null;
   onContextRestored: (() => void) | null = null;
+  private villageStyles = new Map<string,{roof:string;timber:string;roofHeight:number}>();
   private terrainBiome: Uint8Array | null = null;
   private terrainRegion: Uint8Array | null = null;
+  private terrainBlend = new Float32Array(0);
   private grassRegion: Uint8Array | null = null;
   private seasonAcc = 0.4;
   private lastSnow = -1;
@@ -342,7 +345,7 @@ export class WorldView {
     this.floaters = new THREE.Group();
     this.scene.add(this.floaters);
 
-    this.trailMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),new THREE.MeshStandardMaterial({color:"#756d52",transparent:true,opacity:0.22,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
+    this.trailMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),new THREE.MeshStandardMaterial({color:"#756d52",alphaMap:this.trailAlpha(),transparent:true,opacity:0.12,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
     this.trailMesh.count=0;this.trailMesh.frustumCulled=false;this.trailMesh.raycast=()=>{};this.scene.add(this.trailMesh);
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
@@ -694,7 +697,7 @@ export class WorldView {
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(80 * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       roof.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(80 * 3), 3);
-      (roof.material as THREE.MeshStandardMaterial).vertexColors = true;
+      (roof.material as THREE.MeshStandardMaterial).vertexColors = false;
       (roof.material as THREE.MeshStandardMaterial).color.set("#ffffff");
       timber.castShadow = true;
       roof.castShadow = true;
@@ -739,7 +742,7 @@ export class WorldView {
 
   private buildHearths(game: Game) {
     const halls = game.state.buildings.filter((b) => b.type === "townhall" && b.hp > 0);
-    this.pits = new THREE.InstancedMesh(firepitGeo(), this.mats.rock, 6);
+    this.pits = new THREE.InstancedMesh(firepitGeo(), this.mats.rock, 64);
     this.pits.castShadow = true;
     this.pits.receiveShadow = true;
     this.flames = new THREE.InstancedMesh(
@@ -753,14 +756,14 @@ export class WorldView {
       64,
     );
     this.flames.frustumCulled = false;
-    halls.forEach((h, i) => {
+    halls.slice(0,64).forEach((h, i) => {
       _p.set(h.x + 1.6, h.y, h.z + 4.2);
       _q.identity();
       _s.set(1, 1, 1);
       _m.compose(_p, _q, _s);
       this.pits.setMatrixAt(i, _m);
     });
-    this.pits.count = halls.length;
+    this.pits.count = Math.min(halls.length,64);
     this.flames.count = 0;
     this.scene.add(this.pits, this.flames);
     const home = halls.find((h) => h.team === 0);
@@ -1095,15 +1098,24 @@ export class WorldView {
     stamp(this.birds, "bird");
   }
 
+  private trailAlpha() {
+    const canvas=document.createElement("canvas");canvas.width=canvas.height=32;
+    const ctx=canvas.getContext("2d")!;
+    const gradient=ctx.createRadialGradient(16,16,2,16,16,16);
+    gradient.addColorStop(0,"white");gradient.addColorStop(.4,"#aaaaaa");gradient.addColorStop(1,"black");
+    ctx.fillStyle=gradient;ctx.fillRect(0,0,32,32);
+    return new THREE.CanvasTexture(canvas);
+  }
+
   private syncTrails(game:Game) {
     if(this.trailSyncAt===Math.floor(game.state.time))return;this.trailSyncAt=Math.floor(game.state.time);
     let i=0;
     for(const t of game.state.trails||[]) {
-      if(t.wear<0.4||i>=4096)continue;
-      const x=(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-HALF,z=(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-HALF;
+      if(t.wear<0.55||i>=4096)continue;
+      const x=t.x??(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-HALF,z=t.z??(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-HALF;
       if(!game.exploredAt(x,z))continue;
       _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
-      _s.set(0.45+t.wear*0.45,TRAIL_CELL*1.15,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+      _s.set(0.3+t.wear*0.2,TRAIL_CELL*0.65,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
     }
     this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
   }
@@ -1204,6 +1216,16 @@ export class WorldView {
     }
   }
 
+  private villageStyle(game:Game,team:number) {
+    const tribe=game.tribe(team),age=tribe?.age||0,key=`${game.state.seed}/${team}/${age}`;
+    const cached=this.villageStyles.get(key);if(cached)return cached;
+    const variant=(Math.abs(Math.imul(game.state.seed^team,2654435761))>>>0)%4;
+    const roofs=["#ae8958","#aa744e","#6e8590","#aa9273"];
+    const walls=["#ac895f","#b29476","#a6aaa0","#c1b8a3"];
+    const style={roof:age===0?["#b9a477","#a99773","#b49978","#b6ad91"][variant]:roofs[(variant+Math.min(age-1,2))%4],timber:walls[Math.min(age,3)],roofHeight:1+Math.min(age,3)*.055};
+    this.villageStyles.set(key,style);return style;
+  }
+
   private syncBuildings(game: Game) {
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
@@ -1221,6 +1243,7 @@ export class WorldView {
         const b = list[i];
         const seen = b.team === 0 || game.exploredAt(b.x, b.z);
         const st = TEAM_STYLE[b.team] || TEAM_STYLE[0];
+        const identity=this.villageStyle(game,b.team);
         const done = b.build >= 1;
         const ys = !seen ? 0.001 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
         _p.set(b.x, b.y, b.z);
@@ -1237,11 +1260,12 @@ export class WorldView {
           _s.set(0.001, 0.001, 0.001);
           _m.compose(_p, _q, _s);
         }
+        if(seen&&b.build>=.55){_s.y*=identity.roofHeight;_m.compose(_p,_q,_s);}
         meshes.roof.setMatrixAt(i, _m);
         meshes.extra?.setMatrixAt(i, _m);
-        _c.set(st.timber);
+        _c.set(identity.timber);
         if (meshes.timber.instanceColor) meshes.timber.setColorAt(i, _c);
-        _c.set(type === "cornerstone" ? game.tribe(b.team).color : st.roof);
+        _c.set(type === "cornerstone" ? game.tribe(b.team).color : identity.roof);
         if (meshes.roof.instanceColor) meshes.roof.setColorAt(i, _c);
       }
       meshes.timber.count = n;
@@ -1529,6 +1553,15 @@ export class WorldView {
         _m.compose(_p, _q, _s);
         this.flames.setMatrixAt(fi++, _m);
       }
+      let pi=0;
+      for(const h of halls){if(pi>=instCap(this.pits))break;_p.set(h.x+1.6,h.y,h.z+4.2);_q.set(0,0,0,1);_s.setScalar(1);_m.compose(_p,_q,_s);this.pits.setMatrixAt(pi++,_m);}
+      if(night)for(const u of game.state.units){
+        if(fi>=instCap(this.flames)||pi>=instCap(this.pits))break;
+        if(u.hp<=0||!u.expedition||u.expedition.returning||!(u.workReason||"").startsWith("Night camp")||!game.visibleAt(u.x,u.z))continue;
+        _p.set(u.x+.9,u.y,u.z+.8);_q.set(0,0,0,1);_s.setScalar(.5);_m.compose(_p,_q,_s);this.pits.setMatrixAt(pi++,_m);
+        _p.y+=.25;_s.set(.3,.5,.3);_m.compose(_p,_q,_s);this.flames.setMatrixAt(fi++,_m);
+      }
+      this.pits.count=pi;this.pits.instanceMatrix.needsUpdate=true;
       if (night) {
         let torches = 0;
         for (const u of game.state.units) {
@@ -1708,7 +1741,7 @@ export class WorldView {
           float seen = smoothstep(0.12, 0.28, v);
           // Colored land remains visible without concealing terrain detail.
           float contour = smoothstep(0.08,0.16,terr.a)*(1.0-smoothstep(0.22,0.32,terr.a));
-          float wash = seen * (terr.a*(live > 0.5 ? 0.30 : 0.15) + contour*(live > 0.5 ? 0.55 : 0.22));
+          float wash = seen * (terr.a*mix(0.15,0.30,live) + contour*mix(0.22,0.42,live));
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);
@@ -1717,7 +1750,7 @@ export class WorldView {
           gl_FragColor = vec4(col, a);
         }`,
     });
-    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP, 96, 96), mat);
+    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP, SEGS, SEGS), mat);
     this.fowMesh.rotation.x = -Math.PI / 2;
     this.fowMesh.position.y = 0.45;
     this.fowMesh.renderOrder = 6;
@@ -1923,19 +1956,28 @@ export class WorldView {
         c.g = c.g + (0.95 - c.g) * cover;
         c.b = c.b + (0.97 - c.b) * cover;
       }
-      const vx = pos.getX(i);
-      const vz = pos.getZ(i);
-      if (!game.exploredAt(vx, vz)) {
-        c.setRGB(0.72, 0.79, 0.80);
-      } else if (!game.visibleAt(vx, vz)) {
-        c.r += (0.72 - c.r) * 0.10;
-        c.g += (0.79 - c.g) * 0.10;
-        c.b += (0.80 - c.b) * 0.10;
-      }
       const o = i * 3;
       arr[o] = c.r;
       arr[o + 1] = c.g;
       arr[o + 2] = c.b;
+    }
+    // Blend neighbouring palette samples; fog remains a separate continuous overlay.
+    // Reuse one buffer so the low-memory renderer creates no per-frame allocations.
+    if(this.terrainBlend.length!==arr.length)this.terrainBlend=new Float32Array(arr.length);
+    const width=SEGS+1;
+    for(let pass=0;pass<2;pass++){
+      this.terrainBlend.set(arr);
+      for(let i=0;i<pos.count;i++){
+        const ix=i%width,iz=Math.floor(i/width),o=i*3;
+        for(let channel=0;channel<3;channel++){
+          let sum=this.terrainBlend[o+channel]*4,count=4;
+          if(ix>0){sum+=this.terrainBlend[o-3+channel];count++;}
+          if(ix<SEGS){sum+=this.terrainBlend[o+3+channel];count++;}
+          if(iz>0){sum+=this.terrainBlend[o-width*3+channel];count++;}
+          if(iz<SEGS){sum+=this.terrainBlend[o+width*3+channel];count++;}
+          arr[o+channel]=sum/count;
+        }
+      }
     }
     colAttr.needsUpdate = true;
 

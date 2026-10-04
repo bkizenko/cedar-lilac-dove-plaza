@@ -1,3 +1,5 @@
+import {quarryAvailable,quarryReport,digStone} from "./mining";
+import {fishingGrounds,fishingBank,fishingReport,catchDockFish} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
@@ -8,7 +10,7 @@ import { personName, citizenName, prehistoricName, predisposition } from "./peop
 import { sendDelegation, delegationAI } from "./delegations";
 import { establishRaiderCamps, campRaidAI } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
-import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed } from "./pantry";
+import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
 import { habitatAt, soilQuality, cropWater } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote } from "./barter";
@@ -502,6 +504,16 @@ export class Game {
     this.rebuildWalk();
     establishRaiderCamps(this);
     this.rebuildWalk();
+    // Starting landscape is assembled before people receive their final positions.
+    // Extra rival structures must not spawn on top of existing residents.
+    for(const u of this.state.units){
+      if(!this.state.buildings.some(b=>this.solidBuilding(b)&&Math.abs(u.x-b.x)<b.w*.4+u.r&&Math.abs(u.z-b.z)<b.d*.4+u.r))continue;
+      search:for(let radius=1;radius<=16;radius++)for(let i=0;i<24;i++){
+        const x=u.x+Math.sin(i*Math.PI/12)*radius,z=u.z+Math.cos(i*Math.PI/12)*radius;
+        if(!this.walkable(x,z)||this.state.buildings.some(b=>this.solidBuilding(b)&&Math.abs(x-b.x)<b.w*.4+u.r&&Math.abs(z-b.z)<b.d*.4+u.r))continue;
+        u.x=x;u.z=z;u.y=this.height(x,z);u.tx=x;u.tz=z;break search;
+      }
+    }
     this.vision.fill(0);
     this.territory.fill(255);
     this.chopMarks.clear();
@@ -943,7 +955,9 @@ export class Game {
           break;
         }
       }
-      if (!on) return "A quarry must sit on a grey stone outcrop";
+      if(!on&&this.height(x,z)<10)return "Place a quarry near a stone outcrop or on a mountain slope";
+      const grade=Math.max(Math.abs(this.height(x+3,z)-this.height(x-3,z)),Math.abs(this.height(x,z+3)-this.height(x,z-3)))/6;
+      if(grade>1)return "This cliff is too steep for miners — choose an accessible mountain slope";
     }
     if (type === "lumber") {
       let n = 0;
@@ -1078,8 +1092,8 @@ export class Game {
     return "peace";
   }
 
-  craftWeapon(kind: "spear" | "bow" | "blade") {
-    return beginWeaponWork(this,kind);
+  craftWeapon(kind: "spear" | "bow" | "blade", workplaceId?:number) {
+    return beginWeaponWork(this,kind,0,workplaceId);
   }
 
   callToArms(team = 0) {
@@ -1211,7 +1225,7 @@ export class Game {
       }
       return false;
     }
-    if (type === "quarry") {
+    if (type === "quarry" && this.height(x,z)<10) {
       const snap = this.snapQuarry(x, z);
       if (snap) {
         x = snap.x;
@@ -1481,6 +1495,15 @@ export class Game {
     });
   }
 
+  interruptMission(u:Unit) {
+    u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
+    u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
+    u.trade=null;u.tradeTeam=0;u.shelterId=undefined;
+    if(u.expedition)u.expedition.returning=false;
+    if(u.weaponWork)u.weaponWork.paused=true;
+    this.paths.delete(u.id);u.stuckT=0;
+  }
+
   issueMove(x: number, z: number, attackMove = false) {
     const units = this.selectedUnits();
     if (!units.length) {
@@ -1491,7 +1514,7 @@ export class Game {
     }
     const slots = this.slotOffsets(units, x, z);
     units.forEach((u, i) => {
-      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
+      this.interruptMission(u);
       const { ox, oz } = slots[i];
       u.tx = x + ox;
       u.tz = z + oz;
@@ -1508,7 +1531,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    for (const u of this.selectedUnits()) { u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.attackDestination = null; u.pillage = -1; }
+    for (const u of this.selectedUnits()) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits();
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
     if (target.kind === "building" && target.team !== 0 && (anyMil || !selected.length)) {
@@ -1539,7 +1562,6 @@ export class Game {
     const selected = this.selectedUnits();
     return (selected.length ? selected : this.state.units).filter(
       u => u.team === 0 && u.hp > 0 && u.type !== "leader" && !isDependent(this, u) &&
-        u.carry===0 && !u.envoy && !u.expedition && !u.weaponWork &&
         (u.type !== "worker" || selected.length > 0),
     );
   }
@@ -1554,6 +1576,7 @@ export class Game {
     if (!mil.length) return false;
     const slots = this.slotOffsets(mil, tx, tz);
     mil.forEach((u, i) => {
+      this.interruptMission(u);
       const { ox, oz } = slots[i];
       u.tx = tx + ox;
       u.tz = tz + oz;
@@ -1606,7 +1629,7 @@ export class Game {
     }
     const mil = this.commandedMilitary();
     if (!this.marchMilitary(target.x, target.z, target, "attackmove")) {
-      this.banner("Select adults with empty hands to raid", 1.8);
+      this.banner("Select adults to raid", 1.8);
       this.onSfx("invalid");
       return;
     }
@@ -2359,7 +2382,7 @@ export class Game {
     }
     if (job === "hold") {
       for (const u of units) {
-        u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
+        this.interruptMission(u);
         u.order = "hold";
         u.job = null;
         u.jobLock = false;
@@ -2504,7 +2527,7 @@ export class Game {
     for (const u of units) {
       const t = this.findExploreTarget(u);
       if (!t || !beginExpedition(this,u)) continue;
-      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
+      this.interruptMission(u);
       u.order = "explore";
       u.pillage = -1;
       u.attackDestination = null;
@@ -2778,7 +2801,7 @@ export class Game {
     const units = this.selectedUnits();
     if (!units.length) return;
     for (const u of units) {
-      u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;
+      this.interruptMission(u);
       u.order = u.type === "worker" ? "hold" : "idle";
       u.attackDestination = null;
       u.target = null;
@@ -2898,6 +2921,9 @@ export class Game {
   }
 
   tickWeather(dt: number) {
+    // Normalize legacy summer frosts immediately, even while the old weather timer is running.
+    const frostSeason=calendar(this).phase!==1;
+    if(!frostSeason&&this.state.weather==="frost"){this.state.weather="clear";this.state.weatherT=60;}
     // Severe storms are brief work interruptions, not months of enforced idleness.
     if(this.state.weather==="storm")this.state.weatherT=Math.min(50,this.state.weatherT);
     this.state.weatherT -= dt;
@@ -2919,7 +2945,7 @@ export class Game {
       0.1 + sn.spring * 0.08 + sn.winter * 0.08,
       0.1 + sn.spring * 0.12 + sn.autumn * 0.1,
       0.08 + sn.autumn * 0.08 + sn.summer * 0.04,
-      0.02 + sn.winter * 0.28,
+      frostSeason ? 0.02 + sn.winter * 0.28 : 0,
       0.06 + sn.summer * 0.14,
       0.06 + sn.spring * 0.08,
       0.04 + sn.summer * 0.12,
@@ -2934,7 +2960,7 @@ export class Game {
         break;
       }
     }
-    if(next==="storm"&&prev==="storm")next=sn.winter>.35?"frost":"rain";
+    if(next==="storm"&&prev==="storm")next=frostSeason&&sn.winter>.35?"frost":"rain";
     if (next === prev) {
       this.state.weatherT = 90 + Math.random() * 80;
       return;
@@ -3319,6 +3345,7 @@ export class Game {
       hut: 16,
       farm: 14,
       lumber: 18,
+      workshop: 16,
       quarry: 16,
       dock: 12,
       warehouse: 22,
@@ -3528,7 +3555,7 @@ export class Game {
     if (!node) return null;
     if ("species" in node) return node.species === "bird" ? null : "food";
     if (node.kind === "building")
-      return node.type === "farm" || node.type === "dock" || node.type === "warehouse" ? "food" : null;
+      return node.type==="quarry"?"stone":node.type === "farm" || node.type === "dock" || node.type === "warehouse" ? "food" : null;
     if (node.kind === "tree") return "wood";
     if (node.kind === "stone") return "stone";
     if (node.kind === "copper") return "copper";
@@ -3553,7 +3580,7 @@ export class Game {
       for (const b of this.state.buildings) {
         if (this.finished(b) && b.team === u.team && b.type === "farm" && farmAvailable(this, b))
           consider(b, b.x, b.z, -40);
-        if (this.finished(b) && b.team === u.team && b.type === "dock") consider(b, b.x, b.z, -20);
+        if (this.finished(b) && b.team === u.team && b.type === "dock" && fishingGrounds(this,b).length) consider(b, b.x, b.z, -20);
       }
       for (const n of this.state.forage) if (n.amount > 0) consider(n, n.x, n.z);
       for (const c of this.state.wildlife) {
@@ -3733,10 +3760,14 @@ export class Game {
       let escape:{x:number;z:number}|null=null;
       search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
         const x=u.x+Math.sin(i*Math.PI/12)*radius,z=u.z+Math.cos(i*Math.PI/12)*radius;
-        if(!this.walkable(x,z)||!this.canStep(u,x,z))continue;
+        if(!this.walkable(x,z))continue;
         const samples=Math.ceil(radius*2);
         let clear=true;
-        for(let j=1;j<=samples;j++)if(!this.canStep(u,u.x+(x-u.x)*j/samples,u.z+(z-u.z)*j/samples)){clear=false;break;}
+        let probe=u;
+        for(let j=1;j<=samples;j++){const px=u.x+(x-u.x)*j/samples,pz=u.z+(z-u.z)*j/samples;
+          if(!this.canStep(probe,px,pz)){clear=false;break;}
+          probe={...u,x:px,z:pz,y:this.height(px,pz)};
+        }
         if(!clear)continue;
         escape={x,z};break search;
       }
@@ -4007,9 +4038,9 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:1.22);
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:1.22);
       if (!atSurface()) {
-        const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):this.nearestWalk(u,node.x,node.z);
+        const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
         if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}
         u.tx = spot.x;
         u.tz = spot.z;
@@ -4060,6 +4091,8 @@ export class Game {
           }
           return;
         }
+        if("type" in node&&node.type==="dock"){catchDockFish(this,u,node);return;}
+        if("type" in node&&node.type==="quarry"){digStone(this,u,node);return;}
         const rich = "rich" in node ? ((node as ResourceNode).rich ?? 1) : 1;
         let gained = 1;
         if (rich < 0.7) {
@@ -4126,7 +4159,11 @@ export class Game {
         .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
       let drop:Building|undefined,spot:{x:number;z:number}|null=null;
       for(const b of candidates){const p=this.interactionSpot(u,b);if(p){drop=b;spot=p;break;}}
-      if(!drop||!spot){u.workReason="No reachable store — carrying supplies; clear a route or build a local store";return;}
+      if(!drop||!spot){
+        if(candidates.length&&!this.walkable(u.x,u.z)){u.tx=candidates[0].x;u.tz=candidates[0].z;this.steer(u,dt);u.workReason="Finding a way off blocked ground with supplies";}
+        else {u.stuckT+=dt;u.workReason="No reachable store — carrying supplies; clear a route or build a local store";}
+        return;
+      }
       u.tx=spot.x;u.tz=spot.z;
       // Deliver along the reachable store frontage, not one exact shared point.
       // Otherwise congestion can hold a row of carriers next to the entrance.
@@ -5218,15 +5255,18 @@ export class Game {
 
   tickLumber() {
     for (const b of this.state.buildings) {
-      if (b.type !== "lumber" || !this.finished(b) || b.reclaimed) continue;
+      if (b.type !== "lumber" || !this.finished(b)) continue;
+      if(b.reclaimed){b.hp=0;if(this.state.selBld===b)this.clearSelect();this.workBoard.reset();continue;}
       let live = 0;
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
         if (Math.hypot(n.x - b.x, n.z - b.z) <= LUMBER_R) live++;
       }
       if (live > 0) continue;
-      b.reclaimed = true;
-      const back = Math.round((BUILDINGS.lumber.wood || 32) * 0.75);
+      b.reclaimed = true;b.hp=0;
+      if(this.state.selBld===b)this.clearSelect();
+      this.workBoard.reset();
+      const back = Math.round((BUILDINGS.lumber.wood || 16) * 0.75);
       this.tribe(b.team).wood += back;
       if (b.team === 0) {
         this.addFloater(b.x, b.y + 3, b.z, "+" + back + " logs", "#c4e0a8");
@@ -5447,6 +5487,8 @@ export class Game {
     } else if (this.state.selBld && this.state.selBld.hp > 0) {
       const b = this.state.selBld;
       let info = b.raiderCamp ? "Local raider camp. Its finite band patrols nearby paths and steals supplies; destroy the camp to scatter survivors." : BUILDINGS[b.type]?.hint || "";
+      if(b.type==="dock"&&this.finished(b))info+=" · "+fishingReport(this,b);
+      if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);
       if (b.build < 1)
         info = "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
       if (b.queue.length) {
@@ -5462,6 +5504,8 @@ export class Game {
         kind: "building",
         type: b.type,
         team: b.team,
+        buildingId: b.id,
+        completed: this.finished(b),
         queue: b.queue.map((q) => UNITS[q.unit].name).join(", "),
         canRecycle: b.team === 0 && b.type !== "townhall",
       };
@@ -5546,6 +5590,7 @@ export class Game {
 
     return {
       food: Math.floor(t.food),
+      foodLots: foodInventory(t),
       wood: Math.floor(t.wood),
       stone: Math.floor(t.stone),
       copper: Math.floor(t.copper || 0),

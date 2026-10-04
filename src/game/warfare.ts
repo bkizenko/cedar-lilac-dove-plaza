@@ -8,27 +8,28 @@ export const WEAPONS={
   blade:{name:'Metal blade',wood:4,stone:0,copper:6,iron:0,age:1,seconds:48},
 } as const;
 export type WeaponKind=keyof typeof WEAPONS;
-export function beginWeaponWork(g:Game,kind:WeaponKind,team=0){
+export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:number){
   const spec=WEAPONS[kind],t=g.tribe(team);
   if(!spec||!t)return false;
   const reject=(reason:string)=>{if(team===0){g.banner(reason,3);g.onSfx('invalid');}return false;};
   if(t.age<spec.age)return reject('Metalworking needs the Bronze Age; stone spears and bows are available now');
   const work=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&
-    (kind==='blade'?b.type==='forge':['townhall','barracks'].includes(b.type)));
-  if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Finish a hall or barracks for weapon making');
+    (workplaceId===undefined||b.id===workplaceId)&&
+    (kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type)));
+  if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Use a hearth or finish a crafting shelter for weapon making');
   const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.weaponWork&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
   if(!u)return reject('An available adult with empty hands and a reachable workplace is needed');
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
-  const workplace=work.sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+  const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   t.wood-=spec.wood;t.stone-=spec.stone;t.copper-=spec.copper;
-  u.weaponWork={kind,progress:0,duration:spec.seconds,workplace:workplace.id};
+  u.weaponWork={kind,progress:0,duration:spec.seconds*(workplace.type==='townhall'?3:workplace.type==='barracks'?2:1),workplace:workplace.id};
   u.order='hold';u.node=null;u.target=null;u.workReason=`Making ${spec.name.toLowerCase()} — walking to the workplace`;
   if(team===0)g.banner(`${spec.name}: materials reserved; one adult leaves other work to craft it`,3);
   return true;
 }
 export function weaponWorkAI(g:Game,u:Unit,dt:number){
   const job=u.weaponWork;
-  if(!job||u.type!=='worker'||u.order!=='hold')return false;
+  if(!job||job.paused||u.type!=='worker'||u.order!=='hold')return false;
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===u.team&&g.finished(b));
   const spot=b&&g.interactionSpot(u,b);
   if(!b||!spot){u.workReason='Weapon work paused — workplace lost or inaccessible';return true;}

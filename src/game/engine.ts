@@ -231,7 +231,7 @@ export class Engine {
   };
 
   private onWheel = (e: WheelEvent) => {
-    if ((e.target as HTMLElement | null)?.closest("dialog, input, select, textarea")) return;
+    if ((e.target as HTMLElement | null)?.closest("dialog, input, select, textarea, .hud-panel")) return;
     e.preventDefault();
     const s = Math.sign(e.deltaY);
     this.view.dist *= s > 0 ? 1.08 : 0.92;
@@ -432,7 +432,7 @@ export class Engine {
         z = site.z;
       }
     }
-    if (type === "quarry") {
+    if (type === "quarry" && this.game.height(x,z)<10) {
       const snap = this.game.snapQuarry(x, z);
       if (snap) {
         x = snap.x;
@@ -503,8 +503,8 @@ export class Engine {
     this.pushHud();
   }
 
-  craftWeapon(kind: "spear" | "bow" | "blade") {
-    this.game.craftWeapon(kind);
+  craftWeapon(kind: "spear" | "bow" | "blade", workplaceId?:number) {
+    this.game.craftWeapon(kind,workplaceId);
     this.pushHud();
   }
 

@@ -1,3 +1,5 @@
+import {quarryAvailable} from "./mining";
+import {fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
 import { preservationAvailable } from "./pantry";
 import {cropYield} from "./cultivation";
@@ -212,7 +214,8 @@ export class WorkBoard {
         }
         if (b.type === "farm" && farmAvailable(g, b))
           add(b, "food", 3, calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
-        if (b.type === "dock") add(b, "food", 2, foodUrgency);
+        if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency);
+        if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
       for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency);

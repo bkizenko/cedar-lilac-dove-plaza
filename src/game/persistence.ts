@@ -77,7 +77,9 @@ export function decodeGame(raw: unknown): Game {
   if(s.trails!==undefined) {
     if(!Array.isArray(s.trails)||s.trails.length>8192)fail();const cells=new Set();
     for(const t of s.trails){if(!obj(t)||!Number.isSafeInteger(t.cell)||t.cell<0||t.cell>=65536||cells.has(t.cell)||
-      !num(t.wear)||t.wear<0||t.wear>1||!num(t.last)||t.last<0||t.last>s.time||!num(t.angle)||Math.abs(t.angle)>Math.PI)fail();cells.add(t.cell);}
+      !num(t.wear)||t.wear<0||t.wear>1||!num(t.last)||t.last<0||t.last>s.time||!num(t.angle)||Math.abs(t.angle)>Math.PI)fail();
+      for(const key of ["x","z"])if(t[key]!==undefined&&(!num(t[key])||Math.abs(t[key])>HALF))fail();
+      cells.add(t.cell);}
   }
   if(s.rivalKnowledge!==undefined){
     if(!Array.isArray(s.rivalKnowledge)||s.rivalKnowledge.length>2)fail();const teams=new Set();
@@ -275,7 +277,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
-    if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>60||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1)fail();}
+    if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
@@ -328,6 +330,7 @@ export function decodeGame(raw: unknown): Game {
       )
         fail();
     }
+    if(b.excavation!==undefined){const e=b.excavation;if(!obj(e)||!num(e.remaining)||!num(e.dug)||!num(e.quality)||e.remaining<0||e.remaining>1200||e.dug<0||e.dug>1200||e.quality<.65||e.quality>1.65)fail();}
     if (!(b.type in BUILDINGS) || !s.tribes[b.team] || !Array.isArray(b.queue)) fail();
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
     if (b.build < 0 || b.build > 1) fail();

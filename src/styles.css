@@ -125,6 +125,9 @@
   align-items: center;
 }
 .hud-sel {
+  max-height: min(52dvh, 32rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   grid-area: sel;
   align-self: end;
   max-width: 18rem;
