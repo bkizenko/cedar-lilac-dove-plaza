@@ -28,6 +28,7 @@ export class KeyboardCommands {
       g.state.pendingAge = false;
       e.moveMode = false;
       e.loggingMode = false;
+      g.clearSelect();
       e.canvas.focus();
       e.pushHud();
       return;

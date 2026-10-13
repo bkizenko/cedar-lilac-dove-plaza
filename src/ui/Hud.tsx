@@ -7,6 +7,7 @@ import { VisitingTrader } from "./VisitingTrader";
 import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  X,
   Pause,
   Play,
   FastForward,
@@ -479,6 +480,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div className="text-[11px] text-parchment-dim mt-0.5">{sel.info}</div>
             ) : null}
           </div>
+          {sel.kind !== "none" && <button type="button" title="Deselect · Escape" aria-label="Deselect"
+            onClick={() => engine?.clearSelection()}
+            className="grid size-11 shrink-0 place-items-center rounded-md border border-parchment/20 text-parchment hover:border-bronze/40">
+            <X className="size-4" />
+          </button>}
           <button
             type="button"
             title={selMin ? "Expand" : "Minimize"}
@@ -644,11 +650,14 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 >
                   <Sword className="size-3.5 text-bronze" />
                 </JobBtn>}
+                <JobBtn active={false} label="Auto work" title="Release stop orders and job locks; follow village priorities" onClick={() => engine?.assignJob("auto")}>
+                  <Play className="size-3.5 text-parchment" />
+                </JobBtn>
                 <JobBtn
-                  active={hud.job === "hold"}
+                  active={false}
                   label="Rest"
-                  title="Stop working"
-                  onClick={() => engine?.assignJob("hold")}
+                  title="Recover fatigue, then automatically resume village work"
+                  onClick={() => engine?.assignJob("rest")}
                 >
                   <Hand className="size-3.5 text-parchment-dim" />
                 </JobBtn>

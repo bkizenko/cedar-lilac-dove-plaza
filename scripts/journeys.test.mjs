@@ -48,10 +48,12 @@ test("night rest preserves assigned work and resumes during daytime", () => {
   u.order = "gather";
   u.node = g.state.trees[0];
   const node = u.node;
+  u.fatigue=.6;
   g.clockState = () => ({ period: "Night" });
   assert.ok(routineRest(g, u, 1));
   assert.equal(u.node, node);
   assert.equal(u.order, "gather");
+  u.fatigue=0;
   g.clockState = () => ({ period: "Day" });
   assert.equal(routineRest(g, u, 1), false);
   assert.equal(u.node, node);

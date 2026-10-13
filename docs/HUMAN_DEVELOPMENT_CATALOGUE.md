@@ -18,7 +18,7 @@ This is a design catalogue, not a claim that every historical development must o
 ## 2. Survival and personal needs
 
 11. Hunger, diet and physically available food.
-12. ~~Sleep/rest with chosen night shifts and fatigue.~~ — implemented and regression-tested
+12. ~~Sleep/rest with chosen night shifts and fatigue.~~ — finite recovery now resumes adult work before dawn; explicit Rest resumes automatically, Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.
 13. Shelter capacity, warmth, fuel and storm refuge.
 14. Clothing suited to cold, heat and wet conditions.
 15. Injury, illness, care, recovery and readable death causes.

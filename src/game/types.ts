@@ -193,6 +193,7 @@ export type Unit = {
   expedition?: {food:number;returning:boolean;forage:number};
   scout?: {legs:number;returning:boolean};
   fatigue?: number;
+  resting?: boolean;
   shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number};
   jobLock: boolean;

@@ -90,15 +90,19 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   )
     return false;
   if(u.carry>0&&u.order==="return")return false;
-  // Ordinary rain never triggers shelter. A rested food worker can finish urgent
-  // gathering after sunset; exhausted residents and children still need sleep.
-  const urgentFood=u.job==="food"&&u.order==="gather"&&reserveSeconds(g,u.team)<240&&
-    (!u.maturesAt||u.maturesAt<=g.state.time)&&(u.fatigue||0)<.8;
-  const resting =
-    (g.clockState().period === "Night" && !g.state.nightWork&&!urgentFood) || g.state.weather === "storm";
+  // Recovery has an end: a recovered adult resumes work even before sunrise.
+  // Idle adults must reach the work board in a food shortage without a manual order.
+  const adult=!u.maturesAt||u.maturesAt<=g.state.time;
+  const night=g.clockState().period === "Night";
+  const fatigue=u.fatigue||0;
+  const urgentFood=adult&&reserveSeconds(g,u.team)<240&&
+    ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock));
+  if(fatigue<=.12)u.resting=undefined;
+  if(!u.resting&&((night&&!g.state.nightWork&&fatigue>=(urgentFood ? .85 : .45))||fatigue>=.95))u.resting=true;
+  const resting=u.resting||(!adult&&night&&!g.state.nightWork)||g.state.weather==="storm";
   if (!resting) {
     if (/^(Sleeping|Sheltering|Seeking shelter|Night camp)/.test(u.workReason || "")) u.workReason = undefined;
-    u.fatigue = Math.min(1, (u.fatigue || 0) + dt / 240);
+    u.fatigue = Math.max(0,Math.min(1, fatigue + (u.order==="hold"||u.order==="idle"?-dt/60:dt/240)));
     return false;
   }
   // Distant gatherers camp by their work at night instead of spending every

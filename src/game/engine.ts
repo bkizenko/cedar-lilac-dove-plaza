@@ -398,7 +398,7 @@ export class Engine {
       return;
     }
     const entity = this.view.pickEntity(cx, cy, this.game);
-    if (entity) this.game.selectEntity(entity, additive);
+    if (entity) this.game.selectEntity(entity, additive, true);
     else {
       const resource=this.view.pickResource(cx,cy,this.game);
       if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
@@ -543,6 +543,12 @@ export class Engine {
 
   train(type: Parameters<Game["trainSelected"]>[0]) {
     this.game.trainSelected(type);
+    this.pushHud();
+  }
+
+  clearSelection() {
+    this.game.clearSelect();
+    this.moveMode=false;
     this.pushHud();
   }
 

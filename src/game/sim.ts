@@ -1457,8 +1457,13 @@ export class Game {
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] >= 1;
   }
 
-  selectEntity(entity: Unit | Building, additive = false) {
+  selectEntity(entity: Unit | Building, additive = false, toggle = false) {
     if (entity.hp <= 0 || (entity.team !== 0 && !this.visibleAt(entity.x, entity.z))) return;
+    if(toggle&&entity.selected){
+      if(!additive)this.clearSelect();
+      else {entity.selected=false;if(this.state.selBld===entity)this.state.selBld=null;}
+      return;
+    }
     if (!additive || entity.kind === "building") this.clearSelect();
     entity.selected = true;
     if (entity.kind === "building") this.state.selBld = entity;
@@ -1559,7 +1564,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
-    u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
+    u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
     u.trade=null;u.tradeTeam=0;u.procurement=undefined;u.customOffer=undefined;u.shelterId=undefined;
     if(u.expedition)u.expedition.returning=false;
@@ -2467,10 +2472,24 @@ export class Game {
     );
   }
 
-  assignJob(job: ResKind | "hold" | "hunt" | "drill") {
+  assignJob(job: ResKind | "hold" | "hunt" | "drill" | "rest" | "auto") {
     const units = this.selectedUnits().filter((u) => u.type === "worker");
     if (!units.length) {
       this.banner("Select gatherers first", 1.4);
+      return;
+    }
+    if(job === "rest" || job === "auto") {
+      this.workBoard.reset();
+      for(const u of units){
+        this.interruptMission(u);
+        u.order=u.carry>0?"return":"idle";
+        u.job=null;u.jobLock=false;u.huntOnly=false;u.node=null;u.target=null;
+        u.pillage=-1;u.attackDestination=null;u.workCheckAt=0;
+        u.resting=job==="rest"&&(u.fatigue||0)>.12?true:undefined;
+        u.workReason=u.resting?"Seeking shelter for rest":"Resuming village priorities";
+        if(!u.resting)this.workBoard.assign(this,u);
+      }
+      this.onSfx("click");
       return;
     }
     if (job === "hold") {
@@ -2526,7 +2545,8 @@ export class Game {
     const huntOnly = job === "hunt";
     const real: ResKind = huntOnly ? "food" : job;
     for (const u of units) {
-      u.searchJob=undefined;u.envoy=undefined;
+      this.interruptMission(u);
+      u.pillage=-1;u.attackDestination=null;
       u.job = real;
       u.jobLock = true;
       u.huntOnly = huntOnly;

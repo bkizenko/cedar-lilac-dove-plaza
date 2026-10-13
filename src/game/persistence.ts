@@ -281,6 +281,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.parents!==undefined&&(!Array.isArray(u.parents)||u.parents.length>2||new Set(u.parents).size!==u.parents.length||u.parents.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1||id===u.id)))fail();
     if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean")fail();}
     if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
+    if(u.resting!==undefined&&typeof u.resting!=="boolean")fail();
     if(u.shelterId!==undefined&&(!Number.isSafeInteger(u.shelterId)||u.shelterId<1))fail();
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);

@@ -362,7 +362,7 @@ export class WorkBoard {
       }
     }
     if (!best) {
-      const search=u.huntOnly||g.state.laborPolicy==="hunt"?"hunt":u.jobLock&&u.job?u.job:g.state.laborPolicy;
+      const search=u.huntOnly||g.state.laborPolicy==="hunt"?"hunt":u.jobLock&&u.job?u.job:reserveSeconds(g,u.team)<240?"food":g.state.laborPolicy;
       if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=foodWorkTarget(g,u.team))&&(!occupied||(["food","hunt"].includes(search||"")&&reserveSeconds(g,u.team)<240))&&!unsafe&&u.carry===0) {
         const foodSearch=["food","hunt"].includes(search||"");
         const searchers=g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.id!==u.id&&p.order==="explore"&&["food","hunt"].includes(p.searchJob||"")).length;

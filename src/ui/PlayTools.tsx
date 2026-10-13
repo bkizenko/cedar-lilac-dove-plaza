@@ -63,7 +63,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           <dt>Tab / Shift+Tab</dt>
           <dd>All menus; Enter / Space activates</dd>
           <dt>Escape · H · M</dt>
-          <dd>Cancel · guide · mute</dd>
+          <dd>Deselect / cancel · guide · mute</dd>
         </dl>
         <p className="text-sm">
           First steps: C selects a gatherer, ] finds resources, R gathers. Press 1, pan to open
