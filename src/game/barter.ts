@@ -8,18 +8,44 @@ export function knownSettlement(g: Game, team: number) {
     (b) => b.team === team && b.type === "townhall" && b.hp > 0 && g.exploredAt(b.x, b.z),
   );
 }
-export function tradeCarrier(g: Game) {
-  return g.state.units.find(
-    (u) =>
+export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
+  return (
       u.team === 0 &&
       u.type === "worker" &&
       u.hp > 0 &&
       !isDependent(g, u) &&
       !u.emergency &&
-      !u.envoy &&
+      !u.envoy && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.recalled &&
+      !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.studyCrop && u.drill == null &&
       u.carry === 0 &&
-      (u.selected ? u.order !== "trade" : ["idle", "hold", "gather"].includes(u.order)),
+      (automatic ? !u.jobLock && ["idle", "gather"].includes(u.order) : ["idle", "hold", "gather"].includes(u.order))
   );
+}
+export function tradeCarrier(g: Game, automatic = false) {
+  return g.state.units.filter(u => eligibleTradeCarrier(g,u,automatic)).sort((a,b) => Number(!automatic && b.selected)-Number(!automatic && a.selected) ||
+    (predisposition(b).trading-(b.fatigue||0)*.3)-(predisposition(a).trading-(a.fatigue||0)*.3))[0];
+}
+
+export function automaticTradeReady(g: Game, foodCost = 0) {
+  const adults = g.state.units.filter(u => u.team === 0 && u.hp > 0 && u.type === "worker" && !isDependent(g,u));
+  const away = adults.filter(u => u.envoy || u.expedition || u.scout || u.visit || u.foundingJourney || u.order === "trade" || u.tradeTeam > 0).length;
+  return adults.length-away >= 4 && away < Math.max(1,Math.floor(adults.length/4)) &&
+    g.tribe(0).food-foodCost >= foodDemand(g)*360;
+}
+
+/** Only a person at the meeting can reveal current terms. */
+export function recordTradeMeeting(g: Game, team: number, trader: Unit) {
+  const goods: ResKind[] = ["food", "wood", "stone", "copper", "iron"];
+  const offers: TradeDeal[] = [];
+  for (const give of goods) for (const get of goods) {
+    if (give === get) continue;
+    const quote = quoteShipment(g, team, give, get, 20, trader);
+    if (quote.deal) offers.push(quote.deal);
+  }
+  const report = { team, time: g.state.time, offers };
+  g.state.tradeReports = (g.state.tradeReports || []).filter(r => r.team !== team);
+  g.state.tradeReports.push(report);
+  return report;
 }
 function protectedReserve(g:Game,team:number,kind:ResKind){
   if(kind==="wood")return 24;
@@ -135,12 +161,27 @@ export function proposeShipment(
 }
 
 /** Send a proposal without consulting distant stocks. It is negotiated only on arrival. */
-export function sendOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {
+function startOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {
   const goods:ResKind[]=["food","wood","stone","copper","iron"];
   if(!knownSettlement(g,team)||![1,2].includes(team)||!goods.includes(give)||!goods.includes(get)||give===get||
-    !Number.isSafeInteger(amount)||amount<1||amount>100||!Number.isSafeInteger(requested)||requested<1||requested>200)return false;
-  if((give==="iron"||get==="iron")&&g.tribe(0).age<2)return false;
-  if((give==="copper"||get==="copper")&&g.tribe(0).age<1)return false;
-  const u=tradeCarrier(g);if(!u||!g.dispatchTrade(u,{give,get,giveAmt:amount,getAmt:requested},team))return false;
+    !Number.isSafeInteger(amount)||amount<1||amount>100||!Number.isSafeInteger(requested)||requested<1||requested>200)return null;
+  if((give==="iron"||get==="iron")&&g.tribe(0).age<2)return null;
+  if((give==="copper"||get==="copper")&&g.tribe(0).age<1)return null;
+  const u=tradeCarrier(g);if(!u||!g.dispatchTrade(u,{give,get,giveAmt:amount,getAmt:requested},team))return null;
+  return u;
+}
+export function sendOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {
+  const u=startOffer(g,team,give,get,amount,requested);if(!u)return false;
   u.customOffer=true;g.banner("Your trader carries the proposal. They may accept, counter or refuse at the meeting.",4);return true;
+}
+
+/** The whole offered budget travels with the person; nothing is bought remotely. */
+export function sendProcurement(g: Game, team: number, give: ResKind, get: ResKind, budget: number, minimum: number) {
+  const carrier = startOffer(g, team, give, get, budget, minimum);
+  if (!carrier) return false;
+  carrier.customOffer = undefined;
+  carrier.procurement = { minimum };
+  carrier.workReason = `Seeking at least ${minimum} ${get} with ${budget} ${give}`;
+  g.banner("Your trader will seek the best local offer. Below your minimum, the budget comes home.", 4);
+  return true;
 }

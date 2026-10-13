@@ -25,11 +25,11 @@ export const AGES = ["Stone", "Bronze", "Iron", "Classical", "Medieval", "Renais
 
 export const AGE_COST: (Cost | null)[] = [
   null,
-  { food: 220, wood: 150, stone: 60, pop: 10 },
-  { food: 260, wood: 200, stone: 90, copper: 18, pop: 12 },
-  { food: 380, wood: 280, stone: 160, copper: 28, iron: 12, pop: 16 },
-  { food: 520, wood: 400, stone: 240, copper: 36, iron: 22, pop: 20 },
-  { food: 700, wood: 520, stone: 340, copper: 48, iron: 32, pop: 24 },
+  { food: 440, wood: 300, stone: 120, pop: 12 },
+  { food: 520, wood: 400, stone: 180, copper: 36, pop: 18 },
+  { food: 760, wood: 560, stone: 320, copper: 56, iron: 24, pop: 26 },
+  { food: 1040, wood: 800, stone: 480, copper: 72, iron: 44, pop: 36 },
+  { food: 1400, wood: 1040, stone: 680, copper: 96, iron: 64, pop: 48 },
 ];
 
 export const AGE_STAT = [1, 1.1, 1.22, 1.35, 1.5, 1.68];
@@ -410,12 +410,14 @@ export const UNITS: Record<
   },
 };
 
+// Productive work is faster than the seasonal clock; calendar and combat retain their pace.
+export const GATHER_WORK_RATE = 4;
 export const GATHER = {
-  food: { period: 2.6, carry: 7, campBonus: 0.62 },
-  wood: { period: 2.5, carry: 7, campBonus: 0.58 },
-  stone: { period: 3.3, carry: 6, campBonus: 0.6 },
-  copper: { period: 3.6, carry: 5, campBonus: 0.62 },
-  iron: { period: 3.9, carry: 4, campBonus: 0.6 },
+  food: { period: 2, carry: 40, campBonus: 0.62 },
+  wood: { period: 2.5, carry: 28, campBonus: 0.58 },
+  stone: { period: 3.3, carry: 24, campBonus: 0.6 },
+  copper: { period: 3.6, carry: 20, campBonus: 0.62 },
+  iron: { period: 3.9, carry: 16, campBonus: 0.6 },
 };
 
 export const BUILD_ORDER: BldType[] = [

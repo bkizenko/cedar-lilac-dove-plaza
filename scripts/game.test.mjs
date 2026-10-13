@@ -1357,7 +1357,8 @@ test("age commitment revalidates population and buildings instead of bypassing t
   const g=fixture();Object.assign(g.tribe(0),{food:1000,wood:1000,stone:1000});
   const before=g.tribe(0).food;g.commitAge(0,"econ");
   assert.equal(g.tribe(0).age,0);assert.equal(g.tribe(0).food,before);
-  const home=g.campOf(0);while(g.popNow(0)<10)g.spawnUnit("worker",home.x,home.z,0);
+  const home=g.campOf(0);while(g.popNow(0)<12)g.spawnUnit("worker",home.x,home.z,0);
+  for(const type of ["warehouse","workshop","farm"])g.state.buildings.push(g.makeBld(type,home.x+20,home.z+20,0));
   g.commitAge(0,"econ");assert.equal(g.tribe(0).age,1);
 });
 
@@ -1507,15 +1508,15 @@ test("raiding causes hostility at the settlement rather than when the command le
 test("trading terms appear at the meeting and then become stale", async()=>{
   const {reportedQuote}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
   assert.equal(reportedQuote(g,1,"food","wood",20).deal,null);assert.equal(g.sendDelegation(1,"trade"),true);
-  const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;
+  const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;
   g.workerAI(u,21);assert.equal(u.envoy.phase,"return");assert.equal(g.state.tradeReports?.length,1);
-  const r=decodeGame(encodeGame(g)),ru=r.state.units.find(x=>x.id===u.id),home=r.state.buildings.find(b=>b.team===0&&b.type==="townhall");ru.x=home.x+Math.max(home.w,home.d)*0.55+1;ru.z=home.z;r.workerAI(ru,1);
+  const r=decodeGame(encodeGame(g)),ru=r.state.units.find(x=>x.id===u.id),home=r.state.buildings.find(b=>b.team===0&&b.type==="townhall"),door=r.interactionSpot(ru,home);assert.ok(door);ru.x=door.x;ru.z=door.z;r.workerAI(ru,1);
   const quote=reportedQuote(r,1,"food","wood",20).deal;assert.ok(quote);r.tribe(1).wood=0;assert.deepEqual(reportedQuote(r,1,"food","wood",20).deal,quote);
   r.state.time+=901;assert.equal(reportedQuote(r,1,"food","wood",20).deal,null);
 });
 test("peace proposal travels before affecting relations",()=>{
   const g=fixture();g.vision.fill(2);g.clearSelect();g.tribe(1).hostile=true;assert.equal(g.sendDelegation(1,"peace"),true);
-  assert.equal(g.tribe(1).hostile,true);const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;
+  assert.equal(g.tribe(1).hostile,true);const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;
   g.workerAI(u,21);assert.equal(g.tribe(1).hostile,false);assert.equal(u.envoy.phase,"return");
 });
 test("a well supplied village can welcome an outsider group without exceeding housing",()=>{
@@ -1532,7 +1533,7 @@ test("gift carrier transports actual food and only improves trust on delivery",(
   const g=fixture();g.vision.fill(2);g.clearSelect();const food=g.tribe(0).food,other=g.tribe(1).food,trust=g.tribe(1).trust||0;
   assert.equal(g.sendDelegation(1,"gift"),true);const u=g.state.units.find(u=>u.envoy);assert.equal(u.carry,30);assert.equal(g.tribe(0).food,food-30);
   assert.equal(g.tribe(1).food,other);assert.equal(g.tribe(1).trust||0,trust);
-  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;u.z=hall.z;g.workerAI(u,21);
+  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;g.workerAI(u,21);
   assert.equal(g.tribe(1).food,other+30);assert.equal(u.carry,0);assert.ok(g.tribe(1).trust>trust);
 });
 test("seasonal field work outranks berries except during an immediate food emergency",()=>{
@@ -1547,9 +1548,9 @@ test("seasonal field work outranks berries except during an immediate food emerg
 test("children in a small village need food, with gradual weakening and saved hunger",()=>{
   const g=fixture();g.state.units=g.state.units.filter(u=>u.team!==0).concat(g.state.units.filter(u=>u.team===0).slice(0,2));
   const u=g.state.units.find(u=>u.team===0);u.maturesAt=g.state.time+10000;g.tribe(0).food=0;
-  const hp=u.hp;g.tickPeople(5);assert.equal(u.hp,hp);g.tickPeople(45);assert.ok(u.hp<hp&&u.hp>0);
-  const r=decodeGame(encodeGame(g));assert.equal(r.state.units.find(p=>p.id===u.id).hunger,50);
-  g.tribe(0).food=100;g.tickPeople(10);assert.equal(u.hunger,20);
+  const hp=u.hp;g.tickPeople(5);assert.equal(u.hp,hp);g.tickPeople(75);assert.ok(u.hp<hp&&u.hp>0);
+  const r=decodeGame(encodeGame(g));assert.equal(r.state.units.find(p=>p.id===u.id).hunger,80);
+  g.tribe(0).food=100;g.tickPeople(10);assert.equal(u.hunger,50);
 });
 test("construction does not steal travelers or workers already on another building",()=>{
   const g=fixture(),h=g.campOf(0),b=g.makeBld("farm",h.x+15,h.z,0),workers=g.state.units.filter(u=>u.team===0);
@@ -1611,9 +1612,9 @@ test("foreign traders carry real stock, negotiate locally and take payment home"
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),hall=r.state.buildings.find(b=>b.team===1&&b.type==='townhall'),food=r.tribe(1).food;
   ru.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;ru.z=hall.z;visitorAI(r,ru,1);assert.equal(r.tribe(1).food,food+price);assert.equal(ru.visit,undefined);
 });
-test("starvation gradually weakens every age over approximately a calendar month",()=>{
+test("starvation gives every age time to seek food before gradually weakening",()=>{
   const g=fixture(),u=g.state.units.find(u=>u.team===0);g.tribe(0).food=0;u.maturesAt=g.state.time+10000;
-  g.tickPeople(60);assert.ok(u.hp>0&&u.hp<u.maxHp);g.tickPeople(120);assert.ok(u.hp<=0);
+  g.tickPeople(90);assert.ok(u.hp>0&&u.hp<u.maxHp);g.tickPeople(210);assert.ok(u.hp<=0);
 });
 
 test("a blocked visiting trader preserves goods and abandons the expedition",async()=>{

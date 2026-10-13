@@ -55,7 +55,7 @@ export function tickScouts(g: Game, dt: number) {
         u.hp > 0 &&
         !isDependent(g, u) &&
         !u.emergency &&
-        !u.visit &&
+        !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
         !u.foundingJourney &&
         u.carry === 0 &&
         ["idle", "gather", "hold"].includes(u.order),

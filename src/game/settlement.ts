@@ -1,3 +1,7 @@
+import {rivalWorkRange,rivalMaterialPriority} from "./rivalDevelopment";
+import {huntable} from "./hunting";
+import {farmToolRate} from "./farmTools";
+import {carryingCapacity} from "./haulage";
 import {beginExpedition} from "./journeys";
 import {bridgeApproach} from './transport';
 import {quarryAvailable} from "./mining";
@@ -8,10 +12,10 @@ import {cropYield} from "./cultivation";
 import { habitatAt, soilQuality, cropWater } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
-import { LUMBER_R, QUARRY_R, UNITS, MAP, HALF } from "./constants";
+import { LUMBER_R, QUARRY_R, DOCK_R, UNITS, MAP, HALF, GATHER_WORK_RATE } from "./constants";
 
 export const YEAR_SECONDS = 1800;
-export const FOOD_PER_PERSON_SECOND = 0.055;
+export const FOOD_PER_PERSON_SECOND = 0.036;
 export function calendar(g: Game) {
   const year = Math.floor(g.state.time / YEAR_SECONDS);
   const phase = Math.floor((g.state.time % YEAR_SECONDS) / (YEAR_SECONDS / 4));
@@ -33,6 +37,10 @@ export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
+}
+/** Food focus permits exposed reserves; the pantry still charges outdoor spoilage. */
+export function foodWorkTarget(g:Game,team=0){
+  return Math.max(g.stockCap(team),team===0&&g.state.laborPolicy==="food"?foodDemand(g,team)*900:0);
 }
 export function reserveSeconds(g: Game, team = 0) {
   return g.tribe(team).food / Math.max(0.055, foodDemand(g, team));
@@ -88,7 +96,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
   u.stride+=dt*8;u.facing=Math.atan2(b.x-u.x,b.z-u.z);
   u.workReason =
     p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
-  const open = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1;
+  const open = GATHER_WORK_RATE * (b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1)*farmToolRate(u,p);
   if (p === 0) c.planted = Math.min(1, c.planted + (dt / 180) * open);
   else if (p === 1) c.tended = Math.min(1, c.tended + (dt / 220) * open);
   else {
@@ -101,7 +109,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
       u.carry += n;
       u.carryType = "food";
       u.carryFood = c.kind||"grain";
-      if (u.carry >= 8 || c.remaining === 0) u.order = "return";
+      if (u.carry >= carryingCapacity(u,"food") || c.remaining === 0) u.order = "return";
     }
   }
 }
@@ -220,6 +228,7 @@ export class WorkBoard {
         if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
       }
+      for(const n of g.state.fish)if(n.amount>=1&&!nearby(n,"dock",DOCK_R))add(n,"food",1,foodUrgency-20);
       for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency+(n.cropCandidate&&!t.cultivated?.length?35:0));
       for (const n of g.state.trees)
         if (n.amount > 0)
@@ -236,7 +245,7 @@ export class WorkBoard {
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);
       for (const n of g.state.wildlife)
-        if (n.hp > 0 && n.species !== "bird") add(n, "food", 1, foodUrgency + (calendar(g).phase===3?35:-10));
+        if (huntable(g,n)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:calendar(g).phase===3?35:-10));
       this.tasks.set(t.id, list);
     }
   }
@@ -284,20 +293,23 @@ export class WorkBoard {
       score = -Infinity;
     let occupied = false,
       unsafe = false;
+    const materialPriorities = u.team===0 ? null : Object.fromEntries(
+      (["wood","stone","copper","iron"] as ResKind[]).map(kind=>[kind,rivalMaterialPriority(g,u,kind)]));
     for (const task of list) {
       if (u.team === 0 && !("type" in task.node) &&
-          ("species" in task.node ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
+          ("species" in task.node&&task.node.hp>0 ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
       const preparingField =
         "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
       const harvestingField = "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
       const preserving = "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
-      if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= g.stockCap(u.team))
+      if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodWorkTarget(g,u.team))
         continue;
+      if(u.team===0&&g.state.laborPolicy==="food"&&reserveSeconds(g,u.team)<240&&task.kind!=="food"&&!u.jobLock)continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
-      if (u.huntOnly && !("species" in task.node)) continue;
+      if (u.huntOnly && reserveSeconds(g,u.team)>=90 && !("species" in task.node)) continue;
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
-      if ("hp" in task.node && task.node.hp <= 0) continue;
+      if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node))) continue;
       if ("amount" in task.node && task.node.amount <= 0) continue;
       if (task.kind === "build" && g.finished(task.node as Building)) continue;
       if (
@@ -310,12 +322,12 @@ export class WorkBoard {
       // Routine labor must not chase a herd or successive trees across the world.
       // New settlements have their own hall; scouts and traders travel separately.
       if (u.team !== 0 && !("type" in task.node) &&
-          !g.state.buildings.some(b => b.team === u.team && g.finished(b) &&
-            ["townhall", "cornerstone"].includes(b.type) &&
-            Math.hypot(b.x-task.node.x,b.z-task.node.z)<70)) continue;
+          !rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) continue;
       const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
       const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
-      const settlementWork = lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
+      const rivalOutpostWork = u.team!==0 && ((['wood','stone'].includes(task.kind)&&rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) ||
+        (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<175));
+      const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
       if ((distance > 100 && !settlementWork) || !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin)) continue;
       if (
@@ -343,7 +355,7 @@ export class WorkBoard {
           : u.team===0 && policy === "build" && task.kind === "build"
             ? 90
             : 0;
-      const value = task.priority + bonus + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
+      const value = task.priority + bonus + (materialPriorities?.[task.kind]||0) + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
       if (value > score) {
         score = value;
         best = task;
@@ -351,14 +363,17 @@ export class WorkBoard {
     }
     if (!best) {
       const search=u.huntOnly||g.state.laborPolicy==="hunt"?"hunt":u.jobLock&&u.job?u.job:g.state.laborPolicy;
-      if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=g.stockCap(u.team))&&!occupied&&!unsafe&&u.carry===0) {
+      if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=foodWorkTarget(g,u.team))&&(!occupied||(["food","hunt"].includes(search||"")&&reserveSeconds(g,u.team)<240))&&!unsafe&&u.carry===0) {
+        const foodSearch=["food","hunt"].includes(search||"");
+        const searchers=g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.id!==u.id&&p.order==="explore"&&["food","hunt"].includes(p.searchJob||"")).length;
+        if(foodSearch&&searchers>=Math.max(1,Math.ceil(g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.type==="worker"&&!isDependent(g,p)).length/3))){u.workReason="Food sites occupied — a search party is finding more";return;}
         const destination=u.order==="explore"?{x:u.tx,z:u.tz}:g.findExploreTarget(u);
         if(destination){u.searchJob=search as "wood"|"food"|"hunt";u.order="explore";u.node=null;u.tx=destination.x;u.tz=destination.z;u.workReason=`Searching unknown ground for ${search==="hunt"?"herds":search==="wood"?"timber":"food"}`;return;}
       }
 
 
       u.workReason =
-        g.tribe(u.team).food >= g.stockCap(u.team) && (u.job === "food" || !u.jobLock)
+        g.tribe(u.team).food >= foodWorkTarget(g,u.team) && (u.job === "food" || !u.jobLock)
           ? "Food stores full — build storage or assign another job"
           : unsafe
             ? "Waiting for a safe work site"
@@ -387,7 +402,7 @@ export class WorkBoard {
 export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   if (u.team === 3) return false;
   // Explicit adult combat orders take precedence over automatic shelter behavior.
-  if (u.team === 0 && u.type === "worker" && !u.emergency && !isDependent(g, u) &&
+  if ((u.team === 0 || u.militia) && u.type === "worker" && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
   if(u.envoy?.kind==="peace")return false;
   const foes = g.state.units.filter(
@@ -403,10 +418,10 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
         ? { order: u.order, tx: u.tx, tz: u.tz, station: !!u.stationOnArrival } : undefined };
     const t = g.tribe(u.team);
     let type: "spearman" | "archer" | null = null;
-    if (!isDependent(g, u) && t.spears > 0) {
+    if (!isDependent(g, u) && !u.militia && t.spears > 0) {
       t.spears--;
       type = "spearman";
-    } else if (!isDependent(g, u) && t.bows > 0) {
+    } else if (!isDependent(g, u) && !u.militia && t.bows > 0) {
       t.bows--;
       type = "archer";
     }
@@ -453,7 +468,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     }
     return false;
   }
-  if (u.emergency.autoArmed) {
+  if (u.emergency.autoArmed || (u.militia && !isDependent(g,u))) {
     u.workReason = "Militia defending the settlement";
     const foe = foes.sort(
       (a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z),
@@ -504,10 +519,10 @@ export function neighborIntent(g: Game, team: number): "recover" | "trade" | "de
   const scarcity = reserveSeconds(g, team) < 150,
     grievance = t.tension > 0.65;
   const army = g.state.units.filter(
-    (u) => u.team === team && u.type !== "worker" && u.hp > 0,
+    (u) => u.team === team && (u.type !== "worker" || u.militia) && u.hp > 0,
   ).length;
   const defenders = g.state.units.filter(
-    (u) => u.team === 0 && u.type !== "worker" && u.hp > 0,
+    (u) => u.team === 0 && (u.type !== "worker" || u.militia) && u.hp > 0,
   ).length;
   if (
     (t.hostile || grievance || (scarcity && t.aggro > 0.65)) &&

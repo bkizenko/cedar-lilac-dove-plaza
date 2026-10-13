@@ -1,3 +1,6 @@
+import {carcassStateValid} from "./hunting";
+import {validFarmToolUnit} from "./farmTools";
+import {validHaulageUnit,validHaulageTribe} from "./haulage";
 import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
 import { prehistoricName } from "./people";
@@ -12,6 +15,7 @@ export function encodeGame(g: Game) {
   return {
     version: SAVE_VERSION,
     demographicVersion: 1,
+    cargoVersion: 1,
     state: {
       ...s,
       selBld: null,
@@ -51,6 +55,7 @@ function numbers(x: Record<string, any>, fields: string[]) {
 }
 export function decodeGame(raw: unknown): Game {
   if (!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)) fail();
+  if(raw.cargoVersion!==undefined&&raw.cargoVersion!==1)fail();
   const d = JSON.parse(JSON.stringify(raw)),
     s = d.state,
     g = new Game();
@@ -167,7 +172,7 @@ export function decodeGame(raw: unknown): Game {
     }
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
-    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<180||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
+    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
     if([1,2].includes(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;
     }
@@ -186,10 +191,11 @@ export function decodeGame(raw: unknown): Game {
     }
   }
   if (s.growthPolicy !== undefined && !["stable", "welcome", "eager"].includes(s.growthPolicy)) fail();
-  if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt", "explore"].includes(s.laborPolicy)) fail();
+  if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt", "explore", "trade"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
   for(const list of [s.trees,s.forage,s.fish,s.stones,s.copper,s.iron])for(const n of list)if(n.pressure!==undefined&&(!num(n.pressure)||n.pressure<0||n.pressure>1))fail();
   for (const t of s.tribes) {
+    if(!validHaulageTribe(t))fail();
     if(t.lastSettlement!==undefined&&(!num(t.lastSettlement)||t.lastSettlement<0||t.lastSettlement>s.time))fail();
     if (t.trust !== undefined && (!num(t.trust) || t.trust < 0 || t.trust > 1)) fail();
     if (t.recoveryUntil !== undefined && !num(t.recoveryUntil)) fail();
@@ -279,12 +285,14 @@ export function decodeGame(raw: unknown): Game {
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
+    if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
+    if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
@@ -360,8 +368,9 @@ export function decodeGame(raw: unknown): Game {
     }
   for (const c of s.wildlife) {
     add(c);
+    if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>1000||Math.abs(c.grazing.z)>1000))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
-    if (!["deer", "boar", "goat", "bird"].includes(c.species)) fail();
+    if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
   for (const r of s.routes) {
     if (!obj(r)) fail();
@@ -410,7 +419,9 @@ export function decodeGame(raw: unknown): Game {
   const resolve = (id: unknown) => (typeof id === "string" ? refs.get(id) || null : null);
   for (const u of s.units) {
     // Earlier v17 caravans reserved goods without representing their cargo.
-    if (u.order === "trade" && u.trade && u.carry === 0) {
+    // Demographic-era saves already contained physical cargo, including a fully
+    // stolen load. Never reconstruct their empty hands as a new shipment.
+    if (d.cargoVersion===undefined && d.demographicVersion===undefined && u.order === "trade" && u.trade && u.carry === 0) {
       u.carry = u.trade.giveAmt;
       u.carryType = u.trade.give;
     }

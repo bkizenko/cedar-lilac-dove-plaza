@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { ResKind } from "@/game/types";
-import { reportedQuote, proposeShipment, tradeCarrier, sendOffer } from "@/game/barter";
+import { reportedQuote, proposeShipment, tradeCarrier, sendOffer, sendProcurement } from "@/game/barter";
 export function TradeProposal({ engine, team }: { engine: Engine; team: number }) {
   const [give, setGive] = useState<ResKind>("food"),
     [get, setGet] = useState<ResKind>("wood");
@@ -20,7 +20,7 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
   const goods = (Object.keys(names) as ResKind[]).filter(
     (k) =>
       (k !== "copper" && k !== "iron") ||
-      Math.min(g.tribe(0).age, g.tribe(team).age) >= (k === "iron" ? 2 : 1),
+      g.tribe(0).age >= (k === "iron" ? 2 : 1),
   );
   return (
     <details className="trade-proposal">
@@ -76,6 +76,11 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
         Send my proposal and negotiate locally
       </button>
       <p>The trader may accept a smaller counteroffer. Refused goods are carried home.</p>
+      <button disabled={!carrier || give===get || g.tribe(0)[give]<amount || amount<1 || requested<1}
+        onClick={()=>{sendProcurement(g,team,give,get,amount,requested);engine.pushHud();}}>
+        Seek the best deal · minimum {requested} {names[get].toLowerCase()}
+      </button>
+      <p>Spend the offered {amount} {names[give].toLowerCase()} only if the trader can bring back at least your requested quantity. Skill, local needs and relations determine the offer at arrival; otherwise the full budget returns.</p>
       {!carrier && <p>An available adult with empty hands is needed to carry the goods.</p>}
       <button
         disabled={!quote.deal || !carrier}

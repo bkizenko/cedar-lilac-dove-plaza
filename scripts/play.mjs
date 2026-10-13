@@ -11,6 +11,10 @@ if(action==='publish'){
  if(!existsSync(resolve(build,'functions/__server.func/index.mjs')))throw new Error('Build the game before publishing a play release');
  const release=resolve(folder,'releases',new Date().toISOString().replace(/[:.]/g,'-'));
  cpSync(build,release,{recursive:true});
+ // Existing open villages may lazily request chunks from the previous release.
+ // Retain immutable hashed assets without replacing any freshly built files.
+ const previousAssets=resolve(folder,'current/static/assets');
+ if(existsSync(previousAssets))cpSync(previousAssets,resolve(release,'static/assets'),{recursive:true,force:false,errorOnExist:false});
  const next=resolve(folder,'next');rmSync(next,{force:true});symlinkSync(release,next);renameSync(next,resolve(folder,'current'));
  console.log('Play release ready. The running release stays unchanged until the server restarts.');
 }else if(action==='start'||action==='status'){

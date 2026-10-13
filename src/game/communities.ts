@@ -19,6 +19,7 @@ function settlementSite(g: Game, u: Unit, expanding: boolean) {
         z = u.z + Math.cos(angle) * r;
       const spot = g.findOpenSpot(x, z, "townhall", u.team);
       if (!spot || g.height(spot.x, spot.z) < g.world.waterY + 0.6) continue;
+      if (!g.workBoard.connected(g, u.x, u.z, spot.x, spot.z)) continue;
       if (
         g.state.buildings.some(
           (b) => b.hp > 0 && b.type === "townhall" && Math.hypot(b.x - spot.x, b.z - spot.z) < 75,
@@ -122,7 +123,7 @@ export function tickCommunities(g: Game, dt: number) {
           !u.scout &&
           !u.envoy &&
           !u.expedition &&
-          !u.recalled &&
+          !u.recalled && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
           !u.emergency,
       )
       .slice(0, 3);
@@ -180,10 +181,41 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
     return true;
   }
   if (!hall) {
-    if (!mission.leader) return true;
+    if (!mission.leader) {
+      const leader = g.state.units.some(p => p.team === u.team && p.hp > 0 && p.foundingJourney?.leader &&
+        p.foundingJourney.x === mission.x && p.foundingJourney.z === mission.z);
+      if (!leader) {
+        u.foundingJourney = undefined;
+        u.order = u.carry > 0 ? "return" : "idle";
+        u.workReason = "The founding party has dispersed — returning to ordinary work";
+      }
+      return true;
+    }
     if (u.carryType !== "wood" || u.carry < 20) {
       u.foundingJourney = undefined;
       u.order = "idle";
+      return true;
+    }
+    // The river level, vegetation and neighboring construction may change
+    // during the journey. Validate again before consuming the carried timber.
+    if (g.placementIssue("townhall", mission.x, mission.z, u.team) ||
+      !g.workBoard.connected(g, u.x, u.z, mission.x, mission.z)) {
+      const replacement = g.findDryFoundation("townhall", mission.x, mission.z, 28,
+        (x, z) => g.placementValid("townhall", x, z, u.team) && g.workBoard.connected(g, u.x, u.z, x, z));
+      const crew = g.state.units.filter(p => p.team === u.team && p.foundingJourney &&
+        p.foundingJourney.x === mission.x && p.foundingJourney.z === mission.z);
+      for (const person of crew) {
+        if (replacement) {
+          person.foundingJourney = { ...replacement, leader: person.foundingJourney!.leader };
+          person.tx = replacement.x; person.tz = replacement.z; person.order = "move";
+          person.stuckT = 0;
+          person.workReason = "The original site is unsafe — moving to dry foundations";
+        } else {
+          person.foundingJourney = undefined;
+          person.order = person.carry > 0 ? "return" : "idle";
+          person.workReason = "Settlement site is blocked or flooded — timber retained";
+        }
+      }
       return true;
     }
     u.carry -= 20;

@@ -516,6 +516,16 @@ export class Engine {
     this.pushHud();
   }
 
+  craftFarmTool(kind: Parameters<Game["craftFarmTool"]>[0], workplaceId?:number) {
+    this.game.craftFarmTool(kind,workplaceId);
+    this.pushHud();
+  }
+
+  craftHaulage(kind: "sled" | "cart", workplaceId?:number) {
+    this.game.craftHaulage(kind,workplaceId);
+    this.pushHud();
+  }
+
   craftWeapon(kind: "spear" | "bow" | "blade", workplaceId?:number) {
     this.game.craftWeapon(kind,workplaceId);
     this.pushHud();

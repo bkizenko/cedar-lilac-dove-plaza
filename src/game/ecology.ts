@@ -1,3 +1,4 @@
+import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
 export const HABITATS = {
   plains: { name: "Grassland", crops: 1.2, forage: 1, timber: 0.85, winterFood: 1.08, advice: "Open fertile ground favors fields. Store the autumn harvest; timber is slower to collect." },
@@ -46,4 +47,9 @@ export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.s
   if(weather==="drought"){temperature+=5;humidity-=.28;}
   if(weather==="frost")temperature-=5;
   return {temperature,humidity:Math.max(.15,Math.min(1,humidity))};
+}
+
+/** One ordinary seasonal harvest stresses a patch; repeated stripping can exhaust it. */
+export function applyForagePressure(node:ResourceNode,amount=1){
+  node.pressure=Math.min(1,(node.pressure||0)+.3*Math.max(0,amount)/Math.max(1,node.maxAmt||8));
 }

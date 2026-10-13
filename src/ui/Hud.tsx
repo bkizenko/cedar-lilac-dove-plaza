@@ -1,3 +1,5 @@
+import {FARM_TOOLS,farmToolRequirement} from "@/game/farmTools";
+import {HAULAGE,haulageRequirement} from "@/game/haulage";
 import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
 import { FOOD_KINDS } from "@/game/pantry";
@@ -284,6 +286,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               {!clockMin ? (
                 <>
                   <div className="mt-0.5 font-display text-sm text-bronze">{hud.season}</div>
+                  <div className="mt-1 text-[10px] text-parchment-dim tabular" title="Local solar time at 45° north">{hud.daylight}</div>
                   <div className="mt-0.5 flex items-center justify-end gap-2 text-[11px] text-parchment-dim/85">
                     <span className="tabular">{weatherTemp}</span>
                     <span>{weatherName}</span>
@@ -509,6 +512,18 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {sel.kind === "building" && sel.team === 0 && (
               <div className="mt-2 flex flex-col gap-1">
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two fishers</button>}
+                {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="sled"||sel.type==="workshop").map(([kind,h])=>{
+                  const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;
+                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<h.wood||hud.stone<h.stone||!!hud.ended} onClick={()=>engine?.craftHaulage(kind as keyof typeof HAULAGE,sel.buildingId)}>
+                    Make {h.name.toLowerCase()} · {h.wood} logs · {h.stone} stone · {h.seconds*(sel.type==="townhall"?2:1)}s work · carries ×{h.capacity}
+                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
+                })}
+                {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>kind==="stoneHoe"?["townhall","workshop"].includes(sel.type||""):sel.type==="forge").map(([kind,f])=>{
+                  const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
+                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
+                    Make {f.name.toLowerCase()} · {f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {f.seconds*(sel.type==="townhall"?2:1)}s work
+                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
+                })}
                 {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
                   <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={hud.age<w.age||hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper||!!hud.ended} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>
                     Make {w.name.toLowerCase()} · {w.wood} logs{w.stone?` · ${w.stone} stone`:""}{w.copper?` · ${w.copper} copper`:""} · {w.seconds*(sel.type==="townhall"?3:sel.type==="barracks"?2:1)}s work

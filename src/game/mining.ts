@@ -1,3 +1,4 @@
+import {carryingCapacity} from "./haulage";
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {GATHER} from './constants';
@@ -19,6 +20,6 @@ export function digStone(g:Game,u:Unit,b:Building){
   if(!d||d.remaining<=0){u.node=null;u.order=u.carry>0?'return':'idle';u.workReason='This stone seam is exhausted — prospect another slope';g.workBoard.reset();return;}
   const count=Math.min(d.remaining,d.quality>1.2?2:1);d.remaining-=count;d.dug+=count;
   u.carry+=count;u.carryType='stone';u.workReason=`Excavating the mountainside · ${(d.dug/40).toFixed(1)} m into the seam`;
-  if(u.carry>=GATHER.stone.carry||d.remaining<=0)u.order='return';
+  if(u.carry>=carryingCapacity(u,"stone")||d.remaining<=0)u.order='return';
   if(u.team===0)g.onSfx('chop');
 }

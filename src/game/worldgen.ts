@@ -86,6 +86,8 @@ function node(
   scale: number,
   rich: number,
 ): ResourceNode {
+  // New wild plant patches support a food surplus before cultivated harvests.
+  if (kind === "forage") amount *= 2;
   return { id, kind, x, z, y, amount, maxAmt: amount, regenT: 0, scale, rich };
 }
 
@@ -410,7 +412,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
 
   const home = camps[0];
   if (home) {
-    stamp(forage, "forage", home.x + 18, home.z - 8, 10, 9, 2.4, () => 10 + ((rand() * 6) | 0));
+    stamp(forage, "forage", home.x + 18, home.z - 8, 10, 9, 2.4, () => 24 + ((rand() * 8) | 0));
     stamp(trees, "tree", home.x - 16, home.z + 14, 14, 11, 2.2, () => 8 + ((rand() * 6) | 0));
     const closeFood = forage.filter((f) => Math.hypot(f.x - home.x, f.z - home.z) < 36).length;
     if (closeFood < 4) {
@@ -421,7 +423,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
         const h = sampleHeight(heights, x, z);
         if (h < waterY + 0.4) continue;
         if (tooClose(forage, x, z, 2.2)) continue;
-        forage.push(node(nid++, "forage", x, z, h, 12, 0.9, 0.8));
+        forage.push(node(nid++, "forage", x, z, h, 24, 0.9, 0.8));
       }
     }
   }
@@ -440,7 +442,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
   }
   for (let i = 0; i < 2; i++) {
     const c = pickCenter(70, 80, "plains");
-    if (c) stamp(forage, "forage", c.x, c.z, 9, 8, 2.6, () => 9 + ((rand() * 6) | 0));
+    if (c) stamp(forage, "forage", c.x, c.z, 9, 8, 2.6, () => 20 + ((rand() * 8) | 0));
   }
   for (let i = 0; i < 2; i++) {
     const c = pickCenter(110, 120, "hills");
@@ -479,7 +481,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       }
     } else if (rand() < 0.38) {
       if (nearCamp(x, z, 9) || tooClose(forage, x, z, 5.2)) continue;
-      forage.push(node(nid++, "forage", x, z, h, 8 + ((rand() * 5) | 0), 0.85 + rand() * 0.3, 0.75));
+      forage.push(node(nid++, "forage", x, z, h, 16 + ((rand() * 8) | 0), 0.85 + rand() * 0.3, 0.75));
     } else if (rand() < 0.08 && !tooClose(trees, x, z, 8)) {
       trees.push(node(nid++, "tree", x, z, h, 6, 0.8, 0.7));
     }
@@ -497,7 +499,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
         x,
         z,
         waterY + 0.1,
-        10 + ((rand() * 8) | 0),
+        36 + ((rand() * 24) | 0),
         0.9 + rand() * 0.4,
         0.8 + rand() * 0.5,
       ),
@@ -611,6 +613,120 @@ export function generateWorld(seed: number, version = 1): WorldData {
     clearNear(trees, 6.5);
     clearNear(forage, 6);
     clearNear(stones, 6);
+  }
+
+  // Habitat dressing runs after every terrain/dock operation with its own RNG.
+  // Loading a saved world reconstructs that exact landscape, then restores the
+  // saved resource arrays; changing this starter mix never replenishes a save.
+  if (version >= 2 && home) {
+    const habitatRandom = mulberry32(seed ^ 0x5f3759df);
+    const localRadius = 72;
+    const nearHome = (n: ResourceNode) => Math.hypot(n.x - home.x, n.z - home.z) < localRadius;
+    const safeApproach = (x: number, z: number, origin = home) => {
+      const distance = Math.hypot(x - origin.x, z - origin.z);
+      if (distance < 16 || distance >= localRadius || !inBounds(x, z, 4)) return false;
+      if (dockSites.some(s => Math.hypot(s.x - x, s.z - z) < 7)) return false;
+      const h = sampleHeight(heights, x, z);
+      if (h < waterY + 0.55 || Math.hypot(x, z) > islandR - 12) return false;
+      const grade = Math.max(
+        Math.abs(sampleHeight(heights, x + 2, z) - sampleHeight(heights, x - 2, z)),
+        Math.abs(sampleHeight(heights, x, z + 2) - sampleHeight(heights, x, z - 2)),
+      ) / 4;
+      if (grade > 0.55) return false;
+      // Starter supplies must share a dry, gentle approach with the hearth.
+      // This deliberately excludes attractive-looking patches across a river.
+      const steps = Math.ceil(distance / 2);
+      let previous = sampleHeight(heights, origin.x, origin.z);
+      for (let i = 1; i <= steps; i++) {
+        const y = sampleHeight(heights, origin.x + (x - origin.x) * i / steps, origin.z + (z - origin.z) * i / steps);
+        if (y < waterY + 0.32 || Math.abs(y - previous) > 1.25) return false;
+        previous = y;
+      }
+      return true;
+    };
+    const viableClearing = (origin: typeof home) => {
+      // A dry centre alone can be a tiny island or a crater enclosed by cliffs.
+      // Require room for the hearth, a shelter, and actual routes to resources.
+      let low = Infinity, high = -Infinity;
+      for (let dz = -10; dz <= 10; dz += 5) for (let dx = -10; dx <= 10; dx += 5) {
+        const h = sampleHeight(heights, origin.x + dx, origin.z + dz);
+        if (h < waterY + 0.55) return false;
+        low = Math.min(low, h); high = Math.max(high, h);
+      }
+      if (high - low > 4) return false;
+      let close = 0, outer = 0;
+      for (let i = 0; i < 24; i++) {
+        const a = i * Math.PI / 12;
+        if (safeApproach(origin.x + Math.cos(a) * 26, origin.z + Math.sin(a) * 26, origin)) close++;
+        if (safeApproach(origin.x + Math.cos(a) * 48, origin.z + Math.sin(a) * 48, origin)) outer++;
+      }
+      return close >= 12 && outer >= 8;
+    };
+    if (!viableClearing(home)) {
+      const oldX = home.x, oldZ = home.z;
+      search: for (let radius = 8; radius <= 128; radius += 8) for (let i = 0; i < 24; i++) {
+        const a = i * Math.PI / 12;
+        const candidate = { ...home, x: oldX + Math.cos(a) * radius, z: oldZ + Math.sin(a) * radius };
+        if (!inBounds(candidate.x, candidate.z, 72) || camps.some(c => c.team !== 0 && Math.hypot(c.x - candidate.x, c.z - candidate.z) < 120)) continue;
+        if (!viableClearing(candidate)) continue;
+        // Only new settlement metadata moves. Heights, rivers and historical
+        // dock pads were finalized above; saved buildings/people are restored.
+        home.x = candidate.x; home.z = candidate.z;
+        break search;
+      }
+    }
+    const habitat = biomeAt(home.x, home.z);
+    const bearing = habitatRandom() * Math.PI * 2;
+    const dress = (list: ResourceNode[], kind: ResourceNode["kind"], count: number, minimum: number) => {
+      const previous = list.filter(nearHome);
+      for (let i = list.length - 1; i >= 0; i--) if (nearHome(list[i])) list.splice(i, 1);
+      const placed: ResourceNode[] = [];
+      const separation = kind === "stone" ? 4.8 : kind === "tree" ? 3.3 : 3;
+      for (let attempt = 0; attempt < count * 90 && placed.length < count; attempt++) {
+        const nearby = placed.length < minimum;
+        const cluster = Math.floor(habitatRandom() * 3);
+        const angle = nearby || kind === "forage"
+          ? habitatRandom() * Math.PI * 2
+          : bearing + cluster * 1.7 + (habitatRandom() - 0.5) * 1.3;
+        const distance = nearby ? 17 + habitatRandom() * 17
+          : 23 + habitatRandom() * (habitat === "forest" && kind === "tree" ? 44 : 35);
+        const x = home.x + Math.cos(angle) * distance;
+        const z = home.z + Math.sin(angle) * distance;
+        if (!safeApproach(x, z) || tooClose(list, x, z, separation)) continue;
+        if ([trees, stones, forage].some(nodes => nodes !== list && tooClose(nodes, x, z, 2.6))) continue;
+        const amount = kind === "forage" ? 24 + Math.floor(habitatRandom() * 12)
+          : kind === "tree" ? 10 + Math.floor(habitatRandom() * 7)
+          : 14 + Math.floor(habitatRandom() * 10);
+        const n = node(previous[placed.length]?.id ?? nid++, kind, x, z,
+          sampleHeight(heights, x, z), amount, 0.85 + habitatRandom() * 0.45, 0.8 + habitatRandom() * 0.4);
+        list.push(n);
+        placed.push(n);
+      }
+      // Exceptionally constrained shorelines retain their original supplies
+      // if sampling cannot meet the opening's survival minimum.
+      for (const n of previous) {
+        if (placed.length >= minimum) break;
+        if (placed.some(p => p.id === n.id) || !safeApproach(n.x, n.z) || tooClose(list, n.x, n.z, separation)) continue;
+        list.push(n);
+        placed.push(n);
+      }
+      if (placed.length < minimum) {
+        // Do not strip finite existing supplies if this unusual terrain cannot
+        // accommodate the ordinary habitat mix even after start-site repair.
+        for (let i = list.length - 1; i >= 0; i--) if (placed.includes(list[i])) list.splice(i, 1);
+        list.push(...previous);
+      }
+    };
+    const treeCount = habitat === "forest" ? 52 + Math.floor(habitatRandom() * 18)
+      : habitat === "hills" ? 16 + Math.floor(habitatRandom() * 9) : 7 + Math.floor(habitatRandom() * 5);
+    const forageCount = habitat === "plains" ? 28 + Math.floor(habitatRandom() * 12)
+      : habitat === "forest" ? 16 + Math.floor(habitatRandom() * 8) : 12 + Math.floor(habitatRandom() * 6);
+    const stoneCount = habitat === "hills" ? 12 + Math.floor(habitatRandom() * 8)
+      : 2 + Math.floor(habitatRandom() * 3);
+    // Food comes first so dense woodland cannot crowd out its edible understory.
+    dress(forage, "forage", forageCount, 8);
+    dress(trees, "tree", treeCount, 7);
+    dress(stones, "stone", stoneCount, 0);
   }
 
   return {

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { BldType, UnitType } from "@/game/types";
+import type { HaulageKind } from "@/game/haulage";
 
 function box(w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) {
   const g = new THREE.BoxGeometry(w, h, d);
@@ -391,6 +392,45 @@ export function unitGeo(type: UnitType): THREE.BufferGeometry {
     parts.push(tool);
   }
   return merge(parts);
+}
+
+/** Shared low-poly equipment; local +Z points towards the person pulling it. */
+export function haulageGeo(kind: HaulageKind): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const deck = kind === 'cart' ? .6 : .24;
+  for (let i = 0; i < 4; i++) parts.push(box(.25, .1, 1.6, -.42 + i * .28, deck, 0));
+  parts.push(box(1.16, .09, .1, 0, deck + .09, -.75));
+  parts.push(box(1.16, .09, .1, 0, deck + .09, .75));
+  // Shafts connect the vehicle to the owner's hands without more scene objects.
+  for (const side of [-1, 1]) {
+    const shaft = box(.065, .065, 2.1, side * .32, deck + .06, 1.15);
+    shaft.rotateX(-.08); parts.push(shaft);
+  }
+  if (kind === 'sled') {
+    for (const side of [-1, 1]) {
+      parts.push(box(.11, .14, 1.9, side * .46, .04, 0));
+      const tip = box(.11, .12, .48, side * .46, .02, 1.02);
+      tip.rotateX(-.18); parts.push(tip);
+      parts.push(box(.11, .13, .18, side * .46, .12, -.5));
+      parts.push(box(.11, .13, .18, side * .46, .12, .5));
+    }
+  } else {
+    const axle = new THREE.CylinderGeometry(.055, .055, 1.5, 5);
+    axle.rotateZ(Math.PI / 2); axle.translate(0, .42, -.2); parts.push(axle);
+    for (const side of [-1, 1]) {
+      const wheel = new THREE.CylinderGeometry(.41, .41, .12, 10);
+      wheel.rotateZ(Math.PI / 2); wheel.translate(side * .69, .42, -.2); parts.push(wheel);
+      parts.push(box(.055, .25, 1.62, side * .53, deck + .1, 0));
+    }
+  }
+  return merge(parts);
+}
+
+/** Fits the worker's existing wooden handle, avoiding a second overlapping tool. */
+export function farmToolHeadGeo(): THREE.BufferGeometry {
+  const blade = box(.15, .09, .38, .49, 1.04, .34);
+  blade.rotateZ(-.03);
+  return merge([blade, box(.13, .15, .11, .49, 1.01, .2)]);
 }
 
 export function pineGeo() {

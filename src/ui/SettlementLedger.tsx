@@ -1,9 +1,11 @@
+import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
+import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
 import {villageAppeal} from "@/game/migration";
 import {WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
-import { AGES } from "@/game/constants";
-import {CROPS,CROP_NAMES,beginCropTrial,setFieldCrop,cropYield} from "@/game/cultivation";
+import { AGES, AGE_CHOICES, BUILDINGS } from "@/game/constants";
+import {CROPS,CROP_NAMES,seekCropSamples,beginCropTrial,setFieldCrop,cropYield} from "@/game/cultivation";
 import { foodSpoilage, winterOutlook, storehouses, foodInventory, FOOD_KINDS } from "@/game/pantry";
 import { habitatAt, soilQuality, climateAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
@@ -15,9 +17,7 @@ import {
   reserveSeconds,
   foodDemand,
   isDependent,
-  neighborIntent,
 } from "@/game/settlement";
-import { AGE_CHOICES } from "@/game/constants";
 export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const ref = useRef<HTMLDialogElement>(null),
     open = !!engine?.keyboard.ledger;
@@ -47,6 +47,15 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const stores = storehouses(g, 0);
   const dependents = people.filter((u) => isDependent(g, u)).length;
   const foodWorkers = people.filter((u) => u.job === "food" && u.order === "gather").length;
+  const knownCrops = t.cultivated || [];
+  const trial = t.cropTrial;
+  const trialWorker = trial && people.find(u => u.studyCrop === trial.kind);
+  const readyCrop = CROPS.find(kind => !knownCrops.includes(kind) && (t.cropSamples?.[kind] || 0) >= 4);
+  const sampleCrop = [...CROPS].sort((a,b) => (t.cropSamples?.[b] || 0) - (t.cropSamples?.[a] || 0))[0];
+  const startTrial = (kind: typeof CROPS[number]) => {
+    if(!beginCropTrial(g,kind))g.banner("An available adult and reachable hearth are needed for the trial.",4);
+    engine.pushHud();
+  };
   const close = () => {
     engine.keyboard.ledger = false;
     engine.pushHud();
@@ -68,6 +77,34 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <strong>
             {Math.floor(t.food)} food · {g.stockCap(0)} sheltered capacity
           </strong>
+          <h4 className="mt-3 font-display text-bronze-bright">{knownCrops.length ? "Farming" : "Start farming"}</h4>
+          <ol className="list-decimal pl-5">
+            <li>Gather wild grain, pulses or tubers and bring home 8 food for 4 samples.
+              {!knownCrops.length && !trial && <> {Math.floor(t.cropSamples?.[sampleCrop] || 0)}/4 {sampleCrop} samples at home.</>}</li>
+            <li>Test cultivation at the hearth: 4 samples and 2 logs, no food cost. One adult works for 30–45 seconds.
+              {trial && <> {trial.kind} trial: {Math.floor(100*trial.progress/trial.duration)}% complete.</>}
+              {!trial && knownCrops.length>0 && <> Learned: {knownCrops.join(", ")}.</>}</li>
+            <li>Place a field for {BUILDINGS.farm.wood} logs. Greener ground in the placement preview means richer soil; keep it on dry land.</li>
+          </ol>
+          {trial ? (
+            <>
+              <button className="min-h-11" disabled={!!trialWorker} onClick={()=>startTrial(trial.kind)}>
+                {trialWorker ? `Testing ${trial.kind} · ${Math.floor(100*trial.progress/trial.duration)}%` : "Resume cultivation trial"}
+              </button>
+              <p>{trialWorker ? "Close the ledger to let work continue. Saved trials keep their existing progress and work time." : "The paid trial is paused. Resume with an available adult; materials are not charged again."}</p>
+            </>
+          ) : knownCrops.length ? (
+            <button className="min-h-11" disabled={!g.canAfford(0,BUILDINGS.farm)} onClick={()=>{close();engine.setPlacing("farm");}}>
+              Place {farms.length ? "another field" : "your first field"} · {BUILDINGS.farm.wood} logs
+            </button>
+          ) : readyCrop ? (
+            <button className="min-h-11" disabled={t.wood<2} onClick={()=>startTrial(readyCrop)}>
+              Test {readyCrop} cultivation · 2 logs
+            </button>
+          ) : (
+            <button className="min-h-11" onClick={()=>{seekCropSamples(g);engine.pushHud();}}>Find and gather crop seeds</button>
+          )}
+          <p>Forage and hunt while fields grow. Sow in spring, tend in summer, then carry the autumn harvest home.</p>
           <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
           <p>{FOOD_KINDS.filter(k=>foods[k]>=1).map(k=>`${Math.floor(foods[k])} ${k}`).join(" · ") || "No food reserves"}</p>
@@ -120,14 +157,16 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               <option value="stone">Gather stone</option>
               <option value="hunt">Find and hunt herds</option>
               <option value="explore">Explore and make contact</option>
+              <option value="trade">Develop trade connections</option>
             </select>
           </label>
           <p>
             Changing this priority resets adult workers’ assignments and work focus. Carriers finish
             deliveries and delegations before switching.
           </p>
+          {s.laborPolicy==="trade" && <p>Staff your approved routes first and send one trader to refresh old offers. At least three adults and six minutes of food reserves are kept at home. Choose purchases in a known community’s trade panel.</p>}
           <label><input type="checkbox" checked={!!s.nightWork} onChange={e=>{s.nightWork=e.target.checked;engine.pushHud();}}/> Work through the night</label>
-          <p>Workers normally sleep near shelter at night and seek shelter during storms. Night work increases fatigue.</p>
+          <p>Work follows sunrise and sunset: longer summer days, shorter winter days. Ordinary rain does not stop work. Dangerous storms send people inside; rested food gatherers finish urgent work when supplies are low. Night work increases fatigue.</p>
           <label>
             Village growth{" "}
             <select
@@ -168,14 +207,16 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
       <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>
       <h3>Fields and harvest</h3>
-      <p>Gather wild grain, pulses or tubers and carry them home: every four food carries one sample. Four samples (sixteen gathered food), six timber and four food start a trial at the hearth. After the trial, place your first field.</p>
       <p>Known cultivation: {t.cultivated?.join(", ")||"None yet — forage for wild crop samples and bring them home."}</p>
+      <details>
+      <summary>Crop experiments and varieties</summary>
       <ul>{CROPS.filter(k=>!t.cultivated?.includes(k)).map(kind=><li key={kind}>
         {CROP_NAMES[kind]} · {(t.cropSamples?.[kind]||0).toFixed(1)} samples at home
-        {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples, 4 food and 6 timber"}
-        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4||t.wood<6||t.food<4)} onClick={()=>{if(!beginCropTrial(g,kind))g.banner("An available adult and reachable hearth are needed for the trial.",4);engine.pushHud();}}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
+        {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples and 2 logs; 30–45 seconds of work"}
+        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4||t.wood<2)} onClick={()=>startTrial(kind)}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
       </li>)}</ul>
       <p>Trials use an adult’s working time at the hearth. They pause for sleep, storms and urgent food needs. Wild grain, pulses and tubers occur in different habitats; pulses exhaust soil more slowly.</p>
+      </details>
       {farms.length === 0 ? (
         <p>No finished fields. Forage and hunt while you establish your first farm.</p>
       ) : (
@@ -279,8 +320,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               </button>
             )}
             <p>
-              {n.hostile ? "Hostile" : n.ally ? "Allied" : "At peace"} · {neighborIntent(g, n.id)} ·
-              trust {Math.round((n.trust || 0) * 100)}% · tension {Math.round(n.tension * 100)}%
+              {n.hostile ? "Hostile" : n.ally ? "Allied" : "At peace"}. Send a delegation for current trading terms; their private plans are unknown.
             </p>
             <button
               disabled={t.food < 30}
@@ -319,6 +359,13 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text}</p>)}
       </section>
       <section>
+        <h3>Farming tools</h3>
+        <p>Stone hoes speed sowing and tending by 25%; copper tools by 50%; iron tools by 70%. Each tool belongs to one resident. Craft stone hoes at a hearth or shelter, and metal sets at a forge. Harvesting is also faster; the field still needs seeds, water and labor.</p>
+        {people.filter(u=>u.farmTool||u.farmToolWork).map(u=><p key={u.id}>{personName(u)} · {u.farmTool?FARM_TOOLS[u.farmTool].name:"Basic hand tools"}{u.farmToolWork&&<> · making {FARM_TOOLS[u.farmToolWork.kind].name.toLowerCase()} {Math.floor(100*u.farmToolWork.progress/u.farmToolWork.duration)}%{u.farmToolWork.paused&&<button onClick={()=>{if(!resumeFarmToolWork(g,u))g.banner("Need empty hands and a reachable toolmaking workplace to resume",4);engine.pushHud();}}>Resume toolmaking</button>}</>}</p>)}
+        <h3>Carrying equipment</h3>
+        <p>Make a sled at a hearth or crafting shelter. Its owner carries twice as much. After 60 goods have actually arrived by sled, a crafting shelter can replace a sled with a handcart carrying three times as much.</p>
+        <p>{Math.floor(t.haulagePractice||0)}/60 goods delivered by sled.</p>
+        {people.filter(u=>u.haulage||u.haulageWork).map(u=><p key={u.id}>{personName(u)} · {u.haulage?HAULAGE[u.haulage].name:"Hand carrying"}{u.haulageWork&&<> · making {HAULAGE[u.haulageWork.kind].name.toLowerCase()} {Math.floor(100*u.haulageWork.progress/u.haulageWork.duration)}%{u.haulageWork.paused&&<button onClick={()=>{if(!resumeHaulageWork(g,u))g.banner("Need empty hands and a reachable crafting workplace to resume",4);engine.pushHud();}}>Resume transport work</button>}</>}</p>)}
         <h3>Weapons and village defense</h3>
         <p>{t.spears} spears · {t.bows} bows · {t.blades} blades in stores. Equip empty-handed adults near a hall, store or barracks. They remain members of your village.</p>
         <p>Select a hearth to craft outdoors (three times slower), or build a crafting shelter for efficient spear and bow making. Crafting uses a resident’s working time; metal blades need a forge and Bronze Age copper.</p>

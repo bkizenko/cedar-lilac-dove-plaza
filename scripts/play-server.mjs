@@ -1,7 +1,7 @@
 // A production snapshot: no file watcher or hot reload can interrupt a village.
 import {createServer} from 'node:http';
 import {Readable} from 'node:stream';
-import {readFileSync,statSync,existsSync} from 'node:fs';
+import {readFileSync,statSync,existsSync,realpathSync} from 'node:fs';
 import {resolve,sep,extname} from 'node:path';
 import {pathToFileURL} from 'node:url';
 export function staticPath(root,url){
@@ -34,7 +34,7 @@ export function createPlayServer(root,app){
   });
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const root=resolve(process.argv[2]||'.play/current'),port=Number(process.env.PLAY_PORT||8086);
+ const root=realpathSync(resolve(process.argv[2]||'.play/current')),port=Number(process.env.PLAY_PORT||8086);
  if(!Number.isInteger(port)||port<1||port>65535)throw new Error('Invalid play port');
  const {default:app}=await import(pathToFileURL(resolve(root,'functions/__server.func/index.mjs')).href);
  const server=createPlayServer(root,app);server.listen(port,'127.0.0.1',()=>console.log('Hearthwild play server: http://127.0.0.1:'+port));

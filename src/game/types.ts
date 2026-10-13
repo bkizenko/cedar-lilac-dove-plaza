@@ -1,3 +1,5 @@
+import type {FarmToolKind,FarmToolWork} from "./farmTools";
+import type {HaulageKind,HaulageWork} from "./haulage";
 export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
@@ -105,6 +107,8 @@ export type Region = {
 export type CritterKind = "deer" | "boar" | "goat" | "bird";
 
 export type Critter = {
+  grazing?: {x:number;z:number};
+  carcass?: {meat:number;diedAt:number};
   id: number;
   species: CritterKind;
   x: number;
@@ -167,6 +171,10 @@ export type Unit = {
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
+  farmTool?: FarmToolKind;
+  farmToolWork?: FarmToolWork;
+  haulage?: HaulageKind;
+  haulageWork?: HaulageWork;
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
   target: Unit | Building | null;
@@ -178,6 +186,7 @@ export type Unit = {
   ageT: number;
   hunger?: number;
   customOffer?: boolean;
+  procurement?: { minimum: number };
   homeHall?: number;
   parents?: number[];
   foundingJourney?: {x:number;z:number;leader:boolean};
@@ -268,6 +277,7 @@ export type Projectile = {
 };
 
 export type Tribe = {
+  haulagePractice?: number;
   id: number;
   name: string;
   short: string;
@@ -339,7 +349,7 @@ export type GameState = {
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome" | "eager";
-  laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore";
+  laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore" | "trade";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
   time: number;
@@ -422,6 +432,7 @@ export type HudSnapshot = {
   time: number;
   day: number;
   clock: string;
+  daylight?: string;
   period: string;
   weather: string;
   season: string;

@@ -8,6 +8,10 @@ import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
 import { FOW, HALF, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
 import type { Game } from "@/game/sim";
 import type { BldType, UnitType } from "@/game/types";
+import type { HaulageKind } from "@/game/haulage";
+import { carryingCapacity } from "@/game/haulage";
+import type { FarmToolUnit } from "@/game/farmTools";
+import {carcassAvailable} from "@/game/hunting";
 import { isFertile } from "@/game/worldgen";
 import {
   buildingGeos,
@@ -24,6 +28,8 @@ import {
   rockGeo,
   skyGeo,
   unitGeo,
+  haulageGeo,
+  farmToolHeadGeo,
   fishGeo,
   dockPostGeo,
   type MatKit,
@@ -72,6 +78,10 @@ const _ray = new THREE.Raycaster();
 const _ndc = new THREE.Vector2();
 const _ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const _hit = new THREE.Vector3();
+const _haulMatrix = new THREE.Matrix4();
+const _haulEuler = new THREE.Euler(0, 0, 0, "YXZ");
+const CARGO_COLORS = {food:"#c5ad71",wood:"#73502f",stone:"#a2a3a2",copper:"#bc7a4c",iron:"#666e78"};
+const FARM_TOOL_COLORS = {stoneHoe:"#bcb6a6",copperTools:"#d38a55",ironTools:"#afbdc7"};
 
 function instCap(mesh: THREE.InstancedMesh) {
   return ((mesh.instanceMatrix.array as Float32Array).length / 16) | 0;
@@ -125,6 +135,8 @@ export class WorldView {
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
   cargoMesh: THREE.InstancedMesh | null = null;
+  haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
+  farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
@@ -739,6 +751,19 @@ export class WorldView {
     this.cargoMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.cargoMesh.count=0; this.cargoMesh.frustumCulled=false;
     this.scene.add(this.cargoMesh);
+    for (const kind of ['sled', 'cart'] as const) {
+      const mesh = new THREE.InstancedMesh(haulageGeo(kind), this.mats.timber, 140);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.count = 0; mesh.frustumCulled = false;
+      mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
+      this.haulageMeshes.set(kind, mesh); this.scene.add(mesh);
+    }
+    const toolMat = new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.7,metalness:.15});
+    this.farmToolMesh = new THREE.InstancedMesh(farmToolHeadGeo(), toolMat, 140);
+    this.farmToolMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.farmToolMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(140 * 3), 3);
+    this.farmToolMesh.count = 0; this.farmToolMesh.frustumCulled = false;
+    this.scene.add(this.farmToolMesh);
   }
 
   private buildHearths(game: Game) {
@@ -954,17 +979,16 @@ export class WorldView {
   private updateDay(game: Game, dt = 0.016) {
     const p = game.dayPhase();
     const hour = p * 24;
-    const rise = 5.4;
-    const set = 20.2;
+    const {sunrise:rise,sunset:set}=game.daylight();
     const t = (hour - rise) / (set - rise);
     const day = Math.max(0, Math.min(1, t));
     const elev = Math.sin(day * Math.PI);
-    const dawn = Math.max(0, 1 - Math.abs(hour - 6.7) * 0.55);
-    const dusk = Math.max(0, 1 - Math.abs(hour - 18.8) * 0.5);
+    const dawn = Math.max(0, 1 - Math.abs(hour - (rise+.35)) * 0.55);
+    const dusk = Math.max(0, 1 - Math.abs(hour - (set-.35)) * 0.5);
     const night = game.isNight();
     const wx = game.state.weather;
     const wet = wx === "rain" || wx === "storm" || wx === "flood";
-    const ang = ((hour - 6) / 12) * Math.PI;
+    const ang = ((hour - rise) / (set - rise)) * Math.PI;
     const dist = 110;
     this.sun.position.set(
       this.look.x + Math.cos(ang) * dist,
@@ -1082,11 +1106,12 @@ export class WorldView {
       const n = Math.min(list.length, instCap(mesh));
       for (let i = 0; i < n; i++) {
         const c = list[i];
-        const dead = c.hp <= 0 || !game.visibleAt(c.x, c.z);
-        _p.set(c.x, c.y, c.z);
-        _e.set(0, c.facing, 0);
-        _q.setFromEuler(_e);
-        _s.setScalar(dead ? 0.001 : c.scale);
+        const corpse = c.hp <= 0 && carcassAvailable(game,c);
+        const hidden = (c.hp <= 0&&!corpse) || !(corpse?game.exploredAt(c.x,c.z):game.visibleAt(c.x,c.z));
+        _p.set(c.x, c.y+(corpse ? .3*c.scale : 0), c.z);
+        _haulEuler.set(corpse?Math.PI/2:0, c.facing, 0);
+        _q.setFromEuler(_haulEuler);
+        _s.setScalar(hidden ? 0.001 : c.scale);
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
       }
@@ -1285,16 +1310,39 @@ export class WorldView {
   private syncCargo(game: Game) {
     const mesh=this.cargoMesh;
     if (!mesh) return;
-    let i=0;
-    const colors={food:"#c5ad71",wood:"#73502f",stone:"#a2a3a2",copper:"#bc7a4c",iron:"#666e78"};
+    let i=0, sleds=0, carts=0, workers=0;
+    const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
     for (const u of game.state.units) {
-      if (u.hp<=0 || u.shelterId || u.carry<=0 || !u.carryType || (u.team!==0&&!game.visibleAt(u.x,u.z)) || i>=420) continue;
-      _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
-      _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
-      mesh.setMatrixAt(i,_m);_c.set(colors[u.carryType]);mesh.setColorAt(i,_c);i++;
+      if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
+      if (u.hp<=0 || u.shelterId || (u.team!==0&&!game.visibleAt(u.x,u.z))) continue;
+      const kind=u.type==='worker'&&!u.militia?u.haulage:undefined;
+      const vehicle=kind&&this.haulageMeshes.get(kind);
+      const index=kind==='sled'?sleds:carts;
+      const mounted=!!vehicle&&index<instCap(vehicle);
+      if(mounted){
+        const dx=Math.sin(u.facing),dz=Math.cos(u.facing),x=u.x-dx*2.1,z=u.z-dz*2.1;
+        const pitch=-Math.atan2(game.travelHeight(x+dx*.8,z+dz*.8)-game.travelHeight(x-dx*.8,z-dz*.8),1.6);
+        const roll=Math.atan2(game.travelHeight(x+dz*.5,z-dx*.5)-game.travelHeight(x-dz*.5,z+dx*.5),1);
+        _p.set(x,game.travelHeight(x,z)+.04,z);
+        _haulEuler.set(THREE.MathUtils.clamp(pitch,-.45,.45),u.facing,THREE.MathUtils.clamp(roll,-.4,.4));
+        _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
+        vehicle!.setMatrixAt(index,_haulMatrix);
+        if(kind==='sled')sleds++;else carts++;
+      }
+      if(u.carry<=0||!u.carryType||i>=instCap(mesh))continue;
+      if(mounted){
+        const fullness=Math.min(1,u.carry/carryingCapacity(u,u.carryType)),height=.35+fullness*.55;
+        _p.set(0,(kind==='cart'?.7:.34)+height*.5,0).applyMatrix4(_haulMatrix);
+        _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
+      }else{
+        _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
+        _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
+      }
+      mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);i++;
     }
     mesh.count=i;mesh.instanceMatrix.needsUpdate=true;
     if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+    for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=kind==='sled'?sleds:carts;vehicle.instanceMatrix.needsUpdate=true;}
   }
 
   private syncUnits(game: Game) {
@@ -1303,7 +1351,7 @@ export class WorldView {
     for (const u of game.state.units) {
       if (u.hp > 0) grouped.get(u.type)?.push(u);
     }
-    let ri = 0;
+    let ri = 0, tools = 0;
     for (const t of UNIT_TYPES) {
       const list = grouped.get(t)!;
       const mesh = this.unitMeshes.get(t);
@@ -1349,6 +1397,11 @@ export class WorldView {
         );
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
+        const tool=(u as FarmToolUnit).farmTool;
+        if(tool&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
+          this.farmToolMesh.setMatrixAt(tools,_m);
+          _c.set(FARM_TOOL_COLORS[tool]);this.farmToolMesh.setColorAt(tools,_c);tools++;
+        }
         _c.set(st.unit);
         _c.offsetHSL(((u.tint || 0) - 0.5) * 0.12, 0.04, ((u.stature || 1) - 1) * 0.12);
         if (mesh.instanceColor) mesh.setColorAt(i, _c);
@@ -1366,6 +1419,7 @@ export class WorldView {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
+    if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
     if (game.state.selBld && game.state.selBld.hp > 0 && ri < 40) {
       const b = game.state.selBld;
       _p.set(b.x, b.y + 0.06, b.z);
@@ -2135,6 +2189,8 @@ export class WorldView {
     }
     this.bldMeshes.clear();
     this.unitMeshes.clear();
+    this.haulageMeshes.clear();
+    if(this.farmToolMesh){(this.farmToolMesh.material as THREE.Material).dispose();this.farmToolMesh=null;}
   }
 
   dispose() {
