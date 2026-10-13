@@ -571,7 +571,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Recycle className="size-3.5" />
-                  Recycle — return most wood and stone
+                  {sel.planned ? "Cancel plan — nothing spent" : "Recycle — return most wood and stone"}
                 </span>
               </button>
             ) : null}
@@ -739,19 +739,19 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   key={b.type}
                   type="button"
                   disabled={!!hud.ended}
-                  title={`${b.name} [${i + 1}]\n${b.hint}`}
+                  title={`${b.name} [${i + 1}]\n${b.hint}${unaffordable ? "\nPlace a plan now; construction waits for materials." : ""}`}
                   onClick={() => engine?.setPlacing(b.type)}
                   className={`w-16 shrink-0 rounded-lg border px-1 py-1.5 text-center transition-colors ${
                     active
                       ? "border-bronze bg-bronze/20"
                       : "border-parchment/15 bg-ink-soft hover:border-bronze/40"
-                  } ${unaffordable ? "opacity-40" : ""}`}
+                  } ${unaffordable ? "border-dawn/30" : ""}`}
                 >
                   <div className="mx-auto mb-1 flex size-8 items-center justify-center rounded-md bg-ink text-bronze">
                     {BLD_ICON[b.type] || <Landmark className="size-4" />}
                   </div>
                   <div className="text-[10px] leading-tight text-parchment">
-                    {shortName(b.name)}
+                    {shortName(b.name)}{unaffordable ? " · Plan" : ""}
                   </div>
                   <div className="text-[9px] text-parchment tabular">
                     {b.cost.wood ? `L${b.cost.wood}` : ""} {b.cost.stone ? `S${b.cost.stone}` : ""}
@@ -792,7 +792,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
       ) : !founding && hud.placing ? (
         <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-ok/30 bg-ink/90 px-3 py-1.5 text-[11px] text-ok">
-          {founding ? "Click the grass" : "Click to raise"}
+          {founding ? "Click the grass" : "Click to build or plan · missing materials wait in the queue"}
         </div>
       ) : null}
 

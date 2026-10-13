@@ -1,3 +1,4 @@
+import {buildingCost,planStatus,fundConstructionPlans} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue} from './advancement';
 import {rivalCanInvest,developRivalResources,developRivalInstitutions} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
@@ -796,7 +797,7 @@ export class Game {
   }
 
   private solidBuilding(b: Building) {
-    return b.hp > 0 && !["farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !b.plannedCost && !["farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -1056,6 +1057,10 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    if(b.plannedCost){
+      b.hp=0;this.clearSelect();this.workBoard.reset();
+      this.banner("Plan cancelled — no materials were spent",2);this.onSfx("click");return;
+    }
     if(b.type==="bridge"&&b.bridge&&this.state.units.some(u=>u.hp>0&&onBridge(b.bridge!,u.x,u.z))){this.banner("Wait until everyone has left the bridge before reclaiming it",3);return;}
     if (b.type === "townhall") {
       this.banner("The hall cannot be pulled down", 1.5);
@@ -1232,11 +1237,6 @@ export class Game {
 
   placeBuilding(type: BldType, x: number, z: number, team = 0) {
     if (this.state.ended) return false;
-    if (team === 0 && this.state.weather === "storm") {
-      this.banner("The storm holds the builders", 1.6);
-      this.onSfx("invalid");
-      return false;
-    }
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
@@ -1265,20 +1265,9 @@ export class Game {
       }
       return false;
     }
-    const cost = founding ? {} : { food: d.food, wood: d.wood, stone: d.stone };
-    if (!this.canAfford(team, cost)) {
-      if (team === 0) {
-        const need = [];
-        if ((d.food || 0) > tribe.food) need.push("berries");
-        if ((d.wood || 0) > tribe.wood) need.push("logs");
-        if ((d.stone || 0) > tribe.stone) need.push("stone");
-        if ((d.copper || 0) > tribe.copper) need.push("copper");
-        if ((d.iron || 0) > tribe.iron) need.push("iron");
-        this.banner("Need more " + (need.join(" and ") || "resources") + " for a " + d.name, 1.6);
-        this.onSfx("invalid");
-      }
-      return false;
-    }
+    const cost = founding ? {} : buildingCost(type);
+    const planned=team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
+    if(!planned&&!this.canAfford(team,cost))return false;
     if (type === "quarry" && this.height(x,z)<10) {
       const snap = this.snapQuarry(x, z);
       if (snap) {
@@ -1286,6 +1275,7 @@ export class Game {
         z = snap.z;
       }
     }
+    if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
     const spot = this.placementValid(type, x, z, team)
       ? { x, z }
       : this.findPlaceSpot(type, x, z, team);
@@ -1296,10 +1286,11 @@ export class Game {
       }
       return false;
     }
-    this.spend(team, cost);
+    if(!planned)this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team);
     if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
-    if (BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
+    if(planned)b.plannedCost=cost;
+    if (planned || BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
@@ -1314,12 +1305,14 @@ export class Game {
     if (team === 0) {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
       this.onSfx("place");
-      if (b.build < 1) this.assignBuilders(b);
+      if (b.build < 1 && !planned) this.assignBuilders(b);
+      if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
     }
     return true;
   }
 
   assignBuilders(b: Building) {
+    if(b.plannedCost)return;
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
@@ -1341,7 +1334,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e9;
     for (const b of this.state.buildings) {
-      if (b.team !== u.team || b.hp <= 0 || b.build >= 1) continue;
+      if (b.team !== u.team || b.hp <= 0 || b.build >= 1 || b.plannedCost) continue;
       const d = Math.hypot(b.x - u.x, b.z - u.z);
       if (d < bd) {
         bd = d;
@@ -1353,7 +1346,7 @@ export class Game {
 
   buildAI(u: Unit, dt: number) {
     const b = u.node && "type" in u.node ? (u.node as Building) : this.nearestUnbuilt(u);
-    if (!b || b.hp <= 0 || b.build >= 1) {
+    if (!b || b.hp <= 0 || b.build >= 1 || b.plannedCost) {
       u.order = "idle";
       u.node = null;
       return;
@@ -3450,7 +3443,7 @@ export class Game {
       );
     }
     for (const b of this.state.buildings) {
-      if (b.team !== 0 || b.hp <= 0) continue;
+      if (b.team !== 0 || b.hp <= 0 || b.plannedCost) continue;
       this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : 12, 2);
     }
     for (let i = 0; i < vis.length; i++) {
@@ -4537,7 +4530,7 @@ export class Game {
   lootBuilding(attackerTeam: number, b: Building) {
     const victim = this.tribe(b.team);
     const raider = this.tribe(attackerTeam);
-    if (!victim || !raider || b.team === attackerTeam || b.lootClaimed) return;
+    if (!victim || !raider || b.team === attackerTeam || b.lootClaimed || b.plannedCost) return;
     b.lootClaimed=true; b.lootTeam=attackerTeam;
     const take = (
       key: "food" | "wood" | "stone" | "copper" | "iron",
@@ -5209,6 +5202,8 @@ export class Game {
     if (this.state.units.some((u) => u.team === 0 && u.emergency))
       return "Alarm: civilians seek shelter; armed residents defend";
     if (reserveSeconds(this) < 120) return "Food reserves are low — prioritize food in Village (L)";
+    const planned=this.state.buildings.find(b=>b.team===0&&b.hp>0&&b.plannedCost&&!b.planPaused);
+    if(planned)return `${BUILDINGS[planned.type].name} plan: ${planStatus(this,planned)} · Village (L)`;
     const fields = this.state.buildings.filter(
       (b) => b.team === 0 && b.type === "farm" && this.finished(b),
     );
@@ -5440,6 +5435,8 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        fundConstructionPlans(this);
+        if(this.state.walkDirty)this.rebuildWalk();
         for (const b of this.state.buildings)
           if (b.type === "farm" && this.finished(b)) {
             const c=crop(this,b);
@@ -5647,7 +5644,7 @@ export class Game {
       if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);
       if (b.build < 1)
-        info = "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
+        info = b.plannedCost ? "Plan · "+planStatus(this,b) : "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
       if (b.queue.length) {
         const q = b.queue[0];
         info += " · " + (UNITS[q.unit]?.name || q.unit) + " " + Math.ceil(q.max - q.t) + "s";
@@ -5664,7 +5661,8 @@ export class Game {
         buildingId: b.id,
         completed: this.finished(b),
         queue: b.queue.map((q) => UNITS[q.unit].name).join(", "),
-        canRecycle: b.team === 0 && b.type !== "townhall",
+        canRecycle: b.team === 0 && (b.type !== "townhall" || !!b.plannedCost),
+        planned: !!b.plannedCost,
       };
     } else {
       const enemy = this.state.units.find((u) => u.selected && u.team !== 0);

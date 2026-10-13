@@ -1271,7 +1271,7 @@ export class WorldView {
         const st = TEAM_STYLE[b.team] || TEAM_STYLE[0];
         const identity=this.villageStyle(game,b.team);
         const done = b.build >= 1;
-        const ys = !seen ? 0.001 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
+        const ys = !seen ? 0.001 : b.plannedCost ? .08 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
         _p.set(b.x, b.y, b.z);
         const terrainWork=type==="farm"||type==="dock";
         const limit=type==="farm"?0.5:0.2;
@@ -1291,7 +1291,7 @@ export class WorldView {
         if(seen&&b.build>=.55){_s.y*=identity.roofHeight;_m.compose(_p,_q,_s);}
         meshes.roof.setMatrixAt(i, _m);
         meshes.extra?.setMatrixAt(i, _m);
-        _c.set(identity.timber);
+        _c.set(b.plannedCost ? "#87b7cb" : identity.timber);
         if (meshes.timber.instanceColor) meshes.timber.setColorAt(i, _c);
         _c.set(type === "cornerstone" ? game.tribe(b.team).color : identity.roof);
         if (meshes.roof.instanceColor) meshes.roof.setColorAt(i, _c);

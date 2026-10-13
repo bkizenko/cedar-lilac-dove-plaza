@@ -450,23 +450,7 @@ export class Engine {
       }
     }
     const okPlace = this.game.placementValid(type, x, z, 0);
-    const afford = this.game.canAfford(0, {
-      food: BUILDINGS[type].food,
-      wood: BUILDINGS[type].wood,
-      stone: BUILDINGS[type].stone,
-    });
-    const storm = this.game.state.weather === "storm";
-    let issue: string | null = null;
-    if (storm) issue = "The storm holds the builders";
-    else if (!afford) {
-      const d = BUILDINGS[type];
-      const t = this.game.tribe(0);
-      const need = [];
-      if ((d.food || 0) > t.food) need.push("berries");
-      if ((d.wood || 0) > t.wood) need.push("logs");
-      if ((d.stone || 0) > t.stone) need.push("stone");
-      issue = "Need more " + (need.join(" and ") || "resources");
-    } else if (!okPlace) issue = this.game.placementIssue(type, x, z, 0);
+    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;

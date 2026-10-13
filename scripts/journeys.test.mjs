@@ -165,7 +165,7 @@ test("calendar year and day count advance together", () => {
   g.state.time = 1800;
   assert.equal(g.clockState().day, 33);
 });
-test("second settlements cost timber, require labor and never spawn residents", () => {
+test("second settlement plans wait for timber, require labor and never spawn residents", async () => {
   const g = fixture();
   g.world.heights.fill(4);
   const h = g.makeBld("townhall", 0, 38, 0);
@@ -183,10 +183,12 @@ test("second settlements cost timber, require labor and never spawn residents", 
   g.state.iron = [];
   g.rebuildWalk();
   const people = g.state.units.length;
-  g.tribe(0).wood = 19;
-  assert.equal(g.placeBuilding("townhall", 140, 38), false);
-  g.tribe(0).wood = 40;
+  g.vision.fill(2);g.tribe(0).wood = 19;
   assert.equal(g.placeBuilding("townhall", 140, 38), true);
+  assert.equal(g.tribe(0).wood,19);assert.ok(g.state.buildings.at(-1).plannedCost);
+  g.tribe(0).wood = 40;
+  const {fundConstructionPlans}=await import('../src/game/construction.ts');
+  fundConstructionPlans(g);
   assert.equal(g.tribe(0).wood, 20);
   assert.equal(g.state.buildings.at(-1).build, 0);
   assert.equal(g.state.units.length, people);

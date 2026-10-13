@@ -227,6 +227,8 @@ export type Building = {
   cd: number;
   build: number;
   reclaimed: boolean;
+  plannedCost?: Cost;
+  planPaused?: boolean;
   raiderCamp?: boolean;
   lootClaimed?: boolean;
   raidLoot?: Partial<Record<ResKind,number>>;
@@ -414,6 +416,7 @@ export type HudSelection = {
   carry?: string;
   job?: ResKind | "hold" | "hunt" | "drill" | null;
   canRecycle?: boolean;
+  planned?: boolean;
   buildingId?: number;
   completed?: boolean;
 };

@@ -1,3 +1,4 @@
+import {constructionDemand} from "./construction";
 import {rivalWorkRange,rivalMaterialPriority} from "./rivalDevelopment";
 import {huntable} from "./hunting";
 import {farmToolRate} from "./farmTools";
@@ -211,13 +212,15 @@ export class WorkBoard {
         pop = g.popNow(t.id),
         foodUrgency = reserveSeconds(g,t.id)<90 ? 320 : reserveSeconds(g, t.id) < 240 ? 180 : 80;
       const buildings = g.state.buildings.filter((b) => b.team === t.id && b.hp > 0);
+      const needed=new Set((["wood","stone","copper","iron"] as ResKind[]).filter(k=>constructionDemand(g,t.id,k)));
       const add = (node: Node, kind: Task["kind"], slots: number, priority: number) =>
-        list.push({ node, kind, slots, priority });
+        list.push({ node, kind, slots, priority:priority+(needed.has(kind as ResKind)?90:0) });
       const nearby = (n: Node, type: string, r: number) =>
         buildings.some(
           (b) => b.type === type && g.finished(b) && Math.hypot(b.x - n.x, b.z - n.z) < r,
         );
       for (const b of buildings) {
+        if(b.plannedCost)continue;
         if (!g.finished(b)) {
           add(b, "build", 2, reserveSeconds(g,t.id) < 90 ? 120 : 235);
           continue;

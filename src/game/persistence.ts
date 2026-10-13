@@ -351,6 +351,13 @@ export function decodeGame(raw: unknown): Game {
     if (!(b.type in BUILDINGS) || !s.tribes[b.team] || !Array.isArray(b.queue)) fail();
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
     if (b.build < 0 || b.build > 1) fail();
+    if(b.plannedCost!==undefined){
+      if(!obj(b.plannedCost)||b.build!==0||b.queue.length)fail();
+      const allowed=["food","wood","stone","copper","iron"];
+      if(Object.keys(b.plannedCost).some(k=>!allowed.includes(k)))fail();
+      for(const k of allowed){const n=b.plannedCost[k];if(!num(n)||n<0||n>100000)fail();}
+    }
+    if(b.planPaused!==undefined&&(typeof b.planPaused!=="boolean"||!b.plannedCost))fail();
     for (const q of b.queue) {
       if (!obj(q) || !(q.unit in UNITS)) fail();
       numbers(q, ["t", "max"]);

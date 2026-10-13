@@ -1,3 +1,4 @@
+import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
 import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
@@ -49,6 +50,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const stores = storehouses(g, 0);
   const dependents = people.filter((u) => isDependent(g, u)).length;
   const foodWorkers = people.filter((u) => u.job === "food" && u.order === "gather").length;
+  const projects=s.buildings.filter(b=>b.team===0&&b.hp>0&&!g.finished(b));
   const knownCrops = t.cultivated || [];
   const trial = t.cropTrial;
   const trialWorker = trial && people.find(u => u.studyCrop === trial.kind);
@@ -96,7 +98,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               <p>{trialWorker ? "Close the ledger to let work continue. Saved trials keep their existing progress and work time." : "The paid trial is paused. Resume with an available adult; materials are not charged again."}</p>
             </>
           ) : knownCrops.length ? (
-            <button className="min-h-11" disabled={!g.canAfford(0,BUILDINGS.farm)} onClick={()=>{close();engine.setPlacing("farm");}}>
+            <button className="min-h-11" onClick={()=>{close();engine.setPlacing("farm");}}>
               Place {farms.length ? "another field" : "your first field"} · {BUILDINGS.farm.wood} logs
             </button>
           ) : readyCrop ? (
@@ -205,6 +207,22 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           })}
         </ul>
       </details>
+      <section>
+        <h3>Building plans & construction</h3>
+        <p>Lay out an available building before you have its materials. Blue foundations are plans: people can walk through them. As supplies arrive, affordable plans reserve their full cost once and builders begin work. Smaller affordable projects can start while larger ones wait.</p>
+        <p>Keep food secure first. Pause a plan to save materials for tools or another project. Unpaid plans can be cancelled freely.</p>
+        {projects.length ? projects.map(b=><div key={b.id} className="mt-2 rounded-md border border-parchment/20 p-2">
+          <strong>{BUILDINGS[b.type].name}</strong> · {planStatus(g,b)}
+          <div className="mt-1 flex flex-wrap gap-2">
+            <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.selectEntity(b);engine.view.look.set(b.x,b.y-1.2,b.z);close();engine.pushHud();}}>Find site</button>
+            {b.plannedCost&&<>
+              <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{b.planPaused=!b.planPaused;g.workBoard.reset();engine.pushHud();}}>{b.planPaused?"Resume plan":"Pause plan"}</button>
+              <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.selectEntity(b);g.recycleSelected();engine.pushHud();}}>Cancel plan</button>
+              {planMissing(g,b).filter(n=>n.kind==="wood"||n.kind==="stone").map(n=><button key={n.kind} type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.setLaborPriority(n.kind as "wood"|"stone");engine.pushHud();}}>Focus {n.kind==="wood"?"timber":"stone"}</button>)}
+            </>}
+          </div>
+        </div>):<p>No projects queued. Choose a building from the bar to plan its site.</p>}
+      </section>
       <h3>Campaign orders</h3>
       <p>Select adults for an expedition. Raiding is an explicit campaign; home food and construction workers keep their priorities.</p>
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
@@ -352,7 +370,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <section className="mt-4">
         <h3>People and hearths</h3>
         <p>Village fatigue: {Math.round(people.reduce((sum,u)=>sum+(u.fatigue||0),0)/Math.max(1,people.length)*100)}%</p>
-        <button disabled={t.wood<20} onClick={()=>{close();engine.setPlacing("townhall");}}>Establish another settlement · 20 logs and construction labor</button>
+        <button onClick={()=>{close();engine.setPlacing("townhall");}}>Plan another settlement · construction waits for 20 logs</button>
         <p>Choose a distant resource clump. Building a hall provides shelter, not new people.</p>
         {(s.communities || []).filter(c=>c.team===0).map(c=><p key={c.hall}>{c.name} · {c.status} · {people.filter(u=>u.homeHall===c.hall).length} residents</p>)}
         {people.map(u=>{const traits=predisposition(u);return <p key={u.id}><strong>{personName(u)}</strong> · {isDependent(g,u)?"young":"adult"} · {u.workReason || u.order}

@@ -195,3 +195,7 @@ No additional whole item is crossed out by this batch. Keep all 120 accepted ite
 ### Extended workday and armed civilian hunting — 2026-10-13
 
 Items 33/101/103 remain partial. Armed civilian militia can now receive a Hunt order, use their real spear/bow advantage, butcher finite carcasses and physically deliver meat; standing down returns the same weapon and clears hunting locks. This fixes the gap between existing equipment bonuses and reachable player commands. It does not complete group hunting, tracking, traps or the whole combat catalogue. The canonical handoff records the one-year food audit and current regression/release evidence.
+
+### Player-directed construction planning — 2026-10-13
+
+Implemented: unpaid building plans, visible shortages, pause/resume/cancel, material-aware balanced labor, one-time funding and physical construction, with backward-compatible save data. No free salvage, population, production, fog reveal or territory from unfunded drawings. The engagement-report plan is now explicitly mapped to this catalogue in FUTURE_IMPLEMENTATION.md. These controls complete only the planning workflow; larger building variety, local supply delivery, durability/repair and regional administration remain open.
