@@ -103,7 +103,7 @@ export function catchDockFish(g:Game,u:Unit,b:Building){
   ground.amount=Math.max(0,ground.amount-taken);ground.pressure=Math.min(1,(ground.pressure||0)+.4*taken/Math.max(1,ground.maxAmt||8));
   if(ground.amount===0)ground.regenT=60+(ground.pressure||0)*180;
   u.carry+=taken;u.carryType='food';u.carryFood='fish';u.workReason='Fishing from the dock — carrying the catch home';
-  if(u.team===0)g.onSfx('splash');
+  if(u.team===0)g.onSfx('fish');
   if(u.carry>=carryingCapacity(u,"food")||ground.amount===0||(u.carry>=8&&reserveSeconds(g,u.team)<90))u.order='return';
 }
 

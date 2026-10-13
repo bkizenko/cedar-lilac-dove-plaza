@@ -141,3 +141,14 @@ test('unthreatened animals walk back toward saved grazing grounds rather than dr
  const restored=decodeGame(encodeGame(g));assert.deepEqual(restored.state.wildlife[0].grazing,{x:0,z:38});
  const invalid=encodeGame(g);invalid.state.wildlife[0].grazing.x=Infinity;assert.throws(()=>decodeGame(invalid),/damaged/);
 });
+
+test('equipped civilian hunters accept a Hunt order and deliver meat through the full simulation',()=>{
+ const {g,u,prey}=fixture();const hall=g.state.buildings[0];u.x=hall.x;u.z=hall.z-8;prey.x=3;prey.z=u.z;
+ u.selected=true;g.tribe(0).food=20;g.tribe(0).blades=0;g.tribe(0).bows=1;g.tribe(0).spears=0;
+ assert.equal(g.callToArms(),1);assert.equal(u.type,'archer');assert.equal(u.militia,true);assert.equal(g.tribe(0).bows,0);
+ assert.equal(g.snapshot().militiaSelected,1);g.assignJob('hunt');assert.equal(u.node,prey);g.clearSelect();
+ const stock=g.tribe(0).food;
+ for(let i=0;i<1200&&g.tribe(0).food<=stock;i++)g.step(.1);
+ assert.equal(prey.hp,0);assert.ok(g.tribe(0).food>stock,'armed civilian delivers rather than freezing in combat AI');assert.deepEqual(g.simulationErrors,[]);
+ u.carry=0;u.carryType=null;u.x=hall.x;u.z=hall.z-8;g.standDown();assert.equal(u.type,'worker');assert.equal(g.tribe(0).bows,1);assert.equal(u.huntOnly,false);assert.equal(u.jobLock,false);
+});

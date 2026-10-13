@@ -49,7 +49,7 @@ test('new maps have plentiful edible plants and more huntable herds; saves retai
 });
 
 test('distant food gatherers camp by their work at night, then resume instead of repeating the trip home',()=>{
- const g=fixture(),u=g.spawnUnit('worker',80,38,0),n=patch(g);g.clockState=()=>({period:'Night'});Object.assign(u,{order:'gather',job:'food',node:n,fatigue:.5});g.tribe(0).food=200;const x=u.x;assert.equal(routineRest(g,u,1),true);assert.equal(u.x,x);assert.equal(u.node,n);assert.ok(u.fatigue<.5);assert.match(u.workReason,/Night camp/);u.fatigue=0;g.clockState=()=>({period:'Afternoon'});assert.equal(routineRest(g,u,1),false);
+ const g=fixture(),u=g.spawnUnit('worker',80,38,0),n=patch(g);g.clockState=()=>({period:'Night'});Object.assign(u,{order:'gather',job:'food',node:n,fatigue:.5});g.tribe(0).food=200;const x=u.x;g.state.time=40;assert.equal(routineRest(g,u,1),true);assert.equal(u.x,x);assert.equal(u.node,n);assert.ok(u.fatigue<.5);assert.match(u.workReason,/Night camp/);u.fatigue=0;g.state.time=2;g.clockState=()=>({period:'Afternoon'});assert.equal(routineRest(g,u,1),false);
 });
 
 test('journey foraging that exhausts a plant leaves a real recovery delay',async()=>{

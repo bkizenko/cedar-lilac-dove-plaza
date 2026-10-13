@@ -1,3 +1,4 @@
+import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
 import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
 import {villageAppeal} from "@/game/migration";
@@ -37,6 +38,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
     s = g.state,
     t = g.tribe(0);
   if (!t) return null;
+  const workday=workdayAt(s.time,g.dayPhase()*24);
   const home = g.campOf(0);
   const habitat = habitatAt(g, home.x, home.z);
   const climate=climateAt(g,home.x,home.z),foods=foodInventory(t);
@@ -107,6 +109,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <p>Forage and hunt while fields grow. Sow in spring, tend in summer, then carry the autumn harvest home.</p>
           <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
+          <p>Hunting: craft spears or bows at the hearth or crafting shelter, arm adults near village stores, then choose Hunt with weapons. Bows reach farther and equipped hunters need fewer hits. Meat must still be butchered and carried home.</p>
           <p>{FOOD_KINDS.filter(k=>foods[k]>=1).map(k=>`${Math.floor(foods[k])} ${k}`).join(" · ") || "No food reserves"}</p>
           <p>{Math.round(climate.temperature)}°C · {Math.round(climate.humidity*100)}% humidity · {Math.ceil(Math.max(0,t.food-g.stockCap(0)))} food outdoors. Fresh fish and berries keep less well than grain; cool, dry weather slows decay.</p>
           <p><strong>{cal.phase === 3 ? "Remaining winter" : "Full winter"}: about {winter.needed} food needed.</strong>{" "}
@@ -166,7 +169,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </p>
           {s.laborPolicy==="trade" && <p>Staff your approved routes first and send one trader to refresh old offers. At least three adults and six minutes of food reserves are kept at home. Choose purchases in a known community’s trade panel.</p>}
           <label><input type="checkbox" checked={!!s.nightWork} onChange={e=>{s.nightWork=e.target.checked;engine.pushHud();}}/> Work through the night</label>
-          <p>Work follows sunrise and sunset: longer summer days, shorter winter days. Ordinary rain does not stop work. Dangerous storms send people inside; rested food gatherers finish urgent work when supplies are low. Night work increases fatigue.</p>
+          <p>Adult workday: {solarTimeLabel(workday.start)}–{solarTimeLabel(workday.end)} · about {workday.hours.toFixed(1)} hours. Summer allows up to 18 hours, winter 16; lamplight extends natural daylight. Ordinary rain permits work. Storms require shelter; urgent food and loaded deliveries can continue beyond the usual workday. Exhausted workers recover before resuming.</p>
           <label>
             Village growth{" "}
             <select

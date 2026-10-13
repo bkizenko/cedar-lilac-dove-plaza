@@ -64,7 +64,8 @@ export class GameAudio {
     f.frequency.value = 1400;
     const now = this.ctx.currentTime;
     const v = Math.max(0.0008, vol);
-    g.gain.setValueAtTime(v, now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(v, now + Math.min(.012,dur*.2));
     g.gain.exponentialRampToValueAtTime(0.0008, now + dur);
     o.connect(f);
     f.connect(g);
@@ -83,8 +84,8 @@ export class GameAudio {
   play(name: string) {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
-    const gap = name === "hit" || name === "chop" ? 0.18 : 0.04;
-    if ((this.lastSfx[name] || 0) + gap > now) return;
+    const gap = name === "fish" || name === "rustle" ? 2.5 : name === "chop" || name === "hammer" ? .6 : name === "drop" ? .8 : name === "hit" ? .18 : .04;
+    if (this.lastSfx[name] !== undefined && this.lastSfx[name] + gap > now) return;
     this.lastSfx[name] = now;
     const r = 0.94 + Math.random() * 0.12;
     switch (name) {
@@ -140,6 +141,12 @@ export class GameAudio {
         this.tone(240 * r, 0.07, "sine", 0.022);
         this.noiseBurst(0.05, 0.02, 500);
         break;
+      case "rustle":
+        this.noiseBurst(.16, .009, 400);
+        break;
+      case "fish":
+        this.noiseBurst(.28, .018, 650);
+        break;
       case "splash":
         this.noiseBurst(0.12, 0.045, 1600);
         this.tone(320 * r, 0.08, "sine", 0.015);
@@ -184,7 +191,8 @@ export class GameAudio {
     f.frequency.value = cutoff;
     const g = this.ctx.createGain();
     const now = this.ctx.currentTime;
-    g.gain.setValueAtTime(vol, now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now + Math.min(.02,dur*.25));
     g.gain.exponentialRampToValueAtTime(0.0008, now + dur);
     src.connect(f);
     f.connect(g);
@@ -192,6 +200,7 @@ export class GameAudio {
     this.voices++;
     src.onended = () => {
       this.voices = Math.max(0, this.voices - 1);
+      src.disconnect();f.disconnect();g.disconnect();
     };
     src.start(now);
     src.stop(now + dur + 0.02);
@@ -214,7 +223,7 @@ export class GameAudio {
     this.score.setVolume(v);
   }
   setSfxVolume(v: number) {
-    if (this.sfx) this.sfx.gain.value = Math.max(0, Math.min(1, v));
+    if (this.sfx && this.ctx) this.sfx.gain.setTargetAtTime(Math.max(0, Math.min(1, v)),this.ctx.currentTime,.025);
   }
   dispose() {
     this.score.dispose();

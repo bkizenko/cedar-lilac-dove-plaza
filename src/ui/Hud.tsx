@@ -663,6 +663,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 </JobBtn>
               </div>
             ) : null}
+            {hud.militiaSelected>0 && hud.workerSelected===0 && <button type="button"
+              className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm"
+              title="Armed villagers hunt with their spears or bows, butcher the catch and carry meat home"
+              onClick={()=>engine?.assignJob("hunt")}>Hunt with weapons</button>}
             {hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none" ? (
               <button
                 type="button"

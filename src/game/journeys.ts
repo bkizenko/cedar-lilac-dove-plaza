@@ -1,3 +1,4 @@
+import {workdayAt} from "./daylight";
 import {applyForagePressure} from "./ecology";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
@@ -57,8 +58,8 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
   }
   const returnNeed = Math.max(2, (distance / Math.max(1, u.speed)) * FOOD_PER_PERSON_SECOND * 1.4);
   if (e.food <= returnNeed || threat || u.stuckT > 8) e.returning = true;
-  const night = g.clockState().period === "Night";
-  if (night && !threat && !e.returning && e.food>2 && distance > 18) {
+  const offShift = !workdayAt(g.state.time,g.dayPhase()*24).working;
+  if (offShift && !g.state.nightWork && !threat && !e.returning && e.food>2 && distance > 18) {
     u.fatigue = Math.max(0, (u.fatigue || 0) - dt / 15);
     u.workReason = "Night camp — resting with journey provisions";
     return true;
@@ -77,7 +78,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
 export function routineRest(g: Game, u: Unit, dt: number) {
   u.shelterId=undefined;
   if (
-    u.type !== "worker" ||
+    (u.type !== "worker" && !(u.militia&&u.huntOnly)) ||
     u.foundingJourney ||
     u.expedition ||
     u.envoy ||
@@ -95,11 +96,12 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   const adult=!u.maturesAt||u.maturesAt<=g.state.time;
   const night=g.clockState().period === "Night";
   const fatigue=u.fatigue||0;
+  const offShift=!workdayAt(g.state.time,g.dayPhase()*24).working;
   const urgentFood=adult&&reserveSeconds(g,u.team)<240&&
     ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock));
   if(fatigue<=.12)u.resting=undefined;
-  if(!u.resting&&((night&&!g.state.nightWork&&fatigue>=(urgentFood ? .85 : .45))||fatigue>=.95))u.resting=true;
-  const resting=u.resting||(!adult&&night&&!g.state.nightWork)||g.state.weather==="storm";
+  if(!u.resting&&fatigue>=.85)u.resting=true;
+  const resting=u.resting||(!g.state.nightWork&&(adult?offShift&&!urgentFood:night))||g.state.weather==="storm";
   if (!resting) {
     if (/^(Sleeping|Sheltering|Seeking shelter|Night camp)/.test(u.workReason || "")) u.workReason = undefined;
     u.fatigue = Math.max(0,Math.min(1, fatigue + (u.order==="hold"||u.order==="idle"?-dt/60:dt/240)));
@@ -108,7 +110,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   // Distant gatherers camp by their work at night instead of spending every
   // short game day repeating a round trip. Severe storms still require shelter.
   const distantWork=!!u.job&&u.order==="gather"&&g.state.weather!=="storm"&&
-    !g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&["hut","townhall","keep"].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<35);
+    !g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&["hut","townhall","keep"].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<18);
   if(distantWork){u.fatigue=Math.max(0,(u.fatigue||0)-dt/30);u.workReason="Night camp — resting by the gathering grounds";return true;}
   const shelter = g.state.buildings
     .filter(

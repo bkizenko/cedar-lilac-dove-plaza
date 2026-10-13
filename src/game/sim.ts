@@ -1202,6 +1202,7 @@ export class Game {
       const d = UNITS.worker;
       u.type = "worker";
       u.militia = false;
+      u.huntOnly=false;u.jobLock=false;u.job=null;
       u.range = d.range;
       u.dmg = d.dmg;
       u.rof = d.rof;
@@ -2473,7 +2474,7 @@ export class Game {
   }
 
   assignJob(job: ResKind | "hold" | "hunt" | "drill" | "rest" | "auto") {
-    const units = this.selectedUnits().filter((u) => u.type === "worker");
+    const units = this.selectedUnits().filter((u) => u.type === "worker" || (job==="hunt"&&u.militia));
     if (!units.length) {
       this.banner("Select gatherers first", 1.4);
       return;
@@ -4247,7 +4248,7 @@ export class Game {
           if (u.team === 0) {
             if (gained > 1) this.addFloater(u.x, u.y + 1.8, u.z, "+" + gained, "#efe4b0");
             if (Math.random() < 0.35)
-              this.onSfx(node && "kind" in node && node.kind === "fish" ? "splash" : "chop");
+              this.onSfx("kind" in node && node.kind === "fish" ? "fish" : t === "wood" || t === "stone" || t === "copper" || t === "iron" ? "chop" : "rustle");
           }
         }
         if ("amount" in node) {
@@ -5461,7 +5462,7 @@ export class Game {
             if(routineRest(this,u,sdt))continue;
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
             else if (u.team !== 0) this.barbarianAI(u, sdt);
-            else if (u.type === "worker") {
+            else if (u.type === "worker" || (u.militia&&u.huntOnly&&["idle","gather","explore","return"].includes(u.order))) {
               if (u.order === "attack" || u.order === "attackmove") this.combatAI(u, sdt);
               else this.workerAI(u, sdt);
             } else this.combatAI(u, sdt);
@@ -5800,6 +5801,7 @@ export class Game {
       muted: this.muted,
       quality: this.quality,
       workerSelected: units.filter((u) => u.type === "worker").length,
+      militiaSelected: units.filter(u=>u.militia).length,
       militarySelected: units.filter((u) => u.type !== "worker" && u.type !== "leader").length,
       job:
         units.some((u) => u.type === "worker" && u.drill != null)

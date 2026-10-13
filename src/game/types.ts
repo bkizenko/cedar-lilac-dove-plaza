@@ -472,6 +472,7 @@ export type HudSnapshot = {
   muted: boolean;
   quality: "low" | "med" | "high";
   workerSelected: number;
+  militiaSelected: number;
   militarySelected: number;
   job: ResKind | "hold" | "hunt" | "drill" | null;
   canRaid: boolean;

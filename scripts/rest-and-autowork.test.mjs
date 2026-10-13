@@ -21,7 +21,7 @@ test('unselected idle adults start and deliver food at night without repeated co
  assert.ok(g.tribe(0).food>0,'real cargo returned to stores');assert.ok(u.hp>=hp);assert.equal(g.state.ended,null);
 });
 test('rest finishes before dawn and preserves the assigned workplace',()=>{
- const {g,u,n}=fixture();g.tribe(0).food=100;Object.assign(u,{order:'gather',job:'food',node:n,fatigue:.8});
+ const {g,u,n}=fixture();g.tribe(0).food=100;Object.assign(u,{order:'gather',job:'food',node:n,fatigue:.9});
  const at=g.interactionSpot(u,g.state.buildings[0]);u.x=at.x;u.z=at.z;
  assert.equal(routineRest(g,u,.1),true);
  for(let i=0;i<200&&u.resting;i++)routineRest(g,u,.1);
@@ -49,4 +49,15 @@ test('click-toggle and Escape clear selection without changing work; shift remov
  g.selectEntity(u);g.selectEntity(v,true);g.selectEntity(u,true,true);assert.equal(u.selected,false);assert.equal(v.selected,true);
  const e={game:g,canvas:{focus(){}},pushHud(){},moveMode:true,loggingMode:true};new KeyboardCommands(e).key({code:'Escape'});
  assert.equal(g.selectedUnits().length,0);assert.equal(e.moveMode,false);assert.equal(u.node,n);assert.equal(u.order,'gather');
+});
+
+test('winter workers and explorers continue in darkness during the workday, then rest off shift',async()=>{
+ const {expeditionAI}=await import('../src/game/journeys.ts');
+ const {g,u,n}=fixture();g.state.time=1450;g.dayPhase=()=>20/24;g.tribe(0).food=100;
+ Object.assign(u,{job:'food',node:n,order:'gather',fatigue:.2});assert.equal(routineRest(g,u,.1),false);
+ g.dayPhase=()=>23/24;assert.equal(routineRest(g,u,.1),true);assert.equal(u.node,n);
+ Object.assign(u,{x:80,z:38,order:'explore',expedition:{food:24,returning:false,forage:0}});
+ g.dayPhase=()=>20/24;assert.equal(expeditionAI(g,u,.1),false);
+ g.dayPhase=()=>23/24;assert.equal(expeditionAI(g,u,.1),true);
+ g.state.nightWork=true;assert.equal(expeditionAI(g,u,.1),false);
 });

@@ -45,6 +45,7 @@ const EMPTY: HudSnapshot = {
   muted: false,
   quality: "high",
   workerSelected: 0,
+  militiaSelected: 0,
   militarySelected: 0,
   job: null,
   canRaid: false,

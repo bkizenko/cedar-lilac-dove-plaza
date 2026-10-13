@@ -18,3 +18,13 @@ export function solarTimeLabel(hour: number) {
   const minute = Math.round(hour * 60);
   return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 }
+
+/** Productive hours include lamplit shoulders around real seasonal daylight.
+ * This is game pacing, not a claim about historical working hours. */
+export function workdayAt(time: number, hour: number) {
+  const sun=daylightAt(time);
+  const hours=16+2*Math.max(0,Math.min(1,(sun.hours-8)/8));
+  const start=Math.max(4,Math.min(5,sun.sunrise));
+  const end=start+hours;
+  return {start,end,hours,working:hour>=start&&hour<end};
+}
