@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {GATHER,GATHER_WORK_RATE} from '../src/game/constants.ts';
 import {Game} from '../src/game/sim.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {farmWork} from '../src/game/settlement.ts';
@@ -29,7 +30,7 @@ test('real sled delivery counts cargo once and increases displayed load capacity
  const before=g.tribe(0).wood;for(let i=0;i<400&&u.carryType==='wood';i++)advanceWorker(g,u,.1);
  assert.equal(g.tribe(0).wood,before+14);assert.equal(g.tribe(0).haulagePractice,14);assert.equal(u.carry,0);
  u.order='hold';advanceWorker(g,u,2);assert.equal(g.tribe(0).haulagePractice,14);
- u.carry=8;u.carryType='wood';assert.equal(carryingCapacity(u,'wood'),14);
+ u.carry=8;u.carryType='wood';assert.equal(carryingCapacity(u,'wood'),GATHER.wood.carry*2);
  const copy=decodeGame(encodeGame(g));assert.equal(copy.state.units[0].haulage,'sled');assert.equal(copy.tribe(0).haulagePractice,14);
 });
 
@@ -39,7 +40,7 @@ test('crafted stone hoe actually speeds seasonal farm work without granting extr
  advanceWorker(g,u,65);assert.equal(u.farmTool,'stoneHoe');
  const farm=g.makeBld('farm',60,38,0);g.state.buildings.push(farm);
  farm.crop={year:0,planted:0,tended:0,remaining:0,ripened:false,kind:'grain',water:1};
- g.state.time=100;farmWork(g,u,farm,10);assert.ok(Math.abs(farm.crop.planted-10/180*1.25)<1e-9);
+ g.state.time=100;farmWork(g,u,farm,10);assert.ok(Math.abs(farm.crop.planted-10/180*1.25*GATHER_WORK_RATE)<1e-9);
  g.state.time=1000;farm.crop={year:0,planted:1,tended:1,remaining:20,ripened:true,kind:'grain',water:1};u.carry=0;u.gatherT=0;u.order='gather';
  farmWork(g,u,farm,1);assert.equal(farm.crop.remaining+u.carry,20,'tool improves labor, never multiplies harvested stock');
 });

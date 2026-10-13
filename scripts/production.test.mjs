@@ -11,7 +11,7 @@ test('hearth crafting is slower than a dedicated shelter and both require real l
  assert.equal(u.weaponWork,undefined);assert.equal(g.tribe(0).spears,stock+1);
 });
 test('dock fishing uses two labor slots and finite grounds; catches arrive as fish cargo',()=>{
- const {g,u}=fixture(),dock=g.makeBld('dock',0,38,0),ground={...g.state.fish[0],id:g.id(),x:4,z:38,amount:2,maxAmt:2,pressure:0};g.state.fish=[ground];g.state.buildings.push(dock);g.rebuildWalk();
+ const {g,u}=fixture(),dock=g.makeBld('dock',0,38,0),ground={...g.state.fish[0],id:g.id(),x:4,z:38,amount:2,maxAmt:2,pressure:0};g.state.fish=[ground];g.state.buildings.push(dock);g.height=(x,z)=>x>=2&&x<=7&&z>=36&&z<=40?-1:4;g.rebuildWalk();
  Object.assign(u,{order:'gather',node:dock,job:'food',carry:0,gatherT:100});const stock=g.tribe(0).food;
  g.workerAI(u,.1);assert.equal(ground.amount,1);assert.equal(u.carry,1);assert.equal(u.carryFood,'fish');assert.equal(g.tribe(0).food,stock);
  u.gatherT=100;g.workerAI(u,.1);assert.equal(ground.amount,0);assert.equal(u.carry,2);assert.equal(u.order,'return');assert.equal(fishingGrounds(g,dock).length,0);assert.match(fishingReport(g,dock),/\/2 fishers/);

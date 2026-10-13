@@ -1602,7 +1602,7 @@ test("richer new terrain is versioned and old saves keep their exact landscape",
 });
 test("foreign traders carry real stock, negotiate locally and take payment home",async()=>{
   const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);
-  const t=g.tribe(1);Object.assign(t,{wood:200,food:300,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
+  const t=g.tribe(1);Object.assign(t,{wood:400,food:300,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
   for(const p of g.state.units.filter(u=>u.team===1)){p.carry=0;p.carryType=null;}
   const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');u.x=home.x+Math.max(home.w,home.d)*0.55+1;u.z=home.z;
