@@ -527,7 +527,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>kind==="stoneHoe"?["townhall","workshop"].includes(sel.type||""):sel.type==="forge").map(([kind,f])=>{
                   const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
                   return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
-                    Make {f.name.toLowerCase()} · {f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {f.seconds*(sel.type==="townhall"?2:1)}s work
+                    Make {f.name.toLowerCase()} · {f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {f.seconds*(sel.type==="townhall"?2:1)}s work · one resident: +{Math.round((f.cultivation-1)*100)}% sow/tend pace, +{Math.round((f.harvest-1)*100)}% harvest pace
                   </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
                 })}
                 {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(

@@ -295,6 +295,7 @@ test("civilians shelter, armed residents defend, and then resume jobs", async ()
     b = g.spawnUnit("worker", 1, 38, 0);
   a.job = "wood";
   a.jobLock = true;
+  b.maturesAt=g.state.time+100;
   g.tribe(0).spears = 1;
   g.tribe(0).bows = 0;
   const foe = g.spawnUnit("spearman", 5, 38, 3);
@@ -545,7 +546,7 @@ test("cropping depletes fertility; a fallow year restores it and is saved", asyn
   assert.equal(farmAvailable(g, b), true);
 });
 
-test("storage capacity constrains food work and protects surplus from rapid spoilage", () => {
+test("storage capacity protects surplus without stopping food work", () => {
   const g = fixture(),
     u = g.state.units.find((u) => u.team === 0 && u.type === "worker");
   g.tribe(0).food = g.stockCap(0) + 100;
@@ -554,8 +555,8 @@ test("storage capacity constrains food work and protects surplus from rapid spoi
   u.order = "idle";
   u.node = null;
   g.workBoard.assign(g, u);
-  assert.equal(u.order, "idle");
-  assert.match(u.workReason, /stores full/);
+  assert.ok(["gather","explore"].includes(u.order));
+  assert.doesNotMatch(u.workReason||"", /stores full/);
   const food = g.tribe(0).food;
   g.tickPeople(1);
   const exposedLoss = food - g.tribe(0).food;

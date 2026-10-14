@@ -225,6 +225,7 @@ export function decodeGame(raw: unknown): Game {
         !obj(u.emergency) ||
         !num(u.emergency.until) ||
         typeof u.emergency.autoArmed !== "boolean" ||
+        (u.emergency.defending !== undefined && typeof u.emergency.defending !== "boolean") ||
         typeof u.emergency.jobLock !== "boolean" ||
         ![null, "food", "wood", "stone", "copper", "iron"].includes(u.emergency.job)
       )
@@ -307,7 +308,7 @@ export function decodeGame(raw: unknown): Game {
     if (u.stationOnArrival !== undefined && typeof u.stationOnArrival !== "boolean") fail();
     if (u.emergency?.resume !== undefined) {
       const r = u.emergency.resume;
-      if (!obj(r) || !["move", "hold", "explore"].includes(r.order) ||
+      if (!obj(r) || !["move", "hold", "explore", "trade"].includes(r.order) ||
           !num(r.tx) || !num(r.tz) || typeof r.station !== "boolean") fail();
     }
     if (u.attackDestination != null) {

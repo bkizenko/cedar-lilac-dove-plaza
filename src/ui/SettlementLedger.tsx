@@ -1,3 +1,4 @@
+import {fieldProductionSummary} from "@/game/productionReport";
 import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
@@ -111,6 +112,12 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <p>Forage and hunt while fields grow. Sow in spring, tend in summer, then carry the autumn harvest home.</p>
           <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
+          <p>Food work continues when stores fill; extra supplies are kept outdoors.</p>
+          {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 160 more food</button>}
+          {farms.length>0&&<details><summary>Field output & seasonal work</summary>
+            {farms.map((b,i)=><p key={b.id}>Field {i+1}: {fieldProductionSummary(g,b)}.</p>)}
+            <p>Estimates exclude walking, rest and later weather changes. Tools reduce work time; they do not create extra harvest. Food enters stores only when carried home.</p>
+          </details>}
           <p>Hunting: craft spears or bows at the hearth or crafting shelter, arm adults near village stores, then choose Hunt with weapons. Bows reach farther and equipped hunters need fewer hits. Meat must still be butchered and carried home.</p>
           <p>{FOOD_KINDS.filter(k=>foods[k]>=1).map(k=>`${Math.floor(foods[k])} ${k}`).join(" · ") || "No food reserves"}</p>
           <p>{Math.round(climate.temperature)}°C · {Math.round(climate.humidity*100)}% humidity · {Math.ceil(Math.max(0,t.food-g.stockCap(0)))} food outdoors. Fresh fish and berries keep less well than grain; cool, dry weather slows decay.</p>

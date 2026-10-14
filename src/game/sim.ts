@@ -1,3 +1,5 @@
+import {fieldProductionSummary} from "./productionReport";
+import {raiseAttackAlarm} from "./defense";
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue} from './advancement';
@@ -4441,6 +4443,7 @@ export class Game {
       this.makeHostile(target.team);
     if (target.team === 0 && attackerTeam !== 0 && attackerTeam !== 3)
       this.makeHostile(attackerTeam);
+    raiseAttackAlarm(this,target,attackerTeam);
     if (target.hp <= 0) {
       if (
         target.kind === "unit" &&
@@ -5438,9 +5441,9 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
+            if (emergencyResponse(this, u, sdt)) continue;
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if(raidLootAI(this,u,sdt))continue;
-            if (emergencyResponse(this, u, sdt)) continue;
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
             if(routineRest(this,u,sdt))continue;
@@ -5627,6 +5630,7 @@ export class Game {
     } else if (this.state.selBld && this.state.selBld.hp > 0) {
       const b = this.state.selBld;
       let info = b.raiderCamp ? "Local raider camp. Its finite band patrols nearby paths and steals supplies; destroy the camp to scatter survivors." : BUILDINGS[b.type]?.hint || "";
+      if(b.type==="farm"&&this.finished(b))info+=" · "+fieldProductionSummary(this,b);
       if(b.type==="dock"&&this.finished(b))info+=" · "+fishingReport(this,b);
       if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);

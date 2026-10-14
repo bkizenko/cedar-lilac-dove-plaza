@@ -38,8 +38,8 @@ test('eight transported crop food starts a saved physical trial and keeps old tr
 test('seed search uses known plants and reserves no more than two people per plant',()=>{
  const g=fixture(),n=patch(g);g.state.forage=[n];for(let i=0;i<4;i++)g.spawnUnit('worker',i,38,0);assert.equal(seekCropSamples(g),2);assert.equal(g.state.units.filter(u=>u.node===n).length,2);
 });
-test('food focus permits a finite outdoor reserve and sends surplus gatherers to search',()=>{
- const g=fixture(),n=patch(g);g.state.forage=[n];g.tribe(0).food=10;g.state.laborPolicy='food';const people=Array.from({length:5},(_,i)=>g.spawnUnit('worker',i,38,0));g.findExploreTarget=()=>({x:40,z:38});for(const u of people)g.workBoard.assign(g,u);assert.equal(people.filter(u=>u.node===n).length,2);assert.equal(people.filter(u=>u.searchJob==='food').length,2);assert.match(people[4].workReason,/search party/);assert.equal(foodWorkTarget(g),Math.max(g.stockCap(0),foodDemand(g)*900));
+test('food focus permits outdoor surplus and sends spare gatherers to search',()=>{
+ const g=fixture(),n=patch(g);g.state.forage=[n];g.tribe(0).food=10;g.state.laborPolicy='food';const people=Array.from({length:5},(_,i)=>g.spawnUnit('worker',i,38,0));g.findExploreTarget=()=>({x:40,z:38});for(const u of people)g.workBoard.assign(g,u);assert.equal(people.filter(u=>u.node===n).length,2);assert.equal(people.filter(u=>u.searchJob==='food').length,2);assert.match(people[4].workReason,/search party/);assert.equal(foodWorkTarget(g),Infinity);
 });
 test('arrivals join village work while horn recalls continue waiting for explicit orders',()=>{
  const g=fixture(),u=g.spawnUnit('worker',0,38,0),hall=g.state.buildings[0],at=g.interactionSpot(u,hall);u.x=at.x;u.z=at.z;u.recalled=true;u.stationOnArrival=false;g.workerAI(u,.1);assert.equal(u.order,'idle');g.soundRecall();g.workerAI(u,.1);assert.equal(u.order,'hold');

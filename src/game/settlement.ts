@@ -13,7 +13,7 @@ import {cropYield} from "./cultivation";
 import { habitatAt, soilQuality, cropWater } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
-import { LUMBER_R, QUARRY_R, DOCK_R, UNITS, MAP, HALF, GATHER_WORK_RATE } from "./constants";
+import { LUMBER_R, QUARRY_R, DOCK_R, MAP, HALF, GATHER_WORK_RATE } from "./constants";
 
 export const YEAR_SECONDS = 1800;
 export const FOOD_PER_PERSON_SECOND = 0.036;
@@ -39,12 +39,17 @@ export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
 }
-/** Food focus permits exposed reserves; the pantry still charges outdoor spoilage. */
+/** Storage protects food; it never caps the player's gathering orders. */
 export function foodWorkTarget(g:Game,team=0){
-  return Math.max(g.stockCap(team),team===0&&g.state.laborPolicy==="food"?foodDemand(g,team)*900:0);
+  return team===0 ? Infinity : g.stockCap(team);
 }
 export function reserveSeconds(g: Game, team = 0) {
   return g.tribe(team).food / Math.max(0.055, foodDemand(g, team));
+}
+/** Shared by real ripening and read-only production forecasts. */
+export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b.crop?.water??1){
+  const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
+  return Math.floor(planted*(160+100*tended)*(b.fertility??1)*fields*habitatAt(g,b.x,b.z).crops*water*cropYield(g,b)*(0.65+soilQuality(g,b.x,b.z)*0.5));
 }
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);
@@ -65,10 +70,7 @@ export function crop(g: Game, b: Building) {
     b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false, water:1,kind:b.cropType||"grain" };
   }
   if (phase === 2 && !b.crop.ripened) {
-    const fields = b.team === 0 && g.state.agePicks[3] === "econ" ? 1.2 : 1;
-    b.crop.remaining = Math.floor(
-      b.crop.planted * (160 + 100 * b.crop.tended) * (b.fertility ?? 1) * fields * habitatAt(g, b.x, b.z).crops * (b.crop.water??1) * cropYield(g,b) * (0.65 + soilQuality(g,b.x,b.z)*0.5),
-    );
+    b.crop.remaining = farmHarvestEstimate(g,b,b.crop.planted,b.crop.tended,b.crop.water??1);
     b.crop.ripened = true;
   }
   if (phase === 3) b.crop.remaining = 0;
@@ -401,116 +403,7 @@ export class WorkBoard {
   }
 }
 
-/** Automatic response is local; commanded expeditions are not recalled across the map. */
-export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
-  if (u.team === 3) return false;
-  // Explicit adult combat orders take precedence over automatic shelter behavior.
-  if ((u.team === 0 || u.militia) && (u.type === "worker" || u.militia) && !u.emergency && !isDependent(g, u) &&
-      (u.order === "attack" || u.order === "attackmove")) return false;
-  if(u.envoy?.kind==="peace")return false;
-  // A visible attack on a nearby workplace raises the village alarm as well as
-  // personal danger. Already armed civilians must answer it even while holding.
-  const defendedSites = g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&
-    Math.hypot(b.x-u.x,b.z-u.z)<40);
-  const foes = g.state.units.filter(
-    (e) =>
-      e.hp > 0 &&
-      g.isFoe(u.team, e.team) &&
-      (u.team !== 0 || g.visibleAt(e.x, e.z)) &&
-      (Math.hypot(e.x - u.x, e.z - u.z) < 17 ||
-        (Math.hypot(e.x-u.x,e.z-u.z)<45 && defendedSites.some(b=>Math.hypot(b.x-e.x,b.z-e.z)<20))),
-  );
-  if (foes.length && (u.type === "worker" || u.militia) && !u.emergency) {
-    u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false,
-      resume: u.team === 0 && (u.order === "explore" || (u.order === "move" && u.stationOnArrival) || u.order === "hold")
-        ? { order: u.order, tx: u.tx, tz: u.tz, station: !!u.stationOnArrival } : undefined };
-    const t = g.tribe(u.team);
-    let type: "spearman" | "archer" | null = null;
-    if (!isDependent(g, u) && !u.militia && t.spears > 0) {
-      t.spears--;
-      type = "spearman";
-    } else if (!isDependent(g, u) && !u.militia && t.bows > 0) {
-      t.bows--;
-      type = "archer";
-    }
-    if (type) {
-      const d = UNITS[type];
-      u.type = type;
-      u.militia = true;
-      u.range = d.range;
-      u.dmg = d.dmg;
-      u.rof = d.rof;
-      u.emergency.autoArmed = true;
-    }
-    u.node = null;
-    u.target = null;
-  }
-  if (!u.emergency) return false;
-  if (foes.length) u.emergency.until = g.state.time + 10;
-  if (g.state.time >= u.emergency.until) {
-    if (u.emergency.autoArmed) {
-      const t = g.tribe(u.team);
-      if (u.type === "archer") t.bows++;
-      else t.spears++;
-      const d = UNITS.worker;
-      u.type = "worker";
-      u.militia = false;
-      u.range = d.range;
-      u.dmg = d.dmg;
-      u.rof = d.rof;
-    }
-    const resume = u.emergency.resume;
-    u.job = u.emergency.job;
-    u.jobLock = u.emergency.jobLock;
-    u.emergency = undefined;
-    u.target = null;
-    u.node = null;
-    u.order = u.carry > 0 ? "return" : "idle";
-    u.workReason = "Returning to village work";
-    if (resume && u.carry === 0) {
-      u.order = resume.order;
-      u.tx = resume.tx; u.tz = resume.tz;
-      u.stationOnArrival = resume.station;
-      u.stuckT = 0;
-      u.workReason = "Danger passed — resuming your expedition orders";
-    }
-    return false;
-  }
-  if (u.emergency.autoArmed || (u.militia && !isDependent(g,u))) {
-    u.workReason = "Militia defending the settlement";
-    const foe = foes.sort(
-      (a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z),
-    )[0];
-    if (foe) {
-      u.target = foe;
-      u.order = "attack";
-      g.combatAI(u, dt);
-    } else u.order = "hold";
-    return true;
-  }
-  const shelters = g.state.buildings.filter(
-    (b) => b.team === u.team && g.finished(b) && ["townhall", "hut", "keep"].includes(b.type),
-  );
-  const shelter = shelters.sort((a, b) => {
-    const safety = (b: Building) =>
-      foes.reduce((n, e) => n + Math.max(0, 25 - Math.hypot(b.x - e.x, b.z - e.z)) * 4, 0) +
-      Math.hypot(b.x - u.x, b.z - u.z);
-    return safety(a) - safety(b);
-  })[0];
-  u.workReason = "Taking shelter from invaders";
-  u.order = "move";
-  if (shelter) {
-    u.tx = shelter.x;
-    u.tz = shelter.z;
-    g.steer(u, dt);
-  } else if (foes[0]) {
-    const a = Math.atan2(u.z - foes[0].z, u.x - foes[0].x);
-    u.tx = u.x + Math.cos(a) * 8;
-    u.tz = u.z + Math.sin(a) * 8;
-    g.steer(u, dt);
-  }
-  return true;
-}
+export {emergencyResponse} from './defense';
 
 export function neighborIntent(g: Game, team: number): "recover" | "trade" | "defend" | "raid" {
   const t = g.tribe(team),

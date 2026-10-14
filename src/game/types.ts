@@ -157,8 +157,8 @@ export type Unit = {
   workCheckAt?: number;
   blockedTask?: number;
   retryWorkAt?: number;
-  emergency?: { until: number; job: ResKind | null; jobLock: boolean; autoArmed: boolean;
-    resume?: { order: "move" | "hold" | "explore"; tx: number; tz: number; station: boolean } };
+  emergency?: { until: number; job: ResKind | null; jobLock: boolean; autoArmed: boolean; defending?: boolean;
+    resume?: { order: "move" | "hold" | "explore" | "trade"; tx: number; tz: number; station: boolean } };
   attackDestination?: { x: number; z: number } | null;
   tx: number;
   tz: number;

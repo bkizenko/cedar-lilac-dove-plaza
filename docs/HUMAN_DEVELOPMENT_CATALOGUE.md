@@ -203,3 +203,7 @@ Implemented: unpaid building plans, visible shortages, pause/resume/cancel, mate
 ### Priority and raid reliability checkpoint — 2026-10-13
 
 Ordinary workers switch village focus through a shared two-pass reassignment routine; paused crafting and recalled residents no longer prevent rejoining work. Visible hostile first contact does not pause combat. Already armed civilians respond to nearby settlement attacks, and loaded civilians preserve cargo while defending. Starting equipment and Stone Age weapon prices were rebalanced. These are tested repairs within the existing labor/combat scope, not completion of the remaining military or society entries; see the canonical future document for evidence and remaining work.
+
+### Surplus food, impact alarms and readable farming — 2026-10-13
+
+Completed at narrow scope: gathering continues beyond protected food capacity; actual incoming hits mobilize local defense; healthy unarmed adults use tools while children and badly wounded residents shelter. Farm cards and the ledger expose staffing, current/potential yield and seasonal work time using the real harvest formula. Tool buttons expose individual productivity gains. These do not cross out the broader agriculture, storage, military or human-development branches. See the canonical future document for verification and remaining scope.
