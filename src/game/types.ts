@@ -199,7 +199,7 @@ export type Unit = {
   fatigue?: number;
   resting?: boolean;
   shelterId?: number;
-  visit?: {phase:"outbound"|"waiting"|"return";wait:number};
+  visit?: {phase:"outbound"|"waiting"|"return";wait:number;team?:number;wanted?:ResKind};
   jobLock: boolean;
   huntOnly: boolean;
   stuckT: number;

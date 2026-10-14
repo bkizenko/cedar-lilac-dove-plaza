@@ -1,0 +1,1588 @@
+{
+  "scope": "New seed 98765, three simulated years after short-crossing rescue and physical rival barter. This is not a live player save or a complete-game acceptance.",
+  "annual": [
+    {
+      "seed": 98765,
+      "worldgenVersion": 2,
+      "year": 1,
+      "time": 1799.99999999987,
+      "contactDialogs": 0,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 14,
+          "originalSurvivors": 5,
+          "initial": 6,
+          "food": 658,
+          "foodReserveSeconds": 1136,
+          "wood": 30,
+          "stone": 88,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 5,
+          "stores": 3,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "cairn",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "quarry",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            }
+          ],
+          "localTimber": 0,
+          "workerTasks": {
+            "gather warehouse": 1,
+            "idle": 13
+          },
+          "barter": {
+            "departures": 0,
+            "exchanges": 0,
+            "declined": 0
+          },
+          "fieldYield": [
+            {
+              "potential": 309,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 311,
+              "crop": {
+                "year": 0,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 0,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": "food",
+              "reason": "Working: food",
+              "carry": 0,
+              "node": 395
+            },
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 0
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 17,
+          "originalSurvivors": 6,
+          "initial": 7,
+          "food": 740,
+          "foodReserveSeconds": 1165,
+          "wood": 750,
+          "stone": 42,
+          "copper": 0,
+          "age": 1,
+          "nextAge": "Need 24 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 9,
+          "stores": 3,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "grove",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "lumber",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "bridge",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ],
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 13,
+            "move": 1,
+            "gather fish": 1,
+            "gather tree": 2
+          },
+          "barter": {
+            "departures": 3,
+            "exchanges": 2,
+            "declined": 1
+          },
+          "fieldYield": [
+            {
+              "potential": 203,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 196,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 205,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 196,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 206,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 196,
+              "crop": {
+                "year": 0,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 202,
+              "crop": {
+                "year": 0,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": true,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 0,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 0,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            },
+            {
+              "job": null,
+              "reason": "Offer declined \u2014 carrying the goods home",
+              "carry": 32
+            },
+            {
+              "job": "food",
+              "reason": "Working: food",
+              "carry": 0,
+              "node": 319
+            },
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 1
+        }
+      ]
+    },
+    {
+      "seed": 98765,
+      "worldgenVersion": 2,
+      "year": 2,
+      "time": 3600.0000000005193,
+      "contactDialogs": 0,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 18,
+          "originalSurvivors": 5,
+          "initial": 6,
+          "food": 831,
+          "foodReserveSeconds": 1225,
+          "wood": 18,
+          "stone": 687,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Still need 62 timber",
+          "fields": 7,
+          "stores": 3,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "cairn",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "quarry",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "quarry",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            }
+          ],
+          "localTimber": 0,
+          "workerTasks": {
+            "gather warehouse": 2,
+            "idle": 16
+          },
+          "barter": {
+            "departures": 6,
+            "exchanges": 5,
+            "declined": 1
+          },
+          "fieldYield": [
+            {
+              "potential": 235,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 237,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 237,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 274,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 274,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 311,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": "food",
+              "reason": "Drying and smoking stored food \u00b7 uses timber",
+              "carry": 0,
+              "node": 394
+            },
+            {
+              "job": "food",
+              "reason": "Drying and smoking stored food \u00b7 uses timber",
+              "carry": 0,
+              "node": 395
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 0
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 21,
+          "originalSurvivors": 6,
+          "initial": 7,
+          "food": 953,
+          "foodReserveSeconds": 1229,
+          "wood": 392,
+          "stone": 188,
+          "copper": 0,
+          "age": 1,
+          "nextAge": "Need 24 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 12,
+          "stores": 4,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "grove",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "lumber",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "bridge",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            }
+          ],
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 18,
+            "gather warehouse": 1,
+            "gather tree": 2
+          },
+          "barter": {
+            "departures": 9,
+            "exchanges": 2,
+            "declined": 7
+          },
+          "fieldYield": [
+            {
+              "potential": 154,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 156,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 156,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 178,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 172,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 172,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 210,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": false,
+                "water": 1,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": null,
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Drying and smoking stored food \u00b7 uses timber",
+              "carry": 0,
+              "node": 399
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 0
+        }
+      ]
+    },
+    {
+      "seed": 98765,
+      "worldgenVersion": 2,
+      "year": 3,
+      "time": 5399.999999999559,
+      "contactDialogs": 0,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 18,
+          "originalSurvivors": 5,
+          "initial": 6,
+          "food": 1012,
+          "foodReserveSeconds": 1381,
+          "wood": 0,
+          "stone": 655,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 8,
+          "stores": 3,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "cairn",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "quarry",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "quarry",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            }
+          ],
+          "localTimber": 0,
+          "workerTasks": {
+            "idle": 18
+          },
+          "barter": {
+            "departures": 13,
+            "exchanges": 6,
+            "declined": 7
+          },
+          "fieldYield": [
+            {
+              "potential": 235,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 237,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 237,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 274,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 274,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 311,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 312,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8923333333333452,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": null,
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 0
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 27,
+          "originalSurvivors": 6,
+          "initial": 7,
+          "food": 1257,
+          "foodReserveSeconds": 1289,
+          "wood": 0,
+          "stone": 220,
+          "copper": 0,
+          "age": 1,
+          "nextAge": "Complete Forge before advancing",
+          "fields": 16,
+          "stores": 6,
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "barracks",
+              "build": 1
+            },
+            {
+              "type": "grove",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "lumber",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "bridge",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "farm",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ],
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 25,
+            "return tree": 2
+          },
+          "barter": {
+            "departures": 14,
+            "exchanges": 2,
+            "declined": 12
+          },
+          "fieldYield": [
+            {
+              "potential": 154,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 156,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 156,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 149,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 178,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 172,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 172,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 210,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.9556666666666863,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 207,
+              "crop": {
+                "year": 2,
+                "planted": 1,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 0.5777777777777784,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 195,
+              "crop": {
+                "year": 2,
+                "planted": 0.02222222222222222,
+                "tended": 1,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.8670000000000146,
+                "kind": "grain"
+              }
+            },
+            {
+              "potential": 196,
+              "crop": {
+                "year": 2,
+                "planted": 0,
+                "tended": 0,
+                "remaining": 0,
+                "ripened": true,
+                "water": 0.9023333333333441,
+                "kind": "grain"
+              }
+            }
+          ],
+          "workers": [
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            },
+            {
+              "job": "food",
+              "reason": "No known reachable work \u2014 explore for resources or build an outpost",
+              "carry": 0
+            },
+            {
+              "job": "wood",
+              "reason": "All suitable work sites are occupied",
+              "carry": 0
+            }
+          ],
+          "stuck": [],
+          "travelers": 0
+        }
+      ]
+    }
+  ]
+}

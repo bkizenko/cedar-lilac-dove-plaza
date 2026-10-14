@@ -1,3 +1,6 @@
+import {dispatchRivalBarter} from "./rivalTrade";
+import {developRivalCrossings,planReturnCrossing} from "./crossings";
+import {weatherWaterLevel} from "./hydrology";
 import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
@@ -3066,16 +3069,8 @@ export class Game {
     this.state.weather = next;
     this.state.weatherT =
       next === "storm" ? 20 + Math.random()*30 : next === "flood" || next === "drought" ? 70 + Math.random() * 40 : 160 + Math.random() * 140;
-    if (next === "flood") {
-      this.world.waterY = this.world.baseWaterY + 0.55;
-      this.rebuildWalk();
-    } else if (next === "drought") {
-      this.world.waterY = this.world.baseWaterY - 0.18;
-      this.rebuildWalk();
-    } else if (prev === "flood" || prev === "drought") {
-      this.world.waterY = this.world.baseWaterY;
-      this.rebuildWalk();
-    }
+    const water=weatherWaterLevel(this.world.baseWaterY,next);
+    if(this.world.waterY!==water){this.world.waterY=water;this.rebuildWalk();}
     const line: Record<Weather, string> = {
       clear: "Skies open over the island",
       mist: "Mist rolls in from the sea",
@@ -3660,6 +3655,8 @@ export class Game {
     const entrance=this.interactionSpot(u,b);
     return !!entrance&&Math.hypot(u.x-entrance.x,u.z-entrance.z)<=1;
   }
+
+  planReturnCrossing(){return planReturnCrossing(this);}
 
   nearestDrop(x: number, z: number, team: number) {
     let best: Building | null = null;
@@ -4977,6 +4974,8 @@ export class Game {
     if (tr.thinkT > 0) return;
     tr.thinkT = 1.6 + Math.random();
 
+    dispatchRivalBarter(this,team);
+    developRivalCrossings(this,team);
     rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
     developRivalInstitutions(this,team);

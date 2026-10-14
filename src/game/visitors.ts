@@ -1,3 +1,5 @@
+import {settleRivalBarter} from "./rivalTrade";
+import {receiveFood} from "./pantry";
 import type { Game } from './sim';
 import type { Unit, ResKind } from './types';
 import { isDependent, foodDemand, reserveSeconds } from './settlement';
@@ -25,8 +27,8 @@ export function tickVisitors(g:Game,dt:number) {
 }
 export function visitorAI(g:Game,u:Unit,dt:number) {
   const m=u.visit;if(!m)return false;
-  const home=g.state.buildings.find(b=>b.team===(m.phase==='return'?u.team:0)&&b.type==='townhall'&&g.finished(b));
-  if(!home||g.tribe(u.team).hostile){u.visit=undefined;u.order=u.carry>0?'return':'idle';return true;}
+  const home=g.state.buildings.find(b=>b.team===(m.phase==='return'?u.team:(m.team??0))&&b.type==='townhall'&&g.finished(b));
+  if(!home||g.isFoe(u.team,m.team??0)){u.visit=undefined;u.order=u.carry>0?'return':'idle';return true;}
   if(u.stuckT>8){u.visit=undefined;u.order=u.carry>0?'return':'idle';u.node=null;return true;}
   if(m.phase==='waiting') {
     m.wait+=dt;u.vx=0;u.vz=0;
@@ -34,10 +36,14 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   }
   u.tx=home.x;u.tz=home.z;
   if(Math.hypot(u.x-home.x,u.z-home.z)>Math.max(home.w,home.d)*0.55+3){g.steer(u,dt);return true;}
+  if(m.phase==='outbound'&&m.team!==undefined){
+    const exchanged=settleRivalBarter(g,u);m.phase='return';u.stuckT=0;
+    if(!exchanged)u.workReason='Offer declined — carrying the goods home';return true;
+  }
   if(m.phase==='outbound') {m.phase='waiting';u.order='hold';u.workReason='Visiting trader — awaiting your offer';g.banner(g.tribe(u.team).name+' has sent a trader to your village',5);}
   else {
-    if(u.carryType&&u.carry>0)g.tribe(u.team)[u.carryType]+=u.carry;
-    u.carry=0;u.carryType=null;u.visit=undefined;u.order='idle';u.node=null;
+    if(u.carryType&&u.carry>0){if(u.carryType==='food')receiveFood(g,u.team,u.carry,u.carryFood);else g.tribe(u.team)[u.carryType]+=u.carry;}
+    u.carry=0;u.carryType=null;u.carryFood=undefined;u.visit=undefined;u.order='idle';u.node=null;
   }
   return true;
 }

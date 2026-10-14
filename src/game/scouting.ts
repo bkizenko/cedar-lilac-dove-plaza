@@ -78,7 +78,8 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
   const m = u.scout;
   if (u.stuckT > 16 && m.returning) {
     u.scout = undefined;
-    u.order = "idle";
+    u.order = "return";u.recalled=true;u.stationOnArrival=false;
+    u.workReason="Scouting return needs a reachable hearth or crossing";
     return true;
   }
   if (u.stuckT > 8 || m.legs >= 5 || reserveSeconds(g,u.team)<180) m.returning = true;

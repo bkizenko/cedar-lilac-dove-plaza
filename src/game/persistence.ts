@@ -1,3 +1,4 @@
+import {weatherWaterLevel} from "./hydrology";
 import {reconcileTradeReservations} from "./tradeReservations";
 import {carcassStateValid} from "./hunting";
 import {validFarmToolUnit} from "./farmTools";
@@ -297,6 +298,8 @@ export function decodeGame(raw: unknown): Game {
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
+    if(u.visit?.team!==undefined&&(![1,2].includes(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
+    if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
     if(u.tradeReservation!==undefined){
@@ -490,6 +493,7 @@ export function decodeGame(raw: unknown): Game {
   g.tradeTeam = d.tradeTeam;
   g.started = true;
   g.awaitingStart = false;
+  g.world.waterY=weatherWaterLevel(g.world.baseWaterY,g.state.weather);
   g.rebuildWalk();
   return g;
 }
