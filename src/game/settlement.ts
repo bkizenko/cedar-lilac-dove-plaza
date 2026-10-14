@@ -405,17 +405,22 @@ export class WorkBoard {
 export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   if (u.team === 3) return false;
   // Explicit adult combat orders take precedence over automatic shelter behavior.
-  if ((u.team === 0 || u.militia) && u.type === "worker" && !u.emergency && !isDependent(g, u) &&
+  if ((u.team === 0 || u.militia) && (u.type === "worker" || u.militia) && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
   if(u.envoy?.kind==="peace")return false;
+  // A visible attack on a nearby workplace raises the village alarm as well as
+  // personal danger. Already armed civilians must answer it even while holding.
+  const defendedSites = g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&
+    Math.hypot(b.x-u.x,b.z-u.z)<40);
   const foes = g.state.units.filter(
     (e) =>
       e.hp > 0 &&
       g.isFoe(u.team, e.team) &&
       (u.team !== 0 || g.visibleAt(e.x, e.z)) &&
-      Math.hypot(e.x - u.x, e.z - u.z) < 17,
+      (Math.hypot(e.x - u.x, e.z - u.z) < 17 ||
+        (Math.hypot(e.x-u.x,e.z-u.z)<45 && defendedSites.some(b=>Math.hypot(b.x-e.x,b.z-e.z)<20))),
   );
-  if (foes.length && u.type === "worker" && !u.emergency) {
+  if (foes.length && (u.type === "worker" || u.militia) && !u.emergency) {
     u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false,
       resume: u.team === 0 && (u.order === "explore" || (u.order === "move" && u.stationOnArrival) || u.order === "hold")
         ? { order: u.order, tx: u.tx, tz: u.tz, station: !!u.stationOnArrival } : undefined };

@@ -8,6 +8,10 @@ export function tickEncounters(g:Game){
   const person=g.state.units.find(u=>u.team===0&&u.hp>0&&Math.hypot(u.x-stranger.x,u.z-stranger.z)<=12);
   if(!person)continue;
   contacts.push(stranger.team);
+  if(g.isFoe(0,stranger.team)){
+   g.banner(`Hostile party sighted — armed villagers defend nearby homes and workplaces`,5);
+   continue;
+  }
   g.state.encounter={team:stranger.team,person:person.id,stranger:stranger.id,resume:!g.state.paused};
   g.state.paused=true;g.banner(`Your people encounter ${g.tribe(stranger.team).name}`,5);return;
  }

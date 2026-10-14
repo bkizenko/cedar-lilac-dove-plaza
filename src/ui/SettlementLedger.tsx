@@ -166,8 +166,9 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             </select>
           </label>
           <p>
-            Changing this priority resets adult workers’ assignments and work focus. Carriers finish
-            deliveries and delegations before switching.
+            Changing priority reassigns village workers, including paused crafters and recalled residents.
+            Carriers deliver first; returning explorers join on arrival. Active crafting, study, delegations,
+            settlement journeys and armed guards keep their orders.
           </p>
           {s.laborPolicy==="trade" && <p>Staff your approved routes first and send one trader to refresh old offers. At least three adults and six minutes of food reserves are kept at home. Choose purchases in a known community’s trade panel.</p>}
           <label><input type="checkbox" checked={!!s.nightWork} onChange={e=>{s.nightWork=e.target.checked;engine.pushHud();}}/> Work through the night</label>

@@ -1,3 +1,4 @@
+import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue} from './advancement';
 import {rivalCanInvest,developRivalResources,developRivalInstitutions} from "./rivalDevelopment";
@@ -360,8 +361,8 @@ export class Game {
       csType: "Settled",
       tension: 0,
       tensionBand: 0,
-      spears: i === 0 ? 3 : i === 3 ? 0 : 2,
-      bows: i === 2 ? 2 : 0,
+      spears: i === 0 ? 5 : i === 3 ? 0 : 2,
+      bows: i === 0 || i === 2 ? 2 : 0,
       blades: i === 1 ? 1 : 0,
       fallenT: 0,
       };
@@ -1412,19 +1413,7 @@ export class Game {
   }
 
   setLaborPriority(policy: NonNullable<GameState["laborPolicy"]>) {
-    this.state.laborPolicy=policy;
-    if(policy==="trade")for(const route of this.state.routes)if(!route.paused)route.t=Math.min(route.t,1);
-    this.workBoard.reset();
-    for(const u of this.state.units) {
-      if(u.team!==0||u.type!=="worker"||u.hp<=0||isDependent(this,u))continue;
-      u.job=null;u.jobLock=false;u.huntOnly=false;u.searchJob=undefined;u.workCheckAt=0;
-      // Deliver cargo and finish diplomatic missions before starting the new focus.
-      if(u.envoy||u.order==="trade"||u.emergency||u.recalled||u.scout||u.visit||u.foundingJourney||u.studyCrop||u.weaponWork||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused)continue;
-      if(u.expedition){if(policy!=="explore"){u.expedition.returning=true;const h=this.campOf(0);u.order="move";u.tx=h.x;u.tz=h.z;}continue;}
-      u.node=null;u.target=null;u.attackDestination=null;u.pillage=-1;
-      u.order=u.carry>0?"return":"idle";
-      if(u.order==="idle")this.workBoard.assign(this,u);
-    }
+    applyLaborPriority(this,policy);
   }
 
   cycleVillager(direction=1) {
@@ -4626,11 +4615,8 @@ export class Game {
     if (u.order === "idle") {
       const t = this.acquireTarget(u, u.type === "archer" || u.type === "ranger" ? 13 : 7);
       if (t) {
-        const foe = this.tribe(t.team);
-        if (!(u.team === 0 && foe && !foe.hostile)) {
-          u.target = t;
-          u.order = "attack";
-        }
+        u.target = t;
+        u.order = "attack";
       }
       return;
     }
@@ -5452,9 +5438,10 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
-            if(u.recalled || (u.team!==3 && u.order==="return" && u.carry>0)){this.workerAI(u,sdt);continue;}
+            if(u.recalled){this.workerAI(u,sdt);continue;}
             if(raidLootAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
             if(routineRest(this,u,sdt))continue;
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);

@@ -199,3 +199,7 @@ Items 33/101/103 remain partial. Armed civilian militia can now receive a Hunt o
 ### Player-directed construction planning — 2026-10-13
 
 Implemented: unpaid building plans, visible shortages, pause/resume/cancel, material-aware balanced labor, one-time funding and physical construction, with backward-compatible save data. No free salvage, population, production, fog reveal or territory from unfunded drawings. The engagement-report plan is now explicitly mapped to this catalogue in FUTURE_IMPLEMENTATION.md. These controls complete only the planning workflow; larger building variety, local supply delivery, durability/repair and regional administration remain open.
+
+### Priority and raid reliability checkpoint — 2026-10-13
+
+Ordinary workers switch village focus through a shared two-pass reassignment routine; paused crafting and recalled residents no longer prevent rejoining work. Visible hostile first contact does not pause combat. Already armed civilians respond to nearby settlement attacks, and loaded civilians preserve cargo while defending. Starting equipment and Stone Age weapon prices were rebalanced. These are tested repairs within the existing labor/combat scope, not completion of the remaining military or society entries; see the canonical future document for evidence and remaining work.

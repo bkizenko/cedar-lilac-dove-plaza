@@ -3,8 +3,8 @@ import type {Unit,ResKind} from './types';
 import {isDependent} from './settlement';
 import {predisposition} from './people';
 export const WEAPONS={
-  spear:{name:'Stone spear',wood:4,stone:1,copper:0,iron:0,age:0,seconds:24},
-  bow:{name:'Hunting bow',wood:6,stone:1,copper:0,iron:0,age:0,seconds:36},
+  spear:{name:'Stone spear',wood:2,stone:1,copper:0,iron:0,age:0,seconds:24},
+  bow:{name:'Hunting bow',wood:3,stone:1,copper:0,iron:0,age:0,seconds:36},
   blade:{name:'Metal blade',wood:4,stone:0,copper:6,iron:0,age:1,seconds:48},
 } as const;
 export type WeaponKind=keyof typeof WEAPONS;
