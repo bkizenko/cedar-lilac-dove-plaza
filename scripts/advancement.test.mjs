@@ -9,25 +9,25 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(team=0){
  const g=new Game();g.reset(123456,2);g.enterIsland();g.world.heights.fill(4);g.state.units=[];g.state.buildings=[];
  for(const [i,type] of ['townhall','hut','farm','warehouse','workshop'].entries())g.state.buildings.push(g.makeBld(type,i*14,38,team));
- for(let i=0;i<12;i++)g.spawnUnit('worker',i%4,50+Math.floor(i/4),team);
+ for(let i=0;i<16;i++)g.spawnUnit('worker',i%4,50+Math.floor(i/4),team);
  Object.assign(g.tribe(team),{food:2000,wood:2000,stone:2000,copper:2000,iron:2000,age:0});
  g.state.time=200;g.state.weather='clear';g.rebuildWalk();return g;
 }
 
 test('Bronze demands settlement scale and a completed crafting institution, not only a stockpile',()=>{
- const g=fixture();g.state.units.pop();assert.match(g.ageUpIssue(0),/12 residents/);
+ const g=fixture();g.state.units.pop();assert.match(g.ageUpIssue(0),/16 residents/);
  g.spawnUnit('worker',0,50,0);const workshop=g.state.buildings.find(b=>b.type==='workshop');workshop.build=.9;
  assert.match(g.ageUpIssue(0),/Crafting shelter/);workshop.build=1;assert.equal(g.ageUpIssue(0),null);
- const cost=AGE_COST[1];assert.equal(cost.wood,300);assert.equal(cost.stone,120);
+ const cost=AGE_COST[1];assert.equal(cost.wood,80);assert.equal(cost.stone,32);
  const before={...g.tribe(0)};g.commitAge(0,'econ');
- assert.equal(g.tribe(0).age,1);assert.equal(g.tribe(0).food,before.food-cost.food);assert.equal(g.tribe(0).wood,before.wood-cost.wood);
+ assert.equal(g.tribe(0).age,1);assert.equal(g.tribe(0).food,before.food);assert.equal(g.tribe(0).wood,before.wood);
 });
 
 test('a transition cannot empty the pantry and gives useful storage guidance',()=>{
  const g=fixture(),t=g.tribe(0),cost=AGE_COST[1];t.food=cost.food;
- assert.match(g.ageUpIssue(),/Keep .* food.*Expand food storage/);
+ assert.match(g.ageUpIssue(),/Have .* food in reserve/);
  g.commitAge(0,'econ');assert.equal(t.age,0);assert.equal(t.food,cost.food);
- t.food=cost.food+ageFoodReserve(g,0);assert.equal(g.ageUpIssue(),null);
+ t.food=Math.max(cost.food,ageFoodReserve(g,0));assert.equal(g.ageUpIssue(),null);
  g.commitAge(0,'econ');assert.equal(t.age,1);assert.ok(t.food>=ageFoodReserve(g,0));
 });
 

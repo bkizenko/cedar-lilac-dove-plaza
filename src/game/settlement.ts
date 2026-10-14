@@ -289,7 +289,7 @@ export class WorkBoard {
           !["gather", "build"].includes(other.order)
         )
           continue;
-        const key = other.team + ":" + other.node.id;
+        const key = String(other.node.id);
         this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);
       }
     }
@@ -346,7 +346,7 @@ export class WorkBoard {
         unsafe = true;
         continue;
       }
-      const count = this.occupancy.get(u.team + ":" + task.node.id) || 0;
+      const count = this.occupancy.get(String(task.node.id)) || 0;
       if (count >= task.slots) {
         occupied = true;
         continue;
@@ -368,10 +368,11 @@ export class WorkBoard {
     }
     if (!best) {
       const search=u.huntOnly||g.state.laborPolicy==="hunt"?"hunt":u.jobLock&&u.job?u.job:reserveSeconds(g,u.team)<240?"food":g.state.laborPolicy;
-      if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=foodWorkTarget(g,u.team))&&(!occupied||(["food","hunt"].includes(search||"")&&reserveSeconds(g,u.team)<240))&&!unsafe&&u.carry===0) {
+      if(u.team===0&&["wood","food","hunt"].includes(search||"")&&!(["food","hunt"].includes(search||"")&&g.tribe(u.team).food>=foodWorkTarget(g,u.team))&&(!occupied||search==="wood"||(["food","hunt"].includes(search||"")&&reserveSeconds(g,u.team)<240))&&!unsafe&&u.carry===0) {
         const foodSearch=["food","hunt"].includes(search||"");
         const searchers=g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.id!==u.id&&p.order==="explore"&&["food","hunt"].includes(p.searchJob||"")).length;
         if(foodSearch&&searchers>=Math.max(1,Math.ceil(g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.type==="worker"&&!isDependent(g,p)).length/3))){u.workReason="Food sites occupied — a search party is finding more";return;}
+        if(search==="wood"&&g.state.units.filter(p=>p.team===u.team&&p.hp>0&&p.order==="explore"&&p.searchJob==="wood").length>=2){u.workReason="Two cutters per tree — a small party is looking for more timber";return;}
         const destination=u.order==="explore"?{x:u.tx,z:u.tz}:g.findExploreTarget(u);
         if(destination){u.searchJob=search as "wood"|"food"|"hunt";u.order="explore";u.node=null;u.tx=destination.x;u.tz=destination.z;u.workReason=`Searching unknown ground for ${search==="hunt"?"herds":search==="wood"?"timber":"food"}`;return;}
       }
@@ -389,7 +390,7 @@ export class WorkBoard {
                 : "No known reachable work — explore for resources or build an outpost";
       return;
     }
-    const key = u.team + ":" + best.node.id;
+    const key = String(best.node.id);
     this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);
     u.searchJob=undefined;
     u.node = best.node;

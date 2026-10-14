@@ -210,3 +210,8 @@ Completed at narrow scope: gathering continues beyond protected food capacity; a
 
 ### 2026-10-13 frontier and craft capacity increment
 Surplus food now increases both settler attraction/arrival frequency and bounded raid pressure. Defensive segments, gate controls, slower earthwork crossings and tactical sea-raider targeting/withdrawal extend items 65/103–110; actual naval journeys, coordinated siege and rival fortification remain open. Shared crafting benches and hands-on practice extend 57/59/63/74 without completing linked materials or durability. Only the narrow finished palisade/gate scope is crossed out above. See FUTURE_IMPLEMENTATION.md for exact verification and the remaining ordered work.
+
+
+## 2026-10-13: allocation, commitments and age identity
+
+Narrow completed behavior: two cutters per tree including shared sites and overcrowded saved orders; accepted trade goods set aside from seller spending with conserved saved/interrupted shipments; age advancement retains reserves and uses larger population milestones. Rival material/construction orchestration and biome-aware field planning are extended but the three-year audit retained all six societies (39→109 residents, one Bronze transition), but later-age material access and one long-stranded loaded carrier remain unresolved. Six age presentation profiles, instanced building details and evolving licensed calm music are implemented without replacing building/save identities. No additional whole catalogue item is crossed out: discovery-led ages, full regional economies, coordinated armies and independent rising/falling factions remain larger unfinished requirements. Use the newest canonical handoff section for release/test evidence.

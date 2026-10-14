@@ -357,7 +357,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {hud.ageIssue ? <span className="mt-1 block text-[11px] font-normal text-parchment">{hud.ageIssue}</span> : null}
                 {hud.ageCost ? (
                   <span className="mt-0.5 block text-[10px] font-normal text-parchment">
-                    {hud.ageCost.food ?? 0} food · {hud.ageCost.wood ?? 0} logs · {hud.ageCost.stone ?? 0}{" "}
+                    Reserves kept · {hud.ageCost.food ?? 0} food · {hud.ageCost.wood ?? 0} logs · {hud.ageCost.stone ?? 0}{" "}
                     stone
                     {hud.ageCost.pop ? ` · ${hud.ageCost.pop} people` : ""}
                   </span>

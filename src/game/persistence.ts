@@ -1,3 +1,4 @@
+import {reconcileTradeReservations} from "./tradeReservations";
 import {carcassStateValid} from "./hunting";
 import {validFarmToolUnit} from "./farmTools";
 import {validHaulageUnit,validHaulageTribe} from "./haulage";
@@ -11,6 +12,7 @@ import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
+  reconcileTradeReservations(g);
   const s = g.state;
   return {
     version: SAVE_VERSION,
@@ -297,6 +299,12 @@ export function decodeGame(raw: unknown): Game {
     if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
+    if(u.tradeReservation!==undefined){
+      const r=u.tradeReservation;
+      if(!obj(r)||u.team!==0||![1,2].includes(r.team)||r.team!==u.tradeTeam||
+        !["food","wood","stone","copper","iron"].includes(r.kind)||!Number.isSafeInteger(r.amount)||r.amount<1||r.amount>200||
+        !u.trade||r.kind!==u.trade.get||r.amount!==u.trade.getAmt||u.customOffer||u.procurement)fail();
+    }
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();

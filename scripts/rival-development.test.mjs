@@ -21,6 +21,7 @@ function baseEconomy(g){for(let i=0;i<5;i++)g.state.buildings.push(g.makeBld('fa
 test('successful rivals reserve advancement materials instead of endlessly adding optional fields and stores',()=>{
  const g=fixture();baseEconomy(g);const cost=AGE_COST[1];
  while(g.popNow(1)<cost.pop)g.spawnUnit('worker',5,50,1);
+ while(g.state.buildings.filter(b=>b.type==='farm').length<rivalDevelopmentPlan(g,1).foodFields)g.state.buildings.push(g.makeBld('farm',50,70,1));
  g.state.buildings.push(g.makeBld('workshop',40,38,1));
  Object.assign(g.tribe(1),{wood:cost.wood+5,stone:cost.stone+5});
  assert.equal(rivalDevelopmentPlan(g,1).saving,true);
@@ -31,7 +32,7 @@ test('successful rivals reserve advancement materials instead of endlessly addin
  assert.equal(rivalCanInvest(g,1,'warehouse'),false);
  g.tribe(1).wood=cost.wood+30;assert.equal(rivalCanInvest(g,1,'farm'),true,'surplus beyond the reserve can be spent');
  const before=g.tribe(1).age;g.tryAgeUp(1);
- assert.equal(g.tribe(1).age,before+1);assert.equal(g.tribe(1).wood,30);assert.equal(g.tribe(1).stone,5);
+ assert.equal(g.tribe(1).age,before+1);assert.equal(g.tribe(1).wood,cost.wood+30);assert.equal(g.tribe(1).stone,cost.stone+5);
 });
 
 test('survival needs may use reserves but investment cannot exceed real stock or queue endless construction',()=>{

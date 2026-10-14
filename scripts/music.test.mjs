@@ -21,3 +21,17 @@ test('failed autoplay is visible and another gesture retries it without rebuildi
 test('an already unlocked effects context still retries music on a user gesture',()=>{
   let retries=0;GameAudio.prototype.unlock.call({unlocked:true,ctx:{state:'running'},score:{unlock(){retries++;}}});assert.equal(retries,1);
 });
+
+test('ages evolve peaceful music without forcing battle or lively music in calm mode',async()=>{
+  const {peacefulMusic,TRACKS}=await import('../src/game/music.ts');
+  assert.equal(peacefulMusic(0,'Spring'),'village');assert.equal(peacefulMusic(1,'Spring'),'adventure');
+  assert.equal(peacefulMusic(2,'Spring'),'folk');assert.equal(peacefulMusic(5,'Spring',false),'celtic');
+  for(let age=0;age<=5;age++)for(const season of ['Spring','Summer','Autumn','Winter']){
+    const stage=peacefulMusic(age,season,true);assert.ok(TRACKS[stage]);assert.ok(!['battle','celtic'].includes(stage));
+  }
+  const f=fixture();try{
+    f.score.unlock();f.score.update('village',20,false);f.score.update('folk',6,false);
+    assert.equal(f.score.stage,'folk');assert.equal(f.tracks[3].paused,false);assert.equal(f.tracks[0].paused,true);
+    f.score.setMuted(true);assert.equal(f.tracks[3].paused,true);
+  }finally{f.restore();}
+});

@@ -186,6 +186,7 @@ export type Unit = {
   stride: number;
   trade: TradeDeal | null;
   tradeTeam: number;
+  tradeReservation?: {team:number;kind:ResKind;amount:number};
   ageT: number;
   hunger?: number;
   customOffer?: boolean;

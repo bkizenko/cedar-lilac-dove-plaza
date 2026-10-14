@@ -1,4 +1,4 @@
-import { AcousticScore } from "./music";
+import { peacefulMusic, AcousticScore } from "./music";
 export class GameAudio {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -215,7 +215,7 @@ export class GameAudio {
     season = "Spring",
   ) {
     const battle = !this.score.calm && mood !== "peace";
-    const stage = battle ? "battle" : season === "Autumn" || season === "Winter" ? "adventure" : "village";
+    const stage = battle ? "battle" : peacefulMusic(age,season,this.score.calm);
     const duck = (season === "Winter" ? 0.5 : season === "Autumn" ? 0.62 : 0.7) * (population > 30 || age > 3 ? 0.9 : 1);
     this.score.update(stage, dt, paused, duck);
   }

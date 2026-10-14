@@ -30,8 +30,8 @@ export function ageFoodReserve(g:Game,team:number){return Math.ceil(foodDemand(g
 export function ageReserveIssue(g:Game,team:number):string|null{
   const t=g.tribe(team),cost=AGE_COST[t.age+1];
   if(!cost)return null;
-  const buffer=ageFoodReserve(g,team),needed=(cost.food||0)+buffer;
+  const buffer=ageFoodReserve(g,team),needed=Math.max(cost.food||0,buffer);
   if(t.food>=needed)return null;
   const storage=g.stockCap(team)<needed?' Expand food storage to hold that reserve.':'';
-  return `Keep ${buffer} food for your people after advancing — need ${needed} food in total.${storage}`;
+  return `Have ${needed} food in reserve for your people. Reserves are kept when advancing.${storage}`;
 }

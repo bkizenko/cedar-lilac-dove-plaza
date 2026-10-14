@@ -1,9 +1,11 @@
+import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
+import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
 import {raiseAttackAlarm} from "./defense";
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans} from "./construction";
-import {ageInfrastructureIssue,ageReserveIssue} from './advancement';
-import {rivalCanInvest,developRivalResources,developRivalInstitutions} from "./rivalDevelopment";
+import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
+import {rivalCanInvest,rivalDevelopmentPlan,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -1551,6 +1553,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
     u.trade=null;u.tradeTeam=0;u.procurement=undefined;u.customOffer=undefined;u.shelterId=undefined;
@@ -2853,7 +2856,7 @@ export class Game {
     }
   }
 
-  dispatchTrade(worker: Unit, deal: TradeDeal, team: number) {
+  dispatchTrade(worker: Unit, deal: TradeDeal, team: number, accepted = true) {
     const rival = this.tribe(team),
       hall = this.state.buildings.find((b) => b.team === team && b.type === "townhall" && b.hp > 0);
     if (
@@ -2869,6 +2872,11 @@ export class Game {
       !this.canAfford(0, { [deal.give]: deal.giveAmt })
     )
       return false;
+    if(accepted){
+      const issue=shipmentIssue(this,team,deal);
+      if(issue){this.banner(issue,4);return false;}
+      if(!reserveTradeGoods(this,worker,team,deal))return false;
+    }
     this.spend(0, { [deal.give]: deal.giveAmt });
     rival.tradeCd = 32;
     worker.customOffer=undefined;
@@ -3595,8 +3603,7 @@ export class Game {
     const issue = this.ageUpIssue(team);
     if (issue) { if (team === 0) {this.state.pendingAge = false; this.banner(issue, 3);} return; }
     const tribe = this.tribe(team);
-    const c = AGE_COST[tribe.age + 1]!;
-    this.spend(team, c);
+    // Readiness is demonstrated by reserves, not a payment.
     tribe.age++;
     if (team === 0) {
       this.state.age = tribe.age;
@@ -3687,6 +3694,7 @@ export class Game {
     let best: ResourceNode | Building | Critter | null = null;
     let bd = 1e12;
     const consider = (n: ResourceNode | Building | Critter, x: number, z: number, extra = 0) => {
+      if("kind" in n&&n.kind==="tree"&&!treeHasRoom(this,n as ResourceNode,u))return;
       if (u.team === 0 && (!("type" in n) || n.kind !== "building") &&
           ("species" in n && n.hp>0 ? !this.visibleAt(x, z) : !this.exploredAt(x, z))) return;
       const d = (x - u.x) ** 2 + (z - u.z) ** 2 + extra;
@@ -4173,7 +4181,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:1.22);
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&node.kind==="tree"?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
         if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}
@@ -4315,7 +4323,7 @@ export class Game {
       return;
     }
     if (u.carry !== deal.giveAmt || u.carryType !== deal.give) {
-      u.trade = null; u.tradeTeam = 0; u.order = "return";
+      releaseTradeReservation(this,u); u.trade = null; u.tradeTeam = 0; u.order = "return";
       this.banner("The shipment was damaged or stolen. The carrier is returning with what remains.", 4);
       return;
     }
@@ -4324,14 +4332,14 @@ export class Game {
       ? this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0)
       : null;
     if (!rival || !hall || rival.hostile) {
-      u.trade = null;
+      releaseTradeReservation(this,u); u.trade = null;
       u.tradeTeam = 0;
       u.order = "return";
       this.banner(rival?.hostile ? "Trade called off" : "The traders turn back", 1.6);
       return;
     }
     const entrance=this.interactionSpot(u,hall);
-    if(!entrance){u.trade=null;u.order="return";u.workReason="No reachable meeting place — bringing the offer home";return;}
+    if(!entrance){releaseTradeReservation(this,u);u.trade=null;u.order="return";u.workReason="No reachable meeting place — bringing the offer home";return;}
     u.tx=entrance.x;u.tz=entrance.z;
     if (!this.buildingWorkReached(u,hall)) {
       this.steer(u, dt);
@@ -4343,7 +4351,7 @@ export class Game {
       const quote=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u);
       u.procurement=undefined;
       if(!quote.deal||quote.deal.getAmt<minimum){
-        u.trade=null;u.order="return";
+        releaseTradeReservation(this,u);u.trade=null;u.order="return";
         u.workReason="Local terms below your minimum — returning the budget";
         this.banner((quote.deal?`They offered ${quote.deal.getAmt} ${deal.get}, below your minimum of ${minimum}.`:quote.reason)+" Your budget is coming home.",5);
         return;
@@ -4353,20 +4361,22 @@ export class Game {
     if(u.customOffer) {
       const quote=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u);
       u.customOffer=undefined;
-      if(!quote.deal){u.trade=null;u.order="return";this.banner(quote.reason+" Your trader is bringing the offer home.",5);return;}
+      if(!quote.deal){releaseTradeReservation(this,u);u.trade=null;u.order="return";this.banner(quote.reason+" Your trader is bringing the offer home.",5);return;}
       if(quote.deal.getAmt<deal.getAmt) {
         deal.getAmt=quote.deal.getAmt;
         this.banner("They countered with a smaller shipment; your trader accepted the local terms.",5);
       }
     }
-    const issue = shipmentIssue(this, rival.id, deal);
+    const reserved=hasTradeReservation(u);
+    const issue = reserved ? null : shipmentIssue(this, rival.id, deal);
     if (issue) {
-      u.trade = null;
+      releaseTradeReservation(this,u); u.trade = null;
       u.order = "return";
       this.banner(issue + " The carrier is bringing supplies home.", 4);
       return;
     }
-    rival[deal.get] -= deal.getAmt;
+    if(!reserved)rival[deal.get] -= deal.getAmt;
+    u.tradeReservation=undefined;
     rival[deal.give] += deal.giveAmt;
     u.carry = deal.getAmt; // Every returned unit was deducted from the seller.
     u.carryType = deal.get;
@@ -4376,7 +4386,7 @@ export class Game {
     rival.tension = Math.max(0, rival.tension - 0.12);
     this.addFloater(u.x, u.y + 2.4, u.z, "+" + deal.getAmt, "#efe4b0");
     this.banner("Traded with " + rival.name, 1.8);
-    u.trade = null;
+    releaseTradeReservation(this,u); u.trade = null;
     // Keep the destination marker until payment reaches storage, for courier travel pace.
     const drop = this.nearestDrop(u.x, u.z, 0);
     if (drop) {
@@ -4967,6 +4977,7 @@ export class Game {
     if (tr.thinkT > 0) return;
     tr.thinkT = 1.6 + Math.random();
 
+    rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
     developRivalInstitutions(this,team);
     const costScale = 0.92;
@@ -5062,8 +5073,9 @@ export class Game {
         if (spot && rivalCanInvest(this,team,"cairn")) this.placeBuilding("cairn", spot.x, spot.z, team);
       }
     }
+    const foodFields=rivalDevelopmentPlan(this,team).foodFields;
     if (team === 2) {
-      if ((!needsStorage||farms<3) && farms < Math.max(2 + tr.age, Math.ceil(foodDemand(this,team)*1800/130)+1) && tr.wood >= BUILDINGS.farm.wood && Math.random() < 0.62) {
+      if (farms < foodFields && tr.wood >= BUILDINGS.farm.wood && Math.random() < 0.62) {
         const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
         if (spot && rivalCanInvest(this,team,"farm")) this.placeBuilding("farm", spot.x, spot.z, team);
       }
@@ -5080,7 +5092,7 @@ export class Game {
         if (spot && rivalCanInvest(this,team,"grove")) this.placeBuilding("grove", spot.x, spot.z, team);
       }
     }
-    if ((!needsStorage||farms<3) && farms < Math.max(1 + tr.age, Math.ceil(foodDemand(this,team)*1800/130)+1) && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
+    if (farms < foodFields && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
       const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
       if (spot && rivalCanInvest(this,team,"farm")) this.placeBuilding("farm", spot.x, spot.z, team);
     }
@@ -5428,6 +5440,8 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        reconcileTradeReservations(this);
+        reconcileTreeWorkers(this);
         fundConstructionPlans(this);
         tickGates(this);
         if(this.state.walkDirty)this.rebuildWalk();
@@ -5498,6 +5512,7 @@ export class Game {
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
+        reconcileTradeReservations(this);
         for (const u of this.state.units) if (u.hp <= 0) this.paths.delete(u.id);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
@@ -5768,7 +5783,7 @@ export class Game {
       selection,
       canAge: this.ageUpIssue(0) === null,
       ageIssue: this.ageUpIssue(0),
-      ageCost: next,
+      ageCost: next ? {...next,food:Math.max(next.food||0,ageFoodReserve(this,0))} : null,
       nextAge: age < 5 ? AGES[age + 1] : null,
       tribes: this.state.tribes
         .filter((tr) => tr.id !== 3 && (tr.id===0 || knownSettlement(this,tr.id)))

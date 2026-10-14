@@ -1,0 +1,543 @@
+{
+  "command": "node --import ./scripts/game-loader.mjs scripts/rival-economy-audit.mjs 345 123456 98765",
+  "scope": "Fresh isolated seeded simulations, normal rival economy/weather/conflict, three years. Player victory ending suppressed for the audit. No browser or player save accessed.",
+  "checkpoints": [
+    {
+      "seed": 345,
+      "year": 1,
+      "time": 1799.99999999987,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Orila",
+          "alive": true,
+          "pop": 11,
+          "initial": 6,
+          "originalSurvivors": 5,
+          "food": 582,
+          "wood": 68,
+          "stone": 110,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 6,
+          "stores": 3,
+          "localTimber": 0,
+          "workerTasks": {
+            "hold": 1,
+            "move": 1,
+            "idle": 9
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oraku",
+          "alive": true,
+          "pop": 13,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 664,
+          "wood": 53,
+          "stone": 416,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 8,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "move": 1,
+            "gather quarry": 2,
+            "gather warehouse": 2,
+            "gather tree": 2,
+            "idle": 6
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 345,
+      "year": 2,
+      "time": 3600.0000000005193,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Orila",
+          "alive": true,
+          "pop": 14,
+          "initial": 6,
+          "originalSurvivors": 5,
+          "food": 610,
+          "wood": 0,
+          "stone": 110,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 7,
+          "stores": 3,
+          "localTimber": 0,
+          "workerTasks": {
+            "move": 1,
+            "hold": 1,
+            "idle": 12
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oraku",
+          "alive": true,
+          "pop": 17,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 778,
+          "wood": 0,
+          "stone": 732,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 9,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 16,
+            "gather tree": 1
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 345,
+      "year": 3,
+      "time": 5399.999999999559,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Orila",
+          "alive": true,
+          "pop": 14,
+          "initial": 6,
+          "originalSurvivors": 5,
+          "food": 610,
+          "wood": 0,
+          "stone": 110,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 7,
+          "stores": 3,
+          "localTimber": 0,
+          "workerTasks": {
+            "move": 1,
+            "hold": 1,
+            "idle": 12
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oraku",
+          "alive": true,
+          "pop": 17,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 620,
+          "wood": 0,
+          "stone": 732,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 9,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 16,
+            "gather tree": 1
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 123456,
+      "year": 1,
+      "time": 1799.99999999987,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Nimila",
+          "alive": true,
+          "pop": 15,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 728,
+          "wood": 275,
+          "stone": 114,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 7,
+          "stores": 6,
+          "localTimber": 0,
+          "workerTasks": {
+            "move": 1,
+            "gather warehouse": 1,
+            "gather forage": 2,
+            "idle": 11
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oreth",
+          "alive": true,
+          "pop": 13,
+          "initial": 7,
+          "originalSurvivors": 6,
+          "food": 651,
+          "wood": 0,
+          "stone": 915,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 8,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "move": 1,
+            "idle": 10,
+            "gather tree": 2
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 123456,
+      "year": 2,
+      "time": 3600.0000000005193,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Nimila",
+          "alive": true,
+          "pop": 17,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 785,
+          "wood": 0,
+          "stone": 114,
+          "copper": 4,
+          "age": 1,
+          "nextAge": "Need 24 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 8,
+          "stores": 6,
+          "localTimber": 0,
+          "workerTasks": {
+            "idle": 16,
+            "idle forage": 1
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oreth",
+          "alive": true,
+          "pop": 16,
+          "initial": 7,
+          "originalSurvivors": 6,
+          "food": 753,
+          "wood": 0,
+          "stone": 915,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 8,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 14,
+            "gather tree": 2
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 123456,
+      "year": 3,
+      "time": 5399.999999999559,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Nimila",
+          "alive": true,
+          "pop": 17,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 733,
+          "wood": 7,
+          "stone": 114,
+          "copper": 4,
+          "age": 1,
+          "nextAge": "Need 24 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 9,
+          "stores": 6,
+          "localTimber": 0,
+          "workerTasks": {
+            "gather warehouse": 6,
+            "idle": 11
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Oreth",
+          "alive": true,
+          "pop": 17,
+          "initial": 7,
+          "originalSurvivors": 6,
+          "food": 384,
+          "wood": 0,
+          "stone": 915,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 8,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 15,
+            "gather tree": 2
+          },
+          "stuck": []
+        }
+      ]
+    },
+    {
+      "seed": 98765,
+      "year": 1,
+      "time": 1799.99999999987,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 13,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 621,
+          "wood": 46,
+          "stone": 126,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Need 16 residents \u2014 welcome families in Village (L) or raise children",
+          "fields": 4,
+          "stores": 2,
+          "localTimber": 0,
+          "workerTasks": {
+            "gather warehouse": 2,
+            "idle": 11
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 17,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 787,
+          "wood": 987,
+          "stone": 2,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 30 stone",
+          "fields": 8,
+          "stores": 3,
+          "localTimber": 12,
+          "workerTasks": {
+            "idle": 13,
+            "gather warehouse": 1,
+            "return": 1,
+            "gather tree": 2
+          },
+          "stuck": [
+            {
+              "order": "return",
+              "reason": "Finding a way off blocked ground with supplies",
+              "stuck": 1394.999999999962
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 17.000000000000007
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 16.666666666666675
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 16.666666666666675
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 98765,
+      "year": 2,
+      "time": 3600.0000000005193,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 18,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 846,
+          "wood": 0,
+          "stone": 126,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 5,
+          "stores": 2,
+          "localTimber": 0,
+          "workerTasks": {
+            "idle": 18
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 21,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 958,
+          "wood": 699,
+          "stone": 0,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 32 stone",
+          "fields": 12,
+          "stores": 4,
+          "localTimber": 12,
+          "workerTasks": {
+            "gather tree": 2,
+            "idle": 18,
+            "return": 1
+          },
+          "stuck": [
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 17.33333333333334
+            },
+            {
+              "order": "return",
+              "reason": "No reachable store \u2014 carrying supplies; clear a route or build a local store",
+              "stuck": 3195.000000000335
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 17.33333333333334
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 17.000000000000007
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 98765,
+      "year": 3,
+      "time": 5399.999999999559,
+      "errors": [],
+      "rivals": [
+        {
+          "team": 1,
+          "name": "Ushor",
+          "alive": true,
+          "pop": 18,
+          "initial": 6,
+          "originalSurvivors": 6,
+          "food": 716,
+          "wood": 0,
+          "stone": 126,
+          "copper": 4,
+          "age": 0,
+          "nextAge": "Still need 80 timber",
+          "fields": 5,
+          "stores": 2,
+          "localTimber": 0,
+          "workerTasks": {
+            "idle": 18
+          },
+          "stuck": []
+        },
+        {
+          "team": 2,
+          "name": "Kelush",
+          "alive": true,
+          "pop": 26,
+          "initial": 7,
+          "originalSurvivors": 7,
+          "food": 1127,
+          "wood": 451,
+          "stone": 0,
+          "copper": 0,
+          "age": 0,
+          "nextAge": "Still need 32 stone",
+          "fields": 15,
+          "stores": 5,
+          "localTimber": 33,
+          "workerTasks": {
+            "idle": 19,
+            "gather tree": 6,
+            "return": 1
+          },
+          "stuck": [
+            {
+              "order": "return",
+              "reason": "No reachable store \u2014 carrying supplies; clear a route or build a local store",
+              "stuck": 4994.999999999927
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 17.000000000000007
+            },
+            {
+              "order": "idle",
+              "reason": "Food stores full \u2014 build storage or assign another job",
+              "stuck": 16.666666666666675
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

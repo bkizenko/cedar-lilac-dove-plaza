@@ -2,7 +2,7 @@ import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit } from './types';
 import { AGE_COST, BUILDINGS, HALF, MAP, LUMBER_R, QUARRY_R } from './constants';
-import { isDependent, reserveSeconds, foodDemand, YEAR_SECONDS } from './settlement';
+import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
 
 /** Local familiarity plus actual scouting records; never inspect unknown distant nodes. */
 export function rivalKnows(g:Game,team:number,x:number,z:number){
@@ -27,7 +27,12 @@ export function rivalDevelopmentPlan(g:Game,team:number){
   const t=g.tribe(team),next=AGE_COST[t.age+1];
   const count=(type:BldType)=>g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.type===type).length;
   const fields=count('farm'),stores=count('warehouse'),pop=g.popNow(team);
-  const foodFields=Math.max(3,Math.ceil(foodDemand(g,team,0)*YEAR_SECONDS/200));
+  const standing=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.type==='farm');
+  const averageYield=standing.length?standing.reduce((sum,b)=>sum+farmHarvestEstimate(g,b,1,1,1),0)/standing.length:180;
+  // Fund fields for all seasons and storage losses, using this biome's actual
+  // output rather than assuming every farm produces the same 200 food.
+  const annualNeed=[0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*YEAR_SECONDS/4,0)*1.3;
+  const foodFields=Math.max(3,Math.ceil(annualNeed/Math.max(70,averageYield)));
   return {next,fields,stores,pop,foodFields,saving:!!next&&pop>=5&&fields>=2&&stores>=1&&reserveSeconds(g,team)>240};
 }
 
@@ -43,7 +48,7 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
     const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*160;
-    if(p.stores<2||capacity<Math.max(foodDemand(g,team,0)*900+80,(p.next?.food||0)+foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS+40))return true;
+    if(p.stores<2||capacity<Math.max(foodDemand(g,team,0)*900+80,Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40))return true;
   }
   // Leave enough for a timber camp or stone quarry before luxury expansion.
   if(!p.saving||!p.next)return t.wood-(d.wood||0)>=BUILDINGS.lumber.wood+BUILDINGS.quarry.wood;
@@ -53,12 +58,13 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
 /** A bounded share of the workforce secures missing materials while others grow food. */
 export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind){
   if(![1,2].includes(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
-  const p=rivalDevelopmentPlan(g,u.team),t=g.tribe(u.team),target=p.next?.[kind]||0;
+  const t=g.tribe(u.team),target=AGE_COST[t.age+1]?.[kind]||0;
   if(!target||t[kind]>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
   const workers=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.type==='worker'&&!isDependent(g,v));
   const already=workers.filter(v=>v!==u&&v.order==='gather'&&v.job===kind).length;
-  if(already>=Math.max(1,Math.floor(workers.length/4)))return 0;
-  return kind==='wood'?95:85;
+  const materialCrew=workers.filter(v=>v!==u&&v.order==='gather'&&v.job&&v.job!=='food').length;
+  if(already>=Math.max(1,Math.floor(workers.length/4))||materialCrew>=Math.max(1,Math.floor(workers.length/3)))return 0;
+  return kind==='wood'?250:240;
 }
 
 const visits=new WeakMap<Game,Map<number,number>>();
@@ -122,4 +128,29 @@ export function developRivalInstitutions(g:Game,team:number){
   if(!type)return false;
   const site=g.findOpenSpot(home.x,home.z,type,team);
   return !!site&&!!g.placeBuilding(type,site.x,site.z,team);
+}
+
+const laborReviews=new WeakMap<Game,Map<number,number>>();
+/** Surplus food must release some labor for growth; persistent food orders
+ * otherwise occupy the whole workforce even when a material shortage blocks it. */
+export function rebalanceRivalLabor(g:Game,team:number){
+  if(![1,2].includes(team)||reserveSeconds(g,team)<600)return;
+  let reviews=laborReviews.get(g);if(!reviews){reviews=new Map();laborReviews.set(g,reviews);}
+  const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+12)return;
+  reviews.set(team,g.state.time+12);
+  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
+  const foodWorkers=adults.filter(u=>u.order==='gather'&&u.job==='food');
+  const spare=Math.min(2,foodWorkers.length-Math.ceil(adults.length/2));
+  if(spare<=0)return;
+  const eligible=foodWorkers.filter(u=>u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
+    !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
+  let moved=0;
+  for(const u of eligible){
+    if(moved>=spare)break;
+    const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k)>0);
+    const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&!g.finished(b)&&!b.plannedCost);
+    if(!materials&&!unfinished)break;
+    u.node=null;u.job=null;u.jobLock=false;u.order='idle';u.workCheckAt=0;
+    g.workBoard.reset();g.workBoard.assign(g,u);moved++;
+  }
 }

@@ -136,7 +136,7 @@ export function reportedQuote(g:Game,team:number,give:ResKind,get:ResKind,amount
   if(!offer)return no("The trader did not report an offer for those goods. Send another delegation or choose other goods.");
   const quantity=Math.floor(offer.getAmt*amount/offer.giveAmt);
   if(quantity<1||quantity>200)return no("Adjust the offered quantity.");
-  return {deal:{give,get,giveAmt:amount,getAmt:quantity},reason:`Last reported ${Math.floor((g.state.time-report.time)/60)} minutes ago. The partner may revise or refuse these terms on arrival.`};
+  return {deal:{give,get,giveAmt:amount,getAmt:quantity},reason:`Last reported ${Math.floor((g.state.time-report.time)/60)} minutes ago. Accepting checks availability and sets the promised goods aside.`};
 }
 export function proposeShipment(
   g: Game,
@@ -156,7 +156,7 @@ export function proposeShipment(
     return false;
   }
   if (!g.dispatchTrade(carrier, quote.deal, team)) return false;
-  g.banner("A carrier leaves with your offer.", 2.5);
+  g.banner("Shipment reserved. A carrier leaves to collect the promised goods.", 2.5);
   return true;
 }
 
@@ -167,7 +167,7 @@ function startOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,re
     !Number.isSafeInteger(amount)||amount<1||amount>100||!Number.isSafeInteger(requested)||requested<1||requested>200)return null;
   if((give==="iron"||get==="iron")&&g.tribe(0).age<2)return null;
   if((give==="copper"||get==="copper")&&g.tribe(0).age<1)return null;
-  const u=tradeCarrier(g);if(!u||!g.dispatchTrade(u,{give,get,giveAmt:amount,getAmt:requested},team))return null;
+  const u=tradeCarrier(g);if(!u||!g.dispatchTrade(u,{give,get,giveAmt:amount,getAmt:requested},team,false))return null;
   return u;
 }
 export function sendOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {

@@ -1,3 +1,4 @@
+import {architectureStyle} from "./architecture";
 import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -182,7 +183,8 @@ export class WorldView {
   lost = false;
   onContextLost: (() => void) | null = null;
   onContextRestored: (() => void) | null = null;
-  private villageStyles = new Map<string,{roof:string;timber:string;roofHeight:number}>();
+  private villageStyles = new Map<string,ReturnType<typeof architectureStyle>>();
+  private eraDetails: THREE.InstancedMesh | null = null;
   private terrainBiome: Uint8Array | null = null;
   private terrainRegion: Uint8Array | null = null;
   private terrainBlend = new Float32Array(0);
@@ -697,11 +699,17 @@ export class WorldView {
   }
 
   private buildBuildings() {
+    this.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),1600);
+    this.eraDetails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.eraDetails.count=0;this.eraDetails.castShadow=true;this.eraDetails.receiveShadow=true;this.eraDetails.frustumCulled=false;
+    this.scene.add(this.eraDetails);
     const geos = buildingGeos();
     for (const type of BLD_TYPES) {
       const g = geos[type];
       const capacity=["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
-      const timber = new THREE.InstancedMesh(g.timber, this.mats.timber, capacity);
+      const timberMaterial=this.mats.timber.clone();
+      timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
+      const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
       const roofMat =
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
@@ -1247,10 +1255,7 @@ export class WorldView {
   private villageStyle(game:Game,team:number) {
     const tribe=game.tribe(team),age=tribe?.age||0,key=`${game.state.seed}/${team}/${age}`;
     const cached=this.villageStyles.get(key);if(cached)return cached;
-    const variant=(Math.abs(Math.imul(game.state.seed^team,2654435761))>>>0)%4;
-    const roofs=["#ae8958","#aa744e","#6e8590","#aa9273"];
-    const walls=["#ac895f","#b29476","#a6aaa0","#c1b8a3"];
-    const style={roof:age===0?["#b9a477","#a99773","#b49978","#b6ad91"][variant]:roofs[(variant+Math.min(age-1,2))%4],timber:walls[Math.min(age,3)],roofHeight:1+Math.min(age,3)*.055};
+    const style=architectureStyle(game.state.seed,team,age);
     this.villageStyles.set(key,style);return style;
   }
 
@@ -1310,6 +1315,43 @@ export class WorldView {
       if (meshes.timber.instanceColor) meshes.timber.instanceColor.needsUpdate = true;
       if (meshes.roof.instanceColor) meshes.roof.instanceColor.needsUpdate = true;
     }
+    this.syncEraDetails(game);
+  }
+
+  private syncEraDetails(game:Game){
+    const mesh=this.eraDetails;if(!mesh)return;
+    let count=0;const perType=new Map<BldType,number>();
+    for(const b of game.state.buildings){
+      if(b.hp<=0||b.build<1||b.plannedCost)continue;
+      const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
+      if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
+        ['farm','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
+      const identity=this.villageStyle(game,b.team),era=identity.era;if(era===0)continue;
+      const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
+      const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
+      const roof=this.bldMeshes.get(b.type)?.roof.geometry;
+      if(roof&&!roof.boundingBox)roof.computeBoundingBox();
+      const top=(roof?.boundingBox?.max.y||4)*identity.roofHeight;
+      const block=(x:number,y:number,z:number,w:number,h:number,d:number,color=identity.trim)=>{
+        if(count>=instCap(mesh))return;
+        _p.set(b.x+(co*x+si*z)*st.sx,b.y+y*st.sy,b.z+(-si*x+co*z)*st.sz);
+        _e.set(0,yaw,0);_q.setFromEuler(_e);_s.set(w*st.sx,h*st.sy,d*st.sz);_m.compose(_p,_q,_s);
+        mesh.setMatrixAt(count,_m);_c.set(color);mesh.setColorAt(count++,_c);
+      };
+      // Raised clay/stone footing, lintel, later framing and chimney.
+      block(0,.13,0,width,.26,depth);
+      block(-.72,1.1,depth*.5,.18,2.2,.22);block(.72,1.1,depth*.5,.18,2.2,.22);
+      block(0,2.2,depth*.5,1.65,.22,.26);
+      if(era>=2)block(0,.1,depth*.5+.35,1.8,.2,.8);
+      if(era>=3){
+        block(-width*.45,1.2,depth*.48,.23,2.4,.25);block(width*.45,1.2,depth*.48,.23,2.4,.25);
+        block(0,2.4,depth*.48,width,.2,.25);
+      }
+      if(era>=4)block(width*.24,top*.87,-depth*.12,.55,top*.42,.6);
+      if(era>=5)block(width*.24,top*1.09,-depth*.12,.8,.18,.85);
+    }
+    mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
+    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   }
 
   private syncCargo(game: Game) {
@@ -2191,6 +2233,12 @@ export class WorldView {
         const m = c as THREE.Mesh;
         if (m.geometry) m.geometry.dispose();
       });
+    }
+    if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
+    this.villageStyles.clear();
+    for(const meshes of this.bldMeshes.values()){
+      (meshes.timber.material as THREE.Material).dispose();
+      (meshes.roof.material as THREE.Material).dispose();
     }
     this.bldMeshes.clear();
     this.unitMeshes.clear();

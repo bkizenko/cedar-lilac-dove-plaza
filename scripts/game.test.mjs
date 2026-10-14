@@ -623,8 +623,8 @@ test("war interrupts a trade without creating or teleporting a refund", () => {
   const g = fixture(),
     u = g.state.units.find((u) => u.team === 0 && u.type === "worker");
   g.tribe(0).food = 100;
-  g.tribe(1).stone = 100; // This scenario starts with a willing, sufficiently supplied partner.
-  g.dispatchTrade(u, { give: "food", giveAmt: 20, get: "stone", getAmt: 8 }, 1);
+  Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false}); // A willing, sufficiently supplied partner.
+  assert.equal(g.dispatchTrade(u, { give: "food", giveAmt: 20, get: "stone", getAmt: 8 }, 1),true);
   g.tribe(1).hostile = true;
   g.tradeAI(u, 0.1);
   assert.equal(g.tribe(0).food, 80);
@@ -1362,7 +1362,7 @@ test("age commitment revalidates population and buildings instead of bypassing t
   const g=fixture();Object.assign(g.tribe(0),{food:1000,wood:1000,stone:1000});
   const before=g.tribe(0).food;g.commitAge(0,"econ");
   assert.equal(g.tribe(0).age,0);assert.equal(g.tribe(0).food,before);
-  const home=g.campOf(0);while(g.popNow(0)<12)g.spawnUnit("worker",home.x,home.z,0);
+  const home=g.campOf(0);while(g.popNow(0)<16)g.spawnUnit("worker",home.x,home.z,0);
   for(const type of ["warehouse","workshop","farm"])g.state.buildings.push(g.makeBld(type,home.x+20,home.z+20,0));
   g.commitAge(0,"econ");assert.equal(g.tribe(0).age,1);
 });
@@ -1411,7 +1411,7 @@ test("market knowledge improves quoted terms without generating bonus cargo", as
   assert.equal(g.dispatchTrade(u,improved,1),true);
   const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x;u.z=hall.z;
   const stock=g.tribe(1).wood;g.tradeAI(u,0.1);
-  assert.equal(u.carry,improved.getAmt);assert.equal(g.tribe(1).wood,stock-improved.getAmt);
+  assert.equal(u.carry,improved.getAmt);assert.equal(g.tribe(1).wood,stock,"the goods were already set aside at acceptance");
 });
 test("quick exchange cannot conjure goods without a discovered partner", () => {
   const g=fixture();g.vision.fill(0);const food=g.tribe(0).food,wood=g.tribe(0).wood;
@@ -1442,12 +1442,12 @@ test("camp raiders steal and haul real cargo but respect the opening grace and q
   assert.equal(g.tribe(3).wood,stock+4);assert.equal(raider.carry,0);
 });
 test("a stolen outbound shipment cannot exchange the missing goods", () => {
-  const g=fixture();g.vision.fill(1);Object.assign(g.tribe(1),{stone:100,hostile:false,tradeCd:0});
+  const g=fixture();g.vision.fill(1);Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false,tradeCd:0});
   const w=g.state.units.find(u=>u.team===0&&u.type==="worker");
   assert.equal(g.dispatchTrade(w,{give:"food",giveAmt:20,get:"stone",getAmt:8},1),true);
   w.carry-=4;const before=[g.tribe(1).food,g.tribe(1).stone];g.tradeAI(w,0.1);
   assert.equal(w.order,"return");assert.equal(w.carry,16);assert.equal(w.trade,null);
-  assert.deepEqual([g.tribe(1).food,g.tribe(1).stone],before);
+  assert.deepEqual([g.tribe(1).food,g.tribe(1).stone],[before[0],before[1]+8],"canceled goods return to seller availability, not player stores");
 });
 
 test("territory control cannot create daily stock without harvesting", () => {

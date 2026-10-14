@@ -23,13 +23,15 @@ export const TRADE_OFFERS: { give: ResKind; giveAmt: number; get: ResKind; getAm
 
 export const AGES = ["Stone", "Bronze", "Iron", "Classical", "Medieval", "Renaissance"] as const;
 
+/** Readiness reserves, retained on advancement. Population and completed
+ * institutions establish scale; scarce timber is spent on actual construction. */
 export const AGE_COST: (Cost | null)[] = [
   null,
-  { food: 440, wood: 300, stone: 120, pop: 12 },
-  { food: 520, wood: 400, stone: 180, copper: 36, pop: 18 },
-  { food: 760, wood: 560, stone: 320, copper: 56, iron: 24, pop: 26 },
-  { food: 1040, wood: 800, stone: 480, copper: 72, iron: 44, pop: 36 },
-  { food: 1400, wood: 1040, stone: 680, copper: 96, iron: 64, pop: 48 },
+  { food: 160, wood: 80, stone: 32, pop: 16 },
+  { food: 240, wood: 120, stone: 60, copper: 20, pop: 24 },
+  { food: 360, wood: 180, stone: 100, copper: 32, iron: 16, pop: 36 },
+  { food: 520, wood: 240, stone: 150, copper: 48, iron: 32, pop: 52 },
+  { food: 720, wood: 320, stone: 220, copper: 64, iron: 48, pop: 72 },
 ];
 
 export const AGE_STAT = [1, 1.1, 1.22, 1.35, 1.5, 1.68];

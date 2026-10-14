@@ -26,6 +26,9 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
     <details className="trade-proposal">
       <summary>Trade reports and shipments</summary>
       <button onClick={()=>{g.sendDelegation(team,"trade");engine.pushHud();}}>Send a trade delegation</button>
+      {g.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeReservation?.team===team).map(u=>(
+        <p key={u.id}>Reserved for collection: {u.tradeReservation!.amount} {names[u.tradeReservation!.kind].toLowerCase()}.</p>
+      ))}
       <div className="trade-terms">
         <label>
           You offer
@@ -64,7 +67,7 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
       </p>
       <p aria-live="polite">
         {quote.deal
-          ? `They offer ${quote.deal.getAmt} ${names[get].toLowerCase()} for ${quote.deal.giveAmt} ${names[give].toLowerCase()}.`
+          ? `Last reported offer: ${quote.deal.getAmt} ${names[get].toLowerCase()} for ${quote.deal.giveAmt} ${names[give].toLowerCase()}.`
           : quote.reason}
       </p>
       {quote.deal && <p>{quote.reason}</p>}
@@ -89,11 +92,10 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
           engine.pushHud();
         }}
       >
-        Send a carrier with this offer
+        Accept and reserve this shipment
       </button>
       <p>
-        Uses an available adult. Sending removes the offered goods from storage; war or shortages
-        can send the carrier home with their original cargo.
+        Uses an available adult. Acceptance checks availability and sets the promised goods aside; your payment travels with the carrier. Later shortages cannot spend your reserved shipment. War, lost cargo or recall can cancel it.
       </p>
     </details>
   );
