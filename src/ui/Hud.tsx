@@ -1,3 +1,5 @@
+import {craftingReport} from "../game/crafting";
+import {setGateMode} from "../game/fortifications";
 import {FARM_TOOLS,farmToolRequirement} from "@/game/farmTools";
 import {HAULAGE,haulageRequirement} from "@/game/haulage";
 import {staffDock} from "@/game/fishing";
@@ -58,6 +60,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   bridge: <Hammer className="size-4" />,
   warehouse: <Warehouse className="size-4" />,
   barracks: <Shield className="size-4" />,
+  palisade: <Shield className="size-4" />, gate: <Castle className="size-4" />, stonewall: <Castle className="size-4" />, trench: <Hammer className="size-4" />, moat: <Shield className="size-4" />,
   workshop: <Hammer className="size-4" />,
   forge: <Hammer className="size-4" />,
   watchtower: <Eye className="size-4" />,
@@ -517,6 +520,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="mt-2 flex flex-col gap-1">
+                {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
+                {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two fishers</button>}
                 {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="sled"||sel.type==="workshop").map(([kind,h])=>{
                   const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;

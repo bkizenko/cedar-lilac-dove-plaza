@@ -46,6 +46,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 const BLD_TYPES: BldType[] = [
+  "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
   "hut",
@@ -699,17 +700,18 @@ export class WorldView {
     const geos = buildingGeos();
     for (const type of BLD_TYPES) {
       const g = geos[type];
-      const timber = new THREE.InstancedMesh(g.timber, this.mats.timber, 80);
+      const capacity=["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
+      const timber = new THREE.InstancedMesh(g.timber, this.mats.timber, capacity);
       const roofMat =
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
           ? this.mats.tile
           : this.mats.thatch;
-      const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), 80);
+      const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), capacity);
       timber.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(80 * 3), 3);
+      timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      roof.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(80 * 3), 3);
+      roof.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       (roof.material as THREE.MeshStandardMaterial).vertexColors = false;
       (roof.material as THREE.MeshStandardMaterial).color.set("#ffffff");
       timber.castShadow = true;
@@ -722,7 +724,7 @@ export class WorldView {
       this.scene.add(timber, roof);
       let extra: THREE.InstancedMesh | undefined;
       if (g.extra) {
-        extra = new THREE.InstancedMesh(g.extra, this.mats[g.extraMat || "stone"], 80);
+        extra = new THREE.InstancedMesh(g.extra, this.mats[g.extraMat || "stone"], capacity);
         extra.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         extra.castShadow = true;
         extra.count = 0;
@@ -1277,10 +1279,12 @@ export class WorldView {
         const limit=type==="farm"?0.5:0.2;
         const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(b.x,b.z+2)-game.height(b.x,b.z-2))/4))):0;
         const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(b.x+2,b.z)-game.height(b.x-2,b.z))/4))):0;
-        _e.set(pitch, st.yaw, roll);
+        const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
+        _e.set(pitch, fort?0:st.yaw, roll);
         if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);}
         _q.setFromEuler(_e);
         _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
+        if(fort)_s.set(seen?1:.001,seen?ys:.001,seen?1:.001);
         if(b.bridge){_s.x=seen?1:.001;_s.y=seen?ys:.001;_s.z=seen?Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az)/12:.001;}
         _m.compose(_p, _q, _s);
         meshes.timber.setMatrixAt(i, _m);
@@ -1289,9 +1293,10 @@ export class WorldView {
           _m.compose(_p, _q, _s);
         }
         if(seen&&b.build>=.55){_s.y*=identity.roofHeight;_m.compose(_p,_q,_s);}
+        if(type==="gate"&&b.gateOpen){_s.set(.001,.001,.001);_m.compose(_p,_q,_s);}
         meshes.roof.setMatrixAt(i, _m);
         meshes.extra?.setMatrixAt(i, _m);
-        _c.set(b.plannedCost ? "#87b7cb" : identity.timber);
+        _c.set(b.plannedCost ? "#87b7cb" : type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":identity.timber);
         if (meshes.timber.instanceColor) meshes.timber.setColorAt(i, _c);
         _c.set(type === "cornerstone" ? game.tribe(b.team).color : identity.roof);
         if (meshes.roof.instanceColor) meshes.roof.setColorAt(i, _c);

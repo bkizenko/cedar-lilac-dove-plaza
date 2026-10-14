@@ -3,7 +3,7 @@ import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
 import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
-import {villageAppeal} from "@/game/migration";
+import {villageAppeal,foodAttention} from "@/game/migration";
 import {WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
@@ -199,6 +199,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             Welcoming migrants permits arrivals with six minutes of reserves; enthusiastic welcomes need four and invite groups sooner. Food, shelter, health, rest and relations affect attraction. Childhood is compressed into six minutes;
             adult migration supports growth while they grow up.
           </p>
+          <p>Food surplus attention: {Math.round(foodAttention(g)*100)}%. Larger reserves attract arriving families more often and raise raider interest after the opening grace period. Housing and food safeguards still apply. Palisades, gates and trenches protect approaches; leave a gate for your workers. Stone walls arrive in Iron, flooded moats in Medieval.</p>
           <p>Settler attraction: {Math.round(villageAppeal(g)*100)}% · improve food security, spare housing, rest and peaceful relations. Exploration focus sends up to a quarter of adults (at most three); the others keep the village working.</p>
         </section>
       </div>

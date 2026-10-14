@@ -1,10 +1,12 @@
 import type {Game} from './sim';
+import {pauseQueuedCrafting} from './crafting';
 import type {GameState,Unit} from './types';
 import {isDependent} from './settlement';
 
 /** Release old reservations as a group before anyone claims the new work. */
 export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPolicy']>){
   g.state.laborPolicy=policy;
+  pauseQueuedCrafting(g);
   if(policy==='trade')for(const route of g.state.routes)if(!route.paused)route.t=Math.min(route.t,1);
   const available:Unit[]=[];
   for(const u of g.state.units){

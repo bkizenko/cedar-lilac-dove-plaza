@@ -23,7 +23,8 @@ export type BldType =
   | "stables"
   | "university"
   | "cairn"
-  | "grove";
+  | "grove"
+  | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
 export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers";
@@ -175,6 +176,8 @@ export type Unit = {
   farmToolWork?: FarmToolWork;
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
+  seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
+  craftingXP?: number;
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
   target: Unit | Building | null;
@@ -229,6 +232,8 @@ export type Building = {
   reclaimed: boolean;
   plannedCost?: Cost;
   planPaused?: boolean;
+  gateOpen?: boolean;
+  gateMode?: "auto" | "open" | "closed";
   raiderCamp?: boolean;
   lootClaimed?: boolean;
   raidLoot?: Partial<Record<ResKind,number>>;

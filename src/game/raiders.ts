@@ -142,8 +142,10 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
   const roaming = g.state.time >= 300 && g.state.conflict !== "quiet";
   const sight = g.isNight() ? 12 : 22;
   if (roaming) {
+    // Camp patrols look for soft opportunities; escorts and watchposts matter.
+    const guarded=(x:number,z:number,team:number)=>g.state.units.some(v=>v.team===team&&v.hp>0&&(v.militia||!['worker','leader'].includes(v.type))&&Math.hypot(v.x-x,v.z-z)<14)||g.state.buildings.some(b=>b.team===team&&g.finished(b)&&['watchtower','keep'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<22);
     const victim = g.state.units.find(e => e.team !== 3 && e.hp > 0 && e.carry > 0 && e.carryType &&
-      Math.hypot(e.x - u.x, e.z - u.z) < sight && Math.hypot(e.x - camp.x, e.z - camp.z) < 65);
+      Math.hypot(e.x - u.x, e.z - u.z) < sight && Math.hypot(e.x - camp.x, e.z - camp.z) < 65 && !guarded(e.x,e.z,e.team));
     if (victim) {
       u.tx = victim.x; u.tz = victim.z; u.order = "move"; u.node = null;
       u.workReason = "Intercepting an unguarded carrier";
@@ -158,12 +160,14 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
       return true;
     }
     const store = g.state.buildings.find(b => b.team !== 3 && g.finished(b) && b.type === "warehouse" &&
-      Math.hypot(b.x - u.x, b.z - u.z) < sight && Math.hypot(b.x - camp.x, b.z - camp.z) < 65 && g.tribe(b.team).food >= 4);
+      Math.hypot(b.x - u.x, b.z - u.z) < sight && Math.hypot(b.x - camp.x, b.z - camp.z) < 65 && !guarded(b.x,b.z,b.team) && !(u.blockedTask===b.id&&(u.retryWorkAt||0)>g.state.time));
     if (store) {
       u.tx = store.x; u.tz = store.z; u.order = "move"; u.node = null;
       if (!g.buildingWorkReached(u, store)) g.steer(u, dt);
       else {
-        g.tribe(store.team).food -= 4; u.carry = 4; u.carryType = "food"; u.carryFood = "provisions";
+        const stolen=Math.min(4,Math.max(0,g.tribe(store.team).food));
+        if(!stolen){u.blockedTask=store.id;u.retryWorkAt=g.state.time+90;u.order="hold";u.workReason="The store is empty — looking elsewhere";return true;}
+        g.tribe(store.team).food -= stolen; u.carry = stolen; u.carryType = "food"; u.carryFood = "provisions";
         if (store.team === 0) g.banner("Raiders stole food from a storehouse — defend it or clear their camp", 5);
       }
       return true;
@@ -190,4 +194,49 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
     u.order = "hold"; u.wanderT = 5;
   }
   return true;
+}
+
+/** Evaluate only locally observed targets; distant reserves are never inspected. */
+export function raiderTarget(g:Game,u:Unit){
+ const candidates=g.state.buildings.filter(b=>b.hp>0&&!b.plannedCost&&g.isFoe(u.team,b.team)&&!['trench','moat'].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<65);
+ const score=(b:Building)=>{
+  const guards=g.state.units.filter(v=>v.hp>0&&g.isFoe(u.team,v.team)&&(v.type!=='worker'||v.militia)&&Math.hypot(v.x-b.x,v.z-b.z)<18).length;
+  const towers=candidates.filter(v=>['watchtower','keep'].includes(v.type)&&Math.hypot(v.x-b.x,v.z-b.z)<22).length;
+  const value=b.type==='warehouse'?55:['farm','dock','lumber'].includes(b.type)?35:b.type==='hut'?20:0;
+  return value-Math.hypot(b.x-u.x,b.z-u.z)*.4-guards*20-towers*25-b.hp*.025;
+ };
+ // If supplies are enclosed, the reachable weakest perimeter becomes the target.
+ return candidates.sort((a,b)=>score(b)-score(a)).find(b=>!!g.interactionSpot(u,b))||null;
+}
+export function seaRaidAI(g:Game,u:Unit,dt:number){
+ const raid=u.seaRaid;
+ if(u.team!==3||u.homeCamp!==undefined||!raid)return false;
+ const nearby=g.state.units.filter(v=>v.hp>0&&Math.hypot(v.x-u.x,v.z-u.z)<18);
+ const defenders=nearby.filter(v=>g.isFoe(u.team,v.team)&&(v.type!=='worker'||v.militia));
+ const allies=nearby.filter(v=>v.team===u.team);
+ if(u.hp<u.maxHp*.32||defenders.length>allies.length*2+1||g.state.time>raid.departAt||u.carry>0)raid.phase='retreat';
+ if(raid.phase==='retreat'){
+  const breach=u.target;
+  if(breach?.kind==='building'&&breach.hp>0&&['gate','palisade','stonewall'].includes(breach.type)&&!(breach.type==='gate'&&breach.gateOpen)){u.order='attack';g.combatAI(u,dt);return true;}
+  u.order='move';u.target=null;u.tx=raid.x;u.tz=raid.z;u.workReason=u.carry?'Withdrawing to shore with stolen supplies':'Withdrawing from the raid';
+  if(Math.hypot(u.x-raid.x,u.z-raid.z)<5){u.carry=0;u.hp=0;return true;}
+  // A newly closed perimeter can block withdrawal. Break an accessible barrier.
+  if(u.stuckT>3){const wall=g.state.buildings.filter(b=>b.hp>0&&!b.plannedCost&&g.isFoe(u.team,b.team)&&['gate','palisade','stonewall'].includes(b.type)&&!(b.type==='gate'&&b.gateOpen)&&Math.hypot(b.x-u.x,b.z-u.z)<65).sort((a,b)=>a.hp-b.hp+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).find(b=>!!g.interactionSpot(u,b));if(wall){u.target=wall;u.order='attack';g.combatAI(u,dt);return true;}}
+  g.steer(u,dt);return true;
+ }
+ if(!defenders.some(v=>Math.hypot(v.x-u.x,v.z-u.z)<7)){
+  const ruin=g.state.buildings.find(b=>b.hp<=0&&b.lootTeam===3&&b.raidLoot&&Object.values(b.raidLoot).some(v=>(v||0)>0)&&Math.hypot(b.x-u.x,b.z-u.z)<12);
+  if(ruin){
+   if(g.attackDistance(u,ruin)>u.r+1.8){u.tx=ruin.x;u.tz=ruin.z;g.steer(u,dt);return true;}
+   const kind=(['food','wood','stone','copper','iron'] as const).find(k=>(ruin.raidLoot![k]||0)>0)!;
+   const amount=Math.min(12,ruin.raidLoot![kind]!);ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;raid.phase='retreat';return true;
+  }
+ }
+ if(g.state.time>=raid.thinkAt){
+  raid.thinkAt=g.state.time+3;
+  const mark=raiderTarget(g,u);
+  if(mark){u.target=mark;u.order='attack';u.tx=mark.x;u.tz=mark.z;}
+  else if(!u.target||u.target.hp<=0){u.target=null;u.order='attackmove';u.tx=raid.goalX;u.tz=raid.goalZ;}
+ }
+ g.combatAI(u,dt);return true;
 }

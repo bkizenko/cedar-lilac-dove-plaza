@@ -524,8 +524,10 @@ test("unsolicited settler arrivals stop unless welcomed with adequate reserves",
   g.landSeaFolk();
   assert.equal(g.popNow(0), before);
   g.tribe(0).food = 1000;
-  g.landSeaFolk();
-  assert.ok(g.popNow(0)>before && g.popNow(0)<=Math.min(before+3,g.popCap(0)));
+  // A rich, welcoming village can now receive five people, still bounded by housing.
+  const arrivalRandom=Math.random;
+  try { Math.random=()=>.99; g.landSeaFolk(); } finally { Math.random=arrivalRandom; }
+  assert.equal(g.popNow(0),Math.min(before+5,g.popCap(0)));
 });
 test("cropping depletes fertility; a fallow year restores it and is saved", async () => {
   const { crop, farmAvailable } = await import("../src/game/settlement.ts");
@@ -655,8 +657,10 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   g.state.growthPolicy = "welcome";
   g.tribe(0).food = 5000;
   assert.equal(g.enqueueTrain(hall, "worker"), false);
-  g.landSeaFolk();
-  assert.ok(g.popNow(0)>before && g.popNow(0)<=Math.min(before+3,g.popCap(0)));
+  // A rich, welcoming village can now receive five people, still bounded by housing.
+  const arrivalRandom=Math.random;
+  try { Math.random=()=>.99; g.landSeaFolk(); } finally { Math.random=arrivalRandom; }
+  assert.equal(g.popNow(0),Math.min(before+5,g.popCap(0)));
   const barracks = g.makeBld("barracks", hall.x + 16, hall.z, 0);
   g.state.buildings.push(barracks);
   g.tribe(0).food = 500;

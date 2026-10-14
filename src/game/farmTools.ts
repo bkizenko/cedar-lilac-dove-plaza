@@ -1,3 +1,4 @@
+import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type { Game } from './sim';
 import type { Building, Unit } from './types';
 import { isDependent } from './settlement';
@@ -39,7 +40,7 @@ function workplaces(g: Game, team: number, kind: FarmToolKind, id?: number) {
 
 function reachableWorkplace(g: Game, u: Unit, sites: Building[]) {
   return sites.filter(b => !!g.interactionSpot(u, b))
-    .sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
+    .sort((a, b) => (craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
 }
 
 function improvement(u: FarmToolUnit, kind: FarmToolKind) {
@@ -111,12 +112,13 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
     u.workReason = 'Toolmaking paused — choose a reachable replacement workplace';
     g.workBoard.reset(); return true;
   }
+  if (!craftBenchReady(g,u,b)) return true;
   if (!g.buildingWorkReached(u, b)) {
     u.tx = spot.x; u.tz = spot.z; g.steer(u, dt);
     u.workReason = `Walking to make ${FARM_TOOLS[job.kind].name.toLowerCase()}`;
     return true;
   }
-  job.progress = Math.min(job.duration, job.progress + Math.max(0, dt) * predisposition(u).strength);
+  job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt) * predisposition(u).strength);
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
   u.workReason = `Making ${FARM_TOOLS[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {

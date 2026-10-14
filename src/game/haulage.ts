@@ -1,3 +1,4 @@
+import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type { Game } from './sim';
 import type { Building, ResKind, Tribe, Unit } from './types';
 import { GATHER } from './constants';
@@ -43,7 +44,7 @@ function workplaces(g: Game, team: number, kind: HaulageKind, id?: number) {
 
 function nearestWorkplace(g: Game, u: Unit, candidates: Building[]) {
   return candidates.filter(b => !!g.interactionSpot(u, b))
-    .sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
+    .sort((a, b) => (craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
 }
 
 export function haulageRequirement(g: Game, kind: HaulageKind, team = 0): string | null {
@@ -119,12 +120,13 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
     g.workBoard.reset();
     return true;
   }
+  if (!craftBenchReady(g,u,b)) return true;
   if (!g.buildingWorkReached(u, b)) {
     u.tx = spot.x; u.tz = spot.z; g.steer(u, dt);
     u.workReason = `Walking to make ${HAULAGE[job.kind].name.toLowerCase()}`;
     return true;
   }
-  job.progress = Math.min(job.duration, job.progress + Math.max(0, dt) * predisposition(u).strength);
+  job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt) * predisposition(u).strength);
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
   u.workReason = `Making ${HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {

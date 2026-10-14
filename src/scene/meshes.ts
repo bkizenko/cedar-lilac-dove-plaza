@@ -271,6 +271,11 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   ];
 
   return {
+    palisade: {timber:merge(Array.from({length:16},(_,i)=>cyl(.2,.26,2.8,(i%4-1.5)*1.1,0,(Math.floor(i/4)-1.5)*1.1,5))),roof:merge([box(.1,.1,.1,0,0,0)])},
+    gate: {timber:merge([box(.5,3.5,3.8,-1.75,0,0),box(.5,3.5,3.8,1.75,0,0),box(4,.4,3.8,0,3.1,0)]),roof:merge([box(3,2.8,.35,0,0,0)])},
+    stonewall: {timber:merge([box(4,3,4,0,0,0)]),roof:merge([box(1,.6,4,-1.5,3,0),box(1,.6,4,1.5,3,0),box(2,.6,1,0,3,-1.5),box(2,.6,1,0,3,1.5)])},
+    trench: {timber:merge([box(4,.08,4,0,.02,0)]),roof:merge([box(4,.3,.35,0,0,-1.8),box(4,.3,.35,0,0,1.8)])},
+    moat: {timber:merge([box(4,.06,4,0,.02,0)]),roof:merge([box(4,.25,.25,0,0,-1.85),box(4,.25,.25,0,0,1.85)])},
     townhall: th,
     cornerstone: {
       timber: merge([cyl(0.13, 0.18, 4.8, 0, 0, 0, 8), box(1.7, 0.12, 0.12, 0.75, 4.4, 0)]),

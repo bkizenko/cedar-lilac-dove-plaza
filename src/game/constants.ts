@@ -51,6 +51,11 @@ export const BUILDINGS: Record<
     hint: string;
   }
 > = {
+  palisade: {name:"Palisade",w:4,d:4,food:0,wood:6,stone:0,pop:0,hp:420,age:0,hint:"Place adjacent 4m sections to block raiders. Leave a gate for workers."},
+  gate: {name:"Timber gate",w:4,d:4,food:0,wood:12,stone:0,pop:0,hp:350,age:0,hint:"Open in peacetime; automatically closes when an enemy approaches. Select to lock or open. Anyone can pass an open gate."},
+  stonewall: {name:"Stone wall",w:4,d:4,food:0,wood:0,stone:12,pop:0,hp:1000,age:2,hint:"Strong 4m defensive section. Raiders must break through or find a gap."},
+  trench: {name:"Defensive trench",w:4,d:4,food:0,wood:0,stone:0,pop:0,hp:300,age:0,hint:"Dig an earthwork: crossing takes twice as long for everyone. Leave clear approaches for workers."},
+  moat: {name:"Flooded moat",w:4,d:4,food:0,wood:4,stone:4,pop:0,hp:500,age:4,hint:"Medieval water-fed earthwork near a shore or river. Crossing is four times slower. Leave a dry gate approach."},
   townhall: {
     name: "Town Hall",
     w: 10,
@@ -429,6 +434,7 @@ export const BUILD_ORDER: BldType[] = [
   "quarry",
   "warehouse",
   "barracks",
+  "palisade", "gate", "trench", "stonewall", "moat",
   "bridge",
   "forge",
   "watchtower",
@@ -517,6 +523,7 @@ export const AGE_CHOICES: {
 ];
 
 export const BUILD_TIME: Record<BldType, number> = {
+  palisade:12, gate:18, stonewall:24, trench:18, moat:30,
   townhall: 0,
   cornerstone: 12,
   hut: 8,

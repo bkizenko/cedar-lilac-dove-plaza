@@ -10,7 +10,8 @@ import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordH
 import {daylightAt,solarTimeLabel} from "./daylight";
 import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
-import {villageAppeal} from "./migration";
+import {villageAppeal,foodAttention} from "./migration";
+import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish} from "./fishing";
@@ -22,7 +23,7 @@ import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
-import { establishRaiderCamps, campRaidAI, canScheduleSeaRaid, findRaiderLanding } from "./raiders";
+import { establishRaiderCamps, campRaidAI, seaRaidAI, canScheduleSeaRaid, findRaiderLanding } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
@@ -800,7 +801,7 @@ export class Game {
   }
 
   private solidBuilding(b: Building) {
-    return b.hp > 0 && !b.plannedCost && !["farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["trench", "moat", "farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -972,6 +973,7 @@ export class Game {
         }
       }
     }
+    if(type==="moat"&&![4,8,12,14].some(r=>Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return this.height(x+Math.cos(a)*r,z+Math.sin(a)*r)<this.world.waterY;}).some(Boolean)))return "A flooded moat needs a river or shore within 14m";
     if (type !== "quarry" && type !== "lumber") {
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
@@ -1099,21 +1101,21 @@ export class Game {
     const t = this.tribe(team);
     if (!t) return 0.04;
     let blds = 0;
-    for (const b of this.state.buildings) if (b.team === team && b.hp > 0) blds++;
+    for (const b of this.state.buildings) if (b.team === team && this.finished(b) && !FORTIFICATIONS.includes(b.type)) blds++;
     const wealth = blds * 8 + (t.food + t.wood + t.stone) / 32;
     const armed = this.state.units.filter(
       (u) => u.team === team && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     ).length;
     const cover = 10 + armed * 7;
     const ageP = 0.035 + t.age * 0.09;
-    return Math.max(0.025, Math.min(0.78, ageP * (wealth / cover)));
+    return Math.max(0.025, Math.min(0.78, ageP * (wealth / cover) + foodAttention(this,team)*.24));
   }
 
   tribeFortune(team: number) {
     const t = this.tribe(team);
     if (!t || !t.alive) return 0;
     let blds = 0;
-    for (const b of this.state.buildings) if (b.team === team && b.hp > 0) blds++;
+    for (const b of this.state.buildings) if (b.team === team && this.finished(b) && !FORTIFICATIONS.includes(b.type)) blds++;
     const pop = this.popNow(team);
     return t.food / 70 + t.wood / 80 + pop / 7 + blds / 5 + t.age * 0.35;
   }
@@ -1667,7 +1669,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e12;
     for (const b of this.state.buildings) {
-      if ((b.hp<=0 && !(b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0))) || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
+      if (b.plannedCost || earthwork(b) || (b.hp<=0 && !(b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0))) || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
       const d = (b.x - u.x) ** 2 + (b.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
@@ -1893,7 +1895,7 @@ export class Game {
     const {x:sx,z:sz}=landing;
     this.tribe(3).food+=16*n;
     const marks = this.state.buildings.filter(
-      (b) => b.team === 0 && b.hp > 0 && b.type !== "townhall" && b.type !== "keep",
+      (b) => b.team === 0 && this.finished(b) && !FORTIFICATIONS.includes(b.type) && b.type !== "townhall" && b.type !== "keep",
     );
     const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
     const goHall = n >= 6 && age >= 3 && Math.random() < 0.35;
@@ -1912,6 +1914,7 @@ export class Game {
       u.tx = mark ? mark.x : home.x + 8;
       u.tz = mark ? mark.z : home.z + 8;
       u.aggroT = 80;
+      u.seaRaid={x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
     }
     this.banner(label, 2.2);
     this.onSfx("horn");
@@ -3112,7 +3115,7 @@ export class Game {
   tickSea(dt: number) {
     this.seaT -= dt;
     if (this.seaT > 0) return;
-    this.seaT = (this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240;
+    this.seaT = ((this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240)/(1+foodAttention(this)*.65);
     if (this.state.time < 600) return;
     const dead = this.state.tribes.find((t) => (t.id === 1 || t.id === 2) && !t.alive);
     if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
@@ -3172,7 +3175,7 @@ export class Game {
         if(this.walkable(x,z)&&this.workBoard.connected(this,x,z,hall.x,hall.z))arrivals.push({x,z});
       }
       if(!arrivals.length)return;
-      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*(eager?4:3)));
+      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*((eager?4:3)+Math.floor(foodAttention(this)*3))));
       for(let i=0;i<group;i++) {
         you.food-=8;
         const at=arrivals[i%arrivals.length],u=this.spawnUnit("worker",at.x,at.z,0);
@@ -3435,7 +3438,7 @@ export class Game {
     }
     for (const b of this.state.buildings) {
       if (b.team !== 0 || b.hp <= 0 || b.plannedCost) continue;
-      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : 12, 2);
+      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : FORTIFICATIONS.includes(b.type)?5:12, 2);
     }
     for (let i = 0; i < vis.length; i++) {
       if (vis[i] === 2) age[i] = 0;
@@ -3475,7 +3478,7 @@ export class Game {
       grove: 18,
     };
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.build < 1 || b.team > 2) continue;
+      if (b.hp <= 0 || b.build < 1 || b.team > 2 || FORTIFICATIONS.includes(b.type)) continue;
       const r = (rad[b.type] ?? 14) * 1.45;
       const cx = ((b.x + HALF) / cell) | 0;
       const cz = ((b.z + HALF) / cell) | 0;
@@ -3859,7 +3862,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return u.speed * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return u.speed * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -4405,7 +4408,7 @@ export class Game {
     if (!best && (u.team !== 0 || u.order === "attack" || u.order === "attackmove")) {
       for (const b of this.state.buildings) {
         if (
-          b.hp <= 0 ||
+          b.hp <= 0 || b.plannedCost || earthwork(b) ||
           b.team === u.team ||
           !this.isFoe(u.team, b.team) ||
           (u.team === 0 && !this.visibleAt(b.x, b.z))
@@ -4522,7 +4525,7 @@ export class Game {
   lootBuilding(attackerTeam: number, b: Building) {
     const victim = this.tribe(b.team);
     const raider = this.tribe(attackerTeam);
-    if (!victim || !raider || b.team === attackerTeam || b.lootClaimed || b.plannedCost) return;
+    if (!victim || !raider || b.team === attackerTeam || b.lootClaimed || b.plannedCost || FORTIFICATIONS.includes(b.type)) return;
     b.lootClaimed=true; b.lootTeam=attackerTeam;
     const take = (
       key: "food" | "wood" | "stone" | "copper" | "iron",
@@ -4675,6 +4678,7 @@ export class Game {
   barbarianAI(u: Unit, dt: number) {
     if(u.order==="move" && u.team!==3){this.combatAI(u,dt);return;}
     if (campRaidAI(this, u, dt)) return;
+    if (seaRaidAI(this,u,dt)) return;
     u.wanderT -= dt;
     u.aggroT -= dt;
     if (u.type === "leader") {
@@ -5425,6 +5429,7 @@ export class Game {
       try {
         this.state.time += sdt;
         fundConstructionPlans(this);
+        tickGates(this);
         if(this.state.walkDirty)this.rebuildWalk();
         for (const b of this.state.buildings)
           if (b.type === "farm" && this.finished(b)) {

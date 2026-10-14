@@ -288,6 +288,8 @@ export function decodeGame(raw: unknown): Game {
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
+    if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
+    if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
@@ -318,6 +320,8 @@ export function decodeGame(raw: unknown): Game {
   }
   for (const b of s.buildings) {
     add(b, "building");
+    if(b.gateOpen!==undefined&&typeof b.gateOpen!=="boolean")fail();
+    if(b.gateMode!==undefined&&!["auto","open","closed"].includes(b.gateMode))fail();
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();

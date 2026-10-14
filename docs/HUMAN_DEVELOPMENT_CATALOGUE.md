@@ -86,7 +86,7 @@ This is a design catalogue, not a claim that every historical development must o
 62. Hearths, fuel stores, granaries and preservation areas.
 63. Workshops, animal pens and production yards.
 64. Meeting/community centers, healing, ritual and learning spaces.
-65. Palisades, gates, watchposts and later towers.
+65. ~~Palisades and gates~~ — physical construction, collision, safe automatic/manual gates and save regression checks; watchposts/later tower progression and rival perimeter planning remain partial. Stone walls, trenches and Medieval flooded moats now have construction/crossing foundations.
 66. Construction labor, local input delivery, repair and fire/destruction.
 67. Relocating the community center through labor and reconstruction.
 68. Multiple settlements with home/work/storage assignments.
@@ -207,3 +207,6 @@ Ordinary workers switch village focus through a shared two-pass reassignment rou
 ### Surplus food, impact alarms and readable farming — 2026-10-13
 
 Completed at narrow scope: gathering continues beyond protected food capacity; actual incoming hits mobilize local defense; healthy unarmed adults use tools while children and badly wounded residents shelter. Farm cards and the ledger expose staffing, current/potential yield and seasonal work time using the real harvest formula. Tool buttons expose individual productivity gains. These do not cross out the broader agriculture, storage, military or human-development branches. See the canonical future document for verification and remaining scope.
+
+### 2026-10-13 frontier and craft capacity increment
+Surplus food now increases both settler attraction/arrival frequency and bounded raid pressure. Defensive segments, gate controls, slower earthwork crossings and tactical sea-raider targeting/withdrawal extend items 65/103–110; actual naval journeys, coordinated siege and rival fortification remain open. Shared crafting benches and hands-on practice extend 57/59/63/74 without completing linked materials or durability. Only the narrow finished palisade/gate scope is crossed out above. See FUTURE_IMPLEMENTATION.md for exact verification and the remaining ordered work.
