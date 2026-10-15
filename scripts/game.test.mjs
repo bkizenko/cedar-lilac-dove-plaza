@@ -907,15 +907,15 @@ function cornerstoneValley() {
   return { g, w };
 }
 
-test("cornerstones require distant clumps and retain their own outpost limit", () => {
+test("frontier outposts claim open ground without a two-post cap but retain spacing", () => {
   const {g} = cornerstoneValley();
   assert.equal(g.placeBuilding("cornerstone", 20, 38), false);
-  assert.equal(g.placeBuilding("cornerstone", 90, 38), false, "empty ground is not a clump");
+  assert.equal(g.settlementIssue("cornerstone", 90, 38), null, "open ground can be claimed");
   assert.equal(g.placeBuilding("cornerstone", 140, 38), true);
   assert.equal(g.placeBuilding("cornerstone", 150, 38), false);
   assert.equal(g.placeBuilding("cornerstone", 230, 38), true);
-  assert.equal(g.placeBuilding("cornerstone", 320, 38), false, "unfinished markers count toward the limit");
-  assert.equal(g.tribe(0).wood, 360);
+  assert.equal(g.placeBuilding("cornerstone", 320, 38), true, "three frontier posts are allowed");
+  assert.equal(g.tribe(0).wood, 290);
   assert.equal(g.state.buildings.filter(b => b.type === "townhall").length, 1);
   assert.equal(g.popCap(0), 8, "markers do not create housing or people");
 });

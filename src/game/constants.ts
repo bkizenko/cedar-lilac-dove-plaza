@@ -68,12 +68,12 @@ export const BUILDINGS: Record<
     pop: 8,
     hp: 1100,
     age: 0,
-    hint: "The first hearth is free. Later settlements need 20 logs, construction labor and room beyond existing villages. Two cornerstones can claim distant clumps.",
+    hint: "The first hearth is free. Later settlements need 20 logs, construction labor and room beyond existing villages. Frontier outposts extend your claim; residents must defend them.",
   },
   cornerstone: {
-    name: "Cornerstone",
+    name: "Frontier outpost",
     w: 3, d: 3, food: 0, wood: 70, stone: 0, pop: 0, hp: 320, age: 0,
-    hint: "Claims a distant resource clump. Workers gather nearby and deliver here. Two beyond the home hall.",
+    hint: "Claims explored ground and serves as a local delivery point. Additional or distant claims need more armed guards; rival frontiers can provoke disputes.",
   },
   hut: {
     name: "Hut",

@@ -1,3 +1,4 @@
+import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
 import {isRivalTeam} from "./factions";
 import {dispatchRivalBarter} from "./rivalTrade";
 import {developRivalCrossings,planReturnCrossing} from "./crossings";
@@ -9,7 +10,7 @@ import {raiseAttackAlarm} from "./defense";
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
-import {rivalCanInvest,rivalDevelopmentPlan,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
+import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -829,16 +830,19 @@ export class Game {
           const hN = this.travelHeight(x, z + cell);
           if (Math.abs(h - hE) > 2.45 || Math.abs(h - hN) > 2.45) ok = false;
         }
-        if (ok) {
-          for (const b of this.state.buildings) {
-            if (!this.solidBuilding(b)) continue;
-            if (Math.abs(b.x - x) < b.w * 0.4 + 0.75 && Math.abs(b.z - z) < b.d * 0.4 + 0.75) {
-              ok = false;
-              break;
-            }
-          }
-        }
         this.walk[iz * WALK + ix] = ok ? 1 : 0;
+      }
+    }
+    // Rasterize each footprint once instead of checking every building against
+    // every terrain cell. Keep the exact original center/strict-edge rule.
+    for(const b of this.state.buildings){
+      if(!this.solidBuilding(b))continue;
+      const rx=b.w*.4+.75,rz=b.d*.4+.75;
+      const x0=Math.max(0,Math.floor((b.x-rx+HALF)/cell)),x1=Math.min(WALK-1,Math.floor((b.x+rx+HALF)/cell));
+      const z0=Math.max(0,Math.floor((b.z-rz+HALF)/cell)),z1=Math.min(WALK-1,Math.floor((b.z+rz+HALF)/cell));
+      for(let iz=z0;iz<=z1;iz++)for(let ix=x0;ix<=x1;ix++){
+        const x=-HALF+(ix+.5)*cell,z=-HALF+(iz+.5)*cell;
+        if(Math.abs(b.x-x)<rx&&Math.abs(b.z-z)<rz)this.walk[iz*WALK+ix]=0;
       }
     }
     this.state.walkDirty = false;
@@ -901,9 +905,9 @@ export class Game {
     }
     if (type === "cornerstone") {
       if (!hall || !this.finished(hall)) return "Plant the home hall first";
-      if (settlements.filter(b=>b.type==="cornerstone").length >= 2) return "The hall and two cornerstones are enough to hold";
       if (settlements.some((b) => Math.hypot(b.x - x, b.z - z) < SETTLEMENT_GAP))
-        return "A cornerstone needs a distant clump, away from your other settlements";
+        return "A frontier outpost needs room beyond existing settlements and posts";
+      return null;
     }
     return this.nearClump(x, z) ? null : "Plant beside a clump — berries, timber, stone, or ore";
   }
@@ -2119,11 +2123,12 @@ export class Game {
   }
 
   tickRegions() {
+    const claims=new Map(this.state.buildings.filter(b=>b.type==="cornerstone"&&this.finished(b)).map(b=>[b.id,frontierStatus(this,b).strength]));
     for (const r of this.state.regions) {
       const counts = this.state.tribes.map(()=>0);
       for (const b of this.state.buildings) {
-        if (b.hp <= 0 || b.team === 3) continue;
-        if (Math.hypot(b.x - r.x, b.z - r.z) < r.r) counts[b.team] += 1;
+        if (!this.finished(b) || b.team === 3) continue;
+        if (Math.hypot(b.x - r.x, b.z - r.z) < r.r) counts[b.team] += claims.get(b.id)??1;
       }
       for (const u of this.state.units) {
         if (u.hp <= 0 || u.team === 3) continue;
@@ -3490,7 +3495,8 @@ export class Game {
     };
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.build < 1 || b.team === 3 || FORTIFICATIONS.includes(b.type)) continue;
-      const r = (rad[b.type] ?? 14) * 1.45;
+      const frontier=b.type==="cornerstone"?frontierStatus(this,b):null;
+      const r = (frontier?.radius ?? rad[b.type] ?? 14) * 1.45;
       const cx = ((b.x + HALF) / cell) | 0;
       const cz = ((b.z + HALF) / cell) | 0;
       const cr = Math.ceil(r / cell);
@@ -3502,7 +3508,7 @@ export class Game {
           const wz = -HALF + (iz + 0.5) * cell;
           if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
           const i = iz * n + ix;
-          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0,Math.min(1,(1-Math.hypot(wx-b.x,wz-b.z)/r)/0.25)));
+          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0,Math.min(1,(1-Math.hypot(wx-b.x,wz-b.z)/r)/0.25))*(frontier?.strength??1));
           const cur = terr[i];
           if (cur === 255 || cur === b.team) terr[i] = b.team;
           else terr[i] = 254;
@@ -5169,7 +5175,8 @@ export class Game {
           (b) => b.team === 0 && b.hp > 0 && b.type !== "townhall",
         );
         if (targets.length) {
-          const t = targets[(Math.random() * targets.length) | 0];
+          const disputed=tr.tension>.28?targets.filter(b=>b.type==="cornerstone"&&this.finished(b)&&rivalKnows(this,team,b.x,b.z)&&Math.hypot(b.x-hall.x,b.z-hall.z)<160).sort((a,b)=>frontierStatus(this,a).strength-frontierStatus(this,b).strength):[];
+          const t = disputed[0] || targets[(Math.random() * targets.length) | 0];
           const n = shrinking ? 1 : 1 + ((Math.random() * Math.min(mil.length, 2 + tr.age)) | 0);
           for (const u of mil.slice(0, n)) {
             u.tx = t.x;
@@ -5494,8 +5501,7 @@ export class Game {
         this.tickSea(sdt);
         this.defendHome(0);
         if ((this.state.time | 0) % 2 === 0) {
-          this.defendHome(1);
-          this.defendHome(2);
+          for(const tr of this.state.tribes)if(isRivalTeam(tr.id)&&tr.alive)this.defendHome(tr.id);
         }
         this.tickWildlife(sdt);
         tickCommunities(this,sdt);
@@ -5513,6 +5519,7 @@ export class Game {
             b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);
         }
         this.tickInfluence(sdt);
+        tickFrontiers(this);
         this.tickRegen(sdt);
         this.tickPeople(sdt);
         this.updateVision(sdt);
@@ -5662,6 +5669,7 @@ export class Game {
       if(b.type==="dock"&&this.finished(b))info+=" · "+fishingReport(this,b);
       if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);
+      if(b.type==="cornerstone"&&this.finished(b)&&b.team===0)info+=" · "+frontierReport(this,b);
       if (b.build < 1)
         info = b.plannedCost ? "Plan · "+planStatus(this,b) : "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
       if (b.queue.length) {
