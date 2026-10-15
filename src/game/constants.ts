@@ -429,6 +429,8 @@ export const GATHER = {
 
 export const BUILD_ORDER: BldType[] = [
   "hut",
+  "cornerstone",
+  "townhall",
   "farm",
   "dock",
   "lumber",

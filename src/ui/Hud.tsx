@@ -55,6 +55,8 @@ import { YEAR_SECONDS } from "@/game/settlement";
 
 const BLD_ICON: Record<string, ReactNode> = {
   hut: <Home className="size-4" />,
+  cornerstone: <Compass className="size-4" />,
+  townhall: <Landmark className="size-4" />,
   farm: <Wheat className="size-4" />,
   lumber: <Axe className="size-4" />,
   quarry: <Pickaxe className="size-4" />,
@@ -381,11 +383,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       <div className="hud-banner">
         {hud.placing ? (
           <div className="hud-toast">
-            {founding
-              ? hud.banner || "Click beside a clump of berries or timber."
+            {hud.placeIssue || hud.banner || (founding
+              ? "Click beside a clump of berries or timber."
               : hud.placing === "cornerstone"
-                ? "Claim explored dry ground beyond your settlement. Fertile soil, resources and established paths are valuable; nearby rivals may dispute the claim."
-                : `Click open grass to raise a ${BUILDINGS[hud.placing].name}.`}
+                ? "Outpost: choose explored dry ground at least 64m from your halls and outposts. Place a plan even without 70 logs."
+                : `Click open grass to raise a ${BUILDINGS[hud.placing].name}.`)}
           </div>
         ) : hud.banner ? (
           <div className="hud-toast">{hud.banner}</div>
@@ -562,15 +564,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                     </button>
                   ))}
                 {sel.queue && <p className="text-xs">Queue: {sel.queue}</p>}
-                {sel.type === "townhall" ? (
-                  <button
-                    type="button"
-                    className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs"
-                    onClick={() => engine?.setPlacing("cornerstone")}
-                  >
-                    {`Claim land · frontier outpost · 70 logs`}
-                  </button>
-                ) : null}
+
               </div>
             )}
             {sel.canRecycle ? (
@@ -1175,6 +1169,8 @@ function IconBtn({
 }
 
 function shortName(n: string) {
+  if (n === "Frontier outpost") return "Outpost";
+  if (n === "Town Hall") return "Town Hall";
   if (n === "Lumber Camp") return "Lumber";
   if (n === "Watchtower") return "Tower";
   if (n === "University") return "Univ.";

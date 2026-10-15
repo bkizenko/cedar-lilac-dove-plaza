@@ -1,5 +1,7 @@
 # Astra execution backlog
 
+> Scope retained. Current execution order, latest user overrides, completion evidence and a mapping of every task 01–25 into the six delivery batches are in [docs/FUTURE_IMPLEMENTATION.md](docs/FUTURE_IMPLEMENTATION.md). The historical order below is not a second competing queue.
+
 Execute sequentially; dependencies are IDs below. First ten tasks are 01–10. Phase numbers follow audit → foundation → slice → economy → combat → AI → content → survival → polish → optimization → alpha. Parallel work is optional only on disjoint contracts. Read this plus the relevant spec, not the original giant prompt. Status/evidence belongs in DEVELOPMENT_STATUS.md.
 
 ## 01 — Audit and freeze contracts

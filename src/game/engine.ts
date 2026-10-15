@@ -480,7 +480,9 @@ export class Engine {
       const t = this.game.state.placing;
       const d = BUILDINGS[t];
       this.game.banner(
-        t === "dock"
+        t === "cornerstone"
+          ? "Outpost — choose explored dry ground at least 64m from your halls and other outposts. Costs 70 logs; plans can wait for materials."
+          : t === "dock"
           ? "Fishing Dock — click the white posts by the water"
           : t === "farm"
             ? "Farm — click the open grass near camp"
