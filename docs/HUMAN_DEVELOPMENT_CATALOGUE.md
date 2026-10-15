@@ -231,3 +231,7 @@ Item 85 now supports explicitly selected armed civilian carriers through normal 
 Items 85/97 now include conditional foreign trader equipment from local stocks and an explicit one/two-guard escort dispatch for active player shipments. Residents physically follow, defend locally, resume and return; weapon ownership and missions survive saves. Broad diplomacy, convoy routing and naval escorts remain open. Additional halls now cost 80/160/240/320 logs, with old saved quotes honored. See the latest canonical handoff for final test/release evidence.
 
 Latest correction: additional hall prices are now 40/60/80/100 logs, superseding the prior steep curve. Existing higher unpaid plans receive discounts; paid construction is unchanged. Nearby assigned escorts now cause trading carriers to regroup, with blocked/dead/fighting/distant guard handling. These are narrow balance/reliability changes, not completion of whole catalogue entries.
+
+### Mountain prospecting — 2026-10-14
+
+Mountain stone excavation can now expose finite site-seeded copper and iron veins at progressively deeper milestones. Actual ore nodes, quarry staffing controls, physical delivery, fog-aware rendering and saved prospect history are implemented. This extends items 3/51/56/59 without completing metallurgy, underground mine infrastructure or the practical discovery tree. Existing age gates remain explicit. See the newest canonical handoff for verification/release details.

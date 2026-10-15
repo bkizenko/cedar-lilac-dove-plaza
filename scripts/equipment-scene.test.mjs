@@ -133,3 +133,13 @@ test('finite fresh carcasses lie on their side and exhausted, spoiled or unseen 
   game.state.time=1e6;game.state.wildlife=[fresh];view.syncWildlife(game);matrix(view.deer).decompose(p,q,s);
   assert.ok(s.x<.01);
 });
+
+test('newly exposed ore grows its render capacity without losing fog or depletion visibility',()=>{
+ const {view,game}=fixture();view.scene=new THREE.Scene();view.treesTrunk=mesh(new THREE.BoxGeometry(),1);view.treesLeaf=mesh(new THREE.BoxGeometry(),1);
+ view.copper=mesh(new THREE.BoxGeometry(),1);view.iron=mesh(new THREE.BoxGeometry(),1);view.scene.add(view.copper,view.iron);
+ game.state.trees=[];game.state.stones=[];game.state.copper=[{x:0,y:4,z:0,amount:20,scale:1},{x:10,y:4,z:10,amount:40,scale:1},{x:200,y:4,z:10,amount:40,scale:1}];game.state.iron=[];
+ const old=view.copper,geometry=old.geometry;let disposed=false;old.addEventListener('dispose',()=>disposed=true);view.syncNature(game);
+ assert.equal(view.copper.count,3);assert.equal(view.copper.geometry,geometry);assert.equal(disposed,true);assert.equal(view.scene.children.includes(old),false);
+ const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();matrix(view.copper,1).decompose(p,q,s);assert.equal(p.x,10);assert.ok(s.x>.9);
+ matrix(view.copper,2).decompose(p,q,s);assert.ok(s.x<.01,'unexplored new veins remain hidden');game.state.copper[1].amount=0;view.syncNature(game);matrix(view.copper,1).decompose(p,q,s);assert.ok(s.x<.01,'exhausted veins disappear');
+});

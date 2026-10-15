@@ -1220,6 +1220,15 @@ export class WorldView {
       mesh.count = n;
       mesh.instanceMatrix.needsUpdate = true;
     };
+    // Excavation can expose additional veins after scene construction.
+    for(const kind of ['copper','iron'] as const){
+      const old=this[kind],needed=game.state[kind].length;
+      if(old&&needed>instCap(old)){
+        const grown=new THREE.InstancedMesh(old.geometry,old.material,Math.max(needed,instCap(old)*2));
+        grown.castShadow=old.castShadow;grown.receiveShadow=old.receiveShadow;grown.frustumCulled=false;
+        this.scene.remove(old);old.dispose();this[kind]=grown;this.scene.add(grown);
+      }
+    }
     hideNodes(this.copper, game.state.copper);
     hideNodes(this.iron, game.state.iron);
     if (!this.bushes) return;

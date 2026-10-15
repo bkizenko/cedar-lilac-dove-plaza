@@ -228,7 +228,7 @@ export type Building = {
   maxHp: number;
   selected: boolean;
   bridge?: {ax:number;az:number;bx:number;bz:number};
-  excavation?: {remaining:number;dug:number;quality:number};
+  excavation?: {remaining:number;dug:number;quality:number;prospected?:number};
   queue: QueueItem[];
   rally: { x: number; z: number } | null;
   cd: number;

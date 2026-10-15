@@ -2,6 +2,16 @@
 
 You are the next implementation model. Inspect the repository, current Git state, AGENTS.md and relevant project skills first. Preserve working behavior, current saved villages and local changes. Implement, run, diagnose, test, balance and push the remaining accepted game autonomously in dependency order. Do not stop merely after planning. If blocked by a real execution limit, leave this file updated with the exact unfinished acceptance checks. Treat this file as the current remaining-work source; older handoffs are historical.
 
+## Mountain prospecting increment — 2026-10-14
+
+Published on stable 8086 as `2026-10-15T02-06-02-222Z`; service health verified. Full suite: 625/625 plus 32/32 app/auth checks passed. Typecheck and production build passed. Tests cover depth thresholds, variable geology, finite depletion, save validation, actual ore hauling and growing render buffers with fog/depletion visibility. Existing village saves are preserved.
+
+- [x] ~~Excavation can expose finite mountain ore veins.~~ After 80 stone excavated (displayed 2 m), a site's seeded geology may reveal copper; after 200 (5 m), it may reveal iron. Different sites/seeds differ. Veins contain 40–120 units, use existing physical mining/cargo/delivery, and never credit stock directly. Failed prospect stages are recorded; exhausted exposed nodes are not replenished by rechecking/rebuilding. Existing stone seams and paid buildings are retained.
+- [x] ~~Explicit quarry metal commands and readable findings.~~ Quarry panels show exposed surveyed supplies and provide stone/copper/iron staffing commands. Existing Bronze/Iron extraction gates remain; discovery is possible earlier, but this does not yet replace age gates with practical metallurgy experiments. Assignments require actual available residents, access and material. New ore meshes grow their instance capacity and retain fog/depletion rules.
+- [x] ~~Persist prospect history.~~ Optional validated prospect flags preserve old saves and avoid rerolling stages after load. No user village reset.
+
+This extends catalogue 3/51/56/59 and the mountain mining request. Full underground workings, shafts/supports, copper/tin/bronze processing and discovery-led metallurgy remain unfinished. No whole broad catalogue entry is newly crossed out.
+
 ## Latest balance correction — 2026-10-14
 
 Town halls now use the user's gentler curve: first player hearth free, then **40/60/80/100 logs**. This supersedes the previous 80/160/240/320 quote. Building-menu and ledger prices share the calculation. Higher unpaid saved plans are discounted on loading/funding; legacy cheaper plans remain cheaper. Paid buildings and departed founding caravans retain their paid commitments, with no manufactured refund.
