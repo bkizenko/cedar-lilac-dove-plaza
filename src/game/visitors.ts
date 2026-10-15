@@ -1,3 +1,4 @@
+import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
 import {settleRivalBarter} from "./rivalTrade";
 import {receiveFood} from "./pantry";
@@ -21,6 +22,7 @@ export function tickVisitors(g:Game,dt:number) {
       .filter(item=>item.spare>=8).sort((a,b)=>(b.good===t.spec?30:0)+b.spare*worth[b.good]-(a.good===t.spec?30:0)-a.spare*worth[a.good]);
     if(!available.length)continue;
     const {good,spare}=available[0],amount=Math.min(24,Math.floor(spare));
+    equipCaravan(g,u);
     g.spend(t.id,{[good]:amount});u.carry=amount;u.carryType=good;u.carryFood=good==='food'?'provisions':undefined;
     u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=home.x;u.tz=home.z;
     u.job=null;u.jobLock=false;u.stuckT=0;u.workReason='Carrying goods to meet another community';g.state.visitorTimer=360;break;

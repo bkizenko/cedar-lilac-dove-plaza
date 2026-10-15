@@ -39,7 +39,7 @@ export function frontierReport(g:Game,b:Building){
 export function guardFrontier(g:Game,id:number){
  const b=g.state.buildings.find(p=>p.id===id&&p.team===0&&p.type==='cornerstone'&&g.finished(p));if(!b)return 0;
  const s=frontierStatus(g,b);let sent=0;
- const choices=g.state.units.filter(u=>u.team===0&&armed(u)&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.expedition&&!u.envoy&&!u.visit&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.scout&&!u.studyCrop&&u.drill==null&&['idle','hold','gather'].includes(u.order)&&distance(u,b)>=32)
+ const choices=g.state.units.filter(u=>u.team===0&&armed(u)&&!isDependent(g,u)&&!u.emergency&&u.escortId===undefined&&u.carry===0&&!u.expedition&&!u.envoy&&!u.visit&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.scout&&!u.studyCrop&&u.drill==null&&['idle','hold','gather'].includes(u.order)&&distance(u,b)>=32)
    .filter(u=>!g.state.buildings.some(p=>p.team===0&&p.type==='cornerstone'&&g.finished(p)&&distance(u,p)<32))
    .sort((a,c)=>distance(a,b)-distance(c,b));
  for(const u of choices){

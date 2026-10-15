@@ -1,3 +1,4 @@
+import {recoverCaravanEquipment,escortAI} from "./caravans";
 import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
 import {isRivalTeam} from "./factions";
 import {dispatchRivalBarter} from "./rivalTrade";
@@ -1226,6 +1227,7 @@ export class Game {
       const d = UNITS.worker;
       u.type = "worker";
       u.militia = false;
+      u.caravanArmed=undefined;u.escortId=undefined;
       u.huntOnly=false;u.jobLock=false;u.job=null;
       u.range = d.range;
       u.dmg = d.dmg;
@@ -1284,7 +1286,7 @@ export class Game {
       }
       return false;
     }
-    const cost = founding ? {} : buildingCost(type);
+    const cost = founding ? {} : buildingCost(type,this,team);
     const planned=team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost))return false;
     if (type === "quarry" && this.height(x,z)<10) {
@@ -1567,7 +1569,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
-    u.buildOrder=undefined;
+    u.buildOrder=undefined;u.escortId=undefined;
     releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
@@ -1734,7 +1736,7 @@ export class Game {
       (u) => u.team === team && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     );
     for (const u of mil) {
-      if (u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
+      if (u.escortId!==undefined || u.visit || u.trade || u.recalled || u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
         continue;
       if (
         u.order === "attack" &&
@@ -5460,13 +5462,15 @@ export class Game {
           u.vz = 0;
           try {
             if (emergencyResponse(this, u, sdt)) continue;
+            recoverCaravanEquipment(this,u);
             if(u.recalled){this.workerAI(u,sdt);continue;}
+            if(escortAI(this,u,sdt))continue;
             if(raidLootAI(this,u,sdt))continue;
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
             if(routineRest(this,u,sdt))continue;
             // Armed citizens keep their equipment while fulfilling an explicit shipment.
-            if(u.order==="trade"&&u.trade){this.workerAI(u,sdt);continue;}
+            if(u.visit||(u.order==="trade"&&u.trade)){this.workerAI(u,sdt);continue;}
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
             else if (u.team !== 0) this.barbarianAI(u, sdt);
             else if (u.type === "worker" || (u.militia&&u.huntOnly&&["idle","gather","explore","return"].includes(u.order))) {
@@ -5745,13 +5749,7 @@ export class Game {
     const buildOptions = BUILD_ORDER.filter((type) => BUILDINGS[type].age <= age).map((type) => ({
       type,
       name: BUILDINGS[type].name,
-      cost: {
-        wood: BUILDINGS[type].wood,
-        stone: BUILDINGS[type].stone,
-        food: BUILDINGS[type].food,
-        copper: BUILDINGS[type].copper,
-        iron: BUILDINGS[type].iron,
-      },
+      cost: buildingCost(type,this,0),
       age: BUILDINGS[type].age,
       hint: type==="farm"?cultivationIssue(this)||BUILDINGS[type].hint:BUILDINGS[type].hint,
     }));

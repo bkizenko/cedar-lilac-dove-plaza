@@ -1,3 +1,4 @@
+import {buildingCost} from './construction';
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
@@ -114,7 +115,8 @@ export function tickCommunities(g: Game, dt: number) {
         g.state.time - (t.lastSettlement || 0) < 1800)
     )
       continue;
-    if (t.wood < 20) continue;
+    const timber=buildingCost("townhall",g,t.id).wood||20;
+    if (t.wood < timber) continue;
     const crew = survivors
       .filter(
         (u) =>
@@ -130,11 +132,11 @@ export function tickCommunities(g: Game, dt: number) {
     if (!crew.length) continue;
     const site = settlementSite(g, crew[0], expansion);
     if (!site) continue;
-    t.wood -= 20;
+    t.wood -= timber;
     t.lastSettlement = g.state.time;
     for (let i = 0; i < crew.length; i++) {
       const u = crew[i];
-      u.foundingJourney = { ...site, leader: i === 0 };
+      u.foundingJourney = { ...site, leader: i === 0, timber };
       u.order = "move";
       u.node = null;
       u.target = null;
@@ -142,7 +144,7 @@ export function tickCommunities(g: Game, dt: number) {
       u.tz = site.z;
       u.stuckT = 0;
       if (i === 0) {
-        u.carry = 20;
+        u.carry = timber;
         u.carryType = "wood";
       }
     }
@@ -191,7 +193,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
       }
       return true;
     }
-    if (u.carryType !== "wood" || u.carry < 20) {
+    if (u.carryType !== "wood" || u.carry < (mission.timber??20)) {
       u.foundingJourney = undefined;
       u.order = "idle";
       return true;
@@ -206,7 +208,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
         p.foundingJourney.x === mission.x && p.foundingJourney.z === mission.z);
       for (const person of crew) {
         if (replacement) {
-          person.foundingJourney = { ...replacement, leader: person.foundingJourney!.leader };
+          person.foundingJourney = { ...person.foundingJourney!, ...replacement };
           person.tx = replacement.x; person.tz = replacement.z; person.order = "move";
           person.stuckT = 0;
           person.workReason = "The original site is unsafe — moving to dry foundations";
@@ -218,7 +220,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
       }
       return true;
     }
-    u.carry -= 20;
+    u.carry -= mission.timber??20;
     if (u.carry === 0) u.carryType = null;
     hall = g.makeBld("townhall", mission.x, mission.z, u.team);
     hall.build = 0;

@@ -225,3 +225,7 @@ Items 84/85/95/96/103/104/112 remain partial. Known-bank rescue/resource bridges
 ### Armed shipment increment — 2026-10-14
 
 Item 85 now supports explicitly selected armed civilian carriers through normal proposals and reserved shipments. Actual travel, defense/resumption, saved cargo and weapon conservation are tested; automatic trade leaves stationed guards alone. Visiting carriers approach reachable frontages and retain a homeward mission after interruptions. Dedicated escorts and foreign caravan equipment remain incomplete, so item 85 is not crossed out. Latest full suite: 610 + 32 checks passed; production build and stable 8086 service verified. See FUTURE_IMPLEMENTATION.md for release and remaining scope.
+
+### Protected caravans and expansion pricing — 2026-10-14
+
+Items 85/97 now include conditional foreign trader equipment from local stocks and an explicit one/two-guard escort dispatch for active player shipments. Residents physically follow, defend locally, resume and return; weapon ownership and missions survive saves. Broad diplomacy, convoy routing and naval escorts remain open. Additional halls now cost 80/160/240/320 logs, with old saved quotes honored. See the latest canonical handoff for final test/release evidence.

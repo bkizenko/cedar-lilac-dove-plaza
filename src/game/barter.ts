@@ -15,7 +15,7 @@ export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
       (u.type === "worker" || (!automatic && u.selected && u.militia)) &&
       u.hp > 0 &&
       !isDependent(g, u) &&
-      !u.emergency &&
+      !u.emergency && u.escortId===undefined &&
       !u.envoy && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.recalled &&
       !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.studyCrop && u.drill == null &&
       u.carry === 0 &&

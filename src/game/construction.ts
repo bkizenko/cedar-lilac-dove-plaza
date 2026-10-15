@@ -5,9 +5,14 @@ import {foodDemand,isDependent} from './settlement';
 import {bridgeApproach} from './transport';
 
 export const BUILD_MATERIALS:ResKind[]=['food','wood','stone','copper','iron'];
-export function buildingCost(type:BldType):Cost {
+export function buildingCost(type:BldType,g?:Game,team=0):Cost {
   const d=BUILDINGS[type];
-  return Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
+  const cost:Cost=Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
+  if(type==='townhall'&&g){
+    const halls=g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&b.hp>0).length;
+    cost.wood=halls===0?(team===0?0:20):80*halls;
+  }
+  return cost;
 }
 export function planMissing(g:Game,b:Building){
   const t=g.tribe(b.team);

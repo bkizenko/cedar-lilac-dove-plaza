@@ -1,3 +1,4 @@
+import {sendTradeEscort,tradeJourney} from "@/game/caravans";
 import { useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { ResKind } from "@/game/types";
@@ -28,6 +29,12 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
       <button onClick={()=>{g.sendDelegation(team,"trade");engine.pushHud();}}>Send a trade delegation</button>
       {g.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeReservation?.team===team).map(u=>(
         <p key={u.id}>Reserved for collection: {u.tradeReservation!.amount} {names[u.tradeReservation!.kind].toLowerCase()}.</p>
+      ))}
+      {g.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeTeam===team&&tradeJourney(u)).map(u=>(
+        <div key={`escort-${u.id}`}>
+          <p>{u.name||"Trader"} · {g.state.units.filter(p=>p.hp>0&&p.escortId===u.id).length} armed escorts</p>
+          <button onClick={()=>{sendTradeEscort(g,u.id);engine.pushHud();}}>Send a spare armed escort</button>
+        </div>
       ))}
       <div className="trade-terms">
         <label>

@@ -1,3 +1,4 @@
+import {buildingCost} from "@/game/construction";
 import {fieldProductionSummary} from "@/game/productionReport";
 import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
@@ -380,7 +381,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <section className="mt-4">
         <h3>People and hearths</h3>
         <p>Village fatigue: {Math.round(people.reduce((sum,u)=>sum+(u.fatigue||0),0)/Math.max(1,people.length)*100)}%</p>
-        <button onClick={()=>{close();engine.setPlacing("townhall");}}>Plan another settlement · construction waits for 20 logs</button>
+        <button onClick={()=>{close();engine.setPlacing("townhall");}}>Plan another settlement · {buildingCost("townhall",g).wood} logs</button>
         <p>Choose a distant resource clump. Building a hall provides shelter, not new people.</p>
         {(s.communities || []).filter(c=>c.team===0).map(c=><p key={c.hall}>{c.name} · {c.status} · {people.filter(u=>u.homeHall===c.hall).length} residents</p>)}
         {people.map(u=>{const traits=predisposition(u);return <p key={u.id}><strong>{personName(u)}</strong> · {isDependent(g,u)?"young":"adult"} · {u.workReason || u.order}

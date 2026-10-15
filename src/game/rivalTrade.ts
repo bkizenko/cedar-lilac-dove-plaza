@@ -1,3 +1,4 @@
+import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
 import type {Game} from './sim';
 import type {ResKind,Unit} from './types';
@@ -40,6 +41,7 @@ export function dispatchRivalBarter(g:Game,team:number){
     .sort((a,b)=>Math.hypot(u.x-a.x,u.z-a.z)-Math.hypot(u.x-b.x,u.z-b.z));
   if(!halls.length)return false;
   const amount=Math.min(32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
+  equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;
   u.visit={phase:'outbound',wait:0,team:halls[0].team,wanted};u.order='move';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.stuckT=0;
   u.tx=halls[0].x;u.tz=halls[0].z;u.workReason='Taking surplus to a known village to seek '+wanted;

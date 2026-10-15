@@ -193,7 +193,7 @@ export type Unit = {
   procurement?: { minimum: number };
   homeHall?: number;
   parents?: number[];
-  foundingJourney?: {x:number;z:number;leader:boolean};
+  foundingJourney?: {x:number;z:number;leader:boolean;timber?:number};
   expedition?: {food:number;returning:boolean;forage:number};
   scout?: {legs:number;returning:boolean};
   fatigue?: number;
@@ -208,6 +208,8 @@ export type Unit = {
   stature: number;
   tint: number;
   militia: boolean;
+  caravanArmed?: boolean;
+  escortId?: number;
 };
 
 export type QueueItem = { unit: UnitType; t: number; max: number };
