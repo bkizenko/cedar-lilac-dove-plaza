@@ -1,3 +1,4 @@
+import {AGE_COST} from "./constants";
 import { hasTradition } from "./discovery";
 import type { Game } from "./sim";
 import type { Building, Unit, FoodKind, Tribe } from "./types";
@@ -63,9 +64,10 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
   for(const k of FOOD_KINDS)lots[k]*=share;
   t.food=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);t.foodLots=lots;
 }
+export function preservationTimberReserve(g:Game,team:number){return Math.max(16,AGE_COST[g.tribe(team).age+1]?.wood||0);}
 export function preservationAvailable(g: Game, b: Building) {
   return b.type === "warehouse" && g.finished(b) && (b.storeCare || 0) < 0.95 &&
-    g.tribe(b.team).wood >= 1 && reserveSeconds(g, b.team) >= 240;
+    g.tribe(b.team).wood >= preservationTimberReserve(g,b.team)+1 && reserveSeconds(g, b.team) >= 240;
 }
 export function preserveFood(g: Game, u: Unit, b: Building, dt: number) {
   if (isDependent(g, u) || !preservationAvailable(g, b)) {

@@ -143,6 +143,7 @@ export class WorldView {
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
   rings!: THREE.InstancedMesh;
+  resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
   workRings!: THREE.InstancedMesh;
   ghost: THREE.Group;
   arrows: THREE.InstancedMesh;
@@ -375,7 +376,12 @@ export class WorldView {
     );
     this.rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.rings.count = 0;
+    this.rings.frustumCulled = false;
     this.scene.add(this.rings);
+    this.resourceRing=new THREE.Mesh(new THREE.RingGeometry(1.45,1.72,40),new THREE.MeshBasicMaterial({color:"#ffe076",side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+    this.resourceRing.geometry.rotateX(-Math.PI/2);
+    this.resourceRing.visible=false;this.resourceRing.frustumCulled=false;this.resourceRing.raycast=()=>{};
+    this.scene.add(this.resourceRing);
 
     this.workRings = new THREE.InstancedMesh(
       new THREE.RingGeometry(LUMBER_R - 0.55, LUMBER_R + 0.2, 48),
@@ -1478,10 +1484,12 @@ export class WorldView {
       ri++;
     }
     const resource = game.selectedResource;
-    if (resource && resource.amount > 0 && game.exploredAt(resource.x,resource.z) && ri < 40) {
-      _p.set(resource.x,game.height(resource.x,resource.z)+0.1,resource.z);
-      _e.set(-Math.PI/2,0,0); _q.setFromEuler(_e); _s.set(2,2,1);
-      _m.compose(_p,_q,_s); this.rings.setMatrixAt(ri++,_m);
+    this.resourceRing.visible=!!resource&&resource.amount>0&&game.exploredAt(resource.x,resource.z);
+    if(resource&&this.resourceRing.visible){
+      // Drape the halo over the slope; a horizontal ring disappears into hills.
+      const positions=this.resourceRing.geometry.getAttribute("position") as THREE.BufferAttribute;
+      for(let i=0;i<positions.count;i++)positions.setY(i,game.height(resource.x+positions.getX(i),resource.z+positions.getZ(i))+.12);
+      positions.needsUpdate=true;this.resourceRing.position.set(resource.x,0,resource.z);
     }
     this.rings.count = ri;
     this.rings.instanceMatrix.needsUpdate = true;
@@ -1906,7 +1914,7 @@ export class WorldView {
     if (!this.fowTex) return;
     const src = game.vision;
     const cols: [number, number, number][] = [];
-    for (let t = 0; t < 3; t++) {
+    for (let t = 0; t < game.state.tribes.length; t++) {
       const hex = game.tribe(t)?.color || "#c4a060";
       const n = Number.parseInt(hex.replace("#", ""), 16);
       cols.push([(n >> 16) & 255, (n >> 8) & 255, n & 255]);
@@ -2196,6 +2204,7 @@ export class WorldView {
       this.smoke,
       this.floaters,
       this.rings,
+      this.resourceRing,
       this.trailMesh,
       this.workRings,
       this.hemi,

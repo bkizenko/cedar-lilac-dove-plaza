@@ -398,7 +398,8 @@ export class Engine {
       return;
     }
     const entity = this.view.pickEntity(cx, cy, this.game);
-    if (entity) this.game.selectEntity(entity, additive, true);
+    if(entity?.kind==="building"&&entity.team===0&&!this.game.finished(entity)&&!additive&&this.game.selectedUnits().length)this.game.orderConstruction(entity);
+    else if (entity) this.game.selectEntity(entity, additive, true);
     else {
       const resource=this.view.pickResource(cx,cy,this.game);
       if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
@@ -418,6 +419,7 @@ export class Engine {
     }
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
+    else if(ent?.kind==="building"&&ent.team===0&&!this.game.finished(ent))this.game.orderConstruction(ent);
     else {
       const node = this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);

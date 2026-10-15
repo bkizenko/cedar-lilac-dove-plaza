@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import {settleRivalBarter} from "./rivalTrade";
 import {receiveFood} from "./pantry";
 import type { Game } from './sim';
@@ -10,7 +11,7 @@ export function tickVisitors(g:Game,dt:number) {
   g.state.visitorTimer=90;
   if(g.state.units.some(u=>u.visit&&u.hp>0))return;
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));if(!home)return;
-  const rivals=g.state.tribes.filter(t=>[1,2].includes(t.id)&&t.alive&&!t.hostile);
+  const rivals=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
     if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5)continue;
     const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop);

@@ -46,7 +46,7 @@ export function tickCommunities(g: Game, dt: number) {
   if (g.state.communityTimer > 0) return;
   g.state.communityTimer = 30;
   const records = (g.state.communities ??= []);
-  for (const hall of g.state.buildings.filter((b) => b.type === "townhall" && b.team < 3)) {
+  for (const hall of g.state.buildings.filter((b) => b.type === "townhall" && b.team !== 3)) {
     let record = records.find((c) => c.hall === hall.id);
     if (!record) {
       record = {

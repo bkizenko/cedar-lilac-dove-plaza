@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import type {Game} from './sim';
 import type {ResKind,Unit} from './types';
 import {AGE_COST} from './constants';
@@ -16,7 +17,7 @@ const reviews=new WeakMap<Game,Map<number,number>>();
 /** A resident takes an offer to a known community. Its stocks are inspected
  * only on arrival; no purchase or payment occurs across the map. */
 export function dispatchRivalBarter(g:Game,team:number){
-  if(![1,2].includes(team)||!g.tribe(team).alive||g.popNow(team)<6||reserveSeconds(g,team)<600)return false;
+  if(!isRivalTeam(team)||!g.tribe(team).alive||g.popNow(team)<6||reserveSeconds(g,team)<600)return false;
   let clock=reviews.get(g);if(!clock){clock=new Map();reviews.set(g,clock);}
   const due=clock.get(team)||0;if(due>g.state.time&&due<=g.state.time+120)return false;
   clock.set(team,g.state.time+120);
@@ -34,7 +35,7 @@ export function dispatchRivalBarter(g:Game,team:number){
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));
   const u=workers[0];
-  const halls=g.state.buildings.filter(b=>[1,2].includes(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
+  const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
     g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(u,b))
     .sort((a,b)=>Math.hypot(u.x-a.x,u.z-a.z)-Math.hypot(u.x-b.x,u.z-b.z));
   if(!halls.length)return false;

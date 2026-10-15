@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit } from './types';
@@ -44,7 +45,8 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!g.finished(b));
   if(pending.length>=2||pending.some(b=>b.type===type))return false;
   if(type==='lumber'||type==='quarry'||type==='cornerstone'||missingAgeBuildings(g,team).includes(type))return true;
-  if(type==='hut')return g.popCap(team)<Math.max(p.next?.pop||0,p.pop+3);
+  // Shelter grows ahead of actual households, not all the way to the next era's population.
+  if(type==='hut')return g.popCap(team)<p.pop+3;
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
     const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*160;
@@ -57,7 +59,7 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
 
 /** A bounded share of the workforce secures missing materials while others grow food. */
 export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind){
-  if(![1,2].includes(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
+  if(!isRivalTeam(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
   const t=g.tribe(u.team),target=AGE_COST[t.age+1]?.[kind]||0;
   if(!target||t[kind]>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
   const workers=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.type==='worker'&&!isDependent(g,v));
@@ -71,7 +73,7 @@ const visits=new WeakMap<Game,Map<number,number>>();
 /** Place actual paid, reachable workplaces near discovered materials. Builders and
  * carriers use existing simulation orders; there is no remote income or auto-completion. */
 export function developRivalResources(g:Game,team:number){
-  if(![1,2].includes(team)||reserveSeconds(g,team)<300)return false;
+  if(!isRivalTeam(team)||reserveSeconds(g,team)<300)return false;
   let timers=visits.get(g);if(!timers){timers=new Map();visits.set(g,timers);}
   const due=timers.get(team)||0;
   if(due>g.state.time&&due<=g.state.time+25)return false;
@@ -122,7 +124,7 @@ export function developRivalResources(g:Game,team:number){
 
 /** Progression prerequisites consume real stock and builder time too. */
 export function developRivalInstitutions(g:Game,team:number){
-  if(![1,2].includes(team)||reserveSeconds(g,team)<600)return false;
+  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
   const t=g.tribe(team),home=g.campOf(team);
   const type=missingAgeBuildings(g,team).find(type=>BUILDINGS[type].age<=t.age&&rivalCanInvest(g,team,type));
   if(!type)return false;
@@ -134,7 +136,7 @@ const laborReviews=new WeakMap<Game,Map<number,number>>();
 /** Surplus food must release some labor for growth; persistent food orders
  * otherwise occupy the whole workforce even when a material shortage blocks it. */
 export function rebalanceRivalLabor(g:Game,team:number){
-  if(![1,2].includes(team)||reserveSeconds(g,team)<600)return;
+  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return;
   let reviews=laborReviews.get(g);if(!reviews){reviews=new Map();laborReviews.set(g,reviews);}
   const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+12)return;
   reviews.set(team,g.state.time+12);

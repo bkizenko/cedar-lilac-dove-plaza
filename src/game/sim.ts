@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import {dispatchRivalBarter} from "./rivalTrade";
 import {developRivalCrossings,planReturnCrossing} from "./crossings";
 import {weatherWaterLevel} from "./hydrology";
@@ -6,7 +7,7 @@ import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileT
 import {fieldProductionSummary} from "./productionReport";
 import {raiseAttackAlarm} from "./defense";
 import {applyLaborPriority} from "./labor";
-import {buildingCost,planStatus,fundConstructionPlans} from "./construction";
+import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalCanInvest,rivalDevelopmentPlan,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
@@ -250,7 +251,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 2 : 1) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 3 : 1) {
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
@@ -329,12 +330,16 @@ export class Game {
       ["Kest", "#2f6a6a"],
     ];
     const pickFolk = () => folk.splice((Math.random() * folk.length) | 0, 1)[0];
-    this.state.tribes = TEAM_NAMES.map((name, i) => {
-      const rolled = i === 1 || i === 2 ? pickFolk() : null;
+    const usedNames=new Set<string>();
+    this.state.tribes = TEAM_NAMES.slice(0,Math.max(4,...this.world.camps.map(c=>c.team+1))).map((name, i) => {
+      const rolled = isRivalTeam(i) ? pickFolk() : null;
+      let settlementName=rolled?prehistoricName(s,i*977):name;
+      for(let retry=1;usedNames.has(settlementName);retry++)settlementName=prehistoricName(s,i*977+retry*1999);
+      usedNames.add(settlementName);
       return {
       id: i,
-      name: rolled ? prehistoricName(s,i*977) : name,
-      short: rolled ? prehistoricName(s,i*977) : TEAM_SHORT[i],
+      name: settlementName,
+      short: rolled ? settlementName : TEAM_SHORT[i],
       color: rolled ? rolled[1] : TEAM_COLORS[i],
       // Neighbor settlements are already established, with finite spring stores.
       // This is initial provisioning, never an income bonus or periodic refill.
@@ -344,15 +349,15 @@ export class Game {
       copper: i === 0 ? 0 : i === 1 ? 4 : 0,
       iron: 0,
       age: 0,
-      aggro: i === 3 ? 1 : i === 1 ? 0.48 : i === 2 ? 0.34 : 0,
-      expand: i === 2 ? 1.05 : i === 1 ? 0.72 : 0.5,
-      tech: i === 2 ? 0.7 : i === 1 ? 0.58 : 0.45,
+      aggro: i === 3 ? 1 : i>=4 ? .25+Math.random()*.3 : i === 1 ? 0.48 : i === 2 ? 0.34 : 0,
+      expand: i>=4 ? .6+Math.random()*.6 : i === 2 ? 1.05 : i === 1 ? 0.72 : 0.5,
+      tech: i>=4 ? .45+Math.random()*.4 : i === 2 ? 0.7 : i === 1 ? 0.58 : 0.45,
       lastRaid: i === 0 || i === 3 ? 90 : 42,
       thinkT: 1 + i * 0.4,
       alive: true,
       hostile: i === 3,
       ally: false,
-      spec: (i === 1
+      spec: (i>=4 ? (["food","wood","stone","copper"] as ResKind[])[(s>>>((i-4)*3))%4] : i === 1
         ? specRoll < 0.5
           ? "stone"
           : "copper"
@@ -439,7 +444,7 @@ export class Game {
         this.spawnUnit("worker", camp.x - 5, camp.z + 5, camp.team);
         this.spawnUnit("worker", camp.x + 3, camp.z - 6, camp.team);
         this.addStartingBuilding("cairn", camp.x + 12, camp.z - 6, camp.team);
-      } else if (camp.team === 2) {
+      } else if (camp.team === 2 || camp.team>=4) {
         this.spawnUnit("worker", camp.x - 5, camp.z - 3, camp.team);
         this.spawnUnit("worker", camp.x + 5, camp.z - 4, camp.team);
         this.spawnUnit("worker", camp.x - 3, camp.z + 6, camp.team);
@@ -448,7 +453,7 @@ export class Game {
         this.spawnUnit("worker", camp.x + 4, camp.z - 5, camp.team);
         this.spawnUnit("worker", camp.x - 5, camp.z - 4, camp.team);
       }
-      if (camp.team === 1 || camp.team === 2) {
+      if (isRivalTeam(camp.team)) {
         const chief = this.spawnUnit("leader", camp.x + 2.2, camp.z + 1.4, camp.team);
         chief.order = "hold";
       }
@@ -496,7 +501,7 @@ export class Game {
     this.spawnRegions();
     // Existing neighbors begin with a worked landscape and protected stores.
     // These are generated starting assets, not supplies granted during play.
-    for (const camp of this.world.camps.filter(c=>[1,2].includes(c.team))) {
+    for (const camp of this.world.camps.filter(c=>isRivalTeam(c.team))) {
       for (const type of ["warehouse","warehouse","farm","farm","farm"] as BldType[]) {
         const spot=this.findOpenSpot(camp.x,camp.z,type,camp.team);
         if(spot)this.state.buildings.push(this.makeBld(type,spot.x,spot.z,camp.team));
@@ -1321,6 +1326,8 @@ export class Game {
     return true;
   }
 
+  orderConstruction(b:Building){return orderConstruction(this,b);}
+
   assignBuilders(b: Building) {
     if(b.plannedCost)return;
     let n = 0;
@@ -1363,8 +1370,8 @@ export class Game {
     }
     u.node = b;
     if (!this.buildingWorkReached(u,b)) {
-      const approach=b.type==="bridge"?bridgeApproach(this,u,b):{x:b.x,z:b.z};
-      if(!approach){u.node=null;u.order="idle";u.blockedTask=b.id;u.retryWorkAt=this.state.time+30;u.workReason="No reachable bridge bank — approach from dry land";return;}
+      const approach=b.type==="bridge"?bridgeApproach(this,u,b):this.interactionSpot(u,b);
+      if(!approach){u.node=null;u.order="idle";u.blockedTask=b.id;u.retryWorkAt=this.state.time+30;u.workReason="No reachable construction approach — clear a route to the site";return;}
       u.tx = approach.x;
       u.tz = approach.z;
       this.steer(u, dt);
@@ -1556,6 +1563,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    u.buildOrder=undefined;
     releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
@@ -2112,18 +2120,18 @@ export class Game {
 
   tickRegions() {
     for (const r of this.state.regions) {
-      const counts = [0, 0, 0];
+      const counts = this.state.tribes.map(()=>0);
       for (const b of this.state.buildings) {
-        if (b.hp <= 0 || b.team > 2) continue;
+        if (b.hp <= 0 || b.team === 3) continue;
         if (Math.hypot(b.x - r.x, b.z - r.z) < r.r) counts[b.team] += 1;
       }
       for (const u of this.state.units) {
-        if (u.hp <= 0 || u.team > 2) continue;
+        if (u.hp <= 0 || u.team === 3) continue;
         if (Math.hypot(u.x - r.x, u.z - r.z) < r.r) counts[u.team] += 0.35;
       }
       let owner = -1;
       let best = 0;
-      for (let t = 0; t < 3; t++) {
+      for (let t = 0; t < this.state.tribes.length; t++) {
         if (counts[t] > best) {
           best = counts[t];
           owner = t;
@@ -3120,7 +3128,7 @@ export class Game {
     if (this.seaT > 0) return;
     this.seaT = ((this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240)/(1+foodAttention(this)*.65);
     if (this.state.time < 600) return;
-    const dead = this.state.tribes.find((t) => (t.id === 1 || t.id === 2) && !t.alive);
+    const dead = this.state.tribes.find((t) => isRivalTeam(t.id) && !t.alive);
     if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
       this.landSeaTribe(dead.id);
       return;
@@ -3139,7 +3147,7 @@ export class Game {
     if (reserve < (eager?240:360)||appeal<.5) return;
     if (you.food < 16 || this.popNow(0) >= this.popCap(0)||!this.finished(hall)) return;
     const donors = this.state.tribes.filter(
-      (t) => t.id === 1 || t.id === 2,
+      (t) => isRivalTeam(t.id),
     );
     const thriving = donors.find((t) => t.alive && this.popNow(t.id) > 6 && this.tribeFortune(t.id) > 1.6);
     const failing = donors.find((t) => t.alive && this.popNow(t.id) > 4 && this.tribeFortune(t.id) < 1);
@@ -3194,10 +3202,10 @@ export class Game {
   landSeaTribe(slot: number) {
     const specs: ResKind[] = ["food", "wood", "stone", "copper"];
     const tr = this.tribe(slot);
-    if (!tr || ![1, 2].includes(slot) || this.popNow(slot) > 0 ||
+    if (!tr || !isRivalTeam(slot) || this.popNow(slot) > 0 ||
       this.state.buildings.some(b => b.team === slot && b.type === "townhall" && b.hp > 0)) return false;
     const ir = this.world.islandR || 160;
-    const a = slot === 1 ? 2.1 : -2.1;
+    const a = slot === 1 ? 2.1 : slot===2 ? -2.1 : slot===4 ? 1.1 : -1.1;
     const site = this.findDryFoundation("townhall", Math.sin(a) * ir * 0.62, Math.cos(a) * ir * 0.62, 140,
       (x, z) => this.placementValid("townhall", x, z, slot) &&
         this.state.trees.filter(n => n.amount > 0 && Math.hypot(n.x - x, n.z - z) < 65).length >= 2 &&
@@ -3481,7 +3489,7 @@ export class Game {
       grove: 18,
     };
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.build < 1 || b.team > 2 || FORTIFICATIONS.includes(b.type)) continue;
+      if (b.hp <= 0 || b.build < 1 || b.team === 3 || FORTIFICATIONS.includes(b.type)) continue;
       const r = (rad[b.type] ?? 14) * 1.45;
       const cx = ((b.x + HALF) / cell) | 0;
       const cz = ((b.z + HALF) / cell) | 0;
@@ -4102,6 +4110,7 @@ export class Game {
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
       return;
     }
+    if(directedConstruction(this,u,dt))return;
     if(foundingJourneyAI(this,u,dt))return;
     if(scoutAI(this,u,dt))return;
     if(visitorAI(this,u,dt))return;
@@ -4178,7 +4187,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&node.kind==="tree"?3.2:1.22);
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
         if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}
@@ -4459,11 +4468,11 @@ export class Game {
         target.kind === "unit" &&
         target.type === "worker" &&
         attackerTeam === 0 &&
-        (target.team === 1 || target.team === 2) &&
+        isRivalTeam(target.team) &&
         this.popNow(0) < this.popCap(0) &&
         !isDependent(this, target)
       ) {
-        if([1,2].includes(target.team))this.state.conquestAt=this.state.time;
+        if(isRivalTeam(target.team))this.state.conquestAt=this.state.time;
         target.team = 0;
         target.hp = Math.max(16, Math.round(target.maxHp * 0.45));
         target.order = target.carry>0 ? "return" : "move";
@@ -4478,7 +4487,7 @@ export class Game {
         return;
       }
       target.hp = 0;
-      if(attackerTeam===0&&[1,2].includes(target.team))this.state.conquestAt=this.state.time;
+      if(attackerTeam===0&&isRivalTeam(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
       if (target.kind === "building" && attackerTeam !== target.team)
         this.lootBuilding(attackerTeam, target);
@@ -4492,7 +4501,7 @@ export class Game {
       if (target.kind === "building") this.state.walkDirty = true;
       if (target.kind === "building" && attackerTeam === 0) this.tickRegions();
       if (target.kind === "building" && target.team === 0) this.defendHome(0);
-      if (target.kind === "building" && (target.team === 1 || target.team === 2))
+      if (target.kind === "building" && isRivalTeam(target.team))
         this.defendHome(target.team);
       if (target.kind === "unit") {
         for (const u of this.state.units) {
@@ -5189,9 +5198,9 @@ export class Game {
       return;
     }
     const rivalsAlive = this.state.tribes
-      .filter((t) => t.id === 1 || t.id === 2)
+      .filter((t) => isRivalTeam(t.id))
       .filter((t) => t.alive).length;
-    if (this.state.conquestAt!==undefined && this.state.time-this.state.conquestAt<2 && rivalsAlive === 0 && !this.state.units.some(u=>[1,2].includes(u.team)&&u.hp>0) && this.state.time > 120) {
+    if (this.state.conquestAt!==undefined && this.state.time-this.state.conquestAt<2 && rivalsAlive === 0 && !this.state.units.some(u=>isRivalTeam(u.team)&&u.hp>0) && this.state.time > 120) {
       this.state.ended = "win";
       this.state.endReason = "The last rival hall has fallen. The island is yours.";
       this.onSfx("win");
@@ -5856,15 +5865,18 @@ export class Game {
         .filter((c) => c.team !== 0)
         .map((c) => {
           const tr = this.tribe(c.team);
+          const hall=this.state.buildings.find(b=>b.team===c.team&&b.type==="townhall"&&b.hp>0);
+          const seen=hall&&this.state.buildings.find(b=>b.team===c.team&&this.finished(b)&&this.exploredAt(b.x,b.z)&&Math.hypot(b.x-hall.x,b.z-hall.z)<40);
+          const at=seen||(hall&&this.exploredAt(hall.x,hall.z)?hall:null);
           return {
-            x: c.x,
-            z: c.z,
+            x: at?.x ?? c.x,
+            z: at?.z ?? c.z,
             team: c.team,
             name: tr?.name || TEAM_NAMES[c.team] || "Rival",
             color: tr?.color || TEAM_COLORS[c.team] || "#8a3030",
             alive: tr?.alive ?? false,
             hostile: tr?.hostile ?? false,
-            known: this.exploredAt(c.x, c.z),
+            known: knownSettlement(this,c.team),
           };
         }),
       raidName: this.pickRaidRival()?.name ?? null,

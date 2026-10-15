@@ -1,5 +1,5 @@
 import type {Game} from './sim';
-import type {Building,BldType,Cost,ResKind} from './types';
+import type {Building,BldType,Cost,ResKind,Unit} from './types';
 import {BUILDINGS} from './constants';
 import {foodDemand,isDependent} from './settlement';
 import {bridgeApproach} from './transport';
@@ -28,9 +28,9 @@ export function planStatus(g:Game,b:Building){
   return 'Materials ready — waiting for a reachable, available adult';
 }
 /** Pay once, only from actual stores. Unfunded drawings grant no building benefits. */
-export function fundConstructionPlans(g:Game){
+export function fundConstructionPlans(g:Game,preferred?:Building){
   if(g.state.weather==='storm')return;
-  for(const b of g.state.buildings){
+  for(const b of preferred?[preferred]:g.state.buildings){
     const cost=b.plannedCost;
     if(!cost||b.hp<=0||b.planPaused||!g.canAfford(b.team,cost))continue;
     if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z))continue;
@@ -45,4 +45,40 @@ export function fundConstructionPlans(g:Game){
     g.state.walkDirty=true;g.workBoard.reset();
     if(b.team===0){g.banner(`${BUILDINGS[b.type].name}: materials reserved — construction can begin`,3);g.onSfx('place');}
   }
+}
+
+/** A direct RTS order supersedes ordinary jobs while retaining carried/paid goods. */
+export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
+  if(b.team!==0||b.hp<=0||g.finished(b))return false;
+  const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency)
+    .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
+    .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u));
+  if(!chosen.length){g.banner('Select adult residents to build this project.',3);return false;}
+  b.planPaused=false;
+  for(const u of chosen){
+    g.interruptMission(u);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
+    u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
+  }
+  g.workBoard.reset();g.banner(`${chosen.length} builders assigned to ${BUILDINGS[b.type].name}. ${planStatus(g,b)}`,4);return true;
+}
+export function directedConstruction(g:Game,u:Unit,dt:number){
+  if(u.buildOrder===undefined||u.emergency)return false;
+  const b=g.state.buildings.find(b=>b.id===u.buildOrder&&b.team===u.team&&b.hp>0);
+  if(!b||g.finished(b)){u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
+  if(u.carry>0){u.order='return';u.node=null;return false;}
+  u.order='build';u.node=b;
+  if(b.planPaused){u.workReason='Construction plan paused';return true;}
+  if(b.plannedCost){
+    // Walk outside the footprint first, so funding cannot turn a drawing into
+    // a solid obstacle around the very person ordered to build it.
+    if(Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r){
+      const exits=Array.from({length:32},(_,i)=>{const a=i*Math.PI/16,sx=Math.sin(a),sz=Math.cos(a),r=Math.min((b.w*.5+u.r+1.2)/(Math.abs(sx)||1e-6),(b.d*.5+u.r+1.2)/(Math.abs(sz)||1e-6));return {x:b.x+sx*r,z:b.z+sz*r};})
+        .filter(p=>g.walkable(p.x,p.z)&&g.workBoard.connected(g,u.x,u.z,p.x,p.z)&&g.canStep(u,p.x,p.z))
+        .sort((a,c)=>Math.hypot(u.x-a.x,u.z-a.z)-Math.hypot(u.x-c.x,u.z-c.z));
+      const at=exits[0];if(at){u.tx=at.x;u.tz=at.z;g.steer(u,dt);}u.workReason='Clearing the planned footprint';return true;
+    }
+    fundConstructionPlans(g,b);
+    if(b.plannedCost){u.workReason=planStatus(g,b);return true;}
+  }
+  g.buildAI(u,dt);return true;
 }

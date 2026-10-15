@@ -13,7 +13,7 @@ export function tickTradeFocus(g: Game) {
   if (!automaticTradeReady(g) || g.state.units.some(u => u.team === 0 && u.hp > 0 && u.envoy)) return;
   const carrier = tradeCarrier(g,true);
   if (!carrier) return;
-  const partners = g.state.tribes.filter(t => t.id > 0 && t.id < 3 && t.alive && !t.hostile && knownSettlement(g,t.id))
+  const partners = g.state.tribes.filter(t => t.id > 0 && t.id !== 3 && t.alive && !t.hostile && knownSettlement(g,t.id))
     .map(t => ({ team: t.id, time: g.state.tradeReports?.find(r => r.team === t.id)?.time ?? -Infinity }))
     .filter(t => !Number.isFinite(t.time) || g.state.time-t.time >= 900)
     .sort((a,b) => a.time-b.time);

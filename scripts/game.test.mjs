@@ -1209,16 +1209,16 @@ test("store preparation uses labor and timber, survives saves, and limits spoila
   const {foodSpoilage,preserveFood} = await import("../src/game/pantry.ts");
   const {g,w} = cornerstoneValley();
   const store=g.makeBld("warehouse",w.x,w.z,0);g.state.buildings.push(store);
-  g.tribe(0).food=300;g.tribe(0).wood=10;
+  g.tribe(0).food=300;g.tribe(0).wood=100;
   const before=foodSpoilage(g);w.gatherT=0;
-  preserveFood(g,w,store,7);assert.equal(g.tribe(0).wood,10);
-  preserveFood(g,w,store,1);assert.equal(g.tribe(0).wood,9);
+  preserveFood(g,w,store,7);assert.equal(g.tribe(0).wood,100);
+  preserveFood(g,w,store,1);assert.equal(g.tribe(0).wood,99);
   assert.equal(store.storeCare,0.2);assert.ok(foodSpoilage(g)<before);
   const saved=encodeGame(g), restored=decodeGame(saved);
   assert.equal(restored.state.buildings.find(b=>b.id===store.id).storeCare,0.2);
   saved.state.buildings.find(b=>b.id===store.id).storeCare=2;
   assert.throws(()=>decodeGame(saved));
-  g.tribe(0).food=1;preserveFood(g,w,store,8);assert.equal(g.tribe(0).wood,9);
+  g.tribe(0).food=1;preserveFood(g,w,store,8);assert.equal(g.tribe(0).wood,99);
 });
 
 test("winter estimates include dependents, habitat, capacity and the remaining season", async () => {
@@ -1362,7 +1362,7 @@ test("age commitment revalidates population and buildings instead of bypassing t
   const g=fixture();Object.assign(g.tribe(0),{food:1000,wood:1000,stone:1000});
   const before=g.tribe(0).food;g.commitAge(0,"econ");
   assert.equal(g.tribe(0).age,0);assert.equal(g.tribe(0).food,before);
-  const home=g.campOf(0);while(g.popNow(0)<16)g.spawnUnit("worker",home.x,home.z,0);
+  const home=g.campOf(0);while(g.popNow(0)<50)g.spawnUnit("worker",home.x,home.z,0);
   for(const type of ["warehouse","workshop","farm"])g.state.buildings.push(g.makeBld(type,home.x+20,home.z+20,0));
   g.commitAge(0,"econ");assert.equal(g.tribe(0).age,1);
 });

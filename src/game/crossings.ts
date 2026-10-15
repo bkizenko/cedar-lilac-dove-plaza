@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import type {Game} from './sim';
 import {planBridge} from './transport';
 import {rivalKnows} from './rivalDevelopment';
@@ -47,7 +48,7 @@ const reviews=new WeakMap<Game,Map<number,number>>();
 /** Rivals use real stock and builders to reconnect stranded residents first,
  * then known resources. No teleporting people, cargo, free bridges or income. */
 export function developRivalCrossings(g:Game,team:number){
-  if(![1,2].includes(team))return false;
+  if(!isRivalTeam(team))return false;
   let clock=reviews.get(g);if(!clock){clock=new Map();reviews.set(g,clock);}
   const due=clock.get(team)||0;if(due>g.state.time&&due<=g.state.time+25)return false;
   clock.set(team,g.state.time+25);

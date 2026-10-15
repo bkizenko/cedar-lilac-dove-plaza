@@ -69,16 +69,18 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>3||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>![1,2,3].includes(t))))fail();
-  if(s.encounter!==undefined){const e=s.encounter;if(!obj(e)||![1,2,3].includes(e.team)||!Number.isSafeInteger(e.person)||e.person<1||!Number.isSafeInteger(e.stranger)||e.stranger<1||typeof e.resume!=="boolean")fail();}
+  const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
+  const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
+  if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();
+  if(s.encounter!==undefined){const e=s.encounter;if(!obj(e)||(!validTeam(e.team)||e.team===0)||!Number.isSafeInteger(e.person)||e.person<1||!Number.isSafeInteger(e.stranger)||e.stranger<1||typeof e.resume!=="boolean")fail();}
   if(s.communityTimer!==undefined&&(!num(s.communityTimer)||s.communityTimer<0||s.communityTimer>30))fail();
   if(s.lifeHistory!==undefined){
     if(!Array.isArray(s.lifeHistory)||s.lifeHistory.length>256)fail();
-    for(const e of s.lifeHistory)if(!obj(e)||![0,1,2,3].includes(e.team)||typeof e.text!=="string"||e.text.length>300||!num(e.time)||e.time<0||e.time>s.time)fail();
+    for(const e of s.lifeHistory)if(!obj(e)||!validTeam(e.team)||typeof e.text!=="string"||e.text.length>300||!num(e.time)||e.time<0||e.time>s.time)fail();
   }
   if(s.communities!==undefined){
     if(!Array.isArray(s.communities)||s.communities.length>20000)fail();const halls=new Set();
-    for(const c of s.communities){if(!obj(c)||!Number.isSafeInteger(c.hall)||c.hall<1||halls.has(c.hall)||![0,1,2].includes(c.team)||typeof c.name!=="string"||c.name.length>200||!num(c.founded)||c.founded<0||c.founded>s.time||
+    for(const c of s.communities){if(!obj(c)||!Number.isSafeInteger(c.hall)||c.hall<1||halls.has(c.hall)||(!validTeam(c.team)||c.team===3)||typeof c.name!=="string"||c.name.length>200||!num(c.founded)||c.founded<0||c.founded>s.time||
       (c.emptySince!==null&&(!num(c.emptySince)||c.emptySince<0||c.emptySince>s.time))||!["growing","thriving","struggling","abandoned"].includes(c.status))fail();halls.add(c.hall);}
   }
   if(s.conquestAt!==undefined&&(!num(s.conquestAt)||s.conquestAt<0||s.conquestAt>s.time))fail();
@@ -92,12 +94,12 @@ export function decodeGame(raw: unknown): Game {
       cells.add(t.cell);}
   }
   if(s.rivalKnowledge!==undefined){
-    if(!Array.isArray(s.rivalKnowledge)||s.rivalKnowledge.length>2)fail();const teams=new Set();
-    for(const m of s.rivalKnowledge){if(!obj(m)||![1,2].includes(m.team)||teams.has(m.team)||!Array.isArray(m.cells)||m.cells.length>1024||
+    if(!Array.isArray(s.rivalKnowledge)||s.rivalKnowledge.length>s.tribes.length-2)fail();const teams=new Set();
+    for(const m of s.rivalKnowledge){if(!obj(m)||!rivalTeam(m.team)||teams.has(m.team)||!Array.isArray(m.cells)||m.cells.length>1024||
       new Set(m.cells).size!==m.cells.length||m.cells.some((c:unknown)=>!Number.isSafeInteger(c)||Number(c)<0||Number(c)>=1024))fail();teams.add(m.team);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -176,7 +178,7 @@ export function decodeGame(raw: unknown): Game {
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
-    if([1,2].includes(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
+    if(rivalTeam(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;
     }
   }
@@ -187,9 +189,9 @@ export function decodeGame(raw: unknown): Game {
       !Number.isSafeInteger(d.giveAmt)||d.giveAmt<1||d.giveAmt>100||!Number.isSafeInteger(d.getAmt)||d.getAmt<1||d.getAmt>200)fail();
   };
   if(s.tradeReports!==undefined){
-    if(!Array.isArray(s.tradeReports)||s.tradeReports.length>2)fail();
+    if(!Array.isArray(s.tradeReports)||s.tradeReports.length>s.tribes.length-2)fail();
     const teams=new Set();for(const r of s.tradeReports){
-      if(!obj(r)||![1,2].includes(r.team)||teams.has(r.team)||!num(r.time)||r.time<0||r.time>s.time)fail();
+      if(!obj(r)||!rivalTeam(r.team)||teams.has(r.team)||!num(r.time)||r.time<0||r.time>s.time)fail();
       teams.add(r.team);validateOffers(r.offers);
     }
   }
@@ -235,6 +237,7 @@ export function decodeGame(raw: unknown): Game {
         fail();
     }
     if (u.sickUntil !== undefined && !num(u.sickUntil)) fail();
+    if(u.buildOrder!==undefined&&(!Number.isSafeInteger(u.buildOrder)||u.buildOrder<1||u.team!==0))fail();
     if (u.workCheckAt !== undefined && !num(u.workCheckAt)) fail();
     if (u.retryWorkAt !== undefined && !num(u.retryWorkAt)) fail();
     if (u.blockedTask !== undefined && !num(u.blockedTask)) fail();
@@ -296,15 +299,15 @@ export function decodeGame(raw: unknown): Game {
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
-    if(u.scout!==undefined&&(!obj(u.scout)||![1,2].includes(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
-    if(u.visit!==undefined&&(!obj(u.visit)||![1,2].includes(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
-    if(u.visit?.team!==undefined&&(![1,2].includes(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
+    if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
+    if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
+    if(u.visit?.team!==undefined&&(!rivalTeam(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
     if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
     if(u.tradeReservation!==undefined){
       const r=u.tradeReservation;
-      if(!obj(r)||u.team!==0||![1,2].includes(r.team)||r.team!==u.tradeTeam||
+      if(!obj(r)||u.team!==0||!rivalTeam(r.team)||r.team!==u.tradeTeam||
         !["food","wood","stone","copper","iron"].includes(r.kind)||!Number.isSafeInteger(r.amount)||r.amount<1||r.amount>200||
         !u.trade||r.kind!==u.trade.get||r.amount!==u.trade.getAmt||u.customOffer||u.procurement)fail();
     }
@@ -313,7 +316,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){
       const m=u.envoy;
-      if(!obj(m)||u.team!==0||![1,2].includes(m.team)||!["peace","trade","gift"].includes(m.kind)||
+      if(!obj(m)||u.team!==0||!rivalTeam(m.team)||!["peace","trade","gift"].includes(m.kind)||
         !["outbound","return"].includes(m.phase)||!num(m.talk)||m.talk<0)fail();
       if(m.report!==undefined){if(!obj(m.report)||!num(m.report.time)||m.report.time<0||m.report.time>s.time)fail();validateOffers(m.report.offers);}
     }

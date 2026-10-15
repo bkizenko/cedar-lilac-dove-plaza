@@ -200,6 +200,7 @@ export type Unit = {
   resting?: boolean;
   shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number;team?:number;wanted?:ResKind};
+  buildOrder?: number;
   jobLock: boolean;
   huntOnly: boolean;
   stuckT: number;

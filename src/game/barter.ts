@@ -1,12 +1,13 @@
+import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import { predisposition } from "./people";
 import type { Unit, ResKind, TradeDeal } from "./types";
 import { isDependent, foodDemand, calendar } from "./settlement";
 
 export function knownSettlement(g: Game, team: number) {
-  return g.state.buildings.some(
-    (b) => b.team === team && b.type === "townhall" && b.hp > 0 && g.exploredAt(b.x, b.z),
-  );
+  const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0);
+  return !!hall&&(g.exploredAt(hall.x,hall.z)||g.state.buildings.some(b=>b.team===team&&g.finished(b)&&
+    Math.hypot(b.x-hall.x,b.z-hall.z)<40&&g.exploredAt(b.x,b.z)));
 }
 export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
   return (
@@ -163,7 +164,7 @@ export function proposeShipment(
 /** Send a proposal without consulting distant stocks. It is negotiated only on arrival. */
 function startOffer(g:Game,team:number,give:ResKind,get:ResKind,amount:number,requested:number) {
   const goods:ResKind[]=["food","wood","stone","copper","iron"];
-  if(!knownSettlement(g,team)||![1,2].includes(team)||!goods.includes(give)||!goods.includes(get)||give===get||
+  if(!knownSettlement(g,team)||!isRivalTeam(team)||!goods.includes(give)||!goods.includes(get)||give===get||
     !Number.isSafeInteger(amount)||amount<1||amount>100||!Number.isSafeInteger(requested)||requested<1||requested>200)return null;
   if((give==="iron"||get==="iron")&&g.tribe(0).age<2)return null;
   if((give==="copper"||get==="copper")&&g.tribe(0).age<1)return null;

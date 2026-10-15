@@ -27,11 +27,11 @@ export const AGES = ["Stone", "Bronze", "Iron", "Classical", "Medieval", "Renais
  * institutions establish scale; scarce timber is spent on actual construction. */
 export const AGE_COST: (Cost | null)[] = [
   null,
-  { food: 160, wood: 80, stone: 32, pop: 16 },
-  { food: 240, wood: 120, stone: 60, copper: 20, pop: 24 },
-  { food: 360, wood: 180, stone: 100, copper: 32, iron: 16, pop: 36 },
-  { food: 520, wood: 240, stone: 150, copper: 48, iron: 32, pop: 52 },
-  { food: 720, wood: 320, stone: 220, copper: 64, iron: 48, pop: 72 },
+  { food: 160, wood: 80, stone: 32, pop: 50 },
+  { food: 240, wood: 120, stone: 60, copper: 20, pop: 75 },
+  { food: 360, wood: 180, stone: 100, copper: 32, iron: 16, pop: 100 },
+  { food: 520, wood: 240, stone: 150, copper: 48, iron: 32, pop: 125 },
+  { food: 720, wood: 320, stone: 220, copper: 64, iron: 48, pop: 150 },
 ];
 
 export const AGE_STAT = [1, 1.1, 1.22, 1.35, 1.5, 1.68];
@@ -147,7 +147,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 300,
     age: 0,
-    hint: "Shelters 160 food. Adults can dry and smoke surplus food here using timber. Also shortens carrying trips.",
+    hint: "Shelters 160 food. Adults can dry and smoke surplus food here using timber above the next age reserve. Also shortens carrying trips.",
   },
   barracks: {
     name: "Barracks",
@@ -447,15 +447,17 @@ export const BUILD_ORDER: BldType[] = [
   "university",
 ];
 
-export const TEAM_COLORS = ["#c4a060", "#c4452a", "#3d7a62", "#4a2428"];
+export const TEAM_COLORS = ["#c4a060", "#c4452a", "#3d7a62", "#4a2428", "#426f9a", "#8c58a3"];
 export const TEAM_STYLE = [
   { roof: "#c9a36a", timber: "#c4a060", unit: "#e0c078", yaw: 0, sx: 1, sy: 1, sz: 1 },
   { roof: "#4a1c18", timber: "#8a2820", unit: "#e05038", yaw: 0.42, sx: 1.08, sy: 1.2, sz: 1.02 },
   { roof: "#1e3a28", timber: "#2d5a40", unit: "#5a9a78", yaw: -0.32, sx: 1.18, sy: 0.86, sz: 1.16 },
   { roof: "#2a1818", timber: "#4a2428", unit: "#6a3030", yaw: 0.1, sx: 1, sy: 1, sz: 1 },
+  { roof: "#354c64", timber: "#90734c", unit: "#729cba", yaw: .2, sx: 1.1, sy: 1.03, sz: .96 },
+  { roof: "#695575", timber: "#957f67", unit: "#b28ac0", yaw: -.18, sx: .96, sy: 1.13, sz: 1.1 },
 ] as const;
-export const TEAM_NAMES = ["Dawnfolk", "Redcliff", "Ashfen", "Sea Raiders"];
-export const TEAM_SHORT = ["You", "Redcliff", "Ashfen", "Raiders"];
+export const TEAM_NAMES = ["Dawnfolk", "Redcliff", "Ashfen", "Sea Raiders", "Uruhan", "Teshaka"];
+export const TEAM_SHORT = ["You", "Redcliff", "Ashfen", "Raiders", "Uruhan", "Teshaka"];
 export const REGION_CLUSTERS: { id: number; name: string; bonus: ResKind; hint: string }[] = [
   { id: 0, name: "Highlands", bonus: "stone", hint: "Stone gather runs faster island-wide" },
   { id: 1, name: "Riverlands", bonus: "food", hint: "Berries and farms run faster island-wide" },

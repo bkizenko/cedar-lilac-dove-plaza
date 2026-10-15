@@ -1,3 +1,4 @@
+import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { HALF, MAP } from "./constants";
@@ -42,7 +43,7 @@ export function tickScouts(g: Game, dt: number) {
   g.state.scoutTimer = 180;
   for (const t of g.state.tribes) {
     if (
-      ![1, 2].includes(t.id) ||
+      !isRivalTeam(t.id) ||
       !t.alive ||
       reserveSeconds(g,t.id)<450 || g.popNow(t.id)<5 ||
       g.state.units.some((u) => u.team === t.id && u.hp > 0 && u.scout)

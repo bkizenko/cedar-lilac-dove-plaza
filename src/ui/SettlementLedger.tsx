@@ -224,6 +224,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <strong>{BUILDINGS[b.type].name}</strong> · {planStatus(g,b)}
           <div className="mt-1 flex flex-wrap gap-2">
             <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.selectEntity(b);engine.view.look.set(b.x,b.y-1.2,b.z);close();engine.pushHud();}}>Find site</button>
+            <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.orderConstruction(b);engine.pushHud();}}>Assign builders</button>
             {b.plannedCost&&<>
               <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{b.planPaused=!b.planPaused;g.workBoard.reset();engine.pushHud();}}>{b.planPaused?"Resume plan":"Pause plan"}</button>
               <button type="button" className="min-h-11 rounded-md border border-bronze/30 px-2" onClick={()=>{g.selectEntity(b);g.recycleSelected();engine.pushHud();}}>Cancel plan</button>
@@ -332,9 +333,9 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         </ul>
       )}
       <h3>Neighbor relations</h3>
-      {!s.tribes.some(n=>n.id>0&&n.id<3&&n.alive&&knownSettlement(g,n.id)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
+      {!s.tribes.some(n=>n.id>0&&n.id!==3&&n.alive&&knownSettlement(g,n.id)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
       {s.tribes
-        .filter((n) => n.id > 0 && n.id < 3 && n.alive && knownSettlement(g,n.id))
+        .filter((n) => n.id > 0 && n.id !== 3 && n.alive && knownSettlement(g,n.id))
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>

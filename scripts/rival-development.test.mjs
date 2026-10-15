@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {AGE_COST} from '../src/game/constants.ts';
+import {foodDemand} from '../src/game/settlement.ts';
 import {rivalCanInvest,rivalDevelopmentPlan,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources} from '../src/game/rivalDevelopment.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {scoutKnowledge} from '../src/game/scouting.ts';
@@ -28,7 +29,8 @@ test('successful rivals reserve advancement materials instead of endlessly addin
  assert.equal(rivalCanInvest(g,1,'farm'),false);
  assert.equal(rivalCanInvest(g,1,'cairn'),false);
  assert.equal(rivalCanInvest(g,1,'warehouse'),true,'second protective store remains essential');
- g.state.buildings.push(g.makeBld('warehouse',-20,55,1),g.makeBld('warehouse',-40,55,1));
+ // Fifty residents need more stores than the old sixteen-person age fixture.
+ while(g.stockCap(1)<Math.max(foodDemand(g,1,0)*900+80,cost.food+40))g.state.buildings.push(g.makeBld('warehouse',-20,55,1));
  assert.equal(rivalCanInvest(g,1,'warehouse'),false);
  g.tribe(1).wood=cost.wood+30;assert.equal(rivalCanInvest(g,1,'farm'),true,'surplus beyond the reserve can be spent');
  const before=g.tribe(1).age;g.tryAgeUp(1);

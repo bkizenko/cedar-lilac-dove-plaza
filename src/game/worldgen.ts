@@ -1,3 +1,4 @@
+import {rivalCountForArea} from "./factions";
 import { HALF, MAP, SEGS, WATER_Y } from "./constants";
 import { fbm, mulberry32 } from "./rng";
 import type { ResKind, ResourceNode } from "./types";
@@ -307,6 +308,25 @@ export function generateWorld(seed: number, version = 1): WorldData {
     const kinds=["plains","forest","hills"] as const;
     for(let i=0;i<biomes.length;i++)biomes[i].kind=kinds[(i+(seed>>>0)%3)%3];
   }
+  if(version>=3){
+    const usableArea=heights.reduce((n,h)=>n+(h>waterY+.8?1:0),0)*(MAP/SEGS)**2;
+    const wanted=rivalCountForArea(usableArea);
+    for(const team of [4,5].slice(0,wanted-2)){
+      let best:{x:number;z:number}|null=null,score=-Infinity;
+      for(let z=-islandR+40;z<islandR-40;z+=20)for(let x=-islandR+40;x<islandR-40;x+=20){
+        if(Math.hypot(x,z)>islandR-45)continue;
+        const h=sampleHeight(heights,x,z);
+        if(h<waterY+1||h>waterY+8)continue;
+        const corners=[[-7,-7],[-7,7],[7,-7],[7,7]].map(([dx,dz])=>sampleHeight(heights,x+dx,z+dz));
+        if(corners.some(y=>y<waterY+.8)||Math.max(...corners,h)-Math.min(...corners,h)>2)continue;
+        const distances=camps.map(c=>Math.hypot(c.x-x,c.z-z));
+        if(distances[0]<220||Math.min(...distances)<180)continue;
+        const value=Math.min(...distances)-(Math.max(...corners)-Math.min(...corners))*8;
+        if(value>score){score=value;best={x,z};}
+      }
+      if(best){camps.push({...best,team});biomes.push({...best,kind:team===4?'forest':'hills'});}
+    }
+  }
   const biomeAt = (x: number, z: number) => {
     let best: WorldData["biomes"][number]["kind"] = "plains";
     let bd = 1e12;
@@ -429,6 +449,11 @@ export function generateWorld(seed: number, version = 1): WorldData {
   }
   const ashC = camps[2];
   if (ashC) stamp(trees, "tree", ashC.x + 18, ashC.z, 28, 16, 2.3, () => 8 + ((rand() * 8) | 0));
+  if(version>=3)for(const camp of camps.filter(c=>c.team>=4)){
+    stamp(trees,"tree",camp.x+20,camp.z,24,18,2.3,()=>12+((rand()*10)|0));
+    stamp(stones,"stone",camp.x,camp.z+24,10,14,4.5,()=>14+((rand()*10)|0));
+    stamp(forage,"forage",camp.x-18,camp.z,10,14,2.6,()=>18+((rand()*8)|0));
+  }
   const redC = camps[1];
   if (redC) stamp(stones, "stone", redC.x, redC.z + 20, 8, 12, 4.5, () => 12 + ((rand() * 8) | 0));
 
@@ -729,6 +754,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
     dress(stones, "stone", stoneCount, 0);
   }
 
+  if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
   return {
     size: MAP,
     segs: SEGS,
