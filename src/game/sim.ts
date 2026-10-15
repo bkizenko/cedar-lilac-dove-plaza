@@ -30,7 +30,7 @@ import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
-import { establishRaiderCamps, campRaidAI, seaRaidAI, canScheduleSeaRaid, findRaiderLanding } from "./raiders";
+import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
@@ -1892,24 +1892,8 @@ export class Game {
     const landing=findRaiderLanding(this);
     if(!landing){this.state.raidT=60;return;}
     this.state.raidWave += 1;
-    const roll = Math.random();
-    let n: number;
-    let frail: number;
-    let label: string;
-    if (this.state.raidWave === 1 || threat < 0.12 || roll < 0.32) {
-      n = 1 + ((Math.random() * 2) | 0);
-      frail = 0.62 + Math.random() * 0.12;
-      label = n === 1 ? "A scout from the sea" : "A scouting party from the sea";
-    } else if (roll < 0.78 || age < 2) {
-      n = 2 + ((Math.random() * (2 + Math.min(age, 2))) | 0);
-      frail = 0.8 + Math.random() * 0.15;
-      label = "Raiders from the sea";
-    } else {
-      n = 4 + ((Math.random() * (2 + age)) | 0);
-      frail = 0.95 + Math.random() * 0.1;
-      label = "A warband from the sea";
-    }
-    n = Math.max(1, Math.min(8, n));
+    const strength=seaRaidStrength(this.popNow(0),age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous");
+    const n=strength.count,frail=strength.condition,label=strength.label;
     const {x:sx,z:sz}=landing;
     this.tribe(3).food+=16*n;
     const marks = this.state.buildings.filter(
@@ -1934,7 +1918,7 @@ export class Game {
       u.aggroT = 80;
       u.seaRaid={x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
     }
-    this.banner(label, 2.2);
+    this.banner(`${label} · ${n} attackers landed`, 4);
     this.onSfx("horn");
     this.callAlliesTo(home.x, home.z);
     this.defendHome(0);
@@ -1947,7 +1931,7 @@ export class Game {
     if (this.state.raidT > 0) return;
     const threat = this.raidThreat(0);
     this.state.raidT = 5 + Math.random() * 7;
-    if (Math.random() < threat * 0.42) this.spawnRaid();
+    if (Math.random() < seaRaidArrivalChance(threat,this.isNight())) this.spawnRaid();
     else this.state.raidT = 10 + Math.random() * 22;
   }
 

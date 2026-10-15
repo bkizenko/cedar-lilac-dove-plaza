@@ -36,6 +36,16 @@ After each bounded implementation: run appropriate regression checks, build, pub
 
 Outpost and Town Hall are now entries in the common BUILD_ORDER menu (Outpost immediately after Hut). Outpost no longer requires selecting a Town Hall to find its button. Existing completed-home/spacing/dry-ground rules remain; insufficient timber creates a plan. The placement toast now prioritizes the actual invalid-location reason, then the action banner. The redundant hidden Town Hall-only action was removed. A regression covers main-menu discovery, unselected-hall placement without timber, and a clear spacing rejection. Five frontier/menu tests, typecheck and production build passed. Published on stable 8086 as `2026-10-15T01-24-06-438Z`; server health verified. Save then refresh an existing tab. Live visual verification remains unavailable under the recorded browser-access restriction.
 
+### Conflict follow-through — population-scaled sea parties
+
+Published with the building-panel repair at stable 8086, release `2026-10-15T01-26-01-532Z`; health verified.
+
+- [x] ~~Remove the guaranteed tiny first raid against an already substantial town.~~ Small openings below 16 residents still meet one or two scouts; established villages face bands scaled by population, age, wealth attention and the existing dangerous setting, capped at 20. A 40-person Stone Age town at moderate attention receives about seven attackers instead of the old guaranteed one/two frail scouts. This is raid composition, not the unimplemented comprehensive difficulty presets.
+- [x] ~~Modest night arrival bias.~~ Eligible raid checks weight night at 1.25 and day at 0.9, retaining opening grace, quiet mode, cooldown and one active sea band. This is not a clock-forced nightly raid.
+- [x] ~~Explain a visible shore departure.~~ Departing survivors show a brief departure/escaped-supplies floater; the last visible survivor produces a message. Hidden shore departures disclose nothing. Finite stolen cargo leaves with the raider once, as before. This explains an existing intentional departure path; do not claim all reported disappearance causes reproduced or a boat/death animation completed.
+
+Verification: 35 conflict, frontier-defense and priority-response checks passed, including physical shore approaches/attacks, two-landscape beginner defense, walls/gates, finite theft, loaded defenders, new scaling and visible/hidden departure messages. Typecheck and production build passed. Armed caravans, full rival parity, boats, pack animals, prisoners and the remaining batch-2 systems remain open.
+
 ## Intended game
 
 Dawn of Man survival/production, responsive Age of Empires RTS commands/combat, later Civilization regional scale. Begin sheltered in clear weather, discover resources through actual exploration, grow a recognizable community, create meaningful scarcity/productivity/trade/security choices, then expand through practical knowledge and institutions. Preserve current Three.js renderer; detailed 3D assets and first-person content are later projects, but controls/readability/performance belong here. All 120 human-development entries and former optional extensions are accepted. Do not equate a button or isolated stub with a complete system.

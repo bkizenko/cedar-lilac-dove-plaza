@@ -7,6 +7,16 @@ import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
 import { MAP, HALF } from "./constants";
 
+/** Population matters even while a large settlement remains in the Stone Age.
+ * A small first village still meets scouts; established towns face actual bands. */
+export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false){
+ if(population<16&&(wave===1||threat<.12))return {count:roll<.5?1:2,condition:.78,label:"A scouting party from the sea"};
+ const base=Math.max(3,Math.min(14,Math.ceil(population*.14)));
+ const count=Math.max(3,Math.min(20,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1))));
+ return {count,condition:.95,label:count>=8?"A warband from the sea":"Raiders from the sea"};
+}
+export function seaRaidArrivalChance(threat:number,night:boolean){return Math.min(.8,threat*.42*(night?1.25:.9));}
+
 /** Seeded land camps have a finite initial band. They never manufacture replacements. */
 export function establishRaiderCamps(g: Game) {
   const random = mulberry32(g.state.seed ^ 0x7ad34);
@@ -219,7 +229,12 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
   const breach=u.target;
   if(breach?.kind==='building'&&breach.hp>0&&['gate','palisade','stonewall'].includes(breach.type)&&!(breach.type==='gate'&&breach.gateOpen)){u.order='attack';g.combatAI(u,dt);return true;}
   u.order='move';u.target=null;u.tx=raid.x;u.tz=raid.z;u.workReason=u.carry?'Withdrawing to shore with stolen supplies':'Withdrawing from the raid';
-  if(Math.hypot(u.x-raid.x,u.z-raid.z)<5){u.carry=0;u.hp=0;return true;}
+  if(Math.hypot(u.x-raid.x,u.z-raid.z)<5){
+   const seen=g.visibleAt(u.x,u.z),loot=u.carry;
+   const last=!g.state.units.some(v=>v!==u&&v.team===3&&v.hp>0&&v.seaRaid&&v.homeCamp===undefined);
+   if(seen){g.addFloater(u.x,u.y+2,u.z,loot?"Escaped with supplies":"Departed by sea","#e8c878");if(last)g.banner(loot?"The last sea raider escaped with stolen supplies.":"The surviving sea raiders withdrew to their landing and departed.",5);}
+   u.carry=0;u.carryType=null;u.carryFood=undefined;u.hp=0;return true;
+  }
   // A newly closed perimeter can block withdrawal. Break an accessible barrier.
   if(u.stuckT>3){const wall=g.state.buildings.filter(b=>b.hp>0&&!b.plannedCost&&g.isFoe(u.team,b.team)&&['gate','palisade','stonewall'].includes(b.type)&&!(b.type==='gate'&&b.gateOpen)&&Math.hypot(b.x-u.x,b.z-u.z)<65).sort((a,b)=>a.hp-b.hp+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).find(b=>!!g.interactionSpot(u,b));if(wall){u.target=wall;u.order='attack';g.combatAI(u,dt);return true;}}
   g.steer(u,dt);return true;

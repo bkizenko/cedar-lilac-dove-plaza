@@ -6,7 +6,7 @@ import { tickGates, setGateMode, earthworkPace } from "../src/game/fortification
 import { beginWeaponWork, weaponWorkAI } from "../src/game/warfare.ts";
 import { beginFarmToolWork, farmToolWorkAI } from "../src/game/farmTools.ts";
 import { craftingQueue, craftingBenches } from "../src/game/crafting.ts";
-import { raiderTarget, seaRaidAI, campRaidAI } from "../src/game/raiders.ts";
+import { raiderTarget, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, campRaidAI } from "../src/game/raiders.ts";
 import { encodeGame, decodeGame } from "../src/game/persistence.ts";
 import { BUILDINGS } from "../src/game/constants.ts";
 function fixture() {
@@ -281,4 +281,18 @@ test('changing village priorities releases queued crafters without losing their 
  for(let i=0;i<4;i++)assert.equal(beginWeaponWork(g,'spear',0,shop.id),true);
  const queue=craftingQueue(g,shop),waiting=queue[3],wood=g.tribe(0).wood;g.setLaborPriority('wood');
  assert.equal(waiting.weaponWork.paused,true);assert.notEqual(waiting.order,'hold');assert.equal(g.tribe(0).wood,wood);assert.equal(queue[0].weaponWork.paused,undefined);assert.equal(queue[0].order,'hold');
+});
+
+test("large Stone Age towns face substantial sea parties while small first villages retain scouts",()=>{
+ assert.equal(seaRaidStrength(5,0,.6,1,.2).count,1);
+ const forty=seaRaidStrength(40,0,.6,1,.5);assert.ok(forty.count>=6);assert.ok(forty.condition>=.9);
+ assert.ok(seaRaidStrength(150,3,.6,2,.5).count>forty.count);
+ assert.ok(seaRaidStrength(150,5,1,99,1,true).count<=20);
+ assert.ok(seaRaidArrivalChance(.5,true)>seaRaidArrivalChance(.5,false));
+});
+test("visible shore departure explains retreat instead of silently deleting the last raider",()=>{
+ const g=fixture(),u=g.spawnUnit('spearman',0,0,3);g.vision.fill(2);
+ u.seaRaid={x:0,z:0,goalX:40,goalZ:0,phase:'retreat',thinkAt:0,departAt:480};u.carry=4;u.carryType='wood';seaRaidAI(g,u,.1);
+ assert.equal(u.hp,0);assert.equal(u.carry,0);assert.match(g.state.banner,/escaped with stolen/);
+ const v=g.spawnUnit('spearman',0,0,3);v.seaRaid={x:0,z:0,goalX:40,goalZ:0,phase:'retreat',thinkAt:0,departAt:480};g.vision.fill(0);g.state.banner='';seaRaidAI(g,v,.1);assert.equal(g.state.banner,'','unseen departures do not reveal remote positions');
 });
