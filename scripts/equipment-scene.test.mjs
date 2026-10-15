@@ -22,6 +22,7 @@ function fixture(){
   view.farmToolMesh=mesh(farmToolHeadGeo());
   view.unitMeshes=new Map([['worker',mesh(unitGeo('worker'))]]);
   view.rings=mesh(new THREE.PlaneGeometry(),40);view.workRings=mesh(new THREE.PlaneGeometry(),40);
+  view.resourceRing=new THREE.Mesh(new THREE.RingGeometry(1,1.2),new THREE.MeshBasicMaterial());
   view.ghost=new THREE.Group();view.ghost.visible=false;
   const person=(id,extra={})=>({id,type:'worker',team:0,hp:40,x:id*5,y:4,z:15,facing:0,carry:0,carryType:null,stride:0,vx:0,vz:0,stature:1,tint:.5,r:.4,order:'gather',militia:false,...extra});
   const game={state:{units:[],buildings:[],selBld:null,placing:null,time:20,weather:'clear',wildlife:[]},world:{biomes:[],rivers:[]},height:()=>4,visibleAt:(x)=>x<100,exploredAt:(x)=>x<150,travelHeight:()=>4};

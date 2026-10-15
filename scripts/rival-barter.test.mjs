@@ -44,3 +44,18 @@ test('a returning scout retains a homeward order when blocked rather than becomi
  const g=fixture(),u=g.state.units[0];u.scout={legs:5,returning:true};u.stuckT=18;scoutAI(g,u,.1);
  assert.equal(u.scout,undefined);assert.equal(u.recalled,true);assert.equal(u.stationOnArrival,false);assert.equal(u.order,'return');
 });
+
+test('a stranded empty trader keeps a homeward mission and returns to work after reaching shelter',()=>{
+ const g=fixture(),u=g.state.units[0];u.visit={phase:'outbound',wait:0,team:2,wanted:'wood'};u.carry=0;u.carryType=null;u.stuckT=9;
+ visitorAI(g,u,.1);assert.equal(u.visit,undefined);assert.equal(u.recalled,true);assert.equal(u.order,'return');assert.equal(u.stationOnArrival,false);
+ const r=decodeGame(encodeGame(g)),v=r.state.units.find(p=>p.id===u.id);assert.equal(v.recalled,true);
+ // Continue on the original flat test landscape; saved real terrain is covered separately.
+ for(let i=0;i<500&&u.recalled;i++){g.navBudget=10;g.state.time+=.1;g.workerAI(u,.1);}
+ assert.equal(u.recalled,undefined);assert.equal(u.order,'idle');
+});
+
+test('traders target reachable frontages instead of the blocked center of a hall',()=>{
+ const g=fixture();contact(g);assert.equal(dispatchRivalBarter(g,1),true);const u=g.state.units.find(u=>u.visit);
+ visitorAI(g,u,.1);const hall=g.state.buildings.find(b=>b.team===2);
+ assert.ok(Math.hypot(u.tx-hall.x,u.tz-hall.z)>hall.w*.4);assert.equal(g.walkable(u.tx,u.tz),true);
+});

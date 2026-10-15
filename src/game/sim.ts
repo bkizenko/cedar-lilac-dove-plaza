@@ -5465,6 +5465,8 @@ export class Game {
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
             if(routineRest(this,u,sdt))continue;
+            // Armed citizens keep their equipment while fulfilling an explicit shipment.
+            if(u.order==="trade"&&u.trade){this.workerAI(u,sdt);continue;}
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
             else if (u.team !== 0) this.barbarianAI(u, sdt);
             else if (u.type === "worker" || (u.militia&&u.huntOnly&&["idle","gather","explore","return"].includes(u.order))) {

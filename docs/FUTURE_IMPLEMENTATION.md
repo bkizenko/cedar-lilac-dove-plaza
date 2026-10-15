@@ -46,6 +46,19 @@ Published with the building-panel repair at stable 8086, release `2026-10-15T01-
 
 Verification: 35 conflict, frontier-defense and priority-response checks passed, including physical shore approaches/attacks, two-landscape beginner defense, walls/gates, finite theft, loaded defenders, new scaling and visible/hidden departure messages. Typecheck and production build passed. Armed caravans, full rival parity, boats, pack animals, prisoners and the remaining batch-2 systems remain open.
 
+## Armed shipments and visiting-trader recovery — 2026-10-14
+
+Live on stable 8086 as `2026-10-15T01-35-15-058Z`; service health verified. Existing saves are preserved; save then refresh to load the release.
+
+- [x] ~~Selected armed civilians can carry explicit trade shipments.~~ Equip an adult at home, select them, then send a proposal/contract through the settlement trade panel. The panel explains this choice. The real simulation now dispatches armed carriers through trade movement, preserves their weapon and finite payment/reservation, responds to nearby enemies, resumes after danger and physically delivers the return cargo. Stand-down at home returns the one weapon. Automatic routes exclude armed citizens so stationed guards are not recruited silently.
+- [x] ~~Visiting traders use a reachable building frontage.~~ They no longer steer toward a solid hall center. Interrupted visits retain a saved homeward recall, including empty-handed people, then rejoin work on arrival. Actual disconnected terrain still requires a crossing; no teleportation is introduced.
+- [x] ~~Incoming trade respects active orders and other trade routes.~~ Recalled people, envoys, trainees and direct builders cannot be commandeered. A separate rival-to-rival shipment no longer blocks all visitors to the player, while each rival still sends only one visiting carrier at once. Food exchanges retain their carried food category and clear stale cargo categories.
+- [x] ~~Repair the equipment rendering regression fixture.~~ The headless fixture now includes the new resource selection ring; production initialization was already present.
+
+Verification: full suite 610/610 plus 32/32 app/auth checks; 24 focused trade checks; typecheck and production build passed. Tests cover armed travel through the real dispatcher, equipment conservation, saved contracts, local defense/resumption and returned goods. No interactive visual/audio claim: browser access remains restricted.
+
+Still incomplete: automatic foreign caravan arming, dedicated escorts, complete theft/captivity negotiations, boats/pack animals, full rival cultural/economic parity and the remaining crosswalk. This is a tested delivery, **not feature completion of the project**. Continue the six batches above; all 120 catalogue entries and 25 original Astra tasks remain in scope.
+
 ## Intended game
 
 Dawn of Man survival/production, responsive Age of Empires RTS commands/combat, later Civilization regional scale. Begin sheltered in clear weather, discover resources through actual exploration, grow a recognizable community, create meaningful scarcity/productivity/trade/security choices, then expand through practical knowledge and institutions. Preserve current Three.js renderer; detailed 3D assets and first-person content are later projects, but controls/readability/performance belong here. All 120 human-development entries and former optional extensions are accepted. Do not equate a button or isolated stub with a complete system.

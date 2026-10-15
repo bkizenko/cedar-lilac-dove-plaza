@@ -84,6 +84,7 @@ export function TradeProposal({ engine, team }: { engine: Engine; team: number }
         Seek the best deal · minimum {requested} {names[get].toLowerCase()}
       </button>
       <p>Spend the offered {amount} {names[give].toLowerCase()} only if the trader can bring back at least your requested quantity. Skill, local needs and relations determine the offer at arrival; otherwise the full budget returns.</p>
+      <p>{carrier?.militia ? "Your selected armed citizen will carry this shipment, keep their weapon and defend against nearby attackers." : "For an armed shipment, equip an adult near your stores, select them, then send the offer here."}</p>
       {!carrier && <p>An available adult with empty hands is needed to carry the goods.</p>}
       <button
         disabled={!quote.deal || !carrier}

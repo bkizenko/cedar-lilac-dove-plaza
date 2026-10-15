@@ -9,33 +9,40 @@ export function tickVisitors(g:Game,dt:number) {
   g.state.visitorTimer=(g.state.visitorTimer??300)-dt;
   if(g.state.visitorTimer>0)return;
   g.state.visitorTimer=90;
-  if(g.state.units.some(u=>u.visit&&u.hp>0))return;
+  if(g.state.units.some(u=>u.visit&&u.visit.team===undefined&&u.hp>0))return;
   const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));if(!home)return;
   const rivals=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
-    if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5)continue;
-    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop);
+    if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5||g.state.units.some(u=>u.team===t.id&&u.hp>0&&u.visit))continue;
+    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.recalled&&!u.envoy&&u.drill==null&&!u.buildOrder&&['idle','gather'].includes(u.order));
     if(!u)continue;
     const available=(['food','wood','stone','copper','iron'] as ResKind[]).filter(good=>!(good==='copper'&&t.age<1)&&!(good==='iron'&&t.age<2))
       .map(good=>({good,spare:t[good]-(good==='food'?foodDemand(g,t.id)*240:good==='wood'?20:10)}))
       .filter(item=>item.spare>=8).sort((a,b)=>(b.good===t.spec?30:0)+b.spare*worth[b.good]-(a.good===t.spec?30:0)-a.spare*worth[a.good]);
     if(!available.length)continue;
     const {good,spare}=available[0],amount=Math.min(24,Math.floor(spare));
-    t[good]-=amount;u.carry=amount;u.carryType=good;
+    g.spend(t.id,{[good]:amount});u.carry=amount;u.carryType=good;u.carryFood=good==='food'?'provisions':undefined;
     u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=home.x;u.tz=home.z;
-    u.stuckT=0;u.workReason='Carrying goods to meet another community';g.state.visitorTimer=360;break;
+    u.job=null;u.jobLock=false;u.stuckT=0;u.workReason='Carrying goods to meet another community';g.state.visitorTimer=360;break;
   }
+}
+function cancelVisit(u:Unit){
+  u.visit=undefined;u.order='return';u.node=null;u.target=null;u.stuckT=0;
+  u.recalled=true;u.stationOnArrival=false;
+  u.workReason='Trading journey interrupted — returning home with remaining goods';
 }
 export function visitorAI(g:Game,u:Unit,dt:number) {
   const m=u.visit;if(!m)return false;
   const home=g.state.buildings.find(b=>b.team===(m.phase==='return'?u.team:(m.team??0))&&b.type==='townhall'&&g.finished(b));
-  if(!home||g.isFoe(u.team,m.team??0)){u.visit=undefined;u.order=u.carry>0?'return':'idle';return true;}
-  if(u.stuckT>8){u.visit=undefined;u.order=u.carry>0?'return':'idle';u.node=null;return true;}
+  if(!home||g.isFoe(u.team,m.team??0)){cancelVisit(u);return true;}
+  if(u.stuckT>8){cancelVisit(u);return true;}
   if(m.phase==='waiting') {
     m.wait+=dt;u.vx=0;u.vz=0;
-    if(m.wait>=120){m.phase='return';u.workReason='Returning after the trading visit';}return true;
+    if(m.wait>=120){m.phase='return';u.order='move';u.workReason='Returning after the trading visit';}return true;
   }
-  u.tx=home.x;u.tz=home.z;
+  const approach=g.interactionSpot(u,home);
+  if(!approach){cancelVisit(u);return true;}
+  u.tx=approach.x;u.tz=approach.z;
   if(Math.hypot(u.x-home.x,u.z-home.z)>Math.max(home.w,home.d)*0.55+3){g.steer(u,dt);return true;}
   if(m.phase==='outbound'&&m.team!==undefined){
     const exchanged=settleRivalBarter(g,u);m.phase='return';u.stuckT=0;
@@ -59,7 +66,9 @@ export function tradeWithVisitor(g:Game,id:number,give:ResKind) {
   const price=visitorPrice(g,u,give),home=g.campOf(0);
   if(!price||!u.carryType||!g.visibleAt(u.x,u.z)||Math.hypot(u.x-home.x,u.z-home.z)>35||g.tribe(0)[give]<price)return false;
   if((give==='copper'&&g.tribe(0).age<1)||(give==='iron'&&g.tribe(0).age<2))return false;
-  g.tribe(0)[give]-=price;g.tribe(0)[u.carryType]+=u.carry;u.carry=price;u.carryType=give;
+  g.spend(0,{[give]:price});
+  if(u.carryType==='food')receiveFood(g,0,u.carry,u.carryFood);else g.tribe(0)[u.carryType]+=u.carry;
+  u.carry=price;u.carryType=give;u.carryFood=give==='food'?'provisions':undefined;
   u.visit!.phase='return';u.order='move';g.tribe(u.team).trust=Math.min(1,(g.tribe(u.team).trust||0)+0.1);
   g.banner('Goods exchanged locally; the trader carries payment home',4);return true;
 }

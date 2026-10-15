@@ -12,7 +12,7 @@ export function knownSettlement(g: Game, team: number) {
 export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
   return (
       u.team === 0 &&
-      u.type === "worker" &&
+      (u.type === "worker" || (!automatic && u.selected && u.militia)) &&
       u.hp > 0 &&
       !isDependent(g, u) &&
       !u.emergency &&

@@ -10,3 +10,10 @@ test('first contact and pending reaction survive saves; withdrawal cancels the e
 test('visitors can carry a real available surplus when their preferred metal is not yet known',()=>{
  const g=fixture();g.state.visitorTimer=0;const rival=g.tribe(1);rival.spec='iron';rival.age=0;rival.food=500;rival.wood=80;rival.stone=30;const before=rival.wood;tickVisitors(g,1);const visitor=g.state.units.find(u=>u.visit);assert.ok(visitor);assert.notEqual(visitor.carryType,'iron');assert.ok(visitor.carry>=8);if(visitor.carryType==='wood')assert.equal(rival.wood+visitor.carry,before);assert.equal(visitor.team,1);
 });
+
+test('incoming trade does not commandeer recalled workers or direct building orders',()=>{
+ const g=fixture();g.state.visitorTimer=0;
+ for(const t of g.state.tribes){t.food=1000;t.wood=1000;t.hostile=false;}
+ for(const u of g.state.units){if(u.team!==0){u.recalled=true;u.order='return';u.carry=0;}}
+ tickVisitors(g,1);assert.equal(g.state.units.some(u=>u.visit),false);
+});
