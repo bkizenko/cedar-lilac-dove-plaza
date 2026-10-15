@@ -11,7 +11,7 @@ function fixture(){
 test('the free hearth is followed by escalating hall prices including unfinished plans, shown in the build menu',()=>{
  const g=fixture();g.tribe(0).wood=0;
  for(const [i,x] of [-180,-90,0,90,180].entries()){
-  const expected=i*80;assert.equal(buildingCost('townhall',g).wood,expected);
+  const expected=i===0?0:40+20*(i-1);assert.equal(buildingCost('townhall',g).wood,expected);
   assert.equal(g.snapshot().buildOptions.find(b=>b.type==='townhall').cost.wood,expected);
   assert.equal(g.placeBuilding('townhall',x,40),true);const hall=g.state.buildings.at(-1);
   if(i)assert.equal(hall.plannedCost.wood,expected);else assert.equal(hall.plannedCost,undefined);
@@ -22,7 +22,7 @@ test('saved hall quotes survive changing settlement counts and are charged exact
  const g=fixture();g.state.buildings.push(g.makeBld('townhall',0,40,0));g.tribe(0).wood=0;
  g.placeBuilding('townhall',100,40);const id=g.state.buildings.at(-1).id;g.spawnUnit('worker',85,40,0);
  const r=decodeGame(encodeGame(g));r.world.heights.fill(4);r.rebuildWalk();const b=r.state.buildings.find(b=>b.id===id);
- r.state.buildings[0].hp=0;r.tribe(0).wood=80;fundConstructionPlans(r);assert.equal(b.plannedCost,undefined);assert.equal(r.tribe(0).wood,0);
+ r.state.buildings[0].hp=0;r.tribe(0).wood=40;fundConstructionPlans(r);assert.equal(b.plannedCost,undefined);assert.equal(r.tribe(0).wood,0);
  fundConstructionPlans(r);assert.equal(r.tribe(0).wood,0);assert.equal(b.build,0);
 });
 test('legacy twenty-log plans and founder cargo remain valid while new founder quotes consume the saved amount',()=>{
@@ -33,4 +33,12 @@ test('legacy twenty-log plans and founder cargo remain valid while new founder q
   foundingJourneyAI(g,u,.1);assert.equal(u.carry,0);assert.equal(g.state.buildings.length,2);assert.equal(g.state.buildings[1].build,0);
  }
  const g=fixture(),u=g.spawnUnit('worker',0,50,1);u.foundingJourney={x:0,z:40,leader:true,timber:-80};assert.throws(()=>decodeGame(encodeGame(g)));
+});
+
+test('higher-priced unpaid saved halls receive the reduction without changing paid buildings or legacy bargains',()=>{
+ const g=fixture();g.state.buildings.push(g.makeBld('townhall',0,40,0));g.tribe(0).wood=0;g.placeBuilding('townhall',100,40);
+ const raw=encodeGame(g),plan=raw.state.buildings.at(-1);plan.plannedCost.wood=80;
+ const r=decodeGame(raw);assert.equal(r.state.buildings.at(-1).plannedCost.wood,40);assert.equal(r.tribe(0).wood,0);
+ plan.plannedCost.wood=20;assert.equal(decodeGame(raw).state.buildings.at(-1).plannedCost.wood,20);
+ delete plan.plannedCost;assert.equal(decodeGame(raw).state.buildings.at(-1).plannedCost,undefined);
 });

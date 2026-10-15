@@ -2,6 +2,14 @@
 
 You are the next implementation model. Inspect the repository, current Git state, AGENTS.md and relevant project skills first. Preserve working behavior, current saved villages and local changes. Implement, run, diagnose, test, balance and push the remaining accepted game autonomously in dependency order. Do not stop merely after planning. If blocked by a real execution limit, leave this file updated with the exact unfinished acceptance checks. Treat this file as the current remaining-work source; older handoffs are historical.
 
+## Latest balance correction — 2026-10-14
+
+Town halls now use the user's gentler curve: first player hearth free, then **40/60/80/100 logs**. This supersedes the previous 80/160/240/320 quote. Building-menu and ledger prices share the calculation. Higher unpaid saved plans are discounted on loading/funding; legacy cheaper plans remain cheaper. Paid buildings and departed founding caravans retain their paid commitments, with no manufactured refund.
+
+Carriers now pause to regroup with nearby assigned escorts more than 10 m behind; they do not wait for distant, dead or actively fighting guards. The existing blocked-escort timeout returns the guard home and releases the carrier. This extends protected trade without claiming complete convoy/naval logistics.
+
+Verified: 26 construction/journey/price checks and 12 caravan/trade checks passed; typecheck and production build passed. Published at stable 8086 as `2026-10-15T01-54-21-103Z`; service health verified. Existing saves preserved. Whole-overhaul scope below remains open.
+
 ## Active execution order and complete scope crosswalk — 2026-10-14
 
 The six batches are an execution order, **not a replacement scope**. All 120 human-development items (including accepted extensions), all 25 original Astra tasks, the chat request audit, the original design, and the engagement-report applications remain tracked. Broad catalogue items remain open/partial unless their full acceptance is verified. The source-to-batch allocation below covers every catalogue ID exactly once and every Astra ID exactly once; cross-batch dependencies and regression checks still apply. Batch 6 validates all catalogue items. No blanket completion percentage is claimed.

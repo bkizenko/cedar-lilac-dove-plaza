@@ -1,4 +1,4 @@
-import {recoverCaravanEquipment,escortAI} from "./caravans";
+import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
 import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
 import {isRivalTeam} from "./factions";
 import {dispatchRivalBarter} from "./rivalTrade";
@@ -5465,6 +5465,7 @@ export class Game {
             recoverCaravanEquipment(this,u);
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if(escortAI(this,u,sdt))continue;
+            if(waitForTradeEscort(this,u))continue;
             if(raidLootAI(this,u,sdt))continue;
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;

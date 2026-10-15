@@ -229,3 +229,5 @@ Item 85 now supports explicitly selected armed civilian carriers through normal 
 ### Protected caravans and expansion pricing — 2026-10-14
 
 Items 85/97 now include conditional foreign trader equipment from local stocks and an explicit one/two-guard escort dispatch for active player shipments. Residents physically follow, defend locally, resume and return; weapon ownership and missions survive saves. Broad diplomacy, convoy routing and naval escorts remain open. Additional halls now cost 80/160/240/320 logs, with old saved quotes honored. See the latest canonical handoff for final test/release evidence.
+
+Latest correction: additional hall prices are now 40/60/80/100 logs, superseding the prior steep curve. Existing higher unpaid plans receive discounts; paid construction is unchanged. Nearby assigned escorts now cause trading carriers to regroup, with blocked/dead/fighting/distant guard handling. These are narrow balance/reliability changes, not completion of whole catalogue entries.

@@ -10,9 +10,18 @@ export function buildingCost(type:BldType,g?:Game,team=0):Cost {
   const cost:Cost=Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
   if(type==='townhall'&&g){
     const halls=g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&b.hp>0).length;
-    cost.wood=halls===0?(team===0?0:20):80*halls;
+    cost.wood=halls===0?(team===0?0:20):40+20*(halls-1);
   }
   return cost;
+}
+/** Rebalance unpaid drawings only; never refund already-used construction materials. */
+export function discountTownhallPlans(g:Game){
+  const counts=new Map<number,number>();
+  for(const b of g.state.buildings){
+    if(b.type!=='townhall'||b.hp<=0)continue;
+    const previous=counts.get(b.team)||0;counts.set(b.team,previous+1);
+    if(b.plannedCost)b.plannedCost.wood=Math.min(b.plannedCost.wood||0,40+20*Math.max(0,previous-1));
+  }
 }
 export function planMissing(g:Game,b:Building){
   const t=g.tribe(b.team);
@@ -34,6 +43,7 @@ export function planStatus(g:Game,b:Building){
 }
 /** Pay once, only from actual stores. Unfunded drawings grant no building benefits. */
 export function fundConstructionPlans(g:Game,preferred?:Building){
+  discountTownhallPlans(g);
   if(g.state.weather==='storm')return;
   for(const b of preferred?[preferred]:g.state.buildings){
     const cost=b.plannedCost;

@@ -186,8 +186,8 @@ test("second settlement plans wait for timber, require labor and never spawn res
   g.vision.fill(2);g.tribe(0).wood = 19;
   assert.equal(g.placeBuilding("townhall", 140, 38), true);
   assert.equal(g.tribe(0).wood,19);assert.ok(g.state.buildings.at(-1).plannedCost);
-  assert.equal(g.state.buildings.at(-1).plannedCost.wood,80);
-  g.tribe(0).wood = 100;
+  assert.equal(g.state.buildings.at(-1).plannedCost.wood,40);
+  g.tribe(0).wood = 60;
   const {fundConstructionPlans}=await import('../src/game/construction.ts');
   fundConstructionPlans(g);
   assert.equal(g.tribe(0).wood, 20);

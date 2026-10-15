@@ -54,3 +54,15 @@ test('escort duty resumes after a local fight without discarding its charge or e
  foe.hp=0;g.state.time+=11;emergencyResponse(g,guard,.1);assert.equal(escortAI(g,guard,.1),true);
  assert.equal(guard.escortId,carrier.id);assert.equal(guard.militia,true);assert.equal(carrier.carry,10);assert.equal(g.tribe(0).spears,0);
 });
+
+test('carriers regroup with assigned guards but never wait for dead, fighting or distant escorts',async()=>{
+ const {waitForTradeEscort,sendTradeEscort,escortAI}=await import('../src/game/caravans.ts');const {g}=fixture();
+ const carrier=g.spawnUnit('worker',60,40,0),guard=g.spawnUnit('worker',90,40,0);guard.selected=true;g.tribe(0).spears=1;g.tribe(0).bows=0;g.tribe(0).blades=0;g.callToArms();
+ carrier.carry=10;carrier.carryType='wood';carrier.tradeTeam=1;assert.equal(sendTradeEscort(g,carrier.id),true);
+ assert.equal(waitForTradeEscort(g,carrier),true);assert.equal(carrier.carry,10);
+ for(let i=0;i<150&&waitForTradeEscort(g,carrier);i++){g.navBudget=10;escortAI(g,guard,.1);}
+ assert.equal(waitForTradeEscort(g,carrier),false);
+ guard.x=90;guard.emergency={until:g.state.time+10};assert.equal(waitForTradeEscort(g,carrier),false);guard.emergency=undefined;
+ guard.x=200;assert.equal(waitForTradeEscort(g,carrier),false);guard.x=90;guard.hp=0;assert.equal(waitForTradeEscort(g,carrier),false);
+ guard.hp=20;guard.stuckT=13;escortAI(g,guard,.1);assert.equal(waitForTradeEscort(g,carrier),false);assert.equal(guard.recalled,true);
+});

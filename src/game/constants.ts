@@ -68,7 +68,7 @@ export const BUILDINGS: Record<
     pop: 8,
     hp: 1100,
     age: 0,
-    hint: "The first hearth is free. Additional halls cost 80, 160, 240, then 320 logs, including planned halls. They need construction labor and room beyond existing villages. Frontier outposts extend your claim; residents must defend them.",
+    hint: "The first hearth is free. Additional halls cost 40, 60, 80, then 100 logs, including planned halls. They need construction labor and room beyond existing villages. Frontier outposts extend your claim; residents must defend them.",
   },
   cornerstone: {
     name: "Frontier outpost",

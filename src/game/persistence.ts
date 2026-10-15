@@ -1,3 +1,4 @@
+import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
 import {reconcileTradeReservations} from "./tradeReservations";
 import {carcassStateValid} from "./hunting";
@@ -500,5 +501,6 @@ export function decodeGame(raw: unknown): Game {
   g.awaitingStart = false;
   g.world.waterY=weatherWaterLevel(g.world.baseWaterY,g.state.weather);
   g.rebuildWalk();
+  discountTownhallPlans(g);
   return g;
 }

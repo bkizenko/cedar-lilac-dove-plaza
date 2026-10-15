@@ -57,3 +57,14 @@ export function escortAI(g:Game,u:Unit,dt:number){
  if(Math.hypot(u.x-carrier.x,u.z-carrier.z)<=5){u.order='hold';return true;}
  u.order='move';u.tx=carrier.x;u.tz=carrier.z;g.steer(u,dt);return true;
 }
+
+/** Regroup with nearby assigned guards, without recalling distant people or
+ * freezing a carrier while its escort is actively fighting. Blocked escorts
+ * cancel through escortAI's existing stuck timeout. */
+export function waitForTradeEscort(g:Game,u:Unit){
+ if(!tradeJourney(u))return false;
+ const waiting=g.state.units.some(p=>p.hp>0&&p.team===u.team&&p.escortId===u.id&&!p.emergency&&
+   Math.hypot(p.x-u.x,p.z-u.z)>10&&Math.hypot(p.x-u.x,p.z-u.z)<100);
+ if(!waiting)return false;
+ u.vx=0;u.vz=0;u.stuckT=0;u.workReason='Waiting for the armed escort to catch up';return true;
+}
