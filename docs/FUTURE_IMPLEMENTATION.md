@@ -1,3 +1,10 @@
+## Canoe-aware rival resource development — 2026-10-29
+
+- [x] Resource-site planning considers living adult canoe owners as well as the nearest walkers. A discovered forest across a navigable channel can now receive a paid lumber-camp foundation; no boat means no cross-water access.
+- [x] The planner retains local knowledge, food/material reserves, normal placement checks and actual construction requirements. No resources are granted remotely.
+- Validation: 34 rival-development tests passed, including the known far-bank forest rejected before a canoe and accepted afterward for the normal 16-log price. Typecheck and production build passed.
+- Ongoing resumed simulation with the preceding journey fix: year four populations 47/33, six barter departures by the first rival (five declines), no simulation errors. Timber remains low and neither has advanced yet. The run predates this resource-site change and must not be cited as its validation.
+
 ## Long-distance exploration route repair — 2026-10-29
 
 - [x] Diagnosed the stalled rival scout in the year-three seed 345 snapshot: its reachable destination needed a 283-cell river detour. The ordinary 24,000-node search failed, so the scout returned without leaving home.

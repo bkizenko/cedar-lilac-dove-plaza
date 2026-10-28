@@ -1,3 +1,4 @@
+import {connectedForUnit} from './waterTravel';
 import {resumeWeaponWork} from './warfare';
 import {beginPackTaming} from './packAnimals';
 import {HAULAGE,beginHaulageWork,resumeHaulageWork} from "./haulage";
@@ -92,9 +93,11 @@ export function developRivalResources(g:Game,team:number){
   const home=g.campOf(team),t=g.tribe(team),next=AGE_COST[t.age+1];
   // A hall center is occupied by its building. Survey access from real residents,
   // otherwise an enclosed center falsely makes every forest unreachable.
-  const surveyors=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u))
-    .sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z)).slice(0,3);
-  const known=(x:number,z:number)=>Math.hypot(x-home.x,z-home.z)<RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z)&&surveyors.some(u=>g.workBoard.connected(g,u.x,u.z,x,z));
+  const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u))
+    .sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z));
+  // A coastal resident can reach a different shore even when the nearest walkers cannot.
+  const surveyors=residents.filter((u,i)=>i<3||u.haulage==='canoe');
+  const known=(x:number,z:number)=>Math.hypot(x-home.x,z-home.z)<RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z)&&surveyors.some(u=>connectedForUnit(g,u,x,z));
   const timberCamps=g.state.buildings.filter(b=>b.team===team&&b.type==='lumber'&&g.finished(b));
   const localWood=g.state.trees.filter(n=>n.amount>0&&(Math.hypot(n.x-home.x,n.z-home.z)<70||timberCamps.some(b=>Math.hypot(b.x-n.x,b.z-n.z)<=LUMBER_R))).reduce((n,p)=>n+p.amount,0);
   const types:('lumber'|'quarry')[]=localWood<Math.max(100,(next?.wood||150)-t.wood)?['lumber','quarry']:['quarry','lumber'];

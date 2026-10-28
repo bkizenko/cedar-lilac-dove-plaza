@@ -378,3 +378,18 @@ test('new rival starting supplies are placed outside solid buildings instead of 
   for(const n of local)assert.equal(g.state.buildings.some(b=>g.solidBuilding(b)&&Math.abs(n.x-b.x)<b.w*.4&&Math.abs(n.z-b.z)<b.d*.4),false,`resource ${n.id} is inside a building`);
  }
 });
+
+
+test('rival resource planning uses a canoe owner beyond the nearest three walkers',()=>{
+ const g=fixture();g.height=(x,z)=>Math.abs(z)<12?g.world.waterY-2:Math.abs(z)<24?g.world.waterY+(Math.abs(z)-12)/3:4;
+ const sailor=g.state.units.at(-1);sailor.x=20;sailor.z=65;
+ g.state.trees=[tree(g,0,-60),tree(g,8,-60),tree(g,-8,-60),tree(g,0,-68)];
+ sailor.z=-60;scoutKnowledge(g,sailor);sailor.z=65;g.rebuildWalk();
+ const wood=g.tribe(1).wood;
+ assert.equal(developRivalResources(g,1),false,'known forest remains inaccessible without a boat');
+ sailor.haulage='canoe';g.state.time+=26;
+ assert.equal(developRivalResources(g,1),true);
+ const camp=g.state.buildings.find(b=>b.type==='lumber');assert.ok(camp&&camp.z< -24);
+ assert.equal(camp.build,0,'planning does not skip actual construction');
+ assert.equal(g.tribe(1).wood,wood-16,'resource access spends real camp materials');
+});
