@@ -37,3 +37,22 @@ test('rival exploration can select a canoe owner after pedestrians exhaust their
  for(let i=0;i<1600&&sailor.z>=-12;i++){g.navBudget=10;g.state.time+=.1;scoutAI(g,sailor,.1);}
  assert.ok(sailor.z< -12,'scout physically crosses to the far bank');
 });
+
+test('outbound scouts cache a real river detour beyond the routine search budget',async()=>{
+ const {findPath}=await import('../src/game/navigation.ts');
+ const g=new Game();g.reset(345,2);g.state.units=[];g.state.buildings=[];g.rebuildWalk();
+ const u=g.spawnUnit('worker',-232.04165172049082,-128.0222892013027,2);
+ Object.assign(u,{order:'move',tx:-146.25,tz:113.75,scout:{legs:0,returning:false}});
+ const index=(x,z)=>Math.floor((z+520)/2)*520+Math.floor((x+520)/2);
+ assert.equal(findPath(g.walk,520,index(u.x,u.z),index(u.tx,u.tz)),null,'fixture exceeds ordinary route budget');
+ const start={x:u.x,z:u.z};let searches=0;
+ for(let i=0;i<150;i++){
+  g.state.time+=.1;g.navBudget=1;const x=u.x,z=u.z,speed=g.travelSpeed(u);
+  scoutAI(g,u,.1);searches+=1-g.navBudget;
+  assert.ok(Math.hypot(u.x-x,u.z-z)<=speed*.1+1e-7);
+  assert.ok(g.height(u.x,u.z)>=g.world.waterY+.12);
+ }
+ assert.ok(Math.hypot(u.x-start.x,u.z-start.z)>60,'scout actually leaves home');
+ assert.equal(searches,1,'successful long route is reused rather than recomputed each frame');
+ assert.equal(u.scout.returning,false);
+});

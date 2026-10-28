@@ -1,3 +1,11 @@
+## Long-distance exploration route repair — 2026-10-29
+
+- [x] Diagnosed the stalled rival scout in the year-three seed 345 snapshot: its reachable destination needed a 283-cell river detour. The ordinary 24,000-node search failed, so the scout returned without leaving home.
+- [x] Scouts, expeditions, visitors, envoys and trade journeys can use the existing bounded 96,000-node fallback after confirming connectivity. The route stays cached; routine gathering retains its normal budget.
+- [x] Fallback connectivity respects canoe ownership, including water return routes.
+- Validation: 36 journey, scouting, water/pack and river-recovery tests passed, followed by typecheck and production build. The regression walks the actual seed terrain, checks dry physical movement and confirms only one route computation over 150 steps.
+- A resumed years-four-through-six rival simulation is in progress. Strong rival growth, trade and age advancement remain unproven; do not mark them complete from the route test.
+
 ## Crowded-settlement recovery and pack transport polish — 2026-10-28
 
 - [x] Blocked residents can search a bounded local route around a corner when a straight escape fails. Every step uses physical collision checks; no teleportation, wall crossing or save migration.

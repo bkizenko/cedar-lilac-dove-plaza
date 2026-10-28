@@ -3988,10 +3988,11 @@ export class Game {
         }
         let path = findPath(grid, WALK, index(u.x, u.z), end);
         // A river can require a long detour even when the store is close. Only
-        // urgent return journeys get this larger bounded fallback; it is cached
+        // deliberate long journeys get this larger bounded fallback; it is cached
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
-        if(!path && returning && this.workBoard.connected(this,u.x,u.z,
+        const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||u.order==="trade";
+        if(!path && longJourney && connectedForUnit(this,u,
           -HALF+(end%WALK+.5)*cell,-HALF+(Math.floor(end/WALK)+.5)*cell))
           path=findPath(grid,WALK,index(u.x,u.z),end,96000);
         if (path) {
