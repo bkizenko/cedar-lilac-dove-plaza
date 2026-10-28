@@ -333,3 +333,31 @@ test('surplus stone labor returns to village priorities when timber limits growt
  rebalanceRivalLabor(g,1);
  assert.notEqual(worker.job,'stone');assert.equal(loaded.carry,8);assert.equal(loaded.job,'stone');assert.equal(ordered.job,'stone');assert.equal(ordered.jobLock,true);
 });
+
+test('coastal rivals pay for a known reachable dock while retaining timber for a real canoe',async()=>{
+ const {developRivalCoast}=await import('../src/game/rivalDevelopment.ts');const g=fixture();
+ g.height=(x,z)=>z<14?g.world.waterY-2:4;g.world.dockSites=[];g.rebuildWalk();
+ Object.assign(g.tribe(1),{wood:200,stone:20,food:2000});
+ assert.equal(developRivalCoast(g,1),true);
+ const dock=g.state.buildings.find(b=>b.team===1&&b.type==='dock');assert.ok(dock);assert.ok(dock.build<1);
+ assert.equal(g.tribe(1).wood,160);assert.ok(g.state.units.some(u=>g.workBoard.connected(g,u.x,u.z,dock.x,dock.z)));
+ assert.equal(g.state.units.some(u=>u.haulage==='canoe'),false,'a dock does not grant a free boat');
+ g.state.time+=46;assert.equal(developRivalCoast(g,1),false,'do not duplicate the landing');
+});
+
+test('coastal planning preserves food and construction reserves and never builds on an unknown shore',async()=>{
+ const {developRivalCoast}=await import('../src/game/rivalDevelopment.ts');const g=fixture();
+ g.height=(x,z)=>z<14?g.world.waterY-2:4;g.world.dockSites=[];g.rebuildWalk();
+ g.tribe(1).wood=50;assert.equal(developRivalCoast(g,1),false);
+ g.state.time+=46;g.tribe(1).wood=200;g.tribe(1).food=1;assert.equal(developRivalCoast(g,1),false);
+ g.tribe(1).food=2000;g.state.time+=46;g.height=(x,z)=>z< -40?g.world.waterY-2:4;g.rebuildWalk();
+ assert.equal(developRivalCoast(g,1),false);assert.equal(g.tribe(1).wood,200);
+});
+
+test('a first canoe uses the dock budget even while a rival saves for the next age',()=>{
+ const g=fixture();baseEconomy(g);g.state.buildings.push(g.makeBld('dock',25,38,1));g.rebuildWalk();
+ Object.assign(g.tribe(1),{wood:40,stone:8,food:2000});
+ assert.equal(developRivalEquipment(g,1),true);
+ const maker=g.state.units.find(u=>u.haulageWork?.kind==='canoe');assert.ok(maker);
+ assert.equal(g.tribe(1).wood,20);assert.equal(g.tribe(1).stone,6);assert.equal(maker.haulage,undefined);
+});

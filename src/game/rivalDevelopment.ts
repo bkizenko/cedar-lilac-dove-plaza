@@ -206,9 +206,37 @@ export function developRivalEquipment(g:Game,team:number){
   if(hearth)for(const u of eligible)if(beginPackTaming(g,hearth.id,team,u.id))return true;
  }
  for(const kind of ['canoe','cart','sled'] as const){
-  if(!affordable(HAULAGE[kind])||adults.filter(u=>kind==='canoe'?u.haulage==='canoe':kind==='cart'?u.haulage==='cart':!!u.haulage).length>=(kind==='canoe'?1:transportTarget))continue;
+  const funded=kind==='canoe'?t.wood>=HAULAGE.canoe.wood+16&&t.stone>=HAULAGE.canoe.stone:affordable(HAULAGE[kind]);
+  if(!funded||adults.filter(u=>kind==='canoe'?u.haulage==='canoe':kind==='cart'?u.haulage==='cart':!!u.haulage).length>=(kind==='canoe'?1:transportTarget))continue;
   const haulers=[...eligible].sort((a,b)=>Number(b.job==='wood'||b.job==='stone')-Number(a.job==='wood'||a.job==='stone'));
   for(const u of haulers)if(beginHaulageWork(g,kind,team,undefined,u.id))return true;
  }
  return false;
+}
+
+
+const coastalReviews=new WeakMap<Game,Map<number,number>>();
+/** Fund a reachable local landing and its first boat before inland timber runs out. */
+export function developRivalCoast(g:Game,team:number){
+ if(!isRivalTeam(team)||!g.tribe(team).alive||g.popNow(team)<8||reserveSeconds(g,team)<600)return false;
+ if(g.state.buildings.some(b=>b.team===team&&b.hp>0&&b.type==='dock'))return false;
+ let reviews=coastalReviews.get(g);if(!reviews){reviews=new Map();coastalReviews.set(g,reviews);}
+ const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+45)return false;
+ reviews.set(team,g.state.time+45);
+ const t=g.tribe(team),cost=buildingCost('dock',g,team);
+ if(t.wood<(cost.wood||0)+HAULAGE.canoe.wood+16||t.stone<HAULAGE.canoe.stone||!g.canAfford(team,cost))return false;
+ if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!g.finished(b)).length>=2)return false;
+ const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
+ const home=g.campOf(team);
+ let best:{x:number;z:number;score:number}|undefined;
+ for(let r=14;r<=100;r+=8)for(let i=0;i<24;i++){
+  const a=i*Math.PI/12,x=home.x+Math.cos(a)*r,z=home.z+Math.sin(a)*r;
+  if(g.height(x,z)<g.world.waterY+.3||!rivalKnows(g,team,x,z))continue;
+  if(!residents.some(u=>g.workBoard.connected(g,u.x,u.z,x,z))||!g.placementValid('dock',x,z,team))continue;
+  // Known fish improve a site; undiscovered shoals never influence its score.
+  const fish=g.state.fish.filter(n=>n.amount>0&&rivalKnows(g,team,n.x,n.z)&&Math.hypot(n.x-x,n.z-z)<24).length;
+  const score=r-Math.min(3,fish)*8;
+  if(!best||score<best.score)best={x,z,score};
+ }
+ return !!best&&!!g.placeBuilding('dock',best.x,best.z,team);
 }

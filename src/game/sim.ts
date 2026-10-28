@@ -16,7 +16,7 @@ import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
-import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,rebalanceRivalLabor} from "./rivalDevelopment";
+import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -4985,6 +4985,7 @@ export class Game {
     developRivalCrossings(this,team);
     rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
+    developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);
     const costScale = 0.92;

@@ -1,3 +1,11 @@
+## Rival coastal development — 2026-10-28
+
+- [x] Established, fed rivals survey known reachable shoreline and fund one real dock, retaining materials for a first canoe and a small timber reserve.
+- [x] Coastal site selection uses local knowledge and known fish only; unknown distant resources do not influence it. Paid foundations still require normal construction labor.
+- [x] A first canoe can use the coastal reserve while the village saves for an age, avoiding an infrastructure-versus-advancement savings deadlock. It still requires a dock, actual materials, an available resident and crafting work.
+- Validation: 31 rival-development tests passed, covering known shores, inaccessible/unknown sites, reserve protection, no duplicate dock and paid canoe work. Final typecheck and production build passed.
+- Long-run coastal growth remains to be observed; this is not proof that all rival growth or resource-access problems are fixed.
+
 ## Rival frontier access — 2026-10-28
 
 - [x] Rival scout dispatch examines eligible residents until it finds a reachable unexplored frontier; an exhausted pedestrian route no longer blocks a canoe owner from surveying another shore.
