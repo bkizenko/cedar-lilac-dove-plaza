@@ -98,3 +98,19 @@ test('a blocked boat maker leaves work without losing paid progress or retrying 
  u.stuckT=0;assert.equal(resumeHaulageWork(g,u),true);assert.equal(g.tribe(0).wood,80);
  work(g,u,130,haulageWorkAI);assert.equal(u.haulage,'canoe');
 });
+
+
+test('a boat trader never waits for a stranded land escort; boat guards can cross to their charge',async()=>{
+ const {sendTradeEscort,waitForTradeEscort,escortAI}=await import('../src/game/caravans.ts');
+ const {g,u}=fixture();u.haulage='canoe';u.carry=10;u.carryType='wood';u.tradeTeam=1;
+ const guard=g.spawnUnit('worker',4,-32,0);guard.militia=true;guard.type='spearman';
+ assert.equal(sendTradeEscort(g,u.id),true);
+ u.z=32;
+ assert.equal(waitForTradeEscort(g,u),false);
+ escortAI(g,guard,.1);assert.equal(guard.escortId,undefined);assert.equal(guard.recalled,true);
+ guard.recalled=undefined;guard.order='hold';guard.haulage='canoe';
+ assert.equal(sendTradeEscort(g,u.id),true);assert.equal(waitForTradeEscort(g,u),true);
+ work(g,guard,90,escortAI);
+ assert.ok(guard.z>24);assert.equal(waitForTradeEscort(g,u),false);
+ assert.equal(u.carry,10);
+});

@@ -66,3 +66,21 @@ test('carriers regroup with assigned guards but never wait for dead, fighting or
  guard.x=200;assert.equal(waitForTradeEscort(g,carrier),false);guard.x=90;guard.hp=0;assert.equal(waitForTradeEscort(g,carrier),false);
  guard.hp=20;guard.stuckT=13;escortAI(g,guard,.1);assert.equal(waitForTradeEscort(g,carrier),false);assert.equal(guard.recalled,true);
 });
+
+
+test('arming a transport trader preserves capacity, hauling pace and earned wheel practice',async()=>{
+ const {carryingCapacity,loadedHaulSpeed,recordHaulDelivery,HAULAGE}=await import('../src/game/haulage.ts');
+ for(const kind of ['sled','cart','canoe','pack']){
+  const {g,u}=fixture();u.haulage=kind;u.carry=8;u.carryType='wood';
+  const capacity=carryingCapacity(u,'wood'),pace=loadedHaulSpeed(u);
+  assert.equal(equipCaravan(g,u),true);
+  assert.equal(carryingCapacity(u,'wood'),capacity);
+  assert.equal(loadedHaulSpeed(u),pace);
+  const restored=decodeGame(encodeGame(g));
+  assert.equal(carryingCapacity(restored.state.units.find(p=>p.id===u.id),'wood'),capacity);
+  recordHaulDelivery(g,u);
+  assert.equal(g.tribe(1).haulagePractice||0,kind==='sled'?8:0);
+  u.carry=0;recoverCaravanEquipment(g,u);
+  assert.equal(u.haulage,kind);assert.equal(carryingCapacity(u,'wood'),capacity);
+ }
+});

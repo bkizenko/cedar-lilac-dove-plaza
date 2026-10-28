@@ -148,18 +148,23 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
   return true;
 }
 
+/** Borrowing a caravan weapon does not leave the resident’s transport behind. */
+function usesTransport(u: HaulageUnit) {
+  return (u.type === 'worker' && !u.militia) || !!u.caravanArmed;
+}
+
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
 export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
-  return GATHER[kind].carry * (u.type === 'worker' && !u.militia && u.haulage ? HAULAGE[u.haulage].capacity : 1);
+  return GATHER[kind].carry * (usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {
-  return u.type === 'worker' && !u.militia && u.carry > 0 && u.haulage ? HAULAGE[u.haulage].loadedSpeed : 1;
+  return usesTransport(u) && u.carry > 0 && u.haulage ? HAULAGE[u.haulage].loadedSpeed : 1;
 }
 
 /** Call exactly once on an actual store delivery, immediately before clearing cargo. */
 export function recordHaulDelivery(g: Game, u: HaulageUnit) {
-  if (u.haulage !== 'sled' || u.type !== 'worker' || u.militia || !u.carryType || u.carry <= 0) return;
+  if (u.haulage !== 'sled' || !usesTransport(u) || !u.carryType || u.carry <= 0) return;
   const t = g.tribe(u.team) as HaulageTribe, previous = t.haulagePractice || 0;
   t.haulagePractice = Math.min(WHEEL_PRACTICE, previous + u.carry);
   if (u.team === 0 && previous < WHEEL_PRACTICE && t.haulagePractice >= WHEEL_PRACTICE)

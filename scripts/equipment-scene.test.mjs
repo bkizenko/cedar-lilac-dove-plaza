@@ -178,3 +178,14 @@ test('ruin cargo reuses bounded shared batches and reveals only currently visibl
  game.state.buildings=Array.from({length:500},(_,id)=>({id,hp:0,x:20,z:20,raidLoot:{wood:10}}));view.syncCargo(game);assert.equal(view.cargoMeshes.get('wood').count,420);
  assert.equal(matrix(view.cargoMeshes.get('wood'),0).elements[12],5,'resident cargo keeps priority over ruin decoration');
 });
+
+test('armed traders keep visible pack animals and loads in the existing shared batches',()=>{
+ const {view,game,person}=fixture();
+ game.state.units=[person(1,{type:'spearman',militia:true,caravanArmed:true,haulage:'pack',carry:12,carryType:'wood'})];
+ view.syncCargo(game);
+ assert.equal(view.haulageMeshes.get('pack').count,1);
+ assert.equal(view.cargoMeshes.get('wood').count,1);
+ game.state.units[0].hp=0;view.syncCargo(game);
+ assert.equal(view.haulageMeshes.get('pack').count,0);
+ assert.equal(view.cargoMeshes.get('wood').count,0);
+});

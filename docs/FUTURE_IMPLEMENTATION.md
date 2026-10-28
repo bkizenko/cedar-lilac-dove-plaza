@@ -1,3 +1,11 @@
+## Transport caravan reliability — 2026-10-28
+
+- [x] Borrowed caravan weapons preserve owned sled/cart/canoe/pack-goat capacity, loaded pace, and sled discovery practice.
+- [x] Armed traders retain visible pack animals and loads in existing instanced graphics batches.
+- [x] Escort assignment uses each guard’s actual land/boat access. Boat traders do not wait for stranded foot escorts; unreachable escorts return home.
+- Validation: 15 caravan/haulage tests, 24 water/scene tests, and 12 final scene tests passed; typecheck and production build passed. Tests include save round trips and real river movement. Existing village save untouched.
+- Still pending: passenger vessels, naval combat, animal breeding and larger beasts of burden, plus remaining consolidated backlog below. This batch does not complete the overhaul.
+
 # Hearthwild: canonical future execution handoff
 
 ## Local battlefield surrender — 2026-10-28

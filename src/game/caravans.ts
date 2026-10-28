@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {AGE_STAT,UNITS} from './constants';
+import {connectedForUnit} from './waterTravel';
 import {isDependent} from './settlement';
 
 function atStores(g:Game,u:Unit){
@@ -40,7 +41,7 @@ export function sendTradeEscort(g:Game,carrierId:number){
    !u.escortId&&!u.emergency&&!u.recalled&&!u.visit&&!u.trade&&!u.scout&&!u.expedition&&!u.envoy&&!u.foundingJourney&&
    !u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','hold'].includes(u.order)&&
    !g.state.buildings.some(b=>b.team===0&&b.type==='cornerstone'&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<32)&&
-   g.workBoard.connected(g,u.x,u.z,carrier.x,carrier.z))
+   connectedForUnit(g,u,carrier.x,carrier.z))
    .sort((a,b)=>Math.hypot(a.x-carrier.x,a.z-carrier.z)-Math.hypot(b.x-carrier.x,b.z-carrier.z))[0];
  if(!guard){g.banner('Equip an available adult first. Frontier guards stay at their posts.',4);return false;}
  g.interruptMission(guard);guard.escortId=carrier.id;guard.order='move';guard.stationOnArrival=false;
@@ -49,7 +50,7 @@ export function sendTradeEscort(g:Game,carrierId:number){
 export function escortAI(g:Game,u:Unit,dt:number){
  if(u.escortId===undefined)return false;
  const carrier=g.state.units.find(p=>p.id===u.escortId&&p.hp>0&&p.team===u.team&&tradeJourney(p));
- if(!carrier||u.stuckT>12){
+ if(!carrier||u.stuckT>12||!connectedForUnit(g,u,carrier.x,carrier.z)){
    u.escortId=undefined;u.recalled=true;u.stationOnArrival=true;u.order='return';u.stuckT=0;
    u.workReason=carrier?'Escort route blocked — returning home':'Shipment finished — guard returning home';return true;
  }
@@ -64,7 +65,7 @@ export function escortAI(g:Game,u:Unit,dt:number){
 export function waitForTradeEscort(g:Game,u:Unit){
  if(!tradeJourney(u))return false;
  const waiting=g.state.units.some(p=>p.hp>0&&p.team===u.team&&p.escortId===u.id&&!p.emergency&&
-   Math.hypot(p.x-u.x,p.z-u.z)>10&&Math.hypot(p.x-u.x,p.z-u.z)<100);
+   Math.hypot(p.x-u.x,p.z-u.z)>10&&Math.hypot(p.x-u.x,p.z-u.z)<100&&connectedForUnit(g,p,u.x,u.z));
  if(!waiting)return false;
  u.vx=0;u.vz=0;u.stuckT=0;u.workReason='Waiting for the armed escort to catch up';return true;
 }

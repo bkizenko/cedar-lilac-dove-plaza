@@ -1381,7 +1381,7 @@ export class WorldView {
     for (const u of game.state.units) {
       if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
       if (u.hp<=0 || u.shelterId || (u.team!==0&&!game.visibleAt(u.x,u.z))) continue;
-      const kind=u.haulage==='canoe'?'canoe':u.type==='worker'&&!u.militia?u.haulage:undefined;
+      const kind=u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
       const vehicle=kind&&this.haulageMeshes.get(kind);
       const index=kind?vehicles[kind]:0;
       const mounted=!!vehicle&&index<instCap(vehicle);
