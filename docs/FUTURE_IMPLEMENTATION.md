@@ -1,3 +1,10 @@
+## Lightweight canoe animation — 2026-10-28
+
+- [x] Canoes use a separate shared paddle batch with travelling strokes, a stationary water pose and a stowed land pose. The old static hull paddle was removed.
+- [x] Paddles follow owner visibility, shelter, death and existing bounded transport capacity; no per-person meshes, animation timers or simulation state were added.
+- Validation: 13 equipment-scene tests passed, including time-varying movement and stationary/dead-owner behavior; typecheck/build passed. Browser transport test scene rendered without console errors. Original paused village restored with 5 residents, 96 food, 66 logs and 16 stone at Year 1 Spring 13:19; temporary tab closed.
+- Broader art polish and animated character paddling poses remain incomplete; this is a small rendering improvement, not completion of the graphics overhaul.
+
 ## Rival coastal development — 2026-10-28
 
 - [x] Established, fed rivals survey known reachable shoreline and fund one real dock, retaining materials for a first canoe and a small timber reserve.

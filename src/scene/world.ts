@@ -30,6 +30,7 @@ import {
   skyGeo,
   unitGeo,
   haulageGeo,
+  canoePaddleGeo,
   cargoGeo,
   farmToolHeadGeo,
   fishGeo,
@@ -139,6 +140,7 @@ export class WorldView {
   >();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
+  canoePaddles: THREE.InstancedMesh | null = null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   trailMesh!: THREE.InstancedMesh;
@@ -776,6 +778,10 @@ export class WorldView {
       mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
       this.haulageMeshes.set(kind, mesh); this.scene.add(mesh);
     }
+    this.canoePaddles=new THREE.InstancedMesh(canoePaddleGeo(),this.mats.timber,140);
+    this.canoePaddles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.canoePaddles.count=0;this.canoePaddles.frustumCulled=false;
+    this.scene.add(this.canoePaddles);
     const toolMat = new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.7,metalness:.15});
     this.farmToolMesh = new THREE.InstancedMesh(farmToolHeadGeo(), toolMat, 140);
     this.farmToolMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1376,7 +1382,7 @@ export class WorldView {
 
   private syncCargo(game: Game) {
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
-    const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let workers=0;
+    const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let workers=0,paddles=0;
     const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
     for (const u of game.state.units) {
       if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
@@ -1395,6 +1401,15 @@ export class WorldView {
         _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
         vehicle!.setMatrixAt(index,_haulMatrix);
         vehicles[kind!]++;
+        if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
+          const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
+          const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
+          _p.set(.72,afloat?.85:.5,0);
+          _e.set(afloat?stroke*.65:Math.PI/2,0,afloat?-.25:0);_q.setFromEuler(_e);_s.set(1,1,1);
+          _m.compose(_p,_q,_s).premultiply(_haulMatrix);
+          this.canoePaddles.setMatrixAt(paddles++,_m);
+          _q.setFromEuler(_haulEuler);
+        }
       }
       if(u.carry<=0||!u.carryType)continue;
       const mesh=this.cargoMeshes.get(u.carryType),i=counts[u.carryType];
@@ -1424,6 +1439,7 @@ export class WorldView {
       }
     }
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
+    if(this.canoePaddles){this.canoePaddles.count=paddles;this.canoePaddles.instanceMatrix.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
   }
 
@@ -2282,6 +2298,7 @@ export class WorldView {
     this.bldMeshes.clear();
     this.unitMeshes.clear();
     this.haulageMeshes.clear();
+    this.canoePaddles=null;
     for(const mesh of this.cargoMeshes.values())(mesh.material as THREE.Material).dispose();
     this.cargoMeshes.clear();
     if(this.farmToolMesh){(this.farmToolMesh.material as THREE.Material).dispose();this.farmToolMesh=null;}

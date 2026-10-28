@@ -373,13 +373,18 @@ export function unitGeo(type: UnitType): THREE.BufferGeometry {
   return merge(parts);
 }
 
+/** One shared paddle mesh, animated around its grip rather than per-boat objects. */
+export function canoePaddleGeo(){
+ return merge([box(.065,1.5,.065,0,-1.1,0),box(.26,.5,.09,0,-1.45,0),box(.24,.065,.065,0,.35,0)]);
+}
+
 /** Shared low-poly equipment; local +Z points towards the person pulling it. */
 export function haulageGeo(kind: HaulageKind): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
   if(kind==='canoe')return merge([
     box(1.05,.18,2.6,0,0,0),box(.15,.45,2.7,-.57,.08,0),box(.15,.45,2.7,.57,.08,0),
     box(.85,.35,.45,0,.12,-1.45),box(.85,.35,.45,0,.12,1.45),
-    box(1,.12,.3,0,.3,-.55),box(1,.12,.3,0,.3,.55),box(.07,.07,2.6,.85,.5,0),box(.3,.08,.55,.85,.5,1.1)
+    box(1,.12,.3,0,.3,-.55),box(1,.12,.3,0,.3,.55)
   ]);
   if(kind==='pack')return merge([
     box(.55,.5,1,0,.55,0),box(.28,.45,.3,0,.88,.48),box(.3,.25,.38,0,1.23,.53),

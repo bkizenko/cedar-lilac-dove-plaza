@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import * as THREE from 'three';
-import {cargoGeo, haulageGeo, farmToolHeadGeo, unitGeo, deerGeo} from '../src/scene/meshes.ts';
+import {cargoGeo, canoePaddleGeo, haulageGeo, farmToolHeadGeo, unitGeo, deerGeo} from '../src/scene/meshes.ts';
 
 // Import the scene without constructing a renderer or accessing any browser.
 registerHooks({resolve(specifier, context, next) {
@@ -19,6 +19,7 @@ function fixture(){
   const view=Object.create(WorldView.prototype);
   view.cargoMeshes=new Map(["food","wood","stone","copper","iron"].map(k=>[k,mesh(cargoGeo(k),420)]));
   view.haulageMeshes=new Map(['sled','cart','canoe','pack'].map(k=>[k,mesh(haulageGeo(k))]));
+  view.canoePaddles=mesh(canoePaddleGeo());
   view.farmToolMesh=mesh(farmToolHeadGeo());
   view.unitMeshes=new Map([['worker',mesh(unitGeo('worker'))]]);
   view.rings=mesh(new THREE.PlaneGeometry(),40);view.workRings=mesh(new THREE.PlaneGeometry(),40);
@@ -188,4 +189,15 @@ test('armed traders keep visible pack animals and loads in the existing shared b
  game.state.units[0].hp=0;view.syncCargo(game);
  assert.equal(view.haulageMeshes.get('pack').count,0);
  assert.equal(view.cargoMeshes.get('wood').count,0);
+});
+
+
+test('shared canoe paddles animate only on moving visible boats and disappear with their owners',()=>{
+ const {view,game,person}=fixture();game.height=()=>-1;
+ const u=person(1,{haulage:'canoe',vx:1});game.state.units=[u];
+ view.syncCargo(game);assert.equal(view.canoePaddles.count,1);const first=matrix(view.canoePaddles).toArray();
+ game.state.time+=.4;view.syncCargo(game);assert.notDeepEqual(matrix(view.canoePaddles).toArray(),first);
+ u.vx=0;view.syncCargo(game);const still=matrix(view.canoePaddles).toArray();game.state.time+=1;view.syncCargo(game);assert.deepEqual(matrix(view.canoePaddles).toArray(),still);
+ u.hp=0;view.syncCargo(game);assert.equal(view.canoePaddles.count,0);
+ const geometry=canoePaddleGeo();assert.ok(geometry.getAttribute('position').count<150);geometry.dispose();
 });
