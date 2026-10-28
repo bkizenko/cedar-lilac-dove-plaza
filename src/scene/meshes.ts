@@ -109,14 +109,10 @@ export type BldGeo = { timber: THREE.BufferGeometry; roof: THREE.BufferGeometry;
 function thatchHut(r: number, wallH: number, roofH: number): BldGeo {
   const timber: THREE.BufferGeometry[] = [];
   const roof: THREE.BufferGeometry[] = [];
-  timber.push(cyl(r * 0.9, r, wallH, 0, 0, 0, 12));
-  for (let i = 0; i < 5; i++) {
-    timber.push(cyl(r * 0.97, r * 0.97, 0.16, 0, 0.12 + i * (wallH * 0.16), 0, 12));
-  }
-  timber.push(box(0.78, wallH * 0.82, 0.14, 0, 0.04, r * 0.94));
-  roof.push(cone(r * 1.32, roofH, 0, wallH * 0.78, 0, 12));
-  roof.push(cyl(r * 1.34, r * 1.14, 0.26, 0, wallH * 0.72, 0, 12));
-  roof.push(cyl(0.12, 0.08, 0.55, 0, wallH + roofH * 0.72, 0, 6));
+  timber.push(box(r*1.5,wallH,r*1.5,0,0,0));
+  timber.push(box(.8,wallH*.75,.16,0,.02,r*.76));
+  // Stepped overhanging roof reads clearly from the RTS camera.
+  for(let i=0;i<4;i++)roof.push(box(r*(1.9-i*.38),roofH*.25,r*(1.9-i*.38),0,wallH+i*roofH*.25,0));
   return { timber: merge(timber), roof: merge(roof) };
 }
 
@@ -399,22 +395,10 @@ export function farmToolHeadGeo(): THREE.BufferGeometry {
 }
 
 export function pineGeo() {
-  const trunk = new THREE.CylinderGeometry(0.14, 0.26, 3.1, 7);
-  trunk.translate(0, 1.55, 0);
-  const layers: [number, number, number][] = [
-    [1.7, 2.05, 2.4],
-    [1.38, 1.8, 3.25],
-    [1.08, 1.55, 4.05],
-    [0.78, 1.35, 4.8],
-    [0.5, 1.15, 5.5],
-    [0.28, 0.95, 6.1],
-  ];
-  const cones = layers.map(([r, h, y]) => {
-    const c = new THREE.ConeGeometry(r, h, 8);
-    c.translate(0, y, 0);
-    return c;
-  });
-  return { trunk: merge([trunk]), canopy: merge(cones) };
+  return {trunk:merge([box(.4,3.1,.4,0,0,0)]),canopy:merge([
+    box(2.8,1.3,2.8,0,1.8,0),box(2.15,1.2,2.15,0,3,0),
+    box(1.5,1,1.5,0,4.1,0),box(.8,.8,.8,0,5,0)
+  ])};
 }
 
 export function rockGeo() {
@@ -425,15 +409,7 @@ export function rockGeo() {
 }
 
 export function bushGeo() {
-  const a = new THREE.SphereGeometry(0.55, 7, 6);
-  a.translate(-0.15, 0.4, 0);
-  const b = new THREE.SphereGeometry(0.45, 7, 6);
-  b.translate(0.28, 0.35, 0.1);
-  const c = new THREE.SphereGeometry(0.38, 7, 6);
-  c.translate(0.05, 0.5, -0.2);
-  const berry = new THREE.SphereGeometry(0.08, 5, 4);
-  berry.translate(0.2, 0.62, 0.18);
-  return merge([a, b, c, berry]);
+  return merge([box(.8,.65,.75,-.18,.05,0),box(.65,.85,.65,.25,.05,.05),box(.55,.5,.55,.05,.1,-.4)]);
 }
 
 export function dockPostGeo() {

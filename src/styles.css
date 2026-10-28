@@ -364,3 +364,11 @@ canvas:focus-visible {
  .resource-details{width:min(18rem,90vw);}.objective-strip{display:none;}.quick-actions button{min-height:44px;padding:.3rem;font-size:11px;}
  .hud-build-row>button{min-height:64px;}.build-tabs button{min-height:44px;}.hud-sel{max-height:30dvh;}
 }
+
+/* Ledger hierarchy: calm reading surface, distinct section boundaries. */
+.settlement-ledger{width:min(64rem,calc(100vw - 2rem));border-radius:10px;padding:1.25rem;}
+.settlement-ledger h2{font-family:var(--font-sans);font-weight:600;}
+.settlement-ledger h3{border-bottom:1px solid var(--color-parchment-dim);padding-bottom:.5rem;margin-top:1.25rem;}
+.settlement-ledger details{padding:.65rem 0;border-bottom:1px solid color-mix(in srgb,var(--color-parchment) 16%,transparent);}
+.settlement-ledger summary{cursor:pointer;color:var(--color-bronze-bright);font-weight:500;}
+.settlement-ledger button{border-radius:6px;}

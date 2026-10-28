@@ -1,5 +1,9 @@
 # Hearthwild: canonical future execution handoff
 
+## Block silhouettes and rival cost parity — 2026-10-28
+
+Stepped box geometry now replaces cone foliage, spherical bushes and cylindrical early huts while retaining footprints, shared instances and saved identities. Ledger section hierarchy is clearer. Rival investment eligibility now uses actual buildingCost, including farm seeds and scaled hall costs. Typecheck, build and 23 rival-development tests pass. Interactive visual validation remains outstanding for this increment; no claim of a finished art overhaul or hardware benchmark.
+
 ## Interface, seed economy and safe testing — 2026-10-28
 
 Latest direction: a readable, low-poly/blocky RTS with Polytopia-like decision density. Keep the historical catalogue below as a source of ideas, but do not expose every simulation detail as another mandatory chore. Prioritize a compact core loop: gather, build, explore, trade and defend. Target the older MacBook Air; keep shared/instanced geometry and avoid dense textures, blur-heavy UI or a graphics-engine rewrite.

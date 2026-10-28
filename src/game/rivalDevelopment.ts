@@ -1,3 +1,4 @@
+import {buildingCost} from "./construction";
 import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
@@ -47,7 +48,7 @@ export function rivalDevelopmentPlan(g:Game,team:number){
  * Necessary shelter, food infrastructure and resource access still take precedence. */
 export function rivalCanInvest(g:Game,team:number,type:BldType){
   const t=g.tribe(team),d=BUILDINGS[type],p=rivalDevelopmentPlan(g,team);
-  if(!g.canAfford(team,d))return false;
+  if(!g.canAfford(team,buildingCost(type,g,team)))return false;
   const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!g.finished(b));
   if(pending.length>=2||pending.some(b=>b.type===type))return false;
   if(type==='lumber'||type==='quarry'||type==='cornerstone'||missingAgeBuildings(g,team).includes(type))return true;
