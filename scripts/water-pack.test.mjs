@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {beginHaulageWork,haulageWorkAI,carryingCapacity} from '../src/game/haulage.ts';
+import {beginHaulageWork,resumeHaulageWork,haulageWorkAI,carryingCapacity} from '../src/game/haulage.ts';
 import {beginPackTaming,packTamingAI,releasePackAnimal} from '../src/game/packAnimals.ts';
 import {waterNavigation,connectedForUnit} from '../src/game/waterTravel.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
@@ -66,4 +66,35 @@ test('canoe fishers reach known offshore fish, consume finite stock and haul the
 
 test('a pack goat survives a handler loss exactly once as a wild animal',()=>{
  const {g,u}=fixture();u.haulage='pack';u.hp=0;releasePackAnimal(g,u);assert.equal(u.haulage,undefined);assert.equal(g.state.wildlife.length,1);releasePackAnimal(g,u);assert.equal(g.state.wildlife.length,1);assert.equal(g.state.wildlife[0].x,u.x);
+});
+
+
+test('rival handlers use their own discovery and stores, not the player’s map',()=>{
+ const {g,u}=fixture(),animal=goat(g),hall=g.state.buildings[0];
+ u.team=1;hall.team=1;Object.assign(g.tribe(1),{food:80,wood:20});
+ animal.x=180;g.state.rivalKnowledge=[];g.vision.fill(2);
+ assert.equal(beginPackTaming(g,hall.id,1,u.id),false,'player visibility does not reveal goats to rivals');
+ animal.x=4;g.vision.fill(0);
+ assert.equal(beginPackTaming(g,hall.id,1,u.id),true,'nearby residents can see a goat despite player fog');
+ assert.equal(g.tribe(1).food,70);assert.equal(g.tribe(1).wood,18);assert.equal(g.tribe(0).food,100);
+ work(g,u,100,packTamingAI);assert.equal(u.haulage,'pack');assert.equal(g.state.wildlife.length,0);
+});
+
+test('rival taming cannot replace a direct work order or claim another handler’s animal',()=>{
+ const {g,u}=fixture();goat(g);u.team=1;const hall=g.state.buildings[0];hall.team=1;
+ Object.assign(g.tribe(1),{food:80,wood:20});u.jobLock=true;
+ assert.equal(beginPackTaming(g,hall.id,1,u.id),false);u.jobLock=false;
+ assert.equal(beginPackTaming(g,hall.id,1,u.id),true);
+ const other=g.spawnUnit('worker',0,-32,2),h2=g.makeBld('townhall',-15,-35,2);g.state.buildings.push(h2);
+ Object.assign(g.tribe(2),{food:80,wood:20});assert.equal(beginPackTaming(g,h2.id,2,other.id),false);
+});
+
+
+test('a blocked boat maker leaves work without losing paid progress or retrying indefinitely',()=>{
+ const {g,u}=fixture();const dock=g.makeBld('dock',0,-24,0);g.state.buildings=[dock];g.rebuildWalk();
+ assert.equal(beginHaulageWork(g,'canoe',0,dock.id),true);u.haulageWork.progress=12;u.stuckT=12;
+ haulageWorkAI(g,u,.1);assert.equal(u.order,'idle');assert.equal(u.haulageWork.paused,true);
+ assert.equal(resumeHaulageWork(g,u),false);assert.equal(u.haulageWork.progress,12);
+ u.stuckT=0;assert.equal(resumeHaulageWork(g,u),true);assert.equal(g.tribe(0).wood,80);
+ work(g,u,130,haulageWorkAI);assert.equal(u.haulage,'canoe');
 });

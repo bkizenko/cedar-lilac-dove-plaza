@@ -1272,7 +1272,10 @@ export class WorldView {
   private villageStyle(game:Game,team:number) {
     const tribe=game.tribe(team),age=tribe?.age||0,key=`${game.state.seed}/${team}/${age}`;
     const cached=this.villageStyles.get(key);if(cached)return cached;
-    const style=architectureStyle(game.state.seed,team,age);
+    const home=game.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0);
+    let habitat:'plains'|'forest'|'hills'='plains',distance=Infinity;
+    if(home)for(const biome of game.world?.biomes||[]){const d=(biome.x-home.x)**2+(biome.z-home.z)**2;if(d<distance){distance=d;habitat=biome.kind;}}
+    const style=architectureStyle(game.state.seed,team,age,habitat);
     this.villageStyles.set(key,style);return style;
   }
 

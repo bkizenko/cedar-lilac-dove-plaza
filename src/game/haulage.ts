@@ -98,7 +98,7 @@ export function pauseHaulageWork(u: HaulageUnit) {
 /** A paid project may move to a replacement reachable workplace; it never repays costs. */
 export function resumeHaulageWork(g: Game, u: HaulageUnit, workplaceId?: number) {
   const job = u.haulageWork;
-  if (!job || !available(g, u)) return false;
+  if (!job || !available(g, u) || u.stuckT > 8) return false;
   const b = nearestWorkplace(g, u, workplaces(g, u.team, job.kind, workplaceId));
   if (!b) return false;
   // Keep completed fraction when moving between open hearth and sheltered work.
@@ -121,6 +121,12 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
   if (!b || !spot) {
     job.paused = true; u.order = 'idle';
     u.workReason = 'Transport work paused — choose a reachable replacement workplace';
+    g.workBoard.reset();
+    return true;
+  }
+  if (u.stuckT > 8) {
+    job.paused = true; u.order = 'idle'; u.node = null;
+    u.workReason = 'Transport work paused — cannot reach the crafting bench';
     g.workBoard.reset();
     return true;
   }

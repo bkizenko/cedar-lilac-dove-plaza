@@ -8,12 +8,13 @@ Latest delivery (2026-10-14): direct construction overrides, quarry staffing/sto
 
 - [x] ~~Single-person dugouts: dock crafting, real water travel, cargo, portage and saved voyages.~~ Includes recall, known offshore fishing and canoe-equipped exploration. Passenger fleets and naval combat remain open.
 - [x] ~~Pack goats: discovered animals, paid taming labor, carrying bonus, winter feed and release after handler death.~~ Includes interruption/save protection. Breeding, individual animal health and larger draft species remain open.
+- [x] ~~Rivals tame known pack goats using their own supplies and one available handler.~~ They cannot use player exploration to locate animals.
 - [x] ~~Visible shared boat/pannier models and a disposable transport preview.~~ No new heavyweight art assets.
 
 ## Verified additions — 2026-10-28
 
 - [x] ~~Physical delivery of fixed log tribute and puppet dues~~: existing adults carry actual stock; arrival pays debt, loss does not, and journeys persist across saves. Custom tribute demands and escort negotiations remain open.
-- [x] ~~Rival use of existing farming tools and sled/cart crafting~~: actual labor and materials, one crafter at a time, food and age reserves protected. Full rival parity, pack animals and boats remain open.
+- [x] ~~Rival use of existing farming tools and sled/cart crafting~~: actual labor and materials, one crafter at a time, food and age reserves protected. Full rival parity remains open; the later transport batch adds single-person canoes and pack-goat taming.
 - [x] ~~Different visible shapes for carried timber, food and stone/ore~~: shared instanced geometry retains fog and cargo ownership. Specific food varieties and the wider visual overhaul remain open.
 
 ## 1. Landscapes and natural constraints

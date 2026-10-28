@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Rival pack transport and regional materials — 2026-10-28
+
+- [x] ~~Rivals tame discovered pack animals.~~ Prosperous villages can assign one available adult to a known, reachable living goat, using their own food and timber. Player map visibility does not reveal goats to rivals. The same physical approach, paid taming, exclusive claim and animal transfer apply to every village. Direct assignments and the one-equipment-worker limit remain protected.
+- [x] ~~Bound blocked transport crafting.~~ A maker stalled on the way to a bench pauses the paid project and returns to ordinary labor. Automatic resumption refuses a still-stuck maker; after movement recovers, the original paid progress can resume without another charge.
+- [x] ~~Regional building materials.~~ Woodland, upland and grassland settlements use distinct timber/stone/earth wall palettes through all six ages while retaining their village roof identity. Cached per-village styles reuse the existing instanced geometry; no additional texture maps or per-building draw calls.
+
+The isolated three-year economy observation (seed 345, worldgen 2) grew the two rivals to 26 and 23 people with 1,183 and 1,066 food respectively, without simulation exceptions. Neither reached the required 50-person Bronze threshold. The observation exposed a stalled cart maker, motivating the bounded-crafting fix above; it also observed a blocked scouting return and another idle resident. Full route recovery and multi-seed later-age parity are **still open**. Do not call this full rival balance validation. No existing player village was loaded, reset or changed by the isolated simulation. Validation: 687 simulation/tooling tests, 32 app/auth tests and the final focused 43 checks passed; typecheck and build passed. Browser smoke checking on stable port 8086 retained the original paused 5-person village and its 96 food/66 logs/16 stone, with no console errors.
+
 ## Dugout canoes and pack goats — 2026-10-28
 
 - [x] ~~Build usable civilian boats.~~ A completed dock provides one crafting bench. An available empty-handed adult pays 20 logs/2 stone and physically carves a dugout over 75 work seconds. The canoe belongs to that person; it is portaged on land at 80% walking speed and paddled on water at 165%, carrying twice the normal load. Ordinary destination orders, cross-water store approaches, recall, exploration and known offshore fishing use it. Buildings still need dry foundations, and foot travelers still cannot cross water without a bridge. Saved mid-water position, cargo and orders persist.

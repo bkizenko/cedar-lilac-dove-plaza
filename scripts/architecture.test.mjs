@@ -32,3 +32,12 @@ test('building materials allow era colors through and rebuilt scenes own disposa
  for(const m of view.bldMeshes.values()){m.timber.geometry.dispose();m.roof.geometry.dispose();m.extra?.geometry.dispose();m.timber.material.dispose();m.roof.material.dispose();}
  view.eraDetails.geometry.dispose();view.eraDetails.material.dispose();for(const material of Object.values(view.mats))material.dispose();
 });
+
+
+test('local timber, earth and stone palettes distinguish habitats through every age',()=>{
+ for(let age=0;age<6;age++){
+  const styles=['plains','forest','hills'].map(h=>architectureStyle(345,1,age,h));
+  assert.equal(new Set(styles.map(s=>s.timber)).size,3);
+  assert.equal(new Set(styles.map(s=>s.roof)).size,1,'local materials retain the village roof identity');
+ }
+});

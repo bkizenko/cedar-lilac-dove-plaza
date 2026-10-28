@@ -312,3 +312,13 @@ test('rivals make sleds but do not invent wheel experience or spend protected re
  const advancing=fixture();baseEconomy(advancing);Object.assign(advancing.tribe(1),{wood:AGE_COST[1].wood,stone:AGE_COST[1].stone});
  assert.equal(developRivalEquipment(advancing,1),false);
 });
+
+test('prosperous rivals assign one real handler to a known goat before manufacturing hauling gear',()=>{
+ const g=fixture();g.state.wildlife=[{id:g.id(),species:'goat',x:8,y:4,z:50,facing:0,vx:0,vz:0,wanderT:0,hp:24,maxHp:24,fly:0,scale:1}];
+ const wood=g.tribe(1).wood,food=g.tribe(1).food;
+ assert.equal(developRivalEquipment(g,1),true);
+ assert.equal(g.state.units.filter(u=>u.tamingWork).length,1);
+ assert.equal(g.tribe(1).wood,wood-2);assert.equal(g.tribe(1).food,food-10);
+ assert.equal(developRivalEquipment(g,1),false,'one equipment worker at a time protects the economy');
+ assert.equal(g.state.wildlife.length,1,'ordering taming does not instantly create transport');
+});

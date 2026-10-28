@@ -1,6 +1,6 @@
 /** Era materials with a stable local palette. These change presentation only:
  * building identity, footprint, storage, pathfinding and saved progress stay put. */
-export function architectureStyle(seed:number,team:number,age:number){
+export function architectureStyle(seed:number,team:number,age:number,habitat:'plains'|'forest'|'hills'='plains'){
   const era=Math.max(0,Math.min(5,Math.floor(age)));
   const variant=(Math.abs(Math.imul(seed^team,2654435761))>>>0)%4;
   const roofs=[
@@ -13,6 +13,8 @@ export function architectureStyle(seed:number,team:number,age:number){
   ];
   const walls=['#dfc599','#ead3ad','#aa9e86','#ddd3bc','#c5b594','#e2dbc8'];
   const trim=['#907354','#b49b75','#777e77','#cbc2ad','#64523c','#9b9c93'];
-  return {roof:roofs[era][variant],timber:walls[era],roofHeight:[1,1.035,1.075,1.10,1.17,1.21][era],
+  // Local construction materials remain readable at RTS distance without textures.
+  const localWalls={plains:walls,forest:['#c5aa80','#d1b58a','#a3947d','#c8b99b','#baa988','#d5c7aa'],hills:['#c9c1aa','#d7cbb5','#a9aaa0','#d1d1c3','#b7b5a3','#dcdad0']};
+  return {roof:roofs[era][variant],timber:localWalls[habitat][era],roofHeight:[1,1.035,1.075,1.10,1.17,1.21][era],
     trim:trim[era],era,variant};
 }

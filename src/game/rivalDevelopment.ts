@@ -1,3 +1,4 @@
+import {beginPackTaming} from './packAnimals';
 import {HAULAGE,beginHaulageWork,resumeHaulageWork} from "./haulage";
 import {FARM_TOOLS,beginFarmToolWork,resumeFarmToolWork} from "./farmTools";
 import {buildingCost} from "./construction";
@@ -175,7 +176,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
 export function developRivalEquipment(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia);
- if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused))return false;
+ if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused))return false;
  const eligible=adults.filter(u=>!u.jobLock&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){
@@ -194,6 +195,12 @@ export function developRivalEquipment(g:Game,team:number){
   for(const u of farmers)if(beginFarmToolWork(g,kind,team,undefined,u.id))return true;
  }
  const transportTarget=Math.max(1,Math.floor(adults.length/4));
+ // A discovered goat is a real alternative to manufactured hauling equipment.
+ // Keep the same treasury reserve and only one resident away from production.
+ if(adults.filter(u=>!!u.haulage).length<transportTarget&&affordable({wood:2,stone:0})){
+  const hearth=g.state.buildings.find(b=>b.team===team&&g.finished(b)&&['townhall','workshop'].includes(b.type));
+  if(hearth)for(const u of eligible)if(beginPackTaming(g,hearth.id,team,u.id))return true;
+ }
  for(const kind of ['canoe','cart','sled'] as const){
   if(!affordable(HAULAGE[kind])||adults.filter(u=>kind==='canoe'?u.haulage==='canoe':kind==='cart'?u.haulage==='cart':!!u.haulage).length>=(kind==='canoe'?1:transportTarget))continue;
   const haulers=[...eligible].sort((a,b)=>Number(b.job==='wood'||b.job==='stone')-Number(a.job==='wood'||a.job==='stone'));
