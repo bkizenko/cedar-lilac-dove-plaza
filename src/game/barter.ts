@@ -36,6 +36,8 @@ export function automaticTradeReady(g: Game, foodCost = 0) {
 
 /** Only a person at the meeting can reveal current terms. */
 export function recordTradeMeeting(g: Game, team: number, trader: Unit) {
+  const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&g.finished(b));
+  if(!isRivalTeam(team)||!g.tribe(team)?.alive||g.tribe(team).hostile||trader.team!==0||trader.hp<=0||!hall||!g.buildingWorkReached(trader,hall))return undefined;
   const goods: ResKind[] = ["food", "wood", "stone", "copper", "iron"];
   const offers: TradeDeal[] = [];
   for (const give of goods) for (const get of goods) {
@@ -43,7 +45,19 @@ export function recordTradeMeeting(g: Game, team: number, trader: Unit) {
     const quote = quoteShipment(g, team, give, get, 20, trader);
     if (quote.deal) offers.push(quote.deal);
   }
-  const report = { team, time: g.state.time, offers };
+  const local=g.state.units.filter(u=>u.team===team&&u.hp>0&&Math.hypot(u.x-hall.x,u.z-hall.z)<60).length;
+  const uncertainty=Math.max(2,Math.ceil(local*Math.max(.15,.65-(predisposition(trader).trading-.8))));
+  const stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>={};
+  const tribe=g.tribe(team);
+  // Stocks are volunteered by trusted partners, never counted through walls.
+  if(tribe.ally||(tribe.trust||0)>=.5)for(const kind of goods){
+    if(kind==='copper'&&tribe.age<1||kind==='iron'&&tribe.age<2)continue;
+    const reserve=Math.max(10,protectedReserve(g,team,kind));
+    stocks[kind]=tribe[kind]<reserve?'scarce':tribe[kind]>reserve*3?'plentiful':'adequate';
+  }
+  const observation={populationLow:Math.max(0,local-uncertainty),populationHigh:local+uncertainty,
+    buildings:g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&Math.hypot(b.x-hall.x,b.z-hall.z)<60).length,stocks};
+  const report = { team, time: g.state.time, offers, observation };
   g.state.tradeReports = (g.state.tradeReports || []).filter(r => r.team !== team);
   g.state.tradeReports.push(report);
   return report;

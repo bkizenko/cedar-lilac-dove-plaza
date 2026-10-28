@@ -347,6 +347,10 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>
+            {s.tradeReports?.filter(r=>r.team===n.id&&r.observation).map(r=><div key={r.team} className="ledger-report">
+              <p>Trader report · {Math.floor((s.time-r.time)/60)} minutes ago. Estimated {r.observation!.populationLow}–{r.observation!.populationHigh} people near this settlement; {r.observation!.buildings} completed buildings observed. Distant towns and travelers are not counted.</p>
+              <p>{Object.keys(r.observation!.stocks).length?`They reported: ${Object.entries(r.observation!.stocks).map(([kind,level])=>`${kind==='wood'?'logs':kind} ${level}`).join(' · ')}.`:'They kept their supply levels private. Trade offers are the available evidence.'} Send another trader to refresh this account.</p>
+            </div>)}
             {n.peaceTerm && <p>Treaty: {PEACE_TERMS[n.peaceTerm]}.</p>}
             {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} delivered; {n.tribute.owed} owed (including shipments on the road). {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
             {n.peaceTerm==='puppet' && <button onClick={()=>{releasePuppet(g,n.id);engine.pushHud();}}>Grant independence</button>}

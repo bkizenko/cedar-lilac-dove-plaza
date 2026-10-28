@@ -202,6 +202,11 @@ export function decodeGame(raw: unknown): Game {
     const teams=new Set();for(const r of s.tradeReports){
       if(!obj(r)||!rivalTeam(r.team)||teams.has(r.team)||!num(r.time)||r.time<0||r.time>s.time)fail();
       teams.add(r.team);validateOffers(r.offers);
+      if(r.observation!==undefined){
+        const o=r.observation;
+        if(!obj(o)||!Number.isSafeInteger(o.populationLow)||o.populationLow<0||!Number.isSafeInteger(o.populationHigh)||o.populationHigh<o.populationLow||o.populationHigh>100000||!Number.isSafeInteger(o.buildings)||o.buildings<0||o.buildings>100000||!obj(o.stocks))fail();
+        for(const [kind,level] of Object.entries(o.stocks))if(!["food","wood","stone","copper","iron"].includes(kind)||!["scarce","adequate","plentiful"].includes(level as string))fail();
+      }
     }
   }
   if (s.growthPolicy !== undefined && !["stable", "welcome", "eager"].includes(s.growthPolicy)) fail();

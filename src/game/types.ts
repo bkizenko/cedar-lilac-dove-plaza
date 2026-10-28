@@ -373,7 +373,7 @@ export type GameState = {
   nightWork?: boolean;
   visitorTimer?: number;
   worldgenVersion?: number;
-  tradeReports?: {team:number; time:number; offers:TradeDeal[]}[];
+  tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome" | "eager";

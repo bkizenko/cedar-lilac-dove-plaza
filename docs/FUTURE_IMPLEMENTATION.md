@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Dated trader intelligence — 2026-10-28
+
+- [x] ~~Trader estimates of a visited settlement.~~ Trade meetings record a bounded estimate of local residents, completed nearby buildings, and the time observed. Trading aptitude narrows the population estimate. Distant towns and traveling residents outside the visited area are excluded; the report never silently follows live population or stores.
+- [x] ~~Private versus volunteered reserves.~~ Allies or sufficiently trusting partners share coarse scarce/adequate/plentiful supply conditions. Other communities keep their reserves private; offers remain the available evidence. Exact hidden inventory totals are never published, and unadopted metals are omitted.
+- [x] ~~Physical reporting and persistent history.~~ A living player trader must actually reach the foreign hall before recording terms or observations. A new meeting replaces that community's dated report. Neighbor relations displays its age and scope. Optional save fields preserve old reports and reject malformed estimates/stock categories.
+
+Validation: all 20 trader-intelligence, trade-planning and trade-reservation checks passed; typecheck and production build passed. The existing delegation test physically walks to the meeting before observing a report. This implements local commercial intelligence, not espionage, intentional misinformation, complete diplomacy or whole-empire population knowledge. Existing saved villages need no reset.
+
 ## Visible and perishable raid supplies — 2026-10-28
 
 - [x] ~~Show actual ruin supplies.~~ Destroyed buildings with remaining loot display shared log bundles, food sacks and stone/ore piles. Amount affects pile size; empty goods disappear. Only currently visible ruins reveal supplies, so unexplored or merely remembered ground does not expose current inventories. Existing cargo instance pools are reused, with carried resident loads taking priority and fixed capacity retained.
