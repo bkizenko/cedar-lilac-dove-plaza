@@ -50,7 +50,7 @@ export function tickScouts(g: Game, dt: number) {
       g.state.units.some((u) => u.team === t.id && u.hp > 0 && u.scout)
     )
       continue;
-    const u = g.state.units.find(
+    const candidates = g.state.units.filter(
       (u) =>
         u.team === t.id &&
         u.type === "worker" &&
@@ -58,14 +58,19 @@ export function tickScouts(g: Game, dt: number) {
         !isDependent(g, u) &&
         !u.emergency &&
         !u.recalled && !u.envoy && u.drill == null && u.buildOrder === undefined &&
-        !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
+        !u.jobLock && !u.tamingWork && !u.tributeJourney && !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
         !u.foundingJourney &&
         u.carry === 0 &&
         ["idle", "gather"].includes(u.order),
     );
-    if (!u) continue;
-    const target = nextTarget(g, u);
-    if (!target) continue;
+    // A blocked pedestrian must not prevent a canoe owner or another resident
+    // from surveying a reachable frontier. Do not expose unknown resources.
+    let u:Unit|undefined,target:{x:number;z:number}|null=null;
+    for(const candidate of candidates){
+      target=nextTarget(g,candidate);
+      if(target){u=candidate;break;}
+    }
+    if (!u||!target) continue;
     u.scout = { legs: 0, returning: false };
     u.node = null;
     u.target = null;

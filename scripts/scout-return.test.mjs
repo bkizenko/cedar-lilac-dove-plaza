@@ -23,3 +23,17 @@ test('automatic rival scouting leaves recalled residents, envoys and trainees on
  for(let i=0;i<5;i++){const p=g.spawnUnit('worker',10+i,45,1);p.order='gather';p.drill=g.state.buildings[0].id;}
  g.tribe(1).food=5000;g.state.scoutTimer=0;tickScouts(g,1);assert.equal(g.state.units.some(p=>p.scout),false);
 });
+
+test('rival exploration can select a canoe owner after pedestrians exhaust their reachable land',()=>{
+ const {g,u}=setup();u.scout=undefined;u.order='idle';g.state.buildings=[];
+ g.height=(x,z)=>z<0?g.world.waterY-2:4;g.rebuildWalk();
+ for(let i=0;i<5;i++)g.spawnUnit('worker',30+i,40,1);
+ const sailor=g.state.units.at(-1);sailor.haulage='canoe';
+ // Mark the connected southern land as explored, leaving land beyond a water channel.
+ g.height=(x,z)=>Math.abs(z)<12?g.world.waterY-2:Math.abs(z)<24?g.world.waterY+(Math.abs(z)-12)/3:4;g.rebuildWalk();
+ g.state.rivalKnowledge=[{team:1,cells:Array.from({length:512},(_,i)=>512+i)}];
+ g.tribe(1).food=5000;g.state.scoutTimer=0;tickScouts(g,1);
+ assert.equal(u.scout,undefined);assert.ok(sailor.scout);assert.ok(sailor.tz< -12);
+ for(let i=0;i<1600&&sailor.z>=-12;i++){g.navBudget=10;g.state.time+=.1;scoutAI(g,sailor,.1);}
+ assert.ok(sailor.z< -12,'scout physically crosses to the far bank');
+});

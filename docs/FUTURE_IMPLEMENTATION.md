@@ -1,3 +1,10 @@
+## Rival frontier access — 2026-10-28
+
+- [x] Rival scout dispatch examines eligible residents until it finds a reachable unexplored frontier; an exhausted pedestrian route no longer blocks a canoe owner from surveying another shore.
+- [x] Scouts leave explicit job locks, paid animal taming and tribute journeys intact.
+- Validation: 19 scout/journey tests passed, including a canoe scout physically crossing a river after the pedestrian’s known land is exhausted. Typecheck and production build passed.
+- Further diagnosis of the isolated three-year audit: the stalled second rival knows only one remaining tree (12 timber), and has no active scout. Labor reassignment alone did not restore growth. Coastal infrastructure planning and congested resource access still need investigation; this change alone does not resolve that observed settlement.
+
 ## Rival labor bottleneck audit — 2026-10-28
 
 - [x] Rival labor reviews now release a bounded number of empty-handed surplus-material workers when another age material is scarce. Direct orders, taming, tribute, carried goods and important missions remain protected.
