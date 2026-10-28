@@ -282,3 +282,14 @@ test('hostile rivals dispatch trained working militia and their actual raid orde
  for(let i=0;i<120;i++){g.state.time+=.1;g.navBudget=4;assert.equal(emergencyResponse(g,raider,.1),false);g.workerAI(raider,.1);}
  assert.ok(Math.hypot(raider.x-target.x,raider.z-target.z)<distance-10,'the real worker/combat pipeline advances the raider');
 });
+
+
+test('resource development checks residents rather than an occupied camp center',()=>{
+ const g=fixture(),home=g.campOf(1);
+ for(let i=0;i<6;i++)g.state.trees.push(tree(g,112+i%3*3,38+Math.floor(i/3)*4));
+ const scout=g.state.units[0];scout.x=105;scout.z=38;scoutKnowledge(g,scout);scout.x=5;scout.z=46;
+ const connected=g.workBoard.connected.bind(g.workBoard);
+ g.workBoard.connected=(game,x,z,tx,tz)=>Math.hypot(x-home.x,z-home.z)<1?false:connected(game,x,z,tx,tz);
+ assert.equal(developRivalResources(g,1),true);
+ assert.ok(g.state.buildings.some(b=>b.type==='lumber'&&b.build===0));
+});

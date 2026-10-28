@@ -1,5 +1,11 @@
 # Hearthwild: canonical future execution handoff
 
+## Building detail and reachable rival resources — 2026-10-28
+
+Completed: shared hut/hall doorways, windows and steps; warehouse storage props; fishing dock plank seams and drying racks. Details are merged into existing instanced geometry, without individual prop objects. Storage props are decorative, not an inventory visualization. Rival resource development now tests connectivity from up to three actual nearby adult residents instead of the occupied camp center.
+
+Validation: typecheck and production build passed; 24 rival-development tests passed, including blocked-camp-center regression. Published to stable port 8086. Browser inspection confirmed new hut details and stepped silhouettes, saved paused village unchanged (5 residents, 96 food, 66 logs, 16 stone), and no console errors. Dock/warehouse detail has not yet received a dedicated close-up browser check; no old-MacBook performance benchmark claimed. Remaining broader gameplay and art backlog below is still open.
+
 ## Block silhouettes and rival cost parity — 2026-10-28
 
 Stepped box geometry now replaces cone foliage, spherical bushes and cylindrical early huts while retaining footprints, shared instances and saved identities. Ledger section hierarchy is clearer. Rival investment eligibility now uses actual buildingCost, including farm seeds and scaled hall costs. Typecheck, build and 23 rival-development tests pass. Interactive visual validation remains outstanding for this increment; no claim of a finished art overhaul or hardware benchmark.

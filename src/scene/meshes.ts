@@ -113,7 +113,12 @@ function thatchHut(r: number, wallH: number, roofH: number): BldGeo {
   timber.push(box(.8,wallH*.75,.16,0,.02,r*.76));
   // Stepped overhanging roof reads clearly from the RTS camera.
   for(let i=0;i<4;i++)roof.push(box(r*(1.9-i*.38),roofH*.25,r*(1.9-i*.38),0,wallH+i*roofH*.25,0));
-  return { timber: merge(timber), roof: merge(roof) };
+  return { timber: merge(timber), roof: merge(roof), extra:merge([
+    box(.72,wallH*.72,.18,0,.04,r*.77),
+    box(.55,.5,.16,-r*.43,wallH*.48,r*.77),
+    box(.16,.5,.55,r*.77,wallH*.48,0),
+    box(1.2,.16,.65,0,0,r*.77)
+  ]),extraMat:'dark' };
 }
 
 function hall(w: number, d: number, h: number, roofH: number, chimney = false): BldGeo {
@@ -130,7 +135,12 @@ function hall(w: number, d: number, h: number, roofH: number, chimney = false): 
   ridge.translate(0, h + roofH * 0.58, 0);
   roof.push(ridge);
   if (chimney) timber.push(box(0.7, h + roofH + 0.4, 0.7, w * 0.28, 0, -d * 0.2));
-  return { timber: merge(timber), roof: merge(roof) };
+  return { timber: merge(timber), roof: merge(roof),extra:merge([
+    box(w*.18,h*.74,.14,0,.02,d*.51),
+    box(.7,.65,.14,-w*.3,h*.48,d*.51),box(.7,.65,.14,w*.3,h*.48,d*.51),
+    box(.14,.65,.7,w*.51,h*.48,0),box(.14,.65,.7,-w*.51,h*.48,0),
+    box(w*.32,.16,.65,0,0,d*.5),box(w*.95,.12,.12,0,h*.9,d*.51)
+  ]),extraMat:'dark' };
 }
 
 export function buildingGeos(): Record<BldType, BldGeo> {
@@ -171,6 +181,10 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     box(0.22, 1.1, 0.22, 2.4, 0, -0.85),
     box(1.6, 1.2, 1.8, -2.6, 0, -0.1),
   ];
+  // Drying rack and planked deck: merged once, no extra scene objects per dock.
+  for(let i=0;i<9;i++)dockT.push(box(.06,.035,2.1,-2.4+i*.6,.78,0));
+  dockT.push(box(.12,1.7,.12,1,.75,-.8),box(.12,1.7,.12,2.3,.75,-.8),box(1.45,.12,.12,1.65,2.35,-.8));
+  for(let i=0;i<4;i++)dockT.push(box(.09,.8,.07,1.1+i*.35,1.55,-.8));
   const dockR = [box(2.2, 0.16, 2.4, -2.6, 1.2, 0, 0.2), box(0.12, 1.4, 0.12, -2.6, 1.2, 0)];
   const quarryT = [box(1.6, 0.7, 1.2, -1.6, 0, 1.2), box(1.2, 0.9, 1.4, 1.5, 0, -0.8), box(0.9, 0.5, 1.1, 0.4, 0, 1.5)];
   const quarryE: THREE.BufferGeometry[] = [new THREE.CylinderGeometry(2.4, 1.6, 0.8, 8), box(1.8, 0.6, 1.2, 1.6, 0, 1.1)];
@@ -246,7 +260,11 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     dock: { timber: merge(dockT), roof: merge(dockR) },
     bridge: {timber:merge([box(5.2,.25,12,0,-.25,0),box(.2,.9,12,-2.5,0,0),box(.2,.9,12,2.5,0,0)]),roof:merge([box(.1,.1,.1,0,0,0)])},
     quarry: { timber: merge(quarryT), roof: merge([box(0.1, 0.1, 0.1, 0, 0, 0)]), extra: merge(quarryE), extraMat: "stone" },
-    warehouse: { timber: merge(wareT), roof: merge(wareR) },
+    warehouse: { timber: merge(wareT), roof: merge(wareR), extra:merge([
+      box(1.2,1.5,.12,0,.02,2.34),box(.7,.55,.12,-1.8,.9,2.34),
+      box(.8,.65,.8,-1.8,0,2),box(.65,.5,.65,-1.8,.65,2),
+      box(.8,.7,.8,1.8,0,2),box(.8,.1,.9,1.8,.35,2)
+    ]),extraMat:'dark' },
     barracks: { timber: merge(barT), roof: merge(barR) },
     forge: { timber: merge(forgeT), roof: merge(forgeR) },
     watchtower: { timber: merge(towerT), roof: merge([box(0.1, 0.1, 0.1, 0, 0, 0)]) },
