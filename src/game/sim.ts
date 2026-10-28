@@ -839,7 +839,7 @@ export class Game {
     }
   }
 
-  private solidBuilding(b: Building) {
+  solidBuilding(b: Building) {
     return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["trench", "moat", "farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
