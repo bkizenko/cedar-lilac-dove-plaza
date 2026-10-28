@@ -85,3 +85,19 @@ test('moving captive escorts guard only their charge and emancipation ends the a
  assert.ok(captiveGuardCoverage(g).has(u.id));assert.equal(captiveGuardCoverage(g).has(other.id),false);
  freePeople(g,1);escortAI(g,guard,.1);assert.equal(guard.escortId,undefined);assert.equal(guard.recalled,true);
 });
+
+test('repatriation returns the same person and belongings, and grants goodwill only after physical arrival',async()=>{
+ const {repatriateCaptive,finishRepatriation}=await import('../src/game/captivity.ts');const {g,u}=fixture();
+ u.carry=8;u.carryType='wood';const stock=g.tribe(1).wood,trust=g.tribe(1).trust||0,id=u.id,x=u.x;
+ assert.equal(repatriateCaptive(g,id),true);assert.equal(u.team,1);assert.equal(u.x,x);assert.equal(u.carry,8);assert.equal(g.tribe(1).wood,stock);
+ finishRepatriation(g,u);assert.equal(g.tribe(1).trust||0,trust);
+ const restored=decodeGame(encodeGame(g));assert.equal(restored.state.units.find(p=>p.id===id).repatriating,true);
+ for(let i=0;i<1600&&u.recalled;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
+ assert.equal(u.repatriating,undefined);assert.equal(g.tribe(1).wood,stock+8);assert.equal(g.tribe(1).trust,Math.min(1,trust+.15));
+ finishRepatriation(g,u);assert.equal(g.tribe(1).trust,Math.min(1,trust+.15));
+});
+test('a fallen or inaccessible homeland cannot remotely release a captive or grant goodwill',async()=>{
+ const {repatriateCaptive}=await import('../src/game/captivity.ts');const {g,u}=fixture();g.interactionSpot=()=>null;
+ assert.equal(repatriateCaptive(g,u.id),false);assert.equal(u.team,0);assert.equal(u.enslavedFrom,1);
+ const raw=encodeGame(g);raw.state.units[0].repatriating=true;assert.throws(()=>decodeGame(raw));
+});

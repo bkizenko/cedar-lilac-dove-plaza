@@ -1,3 +1,11 @@
+## Physical captive repatriation — 2026-10-28
+
+- [x] Captivity panel offers Send home separately from emancipation into the player village. A living captive needs an existing reachable homeland; no remote or free population duplication occurs.
+- [x] Released people carry their actual belongings home through the recall movement system. Goodwill is granted once on arrival at a real home store; war remains until a peace agreement.
+- [x] Return journeys survive saves; invalid repatriation flags are rejected, and interrupted missions cancel the pending goodwill.
+- Validation: 23 captivity/peace tests passed, including physical return, cargo conservation, save round trips, unreachable homeland and no distant/duplicate goodwill. Typecheck and production build passed. Broader regression suite started before this feature and is still being checked; no all-suite success claimed here.
+- Organized revolts, professional soldier capture and negotiated ransom remain open.
+
 ## Lightweight canoe animation — 2026-10-28
 
 - [x] Canoes use a separate shared paddle batch with travelling strokes, a stationary water pose and a stowed land pose. The old static hull paddle was removed.

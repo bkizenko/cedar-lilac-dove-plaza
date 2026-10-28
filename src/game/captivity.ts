@@ -66,3 +66,23 @@ export function tryCivilianSurrender(g:Game,u:Unit,attackerTeam:number,damage:nu
  g.workBoard.reset();g.banner('A surrounded adult surrendered. They walk to your settlement; keep guards nearby or free them in Village.',6);
  return true;
 }
+
+
+/** Release one existing person to walk home; no payment or diplomatic benefit at distance. */
+export function repatriateCaptive(g:Game,id:number){
+ const u=g.state.units.find(p=>p.id===id&&p.team===0&&p.hp>0&&p.enslavedFrom!==undefined);
+ if(!u)return false;
+ const origin=u.enslavedFrom!;
+ const home=g.state.buildings.find(b=>b.team===origin&&b.type==='townhall'&&g.finished(b)&&g.interactionSpot(u,b));
+ if(!g.tribe(origin)?.alive||!home){g.banner('No reachable home settlement. You can still free this person to join your village.',5);return false;}
+ g.interruptMission(u);u.team=origin;u.enslavedFrom=undefined;u.captivityUnrest=undefined;u.repatriating=true;
+ u.selected=false;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.attackDestination=null;
+ u.recalled=true;u.stationOnArrival=false;u.order='return';u.workReason='Released from captivity — walking home';
+ g.workBoard.reset();g.banner('Released to return home with their belongings. Goodwill follows their safe arrival.',5);return true;
+}
+export function finishRepatriation(g:Game,u:Unit){
+ if(!u.repatriating||u.hp<=0||!isRivalTeam(u.team)||!g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&['townhall','warehouse'].includes(b.type)&&g.buildingWorkReached(u,b)))return;
+ u.repatriating=undefined;
+ const t=g.tribe(u.team);t.trust=Math.min(1,(t.trust||0)+.15);
+ g.banner(`${t.name} welcomes a person you released. Relations improve; existing wars still need a peace agreement.`,6);
+}

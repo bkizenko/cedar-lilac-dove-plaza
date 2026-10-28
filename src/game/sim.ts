@@ -1,4 +1,4 @@
-import {tickCaptivity,tryCivilianSurrender} from './captivity';
+import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
@@ -1561,6 +1561,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    u.repatriating=undefined;
     u.tributeJourney=undefined;u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
@@ -4124,6 +4125,7 @@ export class Game {
       if(!this.buildingWorkReached(u,home)){this.steer(u,dt);return;}
       if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
+      finishRepatriation(this,u);
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
       return;
     }

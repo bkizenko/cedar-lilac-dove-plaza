@@ -156,6 +156,7 @@ export type Unit = {
   returnAfterCombat?: boolean;
   massRaidTarget?: number;
   enslavedFrom?: number;
+  repatriating?: boolean;
   captivityUnrest?: number;
   tributeJourney?: {phase:"pickup"|"deliver"|"return"; amount:number};
   envoy?: {team:number; kind:"peace"|"trade"|"gift"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};

@@ -1,5 +1,5 @@
 import {sendCaptiveEscort} from '@/game/caravans';
-import {captiveGuardCoverage,captivityDescription} from '@/game/captivity';
+import {captiveGuardCoverage,captivityDescription,repatriateCaptive} from '@/game/captivity';
 import {buildingCost} from "@/game/construction";
 import {PEACE_TERMS,peaceTerms,peaceDescription,peaceIssue,rejectPeace,releasePuppet,freePeople} from '@/game/peace';
 import {fieldProductionSummary} from "@/game/productionReport";
@@ -301,7 +301,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           completed this spring.
         </p>
       </details>
-      {people.some(u=>u.enslavedFrom!==undefined)&&<section><h3>Captivity and guards</h3><p>Assign an escort to accompany a returning captive, or station armed adults near captive workers. Each idle or holding guard watches up to three people within 18 meters; a travelling escort watches their assigned person. Hunger and forced work build resistance; at 100% they may escape with carried goods. You can free them here at any time.</p><ul>{people.filter(u=>u.enslavedFrom!==undefined).map(u=><li key={u.id}>{personName(u)} · {captivityDescription(u,guards.has(u.id))}{u.recalled&&<button onClick={()=>{sendCaptiveEscort(g,u.id);engine.pushHud();}}>Assign escort</button>}</li>)}</ul>{[...new Set(people.filter(u=>u.enslavedFrom!==undefined).map(u=>u.enslavedFrom!))].map(team=><button key={team} onClick={()=>{freePeople(g,team);engine.pushHud();}}>Free captives from {g.tribe(team)?.name||"the former settlement"}</button>)}</section>}
+      {people.some(u=>u.enslavedFrom!==undefined)&&<section><h3>Captivity and guards</h3><p>Assign an escort to accompany a returning captive, or station armed adults near captive workers. Each idle or holding guard watches up to three people within 18 meters; a travelling escort watches their assigned person. Hunger and forced work build resistance; at 100% they may escape with carried goods. You can free them here at any time.</p><ul>{people.filter(u=>u.enslavedFrom!==undefined).map(u=><li key={u.id}>{personName(u)} · {captivityDescription(u,guards.has(u.id))}{u.recalled&&<button onClick={()=>{sendCaptiveEscort(g,u.id);engine.pushHud();}}>Assign escort</button>}<button onClick={()=>{repatriateCaptive(g,u.id);engine.pushHud();}}>Send home</button></li>)}</ul>{[...new Set(people.filter(u=>u.enslavedFrom!==undefined).map(u=>u.enslavedFrom!))].map(team=><button key={team} onClick={()=>{freePeople(g,team);engine.pushHud();}}>Free captives from {g.tribe(team)?.name||"the former settlement"}</button>)}</section>}
       <h3>People and work</h3>
       <ul>
         {people.map((u) => (
