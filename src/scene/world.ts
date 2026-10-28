@@ -1398,6 +1398,11 @@ export class WorldView {
         const afloat=kind==='canoe'&&game.height(x,z)<game.world.waterY+.3;
         _p.set(x,kind==='canoe'?(afloat?game.world.waterY-.12:u.y+1.8):game.travelHeight(x,z)+.04,z);
         _haulEuler.set(kind==='canoe'?0:THREE.MathUtils.clamp(pitch,-.45,.45),u.facing,kind==='canoe'?0:THREE.MathUtils.clamp(roll,-.4,.4));
+        // Subtle loaded-animal gait shares the existing instance; no extra meshes.
+        if(kind==='pack'&&Math.hypot(u.vx,u.vz)>.1){
+          const gait=Math.sin(u.stride*2+u.id*.7);
+          _p.y+=Math.abs(gait)*.055;_haulEuler.z+=gait*.025;
+        }
         _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
         vehicle!.setMatrixAt(index,_haulMatrix);
         vehicles[kind!]++;

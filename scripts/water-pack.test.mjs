@@ -114,3 +114,16 @@ test('a boat trader never waits for a stranded land escort; boat guards can cros
  assert.ok(guard.z>24);assert.equal(waitForTradeEscort(g,u),false);
  assert.equal(u.carry,10);
 });
+
+
+test('repeated taming orders cannot replace a paid project when more goats are available',()=>{
+ const {g,u}=fixture(),animal=goat(g),hall=g.state.buildings[0];
+ g.state.wildlife.push({...animal,id:g.id(),x:6});
+ assert.equal(beginPackTaming(g,hall.id,0,u.id),true);
+ u.tamingWork.progress=12;const original={...u.tamingWork},food=g.tribe(0).food,wood=g.tribe(0).wood;
+ assert.equal(beginPackTaming(g,hall.id,0,u.id),false);
+ assert.deepEqual(u.tamingWork,original);assert.equal(g.tribe(0).food,food);assert.equal(g.tribe(0).wood,wood);
+ const other=g.spawnUnit('worker',-2,-32,0);
+ assert.equal(beginPackTaming(g,hall.id,0,other.id),true);
+ assert.notEqual(other.tamingWork.animal,u.tamingWork.animal);
+});

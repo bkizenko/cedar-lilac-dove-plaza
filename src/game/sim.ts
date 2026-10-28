@@ -1,3 +1,4 @@
+import {localEscapeStep} from './localEscape';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
@@ -3917,6 +3918,7 @@ export class Game {
         if(!clear)continue;
         escape={x,z};break search;
       }
+      if(!escape)escape=localEscapeStep(this,u);
       if(escape){
         const dx=escape.x-u.x,dz=escape.z-u.z,distance=Math.hypot(dx,dz);
         const step=Math.min(distance,this.travelSpeed(u)*dt);

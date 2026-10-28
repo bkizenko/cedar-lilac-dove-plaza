@@ -201,3 +201,15 @@ test('shared canoe paddles animate only on moving visible boats and disappear wi
  u.hp=0;view.syncCargo(game);assert.equal(view.canoePaddles.count,0);
  const geometry=canoePaddleGeo();assert.ok(geometry.getAttribute('position').count<150);geometry.dispose();
 });
+
+
+test('pack animal gait carries its load with it and stops when the handler stops',()=>{
+ const {view,game,person}=fixture();const u=person(1,{haulage:'pack',carry:10,carryType:'wood',vx:1});game.state.units=[u];
+ view.syncCargo(game);const first=matrix(view.haulageMeshes.get('pack')).toArray(),load=matrix(view.cargoMeshes.get('wood')).toArray();
+ u.stride+=.4;view.syncCargo(game);
+ assert.notDeepEqual(matrix(view.haulageMeshes.get('pack')).toArray(),first);
+ assert.notDeepEqual(matrix(view.cargoMeshes.get('wood')).toArray(),load);
+ u.vx=0;view.syncCargo(game);const still=matrix(view.haulageMeshes.get('pack')).toArray();
+ u.stride+=1;view.syncCargo(game);assert.deepEqual(matrix(view.haulageMeshes.get('pack')).toArray(),still);
+ assert.equal(view.haulageMeshes.get('pack').count,1);
+});

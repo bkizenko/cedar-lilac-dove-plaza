@@ -10,6 +10,7 @@ export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
   .sort((a,b)=>Number(b.selected)-Number(a.selected));
  for(const u of people){
   if(u.tamingWork?.paused){u.tamingWork.paused=false;u.order='hold';return true;}
+  if(u.tamingWork)continue; // Keep the animal, feed and progress already reserved by this handler.
   const animal=g.state.wildlife.filter(c=>c.species==='goat'&&c.hp>0&&(team===0?g.visibleAt(c.x,c.z):rivalKnows(g,team,c.x,c.z))&&Math.hypot(c.x-home.x,c.z-home.z)<220&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===c.id)&&g.workBoard.connected(g,u.x,u.z,c.x,c.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!animal)continue;

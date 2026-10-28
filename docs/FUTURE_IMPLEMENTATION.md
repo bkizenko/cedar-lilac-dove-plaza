@@ -1,3 +1,13 @@
+## Crowded-settlement recovery and pack transport polish — 2026-10-28
+
+- [x] Blocked residents can search a bounded local route around a corner when a straight escape fails. Every step uses physical collision checks; no teleportation, wall crossing or save migration.
+- [x] Failed local searches are cached briefly; routes invalidate when navigation changes.
+- [x] Pack goats and their visible loads share a subtle movement-driven gait using existing instanced geometry; resting animals remain still.
+- [x] Repeated taming orders preserve an active handler’s animal, paid feed and progress; other available handlers can still tame distinct goats.
+- Validation: 48 movement, transport, equipment-scene and save recovery tests passed; typecheck/build passed. The additional 14 water/pack regression tests also passed after the taming repair, followed by a fresh typecheck and production build.
+- Evidence: isolated saved-simulation replay recovered both chronically trapped residents (512 and 545) onto walkable ground with stuck counters cleared. User browser saves were not touched.
+- Three-year coastal audit completed without simulation errors, but still showed timber shortages, stalled rival barter and no age advancement. These remain open; survival alone is not completion.
+
 ## Embedded-resource and labor regression repair — 2026-10-28
 
 - [x] Diagnosed audit seed 345’s remaining tree at (-216.49, -128.70): it occupied the rival barracks footprint. Coarse connectivity accepted it while all nearby working positions were blocked.
