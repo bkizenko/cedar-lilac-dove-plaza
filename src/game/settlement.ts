@@ -1,5 +1,5 @@
 import {constructionDemand} from "./construction";
-import {rivalWorkRange,rivalMaterialPriority} from "./rivalDevelopment";
+import {rivalWorkRange,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
 import {huntable} from "./hunting";
 import {farmToolRate} from "./farmTools";
 import {carryingCapacity} from "./haulage";
@@ -304,9 +304,9 @@ export class WorkBoard {
       if (u.team === 0 && !("type" in task.node) &&
           ("species" in task.node&&task.node.hp>0 ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
       const preparingField =
-        "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
-      const harvestingField = "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
-      const preserving = "type" in task.node && task.node.type === "warehouse";
+        task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
+      const harvestingField = task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
+      const preserving = task.kind==='food' && "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
       if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodWorkTarget(g,u.team))
         continue;
@@ -318,7 +318,7 @@ export class WorkBoard {
       if ("amount" in task.node && task.node.amount <= 0) continue;
       if (task.kind === "build" && g.finished(task.node as Building)) continue;
       if (
-        "type" in task.node &&
+        task.kind==='food' && "type" in task.node &&
         task.node.type === "farm" &&
         !farmAvailable(g, task.node as Building)
       )
@@ -330,8 +330,8 @@ export class WorkBoard {
           !rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) continue;
       const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
       const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
-      const rivalOutpostWork = u.team!==0 && ((['wood','stone'].includes(task.kind)&&rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) ||
-        (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<175));
+      const rivalOutpostWork = u.team!==0 && ((['wood','stone','copper','iron'].includes(task.kind)&&rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) ||
+        (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<RIVAL_RESOURCE_RANGE));
       const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
       if ((distance > 100 && !settlementWork) || !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin)) continue;

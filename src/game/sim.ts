@@ -8,10 +8,12 @@ import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
 import {raiseAttackAlarm} from "./defense";
+import {standDownMilitia,demobilizationAI} from './demobilization';
+import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
-import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
+import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -31,7 +33,8 @@ import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
-import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding } from "./raiders";
+import {settlePeace, tickPeace} from './peace';
+import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
@@ -95,6 +98,7 @@ import type {
   UnitType,
   Weather,
   SeasonMix,
+  PeaceTerm,
 } from "./types";
 import { generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
 
@@ -1215,29 +1219,7 @@ export class Game {
   }
 
   standDown(team = 0) {
-    const t = this.tribe(team);
-    if (!t) return;
-    let n = 0;
-    for (const u of this.state.units) {
-      if (u.team !== team || !u.militia || u.hp <= 0) continue;
-      if(u.carry>0 || !this.state.buildings.some(b=>b.team===team&&this.finished(b)&&["townhall","warehouse","barracks"].includes(b.type)&&Math.hypot(u.x-b.x,u.z-b.z)<20))continue;
-      if (u.type === "swordsman") t.blades = (t.blades || 0) + 1;
-      else if (u.type === "archer") t.bows = (t.bows || 0) + 1;
-      else t.spears = (t.spears || 0) + 1;
-      const d = UNITS.worker;
-      u.type = "worker";
-      u.militia = false;
-      u.caravanArmed=undefined;u.escortId=undefined;
-      u.huntOnly=false;u.jobLock=false;u.job=null;
-      u.range = d.range;
-      u.dmg = d.dmg;
-      u.rof = d.rof;
-      u.order = "idle";
-      u.target = null; u.pillage=-1; u.emergency=undefined; u.node=null;
-      n++;
-    }
-    if(team===0&&!n)this.banner("Return militia and their cargo to the village before standing down",3);
-    if (team === 0 && n) this.banner(n + " return to work — weapons stay in the armory", 1.7);
+    if(this.tribe(team))standDownMilitia(this,team);
   }
 
   findPlaceSpot(type: BldType, x: number, z: number, team = 0) {
@@ -1264,9 +1246,12 @@ export class Game {
     if(type==="farm"&&cultivationIssue(this,team)){
       if(team===0)this.banner(cultivationIssue(this,team)!,5);return false;
     }
-    const same = this.state.buildings.filter((b) => b.type === type && b.hp > 0).length;
-    if (same >= 56) {
-      if (team === 0) this.banner("The island can't hold more of those", 1.6);
+    const same = this.state.buildings.filter((b) => b.team===team && b.type === type && b.hp > 0).length;
+    // Other societies must not consume this village's construction allowance.
+    // Larger populations need more fields and stores as soil yields decline.
+    const limit=['farm','warehouse'].includes(type)?Math.max(56,Math.min(256,Math.ceil(this.popNow(team)*1.5))):56;
+    if (same >= limit) {
+      if (team === 0) this.banner("This community has reached its limit for that building", 1.6);
       return false;
     }
     if (tribe.age < d.age) {
@@ -1569,7 +1554,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
-    u.buildOrder=undefined;u.escortId=undefined;
+    u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
@@ -1710,7 +1695,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    for (const u of mil) u.pillage = target.team;
+    for (const u of mil) {u.pillage = target.team;u.returnAfterCombat=true;}
     const name = this.tribe(target.team)?.name || "the camp";
     this.banner(mil.length + " villagers raid " + name + " — move or stop to withdraw", 2.2);
     this.onSfx("pillage");
@@ -1794,6 +1779,9 @@ export class Game {
     rival.lastRaid = 600;
     for (const u of this.state.units) {
       if (u.team !== team && u.team !== 0) continue;
+      if(u.massRaidTarget!==undefined&&this.state.buildings.some(b=>b.id===u.massRaidTarget&&b.team===team)){
+        u.massRaidTarget=undefined;u.returnAfterCombat=true;
+      }
       if (u.emergency) u.emergency.until = this.state.time;
       if (u.type === "worker" && !u.target && u.pillage < 0) continue;
       u.target = null;
@@ -1894,7 +1882,11 @@ export class Game {
     const landing=findRaiderLanding(this);
     if(!landing){this.state.raidT=60;return;}
     this.state.raidWave += 1;
-    const strength=seaRaidStrength(this.popNow(0),age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous");
+    const readiness=raidReadiness(this);
+    const strength=seaRaidStrength(readiness.adults,age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous",readiness.cap,this.state.raidCampaign?.loss||0);
+    this.state.raidCampaign={active:true,adults:readiness.adults,buildings:readiness.buildings,loss:0,
+      people:this.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(this,u)).map(u=>u.id),
+      sites:this.state.buildings.filter(b=>b.team===0&&this.finished(b)).map(b=>b.id)};
     const n=strength.count,frail=strength.condition,label=strength.label;
     const {x:sx,z:sz}=landing;
     this.tribe(3).food+=16*n;
@@ -1928,6 +1920,7 @@ export class Game {
   }
 
   tickRaiders(dt: number) {
+    finishSeaRaid(this);
     if(!canScheduleSeaRaid(this))return;
     this.state.raidT -= dt;
     if (this.state.raidT > 0) return;
@@ -2194,6 +2187,7 @@ export class Game {
     if (!hall0) return;
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
+      if (!tr.hostile && (tr.peaceTerm==='puppet' || (tr.recoveryUntil||0)>this.state.time)) continue;
       const hall = this.state.buildings.find(
         (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
       );
@@ -3119,7 +3113,7 @@ export class Game {
     if (this.seaT > 0) return;
     this.seaT = ((this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240)/(1+foodAttention(this)*.65);
     if (this.state.time < 600) return;
-    const dead = this.state.tribes.find((t) => isRivalTeam(t.id) && !t.alive);
+    const dead = this.state.tribes.find((t) => isRivalTeam(t.id) && !t.alive && t.peaceTerm!=='annexation');
     if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
       this.landSeaTribe(dead.id);
       return;
@@ -4084,17 +4078,27 @@ export class Game {
     }
   }
 
-  sendDelegation(team:number,kind:"trade"|"peace"|"gift") {return sendDelegation(this,team,kind);}
+  proposePeace(team:number, term:PeaceTerm="whitePeace") {
+    const rival=this.tribe(team);
+    if(!rival||team===0||team===3||!rival.alive||!rival.hostile) return false;
+    return this.sendDelegation(team,"peace",undefined,term);
+  }
+
+  resolvePeaceTerm(team:number, term:PeaceTerm) {
+    return settlePeace(this,team,term);
+  }
+
+  sendDelegation(team:number,kind:"trade"|"peace"|"gift",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
     if(u.recalled) {
-      const homes=this.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&this.finished(b))
-        .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+      const homes=this.state.buildings.filter(b=>b.team===u.team&&['townhall','warehouse'].includes(b.type)&&this.finished(b))
+        .sort((a,b)=>Number(a.type!=='townhall')-Number(b.type!=='townhall')||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
       let home:Building|undefined,spot:{x:number;z:number}|null=null;
       for(const h of homes){const p=this.interactionSpot(u,h);if(p){home=h;spot=p;break;}}
-      if(!home||!spot){u.workReason="Recall: no reachable hearth — a crossing or clear route is needed";return;}
+      if(!home||!spot){u.workReason="Recall: no reachable hearth or store — a crossing or clear route is needed";return;}
       u.tx=spot.x;u.tz=spot.z;
       if(!this.buildingWorkReached(u,home)){this.steer(u,dt);return;}
       if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
@@ -4844,7 +4848,7 @@ export class Game {
     }
     const spot=this.state.buildings.find(b=>b.team===u.team&&b.type==="barracks"&&this.finished(b));
     const entrance=spot&&this.interactionSpot(u,spot);
-    if(!spot||!entrance){u.workReason="Practice needs a completed, reachable barracks";return;}
+    if(!spot||!entrance){u.drill=undefined;u.order='idle';u.jobLock=false;u.workCheckAt=0;u.workReason="Practice cancelled — returning to work until a barracks is reachable";return;}
     if(!this.buildingWorkReached(u,spot)){u.tx=entrance.x;u.tz=entrance.z;this.steer(u,dt);u.workReason="Walking to practice";return;}
     u.drill=(u.drill||0)+dt;u.stride+=dt*6;tr.food=Math.max(0,tr.food-.03*dt);
     u.workReason="Combat practice · "+Math.min(100,Math.floor(100*u.drill/36))+"%";
@@ -4944,7 +4948,7 @@ export class Game {
         }
       }
     }
-    const maxR = type === "farm" ? 44 : 28;
+    const maxR = isRivalTeam(team) ? 68 : type === "farm" ? 44 : 28;
     for (let r = 6; r < maxR; r += 2) {
       for (let i = 0; i < 12; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -4996,8 +5000,8 @@ export class Game {
     const growing = fortune > 2.1;
     const shrinking = fortune < 0.95;
     const reserve = reserveSeconds(this, team);
-    const plannedStorage=this.stockCap(team)+this.state.buildings.filter(b=>b.team===team&&b.type==="warehouse"&&b.hp>0&&!this.finished(b)).length*160;
-    const needsStorage=plannedStorage<foodDemand(this,team)*1800+100;
+    const plannedStorage=this.stockCap(team)+this.state.buildings.filter(b=>b.team===team&&b.type==="warehouse"&&b.hp>0&&!this.finished(b)).length*200;
+    const needsStorage=plannedStorage<rivalStorageTarget(this,team);
 
     // A shortage changes actual labor before optional investment or travel.
     if (reserve < 240) {
@@ -5026,12 +5030,15 @@ export class Game {
       }
     }
 
-    if (tr.age>=1 && !needsStorage && growing && reserveSeconds(this, team) > 1400 && Math.random() < 0.4) {
+    const practiceHall=this.state.buildings.find(b=>b.team===team&&b.type==='barracks'&&this.finished(b));
+    const practicing=this.state.units.filter(u=>u.team===team&&u.hp>0&&u.drill!=null).length;
+    if (tr.age>=1 && practiceHall && practicing<Math.max(1,Math.min(2,Math.floor(pop/12))) && !needsStorage && growing && reserveSeconds(this, team) > 1400 && Math.random() < 0.4) {
       const adult = this.state.units.find(
         (u) =>
           u.team === team &&
           u.hp > 0 &&
           u.type === "worker" &&
+          ['idle','hold'].includes(u.order) && !!this.interactionSpot(u,practiceHall) &&
           u.drill == null && !u.scout && !u.visit && !u.foundingJourney && !u.expedition && !u.envoy && !u.emergency && !u.haulageWork && !u.farmToolWork && !u.weaponWork && u.carry===0 &&
           !isDependent(this, u),
       );
@@ -5387,7 +5394,7 @@ export class Game {
     if (team === 0 && hasTradition(this, "winter-stores")) cap += 80;
     for (const b of this.state.buildings) {
       if (b.team !== team || !this.finished(b)) continue;
-      if (b.type === "warehouse") cap += 160;
+      if (b.type === "warehouse") cap += 200;
       else if (b.type === "townhall") cap += 80;
       else if (b.type === "hut") cap += 18;
     }
@@ -5462,6 +5469,8 @@ export class Game {
           u.vz = 0;
           try {
             if (emergencyResponse(this, u, sdt)) continue;
+            if (massRaidAI(this,u,sdt)) continue;
+            if (demobilizationAI(this,u,sdt)) continue;
             recoverCaravanEquipment(this,u);
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if(escortAI(this,u,sdt))continue;
@@ -5515,6 +5524,7 @@ export class Game {
         this.tickPeople(sdt);
         this.updateVision(sdt);
         tickEncounters(this);
+        if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 

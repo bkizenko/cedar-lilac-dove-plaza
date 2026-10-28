@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {AGE_COST} from '../src/game/constants.ts';
 import {foodDemand} from '../src/game/settlement.ts';
-import {rivalCanInvest,rivalDevelopmentPlan,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources} from '../src/game/rivalDevelopment.ts';
+import {rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources} from '../src/game/rivalDevelopment.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {scoutKnowledge} from '../src/game/scouting.ts';
 
@@ -19,6 +19,86 @@ function fixture(){
 function tree(g,x,z){return {id:g.id(),kind:'tree',x,y:4,z,amount:30,maxAmt:30,regenT:0,scale:1,rich:1};}
 function baseEconomy(g){for(let i=0;i<5;i++)g.state.buildings.push(g.makeBld('farm',-25+i*11,70,1));g.state.buildings.push(g.makeBld('warehouse',-20,38,1));g.rebuildWalk();}
 
+test('an exhausted village can cut discovered forests beyond the old 175m limit and physically bring timber home',()=>{
+ const g=fixture(),u=g.state.units[0],n=tree(g,230,38);g.state.trees=[n];g.tribe(1).wood=0;
+ assert.equal(rivalWorkRange(g,1,n.x,n.z,'wood'),false,'unexplored forest stays unknown');
+ const scout=g.state.units[1];scout.x=230;scout.z=38;scoutKnowledge(g,scout);scout.x=5;scout.z=46;
+ u.job='wood';u.jobLock=true;u.order='idle';g.workBoard.assign(g,u);assert.equal(u.node,n);
+ assert.equal(g.tribe(1).wood,0,'assignment does not create timber');
+ let load=0;
+ for(let i=0;i<5000&&g.tribe(1).wood===0;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);load=Math.max(load,u.carry);}
+ assert.ok(g.tribe(1).wood>0);assert.ok(n.amount<30);assert.equal(g.tribe(1).wood,load,'only the physically carried load reaches stores');
+});
+
+test('known remote ore becomes an ordinary reachable job after the required age',()=>{
+ const g=fixture(),u=g.state.units[0],n={...tree(g,230,38),kind:'copper'};g.state.copper=[n];
+ const scout=g.state.units[1];scout.x=230;scout.z=38;scoutKnowledge(g,scout);scout.x=5;scout.z=46;
+ u.job='copper';u.jobLock=true;u.order='idle';g.workBoard.assign(g,u);assert.notEqual(u.node,n);
+ g.tribe(1).age=1;g.state.time+=2;g.workBoard.reset();g.workBoard.assign(g,u);assert.equal(u.node,n);
+});
+
+test('a qualifying Bronze village can physically mine remote copper and then advance to Iron',()=>{
+ const g=fixture(),u=g.state.units[0];g.tribe(1).age=1;
+ while(g.popNow(1)<75)g.spawnUnit('worker',5,50,1);
+ for(const [type,x,z] of [['warehouse',-20,38],['workshop',-20,60],['forge',-40,60],['hut',-40,38]])g.state.buildings.push(g.makeBld(type,x,z,1));
+ Object.assign(g.tribe(1),{food:3000,wood:120,stone:60,copper:0});
+ const n={...tree(g,230,38),kind:'copper',amount:40,maxAmt:40};g.state.copper=[n];
+ const scout=g.state.units[1];scout.x=230;scout.z=38;scoutKnowledge(g,scout);scout.x=5;scout.z=46;g.rebuildWalk();
+ assert.match(g.ageUpIssue(1),/copper/i);u.job='copper';u.jobLock=true;u.order='idle';
+ for(let i=0;i<9000&&g.tribe(1).copper<20;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
+ assert.ok(g.tribe(1).copper>=20);assert.ok(n.amount<40);assert.equal(g.ageUpIssue(1),null);
+ g.tryAgeUp(1);assert.equal(g.tribe(1).age,2);assert.equal(g.tribe(1).wood,120);
+ assert.equal(decodeGame(encodeGame(g)).tribe(1).age,2);
+});
+
+test('rivals may fund full-year storage before preserving an age surplus',()=>{
+ const g=fixture();baseEconomy(g);g.tribe(1).wood=60;
+ while(g.stockCap(1)<foodDemand(g,1,0)*900+80)g.state.buildings.push(g.makeBld('warehouse',-20,55,1));
+ assert.ok(g.stockCap(1)<rivalStorageTarget(g,1));assert.equal(rivalCanInvest(g,1,'warehouse'),true);
+});
+
+test('idle workers resume unfinished stores and winter farms without requiring their finished production',()=>{
+ for(const type of ['warehouse','farm']){
+  const g=fixture(),u=g.state.units[0];g.state.time=1500;g.tribe(1).wood=0;
+  const b=g.makeBld(type,22,38,1);b.build=.4;g.state.buildings.push(b);g.rebuildWalk();
+  u.order='idle';u.job=null;u.jobLock=false;g.workBoard.assign(g,u);
+  assert.equal(u.node,b,`${type} construction must not use food-production eligibility`);
+  for(let i=0;i<2000&&b.build<1;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
+  assert.equal(b.build,1,'a resident must physically finish the already paid building');
+  assert.equal(g.tribe(1).wood,0,'resuming a paid site neither charges twice nor creates timber');
+ }
+});
+
+test('another civilization cannot exhaust this village’s farm allowance',()=>{
+ const g=fixture();for(let i=0;i<56;i++)g.state.buildings.push(g.makeBld('farm',300+i%8*10,300+Math.floor(i/8)*10,2));
+ const wood=g.tribe(1).wood;const b=g.placeBuilding('farm',24,38,1);
+ assert.ok(b);assert.equal(g.state.buildings.at(-1).build,0);assert.equal(g.tribe(1).wood,wood-20);
+});
+
+test('a larger community may fund the additional fields its residents require',()=>{
+ const g=fixture();while(g.popNow(1)<50)g.spawnUnit('worker',5,50,1);
+ for(let i=0;i<56;i++)g.state.buildings.push(g.makeBld('farm',300+i%8*10,300+Math.floor(i/8)*10,1));
+ const wood=g.tribe(1).wood;assert.ok(g.placeBuilding('farm',24,38,1));assert.equal(g.tribe(1).wood,wood-20);
+});
+
+test('a missing or unreachable practice ground cannot hold an adult out of production forever',()=>{
+ for(const blocked of [false,true]){
+  const g=fixture(),u=g.state.units[0];g.tribe(1).age=1;u.drill=0;
+  if(blocked){g.state.buildings.push(g.makeBld('barracks',25,38,1));g.interactionSpot=()=>null;}
+  g.drillAI(u,1);assert.equal(u.drill,undefined);assert.equal(u.order,'idle');
+  assert.match(u.workReason,/returning to work/);
+ }
+});
+
+test('a loaded recalled worker can unload at a reachable store when the hall approach is blocked',()=>{
+ const g=fixture(),u=g.state.units[0];g.state.buildings.push(g.makeBld('warehouse',25,38,1));g.rebuildWalk();
+ const approach=g.interactionSpot.bind(g);g.interactionSpot=(person,b)=>b.type==='townhall'?null:approach(person,b);
+ Object.assign(u,{x:60,z:38,carry:24,carryType:'wood',recalled:true,stationOnArrival:false,order:'return'});
+ const wood=g.tribe(1).wood;
+ for(let i=0;i<2000&&u.recalled;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
+ assert.equal(u.recalled,undefined);assert.equal(u.order,'idle');assert.equal(u.carry,0);assert.equal(g.tribe(1).wood,wood+24);
+});
+
 test('successful rivals reserve advancement materials instead of endlessly adding optional fields and stores',()=>{
  const g=fixture();baseEconomy(g);const cost=AGE_COST[1];
  while(g.popNow(1)<cost.pop)g.spawnUnit('worker',5,50,1);
@@ -30,7 +110,7 @@ test('successful rivals reserve advancement materials instead of endlessly addin
  assert.equal(rivalCanInvest(g,1,'cairn'),false);
  assert.equal(rivalCanInvest(g,1,'warehouse'),true,'second protective store remains essential');
  // Fifty residents need more stores than the old sixteen-person age fixture.
- while(g.stockCap(1)<Math.max(foodDemand(g,1,0)*900+80,cost.food+40))g.state.buildings.push(g.makeBld('warehouse',-20,55,1));
+ while(g.stockCap(1)<Math.max(rivalStorageTarget(g,1),cost.food+40))g.state.buildings.push(g.makeBld('warehouse',-20,55,1));
  assert.equal(rivalCanInvest(g,1,'warehouse'),false);
  g.tribe(1).wood=cost.wood+30;assert.equal(rivalCanInvest(g,1,'farm'),true,'surplus beyond the reserve can be spent');
  const before=g.tribe(1).age;g.tryAgeUp(1);

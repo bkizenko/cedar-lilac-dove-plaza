@@ -56,10 +56,11 @@ export function tickScouts(g: Game, dt: number) {
         u.hp > 0 &&
         !isDependent(g, u) &&
         !u.emergency &&
+        !u.recalled && !u.envoy && u.drill == null && u.buildOrder === undefined &&
         !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
         !u.foundingJourney &&
         u.carry === 0 &&
-        ["idle", "gather", "hold"].includes(u.order),
+        ["idle", "gather"].includes(u.order),
     );
     if (!u) continue;
     const target = nextTarget(g, u);
@@ -85,13 +86,20 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
   }
   if (u.stuckT > 8 || m.legs >= 5 || reserveSeconds(g,u.team)<180) m.returning = true;
   if (m.returning) {
-    const h = g.campOf(u.team);
-    u.tx = h.x;
-    u.tz = h.z;
+    const homes=g.state.buildings.filter(b=>b.team===u.team&&b.type==='townhall'&&g.finished(b))
+      .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+    const destination=homes.map(h=>({h,spot:g.interactionSpot(u,h)})).find(p=>p.spot);
+    if(!destination){
+      u.scout=undefined;u.recalled=true;u.stationOnArrival=false;u.order='return';
+      u.workReason='Scouting return needs a reachable hearth or crossing';return true;
+    }
+    u.tx = destination.spot!.x;
+    u.tz = destination.spot!.z;
     u.workReason = "Bringing scouting knowledge home";
-    if (Math.hypot(u.x - h.x, u.z - h.z) < 10) {
+    if (g.buildingWorkReached(u,destination.h)) {
       u.scout = undefined;
-      u.order = "idle";
+      u.order = "idle";u.node=null;u.stuckT=0;
+      u.workReason='Home from scouting — joining village work';
       return true;
     }
   } else u.workReason = "Exploring beyond their village";

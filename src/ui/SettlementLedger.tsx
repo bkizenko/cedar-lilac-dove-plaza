@@ -1,4 +1,5 @@
 import {buildingCost} from "@/game/construction";
+import {PEACE_TERMS,peaceTerms,peaceDescription,peaceIssue,rejectPeace,releasePuppet,freePeople} from '@/game/peace';
 import {fieldProductionSummary} from "@/game/productionReport";
 import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
@@ -52,6 +53,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const stores = storehouses(g, 0);
   const dependents = people.filter((u) => isDependent(g, u)).length;
   const foodWorkers = people.filter((u) => u.job === "food" && u.order === "gather").length;
+  const militia=people.filter(u=>u.militia),standingDown=militia.filter(u=>u.demobilizing).length;
   const projects=s.buildings.filter(b=>b.team===0&&b.hp>0&&!g.finished(b));
   const knownCrops = t.cultivated || [];
   const trial = t.cropTrial;
@@ -80,6 +82,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <div className="ledger-grid">
         <section>
           <h3>Food security</h3>
+          {militia.length>0&&<div role="status">
+            <p>{militia.length} armed civilians are on military duty or hunting instead of ordinary food work. {standingDown>0&&`${standingDown} are returning to stand down.`}</p>
+            <button className="my-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left" onClick={()=>engine.standDown()}>Return militia to food and work</button>
+            <p>They return home, unload supplies and put weapons away before resuming village priorities. Close the ledger to let them travel.</p>
+          </div>}
           <strong>
             {Math.floor(t.food)} food · {g.stockCap(0)} sheltered capacity
           </strong>
@@ -114,7 +121,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
           <p>Food work continues when stores fill; extra supplies are kept outdoors.</p>
-          {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 160 more food</button>}
+          {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 200 more food</button>}
           {farms.length>0&&<details><summary>Field output & seasonal work</summary>
             {farms.map((b,i)=><p key={b.id}>Field {i+1}: {fieldProductionSummary(g,b)}.</p>)}
             <p>Estimates exclude walking, rest and later weather changes. Tools reduce work time; they do not create extra harvest. Food enters stores only when carried home.</p>
@@ -336,20 +343,32 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <h3>Neighbor relations</h3>
       {!s.tribes.some(n=>n.id>0&&n.id!==3&&n.alive&&knownSettlement(g,n.id)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
       {s.tribes
-        .filter((n) => n.id > 0 && n.id !== 3 && n.alive && knownSettlement(g,n.id))
+        .filter((n) => n.id > 0 && n.id !== 3 && (n.peaceTerm==='annexation' || (n.alive && knownSettlement(g,n.id))))
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>
+            {n.peaceTerm && <p>Treaty: {PEACE_TERMS[n.peaceTerm]}.</p>}
+            {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} paid; {n.tribute.owed} owed. {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
+            {n.peaceTerm==='puppet' && <button onClick={()=>{releasePuppet(g,n.id);engine.pushHud();}}>Grant independence</button>}
+            {s.units.some(u=>u.team===0&&u.enslavedFrom===n.id) && <button onClick={()=>{freePeople(g,n.id);engine.pushHud();}}>Free enslaved adults from {n.name}</button>}
+            {n.hostile && n.peaceOffer && n.peaceOffer.expires>s.time && <div role="status">
+              <p>{n.name} sues for peace: {PEACE_TERMS[n.peaceOffer.term]}. Expires in {Math.ceil(n.peaceOffer.expires-s.time)} seconds.</p>
+              <button onClick={()=>{g.resolvePeaceTerm(n.id,n.peaceOffer!.term);engine.pushHud();}}>Accept peace offer</button>
+              <button onClick={()=>{rejectPeace(g,n.id);engine.pushHud();}}>Reject offer</button>
+              <p>You may send different terms below.</p>
+            </div>}
             <TradeProposal engine={engine} team={n.id} />
             {n.hostile && (
-              <button
-                onClick={() => {
-                  g.sendDelegation(n.id,"peace");
-                  engine.pushHud();
-                }}
-              >
-                Send peace delegation
-              </button>
+              <div className="flex flex-wrap gap-1">
+                {peaceTerms.map(term => (
+                  <div key={term} className="w-full">
+                    <button disabled={!!peaceIssue(g,n.id,term)} onClick={() => { g.proposePeace(n.id,term); engine.pushHud(); }}>
+                      Propose {PEACE_TERMS[term].toLowerCase()}
+                    </button>
+                    <p>{peaceDescription[term]} {peaceIssue(g,n.id,term)}</p>
+                  </div>
+                ))}
+              </div>
             )}
             <p>
               {n.hostile ? "Hostile" : n.ally ? "Allied" : "At peace"}. Send a delegation for current trading terms; their private plans are unknown.
@@ -405,7 +424,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         {g.state.buildings.some(b=>b.team===0&&b.type==="forge"&&g.finished(b))&&<button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left" onClick={()=>{const b=g.state.buildings.find(b=>b.team===0&&b.type==="forge"&&g.finished(b))!;g.clearSelect();b.selected=true;g.state.selBld=b;engine.view.look.set(b.x,b.y,b.z);close();engine.pushHud();}}>Choose forge · make metal blades</button>}
         {people.filter(u=>u.weaponWork).map(u=><p key={u.id}>{personName(u)} · {WEAPONS[u.weaponWork!.kind].name} {Math.floor(100*u.weaponWork!.progress/u.weaponWork!.duration)}% · {u.order==='hold'&&!u.weaponWork!.paused?'assigned':'paused by another order'}{(u.order!=='hold'||u.weaponWork!.paused)&&<button onClick={()=>{u.order="hold";if(u.weaponWork)u.weaponWork.paused=false;u.node=null;u.target=null;engine.pushHud();}}>Resume weapon making</button>}</p>)}
         <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>engine.callToArms()}>Arm selected adults (all available if none selected)</button>
-        <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>engine.standDown()}>Stand down militia at home</button>
+        <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" disabled={!militia.length} onClick={()=>engine.standDown()}>Stand down militia · return to work</button>
+        <p>Sea raids grow over the early waves, then level off. Their size is limited by your surviving adults, health, weapons and defenses. Losses bring a longer recovery interval and reduced pressure on the next wave. Raids never overlap another sea band, including its retreat.</p>
         <p>Select a group, then Pillage a discovered camp, or right-click a target. Relations turn hostile when the raid arrives. Move away or sound the recall horn to withdraw. Raiders carry supplies from ruined stores home; supplies are never granted remotely.</p>
         {s.buildings.filter(b=>b.hp<=0&&b.lootTeam===0&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0)&&g.exploredAt(b.x,b.z)).map(b=><button key={b.id} className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>{g.issuePillage(b);close();engine.pushHud();}}>Recover remaining loot from {g.tribe(b.team).name} ruins</button>)}
         {people.filter(u=>(u.combatXP||0)>0).map(u=><p key={u.id}>{personName(u)} · combat practice {Math.round((combatPractice(u)-1)*100)}% damage bonus</p>)}

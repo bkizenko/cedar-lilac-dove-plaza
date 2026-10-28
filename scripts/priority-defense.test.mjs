@@ -48,7 +48,7 @@ test('idle armed civilians answer visible sea attacks on nearby buildings and ac
  const stock=g.tribe(0).spears;assert.equal(u.order,'hold');
  assert.equal(emergencyResponse(g,u,.1),true);assert.equal(u.target,enemy);
  run(g,35);assert.ok(enemy.hp<=0,JSON.stringify({enemyHP:enemy.hp,unitHP:u.hp,order:u.order,x:u.x,z:u.z,enemyX:enemy.x,enemyZ:enemy.z,reason:u.workReason,emergency:u.emergency,paused:g.state.paused,ended:g.state.ended}));assert.ok(u.hp>0);
- assert.equal(u.militia,true,'manually equipped defender keeps their weapon');assert.equal(g.tribe(0).spears,stock,'no duplicate emergency weapon');
+ assert.equal(u.militia,false,'the defender automatically resumes civilian work after the raid');assert.equal(g.tribe(0).spears,stock+1,'the real weapon returns to storage once');
 });
 
 test('loaded civilians defend before delivery then return cargo and emergency equipment exactly once',()=>{

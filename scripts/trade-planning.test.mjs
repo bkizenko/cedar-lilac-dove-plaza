@@ -61,6 +61,8 @@ test('saved procurement preserves its budget and minimum; recall cancels the pur
   const g=setup();sendProcurement(g,1,'food','wood',20,12);
   const saved=decodeGame(encodeGame(g)),u=saved.state.units.find(u=>u.procurement);
   assert.deepEqual(u.procurement,{minimum:12});assert.equal(u.carry,20);assert.equal(saved.tribe(0).food,220);
+  // Saves regenerate terrain from the seed; restore this fixture's artificial flat map.
+  saved.world.heights.fill(4);saved.rebuildWalk();
   saved.soundRecall();assert.equal(u.procurement,undefined);assert.equal(u.recalled,true);
   walkHome(saved,u);assert.equal(saved.tribe(0).food,240);
   const invalid=encodeGame(g);invalid.state.units.find(u=>u.procurement).procurement.minimum=-1;

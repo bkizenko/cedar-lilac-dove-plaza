@@ -1,0 +1,71 @@
+{
+  "scope": "Controlled sea waves 1, 5, 25 on V2 seeds 123456 and 98765; Food focus; Quiet prevents unrelated scheduled sea waves; normal economy and real combat; no healing or resource grants between waves",
+  "observations": [
+    {
+      "seed": 123456,
+      "wave": 1,
+      "attackers": 2,
+      "time": 523,
+      "population": 11,
+      "originalSurvivors": 5,
+      "food": 1213,
+      "armed": 0,
+      "errors": []
+    },
+    {
+      "seed": 123456,
+      "wave": 5,
+      "attackers": 5,
+      "time": 1074,
+      "population": 13,
+      "originalSurvivors": 5,
+      "food": 1821,
+      "armed": 0,
+      "errors": []
+    },
+    {
+      "seed": 123456,
+      "wave": 25,
+      "attackers": 5,
+      "time": 1631,
+      "population": 13,
+      "originalSurvivors": 2,
+      "food": 1923,
+      "armed": 0,
+      "errors": []
+    },
+    {
+      "seed": 98765,
+      "wave": 1,
+      "attackers": 1,
+      "time": 560,
+      "population": 11,
+      "originalSurvivors": 5,
+      "food": 707,
+      "armed": 0,
+      "errors": []
+    },
+    {
+      "seed": 98765,
+      "wave": 5,
+      "attackers": 4,
+      "time": 1178,
+      "population": 13,
+      "originalSurvivors": 4,
+      "food": 705,
+      "armed": 0,
+      "errors": []
+    },
+    {
+      "seed": 98765,
+      "wave": 25,
+      "attackers": 5,
+      "time": 1783,
+      "population": 12,
+      "originalSurvivors": 3,
+      "food": 391,
+      "armed": 0,
+      "errors": []
+    }
+  ]
+}

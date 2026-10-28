@@ -40,8 +40,8 @@ export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="prov
   const t=g.tribe(team),lots=foodInventory(t);lots[kind]+=amount;t.food+=amount;t.foodLots=lots;
 }
 function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:boolean) {
-  const stores=storehouses(g,team),indoor=Math.min(1,stores.length*160/Math.max(1,food));
-  const prepared=Math.min(indoor,stores.reduce((n,b)=>n+(b.storeCare||0)*160,0)/Math.max(1,food));
+  const stores=storehouses(g,team),indoor=Math.min(1,stores.length*200/Math.max(1,food));
+  const prepared=Math.min(indoor,stores.reduce((n,b)=>n+(b.storeCare||0)*200,0)/Math.max(1,food));
   const home=g.campOf(team),time=phase===calendar(g).phase?g.state.time:Math.floor(g.state.time/1800)*1800+phase*450+225;
   const {temperature,humidity}=climateAt(g,home.x,home.z,time);
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));

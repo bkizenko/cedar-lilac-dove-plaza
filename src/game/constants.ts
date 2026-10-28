@@ -147,7 +147,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 300,
     age: 0,
-    hint: "Shelters 160 food. Adults can dry and smoke surplus food here using timber above the next age reserve. Also shortens carrying trips.",
+    hint: "Shelters 200 food. Adults can dry and smoke surplus food here using timber above the next age reserve. Also shortens carrying trips.",
   },
   barracks: {
     name: "Barracks",

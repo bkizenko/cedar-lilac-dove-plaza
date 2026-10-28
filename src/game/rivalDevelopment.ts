@@ -5,6 +5,12 @@ import type { BldType, ResKind, Unit } from './types';
 import { AGE_COST, BUILDINGS, HALF, MAP, LUMBER_R, QUARRY_R } from './constants';
 import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
 
+export const RIVAL_RESOURCE_RANGE=320;
+/** Keep a full harvest cycle plus losses; half-year storage silently capped growth. */
+export function rivalStorageTarget(g:Game,team:number){
+  return Math.ceil([0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*YEAR_SECONDS/4,0)*1.3+100);
+}
+
 /** Local familiarity plus actual scouting records; never inspect unknown distant nodes. */
 export function rivalKnows(g:Game,team:number,x:number,z:number){
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&Math.hypot(u.x-x,u.z-z)<26))return true;
@@ -17,7 +23,7 @@ export function rivalWorkRange(g:Game,team:number,x:number,z:number,kind:ResKind
   // Timber does not require a camp. A known nearby forest can fund the next
   // outpost even when the last local tree was cut and the treasury is empty.
   const home=g.campOf(team);
-  if(kind==='wood'&&Math.hypot(x-home.x,z-home.z)<=175&&rivalKnows(g,team,x,z))return true;
+  if(['wood','copper','iron'].includes(kind)&&Math.hypot(x-home.x,z-home.z)<=RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z))return true;
   return g.state.buildings.some(b=>b.team===team&&g.finished(b)&&
     (['townhall','cornerstone'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<70||
       kind==='wood'&&b.type==='lumber'&&Math.hypot(b.x-x,b.z-z)<=LUMBER_R||
@@ -49,8 +55,8 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   if(type==='hut')return g.popCap(team)<p.pop+3;
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
-    const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*160;
-    if(p.stores<2||capacity<Math.max(foodDemand(g,team,0)*900+80,Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40))return true;
+    const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200;
+    if(p.stores<2||capacity<Math.max(rivalStorageTarget(g,team),Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40))return true;
   }
   // Leave enough for a timber camp or stone quarry before luxury expansion.
   if(!p.saving||!p.next)return t.wood-(d.wood||0)>=BUILDINGS.lumber.wood+BUILDINGS.quarry.wood;
@@ -79,7 +85,7 @@ export function developRivalResources(g:Game,team:number){
   if(due>g.state.time&&due<=g.state.time+25)return false;
   timers.set(team,g.state.time+25);
   const home=g.campOf(team),t=g.tribe(team),next=AGE_COST[t.age+1];
-  const known=(x:number,z:number)=>Math.hypot(x-home.x,z-home.z)<175&&rivalKnows(g,team,x,z)&&g.workBoard.connected(g,home.x,home.z,x,z);
+  const known=(x:number,z:number)=>Math.hypot(x-home.x,z-home.z)<RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z)&&g.workBoard.connected(g,home.x,home.z,x,z);
   const timberCamps=g.state.buildings.filter(b=>b.team===team&&b.type==='lumber'&&g.finished(b));
   const localWood=g.state.trees.filter(n=>n.amount>0&&(Math.hypot(n.x-home.x,n.z-home.z)<70||timberCamps.some(b=>Math.hypot(b.x-n.x,b.z-n.z)<=LUMBER_R))).reduce((n,p)=>n+p.amount,0);
   const types:('lumber'|'quarry')[]=localWood<Math.max(100,(next?.wood||150)-t.wood)?['lumber','quarry']:['quarry','lumber'];

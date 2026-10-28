@@ -19,7 +19,7 @@ export function equipCaravan(g:Game,u:Unit){
 export function recoverCaravanEquipment(g:Game,u:Unit){
   if(!u.caravanArmed||u.hp<=0)return;
   if(!u.militia){u.caravanArmed=undefined;return;}
-  if(u.emergency||u.visit||u.trade||u.carry>0)return;
+  if(u.emergency||u.visit||u.trade||u.carry>0||u.returnAfterCombat||u.massRaidTarget!==undefined)return;
   if(!atStores(g,u)){
     u.recalled=true;u.stationOnArrival=false;u.order='return';return;
   }

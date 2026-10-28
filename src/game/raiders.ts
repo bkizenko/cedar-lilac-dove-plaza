@@ -1,21 +1,56 @@
 import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
-import { foodDemand } from "./settlement";
+import { foodDemand, isDependent } from "./settlement";
 import { receiveFood } from "./pantry";
 import { applyForagePressure } from "./ecology";
 import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
 import { MAP, HALF } from "./constants";
+import {queueStandDown} from './demobilization';
 
 /** Population matters even while a large settlement remains in the Stone Age.
  * A small first village still meets scouts; established towns face actual bands. */
-export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false){
- if(population<16&&(wave===1||threat<.12))return {count:roll<.5?1:2,condition:.78,label:"A scouting party from the sea"};
+export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=20,loss=0){
+ const ceiling=Math.max(1,Math.min(20,Math.ceil(population*(dangerous?.6:.45)),Math.floor(capacity)));
+ if(population<16&&wave<=1)return {count:Math.min(ceiling,roll<.5?1:2),condition:.78,label:"A scouting party from the sea"};
  const base=Math.max(3,Math.min(14,Math.ceil(population*.14)));
- const count=Math.max(3,Math.min(20,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1))));
+ // History increases pressure in small steps, then plateaus. Losses and current
+ // capacity can make the next raid smaller even after many successful years.
+ const escalation=Math.min(5,Math.floor(Math.max(0,wave-1)/2));
+ const count=Math.max(1,Math.min(ceiling,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+escalation+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1)*(1-Math.min(.5,loss)))));
  return {count,condition:.95,label:count>=8?"A warband from the sea":"Raiders from the sea"};
 }
 export function seaRaidArrivalChance(threat:number,night:boolean){return Math.min(.8,threat*.42*(night?1.25:.9));}
+
+/** Count living adults and usable defenses, not children, wealth or historical peaks. */
+export function raidReadiness(g:Game){
+ const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(g,u));
+ const local=adults.filter(u=>!u.expedition&&!u.foundingJourney&&!u.visit&&!u.envoy&&!u.scout);
+ const t=g.tribe(0);let weapons=Math.max(0,t.spears+t.bows+t.blades);
+ let power=0;
+ for(const u of local){const armed=u.militia||!['worker','leader'].includes(u.type);const equipped=armed||weapons-->0;power+=(equipped?1:.35)*Math.min(1,u.hp/u.maxHp);}
+ const buildings=g.state.buildings.filter(b=>b.team===0&&g.finished(b));
+ const towers=Math.min(4,buildings.filter(b=>['watchtower','keep'].includes(b.type)).length);
+ return {adults:adults.length,buildings:buildings.length,cap:Math.max(1,Math.ceil(power*(g.state.conflict==='dangerous'?.95:.75)+towers))};
+}
+
+/** The respite starts when a band has actually gone, including its retreat. */
+export function finishSeaRaid(g:Game){
+ const campaign=g.state.raidCampaign;
+ if(!campaign?.active||g.state.units.some(u=>u.team===3&&u.hp>0&&u.homeCamp===undefined))return;
+ const now=raidReadiness(g);
+ // New arrivals or construction must not conceal casualties or ruined homes.
+ const survivors=campaign.people?campaign.people.filter(id=>g.state.units.some(u=>u.id===id&&u.hp>0&&u.team===0)).length:now.adults;
+ const standing=campaign.sites?campaign.sites.filter(id=>g.state.buildings.some(b=>b.id===id&&b.hp>0&&b.team===0)).length:now.buildings;
+ campaign.loss=Math.min(1,Math.max(0,(campaign.adults-survivors)/Math.max(1,campaign.adults),(campaign.buildings-standing)/Math.max(1,campaign.buildings)));
+ campaign.active=false;
+ for(const u of g.state.units){
+  if(u.team!==0||u.hp<=0||!u.militia||u.pillage>=0||u.massRaidTarget!==undefined||u.visit||u.trade||u.envoy||u.scout||u.expedition||u.foundingJourney||u.escortId!==undefined||u.huntOnly)continue;
+  if(g.state.buildings.some(b=>b.team===0&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<60))queueStandDown(g,u,true);
+ }
+ const hungry=g.tribe(0).food<foodDemand(g)*120;
+ g.state.raidT=Math.max(g.state.raidT,480+Math.round(campaign.loss*900)+(hungry?180:0));
+}
 
 /** Seeded land camps have a finite initial band. They never manufacture replacements. */
 export function establishRaiderCamps(g: Game) {
@@ -53,7 +88,7 @@ export function establishRaiderCamps(g: Game) {
 export function canScheduleSeaRaid(g: Game) {
   return g.state.conflict !== "quiet" &&
     g.state.time >= (g.state.conflict === "dangerous" ? 600 : 1200) &&
-    g.popNow(0) > 0 &&
+    g.state.units.some(u=>u.team===0&&u.hp>0&&!isDependent(g,u)) &&
     !g.state.units.some(u => u.team === 3 && u.hp > 0 && u.homeCamp === undefined);
 }
 

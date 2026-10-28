@@ -151,7 +151,11 @@ export type Unit = {
   homeCamp?: number;
   searchJob?: "wood" | "food" | "hunt";
   recalled?: boolean;
-  envoy?: {team:number; kind:"peace"|"trade"|"gift"; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
+  demobilizing?: boolean;
+  returnAfterCombat?: boolean;
+  massRaidTarget?: number;
+  enslavedFrom?: number;
+  envoy?: {team:number; kind:"peace"|"trade"|"gift"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
   maturesAt?: number;
   workReason?: string;
@@ -288,6 +292,8 @@ export type Projectile = {
   team: number;
 };
 
+export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
+
 export type Tribe = {
   haulagePractice?: number;
   id: number;
@@ -328,6 +334,11 @@ export type Tribe = {
   blades: number;
   fallenT: number;
   lastSettlement?: number;
+  peaceOffer?: { from: number; term: PeaceTerm; expires: number };
+  peaceTerm?: PeaceTerm;
+  tributeUntil?: number;
+  tribute?: {amount:number; remaining:number; next:number; owed:number; paid:number};
+  nextPeaceOffer?: number;
 };
 
 export type Particle = {
@@ -407,6 +418,7 @@ export type GameState = {
   routePopups: number;
   yearOffset: number;
   raidWave: number;
+  raidCampaign?: {active:boolean; adults:number; buildings:number; loss:number; people?:number[]; sites?:number[]};
   regions: Region[];
   richRes: ResKind;
   harvestDay: number;

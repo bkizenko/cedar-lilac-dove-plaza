@@ -86,6 +86,8 @@ export function decodeGame(raw: unknown): Game {
   }
   if(s.conquestAt!==undefined&&(!num(s.conquestAt)||s.conquestAt<0||s.conquestAt>s.time))fail();
   if(s.nightWork!==undefined&&typeof s.nightWork!=="boolean")fail();
+  if(s.raidCampaign!==undefined){const r=s.raidCampaign;if(!obj(r)||typeof r.active!=='boolean'||!Number.isSafeInteger(r.adults)||r.adults<0||r.adults>20000||!Number.isSafeInteger(r.buildings)||r.buildings<0||r.buildings>20000||!num(r.loss)||r.loss<0||r.loss>1)fail();}
+  if(s.raidCampaign)for(const key of ['people','sites']){const ids=s.raidCampaign[key];if(ids!==undefined&&(!Array.isArray(ids)||ids.length>20000||new Set(ids).size!==ids.length||ids.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1)))fail();}
   if(s.scoutTimer!==undefined&&(!num(s.scoutTimer)||s.scoutTimer<0||s.scoutTimer>1000))fail();
   if(s.trails!==undefined) {
     if(!Array.isArray(s.trails)||s.trails.length>8192)fail();const cells=new Set();
@@ -150,6 +152,11 @@ export function decodeGame(raw: unknown): Game {
     fail();
   for (const [i, t] of s.tribes.entries()) {
     if (!obj(t) || t.id !== i || typeof t.name !== "string") fail();
+    const terms=['whitePeace','tribute','forcedLabor','puppet','annexation'];
+    if(t.peaceTerm!==undefined&&!terms.includes(t.peaceTerm))fail();
+    if(t.nextPeaceOffer!==undefined&&(!num(t.nextPeaceOffer)||t.nextPeaceOffer<0))fail();
+    if(t.peaceOffer!==undefined){const p=t.peaceOffer;if(!obj(p)||p.from!==t.id||!terms.includes(p.term)||!num(p.expires)||p.expires<0)fail();}
+    if(t.tribute!==undefined){const c=t.tribute;if(!obj(c)||!['tribute','puppet'].includes(t.peaceTerm)||!num(c.amount)||c.amount<=0||c.amount>20||!Number.isInteger(c.remaining)||c.remaining< -1||c.remaining>6||!num(c.next)||c.next<0||!num(c.owed)||c.owed<0||!num(c.paid)||c.paid<0)fail();}
     numbers(t, [
       "food",
       "wood",
@@ -316,9 +323,14 @@ export function decodeGame(raw: unknown): Game {
     }
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
+    if(u.demobilizing!==undefined&&typeof u.demobilizing!=="boolean")fail();
+    if(u.returnAfterCombat!==undefined&&typeof u.returnAfterCombat!=="boolean")fail();
+    if(u.massRaidTarget!==undefined&&(!Number.isSafeInteger(u.massRaidTarget)||u.massRaidTarget<1))fail();
+    if(u.enslavedFrom!==undefined&&(!rivalTeam(u.enslavedFrom)||u.team!==0))fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){
       const m=u.envoy;
+      if(m.term!==undefined&&!['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(m.term))fail();
       if(!obj(m)||u.team!==0||!rivalTeam(m.team)||!["peace","trade","gift"].includes(m.kind)||
         !["outbound","return"].includes(m.phase)||!num(m.talk)||m.talk<0)fail();
       if(m.report!==undefined){if(!obj(m.report)||!num(m.report.time)||m.report.time<0||m.report.time>s.time)fail();validateOffers(m.report.offers);}

@@ -291,14 +291,15 @@ test("civilians shelter, armed residents defend, and then resume jobs", async ()
   const { emergencyResponse } = await import("../src/game/settlement.ts");
   const g = fixture();
   g.state.units = [];
-  const a = g.spawnUnit("worker", 0, 38, 0),
-    b = g.spawnUnit("worker", 1, 38, 0);
+  const home=g.campOf(0);
+  const a = g.spawnUnit("worker", home.x+8, home.z, 0),
+    b = g.spawnUnit("worker", home.x+9, home.z, 0);
   a.job = "wood";
   a.jobLock = true;
   b.maturesAt=g.state.time+100;
   g.tribe(0).spears = 1;
   g.tribe(0).bows = 0;
-  const foe = g.spawnUnit("spearman", 5, 38, 3);
+  const foe = g.spawnUnit("spearman", home.x+13, home.z, 3);
   g.updateVision();
   assert.equal(emergencyResponse(g, a, 1 / 30), true);
   assert.equal(a.type, "spearman");
@@ -310,6 +311,8 @@ test("civilians shelter, armed residents defend, and then resume jobs", async ()
   foe.hp = 0;
   g.state.time = 11;
   assert.equal(emergencyResponse(g, a, 1 / 30), false);
+  const {demobilizationAI}=await import('../src/game/demobilization.ts');
+  demobilizationAI(g,a,1/30);
   assert.equal(a.type, "worker");
   assert.equal(a.job, "wood");
   assert.equal(a.jobLock, true);

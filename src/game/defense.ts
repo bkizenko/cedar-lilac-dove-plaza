@@ -2,6 +2,7 @@ import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {UNITS} from './constants';
 import {isDependent} from './settlement';
+import {queueStandDown} from './demobilization';
 
 /** Mobilize once without movement or damage, so impact notifications cannot recurse. */
 function mobilize(g:Game,u:Unit){
@@ -80,7 +81,8 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*.3;
   if (foes.length) u.emergency.until = g.state.time + 10;
   if (g.state.time >= u.emergency.until) {
-    if (u.emergency.autoArmed) {
+    const returnToWork=u.team===0&&u.militia&&u.pillage<0&&u.massRaidTarget===undefined&&!u.visit&&!u.trade&&!u.envoy&&!u.scout&&!u.expedition&&!u.foundingJourney&&u.escortId===undefined&&!u.huntOnly;
+    if (u.emergency.autoArmed&&!returnToWork) {
       const t = g.tribe(u.team);
       if (u.type === "archer") t.bows++;
       else t.spears++;
@@ -99,6 +101,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     u.node = null;
     u.order = u.carry > 0 ? "return" : "idle";
     u.workReason = "Returning to village work";
+    if(returnToWork){queueStandDown(g,u,true);return false;}
     if (resume && (u.carry === 0 || resume.order==='trade'&&u.trade)) {
       u.order = resume.order;
       u.tx = resume.tx; u.tz = resume.tz;

@@ -1,4 +1,5 @@
 import {guardFrontier} from "@/game/frontiers";
+import {massRaid} from '@/game/massRaid';
 import {staffQuarry} from "@/game/mining";
 import {craftingReport} from "../game/crafting";
 import {setGateMode} from "../game/fortifications";
@@ -502,6 +503,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {selMin ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
           </button>
         </div>
+        {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
+          <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
+          {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
+        </div>}
         {selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
