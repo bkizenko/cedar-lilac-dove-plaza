@@ -15,7 +15,7 @@ export function tickVisitors(g:Game,dt:number) {
   const rivals=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
     if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5||g.state.units.some(u=>u.team===t.id&&u.hp>0&&u.visit))continue;
-    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.recalled&&!u.envoy&&u.drill==null&&!u.buildOrder&&['idle','gather'].includes(u.order));
+    const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.recalled&&!u.envoy&&u.drill==null&&!u.buildOrder&&!u.jobLock&&!u.tamingWork&&!u.tributeJourney&&['idle','gather'].includes(u.order)&&!!g.interactionSpot(u,home));
     if(!u)continue;
     const available=(['food','wood','stone','copper','iron'] as ResKind[]).filter(good=>!(good==='copper'&&t.age<1)&&!(good==='iron'&&t.age<2))
       .map(good=>({good,spare:t[good]-(good==='food'?foodDemand(g,t.id)*240:good==='wood'?20:10)}))

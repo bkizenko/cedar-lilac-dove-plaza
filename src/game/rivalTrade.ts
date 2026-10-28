@@ -31,20 +31,24 @@ export function dispatchRivalBarter(g:Game,team:number){
     .sort((a,b)=>Number(a==='food')-Number(b==='food')||(t[b]-rivalTradeReserve(g,team,b))*worth[b]-(t[a]-rivalTradeReserve(g,team,a))*worth[a])[0];
   if(!offered)return false;
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
-  const workers=adults.filter(u=>u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
+  const workers=adults.filter(u=>u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
     !u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','gather'].includes(u.order));
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));
-  const u=workers[0];
+  let u:Unit|undefined;
+  let destination:typeof g.state.buildings[number]|undefined;
+  for(const candidate of workers){
   const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
-    g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(u,b))
-    .sort((a,b)=>Math.hypot(u.x-a.x,u.z-a.z)-Math.hypot(u.x-b.x,u.z-b.z));
-  if(!halls.length)return false;
+    g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
+    .sort((a,b)=>Math.hypot(candidate.x-a.x,candidate.z-a.z)-Math.hypot(candidate.x-b.x,candidate.z-b.z));
+  if(halls.length){u=candidate;destination=halls[0];break;}
+  }
+  if(!u||!destination)return false;
   const amount=Math.min(32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
   equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;
-  u.visit={phase:'outbound',wait:0,team:halls[0].team,wanted};u.order='move';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.stuckT=0;
-  u.tx=halls[0].x;u.tz=halls[0].z;u.workReason='Taking surplus to a known village to seek '+wanted;
+  u.visit={phase:'outbound',wait:0,team:destination.team,wanted};u.order='move';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.stuckT=0;
+  u.tx=destination.x;u.tz=destination.z;u.workReason='Taking surplus to a known village to seek '+wanted;
   return true;
 }
 /** Execute a finite exchange at the meeting place. Both communities keep their

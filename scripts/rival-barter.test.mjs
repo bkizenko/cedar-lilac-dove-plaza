@@ -59,3 +59,23 @@ test('traders target reachable frontages instead of the blocked center of a hall
  visitorAI(g,u,.1);const hall=g.state.buildings.find(b=>b.team===2);
  assert.ok(Math.hypot(u.tx-hall.x,u.tz-hall.z)>hall.w*.4);assert.equal(g.walkable(u.tx,u.tz),true);
 });
+
+test('rivals choose a reachable canoe carrier when the first workers cannot cross the river',()=>{
+ const g=fixture();
+ g.height=(x,z)=>Math.abs(x-35)<12?g.world.waterY-2:Math.abs(x-35)<24?g.world.waterY+(Math.abs(x-35)-12)/3:4;
+ g.rebuildWalk();contact(g);
+ const people=g.state.units.filter(u=>u.team===1),sailor=people.at(-1);sailor.haulage='canoe';
+ assert.equal(g.interactionSpot(people[0],g.state.buildings[1]),null);
+ assert.ok(g.interactionSpot(sailor,g.state.buildings[1]));
+ const before=totals(g,'stone');assert.equal(dispatchRivalBarter(g,1),true);
+ assert.equal(sailor.visit.team,2);assert.equal(people[0].visit,undefined);assert.equal(totals(g,'stone'),before);
+ drive(g,sailor,180);assert.equal(sailor.visit,undefined);assert.ok(g.tribe(1).wood>0);
+});
+
+test('rival barter preserves direct orders, animal taming and tribute assignments',()=>{
+ const g=fixture();contact(g);
+ const people=g.state.units.filter(u=>u.team===1);
+ people[0].jobLock=true;people[1].buildOrder=123;people[2].tamingWork={animal:999,progress:0};
+ people[3].tributeJourney={team:2};
+ assert.equal(dispatchRivalBarter(g,1),false);assert.ok(people.every(u=>!u.visit));
+});

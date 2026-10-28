@@ -17,3 +17,15 @@ test('incoming trade does not commandeer recalled workers or direct building ord
  for(const u of g.state.units){if(u.team!==0){u.recalled=true;u.order='return';u.carry=0;}}
  tickVisitors(g,1);assert.equal(g.state.units.some(u=>u.visit),false);
 });
+
+test('incoming traders reserve no goods for an unreachable village and use a canoe when available',()=>{
+ const g=fixture();g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,0,1),g.makeBld('townhall',70,0,0)];
+ g.world.heights.fill(4);g.height=(x,z)=>Math.abs(x-35)<12?g.world.waterY-2:Math.abs(x-35)<24?g.world.waterY+(Math.abs(x-35)-12)/3:4;
+ for(const t of g.state.tribes)t.alive=t.id===0||t.id===1;
+ for(let i=0;i<6;i++)g.spawnUnit('worker',8+i,10,1);
+ Object.assign(g.tribe(1),{food:1500,wood:200,stone:100,hostile:false});g.rebuildWalk();
+ const before=g.tribe(1).wood;g.state.visitorTimer=0;tickVisitors(g,1);
+ assert.equal(g.state.units.some(u=>u.visit),false);assert.equal(g.tribe(1).wood,before);
+ const sailor=g.state.units.at(-1);sailor.haulage='canoe';assert.ok(g.interactionSpot(sailor,g.state.buildings[1]),'canoe can reach destination');g.state.visitorTimer=0;tickVisitors(g,1);
+ assert.ok(sailor.visit);assert.equal(g.state.units.filter(u=>u.visit).length,1);
+});

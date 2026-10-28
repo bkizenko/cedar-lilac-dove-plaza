@@ -1,3 +1,12 @@
+## Rival river trade reliability — 2026-10-28
+
+- [x] Rival barter searches available residents for a reachable partner rather than abandoning trade when the first pedestrian cannot cross a river.
+- [x] Incoming visitors check their actual route before taking goods; canoe owners can serve otherwise disconnected villages.
+- [x] Trade dispatch preserves direct work orders, taming, and tribute assignments.
+- [x] Building approach caches distinguish canoe ownership, so newly acquired boats immediately unlock reachable destinations.
+- Validation: 28 encounter, barter, boat and pack-animal tests passed, including physical cross-river barter and return delivery. Typecheck and production build passed. No saved player village changed.
+- Strong rival cities, broader production balance, and remaining overhaul items below still require work; river trade tests alone do not establish those outcomes.
+
 ## Transport caravan reliability — 2026-10-28
 
 - [x] Borrowed caravan weapons preserve owned sled/cart/canoe/pack-goat capacity, loaded pace, and sled discovery practice.

@@ -133,7 +133,7 @@ export class Game {
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
   selectedResource: ResourceNode | null = null;
-  private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;spot:{x:number;z:number}|null}>();
+  private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;canoe:boolean;spot:{x:number;z:number}|null}>();
   chopMarks = new Set<number>();
   looted = new Set<number>();
   started = false;
@@ -3631,7 +3631,7 @@ export class Game {
   interactionSpot(u: Unit, b: Building) {
     if(this.state.walkDirty)this.rebuildWalk();
     if(b.type==="bridge")return bridgeApproach(this,u,b);
-    const cached=this.approachCache.get(u);if(cached&&cached.building===b&&cached.revision===this.navRevision&&this.state.time-cached.time<2)return cached.spot;
+    const cached=this.approachCache.get(u);if(cached&&cached.building===b&&cached.canoe===(u.haulage==='canoe')&&cached.revision===this.navRevision&&this.state.time-cached.time<2)return cached.spot;
     let best:{x:number;z:number}|null=null,score=Infinity;
     // A physically clear frontage can still fall in a coarse blocked cell.
     // Try the nearest ring first, then a little farther out when necessary.
@@ -3650,7 +3650,7 @@ export class Game {
     }
     if(best)break;
     }
-    this.approachCache.set(u,{building:b,revision:this.navRevision,time:this.state.time,spot:best});
+    this.approachCache.set(u,{building:b,revision:this.navRevision,time:this.state.time,canoe:u.haulage==='canoe',spot:best});
     return best;
   }
 
