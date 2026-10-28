@@ -94,10 +94,10 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <ol className="list-decimal pl-5">
             <li>Gather wild grain, pulses or tubers and bring home 8 food for 4 samples.
               {!knownCrops.length && !trial && <> {Math.floor(t.cropSamples?.[sampleCrop] || 0)}/4 {sampleCrop} samples at home.</>}</li>
-            <li>Test cultivation at the hearth: 4 samples and 2 logs, no food cost. One adult works for 30–45 seconds.
+            <li>Residents automatically test cultivation at the hearth: 4 samples, no logs or food cost. One adult works for 30–45 seconds.
               {trial && <> {trial.kind} trial: {Math.floor(100*trial.progress/trial.duration)}% complete.</>}
               {!trial && knownCrops.length>0 && <> Learned: {knownCrops.join(", ")}.</>}</li>
-            <li>Place a field for {BUILDINGS.farm.wood} logs. Greener ground in the placement preview means richer soil; keep it on dry land.</li>
+            <li>Place a field for 4 seed baskets. Greener ground in the placement preview means richer soil; keep it on dry land.</li>
           </ol>
           {trial ? (
             <>
@@ -108,11 +108,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             </>
           ) : knownCrops.length ? (
             <button className="min-h-11" onClick={()=>{close();engine.setPlacing("farm");}}>
-              Place {farms.length ? "another field" : "your first field"} · {BUILDINGS.farm.wood} logs
+              Place {farms.length ? "another field" : "your first field"} · 4 seed baskets
             </button>
           ) : readyCrop ? (
-            <button className="min-h-11" disabled={t.wood<2} onClick={()=>startTrial(readyCrop)}>
-              Test {readyCrop} cultivation · 2 logs
+            <button className="min-h-11" disabled={false} onClick={()=>startTrial(readyCrop)}>
+              Test {readyCrop} cultivation · 4 samples
             </button>
           ) : (
             <button className="min-h-11" onClick={()=>{seekCropSamples(g);engine.pushHud();}}>Find and gather crop seeds</button>
@@ -252,7 +252,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <ul>{CROPS.filter(k=>!t.cultivated?.includes(k)).map(kind=><li key={kind}>
         {CROP_NAMES[kind]} · {(t.cropSamples?.[kind]||0).toFixed(1)} samples at home
         {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples and 2 logs; 30–45 seconds of work"}
-        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4||t.wood<2)} onClick={()=>startTrial(kind)}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
+        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4)} onClick={()=>startTrial(kind)}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
       </li>)}</ul>
       <p>Trials use an adult’s working time at the hearth. They pause for sleep, storms and urgent food needs. Wild grain, pulses and tubers occur in different habitats; pulses exhaust soil more slowly.</p>
       </details>

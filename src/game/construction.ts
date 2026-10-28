@@ -8,6 +8,7 @@ export const BUILD_MATERIALS:ResKind[]=['food','wood','stone','copper','iron'];
 export function buildingCost(type:BldType,g?:Game,team=0):Cost {
   const d=BUILDINGS[type];
   const cost:Cost=Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
+  if(type==='farm')cost.seeds=4;
   if(type==='townhall'&&g){
     const halls=g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&b.hp>0).length;
     cost.wood=halls===0?(team===0?0:20):40+20*(halls-1);
@@ -25,7 +26,7 @@ export function discountTownhallPlans(g:Game){
 }
 export function planMissing(g:Game,b:Building){
   const t=g.tribe(b.team);
-  return BUILD_MATERIALS.map(kind=>({kind,amount:Math.max(0,Math.ceil((b.plannedCost?.[kind]||0)-(t?.[kind]||0)))})).filter(n=>n.amount>0);
+  return [...BUILD_MATERIALS,'seeds' as const].map(kind=>({kind,amount:Math.max(0,Math.ceil((b.plannedCost?.[kind]||0)-(t?.[kind]||0)))})).filter(n=>n.amount>0);
 }
 export function constructionDemand(g:Game,team:number,kind:ResKind){
   return g.state.buildings.some(b=>b.team===team&&b.hp>0&&b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind]);
@@ -44,6 +45,8 @@ export function planStatus(g:Game,b:Building){
 /** Pay once, only from actual stores. Unfunded drawings grant no building benefits. */
 export function fundConstructionPlans(g:Game,preferred?:Building){
   discountTownhallPlans(g);
+  // Convert only unpaid old farm drawings. Completed farms keep their progress.
+  for(const b of g.state.buildings)if(b.type==='farm'&&b.plannedCost){b.plannedCost.wood=0;b.plannedCost.seeds=4;}
   if(g.state.weather==='storm')return;
   for(const b of preferred?[preferred]:g.state.buildings){
     const cost=b.plannedCost;

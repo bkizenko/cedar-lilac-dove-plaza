@@ -12,7 +12,7 @@ function valid(raw: string | null) {
   }
 }
 export function saveGame(g: Game, deliberate=false) {
-  if (!g.started || g.awaitingStart) return false;
+  if (g.testMode || !g.started || g.awaitingStart) return false;
   try {
     const old=localStorage.getItem(SAVE_KEY),previous=valid(old);
     // A stale tab/engine must not roll the active village backwards on autosave.
@@ -51,7 +51,7 @@ export function hasSave() {
 
 /** Explicit durable checkpoint; autosaves never replace this slot. */
 export function protectGame(g: Game) {
-  if (!g.started || g.awaitingStart) return false;
+  if (g.testMode || !g.started || g.awaitingStart) return false;
   try {localStorage.setItem(SAVE_KEY+":protected",JSON.stringify({...encodeGame(g),savedAt:Date.now()}));return true;} catch {return false;}
 }
 export function exportGame(g: Game) {

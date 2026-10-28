@@ -183,6 +183,7 @@ export function decodeGame(raw: unknown): Game {
       for(const [kind,amount] of Object.entries(t.foodLots))
         if(!FOOD_KINDS.includes(kind as any)||!num(amount)||amount<0||amount>1e9)fail();
     }
+    if(t.seeds!==undefined&&(!num(t.seeds)||t.seeds<0||t.seeds>100000))fail();
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
@@ -387,9 +388,9 @@ export function decodeGame(raw: unknown): Game {
     if (b.build < 0 || b.build > 1) fail();
     if(b.plannedCost!==undefined){
       if(!obj(b.plannedCost)||b.build!==0||b.queue.length)fail();
-      const allowed=["food","wood","stone","copper","iron"];
+      const allowed=["food","wood","stone","copper","iron","seeds"];
       if(Object.keys(b.plannedCost).some(k=>!allowed.includes(k)))fail();
-      for(const k of allowed){const n=b.plannedCost[k];if(!num(n)||n<0||n>100000)fail();}
+      for(const k of allowed){const n=b.plannedCost[k]??(k==='seeds'?0:undefined);if(!num(n)||n<0||n>100000)fail();}
     }
     if(b.planPaused!==undefined&&(typeof b.planPaused!=="boolean"||!b.plannedCost))fail();
     for (const q of b.queue) {
@@ -406,6 +407,7 @@ export function decodeGame(raw: unknown): Game {
       add(n);
       numbers(n, ["amount", "maxAmt", "regenT", "scale", "rich"]);
       if (!["tree", "stone", "forage", "farm", "fish", "copper", "iron"].includes(n.kind)) fail();
+      if(n.planted!==undefined&&(typeof n.planted!=="boolean"||n.kind!=="tree"))fail();
       if(n.cropCandidate!==undefined&&(n.kind!=="forage"||!CROPS.includes(n.cropCandidate)))fail();
     }
   for (const c of s.wildlife) {

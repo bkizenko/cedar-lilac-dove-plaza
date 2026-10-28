@@ -2,7 +2,7 @@ import {planBridge,bridgeHeight} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
-import { decodeGame } from "./persistence";
+import { encodeGame, decodeGame } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
@@ -15,6 +15,18 @@ type HudFn = (s: HudSnapshot) => void;
 
 export class Engine {
   game: Game;
+  private originalGame: Game | null = null;
+  startTestSession(){
+    if(this.originalGame)return;
+    if(!saveGame(this.game,true)){this.game.banner("Save your village successfully before entering test mode",5);return;}
+    const copy=decodeGame(encodeGame(this.game));copy.testMode=true;copy.state.paused=true;
+    this.originalGame=this.game;this.restoreVillage(copy);this.pushHud();
+  }
+  endTestSession(){
+    if(!this.originalGame)return;
+    const original=this.originalGame;this.originalGame=null;original.state.paused=true;
+    this.restoreVillage(original);this.pushHud();
+  }
   view: WorldView;
   audio: GameAudio;
   canvas: HTMLCanvasElement;
@@ -131,6 +143,7 @@ export class Engine {
     return hasSave();
   }
   saveNow() {
+    if(this.game.testMode){this.game.banner("Test copy: saving is disabled. Leave testing to return to your village.",5);return;}
     const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
     this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
     this.pushHud();
@@ -141,6 +154,7 @@ export class Engine {
   }
   exportVillage() {this.protectVillage();exportGame(this.game);}
   async importVillage(file:File) {
+    if(this.originalGame){this.game.banner("Leave test mode before importing a village",4);return;}
     try {
       const restored=decodeGame(JSON.parse(await file.text()));
       if(this.game.started&&!this.game.awaitingStart&&!protectGame(this.game))throw new Error("Could not protect your current village. Download it before importing another save.");
@@ -157,6 +171,7 @@ export class Engine {
     this.view.rebuild(restored);this.homeLook();this.audio.unlock();this.canvas.focus();
   }
   resumeSaved(protectedOnly=false) {
+    if(this.originalGame){this.endTestSession();return;}
     try {
       if(protectedOnly && this.game.started && !this.game.awaitingStart && !saveGame(this.game))throw new Error("Could not save the current village before restoring. Download it first.");
       const raw = loadRaw(protectedOnly);
@@ -172,6 +187,7 @@ export class Engine {
   }
 
   restart() {
+    if(this.originalGame){this.game.banner("Leave test mode before starting another village",4);return;}
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {

@@ -113,7 +113,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
         <p className="text-sm">Music continues while you pause or plan. Switching away from the game silences it.</p>
         {engine.audio.score.error && <p role="status">{engine.audio.score.error}</p>}
         <p className="mt-3 text-xs text-parchment-dim">
-          “Meditation Impromptu 01”, “Atlantean Twilight”, “Folk Round”, “Celtic Impulse”, and “Five Armies” by{" "}
+          “At Rest”, “Meditation Impromptu 01”, “Atlantean Twilight”, “Folk Round”, “Celtic Impulse”, and “Five Armies” by{" "}
           <a href="https://incompetech.com/" target="_blank" rel="noreferrer">
             Kevin MacLeod (incompetech.com)
           </a>
@@ -121,7 +121,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
             Creative Commons: By Attribution 4.0
           </a>
-          . Unedited recordings with gentle fades and quiet gaps. The score grows from quiet piano into acoustic folk as your society advances. Winter stays quieter; lively and combat music are optional;
+          . Unedited recordings with gentle fades and quiet gaps. Calm mode stays with piano and quiet ambience in every age. Adventure mode adds acoustic folk as your society advances. Winter stays quieter; lively and combat music are optional;
           no commercial game soundtrack.
         </p>
         <button

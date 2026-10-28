@@ -33,7 +33,7 @@ test('cultivation is not granted by seeing a plant or collecting samples away fr
   Object.assign(u,{carry:8,carryType:'food',carryFood:'grain'});deliverSamples(g,u);u.carry=0;u.carryType=null;
   const wood=g.tribe(0).wood,food=g.tribe(0).food;
   assert.ok(beginCropTrial(g,'grain'));assert.equal(g.tribe(0).cropSamples.grain,0);
-  assert.equal(g.tribe(0).wood,wood-2);assert.equal(g.tribe(0).food,food);
+  assert.equal(g.tribe(0).wood,wood);assert.equal(g.tribe(0).food,food);
   assert.deepEqual(g.tribe(0).cultivated,[]);assert.equal(beginCropTrial(g,'grain'),false);
 });
 test('a physical cultivation trial uses working time, survives loading and unlocks fields',()=>{

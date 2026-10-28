@@ -29,3 +29,12 @@ Catalog and free attribution license verified on the composer’s original site;
 SHA-256:
 - meditation-impromptu-01.mp3: `ac1332a12fe020cbeee206c7f33a82e29109d5ce63636e3302454e3bdfc36187`
 - atlantean-twilight.mp3: `a3ad327aa9661d95ab701860e5583dac2a59b710af6d204316ff6043ee7205d3`
+
+## At Rest — calm soundtrack (2026-10-28)
+- Creator: Kevin MacLeod (Incompetech).
+- Source / original URL: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100748
+- Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/At%20Rest.mp3
+- License: Creative Commons Attribution 4.0, https://creativecommons.org/licenses/by/4.0/
+- Required attribution: “At Rest” Kevin MacLeod (incompetech.com), licensed CC BY 4.0. Included in Controls & music.
+- Used in: public/audio/at-rest.mp3; calm spring/summer score, all ages.
+- Modified: no; playback volume and crossfades only.

@@ -57,6 +57,7 @@ export type SeasonMix = {
 };
 
 export type Cost = {
+  seeds?: number;
   food?: number;
   wood?: number;
   stone?: number;
@@ -254,6 +255,7 @@ export type Building = {
 };
 
 export type ResourceNode = {
+  planted?: boolean;
   id: number;
   kind: "tree" | "stone" | "forage" | "farm" | "fish" | "copper" | "iron";
   x: number;
@@ -295,6 +297,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  seeds?: number;
   haulagePractice?: number;
   id: number;
   name: string;

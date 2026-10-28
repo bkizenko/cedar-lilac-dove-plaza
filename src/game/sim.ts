@@ -37,7 +37,7 @@ import {settlePeace, tickPeace} from './peace';
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
-import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,CROPS,CROP_NAMES} from "./cultivation";
+import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
 import { habitatAt, soilQuality, cropWater, applyForagePressure } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
@@ -110,6 +110,8 @@ const YEAR_DAYS = 32;
 const DAY_RATE = (86400 * YEAR_DAYS) / 1800;
 
 export class Game {
+  testMode = false;
+  revealMap = false;
   state: GameState;
   // Runtime diagnostics are deliberately outside saved game state.
   simulationErrors: {scope:string;message:string;count:number}[] = [];
@@ -730,6 +732,7 @@ export class Game {
     const t = this.tribe(team);
     if (!t) return false;
     return (
+      (t.seeds || 0) >= (cost.seeds || 0) &&
       t.food >= (cost.food || 0) &&
       t.wood >= (cost.wood || 0) &&
       t.stone >= (cost.stone || 0) &&
@@ -741,6 +744,7 @@ export class Game {
   spend(team: number, cost: Cost) {
     const t = this.tribe(team);
     if (!t) return;
+    t.seeds = Math.max(0,(t.seeds || 0)-(cost.seeds || 0));
     t.food -= cost.food || 0;
     t.wood -= cost.wood || 0;
     t.stone -= cost.stone || 0;
@@ -3278,7 +3282,7 @@ export class Game {
         if (n.regenT <= 0) {
           const base = n.maxAmt || (n.kind === "tree" ? 10 : 8);
           n.amount = Math.max(1, Math.floor(base * (0.5 + Math.random() * 0.35)*(1-(n.pressure||0)*0.7)));
-          n.regenT = 0;
+          n.regenT = 0;n.planted=undefined;
         }
       }
     };
@@ -3443,6 +3447,7 @@ export class Game {
         age[i] = Math.min(age[i], 55);
       }
     }
+    if(this.testMode&&this.revealMap){vis.fill(2);age.fill(0);}
     this.paintTerritory();
   }
 
@@ -5223,7 +5228,7 @@ export class Game {
     const season = calendar(this);
     if (!this.tribe(0).cultivated?.length) {
       if (this.tribe(0).cropTrial) return "A resident is testing wild seeds — review the trial in Village (L)";
-      if (Object.values(this.tribe(0).cropSamples||{}).some(n=>n>=4)) return "Seeds are home — begin a cultivation trial in Village (L)";
+      if (Object.values(this.tribe(0).cropSamples||{}).some(n=>n>=4)) return "Seeds are home — an available resident will test cultivation automatically";
       return "Forage wild plants and bring seeds home before establishing fields";
     }
     if (!fields.length) return "Establish a farm for the seasonal harvest; keep foraging";
@@ -5421,7 +5426,7 @@ export class Game {
       if(b.reclaimed){b.hp=0;if(this.state.selBld===b)this.clearSelect();this.workBoard.reset();continue;}
       let live = 0;
       for (const n of this.state.trees) {
-        if (n.amount <= 0) continue;
+        if (n.amount <= 0&&!n.planted) continue;
         if (Math.hypot(n.x - b.x, n.z - b.z) <= LUMBER_R) live++;
       }
       if (live > 0) continue;
@@ -5510,6 +5515,7 @@ export class Game {
         tickVisitors(this,sdt);
         this.tickRoutes(sdt);
         tickTradeFocus(this);
+        if(Math.floor(this.state.time)!==Math.floor(this.state.time-sdt))tickAutomaticCultivation(this);
         this.tickHarvest();
         this.tickRegions();
         this.tickLumber();

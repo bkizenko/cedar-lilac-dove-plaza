@@ -81,61 +81,21 @@ function canvasTex(size: number, paint: (ctx: CanvasRenderingContext2D, s: numbe
 }
 
 export function makeMaterials(): MatKit {
-  const straw = canvasTex(256, (ctx, s) => {
-    ctx.fillStyle = "#9a7040";
-    ctx.fillRect(0, 0, s, s);
-    for (let i = 0; i < 1100; i++) {
-      const y = Math.random() * s;
-      ctx.strokeStyle = `rgba(${130 + Math.random() * 90},${90 + Math.random() * 60},${30 + Math.random() * 30},${0.35 + Math.random() * 0.4})`;
-      ctx.lineWidth = 0.6 + Math.random();
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(s, y + (Math.random() - 0.5) * 6);
-      ctx.stroke();
-    }
-  });
-  const bark = canvasTex(128, (ctx, s) => {
-    ctx.fillStyle = "#4a3018";
-    ctx.fillRect(0, 0, s, s);
-    for (let i = 0; i < 80; i++) {
-      ctx.strokeStyle = `rgba(${70 + Math.random() * 40},${40 + Math.random() * 22},${12},${0.45})`;
-      ctx.lineWidth = 1 + Math.random() * 2;
-      const x = Math.random() * s;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + (Math.random() - 0.5) * 8, s);
-      ctx.stroke();
-    }
-  });
-  const rock = canvasTex(128, (ctx, s) => {
-    ctx.fillStyle = "#8a8680";
-    ctx.fillRect(0, 0, s, s);
-    for (let i = 0; i < 400; i++) {
-      ctx.fillStyle = `rgba(${110 + Math.random() * 50},${108 + Math.random() * 40},${100 + Math.random() * 30},0.4)`;
-      ctx.beginPath();
-      ctx.arc(Math.random() * s, Math.random() * s, 1 + Math.random() * 3, 0, 7);
-      ctx.fill();
-    }
-  });
-  if (straw) straw.repeat.set(2, 2);
-  if (bark) bark.repeat.set(1, 2);
-  if (rock) rock.repeat.set(2, 2);
-
   const std = (color: string, roughness: number, metalness = 0, opts: Partial<THREE.MeshStandardMaterialParameters> = {}) =>
-    new THREE.MeshStandardMaterial({ color, roughness, metalness, ...opts });
+    new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading: true, ...opts });
   return {
-    thatch: std("#d4b06a", 0.92, 0, { map: straw || undefined }),
+    thatch: std("#d4b06a", 0.92, 0, {}),
     timber: std("#b88858", 0.78),
-    plaster: std("#d2c4aa", 0.86),
-    stone: std("#a8a49c", 0.9, 0, { map: rock || undefined }),
-    dark: std("#4a3420", 0.82),
+    plaster: std("#ead5b5", 0.86),
+    stone: std("#a8a49c", 0.9, 0, {}),
+    dark: std("#664734", 0.82),
     crop: std("#8ab84a", 0.86),
     metal: std("#8a8884", 0.42, 0.55),
-    tile: std("#7a4034", 0.72),
+    tile: std("#b9654f", 0.72),
     dirt: std("#8a6a3c", 0.95),
-    bark: std("#6a4828", 0.88, 0, { map: bark || undefined }),
-    leaf: std("#4e8a3c", 0.72),
-    rock: std("#9a9890", 0.88, 0, { map: rock || undefined }),
+    bark: std("#6a4828", 0.88, 0, {}),
+    leaf: std("#579b53", 0.72),
+    rock: std("#9a9890", 0.88, 0, {}),
     berry: std("#6a8a40", 0.74),
     hide: std("#e0c49a", 0.68),
     gold: std("#d4b070", 0.45, 0.35),

@@ -1,5 +1,17 @@
 # Hearthwild: canonical future execution handoff
 
+## Interface, seed economy and safe testing — 2026-10-28
+
+Latest direction: a readable, low-poly/blocky RTS with Polytopia-like decision density. Keep the historical catalogue below as a source of ideas, but do not expose every simulation detail as another mandatory chore. Prioritize a compact core loop: gather, build, explore, trade and defend. Target the older MacBook Air; keep shared/instanced geometry and avoid dense textures, blur-heavy UI or a graphics-engine rewrite.
+
+This increment: resource strip and progressive food detail; Village/Home/Recall/Ages/Test shortcuts; grouped building categories; reduced default clock detail; opaque lighter-cost panels; brighter faceted materials without procedural noise textures. Calm music now uses At Rest (credited CC BY 4.0) and excludes lively folk in all ages.
+
+Seed baskets arrive with crop samples and harvested crops; new farms cost four baskets and no logs. Trials automatically recruit an available unlocked adult once samples reach home and provisions permit, without stealing recall/hold/build/training orders. Existing completed farms are preserved; only unfunded old plans convert to the seed price. Hall/lumber actions replant depleted nearby trees for one basket each, showing growing saplings. This is replanting existing stands, not arbitrary-position forestry.
+
+Test lab: disposable copy, full-map reveal, age/weather/raid settings, supplies, weapons, crop unlock, healing, completed construction, sea raids and rival war/peace. Local save and protected-save writes are blocked centrally for test copies. Leaving restores the original game paused. Original village is saved before entering. Test exports are possible intentionally; not every simulation variable is exposed.
+
+Still open: stronger rival economies and later ages, full captivity/physical tribute, boats and animal transport, city administration; full visual asset replacement and deeper ledger simplification. New presentation is an incremental style pass, not the completed Crossy Road-level art overhaul. Validation: final seed/testing/rival suites pass 28/28; typecheck and production build passed. Browser checks verified test-copy activation, supply changes, map reveal, war/peace, original village restoration, farm price, music playback and zero console errors. Mobile width 390 had no horizontal overflow; hide-interface overlap was corrected afterward. The broad suite was launched but its final result is not claimed for this checkpoint.
+
 ## Rival scouting return repair — 2026-10-28
 
 Returning rival scouts now target reachable entrances of actual completed home halls instead of a generated camp center. An inaccessible nearest hall falls back to another reachable hall; no reachable home preserves a saved recall rather than dropping the person into idle work. Automatic scouting excludes recall, envoys, training, direct construction and held orders. Twelve focused scouting/barter checks and typecheck passed. This is a narrow fix for autonomous rival scouting, not proof that every player exploration or resource-access problem is resolved.

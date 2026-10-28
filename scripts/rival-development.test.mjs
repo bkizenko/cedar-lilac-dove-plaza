@@ -12,7 +12,7 @@ function fixture(){
  g.state.buildings=[g.makeBld('townhall',0,38,1)];g.state.units=[];
  g.state.trees=[];g.state.stones=[];g.state.forage=[];g.state.fish=[];g.state.wildlife=[];
  g.state.time=200;g.state.weather='clear';g.state.rivalKnowledge=[];
- Object.assign(g.tribe(1),{food:800,wood:90,stone:10,age:0,cultivated:['grain']});
+ Object.assign(g.tribe(1),{food:800,seeds:20,wood:90,stone:10,age:0,cultivated:['grain']});
  for(let i=0;i<10;i++)g.spawnUnit('worker',5+i%3,46+Math.floor(i/3),1);
  g.rebuildWalk();return g;
 }
@@ -72,13 +72,13 @@ test('idle workers resume unfinished stores and winter farms without requiring t
 test('another civilization cannot exhaust this village’s farm allowance',()=>{
  const g=fixture();for(let i=0;i<56;i++)g.state.buildings.push(g.makeBld('farm',300+i%8*10,300+Math.floor(i/8)*10,2));
  const wood=g.tribe(1).wood;const b=g.placeBuilding('farm',24,38,1);
- assert.ok(b);assert.equal(g.state.buildings.at(-1).build,0);assert.equal(g.tribe(1).wood,wood-20);
+ assert.ok(b);assert.equal(g.state.buildings.at(-1).build,0);assert.equal(g.tribe(1).wood,wood);assert.equal(g.tribe(1).seeds,16);
 });
 
 test('a larger community may fund the additional fields its residents require',()=>{
  const g=fixture();while(g.popNow(1)<50)g.spawnUnit('worker',5,50,1);
  for(let i=0;i<56;i++)g.state.buildings.push(g.makeBld('farm',300+i%8*10,300+Math.floor(i/8)*10,1));
- const wood=g.tribe(1).wood;assert.ok(g.placeBuilding('farm',24,38,1));assert.equal(g.tribe(1).wood,wood-20);
+ const wood=g.tribe(1).wood;assert.ok(g.placeBuilding('farm',24,38,1));assert.equal(g.tribe(1).wood,wood);assert.equal(g.tribe(1).seeds,16);
 });
 
 test('a missing or unreachable practice ground cannot hold an adult out of production forever',()=>{
@@ -106,7 +106,7 @@ test('successful rivals reserve advancement materials instead of endlessly addin
  g.state.buildings.push(g.makeBld('workshop',40,38,1));
  Object.assign(g.tribe(1),{wood:cost.wood+5,stone:cost.stone+5});
  assert.equal(rivalDevelopmentPlan(g,1).saving,true);
- assert.equal(rivalCanInvest(g,1,'farm'),false);
+ assert.equal(rivalCanInvest(g,1,'farm'),true,'seed-funded fields do not spend advancement timber');
  assert.equal(rivalCanInvest(g,1,'cairn'),false);
  assert.equal(rivalCanInvest(g,1,'warehouse'),true,'second protective store remains essential');
  // Fifty residents need more stores than the old sixteen-person age fixture.
@@ -170,7 +170,7 @@ test('both rivals can pay for a reachable quarry instead of depending on a facti
  assert.equal(g.tribe(1).wood,before-36);
  g.state.buildings[0].team=2;g.state.buildings=g.state.buildings.filter(b=>b!==q);
  for(const u of g.state.units){u.team=2;u.node=null;u.order='idle';}
- Object.assign(g.tribe(2),{food:800,wood:90,stone:0});g.rebuildWalk();
+ Object.assign(g.tribe(2),{food:800,seeds:20,wood:90,stone:0});g.rebuildWalk();
  assert.equal(developRivalResources(g,2),true);assert.ok(g.state.buildings.some(b=>b.type==='quarry'&&b.team===2));
 });
 

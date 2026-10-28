@@ -1,3 +1,5 @@
+import {TestPanel} from "./TestPanel";
+import {replantStand} from "@/game/cultivation";
 import {guardFrontier} from "@/game/frontiers";
 import {massRaid} from '@/game/massRaid';
 import {staffQuarry} from "@/game/mining";
@@ -87,12 +89,14 @@ function resWord(k: ResKind) {
 export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
   const compact = () => typeof window !== "undefined" && window.innerWidth <= 720;
   const [interfaceHidden,setInterfaceHidden]=useState(false);
-  const [selMin, setSelMin] = useState(compact);
-  const [clockMin, setClockMin] = useState(compact);
-  const [resMin, setResMin] = useState(compact);
+  const [selMin, setSelMin] = useState(true);
+  const [clockMin, setClockMin] = useState(true);
+  const [resMin, setResMin] = useState(true);
   const [buildMin, setBuildMin] = useState(compact);
   const [mapMin, setMapMin] = useState(compact);
   const [toolsMin,setToolsMin]=useState(true);
+  const [testOpen,setTestOpen]=useState(false);
+  const [buildTab,setBuildTab]=useState("Village");
   const [techOpen, setTechOpen] = useState(false);
   useEffect(() => {
     if (hud.selection.kind !== "none") setSelMin(false);
@@ -138,94 +142,16 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 
   return (
     <div className="hud-shell font-sans text-parchment">
-      <button className="absolute right-3 bottom-3 pointer-events-auto hud-panel rounded-xl px-3 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
       <div className="hud-res">
-        <div className="hud-panel rounded-xl px-3 py-2.5 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="font-display text-sm text-bronze-bright">Stores</div>
-            <MinToggle open={!resMin} onClick={() => setResMin((v) => !v)} />
-          </div>
-          {resMin ? (
-            <div className="mt-1 flex w-full items-center gap-2 text-[11px] text-parchment-dim">
-              <span className="tabular text-parchment">{hud.food}</span>
-              <span className="tabular">{hud.wood}</span>
-              <span className="tabular">{hud.stone}</span>
-              {hud.age >= 1 ? <span className="tabular text-dawn">{hud.copper}</span> : null}
-              {hud.age >= 2 ? <span className="tabular">{hud.iron}</span> : null}
-              <span className="ml-auto tabular text-dawn">
-                {founding ? hud.pop : `${hud.pop}/${hud.popCap}`}
-              </span>
-            </div>
-          ) : (
-            <>
-              <ResRow
-                icon={<Wheat className="size-3.5 text-blood" />}
-                label="Food"
-                value={hud.food}
-              />
-              <details className="mb-1 text-[11px] text-parchment-dim">
-                <summary className="cursor-pointer py-1">Food in stores</summary>
-                <dl className="grid grid-cols-2 gap-x-2 px-2 py-1">
-                  {FOOD_KINDS.map(kind=><div key={kind} className="contents"><dt className="capitalize">{kind}</dt><dd className="text-right tabular">{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}
-                </dl>
-              </details>
-              <ResRow
-                icon={<TreePine className="size-3.5 text-ok" />}
-                label="Logs"
-                value={hud.wood}
-              />
-              <ResRow
-                icon={<Mountain className="size-3.5 text-parchment-dim" />}
-                label="Stone"
-                value={hud.stone}
-              />
-              {hud.age >= 1 ? (
-                <ResRow
-                  icon={<Coins className="size-3.5 text-bronze" />}
-                  label="Copper · blades"
-                  value={hud.copper}
-                />
-              ) : null}
-              {hud.age >= 2 ? (
-                <ResRow
-                  icon={<Mountain className="size-3.5 text-parchment" />}
-                  label="Iron"
-                  value={hud.iron}
-                />
-              ) : null}
-              <div className="flex w-full items-center gap-2 text-sm leading-7">
-                <Users className="size-3.5 text-dawn" />
-                <span className="flex-1 text-left text-parchment-dim text-[13px]">People</span>
-                <span className="tabular min-w-10 text-right text-parchment">
-                  {founding ? hud.pop : `${hud.pop}/${hud.popCap}`}
-                </span>
-              </div>
-              {bank && !founding ? (
-                <div className="mt-1.5">
-                  <BankBtn give={bank.give} get={bank.get} hud={hud} engine={engine} />
-                </div>
-              ) : null}
-            </>
-          )}
+        <div className="hud-panel resource-strip">
+          {[["Food",hud.food,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
+          <button aria-label="Expand resource details" aria-expanded={!resMin} onClick={()=>setResMin(v=>!v)}>{resMin?<ChevronDown/>:<ChevronUp/>}</button>
         </div>
-        {!resMin && !founding ? (
-          <div className="hud-panel rounded-xl px-3 py-2 flex items-start gap-2">
-            <Hammer className="size-3.5 mt-0.5 text-bronze shrink-0" />
-            <div className="min-w-0">
-              <p className="text-xs leading-snug text-parchment-dim">{hud.objective}</p>
-              <p className="mt-0.5 text-[10px] text-parchment-dim/80">
-                Food storage {hud.food}/{hud.stockCap}
-              </p>
-            </div>
-          </div>
-        ) : null}
-        {hud.event ? (
-          <div className="hud-panel rounded-xl px-3 py-1.5 text-[11px] text-bronze-bright">
-            {hud.event}
-          </div>
-        ) : null}
+        {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{hud.age>=1&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
+        {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
+        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>setTestOpen(true)}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
-
+      {testOpen&&engine&&<TestPanel engine={engine} close={()=>setTestOpen(false)}/>}
       <div className="hud-clock">
         {founding ? null : (
         <div className="hud-panel rounded-xl p-2 text-xs">
@@ -233,6 +159,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             Controls & save {toolsMin?<ChevronDown className="size-4"/>:<ChevronUp className="size-4"/>}
           </button>
           {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
+          <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"
             onClick={() => {
@@ -532,6 +459,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div className="mt-2 flex flex-col gap-1">
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Assign builders here</button>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
+                {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
                 {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
                 {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Send available armed guards</button>}
                 {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two stone miners</button>}
@@ -735,10 +663,13 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {AGES[hud.age]} buildings
           </button>
         ) : (
-          <div className="hud-build-row">
+          <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
+              const category=["farm","dock","grove"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =
+                (engine?.game.tribe(0).seeds||0)<(b.cost.seeds||0) ||
                 hud.wood < (b.cost.wood || 0) ||
                 hud.stone < (b.cost.stone || 0) ||
                 hud.food < (b.cost.food || 0) ||
@@ -764,7 +695,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                     {shortName(b.name)}{unaffordable ? " · Plan" : ""}
                   </div>
                   <div className="text-[9px] text-parchment tabular">
-                    {b.cost.wood ? `L${b.cost.wood}` : ""} {b.cost.stone ? `S${b.cost.stone}` : ""}
+                    {b.cost.seeds ? `${b.cost.seeds} seeds` : ""} {b.cost.wood ? `L${b.cost.wood}` : ""} {b.cost.stone ? `S${b.cost.stone}` : ""}
                     {b.cost.copper ? ` C${b.cost.copper}` : ""}
                     {b.cost.iron ? ` I${b.cost.iron}` : ""}
                   </div>
@@ -772,7 +703,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               );
             })}
             {hud.trainOptions
-              .filter((u) => u.type !== "worker" && hud.age >= u.age)
+              .filter((u) => buildTab==="Defense" && u.type !== "worker" && hud.age >= u.age)
               .map((u) => (
                 <button
                   key={u.type}
@@ -791,7 +722,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   </div>
                 </button>
               ))}
-          </div>
+          </div></div>
         )}
         <MinToggle open={!buildMin} onClick={() => setBuildMin((v) => !v)} />
       </div>
@@ -817,7 +748,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             onClick={() => setMapMin(false)}
             className="flex w-full items-center gap-1.5 px-2 pb-2 text-[10px] text-parchment-dim"
           >
-            {hud.tribes.map((t) => (
+            {hud.tribes.filter(t=>t.id===0||hud.camps?.some(c=>c.team===t.id&&c.known)).map((t) => (
               <span
                 key={t.name}
                 className="size-1.5 rounded-full"

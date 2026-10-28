@@ -10,6 +10,7 @@ export const CROP_NAMES:Record<CropKind,string>={grain:"Wild grain",pulses:"Wild
 /** Optional fields migrate in place; existing cultivated land never loses its practice. */
 export function initializeCultivation(g:Game,legacy=false){
   for(const t of g.state.tribes){
+    t.seeds??=Math.min(100000,Object.values(t.cropSamples||{}).reduce((n,v)=>n+(v||0),0));
     t.cropSamples??={};
     t.cultivated??=g.state.buildings.some(b=>b.team===t.id&&b.type==="farm")||legacy&&t.age>0?["grain"]:[];
   }
@@ -31,29 +32,33 @@ export function collectSamples(u:Unit,n:ResourceNode,food:number){
   u.seedSamples??={};u.seedSamples[n.cropCandidate]=(u.seedSamples[n.cropCandidate]||0)+food*.5;
 }
 export function deliverSamples(g:Game,u:Unit){
-  if(!u.seedSamples)return;
+  if(!u.seedSamples){
+    if(u.carryType==='food'&&['grain','pulses','tubers'].includes(u.carryFood||''))g.tribe(u.team).seeds=Math.min(100000,(g.tribe(u.team).seeds||0)+u.carry*.08);
+    return;
+  }
   const t=g.tribe(u.team);t.cropSamples??={};
   let remaining=u.carryType==="food"?u.carry*.5:0;
   for(const kind of CROPS){
     const amount=Math.min(remaining,u.seedSamples[kind]||0);remaining-=amount;
     if(!amount)continue;
+    t.seeds=Math.min(100000,(t.seeds||0)+amount);
     const first=!(t.cropSamples[kind]||0);t.cropSamples[kind]=(t.cropSamples[kind]||0)+amount;
-    if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Test cultivation at the hearth.`);
+    if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Residents will test these seeds at the hearth automatically.`);
   }
   u.seedSamples=undefined;
 }
 export function cultivationIssue(g:Game,team=0){
-  return g.tribe(team).cultivated?.length?null:"Gather wild grain, pulses or tubers: bring home 8 crop food for 4 samples, then test cultivation in the village ledger (L).";
+  return g.tribe(team).cultivated?.length?null:"Gather wild grain, pulses or tubers: bring home 8 crop food for 4 samples, residents will learn cultivation automatically at the hearth.";
 }
-export function beginCropTrial(g:Game,kind:CropKind,team=0){
+export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
   if(g.state.units.some(u=>u.hp>0&&u.team===team&&u.studyCrop===kind))return false;
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
+  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
   if(!u||!g.state.buildings.some(b=>b.team===team&&b.type==="townhall"&&g.finished(b)))return false;
   if(!t.cropTrial){
-    if((t.cropSamples?.[kind]||0)<4||t.wood<2)return false;
-    t.cropSamples![kind]=(t.cropSamples![kind]||0)-4;t.wood-=2;
+    if((t.cropSamples?.[kind]||0)<4)return false;
+    t.cropSamples![kind]=(t.cropSamples![kind]||0)-4;
     const home=g.campOf(team);
     t.cropTrial={kind,progress:0,duration:30+Math.round((1-soilQuality(g,home.x,home.z))*15)};
   }
@@ -107,4 +112,27 @@ export function seekCropSamples(g:Game){
     u.workReason=patch?`Gathering ${CROP_NAMES[patch.cropCandidate!]} — carry samples home`:"Searching unknown ground for edible plants and crop seeds";sent++;
   }
   g.workBoard.reset();g.banner(sent?`${sent} residents looking for wild crop samples; harvests must be brought home`:"Need an available adult and either a known plant or food for exploration",5);return sent;
+}
+
+/** One short automatic trial, with food work protected and explicit orders respected. */
+export function tickAutomaticCultivation(g:Game){
+ const t=g.tribe(0);
+ if(!t||reserveSeconds(g,0)<120||g.state.weather==='storm')return;
+ const kind=t.cropTrial?.kind||CROPS.find(k=>!t.cultivated?.includes(k)&&(t.cropSamples?.[k]||0)>=4);
+ if(!kind)return;
+ beginCropTrial(g,kind,0,true);
+}
+/** Replant depleted local stands with seed baskets, never logs. Existing forest
+ * regrowth supplies the growth clock, weather response and saved tree identity. */
+export function replantStand(g:Game,buildingId:number){
+ const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===0&&['lumber','townhall'].includes(b.type)&&g.finished(b));
+ if(!b)return 0;
+ const t=g.tribe(0);let planted=0;
+ for(const n of g.state.trees){
+  if(planted>=4||(t.seeds||0)<1)break;
+  if(n.amount>0||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!g.exploredAt(n.x,n.z))continue;
+  t.seeds!--;n.regenT=120;n.planted=true;planted++;
+ }
+ g.banner(planted?`${planted} trees replanted. Growth takes about two minutes in mild weather.`:'Need seed baskets and depleted trees within 28m of this camp.',5);
+ return planted;
 }

@@ -216,7 +216,7 @@ export class WorldView {
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.02;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     canvas.addEventListener("webglcontextlost", this.onGlLost, false);
@@ -1093,8 +1093,8 @@ export class WorldView {
     this.litSunCol.lerp(sunCol, k);
     this.sun.intensity = this.litSun;
     this.sun.color.copy(this.litSunCol);
-    this.hemi.intensity = this.litHemi;
-    this.fill.intensity = night ? 0.38 : 0.2 + elev * 0.12;
+    this.hemi.intensity = this.litHemi * 1.2;
+    this.fill.intensity = night ? 0.45 : 0.48 + elev * 0.16;
     this.bounce.intensity = night ? 0.22 : 0.12 + elev * 0.12;
     (this.scene.fog as THREE.FogExp2).color.copy(this.litFog);
     this.scene.background = this.litFog;
@@ -1169,9 +1169,9 @@ export class WorldView {
     this.treeCount = nTree;
     for (let i = 0; i < nTree; i++) {
       const t = game.state.trees[i];
-      const stump = t.amount <= 0;
+      const stump = t.amount <= 0&&!t.planted;
       const seen = game.exploredAt(t.x, t.z);
-      const sc = !seen ? 0.001 : stump ? t.scale * 0.22 : t.scale;
+      const sc = !seen ? 0.001 : t.planted ? t.scale*(.18+.6*Math.max(0,1-t.regenT/120)) : stump ? t.scale * 0.22 : t.scale;
       _p.set(t.x, t.y, t.z);
       _e.set(0, i * 0.7, 0);
       _q.setFromEuler(_e);
@@ -1868,7 +1868,7 @@ export class WorldView {
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);
-          vec3 mist = mix(vec3(0.69, 0.77, 0.79), vec3(0.88, 0.91, 0.87), 0.5 + cloud * 0.22);
+          vec3 mist = mix(vec3(0.72, 0.82, 0.86), vec3(0.9, 0.94, 0.94), 0.5 + cloud * 0.22);
           vec3 col = mix(mist, terr.rgb, wash / max(a, 0.001));
           gl_FragColor = vec4(col, a);
         }`,
@@ -2006,7 +2006,7 @@ export class WorldView {
 
   private paintSeason(game: Game, dt: number) {
     this.seasonAcc += dt;
-    if (this.seasonAcc < 0.2 && this.lastSnow >= 0) return;
+    if (this.seasonAcc < 1 && this.lastSnow >= 0) return;
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
@@ -2041,8 +2041,8 @@ export class WorldView {
         );
       } else {
         const gR = 0.42 * sn.spring + 0.36 * sn.summer + 0.48 * sn.autumn + 0.4 * sn.winter;
-        const gG = 0.62 * sn.spring + 0.52 * sn.summer + 0.38 * sn.autumn + 0.44 * sn.winter;
-        const gB = 0.28 * sn.spring + 0.22 * sn.summer + 0.16 * sn.autumn + 0.32 * sn.winter;
+        const gG = 0.72 * sn.spring + 0.62 * sn.summer + 0.38 * sn.autumn + 0.44 * sn.winter;
+        const gB = 0.32 * sn.spring + 0.26 * sn.summer + 0.16 * sn.autumn + 0.32 * sn.winter;
         if (b === 3) {
           c.setRGB(gR * 0.92, gG * 1.08, gB * 0.9);
         } else c.setRGB(gR, gG, gB);

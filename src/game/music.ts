@@ -1,6 +1,6 @@
 export type MusicStage = "village" | "adventure" | "battle" | "folk" | "celtic";
 export const TRACKS: Record<MusicStage, { title: string; file: string }> = {
-  village: { title: "Meditation Impromptu 01", file: "/audio/meditation-impromptu-01.mp3" },
+  village: { title: "At Rest", file: "/audio/at-rest.mp3" },
   adventure: { title: "Atlantean Twilight", file: "/audio/atlantean-twilight.mp3" },
   battle: { title: "Five Armies", file: "/audio/five-armies.mp3" },
   folk: { title: "Folk Round", file: "/audio/folk-round.mp3" },
@@ -10,6 +10,7 @@ export const TRACKS: Record<MusicStage, { title: string; file: string }> = {
  * Calm mode never picks the lively Celtic piece or combat recording. */
 export function peacefulMusic(age:number,season:string,calm=true):MusicStage{
   const winter=season==="Winter",autumn=season==="Autumn";
+  if(calm)return winter||autumn?"adventure":"village";
   if(age<=0)return winter||autumn?"adventure":"village";
   if(age===1)return winter?"village":"adventure";
   if(age===2)return winter||autumn?"adventure":"folk";

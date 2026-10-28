@@ -24,8 +24,8 @@ test('an already unlocked effects context still retries music on a user gesture'
 
 test('ages evolve peaceful music without forcing battle or lively music in calm mode',async()=>{
   const {peacefulMusic,TRACKS}=await import('../src/game/music.ts');
-  assert.equal(peacefulMusic(0,'Spring'),'village');assert.equal(peacefulMusic(1,'Spring'),'adventure');
-  assert.equal(peacefulMusic(2,'Spring'),'folk');assert.equal(peacefulMusic(5,'Spring',false),'celtic');
+  assert.equal(peacefulMusic(0,'Spring'),'village');assert.equal(peacefulMusic(1,'Spring'),'village');
+  assert.equal(peacefulMusic(2,'Spring'),'village');assert.equal(peacefulMusic(5,'Spring',false),'celtic');
   for(let age=0;age<=5;age++)for(const season of ['Spring','Summer','Autumn','Winter']){
     const stage=peacefulMusic(age,season,true);assert.ok(TRACKS[stage]);assert.ok(!['battle','celtic'].includes(stage));
   }
