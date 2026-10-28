@@ -180,6 +180,7 @@ export type Unit = {
   studyCrop?: CropKind;
   farmTool?: FarmToolKind;
   farmToolWork?: FarmToolWork;
+  tamingWork?: {animal:number;progress:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};

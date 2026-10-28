@@ -4,6 +4,12 @@ This is a design catalogue, not a claim that every historical development must o
 
 Latest delivery (2026-10-14): direct construction overrides, quarry staffing/stone approach repair, visited-outskirts discovery, 2–4 new-map rival slots, 50–150 age population requirements, and development timber protection are tracked at their exact scope in the canonical handoff. A first defended-outpost layer now provides physical guard dispatch, variable strength/reach, surveyed value and known rival grievances; full territorial negotiation/contested trade corridors, armed caravans, newcomer-built temporary and mud shelters, rival parity, pack animals and stronger village identity remain accepted incomplete work. Do not cross out these broad systems based on a UI button or a faction slot.
 
+## Boats and animal transport delivered — 2026-10-28
+
+- [x] ~~Single-person dugouts: dock crafting, real water travel, cargo, portage and saved voyages.~~ Includes recall, known offshore fishing and canoe-equipped exploration. Passenger fleets and naval combat remain open.
+- [x] ~~Pack goats: discovered animals, paid taming labor, carrying bonus, winter feed and release after handler death.~~ Includes interruption/save protection. Breeding, individual animal health and larger draft species remain open.
+- [x] ~~Visible shared boat/pannier models and a disposable transport preview.~~ No new heavyweight art assets.
+
 ## Verified additions — 2026-10-28
 
 - [x] ~~Physical delivery of fixed log tribute and puppet dues~~: existing adults carry actual stock; arrival pays debt, loss does not, and journeys persist across saves. Custom tribute demands and escort negotiations remain open.

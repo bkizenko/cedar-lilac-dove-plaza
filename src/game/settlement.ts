@@ -1,3 +1,4 @@
+import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRange,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
 import {huntable} from "./hunting";
@@ -35,7 +36,7 @@ export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
     .filter((u) => u.team === team && u.hp > 0 && !u.expedition)
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
-      (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1), 0);
+      (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather;
 }
@@ -334,7 +335,7 @@ export class WorkBoard {
         (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<RIVAL_RESOURCE_RANGE));
       const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
-      if ((distance > 100 && !settlementWork) || !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin)) continue;
+      if ((distance > 100 && !settlementWork) || (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin))) continue;
       if (
         g.state.units.some(
           (e) =>

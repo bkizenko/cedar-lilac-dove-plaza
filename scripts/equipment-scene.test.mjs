@@ -18,14 +18,14 @@ function mesh(geometry,capacity=140){
 function fixture(){
   const view=Object.create(WorldView.prototype);
   view.cargoMeshes=new Map(["food","wood","stone","copper","iron"].map(k=>[k,mesh(cargoGeo(k),420)]));
-  view.haulageMeshes=new Map([['sled',mesh(haulageGeo('sled'))],['cart',mesh(haulageGeo('cart'))]]);
+  view.haulageMeshes=new Map(['sled','cart','canoe','pack'].map(k=>[k,mesh(haulageGeo(k))]));
   view.farmToolMesh=mesh(farmToolHeadGeo());
   view.unitMeshes=new Map([['worker',mesh(unitGeo('worker'))]]);
   view.rings=mesh(new THREE.PlaneGeometry(),40);view.workRings=mesh(new THREE.PlaneGeometry(),40);
   view.resourceRing=new THREE.Mesh(new THREE.RingGeometry(1,1.2),new THREE.MeshBasicMaterial());
   view.ghost=new THREE.Group();view.ghost.visible=false;
   const person=(id,extra={})=>({id,type:'worker',team:0,hp:40,x:id*5,y:4,z:15,facing:0,carry:0,carryType:null,stride:0,vx:0,vz:0,stature:1,tint:.5,r:.4,order:'gather',militia:false,...extra});
-  const game={state:{units:[],buildings:[],selBld:null,placing:null,time:20,weather:'clear',wildlife:[]},world:{biomes:[],rivers:[]},height:()=>4,visibleAt:(x)=>x<100,exploredAt:(x)=>x<150,travelHeight:()=>4};
+  const game={state:{units:[],buildings:[],selBld:null,placing:null,time:20,weather:'clear',wildlife:[]},world:{biomes:[],rivers:[],waterY:0},height:()=>4,visibleAt:(x)=>x<100,exploredAt:(x)=>x<150,travelHeight:()=>4};
   return {view,game,person};
 }
 const matrix=(mesh,index=0)=>{const m=new THREE.Matrix4();mesh.getMatrixAt(index,m);return m;};
@@ -155,4 +155,16 @@ test('distinct cargo silhouettes remain finite and small without per-carrier mes
   shapes.push([...geo.getAttribute('position').array].join(','));geo.dispose();
  }
  assert.equal(new Set(shapes.slice(0,3)).size,3,'food, logs and rocks must have distinct shapes');
+});
+
+
+test('canoes float with their carrier, portage on land, and pack animals carry cargo without duplicates',()=>{
+ const {view,game,person}=fixture();const sailor=person(1,{haulage:'canoe',carry:12,carryType:'wood',y:.16}),handler=person(2,{haulage:'pack',carry:8,carryType:'stone'});
+ game.height=(x)=>x===sailor.x?-2:4;game.state.units=[sailor,handler];view.syncCargo(game);
+ assert.equal(view.haulageMeshes.get('canoe').count,1);assert.equal(view.haulageMeshes.get('pack').count,1);
+ assert.ok(Math.abs(matrix(view.haulageMeshes.get('canoe')).elements[13]+.12)<.001);assert.equal(matrix(view.haulageMeshes.get('canoe')).elements[12],sailor.x);
+ assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),2);
+ game.height=()=>4;sailor.y=4;view.syncCargo(game);assert.ok(matrix(view.haulageMeshes.get('canoe')).elements[13]>5);
+ sailor.hp=0;handler.shelterId=1;view.syncCargo(game);assert.equal(view.haulageMeshes.get('canoe').count,0);assert.equal(view.haulageMeshes.get('pack').count,0);
+ for(const kind of ['canoe','pack']){const geo=haulageGeo(kind);assert.ok(geo.getAttribute('position').count<600);assert.ok([...geo.getAttribute('position').array].every(Number.isFinite));geo.dispose();}
 });

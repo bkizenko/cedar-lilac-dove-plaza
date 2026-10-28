@@ -416,6 +416,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <h3>Carrying equipment</h3>
         <p>Make a sled at a hearth or crafting shelter. Its owner carries twice as much. After 60 goods have actually arrived by sled, a crafting shelter can replace a sled with a handcart carrying three times as much.</p>
         <p>{Math.floor(t.haulagePractice||0)}/60 goods delivered by sled.</p>
+        <p>Build a dugout at a fishing dock (20 logs, 2 stone, 75 seconds). Its maker can paddle across water with twice the hand-carried load, then portage on land at 80% walking speed. Select the carrier and order a destination or recall them as usual. Canoes can also fish known offshore grounds.</p>
+        <p>Tame a discovered wild goat from a hearth or crafting shelter (10 food, 2 logs, 60 seconds). Its handler carries twice as much without a hauling speed penalty. Goats graze in warm seasons and need more village feed in winter. Movement or combat pauses taming; use the same action to resume without paying again.</p>
         {people.filter(u=>u.haulage||u.haulageWork).map(u=><p key={u.id}>{personName(u)} · {u.haulage?HAULAGE[u.haulage].name:"Hand carrying"}{u.haulageWork&&<> · making {HAULAGE[u.haulageWork.kind].name.toLowerCase()} {Math.floor(100*u.haulageWork.progress/u.haulageWork.duration)}%{u.haulageWork.paused&&<button onClick={()=>{if(!resumeHaulageWork(g,u))g.banner("Need empty hands and a reachable crafting workplace to resume",4);engine.pushHud();}}>Resume transport work</button>}</>}</p>)}
         <h3>Weapons and village defense</h3>
         <p>{t.spears} spears · {t.bows} bows · {t.blades} blades in stores. Equip empty-handed adults near a hall, store or barracks. They remain members of your village.</p>

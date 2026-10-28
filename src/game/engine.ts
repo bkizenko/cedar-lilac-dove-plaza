@@ -525,7 +525,7 @@ export class Engine {
     this.pushHud();
   }
 
-  craftHaulage(kind: "sled" | "cart", workplaceId?:number) {
+  craftHaulage(kind: "sled" | "cart" | "canoe" | "pack", workplaceId?:number) {
     this.game.craftHaulage(kind,workplaceId);
     this.pushHud();
   }

@@ -1,3 +1,4 @@
+import {connectedForUnit} from "./waterTravel";
 import {carryingCapacity} from "./haulage";
 import type {Game} from './sim';
 import type {Building,Unit,ResourceNode} from './types';
@@ -87,6 +88,7 @@ export function fishingReport(g:Game,b:Building){
   return `${workers}/2 fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus))} fish per fisher/min before hauling; winter slows fishing`;
 }
 export function fishingBank(g:Game,u:Unit,n:ResourceNode){
+  if(u.haulage==="canoe"&&g.height(n.x,n.z)<=g.world.waterY+.3&&connectedForUnit(g,u,n.x,n.z))return {x:n.x,z:n.z};
   let best:{x:number;z:number}|null=null,score=Infinity;
   for(const radius of [1,2,3.5,5,6.5])for(let i=0;i<16;i++){
     const x=n.x+Math.sin(i*Math.PI/8)*radius,z=n.z+Math.cos(i*Math.PI/8)*radius;

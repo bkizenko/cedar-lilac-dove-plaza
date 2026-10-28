@@ -769,8 +769,8 @@ export class WorldView {
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.count=0;mesh.frustumCulled=false;
       this.scene.add(mesh);this.cargoMeshes.set(kind,mesh);
     }
-    for (const kind of ['sled', 'cart'] as const) {
-      const mesh = new THREE.InstancedMesh(haulageGeo(kind), this.mats.timber, 140);
+    for (const kind of ['sled', 'cart', 'canoe', 'pack'] as const) {
+      const mesh = new THREE.InstancedMesh(haulageGeo(kind), kind==='pack'?this.mats.hide:this.mats.timber, 140);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mesh.count = 0; mesh.frustumCulled = false;
       mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
@@ -1373,31 +1373,32 @@ export class WorldView {
 
   private syncCargo(game: Game) {
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
-    let sleds=0, carts=0, workers=0;
+    const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let workers=0;
     const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
     for (const u of game.state.units) {
       if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
       if (u.hp<=0 || u.shelterId || (u.team!==0&&!game.visibleAt(u.x,u.z))) continue;
-      const kind=u.type==='worker'&&!u.militia?u.haulage:undefined;
+      const kind=u.haulage==='canoe'?'canoe':u.type==='worker'&&!u.militia?u.haulage:undefined;
       const vehicle=kind&&this.haulageMeshes.get(kind);
-      const index=kind==='sled'?sleds:carts;
+      const index=kind?vehicles[kind]:0;
       const mounted=!!vehicle&&index<instCap(vehicle);
       if(mounted){
-        const dx=Math.sin(u.facing),dz=Math.cos(u.facing),x=u.x-dx*2.1,z=u.z-dz*2.1;
+        const dx=Math.sin(u.facing),dz=Math.cos(u.facing),offset=kind==='canoe'?0:2.1,x=u.x-dx*offset,z=u.z-dz*offset;
         const pitch=-Math.atan2(game.travelHeight(x+dx*.8,z+dz*.8)-game.travelHeight(x-dx*.8,z-dz*.8),1.6);
         const roll=Math.atan2(game.travelHeight(x+dz*.5,z-dx*.5)-game.travelHeight(x-dz*.5,z+dx*.5),1);
-        _p.set(x,game.travelHeight(x,z)+.04,z);
-        _haulEuler.set(THREE.MathUtils.clamp(pitch,-.45,.45),u.facing,THREE.MathUtils.clamp(roll,-.4,.4));
+        const afloat=kind==='canoe'&&game.height(x,z)<game.world.waterY+.3;
+        _p.set(x,kind==='canoe'?(afloat?game.world.waterY-.12:u.y+1.8):game.travelHeight(x,z)+.04,z);
+        _haulEuler.set(kind==='canoe'?0:THREE.MathUtils.clamp(pitch,-.45,.45),u.facing,kind==='canoe'?0:THREE.MathUtils.clamp(roll,-.4,.4));
         _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
         vehicle!.setMatrixAt(index,_haulMatrix);
-        if(kind==='sled')sleds++;else carts++;
+        vehicles[kind!]++;
       }
       if(u.carry<=0||!u.carryType)continue;
       const mesh=this.cargoMeshes.get(u.carryType),i=counts[u.carryType];
       if(!mesh||i>=instCap(mesh))continue;
       if(mounted){
         const fullness=Math.min(1,u.carry/carryingCapacity(u,u.carryType)),height=.35+fullness*.55;
-        _p.set(0,(kind==='cart'?.7:.34)+height*.5,0).applyMatrix4(_haulMatrix);
+        _p.set(0,(kind==='cart'?.7:kind==='pack'?1.05:.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
@@ -1406,7 +1407,7 @@ export class WorldView {
       mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);counts[u.carryType]++;
     }
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
-    for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=kind==='sled'?sleds:carts;vehicle.instanceMatrix.needsUpdate=true;}
+    for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
   }
 
   private syncUnits(game: Game) {
@@ -1438,14 +1439,15 @@ export class WorldView {
         const chopping =
           !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
         const phase = u.stride;
-        const bob = walking
+        const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.world.waterY+.3;
+        const bob = afloat ? Math.sin(game.state.time*2+u.id)*.025 : walking
           ? Math.abs(Math.sin(phase)) * 0.16
           : chopping
             ? Math.abs(Math.sin(phase)) * 0.08
             : 0;
-        const pitch = walking ? Math.sin(phase) * 0.22 : chopping ? Math.sin(phase) * 0.14 : 0;
-        const roll = walking ? Math.sin(phase * 2) * 0.12 : 0;
-        const yScale = walking ? 1.65 * (1 + Math.sin(phase * 2) * 0.045) : 1.65;
+        const pitch = afloat ? 0 : walking ? Math.sin(phase) * 0.22 : chopping ? Math.sin(phase) * 0.14 : 0;
+        const roll = afloat ? 0 : walking ? Math.sin(phase * 2) * 0.12 : 0;
+        const yScale = afloat ? 1.3 : walking ? 1.65 * (1 + Math.sin(phase * 2) * 0.045) : 1.65;
         const st = TEAM_STYLE[u.team] || TEAM_STYLE[0];
         const body =
           (u.type === "leader" ? 1.95 : 1.65) *

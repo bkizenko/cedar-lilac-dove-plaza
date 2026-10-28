@@ -7,6 +7,8 @@ import { predisposition } from './people';
 
 export const HAULAGE = {
   sled: { name: 'Carrying sled', wood: 8, stone: 1, seconds: 45, capacity: 2, loadedSpeed: .88 },
+  canoe: { name: 'Dugout canoe', wood: 20, stone: 2, seconds: 75, capacity: 2, loadedSpeed: 1 },
+  pack: { name: 'Pack goat', wood: 0, stone: 0, seconds: 60, capacity: 2, loadedSpeed: 1 },
   cart: { name: 'Wheeled handcart', wood: 24, stone: 4, seconds: 90, capacity: 3, loadedSpeed: .94 },
 } as const;
 export const WHEEL_PRACTICE = 60;
@@ -30,7 +32,7 @@ function civilian(g: Game, u: HaulageUnit) {
 }
 
 function available(g: Game, u: HaulageUnit) {
-  return civilian(g, u) && u.carry === 0 && !u.weaponWork && !u.farmToolWork && !u.studyCrop &&
+  return civilian(g, u) && u.carry === 0 && !u.tamingWork && !u.weaponWork && !u.farmToolWork && !u.studyCrop &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled &&
     ['idle', 'gather', 'hold'].includes(u.order);
@@ -39,7 +41,7 @@ function available(g: Game, u: HaulageUnit) {
 function workplaces(g: Game, team: number, kind: HaulageKind, id?: number) {
   return g.state.buildings.filter(b => b.team === team && g.finished(b) &&
     (id === undefined || b.id === id) &&
-    (b.type === 'workshop' || kind === 'sled' && b.type === 'townhall'));
+    (kind==='canoe'?b.type==='dock':b.type === 'workshop' || kind === 'sled' && b.type === 'townhall'));
 }
 
 function nearestWorkplace(g: Game, u: Unit, candidates: Building[]) {
@@ -48,6 +50,8 @@ function nearestWorkplace(g: Game, u: Unit, candidates: Building[]) {
 }
 
 export function haulageRequirement(g: Game, kind: HaulageKind, team = 0): string | null {
+  if(kind==='pack')return 'Tame a discovered wild goat at a hearth; pack animals cannot be crafted.';
+  if(kind==='canoe')return workplaces(g,team,kind).length?null:'Finish a fishing dock to carve a dugout canoe';
   if (kind !== 'cart') return null;
   const practice = (g.tribe(team) as HaulageTribe).haulagePractice || 0;
   if (practice < WHEEL_PRACTICE)
@@ -161,11 +165,11 @@ const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFi
 
 export function validHaulageUnit(v: unknown) {
   if (!record(v)) return false;
-  if (v.haulage !== undefined && v.haulage !== 'sled' && v.haulage !== 'cart') return false;
+  if (v.haulage !== undefined && !['sled','cart','canoe','pack'].includes(String(v.haulage))) return false;
   if (v.haulageWork === undefined) return true;
   const w = v.haulageWork;
-  if (!record(w) || w.kind !== 'sled' && w.kind !== 'cart') return false;
-  const durations = w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [HAULAGE.cart.seconds];
+  if (!record(w) || w.kind !== 'sled' && w.kind !== 'cart' && w.kind !== 'canoe') return false;
+  const durations = w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [w.kind==='canoe'?HAULAGE.canoe.seconds:HAULAGE.cart.seconds];
   if (!finite(w.duration) || !durations.includes(w.duration) ||
     !finite(w.progress) || w.progress < 0 || w.progress > w.duration ||
     !Number.isSafeInteger(w.workplace) || Number(w.workplace) < 1 ||

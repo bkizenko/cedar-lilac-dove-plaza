@@ -376,6 +376,15 @@ export function unitGeo(type: UnitType): THREE.BufferGeometry {
 /** Shared low-poly equipment; local +Z points towards the person pulling it. */
 export function haulageGeo(kind: HaulageKind): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
+  if(kind==='canoe')return merge([
+    box(1.05,.18,2.6,0,0,0),box(.15,.45,2.7,-.57,.08,0),box(.15,.45,2.7,.57,.08,0),
+    box(.85,.35,.45,0,.12,-1.45),box(.85,.35,.45,0,.12,1.45),
+    box(1,.12,.3,0,.3,-.55),box(1,.12,.3,0,.3,.55),box(.07,.07,2.6,.85,.5,0),box(.3,.08,.55,.85,.5,1.1)
+  ]);
+  if(kind==='pack')return merge([
+    box(.55,.5,1,0,.55,0),box(.28,.45,.3,0,.88,.48),box(.3,.25,.38,0,1.23,.53),
+    ...[-1,1].flatMap(side=>[box(.12,.6,.12,side*.2,0,.32),box(.12,.6,.12,side*.2,0,-.32),box(.28,.4,.65,side*.4,.55,-.1),box(.055,.25,.07,side*.12,1.45,.48)])
+  ]);
   const deck = kind === 'cart' ? .6 : .24;
   for (let i = 0; i < 4; i++) parts.push(box(.25, .1, 1.6, -.42 + i * .28, deck, 0));
   parts.push(box(1.16, .09, .1, 0, deck + .09, -.75));

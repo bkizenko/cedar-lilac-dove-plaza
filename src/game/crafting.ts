@@ -5,7 +5,7 @@ export function craftingBenches(b: Building) {
     ? 3
     : b.type === "forge" || b.type === "barracks"
       ? 2
-      : b.type === "townhall"
+      : b.type === "townhall" || b.type === "dock"
         ? 1
         : 0;
 }

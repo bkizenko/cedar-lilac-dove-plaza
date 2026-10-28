@@ -1,3 +1,5 @@
+import {packTamingAI,releasePackAnimal} from "./packAnimals";
+import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
 import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
 import {isRivalTeam} from "./factions";
@@ -874,8 +876,8 @@ export class Game {
 
   canStep(u: Unit, x: number, z: number) {
     if (!inBounds(x, z, 1)) return false;
-    const h = this.travelHeight(x, z);
-    if (h < this.world.waterY + WALK_CLEARANCE || Math.abs(h - u.y) > 2.55) return false;
+    const h = canoeHeight(this,u,x,z);
+    if ((u.haulage!=="canoe"&&h < this.world.waterY + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of this.state.buildings) {
       if (!this.solidBuilding(b)) continue;
       const w = b.w * 0.4 + u.r,
@@ -1174,7 +1176,7 @@ export class Game {
     return beginFarmToolWork(this,kind,0,workplaceId);
   }
 
-  craftHaulage(kind: "sled" | "cart", workplaceId?:number) {
+  craftHaulage(kind: "sled" | "cart" | "canoe" | "pack", workplaceId?:number) {
     return beginHaulageWork(this,kind,0,workplaceId);
   }
 
@@ -1565,6 +1567,7 @@ export class Game {
     u.trade=null;u.tradeTeam=0;u.procurement=undefined;u.customOffer=undefined;u.shelterId=undefined;
     if(u.expedition)u.expedition.returning=false;
     if(u.weaponWork)u.weaponWork.paused=true;
+    if(u.tamingWork)u.tamingWork.paused=true;
     pauseHaulageWork(u);
     pauseFarmToolWork(u);
     this.paths.delete(u.id);u.stuckT=0;
@@ -2271,6 +2274,8 @@ export class Game {
         }
         continue;
       }
+      const handler=this.state.units.find(u=>u.hp>0&&u.tamingWork?.animal===c.id&&!u.tamingWork.paused&&u.order==='hold'&&Math.hypot(u.x-c.x,u.z-c.z)<8);
+      if(handler){c.vx=0;c.vz=0;c.facing=Math.atan2(handler.x-c.x,handler.z-c.z);continue;}
       c.wanderT -= dt;
       if (c.species === "bird") {
         c.fly += dt * 0.7;
@@ -2664,7 +2669,7 @@ export class Game {
         const wx = -HALF + (ix + 0.5) * cell;
         const wz = -HALF + (iz + 0.5) * cell;
         if (!this.walkable(wx, wz)) continue;
-        if(!this.workBoard.connected(this,u.x,u.z,wx,wz))continue;
+        if(!connectedForUnit(this,u,wx,wz))continue;
         if (Math.hypot(wx, wz) > this.world.islandR - 8) continue;
         const d = Math.hypot(wx - u.x, wz - u.z);
         if (d < 12) continue;
@@ -2698,7 +2703,7 @@ export class Game {
     this.lootMegaliths(u);
     if (u.stuckT > 8) {
       const next=this.findExploreTarget(u);
-      if(next&&this.workBoard.connected(this,u.x,u.z,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
+      if(next&&connectedForUnit(this,u,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
       u.order = "return";
       u.workReason = "Scouting route blocked — returning toward the village";
       this.banner(u.workReason, 3);
@@ -3634,7 +3639,7 @@ export class Game {
     for(let i=0;i<32;i++) {
       const a=i*Math.PI/16,sx=Math.sin(a),sz=Math.cos(a),r=Math.min(w/(Math.abs(sx)||1e-6),d/(Math.abs(sz)||1e-6));
       const x=b.x+sx*r,z=b.z+sz*r;
-      if(!this.walkable(x,z)||!this.workBoard.connected(this,u.x,u.z,x,z))continue;
+      if(!this.walkable(x,z)||!connectedForUnit(this,u,x,z))continue;
       // A walkable grid cell doesn't guarantee this sub-cell point is clear.
       // Reject neighboring huts/stores rather than redirecting to their doors.
       if(this.state.buildings.some(other=>this.solidBuilding(other)&&
@@ -3866,7 +3871,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return u.speed * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.world.waterY+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -3879,7 +3884,7 @@ export class Game {
     if (this.state.walkDirty) this.rebuildWalk();
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
-    if(!this.walkable(u.x,u.z)){
+    if(u.haulage!=="canoe"&&!this.walkable(u.x,u.z)){
       let escape:{x:number;z:number}|null=null;
       search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
         const x=u.x+Math.sin(i*Math.PI/12)*radius,z=u.z+Math.cos(i*Math.PI/12)*radius;
@@ -3939,13 +3944,14 @@ export class Game {
       let points = [{ x: tx, z: tz }],
         failed = false;
       if (!direct) {
+        const grid=u.haulage==="canoe"?waterNavigation(this).grid:this.walk;
         const cell = MAP / WALK;
         const index = (x: number, z: number) =>
           Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell))) * WALK +
           Math.max(0, Math.min(WALK - 1, Math.floor((x + HALF) / cell)));
         const goal = index(tx, tz);
         let end = goal;
-        if (!this.walk[end]) {
+        if (!grid[end]) {
           let best = Infinity;
           for (let dz = -3; dz <= 3; dz++)
             for (let dx = -3; dx <= 3; dx++) {
@@ -3954,26 +3960,26 @@ export class Game {
               if (x < 0 || z < 0 || x >= WALK || z >= WALK) continue;
               const n = z * WALK + x,
                 d = dx * dx + dz * dz;
-              if (this.walk[n] && d < best) {
+              if (grid[n] && d < best) {
                 best = d;
                 end = n;
               }
             }
         }
-        let path = findPath(this.walk, WALK, index(u.x, u.z), end);
+        let path = findPath(grid, WALK, index(u.x, u.z), end);
         // A river can require a long detour even when the store is close. Only
         // urgent return journeys get this larger bounded fallback; it is cached
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
         if(!path && returning && this.workBoard.connected(this,u.x,u.z,
           -HALF+(end%WALK+.5)*cell,-HALF+(Math.floor(end/WALK)+.5)*cell))
-          path=findPath(this.walk,WALK,index(u.x,u.z),end,96000);
+          path=findPath(grid,WALK,index(u.x,u.z),end,96000);
         if (path) {
           points = path.map((n) => ({
             x: -HALF + ((n % WALK) + 0.5) * cell,
             z: -HALF + (Math.floor(n / WALK) + 0.5) * cell,
           }));
-          if(end===goal&&this.walkable(tx,tz))points.push({ x: tx, z: tz });
+          if(end===goal&&(u.haulage==="canoe"||this.walkable(tx,tz)))points.push({ x: tx, z: tz });
           // Cache against the requested destination even when the route ends on
           // nearby dry ground. Re-keying to that fallback replanned every frame.
         } else {
@@ -4025,10 +4031,10 @@ export class Game {
     }
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
-    wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    if(this.height(nx,nz)>this.world.waterY+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
     u.x = nx;
     u.z = nz;
-    u.y = this.travelHeight(nx, nz);
+    u.y = canoeHeight(this,u,nx,nz);
     u.facing = Math.atan2(dx, dz);
     u.stride += step * 3.6;
     u.stuckT = 0;
@@ -4071,12 +4077,12 @@ export class Game {
             if (a.order !== "hold" && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
               a.x += nx * push;
               a.z += nz * push;
-              a.y = this.travelHeight(a.x, a.z);
+              a.y = canoeHeight(this,a,a.x,a.z);
             }
             if (b.order !== "hold" && this.canStep(b, b.x - nx * push, b.z - nz * push)) {
               b.x -= nx * push;
               b.z -= nz * push;
-              b.y = this.travelHeight(b.x, b.z);
+              b.y = canoeHeight(this,b,b.x,b.z);
             }
           }
         }
@@ -4119,6 +4125,7 @@ export class Game {
     if(delegationAI(this,u,dt))return;
     if(cropStudyAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
+    if(packTamingAI(this,u,dt))return;
     if(haulageWorkAI(this,u,dt))return;
     if(farmToolWorkAI(this,u,dt))return;
     if (isDependent(this, u)) {
@@ -4189,7 +4196,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?this.height(u.x,u.z)>this.world.waterY+.12&&Math.hypot(u.x-node.x,u.z-node.z)<=7:Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.world.waterY+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
         if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}
@@ -5538,7 +5545,7 @@ export class Game {
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
         reconcileTradeReservations(this);
-        for (const u of this.state.units) if (u.hp <= 0) this.paths.delete(u.id);
+        for (const u of this.state.units) if (u.hp <= 0) {releasePackAnimal(this,u);this.paths.delete(u.id);}
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {

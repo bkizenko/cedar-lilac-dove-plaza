@@ -194,8 +194,8 @@ export function developRivalEquipment(g:Game,team:number){
   for(const u of farmers)if(beginFarmToolWork(g,kind,team,undefined,u.id))return true;
  }
  const transportTarget=Math.max(1,Math.floor(adults.length/4));
- for(const kind of ['cart','sled'] as const){
-  if(!affordable(HAULAGE[kind])||adults.filter(u=>kind==='cart'?u.haulage==='cart':!!u.haulage).length>=transportTarget)continue;
+ for(const kind of ['canoe','cart','sled'] as const){
+  if(!affordable(HAULAGE[kind])||adults.filter(u=>kind==='canoe'?u.haulage==='canoe':kind==='cart'?u.haulage==='cart':!!u.haulage).length>=(kind==='canoe'?1:transportTarget))continue;
   const haulers=[...eligible].sort((a,b)=>Number(b.job==='wood'||b.job==='stone')-Number(a.job==='wood'||a.job==='stone'));
   for(const u of haulers)if(beginHaulageWork(g,kind,team,undefined,u.id))return true;
  }
