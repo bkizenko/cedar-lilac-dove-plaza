@@ -1,3 +1,11 @@
+## Physical captive escorts — 2026-10-28
+
+- [x] Assign an existing available armed resident to escort a returning captive from the village panel. Frontier guards remain at their posts; captives cannot escort others.
+- [x] Captives regroup with nearby reachable escorts and walk to real stores before depositing carried goods. Escort assignments survive saves.
+- [x] Moving escorts provide nearby guard coverage only to their charge; stationed guards retain finite capacity. Arrival, emancipation, death, escape or an inaccessible route ends the assignment and sends the guard home.
+- Validation: 19 captivity/caravan tests passed, including real movement, delivery, save round trip and emancipation. Typecheck and production build passed. Existing player saves untouched.
+- Still incomplete: organized revolts, professional-soldier capture, ransom/repatriation and deeper integration, along with the wider backlog below.
+
 ## Rival river trade reliability — 2026-10-28
 
 - [x] Rival barter searches available residents for a reachable partner rather than abandoning trade when the first pedestrian cannot cross a river.

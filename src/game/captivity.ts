@@ -9,11 +9,11 @@ export function captiveGuardCoverage(g:Game){
  const captives=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom!==undefined)
   .sort((a,b)=>(b.captivityUnrest||0)-(a.captivityUnrest||0)||a.id-b.id);
  const guards=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom===undefined&&!isDependent(g,u)&&
-  (u.militia||!['worker','leader'].includes(u.type))&&['idle','hold'].includes(u.order)&&u.carry===0&&
+  (u.militia||!['worker','leader'].includes(u.type))&&(['idle','hold'].includes(u.order)||u.order==='move'&&u.escortId!==undefined)&&u.carry===0&&
   !u.resting&&!u.shelterId&&!u.emergency&&!u.envoy&&!u.visit&&!u.scout&&!u.expedition&&!u.trade&&!u.tributeJourney);
  const assigned=new Map<number,number>();
  for(const u of captives){
-  const guard=guards.filter(p=>(assigned.get(p.id)||0)<3&&Math.hypot(p.x-u.x,p.z-u.z)<18&&g.workBoard.connected(g,p.x,p.z,u.x,u.z))
+  const guard=guards.filter(p=>(assigned.get(p.id)||0)<3&&(p.escortId===undefined||p.escortId===u.id)&&Math.hypot(p.x-u.x,p.z-u.z)<18&&g.workBoard.connected(g,p.x,p.z,u.x,u.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(guard){assigned.set(guard.id,(assigned.get(guard.id)||0)+1);coverage.add(u.id);}
  }

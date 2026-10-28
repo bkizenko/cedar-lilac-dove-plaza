@@ -32,12 +32,16 @@ export function recoverCaravanEquipment(g:Game,u:Unit){
 }
 
 export function tradeJourney(u:Unit){return !!u.visit||!!u.trade||(u.carry>0&&u.tradeTeam>0);}
+const captiveJourney=(u:Unit)=>u.enslavedFrom!==undefined&&!!u.recalled;
+const escortJourney=(u:Unit)=>tradeJourney(u)||captiveJourney(u);
+export function sendCaptiveEscort(g:Game,id:number){return sendEscort(g,id,true);}
+export function sendTradeEscort(g:Game,id:number){return sendEscort(g,id,false);}
 /** Dispatch one existing spare guard; escorting costs that resident's working time. */
-export function sendTradeEscort(g:Game,carrierId:number){
- const carrier=g.state.units.find(u=>u.id===carrierId&&u.team===0&&u.hp>0&&tradeJourney(u));
+function sendEscort(g:Game,carrierId:number,captive:boolean){
+ const carrier=g.state.units.find(u=>u.id===carrierId&&u.team===0&&u.hp>0&&(captive?captiveJourney(u):tradeJourney(u)));
  if(!carrier)return false;
- if(g.state.units.filter(u=>u.hp>0&&u.escortId===carrierId).length>=2){g.banner('This shipment already has two guards.',3);return false;}
- const guard=g.state.units.filter(u=>u!==carrier&&u.team===0&&u.hp>0&&u.militia&&!isDependent(g,u)&&u.carry===0&&
+ if(g.state.units.filter(u=>u.hp>0&&u.escortId===carrierId).length>=2){g.banner('This party already has two guards.',3);return false;}
+ const guard=g.state.units.filter(u=>u!==carrier&&u.team===0&&u.hp>0&&u.militia&&u.enslavedFrom===undefined&&!isDependent(g,u)&&u.carry===0&&
    !u.escortId&&!u.emergency&&!u.recalled&&!u.visit&&!u.trade&&!u.scout&&!u.expedition&&!u.envoy&&!u.foundingJourney&&
    !u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','hold'].includes(u.order)&&
    !g.state.buildings.some(b=>b.team===0&&b.type==='cornerstone'&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<32)&&
@@ -45,16 +49,16 @@ export function sendTradeEscort(g:Game,carrierId:number){
    .sort((a,b)=>Math.hypot(a.x-carrier.x,a.z-carrier.z)-Math.hypot(b.x-carrier.x,b.z-carrier.z))[0];
  if(!guard){g.banner('Equip an available adult first. Frontier guards stay at their posts.',4);return false;}
  g.interruptMission(guard);guard.escortId=carrier.id;guard.order='move';guard.stationOnArrival=false;
- guard.workReason='Joining the trading party as an armed escort';g.banner('An armed guard is joining the shipment.',3);return true;
+ guard.workReason=captive?'Escorting a captive home':'Joining the trading party as an armed escort';g.banner(captive?'An armed guard is joining the returning captive.':'An armed guard is joining the shipment.',3);return true;
 }
 export function escortAI(g:Game,u:Unit,dt:number){
  if(u.escortId===undefined)return false;
- const carrier=g.state.units.find(p=>p.id===u.escortId&&p.hp>0&&p.team===u.team&&tradeJourney(p));
+ const carrier=g.state.units.find(p=>p.id===u.escortId&&p.hp>0&&p.team===u.team&&escortJourney(p));
  if(!carrier||u.stuckT>12||!connectedForUnit(g,u,carrier.x,carrier.z)){
    u.escortId=undefined;u.recalled=true;u.stationOnArrival=true;u.order='return';u.stuckT=0;
-   u.workReason=carrier?'Escort route blocked — returning home':'Shipment finished — guard returning home';return true;
+   u.workReason=carrier?'Escort route blocked — returning home':'Escort journey finished — guard returning home';return true;
  }
- u.target=null;u.node=null;u.workReason='Guarding the travelling trader';
+ u.target=null;u.node=null;u.workReason=captiveJourney(carrier)?'Escorting a captive home':'Guarding the travelling trader';
  if(Math.hypot(u.x-carrier.x,u.z-carrier.z)<=5){u.order='hold';return true;}
  u.order='move';u.tx=carrier.x;u.tz=carrier.z;g.steer(u,dt);return true;
 }
@@ -63,7 +67,7 @@ export function escortAI(g:Game,u:Unit,dt:number){
  * freezing a carrier while its escort is actively fighting. Blocked escorts
  * cancel through escortAI's existing stuck timeout. */
 export function waitForTradeEscort(g:Game,u:Unit){
- if(!tradeJourney(u))return false;
+ if(!escortJourney(u))return false;
  const waiting=g.state.units.some(p=>p.hp>0&&p.team===u.team&&p.escortId===u.id&&!p.emergency&&
    Math.hypot(p.x-u.x,p.z-u.z)>10&&Math.hypot(p.x-u.x,p.z-u.z)<100&&connectedForUnit(g,p,u.x,u.z));
  if(!waiting)return false;

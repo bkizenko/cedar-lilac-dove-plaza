@@ -4106,6 +4106,7 @@ export class Game {
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
     if(u.recalled) {
+      if(u.enslavedFrom!==undefined&&waitForTradeEscort(this,u))return;
       const homes=this.state.buildings.filter(b=>b.team===u.team&&['townhall','warehouse'].includes(b.type)&&this.finished(b))
         .sort((a,b)=>Number(a.type!=='townhall')-Number(b.type!=='townhall')||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
       let home:Building|undefined,spot:{x:number;z:number}|null=null;

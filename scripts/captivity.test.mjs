@@ -64,3 +64,24 @@ test('surrender preserves paid projects rather than deleting their materials and
  target.hp=5;target.weaponWork={kind:'spear',progress:10,duration:72,workplace:g.state.buildings[1].id};target.order='hold';
  g.applyCombatDamage(0,target,10);assert.equal(target.team,0);assert.equal(target.weaponWork.progress,10);assert.equal(target.weaponWork.paused,true);
 });
+
+test('a captive and assigned guard rendezvous, walk home with cargo and end escort duty',async()=>{
+ const {sendCaptiveEscort,escortAI}=await import('../src/game/caravans.ts');
+ const {g,u}=fixture();u.x=50;u.recalled=true;u.order='return';u.stationOnArrival=false;u.carry=7;u.carryType='wood';
+ const guard=g.spawnUnit('spearman',10,50,0);guard.militia=true;guard.order='hold';
+ const before=g.tribe(0).wood;assert.equal(sendCaptiveEscort(g,u.id),true);
+ g.workerAI(u,.1);assert.equal(u.x,50,'wait for nearby assigned escort');assert.equal(g.tribe(0).wood,before);
+ const loaded=decodeGame(encodeGame(g));assert.equal(loaded.state.units.find(p=>p.id===guard.id).escortId,u.id);
+ for(let i=0;i<1600&&u.recalled;i++){g.state.time+=.1;g.navBudget=10;escortAI(g,guard,.1);g.workerAI(u,.1);}
+ assert.equal(u.recalled,undefined);assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,before+7);
+ escortAI(g,guard,.1);assert.equal(guard.escortId,undefined);assert.equal(guard.recalled,true);
+});
+
+test('moving captive escorts guard only their charge and emancipation ends the assignment',async()=>{
+ const {sendCaptiveEscort,escortAI}=await import('../src/game/caravans.ts');const {g,u}=fixture();
+ u.recalled=true;const guard=g.spawnUnit('spearman',10,52,0);guard.militia=true;guard.order='hold';
+ const other=g.spawnUnit('worker',11,50,0);other.enslavedFrom=1;
+ assert.equal(sendCaptiveEscort(g,u.id),true);guard.order='move';
+ assert.ok(captiveGuardCoverage(g).has(u.id));assert.equal(captiveGuardCoverage(g).has(other.id),false);
+ freePeople(g,1);escortAI(g,guard,.1);assert.equal(guard.escortId,undefined);assert.equal(guard.recalled,true);
+});
