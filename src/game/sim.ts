@@ -27,7 +27,7 @@ import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications
 import {planBridge,onBridge,bridgeHeight,bridgeApproach} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish} from "./fishing";
-import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice} from "./warfare";
+import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
@@ -5538,6 +5538,7 @@ export class Game {
         this.tickRegions();
         this.tickLumber();
         this.tickYields(sdt);
+        spoilRuinSupplies(this,sdt);
         for (const b of this.state.buildings) {
           if (b.type === "townhall" && b.hp > 0 && b.hp < b.maxHp)
             b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);

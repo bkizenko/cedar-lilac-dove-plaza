@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Visible and perishable raid supplies — 2026-10-28
+
+- [x] ~~Show actual ruin supplies.~~ Destroyed buildings with remaining loot display shared log bundles, food sacks and stone/ore piles. Amount affects pile size; empty goods disappear. Only currently visible ruins reveal supplies, so unexplored or merely remembered ground does not expose current inventories. Existing cargo instance pools are reused, with carried resident loads taking priority and fixed capacity retained.
+- [x] ~~Exposed ruin food deteriorates locally.~~ Temperature and humidity at the ruined building control exponential food decay; warm seasons spoil it faster than cold ones. Wood/stone/metals do not spoil, no supplies regenerate, and the saved remaining amount is authoritative. Loading transfers only the remaining quantity; food already carried is not deducted again by ruin decay.
+- [x] ~~Raid pickup chooses the closest ruin.~~ Removed an unrelated crafting-bench queue score from ruined-store targeting.
+
+Validation: 27 scene/warfare/ruin checks passed, followed by the four ruin checks including the running simulation; typecheck and production build passed. Render validation covers finite matrices, actual remaining quantities, visibility, capacity and resident-load priority; no direct browser inspection of a destroyed store is claimed. This is a concrete part of the external raid economy, not completed captivity, naval combat or regional storage. Existing village saves need no migration or reset.
+
 ## Recall and paid-crafting recovery — 2026-10-28
 
 - [x] ~~Recall permits physical escape from an obstructed navigation cell.~~ If no home entrance can be resolved and a walking resident's starting cell is blocked, recall now invokes the existing collision-checked escape movement instead of returning before movement runs. No teleportation, cargo credit or cross-water exemption. A regression simulates the unavailable entrance, physically walks home and verifies one cargo delivery.

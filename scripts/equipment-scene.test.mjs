@@ -168,3 +168,13 @@ test('canoes float with their carrier, portage on land, and pack animals carry c
  sailor.hp=0;handler.shelterId=1;view.syncCargo(game);assert.equal(view.haulageMeshes.get('canoe').count,0);assert.equal(view.haulageMeshes.get('pack').count,0);
  for(const kind of ['canoe','pack']){const geo=haulageGeo(kind);assert.ok(geo.getAttribute('position').count<600);assert.ok([...geo.getAttribute('position').array].every(Number.isFinite));geo.dispose();}
 });
+
+test('ruin cargo reuses bounded shared batches and reveals only currently visible remaining supplies',()=>{
+ const {view,game,person}=fixture();game.state.units=[person(1,{carry:8,carryType:'wood'})];
+ game.state.buildings=[{id:4,hp:0,x:20,z:20,raidLoot:{food:24,wood:40,stone:0}},{id:5,hp:0,x:120,z:20,raidLoot:{food:50}},{id:6,hp:20,x:30,z:20,raidLoot:{food:20}}];
+ view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,1);assert.equal(view.cargoMeshes.get('wood').count,2);assert.equal(view.cargoMeshes.get('stone').count,0);
+ const m=matrix(view.cargoMeshes.get('food'));assert.ok(m.elements.every(Number.isFinite));assert.ok(m.elements[13]>4);
+ game.state.buildings[0].raidLoot.food=0;view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,0);
+ game.state.buildings=Array.from({length:500},(_,id)=>({id,hp:0,x:20,z:20,raidLoot:{wood:10}}));view.syncCargo(game);assert.equal(view.cargoMeshes.get('wood').count,420);
+ assert.equal(matrix(view.cargoMeshes.get('wood'),0).elements[12],5,'resident cargo keeps priority over ruin decoration');
+});

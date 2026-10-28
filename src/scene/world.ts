@@ -1409,6 +1409,20 @@ export class WorldView {
       }
       mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);counts[u.carryType]++;
     }
+    // Reuse cargo batches for visible finite ruin supplies, after residents so
+    // decorative piles can never displace their carried loads from the pool.
+    for(const b of game.state.buildings||[]){
+      if(b.hp>0||!b.raidLoot||!game.visibleAt(b.x,b.z))continue;
+      let slot=0;
+      for(const kind of Object.keys(CARGO_COLORS) as ResKind[]){
+        const amount=b.raidLoot[kind]||0,mesh=this.cargoMeshes.get(kind),i=counts[kind];
+        if(amount<=0||!mesh||i>=instCap(mesh))continue;
+        const x=b.x+(slot%3-1)*1.5,z=b.z+(Math.floor(slot/3)-.5)*1.5;
+        const size=Math.min(1.8,.45+Math.cbrt(amount/12)*.45);
+        _p.set(x,game.height(x,z)+.4*size,z);_e.set(0,(b.id%7)*.37,0);_q.setFromEuler(_e);_s.setScalar(size);_m.compose(_p,_q,_s);
+        mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[kind]);mesh.setColorAt(i,_c);counts[kind]++;slot++;
+      }
+    }
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
   }

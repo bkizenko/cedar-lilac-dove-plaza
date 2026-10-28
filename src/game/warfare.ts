@@ -1,3 +1,4 @@
+import {climateAt} from './ecology';
 import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type {Game} from './sim';
 import type {Unit,ResKind} from './types';
@@ -71,7 +72,7 @@ export function combatPractice(u:Unit){return 1+Math.min(5,Math.floor(Math.sqrt(
 export function raidLootAI(g:Game,u:Unit,dt:number){
   if(u.team===3||u.pillage<0||u.carry>0||!['attack','attackmove','idle'].includes(u.order))return false;
   const ruin=g.state.buildings.filter(b=>b.hp<=0&&b.team===u.pillage&&b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0)&&Math.hypot(u.x-b.x,u.z-b.z)<18)
-    .sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!ruin)return false;
   // An engaged defender must be dealt with before anyone stops to load supplies.
   if(g.state.units.some(e=>e.hp>0&&g.isFoe(u.team,e.team)&&Math.hypot(e.x-u.x,e.z-u.z)<7))return false;
@@ -84,4 +85,18 @@ export function raidLootAI(g:Game,u:Unit,dt:number){
   u.workReason='Carrying pillaged supplies home';
   if(u.team===0)g.banner(`Raider carrying ${count} ${kind} home — stores increase on delivery`,3);
   return true;
+}
+
+
+/** Exposed food remains finite after a raid and spoils where it was left. */
+export function spoilRuinSupplies(g:Game,dt:number){
+ if(!Number.isFinite(dt)||dt<=0)return;
+ for(const b of g.state.buildings){
+  if(b.hp>0||!b.raidLoot?.food)continue;
+  const {temperature,humidity}=climateAt(g,b.x,b.z);
+  const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
+  // Mixed abandoned provisions have neither a roof nor maintained preservation.
+  const remaining=b.raidLoot.food*Math.exp(-.0005*climate*dt);
+  b.raidLoot.food=remaining<.01?0:remaining;
+ }
 }
