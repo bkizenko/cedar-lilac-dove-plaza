@@ -1,3 +1,10 @@
+## Rival labor bottleneck audit — 2026-10-28
+
+- [x] Rival labor reviews now release a bounded number of empty-handed surplus-material workers when another age material is scarce. Direct orders, taming, tribute, carried goods and important missions remain protected.
+- Baseline isolated seed 345, worldgen 2, three-year simulation: both rivals survived without simulation errors; populations 23/18, food 1072/1377, timber 44/20, stone 88/719. Neither advanced or established rival barter. Snapshot retained outside the repository for diagnosis; no browser save touched.
+- Validation: 28 rival-development tests passed, including surplus-stone labor reassignment; typecheck and production build passed.
+- This addresses one measured labor bottleneck. Strong late-age rivals and organic trade networks remain unproven and must not be marked complete from this audit.
+
 ## Physical captive escorts — 2026-10-28
 
 - [x] Assign an existing available armed resident to escort a returning captive from the village panel. Frontier guards remain at their posts; captives cannot escort others.

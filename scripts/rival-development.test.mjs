@@ -322,3 +322,14 @@ test('prosperous rivals assign one real handler to a known goat before manufactu
  assert.equal(developRivalEquipment(g,1),false,'one equipment worker at a time protects the economy');
  assert.equal(g.state.wildlife.length,1,'ordering taming does not instantly create transport');
 });
+
+test('surplus stone labor returns to village priorities when timber limits growth without losing cargo or overriding commands',async()=>{
+ const {rebalanceRivalLabor}=await import('../src/game/rivalDevelopment.ts');const g=fixture();
+ Object.assign(g.tribe(1),{food:2000,wood:0,stone:900});
+ const [worker,loaded,ordered]=g.state.units;
+ for(const u of [worker,loaded,ordered]){u.order='gather';u.job='stone';u.node={id:999,kind:'stone',x:8,z:50,amount:100};}
+ loaded.carry=8;loaded.carryType='stone';ordered.jobLock=true;
+ g.state.trees=[tree(g,18,52)];
+ rebalanceRivalLabor(g,1);
+ assert.notEqual(worker.job,'stone');assert.equal(loaded.carry,8);assert.equal(loaded.job,'stone');assert.equal(ordered.job,'stone');assert.equal(ordered.jobLock,true);
+});

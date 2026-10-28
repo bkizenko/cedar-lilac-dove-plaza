@@ -157,16 +157,18 @@ export function rebalanceRivalLabor(g:Game,team:number){
   reviews.set(team,g.state.time+12);
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
   const foodWorkers=adults.filter(u=>u.order==='gather'&&u.job==='food');
-  const spare=Math.min(2,foodWorkers.length-Math.ceil(adults.length/2));
-  if(spare<=0)return;
-  const eligible=foodWorkers.filter(u=>u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
+  const spare=Math.max(0,Math.min(2,foodWorkers.length-Math.ceil(adults.length/2)));
+  const t=g.tribe(team),next=AGE_COST[t.age+1];
+  const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
+  const surplusWorkers=shortage?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5)):[];
+  const eligible=[...surplusWorkers,...foodWorkers.slice(0,spare)].filter(u=>!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
     !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
   let moved=0;
   for(const u of eligible){
-    if(moved>=spare)break;
+    if(moved>=2)break;
     const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k)>0);
     const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&!g.finished(b)&&!b.plannedCost);
-    if(!materials&&!unfinished)break;
+    if(!materials&&!unfinished&&!surplusWorkers.includes(u))continue;
     u.node=null;u.job=null;u.jobLock=false;u.order='idle';u.workCheckAt=0;
     g.workBoard.reset();g.workBoard.assign(g,u);moved++;
   }
