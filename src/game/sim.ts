@@ -4109,7 +4109,15 @@ export class Game {
         .sort((a,b)=>Number(a.type!=='townhall')-Number(b.type!=='townhall')||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
       let home:Building|undefined,spot:{x:number;z:number}|null=null;
       for(const h of homes){const p=this.interactionSpot(u,h);if(p){home=h;spot=p;break;}}
-      if(!home||!spot){u.workReason="Recall: no reachable hearth or store — a crossing or clear route is needed";return;}
+      if(!home||!spot){
+        // Connectivity cannot find an entrance while the resident occupies a
+        // newly blocked coarse cell. Let steering physically leave that cell;
+        // otherwise the recall branch prevents its own navigation recovery.
+        if(homes.length&&!this.walkable(u.x,u.z)&&u.haulage!=="canoe"){
+          u.tx=homes[0].x;u.tz=homes[0].z;this.steer(u,dt);
+        }
+        u.workReason="Recall: no reachable hearth or store — a crossing or clear route is needed";return;
+      }
       u.tx=spot.x;u.tz=spot.z;
       if(!this.buildingWorkReached(u,home)){this.steer(u,dt);return;}
       if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}

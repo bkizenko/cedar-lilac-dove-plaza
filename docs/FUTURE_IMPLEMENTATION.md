@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Recall and paid-crafting recovery — 2026-10-28
+
+- [x] ~~Recall permits physical escape from an obstructed navigation cell.~~ If no home entrance can be resolved and a walking resident's starting cell is blocked, recall now invokes the existing collision-checked escape movement instead of returning before movement runs. No teleportation, cargo credit or cross-water exemption. A regression simulates the unavailable entrance, physically walks home and verifies one cargo delivery.
+- [x] ~~Blocked weapon and farm-tool makers release their labor.~~ Lost/unreachable benches and prolonged stalled movement pause paid projects and return the resident to ordinary work. Still-stuck people cannot be repeatedly auto-resumed.
+- [x] ~~Weapon work resumes at replacement buildings.~~ The ledger resume action and an appropriate building's existing weapon command use a validated resume operation. It selects a reachable valid bench, preserves completion fraction when workplace speed changes, and charges no second materials. Rivals also resume their paid weapon jobs before starting new equipment. Taming residents are not borrowed for weapon making.
+
+Validation: 31 recall/fishing/crossing/boat checks, 57 warfare/rival/frontier checks, and 8 farm-tool checks passed; typecheck and production build passed. These are targeted regressions, not a rerun of the previous full suite or proof that every long-run route is fixed. The three-year audit's exact stuck positions remain to be reproduced from a saved audit snapshot. Existing player saves are unchanged.
+
 ## Rival pack transport and regional materials — 2026-10-28
 
 - [x] ~~Rivals tame discovered pack animals.~~ Prosperous villages can assign one available adult to a known, reachable living goat, using their own food and timber. Player map visibility does not reveal goats to rivals. The same physical approach, paid taming, exclusive claim and animal transfer apply to every village. Direct assignments and the one-equipment-worker limit remain protected.

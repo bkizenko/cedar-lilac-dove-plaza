@@ -90,7 +90,7 @@ export function pauseFarmToolWork(u: FarmToolUnit) {
 
 export function resumeFarmToolWork(g: Game, u: FarmToolUnit, workplaceId?: number) {
   const job = u.farmToolWork;
-  if (!job || !available(g, u)) return false;
+  if (!job || !available(g, u) || u.stuckT > 8) return false;
   const b = reachableWorkplace(g, u, workplaces(g, u.team, job.kind, workplaceId));
   if (!b) return false;
   const fraction = job.progress / job.duration;
@@ -107,7 +107,7 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
   if (!job || job.paused || !civilian(g, u) || u.order !== 'hold') return false;
   if (g.state.weather === 'storm' || g.clockState().period === 'Night' && !g.state.nightWork) return false;
   const b = workplaces(g, u.team, job.kind, job.workplace)[0], spot = b && g.interactionSpot(u, b);
-  if (!b || !spot) {
+  if (!b || !spot || u.stuckT > 8) {
     job.paused = true; u.order = 'idle';
     u.workReason = 'Toolmaking paused — choose a reachable replacement workplace';
     g.workBoard.reset(); return true;

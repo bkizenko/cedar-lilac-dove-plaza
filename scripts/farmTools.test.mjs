@@ -158,3 +158,12 @@ test('invalid tools and corrupted paid projects are rejected, while old saves re
   assert.equal(validFarmToolUnit({farmTool: 'stoneHoe', farmToolWork: work}), false);
   assert.equal(validFarmToolUnit({farmToolWork: {...work, kind: 'copperTools', duration: 90}}), false);
 });
+
+test('blocked toolmakers release their job and preserve paid work until movement recovers',()=>{
+ const {g,u,shop}=fixture();assert.equal(beginFarmToolWork(g,'stoneHoe',0,shop.id),true);
+ const wood=g.tribe(0).wood;u.farmToolWork.progress=5;u.stuckT=12;
+ farmToolWorkAI(g,u,.1);assert.equal(u.order,'idle');assert.equal(u.farmToolWork.paused,true);
+ assert.equal(resumeFarmToolWork(g,u),false);assert.equal(u.farmToolWork.progress,5);
+ u.stuckT=0;assert.equal(resumeFarmToolWork(g,u,shop.id),true);assert.equal(g.tribe(0).wood,wood);
+ work(g,u,120);assert.equal(u.farmTool,'stoneHoe');
+});

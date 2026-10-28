@@ -9,6 +9,23 @@ export const WEAPONS={
   blade:{name:'Metal blade',wood:4,stone:0,copper:6,iron:0,age:1,seconds:48},
 } as const;
 export type WeaponKind=keyof typeof WEAPONS;
+/** Paid work can move to a replacement bench without repurchasing its inputs. */
+export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
+ const job=u.weaponWork;
+ if(!job||u.hp<=0||u.type!=='worker'||u.militia||isDependent(g,u)||u.carry>0||u.stuckT>8||
+   u.recalled||u.emergency||u.buildOrder!==undefined||u.tamingWork||u.haulageWork||u.farmToolWork||u.studyCrop||
+   u.drill!=null||u.expedition||u.envoy||u.scout||u.visit||u.foundingJourney||u.tributeJourney||
+   !['idle','gather','hold'].includes(u.order))return false;
+ const b=g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&(workplaceId===undefined||b.id===workplaceId)&&
+   (job.kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type))&&g.interactionSpot(u,b))
+   .sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+ if(!b)return false;
+ const fraction=job.progress/job.duration;
+ job.duration=WEAPONS[job.kind].seconds*(b.type==='townhall'?3:b.type==='barracks'?2:1);
+ job.progress=fraction*job.duration;job.workplace=b.id;job.paused=false;
+ u.order='hold';u.node=null;u.target=null;u.workReason=`Resuming ${WEAPONS[job.kind].name.toLowerCase()}`;
+ g.workBoard.reset();return true;
+}
 export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:number){
   const spec=WEAPONS[kind],t=g.tribe(team);
   if(!spec||!t)return false;
@@ -18,7 +35,8 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
     (workplaceId===undefined||b.id===workplaceId)&&
     (kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type)));
   if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Use a hearth or finish a crafting shelter for weapon making');
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
+  for(const person of g.state.units)if(person.team===team&&person.weaponWork?.kind===kind&&person.weaponWork.paused&&resumeWeaponWork(g,person,workplaceId))return true;
+  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.tamingWork&&!u.recalled&&!u.tributeJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
   if(!u)return reject('An available adult with empty hands and a reachable workplace is needed');
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
   const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
@@ -33,7 +51,7 @@ export function weaponWorkAI(g:Game,u:Unit,dt:number){
   if(!job||job.paused||u.type!=='worker'||u.order!=='hold')return false;
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===u.team&&g.finished(b));
   const spot=b&&g.interactionSpot(u,b);
-  if(!b||!spot){u.workReason='Weapon work paused — workplace lost or inaccessible';return true;}
+  if(!b||!spot||u.stuckT>8){job.paused=true;u.order='idle';u.node=null;u.workReason='Weapon work paused — workplace lost or inaccessible';g.workBoard.reset();return true;}
   if(g.state.weather==='storm'||g.clockState().period==='Night'&&!g.state.nightWork)return false;
   if(!craftBenchReady(g,u,b))return true;
   if(!g.buildingWorkReached(u,b)){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);return true;}

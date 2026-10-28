@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {decodeGame,encodeGame} from '../src/game/persistence.ts';
 import {saveGame,loadRaw} from '../src/game/save.ts';
-import {SAVE_KEY} from '../src/game/constants.ts';
+import {SAVE_KEY,HALF,MAP} from '../src/game/constants.ts';
 import {staffDock,fishingReport,renewFish} from '../src/game/fishing.ts';
 import {villageAppeal} from '../src/game/migration.ts';
 function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.world.heights.fill(4);g.state.buildings=[];g.state.units=[];g.state.weather='clear';g.state.trees=[];g.state.forage=[];g.state.wildlife=[];g.state.stones=[];g.clockState=()=>({period:'Afternoon'});g.vision.fill(2);const hall=g.makeBld('townhall',0,50,0);g.state.buildings=[hall];g.rebuildWalk();return {g,hall};}
@@ -47,4 +47,19 @@ test('well-fed rested villages attract more settlers than starving exhausted one
 });
 test('new arrivals start on reachable dry land and walk to the hearth as a group',()=>{
  const {g,hall}=fixture();g.state.buildings.push(g.makeBld('hut',20,50,0));g.rebuildWalk();g.spawnUnit('worker',0,38,0);g.tribe(0).food=500;g.setGrowthPolicy('eager');g.state.tribes[1].alive=false;g.state.tribes[2].alive=false;const old=Math.random;Math.random=()=>.95;try{g.landSeaFolk();}finally{Math.random=old;}const arrivals=g.state.units.filter(u=>u.recalled);assert.ok(arrivals.length>1);for(const u of arrivals){assert.ok(g.walkable(u.x,u.z));assert.ok(g.workBoard.connected(g,u.x,u.z,hall.x,hall.z));assert.ok(Math.hypot(u.x-hall.x,u.z-hall.z)>20);}
+});
+
+
+test('recall physically escapes a blocked navigation cell before resolving the home entrance',()=>{
+ const {g,hall}=fixture(),u=g.spawnUnit('worker',40,38,0);
+ const WALK=Math.sqrt(g.walk.length),cell=MAP/WALK,index=Math.floor((u.z+HALF)/cell)*WALK+Math.floor((u.x+HALF)/cell);
+ g.walk[index]=0;g.workBoard.reset();
+ const entrance=g.interactionSpot.bind(g);g.interactionSpot=(person,building)=>g.walkable(person.x,person.z)?entrance(person,building):null;
+ assert.equal(g.interactionSpot(u,hall),null,'simulate a connectivity lookup that cannot label the blocked start');
+ u.recalled=true;u.order='return';u.carry=9;u.carryType='wood';
+ const before=g.tribe(0).wood,origin={x:u.x,z:u.z};
+ assert.equal(g.walkable(u.x,u.z),false);
+ for(let i=0;i<1200&&u.recalled;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
+ assert.equal(u.recalled,undefined);assert.ok(g.buildingWorkReached(u,hall));
+ assert.ok(Math.hypot(u.x-origin.x,u.z-origin.z)>1);assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,before+9);
 });

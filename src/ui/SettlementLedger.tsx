@@ -6,7 +6,7 @@ import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
 import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
 import {villageAppeal,foodAttention} from "@/game/migration";
-import {WEAPONS,combatPractice} from "@/game/warfare";
+import {resumeWeaponWork,WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES, AGE_CHOICES, BUILDINGS } from "@/game/constants";
@@ -424,7 +424,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <p>Select a hearth to craft outdoors (three times slower), or build a crafting shelter for efficient spear and bow making. Crafting uses a resident’s working time; metal blades need a forge and Bronze Age copper.</p>
         <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left" onClick={()=>{const b=g.state.buildings.find(b=>b.team===0&&b.type==="workshop"&&g.finished(b))||g.state.buildings.find(b=>b.team===0&&b.type==="townhall"&&g.finished(b));if(b){g.clearSelect();b.selected=true;g.state.selBld=b;engine.view.look.set(b.x,b.y,b.z);close();engine.pushHud();}}}>Choose crafting shelter or hearth · recipes are on the building</button>
         {g.state.buildings.some(b=>b.team===0&&b.type==="forge"&&g.finished(b))&&<button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left" onClick={()=>{const b=g.state.buildings.find(b=>b.team===0&&b.type==="forge"&&g.finished(b))!;g.clearSelect();b.selected=true;g.state.selBld=b;engine.view.look.set(b.x,b.y,b.z);close();engine.pushHud();}}>Choose forge · make metal blades</button>}
-        {people.filter(u=>u.weaponWork).map(u=><p key={u.id}>{personName(u)} · {WEAPONS[u.weaponWork!.kind].name} {Math.floor(100*u.weaponWork!.progress/u.weaponWork!.duration)}% · {u.order==='hold'&&!u.weaponWork!.paused?'assigned':'paused by another order'}{(u.order!=='hold'||u.weaponWork!.paused)&&<button onClick={()=>{u.order="hold";if(u.weaponWork)u.weaponWork.paused=false;u.node=null;u.target=null;engine.pushHud();}}>Resume weapon making</button>}</p>)}
+        {people.filter(u=>u.weaponWork).map(u=><p key={u.id}>{personName(u)} · {WEAPONS[u.weaponWork!.kind].name} {Math.floor(100*u.weaponWork!.progress/u.weaponWork!.duration)}% · {u.order==='hold'&&!u.weaponWork!.paused?'assigned':'paused by another order'}{(u.order!=='hold'||u.weaponWork!.paused)&&<button onClick={()=>{if(!resumeWeaponWork(engine.game,u))engine.game.banner('Choose an available adult and a reachable weapon-making workplace',4);engine.pushHud();}}>Resume weapon making</button>}</p>)}
         <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" onClick={()=>engine.callToArms()}>Arm selected adults (all available if none selected)</button>
         <button className="my-2 block min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left disabled:opacity-50" disabled={!militia.length} onClick={()=>engine.standDown()}>Stand down militia · return to work</button>
         <p>Sea raids grow over the early waves, then level off. Their size is limited by your surviving adults, health, weapons and defenses. Losses bring a longer recovery interval and reduced pressure on the next wave. Raids never overlap another sea band, including its retreat.</p>

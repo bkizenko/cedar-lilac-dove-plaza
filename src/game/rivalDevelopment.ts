@@ -1,3 +1,4 @@
+import {resumeWeaponWork} from './warfare';
 import {beginPackTaming} from './packAnimals';
 import {HAULAGE,beginHaulageWork,resumeHaulageWork} from "./haulage";
 import {FARM_TOOLS,beginFarmToolWork,resumeFarmToolWork} from "./farmTools";
@@ -180,6 +181,7 @@ export function developRivalEquipment(g:Game,team:number){
  const eligible=adults.filter(u=>!u.jobLock&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){
+  if(u.weaponWork?.paused&&resumeWeaponWork(g,u))return true;
   if(u.haulageWork?.paused&&resumeHaulageWork(g,u))return true;
   if(u.farmToolWork?.paused&&resumeFarmToolWork(g,u))return true;
  }
