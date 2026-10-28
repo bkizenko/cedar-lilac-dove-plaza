@@ -5,7 +5,7 @@ import {isDependent} from './settlement';
 
 export const PEACE_TERMS: Record<PeaceTerm,string> = {whitePeace:'White peace',tribute:'Tribute',forcedLabor:'Slavery',puppet:'Puppet state',annexation:'Annexation'};
 export const peaceTerms=Object.keys(PEACE_TERMS) as PeaceTerm[];
-export const peaceDescription:Record<PeaceTerm,string>={whitePeace:'Both armies withdraw. Ten minutes of protected peace.',tribute:'The defeated tribe owes 20 logs every two minutes, six payments total. Residents carry payments to your hall; missing or intercepted deliveries remain owed.',forcedLabor:'Two existing adults are enslaved and walk to your settlement. They require food and housing; you can free them.',puppet:'The tribe keeps its people and buildings, becomes your ally, and sends 10 logs every two minutes until released. Payments arrive by carrier.',annexation:'All surviving people, buildings, stores and claimed regions join your tribe. Requires overwhelming military pressure.'};
+export const peaceDescription:Record<PeaceTerm,string>={whitePeace:'Both armies withdraw. Ten minutes of protected peace.',tribute:'The defeated tribe owes 20 logs every two minutes, six payments total. Residents carry payments to your hall; missing or intercepted deliveries remain owed.',forcedLabor:'Two existing adults are enslaved and walk to your settlement. They require food, housing and nearby stationed guards. Forced work and hunger raise resistance; unguarded people may escape. You can free them.',puppet:'The tribe keeps its people and buildings, becomes your ally, and sends 10 logs every two minutes until released. Payments arrive by carrier.',annexation:'All surviving people, buildings, stores and claimed regions join your tribe. Requires overwhelming military pressure.'};
 export function peacePressure(g:Game,team:number){
  const strength=(t:number)=>g.state.units.filter(u=>u.team===t&&u.hp>0&&!isDependent(g,u)).reduce((s,u)=>s+(u.type==='worker'&&!u.militia?0.25:1)*u.hp/Math.max(1,u.maxHp),0);
  return strength(0)/Math.max(.5,strength(team));
@@ -35,7 +35,7 @@ export function settlePeace(g:Game,team:number,term:PeaceTerm){
   t.tribute={amount:term==='puppet'?10:20,remaining:term==='puppet'?-1:6,next:g.state.time,owed:0,paid:0};
   if(term==='puppet')t.ally=true;
  }
- if(term==='forcedLabor')for(const u of people){transferPerson(g,u,0);u.enslavedFrom=team;}
+ if(term==='forcedLabor')for(const u of people){transferPerson(g,u,0);u.enslavedFrom=team;u.captivityUnrest=25;}
  if(term==='annexation'){
   // Cancel contracts before ownership changes so escrow and equipment are settled once.
   for(const u of g.state.units)if(u.team===team||u.tradeTeam===team||u.envoy?.team===team)g.interruptMission(u);
@@ -51,7 +51,7 @@ export function settlePeace(g:Game,team:number,term:PeaceTerm){
 }
 export function rejectPeace(g:Game,team:number){const t=g.tribe(team);if(t){t.peaceOffer=undefined;t.nextPeaceOffer=g.state.time+300;}}
 export function releasePuppet(g:Game,team:number){const t=g.tribe(team);if(t?.peaceTerm!=='puppet')return;t.peaceTerm='whitePeace';t.tribute=undefined;t.recoveryUntil=g.state.time+600;g.banner(`${t.name} is independent again; the alliance remains.`,5);}
-export function freePeople(g:Game,team:number){for(const u of g.state.units)if(u.team===0&&u.enslavedFrom===team)u.enslavedFrom=undefined;g.banner('The enslaved adults are now free members of your tribe.',5);}
+export function freePeople(g:Game,team:number){for(const u of g.state.units)if(u.team===0&&u.enslavedFrom===team){u.enslavedFrom=undefined;u.captivityUnrest=undefined;}g.banner('The enslaved adults are now free members of your tribe.',5);}
 export function tickPeace(g:Game){
  for(const t of g.state.tribes){
   if(t.id===0||t.id===3||!t.alive)continue;

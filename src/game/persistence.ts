@@ -335,6 +335,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.returnAfterCombat!==undefined&&typeof u.returnAfterCombat!=="boolean")fail();
     if(u.massRaidTarget!==undefined&&(!Number.isSafeInteger(u.massRaidTarget)||u.massRaidTarget<1))fail();
     if(u.enslavedFrom!==undefined&&(!rivalTeam(u.enslavedFrom)||u.team!==0))fail();
+    if(u.captivityUnrest!==undefined&&(!num(u.captivityUnrest)||u.captivityUnrest<0||u.captivityUnrest>100||u.enslavedFrom===undefined))fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){
       const m=u.envoy;

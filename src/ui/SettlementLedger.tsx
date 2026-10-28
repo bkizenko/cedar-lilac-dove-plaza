@@ -1,3 +1,4 @@
+import {captiveGuardCoverage,captivityDescription} from '@/game/captivity';
 import {buildingCost} from "@/game/construction";
 import {PEACE_TERMS,peaceTerms,peaceDescription,peaceIssue,rejectPeace,releasePuppet,freePeople} from '@/game/peace';
 import {fieldProductionSummary} from "@/game/productionReport";
@@ -50,6 +51,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
     people = s.units.filter((u) => u.team === 0 && u.hp > 0),
     farms = s.buildings.filter((b) => b.team === 0 && b.type === "farm" && g.finished(b));
   const winter = open ? winterOutlook(g) : {needed:0,shortage:0,capacityShortfall:0,seconds:0};
+  const guards=open?captiveGuardCoverage(g):new Set<number>();
   const stores = storehouses(g, 0);
   const dependents = people.filter((u) => isDependent(g, u)).length;
   const foodWorkers = people.filter((u) => u.job === "food" && u.order === "gather").length;
@@ -298,6 +300,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           completed this spring.
         </p>
       </details>
+      {people.some(u=>u.enslavedFrom!==undefined)&&<section><h3>Captivity and guards</h3><p>Station armed adults near captive workers. Each idle or holding guard watches up to three people within 18 meters. Hunger and forced work build resistance; at 100% they may escape with carried goods. You can free them here at any time.</p><ul>{people.filter(u=>u.enslavedFrom!==undefined).map(u=><li key={u.id}>{personName(u)} · {captivityDescription(u,guards.has(u.id))}</li>)}</ul>{[...new Set(people.filter(u=>u.enslavedFrom!==undefined).map(u=>u.enslavedFrom!))].map(team=><button key={team} onClick={()=>{freePeople(g,team);engine.pushHud();}}>Free captives from {g.tribe(team)?.name||"the former settlement"}</button>)}</section>}
       <h3>People and work</h3>
       <ul>
         {people.map((u) => (
@@ -354,7 +357,6 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             {n.peaceTerm && <p>Treaty: {PEACE_TERMS[n.peaceTerm]}.</p>}
             {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} delivered; {n.tribute.owed} owed (including shipments on the road). {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
             {n.peaceTerm==='puppet' && <button onClick={()=>{releasePuppet(g,n.id);engine.pushHud();}}>Grant independence</button>}
-            {s.units.some(u=>u.team===0&&u.enslavedFrom===n.id) && <button onClick={()=>{freePeople(g,n.id);engine.pushHud();}}>Free enslaved adults from {n.name}</button>}
             {n.hostile && n.peaceOffer && n.peaceOffer.expires>s.time && <div role="status">
               <p>{n.name} sues for peace: {PEACE_TERMS[n.peaceOffer.term]}. Expires in {Math.ceil(n.peaceOffer.expires-s.time)} seconds.</p>
               <button onClick={()=>{g.resolvePeaceTerm(n.id,n.peaceOffer!.term);engine.pushHud();}}>Accept peace offer</button>

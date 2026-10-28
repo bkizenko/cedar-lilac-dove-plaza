@@ -1,3 +1,4 @@
+import {tickCaptivity} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
@@ -5547,6 +5548,7 @@ export class Game {
         tickFrontiers(this);
         this.tickRegen(sdt);
         this.tickPeople(sdt);
+        tickCaptivity(this,sdt);
         this.updateVision(sdt);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);

@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Captivity resistance, guards and physical escape — 2026-10-28
+
+- [x] ~~Guard costs for treaty captives.~~ Idle/holding armed adults who are awake, outside shelter, empty-handed and not on a mission can cover up to three captives within 18 m on connected ground. The same guard has one finite assignment budget. Resistance is prioritized when coverage is scarce.
+- [x] ~~Conditions and escape.~~ Forced work, hunger and exhaustion increase resistance; nearby guards reduce it for fed residents. At 100%, an existing captive leaves in place for their living home tribe, keeps their actual carried goods and physically returns through ordinary recall navigation. Goods enter the home inventory only on arrival. No population, resources or faction resurrection is manufactured. If the home tribe has fallen, refusal of service ends captivity locally instead.
+- [x] ~~Inspectable status and emancipation.~~ The ledger explains guard capacity and each person's resistance/coverage, and can free groups even after their former tribe falls. Emancipation clears resistance. New treaty captives start at 25%; old saves have optional compatible resistance state. Invalid/orphaned values are rejected.
+
+Validation: 28 captivity, treaty and recall checks passed, including the running simulation, saved escapes and real cargo arrival. Typecheck/build passed. This is the treaty-captivity lifecycle foundation: battlefield surrender/capture, guard escort orders, organized armed revolts, negotiated release/ransom, integration/household consequences and wider forced-labor balancing remain open. No magical productivity or fatigue advantage has been introduced. Existing player saves were not reset or edited.
+
 ## Dated trader intelligence — 2026-10-28
 
 - [x] ~~Trader estimates of a visited settlement.~~ Trade meetings record a bounded estimate of local residents, completed nearby buildings, and the time observed. Trading aptitude narrows the population estimate. Distant towns and traveling residents outside the visited area are excluded; the report never silently follows live population or stores.
