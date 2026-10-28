@@ -6,6 +6,7 @@ Latest delivery (2026-10-14): direct construction overrides, quarry staffing/sto
 
 ## Captivity foundation — 2026-10-28
 
+- [x] ~~Adult civilian surrender under nearby superior force, without remote conversion or healing.~~ Actual identity, cargo, paid work and the walk home are preserved. Soldier capture, escort commands, ransom and organized revolts remain open.
 - [x] ~~Treaty captive resistance, finite nearby guards, emancipation and physical escape with conserved cargo.~~ Old saves remain compatible. Item 26 remains partial: battlefield capture, escort orders, organized revolts, ransom/release negotiations and long-term integration are not complete.
 
 ## Boats and animal transport delivered — 2026-10-28

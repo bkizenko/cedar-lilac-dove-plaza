@@ -1,3 +1,4 @@
+import {isRivalTeam} from './factions';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
@@ -8,7 +9,7 @@ export function captiveGuardCoverage(g:Game){
  const captives=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom!==undefined)
   .sort((a,b)=>(b.captivityUnrest||0)-(a.captivityUnrest||0)||a.id-b.id);
  const guards=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom===undefined&&!isDependent(g,u)&&
-  (u.militia||u.type==='spearman'||u.type==='archer')&&['idle','hold'].includes(u.order)&&u.carry===0&&
+  (u.militia||!['worker','leader'].includes(u.type))&&['idle','hold'].includes(u.order)&&u.carry===0&&
   !u.resting&&!u.shelterId&&!u.emergency&&!u.envoy&&!u.visit&&!u.scout&&!u.expedition&&!u.trade&&!u.tributeJourney);
  const assigned=new Map<number,number>();
  for(const u of captives){
@@ -42,4 +43,26 @@ export function tickCaptivity(g:Game,dt:number){
   u.recalled=true;u.stationOnArrival=false;u.order='return';u.workReason='Escaping captivity — returning to the home settlement';
   g.workBoard.reset();g.banner(`An enslaved resident has escaped toward ${g.tribe(origin).name}, carrying what was in their hands.`,7);
  }
+}
+
+
+/** A civilian can surrender to nearby superior force before a fatal blow.
+ * Arrows or towers alone cannot remotely convert people into healed recruits. */
+export function tryCivilianSurrender(g:Game,u:Unit,attackerTeam:number,damage:number){
+ if(!Number.isFinite(damage)||damage<=0||attackerTeam!==0||!isRivalTeam(u.team)||u.hp<=0||damage<u.hp||u.type!=='worker'||u.militia||isDependent(g,u)||g.popNow(0)>=g.popCap(0))return false;
+ const armed=(p:Unit)=>p.hp>0&&!isDependent(g,p)&&(p.militia||!['worker','leader'].includes(p.type));
+ const captors=g.state.units.filter(p=>p.team===0&&p.enslavedFrom===undefined&&armed(p)&&Math.hypot(p.x-u.x,p.z-u.z)<6);
+ const defenders=g.state.units.filter(p=>p.team===u.team&&armed(p)&&Math.hypot(p.x-u.x,p.z-u.z)<12);
+ if(!captors.length||captors.length<defenders.length*2)return false;
+ const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b)&&g.interactionSpot(u,b));
+ if(!home)return false;
+ const origin=u.team,health=u.hp;
+ g.makeHostile(origin);g.interruptMission(u);
+ u.team=0;u.enslavedFrom=origin;u.captivityUnrest=40;u.homeHall=home.id;
+ u.hp=Math.max(1,Math.min(health,u.maxHp*.2));u.selected=false;u.pillage=-1;u.attackDestination=null;
+ u.target=null;u.node=null;u.job=null;u.jobLock=false;u.recalled=true;u.stationOnArrival=false;u.order='return';
+ u.workReason='Surrendered — walking to the captors’ settlement';g.state.conquestAt=g.state.time;
+ g.addFloater(u.x,u.y+2,u.z,'Surrendered','#e8cf83');
+ g.workBoard.reset();g.banner('A surrounded adult surrendered. They walk to your settlement; keep guards nearby or free them in Village.',6);
+ return true;
 }

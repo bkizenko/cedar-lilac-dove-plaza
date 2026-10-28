@@ -1,4 +1,4 @@
-import {tickCaptivity} from './captivity';
+import {tickCaptivity,tryCivilianSurrender} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
@@ -4473,6 +4473,7 @@ export class Game {
 
   applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number) {
     if(!target || target.hp<=0 || !Number.isFinite(dmg) || dmg<=0 || target.team===attackerTeam)return;
+    if(target.kind==="unit"&&tryCivilianSurrender(this,target,attackerTeam,dmg))return;
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
@@ -4482,28 +4483,6 @@ export class Game {
       this.makeHostile(attackerTeam);
     raiseAttackAlarm(this,target,attackerTeam);
     if (target.hp <= 0) {
-      if (
-        target.kind === "unit" &&
-        target.type === "worker" &&
-        attackerTeam === 0 &&
-        isRivalTeam(target.team) &&
-        this.popNow(0) < this.popCap(0) &&
-        !isDependent(this, target)
-      ) {
-        if(isRivalTeam(target.team))this.state.conquestAt=this.state.time;
-        target.team = 0;
-        target.hp = Math.max(16, Math.round(target.maxHp * 0.45));
-        target.order = target.carry>0 ? "return" : "move";
-        target.pillage = -1;
-        target.target = null;
-        target.job = null;target.scout=undefined;target.envoy=undefined;target.visit=undefined;target.foundingJourney=undefined;target.studyCrop=undefined;target.weaponWork=undefined;pauseHaulageWork(target);pauseFarmToolWork(target);target.emergency=undefined;target.drill=undefined;target.trade=null;target.tradeTeam=0;
-        const home = this.campOf(0);
-        target.tx = home.x;
-        target.tz = home.z;
-        this.banner("Taken — they walk to your camp", 1.8);
-        this.onSfx("train");
-        return;
-      }
       target.hp = 0;
       if(attackerTeam===0&&isRivalTeam(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
@@ -5681,7 +5660,7 @@ export class Game {
       const cap = carryingCapacity(u,u.carryType||"wood");
       selection = {
         name: (isDependent(this, u) ? "Young " : "") + personName(u),
-        info: (u.expedition ? `${info} · journey food ${u.expedition.food.toFixed(1)}` : info) + ` · fatigue ${Math.round((u.fatigue||0)*100)}%` + (u.haulage?` · ${HAULAGE[u.haulage].name}`:"") + (u.farmTool?` · ${FARM_TOOLS[u.farmTool].name}`:""),
+        info: (u.expedition ? `${info} · journey food ${u.expedition.food.toFixed(1)}` : info) + ` · fatigue ${Math.round((u.fatigue||0)*100)}%` + (u.enslavedFrom!==undefined?` · captive · resistance ${Math.round(u.captivityUnrest||0)}%`:"") + (u.haulage?` · ${HAULAGE[u.haulage].name}`:"") + (u.farmTool?` · ${FARM_TOOLS[u.farmTool].name}`:""),
         hp: u.hp,
         maxHp: u.maxHp,
         kind: "unit",

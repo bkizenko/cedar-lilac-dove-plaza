@@ -1,5 +1,13 @@
 # Hearthwild: canonical future execution handoff
 
+## Local battlefield surrender — 2026-10-28
+
+- [x] ~~Replace lethal civilian conversion with local surrender.~~ A living adult civilian facing a fatal player hit can surrender only with nearby armed captors, local superiority over armed defenders, spare housing and a reachable completed player hall. Children, active soldiers, protected civilians and remote attacks without nearby captors do not trigger capture. This replaces the previous unconditional lethal-hit conversion/healing branch.
+- [x] ~~Preserve people and supplies.~~ Surrender retains identity, position, carried cargo and paid crafting progress, pauses old missions, marks the former tribe and starts resistance at 40%. Health never increases. The existing recall route carries the captive and supplies home physically; stores only increase on arrival. Captivity guards, escape, emancipation and save validation continue to apply.
+- [x] ~~Visible encounter outcome.~~ A surrender floater identifies the event, and selected captives show their resistance alongside fatigue.
+
+Validation: the broad simulation/tooling run passed 708 of 709 checks; its sole failure expected the removed remote conversion. That fixture now places captors beside the civilian and verifies no healing and captive identity, and passed in isolation. All 32 app/auth checks and the final nine captivity checks passed, as did typecheck and production build. No fresh all-green broad rerun is claimed. This covers adult-civilian surrender only. Capturing professional soldiers, explicit nonlethal orders, prisoner escort commands, negotiated ransom/release and organized armed revolts remain in scope. Do not mark the whole captivity/combat catalogue finished.
+
 ## Captivity resistance, guards and physical escape — 2026-10-28
 
 - [x] ~~Guard costs for treaty captives.~~ Idle/holding armed adults who are awake, outside shelter, empty-handed and not on a mission can cover up to three captives within 18 m on connected ground. The same guard has one finite assignment budget. Resistance is prioritized when coverage is scarce.

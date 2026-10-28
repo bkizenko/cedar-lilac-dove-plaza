@@ -706,10 +706,14 @@ test("marked trees are felled first, and burning a hall takes stores", async () 
   const foe = g.state.units.find((x) => x.team === 1 && x.type === "worker" && x.hp > 0);
   const atk = g.state.units.find((x) => x.team === 0 && x.type !== "worker" && x.hp > 0);
   const pop = g.popNow(0);
+  const meeting=g.interactionSpot(atk,hall);assert.ok(meeting);
+  foe.x=meeting.x;foe.z=meeting.z;foe.y=g.height(foe.x,foe.z);
+  atk.x=foe.x;atk.z=foe.z;atk.y=foe.y;
   foe.hp = 1;
   g.dealDamage(atk, foe);
   assert.equal(foe.team, 0);
-  assert.ok(foe.hp > 0);
+  assert.equal(foe.hp,1,"surrender never heals the wounded civilian");
+  assert.equal(foe.enslavedFrom,1);
   assert.equal(g.popNow(0), pop + 1);
   g.tribe(1).food = 100;
   g.tribe(0).food = 10;
