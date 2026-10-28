@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import type { BldType, UnitType } from "@/game/types";
+import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
 
 function box(w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) {
@@ -595,3 +595,18 @@ export function skyGeo() {
 }
 
 void hall;
+
+
+/** Distinct shared cargo silhouettes, centered on the carrier's hands/vehicle. */
+export function cargoGeo(kind:ResKind){
+ const parts:THREE.BufferGeometry[]=[];
+ if(kind==='wood'){
+  for(const [x,y] of [[-.18,-.22],[.18,-.22],[0,.04]])parts.push(box(.29,.25,1.05,x,y,0));
+  for(const z of [-.32,.32])parts.push(box(.7,.045,.065,0,.02,z));
+ }else if(kind==='food'){
+  parts.push(box(.66,.43,.65,0,-.25,0),box(.45,.12,.48,0,.18,0),box(.18,.1,.2,0,.3,0));
+ }else{
+  parts.push(box(.43,.33,.5,-.14,-.25,.1,.22),box(.35,.4,.38,.18,-.25,-.12,-.3),box(.36,.24,.35,0,.05,0,.4));
+ }
+ return merge(parts);
+}

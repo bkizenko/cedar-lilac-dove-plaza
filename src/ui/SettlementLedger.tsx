@@ -302,7 +302,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <ul>
         {people.map((u) => (
           <li key={u.id}>
-            {isDependent(g, u) ? "Dependent" : u.type === "worker" ? "Villager" : "Defender"} {u.id}
+            <strong>{personName(u)}</strong> · {isDependent(g, u) ? "young" : u.type === "worker" ? "villager" : "defender"}
             · age {Math.floor(u.ageT / 1800)}{u.sickUntil ? " · recovering from fever" : ""}:{" "}
             {u.emergency
               ? u.workReason
@@ -348,7 +348,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>
             {n.peaceTerm && <p>Treaty: {PEACE_TERMS[n.peaceTerm]}.</p>}
-            {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} paid; {n.tribute.owed} owed. {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
+            {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} delivered; {n.tribute.owed} owed (including shipments on the road). {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
             {n.peaceTerm==='puppet' && <button onClick={()=>{releasePuppet(g,n.id);engine.pushHud();}}>Grant independence</button>}
             {s.units.some(u=>u.team===0&&u.enslavedFrom===n.id) && <button onClick={()=>{freePeople(g,n.id);engine.pushHud();}}>Free enslaved adults from {n.name}</button>}
             {n.hostile && n.peaceOffer && n.peaceOffer.expires>s.time && <div role="status">

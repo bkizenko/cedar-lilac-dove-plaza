@@ -8,7 +8,7 @@ import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
 import { FOW, HALF, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
 import type { Game } from "@/game/sim";
-import type { BldType, UnitType } from "@/game/types";
+import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
 import { carryingCapacity } from "@/game/haulage";
 import type { FarmToolUnit } from "@/game/farmTools";
@@ -30,6 +30,7 @@ import {
   skyGeo,
   unitGeo,
   haulageGeo,
+  cargoGeo,
   farmToolHeadGeo,
   fishGeo,
   dockPostGeo,
@@ -136,7 +137,7 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
-  cargoMesh: THREE.InstancedMesh | null = null;
+  cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
@@ -763,10 +764,11 @@ export class WorldView {
       this.scene.add(mesh);
       this.unitMeshes.set(t, mesh);
     }
-    this.cargoMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.65,0.55,0.75),this.mats.timber.clone(),420);
-    this.cargoMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    this.cargoMesh.count=0; this.cargoMesh.frustumCulled=false;
-    this.scene.add(this.cargoMesh);
+    for(const kind of Object.keys(CARGO_COLORS) as ResKind[]){
+      const mesh=new THREE.InstancedMesh(cargoGeo(kind),this.mats.timber.clone(),420);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.count=0;mesh.frustumCulled=false;
+      this.scene.add(mesh);this.cargoMeshes.set(kind,mesh);
+    }
     for (const kind of ['sled', 'cart'] as const) {
       const mesh = new THREE.InstancedMesh(haulageGeo(kind), this.mats.timber, 140);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1370,9 +1372,8 @@ export class WorldView {
   }
 
   private syncCargo(game: Game) {
-    const mesh=this.cargoMesh;
-    if (!mesh) return;
-    let i=0, sleds=0, carts=0, workers=0;
+    const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
+    let sleds=0, carts=0, workers=0;
     const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
     for (const u of game.state.units) {
       if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
@@ -1391,7 +1392,9 @@ export class WorldView {
         vehicle!.setMatrixAt(index,_haulMatrix);
         if(kind==='sled')sleds++;else carts++;
       }
-      if(u.carry<=0||!u.carryType||i>=instCap(mesh))continue;
+      if(u.carry<=0||!u.carryType)continue;
+      const mesh=this.cargoMeshes.get(u.carryType),i=counts[u.carryType];
+      if(!mesh||i>=instCap(mesh))continue;
       if(mounted){
         const fullness=Math.min(1,u.carry/carryingCapacity(u,u.carryType)),height=.35+fullness*.55;
         _p.set(0,(kind==='cart'?.7:.34)+height*.5,0).applyMatrix4(_haulMatrix);
@@ -1400,10 +1403,9 @@ export class WorldView {
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
         _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       }
-      mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);i++;
+      mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);counts[u.carryType]++;
     }
-    mesh.count=i;mesh.instanceMatrix.needsUpdate=true;
-    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+    for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=kind==='sled'?sleds:carts;vehicle.instanceMatrix.needsUpdate=true;}
   }
 
@@ -2261,6 +2263,8 @@ export class WorldView {
     this.bldMeshes.clear();
     this.unitMeshes.clear();
     this.haulageMeshes.clear();
+    for(const mesh of this.cargoMeshes.values())(mesh.material as THREE.Material).dispose();
+    this.cargoMeshes.clear();
     if(this.farmToolMesh){(this.farmToolMesh.material as THREE.Material).dispose();this.farmToolMesh=null;}
   }
 

@@ -4,6 +4,12 @@ This is a design catalogue, not a claim that every historical development must o
 
 Latest delivery (2026-10-14): direct construction overrides, quarry staffing/stone approach repair, visited-outskirts discovery, 2–4 new-map rival slots, 50–150 age population requirements, and development timber protection are tracked at their exact scope in the canonical handoff. A first defended-outpost layer now provides physical guard dispatch, variable strength/reach, surveyed value and known rival grievances; full territorial negotiation/contested trade corridors, armed caravans, newcomer-built temporary and mud shelters, rival parity, pack animals and stronger village identity remain accepted incomplete work. Do not cross out these broad systems based on a UI button or a faction slot.
 
+## Verified additions — 2026-10-28
+
+- [x] ~~Physical delivery of fixed log tribute and puppet dues~~: existing adults carry actual stock; arrival pays debt, loss does not, and journeys persist across saves. Custom tribute demands and escort negotiations remain open.
+- [x] ~~Rival use of existing farming tools and sled/cart crafting~~: actual labor and materials, one crafter at a time, food and age reserves protected. Full rival parity, pack animals and boats remain open.
+- [x] ~~Different visible shapes for carried timber, food and stone/ore~~: shared instanced geometry retains fog and cargo ownership. Specific food varieties and the wider visual overhaul remain open.
+
 ## 1. Landscapes and natural constraints
 
 1. Seeded starting habitats and seasonal climate profiles.

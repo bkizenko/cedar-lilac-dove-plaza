@@ -1,3 +1,5 @@
+import {HAULAGE,beginHaulageWork,resumeHaulageWork} from "./haulage";
+import {FARM_TOOLS,beginFarmToolWork,resumeFarmToolWork} from "./farmTools";
 import {buildingCost} from "./construction";
 import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
@@ -166,4 +168,36 @@ export function rebalanceRivalLabor(g:Game,team:number){
     u.node=null;u.job=null;u.jobLock=false;u.order='idle';u.workCheckAt=0;
     g.workBoard.reset();g.workBoard.assign(g,u);moved++;
   }
+}
+
+
+/** Prosperous rivals improve actual residents, not faction-wide production multipliers. */
+export function developRivalEquipment(g:Game,team:number){
+ if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
+ const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia);
+ if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused))return false;
+ const eligible=adults.filter(u=>!u.jobLock&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
+ // Resume paid projects before reserving any new materials.
+ for(const u of eligible){
+  if(u.haulageWork?.paused&&resumeHaulageWork(g,u))return true;
+  if(u.farmToolWork?.paused&&resumeFarmToolWork(g,u))return true;
+ }
+ const t=g.tribe(team),plan=rivalDevelopmentPlan(g,team);
+ const affordable=(cost:{wood:number;stone:number;copper?:number;iron?:number})=>(['wood','stone','copper','iron'] as const).every(k=>
+  t[k]-(cost[k]||0)>=(plan.saving?(plan.next?.[k]||0):k==='wood'?40:k==='stone'?6:0));
+ const fields=g.state.buildings.filter(b=>b.team===team&&b.type==='farm'&&g.finished(b)).length;
+ const toolTarget=Math.min(fields,Math.max(1,Math.floor(adults.length/3)));
+ for(const kind of ['ironTools','copperTools','stoneHoe'] as const){
+  const spec=FARM_TOOLS[kind];if(t.age<spec.age||!affordable(spec))continue;
+  if(adults.filter(u=>u.farmTool&&FARM_TOOLS[u.farmTool].cultivation>=spec.cultivation).length>=toolTarget)continue;
+  const farmers=[...eligible].sort((a,b)=>Number(b.job==='food')-Number(a.job==='food'));
+  for(const u of farmers)if(beginFarmToolWork(g,kind,team,undefined,u.id))return true;
+ }
+ const transportTarget=Math.max(1,Math.floor(adults.length/4));
+ for(const kind of ['cart','sled'] as const){
+  if(!affordable(HAULAGE[kind])||adults.filter(u=>kind==='cart'?u.haulage==='cart':!!u.haulage).length>=transportTarget)continue;
+  const haulers=[...eligible].sort((a,b)=>Number(b.job==='wood'||b.job==='stone')-Number(a.job==='wood'||a.job==='stone'));
+  for(const u of haulers)if(beginHaulageWork(g,kind,team,undefined,u.id))return true;
+ }
+ return false;
 }

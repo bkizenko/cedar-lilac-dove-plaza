@@ -304,6 +304,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
+    if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
     if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();

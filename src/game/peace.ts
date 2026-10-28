@@ -5,12 +5,12 @@ import {isDependent} from './settlement';
 
 export const PEACE_TERMS: Record<PeaceTerm,string> = {whitePeace:'White peace',tribute:'Tribute',forcedLabor:'Slavery',puppet:'Puppet state',annexation:'Annexation'};
 export const peaceTerms=Object.keys(PEACE_TERMS) as PeaceTerm[];
-export const peaceDescription:Record<PeaceTerm,string>={whitePeace:'Both armies withdraw. Ten minutes of protected peace.',tribute:'The defeated tribe pays 20 logs now and every two minutes, six payments total. Shortfalls remain owed.',forcedLabor:'Two existing adults are enslaved and walk to your settlement. They require food and housing; you can free them.',puppet:'The tribe keeps its people and buildings, becomes your ally, and pays 10 logs every two minutes until released.',annexation:'All surviving people, buildings, stores and claimed regions join your tribe. Requires overwhelming military pressure.'};
+export const peaceDescription:Record<PeaceTerm,string>={whitePeace:'Both armies withdraw. Ten minutes of protected peace.',tribute:'The defeated tribe owes 20 logs every two minutes, six payments total. Residents carry payments to your hall; missing or intercepted deliveries remain owed.',forcedLabor:'Two existing adults are enslaved and walk to your settlement. They require food and housing; you can free them.',puppet:'The tribe keeps its people and buildings, becomes your ally, and sends 10 logs every two minutes until released. Payments arrive by carrier.',annexation:'All surviving people, buildings, stores and claimed regions join your tribe. Requires overwhelming military pressure.'};
 export function peacePressure(g:Game,team:number){
  const strength=(t:number)=>g.state.units.filter(u=>u.team===t&&u.hp>0&&!isDependent(g,u)).reduce((s,u)=>s+(u.type==='worker'&&!u.militia?0.25:1)*u.hp/Math.max(1,u.maxHp),0);
  return strength(0)/Math.max(.5,strength(team));
 }
-function candidates(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.emergency&&!u.militia&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&u.carry===0);}
+function candidates(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&!u.studyCrop&&!u.recalled&&!u.jobLock&&["idle","gather"].includes(u.order)&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.emergency&&!u.militia&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&u.carry===0);}
 export function peaceIssue(g:Game,team:number,term:PeaceTerm):string|null{
  const t=g.tribe(team);
  if(!peaceTerms.includes(term)||!t||team===0||team===3||!t.alive||!t.hostile||!knownSettlement(g,team))return 'Peace negotiations require a known tribe at war.';
@@ -67,8 +67,51 @@ export function tickPeace(g:Game){
   }else if(t.tribute){
    const c=t.tribute;
    if(g.state.time>=c.next&&c.remaining!==0){c.owed+=c.amount;if(c.remaining>0)c.remaining--;c.next=g.state.time+120;}
-   const payment=Math.min(c.owed,Math.max(0,t.wood));t.wood-=payment;g.tribe(0).wood+=payment;c.owed-=payment;c.paid+=payment;
+   // A single real resident carries the installment. Owed includes cargo in transit,
+   // so an intercepted shipment never counts as payment or creates replacement goods.
+   if(c.owed>0&&t.wood>0&&!g.state.units.some(u=>u.team===t.id&&u.hp>0&&u.tributeJourney)){
+    const u=candidates(g,t.id).find(u=>tributeHome(g,u,t.id)&&tributeHome(g,u,0));
+    if(u){u.tributeJourney={phase:'pickup',amount:0};u.node=null;u.order='move';u.job=null;u.stuckT=0;}
+   }
    if(c.remaining===0&&c.owed===0)t.tribute=undefined;
   }
  }
+}
+
+
+function tributeHome(g:Game,u:Unit,team:number){
+ return g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&g.finished(b))
+  .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))
+  .find(b=>!!g.interactionSpot(u,b));
+}
+
+/** No teleporting payments: pickup, delivery and the carrier's return are physical. */
+export function tributeJourneyAI(g:Game,u:Unit,dt:number){
+ const m=u.tributeJourney;if(!m)return false;
+ const t=g.tribe(u.team),c=t?.tribute;
+ if(m.phase!=='return'&&(!c||t.hostile||u.emergency||u.recalled)){
+  u.tributeJourney=undefined;u.order='return';u.workReason='Tribute cancelled — bringing cargo home';return false;
+ }
+ const home=tributeHome(g,u,m.phase==='deliver'?0:u.team);
+ if(!home){u.tributeJourney=undefined;u.order='return';u.workReason='Tribute route blocked — returning with cargo';return false;}
+ const spot=g.interactionSpot(u,home)!;
+ u.tx=spot.x;u.tz=spot.z;
+ u.workReason=m.phase==='pickup'?'Collecting tribute at the hearth':m.phase==='deliver'?`Delivering ${m.amount} tribute logs`:'Tribute delivered — returning home';
+ if(!g.buildingWorkReached(u,home)){g.steer(u,dt);return true;}
+ if(m.phase==='pickup'){
+  const amount=Math.min(20,c!.owed,Math.max(0,t.wood));
+  if(amount<=0){u.tributeJourney=undefined;u.order='idle';return true;}
+  t.wood-=amount;u.carry=amount;u.carryType='wood';m.amount=amount;m.phase='deliver';
+ }else if(m.phase==='deliver'){
+  const amount=Math.min(m.amount,u.carry,c!.owed);
+  if(u.carryType==='wood'&&amount>0){g.tribe(0).wood+=amount;c!.owed-=amount;c!.paid+=amount;u.carry-=amount;
+   g.banner(`${t.name}: ${amount} tribute logs delivered`,4);}
+  if(u.carry===0)u.carryType=null;
+  m.phase='return';m.amount=0;
+ }else{
+  // Undelivered cargo remains real and is restored only at the sender's home.
+  if(u.carryType==='wood'){t.wood+=u.carry;u.carry=0;u.carryType=null;}
+  u.tributeJourney=undefined;u.order='idle';g.workBoard.reset();
+ }
+ u.stuckT=0;return true;
 }

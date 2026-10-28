@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import * as THREE from 'three';
-import {haulageGeo, farmToolHeadGeo, unitGeo, deerGeo} from '../src/scene/meshes.ts';
+import {cargoGeo, haulageGeo, farmToolHeadGeo, unitGeo, deerGeo} from '../src/scene/meshes.ts';
 
 // Import the scene without constructing a renderer or accessing any browser.
 registerHooks({resolve(specifier, context, next) {
@@ -17,7 +17,7 @@ function mesh(geometry,capacity=140){
 }
 function fixture(){
   const view=Object.create(WorldView.prototype);
-  view.cargoMesh=mesh(new THREE.BoxGeometry(.65,.55,.75),420);
+  view.cargoMeshes=new Map(["food","wood","stone","copper","iron"].map(k=>[k,mesh(cargoGeo(k),420)]));
   view.haulageMeshes=new Map([['sled',mesh(haulageGeo('sled'))],['cart',mesh(haulageGeo('cart'))]]);
   view.farmToolMesh=mesh(farmToolHeadGeo());
   view.unitMeshes=new Map([['worker',mesh(unitGeo('worker'))]]);
@@ -55,10 +55,11 @@ test('cargo is drawn once on its actual owner’s sled or cart, and empty equipm
   const bare=person(3,{carry:4,carryType:'food'});
   const empty=person(4,{haulage:'cart'});
   game.state.units=[sled,cart,bare,empty];view.syncCargo(game);
-  assert.equal(view.cargoMesh.count,3,'no duplicate load in the owner’s hands');
+  assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),3,'no duplicate load in the owner’s hands');
+  assert.equal(view.cargoMeshes.get('wood').count,1);assert.equal(view.cargoMeshes.get('stone').count,1);assert.equal(view.cargoMeshes.get('food').count,1);
   assert.equal(view.haulageMeshes.get('sled').count,1);
   assert.equal(view.haulageMeshes.get('cart').count,2);
-  const sledMatrix=matrix(view.haulageMeshes.get('sled')),loadMatrix=matrix(view.cargoMesh);
+  const sledMatrix=matrix(view.haulageMeshes.get('sled')),loadMatrix=matrix(view.cargoMeshes.get("wood"));
   assert.ok(Math.abs(sledMatrix.elements[14]-(sled.z-2.1))<1e-5);
   assert.equal(loadMatrix.elements[12],sledMatrix.elements[12]);
   assert.equal(loadMatrix.elements[14],sledMatrix.elements[14]);
@@ -75,11 +76,11 @@ test('equipment and cargo follow fog, shelter, death and militia visibility rule
   assert.equal(view.haulageMeshes.get('cart').count,1);
   for(const condition of [{shelterId:1},{hp:0},{team:1,x:200}]){
     game.state.units=[{...owner,...condition}];view.syncCargo(game);
-    assert.equal(view.cargoMesh.count,0);assert.equal(view.haulageMeshes.get('cart').count,0);
+    assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),0);assert.equal(view.haulageMeshes.get('cart').count,0);
   }
   game.state.units=[{...owner,militia:true}];view.syncCargo(game);
   assert.equal(view.haulageMeshes.get('cart').count,0);
-  assert.equal(view.cargoMesh.count,1,'armed carriers use their ordinary carried load');
+  assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),1,'armed carriers use their ordinary carried load');
 });
 
 test('transport follows ground slopes and its load shares the vehicle pose',()=>{
@@ -87,7 +88,7 @@ test('transport follows ground slopes and its load shares the vehicle pose',()=>
   game.travelHeight=(x,z)=>4+x*.1+z*.2;
   game.state.units=[person(1,{haulage:'sled',carry:10,carryType:'wood'})];
   view.syncCargo(game);
-  const transport=matrix(view.haulageMeshes.get('sled')),cargo=matrix(view.cargoMesh);
+  const transport=matrix(view.haulageMeshes.get('sled')),cargo=matrix(view.cargoMeshes.get("wood"));
   assert.ok(Math.abs(transport.elements[6])>.01,'pitch follows the longitudinal slope');
   assert.ok(Math.abs(transport.elements[1])>.01,'roll follows the cross slope');
   const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();
@@ -113,7 +114,7 @@ test('equipment never outlives the renderer’s visible-owner capacity',()=>{
   game.state.units=Array.from({length:140},(_,i)=>person(i));
   game.state.units.push(person(999,{haulage:'cart',carry:20,carryType:'wood'}));
   view.syncCargo(game);
-  assert.equal(view.haulageMeshes.get('cart').count,0);assert.equal(view.cargoMesh.count,0);
+  assert.equal(view.haulageMeshes.get('cart').count,0);assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),0);
 });
 
 test('finite fresh carcasses lie on their side and exhausted, spoiled or unseen carcasses disappear',()=>{
@@ -142,4 +143,16 @@ test('newly exposed ore grows its render capacity without losing fog or depletio
  assert.equal(view.copper.count,3);assert.equal(view.copper.geometry,geometry);assert.equal(disposed,true);assert.equal(view.scene.children.includes(old),false);
  const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();matrix(view.copper,1).decompose(p,q,s);assert.equal(p.x,10);assert.ok(s.x>.9);
  matrix(view.copper,2).decompose(p,q,s);assert.ok(s.x<.01,'unexplored new veins remain hidden');game.state.copper[1].amount=0;view.syncNature(game);matrix(view.copper,1).decompose(p,q,s);assert.ok(s.x<.01,'exhausted veins disappear');
+});
+
+
+test('distinct cargo silhouettes remain finite and small without per-carrier meshes',()=>{
+ const shapes=[];
+ for(const kind of ['food','wood','stone','copper','iron']){
+  const geo=cargoGeo(kind);geo.computeBoundingBox();
+  assert.ok(geo.getAttribute('position').count<=180);
+  assert.ok([...geo.getAttribute('position').array].every(Number.isFinite));
+  shapes.push([...geo.getAttribute('position').array].join(','));geo.dispose();
+ }
+ assert.equal(new Set(shapes.slice(0,3)).size,3,'food, logs and rocks must have distinct shapes');
 });

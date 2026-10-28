@@ -13,7 +13,7 @@ import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
-import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,rebalanceRivalLabor} from "./rivalDevelopment";
+import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -33,7 +33,7 @@ import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
-import {settlePeace, tickPeace} from './peace';
+import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
@@ -1558,7 +1558,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
-    u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
+    u.tributeJourney=undefined;u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
     u.resting=undefined;u.envoy=undefined;u.searchJob=undefined;u.recalled=undefined;u.scout=undefined;u.visit=undefined;
     u.foundingJourney=undefined;u.drill=undefined;u.studyCrop=undefined;u.emergency=undefined;
@@ -4111,6 +4111,7 @@ export class Game {
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
       return;
     }
+    if(tributeJourneyAI(this,u,dt))return;
     if(directedConstruction(this,u,dt))return;
     if(foundingJourneyAI(this,u,dt))return;
     if(scoutAI(this,u,dt))return;
@@ -4989,6 +4990,7 @@ export class Game {
     rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
     developRivalInstitutions(this,team);
+    developRivalEquipment(this,team);
     const costScale = 0.92;
     const pop = this.popNow(team);
     if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
@@ -5478,6 +5480,7 @@ export class Game {
             if (demobilizationAI(this,u,sdt)) continue;
             recoverCaravanEquipment(this,u);
             if(u.recalled){this.workerAI(u,sdt);continue;}
+            if(tributeJourneyAI(this,u,sdt))continue;
             if(escortAI(this,u,sdt))continue;
             if(waitForTradeEscort(this,u))continue;
             if(raidLootAI(this,u,sdt))continue;

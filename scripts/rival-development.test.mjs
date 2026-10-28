@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {AGE_COST} from '../src/game/constants.ts';
 import {foodDemand} from '../src/game/settlement.ts';
-import {rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources} from '../src/game/rivalDevelopment.ts';
+import {rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources,developRivalEquipment} from '../src/game/rivalDevelopment.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {scoutKnowledge} from '../src/game/scouting.ts';
 
@@ -292,4 +292,23 @@ test('resource development checks residents rather than an occupied camp center'
  g.workBoard.connected=(game,x,z,tx,tz)=>Math.hypot(x-home.x,z-home.z)<1?false:connected(game,x,z,tx,tz);
  assert.equal(developRivalResources(g,1),true);
  assert.ok(g.state.buildings.some(b=>b.type==='lumber'&&b.build===0));
+});
+
+
+test('prosperous rivals pay and physically craft tools one worker at a time',()=>{
+ const g=fixture();g.state.buildings.push(g.makeBld('farm',-25,70,1));g.rebuildWalk();g.clockState=()=>({period:'Afternoon'});
+ const wood=g.tribe(1).wood,stone=g.tribe(1).stone;
+ assert.equal(developRivalEquipment(g,1),true);const u=g.state.units.find(u=>u.farmToolWork);
+ assert.ok(u);assert.equal(g.tribe(1).wood,wood-3);assert.equal(g.tribe(1).stone,stone-2);assert.equal(u.farmTool,undefined);
+ assert.equal(developRivalEquipment(g,1),false,'one crafter leaves the rest producing');
+ for(let i=0;i<1800&&!u.farmTool;i++){g.navBudget=10;g.workerAI(u,.1);}
+ assert.equal(u.farmTool,'stoneHoe');assert.equal(g.tribe(1).wood,wood-3);
+});
+test('rivals make sleds but do not invent wheel experience or spend protected reserves',()=>{
+ const g=fixture();assert.equal(developRivalEquipment(g,1),true);
+ const u=g.state.units.find(u=>u.haulageWork);assert.equal(u.haulageWork.kind,'sled');assert.equal(g.tribe(1).wood,82);
+ const poor=fixture();poor.tribe(1).food=1;const before=poor.tribe(1).wood;
+ assert.equal(developRivalEquipment(poor,1),false);assert.equal(poor.tribe(1).wood,before);
+ const advancing=fixture();baseEconomy(advancing);Object.assign(advancing.tribe(1),{wood:AGE_COST[1].wood,stone:AGE_COST[1].stone});
+ assert.equal(developRivalEquipment(advancing,1),false);
 });
