@@ -1,3 +1,12 @@
+## Embedded-resource and labor regression repair — 2026-10-28
+
+- [x] Diagnosed audit seed 345’s remaining tree at (-216.49, -128.70): it occupied the rival barracks footprint. Coarse connectivity accepted it while all nearby working positions were blocked.
+- [x] New worlds place supplemental supplies clear of structures and relocate natural trees/forage covered by initial buildings. Existing saved nodes are not moved or deleted.
+- [x] Work-board refresh excludes resource nodes inside solid structures, caching the footprint result across teams; destroying the obstruction makes the resource eligible again.
+- [x] Labor rebalancing now filters busy people before exhausting its bounded crew selection, fixing the regression where two busy candidates prevented all food-worker reassignment.
+- Validation: broad run completed 723 checks, 722 passed and one labor orchestration test failed. That failure was repaired and the final 35-test rival development/orchestration suite passed. Separate 32 app/auth tests passed. Final typecheck and build passed. This is not a claim of a fresh all-green full-suite rerun after the world-generation edits.
+- Strong late-age rivals and remaining catalogue features are still incomplete.
+
 ## Physical captive repatriation — 2026-10-28
 
 - [x] Captivity panel offers Send home separately from emancipation into the player village. A living captive needs an existing reachable homeland; no remote or free population duplication occurs.

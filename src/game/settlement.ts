@@ -209,6 +209,13 @@ export class WorkBoard {
     if (g.state.time < this.next) return;
     this.next = g.state.time + 1;
     this.tasks.clear();
+    const solid=g.state.buildings.filter(b=>g.solidBuilding(b)),obstructed=new Map<Node,boolean>();
+    const blockedResource=(node:Node)=>{
+      if('type' in node||'species' in node)return false;
+      let blocked=obstructed.get(node);
+      if(blocked===undefined){blocked=solid.some(b=>Math.abs(node.x-b.x)<b.w*.4&&Math.abs(node.z-b.z)<b.d*.4);obstructed.set(node,blocked);}
+      return blocked;
+    };
     for (const t of g.state.tribes) {
       if (!t.alive || t.id === 3) continue;
       const list: Task[] = [],
@@ -216,8 +223,9 @@ export class WorkBoard {
         foodUrgency = reserveSeconds(g,t.id)<90 ? 320 : reserveSeconds(g, t.id) < 240 ? 180 : 80;
       const buildings = g.state.buildings.filter((b) => b.team === t.id && b.hp > 0);
       const needed=new Set((["wood","stone","copper","iron"] as ResKind[]).filter(k=>constructionDemand(g,t.id,k)));
-      const add = (node: Node, kind: Task["kind"], slots: number, priority: number) =>
-        list.push({ node, kind, slots, priority:priority+(needed.has(kind as ResKind)?90:0) });
+      const add = (node: Node, kind: Task["kind"], slots: number, priority: number) => {
+        if(!blockedResource(node))list.push({ node, kind, slots, priority:priority+(needed.has(kind as ResKind)?90:0) });
+      };
       const nearby = (n: Node, type: string, r: number) =>
         buildings.some(
           (b) => b.type === type && g.finished(b) && Math.hypot(b.x - n.x, b.z - n.z) < r,

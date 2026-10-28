@@ -470,14 +470,24 @@ export class Game {
       }
     }
 
+    const startingResourceSpot=(x:number,z:number)=>{
+      for(const r of [0,4,8,12,18,24])for(let i=0;i<(r?16:1);i++){
+        const a=i*Math.PI/8,sx=x+Math.sin(a)*r,sz=z+Math.cos(a)*r;
+        if(this.height(sx,sz)<this.world.waterY+.4)continue;
+        if(this.state.buildings.some(b=>b.hp>0&&Math.abs(sx-b.x)<b.w*.5+2&&Math.abs(sz-b.z)<b.d*.5+2))continue;
+        if([...this.state.trees,...this.state.forage].some(n=>n.amount>0&&Math.hypot(n.x-sx,n.z-sz)<1.8))continue;
+        return {x:sx,z:sz};
+      }
+      return null;
+    };
     for (const camp of this.world.camps) {
       if (camp.team === 0) continue;
       const hx = camp.x;
       const hz = camp.z;
       const nExtra = 4;
       for (let i = 0; i < nExtra; i++) {
-        const x = hx - 8 - (i % 3) * 2.4;
-        const z = hz - 9 - Math.floor(i / 3) * 2.2;
+        const spot=startingResourceSpot(hx-8-(i%3)*2.4,hz-9-Math.floor(i/3)*2.2);if(!spot)continue;
+        const {x,z}=spot;
         this.state.forage.push({
           id: this.id(),
           kind: "forage",
@@ -492,8 +502,8 @@ export class Game {
         });
       }
       for (let i = 0; i < nExtra; i++) {
-        const x = hx + 10 + (i % 3) * 2.6;
-        const z = hz - 7 - Math.floor(i / 3) * 2.4;
+        const spot=startingResourceSpot(hx+10+(i%3)*2.6,hz-7-Math.floor(i/3)*2.4);if(!spot)continue;
+        const {x,z}=spot;
         this.state.trees.push({
           id: this.id(),
           kind: "tree",
@@ -509,6 +519,12 @@ export class Game {
       }
     }
 
+    // Initial structures predate supplemental resources. Relocate covered
+    // natural nodes once during world creation, never during saved-game play.
+    for(const n of [...this.state.trees,...this.state.forage]){
+      if(!this.state.buildings.some(b=>this.solidBuilding(b)&&Math.abs(n.x-b.x)<b.w*.4&&Math.abs(n.z-b.z)<b.d*.4))continue;
+      const spot=startingResourceSpot(n.x,n.z);if(spot){n.x=spot.x;n.z=spot.z;n.y=this.height(n.x,n.z);}
+    }
     this.spawnRegions();
     // Existing neighbors begin with a worked landscape and protected stores.
     // These are generated starting assets, not supplies granted during play.

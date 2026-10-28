@@ -361,3 +361,20 @@ test('a first canoe uses the dock budget even while a rival saves for the next a
  const maker=g.state.units.find(u=>u.haulageWork?.kind==='canoe');assert.ok(maker);
  assert.equal(g.tribe(1).wood,20);assert.equal(g.tribe(1).stone,6);assert.equal(maker.haulage,undefined);
 });
+
+test('resources embedded in legacy buildings do not monopolize worker assignments and reopen after destruction',()=>{
+ const g=fixture(),u=g.state.units[0];g.tribe(1).wood=0;
+ const barracks=g.makeBld('barracks',20,50,1);g.state.buildings.push(barracks);
+ const trapped=tree(g,20,50),accessible=tree(g,35,55);g.state.trees=[trapped,accessible];g.rebuildWalk();
+ u.job='wood';u.jobLock=true;g.workBoard.assign(g,u);assert.equal(u.node?.id,accessible.id);
+ barracks.hp=0;accessible.amount=0;u.node=null;u.order='idle';u.workCheckAt=0;g.state.time+=2;g.rebuildWalk();g.workBoard.reset();g.workBoard.assign(g,u);assert.equal(u.node?.id,trapped.id);
+});
+
+test('new rival starting supplies are placed outside solid buildings instead of inside their barracks',()=>{
+ const g=new Game();g.reset(345,2);g.enterIsland();
+ for(const camp of g.world.camps.filter(c=>c.team!==0)){
+  const local=[...g.state.trees,...g.state.forage].filter(n=>n.amount>0&&Math.hypot(n.x-camp.x,n.z-camp.z)<35);
+  assert.ok(local.length>0);
+  for(const n of local)assert.equal(g.state.buildings.some(b=>g.solidBuilding(b)&&Math.abs(n.x-b.x)<b.w*.4&&Math.abs(n.z-b.z)<b.d*.4),false,`resource ${n.id} is inside a building`);
+ }
+});
