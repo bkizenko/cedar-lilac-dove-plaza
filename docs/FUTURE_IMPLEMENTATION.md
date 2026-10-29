@@ -1,3 +1,11 @@
+## Seed-funded rival woodland renewal — 2026-10-29
+
+- [x] Fed rivals with scarce timber can spend spare seed baskets to replant depleted stands near their halls/lumber camps, using the same growth system as the player. Four seeds remain reserved for farms; each review plants at most four trees and waits a minute before reviewing again.
+- [x] Replanting excludes solid building footprints. Rivals use their own local camp knowledge, independent of player fog; no existing terrain or saved resources are reset.
+- [x] Regrowth creates standing trees, never direct treasury income. Weather, felling, hauling and unloading still apply.
+- Validation: 41 rival-development and seed/testing checks passed; typecheck and production build passed. The year-six diagnostic had 1,679/1,173 unused seeds but just 28/30 timber. Each rival successfully replanted four trees in an isolated replay. Longer growth/advancement verification is ongoing.
+- Usage constraint: user requests retaining at least 20% allowance. Check account usage between batches and stop before reaching 80% used, with a buffer for validation/push. Last observed 51% used.
+
 ## Rival trade memory and idle labor recovery — 2026-10-29
 
 - [x] Returning traders report refused offers only after physically reaching their own town hall. The village avoids that partner/offer/wanted combination for half a game year, then can check again. Other partners remain eligible. No remote reserve information is exposed.

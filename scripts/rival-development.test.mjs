@@ -393,3 +393,16 @@ test('rival resource planning uses a canoe owner beyond the nearest three walker
  assert.equal(camp.build,0,'planning does not skip actual construction');
  assert.equal(g.tribe(1).wood,wood-16,'resource access spends real camp materials');
 });
+
+
+test('rivals spend spare seeds on depleted local stands, wait for regrowth and preserve farm seed reserves',async()=>{
+ const {developRivalForestry}=await import('../src/game/rivalDevelopment.ts');
+ const g=fixture(),t=g.tribe(1);t.food=2000;t.wood=0;t.seeds=6;g.vision.fill(0);
+ g.state.trees=[tree(g,15,38),tree(g,19,38),tree(g,23,38),tree(g,200,38)];
+ for(const n of g.state.trees){n.amount=0;n.regenT=5000;}
+ assert.equal(developRivalForestry(g,1),true);assert.equal(t.seeds,4);assert.equal(t.wood,0);
+ assert.equal(g.state.trees.filter(n=>n.planted).length,2);assert.equal(g.state.trees[3].planted,undefined);
+ assert.equal(developRivalForestry(g,1),false);
+ const saved=decodeGame(encodeGame(g));assert.equal(saved.tribe(1).seeds,4);assert.equal(saved.state.trees.filter(n=>n.planted).length,2);
+ g.tickRegen(200);assert.ok(g.state.trees[0].amount>0);assert.equal(t.wood,0,'regrowth is standing timber, not treasury income');
+});

@@ -124,15 +124,16 @@ export function tickAutomaticCultivation(g:Game){
 }
 /** Replant depleted local stands with seed baskets, never logs. Existing forest
  * regrowth supplies the growth clock, weather response and saved tree identity. */
-export function replantStand(g:Game,buildingId:number){
- const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===0&&['lumber','townhall'].includes(b.type)&&g.finished(b));
+export function replantStand(g:Game,buildingId:number,team=0){
+ const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&['lumber','townhall'].includes(b.type)&&g.finished(b));
  if(!b)return 0;
- const t=g.tribe(0);let planted=0;
+ const t=g.tribe(team);let planted=0;
  for(const n of g.state.trees){
-  if(planted>=4||(t.seeds||0)<1)break;
-  if(n.amount>0||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!g.exploredAt(n.x,n.z))continue;
+  if(planted>=4||(t.seeds||0)<(team===0?1:5))break;
+  if(n.amount>0||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||(team===0&&!g.exploredAt(n.x,n.z)))continue;
+  if(g.state.buildings.some(site=>g.solidBuilding(site)&&Math.abs(site.x-n.x)<site.w*.4&&Math.abs(site.z-n.z)<site.d*.4))continue;
   t.seeds!--;n.regenT=120;n.planted=true;planted++;
  }
- g.banner(planted?`${planted} trees replanted. Growth takes about two minutes in mild weather.`:'Need seed baskets and depleted trees within 28m of this camp.',5);
+ if(team===0)g.banner(planted?`${planted} trees replanted. Growth takes about two minutes in mild weather.`:'Need seed baskets and depleted trees within 28m of this camp.',5);
  return planted;
 }

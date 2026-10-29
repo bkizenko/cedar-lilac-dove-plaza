@@ -1,3 +1,4 @@
+import {replantStand} from './cultivation';
 import {connectedForUnit} from './waterTravel';
 import {resumeWeaponWork} from './warfare';
 import {beginPackTaming} from './packAnimals';
@@ -243,4 +244,19 @@ export function developRivalCoast(g:Game,team:number){
   if(!best||score<best.score)best={x,z,score};
  }
  return !!best&&!!g.placeBuilding('dock',best.x,best.z,team);
+}
+
+
+const forestryReviews=new WeakMap<Game,Map<number,number>>();
+/** Reuse player seed-funded replanting; standing timber still needs to grow,
+ * be felled, carried and deposited by actual residents. */
+export function developRivalForestry(g:Game,team:number){
+ if(!isRivalTeam(team)||!g.tribe(team).alive||reserveSeconds(g,team)<600)return false;
+ const t=g.tribe(team);
+ if((t.seeds||0)<=4||t.wood>=Math.max(100,AGE_COST[t.age+1]?.wood||0))return false;
+ let timers=forestryReviews.get(g);if(!timers){timers=new Map();forestryReviews.set(g,timers);}
+ const due=timers.get(team)||0;if(due>g.state.time&&due<=g.state.time+60)return false;
+ timers.set(team,g.state.time+60);
+ for(const b of g.state.buildings)if(b.team===team&&g.finished(b)&&['townhall','lumber'].includes(b.type)&&replantStand(g,b.id,team)>0)return true;
+ return false;
 }

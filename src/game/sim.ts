@@ -1,3 +1,4 @@
+import {developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
@@ -5006,6 +5007,7 @@ export class Game {
     developRivalCrossings(this,team);
     rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
+    developRivalForestry(this,team);
     developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);
