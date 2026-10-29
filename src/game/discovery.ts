@@ -74,3 +74,13 @@ export function adoptTradition(g: Game, kind: Tradition) {
   g.banner(`${TRADITIONS.find(t => t.id === kind)!.name} adopted — a lasting village tradition`, 4);
   return true;
 }
+
+
+/** Stable site rewards survive reloads without rerolling; already investigated
+ * sites remain spent in legacy saves. Material finds do not unlock technology. */
+export function ancientSiteYield(seed:number,site:number){
+ const roll=((seed>>>0)+Math.imul(site,2654435761)>>>0)%3;
+ return roll===0?{kind:'stone' as const,amount:18,label:'18 worked stone'}:
+  roll===1?{kind:'copper' as const,amount:8,label:'8 copper fragments — material for later experiments'}:
+  {kind:'food' as const,amount:8,label:'8 preserved grain and 4 planting seeds',seeds:4};
+}

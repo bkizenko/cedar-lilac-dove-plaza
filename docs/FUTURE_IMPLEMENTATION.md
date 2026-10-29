@@ -1,3 +1,12 @@
+## Ancient-discovery yields: first playable increment — 2026-10-29
+
+- [x] Uninvestigated standing-stone sites yield one deterministic cache: 18 worked stone, 8 copper fragments, or 8 preserved grain with 4 planting samples. Existing investigated sites remain spent; no saved village reset or retroactive grants.
+- [x] A living empty-handed player explorer collects the find, receives a clear reward message and physically returns home. Full hands preserve both existing cargo and the unclaimed site. Supplies enter stores only upon delivery; grain samples use the ordinary cultivation-trial system.
+- [x] Save/reload preserves site consumption and carried goods. Metal finds do not grant technologies or ages. The exploration chronicle explains the reward loop.
+- Validation: 10 discovery/seed/save tests plus the existing standing-stone regression passed; final typecheck and production build passed. No saved player world was reset.
+- Still open: dedicated ruin types, cultural artifacts and their trade/study interactions, stronger discovery presentation. This is a playable material/seed reward loop, not completion of archaeology or organic research.
+- Delivery direction: prioritize visible, end-to-end MVP loops and the expandable field/storehouse milestone before further minor subsystem additions. Keep the 20% account-usage reserve.
+
 ## Next design priority: expandable plots and organic societies — 2026-10-29
 
 User direction: start with few seeds; farms and storehouses should be drawn as expandable rectangles rather than repeated fixed-size units. Cultures and visible styles should develop organically. These are accepted requirements, not implemented features.

@@ -1,3 +1,4 @@
+import {ancientSiteYield} from './discovery';
 import {developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
@@ -2704,14 +2705,23 @@ export class Game {
   }
 
   lootMegaliths(u: Unit) {
-    if (u.team !== 0 || u.type !== "worker") return;
+    if (u.team !== 0 || u.type !== "worker" || u.hp<=0 || u.carry>0) return false;
     for (let i = 0; i < this.world.megaliths.length; i++) {
       if (this.looted.has(i)) continue;
       const m = this.world.megaliths[i];
       if (Math.hypot(u.x - m.x, u.z - m.z) > 5.2) continue;
-      this.looted.add(i); // Historical field name: now records investigation, not treasure.
-      this.banner("Investigated standing stones — a landmark for your exploration chronicle", 3);
+      const reward=ancientSiteYield(this.state.seed,i);
+      this.interruptMission(u);
+      this.looted.add(i);
+      u.carry=reward.amount;u.carryType=reward.kind;
+      u.carryFood=reward.kind==='food'?'grain':undefined;
+      if(reward.kind==='food')u.seedSamples={grain:reward.seeds!};
+      u.recalled=true;u.stationOnArrival=false;u.order='return';
+      u.workReason=`Ancient find: ${reward.label} — carrying it home`;
+      this.banner(u.workReason,7);this.onSfx('drop');
+      return true;
     }
+    return false;
   }
 
   exploreAI(u: Unit, dt: number) {
@@ -2720,7 +2730,7 @@ export class Game {
       if(u.order!=="explore")return;
     }
 
-    this.lootMegaliths(u);
+    if(this.lootMegaliths(u))return;
     if (u.stuckT > 8) {
       const next=this.findExploreTarget(u);
       if(next&&connectedForUnit(this,u,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}

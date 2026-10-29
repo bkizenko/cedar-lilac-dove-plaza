@@ -217,7 +217,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <p><strong>Next age:</strong> {g.ageUpIssue(0) || "Ready — choose a development path in the age panel."}</p>
       <details>
         <summary>Exploration chronicle</summary>
-        <p>Remembered discoveries and journeys. Practical development will depend on materials, experiments and study brought home, not points.</p>
+        <p>Standing stones can yield worked stone, copper fragments or grain with planting seeds. An empty-handed explorer brings each one-time find home. Seed samples lead to cultivation trials; finding metal does not instantly unlock its technology.</p>
         <ul>
           {DISCOVERIES.map(d => {
             const entry = s.discoveries?.find(h => h.id === d.id);

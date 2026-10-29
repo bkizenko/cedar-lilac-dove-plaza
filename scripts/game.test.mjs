@@ -1344,7 +1344,7 @@ test("manual scouting destinations hold on arrival and survive reload", () => {
   assert.equal(rw.order,"hold");
   restored.workerAI(rw,1/30);assert.equal(rw.order,"hold");
 });
-test("standing stones record investigation without creating resources", () => {
+test("standing stones put finds in carried cargo without remotely increasing village stores", () => {
   const g=fixture(), w=g.state.units.find(u=>u.team===0&&u.type==="worker");
   const m=g.world.megaliths[0];w.x=m.x;w.z=m.z;
   const before=[g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone];
