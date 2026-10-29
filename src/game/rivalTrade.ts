@@ -14,6 +14,18 @@ export function rivalTradeReserve(g:Game,team:number,k:ResKind){
   if(k==='food')return foodDemand(g,team)*900;
   return Math.max(k==='wood'?48:k==='stone'?24:8,AGE_COST[g.tribe(team).age+1]?.[k]||0);
 }
+export const RIVAL_REFUSAL_MEMORY=900;
+/** News travels with the returning trader, never straight from a remote market. */
+export function reportRivalRefusal(g:Game,u:Unit){
+ const m=u.visit;
+ if(m?.phase!=='return'||m.team===undefined||!m.wanted||!u.carryType||u.carry<=0||u.carryType===m.wanted)return;
+ const home=g.state.buildings.find(b=>b.team===u.team&&b.type==='townhall'&&g.finished(b)&&g.buildingWorkReached(u,b));
+ if(!home)return;
+ const reports=(g.state.rivalTradeRefusals||[]).filter(r=>g.state.time-r.time<RIVAL_REFUSAL_MEMORY&&
+  !(r.team===u.team&&r.partner===m.team&&r.wanted===m.wanted&&r.offered===u.carryType));
+ reports.push({team:u.team,partner:m.team,wanted:m.wanted,offered:u.carryType,time:g.state.time});
+ g.state.rivalTradeRefusals=reports.slice(-128);
+}
 const reviews=new WeakMap<Game,Map<number,number>>();
 /** A resident takes an offer to a known community. Its stocks are inspected
  * only on arrival; no purchase or payment occurs across the map. */
@@ -39,7 +51,8 @@ export function dispatchRivalBarter(g:Game,team:number){
   let destination:typeof g.state.buildings[number]|undefined;
   for(const candidate of workers){
   const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
-    g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
+    g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&
+    !g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===b.team&&r.wanted===wanted&&r.offered===offered&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
     .sort((a,b)=>Math.hypot(candidate.x-a.x,candidate.z-a.z)-Math.hypot(candidate.x-b.x,candidate.z-b.z));
   if(halls.length){u=candidate;destination=halls[0];break;}
   }

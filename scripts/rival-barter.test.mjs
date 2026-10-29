@@ -79,3 +79,22 @@ test('rival barter preserves direct orders, animal taming and tribute assignment
  people[3].tributeJourney={team:2};
  assert.equal(dispatchRivalBarter(g,1),false);assert.ok(people.every(u=>!u.visit));
 });
+
+test('refused offers become remembered only when the trader physically brings the report home',()=>{
+ const g=fixture();contact(g);g.tribe(2).wood=0;
+ assert.equal(dispatchRivalBarter(g,1),true);const u=g.state.units.find(u=>u.visit);
+ for(let i=0;i<900&&u.visit?.phase!=='return';i++){g.state.time+=.1;g.navBudget=10;visitorAI(g,u,.1);}
+ assert.equal(u.visit.phase,'return');assert.equal(g.state.rivalTradeRefusals,undefined);
+ drive(g,u,100);assert.equal(u.visit,undefined);
+ assert.equal(g.state.rivalTradeRefusals?.length,1);
+ const report=g.state.rivalTradeRefusals[0];assert.equal(report.wanted,'wood');assert.equal(report.offered,'stone');
+ g.state.time+=121;assert.equal(dispatchRivalBarter(g,1),false,'do not repeat the same known refusal');
+ const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.state.rivalTradeRefusals,g.state.rivalTradeRefusals);
+ g.state.time+=901;assert.equal(dispatchRivalBarter(g,1),true,'old information expires as markets change');
+ const bad=encodeGame(copy);bad.state.rivalTradeRefusals[0].time=bad.state.time+1;assert.throws(()=>decodeGame(bad));
+});
+
+test('successful exchanges do not generate a refusal report',()=>{
+ const g=fixture();contact(g);dispatchRivalBarter(g,1);const u=g.state.units.find(u=>u.visit);
+ drive(g,u,180);assert.equal(u.visit,undefined);assert.equal(g.state.rivalTradeRefusals,undefined);
+});

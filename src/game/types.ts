@@ -371,6 +371,7 @@ export type GameState = {
   trails?: {cell:number;wear:number;last:number;angle:number;x?:number;z?:number}[];
   rivalKnowledge?: {team:number;cells:number[]}[];
   scoutTimer?: number;
+  rivalTradeRefusals?: {team:number;partner:number;wanted:ResKind;offered:ResKind;time:number}[];
   conquestAt?: number;
   nightWork?: boolean;
   visitorTimer?: number;

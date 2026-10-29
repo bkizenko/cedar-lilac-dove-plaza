@@ -23,3 +23,13 @@ test('rival field planning accounts for local yields, population, winter and los
  for(let i=0;i<10;i++)g.spawnUnit('worker',0,50,1);
  assert.ok(rivalDevelopmentPlan(g,1).foodFields>poor);
 });
+
+
+test('idle food workers with full stores can rejoin material work instead of remaining permanently assigned to food',()=>{
+ const g=fixture();for(const u of g.state.units){u.order='idle';u.node=null;u.workReason='Food stores full';}
+ g.state.units[0].jobLock=true;
+ rebalanceRivalLabor(g,1);
+ assert.equal(g.state.units.filter(u=>u.job==='wood'&&u.order==='gather').length,2);
+ assert.equal(g.state.units[0].job,'food','explicit orders remain protected');
+ assert.ok(g.state.units.filter(u=>u.job==='food').length>=5);
+});

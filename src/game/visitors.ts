@@ -1,6 +1,6 @@
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
-import {settleRivalBarter} from "./rivalTrade";
+import {settleRivalBarter,reportRivalRefusal} from "./rivalTrade";
 import {receiveFood} from "./pantry";
 import type { Game } from './sim';
 import type { Unit, ResKind } from './types';
@@ -52,6 +52,7 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   }
   if(m.phase==='outbound') {m.phase='waiting';u.order='hold';u.workReason='Visiting trader — awaiting your offer';g.banner(g.tribe(u.team).name+' has sent a trader to your village',5);}
   else {
+    reportRivalRefusal(g,u);
     if(u.carryType&&u.carry>0){if(u.carryType==='food')receiveFood(g,u.team,u.carry,u.carryFood);else g.tribe(u.team)[u.carryType]+=u.carry;}
     u.carry=0;u.carryType=null;u.carryFood=undefined;u.visit=undefined;u.order='idle';u.node=null;
   }

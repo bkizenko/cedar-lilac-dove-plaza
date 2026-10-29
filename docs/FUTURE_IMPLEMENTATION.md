@@ -1,3 +1,11 @@
+## Rival trade memory and idle labor recovery — 2026-10-29
+
+- [x] Returning traders report refused offers only after physically reaching their own town hall. The village avoids that partner/offer/wanted combination for half a game year, then can check again. Other partners remain eligible. No remote reserve information is exposed.
+- [x] Refusal history is bounded and validated in saves; successful trades do not create refusal reports, and traders still conserve all carried goods.
+- [x] Labor reassignment includes idle food workers whose stores filled, preserving direct orders, cargo and important missions. Each review still releases at most two residents and protects the core food workforce.
+- Validation: 49 rival barter, development and orchestration tests passed, covering physical report delivery, expiry, save validation and idle-food reassignment. Typecheck and production build passed.
+- Evidence: year-five diagnostic had an idle canoe carrier assigned to food despite full stores and scarce timber. The preceding long-journey simulation reached populations 66/48 but recorded repeated refused offers and no age advancement. The current fixes address these measured bottlenecks; later-era strength and successful regional trade remain unproven.
+
 ## Canoe-aware rival resource development — 2026-10-29
 
 - [x] Resource-site planning considers living adult canoe owners as well as the nearest walkers. A discovered forest across a navigable channel can now receive a paid lumber-camp foundation; no boat means no cross-water access.

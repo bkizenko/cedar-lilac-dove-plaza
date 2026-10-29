@@ -197,6 +197,12 @@ export function decodeGame(raw: unknown): Game {
       !["food","wood","stone","copper","iron"].includes(d.get)||d.give===d.get||
       !Number.isSafeInteger(d.giveAmt)||d.giveAmt<1||d.giveAmt>100||!Number.isSafeInteger(d.getAmt)||d.getAmt<1||d.getAmt>200)fail();
   };
+  if(s.rivalTradeRefusals!==undefined){
+    if(!Array.isArray(s.rivalTradeRefusals)||s.rivalTradeRefusals.length>128)fail();
+    for(const r of s.rivalTradeRefusals)if(!obj(r)||!rivalTeam(r.team)||!rivalTeam(r.partner)||r.team===r.partner||
+      !['food','wood','stone','copper','iron'].includes(r.wanted)||!['food','wood','stone','copper','iron'].includes(r.offered)||r.wanted===r.offered||
+      !num(r.time)||r.time<0||r.time>s.time)fail();
+  }
   if(s.tradeReports!==undefined){
     if(!Array.isArray(s.tradeReports)||s.tradeReports.length>s.tribes.length-2)fail();
     const teams=new Set();for(const r of s.tradeReports){

@@ -159,7 +159,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
   const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+12)return;
   reviews.set(team,g.state.time+12);
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
-  const foodWorkers=adults.filter(u=>u.order==='gather'&&u.job==='food');
+  const foodWorkers=adults.filter(u=>['gather','idle'].includes(u.order)&&u.job==='food');
   const spare=Math.max(0,Math.min(2,foodWorkers.length-Math.ceil(adults.length/2)));
   const t=g.tribe(team),next=AGE_COST[t.age+1];
   const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
