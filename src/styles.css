@@ -372,3 +372,21 @@ canvas:focus-visible {
 .settlement-ledger details{padding:.65rem 0;border-bottom:1px solid color-mix(in srgb,var(--color-parchment) 16%,transparent);}
 .settlement-ledger summary{cursor:pointer;color:var(--color-bronze-bright);font-weight:500;}
 .settlement-ledger button{border-radius:6px;}
+
+
+/* Encounter choices stay readable without turning the map into a text page. */
+.encounter-dialog{width:min(34rem,calc(100vw - 2rem));padding:1.5rem;border-radius:1rem;font-size:1rem;line-height:1.5;}
+.encounter-dialog h2{font-family:var(--font-display);font-size:2rem;color:var(--color-bronze-bright);margin:.25rem 0 .75rem;}
+.encounter-dialog p{margin:.5rem 0;color:var(--color-parchment);}
+.encounter-eyebrow{color:var(--color-bronze-bright);font-size:.875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+.encounter-actions,.encounter-trades{display:grid;gap:.75rem;margin-top:1.25rem;}
+.encounter-dialog button{display:block;width:100%;min-height:3rem;padding:.75rem 1rem;border:1px solid var(--color-parchment-dim);border-radius:.5rem;background:var(--color-ink-soft);color:var(--color-parchment);font-size:1rem;font-weight:600;text-align:center;}
+.encounter-dialog button:hover:not(:disabled){border-color:var(--color-bronze-bright);background:var(--color-ink);}
+.encounter-dialog button:focus-visible{outline:3px solid var(--color-bronze-bright);outline-offset:3px;}
+.encounter-dialog button:disabled{opacity:.45;cursor:not-allowed;}
+.encounter-dialog .encounter-primary{background:var(--color-bronze-bright);color:var(--color-ink);border-color:var(--color-bronze-bright);}
+.encounter-dialog .encounter-primary:hover{color:var(--color-bronze-bright);}
+.encounter-dialog .encounter-hint{margin-top:1rem;font-size:.875rem;color:var(--color-parchment-dim);}
+
+.building-actions button{min-height:2.75rem;font-size:1rem;line-height:1.35;padding:.65rem .75rem;}
+.building-actions p{font-size:.875rem;line-height:1.45;}

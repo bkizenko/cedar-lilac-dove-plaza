@@ -12,19 +12,22 @@ export function EncounterDialog({engine}:{engine:Engine|null}){
  const g=engine.game,t=g.tribe(encounter.team),stranger=g.state.units.find(u=>u.id===encounter.stranger),person=g.state.units.find(u=>u.id===encounter.person);
  const hostile=g.isFoe(0,t.id),localTrader=stranger?.visit?.phase==='waiting'&&Math.hypot(stranger.x-g.campOf(0).x,stranger.z-g.campOf(0).z)<35;
  const reply=(r:'greet'|'withdraw'|'observe')=>{answerEncounter(g,r);engine.canvas.focus();engine.pushHud();};
- return <dialog ref={ref} className="play-guide settlement-ledger" onCancel={e=>{e.preventDefault();reply('observe');}}>
-  <h2 className="font-display text-2xl text-bronze-bright">People on the frontier</h2>
+ return <dialog ref={ref} className="play-guide encounter-dialog" aria-labelledby="encounter-heading" onCancel={e=>{e.preventDefault();reply('observe');}}>
+  <span className="encounter-eyebrow">{hostile?"Hostile encounter":"First contact"}</span>
+  <h2 id="encounter-heading">{t.name}</h2>
   <p>{person?personName(person):'Your explorer'} has met someone from <strong>{t.name}</strong>.</p>
-  <p>{hostile?'They may attack. Choose whether to retreat or continue.':'This is your first face-to-face contact. Their stores and settlement size remain unknown.'}</p>
+  <p>{hostile?'They may attack. Retreat or continue exploring.':'Their settlement and supplies are still unknown.'}</p>
   {stranger?.carryType&&stranger.carry>0&&<p>Visible cargo: {Math.floor(stranger.carry)} {stranger.carryType}.</p>}
-  {localTrader&&stranger&&<section><h3>Discuss their carried goods</h3>{(['food','wood','stone','copper','iron'] as ResKind[]).map(good=>{
+  {localTrader&&stranger&&<section className="encounter-trades"><h3>Trade their cargo</h3>{(['food','wood','stone','copper','iron'] as ResKind[]).map(good=>{
     const price=visitorPrice(g,stranger,good);if(!price||good==='copper'&&g.tribe(0).age<1||good==='iron'&&g.tribe(0).age<2)return null;
-    return <button key={good} disabled={g.tribe(0)[good]<price} onClick={()=>{if(tradeWithVisitor(g,stranger.id,good))reply('greet');else g.banner('The trader is no longer available for this exchange',4);engine.pushHud();}}>Offer {price} {good} for their cargo</button>;
+    return <button key={good} disabled={g.tribe(0)[good]<price} onClick={()=>{if(tradeWithVisitor(g,stranger.id,good))reply('greet');else g.banner('The trader is no longer available for this exchange',4);engine.pushHud();}}>Pay {price} {good}</button>;
   })}</section>}
-  {!hostile&&<button onClick={()=>reply('greet')}>Greet them peacefully</button>}
-  {!hostile&&knownSettlement(g,t.id)&&<button onClick={()=>{reply('greet');engine.keyboard.ledger=true;engine.pushHud();}}>Plan a trade offer or delegation</button>}
-  {!hostile&&!knownSettlement(g,t.id)&&<p>Locate their settlement to send a trade or peace delegation. Reports arrive with the carrier.</p>}
-  <button onClick={()=>reply('withdraw')}>Bring this explorer home</button>
-  <button onClick={()=>reply('observe')}>Keep going</button>
+  <div className="encounter-actions">
+  {!hostile&&<button className="encounter-primary" onClick={()=>reply('greet')}>Greet peacefully</button>}
+  {!hostile&&knownSettlement(g,t.id)&&<button onClick={()=>{reply('greet');engine.keyboard.ledger=true;engine.pushHud();}}>Trade & diplomacy</button>}
+  <button onClick={()=>reply('withdraw')}>Return home</button>
+  <button onClick={()=>reply('observe')}>Keep exploring</button>
+  </div>
+  {!hostile&&!knownSettlement(g,t.id)&&<p className="encounter-hint">Find their settlement to arrange trade.</p>}
  </dialog>;
 }

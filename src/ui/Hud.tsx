@@ -457,27 +457,27 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               </p>
             )}
             {sel.kind === "building" && sel.team === 0 && (
-              <div className="mt-2 flex flex-col gap-1">
+              <div className="building-actions mt-2 flex flex-col gap-2">
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Assign builders here</button>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
-                {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame / resume pack goat · 10 food + 2 logs · discovered wild goat · 60s</button>}
-                {sel.completed&&sel.type==="dock"&&<p className="text-xs text-parchment-dim">A dugout belongs to its maker. Select that person and click a destination across water. They paddle with cargo and carry the canoe ashore.</p>}
+                {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
+                {sel.completed&&sel.type==="dock"&&<p className="text-xs text-parchment-dim">Select the canoe owner, then click across the water.</p>}
                 {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
                 {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
                 {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Send available armed guards</button>}
                 {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two stone miners</button>}
                 {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
-                {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign up to two fishers</button>}
+                {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="pack"?false:kind==="canoe"?sel.type==="dock":sel.type!=="dock"&&(kind==="sled"||sel.type==="workshop")).map(([kind,h])=>{
                   const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;
                   return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<h.wood||hud.stone<h.stone||!!hud.ended} onClick={()=>engine?.craftHaulage(kind as keyof typeof HAULAGE,sel.buildingId)}>
-                    Make {h.name.toLowerCase()} · {h.wood} logs · {h.stone} stone · {h.seconds*(sel.type==="townhall"?2:1)}s work · carries ×{h.capacity}
+                    Make {h.name.toLowerCase()} · {h.wood} logs · {h.stone} stone · ×{h.capacity} load
                   </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
                 })}
                 {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>kind==="stoneHoe"?["townhall","workshop"].includes(sel.type||""):sel.type==="forge").map(([kind,f])=>{
                   const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
                   return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
-                    Make {f.name.toLowerCase()} · {f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {f.seconds*(sel.type==="townhall"?2:1)}s work · one resident: +{Math.round((f.cultivation-1)*100)}% sow/tend pace, +{Math.round((f.harvest-1)*100)}% harvest pace
+                    Make {f.name.toLowerCase()} · {f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · +{Math.round((f.harvest-1)*100)}% harvest
                   </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
                 })}
                 {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(

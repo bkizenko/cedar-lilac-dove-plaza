@@ -1,3 +1,10 @@
+## Readable encounter and building actions — 2026-10-29
+
+- [x] First-contact dialog now has a compact width, large faction heading, short explanation, separated full-width 48px actions, a distinct primary greeting and visible keyboard focus. Hostile encounters retain retreat/continue options; local trades and known-settlement diplomacy remain accessible.
+- [x] Building action buttons use 16px text and at least 44px height. Transport/tool labels are shorter; dock instructions use one sentence.
+- Validation: typecheck and production build passed. The actual React encounter component was server-rendered with a harmless fixture and inspected in an isolated browser preview at 1280x720 using production CSS. Buttons are separated and dialog bounds fit. This visual check does not validate live encounter callbacks or every HUD layout. No player save was loaded or changed.
+- Broader UI cleanup, richer object detail, expandable plots and all remaining gameplay branches remain open. Preserve 20% usage reserve.
+
 ## Ancient-discovery yields: first playable increment — 2026-10-29
 
 - [x] Uninvestigated standing-stone sites yield one deterministic cache: 18 worked stone, 8 copper fragments, or 8 preserved grain with 4 planting samples. Existing investigated sites remain spent; no saved village reset or retroactive grants.
