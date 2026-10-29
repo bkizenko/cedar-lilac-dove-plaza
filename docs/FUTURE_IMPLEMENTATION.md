@@ -1,3 +1,16 @@
+## Next design priority: expandable plots and organic societies — 2026-10-29
+
+User direction: start with few seeds; farms and storehouses should be drawn as expandable rectangles rather than repeated fixed-size units. Cultures and visible styles should develop organically. These are accepted requirements, not implemented features.
+
+1. Seeds: preserve existing reserves. Verify fresh-start balances separately from late-game accumulation. Start with at most a small trial plot's seed supply; make wild seed discovery readable and plentiful enough to avoid a starvation gate. Scale sowing requirements with planted area; audit the current seed income/sink imbalance.
+2. Fields: drag a rectangular outline, preview area, seed requirement, soil/water quality and estimated seasonal output. Existing fields retain their dimensions/yield. Extend a selected field via its boundary; charge only added area. Preparation, sowing, tending and harvesting require labor proportional to area; understaffed fields visibly underperform. Keyboard placement and resizing remain available.
+3. Storehouses: drag a footprint and extend existing structures. Cost, construction labor, sheltered capacity and visible structure scale with area. Extensions start as paid/planned construction and add no capacity until complete. Preserve stored goods, access entrances and routes through expansion; existing saves do not resize automatically.
+4. Shared foundation: validated per-building plot dimensions/area; common footprint, placement, selection, construction, capacity, rendering and persistence rules. Never implement a visual stretch while leaving fixed gameplay capacity/costs. Use shared repeated structural bays for low-cost blocky visuals rather than stretched doors/props.
+5. Organic societies: persistent practices derived from actual fishing/farming/herding/mining/trade/war outcomes, geography and local materials. Small inherited variation changes preferences, not rigid factions or deterministic political systems. Sustained practices shape building materials/rooflines, motifs, transport, food and trade priorities; migration and trade spread influences, and changing conditions allow adaptation. Make several different development paths competitive.
+6. Verification: fresh and existing-save tests; expansion conserves resources, prevents overlap/water foundations, retains entrances and keyboard controls, scales real production/storage, and performs on the older MacBook Air. Culture differences must be visible and behavioral across multi-year seeds, not only names/colors.
+
+Keep the 20% usage reserve and preserve the user's village. Implement these after closing the currently active verified batch, before adding further small simulation subsystems.
+
 ## Seed-funded rival woodland renewal — 2026-10-29
 
 - [x] Fed rivals with scarce timber can spend spare seed baskets to replant depleted stands near their halls/lumber camps, using the same growth system as the player. Four seeds remain reserved for farms; each review plants at most four trees and waits a minute before reviewing again.
