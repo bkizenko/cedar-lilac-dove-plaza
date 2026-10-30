@@ -10,10 +10,10 @@ import {queueStandDown} from './demobilization';
 
 /** Population matters even while a large settlement remains in the Stone Age.
  * A small first village still meets scouts; established towns face actual bands. */
-export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=20,loss=0){
- const ceiling=Math.max(1,Math.min(20,Math.ceil(population*(dangerous?.6:.45)),Math.floor(capacity)));
+export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=36,loss=0){
+ const ceiling=Math.max(1,Math.min(36,Math.ceil(population*(dangerous?.6:.45)),Math.floor(capacity)));
  if(population<16&&wave<=1)return {count:Math.min(ceiling,roll<.5?1:2),condition:.78,label:"A scouting party from the sea"};
- const base=Math.max(3,Math.min(14,Math.ceil(population*.14)));
+ const base=Math.max(3,Math.min(26,Math.ceil(population*.22)));
  // History increases pressure in small steps, then plateaus. Losses and current
  // capacity can make the next raid smaller even after many successful years.
  const escalation=Math.min(5,Math.floor(Math.max(0,wave-1)/2));
@@ -274,6 +274,11 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
   if(u.stuckT>3){const wall=g.state.buildings.filter(b=>b.hp>0&&!b.plannedCost&&g.isFoe(u.team,b.team)&&['gate','palisade','stonewall'].includes(b.type)&&!(b.type==='gate'&&b.gateOpen)&&Math.hypot(b.x-u.x,b.z-u.z)<65).sort((a,b)=>a.hp-b.hp+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).find(b=>!!g.interactionSpot(u,b));if(wall){u.target=wall;u.order='attack';g.combatAI(u,dt);return true;}}
   g.steer(u,dt);return true;
  }
+ // Fight an intercepting guard before resuming the shared village objective.
+ // Otherwise the periodic building retarget overrides combat every three seconds.
+ const intercept=defenders.filter(v=>Math.hypot(v.x-u.x,v.z-u.z)<=Math.max(7,u.range+2))
+   .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+ if(intercept){u.target=intercept;u.order='attack';g.combatAI(u,dt);return true;}
  if(!defenders.some(v=>Math.hypot(v.x-u.x,v.z-u.z)<7)){
   const ruin=g.state.buildings.find(b=>b.hp<=0&&b.lootTeam===3&&b.raidLoot&&Object.values(b.raidLoot).some(v=>(v||0)>0)&&Math.hypot(b.x-u.x,b.z-u.z)<12);
   if(ruin){

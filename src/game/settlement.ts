@@ -347,7 +347,12 @@ export class WorkBoard {
         (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<RIVAL_RESOURCE_RANGE));
       const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
-      if ((distance > 100 && !settlementWork) || (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin))) continue;
+      // An explicit timber focus may use discovered forests beyond routine range.
+      // Connectivity, danger checks and the two-cutter reservation still apply.
+      const timberFocus = u.team===0 && task.kind==='wood' &&
+        (g.state.laborPolicy==='wood' || (u.jobLock && u.job==='wood'));
+      const routineRange = timberFocus ? 220 : 100;
+      if ((distance > routineRange && !settlementWork) || (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin))) continue;
       if (
         g.state.units.some(
           (e) =>

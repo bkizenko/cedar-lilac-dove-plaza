@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {seaRaidStrength,raidReadiness,finishSeaRaid,canScheduleSeaRaid} from '../src/game/raiders.ts';
+import {seaRaidStrength,raidReadiness,finishSeaRaid,canScheduleSeaRaid,seaRaidAI} from '../src/game/raiders.ts';
 import {demobilizationAI} from '../src/game/demobilization.ts';
 import {emergencyResponse} from '../src/game/defense.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
@@ -81,4 +81,17 @@ test('new settlers cannot hide raid casualties from the recovery policy',()=>{
  u.hp=0;g.spawnUnit('worker',0,50,0);finishSeaRaid(g);
  assert.equal(g.state.raidCampaign.loss,1);assert.ok(g.state.raidT>=1380);
  const r=decodeGame(encodeGame(g));assert.deepEqual(r.state.raidCampaign.people,[u.id]);
+});
+
+test('prosperous established populations face larger finite bands while early scouts remain small',()=>{
+ assert.ok(seaRaidStrength(150,2,.78,9,.5,false,36).count>20);
+ assert.ok(seaRaidStrength(40,0,.78,5,.5,false,30).count>=12);
+ assert.ok(seaRaidStrength(8,0,.78,1,.5,false,30).count<=2);
+});
+test('sea raiders fight a nearby armed defender instead of repeatedly selecting buildings',()=>{
+ const {g,u}=fixture();g.callToArms();
+ const r=g.spawnUnit('spearman',u.x+3,u.z,3);
+ r.seaRaid={x:90,z:50,goalX:0,goalZ:38,phase:'raid',thinkAt:0,departAt:9999};
+ r.target=g.state.buildings[0];r.order='attack';let target;g.combatAI=(unit)=>{target=unit.target};
+ seaRaidAI(g,r,.1);assert.equal(target,u);assert.equal(r.seaRaid.phase,'raid');
 });

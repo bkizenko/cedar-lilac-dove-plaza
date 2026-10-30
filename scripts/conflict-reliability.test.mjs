@@ -106,6 +106,7 @@ test('spawned sea scouts walk from their landing to damage an undefended village
   g.spawnRaid();
   const attackers=g.state.units.filter(u=>!previous.has(u.id)&&u.team===3);
   assert.ok(attackers.length>0);
+  assert.equal(new Set(attackers.map(u=>`${u.seaRaid.goalX},${u.seaRaid.goalZ}`)).size,1,'landing party shares its approach objective');
   assert.ok(attackers.every(u=>g.walkable(u.x,u.z)));
   g.state.units=attackers;
   g.state.buildings=g.state.buildings.filter(b=>b.team===0);

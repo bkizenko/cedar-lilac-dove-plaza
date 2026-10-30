@@ -93,3 +93,15 @@ test('new village civilians defeat a landed sea scout in the real simulation on 
   assert.ok(g.state.units.some(u=>people.includes(u.id)&&u.hp>0),'village survives the scout');
  }
 });
+
+test('timber focus reaches known distant forests without crowding or revealing hidden trees',()=>{
+ const g=fixture();g.state.trees.forEach((n,i)=>n.x=150+i*12);
+ const people=[worker(g),worker(g,11),worker(g,12),worker(g,13)];
+ g.setLaborPriority('wood');
+ assert.ok(people.every(u=>u.order==='gather'&&u.node?.kind==='tree'));
+ assert.equal(people.filter(u=>u.node===g.state.trees[0]).length,2);
+ assert.equal(people.filter(u=>u.node===g.state.trees[1]).length,2);
+ run(g,180);assert.ok(g.tribe(0).wood>0,'distant timber is physically delivered, not merely assigned');
+ const unseen=fixture();unseen.state.trees.forEach(n=>n.x=160);unseen.vision.fill(0);const u=worker(unseen);
+ unseen.setLaborPriority('wood');assert.notEqual(u.order,'gather');
+});

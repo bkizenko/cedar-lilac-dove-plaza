@@ -1,3 +1,10 @@
+## Coordinated sea raids and distant timber — 2026-10-30
+
+- [x] ~~Landing parties share an initial objective instead of splitting across unrelated buildings.~~ Sea raiders engage nearby armed defenders before resuming building attacks, fixing periodic retargeting that ignored interceptors.
+- [x] ~~Scale established-village sea bands beyond the old 20-unit ceiling.~~ Base strength now grows with 22% of adults (formerly 14%), capped at 36 overall, still limited by current usable defenses and population. Small initial scouting parties, finite forces, retreat and casualty-based respite remain. This is a targeted pressure adjustment, not full difficulty or multi-seed balance completion.
+- [x] ~~Timber focus uses discovered forests up to 220m away.~~ Routine work retains its 100m range; marked trees and lumber-camp coverage still work. Explicit timber orders retain connectivity, danger and two-cutter checks. Regression verifies physical delivery from distant trees and no harvesting of unexplored trees.
+- Validation: 18 raid/conflict checks, ten priority/defense checks and a focused 180-second timber-delivery replay pass; typecheck/build pass. No save schema changes. Remaining: richer forests/regrowth balance, six difficulty presets, rival war networks and full-playthrough pressure tuning.
+
 ## Default instrumental music — 2026-10-30
 
 - [x] ~~Remove At Rest and Atlantean Twilight from the default calm playlist.~~ Reuse composer-verified instrumental piano and acoustic folk recordings, with existing fades and quiet intervals. No new download, no village/save migration. Optional non-calm tracks are unchanged; a larger instrumental era/adventure library remains unfinished.

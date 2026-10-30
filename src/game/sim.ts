@@ -1938,6 +1938,8 @@ export class Game {
     );
     const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
     const goHall = n >= 6 && age >= 3 && Math.random() < 0.35;
+    // A landing party travels together, instead of scattering toward unrelated outposts.
+    const raidMark = goHall ? hall : marks.length ? marks[(Math.random() * marks.length) | 0] : hall;
     for (let i = 0; i < n; i++) {
       let type: UnitType = "spearman";
       if (age >= 1 && Math.random() < 0.28) type = "archer";
@@ -1949,7 +1951,7 @@ export class Game {
       u.maxHp = u.hp;
       u.dmg *= frail;
       u.order = "attackmove";
-      const mark = goHall ? hall : marks.length ? marks[(Math.random() * marks.length) | 0] : hall;
+      const mark = raidMark;
       u.tx = mark ? mark.x : home.x + 8;
       u.tz = mark ? mark.z : home.z + 8;
       u.aggroT = 80;
