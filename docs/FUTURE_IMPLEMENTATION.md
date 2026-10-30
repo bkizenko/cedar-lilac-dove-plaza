@@ -1,3 +1,9 @@
+## Ancient-site collection usability — 2026-10-29
+
+- [x] Direct move orders collect ancient finds on reaching a site, as exploration orders already do. Finds travel home as cargo; full hands retain their existing load.
+- [x] Grain finds preserve samples already carried. Spent sites remain spent after save/load.
+- Validation: six discovery regressions passed, including actual return delivery, no duplicate rewards, direct movement and sample conservation. Larger artifacts/study and discovery presentation remain open.
+
 ## Readable encounter and building actions — 2026-10-29
 
 - [x] First-contact dialog now has a compact width, large faction heading, short explanation, separated full-width 48px actions, a distinct primary greeting and visible keyboard focus. Hostile encounters retain retreat/continue options; local trades and known-settlement diplomacy remain accessible.

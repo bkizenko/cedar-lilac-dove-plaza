@@ -17,3 +17,14 @@ test('full hands do not discard cargo or consume an unclaimed discovery',()=>{
  const {g,u}=fixture(345);u.carry=5;u.carryType='wood';assert.equal(g.lootMegaliths(u),false);assert.equal(u.carry,5);assert.equal(g.looted.size,0);
  u.carry=0;u.hp=0;assert.equal(g.lootMegaliths(u),false);assert.equal(g.looted.size,0);
 });
+
+test('direct movement discovers a nearby site and returns its cargo',()=>{
+ const {g,u}=fixture(345);u.order='move';u.tx=25;u.tz=40;
+ g.workerAI(u,.1);
+ assert.equal(g.looted.has(0),true);assert.equal(u.order,'return');assert.equal(u.recalled,true);
+ assert.equal(u.carry,ancientSiteYield(345,0).amount);
+});
+test('ancient grain adds to samples already carried rather than replacing them',()=>{
+ const {g,u}=fixture(347);u.seedSamples={grain:3};
+ assert.equal(g.lootMegaliths(u),true);assert.equal(u.seedSamples.grain,7);
+});

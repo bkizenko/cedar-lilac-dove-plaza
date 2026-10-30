@@ -2715,7 +2715,7 @@ export class Game {
       this.looted.add(i);
       u.carry=reward.amount;u.carryType=reward.kind;
       u.carryFood=reward.kind==='food'?'grain':undefined;
-      if(reward.kind==='food')u.seedSamples={grain:reward.seeds!};
+      if(reward.kind==='food')u.seedSamples={...u.seedSamples,grain:(u.seedSamples?.grain??0)+reward.seeds!};
       u.recalled=true;u.stationOnArrival=false;u.order='return';
       u.workReason=`Ancient find: ${reward.label} — carrying it home`;
       this.banner(u.workReason,7);this.onSfx('drop');
@@ -4187,7 +4187,9 @@ export class Game {
       return;
     }
     if (u.order === "move") {
+      if (this.lootMegaliths(u)) return;
       if (this.steer(u, dt)) {
+        if (this.lootMegaliths(u)) return;
         u.order = u.stationOnArrival ? "hold" : "idle";
         if (u.stationOnArrival) u.workReason = "At your destination — waiting for orders";
         u.stationOnArrival = undefined;u.recalled=undefined;
