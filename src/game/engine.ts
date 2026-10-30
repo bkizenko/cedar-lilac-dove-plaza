@@ -458,6 +458,8 @@ export class Engine {
   private updateGhost() {
     const type = this.game.state.placing;
     if (!type) {
+      const b=this.game.state.selBld;
+      if(b?.expansion){this.view.setGhost(b.type,b.x,b.z,b.y,true,undefined,null,b.expansion);return;}
       this.view.setGhost(null, 0, 0, 0, false);
       return;
     }

@@ -16,3 +16,7 @@ export function dragPlot(type:BldType,a:{x:number;z:number},b:{x:number;z:number
  const d=Math.min(base.d*3,Math.max(base.d,Math.ceil(Math.abs(b.z-a.z)/2)*2));
  return {x:a.x+Math.sign(b.x-a.x||1)*w/2,z:a.z+Math.sign(b.z-a.z||1)*d/2,w,d};
 }
+export function expansionCost(b:Pick<Building,'type'|'w'|'d'>,size:PlotSize){
+ const delta=Math.max(0,plotArea({...b,...size})-plotArea(b));
+ return b.type==='farm'?{seeds:Math.ceil(4*delta-1e-6)}:{wood:Math.ceil(60*delta-1e-6)};
+}

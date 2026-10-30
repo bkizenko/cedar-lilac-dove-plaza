@@ -1,3 +1,4 @@
+import {expansionWork,expansionStatus} from './plotExpansion';
 import {plotArea,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalForestry} from './rivalDevelopment';
@@ -997,7 +998,7 @@ export class Game {
     return b;
   }
 
-  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize): string | null {
+  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number): string | null {
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
@@ -1017,7 +1018,7 @@ export class Game {
       const corners=[[-1,-1],[-1,1],[1,-1],[1,1]];
       if(_team===0&&corners.some(([a,b])=>!this.exploredAt(x+a*d.w/2,z+b*d.d/2)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+1&&Math.abs(n.z-z)<d.d/2+1))return "Clear resources from the plot first";
-      if(this.state.buildings.some(b=>b.hp>0&&Math.abs(b.x-x)<(b.w+d.w)/2+1&&Math.abs(b.z-z)<(b.d+d.d)/2+1))return "Too close to another building";
+      if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+1&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+1))return "Too close to another building";
     }
     if (type !== "quarry") {
       for (const n of this.state.stones) {
@@ -1046,8 +1047,9 @@ export class Game {
     }
     for (const b of this.state.buildings) {
       // Physical footprints exist for every society, independently of player fog.
-      if (b.hp <= 0) continue;
-      if (Math.abs(b.x - x) < (b.w + d.w) * 0.42 && Math.abs(b.z - z) < (b.d + d.d) * 0.42) {
+      if (b.hp <= 0 || b.id===ignoreId) continue;
+      const factor=b.expansion?.5:.42,apron=b.expansion?1:0;
+      if (Math.abs(b.x - x) < ((b.expansion?.w??b.w) + d.w) * factor+apron && Math.abs(b.z - z) < ((b.expansion?.d??b.d) + d.d) * factor+apron) {
         return "Too close to another building";
       }
     }
@@ -1378,7 +1380,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e9;
     for (const b of this.state.buildings) {
-      if (b.team !== u.team || b.hp <= 0 || b.build >= 1 || b.plannedCost) continue;
+      if (b.team !== u.team || b.hp <= 0 || (b.build >= 1&&!b.expansion) || b.plannedCost) continue;
       const d = Math.hypot(b.x - u.x, b.z - u.z);
       if (d < bd) {
         bd = d;
@@ -1390,6 +1392,7 @@ export class Game {
 
   buildAI(u: Unit, dt: number) {
     const b = u.node && "type" in u.node ? (u.node as Building) : this.nearestUnbuilt(u);
+    if(b?.expansion&&expansionWork(this,u,b,dt))return;
     if (!b || b.hp <= 0 || b.build >= 1 || b.plannedCost) {
       u.order = "idle";
       u.node = null;
@@ -5719,7 +5722,9 @@ export class Game {
     } else if (this.state.selBld && this.state.selBld.hp > 0) {
       const b = this.state.selBld;
       let info = b.raiderCamp ? "Local raider camp. Its finite band patrols nearby paths and steals supplies; destroy the camp to scatter survivors." : BUILDINGS[b.type]?.hint || "";
-      if(b.type==="farm"&&this.finished(b))info+=" · "+fieldProductionSummary(this,b);
+      if(b.type==="farm"&&this.finished(b))info="Seasonal field";
+      if(b.type==="warehouse"&&this.finished(b))info="Protected storage and deliveries";
+      if(b.expansion)info+=" · "+expansionStatus(this,b);
       if(b.type==="dock"&&this.finished(b))info+=" · "+fishingReport(this,b);
       if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);

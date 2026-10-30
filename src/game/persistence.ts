@@ -403,12 +403,14 @@ export function decodeGame(raw: unknown): Game {
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
     if(scalablePlot(b.type)&&!validPlot(b.type,b))fail();
     if (b.build < 0 || b.build > 1) fail();
+    if(b.expansion!==undefined){const e=b.expansion;if(!obj(e)||!validPlot(b.type,{w:e.w,d:e.d})||b.build!==1||b.plannedCost||e.w<b.w||e.d<b.d||(e.w===b.w&&e.d===b.d)||!num(e.progress)||e.progress<0||e.progress>1||typeof e.paid!=="boolean"||(!e.paid&&e.progress!==0))fail();}
     if(b.plannedCost!==undefined){
       if(!obj(b.plannedCost)||b.build!==0||b.queue.length)fail();
       const allowed=["food","wood","stone","copper","iron","seeds"];
       if(Object.keys(b.plannedCost).some(k=>!allowed.includes(k)))fail();
       for(const k of allowed){const n=b.plannedCost[k]??(k==='seeds'?0:undefined);if(!num(n)||n<0||n>100000)fail();}
     }
+    if(b.planPaused===false&&!b.plannedCost)b.planPaused=undefined; // Older direct build orders wrote a redundant false flag.
     if(b.planPaused!==undefined&&(typeof b.planPaused!=="boolean"||!b.plannedCost))fail();
     for (const q of b.queue) {
       if (!obj(q) || !(q.unit in UNITS)) fail();

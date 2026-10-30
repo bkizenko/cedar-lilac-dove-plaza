@@ -1,4 +1,4 @@
-import {plotArea} from './plots';
+import {expansionCost,plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRange,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
@@ -233,6 +233,7 @@ export class WorkBoard {
         );
       for (const b of buildings) {
         if(b.plannedCost)continue;
+        if(b.expansion&&(b.expansion.paid||g.canAfford(b.team,expansionCost(b,b.expansion))))add(b,"build",2,235);
         if (!g.finished(b)) {
           add(b, "build", 2, reserveSeconds(g,t.id) < 90 ? 120 : 235);
           continue;
@@ -299,7 +300,7 @@ export class WorkBoard {
           !["gather", "build"].includes(other.order)
         )
           continue;
-        const key = String(other.node.id);
+        const key = String(other.node.id)+(other.order==="build"?":build":":gather");
         this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);
       }
     }
@@ -326,7 +327,7 @@ export class WorkBoard {
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
       if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node))) continue;
       if ("amount" in task.node && task.node.amount <= 0) continue;
-      if (task.kind === "build" && g.finished(task.node as Building)) continue;
+      if (task.kind === "build" && g.finished(task.node as Building)&&!(task.node as Building).expansion) continue;
       if (
         task.kind==='food' && "type" in task.node &&
         task.node.type === "farm" &&
@@ -356,7 +357,7 @@ export class WorkBoard {
         unsafe = true;
         continue;
       }
-      const count = this.occupancy.get(String(task.node.id)) || 0;
+      const count = this.occupancy.get(String(task.node.id)+(task.kind==="build"?":build":":gather")) || 0;
       if (count >= task.slots) {
         occupied = true;
         continue;
@@ -400,7 +401,7 @@ export class WorkBoard {
                 : "No known reachable work — explore for resources or build an outpost";
       return;
     }
-    const key = String(best.node.id);
+    const key = String(best.node.id)+(best.kind==="build"?":build":":gather");
     this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);
     u.searchJob=undefined;
     u.node = best.node;

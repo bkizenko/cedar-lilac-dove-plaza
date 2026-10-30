@@ -1,4 +1,4 @@
-import {plotArea,type PlotSize} from './plots';
+import {expansionCost,plotArea,type PlotSize} from './plots';
 import type {Game} from './sim';
 import type {Building,BldType,Cost,ResKind,Unit} from './types';
 import {BUILDINGS} from './constants';
@@ -31,7 +31,7 @@ export function planMissing(g:Game,b:Building){
   return [...BUILD_MATERIALS,'seeds' as const].map(kind=>({kind,amount:Math.max(0,Math.ceil((b.plannedCost?.[kind]||0)-(t?.[kind]||0)))})).filter(n=>n.amount>0);
 }
 export function constructionDemand(g:Game,team:number,kind:ResKind){
-  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind]);
+  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&kind==='wood'&&(expansionCost(b,b.expansion).wood||0)>g.tribe(team).wood)));
 }
 export function planStatus(g:Game,b:Building){
   if(!b.plannedCost)return g.finished(b)?'Complete':`Building ${Math.floor(b.build*100)}%`;
@@ -69,12 +69,12 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
 
 /** A direct RTS order supersedes ordinary jobs while retaining carried/paid goods. */
 export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
-  if(b.team!==0||b.hp<=0||g.finished(b))return false;
+  if(b.team!==0||b.hp<=0||(g.finished(b)&&!b.expansion))return false;
   const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency)
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
     .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u));
   if(!chosen.length){g.banner('Select adult residents to build this project.',3);return false;}
-  b.planPaused=false;
+  b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     g.interruptMission(u);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
     u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
@@ -84,7 +84,7 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
 export function directedConstruction(g:Game,u:Unit,dt:number){
   if(u.buildOrder===undefined||u.emergency)return false;
   const b=g.state.buildings.find(b=>b.id===u.buildOrder&&b.team===u.team&&b.hp>0);
-  if(!b||g.finished(b)){u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
+  if(!b||(g.finished(b)&&!b.expansion)){u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
   if(u.carry>0){u.order='return';u.node=null;return false;}
   u.order='build';u.node=b;
   if(b.planPaused){u.workReason='Construction plan paused';return true;}

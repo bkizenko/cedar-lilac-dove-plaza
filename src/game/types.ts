@@ -243,6 +243,7 @@ export type Building = {
   cd: number;
   build: number;
   reclaimed: boolean;
+  expansion?: {w:number;d:number;progress:number;paid:boolean};
   plannedCost?: Cost;
   planPaused?: boolean;
   gateOpen?: boolean;

@@ -1,3 +1,4 @@
+import {plotArea} from './plots';
 import type {Game} from './sim';
 import type {Building} from './types';
 import {calendar,farmHarvestEstimate} from './settlement';
@@ -16,11 +17,12 @@ export function fieldProductionReport(g:Game,b:Building){
     staff:g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length,
     projected:fallow||cal.phase===3?0:cal.phase===2?(c?.remaining||0):farmHarvestEstimate(g,b,planted,tended,c?.water??1),
     potential:farmHarvestEstimate(g,b,1,1,c?.water??1),
-    workSeconds:fallow?0:Math.ceil(work),
+    workSeconds:fallow?0:Math.ceil(work*plotArea(b)),
+    workerSlots:Math.min(12,Math.ceil(3*plotArea(b))),
   };
 }
 
 export function fieldProductionSummary(g:Game,b:Building){
   const r=fieldProductionReport(g,b);
-  return `${r.stage} · ${r.staff}/3 workers · ${r.projected} ${r.kind} ${calendar(g).phase===2?'left to carry home':'projected'} · up to ${r.potential} per harvest with full care at current conditions${r.workSeconds?` · ${r.workSeconds}s hands-on work remaining before tool bonuses`:''}`;
+  return `${r.stage} · ${r.staff}/${r.workerSlots} workers · ${r.projected} ${r.kind} ${calendar(g).phase===2?'left to carry home':'projected'} · up to ${r.potential} per harvest with full care at current conditions${r.workSeconds?` · ${r.workSeconds}s hands-on work remaining before tool bonuses`:''}`;
 }

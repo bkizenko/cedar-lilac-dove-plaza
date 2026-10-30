@@ -1,9 +1,19 @@
+## Existing-plot extensions and concise field panels — 2026-10-29
+
+- [x] Select a completed farm/store, open **Expand plot**, then choose **Wider** or **Deeper**. Only added area costs materials. Pending extensions reserve space, show a map preview, and may wait for supplies while the original area stays usable.
+- [x] Automatic builders and direct build orders perform the work outside the future footprint. New storage arrives only on completion; people must clear the enlarged solid footprint first. Paid progress survives save/load without another charge. Unpaid extensions can be canceled.
+- [x] Enlarging fields preserves absolute planted area and existing harvested yield; extra land does not generate a free crop. Field panels show staff, current/full-care forecast and area-scaled work remaining.
+- [x] Repair redundant false pause flags from older direct-builder saves; no village reset or resource replacement.
+- Validation: 30 distinct targeted construction/plot/food-defense checks passed across runs, including physical completion, save continuity, resource conservation, reservation collision and legacy saves. Typecheck/build passed. Production UI verified 400-supply existing store retained capacity while planning a 120-log extension, and blocked the alternative direction containing resources.
+- Remaining refinements: dragging existing edges/directional extensions, detailed row-level field jobs, terrain-averaged forecasts and long-run balance. Current expansion buttons grow symmetrically around the existing center.
+
 ## Modular plot visuals and production reference audit — 2026-10-29
 
 - [x] Larger stores repeat structural bays, with normal-scale doors, crates and stepped roofs. Larger fields keep one tool shed and repeat crop rows; planted/tended/ripened state changes crop height and color. No new gameplay entities or save migration.
 - [x] Every rendered bay maps back to its actual building for selection. Shared instancing keeps draw calls independent of bay count; static building transforms refresh at 10 Hz rather than every frame. Full busy-village performance remains unverified.
 - Validation: six architecture/rendering tests pass, including bay ownership, fog hiding, bounded modules, cached layouts and crop growth. Typecheck/build pass. Production preview visually checked a completed two-bay store and larger unsown field in a disposable test copy; no console errors.
-- [ ] Existing-plot expansion and more varied cultural architecture remain unfinished.
+- [x] ~~Existing-plot expansion~~ now supports Wider/Deeper projects; directional edge dragging remains open.
+- [ ] More varied cultural architecture remains unfinished.
 
 ### Dawn of Man reference check: production and settlement priorities
 
@@ -26,7 +36,8 @@ This is a focused primary-source audit, not the promised exhaustive mechanic-by-
 - [x] Area scales seeds/timber, construction time, sowing/tending labor, harvest potential, farm worker slots and completed storage capacity. Unfunded drawings retain the full bill and grant no benefits.
 - [x] Larger footprints check dry ground, explored corners, resources and building overlap; save/load retains their dimensions with bounded validation. Existing farms/stores stay at their current size. Fresh games already begin with zero seeds; no existing reserves were confiscated.
 - Validation: 18 construction/seed/plot checks passed across targeted runs; typecheck and production build passed. Browser verified keyboard resizing, 120-log double-width store plan with 58 logs retained and 62 missing, and no console errors in development.
-- Still open: expanding an already completed plot, modular store bays instead of stretched geometry, richer field detail, footprint-averaged soil/water forecasts, and full multi-season balancing. This does not complete the full overhaul.
+- [x] ~~Expanding completed plots~~ and ~~modular store bays~~ shipped in subsequent batches.
+- Still open: richer field detail, footprint-averaged soil/water forecasts and full multi-season balancing. This does not complete the full overhaul.
 
 ## Ancient-site collection usability — 2026-10-29
 
