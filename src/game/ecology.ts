@@ -14,17 +14,23 @@ export function habitatAt(g: Game, x: number, z: number) {
   return HABITATS[kind];
 }
 
-/** Site potential, separate from a field's fertility loss through repeated cropping. */
-export function soilQuality(g: Game, x: number, z: number) {
-  const h = g.height(x,z);
-  const slope = Math.max(Math.abs(g.height(x+3,z)-h), Math.abs(g.height(x-3,z)-h),
-    Math.abs(g.height(x,z+3)-h), Math.abs(g.height(x,z-3)-h));
+/** Distance to the continuous river course, not just its control points. */
+export function riverDistance(g:Game,x:number,z:number){
   let distance = Infinity;
   for (const river of g.world.rivers || []) for (let i=1;i<river.pts.length;i++) {
     const a=river.pts[i-1], b=river.pts[i], dx=b.x-a.x, dz=b.z-a.z;
     const t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));
     distance=Math.min(distance,Math.hypot(x-a.x-t*dx,z-a.z-t*dz));
   }
+  return distance;
+}
+
+/** Site potential, separate from a field's fertility loss through repeated cropping. */
+export function soilQuality(g: Game, x: number, z: number) {
+  const h = g.height(x,z);
+  const slope = Math.max(Math.abs(g.height(x+3,z)-h), Math.abs(g.height(x-3,z)-h),
+    Math.abs(g.height(x,z+3)-h), Math.abs(g.height(x,z-3)-h));
+  const distance=riverDistance(g,x,z);
   return Math.max(0.25,Math.min(1,0.35+habitatAt(g,x,z).crops*0.3 +
     Math.max(0,1-distance/40)*0.3 - slope*0.08));
 }
@@ -32,9 +38,7 @@ export function soilQuality(g: Game, x: number, z: number) {
 /** Rain-fed cultivation remains possible; drought penalizes ground far from water. */
 export function cropWater(g:Game,x:number,z:number) {
   if(g.state.weather!=="drought")return 1;
-  let near=false;
-  for(const r of g.world.rivers||[])for(const p of r.pts)if(Math.hypot(p.x-x,p.z-z)<24)near=true;
-  return near?0.8:0.4;
+  return riverDistance(g,x,z)<24?0.8:0.4;
 }
 
 /** Local weather drives real spoilage, not merely the calendar label. */

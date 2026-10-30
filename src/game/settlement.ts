@@ -11,8 +11,8 @@ import {quarryAvailable} from "./mining";
 import {fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
 import { preservationAvailable } from "./pantry";
-import {cropYield} from "./cultivation";
-import { habitatAt, soilQuality, cropWater } from "./ecology";
+import {fieldTerrain} from "./fieldTerrain";
+import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, DOCK_R, MAP, HALF, GATHER_WORK_RATE } from "./constants";
@@ -51,7 +51,9 @@ export function reserveSeconds(g: Game, team = 0) {
 /** Shared by real ripening and read-only production forecasts. */
 export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b.crop?.water??1){
   const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
-  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*habitatAt(g,b.x,b.z).crops*water*cropYield(g,b)*(0.65+soilQuality(g,b.x,b.z)*0.5));
+  const land=fieldTerrain(g,b),kind=b.crop?.kind||b.cropType||"grain";
+  const yieldFactor=kind==="tubers"?land.tubers:land.grain*(kind==="pulses"?.85:1);
+  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor);
 }
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);

@@ -12,9 +12,11 @@ test('rectangular stores pay for area and only completed space adds capacity; sa
  assert.equal(g.tribe(0).wood,wood-360);assert.equal(g.stockCap(),base);b.build=1;
  assert.equal(g.stockCap(),base+1200);const loaded=decodeGame(encodeGame(g));assert.equal(loaded.stockCap(),base+1200);assert.equal(loaded.state.buildings.at(-1).w,size.w);
 });
-test('larger fields require proportional seeds and work for proportional harvest',()=>{
+test('larger fields on uniform terrain require proportional seeds and work for proportional harvest',()=>{
  const g=fixture(),d=BUILDINGS.farm,size={w:d.w*2,d:d.d};
  assert.equal(buildingCost('farm',g,0,size).seeds,8);
+ // Area alone scales yield only when the whole footprint has equal land quality.
+ g.world.rivers=[];g.world.biomes=[{kind:'plains',x:0,z:0}];
  const small=g.makeBld('farm',30,40,0),large={...small,...size};
  assert.ok(Math.abs(farmHarvestEstimate(g,large)-2*farmHarvestEstimate(g,small))<=1);
  g.state.time=0;const u=g.spawnUnit('worker',30,40,0);farmWork(g,u,small,1);farmWork(g,u,large,1);

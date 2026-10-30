@@ -1,3 +1,11 @@
+## Field terrain and continuous river moisture — 2026-10-29
+
+- [x] ~~Expanded fields average soil, habitat crop suitability and drought access over their footprint.~~ Up to nine equal-area samples, cached per building/footprint/world. Ordinary base-sized fields retain center sampling and their former yield formula. Expansion and world replacement invalidate the cache.
+- [x] ~~Water distance follows river segments, not only control points.~~ Fields between distant river vertices now receive their riverside drought protection. Stored crop moisture and actual harvested cargo remain unchanged.
+- [x] ~~Selected fields show Soil and Moisture percentages.~~ This is field-wide information; per-row visual terrain gradients and canals are still open.
+- Validation: 12 field-terrain, physical field-work and scalable-plot checks pass; typecheck and production build pass. The proportional-yield test now uses uniform terrain, with a separate mixed-habitat test proving unequal land changes yield. Browser visual check remains pending after the locked-Mac interruption.
+- Limits: current terrain is static. Future terrain editing/canals must explicitly invalidate these cached land samples. Full-season/multi-biome balancing remains open.
+
 ## Selected-building action hierarchy — 2026-10-29
 
 - [x] ~~Group recipes into Transport, Farm tools and Weapons.~~ Docks open Transport, barracks open Weapons; other recipe groups are collapsed. Names and costs use separate lines, with larger labels and 48px recipe controls.

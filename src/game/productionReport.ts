@@ -1,3 +1,4 @@
+import {fieldTerrain} from './fieldTerrain';
 import {plotArea} from './plots';
 import type {Game} from './sim';
 import type {Building} from './types';
@@ -13,6 +14,7 @@ export function fieldProductionReport(g:Game,b:Building){
   const work=cal.phase===0?(1-planted)*180/pace:cal.phase===1&&planted>0?(1-tended)*220/pace:0;
   const stage=fallow?'Fallow':cal.phase===0?'Sow now':cal.phase===1?(planted>0?'Tend now':'Spring sowing missed'):cal.phase===2?'Harvest now':'Winter — prepare for spring';
   return {
+    soil:Math.round(fieldTerrain(g,b).soil*100),water:Math.round((c?.water??1)*100),
     stage,kind:c?.kind||b.cropType||'grain',
     staff:g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length,
     projected:fallow||cal.phase===3?0:cal.phase===2?(c?.remaining||0):farmHarvestEstimate(g,b,planted,tended,c?.water??1),

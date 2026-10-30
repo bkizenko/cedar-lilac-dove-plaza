@@ -1,3 +1,7 @@
+## Field geography delivered — 2026-10-29
+
+- [x] ~~Area-averaged land suitability for expanded fields and continuous river-distance drought protection.~~ Soil/moisture shown in field panel. Irrigation canals, floods enriching individual rows and full biome balancing remain unfinished.
+
 ## Field labor delivered — 2026-10-29
 
 - [x] ~~Separate farmer work positions, travel before credited labor, visible sow/tend/harvest work and selected-field crew assignment.~~ Preserves finite harvest and saved crop progress. Detailed row crop state, animal traction and full-season balance remain open.

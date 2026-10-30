@@ -1,3 +1,4 @@
+import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
 import {plotArea,validPlot,type PlotSize} from './plots';
@@ -47,7 +48,7 @@ import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidAr
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
-import { habitatAt, soilQuality, cropWater, applyForagePressure } from "./ecology";
+import { habitatAt, soilQuality, applyForagePressure } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
 import {
@@ -5498,7 +5499,7 @@ export class Game {
           if (b.type === "farm" && this.finished(b)) {
             const c=crop(this,b);
             if(calendar(this).phase<2)c.water=Math.max(.35,Math.min(1,(c.water??1)+
-              (this.state.weather==="drought" ? -(1-cropWater(this,b.x,b.z))*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
+              (this.state.weather==="drought" ? -(1-fieldTerrain(this,b).droughtWater)*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
           }
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
