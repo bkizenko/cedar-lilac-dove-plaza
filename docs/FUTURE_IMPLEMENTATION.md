@@ -1,3 +1,8 @@
+## Default instrumental music — 2026-10-30
+
+- [x] ~~Remove At Rest and Atlantean Twilight from the default calm playlist.~~ Reuse composer-verified instrumental piano and acoustic folk recordings, with existing fades and quiet intervals. No new download, no village/save migration. Optional non-calm tracks are unchanged; a larger instrumental era/adventure library remains unfinished.
+- Seven music checks pass, including every default age/season combination, mute/background behavior and autoplay recovery. Typecheck/build pass.
+
 ## Terrain minimap — 2026-10-30
 
 User clarified: leave **5% usage unused**. Earlier 20% checkpoints below are historical.

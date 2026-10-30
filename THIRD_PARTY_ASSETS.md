@@ -38,3 +38,7 @@ SHA-256:
 - Required attribution: “At Rest” Kevin MacLeod (incompetech.com), licensed CC BY 4.0. Included in Controls & music.
 - Used in: public/audio/at-rest.mp3; calm spring/summer score, all ages.
 - Modified: no; playback volume and crossfades only.
+
+### Default instrumental playlist — 2026-10-30
+
+Default calm playback now uses Meditation Impromptu 01 (spring/summer) and Folk Round (autumn/winter), reusing the unchanged licensed files above. Composer instrumentation confirms piano only for Meditation and guitar, violin, recorder, piccolo, percussion and accordion for Folk Round. Sources: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100163 and https://wwww.incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100357. Both CC BY 4.0; existing credits retained. Older tracks remain for optional non-calm playback, not the default playlist.

@@ -35,3 +35,9 @@ test('ages evolve peaceful music without forcing battle or lively music in calm 
     f.score.setMuted(true);assert.equal(f.tracks[3].paused,true);
   }finally{f.restore();}
 });
+
+test('default calm playlist uses only verified instrumental recordings',async()=>{
+  const {peacefulMusic,TRACKS}=await import('../src/game/music.ts');
+  const allowed=new Set(['/audio/meditation-impromptu-01.mp3','/audio/folk-round.mp3']);
+  for(let age=0;age<=5;age++)for(const season of ['Spring','Summer','Autumn','Winter'])assert.ok(allowed.has(TRACKS[peacefulMusic(age,season)].file));
+});
