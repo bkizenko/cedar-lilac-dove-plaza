@@ -1,3 +1,4 @@
+import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
@@ -5036,6 +5037,7 @@ export class Game {
     rebalanceRivalLabor(this,team);
     developRivalResources(this,team);
     developRivalForestry(this,team);
+    manageRivalFields(this,team);
     developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);

@@ -1,3 +1,11 @@
+## Rival agricultural choices — 2026-10-29
+
+- [x] ~~Rivals choose learned crops based on field habitat and soil condition.~~ Woodland can favor tubers; well-supplied villages prefer soil-conserving pulses on tired fields. Unknown crops are never granted, standing crops never converted and food/labor never credited remotely.
+- [x] ~~Well-supplied rivals can rest surplus exhausted fields, at most a fifth of finished fields.~~ They retain enough fields for the existing annual-food target. A severe spring food shortage reopens unsown resting fields; workers retain cargo. Player field settings are untouched.
+- Decisions run at most once per minute per rival during spring, using cached field terrain and existing crop/save state. No new save format.
+- Validation: six crop-choice/rotation checks and 38 rival-development integration checks pass, including learned-crop restrictions, saved choices, finite rest and shortage response. Typecheck/build pass. Long-run agricultural outcomes across seeds remain unverified.
+- Remaining: richer organic culture, animal husbandry, inherited specializations and visual architectural differences; crop choices alone do not complete distinct civilizations.
+
 ## Cross-system regression pass — 2026-10-29
 
 - [x] ~~Protect paused paid transport upgrades from local equipment handoffs.~~ A cart project must retain its original sled; sharing cannot invalidate project/save ownership.
