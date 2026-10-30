@@ -146,6 +146,22 @@ export function generateWorld(seed: number, version = 1): WorldData {
     usedAng.push(ang);
     const river=makeRiver(rand,islandR,ang);
     if(version>=2)river.w*=i===0?3:1.3+(i%3)*0.5;
+    if(version>=5&&i>0){
+      const branchRandom=mulberry32(seed^(i*0x19a71));
+      const trunk=rivers[0].pts;
+      const join=trunk[5+Math.floor(branchRandom()*11)];
+      const start=river.pts[0],dx=join.x-start.x,dz=join.z-start.z;
+      const length=Math.hypot(dx,dz),bend=(branchRandom()-.5)*length*.25;
+      const phase=branchRandom()*Math.PI*2;
+      river.pts=Array.from({length:21},(_,j)=>{
+        const t=j/20;
+        // End taper makes the tributary join the trunk exactly; continuous
+        // bends replace per-vertex random zigzags in the branch channel.
+        const offset=Math.sin(t*Math.PI)*bend+Math.sin(t*Math.PI*4+phase)*Math.sin(t*Math.PI)*8;
+        return {x:start.x+dx*t-dz/length*offset,z:start.z+dz*t+dx/length*offset};
+      });
+      river.w=Math.min(river.w,rivers[0].w*.45);
+    }
     rivers.push(river);
   }
 
@@ -224,7 +240,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
 
   const fords: { x: number; z: number }[] = [];
   for (const rv of rivers) {
-    for (let k = 3; k < rv.pts.length - 3; k += 4) {
+    for (let k = version>=5?6:3; k < rv.pts.length - 3; k += version>=5?10:4) {
       const p = rv.pts[k];
       if (Math.hypot(p.x, p.z) < islandR * 0.82) fords.push({ x: p.x, z: p.z });
     }
@@ -235,9 +251,10 @@ export function generateWorld(seed: number, version = 1): WorldData {
         const x = (ix / SEGS) * MAP - HALF;
         const z = (iz / SEGS) * MAP - HALF;
         const d = Math.hypot(x - fd.x, z - fd.z);
-        if (d < 14) {
+        const fordRadius=version>=5?7:14;
+        if (d < fordRadius) {
           const i = idx(ix, iz);
-          const k = Math.min(1, (14 - d) / 5);
+          const k = Math.min(1, (fordRadius - d) / (version>=5?3:5));
           const pad = waterY + 0.65;
           heights[i] = Math.max(heights[i], heights[i] * (1 - k) + pad * k);
         }

@@ -12,5 +12,17 @@ test('organic worlds are deterministic with viable dry settlements and finite wo
  }
 });
 test('saved old and organic landscapes retain exact terrain and trees',()=>{
- for(const version of [3,4]){const g=new Game();g.reset(123456,version);g.enterIsland();const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.world.heights,g.world.heights);assert.deepEqual(copy.state.trees,g.state.trees);}
+ for(const version of [3,4,5]){const g=new Game();g.reset(123456,version);g.enterIsland();const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.world.heights,g.world.heights);assert.deepEqual(copy.state.trees,g.state.trees);}
+});
+
+test('new tributaries join the main channel exactly and remain narrower',()=>{
+ for(const seed of [123456,98765,345,7719]){
+  const w=generateWorld(seed,5),trunk=w.rivers[0];
+  assert.deepEqual(w.heights,generateWorld(seed,5).heights);
+  for(const branch of w.rivers.slice(1)){
+   const end=branch.pts.at(-1);assert.ok(trunk.pts.some(p=>Math.hypot(p.x-end.x,p.z-end.z)<1e-8));
+   assert.ok(branch.w<trunk.w);
+  }
+  for(const camp of w.camps)assert.ok(sampleHeight(w.heights,camp.x,camp.z)>w.waterY);
+ }
 });

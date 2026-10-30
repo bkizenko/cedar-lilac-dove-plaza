@@ -1,3 +1,8 @@
+## Main rivers and tributaries — 2026-10-30
+
+- [x] ~~New worlds use a main channel with narrower joining tributaries instead of every river crossing the map edge to edge.~~ Branch curves join sampled main-channel points exactly, with smooth bends. New-world v5 has fewer, smaller ford pads to avoid filling narrow channels. Existing v1–v4 saves retain their original terrain.
+- Three organic-world checks pass: deterministic v5 geometry across four seeds, exact tributary joins/relative widths and dry camp centers, plus v3/v4/v5 save round-trips. Typecheck/build pass. A generated-data overview was inspected; it exposed overlapping ford pads, which were reduced before publishing. Final in-game render/performance and multi-season connectivity/AI outcomes still require testing. No claim of erosion-based hydrology or complete organic world simulation.
+
 ## Full defensive-line preview — 2026-10-30
 
 - [x] ~~Show every section of the pending defensive drag route.~~ One reusable instanced marker mesh (maximum 32) shows green sections and red from the first obstruction onward, matching stop-at-obstruction placement. Preview resources clear when the scene is rebuilt. No save changes.
