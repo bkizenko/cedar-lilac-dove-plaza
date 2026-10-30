@@ -1,3 +1,17 @@
+## Latest requested batch — 2026-10-30
+
+Preserve the existing village and save compatibility. Push each tested implementation batch. Account currently reports 80% used; the latest request mentions both 5% and 20% unused, so preserve 20% pending clarification or a confirmed reset. Do not consume a reset credit automatically.
+
+- [ ] **UI and graphics first:** continue clearer, larger controls and cohesive detailed blocky art within older MacBook Air performance limits; visually verify recent unverified UI changes.
+- [ ] **Minimap accuracy and scaling:** audit world coordinates, aspect ratio, camera bounds, discovery masking and responsive sizing; make the displayed map correspond accurately to the world. The user's final scaling phrase was incomplete; use these concrete checks as the initial scope.
+- [ ] **Prosperity creates meaningful danger:** balance serious raids and rival aggression against visible wealth, with warnings, travel, finite forces, defense and recovery. Validate that raiders actually arrive and fight instead of disappearing. Avoid merely multiplying damage.
+- [ ] **Timber versus food balance:** diagnose sustainable tree availability, exploration and hauling while measuring excessive food production; make wood obtainable without removing meaningful regional scarcity or breaking existing saves.
+- [ ] **Stretchable linear construction:** extend the drag-placement model to bridges, walls and other suitable linear structures, with length-based costs, valid terrain/endpoints, navigable crossings/gates, physical construction and save compatibility.
+- [ ] **Six difficulty presets:** Super easy, Easy, Normal, Hard, Survival, Apocalypse. Centralize coherent modifiers for starting support, food, spoilage, climate, raiders and rivals; show plain-language differences and preserve existing saved difficulty behavior.
+- [ ] **Instrumental music replacement:** remove unwanted vocal tracks from the default soundtrack. Seek calm acoustic/orchestral survival music that develops with civilization, inspired by the mood of Civilization V / Dawn of Man without copying their recordings. Only redistribute clearly licensed free tracks and document them in THIRD_PARTY_ASSETS.md.
+
+These requests extend, rather than replace, the eight workstreams and human-development catalogue below. They are recorded requirements, not completed features.
+
 ## Continuation checkpoint — usage reserve, 2026-10-29
 
 Implementation stops at 78% account usage to preserve the user's requested 20% reserve. Do not consume the available reset credit. The overhaul remains incomplete. Latest playable source: `836787c`; permanent server remains 8086. Preserve the player's save. Recent UI changes still require visual verification after the Mac is unlocked.
