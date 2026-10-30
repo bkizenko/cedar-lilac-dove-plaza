@@ -1,3 +1,4 @@
+import {difficulty} from './difficulty';
 import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
 import { foodDemand, isDependent } from "./settlement";
@@ -10,14 +11,14 @@ import {queueStandDown} from './demobilization';
 
 /** Population matters even while a large settlement remains in the Stone Age.
  * A small first village still meets scouts; established towns face actual bands. */
-export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=36,loss=0){
+export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=36,loss=0,band=1){
  const ceiling=Math.max(1,Math.min(36,Math.ceil(population*(dangerous?.6:.45)),Math.floor(capacity)));
  if(population<16&&wave<=1)return {count:Math.min(ceiling,roll<.5?1:2),condition:.78,label:"A scouting party from the sea"};
  const base=Math.max(3,Math.min(26,Math.ceil(population*.22)));
  // History increases pressure in small steps, then plateaus. Losses and current
  // capacity can make the next raid smaller even after many successful years.
  const escalation=Math.min(5,Math.floor(Math.max(0,wave-1)/2));
- const count=Math.max(1,Math.min(ceiling,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+escalation+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1)*(1-Math.min(.5,loss)))));
+ const count=Math.max(1,Math.min(ceiling,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+escalation+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1)*Math.max(.25,Math.min(2,band))*(1-Math.min(.5,loss)))));
  return {count,condition:.95,label:count>=8?"A warband from the sea":"Raiders from the sea"};
 }
 export function seaRaidArrivalChance(threat:number,night:boolean){return Math.min(.8,threat*.42*(night?1.25:.9));}
@@ -49,7 +50,7 @@ export function finishSeaRaid(g:Game){
   if(g.state.buildings.some(b=>b.team===0&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<60))queueStandDown(g,u,true);
  }
  const hungry=g.tribe(0).food<foodDemand(g)*120;
- g.state.raidT=Math.max(g.state.raidT,480+Math.round(campaign.loss*900)+(hungry?180:0));
+ g.state.raidT=Math.max(g.state.raidT,480/difficulty(g).raid+Math.round(campaign.loss*900)+(hungry?180:0));
 }
 
 /** Seeded land camps have a finite initial band. They never manufacture replacements. */

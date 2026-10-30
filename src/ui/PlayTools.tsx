@@ -77,7 +77,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
             {Object.entries(DIFFICULTIES).map(([id,d])=><option key={id} value={id}>{d.name}</option>)}
           </select>
         </label>
-        <p className="text-sm">Applies immediately to food needs, spoilage, sea-raid frequency and incoming enemy damage. Quiet frontier still prevents new unprovoked raids.</p>
+        <p className="text-sm">Applies immediately to food needs, spoilage, sea-raid size/frequency and incoming enemy damage. Quiet frontier still prevents new unprovoked raids.</p>
         <label className="audio-setting">
           Calm soundtrack
           <input

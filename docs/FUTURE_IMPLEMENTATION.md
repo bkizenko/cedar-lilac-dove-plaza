@@ -1,3 +1,8 @@
+## Difficulty raid cadence and band sizes — 2026-10-30
+
+- [x] ~~Difficulty scales the actual cooldown between sea campaigns and finite band sizes, not only the probability of an arrival check.~~ Super easy/easy have smaller bands and longer intervals; hard/survival/apocalypse increase pressure. Existing adult/defense caps, small first scouting parties, no-overlap rules and extra respite after losses remain. Normal is unchanged.
+- Twelve difficulty/raid checks pass, including differing finite bands, protected early scouts, actual campaign intervals, casualty respite and save behavior. Typecheck/build pass. Multi-season balancing and final UI verification remain open; larger preset climate/resource/rival changes are still unfinished.
+
 ## Six difficulty presets, survival/combat controls — 2026-10-30
 
 - [x] ~~Add Super easy, Easy, Normal, Hard, Survival and Apocalypse in Controls & music.~~ Saved optional difficulty defaults to Normal for existing games. Four centralized effects apply immediately: player food demand (including growth forecasts), spoilage, sea-raid arrival chance and incoming enemy combat damage. Foreign food economies remain on baseline. Quiet frontier and existing casualty respite still apply.

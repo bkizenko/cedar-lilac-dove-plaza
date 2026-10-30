@@ -1929,7 +1929,7 @@ export class Game {
     if(!landing){this.state.raidT=60;return;}
     this.state.raidWave += 1;
     const readiness=raidReadiness(this);
-    const strength=seaRaidStrength(readiness.adults,age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous",readiness.cap,this.state.raidCampaign?.loss||0);
+    const strength=seaRaidStrength(readiness.adults,age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous",readiness.cap,this.state.raidCampaign?.loss||0,difficulty(this).band);
     this.state.raidCampaign={active:true,adults:readiness.adults,buildings:readiness.buildings,loss:0,
       people:this.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(this,u)).map(u=>u.id),
       sites:this.state.buildings.filter(b=>b.team===0&&this.finished(b)).map(b=>b.id)};
@@ -1964,7 +1964,7 @@ export class Game {
     this.onSfx("horn");
     this.callAlliesTo(home.x, home.z);
     this.defendHome(0);
-    this.state.raidT = 480 + Math.random() * 240 + (1 - threat) * 120;
+    this.state.raidT = (480 + Math.random() * 240 + (1 - threat) * 120)/difficulty(this).raid;
   }
 
   tickRaiders(dt: number) {
