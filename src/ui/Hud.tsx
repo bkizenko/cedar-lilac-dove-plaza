@@ -770,6 +770,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div>
             <WorldMinimap hud={hud} engine={engine} />
+            <details className="neighbor-details"><summary>Neighbors & trade</summary>
             {founding ? null : (
             <div className="px-2 py-1.5 space-y-1">
               {hud.tribes
@@ -813,6 +814,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 <TradeBlock hud={hud} engine={engine} />
               </div>
             ) : null}
+            </details>
           </div>
         )}
       </div>

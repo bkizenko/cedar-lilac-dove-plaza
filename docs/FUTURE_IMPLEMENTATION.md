@@ -1,3 +1,9 @@
+## Browser verification restored; compact diplomacy — 2026-10-30
+
+- [x] ~~Collapse minimap neighbors/trade behind a 44px disclosure by default.~~ Map remains visible; names and trade controls expand on demand. Mouse expansion and Space-key collapse verified in the production preview.
+- [x] ~~Prevent the H guide shortcut from changing the newly focused difficulty select to Hard.~~ Reproduced during browser QA; preventDefault on guide opening fixes it. Verified selecting Normal, closing and reopening with H leaves Normal selected.
+- Browser connection recovered after resetting the computer-use session. Current larger construction labels, tree geometry and minimap render visibly at1280×720; zero console errors observed. Screenshot `/tmp/hearth-hud-cleaner.png`. This verifies those visible elements, not every new terrain version, line preview, mobile layout or animation. Further visual/playthrough QA remains open. Typecheck/build pass.
+
 ## Pack-animal identity persistence — 2026-10-30
 
 - [x] ~~Taming retains the discovered goat's ID, size and health in optional validated handler data.~~ A handler's death releases that same animal once, preserving condition rather than creating a healed generic replacement. Legacy pack handlers without identity records retain their earlier release behavior. No village reset or save-version bump.

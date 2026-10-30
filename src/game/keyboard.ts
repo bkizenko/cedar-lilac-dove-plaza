@@ -110,7 +110,7 @@ export class KeyboardCommands {
     if (event.repeat) return;
     if (code === "KeyN") e.toggleLogging();
     if (code === "KeyK") this.mode = !this.mode;
-    if (code === "KeyH") this.help = !this.help;
+    if (code === "KeyH") {event.preventDefault();this.help = !this.help;}
     if (code === "KeyL") this.ledger = !this.ledger;
     if (code === "KeyC" || code === "KeyB") {
       const entities = (code === "KeyB" ? g.state.buildings : g.state.units).filter(

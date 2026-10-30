@@ -129,7 +129,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
             Creative Commons: By Attribution 4.0
           </a>
-          . Unedited recordings with gentle fades and quiet gaps. Calm mode stays with piano and quiet ambience in every age. Adventure mode adds acoustic folk as your society advances. Winter stays quieter; lively and combat music are optional;
+          . Unedited recordings with gentle fades and quiet gaps. Calm mode uses piano and acoustic folk across the seasons. Adventure mode adds acoustic folk as your society advances. Winter stays quieter; lively and combat music are optional;
           no commercial game soundtrack.
         </p>
         <button
