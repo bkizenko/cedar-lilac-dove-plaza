@@ -1,3 +1,9 @@
+## Reachable shelter fallback and regression result — 2026-10-30
+
+- [x] ~~A blocked nearest shelter no longer prevents using another reachable shelter with free rooms.~~ Occupancy still counts once, and another nearest-candidate pass happens only when an entrance is rejected. Full rooms and dead occupants are handled correctly; no remote recovery or save changes.
+- 43 cultivation/survival/carrier checks pass, including blocked-nearest and room-reuse cases. Typecheck/build pass after an explicit TypeScript narrowing guard.
+- Full scripts suite session40818 is **terminal**: 788/789 passed; only the superseded 20-raider ceiling assertion failed. The corrected 36-ceiling case passes separately. App-data/auth checks, skipped by the original npm chain, ran separately: 32/32 passed. Do not poll session40818 again. Logs: `/tmp/hearth-overhaul-regression.log`, `/tmp/hearth-regression-app-tests.log`, `/tmp/hearth-shelter-route-tests.log`. Whole suite not rerun wholesale after this shelter change; focused coverage passes.
+
 ## Construction control readability — 2026-10-30
 
 - [x] ~~Enlarge building names to 14px and costs to 12px with explicit resource names.~~ Building cards are wider, replacing L/S/C/I abbreviations with logs/stone/copper/iron. Existing category scrolling remains. Placement, costs and plans unchanged.

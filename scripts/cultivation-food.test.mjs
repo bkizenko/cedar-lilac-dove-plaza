@@ -88,5 +88,13 @@ test('shelter search respects occupied rooms and reuses rooms after deaths',()=>
  Object.assign(u,{x:10,z:38,order:'idle'});g.rebuildWalk();
  const checked=[];g.interactionSpot=(person,b)=>{checked.push(b.id);return null};
  routineRest(g,u,.1);assert.equal(checked.at(-1),far.id);
- occupants[0].hp=0;routineRest(g,u,.1);assert.equal(checked.at(-1),near.id);
+ occupants[0].hp=0;checked.length=0;routineRest(g,u,.1);assert.equal(checked[0],near.id);
+});
+
+test('a blocked nearest shelter does not prevent using the next reachable room',()=>{
+ const g=fixture(),u=g.state.units[0];g.state.units=[u];g.state.weather='storm';
+ const near=g.makeBld('hut',20,38,0),far=g.makeBld('hut',35,38,0);g.state.buildings=[near,far];
+ Object.assign(u,{x:10,z:38,order:'idle'});
+ const checked=[];g.interactionSpot=(person,b)=>{checked.push(b.id);return b===near?null:{x:u.x,z:u.z}};
+ assert.equal(routineRest(g,u,.1),true);assert.deepEqual(checked,[near.id,far.id]);assert.equal(u.shelterId,far.id);
 });

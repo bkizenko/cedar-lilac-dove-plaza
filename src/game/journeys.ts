@@ -115,16 +115,23 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   // Count residents once, rather than scanning every resident for every hut.
   const occupancy=new Map<number,number>();
   for(const p of g.state.units)if(p.hp>0&&p.shelterId!==undefined)occupancy.set(p.shelterId,(occupancy.get(p.shelterId)||0)+1);
-  let shelter:typeof g.state.buildings[number]|undefined,nearest=Infinity;
-  for(const b of g.state.buildings){
-    if(b.team!==u.team||!g.finished(b)||!["hut","townhall","keep"].includes(b.type)||
-      (occupancy.get(b.id)||0)>=(b.type==="hut"?5:b.type==="keep"?12:8))continue;
-    const distance=(b.x-u.x)**2+(b.z-u.z)**2;
-    if(distance<nearest){nearest=distance;shelter=b;}
+  const rejected=new Set<number>();
+  let shelter:typeof g.state.buildings[number]|undefined;
+  let entrance:ReturnType<Game['interactionSpot']>=null;
+  // Usually one pass; only a blocked entrance triggers another candidate search.
+  while(!entrance){
+    let nearest=Infinity;shelter=undefined;
+    for(const b of g.state.buildings){
+      if(rejected.has(b.id)||b.team!==u.team||!g.finished(b)||!["hut","townhall","keep"].includes(b.type)||
+        (occupancy.get(b.id)||0)>=(b.type==="hut"?5:b.type==="keep"?12:8))continue;
+      const distance=(b.x-u.x)**2+(b.z-u.z)**2;
+      if(distance<nearest){nearest=distance;shelter=b;}
+    }
+    if(!shelter){u.workReason=rejected.size?"Shelter unreachable — clear an entrance":"No shelter room — build more huts";return false;}
+    entrance=g.interactionSpot(u,shelter);
+    if(!entrance)rejected.add(shelter.id);
   }
-  if (!shelter) {u.workReason="No shelter room — build more huts";return false;}
-  const entrance=g.interactionSpot(u,shelter);
-  if(!entrance){u.workReason="Shelter unreachable — seeking a clear entrance";return false;}
+  if(!shelter)return false;
   if (Math.hypot(u.x - entrance.x, u.z - entrance.z) > 1) {
     u.tx = entrance.x;
     u.tz = entrance.z;
