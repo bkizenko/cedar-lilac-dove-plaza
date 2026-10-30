@@ -12,7 +12,7 @@ export function beginCopperStudy(g:Game,workplace:number,team=0){
  if(g.popNow(team)<20){if(team===0)g.banner('Copper trials need a settled community of 20 people',4);return false;}
  if(t.copper<8||t.wood<4){if(team===0)g.banner('Bring 8 copper and 4 logs to test a prototype tool',4);return false;}
  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.jobLock&&!u.plantingWork&&!u.tamingWork&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.recalled&&!u.emergency&&!u.foundingJourney&&!u.tributeJourney&&u.drill==null&&u.carry===0&&['idle','gather','hold'].includes(u.order)&&!!g.interactionSpot(u,b));
- if(!u)return false;
+ if(!u){if(team===0)g.banner('Need an available adult with empty hands and a clear route to this shelter',4);return false;}
  g.interruptMission(u);t.copper-=8;t.wood-=4;u.copperStudy={workplace:b.id,progress:0};u.node=null;u.order='hold';g.workBoard.reset();return true;
 }
 export function copperStudyAI(g:Game,u:Unit,dt:number){

@@ -1,3 +1,8 @@
+## Copper trial controls — 2026-10-30
+
+- [x] ~~Workshop trial control displays missing population/materials before starting, progress while active, a paid resume action while paused, and discovered status after completion.~~ Disabled start uses current actual prerequisites; a missing available worker now produces a clear explanation. Zero-quantity missing resources are omitted. Pack-goat taming moved into Transport disclosure to free primary workshop space.
+- Six material-study checks and typecheck/build pass. Browser test built a workshop through normal UI in the disposable8087 test copy; verified disabled start,5/20residents and missing8copper with no console errors. Screenshot `/tmp/hearth-copper-trial-controls.png` records the first layout, where taming crowded the trial requirements below the fold. Moving taming into Transport corrects that source layout; final post-move screenshot remains pending. Do not use the old screenshot as proof of the final layout. Active/paused/completed UI variants remain visually unverified.
+
 ## Rival copper experiments — 2026-10-30
 
 - [x] ~~Rivals use the same paid, physical copper trials and prototype tools.~~ A20-person rival with at least600seconds of food reserves and a finished crafting shelter may fund/resume a trial. If short of copper, one available uncommitted worker can gather known nearby connected ore; no unseen deposit knowledge or automatic ore grant. Actual crafting shares benches and records only that society's technique.
