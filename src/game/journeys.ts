@@ -112,12 +112,16 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   const distantWork=!!u.job&&u.order==="gather"&&g.state.weather!=="storm"&&
     !g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&["hut","townhall","keep"].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<18);
   if(distantWork){u.fatigue=Math.max(0,(u.fatigue||0)-dt/30);u.workReason="Night camp — resting by the gathering grounds";return true;}
-  const shelter = g.state.buildings
-    .filter(
-      (b) => b.team === u.team && g.finished(b) && ["hut", "townhall", "keep"].includes(b.type) &&
-        g.state.units.filter(p=>p.hp>0&&p.shelterId===b.id).length < (b.type==="hut"?5:b.type==="keep"?12:8),
-    )
-    .sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
+  // Count residents once, rather than scanning every resident for every hut.
+  const occupancy=new Map<number,number>();
+  for(const p of g.state.units)if(p.hp>0&&p.shelterId!==undefined)occupancy.set(p.shelterId,(occupancy.get(p.shelterId)||0)+1);
+  let shelter:typeof g.state.buildings[number]|undefined,nearest=Infinity;
+  for(const b of g.state.buildings){
+    if(b.team!==u.team||!g.finished(b)||!["hut","townhall","keep"].includes(b.type)||
+      (occupancy.get(b.id)||0)>=(b.type==="hut"?5:b.type==="keep"?12:8))continue;
+    const distance=(b.x-u.x)**2+(b.z-u.z)**2;
+    if(distance<nearest){nearest=distance;shelter=b;}
+  }
   if (!shelter) {u.workReason="No shelter room — build more huts";return false;}
   const entrance=g.interactionSpot(u,shelter);
   if(!entrance){u.workReason="Shelter unreachable — seeking a clear entrance";return false;}

@@ -80,3 +80,13 @@ test('invented settlement names vary by seed and legacy English neighbors migrat
   const g=fixture(),s=encodeGame(g);s.state.tribes[1].name='Redcliff';const r=decodeGame(s);
   assert.notEqual(r.tribe(1).name,'Redcliff');assert.equal(r.state.seed,g.state.seed);assert.equal(r.tribe(1).food,g.tribe(1).food);
 });
+
+test('shelter search respects occupied rooms and reuses rooms after deaths',()=>{
+ const g=fixture(),u=g.state.units[0];g.state.units=[u];g.state.weather='storm';
+ const near=g.makeBld('hut',20,38,0),far=g.makeBld('hut',35,38,0);g.state.buildings=[near,far];
+ const occupants=[];for(let i=0;i<5;i++){const p=g.spawnUnit('worker',20,38,0);p.shelterId=near.id;occupants.push(p);}
+ Object.assign(u,{x:10,z:38,order:'idle'});g.rebuildWalk();
+ const checked=[];g.interactionSpot=(person,b)=>{checked.push(b.id);return null};
+ routineRest(g,u,.1);assert.equal(checked.at(-1),far.id);
+ occupants[0].hp=0;routineRest(g,u,.1);assert.equal(checked.at(-1),near.id);
+});

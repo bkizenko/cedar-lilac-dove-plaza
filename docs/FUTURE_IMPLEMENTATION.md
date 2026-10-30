@@ -1,3 +1,9 @@
+## Shelter search work reduction — 2026-10-30
+
+- [x] ~~Count occupied shelter rooms once per resting citizen, then find the nearest available shelter in one pass.~~ Removes the previous resident scan per building and distance sort; respects living occupants, capacities, team, completion and stable nearest ties. No stale cache or save changes.
+- 44 focused survival/workday/carrier checks pass. A new capacity/death-room-release regression also passes. Typecheck/build pass. A 199-person/252-building replay completed 100 simulated seconds in 14.92 wall seconds with no errors while the broader suite was competing for CPU; this is not evidence of a measured speedup against the earlier profiled run.
+- Full `npm test` remains running in session **40818**, log `/tmp/hearth-overhaul-regression.log`. Resume by polling that handle, not restarting. It exposed the old `<=20` raid-ceiling assertion in frontier-defense; updated to the published 36 ceiling and the focused case passes. Inspect final suite output for additional failures; do not call the suite green yet.
+
 ## Shared tree geometry detail — 2026-10-30
 
 - [x] ~~Add root base, exposed branch bars, offset foliage lobes and height shading to the shared tree model.~~ Existing two instanced draw calls remain; trunk and canopy each stay under 160 triangles. No tree identity, save or harvesting changes.

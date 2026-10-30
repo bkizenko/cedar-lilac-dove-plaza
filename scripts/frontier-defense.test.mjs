@@ -287,7 +287,7 @@ test("large Stone Age towns face substantial sea parties while small first villa
  assert.equal(seaRaidStrength(5,0,.6,1,.2).count,1);
  const forty=seaRaidStrength(40,0,.6,1,.5);assert.ok(forty.count>=6);assert.ok(forty.condition>=.9);
  assert.ok(seaRaidStrength(150,3,.6,2,.5).count>forty.count);
- assert.ok(seaRaidStrength(150,5,1,99,1,true).count<=20);
+ assert.ok(seaRaidStrength(150,5,1,99,1,true).count<=36);
  assert.ok(seaRaidArrivalChance(.5,true)>seaRaidArrivalChance(.5,false));
 });
 test("visible shore departure explains retreat instead of silently deleting the last raider",()=>{
