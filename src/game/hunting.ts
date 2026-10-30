@@ -30,7 +30,8 @@ export function carcassAvailable(g: Game, c: HuntableCritter) {
     g.state.time >= c.carcass.diedAt && g.state.time - c.carcass.diedAt < carcassLifetime(g, c);
 }
 
-export function huntable(g: Game, c: HuntableCritter) {
+export function huntable(g: Game, c: HuntableCritter, team?:number) {
+  if(c.hp>0&&team!==undefined&&g.state.units.some(u=>u.hp>0&&u.team===team&&u.tamingWork?.animal===c.id))return false;
   return c.species !== "bird" && (c.hp > 0 || carcassAvailable(g, c));
 }
 
@@ -57,8 +58,8 @@ function finishTask(g: Game, u: Unit, reason: string) {
 export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
   if (u.order !== "gather" || !u.node || !("species" in u.node) || u.hp <= 0) return false;
   const c = u.node as HuntableCritter;
-  if (!huntable(g, c)) {
-    finishTask(g, u, "The carcass is exhausted or spoiled — finding other food");
+  if (!huntable(g, c,u.team)) {
+    finishTask(g, u, c.hp>0?"This goat is reserved for taming — finding other food":"The carcass is exhausted or spoiled — finding other food");
     return true;
   }
   if (u.carry > 0 && (u.carryType !== "food" || (u.carryFood || "provisions") !== "meat")) {

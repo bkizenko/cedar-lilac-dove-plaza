@@ -3758,7 +3758,7 @@ export class Game {
       }
       for (const n of this.state.forage) if (n.amount > 0) consider(n, n.x, n.z);
       for (const c of this.state.wildlife) {
-        if (huntable(this,c)) consider(c, c.x, c.z, c.hp<=0?-100:u.huntOnly ? -80 : -28);
+        if (huntable(this,c,u.team)) consider(c, c.x, c.z, c.hp<=0?-100:u.huntOnly ? -80 : -28);
       }
       const docks = this.state.buildings.filter(
         (b) => b.team === u.team && b.type === "dock" && this.finished(b),
@@ -3802,7 +3802,7 @@ export class Game {
     let best: Critter | null = null;
     let bd = 1e12;
     for (const c of this.state.wildlife) {
-      if (!huntable(this,c) || (u.team === 0 && (c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))) continue;
+      if (!huntable(this,c,u.team) || (u.team === 0 && (c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))) continue;
       const d = (c.x - u.x) ** 2 + (c.z - u.z) ** 2;
       if (d < bd) {
         bd = d;

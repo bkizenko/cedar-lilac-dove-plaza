@@ -1,3 +1,9 @@
+## Hunting and taming coordination — 2026-10-29
+
+- [x] ~~Automatic and already-assigned hunters respect their village's living goat-taming reservations.~~ Work planning refreshes when taming starts. Other tribes can still hunt the animal; a dead handler cannot reserve it forever. Saved paid taming progress remains protected.
+- Validation: 15 water/pack checks and ten hunting checks pass, including save/load, a previously assigned hunter and foreign access; typecheck/build pass.
+- Husbandry remains incomplete: current pack goats are attached equipment, not independent domestic animals. The next substantial animal phase needs persistent domestic identity, housing/grazing, finite fodder and reproduction, with migration of existing handlers. Do not call this coordination fix breeding or livestock simulation.
+
 ## Rival agricultural choices — 2026-10-29
 
 - [x] ~~Rivals choose learned crops based on field habitat and soil condition.~~ Woodland can favor tubers; well-supplied villages prefer soil-conserving pulses on tired fields. Unknown crops are never granted, standing crops never converted and food/labor never credited remotely.

@@ -16,7 +16,7 @@ export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
   if(!animal)continue;
   if(g.tribe(team).food<10||g.tribe(team).wood<2){if(team===0)g.banner('Taming needs 10 food and 2 logs for feed and a carrying harness',4);return false;}
   g.interruptMission(u);g.tribe(team).food-=10;g.tribe(team).wood-=2;
-  u.tamingWork={animal:animal.id,progress:0};u.order='hold';u.node=null;u.target=null;
+  u.tamingWork={animal:animal.id,progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
   if(team===0)g.banner('One adult is approaching a wild goat with feed. Taming and fitting its pack takes a minute.',5);return true;
  }
  if(team===0)g.banner('Explore to find a living wild goat and an available empty-handed adult with a clear route',5);return false;

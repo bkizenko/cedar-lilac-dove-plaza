@@ -1,3 +1,4 @@
+import {huntable,workerHuntAI} from '../src/game/hunting.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -126,4 +127,16 @@ test('repeated taming orders cannot replace a paid project when more goats are a
  const other=g.spawnUnit('worker',-2,-32,0);
  assert.equal(beginPackTaming(g,hall.id,0,other.id),true);
  assert.notEqual(other.tamingWork.animal,u.tamingWork.animal);
+});
+
+
+test('hunters respect their own taming reservation while other tribes remain able to hunt',()=>{
+ const {g,u}=fixture(),animal=goat(g),hunter=g.spawnUnit('worker',animal.x,animal.z,0);
+ hunter.order='gather';hunter.node=animal;hunter.job='food';hunter.gatherT=20;
+ assert.equal(beginPackTaming(g,g.state.buildings[0].id,0,u.id),true);
+ assert.equal(huntable(g,animal,0),false);assert.equal(huntable(g,animal,1),true);
+ const hp=animal.hp;workerHuntAI(g,hunter,1);assert.equal(animal.hp,hp);assert.notEqual(hunter.node,animal);
+ const copy=decodeGame(encodeGame(g)),saved=copy.state.wildlife.find(c=>c.id===animal.id);
+ assert.equal(huntable(copy,saved,0),false,'paid reservation survives loading');
+ u.hp=0;assert.equal(huntable(g,animal,0),true,'a dead handler cannot reserve wildlife forever');
 });

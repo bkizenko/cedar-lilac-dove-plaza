@@ -263,7 +263,7 @@ export class WorkBoard {
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);
       for (const n of g.state.wildlife)
-        if (huntable(g,n)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:calendar(g).phase===3?35:-10));
+        if (huntable(g,n,t.id)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:calendar(g).phase===3?35:-10));
       this.tasks.set(t.id, list);
     }
   }
@@ -327,7 +327,7 @@ export class WorkBoard {
       if (u.jobLock && u.job && task.kind !== u.job) continue;
       if (u.huntOnly && reserveSeconds(g,u.team)>=90 && !("species" in task.node)) continue;
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
-      if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node))) continue;
+      if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node,u.team))) continue;
       if ("amount" in task.node && task.node.amount <= 0) continue;
       if (task.kind === "build" && g.finished(task.node as Building)&&!(task.node as Building).expansion) continue;
       if (
