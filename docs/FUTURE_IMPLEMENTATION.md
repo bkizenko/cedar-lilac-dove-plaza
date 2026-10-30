@@ -1,3 +1,8 @@
+## Joined wall drags and cost preview — 2026-10-30
+
+- [x] ~~Palisade, wall, trench and moat drags follow both axes using edge-joined sections.~~ Bends avoid diagonal-only gaps; the existing32-section limit, first-obstruction stop, physical labor and unpaid plans remain. Preview banner includes total logs/stone and blocked status.
+- Five construction-line checks and typecheck/build pass, including real bent palisade placement, finite payment and save restoration. In-game drag visual QA remains pending.
+
 ## Bridge survey obstruction fix — 2026-10-30
 
 - [x] ~~Automatic crossing surveys reject live structures along the entire deck, including river islands.~~ Existing span choices, construction costs and saved bridges remain unchanged. Drawn crossings retain their existing obstruction checks.

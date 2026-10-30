@@ -498,10 +498,12 @@ export class Engine {
     }
     if(linearStructure(type)&&this.plotStart){
       const line=constructionLine(this.plotStart,g),end=line[line.length-1];
+      if(!end)return;
       x=end.x;z=end.z;
       let blocked=false;
       this.view.setLinePreview(line.map(p=>{blocked=blocked||!this.game.placementValid(type,p.x,p.z,0);return {...p,y:this.game.height(p.x,p.z),ok:!blocked};}));
-      this.game.banner(`${line.length} sections · drag to extend · leave room for a gate`,2);
+      const unitCost=buildingCost(type,this.game),costs=[unitCost.wood?`${(unitCost.wood||0)*line.length} logs`:'',unitCost.stone?`${(unitCost.stone||0)*line.length} stone`:''].filter(Boolean).join(' · ');
+      this.game.banner(`${line.length} sections${costs?' · '+costs:''}${blocked?' · red sections blocked':' · leave a gate'}`,2);
     }
     this.bridgeSpan=undefined;
     if(type==='bridge'&&this.plotStart&&Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z)>2){

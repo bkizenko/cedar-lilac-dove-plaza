@@ -1,12 +1,20 @@
 import type {Game} from './sim';
 import type {BldType} from './types';
 export function linearStructure(t:BldType){return ['palisade','stonewall','trench','moat'].includes(t);}
-/** Axis-aligned joined sections avoid diagonal holes in the collision grid. */
+/** Follow the drag with edge-joined grid cells: diagonal corner contacts leave gaps. */
 export function constructionLine(a:{x:number;z:number},b:{x:number;z:number}){
- const horizontal=Math.abs(b.x-a.x)>=Math.abs(b.z-a.z);
- const delta=horizontal?b.x-a.x:b.z-a.z;
- const count=Math.min(32,Math.floor(Math.abs(delta)/4)+1),sign=Math.sign(delta)||1;
- return Array.from({length:count},(_,i)=>({x:a.x+(horizontal?i*4*sign:0),z:a.z+(horizontal?0:i*4*sign)}));
+ if(![a.x,a.z,b.x,b.z].every(Number.isFinite))return [];
+ const nx=Math.floor(Math.abs(b.x-a.x)/4),nz=Math.floor(Math.abs(b.z-a.z)/4);
+ const sx=Math.sign(b.x-a.x),sz=Math.sign(b.z-a.z);
+ const points=[{x:a.x,z:a.z}];let ix=0,iz=0;
+ while(points.length<32&&(ix<nx||iz<nz)){
+  // Compare the next grid-edge crossing along each axis. Every section shares
+  // a full edge with its predecessor, including through bends.
+  if(ix<nx&&(iz>=nz||(ix+.5)/nx<=(iz+.5)/nz))ix++;
+  else iz++;
+  points.push({x:a.x+ix*4*sx,z:a.z+iz*4*sz});
+ }
+ return points;
 }
 export function placeConstructionLine(g:Game,type:BldType,a:{x:number;z:number},b:{x:number;z:number}){
  if(!linearStructure(type))return 0;
