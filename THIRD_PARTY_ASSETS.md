@@ -42,3 +42,11 @@ SHA-256:
 ### Default instrumental playlist — 2026-10-30
 
 Default calm playback now uses Meditation Impromptu 01 (spring/summer) and Folk Round (autumn/winter), reusing the unchanged licensed files above. Composer instrumentation confirms piano only for Meditation and guitar, violin, recorder, piccolo, percussion and accordion for Folk Round. Sources: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100163 and https://wwww.incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100357. Both CC BY 4.0; existing credits retained. Older tracks remain for optional non-calm playback, not the default playlist.
+
+### Winter harp addition — 2026-10-30
+
+| Resource | Creator | Source | Original URLs | License | Attribution | Used in | Modified |
+|---|---|---|---|---|---|---|---|
+| Evening Fall (Harp) | Kevin MacLeod | Incompetech, ISRC USUAN1100236 | https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN1100236 ; original download https://incompetech.com/music/royalty-free/mp3-royaltyfree/Evening%20Fall%20-%20Harp.mp3 | CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ | Title, composer, source and license credited in Controls & music | public/audio/evening-fall-harp.mp3; calm winter score | Recording unchanged; playback fades/volume/quiet gaps only |
+
+Downloaded SHA-256: `7899334b322d0b651801c3f2f0c70adb4704871863ca6fa2de1f0d84f593ee65`. Composer instrumentation lists harp only. Current calm playlist: piano in spring/early summers, folk in autumn and developed summers, harp in winter. Earlier playlist notes are historical.

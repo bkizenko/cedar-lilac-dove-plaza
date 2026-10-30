@@ -38,6 +38,10 @@ test('ages evolve peaceful music without forcing battle or lively music in calm 
 
 test('default calm playlist uses only verified instrumental recordings',async()=>{
   const {peacefulMusic,TRACKS}=await import('../src/game/music.ts');
-  const allowed=new Set(['/audio/meditation-impromptu-01.mp3','/audio/folk-round.mp3']);
+  const allowed=new Set(['/audio/meditation-impromptu-01.mp3','/audio/folk-round.mp3','/audio/evening-fall-harp.mp3']);
   for(let age=0;age<=5;age++)for(const season of ['Spring','Summer','Autumn','Winter'])assert.ok(allowed.has(TRACKS[peacefulMusic(age,season)].file));
+});
+
+test('calm winters use harp while developed summers gain acoustic folk',async()=>{
+ const {peacefulMusic}=await import('../src/game/music.ts');assert.equal(peacefulMusic(0,'Winter'),'harp');assert.equal(peacefulMusic(0,'Summer'),'village');assert.equal(peacefulMusic(2,'Summer'),'folk');
 });

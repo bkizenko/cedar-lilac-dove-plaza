@@ -1,3 +1,8 @@
+## Seasonal instrumental variety — 2026-10-30
+
+- [x] ~~Add licensed solo harp for calm winters and acoustic folk for developed summer villages.~~ Early summers/spring retain piano; autumn folk remains. Existing fades, quiet gaps, mute and background pausing apply. Downloaded original Evening Fall (Harp) by Kevin MacLeod from Incompetech; composer lists harp only and CC BY4.0. Attribution/source/license/hash recorded in THIRD_PARTY_ASSETS.md and in-game credits.
+- Eight music checks pass, including instrumental default selections and seasonal/age changes; typecheck/build pass. Download verified as MPEG audio. Full listening/transition quality and a richer civilization/adventure orchestral library remain open. No commercial-game recordings used.
+
 ## Narrow construction tray verification — 2026-10-30
 
 - [x] ~~Keep the expanded construction tray's collapse button visible on narrow screens.~~ Its inner flex child can shrink; the building list scrolls within that slot while the collapse button stays fixed and reachable.
