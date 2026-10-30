@@ -1,3 +1,9 @@
+## Cross-system regression pass — 2026-10-29
+
+- [x] ~~Protect paused paid transport upgrades from local equipment handoffs.~~ A cart project must retain its original sled; sharing cannot invalidate project/save ownership.
+- All nine haulage tests pass, including the new paid-upgrade exception; typecheck/build pass.
+- Full `npm test` is running in session 16081, output `/tmp/hearth-full-regression.log`. It has not yet completed; do not report the full suite passed. Revalidate the handle and inspect failures before adding the next major feature. The suite started before the one-line paid-upgrade guard; that guard has its own rerun above.
+
 ## Local transport handoffs — 2026-10-29
 
 - [x] ~~Idle sled/cart owners can hand equipment to nearby unequipped gatherers leaving on a longer journey.~~ Both must be safe available adults of the same village, within 2.4m at a completed hall/store/outpost with a clear step between them. Actual ownership changes once; no inventory or cargo is created.

@@ -197,7 +197,7 @@ export function validHaulageTribe(v: unknown) {
  * Boats and bonded animals stay with their handlers; direct orders remain owned. */
 export function shareLocalTransport(g:Game){
  if(g.clockState().period==='Night'||g.state.weather==='storm')return 0;
- const safe=(u:HaulageUnit)=>civilian(g,u)&&available(g,u)&&!u.jobLock&&!u.buildOrder&&!u.selected&&!u.resting&&!u.shelterId&&!u.tributeJourney;
+ const safe=(u:HaulageUnit)=>civilian(g,u)&&available(g,u)&&!u.haulageWork&&!u.jobLock&&!u.buildOrder&&!u.selected&&!u.resting&&!u.shelterId&&!u.tributeJourney;
  const donors=g.state.units.filter(u=>safe(u)&&u.order==='idle'&&(u.haulage==='sled'||u.haulage==='cart'));
  if(!donors.length)return 0;
  const recipients=g.state.units.filter(u=>safe(u)&&!u.haulage&&u.order==='gather'&&u.node&&
