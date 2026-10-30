@@ -1,3 +1,4 @@
+import {plotModules} from './plotModules';
 import {architectureStyle} from "./architecture";
 import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
 import * as THREE from "three";
@@ -138,6 +139,8 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
+  buildingSyncIn=0;
+  buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
   canoePaddles: THREE.InstancedMesh | null = null;
@@ -715,7 +718,7 @@ export class WorldView {
     const geos = buildingGeos();
     for (const type of BLD_TYPES) {
       const g = geos[type];
-      const capacity=["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
+      const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
       const timberMaterial=this.mats.timber.clone();
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
@@ -743,6 +746,7 @@ export class WorldView {
       if (g.extra) {
         extra = new THREE.InstancedMesh(g.extra, this.mats[g.extraMat || "stone"], capacity);
         extra.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        if(type==="farm"){extra.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(capacity*3),3);}
         extra.castShadow = true;
         extra.count = 0;
         extra.frustumCulled = false;
@@ -921,7 +925,7 @@ export class WorldView {
       for (const mesh of [meshes.timber, meshes.roof, meshes.extra])
         if (mesh) {
           mesh.computeBoundingSphere();
-          sources.set(mesh, entities);
+          sources.set(mesh, this.buildingInstances.get(mesh)??entities);
         }
     }
     for (const [type, mesh] of this.unitMeshes) {
@@ -985,7 +989,8 @@ export class WorldView {
     this.updateDay(game, dt);
     this.syncNature(game);
     this.syncWildlife(game);
-    this.syncBuildings(game);
+    this.buildingSyncIn-=dt;
+    if(this.buildingSyncIn<=0){this.syncBuildings(game);this.buildingSyncIn=.1;}
     this.syncUnits(game);
     this.syncTrails(game);
     this.syncCargo(game);
@@ -1288,59 +1293,53 @@ export class WorldView {
   private syncBuildings(game: Game) {
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
-    for (const b of game.state.buildings) {
-      if (b.hp <= 0) continue;
-      grouped.get(b.type)?.push(b);
-    }
+    for (const b of game.state.buildings) if(b.hp>0)grouped.get(b.type)?.push(b);
     for (const type of BLD_TYPES) {
-      const list = grouped.get(type)!;
-      const meshes = this.bldMeshes.get(type);
-      if (!meshes) continue;
-      const cap = instCap(meshes.timber);
-      const n = Math.min(list.length, cap);
-      for (let i = 0; i < n; i++) {
-        const b = list[i];
-        const seen = b.team === 0 || game.exploredAt(b.x, b.z);
-        const st = TEAM_STYLE[b.team] || TEAM_STYLE[0];
-        const identity=this.villageStyle(game,b.team);
-        const done = b.build >= 1;
-        const ys = !seen ? 0.001 : b.plannedCost ? .08 : done ? 1 : 0.22 + 0.78 * Math.max(0, b.build);
-        _p.set(b.x, b.y, b.z);
-        const terrainWork=type==="farm"||type==="dock";
-        const limit=type==="farm"?0.5:0.2;
-        const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(b.x,b.z+2)-game.height(b.x,b.z-2))/4))):0;
-        const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(b.x+2,b.z)-game.height(b.x-2,b.z))/4))):0;
-        const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
-        _e.set(pitch, fort?0:st.yaw, roll);
-        if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);}
-        _q.setFromEuler(_e);
-        _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
-        if(fort)_s.set(seen?1:.001,seen?ys:.001,seen?1:.001);
-        if(type==="farm"||type==="warehouse"){_e.y=0;_q.setFromEuler(_e);_s.x=seen?b.w/BUILDINGS[type].w:.001;_s.z=seen?b.d/BUILDINGS[type].d:.001;}
-        if(b.bridge){_s.x=seen?1:.001;_s.y=seen?ys:.001;_s.z=seen?Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az)/12:.001;}
-        _m.compose(_p, _q, _s);
-        meshes.timber.setMatrixAt(i, _m);
-        if (seen && b.build < 0.55) {
-          _s.set(0.001, 0.001, 0.001);
-          _m.compose(_p, _q, _s);
-        }
-        if(seen&&b.build>=.55){_s.y*=identity.roofHeight;_m.compose(_p,_q,_s);}
-        if(type==="gate"&&b.gateOpen){_s.set(.001,.001,.001);_m.compose(_p,_q,_s);}
-        meshes.roof.setMatrixAt(i, _m);
-        meshes.extra?.setMatrixAt(i, _m);
-        _c.set(b.plannedCost ? "#87b7cb" : type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":identity.timber);
-        if (meshes.timber.instanceColor) meshes.timber.setColorAt(i, _c);
-        _c.set(type === "cornerstone" ? game.tribe(b.team).color : identity.roof);
-        if (meshes.roof.instanceColor) meshes.roof.setColorAt(i, _c);
+      const meshes=this.bldMeshes.get(type);if(!meshes)continue;
+      const counts={timber:0,roof:0,extra:0};
+      for(const mesh of [meshes.timber,meshes.roof,meshes.extra])if(mesh){
+        let owners=this.buildingInstances.get(mesh);if(!owners){owners=[];this.buildingInstances.set(mesh,owners);}owners.length=0;
       }
-      meshes.timber.count = n;
-      meshes.roof.count = n;
-      if (meshes.extra) meshes.extra.count = n;
-      meshes.timber.instanceMatrix.needsUpdate = true;
-      meshes.roof.instanceMatrix.needsUpdate = true;
-      if (meshes.extra) meshes.extra.instanceMatrix.needsUpdate = true;
-      if (meshes.timber.instanceColor) meshes.timber.instanceColor.needsUpdate = true;
-      if (meshes.roof.instanceColor) meshes.roof.instanceColor.needsUpdate = true;
+      for(const b of grouped.get(type)!) {
+        const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
+        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team);
+        const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
+        const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
+        const scalable=type==="farm"||type==="warehouse";
+        const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
+          const mesh=meshes[part];if(!mesh||counts[part]>=instCap(mesh))return;
+          const wx=b.x+x,wz=b.z+z;
+          const ground=type==="farm"?game.height(wx,wz):b.y;
+          _p.set(wx,ground,wz);
+          const terrainWork=type==="farm"||type==="dock",limit=type==="farm"?.5:.2;
+          const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
+          const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
+          _e.set(pitch,fort||scalable?0:st.yaw,roll);
+          _s.set(scalable?sx:fort?1:st.sx,ys*(scalable||fort?1:st.sy),scalable?sz:fort?1:st.sz);
+          if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
+          if(part!=="timber"){
+            if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
+            else if(type!=="farm")_s.y*=identity.roofHeight;
+          }
+          if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
+          _q.setFromEuler(_e);_m.compose(_p,_q,_s);
+          const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
+          if(mesh.instanceColor){
+            _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
+            if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
+            mesh.setColorAt(i,_c);
+          }
+        };
+        if(type==="warehouse"){
+          for(const m of plotModules(b))for(const part of ['timber','roof','extra'] as const)write(part,m.x,m.z,m.sx,m.sz);
+        }else if(type==="farm"){
+          write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
+          // One tool shed per field; its size stays human-scaled as the plot grows.
+          write('roof',(b.w-BUILDINGS.farm.w)/2,(b.d-BUILDINGS.farm.d)/2,1,1);
+          for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
+        }else for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
+      }
+      for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
     this.syncEraDetails(game);
   }
@@ -1352,7 +1351,7 @@ export class WorldView {
       if(b.hp<=0||b.build<1||b.plannedCost)continue;
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
-        ['farm','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
+        ['warehouse','farm','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
       const identity=this.villageStyle(game,b.team),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
@@ -1595,10 +1594,10 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
-    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(size?size.w/BUILDINGS[type].w:1,1,size?size.d/BUILDINGS[type].d:1);
+    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
-    const key = type + (ok ? "-ok" : "-bad") + qualityStep;
+    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size);
     if (this.ghost.userData.key === key) return;
     this.clearGhost();
     this.ghost.userData.key = key;
@@ -1617,10 +1616,15 @@ export class WorldView {
     mr.opacity = 0.5;
     mr.depthWrite = false;
     mr.color.set(ok ? "#8aaa58" : "#a05048");
-    this.ghost.add(new THREE.Mesh(meshes.timber.geometry, mt));
-    this.ghost.add(new THREE.Mesh(meshes.roof.geometry, mr));
+    const add=(geometry:THREE.BufferGeometry,material:THREE.Material,x=0,z=0,sx=1,sz=1)=>{const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,0,z);mesh.scale.set(sx,1,sz);this.ghost.add(mesh);};
+    if(size&&type==='warehouse'){
+      for(const m of plotModules({type,...size} as import("@/game/types").Building)){add(meshes.timber.geometry,mt,m.x,m.z,m.sx,m.sz);add(meshes.roof.geometry,mr,m.x,m.z,m.sx,m.sz);}
+    }else if(size&&type==='farm'){
+      add(meshes.timber.geometry,mt,0,0,size.w/BUILDINGS.farm.w,size.d/BUILDINGS.farm.d);
+      add(meshes.roof.geometry,mr,(size.w-BUILDINGS.farm.w)/2,(size.d-BUILDINGS.farm.d)/2);
+    }else{add(meshes.timber.geometry,mt);add(meshes.roof.geometry,mr);}
     const pad = new THREE.Mesh(
-      new THREE.PlaneGeometry(8, 8),
+      new THREE.PlaneGeometry(size?.w??8, size?.d??8),
       new THREE.MeshBasicMaterial({
         color: tint,
         transparent: true,
@@ -2301,7 +2305,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
-    this.bldMeshes.clear();
+    this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();
     this.haulageMeshes.clear();
     this.canoePaddles=null;

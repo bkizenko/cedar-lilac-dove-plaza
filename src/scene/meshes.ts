@@ -147,6 +147,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   const hut = thatchHut(2.6, 1.9, 2.5);
   const th = hall(5.4, 4.6, 2.6, 1.7, true);
   const farmTimber = [
+    box(7.4,.06,7.4,0,.01,0),
     box(0.18, 1.15, 0.18, -3.6, 0, -3.6),
     box(0.18, 1.15, 0.18, 3.6, 0, -3.6),
     box(0.18, 1.15, 0.18, -3.6, 0, 3.6),
@@ -157,13 +158,14 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     box(0.12, 0.12, 7.4, 3.6, 0.95, 0),
   ];
   const farmExtra = [
-    box(7.4, 0.1, 7.4, 0, 0.02, 0),
+
     box(0.4, 0.48, 6.2, -2.4, 0.12, 0),
     box(0.4, 0.48, 6.2, -1.2, 0.12, 0),
     box(0.4, 0.48, 6.2, 0, 0.12, 0),
     box(0.4, 0.48, 6.2, 1.2, 0.12, 0),
     box(0.4, 0.48, 6.2, 2.4, 0.12, 0),
   ];
+  for(let row=0;row<5;row++)for(let stalk=0;stalk<5;stalk++)farmExtra.push(box(.22,.18,.3,-2.4+row*1.2,.6,-2.5+stalk*1.2));
   const lumberT: THREE.BufferGeometry[] = [
     cyl(0.9, 1.0, 0.5, -1.4, 0, 0.4, 8),
     box(3.4, 1.5, 2.4, 1.2, 0, 0),
@@ -190,7 +192,8 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   const quarryE: THREE.BufferGeometry[] = [new THREE.CylinderGeometry(2.4, 1.6, 0.8, 8), box(1.8, 0.6, 1.2, 1.6, 0, 1.1)];
   quarryE[0].translate(0, 0.15, 0);
   const wareT = [box(5.4, 1.8, 4.6, 0, 0, 0)];
-  const wareR = [box(6.2, 0.22, 3.4, 0, 1.8, 0, 0.5), box(6.2, 0.22, 3.4, 0, 1.8, 0, -0.5)];
+  const wareR = Array.from({length:4},(_,i)=>box(6.2,.28,5.4-i*1.25,0,1.8+i*.28,0));
+  for(const x of [-2.65,2.65])for(const z of [-2.2,0,2.2])wareT.push(box(.2,2,.2,x,0,z));
   const barT: THREE.BufferGeometry[] = [
     box(7.2, 2.2, 6.4, 0, 0, 0),
     box(2.6, 4.2, 2.6, -3.4, 0, -3.0),
@@ -262,6 +265,8 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     quarry: { timber: merge(quarryT), roof: merge([box(0.1, 0.1, 0.1, 0, 0, 0)]), extra: merge(quarryE), extraMat: "stone" },
     warehouse: { timber: merge(wareT), roof: merge(wareR), extra:merge([
       box(1.2,1.5,.12,0,.02,2.34),box(.7,.55,.12,-1.8,.9,2.34),
+      box(5.4,.12,.12,0,1.6,2.34),box(5.4,.12,.12,0,.18,2.34),
+      ...[-2.65,-.7,.7,2.65].map(x=>box(.13,1.8,.14,x,0,2.34)),
       box(.8,.65,.8,-1.8,0,2),box(.65,.5,.65,-1.8,.65,2),
       box(.8,.7,.8,1.8,0,2),box(.8,.1,.9,1.8,.35,2)
     ]),extraMat:'dark' },

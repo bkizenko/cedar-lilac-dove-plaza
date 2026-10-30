@@ -1,3 +1,25 @@
+## Modular plot visuals and production reference audit — 2026-10-29
+
+- [x] Larger stores repeat structural bays, with normal-scale doors, crates and stepped roofs. Larger fields keep one tool shed and repeat crop rows; planted/tended/ripened state changes crop height and color. No new gameplay entities or save migration.
+- [x] Every rendered bay maps back to its actual building for selection. Shared instancing keeps draw calls independent of bay count; static building transforms refresh at 10 Hz rather than every frame. Full busy-village performance remains unverified.
+- Validation: six architecture/rendering tests pass, including bay ownership, fog hiding, bounded modules, cached layouts and crop growth. Typecheck/build pass. Production preview visually checked a completed two-bay store and larger unsown field in a disposable test copy; no console errors.
+- [ ] Existing-plot expansion and more varied cultural architecture remain unfinished.
+
+### Dawn of Man reference check: production and settlement priorities
+
+Primary sources: [Madruga FAQ](https://madrugaworks.com/dawnofman/faq.php), [developer farming/combat updates](https://store.steampowered.com/news/posts/?appgroupname=Dawn+of+Man&appids=858810&enddate=1596459501&feed=steam_community_announcements).
+
+The FAQ identifies workload, available inputs/tools and production limits as reasons work may stall. Animal roles differ: goats/cattle give milk, sheep wool, pigs meat, horses/donkeys traction. Leather needs raw skins and tannin; warm clothing differs from summer clothing. These support a small, legible chain of useful specializations rather than unrelated production buttons. They are reference mechanics, not proof our equivalents are complete.
+
+The developer updates add animal-drawn plowing, transport parking, row-ordered sowing/harvesting, adult-relative equipment targets, armor with distinct manufacturing, gate rally points and direct-command protection. Apply this to the remaining backlog in this order:
+1. Show field labor, yield and missing tools beside the selected field; allocate actual row work positions rather than everyone standing at the building center.
+2. Finish shared transport parking/assignment, animal breeding and traction. Current personal pack goats/canoes are only the first layer.
+3. Production targets tied to population, with exact missing inputs and reserved resources; short user-controlled queues.
+4. Armor and defense rally controls, preserving direct RTS orders during danger.
+5. Seasonal animal products, clothing, tool wear and repair with visible shortages. Do not increase starvation/rest penalties to substitute for strategic depth.
+
+This is a focused primary-source audit, not the promised exhaustive mechanic-by-mechanic review. Rival cities, international relations, organic cultures and later administration also go beyond these references and remain separate major work.
+
 ## Scalable new field and store plots — 2026-10-29
 
 - [x] Drag a rectangular farm/store footprint, up to three times normal width and depth. Keyboard: [ / ] change width; Shift+[ / ] change depth. Live placement shows its material cost.
