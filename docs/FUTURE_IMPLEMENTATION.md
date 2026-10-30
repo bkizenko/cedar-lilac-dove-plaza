@@ -2,8 +2,8 @@
 
 - Observed resumed seed-345 simulation at year 7: rivals reached 94/80 people, 25/24 storehouses, but retained only 26/35 timber and remained Stone Age. Food buffers exceeded 1,000 seconds. The annual-storage target continually treated more stores as essential spending.
 - [x] ~~Protect age materials from optional annual-storage growth once population qualifies.~~ Two basic stores and the shared age food-buffer capacity remain essential; further stores use surplus. Younger or food-insecure settlements may still prioritize annual capacity.
-- Validation: 38 rival-development tests, typecheck and production build pass. Includes 79-log reserve protection, genuine surplus spending and essential-storage exception. A full-state replay is running; long-run recovery is not yet proven.
-- Audit handles for continuation: baseline session 39755 writes `/tmp/hearth-current-rivals.log` and snapshot `/tmp/hearth-current-rivals.json`; changed-policy 600-second replay session 59947 writes `/tmp/hearth-storage-replay.log` and snapshot `/tmp/hearth-storage-replay.json`. Check whether these handles are live before polling; never infer completion from files alone.
+- Validation: 38 rival-development tests, typecheck and production build pass. Includes 79-log reserve protection, genuine surplus spending and essential-storage exception. The completed 600-second full-state replay advanced team 1 to Bronze (98 people) and team 2 to Iron (84 people), with no simulation errors. Both started Stone Age at 94/80 people.
+- Both audit sessions are terminal (39755 and 59947). Baseline completed through year 9 with both rivals still Stone Age (125/113 people, 45/51 timber). Evidence: `/tmp/hearth-current-rivals.log`; changed-policy evidence: `/tmp/hearth-storage-replay.log`. This is one continued seed-345 world, not a multi-seed balance certification. Baseline and changed-policy snapshots remain in the corresponding `.json` files for further investigation.
 
 ### Additional Dawn of Man primary-source design audit
 
