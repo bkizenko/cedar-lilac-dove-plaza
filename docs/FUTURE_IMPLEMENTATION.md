@@ -1,3 +1,26 @@
+## Continuation checkpoint — usage reserve, 2026-10-29
+
+Implementation stops at 78% account usage to preserve the user's requested 20% reserve. Do not consume the available reset credit. The overhaul remains incomplete. Latest playable source: `836787c`; permanent server remains 8086. Preserve the player's save. Recent UI changes still require visual verification after the Mac is unlocked.
+
+### Measured performance next step
+
+A disposable saved world with 199 residents and 252 buildings simulated 100 seconds in 13.80 wall seconds, with no simulation errors. This measures simulation only, not browser FPS. Profile: `/tmp/hearth-simulation.cpuprofile`; reproducer: `/tmp/hearth-profile.mjs`; output: `/tmp/hearth-profile.log`. Session 10947 is terminal.
+
+Largest sampled self costs: workerAI 1,960ms; work assignment 1,589ms; rest-site filtering 1,157ms; foodWorkTarget 1,003ms; interactionSpot 739ms; emergencyResponse 591ms; solidBuilding 530ms; stockCap 461ms. Next optimize repeated per-team storage/food-target queries and rest-site searches with correctly invalidated per-step caches; retain direct commands, dynamic gates, destruction and new construction. Compare the same saved input and deterministic seed, then check gameplay before claiming a speedup.
+
+### Eight workstreams still open
+
+1. **Fields and production:** scalable fields/stores, expansions, rows, land averages and crop planning are delivered. Still needs multi-season balance, row crop state, irrigation and deeper production chains.
+2. **Rival economy/trade:** resource planning, reserve protection, physical barter alternatives and crop choices exist. One saved-world replay now reaches Bronze/Iron. Multi-seed prosperity, reliable trade networks and comparable adversaries remain unproven.
+3. **Organic civilizations:** basic geography-sensitive behavior exists; distinct evolving cultures, coherent architectural styles and richer rise/fall remain incomplete.
+4. **Transport/animals:** individual canoes, sleds, carts, pack goats and local land-equipment handoffs exist. Independent depots, passenger fleets, breeding, pens and draft animals remain open.
+5. **War/captivity:** existing raids, finite loot, weapons, fortifications and partial captive/tribute mechanics remain. Full formations/siege, organized revolts, ransom and complete physical captivity remain open.
+6. **Discovery/technology:** ancient yields, crop trials and practical equipment exist. Material experimentation, deeper metallurgy, wear/repair and coherent later-age production remain open.
+7. **Cities/administration:** expansion foundations exist; regional storage/logistics, density, multi-town administration and later cities remain open.
+8. **Presentation/performance:** recent clearer controls and modular plot visuals exist; visual QA is pending. Detailed cohesive objects, broader UI cleanup, culture/era art/music, measured optimization and full playthrough balancing remain open.
+
+The 120-item human-development catalogue and older detailed requirements below remain authoritative scope; these eight headings are a navigation summary, not replacement acceptance criteria. Do not mark the full project complete from narrow test results.
+
 ## Hunting and taming coordination — 2026-10-29
 
 - [x] ~~Automatic and already-assigned hunters respect their village's living goat-taming reservations.~~ Work planning refreshes when taming starts. Other tribes can still hunt the animal; a dead handler cannot reserve it forever. Saved paid taming progress remains protected.
