@@ -432,10 +432,26 @@ export function farmToolHeadGeo(): THREE.BufferGeometry {
 }
 
 export function pineGeo() {
-  return {trunk:merge([box(.4,3.1,.4,0,0,0)]),canopy:merge([
-    box(2.8,1.3,2.8,0,1.8,0),box(2.15,1.2,2.15,0,3,0),
-    box(1.5,1,1.5,0,4.1,0),box(.8,.8,.8,0,5,0)
-  ])};
+  // Shared low-poly geometry: roots, exposed boughs and offset foliage tiers.
+  // Every tree still renders through the existing two instanced draw calls.
+  const trunk=merge([
+    box(.4,3.1,.4,0,0,0),box(.72,.28,.65,0,0,0),
+    box(1.4,.18,.18,0,1.55,0,.18),box(.18,.16,1.25,0,2.35,0,-.22),
+  ]);
+  const canopy=merge([
+    box(2.65,.9,2.45,-.12,1.9,.08),
+    box(1.35,.65,1.3,-.85,2.15,-.1),box(1.25,.65,1.35,.75,2.2,.22),
+    box(2.05,1.05,2.0,.12,2.85,-.12),
+    box(1.1,.6,1.2,-.55,3.4,.18),
+    box(1.4,.95,1.45,-.08,3.95,.02),box(.7,.75,.75,.06,4.85,-.08),
+  ]);
+  const pos=canopy.getAttribute('position'),colors=new Float32Array(pos.count*3);
+  for(let i=0;i<pos.count;i++){
+    const light=.72+.28*Math.min(1,pos.getY(i)/5.6);
+    colors[i*3]=light;colors[i*3+1]=light;colors[i*3+2]=light;
+  }
+  canopy.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  return {trunk,canopy};
 }
 
 export function rockGeo() {

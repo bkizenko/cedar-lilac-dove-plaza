@@ -1,3 +1,8 @@
+## Shared tree geometry detail — 2026-10-30
+
+- [x] ~~Add root base, exposed branch bars, offset foliage lobes and height shading to the shared tree model.~~ Existing two instanced draw calls remain; trunk and canopy each stay under 160 triangles. No tree identity, save or harvesting changes.
+- Geometry budget/finite-coordinate/color checks pass; typecheck/build pass. A standalone projection of the actual geometry was inspected at `/tmp/hearth-tree-detail.png`. This is a geometry preview, not an in-game screenshot or browser FPS verification. Species diversity, broadleaf silhouettes and broader object/art overhaul remain unfinished.
+
 ## Main rivers and tributaries — 2026-10-30
 
 - [x] ~~New worlds use a main channel with narrower joining tributaries instead of every river crossing the map edge to edge.~~ Branch curves join sampled main-channel points exactly, with smooth bends. New-world v5 has fewer, smaller ford pads to avoid filling narrow channels. Existing v1–v4 saves retain their original terrain.

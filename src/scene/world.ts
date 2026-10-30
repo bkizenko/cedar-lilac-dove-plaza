@@ -559,6 +559,7 @@ export class WorldView {
       Math.max(nTree, 1),
     );
     (this.treesLeaf.material as THREE.MeshStandardMaterial).color.set("#ffffff");
+    (this.treesLeaf.material as THREE.MeshStandardMaterial).vertexColors=true;
     (this.treesLeaf.material as THREE.MeshStandardMaterial).side = THREE.DoubleSide;
     this.treesLeaf.instanceColor = new THREE.InstancedBufferAttribute(
       new Float32Array(Math.max(nTree, 1) * 3),
