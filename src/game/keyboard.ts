@@ -56,7 +56,7 @@ export class KeyboardCommands {
       e.keys.clear();
       return;
     }
-    if (ui && !camera) return;
+    if (ui && !camera && !(g.state.placing&&["BracketLeft","BracketRight"].includes(code))) return;
     if (ui && camera) {
       event.preventDefault();
       e.canvas.focus();
@@ -68,6 +68,9 @@ export class KeyboardCommands {
         e.enterIsland();
       }
       return;
+    }
+    if(g.state.placing&&["farm","warehouse"].includes(g.state.placing)&&["BracketLeft","BracketRight"].includes(code)){
+      event.preventDefault();e.resizePlot(code==="BracketRight"?1:-1,event.shiftKey);return;
     }
     const n = /^Digit[1-9]$/.test(code) ? Number(code.slice(-1)) : 0;
     if (event.ctrlKey || event.altKey) {

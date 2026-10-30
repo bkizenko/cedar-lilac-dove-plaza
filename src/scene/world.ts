@@ -6,7 +6,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
-import { FOW, HALF, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
+import { BUILDINGS, FOW, HALF, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
 import type { Game } from "@/game/sim";
 import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
@@ -1316,6 +1316,7 @@ export class WorldView {
         _q.setFromEuler(_e);
         _s.set(seen ? st.sx : 0.001, seen ? ys * st.sy : 0.001, seen ? st.sz : 0.001);
         if(fort)_s.set(seen?1:.001,seen?ys:.001,seen?1:.001);
+        if(type==="farm"||type==="warehouse"){_e.y=0;_q.setFromEuler(_e);_s.x=seen?b.w/BUILDINGS[type].w:.001;_s.z=seen?b.d/BUILDINGS[type].d:.001;}
         if(b.bridge){_s.x=seen?1:.001;_s.y=seen?ys:.001;_s.z=seen?Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az)/12:.001;}
         _m.compose(_p, _q, _s);
         meshes.timber.setMatrixAt(i, _m);
@@ -1586,7 +1587,7 @@ export class WorldView {
     /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -1594,7 +1595,7 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
-    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(1,1,1);
+    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(size?size.w/BUILDINGS[type].w:1,1,size?size.d/BUILDINGS[type].d:1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep;

@@ -316,7 +316,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               ? "Click beside a clump of berries or timber."
               : hud.placing === "cornerstone"
                 ? "Outpost: choose explored dry ground at least 64m from your halls and outposts. Place a plan even without 70 logs."
-                : `Click open grass to raise a ${BUILDINGS[hud.placing].name}.`)}
+                : ["farm","warehouse"].includes(hud.placing)?"Drag to size · [ ] width · Shift+[ ] depth":`Click to place ${BUILDINGS[hud.placing].name}.`)}
           </div>
         ) : hud.banner ? (
           <div className="hud-toast">{hud.banner}</div>
@@ -731,12 +731,12 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       </div>
       )}
       {!founding && hud.placing && hud.placeIssue ? (
-        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-blood/40 bg-ink/90 px-3 py-1.5 text-[11px] text-blood">
-          {hud.placeIssue}
+        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-blood/40 bg-ink/90 px-3 py-2 text-sm text-blood">
+          {hud.placeIssue}{hud.plotSummary&&<div className="text-parchment">{hud.plotSummary}</div>}
         </div>
       ) : !founding && hud.placing ? (
-        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-ok/30 bg-ink/90 px-3 py-1.5 text-[11px] text-ok">
-          {founding ? "Click the grass" : "Click to build or plan · missing materials wait in the queue"}
+        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-ok/30 bg-ink/90 px-3 py-2 text-sm text-ok">
+          {hud.plotSummary || (founding ? "Click the grass" : "Click to build or plan")}
         </div>
       ) : null}
 

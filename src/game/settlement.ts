@@ -1,3 +1,4 @@
+import {plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRange,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
@@ -50,7 +51,7 @@ export function reserveSeconds(g: Game, team = 0) {
 /** Shared by real ripening and read-only production forecasts. */
 export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b.crop?.water??1){
   const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
-  return Math.floor(planted*(160+100*tended)*(b.fertility??1)*fields*habitatAt(g,b.x,b.z).crops*water*cropYield(g,b)*(0.65+soilQuality(g,b.x,b.z)*0.5));
+  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*habitatAt(g,b.x,b.z).crops*water*cropYield(g,b)*(0.65+soilQuality(g,b.x,b.z)*0.5));
 }
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);
@@ -101,8 +102,8 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
   u.workReason =
     p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
   const open = GATHER_WORK_RATE * (b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1)*farmToolRate(u,p);
-  if (p === 0) c.planted = Math.min(1, c.planted + (dt / 180) * open);
-  else if (p === 1) c.tended = Math.min(1, c.tended + (dt / 220) * open);
+  if (p === 0) c.planted = Math.min(1, c.planted + (dt / (180*plotArea(b))) * open);
+  else if (p === 1) c.tended = Math.min(1, c.tended + (dt / (220*plotArea(b))) * open);
   else {
     u.gatherT += dt;
     const pace = 0.8 / open;
@@ -237,7 +238,7 @@ export class WorkBoard {
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))
-          add(b, "food", 3, calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
+          add(b, "food", Math.min(12,Math.ceil(3*plotArea(b))), calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
         if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency+65);
         if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
         if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);

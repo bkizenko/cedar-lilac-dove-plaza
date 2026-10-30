@@ -1,3 +1,4 @@
+import {plotArea,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
@@ -951,12 +952,13 @@ export class Game {
   }
 
   /** Shared by player placement, generated villages and arriving founders. */
-  dryFoundation(type: BldType, x: number, z: number, margin = 0) {
-    const d = BUILDINGS[type];
+  dryFoundation(type: BldType, x: number, z: number, margin = 0, size?:PlotSize) {
+    const d = size??BUILDINGS[type];
     if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + margin + 1)) return false;
-    for (let iz = 0; iz <= 4; iz++) for (let ix = 0; ix <= 4; ix++) {
-      const px = x - d.w / 2 - margin + ix * (d.w + margin * 2) / 4;
-      const pz = z - d.d / 2 - margin + iz * (d.d + margin * 2) / 4;
+    const nx=Math.max(4,Math.ceil(d.w/2)),nz=Math.max(4,Math.ceil(d.d/2));
+    for (let iz = 0; iz <= nz; iz++) for (let ix = 0; ix <= nx; ix++) {
+      const px = x - d.w / 2 - margin + ix * (d.w + margin * 2) / nx;
+      const pz = z - d.d / 2 - margin + iz * (d.d + margin * 2) / nz;
       if (this.height(px, pz) < this.world.waterY + 0.28) return false;
     }
     return true;
@@ -995,10 +997,11 @@ export class Game {
     return b;
   }
 
-  placementIssue(type: BldType, x: number, z: number, _team = 0): string | null {
+  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize): string | null {
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
-    const d = BUILDINGS[type];
+    if(size&&!validPlot(type,size))return "Invalid plot size";
+    const d = size??BUILDINGS[type];
     if(type==="bridge"){
       const span=planBridge(this,x,z);
       if(!span)return "Aim at a narrow shallow river with two gentle, clear banks";
@@ -1009,7 +1012,13 @@ export class Game {
     if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
-    if (type !== "dock" && !this.dryFoundation(type, x, z)) return "Can't raise that in the water";
+    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
+    if(size){
+      const corners=[[-1,-1],[-1,1],[1,-1],[1,1]];
+      if(_team===0&&corners.some(([a,b])=>!this.exploredAt(x+a*d.w/2,z+b*d.d/2)))return "Explore the whole plot first";
+      if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+1&&Math.abs(n.z-z)<d.d/2+1))return "Clear resources from the plot first";
+      if(this.state.buildings.some(b=>b.hp>0&&Math.abs(b.x-x)<(b.w+d.w)/2+1&&Math.abs(b.z-z)<(b.d+d.d)/2+1))return "Too close to another building";
+    }
     if (type !== "quarry") {
       for (const n of this.state.stones) {
         if (n.amount <= 0) continue;
@@ -1083,8 +1092,8 @@ export class Game {
     return null;
   }
 
-  placementValid(type: BldType, x: number, z: number, team = 0) {
-    return this.placementIssue(type, x, z, team) === null;
+  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize) {
+    return this.placementIssue(type, x, z, team,size) === null;
   }
 
   snapQuarry(x: number, z: number) {
@@ -1264,8 +1273,8 @@ export class Game {
     return null;
   }
 
-  placeBuilding(type: BldType, x: number, z: number, team = 0) {
-    if (this.state.ended) return false;
+  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize) {
+    if (this.state.ended || (size&&!validPlot(type,size))) return false;
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
@@ -1297,7 +1306,7 @@ export class Game {
       }
       return false;
     }
-    const cost = founding ? {} : buildingCost(type,this,team);
+    const cost = founding ? {} : buildingCost(type,this,team,size);
     const planned=team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost))return false;
     if (type === "quarry" && this.height(x,z)<10) {
@@ -1308,18 +1317,19 @@ export class Game {
       }
     }
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
-    const spot = this.placementValid(type, x, z, team)
+    const spot = this.placementValid(type, x, z, team,size)
       ? { x, z }
-      : this.findPlaceSpot(type, x, z, team);
+      : size?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
-        this.banner(this.placementIssue(type, x, z, team) || "Can't build there", 1.8);
+        this.banner(this.placementIssue(type, x, z, team,size) || "Can't build there", 1.8);
         this.onSfx("invalid");
       }
       return false;
     }
     if(!planned)this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team);
+    if(size){b.w=size.w;b.d=size.d;}
     if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
     if(planned)b.plannedCost=cost;
     if (planned || BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
@@ -1398,7 +1408,7 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = BUILD_TIME[b.type] || 16;
+    const need = (BUILD_TIME[b.type] || 16)*plotArea(b);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
@@ -5433,7 +5443,7 @@ export class Game {
     if (team === 0 && hasTradition(this, "winter-stores")) cap += 80;
     for (const b of this.state.buildings) {
       if (b.team !== team || !this.finished(b)) continue;
-      if (b.type === "warehouse") cap += 200;
+      if (b.type === "warehouse") cap += Math.floor(200*plotArea(b));
       else if (b.type === "townhall") cap += 80;
       else if (b.type === "hut") cap += 18;
     }

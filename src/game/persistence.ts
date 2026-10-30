@@ -1,3 +1,4 @@
+import {scalablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
 import {reconcileTradeReservations} from "./tradeReservations";
@@ -400,6 +401,7 @@ export function decodeGame(raw: unknown): Game {
     if(b.excavation!==undefined){const e=b.excavation;if(!obj(e)||!num(e.remaining)||!num(e.dug)||!num(e.quality)||e.remaining<0||e.remaining>1200||e.dug<0||e.dug>1200||e.quality<.65||e.quality>1.65||(e.prospected!==undefined&&(!Number.isInteger(e.prospected)||e.prospected<0||e.prospected>3)))fail();}
     if (!(b.type in BUILDINGS) || !s.tribes[b.team] || !Array.isArray(b.queue)) fail();
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
+    if(scalablePlot(b.type)&&!validPlot(b.type,b))fail();
     if (b.build < 0 || b.build > 1) fail();
     if(b.plannedCost!==undefined){
       if(!obj(b.plannedCost)||b.build!==0||b.queue.length)fail();

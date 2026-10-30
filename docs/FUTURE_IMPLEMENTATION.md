@@ -1,3 +1,11 @@
+## Scalable new field and store plots — 2026-10-29
+
+- [x] Drag a rectangular farm/store footprint, up to three times normal width and depth. Keyboard: [ / ] change width; Shift+[ / ] change depth. Live placement shows its material cost.
+- [x] Area scales seeds/timber, construction time, sowing/tending labor, harvest potential, farm worker slots and completed storage capacity. Unfunded drawings retain the full bill and grant no benefits.
+- [x] Larger footprints check dry ground, explored corners, resources and building overlap; save/load retains their dimensions with bounded validation. Existing farms/stores stay at their current size. Fresh games already begin with zero seeds; no existing reserves were confiscated.
+- Validation: 18 construction/seed/plot checks passed across targeted runs; typecheck and production build passed. Browser verified keyboard resizing, 120-log double-width store plan with 58 logs retained and 62 missing, and no console errors in development.
+- Still open: expanding an already completed plot, modular store bays instead of stretched geometry, richer field detail, footprint-averaged soil/water forecasts, and full multi-season balancing. This does not complete the full overhaul.
+
 ## Ancient-site collection usability — 2026-10-29
 
 - [x] Direct move orders collect ancient finds on reaching a site, as exploration orders already do. Finds travel home as cargo; full hands retain their existing load.

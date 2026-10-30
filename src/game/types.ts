@@ -476,6 +476,7 @@ export type HudSnapshot = {
   objective: string;
   placing: BldType | null;
   placeIssue: string | null;
+  plotSummary?: string;
   banner: string | null;
   selection: HudSelection;
   canAge: boolean;

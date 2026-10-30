@@ -1,3 +1,5 @@
+import {buildingCost} from './construction';
+import {dragPlot,scalablePlot,type PlotSize} from './plots';
 import {planBridge,bridgeHeight} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
@@ -49,6 +51,14 @@ export class Engine {
   loggingMode = false;
   pointer = { x: 0, y: 0 };
   ghostPos = { x: 0, z: 0 };
+  plotStart: {x:number;z:number}|null=null;
+  plotSize: PlotSize|undefined;
+  plotWidth=1;plotDepth=1;
+  plotPreviewKey="";
+  resizePlot(delta:number,depth=false){
+    if(depth)this.plotDepth=Math.max(1,Math.min(3,this.plotDepth+delta));else this.plotWidth=Math.max(1,Math.min(3,this.plotWidth+delta));
+    this.updateGhost();this.game.banner(`Plot ${this.plotWidth} × ${this.plotDepth} · [ ] width · Shift+[ ] depth`,3);this.pushHud();
+  }
   disposed = false;
   ro: ResizeObserver | null = null;
   failFrames = 0;
@@ -285,6 +295,7 @@ export class Engine {
     }
     if (e.button === 0) {
       if (this.game.state.placing) {
+        this.plotStart=scalablePlot(this.game.state.placing)?this.view.groundAt(p.x,p.y):null;
         this.drag = null;
         return;
       }
@@ -345,6 +356,7 @@ export class Engine {
     this.panDrag = null;
     if (e.button === 0 && this.game.state.placing) {
       this.leftClick(p.x, p.y, e.shiftKey);
+      this.plotStart=null;this.plotSize=undefined;
       this.drag = null;
       this.updateGhost();
       this.pushHud();
@@ -394,7 +406,7 @@ export class Engine {
     }
     if (this.game.state.placing) {
       this.updateGhost();
-      this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0);
+      this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize);
       this.updateGhost();
       this.pushHud();
       return;
@@ -467,13 +479,21 @@ export class Engine {
         z = snap.z;
       }
     }
-    const okPlace = this.game.placementValid(type, x, z, 0);
-    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0);
+    this.plotSize=scalablePlot(type)&&(this.plotWidth>1||this.plotDepth>1)?{w:BUILDINGS[type].w*this.plotWidth,d:BUILDINGS[type].d*this.plotDepth}:undefined;
+    if(this.plotStart&&scalablePlot(type)&&Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z)>2){
+      const plot=dragPlot(type,this.plotStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
+    }
+    if(scalablePlot(type)){
+      const key=type+JSON.stringify(this.plotSize);
+      if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`Store · ${cost.wood} logs · drag to size`,4);}
+    }
+    const okPlace = this.game.placementValid(type, x, z, 0,this.plotSize);
+    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0,this.plotSize);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?planBridge(this.game,x,z):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize);
   }
 
   toggleLogging() {
@@ -486,6 +506,7 @@ export class Engine {
   }
 
   setPlacing(type: BldType | null) {
+    this.plotStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="farm"&&cultivationIssue(this.game)){
@@ -501,8 +522,8 @@ export class Engine {
           : t === "dock"
           ? "Fishing Dock — click the white posts by the water"
           : t === "farm"
-            ? "Farm — click the open grass near camp"
-            : t === "quarry"
+            ? "Farm — drag a rectangle. Larger fields need more seeds and workers."
+            : t === "warehouse" ? "Storehouse — drag a rectangle. Larger stores cost more and hold more." : t === "quarry"
               ? "Quarry — choose a stone outcrop or gentle mountain slope. Two miners dig and haul stone."
               : t === "bridge"
                 ? "Bridge — aim at a narrow shallow river. Explore both banks first; builders work from dry land."
@@ -781,7 +802,9 @@ export class Engine {
 
   pushHud() {
     try {
-      this.hud(this.game.snapshot());
+      const type=this.game.state.placing;
+      const cost=type&&scalablePlot(type)?buildingCost(type,this.game,0,this.plotSize):null;
+      this.hud({...this.game.snapshot(),plotSummary:cost?`${type==="farm"?cost.seeds+" seeds":cost.wood+" logs"} · Drag to size · [ ] width · Shift+[ ] depth`:undefined});
     } catch (err) {
       console.error(err);
     }
