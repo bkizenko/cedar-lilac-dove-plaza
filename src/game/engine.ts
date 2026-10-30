@@ -1,6 +1,6 @@
 import {buildingCost} from './construction';
 import {dragPlot,scalablePlot,type PlotSize} from './plots';
-import {planBridge,bridgeHeight} from './transport';
+import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
@@ -53,6 +53,7 @@ export class Engine {
   ghostPos = { x: 0, z: 0 };
   plotStart: {x:number;z:number}|null=null;
   plotSize: PlotSize|undefined;
+  bridgeSpan: BridgeSpan|undefined;
   plotWidth=1;plotDepth=1;
   plotPreviewKey="";
   resizePlot(delta:number,depth=false){
@@ -295,7 +296,7 @@ export class Engine {
     }
     if (e.button === 0) {
       if (this.game.state.placing) {
-        this.plotStart=scalablePlot(this.game.state.placing)?this.view.groundAt(p.x,p.y):null;
+        this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge")?this.view.groundAt(p.x,p.y):null;
         this.drag = null;
         return;
       }
@@ -406,7 +407,7 @@ export class Engine {
     }
     if (this.game.state.placing) {
       this.updateGhost();
-      this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize);
+      this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
       this.updateGhost();
       this.pushHud();
       return;
@@ -489,12 +490,19 @@ export class Engine {
       const key=type+JSON.stringify(this.plotSize);
       if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`Store · ${cost.wood} logs · drag to size`,4);}
     }
-    const okPlace = this.game.placementValid(type, x, z, 0,this.plotSize);
-    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0,this.plotSize);
+    this.bridgeSpan=undefined;
+    if(type==='bridge'&&this.plotStart&&Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z)>2){
+      this.bridgeSpan={ax:this.plotStart.x,az:this.plotStart.z,bx:g.x,bz:g.z};
+      x=(this.plotStart.x+g.x)/2;z=(this.plotStart.z+g.z)/2;
+      const cost=buildingCost(type,this.game,0,undefined,this.bridgeSpan);
+      this.game.banner(`Bridge · ${Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z).toFixed(0)} m · ${cost.wood} logs · ${cost.stone} stone`,2);
+    }
+    const okPlace = this.game.placementValid(type, x, z, 0,this.plotSize,this.bridgeSpan);
+    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
-    const bridge=type==="bridge"?planBridge(this.game,x,z):null;
+    const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
     this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize);
   }
 
@@ -508,7 +516,7 @@ export class Engine {
   }
 
   setPlacing(type: BldType | null) {
-    this.plotStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
+    this.bridgeSpan=undefined;this.plotStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="farm"&&cultivationIssue(this.game)){
@@ -528,7 +536,7 @@ export class Engine {
             : t === "warehouse" ? "Storehouse — drag a rectangle. Larger stores cost more and hold more." : t === "quarry"
               ? "Quarry — choose a stone outcrop or gentle mountain slope. Two miners dig and haul stone."
               : t === "bridge"
-                ? "Bridge — aim at a narrow shallow river. Explore both banks first; builders work from dry land."
+                ? "Bridge — drag bank to bank (5–28 m), or click a narrow river for an automatic crossing."
               : "Click the valley to raise a " + d.name + "  ·  Esc cancel",
         2.6,
       );

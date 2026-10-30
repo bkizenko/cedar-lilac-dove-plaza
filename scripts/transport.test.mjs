@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {planBridge} from '../src/game/transport.ts';
+import {planBridge,validBridgeSpan} from '../src/game/transport.ts';
 import {decodeGame,encodeGame} from '../src/game/persistence.ts';
 import {HALF,MAP,SEGS} from '../src/game/constants.ts';
 function river(g){for(let iz=0;iz<=SEGS;iz++)for(let ix=0;ix<=SEGS;ix++){const z=iz/SEGS*MAP-HALF;g.world.heights[iz*(SEGS+1)+ix]=Math.abs(z)<6?g.world.waterY-.6:4;}g.rebuildWalk();}
@@ -31,4 +31,21 @@ test('bridge span and construction survive saves; forged wide spans are rejected
 test('a command aimed at blocked water follows its fallback route rather than replanning each frame',()=>{
  const {g,u}=fixture(),b=g.makeBld('bridge',0,0,0);g.state.buildings=[b];g.rebuildWalk();u.selected=true;u.carry=8;u.carryType='wood';g.issueMove(4,0);
  drive(g,u,40,()=>g.workerAI(u,.1));assert.equal(u.order,'hold');assert.ok(u.z>4&&u.z<6);assert.equal(u.carry,8);assert.ok(g.walkable(u.x,u.z));
+});
+
+test('drawn bridges keep chosen banks, scale materials, and retain their span through saves',()=>{
+ const {g}=fixture();g.state.buildings=[g.makeBld('townhall',20,-30,0)];Object.assign(g.tribe(0),{wood:200,stone:50});
+ const span={ax:0,az:-12,bx:0,bz:12};assert.ok(validBridgeSpan(g,span));
+ assert.ok(g.placeBuilding('bridge',0,0,0,undefined,span));
+ const b=g.state.buildings.find(b=>b.type==='bridge');assert.deepEqual(b.bridge,span);
+ assert.equal(g.tribe(0).wood,152);assert.equal(g.tribe(0).stone,44);
+ assert.deepEqual(decodeGame(encodeGame(g)).state.buildings.find(b=>b.type==='bridge').bridge,span);
+});
+test('drawn bridge validation rejects obstructed, dry, steep, deep and overlong spans',()=>{
+ const {g}=fixture(),span={ax:0,az:-12,bx:0,bz:12};
+ assert.equal(validBridgeSpan(g,{...span,bz:30}),false);
+ g.state.buildings=[g.makeBld('hut',0,-12,0)];assert.equal(validBridgeSpan(g,span),false);g.state.buildings=[];
+ g.height=()=>4;assert.equal(validBridgeSpan(g,span),false);
+ g.height=(x,z)=>Math.abs(z)<6?-10:4;assert.equal(validBridgeSpan(g,span),false);
+ g.height=(x,z)=>z<0?4:20;assert.equal(validBridgeSpan(g,span),false);
 });

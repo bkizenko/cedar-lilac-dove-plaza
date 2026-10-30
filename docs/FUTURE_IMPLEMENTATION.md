@@ -1,3 +1,9 @@
+## Drawn bridges — 2026-10-30
+
+- [x] ~~Drag a bridge between chosen banks.~~ Drawn endpoints persist through construction and saves; invalid deep, dry, obstructed, steep or overlong spans are rejected. Click-to-survey remains available. Crossings over 16m use proportionally more materials; existing paid bridges retain their state.
+- Validation: 14 transport/crossing tests pass, including physical construction, carrying cargo across, bank selection, cost and save/load. Typecheck/build pass. Production preview renders, placement rejects dry land, Escape cancels, no console errors. A successful bank-to-bank mouse drag still needs broader terrain playtesting.
+- Next: stretchable defensive lines; organic terrain/forest/coast generation and graphics. Latest user permits resetting a village, but prefer save compatibility and separate new-world testing.
+
 ## Coordinated sea raids and distant timber — 2026-10-30
 
 - [x] ~~Landing parties share an initial objective instead of splitting across unrelated buildings.~~ Sea raiders engage nearby armed defenders before resuming building attacks, fixing periodic retargeting that ignored interceptors.

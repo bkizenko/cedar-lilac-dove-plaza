@@ -3,12 +3,13 @@ import type {Game} from './sim';
 import type {Building,BldType,Cost,ResKind,Unit} from './types';
 import {BUILDINGS} from './constants';
 import {foodDemand,isDependent} from './settlement';
-import {bridgeApproach} from './transport';
+import {bridgeApproach,bridgeCostScale,type BridgeSpan} from './transport';
 
 export const BUILD_MATERIALS:ResKind[]=['food','wood','stone','copper','iron'];
-export function buildingCost(type:BldType,g?:Game,team=0,size?:PlotSize):Cost {
+export function buildingCost(type:BldType,g?:Game,team=0,size?:PlotSize,span?:BridgeSpan):Cost {
   const d=BUILDINGS[type];
   const cost:Cost=Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
+  if(type==='bridge'&&span){cost.wood=Math.ceil((cost.wood||0)*bridgeCostScale(span));cost.stone=Math.ceil((cost.stone||0)*bridgeCostScale(span));}
   if(type==='farm')cost.seeds=4;
   if(type==='townhall'&&g){
     const halls=g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&b.hp>0).length;

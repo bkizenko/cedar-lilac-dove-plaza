@@ -33,7 +33,7 @@ import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
 import {villageAppeal,foodAttention} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
-import {planBridge,onBridge,bridgeHeight,bridgeApproach} from './transport';
+import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
@@ -609,10 +609,10 @@ export class Game {
     return trees >= 5 || stones >= 2 || food >= 3 || ore >= 2;
   }
 
-  makeBld(type: BldType, x: number, z: number, team: number, y?: number): Building {
+  makeBld(type: BldType, x: number, z: number, team: number, y?: number,span?:BridgeSpan): Building {
     const d = BUILDINGS[type];
     const hp = d.hp;
-    const bridge=type==="bridge"?planBridge(this,x,z):null;
+    const bridge=type==="bridge"?(span??planBridge(this,x,z)):null;
     if(bridge){x=(bridge.ax+bridge.bx)/2;z=(bridge.az+bridge.bz)/2;}
     return {
       id: this.id(),
@@ -1000,13 +1000,14 @@ export class Game {
     return b;
   }
 
-  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number): string | null {
+  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
     const d = size??BUILDINGS[type];
     if(type==="bridge"){
-      const span=planBridge(this,x,z);
+      const span=drawnSpan??planBridge(this,x,z);
+      if(drawnSpan&&!validBridgeSpan(this,drawnSpan))return "Drag between clear, gentle banks across shallow water (5–28 m)";
       if(!span)return "Aim at a narrow shallow river with two gentle, clear banks";
       if(_team===0&&(!this.exploredAt(span.ax,span.az)||!this.exploredAt(span.bx,span.bz)))return "Explore both banks before planning a crossing";
       if(!inBounds(span.ax,span.az,4)||!inBounds(span.bx,span.bz,4))return "A bridge needs safe banks inside the map";
@@ -1096,8 +1097,8 @@ export class Game {
     return null;
   }
 
-  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize) {
-    return this.placementIssue(type, x, z, team,size) === null;
+  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
+    return this.placementIssue(type, x, z, team,size,undefined,span) === null;
   }
 
   snapQuarry(x: number, z: number) {
@@ -1277,7 +1278,7 @@ export class Game {
     return null;
   }
 
-  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize) {
+  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
     if (this.state.ended || (size&&!validPlot(type,size))) return false;
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
@@ -1310,7 +1311,8 @@ export class Game {
       }
       return false;
     }
-    const cost = founding ? {} : buildingCost(type,this,team,size);
+    const crossing=type==="bridge"?(span??planBridge(this,x,z)):undefined;
+    const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
     const planned=team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost))return false;
     if (type === "quarry" && this.height(x,z)<10) {
@@ -1321,18 +1323,18 @@ export class Game {
       }
     }
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
-    const spot = this.placementValid(type, x, z, team,size)
+    const spot = this.placementValid(type, x, z, team,size,span)
       ? { x, z }
-      : size?null:this.findPlaceSpot(type, x, z, team);
+      : size||span||type==="bridge"?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
-        this.banner(this.placementIssue(type, x, z, team,size) || "Can't build there", 1.8);
+        this.banner(this.placementIssue(type, x, z, team,size,undefined,span) || "Can't build there", 1.8);
         this.onSfx("invalid");
       }
       return false;
     }
     if(!planned)this.spend(team, cost);
-    const b = this.makeBld(type, spot.x, spot.z, team);
+    const b = this.makeBld(type, spot.x, spot.z, team,undefined,span);
     if(size){b.w=size.w;b.d=size.d;}
     if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
     if(planned)b.plannedCost=cost;

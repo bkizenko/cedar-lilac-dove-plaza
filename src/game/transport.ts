@@ -57,3 +57,24 @@ export function bridgeApproach(g:Game,u:Unit,b:Building){
   return [{x:ax,z:az},{x:bx,z:bz}].filter(p=>g.walkable(p.x,p.z)&&g.workBoard.connected(g,u.x,u.z,p.x,p.z))
     .sort((a,c)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(c.x-u.x,c.z-u.z))[0]||null;
 }
+
+/** Validate a player-drawn crossing without silently moving either bank. */
+export function validBridgeSpan(g:Game,s:BridgeSpan){
+ if(![s.ax,s.az,s.bx,s.bz].every(Number.isFinite))return false;
+ const dx=s.bx-s.ax,dz=s.bz-s.az,len=Math.hypot(dx,dz);
+ if(len<5||len>MAX_BRIDGE_SPAN)return false;
+ const a=g.height(s.ax,s.az),b=g.height(s.bx,s.bz);
+ if(Math.min(a,b)<=g.world.waterY+.55||Math.abs(a-b)>len*.18)return false;
+ let water=0;
+ for(let t=-1.5;t<=len+1.5;t+=.5){
+  for(const side of [-BRIDGE_WIDTH/2,0,BRIDGE_WIDTH/2]){
+   const x=s.ax+dx*t/len+dz*side/len,z=s.az+dz*t/len-dx*side/len,h=g.height(x,z);
+   if(h<g.world.waterY-3.5||h>Math.max(a,b)+1)return false;
+   if((t<=0||t>=len)&&h<=g.world.waterY+.28)return false;
+   if(g.state.buildings.some(site=>site.hp>0&&Math.abs(x-site.x)<site.w*.4+.6&&Math.abs(z-site.z)<site.d*.4+.6))return false;
+   if(side===0&&t>=0&&t<=len&&h<g.world.waterY+.12)water++;
+  }
+ }
+ return water>=4;
+}
+export function bridgeCostScale(span?:BridgeSpan){return span?Math.max(1,Math.hypot(span.bx-span.ax,span.bz-span.az)/16):1;}
