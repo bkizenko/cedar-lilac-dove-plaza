@@ -1,3 +1,9 @@
+## Pack-animal identity persistence — 2026-10-30
+
+- [x] ~~Taming retains the discovered goat's ID, size and health in optional validated handler data.~~ A handler's death releases that same animal once, preserving condition rather than creating a healed generic replacement. Legacy pack handlers without identity records retain their earlier release behavior. No village reset or save-version bump.
+- Sixteen water/pack checks pass, including actual taming, saved identity/condition, single release and corrupt-health rejection. Typecheck/build pass.
+- This is identity groundwork only: pack goats are still attached equipment. Independent domestic animal entities, husbandry, feeding/grazing, pens, breeding, products and draft use remain open. Do not cross out the full animal catalogue item.
+
 ## Rival food emergency and completed landscape audit — 2026-10-30
 
 - [x] ~~Rival labor rebalancing runs during food emergencies, not only when reserves exceed600seconds.~~ Below300seconds of food, if fewer than65% of adults gather food, up to two uncommitted material gatherers per12-second review are released to the ordinary work board. High stocks do not prevent this; cargo, direct locks and missions remain protected. Surplus-food-to-material reassignment still requires600seconds of reserves.

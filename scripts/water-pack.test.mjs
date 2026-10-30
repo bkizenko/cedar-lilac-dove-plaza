@@ -140,3 +140,14 @@ test('hunters respect their own taming reservation while other tribes remain abl
  assert.equal(huntable(copy,saved,0),false,'paid reservation survives loading');
  u.hp=0;assert.equal(huntable(g,animal,0),true,'a dead handler cannot reserve wildlife forever');
 });
+
+test('a tamed goat retains its original identity and condition through saves and release',()=>{
+ const {g,u}=fixture(),c=goat(g);c.hp=17;c.scale=1.3;
+ assert.equal(beginPackTaming(g,g.state.buildings[0].id),true);work(g,u,100,packTamingAI);
+ assert.deepEqual(u.packAnimal,{id:c.id,hp:17,maxHp:30,scale:1.3});
+ const copy=decodeGame(encodeGame(g)),handler=copy.state.units.find(p=>p.id===u.id);handler.hp=0;
+ releasePackAnimal(copy,handler);const freed=copy.state.wildlife.find(p=>p.id===c.id);
+ assert.ok(freed);assert.equal(freed.hp,17);assert.equal(freed.maxHp,30);assert.equal(freed.scale,1.3);
+ releasePackAnimal(copy,handler);assert.equal(copy.state.wildlife.filter(p=>p.id===c.id).length,1);
+ const raw=encodeGame(g);raw.state.units[0].packAnimal.hp=1000;assert.throws(()=>decodeGame(raw));
+});

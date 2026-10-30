@@ -323,6 +323,7 @@ export function decodeGame(raw: unknown): Game {
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
     if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();
+    if(u.packAnimal!==undefined){const a=u.packAnimal;if(!obj(a)||u.haulage!=="pack"||!Number.isSafeInteger(a.id)||a.id<1||!num(a.hp)||!num(a.maxHp)||a.hp<=0||a.maxHp<=0||a.hp>a.maxHp||a.maxHp>1000||!num(a.scale)||a.scale<.1||a.scale>5)fail();}
     if(u.plantingWork!==undefined){const p=u.plantingWork;if(!obj(p)||!Number.isSafeInteger(p.treeId)||p.treeId<1||!num(p.progress)||p.progress<0||p.progress>12)fail();}
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();

@@ -182,6 +182,7 @@ export type Unit = {
   studyCrop?: CropKind;
   farmTool?: FarmToolKind;
   farmToolWork?: FarmToolWork;
+  packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
   tamingWork?: {animal:number;progress:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;

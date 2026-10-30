@@ -36,6 +36,7 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
  if(work.progress>=PACK_TAMING_SECONDS){
   // Transfer this existing animal out of the wild population, without a carcass or respawn slot.
   g.state.wildlife=g.state.wildlife.filter(c=>c.id!==animal.id);
+  u.packAnimal={id:animal.id,hp:animal.hp,maxHp:animal.maxHp,scale:animal.scale};
   u.haulage='pack';u.tamingWork=undefined;u.order='return';u.workReason='Pack goat ready — carrying capacity doubled';
   g.workBoard.reset();if(u.team===0)g.banner('Pack goat tamed. Its handler carries twice as much without a sled’s hauling penalty.',5);
  }
@@ -46,6 +47,7 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
 /** A handler's death releases the animal once, rather than duplicating or erasing it. */
 export function releasePackAnimal(g:Game,u:Unit){
  if(u.hp>0||u.haulage!=='pack')return;
- u.haulage=undefined;
- g.state.wildlife.push({id:g.id(),species:'goat',x:u.x,y:g.height(u.x,u.z),z:u.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:24,maxHp:24,fly:0,scale:1,grazing:{x:u.x,z:u.z}});
+ const animal=u.packAnimal;u.packAnimal=undefined;u.haulage=undefined;
+ if(animal&&g.state.wildlife.some(c=>c.id===animal.id))return;
+ g.state.wildlife.push({id:animal?.id??g.id(),species:'goat',x:u.x,y:g.height(u.x,u.z),z:u.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:animal?.hp??24,maxHp:animal?.maxHp??24,fly:0,scale:animal?.scale??1,grazing:{x:u.x,z:u.z}});
 }
