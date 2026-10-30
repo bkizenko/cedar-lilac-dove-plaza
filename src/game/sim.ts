@@ -1,4 +1,4 @@
-import {copperStudyAI} from './materialStudy';
+import {copperStudyAI,developRivalCopper} from './materialStudy';
 import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
@@ -5045,6 +5045,7 @@ export class Game {
     developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);
+    developRivalCopper(this,team);
     const pop = this.popNow(team);
     if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
       for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}

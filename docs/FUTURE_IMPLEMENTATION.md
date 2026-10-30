@@ -1,3 +1,9 @@
+## Rival copper experiments — 2026-10-30
+
+- [x] ~~Rivals use the same paid, physical copper trials and prototype tools.~~ A20-person rival with at least600seconds of food reserves and a finished crafting shelter may fund/resume a trial. If short of copper, one available uncommitted worker can gather known nearby connected ore; no unseen deposit knowledge or automatic ore grant. Actual crafting shares benches and records only that society's technique.
+- Forty-five material-study/rival-development checks pass, including physical rival completion, finite stock use, player knowledge isolation, hunger/unknown-ore exclusions and sampler assignment without remote credit. Typecheck/build pass. Multi-year rival technology outcomes after this integration remain unverified.
+- Catalogue71/74 remains partial; research diffusion, alloy/furnace chains, cultural inheritance and the broader organic technology tree remain open.
+
 ## Physical copper experiments and early tools — 2026-10-30
 
 - [x] ~~Player villagers may gather discovered surface copper before Bronze and physically deliver it.~~ Known copper becomes an available work target; iron/deep quarry extraction gates remain. No remote deposit credit.

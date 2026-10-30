@@ -24,3 +24,17 @@ test('Stone Age residents can gather discovered copper and physically bring it h
  g.issueGather(n);assert.equal(u.order,'gather');for(let i=0;i<2000&&g.tribe(0).copper===0;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
  assert.ok(g.tribe(0).copper>0);assert.ok(n.amount<20);assert.equal(g.tribe(0).age,0);
 });
+
+test('prosperous rivals fund and complete the same physical copper prototype',async()=>{
+ const {developRivalCopper}=await import('../src/game/materialStudy.ts');const g=fixture();
+ for(const u of g.state.units)u.team=1;g.state.buildings[0].team=1;Object.assign(g.tribe(1),{food:10000,copper:16,wood:20});
+ assert.equal(developRivalCopper(g,1),true);const u=g.state.units.find(u=>u.copperStudy);assert.equal(g.tribe(1).copper,8);
+ for(let i=0;i<2000&&u.copperStudy;i++){g.state.time+=.1;g.navBudget=10;copperStudyAI(g,u,.1);}
+ assert.equal(g.tribe(1).copperExperiment,true);assert.equal(u.farmTool,'copperTools');assert.equal(g.tribe(0).copperExperiment,undefined);
+});
+test('rival copper sampling respects knowledge and hunger',async()=>{
+ const {developRivalCopper}=await import('../src/game/materialStudy.ts');const g=fixture();for(const u of g.state.units)u.team=1;g.state.buildings[0].team=1;
+ Object.assign(g.tribe(1),{food:10000,copper:0,wood:20});g.state.copper=[{id:g.id(),kind:'copper',x:150,z:38,y:4,amount:20,maxAmt:20,regenT:0,scale:1,rich:1}];assert.equal(developRivalCopper(g,1),false);
+ g.state.copper[0].x=5;g.state.copper[0].z=65;g.tribe(1).food=1;assert.equal(developRivalCopper(g,1),false);
+ g.tribe(1).food=10000;assert.equal(developRivalCopper(g,1),true);assert.ok(g.state.units.some(u=>u.node===g.state.copper[0]));assert.equal(g.tribe(1).copper,0);
+});
