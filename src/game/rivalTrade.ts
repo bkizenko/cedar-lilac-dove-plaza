@@ -36,27 +36,32 @@ export function dispatchRivalBarter(g:Game,team:number){
   clock.set(team,g.state.time+120);
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.visit))return false;
   const t=g.tribe(team);
-  const wanted=goods.filter(k=>k!=='food'&&usable(g,team,k)&&t[k]<rivalTradeReserve(g,team,k))
-    .sort((a,b)=>(1-t[b]/rivalTradeReserve(g,team,b))-(1-t[a]/rivalTradeReserve(g,team,a)))[0];
-  if(!wanted)return false;
-  const offered=goods.filter(k=>k!==wanted&&usable(g,team,k)&&t[k]-rivalTradeReserve(g,team,k)>=12)
-    .sort((a,b)=>Number(a==='food')-Number(b==='food')||(t[b]-rivalTradeReserve(g,team,b))*worth[b]-(t[a]-rivalTradeReserve(g,team,a))*worth[a])[0];
-  if(!offered)return false;
+  const wants=goods.filter(k=>k!=='food'&&usable(g,team,k)&&t[k]<rivalTradeReserve(g,team,k))
+    .sort((a,b)=>(1-t[b]/rivalTradeReserve(g,team,b))-(1-t[a]/rivalTradeReserve(g,team,a)));
+  if(!wants.length)return false;
+  const offers=goods.filter(k=>usable(g,team,k)&&t[k]-rivalTradeReserve(g,team,k)>=12)
+    .sort((a,b)=>Number(a==='food')-Number(b==='food')||(t[b]-rivalTradeReserve(g,team,b))*worth[b]-(t[a]-rivalTradeReserve(g,team,a))*worth[a]);
+  if(!offers.length)return false;
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
   const workers=adults.filter(u=>u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
     !u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','gather'].includes(u.order));
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));
+  let wanted:ResKind|undefined,offered:ResKind|undefined;
   let u:Unit|undefined;
   let destination:typeof g.state.buildings[number]|undefined;
+  // A remembered refusal rules out that offer, not every other useful deal.
+  search: for(const want of wants)for(const offer of offers){
+  if(want===offer)continue;
   for(const candidate of workers){
   const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
     g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&
-    !g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===b.team&&r.wanted===wanted&&r.offered===offered&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
+    !g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===b.team&&r.wanted===want&&r.offered===offer&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
     .sort((a,b)=>Math.hypot(candidate.x-a.x,candidate.z-a.z)-Math.hypot(candidate.x-b.x,candidate.z-b.z));
-  if(halls.length){u=candidate;destination=halls[0];break;}
+  if(halls.length){u=candidate;destination=halls[0];wanted=want;offered=offer;break search;}
   }
-  if(!u||!destination)return false;
+  }
+  if(!u||!destination||!wanted||!offered)return false;
   const amount=Math.min(32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
   equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;

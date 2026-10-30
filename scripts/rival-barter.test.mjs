@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {dispatchRivalBarter,settleRivalBarter} from '../src/game/rivalTrade.ts';
+import {dispatchRivalBarter,settleRivalBarter,rivalTradeReserve} from '../src/game/rivalTrade.ts';
 import {visitorAI} from '../src/game/visitors.ts';
 import {scoutKnowledge,scoutAI} from '../src/game/scouting.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
@@ -88,7 +88,8 @@ test('refused offers become remembered only when the trader physically brings th
  drive(g,u,100);assert.equal(u.visit,undefined);
  assert.equal(g.state.rivalTradeRefusals?.length,1);
  const report=g.state.rivalTradeRefusals[0];assert.equal(report.wanted,'wood');assert.equal(report.offered,'stone');
- g.state.time+=121;assert.equal(dispatchRivalBarter(g,1),false,'do not repeat the same known refusal');
+ g.tribe(1).food=rivalTradeReserve(g,1,'food');
+ g.state.time+=121;assert.equal(dispatchRivalBarter(g,1),false,'do not repeat the same known refusal when no alternative surplus exists');
  const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.state.rivalTradeRefusals,g.state.rivalTradeRefusals);
  g.state.time+=901;assert.equal(dispatchRivalBarter(g,1),true,'old information expires as markets change');
  const bad=encodeGame(copy);bad.state.rivalTradeRefusals[0].time=bad.state.time+1;assert.throws(()=>decodeGame(bad));
@@ -97,4 +98,17 @@ test('refused offers become remembered only when the trader physically brings th
 test('successful exchanges do not generate a refusal report',()=>{
  const g=fixture();contact(g);dispatchRivalBarter(g,1);const u=g.state.units.find(u=>u.visit);
  drive(g,u,180);assert.equal(u.visit,undefined);assert.equal(g.state.rivalTradeRefusals,undefined);
+});
+
+
+test('a remembered refusal redirects the next shipment to another surplus and completes a real exchange',()=>{
+ const g=fixture();contact(g);
+ g.state.rivalTradeRefusals=[{team:1,partner:2,wanted:'wood',offered:'stone',time:g.state.time}];
+ g.tribe(2).stone=500;g.tribe(2).food=1;
+ const food=totals(g,'food'),wood=totals(g,'wood'),stone=totals(g,'stone');
+ assert.equal(dispatchRivalBarter(g,1),true);
+ const u=g.state.units.find(u=>u.visit);assert.equal(u.carryType,'food');assert.equal(u.visit.wanted,'wood');
+ assert.equal(g.tribe(1).wood,0,'no remote stock or payment');
+ drive(g,u,180);assert.equal(u.visit,undefined);assert.ok(g.tribe(1).wood>0);
+ assert.equal(totals(g,'food'),food);assert.equal(totals(g,'wood'),wood);assert.equal(totals(g,'stone'),stone);
 });

@@ -1,3 +1,9 @@
+## Alternative rival barter offers — 2026-10-29
+
+- [x] ~~A remembered refusal no longer blocks all trade.~~ Rivals try their other real surpluses and material shortages against known reachable partners, preserving reserves and direct orders. Departure still cannot inspect another village's hidden stock.
+- Validation: 13 physical barter tests and typecheck pass, including a rejected stone offer replaced by food, locally exchanged for timber and returned home with conserved resources. Production build passes. No save format changes.
+- Remaining: long-run trade success across generated worlds, richer negotiation and regional trade networks.
+
 ## Rival advancement ordering — 2026-10-29
 
 - [x] ~~Check earned age readiness before rival trade, equipment and construction spend reserves.~~ Uses the same population, civic infrastructure and retained-stock rules as the player. Removed the additional AI-only 600-second food gate and random advancement roll.
