@@ -1,3 +1,10 @@
+## Local transport handoffs — 2026-10-29
+
+- [x] ~~Idle sled/cart owners can hand equipment to nearby unequipped gatherers leaving on a longer journey.~~ Both must be safe available adults of the same village, within 2.4m at a completed hall/store/outpost with a clear step between them. Actual ownership changes once; no inventory or cargo is created.
+- [x] ~~Protect loaded carriers, selected/directly ordered people, resting residents and active missions.~~ Boats and bonded pack animals are excluded. Darkness/storms disable handoffs. Existing unit ownership saves need no migration.
+- Validation: all nine haulage checks pass, including save continuity, proximity, single ownership and protected cases; typecheck and production build pass. No visual changes in this batch.
+- Remaining: parked independent transport entities, explicit lending controls, passenger boats, breeding and draft animals. This is local reuse of existing equipment, not a completed shared-depot system.
+
 ## Direct field crop and rest controls — 2026-10-29
 
 - [x] ~~Selected fields expose Crop & soil controls: cultivated crop choice, fertility and rest.~~ Crop changes after sowing schedule next spring, preserve this year's crop kind/progress and survive saves.

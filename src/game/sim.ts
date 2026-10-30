@@ -26,7 +26,7 @@ import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advanceme
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
-import {beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
+import {shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
 import {daylightAt,solarTimeLabel} from "./daylight";
 import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
@@ -5492,6 +5492,7 @@ export class Game {
         this.state.time += sdt;
         reconcileTradeReservations(this);
         reconcileTreeWorkers(this);
+        shareLocalTransport(this);
         fundConstructionPlans(this);
         tickGates(this);
         if(this.state.walkDirty)this.rebuildWalk();

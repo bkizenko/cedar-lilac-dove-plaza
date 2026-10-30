@@ -4,7 +4,7 @@ import { Game } from '../src/game/sim.ts';
 import { GATHER } from '../src/game/constants.ts';
 import { encodeGame, decodeGame } from '../src/game/persistence.ts';
 import {
-  HAULAGE, WHEEL_PRACTICE, beginHaulageWork, haulageWorkAI, pauseHaulageWork,
+  shareLocalTransport,HAULAGE, WHEEL_PRACTICE, beginHaulageWork, haulageWorkAI, pauseHaulageWork,
   resumeHaulageWork, carryingCapacity, loadedHaulSpeed, recordHaulDelivery,
   validHaulageUnit, validHaulageTribe, haulageRequirement,
 } from '../src/game/haulage.ts';
@@ -152,4 +152,27 @@ test('busy people, full hands, lack of materials, and unreachable workplaces can
   g.tribe(0).stone = 0;
   assert.equal(beginHaulageWork(g, 'sled', 0, shop.id), false);
   assert.equal(g.tribe(0).wood, 100);
+});
+
+
+test('idle sleds pass physically to nearby working carriers without creating equipment or changing orders',()=>{
+ const {g,u,hall}=fixture();u.x=0;u.z=hall.z+hall.d/2+1;u.haulage='sled';u.order='idle';u.selected=false;
+ const receiver=g.spawnUnit('worker',u.x+1,u.z,0);receiver.selected=false;receiver.order='gather';receiver.job='wood';receiver.node={id:999,kind:'tree',x:50,y:4,z:80,amount:30,maxAmt:30,regenT:0,scale:1,rich:1};
+ assert.ok(g.buildingWorkReached(u,hall));assert.equal(shareLocalTransport(g),1);
+ assert.equal(u.haulage,undefined);assert.equal(receiver.haulage,'sled');assert.equal(receiver.order,'gather');assert.equal(receiver.job,'wood');
+ assert.equal(shareLocalTransport(g),0);assert.equal(g.state.units.filter(v=>v.haulage).length,1);
+ const saved=decodeGame(encodeGame(g));assert.equal(saved.state.units.find(v=>v.id===receiver.id).haulage,'sled');
+});
+test('equipment never jumps across camp, leaves a loaded carrier or overrides protected owners',()=>{
+ for(const protection of ['distance','cargo','selected','jobLock','resting','canoe','pack','hold','night']){
+  const {g,u,hall}=fixture();u.x=0;u.z=hall.z+hall.d/2+1;u.haulage='sled';u.order='idle';u.selected=false;
+  const receiver=g.spawnUnit('worker',u.x+1,u.z,0);receiver.selected=false;receiver.order='gather';receiver.node={id:999,kind:'tree',x:50,y:4,z:80,amount:30,maxAmt:30,regenT:0,scale:1,rich:1};
+  if(protection==='distance')receiver.x+=15;
+  else if(protection==='cargo')u.carry=1;
+  else if(['canoe','pack'].includes(protection))u.haulage=protection;
+  else if(protection==='hold')u.order='hold';
+  else if(protection==='night')g.clockState=()=>({period:'Night'});
+  else u[protection]=true;
+  assert.equal(shareLocalTransport(g),0,protection);assert.equal(receiver.haulage,undefined);assert.ok(u.haulage);
+ }
 });

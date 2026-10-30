@@ -192,3 +192,25 @@ export function validHaulageTribe(v: unknown) {
   return record(v) && (v.haulagePractice === undefined ||
     finite(v.haulagePractice) && v.haulagePractice >= 0 && v.haulagePractice <= WHEEL_PRACTICE);
 }
+
+/** Share idle land transport only through a physical handoff at a settlement.
+ * Boats and bonded animals stay with their handlers; direct orders remain owned. */
+export function shareLocalTransport(g:Game){
+ if(g.clockState().period==='Night'||g.state.weather==='storm')return 0;
+ const safe=(u:HaulageUnit)=>civilian(g,u)&&available(g,u)&&!u.jobLock&&!u.buildOrder&&!u.selected&&!u.resting&&!u.shelterId&&!u.tributeJourney;
+ const donors=g.state.units.filter(u=>safe(u)&&u.order==='idle'&&(u.haulage==='sled'||u.haulage==='cart'));
+ if(!donors.length)return 0;
+ const recipients=g.state.units.filter(u=>safe(u)&&!u.haulage&&u.order==='gather'&&u.node&&
+  Math.hypot(u.node.x-u.x,u.node.z-u.z)>12);
+ let shared=0;
+ for(const donor of donors){
+  const depot=g.state.buildings.find(b=>b.team===donor.team&&g.finished(b)&&['townhall','warehouse','cornerstone'].includes(b.type)&&g.buildingWorkReached(donor,b));
+  if(!depot)continue;
+  const receiver=recipients.find(u=>!u.haulage&&u.team===donor.team&&Math.hypot(u.x-donor.x,u.z-donor.z)<=2.4&&g.canStep(donor,u.x,u.z));
+  if(!receiver)continue;
+  receiver.haulage=donor.haulage;donor.haulage=undefined;shared++;
+  donor.workReason='Shared transport with a nearby carrier';
+  receiver.workReason=`Borrowed ${HAULAGE[receiver.haulage!].name.toLowerCase()} for this journey`;
+ }
+ return shared;
+}

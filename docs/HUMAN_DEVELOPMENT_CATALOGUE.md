@@ -1,3 +1,7 @@
+## Transport reuse delivered — 2026-10-29
+
+- [x] ~~Physical local handoff of idle sleds/carts to available nearby gatherers, preserving cargo and orders.~~ Shared parking/depot inventory, passenger fleets and animal breeding remain open.
+
 ## Field geography delivered — 2026-10-29
 
 - [x] ~~Area-averaged land suitability for expanded fields and continuous river-distance drought protection.~~ Soil/moisture shown in field panel. Irrigation canals, floods enriching individual rows and full biome balancing remain unfinished.
