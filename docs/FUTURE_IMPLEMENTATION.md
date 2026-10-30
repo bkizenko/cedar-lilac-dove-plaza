@@ -1,3 +1,8 @@
+## Bridge survey obstruction fix — 2026-10-30
+
+- [x] ~~Automatic crossing surveys reject live structures along the entire deck, including river islands.~~ Existing span choices, construction costs and saved bridges remain unchanged. Drawn crossings retain their existing obstruction checks.
+- Transport regression now stops the delivery simulation at unloading, rather than interpreting later automatically gathered fish as failed timber delivery. Eight transport checks and typecheck/build pass. Full drag interaction visual QA remains open.
+
 ## Copper trial controls — 2026-10-30
 
 - [x] ~~Workshop trial control displays missing population/materials before starting, progress while active, a paid resume action while paused, and discovered status after completion.~~ Disabled start uses current actual prerequisites; a missing available worker now produces a clear explanation. Zero-quantity missing resources are omitted. Pack-goat taming moved into Transport disclosure to free primary workshop space.

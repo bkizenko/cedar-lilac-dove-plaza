@@ -16,7 +16,7 @@ test('bank construction opens a real crossing only after labor; carriers walk ac
  assert.equal(g.workBoard.connected(g,0,-18,0,18),false);assert.equal(g.placeBuilding('bridge',0,0),true);const bridge=g.state.buildings.find(b=>b.type==='bridge');assert.equal(g.tribe(0).wood,68);assert.equal(g.tribe(0).stone,26);assert.equal(g.walkable(0,0),false);
  drive(g,u,70,()=>g.buildAI(u,.1));assert.equal(bridge.build,1);g.rebuildWalk();assert.equal(g.workBoard.connected(g,0,-18,0,18),true);
  u.selected=true;g.issueMove(0,18);let seenOnDeck=false;drive(g,u,40,()=>{g.workerAI(u,.1);if(Math.abs(u.z)<3){seenOnDeck=true;assert.ok(u.y>g.world.waterY+.28);}});assert.ok(seenOnDeck,JSON.stringify({bridge:bridge.bridge,u:{x:u.x,z:u.z,y:u.y,tx:u.tx,tz:u.tz,order:u.order,reason:u.workReason,stuck:u.stuckT},route:g.paths.get(u.id)}));assert.ok(u.z>15);
- Object.assign(u,{carry:8,carryType:'wood',order:'return'});const before=g.tribe(0).wood;drive(g,u,50,()=>g.workerAI(u,.1));assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,before+8);assert.ok(u.z<0);
+ Object.assign(u,{carry:8,carryType:'wood',order:'return'});const before=g.tribe(0).wood;drive(g,u,50,()=>{if(u.carry>0&&u.carryType==='wood')g.workerAI(u,.1);});assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,before+8);assert.ok(u.z<0);
 });
 test('either reachable bank can supply builders and a bridge in use cannot be reclaimed',()=>{
  const {g,u}=fixture();const bridge=g.makeBld('bridge',0,0,0);bridge.build=0;g.state.buildings=[bridge];g.rebuildWalk();Object.assign(u,{x:0,z:18,y:4,order:'idle'});g.workBoard.reset();g.workBoard.assign(g,u);assert.equal(u.node,bridge);assert.equal(u.order,'build');
@@ -49,3 +49,11 @@ test('drawn bridge validation rejects obstructed, dry, steep, deep and overlong 
  g.height=(x,z)=>Math.abs(z)<6?-10:4;assert.equal(validBridgeSpan(g,span),false);
  g.height=(x,z)=>z<0?4:20;assert.equal(validBridgeSpan(g,span),false);
 });
+
+ test('automatic bridge survey rejects an obstruction anywhere along its deck',()=>{
+ const {g}=fixture();assert.ok(planBridge(g,0,0));
+ // A surviving structure on a small river island must not disappear under a deck.
+ const obstruction=g.makeBld('hut',0,0,0);obstruction.w=60;obstruction.d=2;
+ g.state.buildings=[obstruction];assert.equal(planBridge(g,0,0),null);
+ assert.equal(g.placeBuilding('bridge',0,0),false);
+ });

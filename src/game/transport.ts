@@ -35,7 +35,8 @@ export function planBridge(g:Game,x:number,z:number):BridgeSpan|null {
       if(h<g.world.waterY-3.5||h>Math.max(g.height(left.x,left.z),g.height(right.x,right.z))+1){valid=false;break;}
       if(h<g.world.waterY+.12)water++;
     }
-    if(valid&&water>=4){best={ax:left.x,az:left.z,bx:right.x,bz:right.z};bestLength=length;}
+    const candidate={ax:left.x,az:left.z,bx:right.x,bz:right.z};
+    if(valid&&water>=4&&!bridgeDeckBlocked(g,candidate)){best=candidate;bestLength=length;}
   }
   return best;
 }
@@ -56,6 +57,16 @@ export function bridgeApproach(g:Game,u:Unit,b:Building){
   const {ax,az,bx,bz}=b.bridge;
   return [{x:ax,z:az},{x:bx,z:bz}].filter(p=>g.walkable(p.x,p.z)&&g.workBoard.connected(g,u.x,u.z,p.x,p.z))
     .sort((a,c)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(c.x-u.x,c.z-u.z))[0]||null;
+}
+
+/** Survey the full deck, including islands between otherwise clear banks. */
+function bridgeDeckBlocked(g:Game,s:BridgeSpan){
+ const dx=s.bx-s.ax,dz=s.bz-s.az,len=Math.hypot(dx,dz);
+ for(let t=0;t<=len;t+=.5)for(const side of [-BRIDGE_WIDTH/2,0,BRIDGE_WIDTH/2]){
+  const x=s.ax+dx*t/len+dz*side/len,z=s.az+dz*t/len-dx*side/len;
+  if(g.state.buildings.some(b=>b.hp>0&&Math.abs(x-b.x)<b.w*.4+.6&&Math.abs(z-b.z)<b.d*.4+.6))return true;
+ }
+ return false;
 }
 
 /** Validate a player-drawn crossing without silently moving either bank. */
