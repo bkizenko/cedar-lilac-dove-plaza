@@ -1,3 +1,9 @@
+## Clear age readiness — 2026-10-30
+
+- [x] ~~Ages screen shows current/required population and each material reserve, plus missing infrastructure and safety-food requirements together.~~ Uses existing advancement rules; no duplicate readiness logic or costs. Explicitly explains that reserves are kept. A direct Choose next age button invokes the existing choice flow and remains disabled when not ready.
+- Typecheck/build pass. Production browser preview verified actual values (5/50people,120/160food,58/80timber,16/32stone), missing Storehouse/Crafting shelter, disabled advancement, successful close and zero console errors. Screenshot `/tmp/hearth-age-readiness.png`.
+- This clarifies current gates; it does not complete organic material experimentation, a larger practical technology tree or age playthrough balancing.
+
 ## Readable planting work — 2026-10-30
 
 - [x] ~~Planters show a carried seed basket and use the bending work pose at the stump.~~ Uses existing food-basket geometry/shared instance pool purely for presentation; no food cargo, reserves or delivery are created. Basket visibility follows owner fog, shelter/death and task completion.

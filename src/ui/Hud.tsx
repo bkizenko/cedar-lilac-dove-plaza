@@ -1,3 +1,4 @@
+import {AgeReadiness} from './AgeReadiness';
 import {WorldMinimap} from './WorldMinimap';
 import {PlotControls} from './PlotControls';
 import {beginPackTaming} from "@/game/packAnimals";
@@ -832,10 +833,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 Close
               </button>
             </div>
-            <p className="mt-1 text-[12px] leading-snug text-parchment">
-              The bar only offers this age. Later ages stay closed until enough people live here and
-              the village has more than one kind of building.
-            </p>
+            <AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AGES.map((name, age) => (
                 <div
