@@ -21,6 +21,6 @@ test('base-size fields retain their existing yield and mixed habitats affect exp
  const expected=Math.floor(260*(b.fertility??1)*habitatAt(g,b.x,b.z).crops*(.65+soilQuality(g,b.x,b.z)*.5));
  assert.equal(farmHarvestEstimate(g,b),expected);
  const same=g.makeBld('farm',0,0,0);same.w*=3;const fertile=farmHarvestEstimate(g,same);
- g.world={...g.world,biomes:[{kind:'plains',x:-3,z:0},{kind:'hills',x:3,z:0}]};
- assert.ok(farmHarvestEstimate(g,same)<fertile,'new terrain identity invalidates cached samples');
+ g.world.biomes=[{kind:'plains',x:-3,z:0},{kind:'hills',x:3,z:0}];
+ assert.ok(farmHarvestEstimate(g,same)<fertile,'replacing biome data invalidates cached samples');
 });

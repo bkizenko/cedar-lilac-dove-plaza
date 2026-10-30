@@ -2,7 +2,7 @@
 
 - [x] ~~Protect paused paid transport upgrades from local equipment handoffs.~~ A cart project must retain its original sled; sharing cannot invalidate project/save ownership.
 - All nine haulage tests pass, including the new paid-upgrade exception; typecheck/build pass.
-- Full `npm test` is running in session 16081, output `/tmp/hearth-full-regression.log`. It has not yet completed; do not report the full suite passed. Revalidate the handle and inspect failures before adding the next major feature. The suite started before the one-line paid-upgrade guard; that guard has its own rerun above.
+- Full scripts suite completed (session 16081 terminal): 771/772 passed in 159 seconds. Its sole failure exposed stale field terrain after biome-array replacement. Fixed cache identity checks now include biome, river and height inputs. The failed case plus three related terrain cases pass on rerun. Separate app-data/auth suite: 32/32 passed. Typecheck/build pass. Full suite was not rerun wholesale after this fix; focused coverage and original results are in `/tmp/hearth-terrain-cache.log`, `/tmp/hearth-full-regression.log` and `/tmp/hearth-app-auth-tests.log`. The paid-upgrade guard also has its own nine-check rerun.
 
 ## Local transport handoffs — 2026-10-29
 
