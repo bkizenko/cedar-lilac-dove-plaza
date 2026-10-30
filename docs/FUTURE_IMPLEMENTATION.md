@@ -1,3 +1,10 @@
+## Rival food emergency and completed landscape audit — 2026-10-30
+
+- [x] ~~Rival labor rebalancing runs during food emergencies, not only when reserves exceed600seconds.~~ Below300seconds of food, if fewer than65% of adults gather food, up to two uncommitted material gatherers per12-second review are released to the ordinary work board. High stocks do not prevent this; cargo, direct locks and missions remain protected. Surplus-food-to-material reassignment still requires600seconds of reserves.
+- 39 rival-development checks pass, including a real food-task assignment with5000timber/stone and almost no food. Typecheck/build pass.
+- **Session58598 is terminal.** Two disposable v5 worlds completed3600simseconds each, with no simulation errors. Seed123456 rivals finished at33/18/42people and44/29/50buildings, all alive with positive reserves. Seed98765 finished at37/38people and38/44buildings, food2902/2746 and timber3394/2913. Player remained at13people with two buildings (no build commands supplied); seed98765 food fell to112. No age transition occurred by this horizon; longer progression remains unverified. One rival grows more slowly, and later era/material competition still needs work.
+- This audit ran the pre-emergency-fix module snapshot. Do not claim it demonstrates the new fix; the focused regression does. Log `/tmp/hearth-organic-playthrough.log`. Wall timings include machine sleep/competition and are not performance evidence. Do not poll session58598 again.
+
 ## Planting-task orchestration and live landscape audit — 2026-10-30
 
 - [x] ~~Transport, farm-tool and weapon crafting availability excludes paid planting tasks.~~ A new regression checks that weapon assignment cannot steal a planter. Thirteen planting/haulage checks plus eight farm-tool checks pass; typecheck/build pass.

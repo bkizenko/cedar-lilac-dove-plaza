@@ -440,3 +440,13 @@ test('population-ready rivals preserve timber before optional annual storage, bu
  g.state.buildings=g.state.buildings.filter(b=>b.type!=='warehouse');g.tribe(1).wood=60;
  assert.equal(rivalCanInvest(g,1,'warehouse'),true,'basic storage remains a survival priority');
 });
+
+test('food emergencies release material crews even when no age material is missing',async()=>{
+ const {rebalanceRivalLabor}=await import('../src/game/rivalDevelopment.ts');const g=fixture();
+ Object.assign(g.tribe(1),{food:1,wood:5000,stone:5000});
+ const timber=tree(g,18,52);g.state.trees=[timber];g.state.forage=[{...tree(g,-14,52),kind:'forage',amount:1000,maxAmt:1000}];
+ for(const u of g.state.units){u.order='gather';u.job='wood';u.node=timber;}
+ const locked=g.state.units[2];locked.jobLock=true;const carrier=g.state.units[3];carrier.carry=5;carrier.carryType='wood';
+ rebalanceRivalLabor(g,1);
+ assert.equal(g.state.units.filter(u=>u.job==='food').length,2);assert.equal(locked.job,'wood');assert.equal(carrier.carry,5);
+});

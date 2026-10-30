@@ -160,16 +160,18 @@ const laborReviews=new WeakMap<Game,Map<number,number>>();
 /** Surplus food must release some labor for growth; persistent food orders
  * otherwise occupy the whole workforce even when a material shortage blocks it. */
 export function rebalanceRivalLabor(g:Game,team:number){
-  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return;
+  if(!isRivalTeam(team))return;
   let reviews=laborReviews.get(g);if(!reviews){reviews=new Map();laborReviews.set(g,reviews);}
   const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+12)return;
   reviews.set(team,g.state.time+12);
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
   const foodWorkers=adults.filter(u=>['gather','idle'].includes(u.order)&&u.job==='food');
-  const spare=Math.max(0,Math.min(2,foodWorkers.length-Math.ceil(adults.length/2)));
+  const reserves=reserveSeconds(g,team);
+  const foodEmergency=reserves<300&&foodWorkers.length<Math.ceil(adults.length*.65);
+  const spare=reserves>=600?Math.max(0,Math.min(2,foodWorkers.length-Math.ceil(adults.length/2))):0;
   const t=g.tribe(team),next=AGE_COST[t.age+1];
   const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
-  const surplusWorkers=shortage?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5)):[];
+  const surplusWorkers=(shortage||foodEmergency)?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&(foodEmergency||t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5))):[];
   const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
     !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
   let moved=0;
