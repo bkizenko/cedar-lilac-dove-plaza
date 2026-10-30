@@ -1,3 +1,4 @@
+import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
 import {architectureStyle} from "./architecture";
 import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
@@ -492,7 +493,7 @@ export class WorldView {
         Math.abs(game.height(x, z + 2.4) - game.height(x, z - 2.4));
       const dist = Math.hypot(x, z);
       const river = h < game.world.waterY + 0.32;
-      const shore = dist > islandR - 10;
+      const shore = shorelineAt((px,pz)=>game.height(px,pz),x,z,water);
       const pathN =
         Math.abs(x - home.x - Math.sin((z - home.z) * 0.08) * 1.6) < 1.7 &&
         Math.hypot(x - home.x, z - home.z) < 22;
@@ -2101,9 +2102,9 @@ export class WorldView {
         );
       } else if (b === 8) {
         c.setRGB(
-          0.2 * sn.spring + 0.18 * sn.summer + 0.26 * sn.autumn + 0.2 * sn.winter,
-          0.36 * sn.spring + 0.32 * sn.summer + 0.24 * sn.autumn + 0.26 * sn.winter,
-          0.14 * sn.spring + 0.12 * sn.summer + 0.1 * sn.autumn + 0.16 * sn.winter,
+          0.28 * sn.spring + 0.24 * sn.summer + 0.36 * sn.autumn + 0.28 * sn.winter,
+          0.44 * sn.spring + 0.39 * sn.summer + 0.33 * sn.autumn + 0.34 * sn.winter,
+          0.2 * sn.spring + 0.16 * sn.summer + 0.16 * sn.autumn + 0.25 * sn.winter,
         );
       } else {
         const gR = 0.42 * sn.spring + 0.36 * sn.summer + 0.48 * sn.autumn + 0.4 * sn.winter;

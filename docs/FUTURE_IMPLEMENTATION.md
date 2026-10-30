@@ -1,3 +1,8 @@
+## Shore and woodland palette correction — 2026-10-30
+
+- [x] ~~Beach coloring follows actual low banks beside water rather than a radial island boundary.~~ Warped coves/headlands and river margins are evaluated by local elevation/water samples; inland land, submerged terrain and high cliffs do not become beach merely because of map radius. Rendering only, no save/soil/navigation change.
+- Forest-floor seasonal colors are lighter and less muddy while retaining seasonal variation. Two shoreline checks and typecheck/build pass. In-game palette verification remains pending; do not claim full biome art or visual signoff.
+
 ## Physical managed planting — 2026-10-30
 
 - [x] ~~Automatic timber-focus replanting assigns local workers to individual stump sites.~~ Spare seeds fund up to four distinct tasks per review, retaining eight baskets. Only available local adults on connected dry ground qualify; existing missions/cargo/paid projects are protected. Workers walk to the stump and spend twelve work seconds before the sapling growth timer starts. No logs or saplings are credited at assignment.
