@@ -1,3 +1,8 @@
+## Construction control readability — 2026-10-30
+
+- [x] ~~Enlarge building names to 14px and costs to 12px with explicit resource names.~~ Building cards are wider, replacing L/S/C/I abbreviations with logs/stone/copper/iron. Existing category scrolling remains. Placement, costs and plans unchanged.
+- Typecheck/build pass. Visual/responsive verification remains pending after the browser connection failure. Full regression session40818 continues making progress; its known obsolete raid-ceiling assertion was fixed and independently rerun in the previous batch. No final full-suite verdict yet.
+
 ## Shelter search work reduction — 2026-10-30
 
 - [x] ~~Count occupied shelter rooms once per resting citizen, then find the nearest available shelter in one pass.~~ Removes the previous resident scan per building and distance sort; respects living occupants, capacities, team, completion and stable nearest ties. No stale cache or save changes.

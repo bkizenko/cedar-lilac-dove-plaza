@@ -694,7 +694,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   disabled={!!hud.ended}
                   title={`${b.name} [${i + 1}]\n${b.hint}${unaffordable ? "\nPlace a plan now; construction waits for materials." : ""}`}
                   onClick={() => engine?.setPlacing(b.type)}
-                  className={`w-16 shrink-0 rounded-lg border px-1 py-1.5 text-center transition-colors ${
+                  className={`w-24 shrink-0 rounded-lg border px-2 py-2 text-center transition-colors ${
                     active
                       ? "border-bronze bg-bronze/20"
                       : "border-parchment/15 bg-ink-soft hover:border-bronze/40"
@@ -703,13 +703,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   <div className="mx-auto mb-1 flex size-8 items-center justify-center rounded-md bg-ink text-bronze">
                     {BLD_ICON[b.type] || <Landmark className="size-4" />}
                   </div>
-                  <div className="text-[10px] leading-tight text-parchment">
+                  <div className="text-sm font-medium leading-tight text-parchment">
                     {shortName(b.name)}{unaffordable ? " · Plan" : ""}
                   </div>
-                  <div className="text-[9px] text-parchment tabular">
-                    {b.cost.seeds ? `${b.cost.seeds} seeds` : ""} {b.cost.wood ? `L${b.cost.wood}` : ""} {b.cost.stone ? `S${b.cost.stone}` : ""}
-                    {b.cost.copper ? ` C${b.cost.copper}` : ""}
-                    {b.cost.iron ? ` I${b.cost.iron}` : ""}
+                  <div className="mt-1 text-xs leading-snug text-parchment tabular">
+                    {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}
                   </div>
                 </button>
               );
