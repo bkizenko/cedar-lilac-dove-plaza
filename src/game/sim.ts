@@ -49,7 +49,7 @@ import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
-import {initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
+import {tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
 import { habitatAt, soilQuality, applyForagePressure } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
@@ -3307,6 +3307,7 @@ export class Game {
   }
 
   tickRegen(dt: number) {
+    tickManagedWoodland(this,dt);
     const rain = this.state.weather === "rain" || this.state.weather === "storm";
     const frost = this.state.weather === "frost";
     const drought = this.state.weather === "drought";

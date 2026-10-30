@@ -138,16 +138,32 @@ export function tickAutomaticCultivation(g:Game){
 }
 /** Replant depleted local stands with seed baskets, never logs. Existing forest
  * regrowth supplies the growth clock, weather response and saved tree identity. */
-export function replantStand(g:Game,buildingId:number,team=0){
- const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&['lumber','townhall'].includes(b.type)&&g.finished(b));
+export function replantStand(g:Game,buildingId:number,team=0,limit=4,silent=false){
+ const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&['lumber','townhall'].includes(b.type)&&!b.plannedCost&&g.finished(b));
  if(!b)return 0;
  const t=g.tribe(team);let planted=0;
  for(const n of g.state.trees){
-  if(planted>=4||(t.seeds||0)<(team===0?1:5))break;
+  if(planted>=Math.max(0,Math.min(4,limit))||(t.seeds||0)<(team===0?1:5))break;
   if(n.amount>0||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||(team===0&&!g.exploredAt(n.x,n.z)))continue;
   if(g.state.buildings.some(site=>g.solidBuilding(site)&&Math.abs(site.x-n.x)<site.w*.4&&Math.abs(site.z-n.z)<site.d*.4))continue;
   t.seeds!--;n.regenT=120;n.planted=true;planted++;
  }
- if(team===0)g.banner(planted?`${planted} trees replanted. Growth takes about two minutes in mild weather.`:'Need seed baskets and depleted trees within 28m of this camp.',5);
+ if(team===0&&!silent)g.banner(planted?`${planted} trees replanted. Growth takes about two minutes in mild weather.`:'Need seed baskets and depleted trees within 28m of this camp.',5);
  return planted;
+}
+
+const forestReviews=new WeakMap<Game,number>();
+/** Timber focus sustains worked forests with spare seeds; no mature logs appear instantly. */
+export function tickManagedWoodland(g:Game,dt:number){
+ const elapsed=(forestReviews.get(g)||0)+dt;
+ if(elapsed<60){forestReviews.set(g,elapsed);return 0;}
+ forestReviews.set(g,0);
+ if(g.state.laborPolicy!=='wood'||calendar(g).phase>=2)return 0;
+ const t=g.tribe(0);if((t.seeds||0)<=8)return 0;
+ for(const b of g.state.buildings){
+  if(b.team!==0||b.type!=='lumber'||b.plannedCost||!g.finished(b))continue;
+  const planted=replantStand(g,b.id,0,Math.min(4,(t.seeds||0)-8),true);
+  if(planted){g.banner(`${planted} saplings planted near the lumber camp`,3);return planted;}
+ }
+ return 0;
 }

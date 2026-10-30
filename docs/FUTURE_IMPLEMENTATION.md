@@ -1,3 +1,10 @@
+## Managed woodland under timber focus — 2026-10-30
+
+- [x] ~~Timber-focused villages use spare seed baskets to replant local exhausted stands.~~ Every minute in spring/summer, a finished paid lumber camp can replant at most four known nearby stumps; eight seed baskets remain reserved for farming. Existing planting behavior supplies the weather-sensitive sapling timer; no harvestable timber is credited immediately. Planted tree/save identities remain intact.
+- Manual/automatic replanting reject unpaid lumber plans. Removed legacy Ashfen/Redcliff names from grove/landmark descriptions; grove is now Sacred grove.
+- Six managed-woodland/scalable-plot checks pass, including exact seed reserve, no instant logs, sapling save restoration, winter/priority/unpaid-plan exclusions. Typecheck/build pass.
+- This automates the existing abstract replant action; physical planting jobs, tending, species, forest spread/fire ecology and a complete forestry production chain remain unfinished. It does not complete the human-development forestry scope.
+
 ## Difficulty raid cadence and band sizes — 2026-10-30
 
 - [x] ~~Difficulty scales the actual cooldown between sea campaigns and finite band sizes, not only the probability of an arrival check.~~ Super easy/easy have smaller bands and longer intervals; hard/survival/apocalypse increase pressure. Existing adult/defense caps, small first scouting parties, no-overlap rules and extra respite after losses remain. Normal is unchanged.

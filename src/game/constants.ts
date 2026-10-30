@@ -257,10 +257,10 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 280,
     age: 0,
-    hint: "Redcliff marker. Radiates influence toward stone.",
+    hint: "A stone landmark that strengthens local influence.",
   },
   grove: {
-    name: "Ash Grove",
+    name: "Sacred grove",
     w: 5.2,
     d: 5.2,
     food: 0,
@@ -269,7 +269,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 240,
     age: 0,
-    hint: "Ashfen marker. Radiates influence toward forage.",
+    hint: "A sacred gathering place that strengthens local influence.",
   },
 };
 
