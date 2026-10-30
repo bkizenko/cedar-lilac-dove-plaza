@@ -1,3 +1,8 @@
+## Narrow construction tray verification — 2026-10-30
+
+- [x] ~~Keep the expanded construction tray's collapse button visible on narrow screens.~~ Its inner flex child can shrink; the building list scrolls within that slot while the collapse button stays fixed and reachable.
+- Reproduced the offscreen button at390×844, fixed CSS sizing, then visually verified the rebuilt production preview and successful collapse. No console errors observed. Screenshot `/tmp/hearth-mobile-tray.png`. Viewport override reset and temporary preview closed. Typecheck/build pass. This verifies this tray interaction, not complete touch gameplay or every mobile overlay.
+
 ## Browser verification restored; compact diplomacy — 2026-10-30
 
 - [x] ~~Collapse minimap neighbors/trade behind a 44px disclosure by default.~~ Map remains visible; names and trade controls expand on demand. Mouse expansion and Space-key collapse verified in the production preview.
