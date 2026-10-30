@@ -1,3 +1,11 @@
+## Physical field crews — 2026-10-29
+
+- [x] ~~Farmers claim separate work rows and move between sowing, tending and harvesting positions.~~ Work is credited only after reaching the position; blocked rows release their assignments instead of trapping workers.
+- [x] ~~Assign farmers from the selected field.~~ Fills area-scaled slots using available adults, preserving loaded carriers and active missions. This sends a crew now; normal priorities still govern subsequent jobs.
+- [x] ~~Visible field-work bending animation; finite harvest carried home.~~ Row reservations are transient, and saved crop progress remains unchanged.
+- Validation: 30 distinct targeted checks across field work, farming tools, scalable plots, expansion and surplus/defense. Full simulation test exceeds 90% sowing with movement/separation enabled. Typecheck and production build pass. Disposable browser preview showed 3/3 workers and advancing sowing, with no console errors; user save untouched.
+- Remaining: individual crop-row state, terrain-averaged soil/water, directional expansion and full-season balance. These changes do not complete the broader farming or transport catalogue.
+
 ## Existing-plot extensions and concise field panels — 2026-10-29
 
 - [x] Select a completed farm/store, open **Expand plot**, then choose **Wider** or **Deeper**. Only added area costs materials. Pending extensions reserve space, show a map preview, and may wait for supplies while the original area stays usable.

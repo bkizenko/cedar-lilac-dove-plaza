@@ -1,3 +1,4 @@
+import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
 import {plotArea,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
@@ -55,7 +56,6 @@ import {
   calendar,
   crop,
   farmAvailable,
-  farmWork,
   reserveSeconds,
   neighborIntent,
   foodDemand,
@@ -2640,7 +2640,8 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    let slots = Math.max(0, 2 - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
+    const capacity="type" in node&&node.type==="farm"?Math.min(12,Math.ceil(3*plotArea(node))):2;
+    let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
     this.workBoard.reset();
     for (const u of workers) {
       u.selected = true; u.job = job; u.jobLock = true; u.huntOnly = false;
@@ -4253,6 +4254,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
+      if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt);return;}
       const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.world.waterY+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
@@ -4270,10 +4272,6 @@ export class Game {
       }
       if ("type" in node && node.type === "warehouse") {
         preserveFood(this, u, node as Building, dt);
-        return;
-      }
-      if ("type" in node && node.type === "farm") {
-        farmWork(this, u, node as Building, dt);
         return;
       }
       const t = this.resKind(node) || u.job || "food";

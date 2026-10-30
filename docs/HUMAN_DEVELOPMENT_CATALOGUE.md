@@ -1,3 +1,7 @@
+## Field labor delivered — 2026-10-29
+
+- [x] ~~Separate farmer work positions, travel before credited labor, visible sow/tend/harvest work and selected-field crew assignment.~~ Preserves finite harvest and saved crop progress. Detailed row crop state, animal traction and full-season balance remain open.
+
 # Itemized human-development game catalogue
 
 This is a design catalogue, not a claim that every historical development must occur in one linear sequence or that all these features already exist. It combines the user's requested survival/RTS/empire game with all accepted extensions. The canonical remaining execution plan is [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md). Struck-through entries are verified at their stated scope; uncrossed entries remain open or partial. As explicitly requested on 2026-10-03, all 120 items, including formerly optional items, are committed overhaul scope. Inclusion does not mean implementation is complete. Features should create decisions and interact with existing labor/material/knowledge systems; omit decorative inventory clutter. Preserve ongoing saved settlements through compatible additions.

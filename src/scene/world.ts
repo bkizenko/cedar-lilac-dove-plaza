@@ -1476,6 +1476,7 @@ export class WorldView {
         const walking = spd > 0.35;
         const chopping =
           !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
+        const farming=!walking&&u.order==="gather"&&u.node&&"type" in u.node&&u.node.type==="farm";
         const phase = u.stride;
         const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.world.waterY+.3;
         const bob = afloat ? Math.sin(game.state.time*2+u.id)*.025 : walking
@@ -1483,7 +1484,7 @@ export class WorldView {
           : chopping
             ? Math.abs(Math.sin(phase)) * 0.08
             : 0;
-        const pitch = afloat ? 0 : walking ? Math.sin(phase) * 0.22 : chopping ? Math.sin(phase) * 0.14 : 0;
+        const pitch = afloat ? 0 : walking ? Math.sin(phase) * 0.22 : farming ? .18+Math.sin(phase)*.16 : chopping ? Math.sin(phase) * 0.14 : 0;
         const roll = afloat ? 0 : walking ? Math.sin(phase * 2) * 0.12 : 0;
         const yScale = afloat ? 1.3 : walking ? 1.65 * (1 + Math.sin(phase * 2) * 0.045) : 1.65;
         const st = TEAM_STYLE[u.team] || TEAM_STYLE[0];
