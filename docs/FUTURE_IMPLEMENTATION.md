@@ -1,3 +1,9 @@
+## Selected-building action hierarchy — 2026-10-29
+
+- [x] ~~Group recipes into Transport, Farm tools and Weapons.~~ Docks open Transport, barracks open Weapons; other recipe groups are collapsed. Names and costs use separate lines, with larger labels and 48px recipe controls.
+- [x] ~~Larger selected-object heading and minimize target; optional information under Details.~~ Shorter direct build/mining/guard/recycle labels. Villager arrows no longer appear on unrelated buildings/resources.
+- Typecheck, production build and whitespace checks pass. Visual browser verification is blocked: the Mac is locked and browser transport disconnected. Do not treat the layout as visually signed off; check desktop and narrow layouts after unlock. No saved-village data changes.
+
 ## Rival annual-storage spending — 2026-10-29
 
 - Observed resumed seed-345 simulation at year 7: rivals reached 94/80 people, 25/24 storehouses, but retained only 26/35 timber and remained Stone Age. Food buffers exceeded 1,000 seconds. The annual-storage target continually treated more stores as essential spending.

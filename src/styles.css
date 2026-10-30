@@ -390,3 +390,17 @@ canvas:focus-visible {
 
 .building-actions button{min-height:2.75rem;font-size:1rem;line-height:1.35;padding:.65rem .75rem;}
 .building-actions p{font-size:.875rem;line-height:1.45;}
+
+/* Selected buildings expose short task groups rather than a wall of recipes. */
+.selection-info{font-size:14px;line-height:1.4;color:var(--color-parchment-dim);}
+.selection-info summary{cursor:pointer;min-height:32px;display:list-item;align-content:center;}
+.selection-info p{margin:.4rem 0;}
+.craft-group{border:1px solid color-mix(in srgb,var(--color-parchment) 22%,transparent);border-radius:8px;overflow:hidden;}
+.craft-group>summary{cursor:pointer;padding:.7rem .8rem;font-size:17px;font-weight:600;min-height:48px;color:var(--color-parchment);}
+.craft-group[open]>summary{background:var(--color-ink-soft);}
+.craft-options{display:grid;gap:.5rem;padding:.6rem;}
+.craft-options button{min-height:48px;font-size:16px!important;line-height:1.35;}
+.craft-options button strong{display:block;font-weight:600;}
+.craft-options button span{display:block;font-size:13px;color:var(--color-parchment-dim);margin-top:.2rem;}
+.craft-options p{font-size:13px;line-height:1.4;margin:.3rem 0;}
+.craft-group summary:focus-visible,.selection-info summary:focus-visible{outline:2px solid var(--color-bronze-bright);outline-offset:-3px;}
