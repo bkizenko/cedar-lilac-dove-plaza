@@ -1,3 +1,15 @@
+## Defensive line dragging — 2026-10-30
+
+- [x] ~~Drag adjoining palisade, stone-wall, trench and moat sections.~~ Lines snap to the dominant axis, retain ordinary section costs/building work, stop at the first obstruction and create unpaid plans when materials run out. Each drag is capped at 32 sections. Gate placement remains individual. Preview currently shows the final section and a section-count banner; a full-line preview and arbitrary-angle joined geometry remain open.
+- Three new checks cover both directions, bounds, finite material spending, unpaid plans, save/load and obstruction handling. Typecheck/build pass.
+
+## Organic landscape expansion — latest direction
+
+- [ ] Replace predominantly radial island silhouettes with seeded mainland, peninsula, broken-coast and connected-basin layouts; retain navigable settlement starts and 2–4 viable rivals.
+- [ ] Tie forests to moisture, slope and shelter, with irregular connected stands, sparse edges and local clearings rather than repeated small tree circles.
+- [ ] Add coherent uplands, passes, valleys, estuaries and varied shore gradients; coordinate soil, rivers, vegetation and readable colors. Keep old world versions reproducible for saves.
+- [ ] Verify multiple seeds for land connectivity, accessible timber/food/stone, rival viability and render performance; visually inspect broad views before publishing.
+
 ## Drawn bridges — 2026-10-30
 
 - [x] ~~Drag a bridge between chosen banks.~~ Drawn endpoints persist through construction and saves; invalid deep, dry, obstructed, steep or overlong spans are rejected. Click-to-survey remains available. Crossings over 16m use proportionally more materials; existing paid bridges retain their state.

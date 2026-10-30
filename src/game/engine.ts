@@ -1,3 +1,4 @@
+import {linearStructure,constructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
 import {dragPlot,scalablePlot,type PlotSize} from './plots';
 import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
@@ -296,7 +297,7 @@ export class Engine {
     }
     if (e.button === 0) {
       if (this.game.state.placing) {
-        this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge")?this.view.groundAt(p.x,p.y):null;
+        this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge"||linearStructure(this.game.state.placing))?this.view.groundAt(p.x,p.y):null;
         this.drag = null;
         return;
       }
@@ -407,6 +408,10 @@ export class Engine {
     }
     if (this.game.state.placing) {
       this.updateGhost();
+      if(linearStructure(this.game.state.placing)&&this.plotStart){
+        placeConstructionLine(this.game,this.game.state.placing,this.plotStart,g);
+        this.pushHud();return;
+      }
       this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
       this.updateGhost();
       this.pushHud();
@@ -490,6 +495,11 @@ export class Engine {
       const key=type+JSON.stringify(this.plotSize);
       if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`Store · ${cost.wood} logs · drag to size`,4);}
     }
+    if(linearStructure(type)&&this.plotStart){
+      const line=constructionLine(this.plotStart,g),end=line[line.length-1];
+      x=end.x;z=end.z;
+      this.game.banner(`${line.length} sections · drag to extend · leave room for a gate`,2);
+    }
     this.bridgeSpan=undefined;
     if(type==='bridge'&&this.plotStart&&Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z)>2){
       this.bridgeSpan={ax:this.plotStart.x,az:this.plotStart.z,bx:g.x,bz:g.z};
@@ -537,6 +547,7 @@ export class Engine {
               ? "Quarry — choose a stone outcrop or gentle mountain slope. Two miners dig and haul stone."
               : t === "bridge"
                 ? "Bridge — drag bank to bank (5–28 m), or click a narrow river for an automatic crossing."
+              : linearStructure(t) ? "Drag a defensive line. Each section needs materials and builders. Leave room for a gate."
               : "Click the valley to raise a " + d.name + "  ·  Esc cancel",
         2.6,
       );
