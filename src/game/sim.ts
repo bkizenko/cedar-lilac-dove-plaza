@@ -49,7 +49,7 @@ import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
-import {tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
+import {plantingAI,cancelPlanting,tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
 import { habitatAt, soilQuality, applyForagePressure } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
@@ -1598,6 +1598,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    cancelPlanting(this,u);
     u.repatriating=undefined;
     u.tributeJourney=undefined;u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
@@ -4188,6 +4189,7 @@ export class Game {
     if(visitorAI(this,u,dt))return;
     if(delegationAI(this,u,dt))return;
     if(cropStudyAI(this,u,dt))return;
+    if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;
     if(haulageWorkAI(this,u,dt))return;

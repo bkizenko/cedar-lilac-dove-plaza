@@ -187,6 +187,7 @@ export type Unit = {
   haulageWork?: HaulageWork;
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
+  plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
   target: Unit | Building | null;

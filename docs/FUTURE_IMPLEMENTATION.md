@@ -1,3 +1,9 @@
+## Physical managed planting — 2026-10-30
+
+- [x] ~~Automatic timber-focus replanting assigns local workers to individual stump sites.~~ Spare seeds fund up to four distinct tasks per review, retaining eight baskets. Only available local adults on connected dry ground qualify; existing missions/cargo/paid projects are protected. Workers walk to the stump and spend twelve work seconds before the sapling growth timer starts. No logs or saplings are credited at assignment.
+- Optional validated plantingWork fields preserve paid task/progress in saves. Explicit mission interruption cancels and returns the unused seed once. Dead workers do not complete tasks or permanently reserve stumps. Manual replant button remains the older abstract action; a dedicated carried-seed visual and full tending/forestry chain remain unfinished.
+- Three physical-planting checks pass: actual walking/work completion, finite seeds and no immediate timber, save-state retention, seasonal/priority/unfunded exclusions, cancellation and corrupt-progress rejection. Typecheck/build pass. Visual animation verification remains pending.
+
 ## Managed woodland under timber focus — 2026-10-30
 
 - [x] ~~Timber-focused villages use spare seed baskets to replant local exhausted stands.~~ Every minute in spring/summer, a finished paid lumber camp can replant at most four known nearby stumps; eight seed baskets remain reserved for farming. Existing planting behavior supplies the weather-sensitive sapling timer; no harvestable timber is credited immediately. Planted tree/save identities remain intact.

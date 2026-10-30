@@ -162,8 +162,27 @@ export function tickManagedWoodland(g:Game,dt:number){
  const t=g.tribe(0);if((t.seeds||0)<=8)return 0;
  for(const b of g.state.buildings){
   if(b.team!==0||b.type!=='lumber'||b.plannedCost||!g.finished(b))continue;
-  const planted=replantStand(g,b.id,0,Math.min(4,(t.seeds||0)-8),true);
-  if(planted){g.banner(`${planted} saplings planted near the lumber camp`,3);return planted;}
+  let assigned=0;
+  for(const n of g.state.trees){
+   if(assigned>=4||(t.seeds||0)<=8)break;
+   if(n.amount>0||n.planted||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!g.exploredAt(n.x,n.z)||!g.walkable(n.x,n.z)||
+      g.state.units.some(p=>p.hp>0&&p.plantingWork?.treeId===n.id))continue;
+   const u=g.state.units.find(p=>p.team===0&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.jobLock&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));
+   if(!u)break;
+   t.seeds!--;u.plantingWork={treeId:n.id,progress:0};u.order='gather';u.node=null;u.job='wood';u.jobLock=true;assigned++;
+  }
+  if(assigned){g.workBoard.reset();g.banner(`${assigned} residents assigned to plant saplings`,3);return assigned;}
  }
  return 0;
 }
+
+export function plantingAI(g:Game,u:Unit,dt:number){
+ const work=u.plantingWork;if(!work)return false;
+ const n=g.state.trees.find(n=>n.id===work.treeId);
+ if(!n||n.amount>0||n.planted){cancelPlanting(g,u);return false;}
+ if(Math.hypot(u.x-n.x,u.z-n.z)>2){u.tx=n.x;u.tz=n.z;u.workReason='Taking a seed basket to the planting site';g.steer(u,dt);return true;}
+ u.vx=0;u.vz=0;u.stride+=dt*5;u.workReason='Planting a sapling';work.progress=Math.min(12,work.progress+dt);
+ if(work.progress>=12){n.planted=true;n.regenT=120;u.plantingWork=undefined;u.jobLock=false;u.order='idle';g.workBoard.reset();}
+ return true;
+}
+export function cancelPlanting(g:Game,u:Unit){if(!u.plantingWork)return;u.plantingWork=undefined;g.tribe(u.team).seeds=(g.tribe(u.team).seeds||0)+1;u.jobLock=false;}
