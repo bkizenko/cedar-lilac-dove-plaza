@@ -167,10 +167,15 @@ export function generateWorld(seed: number, version = 1): WorldData {
     for (let ix = 0; ix < n; ix++) {
       const x = (ix / SEGS) * MAP - HALF;
       const z = (iz / SEGS) * MAP - HALF;
-      const dist = Math.hypot(x, z);
-      const ang = Math.atan2(x, z);
+      // Domain-warp the shoreline on new worlds: coves and headlands vary
+      // independently of the mountains and of the map's square boundary.
+      const wx=version>=4?x+(fbm(x*.006+seed%997,z*.006,3)-.5)*150:x;
+      const wz=version>=4?z+(fbm(x*.006-37,z*.006+seed%619,3)-.5)*150:z;
+      const dist = Math.hypot(wx*(version>=4?1.12:1), wz*(version>=4?.9:1));
+      const ang = Math.atan2(wx, wz);
       const warble = fbm(x * 0.016 + 3, z * 0.016, 4) * coastAmp;
-      const r = islandR * (1 + lobeAmp * Math.sin(lobes * ang + lobePhase)) + warble;
+      const inlet=version>=4?(fbm(wx*.012+seed%353,wz*.012-81,4)-.5)*100:0;
+      const r = islandR * (1 + lobeAmp * Math.sin(lobes * ang + lobePhase)) + warble + inlet;
       const coast = Math.max(0, Math.min(1, (r - dist) / 8));
 
       let h = 0.7 + fbm(x * 0.018, z * 0.018, 5) * (1.8 + hillScale * 1.2);
@@ -754,6 +759,20 @@ export function generateWorld(seed: number, version = 1): WorldData {
     dress(stones, "stone", stoneCount, 0);
   }
 
+  if(version>=4){
+    const vegetation=mulberry32(seed^0x7f031);
+    // Continuous woodland belts with broken edges and clearings, not stamps.
+    // Bounded instances keep the low-quality renderer affordable.
+    for(let attempt=0,added=0;attempt<5000&&added<400;attempt++){
+      const x=(vegetation()-.5)*MAP*.9,z=(vegetation()-.5)*MAP*.9;
+      const canopy=fbm(x*.014+seed%571,z*.014-23,4);
+      if(canopy<.49||vegetation()>(canopy-.44)*3)continue;
+      const y=sampleHeight(heights,x,z);
+      if(y<waterY+.5||y>27||Math.abs(sampleHeight(heights,x+3,z)-sampleHeight(heights,x-3,z))>4)continue;
+      if(camps.some(c=>Math.hypot(c.x-x,c.z-z)<20)||trees.some(t=>Math.hypot(t.x-x,t.z-z)<5)||stones.some(t=>Math.hypot(t.x-x,t.z-z)<4))continue;
+      trees.push(node(nid++,"tree",x,z,y,18+Math.floor(vegetation()*20),.85+vegetation()*.35,1));added++;
+    }
+  }
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
   return {
     size: MAP,

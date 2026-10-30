@@ -1,3 +1,9 @@
+## Organic world generation, first batch — 2026-10-30
+
+- [x] ~~Version 4 shoreline domain warping and continuous woodland placement.~~ New unseeded games use v4; old saves retain their exact generation version. Coast outlines gain coves/headlands and an elongated footprint. Up to 400 additional bounded tree instances follow a continuous noise field with clearings, dry-ground/slope checks and settlement clearance.
+- Validation: four seeds checked for determinism, finite terrain, dry camp centers, added bounded timber and unique tree IDs. Both v3/v4 save round-trips restore exact heights and tree state. Typecheck/build pass. Actual terrain data rendered to `/tmp/hearth-organic-terrain.png` for overview inspection; browser performance and multi-season rival outcomes remain unverified.
+- Remaining: river junctions still often form a central cross, ford pads look repetitive, broader biome palettes and denser coherent forest interiors need work. This does not complete organic geography or prove settlement connectivity across every seed. Preserve v1–v3 generation functions when revising further.
+
 ## Defensive line dragging — 2026-10-30
 
 - [x] ~~Drag adjoining palisade, stone-wall, trench and moat sections.~~ Lines snap to the dominant axis, retain ordinary section costs/building work, stop at the first obstruction and create unpaid plans when materials run out. Each drag is capped at 32 sections. Gate placement remains individual. Preview currently shows the final section and a section-count banner; a full-line preview and arbitrary-angle joined geometry remain open.
