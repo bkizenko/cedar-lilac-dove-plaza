@@ -1,3 +1,9 @@
+## Rival advancement ordering — 2026-10-29
+
+- [x] ~~Check earned age readiness before rival trade, equipment and construction spend reserves.~~ Uses the same population, civic infrastructure and retained-stock rules as the player. Removed the additional AI-only 600-second food gate and random advancement roll.
+- Validation: all 37 rival-development checks pass, including the real decision loop at exactly qualifying materials and a 350-second food reserve, plus refusal when institutions are missing. Typecheck and production build pass.
+- Still open: unassisted multi-year progression across difficult maps, sustained successful barter and powerful rival cities. This corrects readiness recognition; it does not prove the whole rival economy balanced.
+
 ## Physical field crews — 2026-10-29
 
 - [x] ~~Farmers claim separate work rows and move between sowing, tending and harvesting positions.~~ Work is credited only after reaching the position; blocked rows release their assignments instead of trapping workers.

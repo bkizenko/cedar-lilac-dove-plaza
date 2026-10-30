@@ -5026,6 +5026,10 @@ export class Game {
     if (tr.thinkT > 0) return;
     tr.thinkT = 1.6 + Math.random();
 
+    // Recognize earned readiness before trade or building plans spend its reserves.
+    // The shared rule already checks people, institutions and a food buffer.
+    if (tr.age < 5 && this.ageUpIssue(team) === null) this.tryAgeUp(team);
+
     dispatchRivalBarter(this,team);
     developRivalCrossings(this,team);
     rebalanceRivalLabor(this,team);
@@ -5034,7 +5038,6 @@ export class Game {
     developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);
-    const costScale = 0.92;
     const pop = this.popNow(team);
     if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
       for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}
@@ -5065,18 +5068,6 @@ export class Game {
           u.workCheckAt = 0;
           this.workBoard.assign(this,u);
         }
-      }
-    }
-
-    if (reserve > 600 && tr.age < 5 && pop >= (AGE_COST[tr.age + 1]?.pop || 0) * (growing ? 0.75 : 0.95)) {
-      const c = AGE_COST[tr.age + 1];
-      if (
-        c &&
-        tr.food > (c.food || 0) * costScale &&
-        tr.wood > (c.wood || 0) * costScale &&
-        Math.random() < tr.tech + (growing ? 0.38 : 0.08)
-      ) {
-        this.tryAgeUp(team);
       }
     }
 

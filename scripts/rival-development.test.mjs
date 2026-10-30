@@ -406,3 +406,24 @@ test('rivals spend spare seeds on depleted local stands, wait for regrowth and p
  const saved=decodeGame(encodeGame(g));assert.equal(saved.tribe(1).seeds,4);assert.equal(saved.state.trees.filter(n=>n.planted).length,2);
  g.tickRegen(200);assert.ok(g.state.trees[0].amount>0);assert.equal(t.wood,0,'regrowth is standing timber, not treasury income');
 });
+
+
+test('the real rival decision loop recognizes earned advancement before optional investment',()=>{
+ const g=fixture();baseEconomy(g);
+ const cost=AGE_COST[1];while(g.popNow(1)<cost.pop)g.spawnUnit('worker',5,50,1);
+ g.state.buildings.push(g.makeBld('workshop',40,38,1));
+ Object.assign(g.tribe(1),{wood:cost.wood,stone:cost.stone,food:Math.max(cost.food,Math.ceil(foodDemand(g,1)*350)),thinkT:0,tech:0});
+ assert.equal(g.ageUpIssue(1),null);
+ assert.ok(g.tribe(1).food/foodDemand(g,1)<600,'qualifies without the obsolete AI-only food requirement');
+ const random=Math.random;Math.random=()=>.99;
+ try {g.rivalTick(1,2);}finally{Math.random=random;}
+ assert.equal(g.tribe(1).age,1,'no lucky roll or spare construction budget is required');
+ assert.deepEqual(g.simulationErrors,[]);
+});
+
+test('rival decision loop cannot bypass missing civic prerequisites',()=>{
+ const g=fixture();const cost=AGE_COST[1];while(g.popNow(1)<cost.pop)g.spawnUnit('worker',5,50,1);
+ Object.assign(g.tribe(1),{wood:500,stone:500,food:5000,thinkT:0});
+ assert.match(g.ageUpIssue(1),/Complete/);
+ g.rivalTick(1,2);assert.equal(g.tribe(1).age,0);
+});
