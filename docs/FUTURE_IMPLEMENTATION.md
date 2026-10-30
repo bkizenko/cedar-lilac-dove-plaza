@@ -1,3 +1,10 @@
+## Terrain minimap — 2026-10-30
+
+User clarified: leave **5% usage unused**. Earlier 20% checkpoints below are historical.
+
+- [x] ~~Replace the empty stretched minimap with equal-scale square terrain, water and elevation colors, discovery masking, known settlements and camera-center marker.~~ Drag pans; focused arrow keys pan; Home returns to the village. Terrain sampling is cached while mounted and markers/fog refresh at 2 Hz. No save format or village state changes.
+- Production preview verified visually; arrow-key camera movement verified; no browser console errors. Typecheck/build pass. The camera marker indicates center, not the full perspective viewport footprint. Further map zoom/viewport outline and touch-layout QA remain open.
+
 ## Latest requested batch — 2026-10-30
 
 Preserve the existing village and save compatibility. Push each tested implementation batch. Account currently reports 80% used; the latest request mentions both 5% and 20% unused, so preserve 20% pending clarification or a confirmed reset. Do not consume a reset credit automatically.

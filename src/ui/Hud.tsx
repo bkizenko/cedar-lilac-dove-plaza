@@ -1,3 +1,4 @@
+import {WorldMinimap} from './WorldMinimap';
 import {PlotControls} from './PlotControls';
 import {beginPackTaming} from "@/game/packAnimals";
 import {TestPanel} from "./TestPanel";
@@ -770,7 +771,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </button>
         ) : (
           <div>
-            <Minimap hud={hud} engine={engine} />
+            <WorldMinimap hud={hud} engine={engine} />
             {founding ? null : (
             <div className="px-2 py-1.5 space-y-1">
               {hud.tribes
@@ -1126,43 +1127,3 @@ function shortName(n: string) {
   return n;
 }
 
-function Minimap({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
-  const camps = (hud.camps || []).filter((c) => c.known);
-  const homeLeft = 50 + ((hud.homeX ?? 0) / MAP) * 100;
-  const homeTop = 50 + ((hud.homeZ ?? 0) / MAP) * 100;
-  return (
-    <button
-      type="button"
-      aria-label="Minimap"
-      className="block h-24 w-40 bg-[#1a2218] relative overflow-hidden"
-      onClick={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        const nx = ((e.clientX - r.left) / r.width - 0.5) * MAP;
-        const nz = ((e.clientY - r.top) / r.height - 0.5) * MAP;
-        engine?.focusMinimap(nx, nz);
-      }}
-    >
-      <Home
-        className="absolute size-3 -translate-x-1/2 -translate-y-1/2 text-bronze-bright"
-        style={{ left: `${homeLeft}%`, top: `${homeTop}%` }}
-      />
-      {camps.map((c) => (
-        <span
-          key={c.name + c.team}
-          className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            left: `${50 + (c.x / MAP) * 100}%`,
-            top: `${50 + (c.z / MAP) * 100}%`,
-            background: c.alive ? c.color : "#4a4038",
-            opacity: c.alive ? 1 : 0.4,
-          }}
-          title={c.name}
-        />
-      ))}
-      <span className="sr-only">Focus valley</span>
-      <span className="absolute bottom-1 right-1 text-[9px] text-parchment tabular">
-        {hud.fps} fps
-      </span>
-    </button>
-  );
-}
