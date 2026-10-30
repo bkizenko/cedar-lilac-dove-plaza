@@ -46,7 +46,7 @@ test('a physical cultivation trial uses working time, survives loading and unloc
   assert.deepEqual(g.tribe(0).cultivated,['tubers']);assert.equal(g.tribe(0).cropTrial,undefined);
   const field=g.makeBld('farm',20,38,0);g.state.buildings.push(field);
   assert.ok(setFieldCrop(g,field.id,'tubers'));assert.equal(setFieldCrop(g,field.id,'grain'),false);
-  crop(g,field).planted=1;assert.equal(setFieldCrop(g,field.id,'tubers'),false);
+  crop(g,field).planted=1;assert.equal(setFieldCrop(g,field.id,'tubers'),true);assert.equal(field.crop.planted,1,'planning never erases the standing crop');
   g.state.time=950;const c=crop(g,field);assert.ok(c.remaining>0);
   Object.assign(u,{order:'gather',carry:0,gatherT:1});farmWork(g,u,field,.1);assert.equal(u.carryFood,'tubers');
 });

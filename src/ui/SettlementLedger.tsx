@@ -12,7 +12,7 @@ import {resumeWeaponWork,WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES, AGE_CHOICES, BUILDINGS } from "@/game/constants";
-import {CROPS,CROP_NAMES,seekCropSamples,beginCropTrial,setFieldCrop,cropYield} from "@/game/cultivation";
+import {CROPS,CROP_NAMES,seekCropSamples,beginCropTrial,setFieldCrop,setFieldRest} from "@/game/cultivation";
 import { foodSpoilage, winterOutlook, storehouses, foodInventory, FOOD_KINDS } from "@/game/pantry";
 import { habitatAt, soilQuality, climateAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
@@ -265,30 +265,17 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <ul>
           {farms.map((b) => (
             <li key={b.id}>
-              Field {b.id} · {b.crop?.kind||b.cropType||"grain"} · full harvest capacity {Math.floor(260 * (b.fertility ?? 1) * cropYield(g,b) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) * (s.agePicks[3] === "econ" ? 1.2 : 1))} food per year · soil {Math.round((b.fertility ?? 1) * 100)}% ·{" "}
-              {b.fallowYear === cal.year ? "Resting this year" : "In cultivation"}:{" "}
-              {Math.round((b.crop?.planted || 0) * 100)}% sown ·{" "}
-              {Math.round((b.crop?.tended || 0) * 100)}% tended ·{" "}
-              {b.crop?.ripened
-                ? `${Math.floor(b.crop.remaining)} food left to harvest`
-                : `up to ${Math.floor(
-                    (b.crop?.planted || 0) *
-                      (160 + 100 * (b.crop?.tended || 0)) *
-                      (b.fertility ?? 1) * (b.crop?.water??1) * cropYield(g,b) * habitatAt(g, b.x, b.z).crops * (0.65 + soilQuality(g,b.x,b.z)*0.5) *
-                      (s.agePicks[3] === "econ" ? 1.2 : 1),
-                  )} food expected`}
+              Field {b.id} · {fieldProductionSummary(g,b)} · fertility {Math.round((b.fertility??1)*100)}%
               <button
-                disabled={cal.phase !== 0}
+                disabled={cal.phase !== 0 || b.crop?.year===cal.year && b.crop.planted>0}
                 onClick={() => {
-                  b.fallowYear = b.fallowYear === cal.year ? undefined : cal.year;
-                  if (b.fallowYear === cal.year && b.crop) b.crop.planted = 0;
-                  g.workBoard.reset();
+                  setFieldRest(g,b.id,b.fallowYear!==cal.year);
                   engine.pushHud();
                 }}
               >
                 {b.fallowYear === cal.year ? "Cultivate this year" : "Rest field this year"}
               </button>
-              <label> Next crop <select value={b.crop?.kind||b.cropType||"grain"} disabled={!!b.crop&&b.crop.year===cal.year&&b.crop.planted>0} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
+              <label> Next crop <select value={b.cropType||b.crop?.kind||"grain"} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
             </li>
           ))}
         </ul>

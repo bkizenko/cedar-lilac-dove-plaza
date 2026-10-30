@@ -1,7 +1,7 @@
 import type {Game} from "./sim";
 import type {CropKind,Unit,ResourceNode,Building} from "./types";
 import {HABITATS,habitatAt,soilQuality} from "./ecology";
-import {isDependent,reserveSeconds} from "./settlement";
+import {calendar,crop,isDependent,reserveSeconds} from "./settlement";
 import {beginExpedition} from "./journeys";
 import {lifeEvent} from "./communities";
 
@@ -90,9 +90,23 @@ export function cropYield(g:Game,b:Building){
   return kind==="pulses"?.85:kind==="tubers"?(habitat===HABITATS.forest?1.15:.9):1;
 }
 export function setFieldCrop(g:Game,id:number,kind:CropKind){
-  const b=g.state.buildings.find(b=>b.id===id&&b.team===0&&b.type==="farm");
-  if(!b||!g.tribe(0).cultivated?.includes(kind)||b.crop&&b.crop.planted>0&&b.crop.year===Math.floor(g.state.time/1800))return false;
-  b.cropType=kind;if(b.crop)b.crop.kind=kind;g.workBoard.reset();return true;
+  const b=g.state.buildings.find(b=>b.id===id&&b.team===0&&b.type==="farm"&&g.finished(b));
+  if(!b||!CROPS.includes(kind)||!g.tribe(0).cultivated?.includes(kind))return false;
+  const current=crop(g,b);
+  b.cropType=kind;
+  // Once sown, a change is next spring's plan, never a conversion of live crops.
+  if(current.planted===0&&calendar(g).phase===0)current.kind=kind;
+  g.workBoard.reset();return true;
+}
+export function setFieldRest(g:Game,id:number,rest:boolean){
+ const b=g.state.buildings.find(b=>b.id===id&&b.team===0&&b.type==='farm'&&g.finished(b));
+ if(!b||calendar(g).phase!==0)return false;
+ const current=crop(g,b);if(current.planted>0)return false;
+ b.fallowYear=rest?calendar(g).year:undefined;
+ if(rest)for(const u of g.state.units)if(u.node===b&&u.order==='gather'){
+  u.node=null;u.order=u.carry>0?'return':'idle';u.workCheckAt=0;
+ }
+ g.workBoard.reset();return true;
 }
 
 /** Known plants are gathered; unknown locations require a provisioned search. */

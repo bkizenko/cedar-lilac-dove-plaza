@@ -1,3 +1,11 @@
+## Direct field crop and rest controls — 2026-10-29
+
+- [x] ~~Selected fields expose Crop & soil controls: cultivated crop choice, fertility and rest.~~ Crop changes after sowing schedule next spring, preserve this year's crop kind/progress and survive saves.
+- [x] ~~Rest only unsown spring fields; release assigned farmers without dropping cargo.~~ Uses existing seasonal fertility recovery. Prevents the ledger's former destructive reset of partially planted crops.
+- [x] ~~Ledger harvest numbers use the shared field production report.~~ Includes expanded area and terrain instead of its stale fixed-size formula.
+- Validation: 17 rotation, cultivation and physical field-work checks pass; typecheck/build pass. Visual review remains pending following the browser interruption. No save reset/migration.
+- Remaining: multi-year rotation schedules, per-row crop state, animal traction and irrigation; this is not the whole agriculture overhaul.
+
 ## Field terrain and continuous river moisture — 2026-10-29
 
 - [x] ~~Expanded fields average soil, habitat crop suitability and drought access over their footprint.~~ Up to nine equal-area samples, cached per building/footprint/world. Ordinary base-sized fields retain center sampling and their former yield formula. Expansion and world replacement invalidate the cache.
