@@ -1,6 +1,6 @@
 import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
-import {architectureStyle} from "./architecture";
+import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -192,6 +192,7 @@ export class WorldView {
   lost = false;
   onContextLost: (() => void) | null = null;
   onContextRestored: (() => void) | null = null;
+  private styleHalls:{id:number;x:number;z:number;team:number}[]=[];
   private villageStyles = new Map<string,ReturnType<typeof architectureStyle>>();
   private eraDetails: THREE.InstancedMesh | null = null;
   private terrainBiome: Uint8Array | null = null;
@@ -1283,17 +1284,15 @@ export class WorldView {
     }
   }
 
-  private villageStyle(game:Game,team:number) {
-    const tribe=game.tribe(team),age=tribe?.age||0,key=`${game.state.seed}/${team}/${age}`;
-    const cached=this.villageStyles.get(key);if(cached)return cached;
-    const home=game.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0);
-    let habitat:'plains'|'forest'|'hills'='plains',distance=Infinity;
-    if(home)for(const biome of game.world?.biomes||[]){const d=(biome.x-home.x)**2+(biome.z-home.z)**2;if(d<distance){distance=d;habitat=biome.kind;}}
-    const style=architectureStyle(game.state.seed,team,age,habitat);
-    this.villageStyles.set(key,style);return style;
+  private villageStyle(game:Game,team:number,point:{x:number;z:number}) {
+    const age=game.tribe(team)?.age||0;
+    const local=localArchitecture(game.state.seed,team,age,point,this.styleHalls||[],game.world?.biomes||[],this.villageStyles);
+    const cached=this.villageStyles.get(local.key);if(cached)return cached;
+    this.villageStyles.set(local.key,local.style);return local.style;
   }
 
   private syncBuildings(game: Game) {
+    this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
     for (const b of game.state.buildings) if(b.hp>0)grouped.get(b.type)?.push(b);
@@ -1305,7 +1304,7 @@ export class WorldView {
       }
       for(const b of grouped.get(type)!) {
         const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
-        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team);
+        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b);
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const scalable=type==="farm"||type==="warehouse";
@@ -1355,7 +1354,7 @@ export class WorldView {
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
         ['warehouse','farm','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
-      const identity=this.villageStyle(game,b.team),era=identity.era;if(era===0)continue;
+      const identity=this.villageStyle(game,b.team,b),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
       const roof=this.bldMeshes.get(b.type)?.roof.geometry;

@@ -41,3 +41,13 @@ test('local timber, earth and stone palettes distinguish habitats through every 
   assert.equal(new Set(styles.map(s=>s.roof)).size,1,'local materials retain the village roof identity');
  }
 });
+
+test('offshoot towns use local habitat materials while the founding palette stays stable',async()=>{
+ const {localArchitecture}=await import('../src/scene/architecture.ts');
+ const halls=[{id:1,team:0,x:0,z:0},{id:2,team:0,x:200,z:0},{id:3,team:1,x:190,z:0}];
+ const biomes=[{kind:'forest',x:0,z:0},{kind:'hills',x:200,z:0}];
+ const home=localArchitecture(345,0,2,{x:5,z:0},halls,biomes);
+ const town=localArchitecture(345,0,2,{x:195,z:0},halls,biomes);
+ assert.deepEqual(home.style,architectureStyle(345,0,2,'forest'));assert.notEqual(home.style.timber,town.style.timber);
+ assert.notEqual(home.key,town.key);assert.deepEqual(town,localArchitecture(345,0,2,{x:200,z:3},halls,biomes));
+});

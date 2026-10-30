@@ -18,3 +18,18 @@ export function architectureStyle(seed:number,team:number,age:number,habitat:'pl
   return {roof:roofs[era][variant],timber:localWalls[habitat][era],roofHeight:[1,1.035,1.075,1.10,1.17,1.21][era],
     trim:trim[era],era,variant};
 }
+
+export function localArchitecture(seed:number,team:number,age:number,point:{x:number;z:number},
+ halls:{id:number;x:number;z:number;team:number}[],biomes:{kind:'plains'|'forest'|'hills';x:number;z:number}[],cache?:Map<string,ReturnType<typeof architectureStyle>>){
+ const own=halls.filter(h=>h.team===team);
+ let home=own[0],nearest=Infinity;
+ for(const h of own){const d=(h.x-point.x)**2+(h.z-point.z)**2;if(d<nearest){nearest=d;home=h;}}
+ const center=home??point;
+ let habitat:'plains'|'forest'|'hills'='plains',distance=Infinity;
+ for(const b of biomes){const d=(b.x-center.x)**2+(b.z-center.z)**2;if(d<distance){distance=d;habitat=b.kind;}}
+ // Preserve the founding village's palette; offshoot towns develop their own.
+ const localSeed=home&&home!==own[0]?seed^Math.imul(home.id,0x45d9f3b):seed;
+ const key=`${seed}/${team}/${age}/${own[0]?.id??0}/${home?.id??0}/${habitat}`;
+ let style=cache?.get(key);if(!style){style=architectureStyle(localSeed,team,age,habitat);cache?.set(key,style);}
+ return {key,style};
+}

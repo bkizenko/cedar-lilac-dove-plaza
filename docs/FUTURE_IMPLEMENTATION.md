@@ -1,3 +1,9 @@
+## Local architecture for offshoot towns — 2026-10-30
+
+- [x] ~~Building presentation resolves the nearest completed own town hall and its local habitat instead of using the tribe's first hall everywhere.~~ Founding palettes remain stable; offshoot towns get seeded local roof palettes and habitat wall materials through all six ages. Cached styles account for settlement/age/habitat, with shared instanced building geometry and unchanged footprints/saves.
+- Five architecture checks pass, including era-detail rendering bounds/discovery, material ownership, local habitat differentiation and same-town coherence. Typecheck/build pass. A sparse renderer fixture exposed missing optional world/context handling; fixed and suite rerun successfully. Visual multi-town inspection remains pending.
+- This is presentation differentiation only. Cultural inheritance, agendas, local economic traditions, regional administration and distinct architectural silhouettes remain larger unfinished requirements.
+
 ## Seasonal instrumental variety — 2026-10-30
 
 - [x] ~~Add licensed solo harp for calm winters and acoustic folk for developed summer villages.~~ Early summers/spring retain piano; autumn folk remains. Existing fades, quiet gaps, mute and background pausing apply. Downloaded original Evening Fall (Harp) by Kevin MacLeod from Incompetech; composer lists harp only and CC BY4.0. Attribution/source/license/hash recorded in THIRD_PARTY_ASSETS.md and in-game credits.
