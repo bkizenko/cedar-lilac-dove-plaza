@@ -32,7 +32,7 @@ function civilian(g: Game, u: HaulageUnit) {
 }
 
 function available(g: Game, u: HaulageUnit) {
-  return civilian(g, u) && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.farmToolWork && !u.studyCrop &&
+  return civilian(g, u) && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.farmToolWork && !u.copperStudy&&!u.studyCrop &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled &&
     ['idle', 'gather', 'hold'].includes(u.order);

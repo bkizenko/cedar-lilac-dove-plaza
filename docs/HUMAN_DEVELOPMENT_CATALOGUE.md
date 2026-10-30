@@ -265,3 +265,7 @@ Latest correction: additional hall prices are now 40/60/80/100 logs, superseding
 ### Mountain prospecting — 2026-10-14
 
 Mountain stone excavation can now expose finite site-seeded copper and iron veins at progressively deeper milestones. Actual ore nodes, quarry staffing controls, physical delivery, fog-aware rendering and saved prospect history are implemented. This extends items 3/51/56/59 without completing metallurgy, underground mine infrastructure or the practical discovery tree. Existing age gates remain explicit. See the newest canonical handoff for verification/release details.
+
+### Copper workshop trials — 2026-10-30
+
+Items71/74/78 remain partial. Discovered copper can now be gathered in the Stone Age and delivered physically. A20-person community can fund a90-second crafting-shelter trial with8copper/4logs, producing one prototype farming tool and unlocking repeatable workshop copper tools. Paid work pauses/resumes across saves. No points, automatic era grant or universal tool bonus. Alloying, furnaces/fuel, iron experiments, diffusion and the complete practical tree remain unfinished. See the newest consolidated backlog for tests and release evidence.

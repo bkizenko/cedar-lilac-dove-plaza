@@ -1,3 +1,4 @@
+import {beginCopperStudy} from '@/game/materialStudy';
 import {AgeReadiness} from './AgeReadiness';
 import {WorldMinimap} from './WorldMinimap';
 import {PlotControls} from './PlotControls';
@@ -465,6 +466,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build here</button>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
                 {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
+                {sel.completed&&sel.type==="workshop"&&<button type="button" onClick={()=>{if(engine&&sel.buildingId){beginCopperStudy(engine.game,sel.buildingId);engine.pushHud();}}}>Test copper tool · 8 copper + 4 logs · 20 people</button>}
                 {sel.completed&&sel.type==="dock"&&<p className="text-xs text-parchment-dim">Select the canoe owner, then click across the water.</p>}
                 {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
                 {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
@@ -565,11 +567,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 >
                   <Mountain className="size-3.5 text-parchment-dim" />
                 </JobBtn>
-                {hud.age >= 1 ? (
+                {(hud.age >= 1||engine?.game.state.copper.some(n=>n.amount>0&&engine.game.exploredAt(n.x,n.z))) ? (
                   <JobBtn
                     active={hud.job === "copper"}
                     label="Copper"
-                    title="Gather copper (Bronze Age)"
+                    title="Gather discovered copper for tools and experiments"
                     onClick={() => engine?.assignJob("copper")}
                   >
                     <Coins className="size-3.5 text-bronze" />

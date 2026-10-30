@@ -1,3 +1,4 @@
+import {copperStudyAI} from './materialStudy';
 import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
@@ -1599,6 +1600,7 @@ export class Game {
 
   interruptMission(u:Unit) {
     cancelPlanting(this,u);
+    if(u.copperStudy)u.copperStudy.paused=true;
     u.repatriating=undefined;
     u.tributeJourney=undefined;u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
@@ -2569,11 +2571,7 @@ export class Game {
       this.onSfx("click");
       return;
     }
-    if (job === "copper" && (this.tribe(0)?.age ?? 0) < 1) {
-      this.banner("Copper waits on the Bronze Age", 1.7);
-      this.onSfx("invalid");
-      return;
-    }
+
     if (job === "iron" && (this.tribe(0)?.age ?? 0) < 2) {
       this.banner("Iron waits on the Iron Age", 1.7);
       this.onSfx("invalid");
@@ -2638,11 +2636,7 @@ export class Game {
       this.issueMove(node.x, node.z);
       return;
     }
-    if (job === "copper" && (this.tribe(0)?.age ?? 0) < 1) {
-      this.banner("Orange copper — it opens in the Bronze Age, then people can haul it", 2.2);
-      this.onSfx("invalid");
-      return;
-    }
+
     if (job === "iron" && (this.tribe(0)?.age ?? 0) < 2) {
       this.banner("Dark iron — the Iron Age, then haul the dark rock. A forge turns it to blades", 2.4);
       this.onSfx("invalid");
@@ -4189,6 +4183,7 @@ export class Game {
     if(visitorAI(this,u,dt))return;
     if(delegationAI(this,u,dt))return;
     if(cropStudyAI(this,u,dt))return;
+    if(copperStudyAI(this,u,dt))return;
     if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;

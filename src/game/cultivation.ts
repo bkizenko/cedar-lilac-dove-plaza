@@ -54,7 +54,7 @@ export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
   if(g.state.units.some(u=>u.hp>0&&u.team===team&&u.studyCrop===kind))return false;
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
+  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
   if(!u||!g.state.buildings.some(b=>b.team===team&&b.type==="townhall"&&g.finished(b)))return false;
   if(!t.cropTrial){
     if((t.cropSamples?.[kind]||0)<4)return false;
@@ -65,7 +65,7 @@ export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false){
   u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
 }
 export function cropStudyAI(g:Game,u:Unit,dt:number){
-  if(!u.studyCrop)return false;
+  if(!u.copperStudy&&!u.studyCrop)return false;
   const t=g.tribe(u.team),trial=t.cropTrial;
   if(u.order!=="hold"||!trial||trial.kind!==u.studyCrop||isDependent(g,u)) {u.studyCrop=undefined;return false;}
   const hall=g.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
@@ -112,7 +112,7 @@ export function setFieldRest(g:Game,id:number,rest:boolean){
 /** Known plants are gathered; unknown locations require a provisioned search. */
 export function seekCropSamples(g:Game){
   g.updateVision(0);
-  const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&["idle","hold","gather"].includes(u.order))
+  const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.copperStudy&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&["idle","hold","gather"].includes(u.order))
     .sort((a,b)=>Number(b.selected)-Number(a.selected)||Number(a.order==="gather")-Number(b.order==="gather"));
   let sent=0;
   for(const u of adults){
@@ -167,7 +167,7 @@ export function tickManagedWoodland(g:Game,dt:number){
    if(assigned>=4||(t.seeds||0)<=8)break;
    if(n.amount>0||n.planted||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!g.exploredAt(n.x,n.z)||!g.walkable(n.x,n.z)||
       g.state.units.some(p=>p.hp>0&&p.plantingWork?.treeId===n.id))continue;
-   const u=g.state.units.find(p=>p.team===0&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.jobLock&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));
+   const u=g.state.units.find(p=>p.team===0&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.jobLock&&!p.copperStudy&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));
    if(!u)break;
    t.seeds!--;u.plantingWork={treeId:n.id,progress:0};u.order='gather';u.node=null;u.job='wood';u.jobLock=true;assigned++;
   }

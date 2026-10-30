@@ -188,6 +188,7 @@ export type Unit = {
   haulageWork?: HaulageWork;
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
+  copperStudy?: {workplace:number;progress:number;paused?:boolean};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
@@ -313,6 +314,7 @@ export type Tribe = {
   food: number;
   foodLots?: Partial<Record<FoodKind,number>>;
   cropSamples?: Partial<Record<CropKind,number>>;
+  copperExperiment?: boolean;
   cultivated?: CropKind[];
   cropTrial?: {kind:CropKind; progress:number; duration:number};
   wood: number;

@@ -259,7 +259,7 @@ export class WorkBoard {
             Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
         )
           add(n, "stone", 2, Math.max(10, 65 - t.stone * 0.4));
-      if (t.age >= 1)
+      if (t.age >= 1 || t.id===0)
         for (const n of g.state.copper) if (n.amount > 0) add(n, "copper", 2, 45 - t.copper * 0.25);
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);

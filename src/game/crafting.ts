@@ -16,7 +16,7 @@ export function craftingQueue(g: Game, b: Building) {
         u.hp > 0 &&
         u.team === b.team &&
         u.order === "hold" &&
-        [u.weaponWork, u.haulageWork, u.farmToolWork].some(
+        [u.weaponWork, u.haulageWork, u.farmToolWork, u.copperStudy].some(
           (j) => j && !j.paused && j.workplace === b.id,
         ),
     )

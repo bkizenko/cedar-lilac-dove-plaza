@@ -1,3 +1,11 @@
+## Physical copper experiments and early tools — 2026-10-30
+
+- [x] ~~Player villagers may gather discovered surface copper before Bronze and physically deliver it.~~ Known copper becomes an available work target; iron/deep quarry extraction gates remain. No remote deposit credit.
+- [x] ~~A crafting-shelter copper trial needs20people,8copper,4logs and90seconds of real bench work.~~ One available adult walks to the workshop and shares existing bench capacity. Completion equips its maker with one prototype copper farming tool and records the technique. This enables ordinary paid copper-tool production at workshops before Bronze; it does not automatically advance an age or equip everyone.
+- Optional validated study/knowledge fields preserve progress. Direct interruptions pause paid work; resuming at an available workshop does not charge again. Missing workshops pause the project. Other crafting/planting selectors protect study tasks. Working-study pose reuses current animation.
+- Twenty-one material/farm-tool/haulage checks pass, including finite physical ore delivery, population gate, actual work completion, prototype, repeatable recipe unlock, pause/save/resume and corrupt progress. Typecheck/build pass. UI action/animation visual verification remains pending.
+- Partial catalogue71/74/78 only: copper trials do not complete bronze alloying, fuel/temperature/furnace chains, iron metallurgy, distributed knowledge, cultural diffusion or density-driven discovery. Existing age gates remain separate. Larger technology design remains open.
+
 ## Clear age readiness — 2026-10-30
 
 - [x] ~~Ages screen shows current/required population and each material reserve, plus missing infrastructure and safety-food requirements together.~~ Uses existing advancement rules; no duplicate readiness logic or costs. Explicitly explains that reserves are kept. A direct Choose next age button invokes the existing choice flow and remains disabled when not ready.

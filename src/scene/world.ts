@@ -1478,7 +1478,7 @@ export class WorldView {
         const spd = Math.hypot(u.vx, u.vz);
         const walking = spd > 0.35;
         const chopping =
-          !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
+          !walking && (u.order === "gather" || u.order === "attack" || u.order === "build" || !!u.copperStudy&&!u.copperStudy.paused);
         const farming=!walking&&u.order==="gather"&&(!!u.plantingWork||u.node&&"type" in u.node&&u.node.type==="farm");
         const phase = u.stride;
         const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.world.waterY+.3;

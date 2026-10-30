@@ -27,7 +27,7 @@ function civilian(g: Game, u: FarmToolUnit) {
 }
 
 function available(g: Game, u: FarmToolUnit) {
-  return civilian(g, u) && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.haulageWork && !u.studyCrop &&
+  return civilian(g, u) && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.haulageWork && !u.copperStudy&&!u.studyCrop &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled && ['idle', 'gather', 'hold'].includes(u.order);
 }
@@ -35,7 +35,7 @@ function available(g: Game, u: FarmToolUnit) {
 function workplaces(g: Game, team: number, kind: FarmToolKind, id?: number) {
   return g.state.buildings.filter(b => b.team === team && g.finished(b) &&
     (id === undefined || id === b.id) &&
-    (kind === 'stoneHoe' ? ['townhall', 'workshop'].includes(b.type) : b.type === 'forge'));
+    (kind === 'stoneHoe' ? ['townhall', 'workshop'].includes(b.type) : kind==='copperTools'&&g.tribe(team).copperExperiment ? ['workshop','forge'].includes(b.type) : b.type === 'forge'));
 }
 
 function reachableWorkplace(g: Game, u: Unit, sites: Building[]) {
@@ -49,7 +49,7 @@ function improvement(u: FarmToolUnit, kind: FarmToolKind) {
 
 export function farmToolRequirement(g: Game, kind: FarmToolKind, team = 0): string | null {
   const spec = FARM_TOOLS[kind], t = g.tribe(team);
-  if (t.age < spec.age) return kind === 'ironTools' ? 'Iron farming tools need the Iron Age and four iron' : 'Copper farming tools need the Bronze Age and four copper';
+  if (t.age < spec.age && !(kind==='copperTools'&&t.copperExperiment)) return kind === 'ironTools' ? 'Iron farming tools need the Iron Age and four iron' : 'Copper farming tools need the Bronze Age and four copper';
   if (!workplaces(g, team, kind).length) return kind === 'stoneHoe' ? 'Make stone hoes at a completed hearth or crafting shelter' : 'Finish a forge to shape metal farming tools';
   return null;
 }

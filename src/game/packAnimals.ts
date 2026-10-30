@@ -6,7 +6,7 @@ export const PACK_TAMING_SECONDS=60;
 export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
  const home=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&g.finished(b)&&['townhall','workshop'].includes(b.type));
  if(!home)return false;
- const people=g.state.units.filter(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&(team===0||!u.buildOrder&&!u.jobLock)&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.haulage&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null&&['idle','hold','gather'].includes(u.order))
+ const people=g.state.units.filter(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&(team===0||!u.buildOrder&&!u.jobLock)&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.haulage&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.copperStudy&&!u.studyCrop&&u.drill==null&&['idle','hold','gather'].includes(u.order))
   .sort((a,b)=>Number(b.selected)-Number(a.selected));
  for(const u of people){
   if(u.tamingWork?.paused){u.tamingWork.paused=false;u.order='hold';return true;}
