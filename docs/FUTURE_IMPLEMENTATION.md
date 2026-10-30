@@ -1,3 +1,16 @@
+## Rival annual-storage spending — 2026-10-29
+
+- Observed resumed seed-345 simulation at year 7: rivals reached 94/80 people, 25/24 storehouses, but retained only 26/35 timber and remained Stone Age. Food buffers exceeded 1,000 seconds. The annual-storage target continually treated more stores as essential spending.
+- [x] ~~Protect age materials from optional annual-storage growth once population qualifies.~~ Two basic stores and the shared age food-buffer capacity remain essential; further stores use surplus. Younger or food-insecure settlements may still prioritize annual capacity.
+- Validation: 38 rival-development tests, typecheck and production build pass. Includes 79-log reserve protection, genuine surplus spending and essential-storage exception. A full-state replay is running; long-run recovery is not yet proven.
+- Audit handles for continuation: baseline session 39755 writes `/tmp/hearth-current-rivals.log` and snapshot `/tmp/hearth-current-rivals.json`; changed-policy 600-second replay session 59947 writes `/tmp/hearth-storage-replay.log` and snapshot `/tmp/hearth-storage-replay.json`. Check whether these handles are live before polling; never infer completion from files alone.
+
+### Additional Dawn of Man primary-source design audit
+
+[Designer Martiño Figueroa's account](https://www.gamedeveloper.com/design/game-design-deep-dive-creating-an-adaptive-tech-tree-in-i-dawn-of-man-i-) describes first-time hunting, crafting, building and population milestones as knowledge sources. Progression changes the central activity from hunting/gathering to farming and later defense. Technologies unlock tangible objects that must be made and used, rather than invisible stat increases.
+
+Application here: retain the user's preference for material experiments instead of copying instant knowledge purchases. Prioritize visible tool-making, animal traction, preservation and defensive equipment; each unlock needs an explicit production/use loop and a clear player choice. Existing milestone and crafting systems only partially meet this. The wider catalogue remains open.
+
 ## Alternative rival barter offers — 2026-10-29
 
 - [x] ~~A remembered refusal no longer blocks all trade.~~ Rivals try their other real surpluses and material shortages against known reachable partners, preserving reserves and direct orders. Departure still cannot inspect another village's hidden stock.

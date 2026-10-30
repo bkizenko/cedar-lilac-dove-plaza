@@ -63,7 +63,12 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
     const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200;
-    if(p.stores<2||capacity<Math.max(rivalStorageTarget(g,team),Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40))return true;
+    const essential=Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40;
+    if(p.stores<2||capacity<essential)return true;
+    // Annual storage is a useful target, not an emergency that may consume
+    // every timber delivery forever as new families arrive. Once the community
+    // has the people and safe food buffer for its next age, save that timber.
+    if(capacity<rivalStorageTarget(g,team)&&(!p.saving||!p.next||p.pop<(p.next.pop||0)))return true;
   }
   // Leave enough for a timber camp or stone quarry before luxury expansion.
   if(!p.saving||!p.next)return t.wood-(d.wood||0)>=BUILDINGS.lumber.wood+BUILDINGS.quarry.wood;

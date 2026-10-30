@@ -427,3 +427,16 @@ test('rival decision loop cannot bypass missing civic prerequisites',()=>{
  assert.match(g.ageUpIssue(1),/Complete/);
  g.rivalTick(1,2);assert.equal(g.tribe(1).age,0);
 });
+
+
+test('population-ready rivals preserve timber before optional annual storage, but still fund essential capacity',()=>{
+ const g=fixture();baseEconomy(g);const cost=AGE_COST[1];
+ while(g.popNow(1)<cost.pop)g.spawnUnit('worker',5,50,1);
+ Object.assign(g.tribe(1),{wood:79,stone:100,food:3000});
+ while(g.stockCap(1)<foodDemand(g,1)*350+cost.food)g.state.buildings.push(g.makeBld('warehouse',-20,55,1));
+ assert.ok(g.stockCap(1)<rivalStorageTarget(g,1));
+ assert.equal(rivalCanInvest(g,1,'warehouse'),false,'a full-year target cannot repeatedly spend the almost-complete 80-log reserve');
+ g.tribe(1).wood=cost.wood+60;assert.equal(rivalCanInvest(g,1,'warehouse'),true,'extra storage can use genuine surplus');
+ g.state.buildings=g.state.buildings.filter(b=>b.type!=='warehouse');g.tribe(1).wood=60;
+ assert.equal(rivalCanInvest(g,1,'warehouse'),true,'basic storage remains a survival priority');
+});
