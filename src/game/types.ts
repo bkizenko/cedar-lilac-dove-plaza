@@ -374,6 +374,7 @@ export type GameState = {
   scoutTimer?: number;
   rivalTradeRefusals?: {team:number;partner:number;wanted:ResKind;offered:ResKind;time:number}[];
   conquestAt?: number;
+  difficulty?: import("./difficulty").Difficulty;
   nightWork?: boolean;
   visitorTimer?: number;
   worldgenVersion?: number;

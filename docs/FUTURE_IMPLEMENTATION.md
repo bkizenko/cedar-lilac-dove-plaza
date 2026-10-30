@@ -1,3 +1,9 @@
+## Six difficulty presets, survival/combat controls — 2026-10-30
+
+- [x] ~~Add Super easy, Easy, Normal, Hard, Survival and Apocalypse in Controls & music.~~ Saved optional difficulty defaults to Normal for existing games. Four centralized effects apply immediately: player food demand (including growth forecasts), spoilage, sea-raid arrival chance and incoming enemy combat damage. Foreign food economies remain on baseline. Quiet frontier and existing casualty respite still apply.
+- 22 difficulty/raid/cultivation checks pass, including actual food and damage effects, exact save terrain/people preservation, legacy default and invalid import rejection. Typecheck/build pass. Browser setting-layout verification remains pending.
+- This is not the complete requested difficulty design: climate/season length, starting bonuses, resource availability, crop difficulty and rival economic/aggression buffs still need coherent preset integration and playthrough balancing. The mode descriptions state the four effects actually implemented.
+
 ## Reachable shelter fallback and regression result — 2026-10-30
 
 - [x] ~~A blocked nearest shelter no longer prevents using another reachable shelter with free rooms.~~ Occupancy still counts once, and another nearest-candidate pass happens only when an entrance is rejected. Full rooms and dead occupants are handled correctly; no remote recovery or save changes.

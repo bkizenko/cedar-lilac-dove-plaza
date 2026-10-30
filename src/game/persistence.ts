@@ -1,3 +1,4 @@
+import {DIFFICULTIES} from './difficulty';
 import {scalablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
@@ -86,6 +87,7 @@ export function decodeGame(raw: unknown): Game {
       (c.emptySince!==null&&(!num(c.emptySince)||c.emptySince<0||c.emptySince>s.time))||!["growing","thriving","struggling","abandoned"].includes(c.status))fail();halls.add(c.hall);}
   }
   if(s.conquestAt!==undefined&&(!num(s.conquestAt)||s.conquestAt<0||s.conquestAt>s.time))fail();
+  if(s.difficulty!==undefined&&(!Object.hasOwn(DIFFICULTIES,s.difficulty)))fail();
   if(s.nightWork!==undefined&&typeof s.nightWork!=="boolean")fail();
   if(s.raidCampaign!==undefined){const r=s.raidCampaign;if(!obj(r)||typeof r.active!=='boolean'||!Number.isSafeInteger(r.adults)||r.adults<0||r.adults>20000||!Number.isSafeInteger(r.buildings)||r.buildings<0||r.buildings>20000||!num(r.loss)||r.loss<0||r.loss>1)fail();}
   if(s.raidCampaign)for(const key of ['people','sites']){const ids=s.raidCampaign[key];if(ids!==undefined&&(!Array.isArray(ids)||ids.length>20000||new Set(ids).size!==ids.length||ids.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1)))fail();}

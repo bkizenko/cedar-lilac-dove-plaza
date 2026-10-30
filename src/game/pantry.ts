@@ -1,3 +1,4 @@
+import {difficulty} from './difficulty';
 import {AGE_COST} from "./constants";
 import { hasTradition } from "./discovery";
 import type { Game } from "./sim";
@@ -20,7 +21,7 @@ export function growthFoodNeed(g:Game,team:number) {
     const mouths=people.reduce((n,u)=>n+(u.maturesAt!==undefined&&time<u.maturesAt?0.5:1)*predisposition(u).appetite*(winter?habitatAt(g,u.x,u.z).winterFood:1),0);
     food+=(mouths+(at<360?.5:1))*FOOD_PER_PERSON_SECOND*dt;
   }
-  return Math.ceil(food*1.12+20);
+  return Math.ceil(food*1.12*(team===0?difficulty(g).food:1)+20);
 }
 import { climateAt } from "./ecology";
 
@@ -49,7 +50,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
   const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
-  return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge])) as Record<FoodKind,number>;
+  return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;
 }
 export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase = calendar(g).phase, includeOverflow = true) {
   const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,food,phase,includeOverflow);

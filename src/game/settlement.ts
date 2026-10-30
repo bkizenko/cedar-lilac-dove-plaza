@@ -1,3 +1,4 @@
+import {difficulty} from './difficulty';
 import {expansionCost,plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
@@ -39,7 +40,7 @@ export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
-  return mouths * FOOD_PER_PERSON_SECOND * weather;
+  return mouths * FOOD_PER_PERSON_SECOND * weather * (team===0?difficulty(g).food:1);
 }
 /** Storage protects food; it never caps the player's gathering orders. */
 export function foodWorkTarget(g:Game,team=0){

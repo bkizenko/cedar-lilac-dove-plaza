@@ -1,3 +1,4 @@
+import {DIFFICULTIES,type Difficulty} from '@/game/difficulty';
 import { useEffect, useRef } from "react";
 import type { Engine } from "@/game/engine";
 import { TRACKS } from "@/game/music";
@@ -70,6 +71,13 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           ground, and Enter to place a hut. Tab reaches jobs, military training, research and
           diplomacy.
         </p>
+        <label className="audio-setting">
+          Difficulty
+          <select aria-label="Difficulty" defaultValue={engine.game.state.difficulty??'normal'} onChange={e=>{engine.game.state.difficulty=e.target.value as Difficulty;engine.pushHud();}}>
+            {Object.entries(DIFFICULTIES).map(([id,d])=><option key={id} value={id}>{d.name}</option>)}
+          </select>
+        </label>
+        <p className="text-sm">Applies immediately to food needs, spoilage, sea-raid frequency and incoming enemy damage. Quiet frontier still prevents new unprovoked raids.</p>
         <label className="audio-setting">
           Calm soundtrack
           <input

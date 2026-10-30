@@ -1,3 +1,4 @@
+import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
@@ -1973,7 +1974,7 @@ export class Game {
     if (this.state.raidT > 0) return;
     const threat = this.raidThreat(0);
     this.state.raidT = 5 + Math.random() * 7;
-    if (Math.random() < seaRaidArrivalChance(threat,this.isNight())) this.spawnRaid();
+    if (Math.random() < Math.min(.95,seaRaidArrivalChance(threat,this.isNight())*difficulty(this).raid)) this.spawnRaid();
     else this.state.raidT = 10 + Math.random() * 22;
   }
 
@@ -4525,6 +4526,7 @@ export class Game {
 
   applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number) {
     if(!target || target.hp<=0 || !Number.isFinite(dmg) || dmg<=0 || target.team===attackerTeam)return;
+    if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
     if(target.kind==="unit"&&tryCivilianSurrender(this,target,attackerTeam,dmg))return;
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
