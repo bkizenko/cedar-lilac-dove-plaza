@@ -1,3 +1,8 @@
+## Readable planting work — 2026-10-30
+
+- [x] ~~Planters show a carried seed basket and use the bending work pose at the stump.~~ Uses existing food-basket geometry/shared instance pool purely for presentation; no food cargo, reserves or delivery are created. Basket visibility follows owner fog, shelter/death and task completion.
+- Fifteen equipment-scene checks pass, including basket appearance/removal without inventory changes. Typecheck/build pass. In-game planting animation still needs visual verification; this does not finish farming tools/hand animations or production-chain art.
+
 ## Local architecture for offshoot towns — 2026-10-30
 
 - [x] ~~Building presentation resolves the nearest completed own town hall and its local habitat instead of using the tribe's first hall everywhere.~~ Founding palettes remain stable; offshoot towns get seeded local roof palettes and habitat wall materials through all six ages. Cached styles account for settlement/age/habitat, with shared instanced building geometry and unchanged footprints/saves.

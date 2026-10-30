@@ -1418,18 +1418,19 @@ export class WorldView {
           _q.setFromEuler(_haulEuler);
         }
       }
-      if(u.carry<=0||!u.carryType)continue;
-      const mesh=this.cargoMeshes.get(u.carryType),i=counts[u.carryType];
+      const carryType=u.plantingWork?'food':u.carryType,carried=u.plantingWork?1:u.carry;
+      if(carried<=0||!carryType)continue;
+      const mesh=this.cargoMeshes.get(carryType),i=counts[carryType];
       if(!mesh||i>=instCap(mesh))continue;
-      if(mounted){
-        const fullness=Math.min(1,u.carry/carryingCapacity(u,u.carryType)),height=.35+fullness*.55;
+      if(mounted&&!u.plantingWork){
+        const fullness=Math.min(1,carried/carryingCapacity(u,carryType)),height=.35+fullness*.55;
         _p.set(0,(kind==='cart'?.7:kind==='pack'?1.05:.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
         _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       }
-      mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[u.carryType]);mesh.setColorAt(i,_c);counts[u.carryType]++;
+      mesh.setMatrixAt(i,_m);_c.set(CARGO_COLORS[carryType]);mesh.setColorAt(i,_c);counts[carryType]++;
     }
     // Reuse cargo batches for visible finite ruin supplies, after residents so
     // decorative piles can never displace their carried loads from the pool.
@@ -1478,7 +1479,7 @@ export class WorldView {
         const walking = spd > 0.35;
         const chopping =
           !walking && (u.order === "gather" || u.order === "attack" || u.order === "build");
-        const farming=!walking&&u.order==="gather"&&u.node&&"type" in u.node&&u.node.type==="farm";
+        const farming=!walking&&u.order==="gather"&&(!!u.plantingWork||u.node&&"type" in u.node&&u.node.type==="farm");
         const phase = u.stride;
         const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.world.waterY+.3;
         const bob = afloat ? Math.sin(game.state.time*2+u.id)*.025 : walking

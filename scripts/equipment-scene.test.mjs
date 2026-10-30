@@ -213,3 +213,10 @@ test('pack animal gait carries its load with it and stops when the handler stops
  u.stride+=1;view.syncCargo(game);assert.deepEqual(matrix(view.haulageMeshes.get('pack')).toArray(),still);
  assert.equal(view.haulageMeshes.get('pack').count,1);
 });
+
+test('planting seed baskets render without crediting food and disappear when work ends',()=>{
+ const {view,game,person}=fixture();const u=person(1,{plantingWork:{treeId:30,progress:0}});game.state.units=[u];
+ view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,1);assert.equal(u.carry,0);assert.equal(u.carryType,null);
+ u.plantingWork=undefined;view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,0);
+ u.plantingWork={treeId:30,progress:0};u.shelterId=1;view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,0);
+});
