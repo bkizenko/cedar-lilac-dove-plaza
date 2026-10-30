@@ -1,3 +1,9 @@
+## Planting-task orchestration and live landscape audit — 2026-10-30
+
+- [x] ~~Transport, farm-tool and weapon crafting availability excludes paid planting tasks.~~ A new regression checks that weapon assignment cannot steal a planter. Thirteen planting/haulage checks plus eight farm-tool checks pass; typecheck/build pass.
+- Disposable deterministic audit script: `scripts/organic-playthrough-audit.mjs` (run with the game loader). It never accesses browser saves. **Session58598 is still live**, logging `/tmp/hearth-organic-playthrough.log`; poll before deciding whether to extend or restart. Intended seeds123456 and98765, v5, 3,600simseconds each.
+- Observed first-seed checkpoint at2,400simseconds: player12people/2buildings, rivals22/14/28people and32/24/33buildings, all alive with positive food/timber and no simulation errors. One rival grows noticeably slower. Player receives no building commands in this audit, so housing caps limit growth. Do not call this a complete playthrough or performance proof: machine sleep/competing processes make wall timings unsuitable. End results remain pending.
+
 ## Shore and woodland palette correction — 2026-10-30
 
 - [x] ~~Beach coloring follows actual low banks beside water rather than a radial island boundary.~~ Warped coves/headlands and river margins are evaluated by local elevation/water samples; inland land, submerged terrain and high cliffs do not become beach merely because of map radius. Rendering only, no save/soil/navigation change.

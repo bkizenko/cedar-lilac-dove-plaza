@@ -18,3 +18,9 @@ test('direct orders cancel planting and return the unused seed only once',()=>{
  const seeds=g.tribe(0).seeds;g.interruptMission(u);assert.equal(u.plantingWork,undefined);assert.equal(g.tribe(0).seeds,seeds+1);g.interruptMission(u);assert.equal(g.tribe(0).seeds,seeds+1);
  const raw=encodeGame(g);raw.state.units[0].plantingWork={treeId:1,progress:50};assert.throws(()=>decodeGame(raw));
 });
+
+test('weapon crafting does not steal a worker already planting a paid sapling',async()=>{
+ const {beginWeaponWork}=await import('../src/game/warfare.ts');const g=fixture();tickManagedWoodland(g,60);
+ const u=g.state.units.find(u=>u.plantingWork);g.state.units=[u];g.state.buildings=[g.makeBld('townhall',0,20,0)];g.interactionSpot=()=>({x:0,z:20});
+ Object.assign(g.tribe(0),{wood:100,stone:100,food:100});assert.equal(beginWeaponWork(g,'spear'),false);assert.ok(u.plantingWork);assert.equal(u.weaponWork,undefined);
+});

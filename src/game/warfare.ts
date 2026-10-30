@@ -14,7 +14,7 @@ export type WeaponKind=keyof typeof WEAPONS;
 export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
  const job=u.weaponWork;
  if(!job||u.hp<=0||u.type!=='worker'||u.militia||isDependent(g,u)||u.carry>0||u.stuckT>8||
-   u.recalled||u.emergency||u.buildOrder!==undefined||u.tamingWork||u.haulageWork||u.farmToolWork||u.studyCrop||
+   u.recalled||u.emergency||u.buildOrder!==undefined||u.plantingWork||u.tamingWork||u.haulageWork||u.farmToolWork||u.studyCrop||
    u.drill!=null||u.expedition||u.envoy||u.scout||u.visit||u.foundingJourney||u.tributeJourney||
    !['idle','gather','hold'].includes(u.order))return false;
  const b=g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&(workplaceId===undefined||b.id===workplaceId)&&
@@ -37,7 +37,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
     (kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type)));
   if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Use a hearth or finish a crafting shelter for weapon making');
   for(const person of g.state.units)if(person.team===team&&person.weaponWork?.kind===kind&&person.weaponWork.paused&&resumeWeaponWork(g,person,workplaceId))return true;
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.tamingWork&&!u.recalled&&!u.tributeJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
+  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.plantingWork&&!u.tamingWork&&!u.recalled&&!u.tributeJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
   if(!u)return reject('An available adult with empty hands and a reachable workplace is needed');
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
   const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
