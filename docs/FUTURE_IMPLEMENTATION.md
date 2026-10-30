@@ -1,3 +1,8 @@
+## Full defensive-line preview — 2026-10-30
+
+- [x] ~~Show every section of the pending defensive drag route.~~ One reusable instanced marker mesh (maximum 32) shows green sections and red from the first obstruction onward, matching stop-at-obstruction placement. Preview resources clear when the scene is rebuilt. No save changes.
+- Typecheck/build pass. Browser verification was attempted but the browser transport closed before responding; color/layout verification remains pending. Do not count this as completed visual QA. The existing line-construction regression covers finite cost, plans, persistence and obstruction behavior.
+
 ## Organic world generation, first batch — 2026-10-30
 
 - [x] ~~Version 4 shoreline domain warping and continuous woodland placement.~~ New unseeded games use v4; old saves retain their exact generation version. Coast outlines gain coves/headlands and an elongated footprint. Up to 400 additional bounded tree instances follow a continuous noise field with clearings, dry-ground/slope checks and settlement clearance.

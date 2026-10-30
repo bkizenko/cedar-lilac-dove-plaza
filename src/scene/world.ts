@@ -152,6 +152,7 @@ export class WorldView {
   resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
   workRings!: THREE.InstancedMesh;
   ghost: THREE.Group;
+  private linePreview: THREE.InstancedMesh | null = null;
   arrows: THREE.InstancedMesh;
   smoke: THREE.Points;
   smokeGeo: THREE.BufferGeometry;
@@ -1587,6 +1588,22 @@ export class WorldView {
     /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
+  setLinePreview(points:{x:number;z:number;y:number;ok:boolean}[]){
+    if(!points.length){if(this.linePreview)this.linePreview.visible=false;return;}
+    if(!this.linePreview){
+      this.linePreview=new THREE.InstancedMesh(new THREE.BoxGeometry(3.8,.25,3.8),new THREE.MeshBasicMaterial({transparent:true,opacity:.65,depthWrite:false}),32);
+      this.linePreview.frustumCulled=false;this.scene.add(this.linePreview);
+    }
+    this.linePreview.visible=true;this.linePreview.count=Math.min(32,points.length);
+    const matrix=new THREE.Matrix4(),color=new THREE.Color();
+    for(let i=0;i<this.linePreview.count;i++){
+      const p=points[i];matrix.makeTranslation(p.x,p.y+.2,p.z);this.linePreview.setMatrixAt(i,matrix);
+      color.set(p.ok?'#75db9a':'#f06958');this.linePreview.setColorAt(i,color);
+    }
+    this.linePreview.instanceMatrix.needsUpdate=true;
+    if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;
+  }
+
   setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}) {
     if (!type) {
       this.clearGhost();
@@ -2300,6 +2317,7 @@ export class WorldView {
         if (m.geometry) m.geometry.dispose();
       });
     }
+    if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
     this.villageStyles.clear();
     for(const meshes of this.bldMeshes.values()){

@@ -462,6 +462,7 @@ export class Engine {
   }
 
   private updateGhost() {
+    this.view.setLinePreview([]);
     const type = this.game.state.placing;
     if (!type) {
       const b=this.game.state.selBld;
@@ -498,6 +499,8 @@ export class Engine {
     if(linearStructure(type)&&this.plotStart){
       const line=constructionLine(this.plotStart,g),end=line[line.length-1];
       x=end.x;z=end.z;
+      let blocked=false;
+      this.view.setLinePreview(line.map(p=>{blocked=blocked||!this.game.placementValid(type,p.x,p.z,0);return {...p,y:this.game.height(p.x,p.z),ok:!blocked};}));
       this.game.banner(`${line.length} sections · drag to extend · leave room for a gate`,2);
     }
     this.bridgeSpan=undefined;
