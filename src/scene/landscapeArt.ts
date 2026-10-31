@@ -31,7 +31,7 @@ export const ATMOSPHERE_RULES = {
   weatherDensity: {mist:.0078,rain:.0052,storm:.009,flood:.0074,drought:.0044,frost:.0064} as Record<string,number>,
   coolDistance: '#b9cedb', coolSky: '#cedff0', coolGround: '#526175',
   distanceMix: .32, skyMix: .34,
-  daylightFill: .30, elevatedFill: .12,
+  daylightFill: .55, elevatedFill: .20,
 } as const;
 export function atmosphericDensity(weather:string,night:boolean,snow:number){
   return Math.max(ATMOSPHERE_RULES.weatherDensity[weather]??(night?ATMOSPHERE_RULES.nightDensity:ATMOSPHERE_RULES.clearDensity),snow>.45?.0064:0);

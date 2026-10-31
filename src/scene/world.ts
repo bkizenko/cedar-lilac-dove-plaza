@@ -1150,7 +1150,7 @@ export class WorldView {
     this.scene.background = this.litFog;
     (this.scene.fog as THREE.FogExp2).density = this.litFogD;
     this.renderer.toneMappingExposure =
-      (night ? 1.08 : 0.94 + elev * 0.16 + dawn * 0.08 + sn.winter * 0.06) *
+      (night ? 1.08 : 1.02 + elev * 0.20 + dawn * 0.08 + sn.winter * 0.06) *
       (wx === "storm" || wx === "flood" ? 0.88 : 1);
 
     const sunDir = this.sun.position.clone().sub(this.look).normalize();

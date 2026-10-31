@@ -43,7 +43,7 @@ import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,develo
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
-import {daylightAt,solarTimeLabel} from "./daylight";
+import {daylightAt,solarTimeLabel,pacedSolarHour} from "./daylight";
 import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
 import {villageAppeal,foodAttention} from "./migration";
@@ -5327,7 +5327,7 @@ export class Game {
     const start = 6 * 3600 + 42 * 60;
     const t = start + this.state.time * DAY_RATE;
     const day = 1 + Math.floor(this.state.time * DAY_RATE / 86400);
-    const tod = ((t % 86400) + 86400) % 86400;
+    const tod = this.dayPhase()*86400;
     const h = Math.floor(tod / 3600);
     const m = Math.floor((tod % 3600) / 60);
     const hh = (h < 10 ? "0" : "") + h;
@@ -5382,10 +5382,7 @@ export class Game {
   }
 
   dayPhase() {
-    const start = 6 * 3600 + 42 * 60;
-    const t = start + this.state.time * DAY_RATE;
-    const tod = ((t % 86400) + 86400) % 86400;
-    return tod / 86400;
+    return pacedSolarHour(this.state.time,DAY_RATE)/24;
   }
 
   daylight() {return daylightAt(this.state.time);}
