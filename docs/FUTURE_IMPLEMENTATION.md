@@ -1,3 +1,9 @@
+## Rival plot enlargement and completed seasonal audit — 2026-10-30
+
+- [x] ~~Rivals can extend completed stores and fields using the shared physical expansion system.~~ Need-based reviews run at most every30seconds; each society reserves one extension at a time. Clear foundations, finite actual materials, four seed baskets for crops, real builders and unchanged original capacity/yield until completion remain. Pending extensions block duplicate investment of the same type. Automatic builders preserve paid studies/planting/crafting and direct orders.
+- Fifty-four rival/expansion/woodland checks and typecheck/build pass. Actual rival store builders pay60logs and increase capacity only on completion; field enlargement preserves harvested goods/absolute sown area, spends4seeds and survives saves. UI appearance of expanding rivals is still unverified.
+- **Session22225 is terminal.** The pre-expansion v6 seed123456 seasonal audit completed1800simseconds: rivals23/12/23people with31/19/29buildings and1159/537/1275food; all alive, positive timber, zero simulation errors. One rival still lags; later-era competition and multiple-seed longer balancing remain open. Log `/tmp/hearth-world-six-audit.log`. This audit does not validate the subsequent expansion decisions.
+
 ## Rival physical forestry and protected work — 2026-10-30
 
 - [x] ~~Rivals assign seed-funded local planting jobs instead of instantly replanting depleted trees.~~ Shared assignment preserves four seed baskets for rival crops (eight for player auto-forestry), respects spring/summer, knowledge, reachable stumps, real available adults and four-job review limits. Saplings appear only after actual travel and planting; growth and hauling remain separate. Existing paid experiments and direct construction orders are protected from forestry/equipment/labor reassignment.

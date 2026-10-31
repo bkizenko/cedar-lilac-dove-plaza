@@ -7,13 +7,13 @@ export function expansionStatus(g:Game,b:Building){
  if(!e.paid){const cost=expansionCost(b,e);if(g.canAfford(b.team,cost))return 'Materials ready';return Object.entries(cost).map(([kind,n])=>`${Math.max(0,n-(g.tribe(b.team)[kind as 'wood'|'seeds']||0))} ${kind==='wood'?'logs':kind} missing`).join(' · ');}
  return e.progress>=1?'Clear people from the extension':`Expanding ${Math.floor(e.progress*100)}%`;
 }
-export function planExpansion(g:Game,b:Building,axis:'w'|'d'){
- if(g.state.ended||b.team!==0||!g.finished(b)||!scalablePlot(b.type)||b.expansion)return false;
+export function planExpansion(g:Game,b:Building,axis:'w'|'d',team=0){
+ if(g.state.ended||b.team!==team||!g.finished(b)||!scalablePlot(b.type)||b.expansion)return false;
  const size={w:b.w,d:b.d};size[axis]=Math.min(BUILDINGS[b.type][axis]*3,size[axis]+BUILDINGS[b.type][axis]);
  if(size[axis]<=b[axis]+1e-6||!validPlot(b.type,size))return false;
- const issue=g.placementIssue(b.type,b.x,b.z,b.team,size,b.id);if(issue){g.banner(issue,4);return false;}
+ const issue=g.placementIssue(b.type,b.x,b.z,b.team,size,b.id);if(issue){if(team===0)g.banner(issue,4);return false;}
  b.expansion={...size,progress:0,paid:false};g.workBoard.reset();g.assignBuilders(b);
- g.banner('Extension planned — original area stays open',3);return true;
+ if(team===0)g.banner('Extension planned — original area stays open',3);return true;
 }
 export function expansionWork(g:Game,u:Unit,b:Building,dt:number){
  const e=b.expansion;if(!e)return false;
@@ -36,5 +36,5 @@ export function expansionWork(g:Game,u:Unit,b:Building,dt:number){
  // New ground is unsown. Preserve absolute planted area and any existing harvest.
  if(b.crop)b.crop.planted*=oldArea/newArea;
  b.w=e.w;b.d=e.d;b.expansion=undefined;g.state.walkDirty=true;g.workBoard.reset();
- u.node=null;u.order='idle';u.buildOrder=undefined;g.banner(`${BUILDINGS[b.type].name} expanded`,3);return true;
+ u.node=null;u.order='idle';u.buildOrder=undefined;if(b.team===0)g.banner(`${BUILDINGS[b.type].name} expanded`,3);return true;
 }

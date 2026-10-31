@@ -6,7 +6,7 @@ import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
 import {plotArea,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
-import {developRivalForestry} from './rivalDevelopment';
+import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
@@ -1368,6 +1368,7 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
+      if (u.copperStudy || u.plantingWork || u.weaponWork || u.haulageWork || u.farmToolWork || u.tamingWork || u.studyCrop || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
       if (u.envoy || u.scout || u.expedition || u.foundingJourney || u.visit || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
@@ -5042,6 +5043,7 @@ export class Game {
     developRivalResources(this,team);
     developRivalForestry(this,team);
     manageRivalFields(this,team);
+    developRivalPlots(this,team);
     developRivalCoast(this,team);
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);

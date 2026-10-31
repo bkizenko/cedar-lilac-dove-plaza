@@ -1,3 +1,5 @@
+import {planExpansion} from './plotExpansion';
+import {expansionCost,plotArea} from './plots';
 import {assignWoodlandPlanting} from './cultivation';
 import {connectedForUnit} from './waterTravel';
 import {resumeWeaponWork} from './warfare';
@@ -55,7 +57,7 @@ export function rivalDevelopmentPlan(g:Game,team:number){
 export function rivalCanInvest(g:Game,team:number,type:BldType){
   const t=g.tribe(team),d=BUILDINGS[type],p=rivalDevelopmentPlan(g,team);
   if(!g.canAfford(team,buildingCost(type,g,team)))return false;
-  const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!g.finished(b));
+  const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion));
   if(pending.length>=2||pending.some(b=>b.type===type))return false;
   if(type==='lumber'||type==='quarry'||type==='cornerstone'||missingAgeBuildings(g,team).includes(type))return true;
   // Shelter grows ahead of actual households, not all the way to the next era's population.
@@ -179,7 +181,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
     if(moved>=2)break;
     if(!surplusWorkers.includes(u)&&moved>=spare)continue;
     const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k)>0);
-    const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&!g.finished(b)&&!b.plannedCost);
+    const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)&&!b.plannedCost);
     if(!materials&&!unfinished&&!surplusWorkers.includes(u))continue;
     u.node=null;u.job=null;u.jobLock=false;u.order='idle';u.workCheckAt=0;
     g.workBoard.reset();g.workBoard.assign(g,u);moved++;
@@ -237,7 +239,7 @@ export function developRivalCoast(g:Game,team:number){
  reviews.set(team,g.state.time+45);
  const t=g.tribe(team),cost=buildingCost('dock',g,team);
  if(t.wood<(cost.wood||0)+HAULAGE.canoe.wood+16||t.stone<HAULAGE.canoe.stone||!g.canAfford(team,cost))return false;
- if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!g.finished(b)).length>=2)return false;
+ if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)).length>=2)return false;
  const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
  const home=g.campOf(team);
  let best:{x:number;z:number;score:number}|undefined;
@@ -265,5 +267,26 @@ export function developRivalForestry(g:Game,team:number){
  const due=timers.get(team)||0;if(due>g.state.time&&due<=g.state.time+60)return false;
  timers.set(team,g.state.time+60);
  for(const b of g.state.buildings)if(b.team===team&&g.finished(b)&&['townhall','lumber'].includes(b.type)&&assignWoodlandPlanting(g,b.id,team,4,(x,z)=>rivalKnows(g,team,x,z))>0)return true;
+ return false;
+}
+
+const plotReviews=new WeakMap<Game,Map<number,number>>();
+/** Prefer extending an existing productive plot when there is safe clear ground.
+ * It uses the same pending footprint, materials and builder labor as player work. */
+export function developRivalPlots(g:Game,team:number){
+ if(!isRivalTeam(team)||reserveSeconds(g,team)<600||g.state.buildings.some(b=>b.team===team&&b.hp>0&&b.expansion))return false;
+ let reviews=plotReviews.get(g);if(!reviews){reviews=new Map();plotReviews.set(g,reviews);}
+ const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+30)return false;
+ reviews.set(team,g.state.time+30);
+ const p=rivalDevelopmentPlan(g,team),t=g.tribe(team);
+ const type=g.stockCap(team)<rivalStorageTarget(g,team)?'warehouse':p.fields<p.foodFields?'farm':null;
+ if(!type||!rivalCanInvest(g,team,type))return false;
+ const plots=g.state.buildings.filter(b=>b.team===team&&b.type===type&&g.finished(b)).sort((a,b)=>plotArea(a)-plotArea(b));
+ for(const b of plots)for(const axis of (b.w/BUILDINGS[type].w<=b.d/BUILDINGS[type].d?['w','d'] as const:['d','w'] as const)){
+  const size={w:b.w,d:b.d};size[axis]+=BUILDINGS[type][axis];
+  const cost=expansionCost(b,size);
+  if(!g.canAfford(team,cost)||type==='farm'&&(t.seeds||0)-(cost.seeds||0)<4)continue;
+  if(planExpansion(g,b,axis,team))return true;
+ }
  return false;
 }
