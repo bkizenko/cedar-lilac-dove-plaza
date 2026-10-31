@@ -1,3 +1,5 @@
+import {hasTaskCommitment} from './workCommitments';
+import {carryingCapacity} from './haulage';
 import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import { predisposition } from "./people";
@@ -17,9 +19,9 @@ export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
       !isDependent(g, u) &&
       !u.emergency && u.escortId===undefined &&
       !u.envoy && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.recalled &&
-      !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.studyCrop && u.drill == null &&
+      !hasTaskCommitment(u) && u.drill == null &&
       u.carry === 0 &&
-      (automatic ? !u.jobLock && ["idle", "gather"].includes(u.order) : ["idle", "hold", "gather"].includes(u.order))
+      (automatic ? u.enslavedFrom===undefined && !u.jobLock && ["idle", "gather"].includes(u.order) : ["idle", "hold", "gather"].includes(u.order))
   );
 }
 export function tradeCarrier(g: Game, automatic = false) {
@@ -28,7 +30,7 @@ export function tradeCarrier(g: Game, automatic = false) {
 }
 
 export function automaticTradeReady(g: Game, foodCost = 0) {
-  const adults = g.state.units.filter(u => u.team === 0 && u.hp > 0 && u.type === "worker" && !isDependent(g,u));
+  const adults = g.state.units.filter(u => u.team === 0 && u.hp > 0 && (u.type === "worker" || u.caravanArmed) && !isDependent(g,u));
   const away = adults.filter(u => u.envoy || u.expedition || u.scout || u.visit || u.foundingJourney || u.order === "trade" || u.tradeTeam > 0).length;
   return adults.length-away >= 4 && away < Math.max(1,Math.floor(adults.length/4)) &&
     g.tribe(0).food-foodCost >= foodDemand(g)*360;
@@ -126,7 +128,7 @@ export function quoteShipment(
   // At a physical meeting they can offer a smaller surplus rather than reject
   // every proposal that would otherwise touch their protected reserves.
   const surplus=Math.max(0,Math.floor(other[get]-protectedReserve(g,team,get)));
-  const quantity=Math.min(200,marketQuantity,surplus);
+  const quantity=Math.min(200,marketQuantity,surplus,visitingTrader?.caravanRoute?carryingCapacity(visitingTrader,get):Infinity);
   if(surplus<1)return no(get==="food"&&calendar(g).phase>=2?"They are keeping food for winter. Ask for different goods.":"They have no surplus of those goods to exchange. Try another resource.");
   if (quantity < 1) return no("Offer more goods for at least one item in return.");
   const issue = shipmentIssue(g, team, {give, giveAmt:amount, get, getAmt:quantity});

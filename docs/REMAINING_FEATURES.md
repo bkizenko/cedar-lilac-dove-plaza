@@ -6,7 +6,7 @@ This is a readable snapshot of the two original inventories. The execution recor
 
 1. Independent dock-built ferries: crews, passengers, physical crossing/landing, mooring/reuse and saved ownership. Core five-seat ferry loop implemented/tested; visual verification and broader fleet functions remain.
    Follow-up: drag-sized hulls, ship classes/draft and deep-water ports.
-2. Caravans: explicit repeat routes, pack/cart loads, visible escorts, provisions, interruptions and delivery reports.
+2. Caravans: player-planned repeat convoys, pack/cart load limits, escorts, local deals and actual delivery reports are now implemented/tested. Still require broader regional depots, provisions, ship cargo and complete multi-item negotiation.
 3. Husbandry: actual owned livestock, pens/pasture, capture/herding, feeding, births, products and draft/pack use.
 4. Captivity: readable local capture/escort, guarded work, release/ransom/integration, resistance and organized revolt.
 5. Competitive rivals and distinct societies using those same economies and physical systems.
@@ -172,3 +172,16 @@ Usage reserve: **1%**, per the latest user instruction. Do not consume the reset
 - [Jane Ng: The Art of Firewatch](https://gdcvault.com/play/1022296/The-Art-of) is an art-direction reference. The large linked slide deck was not fully fetched, so no detailed technical claims are based on it. Proposed visual application: coherent palette, readable silhouettes, layered terrain and restrained atmospheric depth.
 
 Requested art direction: golden-hour styling through most non-winter daylight, with night/storm/winter identity preserved; warm sunlight against cooler shadows, clear terrain/settlement composition, richer blocky silhouettes and meaningful color variation. Preserve actual astronomical sunrise/sunset/work schedules independently from the stylized lighting. Beauty requires broader art work than a color filter alone.
+
+## Latest interview inputs — not implemented yet
+
+- Start from people without prebuilt structures or a town hall. Existing saves stay intact. Ensure an actual usable bootstrap/storage/shelter loop.
+- Remove automatic decorative animal pens; only build functional husbandry facilities intentionally.
+- Fields must hug the land and read as cultivated soil, not raised wooden platforms.
+- Individual buildings need handmade variation within a coherent village/age/material style.
+- Boats need direct world selection and obvious boarding/disembark controls; add drag-sized hulls and deep-water ports.
+- Markets should support meaningful trade throughput and storage/logistics; audit the existing generic production bonus.
+- Temples need meaningful community/ritual/safety utility beyond housing; universities need actual teaching/discovery jobs beyond housing.
+- Consolidate worker commitments, order lifecycle and save boundaries to reduce the cost of adding systems. Keep working systems and avoid a whole-game rewrite.
+- Conduct a user interview after this caravan batch before deciding the next implementation slice. The user's brief is clear; the delivery has not yet met their intended experience.
+- User screenshot confirms Full access is selected. The current executor still reports restricted capabilities; do not keep instructing them to toggle it or imply authorization is absent.

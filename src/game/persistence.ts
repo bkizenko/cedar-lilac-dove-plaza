@@ -327,6 +327,7 @@ export function decodeGame(raw: unknown): Game {
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
     if(u.tamingWork!==undefined){const w=u.tamingWork;if(!obj(w)||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
       const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);
       if(!obj(ride)||!b||b.team!==u.team||u.haulage!=='canoe'||!['boarding','aboard','landing'].includes(ride.phase)||ride.phase==='landing'&&(!num(ride.x)||!num(ride.z)||Math.abs(ride.x)>HALF||Math.abs(ride.z)>HALF))fail();
@@ -454,6 +455,9 @@ export function decodeGame(raw: unknown): Game {
   for (const r of s.routes) {
     if (!obj(r)) fail();
     numbers(r, ["id", "team", "giveAmt", "getAmt", "interval", "t"]);
+    if(r.caravan!==undefined){const c=r.caravan;
+      if(!obj(c)||![1,2,3].includes(c.size)||![0,1,2].includes(c.guards)||!['any','pack','cart'].includes(c.transport)||!Array.isArray(c.workerIds)||c.workerIds.length>3||new Set(c.workerIds).size!==c.workerIds.length||c.workerIds.some((id:any)=>!Number.isSafeInteger(id)||id<1)||!Number.isSafeInteger(c.trips)||c.trips<0||!Number.isSafeInteger(c.losses)||c.losses<0||!num(c.refunded)||c.refunded<0||!obj(c.received)||Object.entries(c.received).some(([k,v])=>!['food','wood','stone','copper','iron'].includes(k)||!num(v)||v<0)||c.lastResult!==undefined&&(typeof c.lastResult!=='string'||c.lastResult.length>1000))fail();
+    }
     if (r.paused !== undefined && typeof r.paused !== "boolean") fail();
     if (r.workerId !== undefined && !Number.isInteger(r.workerId)) fail();
     if (r.status !== undefined && typeof r.status !== "string") fail();

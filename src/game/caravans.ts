@@ -1,3 +1,4 @@
+import {hasTaskCommitment} from './workCommitments';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {AGE_STAT,UNITS} from './constants';
@@ -41,9 +42,9 @@ function sendEscort(g:Game,carrierId:number,captive:boolean){
  const carrier=g.state.units.find(u=>u.id===carrierId&&u.team===0&&u.hp>0&&(captive?captiveJourney(u):tradeJourney(u)));
  if(!carrier)return false;
  if(g.state.units.filter(u=>u.hp>0&&u.escortId===carrierId).length>=2){g.banner('This party already has two guards.',3);return false;}
- const guard=g.state.units.filter(u=>u!==carrier&&u.team===0&&u.hp>0&&u.militia&&u.enslavedFrom===undefined&&!isDependent(g,u)&&u.carry===0&&
+ const guard=g.state.units.filter(u=>u!==carrier&&u.team===0&&u.hp>0&&u.militia&&!u.caravanArmed&&u.enslavedFrom===undefined&&!isDependent(g,u)&&u.carry===0&&
    !u.escortId&&!u.emergency&&!u.recalled&&!u.visit&&!u.trade&&!u.scout&&!u.expedition&&!u.envoy&&!u.foundingJourney&&
-   !u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','hold'].includes(u.order)&&
+   !hasTaskCommitment(u)&&u.drill==null&&['idle','hold'].includes(u.order)&&
    !g.state.buildings.some(b=>b.team===0&&b.type==='cornerstone'&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<32)&&
    connectedForUnit(g,u,carrier.x,carrier.z))
    .sort((a,b)=>Math.hypot(a.x-carrier.x,a.z-carrier.z)-Math.hypot(b.x-carrier.x,b.z-carrier.z))[0];

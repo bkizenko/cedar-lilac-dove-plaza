@@ -319,6 +319,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <li key={r.id}>
               {r.rival}: {r.status || "Preparing caravan"} · {r.giveAmt} {r.give} for {r.getAmt}{" "}
               {r.get}
+              {r.caravan&&<p>{r.caravan.size} carriers · {r.caravan.guards} guards · {r.caravan.transport} transport · {r.caravan.trips} trips · {r.caravan.losses} carriers lost<br/>{r.caravan.lastResult||'No cargo home yet'}{Object.keys(r.caravan.received).length>0&&` · Total delivered: ${Object.entries(r.caravan.received).map(([kind,n])=>`${Math.floor(n||0)} ${kind}`).join(', ')}`}</p>}
               <button
                 onClick={() => {
                   r.paused = !r.paused;

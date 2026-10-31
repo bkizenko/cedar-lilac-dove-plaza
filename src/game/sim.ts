@@ -1,3 +1,5 @@
+import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
+import {hasTaskCommitment} from './workCommitments';
 import {commandRiverboat,riverboatAI,syncRiverboats} from './boats';
 import {copperStudyAI,developRivalCopper} from './materialStudy';
 import {difficulty} from './difficulty';
@@ -1370,7 +1372,7 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
-      if (u.boat || u.copperStudy || u.plantingWork || u.weaponWork || u.haulageWork || u.farmToolWork || u.tamingWork || u.studyCrop || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
+      if (hasTaskCommitment(u) || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
       if (u.envoy || u.scout || u.expedition || u.foundingJourney || u.visit || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
@@ -2389,7 +2391,9 @@ export class Game {
   }
 
   tickRoutes(dt: number) {
+    tickCaravanRoutes(this,dt);
     for (const r of this.state.routes) {
+      if(r.caravan)continue;
       if (r.paused) {
         r.status = "Departures paused; existing cargo continues home";
         continue;
@@ -4381,6 +4385,7 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-(drop.w*.4+u.r),dz=Math.abs(u.z-drop.z)-(drop.d*.4+u.r);
       const frontage=(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
+      recordCaravanDelivery(this,u);
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
         deliverSamples(this,u);
@@ -5536,7 +5541,7 @@ export class Game {
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if(tributeJourneyAI(this,u,sdt))continue;
             if(escortAI(this,u,sdt))continue;
-            if(waitForTradeEscort(this,u))continue;
+            if(waitForTradeEscort(this,u)||waitForCaravan(this,u))continue;
             if(raidLootAI(this,u,sdt))continue;
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;

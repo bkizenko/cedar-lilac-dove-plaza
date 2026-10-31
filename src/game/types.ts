@@ -69,6 +69,7 @@ export type Cost = {
 export type TradeDeal = { give: ResKind; giveAmt: number; get: ResKind; getAmt: number };
 
 export type TradeRoute = {
+  caravan?: {size:number;guards:number;transport:'any'|'pack'|'cart';workerIds:number[];trips:number;losses:number;received:Partial<Record<ResKind,number>>;refunded:number;lastResult?:string};
   paused?: boolean;
   workerId?: number;
   status?: string;
@@ -189,6 +190,7 @@ export type Unit = {
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
+  caravanRoute?:number;
   boat?: {id:number;phase:'boarding'|'aboard'|'landing';x?:number;z?:number};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};

@@ -1,3 +1,4 @@
+import {hasTaskCommitment} from './workCommitments';
 import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type { Game } from './sim';
 import type { Building, Unit } from './types';
@@ -27,7 +28,7 @@ function civilian(g: Game, u: FarmToolUnit) {
 }
 
 function available(g: Game, u: FarmToolUnit) {
-  return civilian(g, u) && !u.boat && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.haulageWork && !u.copperStudy&&!u.studyCrop &&
+  return civilian(g, u) && u.carry === 0 && !hasTaskCommitment(u,'farmToolWork') &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled && ['idle', 'gather', 'hold'].includes(u.order);
 }
