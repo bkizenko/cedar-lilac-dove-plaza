@@ -1,4 +1,5 @@
-import {landscapeSample,LANDSCAPE_ART_RULES} from './landscapeArt';
+import {CampVisual} from './campVisual';
+import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
 import {foundationProfile} from './foundations';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
@@ -202,6 +203,7 @@ export class WorldView {
   private styleHalls:{id:number;x:number;z:number;team:number}[]=[];
   private villageStyles = new Map<string,ReturnType<typeof architectureStyle>>();
   private eraDetails: THREE.InstancedMesh | null = null;
+  private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
   private terrainBiome: Uint8Array | null = null;
   private terrainRegion: Uint8Array | null = null;
@@ -479,6 +481,8 @@ export class WorldView {
     this.buildBuildings();
     this.buildUnits();
     this.buildHearths(game);
+    this.campVisual=new CampVisual(this.scene,game.world.camps.length);
+    this.campVisual.sync(game);
     this.buildWildlife();
     const home = game.world.camps.find((c) => c.team === 0) ||
       game.world.camps[0] || { x: 0, z: 0 };
@@ -1018,7 +1022,7 @@ export class WorldView {
     this.syncNature(game);
     this.syncWildlife(game);
     this.buildingSyncIn-=dt;
-    if(this.buildingSyncIn<=0){this.syncBuildings(game);this.buildingSyncIn=.1;}
+    if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
     this.syncUnits(game);
     this.syncTrails(game);
     this.syncCargo(game);
@@ -1123,13 +1127,14 @@ export class WorldView {
                               : "#dce7ed",
     );
     fog.lerp(_c.set("#ead9bb"),art.warmth*.16);
-    let dens = night ? 0.003 : 0.0018;
-    if (wx === "mist") dens = 0.0078;
-    if (wx === "rain") dens = 0.0052;
-    if (wx === "storm") dens = 0.009;
-    if (wx === "flood") dens = 0.0074;
-    if (wx === "drought") dens = 0.0044;
-    if (wx === "frost" || sn.snow > 0.45) dens = 0.0064;
+    // Warm direct light against cool skylight separates valleys and distant ridges.
+    const clearDay=!night&&!wet&&wx!=="mist"&&wx!=="drought";
+    if(clearDay){
+      fog.lerp(_c.set(ATMOSPHERE_RULES.coolDistance),ATMOSPHERE_RULES.distanceMix);
+      this.hemi.color.lerp(_c.set(ATMOSPHERE_RULES.coolSky),ATMOSPHERE_RULES.skyMix);
+    }
+    this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
+    const dens=atmosphericDensity(wx,night,sn.snow);
     const k = dt > 0.4 ? 1 : 1 - Math.exp(-dt * 0.38);
     this.litSun += (sunI - this.litSun) * k;
     this.litHemi += (hemiI - this.litHemi) * k;
@@ -1139,7 +1144,7 @@ export class WorldView {
     this.sun.intensity = this.litSun;
     this.sun.color.copy(this.litSunCol);
     this.hemi.intensity = this.litHemi * 1.2;
-    this.fill.intensity = night ? 0.45 : 0.48 + elev * 0.16;
+    this.fill.intensity = night ? 0.45 : ATMOSPHERE_RULES.daylightFill + elev * ATMOSPHERE_RULES.elevatedFill;
     this.bounce.intensity = night ? 0.22 : 0.12 + elev * 0.12;
     (this.scene.fog as THREE.FogExp2).color.copy(this.litFog);
     this.scene.background = this.litFog;
@@ -2347,6 +2352,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.campVisual?.dispose();this.campVisual=null;
     const keep = new Set([
       this.ghost,
       this.arrows,

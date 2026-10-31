@@ -1,3 +1,9 @@
+## Batch 2 execution — 2026-10-31
+
+Implemented v10 unbuilt camp openings with real shared-inventory cargo/recall targets, hall-independent society survival, bounded actual-stock camp visuals; atomic job/reservation contracts with tree-gathering ownership adapter; per-landmass ridge/valley/drainage composition and atmospheric layering. Historical generation versions remain supported. Bierstadt/Cole direction is partially implemented, not visually complete.
+
+First-winter diagnostics across two Normal/default-conflict seeds: subsistence and physical construction succeed, but one seed loses all five founders during armed contact. M1 acceptance remains **open**, including defense/shelter reliability and scarcity balance. See `FIRST_WINTER_2026-10-31.json`. Next migrate remaining job families and tighten survival/defense before M2 widening. No full Classical or release claim.
+
 ## Map art planning addition — 2026-10-31
 
 - [ ] Implement Albert Bierstadt / Thomas Cole inspired regional landscape composition: grand ridge backdrops, luminous valleys, winding waterways, wooded framing and atmospheric depth. Permit beautiful but impractical terrain; separate scenic value from settlement utility. Retain ordinary/attractive/rare exceptional distributions and above-average viable player openings. Extend tunable metrics and seed/render acceptance as specified in `INCENTIVE_FIRST_MASTER_PLAN.md` and `VISUAL_DIRECTION.md`. Planning addition only; current scenery scoring does not complete this work.

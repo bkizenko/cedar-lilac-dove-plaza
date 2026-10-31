@@ -76,8 +76,8 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
-  if([7,8,9].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if([7,8,9,10].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
@@ -116,7 +116,7 @@ export function decodeGame(raw: unknown): Game {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();

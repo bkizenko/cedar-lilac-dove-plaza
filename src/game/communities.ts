@@ -105,6 +105,8 @@ export function tickCommunities(g: Game, dt: number) {
     if (!survivors.length || g.state.units.some((u) => u.team === t.id && u.foundingJourney))
       continue;
     const expansion = halls.length > 0;
+    // The player chooses when and where an initial camp becomes a settlement.
+    if(!expansion&&t.id===0&&(g.state.worldgenVersion??1)>=10&&!records.some(r=>r.team===0))continue;
     if (
       expansion &&
       (t.id === 0 ||

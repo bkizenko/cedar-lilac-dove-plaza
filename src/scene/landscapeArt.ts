@@ -23,3 +23,19 @@ export function landscapeSample(seed:number,x:number,z:number,height:number,dx:n
   const shade=1+Math.max(-1,Math.min(1,(dx*.65-dz*.75)/Math.max(.4,grade)))*rules.aspectContrast*exposure;
   return {exposure,r:.68+warm*.10+strata,g:.69-warm*.13+strata*.8,b:.66-warm*.22+strata*.55,shade};
 }
+
+/** Fog density is inverse metres. Clear daylight keeps the work yard crisp while
+ * distant ridges converge toward a cool atmospheric color. No extra render pass. */
+export const ATMOSPHERE_RULES = {
+  clearDensity: .0023, nightDensity: .003,
+  weatherDensity: {mist:.0078,rain:.0052,storm:.009,flood:.0074,drought:.0044,frost:.0064} as Record<string,number>,
+  coolDistance: '#b9cedb', coolSky: '#cedff0', coolGround: '#526175',
+  distanceMix: .32, skyMix: .34,
+  daylightFill: .30, elevatedFill: .12,
+} as const;
+export function atmosphericDensity(weather:string,night:boolean,snow:number){
+  return Math.max(ATMOSPHERE_RULES.weatherDensity[weather]??(night?ATMOSPHERE_RULES.nightDensity:ATMOSPHERE_RULES.clearDensity),snow>.45?.0064:0);
+}
+export function atmosphericObscurance(distanceMetres:number,density:number){
+  return 1-Math.exp(-(Math.max(0,distanceMetres)**2)*density*density);
+}

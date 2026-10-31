@@ -1,3 +1,4 @@
+import {reserveTreeWorker} from './workAllocation';
 import {rivalOperationIntent} from './rivalOperations';
 import {difficulty} from './difficulty';
 import {expansionCost,plotArea} from './plots';
@@ -409,6 +410,9 @@ export class WorkBoard {
                 ? "No available work for the assigned job"
                 : "No known reachable work — explore for resources or build an outpost";
       return;
+    }
+    if(best.kind==='wood'&&'kind' in best.node&&best.node.kind==='tree'&&!reserveTreeWorker(g,best.node as ResourceNode,u)){
+      u.workReason='Tree slots reserved — finding another work site';u.node=null;u.order='idle';return;
     }
     const key = String(best.node.id)+(best.kind==="build"?":build":":gather");
     this.occupancy.set(key, (this.occupancy.get(key) || 0) + 1);

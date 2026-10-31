@@ -10,6 +10,7 @@ import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  landscape?: ReturnType<typeof import('./regionalGeography').regionalGeography>['metrics'];
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;
   features?: LandFeature[];
@@ -195,7 +196,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
-  const geo=land?geography(seed,MAP,land.distance,version>=8):null;
+  const geo=land?geography(seed,MAP,land.distance,version>=8,version>=10):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   for (let iz = 0; iz < n; iz++) {
     for (let ix = 0; ix < n; ix++) {
@@ -902,6 +903,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     ...(scenery?{scenery}:{}),
     size: MAP,
     ...(land?{options:land.options,features:geo!.features}:{}),
+    ...(geo&&'metrics' in geo?{landscape:geo.metrics as NonNullable<WorldData['landscape']>}:{}),
     segs: SEGS,
     heights,
     waterY,

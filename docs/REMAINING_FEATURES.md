@@ -1,3 +1,7 @@
+## Batch 2 delta — 2026-10-31
+
+Unbuilt starts, camp unloading/recall and hall-loss continuity now have implemented adapters and focused scenarios. v10 connected landmass composition and atmosphere implement part of the requested painterly direction. Tree jobs use actor/workplace reservations; other executor migrations remain open. Normal first-winter end-to-end gate fails one of two seeds on conflict deaths despite adequate food. Do not equate these foundations with finished M0/M1 or full map-art acceptance.
+
 ## 2026-10-31 execution status
 
 First narrow M0/scenery batch implemented; master plan retained in `INCENTIVE_FIRST_MASTER_PLAN.md`. Scenic scores describe actual sampled terrain and compare habitable clearings; separate dry-land average is exposed. Metrics do not establish complete map ecology or release acceptance. Full M0 job/reservation coordination, unbuilt-camp survival, society-pair strategy, Classical campaign and hardware acceptance remain open. See `EXECUTION_EVIDENCE_2026-10-31.md`.

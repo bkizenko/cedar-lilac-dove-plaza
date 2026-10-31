@@ -1,3 +1,4 @@
+import {supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import type {Game} from './sim';
 import type {Building,Livestock,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
@@ -48,9 +49,9 @@ export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'p
  if(!u){g.banner('Choose a free empty-handed adult for this pen',4);return false;}
  g.interruptMission(u);u.husbandryWork={pen:penId,action,animal:animal?.id,phase:'pen',progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();return true;
 }
-function atBuilding(g:Game,u:Unit,b:Building,dt:number) {
- const spot=g.interactionSpot(u,b);if(!spot){u.workReason='No clear approach to the pen or store';return false;}
- u.tx=spot.x;u.tz=spot.z;if(!g.buildingWorkReached(u,b)){g.steer(u,dt);return false;}return true;
+function atBuilding(g:Game,u:Unit,b:SupplyDrop,dt:number) {
+ const spot=supplyApproach(g,u,b);if(!spot){u.workReason='No clear approach to the pen or store';return false;}
+ u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,b,spot)){g.steer(u,dt);return false;}return true;
 }
 function animalStep(g:Game,a:Livestock,handler:Unit,x:number,z:number,dt:number) {
  const actor:Unit={...handler,id:a.id,x:a.x,y:a.y,z:a.z,vx:a.vx,vz:a.vz,facing:a.facing,r:.35,speed:2.8,

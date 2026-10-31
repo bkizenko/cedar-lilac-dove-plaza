@@ -32,6 +32,8 @@ export function rivalWorkRange(g:Game,team:number,x:number,z:number,kind:ResKind
   // Timber does not require a camp. A known nearby forest can fund the next
   // outpost even when the last local tree was cut and the treasury is empty.
   const home=g.campOf(team);
+  // Small camps can subsist and rebuild before any resource institution exists.
+  if(Math.hypot(x-home.x,z-home.z)<=70&&rivalKnows(g,team,x,z))return true;
   if(['wood','copper','iron'].includes(kind)&&Math.hypot(x-home.x,z-home.z)<=RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z))return true;
   return g.state.buildings.some(b=>b.team===team&&g.finished(b)&&
     (['townhall','cornerstone'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<70||

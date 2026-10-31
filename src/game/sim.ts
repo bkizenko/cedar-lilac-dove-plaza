@@ -1,3 +1,5 @@
+import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
+import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {dispatchRivalOperation,prepareRivalDefense} from './rivalOperations';
 import {influenceRadius,influenceStrength} from './territory';
 import {grievanceChange,grievanceTemper} from './antagonism';
@@ -281,7 +283,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 9 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 10 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     resetCommandDiagnostics(this);
     this.simulationErrors=[];
@@ -376,8 +378,8 @@ export class Game {
       color: rolled ? rolled[1] : TEAM_COLORS[i],
       // Neighbor settlements are already established, with finite spring stores.
       // This is initial provisioning, never an income bonus or periodic refill.
-      food: i === 0 ? 120 : i === 3 ? 0 : 300,
-      wood: i === 0 ? 58 : i === 3 ? 0 : 90,
+      food: worldgenVersion>=CAMP_RULES.unbuiltGeneration&&i!==3?120:i === 0 ? 120 : i === 3 ? 0 : 300,
+      wood: worldgenVersion>=CAMP_RULES.unbuiltGeneration&&i!==3?58:i === 0 ? 58 : i === 3 ? 0 : 90,
       stone: i === 0 ? 16 : i === 3 ? 0 : 10,
       copper: i === 0 ? 0 : i === 1 ? 4 : 0,
       iron: 0,
@@ -425,9 +427,9 @@ export class Game {
     this.state.raidWave = 0;
 
     for (const generatedCamp of this.world.camps) {
-      const hall = this.addStartingBuilding("townhall", generatedCamp.x, generatedCamp.z, generatedCamp.team);
-      if (!hall) continue;
-      const camp = { ...generatedCamp, x: hall.x, z: hall.z };
+      const hall = worldgenVersion>=CAMP_RULES.unbuiltGeneration?null:this.addStartingBuilding("townhall", generatedCamp.x, generatedCamp.z, generatedCamp.team);
+      if (!hall && worldgenVersion<CAMP_RULES.unbuiltGeneration) continue;
+      const camp = { ...generatedCamp, x: hall?.x??generatedCamp.x, z: hall?.z??generatedCamp.z };
       const hutOff =
         camp.team === 1
           ? [
@@ -450,15 +452,15 @@ export class Game {
       for (let i = 0; i < nHuts; i++) {
         const ox = hutOff[i][0] + (Math.random() - 0.5) * 3;
         const oz = hutOff[i][1] + (Math.random() - 0.5) * 3;
-        this.addStartingBuilding("hut", camp.x + ox, camp.z + oz, camp.team);
+        if(worldgenVersion<CAMP_RULES.unbuiltGeneration)this.addStartingBuilding("hut", camp.x + ox, camp.z + oz, camp.team);
       }
       if (camp.team !== 0) {
         const lx = camp.team === 1 ? 9 : -10;
         const lz = camp.team === 1 ? -7 : 6;
-        this.addStartingBuilding("lumber", camp.x + lx, camp.z + lz, camp.team);
+        if(worldgenVersion<CAMP_RULES.unbuiltGeneration)this.addStartingBuilding("lumber", camp.x + lx, camp.z + lz, camp.team);
         const bx = camp.team === 1 ? -9 : 10;
         const bz = camp.team === 1 ? 8 : -8;
-        this.addStartingBuilding("barracks", camp.x + bx, camp.z + bz, camp.team);
+        if(worldgenVersion<CAMP_RULES.unbuiltGeneration)this.addStartingBuilding("barracks", camp.x + bx, camp.z + bz, camp.team);
       }
 
       const nWork = camp.team === 0 || camp.team === 2 ? 3 : 2;
@@ -476,12 +478,12 @@ export class Game {
         this.spawnUnit("worker", camp.x + 6, camp.z + 2, camp.team);
         this.spawnUnit("worker", camp.x - 5, camp.z + 5, camp.team);
         this.spawnUnit("worker", camp.x + 3, camp.z - 6, camp.team);
-        this.addStartingBuilding("cairn", camp.x + 12, camp.z - 6, camp.team);
+        if(worldgenVersion<CAMP_RULES.unbuiltGeneration)this.addStartingBuilding("cairn", camp.x + 12, camp.z - 6, camp.team);
       } else if (camp.team === 2 || camp.team>=4) {
         this.spawnUnit("worker", camp.x - 5, camp.z - 3, camp.team);
         this.spawnUnit("worker", camp.x + 5, camp.z - 4, camp.team);
         this.spawnUnit("worker", camp.x - 3, camp.z + 6, camp.team);
-        this.addStartingBuilding("grove", camp.x - 11, camp.z + 7, camp.team);
+        if(worldgenVersion<CAMP_RULES.unbuiltGeneration)this.addStartingBuilding("grove", camp.x - 11, camp.z + 7, camp.team);
       } else {
         this.spawnUnit("worker", camp.x + 4, camp.z - 5, camp.team);
         this.spawnUnit("worker", camp.x - 5, camp.z - 4, camp.team);
@@ -550,7 +552,7 @@ export class Game {
     this.spawnRegions();
     // Existing neighbors begin with a worked landscape and protected stores.
     // These are generated starting assets, not supplies granted during play.
-    for (const camp of this.world.camps.filter(c=>isRivalTeam(c.team))) {
+    for (const camp of this.world.camps.filter(c=>worldgenVersion<CAMP_RULES.unbuiltGeneration&&isRivalTeam(c.team))) {
       for (const type of ["warehouse","warehouse","farm","farm","farm"] as BldType[]) {
         const spot=this.findOpenSpot(camp.x,camp.z,type,camp.team);
         if(spot)this.state.buildings.push(this.makeBld(type,spot.x,spot.z,camp.team));
@@ -748,7 +750,7 @@ export class Game {
   }
 
   popCap(team = 0) {
-    let cap = 0;
+    let cap = (this.state.worldgenVersion??1)>=CAMP_RULES.unbuiltGeneration?CAMP_RULES.peopleSupported:0;
     for (const b of this.state.buildings) {
       if (this.finished(b) && b.team === team) cap += BUILDINGS[b.type]?.pop || 0;
     }
@@ -1628,6 +1630,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    releaseTreeWorker(this,u);
     cancelPlanting(this,u);
     if(u.copperStudy)u.copperStudy.paused=true;
     u.repatriating=undefined;
@@ -2674,7 +2677,7 @@ export class Game {
       if (u.emergency) u.emergency.resume = undefined;
     }
     for (const u of workers) {
-      if (slots > 0) {
+      if (slots > 0 && !(node.kind==='tree'&&!reserveTreeWorker(this,node as ResourceNode,u))) {
         slots--; u.node = node; u.order = "gather"; u.tx = node.x; u.tz = node.z;
       }
     }
@@ -3714,17 +3717,10 @@ export class Game {
   planReturnCrossing(){return planReturnCrossing(this);}
 
   nearestDrop(x: number, z: number, team: number) {
-    let best: Building | null = null;
-    let bd = 1e12;
-    for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== team || !this.finished(b)) continue;
-      if (b.type !== "townhall" && b.type !== "warehouse" && b.type !== "cornerstone") continue;
-      if (b.type === "cornerstone" && !this.finished(b)) continue;
-      const d = (b.x - x) ** 2 + (b.z - z) ** 2;
-      if (d < bd) {
-        bd = d;
-        best = b;
-      }
+    let best:SupplyDrop|null=null,bd=Infinity;
+    for(const drop of supplyDrops(this,team)){
+      const distance=(drop.x-x)**2+(drop.z-z)**2;
+      if(distance<bd){bd=distance;best=drop;}
     }
     return best;
   }
@@ -4160,10 +4156,9 @@ export class Game {
     // The horn overrides every mission, including foreign visits and settlement journeys.
     if(u.recalled) {
       if(u.enslavedFrom!==undefined&&waitForTradeEscort(this,u))return;
-      const homes=this.state.buildings.filter(b=>b.team===u.team&&['townhall','warehouse'].includes(b.type)&&this.finished(b))
-        .sort((a,b)=>Number(a.type!=='townhall')-Number(b.type!=='townhall')||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
-      let home:Building|undefined,spot:{x:number;z:number}|null=null;
-      for(const h of homes){const p=this.interactionSpot(u,h);if(p){home=h;spot=p;break;}}
+      const homes=supplyDrops(this,u.team).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+      let home:SupplyDrop|undefined,spot:{x:number;z:number}|null=null;
+      for(const h of homes){const p=supplyApproach(this,u,h);if(p){home=h;spot=p;break;}}
       if(!home||!spot){
         // Connectivity cannot find an entrance while the resident occupies a
         // newly blocked coarse cell. Let steering physically leave that cell;
@@ -4174,7 +4169,7 @@ export class Game {
         u.workReason="Recall: no reachable hearth or store — a crossing or clear route is needed";return;
       }
       u.tx=spot.x;u.tz=spot.z;
-      if(!this.buildingWorkReached(u,home)){this.steer(u,dt);return;}
+      if(!supplyReached(this,u,home,spot)){this.steer(u,dt);return;}
       if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
       finishRepatriation(this,u);
@@ -4363,10 +4358,10 @@ export class Game {
       return;
     }
     if (u.order === "return") {
-      const candidates=this.state.buildings.filter(b=>b.team===u.team&&this.finished(b)&&["townhall","warehouse","cornerstone"].includes(b.type))
+      const candidates=supplyDrops(this,u.team)
         .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
-      let drop:Building|undefined,spot:{x:number;z:number}|null=null;
-      for(const b of candidates){const p=this.interactionSpot(u,b);if(p){drop=b;spot=p;break;}}
+      let drop:SupplyDrop|undefined,spot:{x:number;z:number}|null=null;
+      for(const b of candidates){const p=supplyApproach(this,u,b);if(p){drop=b;spot=p;break;}}
       if(!drop||!spot){
         if(candidates.length&&!this.walkable(u.x,u.z)){u.tx=candidates[0].x;u.tz=candidates[0].z;this.steer(u,dt);u.workReason="Finding a way off blocked ground with supplies";}
         else {u.stuckT+=dt;u.workReason="No reachable store — carrying supplies; clear a route or build a local store";}
@@ -4375,8 +4370,8 @@ export class Game {
       u.tx=spot.x;u.tz=spot.z;
       // Deliver along the reachable store frontage, not one exact shared point.
       // Otherwise congestion can hold a row of carriers next to the entrance.
-      const dx=Math.abs(u.x-drop.x)-(drop.w*.4+u.r),dz=Math.abs(u.z-drop.z)-(drop.d*.4+u.r);
-      const frontage=(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
+      const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
+      const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
       recordCaravanDelivery(this,u);
       if (u.carry > 0 && u.carryType) {
@@ -5028,13 +5023,14 @@ export class Game {
     if (!tr || !tr.alive) return;
     const hall = this.state.buildings.find(
       (b) => b.team === team && b.type === "townhall" && b.hp > 0,
-    );
-    if (!hall) {
+    ) ?? campAnchor(this,team);
+    if (!this.state.units.some(u=>u.team===team&&u.hp>0)) {
       tr.alive = false;
       tr.fallenT = this.state.time;
       if(this.started&&this.visibleAt(this.campOf(team).x,this.campOf(team).z)) this.banner(tr.name + " has lost its hall; survivors may rebuild", 3);
       return;
     }
+    if(!hall)return;
     tr.thinkT -= dt;
     if (tr.thinkT > 0) return;
     tr.thinkT = 1.6 + Math.random();
