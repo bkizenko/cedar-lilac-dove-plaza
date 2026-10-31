@@ -24,3 +24,9 @@ test('weapon crafting does not steal a worker already planting a paid sapling',a
  const u=g.state.units.find(u=>u.plantingWork);g.state.units=[u];g.state.buildings=[g.makeBld('townhall',0,20,0)];g.interactionSpot=()=>({x:0,z:20});
  Object.assign(g.tribe(0),{wood:100,stone:100,food:100});assert.equal(beginWeaponWork(g,'spear'),false);assert.ok(u.plantingWork);assert.equal(u.weaponWork,undefined);
 });
+
+test('natural woodland regrows within the shorter cycle and old depleted timers do not create instant timber',()=>{
+ const g=fixture();g.state.wildlife=[];g.world.biomes=[{kind:'forest',x:0,z:0}];g.state.weather='clear';g.state.laborPolicy='balanced';
+ const tree=g.state.trees[0];g.tickRegen(1);assert.equal(tree.amount,0);assert.ok(tree.regenT>0&&tree.regenT<=1200);
+ g.tickRegen(1500);assert.ok(tree.amount>0&&tree.amount<=tree.maxAmt);assert.equal(tree.regenT,0);
+});

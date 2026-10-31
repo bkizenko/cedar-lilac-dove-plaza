@@ -3357,6 +3357,8 @@ export class Game {
         if (n.kind === "stone" || n.kind === "copper" || n.kind === "iron") continue;
         // Exhausted wild food does not regrow through winter.
         if (n.kind === "forage" && calendar(this).phase === 3) continue;
+        // Shorten legacy stump timers too, without creating immediate timber.
+        if(n.kind==="tree"&&!n.planted)n.regenT=Math.min(n.regenT,1200);
         let rate = 1;
         if (rain) rate = 1.25;
         if (frost) rate = 0.55;
@@ -4367,7 +4369,7 @@ export class Game {
             if (node.kind === "tree") this.chopMarks.delete(node.id);
             node.regenT =
               node.kind === "tree"
-                ? 1800 * (3 + Math.random() * 2)
+                ? 600 + Math.random() * 600
                 : node.kind === "forage"
                   ? 240 + (node.pressure||0)*900 + Math.random() * 120
                   : node.kind === "fish"
@@ -5528,7 +5530,7 @@ export class Game {
   step(dt: number) {
     if (!this.started) return;
     const spd = this.state.speed >= 3 ? 4 : this.state.speed === 2 ? 2 : 1;
-    const nightMul = 1;
+    const nightMul = this.isNight()?1.6:1;
     const sdt = this.state.paused || this.state.ended ? 0 : Math.min(dt * spd * nightMul, 0.34);
     if (this.state.walkDirty) this.rebuildWalk();
 

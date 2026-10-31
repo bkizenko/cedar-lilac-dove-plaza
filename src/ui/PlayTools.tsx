@@ -35,7 +35,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
       >
         <h2 className="font-display text-2xl text-bronze-bright">Your tribe, at your fingertips</h2>
         <p className="mt-2 text-sm text-parchment-dim">
-          The village is paused. Escape returns to the world. L opens the village ledger for food,
+          The village is paused. Nights pass 1.6× faster. Escape returns to the world. L opens the village ledger for food,
           work priorities and neighbor relations.
         </p>
         <dl className="key-guide">

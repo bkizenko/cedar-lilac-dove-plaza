@@ -21,10 +21,10 @@ export class Engine {
   game: Game;
   private originalGame: Game | null = null;
   startTestSession(){
-    if(this.originalGame)return;
-    if(!saveGame(this.game,true)){this.game.banner("Save your village successfully before entering test mode",5);return;}
+    if(this.originalGame)return true;
+    if(!saveGame(this.game,true)){this.game.banner("Save your village successfully before entering test mode",5);return false;}
     const copy=decodeGame(encodeGame(this.game));copy.testMode=true;copy.state.paused=true;
-    this.originalGame=this.game;this.restoreVillage(copy);this.pushHud();
+    this.originalGame=this.game;this.restoreVillage(copy);this.pushHud();return true;
   }
   endTestSession(){
     if(!this.originalGame)return;
@@ -139,7 +139,7 @@ export class Engine {
   }
 
   configureNewWorld(request:WorldRequest) {
-    if(!this.game.awaitingStart||this.originalGame)return;
+    if(!this.game.awaitingStart||(this.originalGame&&!this.game.testMode))return;
     try {
       this.game.reset(undefined,7,request);this.keyboard.groups.clear();this.simAccumulator=0;
       this.view.rebuild(this.game);this.homeLook();this.pushHud();
@@ -208,7 +208,6 @@ export class Engine {
   }
 
   restart() {
-    if(this.originalGame){this.game.banner("Leave test mode before starting another village",4);return;}
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {

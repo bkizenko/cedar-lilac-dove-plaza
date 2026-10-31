@@ -352,6 +352,9 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               <button onClick={()=>{rejectPeace(g,n.id);engine.pushHud();}}>Reject offer</button>
               <p>You may send different terms below.</p>
             </div>}
+            <button disabled={n.hostile||s.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===n.id)} onClick={()=>{g.sendDelegation(n.id,'trade');engine.pushHud();}}>
+              {s.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===n.id)?'Trade envoy travelling':'Send trade envoy'}
+            </button>
             <TradeProposal engine={engine} team={n.id} />
             {n.hostile && (
               <div className="flex flex-wrap gap-1">

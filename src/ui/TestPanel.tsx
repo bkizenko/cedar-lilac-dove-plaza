@@ -16,6 +16,7 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <label>Scheduled raids<select value={g.state.conflict} onChange={e=>run(()=>{g.state.conflict=e.target.value as typeof g.state.conflict;})}>{['quiet','balanced','dangerous'].map(w=><option key={w}>{w}</option>)}</select></label></fieldset>
  <fieldset><legend>Village</legend><div className="test-actions">{([['supplies','Add supplies & seeds'],['weapons','Add weapons'],['heal','Heal & rest people'],['cultivation','Unlock crops'],['finish','Complete construction'],['raid','Land a sea raid'],['transport','Try canoe & pack goat'],['ferry','Try passenger ferry']] as [TestAction,string][]).map(([action,label])=><button key={action} onClick={()=>run(()=>{testAction(g,action);if(action==='ferry'&&g.state.selBld){engine.view.look.x=g.state.selBld.x;engine.view.look.z=g.state.selBld.z;}})}>{label}</button>)}</div></fieldset>
  <fieldset><legend>Relations</legend>{g.state.tribes.filter(t=>t.id!==0&&t.id!==3&&t.alive).map(t=><div className="test-relation" key={t.id}><span>{t.name}</span><button aria-pressed={t.hostile} onClick={()=>run(()=>{t.recoveryUntil=0;g.makeHostile(t.id);})}>War</button><button aria-pressed={!t.hostile} onClick={()=>run(()=>g.agreeTruce(t.id))}>Peace</button></div>)}</fieldset>
+ <button className="test-primary" onClick={()=>{engine.restart();close();}}>New test world</button>
  <button className="test-primary" onClick={()=>{engine.endTestSession();close();}}>Leave testing · return to my village</button>
  </>}
  </dialog>;

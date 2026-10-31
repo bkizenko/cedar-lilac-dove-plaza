@@ -1,3 +1,12 @@
+## Test-world flow, shorter nights, woodland pacing and outbound envoy access — 2026-10-31
+
+- [x] ~~One click on Test lab saves the real village, creates a disposable copy and opens its controls.~~ Failed durable saving cannot claim success or replace the real village. Restart/New test world stays within the test copy; layout/size generation remains available while the original village pointer and saved data stay protected. Leaving testing restores the original village.
+- [x] ~~Nights pass1.6× faster in wall-clock play.~~ The whole simulation advances together; seasonal clock/work schedules remain based on simulation time, and pausing still freezes it.
+- [x] ~~Expose Send trade envoy for known peaceful settlements.~~ Uses the existing physical delegation/meeting/report journey; duplicate dispatch to the same settlement is blocked. Offers/reports still require arrival.
+- [x] ~~Faster natural timber regrowth, including legacy depleted stands.~~ New natural timers are600–1200simseconds instead of5400–9000; weather/habitat still change growth rate. Existing unplanted stump timers are capped at1200on their next growth tick, preserving finite wood and avoiding instant replenishment. Seed-funded planted saplings keep their quicker120-second cycle.
+- Four focused play-flow tests and five managed-woodland checks pass. These cover test restart/configure/restore and durable-save isolation; failed-save safety; night/pause pacing; real envoy arrival/report and duplicate exclusion; and finite shortened natural regrowth with paid planting preserved. Final typecheck and production build pass; published to the permanent preview and restarted the play service. UI browser verification remains pending.
+- The latest incentive audit/design is in AI_INCENTIVES.md. Rival ambitions, stronger operations, lifecycle, visible influence/grievances, artifacts/monuments and era/total score are the accepted next strategic work, not delivered features here. Boats already move at1.65× base speed on water; general cargo fleets/deep ports remain open.
+
 ## World families, saved dimensions and geographic terrain — 2026-10-31
 
 - [x] ~~Replace the sole radial-island parent for new games with Pangaea, Continents and Archipelago families.~~ Separate landforms/geography modules generate distinct topology, incised bays/coves, mountain ranges, plateaus, valleys, lakes and curved lake outlets/tributaries. New terrain omits the old raised ford disks and automatic dock-bank pads. These are terrain forms, not a complete erosion/watershed/water-level simulation.

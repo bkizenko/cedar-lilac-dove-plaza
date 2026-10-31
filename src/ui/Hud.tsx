@@ -157,7 +157,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
         {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
-        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>setTestOpen(true)}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
+        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
       {testOpen&&engine&&<TestPanel engine={engine} close={()=>setTestOpen(false)}/>}
       <div className="hud-clock">

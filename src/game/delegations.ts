@@ -6,6 +6,7 @@ export function sendDelegation(g:Game,team:number,kind:"trade"|"peace"|"gift",ca
   const hall=g.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&g.finished(b));
   if(!hall||!knownSettlement(g,team)||team===0||team===3)return false;
   if(kind==="gift"&&g.tribe(0).food<30)return false;
+  if(kind==="trade"&&g.state.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===team)){g.banner('A trade envoy is already travelling to this settlement',4);return false;}
   if(kind==="peace"&&g.state.units.some(u=>u.envoy?.kind==='peace'&&u.envoy.team===team)){g.banner('A peace delegation is already travelling to this tribe.',4);return false;}
   const u=carrier||tradeCarrier(g);if(!u){g.banner("Select an available adult with empty hands for the delegation",4);return false;}
   if(!g.interactionSpot(u,hall)){g.banner("The meeting place needs a reachable land route or crossing",4);return false;}

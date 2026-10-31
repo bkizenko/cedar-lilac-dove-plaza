@@ -222,3 +222,17 @@ See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-f
 - [x] ~~Distinct world families, larger persistent dimensions, updated world-coordinate consumers, and denser physical woodland.~~
 - [x] ~~Geographic highlands, plateau, valley, lake, bay and cove forms on new worlds; remove artificial raised ford/dock pads there.~~
 - These close the specific foundation slice, not the full terrain or gameplay overhaul. New-world UI/renderer review remains unproven after the browser origin denial. Legacy saved terrain is unchanged, including any old ford shapes; future saved excavation/canals must change the actual terrain and navigation together.
+
+
+## Current AI incentive audit — 2026-10-31
+
+[AI_INCENTIVES.md](AI_INCENTIVES.md) records actual current survival/build/raid/relationship/lifecycle rules and their shortcomings, then specifies the shared incentive layer, control-to-influence gradient, witnessed grievance meter, leader/society priorities, physical artifacts/monuments, era/total scores and proposed Civ-style victory families. The player explicitly accepts achievement scores while rejecting generic gold/science/production yields as a replacement for physical systems. Faster forest regrowth, starker regional cultural/contact differences and much larger future worlds remain requested. None of these strategic/score changes is claimed complete by map or test-flow releases.
+
+
+## Play-flow and woodland batch — 2026-10-31
+
+- [x] ~~One-click protected test entry, restart and world configuration within the test copy, and restoration of the original village.~~
+- [x] ~~Nights pass1.6× faster; pauses still freeze the simulation.~~
+- [x] ~~Visible outbound trade-envoy dispatch, physical arrival reports and duplicate exclusion.~~
+- [x] ~~Natural stump recovery shortened to600–1200simseconds; older depleted timers capped without immediate wood.~~ Planted saplings retain120seconds. Full forest spread/ecology remains open.
+- Leader presentation, clearer practical age/discovery teaching, influence/grievance overhaul and the strategic AI/score systems in AI_INCENTIVES.md remain unfinished.
