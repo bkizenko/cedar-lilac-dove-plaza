@@ -1,3 +1,6 @@
+import {openingWaterSurvey,OPENING_WATER_RULES} from './openingWater';
+import {continentalRiparian} from './continentalRiparian';
+import {variedLandforms,variedGeography,surveyVariety,validateVariety,makeLandContinuation,VARIETY_RULES,type TownCandidate} from './worldVariety';
 import {multipleLandmasses,multipleGeography,measureLandmasses,MULTILAND_RULES} from './multipleLandmasses';
 import {buildEcologicalProvinces,provinceAt,EcologyCoverageError,type EcologicalProvinceGrid} from './ecologicalProvinces';
 import {repairRiparianTerrain} from './riparianRepair';
@@ -16,9 +19,12 @@ import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  openingWater?:NonNullable<ReturnType<ReturnType<typeof openingWaterSurvey>["at"]>>;
+  landContinuation?:ReturnType<typeof makeLandContinuation>;
+  variety?:Omit<ReturnType<typeof surveyVariety>,'componentAt'>;
   topology?:ReturnType<typeof measureLandmasses>;
   ecology?:EcologicalProvinceGrid;
-  ecologyRepair?:ReturnType<typeof repairRiparianTerrain>;
+  ecologyRepair?:ReturnType<typeof repairRiparianTerrain>|ReturnType<typeof continentalRiparian>;
   ecologyResourceMetrics?:ReturnType<typeof populateEcologicalResources>['regions'];
   landscape?: ReturnType<typeof import('./regionalGeography').regionalGeography>['metrics'] | ReturnType<typeof import('./composedGeography').composedGeography>['metrics'];
   waterBodies?:LocalWaterBody[];
@@ -111,8 +117,9 @@ function node(
 }
 
 export function generateWorld(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const multi=version>=13?multipleLandmasses(seed,request):null;
-  const land=multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
+  const varied=version>=14?variedLandforms(seed,request):null;
+  const multi=version===13?multipleLandmasses(seed,request):null;
+  const land=varied??multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
   const MAP=land?.options.size??1040, HALF=MAP/2;
   const SEGS=land?Math.round(MAP/1040*256):256;
   const idx=(ix:number,iz:number)=>iz*(SEGS+1)+ix;
@@ -210,7 +217,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
-  const geo=multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
+  const geo=varied?variedGeography(seed,MAP,varied):multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   const localBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
   const waterHeights=version>=11?new Float32Array(n*n):undefined;
@@ -360,6 +367,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     { x: rival.x, z: rival.z, team: 1 },
     { x: ash.x, z: ash.z, team: 2 },
   ];
+  let varietyCandidates:TownCandidate[]=[];
   if(land){
     const sites:{x:number;z:number;noise:number;beauty:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
     for(let z=-HALF+48;z<HALF-48;z+=20)for(let x=-HALF+48;x<HALF-48;x+=20){
@@ -374,19 +382,26 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     if(sites.length<3)throw new Error('This seed has no viable settlement sites');
     const area=heights.reduce((sum,h)=>sum+Number(h>waterY+.8),0)*(MAP/SEGS)**2;
     const teams=[0,1,2,4,5].slice(0,1+rivalCountForArea(area));
+    const townSurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,sites):null,townCounts=new Map<number,number>();
+    if(townSurvey){varietyCandidates=sites.map(({x,z})=>({x,z}));const capacity=townSurvey.landmasses.reduce((n,p)=>n+p.townSites.length,0);if(capacity<3)throw new Error('V14 requires three physically spaced town sites');teams.length=Math.min(teams.length,capacity);}
     const beauty=(site:{beauty:number})=>site.beauty;
     const scenicThreshold=version>=9?[...sites].map(beauty).sort((a,b)=>a-b)[Math.floor((sites.length-1)*SCENERY_RULES.playerCandidatePercentile)]:0;
     camps.length=0;
     for(const team of teams){
-      let best=sites[0],score=-Infinity;
+      let best=sites[0],score=-Infinity,zone=-1;
+      if(townSurvey&&team!==0){let priority=-Infinity;for(const part of townSurvey.landmasses){const used=townCounts.get(part.id)||0;if(used>=part.townSites.length)continue;const available=sites.some(site=>townSurvey.componentAt(site.x,site.z)===part.id&&camps.every(c=>Math.hypot(c.x-site.x,c.z-site.z)>=VARIETY_RULES.minimumTownSpacingMeters));const value=part.usableAreaSquareMeters/(used+1);if(available&&value>priority){priority=value;zone=part.id;}}}
       for(const site of sites){
+        if(townSurvey&&team!==0&&townSurvey.componentAt(site.x,site.z)!==zone)continue;
         if(version>=9&&team===0&&beauty(site)<scenicThreshold)continue;
         const distance=camps.length?Math.min(...camps.map(c=>Math.hypot(c.x-site.x,c.z-site.z))):MAP*.3;
+        if(townSurvey&&camps.length&&distance<VARIETY_RULES.minimumTownSpacingMeters)continue;
         const startLake=version>=11&&team===0?geo?.features.find(f=>f.kind==='lake'):undefined;
         const value=startLake?-Math.hypot(site.x-startLake.x,site.z-startLake.z)+site.noise*2:distance+site.noise*MAP*(camps.length?.06:.7);
         if(value>score){score=value;best=site;}
       }
+      if(townSurvey&&!Number.isFinite(score))throw new Error(`V14 cannot place a spaced town for team ${team}`);
       camps.push({x:best.x,z:best.z,team});
+      if(townSurvey){const id=townSurvey.componentAt(best.x,best.z);townCounts.set(id,(townCounts.get(id)||0)+1);}
     }
   }
   const biomes: WorldData["biomes"] = [
@@ -418,7 +433,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       if(best){camps.push({...best,team});biomes.push({...best,kind:team===4?'forest':'hills'});}
     }
   }
-  let ecology:EcologicalProvinceGrid|undefined,ecologyRepair:ReturnType<typeof repairRiparianTerrain>|undefined;
+  let ecology:EcologicalProvinceGrid|undefined,ecologyRepair:ReturnType<typeof repairRiparianTerrain>|ReturnType<typeof continentalRiparian>|undefined;
   const biomeAt = (x: number, z: number) => {
     if(ecology)return provinceAt(ecology,x,z).baseHabitat;
     let best: WorldData["biomes"][number]["kind"] = "plains";
@@ -457,9 +472,9 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
 
   if(version>=12){
     const terrain={size:MAP,heights,waterY,baseWaterY:waterY,waterHeights,waterBodies:localBodies,features:geo?.features,rivers};
-    try{ecology=buildEcologicalProvinces(terrain,seed);}catch(error){
+    try{ecology=buildEcologicalProvinces(terrain,seed,version>=14);}catch(error){
       if(!(error instanceof EcologyCoverageError)||error.code!=='riparian-physical-coverage')throw error;
-      ecologyRepair=repairRiparianTerrain(terrain,seed,version);ecology=buildEcologicalProvinces(terrain,seed);
+      ecologyRepair=version>=14?continentalRiparian(terrain,error.requiredAreaSquareMeters,camps):repairRiparianTerrain(terrain,seed,version);ecology=buildEcologicalProvinces(terrain,seed,version>=14);
     }
   }
   let nid = 1;
@@ -788,25 +803,43 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       }
       return close >= 12 && outer >= 8;
     };
+    // A waterfront camp needs a real hall-sized dry apron and several usable
+    // resource paths; it need not fit the old broad 20m village clearing.
+    const viableOpeningClearing=(origin:typeof home)=>{
+      let low=Infinity,high=-Infinity;
+      for(let dz=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz+=3)for(let dx=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx+=3){const h=sample(heights,origin.x+dx,origin.z+dz);if(h<localLevel(origin.x+dx,origin.z+dz)+.55)return false;low=Math.min(low,h);high=Math.max(high,h);}
+      if(high-low>OPENING_WATER_RULES.maxFoundationReliefMetres)return false;
+      let near=0,far=0;for(let i=0;i<24;i++){const a=i*Math.PI/12;if(safeApproach(origin.x+Math.cos(a)*26,origin.z+Math.sin(a)*26,origin))near++;if(safeApproach(origin.x+Math.cos(a)*48,origin.z+Math.sin(a)*48,origin))far++;}
+      return near>=OPENING_WATER_RULES.nearDryApproaches&&far>=OPENING_WATER_RULES.outerDryApproaches;
+    };
     if(version>=9){
+      const opening=version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null;
       const candidates:{x:number;z:number;score:number}[]=[];
       for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
         if(camps.some(c=>c.team!==0&&Math.hypot(c.x-x,c.z-z)<120))continue;
         if(!viableClearing({...home,x,z}))continue;
         candidates.push({x,z,score:scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z,version>=11?localLevel:undefined,version>=11?SCENERY_RULES.backdropRadiusMeters:0).score});
       }
+      if(opening){
+        const target=geo?.features.find(f=>f.kind==='lake')??home;
+        for(const p of opening.candidates(target)){
+          if(!inside(p.x,p.z,72)||camps.some(c=>c.team!==0&&Math.hypot(c.x-p.x,c.z-p.z)<120)||!viableOpeningClearing({...home,...p}))continue;
+          candidates.push({...p,score:scenicBeautyAt((x,z)=>sample(heights,x,z),waterY,p.x,p.z,localLevel,SCENERY_RULES.backdropRadiusMeters).score});
+        }
+      }
       scenicCampScores=candidates.map(c=>c.score);
       const mean=scenicCampScores.reduce((s,n)=>s+n,0)/(scenicCampScores.length||1);
       const sorted=[...candidates].sort((a,b)=>a.score-b.score);
       const threshold=Math.max(mean,sorted[Math.floor((sorted.length-1)*SCENERY_RULES.playerCandidatePercentile)]?.score??0);
       const sceneTarget=version>=11?geo?.features.find(f=>f.kind==='lake')??home:home;
-      const best=candidates.filter(c=>c.score>=threshold).sort((a,b)=>Math.hypot(a.x-sceneTarget.x,a.z-sceneTarget.z)-Math.hypot(b.x-sceneTarget.x,b.z-sceneTarget.z))[0];
+      const best=candidates.filter(c=>c.score>=threshold&&(!opening||opening.at(c))).sort((a,b)=>Math.hypot(a.x-sceneTarget.x,a.z-sceneTarget.z)-Math.hypot(b.x-sceneTarget.x,b.z-sceneTarget.z))[0];
       // Exceptional layouts keep the safest available opening rather than
       // inventing scenery or accepting an unsafe clearing to hit a preference.
-      const selected=best??[...candidates].sort((a,b)=>b.score-a.score)[0];
+      const selected=best??(opening?undefined:[...candidates].sort((a,b)=>b.score-a.score)[0]);
+      if(opening&&!selected)throw new Error("V14 has no above-average safe clearing with an initially known reachable freshwater bank");
       if(selected){home.x=selected.x;home.z=selected.z;biomes[0].x=home.x;biomes[0].z=home.z;}
     }
-    if (!viableClearing(home)) {
+    if (!(version>=14?viableOpeningClearing(home):viableClearing(home))) {
       const oldX = home.x, oldZ = home.z;
       search: for (let radius = 8; radius <= 128; radius += 8) for (let i = 0; i < 24; i++) {
         const a = i * Math.PI / 12;
@@ -923,6 +956,8 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     const distribution=populateEcologicalResources({size:MAP,waterY,baseWaterY:waterY,waterHeights,ecology,camps,dockSites,trees,forage,stones,copper,iron},seed,(x,z)=>sample(heights,x,z),nid);
     nid=distribution.nextId;ecologyResourceMetrics=distribution.regions;
   }
+  const openingWater=version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}).at(home):null;
+  if(version>=14&&!openingWater)throw new Error("V14 final camp lost its reachable freshwater bank");
   const scenery=version>=9?(()=>{
     const scores:number[]=[];
     for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
@@ -934,9 +969,19 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     return {...scenerySummary(scenicCampScores,player),dryLandMean:dryLand.mean,dryLandSampleCount:scores.length};
   })():undefined;
   if(geo&&'measure' in geo){const composed=geo as ReturnType<typeof import('./composedGeography').composedGeography>;composed.metrics.geometry=composed.measure((x:number,z:number)=>sample(heights,x,z));}
-  const topology=multi?measureLandmasses(heights,SEGS,MAP,localLevel):undefined;
-  if(topology&&(topology.substantialLandmassCount<2||topology.substantialLandmassCount>5||topology.largestLandmassShare>MULTILAND_RULES.maximumLargestShare||topology.secondLandmassShare<MULTILAND_RULES.minimumSecondShare))throw new Error(`V13 physical landmass coverage failed: ${JSON.stringify(topology)}`);
+  const topology=multi||varied?measureLandmasses(heights,SEGS,MAP,localLevel):undefined;
+  if(multi&&topology&&(topology.substantialLandmassCount<2||topology.substantialLandmassCount>5||topology.largestLandmassShare>MULTILAND_RULES.maximumLargestShare||topology.secondLandmassShare<MULTILAND_RULES.minimumSecondShare))throw new Error(`V13 physical landmass coverage failed: ${JSON.stringify(topology)}`);
+  const varietySurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,varietyCandidates.filter(p=>sample(heights,p.x,p.z)>localLevel(p.x,p.z)+.8)):null;
+  if(varietySurvey){validateVariety(varietySurvey);for(const part of varietySurvey.landmasses)part.startingTownCount=camps.filter(c=>varietySurvey.componentAt(c.x,c.z)===part.id).length;}
+  const variety=varietySurvey?(({componentAt,...metrics})=>metrics)(varietySurvey):undefined;
+  const landContinuation=varied&&variety?.continuationWidthMeters?makeLandContinuation(MAP,SEGS,heights,variety.continuationWidthMeters,(x,z)=>{
+    const distance=varied.distance(x,z),coast=Math.max(0,Math.min(1,distance/shorelineWidth));if(coast<.16)return waterY-1.5-Math.max(0,-distance)*.025;
+    return Math.min(144,Math.max(.06,geo!.elevation(x,z,3,waterY)*(.22+.78*coast)));
+  }):undefined;
   return {
+    ...(openingWater?{openingWater}:{}),
+    ...(landContinuation?{landContinuation}:{}),
+    ...(variety?{variety}:{}),
     ...(topology?{topology}:{}),
     ...(scenery?{scenery}:{}),
     ...(ecology?{ecology,ecologyResourceMetrics,...(ecologyRepair?{ecologyRepair}:{})}:{}),

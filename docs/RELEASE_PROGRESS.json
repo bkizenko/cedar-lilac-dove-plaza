@@ -11,12 +11,11 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "5dfcfae",
+  "verifiedPublishedCodeBaseline": "65e187d",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
-    "V14 world-family/seasonal-plant integration and default promotion",
-    "Independent society-pair and naval-mission integration",
-    "Physical excavation and geographic influence final central hooks",
+    "Coastal NPC boat trade and autonomous fleet commissioning",
+    "Physical excavation and bounded geographic influence final integration",
     "Remaining production chains, teaching and campaign qualification"
   ],
   "method": {
@@ -30,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 19,
+    "verifiedGates": 20,
     "totalGates": 98,
-    "verifiedGatePercent": 19.39
+    "verifiedGatePercent": 20.41
   },
   "milestones": {
     "M0": {
@@ -41,9 +40,9 @@
       "verifiedGatePercent": 41.67
     },
     "M1": {
-      "verifiedGates": 9,
+      "verifiedGates": 10,
       "totalGates": 22,
-      "verifiedGatePercent": 40.91
+      "verifiedGatePercent": 45.45
     },
     "M2": {
       "verifiedGates": 0,
@@ -118,6 +117,12 @@
       "section": "Four newly qualified gates",
       "kind": "Executed live simulation, strict-save and UI checks",
       "scope": "Published89a32e0 core capture/occupation/knowledge, re-executed in isolated camp/workload snapshot;77/77 tests passed."
+    },
+    "v14winter": {
+      "path": "docs/V14_FIRST_WINTER_SEED42_2026-10-31.json",
+      "section": "Scenario and source scope",
+      "kind": "Executed full first-winter Game.step scenario on combined indexed source",
+      "scope": "Normal/default conflict, V14 seed42 continents, actual finite unbuilt opening, explicit delegation/build/defense, physical water/fuel and strict save. One fixed scenario, not all-seed campaign qualification."
     }
   },
   "gates": [
@@ -561,10 +566,12 @@
         "21-40",
         "51-70"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Earlier defended pre-needs runs and separate quiet needs runs cannot be combined into proof of this gate."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "v14winter"
+      ],
+      "remainingNotes": "Current combined-index scenario passes with five founders surviving, actual automatic water deliveries, real fuel, food reserves, defense and strict save; no grants/terrain edits/repairs. Wider campaign and holdout balance remain open."
     },
     {
       "id": "M1-21",
@@ -576,7 +583,7 @@
       "status": "pending",
       "credit": 0,
       "evidence": [],
-      "remainingNotes": "Only three broad habitat labels are present; many-biome physical coverage and transitions are unverified."
+      "remainingNotes": "Eight substantial connected biomes are implemented and area-qualified across current V14 cases. Full current transition-gradient and per-region resource-distribution acceptance remains unverified."
     },
     {
       "id": "M1-22",

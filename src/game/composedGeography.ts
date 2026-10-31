@@ -15,11 +15,11 @@ function nearest(x:number,z:number,path:P[]){let distance=Infinity,index=0,t=0;f
  }return{distance,index,t};}
 /** New v11 landscape only. Coarse topology is reserved before these connected
  * provinces are built; old regional geography remains available for save loads. */
-export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number,province?:{reliefScale:number;pillars:boolean;dunes:boolean;plateau:boolean;canyonWidthScale?:number;valleyShoulderReliefMeters?:number},minimumInland=140){
+export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number,province?:{reliefScale:number;pillars:boolean;dunes:boolean;plateau:boolean;canyonWidthScale?:number;valleyShoulderReliefMeters?:number;shoreDistance?:(x:number,z:number)=>number;angleRadians?:number;mouthStepMetres?:number;broadValley?:boolean},minimumInland=140){
  const rules=COMPOSED_RULES,rand=mulberry32(seed^0x7741f32);let center={x:0,z:0},inland=0;
  for(let z=-size*.42;z<size*.42;z+=16)for(let x=-size*.42;x<size*.42;x+=16){const d=landDistance(x,z);if(d>inland){inland=d;center={x,z};}}
  if(inland<minimumInland)throw new Error('Primary landscape lacks space for required geological provinces');
- const r=Math.min(260,inland*.84),angle=rand()*Math.PI*2,cs=Math.cos(angle),sn=Math.sin(angle);
+ const r=Math.min(260,inland*.84),rolledAngle=rand()*Math.PI*2,angle=province?.angleRadians??rolledAngle,cs=Math.cos(angle),sn=Math.sin(angle);
  const point=(u:number,v:number)=>({x:center.x+u*cs-v*sn,z:center.z+u*sn+v*cs});
  const coords=(x:number,z:number)=>({u:(x-center.x)*cs+(z-center.z)*sn,v:-(x-center.x)*sn+(z-center.z)*cs});
  const grand=rand()<rules.grandProbability,relief=(grand?rules.grandReliefMeters:rules.mountainReliefMeters)*(.94+rand()*.12)*(province?.reliefScale??1);
@@ -28,7 +28,7 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
   ...Array.from({length:17},(_,i)=>{const t=i/16;return[r*(.29+.70*t),r*(-.28-.08*t+Math.sin(t*Math.PI*2)*.11*Math.sin(t*Math.PI))];})];
  const main=channelLocal.map(([u,v])=>point(u,v));
  const mouthDirection={x:cs,z:sn};let end=main.at(-1)!;
- for(let i=0;i<80&&landDistance(end.x,end.z)>-12;i++){end={x:end.x+mouthDirection.x*10,z:end.z+mouthDirection.z*10};main.push(end);}
+ for(let i=0;i<80&&(province?.shoreDistance??landDistance)(end.x,end.z)>-12;i++){const step=province?.mouthStepMetres??10;end={x:end.x+mouthDirection.x*step,z:end.z+mouthDirection.z*step};main.push(end);}
  // A duplicated x/z at the fall edge creates a genuine vertical water drop:
  // upper channel ends here; lower stream begins downstream at sea-level height.
  const fall=main[4],fallLower=main[5];
@@ -121,7 +121,7 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
  return{measure,features,metrics,waterBodies,waterfalls,center,radius:r,peakMarks,pillars,
  rivers:[{pts:main,w:rules.riverWidthMeters},{pts:tributary,w:7}],coast(_x:number,_z:number,d:number){return d;},
  elevation:function terrainElevation(x:number,z:number,_old:number,water:number,skipRamp=false):number{
-  const {u,v}=coords(x,z),shore=smooth(landDistance(x,z)/rules.shoreBlendMeters);
+  const {u,v}=coords(x,z),shore=smooth((province?.shoreDistance??landDistance)(x,z)/rules.shoreBlendMeters);
   // Large forms, intermediate spurs and fine ground relief use separate scales.
   // No blanket smoothing toward sea level is applied across the whole basin.
   let h=water+2.5+fbm(x*.009+seed%991,z*.009,4)*3;
@@ -168,6 +168,10 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
     section+=(rules.plateauHeightMeters-17)*smooth((d-77)/11);
    }
    const influence=smooth(((province?96:r*.50)-(province?physicalBankDistance:d))/12)*shelfBlend;h=h*(1-influence)+section*influence;
+  }
+  if(province?.broadValley){
+   const valley=smooth((r*.26-Math.abs(v+r*.29))/(r*.10))*smooth((u+r*.55)/(r*.12))*smooth((r*.12-u)/(r*.12));
+   h=h*(1-valley)+(water+rules.lakeRiseMeters+1.8+fbm(x*.02,z*.02,2)*.3)*valley;
   }
   // A wooded ravine floor supports a compact pillar district. Each spire is
   // literal heightfield, with nonuniform widths and intervening lower passages.

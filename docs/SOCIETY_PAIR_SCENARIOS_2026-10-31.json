@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-31",
+  "scope": "Controlled land/actor Game.step scenarios; not natural-map frequency or naval/campaign qualification",
+  "scenarios": [
+    {
+      "pair": "1→2",
+      "activity": "raid",
+      "automaticReview": true,
+      "saveDuringApproach": true,
+      "timeSeconds": 873.8000000000168,
+      "metrics": {
+        "reviews": 1,
+        "blocked": 0,
+        "departures": 1,
+        "contacts": 1,
+        "resolved": 1,
+        "returned": 1,
+        "actorsReturned": 4,
+        "actorsLost": 0,
+        "meters": 998.3067293472345,
+        "goodsDelivered": 12,
+        "contactRate": 1,
+        "returnRate": 1
+      },
+      "resolved": true,
+      "partyIds": [
+        740,
+        741,
+        743,
+        744
+      ],
+      "survivingOriginalHomePeople": 11,
+      "remainingTargetPopulation": 2,
+      "targetAlive": true,
+      "playerWars": [
+        false,
+        false
+      ]
+    },
+    {
+      "pair": "2→4",
+      "activity": "peace",
+      "automaticReview": true,
+      "witnessedDamage": true,
+      "saveDuringApproach": true,
+      "timeSeconds": 841.7000000000095,
+      "metrics": {
+        "reviews": 1,
+        "blocked": 0,
+        "departures": 1,
+        "contacts": 1,
+        "resolved": 1,
+        "returned": 1,
+        "actorsReturned": 1,
+        "actorsLost": 0,
+        "meters": 240.7643512783874,
+        "goodsDelivered": 0,
+        "contactRate": 1,
+        "returnRate": 1
+      },
+      "resolved": true,
+      "messengerId": 754,
+      "packFoodConsumed": 1.4976000000000125,
+      "packWaterConsumed": 0.3328000000000013,
+      "measuredSocietyWaterUsed": 1.7064000000000012,
+      "oneUseBounds": {
+        "low": 1.7056000000003813,
+        "high": 1.7064000000003814
+      },
+      "playerWars": [
+        false,
+        false
+      ]
+    }
+  ]
+}

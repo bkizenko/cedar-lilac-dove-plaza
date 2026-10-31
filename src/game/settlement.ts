@@ -1,5 +1,6 @@
-import {campMoveIndependentNeeds} from './nomadicCamp';
 import {sameTypedValues} from './terrainWalkCache';
+import {campMoveIndependentNeeds} from './nomadicCamp';
+import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
 import {reserveTreeWorker} from './workAllocation';
 import {rivalOperationIntent} from './rivalOperations';
@@ -41,7 +42,7 @@ export function isDependent(g: Game, u: Unit) {
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(g,u))
+    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
@@ -277,7 +278,7 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
-    if(u.productionProjectId||u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
+    if(u.productionProjectId||u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.societyMissionId||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
     if(u.team===0&&g.state.autoWorkEnabled===false&&!u.jobLock){u.order=u.carry>0?'return':'hold';u.node=null;u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — select this resident and give an order';return;}
     if(u.prisoner){u.order='hold';u.node=null;u.target=null;u.workReason='Custody and release need their own orders; no automatic labor';return;}
     if(u.waterWork&&!u.waterWork.paused)return;

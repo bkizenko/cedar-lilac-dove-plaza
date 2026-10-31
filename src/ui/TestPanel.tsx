@@ -7,6 +7,7 @@ import {testAction,type TestAction} from '../game/testing';
 import {terrainMetrics} from '../game/terrainMetrics';
 import {commandDiagnostics} from '../game/commandGateway';
 import {AGES} from '../game/constants';
+import {PROVINCE_PROFILES} from '../game/ecologicalProvinces';
 export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),[,refresh]=useState(0);
  useEffect(()=>{dialog.current?.showModal();return()=>dialog.current?.close();},[]);
@@ -28,6 +29,8 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <p>{scenery.candidateCount} suitable sites · beauty range {scenery.minimum.toFixed(1)}–{scenery.maximum.toFixed(1)}. Higher scores reflect more varied landscape composition.</p></>:<p>Scenery measurements are available in new worlds. This village retains its original terrain.</p>}
  </fieldset>
  {g.world.landscape&&<fieldset><legend>Landscape composition</legend><p>{g.world.landscape.substantialLandmassCount} substantial landmasses · {g.world.landscape.dramaticRegionCount} dramatic regions</p><p>{g.world.landscape.regions.map((r,i)=>`Region ${i+1}: ${r.designedReliefMeters.toFixed(0)} m designed relief, ${r.drainageLengthMeters.toFixed(0)} m drainage${r.dramatic?', dramatic':''}`).join(' · ')}</p></fieldset>}
+ {g.world.variety&&<fieldset><legend>Land and settlement survey</legend><p>{g.world.variety.mode.replaceAll('-',' ')} · {(g.world.variety.largestLandmassShare*100).toFixed(0)}% of land in the largest region · {g.world.variety.edgeContactMeters.toFixed(0)} m of dry map edges · {g.world.variety.dryCornerCount} dry corners</p>{g.world.variety.landmasses.filter(p=>p.areaSquareMeters>=18000).map((p,i)=><p key={p.id}>Landmass {i+1}: {(p.areaSquareMeters/1000000).toFixed(2)} km² · {p.townSites.length} surveyed town sites · {p.startingTownCount} starting camps</p>)}</fieldset>}
+ {g.world.ecology&&<fieldset><legend>Biomes and geographical features</legend>{g.world.ecology.metrics.regions.map(p=><p key={p.kind}>{PROVINCE_PROFILES[p.kind].name}: {(p.largestConnectedAreaSquareMeters/10000).toFixed(1)} connected hectares · mean elevation {p.meanElevationMeters.toFixed(0)} m</p>)}<p>Physical features: {[...new Set((g.world.features??[]).map(f=>f.kind.replaceAll('-',' ')))].join(', ')}.</p><p>{g.world.rivers.length} river courses · {g.world.waterBodies?.filter(b=>b.kind==='lake').length??0} lakes · {g.world.waterfalls?.length??0} waterfalls</p></fieldset>}
  <fieldset><legend>World</legend><label><input type="checkbox" checked={g.revealMap} onChange={e=>run(()=>{g.revealMap=e.target.checked;g.updateVision(0);})}/> Reveal the whole map</label>
  <label>Age<select value={g.tribe(0).age} onChange={e=>run(()=>{g.tribe(0).age=Number(e.target.value);engine.view.rebuild(g);})}>{AGES.map((a,i)=><option key={a} value={i}>{a}</option>)}</select></label>
  <label>Weather<select value={g.state.weather} onChange={e=>run(()=>{g.state.weather=e.target.value as typeof g.state.weather;g.state.weatherT=180;})}>{['clear','rain','storm','mist','golden','frost','drought','flood'].map(w=><option key={w}>{w}</option>)}</select></label>

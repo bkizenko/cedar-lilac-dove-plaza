@@ -1,3 +1,4 @@
+import type {WildPlantState} from "./ecology";
 import type {ConflictIntent,OccupationControl} from './conflictIntent';
 import type {PrisonerCustody} from './captivity';
 import type {ConflictJournal} from './conflictMetrics';
@@ -139,6 +140,7 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  societyMissionId?:number;
   productionProjectId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
@@ -309,6 +311,7 @@ export type ResourceNode = {
   rich: number;
   pressure?: number;
   cropCandidate?: CropKind;
+  wildPlant?: WildPlantState;
 };
 
 export type Floater = {
@@ -405,6 +408,10 @@ export type Particle = {
 };
 
 export type GameState = {
+  societyRelations?:import('./societyRelations').SocietyRelation[];
+  rivalMissions?:import('./rivalActivity').RivalMission[];
+  rivalActivity?:import('./rivalActivity').RivalActivityJournal;
+  rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
   production?:import('./production').ProductionState;
   campSites?:{team:number;x:number;z:number}[];
@@ -431,6 +438,7 @@ export type GameState = {
   visitorTimer?: number;
   boats?: import('./boats').Riverboat[];
   worldgenVersion?: number;
+  wildPlantVersion?: 1;
   worldOptions?: import("./worldOptions").WorldOptions;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];

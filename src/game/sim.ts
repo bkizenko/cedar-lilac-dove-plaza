@@ -1,3 +1,5 @@
+import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
+import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
 import {productionAI,pauseProduction,tickProduction,deliverProductionCargo} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
@@ -12,7 +14,7 @@ import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,d
 import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
-import {dispatchRivalOperation,prepareRivalDefense} from './rivalOperations';
+import {prepareRivalDefense} from './rivalOperations';
 import {influenceRadius,influenceStrength} from './territory';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
@@ -74,7 +76,7 @@ import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidAr
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {plantingAI,cancelPlanting,tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
-import { habitatAt, soilQuality, applyForagePressure } from "./ecology";
+import { habitatAt, soilQuality, applyForagePressure, initializeWildPlants, tickWildPlant, harvestWildPlant, wildPlantsEnabled } from "./ecology";
 import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
 import {
@@ -303,7 +305,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 10 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 14 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     resetCommandDiagnostics(this);
     resetDefenseMobilization(this);
@@ -606,6 +608,7 @@ export class Game {
     this.stampVision(home.x, home.z, 26, 1);
     this.updateVision(0);
     if(worldgenVersion>=10)initializeSurvival(this);
+    if(worldgenVersion>=14)initializeWildPlants(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
@@ -1262,7 +1265,7 @@ export class Game {
     let n = 0;
     const selected = team===0 ? this.selectedUnits() : [];
     const workers = (selected.length ? selected : this.state.units).filter(
-      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !isDependent(this,u) &&
+      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId && !isDependent(this,u) &&
         u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork &&
         militiaStoresReached(this,u),
     );
@@ -1668,6 +1671,7 @@ export class Game {
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
     u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;
+    cancelSocietyMission(this,u);
     releaseConflictAssignment(this,u);
     releaseTreeWorker(this,u);
     pauseWaterCollection(u);
@@ -1841,7 +1845,7 @@ export class Game {
     let threat: Unit | Building | null = null;
     let bd = 28 * 28;
     for (const u of this.state.units) {
-      if(contactYieldingTo(this,u,team))continue;
+      if(contactYieldingTo(this,u,team)||isSocietyPeaceMessengerFor(this,u,team))continue;
       if (u.hp <= 0 || !this.isFoe(team, u.team)) continue;
       const d = (u.x - hall.x) ** 2 + (u.z - hall.z) ** 2;
       if (d < bd) {
@@ -1854,7 +1858,7 @@ export class Game {
       (u) => u.team === team && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     );
     for (const u of mil) {
-      if (u.escortId!==undefined || u.visit || u.trade || u.recalled || u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
+      if (u.societyMissionId || u.escortId!==undefined || u.visit || u.trade || u.recalled || u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
         continue;
       if (
         u.order === "attack" &&
@@ -1877,6 +1881,7 @@ export class Game {
     if (team === 3) return;
     const tr = this.tribe(team);
     if (!tr || tr.hostile || team === 0) return;
+    declareSocietyHostility(this,0,team);
     tr.ally = false;
     tr.trust = 0;
     tr.hostile = true;
@@ -1892,16 +1897,18 @@ export class Game {
   }
 
   isFoe(a: number, b: number) {
-    if (a === b) return false;
-    if (a === 3 || b === 3) return true;
-    if (a === 0) return !!this.tribe(b)?.hostile;
-    if (b === 0) return !!this.tribe(a)?.hostile;
-    return false;
+    if(a===b)return false;
+    if(a===3||b===3)return true;
+    if(a===0)return !!this.tribe(b)?.hostile;
+    if(b===0)return !!this.tribe(a)?.hostile;
+    if(!this.state.societyRelations?.length)return false;
+    return societiesAreFoes(this,a,b);
   }
 
   agreeTruce(team: number) {
     const rival = this.tribe(team);
     if (!rival || team === 0 || team === 3) return;
+    agreeSocietyTruce(this,0,team);
     rival.hostile = false;
     rival.tension = 0;
     rival.trust = Math.max(0.4, rival.trust || 0);
@@ -3351,6 +3358,7 @@ export class Game {
     const flood = this.state.weather === "flood";
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
+        if(tickWildPlant(this,n,dt))continue;
         if(n.kind==="fish"){renewFish(this,n,dt);continue;}
         if(n.pressure&&!(this.state.units.some(u=>u.hp>0&&u.order==="gather"&&u.node===n)))n.pressure=Math.max(0,n.pressure-dt/7200);
         if (n.kind === "forage" && calendar(this).phase === 3 && n.amount > 0) {
@@ -3473,7 +3481,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(this,u)){
+      if(!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
@@ -3484,7 +3492,7 @@ export class Game {
       // Regular meals gradually repair hunger damage instead of leaving a death spiral.
       if (!hungry && previousHunger > 0 && !u.sickUntil) u.hp = Math.min(u.maxHp, u.hp + Math.min(dt, previousHunger / 3) * u.maxHp / 240);
       }
-      if (!prisonerIndependentNeeds(u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
+      if (!prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(this,u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
@@ -4162,6 +4170,9 @@ export class Game {
     }
   }
 
+  sendSocietyPeace(team:number,partner:number){return dispatchSocietyPeace(this,team,partner);}
+  dispatchSocietyRaid(team:number,partner:number){return dispatchPairRaid(this,team,reserveSeconds(this,team),partner);}
+  resumeSocietyJourney(id:number){return resumeSocietyMission(this,id);}
   capturePerson(id:number){return captureTarget(this,id);}
   secureVillage(id:number){return secureVillage(this,id);}
   occupationStatus(id:number){return occupationStatus(this,id);}
@@ -4190,6 +4201,7 @@ export class Game {
 
   workerAI(u: Unit, dt: number) {
     if(prisonerAI(this,u,dt))return;
+    if(societyMissionAI(this,u,dt))return;
     if(riverboatAI(this,u,dt))return;
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
@@ -4359,6 +4371,8 @@ export class Game {
         }
         if("kind" in node&&node.kind==="fish")gained=Math.min(gained,Math.floor(node.amount));
         if("kind" in node&&node.kind==="stone")gained=Math.min(gained,node.amount);
+        const seasonalForage="kind" in node&&node.kind==="forage"&&wildPlantsEnabled(this);
+        if(seasonalForage)gained=harvestWildPlant(this,node as ResourceNode,gained);
         if (gained <= 0) {
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "thin", "#b8a888");
         } else {
@@ -4375,7 +4389,7 @@ export class Game {
               this.onSfx("kind" in node && node.kind === "fish" ? "fish" : t === "wood" || t === "stone" || t === "copper" || t === "iron" ? "chop" : "rustle");
           }
         }
-        if ("amount" in node) {
+        if ("amount" in node && !seasonalForage) {
           node.amount -= (node.kind === "fish" || node.kind === "stone") ? gained : 1;
           if(node.kind==="forage")applyForagePressure(node);
           else if(node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+.4*gained/Math.max(1,node.maxAmt||8));
@@ -4543,7 +4557,7 @@ export class Game {
     let bd = radius * radius;
     for (const o of this.state.units) {
       if (
-        (o.envoy?.kind === "peace" && o.envoy.team === u.team) || contactYieldingTo(this,o,u.team) || !missionMayTargetCivilian(this,u,o) ||
+        (o.envoy?.kind === "peace" && o.envoy.team === u.team) || contactYieldingTo(this,o,u.team) || isSocietyPeaceMessengerFor(this,o,u.team) || !missionMayTargetCivilian(this,u,o) ||
         o.hp <= 0 || o.shelterId ||
         o.team === u.team ||
         !this.isFoe(u.team, o.team) ||
@@ -4586,7 +4600,7 @@ export class Game {
     const skill=attacker.kind==="unit"?combatPractice(attacker):1;
     const dmg = ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength * skill : 8) * this.dmgMul(attacker.team,attacker.x,attacker.z);
     if(attacker.kind==="unit")attacker.combatXP=Math.min(150,(attacker.combatXP||0)+.2);
-    this.applyCombatDamage(attacker.team,target,dmg,attacker.kind==='unit'?attacker.id:undefined,attacker.kind==='unit'?attacker.conflictIntent:undefined);
+    this.applyCombatDamage(attacker.team,target,dmg,attacker.id,attacker.kind==='unit'?attacker.conflictIntent:undefined);
   }
 
   applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number,sourceId?:number,sourceIntent?:import('./conflictIntent').ConflictIntent) {
@@ -4597,6 +4611,11 @@ export class Game {
     if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
     if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
+    if(attackerTeam===0&&target.team!==3)this.makeHostile(target.team);
+    if(target.team===0&&attackerTeam!==3)this.makeHostile(attackerTeam);
+    const evidenceSource=source||this.state.buildings.find(b=>b.id===sourceId);
+    if(evidenceSource)recordSocietyAttack(this,evidenceSource,target,Math.min(dmg,target.hp));
+    else if(attackerTeam!==3&&target.team!==3)declareSocietyHostility(this,attackerTeam,target.team);
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
@@ -4650,7 +4669,7 @@ export class Game {
       ty: to.y + 1,
       tz: to.z,
       target: to,
-      ...(from.kind==='unit'?{attackerId:from.id,conflictIntent:from.conflictIntent}:{}),
+      attackerId:from.id,...(from.kind==='unit'?{conflictIntent:from.conflictIntent}:{}),
       speed: 22,
       life: Math.max(1.1,flightSeconds+.15),
       dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z),
@@ -4716,7 +4735,7 @@ export class Game {
       if(Math.hypot(u.x-u.target.x,u.z-u.target.z)>Math.max(8,u.range+2)) {
         u.tx=u.target.x;u.tz=u.target.z;this.steer(u,dt);return;
       }
-      this.makeHostile(u.team===0?u.target.team:u.team);
+      if(u.team===0||u.target.team===0)this.makeHostile(u.team===0?u.target.team:u.team);else declareSocietyHostility(this,u.team,u.target.team);
     }
 
     if(u.team>0&&u.team!==3&&u.pillage===0) {
@@ -5035,15 +5054,7 @@ export class Game {
       let best: Unit | null = null;
       let bd = towerRangeMeters(b) ** 2;
       for (const u of this.state.units) {
-      if(contactYieldingTo(this,u,b.team))continue;
-        if (u.hp <= 0 || u.team === b.team) continue;
-        if (b.team !== 0 && !this.tribe(b.team)?.hostile) {
-          if (u.type === "worker" || u.order === "trade") continue;
-          const hall = this.state.buildings.find(
-            (h) => h.team === b.team && h.type === "townhall" && h.hp > 0,
-          );
-          if (hall && Math.hypot(u.x - hall.x, u.z - hall.z) > 16) continue;
-        }
+        if(u.hp<=0||u.shelterId||u.team===b.team||contactYieldingTo(this,u,b.team)||!this.isFoe(b.team,u.team)||isSocietyPeaceMessengerFor(this,u,b.team)||(u.envoy?.kind==='peace'&&u.envoy.team===b.team)||b.team===0&&!this.visibleAt(u.x,u.z))continue;
         const d = (u.x - b.x) ** 2 + (u.z - b.z) ** 2;
         if (d < bd) {
           bd = d;
@@ -5118,6 +5129,7 @@ export class Game {
     // The shared rule already checks people, institutions and a food buffer.
     if (tr.age < 5 && this.ageUpIssue(team) === null) this.tryAgeUp(team);
 
+    reviewRivalSocietyActivity(this,team,reserveSeconds(this,team));
     dispatchRivalBarter(this,team);
     developRivalCrossings(this,team);
     rebalanceRivalLabor(this,team);
@@ -5261,7 +5273,7 @@ export class Game {
 
     tr.lastRaid -= 2;
     tr.intent = neighborIntent(this, team);
-    if(tr.intent==='raid')dispatchRivalOperation(this,team,reserve);
+    // Pair activity owns dispatch; prevent a duplicate player-only party.
   }
 
   checkVictory() {
@@ -5524,7 +5536,9 @@ export class Game {
         this.state.time += sdt;
         tickProduction(this,sdt);
         tickVillageDefense(this);
+        tickSocietyMissionNeeds(this,sdt);
         tickCampRelocation(this,sdt);
+        tickRivalActivity(this);
         reconcileTradeReservations(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
@@ -5552,6 +5566,7 @@ export class Game {
             if(queuedExplorationAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
+            if(societyMissionAI(this,u,sdt))continue;
             if(captureIntentAI(this,u,sdt))continue;
             if(occupationActorAI(this,u,sdt))continue;
             if (massRaidAI(this,u,sdt)) continue;
@@ -5562,6 +5577,7 @@ export class Game {
             if(escortAI(this,u,sdt))continue;
             if(waitForTradeEscort(this,u)||waitForCaravan(this,u))continue;
             if(raidLootAI(this,u,sdt))continue;
+            if(u.societyMissionId&&(u.order==='attack'||u.order==='attackmove')){this.combatAI(u,sdt);continue;}
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
             if(u.order==='explore'){this.workerAI(u,sdt);continue;}
@@ -5578,6 +5594,7 @@ export class Game {
             this.reportSimulationError(`unit ${u.id}`,error);
           }
         }
+        tickRivalActivity(this);
         tickOccupation(this,sdt);
         syncRiverboats(this);
         this.separate(sdt);
@@ -5625,6 +5642,7 @@ export class Game {
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        tickRivalActivity(this);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
@@ -5721,7 +5739,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.productionProjectId || u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.societyMissionId || u.productionProjectId || u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"

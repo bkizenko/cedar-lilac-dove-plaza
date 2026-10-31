@@ -1,5 +1,5 @@
 import {workdayAt} from "./daylight";
-import {applyForagePressure} from "./ecology";
+import {applyForagePressure,harvestWildPlant,wildPlantsEnabled} from "./ecology";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { foodDemand, FOOD_PER_PERSON_SECOND, reserveSeconds } from "./settlement";
@@ -49,9 +49,9 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
       u.workReason = "Foraging nearby wild food for the journey";
       if (e.forage >= 8) {
         e.forage -= 8;
-        patch.amount -= 1;
-        applyForagePressure(patch);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;
-        e.food += 1;
+        const taken=harvestWildPlant(g,patch,1);
+        if(!wildPlantsEnabled(g)){patch.amount-=taken;applyForagePressure(patch,taken);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;}
+        e.food += taken;
       }
       if (e.forage > 0) return true;
     }
@@ -64,7 +64,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
     u.workReason = "Night camp — resting with journey provisions";
     return true;
   }
-  if(e.returning&&e.food<2){const patch=g.state.forage.find(n=>n.amount>=1&&Math.hypot(n.x-u.x,n.z-u.z)<4);if(patch){e.forage+=dt;if(e.forage>=8){e.forage=0;patch.amount--;applyForagePressure(patch);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;e.food++;}}}
+  if(e.returning&&e.food<2){const patch=g.state.forage.find(n=>n.amount>=1&&Math.hypot(n.x-u.x,n.z-u.z)<4);if(patch){e.forage+=dt;if(e.forage>=8){e.forage=0;const taken=harvestWildPlant(g,patch,1);if(!wildPlantsEnabled(g)){patch.amount-=taken;applyForagePressure(patch,taken);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;}e.food+=taken;}}}
   if (e.returning) {
     u.order = "move";
     u.tx = home.x;

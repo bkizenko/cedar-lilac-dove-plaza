@@ -19,7 +19,7 @@ export function equipCaravan(g:Game,u:Unit){
 }
 /** Finish a loan only after both resident and goods physically return. Death loses it. */
 export function recoverCaravanEquipment(g:Game,u:Unit){
-  if(!u.caravanArmed||u.hp<=0||u.exploreAfterDelivery||u.expedition||u.order==='explore'||u.contactDemand||u.contactAttackTargetId!==undefined||u.huntOnly||u.conflictIntent==='capture'||u.conflictIntent==='occupy'||u.conflictIntent==='loot')return;
+  if(!u.caravanArmed||u.hp<=0||u.exploreAfterDelivery||u.expedition||u.order==='explore'||u.contactDemand||u.contactAttackTargetId!==undefined||u.societyMissionId||u.huntOnly||u.conflictIntent==='capture'||u.conflictIntent==='occupy'||u.conflictIntent==='loot')return;
   if(!u.militia){u.caravanArmed=undefined;return;}
   if(u.emergency||u.visit||u.trade||u.carry>0||u.returnAfterCombat||u.massRaidTarget!==undefined)return;
   if(!atStores(g,u)){

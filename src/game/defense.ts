@@ -1,4 +1,5 @@
 import {contactYieldingTo} from './encounters';
+import {isSocietyPeaceMessengerFor} from './rivalActivity';
 import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
@@ -65,7 +66,7 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
     .sort((a,b)=>Math.hypot(a.x-victim.x,a.z-victim.z)-Math.hypot(b.x-victim.x,b.z-victim.z));
   for(const center of villageCenters(g,victim.team))if(Math.hypot(victim.x-center.x,victim.z-center.z)<=DEFENSE_RULES.localMobilizationMetres&&attackers.length)automaticVillageCall(g,center,attackers,victim.team);
   for(const u of g.state.units){
-    if(u.team!==victim.team||u.hp<=0||u.prisoner||Math.hypot(u.x-victim.x,u.z-victim.z)>45||u.envoy?.kind==='peace')continue;
+    if(u.team!==victim.team||u.hp<=0||u.prisoner||Math.hypot(u.x-victim.x,u.z-victim.z)>45||(u.envoy?.kind==='peace'||g.state.rivalMissions?.some(m=>m.id===u.societyMissionId&&m.kind==='peace'&&['outbound','contact','returning'].includes(m.phase))))continue;
     if(u.type==='worker'||u.militia){
       mobilize(g,u);u.emergency!.until=g.state.time+10;
       if(isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction){
@@ -84,7 +85,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   // Explicit adult combat orders take precedence over automatic shelter behavior.
   if ((u.team === 0 || u.militia) && (u.type === "worker" || u.militia) && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
-  if(u.envoy?.kind==="peace")return false;
+  if(u.envoy?.kind==="peace"||g.state.rivalMissions?.some(m=>m.kind==='peace'&&m.id===u.societyMissionId&&m.phase!=='completed'&&m.phase!=='lost'))return false;
   // A visible attack on a nearby workplace raises the village alarm as well as
   // personal danger. Already armed civilians must answer it even while holding.
   let defendedSites:Building[]|null=null;
@@ -94,7 +95,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     // No branch below can react beyond 65 metres. Reject remote residents
     // before diplomacy/mission checks, then survey nearby workplaces lazily.
     if(distance>=65||!g.isFoe(u.team,e.team)||
-      (u.team===0&&!g.visibleAt(e.x,e.z))||contactYieldingTo(g,e,u.team)||occupationProtectsCivilian(g,u,e)||!missionMayTargetCivilian(g,u,e))return false;
+      (u.team===0&&!g.visibleAt(e.x,e.z))||contactYieldingTo(g,e,u.team)||isSocietyPeaceMessengerFor(g,e,u.team)||occupationProtectsCivilian(g,u,e)||!missionMayTargetCivilian(g,u,e))return false;
     if(distance<17||(u.emergency&&u.target===e&&distance<65))return true;
     if(distance>=45)return false;
     defendedSites??=g.state.buildings.filter(b=>b.team===u.team&&
@@ -179,7 +180,7 @@ export function callVillageDefense(g:Game,center:{x:number;z:number},intruders:U
 const villageCallTimes=new WeakMap<Game,Map<string,number>>();
 function automaticVillageCall(g:Game,center:{x:number;z:number},intruders:Unit[],team:number){let calls=villageCallTimes.get(g);if(!calls){calls=new Map();villageCallTimes.set(g,calls);}const key=team+':'+center.x+':'+center.z,due=calls.get(key)||0;if(g.state.time<due&&due-g.state.time<=DEFENSE_RULES.reviewSeconds)return;calls.set(key,g.state.time+DEFENSE_RULES.reviewSeconds);callVillageDefense(g,center,intruders,false,team);}
 const defenseReview=new WeakMap<Game,number>();
-export function tickVillageDefense(g:Game){if(g.state.time<(defenseReview.get(g)||0))return;defenseReview.set(g,g.state.time+DEFENSE_RULES.reviewSeconds);const foes=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&!(e.envoy?.kind==='peace'&&e.envoy.team===0)&&!contactYieldingTo(g,e,0));if(!foes.length)return;for(const center of villageCenters(g,0)){const intruders=foes.filter(e=>Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);if(intruders.length)automaticVillageCall(g,center,intruders,0);}}
+export function tickVillageDefense(g:Game){if(g.state.time<(defenseReview.get(g)||0))return;defenseReview.set(g,g.state.time+DEFENSE_RULES.reviewSeconds);const foes=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&!(e.envoy?.kind==='peace'&&e.envoy.team===0)&&!isSocietyPeaceMessengerFor(g,e,0)&&!contactYieldingTo(g,e,0));if(!foes.length)return;for(const center of villageCenters(g,0)){const intruders=foes.filter(e=>Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);if(intruders.length)automaticVillageCall(g,center,intruders,0);}}
 export function soundDefenseHorn(g:Game){const selected=g.state.selBld,center=selected&&selected.team===0&&selected.type==='townhall'&&g.finished(selected)?selected:g.campOf(0);return callVillageDefense(g,center);}
 
 export function resetDefenseMobilization(g:Game){defenseReview.delete(g);defenseMetrics.delete(g);villageCallTimes.delete(g);}

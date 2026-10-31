@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "gate": "M1-20",
+  "status": "verified",
+  "date": "2026-10-31",
+  "scenario": {
+    "seed": 42,
+    "worldgenVersion": 14,
+    "size": 1040,
+    "layout": "continents",
+    "difficulty": "normal",
+    "conflict": "default",
+    "defended": true,
+    "stepSeconds": 0.25
+  },
+  "source": {
+    "sourceSnapshot": "/tmp/hearthwild-v14-current-winter",
+    "baseCommit": "65e187dd3b8d1ced41e245ab0463e275831be710",
+    "gameSourcesSha256": "1fa649d0cc4f15bc4e343f3cfbb5dbe13c6c3eb3e92b8aa533d2b42ce0b0030c",
+    "default14": true,
+    "npcIntegrated": true
+  },
+  "test": "scripts/v14-first-winter.test.mjs",
+  "harness": "scripts/diagnostics/first-winter.mjs",
+  "execution": {
+    "passed": 1,
+    "failed": 0,
+    "durationMilliseconds": 30461.857333
+  },
+  "constraints": {
+    "resourceGrants": false,
+    "terrainEdits": false,
+    "visibilityEdits": false,
+    "weatherEdits": false,
+    "unitRepairs": false,
+    "manualExploration": false,
+    "manualWaterDispatch": false,
+    "ordinaryWorkDelegatedExplicitly": true,
+    "milestonePausesContinued": true
+  },
+  "outcome": {
+    "seconds": 1800.1499999999664,
+    "initialFood": 120,
+    "food": 960.3364215443628,
+    "foodReserveSeconds": 1971.2400690202226,
+    "originalResidents": 5,
+    "originalSurvivors": 5,
+    "livingAdults": 13,
+    "completedShelters": 2,
+    "zeroFounderLoss": true,
+    "survivalGate": true,
+    "needsGate": true,
+    "saveRoundtrip": true,
+    "simulationErrors": [],
+    "waterReserveSeconds": 255.2371428571309,
+    "maximumThirstSeconds": 0,
+    "maximumColdExposureSeconds": 467.9999999999985
+  },
+  "water": {
+    "waterLiters": 28.58655999999866,
+    "waterConsumedLiters": 139.41343999999754,
+    "waterDeliveredLiters": 144,
+    "waterLostLiters": 0,
+    "fuelBurnedWood": 20.2317300000006,
+    "waterShortageSeconds": 0,
+    "coldExposurePersonSeconds": 3824.7500000000737
+  },
+  "ecologicalRegionCount": 8,
+  "actions": [
+    {
+      "at": 0,
+      "type": "setAutoWork",
+      "enabled": true,
+      "reason": "Explicit player choice to delegate ordinary work"
+    },
+    {
+      "at": 0,
+      "type": "townhall",
+      "accepted": true,
+      "x": 92,
+      "z": -448
+    },
+    {
+      "at": 56.25,
+      "type": "warehouse",
+      "accepted": true,
+      "x": 106,
+      "z": -448
+    },
+    {
+      "at": 300,
+      "type": "workshop",
+      "accepted": true,
+      "x": 112,
+      "z": -448
+    },
+    {
+      "at": 300,
+      "type": "callToArms",
+      "armed": 2
+    },
+    {
+      "at": 315.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 345.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 375.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 405.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 435.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 465.5,
+      "type": "craft:spear",
+      "accepted": true
+    },
+    {
+      "at": 1764.6499999999664,
+      "type": "hut",
+      "accepted": true,
+      "x": 100,
+      "z": -446
+    }
+  ],
+  "limits": [
+    "One seed and layout; this is the specified first-winter scenario, not a guarantee for every map or later winters.",
+    "Cold exposure remains real. The harness builds no clothes; one founder finishes with about7HP.",
+    "M1-21 remains pending: this scenario does not qualify coherent transitions and matching resources across all maps."
+  ]
+}

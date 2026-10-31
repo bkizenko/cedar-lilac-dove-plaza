@@ -1,5 +1,6 @@
 import {clothingWarmth} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
+import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
 import type {Game} from './sim';
 import type {GameState,Unit} from './types';
@@ -36,7 +37,7 @@ function sheltered(g:Game,u:Unit){
 function fireDemand(g:Game,team:number,temp:number){return temp<SURVIVAL_RULES.coldThresholdCelsius?residents(g,team).length*SURVIVAL_RULES.woodPerPersonColdSecond:0;}
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),temp=ambientTemperature(g);
- const demand=people.filter(u=>!prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond,fuelDemand=fireDemand(g,team,temp);
+ const demand=people.filter(u=>!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond,fuelDemand=fireDemand(g,team,temp);
  const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];
@@ -182,14 +183,14 @@ export function tickSurvival(g:Game,dt:number){
  for(const tr of g.state.tribes){
   const stock=tr.survival;if(!stock)continue;
   const people=residents(g,tr.id);if(!people.length)continue;
-  const demand=people.filter(u=>!prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
+  const demand=people.filter(u=>!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
   stock.waterLiters=Math.max(0,stock.waterLiters-used);stock.waterConsumedLiters+=used;stock.waterShortageSeconds+=dt*shortfall;
   const fuelNeeded=fireDemand(g,tr.id,temp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
   if(fuel>0)activeFires.add(tr.id);
   tr.wood=Math.max(0,tr.wood-fuel);stock.fuelBurnedWood+=fuel;
   const home=g.campOf(tr.id);
   for(const u of people){
-   if(!prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(g,u)){
+   if(!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)){
    const beforeThirst=u.thirstSeconds??0;u.thirstSeconds=Math.max(0,beforeThirst+dt*(shortfall>0?shortfall:-rules.recoverySecondsPerSecond));
    const thirstDamage=Math.max(0,u.thirstSeconds-rules.thirstGraceSeconds)-Math.max(0,beforeThirst-rules.thirstGraceSeconds);
    if(thirstDamage>0)u.hp-=thirstDamage*u.maxHp/rules.thirstFatalExposureSeconds;

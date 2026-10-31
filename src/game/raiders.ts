@@ -4,7 +4,7 @@ import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
 import { foodDemand, isDependent } from "./settlement";
 import { receiveFood } from "./pantry";
-import { applyForagePressure } from "./ecology";
+import { applyForagePressure,harvestWildPlant,wildPlantsEnabled } from "./ecology";
 import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
 import {queueStandDown} from './demobilization';
@@ -151,8 +151,8 @@ function localForage(g: Game, u: Unit, camp: Building, dt: number) {
   else {
     u.gatherT += dt;
     if (u.gatherT >= 8) {
-      const amount = Math.min(5, Math.floor(node.amount));
-      node.amount -= amount; applyForagePressure(node, amount);
+      const amount = harvestWildPlant(g,node,Math.min(5,Math.floor(node.amount)));
+      if(!wildPlantsEnabled(g)){node.amount-=amount;applyForagePressure(node,amount);}
       node.regenT = node.amount <= 0 ? 240 + (node.pressure || 0) * 900 : 0;
       u.carry = amount; u.carryType = "food"; u.carryFood = node.cropCandidate || "berries";
       u.node = null; u.gatherT = 0; u.order = "return";

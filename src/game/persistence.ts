@@ -1,3 +1,6 @@
+import {validSocietyRelations} from './societyRelations';
+import {validRivalActivityState} from './rivalActivity';
+import {validWildPlantState} from "./ecology";
 import {validTowerPlatformState} from './towerPlatforms';
 import {validProductionState} from './production';
 import {discountQuarryPlans} from "./mining";
@@ -87,14 +90,16 @@ function validateGamePayload(raw: unknown) {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
-  if([7,8,9,10,11,12,13].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13,14].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if([7,8,9,10,11,12,13,14].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s))fail();
   if(!validProductionState(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();
+  if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
+  if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
@@ -133,7 +138,7 @@ function validateGamePayload(raw: unknown) {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -471,6 +476,8 @@ function validateGamePayload(raw: unknown) {
       if(n.planted!==undefined&&(typeof n.planted!=="boolean"||n.kind!=="tree"))fail();
       if(n.cropCandidate!==undefined&&(n.kind!=="forage"||!CROPS.includes(n.cropCandidate)))fail();
     }
+  if(!validWildPlantState(s as GameState))fail();
+  for(const list of ["trees","stones","fish","copper","iron"])if(s[list].some((n:any)=>n.wildPlant!==undefined))fail();
   if(s.livestock!==undefined){
     if(!Array.isArray(s.livestock)||s.livestock.length>96)fail();
     const perPen=new Map<number,number>();

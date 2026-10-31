@@ -1,0 +1,16 @@
+{
+  "kind": "Bounded targeting-predicate microcomparison; not a full-village stress qualification",
+  "iterationsPerRound": 200000,
+  "rounds": 5,
+  "legacyMedianMs": 3.783666999999923,
+  "candidateFallbackMedianMs": 3.7981250000000273,
+  "fallbackRatio": 1.003821160794569,
+  "fallbackExtraMsPerMillionQueries": 0.0722900000005211,
+  "threshold": {
+    "maximumFallbackExtraMsPerMillionQueries": 5,
+    "maximumActiveMsPerMillionQueries": 100
+  },
+  "activePairsMsPerMillionQueries": 35.32333499999993,
+  "gate": true,
+  "sink": 1133352
+}

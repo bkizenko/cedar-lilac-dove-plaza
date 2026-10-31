@@ -1,3 +1,6 @@
+import {WildPlantLayer} from './wildPlants';
+import {wildPlantsEnabled} from '../game/ecology';
+import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
@@ -161,6 +164,8 @@ export class WorldView {
   >();
   private towerPlatforms:TowerPlatformLayer|null=null;
   private contourFields: ContourFields | null = null;
+  private wildPlantLayer:WildPlantLayer|null=null;
+  private landContinuation:LandContinuation|null=null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
@@ -496,9 +501,11 @@ export class WorldView {
     this.lastSnow = -1;
     this.seasonAcc = 1;
     this.buildTerrain(game);
+    if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
     if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
     this.buildNature(game);
+    if(game.state&&wildPlantsEnabled(game)){this.wildPlantLayer=new WildPlantLayer(this.scene,game);if(this.bushes)this.bushes.count=0;}
     this.buildBuildings();
     this.buildUnits();
     this.buildHearths(game);
@@ -1042,10 +1049,13 @@ export class WorldView {
     for(const [mesh,nodes] of [[this.treesTrunk,game.state.trees],[this.treesLeaf,game.state.trees],
       [this.rocks,game.state.stones],[this.bushes,game.state.forage],
       [this.copper,game.state.copper],[this.iron,game.state.iron]] as const) {
-      if(mesh&&(!this.biomeScene||mesh!==this.treesTrunk&&mesh!==this.treesLeaf)){mesh.computeBoundingSphere();sources.set(mesh,nodes);}
+      if(mesh&&(!this.wildPlantLayer||mesh!==this.bushes)&&(!this.biomeScene||mesh!==this.treesTrunk&&mesh!==this.treesLeaf)){mesh.computeBoundingSphere();sources.set(mesh,nodes);}
     }
     if(this.biomeScene){const treesById=new Map(game.state.trees.map(node=>[node.id,node]));
       for(const source of this.biomeScene.pickingSources()){source.mesh.computeBoundingSphere();sources.set(source.mesh,source.resourceIds.map(id=>treesById.get(id)));}
+    }
+    if(this.wildPlantLayer){const forageById=new Map(game.state.forage.map(node=>[node.id,node]));
+      for(const source of this.wildPlantLayer.pickingSources()){source.mesh.computeBoundingSphere();sources.set(source.mesh,source.resourceIds.map(id=>forageById.get(id)));}
     }
     for(const hit of _ray.intersectObjects([...sources.keys()],false)) {
       if(hit.instanceId===undefined)continue;
@@ -1080,8 +1090,10 @@ export class WorldView {
 
   sync(game: Game, dt: number) {
     if (this.lost || this.disposed) return;
+    this.landContinuation?.sync(game);
     this.updateDay(game, dt);
     this.biomeScene?.sync(game,this.camera.position,this.quality,dt);
+    this.wildPlantLayer?.sync(game);
     this.syncNature(game);
     this.syncWildlife(game);
     this.buildingSyncIn-=dt;
@@ -1362,7 +1374,7 @@ export class WorldView {
     hideNodes(this.iron, game.state.iron);
     if (!this.bushes) return;
     const bushCap = instCap(this.bushes);
-    const nBush = Math.min(game.state.forage.length, bushCap);
+    const nBush = wildPlantsEnabled(game)?0:Math.min(game.state.forage.length, bushCap);
     this.bushCount = nBush;
     for (let i = 0; i < nBush; i++) {
       const b = game.state.forage[i];
@@ -2405,6 +2417,8 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
+    this.landContinuation?.dispose();this.landContinuation=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;

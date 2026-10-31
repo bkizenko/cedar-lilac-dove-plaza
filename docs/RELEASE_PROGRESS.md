@@ -2,16 +2,16 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**19/98 verified gates — 19.39%.** This measures acceptance evidence, not development effort or time remaining.
+**20/98 verified gates — 20.41%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 5dfcfae. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: 65e187d. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
 | M0 | 5/12 | 41.67% |
-| M1 | 9/22 | 40.91% |
+| M1 | 10/22 | 45.45% |
 | M2 | 0/16 | 0% |
 | M3 | 2/18 | 11.11% |
 | M4 | 2/20 | 10% |
@@ -59,8 +59,8 @@ Verified baseline: 5dfcfae. Unverified integration earns no credit. Partial/unve
 | M1-17 | verified | Scenic scores expose geographic components and choose an above-average viable start when feasible | batch1. Numeric geographic score components and above-average candidate selection verified. User rejects broader art; M1-16/M5-04 remain pending. |
 | M1-18 | pending | New terrain supports dry roots/foundations, freshwater access and prospectable mountain approaches | No matching executed evidence. New elevated water changes physical access/dry placements; unpublished v11 must pass broader scenarios. |
 | M1-19 | verified | Water/cold neglect produces visible warnings and grace before gradual harm; legacy needs rules persist | batch4. Needs warnings/grace/neglect and legacy opt-in compatibility checked, not all survival pressures. |
-| M1-20 | pending | Current Normal default-conflict unbuilt-camp scenario survives first winter with water/fuel/food/defense and no repair | No matching executed evidence. Earlier defended pre-needs runs and separate quiet needs runs cannot be combined into proof of this gate. |
-| M1-21 | pending | Every map contains at least eight substantial ecological regions with measured coverage, coherent moisture/soil/climate transitions and matching resources | No matching executed evidence. Only three broad habitat labels are present; many-biome physical coverage and transitions are unverified. |
+| M1-20 | verified | Current Normal default-conflict unbuilt-camp scenario survives first winter with water/fuel/food/defense and no repair | v14winter. Current combined-index scenario passes with five founders surviving, actual automatic water deliveries, real fuel, food reserves, defense and strict save; no grants/terrain edits/repairs. Wider campaign and holdout balance remain open. |
+| M1-21 | pending | Every map contains at least eight substantial ecological regions with measured coverage, coherent moisture/soil/climate transitions and matching resources | No matching executed evidence. Eight substantial connected biomes are implemented and area-qualified across current V14 cases. Full current transition-gradient and per-region resource-distribution acceptance remains unverified. |
 | M1-22 | pending | Biome presentation uses distinct grass/forest forms, wetland reeds, desert scrub and alpine vegetation with dry placement and bounded detail tiers | No matching executed evidence. Distinct biome vegetation families/ground structure are not completed by recoloring the same trees or grass. |
 
 ### M2
