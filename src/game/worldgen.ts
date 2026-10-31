@@ -1,10 +1,15 @@
+import {geography,type LandFeature} from './geography';
+import {landforms} from './landforms';
+import type {WorldRequest,WorldOptions} from './worldOptions';
 import {rivalCountForArea} from "./factions";
-import { HALF, MAP, SEGS, WATER_Y } from "./constants";
+import { MAP, WATER_Y } from "./constants";
 import { fbm, mulberry32 } from "./rng";
 import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  options?: WorldOptions;
+  features?: LandFeature[];
   segs: number;
   heights: Float32Array;
   waterY: number;
@@ -73,10 +78,6 @@ function makeRiver(
   return { pts, w: 7 + rand() * 6 };
 }
 
-function idx(ix: number, iz: number) {
-  return iz * (SEGS + 1) + ix;
-}
-
 function node(
   id: number,
   kind: ResourceNode["kind"],
@@ -92,12 +93,18 @@ function node(
   return { id, kind, x, z, y, amount, maxAmt: amount, regenT: 0, scale, rich };
 }
 
-export function generateWorld(seed: number, version = 1): WorldData {
+export function generateWorld(seed: number, version = 1, request: WorldRequest = {}): WorldData {
+  const land=version>=7?landforms(seed,request):null;
+  const MAP=land?.options.size??1040, HALF=MAP/2;
+  const SEGS=land?Math.round(MAP/1040*256):256;
+  const idx=(ix:number,iz:number)=>iz*(SEGS+1)+ix;
+  const sample=(heights:Float32Array,x:number,z:number)=>sampleHeight(heights,x,z,MAP);
+  const inside=(x:number,z:number,pad=2)=>inBounds(x,z,pad,MAP);
   const rand = mulberry32(seed);
   const n = SEGS + 1;
   const heights = new Float32Array(n * n);
 
-  const islandR = 410 + rand() * 45;
+  const islandR = (410 + rand() * 45) * (MAP/1040);
   const hillScale = 0.55 + rand() * 0.75;
   const nHills = 5 + ((rand() * 7) | 0);
   const hills: { x: number; z: number; r: number; h: number }[] = [];
@@ -185,6 +192,8 @@ export function generateWorld(seed: number, version = 1): WorldData {
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
+  const geo=land?geography(seed,MAP,land.distance):null;
+  if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   for (let iz = 0; iz < n; iz++) {
     for (let ix = 0; ix < n; ix++) {
       const x = (ix / SEGS) * MAP - HALF;
@@ -199,7 +208,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       const warble = fbm(x * 0.016 + 3, z * 0.016, 4) * coastAmp;
       const inlet=version>=4?(fbm(wx*.012+seed%353,wz*.012-81,4)-.5)*100:0;
       const r = islandR * (1 + lobeAmp * Math.sin(lobes * ang + lobePhase)) + warble + inlet;
-      const coast = Math.max(0, Math.min(1, (r - dist) / (version>=6?shorelineWidth:8)));
+      const coast = Math.max(0, Math.min(1, (land?geo!.coast(x,z,land.distance(x,z)):r-dist) / (version>=6?shorelineWidth:8)));
 
       let h = 0.7 + fbm(x * 0.018, z * 0.018, 5) * (1.8 + hillScale * 1.2);
       h += fbm(x * 0.048 + 20, z * 0.048, 3) * 0.85 * hillScale;
@@ -217,10 +226,11 @@ export function generateWorld(seed: number, version = 1): WorldData {
       const along = x * ridge.nx + z * ridge.nz;
       const across = -x * ridge.nz + z * ridge.nx;
       const ridgeBand = Math.exp(-(across * across) / (ridge.w * ridge.w));
-      if (Math.abs(along) < islandR * 0.78)
+      if (!geo && Math.abs(along) < islandR * 0.78)
         h += ridgeBand * ridge.h * (0.4 + fbm(along * 0.04, 2, 2) * 0.6);
 
-      if (lake) {
+      if(geo)h=geo.elevation(x,z,h,waterY);
+      if (lake && !geo) {
         const ld = Math.hypot(x - lake.x, z - lake.z);
         if (ld < lake.r) {
           const t = 1 - ld / lake.r;
@@ -239,9 +249,9 @@ export function generateWorld(seed: number, version = 1): WorldData {
         }
       }
 
-      if (coast < 0.16) h = 0.04;
+      if (coast < 0.16) h = land ? waterY-1.5-Math.max(0,-land.distance(x,z))*.025 : 0.04;
       else h = Math.max(0.06, h * (0.22 + 0.78 * coast));
-      heights[idx(ix, iz)] = Math.min(h, version>=2?42:13.2);
+      heights[idx(ix, iz)] = Math.min(h, land?96:version>=2?42:13.2);
     }
   }
 
@@ -252,7 +262,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       if (Math.hypot(p.x, p.z) < islandR * 0.82) fords.push({ x: p.x, z: p.z });
     }
   }
-  for (const fd of fords) {
+  for (const fd of geo?[]:fords) {
     for (let iz = 0; iz < n; iz++) {
       for (let ix = 0; ix < n; ix++) {
         const x = (ix / SEGS) * MAP - HALF;
@@ -283,14 +293,14 @@ export function generateWorld(seed: number, version = 1): WorldData {
       const d = islandR * (near + rand() * (far - near));
       const x = Math.sin(a) * d;
       const z = Math.cos(a) * d;
-      const h = sampleHeight(heights, x, z);
+      const h = sample(heights, x, z);
       const minH = want === "high" ? waterY + 2.4 : waterY + 0.9;
       const maxH = want === "high" ? waterY + 7.2 : want === "mid" ? waterY + 4.4 : waterY + 3.2;
       if (h < minH || h > maxH) continue;
       if (Math.hypot(x, z) > islandR - 14) continue;
       const slope =
-        Math.abs(sampleHeight(heights, x + 3, z) - sampleHeight(heights, x - 3, z)) +
-        Math.abs(sampleHeight(heights, x, z + 3) - sampleHeight(heights, x, z - 3));
+        Math.abs(sample(heights, x + 3, z) - sample(heights, x - 3, z)) +
+        Math.abs(sample(heights, x, z + 3) - sample(heights, x, z - 3));
       if (slope > (want === "high" ? 2.4 : 1.8)) continue;
       const score =
         slope * 3 +
@@ -328,6 +338,31 @@ export function generateWorld(seed: number, version = 1): WorldData {
     { x: rival.x, z: rival.z, team: 1 },
     { x: ash.x, z: ash.z, team: 2 },
   ];
+  if(land){
+    const sites:{x:number;z:number;noise:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
+    for(let z=-HALF+48;z<HALF-48;z+=20)for(let x=-HALF+48;x<HALF-48;x+=20){
+      const h=sample(heights,x,z);if(h<waterY+.8||h>12)continue;
+      const corners=[[-12,-12],[-12,12],[12,-12],[12,12]].map(([dx,dz])=>sample(heights,x+dx,z+dz));
+      if(corners.some(y=>y<waterY+.6)||Math.max(h,...corners)-Math.min(h,...corners)>3)continue;
+      let approaches=0;
+      for(let i=0;i<8;i++){const a=i*Math.PI/4,y=sample(heights,x+Math.sin(a)*40,z+Math.cos(a)*40);if(y>waterY+.55&&Math.abs(y-h)<4)approaches++;}
+      if(approaches<6)continue;
+      sites.push({x,z,noise:siteRandom()});
+    }
+    if(sites.length<3)throw new Error('This seed has no viable settlement sites');
+    const area=heights.reduce((sum,h)=>sum+Number(h>waterY+.8),0)*(MAP/SEGS)**2;
+    const teams=[0,1,2,4,5].slice(0,1+rivalCountForArea(area));
+    camps.length=0;
+    for(const team of teams){
+      let best=sites[0],score=-Infinity;
+      for(const site of sites){
+        const distance=camps.length?Math.min(...camps.map(c=>Math.hypot(c.x-site.x,c.z-site.z))):MAP*.3;
+        const value=distance+site.noise*MAP*(camps.length?.06:.7);
+        if(value>score){score=value;best=site;}
+      }
+      camps.push({x:best.x,z:best.z,team});
+    }
+  }
   const biomes: WorldData["biomes"] = [
     { kind: "plains", x: camps[0].x, z: camps[0].z },
     { kind: "hills", x: camps[1].x, z: camps[1].z },
@@ -337,16 +372,17 @@ export function generateWorld(seed: number, version = 1): WorldData {
     const kinds=["plains","forest","hills"] as const;
     for(let i=0;i<biomes.length;i++)biomes[i].kind=kinds[(i+(seed>>>0)%3)%3];
   }
-  if(version>=3){
+  if(land)for(const c of camps.slice(3))biomes.push({...c,kind:c.team===4?'forest':'hills'});
+  if(version>=3&&version<7){
     const usableArea=heights.reduce((n,h)=>n+(h>waterY+.8?1:0),0)*(MAP/SEGS)**2;
     const wanted=rivalCountForArea(usableArea);
     for(const team of [4,5].slice(0,wanted-2)){
       let best:{x:number;z:number}|null=null,score=-Infinity;
       for(let z=-islandR+40;z<islandR-40;z+=20)for(let x=-islandR+40;x<islandR-40;x+=20){
         if(Math.hypot(x,z)>islandR-45)continue;
-        const h=sampleHeight(heights,x,z);
+        const h=sample(heights,x,z);
         if(h<waterY+1||h>waterY+8)continue;
-        const corners=[[-7,-7],[-7,7],[7,-7],[7,7]].map(([dx,dz])=>sampleHeight(heights,x+dx,z+dz));
+        const corners=[[-7,-7],[-7,7],[7,-7],[7,7]].map(([dx,dz])=>sample(heights,x+dx,z+dz));
         if(corners.some(y=>y<waterY+.8)||Math.max(...corners,h)-Math.min(...corners,h)>2)continue;
         const distances=camps.map(c=>Math.hypot(c.x-x,c.z-z));
         if(distances[0]<220||Math.min(...distances)<180)continue;
@@ -426,9 +462,9 @@ export function generateWorld(seed: number, version = 1): WorldData {
       const d = Math.sqrt(rand()) * radius;
       const x = cx + Math.sin(a) * d;
       const z = cz + Math.cos(a) * d;
-      const h = sampleHeight(heights, x, z);
+      const h = sample(heights, x, z);
       if (h < waterY + 0.55 || h > 9.2) continue;
-      if (Math.hypot(x, z) > islandR - 12) continue;
+      if (!land && Math.hypot(x, z) > islandR - 12) continue;
       if (tooClose(list, x, z, sep)) continue;
       list.push(node(nid++, kind, x, z, h, amount(), 0.85 + rand() * 0.5, 0.75 + rand() * 0.4));
       placed++;
@@ -447,7 +483,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
         const dist = islandR * (0.22 + rand() * 0.55);
         const x = Math.sin(a) * dist;
         const z = Math.cos(a) * dist;
-        const h = sampleHeight(heights, x, z);
+        const h = sample(heights, x, z);
         if (h < waterY + 0.8 || h > 7.2) continue;
         if (pass === 0 && biome && biomeAt(x, z) !== biome) continue;
         if (camps.some((c) => Math.hypot(c.x - x, c.z - z) < minCamp)) continue;
@@ -469,7 +505,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
         const a = rand() * Math.PI * 2;
         const x = home.x + Math.cos(a) * (14 + rand() * 8);
         const z = home.z + Math.sin(a) * (14 + rand() * 8);
-        const h = sampleHeight(heights, x, z);
+        const h = sample(heights, x, z);
         if (h < waterY + 0.4) continue;
         if (tooClose(forage, x, z, 2.2)) continue;
         forage.push(node(nid++, "forage", x, z, h, 24, 0.9, 0.8));
@@ -510,8 +546,8 @@ export function generateWorld(seed: number, version = 1): WorldData {
   for (let i = 0; i < 640; i++) {
     const x = (rand() - 0.5) * (MAP - 28);
     const z = (rand() - 0.5) * (MAP - 28);
-    if (Math.hypot(x, z) > islandR - 18) continue;
-    const h = sampleHeight(heights, x, z);
+    if (!land && Math.hypot(x, z) > islandR - 18) continue;
+    const h = sample(heights, x, z);
     if (h < waterY + 0.7 || h > 8.6) continue;
     const bio = biomeAt(x, z);
     const nearHome = !!home && Math.hypot(x - home.x, z - home.z) < 36;
@@ -542,9 +578,9 @@ export function generateWorld(seed: number, version = 1): WorldData {
   }
 
   const tryFish = (x: number, z: number) => {
-    if (!inBounds(x, z, 3)) return;
+    if (!inside(x, z, 3)) return;
     if (tooClose(fish, x, z, 5.4)) return;
-    const h = sampleHeight(heights, x, z);
+    const h = sample(heights, x, z);
     if (h < waterY - 0.04 || h > waterY + 0.5) return;
     fish.push(
       node(
@@ -579,7 +615,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       const d = 18 + (i % 6) * 4;
       const x = home.x + Math.cos(a) * d;
       const z = home.z + Math.sin(a) * d;
-      const h = sampleHeight(heights, x, z);
+      const h = sample(heights, x, z);
       if (h < waterY + 0.4) {
         const dd = Math.hypot(x - home.x, z - home.z);
         if (dd < nearest.d) nearest = { x, z, d: dd };
@@ -599,7 +635,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
     const d = islandR * (0.22 + rand() * 0.52);
     const x = Math.sin(a) * d;
     const z = Math.cos(a) * d;
-    const h = sampleHeight(heights, x, z);
+    const h = sample(heights, x, z);
     if (h < waterY + 0.7 || nearCamp(x, z, 18)) continue;
     megaliths.push({
       x,
@@ -619,13 +655,13 @@ export function generateWorld(seed: number, version = 1): WorldData {
       for (let d = 14; d < 62; d += 2.2) {
         const x = origin.x + Math.cos(a) * d;
         const z = origin.z + Math.sin(a) * d;
-        const h = sampleHeight(heights, x, z);
+        const h = sample(heights, x, z);
         if (h < waterY + 0.28 || h > waterY + 1.7) continue;
         let wet = false;
         for (let k = 0; k < 8; k++) {
           const aa = (k / 8) * Math.PI * 2;
           if (
-            sampleHeight(heights, x + Math.cos(aa) * 5.5, z + Math.sin(aa) * 5.5) <
+            sample(heights, x + Math.cos(aa) * 5.5, z + Math.sin(aa) * 5.5) <
             waterY + 0.32
           ) {
             wet = true;
@@ -643,7 +679,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       dockSites.push({ x: c.x, z: c.z });
       if (dockSites.length >= 3) break;
     }
-    for (const s of dockSites) {
+    if(!land)for (const s of dockSites) {
       for (let iz = 0; iz < n; iz++) {
         for (let ix = 0; ix < n; ix++) {
           const x = (ix / SEGS) * MAP - HALF;
@@ -678,21 +714,21 @@ export function generateWorld(seed: number, version = 1): WorldData {
     const nearHome = (n: ResourceNode) => Math.hypot(n.x - home.x, n.z - home.z) < localRadius;
     const safeApproach = (x: number, z: number, origin = home) => {
       const distance = Math.hypot(x - origin.x, z - origin.z);
-      if (distance < 16 || distance >= localRadius || !inBounds(x, z, 4)) return false;
+      if (distance < 16 || distance >= localRadius || !inside(x, z, 4)) return false;
       if (dockSites.some(s => Math.hypot(s.x - x, s.z - z) < 7)) return false;
-      const h = sampleHeight(heights, x, z);
-      if (h < waterY + 0.55 || Math.hypot(x, z) > islandR - 12) return false;
+      const h = sample(heights, x, z);
+      if (h < waterY + 0.55 || (!land && Math.hypot(x, z) > islandR - 12)) return false;
       const grade = Math.max(
-        Math.abs(sampleHeight(heights, x + 2, z) - sampleHeight(heights, x - 2, z)),
-        Math.abs(sampleHeight(heights, x, z + 2) - sampleHeight(heights, x, z - 2)),
+        Math.abs(sample(heights, x + 2, z) - sample(heights, x - 2, z)),
+        Math.abs(sample(heights, x, z + 2) - sample(heights, x, z - 2)),
       ) / 4;
       if (grade > 0.55) return false;
       // Starter supplies must share a dry, gentle approach with the hearth.
       // This deliberately excludes attractive-looking patches across a river.
       const steps = Math.ceil(distance / 2);
-      let previous = sampleHeight(heights, origin.x, origin.z);
+      let previous = sample(heights, origin.x, origin.z);
       for (let i = 1; i <= steps; i++) {
-        const y = sampleHeight(heights, origin.x + (x - origin.x) * i / steps, origin.z + (z - origin.z) * i / steps);
+        const y = sample(heights, origin.x + (x - origin.x) * i / steps, origin.z + (z - origin.z) * i / steps);
         if (y < waterY + 0.32 || Math.abs(y - previous) > 1.25) return false;
         previous = y;
       }
@@ -703,7 +739,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       // Require room for the hearth, a shelter, and actual routes to resources.
       let low = Infinity, high = -Infinity;
       for (let dz = -10; dz <= 10; dz += 5) for (let dx = -10; dx <= 10; dx += 5) {
-        const h = sampleHeight(heights, origin.x + dx, origin.z + dz);
+        const h = sample(heights, origin.x + dx, origin.z + dz);
         if (h < waterY + 0.55) return false;
         low = Math.min(low, h); high = Math.max(high, h);
       }
@@ -721,7 +757,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
       search: for (let radius = 8; radius <= 128; radius += 8) for (let i = 0; i < 24; i++) {
         const a = i * Math.PI / 12;
         const candidate = { ...home, x: oldX + Math.cos(a) * radius, z: oldZ + Math.sin(a) * radius };
-        if (!inBounds(candidate.x, candidate.z, 72) || camps.some(c => c.team !== 0 && Math.hypot(c.x - candidate.x, c.z - candidate.z) < 120)) continue;
+        if (!inside(candidate.x, candidate.z, 72) || camps.some(c => c.team !== 0 && Math.hypot(c.x - candidate.x, c.z - candidate.z) < 120)) continue;
         if (!viableClearing(candidate)) continue;
         // Only new settlement metadata moves. Heights, rivers and historical
         // dock pads were finalized above; saved buildings/people are restored.
@@ -752,7 +788,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
           : kind === "tree" ? 10 + Math.floor(habitatRandom() * 7)
           : 14 + Math.floor(habitatRandom() * 10);
         const n = node(previous[placed.length]?.id ?? nid++, kind, x, z,
-          sampleHeight(heights, x, z), amount, 0.85 + habitatRandom() * 0.45, 0.8 + habitatRandom() * 0.4);
+          sample(heights, x, z), amount, 0.85 + habitatRandom() * 0.45, 0.8 + habitatRandom() * 0.4);
         list.push(n);
         placed.push(n);
       }
@@ -783,7 +819,7 @@ export function generateWorld(seed: number, version = 1): WorldData {
     dress(stones, "stone", stoneCount, 0);
   }
 
-  if(version>=4){
+  if(version>=4&&version<7){
     const vegetation=mulberry32(seed^0x7f031);
     // Continuous woodland belts with broken edges and clearings, not stamps.
     // Bounded instances keep the low-quality renderer affordable.
@@ -794,16 +830,41 @@ export function generateWorld(seed: number, version = 1): WorldData {
       // woodland margins without multiplying the renderer's tree budget.
       const canopy=version>=6?broadCanopy*.65+fbm(x*.006+woodlandShift,z*.006+71,3)*.35:broadCanopy;
       if(canopy<.49||vegetation()>(canopy-.44)*3)continue;
-      const y=sampleHeight(heights,x,z);
-      if(y<waterY+.5||y>27||Math.abs(sampleHeight(heights,x+3,z)-sampleHeight(heights,x-3,z))>4)continue;
-      if(version>=6&&Math.abs(sampleHeight(heights,x,z+3)-sampleHeight(heights,x,z-3))>4)continue;
+      const y=sample(heights,x,z);
+      if(y<waterY+.5||y>27||Math.abs(sample(heights,x+3,z)-sample(heights,x-3,z))>4)continue;
+      if(version>=6&&Math.abs(sample(heights,x,z+3)-sample(heights,x,z-3))>4)continue;
       if(camps.some(c=>Math.hypot(c.x-x,c.z-z)<20)||trees.some(t=>Math.hypot(t.x-x,t.z-z)<5)||stones.some(t=>Math.hypot(t.x-x,t.z-z)<4))continue;
       trees.push(node(nid++,"tree",x,z,y,18+Math.floor(vegetation()*20),.85+vegetation()*.35,1));added++;
     }
   }
+  if(land){
+    const vegetation=mulberry32(seed^0x740f93),bucketSize=6,buckets=new Map<string,ResourceNode[]>();
+    const bucket=(x:number,z:number)=>`${Math.floor(x/bucketSize)},${Math.floor(z/bucketSize)}`;
+    const add=(t:ResourceNode)=>{const k=bucket(t.x,t.z),list=buckets.get(k)||[];list.push(t);buckets.set(k,list);};
+    trees.forEach(add);stones.forEach(add);
+    const crowded=(x:number,z:number)=>{
+      const ix=Math.floor(x/bucketSize),iz=Math.floor(z/bucketSize);
+      for(let z0=iz-1;z0<=iz+1;z0++)for(let x0=ix-1;x0<=ix+1;x0++)
+        if(buckets.get(`${x0},${z0}`)?.some(t=>Math.hypot(t.x-x,t.z-z)<(t.kind==='tree'?3.5:4)))return true;
+      return false;
+    };
+    const target=Math.floor(2300*Math.pow(MAP/1040,1.15));
+    for(let attempt=0;attempt<target*35&&trees.length<target;attempt++){
+      const x=(vegetation()-.5)*MAP*.96,z=(vegetation()-.5)*MAP*.96;
+      const canopy=fbm(x*.006+seed%571,z*.006-23,4)*.65+fbm(x*.018+woodlandShift,z*.018+71,3)*.35;
+      if(canopy<.43||vegetation()>(canopy-.38)*4)continue;
+      const y=sample(heights,x,z);if(y<waterY+.55||y>30||Math.abs(sample(heights,x+3,z)-sample(heights,x-3,z))>4||Math.abs(sample(heights,x,z+3)-sample(heights,x,z-3))>4)continue;
+      if(camps.some(c=>Math.hypot(c.x-x,c.z-z)<19)||dockSites.some(s=>Math.hypot(s.x-x,s.z-z)<8)||crowded(x,z))continue;
+      const t=node(nid++,'tree',x,z,y,16+Math.floor(vegetation()*20),.8+vegetation()*.65,.85+vegetation()*.3);
+      trees.push(t);add(t);
+    }
+    // Coastline fish sites follow actual shores on every landmass.
+    for(let attempt=0;attempt<4000&&fish.length<300;attempt++)tryFish((vegetation()-.5)*MAP*.95,(vegetation()-.5)*MAP*.95);
+  }
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
   return {
     size: MAP,
+    ...(land?{options:land.options,features:geo!.features}:{}),
     segs: SEGS,
     heights,
     waterY,
@@ -825,7 +886,8 @@ export function generateWorld(seed: number, version = 1): WorldData {
   };
 }
 
-export function sampleHeight(heights: Float32Array, x: number, z: number) {
+export function sampleHeight(heights: Float32Array, x: number, z: number, size=MAP) {
+  const MAP=size,HALF=size/2,SEGS=Math.round(Math.sqrt(heights.length))-1;
   const gx = ((x + HALF) / MAP) * SEGS;
   const gz = ((z + HALF) / MAP) * SEGS;
   const ix = Math.max(0, Math.min(SEGS - 1, Math.floor(gx)));
@@ -840,15 +902,16 @@ export function sampleHeight(heights: Float32Array, x: number, z: number) {
   return a * (1 - fx) * (1 - fz) + b * fx * (1 - fz) + c * (1 - fx) * fz + d * fx * fz;
 }
 
-export function inBounds(x: number, z: number, pad = 2) {
+export function inBounds(x: number, z: number, pad = 2, size=MAP) {
+  const HALF=size/2;
   return Math.abs(x) < HALF - pad && Math.abs(z) < HALF - pad;
 }
 
-export function isFertile(heights: Float32Array, x: number, z: number, waterY: number) {
-  const h = sampleHeight(heights, x, z);
+export function isFertile(heights: Float32Array, x: number, z: number, waterY: number, size=MAP) {
+  const h = sampleHeight(heights, x, z,size);
   if (h < waterY + 0.28 || h > waterY + 3.15) return false;
   const s =
-    Math.abs(sampleHeight(heights, x + 2.2, z) - sampleHeight(heights, x - 2.2, z)) +
-    Math.abs(sampleHeight(heights, x, z + 2.2) - sampleHeight(heights, x, z - 2.2));
+    Math.abs(sampleHeight(heights, x + 2.2, z,size) - sampleHeight(heights, x - 2.2, z,size)) +
+    Math.abs(sampleHeight(heights, x, z + 2.2,size) - sampleHeight(heights, x, z - 2.2,size));
   return s < 2.2;
 }

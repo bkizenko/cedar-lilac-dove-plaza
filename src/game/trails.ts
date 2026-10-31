@@ -4,7 +4,8 @@ export const TRAIL_GRID = 256,
   TRAIL_CELL = MAP / TRAIL_GRID;
 export type Trail = { cell: number; wear: number; last: number; angle: number; x?:number; z?:number };
 const caches = new WeakMap<Game, { source: Trail[]; map: Map<number, Trail> }>();
-export function trailCell(x: number, z: number) {
+export function trailCell(x: number, z: number,size=MAP) {
+  const HALF=size/2,TRAIL_CELL=size/TRAIL_GRID;
   const ix = Math.floor((x + HALF) / TRAIL_CELL),
     iz = Math.floor((z + HALF) / TRAIL_CELL);
   return ix < 0 || iz < 0 || ix >= TRAIL_GRID || iz >= TRAIL_GRID ? -1 : iz * TRAIL_GRID + ix;
@@ -19,11 +20,11 @@ function map(g: Game) {
   return cache.map;
 }
 export function pathPace(g: Game, x: number, z: number) {
-  const t = map(g).get(trailCell(x, z));
+  const t = map(g).get(trailCell(x, z,g.world.size));
   return t ? 1 + Math.max(0, t.wear - 0.4) * 0.2 : 1;
 }
 export function wearTrail(g: Game, x: number, z: number, dx: number, dz: number) {
-  const cell = trailCell(x, z),
+  const cell = trailCell(x, z,g.world.size),
     distance = Math.hypot(dx, dz);
   if (cell < 0 || distance < 0.01) return;
   const roads = map(g);

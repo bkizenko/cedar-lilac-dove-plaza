@@ -16,7 +16,7 @@ import {fieldTerrain} from "./fieldTerrain";
 import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
-import { LUMBER_R, QUARRY_R, DOCK_R, MAP, HALF, GATHER_WORK_RATE } from "./constants";
+import { LUMBER_R, QUARRY_R, DOCK_R, GATHER_WORK_RATE } from "./constants";
 
 export const YEAR_SECONDS = 1800;
 export const FOOD_PER_PERSON_SECOND = 0.036;
@@ -174,8 +174,8 @@ export class WorkBoard {
   }
   private component(g: Game, x: number, z: number) {
     const n = Math.sqrt(g.walk.length),
-      cx = Math.floor(((x + HALF) / MAP) * n),
-      cz = Math.floor(((z + HALF) / MAP) * n);
+      cx = Math.floor(((x + (g.world.size/2)) / g.world.size) * n),
+      cz = Math.floor(((z + (g.world.size/2)) / g.world.size) * n);
     let best = 0,
       distance = Infinity;
     for (let dz = -4; dz <= 4; dz++)

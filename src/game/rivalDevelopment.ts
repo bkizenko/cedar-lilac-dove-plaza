@@ -11,7 +11,7 @@ import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit } from './types';
-import { AGE_COST, BUILDINGS, HALF, MAP, LUMBER_R, QUARRY_R } from './constants';
+import { AGE_COST, BUILDINGS, LUMBER_R, QUARRY_R } from './constants';
 import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
 
 export const RIVAL_RESOURCE_RANGE=320;
@@ -24,7 +24,7 @@ export function rivalStorageTarget(g:Game,team:number){
 export function rivalKnows(g:Game,team:number,x:number,z:number){
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&Math.hypot(u.x-x,u.z-z)<26))return true;
   if(g.state.buildings.some(b=>b.team===team&&g.finished(b)&&['townhall','cornerstone','lumber','quarry'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<55))return true;
-  const cx=Math.floor((x+HALF)/MAP*32),cz=Math.floor((z+HALF)/MAP*32);
+  const cx=Math.floor((x+(g.world.size/2))/g.world.size*32),cz=Math.floor((z+(g.world.size/2))/g.world.size*32);
   return cx>=0&&cx<32&&cz>=0&&cz<32&&!!g.state.rivalKnowledge?.find(m=>m.team===team)?.cells.includes(cz*32+cx);
 }
 

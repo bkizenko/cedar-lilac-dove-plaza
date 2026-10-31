@@ -19,13 +19,15 @@ This overrides the earlier assumption that plentiful automatic food and rapid pr
 
 These sources establish core design patterns, not every current patch detail. The Civ VII game-guide page and official Civ VI manual returned403 during this audit; their unread contents are not presented as inspected. The developer-linked Dawn of Man playthrough was found, but browser approval declined YouTube access. No video/transcript was watched or accessed through a workaround. Primary written sources above were reviewed.
 
-## Current code: why maps remain repetitive
+## Pre-v7 code findings: why maps remained repetitive
 
 - `src/game/worldgen.ts` still begins with a single `islandR` (410–455m) and a radial/elliptical distance mask. Seeded lobes, warp and coast orientation decorate that parent island. They do not implement Pangaea, separate continents or an archipelago generator.
 - The `MAP=1040` constant and fixed navigation/fog grids are assumed throughout simulation, rendering and save validation. Simply increasing that constant would alter old regenerated worlds and does not provide safe per-save size options.
 - The extra woodland pass stops at400 added trees and rejects close spacing. Sample version6 seeds123456 and42 produced607 and577 trees respectively, with52% and51% sampled dry land. Node stock is26692 and25768 logs, but stock quantity is not the same as a visibly continuous forest or accessible timber near a settlement.
 - Radial placement/recovery checks survive outside the coastline equation. Replacing only the height mask leaves camp placement, resources, wildlife recruitment and some navigation assumptions inconsistent.
 - The simulation coordinator is large, but many systems already have separate modules. Replacing the engine is not necessary to remove these specific couplings. Work eligibility and order ownership remain partly duplicated; new reserved tasks must be protected across all schedulers.
+
+The v7 foundation batch now adds the first saved-size/layout/forest/geographic-form implementation described below. The findings above document the audited legacy behavior; they are not claims that the new v7 generator still uses a single radial mask. Full ecology, excavation and strategic acceptance remain open.
 
 ## Recommended next execution order
 

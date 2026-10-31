@@ -2,10 +2,8 @@ import {connectedForUnit} from "./waterTravel";
 import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
-import { HALF, MAP } from "./constants";
 import { isDependent, reserveSeconds } from "./settlement";
-const GRID = 32,
-  CELL = MAP / GRID;
+const GRID = 32;
 export function scoutKnowledge(g: Game, u: Unit) {
   const memories = (g.state.rivalKnowledge ??= []);
   let memory = memories.find((m) => m.team === u.team);
@@ -13,6 +11,7 @@ export function scoutKnowledge(g: Game, u: Unit) {
     memory = { team: u.team, cells: [] };
     memories.push(memory);
   }
+  const HALF=g.world.size/2,CELL=g.world.size/GRID;
   const ix = Math.floor((u.x + HALF) / CELL),
     iz = Math.floor((u.z + HALF) / CELL);
   for (let z = iz - 1; z <= iz + 1; z++)
@@ -23,6 +22,7 @@ export function scoutKnowledge(g: Game, u: Unit) {
 }
 function nextTarget(g: Game, u: Unit) {
   const memory = scoutKnowledge(g, u);
+  const HALF=g.world.size/2,CELL=g.world.size/GRID;
   let best: { x: number; z: number } | null = null,
     score = Infinity;
   for (let i = 0; i < GRID * GRID; i++) {

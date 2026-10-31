@@ -1,3 +1,4 @@
+import {WorldSetup} from './WorldSetup';
 import {EncounterDialog} from "./EncounterDialog";
 import { SettlementLedger } from "./SettlementLedger";
 import { PlayTools } from "./PlayTools";
@@ -167,9 +168,9 @@ export function GameApp() {
             WILD
           </p>
           <p className="mt-8 max-w-sm px-6 text-center text-sm leading-relaxed text-parchment">
-            Your hut is ready. Gather food and timber, care for your people, and explore.
-            Later, cornerstones claim distant resource clumps.
+            Hunt, gather and prepare for winter.
           </p>
+          {engineRef.current&&<WorldSetup engine={engineRef.current}/>}
           <button
             type="button"
             onClick={() => engineRef.current?.enterIsland()}

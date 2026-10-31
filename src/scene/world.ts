@@ -3,14 +3,14 @@ import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
 import {architectureStyle,localArchitecture} from "./architecture";
-import {TRAIL_GRID,TRAIL_CELL} from "@/game/trails";
+import {TRAIL_GRID} from "@/game/trails";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
-import { BUILDINGS, FOW, HALF, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
+import { BUILDINGS, FOW, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
 import type { Game } from "@/game/sim";
 import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
@@ -114,6 +114,7 @@ function makeSunSprite() {
 }
 
 export class WorldView {
+  mapSize=MAP;
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
@@ -449,6 +450,12 @@ export class WorldView {
   }
 
   rebuild(game: Game) {
+    if(this.mapSize!==game.world.size&&this.fowMesh){
+      this.fowMesh.geometry.dispose();this.fowMesh.geometry=new THREE.PlaneGeometry(game.world.size,game.world.size,SEGS,SEGS);
+      const uniforms=(this.fowMesh.material as THREE.ShaderMaterial).uniforms;
+      uniforms.uHalf.value=game.world.size/2;uniforms.uSize.value=game.world.size;
+    }
+    this.mapSize=game.world.size;
     this.trailSyncAt=-1;
     if (this.fowMesh) {
       const positions = this.fowMesh.geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -462,7 +469,7 @@ export class WorldView {
     this.lastSnow = -1;
     this.seasonAcc = 1;
     this.buildTerrain(game);
-    this.fieldSurface = new FieldSurface(game.world.heights);
+    this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
     this.buildNature(game);
     this.buildBuildings();
     this.buildUnits();
@@ -479,7 +486,7 @@ export class WorldView {
   }
 
   private buildTerrain(game: Game) {
-    const geo = new THREE.PlaneGeometry(MAP, MAP, SEGS, SEGS);
+    const geo = new THREE.PlaneGeometry(this.mapSize, this.mapSize, game.world.segs, game.world.segs);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     const colors: number[] = [];
@@ -502,7 +509,7 @@ export class WorldView {
       const pathN =
         Math.abs(x - home.x - Math.sin((z - home.z) * 0.08) * 1.6) < 1.7 &&
         Math.hypot(x - home.x, z - home.z) < 22;
-      const fertile = !river && isFertile(game.world.heights, x, z, water);
+      const fertile = !river && isFertile(game.world.heights, x, z, water,game.world.size);
       let b = 2;
       if (h < water + 0.08) b = 0;
       else if (river) b = 0;
@@ -546,7 +553,7 @@ export class WorldView {
     this.terrain.name = "terrain";
     this.scene.add(this.terrain);
 
-    const wgeo = new THREE.PlaneGeometry(MAP, MAP, 48, 48);
+    const wgeo = new THREE.PlaneGeometry(this.mapSize, this.mapSize, 48, 48);
     wgeo.rotateX(-Math.PI / 2);
     this.water = new THREE.Mesh(wgeo, this.makeWaterMat());
     this.water.position.y = game.world.waterY;
@@ -871,8 +878,8 @@ export class WorldView {
       const rz = -Math.sin(this.yaw);
       this.look.x += (fx * this.pan.z + rx * this.pan.x) * panSp * dt;
       this.look.z += (fz * this.pan.z + rz * this.pan.x) * panSp * dt;
-      this.look.x = THREE.MathUtils.clamp(this.look.x, -HALF + 10, HALF - 10);
-      this.look.z = THREE.MathUtils.clamp(this.look.z, -HALF + 10, HALF - 10);
+      this.look.x = THREE.MathUtils.clamp(this.look.x, -(this.mapSize/2) + 10, (this.mapSize/2) - 10);
+      this.look.z = THREE.MathUtils.clamp(this.look.z, -(this.mapSize/2) + 10, (this.mapSize/2) - 10);
     }
     this.pitch = THREE.MathUtils.clamp(this.pitch, 0.2, 1.36);
     this.dist = THREE.MathUtils.clamp(this.dist, 14, 230);
@@ -1186,9 +1193,10 @@ export class WorldView {
   private syncTrails(game:Game) {
     if(this.trailSyncAt===Math.floor(game.state.time))return;this.trailSyncAt=Math.floor(game.state.time);
     let i=0;
+    const TRAIL_CELL=game.world.size/TRAIL_GRID;
     for(const t of game.state.trails||[]) {
       if(t.wear<0.55||i>=4096)continue;
-      const x=t.x??(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-HALF,z=t.z??(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-HALF;
+      const x=t.x??(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-(this.mapSize/2),z=t.z??(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-(this.mapSize/2);
       if(!game.exploredAt(x,z))continue;
       _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
       _s.set(0.3+t.wear*0.2,TRAIL_CELL*0.65,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
@@ -1937,8 +1945,8 @@ export class WorldView {
         uMap: { value: this.fowTex },
         uTime: this.timeU,
         uTerr: { value: this.terrTex },
-        uHalf: { value: HALF },
-        uSize: { value: MAP },
+        uHalf: { value: (this.mapSize/2) },
+        uSize: { value: this.mapSize },
       },
       vertexShader: `
         uniform float uHalf;
@@ -1971,7 +1979,7 @@ export class WorldView {
           gl_FragColor = vec4(col, a);
         }`,
     });
-    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAP, MAP, SEGS, SEGS), mat);
+    this.fowMesh = new THREE.Mesh(new THREE.PlaneGeometry(this.mapSize, this.mapSize, SEGS, SEGS), mat);
     this.fowMesh.rotation.x = -Math.PI / 2;
     this.fowMesh.position.y = 0.45;
     this.fowMesh.renderOrder = 6;

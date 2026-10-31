@@ -2,7 +2,6 @@ import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {beginHaulageWork} from './haulage';
 import {waterNavigation} from './waterTravel';
-import {HALF,MAP} from './constants';
 export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number};
 export const BOAT_COST={wood:40,stone:4,seconds:150,seats:5};
 export function boatCrew(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&u.boat?.id===id);}
@@ -18,7 +17,7 @@ export function beginRiverboat(g:Game,dock:number,team=0){
 function waterPoint(g:Game,x:number,z:number,radius=18){
  for(let r=0;r<=radius;r+=2)for(let i=0;i<24;i++){
   const a=i*Math.PI/12,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;
-  if(Math.abs(px)>HALF-5||Math.abs(pz)>HALF-5)continue;
+  if(Math.abs(px)>(g.world.size/2)-5||Math.abs(pz)>(g.world.size/2)-5)continue;
   if([[-1.5,0],[1.5,0],[0,-3],[0,3]].every(([dx,dz])=>g.height(px+dx,pz+dz)<g.world.waterY+.1))return {x:px,z:pz};
  }
  return null;
@@ -41,12 +40,12 @@ export function boardRiverboat(g:Game,id:number,people=g.selectedUnits()){
  g.workBoard.reset();return n;
 }
 function wetDestination(g:Game,b:Riverboat,x:number,z:number){
- const nav=waterNavigation(g,true),cell=MAP/nav.width;
- const idx=(px:number,pz:number)=>Math.floor((pz+HALF)/cell)*nav.width+Math.floor((px+HALF)/cell);
+ const nav=waterNavigation(g,true),cell=g.world.size/nav.width;
+ const idx=(px:number,pz:number)=>Math.floor((pz+(g.world.size/2))/cell)*nav.width+Math.floor((px+(g.world.size/2))/cell);
  const label=nav.labels[idx(b.x,b.z)];if(!label)return null;
  let best:{x:number;z:number}|null=null,score=Infinity;
  for(let dz=-8;dz<=8;dz++)for(let dx=-8;dx<=8;dx++){
-  const px=x+dx*cell,pz=z+dz*cell;if(Math.abs(px)>HALF-5||Math.abs(pz)>HALF-5)continue;
+  const px=x+dx*cell,pz=z+dz*cell;if(Math.abs(px)>(g.world.size/2)-5||Math.abs(pz)>(g.world.size/2)-5)continue;
   if(nav.labels[idx(px,pz)]!==label||g.height(px,pz)>=g.world.waterY+.3)continue;
   const d=dx*dx+dz*dz;if(d<score){score=d;best={x:px,z:pz};}
  }

@@ -1,3 +1,4 @@
+import type {WorldRequest} from './worldOptions';
 import {linearStructure,constructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
 import {dragPlot,scalablePlot,type PlotSize} from './plots';
@@ -137,6 +138,14 @@ export class Engine {
     this.pushHud();
   }
 
+  configureNewWorld(request:WorldRequest) {
+    if(!this.game.awaitingStart||this.originalGame)return;
+    try {
+      this.game.reset(undefined,7,request);this.keyboard.groups.clear();this.simAccumulator=0;
+      this.view.rebuild(this.game);this.homeLook();this.pushHud();
+    }catch(error){this.game.banner(error instanceof Error?error.message:'Could not generate that world',5);this.pushHud();}
+  }
+
   enterIsland() {
     this.audio.unlock();
     this.game.enterIsland();
@@ -204,16 +213,16 @@ export class Engine {
     this.keyboard.groups.clear();
     try {
       this.game.reset();
-      this.game.awaitingStart = false;
-      this.game.state.paused = false;
+      this.game.awaitingStart = true;
+      this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();
     } catch (err) {
       console.error(err);
       this.setQuality("low");
       this.game.reset();
-      this.game.awaitingStart = false;
-      this.game.state.paused = false;
+      this.game.awaitingStart = true;
+      this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();
     }

@@ -10,7 +10,7 @@ This is a readable snapshot of the two original inventories. The execution recor
 3. Husbandry: core actual goat herds/pen/capture/care/feeding/birth/milk/slaughter/pack conversion are implemented in the current batch. Animal diversity, water/feed chains, livestock exchange/theft, rival husbandry and traction fleets remain open.
 4. Captivity: readable local capture/escort, guarded work, release/ransom/integration, resistance and organized revolt.
 5. Competitive rivals and distinct societies using those same economies and physical systems.
-6. World families: Pangaea/continents/archipelago, larger explorable worlds, coherent climate/river systems and strategically uneven resource regions. Preserve old save terrain.
+6. World families and saved sizes now have a working core: Pangaea/continents/archipelago,1040/1560/2080m, dense physical forests and named terrain-form metadata. Remaining: fuller climate/ecology, river hydrology, saved excavations/canals, broader geography variety, runtime spatial queries/LOD and measured full-game acceptance. Old save terrain is preserved.
 7. Deeper practical production/discovery, cities and regional administration.
 8. Cohesive visual/UI/audio overhaul and focused whole-game balance/performance acceptance.
 
@@ -202,3 +202,23 @@ Requested art direction: golden-hour styling through most non-winter daylight, w
 ## Interview answer and next priority — 2026-10-31
 
 See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-first answer, verified primary-source comparison, current radial-map/tree audit, and recommended execution order. After the in-flight husbandry batch, **world foundation and first-winter survival take priority over further isolated late-game additions**. Actual continent/Pangaea/archipelago families, larger saved world sizes and dense regional woodland have not been delivered by prior coast-noise updates. Rival defenses should emerge from utility/risk/cost decisions, not unconditional wall-building commands. Later legitimacy, households/dynasties, ritual, treaties, writing/accounting and ancient ruins remain part of the full scope.
+
+
+## Latest accepted corrections and incentive model — 2026-10-31
+
+- Rivals must mount real raids, grow, decline, split/refound and leave observable refugees/ruins. Current broad lifecycle remains unproven; do not call faction slots or starting supplies a successful civilization AI. Existing initial provisioning is player120food/58logs versus rival300food/90logs plus some prebuilt facilities; audit fair starts and actual production before adding any more catch-up grants.
+- Societies start with survival needs; individual leaders and accumulated histories develop different ambitions for safety, wealth, territory, learning, ritual/prestige and alliances. Use competing utility/risk/cost decisions and finite goods, people, travel and work. Do not introduce generic gold/science/production yield currencies as substitutes for these systems.
+- Terrain needs recognizable mountains, plateaus, valleys, lakes, rivers, bays and coves across a sufficiently large map. Remove artificial raised river-crossing blocks from new worlds. Canals and drag-dug trenches need actual saved terrain work, suitable water/navigation consequences and excavation animation; current flat surface decals are inadequate.
+- Town-hall roof/ornament design is unacceptable to the player. Replace the repeated central protrusion and generic silhouettes in the cultural architecture pass; wealth and local influences should create meaningful regional variation.
+- One click should enter test mode and open its controls. Restart inside a test copy should create another test world while retaining the protected real village, rather than demand leaving testing. Keep test saves isolated.
+- Nights should be shorter in wall-clock play while retaining seasonal/daylight identity. Show practical age requirements and the next actionable step clearly. Boat journeys should have meaningful time/carrying advantages; the current water speed multiplier is1.65 versus foot base speed, with a land-carrying penalty.
+- Add outbound trade delegations and clear access to existing proposal/dispatch actions; receiving visitors must not be the only apparent route to trade. First-contact/leader meetings need a visible animated character presentation and contextual choices, then later richer diplomacy/espionage.
+- Proposed selectable victories for discussion/implementation: sustained multi-town prosperity through winters; a functioning international trade league measured by physical deliveries; defended regional power via conquest/tribute/alliances; practical technology adoption and completed major works. These are proposed objectives, not implemented win conditions. Natural rival collapse alone must not award victory or end the game.
+- Speed delivery by proving the shared survival-to-rival-conflict loop and one common incentive/order system before adding more isolated late-game panels. Preserve the entire accepted overhaul scope.
+
+
+## World foundation delivery — 2026-10-31
+
+- [x] ~~Distinct world families, larger persistent dimensions, updated world-coordinate consumers, and denser physical woodland.~~
+- [x] ~~Geographic highlands, plateau, valley, lake, bay and cove forms on new worlds; remove artificial raised ford/dock pads there.~~
+- These close the specific foundation slice, not the full terrain or gameplay overhaul. New-world UI/renderer review remains unproven after the browser origin denial. Legacy saved terrain is unchanged, including any old ford shapes; future saved excavation/canals must change the actual terrain and navigation together.

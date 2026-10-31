@@ -1,3 +1,4 @@
+import {WORLD_LAYOUTS,WORLD_SIZES} from './worldOptions';
 import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
 import {scalablePlot,validPlot} from './plots';
@@ -12,7 +13,7 @@ import { Game } from "./sim";
 import { prehistoricName } from "./people";
 import { FOOD_KINDS } from "./pantry";
 import {CROPS,initializeCultivation} from "./cultivation";
-import { FOW, SAVE_VERSION, BUILDINGS, UNITS, HALF } from "./constants";
+import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
@@ -74,6 +75,9 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||s.worldgenVersion!==7||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if(s.worldgenVersion===7&&s.worldOptions===undefined)fail();
+  const HALF=(s.worldOptions?.size??1040)/2;
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
   if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();
@@ -111,7 +115,7 @@ export function decodeGame(raw: unknown): Game {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -242,8 +246,8 @@ export function decodeGame(raw: unknown): Game {
     numbers(e, ["id", "x", "y", "z"]);
     if (
       !Number.isInteger(e.id) ||
-      Math.abs(e.x) > 1000 ||
-      Math.abs(e.z) > 1000 ||
+      Math.abs(e.x) > Math.max(1000,HALF+40) ||
+      Math.abs(e.z) > Math.max(1000,HALF+40) ||
       (kind && e.kind !== kind)
     )
       fail();
@@ -460,7 +464,7 @@ export function decodeGame(raw: unknown): Game {
   }
   for (const c of s.wildlife) {
     add(c);
-    if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>1000||Math.abs(c.grazing.z)>1000))fail();
+    if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>Math.max(1000,HALF+40)||Math.abs(c.grazing.z)>Math.max(1000,HALF+40)))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
     if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
@@ -547,7 +551,7 @@ export function decodeGame(raw: unknown): Game {
     const crew=s.units.filter((u:any)=>u.hp>0&&u.boat?.id===b.id);
     if(crew.length>b.capacity||b.captain!==undefined&&!crew.some((u:any)=>u.id===b.captain&&u.boat.phase==='aboard'))fail();
   }
-  g.reset(s.seed,s.worldgenVersion??1);
+  g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);
   g.state = {
     ...s,
     growthPolicy: s.growthPolicy ?? "welcome",

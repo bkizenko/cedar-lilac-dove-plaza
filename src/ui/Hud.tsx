@@ -60,7 +60,7 @@ import {
 } from "lucide-react";
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot, ResKind, TradeDeal } from "@/game/types";
-import { AGES, BUILDINGS, BUILD_ORDER, MAP, UNITS } from "@/game/constants";
+import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
 import { YEAR_SECONDS } from "@/game/settlement";
 
 const BLD_ICON: Record<string, ReactNode> = {

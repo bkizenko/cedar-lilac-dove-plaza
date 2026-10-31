@@ -395,6 +395,7 @@ export type GameState = {
   visitorTimer?: number;
   boats?: import('./boats').Riverboat[];
   worldgenVersion?: number;
+  worldOptions?: import("./worldOptions").WorldOptions;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];

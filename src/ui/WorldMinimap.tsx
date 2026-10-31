@@ -1,11 +1,11 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { Engine } from '@/game/engine';
 import type { HudSnapshot } from '@/game/types';
-import { MAP } from '@/game/constants';
 
 const SIZE = 160;
 /** North-up, equal-scale map. Hidden terrain is never painted through the fog. */
 export function WorldMinimap({ hud, engine }: {hud: HudSnapshot; engine: Engine | null}) {
+  const MAP=engine?.game.world.size??1040;
   const latest = useRef(hud); latest.current = hud;
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -40,7 +40,7 @@ export function WorldMinimap({ hud, engine }: {hud: HudSnapshot; engine: Engine 
     };
     draw();const timer=setInterval(draw,500);
     return ()=>clearInterval(timer);
-  },[engine,engine?.game]);
+  },[engine,engine?.game,MAP,engine?.game.state.seed]);
   const pan=(e:PointerEvent<HTMLCanvasElement>)=>{
     const r=e.currentTarget.getBoundingClientRect();
     const at=(n:number,start:number,size:number)=>(Math.max(0,Math.min(1,(n-start)/size))-.5)*MAP;

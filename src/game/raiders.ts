@@ -6,7 +6,6 @@ import { receiveFood } from "./pantry";
 import { applyForagePressure } from "./ecology";
 import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
-import { MAP, HALF } from "./constants";
 import {queueStandDown} from './demobilization';
 
 /** Population matters even while a large settlement remains in the Stone Age.
@@ -98,8 +97,8 @@ export function canScheduleSeaRaid(g: Game) {
 export function findRaiderLanding(g: Game) {
   if (g.state.walkDirty) g.rebuildWalk();
   const home = g.campOf(0), preferred = Math.atan2(home.z, home.x);
-  const width = Math.sqrt(g.walk.length), cell = MAP / width;
-  const index = (x: number, z: number) => Math.floor((z + HALF) / cell) * width + Math.floor((x + HALF) / cell);
+  const width = Math.sqrt(g.walk.length), cell = g.world.size / width;
+  const index = (x: number, z: number) => Math.floor((z + (g.world.size/2)) / cell) * width + Math.floor((x + (g.world.size/2)) / cell);
   const goals: {x:number;z:number}[] = [];
   for (let i = 0; i < 16; i++) {
     const angle = i * Math.PI / 8, x = home.x + Math.cos(angle) * 9, z = home.z + Math.sin(angle) * 9;

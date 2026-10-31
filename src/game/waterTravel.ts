@@ -1,6 +1,5 @@
 import type {Game} from './sim';
 import type {Unit} from './types';
-import {HALF,MAP} from './constants';
 
 /** Portable dugouts share one lazily-built amphibious navigation grid. */
 const caches=new WeakMap<Game,{revision:number;grid:Uint8Array;labels:Int32Array;width:number}>();
@@ -12,10 +11,10 @@ export function waterNavigation(g:Game,waterOnly=false){return cachedWaterNaviga
 function cachedWaterNavigation(g:Game,waterOnly=false){
  const cache=waterOnly?vesselCaches:caches;
  const old=cache.get(g);if(old?.revision===g.navigationRevision())return old;
- const width=Math.sqrt(g.walk.length),cell=MAP/width,grid=g.walk.slice();
+ const width=Math.sqrt(g.walk.length),cell=g.world.size/width,grid=g.walk.slice();
  for(let z=0;z<width;z++)for(let x=0;x<width;x++){
-  const wx=-HALF+(x+.5)*cell,wz=-HALF+(z+.5)*cell,h=g.height(wx,wz);
-  if(Math.abs(wx)>HALF-2||Math.abs(wz)>HALF-2)continue;
+  const wx=-(g.world.size/2)+(x+.5)*cell,wz=-(g.world.size/2)+(z+.5)*cell,h=g.height(wx,wz);
+  if(Math.abs(wx)>(g.world.size/2)-2||Math.abs(wz)>(g.world.size/2)-2)continue;
   if(waterOnly&&h>=g.world.waterY+.3)grid[z*width+x]=0;
   if(h<g.world.waterY+.3){
    const surface=Math.max(h,g.world.waterY+.16);
@@ -24,11 +23,11 @@ function cachedWaterNavigation(g:Game,waterOnly=false){
  }
  // Buildings still block navigation, even in old saves containing wet foundations.
  for(const b of g.state.buildings){
-  if(b.hp<=0||b.plannedCost||['dock','bridge','farm','quarry','lumber','grove','cairn','cornerstone','trench','moat'].includes(b.type)||b.type==='gate'&&b.gateOpen)continue;
+  if(b.hp<=0||b.plannedCost||['dock','bridge','farm','pen','quarry','lumber','grove','cairn','cornerstone','trench','moat'].includes(b.type)||b.type==='gate'&&b.gateOpen)continue;
   const rx=b.w*.4+.75,rz=b.d*.4+.75;
-  for(let z=Math.max(0,Math.floor((b.z-rz+HALF)/cell));z<=Math.min(width-1,Math.floor((b.z+rz+HALF)/cell));z++)
-   for(let x=Math.max(0,Math.floor((b.x-rx+HALF)/cell));x<=Math.min(width-1,Math.floor((b.x+rx+HALF)/cell));x++)
-    if(Math.abs(-HALF+(x+.5)*cell-b.x)<rx&&Math.abs(-HALF+(z+.5)*cell-b.z)<rz)grid[z*width+x]=0;
+  for(let z=Math.max(0,Math.floor((b.z-rz+(g.world.size/2))/cell));z<=Math.min(width-1,Math.floor((b.z+rz+(g.world.size/2))/cell));z++)
+   for(let x=Math.max(0,Math.floor((b.x-rx+(g.world.size/2))/cell));x<=Math.min(width-1,Math.floor((b.x+rx+(g.world.size/2))/cell));x++)
+    if(Math.abs(-(g.world.size/2)+(x+.5)*cell-b.x)<rx&&Math.abs(-(g.world.size/2)+(z+.5)*cell-b.z)<rz)grid[z*width+x]=0;
  }
  const labels=new Int32Array(grid.length),queue=new Int32Array(grid.length);let label=0;
  for(let start=0;start<grid.length;start++)if(grid[start]&&!labels[start]){
@@ -42,7 +41,7 @@ function cachedWaterNavigation(g:Game,waterOnly=false){
 }
 export function connectedForUnit(g:Game,u:Unit,x:number,z:number){
  if(u.haulage!=='canoe')return g.workBoard.connected(g,u.x,u.z,x,z);
- const nav=waterNavigation(g,u.boat?.phase==='aboard'),cell=MAP/nav.width;
- const index=(px:number,pz:number)=>Math.max(0,Math.min(nav.width-1,Math.floor((pz+HALF)/cell)))*nav.width+Math.max(0,Math.min(nav.width-1,Math.floor((px+HALF)/cell)));
+ const nav=waterNavigation(g,u.boat?.phase==='aboard'),cell=g.world.size/nav.width;
+ const index=(px:number,pz:number)=>Math.max(0,Math.min(nav.width-1,Math.floor((pz+(g.world.size/2))/cell)))*nav.width+Math.max(0,Math.min(nav.width-1,Math.floor((px+(g.world.size/2))/cell)));
  const a=nav.labels[index(u.x,u.z)],b=nav.labels[index(x,z)];return a>0&&a===b;
 }

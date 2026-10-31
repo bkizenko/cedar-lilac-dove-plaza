@@ -1,14 +1,18 @@
 import * as THREE from 'three';
-import {MAP, SEGS} from '@/game/constants';
+import {MAP} from '@/game/constants';
 
 // One small height texture for every field. Keep the existing instanced draw
 // calls instead of rebuilding a unique mesh for each growing plot.
 export class FieldSurface {
   readonly texture: THREE.DataTexture;
+  readonly segments:number;
+  readonly size:number;
   readonly depth = new THREE.MeshDepthMaterial({depthPacking: THREE.RGBADepthPacking});
 
-  constructor(heights: Float32Array) {
-    this.texture = new THREE.DataTexture(heights, SEGS + 1, SEGS + 1, THREE.RedFormat, THREE.FloatType);
+  constructor(heights: Float32Array,size=MAP) {
+    this.size=size;
+    this.segments=Math.round(Math.sqrt(heights.length))-1;
+    this.texture = new THREE.DataTexture(heights, this.segments + 1, this.segments + 1, THREE.RedFormat, THREE.FloatType);
     this.texture.minFilter = this.texture.magFilter = THREE.NearestFilter;
     this.texture.generateMipmaps = false;
     this.texture.needsUpdate = true;
@@ -22,11 +26,11 @@ export class FieldSurface {
       shader.vertexShader = `
         uniform sampler2D fieldHeights;
         float fieldHeight(vec2 worldXZ) {
-          vec2 grid = clamp((worldXZ / ${MAP.toFixed(1)} + .5) * ${SEGS.toFixed(1)}, vec2(0.), vec2(${SEGS.toFixed(1)}));
-          vec2 cell = min(floor(grid), vec2(${(SEGS - 1).toFixed(1)}));
+          vec2 grid = clamp((worldXZ / ${this.size.toFixed(1)} + .5) * ${this.segments.toFixed(1)}, vec2(0.), vec2(${this.segments.toFixed(1)}));
+          vec2 cell = min(floor(grid), vec2(${(this.segments - 1).toFixed(1)}));
           vec2 f = grid - cell;
-          vec2 uv = (cell + .5) / ${(SEGS + 1).toFixed(1)};
-          float stepUV = 1. / ${(SEGS + 1).toFixed(1)};
+          vec2 uv = (cell + .5) / ${(this.segments + 1).toFixed(1)};
+          float stepUV = 1. / ${(this.segments + 1).toFixed(1)};
           float a = texture2D(fieldHeights, uv).r;
           float b = texture2D(fieldHeights, uv + vec2(stepUV, 0.)).r;
           float c = texture2D(fieldHeights, uv + vec2(0., stepUV)).r;

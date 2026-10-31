@@ -1,3 +1,4 @@
+import type {WorldRequest} from './worldOptions';
 import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
@@ -83,9 +84,7 @@ import {
   FOW,
   GATHER,
   GATHER_WORK_RATE,
-  HALF,
   LUMBER_R,
-  MAP,
   QUARRY_R,
   DOCK_R,
   TEAM_COLORS,
@@ -253,8 +252,10 @@ export class Game {
     return this.height(x,z);
   }
 
+  private withinWorld(x:number,z:number,pad=2){return inBounds(x,z,pad,this.world.size);}
+
   height(x: number, z: number) {
-    return sampleHeight(this.world.heights, x, z);
+    return sampleHeight(this.world.heights, x, z,this.world.size);
   }
 
   campOf(team: number) {
@@ -276,17 +277,18 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 6 : 1) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 7 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
-    this.world = generateWorld(s,worldgenVersion);
+    this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
+    if(this.world.options)this.state.worldOptions=this.world.options;
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
@@ -652,7 +654,7 @@ export class Game {
     const d = UNITS[type];
     // Recruitment and initial camp layouts must never place people inside walls.
     const free = (px: number, pz: number) =>
-      inBounds(px, pz, 1) &&
+      this.withinWorld(px, pz, 1) &&
       this.height(px, pz) > this.world.waterY + 0.3 &&
       !this.state.buildings.some(
         (b) =>
@@ -861,13 +863,13 @@ export class Game {
   rebuildWalk() {
     this.navRevision++;
     this.bridges=this.state.buildings.filter(b=>b.type==="bridge"&&this.finished(b)&&b.bridge);
-    const cell = (HALF * 2) / WALK;
+    const cell = ((this.world.size/2) * 2) / WALK;
     for (let iz = 0; iz < WALK; iz++) {
       for (let ix = 0; ix < WALK; ix++) {
-        const x = -HALF + (ix + 0.5) * cell;
-        const z = -HALF + (iz + 0.5) * cell;
+        const x = -(this.world.size/2) + (ix + 0.5) * cell;
+        const z = -(this.world.size/2) + (iz + 0.5) * cell;
         const h = this.travelHeight(x, z);
-        let ok = h >= this.world.waterY + WALK_CLEARANCE && inBounds(x, z, 1.5);
+        let ok = h >= this.world.waterY + WALK_CLEARANCE && this.withinWorld(x, z, 1.5);
         if (ok) {
           const hE = this.travelHeight(x + cell, z);
           const hN = this.travelHeight(x, z + cell);
@@ -881,10 +883,10 @@ export class Game {
     for(const b of this.state.buildings){
       if(!this.solidBuilding(b))continue;
       const rx=b.w*.4+.75,rz=b.d*.4+.75;
-      const x0=Math.max(0,Math.floor((b.x-rx+HALF)/cell)),x1=Math.min(WALK-1,Math.floor((b.x+rx+HALF)/cell));
-      const z0=Math.max(0,Math.floor((b.z-rz+HALF)/cell)),z1=Math.min(WALK-1,Math.floor((b.z+rz+HALF)/cell));
+      const x0=Math.max(0,Math.floor((b.x-rx+(this.world.size/2))/cell)),x1=Math.min(WALK-1,Math.floor((b.x+rx+(this.world.size/2))/cell));
+      const z0=Math.max(0,Math.floor((b.z-rz+(this.world.size/2))/cell)),z1=Math.min(WALK-1,Math.floor((b.z+rz+(this.world.size/2))/cell));
       for(let iz=z0;iz<=z1;iz++)for(let ix=x0;ix<=x1;ix++){
-        const x=-HALF+(ix+.5)*cell,z=-HALF+(iz+.5)*cell;
+        const x=-(this.world.size/2)+(ix+.5)*cell,z=-(this.world.size/2)+(iz+.5)*cell;
         if(Math.abs(b.x-x)<rx&&Math.abs(b.z-z)<rz)this.walk[iz*WALK+ix]=0;
       }
     }
@@ -896,18 +898,18 @@ export class Game {
   }
 
   walkable(x: number, z: number) {
-    if (!inBounds(x, z, 1.2)) return false;
+    if (!this.withinWorld(x, z, 1.2)) return false;
     if (this.travelHeight(x, z) < this.world.waterY + WALK_CLEARANCE) return false;
     // A deck edge can share a coarse cell with water; physical deck points remain safe.
     if(this.bridges.some(b=>this.finished(b)&&b.bridge&&onBridge(b.bridge,x,z)))return true;
-    const cell = (HALF * 2) / WALK;
-    const ix = Math.max(0, Math.min(WALK - 1, Math.floor((x + HALF) / cell)));
-    const iz = Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell)));
+    const cell = ((this.world.size/2) * 2) / WALK;
+    const ix = Math.max(0, Math.min(WALK - 1, Math.floor((x + (this.world.size/2)) / cell)));
+    const iz = Math.max(0, Math.min(WALK - 1, Math.floor((z + (this.world.size/2)) / cell)));
     return this.walk[iz * WALK + ix] === 1;
   }
 
   canStep(u: Unit, x: number, z: number) {
-    if (!inBounds(x, z, 1)) return false;
+    if (!this.withinWorld(x, z, 1)) return false;
     const h = canoeHeight(this,u,x,z);
     if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.world.waterY+.3)return false;
     if ((u.haulage!=="canoe"&&h < this.world.waterY + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
@@ -966,7 +968,7 @@ export class Game {
   /** Shared by player placement, generated villages and arriving founders. */
   dryFoundation(type: BldType, x: number, z: number, margin = 0, size?:PlotSize) {
     const d = size??BUILDINGS[type];
-    if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + margin + 1)) return false;
+    if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + margin + 1)) return false;
     const nx=Math.max(4,Math.ceil(d.w/2)),nz=Math.max(4,Math.ceil(d.d/2));
     for (let iz = 0; iz <= nz; iz++) for (let ix = 0; ix <= nx; ix++) {
       const px = x - d.w / 2 - margin + ix * (d.w + margin * 2) / nx;
@@ -1019,11 +1021,11 @@ export class Game {
       if(drawnSpan&&!validBridgeSpan(this,drawnSpan))return "Drag between clear, gentle banks across shallow water (5–28 m)";
       if(!span)return "Aim at a narrow shallow river with two gentle, clear banks";
       if(_team===0&&(!this.exploredAt(span.ax,span.az)||!this.exploredAt(span.bx,span.bz)))return "Explore both banks before planning a crossing";
-      if(!inBounds(span.ax,span.az,4)||!inBounds(span.bx,span.bz,4))return "A bridge needs safe banks inside the map";
+      if(!this.withinWorld(span.ax,span.az,4)||!this.withinWorld(span.bx,span.bz,4))return "A bridge needs safe banks inside the map";
       return null;
     }
-    if (!inBounds(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
-    if (type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
+    if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
+    if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
     if(size){
@@ -1499,14 +1501,14 @@ export class Game {
   }
 
   visibleAt(x: number, z: number) {
-    const gx = Math.floor(((x + HALF) / MAP) * FOW),
-      gz = Math.floor(((z + HALF) / MAP) * FOW);
+    const gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
+      gz = Math.floor(((z + (this.world.size/2)) / this.world.size) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] === 2;
   }
 
   exploredAt(x: number, z: number) {
-    const gx = Math.floor(((x + HALF) / MAP) * FOW),
-      gz = Math.floor(((z + HALF) / MAP) * FOW);
+    const gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
+      gz = Math.floor(((z + (this.world.size/2)) / this.world.size) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] >= 1;
   }
 
@@ -2036,7 +2038,7 @@ export class Game {
     const accessible = (home: {x:number;z:number}, x:number, z:number) => {
       if (!this.walkable(x,z) || !this.workBoard.connected(this,home.x,home.z,x,z)) return false;
       const distance = Math.hypot(x-home.x,z-home.z);
-      if(distance<18 || distance>72 || Math.hypot(x,z)>r-6)return false;
+      if(distance<18 || distance>72 || (!this.world.options&&Math.hypot(x,z)>r-6))return false;
       const steps=Math.ceil(distance/2);
       let previous=this.height(home.x,home.z);
       for(let i=1;i<=steps;i++){
@@ -2338,7 +2340,7 @@ export class Game {
             const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
             const y = this.height(x, z);
             if (y <= this.world.waterY + 0.35 ||
-                Math.hypot(x, z) >= (this.world.islandR || 140) - 6 || this.visibleAt(x, z)) continue;
+                (!this.world.options&&Math.hypot(x, z) >= (this.world.islandR || 140) - 6) || this.visibleAt(x, z)) continue;
             c.hp = c.maxHp;
             c.carcass=undefined;
             c.grazing={x,z};
@@ -2398,7 +2400,7 @@ export class Game {
       const nx = c.x + c.vx * dt;
       const nz = c.z + c.vz * dt;
       const h = this.height(nx, nz);
-      if (h > this.world.waterY + 0.2 && Math.hypot(nx, nz) < (this.world.islandR || 140) - 6) {
+      if (h > this.world.waterY + 0.2 && this.withinWorld(nx,nz,4) && (this.world.options||Math.hypot(nx, nz) < (this.world.islandR || 140) - 6)) {
         c.x = nx;
         c.z = nz;
         c.y = h;
@@ -2722,25 +2724,25 @@ export class Game {
       sent++;
     }
     if (sent) {
-      this.banner("Scouting the island", 1.6);
+      this.banner("Exploring the world", 1.6);
       this.onSfx("move");
     } else this.banner("No unknown ground found, or not enough food to pack a safe journey", 2.4);
   }
 
   findExploreTarget(u: Unit): { x: number; z: number } | null {
     const n = FOW;
-    const cell = MAP / n;
+    const cell = this.world.size / n;
     let best: { x: number; z: number } | null = null;
     let bd = 1e12;
     const step = 2;
     for (let iz = 1; iz < n - 1; iz += step) {
       for (let ix = 1; ix < n - 1; ix += step) {
         if (this.vision[iz * n + ix] !== 0) continue;
-        const wx = -HALF + (ix + 0.5) * cell;
-        const wz = -HALF + (iz + 0.5) * cell;
+        const wx = -(this.world.size/2) + (ix + 0.5) * cell;
+        const wz = -(this.world.size/2) + (iz + 0.5) * cell;
         if (!this.walkable(wx, wz)) continue;
         if(!connectedForUnit(this,u,wx,wz))continue;
-        if (Math.hypot(wx, wz) > this.world.islandR - 8) continue;
+        if (!this.world.options&&Math.hypot(wx, wz) > this.world.islandR - 8) continue;
         const d = Math.hypot(wx - u.x, wz - u.z);
         if (d < 12) continue;
         const score = d + Math.random() * 8;
@@ -3491,16 +3493,16 @@ export class Game {
   stampVision(x: number, z: number, r: number, level = 2) {
     const n = FOW;
     const vis = this.vision;
-    const cell = MAP / n;
-    const cx = ((x + HALF) / cell) | 0;
-    const cz = ((z + HALF) / cell) | 0;
+    const cell = this.world.size / n;
+    const cx = ((x + (this.world.size/2)) / cell) | 0;
+    const cz = ((z + (this.world.size/2)) / cell) | 0;
     const cr = Math.ceil(r / cell);
     for (let iz = cz - cr; iz <= cz + cr; iz++) {
       if (iz < 0 || iz >= n) continue;
       for (let ix = cx - cr; ix <= cx + cr; ix++) {
         if (ix < 0 || ix >= n) continue;
-        const wx = -HALF + (ix + 0.5) * cell;
-        const wz = -HALF + (iz + 0.5) * cell;
+        const wx = -(this.world.size/2) + (ix + 0.5) * cell;
+        const wz = -(this.world.size/2) + (iz + 0.5) * cell;
         if ((wx - x) ** 2 + (wz - z) ** 2 <= r * r) {
           if (vis[iz * n + ix] < level) vis[iz * n + ix] = level;
         }
@@ -3541,7 +3543,7 @@ export class Game {
     terr.fill(255);
     this.territoryStrength.fill(0);
     const n = FOW;
-    const cell = MAP / n;
+    const cell = this.world.size / n;
     const rad: Partial<Record<BldType, number>> = {
       townhall: 34,
       cornerstone: CORNERSTONE_R,
@@ -3567,15 +3569,15 @@ export class Game {
       if (b.hp <= 0 || b.build < 1 || b.team === 3 || FORTIFICATIONS.includes(b.type)) continue;
       const frontier=b.type==="cornerstone"?frontierStatus(this,b):null;
       const r = (frontier?.radius ?? rad[b.type] ?? 14) * 1.45;
-      const cx = ((b.x + HALF) / cell) | 0;
-      const cz = ((b.z + HALF) / cell) | 0;
+      const cx = ((b.x + (this.world.size/2)) / cell) | 0;
+      const cz = ((b.z + (this.world.size/2)) / cell) | 0;
       const cr = Math.ceil(r / cell);
       for (let iz = cz - cr; iz <= cz + cr; iz++) {
         if (iz < 0 || iz >= n) continue;
         for (let ix = cx - cr; ix <= cx + cr; ix++) {
           if (ix < 0 || ix >= n) continue;
-          const wx = -HALF + (ix + 0.5) * cell;
-          const wz = -HALF + (iz + 0.5) * cell;
+          const wx = -(this.world.size/2) + (ix + 0.5) * cell;
+          const wz = -(this.world.size/2) + (iz + 0.5) * cell;
           if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
           const i = iz * n + ix;
           this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0,Math.min(1,(1-Math.hypot(wx-b.x,wz-b.z)/r)/0.25))*(frontier?.strength??1));
@@ -4026,10 +4028,10 @@ export class Game {
         failed = false;
       if (!direct) {
         const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
-        const cell = MAP / WALK;
+        const cell = this.world.size / WALK;
         const index = (x: number, z: number) =>
-          Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell))) * WALK +
-          Math.max(0, Math.min(WALK - 1, Math.floor((x + HALF) / cell)));
+          Math.max(0, Math.min(WALK - 1, Math.floor((z + (this.world.size/2)) / cell))) * WALK +
+          Math.max(0, Math.min(WALK - 1, Math.floor((x + (this.world.size/2)) / cell)));
         const goal = index(tx, tz);
         let end = goal;
         if (!grid[end]) {
@@ -4054,12 +4056,12 @@ export class Game {
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
         const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||u.order==="trade";
         if(!path && longJourney && connectedForUnit(this,u,
-          -HALF+(end%WALK+.5)*cell,-HALF+(Math.floor(end/WALK)+.5)*cell))
+          -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell))
           path=findPath(grid,WALK,index(u.x,u.z),end,96000);
         if (path) {
           points = path.map((n) => ({
-            x: -HALF + ((n % WALK) + 0.5) * cell,
-            z: -HALF + (Math.floor(n / WALK) + 0.5) * cell,
+            x: -(this.world.size/2) + ((n % WALK) + 0.5) * cell,
+            z: -(this.world.size/2) + (Math.floor(n / WALK) + 0.5) * cell,
           }));
           if(end===goal&&(u.haulage==="canoe"||this.walkable(tx,tz)))points.push({ x: tx, z: tz });
           // Cache against the requested destination even when the route ends on

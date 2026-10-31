@@ -1,3 +1,9 @@
+## New-world geographic foundation — 2026-10-31
+
+- [x] ~~Seeded Pangaea/Continents/Archipelago families, saved larger-world sizes and consistent map/navigation/fog/boat coordinates.~~
+- [x] ~~Mountain-range, plateau, valley, lake, bay and cove terrain forms; denser actual woodland; remove raised automatic ford/dock-bank disks from new worlds.~~
+- Items1–10 remain partial: these changes do not complete climate/biome ecology, hydrological flow, all geographic features, erosion/disasters or artificial canals/terrain editing. Older saves preserve their original geography. See FUTURE_IMPLEMENTATION.md for scoped evidence.
+
 ## Functional owned goat herds — 2026-10-31
 
 - [x] ~~Stone Age animal pen; capture and physically lead wild goats home; saved owned herd and keeper jobs.~~
