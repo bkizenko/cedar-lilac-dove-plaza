@@ -6,9 +6,9 @@ export function beginCopperStudy(g:Game,workplace:number,team=0){
  const b=g.state.buildings.find(b=>b.id===workplace&&b.team===team&&b.type==='workshop'&&g.finished(b));
  if(!b)return false;
  const t=g.tribe(team);if(t.copperExperiment){if(team===0)g.banner('Your people already know this copper technique',4);return false;}
- const paused=g.state.units.find(u=>u.team===team&&u.hp>0&&u.copperStudy?.paused&&u.type==='worker'&&u.carry===0&&!u.expedition&&!u.envoy&&!u.visit&&!u.scout&&!u.emergency&&!u.recalled&&!!g.interactionSpot(u,b));
+ const paused=g.state.units.find(u=>u.team===team&&u.hp>0&&u.copperStudy?.paused&&u.type==='worker'&&!isDependent(g,u)&&!u.militia&&!u.jobLock&&!u.buildOrder&&!u.tributeJourney&&!u.foundingJourney&&!u.plantingWork&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.tamingWork&&!u.studyCrop&&u.drill==null&&['idle','gather','hold'].includes(u.order)&&u.carry===0&&!u.expedition&&!u.envoy&&!u.visit&&!u.scout&&!u.emergency&&!u.recalled&&!!g.interactionSpot(u,b));
  if(paused){paused.copperStudy!.paused=false;paused.copperStudy!.workplace=b.id;paused.order='hold';return true;}
- if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.copperStudy))return false;
+ if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.copperStudy)){if(team===0)g.banner('The experimenter is busy. Release their current order before resuming.',4);return false;}
  if(g.popNow(team)<20){if(team===0)g.banner('Copper trials need a settled community of 20 people',4);return false;}
  if(t.copper<8||t.wood<4){if(team===0)g.banner('Bring 8 copper and 4 logs to test a prototype tool',4);return false;}
  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.jobLock&&!u.plantingWork&&!u.tamingWork&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.recalled&&!u.emergency&&!u.foundingJourney&&!u.tributeJourney&&u.drill==null&&u.carry===0&&['idle','gather','hold'].includes(u.order)&&!!g.interactionSpot(u,b));

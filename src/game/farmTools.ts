@@ -32,10 +32,15 @@ function available(g: Game, u: FarmToolUnit) {
     !u.emergency && !u.foundingJourney && !u.recalled && ['idle', 'gather', 'hold'].includes(u.order);
 }
 
+/** Shared by workplace validation and visible recipe controls. */
+export function farmToolWorkplace(kind:FarmToolKind,type:string,copperExperiment=false){
+ return kind==='stoneHoe'?['townhall','workshop'].includes(type):kind==='copperTools'&&copperExperiment?['workshop','forge'].includes(type):type==='forge';
+}
+
 function workplaces(g: Game, team: number, kind: FarmToolKind, id?: number) {
   return g.state.buildings.filter(b => b.team === team && g.finished(b) &&
     (id === undefined || id === b.id) &&
-    (kind === 'stoneHoe' ? ['townhall', 'workshop'].includes(b.type) : kind==='copperTools'&&g.tribe(team).copperExperiment ? ['workshop','forge'].includes(b.type) : b.type === 'forge'));
+    farmToolWorkplace(kind,b.type,!!g.tribe(team).copperExperiment));
 }
 
 function reachableWorkplace(g: Game, u: Unit, sites: Building[]) {

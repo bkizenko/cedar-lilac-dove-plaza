@@ -50,6 +50,6 @@ export function pauseQueuedCrafting(g:Game,team=0){
  for(const b of g.state.buildings){
   if(b.team!==team)continue;
   const waiting=craftingQueue(g,b).slice(craftingBenches(b));
-  for(const u of waiting)for(const job of [u.weaponWork,u.haulageWork,u.farmToolWork])if(job)job.paused=true;
+  for(const u of waiting)for(const job of [u.weaponWork,u.haulageWork,u.farmToolWork,u.copperStudy])if(job)job.paused=true;
  }
 }

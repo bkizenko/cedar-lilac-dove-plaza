@@ -1,3 +1,9 @@
+## Discovered recipe controls and priority handoffs — 2026-10-31
+
+- [x] ~~Workshop controls use the same workplace/unlock rule as actual tool production.~~ Discovering copper tools now exposes the repeatable workshop recipe before Bronze; stone hoes and forge-only iron retain their rules. Resource details show held copper/iron even before Bronze.
+- [x] ~~Priority changes preserve active copper experiments while pausing queued ones without losing paid materials/progress.~~ Resumption cannot steal a planter, another paid project or a direct construction order; a busy experimenter produces an explanation.
+- Thirty-nine material-study/farm-tool/frontier/construction checks and typecheck/build pass. Synthetic20-person save imported only into disposable8087 preview; clicked workshop copper tools, observed3logs spent and1/3benches reserved with no console errors. Screenshot `/tmp/hearth-workshop-recipe.png`. Tool panel still scrolls its header away; sticky selection identity is next UI repair. New ore-details condition was built/typechecked after this screenshot; its visual check remains pending.
+
 ## Rival plot enlargement and completed seasonal audit — 2026-10-30
 
 - [x] ~~Rivals can extend completed stores and fields using the shared physical expansion system.~~ Need-based reviews run at most every30seconds; each society reserves one extension at a time. Clear foundations, finite actual materials, four seed baskets for crops, real builders and unchanged original capacity/yield until completion remain. Pending extensions block duplicate investment of the same type. Automatic builders preserve paid studies/planting/crafting and direct orders.

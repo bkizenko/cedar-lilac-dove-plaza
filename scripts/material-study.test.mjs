@@ -38,3 +38,27 @@ test('rival copper sampling respects knowledge and hunger',async()=>{
  g.state.copper[0].x=5;g.state.copper[0].z=65;g.tribe(1).food=1;assert.equal(developRivalCopper(g,1),false);
  g.tribe(1).food=10000;assert.equal(developRivalCopper(g,1),true);assert.ok(g.state.units.some(u=>u.node===g.state.copper[0]));assert.equal(g.tribe(1).copper,0);
 });
+
+test('workshop recipes expose the copper technique at the same sites that actually craft it',async()=>{
+ const {farmToolWorkplace,beginFarmToolWork}=await import('../src/game/farmTools.ts');
+ assert.equal(farmToolWorkplace('copperTools','workshop',false),false);
+ assert.equal(farmToolWorkplace('copperTools','workshop',true),true);
+ assert.equal(farmToolWorkplace('copperTools','townhall',true),false);
+ assert.equal(farmToolWorkplace('ironTools','workshop',true),false);
+ const g=fixture();g.tribe(0).copperExperiment=true;
+ assert.equal(beginFarmToolWork(g,'copperTools',0,g.state.buildings[0].id),true);
+});
+test('new priorities keep an active copper trial and its paid effort',()=>{
+ const g=fixture();assert.equal(beginCopperStudy(g,g.state.buildings[0].id),true);
+ const u=g.state.units.find(u=>u.copperStudy);u.copperStudy.progress=23;
+ const copper=g.tribe(0).copper;g.setLaborPriority('wood');
+ assert.equal(u.copperStudy.paused,undefined);assert.equal(u.copperStudy.progress,23);assert.equal(u.order,'hold');assert.equal(g.tribe(0).copper,copper);
+});
+test('queued copper experiments yield to a new focus and can resume without new materials',()=>{
+ const g=fixture(),b=g.state.buildings[0];
+ for(const u of g.state.units.slice(0,3)){u.weaponWork={kind:'spear',workplace:b.id,progress:0,duration:24};u.order='hold';}
+ assert.equal(beginCopperStudy(g,b.id),true);const u=g.state.units.find(u=>u.copperStudy),copper=g.tribe(0).copper;
+ g.setLaborPriority('wood');assert.equal(u.copperStudy.paused,true);assert.notEqual(u.order,'hold');
+ assert.equal(beginCopperStudy(g,b.id),true);assert.equal(g.tribe(0).copper,copper);
+ g.interruptMission(u);u.buildOrder=999;u.order='build';assert.equal(beginCopperStudy(g,b.id),false);assert.equal(u.buildOrder,999);
+});

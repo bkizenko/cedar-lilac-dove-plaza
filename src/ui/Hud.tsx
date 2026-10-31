@@ -10,7 +10,7 @@ import {massRaid} from '@/game/massRaid';
 import {staffQuarry} from "@/game/mining";
 import {craftingReport} from "../game/crafting";
 import {setGateMode} from "../game/fortifications";
-import {FARM_TOOLS,farmToolRequirement} from "@/game/farmTools";
+import {FARM_TOOLS,farmToolRequirement,farmToolWorkplace} from "@/game/farmTools";
 import {HAULAGE,haulageRequirement} from "@/game/haulage";
 import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
@@ -152,7 +152,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           {[["Food",hud.food,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
           <button aria-label="Expand resource details" aria-expanded={!resMin} onClick={()=>setResMin(v=>!v)}>{resMin?<ChevronDown/>:<ChevronUp/>}</button>
         </div>
-        {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{hud.age>=1&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
+        {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
         <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>setTestOpen(true)}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
@@ -488,7 +488,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 })}
                 </div></details>}
                 {sel.completed&&["townhall","workshop","forge"].includes(sel.type||"")&&<details className="craft-group" key={`tools-${sel.buildingId}`}><summary>Farm tools</summary><div className="craft-options">
-                {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>kind==="stoneHoe"?["townhall","workshop"].includes(sel.type||""):sel.type==="forge").map(([kind,f])=>{
+                {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>!!sel.type&&farmToolWorkplace(kind as keyof typeof FARM_TOOLS,sel.type,!!engine?.game.tribe(0).copperExperiment)).map(([kind,f])=>{
                   const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
                   return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
                     <strong>{f.name}</strong><span>{f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · +{Math.round((f.harvest-1)*100)}% harvest</span>

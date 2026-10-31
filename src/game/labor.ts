@@ -16,7 +16,7 @@ export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPol
     // Paid active projects and dispatched shipments keep their commitments.
     // Paused projects are stored progress, not a reason to exclude a worker.
     if(u.envoy||u.order==='trade'||u.visit||u.foundingJourney||u.studyCrop||u.drill!=null||
-      (u.order==='hold'&&(u.tamingWork&&!u.tamingWork.paused||u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused)))continue;
+      (u.order==='hold'&&(u.copperStudy&&!u.copperStudy.paused||u.tamingWork&&!u.tamingWork.paused||u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused)))continue;
     u.job=null;u.jobLock=false;u.huntOnly=false;u.searchJob=undefined;u.workCheckAt=0;
     u.blockedTask=undefined;u.retryWorkAt=undefined;u.node=null;u.target=null;u.attackDestination=null;u.pillage=-1;
     if(u.recalled){u.stationOnArrival=false;continue;}
