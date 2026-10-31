@@ -430,3 +430,9 @@ canvas:focus-visible {
 .copper-study-control button {min-height:44px;text-align:left;padding:8px 10px;border:1px solid var(--color-bronze);border-radius:6px;font-size:15px;}
 .copper-study-control button:disabled {opacity:.5;cursor:default;}
 .copper-study-control progress {width:100%;accent-color:var(--color-bronze-bright);}
+
+/* One placement message keeps warnings away from the construction tray. */
+.hud-placement {display:flex;align-items:flex-start;gap:.5rem;text-align:left;pointer-events:auto;}
+.hud-placement > div {min-width:0;flex:1;}
+.hud-placement strong {display:block;font-size:.94rem;margin-bottom:.2rem;}
+.hud-placement button {display:flex;align-items:center;justify-content:center;flex:0 0 44px;min-height:44px;border:1px solid currentColor;border-radius:.5rem;}

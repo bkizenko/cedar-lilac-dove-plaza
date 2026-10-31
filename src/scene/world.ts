@@ -238,9 +238,9 @@ export class WorldView {
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 860);
     this.mats = makeMaterials();
 
-    this.hemi = new THREE.HemisphereLight("#ffe9c8", "#4a6a38", 0.72);
+    this.hemi = new THREE.HemisphereLight("#dcebf8", "#5a6651", 0.72);
     this.scene.add(this.hemi);
-    this.fill = new THREE.AmbientLight("#efe4cc", 0.22);
+    this.fill = new THREE.AmbientLight("#f1f1e6", 0.22);
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
     this.sun.castShadow = true;
@@ -1054,7 +1054,7 @@ export class WorldView {
           : wx === "drought" || sn.autumn > 0.5
             ? "#f0d8a8"
             : dawn > 0.2 || dusk > 0.25 || wx === "golden" || sn.autumn > 0.25
-              ? "#ffb060"
+              ? "#ffd0a1"
               : night
                 ? "#c8d4ee"
                 : "#fff4d2",
@@ -1066,7 +1066,7 @@ export class WorldView {
           ? "#d8e4f0"
           : sn.autumn > 0.4
             ? "#f0d4b0"
-            : "#ffe9c8",
+            : "#dcebf8",
     );
     const fog = new THREE.Color().setStyle(
       night
@@ -1092,8 +1092,8 @@ export class WorldView {
                           : dusk > 0.3 || wx === "golden"
                             ? "#e0b888"
                             : sn.spring > 0.4
-                              ? "#c8dcbe"
-                              : "#d2dcbe",
+                              ? "#d8e7e6"
+                              : "#dce7ed",
     );
     let dens = night ? 0.003 : 0.0018;
     if (wx === "mist") dens = 0.0078;

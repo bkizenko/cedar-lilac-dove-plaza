@@ -829,8 +829,11 @@ export class Engine {
   pushHud() {
     try {
       const type=this.game.state.placing;
-      const cost=type&&scalablePlot(type)?buildingCost(type,this.game,0,this.plotSize):null;
-      this.hud({...this.game.snapshot(),plotSummary:cost?`${type==="farm"?cost.seeds+" seeds":cost.wood+" logs"} · Drag to size · [ ] width · Shift+[ ] depth`:undefined});
+      const cost=type?buildingCost(type,this.game,0,this.plotSize,this.bridgeSpan):null;
+      const sections=type&&linearStructure(type)&&this.plotStart?constructionLine(this.plotStart,this.ghostPos).length:1;
+      const materials=cost?Object.entries(cost).filter(([,amount])=>amount>0).map(([kind,amount])=>`${amount*sections} ${kind==='wood'?'logs':kind}`).join(' · '):'';
+      const summary=type?`${sections>1?sections+' sections · ':''}${materials||'Labor only'}`:undefined;
+      this.hud({...this.game.snapshot(),plotSummary:summary});
     } catch (err) {
       console.error(err);
     }

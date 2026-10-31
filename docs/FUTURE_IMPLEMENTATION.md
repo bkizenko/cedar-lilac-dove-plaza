@@ -1,3 +1,9 @@
+## Unified placement feedback and cleaner daylight — 2026-10-30
+
+- [x] ~~Replace duplicated placement warnings with one readable panel containing building name, instructions, cost/status and a44px cancel button.~~ Bridge/wall drag guidance remains visible; costs use actual building/plot/span values and joined-section count. The former lower warning no longer covers the construction tray.
+- [x] ~~Cool neutral daylight fill and softer amber dawn reduce the overall yellow cast.~~ Existing night/weather/season cycles and fog-of-war mechanics remain; no extra geometry or lighting passes.
+- Twenty architecture/equipment scene checks and typecheck/build pass. Production preview at1280×720 and390×844 verified bridge guidance, invalid-site warning, reachable Cancel and successful cancellation, with zero console errors. Screenshots `/tmp/hearth-clean-placement.png` and `/tmp/hearth-mobile-placement.png`. Viewport restored and disposable tab closed. Not a complete UI/art overhaul or performance claim.
+
 ## Varied coast orientation and woodland clearings — 2026-10-30
 
 - [x] ~~New worlds use seed-varied coastline orientation/aspect and broader shoreline transitions.~~ Woodland blends broad groves with smaller canopy patches and excludes severe slopes on both axes; the400-extra-tree instance cap remains. New random starts use generator6. Old versions1–5 retain their generation and saves; a golden hash verifies v5 terrain bytes.

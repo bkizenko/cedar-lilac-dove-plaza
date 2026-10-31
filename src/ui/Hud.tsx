@@ -315,12 +315,17 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 
       <div className="hud-banner">
         {hud.placing ? (
-          <div className="hud-toast">
-            {hud.placeIssue || hud.banner || (founding
-              ? "Click beside a clump of berries or timber."
-              : hud.placing === "cornerstone"
-                ? "Outpost: choose explored dry ground at least 64m from your halls and outposts. Place a plan even without 70 logs."
-                : ["farm","warehouse"].includes(hud.placing)?"Drag to size · [ ] width · Shift+[ ] depth":`Click to place ${BUILDINGS[hud.placing].name}.`)}
+          <div className="hud-toast hud-placement" role="status">
+            <div>
+              <strong>{BUILDINGS[hud.placing].name}</strong>
+              <div>{founding ? "Choose open ground near food and timber."
+                : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
+                : ["palisade","stonewall","trench","moat"].includes(hud.placing) ? "Drag a joined line · leave space for a gate"
+                : ["farm","warehouse"].includes(hud.placing) ? "Drag to size · [ ] width · Shift+[ ] depth"
+                : "Click to build or plan · Esc cancels"}</div>
+              {hud.placeIssue ? <div className="text-blood">{hud.placeIssue}</div> : hud.plotSummary ? <div className="text-ok">{hud.plotSummary}</div> : hud.banner ? <div>{hud.banner}</div> : null}
+            </div>
+            <button type="button" aria-label="Cancel building placement" title="Cancel · Escape" onClick={()=>engine?.setPlacing(null)}><X className="size-4" /></button>
           </div>
         ) : hud.banner ? (
           <div className="hud-toast">{hud.banner}</div>
@@ -740,16 +745,6 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         <MinToggle open={!buildMin} onClick={() => setBuildMin((v) => !v)} />
       </div>
       )}
-      {!founding && hud.placing && hud.placeIssue ? (
-        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-blood/40 bg-ink/90 px-3 py-2 text-sm text-blood">
-          {hud.placeIssue}{hud.plotSummary&&<div className="text-parchment">{hud.plotSummary}</div>}
-        </div>
-      ) : !founding && hud.placing ? (
-        <div className="pointer-events-none absolute bottom-[5.5rem] left-1/2 z-10 -translate-x-1/2 rounded-md border border-ok/30 bg-ink/90 px-3 py-2 text-sm text-ok">
-          {hud.plotSummary || (founding ? "Click the grass" : "Click to build or plan")}
-        </div>
-      ) : null}
-
       <div className="hud-map hud-panel rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-2 pt-1.5">
           <div className="text-[10px] uppercase tracking-wide text-parchment-dim">Island</div>
