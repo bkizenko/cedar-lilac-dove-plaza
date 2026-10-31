@@ -1,3 +1,4 @@
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {connectedForUnit} from "./waterTravel";
 import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
@@ -87,24 +88,25 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
   if (u.stuckT > 16 && m.returning) {
     u.scout = undefined;
     u.order = "return";u.recalled=true;u.stationOnArrival=false;
-    u.workReason="Scouting return needs a reachable hearth or crossing";
+    u.workReason="Scouting return needs a reachable camp, store or crossing";
     return true;
   }
   if (u.stuckT > 8 || m.legs >= 5 || reserveSeconds(g,u.team)<180) m.returning = true;
   if (m.returning) {
-    const homes=g.state.buildings.filter(b=>b.team===u.team&&b.type==='townhall'&&g.finished(b))
-      .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
-    const destination=homes.map(h=>({h,spot:g.interactionSpot(u,h)})).find(p=>p.spot);
+    const homes=supplyDrops(g,u.team).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+    const destination=homes.map(h=>({h,spot:supplyApproach(g,u,h)})).find(p=>p.spot);
     if(!destination){
       u.scout=undefined;u.recalled=true;u.stationOnArrival=false;u.order='return';
-      u.workReason='Scouting return needs a reachable hearth or crossing';return true;
+      u.workReason='Scouting return needs a reachable camp or store';return true;
     }
     u.tx = destination.spot!.x;
     u.tz = destination.spot!.z;
     u.workReason = "Bringing scouting knowledge home";
-    if (g.buildingWorkReached(u,destination.h)) {
+    if (supplyReached(g,u,destination.h,destination.spot!)) {
       u.scout = undefined;
-      u.order = "idle";u.node=null;u.stuckT=0;
+      // Any retained cargo stays on its existing return executor; scouting
+      // never credits supplies or duplicates the communal cache itself.
+      u.order = u.carry>0?"return":"idle";u.node=null;u.stuckT=0;
       u.workReason='Home from scouting — joining village work';
       return true;
     }
