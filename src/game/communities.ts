@@ -19,7 +19,7 @@ function settlementSite(g: Game, u: Unit, expanding: boolean) {
         x = u.x + Math.sin(angle) * r,
         z = u.z + Math.cos(angle) * r;
       const spot = g.findOpenSpot(x, z, "townhall", u.team);
-      if (!spot || g.height(spot.x, spot.z) < g.world.waterY + 0.6) continue;
+      if (!spot || g.height(spot.x, spot.z) < g.waterAt(spot.x,spot.z) + 0.6) continue;
       if (!g.workBoard.connected(g, u.x, u.z, spot.x, spot.z)) continue;
       if (
         g.state.buildings.some(

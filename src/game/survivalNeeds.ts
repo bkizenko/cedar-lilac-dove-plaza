@@ -59,18 +59,24 @@ function sourceFor(g:Game,u:Unit):Source|null{
   for(let j=0;j<steps;j++)sources.push({x:a.x+(b.x-a.x)*j/steps,z:a.z+(b.z-a.z)*j/steps});
  }
  for(const lake of g.world.features??[])if(lake.kind==='lake')sources.push(lake);
+ // Elevated lakes can be wider than the bank search radius. Inspect their
+ // actual irregular shoreline rather than treating the lake centre as a bank.
+ for(const body of g.world.waterBodies??[])if(body.kind==='lake'&&body.shoreline){
+  const stride=Math.max(1,Math.floor(body.shoreline.length/16));
+  for(let i=0;i<body.shoreline.length;i+=stride){const p=body.shoreline[i];sources.push({x:body.x+(p.x-body.x)*.94,z:body.z+(p.z-body.z)*.94});}
+ }
  const candidates:Source[]=[];
  for(const p of sources){
   if(Math.hypot(p.x-u.x,p.z-u.z)>SURVIVAL_RULES.sourceSearchMeters)continue;
 
-  if(g.height(p.x,p.z)>g.world.baseWaterY+.25)continue;
+  if(g.height(p.x,p.z)>g.waterAt(p.x,p.z)+.25)continue;
   for(const d of [8,16,24,32])for(let i=0;i<12;i++){
    const a=i*Math.PI/6,x=p.x+Math.cos(a)*d,z=p.z+Math.sin(a)*d;
    if(u.team===0&&!g.exploredAt(x,z))continue;
    if(!g.walkable(x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
    // Collection is physically beside fresh water, rather than from a distant
    // dry waypoint that happens to be close to a river's metadata.
-   const reach=Array.from({length:8},(_,j)=>{const a=j*Math.PI/4;return g.height(x+Math.cos(a)*5,z+Math.sin(a)*5)<g.world.baseWaterY+.2;}).some(Boolean);
+   const reach=Array.from({length:8},(_,j)=>{const a=j*Math.PI/4;return g.height(x+Math.cos(a)*5,z+Math.sin(a)*5)<g.waterAt(x+Math.cos(a)*5,z+Math.sin(a)*5)+.2;}).some(Boolean);
    if(reach)candidates.push({sourceX:p.x,sourceZ:p.z,bankX:x,bankZ:z});
   }
  }
@@ -132,7 +138,7 @@ export function waterCollectionAI(g:Game,u:Unit,dt:number){
   u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){g.steer(u,dt);u.workReason=`Returning ${w.liters.toFixed(0)} L of drinking water`;return true;}
   deliverWaterCargo(g,u);u.order='idle';u.workReason='Drinking water delivered';g.invalidateRoute(u);g.workBoard.reset();return true;
  }
- if(!g.walkable(w.bankX,w.bankZ)||(u.stuckT??0)>30||g.height(w.sourceX,w.sourceZ)>g.world.waterY+.25){w.paused=true;u.order='idle';u.workReason='Water source dry, flooded or unreachable — collection paused';return true;}
+ if(!g.walkable(w.bankX,w.bankZ)||(u.stuckT??0)>30||g.height(w.sourceX,w.sourceZ)>g.waterAt(w.sourceX,w.sourceZ)+.25){w.paused=true;u.order='idle';u.workReason='Water source dry, flooded or unreachable — collection paused';return true;}
  u.tx=w.bankX;u.tz=w.bankZ;
  if(Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5){g.steer(u,dt);u.workReason='Walking to a freshwater bank';return true;}
  w.phase='collecting';w.progressSeconds=Math.min(SURVIVAL_RULES.collectSeconds,w.progressSeconds+dt);u.workReason=`Filling water vessels · ${Math.min(100,Math.floor(w.progressSeconds/SURVIVAL_RULES.collectSeconds*100))}%`;

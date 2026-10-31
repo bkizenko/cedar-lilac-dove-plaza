@@ -123,7 +123,7 @@ import type {
   SeasonMix,
   PeaceTerm,
 } from "./types";
-import { generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
+import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
@@ -261,6 +261,8 @@ export class Game {
   }
 
   private withinWorld(x:number,z:number,pad=2){return inBounds(x,z,pad,this.world.size);}
+
+  waterAt(x:number,z:number){return waterSurfaceAt(this.world,x,z);}
 
   height(x: number, z: number) {
     return sampleHeight(this.world.heights, x, z,this.world.size);
@@ -499,7 +501,7 @@ export class Game {
     const startingResourceSpot=(x:number,z:number)=>{
       for(const r of [0,4,8,12,18,24])for(let i=0;i<(r?16:1);i++){
         const a=i*Math.PI/8,sx=x+Math.sin(a)*r,sz=z+Math.cos(a)*r;
-        if(this.height(sx,sz)<this.world.waterY+.4||worldgenVersion>=8&&!dryTreeRoot((x,z)=>this.height(x,z),sx,sz,this.world.baseWaterY))continue;
+        if(this.height(sx,sz)<this.waterAt(sx,sz)+.4||worldgenVersion>=8&&!dryTreeRoot((x,z)=>this.height(x,z),sx,sz,this.waterAt(sx,sz)-this.world.waterY+this.world.baseWaterY))continue;
         if(this.state.buildings.some(b=>b.hp>0&&Math.abs(sx-b.x)<b.w*.5+2&&Math.abs(sz-b.z)<b.d*.5+2))continue;
         if([...this.state.trees,...this.state.forage].some(n=>n.amount>0&&Math.hypot(n.x-sx,n.z-sz)<1.8))continue;
         return {x:sx,z:sz};
@@ -665,7 +667,7 @@ export class Game {
     // Recruitment and initial camp layouts must never place people inside walls.
     const free = (px: number, pz: number) =>
       this.withinWorld(px, pz, 1) &&
-      this.height(px, pz) > this.world.waterY + 0.3 &&
+      this.height(px, pz) > this.waterAt(px,pz) + 0.3 &&
       !this.state.buildings.some(
         (b) =>
           this.solidBuilding(b) &&
@@ -879,11 +881,18 @@ export class Game {
         const x = -(this.world.size/2) + (ix + 0.5) * cell;
         const z = -(this.world.size/2) + (iz + 0.5) * cell;
         const h = this.travelHeight(x, z);
-        let ok = h >= this.world.waterY + WALK_CLEARANCE && this.withinWorld(x, z, 1.5);
+        let ok = h >= this.waterAt(x,z) + WALK_CLEARANCE && this.withinWorld(x, z, 1.5);
         if (ok) {
           const hE = this.travelHeight(x + cell, z);
           const hN = this.travelHeight(x, z + cell);
           if (Math.abs(h - hE) > 2.45 || Math.abs(h - hN) > 2.45) ok = false;
+          // Elevated-water banks can cut through a coarse cell even when its
+          // centre is dry. Admit a cell only when its physical walking footprint
+          // stays above water; otherwise A* can repeatedly steer into the bank.
+          if(ok&&this.world.waterHeights)for(const dz of [-.48,0,.48])for(const dx of [-.48,0,.48]){
+            const px=x+dx*cell,pz=z+dz*cell;
+            if(this.travelHeight(px,pz)<this.waterAt(px,pz)+WALK_CLEARANCE){ok=false;break;}
+          }
         }
         this.walk[iz * WALK + ix] = ok ? 1 : 0;
       }
@@ -909,7 +918,7 @@ export class Game {
 
   walkable(x: number, z: number) {
     if (!this.withinWorld(x, z, 1.2)) return false;
-    if (this.travelHeight(x, z) < this.world.waterY + WALK_CLEARANCE) return false;
+    if (this.travelHeight(x, z) < this.waterAt(x,z) + WALK_CLEARANCE) return false;
     // A deck edge can share a coarse cell with water; physical deck points remain safe.
     if(this.bridges.some(b=>this.finished(b)&&b.bridge&&onBridge(b.bridge,x,z)))return true;
     const cell = ((this.world.size/2) * 2) / WALK;
@@ -921,8 +930,8 @@ export class Game {
   canStep(u: Unit, x: number, z: number) {
     if (!this.withinWorld(x, z, 1)) return false;
     const h = canoeHeight(this,u,x,z);
-    if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.world.waterY+.3)return false;
-    if ((u.haulage!=="canoe"&&h < this.world.waterY + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
+    if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.waterAt(x,z)+.3)return false;
+    if ((u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of this.state.buildings) {
       if (!this.solidBuilding(b)) continue;
       const w = b.w * 0.4 + u.r,
@@ -983,7 +992,7 @@ export class Game {
     for (let iz = 0; iz <= nz; iz++) for (let ix = 0; ix <= nx; ix++) {
       const px = x - d.w / 2 - margin + ix * (d.w + margin * 2) / nx;
       const pz = z - d.d / 2 - margin + iz * (d.d + margin * 2) / nz;
-      if (this.height(px, pz) < Math.max(this.world.waterY,highWaterLevel(this.world.baseWaterY)) + 0.28) return false;
+      if (this.height(px, pz) < this.waterAt(px,pz)+Math.max(0,highWaterLevel(this.world.baseWaterY)-this.world.waterY) + 0.28) return false;
     }
     return true;
   }
@@ -1052,7 +1061,7 @@ export class Game {
         }
       }
     }
-    if(type==="moat"&&![4,8,12,14].some(r=>Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return this.height(x+Math.cos(a)*r,z+Math.sin(a)*r)<this.world.waterY;}).some(Boolean)))return "A flooded moat needs a river or shore within 14m";
+    if(type==="moat"&&![4,8,12,14].some(r=>Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return this.height(x+Math.cos(a)*r,z+Math.sin(a)*r)<this.waterAt(x+Math.cos(a)*r,z+Math.sin(a)*r);}).some(Boolean)))return "A flooded moat needs a river or shore within 14m";
     if (type !== "quarry" && type !== "lumber") {
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
@@ -1101,14 +1110,14 @@ export class Game {
       if(slope>0.6)return "This slope is too steep for fields; choose a gentler bank or terrace";
     }
     if (type === "dock") {
-      if (this.height(x, z) < this.world.waterY - 0.12) return "The dock would sink";
+      if (this.height(x, z) < this.waterAt(x,z) - 0.12) return "The dock would sink";
       const nearSite = (this.world.dockSites || []).some((s) => Math.hypot(s.x - x, s.z - z) < 7);
       if (nearSite) return null;
       let shore = false;
       for (let i = 0; i < 10; i++) {
         const a = (i / 10) * Math.PI * 2;
         const h = this.height(x + Math.cos(a) * 7, z + Math.sin(a) * 7);
-        if (h < this.world.waterY + 0.38) {
+        if (h < this.waterAt(x+Math.cos(a)*7,z+Math.sin(a)*7) + 0.38) {
           shore = true;
           break;
         }
@@ -2055,7 +2064,7 @@ export class Game {
       let previous=this.height(home.x,home.z);
       for(let i=1;i<=steps;i++){
         const h=this.height(home.x+(x-home.x)*i/steps,home.z+(z-home.z)*i/steps);
-        if(h<this.world.waterY+.35 || Math.abs(h-previous)>1.4)return false;
+        if(h<this.waterAt(home.x+(x-home.x)*i/steps,home.z+(z-home.z)*i/steps)+.35 || Math.abs(h-previous)>1.4)return false;
         previous=h;
       }
       return true;
@@ -2091,7 +2100,7 @@ export class Game {
         const x = (anchor?.x ?? home?.x ?? 0) + Math.sin(a) * d;
         const z = (anchor?.z ?? home?.z ?? 0) + Math.cos(a) * d;
         const h = this.height(x, z);
-        if (k.species !== "bird" && h < this.world.waterY + 0.35) continue;
+        if (k.species !== "bird" && h < this.waterAt(x,z) + 0.35) continue;
         if(home && (!accessible(home,x,z)||list.some(c=>Math.hypot(c.x-x,c.z-z)<1.2)))continue;
         if (this.world.camps.some((c) => Math.hypot(c.x - x, c.z - z) < 12) && k.species !== "goat")
           continue;
@@ -2328,7 +2337,7 @@ export class Game {
             const a = Math.random() * Math.PI * 2, d = 8 + Math.random() * 14;
             const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
             const y = this.height(x, z);
-            if (y <= this.world.waterY + 0.35 ||
+            if (y <= this.waterAt(x,z) + 0.35 ||
                 (!this.world.options&&Math.hypot(x, z) >= (this.world.islandR || 140) - 6) || this.visibleAt(x, z)) continue;
             c.hp = c.maxHp;
             c.carcass=undefined;
@@ -2389,7 +2398,7 @@ export class Game {
       const nx = c.x + c.vx * dt;
       const nz = c.z + c.vz * dt;
       const h = this.height(nx, nz);
-      if (h > this.world.waterY + 0.2 && this.withinWorld(nx,nz,4) && (this.world.options||Math.hypot(nx, nz) < (this.world.islandR || 140) - 6)) {
+      if (h > this.waterAt(nx,nz) + 0.2 && this.withinWorld(nx,nz,4) && (this.world.options||Math.hypot(nx, nz) < (this.world.islandR || 140) - 6)) {
         c.x = nx;
         c.z = nz;
         c.y = h;
@@ -3922,7 +3931,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.world.waterY+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -4084,7 +4093,7 @@ export class Game {
     }
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
-    if(this.height(nx,nz)>this.world.waterY+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    if(this.height(nx,nz)>this.waterAt(nx,nz)+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
     u.x = nx;
     u.z = nz;
     u.y = canoeHeight(this,u,nx,nz);
@@ -4277,7 +4286,7 @@ export class Game {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
       if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt);return;}
-      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.world.waterY+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
+      const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.waterAt(u.x,u.z)+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
         if(!spot){u.blockedTask=node.id;u.retryWorkAt=this.state.time+60;u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Workplace unreachable — finding another task";return;}

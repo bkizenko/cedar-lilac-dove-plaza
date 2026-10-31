@@ -114,7 +114,7 @@ export function findRaiderLanding(g: Game) {
       let shore = false;
       for (let i = 0; i < 8; i++) {
         const a = i * Math.PI / 4;
-        if (g.height(x + Math.cos(a) * 10, z + Math.sin(a) * 10) < g.world.waterY) { shore = true; break; }
+        if (g.height(x + Math.cos(a) * 10, z + Math.sin(a) * 10) < g.waterAt(x+Math.cos(a)*10,z+Math.sin(a)*10)) { shore = true; break; }
       }
       if (!shore || !g.workBoard.connected(g, home.x, home.z, x, z)) continue;
       const goal = goals.slice().sort((a,b) => Math.hypot(a.x-x,a.z-z) - Math.hypot(b.x-x,b.z-z))[0];

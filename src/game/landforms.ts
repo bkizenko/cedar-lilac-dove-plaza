@@ -2,7 +2,7 @@ import {mulberry32,fbm} from './rng';
 import {WORLD_SIZES,WORLD_LAYOUTS,type WorldRequest,type WorldOptions} from './worldOptions';
 type Lobe={x:number;z:number;rx:number;rz:number;angle:number};
 /** Separate landmass topology from elevation, resources and legacy save generation. */
-export function landforms(seed:number,request:WorldRequest={},stableStream=false) {
+export function landforms(seed:number,request:WorldRequest={},stableStream=false,composedPrimary=false) {
  if(request.size!==undefined&&!WORLD_SIZES.includes(request.size)||request.layout!==undefined&&request.layout!=='random'&&!WORLD_LAYOUTS.includes(request.layout))throw new Error('Unsupported world settings');
  const rand=mulberry32(seed^0x61cd8a9),size=request.size??1560;
  const layoutRoll=stableStream?rand():undefined;
@@ -10,7 +10,18 @@ export function landforms(seed:number,request:WorldRequest={},stableStream=false
  const options:WorldOptions={size,layout},lobes:Lobe[]=[];
  const rotation=rand()*Math.PI*2,cs=Math.cos(rotation),sn=Math.sin(rotation);
  const add=(x:number,z:number,rx:number,rz:number,angle=0)=>lobes.push({x:x*size,z:z*size,rx:rx*size,rz:rz*size,angle});
- if(layout==='pangaea'){
+ if(composedPrimary){
+  // A mandatory broad primary landscape has enough interior to hold all of the
+  // requested linked geological provinces, including on archipelago maps.
+  if(layout==='pangaea'){
+   add(0,0,.38,.32,.12);add(-.22,.09,.21,.20,-.25);add(.22,-.08,.21,.19,.3);
+  }else if(layout==='continents'){
+   add(-.14,0,.285,.32,-.1);add(.32,.04,.14,.23,.3);
+  }else{
+   add(-.10,0,.29,.29,.08);
+   for(const [x,z] of [[.32,.29],[.34,-.26],[-.35,.34],[-.35,-.34]])add(x,z,.065+rand()*.025,.07+rand()*.025,rand()*Math.PI);
+  }
+ }else if(layout==='pangaea'){
   for(let i=0;i<6;i++)add(-.28+i*.112,(rand()-.5)*.13,.16+rand()*.045,.16+rand()*.055,(rand()-.5)*.7);
   for(let i=0;i<3;i++)add((rand()-.5)*.55,(i%2?1:-1)*(.15+rand()*.08),.10+rand()*.06,.10+rand()*.06,rand()*Math.PI);
   if(stableStream)for(let i=0,n=Math.floor(rand()*5);i<n;i++)add((rand()-.5)*.86,(rand()-.5)*.86,.025+rand()*.035,.025+rand()*.04,rand()*Math.PI);

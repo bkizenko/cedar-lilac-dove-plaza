@@ -20,7 +20,7 @@ function dockWaters(g:Game,b:Building){
   let start=-1,nearest=Infinity;
   for(let iz=0;iz<width;iz++)for(let ix=0;ix<width;ix++){
     const x=ox+ix*step,z=oz+iz*step,id=iz*width+ix;
-    if(g.height(x,z)>g.world.waterY+.04)continue;
+    if(g.height(x,z)>g.waterAt(x,z)+.04)continue;
     wet[id]=1;const d=Math.hypot(x-b.x,z-b.z);
     if(d<nearest){nearest=d;start=id;}
   }
@@ -41,7 +41,7 @@ function dockWaters(g:Game,b:Building){
 }
 function touchesWater(g:Game,n:WaterPoint,water:WaterPoint[]){
   // Original saves represent fish near the bank, sometimes just above water.
-  const radius=g.height(n.x,n.z)<=g.world.waterY+.04?1.5:6.5;
+  const radius=g.height(n.x,n.z)<=g.waterAt(n.x,n.z)+.04?1.5:6.5;
   return water.some(p=>(p.x-n.x)**2+(p.z-n.z)**2<=radius*radius);
 }
 function localGrounds(g:Game,b:Building,water:WaterPoint[]){
@@ -61,7 +61,7 @@ function surveyFishingWater(g:Game,b:Building,water:WaterPoint[]){
         (b.team===0&&!g.exploredAt(site.x,site.z))||existing.some(n=>Math.hypot(n.x-site!.x,n.z-site!.z)<10))continue;
       const random=mulberry32(g.state.seed^Math.imul(ix,73856093)^Math.imul(iz,19349663));
       const capacity=36+Math.floor(random()*24);
-      const n:ResourceNode={id:g.id(),kind:'fish',x:site.x,z:site.z,y:g.world.waterY+.1,
+      const n:ResourceNode={id:g.id(),kind:'fish',x:site.x,z:site.z,y:g.waterAt(site.x,site.z)+.1,
         amount:capacity,maxAmt:capacity,regenT:0,pressure:0,scale:.9+random()*.2,rich:.9+random()*.2};
       g.state.fish.push(n);existing.push(n);
     }
@@ -88,7 +88,7 @@ export function fishingReport(g:Game,b:Building){
   return `${workers}/2 fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus))} fish per fisher/min before hauling; winter slows fishing`;
 }
 export function fishingBank(g:Game,u:Unit,n:ResourceNode){
-  if(u.haulage==="canoe"&&g.height(n.x,n.z)<=g.world.waterY+.3&&connectedForUnit(g,u,n.x,n.z))return {x:n.x,z:n.z};
+  if(u.haulage==="canoe"&&g.height(n.x,n.z)<=g.waterAt(n.x,n.z)+.3&&connectedForUnit(g,u,n.x,n.z))return {x:n.x,z:n.z};
   let best:{x:number;z:number}|null=null,score=Infinity;
   for(const radius of [1,2,3.5,5,6.5])for(let i=0;i<16;i++){
     const x=n.x+Math.sin(i*Math.PI/8)*radius,z=n.z+Math.cos(i*Math.PI/8)*radius;

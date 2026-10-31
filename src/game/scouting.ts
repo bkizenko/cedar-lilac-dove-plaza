@@ -29,7 +29,7 @@ function nextTarget(g: Game, u: Unit) {
     if (memory.cells.includes(i)) continue;
     const x = ((i % GRID) + 0.5) * CELL - HALF,
       z = (Math.floor(i / GRID) + 0.5) * CELL - HALF;
-    if (g.height(x, z) <= g.world.waterY + 0.3 || !connectedForUnit(g,u,x,z)) continue;
+    if (g.height(x, z) <= g.waterAt(x,z) + 0.3 || !connectedForUnit(g,u,x,z)) continue;
     const d = Math.hypot(x - u.x, z - u.z);
     if (d < score) {
       score = d;

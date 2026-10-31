@@ -18,13 +18,13 @@ function waterPoint(g:Game,x:number,z:number,radius=18){
  for(let r=0;r<=radius;r+=2)for(let i=0;i<24;i++){
   const a=i*Math.PI/12,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;
   if(Math.abs(px)>(g.world.size/2)-5||Math.abs(pz)>(g.world.size/2)-5)continue;
-  if([[-1.5,0],[1.5,0],[0,-3],[0,3]].every(([dx,dz])=>g.height(px+dx,pz+dz)<g.world.waterY+.1))return {x:px,z:pz};
+  if([[-1.5,0],[1.5,0],[0,-3],[0,3]].every(([dx,dz])=>g.height(px+dx,pz+dz)<g.waterAt(px+dx,pz+dz)+.1))return {x:px,z:pz};
  }
  return null;
 }
 export function launchRiverboat(g:Game,b:Building){
  const p=waterPoint(g,b.x,b.z);if(!p)return false;
- const boat:Riverboat={id:g.id(),team:b.team,dock:b.id,...p,y:g.world.waterY+.16,facing:0,hp:300,capacity:BOAT_COST.seats};
+ const boat:Riverboat={id:g.id(),team:b.team,dock:b.id,...p,y:g.waterAt(p.x,p.z)+.16,facing:0,hp:300,capacity:BOAT_COST.seats};
  (g.state.boats??=[]).push(boat);return true;
 }
 export function boardRiverboat(g:Game,id:number,people=g.selectedUnits()){
@@ -46,7 +46,7 @@ function wetDestination(g:Game,b:Riverboat,x:number,z:number){
  let best:{x:number;z:number}|null=null,score=Infinity;
  for(let dz=-8;dz<=8;dz++)for(let dx=-8;dx<=8;dx++){
   const px=x+dx*cell,pz=z+dz*cell;if(Math.abs(px)>(g.world.size/2)-5||Math.abs(pz)>(g.world.size/2)-5)continue;
-  if(nav.labels[idx(px,pz)]!==label||g.height(px,pz)>=g.world.waterY+.3)continue;
+  if(nav.labels[idx(px,pz)]!==label||g.height(px,pz)>=g.waterAt(px,pz)+.3)continue;
   const d=dx*dx+dz*dz;if(d<score){score=d;best={x:px,z:pz};}
  }
  return best;
@@ -63,7 +63,7 @@ export function landRiverboat(g:Game,id:number){
   let point:{x:number;z:number}|null=null;
   for(let r=2;r<=10&&!point;r+=1)for(let i=0;i<24;i++){
    const a=i*Math.PI/12,x=b.x+Math.cos(a)*r,z=b.z+Math.sin(a)*r;
-   if(g.walkable(x,z)&&g.height(x,z)>g.world.waterY+.3&&[[-1,0],[1,0],[0,-1],[0,1]].every(([dx,dz])=>g.walkable(x+dx,z+dz))){point={x,z};break;}
+   if(g.walkable(x,z)&&g.height(x,z)>g.waterAt(x,z)+.3&&[[-1,0],[1,0],[0,-1],[0,1]].every(([dx,dz])=>g.walkable(x+dx,z+dz))){point={x,z};break;}
   }
   if(!point)continue;
   u.boat={id,phase:'landing',...point};u.order='hold';g.invalidateRoute(u);n++;
@@ -83,7 +83,7 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
  }
  if(ride.phase==='landing'){
   u.tx=ride.x!;u.tz=ride.z!;u.workReason='Disembarking';
-  if(Math.hypot(u.x-u.tx,u.z-u.tz)>1||!g.walkable(u.x,u.z)||g.height(u.x,u.z)<=g.world.waterY+.3){g.steer(u,dt);return true;}
+  if(Math.hypot(u.x-u.tx,u.z-u.tz)>1||!g.walkable(u.x,u.z)||g.height(u.x,u.z)<=g.waterAt(u.x,u.z)+.3){g.steer(u,dt);return true;}
   u.boat=undefined;u.haulage=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();return true;
  }
  if(b.captain===u.id){
@@ -99,7 +99,7 @@ export function syncRiverboats(g:Game){
   if(!captain&&aboard.length){captain=aboard[0];b.captain=captain.id;captain.order='hold';}
   if(captain){b.x=captain.x;b.z=captain.z;b.facing=captain.facing;}
   else delete b.captain;
-  b.y=g.world.waterY+.16;
+  b.y=g.waterAt(b.x,b.z)+.16;
   for(let i=0;i<aboard.length;i++){
    const u=aboard[i];if(u===captain)continue;
    const offset=(i-2)*.8;u.x=b.x+Math.sin(b.facing)*offset;u.z=b.z+Math.cos(b.facing)*offset;u.y=b.y;u.facing=b.facing;u.vx=0;u.vz=0;

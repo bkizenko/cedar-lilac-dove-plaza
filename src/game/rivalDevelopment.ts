@@ -247,7 +247,7 @@ export function developRivalCoast(g:Game,team:number){
  let best:{x:number;z:number;score:number}|undefined;
  for(let r=14;r<=100;r+=8)for(let i=0;i<24;i++){
   const a=i*Math.PI/12,x=home.x+Math.cos(a)*r,z=home.z+Math.sin(a)*r;
-  if(g.height(x,z)<g.world.waterY+.3||!rivalKnows(g,team,x,z))continue;
+  if(g.height(x,z)<g.waterAt(x,z)+.3||!rivalKnows(g,team,x,z))continue;
   if(!residents.some(u=>g.workBoard.connected(g,u.x,u.z,x,z))||!g.placementValid('dock',x,z,team))continue;
   // Known fish improve a site; undiscovered shoals never influence its score.
   const fish=g.state.fish.filter(n=>n.amount>0&&rivalKnows(g,team,n.x,n.z)&&Math.hypot(n.x-x,n.z-z)<24).length;

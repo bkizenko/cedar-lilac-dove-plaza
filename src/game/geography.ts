@@ -1,6 +1,7 @@
+import {composedGeography} from './composedGeography';
 import {regionalGeography} from './regionalGeography';
 import {mulberry32,fbm} from './rng';
-export type LandFeature={kind:'mountain-range'|'plateau'|'valley'|'lake'|'bay'|'cove';x:number;z:number;radius:number};
+export type LandFeature={kind:'mountain-range'|'plateau'|'valley'|'lake'|'bay'|'cove'|'hills'|'canyon'|'cliff'|'terrace'|'pillars'|'dunes'|'wetland'|'waterfall';x:number;z:number;radius:number;shape?:{rx:number;rz:number;rotation:number}};
 type Point={x:number;z:number};
 const distanceToPath=(x:number,z:number,path:Point[])=>{
  let best=Infinity;
@@ -12,7 +13,8 @@ const distanceToPath=(x:number,z:number,path:Point[])=>{
  return best;
 };
 /** Geographic forms share a watershed instead of independently stamped circles. */
-export function geography(seed:number,size:number,landDistance:(x:number,z:number)=>number,rolling=false,composed=false){
+export function geography(seed:number,size:number,landDistance:(x:number,z:number)=>number,rolling=false,composed=false,complete=false){
+ if(complete)return composedGeography(seed,size,landDistance);
  if(composed)return regionalGeography(seed,size,landDistance);
  const rand=mulberry32(seed^0x432aac1),core:Point[]=[],coasts:Point[]=[];
  for(let z=-size*.46;z<size*.46;z+=24)for(let x=-size*.46;x<size*.46;x+=24){
