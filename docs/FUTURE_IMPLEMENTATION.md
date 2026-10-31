@@ -1,3 +1,7 @@
+## Active unshipped map redesign — latest desktop review
+
+v11 geometry/local water and triplanar terrain/depth-water renderer are under development; default new-game generator remains v10 until acceptance. Physical local-water/bridge/boat tests passed20checks in integration, shaderdriver error fixed and desktopgallery has zeroGL/pageerrors. However current lake is too elliptical and canyon too straight/repetitive; waterfall scanlines and material noise need refinement. These captures are **not accepted** as finished map art. Scenery and art agents are correcting organic shapes/varied banks/meanders and surface treatment. Do not use numeric familycoverage or existinggreenchecks to declare the user's requested visualquality complete. Actualclose/mid/wide/overcastreview remainsrequired. Naturalcontextualconflict module is being developed separately withoutUI/sharedsimulationwiring yet; no mandatorypredeparturemenu.
+
 ## Latest refinement — natural conflict and richer surfaces
 
 Supersedes the earlier suggestion of mandatory pre-departure intent selection: make raid/capture/occupation/domination outcomes emerge through contextual field actions, surrender and sustained control, with changeable orders and distinct physical consequences. No compulsory objective wizard. New Civ reference images require textured/material terrain, broken rocky relief, layered vegetation and depth-aware water/shore treatment; flat recoloring is not sufficient. Desktop only. Full map coverage and actual rendered acceptance remain required.
