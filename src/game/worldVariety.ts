@@ -11,10 +11,11 @@ const clamp=(v:number)=>Math.max(0,Math.min(1,v));const smooth=(v:number)=>{cons
 type Island={x:number;z:number;radius:number;distance:(x:number,z:number)=>number;domain:(x:number,z:number)=>number;angle?:number;primary:boolean};
 export function variedLandforms(seed:number,request:WorldRequest={}){
  const validated=landforms(seed,request,true).options,size=validated.size,rand=mulberry32(seed^0x14ca913);
+ const randomLayout=request.randomLayout===true||request.layout===undefined||request.layout==='random',selection=randomLayout?'random':request.layout;
  let mode:LandMode;
- if(request.layout==='pangaea')mode='edge-continent';else if(request.layout==='continents')mode='divided-continent';else if(request.layout==='archipelago')mode=rand()<VARIETY_RULES.archipelagoMainlandProbability?'mainland-satellites':'major-islands';else{let roll=rand();mode='major-islands';for(const [key,weight] of Object.entries(VARIETY_RULES.randomWeights)){roll-=weight;if(roll<0){mode=key as LandMode;break;}}}
- const options:WorldOptions={size,layout:mode==='edge-continent'?'pangaea':mode==='divided-continent'?'continents':'archipelago'};
- if(mode==='major-islands'){const old=multipleLandmasses(seed,options);return{...old,mode,islands:old.islands.map(i=>({...i,domain:i.distance,primary:true} as Island))};}
+ if(selection==='pangaea')mode='edge-continent';else if(selection==='continents')mode='divided-continent';else if(selection==='archipelago')mode=rand()<VARIETY_RULES.archipelagoMainlandProbability?'mainland-satellites':'major-islands';else{let roll=rand();mode='major-islands';for(const [key,weight] of Object.entries(VARIETY_RULES.randomWeights)){roll-=weight;if(roll<0){mode=key as LandMode;break;}}}
+ const options:WorldOptions={size,layout:mode==='edge-continent'?'pangaea':mode==='divided-continent'?'continents':'archipelago',...(randomLayout?{randomLayout:true as const}:{})};
+ if(mode==='major-islands'){const old=multipleLandmasses(seed,options);return{...old,options,mode,islands:old.islands.map(i=>({...i,domain:i.distance,primary:true} as Island))};}
  const angle=rand()*Math.PI*2,nx=Math.cos(angle),nz=Math.sin(angle),tx=-nz,tz=nx,islands:Island[]=[];
  const island=(x:number,z:number,rx:number,rz:number,primary=true)=>{
   const distance=(px:number,pz:number)=>{const u=px-x,v=pz-z;return(1-Math.hypot(u/rx,v/rz))*Math.min(rx,rz)+(fbm(px/size*19+seed%331,pz/size*19,3)-.5)*size*.022;};

@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {registerHooks} from 'node:module';
+registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))return next(new URL(`../src/${specifier.slice(2)}.ts`,import.meta.url).href,context);return next(specifier,context);}});
+const {Engine}=await import('../src/game/engine.ts');
+import {SAVE_KEY,SAVE_VERSION} from '../src/game/constants.ts';
+test('an existing village that cannot reconstruct never starts and autosaves a replacement camp',()=>{const previous=globalThis.localStorage,log=console.error,raw=JSON.stringify({version:SAVE_VERSION,state:{seed:42}}),store=new Map([[SAVE_KEY,raw]]);globalThis.localStorage={getItem:k=>store.get(k)??null,setItem:()=>assert.fail('startup must not write any save')};console.error=()=>{};let resets=0;const engine={running:false,game:{reset:()=>resets++},setQuality:()=>assert.fail('stored village failure must not trigger fresh-game fallback')};try{assert.throws(()=>Engine.prototype.begin.call(engine),/saved village could not be restored/);assert.equal(resets,0);assert.equal(store.get(SAVE_KEY),raw);assert.equal(engine.running,false);}finally{globalThis.localStorage=previous;console.error=log;}});

@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import {MAP} from '../game/constants';
+import {ExcavationSurface} from './excavationSurface';
 
 // One small height texture for every field. Keep the existing instanced draw
 // calls instead of rebuilding a unique mesh for each growing plot.
 export class FieldSurface {
+  readonly excavations:ExcavationSurface;
   readonly texture: THREE.DataTexture;
   readonly segments:number;
   readonly size:number;
@@ -11,6 +13,7 @@ export class FieldSurface {
 
   constructor(heights: Float32Array,size=MAP) {
     this.size=size;
+    this.excavations=new ExcavationSurface(size);
     this.segments=Math.round(Math.sqrt(heights.length))-1;
     this.texture = new THREE.DataTexture(heights, this.segments + 1, this.segments + 1, THREE.RedFormat, THREE.FloatType);
     this.texture.minFilter = this.texture.magFilter = THREE.NearestFilter;
@@ -20,11 +23,13 @@ export class FieldSurface {
   }
 
   bind(material: THREE.Material,options:{furrows?:boolean}={}) {
-    material.customProgramCacheKey = () => options.furrows?'hearth-contour-field-v2':'hearth-field-surface-v1';
+    material.customProgramCacheKey = () => options.furrows?'hearth-contour-field-v3-cuts':'hearth-field-surface-v2-cuts';
     material.onBeforeCompile = shader => {
+      this.excavations.bind(shader);
       shader.uniforms.fieldHeights = {value: this.texture};
       shader.vertexShader = `
         ${options.furrows?'attribute vec4 fieldRows;varying vec4 vFieldRows;varying vec2 vFieldWorldXZ;':''}
+        ${this.excavations.glsl}
         uniform sampler2D fieldHeights;
         float fieldHeight(vec2 worldXZ) {
           vec2 grid = clamp((worldXZ / ${this.size.toFixed(1)} + .5) * ${this.segments.toFixed(1)}, vec2(0.), vec2(${this.segments.toFixed(1)}));
@@ -37,8 +42,9 @@ export class FieldSurface {
           float c = texture2D(fieldHeights, uv + vec2(0., stepUV)).r;
           float d = texture2D(fieldHeights, uv + vec2(stepUV)).r;
           // Match the terrain plane's actual triangles, including valley creases.
-          return f.x + f.y <= 1. ? a + (b-a)*f.x + (c-a)*f.y
+          float baseHeight=f.x + f.y <= 1. ? a + (b-a)*f.x + (c-a)*f.y
             : d + (c-d)*(1.-f.x) + (b-d)*(1.-f.y);
+          return refinedExcavationHeight(worldXZ,baseHeight);
         }
       ` + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
@@ -62,5 +68,5 @@ export class FieldSurface {
     };
   }
 
-  dispose() { this.texture.dispose(); this.depth.dispose(); }
+  dispose() { this.texture.dispose(); this.depth.dispose(); this.excavations.dispose(); }
 }

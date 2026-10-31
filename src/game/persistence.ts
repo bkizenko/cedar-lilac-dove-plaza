@@ -1,3 +1,4 @@
+import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
 import {validCoastalTradeState} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validRivalActivityState} from './rivalActivity';
@@ -93,7 +94,11 @@ function validateGamePayload(raw: unknown) {
   }
   if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13,14].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
   if([7,8,9,10,11,12,13,14].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
+  if(s.worldOptions?.randomLayout!==undefined&&(s.worldgenVersion!==14||s.worldOptions.randomLayout!==true))fail();
   const HALF=(s.worldOptions?.size??1040)/2;
+  const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
+  if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
+  for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validProductionState(s))fail();
@@ -413,6 +418,9 @@ function validateGamePayload(raw: unknown) {
   }
   for (const b of s.buildings) {
     add(b, "building");
+    if(b.excavationDepth!==undefined&&(b.type!=='trench'||!EXCAVATION_RULES.depths.includes(b.excavationDepth)))fail();
+    if(b.excavationVolume!==undefined&&(b.type!=='trench'||!num(b.excavationVolume)||b.excavationVolume<0||b.excavationVolume>1e6))fail();
+    if(b.excavationWorkSeconds!==undefined&&(b.type!=='trench'||!num(b.excavationWorkSeconds)||b.excavationWorkSeconds<18||b.excavationWorkSeconds>1e8))fail();
     if(b.gateOpen!==undefined&&typeof b.gateOpen!=="boolean")fail();
     if(b.gateMode!==undefined&&!["auto","open","closed"].includes(b.gateMode))fail();
     if(b.gateFacing!==undefined&&!["north","east","south","west"].includes(b.gateFacing))fail();
@@ -590,7 +598,16 @@ function validateGamePayload(raw: unknown) {
 export function validateGameSave(raw:unknown):void {validateGamePayload(raw);}
 export function decodeGame(raw:unknown):Game {
   const {d,s}=validateGamePayload(raw),g=new Game();
-  g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);
+  const v14Hintless=s.worldgenVersion===14&&s.worldOptions&&s.worldOptions.randomLayout===undefined;
+  const v14Evidence=v14Hintless?[...s.trees,...s.stones,...s.forage].filter((n:any)=>Number.isFinite(n.y)):[];
+  const v14Points=v14Evidence.filter((_:unknown,i:number)=>i%Math.max(1,Math.floor(v14Evidence.length/64))===0).slice(0,64);
+  const v14Fit=(world:typeof g.world)=>v14Points.reduce((sum:number,n:any)=>sum+Math.min(30,Math.abs(sampleHeight(world.heights,n.x,n.z,world.size)-n.y)),0)/Math.max(1,v14Points.length);
+  try{g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);}catch(original){
+    if(!v14Hintless||v14Points.length<8)throw original;
+    try{g.reset(s.seed,14,{...s.worldOptions,randomLayout:true});}catch{throw original;}
+    if(g.world.options?.layout!==s.worldOptions.layout||v14Fit(g.world)>=.25)throw original;
+    s.worldOptions={...s.worldOptions,randomLayout:true};
+  }
   // Early v7 random-layout saves omitted the original selection roll. Select
   // the reconstruction supported by saved natural-node heights, not a new map.
   if(s.worldgenVersion===7&&s.worldOptions){
@@ -601,6 +618,16 @@ export function decodeGame(raw:unknown):Game {
     if(points.length>=8&&initial>.25){
       const candidate=generateWorld(s.seed,7,{size:s.worldOptions.size,layout:'random'});
       if(candidate.options?.layout===s.worldOptions.layout&&error(candidate)<initial*.5)g.world=candidate;
+    }
+  }
+  // Explicit restores alone may recover a lost random-family roll from
+  // saved natural-node heights; structural/autosave validation never generates.
+  if(v14Hintless&&s.worldOptions.randomLayout===undefined&&v14Points.length>=8){
+    const initial=v14Fit(g.world);
+    if(initial>.25){
+      let candidate:typeof g.world|undefined;
+      try{candidate=generateWorld(s.seed,14,{...s.worldOptions,randomLayout:true});}catch{/* Keep the already reconstructed world when no alternative passes. */}
+      if(candidate){const fit=v14Fit(candidate);if(candidate.options?.layout===s.worldOptions.layout&&fit<.25&&fit<initial*.5&&initial-fit>.25){g.world=candidate;s.worldOptions={...s.worldOptions,randomLayout:true};}}
     }
   }
   g.state = {
@@ -628,6 +655,7 @@ export function decodeGame(raw:unknown):Game {
   g.started = true;
   g.awaitingStart = false;
   g.world.waterY=weatherWaterLevel(g.world.baseWaterY,g.state.weather);
+  migratePaidTrenches(g);
   g.rebuildWalk();
   discountTownhallPlans(g);
   discountQuarryPlans(g);

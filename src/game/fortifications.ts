@@ -1,11 +1,15 @@
+export {GATE_FACINGS,gateFacing,gateOrientation,gateJoinPorts,gateJoinedWalls,snapGate,suggestGateSnap,snapWallToGate,rotateGateFacing,validGateFacing,type GateFacing} from './gateGeometry';
+import {excavationTerrain,cutAmount} from './excavation';
 import type { Game } from "./sim";
 import type { BldType, Building } from "./types";
 export const FORTIFICATIONS: BldType[] = ["palisade", "gate", "stonewall", "trench", "moat"];
 export const earthwork = (b: Building) => b.type === "trench" || b.type === "moat";
 export function earthworkPace(g: Game, x: number, z: number) {
   let pace = 1;
+  const terrain=g.state.excavations?.length?excavationTerrain(g):null,tile=terrain?.tiles.get(Math.floor((z+g.world.size/2)/terrain.tileSize)*terrain.width+Math.floor((x+g.world.size/2)/terrain.tileSize));
+  for(const cut of tile?.cuts||[])if(cutAmount(cut,x,z)>.15)pace=Math.min(pace,1/(1+cut.depth));
   for (const b of g.state.buildings)
-    if (earthwork(b) && g.finished(b) && Math.abs(b.x - x) < b.w / 2 && Math.abs(b.z - z) < b.d / 2)
+    if (earthwork(b) && !(b.type==='trench'&&terrain?.buildingIds.has(b.id)) && g.finished(b) && Math.abs(b.x - x) < b.w / 2 && Math.abs(b.z - z) < b.d / 2)
       pace = Math.min(pace, b.type === "moat" ? 0.25 : 0.5);
   return pace;
 }

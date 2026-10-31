@@ -145,10 +145,15 @@ export function releasePrisoner(g:Game,id:number,escaped=false){
 export function prisonerAI(g:Game,person:Unit,dt:number){
  const u=person as PrisonerUnit;
  if(!u.prisoner){
-  const prisoners=g.state.units.filter(p=>p.hp>0&&(p as PrisonerUnit).prisoner?.phase!=='released'&&(p as PrisonerUnit).prisoner?.guardId===u.id) as PrisonerUnit[];
-  if(!prisoners.length)return false;
   if(u.emergency||u.hp<=0)return false;
-  const traveling=prisoners.find(p=>p.prisoner!.phase==='escorting');
+  let assigned=false,traveling:PrisonerUnit|undefined;
+  // Most residents guard nobody. Read the sparse custody marker first, and
+  // stop at the same first escorting person the previous filter/find selected.
+  for(const person of g.state.units){const p=person as PrisonerUnit,custody=p.prisoner;
+   if(custody?.guardId!==u.id||!(p.hp>0)||custody.phase==='released')continue;
+   assigned=true;if(custody.phase==='escorting'){traveling=p;break;}
+  }
+  if(!assigned)return false;
   if(!traveling){u.order='hold';u.node=null;u.target=null;u.workReason='Guarding prisoners in custody';return true;}
   if(Math.hypot(u.x-traveling.x,u.z-traveling.z)>PRISONER_RULES.escortSeparationMeters){u.tx=traveling.x;u.tz=traveling.z;u.order='move';g.steer(u,dt);u.workReason='Regrouping with prisoner before continuing';return true;}
   const drop=g.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(g,u,drop):null;

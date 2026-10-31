@@ -19,7 +19,7 @@ type SourceMetric={id:number;radiusMeters:number;fadeMeters:number;strength:numb
 type Port={x:number;z:number;label:number};
 type Field={sourceBins:Map<number,Source[]>;binWidth:number;strength:Float32Array;cost:Float32Array;reached:Uint8Array;sources:Source[];metrics:SourceMetric[];blocked:Blocks;ports:Port[];vessels:number;visited:number;builtAt:number;builds:number;pointCorrections:Map<string,number>};
 type Cache={world:Game['world'];revision:number;width:number;cell:number;count:number;signature:string;checkedAt:number;
- unitCount:number;boatCount:number;heightFunction:Game['height'];walkHash:number;heightSource:Float32Array;teamSignatures:Map<number,string>;waterSignature:string;navigationSignature:string;trailSignature:string;trailCheckedAt:number;water:number;fields:Map<number,Field>;
+ terrainRevision:number;unitCount:number;boatCount:number;heightFunction:Game['height'];walkHash:number;heightSource:Float32Array;teamSignatures:Map<number,string>;waterSignature:string;navigationSignature:string;trailSignature:string;trailCheckedAt:number;water:number;fields:Map<number,Field>;
  paintedTerritory?:Uint8Array;paintedStrength?:Float32Array;edgeCosts:Map<number,number>;samples:Uint8Array;heights:Float32Array;levels:Float32Array;wear:Map<number,number>;waterNav:InfluenceWater|null;jobs:Map<number,Generator<void,Field>>;waterJob?:Generator<void,InfluenceWater>;paintJob?:Generator<void>;paintTeams?:number[];builds:number};
 type InfluenceWater={revision:number;grid:Uint8Array;labels:Int32Array;width:number};
 const caches=new WeakMap<Game,Cache>();
@@ -50,11 +50,11 @@ function nearbyNavigation(g:Game,team:number){
 }
 function walkHash(g:Game){let hash=2166136261;for(let i=0;i<g.walk.length;i++)hash=Math.imul(hash^g.walk[i],16777619);return hash>>>0;}
 function cacheFor(g:Game){
- let c=caches.get(g);const revision=g.navigationRevision(),width=Math.sqrt(g.walk.length),water=g.world.waterY;
- let hard=!c||c.world!==g.world||c.heightSource!==g.world.heights||c.heightFunction!==g.height||c.water!==water||g.state.time<c.checkedAt;
+ let c=caches.get(g);const revision=g.navigationRevision(),terrainRevision=(g as Game&{terrainRevision?:()=>number}).terrainRevision?.()??0,width=Math.sqrt(g.walk.length),water=g.world.waterY;
+ let hard=!c||c.world!==g.world||c.terrainRevision!==terrainRevision||c.heightSource!==g.world.heights||c.heightFunction!==g.height||c.water!==water||g.state.time<c.checkedAt;
  const navChanged=hard||c!.revision!==revision,nav=navChanged?navigationSignature(g):c!.navigationSignature,hash=navChanged?walkHash(g):c!.walkHash;
  if(c&&navChanged&&nav===c.navigationSignature&&hash!==c.walkHash)hard=true;
- if(hard){c={world:g.world,unitCount:g.state.units.length,boatCount:g.state.boats?.length??0,heightSource:g.world.heights,heightFunction:g.height,walkHash:hash,revision,width,cell:g.world.size/width,count:g.walk.length,signature:'',checkedAt:-Infinity,navigationSignature:nav,waterSignature:'',teamSignatures:new Map(),trailSignature:'',trailCheckedAt:-Infinity,water,
+ if(hard){c={world:g.world,terrainRevision,unitCount:g.state.units.length,boatCount:g.state.boats?.length??0,heightSource:g.world.heights,heightFunction:g.height,walkHash:hash,revision,width,cell:g.world.size/width,count:g.walk.length,signature:'',checkedAt:-Infinity,navigationSignature:nav,waterSignature:'',teamSignatures:new Map(),trailSignature:'',trailCheckedAt:-Infinity,water,
   fields:new Map(),jobs:new Map(),edgeCosts:new Map(),samples:new Uint8Array(g.walk.length),heights:new Float32Array(g.walk.length),levels:new Float32Array(g.walk.length),wear:new Map((g.state.trails??[]).map(t=>[t.cell,t.wear])),waterNav:null,builds:(c?.builds??0)+1};caches.set(g,c);}
  const current=c!,physical=nav!==current.navigationSignature;
  if(physical){current.samples.fill(0);current.edgeCosts.clear();current.navigationSignature=nav;}
@@ -241,7 +241,7 @@ export function advanceGeographicInfluence(g:Game,now=performance.now()){
  }while(performance.now()-start<INFLUENCE_RULES.sliceMilliseconds);
  const elapsed=performance.now()-start;slice.lastMilliseconds=elapsed;slice.maximumMilliseconds=Math.max(slice.maximumMilliseconds,elapsed);slice.count++;
 }
-export function geographicInfluenceDiagnostics(g:Game,team=0){const c=cacheFor(g),f=field(g,c,team);return{ready:!!f,pendingJobs:c.jobs.size,paintReady:c.paintedTerritory===g.territory&&c.paintedStrength===g.territoryStrength,slices:slices.get(g),units:'equivalent metres of level walking',builtAtSeconds:f?.builtAt??null,cacheBuild:c.builds,navigationRevision:c.revision,gridCellMeters:c.cell,visitedCells:f?.visited??0,eligiblePorts:f?.ports.length??0,availableVessels:f?.vessels??0,blocked:{...f?.blocked},sources:(f?.metrics??[]).map(s=>({...s})),rules:INFLUENCE_RULES};}
+export function geographicInfluenceDiagnostics(g:Game,team=0){const c=cacheFor(g),f=field(g,c,team);return{ready:!!f,pendingJobs:c.jobs.size,paintReady:c.paintedTerritory===g.territory&&c.paintedStrength===g.territoryStrength,slices:slices.get(g),units:'equivalent metres of level walking',builtAtSeconds:f?.builtAt??null,cacheBuild:c.builds,navigationRevision:c.revision,terrainRevision:c.terrainRevision,gridCellMeters:c.cell,visitedCells:f?.visited??0,eligiblePorts:f?.ports.length??0,availableVessels:f?.vessels??0,blocked:{...f?.blocked},sources:(f?.metrics??[]).map(s=>({...s})),rules:INFLUENCE_RULES};}
 /** Route cost belongs to the reported navigation-cell centre; strength is the
  * smoothly sampled point value. Infinity is represented as null for JSON/UI. */
 export function geographicInfluenceSample(g:Game,x:number,z:number,team=0){

@@ -1,3 +1,4 @@
+import {ExcavationControls,ExcavationReadout} from './ExcavationControls';
 import {TowerPlatformControls,TowerPlatformReadout} from './TowerPlatformControls';
 import {CraftingAndBuildings} from './CraftingAndBuildings';
 import {ProductionControls} from './ProductionControls';
@@ -347,6 +348,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <div className="hud-toast hud-placement" role="status">
             <div>
               <strong>{BUILDINGS[hud.placing].name}</strong>
+              {hud.placing==='trench'&&engine&&<ExcavationControls engine={engine}/>}
               {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
               {hud.placing==='gate'&&engine&&<><GateRotationControl facing={engine.gateFacing} onChange={facing=>engine.setGateFacing(facing)}/><span className="text-xs text-parchment-dim">R rotates · Shift+R reverses</span></>}
               <div>{founding ? "Choose open ground near food and timber."
@@ -500,6 +502,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="building-actions mt-2 flex flex-col gap-2">
+                {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
                 {sel.completed&&["farm","warehouse"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build here</button>}

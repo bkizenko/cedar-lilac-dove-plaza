@@ -261,6 +261,9 @@ export type Unit = {
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  excavationDepth?:number;
+  excavationVolume?:number;
+  excavationWorkSeconds?:number;
   towerPlatform?:import('./towerPlatforms').TowerPlatform;
   id: number;
   kind: "building";
@@ -410,6 +413,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  excavations?:import('./excavation').TerrainCut[];
+  excavationDepth?:number;
   societyRelations?:import('./societyRelations').SocietyRelation[];
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];

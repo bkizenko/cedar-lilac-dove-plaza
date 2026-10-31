@@ -1,3 +1,5 @@
+import {ExcavationLayer} from './excavationLayer';
+import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
@@ -166,6 +168,7 @@ export class WorldView {
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
+  private excavationLayer:ExcavationLayer|null=null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
@@ -503,6 +506,7 @@ export class WorldView {
     this.buildTerrain(game);
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
+    if(game.state.excavations?.length)this.ensureExcavationLayer(game);
     if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
     this.buildNature(game);
     if(game.state&&wildPlantsEnabled(game)){this.wildPlantLayer=new WildPlantLayer(this.scene,game);if(this.bushes)this.bushes.count=0;}
@@ -1001,7 +1005,7 @@ export class WorldView {
     }
     const ground = this.groundAt(cx, cy);
     if (ground) {
-      const farm = game.state.buildings.find(b => b.hp > 0 && b.type === 'farm' &&
+      const farm = game.state.buildings.find(b => b.hp > 0 && (b.type === 'farm'||b.type==='trench') &&
         (b.team === 0 || game.visibleAt(b.x, b.z)) &&
         Math.abs(ground.x - b.x) <= b.w / 2 && Math.abs(ground.z - b.z) <= b.d / 2);
       if (farm) return farm;
@@ -1015,7 +1019,7 @@ export class WorldView {
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
     _ray.setFromCamera(_ndc,this.camera);mesh.computeBoundingSphere();
     const boats=(game.state.boats||[]).filter(b=>b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
-    const groundHit=this.terrain?_ray.intersectObject(this.terrain,false)[0]:undefined;
+    const groundHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain],false)[0]:undefined;
     for(const hit of _ray.intersectObject(mesh,false)) {
       if(groundHit&&groundHit.distance+.02<hit.distance)continue;
       const boat=hit.instanceId===undefined?null:boats[hit.instanceId];
@@ -1071,7 +1075,7 @@ export class WorldView {
     const h = el.clientHeight || 1;
     _ndc.set((cx / w) * 2 - 1, -(cy / h) * 2 + 1);
     _ray.setFromCamera(_ndc, this.camera);
-    const hits = _ray.intersectObject(this.terrain, false);
+    const hits = _ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain], false);
     if (hits[0]) return hits[0].point.clone();
     _ground.set(new THREE.Vector3(0, 1, 0), -this.look.y);
     if (_ray.ray.intersectPlane(_ground, _hit)) return _hit.clone();
@@ -1088,9 +1092,19 @@ export class WorldView {
     };
   }
 
+  private ensureExcavationLayer(game:Game){
+    if(this.excavationLayer||!this.terrain?.geometry?.index||!this.fieldSurface)return;
+    this.excavationLayer=new ExcavationLayer(this.terrain,this.fieldSurface,geometry=>{
+      const ecology=game.world.ecology;if(!ecology)return;
+      const a=biomeSurfaceAttributes(ecology,geometry.getAttribute('position') as THREE.BufferAttribute);
+      geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));
+    });this.scene.add(this.excavationLayer.mesh);
+  }
+
   sync(game: Game, dt: number) {
     if (this.lost || this.disposed) return;
     this.landContinuation?.sync(game);
+    if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);
     this.biomeScene?.sync(game,this.camera.position,this.quality,dt);
     this.wildPlantLayer?.sync(game);
@@ -1430,6 +1444,7 @@ export class WorldView {
       }
       for(const b of grouped.get(type)!) {
         if(type==='watchtower'&&b.towerPlatform)continue;
+        if(type==='trench'&&excavationTerrain(game).buildingIds.has(b.id))continue;
         const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
         const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b);
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
@@ -2419,6 +2434,7 @@ export class WorldView {
   private disposeWorld() {
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
+    this.excavationLayer?.dispose();this.excavationLayer=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;

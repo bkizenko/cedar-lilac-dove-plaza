@@ -1,0 +1,33 @@
+# Physical trenches: integration contract
+
+Source module: `src/game/excavation.ts`. This first batch supports dry trenches. Existing flooded moats retain their previous rules until real water-fed excavation is implemented. No water, stone or ore is created by digging.
+
+## Geometry and accounting
+
+Depth choices are 0.5, 1, 1.5 and 2 metres from original ground. A rounded smoothstep cross section has a small flat floor and depth-scaled banks; bank grade is at most 0.30 on natural ground admitted only up to 0.24. The centre is lowered only after all measured digging work completes. All cuts combine by maximum removed depth, so joined trenches do not repeatedly remove or charge for the same soil.
+
+The base heightfield is immutable. Only coarse tiles touched by a completed cut receive local refinement (16 subdivisions across two coarse cells, about 0.51 m on current maps). Their coarse triangles are removed, replaced by one shared refined terrain mesh with physical bank normals and shadows. Physics samples exactly these fine triangles. The same sparse height atlas controls field/crop ground displacement and their shadow material. Ground picking also raycasts the refined terrain. There is no hidden flat ground under the visible hole.
+
+Maximum allocation is 512 local tiles / 512 permanent records. Placement rejects unsupported slopes, seasonal high-water intrusion, live resources, occupied structures/fields, map-edge overrun and allocation overflow. Existing fields cannot be excavated underneath. New field surfaces can follow an existing legal cut via the shared actual-height atlas. Ordinary plot safety checks still decide whether those fields are cultivable. A project reserves its bank space against new structures while digging.
+
+`volumeCubicMeters` is numerical integration of additional lowering on the actual refined triangles, at 0.5 m midpoint intervals. Labor is max(18, volume × 6) strength-adjusted work seconds using the existing builder executor. These tunables are in `EXCAVATION_RULES`. There is no instant inventory conversion or material yield. Ground remains after the project marker is removed.
+
+## Shared hooks (implemented in the central integration patch)
+
+1. Import helpers from `./excavation` into Game.
+2. `Game.height(x,z)` must return `excavationHeightAt(this,x,z,sampleHeight(this.world.heights,x,z,this.world.size))`. The helper deliberately samples raw terrain internally and cannot recurse into Game.height.
+3. When a trench project is created/reserved, call `configureExcavation(this,b)` once. This locks chosen depth, measured volume and labor. Rival projects default to 1 m independently of the player's selector.
+4. In placement validation for trench call `excavationIssue(this,{id:-1,team,x,z,w:4,d:4})` and return its one reason. For other building types call `excavationConstructionIssue(this,type,x,z,w,d)` to protect already reserved banks.
+5. In buildAI replace the trench work denominator with `excavationWorkNeed(this,b)`. Keep the existing actual worker reach, strength and dt rules. On reaching build 1, call `commitExcavation(this,b)`. If it returns false, hold below completion and report the placement issue; do not announce a completed physical trench. Plans / unpaid projects / unfinished work cannot commit.
+6. On save load, preserve `state.excavations` and `state.excavationDepth`; preserve Building `excavationDepth`, `excavationVolume`, `excavationWorkSeconds`. Validate depth against the supported list and finite positive project values. `validExcavations(s.excavations,world.size,world.segs)` validates permanent records and their derived patch budget without allocating geometry. Also validate cut teams and IDs against tribe count / nextId.
+7. Do not add new fields as mandatory blank-state keys: existing decoder rejects missing blank keys, so keep these optional for legacy saves. After actual state/world restore, call `migratePaidTrenches(this)` before `rebuildWalk()`. Only old completed paid trench markers without the new depth/work fields qualify. A blocked legacy marker stays a marker with a truthful readout; it is never shown as a physical cut. Old unfinished projects preserve only their previous paid work seconds when configured, rather than gaining a free percentage of a deeper excavation.
+
+Commit invalidates walk/work-board state and settles affected people/depleted resource roots onto the new physical ground. The renderer is already integrated through WorldView, FieldSurface, ExcavationLayer and ExcavationControls. No global height-grid resampling is needed.
+
+## Validation and limits
+
+Focused tests verify no unfinished cut, real depth / volume / labor / usable grades, incremental overlapping work (including zero repeated soil), water / structure / resource / steep-ground rejection, persistent ground after marker removal, exact rendered raycast versus physical-height agreement, and shared field/shadow atlas. A resident also walks into and out of a 2 m cut with the exact proposed Game.height adapter injected in the fixture, after its building marker is removed. That isolates actual navigation correctness without claiming the integrator-owned hook is already installed. Existing frontier-defense and contour/field rendering tests also pass.
+
+The central integration patch now adds the real Game.height, placement, worker-volume labor, completion, navigation invalidation, strict saved schemas and load hooks. The actual Game.step gate completes a 0.5 m excavation with a physical worker, preserves paid work through a mid-dig save, matches rendered raycast to physical height, walks the same body down and out, and retains the depression after marker removal and another save. Ordinary digging strokes do not rebuild navigation; the completed cut triggers one normal navigation/terrain-cache rebuild. Renderer refinement is allocated lazily on the first cut, preserving an uncut-world fast path. Game.terrainRevision() provides a cheap permanent-height revision for other derived systems. Neighbor completion refreshes remaining-soil work estimates while retaining performed work.
+
+Limits: the full paid 2 m solo construction attempt did not qualify campaign survival (1503 model work seconds; the controlled lone worker died before completion in year two). Existing module tests verify 2 m geometry, walkable grades and traversal, but this does not establish deep-project economic or survival balance. Actual GPU shader compilation and close/mid desktop trench views remain integration acceptance. Nav-grid rebuilding and sparse render-mesh/index updates occur at completed projects, not every digging stroke; those completion hitches still need browser qualification. No mobile work or free flooded-moat behavior is included.

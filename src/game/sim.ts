@@ -1,3 +1,4 @@
+import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,excavationWorkNeed,commitExcavation} from './excavation';
 import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
@@ -278,7 +279,8 @@ export class Game {
   waterAt(x:number,z:number){return waterSurfaceAt(this.world,x,z);}
 
   height(x: number, z: number) {
-    return sampleHeight(this.world.heights, x, z,this.world.size);
+    const base=sampleHeight(this.world.heights,x,z,this.world.size);
+    return this.state.excavations?.length?excavationHeightAt(this,x,z,base):base;
   }
 
   relocateCamp(x:number,z:number){return beginCampRelocation(this,x,z);}
@@ -939,6 +941,9 @@ export class Game {
     this.state.walkDirty = false;
   }
 
+  /** Permanent cuts are append-only within a world; reset/load changes world identity. */
+  terrainRevision(){return this.state.excavations?.length||0;}
+
   navigationRevision() {
     return this.navRevision;
   }
@@ -1065,6 +1070,8 @@ export class Game {
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
     const d = size??BUILDINGS[type];
+    const excavation=type==='trench'?excavationIssue(this,{id:ignoreId??-1,team:_team,x,z,w:d.w,d:d.d}):excavationConstructionIssue(this,type,x,z,d.w,d.d);
+    if(excavation)return excavation;
     if(type==="bridge"){
       const span=drawnSpan??planBridge(this,x,z);
       if(drawnSpan&&!validBridgeSpan(this,drawnSpan))return "Drag between clear, gentle banks across shallow water (5–28 m)";
@@ -1382,6 +1389,7 @@ export class Game {
     if(!planned)this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team,undefined,span);
     configureTowerPlatform(this,b);
+    configureExcavation(this,b);
     if(size){b.w=size.w;b.d=size.d;}
     if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
     if(planned)b.plannedCost=cost;
@@ -1463,11 +1471,12 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
+    const need = b.type==='trench'?excavationWorkNeed(this,b):towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
     if (b.build >= 1) {
+      if(b.type==='trench'&&!commitExcavation(this,b)){b.build=1-1e-6;u.workReason=excavationIssue(this,b)||'Digging cannot safely change this ground yet';return;}
       b.build = 1;
       b.hp = b.maxHp;
       if(b.type==="bridge"){this.state.walkDirty=true;this.workBoard.reset();}

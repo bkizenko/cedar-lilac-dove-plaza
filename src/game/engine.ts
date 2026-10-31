@@ -124,8 +124,9 @@ export class Engine {
       this.pushHud();
       return;
     }
+    const saved=loadRaw(),storedVillage=hasSave();
     try {
-      const saved=loadRaw();
+      if(!saved&&storedVillage)throw new Error('Your saved village could not be restored. Its saved copies have been kept.');
       if(saved){this.game=decodeGame(saved);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
@@ -135,6 +136,7 @@ export class Engine {
       this.view.resize();
     } catch (err) {
       console.error(err);
+      if(storedVillage)throw err;
       this.setQuality("low");
       try {
         this.game.reset();
