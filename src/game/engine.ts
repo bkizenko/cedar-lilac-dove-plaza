@@ -17,6 +17,13 @@ import { WorldView } from "@/scene/world";
 
 type HudFn = (s: HudSnapshot) => void;
 
+/** A queued animation frame can predate expensive synchronous world setup.
+ * Never let that stale timestamp create simulation debt or reverse timers. */
+export function frameDeltaSeconds(timestamp:number,last:number):number {
+  if(!Number.isFinite(timestamp)||!Number.isFinite(last))return 0;
+  return last ? Math.max(0,Math.min((timestamp-last)/1000,0.1)) : 0.016;
+}
+
 export class Engine {
   game: Game;
   private originalGame: Game | null = null;
@@ -743,7 +750,7 @@ export class Engine {
   private frame = (t: number) => {
     if (this.disposed) return;
     try {
-      const dt = this.last ? Math.min((t - this.last) / 1000, 0.1) : 0.016;
+      const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
       this.fpsAcc += dt;
