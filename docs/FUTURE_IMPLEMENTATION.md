@@ -1,3 +1,8 @@
+## Selection identity stays visible — 2026-10-31
+
+- [x] ~~Pin the selected object name, Deselect and Minimize controls while its actions scroll.~~ Long Details content now belongs to the scrolling body. Typecheck/build pass; final visual verification pending. Prioritize boats/caravans/husbandry/captivity over further cosmetic polish, per latest user steering.
+- Usage reserve changed by user from5% to1%; last check92%used. Do not consume the available reset credit automatically.
+
 ## Discovered recipe controls and priority handoffs — 2026-10-31
 
 - [x] ~~Workshop controls use the same workplace/unlock rule as actual tool production.~~ Discovering copper tools now exposes the repeatable workshop recipe before Bronze; stone hoes and forge-only iron retain their rules. Resource details show held copper/iron even before Bronze.

@@ -436,3 +436,7 @@ canvas:focus-visible {
 .hud-placement > div {min-width:0;flex:1;}
 .hud-placement strong {display:block;font-size:.94rem;margin-bottom:.2rem;}
 .hud-placement button {display:flex;align-items:center;justify-content:center;flex:0 0 44px;min-height:44px;border:1px solid currentColor;border-radius:.5rem;}
+
+/* Keep identity and exit controls visible while a long action panel scrolls. */
+.selection-header {position:sticky;top:-.625rem;z-index:3;background:var(--color-ink-panel);padding:.625rem 0;margin-top:-.625rem;}
+.selection-header + .selection-info {margin-bottom:.5rem;}
