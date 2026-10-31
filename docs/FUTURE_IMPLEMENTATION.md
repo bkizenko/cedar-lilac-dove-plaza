@@ -1,3 +1,8 @@
+## Golden-hour art profile — 2026-10-31
+
+- [x] ~~Warm low-angle styling through most non-winter daylight.~~ New pure daylightArt module separates visual sun elevation/warmth from the astronomical clock, work schedules and simulation weather. Winter blends it away; night, storm and flood keep their original identity; rain/mist reduce warmth. Cool ambient light remains to avoid a uniform brown/yellow wash. No new lighting passes or geometry.
+- Typecheck/build pass; browser visual validation remains unavailable after the declined preview-origin permission. This implements the requested lighting direction only, not a claim that the full art overhaul is complete. Research/application notes and both backlog inventories are in REMAINING_FEATURES.md.
+
 ## Independent passenger ferries — 2026-10-31
 
 - [x] ~~Dock workers can build persistent five-seat riverboats for40logs,4stone and150work units.~~ Hulls are separate saved world entities, not personal canoe equipment. Nearby residents physically board; first aboard takes the helm, and selecting crew then clicking water issues a vessel movement command. Passengers travel with the hull. Shore landing keeps canoe navigation until each passenger actually reaches dry walkable ground; the same empty hull remains moored for reuse. A living passenger can take over a dead captain’s helm.

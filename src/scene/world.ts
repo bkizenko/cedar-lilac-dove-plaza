@@ -1,3 +1,4 @@
+import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
 import {architectureStyle,localArchitecture} from "./architecture";
@@ -1025,19 +1026,20 @@ export class WorldView {
     const dusk = Math.max(0, 1 - Math.abs(hour - (set-.35)) * 0.5);
     const night = game.isNight();
     const wx = game.state.weather;
+    const sn = game.seasonMix();
+    const art=daylightArt(wx,night,sn.winter,elev);
     const wet = wx === "rain" || wx === "storm" || wx === "flood";
     const ang = ((hour - rise) / (set - rise)) * Math.PI;
     const dist = 110;
     this.sun.position.set(
       this.look.x + Math.cos(ang) * dist,
-      8 + Math.max(4, elev * 58),
+      8 + Math.max(4, art.sunElevation * 58),
       this.look.z + Math.sin(ang) * dist * 0.62,
     );
     this.sun.target.position.copy(this.look);
     this.bounce.position.set(this.look.x - 24, 20, this.look.z + 14);
     this.bounce.target.position.copy(this.look);
 
-    const sn = game.seasonMix();
     let sunI = 1.15 + elev * 1.15 + dawn * 0.35;
     if (night) sunI = 0.62;
     if (wx === "storm") sunI *= 0.45;
@@ -1064,6 +1066,7 @@ export class WorldView {
                 ? "#c8d4ee"
                 : "#fff4d2",
     );
+    sunCol.lerp(_c.set("#ffe0aa"),art.warmth*.75);
     this.hemi.color.set(
       night
         ? "#c4d0e8"
@@ -1100,6 +1103,7 @@ export class WorldView {
                               ? "#d8e7e6"
                               : "#dce7ed",
     );
+    fog.lerp(_c.set("#ead9bb"),art.warmth*.16);
     let dens = night ? 0.003 : 0.0018;
     if (wx === "mist") dens = 0.0078;
     if (wx === "rain") dens = 0.0052;
