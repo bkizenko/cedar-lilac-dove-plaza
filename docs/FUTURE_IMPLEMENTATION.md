@@ -1,3 +1,7 @@
+## Batch 3 verified survival scenarios — 2026-10-31
+
+Physical emergency shelter fixed and tested through building destruction. Updated deliberate defense policy completes Normal first winter on seeds42/123456 with5/5founders each, no food gaps, live working societies and save roundtrips; no grants/repairs. See FIRST_WINTER_2026-10-31.json and EXECUTION_EVIDENCE_2026-10-31.md. This supersedes the earlier two-seed diagnostic failure **for this updated policy**, not full M1 scope. Fuel/clothing/warnings/balance, broader seeds and remaining M0 ownership migrations stay open; all M2–M5 and expansion backlog retained.
+
 ## Batch 2 execution — 2026-10-31
 
 Implemented v10 unbuilt camp openings with real shared-inventory cargo/recall targets, hall-independent society survival, bounded actual-stock camp visuals; atomic job/reservation contracts with tree-gathering ownership adapter; per-landmass ridge/valley/drainage composition and atmospheric layering. Historical generation versions remain supported. Bierstadt/Cole direction is partially implemented, not visually complete.

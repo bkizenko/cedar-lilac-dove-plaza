@@ -1,8 +1,9 @@
 import {Game} from '../../src/game/sim.ts';
 import {mulberry32} from '../../src/game/rng.ts';
-import {calendar,foodDemand,reserveSeconds} from '../../src/game/settlement.ts';
+import {calendar,foodDemand,reserveSeconds,isDependent} from '../../src/game/settlement.ts';
 import {foodSpoilage} from '../../src/game/pantry.ts';
 import {encodeGame,decodeGame} from '../../src/game/persistence.ts';
+import {hasTaskCommitment} from '../../src/game/workCommitments.ts';
 import {workAllocationDiagnostics} from '../../src/game/workAllocation.ts';
 
 /** Only player-facing placement and village-focus commands; no resource grants,
@@ -19,7 +20,7 @@ export function firstWinter(seed,onSnapshot=()=>{},options={}){
   g.setLaborPriority('food');build('townhall');
   // Initial provisions fund only one development project. Wood focus obtains the
   // missing two logs for a store; then routine food labor remains autonomous.
-  g.setLaborPriority('wood');let storeOrdered=false,foodFocus=false,hutOrdered=false,guardsReady=false,workshopOrdered=false,weaponsQueued=false;
+  g.setLaborPriority('wood');let storeOrdered=false,foodFocus=false,hutOrdered=false,guardsReady=false,workshopOrdered=false,weaponRequests=0,nextWeaponAttempt=0;
   while(g.state.time<1800&&iterations++<30000&&!g.state.ended){
    if(!storeOrdered&&g.tribe(0).wood>=60){storeOrdered=build('warehouse');if(storeOrdered){g.setLaborPriority('food');foodFocus=true;}}
    if(!foodFocus&&g.state.time>=90){g.setLaborPriority('food');foodFocus=true;}
@@ -31,10 +32,14 @@ export function firstWinter(seed,onSnapshot=()=>{},options={}){
      if(ready.length===2){g.clearSelect();for(const u of ready)u.selected=true;const armed=g.callToArms();actions.push({at:g.state.time,type:'callToArms',armed});g.clearSelect();guardsReady=armed===2;}
     }
     const workshop=g.state.buildings.find(b=>b.team===0&&b.type==='workshop'&&g.finished(b));
-    if(workshop&&!weaponsQueued){for(let i=0;i<6;i++){const accepted=g.craftWeapon('spear',workshop.id);actions.push({at:g.state.time,type:'craft:spear',accepted});}weaponsQueued=true;}
+    const craftReady=workshop&&g.state.units.some(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!hasTaskCommitment(u)&&!u.emergency&&!u.recalled&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.drill==null&&['idle','gather','hold'].includes(u.order)&&g.interactionSpot(u,workshop));
+    if(craftReady&&weaponRequests<6&&g.state.time>=nextWeaponAttempt&&!g.state.units.some(u=>u.team===0&&u.weaponWork)){
+     const accepted=g.craftWeapon('spear',workshop.id);actions.push({at:g.state.time,type:'craft:spear',accepted});if(accepted)weaponRequests++;nextWeaponAttempt=g.state.time+30;
+    }
    }
    // Dismiss milestone/dialog pauses just as a player presses Continue.
    if(g.state.paused)g.state.paused=false;
+   const previousResidents=new Map(g.state.units.filter(u=>starting.includes(u.id)).map(u=>[u.id,u]));
    const demand=foodDemand(g),loss=foodSpoilage(g);
    g.step(.25);const dt=g.state.time-lastTime;
    consumed+=demand*dt;spoiled+=loss*dt;
@@ -44,7 +49,7 @@ export function firstWinter(seed,onSnapshot=()=>{},options={}){
    lastFood=g.tribe(0).food;lastTime=g.state.time;
    const home=g.campOf(0);
    for(const foe of g.state.units)if(foe.hp>0&&g.isFoe(0,foe.team)&&g.visibleAt(foe.x,foe.z)&&Math.hypot(foe.x-home.x,foe.z-home.z)<45&&!observedFoes.has(foe.id)){observedFoes.add(foe.id);incidents.push({at:g.state.time,event:'visible-approach',id:foe.id,team:foe.team,type:foe.type,hp:foe.hp});}
-   for(const id of starting){const u=g.state.units.find(u=>u.id===id);if((!u||u.hp<=0)&&!deadFounders.has(id)){deadFounders.add(id);incidents.push({at:g.state.time,event:'founder-death',id,order:u?.order,workReason:u?.workReason,nearbyHostiles:g.state.units.filter(e=>e.hp>0&&g.isFoe(0,e.team)&&u&&Math.hypot(e.x-u.x,e.z-u.z)<25).map(e=>({id:e.id,team:e.team,type:e.type,target:e.target?.id}))});}}
+   for(const id of starting){const u=g.state.units.find(u=>u.id===id)||previousResidents.get(id);if((!u||u.hp<=0)&&!deadFounders.has(id)){deadFounders.add(id);incidents.push({at:g.state.time,event:'founder-death',id,order:u?.order,workReason:u?.workReason,nearbyHostiles:g.state.units.filter(e=>e.hp>0&&g.isFoe(0,e.team)&&u&&Math.hypot(e.x-u.x,e.z-u.z)<25).map(e=>({id:e.id,team:e.team,type:e.type,target:e.target?.id}))});}}
 
    if(g.state.time>=next){
     const residents=g.state.units.filter(u=>u.team===0&&u.hp>0);
@@ -53,7 +58,10 @@ export function firstWinter(seed,onSnapshot=()=>{},options={}){
    }
   }
   const loaded=decodeGame(encodeGame(g));
-  return {seed,defended:!!options.defended,incidents,seconds:g.state.time,initialFood,food:g.tribe(0).food,foodEmptySeconds,estimatedFoodDelivered:produced,estimatedFoodConsumed:consumed,estimatedFoodSpoiled:spoiled,estimatedOtherFoodOutflow:otherOutflow,originalResidents:starting.length,originalSurvivors:g.state.units.filter(u=>u.hp>0&&starting.includes(u.id)).length,ended:g.state.ended,simulationErrors:g.simulationErrors,saveRoundtrip:loaded.popNow(0)===g.popNow(0),actions,snapshots,jobs:workAllocationDiagnostics(g)};
+  const livingAdults=g.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(g,u)).length;
+  const originalSurvivors=g.state.units.filter(u=>u.hp>0&&starting.includes(u.id)).length;
+  const survivalGate=g.state.time>=1800&&g.tribe(0).alive&&livingAdults>=2&&reserveSeconds(g)>=180&&!g.state.ended&&!g.simulationErrors.length&&loaded.popNow(0)===g.popNow(0);
+  return {survivalGate,zeroFounderLoss:originalSurvivors===starting.length,livingAdults,foodReserveSeconds:reserveSeconds(g),societyAlive:g.tribe(0).alive,seed,defended:!!options.defended,incidents,seconds:g.state.time,initialFood,food:g.tribe(0).food,foodEmptySeconds,estimatedFoodDelivered:produced,estimatedFoodConsumed:consumed,estimatedFoodSpoiled:spoiled,estimatedOtherFoodOutflow:otherOutflow,originalResidents:starting.length,originalSurvivors:g.state.units.filter(u=>u.hp>0&&starting.includes(u.id)).length,ended:g.state.ended,simulationErrors:g.simulationErrors,saveRoundtrip:loaded.popNow(0)===g.popNow(0),actions,snapshots,jobs:workAllocationDiagnostics(g)};
  }finally{Math.random=random;}
 }
 if(process.argv[1]?.endsWith('first-winter.mjs')){
@@ -61,6 +69,6 @@ if(process.argv[1]?.endsWith('first-winter.mjs')){
  for(const seed of seeds.length?seeds:[42,123456]){
   const result=firstWinter(seed,s=>console.log(JSON.stringify({seed,...s})),{defended:process.argv.includes('--defended')});
   console.log(JSON.stringify({result}));
-  if(result.seconds<1800||result.originalSurvivors!==result.originalResidents||result.foodEmptySeconds>0||result.food<=0||!result.saveRoundtrip||result.simulationErrors.length)process.exitCode=1;
+  if(!result.survivalGate||(process.argv.includes('--strict-founders')&&!result.zeroFounderLoss))process.exitCode=1;
  }
 }

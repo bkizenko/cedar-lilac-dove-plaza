@@ -1,3 +1,7 @@
+## Batch 3 verified survival scenarios — 2026-10-31
+
+Physical emergency shelter fixed and tested through building destruction. Updated deliberate defense policy completes Normal first winter on seeds42/123456 with5/5founders each, no food gaps, live working societies and save roundtrips; no grants/repairs. See FIRST_WINTER_2026-10-31.json and EXECUTION_EVIDENCE_2026-10-31.md. This supersedes the earlier two-seed diagnostic failure **for this updated policy**, not full M1 scope. Fuel/clothing/warnings/balance, broader seeds and remaining M0 ownership migrations stay open; all M2–M5 and expansion backlog retained.
+
 ## Batch 2 delta — 2026-10-31
 
 Unbuilt starts, camp unloading/recall and hall-loss continuity now have implemented adapters and focused scenarios. v10 connected landmass composition and atmosphere implement part of the requested painterly direction. Tree jobs use actor/workplace reservations; other executor migrations remain open. Normal first-winter end-to-end gate fails one of two seeds on conflict deaths despite adequate food. Do not equate these foundations with finished M0/M1 or full map-art acceptance.

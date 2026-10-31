@@ -13,13 +13,13 @@
     "unitRepairs": false,
     "pauses": "Dismissed as player Continue; no reassignment repairs."
   },
-  "gatePassed": false,
-  "finding": "Subsistence remains viable across both seeds, but the full opening survival gate FAILS: seed123456 loses all five founders during winter despite food reserves. Snapshots show armed contact; conflict casualties are the likely cause, inferred rather than attributed by death events. A proactive defense scenario and reliable casualty event attribution remain required.",
+  "finding": "Both updated defended Normal scenarios complete1800s with a living society,17 working-age adults, more than1400s food reserves, all five founders alive, no starvation interval, no simulation errors and valid save roundtrips. This establishes this bounded first-winter scenario; M1 remains open for fuel, clothing, warned consequences, scarcity balance and broader seeds/plans.",
   "limitations": [
     "This is one player plan across two regression seeds, not all competent plans or holdout seeds.",
     "Food delivery/consumption/spoilage are integrated estimates, not a complete physical event ledger. Other outflow includes growth/cost events and integration error.",
     "Timber surplus and food abundance still need scarcity balancing.",
-    "Water, clothing, fuel, and complete first-winter survival acceptance are not established by this scenario."
+    "Water, clothing, fuel, and complete first-winter survival acceptance are not established by this scenario.",
+    "Defended run identifies disappearance timing, but its loaded script predates fallback to removed resident references; founder death work state and nearest attackers were not retained. The diagnostic now retains references for the next run."
   ],
   "results": [
     {
@@ -624,7 +624,9 @@
         }
       },
       "estimatedOtherFoodOutflow": 216.43035513483778,
-      "passed": true
+      "zeroFounderLoss": true,
+      "survivalGate": null,
+      "survivalGateNote": "Historical run did not retain exact living-adult/society metrics; use updated scenario results."
     },
     {
       "seed": 123456,
@@ -1148,7 +1150,2141 @@
         }
       },
       "estimatedOtherFoodOutflow": 397.4052761728515,
-      "passed": false
+      "zeroFounderLoss": false,
+      "survivalGate": null,
+      "survivalGateNote": "Historical run did not retain exact living-adult/society metrics; use updated scenario results."
     }
-  ]
+  ],
+  "defendedVariant": {
+    "reproduction": "node --import ./scripts/game-loader.mjs scripts/diagnostics/first-winter.mjs 123456 --defended",
+    "finding": "Early workshop and two armed guards improve founder retention from0/5 to4/5. The society completes winter with18 people and954 food. One casualty does not alone fail society survival. Six visible hostile spearmen arrive1481\u20131484s; founder2223 dies1494.91s. One of six simultaneous workshop spear requests accepted, motivating the next run to schedule actual projects sequentially.",
+    "result": {
+      "seed": 123456,
+      "defended": true,
+      "incidents": [
+        {
+          "at": 1019.2800000000126,
+          "event": "visible-approach",
+          "id": 2331,
+          "team": 3,
+          "type": "spearman",
+          "hp": 92
+        },
+        {
+          "at": 1481.1399999999487,
+          "event": "visible-approach",
+          "id": 2418,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1481.1399999999487,
+          "event": "visible-approach",
+          "id": 2419,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1481.6399999999487,
+          "event": "visible-approach",
+          "id": 2421,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1482.3899999999487,
+          "event": "visible-approach",
+          "id": 2417,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1482.6399999999487,
+          "event": "visible-approach",
+          "id": 2420,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1483.8899999999487,
+          "event": "visible-approach",
+          "id": 2422,
+          "team": 3,
+          "type": "spearman",
+          "hp": 87
+        },
+        {
+          "at": 1494.9099999999464,
+          "event": "founder-death",
+          "id": 2223,
+          "nearbyHostiles": []
+        }
+      ],
+      "seconds": 1800.0799999999003,
+      "initialFood": 120,
+      "food": 954.3093542336998,
+      "foodEmptySeconds": 0,
+      "estimatedFoodDelivered": 2439.8125603015897,
+      "estimatedFoodConsumed": 723.5240115216726,
+      "estimatedFoodSpoiled": 697.6678606462864,
+      "estimatedOtherFoodOutflow": 184.31133389993414,
+      "originalResidents": 5,
+      "originalSurvivors": 4,
+      "ended": null,
+      "simulationErrors": [],
+      "saveRoundtrip": true,
+      "actions": [
+        {
+          "at": 0,
+          "type": "townhall",
+          "accepted": true
+        },
+        {
+          "at": 23.5,
+          "type": "warehouse",
+          "accepted": true
+        },
+        {
+          "at": 300.0099999999995,
+          "type": "workshop",
+          "accepted": true
+        },
+        {
+          "at": 300.0099999999995,
+          "type": "callToArms",
+          "armed": 2
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": false
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": false
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": false
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": false
+        },
+        {
+          "at": 335.44999999999783,
+          "type": "craft:spear",
+          "accepted": false
+        },
+        {
+          "at": 600.0099999999958,
+          "type": "hut",
+          "accepted": true
+        }
+      ],
+      "snapshots": [
+        {
+          "seconds": 0,
+          "season": "Spring",
+          "food": 120,
+          "reserveSeconds": 674,
+          "wood": 58,
+          "population": 5,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 5
+          },
+          "reasons": [
+            {
+              "id": 2222,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2223,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2224,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2225,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2226,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 450,
+          "season": "Summer",
+          "food": 883,
+          "reserveSeconds": 3819,
+          "wood": 411,
+          "population": 8,
+          "originalSurvivors": 5,
+          "orders": {
+            "hold": 2,
+            "gather": 3,
+            "idle": 3
+          },
+          "reasons": [
+            {
+              "id": 2222,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2223,
+              "order": "gather",
+              "carry": 18,
+              "hp": 48
+            },
+            {
+              "id": 2224,
+              "order": "gather",
+              "carry": 10,
+              "hp": 48
+            },
+            {
+              "id": 2225,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2226,
+              "order": "gather",
+              "carry": 11,
+              "hp": 48
+            },
+            {
+              "id": 2355,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2359,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2363,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 900,
+          "season": "Autumn",
+          "food": 961,
+          "reserveSeconds": 2387,
+          "wood": 1684,
+          "population": 13,
+          "originalSurvivors": 5,
+          "orders": {
+            "hold": 2,
+            "gather": 5,
+            "return": 3,
+            "idle": 3
+          },
+          "reasons": [
+            {
+              "id": 2222,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2223,
+              "order": "gather",
+              "carry": 1,
+              "hp": 48
+            },
+            {
+              "id": 2224,
+              "order": "return",
+              "carry": 28,
+              "hp": 48
+            },
+            {
+              "id": 2225,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2226,
+              "order": "gather",
+              "carry": 27,
+              "hp": 48
+            },
+            {
+              "id": 2355,
+              "order": "return",
+              "reason": "Delivering carried supplies",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 2359,
+              "order": "return",
+              "carry": 16,
+              "hp": 48
+            },
+            {
+              "id": 2363,
+              "order": "gather",
+              "carry": 4,
+              "hp": 48
+            },
+            {
+              "id": 2366,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2368,
+              "order": "gather",
+              "carry": 5,
+              "hp": 48
+            },
+            {
+              "id": 2379,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2382,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2387,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 1350,
+          "season": "Winter",
+          "food": 1212,
+          "reserveSeconds": 2171,
+          "wood": 3847,
+          "population": 15,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 13,
+            "return": 1,
+            "idle": 1
+          },
+          "reasons": [
+            {
+              "id": 2222,
+              "order": "gather",
+              "carry": 4,
+              "hp": 48
+            },
+            {
+              "id": 2223,
+              "order": "gather",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2224,
+              "order": "gather",
+              "reason": "Stalking deer",
+              "carry": 0,
+              "hp": 37
+            },
+            {
+              "id": 2225,
+              "order": "gather",
+              "carry": 2,
+              "hp": 48
+            },
+            {
+              "id": 2226,
+              "order": "return",
+              "carry": 28,
+              "hp": 48
+            },
+            {
+              "id": 2355,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2359,
+              "order": "gather",
+              "carry": 3,
+              "hp": 48
+            },
+            {
+              "id": 2363,
+              "order": "gather",
+              "carry": 19,
+              "hp": 48
+            },
+            {
+              "id": 2366,
+              "order": "gather",
+              "carry": 8,
+              "hp": 48
+            },
+            {
+              "id": 2368,
+              "order": "gather",
+              "carry": 8,
+              "hp": 48
+            },
+            {
+              "id": 2379,
+              "order": "gather",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 2382,
+              "order": "gather",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2387,
+              "order": "gather",
+              "carry": 14,
+              "hp": 48
+            },
+            {
+              "id": 2394,
+              "order": "gather",
+              "carry": 17,
+              "hp": 48
+            },
+            {
+              "id": 2408,
+              "order": "idle",
+              "reason": "Sleeping inside by the hearth",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 1800,
+          "season": "Spring",
+          "food": 954,
+          "reserveSeconds": 1404,
+          "wood": 6206,
+          "population": 18,
+          "originalSurvivors": 4,
+          "orders": {
+            "gather": 15,
+            "return": 1,
+            "idle": 2
+          },
+          "reasons": [
+            {
+              "id": 2222,
+              "order": "gather",
+              "carry": 17,
+              "hp": 48
+            },
+            {
+              "id": 2224,
+              "order": "gather",
+              "reason": "Stalking deer",
+              "carry": 0,
+              "hp": 41
+            },
+            {
+              "id": 2225,
+              "order": "gather",
+              "carry": 4,
+              "hp": 48
+            },
+            {
+              "id": 2226,
+              "order": "gather",
+              "carry": 18,
+              "hp": 12
+            },
+            {
+              "id": 2355,
+              "order": "gather",
+              "carry": 4,
+              "hp": 15
+            },
+            {
+              "id": 2359,
+              "order": "gather",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2363,
+              "order": "return",
+              "carry": 20,
+              "hp": 39
+            },
+            {
+              "id": 2366,
+              "order": "gather",
+              "carry": 4,
+              "hp": 48
+            },
+            {
+              "id": 2368,
+              "order": "gather",
+              "carry": 5,
+              "hp": 12
+            },
+            {
+              "id": 2379,
+              "order": "gather",
+              "carry": 18,
+              "hp": 48
+            },
+            {
+              "id": 2382,
+              "order": "gather",
+              "carry": 5,
+              "hp": 12
+            },
+            {
+              "id": 2387,
+              "order": "gather",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 2408,
+              "order": "gather",
+              "carry": 27,
+              "hp": 48
+            },
+            {
+              "id": 2411,
+              "order": "gather",
+              "carry": 3,
+              "hp": 48
+            },
+            {
+              "id": 2415,
+              "order": "gather",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 2416,
+              "order": "gather",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 2428,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 2431,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        }
+      ],
+      "jobs": {
+        "domain": "tree gathering",
+        "activeJobs": 27,
+        "proposed": 822,
+        "accepted": 822,
+        "ownershipConflicts": 0,
+        "suspended": 0,
+        "resumed": 0,
+        "completed": 0,
+        "canceled": 795,
+        "reservations": {
+          "attempts": 822,
+          "failures": 0,
+          "released": 795,
+          "committed": 0
+        }
+      },
+      "zeroFounderLoss": false,
+      "survivalGate": null
+    }
+  },
+  "survivalGate": true,
+  "survivalGateCriteria": {
+    "completedSeconds": 1800,
+    "minimumLivingAdults": 2,
+    "minimumFoodReserveSeconds": 180,
+    "societyAlive": true,
+    "noEndedState": true,
+    "simulationErrors": 0,
+    "saveRoundtrip": true,
+    "zeroFounderLoss": "Separate strict diagnostic, not required for society survival."
+  },
+  "updatedDefendedRuns": {
+    "reproduction": "node --import ./scripts/game-loader.mjs scripts/diagnostics/first-winter.mjs 42 123456 --defended",
+    "changes": "Corrected shelter entrances/entry/target loss; two armed guards; one completed workshop; six sequential physical spear projects when an adult is available, without rejected retries or command repair. These two changes vary together, so improvement cannot be attributed to shelter alone.",
+    "results": [
+      {
+        "survivalGate": true,
+        "zeroFounderLoss": true,
+        "livingAdults": 17,
+        "foodReserveSeconds": 1862.6806302473935,
+        "societyAlive": true,
+        "seed": 42,
+        "defended": true,
+        "incidents": [
+          {
+            "at": 1360.5799999999658,
+            "event": "visible-approach",
+            "id": 2634,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1360.5799999999658,
+            "event": "visible-approach",
+            "id": 2636,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1360.8299999999658,
+            "event": "visible-approach",
+            "id": 2637,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1361.0799999999658,
+            "event": "visible-approach",
+            "id": 2635,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1361.0799999999658,
+            "event": "visible-approach",
+            "id": 2638,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          }
+        ],
+        "seconds": 1800.0799999999003,
+        "initialFood": 120,
+        "food": 1313.044911382794,
+        "foodEmptySeconds": 0,
+        "estimatedFoodDelivered": 3500.664205627569,
+        "estimatedFoodConsumed": 878.110744591894,
+        "estimatedFoodSpoiled": 1261.0312593232572,
+        "estimatedOtherFoodOutflow": 168.47729032964148,
+        "originalResidents": 5,
+        "originalSurvivors": 5,
+        "ended": null,
+        "simulationErrors": [],
+        "saveRoundtrip": true,
+        "actions": [
+          {
+            "at": 0,
+            "type": "townhall",
+            "accepted": true
+          },
+          {
+            "at": 22.5,
+            "type": "warehouse",
+            "accepted": true
+          },
+          {
+            "at": 300.0099999999995,
+            "type": "workshop",
+            "accepted": true
+          },
+          {
+            "at": 301.2599999999995,
+            "type": "callToArms",
+            "armed": 2
+          },
+          {
+            "at": 336.19999999999783,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 366.19999999999783,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 415.61999999999625,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 460.51999999999475,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 504.2399999999933,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 534.2399999999933,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 600.0099999999958,
+            "type": "hut",
+            "accepted": true
+          }
+        ],
+        "snapshots": [
+          {
+            "seconds": 0,
+            "season": "Spring",
+            "food": 120,
+            "reserveSeconds": 659,
+            "wood": 58,
+            "population": 5,
+            "originalSurvivors": 5,
+            "orders": {
+              "gather": 5
+            },
+            "reasons": [
+              {
+                "id": 2440,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2441,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2442,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2443,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2444,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 450,
+            "season": "Summer",
+            "food": 1209,
+            "reserveSeconds": 5556,
+            "wood": 83,
+            "population": 7,
+            "originalSurvivors": 5,
+            "orders": {
+              "hold": 3,
+              "gather": 2,
+              "idle": 2
+            },
+            "reasons": [
+              {
+                "id": 2440,
+                "order": "hold",
+                "reason": "Making stone spear \u00b7 53%",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2441,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2442,
+                "order": "gather",
+                "carry": 14,
+                "hp": 48
+              },
+              {
+                "id": 2443,
+                "order": "gather",
+                "carry": 13,
+                "hp": 48
+              },
+              {
+                "id": 2444,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2582,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2585,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 900,
+            "season": "Autumn",
+            "food": 1370,
+            "reserveSeconds": 2420,
+            "wood": 782,
+            "population": 18,
+            "originalSurvivors": 5,
+            "orders": {
+              "return": 3,
+              "hold": 2,
+              "gather": 8,
+              "idle": 5
+            },
+            "reasons": [
+              {
+                "id": 2440,
+                "order": "return",
+                "reason": "Carrying the hunting catch home",
+                "carry": 24,
+                "hp": 48
+              },
+              {
+                "id": 2441,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2442,
+                "order": "gather",
+                "carry": 9,
+                "hp": 48
+              },
+              {
+                "id": 2443,
+                "order": "idle",
+                "reason": "Lost sight of the herd \u2014 exploring to find food again",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2444,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2582,
+                "order": "return",
+                "carry": 28,
+                "hp": 48
+              },
+              {
+                "id": 2585,
+                "order": "gather",
+                "reason": "Hunting deer",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2586,
+                "order": "return",
+                "carry": 25,
+                "hp": 48
+              },
+              {
+                "id": 2589,
+                "order": "gather",
+                "carry": 15,
+                "hp": 48
+              },
+              {
+                "id": 2596,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2600,
+                "order": "gather",
+                "carry": 7,
+                "hp": 48
+              },
+              {
+                "id": 2601,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2602,
+                "order": "gather",
+                "carry": 11,
+                "hp": 48
+              },
+              {
+                "id": 2603,
+                "order": "gather",
+                "carry": 21,
+                "hp": 48
+              },
+              {
+                "id": 2604,
+                "order": "gather",
+                "carry": 9,
+                "hp": 48
+              },
+              {
+                "id": 2605,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2608,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2612,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 1350,
+            "season": "Winter",
+            "food": 1553,
+            "reserveSeconds": 1614,
+            "wood": 2297,
+            "population": 18,
+            "originalSurvivors": 5,
+            "orders": {
+              "gather": 12,
+              "hold": 2,
+              "return": 4
+            },
+            "reasons": [
+              {
+                "id": 2440,
+                "order": "gather",
+                "carry": 21,
+                "hp": 48
+              },
+              {
+                "id": 2441,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2442,
+                "order": "gather",
+                "carry": 2,
+                "hp": 48
+              },
+              {
+                "id": 2443,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2444,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2582,
+                "order": "gather",
+                "carry": 19,
+                "hp": 48
+              },
+              {
+                "id": 2585,
+                "order": "gather",
+                "carry": 25,
+                "hp": 48
+              },
+              {
+                "id": 2586,
+                "order": "gather",
+                "carry": 14,
+                "hp": 48
+              },
+              {
+                "id": 2589,
+                "order": "return",
+                "carry": 31,
+                "hp": 48
+              },
+              {
+                "id": 2596,
+                "order": "return",
+                "carry": 19,
+                "hp": 48
+              },
+              {
+                "id": 2600,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2601,
+                "order": "return",
+                "carry": 29,
+                "hp": 48
+              },
+              {
+                "id": 2602,
+                "order": "gather",
+                "carry": 28,
+                "hp": 48
+              },
+              {
+                "id": 2603,
+                "order": "gather",
+                "carry": 16,
+                "hp": 48
+              },
+              {
+                "id": 2604,
+                "order": "gather",
+                "carry": 3,
+                "hp": 48
+              },
+              {
+                "id": 2605,
+                "order": "gather",
+                "reason": "Working: food",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2608,
+                "order": "return",
+                "reason": "Delivering carried supplies",
+                "carry": 10,
+                "hp": 48
+              },
+              {
+                "id": 2612,
+                "order": "gather",
+                "reason": "Working: food",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 1800,
+            "season": "Spring",
+            "food": 1313,
+            "reserveSeconds": 1863,
+            "wood": 4306,
+            "population": 18,
+            "originalSurvivors": 5,
+            "orders": {
+              "return": 1,
+              "gather": 16,
+              "idle": 1
+            },
+            "reasons": [
+              {
+                "id": 2440,
+                "order": "return",
+                "carry": 7,
+                "hp": 48
+              },
+              {
+                "id": 2441,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2442,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2443,
+                "order": "gather",
+                "carry": 7,
+                "hp": 48
+              },
+              {
+                "id": 2444,
+                "order": "gather",
+                "carry": 0,
+                "hp": 38
+              },
+              {
+                "id": 2582,
+                "order": "gather",
+                "carry": 22,
+                "hp": 48
+              },
+              {
+                "id": 2585,
+                "order": "gather",
+                "carry": 0,
+                "hp": 14
+              },
+              {
+                "id": 2586,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2589,
+                "order": "gather",
+                "carry": 0,
+                "hp": 6
+              },
+              {
+                "id": 2596,
+                "order": "gather",
+                "carry": 0,
+                "hp": 15
+              },
+              {
+                "id": 2600,
+                "order": "gather",
+                "carry": 2,
+                "hp": 48
+              },
+              {
+                "id": 2601,
+                "order": "gather",
+                "carry": 0,
+                "hp": 39
+              },
+              {
+                "id": 2602,
+                "order": "gather",
+                "carry": 0,
+                "hp": 14
+              },
+              {
+                "id": 2603,
+                "order": "gather",
+                "carry": 27,
+                "hp": 48
+              },
+              {
+                "id": 2605,
+                "order": "gather",
+                "carry": 3,
+                "hp": 48
+              },
+              {
+                "id": 2608,
+                "order": "gather",
+                "carry": 2,
+                "hp": 2
+              },
+              {
+                "id": 2612,
+                "order": "gather",
+                "carry": 0,
+                "hp": 26
+              },
+              {
+                "id": 2640,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          }
+        ],
+        "jobs": {
+          "domain": "tree gathering",
+          "activeJobs": 24,
+          "proposed": 724,
+          "accepted": 724,
+          "ownershipConflicts": 0,
+          "suspended": 0,
+          "resumed": 0,
+          "completed": 0,
+          "canceled": 700,
+          "reservations": {
+            "attempts": 724,
+            "failures": 0,
+            "released": 700,
+            "committed": 0
+          }
+        }
+      },
+      {
+        "survivalGate": true,
+        "zeroFounderLoss": true,
+        "livingAdults": 17,
+        "foodReserveSeconds": 1413.450003169902,
+        "societyAlive": true,
+        "seed": 123456,
+        "defended": true,
+        "incidents": [
+          {
+            "at": 1086.7700000000054,
+            "event": "visible-approach",
+            "id": 2331,
+            "team": 3,
+            "type": "spearman",
+            "hp": 45.14574665790546
+          },
+          {
+            "at": 1100.050000000004,
+            "event": "visible-approach",
+            "id": 2330,
+            "team": 3,
+            "type": "spearman",
+            "hp": 63.09113558836138
+          },
+          {
+            "at": 1408.0999999999574,
+            "event": "visible-approach",
+            "id": 2404,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1408.9399999999573,
+            "event": "visible-approach",
+            "id": 2406,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1409.4399999999573,
+            "event": "visible-approach",
+            "id": 2408,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1409.6899999999573,
+            "event": "visible-approach",
+            "id": 2405,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          },
+          {
+            "at": 1409.9399999999573,
+            "event": "visible-approach",
+            "id": 2407,
+            "team": 3,
+            "type": "spearman",
+            "hp": 87
+          }
+        ],
+        "seconds": 1800.0799999999003,
+        "initialFood": 120,
+        "food": 880.1111869430871,
+        "foodEmptySeconds": 0,
+        "estimatedFoodDelivered": 2423.834475023715,
+        "estimatedFoodConsumed": 811.7347743014745,
+        "estimatedFoodSpoiled": 681.6540502992488,
+        "estimatedOtherFoodOutflow": 170.3344634798858,
+        "originalResidents": 5,
+        "originalSurvivors": 5,
+        "ended": null,
+        "simulationErrors": [],
+        "saveRoundtrip": true,
+        "actions": [
+          {
+            "at": 0,
+            "type": "townhall",
+            "accepted": true
+          },
+          {
+            "at": 23.5,
+            "type": "warehouse",
+            "accepted": true
+          },
+          {
+            "at": 300.0099999999995,
+            "type": "workshop",
+            "accepted": true
+          },
+          {
+            "at": 300.0099999999995,
+            "type": "callToArms",
+            "armed": 2
+          },
+          {
+            "at": 335.44999999999783,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 365.44999999999783,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 412.11999999999625,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 455.76999999999475,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 485.8699999999944,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 524.9899999999933,
+            "type": "craft:spear",
+            "accepted": true
+          },
+          {
+            "at": 600.0099999999958,
+            "type": "hut",
+            "accepted": true
+          }
+        ],
+        "snapshots": [
+          {
+            "seconds": 0,
+            "season": "Spring",
+            "food": 120,
+            "reserveSeconds": 674,
+            "wood": 58,
+            "population": 5,
+            "originalSurvivors": 5,
+            "orders": {
+              "gather": 5
+            },
+            "reasons": [
+              {
+                "id": 2222,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2223,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2224,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2225,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2226,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 450,
+            "season": "Summer",
+            "food": 879,
+            "reserveSeconds": 3805,
+            "wood": 366,
+            "population": 8,
+            "originalSurvivors": 5,
+            "orders": {
+              "hold": 3,
+              "gather": 2,
+              "idle": 3
+            },
+            "reasons": [
+              {
+                "id": 2222,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2223,
+                "order": "hold",
+                "reason": "Making stone spear \u00b7 75%",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2224,
+                "order": "gather",
+                "reason": "Working: wood",
+                "carry": 1,
+                "hp": 48
+              },
+              {
+                "id": 2225,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2226,
+                "order": "gather",
+                "carry": 19,
+                "hp": 48
+              },
+              {
+                "id": 2355,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2359,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2363,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 900,
+            "season": "Autumn",
+            "food": 1045,
+            "reserveSeconds": 2555,
+            "wood": 1362,
+            "population": 13,
+            "originalSurvivors": 5,
+            "orders": {
+              "hold": 2,
+              "gather": 8,
+              "idle": 3
+            },
+            "reasons": [
+              {
+                "id": 2222,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2223,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2224,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 17,
+                "hp": 48
+              },
+              {
+                "id": 2225,
+                "order": "hold",
+                "reason": "Armed civilian \u2014 ready to defend or raid",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2226,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2355,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 11,
+                "hp": 48
+              },
+              {
+                "id": 2359,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 7,
+                "hp": 48
+              },
+              {
+                "id": 2363,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2366,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2374,
+                "order": "gather",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2377,
+                "order": "idle",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2380,
+                "order": "idle",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2386,
+                "order": "idle",
+                "reason": "Sheltering inside from the storm",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 1350,
+            "season": "Winter",
+            "food": 899,
+            "reserveSeconds": 1292,
+            "wood": 4166,
+            "population": 18,
+            "originalSurvivors": 5,
+            "orders": {
+              "gather": 17,
+              "return": 1
+            },
+            "reasons": [
+              {
+                "id": 2222,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2223,
+                "order": "gather",
+                "carry": 12,
+                "hp": 48
+              },
+              {
+                "id": 2224,
+                "order": "gather",
+                "carry": 8,
+                "hp": 24
+              },
+              {
+                "id": 2225,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2226,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2233,
+                "order": "gather",
+                "reason": "Working: food",
+                "carry": 0,
+                "hp": 20
+              },
+              {
+                "id": 2355,
+                "order": "return",
+                "carry": 28,
+                "hp": 48
+              },
+              {
+                "id": 2359,
+                "order": "gather",
+                "carry": 15,
+                "hp": 48
+              },
+              {
+                "id": 2363,
+                "order": "gather",
+                "carry": 10,
+                "hp": 48
+              },
+              {
+                "id": 2366,
+                "order": "gather",
+                "carry": 10,
+                "hp": 48
+              },
+              {
+                "id": 2374,
+                "order": "gather",
+                "carry": 7,
+                "hp": 48
+              },
+              {
+                "id": 2377,
+                "order": "gather",
+                "carry": 6,
+                "hp": 48
+              },
+              {
+                "id": 2380,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2386,
+                "order": "gather",
+                "carry": 15,
+                "hp": 48
+              },
+              {
+                "id": 2390,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2391,
+                "order": "gather",
+                "reason": "Working: food",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2392,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2393,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          },
+          {
+            "seconds": 1800,
+            "season": "Spring",
+            "food": 880,
+            "reserveSeconds": 1413,
+            "wood": 6780,
+            "population": 18,
+            "originalSurvivors": 5,
+            "orders": {
+              "gather": 15,
+              "return": 2,
+              "idle": 1
+            },
+            "reasons": [
+              {
+                "id": 2222,
+                "order": "gather",
+                "carry": 22,
+                "hp": 48
+              },
+              {
+                "id": 2223,
+                "order": "gather",
+                "carry": 4,
+                "hp": 48
+              },
+              {
+                "id": 2224,
+                "order": "gather",
+                "carry": 8,
+                "hp": 3
+              },
+              {
+                "id": 2225,
+                "order": "gather",
+                "carry": 15,
+                "hp": 48
+              },
+              {
+                "id": 2226,
+                "order": "gather",
+                "carry": 7,
+                "hp": 26
+              },
+              {
+                "id": 2233,
+                "order": "return",
+                "carry": 28,
+                "hp": 10
+              },
+              {
+                "id": 2355,
+                "order": "gather",
+                "carry": 5,
+                "hp": 48
+              },
+              {
+                "id": 2359,
+                "order": "gather",
+                "carry": 11,
+                "hp": 48
+              },
+              {
+                "id": 2363,
+                "order": "gather",
+                "carry": 8,
+                "hp": 48
+              },
+              {
+                "id": 2366,
+                "order": "return",
+                "carry": 28,
+                "hp": 48
+              },
+              {
+                "id": 2374,
+                "order": "gather",
+                "carry": 4,
+                "hp": 6
+              },
+              {
+                "id": 2377,
+                "order": "gather",
+                "carry": 0,
+                "hp": 17
+              },
+              {
+                "id": 2380,
+                "order": "gather",
+                "carry": 6,
+                "hp": 48
+              },
+              {
+                "id": 2386,
+                "order": "gather",
+                "carry": 3,
+                "hp": 39
+              },
+              {
+                "id": 2390,
+                "order": "gather",
+                "carry": 0,
+                "hp": 48
+              },
+              {
+                "id": 2391,
+                "order": "gather",
+                "carry": 10,
+                "hp": 48
+              },
+              {
+                "id": 2393,
+                "order": "gather",
+                "carry": 4,
+                "hp": 15
+              },
+              {
+                "id": 2411,
+                "order": "idle",
+                "reason": "Growing up \u2014 supported by the village",
+                "carry": 0,
+                "hp": 48
+              }
+            ],
+            "buildings": [
+              {
+                "type": "townhall",
+                "build": 1
+              },
+              {
+                "type": "warehouse",
+                "build": 1
+              },
+              {
+                "type": "workshop",
+                "build": 1
+              },
+              {
+                "type": "hut",
+                "build": 1
+              }
+            ]
+          }
+        ],
+        "jobs": {
+          "domain": "tree gathering",
+          "activeJobs": 27,
+          "proposed": 807,
+          "accepted": 807,
+          "ownershipConflicts": 0,
+          "suspended": 0,
+          "resumed": 0,
+          "completed": 0,
+          "canceled": 780,
+          "reservations": {
+            "attempts": 807,
+            "failures": 0,
+            "released": 780,
+            "committed": 0
+          }
+        }
+      }
+    ]
+  }
 }

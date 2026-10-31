@@ -4,6 +4,34 @@ import {UNITS} from './constants';
 import {isDependent} from './settlement';
 import {queueStandDown} from './demobilization';
 
+export const DEFENSE_RULES={shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12}} as const;
+
+/** Follow the same physical entrance and occupancy contract as ordinary rest.
+ * Shelter conceals occupants; its building remains vulnerable to attack. */
+function seekEmergencyShelter(g:Game,u:Unit,foes:Unit[],dt:number){
+  const occupancy=new Map<number,number>();
+  for(const resident of g.state.units)if(resident!==u&&resident.hp>0&&resident.shelterId!==undefined)
+    occupancy.set(resident.shelterId,(occupancy.get(resident.shelterId)||0)+1);
+  const shelters=g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&
+    b.type in DEFENSE_RULES.shelterCapacity&&(occupancy.get(b.id)||0)<DEFENSE_RULES.shelterCapacity[b.type as keyof typeof DEFENSE_RULES.shelterCapacity]);
+  const danger=(x:number,z:number)=>foes.reduce((sum,e)=>sum+Math.max(0,25-Math.hypot(x-e.x,z-e.z))*4,0);
+  shelters.sort((a,b)=>danger(a.x,a.z)+Math.hypot(a.x-u.x,a.z-u.z)-danger(b.x,b.z)-Math.hypot(b.x-u.x,b.z-u.z));
+  for(const shelter of shelters){
+    const entrance=g.interactionSpot(u,shelter);if(!entrance)continue;
+    u.target=null;u.tx=entrance.x;u.tz=entrance.z;
+    if(Math.hypot(u.x-entrance.x,u.z-entrance.z)>DEFENSE_RULES.shelterArrivalMetres){
+      u.order='move';u.workReason='Seeking shelter from invaders';g.steer(u,dt);
+    }else{
+      u.shelterId=shelter.id;u.order='hold';u.workReason='Sheltering inside from invaders';
+      // Existing pursuers must lose concealed targets, just as acquireTarget
+      // ignores resting occupants. Already airborne projectiles still resolve.
+      for(const foe of g.state.units)if(foe.target===u)foe.target=null;
+    }
+    return true;
+  }
+  return false;
+}
+
 /** Mobilize once without movement or damage, so impact notifications cannot recurse. */
 function mobilize(g:Game,u:Unit){
   if(u.emergency){u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*.3;return;}
@@ -66,7 +94,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     Math.hypot(b.x-u.x,b.z-u.z)<40);
   const foes = g.state.units.filter(
     (e) =>
-      e.hp > 0 &&
+      e.hp > 0 && !e.shelterId &&
       g.isFoe(u.team, e.team) &&
       (u.team !== 0 || g.visibleAt(e.x, e.z)) &&
       (Math.hypot(e.x - u.x, e.z - u.z) < 17 ||
@@ -97,6 +125,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     u.job = u.emergency.job;
     u.jobLock = u.emergency.jobLock;
     u.emergency = undefined;
+    u.shelterId=undefined;
     u.target = null;
     u.node = null;
     u.order = u.carry > 0 ? "return" : "idle";
@@ -123,27 +152,19 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     } else u.order = "hold";
     return true;
   }
-  const shelters = g.state.buildings.filter(
-    (b) => b.team === u.team && g.finished(b) && ["townhall", "hut", "keep"].includes(b.type),
-  );
-  const shelter = shelters.sort((a, b) => {
-    const safety = (b: Building) =>
-      foes.reduce((n, e) => n + Math.max(0, 25 - Math.hypot(b.x - e.x, b.z - e.z)) * 4, 0) +
-      Math.hypot(b.x - u.x, b.z - u.z);
-    return safety(a) - safety(b);
-  })[0];
-  u.workReason = "Taking shelter from invaders";
-  u.order = "move";
-  if (shelter) {
-    u.tx = shelter.x;
-    u.tz = shelter.z;
-    g.steer(u, dt);
-  } else if (foes[0]) {
-    const a = Math.atan2(u.z - foes[0].z, u.x - foes[0].x);
-    u.tx = u.x + Math.cos(a) * 8;
-    u.tz = u.z + Math.sin(a) * 8;
-    g.steer(u, dt);
-  }
+  if(seekEmergencyShelter(g,u,foes,dt))return true;
+  u.target=null;u.shelterId=undefined;u.order='move';
+  if(foes.length){
+    const nearest=foes.reduce((best,e)=>Math.hypot(e.x-u.x,e.z-u.z)<Math.hypot(best.x-u.x,best.z-u.z)?e:best);
+    const away=Math.atan2(u.z-nearest.z,u.x-nearest.x),options=[];
+    for(const offset of [0,.5,-.5,1,-1,1.5,-1.5,Math.PI]){
+      const x=u.x+Math.cos(away+offset)*DEFENSE_RULES.retreatMetres,z=u.z+Math.sin(away+offset)*DEFENSE_RULES.retreatMetres;
+      if(!g.walkable(x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
+      options.push({x,z,safety:Math.min(...foes.map(e=>Math.hypot(x-e.x,z-e.z)))});
+    }
+    options.sort((a,b)=>b.safety-a.safety);
+    if(options[0]){u.tx=options[0].x;u.tz=options[0].z;u.workReason='No reachable shelter — escaping invaders';g.steer(u,dt);}
+    else {u.order='hold';u.workReason='Escape blocked — clear a route or defend this resident';}
+  }else {u.order='hold';u.workReason='Waiting for the local alarm to clear';}
   return true;
 }
-
