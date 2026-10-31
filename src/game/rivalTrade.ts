@@ -43,7 +43,7 @@ export function dispatchRivalBarter(g:Game,team:number){
     .sort((a,b)=>Number(a==='food')-Number(b==='food')||(t[b]-rivalTradeReserve(g,team,b))*worth[b]-(t[a]-rivalTradeReserve(g,team,a))*worth[a]);
   if(!offers.length)return false;
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
-  const workers=adults.filter(u=>u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
+  const workers=adults.filter(u=>u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
     !u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','gather'].includes(u.order));
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));

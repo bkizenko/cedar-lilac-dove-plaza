@@ -7,7 +7,7 @@ This is a readable snapshot of the two original inventories. The execution recor
 1. Independent dock-built ferries: crews, passengers, physical crossing/landing, mooring/reuse and saved ownership. Core five-seat ferry loop implemented/tested; visual verification and broader fleet functions remain.
    Follow-up: drag-sized hulls, ship classes/draft and deep-water ports.
 2. Caravans: player-planned repeat convoys, pack/cart load limits, escorts, local deals and actual delivery reports are now implemented/tested. Still require broader regional depots, provisions, ship cargo and complete multi-item negotiation.
-3. Husbandry: actual owned livestock, pens/pasture, capture/herding, feeding, births, products and draft/pack use.
+3. Husbandry: core actual goat herds/pen/capture/care/feeding/birth/milk/slaughter/pack conversion are implemented in the current batch. Animal diversity, water/feed chains, livestock exchange/theft, rival husbandry and traction fleets remain open.
 4. Captivity: readable local capture/escort, guarded work, release/ransom/integration, resistance and organized revolt.
 5. Competitive rivals and distinct societies using those same economies and physical systems.
 6. World families: Pangaea/continents/archipelago, larger explorable worlds, coherent climate/river systems and strategically uneven resource regions. Preserve old save terrain.
@@ -196,4 +196,9 @@ Requested art direction: golden-hour styling through most non-winter daylight, w
 - Let neighboring civilizations express visibly different materials, building forms, street patterns and civic landmarks, with seeded handmade variation inside each coherent style. Architecture must reflect actual culture/age/prosperity, not just a palette swap.
 - Replace the confusing first-contact menu with clear actions about the encountered party: offer to trade, ask questions, send visitors back, or attempt capture/interrogation with actual proximity, force and diplomatic consequences. Returning the player's expedition is a separate travel order. Conversation options depend on who was met, language/contact history, relation, role, cargo and knowledge; no remote omniscient report.
 - Later developed cities can appoint trade and infrastructure administrators. Delegate explicit goals, budgets, territory and priorities; decisions must use existing physical jobs and logistics with legible reports and player overrides. Local simulation agents are sufficient; no paid language-model service is required for villagers.
-- The player is still preparing answers to the first-15-minutes interview. Finish the already-in-progress farm fix, then wait for those answers before selecting a broader redesign. These additions are acceptance requirements, not completed features.
+- The player answered the interview: survival first, difficulty-scaled recurring seasonal/scarcity/defense pressure, direct control with optional assignments, and development shaped by incentives. See REFERENCE_GAME_AUDIT.md. These cultural additions are acceptance requirements, not completed features.
+
+
+## Interview answer and next priority — 2026-10-31
+
+See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-first answer, verified primary-source comparison, current radial-map/tree audit, and recommended execution order. After the in-flight husbandry batch, **world foundation and first-winter survival take priority over further isolated late-game additions**. Actual continent/Pangaea/archipelago families, larger saved world sizes and dense regional woodland have not been delivered by prior coast-noise updates. Rival defenses should emerge from utility/risk/cost decisions, not unconditional wall-building commands. Later legitimacy, households/dynasties, ritual, treaties, writing/accounting and ancient ruins remain part of the full scope.

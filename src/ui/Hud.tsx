@@ -1,3 +1,4 @@
+import {HusbandryControls} from './HusbandryControls';
 import {BoatControls} from './BoatControls';
 import {CopperStudyControl} from './CopperStudyControl';
 import {AgeReadiness} from './AgeReadiness';
@@ -80,6 +81,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   temple: <Church className="size-4" />,
   market: <Store className="size-4" />,
   keep: <Castle className="size-4" />,
+  pen: <PawPrint className="size-4" />,
   stables: <PawPrint className="size-4" />,
   university: <GraduationCap className="size-4" />,
 };
@@ -478,6 +480,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Post guards</button>}
                 {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Mine stone</button>}
                 {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
+                {sel.completed&&sel.type==='pen'&&engine&&<HusbandryControls engine={engine} pen={sel.buildingId!}/>}
                 {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
@@ -688,7 +691,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","dock","grove"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =

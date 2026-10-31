@@ -174,7 +174,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
   const t=g.tribe(team),next=AGE_COST[t.age+1];
   const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
   const surplusWorkers=(shortage||foodEmergency)?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&(foodEmergency||t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5))):[];
-  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
+  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
     !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
   let moved=0;
   for(const u of eligible){
@@ -193,7 +193,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
 export function developRivalEquipment(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia);
- if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused))return false;
+ if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused||u.husbandryWork&&!u.husbandryWork.paused))return false;
  const eligible=adults.filter(u=>!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){

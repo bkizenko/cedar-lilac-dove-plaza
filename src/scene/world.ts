@@ -58,7 +58,7 @@ const BLD_TYPES: BldType[] = [
   "cornerstone",
   "hut",
   "farm",
-  "lumber",
+  "pen",  "lumber",
   "workshop",
   "quarry",
   "dock",
@@ -173,6 +173,7 @@ export class WorldView {
   deer: THREE.InstancedMesh | null = null;
   boars: THREE.InstancedMesh | null = null;
   wildGoats: THREE.InstancedMesh | null = null;
+  domesticGoats: THREE.InstancedMesh | null = null;
   birds: THREE.InstancedMesh | null = null;
   private tmpCam = new THREE.Vector3();
   private disposed = false;
@@ -728,9 +729,10 @@ export class WorldView {
       const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
       const timberMaterial=this.mats.timber.clone();
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
-      if(type === "farm") { timberMaterial.vertexColors = true; this.fieldSurface?.bind(timberMaterial); }
+      if(type === "farm") timberMaterial.vertexColors = true;
+      if(type === "farm" || type === "pen") this.fieldSurface?.bind(timberMaterial);
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
-      if(type === "farm" && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
+      if((type === "farm" || type === "pen") && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
       const roofMat =
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
@@ -855,7 +857,8 @@ export class WorldView {
     birdMat.color.set("#c8c0b0");
     this.deer = mkHerd(deerGeo(), hideMat, 12);
     this.boars = mkHerd(boarGeo(), boarMat, 10);
-    this.wildGoats = mkHerd(goatGeo(), this.mats.hideDark, 14);
+    this.wildGoats = mkHerd(goatGeo(), this.mats.hideDark, 96);
+    this.domesticGoats = mkHerd(goatGeo(), this.mats.hide, 96);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
   }
 
@@ -898,6 +901,10 @@ export class WorldView {
           mesh.computeBoundingSphere();
           sources.set(mesh, this.buildingInstances.get(mesh)??entities);
         }
+    }
+    if(this.domesticGoats){
+      this.domesticGoats.computeBoundingSphere();
+      sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
     }
     for (const [type, mesh] of this.unitMeshes) {
       mesh.computeBoundingSphere();
@@ -1156,6 +1163,15 @@ export class WorldView {
     stamp(this.boars, "boar");
     stamp(this.wildGoats, "goat");
     stamp(this.birds, "bird");
+    const mesh=this.domesticGoats;
+    if(mesh){
+      const animals=(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(mesh));
+      for(let i=0;i<animals.length;i++){
+        const a=animals[i],seen=a.team===0||game.visibleAt(a.x,a.z);
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+      }
+      mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
+    }
   }
 
   private trailAlpha() {
@@ -1354,7 +1370,7 @@ export class WorldView {
       if(b.hp<=0||b.build<1||b.plannedCost)continue;
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
-        ['warehouse','farm','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
+        ['warehouse','farm','pen','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
       const identity=this.villageStyle(game,b.team,b),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);

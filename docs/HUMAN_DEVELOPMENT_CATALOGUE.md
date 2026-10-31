@@ -1,3 +1,9 @@
+## Functional owned goat herds — 2026-10-31
+
+- [x] ~~Stone Age animal pen; capture and physically lead wild goats home; saved owned herd and keeper jobs.~~
+- [x] ~~Finite pasture, winter plant feed carried from stores, fed breeding pairs, kids, maternal milk hauled to food stores, slaughter and physical meat, and converting one herd goat into a pack carrier.~~
+- Items37–40/63/94 remain partial: species diversity, wool/hides, water, disease, livestock trading/theft, rival herd strategies and larger animal traction are not complete. No fake starting pen or livestock was added. See FUTURE_IMPLEMENTATION.md for scoped checks and REFERENCE_GAME_AUDIT.md for the survival-first interview and next priorities.
+
 ## Transport reuse delivered — 2026-10-29
 
 - [x] ~~Physical local handoff of idle sleds/carts to available nearby gatherers, preserving cargo and orders.~~ Shared parking/depot inventory, passenger fleets and animal breeding remain open.

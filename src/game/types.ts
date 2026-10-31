@@ -8,6 +8,7 @@ export type BldType =
   | "cornerstone"
   | "hut"
   | "farm"
+  | "pen"
   | "lumber"
   | "quarry"
   | "dock"
@@ -27,7 +28,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
@@ -127,6 +128,12 @@ export type Critter = {
   scale: number;
 };
 
+export type Livestock = Critter & {
+  team: number; pen: number; sex: 'female' | 'male';
+  born: number; tamedAt: number; hunger: number; milk: number;
+  pregnancy: number; lactatingUntil?: number; stuckT?: number;
+};
+
 export type Unit = {
   name?: string;
   id: number;
@@ -184,7 +191,8 @@ export type Unit = {
   farmTool?: FarmToolKind;
   farmToolWork?: FarmToolWork;
   packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
-  tamingWork?: {animal:number;progress:number;paused?:boolean};
+  tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number};
+  husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver";animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
@@ -259,6 +267,7 @@ export type Building = {
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
   storeCare?: number;
+  pasture?: {condition:number;feed:number;care:number};
   fertility?: number;
   fallowYear?: number;
   cropType?: CropKind;
@@ -430,6 +439,7 @@ export type GameState = {
   deals: TradeDeal[];
   raidT: number;
   wildlife: Critter[];
+  livestock?: Livestock[];
   routes: TradeRoute[];
   routeOffer: RouteOffer | null;
   routeOfferT: number;

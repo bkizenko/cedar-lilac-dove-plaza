@@ -326,7 +326,8 @@ export function decodeGame(raw: unknown): Game {
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
-    if(u.tamingWork!==undefined){const w=u.tamingWork;if(!obj(w)||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack"].includes(w.action)||!["pen","fetch","feed","deliver"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
+    if(u.tamingWork!==undefined){const w=u.tamingWork;if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
     if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
       const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);
@@ -446,11 +447,26 @@ export function decodeGame(raw: unknown): Game {
       if(n.planted!==undefined&&(typeof n.planted!=="boolean"||n.kind!=="tree"))fail();
       if(n.cropCandidate!==undefined&&(n.kind!=="forage"||!CROPS.includes(n.cropCandidate)))fail();
     }
+  if(s.livestock!==undefined){
+    if(!Array.isArray(s.livestock)||s.livestock.length>96)fail();
+    const perPen=new Map<number,number>();
+    for(const a of s.livestock){
+      add(a);numbers(a,["team","pen","hp","maxHp","facing","vx","vz","wanderT","fly","scale","born","tamedAt","hunger","milk","pregnancy"]);
+      const pen=s.buildings.find((b:any)=>b.id===a.pen&&b.type==='pen'&&b.team===a.team);
+      if(!pen||a.species!=='goat'||!['female','male'].includes(a.sex)||a.born< -300||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>6||a.pregnancy<0||a.pregnancy>240||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail();
+      if(a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lactatingUntil>s.time+901))fail();
+      if(a.hp>0){perPen.set(a.pen,(perPen.get(a.pen)||0)+1);if((perPen.get(a.pen)||0)>8)fail();}
+    }
+  }
   for (const c of s.wildlife) {
     add(c);
     if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>1000||Math.abs(c.grazing.z)>1000))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
     if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
+  }
+  for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>100||!num(p.care)||p.care<0||p.care>1)fail();}
+  for(const u of s.units){
+    for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team))fail();
   }
   for (const r of s.routes) {
     if (!obj(r)) fail();

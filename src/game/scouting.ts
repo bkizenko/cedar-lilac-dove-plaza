@@ -58,7 +58,7 @@ export function tickScouts(g: Game, dt: number) {
         !isDependent(g, u) &&
         !u.emergency &&
         !u.recalled && !u.envoy && u.drill == null && u.buildOrder === undefined &&
-        !u.jobLock && !u.tamingWork && !u.tributeJourney && !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
+        !u.jobLock && !u.tamingWork&&!u.husbandryWork && !u.tributeJourney && !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
         !u.foundingJourney &&
         u.carry === 0 &&
         ["idle", "gather"].includes(u.order),

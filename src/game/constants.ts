@@ -223,6 +223,7 @@ export const BUILDINGS: Record<
     age: 4,
     hint: "Stone stronghold. +6 population.",
   },
+  pen: {name:"Animal pen",w:10,d:10,food:0,wood:18,stone:0,pop:0,hp:260,age:0,hint:"Capture wild goats and lead them home. Up to 8 animals; a keeper brings winter feed, milks females, and cares for breeding pairs."},
   stables: {
     name: "Stables",
     w: 8.4,
@@ -432,6 +433,7 @@ export const BUILD_ORDER: BldType[] = [
   "cornerstone",
   "townhall",
   "farm",
+  "pen",
   "dock",
   "lumber",
   "workshop",
@@ -534,6 +536,7 @@ export const BUILD_TIME: Record<BldType, number> = {
   cornerstone: 12,
   hut: 8,
   farm: 10,
+  pen: 16,
   lumber: 10,
   workshop: 14,
   dock: 10,

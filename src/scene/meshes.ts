@@ -266,6 +266,11 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       extraMat: "stone",
     },
     hut,
+    pen: {timber:merge([
+      ...[-4,-2,0,2,4].flatMap(n=>[-1,1].flatMap(side=>[box(.16,.95,.16,n,0,side*4),box(.16,.95,.16,side*4,0,n)])),
+      ...[-1,1].flatMap(side=>[-3,-1,1,3].flatMap(n=>[box(2,.1,.1,n,.55,side*4),box(.1,.1,2,side*4,.55,n)])),
+      box(2,.4,.55,-2.5,0,-2.5),box(.14,1.9,.14,-3.5,0,-3.5),box(.14,1.9,.14,-1.5,0,-3.5)
+    ]),roof:merge([box(3,.18,2.8,-2.5,1.9,-2.5,.08)])},
     farm: { timber: merge(farmTimber), roof: merge([box(2.4, 1.2, 2.2, 0, 0, 0)]), extra: merge(farmExtra), extraMat: "crop" },
     lumber: { timber: merge(lumberT), roof: merge(lumberR) },
     workshop: {timber:merge([box(3.8,.2,1.5,0,1.0,0),box(.3,1,.3,-1.5,0,0),box(.3,1,.3,1.5,0,0),box(.2,2.5,.2,-2,0,-1.5),box(.2,2.5,.2,2,0,-1.5)]),roof:merge([box(5,.15,4,0,2.5,0,.12)])},

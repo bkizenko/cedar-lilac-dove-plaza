@@ -1,3 +1,4 @@
+import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
 import {commandRiverboat,riverboatAI,syncRiverboats} from './boats';
@@ -854,7 +855,7 @@ export class Game {
   }
 
   solidBuilding(b: Building) {
-    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["trench", "moat", "farm", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -1631,6 +1632,7 @@ export class Game {
     if(u.expedition)u.expedition.returning=false;
     if(u.weaponWork)u.weaponWork.paused=true;
     if(u.tamingWork)u.tamingWork.paused=true;
+    if(u.husbandryWork)u.husbandryWork.paused=true;
     pauseHaulageWork(u);
     pauseFarmToolWork(u);
     this.paths.delete(u.id);u.stuckT=0;
@@ -4218,6 +4220,7 @@ export class Game {
     if(copperStudyAI(this,u,dt))return;
     if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
+    if(husbandryAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;
     if(haulageWorkAI(this,u,dt))return;
     if(farmToolWorkAI(this,u,dt))return;
@@ -5591,6 +5594,7 @@ export class Game {
           for(const tr of this.state.tribes)if(isRivalTeam(tr.id)&&tr.alive)this.defendHome(tr.id);
         }
         this.tickWildlife(sdt);
+        tickHusbandry(this,sdt);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
         fadeTrails(this,sdt);

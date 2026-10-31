@@ -6,9 +6,10 @@ export const PACK_TAMING_SECONDS=60;
 export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
  const home=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&g.finished(b)&&['townhall','workshop'].includes(b.type));
  if(!home)return false;
- const people=g.state.units.filter(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&(team===0||!u.buildOrder&&!u.jobLock)&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.haulage&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.copperStudy&&!u.studyCrop&&u.drill==null&&['idle','hold','gather'].includes(u.order))
+ const people=g.state.units.filter(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&(team===0||!u.buildOrder&&!u.jobLock)&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!u.haulage&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.copperStudy&&!u.studyCrop&&!u.husbandryWork&&u.drill==null&&['idle','hold','gather'].includes(u.order))
   .sort((a,b)=>Number(b.selected)-Number(a.selected));
  for(const u of people){
+  if(u.tamingWork?.pen!==undefined)continue;
   if(u.tamingWork?.paused){u.tamingWork.paused=false;u.order='hold';return true;}
   if(u.tamingWork)continue; // Keep the animal, feed and progress already reserved by this handler.
   const animal=g.state.wildlife.filter(c=>c.species==='goat'&&c.hp>0&&(team===0?g.visibleAt(c.x,c.z):rivalKnows(g,team,c.x,c.z))&&Math.hypot(c.x-home.x,c.z-home.z)<220&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===c.id)&&g.workBoard.connected(g,u.x,u.z,c.x,c.z))
@@ -22,7 +23,7 @@ export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
  if(team===0)g.banner('Explore to find a living wild goat and an available empty-handed adult with a clear route',5);return false;
 }
 export function packTamingAI(g:Game,u:Unit,dt:number){
- const work=u.tamingWork;if(!work||work.paused||u.order!=='hold'||u.type!=='worker'||u.militia||u.emergency)return false;
+ const work=u.tamingWork;if(!work||work.pen!==undefined||work.paused||u.order!=='hold'||u.type!=='worker'||u.militia||u.emergency)return false;
  const animal=g.state.wildlife.find(c=>c.id===work.animal&&c.hp>0&&c.species==='goat');
  if(!animal){u.tamingWork=undefined;u.order='idle';u.workReason='The goat is gone; taming stopped';return true;}
  if(g.state.weather==='storm')return false;

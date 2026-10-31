@@ -45,7 +45,7 @@ export function staffField(g:Game,b:Building){
  if(b.team!==0||b.type!=='farm'||!g.finished(b)||!farmAvailable(g,b)){g.banner('No field work this season',3);return 0;}
  const slots=Math.min(12,Math.ceil(3*plotArea(b)));
  const existing=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length;
- const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.tamingWork&&!u.tributeJourney&&!u.foundingJourney&&u.node!==b&&['idle','hold','gather'].includes(u.order))
+ const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.foundingJourney&&u.node!==b&&['idle','hold','gather'].includes(u.order))
    .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
  let sent=0;
  for(const u of candidates){if(existing+sent>=slots)break;if(!g.workBoard.connected(g,u.x,u.z,b.x,b.z))continue;
