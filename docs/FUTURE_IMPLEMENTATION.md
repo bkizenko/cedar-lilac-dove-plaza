@@ -1,3 +1,7 @@
+## Planning handoff priority — 2026-10-31
+
+Read ASTRA_PLANNING_HANDOFF.md first for the latest user direction: incentives are central, agents have broad creative design freedom, and existing proposals may be challenged. Use a conversation fork plus durable repo context; a fresh chat does not automatically inherit all history. This is a planning-only handoff, not completion of the game.
+
 ## Random-layout recovery, flood-safe generation and rigid foundations — 2026-10-31
 
 - [x] ~~Fix random-layout save reconstruction.~~ The first v7 generator consumed a selection RNG draw only when layout was random; loading the saved resolved layout skipped it, moving geography under saved objects. Version8 always consumes that draw. For affected v7 saves, reconstruction compares64stratified saved natural-node heights and selects the original random-layout terrain only if the saved layout agrees and the evidence fits substantially better. Entity positions/cargo/buildings are preserved. Six random seed/version round trips cover both versions7and8, beyond the earlier explicit-layout checks.
