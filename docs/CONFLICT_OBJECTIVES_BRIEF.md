@@ -89,7 +89,7 @@ Integrator owns shared schemas, dispatcher/combat hooks, migration and UI wiring
 
 A contextual button, an isolated annexation transfer or passing preexisting combat tests does not establish this connected behavior. Full captivity, diplomacy, control and victory backlog remains retained.
 
-## Integration contract for the isolated implementation
+## Original integration contract for the isolated implementation
 
 Current isolated modules export `captureTarget`, `captureIntentAI`, `secureVillage`, `occupationActorAI`, `tickOccupation`, `occupationStatus`, `integrateOccupiedVillage`, `withdrawOccupation`, the two target-permission helpers, and explicit-order cleanup. The later integration should record the existing `massRaid` loot action without adding a modal; its live executor remains unchanged during the preceding map release.
 
@@ -97,4 +97,12 @@ Current isolated modules export `captureTarget`, `captureIntentAI`, `secureVilla
 
 New custody has escorting, custody and released/home-return phases. New captures do not set `enslavedFrom`. A released person physically retains/uses remaining pack provisions and returns leftovers only on reaching home; escaping is counted separately from an intentional release. Escorting and released people require their own physical supplies, whereas a prisoner who has reached custody consumes the captor's ordinary local supplies. Existing forced-labor saves remain separate.
 
-The integrator must still wire selection actions, shared optional types, combat permissions on every route, AI/needs hooks, assignment protection and save validators. Before those hooks are connected and rendered, these exports and focused module tests do not constitute a shipped contextual conflict feature.
+This original isolation stage required selection actions, shared optional types, combat permissions on every route, AI/needs hooks, assignment protection and save validators before the feature could count as connected. The implementation update below records that subsequent integration; the wider acceptance matrix remains retained.
+
+## Connected implementation, 2026-10-31
+
+The pending game integration now connects contextual capture and intact local control through public Game actions, per-step approach/escort/hold behavior, target permissions including in-flight arrows, independent prisoner provisions, assignment protections and validated save/load. The desktop selection controls expose these actions without a departure picker. Local acceptance transfers only the scoped living people/buildings and paid projects; unlocalized society stores and distant settlements remain independent.
+
+A badly wounded emergency retreater physically concealed inside an existing shelter does not project control over the hall. Healthy sheltered guards and active attackers still contest it. Wounded civilians must recover to the existing 60% military readiness threshold before rival development equips them; this prevents routine equipment selection from turning injured noncombatants into compulsory combatants.
+
+Non-destructive player store looting remains deferred: the existing Mass Raid executor is unchanged and still uses destructive pillage. It is not a completed implementation of the intended take-goods-and-withdraw action. Wider domination, negotiated tributary arrangements and the full conflict acceptance matrix remain open.

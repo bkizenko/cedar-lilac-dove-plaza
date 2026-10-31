@@ -16,7 +16,7 @@ export function commandDiagnostics(g:Game):Diagnostics {
 /** Compatibility gateway: validate physical feasibility before interrupting paid work.
  * Acceptance reports actor eligibility only; target checks and the existing executor follow. */
 export function acceptWorkerCommand(g:Game,u:Unit,kind:string){
-  const reason=u.hp<=0?'This resident is incapacitated':
+  const reason=u.prisoner?'This person is in custody or returning from release; use prisoner actions':u.hp<=0?'This resident is incapacitated':
     isDependent(g,u)?'Children remain supported by the village':
     u.boat?.phase==='aboard'?'Disembark before assigning land work':null;
   let d=diagnostics.get(g);

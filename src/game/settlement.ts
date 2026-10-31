@@ -1,3 +1,5 @@
+import {sameTypedValues} from './terrainWalkCache';
+import {prisonerIndependentNeeds} from './captivity';
 import {reserveTreeWorker} from './workAllocation';
 import {rivalOperationIntent} from './rivalOperations';
 import {difficulty} from './difficulty';
@@ -38,7 +40,7 @@ export function isDependent(g: Game, u: Unit) {
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0 && !u.expedition)
+    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u))
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
@@ -135,14 +137,17 @@ export class WorkBoard {
   private revision = -1;
   private nodeComponents = new WeakMap<Node, number>();
   private labels = new Int32Array(0);
+  private labeledWalk = new Uint8Array(0);
   private labelNavigation(g: Game) {
     if (g.state.walkDirty) g.rebuildWalk();
     if (this.revision === g.navigationRevision()) return;
     this.revision = g.navigationRevision();
     const grid = g.walk,
       n = Math.sqrt(grid.length);
-    this.labels = new Int32Array(grid.length);
     this.nodeComponents = new WeakMap();
+    if(sameTypedValues(grid,this.labeledWalk))return;
+    this.labeledWalk=grid.slice();
+    this.labels = new Int32Array(grid.length);
     const queue = new Int32Array(grid.length);
     let component = 0;
     for (let start = 0; start < grid.length; start++) {
@@ -271,6 +276,9 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
+    if(u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
+    if(u.team===0&&g.state.autoWorkEnabled===false&&!u.jobLock){u.order=u.carry>0?'return':'hold';u.node=null;u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — select this resident and give an order';return;}
+    if(u.prisoner){u.order='hold';u.node=null;u.target=null;u.workReason='Custody and release need their own orders; no automatic labor';return;}
     if(u.waterWork&&!u.waterWork.paused)return;
     if((u.waterWork?.liters??0)>0){u.order='return';u.workReason='Delivering carried drinking water before another assignment';return;}
     if (isDependent(g, u)) {

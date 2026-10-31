@@ -196,7 +196,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <label>
             Village growth{" "}
             <select
-              value={s.growthPolicy || "stable"}
+              value={s.growthPolicy || "welcome"}
               onChange={(e) => {
                 g.setGrowthPolicy(e.target.value as NonNullable<typeof s.growthPolicy>);
                 engine.pushHud();
@@ -407,7 +407,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           {u.expedition && ` · ${u.expedition.food.toFixed(1)} journey food`}
           {` · fatigue ${Math.round((u.fatigue||0)*100)}%, pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
         <h3>Life in the village</h3>
-        {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text}</p>)}
+        {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text.replace(/^\[Contact \d+\] /,'')}</p>)}
       </section>
       <section>
         <h3>Farming tools</h3>

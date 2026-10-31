@@ -53,3 +53,10 @@ test('left click selects and deselects the hull; sailing clicks use the water su
  g.selectBoat(b.id);picked=null;g.issueMove=(x,z)=>{move={x,z};};e.leftClick(1,1,false);assert.deepEqual(move,{x:2,z:4});
  e.rightClick(1,1);assert.deepEqual(move,{x:2,z:4});assert.ok(waterCalls>=3);
 });
+test('sailing screen picks hit elevated local water even though entity picking ignores it',()=>{
+ const camera=new THREE.PerspectiveCamera(55,1,.1,500);camera.position.set(0,30,20);camera.lookAt(0,10,0);camera.updateMatrixWorld(true);
+ const localWater=new THREE.Group(),mesh=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));mesh.geometry.rotateX(-Math.PI/2);mesh.position.y=10;mesh.name='water-lake-test';mesh.raycast=()=>{};localWater.add(mesh);localWater.updateMatrixWorld(true);
+ const view={renderer:{domElement:{clientWidth:100,clientHeight:100}},camera,localWater};
+ const point=WorldView.prototype.waterAt.call(view,50,50,.2);assert.ok(Math.abs(point.y-10)<1e-7,'use the visible lake surface, rather than sea level');
+ mesh.geometry.dispose();mesh.material.dispose();
+});

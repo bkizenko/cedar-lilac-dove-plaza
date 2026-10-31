@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import type {Building} from './types';
 import {BUILDINGS} from './constants';
-import {HABITATS,habitatAt,soilQuality,riverDistance} from './ecology';
+import {HABITATS,habitatAt,soilQuality,riverDistance,habitatKindAt,droughtWaterPotential} from './ecology';
 
 const cached=new WeakMap<Building,{world:Game['world'];biomes:Game['world']['biomes'];rivers:Game['world']['rivers'];heights:Game['world']['heights'];key:string;soil:number;grain:number;tubers:number;droughtWater:number}>();
 /** At most nine equal-area land samples. Static terrain is cached per footprint,
@@ -14,8 +14,8 @@ export function fieldTerrain(g:Game,b:Building){
  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++){
   const x=b.x+((i+.5)/nx-.5)*b.w,z=b.z+((j+.5)/nz-.5)*b.d;
   const h=habitatAt(g,x,z),q=soilQuality(g,x,z),yieldFactor=h.crops*(.65+q*.5);
-  soil+=q;grain+=yieldFactor;tubers+=yieldFactor*(h===HABITATS.forest?1.15:.9);
-  droughtWater+=riverDistance(g,x,z)<24?.8:.4;
+  soil+=q;grain+=yieldFactor;tubers+=yieldFactor*(habitatKindAt(g,x,z)==='forest'?1.15:.9);
+  droughtWater+=droughtWaterPotential(g,x,z);
  }
  const n=nx*nz,result={world:g.world,biomes:g.world.biomes,rivers:g.world.rivers,heights:g.world.heights,key,soil:soil/n,grain:grain/n,tubers:tubers/n,droughtWater:droughtWater/n};
  cached.set(b,result);return result;

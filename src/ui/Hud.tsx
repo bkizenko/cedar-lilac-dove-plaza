@@ -1,3 +1,8 @@
+import {PerformanceReadout} from './PerformanceReadout';
+import {DIFFICULTIES} from '../game/difficulty';
+import {FarmingProgress} from './FarmingProgress';
+import {ConflictControls} from './ConflictControls';
+import {KnowledgePanel} from './KnowledgePanel';
 import {PaidProjects} from './PaidProjects';
 import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
@@ -159,8 +164,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
         {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
         {engine&&!founding&&<NeedsPanel engine={engine}/>}
+        {engine&&!founding&&<FarmingProgress engine={engine} onKnowledge={()=>setTechOpen(true)}/>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
-        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
+        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button type="button" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}>Auto work · {engine?.game.state.autoWorkEnabled===false?"Off":"On"}</button><button aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}>{engine?.loggingMode?"Finish tree marks · N":"Mark trees · N"}</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Knowledge</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
       {testOpen&&engine&&<TestPanel engine={engine} close={()=>setTestOpen(false)}/>}
       <div className="hud-clock">
@@ -170,6 +176,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             Controls & save {toolsMin?<ChevronDown className="size-4"/>:<ChevronUp className="size-4"/>}
           </button>
           {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
+          {engine&&<PerformanceReadout engine={engine}/>}
+          <p className="px-2 py-2 text-xs">Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
+          <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
+          <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
+          <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
           <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"
@@ -450,6 +461,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
         </div>}
+        {!selMin&&engine&&<ConflictControls engine={engine}/>}
         {selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
@@ -831,7 +843,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-ink/70 px-3">
           <div className="hud-panel max-h-[80dvh] w-full max-w-3xl overflow-y-auto rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
-              <div className="font-display text-lg text-parchment">Ages</div>
+              <div className="font-display text-lg text-parchment">Knowledge &amp; ages</div>
               <button
                 type="button"
                 onClick={() => setTechOpen(false)}
@@ -840,6 +852,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 Close
               </button>
             </div>
+            {engine&&<KnowledgePanel engine={engine} expanded onChooseSite={()=>setTechOpen(false)}/>}
             <AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AGES.map((name, age) => (

@@ -1,3 +1,7 @@
+import {multipleLandmasses,multipleGeography,measureLandmasses,MULTILAND_RULES} from './multipleLandmasses';
+import {buildEcologicalProvinces,provinceAt,EcologyCoverageError,type EcologicalProvinceGrid} from './ecologicalProvinces';
+import {repairRiparianTerrain} from './riparianRepair';
+import {populateEcologicalResources} from './ecologicalResources';
 import {localWaterAt,waterSurfaceAt,type LocalWaterBody,type Waterfall} from './localWater';
 export {waterSurfaceAt} from './localWater';
 import {scenicBeautyAt,scenerySummary,SCENERY_RULES} from './scenery';
@@ -12,6 +16,10 @@ import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  topology?:ReturnType<typeof measureLandmasses>;
+  ecology?:EcologicalProvinceGrid;
+  ecologyRepair?:ReturnType<typeof repairRiparianTerrain>;
+  ecologyResourceMetrics?:ReturnType<typeof populateEcologicalResources>['regions'];
   landscape?: ReturnType<typeof import('./regionalGeography').regionalGeography>['metrics'] | ReturnType<typeof import('./composedGeography').composedGeography>['metrics'];
   waterBodies?:LocalWaterBody[];
   waterfalls?:Waterfall[];
@@ -103,7 +111,8 @@ function node(
 }
 
 export function generateWorld(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const land=version>=7?landforms(seed,request,version>=8,version>=11):null;
+  const multi=version>=13?multipleLandmasses(seed,request):null;
+  const land=multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
   const MAP=land?.options.size??1040, HALF=MAP/2;
   const SEGS=land?Math.round(MAP/1040*256):256;
   const idx=(ix:number,iz:number)=>iz*(SEGS+1)+ix;
@@ -201,7 +210,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
-  const geo=land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
+  const geo=multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   const localBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
   const waterHeights=version>=11?new Float32Array(n*n):undefined;
@@ -409,7 +418,9 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       if(best){camps.push({...best,team});biomes.push({...best,kind:team===4?'forest':'hills'});}
     }
   }
+  let ecology:EcologicalProvinceGrid|undefined,ecologyRepair:ReturnType<typeof repairRiparianTerrain>|undefined;
   const biomeAt = (x: number, z: number) => {
+    if(ecology)return provinceAt(ecology,x,z).baseHabitat;
     let best: WorldData["biomes"][number]["kind"] = "plains";
     let bd = 1e12;
     for (const b of biomes) {
@@ -444,6 +455,13 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     }
   }
 
+  if(version>=12){
+    const terrain={size:MAP,heights,waterY,baseWaterY:waterY,waterHeights,waterBodies:localBodies,features:geo?.features,rivers};
+    try{ecology=buildEcologicalProvinces(terrain,seed);}catch(error){
+      if(!(error instanceof EcologyCoverageError)||error.code!=='riparian-physical-coverage')throw error;
+      ecologyRepair=repairRiparianTerrain(terrain,seed,version);ecology=buildEcologicalProvinces(terrain,seed);
+    }
+  }
   let nid = 1;
   const trees: ResourceNode[] = [];
   const stones: ResourceNode[] = [];
@@ -900,6 +918,11 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   }
   if(version>=8)for(let i=trees.length-1;i>=0;i--)if(!dryTreeRoot((x,z)=>sample(heights,x,z),trees[i].x,trees[i].z,localLevel(trees[i].x,trees[i].z)))trees.splice(i,1);
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
+  let ecologyResourceMetrics:ReturnType<typeof populateEcologicalResources>['regions']|undefined;
+  if(ecology){
+    const distribution=populateEcologicalResources({size:MAP,waterY,baseWaterY:waterY,waterHeights,ecology,camps,dockSites,trees,forage,stones,copper,iron},seed,(x,z)=>sample(heights,x,z),nid);
+    nid=distribution.nextId;ecologyResourceMetrics=distribution.regions;
+  }
   const scenery=version>=9?(()=>{
     const scores:number[]=[];
     for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
@@ -911,8 +934,12 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     return {...scenerySummary(scenicCampScores,player),dryLandMean:dryLand.mean,dryLandSampleCount:scores.length};
   })():undefined;
   if(geo&&'measure' in geo){const composed=geo as ReturnType<typeof import('./composedGeography').composedGeography>;composed.metrics.geometry=composed.measure((x:number,z:number)=>sample(heights,x,z));}
+  const topology=multi?measureLandmasses(heights,SEGS,MAP,localLevel):undefined;
+  if(topology&&(topology.substantialLandmassCount<2||topology.substantialLandmassCount>5||topology.largestLandmassShare>MULTILAND_RULES.maximumLargestShare||topology.secondLandmassShare<MULTILAND_RULES.minimumSecondShare))throw new Error(`V13 physical landmass coverage failed: ${JSON.stringify(topology)}`);
   return {
+    ...(topology?{topology}:{}),
     ...(scenery?{scenery}:{}),
+    ...(ecology?{ecology,ecologyResourceMetrics,...(ecologyRepair?{ecologyRepair}:{})}:{}),
     ...(waterHeights?{waterHeights,waterBodies:localBodies,waterfalls:geo&&'waterfalls' in geo?geo.waterfalls as Waterfall[]:[]}:{}),
     size: MAP,
     ...(land?{options:land.options,features:geo!.features}:{}),

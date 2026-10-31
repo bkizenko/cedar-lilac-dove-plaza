@@ -1,3 +1,4 @@
+import {supplyDrops} from './campAnchor';
 import {difficulty} from './difficulty';
 import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
@@ -45,8 +46,8 @@ export function finishSeaRaid(g:Game){
  campaign.loss=Math.min(1,Math.max(0,(campaign.adults-survivors)/Math.max(1,campaign.adults),(campaign.buildings-standing)/Math.max(1,campaign.buildings)));
  campaign.active=false;
  for(const u of g.state.units){
-  if(u.team!==0||u.hp<=0||!u.militia||u.pillage>=0||u.massRaidTarget!==undefined||u.visit||u.trade||u.envoy||u.scout||u.expedition||u.foundingJourney||u.escortId!==undefined||u.huntOnly)continue;
-  if(g.state.buildings.some(b=>b.team===0&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<60))queueStandDown(g,u,true);
+  if(u.team!==0||u.hp<=0||!u.militia||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.pillage>=0||u.massRaidTarget!==undefined||u.visit||u.trade||u.envoy||u.scout||u.expedition||u.foundingJourney||u.escortId!==undefined||u.huntOnly)continue;
+  if(supplyDrops(g,0).some(b=>Math.hypot(u.x-b.x,u.z-b.z)<60))queueStandDown(g,u,true);
  }
  const hungry=g.tribe(0).food<foodDemand(g)*120;
  g.state.raidT=Math.max(g.state.raidT,480/difficulty(g).raid+Math.round(campaign.loss*900)+(hungry?180:0));

@@ -1,3 +1,4 @@
+import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {UNITS} from './constants';
@@ -68,7 +69,7 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
     (victim.team!==0||g.visibleAt(e.x,e.z))&&Math.hypot(e.x-victim.x,e.z-victim.z)<60)
     .sort((a,b)=>Math.hypot(a.x-victim.x,a.z-victim.z)-Math.hypot(b.x-victim.x,b.z-victim.z));
   for(const u of g.state.units){
-    if(u.team!==victim.team||u.hp<=0||Math.hypot(u.x-victim.x,u.z-victim.z)>45||u.envoy?.kind==='peace')continue;
+    if(u.team!==victim.team||u.hp<=0||u.prisoner||Math.hypot(u.x-victim.x,u.z-victim.z)>45||u.envoy?.kind==='peace')continue;
     if(u.type==='worker'||u.militia){
       mobilize(g,u);u.emergency!.until=g.state.time+10;
       if(isDependent(g,u)||u.hp<u.maxHp*.3){
@@ -83,7 +84,7 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
 
 /** Automatic response is local; commanded expeditions are not recalled across the map. */
 export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
-  if (u.team === 3) return false;
+  if (u.team === 3 || u.prisoner) return false;
   // Explicit adult combat orders take precedence over automatic shelter behavior.
   if ((u.team === 0 || u.militia) && (u.type === "worker" || u.militia) && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
@@ -94,7 +95,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     Math.hypot(b.x-u.x,b.z-u.z)<40);
   const foes = g.state.units.filter(
     (e) =>
-      e.hp > 0 && !e.shelterId &&
+      e.hp > 0 && !e.shelterId && !occupationProtectsCivilian(g,u,e) && missionMayTargetCivilian(g,u,e) &&
       g.isFoe(u.team, e.team) &&
       (u.team !== 0 || g.visibleAt(e.x, e.z)) &&
       (Math.hypot(e.x - u.x, e.z - u.z) < 17 ||
@@ -109,7 +110,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*.3;
   if (foes.length) u.emergency.until = g.state.time + 10;
   if (g.state.time >= u.emergency.until) {
-    const returnToWork=u.team===0&&u.militia&&u.pillage<0&&u.massRaidTarget===undefined&&!u.visit&&!u.trade&&!u.envoy&&!u.scout&&!u.expedition&&!u.foundingJourney&&u.escortId===undefined&&!u.huntOnly;
+    const returnToWork=u.team===0&&u.militia&&!u.conflictIntent&&u.pillage<0&&u.massRaidTarget===undefined&&!u.visit&&!u.trade&&!u.envoy&&!u.scout&&!u.expedition&&!u.foundingJourney&&u.escortId===undefined&&!u.huntOnly;
     if (u.emergency.autoArmed&&!returnToWork) {
       const t = g.tribe(u.team);
       if (u.type === "archer") t.bows++;

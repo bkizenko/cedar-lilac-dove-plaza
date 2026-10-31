@@ -1,3 +1,6 @@
+import {validConflictIntentState} from './conflictIntent';
+import {validPrisonerState} from './captivity';
+import {validConflictJournal} from './conflictMetrics';
 import {validSurvivalState} from './survivalNeeds';
 import {validSimulationEvents} from './simulationEvents';
 import {syncHaulageProjects,validHaulageProjects} from './haulage';
@@ -67,23 +70,23 @@ function num(x: unknown): x is number {
 function numbers(x: Record<string, any>, fields: string[]) {
   for (const f of fields) if (!num(x[f])) fail();
 }
-export function decodeGame(raw: unknown): Game {
+function validateGamePayload(raw: unknown) {
   if (!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)) fail();
   if(raw.cargoVersion!==undefined&&raw.cargoVersion!==1)fail();
   const d = JSON.parse(JSON.stringify(raw)),
-    s = d.state,
-    g = new Game();
-  for (const [name, v] of Object.entries(g.blank())) {
+    s = d.state;
+  for (const [name, v] of Object.entries(Game.prototype.blank())) {
     if (!(name in s)) fail();
     if (typeof v === "number" && !num(s[name])) fail();
     if (typeof v === "string" && typeof s[name] !== "string") fail();
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
-  if([7,8,9,10,11].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if([7,8,9,10,11,12,13].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
-  if(!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
+  if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
+  if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
   if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();
@@ -121,7 +124,7 @@ export function decodeGame(raw: unknown): Game {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -543,6 +546,8 @@ export function decodeGame(raw: unknown): Game {
   for (const p of s.projectiles) {
     if (!obj(p)) fail();
     numbers(p, ["x", "y", "z", "tx", "ty", "tz", "speed", "life", "dmg", "team"]);
+    if(p.attackerId!==undefined&&(!Number.isSafeInteger(p.attackerId)||p.attackerId<1||p.attackerId>=s.nextId))fail();
+    if(p.conflictIntent!==undefined&&!['loot','capture','occupy','dominate'].includes(p.conflictIntent))fail();
     p.target = resolve(p.target);
   }
   if (d.demographicVersion === undefined) {
@@ -557,6 +562,15 @@ export function decodeGame(raw: unknown): Game {
     const crew=s.units.filter((u:any)=>u.hp>0&&u.boat?.id===b.id);
     if(crew.length>b.capacity||b.captain!==undefined&&!crew.some((u:any)=>u.id===b.captain&&u.boat.phase==='aboard'))fail();
   }
+  if (d.chopMarks !== undefined && (!Array.isArray(d.chopMarks) || d.chopMarks.length > 20000 ||
+    d.chopMarks.some((id: unknown) => !Number.isSafeInteger(id)))) fail();
+  return {d,s};
+}
+/** Full serialized-schema/reference validation without regenerating terrain or
+ * navigation. Autosave checks previous snapshots; it must not rebuild a world. */
+export function validateGameSave(raw:unknown):void {validateGamePayload(raw);}
+export function decodeGame(raw:unknown):Game {
+  const {d,s}=validateGamePayload(raw),g=new Game();
   g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);
   // Early v7 random-layout saves omitted the original selection roll. Select
   // the reconstruction supported by saved natural-node heights, not a new map.
@@ -586,8 +600,7 @@ export function decodeGame(raw: unknown): Game {
   g.vision.set(d.vision);
   g.visAge.set(d.visAge);
   g.looted = new Set(d.looted);
-  if (d.chopMarks !== undefined && (!Array.isArray(d.chopMarks) || d.chopMarks.length > 20000 ||
-    d.chopMarks.some((id: unknown) => !Number.isSafeInteger(id)))) fail();
+
   const liveTrees = new Set(g.state.trees.filter(t => t.amount > 0).map(t => t.id));
   g.chopMarks = new Set((d.chopMarks || []).filter((id: number) => liveTrees.has(id)));
   g.seaT = d.seaT;

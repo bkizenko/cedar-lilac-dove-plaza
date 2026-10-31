@@ -1,0 +1,932 @@
+{
+  "version": 13,
+  "startedAt": "2026-10-31T17:38:56.066Z",
+  "sourceFingerprint": "46689c8326d3b4880d6bea339f47d8ae8b5af576091a28f55fc20a950b0bb927",
+  "gate": "actual-terrain-geometry-biomes-dry-roots-camps",
+  "results": [
+    {
+      "seed": 1579889981,
+      "size": 1040,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 2920.874125,
+      "mainlands": 3,
+      "largestShare": 0.377473645274644,
+      "secondArea": 87421.19140625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 101743.8499141234
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 27579.442462676707
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 33581.18641828511
+        },
+        {
+          "kind": "alpine",
+          "area": 22577.989166336374
+        },
+        {
+          "kind": "wetland",
+          "area": 8859.71726780288
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 33866.98374950456
+        },
+        {
+          "kind": "arid",
+          "area": 27722.341128286433
+        },
+        {
+          "kind": "warm-coast",
+          "area": 14432.765226582113
+        }
+      ],
+      "trees": 1254,
+      "camps": 3
+    },
+    {
+      "seed": 2683405226,
+      "size": 1560,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 9563.542875,
+      "mainlands": 4,
+      "largestShare": 0.27486969851814,
+      "secondArea": 220426.171875,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 86256
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 52560
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 106128
+        },
+        {
+          "kind": "alpine",
+          "area": 118368
+        },
+        {
+          "kind": "wetland",
+          "area": 43200
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 223488
+        },
+        {
+          "kind": "arid",
+          "area": 89856
+        },
+        {
+          "kind": "warm-coast",
+          "area": 92592
+        }
+      ],
+      "trees": 3891,
+      "camps": 5
+    },
+    {
+      "seed": 3786920471,
+      "size": 2080,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 17443.539959,
+      "mainlands": 5,
+      "largestShare": 0.212498973137271,
+      "secondArea": 331282.91015625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 326523.45091821905
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 343957.08812260535
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 122321.25776192364
+        },
+        {
+          "kind": "alpine",
+          "area": 185768.26529264104
+        },
+        {
+          "kind": "wetland",
+          "area": 81880.93539437179
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 123750.24441802088
+        },
+        {
+          "kind": "arid",
+          "area": 146899.82824679615
+        },
+        {
+          "kind": "warm-coast",
+          "area": 203487.6998282468
+        }
+      ],
+      "trees": 9181,
+      "camps": 5
+    },
+    {
+      "seed": 595468420,
+      "size": 1040,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 3416.8608749999985,
+      "mainlands": 3,
+      "largestShare": 0.37815126050420167,
+      "secondArea": 81463.28125,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 35438.86907121152
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 13289.57590170432
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 52443.810278768666
+        },
+        {
+          "kind": "alpine",
+          "area": 19291.319857312723
+        },
+        {
+          "kind": "wetland",
+          "area": 14146.967895362664
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 51014.82362267142
+        },
+        {
+          "kind": "arid",
+          "area": 27579.442462676707
+        },
+        {
+          "kind": "warm-coast",
+          "area": 20577.407847800238
+        }
+      ],
+      "trees": 1604,
+      "camps": 3
+    },
+    {
+      "seed": 1698983665,
+      "size": 1560,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 8466.127874999998,
+      "mainlands": 5,
+      "largestShare": 0.21208288744041248,
+      "secondArea": 179199.4140625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 150336
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 174960
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 70416
+        },
+        {
+          "kind": "alpine",
+          "area": 181584
+        },
+        {
+          "kind": "wetland",
+          "area": 35136
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 53136
+        },
+        {
+          "kind": "arid",
+          "area": 57168
+        },
+        {
+          "kind": "warm-coast",
+          "area": 131904
+        }
+      ],
+      "trees": 4696,
+      "camps": 5
+    },
+    {
+      "seed": 2802498910,
+      "size": 2080,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 18028.66025,
+      "mainlands": 3,
+      "largestShare": 0.34016608162623774,
+      "secondArea": 427748.2421875,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 55587.58092218259
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 125750.82573655702
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 293942.555159202
+        },
+        {
+          "kind": "alpine",
+          "area": 204345.09182190514
+        },
+        {
+          "kind": "wetland",
+          "area": 76307.88743559255
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 102172.54591095257
+        },
+        {
+          "kind": "arid",
+          "area": 137468.51631655436
+        },
+        {
+          "kind": "warm-coast",
+          "area": 255788.61144140575
+        }
+      ],
+      "trees": 8185,
+      "camps": 5
+    },
+    {
+      "seed": 3906014155,
+      "size": 1040,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 11065.493540999996,
+      "mainlands": 4,
+      "largestShare": 0.2820925985605328,
+      "secondArea": 83212.6953125,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 13861.170564143216
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 22292.191835116926
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 17004.94120755714
+        },
+        {
+          "kind": "alpine",
+          "area": 32866.69309023649
+        },
+        {
+          "kind": "wetland",
+          "area": 24435.67181926278
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 25578.861144140574
+        },
+        {
+          "kind": "arid",
+          "area": 18433.92786365438
+        },
+        {
+          "kind": "warm-coast",
+          "area": 84310.21270973708
+        }
+      ],
+      "trees": 1932,
+      "camps": 3
+    },
+    {
+      "seed": 714562104,
+      "size": 1560,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 15556.881791000007,
+      "mainlands": 2,
+      "largestShare": 0.508890214797136,
+      "secondArea": 271687.3046875,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 31104
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 157824
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 66816
+        },
+        {
+          "kind": "alpine",
+          "area": 72576
+        },
+        {
+          "kind": "wetland",
+          "area": 47232
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 68400
+        },
+        {
+          "kind": "arid",
+          "area": 75312
+        },
+        {
+          "kind": "warm-coast",
+          "area": 34704
+        }
+      ],
+      "trees": 3563,
+      "camps": 4
+    },
+    {
+      "seed": 1818077349,
+      "size": 2080,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 18681.115833000003,
+      "mainlands": 3,
+      "largestShare": 0.3820015962527313,
+      "secondArea": 432336.328125,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 69591.65015193552
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 50157.43162901308
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 281653.26991676574
+        },
+        {
+          "kind": "alpine",
+          "area": 189483.63059849385
+        },
+        {
+          "kind": "wetland",
+          "area": 82452.53005681068
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 202201.6118377593
+        },
+        {
+          "kind": "arid",
+          "area": 90883.55132778439
+        },
+        {
+          "kind": "warm-coast",
+          "area": 298086.616461884
+        }
+      ],
+      "trees": 7710,
+      "camps": 5
+    },
+    {
+      "seed": 2921592594,
+      "size": 1040,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 2762.8318750000035,
+      "mainlands": 2,
+      "largestShare": 0.5385384051695423,
+      "secondArea": 114322.55859375,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 15147.258554630731
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 16147.549213898797
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 14146.967895362664
+        },
+        {
+          "kind": "alpine",
+          "area": 24149.874488043337
+        },
+        {
+          "kind": "wetland",
+          "area": 34009.88241511428
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 40726.119698771305
+        },
+        {
+          "kind": "arid",
+          "area": 14718.562557801559
+        },
+        {
+          "kind": "warm-coast",
+          "area": 47013.660985599156
+        }
+      ],
+      "trees": 1345,
+      "camps": 3
+    },
+    {
+      "seed": 4025107839,
+      "size": 1560,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 9578.768333,
+      "mainlands": 5,
+      "largestShare": 0.23269262094803714,
+      "secondArea": 167778.7109375,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 68544
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 83232
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 123552
+        },
+        {
+          "kind": "alpine",
+          "area": 149184
+        },
+        {
+          "kind": "wetland",
+          "area": 49824
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 100800
+        },
+        {
+          "kind": "arid",
+          "area": 90288
+        },
+        {
+          "kind": "warm-coast",
+          "area": 69264
+        }
+      ],
+      "trees": 4495,
+      "camps": 5
+    },
+    {
+      "seed": 833655788,
+      "size": 2080,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 14424.163666000008,
+      "mainlands": 2,
+      "largestShare": 0.5146748669941354,
+      "secondArea": 588661.328125,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 299515.6031179812
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 62732.51420266878
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 38296.842383406
+        },
+        {
+          "kind": "alpine",
+          "area": 112604.14850046241
+        },
+        {
+          "kind": "wetland",
+          "area": 83881.51671290792
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 171764.1960628881
+        },
+        {
+          "kind": "arid",
+          "area": 205774.0784780024
+        },
+        {
+          "kind": "warm-coast",
+          "area": 223779.3103448276
+        }
+      ],
+      "trees": 4511,
+      "camps": 5
+    },
+    {
+      "seed": 1937171033,
+      "size": 1040,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 4310.732209000009,
+      "mainlands": 3,
+      "largestShare": 0.3600663143715677,
+      "secondArea": 108678.22265625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 45584.67432950192
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 38153.943717796275
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 37153.65305852821
+        },
+        {
+          "kind": "alpine",
+          "area": 36439.15973047959
+        },
+        {
+          "kind": "wetland",
+          "area": 38582.639714625446
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 37010.75439291848
+        },
+        {
+          "kind": "arid",
+          "area": 35153.071739992076
+        },
+        {
+          "kind": "warm-coast",
+          "area": 42583.80235169772
+        }
+      ],
+      "trees": 1797,
+      "camps": 3
+    },
+    {
+      "seed": 3040686278,
+      "size": 1560,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 12064.733625000023,
+      "mainlands": 3,
+      "largestShare": 0.39954777003846553,
+      "secondArea": 212058.69140625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 23472
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 71424
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 110736
+        },
+        {
+          "kind": "alpine",
+          "area": 58464
+        },
+        {
+          "kind": "wetland",
+          "area": 81216
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 52992
+        },
+        {
+          "kind": "arid",
+          "area": 50256
+        },
+        {
+          "kind": "warm-coast",
+          "area": 84816
+        }
+      ],
+      "trees": 4313,
+      "camps": 5
+    },
+    {
+      "seed": 4144201523,
+      "size": 2080,
+      "layout": "continents",
+      "status": "passed",
+      "elapsedMs": 12913.168416,
+      "mainlands": 3,
+      "largestShare": 0.3541994075351515,
+      "secondArea": 406408.69140625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 99171.67393314837
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 261933.25406262386
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 156902.73483947682
+        },
+        {
+          "kind": "alpine",
+          "area": 108745.88452899987
+        },
+        {
+          "kind": "wetland",
+          "area": 45298.87699828247
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 96170.80195534417
+        },
+        {
+          "kind": "arid",
+          "area": 243642.2248645792
+        },
+        {
+          "kind": "warm-coast",
+          "area": 178623.33201215486
+        }
+      ],
+      "trees": 7261,
+      "camps": 5
+    },
+    {
+      "seed": 952749472,
+      "size": 1040,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 8385.050832999987,
+      "mainlands": 4,
+      "largestShare": 0.30201342281879195,
+      "secondArea": 77815.91796875,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 69591.65015193552
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 16004.650548289075
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 43441.19434535606
+        },
+        {
+          "kind": "alpine",
+          "area": 31866.402430968425
+        },
+        {
+          "kind": "wetland",
+          "area": 13575.373232923768
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 21720.59717267803
+        },
+        {
+          "kind": "arid",
+          "area": 92169.6393182719
+        },
+        {
+          "kind": "warm-coast",
+          "area": 16147.549213898797
+        }
+      ],
+      "trees": 1281,
+      "camps": 3
+    },
+    {
+      "seed": 2056264717,
+      "size": 1560,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 320726.53495800006,
+      "mainlands": 3,
+      "largestShare": 0.3686887716654107,
+      "secondArea": 255629.00390625,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 80784
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 38160
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 63936
+        },
+        {
+          "kind": "alpine",
+          "area": 49248
+        },
+        {
+          "kind": "wetland",
+          "area": 86400
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 36432
+        },
+        {
+          "kind": "arid",
+          "area": 71424
+        },
+        {
+          "kind": "warm-coast",
+          "area": 144576
+        }
+      ],
+      "trees": 3845,
+      "camps": 5
+    },
+    {
+      "seed": 3159779962,
+      "size": 2080,
+      "layout": "archipelago",
+      "status": "passed",
+      "elapsedMs": 3068.617542000022,
+      "mainlands": 2,
+      "largestShare": 0.5015972975864758,
+      "secondArea": 538142.87109375,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 82595.4287224204
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 99314.5725987581
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 136468.2256572863
+        },
+        {
+          "kind": "alpine",
+          "area": 162761.5801294755
+        },
+        {
+          "kind": "wetland",
+          "area": 75021.79944510503
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 150472.29488703926
+        },
+        {
+          "kind": "arid",
+          "area": 141469.67895362663
+        },
+        {
+          "kind": "warm-coast",
+          "area": 233639.31827189855
+        }
+      ],
+      "trees": 5779,
+      "camps": 5
+    },
+    {
+      "seed": 4263295207,
+      "size": 1040,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 878.9712079999736,
+      "mainlands": 4,
+      "largestShare": 0.2756053941708154,
+      "secondArea": 89335.64453125,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 86596.59135949267
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 11431.89324877791
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 17719.43453560576
+        },
+        {
+          "kind": "alpine",
+          "area": 25007.266481701678
+        },
+        {
+          "kind": "wetland",
+          "area": 11717.690579997357
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 82881.22605363985
+        },
+        {
+          "kind": "arid",
+          "area": 91312.24732461356
+        },
+        {
+          "kind": "warm-coast",
+          "area": 19291.319857312723
+        }
+      ],
+      "trees": 1129,
+      "camps": 3
+    },
+    {
+      "seed": 1071843156,
+      "size": 1560,
+      "layout": "pangaea",
+      "status": "passed",
+      "elapsedMs": 2042.719625000027,
+      "mainlands": 5,
+      "largestShare": 0.22252821203023088,
+      "secondArea": 164510.9375,
+      "connectedBiomeAreas": [
+        {
+          "kind": "meadow",
+          "area": 77472
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 38160
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 154944
+        },
+        {
+          "kind": "alpine",
+          "area": 80496
+        },
+        {
+          "kind": "wetland",
+          "area": 75456
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 70128
+        },
+        {
+          "kind": "arid",
+          "area": 49104
+        },
+        {
+          "kind": "warm-coast",
+          "area": 155952
+        }
+      ],
+      "trees": 5059,
+      "camps": 5
+    }
+  ],
+  "status": "passed",
+  "passed": 20,
+  "total": 20,
+  "timingNote": "Elapsed values are wall-clock measurements during concurrent development, not a generation benchmark or FPS measurement. A 320.7-second outlier needs separate CPU-time investigation; no per-case CPU times were recorded."
+}

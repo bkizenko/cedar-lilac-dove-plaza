@@ -1,3 +1,4 @@
+import {prisonerIndependentNeeds} from './captivity';
 import type {Game} from './sim';
 import type {GameState,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
@@ -33,7 +34,7 @@ function sheltered(g:Game,u:Unit){
 function fireDemand(g:Game,team:number,temp:number){return temp<SURVIVAL_RULES.coldThresholdCelsius?residents(g,team).length*SURVIVAL_RULES.woodPerPersonColdSecond:0;}
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),temp=ambientTemperature(g);
- const demand=people.length*SURVIVAL_RULES.waterLitersPerPersonSecond,fuelDemand=fireDemand(g,team,temp);
+ const demand=people.filter(u=>!prisonerIndependentNeeds(u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond,fuelDemand=fireDemand(g,team,temp);
  const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];
@@ -49,10 +50,16 @@ export function survivalStatus(g:Game,team=0){
 function free(g:Game,u:Unit,automatic=false){
  return u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia&&!u.emergency&&!u.boat&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.resting&&
  !u.buildOrder&&u.drill==null&&!u.haulage&&u.carry===0&&!hasTaskCommitment(u,'waterWork')&&(!u.waterWork||u.waterWork.paused)&&
- (automatic?(!u.jobLock&&['idle','gather'].includes(u.order)):['idle','hold','gather','return','move'].includes(u.order));
+ (automatic?(!u.jobLock&&['idle','gather',...(g.state.autoWorkEnabled===false?['hold']:[])].includes(u.order)):['idle','hold','gather','return','move'].includes(u.order));
 }
 type Source={sourceX:number;sourceZ:number;bankX:number;bankZ:number};
-function sourceFor(g:Game,u:Unit):Source|null{
+/** Matches steer's physical destination collision test, including the actor's
+ * radius. A coarse walk-grid cell can be free while the exact point is indoors. */
+function bankClear(g:Game,u:Unit,x:number,z:number){
+ return g.walkable(x,z)&&!g.state.buildings.some(b=>g.solidBuilding(b)&&Math.abs(x-b.x)<=b.w*.4+u.r&&Math.abs(z-b.z)<=b.d*.4+u.r);
+}
+function sourceWet(g:Game,source:Source){return g.height(source.sourceX,source.sourceZ)<=g.waterAt(source.sourceX,source.sourceZ)+.25;}
+function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
  const sources:{x:number;z:number}[]=[];
  for(const river of g.world.rivers)for(let i=1;i<river.pts.length-2;i++){
   const a=river.pts[i-1],b=river.pts[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/8));
@@ -73,7 +80,8 @@ function sourceFor(g:Game,u:Unit):Source|null{
   for(const d of [8,16,24,32])for(let i=0;i<12;i++){
    const a=i*Math.PI/6,x=p.x+Math.cos(a)*d,z=p.z+Math.sin(a)*d;
    if(u.team===0&&!g.exploredAt(x,z))continue;
-   if(!g.walkable(x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
+   if(avoid&&Math.hypot(x-avoid.x,z-avoid.z)<4)continue;
+   if(!bankClear(g,u,x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
    // Collection is physically beside fresh water, rather than from a distant
    // dry waypoint that happens to be close to a river's metadata.
    const reach=Array.from({length:8},(_,j)=>{const a=j*Math.PI/4;return g.height(x+Math.cos(a)*5,z+Math.sin(a)*5)<g.waterAt(x+Math.cos(a)*5,z+Math.sin(a)*5)+.2;}).some(Boolean);
@@ -82,11 +90,21 @@ function sourceFor(g:Game,u:Unit):Source|null{
  }
  candidates.sort((a,b)=>Math.hypot(a.bankX-u.x,a.bankZ-u.z)-Math.hypot(b.bankX-u.x,b.bankZ-u.z));return candidates[0]??null;
 }
-function proposal(g:Game,team:number,automatic=false){
+type WaterProposal={reason:string|null;u?:Unit;source?:Source|null};
+function proposal(g:Game,team:number,automatic=false):WaterProposal{
  if(g.state.survivalVersion!==1||!g.tribe(team)?.survival)return {reason:'This saved village uses the previous survival rules'};
  const adults=[...g.state.units].filter(u=>u.team===team&&free(g,u,automatic)).sort((a,b)=>Number(b.selected)-Number(a.selected));
  if(!adults.length)return {reason:'Choose an empty-handed adult without a reserved project'};
- for(const u of adults){if(u.waterWork?.paused)return {u,source:null,reason:null};const source=sourceFor(g,u);if(source)return {u,source,reason:null};}
+ for(const u of adults){
+  const paused=u.waterWork;
+  if(paused?.paused){
+   // Loaded water always returns through its real delivery executor. Empty
+   // paused jobs only resume their old bank while it remains physically valid.
+   if(paused.phase==='returning'||bankClear(g,u,paused.bankX,paused.bankZ)&&sourceWet(g,paused))return {u,source:null,reason:null};
+   const source=sourceFor(g,u,{x:paused.bankX,z:paused.bankZ});if(source)return {u,source,reason:null};continue;
+  }
+  const source=sourceFor(g,u);if(source)return {u,source,reason:null};
+ }
  return {reason:'Explore a freshwater bank reachable by land before collecting water'};
 }
 const issueCache=new WeakMap<Game,Map<number,{time:number;reason:string|null}>>();
@@ -116,9 +134,9 @@ export function validSurvivalState(state:GameState):boolean{
 }
 export function beginWaterCollection(g:Game,team=0,automatic=false){
  issueCache.delete(g);const p=proposal(g,team,automatic);if(p.reason||!p.u)return {accepted:false,reason:p.reason??'No water carrier available'};
- const u=p.u;
- if(!u.waterWork){g.interruptMission(u);u.waterWork={...p.source!,phase:'outbound',progressSeconds:0,liters:0};}
- else u.waterWork.paused=false;
+ const u=p.u,previous=u.waterWork;g.interruptMission(u);
+ if(!previous)u.waterWork={...p.source!,phase:'outbound',progressSeconds:0,liters:0};
+ else {u.waterWork=previous;if(p.source){Object.assign(previous,p.source);previous.phase='outbound';}previous.paused=false;}
  u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);g.workBoard.reset();
  u.workReason='Collecting drinking water from a freshwater bank';return {accepted:true,reason:'Water carrier dispatched',actorId:u.id};
 }
@@ -138,9 +156,14 @@ export function waterCollectionAI(g:Game,u:Unit,dt:number){
   u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){g.steer(u,dt);u.workReason=`Returning ${w.liters.toFixed(0)} L of drinking water`;return true;}
   deliverWaterCargo(g,u);u.order='idle';u.workReason='Drinking water delivered';g.invalidateRoute(u);g.workBoard.reset();return true;
  }
- if(!g.walkable(w.bankX,w.bankZ)||(u.stuckT??0)>30||g.height(w.sourceX,w.sourceZ)>g.waterAt(w.sourceX,w.sourceZ)+.25){w.paused=true;u.order='idle';u.workReason='Water source dry, flooded or unreachable — collection paused';return true;}
+ const replan=()=>{
+  const alternate=sourceFor(g,u,{x:w.bankX,z:w.bankZ});
+  if(alternate){Object.assign(w,alternate);w.phase='outbound';w.paused=false;u.stuckT=0;g.invalidateRoute(u);u.workReason='Water bank obstructed — approaching another freshwater bank';}
+  else {w.paused=true;u.order='idle';g.invalidateRoute(u);g.workBoard.reset();u.workReason='No known clear freshwater bank — collection paused; explore or clear an approach';}
+ };
+ if(!bankClear(g,u,w.bankX,w.bankZ)||(u.stuckT??0)>30||!sourceWet(g,w)){replan();return true;}
  u.tx=w.bankX;u.tz=w.bankZ;
- if(Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5){g.steer(u,dt);u.workReason='Walking to a freshwater bank';return true;}
+ if(Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5){const arrived=g.steer(u,dt);if(arrived&&Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5)replan();else u.workReason='Walking to a freshwater bank';return true;}
  w.phase='collecting';w.progressSeconds=Math.min(SURVIVAL_RULES.collectSeconds,w.progressSeconds+dt);u.workReason=`Filling water vessels · ${Math.min(100,Math.floor(w.progressSeconds/SURVIVAL_RULES.collectSeconds*100))}%`;
  if(w.progressSeconds>=SURVIVAL_RULES.collectSeconds){w.liters=SURVIVAL_RULES.waterTripLiters;w.phase='returning';g.invalidateRoute(u);}
  return true;
@@ -157,16 +180,18 @@ export function tickSurvival(g:Game,dt:number){
  for(const tr of g.state.tribes){
   const stock=tr.survival;if(!stock)continue;
   const people=residents(g,tr.id);if(!people.length)continue;
-  const demand=people.length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
+  const demand=people.filter(u=>!prisonerIndependentNeeds(u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
   stock.waterLiters=Math.max(0,stock.waterLiters-used);stock.waterConsumedLiters+=used;stock.waterShortageSeconds+=dt*shortfall;
   const fuelNeeded=fireDemand(g,tr.id,temp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
   if(fuel>0)activeFires.add(tr.id);
   tr.wood=Math.max(0,tr.wood-fuel);stock.fuelBurnedWood+=fuel;
   const home=g.campOf(tr.id);
   for(const u of people){
+   if(!prisonerIndependentNeeds(u)){
    const beforeThirst=u.thirstSeconds??0;u.thirstSeconds=Math.max(0,beforeThirst+dt*(shortfall>0?shortfall:-rules.recoverySecondsPerSecond));
    const thirstDamage=Math.max(0,u.thirstSeconds-rules.thirstGraceSeconds)-Math.max(0,beforeThirst-rules.thirstGraceSeconds);
    if(thirstDamage>0)u.hp-=thirstDamage*u.maxHp/rules.thirstFatalExposureSeconds;
+   }
    const fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
    const effective=temp+fire*rules.fireWarmthCelsius+(sheltered(g,u)?rules.shelterWarmthCelsius:0);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;

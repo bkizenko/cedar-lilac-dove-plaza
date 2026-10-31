@@ -10,7 +10,7 @@ export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPol
   if(policy==='trade')for(const route of g.state.routes)if(!route.paused)route.t=Math.min(route.t,1);
   const available:Unit[]=[];
   for(const u of g.state.units){
-    if(u.team!==0||u.hp<=0||isDependent(g,u))continue;
+    if(u.team!==0||u.hp<=0||u.prisoner||isDependent(g,u))continue;
     if(u.emergency){u.emergency.job=null;u.emergency.jobLock=false;u.emergency.resume=undefined;continue;}
     if(u.type!=='worker'||u.boat)continue;
     // Paid active projects and dispatched shipments keep their commitments.

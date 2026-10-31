@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {beginCopperStudy,copperStudyAI} from '../src/game/materialStudy.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.world.heights.fill(4);g.state.units=[];g.state.buildings=[g.makeBld('workshop',0,38,0)];g.state.weather='clear';g.clockState=()=>({period:'Afternoon'});for(let i=0;i<20;i++)g.spawnUnit('worker',i%5,60+Math.floor(i/5),0);Object.assign(g.tribe(0),{copper:16,wood:20});g.rebuildWalk();return g;}
-test('copper trials consume finite materials and require settlement mass and physical workshop labor',()=>{
- const g=fixture(),b=g.state.buildings[0];g.state.units.pop();assert.equal(beginCopperStudy(g,b.id),false);g.spawnUnit('worker',4,60,0);
+test('a small camp can establish copper tools through finite materials and physical workshop labor',()=>{
+ const g=fixture(),b=g.state.buildings[0];g.state.units=g.state.units.slice(0,5);assert.equal(g.popNow(0),5);
  assert.equal(beginCopperStudy(g,b.id),true);const u=g.state.units.find(u=>u.copperStudy);assert.equal(g.tribe(0).copper,8);assert.equal(g.tribe(0).wood,16);
  assert.equal(g.tribe(0).copperExperiment,undefined);assert.equal(u.farmTool,undefined);
  for(let i=0;i<2000&&u.copperStudy;i++){g.state.time+=.1;g.navBudget=10;copperStudyAI(g,u,.1);}

@@ -1,11 +1,11 @@
 import { SAVE_KEY, SAVE_VERSION } from "./constants";
 import type { Game } from "./sim";
-import { encodeGame, decodeGame } from "./persistence";
-function valid(raw: string | null) {
+import { encodeGame, decodeGame, validateGameSave } from "./persistence";
+function valid(raw: string | null,reconstruct=true) {
   if (!raw) return null;
   try {
     const d = JSON.parse(raw);
-    decodeGame(d);
+    if(reconstruct)decodeGame(d);else validateGameSave(d);
     return d;
   } catch {
     return null;
@@ -14,7 +14,7 @@ function valid(raw: string | null) {
 export function saveGame(g: Game, deliberate=false) {
   if (g.testMode || !g.started || g.awaitingStart) return false;
   try {
-    const old=localStorage.getItem(SAVE_KEY),previous=valid(old);
+    const old=localStorage.getItem(SAVE_KEY),previous=valid(old,false);
     // A stale tab/engine must not roll the active village backwards on autosave.
     if(!deliberate&&previous?.state.seed===g.state.seed&&previous.state.time>g.state.time)return true;
     const data=JSON.stringify({...encodeGame(g),savedAt:Date.now()});

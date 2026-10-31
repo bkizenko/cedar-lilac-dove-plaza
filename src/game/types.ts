@@ -1,3 +1,6 @@
+import type {ConflictIntent,OccupationControl} from './conflictIntent';
+import type {PrisonerCustody} from './captivity';
+import type {ConflictJournal} from './conflictMetrics';
 import type {FarmToolKind,FarmToolWork} from "./farmTools";
 import type {HaulageKind,HaulageWork} from "./haulage";
 export type UnitType =
@@ -135,6 +138,9 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  conflictIntent?:ConflictIntent;
+  captureTargetId?:number;
+  prisoner?:PrisonerCustody;
   waterWork?:import('./survivalNeeds').WaterWork;
   thirstSeconds?:number;
   coldSeconds?:number;
@@ -304,6 +310,8 @@ export type Floater = {
 };
 
 export type Projectile = {
+  attackerId?:number;
+  conflictIntent?:ConflictIntent;
   x: number;
   y: number;
   z: number;
@@ -383,6 +391,9 @@ export type Particle = {
 };
 
 export type GameState = {
+  autoWorkEnabled?:boolean;
+  occupations?:OccupationControl[];
+  conflictJournal?:ConflictJournal;
   simulationEvents?:import('./simulationEvents').SimulationEventLog;
   survivalVersion?:1;
   haulageProjects?:import('./haulage').HaulageProject[];

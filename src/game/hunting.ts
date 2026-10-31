@@ -1,3 +1,4 @@
+import {butcheryLaborMultiplier} from './subsistenceBalance';
 import type { Game } from "./sim";
 import type { Critter, CritterKind, Unit } from "./types";
 import { GATHER_WORK_RATE } from "./constants";
@@ -82,7 +83,7 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
   const alive = c.hp > 0;
   const range = alive ? u.type === "archer" ? 8 : armed ? 6 : 5 : 1.8;
   const urgency = reserveSeconds(g,u.team) < 240 ? 1.25 : 1;
-  const period = alive ? (armed ? 1.8 : 2.2) / 2 : 1.8 / (GATHER_WORK_RATE * urgency);
+  const period = alive ? (armed ? 1.8 : 2.2) / 2 : 1.8 * butcheryLaborMultiplier(g,u.x,u.z) / (GATHER_WORK_RATE * urgency);
   // Ready the next throw while stalking, but never accumulate remote butchery.
   if (alive) u.gatherT = Math.min(period, u.gatherT + dt * predisposition(u).strength);
   const inReach = () => Math.hypot(c.x - u.x, c.z - u.z) <= range;

@@ -1,3 +1,9 @@
+import {GRAPHICS_RULES} from '../game/graphics';
+import {ContourFields} from './contourFields';
+import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
+import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
+import {TerrainSurface,duneSandWeight} from './terrainSurface';
+import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
 import {foundationProfile} from './foundations';
@@ -147,6 +153,7 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
+  private contourFields: ContourFields | null = null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
@@ -171,6 +178,8 @@ export class WorldView {
   pits!: THREE.InstancedMesh;
   floaters: THREE.Group;
   quality: "low" | "med" | "high" = "med";
+  shadowsEnabled = GRAPHICS_RULES.defaultShadows as boolean;
+  unitRingsEnabled = GRAPHICS_RULES.defaultUnitRings as boolean;
   sky: THREE.Mesh;
   sunDisc: THREE.Mesh;
   sunGlow: THREE.Mesh;
@@ -203,6 +212,10 @@ export class WorldView {
   private styleHalls:{id:number;x:number;z:number;team:number}[]=[];
   private villageStyles = new Map<string,ReturnType<typeof architectureStyle>>();
   private eraDetails: THREE.InstancedMesh | null = null;
+  private biomeScene: BiomeSceneLayer | null = null;
+  private localWater: THREE.Group | null = null;
+  private terrainSurface: TerrainSurface | null = null;
+  private waterMaterials: THREE.Material[] = [];
   private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
   private terrainBiome: Uint8Array | null = null;
@@ -218,9 +231,7 @@ export class WorldView {
   private litSunCol = new THREE.Color("#fff4d2");
 
   constructor(canvas: HTMLCanvasElement) {
-    const mobile = window.matchMedia("(max-width: 700px)").matches || navigator.maxTouchPoints > 1;
-    const cores = navigator.hardwareConcurrency || 4;
-    this.quality = mobile || cores <= 4 ? "med" : "high";
+    this.quality = GRAPHICS_RULES.defaultQuality;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: this.quality === "high",
@@ -233,7 +244,7 @@ export class WorldView {
       Math.min(window.devicePixelRatio || 1, this.quality === "high" ? 1.5 : 1.25),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = this.shadowsEnabled;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.02;
@@ -253,7 +264,7 @@ export class WorldView {
     this.fill = new THREE.AmbientLight("#f1f1e6", 0.22);
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
-    this.sun.castShadow = true;
+    this.sun.castShadow = this.shadowsEnabled;
     this.sun.shadow.mapSize.set(
       this.quality === "high" ? 1024 : 512,
       this.quality === "high" ? 1024 : 512,
@@ -438,16 +449,18 @@ export class WorldView {
   applyQuality(q: "low" | "med" | "high") {
     this.quality = q;
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, q === "low" ? 1 : q === "med" ? 1.25 : 1.5),
+      Math.min(window.devicePixelRatio || 1, GRAPHICS_RULES.profiles[q].pixelRatio),
     );
-    this.renderer.shadowMap.enabled = q !== "low";
-    this.sun.castShadow = q !== "low";
+    this.renderer.shadowMap.enabled = this.shadowsEnabled && q !== "low";
+    this.sun.castShadow = this.shadowsEnabled && q !== "low";
     const map = q === "high" ? 1024 : 512;
     this.sun.shadow.mapSize.set(map, map);
     this.sun.shadow.map?.dispose();
     this.sun.shadow.map = null;
     if (this.grass) this.grass.visible = q !== "low";
     if (q === "low") {
+      this.composer?.dispose();
+      this.bloom?.dispose();
       this.composer = null;
       this.bloom = null;
     } else if (!this.composer && !this.lost) {
@@ -477,6 +490,7 @@ export class WorldView {
     this.seasonAcc = 1;
     this.buildTerrain(game);
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
+    if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
     this.buildNature(game);
     this.buildBuildings();
     this.buildUnits();
@@ -500,6 +514,8 @@ export class WorldView {
     const pos = geo.attributes.position;
     const colors: number[] = [];
     const landscape = new Float32Array(pos.count*5);
+    const surfaceRock = new Float32Array(pos.count);
+    const surfaceSand=new Float32Array(pos.count),sandFeatures=(game.world.features??[]).filter(f=>f.kind==='dunes');
     const biome = new Uint8Array(pos.count);
     const region = new Uint8Array(pos.count);
     const home = game.world.camps.find((c) => c.team === 0) || { x: 0, z: 0 };
@@ -514,6 +530,7 @@ export class WorldView {
       const heightDz=game.height(x,z+2.4)-game.height(x,z-2.4);
       const art=landscapeSample(game.state.seed,x,z,h,heightDx/4.8,heightDz/4.8);
       const artOffset=i*5;
+      surfaceRock[i]=art.exposure;surfaceSand[i]=duneSandWeight(sandFeatures,x,z);
       landscape[artOffset]=art.exposure;landscape[artOffset+1]=art.r;
       landscape[artOffset+2]=art.g;landscape[artOffset+3]=art.b;landscape[artOffset+4]=art.shade;
       const slope = Math.abs(heightDx)+Math.abs(heightDz);
@@ -560,6 +577,16 @@ export class WorldView {
     this.terrainBiome = biome;
     this.terrainRegion = region;
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geo.setAttribute("surfaceRock",new THREE.BufferAttribute(surfaceRock,1));
+    geo.setAttribute("surfaceSand",new THREE.BufferAttribute(surfaceSand,1));
+    this.terrainSurface=new TerrainSurface(game.world.heights,game.world.size,game.state.seed);
+    const ecology=(game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology;
+    if(ecology){const attributes=biomeSurfaceAttributes(ecology,pos as THREE.BufferAttribute);
+      geo.setAttribute('biomeCover',new THREE.BufferAttribute(attributes.cover,4));
+      geo.setAttribute('biomeMaterial',new THREE.BufferAttribute(attributes.material,4));
+      geo.setAttribute('biomeTint',new THREE.BufferAttribute(attributes.tint,3));
+    }
+    this.terrainSurface.bind(this.mats.ground,!!ecology);
     geo.computeVertexNormals();
     geo.computeBoundingBox();
     geo.computeBoundingSphere();
@@ -570,14 +597,23 @@ export class WorldView {
 
     const wgeo = new THREE.PlaneGeometry(this.mapSize, this.mapSize, 48, 48);
     wgeo.rotateX(-Math.PI / 2);
-    this.water = new THREE.Mesh(wgeo, this.makeWaterMat());
+    const waterMaterial=this.makeWaterMat(),fallMaterial=makeDepthWater(this.terrainSurface!,this.timeU,true);
+    this.waterMaterials=[waterMaterial,fallMaterial];
+    this.water = new THREE.Mesh(wgeo, waterMaterial);
     this.water.position.y = game.world.waterY;
     this.water.renderOrder = 1;
     this.scene.add(this.water);
+    const localWater=new THREE.Group();localWater.name='local-water-bodies';this.localWater=localWater;
+    localWater.position.y=game.world.waterY-game.world.baseWaterY;
+    const hydrology=game.world as typeof game.world&{waterBodies?:RenderWaterBody[];waterfalls?:RenderWaterfall[]};
+    addLocalWaters(localWater,hydrology.waterBodies??[],hydrology.waterfalls??[],waterMaterial,fallMaterial);this.scene.add(localWater);
     this.seasonAcc = 1;
   }
 
   private buildNature(game: Game) {
+    const ecology=(game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology;
+    if(ecology){this.biomeScene=new BiomeSceneLayer(this.scene,game,ecology);this.biomeScene.sync(game,this.camera.position,this.quality,1);this.treeCount=game.state.trees.length;}
+    else {
     const pine = pineGeo();
     const nTree = game.state.trees.length;
     this.treesTrunk = new THREE.InstancedMesh(pine.trunk, this.mats.bark, Math.max(nTree, 1));
@@ -612,6 +648,7 @@ export class WorldView {
     this.treesTrunk.count = nTree;
     this.treesLeaf.count = nTree;
     this.scene.add(this.treesTrunk, this.treesLeaf);
+    }
 
     const nRock = game.state.stones.length;
     this.rocks = new THREE.InstancedMesh(rockGeo(), this.mats.rock, Math.max(nRock, 1));
@@ -754,7 +791,12 @@ export class WorldView {
       const timberMaterial=this.mats.timber.clone();
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       if(type === "farm") timberMaterial.vertexColors = true;
-      if(type === "farm" || type === "pen") this.fieldSurface?.bind(timberMaterial);
+      if(type === "farm" || type === "pen") this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
+      if(type==='farm'&&this.contourFields){
+        g.timber.setAttribute('fieldRows',new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
+        const positions=g.timber.attributes.position,colors=g.timber.attributes.color,soilColor=new THREE.Color('#795632');
+        for(let i=0;i<positions.count;i++)if(Math.abs(positions.getY(i)-.075)<.002)colors.setXYZ(i,soilColor.r,soilColor.g,soilColor.b);
+      }
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
       if((type === "farm" || type === "pen") && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
       const roofMat =
@@ -971,6 +1013,15 @@ export class WorldView {
     const el=this.renderer.domElement;
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
     _ray.setFromCamera(_ndc,this.camera);
+    // Elevated lakes and descending rivers are actual surfaces for boat orders.
+    // Explicitly use Mesh raycasting because water is excluded from entity picks.
+    if(this.localWater){
+      const hits:THREE.Intersection[]=[];
+      this.localWater.updateMatrixWorld(true);
+      for(const mesh of this.localWater.children)if(mesh instanceof THREE.Mesh&&mesh.name.startsWith('water-'))THREE.Mesh.prototype.raycast.call(mesh,_ray,hits);
+      hits.sort((a,b)=>a.distance-b.distance);
+      if(hits.length)return hits[0].point.clone();
+    }
     _ground.set(new THREE.Vector3(0,1,0),-height);
     return _ray.ray.intersectPlane(_ground,_hit)?_hit.clone():null;
   }
@@ -979,11 +1030,14 @@ export class WorldView {
     const el=this.renderer.domElement;
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
     _ray.setFromCamera(_ndc,this.camera);
-    const sources=new Map<THREE.Object3D,import("@/game/types").ResourceNode[]>();
+    const sources=new Map<THREE.Object3D,(import("@/game/types").ResourceNode|undefined)[]>();
     for(const [mesh,nodes] of [[this.treesTrunk,game.state.trees],[this.treesLeaf,game.state.trees],
       [this.rocks,game.state.stones],[this.bushes,game.state.forage],
       [this.copper,game.state.copper],[this.iron,game.state.iron]] as const) {
-      if(mesh){mesh.computeBoundingSphere();sources.set(mesh,nodes);}
+      if(mesh&&(!this.biomeScene||mesh!==this.treesTrunk&&mesh!==this.treesLeaf)){mesh.computeBoundingSphere();sources.set(mesh,nodes);}
+    }
+    if(this.biomeScene){const treesById=new Map(game.state.trees.map(node=>[node.id,node]));
+      for(const source of this.biomeScene.pickingSources()){source.mesh.computeBoundingSphere();sources.set(source.mesh,source.resourceIds.map(id=>treesById.get(id)));}
     }
     for(const hit of _ray.intersectObjects([...sources.keys()],false)) {
       if(hit.instanceId===undefined)continue;
@@ -1019,6 +1073,7 @@ export class WorldView {
   sync(game: Game, dt: number) {
     if (this.lost || this.disposed) return;
     this.updateDay(game, dt);
+    this.biomeScene?.sync(game,this.camera.position,this.quality,dt);
     this.syncNature(game);
     this.syncWildlife(game);
     this.buildingSyncIn-=dt;
@@ -1034,6 +1089,7 @@ export class WorldView {
     this.syncFow(game);
     this.syncRain(game, dt);
     this.paintSeason(game, dt);
+    if(this.localWater)this.localWater.position.y=game.world.waterY-game.world.baseWaterY;
     if (this.water)
       this.water.position.y = game.world.waterY + Math.sin(game.state.time * 0.6) * 0.03;
   }
@@ -1154,6 +1210,10 @@ export class WorldView {
       (wx === "storm" || wx === "flood" ? 0.88 : 1);
 
     const sunDir = this.sun.position.clone().sub(this.look).normalize();
+    for(const material of this.waterMaterials){
+      const uniforms=(material as THREE.ShaderMaterial).uniforms;
+      if(uniforms?.uSunDirection){uniforms.uSunDirection.value.copy(sunDir);uniforms.uLight.value=night?.32:Math.min(1.1,.45+this.litSun*.3);}
+    }
     this.sunDisc.position.copy(this.camera.position).add(sunDir.clone().multiplyScalar(180));
     this.sunDisc.lookAt(this.camera.position);
     this.sunGlow.position.copy(this.sunDisc.position);
@@ -1223,7 +1283,7 @@ export class WorldView {
   }
 
   private syncNature(game: Game) {
-    if (!this.treesTrunk) return;
+    if (!this.biomeScene&&this.treesTrunk) {
     const treeCap = instCap(this.treesTrunk);
     const nTree = Math.min(game.state.trees.length, treeCap);
     this.treeCount = nTree;
@@ -1246,6 +1306,7 @@ export class WorldView {
     this.treesLeaf.count = nTree;
     this.treesTrunk.instanceMatrix.needsUpdate = true;
     this.treesLeaf.instanceMatrix.needsUpdate = true;
+    }
     if (this.rocks) {
       const rockCap = instCap(this.rocks);
       this.rockCount = Math.min(game.state.stones.length, rockCap);
@@ -1369,6 +1430,7 @@ export class WorldView {
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
           const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
+          if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);}
           if(mesh.instanceColor){
             _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
             if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
@@ -1381,11 +1443,13 @@ export class WorldView {
           write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
           // One tool shed per field; its size stays human-scaled as the plot grows.
           write('roof',(b.w-BUILDINGS.farm.w)/2+2.4,(b.d-BUILDINGS.farm.d)/2+2.2,1,1);
-          for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
+          if(!this.contourFields)for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
         }else for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
       }
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
+    this.contourFields?.sync(game,this.camera.position);
+    const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
     if(this.foundations){let count=0;
       for(const b of game.state.buildings){
@@ -1575,7 +1639,7 @@ export class WorldView {
         _c.set(st.unit);
         _c.offsetHSL(((u.tint || 0) - 0.5) * 0.12, 0.04, ((u.stature || 1) - 1) * 0.12);
         if (mesh.instanceColor) mesh.setColorAt(i, _c);
-        if (u.selected && ri < 40) {
+        if (this.unitRingsEnabled && u.selected && ri < 40) {
           _p.set(u.x, u.y + 0.05, u.z);
           _e.set(-Math.PI / 2, 0, 0);
           _q.setFromEuler(_e);
@@ -1876,6 +1940,8 @@ export class WorldView {
       if (this.composer && this.quality !== "low") this.composer.render();
       else this.renderer.render(this.scene, this.camera);
     } catch {
+      this.composer?.dispose();
+      this.bloom?.dispose();
       this.composer = null;
       this.bloom = null;
       try {
@@ -1902,38 +1968,7 @@ export class WorldView {
   };
 
   private makeWaterMat() {
-    return new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      uniforms: {
-        uTime: this.timeU,
-        uColor: { value: new THREE.Color("#3e7a78") },
-        uDeep: { value: new THREE.Color("#16323c") },
-      },
-      vertexShader: `
-        varying vec3 vWPos;
-        varying vec3 vN;
-        void main() {
-          vec4 w = modelMatrix * vec4(position, 1.0);
-          vWPos = w.xyz;
-          vN = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * viewMatrix * w;
-        }`,
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec3 uColor;
-        uniform vec3 uDeep;
-        varying vec3 vWPos;
-        varying vec3 vN;
-        void main() {
-          float waves = sin(vWPos.x * 0.32 + uTime * 1.35) + sin(vWPos.z * 0.26 + uTime * 1.05);
-          vec3 n = normalize(vN + vec3(waves * 0.07, 0.0, waves * 0.05));
-          float fres = pow(1.0 - clamp(n.y, 0.0, 1.0), 2.2);
-          vec3 col = mix(uDeep, uColor, 0.52 + waves * 0.07);
-          col += vec3(0.62, 0.78, 0.82) * fres * 0.5;
-          gl_FragColor = vec4(col, 0.76 + fres * 0.14);
-        }`,
-    });
+    return makeDepthWater(this.terrainSurface!,this.timeU);
   }
 
   private setupGodrays() {
@@ -2018,6 +2053,8 @@ export class WorldView {
   private setupComposer() {
     try {
       this.composer?.dispose();
+      this.composer?.dispose();
+      this.bloom?.dispose();
       this.composer = null;
       this.bloom = null;
       if (this.quality === "low") return;
@@ -2048,6 +2085,8 @@ export class WorldView {
       this.composer.addPass(new FilmPass(0.025, false));
       this.composer.setSize(w, h);
     } catch {
+      this.composer?.dispose();
+      this.bloom?.dispose();
       this.composer = null;
       this.bloom = null;
     }
@@ -2144,6 +2183,7 @@ export class WorldView {
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
+    if(this.terrainSurface){this.terrainSurface.snow.value=sn.snow;this.terrainSurface.heights.needsUpdate=true;}
     const geo = this.terrain.geometry as THREE.BufferGeometry;
     const colAttr = geo.getAttribute("color") as THREE.BufferAttribute | undefined;
     const pos = geo.attributes.position;
@@ -2249,7 +2289,7 @@ export class WorldView {
     }
     colAttr.needsUpdate = true;
 
-    if (this.treesLeaf?.instanceColor) {
+    if (!this.biomeScene&&this.treesLeaf?.instanceColor) {
       const nTree = this.treesLeaf.count;
       for (let i = 0; i < nTree; i++) {
         const hue = 0.33 * sn.spring + 0.3 * sn.summer + 0.075 * sn.autumn + 0.2 * sn.winter;
@@ -2346,12 +2386,16 @@ export class WorldView {
 
     const waterMat = this.water?.material as THREE.ShaderMaterial | undefined;
     if (waterMat?.uniforms?.uColor) {
-      (waterMat.uniforms.uColor.value as THREE.Color).set(sn.winter > 0.5 ? "#7a9aaa" : "#3e7a78");
-      (waterMat.uniforms.uDeep.value as THREE.Color).set(sn.winter > 0.5 ? "#2a4450" : "#16323c");
+      (waterMat.uniforms.uColor.value as THREE.Color).set(sn.winter > 0.5 ? "#8baeb9" : "#53b5b8");
+      (waterMat.uniforms.uDeep.value as THREE.Color).set(sn.winter > 0.5 ? "#2a4450" : "#123d61");
     }
   }
 
   private disposeWorld() {
+    this.contourFields?.dispose();this.contourFields=null;
+    this.biomeScene?.dispose();this.biomeScene=null;
+    this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;
+    for(const material of this.waterMaterials)material.dispose();this.waterMaterials=[];
     this.campVisual?.dispose();this.campVisual=null;
     const keep = new Set([
       this.ghost,

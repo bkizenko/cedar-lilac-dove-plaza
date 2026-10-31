@@ -1,6 +1,7 @@
+import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
 import type {CropKind,Unit,ResourceNode,Building} from "./types";
-import {HABITATS,habitatAt,soilQuality} from "./ecology";
+import {HABITATS,habitatAt,habitatKindAt,soilQuality} from "./ecology";
 import {calendar,crop,isDependent,reserveSeconds} from "./settlement";
 import {beginExpedition} from "./journeys";
 import {lifeEvent} from "./communities";
@@ -19,12 +20,12 @@ export function initializeCultivation(g:Game,legacy=false){
     let hash=Math.imul(g.state.seed^n.id,0x45d9f3b);hash=(hash^(hash>>>16))>>>0;
     if(hash%2===0){
       const habitat=habitatAt(g,n.x,n.z);
-      n.cropCandidate=habitat===HABITATS.forest?"tubers":habitat===HABITATS.hills?"pulses":"grain";
+      n.cropCandidate=habitatKindAt(g,n.x,n.z)==='forest'?"tubers":habitatKindAt(g,n.x,n.z)==='hills'?"pulses":"grain";
     }
   }
   // A viable starter patch is still unknown until somebody actually gathers it.
   const home=g.campOf(0),near=g.state.forage.filter(n=>Math.hypot(n.x-home.x,n.z-home.z)<35);
-  if(near.length&&!near.some(n=>n.cropCandidate))near[0].cropCandidate=habitatAt(g,near[0].x,near[0].z)===HABITATS.forest?"tubers":"grain";
+  if(near.length&&!near.some(n=>n.cropCandidate))near[0].cropCandidate=habitatKindAt(g,near[0].x,near[0].z)==='forest'?"tubers":"grain";
   g.state.cultivationVersion=1;
 }
 export function collectSamples(u:Unit,n:ResourceNode,food:number){
@@ -50,11 +51,11 @@ export function deliverSamples(g:Game,u:Unit){
 export function cultivationIssue(g:Game,team=0){
   return g.tribe(team).cultivated?.length?null:"Gather wild grain, pulses or tubers: bring home 8 crop food for 4 samples, residents will learn cultivation automatically at the hearth.";
 }
-export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false){
+export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitId?:number){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
   if(g.state.units.some(u=>u.hp>0&&u.team===team&&u.studyCrop===kind))return false;
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
+  const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
   if(!u||!g.state.buildings.some(b=>b.team===team&&b.type==="townhall"&&g.finished(b)))return false;
   if(!t.cropTrial){
     if((t.cropSamples?.[kind]||0)<4)return false;
@@ -87,7 +88,7 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
 }
 export function cropYield(g:Game,b:Building){
   const kind=b.crop?.kind||b.cropType||"grain",habitat=habitatAt(g,b.x,b.z);
-  return kind==="pulses"?.85:kind==="tubers"?(habitat===HABITATS.forest?1.15:.9):1;
+  return kind==="pulses"?.85:kind==="tubers"?(habitatKindAt(g,b.x,b.z)==='forest'?1.15:.9):1;
 }
 export function setFieldCrop(g:Game,id:number,kind:CropKind){
   const b=g.state.buildings.find(b=>b.id===id&&b.team===0&&b.type==="farm"&&g.finished(b));
@@ -112,7 +113,7 @@ export function setFieldRest(g:Game,id:number,rest:boolean){
 /** Known plants are gathered; unknown locations require a provisioned search. */
 export function seekCropSamples(g:Game){
   g.updateVision(0);
-  const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.copperStudy&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&["idle","hold","gather"].includes(u.order))
+  const adults=g.state.units.filter(u=>u.team===0&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.copperStudy&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&["idle","hold","gather"].includes(u.order))
     .sort((a,b)=>Number(b.selected)-Number(a.selected)||Number(a.order==="gather")-Number(b.order==="gather"));
   let sent=0;
   for(const u of adults){
@@ -130,6 +131,7 @@ export function seekCropSamples(g:Game){
 
 /** One short automatic trial, with food work protected and explicit orders respected. */
 export function tickAutomaticCultivation(g:Game){
+ if(g.state.autoWorkEnabled===false)return;
  const t=g.tribe(0);
  if(!t||reserveSeconds(g,0)<120||g.state.weather==='storm')return;
  const kind=t.cropTrial?.kind||CROPS.find(k=>!t.cultivated?.includes(k)&&(t.cropSamples?.[k]||0)>=4);
@@ -172,6 +174,7 @@ export function assignWoodlandPlanting(g:Game,buildingId:number,team=0,reserve=8
 const forestReviews=new WeakMap<Game,number>();
 /** Timber focus sustains worked forests with spare seeds; no mature logs appear instantly. */
 export function tickManagedWoodland(g:Game,dt:number){
+ if(g.state.autoWorkEnabled===false)return 0;
  const elapsed=(forestReviews.get(g)||0)+dt;
  if(elapsed<60){forestReviews.set(g,elapsed);return 0;}
  forestReviews.set(g,0);

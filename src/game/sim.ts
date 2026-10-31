@@ -1,3 +1,9 @@
+import {terrainWalkBase} from './terrainWalkCache';
+import {subsistenceLaborMultiplier} from './subsistenceBalance';
+import {assignMarkedTrees} from './treeDesignation';
+import {fieldTopographyIssue} from './plotTopography';
+import {captureTarget,captureIntentAI,secureVillage,occupationActorAI,tickOccupation,occupationStatus,integrateOccupiedVillage,withdrawOccupation,releaseConflictAssignment,missionMayTargetBuilding,missionMayTargetCivilian} from './conflictIntent';
+import {prisonerAI,prisonerIndependentNeeds,acceptPrisonerSurrender,provisionPrisoner,releasePrisoner,assignPrisonerGuard,recordPrisonerDeath} from './captivity';
 import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
 import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
@@ -34,7 +40,7 @@ import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
 import {raiseAttackAlarm} from "./defense";
-import {standDownMilitia,demobilizationAI} from './demobilization';
+import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
@@ -46,7 +52,7 @@ import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWor
 import {daylightAt,solarTimeLabel,pacedSolarHour} from "./daylight";
 import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
-import {villageAppeal,foodAttention} from "./migration";
+import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
@@ -299,6 +305,7 @@ export class Game {
     this.paths.clear();
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
+    this.state.autoWorkEnabled=worldgenVersion>=CAMP_RULES.unbuiltGeneration?false:true;
     if(this.world.options)this.state.worldOptions=this.world.options;
     this.started = true;
     this.awaitingStart = true;
@@ -572,6 +579,7 @@ export class Game {
     // Residents need a dry walk cell connected to their hearth, including when
     // a newly generated hearth moved away from an unusable cliff or shoreline.
     for(const u of this.state.units){
+      if(u.team===0&&this.state.autoWorkEnabled===false){u.order="hold";u.node=null;u.job=null;u.jobLock=false;u.workReason="Waiting for your orders · Auto work is off";}
       const home=this.campOf(u.team);
       if(this.walkable(u.x,u.z)&&this.workBoard.connected(this,u.x,u.z,home.x,home.z)&&!this.state.buildings.some(b=>this.solidBuilding(b)&&Math.abs(u.x-b.x)<b.w*.4+u.r&&Math.abs(u.z-b.z)<b.d*.4+u.r))continue;
       search:for(let radius=1;radius<=16;radius++)for(let i=0;i<24;i++){
@@ -712,7 +720,7 @@ export class Game {
       cd: 0,
       r: d.r,
       selected: false,
-      order: "idle",
+      order: team===0&&this.state.autoWorkEnabled===false?"hold":"idle",
       tx: x,
       tz: z,
       job: null,
@@ -876,6 +884,7 @@ export class Game {
     this.navRevision++;
     this.bridges=this.state.buildings.filter(b=>b.type==="bridge"&&this.finished(b)&&b.bridge);
     const cell = ((this.world.size/2) * 2) / WALK;
+    const terrainBase=terrainWalkBase(this,()=>{
     for (let iz = 0; iz < WALK; iz++) {
       for (let ix = 0; ix < WALK; ix++) {
         const x = -(this.world.size/2) + (ix + 0.5) * cell;
@@ -897,6 +906,9 @@ export class Game {
         this.walk[iz * WALK + ix] = ok ? 1 : 0;
       }
     }
+      return this.walk.slice();
+    });
+    this.walk.set(terrainBase);
     // Rasterize each footprint once instead of checking every building against
     // every terrain cell. Keep the exact original center/strict-edge rule.
     for(const b of this.state.buildings){
@@ -1106,8 +1118,8 @@ export class Game {
       if (n < 4) return "A lumber camp needs a stand of pines";
     }
     if (type === "farm") {
-      const slope=Math.max(Math.abs(this.height(x+3,z)-this.height(x-3,z)),Math.abs(this.height(x,z+3)-this.height(x,z-3)))/6;
-      if(slope>0.6)return "This slope is too steep for fields; choose a gentler bank or terrace";
+      const issue=fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
+      if(issue)return issue;
     }
     if (type === "dock") {
       if (this.height(x, z) < this.waterAt(x,z) - 0.12) return "The dock would sink";
@@ -1210,30 +1222,13 @@ export class Game {
   }
 
   musicMood(): "peace" | "raid" | "pillage" {
-    if (
-      this.state.units.some(
-        (u) =>
-          u.team === 0 &&
-          u.hp > 0 &&
-          u.order === "attack" &&
-          u.target &&
-          u.target.hp > 0 &&
-          Math.hypot(u.x - u.target.x, u.z - u.target.z) < 24,
-      )
-    )
-      return "pillage";
-    const c = this.campOf(0);
-    if (
-      this.state.units.some(
-        (u) =>
-          u.hp > 0 &&
-          this.isFoe(0, u.team) &&
-          this.visibleAt(u.x, u.z) &&
-          Math.hypot(u.x - c.x, u.z - c.z) < 40,
-      )
-    )
-      return "raid";
-    return "peace";
+    const home=this.campOf(0);
+    const nearbyFight=(u:Unit)=>u.order==='attack'&&u.target&&u.target.hp>0&&Math.hypot(u.x-u.target.x,u.z-u.target.z)<24;
+    // Defense wins when both sides are fighting at home. Hunting and stale
+    // raid markers cannot keep the soundtrack in an offensive battle state.
+    if(this.state.units.some(u=>u.hp>0&&!u.shelterId&&this.isFoe(0,u.team)&&this.visibleAt(u.x,u.z)&&u.envoy?.kind!=='peace'&&(Math.hypot(u.x-home.x,u.z-home.z)<40||nearbyFight(u)&&u.target?.team===0)))return 'raid';
+    if(this.state.units.some(u=>u.team===0&&u.hp>0&&!u.demobilizing&&!u.recalled&&!u.huntOnly&&(nearbyFight(u)||u.order==='attackmove'&&u.pillage>=0&&!!u.attackDestination)))return 'pillage';
+    return 'peace';
   }
 
   craftFarmTool(kind: FarmToolKind, workplaceId?:number) {
@@ -1254,9 +1249,9 @@ export class Game {
     let n = 0;
     const selected = team===0 ? this.selectedUnits() : [];
     const workers = (selected.length ? selected : this.state.units).filter(
-      u => u.team===team && u.hp>0 && u.type==="worker" && !u.militia && !isDependent(this,u) &&
+      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !isDependent(this,u) &&
         u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork &&
-        this.state.buildings.some(b=>b.team===team && this.finished(b) && ["townhall","warehouse","barracks"].includes(b.type) && Math.hypot(u.x-b.x,u.z-b.z)<20),
+        militiaStoresReached(this,u),
     );
     for (const u of workers) {
       let kind: UnitType | null = null;
@@ -1283,7 +1278,7 @@ export class Game {
       u.workReason="Armed civilian — ready to defend or raid";
       n++;
     }
-    if (team===0 && !n) this.banner("Bring empty-handed adults near your hall, store or barracks; craft weapons first",3);
+    if (team===0 && !n) this.banner("Bring empty-handed adults to your camp, hall, store or barracks; craft weapons first",3);
     if (team === 0 && n) this.banner(n + " villagers take up arms", 1.8);
     return n;
   }
@@ -1491,11 +1486,23 @@ export class Game {
 
   setGrowthPolicy(policy:NonNullable<GameState["growthPolicy"]>){
     this.state.growthPolicy=policy;
-    if(policy==="eager")this.seaT=Math.min(this.seaT,120);
+    if(policy!=="stable")this.seaT=Math.min(this.seaT,migrationSettings(policy).baseIntervalSeconds/2);
+  }
+
+  setAutoWork(enabled:boolean){
+    this.state.autoWorkEnabled=enabled;
+    this.workBoard.reset();
+    for(const u of this.state.units){
+      if(u.team!==0||u.hp<=0||u.type!=='worker'||u.militia||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.jobLock||hasTaskCommitment(u)||u.emergency||u.expedition||u.envoy||u.visit||u.scout||u.foundingJourney||u.recalled||u.buildOrder||u.escortId!==undefined||u.drill!=null)continue;
+      if(enabled&&['hold','idle'].includes(u.order)){u.order='idle';u.workCheckAt=0;this.workBoard.assign(this,u);}
+      else if(!enabled&&['idle','gather'].includes(u.order)){releaseTreeWorker(this,u);u.node=null;u.job=null;u.order=u.carry>0?'return':'hold';u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — waiting for your order';}
+    }
+    this.workBoard.reset();this.banner(enabled?'Auto work enabled — available residents follow village priorities':'Manual work — give orders to selected residents; existing commitments continue',5);
   }
 
   setLaborPriority(policy: NonNullable<GameState["laborPolicy"]>) {
     applyLaborPriority(this,policy);
+    if(this.state.autoWorkEnabled===false)this.banner('Village focus selected; enable Auto work or give individual orders to assign it',5);
   }
 
   cycleVillager(direction=1) {
@@ -1642,6 +1649,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    releaseConflictAssignment(this,u);
     releaseTreeWorker(this,u);
     pauseWaterCollection(u);
     cancelPlanting(this,u);
@@ -1667,7 +1675,8 @@ export class Game {
       if (!b) this.selectedBoat = null;
       else { if (!b.captain) this.banner('Board residents before sailing', 3); else commandRiverboat(this, b.id, x, z); return; }
     }
-    const selected=this.selectedUnits();
+    const selected=this.selectedUnits().filter(u=>!u.prisoner);
+    if(!selected.length&&this.selectedUnits().some(u=>u.prisoner)){this.banner('Use prisoner escort or release actions for a person in custody',4);return;}
     for(const id of new Set(selected.filter(u=>u.boat?.phase==='aboard').map(u=>u.boat!.id)))commandRiverboat(this,id,x,z);
     const units = selected.filter(u=>u.boat?.phase!=='aboard');
     if(selected.length&&!units.length)return;
@@ -1696,8 +1705,8 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    for (const u of this.selectedUnits()) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
-    const selected = this.selectedUnits();
+    for (const u of this.selectedUnits().filter(u=>!u.prisoner)) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
+    const selected = this.selectedUnits().filter(u=>!u.prisoner);
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
     if (target.kind === "building" && target.team !== 0 && (anyMil || !selected.length)) {
       this.issuePillage(target);
@@ -1726,7 +1735,7 @@ export class Game {
   commandedMilitary() {
     const selected = this.selectedUnits();
     return (selected.length ? selected : this.state.units).filter(
-      u => u.team === 0 && u.hp > 0 && u.type !== "leader" && !isDependent(this, u) &&
+      u => u.team === 0 && u.hp > 0 && !u.prisoner && u.type !== "leader" && !isDependent(this, u) &&
         (u.type !== "worker" || selected.length > 0),
     );
   }
@@ -1777,7 +1786,7 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e12;
     for (const b of this.state.buildings) {
-      if (b.plannedCost || earthwork(b) || (b.hp<=0 && !(b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0))) || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
+      if (!missionMayTargetBuilding(this,u,b) || b.plannedCost || earthwork(b) || (b.hp<=0 && !(b.lootTeam===u.team&&b.raidLoot&&Object.values(b.raidLoot).some(n=>(n||0)>0))) || b.team !== u.pillage || (u.team === 0 && !this.exploredAt(b.x, b.z))) continue;
       const d = (b.x - u.x) ** 2 + (b.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
@@ -3205,7 +3214,7 @@ export class Game {
   tickSea(dt: number) {
     this.seaT -= dt;
     if (this.seaT > 0) return;
-    this.seaT = ((this.state.growthPolicy==="eager"?240:480) + Math.random() * 240 + (1-villageAppeal(this))*240)/(1+foodAttention(this)*.65);
+    this.seaT = (migrationSettings(this.state.growthPolicy).baseIntervalSeconds + Math.random() * 240 + (1-villageAppeal(this))*240)/(1+foodAttention(this)*.65);
     if (this.state.time < 600) return;
     const dead = this.state.tribes.find((t) => isRivalTeam(t.id) && !t.alive && t.peaceTerm!=='annexation');
     if (dead && this.popNow(dead.id)===0 && this.state.time - (dead.fallenT || 0) > 1800) {
@@ -3221,9 +3230,9 @@ export class Game {
       (b) => b.team === 0 && b.type === "townhall" && b.hp > 0,
     );
     if (!you || !hall || this.state.growthPolicy === "stable") return;
-    const eager=this.state.growthPolicy==="eager",appeal=villageAppeal(this);
+    const growth=migrationSettings(this.state.growthPolicy),appeal=villageAppeal(this);
     const reserve = reserveSeconds(this);
-    if (reserve < (eager?240:360)||appeal<.5) return;
+    if (reserve < growth.foodReserveSeconds||appeal<.5) return;
     if (you.food < 16 || this.popNow(0) >= this.popCap(0)||!this.finished(hall)) return;
     const donors = this.state.tribes.filter(
       (t) => isRivalTeam(t.id),
@@ -3234,7 +3243,7 @@ export class Game {
       if (!tr) return null;
       return (
         this.state.units.find(
-          (u) => u.team === tr.id && u.hp > 0 && u.type === "worker" && !isDependent(this, u)&&!u.visit&&!u.scout&&!u.envoy&&!u.expedition&&!u.foundingJourney&&this.workBoard.connected(this,u.x,u.z,hall.x,hall.z),
+          (u) => u.team === tr.id && u.hp > 0 && u.type === "worker" && !isDependent(this, u)&&!u.prisoner&&!u.militia&&!hasTaskCommitment(u)&&!u.recalled&&!u.emergency&&!u.trade&&!u.tributeJourney&&!u.buildOrder&&u.escortId===undefined&&!u.visit&&!u.scout&&!u.envoy&&!u.expedition&&!u.foundingJourney&&this.workBoard.connected(this,u.x,u.z,hall.x,hall.z),
         ) || null
       );
     };
@@ -3265,7 +3274,7 @@ export class Game {
         if(this.walkable(x,z)&&this.workBoard.connected(this,x,z,hall.x,hall.z))arrivals.push({x,z});
       }
       if(!arrivals.length)return;
-      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*((eager?4:3)+Math.floor(foodAttention(this)*3))));
+      const group=Math.min(this.popCap(0)-this.popNow(0),Math.floor(you.food/8),1+Math.floor(Math.random()*(growth.groupSpread+Math.floor(foodAttention(this)*3))));
       for(let i=0;i<group;i++) {
         you.food-=8;
         const at=arrivals[i%arrivals.length],u=this.spawnUnit("worker",at.x,at.z,0);
@@ -3412,7 +3421,7 @@ export class Game {
         // a birth boom that consumes the player's entire winter food budget.
         // Welcome/eager still govern migration; neither removes this food floor.
         if(tr.food<growthFoodNeed(this,tr.id))continue;
-        const family = this.state.units.filter(u => u.team === tr.id && u.hp > 0);
+        const family = this.state.units.filter(u => u.team === tr.id && u.hp > 0 && !u.prisoner);
         if (family.filter(u => isDependent(this, u)).length >= Math.ceil(family.filter(u => !isDependent(this, u)).length / 2)) {
           const home = this.campOf(tr.id);
           if (reserveSeconds(this, tr.id) >= 900) this.welcomeSoul(tr.id, home.x, home.z);
@@ -3470,6 +3479,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
+      if(!prisonerIndependentNeeds(u)){
       const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
@@ -3479,7 +3489,8 @@ export class Game {
       }
       // Regular meals gradually repair hunger damage instead of leaving a death spiral.
       if (!hungry && previousHunger > 0 && !u.sickUntil) u.hp = Math.min(u.maxHp, u.hp + Math.min(dt, previousHunger / 3) * u.maxHp / 240);
-      if (u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
+      }
+      if (!prisonerIndependentNeeds(u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
@@ -4151,6 +4162,20 @@ export class Game {
     }
   }
 
+  capturePerson(id:number){return captureTarget(this,id);}
+  secureVillage(id:number){return secureVillage(this,id);}
+  occupationStatus(id:number){return occupationStatus(this,id);}
+  integrateVillage(id:number){return integrateOccupiedVillage(this,id);}
+  withdrawVillage(id:number){return withdrawOccupation(this,id);}
+  releasePrisoner(id:number){return releasePrisoner(this,id);}
+  guardPrisoner(id:number,guardId?:number){return assignPrisonerGuard(this,id,guardId);}
+  supplyPrisoner(id:number){
+    const target=this.state.units.find(u=>u.id===id&&u.prisoner);if(!target)return {accepted:false,reason:'Choose a person in custody'};
+    const carriers=this.state.units.filter(u=>u.hp>0&&u.team===target.team&&Math.hypot(u.x-target.x,u.z-target.z)<=3&&(u.carryType==='food'&&u.carry>0||(u.waterWork?.liters||0)>0)).sort((a,b)=>Number(b.selected)-Number(a.selected));
+    for(const carrier of carriers)if(provisionPrisoner(this,id,carrier.id))return {accepted:true,reason:'Nearby carried food or water handed to the prisoner'};
+    return {accepted:false,reason:'Bring a carrier with food or water within 3 metres of the prisoner'};
+  }
+
   proposePeace(team:number, term:PeaceTerm="whitePeace") {
     const rival=this.tribe(team);
     if(!rival||team===0||team===3||!rival.alive||!rival.hostile) return false;
@@ -4164,6 +4189,7 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
+    if(prisonerAI(this,u,dt))return;
     if(riverboatAI(this,u,dt))return;
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
@@ -4311,7 +4337,7 @@ export class Game {
         "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
       const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 1.65 : 1;
       const urgency = t === "food" && reserveSeconds(this, u.team) < 240 ? 1.25 : 1;
-      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing / (GATHER_WORK_RATE * urgency);
+      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency);
       u.gatherT += dt;
       u.stride += dt * 9;
       u.facing = Math.atan2(node.x - u.x, node.z - u.z);
@@ -4505,7 +4531,7 @@ export class Game {
     let bd = radius * radius;
     for (const o of this.state.units) {
       if (
-        (o.envoy?.kind === "peace" && o.envoy.team === u.team) ||
+        (o.envoy?.kind === "peace" && o.envoy.team === u.team) || !missionMayTargetCivilian(this,u,o) ||
         o.hp <= 0 || o.shelterId ||
         o.team === u.team ||
         !this.isFoe(u.team, o.team) ||
@@ -4521,7 +4547,7 @@ export class Game {
     if (!best && (u.team !== 0 || u.order === "attack" || u.order === "attackmove")) {
       for (const b of this.state.buildings) {
         if (
-          b.hp <= 0 || b.plannedCost || earthwork(b) ||
+          b.hp <= 0 || b.plannedCost || earthwork(b) || !missionMayTargetBuilding(this,u,b) ||
           b.team === u.team ||
           !this.isFoe(u.team, b.team) ||
           (u.team === 0 && !this.visibleAt(b.x, b.z))
@@ -4544,16 +4570,21 @@ export class Game {
 
   dealDamage(attacker: Unit | Building, target: Unit | Building) {
     if(!target||target.hp<=0||target.team===attacker.team)return;
+    if(attacker.kind==='unit'&&!(target.kind==='building'?missionMayTargetBuilding(this,attacker,target):missionMayTargetCivilian(this,attacker,target)))return;
     const skill=attacker.kind==="unit"?combatPractice(attacker):1;
     const dmg = ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength * skill : 8) * this.dmgMul(attacker.team,attacker.x,attacker.z);
     if(attacker.kind==="unit")attacker.combatXP=Math.min(150,(attacker.combatXP||0)+.2);
-    this.applyCombatDamage(attacker.team,target,dmg);
+    this.applyCombatDamage(attacker.team,target,dmg,attacker.kind==='unit'?attacker.id:undefined,attacker.kind==='unit'?attacker.conflictIntent:undefined);
   }
 
-  applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number) {
+  applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number,sourceId?:number,sourceIntent?:import('./conflictIntent').ConflictIntent) {
     if(!target || target.hp<=0 || !Number.isFinite(dmg) || dmg<=0 || target.team===attackerTeam)return;
+    const source=sourceId===undefined?undefined:this.state.units.find(u=>u.id===sourceId);
+    const intent=source?.conflictIntent||sourceIntent;
+    if(target.kind==='building'&&(intent==='capture'||(intent==='occupy'||intent==='loot')&&!['palisade','stonewall','gate','watchtower','keep'].includes(target.type)))return;
+    if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
-    if(target.kind==="unit"&&tryCivilianSurrender(this,target,attackerTeam,dmg))return;
+    if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
@@ -4564,6 +4595,7 @@ export class Game {
     raiseAttackAlarm(this,target,attackerTeam);
     if (target.hp <= 0) {
       target.hp = 0;
+      if(target.kind==='unit')recordPrisonerDeath(this,target);
       if(attackerTeam===0&&isRivalTeam(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);
       if (target.kind === "building" && attackerTeam !== target.team)
@@ -4595,6 +4627,7 @@ export class Game {
 
   fireArrow(from: Unit | Building, to: Unit | Building) {
     if(!to||to.hp<=0||to.team===from.team)return;
+    if(from.kind==='unit'&&!(to.kind==='building'?missionMayTargetBuilding(this,from,to):missionMayTargetCivilian(this,from,to)))return;
     const p: Projectile = {
       x: from.x,
       y: from.y + 1.4,
@@ -4603,6 +4636,7 @@ export class Game {
       ty: to.y + 1,
       tz: to.z,
       target: to,
+      ...(from.kind==='unit'?{attackerId:from.id,conflictIntent:from.conflictIntent}:{}),
       speed: 22,
       life: 1.1,
       dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z),
@@ -4657,10 +4691,12 @@ export class Game {
       copper ? copper + " copper" : "",
       iron ? iron + " iron" : "",
     ].filter(Boolean);
-    this.banner(bits.length ? "Stores exposed: " + bits.join(", ") + " — raiders must carry them home" : "Burned — the stores were empty", 1.8);
+    this.banner(bits.length ? "Stores exposed: " + bits.join(", ") + " — raiders must carry them home" : "The stores were empty", 1.8);
   }
 
   combatAI(u: Unit, dt: number) {
+    if(u.prisoner)return;
+    if(u.target&&!(u.target.kind==='building'?missionMayTargetBuilding(this,u,u.target):missionMayTargetCivilian(this,u,u.target))){u.target=null;u.order=u.conflictIntent==='occupy'||u.conflictIntent==='capture'?'hold':'idle';}
     if(u.order==="attack"&&u.target&&u.target.team!==u.team&&!this.isFoe(u.team,u.target.team)) {
       if(Math.hypot(u.x-u.target.x,u.z-u.target.z)>Math.max(8,u.range+2)) {
         u.tx=u.target.x;u.tz=u.target.z;this.steer(u,dt);return;
@@ -4859,7 +4895,7 @@ export class Game {
       const gz = t && t.hp > 0 ? t.z : p.tz;
       const d = Math.hypot(p.x - gx, p.y - gy, p.z - gz);
       if (d < 0.7 || p.life <= 0) {
-        if(t && t.hp>0)this.applyCombatDamage(p.team,t,p.dmg);
+        if(t && t.hp>0)this.applyCombatDamage(p.team,t,p.dmg,p.attackerId,p.conflictIntent);
         ps.splice(i, 1);
         continue;
       }
@@ -4892,7 +4928,7 @@ export class Game {
         continue;
       }
       const adult = this.state.units.find(
-        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !(q.unit === "spearman" && tr.age < 3 && u.militia) && !u.studyCrop && u.drill == null && !isDependent(this, u) && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.waterWork && u.carry===0 && ["idle","gather","hold"].includes(u.order),
+        (u) => u.team === b.team && u.hp > 0 && !u.prisoner && u.type === "worker" && !(q.unit === "spearman" && tr.age < 3 && u.militia) && !u.studyCrop && u.drill == null && !isDependent(this, u) && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.waterWork && u.carry===0 && ["idle","gather","hold"].includes(u.order),
       );
       if (!adult || this.popNow(b.team) > this.popCap(b.team)) {
         refund();
@@ -4970,7 +5006,8 @@ export class Game {
     }
     // This is a work designation, not a recall order for soldiers, builders or haulers.
     this.workBoard.reset();
-    this.banner(n + (n === 1 ? " tree marked — people will fell it" : " trees marked — people will fell them"), 1.6);
+    const assigned=assignMarkedTrees(this,ids);
+    this.banner(`${n} ${n===1?'tree':'trees'} marked · ${assigned?`${assigned} gatherers assigned`:this.state.autoWorkEnabled===false?'select free adults or enable Auto work to fell them':'available gatherers will fell them'}`, 3);
     this.onSfx("click");
     return n;
   }
@@ -5024,7 +5061,7 @@ export class Game {
           const a = Math.random() * Math.PI * 2;
           const x = Math.round((t.x + Math.cos(a) * 6) / TILE) * TILE;
           const z = Math.round((t.z + Math.sin(a) * 6) / TILE) * TILE;
-          if (this.placementValid(type, x, z, team) && Math.hypot(x - cx, z - cz) < 36)
+          if (Math.hypot(x - cx, z - cz) < 36 && this.placementValid(type, x, z, team))
             return { x, z };
         }
       }
@@ -5490,8 +5527,11 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
+            if(prisonerAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(captureIntentAI(this,u,sdt))continue;
+            if(occupationActorAI(this,u,sdt))continue;
             if (massRaidAI(this,u,sdt)) continue;
             if (demobilizationAI(this,u,sdt)) continue;
             recoverCaravanEquipment(this,u);
@@ -5515,6 +5555,7 @@ export class Game {
             this.reportSimulationError(`unit ${u.id}`,error);
           }
         }
+        tickOccupation(this,sdt);
         syncRiverboats(this);
         this.separate(sdt);
         this.updateProjectiles(sdt);
@@ -5560,7 +5601,7 @@ export class Game {
 
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {

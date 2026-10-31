@@ -15,14 +15,14 @@ function nearest(x:number,z:number,path:P[]){let distance=Infinity,index=0,t=0;f
  }return{distance,index,t};}
 /** New v11 landscape only. Coarse topology is reserved before these connected
  * provinces are built; old regional geography remains available for save loads. */
-export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number){
+export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number,province?:{reliefScale:number;pillars:boolean;dunes:boolean;plateau:boolean;canyonWidthScale?:number;valleyShoulderReliefMeters?:number},minimumInland=140){
  const rules=COMPOSED_RULES,rand=mulberry32(seed^0x7741f32);let center={x:0,z:0},inland=0;
  for(let z=-size*.42;z<size*.42;z+=16)for(let x=-size*.42;x<size*.42;x+=16){const d=landDistance(x,z);if(d>inland){inland=d;center={x,z};}}
- if(inland<140)throw new Error('Primary landscape lacks space for required geological provinces');
+ if(inland<minimumInland)throw new Error('Primary landscape lacks space for required geological provinces');
  const r=Math.min(260,inland*.84),angle=rand()*Math.PI*2,cs=Math.cos(angle),sn=Math.sin(angle);
  const point=(u:number,v:number)=>({x:center.x+u*cs-v*sn,z:center.z+u*sn+v*cs});
  const coords=(x:number,z:number)=>({u:(x-center.x)*cs+(z-center.z)*sn,v:-(x-center.x)*sn+(z-center.z)*cs});
- const grand=rand()<rules.grandProbability,relief=(grand?rules.grandReliefMeters:rules.mountainReliefMeters)*(.94+rand()*.12);
+ const grand=rand()<rules.grandProbability,relief=(grand?rules.grandReliefMeters:rules.mountainReliefMeters)*(.94+rand()*.12)*(province?.reliefScale??1);
  const lake=point(-r*.52,-r*.26),lakeY=WATER_Y+rules.lakeRiseMeters;
  const channelLocal=[[-r*.52,-r*.26],[-r*.25,-r*.33],[0,-r*.29],[r*.22,-r*.28],[r*.24,-r*.28],
   ...Array.from({length:17},(_,i)=>{const t=i/16;return[r*(.29+.70*t),r*(-.28-.08*t+Math.sin(t*Math.PI*2)*.11*Math.sin(t*Math.PI))];})];
@@ -55,6 +55,7 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
  {kind:'plateau',...point(r*.56,r*.02),radius:r*.6},{kind:'pillars',...point(-r*.62,r*.12),radius:60},
  {kind:'waterfall',...fall,radius:18},{kind:'dunes',...point(-r*.05,-r*.78),radius:r*.46,shape:{rx:r*.46,rz:r*.18,rotation:angle}},
  {kind:'wetland',...point(-r*.63,-r*.42),radius:24}];
+ if(province)for(let i=features.length-1;i>=0;i--){const k=features[i].kind;if(k==='pillars'&&!province.pillars||k==='dunes'&&!province.dunes||['plateau','cliff','terrace','canyon'].includes(k)&&!province.plateau)features.splice(i,1);}
  const surveyStep=24,surveyN=Math.ceil(size/surveyStep)+1,surveyHalf=(surveyN-1)*surveyStep/2,survey=new Uint8Array(surveyN*surveyN);
  for(let i=0;i<survey.length;i++)survey[i]=Number(landDistance(i%surveyN*surveyStep-surveyHalf,Math.floor(i/surveyN)*surveyStep-surveyHalf)>0);
  let landmassCount=0,substantialLandmassCount=0,primaryArea=0;
@@ -88,7 +89,7 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
    return{depthMeters:Math.min(left,right)-floor,benches};
   });
   const plateauHeights:number[]=[];let cliffMax=0,cliffEdgeSamples=0;
-  for(let u=r*.2;u<r*.95;u+=4)for(let v=-r*.72;v<r*.22;v+=4){
+  for(let u=r*(province?-.30:.2);u<r*(province?1.2:.95);u+=4)for(let v=-r*.72;v<r*.22;v+=4){
    const h=at(u,v);
    if(h>rules.plateauHeightMeters-1&&Math.max(Math.abs(at(u+2,v)-at(u-2,v)),Math.abs(at(u,v+2)-at(u,v-2)))/4<.25)plateauHeights.push(h);
    const delta=Math.max(Math.abs(at(u+8,v)-at(u-8,v)),Math.abs(at(u,v+8)-at(u,v-8)));
@@ -106,13 +107,14 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
   }
   const wetlandPoint=point(-r*.63,-r*.42),wetlandHeight=height(wetlandPoint.x,wetlandPoint.z);
   const rampSamples=Array.from({length:Math.floor(r*.60/2)+1},(_,i)=>{const u=r*.10+i*2;return at(u,-r*1.04+(u-r*.10)*(.32/.60));});
+  const valleyDistances=province?[r*.20,r*.30,r*.40,r*.50]:[60,90,120,150],valleyNorthDistances=province?[r*.40,r*.60,r*.80,r]:valleyDistances;
   const rampMaxGrade=Math.max(...rampSamples.slice(1).map((y,i)=>Math.abs(y-rampSamples[i])/Math.hypot(2,2*.32/.60)));
   return{uplandApproachMaxGrade:rampMaxGrade,uplandApproachGentleTargetMet:rampMaxGrade<=rules.uplandGentleGradeTarget,mountainProminenceMeters:mountainProminence,summitCount:distinctPeaks.length,canyonMedianDepthMeters:median(canyonSections.map(s=>s.depthMeters)),
    canyonSections,cliffMaxRiseOver16Meters:cliffMax,cliffEdgeSampleCount:cliffEdgeSamples,
    terraceBenchCount:Math.max(...canyonSections.map(s=>s.benches.filter(b=>b.variation<1.7&&b.widthMeters>=8).length)),
    plateauHighAreaSquareMeters:plateauHeights.length*16,pillarReliefMeters:measuredPillars,pillarCount:measuredPillars.filter(h=>h>=12).length,
    hillsTransectReliefMeters:range(hillSamples),dunesTransectReliefMeters:range(duneSamples),lakeWetAreaSquareMeters:lakeWetArea,
-   valleyFlankReliefMeters:Math.min(Math.max(...[60,90,120,150].map(d=>at(-r*.20,-r*.29+d))),Math.max(...[60,90,120,150].map(d=>at(-r*.20,-r*.29-d))))-at(-r*.20,-r*.29+16),
+   valleyFlankReliefMeters:Math.min(Math.max(...valleyNorthDistances.map(d=>at(-r*.20,-r*.29+d))),Math.max(...valleyDistances.map(d=>at(-r*.20,-r*.29-d))))-at(-r*.20,-r*.29+16),
    waterfallBedDropMeters:height(fall.x,fall.z)-height(fallLower.x,fallLower.z),
    wetlandHeightAboveLakeMeters:wetlandHeight-lakeY,waterfallDropMeters:waterfalls[0].upperY-waterfalls[0].lowerY};
  };
@@ -134,21 +136,28 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
   h+=shore*primary*spurBand*spurs*spurs*relief*.23;
   const hills=Math.exp(-(((v+r*.55)/(r*.40))**2))*primary;
   const southernShoulder=Math.exp(-(((v+r*.54)/(r*.13))**2))*smooth((r*.25-u)/(r*.2))*smooth((u+r*.98)/(r*.2));
-  h+=shore*primary*southernShoulder*16;
+  h+=shore*primary*southernShoulder*(province?.valleyShoulderReliefMeters??16);
   h+=shore*hills*rules.hillAmplitudeMeters*(.5+.5*Math.sin(u/24+Math.sin(v/35)));
   // Connected plateau with hard rim; the stream cuts its center, leaving
   // traversable benches rather than turning the entire upland into a bowl.
-  const shelf=Math.hypot((u-r*.55)/(r*.64),(v+r*.25)/(r*.52));
-  const shelfBlend=smooth((1.08-shelf)/.12)*primary;
+  const shelf=Math.hypot((u-r*(province?.50:.55))/(r*(province?.80:.64)),(v+r*.25)/(r*(province?.65:.52)));
+  const shelfBlend=smooth((1.08-shelf)/.12)*primary*(province&&!province.plateau?0:1);
   h=h*(1-shelfBlend)+(water+rules.plateauHeightMeters+fbm(x*.03,z*.03,2)*.7)*shelfBlend;
   const cn=nearest(x,z,main.slice(4)),ca=main[cn.index+4],cb=main[cn.index+5];
   const side=ca&&cb?Math.sign((cb.x-ca.x)*(z-ca.z)-(cb.z-ca.z)*(x-ca.x)):1;
   const along=cn.index+cn.t,widthVariation=side>0?.92+.10*Math.sin(along*.45+lakePhase):1.04+.12*Math.cos(along*.35-lakePhase);
-  const d=(cn.distance+(fbm(x*.018+seed%331,z*.018,3)-.5)*8)/widthVariation;
+  const physicalBankDistance=(cn.distance+(fbm(x*.018+seed%331,z*.018,3)-.5)*8)/widthVariation;
+  const d=province?12+(physicalBankDistance-12)/(province.canyonWidthScale??1):physicalBankDistance;
   if(u>r*.21&&u<r*1.25&&shelf<1.10){
    // Three broad benches separated by short steep risers, all above the channel.
    let section=water+2+fbm(x*.012+seed%229,z*.012,2)*.6;
-   if(side>0){
+   if(province){
+    // Three physical flats each span 16m before raster interpolation, rather
+    // than shrinking below two terrain cells on compact mainlands.
+    const bank=physicalBankDistance;
+    if(side>0){section+=7*smooth((bank-12)/4)+7*smooth((bank-32)/4)+7*smooth((bank-52)/4)+(rules.plateauHeightMeters-23)*smooth((bank-72)/5);}
+    else{section+=7*smooth((bank-16)/5)+15*smooth((bank-40)/5)+(rules.plateauHeightMeters-24)*smooth((bank-69)/6);}
+   }else if(side>0){
     section+=5.5*smooth((d-12)/7);
     section+=5.5*smooth((d-32)/8);
     section+=5.5*smooth((d-53)/7);
@@ -158,21 +167,21 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
     section+=8*smooth((d-45)/12);
     section+=(rules.plateauHeightMeters-17)*smooth((d-77)/11);
    }
-   const influence=smooth((r*.50-d)/12)*shelfBlend;h=h*(1-influence)+section*influence;
+   const influence=smooth(((province?96:r*.50)-(province?physicalBankDistance:d))/12)*shelfBlend;h=h*(1-influence)+section*influence;
   }
   // A wooded ravine floor supports a compact pillar district. Each spire is
   // literal heightfield, with nonuniform widths and intervening lower passages.
-  const pillarZone=Math.hypot(u+r*.62,v-r*.12),zone=smooth((75-pillarZone)/14);
+  const pillarZone=Math.hypot(u+r*.62,v-r*.12),zone=smooth((75-pillarZone)/14)*(province&&!province.pillars?0:1);
   h=h*(1-zone)+(water+6+fbm(x*.025,z*.025,2)*2)*zone;
-  for(const p of pillars){const d=Math.hypot(x-p.x,z-p.z),top=smooth((p.radius-d)/3);h+=p.height*top;}
-  const duneZone=Math.hypot((u+r*.05)/(r*.46),(v+r*.78)/(r*.18)),duneBlend=smooth((1.1-duneZone)/.2);
+  for(const p of province&&!province.pillars?[]:pillars){const d=Math.hypot(x-p.x,z-p.z),top=smooth((p.radius-d)/3);h+=p.height*top;}
+  const duneZone=Math.hypot((u+r*.05)/(r*.46),(v+r*.78)/(r*.18)),duneBlend=smooth((1.1-duneZone)/.2)*(province&&!province.dunes?0:1);
   const duneWave=(Math.sin(u/rules.duneWavelengthMeters*Math.PI*2+Math.sin(v/23))*.5+.5)**1.5;
   h=h*(1-duneBlend)+(water+4+rules.duneAmplitudeMeters*duneWave)*duneBlend;
-  const dryChannel=Math.abs(v+r*.78-Math.sin(u/42)*8);if(duneZone<1&&dryChannel<3)h-=1.2*smooth((3-dryChannel)/2);
+  const dryChannel=Math.abs(v+r*.78-Math.sin(u/42)*8);if((!province||province.dunes)&&duneZone<1&&dryChannel<3)h-=1.2*smooth((3-dryChannel)/2);
   // A continuous dry approach climbs the southern outer shelf, avoiding the
   // river incision and ending on the plateau rather than inside its terraces.
   const rampV=-r*1.04+(u-r*.10)*(.32/.60),rampDistance=Math.abs(v-rampV);
-  if(!skipRamp&&u>r*.10&&u<r*.70&&rampDistance<13){
+  if((!province||province.plateau)&&!skipRamp&&u>r*.10&&u<r*.70&&rampDistance<13){
    const blend=smooth((13-rampDistance)/6)*smooth((u-r*.10)/24)*smooth((r*.70-u)/24);
    const endpoint=point(r*.70,-r*.72),endHeight=terrainElevation(endpoint.x,endpoint.z,0,water,true);
    const rampH=water+5+clamp((u-r*.10)/(r*.60))*(endHeight-water-5);

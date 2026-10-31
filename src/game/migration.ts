@@ -1,4 +1,13 @@
 import type {Game} from './sim';
+import type {GameState} from './types';
+/** Three policy knobs: food buffer, base review interval and arrival group spread.
+ * Stable remains an explicit refusal of migration in the existing executor. */
+export const MIGRATION_RULES={
+ stable:{foodReserveSeconds:360,baseIntervalSeconds:480,groupSpread:0},
+ welcome:{foodReserveSeconds:240,baseIntervalSeconds:240,groupSpread:4},
+ eager:{foodReserveSeconds:180,baseIntervalSeconds:120,groupSpread:5},
+} as const;
+export function migrationSettings(policy:GameState['growthPolicy']){return MIGRATION_RULES[policy??'welcome'];}
 import {reserveSeconds,foodDemand} from './settlement';
 export function foodAttention(g:Game,team=0){const surplus=Math.max(0,g.tribe(team).food-foodDemand(g,team)*240);return surplus/(surplus+Math.max(120,foodDemand(g,team)*900));}
 

@@ -1,63 +1,48 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { Engine } from '@/game/engine';
 import type { HudSnapshot } from '@/game/types';
-
-const SIZE = 160;
-/** North-up, equal-scale map. Hidden terrain is never painted through the fog. */
-export function WorldMinimap({ hud, engine }: {hud: HudSnapshot; engine: Engine | null}) {
-  const MAP=engine?.game.world.size??1040;
-  const latest = useRef(hud); latest.current = hud;
-  const canvas = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    if (!engine || !canvas.current) return;
-    const ctx = canvas.current.getContext('2d');
-    if (!ctx) return;
-    const g = engine.game;
-    // Terrain is immutable within a game; fog and markers update at only 2 Hz.
-    const heights = new Float32Array(SIZE * SIZE);
-    for (let z=0; z<SIZE; z++) for (let x=0; x<SIZE; x++)
-      heights[z*SIZE+x] = g.height(((x+.5)/SIZE-.5)*MAP, ((z+.5)/SIZE-.5)*MAP);
-    const draw = () => {
-      const hud=latest.current;
-      const pixels = ctx.createImageData(SIZE,SIZE);
-      for(let z=0;z<SIZE;z++) for(let x=0;x<SIZE;x++) {
-        const wx=((x+.5)/SIZE-.5)*MAP, wz=((z+.5)/SIZE-.5)*MAP;
-        const h=heights[z*SIZE+x]-g.world.waterY;
-        const seen=g.exploredAt(wx,wz), visible=seen&&g.visibleAt(wx,wz);
-        const color=!seen?[25,32,35]:h<0?[57,104,123]:h<2?[158,151,109]:h<16?[102,129,83]:h<35?[129,133,106]:[173,170,151];
-        const shade=seen&&!visible?.65:1, i=(z*SIZE+x)*4;
-        pixels.data[i]=color[0]*shade;pixels.data[i+1]=color[1]*shade;pixels.data[i+2]=color[2]*shade;pixels.data[i+3]=255;
-      }
-      ctx.putImageData(pixels,0,0);
-      const point=(x:number,z:number,color:string,r:number)=>{
-        ctx.fillStyle=color;ctx.beginPath();ctx.arc((x/MAP+.5)*SIZE,(z/MAP+.5)*SIZE,r,0,Math.PI*2);ctx.fill();
-      };
-      for(const c of hud.camps||[]) if(c.known)point(c.x,c.z,c.alive?c.color:'#82786b',3);
-      point(hud.homeX??0,hud.homeZ??0,'#f7d48b',4);
-      const look=engine.view.look;
-      const x=(look.x/MAP+.5)*SIZE,z=(look.z/MAP+.5)*SIZE;
-      ctx.strokeStyle='#fff4dc';ctx.lineWidth=1.5;ctx.strokeRect(x-5,z-5,10,10);
-    };
-    draw();const timer=setInterval(draw,500);
-    return ()=>clearInterval(timer);
-  },[engine,engine?.game,MAP,engine?.game.state.seed]);
-  const pan=(e:PointerEvent<HTMLCanvasElement>)=>{
-    const r=e.currentTarget.getBoundingClientRect();
-    const at=(n:number,start:number,size:number)=>(Math.max(0,Math.min(1,(n-start)/size))-.5)*MAP;
-    engine?.focusMinimap(at(e.clientX,r.left,r.width),at(e.clientY,r.top,r.height));
+import {MINIMAP_RULES,sampleMinimapTerrain,fogMinimapColor,worldToMinimap,minimapToWorld,cameraSurfaceFootprint} from './minimapModel';
+const SIZE=MINIMAP_RULES.pixels;
+/** North is negative world Z. Unknown terrain and unknown settlements stay hidden. */
+export function WorldMinimap({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
+ const latest=useRef(hud);latest.current=hud;
+ const canvas=useRef<HTMLCanvasElement>(null);
+ useEffect(()=>{
+  if(!engine||!canvas.current)return;const ctx=canvas.current.getContext('2d');if(!ctx)return;
+  const draw=()=>{
+   // Read the current game here: a restored/reset world can replace it while the
+   // same engine and minimap component remain mounted.
+   const g=engine.game,hud=latest.current,terrain=sampleMinimapTerrain(g,performance.now()),map=terrain.size,pixels=ctx.createImageData(SIZE,SIZE);
+   for(let z=0;z<SIZE;z++)for(let x=0;x<SIZE;x++){
+    const p=minimapToWorld(x+.5,z+.5,map),n=z*SIZE+x,seen=g.exploredAt(p.x,p.z),visible=seen&&g.visibleAt(p.x,p.z),i=n*4;
+    const color=fogMinimapColor([terrain.colors[n*3],terrain.colors[n*3+1],terrain.colors[n*3+2]],seen,visible);
+    pixels.data[i]=color[0];pixels.data[i+1]=color[1];pixels.data[i+2]=color[2];pixels.data[i+3]=255;
+   }
+   ctx.putImageData(pixels,0,0);
+   const point=(x:number,z:number,color:string,r:number)=>{const p=worldToMinimap(x,z,map);ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();};
+   for(const c of hud.camps||[])if(c.known)point(c.x,c.z,c.alive?c.color:'#82786b',3);
+   const home=g.campOf(0);point(home.x,home.z,'#f7d48b',4);
+   engine.view.camera.updateMatrixWorld(true);
+   const footprint=cameraSurfaceFootprint(engine.view.camera,map,(x,z)=>Math.max(g.height(x,z),g.waterAt(x,z))).points;
+   ctx.strokeStyle='#fff4dc';ctx.lineWidth=1.25;ctx.beginPath();
+   // Clip the outline to surveyed ground as well; its terrain-dependent shape
+   // must not become an indirect reveal of an unknown ridge or lake.
+   if(footprint.length>=3)for(let i=0;i<footprint.length;i++){
+    const a=footprint[i],b=footprint[(i+1)%footprint.length],pa=worldToMinimap(a.x,a.z,map),pb=worldToMinimap(b.x,b.z,map),steps=Math.max(1,Math.ceil(Math.hypot(pb.x-pa.x,pb.y-pa.y)));let pen=false;
+    for(let k=0;k<=steps;k++){const t=k/steps,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,p=worldToMinimap(x,z,map);
+     if(!g.exploredAt(x,z)){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else{ctx.moveTo(p.x,p.y);pen=true;}}
+   }
+   ctx.stroke();const look=engine.view.look;point(look.x,look.z,'#fff4dc',1.5);
   };
-  return <div className="world-minimap">
-    <canvas ref={canvas} width={SIZE} height={SIZE} role="button" tabIndex={0}
-      aria-label="World map. Drag to pan. Arrow keys move the camera; Home returns to your village."
-      onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);pan(e);}}
-      onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))pan(e);}}
-      onKeyDown={e=>{
-        if(!engine)return;
-        const step=MAP/30, p=engine.view.look;
-        const dirs:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};
-        if(e.key==='Home'){e.preventDefault();e.stopPropagation();engine.focusMinimap(hud.homeX??0,hud.homeZ??0);}
-        else if(dirs[e.key]){e.preventDefault();e.stopPropagation();const [x,z]=dirs[e.key];engine.focusMinimap(Math.max(-MAP/2,Math.min(MAP/2,p.x+x)),Math.max(-MAP/2,Math.min(MAP/2,p.z+z)));}
-      }}/>
-    <span className="world-minimap-north" aria-hidden="true">N ↑</span>
-  </div>;
+  const measuredDraw=()=>engine.profile.measure('map',draw);measuredDraw();const timer=setInterval(measuredDraw,MINIMAP_RULES.terrainRefreshMilliseconds);return()=>clearInterval(timer);
+ },[engine]);
+ const pan=(e:PointerEvent<HTMLCanvasElement>)=>{if(!engine)return;const r=e.currentTarget.getBoundingClientRect(),p=minimapToWorld((e.clientX-r.left)/r.width*SIZE,(e.clientY-r.top)/r.height*SIZE,engine.game.world.size);engine.focusMinimap(p.x,p.z);};
+ return <div className="world-minimap"><canvas ref={canvas} width={SIZE} height={SIZE} role="button" tabIndex={0}
+  aria-label="World map, north up. Drag to pan. White outline shows the current camera view. Arrow keys move the camera; Home returns to your village."
+  onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);pan(e);}}
+  onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))pan(e);}}
+  onKeyDown={e=>{if(!engine)return;const map=engine.game.world.size,step=map/30,p=engine.view.look,dirs:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};
+   if(e.key==='Home'){e.preventDefault();e.stopPropagation();const home=engine.game.campOf(0);engine.focusMinimap(home.x,home.z);}
+   else if(dirs[e.key]){e.preventDefault();e.stopPropagation();const[x,z]=dirs[e.key];engine.focusMinimap(Math.max(-map/2,Math.min(map/2,p.x+x)),Math.max(-map/2,Math.min(map/2,p.z+z)));}
+  }}/><span className="world-minimap-north" aria-hidden="true">N ↑</span></div>;
 }

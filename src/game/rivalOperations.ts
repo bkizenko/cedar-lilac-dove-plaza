@@ -14,10 +14,10 @@ export function rivalMilitaryTarget(g:Game,team:number){
  // Equipment and training still cost real goods and take an existing adult out of work.
  return Math.min(Math.max(0,pop-4),Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension))));
 }
-export const OPERATION_RULES={minFoodSeconds:180,guardFraction:.06,raidFraction:.3,localDefenseRadius:55,maxTargets:8,minUtility:1,travelCostPerMeter:.01,defenseWeight:7,nightBonus:.4};
+export const OPERATION_RULES={militaryReadinessHealthRatio:.6,minFoodSeconds:180,guardFraction:.06,raidFraction:.3,localDefenseRadius:55,maxTargets:8,minUtility:1,travelCostPerMeter:.01,defenseWeight:7,nightBonus:.4};
 export type RaidMetrics={reward:number;grievance:number;travelCost:number;defenseCost:number;structureCost:number;nightBonus:number;observedDefenders:number;power:number;guards:number};
 export type RivalRaidPlan={target:Building;fighters:Unit[];utility:number;reason:string;metrics:RaidMetrics};
-function freeWorker(g:Game,u:Unit){return u.hp>0&&u.type==='worker'&&!u.militia&&adult(g,u)&&!hasTaskCommitment(u)&&u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.trade&&!u.tributeJourney&&!u.expedition&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.envoy&&!u.emergency&&!u.recalled&&u.drill==null&&['idle','gather'].includes(u.order);}
+function freeWorker(g:Game,u:Unit){return u.hp>=u.maxHp*OPERATION_RULES.militaryReadinessHealthRatio&&u.type==='worker'&&!u.militia&&adult(g,u)&&!hasTaskCommitment(u)&&u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.trade&&!u.tributeJourney&&!u.expedition&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.envoy&&!u.emergency&&!u.recalled&&u.drill==null&&['idle','gather'].includes(u.order);}
 /** Make finite weapons, then equip existing adults; never spawn a soldier. */
 export function prepareRivalDefense(g:Game,team:number,reserve:number){
  const t=g.tribe(team);
@@ -42,7 +42,7 @@ export function planRivalRaid(g:Game,team:number,reserve:number):RivalRaidPlan|n
  const t=g.tribe(team),home=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&g.finished(b));
  if(!home||reserve<OPERATION_RULES.minFoodSeconds)return null;
  const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&adult(g,u));
- const ready=residents.filter(u=>armed(u)&&u.type!=='leader'&&u.hp>=u.maxHp*.6&&u.carry===0&&!u.jobLock&&!u.buildOrder&&!hasTaskCommitment(u)&&
+ const ready=residents.filter(u=>armed(u)&&u.type!=='leader'&&u.hp>=u.maxHp*OPERATION_RULES.militaryReadinessHealthRatio&&u.carry===0&&!u.jobLock&&!u.buildOrder&&!hasTaskCommitment(u)&&
   !u.trade&&!u.tributeJourney&&!u.expedition&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.envoy&&!u.emergency&&!u.recalled&&!u.shelterId&&u.drill==null&&['idle','hold','gather'].includes(u.order));
  const guards=Math.max(1,Math.ceil(residents.length*OPERATION_RULES.guardFraction));
  const homeGuards=ready.filter(u=>distance(u,home)<OPERATION_RULES.localDefenseRadius).sort((a,b)=>distance(a,home)-distance(b,home)).slice(0,guards);

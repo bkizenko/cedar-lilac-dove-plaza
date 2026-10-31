@@ -393,3 +393,19 @@ Latest clarification: independent societies must visibly explore, construct/crew
 Urgent pacing correction: this is a daytime game. Night is a short realism interval, not an equal share of play. DAYLIGHT_PACING_RULES centralizes88–94% daylight share and24x clock-cycle slowdown, yielding roughlyfive real minutes of uninterrupted daylight even at4x in fixed-season diagnostics. The displayed clock remains24 hours and sunrise/sunset seasonal. Production/consumption rates and year/season simulation timers are unchanged by this clock-only correction.
 
 V13 topology acceptance makes the latest instruction measurable:2–5 substantial final terrain components, largest at most62% of total dry land, second at least18,000m² and13% of dry land, with seeded variation in island shape/size and distributed coherent watersheds. Historical save generations remain exact. These draft thresholds require physical and desktop acceptance before default promotion.
+
+## Latest corrections: mobile origins and world variety (October 31, 14:25)
+
+A fresh hunter-gatherer society starts with people and finite supplies, no completed structures. Camps must be relocatable through physical travel and supply transport, preserving inventory and existing obligations. Loading an established save or cloning it for tests preserves its buildings and must be clearly identified. Seasonal wild plants have species-dependent growth, ripeness, actual mature harvest quantities, depletion and loss, visible in their meshes; measurements and tuning rules remain available behind the scenes.
+
+The earlier strict multiple-landmass rule is superseded: support archipelagos, divided continents, mostly-land maps reaching edges/corners and rare dominant-island maps with satellites. Multiple islands are more common than one main island. Required rivers, lakes, relief and substantial biomes remain mandatory.
+
+Farming must explain delivered versus carried samples, physical seed trials, required work, worker availability, construction, spring sowing and seasonal waiting. Do not promise completion merely from elapsed time or an unassigned experiment.
+
+## Trade identity and subsistence balance (October 31, 14:30)
+
+Villages develop distinctive goods from local resources, demonstrated skills and workplaces, with measured quality, quantities and costs. Carried trade uses owned containers appropriate to material/era: pottery, baskets, sacks, skins or wood; cultural shapes, clay/firing, decoration and seals can identify workshops/villages. Containers require actual production and transport capacity; no free unique-item spawns or instant goods transfer. Amphora references: https://isaw.nyu.edu/exhibitions/edge-of-empires/highlights/transport-amphora and https://www.metmuseum.org/art/collection/search/239942 .
+
+Keep abundant trees and wildlife. Balance labor time, real processing, carrying, seasonality, spoilage, fuel and consumption so food and logs remain a decision. Show the actual difficulty preset. Benchmark delivered goods per worker-minute and household reserves before/after rate changes; do not call a balance pass complete without a connected normal-difficulty seasonal survival run. Current gather speed multiplier4 makes near-camp food/timber collection especially fast and needs explicit tuning.
+
+Stability: desktop Low/Medium/High controls, shadows off and person circles off by default, real frame timing and error evidence. A lower graphics setting cannot mask simulation correctness failures. Explicit tree-box marking must work with Auto work off and communicate whether anyone is actually assigned.

@@ -45,3 +45,8 @@ test('default calm playlist uses only verified instrumental recordings',async()=
 test('calm winters use harp while developed summers gain acoustic folk',async()=>{
  const {peacefulMusic}=await import('../src/game/music.ts');assert.equal(peacefulMusic(0,'Winter'),'harp');assert.equal(peacefulMusic(0,'Summer'),'village');assert.equal(peacefulMusic(2,'Summer'),'folk');
 });
+test('default calm soundtrack still changes for actual attack and defense, then returns to seasonal peace',()=>{
+ const audio=new GameAudio(),stages=[];audio.score={calm:true,update:stage=>stages.push(stage)};
+ audio.setMood('peace',0,5,.2,false,'Spring');audio.setMood('pillage',0,5,.2,false,'Spring');audio.setMood('raid',0,5,.2,false,'Spring');audio.setMood('peace',0,5,.2,false,'Spring');
+ assert.notEqual(stages[0],'battle');assert.equal(stages[1],'battle');assert.equal(stages[2],'battle');assert.equal(stages[3],stages[0]);
+});

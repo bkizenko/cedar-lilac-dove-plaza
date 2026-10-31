@@ -1,3 +1,6 @@
+import {receiveFood} from './pantry';
+import {recordConflict} from './conflictMetrics';
+import {supplyApproach,supplyReached} from './campAnchor';
 import {isRivalTeam} from './factions';
 import type {Game} from './sim';
 import type {Unit} from './types';
@@ -86,3 +89,118 @@ export function finishRepatriation(g:Game,u:Unit){
  const t=g.tribe(u.team);t.trust=Math.min(1,(t.trust||0)+.15);
  g.banner(`${t.name} welcomes a person you released. Relations improve; existing wars still need a peace agreement.`,6);
 }
+
+/** New prisoners are held in custody, not automatically assigned forced labor.
+ * Existing enslavedFrom saves retain their previous meaning. */
+export type PrisonerCustody={originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
+export type PrisonerUnit=Unit&{prisoner?:PrisonerCustody};
+export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,defenderRadiusMeters:12,superiorityRatio:2,escortSeparationMeters:8,unguardedEscapeSeconds:30,localSupplyRadiusMeters:3,foodPerSecond:.036,waterLitersPerSecond:.008,foodGraceSeconds:60,foodFatalSeconds:160,waterGraceSeconds:180,waterFatalSeconds:1800} as const;
+export const prisonerIndependentNeeds=(u:Unit)=>!!(u as PrisonerUnit).prisoner&&(u as PrisonerUnit).prisoner!.phase!=='custody';
+const armedPrisonerGuard=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>0&&!isDependent(g,u)&&!(u as PrisonerUnit).prisoner&&u.enslavedFrom===undefined&&(u.militia||!['worker','leader'].includes(u.type));
+function guardLoad(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&(u as PrisonerUnit).prisoner?.phase!=='released'&&(u as PrisonerUnit).prisoner?.guardId===id).length;}
+/** Called only after the surrender decision, with nearby actual captors. */
+export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
+ const u=target as PrisonerUnit;
+ if(u.hp<=0||u.team===captorTeam||u.prisoner||u.enslavedFrom!==undefined||u.type!=='worker'||u.militia||u.boat||isDependent(g,u))return {accepted:false,reason:'Only a living unarmed adult can accept these surrender terms'};
+ const captors=g.state.units.filter(p=>armedPrisonerGuard(g,p,captorTeam)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.surrenderRadiusMeters&&g.workBoard.connected(g,p.x,p.z,u.x,u.z));
+ const defenders=g.state.units.filter(p=>armedPrisonerGuard(g,p,u.team)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.defenderRadiusMeters);
+ if(!captors.length||captors.length<defenders.length*PRISONER_RULES.superiorityRatio)return {accepted:false,reason:'Reach the person with enough local force to obtain surrender'};
+ const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
+ if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
+ const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);g.interruptMission(u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
+ u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0};
+ u.team=captorTeam;u.selected=false;u.homeHall=undefined;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.order='hold';u.workReason='Surrendered — waiting for a guarded route to custody';
+ guard.order='hold';guard.target=null;guard.node=null;guard.pillage=-1;guard.returnAfterCombat=undefined;guard.escortId=u.id;
+ recordConflict(g,'surrender',captorTeam,1,{actorId:guard.id,targetId:u.id});g.workBoard.reset();
+ return {accepted:true,reason:'Surrender accepted; the same person needs a guard, supplies and physical delivery',prisonerId:u.id};
+}
+/** A nearby carrier supplies real cargo, never a distant society stockpile. */
+export function provisionPrisoner(g:Game,id:number,carrierId:number){
+ const u=g.state.units.find(u=>u.id===id&&u.hp>0) as PrisonerUnit|undefined,carrier=g.state.units.find(u=>u.id===carrierId&&u.hp>0);
+ if(!u?.prisoner||!carrier||carrier.team!==u.prisoner.captorTeam||Math.hypot(carrier.x-u.x,carrier.z-u.z)>PRISONER_RULES.localSupplyRadiusMeters)return false;
+ let delivered=false;
+ if(carrier.carryType==='food'&&carrier.carry>0){const food=Math.min(carrier.carry,12-u.prisoner.food);if(food>0){carrier.carry-=food;u.prisoner.food+=food;delivered=true;if(carrier.carry===0){carrier.carryType=null;carrier.carryFood=undefined;}}}
+ if(g.state.survivalVersion===1&&carrier.waterWork&&carrier.waterWork.liters>0){const water=Math.min(carrier.waterWork.liters,4-u.prisoner.waterLiters);if(water>0){carrier.waterWork.liters-=water;u.prisoner.waterLiters+=water;delivered=true;}}
+ return delivered;
+}
+function prisonerTravelNeeds(g:Game,u:PrisonerUnit,dt:number){
+ const p=u.prisoner!,waterDemand=g.state.survivalVersion===1?PRISONER_RULES.waterLitersPerSecond*dt:0;const food=Math.min(p.food,PRISONER_RULES.foodPerSecond*dt),water=Math.min(p.waterLiters,waterDemand);p.food-=food;p.waterLiters-=water;
+ recordConflict(g,'prisoner_food_used',p.captorTeam,food,{actorId:u.id});recordConflict(g,'prisoner_water_used',p.captorTeam,water,{actorId:u.id});
+ const hunger=u.hunger||0,thirst=u.thirstSeconds||0;
+ u.hunger=Math.max(0,hunger+(food+1e-9<PRISONER_RULES.foodPerSecond*dt?dt:-dt*3));u.thirstSeconds=Math.max(0,thirst+(water+1e-9<waterDemand?dt:-dt*3));
+ const exposure=Math.max(0,u.hunger-PRISONER_RULES.foodGraceSeconds)-Math.max(0,hunger-PRISONER_RULES.foodGraceSeconds);
+ const dehydration=Math.max(0,u.thirstSeconds-PRISONER_RULES.waterGraceSeconds)-Math.max(0,thirst-PRISONER_RULES.waterGraceSeconds);
+ u.hp-=Math.max(0,exposure)*u.maxHp/PRISONER_RULES.foodFatalSeconds+Math.max(0,dehydration)*u.maxHp/PRISONER_RULES.waterFatalSeconds;
+ if(u.hp<=0){u.hp=0;recordPrisonerDeath(g,u);}
+}
+function clearPrisonerGuard(g:Game,u:PrisonerUnit){const guard=g.state.units.find(p=>p.id===u.prisoner?.guardId);if(guard?.escortId===u.id){guard.escortId=undefined;guard.order='hold';guard.workReason='Prisoner escort finished';}}
+/** Release preserves bodily state, origin and possessions; the person walks home. */
+export function releasePrisoner(g:Game,id:number,escaped=false){
+ const u=g.state.units.find(u=>u.id===id&&u.hp>0) as PrisonerUnit|undefined;if(!u?.prisoner||u.prisoner.phase==='released')return false;
+ const p=u.prisoner;clearPrisonerGuard(g,u);g.interruptMission(u);u.team=p.originTeam;u.homeHall=p.originHomeHall;if(g.tribe(p.originTeam))g.tribe(p.originTeam).alive=true;
+ p.phase='released';u.recalled=true;u.repatriating=true;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.workReason='Released prisoner — returning home with belongings';
+ recordConflict(g,escaped?'prisoner_escape':'prisoner_release',p.captorTeam,1,{actorId:u.id});g.workBoard.reset();return true;
+}
+/** Must run before generic worker/escort AI. Captives never become automatic labor. */
+export function prisonerAI(g:Game,person:Unit,dt:number){
+ const u=person as PrisonerUnit;
+ if(!u.prisoner){
+  const prisoners=g.state.units.filter(p=>p.hp>0&&(p as PrisonerUnit).prisoner?.phase!=='released'&&(p as PrisonerUnit).prisoner?.guardId===u.id) as PrisonerUnit[];
+  if(!prisoners.length)return false;
+  if(u.emergency||u.hp<=0)return false;
+  const traveling=prisoners.find(p=>p.prisoner!.phase==='escorting');
+  if(!traveling){u.order='hold';u.node=null;u.target=null;u.workReason='Guarding prisoners in custody';return true;}
+  if(Math.hypot(u.x-traveling.x,u.z-traveling.z)>PRISONER_RULES.escortSeparationMeters){u.tx=traveling.x;u.tz=traveling.z;u.order='move';g.steer(u,dt);u.workReason='Regrouping with prisoner before continuing';return true;}
+  const drop=g.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(g,u,drop):null;
+  if(!drop||!spot){u.order='hold';u.workReason='Prisoner escort needs a reachable friendly camp or store';return true;}
+  u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){u.order='move';g.steer(u,dt);}else u.order='hold';u.workReason='Escorting prisoners to custody';return true;
+ }
+ const p=u.prisoner;if(u.hp<=0)return true;
+ if(p.phase==='released'){
+  prisonerTravelNeeds(g,u,Math.max(0,dt));if(u.hp<=0)return true;
+  const home=g.nearestDrop(u.x,u.z,p.originTeam),spot=home?supplyApproach(g,u,home):null;
+  if(!home||!spot){u.order='hold';u.workReason='Released — no reachable home cache for return';return true;}
+  if(supplyReached(g,u,home,spot)){
+   if(p.food>0)receiveFood(g,p.originTeam,p.food);const stock=g.tribe(p.originTeam).survival;if(stock)stock.waterLiters+=p.waterLiters;
+   p.food=0;p.waterLiters=0;u.prisoner=undefined;u.recalled=undefined;finishRepatriation(g,u);if(u.repatriating){const origin=g.tribe(u.team);origin.trust=Math.min(1,(origin.trust||0)+.15);u.repatriating=undefined;}u.order='idle';u.workReason='Released person arrived home with remaining provisions';g.workBoard.reset();return true;
+  }
+  u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Released — walking home with carried provisions';return true;
+ }
+ if(p.phase==='escorting')prisonerTravelNeeds(g,u,Math.max(0,dt));if(u.hp<=0){clearPrisonerGuard(g,u);return true;}
+ const guard=g.state.units.find(guard=>guard.id===p.guardId&&armedPrisonerGuard(g,guard,p.captorTeam)&&!guard.emergency&&Math.hypot(guard.x-u.x,guard.z-u.z)<=18&&g.workBoard.connected(g,guard.x,guard.z,u.x,u.z));
+ if(!guard){
+  p.unguardedSeconds+=Math.max(0,dt);u.order='hold';u.node=null;u.target=null;u.workReason='Prisoner unguarded — escape risk rising';
+  if(p.unguardedSeconds>=PRISONER_RULES.unguardedEscapeSeconds){releasePrisoner(g,u.id,true);u.repatriating=undefined;}
+  return true;
+ }
+ p.unguardedSeconds=0;recordConflict(g,'guard_seconds',p.captorTeam,Math.max(0,dt),{actorId:guard.id,targetId:u.id});
+ if(p.phase==='custody'){u.order='hold';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.workReason='Prisoner in guarded custody — no labor assigned';return true;}
+ const drop=g.nearestDrop(u.x,u.z,p.captorTeam),spot=drop?supplyApproach(g,u,drop):null;
+ if(!drop||!spot){u.order='hold';u.workReason='Prisoner waiting for a reachable custody site';return true;}
+ if(supplyReached(g,u,drop,spot)){p.phase='custody';u.order='hold';u.node=null;u.target=null;recordConflict(g,'prisoner_custody',p.captorTeam,1,{actorId:u.id});return true;}
+ if(Math.hypot(guard.x-u.x,guard.z-u.z)>PRISONER_RULES.escortSeparationMeters){u.order='hold';u.workReason='Waiting for prisoner escort to catch up';return true;}
+ u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Walking under escort to custody';return true;
+}
+
+/** Validate optional new custody saves without reinterpreting enslavedFrom saves. */
+export function validPrisonerState(state:unknown){
+ if(!state||typeof state!=='object'||!Array.isArray((state as Game['state']).units)||!Array.isArray((state as Game['state']).tribes))return false;
+ const s=state as Game['state'];
+ const nonnegative=(n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=1e9;
+ for(const person of s.units){const u=person as PrisonerUnit,p=u.prisoner;if(p===undefined)continue;
+  if(!p||typeof p!=='object'||!Number.isInteger(p.originTeam)||!Number.isInteger(p.captorTeam)||p.originTeam<0||p.captorTeam<0||p.originTeam>=s.tribes.length||p.captorTeam>=s.tribes.length||p.originTeam===p.captorTeam||!['escorting','custody','released'].includes(p.phase)||p.guardId!==undefined&&(!Number.isSafeInteger(p.guardId)||p.guardId<1)||!nonnegative(p.food)||p.food>12||!nonnegative(p.waterLiters)||p.waterLiters>4||!nonnegative(p.unguardedSeconds)||u.enslavedFrom!==undefined)return false;
+  if(p.originHomeHall!==undefined&&(!Number.isSafeInteger(p.originHomeHall)||p.originHomeHall<1))return false;
+  if(u.team!==(p.phase==='released'?p.originTeam:p.captorTeam))return false;
+ }
+ return true;
+}
+/** A replacement guard is assigned explicitly and must actually reach the person. */
+export function assignPrisonerGuard(g:Game,id:number,guardId?:number){
+ const u=g.state.units.find(p=>p.id===id&&p.hp>0) as PrisonerUnit|undefined;if(!u?.prisoner||u.prisoner.phase==='released')return {accepted:false,reason:'Choose a person currently in custody'};
+ const guard=g.state.units.filter(p=>(guardId===undefined||p.id===guardId)&&armedPrisonerGuard(g,p,u.prisoner!.captorTeam)&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat&&(!p.escortId||guardLoad(g,p.id)>0)&&guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&['idle','hold','move'].includes(p.order)&&g.workBoard.connected(g,p.x,p.z,u.x,u.z)).sort((a,b)=>Number(b.selected)-Number(a.selected)||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+ if(!guard)return {accepted:false,reason:'Need an available armed guard with capacity and a reachable route'};
+ if(guardLoad(g,guard.id)===0)g.interruptMission(guard);u.prisoner.guardId=guard.id;guard.escortId=u.id;guard.order='move';guard.tx=u.x;guard.tz=u.z;guard.workReason='Joining prisoner escort — protection begins on arrival';
+ return {accepted:true,reason:'Guard is physically joining the prisoner escort',guardId:guard.id};
+}
+const recordedPrisonerDeaths=new WeakSet<Unit>();
+export function recordPrisonerDeath(g:Game,u:Unit){if(u.prisoner&&u.hp<=0&&!recordedPrisonerDeaths.has(u)){recordedPrisonerDeaths.add(u);recordConflict(g,'prisoner_death',u.prisoner.captorTeam,1,{actorId:u.id});}}

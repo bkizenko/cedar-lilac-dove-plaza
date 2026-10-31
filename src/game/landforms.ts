@@ -2,7 +2,7 @@ import {mulberry32,fbm} from './rng';
 import {WORLD_SIZES,WORLD_LAYOUTS,type WorldRequest,type WorldOptions} from './worldOptions';
 type Lobe={x:number;z:number;rx:number;rz:number;angle:number};
 /** Separate landmass topology from elevation, resources and legacy save generation. */
-export function landforms(seed:number,request:WorldRequest={},stableStream=false,composedPrimary=false) {
+export function landforms(seed:number,request:WorldRequest={},stableStream=false,composedPrimary=false,diverseIslands=false) {
  if(request.size!==undefined&&!WORLD_SIZES.includes(request.size)||request.layout!==undefined&&request.layout!=='random'&&!WORLD_LAYOUTS.includes(request.layout))throw new Error('Unsupported world settings');
  const rand=mulberry32(seed^0x61cd8a9),size=request.size??1560;
  const layoutRoll=stableStream?rand():undefined;
@@ -19,7 +19,15 @@ export function landforms(seed:number,request:WorldRequest={},stableStream=false
    add(-.14,0,.285,.32,-.1);add(.32,.04,.14,.23,.3);
   }else{
    add(-.10,0,.29,.29,.08);
-   for(const [x,z] of [[.32,.29],[.34,-.26],[-.35,.34],[-.35,-.34]])add(x,z,.065+rand()*.025,.07+rand()*.025,rand()*Math.PI);
+   if(diverseIslands){
+    const count=2+Math.floor(rand()*8),centers:{x:number;z:number;r:number}[]=[];
+    for(let attempt=0;attempt<300&&centers.length<count;attempt++){
+     const x=(rand()-.5)*.86,z=(rand()-.5)*.86,rx=.03+rand()*.06,rz=rx*(.55+rand()*.8),r=Math.max(rx,rz);
+     if(Math.hypot(x+.10,z)<.29+r+.025||centers.some(p=>Math.hypot(p.x-x,p.z-z)<p.r+r+.025))continue;
+     centers.push({x,z,r});const angle=rand()*Math.PI;add(x,z,rx,rz,angle);
+     if(rand()<.5)add(x+Math.cos(angle)*rx*.35,z+Math.sin(angle)*rz*.35,rx*.7,rz*.65,angle+.45);
+    }
+   }else for(const [x,z] of [[.32,.29],[.34,-.26],[-.35,.34],[-.35,-.34]])add(x,z,.065+rand()*.025,.07+rand()*.025,rand()*Math.PI);
   }
  }else if(layout==='pangaea'){
   for(let i=0;i<6;i++)add(-.28+i*.112,(rand()-.5)*.13,.16+rand()*.045,.16+rand()*.055,(rand()-.5)*.7);

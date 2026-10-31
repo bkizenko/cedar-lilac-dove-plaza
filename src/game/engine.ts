@@ -1,3 +1,5 @@
+import {RuntimeProfile} from './runtimeProfile';
+import {projectedTreeInBox} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
 import {linearStructure,constructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
@@ -25,6 +27,7 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 }
 
 export class Engine {
+  readonly profile = new RuntimeProfile();
   game: Game;
   private originalGame: Game | null = null;
   startTestSession(){
@@ -379,6 +382,7 @@ export class Engine {
       return;
     }
     if (this.drag && e.button === 0) {
+      this.drag.x=p.x;this.drag.y=p.y;
       const dx = this.drag.x - this.drag.sx;
       const dy = this.drag.y - this.drag.sy;
       if (Math.hypot(dx, dy) > 8) {
@@ -401,16 +405,16 @@ export class Engine {
           const ids: number[] = [];
           for (const tree of this.game.state.trees) {
             if (tree.amount <= 0 || !this.game.visibleAt(tree.x, tree.z)) continue;
-            const sp = this.view.project(tree.x, tree.y + 1.2, tree.z);
-            if (sp.behind) continue;
-            if (sp.x >= minx && sp.x <= maxx && sp.y >= miny && sp.y <= maxy) ids.push(tree.id);
+            if (projectedTreeInBox((x,y,z)=>this.view.project(x,y,z),tree,{minx,maxx,miny,maxy})) ids.push(tree.id);
           }
           if (ids.length) this.game.markChop(ids);
+          else if(this.loggingMode)this.game.banner("No visible trees in the box — drag across the trunks or crowns",3);
         }
       } else {
         this.leftClick(p.x, p.y, e.shiftKey);
       }
       this.drag = null;
+      this.pushHud();
     }
   };
 
@@ -750,6 +754,7 @@ export class Engine {
   private frame = (t: number) => {
     if (this.disposed) return;
     try {
+      this.profile.frame(t);
       const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
@@ -784,7 +789,7 @@ export class Engine {
       } else {
         this.simAccumulator += dt;
         while (this.simAccumulator >= 1 / 30) {
-          this.game.step(1 / 30);
+          this.profile.measure('simulation',()=>this.game.step(1 / 30));
           this.simAccumulator -= 1 / 30;
         }
       }
@@ -801,19 +806,19 @@ export class Engine {
       this.view.updateCamera(dt);
       if (this.keyboard.mode) this.keyboard.center();
       this.updateGhost();
-      this.view.sync(this.game, dt);
-      this.view.render();
+      this.profile.measure('scene',()=>this.view.sync(this.game, dt));
+      this.profile.measure('draw',()=>this.view.render());
       this.tuneQuality(dt);
 
       this.hudAcc += dt;
       if (this.hudAcc > 0.12) {
         this.hudAcc = 0;
-        this.pushHud();
+        this.profile.measure('interface',()=>this.pushHud());
       }
       this.saveAcc += dt;
       if (this.saveAcc > 18) {
         this.saveAcc = 0;
-        saveGame(this.game);
+        this.profile.measure('save',()=>saveGame(this.game));
       }
       this.failFrames = 0;
     } catch (err) {

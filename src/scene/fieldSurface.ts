@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {MAP} from '@/game/constants';
+import {MAP} from '../game/constants';
 
 // One small height texture for every field. Keep the existing instanced draw
 // calls instead of rebuilding a unique mesh for each growing plot.
@@ -19,11 +19,12 @@ export class FieldSurface {
     this.bind(this.depth);
   }
 
-  bind(material: THREE.Material) {
-    material.customProgramCacheKey = () => 'hearth-field-surface-v1';
+  bind(material: THREE.Material,options:{furrows?:boolean}={}) {
+    material.customProgramCacheKey = () => options.furrows?'hearth-contour-field-v2':'hearth-field-surface-v1';
     material.onBeforeCompile = shader => {
       shader.uniforms.fieldHeights = {value: this.texture};
       shader.vertexShader = `
+        ${options.furrows?'attribute vec4 fieldRows;varying vec4 vFieldRows;varying vec2 vFieldWorldXZ;':''}
         uniform sampler2D fieldHeights;
         float fieldHeight(vec2 worldXZ) {
           vec2 grid = clamp((worldXZ / ${this.size.toFixed(1)} + .5) * ${this.segments.toFixed(1)}, vec2(0.), vec2(${this.segments.toFixed(1)}));
@@ -47,8 +48,17 @@ export class FieldSurface {
           fieldMatrix = modelMatrix * instanceMatrix;
         #endif
         vec3 fieldWorld = (fieldMatrix * vec4(transformed, 1.)).xyz;
+        ${options.furrows?'vFieldRows=fieldRows;vFieldWorldXZ=fieldWorld.xz;':''}
         transformed.y += (fieldHeight(fieldWorld.xz) - fieldMatrix[3].y) / max(abs(fieldMatrix[1].y), .00001);
       `);
+      if(options.furrows){
+        shader.fragmentShader='varying vec4 vFieldRows;varying vec2 vFieldWorldXZ;\n'+shader.fragmentShader;
+        shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+          float fieldAcross=dot(vFieldWorldXZ,vFieldRows.xy)+vFieldRows.z;
+          float fieldBand=.5+.5*cos(fieldAcross/max(.3,vFieldRows.w)*6.28318530718);
+          diffuseColor.rgb*=.86+.20*fieldBand;
+        `);
+      }
     };
   }
 

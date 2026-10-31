@@ -1,5 +1,5 @@
 import type { Game } from "./sim";
-import { habitatAt, HABITATS } from "./ecology";
+import { habitatAt, habitatKindAt, HABITATS } from "./ecology";
 import { reserveSeconds } from "./settlement";
 import { knownSettlement } from "./barter";
 
@@ -36,7 +36,7 @@ export const DISCOVERIES = [
       g.state.buildings.some(b => b.team === 0 && b.type === "warehouse" && g.finished(b) && (b.storeCare || 0) >= 0.6) },
 ] as const;
 function visits(g: Game, kind: keyof typeof HABITATS) {
-  return g.state.units.some(u => u.team === 0 && u.hp > 0 && habitatAt(g, u.x, u.z) === HABITATS[kind]);
+  return g.state.units.some(u => u.team === 0 && u.hp > 0 && habitatKindAt(g, u.x, u.z) === kind);
 }
 export function recordDiscoveries(g: Game) {
   const history = g.state.discoveries ??= [];

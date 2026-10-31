@@ -1,0 +1,34 @@
+{
+  "version": 13,
+  "status": "passed",
+  "test": "scripts/v13-upland-traversal.test.mjs",
+  "scope": "Real resident workerAI walking orders from actual starting camp to a higher shelf on its own mainland. Terrain, navigation, water and position changes remain physical. This isolates movement and does not step the full survival/economy simulation.",
+  "findsMarkedCollected": 0,
+  "results": [
+    {
+      "seed": 42,
+      "size": 1040,
+      "layout": "pangaea",
+      "region": 0,
+      "travelSeconds": 25.7,
+      "traveledMeters": 129.36520474563756,
+      "heightGainMeters": 5.434054725087335,
+      "maximumVerticalStepMeters": 0.551258263448819,
+      "rampEndpointOffsetMeters": 2,
+      "ordersResumed": 0
+    },
+    {
+      "seed": 1,
+      "size": 1040,
+      "layout": "pangaea",
+      "region": 0,
+      "travelSeconds": 62.8,
+      "traveledMeters": 346.30602069762125,
+      "heightGainMeters": 17.644780856674362,
+      "maximumVerticalStepMeters": 0.5264198627422729,
+      "rampEndpointOffsetMeters": 0,
+      "ordersResumed": 0
+    }
+  ],
+  "sourceFingerprint": "46689c8326d3b4880d6bea339f47d8ae8b5af576091a28f55fc20a950b0bb927"
+}

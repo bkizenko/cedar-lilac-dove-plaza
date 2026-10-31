@@ -1,3 +1,4 @@
+import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {connectedForUnit} from "./waterTravel";
 import {carryingCapacity} from "./haulage";
 import type {Game} from './sim';
@@ -85,7 +86,7 @@ function fishingIssue(g:Game,b:Building){
 export function fishingReport(g:Game,b:Building){
   const grounds=fishingGrounds(g,b,true),capacity=grounds.reduce((n,p)=>n+(p.maxAmt||8),0),health=capacity?grounds.reduce((n,p)=>n+(1-(p.pressure||0))*(p.maxAmt||8),0)/capacity:0,workers=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length;
   const issue=fishingIssue(g,b);
-  return `${workers}/2 fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus))} fish per fisher/min before hauling; winter slows fishing`;
+  return `${workers}/2 fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus*subsistenceLaborMultiplier(g,'food',b.x,b.z)))} fish per fisher/min before hauling; winter slows fishing`;
 }
 export function fishingBank(g:Game,u:Unit,n:ResourceNode){
   if(u.haulage==="canoe"&&g.height(n.x,n.z)<=g.waterAt(n.x,n.z)+.3&&connectedForUnit(g,u,n.x,n.z))return {x:n.x,z:n.z};

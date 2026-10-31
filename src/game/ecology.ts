@@ -1,3 +1,4 @@
+import {provinceAt,ecologicalConditionsAt} from './ecologicalProvinces';
 import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
 export const HABITATS = {
@@ -6,6 +7,7 @@ export const HABITATS = {
   hills: { name: "Uplands", crops: 0.7, forage: 0.85, timber: 0.9, winterFood: 1.2, advice: "Thin soils give smaller harvests. Exposed winters need more food; prepare stores and trade for grain." },
 } as const;
 export function habitatAt(g: Game, x: number, z: number) {
+  if(g.world.ecology)return provinceAt(g.world.ecology,x,z);
   let kind: keyof typeof HABITATS = "plains", distance = Infinity;
   for (const biome of g.world.biomes || []) {
     const d = (biome.x-x)**2 + (biome.z-z)**2;
@@ -14,8 +16,16 @@ export function habitatAt(g: Game, x: number, z: number) {
   return HABITATS[kind];
 }
 
+/** Compatibility family supports old discovery/cultivation rules without
+ * comparing dynamic ecological profiles to three legacy singleton objects. */
+export function habitatKindAt(g:Game,x:number,z:number):'plains'|'forest'|'hills'{
+ if(g.world.ecology)return provinceAt(g.world.ecology,x,z).baseHabitat;
+ const habitat=habitatAt(g,x,z);return habitat===HABITATS.forest?'forest':habitat===HABITATS.hills?'hills':'plains';
+}
+
 /** Distance to the continuous river course, not just its control points. */
 export function riverDistance(g:Game,x:number,z:number){
+  if(g.world.ecology)return ecologicalConditionsAt(g.world.ecology,x,z).freshwaterDistanceMeters;
   let distance = Infinity;
   for (const river of g.world.rivers || []) for (let i=1;i<river.pts.length;i++) {
     const a=river.pts[i-1], b=river.pts[i], dx=b.x-a.x, dz=b.z-a.z;
@@ -31,6 +41,7 @@ export function soilQuality(g: Game, x: number, z: number) {
   const slope = Math.max(Math.abs(g.height(x+3,z)-h), Math.abs(g.height(x-3,z)-h),
     Math.abs(g.height(x,z+3)-h), Math.abs(g.height(x,z-3)-h));
   const distance=riverDistance(g,x,z);
+  if(g.world.ecology)return Math.max(.15,Math.min(1,ecologicalConditionsAt(g.world.ecology,x,z).soil-Math.max(0,slope-1)*.06));
   return Math.max(0.25,Math.min(1,0.35+habitatAt(g,x,z).crops*0.3 +
     Math.max(0,1-distance/40)*0.3 - slope*0.08));
 }
@@ -38,7 +49,12 @@ export function soilQuality(g: Game, x: number, z: number) {
 /** Rain-fed cultivation remains possible; drought penalizes ground far from water. */
 export function cropWater(g:Game,x:number,z:number) {
   if(g.state.weather!=="drought")return 1;
-  return riverDistance(g,x,z)<24?0.8:0.4;
+  return droughtWaterPotential(g,x,z);
+}
+
+export function droughtWaterPotential(g:Game,x:number,z:number){
+ if(g.world.ecology){const e=ecologicalConditionsAt(g.world.ecology,x,z);return Math.max(.25,Math.min(.95,.2+e.moisture*.65+(e.freshwaterDistanceMeters<24?.15:0)));}
+ return riverDistance(g,x,z)<24?.8:.4;
 }
 
 /** Local weather drives real spoilage, not merely the calendar label. */
@@ -46,6 +62,7 @@ export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.s
   const habitat=habitatAt(g,x,z),phase=(time%1800)/1800;
   let temperature=11+15*Math.sin((phase-.07)*Math.PI*2)-Math.max(0,g.height(x,z)-4)*.18;
   let humidity=habitat===HABITATS.forest?.76:habitat===HABITATS.hills?.47:.6;
+  if(g.world.ecology){const e=ecologicalConditionsAt(g.world.ecology,x,z);temperature+=e.temperatureOffsetCelsius;humidity=e.moisture;}
   if(weather==="rain"||weather==="storm"||weather==="flood")humidity+=.2;
   if(weather==="mist")humidity+=.1;
   if(weather==="drought"){temperature+=5;humidity-=.28;}

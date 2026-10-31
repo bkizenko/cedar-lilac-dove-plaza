@@ -46,10 +46,10 @@ test('nearby superior force captures an adult in place without healing, duplicat
  captive.hp=7;captive.carry=8;captive.carryType='wood';const stock=g.tribe(0).wood,id=captive.id;
  g.applyCombatDamage(0,captive,20);
  assert.equal(captive.team,0);assert.equal(captive.id,id);assert.equal(g.state.units.length,2);assert.ok(captive.hp>0&&captive.hp<=7);
- assert.equal(captive.enslavedFrom,1);assert.equal(captive.captivityUnrest,40);assert.equal(captive.x,25);assert.equal(captive.carry,8);assert.equal(g.tribe(0).wood,stock);
- for(let i=0;i<1500&&captive.recalled;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(captive,.1);}
- assert.equal(captive.carry,0);assert.equal(g.tribe(0).wood,stock+8);assert.equal(captive.recalled,undefined);
- assert.equal(decodeGame(encodeGame(g)).state.units.find(u=>u.id===id).enslavedFrom,1);
+ assert.equal(captive.enslavedFrom,undefined);assert.equal(captive.prisoner.originTeam,1);assert.equal(captive.x,25);assert.equal(captive.carry,8);assert.equal(g.tribe(0).wood,stock);
+ for(let i=0;i<1500&&captive.prisoner.phase==='escorting';i++){g.state.time+=.1;g.navBudget=10;g.workerAI(guard,.1);g.workerAI(captive,.1);}
+ assert.equal(captive.carry,8);assert.equal(g.tribe(0).wood,stock);assert.equal(captive.prisoner.phase,'custody');
+ assert.equal(decodeGame(encodeGame(g)).state.units.find(u=>u.id===id).prisoner.originTeam,1);
 });
 test('remote fire, children and protected civilians cannot become magically healed captives',()=>{
  for(const situation of ['remote','child','protected','soldier']){

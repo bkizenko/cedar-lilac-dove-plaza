@@ -41,3 +41,7 @@ test('Stone Age defense consumes existing weapons and equips existing working ad
  assert.equal(prepareRivalDefense(g,1,1000),true);assert.equal(g.tribe(1).spears,1);assert.equal(g.state.units.length,before);assert.equal(g.state.units.find(u=>u.militia).type,'worker');
  const small=rivalMilitaryTarget(g,1);for(let i=0;i<28;i++)g.spawnUnit('worker',12,12,1);assert.ok(rivalMilitaryTarget(g,1)>small);
 });
+
+test('defense equipment readiness leaves wounded existing adults unarmed until recovery',()=>{
+ const g=fixture();g.state.units=g.state.units.filter(u=>!u.militia);const wounded=g.state.units[0];for(const u of g.state.units)u.jobLock=true;wounded.jobLock=false;wounded.hp=wounded.maxHp*.4;g.tribe(1).spears=3;const stock=g.tribe(1).spears;assert.equal(prepareRivalDefense(g,1,600),false);assert.equal(wounded.militia,false);assert.equal(g.tribe(1).spears,stock);wounded.hp=wounded.maxHp*.7;assert.equal(prepareRivalDefense(g,1,600),true);assert.equal(wounded.militia,true);assert.equal(g.tribe(1).spears,stock-1);
+});

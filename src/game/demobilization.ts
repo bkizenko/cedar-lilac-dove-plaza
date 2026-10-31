@@ -1,15 +1,18 @@
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {UNITS} from './constants';
 
-function atStores(g:Game,u:Unit){
- return g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&['townhall','warehouse','barracks'].includes(b.type)&&Math.hypot(u.x-b.x,u.z-b.z)<20);
+export function militiaStoresReached(g:Game,u:Unit){
+ const camp=supplyDrops(g,u.team).find(drop=>drop.kind==='camp');
+ const approach=camp?supplyApproach(g,u,camp):null;
+ return !!camp&&!!approach&&supplyReached(g,u,camp,approach)||g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&['townhall','warehouse','barracks'].includes(b.type)&&Math.hypot(u.x-b.x,u.z-b.z)<20);
 }
 function threatened(g:Game,u:Unit){
  return !!u.emergency||g.state.units.some(e=>e.hp>0&&g.isFoe(u.team,e.team)&&Math.hypot(e.x-u.x,e.z-u.z)<25);
 }
 function finish(g:Game,u:Unit){
- if(!u.militia||u.carry>0||u.expedition||!atStores(g,u)||threatened(g,u))return false;
+ if(!u.militia||u.carry>0||u.expedition||!militiaStoresReached(g,u)||threatened(g,u))return false;
  const t=g.tribe(u.team);
  if(u.type==='swordsman')t.blades++;else if(u.type==='archer')t.bows++;else t.spears++;
  const d=UNITS.worker;
@@ -19,14 +22,15 @@ function finish(g:Game,u:Unit){
  return true;
 }
 export function standDownMilitia(g:Game,team=0){
- let ready=0,returning=0;
+ let ready=0,returning=0,guarding=0;
  for(const u of g.state.units){
   if(u.team!==team||!u.militia||u.hp<=0)continue;
+  if(u.prisoner||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.escortId!==undefined){guarding++;continue;}
   // Cancel explicit missions once, retaining carried cargo and paid projects.
   queueStandDown(g,u);
   if(finish(g,u))ready++;else returning++;
  }
- if(team===0)g.banner(ready+returning?`${ready} back at work; ${returning} returning to stand down. Weapons and carried supplies are kept.`:'No armed civilian militia to stand down.',5);
+ if(team===0)g.banner(ready+returning?`${ready} back at work; ${returning} returning to stand down. Weapons and carried supplies are kept.`:guarding?'Armed residents are guarding prisoners or securing a village; withdraw those duties first.':'No armed civilian militia to stand down.',5);
 }
 export function queueStandDown(g:Game,u:Unit,preserveWork=false){
  g.interruptMission(u);u.demobilizing=!!u.militia;u.recalled=true;u.stationOnArrival=!u.militia;
