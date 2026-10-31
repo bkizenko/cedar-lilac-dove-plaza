@@ -1,3 +1,4 @@
+import {dryTreeRoot} from './hydrology';
 import {geography,type LandFeature} from './geography';
 import {landforms} from './landforms';
 import type {WorldRequest,WorldOptions} from './worldOptions';
@@ -94,7 +95,7 @@ function node(
 }
 
 export function generateWorld(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const land=version>=7?landforms(seed,request):null;
+  const land=version>=7?landforms(seed,request,version>=8):null;
   const MAP=land?.options.size??1040, HALF=MAP/2;
   const SEGS=land?Math.round(MAP/1040*256):256;
   const idx=(ix:number,iz:number)=>iz*(SEGS+1)+ix;
@@ -192,7 +193,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
-  const geo=land?geography(seed,MAP,land.distance):null;
+  const geo=land?geography(seed,MAP,land.distance,version>=8):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   for (let iz = 0; iz < n; iz++) {
     for (let ix = 0; ix < n; ix++) {
@@ -341,7 +342,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   if(land){
     const sites:{x:number;z:number;noise:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
     for(let z=-HALF+48;z<HALF-48;z+=20)for(let x=-HALF+48;x<HALF-48;x+=20){
-      const h=sample(heights,x,z);if(h<waterY+.8||h>12)continue;
+      const h=sample(heights,x,z);if(h<waterY+.8||h>(version>=8?36:12))continue;
       const corners=[[-12,-12],[-12,12],[12,-12],[12,12]].map(([dx,dz])=>sample(heights,x+dx,z+dz));
       if(corners.some(y=>y<waterY+.6)||Math.max(h,...corners)-Math.min(h,...corners)>3)continue;
       let approaches=0;
@@ -853,7 +854,8 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       const x=(vegetation()-.5)*MAP*.96,z=(vegetation()-.5)*MAP*.96;
       const canopy=fbm(x*.006+seed%571,z*.006-23,4)*.65+fbm(x*.018+woodlandShift,z*.018+71,3)*.35;
       if(canopy<.43||vegetation()>(canopy-.38)*4)continue;
-      const y=sample(heights,x,z);if(y<waterY+.55||y>30||Math.abs(sample(heights,x+3,z)-sample(heights,x-3,z))>4||Math.abs(sample(heights,x,z+3)-sample(heights,x,z-3))>4)continue;
+      const y=sample(heights,x,z);if(version>=8&&!dryTreeRoot((px,pz)=>sample(heights,px,pz),x,z,waterY))continue;
+      if(y<waterY+.55||y>30||Math.abs(sample(heights,x+3,z)-sample(heights,x-3,z))>4||Math.abs(sample(heights,x,z+3)-sample(heights,x,z-3))>4)continue;
       if(camps.some(c=>Math.hypot(c.x-x,c.z-z)<19)||dockSites.some(s=>Math.hypot(s.x-x,s.z-z)<8)||crowded(x,z))continue;
       const t=node(nid++,'tree',x,z,y,16+Math.floor(vegetation()*20),.8+vegetation()*.65,.85+vegetation()*.3);
       trees.push(t);add(t);
@@ -861,6 +863,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     // Coastline fish sites follow actual shores on every landmass.
     for(let attempt=0;attempt<4000&&fish.length<300;attempt++)tryFish((vegetation()-.5)*MAP*.95,(vegetation()-.5)*MAP*.95);
   }
+  if(version>=8)for(let i=trees.length-1;i>=0;i--)if(!dryTreeRoot((x,z)=>sample(heights,x,z),trees[i].x,trees[i].z,waterY))trees.splice(i,1);
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
   return {
     size: MAP,

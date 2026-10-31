@@ -250,3 +250,18 @@ See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-f
 - [ ] Mountain prospecting: persistent resident survey/search order, discovered mineral evidence, real digging work and depth/deposit quality. Hikeable slopes must have actual routes; cliffs remain obstacles.
 - [ ] UI: concise age progress with larger text, fewer instructional paragraphs, clear buttons; keep welcome layout for later but bypass it while iterating. Test world generation belongs in Test lab, and restart must stay within protected test state.
 - [ ] Parallel work plan and ownership boundaries: see PARALLEL_EXECUTION_PLAN.md. Proposed roles only; no new agents launched by this checkpoint.
+
+## Random-map and foundation repair — 2026-10-31
+
+- [x] ~~Stable random-layout save/load and evidence-based reconstruction of affected v7 random maps.~~ Saved objects remain in place.
+- [x] ~~Version8 continuous relief, variable continent/island groups and flood-safe root/footprint generation.~~ Existing terrain versions remain reconstructable.
+- [x] ~~Raised rigid-building render bases and shared supporting footings; actual grid-width palette smoothing.~~ Browser appearance remains unverified.
+- [ ] Full watershed/erosion and geographic feature guarantees, mountain prospecting and complete climbing routes, biome/culture differentiation and the original eight workstreams remain open.
+- Visual references and ordered UI/art work: VISUAL_DIRECTION.md. Agent workflow should measure scenarios, change one owned system, replay, compare, retain/revert, then publish; it must not optimize one passing seed at the expense of the rest of the game.
+
+## Planning scope accepted — 2026-10-31
+
+- Future campaign scale: local survival -> regional cities/states -> larger world maps and eventual space settlement. Preserve this ambition in the architecture; space is not a requirement for the first complete survival/civilization release. Victory should allow continuation/expansion without deleting the player's society.
+- Desired depth lies between Civilization VII and Hearts of Iron IV, with clear RTS commands and optional administration hiding later workload.
+- Each future domain agent should research relevant primary academic sources and strong genre precedents, state evidence/uncertainty, and translate findings into tunable playable systems. Avoid geographic/cultural determinism or historical complexity that produces no meaningful choice.
+- Next requested step is a coherent planning pass across incentives, progression, shared contracts, agent ownership, metrics and staged acceptance—not another disconnected feature list.

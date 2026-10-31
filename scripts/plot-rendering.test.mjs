@@ -76,3 +76,12 @@ test('territory and fog overlay follows every terrain vertex on enlarged maps',(
  assert.equal(v.fowMesh.material.uniforms.uSize.value,2080);
  v.fieldSurface.dispose();v.fowMesh.geometry.dispose();v.fowMesh.material.dispose();
 });
+test('rigid buildings clear uphill terrain and receive full-depth footings without rewriting saved placement',async()=>{
+ const {foundationProfile}=await import('../src/scene/foundations.ts');
+ const b=building('townhall'),before=JSON.stringify(b),g={world:{heights:new Float32Array(9)},height:(x,z)=>4+x*.2+z*.1};
+ const f=foundationProfile(g,b);assert.ok(f.level>4);assert.ok(f.bottom<4);
+ assert.equal(JSON.stringify(b),before);assert.equal(foundationProfile(g,b),f,'cached support calculation');
+ const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();v.mats=new Proxy({},{get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
+ const game={...g,state:{seed:345,buildings:[b]},tribe:()=>({age:0}),finished:b=>b.build>=1&&b.hp>0,exploredAt:()=>true};v.syncBuildings(game);
+ const matrix=new THREE.Matrix4();v.bldMeshes.get('townhall').timber.getMatrixAt(0,matrix);assert.ok(Math.abs(matrix.elements[13]-f.level)<.00001);assert.equal(v.foundations.count,1);
+});

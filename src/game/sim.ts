@@ -24,7 +24,7 @@ import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
 import {isRivalTeam} from "./factions";
 import {dispatchRivalBarter} from "./rivalTrade";
 import {developRivalCrossings,planReturnCrossing} from "./crossings";
-import {weatherWaterLevel} from "./hydrology";
+import {weatherWaterLevel,highWaterLevel,dryTreeRoot} from "./hydrology";
 import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
@@ -280,7 +280,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 7 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 8 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     this.simulationErrors=[];
     this.chopMarks.clear();
@@ -493,7 +493,7 @@ export class Game {
     const startingResourceSpot=(x:number,z:number)=>{
       for(const r of [0,4,8,12,18,24])for(let i=0;i<(r?16:1);i++){
         const a=i*Math.PI/8,sx=x+Math.sin(a)*r,sz=z+Math.cos(a)*r;
-        if(this.height(sx,sz)<this.world.waterY+.4)continue;
+        if(this.height(sx,sz)<this.world.waterY+.4||worldgenVersion>=8&&!dryTreeRoot((x,z)=>this.height(x,z),sx,sz,this.world.baseWaterY))continue;
         if(this.state.buildings.some(b=>b.hp>0&&Math.abs(sx-b.x)<b.w*.5+2&&Math.abs(sz-b.z)<b.d*.5+2))continue;
         if([...this.state.trees,...this.state.forage].some(n=>n.amount>0&&Math.hypot(n.x-sx,n.z-sz)<1.8))continue;
         return {x:sx,z:sz};
@@ -976,7 +976,7 @@ export class Game {
     for (let iz = 0; iz <= nz; iz++) for (let ix = 0; ix <= nx; ix++) {
       const px = x - d.w / 2 - margin + ix * (d.w + margin * 2) / nx;
       const pz = z - d.d / 2 - margin + iz * (d.d + margin * 2) / nz;
-      if (this.height(px, pz) < this.world.waterY + 0.28) return false;
+      if (this.height(px, pz) < Math.max(this.world.waterY,highWaterLevel(this.world.baseWaterY)) + 0.28) return false;
     }
     return true;
   }

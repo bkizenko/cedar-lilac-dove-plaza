@@ -11,7 +11,7 @@ const distanceToPath=(x:number,z:number,path:Point[])=>{
  return best;
 };
 /** Geographic forms share a watershed instead of independently stamped circles. */
-export function geography(seed:number,size:number,landDistance:(x:number,z:number)=>number){
+export function geography(seed:number,size:number,landDistance:(x:number,z:number)=>number,rolling=false){
  const rand=mulberry32(seed^0x432aac1),core:Point[]=[],coasts:Point[]=[];
  for(let z=-size*.46;z<size*.46;z+=24)for(let x=-size*.46;x<size*.46;x+=24){
   const d=landDistance(x,z);if(d>68)core.push({x,z});else if(d> -8&&d<12)coasts.push({x,z});
@@ -23,7 +23,7 @@ export function geography(seed:number,size:number,landDistance:(x:number,z:numbe
  const peak=core.filter(p=>Math.hypot(p.x-lake.x,p.z-lake.z)>75).sort((a,b)=>Math.hypot(a.x-lake.x,a.z-lake.z)-Math.hypot(b.x-lake.x,b.z-lake.z))[0]||core[0];
  const plateau=[...core].sort((a,b)=>Math.hypot(b.x-peak.x,b.z-peak.z)-Math.hypot(a.x-peak.x,a.z-peak.z))[0];
  const angle=rand()*Math.PI,cs=Math.cos(angle),sn=Math.sin(angle);
- const rangeLength=Math.min(150,size*.105),rangeWidth=27+rand()*17,peakHeight=50+rand()*30;
+ const rangeLength=Math.min(rolling?250:150,size*(rolling?.16:.105)),rangeWidth=(rolling?55:27)+rand()*(rolling?30:17),peakHeight=(rolling?40:50)+rand()*30;
  const lakeRadius=28+rand()*15,plateauRadius=45+rand()*22,plateauHeight=15+rand()*7;
  const end={x:mouth.x+dx/len*40,z:mouth.z+dz/len*40};
  const river=Array.from({length:19},(_,i)=>{
@@ -50,6 +50,12 @@ export function geography(seed:number,size:number,landDistance:(x:number,z:numbe
    return Math.min(d,distanceToPath(x,z,bay.path)-bay.width,distanceToPath(x,z,cove.path)-cove.width);
   },
   elevation(x:number,z:number,h:number,water:number){
+   if(rolling){
+    const inland=Math.max(0,Math.min(1,landDistance(x,z)/45));
+    const broad=fbm(x*.0035+seed%271,z*.0035-81,4);
+    const folded=1-Math.abs(fbm(x*.007-37,z*.007+seed%431,3)*2-1);
+    h+=inland*(broad*15+folded*folded*9);
+   }
    const px=x-peak.x,pz=z-peak.z,along=px*cs+pz*sn,across=-px*sn+pz*cs;
    const spine=across-Math.sin(along*.018)*rangeWidth*.35;
    h+=peakHeight*Math.exp(-spine*spine/(rangeWidth*rangeWidth))*Math.max(0,1-Math.abs(along)/rangeLength)**.65;

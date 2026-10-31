@@ -1,3 +1,4 @@
+import {generateWorld,sampleHeight} from './worldgen';
 import {WORLD_LAYOUTS,WORLD_SIZES} from './worldOptions';
 import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
@@ -75,8 +76,8 @@ export function decodeGame(raw: unknown): Game {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||s.worldgenVersion!==7||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
-  if(s.worldgenVersion===7&&s.worldOptions===undefined)fail();
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if([7,8].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
@@ -115,7 +116,7 @@ export function decodeGame(raw: unknown): Game {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -552,6 +553,18 @@ export function decodeGame(raw: unknown): Game {
     if(crew.length>b.capacity||b.captain!==undefined&&!crew.some((u:any)=>u.id===b.captain&&u.boat.phase==='aboard'))fail();
   }
   g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);
+  // Early v7 random-layout saves omitted the original selection roll. Select
+  // the reconstruction supported by saved natural-node heights, not a new map.
+  if(s.worldgenVersion===7&&s.worldOptions){
+    const evidence=[...s.trees,...s.stones,...s.forage].filter((n:any)=>Number.isFinite(n.y));
+    const points=evidence.filter((_:unknown,i:number)=>i%Math.max(1,Math.floor(evidence.length/64))===0).slice(0,64);
+    const error=(world:typeof g.world)=>points.reduce((sum:number,n:any)=>sum+Math.min(30,Math.abs(sampleHeight(world.heights,n.x,n.z,world.size)-n.y)),0)/Math.max(1,points.length);
+    const initial=error(g.world);
+    if(points.length>=8&&initial>.25){
+      const candidate=generateWorld(s.seed,7,{size:s.worldOptions.size,layout:'random'});
+      if(candidate.options?.layout===s.worldOptions.layout&&error(candidate)<initial*.5)g.world=candidate;
+    }
+  }
   g.state = {
     ...s,
     growthPolicy: s.growthPolicy ?? "welcome",

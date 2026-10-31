@@ -1,3 +1,4 @@
+import {foundationProfile} from './foundations';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
@@ -114,6 +115,7 @@ function makeSunSprite() {
 }
 
 export class WorldView {
+  foundations:THREE.InstancedMesh|null=null;
   mapSize=MAP;
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
@@ -727,6 +729,8 @@ export class WorldView {
   }
 
   private buildBuildings() {
+    this.foundations=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#81705a',roughness:1}),2000);
+    this.foundations.count=0;this.foundations.receiveShadow=true;this.foundations.frustumCulled=false;this.scene.add(this.foundations);
     this.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),1600);
     this.eraDetails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.eraDetails.count=0;this.eraDetails.castShadow=true;this.eraDetails.receiveShadow=true;this.eraDetails.frustumCulled=false;
@@ -1337,7 +1341,7 @@ export class WorldView {
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
           const mesh=meshes[part];if(!mesh||counts[part]>=instCap(mesh))return;
           const wx=b.x+x,wz=b.z+z;
-          const ground=type==="farm"?game.height(wx,wz):b.y;
+          const ground=type==="farm"?game.height(wx,wz):foundationProfile(game,b).level;
           _p.set(wx,ground,wz);
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
@@ -1370,6 +1374,16 @@ export class WorldView {
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
     this.syncEraDetails(game);
+    if(this.foundations){let count=0;
+      for(const b of game.state.buildings){
+        if(b.hp<=0||b.build<.2||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
+        const f=foundationProfile(game,b);if(f.level-f.bottom<.08||count>=instCap(this.foundations))continue;
+        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],scalable=b.type==='warehouse';
+        _p.set(b.x,(f.level+f.bottom)/2,b.z);_e.set(0,scalable?0:st.yaw,0);_q.setFromEuler(_e);
+        _s.set(b.w*(scalable?1:st.sx),f.level-f.bottom,b.d*(scalable?1:st.sz));_m.compose(_p,_q,_s);this.foundations.setMatrixAt(count++,_m);
+      }
+      this.foundations.count=count;this.foundations.instanceMatrix.needsUpdate=true;
+    }
   }
 
   private syncEraDetails(game:Game){
@@ -1388,7 +1402,7 @@ export class WorldView {
       const top=(roof?.boundingBox?.max.y||4)*identity.roofHeight;
       const block=(x:number,y:number,z:number,w:number,h:number,d:number,color=identity.trim)=>{
         if(count>=instCap(mesh))return;
-        _p.set(b.x+(co*x+si*z)*st.sx,b.y+y*st.sy,b.z+(-si*x+co*z)*st.sz);
+        _p.set(b.x+(co*x+si*z)*st.sx,foundationProfile(game,b).level+y*st.sy,b.z+(-si*x+co*z)*st.sz);
         _e.set(0,yaw,0);_q.setFromEuler(_e);_s.set(w*st.sx,h*st.sy,d*st.sz);_m.compose(_p,_q,_s);
         mesh.setMatrixAt(count,_m);_c.set(color);mesh.setColorAt(count++,_c);
       };
@@ -2194,7 +2208,8 @@ export class WorldView {
     // Blend neighbouring palette samples; fog remains a separate continuous overlay.
     // Reuse one buffer so the low-memory renderer creates no per-frame allocations.
     if(this.terrainBlend.length!==arr.length)this.terrainBlend=new Float32Array(arr.length);
-    const width=SEGS+1;
+    const segments=(geo as THREE.PlaneGeometry).parameters.widthSegments;
+    const width=segments+1;
     for(let pass=0;pass<2;pass++){
       this.terrainBlend.set(arr);
       for(let i=0;i<pos.count;i++){
@@ -2202,9 +2217,9 @@ export class WorldView {
         for(let channel=0;channel<3;channel++){
           let sum=this.terrainBlend[o+channel]*4,count=4;
           if(ix>0){sum+=this.terrainBlend[o-3+channel];count++;}
-          if(ix<SEGS){sum+=this.terrainBlend[o+3+channel];count++;}
+          if(ix<segments){sum+=this.terrainBlend[o+3+channel];count++;}
           if(iz>0){sum+=this.terrainBlend[o-width*3+channel];count++;}
-          if(iz<SEGS){sum+=this.terrainBlend[o+width*3+channel];count++;}
+          if(iz<segments){sum+=this.terrainBlend[o+width*3+channel];count++;}
           arr[o+channel]=sum/count;
         }
       }
