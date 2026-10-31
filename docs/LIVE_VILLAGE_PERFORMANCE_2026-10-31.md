@@ -19,3 +19,7 @@ Exact saved village is retained locally in.play/diagnostics/year-three-village.j
 ## Ready interaction batch
 
 77/77camp/custody/contact/knowledge/workload/music checks and10cardinal gate/line checks pass in isolated source. Explore loaded-cargo queue3/3passes with real delivery/save/provision depletion. Music skip11/11checks. Combined compiler/build and actual Chrome review are performed before publication. Productioncohort/V14/defaultpromotion/major NPC/naval/trench work remain outside this performance release.
+
+## Actual Chrome post-publication check
+
+5dfcfae loaded the existing Bronze village with55/83 people and2381food/6874logs/738stone/1066seeds preserved fromits latest save. Resumed actualplay onMedium/shadowsoff: simulation27.2msmean/66.3mspeak, scenework1.5msmean, drawsubmission.8msmean, map2.8msmean; zero rawframeintervals over100ms in latest600frames (longest83ms). Saving60.5msmean/83.8mspeak remains an occasional cost. This is a real reduction from previous47–50ms simulation/10fps, but no sustained FPS target is claimed from this readout alone.

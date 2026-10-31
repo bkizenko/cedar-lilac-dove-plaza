@@ -2,11 +2,12 @@ import {contactYieldingTo} from './encounters';
 import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
-import {UNITS} from './constants';
+import {UNITS,AGE_STAT} from './constants';
+import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {isDependent} from './settlement';
 import {queueStandDown} from './demobilization';
 
-export const DEFENSE_RULES={shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12}} as const;
+export const DEFENSE_RULES={localMobilizationMetres:70,intrusionMetres:28,reviewSeconds:.5,manualAlarmSeconds:20,healthyFraction:.5,armingDangerMetres:8,shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12}} as const;
 
 /** Follow the same physical entrance and occupancy contract as ordinary rest.
  * Shelter conceals occupants; its building remains vulnerable to attack. */
@@ -34,30 +35,22 @@ function seekEmergencyShelter(g:Game,u:Unit,foes:Unit[],dt:number){
   return false;
 }
 
+export type DefenseMobilizationMetrics={hornCalls:number;automaticAlarms:number;residentsAlerted:number;weaponsTaken:number;toolDefenders:number;shelterOrders:number;protectedDuties:number};
+const defenseMetrics=new WeakMap<Game,DefenseMobilizationMetrics>();
+export function defenseMobilizationStatus(g:Game){let value=defenseMetrics.get(g);if(!value){value={hornCalls:0,automaticAlarms:0,residentsAlerted:0,weaponsTaken:0,toolDefenders:0,shelterOrders:0,protectedDuties:0};defenseMetrics.set(g,value);}return value;}
+const weaponAvailable=(g:Game,team:number)=>{const t=g.tribe(team);return !!t&&(t.blades>0||t.spears>0||t.bows>0);};
+const armTargets=new WeakMap<Unit,{until:number;drop:SupplyDrop;spot:{x:number;z:number}}>();
+function armingTarget(g:Game,u:Unit){let cached=armTargets.get(u);if(cached&&g.state.time<cached.until&&('hp' in cached.drop?g.finished(cached.drop):true))return cached;for(const drop of supplyDrops(g,u.team).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))){const spot=supplyApproach(g,u,drop);if(!spot)continue;cached={until:g.state.time+DEFENSE_RULES.reviewSeconds,drop,spot};armTargets.set(u,cached);return cached;}return null;}
+function takeLocalDefenseWeapon(g:Game,u:Unit){if(!u.emergency?.defending||isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction||u.type!=='worker'||u.militia||!weaponAvailable(g,u.team))return false;const local=armingTarget(g,u);if(!local||!supplyReached(g,u,local.drop,local.spot))return false;const t=g.tribe(u.team),kind=t.blades>0?'swordsman':t.spears>0?'spearman':'archer';if(kind==='swordsman')t.blades--;else if(kind==='spearman')t.spears--;else t.bows--;const d=UNITS[kind];u.type=kind;u.militia=true;u.range=d.range;u.dmg=d.dmg*AGE_STAT[t.age];u.rof=d.rof;u.emergency.autoArmed=true;defenseMobilizationStatus(g).weaponsTaken++;return true;}
+function armForLocalDefense(g:Game,u:Unit,foes:Unit[],dt:number){if(u.type!=='worker'||isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction||!u.emergency?.defending||!weaponAvailable(g,u.team))return false;if(takeLocalDefenseWeapon(g,u))return false;if(u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||foes.some(e=>Math.hypot(e.x-u.x,e.z-u.z)<DEFENSE_RULES.armingDangerMetres))return false;const target=armingTarget(g,u);if(!target)return false;u.target=null;u.order='move';u.tx=target.spot.x;u.tz=target.spot.z;u.workReason='Defense horn — walking to the cache to take an available weapon';g.steer(u,dt);return true;}
+
 /** Mobilize once without movement or damage, so impact notifications cannot recurse. */
 function mobilize(g:Game,u:Unit){
-  if(u.emergency){u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*.3;return;}
-  u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false, defending: !isDependent(g,u)&&u.hp>=u.maxHp*.3,
+  if(u.emergency){u.emergency.defending=!isDependent(g,u)&&u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction;return;}
+  u.emergency = { until: g.state.time + 10, job: u.job, jobLock: u.jobLock, autoArmed: false, defending: !isDependent(g,u)&&u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction,
     resume: u.team === 0 && (u.order === "explore" || (u.order === "move" && u.stationOnArrival) || u.order === "hold" || u.order === "trade")
       ? { order: u.order, tx: u.tx, tz: u.tz, station: !!u.stationOnArrival } : undefined };
-  const t = g.tribe(u.team);
-  let type: "spearman" | "archer" | null = null;
-  if (u.emergency.defending && !u.militia && t.spears > 0) {
-    t.spears--;
-    type = "spearman";
-  } else if (u.emergency.defending && !u.militia && t.bows > 0) {
-    t.bows--;
-    type = "archer";
-  }
-  if (type) {
-    const d = UNITS[type];
-    u.type = type;
-    u.militia = true;
-    u.range = d.range;
-    u.dmg = d.dmg;
-    u.rof = d.rof;
-    u.emergency.autoArmed = true;
-  }
+  takeLocalDefenseWeapon(g,u);
   u.node = null;
   u.target = null;
   u.shelterId=undefined;
@@ -70,11 +63,12 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
   const attackers=g.state.units.filter(e=>e.hp>0&&e.team===attackerTeam&&
     (victim.team!==0||g.visibleAt(e.x,e.z))&&Math.hypot(e.x-victim.x,e.z-victim.z)<60)
     .sort((a,b)=>Math.hypot(a.x-victim.x,a.z-victim.z)-Math.hypot(b.x-victim.x,b.z-victim.z));
+  for(const center of villageCenters(g,victim.team))if(Math.hypot(victim.x-center.x,victim.z-center.z)<=DEFENSE_RULES.localMobilizationMetres&&attackers.length)automaticVillageCall(g,center,attackers,victim.team);
   for(const u of g.state.units){
     if(u.team!==victim.team||u.hp<=0||u.prisoner||Math.hypot(u.x-victim.x,u.z-victim.z)>45||u.envoy?.kind==='peace')continue;
     if(u.type==='worker'||u.militia){
       mobilize(g,u);u.emergency!.until=g.state.time+10;
-      if(isDependent(g,u)||u.hp<u.maxHp*.3){
+      if(isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction){
         u.order='move';u.workReason='Alarm — seeking shelter';continue;
       }
     }
@@ -112,13 +106,14 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   }
 
   if (!u.emergency) return false;
-  u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*.3;
+  u.emergency.defending??=!isDependent(g,u)&&u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction;
   if (foes.length) u.emergency.until = g.state.time + 10;
   if (g.state.time >= u.emergency.until) {
     const returnToWork=u.team===0&&u.militia&&!u.conflictIntent&&u.pillage<0&&u.massRaidTarget===undefined&&!u.visit&&!u.trade&&!u.envoy&&!u.scout&&!u.expedition&&!u.foundingJourney&&u.escortId===undefined&&!u.huntOnly;
-    if (u.emergency.autoArmed&&!returnToWork) {
+    if (u.emergency.autoArmed&&!returnToWork&&u.team!==0) {
       const t = g.tribe(u.team);
       if (u.type === "archer") t.bows++;
+      else if(u.type==='swordsman')t.blades++;
       else t.spears++;
       const d = UNITS.worker;
       u.type = "worker";
@@ -136,7 +131,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     u.node = null;
     u.order = u.carry > 0 ? "return" : "idle";
     u.workReason = "Returning to village work";
-    if(returnToWork){queueStandDown(g,u,true);return false;}
+    if(returnToWork){const queuedExplore=u.exploreAfterDelivery;queueStandDown(g,u,true);if(queuedExplore)u.exploreAfterDelivery=true;return false;}
     if (resume && (u.carry === 0 || resume.order==='trade'&&u.trade)) {
       u.order = resume.order;
       u.tx = resume.tx; u.tz = resume.tz;
@@ -146,7 +141,8 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     }
     return false;
   }
-  if (!isDependent(g,u) && u.hp>=u.maxHp*.3 && (u.emergency.autoArmed || u.militia || u.emergency.defending)) {
+  if(armForLocalDefense(g,u,foes,dt))return true;
+  if (!isDependent(g,u) && u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction && (u.emergency.autoArmed || u.militia || u.emergency.defending)) {
     u.workReason = u.militia ? "Militia defending the settlement" : "Defending the tribe with work tools";
     const foe = foes.sort(
       (a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z),
@@ -174,3 +170,16 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   }else {u.order='hold';u.workReason='Waiting for the local alarm to clear';}
   return true;
 }
+
+function villageCenters(g:Game,team:number){const halls=g.state.buildings.filter(b=>b.team===team&&b.type==='townhall'&&g.finished(b));return halls.length?halls:[g.campOf(team)];}
+function protectedDefenseDuty(u:Unit){return !!u.contactDemand||u.contactAttackTargetId!==undefined||u.massRaidTarget!==undefined||u.pillage>=0&&!!u.attackDestination||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||!!(u.expedition||u.scout||u.visit||u.trade||u.envoy||u.foundingJourney||u.tributeJourney||u.boat);}
+/** One bounded local call. It never interrupts a distant expedition or turns
+ * a prisoner into labor; the existing emergency owns temporary defense only. */
+export function callVillageDefense(g:Game,center:{x:number;z:number},intruders:Unit[]=[],manual=true,team=0){const metrics=defenseMobilizationStatus(g);if(manual)metrics.hornCalls++;let ready=0,vulnerable=0,protectedCount=0,newlyAlerted=0;for(const u of g.state.units){if(u.team!==team||u.hp<=0||u.prisoner||u.boat||Math.hypot(u.x-center.x,u.z-center.z)>DEFENSE_RULES.localMobilizationMetres)continue;const nearbyIntruder=intruders.some(e=>Math.hypot(e.x-u.x,e.z-u.z)<35);if(protectedDefenseDuty(u)&&!nearbyIntruder){protectedCount++;continue;}const wasEmergency=!!u.emergency;mobilize(g,u);u.emergency!.until=Math.max(u.emergency!.until,g.state.time+(manual?DEFENSE_RULES.manualAlarmSeconds:10));if(u.emergency!.defending)ready++;else vulnerable++;if(!wasEmergency){newlyAlerted++;metrics.residentsAlerted++;if(!u.emergency!.defending)metrics.shelterOrders++;else if(!u.militia&&!weaponAvailable(g,team))metrics.toolDefenders++;}u.workReason=u.emergency!.defending?'Defense horn — arm at the cache or defend with work tools':'Defense horn — children and injured residents seek shelter';}if(!manual&&newlyAlerted)metrics.automaticAlarms++;metrics.protectedDuties+=protectedCount;if(manual)g.banner(`${ready} nearby adults answering defense; ${vulnerable} seeking shelter${protectedCount?`; ${protectedCount} ongoing duties protected`:''}. Existing weapons and supplies are kept.`,5);return {ready,vulnerable,protected:protectedCount};}
+const villageCallTimes=new WeakMap<Game,Map<string,number>>();
+function automaticVillageCall(g:Game,center:{x:number;z:number},intruders:Unit[],team:number){let calls=villageCallTimes.get(g);if(!calls){calls=new Map();villageCallTimes.set(g,calls);}const key=team+':'+center.x+':'+center.z,due=calls.get(key)||0;if(g.state.time<due&&due-g.state.time<=DEFENSE_RULES.reviewSeconds)return;calls.set(key,g.state.time+DEFENSE_RULES.reviewSeconds);callVillageDefense(g,center,intruders,false,team);}
+const defenseReview=new WeakMap<Game,number>();
+export function tickVillageDefense(g:Game){if(g.state.time<(defenseReview.get(g)||0))return;defenseReview.set(g,g.state.time+DEFENSE_RULES.reviewSeconds);const foes=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&!(e.envoy?.kind==='peace'&&e.envoy.team===0)&&!contactYieldingTo(g,e,0));if(!foes.length)return;for(const center of villageCenters(g,0)){const intruders=foes.filter(e=>Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);if(intruders.length)automaticVillageCall(g,center,intruders,0);}}
+export function soundDefenseHorn(g:Game){const selected=g.state.selBld,center=selected&&selected.team===0&&selected.type==='townhall'&&g.finished(selected)?selected:g.campOf(0);return callVillageDefense(g,center);}
+
+export function resetDefenseMobilization(g:Game){defenseReview.delete(g);defenseMetrics.delete(g);villageCallTimes.delete(g);}

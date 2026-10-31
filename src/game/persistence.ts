@@ -1,3 +1,6 @@
+import {validTowerPlatformState} from './towerPlatforms';
+import {validProductionState} from './production';
+import {discountQuarryPlans} from "./mining";
 import {validCampMoveState} from './nomadicCamp';
 import {validContactState} from './encounters';
 import {validConflictIntentState} from './conflictIntent';
@@ -88,6 +91,8 @@ function validateGamePayload(raw: unknown) {
   if([7,8,9,10,11,12,13].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
+  if(!validTowerPlatformState(s))fail();
+  if(!validProductionState(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
@@ -617,5 +622,6 @@ export function decodeGame(raw:unknown):Game {
   g.world.waterY=weatherWaterLevel(g.world.baseWaterY,g.state.weather);
   g.rebuildWalk();
   discountTownhallPlans(g);
+  discountQuarryPlans(g);
   return g;
 }

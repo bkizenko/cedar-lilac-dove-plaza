@@ -6,7 +6,7 @@ export const SEGS = 256;
 export const WATER_Y = 0.42;
 export const TILE = 2;
 export const LUMBER_R = 18;
-export const QUARRY_R = 16;
+export const QUARRY_R = 32;
 export const DOCK_R = 20;
 export const CORNERSTONE_R = 28;
 export const SETTLEMENT_GAP = 64;
@@ -58,6 +58,11 @@ export const BUILDINGS: Record<
   stonewall: {name:"Stone wall",w:4,d:4,food:0,wood:0,stone:12,pop:0,hp:1000,age:2,hint:"Strong 4m defensive section. Raiders must break through or find a gap."},
   trench: {name:"Defensive trench",w:4,d:4,food:0,wood:0,stone:0,pop:0,hp:300,age:0,hint:"Dig an earthwork: crossing takes twice as long for everyone. Leave clear approaches for workers."},
   moat: {name:"Flooded moat",w:4,d:4,food:0,wood:4,stone:4,pop:0,hp:500,age:4,hint:"Medieval water-fed earthwork near a shore or river. Crossing is four times slower. Leave a dry gate approach."},
+  hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook delivered raw meat with actual logs. New hunting catches then enter the raw-food processing chain."},
+  butcher: {name:"Butcher and skin yard",w:4,d:4,food:0,wood:6,stone:2,pop:0,hp:180,age:0,hint:"Clean actual animal hides and extract tannin from delivered bark-bearing logs and collected water."},
+  dryrack: {name:"Skin drying rack",w:4,d:3,food:0,wood:4,stone:0,pop:0,hp:180,age:0,hint:"Two finite drying slots for cleaned skins. Requires real tending work; an empty rack produces nothing."},
+  tanner: {name:"Tanning yard",w:4,d:4,food:0,wood:8,stone:2,pop:0,hp:180,age:0,hint:"Tan cleaned hides using actual bark tannin, collected water and worker time."},
+  tailor: {name:"Skin sewing shelter",w:4,d:4,food:0,wood:8,stone:0,pop:0,hp:180,age:0,hint:"Sew real dried skins or leather with a bone needle. Finished clothes must be delivered and worn."},
   townhall: {
     name: "Town Hall",
     w: 10,
@@ -117,12 +122,12 @@ export const BUILDINGS: Record<
     w: 6.4,
     d: 6,
     food: 0,
-    wood: 36,
+    wood: 18,
     stone: 0,
     pop: 0,
     hp: 240,
     age: 0,
-    hint: "Place on a loose stone outcrop or accessible mountain slope. Two miners excavate a finite mountain seam; different sites have different yields.",
+    hint: "A 32m work area covers nearby stone outcrops. Two miners haul finite surface stone or excavate a finite mountain seam; each site has a different yield.",
   },
   dock: {
     name: "Fishing Dock",
@@ -449,6 +454,8 @@ export const BUILD_ORDER: BldType[] = [
   "keep",
   "stables",
   "university",
+  "hearth","butcher","dryrack","tanner","tailor",
+  "cairn","grove",
 ];
 
 export const TEAM_COLORS = ["#c4a060", "#c4452a", "#3d7a62", "#4a2428", "#426f9a", "#8c58a3"];
@@ -531,6 +538,7 @@ export const AGE_CHOICES: {
 ];
 
 export const BUILD_TIME: Record<BldType, number> = {
+  hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
   palisade:12, gate:18, stonewall:24, trench:18, moat:30,
   townhall: 0,
   cornerstone: 12,

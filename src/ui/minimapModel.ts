@@ -8,6 +8,15 @@ export function worldToMinimap(x:number,z:number,worldSize:number,pixels:number=
 export function minimapToWorld(x:number,y:number,worldSize:number,pixels:number=MINIMAP_RULES.pixels):MapPoint{
  const clamp=(n:number)=>Math.max(0,Math.min(1,n/pixels));return{x:(clamp(x)-.5)*worldSize,z:(clamp(y)-.5)*worldSize};
 }
+/** Quiet north-up view marker. This is an approximate zoom indicator, not a
+ * terrain raycast or the exact rotated camera footprint. No terrain is revealed. */
+export function minimapViewRectangle(look:MapPoint,worldSize:number,distance:number,fovDegrees:number,aspect=1,pixels:number=MINIMAP_RULES.pixels){
+ const center=worldToMinimap(look.x,look.z,worldSize,pixels),span=2*Math.max(0,distance)*Math.tan(fovDegrees*Math.PI/360)*Math.max(1,aspect);
+ const side=Math.max(6,Math.min(pixels*.4,span/worldSize*pixels)),half=side/2;
+ const left=Math.max(0,Math.min(pixels,center.x-half)),top=Math.max(0,Math.min(pixels,center.y-half));
+ const right=Math.max(left,Math.min(pixels,center.x+half)),bottom=Math.max(top,Math.min(pixels,center.y+half));
+ return{x:left,y:top,width:right-left,height:bottom-top};
+}
 const BIOMES:Record<string,RGB>={meadow:[108,139,82],'mixed-woodland':[76,111,67],'conifer-forest':[66,104,91],alpine:[143,149,137],wetland:[92,124,101],'dry-scrub':[147,140,94],arid:[183,158,108],'warm-coast':[119,147,92],plains:[108,139,82],forest:[76,111,67],hills:[129,133,106]};
 function writeTerrainColor(target:{[index:number]:number},offset:number,height:number,water:number,biome:string,relief=0){
  const above=height-water;

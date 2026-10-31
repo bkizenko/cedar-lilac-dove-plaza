@@ -1,7 +1,7 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { Engine } from '@/game/engine';
 import type { HudSnapshot } from '@/game/types';
-import {MINIMAP_RULES,sampleMinimapTerrain,paintMinimapFog,worldToMinimap,minimapToWorld,cameraSurfaceFootprint} from './minimapModel';
+import {MINIMAP_RULES,sampleMinimapTerrain,paintMinimapFog,worldToMinimap,minimapToWorld,minimapViewRectangle} from './minimapModel';
 const SIZE=MINIMAP_RULES.pixels;
 /** North is negative world Z. Unknown terrain and unknown settlements stay hidden. */
 export function WorldMinimap({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
@@ -20,23 +20,15 @@ export function WorldMinimap({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
    const point=(x:number,z:number,color:string,r:number)=>{const p=worldToMinimap(x,z,map);ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();};
    for(const c of hud.camps||[])if(c.known)point(c.x,c.z,c.alive?c.color:'#82786b',3);
    const home=g.campOf(0);point(home.x,home.z,'#f7d48b',4);
-   engine.view.camera.updateMatrixWorld(true);
-   const footprint=cameraSurfaceFootprint(engine.view.camera,map,(x,z)=>Math.max(g.height(x,z),g.waterAt(x,z))).points;
-   ctx.strokeStyle='#fff4dc';ctx.lineWidth=1.25;ctx.beginPath();
-   // Clip the outline to surveyed ground as well; its terrain-dependent shape
-   // must not become an indirect reveal of an unknown ridge or lake.
-   if(footprint.length>=3)for(let i=0;i<footprint.length;i++){
-    const a=footprint[i],b=footprint[(i+1)%footprint.length],pa=worldToMinimap(a.x,a.z,map),pb=worldToMinimap(b.x,b.z,map),steps=Math.max(1,Math.ceil(Math.hypot(pb.x-pa.x,pb.y-pa.y)));let pen=false;
-    for(let k=0;k<=steps;k++){const t=k/steps,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,p=worldToMinimap(x,z,map);
-     if(!g.exploredAt(x,z)){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else{ctx.moveTo(p.x,p.y);pen=true;}}
-   }
-   ctx.stroke();const look=engine.view.look;point(look.x,look.z,'#fff4dc',1.5);
+   const view=engine.view,rect=minimapViewRectangle(view.look,map,view.dist,view.camera.fov,view.camera.aspect);
+   ctx.strokeStyle='rgba(227, 215, 193, 0.45)';ctx.lineWidth=1;
+   ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
   };
   const measuredDraw=()=>engine.profile.measure('map',draw);measuredDraw();const timer=setInterval(measuredDraw,MINIMAP_RULES.terrainRefreshMilliseconds);return()=>clearInterval(timer);
  },[engine]);
  const pan=(e:PointerEvent<HTMLCanvasElement>)=>{if(!engine)return;const r=e.currentTarget.getBoundingClientRect(),p=minimapToWorld((e.clientX-r.left)/r.width*SIZE,(e.clientY-r.top)/r.height*SIZE,engine.game.world.size);engine.focusMinimap(p.x,p.z);};
  return <div className="world-minimap"><canvas ref={canvas} width={SIZE} height={SIZE} role="button" tabIndex={0}
-  aria-label="World map, north up. Drag to pan. White outline shows the current camera view. Arrow keys move the camera; Home returns to your village."
+  aria-label="World map, north up. Drag to pan. Muted square marks the approximate view centre and zoom. Arrow keys move the camera; Home returns to your village."
   onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);pan(e);}}
   onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))pan(e);}}
   onKeyDown={e=>{if(!engine)return;const map=engine.game.world.size,step=map/30,p=engine.view.look,dirs:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};

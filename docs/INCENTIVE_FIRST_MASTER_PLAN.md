@@ -418,3 +418,13 @@ Expose village workload as estimated person-seconds of enabled queued and recurr
 Show values above100%, identify waiting jobs and their actual priority or access/material/worker/bench bottleneck, and explain that overload means work waits for finite workers. Do not add random failure, a second arbitrary speed penalty or pretend every queued job starts immediately. Estimates must disclose travel and seasonal limits. Validate that more work raises workload, more available adults and useful equipment reduce it, and constrained workplaces can cause real waiting even below100%.
 
 This is additive acceptance scope. Preserve the frozen98-gate baseline and its denominator; this requirement and its source/tests do not by themselves increase published completion or count as desktop acceptance.
+
+## Latest defense, extraction, trade and presentation requirements
+
+Replace the distracting irregular minimap camera outline with a thin muted square. Lower quarry startup cost and show the actual reachable deposit area/capacity; it must work more than one decorative rock while preserving finite extraction. Trade partial offers must preserve their unit price and physically transport only the actual quoted payment; no gift balances or distant refunds.
+
+A separate defense horn calls healthy nearby adults to defend using actual stored weapons (collected physically) or work tools; vulnerable residents seek real shelter. Automatic intruder alarms trigger the same local response, and temporary militia stand down afterward. Preserve ongoing custody and distant expeditions unless intruders actually threaten them.
+
+Shooting platforms/towers need paid material-dependent height, stronger measured durability, matching actual geometry/projectile release height, and height limits from construction materials. Unfinished towers must not shoot. Staffed garrisons/ammunition remain separate explicit implementation needs.
+
+Desktop packaging is an option; bundling the same simulation does not substitute for measured CPU/render improvements. Keep Low/Medium/High and remember the selected quality. Avoid brightness/color changes caused merely by switching postprocessing pipelines; normal weather/day/night changes should remain explainable.

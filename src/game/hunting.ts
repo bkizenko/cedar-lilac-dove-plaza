@@ -1,3 +1,4 @@
+import {productionEnabled,harvestAnimalMaterials} from './production';
 import {butcheryLaborMultiplier} from './subsistenceBalance';
 import type { Game } from "./sim";
 import type { Critter, CritterKind, Unit } from "./types";
@@ -7,7 +8,7 @@ import { carryingCapacity } from "./haulage";
 import { climateAt } from "./ecology";
 import { predisposition } from "./people";
 
-export type Carcass = { meat: number; diedAt: number };
+export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:number };
 export type HuntableCritter = Critter & { carcass?: Carcass };
 export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, bird: 0 } as const;
 
@@ -17,6 +18,7 @@ export function carcassStateValid(value: unknown, species: CritterKind, hp: numb
   if (!value || typeof value !== "object" || Array.isArray(value) || hp > 0 || species === "bird") return false;
   const c = value as Carcass;
   return Number.isFinite(c.meat) && c.meat >= 0 && c.meat <= CARCASS_MEAT[species] &&
+    (c.hides===undefined||Number.isFinite(c.hides)&&c.hides>=0&&c.hides<=1)&&(c.bones===undefined||Number.isFinite(c.bones)&&c.bones>=0&&c.bones<=(species==='boar'?3:2))&&
     Number.isFinite(c.diedAt) && c.diedAt >= 0 && c.diedAt <= now;
 }
 
@@ -63,11 +65,11 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
     finishTask(g, u, c.hp>0?"This goat is reserved for taming — finding other food":"The carcass is exhausted or spoiled — finding other food");
     return true;
   }
-  if (u.carry > 0 && (u.carryType !== "food" || (u.carryFood || "provisions") !== "meat")) {
+  if (u.carry > 0 && (u.carryType !== "food" || (u.carryFood || "provisions") !== "meat" || productionEnabled(g,u.team)&&!u.rawHuntMeat)) {
     u.order = "return"; u.workReason = "Delivering the current load before hunting";
     return true;
   }
-  if (u.carry >= carryingCapacity(u, "food")) {
+  if (u.carry+Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0) >= carryingCapacity(u, "food")) {
     u.order = "return"; u.workReason = "Carrying the hunting catch home";
     return true;
   }
@@ -114,7 +116,7 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
     if (c.hp === 0) {
       // Only this live-to-dead transition creates meat. Old corpses, loading,
       // repeated task calls and multiple workers cannot award it twice.
-      c.carcass = { meat: CARCASS_MEAT[c.species], diedAt: g.state.time };
+      c.carcass = { meat: CARCASS_MEAT[c.species], diedAt: g.state.time,...(productionEnabled(g,u.team)?{hides:1,bones:c.species==='boar'?3:2}:{}) };
       c.vx = 0; c.vz = 0; c.wanderT = 600;
       g.workBoard.reset();
       g.addBurst(c.x, c.y + 0.3, c.z, "#8a5a3a", 6);
@@ -123,10 +125,12 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
     return true;
   }
   const carcass = c.carcass!;
-  const taken = Math.min(3, carcass.meat, Math.max(0, carryingCapacity(u, "food") - u.carry));
+  harvestAnimalMaterials(g,u,carcass,Math.max(0,carryingCapacity(u,"food")-u.carry-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
+  const taken = Math.min(3, carcass.meat, Math.max(0, carryingCapacity(u, "food") - u.carry-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
   carcass.meat -= taken;
+  if(taken>0&&productionEnabled(g,u.team))u.rawHuntMeat=true;
   u.carry += taken; u.carryType = "food"; u.carryFood = "meat";
-  if (u.carry >= carryingCapacity(u, "food") || (u.carry >= 8 && reserveSeconds(g,u.team) < 90) || carcass.meat === 0) {
+  if (u.carry+Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0) >= carryingCapacity(u, "food") || (u.carry >= 8 && reserveSeconds(g,u.team) < 90) || carcass.meat === 0) {
     u.order = "return"; u.workReason = "Carrying the hunting catch home";
     if (carcass.meat === 0) g.workBoard.reset();
   }

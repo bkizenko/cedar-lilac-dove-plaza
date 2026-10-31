@@ -1,3 +1,4 @@
+import {productionWorkplaceGeos} from './productionWorkplaces';
 import {timberGateKit} from './gateKit';
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -254,6 +255,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   ];
 
   return {
+    ...productionWorkplaceGeos(),
     palisade: {timber:merge(Array.from({length:16},(_,i)=>cyl(.2,.26,2.8,(i%4-1.5)*1.1,0,(Math.floor(i/4)-1.5)*1.1,5))),roof:merge([box(.1,.1,.1,0,0,0)])},
     gate: timberGateKit(),
     stonewall: {timber:merge([box(4,3,4,0,0,0)]),roof:merge([box(1,.6,4,-1.5,3,0),box(1,.6,4,1.5,3,0),box(2,.6,1,0,3,-1.5),box(2,.6,1,0,3,1.5)])},

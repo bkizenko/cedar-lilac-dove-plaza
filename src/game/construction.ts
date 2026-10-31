@@ -1,3 +1,5 @@
+import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
+import {discountQuarryPlans} from "./mining";
 import {expansionCost,plotArea,type PlotSize} from './plots';
 import type {Game} from './sim';
 import type {Building,BldType,Cost,ResKind,Unit} from './types';
@@ -9,6 +11,7 @@ export const BUILD_MATERIALS:ResKind[]=['food','wood','stone','copper','iron'];
 export function buildingCost(type:BldType,g?:Game,team=0,size?:PlotSize,span?:BridgeSpan):Cost {
   const d=BUILDINGS[type];
   const cost:Cost=Object.fromEntries(BUILD_MATERIALS.map(k=>[k,d[k]||0]));
+  if(type==='watchtower'&&g)Object.assign(cost,towerPlatformSpec(towerBuildConfiguration(g,team)).cost);
   if(type==='bridge'&&span){cost.wood=Math.ceil((cost.wood||0)*bridgeCostScale(span));cost.stone=Math.ceil((cost.stone||0)*bridgeCostScale(span));}
   if(type==='farm')cost.seeds=4;
   if(type==='townhall'&&g){
@@ -48,6 +51,7 @@ export function planStatus(g:Game,b:Building){
 /** Pay once, only from actual stores. Unfunded drawings grant no building benefits. */
 export function fundConstructionPlans(g:Game,preferred?:Building){
   discountTownhallPlans(g);
+  discountQuarryPlans(g);
   // Convert only unpaid old farm drawings. Completed farms keep their progress.
   for(const b of g.state.buildings)if(b.type==='farm'&&b.plannedCost){b.plannedCost.wood=0;b.plannedCost.seeds=Math.ceil(4*plotArea(b));}
   if(g.state.weather==='storm')return;

@@ -1,5 +1,8 @@
+import {TowerPlatformLayer} from './towerPlatformLayer';
+import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
+import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
-import {GRAPHICS_RULES} from '../game/graphics';
+import {GRAPHICS_RULES,loadGraphicsQuality} from '../game/graphics';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
@@ -20,6 +23,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { BUILDINGS, FOW, LUMBER_R, MAP, QUARRY_R, SEGS, TEAM_STYLE } from "@/game/constants";
 import type { Game } from "@/game/sim";
 import type { BldType, UnitType, ResKind } from "@/game/types";
@@ -62,7 +66,8 @@ const UNIT_TYPES: UnitType[] = [
   "warden",
   "ranger",
 ];
-const BLD_TYPES: BldType[] = [
+export const BLD_TYPES: BldType[] = [
+  "hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -154,6 +159,7 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
+  private towerPlatforms:TowerPlatformLayer|null=null;
   private contourFields: ContourFields | null = null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
@@ -232,7 +238,7 @@ export class WorldView {
   private litSunCol = new THREE.Color("#fff4d2");
 
   constructor(canvas: HTMLCanvasElement) {
-    this.quality = GRAPHICS_RULES.defaultQuality;
+    this.quality = loadGraphicsQuality();
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: this.quality === "high",
@@ -242,7 +248,7 @@ export class WorldView {
       failIfMajorPerformanceCaveat: false,
     });
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, this.quality === "high" ? 1.5 : 1.25),
+      Math.min(window.devicePixelRatio || 1, GRAPHICS_RULES.profiles[this.quality].pixelRatio),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
     this.renderer.shadowMap.enabled = this.shadowsEnabled;
@@ -969,6 +975,7 @@ export class WorldView {
           sources.set(mesh, this.buildingInstances.get(mesh)??entities);
         }
     }
+    for(const [mesh,owners]of this.towerPlatforms?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     if(this.domesticGoats){
       this.domesticGoats.computeBoundingSphere();
       sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
@@ -1397,6 +1404,8 @@ export class WorldView {
   }
 
   private syncBuildings(game: Game) {
+    if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
+    this.towerPlatforms.sync(game);
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
@@ -1408,6 +1417,7 @@ export class WorldView {
         let owners=this.buildingInstances.get(mesh);if(!owners){owners=[];this.buildingInstances.set(mesh,owners);}owners.length=0;
       }
       for(const b of grouped.get(type)!) {
+        if(type==='watchtower'&&b.towerPlatform)continue;
         const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
         const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b);
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
@@ -1738,7 +1748,7 @@ export class WorldView {
     if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing, towerPlatform?:TowerPlatform) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -1749,7 +1759,7 @@ export class WorldView {
     this.ghost.rotation.set(0,type==='gate'?gateOrientation(gateFacing).yawRadians:0,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
-    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size);
+    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'');
     if (this.ghost.userData.key === key) return;
     this.clearGhost();
     this.ghost.userData.key = key;
@@ -1769,7 +1779,8 @@ export class WorldView {
     mr.depthWrite = false;
     mr.color.set(ok ? "#8aaa58" : "#a05048");
     const add=(geometry:THREE.BufferGeometry,material:THREE.Material,x=0,z=0,sx=1,sz=1)=>{const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,0,z);mesh.scale.set(sx,1,sz);this.ghost.add(mesh);};
-    if(size&&type==='warehouse'){
+    if(type==='watchtower'&&towerPlatform){const geo=towerPlatformGeos(towerPlatform);add(geo.timber,mt);if(geo.extra)add(geo.extra,mt);add(geo.roof,mr);
+    }else if(size&&type==='warehouse'){
       for(const m of plotModules({type,...size} as import("@/game/types").Building)){add(meshes.timber.geometry,mt,m.x,m.z,m.sx,m.sz);add(meshes.roof.geometry,mr,m.x,m.z,m.sx,m.sz);}
     }else if(size&&type==='farm'){
       add(meshes.timber.geometry,mt,0,0,size.w/BUILDINGS.farm.w,size.d/BUILDINGS.farm.d);
@@ -2054,7 +2065,6 @@ export class WorldView {
   private setupComposer() {
     try {
       this.composer?.dispose();
-      this.composer?.dispose();
       this.bloom?.dispose();
       this.composer = null;
       this.bloom = null;
@@ -2084,6 +2094,8 @@ export class WorldView {
       });
       this.composer.addPass(vig);
       this.composer.addPass(new FilmPass(0.025, false));
+      // Match the direct renderer's display color conversion at every quality.
+      this.composer.addPass(new OutputPass());
       this.composer.setSize(w, h);
     } catch {
       this.composer?.dispose();
@@ -2393,6 +2405,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
     this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;

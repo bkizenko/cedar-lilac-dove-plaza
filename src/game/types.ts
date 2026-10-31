@@ -7,6 +7,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
+  | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -115,7 +116,7 @@ export type CritterKind = "deer" | "boar" | "goat" | "bird";
 
 export type Critter = {
   grazing?: {x:number;z:number};
-  carcass?: {meat:number;diedAt:number};
+  carcass?: {meat:number;diedAt:number;hides?:number;bones?:number};
   id: number;
   species: CritterKind;
   x: number;
@@ -138,6 +139,10 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  productionProjectId?:number;
+  itemCargo?:import('./production').ItemStock;
+  rawHuntMeat?:true;
+  garment?:{item:'skinClothes'|'leatherClothes';condition:number};
   exploreAfterDelivery?:true;
   campMoveId?:number;
   contactDemand?:{targetId:number;lastTimeSeconds:number};
@@ -252,6 +257,7 @@ export type Unit = {
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  towerPlatform?:import('./towerPlatforms').TowerPlatform;
   id: number;
   kind: "building";
   type: BldType;
@@ -334,6 +340,8 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  items?:import('./production').ItemStock;
+  itemFreshness?:Partial<Record<'rawHide'|'cleanHide',number>>;
   survival?:import('./survivalNeeds').SurvivalStock;
   seeds?: number;
   haulagePractice?: number;
@@ -397,6 +405,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  towerPlacement?:import('./towerPlatforms').TowerPlatform;
+  production?:import('./production').ProductionState;
   campSites?:{team:number;x:number;z:number}[];
   campMove?:import('./nomadicCamp').CampMove;
   autoWorkEnabled?:boolean;

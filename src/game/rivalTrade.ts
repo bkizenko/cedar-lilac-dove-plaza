@@ -1,3 +1,4 @@
+import {TRADE_PRICING} from "./tradePricing";
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
 import type {Game} from './sim';
@@ -8,7 +9,7 @@ import {rivalKnows} from './rivalDevelopment';
 import {receiveFood} from './pantry';
 
 const goods:ResKind[]=['wood','stone','copper','iron','food'];
-const worth:Record<ResKind,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
+const worth=TRADE_PRICING.worth;
 const usable=(g:Game,team:number,k:ResKind)=>k!=='copper'&&k!=='iron'||g.tribe(team).age>=(k==='copper'?1:2);
 export function rivalTradeReserve(g:Game,team:number,k:ResKind){
   if(k==='food')return foodDemand(g,team)*900;
@@ -81,7 +82,7 @@ export function settleRivalBarter(g:Game,u:Unit){
   // A village with a glut of the offered material will decline it. A shortage
   // makes the same physical offer worth more, without exposing a remote quote.
   const value=Math.max(.45,Math.min(1.35,rivalTradeReserve(g,seller.id,give)/Math.max(1,seller[give])));
-  const amount=Math.min(spare,Math.floor(u.carry*worth[give]/worth[get]*value*.9));
+  const amount=Math.min(spare,Math.floor(u.carry*worth[give]/worth[get]*value*TRADE_PRICING.rivalTerms));
   if(amount<4||seller[give]>rivalTradeReserve(g,seller.id,give)*3)return false;
   g.spend(seller.id,{[get]:amount});
   if(give==='food')receiveFood(g,seller.id,u.carry,u.carryFood);else seller[give]+=u.carry;

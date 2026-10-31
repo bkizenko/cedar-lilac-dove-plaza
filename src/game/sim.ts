@@ -1,3 +1,5 @@
+import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
+import {productionAI,pauseProduction,tickProduction,deliverProductionCargo} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
 import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
 import {terrainWalkBase} from './terrainWalkCache';
@@ -41,7 +43,7 @@ import {weatherWaterLevel,highWaterLevel,dryTreeRoot} from "./hydrology";
 import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
-import {raiseAttackAlarm} from "./defense";
+import {raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
@@ -304,6 +306,7 @@ export class Game {
   reset(seed?: number, worldgenVersion = seed === undefined ? 10 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     resetCommandDiagnostics(this);
+    resetDefenseMobilization(this);
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
@@ -1251,6 +1254,8 @@ export class Game {
     return beginWeaponWork(this,kind,0,workplaceId);
   }
 
+  soundDefenseHorn(){return soundDefenseHorn(this);}
+
   callToArms(team = 0) {
     const t = this.tribe(team);
     if (!t) return 0;
@@ -1369,6 +1374,7 @@ export class Game {
     }
     if(!planned)this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team,undefined,span);
+    configureTowerPlatform(this,b);
     if(size){b.w=size.w;b.d=size.d;}
     if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
     if(planned)b.plannedCost=cost;
@@ -1450,7 +1456,7 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = (BUILD_TIME[b.type] || 16)*plotArea(b);
+    const need = towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
@@ -1658,6 +1664,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    pauseProduction(this,u);
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
     u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;
@@ -4203,6 +4210,7 @@ export class Game {
       u.tx=spot.x;u.tz=spot.z;
       if(!supplyReached(this,u,home,spot)){this.steer(u,dt);return;}
       deliverWaterCargo(this,u);
+      if(!deliverProductionCargo(this,u))return;
       if(u.carryType&&u.carry>0){recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
       finishRepatriation(this,u);
@@ -4350,6 +4358,7 @@ export class Game {
           else if (roll > 0.93) gained = 2;
         }
         if("kind" in node&&node.kind==="fish")gained=Math.min(gained,Math.floor(node.amount));
+        if("kind" in node&&node.kind==="stone")gained=Math.min(gained,node.amount);
         if (gained <= 0) {
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "thin", "#b8a888");
         } else {
@@ -4367,7 +4376,7 @@ export class Game {
           }
         }
         if ("amount" in node) {
-          node.amount -= node.kind === "fish" ? gained : 1;
+          node.amount -= (node.kind === "fish" || node.kind === "stone") ? gained : 1;
           if(node.kind==="forage")applyForagePressure(node);
           else if(node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+.4*gained/Math.max(1,node.maxAmt||8));
           if (node.amount <= 0) {
@@ -4417,6 +4426,7 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
+      if(!deliverProductionCargo(this,u))return;
       recordCaravanDelivery(this,u);
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
@@ -4433,7 +4443,7 @@ export class Game {
       u.tradeTeam = 0;
       u.node = null;
       u.order = "idle";
-      if(u.type==="worker")this.workBoard.assign(this, u);
+      if(u.type==="worker"||u.militia&&u.huntOnly)this.workBoard.assign(this, u);
       else {u.order="hold";u.target=null;u.pillage=-1;u.workReason="Loot delivered — awaiting orders";}
     }
   }
@@ -4468,6 +4478,15 @@ export class Game {
       return;
     }
     recordTradeMeeting(this,rival.id,u);
+    if(u.procurement||u.customOffer){
+      const local=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u).deal;
+      if(local&&local.giveAmt<deal.giveAmt){
+        u.procurement=undefined;u.customOffer=undefined;releaseTradeReservation(this,u);u.trade=null;u.order="return";
+        u.workReason="Smaller fixed shipment available — bringing the full budget home";
+        this.banner(`They offer ${local.getAmt} ${local.get} for ${local.giveAmt} ${local.give}. Your full budget returns; use the meeting report to send that smaller shipment.`,6);
+        return;
+      }
+    }
     if(u.procurement) {
       const minimum=u.procurement.minimum;
       const quote=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u);
@@ -4621,9 +4640,11 @@ export class Game {
   fireArrow(from: Unit | Building, to: Unit | Building) {
     if(!to||to.hp<=0||to.team===from.team)return;
     if(from.kind==='unit'&&!(to.kind==='building'?missionMayTargetBuilding(this,from,to):missionMayTargetCivilian(this,from,to)))return;
+    const releaseY=(from.kind==='building'?towerProjectileBase(this,from):from.y)+(from.kind==='building'?towerProjectileHeight(from):1.4);
+    const flightSeconds=Math.hypot(to.x-from.x,to.z-from.z,to.y+1-releaseY)/22;
     const p: Projectile = {
       x: from.x,
-      y: from.y + 1.4,
+      y: releaseY,
       z: from.z,
       tx: to.x,
       ty: to.y + 1,
@@ -4631,7 +4652,7 @@ export class Game {
       target: to,
       ...(from.kind==='unit'?{attackerId:from.id,conflictIntent:from.conflictIntent}:{}),
       speed: 22,
-      life: 1.1,
+      life: Math.max(1.1,flightSeconds+.15),
       dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z),
       team: from.team,
     };
@@ -5008,11 +5029,11 @@ export class Game {
 
   updateTowers(dt: number) {
     for (const b of this.state.buildings) {
-      if (b.type !== "watchtower" || b.hp <= 0) continue;
+      if (b.type !== "watchtower" || !this.finished(b) || b.plannedCost) continue;
       b.cd -= dt;
       if (b.cd > 0) continue;
       let best: Unit | null = null;
-      let bd = 16 * 16;
+      let bd = towerRangeMeters(b) ** 2;
       for (const u of this.state.units) {
       if(contactYieldingTo(this,u,b.team))continue;
         if (u.hp <= 0 || u.team === b.team) continue;
@@ -5174,7 +5195,7 @@ export class Game {
       if(spot&&rivalCanInvest(this,team,"warehouse"))this.placeBuilding("warehouse",spot.x,spot.z,team);
     }
     if (team === 1 && reserve > 450 && !needsStorage) {
-      if (!this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.55) {
+      if (!this.hasBld(team, "quarry") && tr.wood >= BUILDINGS.quarry.wood && Math.random() < 0.55) {
         const spot = this.findOpenSpot(hall.x, hall.z, "quarry", team);
         if (spot && rivalCanInvest(this,team,"quarry")) this.placeBuilding("quarry", spot.x, spot.z, team);
       }
@@ -5219,7 +5240,7 @@ export class Game {
       const spot = this.findOpenSpot(hall.x, hall.z, "lumber", team);
       if (spot && rivalCanInvest(this,team,"lumber")) this.placeBuilding("lumber", spot.x, spot.z, team);
     }
-    if (!needsStorage && reserve > 450 && !this.hasBld(team, "quarry") && tr.wood >= 36 && Math.random() < 0.4) {
+    if (!needsStorage && reserve > 450 && !this.hasBld(team, "quarry") && tr.wood >= BUILDINGS.quarry.wood && Math.random() < 0.4) {
       const spot = this.findOpenSpot(hall.x, hall.z, "quarry", team);
       if (spot && rivalCanInvest(this,team,"quarry")) this.placeBuilding("quarry", spot.x, spot.z, team);
     }
@@ -5501,6 +5522,8 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        tickProduction(this,sdt);
+        tickVillageDefense(this);
         tickCampRelocation(this,sdt);
         reconcileTradeReservations(this);
         reconcileTreeWorkers(this);
@@ -5527,6 +5550,7 @@ export class Game {
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
             if(queuedExplorationAI(this,u,sdt))continue;
+            if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
             if(captureIntentAI(this,u,sdt))continue;
             if(occupationActorAI(this,u,sdt))continue;
@@ -5601,6 +5625,7 @@ export class Game {
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
@@ -5696,7 +5721,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.productionProjectId || u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"

@@ -11,12 +11,13 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "89a32e0",
+  "verifiedPublishedCodeBaseline": "5dfcfae",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "V14 world-family/seasonal-plant integration and default promotion",
-    "Nomadic relocation, workload report and expanded contact next-batch publication",
-    "Granular survival production and remaining required workplaces"
+    "Independent society-pair and naval-mission integration",
+    "Physical excavation and geographic influence final central hooks",
+    "Remaining production chains, teaching and campaign qualification"
   ],
   "method": {
     "unit": "one fixed acceptance gate",

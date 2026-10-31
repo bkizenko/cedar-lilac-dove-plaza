@@ -1,3 +1,5 @@
+import {towerBuildConfiguration} from './towerPlatforms';
+import {rememberGraphicsQuality} from './graphics';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
@@ -554,7 +556,7 @@ export class Engine {
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined);
   }
 
   setGateFacing(facing:GateFacing){
@@ -762,6 +764,7 @@ export class Engine {
   setQuality(q: "low" | "med" | "high") {
     this.game.quality = q;
     this.view.applyQuality(q);
+    rememberGraphicsQuality(q);
   }
 
   focusMinimap(nx: number, nz: number) {
@@ -861,7 +864,7 @@ export class Engine {
       if (this.slowFps > 3.2) {
         this.slowFps = 0;
         this.setQuality(this.game.quality === "high" ? "med" : "low");
-        this.game.banner("The valley eases", 1.6);
+        this.game.banner("Graphics reduced to keep the village responsive", 3);
       }
     } else {
       this.slowFps = Math.max(0, this.slowFps - dt * 0.5);

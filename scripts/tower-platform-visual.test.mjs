@@ -1,0 +1,12 @@
+import test,{after} from 'node:test';import assert from 'node:assert/strict';import * as THREE from 'three';
+import {towerPlatformGeos,towerPlatformGeometryKey,towerPlatformGeometryCacheSize,disposeTowerPlatformGeometries} from '../src/scene/towerPlatformKit.ts';
+import {TOWER_PLATFORM_RULES,towerPlatformSpec} from '../src/game/towerPlatforms.ts';
+after(disposeTowerPlatformGeometries);
+test('real tower deck geometry matches2/6/8/14m paid designs and stays within the fixed foundation footprint',()=>{
+ for(const [material,heightMeters]of[['timber',2],['timber',6],['timber',8],['stone',3],['stone',6],['stone',14]]){const c={version:1,material,heightMeters},g=towerPlatformGeos(c),spec=towerPlatformSpec(c),p=g.timber.attributes.position;let deckCorners=0,ladderGround=false;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);if(Math.abs(Math.abs(x)-1.9)<1e-5&&Math.abs(Math.abs(z)-1.9)<1e-5&&Math.abs(y-heightMeters)<1e-5)deckCorners++;if(Math.abs(x)<.4&&z>2&&y<.05)ladderGround=true;}
+ assert.ok(deckCorners>=4,`${material}${heightMeters}: actual top deck corners at requested height`);assert.ok(ladderGround,'ladder physically reaches ground');assert.equal(g.platformHeightMeters,heightMeters);assert.ok(spec.projectileHeightMeters>g.overallHeightMeters,'release clears actual parapet');let vertices=0;
+ for(const part of[g.timber,g.roof,g.extra].filter(Boolean)){part.computeBoundingBox();const b=part.boundingBox;assert.ok(b.min.x>=-spec.widthMeters/2&&b.max.x<=spec.widthMeters/2);assert.ok(b.min.z>=-spec.depthMeters/2&&b.max.z<=spec.depthMeters/2);assert.ok(b.min.y>=-.00001);assert.ok(b.max.y<=g.overallHeightMeters+.00001);vertices+=part.attributes.position.count;}assert.ok(vertices<12000,'bounded geometry cost');assert.equal(!!g.extra,material==='stone');assert.equal(g.extraMat,material==='stone'?'stone':undefined);
+ }
+});
+test('normalized whole-metre variants reuse immutable geometry with a finite19-entry cache',()=>{for(const material of['timber','stone'])for(let h=-20;h<=40;h+=.25)towerPlatformGeos({version:1,material,heightMeters:h});assert.equal(towerPlatformGeometryCacheSize(),19);assert.equal(towerPlatformGeometryKey({version:1,material:'timber',heightMeters:99}),'timber:8');const a=towerPlatformGeos({version:1,material:'stone',heightMeters:14}),b=towerPlatformGeos({version:1,material:'stone',heightMeters:14});assert.equal(a,b);assert.equal(a.timber,b.timber);});

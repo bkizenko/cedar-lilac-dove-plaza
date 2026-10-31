@@ -1,3 +1,6 @@
+import {TowerPlatformControls,TowerPlatformReadout} from './TowerPlatformControls';
+import {CraftingAndBuildings} from './CraftingAndBuildings';
+import {ProductionControls} from './ProductionControls';
 import {GateRotationControl} from './GateRotationControl';
 import {WorkloadPanel} from './WorkloadPanel';
 import {NomadicCampControl} from './NomadicCampControl';
@@ -171,8 +174,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {engine&&!founding&&<WorkloadPanel engine={engine}/>}
         {engine&&!founding&&<NomadicCampControl engine={engine}/>}
         {engine&&!founding&&<FarmingProgress engine={engine} onKnowledge={()=>setTechOpen(true)}/>}
+        {engine&&!founding&&<CraftingAndBuildings engine={engine}/>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
-        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button type="button" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}>Auto work · {engine?.game.state.autoWorkEnabled===false?"Off":"On"}</button><button aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}>{engine?.loggingMode?"Finish tree marks · N":"Mark trees · N"}</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Knowledge</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
+        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button type="button" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}>Auto work · {engine?.game.state.autoWorkEnabled===false?"Off":"On"}</button><button aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}>{engine?.loggingMode?"Finish tree marks · N":"Mark trees · N"}</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button title="Call nearby adults to defend with real weapons; children and injured residents seek shelter" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Knowledge</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
       {testOpen&&engine&&<TestPanel engine={engine} close={()=>setTestOpen(false)}/>}
       <div className="hud-clock">
@@ -224,6 +228,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <details><summary className="px-2 py-2 cursor-pointer">Transfer village file</summary>
           <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Export file</button>
           <label className="px-2 py-2">Import file<input className="sr-only" aria-label="Import village file" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label></details>
+          <button className="px-2 py-2" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn · arm the village</button>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" title="Plan a bridge on explored banks for recalled or loaded residents cut off by water. Requires materials and builders." onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}}>Plan return crossing</button>
           <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
@@ -342,6 +347,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <div className="hud-toast hud-placement" role="status">
             <div>
               <strong>{BUILDINGS[hud.placing].name}</strong>
+              {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
               {hud.placing==='gate'&&engine&&<><GateRotationControl facing={engine.gateFacing} onChange={facing=>engine.setGateFacing(facing)}/><span className="text-xs text-parchment-dim">R rotates · Shift+R reverses</span></>}
               <div>{founding ? "Choose open ground near food and timber."
                 : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
@@ -470,6 +476,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
         </div>}
         {!selMin&&engine&&<ConflictControls engine={engine}/>}
+        {!selMin&&engine&&<ProductionControls engine={engine}/>}
         {selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
@@ -493,6 +500,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="building-actions mt-2 flex flex-col gap-2">
+                {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
                 {sel.completed&&["farm","warehouse"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build here</button>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
@@ -715,7 +723,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","pen","dock","grove"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove","hearth","butcher"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =
@@ -730,7 +738,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   key={b.type}
                   type="button"
                   disabled={!!hud.ended}
-                  title={`${b.name} [${i + 1}]\n${b.hint}${unaffordable ? "\nPlace a plan now; construction waits for materials." : ""}`}
+                  title={`${b.name}${i<9?` [${i+1}]`:""}\n${b.hint}${unaffordable ? "\nPlace a plan now; construction waits for materials." : ""}`}
                   onClick={() => engine?.setPlacing(b.type)}
                   className={`w-24 shrink-0 rounded-lg border px-2 py-2 text-center transition-colors ${
                     active
