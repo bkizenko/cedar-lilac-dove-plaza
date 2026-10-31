@@ -1,3 +1,10 @@
+## Shared finite influence and slower grievances — 2026-10-31
+
+- [x] ~~Use the same finite controlled core and fading outer sphere for simulation influence and territory colors.~~ Full strength through75%of reach, declining tozero at the edge. Removes unbounded influence and faction-ID bonuses from diplomatic overlap. Known overlapping claims can generate pressure; resource incursions use actual rival influence and local knowledge rather than a45m hall-only check.
+- [x] ~~Preserve territorial anger instead of clearing it in seconds at long distances.~~ Existing saved tension cools gradually; aggression/expansion increase sensitivity, aggression lowers escalation threshold, trust assists cooling. This is the narrow territorial correction, not the full leader ambition/event-memory/response system.
+- [x] ~~Increase territory color visibility and match overlay mesh density to actual terrain.~~ Larger maps no longer drape a lower-resolution overlay over higher-resolution hills. Browser visual acceptance remains pending.
+- Twelve focused influence/frontier/expanded-rival checks and five rendering-data checks pass. Final typecheck and production build pass; published to the permanent preview and restarted the play service. No village reset or resource grants.
+
 ## Test-world flow, shorter nights, woodland pacing and outbound envoy access — 2026-10-31
 
 - [x] ~~One click on Test lab saves the real village, creates a disposable copy and opens its controls.~~ Failed durable saving cannot claim success or replace the real village. Restart/New test world stays within the test copy; layout/size generation remains available while the original village pointer and saved data stay protected. Leaving testing restores the original village.

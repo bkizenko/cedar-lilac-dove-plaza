@@ -450,8 +450,9 @@ export class WorldView {
   }
 
   rebuild(game: Game) {
-    if(this.mapSize!==game.world.size&&this.fowMesh){
-      this.fowMesh.geometry.dispose();this.fowMesh.geometry=new THREE.PlaneGeometry(game.world.size,game.world.size,SEGS,SEGS);
+    const fogSegments=Math.round(Math.sqrt(game.world.heights.length))-1;
+    if(this.fowMesh&&(this.mapSize!==game.world.size||(this.fowMesh.geometry as THREE.PlaneGeometry).parameters.widthSegments!==fogSegments)){
+      this.fowMesh.geometry.dispose();this.fowMesh.geometry=new THREE.PlaneGeometry(game.world.size,game.world.size,fogSegments,fogSegments);
       const uniforms=(this.fowMesh.material as THREE.ShaderMaterial).uniforms;
       uniforms.uHalf.value=game.world.size/2;uniforms.uSize.value=game.world.size;
     }
@@ -1970,7 +1971,7 @@ export class WorldView {
           float seen = smoothstep(0.12, 0.28, v);
           // Colored land remains visible without concealing terrain detail.
           float contour = smoothstep(0.08,0.16,terr.a)*(1.0-smoothstep(0.22,0.32,terr.a));
-          float wash = seen * (terr.a*mix(0.15,0.30,live) + contour*mix(0.22,0.42,live));
+          float wash = seen * (terr.a*mix(0.23,0.43,live) + contour*mix(0.24,0.45,live));
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);

@@ -2,7 +2,7 @@
 
 This is a code audit, not a claim that the replacement exists. Rivals use local programmed simulation AI, not language-model calls. The current system is a mix of reserve/threshold rules, random rolls, fixed faction branches and several newer physical economy modules. It does not optimize a coherent victory or personality objective.
 
-## What drives rivals now
+## Audit snapshot before the territorial correction
 
 | Current drive | Actual decision rules | Limitation the player is seeing |
 | --- | --- | --- |
@@ -19,6 +19,10 @@ This is a code audit, not a claim that the replacement exists. Rivals use local 
 Primary code: `src/game/sim.ts` (`rivalTick`, `tickInfluence`, `paintTerritory`, `travelSpeed`); `settlement.ts` (`neighborIntent`); `rivalDevelopment.ts`; `frontiers.ts`; `communities.ts`; `discovery.ts`.
 
 Existing rival starts also provide300food/90logs versus the player's120food/58logs and some prebuilt facilities. These are initial provisions, not recurring income, but they do not prove strong economy/AI. Do not add more free catch-up resources as a substitute for a working decision system.
+
+## Territorial correction delivered after this audit
+
+Diplomatic influence now shares the map's finite radius and stable75%core/fading edge. Fixed team resource bonuses and infinite-distance influence are removed from that calculation. Unknown foreign home overlap cannot generate anger. Known resource incursions use the influence field, not only45m around the hall. Anger now cools slowly without distance erasing it; aggression/expansion affect sensitivity and aggression affects escalation threshold. Existing saved tension remains compatible. The colored wash is stronger and overlay geometry matches terrain resolution on larger maps; browser appearance is unverified. Full witnessed event histories, compensation, all settlement/fortification incidents, distinct leader ambition planning and rival operations remain open.
 
 ## Target: one shared decision layer
 

@@ -62,3 +62,17 @@ test('a terrain-conforming field can be selected on its ground footprint without
  assert.equal(v.pickEntity(400,300,game),own);point={x:30,z:0};assert.equal(v.pickEntity(400,300,game),null);
  game.visibleAt=()=>true;assert.equal(v.pickEntity(400,300,game),foreign);
 });
+
+test('territory and fog overlay follows every terrain vertex on enlarged maps',()=>{
+ const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();
+ v.fowMesh=new THREE.Mesh(new THREE.PlaneGeometry(1040,1040,2,2),new THREE.ShaderMaterial({uniforms:{uHalf:{value:520},uSize:{value:1040}}}));
+ for(const name of ['disposeWorld','buildTerrain','buildNature','buildBuildings','buildUnits','buildHearths','buildWildlife','updateCamera'])v[name]=()=>{};
+ const height=(x,z)=>Math.abs(x)<1&&Math.abs(z)<1?45:4;
+ const game={world:{size:2080,heights:new Float32Array(25),waterY:0,camps:[]},height};
+ v.rebuild(game);
+ assert.equal(v.fowMesh.geometry.parameters.widthSegments,4);
+ const positions=v.fowMesh.geometry.getAttribute('position');
+ for(let i=0;i<positions.count;i++)assert.ok(Math.abs(positions.getZ(i)-height(positions.getX(i),-positions.getY(i))-.8)<.00001);
+ assert.equal(v.fowMesh.material.uniforms.uSize.value,2080);
+ v.fieldSurface.dispose();v.fowMesh.geometry.dispose();v.fowMesh.material.dispose();
+});

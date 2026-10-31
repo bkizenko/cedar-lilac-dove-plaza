@@ -236,3 +236,9 @@ See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-f
 - [x] ~~Visible outbound trade-envoy dispatch, physical arrival reports and duplicate exclusion.~~
 - [x] ~~Natural stump recovery shortened to600–1200simseconds; older depleted timers capped without immediate wood.~~ Planted saplings retain120seconds. Full forest spread/ecology remains open.
 - Leader presentation, clearer practical age/discovery teaching, influence/grievance overhaul and the strategic AI/score systems in AI_INCENTIVES.md remain unfinished.
+
+## Territorial correction — 2026-10-31
+
+- [x] ~~Shared finite core/fading influence in simulation and map; slower personality-sensitive grievance cooling.~~
+- [x] ~~Stronger territory wash and terrain-matched overlay resolution.~~ Browser appearance remains unverified.
+- [ ] Full grievance event memory, negotiation/compensation/escalation responses, leader ambitions, rival operations, physical monuments/artifacts and victory/era/total-score objectives remain open in AI_INCENTIVES.md.

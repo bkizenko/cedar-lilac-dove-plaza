@@ -1,3 +1,5 @@
+import {influenceRadius,influenceStrength} from './territory';
+import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
@@ -2234,32 +2236,10 @@ export class Game {
   influenceAt(x: number, z: number, team: number) {
     let v = 0;
     for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== team || b.build < 1) continue;
-      let str = 10;
-      if (b.type === "townhall") str = 36;
-      else if (b.type === "cairn" || b.type === "grove") str = 24;
-      else if (b.type === "keep" || b.type === "watchtower") str = 16;
-      const d = Math.hypot(b.x - x, b.z - z);
-      v += str / (1 + d / 16);
-    }
-    if (team === 1) {
-      for (const n of this.state.stones) {
-        if (n.amount <= 0) continue;
-        const d = Math.hypot(n.x - x, n.z - z);
-        if (d < 28) v += 2.4 / (1 + d / 10);
-      }
-    }
-    if (team === 2) {
-      for (const n of this.state.forage) {
-        if (n.amount <= 0) continue;
-        const d = Math.hypot(n.x - x, n.z - z);
-        if (d < 22) v += 1.8 / (1 + d / 9);
-      }
-      for (const n of this.state.trees) {
-        if (n.amount <= 0) continue;
-        const d = Math.hypot(n.x - x, n.z - z);
-        if (d < 18) v += 0.9 / (1 + d / 8);
-      }
+      if (b.hp <= 0 || b.team !== team || b.build < 1 || b.team===3 || FORTIFICATIONS.includes(b.type)) continue;
+      const frontier=b.type==='cornerstone'?frontierStatus(this,b):null;
+      const radius=(frontier?.radius??influenceRadius(b.type))*1.45;
+      v=Math.max(v,influenceStrength(Math.hypot(b.x-x,b.z-z),radius,frontier?.strength??1));
     }
     return v;
   }
@@ -2276,7 +2256,7 @@ export class Game {
         (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
       );
       if (!hall) {
-        tr.tension = Math.max(0, tr.tension - 0.08 * dt);
+        tr.tension = Math.max(0, tr.tension - 0.001 * dt);
         continue;
       }
       const samples = [
@@ -2288,22 +2268,21 @@ export class Game {
       for (const s of samples) {
         overlap += Math.min(this.influenceAt(s.x, s.z, 0), this.influenceAt(s.x, s.z, tr.id));
       }
-      const dist = Math.hypot(hall.x - hall0.x, hall.z - hall0.z);
-      const space = Math.max(0, (dist - 70) / 140);
-      tr.tension += overlap * 0.00115 * dt;
+      // Only known overlapping claims can cause diplomatic pressure.
+      if (!rivalKnows(this,tr.id,hall0.x,hall0.z)) overlap=0;
       const trespassers = this.state.units.filter(u => u.team === 0 && u.hp > 0 && u.order === "gather" && u.node &&
-        !("type" in u.node && u.node.team === 0) && Math.hypot(u.node.x-hall.x,u.node.z-hall.z)<45 &&
+        !("type" in u.node && u.node.team === 0) && this.influenceAt(u.node.x,u.node.z,tr.id)>0 && rivalKnows(this,tr.id,u.x,u.z) &&
         !tr.ally && !((tr.compactUntil || 0)>this.state.time && u.job === "food"));
       const previous = tr.tension;
+      tr.tension += grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,trespassers.length,overlap);
       if (trespassers.length) {
-        tr.tension += (0.025 + Math.min(0.05,trespassers.length*0.012)) * dt;
         tr.trust = Math.max(0,(tr.trust || 0)-0.008*dt);
         if (previous < 0.28 && tr.tension >= 0.28) this.banner(tr.name + " warns your gatherers to leave their resources alone",5);
-        if (tr.tension >= 0.75 && !tr.hostile) {
+        if (tr.tension >= grievanceTemper(tr.aggro,tr.expand,tr.trust||0).warThreshold && !tr.hostile) {
           tr.hostile = true;
           this.banner(tr.name + " is defending its land against your continued taking of resources. Withdraw and seek a truce.",6);
         }
-      } else tr.tension -= (0.032 + space * 0.055) * dt;
+      }
       tr.tension = Math.max(0, Math.min(1, tr.tension));
       const band = tr.tension > 0.72 ? 3 : tr.tension > 0.52 ? 2 : tr.tension > 0.28 ? 1 : 0;
       if (band > tr.tensionBand && this.started && band >= 3) {
@@ -3546,31 +3525,10 @@ export class Game {
     this.territoryStrength.fill(0);
     const n = FOW;
     const cell = this.world.size / n;
-    const rad: Partial<Record<BldType, number>> = {
-      townhall: 34,
-      cornerstone: CORNERSTONE_R,
-      hut: 16,
-      farm: 14,
-      lumber: 18,
-      workshop: 16,
-      quarry: 16,
-      dock: 12,
-      warehouse: 22,
-      barracks: 18,
-      forge: 15,
-      watchtower: 28,
-      temple: 20,
-      market: 18,
-      keep: 30,
-      stables: 16,
-      university: 20,
-      cairn: 18,
-      grove: 18,
-    };
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.build < 1 || b.team === 3 || FORTIFICATIONS.includes(b.type)) continue;
       const frontier=b.type==="cornerstone"?frontierStatus(this,b):null;
-      const r = (frontier?.radius ?? rad[b.type] ?? 14) * 1.45;
+      const r = (frontier?.radius ?? influenceRadius(b.type)) * 1.45;
       const cx = ((b.x + (this.world.size/2)) / cell) | 0;
       const cz = ((b.z + (this.world.size/2)) / cell) | 0;
       const cr = Math.ceil(r / cell);
@@ -3582,7 +3540,7 @@ export class Game {
           const wz = -(this.world.size/2) + (iz + 0.5) * cell;
           if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
           const i = iz * n + ix;
-          this.territoryStrength[i] = Math.max(this.territoryStrength[i], Math.max(0,Math.min(1,(1-Math.hypot(wx-b.x,wz-b.z)/r)/0.25))*(frontier?.strength??1));
+          this.territoryStrength[i] = Math.max(this.territoryStrength[i], influenceStrength(Math.hypot(wx-b.x,wz-b.z),r,frontier?.strength??1));
           const cur = terr[i];
           if (cur === 255 || cur === b.team) terr[i] = b.team;
           else terr[i] = 254;
