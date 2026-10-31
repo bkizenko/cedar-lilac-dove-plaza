@@ -189,6 +189,7 @@ export type Unit = {
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
+  boat?: {id:number;phase:'boarding'|'aboard'|'landing';x?:number;z?:number};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
   combatXP?: number;
@@ -381,6 +382,7 @@ export type GameState = {
   difficulty?: import("./difficulty").Difficulty;
   nightWork?: boolean;
   visitorTimer?: number;
+  boats?: import('./boats').Riverboat[];
   worldgenVersion?: number;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];

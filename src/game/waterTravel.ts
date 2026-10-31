@@ -7,12 +7,16 @@ const caches=new WeakMap<Game,{revision:number;grid:Uint8Array;labels:Int32Array
 export function canoeHeight(g:Game,u:Unit,x:number,z:number){
  return u.haulage==='canoe'?Math.max(g.travelHeight(x,z),g.world.waterY+.16):g.travelHeight(x,z);
 }
-export function waterNavigation(g:Game){
- const old=caches.get(g);if(old?.revision===g.navigationRevision())return old;
+const vesselCaches=new WeakMap<Game,{revision:number;grid:Uint8Array;labels:Int32Array;width:number}>();
+export function waterNavigation(g:Game,waterOnly=false){return cachedWaterNavigation(g,waterOnly);}
+function cachedWaterNavigation(g:Game,waterOnly=false){
+ const cache=waterOnly?vesselCaches:caches;
+ const old=cache.get(g);if(old?.revision===g.navigationRevision())return old;
  const width=Math.sqrt(g.walk.length),cell=MAP/width,grid=g.walk.slice();
  for(let z=0;z<width;z++)for(let x=0;x<width;x++){
   const wx=-HALF+(x+.5)*cell,wz=-HALF+(z+.5)*cell,h=g.height(wx,wz);
   if(Math.abs(wx)>HALF-2||Math.abs(wz)>HALF-2)continue;
+  if(waterOnly&&h>=g.world.waterY+.3)grid[z*width+x]=0;
   if(h<g.world.waterY+.3){
    const surface=Math.max(h,g.world.waterY+.16);
    if(Math.abs(surface-Math.max(g.height(wx+cell,wz),g.world.waterY+.16))<=2.45&&Math.abs(surface-Math.max(g.height(wx,wz+cell),g.world.waterY+.16))<=2.45)grid[z*width+x]=1;
@@ -34,11 +38,11 @@ export function waterNavigation(g:Game){
     if(nx<0||nz<0||nx>=width||nz>=width||!grid[n]||labels[n])continue;labels[n]=label;queue[tail++]=n;}
   }
  }
- const result={revision:g.navigationRevision(),grid,labels,width};caches.set(g,result);return result;
+ const result={revision:g.navigationRevision(),grid,labels,width};cache.set(g,result);return result;
 }
 export function connectedForUnit(g:Game,u:Unit,x:number,z:number){
  if(u.haulage!=='canoe')return g.workBoard.connected(g,u.x,u.z,x,z);
- const nav=waterNavigation(g),cell=MAP/nav.width;
+ const nav=waterNavigation(g,u.boat?.phase==='aboard'),cell=MAP/nav.width;
  const index=(px:number,pz:number)=>Math.max(0,Math.min(nav.width-1,Math.floor((pz+HALF)/cell)))*nav.width+Math.max(0,Math.min(nav.width-1,Math.floor((px+HALF)/cell)));
  const a=nav.labels[index(u.x,u.z)],b=nav.labels[index(x,z)];return a>0&&a===b;
 }

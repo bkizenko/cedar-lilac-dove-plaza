@@ -32,7 +32,7 @@ export function tickCaptivity(g:Game,dt:number){
   const hardship=(u.hunger||0)>30?.12:0;
   const rate=covered.has(u.id)?-.06+hardship:.05+(working?.1:0)+hardship+((u.fatigue||0)>.6?.05:0);
   u.captivityUnrest=Math.max(0,Math.min(100,(u.captivityUnrest||0)+rate*dt));
-  if(u.captivityUnrest<100)continue;
+  if(u.captivityUnrest<100||u.boat)continue;
   const origin=u.enslavedFrom,home=g.state.buildings.find(b=>b.team===origin&&b.type==='townhall'&&g.finished(b));
   if(!g.tribe(origin)?.alive||!home){
    u.enslavedFrom=undefined;u.captivityUnrest=undefined;

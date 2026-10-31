@@ -645,3 +645,11 @@ export function cargoGeo(kind:ResKind){
  }
  return merge(parts);
 }
+
+/** Five seats, raised gunwales and exposed cross ribs; one shared fleet mesh. */
+export function riverboatGeo(){return merge([
+ box(2.3,.22,5.6,0,0,0),box(.2,.7,5.8,-1.25,.12,0),box(.2,.7,5.8,1.25,.12,0),
+ box(1.8,.6,.55,0,.18,-3),box(1.8,.6,.55,0,.18,3),
+ ...[-1.8,-.9,0,.9,1.8].map(z=>box(2.4,.15,.3,0,.5,z)),
+ ...[-2.4,-1.2,0,1.2,2.4].flatMap(z=>[-1,1].map(side=>box(.14,.8,.14,side*1.23,.08,z))),
+ ]);}

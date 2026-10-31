@@ -1,3 +1,4 @@
+import {BoatControls} from './BoatControls';
 import {CopperStudyControl} from './CopperStudyControl';
 import {AgeReadiness} from './AgeReadiness';
 import {WorldMinimap} from './WorldMinimap';
@@ -477,6 +478,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Post guards</button>}
                 {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Mine stone</button>}
                 {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
+                {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
                 {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
@@ -546,6 +548,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {hud.idleWorkers} idle · cycle to them (I)
               </button>
             ) : null}
+            {engine&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
             {showJobs ? (
               <div className="mt-1.5 grid grid-cols-4 gap-1">
                 <JobBtn

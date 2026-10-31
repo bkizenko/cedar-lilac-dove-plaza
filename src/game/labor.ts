@@ -12,7 +12,7 @@ export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPol
   for(const u of g.state.units){
     if(u.team!==0||u.hp<=0||isDependent(g,u))continue;
     if(u.emergency){u.emergency.job=null;u.emergency.jobLock=false;u.emergency.resume=undefined;continue;}
-    if(u.type!=='worker')continue;
+    if(u.type!=='worker'||u.boat)continue;
     // Paid active projects and dispatched shipments keep their commitments.
     // Paused projects are stored progress, not a reason to exclude a worker.
     if(u.envoy||u.order==='trade'||u.visit||u.foundingJourney||u.studyCrop||u.drill!=null||

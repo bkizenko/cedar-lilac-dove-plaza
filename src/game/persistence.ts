@@ -1,3 +1,4 @@
+import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
 import {scalablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
@@ -16,6 +17,7 @@ import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
+  syncRiverboats(g);
   reconcileTradeReservations(g);
   const s = g.state;
   return {
@@ -103,6 +105,10 @@ export function decodeGame(raw: unknown): Game {
     if(!Array.isArray(s.rivalKnowledge)||s.rivalKnowledge.length>s.tribes.length-2)fail();const teams=new Set();
     for(const m of s.rivalKnowledge){if(!obj(m)||!rivalTeam(m.team)||teams.has(m.team)||!Array.isArray(m.cells)||m.cells.length>1024||
       new Set(m.cells).size!==m.cells.length||m.cells.some((c:unknown)=>!Number.isSafeInteger(c)||Number(c)<0||Number(c)>=1024))fail();teams.add(m.team);}
+  }
+  if(s.boats!==undefined){
+    if(!Array.isArray(s.boats)||s.boats.length>96)fail();const ids=new Set();
+    for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
   if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6].includes(s.worldgenVersion))fail();
@@ -321,6 +327,10 @@ export function decodeGame(raw: unknown): Game {
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
     if(u.tamingWork!==undefined){const w=u.tamingWork;if(!obj(w)||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.boat!==undefined){
+      const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);
+      if(!obj(ride)||!b||b.team!==u.team||u.haulage!=='canoe'||!['boarding','aboard','landing'].includes(ride.phase)||ride.phase==='landing'&&(!num(ride.x)||!num(ride.z)||Math.abs(ride.x)>HALF||Math.abs(ride.z)>HALF))fail();
+    }
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
     if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();
@@ -513,6 +523,10 @@ export function decodeGame(raw: unknown): Game {
       } else u.ageT = (18 + (u.id % 25)) * 1800;
     }
   } else if (d.demographicVersion !== 1) fail();
+  for(const b of s.boats||[]){
+    const crew=s.units.filter((u:any)=>u.hp>0&&u.boat?.id===b.id);
+    if(crew.length>b.capacity||b.captain!==undefined&&!crew.some((u:any)=>u.id===b.captain&&u.boat.phase==='aboard'))fail();
+  }
   g.reset(s.seed,s.worldgenVersion??1);
   g.state = {
     ...s,

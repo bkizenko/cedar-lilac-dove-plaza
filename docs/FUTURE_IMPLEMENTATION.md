@@ -1,3 +1,10 @@
+## Independent passenger ferries — 2026-10-31
+
+- [x] ~~Dock workers can build persistent five-seat riverboats for40logs,4stone and150work units.~~ Hulls are separate saved world entities, not personal canoe equipment. Nearby residents physically board; first aboard takes the helm, and selecting crew then clicking water issues a vessel movement command. Passengers travel with the hull. Shore landing keeps canoe navigation until each passenger actually reaches dry walkable ground; the same empty hull remains moored for reuse. A living passenger can take over a dead captain’s helm.
+- [x] ~~Dock/crew controls expose construction, boarding, selection and disembarkation.~~ Shared instanced hull geometry includes gunwales, cross ribs and seats. Test lab has Try passenger ferry in a disposable copy. Water-only vessel navigation prevents land sailing; portable dugouts retain their previous amphibious routing.
+- Twenty-nine focused transport checks passed before the final save cleanup; six final ferry-loop checks pass, including real construction/costs, multiple passengers crossing and landing/reboarding, save/import rejection, captain death, paid resumption and test-copy isolation. Typecheck/build pass. Browser approval gate declined the8087origin; no alternate route attempted, and visual UI/renderer verification remains unproven.
+- Still open: user-draggable hull sizes/drafts, deep-water ports, shipping manifests/regular cargo fleets, naval combat, vessel theft/damage and provisioning. This does not close catalogue96 or the transport workstream. Current ships hold one captain plus four passengers.
+
 ## Selection identity stays visible — 2026-10-31
 
 - [x] ~~Pin the selected object name, Deselect and Minimize controls while its actions scroll.~~ Long Details content now belongs to the scrolling body. Typecheck/build pass; final visual verification pending. Prioritize boats/caravans/husbandry/captivity over further cosmetic polish, per latest user steering.

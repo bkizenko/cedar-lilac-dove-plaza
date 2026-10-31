@@ -33,6 +33,7 @@ import {
   unitGeo,
   haulageGeo,
   canoePaddleGeo,
+  riverboatGeo,
   cargoGeo,
   farmToolHeadGeo,
   fishGeo,
@@ -145,6 +146,7 @@ export class WorldView {
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
   canoePaddles: THREE.InstancedMesh | null = null;
+  riverboats: THREE.InstancedMesh | null = null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   trailMesh!: THREE.InstancedMesh;
@@ -786,6 +788,8 @@ export class WorldView {
       mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
       this.haulageMeshes.set(kind, mesh); this.scene.add(mesh);
     }
+    this.riverboats=new THREE.InstancedMesh(riverboatGeo(),this.mats.timber,96);
+    this.riverboats.count=0;this.riverboats.frustumCulled=false;this.scene.add(this.riverboats);
     this.canoePaddles=new THREE.InstancedMesh(canoePaddleGeo(),this.mats.timber,140);
     this.canoePaddles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.canoePaddles.count=0;this.canoePaddles.frustumCulled=false;
@@ -998,6 +1002,7 @@ export class WorldView {
     this.syncUnits(game);
     this.syncTrails(game);
     this.syncCargo(game);
+    this.syncRiverboatMeshes(game);
     this.syncGhost(game);
     this.syncArrows(game);
     this.syncSmoke(game, dt);
@@ -1389,7 +1394,7 @@ export class WorldView {
     for (const u of game.state.units) {
       if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
       if (u.hp<=0 || u.shelterId || (u.team!==0&&!game.visibleAt(u.x,u.z))) continue;
-      const kind=u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
+      const kind=u.boat?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
       const vehicle=kind&&this.haulageMeshes.get(kind);
       const index=kind?vehicles[kind]:0;
       const mounted=!!vehicle&&index<instCap(vehicle);
@@ -1449,6 +1454,15 @@ export class WorldView {
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     if(this.canoePaddles){this.canoePaddles.count=paddles;this.canoePaddles.instanceMatrix.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
+  }
+
+  private syncRiverboatMeshes(game:Game){
+    const mesh=this.riverboats;if(!mesh)return;let count=0;
+    for(const b of game.state.boats||[]){
+      if(b.hp<=0||count>=instCap(mesh)||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
+      _p.set(b.x,game.world.waterY-.12,b.z);_e.set(0,b.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);mesh.setMatrixAt(count++,_m);
+    }
+    mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
   }
 
   private syncUnits(game: Game) {
@@ -2329,7 +2343,7 @@ export class WorldView {
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();
     this.haulageMeshes.clear();
-    this.canoePaddles=null;
+    this.canoePaddles=null;this.riverboats=null;
     for(const mesh of this.cargoMeshes.values())(mesh.material as THREE.Material).dispose();
     this.cargoMeshes.clear();
     if(this.farmToolMesh){(this.farmToolMesh.material as THREE.Material).dispose();this.farmToolMesh=null;}

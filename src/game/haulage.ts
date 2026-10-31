@@ -1,3 +1,4 @@
+import {launchRiverboat} from './boats';
 import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type { Game } from './sim';
 import type { Building, ResKind, Tribe, Unit } from './types';
@@ -14,7 +15,7 @@ export const HAULAGE = {
 export const WHEEL_PRACTICE = 60;
 export type HaulageKind = keyof typeof HAULAGE;
 export type HaulageWork = {
-  kind: HaulageKind; progress: number; duration: number; workplace: number; paused?: boolean;
+  kind: HaulageKind; progress: number; duration: number; workplace: number; paused?: boolean; vessel?:boolean;
 };
 // Optional fields preserve pre-transport saves. Exporting this shape also keeps
 // save validation and the integration contract in one place.
@@ -32,7 +33,7 @@ function civilian(g: Game, u: HaulageUnit) {
 }
 
 function available(g: Game, u: HaulageUnit) {
-  return civilian(g, u) && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.farmToolWork && !u.copperStudy&&!u.studyCrop &&
+  return civilian(g, u) && !u.boat && u.carry === 0 && !u.plantingWork&&!u.tamingWork && !u.weaponWork && !u.farmToolWork && !u.copperStudy&&!u.studyCrop &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled &&
     ['idle', 'gather', 'hold'].includes(u.order);
@@ -103,11 +104,11 @@ export function resumeHaulageWork(g: Game, u: HaulageUnit, workplaceId?: number)
   if (!b) return false;
   // Keep completed fraction when moving between open hearth and sheltered work.
   const fraction = job.progress / job.duration;
-  job.duration = HAULAGE[job.kind].seconds * (b.type === 'townhall' ? 2 : 1);
+  job.duration = job.vessel?150:HAULAGE[job.kind].seconds * (b.type === 'townhall' ? 2 : 1);
   job.progress = fraction * job.duration;
   job.workplace = b.id; job.paused = false;
   u.order = 'hold'; u.node = null; u.target = null; u.trade = null; u.searchJob = undefined;
-  u.workReason = `Resuming ${HAULAGE[job.kind].name.toLowerCase()}`;
+  u.workReason = `Resuming ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()}`;
   g.workBoard.reset();
   return true;
 }
@@ -133,13 +134,14 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
   if (!craftBenchReady(g,u,b)) return true;
   if (!g.buildingWorkReached(u, b)) {
     u.tx = spot.x; u.tz = spot.z; g.steer(u, dt);
-    u.workReason = `Walking to make ${HAULAGE[job.kind].name.toLowerCase()}`;
+    u.workReason = `Walking to make ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()}`;
     return true;
   }
   job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt) * predisposition(u).strength);
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-  u.workReason = `Making ${HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
+  u.workReason = `Making ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {
+    if(job.vessel){if(!launchRiverboat(g,b)){u.workReason='Riverboat ready — waiting for clear launch water';return true;}u.haulageWork=undefined;u.order='idle';g.workBoard.reset();if(u.team===0)g.banner('Riverboat launched. Select residents and board from this dock.',5);return true;}
     u.haulage = job.kind; u.haulageWork = undefined; u.order = 'idle';
     u.workReason = `${HAULAGE[job.kind].name} ready — carrying capacity ×${HAULAGE[job.kind].capacity}`;
     g.workBoard.reset();
@@ -155,7 +157,7 @@ function usesTransport(u: HaulageUnit) {
 
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
 export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
-  return GATHER[kind].carry * (usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
+  return GATHER[kind].carry * (u.boat?.phase==='aboard'?5:usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {
@@ -180,7 +182,8 @@ export function validHaulageUnit(v: unknown) {
   if (v.haulageWork === undefined) return true;
   const w = v.haulageWork;
   if (!record(w) || w.kind !== 'sled' && w.kind !== 'cart' && w.kind !== 'canoe') return false;
-  const durations = w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [w.kind==='canoe'?HAULAGE.canoe.seconds:HAULAGE.cart.seconds];
+  if(w.vessel!==undefined&&(typeof w.vessel!=='boolean'||w.kind!=='canoe'))return false;
+  const durations = w.vessel?[150]:w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [w.kind==='canoe'?HAULAGE.canoe.seconds:HAULAGE.cart.seconds];
   if (!finite(w.duration) || !durations.includes(w.duration) ||
     !finite(w.progress) || w.progress < 0 || w.progress > w.duration ||
     !Number.isSafeInteger(w.workplace) || Number(w.workplace) < 1 ||

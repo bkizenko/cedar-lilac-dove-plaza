@@ -1,0 +1,174 @@
+# Remaining game work — 2026-10-31
+
+This is a readable snapshot of the two original inventories. The execution record remains [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md). Partial foundations do not mean a whole feature is complete. No honest overall completion percentage is currently established.
+
+## Immediate delivery order
+
+1. Independent dock-built ferries: crews, passengers, physical crossing/landing, mooring/reuse and saved ownership. Core five-seat ferry loop implemented/tested; visual verification and broader fleet functions remain.
+   Follow-up: drag-sized hulls, ship classes/draft and deep-water ports.
+2. Caravans: explicit repeat routes, pack/cart loads, visible escorts, provisions, interruptions and delivery reports.
+3. Husbandry: actual owned livestock, pens/pasture, capture/herding, feeding, births, products and draft/pack use.
+4. Captivity: readable local capture/escort, guarded work, release/ransom/integration, resistance and organized revolt.
+5. Competitive rivals and distinct societies using those same economies and physical systems.
+6. World families: Pangaea/continents/archipelago, larger explorable worlds, coherent climate/river systems and strategically uneven resource regions. Preserve old save terrain.
+7. Deeper practical production/discovery, cities and regional administration.
+8. Cohesive visual/UI/audio overhaul and focused whole-game balance/performance acceptance.
+
+## Original 25-task backlog
+
+These are all retained. The remaining work below supersedes historic completion implications in the old plan.
+
+| ID | Original task | Still required |
+|---|---|---|
+| 01 | Audit and freeze contracts | Refresh architecture/contracts for fleet, caravan, livestock and regional systems; avoid treating historic specs as current behavior. |
+| 02 | Keyboard world commands | Finish keyboard coverage for the new systems and every menu; verify a complete keyboard-only play loop. |
+| 03 | Acoustic adaptive score | Broader age/culture soundtrack, quieter transition/listening review; current licensed piano/harp/folk already works. |
+| 04 | Reliable save and resume | Stress/reload validation for larger villages, new transport/livestock and long campaigns; current basic saving works. |
+| 05 | Fixed simulation cadence | Remove remaining timing/randomness dependencies that prevent deterministic simulation/replays. |
+| 06 | Route around obstacles | Finish boat/landing, caravan, animal and dense-town routing; basic foot/bridge paths already work. |
+| 07 | RTS selection and combat orders | Better group targeting, formations, congestion, command clarity and effective raids; RTS foundations already work. |
+| 08 | Vertical slice integration gate | Prove the survival/build/trade/raid/advance loop as a complete playable slice, not isolated successful systems. |
+| 09 | Spatial query budget | Finish shared spatial budgets and reduce repeated world/labor scans at larger populations. |
+| 10 | Construction and repair refinement | Full repair, decay, expandable structures and reliable autonomous construction across player/rival settlements. |
+| 11 | Survival economy and priorities | Balance farming, wild food, storage, wood, fatigue and priorities across seasons/biomes; finish physical production chains. |
+| 12 | Death and job animation | Readable work, injury/death, night camp, hunting and vehicle/livestock animations. |
+| 13 | Shared character rig | Richer shared character rig/equipment and later first-person-compatible presentation. |
+| 14 | Defenses and gate navigation | Finish wall/gate/bridge interplay, credible siege/fortification assaults, trenches/moats and strategic rival use. |
+| 15 | Soft counters and formations | Combat counters, morale, commanders, formations and siege after dependable basic engagements. |
+| 16 | Strategic tribe director | Competitive multi-year rivals, distinct agendas/cultures, trade networks, recovery, migration, rise/fall and refounding. |
+| 17 | Prehistoric technology graph | Practical linked discovery, metallurgy/fuel/alloys, adoption/diffusion and meaningful later-age development. |
+| 18 | Cohesive environment pack pass | Cohesive richer blocky terrain/buildings/vegetation, distinct biomes/cultures/ages and licensed asset polish. |
+| 19 | Wildlife and seasonal habitat | Animal husbandry, pens, feeding/breeding/products/traction, hunting ecology and fuller seasonal habitats. |
+| 20 | Fog and scouting audit | Exploration/travel feedback, discoveries and foreign information boundaries across fleets/caravans and large maps. |
+| 21 | HUD and teaching pass | Bigger readable controls, concise panels, contextual teaching and clear reasons when orders cannot complete. |
+| 22 | Natural SFX and environment mix | More natural environmental/work/combat sounds and balanced audio mix; avoid repetitive clicks. |
+| 23 | Save migration and deterministic replay | Deterministic replay and tested migrations spanning every new optional entity/system. |
+| 24 | Performance and balance gate | Full playthrough balance across difficulty presets and measured CPU/frame/memory budgets on the M1 Air. |
+| 25 | Playable alpha packaging | Offline/distribution packaging, documented complete playthrough and verified release acceptance. |
+
+## Human-development catalogue: all open or partial entries
+
+104 of the 120 catalogue entries remain uncrossed. This is a count of broad open headings, **not percentage of implementation effort**. Each may contain working foundations. See [the full catalogue](HUMAN_DEVELOPMENT_CATALOGUE.md) for completed entries and evidence.
+
+1. Seeded starting habitats and seasonal climate profiles.
+2. Regional soils, fertility, slopes, exposure and water access.
+4. Local shortages that encourage exploration, exchange or migration.
+5. Forest recruitment, succession, clearing and regrowth.
+6. Grassland grazing, woodland wild food and upland extraction strategies.
+7. Rivers, lakes, wetlands, fishing grounds and navigable channels.
+8. Flood, drought, wildfire and storm risks with warning and recovery.
+9. Carrying capacity and depleted hunting/gathering grounds.
+10. **Accepted extension:** longer climate shifts and settlement adaptation.
+11. Hunger, diet and physically available food.
+13. Shelter capacity, warmth, fuel and storm refuge.
+14. Clothing suited to cold, heat and wet conditions.
+15. Injury, illness, care, recovery and readable death causes.
+17. Expedition provisions, camping and return decisions.
+18. Shelter/tool degradation, repair and replacement.
+19. **Accepted extension:** water quality, sanitation and waste.
+20. **Accepted extension:** morale from safety, family, food variety and community events.
+23. Household/family links and support of dependents.
+25. Refugees, rescue encounters and former settlement histories.
+26. Captives, surrender, release and gradual integration.
+27. Departure when settlement life is unsafe or unsustainable.
+28. Seasonal nomadic camps and following herds.
+30. **Accepted extension:** traditions transmitted through families and apprentices.
+32. Tracks/signs and locating moving herds.
+33. Civilian hunting with primitive equipment, risk and group coordination.
+34. Fleeing/aggressive wildlife and sustainable reproduction.
+35. Carcass transport, butchery and useful hides/bone.
+36. Seasonal wild foods, fishing and traps.
+37. Animal capture/taming and species-specific domestic uses.
+38. Pens, fodder, pasture, veterinary care and breeding.
+39. Milk, meat, wool, transport and animal traction where species permit.
+40. **Accepted extension:** selective breeding, pack dogs and working horses.
+41. Land clearing and viable low-timber fields.
+43. Seeds, soil exhaustion, fallow, manure and crop rotation.
+44. Drying, smoking, salting and grain storage where inputs exist.
+45. Mortars/querns, mills and other actual processing jobs.
+46. Irrigation/drainage with terrain and maintenance constraints.
+47. Animal-drawn plows and later plow improvements.
+48. Tools and processing that free people for other work.
+49. **Accepted extension:** crop diversity, orchards and managed wild plants.
+50. **Accepted extension:** pests and crop disease with mitigation.
+51. Wood, stone/flint, fiber, hides, bone and clay with actual uses.
+52. Knapping, woodworking and hide-working.
+53. Warm/light garments through tanning and weaving.
+54. Pottery/containers and improved storage.
+55. Charcoal/fuel and kiln/smelting inputs.
+56. Copper/tin/bronze/iron material chains without circular age gates.
+57. Tool/weapon recipes, durability and outfitting priorities.
+59. Useful workshops and upgrade branches, each with real worker tasks.
+60. **Accepted extension:** glass, specialty stone, dyes and luxury craft goods.
+61. Portable shelters, seasonal huts and durable houses suited to materials.
+62. Hearths, fuel stores, granaries and preservation areas.
+63. Workshops, animal pens and production yards.
+64. Meeting/community centers, healing, ritual and learning spaces.
+66. Construction labor, local input delivery, repair and fire/destruction.
+67. Relocating the community center through labor and reconstruction.
+68. Multiple settlements with home/work/storage assignments.
+70. **Accepted extension:** public spaces, monuments and settlement identity.
+71. Evidence-led experiments with new materials and techniques.
+72. Time, labor, fuel and uncertain results that produce useful evidence.
+73. Bring samples and recovered artifacts home before studying them.
+74. Workshops/learning buildings supporting experimentation and adoption.
+75. Apprentices, outside exchange and cumulative practical knowledge.
+76. Discoveries about habitats/routes/peoples recorded in a chronicle.
+77. Age recognition based on adopted practices and a sustainable community.
+78. Linked food, textile, metallurgy, construction, transport and governance branches.
+79. Cultural artifacts valued differently by different societies.
+80. **Accepted extension:** oral histories, later writing and libraries with distinct information effects.
+83. Selective disclosure, boasting, concealment and reputation.
+84. Needs-based willingness, counteroffers and multi-item deals; procurement requests with material/quantity targets and spending limits, affected by trader skill and counterpart needs/friendliness.
+85. Physical gifts, cargo, recurring routes and delivery failures; a trading labor priority and real procurement expeditions with cargo/return limits and escort choices.
+86. Peace delegations, withdrawal and locally recognized agreements.
+87. Resource/grazing/transit rights and disputed frontiers.
+88. Scarcity competition without mandatory constant war.
+89. Trade contacts teaching techniques and supplying unavailable goods.
+90. **Accepted extension:** interpreters, measures, markets and later monetary institutions.
+92. Later engineered roads with real labor/material/upkeep costs.
+93. River boats, launch sites, ports and land/water transfer.
+94. Pack animals, sledges/carts and capacity/speed tradeoffs.
+95. Local stores, carriers, hauling priorities and route reliability.
+96. Bridges/fords/choke points as strategic constraints.
+97. Expedition escorts and raider ambush risk.
+98. Sea arrivals and raids grounded in actual movement.
+99. **Accepted extension:** navigation knowledge and seasonal sailing conditions.
+100. **Accepted extension:** warehouses serving regional supply networks.
+101. Stone-age clubs, spears and bows; civilians can hunt/defend.
+103. Shared militia stores, alarms and recall horn.
+104. Responsive selected-unit raids, attack-move, retreat and hold.
+105. Distinct counters, armor, ranges, projectiles and collision/spacing.
+106. Separate gatherer slots from guards/escorts and patrols.
+107. Night raids, finite raider camps, stolen cargo and safe trade routes.
+108. Pillage, building fire, civilian flight, surrender and conquest aftermath.
+109. Later trained specialization, commanders and formations supported by civilian economy.
+110. **Accepted extension:** siege, fortified towns and naval combat after core transport/combat work.
+111. Varied names/colors, preferences, strengths, risks and settlement strategies.
+112. Goal-driven rival economies that obey the same human/material constraints.
+113. Rival scouting, defense, cooperation, aggression and recovery.
+114. New settlements, collapse and survivors founding elsewhere.
+115. Expansion constrained by resources, transport and local population support.
+116. Appointed administrators with competence, policy scope and reports.
+117. Regional logistics and local autonomy.
+118. Breakaway settlements and nontrivial reintegration/conflict choices.
+119. **Accepted extension:** obligations, taxation, public works and later legal institutions.
+120. **Accepted extension:** federations, vassalage and alliances as alternatives to conquest.
+
+## Architecture and delivery discipline
+
+The game has a class-based Game coordinator (about 6,000 lines) plus more than 100 game modules. It is not a single-file game, but the coordinator and repeated worker-eligibility rules remain bottlenecks. Keep working terrain/save/RTS systems; extract narrow modules while shipping real play loops. Do not restart the project or turn this report into another implementation prerequisite.
+
+Use focused end-to-end checks for the feature being delivered plus build/typecheck/save compatibility. Run broad regression gates when integration risk warrants them. Push finished batches, document material gaps plainly, and keep user-facing progress focused on usable mechanics rather than counts of checks.
+
+Usage reserve: **1%**, per the latest user instruction. Do not consume the reset credit automatically.
+
+## Research informing implementation
+
+- [Przybylski, Rigby and Ryan: A Motivational Model of Video Game Engagement](https://selfdeterminationtheory.org/SDT/documents/2010_PrzybylskiRigbyRyan_ROGP.pdf): the authors connect appeal with competence, autonomy and relatedness. Application here: readable causes and outcomes, viable settlement strategies, meaningful agency and attachment to named residents. This is a design inference, not evidence that a specific mechanic guarantees engagement.
+- [Sid Meier: Interesting Decisions](https://www.gdcvault.com/play/1015756/interesting): prioritize consequential choices and usable feedback. Application: competing uses for scarce materials, exploration revealing opportunities and risks, clear feedback on why orders can/cannot complete.
+- [Anno developers: Your own trading empire](https://www.anno-union.com/devblog-your-own-trading-empire/) and [Pushing carts](https://www.anno-union.com/devblog-pushing-carts/): use trade routes and logistics as actual economic planning. Application: regional scarcity, finite cargo, reliable repeat routes, guards, bottlenecks and opportunities to improve a network.
+- [Dawn of Man official FAQ](https://dawnofman.madrugaworks.com/faq.php): retain survival, settlement and age-scale progression as interacting play loops. Avoid claiming that this short reference inventory covers every Dawn of Man mechanic.
+- [Jane Ng: The Art of Firewatch](https://gdcvault.com/play/1022296/The-Art-of) is an art-direction reference. The large linked slide deck was not fully fetched, so no detailed technical claims are based on it. Proposed visual application: coherent palette, readable silhouettes, layered terrain and restrained atmospheric depth.
+
+Requested art direction: golden-hour styling through most non-winter daylight, with night/storm/winter identity preserved; warm sunlight against cooler shadows, clear terrain/settlement composition, richer blocky silhouettes and meaningful color variation. Preserve actual astronomical sunrise/sunset/work schedules independently from the stylized lighting. Beauty requires broader art work than a color filter alone.

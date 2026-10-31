@@ -1,3 +1,4 @@
+import {commandRiverboat,riverboatAI,syncRiverboats} from './boats';
 import {copperStudyAI,developRivalCopper} from './materialStudy';
 import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
@@ -903,6 +904,7 @@ export class Game {
   canStep(u: Unit, x: number, z: number) {
     if (!inBounds(x, z, 1)) return false;
     const h = canoeHeight(this,u,x,z);
+    if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.world.waterY+.3)return false;
     if ((u.haulage!=="canoe"&&h < this.world.waterY + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of this.state.buildings) {
       if (!this.solidBuilding(b)) continue;
@@ -1368,7 +1370,7 @@ export class Game {
     let n = 0;
     for (const u of this.state.units) {
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
-      if (u.copperStudy || u.plantingWork || u.weaponWork || u.haulageWork || u.farmToolWork || u.tamingWork || u.studyCrop || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
+      if (u.boat || u.copperStudy || u.plantingWork || u.weaponWork || u.haulageWork || u.farmToolWork || u.tamingWork || u.studyCrop || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
       if (u.envoy || u.scout || u.expedition || u.foundingJourney || u.visit || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
@@ -1599,6 +1601,8 @@ export class Game {
     });
   }
 
+  invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
+
   interruptMission(u:Unit) {
     cancelPlanting(this,u);
     if(u.copperStudy)u.copperStudy.paused=true;
@@ -1617,7 +1621,10 @@ export class Game {
   }
 
   issueMove(x: number, z: number, attackMove = false) {
-    const units = this.selectedUnits();
+    const selected=this.selectedUnits();
+    for(const id of new Set(selected.filter(u=>u.boat?.phase==='aboard').map(u=>u.boat!.id)))commandRiverboat(this,id,x,z);
+    const units = selected.filter(u=>u.boat?.phase!=='aboard');
+    if(selected.length&&!units.length)return;
     if (!units.length) {
       if (this.state.selBld && this.state.selBld.team === 0) {
         this.state.selBld.rally = { x, z };
@@ -3993,7 +4000,7 @@ export class Game {
       let points = [{ x: tx, z: tz }],
         failed = false;
       if (!direct) {
-        const grid=u.haulage==="canoe"?waterNavigation(this).grid:this.walk;
+        const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
         const cell = MAP / WALK;
         const index = (x: number, z: number) =>
           Math.max(0, Math.min(WALK - 1, Math.floor((z + HALF) / cell))) * WALK +
@@ -4098,7 +4105,7 @@ export class Game {
     const buckets = new Map<string, number[]>();
     for (let i = 0; i < us.length; i++) {
       const u = us[i];
-      if (u.hp <= 0) continue;
+      if (u.hp <= 0||u.boat?.phase==='aboard') continue;
       const key = `${Math.floor(u.x / cell)},${Math.floor(u.z / cell)}`;
       const bucket = buckets.get(key) || [];
       bucket.push(i);
@@ -4106,7 +4113,7 @@ export class Game {
     }
     for (let i = 0; i < us.length; i++) {
       const a = us[i];
-      if (a.hp <= 0) continue;
+      if (a.hp <= 0||a.boat?.phase==='aboard') continue;
       const cx = Math.floor(a.x / cell),
         cz = Math.floor(a.z / cell);
       for (let z = cz - 1; z <= cz + 1; z++)
@@ -4152,6 +4159,7 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
+    if(riverboatAI(this,u,dt))return;
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
     if(u.recalled) {
@@ -5520,6 +5528,7 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
+            if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
             if (massRaidAI(this,u,sdt)) continue;
             if (demobilizationAI(this,u,sdt)) continue;
@@ -5544,6 +5553,7 @@ export class Game {
             this.reportSimulationError(`unit ${u.id}`,error);
           }
         }
+        syncRiverboats(this);
         this.separate(sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
