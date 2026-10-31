@@ -1,7 +1,8 @@
+import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
-import {linearStructure,constructionLine,placeConstructionLine} from './linearConstruction';
+import {linearStructure,joinedConstructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
 import {dragPlot,scalablePlot,type PlotSize} from './plots';
 import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
@@ -62,6 +63,8 @@ export class Engine {
   moveMode = false;
   loggingMode = false;
   pointer = { x: 0, y: 0 };
+  gateFacing:GateFacing="north";
+  private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
   plotStart: {x:number;z:number}|null=null;
   plotSize: PlotSize|undefined;
@@ -279,7 +282,13 @@ export class Engine {
     }
   };
 
-  private onKeyDown = (e: KeyboardEvent) => this.keyboard.key(e);
+  private onKeyDown = (e: KeyboardEvent) => {
+    const target=e.target as HTMLElement|null;
+    if(e.code==='KeyR'&&this.game.state.placing==='gate'&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
+      e.preventDefault();if(!e.repeat)this.setGateFacing(rotateGateFacing(this.gateFacing,e.shiftKey?-1:1));return;
+    }
+    this.keyboard.key(e);
+  };
 
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.code);
@@ -431,7 +440,8 @@ export class Engine {
         placeConstructionLine(this.game,this.game.state.placing,this.plotStart,g);
         this.pushHud();return;
       }
-      this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
+      if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
+      else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
       this.updateGhost();
       this.pushHud();
       return;
@@ -519,7 +529,7 @@ export class Engine {
       if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`Store · ${cost.wood} logs · drag to size`,4);}
     }
     if(linearStructure(type)&&this.plotStart){
-      const line=constructionLine(this.plotStart,g),end=line[line.length-1];
+      const line=joinedConstructionLine(this.game.state.buildings,type,this.plotStart,g),end=line[line.length-1];
       if(!end)return;
       x=end.x;z=end.z;
       let blocked=false;
@@ -534,13 +544,21 @@ export class Engine {
       const cost=buildingCost(type,this.game,0,undefined,this.bridgeSpan);
       this.game.banner(`Bridge · ${Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z).toFixed(0)} m · ${cost.wood} logs · ${cost.stone} stone`,2);
     }
+    if(type==='gate'){
+      const snap=this.gateFacingExplicit?snapGate(this.game.state.buildings,{x,z},this.gateFacing):suggestGateSnap(this.game.state.buildings,{x,z},this.gateFacing);
+      if(snap){x=snap.x;z=snap.z;this.gateFacing=snap.facing;}
+    }
     const okPlace = this.game.placementValid(type, x, z, 0,this.plotSize,this.bridgeSpan);
     const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined);
+  }
+
+  setGateFacing(facing:GateFacing){
+    this.gateFacing=normalizeGateFacing(facing);this.gateFacingExplicit=true;this.updateGhost();this.pushHud();
   }
 
   toggleLogging() {
@@ -554,6 +572,7 @@ export class Engine {
 
   setPlacing(type: BldType | null) {
     this.bridgeSpan=undefined;this.plotStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
+    if(type==='gate')this.gateFacingExplicit=false;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="farm"&&cultivationIssue(this.game)){
@@ -853,7 +872,7 @@ export class Engine {
     try {
       const type=this.game.state.placing;
       const cost=type?buildingCost(type,this.game,0,this.plotSize,this.bridgeSpan):null;
-      const sections=type&&linearStructure(type)&&this.plotStart?constructionLine(this.plotStart,this.ghostPos).length:1;
+      const sections=type&&linearStructure(type)&&this.plotStart?joinedConstructionLine(this.game.state.buildings,type,this.plotStart,this.ghostPos).length:1;
       const materials=cost?Object.entries(cost).filter(([,amount])=>amount>0).map(([kind,amount])=>`${amount*sections} ${kind==='wood'?'logs':kind}`).join(' · '):'';
       const summary=type?`${sections>1?sections+' sections · ':''}${materials||'Labor only'}`:undefined;
       this.hud({...this.game.snapshot(),plotSummary:summary});

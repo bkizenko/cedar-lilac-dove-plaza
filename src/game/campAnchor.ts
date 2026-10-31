@@ -7,7 +7,7 @@ export const CAMP_RULES={version:1,unbuiltGeneration:10,deliveryRadiusMeters:3,p
 export type CampAnchor={kind:'camp';team:number;x:number;z:number;y:number;radius:number};
 export type SupplyDrop=Building|CampAnchor;
 export function campAnchor(g:Game,team:number):CampAnchor|null {
- const c=g.world.camps.find(c=>c.team===team);
+ const c=g.state.campSites?.find(c=>c.team===team)||g.world.camps.find(c=>c.team===team);
  if(!c||!g.tribe(team)?.alive)return null;
  return {kind:'camp',team,x:c.x,z:c.z,y:g.height(c.x,c.z),radius:CAMP_RULES.deliveryRadiusMeters};
 }

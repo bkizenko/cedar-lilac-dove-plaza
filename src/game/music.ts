@@ -32,6 +32,8 @@ export class AcousticScore {
   private rests = new Map<MusicStage, number>();
   private dwell = 0;
   private peacefulTime = 0;
+  private requested: MusicStage = "village";
+  private skipped: {context:MusicStage;stage:MusicStage}|null = null;
   private disposed = false;
   unlock() {
     if (this.disposed) return;
@@ -74,6 +76,9 @@ export class AcousticScore {
     if (!this.tracks.size || this.disposed) return;
     // Planning menus pause the simulation, not the calm soundtrack.
     if (document.hidden || this.muted) return;
+    if(this.skipped&&this.skipped.context!==requested)this.skipped=null;
+    this.requested=requested;
+    requested=this.skipped?.stage??requested;
     this.dwell += dt;
     this.peacefulTime = requested === "battle" ? 0 : this.peacefulTime + dt;
     if (
@@ -106,6 +111,20 @@ export class AcousticScore {
     }
     this.seasonMul = seasonMul;
     this.applyVolume();
+  }
+  /** A manual track choice lasts until the world requests a different mood. */
+  skip() {
+    if(this.disposed)return;
+    if(!this.tracks.size)this.unlock();
+    const peaceful:MusicStage[]=this.calm?['village','harp','folk']:['village','adventure','folk','celtic','harp'];
+    const choices:MusicStage[]=this.requested==='battle'?['battle',...peaceful]:peaceful;
+    const next=choices[(choices.indexOf(this.stage)+1)%choices.length];
+    for(const [stage,track] of this.tracks){track.pause();this.levels[stage]=0;}
+    this.stage=next;this.skipped={context:this.requested,stage:next};this.dwell=0;
+    this.rests.delete(next);this.error='';
+    const track=this.tracks.get(next);if(track)track.currentTime=0;
+    this.levels[next]=1;this.applyVolume();
+    if(!this.muted&&!document.hidden)this.playCurrent();
   }
   private playCurrent(){
     const track=this.tracks.get(this.stage);if(!track)return;

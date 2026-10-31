@@ -1,7 +1,7 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { Engine } from '@/game/engine';
 import type { HudSnapshot } from '@/game/types';
-import {MINIMAP_RULES,sampleMinimapTerrain,fogMinimapColor,worldToMinimap,minimapToWorld,cameraSurfaceFootprint} from './minimapModel';
+import {MINIMAP_RULES,sampleMinimapTerrain,paintMinimapFog,worldToMinimap,minimapToWorld,cameraSurfaceFootprint} from './minimapModel';
 const SIZE=MINIMAP_RULES.pixels;
 /** North is negative world Z. Unknown terrain and unknown settlements stay hidden. */
 export function WorldMinimap({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
@@ -9,15 +9,13 @@ export function WorldMinimap({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const canvas=useRef<HTMLCanvasElement>(null);
  useEffect(()=>{
   if(!engine||!canvas.current)return;const ctx=canvas.current.getContext('2d');if(!ctx)return;
+  // Reuse the canvas pixel buffer; terrain/fog still refresh at the same2Hz.
+  const pixels=ctx.createImageData(SIZE,SIZE);
   const draw=()=>{
    // Read the current game here: a restored/reset world can replace it while the
    // same engine and minimap component remain mounted.
-   const g=engine.game,hud=latest.current,terrain=sampleMinimapTerrain(g,performance.now()),map=terrain.size,pixels=ctx.createImageData(SIZE,SIZE);
-   for(let z=0;z<SIZE;z++)for(let x=0;x<SIZE;x++){
-    const p=minimapToWorld(x+.5,z+.5,map),n=z*SIZE+x,seen=g.exploredAt(p.x,p.z),visible=seen&&g.visibleAt(p.x,p.z),i=n*4;
-    const color=fogMinimapColor([terrain.colors[n*3],terrain.colors[n*3+1],terrain.colors[n*3+2]],seen,visible);
-    pixels.data[i]=color[0];pixels.data[i+1]=color[1];pixels.data[i+2]=color[2];pixels.data[i+3]=255;
-   }
+   const g=engine.game,hud=latest.current,terrain=sampleMinimapTerrain(g,performance.now()),map=terrain.size;
+   paintMinimapFog(g,terrain,pixels.data);
    ctx.putImageData(pixels,0,0);
    const point=(x:number,z:number,color:string,r:number)=>{const p=worldToMinimap(x,z,map);ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();};
    for(const c of hud.camps||[])if(c.known)point(c.x,c.z,c.alive?c.color:'#82786b',3);

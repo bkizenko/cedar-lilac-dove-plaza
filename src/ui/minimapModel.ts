@@ -9,13 +9,14 @@ export function minimapToWorld(x:number,y:number,worldSize:number,pixels:number=
  const clamp=(n:number)=>Math.max(0,Math.min(1,n/pixels));return{x:(clamp(x)-.5)*worldSize,z:(clamp(y)-.5)*worldSize};
 }
 const BIOMES:Record<string,RGB>={meadow:[108,139,82],'mixed-woodland':[76,111,67],'conifer-forest':[66,104,91],alpine:[143,149,137],wetland:[92,124,101],'dry-scrub':[147,140,94],arid:[183,158,108],'warm-coast':[119,147,92],plains:[108,139,82],forest:[76,111,67],hills:[129,133,106]};
-export function minimapTerrainColor(height:number,water:number,biome:string,relief=0):RGB{
+function writeTerrainColor(target:{[index:number]:number},offset:number,height:number,water:number,biome:string,relief=0){
  const above=height-water;
- if(above<0){const depth=Math.min(1,-above/12);return[57-depth*21,113-depth*31,137-depth*29];}
+ if(above<0){const depth=Math.min(1,-above/12);target[offset]=57-depth*21;target[offset+1]=113-depth*31;target[offset+2]=137-depth*29;return;}
  const base=BIOMES[biome]??BIOMES.plains,shore=Math.max(0,1-above/1.8),rock=Math.max(0,Math.min(.75,(height-35)/100));
  const light=Math.max(.72,Math.min(1.23,1+relief));
- return base.map((v,i)=>((v*(1-rock)+[173,170,151][i]*rock)*(1-shore)+[163,153,113][i]*shore)*light) as unknown as RGB;
+ for(let i=0;i<3;i++){const rockColor=i===0?173:i===1?170:151,shoreColor=i===0?163:i===1?153:113;target[offset+i]=((base[i]*(1-rock)+rockColor*rock)*(1-shore)+shoreColor*shore)*light;}
 }
+export function minimapTerrainColor(height:number,water:number,biome:string,relief=0):RGB{const color:[number,number,number]=[0,0,0];writeTerrainColor(color,0,height,water,biome,relief);return color;}
 export function fogMinimapColor(color:RGB,explored:boolean,visible:boolean):RGB{return!explored?[25,32,35]:visible?color:color.map(v=>v*.65) as unknown as RGB;}
 type TerrainSource=Pick<Game,'world'|'height'|'waterAt'|'navigationRevision'>;
 export type MinimapTerrain={size:number;resolution:number;heights:Float32Array;water:Float32Array;colors:Uint8ClampedArray;sampledAtMilliseconds:number};
@@ -27,16 +28,23 @@ export function sampleMinimapTerrain(g:TerrainSource,nowMilliseconds:number,reso
  const old=terrainCaches.get(g),revision=g.navigationRevision();
  if(old&&old.world===g.world&&old.heightSource===g.world.heights&&old.revision===revision&&old.waterY===g.world.waterY&&old.data.resolution===resolution&&nowMilliseconds>=old.data.sampledAtMilliseconds&&nowMilliseconds-old.data.sampledAtMilliseconds<MINIMAP_RULES.terrainRefreshMilliseconds)return old.data;
  const size=g.world.size,heights=new Float32Array(resolution*resolution),water=new Float32Array(heights.length),colors=new Uint8ClampedArray(heights.length*3);
- for(let z=0;z<resolution;z++)for(let x=0;x<resolution;x++){const p=minimapToWorld(x+.5,z+.5,size,resolution),i=z*resolution+x;heights[i]=g.height(p.x,p.z);water[i]=g.waterAt(p.x,p.z);}
+ for(let z=0;z<resolution;z++)for(let x=0;x<resolution;x++){const wx=((x+.5)/resolution-.5)*size,wz=((z+.5)/resolution-.5)*size,i=z*resolution+x;heights[i]=g.height(wx,wz);water[i]=g.waterAt(wx,wz);}
  for(let z=0;z<resolution;z++)for(let x=0;x<resolution;x++){
-  const p=minimapToWorld(x+.5,z+.5,size,resolution),i=z*resolution+x;
-  let biome='plains';if(g.world.ecology)biome=provinceAt(g.world.ecology,p.x,p.z).kind;
-  else{let nearest=Infinity;for(const b of g.world.biomes){const d=(b.x-p.x)**2+(b.z-p.z)**2;if(d<nearest){nearest=d;biome=b.kind;}}}
+  const wx=((x+.5)/resolution-.5)*size,wz=((z+.5)/resolution-.5)*size,i=z*resolution+x;
+  let biome='plains';if(g.world.ecology)biome=provinceAt(g.world.ecology,wx,wz).kind;
+  else{let nearest=Infinity;for(const b of g.world.biomes){const d=(b.x-wx)**2+(b.z-wz)**2;if(d<nearest){nearest=d;biome=b.kind;}}}
   const left=heights[z*resolution+Math.max(0,x-1)],right=heights[z*resolution+Math.min(resolution-1,x+1)],up=heights[Math.max(0,z-1)*resolution+x],down=heights[Math.min(resolution-1,z+1)*resolution+x];
-  const color=minimapTerrainColor(heights[i],water[i],biome,((left-right)*.5+(down-up)*.35)/(size/resolution)*.18);
-  colors.set(color,i*3);
+  writeTerrainColor(colors,i*3,heights[i],water[i],biome,((left-right)*.5+(down-up)*.35)/(size/resolution)*.18);
  }
  const data={size,resolution,heights,water,colors,sampledAtMilliseconds:nowMilliseconds};terrainCaches.set(g,{world:g.world,revision,heightSource:g.world.heights,waterY:g.world.waterY,data});return data;
+}
+/** Fill a reused canvas buffer without making coordinate/color arrays per pixel. */
+export function paintMinimapFog(g:Pick<Game,'exploredAt'|'visibleAt'>,terrain:MinimapTerrain,pixels:Uint8ClampedArray){
+ const resolution=terrain.resolution,map=terrain.size;
+ for(let z=0;z<resolution;z++)for(let x=0;x<resolution;x++){
+  const wx=((x+.5)/resolution-.5)*map,wz=((z+.5)/resolution-.5)*map,n=z*resolution+x,seen=g.exploredAt(wx,wz),visible=seen&&g.visibleAt(wx,wz),i=n*4,shade=visible?1:.65;
+  pixels[i]=seen?terrain.colors[n*3]*shade:25;pixels[i+1]=seen?terrain.colors[n*3+1]*shade:32;pixels[i+2]=seen?terrain.colors[n*3+2]*shade:35;pixels[i+3]=255;
+ }
 }
 export type CameraProjection={matrixWorld:{elements:ArrayLike<number>};projectionMatrixInverse:{elements:ArrayLike<number>}};
 function transform(m:ArrayLike<number>,x:number,y:number,z:number){const w=m[3]*x+m[7]*y+m[11]*z+m[15];return{x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,z:(m[2]*x+m[6]*y+m[10]*z+m[14])/w};}

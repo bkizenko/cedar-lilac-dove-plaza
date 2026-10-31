@@ -1,3 +1,6 @@
+import {GateRotationControl} from './GateRotationControl';
+import {WorkloadPanel} from './WorkloadPanel';
+import {NomadicCampControl} from './NomadicCampControl';
 import {PerformanceReadout} from './PerformanceReadout';
 import {DIFFICULTIES} from '../game/difficulty';
 import {FarmingProgress} from './FarmingProgress';
@@ -32,6 +35,7 @@ import {
   Pause,
   Play,
   FastForward,
+  SkipForward,
   Volume2,
   VolumeX,
   RotateCcw,
@@ -164,6 +168,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
         {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
         {engine&&!founding&&<NeedsPanel engine={engine}/>}
+        {engine&&!founding&&<WorkloadPanel engine={engine}/>}
+        {engine&&!founding&&<NomadicCampControl engine={engine}/>}
         {engine&&!founding&&<FarmingProgress engine={engine} onKnowledge={()=>setTechOpen(true)}/>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
         <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button type="button" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}>Auto work · {engine?.game.state.autoWorkEnabled===false?"Off":"On"}</button><button aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}>{engine?.loggingMode?"Finish tree marks · N":"Mark trees · N"}</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Knowledge</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
@@ -292,6 +298,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 <IconBtn title={hud.muted ? "Unmute" : "Mute"} onClick={() => engine?.toggleMute()}>
                   {hud.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
                 </IconBtn>
+                <IconBtn title="Skip music" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}><SkipForward className="size-3.5"/></IconBtn>
                 <IconBtn title="Restart" onClick={() => engine?.restart()}>
                   <RotateCcw className="size-3.5" />
                 </IconBtn>
@@ -335,6 +342,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <div className="hud-toast hud-placement" role="status">
             <div>
               <strong>{BUILDINGS[hud.placing].name}</strong>
+              {hud.placing==='gate'&&engine&&<><GateRotationControl facing={engine.gateFacing} onChange={facing=>engine.setGateFacing(facing)}/><span className="text-xs text-parchment-dim">R rotates · Shift+R reverses</span></>}
               <div>{founding ? "Choose open ground near food and timber."
                 : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
                 : ["palisade","stonewall","trench","moat"].includes(hud.placing) ? "Drag a joined line · leave space for a gate"

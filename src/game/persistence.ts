@@ -1,3 +1,5 @@
+import {validCampMoveState} from './nomadicCamp';
+import {validContactState} from './encounters';
 import {validConflictIntentState} from './conflictIntent';
 import {validPrisonerState} from './captivity';
 import {validConflictJournal} from './conflictMetrics';
@@ -86,6 +88,8 @@ function validateGamePayload(raw: unknown) {
   if([7,8,9,10,11,12,13].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
+  if(!validCampMoveState(s))fail();
+  if(!validContactState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
@@ -368,6 +372,7 @@ function validateGamePayload(raw: unknown) {
         !u.trade||r.kind!==u.trade.get||r.amount!==u.trade.getAmt||u.customOffer||u.procurement)fail();
     }
     if(u.hunger!==undefined&&(!num(u.hunger)||u.hunger<0||u.hunger>1200))fail();
+    if(u.exploreAfterDelivery!==undefined&&u.exploreAfterDelivery!==true)fail();
     if(u.recalled!==undefined&&typeof u.recalled!=="boolean")fail();
     if(u.demobilizing!==undefined&&typeof u.demobilizing!=="boolean")fail();
     if(u.returnAfterCombat!==undefined&&typeof u.returnAfterCombat!=="boolean")fail();
@@ -399,6 +404,7 @@ function validateGamePayload(raw: unknown) {
     add(b, "building");
     if(b.gateOpen!==undefined&&typeof b.gateOpen!=="boolean")fail();
     if(b.gateMode!==undefined&&!["auto","open","closed"].includes(b.gateMode))fail();
+    if(b.gateFacing!==undefined&&!["north","east","south","west"].includes(b.gateFacing))fail();
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();

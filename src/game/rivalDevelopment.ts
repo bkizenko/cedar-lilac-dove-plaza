@@ -23,7 +23,7 @@ export function rivalStorageTarget(g:Game,team:number){
 /** Local familiarity plus actual scouting records; never inspect unknown distant nodes. */
 export function rivalKnows(g:Game,team:number,x:number,z:number){
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&Math.hypot(u.x-x,u.z-z)<26))return true;
-  if(g.state.buildings.some(b=>b.team===team&&g.finished(b)&&['townhall','cornerstone','lumber','quarry'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<55))return true;
+  if(g.state.buildings.some(b=>b.team===team&&['townhall','cornerstone','lumber','quarry'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<55&&g.finished(b)))return true;
   const cx=Math.floor((x+(g.world.size/2))/g.world.size*32),cz=Math.floor((z+(g.world.size/2))/g.world.size*32);
   return cx>=0&&cx<32&&cz>=0&&cz<32&&!!g.state.rivalKnowledge?.find(m=>m.team===team)?.cells.includes(cz*32+cx);
 }
@@ -35,10 +35,36 @@ export function rivalWorkRange(g:Game,team:number,x:number,z:number,kind:ResKind
   // Small camps can subsist and rebuild before any resource institution exists.
   if(Math.hypot(x-home.x,z-home.z)<=70&&rivalKnows(g,team,x,z))return true;
   if(['wood','copper','iron'].includes(kind)&&Math.hypot(x-home.x,z-home.z)<=RIVAL_RESOURCE_RANGE&&rivalKnows(g,team,x,z))return true;
-  return g.state.buildings.some(b=>b.team===team&&g.finished(b)&&
+  return g.state.buildings.some(b=>b.team===team&&
     (['townhall','cornerstone'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<70||
       kind==='wood'&&b.type==='lumber'&&Math.hypot(b.x-x,b.z-z)<=LUMBER_R||
-      kind==='stone'&&b.type==='quarry'&&Math.hypot(b.x-x,b.z-z)<=QUARRY_R));
+      kind==='stone'&&b.type==='quarry'&&Math.hypot(b.x-x,b.z-z)<=QUARRY_R)&&g.finished(b));
+}
+
+/** A snapshot for one synchronous work-board assignment only. Membership and
+ * knowledge are rebuilt for the next resident, so diplomacy, completed sites,
+ * deaths and discoveries never wait for a cross-frame cache to expire. */
+export function rivalWorkRangeContext(g:Game,team:number){
+  const home=g.campOf(team),half=g.world.size/2;
+  const residents=g.state.units.filter(u=>u.team===team&&u.hp>0);
+  const sites=g.state.buildings.filter(b=>b.team===team&&
+    ['townhall','cornerstone','lumber','quarry'].includes(b.type)&&g.finished(b));
+  const knownCells=new Set(g.state.rivalKnowledge?.find(m=>m.team===team)?.cells||[]);
+  const knows=(x:number,z:number)=>{
+    if(residents.some(u=>Math.hypot(u.x-x,u.z-z)<26))return true;
+    if(sites.some(b=>Math.hypot(b.x-x,b.z-z)<55))return true;
+    const cx=Math.floor((x+half)/g.world.size*32),cz=Math.floor((z+half)/g.world.size*32);
+    return cx>=0&&cx<32&&cz>=0&&cz<32&&knownCells.has(cz*32+cx);
+  };
+  return (x:number,z:number,kind:ResKind)=>{
+    const distance=Math.hypot(x-home.x,z-home.z);
+    if(distance<=70&&knows(x,z))return true;
+    if(['wood','copper','iron'].includes(kind)&&distance<=RIVAL_RESOURCE_RANGE&&knows(x,z))return true;
+    return sites.some(b=>
+      ['townhall','cornerstone'].includes(b.type)&&Math.hypot(b.x-x,b.z-z)<70||
+      kind==='wood'&&b.type==='lumber'&&Math.hypot(b.x-x,b.z-z)<=LUMBER_R||
+      kind==='stone'&&b.type==='quarry'&&Math.hypot(b.x-x,b.z-z)<=QUARRY_R);
+  };
 }
 
 export function rivalDevelopmentPlan(g:Game,team:number){

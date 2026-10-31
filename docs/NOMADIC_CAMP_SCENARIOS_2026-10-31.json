@@ -1,0 +1,63 @@
+{
+  "gate": "Bounded land-based relocation of an unbuilt household and its finite cache; not a full campaign or naval logistics gate",
+  "reports": [
+    {
+      "seed": 42,
+      "worldgenVersion": 10,
+      "terrainUnmodified": true,
+      "stockGrants": 0,
+      "originalCamp": {
+        "x": -300,
+        "z": -420
+      },
+      "destination": {
+        "x": -284,
+        "z": -420
+      },
+      "elapsedSeconds": 14.199999999999966,
+      "livingPeople": 5,
+      "metrics": {
+        "distanceMeters": 329.2643528584714,
+        "loadsDelivered": 17,
+        "foodConsumed": 2.515953969614435,
+        "waterConsumed": 0.5504000000000075,
+        "foodSpoiled": 0.04539635689777734,
+        "lost": {}
+      },
+      "woodRemaining": 58,
+      "stoneRemaining": 16,
+      "foodRemaining": 117.36597973419427,
+      "waterRemaining": 23.449599999999847,
+      "saveRoundtrip": true
+    },
+    {
+      "seed": 123456,
+      "worldgenVersion": 10,
+      "terrainUnmodified": true,
+      "stockGrants": 0,
+      "originalCamp": {
+        "x": -580,
+        "z": -320
+      },
+      "destination": {
+        "x": -564,
+        "z": -320
+      },
+      "elapsedSeconds": 14.299999999999965,
+      "livingPeople": 5,
+      "metrics": {
+        "distanceMeters": 331.6956549636641,
+        "loadsDelivered": 17,
+        "foodConsumed": 2.7588916868883753,
+        "waterConsumed": 0.5544000000000077,
+        "foodSpoiled": 0.04622186355547527,
+        "lost": {}
+      },
+      "woodRemaining": 58,
+      "stoneRemaining": 16,
+      "foodRemaining": 117.12411193032139,
+      "waterRemaining": 23.445599999999853,
+      "saveRoundtrip": true
+    }
+  ]
+}

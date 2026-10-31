@@ -1,3 +1,4 @@
+import {campMoveIndependentNeeds} from './nomadicCamp';
 import {sameTypedValues} from './terrainWalkCache';
 import {prisonerIndependentNeeds} from './captivity';
 import {reserveTreeWorker} from './workAllocation';
@@ -6,7 +7,7 @@ import {difficulty} from './difficulty';
 import {expansionCost,plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
-import {rivalWorkRange,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
+import {rivalWorkRangeContext,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
 import {huntable} from "./hunting";
 import {farmToolRate} from "./farmTools";
 import {carryingCapacity} from "./haulage";
@@ -40,7 +41,7 @@ export function isDependent(g: Game, u: Unit) {
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u))
+    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(g,u))
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
@@ -276,7 +277,7 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
-    if(u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
+    if(u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
     if(u.team===0&&g.state.autoWorkEnabled===false&&!u.jobLock){u.order=u.carry>0?'return':'hold';u.node=null;u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — select this resident and give an order';return;}
     if(u.prisoner){u.order='hold';u.node=null;u.target=null;u.workReason='Custody and release need their own orders; no automatic labor';return;}
     if(u.waterWork&&!u.waterWork.paused)return;
@@ -326,6 +327,12 @@ export class WorkBoard {
       unsafe = false;
     const materialPriorities = u.team===0 ? null : Object.fromEntries(
       (["wood","stone","copper","iron"] as ResKind[]).map(kind=>[kind,rivalMaterialPriority(g,u,kind)]));
+    // These predicates are invariant during one synchronous assignment scan.
+    // Rebuild them on every assignment so deaths, diplomacy and completed work
+    // are immediately visible without a cross-frame cache.
+    const foes=g.state.units.filter(e=>e.hp>0&&g.isFoe(u.team,e.team));
+    const workRange=u.team===0?null:rivalWorkRangeContext(g,u.team);
+    const lumberSites=g.state.buildings.filter(b=>b.team===u.team&&b.type==='lumber'&&g.finished(b));
     for (const task of list) {
       if (u.team === 0 && !("type" in task.node) &&
           ("species" in task.node&&task.node.hp>0 ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
@@ -353,10 +360,10 @@ export class WorkBoard {
       // Routine labor must not chase a herd or successive trees across the world.
       // New settlements have their own hall; scouts and traders travel separately.
       if (u.team !== 0 && !("type" in task.node) &&
-          !rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) continue;
+          !workRange!(task.node.x,task.node.z,task.kind as ResKind)) continue;
       const markedWork = u.team === 0 && task.kind === "wood" && g.chopMarks.has(task.node.id);
-      const lumberWork = task.kind === "wood" && g.state.buildings.some(b => b.team === u.team && b.type === "lumber" && g.finished(b) && Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
-      const rivalOutpostWork = u.team!==0 && ((['wood','stone','copper','iron'].includes(task.kind)&&rivalWorkRange(g,u.team,task.node.x,task.node.z,task.kind as ResKind)) ||
+      const lumberWork = task.kind === "wood" && lumberSites.some(b=>Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
+      const rivalOutpostWork = u.team!==0 && ((['wood','stone','copper','iron'].includes(task.kind)&&workRange!(task.node.x,task.node.z,task.kind as ResKind)) ||
         (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<RIVAL_RESOURCE_RANGE));
       const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
@@ -367,12 +374,7 @@ export class WorkBoard {
       const routineRange = timberFocus ? 220 : 100;
       if ((distance > routineRange && !settlementWork) || (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin))) continue;
       if (
-        g.state.units.some(
-          (e) =>
-            e.hp > 0 &&
-            g.isFoe(u.team, e.team) &&
-            Math.hypot(e.x - task.node.x, e.z - task.node.z) < 14,
-        )
+        foes.some(e=>Math.hypot(e.x-task.node.x,e.z-task.node.z)<14)
       ) {
         unsafe = true;
         continue;

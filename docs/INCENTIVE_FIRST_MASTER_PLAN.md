@@ -409,3 +409,12 @@ Villages develop distinctive goods from local resources, demonstrated skills and
 Keep abundant trees and wildlife. Balance labor time, real processing, carrying, seasonality, spoilage, fuel and consumption so food and logs remain a decision. Show the actual difficulty preset. Benchmark delivered goods per worker-minute and household reserves before/after rate changes; do not call a balance pass complete without a connected normal-difficulty seasonal survival run. Current gather speed multiplier4 makes near-camp food/timber collection especially fast and needs explicit tuning.
 
 Stability: desktop Low/Medium/High controls, shadows off and person circles off by default, real frame timing and error evidence. A lower graphics setting cannot mask simulation correctness failures. Explicit tree-box marking must work with Auto work off and communicate whether anyone is actually assigned.
+
+
+## Village workload and finite capacity (October 31)
+
+Expose village workload as estimated person-seconds of enabled queued and recurring work divided by available adult person-seconds over a named, adjustable planning window. Include actual construction progress, seasonal field work, gathering and supply needs, water collection, hauling, workplace queues and care commitments. Count shared projects and each actor once; separate blocked plans, paused orders and timers that do not occupy workers. Dependents, guard duties, other exclusive commitments and fatigue/rest reduce available civilian capacity. Tools, learned practice, carrying capacity and actual productive innovations reduce the work needed through their real simulation rates.
+
+Show values above100%, identify waiting jobs and their actual priority or access/material/worker/bench bottleneck, and explain that overload means work waits for finite workers. Do not add random failure, a second arbitrary speed penalty or pretend every queued job starts immediately. Estimates must disclose travel and seasonal limits. Validate that more work raises workload, more available adults and useful equipment reduce it, and constrained workplaces can cause real waiting even below100%.
+
+This is additive acceptance scope. Preserve the frozen98-gate baseline and its denominator; this requirement and its source/tests do not by themselves increase published completion or count as desktop acceptance.

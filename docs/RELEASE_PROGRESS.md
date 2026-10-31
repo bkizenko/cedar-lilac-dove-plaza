@@ -2,9 +2,9 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**15/98 verified gates — 15.31%.** This measures acceptance evidence, not development effort or time remaining.
+**19/98 verified gates — 19.39%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: c25f405. Unpublished map/conflict integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: 89a32e0. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
@@ -13,8 +13,8 @@ Verified baseline: c25f405. Unpublished map/conflict integration earns no credit
 | M0 | 5/12 | 41.67% |
 | M1 | 9/22 | 40.91% |
 | M2 | 0/16 | 0% |
-| M3 | 0/18 | 0% |
-| M4 | 0/20 | 0% |
+| M3 | 2/18 | 11.11% |
+| M4 | 2/20 | 10% |
 | M5 | 1/10 | 10% |
 
 ## Fixed acceptance checklist
@@ -97,8 +97,8 @@ Verified baseline: c25f405. Unpublished map/conflict integration earns no credit
 | M3-07 | pending | Contested access and extraction support physical transit agreements, escorts or route abandonment | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-08 | pending | Raids prepare/approach/contact/loot/withdraw; defense can deter them without automatic larger spawns | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-09 | pending | Finite looting can succeed without compulsory burning and counts only physically returned goods | No matching executed evidence. Natural non-destructive loot integration unpublished; ordinary destruction-linked loot is not this gate. |
-| M3-10 | pending | Contextual capture/surrender preserves existing people and requires physical escort, custody and needs | No matching executed evidence. Incidental surrender/forced-labor foundations do not complete contextual nonlethal capture/custody. |
-| M3-11 | pending | Intact local occupation requires present control/garrison and preserves building/person/project identities | No matching executed evidence. Local intact occupation is unpublished; society-wide treaty annexation is not this gate. |
+| M3-10 | verified | Contextual capture/surrender preserves existing people and requires physical escort, custody and needs | oct31gateaudit. Live approach, surrender, guard capacity, finite food/water provisioning, escort/custody and strict-save scenarios passed. Broader ransom/integration/revolt remains in M3-16. |
+| M3-11 | verified | Intact local occupation requires present control/garrison and preserves building/person/project identities | oct31gateaudit. Actual garrison arrival/hold, contested control and local intact surrender preserve existing buildings, residents and paid projects; remote settlements/stores remain independent. |
 | M3-12 | pending | Domination/vassalage uses local leverage and real continuing obligations rather than remote instant transfers | No matching executed evidence. Remote strength-ratio treaty acceptance is not actual local sustained domination. |
 | M3-13 | pending | Withdrawal/release returns surviving actors and possessions and updates local control/custody | No matching executed evidence. Natural withdrawal/custody/control integration unpublished; zero credit. |
 | M3-14 | pending | Negotiated aftermath preserves incidents, compensation, agreements and witnessed conflict knowledge | No matching executed evidence. Player-centric peace foundations do not establish full shared-rule aftermath. |
@@ -111,8 +111,8 @@ Verified baseline: c25f405. Unpublished map/conflict integration earns no credit
 
 | Gate | Status | Acceptance | Evidence / limitation |
 | --- | --- | --- | --- |
-| M4-01 | pending | Need-driven discoveries show observation/sample, performed experiment, demonstrated production and adoption | No matching executed evidence. Existing discovery modules are foundations; visible need-led experiment/production/adoption chapter not yet demonstrated. |
-| M4-02 | pending | Residents/players prioritize meaningful practical experiments with evidence and readable blocked reasons | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
+| M4-01 | verified | Need-driven discoveries show observation/sample, performed experiment, demonstrated production and adoption | oct31gateaudit. Delivered crop samples, performed trials, actual sowing; copper prototype/tools; sled delivery practice and material-paid cart production are measured in live scenarios. Teaching is separately pending in M4-03. |
+| M4-02 | verified | Residents/players prioritize meaningful practical experiments with evidence and readable blocked reasons | oct31gateaudit. Player practical priorities validate actual people, materials, reachable workplaces and reserve blockers; real desktop Knowledge panel reviewed. No passive science queue. |
 | M4-03 | pending | Teaching/successors/artifacts/records spread demonstrated techniques through learning/trade/migration | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M4-04 | pending | Bronze/Iron/Classical advancement keeps 50/75/100 population plus practices/institutions/sustainable unspent reserves | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M4-05 | pending | Small specialized societies remain competitive through trade and techniques without matching every population threshold | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |

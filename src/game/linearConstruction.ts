@@ -1,3 +1,4 @@
+import {snapWallToGate,type GateWall} from './gateGeometry';
 import type {Game} from './sim';
 import type {BldType} from './types';
 export function linearStructure(t:BldType){return ['palisade','stonewall','trench','moat'].includes(t);}
@@ -16,10 +17,15 @@ export function constructionLine(a:{x:number;z:number},b:{x:number;z:number}){
  }
  return points;
 }
+/** Both preview and commit use the same physical gate-port alignment. */
+export function joinedConstructionLine(buildings:readonly GateWall[],type:BldType,a:{x:number;z:number},b:{x:number;z:number},team=0){
+ if(type!=='palisade'&&type!=='stonewall')return constructionLine(a,b);
+ return constructionLine(snapWallToGate(buildings,a,team)??a,snapWallToGate(buildings,b,team)??b);
+}
 export function placeConstructionLine(g:Game,type:BldType,a:{x:number;z:number},b:{x:number;z:number}){
  if(!linearStructure(type))return 0;
  let count=0;
- for(const p of constructionLine(a,b)){
+ for(const p of joinedConstructionLine(g.state?.buildings||[],type,a,b,0)){
   // Stop at the first obstruction; never silently move a section or leave holes.
   if(!g.placementValid(type,p.x,p.z,0)||!g.placeBuilding(type,p.x,p.z,0))break;
   count++;

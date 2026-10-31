@@ -138,6 +138,11 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  exploreAfterDelivery?:true;
+  campMoveId?:number;
+  contactDemand?:{targetId:number;lastTimeSeconds:number};
+  contactAttackTargetId?:number;
+  contactSurrender?:{team:number;until:number};
   conflictIntent?:ConflictIntent;
   captureTargetId?:number;
   prisoner?:PrisonerCustody;
@@ -271,6 +276,7 @@ export type Building = {
   planPaused?: boolean;
   gateOpen?: boolean;
   gateMode?: "auto" | "open" | "closed";
+  gateFacing?: "north" | "east" | "south" | "west";
   raiderCamp?: boolean;
   lootClaimed?: boolean;
   raidLoot?: Partial<Record<ResKind,number>>;
@@ -391,6 +397,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  campSites?:{team:number;x:number;z:number}[];
+  campMove?:import('./nomadicCamp').CampMove;
   autoWorkEnabled?:boolean;
   occupations?:OccupationControl[];
   conflictJournal?:ConflictJournal;

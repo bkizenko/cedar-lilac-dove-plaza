@@ -11,26 +11,27 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "c25f405",
+  "verifiedPublishedCodeBaseline": "89a32e0",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
-    "v11 organic landscape/local water/materials",
-    "Natural conflict contextual capture/intact occupation/finite loot"
+    "V14 world-family/seasonal-plant integration and default promotion",
+    "Nomadic relocation, workload report and expanded contact next-batch publication",
+    "Granular survival production and remaining required workplaces"
   ],
   "method": {
     "unit": "one fixed acceptance gate",
     "denominator": 98,
     "weighting": "equal gate weights; no time, effort, code-volume or feature-catalogue percentage implied",
     "creditRule": "1 only for recorded executed evidence matching the gate scope; pending/unverified/partial=0",
-    "baselineRule": "Verified narrow behavior refers to published c25f405-or-earlier evidence. This does not certify the current unpublished working tree. Regressions revoke credit; new integration gates remain pending until matching acceptance and publication.",
+    "baselineRule": "Verified credit requires executed scenario evidence and published code. Published89a32e0 capture/occupation/knowledge checks were re-executed in the isolated next-batch snapshot; new source-only work earns no credit.",
     "scopeChanges": "Do not silently add/remove/split easy gates to improve percentages. Any requirement change creates a documented new baseline version and recalculated denominator.",
     "updateRule": "After every finished batch and push, update actual evidence/status, recalculate counts and report verified/total and percent; report batch delta and published commit separately. Failed push is not published.",
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 15,
+    "verifiedGates": 19,
     "totalGates": 98,
-    "verifiedGatePercent": 15.31
+    "verifiedGatePercent": 19.39
   },
   "milestones": {
     "M0": {
@@ -49,14 +50,14 @@
       "verifiedGatePercent": 0
     },
     "M3": {
-      "verifiedGates": 0,
+      "verifiedGates": 2,
       "totalGates": 18,
-      "verifiedGatePercent": 0
+      "verifiedGatePercent": 11.11
     },
     "M4": {
-      "verifiedGates": 0,
+      "verifiedGates": 2,
       "totalGates": 20,
-      "verifiedGatePercent": 0
+      "verifiedGatePercent": 10
     },
     "M5": {
       "verifiedGates": 1,
@@ -110,6 +111,12 @@
       "path": "docs/CONFLICT_OBJECTIVES_BRIEF.md",
       "kind": "requirement/design only",
       "scope": "Natural conflict not yet integrated/published; zero completion credit"
+    },
+    "oct31gateaudit": {
+      "path": "docs/RELEASE_GATE_AUDIT_2026-10-31.md",
+      "section": "Four newly qualified gates",
+      "kind": "Executed live simulation, strict-save and UI checks",
+      "scope": "Published89a32e0 core capture/occupation/knowledge, re-executed in isolated camp/workload snapshot;77/77 tests passed."
     }
   },
   "gates": [
@@ -918,10 +925,12 @@
         "81-90",
         "101-110"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Incidental surrender/forced-labor foundations do not complete contextual nonlethal capture/custody."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "oct31gateaudit"
+      ],
+      "remainingNotes": "Live approach, surrender, guard capacity, finite food/water provisioning, escort/custody and strict-save scenarios passed. Broader ransom/integration/revolt remains in M3-16."
     },
     {
       "id": "M3-11",
@@ -932,10 +941,12 @@
         "61-70",
         "101-120"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Local intact occupation is unpublished; society-wide treaty annexation is not this gate."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "oct31gateaudit"
+      ],
+      "remainingNotes": "Actual garrison arrival/hold, contested control and local intact surrender preserve existing buildings, residents and paid projects; remote settlements/stores remain independent."
     },
     {
       "id": "M3-12",
@@ -1037,10 +1048,12 @@
         "51-60",
         "71-80"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Existing discovery modules are foundations; visible need-led experiment/production/adoption chapter not yet demonstrated."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "oct31gateaudit"
+      ],
+      "remainingNotes": "Delivered crop samples, performed trials, actual sowing; copper prototype/tools; sled delivery practice and material-paid cart production are measured in live scenarios. Teaching is separately pending in M4-03."
     },
     {
       "id": "M4-02",
@@ -1050,10 +1063,12 @@
         "41-60",
         "71-80"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "oct31gateaudit"
+      ],
+      "remainingNotes": "Player practical priorities validate actual people, materials, reachable workplaces and reserve blockers; real desktop Knowledge panel reviewed. No passive science queue."
     },
     {
       "id": "M4-03",

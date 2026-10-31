@@ -1,3 +1,5 @@
+import {orderExploration,queuedExplorationAI} from './explorationOrders';
+import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
 import {terrainWalkBase} from './terrainWalkCache';
 import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {assignMarkedTrees} from './treeDesignation';
@@ -51,7 +53,7 @@ import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmT
 import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
 import {daylightAt,solarTimeLabel,pacedSolarHour} from "./daylight";
 import {mulberry32} from "./rng";
-import {tickEncounters} from "./encounters";
+import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
@@ -274,9 +276,15 @@ export class Game {
     return sampleHeight(this.world.heights, x, z,this.world.size);
   }
 
+  relocateCamp(x:number,z:number){return beginCampRelocation(this,x,z);}
+  campMoveStatus(){return campMoveStatus(this);}
+  pauseCampMove(){return pauseCampRelocation(this);}
+  resumeCampMove(){return resumeCampRelocation(this);}
+  cancelCampMove(){return cancelCampRelocation(this);}
+
   campOf(team: number) {
     return (
-      this.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&b.hp>0) || this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
+      this.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&b.hp>0) || this.state.campSites?.find(c=>c.team===team) || this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
     );
   }
 
@@ -945,11 +953,10 @@ export class Game {
     if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.waterAt(x,z)+.3)return false;
     if ((u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of this.state.buildings) {
-      if (!this.solidBuilding(b)) continue;
       const w = b.w * 0.4 + u.r,
         d = b.d * 0.4 + u.r;
       const depth = Math.min(w - Math.abs(x - b.x), d - Math.abs(z - b.z));
-      if (depth <= 0) continue;
+      if (depth <= 0 || !this.solidBuilding(b)) continue;
       const old = Math.min(w - Math.abs(u.x - b.x), d - Math.abs(u.z - b.z));
       if (old <= 0 || depth >= old) return false;
     }
@@ -1043,6 +1050,7 @@ export class Game {
   }
 
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
+    if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
@@ -1266,6 +1274,7 @@ export class Game {
         kind = "spearman";
       }
       if (!kind) break;
+      interruptCampRelocation(this,u);
       const d = UNITS[kind];
       u.type = kind;
       u.militia = true;
@@ -1649,6 +1658,9 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    u.exploreAfterDelivery=undefined;
+    interruptCampRelocation(this,u);
+    u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;
     releaseConflictAssignment(this,u);
     releaseTreeWorker(this,u);
     pauseWaterCollection(u);
@@ -1705,6 +1717,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
+    if(target.kind==='unit')target.contactSurrender=undefined;
     for (const u of this.selectedUnits().filter(u=>!u.prisoner)) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits().filter(u=>!u.prisoner);
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
@@ -1821,6 +1834,7 @@ export class Game {
     let threat: Unit | Building | null = null;
     let bd = 28 * 28;
     for (const u of this.state.units) {
+      if(contactYieldingTo(this,u,team))continue;
       if (u.hp <= 0 || !this.isFoe(team, u.team)) continue;
       const d = (u.x - hall.x) ** 2 + (u.z - hall.z) ** 2;
       if (d < bd) {
@@ -1873,11 +1887,8 @@ export class Game {
   isFoe(a: number, b: number) {
     if (a === b) return false;
     if (a === 3 || b === 3) return true;
-    if (this.isAlly(a) && this.isAlly(b)) return false;
-    const ta = this.tribe(a);
-    const tb = this.tribe(b);
-    if (a === 0) return !!tb?.hostile;
-    if (b === 0) return !!ta?.hostile;
+    if (a === 0) return !!this.tribe(b)?.hostile;
+    if (b === 0) return !!this.tribe(a)?.hostile;
     return false;
   }
 
@@ -2710,36 +2721,12 @@ export class Game {
   }
 
   issueExplore() {
-    let units = this.selectedUnits();
-    if (!units.length) units = this.idleWorkers().slice(0, 2);
-    units = units.filter(u => !isDependent(this, u) && !u.emergency && u.carry === 0 && u.order !== "trade");
-    if (!units.length) {
-      this.banner("Select available adults with empty hands, then Explore (X)", 1.6);
-      return;
-    }
-    let sent = 0;
-    for (const u of units) {
-      const t = this.findExploreTarget(u);
-      if (!t || !beginExpedition(this,u)) continue;
-      this.interruptMission(u);
-      u.order = "explore";
-      u.pillage = -1;
-      u.attackDestination = null;
-      u.stuckT = 0;
-      u.workReason = "Exploring until you give another order";
-      u.tx = t.x;
-      u.tz = t.z;
-      u.target = null;
-      u.node = null;
-      u.trade = null;
-      u.wanderT = 0;
-      u.gatherT = 0;
-      sent++;
-    }
-    if (sent) {
-      this.banner("Exploring the world", 1.6);
-      this.onSfx("move");
-    } else this.banner("No unknown ground found, or not enough food to pack a safe journey", 2.4);
+    let units=this.selectedUnits();
+    if(!units.length)units=this.idleWorkers().slice(0,2);
+    let sent=0,queued=0,reason='Select an available adult, then Explore (X)';
+    for(const u of units){const issue=orderExploration(this,u);if(issue){reason=issue;continue;}sent++;if(u.exploreAfterDelivery)queued++;}
+    this.banner(sent?(queued?`${queued} Explore orders queued — existing supplies go home first`:'Exploring the world'):reason,3);
+    if(sent)this.onSfx('move');
   }
 
   findExploreTarget(u: Unit): { x: number; z: number } | null {
@@ -3479,7 +3466,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!prisonerIndependentNeeds(u)){
+      if(!prisonerIndependentNeeds(u)&&!campMoveIndependentNeeds(this,u)){
       const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
@@ -3490,7 +3477,7 @@ export class Game {
       // Regular meals gradually repair hunger damage instead of leaving a death spiral.
       if (!hungry && previousHunger > 0 && !u.sickUntil) u.hp = Math.min(u.maxHp, u.hp + Math.min(dt, previousHunger / 3) * u.maxHp / 240);
       }
-      if (!prisonerIndependentNeeds(u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
+      if (!prisonerIndependentNeeds(u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
@@ -3710,6 +3697,12 @@ export class Game {
     if(b.type==="bridge")return bridgeApproach(this,u,b);
     const cached=this.approachCache.get(u);if(cached&&cached.building===b&&cached.canoe===(u.haulage==='canoe')&&cached.revision===this.navRevision&&this.state.time-cached.time<2)return cached.spot;
     let best:{x:number;z:number}|null=null,score=Infinity;
+    // All entrance samples lie in this envelope. Read current footprints once
+    // per call; each sample still checks the original exact collision predicate.
+    const extentX=b.w*.4+Math.max(u.r,.45)+1.6,extentZ=b.d*.4+Math.max(u.r,.45)+1.6;
+    const blockers=this.state.buildings.filter(other=>
+      Math.abs(other.x-b.x)<=extentX+other.w*.4+u.r+.150001&&
+      Math.abs(other.z-b.z)<=extentZ+other.d*.4+u.r+.150001);
     // A physically clear frontage can still fall in a coarse blocked cell.
     // Try the nearest ring first, then a little farther out when necessary.
     for(const margin of [.8,1.2,1.6]) {
@@ -3720,8 +3713,8 @@ export class Game {
       if(!this.walkable(x,z)||!connectedForUnit(this,u,x,z))continue;
       // A walkable grid cell doesn't guarantee this sub-cell point is clear.
       // Reject neighboring huts/stores rather than redirecting to their doors.
-      if(this.state.buildings.some(other=>this.solidBuilding(other)&&
-          Math.abs(x-other.x)<other.w*.4+u.r+.15&&Math.abs(z-other.z)<other.d*.4+u.r+.15))continue;
+      if(blockers.some(other=>
+          Math.abs(x-other.x)<other.w*.4+u.r+.15&&Math.abs(z-other.z)<other.d*.4+u.r+.15&&this.solidBuilding(other)))continue;
       if(u.order==="attack"&&u.target===b){const gap=Math.hypot(Math.max(0,Math.abs(x-b.x)-b.w*.4),Math.max(0,Math.abs(z-b.z)-b.d*.4));if(gap>u.range+.4)continue;}
       const value=Math.hypot(x-u.x,z-u.z);if(value<score){score=value;best={x,z};}
     }
@@ -4531,7 +4524,7 @@ export class Game {
     let bd = radius * radius;
     for (const o of this.state.units) {
       if (
-        (o.envoy?.kind === "peace" && o.envoy.team === u.team) || !missionMayTargetCivilian(this,u,o) ||
+        (o.envoy?.kind === "peace" && o.envoy.team === u.team) || contactYieldingTo(this,o,u.team) || !missionMayTargetCivilian(this,u,o) ||
         o.hp <= 0 || o.shelterId ||
         o.team === u.team ||
         !this.isFoe(u.team, o.team) ||
@@ -4584,7 +4577,7 @@ export class Game {
     if(target.kind==='building'&&(intent==='capture'||(intent==='occupy'||intent==='loot')&&!['palisade','stonewall','gate','watchtower','keep'].includes(target.type)))return;
     if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
-    if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
+    if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     target.hp -= dmg;
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
@@ -4696,6 +4689,7 @@ export class Game {
 
   combatAI(u: Unit, dt: number) {
     if(u.prisoner)return;
+    if(u.target?.kind==='unit'&&contactYieldingTo(this,u.target,u.team)){u.target=null;u.order='hold';return;}
     if(u.target&&!(u.target.kind==='building'?missionMayTargetBuilding(this,u,u.target):missionMayTargetCivilian(this,u,u.target))){u.target=null;u.order=u.conflictIntent==='occupy'||u.conflictIntent==='capture'?'hold':'idle';}
     if(u.order==="attack"&&u.target&&u.target.team!==u.team&&!this.isFoe(u.team,u.target.team)) {
       if(Math.hypot(u.x-u.target.x,u.z-u.target.z)>Math.max(8,u.range+2)) {
@@ -5020,6 +5014,7 @@ export class Game {
       let best: Unit | null = null;
       let bd = 16 * 16;
       for (const u of this.state.units) {
+      if(contactYieldingTo(this,u,b.team))continue;
         if (u.hp <= 0 || u.team === b.team) continue;
         if (b.team !== 0 && !this.tribe(b.team)?.hostile) {
           if (u.type === "worker" || u.order === "trade") continue;
@@ -5506,6 +5501,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        tickCampRelocation(this,sdt);
         reconcileTradeReservations(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
@@ -5530,6 +5526,8 @@ export class Game {
             if(prisonerAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(queuedExplorationAI(this,u,sdt))continue;
+            if(campRelocationAI(this,u,sdt))continue;
             if(captureIntentAI(this,u,sdt))continue;
             if(occupationActorAI(this,u,sdt))continue;
             if (massRaidAI(this,u,sdt)) continue;
@@ -5542,6 +5540,7 @@ export class Game {
             if(raidLootAI(this,u,sdt))continue;
             if(u.team!==3 && u.order==="return" && u.carry>0){this.workerAI(u,sdt);continue;}
             if(expeditionAI(this,u,sdt))continue;
+            if(u.order==='explore'){this.workerAI(u,sdt);continue;}
             if(routineRest(this,u,sdt))continue;
             // Armed citizens keep their equipment while fulfilling an explicit shipment.
             if(u.visit||(u.order==="trade"&&u.trade)){this.workerAI(u,sdt);continue;}
@@ -5602,6 +5601,7 @@ export class Game {
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {
@@ -5696,7 +5696,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"

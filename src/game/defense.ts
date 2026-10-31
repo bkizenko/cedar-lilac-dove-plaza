@@ -1,3 +1,4 @@
+import {contactYieldingTo} from './encounters';
 import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
@@ -64,6 +65,7 @@ function mobilize(g:Game,u:Unit){
 
 /** A real hit is a local alarm, including attacks during recall, work or sleep. */
 export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number){
+  if(victim.kind==='unit')victim.contactSurrender=undefined;
   if(victim.team===3)return;
   const attackers=g.state.units.filter(e=>e.hp>0&&e.team===attackerTeam&&
     (victim.team!==0||g.visibleAt(e.x,e.z))&&Math.hypot(e.x-victim.x,e.z-victim.z)<60)
@@ -84,24 +86,27 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
 
 /** Automatic response is local; commanded expeditions are not recalled across the map. */
 export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
-  if (u.team === 3 || u.prisoner) return false;
+  if (u.team === 3 || u.prisoner ||u.contactSurrender&&u.contactSurrender.until>g.state.time&&!u.emergency) return false;
   // Explicit adult combat orders take precedence over automatic shelter behavior.
   if ((u.team === 0 || u.militia) && (u.type === "worker" || u.militia) && !u.emergency && !isDependent(g, u) &&
       (u.order === "attack" || u.order === "attackmove")) return false;
   if(u.envoy?.kind==="peace")return false;
   // A visible attack on a nearby workplace raises the village alarm as well as
   // personal danger. Already armed civilians must answer it even while holding.
-  const defendedSites = g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&
-    Math.hypot(b.x-u.x,b.z-u.z)<40);
-  const foes = g.state.units.filter(
-    (e) =>
-      e.hp > 0 && !e.shelterId && !occupationProtectsCivilian(g,u,e) && missionMayTargetCivilian(g,u,e) &&
-      g.isFoe(u.team, e.team) &&
-      (u.team !== 0 || g.visibleAt(e.x, e.z)) &&
-      (Math.hypot(e.x - u.x, e.z - u.z) < 17 ||
-        (u.emergency&&u.target===e&&Math.hypot(e.x-u.x,e.z-u.z)<65) ||
-        (Math.hypot(e.x-u.x,e.z-u.z)<45 && defendedSites.some(b=>Math.hypot(b.x-e.x,b.z-e.z)<20))),
-  );
+  let defendedSites:Building[]|null=null;
+  const foes = g.state.units.filter(e=>{
+    if(!(e.hp>0)||e.shelterId)return false;
+    const distance=Math.hypot(e.x-u.x,e.z-u.z);
+    // No branch below can react beyond 65 metres. Reject remote residents
+    // before diplomacy/mission checks, then survey nearby workplaces lazily.
+    if(distance>=65||!g.isFoe(u.team,e.team)||
+      (u.team===0&&!g.visibleAt(e.x,e.z))||contactYieldingTo(g,e,u.team)||occupationProtectsCivilian(g,u,e)||!missionMayTargetCivilian(g,u,e))return false;
+    if(distance<17||(u.emergency&&u.target===e&&distance<65))return true;
+    if(distance>=45)return false;
+    defendedSites??=g.state.buildings.filter(b=>b.team===u.team&&
+      Math.hypot(b.x-u.x,b.z-u.z)<40&&g.finished(b));
+    return defendedSites.some(b=>Math.hypot(b.x-e.x,b.z-e.z)<20);
+  });
   if (foes.length && (u.type === "worker" || u.militia) && !u.emergency) {
     mobilize(g,u);
   }

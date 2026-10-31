@@ -1,3 +1,4 @@
+import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES} from '../game/graphics';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
@@ -1420,7 +1421,7 @@ export class WorldView {
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
-          _e.set(pitch,fort||scalable?0:st.yaw,roll);
+          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable?0:st.yaw,roll);
           _s.set(scalable?sx:fort?1:st.sx,ys*(scalable||fort?1:st.sy),scalable?sz:fort?1:st.sz);
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
@@ -1737,7 +1738,7 @@ export class WorldView {
     if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -1745,7 +1746,7 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
-    this.ghost.rotation.set(0,0,0);this.ghost.scale.set(1,1,1);
+    this.ghost.rotation.set(0,type==='gate'?gateOrientation(gateFacing).yawRadians:0,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size);
