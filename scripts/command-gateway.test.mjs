@@ -15,17 +15,17 @@ test('direct gathering interrupts paid crafting once and preserves materials and
  const {g,u,hall}=fixture();assert.equal(beginHaulageWork(g,'sled',0,hall.id,u.id),true);
  u.haulageWork.progress=17;const wood=g.tribe(0).wood,stone=g.tribe(0).stone;
  const node=g.state.trees.find(n=>n.amount>0);g.issueGather(node);
- assert.equal(u.haulageWork.paused,true);assert.equal(u.haulageWork.progress,17);
+ assert.equal(u.haulageWork,undefined);const project=g.state.haulageProjects[0];assert.equal(project.actorId,null);assert.equal(project.work.paused,true);assert.equal(project.work.progress,17);
  assert.equal(u.order,'gather');assert.equal(u.node,node);
  assert.equal(g.tribe(0).wood,wood);assert.equal(g.tribe(0).stone,stone);
  const restored=decodeGame(encodeGame(g));const worker=restored.state.units.find(p=>p.id===u.id);
- assert.equal(worker.haulageWork.progress,17);assert.equal(worker.haulageWork.paused,true);
+ assert.equal(worker.haulageWork,undefined);assert.equal(restored.state.haulageProjects[0].work.progress,17);assert.equal(restored.state.haulageProjects[0].actorId,null);
  assert.equal(commandDiagnostics(g).accepted,1);
 });
 test('drill suspends paid work rather than leaving a competing active owner',()=>{
  const {g,u,hall}=fixture();assert.equal(beginHaulageWork(g,'sled',0,hall.id,u.id),true);
  g.tribe(0).age=1;g.tribe(0).food=10000;g.assignJob('drill');
- assert.equal(u.drill,0);assert.equal(u.haulageWork.paused,true);
+ assert.equal(u.drill,0);assert.equal(u.haulageWork,undefined);assert.equal(g.state.haulageProjects[0].work.paused,true);assert.equal(g.state.haulageProjects[0].actorId,null);
 });
 test('incapacitated residents reject land orders with a reason and bounded diagnostics',()=>{
  const {g,u}=fixture();u.hp=0;u.order='hold';assert.equal(acceptWorkerCommand(g,u,'assign:wood'),false);assert.equal(u.order,'hold');

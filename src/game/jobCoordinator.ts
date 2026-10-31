@@ -27,6 +27,7 @@ export class JobCoordinator {
   if(progress!==undefined&&(!Number.isFinite(progress)||progress<job.progress))return false;
   job.phase=phase;if(progress!==undefined)job.progress=progress;return true;
  }
+ retarget(id:string,target:number|null){const job=this.jobs.get(id);if(!job||terminal(job.phase))return false;job.target=target;return true;}
  private release(job:CoordinatedJob){for(const actor of job.actors)if(this.actors.get(actor)===job.id)this.actors.delete(actor);this.reservations.release(job.id);}
  suspend(id:string,reason:string){const job=this.jobs.get(id);if(!job||terminal(job.phase)||job.phase==='suspended')return false;this.release(job);job.phase='suspended';job.blockedReason=reason;this.metrics.suspended++;return true;}
  resume(id:string,actors:number[],requests:ReservationRequest[]=[]){

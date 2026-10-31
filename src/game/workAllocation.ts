@@ -1,13 +1,14 @@
 import type {Game} from './sim';
 import type {Unit, ResourceNode} from './types';
-import {JobCoordinator} from './jobCoordinator';
+import type {JobCoordinator} from './jobCoordinator';
+import {workRuntime} from './workRuntime';
 
 export const WORK_ALLOCATION_RULES={treeSlots:2,auditIntervalSeconds:1} as const;
 type TreeOwnership={state:Game['state'];jobs:JobCoordinator;claims:Map<number,{id:string;node:ResourceNode}>;nextAudit:number};
 const ownership=new WeakMap<Game,TreeOwnership>();
 function context(g:Game){
  let c=ownership.get(g);
- if(!c||c.state!==g.state){c={state:g.state,jobs:new JobCoordinator(),claims:new Map(),nextAudit:-1};ownership.set(g,c);}
+ if(!c||c.state!==g.state){c={state:g.state,jobs:workRuntime(g),claims:new Map(),nextAudit:-1};ownership.set(g,c);}
  return c;
 }
 function release(c:TreeOwnership,actor:number){const claim=c.claims.get(actor);if(!claim)return;c.jobs.finish(claim.id,true);c.jobs.forget(claim.id);c.claims.delete(actor);}
@@ -27,7 +28,7 @@ function claimTree(g:Game,c:TreeOwnership,node:ResourceNode,worker:Unit){
  c.claims.set(worker.id,{id,node});return true;
 }
 /** Adapter diagnostics cover migrated tree jobs, not every legacy executor. */
-export function workAllocationDiagnostics(g:Game){const c=context(g);return {domain:'tree gathering',activeJobs:c.claims.size,...c.jobs.metrics,reservations:{...c.jobs.reservations.metrics}};}
+export function workAllocationDiagnostics(g:Game){const c=context(g);return {domain:'shared migrated work',activeTreeJobs:c.claims.size,activeJobs:c.claims.size,...c.jobs.metrics,reservations:{...c.jobs.reservations.metrics}};}
 export function treeHasRoom(g:Game,node:ResourceNode,worker:Unit){
  // Candidate scanning must never reserve a worker or a tree slot.
  return g.state.units.filter(u=>u!==worker&&u.hp>0&&!u.emergency&&u.order==='gather'&&u.node===node).length<WORK_ALLOCATION_RULES.treeSlots;

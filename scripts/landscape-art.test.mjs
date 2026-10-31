@@ -37,11 +37,26 @@ test('camp marker batches follow inventory, knowledge, wet ground and actual hal
  const scene=new THREE.Scene(),view=new CampVisual(scene,1);
  const tribe={alive:true,food:21,wood:0,stone:20};
  const game={world:{camps:[{team:0,x:0,z:0}],waterY:0},state:{buildings:[]},tribe:()=>tribe,exploredAt:()=>true,height:()=>2,finished:b=>b.done};
- view.sync(game);assert.deepEqual(scene.children.map(m=>m.count),[2,0,1]);
- tribe.food=0;view.sync(game);assert.deepEqual(scene.children.map(m=>m.count),[0,0,1]);
+ view.sync(game);assert.deepEqual(scene.children.slice(0,3).map(m=>m.count),[2,0,1]);
+ tribe.food=0;view.sync(game);assert.deepEqual(scene.children.slice(0,3).map(m=>m.count),[0,0,1]);
  game.state.buildings.push({team:0,type:'townhall',done:false});view.sync(game);assert.equal(scene.children[2].count,1);
- game.state.buildings[0].done=true;view.sync(game);assert.deepEqual(scene.children.map(m=>m.count),[0,0,0]);
- game.state.buildings=[];game.height=()=>0;view.sync(game);assert.deepEqual(scene.children.map(m=>m.count),[0,0,0]);
- game.height=()=>2;game.exploredAt=()=>false;view.sync(game);assert.deepEqual(scene.children.map(m=>m.count),[0,0,0]);
+ game.state.buildings[0].done=true;view.sync(game);assert.deepEqual(scene.children.slice(0,3).map(m=>m.count),[0,0,0]);
+ game.state.buildings=[];game.height=()=>0;view.sync(game);assert.deepEqual(scene.children.slice(0,3).map(m=>m.count),[0,0,0]);
+ game.height=()=>2;game.exploredAt=()=>false;view.sync(game);assert.deepEqual(scene.children.slice(0,3).map(m=>m.count),[0,0,0]);
+ view.dispose();assert.equal(scene.children.length,0);
+});
+
+import {Game} from '../src/game/sim.ts';
+import {initializeSurvival,tickSurvival} from '../src/game/survivalNeeds.ts';
+test('camp embers represent actual last-tick fuel combustion, with no lights or free fire after depletion',()=>{
+ const g=new Game();g.reset(42,10);g.enterIsland();g.state.units=g.state.units.filter(u=>u.team===0);
+ g.world.camps=g.world.camps.filter(c=>c.team===0);g.state.buildings=[];g.world.heights.fill(4);
+ g.exploredAt=()=>true;g.clockState=()=>({weather:'Clear · 0°C'});initializeSurvival(g);g.tribe(0).wood=1;
+ const scene=new THREE.Scene(),view=new CampVisual(scene,1),embers=scene.getObjectByName('camp-embers');
+ view.sync(g);assert.equal(embers.count,0,'no glow before fuel actually burns');
+ const before=g.tribe(0).wood;tickSurvival(g,1);view.sync(g);
+ assert.ok(g.tribe(0).wood<before);assert.equal(embers.count,6);assert.equal(scene.children.filter(o=>o.isLight).length,0);
+ g.tribe(0).wood=0;tickSurvival(g,1);view.sync(g);assert.equal(embers.count,0,'empty stores cannot sustain fire');
+ g.tribe(0).wood=50;g.clockState=()=>({weather:'Clear · 20°C'});tickSurvival(g,1);view.sync(g);assert.equal(embers.count,0,'warm weather does not burn free decorative fuel');
  view.dispose();assert.equal(scene.children.length,0);
 });

@@ -1,3 +1,6 @@
+import {validSurvivalState} from './survivalNeeds';
+import {validSimulationEvents} from './simulationEvents';
+import {syncHaulageProjects,validHaulageProjects} from './haulage';
 import {generateWorld,sampleHeight} from './worldgen';
 import {WORLD_LAYOUTS,WORLD_SIZES} from './worldOptions';
 import {syncRiverboats} from './boats';
@@ -20,6 +23,7 @@ type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
   syncRiverboats(g);
+  syncHaulageProjects(g);
   reconcileTradeReservations(g);
   const s = g.state;
   return {
@@ -79,6 +83,7 @@ export function decodeGame(raw: unknown): Game {
   if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
   if([7,8,9,10].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
+  if(!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
   if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();
@@ -576,6 +581,7 @@ export function decodeGame(raw: unknown): Game {
     particles: [],
     floaters: [],
   } as GameState;
+  syncHaulageProjects(g);
   initializeCultivation(g,s.cultivationVersion===undefined);
   g.vision.set(d.vision);
   g.visAge.set(d.visAge);

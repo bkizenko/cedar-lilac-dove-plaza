@@ -1,3 +1,5 @@
+import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
+import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {dispatchRivalOperation,prepareRivalDefense} from './rivalOperations';
@@ -40,7 +42,7 @@ import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advanceme
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
-import {shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
+import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
 import {daylightAt,solarTimeLabel} from "./daylight";
 import {mulberry32} from "./rng";
 import {tickEncounters} from "./encounters";
@@ -582,6 +584,7 @@ export class Game {
     const home = this.campOf(0);
     this.stampVision(home.x, home.z, 26, 1);
     this.updateVision(0);
+    if(worldgenVersion>=10)initializeSurvival(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
@@ -1243,7 +1246,7 @@ export class Game {
     const selected = team===0 ? this.selectedUnits() : [];
     const workers = (selected.length ? selected : this.state.units).filter(
       u => u.team===team && u.hp>0 && u.type==="worker" && !u.militia && !isDependent(this,u) &&
-        u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork &&
+        u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork &&
         this.state.buildings.some(b=>b.team===team && this.finished(b) && ["townhall","warehouse","barracks"].includes(b.type) && Math.hypot(u.x-b.x,u.z-b.z)<20),
     );
     for (const u of workers) {
@@ -1631,6 +1634,7 @@ export class Game {
 
   interruptMission(u:Unit) {
     releaseTreeWorker(this,u);
+    pauseWaterCollection(u);
     cancelPlanting(this,u);
     if(u.copperStudy)u.copperStudy.paused=true;
     u.repatriating=undefined;
@@ -1643,7 +1647,7 @@ export class Game {
     if(u.weaponWork)u.weaponWork.paused=true;
     if(u.tamingWork)u.tamingWork.paused=true;
     if(u.husbandryWork)u.husbandryWork.paused=true;
-    pauseHaulageWork(u);
+    pauseHaulageWork(u,this);
     pauseFarmToolWork(u);
     this.paths.delete(u.id);u.stuckT=0;
   }
@@ -4170,11 +4174,23 @@ export class Game {
       }
       u.tx=spot.x;u.tz=spot.z;
       if(!supplyReached(this,u,home,spot)){this.steer(u,dt);return;}
-      if(u.carryType&&u.carry>0){deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
+      deliverWaterCargo(this,u);
+      if(u.carryType&&u.carry>0){recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
       finishRepatriation(this,u);
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
       return;
+    }
+    if(waterCollectionAI(this,u,dt))return;
+    // New work waits for a carried water load to reach storage, just as ordinary
+    // full-handed reassignment does. Explicit movement/hold orders still win.
+    if(u.waterWork?.paused&&u.waterWork.liters>0&&['idle','gather','build','return'].includes(u.order)){
+      const drop=this.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(this,u,drop):null;
+      u.order='return';
+      if(!drop||!spot){u.workReason='Water cargo waiting for a reachable store';return;}
+      u.tx=spot.x;u.tz=spot.z;
+      if(!supplyReached(this,u,drop,spot)){this.steer(u,dt);u.workReason='Delivering carried water before the new assignment';return;}
+      deliverWaterCargo(this,u);u.order='idle';this.workBoard.reset();return;
     }
     if(tributeJourneyAI(this,u,dt))return;
     if(directedConstruction(this,u,dt))return;
@@ -4376,6 +4392,7 @@ export class Game {
       recordCaravanDelivery(this,u);
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
+        recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);
         deliverSamples(this,u);
         if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else tr[u.carryType] += u.carry;
         if (u.team === 0) this.addFloater(drop.x, drop.y + 3, drop.z, "+" + u.carry, "#efe4b0");
@@ -4866,7 +4883,7 @@ export class Game {
         continue;
       }
       const adult = this.state.units.find(
-        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !(q.unit === "spearman" && tr.age < 3 && u.militia) && !u.studyCrop && u.drill == null && !isDependent(this, u) && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && !u.haulageWork && !u.farmToolWork && !u.weaponWork && u.carry===0 && ["idle","gather","hold"].includes(u.order),
+        (u) => u.team === b.team && u.hp > 0 && u.type === "worker" && !(q.unit === "spearman" && tr.age < 3 && u.militia) && !u.studyCrop && u.drill == null && !isDependent(this, u) && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.waterWork && u.carry===0 && ["idle","gather","hold"].includes(u.order),
       );
       if (!adult || this.popNow(b.team) > this.popCap(b.team)) {
         refund();
@@ -5092,7 +5109,7 @@ export class Game {
           u.hp > 0 &&
           u.type === "worker" &&
           ['idle','hold'].includes(u.order) && !!this.interactionSpot(u,practiceHall) &&
-          u.drill == null && !u.scout && !u.visit && !u.foundingJourney && !u.expedition && !u.envoy && !u.emergency && !u.haulageWork && !u.farmToolWork && !u.weaponWork && u.carry===0 &&
+          u.drill == null && !u.scout && !u.visit && !u.foundingJourney && !u.expedition && !u.envoy && !u.emergency && !u.haulageWork && !u.farmToolWork && !u.weaponWork && !u.waterWork && u.carry===0 &&
           !isDependent(this, u),
       );
       if (adult) adult.drill = 0;
@@ -5527,6 +5544,7 @@ export class Game {
         tickFrontiers(this);
         this.tickRegen(sdt);
         this.tickPeople(sdt);
+        tickSurvival(this,sdt);
         tickCaptivity(this,sdt);
         this.updateVision(sdt);
         tickEncounters(this);
@@ -5535,6 +5553,7 @@ export class Game {
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
         reconcileTradeReservations(this);
+        reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {releasePackAnimal(this,u);this.paths.delete(u.id);}
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();

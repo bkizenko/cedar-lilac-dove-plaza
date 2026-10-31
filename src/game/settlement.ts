@@ -271,6 +271,8 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
+    if(u.waterWork&&!u.waterWork.paused)return;
+    if((u.waterWork?.liters??0)>0){u.order='return';u.workReason='Delivering carried drinking water before another assignment';return;}
     if (isDependent(g, u)) {
       u.workReason = "Growing up — supported by the village";
       return;

@@ -1,3 +1,4 @@
+import {recordSimulationEvent} from './simulationEvents';
 import {difficulty} from './difficulty';
 import {AGE_COST} from "./constants";
 import { hasTradition } from "./discovery";
@@ -38,6 +39,7 @@ export function foodInventory(t:Tribe) {
   return lots;
 }
 export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="provisions") {
+  recordSimulationEvent(g,'food_received',team,'food',amount);
   const t=g.tribe(team),lots=foodInventory(t);lots[kind]+=amount;t.food+=amount;t.foodLots=lots;
 }
 function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:boolean) {
@@ -59,11 +61,13 @@ export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase
   return FOOD_KINDS.reduce((n,k)=>n+food*lots[k]/total*rates[k],0);
 }
 export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) {
-  const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true);
+  const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true),before=t.food;
   for(const k of FOOD_KINDS)lots[k]*=Math.max(0,1-rates[k]*dt);
   const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0),share=Math.max(0,1-demand*dt/Math.max(.0001,left));
   for(const k of FOOD_KINDS)lots[k]*=share;
   t.food=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);t.foodLots=lots;
+  recordSimulationEvent(g,'food_spoiled',team,'food',Math.max(0,before-left));
+  recordSimulationEvent(g,'food_consumed',team,'food',Math.max(0,left-t.food));
 }
 export function preservationTimberReserve(g:Game,team:number){return Math.max(16,AGE_COST[g.tribe(team).age+1]?.wood||0);}
 export function preservationAvailable(g: Game, b: Building) {

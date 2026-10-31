@@ -1,3 +1,5 @@
+import {PaidProjects} from './PaidProjects';
+import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
 import {BoatControls} from './BoatControls';
 import {CopperStudyControl} from './CopperStudyControl';
@@ -156,6 +158,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button aria-label="Expand resource details" aria-expanded={!resMin} onClick={()=>setResMin(v=>!v)}>{resMin?<ChevronDown/>:<ChevronUp/>}</button>
         </div>
         {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
+        {engine&&!founding&&<NeedsPanel engine={engine}/>}
         {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
         <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Ages</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
       </div>
@@ -484,6 +487,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
+                {engine&&sel.buildingId&&sel.completed&&sel.team===0&&["townhall","workshop","dock"].includes(sel.type||"")&&<PaidProjects engine={engine} workplaceId={sel.buildingId}/>}
                 {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="pack"?false:kind==="canoe"?sel.type==="dock":sel.type!=="dock"&&(kind==="sled"||sel.type==="workshop")).map(([kind,h])=>{
                   const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;

@@ -1,3 +1,4 @@
+import {NeedsPanel} from './NeedsPanel';
 import {sendCaptiveEscort} from '@/game/caravans';
 import {captiveGuardCoverage,captivityDescription,repatriateCaptive} from '@/game/captivity';
 import {buildingCost} from "@/game/construction";
@@ -83,6 +84,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         Paused while you plan. Food reserves exclude future gathering and harvests.
       </p>
       <div className="ledger-grid">
+        {open&&<NeedsPanel engine={engine} expanded/>}
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">

@@ -135,6 +135,9 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  waterWork?:import('./survivalNeeds').WaterWork;
+  thirstSeconds?:number;
+  coldSeconds?:number;
   name?: string;
   id: number;
   kind: "unit";
@@ -317,6 +320,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  survival?:import('./survivalNeeds').SurvivalStock;
   seeds?: number;
   haulagePractice?: number;
   id: number;
@@ -379,6 +383,9 @@ export type Particle = {
 };
 
 export type GameState = {
+  simulationEvents?:import('./simulationEvents').SimulationEventLog;
+  survivalVersion?:1;
+  haulageProjects?:import('./haulage').HaulageProject[];
   contacts?:number[];
   encounter?:{team:number;person:number;stranger:number;resume:boolean};
   cultivationVersion?: number;
