@@ -12,6 +12,16 @@
 
 These are design interpretations and visual references, not asset sources or claims of historical accuracy. Do not bundle the screenshots, extract game models, or copy branded UI.
 
+### Bierstadt and Cole landscape generation — requested direction, October 31, 2026
+
+Use Albert Bierstadt and Thomas Cole as explicit influences on the generated world itself, as well as its lighting. Translate their landscape composition into Hearthwild’s original stylized 3D terrain: grand mountain backdrops, luminous open valleys, winding rivers and reflective lakes, wooded foreground framing, waterfalls or ravines as occasional focal points, and layered distant ridges softened by atmosphere. Compose these elements into connected regions and views that reward exploration.
+
+Allow some spectacular places to be difficult or impractical to settle: steep cliffs, remote lakes, narrow gorges and rugged mountain amphitheaters can exist for their beauty and sense of scale. Keep scenic appeal separate from fertility, buildability, accessibility and resource value; the most beautiful place need not be the strongest economic opening. Preserve viable routes and subsistence at the player’s above-average scenic starting site. Ordinary landscapes must remain common, with attractive regions and rare exceptional vistas providing contrast; do not turn every island into the same showcase.
+
+Centralize and measure landmark rarity (per land area), relief and ridge continuity (metres), valley openness, water curvature and visible water fraction, foreground framing, number of depth layers, focal-point prominence and atmospheric falloff (distance). Record regional beauty distributions and start-site percentiles separately from settlement viability. New composition metrics extend the current water/relief/outlook/contrast score; they are proposed work, not implemented measurements. Keep terrain composition independent of camera position, with view-dependent lighting/framing diagnostics as a separate layer. Tune daylight for warm illuminated land and cool shadows while keeping weather, seasons and nights distinct and readable.
+
+Acceptance: inspect representative ordinary, attractive and exceptional views across fixed and holdout seeds; verify coherent regional composition rather than scattered decorative stamps, measurable variation, safe player starts and bounded generation/render costs. This is artistic influence, not a promise of photorealism or a copy of a particular painting.
+
 ## The settlement should show how people live
 
 Early homes use timber, reed, straw and rough earthen surfaces, with garden plots, paths, work yards and storage around them. Later neighborhoods become denser through connected street edges and inward-facing courtyards. Keep working rural edges around the city rather than upgrading every hut into an isolated monument.

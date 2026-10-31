@@ -1,3 +1,7 @@
+## Map art planning addition — 2026-10-31
+
+- [ ] Implement Albert Bierstadt / Thomas Cole inspired regional landscape composition: grand ridge backdrops, luminous valleys, winding waterways, wooded framing and atmospheric depth. Permit beautiful but impractical terrain; separate scenic value from settlement utility. Retain ordinary/attractive/rare exceptional distributions and above-average viable player openings. Extend tunable metrics and seed/render acceptance as specified in `INCENTIVE_FIRST_MASTER_PLAN.md` and `VISUAL_DIRECTION.md`. Planning addition only; current scenery scoring does not complete this work.
+
 ## Active execution — 2026-10-31
 
 The governing sequence is `INCENTIVE_FIRST_MASTER_PLAN.md`. Existing expansion scope below remains retained. Three specialist workers and one integrator delivered a first M0/geography/art batch; this is not M0–M5 completion.
