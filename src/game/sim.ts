@@ -145,6 +145,7 @@ export class Game {
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
   selectedResource: ResourceNode | null = null;
+  selectedBoat: number | null = null;
   private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;canoe:boolean;spot:{x:number;z:number}|null}>();
   chopMarks = new Set<number>();
   looted = new Set<number>();
@@ -275,6 +276,7 @@ export class Game {
   }
 
   reset(seed?: number, worldgenVersion = seed === undefined ? 6 : 1) {
+    this.selectedBoat = null;
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
@@ -1458,6 +1460,7 @@ export class Game {
   }
 
   clearSelect() {
+    this.selectedBoat = null;
     this.selectedResource = null;
     for (const u of this.state.units) u.selected = false;
     for (const b of this.state.buildings) b.selected = false;
@@ -1479,6 +1482,15 @@ export class Game {
     const current=people.findIndex(u=>u.selected);
     const index=current<0?(direction<0?people.length-1:0):(current+direction+people.length)%people.length;
     this.selectEntity(people[index]);return people[index];
+  }
+
+  selectBoat(id: number) {
+    const boat = this.state.boats?.find(b => b.id === id && b.team === 0 && b.hp > 0);
+    if (!boat) return false;
+    const toggle = this.selectedBoat === id;
+    this.clearSelect();
+    if (!toggle) this.selectedBoat = id;
+    return true;
   }
 
   selectedUnits() {
@@ -1505,11 +1517,13 @@ export class Game {
       return;
     }
     if (!additive || entity.kind === "building") this.clearSelect();
+    this.selectedBoat = null;
     entity.selected = true;
     if (entity.kind === "building") this.state.selBld = entity;
   }
 
   selectAt(x: number, z: number, additive: boolean) {
+    this.selectedBoat = null;
     let bestU: Unit | null = null;
     let bd = 2.2;
     for (const u of this.state.units) {
@@ -1623,6 +1637,11 @@ export class Game {
   }
 
   issueMove(x: number, z: number, attackMove = false) {
+    if (this.selectedBoat !== null) {
+      const b = this.state.boats?.find(b => b.id === this.selectedBoat && b.hp > 0 && b.team === 0);
+      if (!b) this.selectedBoat = null;
+      else { if (!b.captain) this.banner('Board residents before sailing', 3); else commandRiverboat(this, b.id, x, z); return; }
+    }
     const selected=this.selectedUnits();
     for(const id of new Set(selected.filter(u=>u.boat?.phase==='aboard').map(u=>u.boat!.id)))commandRiverboat(this,id,x,z);
     const units = selected.filter(u=>u.boat?.phase!=='aboard');
@@ -5793,6 +5812,13 @@ export class Game {
     }
 
     if(!units.length&&!this.state.selBld&&this.selectedResource){const n=this.selectedResource;selection={name:n.cropCandidate?CROP_NAMES[n.cropCandidate]:n.kind==="tree"?"Tree":n.kind,info:`Selected · ${Math.ceil(n.amount)} remaining${n.cropCandidate?" · gather to bring samples home":""}`,hp:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource"};}
+    if(this.selectedBoat !== null) {
+      const b=this.state.boats?.find(b=>b.id===this.selectedBoat&&b.team===0&&b.hp>0);
+      if(b) {
+        const crew=this.state.units.filter(u=>u.hp>0&&u.boat?.id===b.id);
+        selection={name:'Riverboat',info:`${crew.length}/${b.capacity} seats · ${b.captain ? 'Click water to sail' : 'Board residents to take the helm'}`,hp:b.hp,maxHp:300,kind:'boat',type:'riverboat',team:b.team};
+      } else this.selectedBoat=null;
+    }
     const age = t.age;
     const next = AGE_COST[age + 1];
     const trainOptions: HudSnapshot["trainOptions"] = [];

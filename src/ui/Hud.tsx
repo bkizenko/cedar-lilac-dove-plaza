@@ -548,7 +548,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {hud.idleWorkers} idle · cycle to them (I)
               </button>
             ) : null}
-            {engine&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
+            {engine&&!selMin&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
             {showJobs ? (
               <div className="mt-1.5 grid grid-cols-4 gap-1">
                 <JobBtn

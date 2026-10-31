@@ -440,3 +440,12 @@ canvas:focus-visible {
 /* Keep identity and exit controls visible while a long action panel scrolls. */
 .selection-header {position:sticky;top:-.625rem;z-index:3;background:var(--color-ink-panel);padding:.625rem 0;margin-top:-.625rem;}
 .selection-header + .selection-info {margin-bottom:.5rem;}
+
+.boat-card{display:grid;gap:.5rem;padding:.75rem;border:1px solid color-mix(in srgb,var(--color-parchment) 20%,transparent);border-radius:8px;}
+.boat-status{display:flex;justify-content:space-between;gap:.5rem;font-size:17px;}
+.boat-status span{color:var(--color-parchment-dim);}
+.boat-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;}
+.boat-actions button{border:1px solid color-mix(in srgb,var(--color-bronze) 45%,transparent);border-radius:6px;padding:.5rem;color:var(--color-parchment);background:var(--color-ink-soft);}
+.boat-actions button:disabled{opacity:.4;cursor:default;}
+.boat-card>details>summary{min-height:44px;display:flex;align-items:center;font-size:15px;cursor:pointer;}
+.boat-passengers{font-size:15px;line-height:1.5;}

@@ -1,3 +1,10 @@
+## Direct hull selection and concise ferry controls — 2026-10-31
+
+- [x] ~~Click an empty or occupied owned riverboat to select the hull itself.~~ Boats have a separate transient selection, a water-level halo and Riverboat HUD identity. Click again or Deselect to clear. Picking follows the actual instanced renderer order, ignores dead/unknown hulls and respects foreground terrain. Foreign hull control is unavailable.
+- [x] ~~Board, Sail, Land and Stop are explicit boat actions.~~ Occupied seats and boarding/moored/ready status are prominent; passenger names and helm role are in a collapsible list. Dock construction controls remain. Selecting a boat does not select every passenger or reassign land workers. Click/right-click sailing orders intersect the water surface rather than the seabed; the real captain executes the existing water-only navigation.
+- Four focused hull-selection/input checks and the existing six ferry construction/crossing/save checks pass. Typecheck and production build pass; published to the permanent preview and restarted the play service. Visual UI verification is still pending; scalable hulls, ports, cargo fleets and husbandry remain unfinished.
+- Save format and village state are preserved; transient boat selection is intentionally not serialized. The broader cultural/UI redesign remains pending the requested user interview.
+
 ## Ground-conforming cultivated fields — 2026-10-31
 
 - [x] ~~Remove rigid wooden farm foundations and tall pen rails.~~ Fields now use subdivided earthen soil with furrow colors, small boundary stakes and individual crop clumps. One shared 257×257 float height texture conforms soil, crops and their shadow depth pass to the terrain triangles while preserving the existing instanced batches. Tool sheds remain upright and sample the ground at their own center. Ground-footprint picking replaces obsolete CPU slab raycasts without revealing hidden foreign fields.

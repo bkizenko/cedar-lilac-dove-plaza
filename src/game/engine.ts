@@ -401,7 +401,8 @@ export class Engine {
   };
 
   leftClick(cx: number, cy: number, additive: boolean) {
-    const g = this.view.groundAt(cx, cy);
+    const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
+    const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) {
       if (this.game.state.placing) this.game.banner("Aim at the valley floor", 1.2);
       return;
@@ -431,26 +432,29 @@ export class Engine {
       this.moveMode = false;
       return;
     }
+    const boat=this.view.pickBoat(cx,cy,this.game);
+    if(boat&&boat.team===0){this.game.selectBoat(boat.id);this.pushHud();return;}
     const entity = this.view.pickEntity(cx, cy, this.game);
     if(entity?.kind==="building"&&entity.team===0&&!this.game.finished(entity)&&!additive&&this.game.selectedUnits().length)this.game.orderConstruction(entity);
     else if (entity) this.game.selectEntity(entity, additive, true);
     else {
       const resource=this.view.pickResource(cx,cy,this.game);
       if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
-      else if(!additive&&this.game.selectedUnits().length)this.game.issueMove(g.x,g.z);
+      else if(!additive&&(this.game.selectedUnits().length||this.game.selectedBoat!==null))this.game.issueMove(g.x,g.z);
       else this.game.selectAt(g.x,g.z,additive);
     }
     this.pushHud();
   }
 
   rightClick(cx: number, cy: number) {
-    const g = this.view.groundAt(cx, cy);
+    const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
       this.game.state.placing = null;
       this.view.setGhost(null, 0, 0, 0, false);
       return;
     }
+    if(this.game.selectedBoat!==null){this.game.issueMove(g.x,g.z);this.pushHud();return;}
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else if(ent?.kind==="building"&&ent.team===0&&!this.game.finished(ent))this.game.orderConstruction(ent);

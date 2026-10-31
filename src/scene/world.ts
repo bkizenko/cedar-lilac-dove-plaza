@@ -921,6 +921,29 @@ export class WorldView {
     return null;
   }
 
+  pickBoat(cx: number, cy: number, game: Game) {
+    const mesh=this.riverboats;if(!mesh)return null;
+    const el=this.renderer.domElement;
+    _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
+    _ray.setFromCamera(_ndc,this.camera);mesh.computeBoundingSphere();
+    const boats=(game.state.boats||[]).filter(b=>b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
+    const groundHit=this.terrain?_ray.intersectObject(this.terrain,false)[0]:undefined;
+    for(const hit of _ray.intersectObject(mesh,false)) {
+      if(groundHit&&groundHit.distance+.02<hit.distance)continue;
+      const boat=hit.instanceId===undefined?null:boats[hit.instanceId];
+      if(boat&&(boat.team===0||game.visibleAt(boat.x,boat.z)))return boat;
+    }
+    return null;
+  }
+
+  waterAt(cx: number, cy: number, height: number) {
+    const el=this.renderer.domElement;
+    _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
+    _ray.setFromCamera(_ndc,this.camera);
+    _ground.set(new THREE.Vector3(0,1,0),-height);
+    return _ray.ray.intersectPlane(_ground,_hit)?_hit.clone():null;
+  }
+
   pickResource(cx:number,cy:number,game:Game) {
     const el=this.renderer.domElement;
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
@@ -1524,6 +1547,11 @@ export class WorldView {
       _m.compose(_p, _q, _s);
       this.rings.setMatrixAt(ri, _m);
       ri++;
+    }
+    const boat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
+    if(boat&&ri<40){
+      _p.set(boat.x,game.world.waterY+.08,boat.z);_e.set(-Math.PI/2,0,0);_q.setFromEuler(_e);_s.set(4,4,1);_m.compose(_p,_q,_s);
+      this.rings.setMatrixAt(ri++,_m);
     }
     const resource = game.selectedResource;
     this.resourceRing.visible=!!resource&&resource.amount>0&&game.exploredAt(resource.x,resource.z);

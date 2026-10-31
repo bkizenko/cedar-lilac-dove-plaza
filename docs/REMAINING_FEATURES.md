@@ -179,7 +179,7 @@ Requested art direction: golden-hour styling through most non-winter daylight, w
 - [x] ~~Remove automatic decorative animal pens and fake goats.~~ Real wildlife remains; functional husbandry facilities are still open.
 - [x] ~~Replace wooden farm trays with terrain-conforming soil and separate plants.~~ Shared height texture deforms fields and their shadows; upright sheds sample their own ground. Renderer checks pass; final visual review remains pending.
 - Individual buildings need handmade variation within a coherent village/age/material style.
-- Boats need direct world selection and obvious boarding/disembark controls; add drag-sized hulls and deep-water ports.
+- [x] ~~Direct hull selection and clear Board/Sail/Land/Stop controls.~~ Empty hulls can be selected; seat count, status, collapsible passenger manifest and water-surface sailing orders are implemented with focused checks. Visual review remains pending. Drag-sized hulls, deep-water ports and broader fleets remain open.
 - Markets should support meaningful trade throughput and storage/logistics; audit the existing generic production bonus.
 - Temples need meaningful community/ritual/safety utility beyond housing; universities need actual teaching/discovery jobs beyond housing.
 - Consolidate worker commitments, order lifecycle and save boundaries to reduce the cost of adding systems. Keep working systems and avoid a whole-game rewrite.

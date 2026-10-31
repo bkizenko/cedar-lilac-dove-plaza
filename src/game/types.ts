@@ -448,7 +448,7 @@ export type HudSelection = {
   info: string;
   hp: number;
   maxHp: number;
-  kind: "none" | "unit" | "units" | "building" | "resource";
+  kind: "none" | "unit" | "units" | "building" | "resource" | "boat";
   type?: string;
   team?: number;
   queue?: string;
