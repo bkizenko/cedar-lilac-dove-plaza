@@ -1,4 +1,4 @@
-import {replantStand} from './cultivation';
+import {assignWoodlandPlanting} from './cultivation';
 import {connectedForUnit} from './waterTravel';
 import {resumeWeaponWork} from './warfare';
 import {beginPackTaming} from './packAnimals';
@@ -172,7 +172,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
   const t=g.tribe(team),next=AGE_COST[t.age+1];
   const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
   const surplusWorkers=(shortage||foodEmergency)?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&(foodEmergency||t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5))):[];
-  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
+  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tamingWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
     !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
   let moved=0;
   for(const u of eligible){
@@ -192,7 +192,7 @@ export function developRivalEquipment(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia);
  if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused))return false;
- const eligible=adults.filter(u=>!u.jobLock&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
+ const eligible=adults.filter(u=>!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){
   if(u.weaponWork?.paused&&resumeWeaponWork(g,u))return true;
@@ -255,7 +255,7 @@ export function developRivalCoast(g:Game,team:number){
 
 
 const forestryReviews=new WeakMap<Game,Map<number,number>>();
-/** Reuse player seed-funded replanting; standing timber still needs to grow,
+/** Reuse physical seed-funded planting; standing timber still needs to grow,
  * be felled, carried and deposited by actual residents. */
 export function developRivalForestry(g:Game,team:number){
  if(!isRivalTeam(team)||!g.tribe(team).alive||reserveSeconds(g,team)<600)return false;
@@ -264,6 +264,6 @@ export function developRivalForestry(g:Game,team:number){
  let timers=forestryReviews.get(g);if(!timers){timers=new Map();forestryReviews.set(g,timers);}
  const due=timers.get(team)||0;if(due>g.state.time&&due<=g.state.time+60)return false;
  timers.set(team,g.state.time+60);
- for(const b of g.state.buildings)if(b.team===team&&g.finished(b)&&['townhall','lumber'].includes(b.type)&&replantStand(g,b.id,team)>0)return true;
+ for(const b of g.state.buildings)if(b.team===team&&g.finished(b)&&['townhall','lumber'].includes(b.type)&&assignWoodlandPlanting(g,b.id,team,4,(x,z)=>rivalKnows(g,team,x,z))>0)return true;
  return false;
 }

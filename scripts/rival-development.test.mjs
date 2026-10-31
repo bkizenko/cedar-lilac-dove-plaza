@@ -401,9 +401,12 @@ test('rivals spend spare seeds on depleted local stands, wait for regrowth and p
  g.state.trees=[tree(g,15,38),tree(g,19,38),tree(g,23,38),tree(g,200,38)];
  for(const n of g.state.trees){n.amount=0;n.regenT=5000;}
  assert.equal(developRivalForestry(g,1),true);assert.equal(t.seeds,4);assert.equal(t.wood,0);
- assert.equal(g.state.trees.filter(n=>n.planted).length,2);assert.equal(g.state.trees[3].planted,undefined);
+ assert.equal(g.state.trees.filter(n=>n.planted).length,0);assert.equal(g.state.units.filter(u=>u.plantingWork).length,2);assert.equal(g.state.trees[3].planted,undefined);
  assert.equal(developRivalForestry(g,1),false);
- const saved=decodeGame(encodeGame(g));assert.equal(saved.tribe(1).seeds,4);assert.equal(saved.state.trees.filter(n=>n.planted).length,2);
+ const saved=decodeGame(encodeGame(g));assert.equal(saved.tribe(1).seeds,4);assert.equal(saved.state.units.filter(u=>u.plantingWork).length,2);
+ const {plantingAI}=await import('../src/game/cultivation.ts');
+ for(let i=0;i<1500&&g.state.units.some(u=>u.plantingWork);i++){g.state.time+=.1;g.navBudget=10;for(const u of g.state.units)plantingAI(g,u,.1);}
+ assert.equal(g.state.trees.filter(n=>n.planted).length,2);
  g.tickRegen(200);assert.ok(g.state.trees[0].amount>0);assert.equal(t.wood,0,'regrowth is standing timber, not treasury income');
 });
 
@@ -449,4 +452,14 @@ test('food emergencies release material crews even when no age material is missi
  const locked=g.state.units[2];locked.jobLock=true;const carrier=g.state.units[3];carrier.carry=5;carrier.carryType='wood';
  rebalanceRivalLabor(g,1);
  assert.equal(g.state.units.filter(u=>u.job==='food').length,2);assert.equal(locked.job,'wood');assert.equal(carrier.carry,5);
+});
+
+test('rival forestry preserves workers with direct construction and paid experiment tasks',async()=>{
+ const {developRivalForestry}=await import('../src/game/rivalDevelopment.ts');
+ const g=fixture();Object.assign(g.tribe(1),{food:2000,seeds:12,wood:0});
+ g.state.trees=[{...tree(g,18,38),amount:0,regenT:5000}];
+ for(const u of g.state.units)u.buildOrder=42;
+ assert.equal(developRivalForestry(g,1),false);assert.equal(g.tribe(1).seeds,12);
+ const u=g.state.units[0];u.buildOrder=undefined;u.copperStudy={workplace:42,progress:1};g.state.time+=61;
+ assert.equal(developRivalForestry(g,1),false);assert.equal(u.plantingWork,undefined);
 });

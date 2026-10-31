@@ -3,15 +3,17 @@ import {Game} from '../src/game/sim.ts';
 import {answerEncounter} from '../src/game/encounters.ts';
 import {mulberry32} from '../src/game/rng.ts';
 const seeds=process.argv.slice(2).map(Number);if(!seeds.length)seeds.push(123456,98765);
+const version=Number(process.env.AUDIT_WORLDGEN||6),seconds=Number(process.env.AUDIT_SECONDS||3600);
+if(![1,2,3,4,5,6].includes(version)||!Number.isFinite(seconds)||seconds<=0||seconds>36000||seeds.some(n=>!Number.isFinite(n)))throw new Error('Invalid audit version, duration or seed');
 for(const seed of seeds){
  const random=Math.random;Math.random=mulberry32(seed^0x3a51);
  try{
-  const g=new Game();g.reset(seed,5);g.enterIsland();g.state.paused=false;g.checkVictory=()=>{};
+  const g=new Game();g.reset(seed,version);g.enterIsland();g.state.paused=false;g.checkVictory=()=>{};
   const start=performance.now();
-  for(let i=0;i<10800;i++){
+  for(let i=0;i<Math.ceil(seconds*3);i++){
    if(g.state.encounter)answerEncounter(g,'observe');
    g.step(1/3);
-   if((i+1)%1800===0)console.log(JSON.stringify({seed,time:Math.round(g.state.time),villages:g.state.tribes.filter(t=>t.id!==3).map(t=>({team:t.id,alive:t.alive,pop:g.popNow(t.id),age:t.age,food:Math.round(t.food),wood:Math.round(t.wood),buildings:g.state.buildings.filter(b=>b.team===t.id&&b.hp>0).length})),errors:g.simulationErrors,wallMs:Math.round(performance.now()-start)}));
+   if((i+1)%1800===0||i+1===Math.ceil(seconds*3))console.log(JSON.stringify({seed,version,time:Math.round(g.state.time),villages:g.state.tribes.filter(t=>t.id!==3).map(t=>({team:t.id,alive:t.alive,pop:g.popNow(t.id),age:t.age,food:Math.round(t.food),wood:Math.round(t.wood),buildings:g.state.buildings.filter(b=>b.team===t.id&&b.hp>0).length})),errors:g.simulationErrors,wallMs:Math.round(performance.now()-start)}));
   }
  }finally{Math.random=random;}
 }

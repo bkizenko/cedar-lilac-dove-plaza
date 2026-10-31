@@ -152,26 +152,34 @@ export function replantStand(g:Game,buildingId:number,team=0,limit=4,silent=fals
  return planted;
 }
 
+/** Shared seed-funded work assignment. Both societies must reach and plant each stump. */
+export function assignWoodlandPlanting(g:Game,buildingId:number,team=0,reserve=8,known=(x:number,z:number)=>g.exploredAt(x,z)){
+ if(calendar(g).phase>=2)return 0;
+ const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===team&&!b.plannedCost&&g.finished(b)&&['lumber','townhall'].includes(b.type));
+ const t=g.tribe(team);if(!b||(t.seeds||0)<=reserve)return 0;
+ let assigned=0;
+ for(const n of g.state.trees){
+  if(assigned>=4||(t.seeds||0)<=reserve)break;
+  if(n.amount>0||n.planted||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!known(n.x,n.z)||!g.walkable(n.x,n.z)||
+     g.state.units.some(p=>p.hp>0&&p.plantingWork?.treeId===n.id))continue;
+  const u=g.state.units.find(p=>p.team===team&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.militia&&!p.jobLock&&!p.buildOrder&&!p.tributeJourney&&p.drill==null&&!p.studyCrop&&!p.copperStudy&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));
+  if(!u)break;
+  t.seeds!--;u.plantingWork={treeId:n.id,progress:0};u.order='gather';u.node=null;u.job='wood';u.jobLock=true;assigned++;
+ }
+ if(assigned){g.workBoard.reset();if(team===0)g.banner(`${assigned} residents assigned to plant saplings`,3);}
+ return assigned;
+}
 const forestReviews=new WeakMap<Game,number>();
 /** Timber focus sustains worked forests with spare seeds; no mature logs appear instantly. */
 export function tickManagedWoodland(g:Game,dt:number){
  const elapsed=(forestReviews.get(g)||0)+dt;
  if(elapsed<60){forestReviews.set(g,elapsed);return 0;}
  forestReviews.set(g,0);
- if(g.state.laborPolicy!=='wood'||calendar(g).phase>=2)return 0;
- const t=g.tribe(0);if((t.seeds||0)<=8)return 0;
+ if(g.state.laborPolicy!=='wood')return 0;
  for(const b of g.state.buildings){
-  if(b.team!==0||b.type!=='lumber'||b.plannedCost||!g.finished(b))continue;
-  let assigned=0;
-  for(const n of g.state.trees){
-   if(assigned>=4||(t.seeds||0)<=8)break;
-   if(n.amount>0||n.planted||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!g.exploredAt(n.x,n.z)||!g.walkable(n.x,n.z)||
-      g.state.units.some(p=>p.hp>0&&p.plantingWork?.treeId===n.id))continue;
-   const u=g.state.units.find(p=>p.team===0&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.jobLock&&!p.copperStudy&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));
-   if(!u)break;
-   t.seeds!--;u.plantingWork={treeId:n.id,progress:0};u.order='gather';u.node=null;u.job='wood';u.jobLock=true;assigned++;
-  }
-  if(assigned){g.workBoard.reset();g.banner(`${assigned} residents assigned to plant saplings`,3);return assigned;}
+  if(b.team!==0||b.type!=='lumber')continue;
+  const assigned=assignWoodlandPlanting(g,b.id);
+  if(assigned)return assigned;
  }
  return 0;
 }

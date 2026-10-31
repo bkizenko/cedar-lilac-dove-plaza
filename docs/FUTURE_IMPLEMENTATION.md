@@ -1,3 +1,9 @@
+## Rival physical forestry and protected work — 2026-10-30
+
+- [x] ~~Rivals assign seed-funded local planting jobs instead of instantly replanting depleted trees.~~ Shared assignment preserves four seed baskets for rival crops (eight for player auto-forestry), respects spring/summer, knowledge, reachable stumps, real available adults and four-job review limits. Saplings appear only after actual travel and planting; growth and hauling remain separate. Existing paid experiments and direct construction orders are protected from forestry/equipment/labor reassignment.
+- Fifty rival/forestry/material-study checks and typecheck/build pass. Includes physical rival completion, no immediate saplings/logs, seed reserve, saved task progress and project exclusions. No save reset.
+- Audit script now accepts explicit generator/duration and defaults to6. Session22225 is currently live: seed123456 reached1200simseconds with rivals17/12/16people,24/19/23buildings and positive food/timber; no simulation errors. Final1800second outcome pending. This is a seasonal smoke audit, not later-era balance proof; log `/tmp/hearth-world-six-audit.log`. Catalogue forestry remains partial (ecology/succession/fire chains still open).
+
 ## Unified placement feedback and cleaner daylight — 2026-10-30
 
 - [x] ~~Replace duplicated placement warnings with one readable panel containing building name, instructions, cost/status and a44px cancel button.~~ Bridge/wall drag guidance remains visible; costs use actual building/plot/span values and joined-section count. The former lower warning no longer covers the construction tray.
