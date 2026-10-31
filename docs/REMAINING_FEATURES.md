@@ -173,15 +173,27 @@ Usage reserve: **1%**, per the latest user instruction. Do not consume the reset
 
 Requested art direction: golden-hour styling through most non-winter daylight, with night/storm/winter identity preserved; warm sunlight against cooler shadows, clear terrain/settlement composition, richer blocky silhouettes and meaningful color variation. Preserve actual astronomical sunrise/sunset/work schedules independently from the stylized lighting. Beauty requires broader art work than a color filter alone.
 
-## Latest interview inputs — not implemented yet
+## Latest interview inputs — status noted per item
 
 - Start from people without prebuilt structures or a town hall. Existing saves stay intact. Ensure an actual usable bootstrap/storage/shelter loop.
-- Remove automatic decorative animal pens; only build functional husbandry facilities intentionally.
-- Fields must hug the land and read as cultivated soil, not raised wooden platforms.
+- [x] ~~Remove automatic decorative animal pens and fake goats.~~ Real wildlife remains; functional husbandry facilities are still open.
+- [x] ~~Replace wooden farm trays with terrain-conforming soil and separate plants.~~ Shared height texture deforms fields and their shadows; upright sheds sample their own ground. Renderer checks pass; final visual review remains pending.
 - Individual buildings need handmade variation within a coherent village/age/material style.
 - Boats need direct world selection and obvious boarding/disembark controls; add drag-sized hulls and deep-water ports.
 - Markets should support meaningful trade throughput and storage/logistics; audit the existing generic production bonus.
 - Temples need meaningful community/ritual/safety utility beyond housing; universities need actual teaching/discovery jobs beyond housing.
 - Consolidate worker commitments, order lifecycle and save boundaries to reduce the cost of adding systems. Keep working systems and avoid a whole-game rewrite.
 - Conduct a user interview after this caravan batch before deciding the next implementation slice. The user's brief is clear; the delivery has not yet met their intended experience.
-- User screenshot confirms Full access is selected. The current executor still reports restricted capabilities; do not keep instructing them to toggle it or imply authorization is absent.
+- Full access is now active for file/command work, with no approval prompts. A prior preview-origin denial is a separate browser boundary; do not bypass it or ask the user to toggle Full access again.
+
+
+## Cultural city identity and encounters — accepted 2026-10-31, not implemented
+
+- Raise the architectural bar: the current repeated stepped roofs do not read as a Renaissance/golden-age city. The user's preferred player identity is a Nabataean-inspired fusion, with Italian Renaissance references where appropriate to that city's influences, rather than every society acquiring the same roof ladder.
+- Draw from a broad researched catalogue of regional traditions, including less represented cultures such as the Medes and peoples incorporated into Persian realms. Avoid reducing each to a roof color or assuming every biome produces a predetermined real-world civilization.
+- Seed a coherent founding identity weighted by habitat and available materials. Retain continuity across ages, adding local inventions, migration, trading contacts and conquest influences over time. Do not reroll the civilization's style independently each age.
+- Wealth and public investment should visibly increase ornament and civic ambition: carved entrances, courts, arcades, columns, facades, terraces, public squares, gardens and monuments as appropriate to each tradition. Distinguish civic/wealthy buildings from modest homes and productive areas; prosperity must not turn every hut into a palace. Develop instanced modular families and measured detail tiers for the M1 Air.
+- Let neighboring civilizations express visibly different materials, building forms, street patterns and civic landmarks, with seeded handmade variation inside each coherent style. Architecture must reflect actual culture/age/prosperity, not just a palette swap.
+- Replace the confusing first-contact menu with clear actions about the encountered party: offer to trade, ask questions, send visitors back, or attempt capture/interrogation with actual proximity, force and diplomatic consequences. Returning the player's expedition is a separate travel order. Conversation options depend on who was met, language/contact history, relation, role, cargo and knowledge; no remote omniscient report.
+- Later developed cities can appoint trade and infrastructure administrators. Delegate explicit goals, budgets, territory and priorities; decisions must use existing physical jobs and logistics with legible reports and player overrides. Local simulation agents are sufficient; no paid language-model service is required for villagers.
+- The player is still preparing answers to the first-15-minutes interview. Finish the already-in-progress farm fix, then wait for those answers before selecting a broader redesign. These additions are acceptance requirements, not completed features.

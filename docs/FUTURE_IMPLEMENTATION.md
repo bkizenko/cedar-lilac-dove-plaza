@@ -1,3 +1,10 @@
+## Ground-conforming cultivated fields — 2026-10-31
+
+- [x] ~~Remove rigid wooden farm foundations and tall pen rails.~~ Fields now use subdivided earthen soil with furrow colors, small boundary stakes and individual crop clumps. One shared 257×257 float height texture conforms soil, crops and their shadow depth pass to the terrain triangles while preserving the existing instanced batches. Tool sheds remain upright and sample the ground at their own center. Ground-footprint picking replaces obsolete CPU slab raycasts without revealing hidden foreign fields.
+- [x] ~~Remove the automatic decorative livestock enclosure and four fake goats.~~ Actual deer/boar/goat/bird rendering remains; no owned livestock or economy was deleted.
+- Nine focused architecture/field renderer checks, typecheck and production build pass. Published to the permanent preview and restarted the play service. No simulation, plot cost, crop state or save migration changed. Browser visual review remains pending, so this is not proof that the broader art overhaul meets the user's bar.
+- Latest requested cultural architecture/wealth ornament, contextual encounter choices and later civic administrators are recorded explicitly in REMAINING_FEATURES.md. They are not implemented. Await the user's interview answers before choosing another broad redesign batch.
+
 ## Player-planned physical caravans and shared task reservations — 2026-10-31
 
 - [x] ~~Plan recurring caravans to discovered settlements with1–3carriers,0–2prepared guards and optional pack/cart requirements.~~ Departures require actual supplies, capacity, spare workers at stores and six minutes of home food; three workers remain. Borrowed armed traders still count toward the away-workforce quota. No income or foreign goods are created by planning a route.

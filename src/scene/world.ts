@@ -1,3 +1,4 @@
+import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
@@ -20,7 +21,6 @@ import { isFertile } from "@/game/worldgen";
 import {
   buildingGeos,
   bushGeo,
-  fenceSegGeo,
   firepitGeo,
   flameGeo,
   goatGeo,
@@ -142,6 +142,7 @@ export class WorldView {
     BldType,
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
+  private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
@@ -169,8 +170,6 @@ export class WorldView {
   sunDisc: THREE.Mesh;
   sunGlow: THREE.Mesh;
   bounce: THREE.DirectionalLight;
-  fence: THREE.InstancedMesh | null = null;
-  goats: THREE.InstancedMesh | null = null;
   deer: THREE.InstancedMesh | null = null;
   boars: THREE.InstancedMesh | null = null;
   wildGoats: THREE.InstancedMesh | null = null;
@@ -462,11 +461,12 @@ export class WorldView {
     this.lastSnow = -1;
     this.seasonAcc = 1;
     this.buildTerrain(game);
+    this.fieldSurface = new FieldSurface(game.world.heights);
     this.buildNature(game);
     this.buildBuildings();
     this.buildUnits();
     this.buildHearths(game);
-    this.buildCampDressing(game);
+    this.buildWildlife();
     const home = game.world.camps.find((c) => c.team === 0) ||
       game.world.camps[0] || { x: 0, z: 0 };
     this.look.set(home.x, this.sampleY(game, home.x, home.z) + 0.55, home.z);
@@ -728,7 +728,9 @@ export class WorldView {
       const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
       const timberMaterial=this.mats.timber.clone();
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
+      if(type === "farm") { timberMaterial.vertexColors = true; this.fieldSurface?.bind(timberMaterial); }
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
+      if(type === "farm" && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
       const roofMat =
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
@@ -751,7 +753,10 @@ export class WorldView {
       this.scene.add(timber, roof);
       let extra: THREE.InstancedMesh | undefined;
       if (g.extra) {
-        extra = new THREE.InstancedMesh(g.extra, this.mats[g.extraMat || "stone"], capacity);
+        const extraMaterial = type === "farm" ? this.mats.crop.clone() : this.mats[g.extraMat || "stone"];
+        if(type === "farm") this.fieldSurface?.bind(extraMaterial);
+        extra = new THREE.InstancedMesh(g.extra, extraMaterial, capacity);
+        if(type === "farm" && this.fieldSurface) extra.customDepthMaterial = this.fieldSurface.depth;
         extra.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         if(type==="farm"){extra.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(capacity*3),3);}
         extra.castShadow = true;
@@ -833,51 +838,7 @@ export class WorldView {
     if (home) this.hearth.position.set(home.x + 1.6, home.y + 0.8, home.z + 4.2);
   }
 
-  private buildCampDressing(game: Game) {
-    const home = game.state.buildings.find((b) => b.type === "townhall" && b.team === 0);
-    if (!home) return;
-    const cx = home.x + 7.5;
-    const cz = home.z + 2.5;
-    const segs = 14;
-    const radius = 5.2;
-    this.fence = new THREE.InstancedMesh(fenceSegGeo(), this.mats.timber, segs);
-    this.fence.castShadow = true;
-    this.fence.receiveShadow = true;
-    for (let i = 0; i < segs; i++) {
-      const a = (i / segs) * Math.PI * 2;
-      const x = cx + Math.cos(a) * radius;
-      const z = cz + Math.sin(a) * radius;
-      _p.set(x, game.height(x, z), z);
-      _e.set(0, -a + Math.PI / 2, 0);
-      _q.setFromEuler(_e);
-      _s.set(1, 1, 1);
-      _m.compose(_p, _q, _s);
-      this.fence.setMatrixAt(i, _m);
-    }
-    this.fence.count = segs;
-    this.scene.add(this.fence);
-
-    this.goats = new THREE.InstancedMesh(goatGeo(), this.mats.hideDark, 4);
-    this.goats.castShadow = true;
-    const goatPos = [
-      [cx + 1.2, cz + 0.6, 0.4],
-      [cx - 1.4, cz - 0.8, 2.1],
-      [cx + 0.2, cz - 1.6, -0.7],
-      [cx - 0.6, cz + 1.4, 1.3],
-    ];
-    goatPos.forEach((g, i) => {
-      const x = g[0],
-        z = g[1];
-      _p.set(x, game.height(x, z), z);
-      _e.set(0, g[2], 0);
-      _q.setFromEuler(_e);
-      _s.set(1.15, 1.15, 1.15);
-      _m.compose(_p, _q, _s);
-      this.goats!.setMatrixAt(i, _m);
-    });
-    this.goats.count = 4;
-    this.scene.add(this.goats);
-
+  private buildWildlife() {
     const mkHerd = (geo: THREE.BufferGeometry, mat: THREE.Material, n: number) => {
       const mesh = new THREE.InstancedMesh(geo, mat, Math.max(n, 1));
       mesh.castShadow = true;
@@ -932,7 +893,8 @@ export class WorldView {
     for (const [type, meshes] of this.bldMeshes) {
       const entities = game.state.buildings.filter((b) => b.hp > 0 && b.type === type);
       for (const mesh of [meshes.timber, meshes.roof, meshes.extra])
-        if (mesh) {
+        if (mesh && !(type === "farm" && mesh !== meshes.roof)) {
+          // CPU raycasts cannot see the terrain displacement in field shaders.
           mesh.computeBoundingSphere();
           sources.set(mesh, this.buildingInstances.get(mesh)??entities);
         }
@@ -948,6 +910,13 @@ export class WorldView {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
       if (entity && (entity.team === 0 || game.visibleAt(entity.x, entity.z))) return entity;
+    }
+    const ground = this.groundAt(cx, cy);
+    if (ground) {
+      const farm = game.state.buildings.find(b => b.hp > 0 && b.type === 'farm' &&
+        (b.team === 0 || game.visibleAt(b.x, b.z)) &&
+        Math.abs(ground.x - b.x) <= b.w / 2 && Math.abs(ground.z - b.z) <= b.d / 2);
+      if (farm) return farm;
     }
     return null;
   }
@@ -1322,7 +1291,7 @@ export class WorldView {
           const wx=b.x+x,wz=b.z+z;
           const ground=type==="farm"?game.height(wx,wz):b.y;
           _p.set(wx,ground,wz);
-          const terrainWork=type==="farm"||type==="dock",limit=type==="farm"?.5:.2;
+          const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
           _e.set(pitch,fort||scalable?0:st.yaw,roll);
@@ -1336,7 +1305,7 @@ export class WorldView {
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
           const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
           if(mesh.instanceColor){
-            _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
+            _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
             if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
             mesh.setColorAt(i,_c);
           }
@@ -1346,7 +1315,7 @@ export class WorldView {
         }else if(type==="farm"){
           write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
           // One tool shed per field; its size stays human-scaled as the plot grows.
-          write('roof',(b.w-BUILDINGS.farm.w)/2,(b.d-BUILDINGS.farm.d)/2,1,1);
+          write('roof',(b.w-BUILDINGS.farm.w)/2+2.4,(b.d-BUILDINGS.farm.d)/2+2.2,1,1);
           for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
         }else for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
       }
@@ -2340,7 +2309,9 @@ export class WorldView {
     if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
     this.villageStyles.clear();
-    for(const meshes of this.bldMeshes.values()){
+    if(this.fieldSurface){this.fieldSurface.dispose();this.fieldSurface=null;}
+    for(const [type, meshes] of this.bldMeshes){
+      if(type === "farm" && meshes.extra) (meshes.extra.material as THREE.Material).dispose();
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }

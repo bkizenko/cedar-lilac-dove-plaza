@@ -25,3 +25,40 @@ test('renderer maps every store bay and crop patch back to one actual building w
  const hidden={...store,team:1,id:3};game.state.buildings=[hidden];v.syncBuildings(game);assert.equal(sm.timber.count,0);assert.equal(v.buildingInstances.get(sm.roof).length,0);
  for(const m of v.bldMeshes.values())for(const mesh of [m.timber,m.roof,m.extra])if(mesh){mesh.geometry.dispose();mesh.material.dispose();}v.eraDetails.geometry.dispose();v.eraDetails.material.dispose();
 });
+
+test('sloped fields use terrain displacement for crops and shadows while the shed stays upright on its own ground', async()=>{
+ const {FieldSurface}=await import('../src/scene/fieldSurface.ts');
+ const {MAP,SEGS}=await import('../src/game/constants.ts');
+ const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
+ const heights=new Float32Array((SEGS+1)**2);
+ for(let z=0;z<=SEGS;z++)for(let x=0;x<=SEGS;x++)heights[z*(SEGS+1)+x]=4+(x/SEGS*MAP-MAP/2)*.2;
+ v.fieldSurface=new FieldSurface(heights);
+ v.mats=new Proxy({}, {get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
+ const farm={...building('farm',3,2),crop:{planted:1,tended:1,ripened:true,remaining:100}};
+ const game={state:{seed:345,buildings:[farm]},tribe:()=>({age:0}),exploredAt:()=>false,height:(x,z)=>4+x*.2+z*.1,world:{biomes:[]}};
+ const before=JSON.stringify(farm);v.syncBuildings(game);
+ const field=v.bldMeshes.get('farm'),m=new THREE.Matrix4();
+ for(const mesh of [field.timber,field.extra]){
+  mesh.getMatrixAt(0,m);assert.equal(m.elements[1],0);assert.equal(m.elements[9],0,'field no longer tilts as a rigid tray');
+  assert.equal(mesh.customDepthMaterial,v.fieldSurface.depth);
+  const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader};mesh.material.onBeforeCompile(shader);
+  assert.equal(shader.uniforms.fieldHeights.value,v.fieldSurface.texture);assert.match(shader.vertexShader,/fieldHeight\(fieldWorld.xz\)/);
+ }
+ const shadow={uniforms:{},vertexShader:THREE.ShaderLib.depth.vertexShader};v.fieldSurface.depth.onBeforeCompile(shadow);
+ assert.match(shadow.vertexShader,/fieldHeight\(fieldWorld.xz\)/);assert.equal(shadow.uniforms.fieldHeights.value,v.fieldSurface.texture);
+ field.roof.getMatrixAt(0,m);assert.ok(Math.abs(m.elements[13]-game.height(m.elements[12],m.elements[14]))<1e-5);
+ assert.equal(JSON.stringify(farm),before,'rendering must preserve the saved crop and plot');
+ assert.ok(field.timber.geometry.attributes.color,'soil and stakes retain distinct materials');
+ assert.notEqual(field.extra.material,v.mats.crop,'field deformation must not affect shared crops elsewhere');
+ for(const parts of v.bldMeshes.values())for(const mesh of [parts.timber,parts.roof,parts.extra])if(mesh){mesh.geometry.dispose();mesh.material.dispose();}
+ v.fieldSurface.dispose();v.eraDetails.geometry.dispose();v.eraDetails.material.dispose();
+});
+
+test('a terrain-conforming field can be selected on its ground footprint without revealing a hidden foreign field',()=>{
+ const v=Object.create(WorldView.prototype);v.renderer={domElement:{clientWidth:800,clientHeight:600}};
+ v.camera=new THREE.PerspectiveCamera();v.bldMeshes=new Map();v.unitMeshes=new Map();
+ const own=building('farm',3,2),foreign={...building('farm'),id:2,team:1,x:30};let point={x:0,z:0};v.groundAt=()=>point;
+ const game={state:{buildings:[own,foreign]},visibleAt:()=>false};
+ assert.equal(v.pickEntity(400,300,game),own);point={x:30,z:0};assert.equal(v.pickEntity(400,300,game),null);
+ game.visibleAt=()=>true;assert.equal(v.pickEntity(400,300,game),foreign);
+});

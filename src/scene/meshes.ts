@@ -146,26 +146,35 @@ function hall(w: number, d: number, h: number, roofH: number, chimney = false): 
 export function buildingGeos(): Record<BldType, BldGeo> {
   const hut = thatchHut(2.6, 1.9, 2.5);
   const th = hall(5.4, 4.6, 2.6, 1.7, true);
-  const farmTimber = [
-    box(7.4,.06,7.4,0,.01,0),
-    box(0.18, 1.15, 0.18, -3.6, 0, -3.6),
-    box(0.18, 1.15, 0.18, 3.6, 0, -3.6),
-    box(0.18, 1.15, 0.18, -3.6, 0, 3.6),
-    box(0.18, 1.15, 0.18, 3.6, 0, 3.6),
-    box(7.4, 0.12, 0.12, 0, 0.95, -3.6),
-    box(7.4, 0.12, 0.12, 0, 0.95, 3.6),
-    box(0.12, 0.12, 7.4, -3.6, 0.95, 0),
-    box(0.12, 0.12, 7.4, 3.6, 0.95, 0),
-  ];
-  const farmExtra = [
-
-    box(0.4, 0.48, 6.2, -2.4, 0.12, 0),
-    box(0.4, 0.48, 6.2, -1.2, 0.12, 0),
-    box(0.4, 0.48, 6.2, 0, 0.12, 0),
-    box(0.4, 0.48, 6.2, 1.2, 0.12, 0),
-    box(0.4, 0.48, 6.2, 2.4, 0.12, 0),
-  ];
-  for(let row=0;row<5;row++)for(let stalk=0;stalk<5;stalk++)farmExtra.push(box(.22,.18,.3,-2.4+row*1.2,.6,-2.5+stalk*1.2));
+  // A field is soil and individual plants, never a rigid wooden foundation.
+  const soil = new THREE.PlaneGeometry(7.4, 7.4, 24, 24);
+  soil.rotateX(-Math.PI / 2); soil.translate(0, .075, 0);
+  const soilColors: number[] = [];
+  for (let i = 0; i < soil.attributes.position.count; i++) {
+    const x = soil.attributes.position.getX(i), z = soil.attributes.position.getZ(i);
+    const furrow = .88 + .12 * Math.cos(x * 9) + .035 * Math.sin(z * 11 + x);
+    const c = new THREE.Color('#795632').multiplyScalar(furrow);
+    soilColors.push(c.r, c.g, c.b);
+  }
+  soil.setAttribute('color', new THREE.Float32BufferAttribute(soilColors, 3));
+  const farmTimber = [soil];
+  // Short boundary stakes avoid the appearance of a raised livestock pen.
+  for (const x of [-3.6, 3.6]) for (const z of [-3.6, 0, 3.6]) {
+    const stake = box(.09, .42, .09, x, .02, z);
+    const colors = new Float32Array(stake.attributes.position.count * 3);
+    const c = new THREE.Color('#96744c');
+    for (let i = 0; i < colors.length; i += 3) colors.set([c.r,c.g,c.b], i);
+    stake.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    farmTimber.push(stake);
+  }
+  const farmExtra: THREE.BufferGeometry[] = [];
+  for (let row = 0; row < 5; row++) for (let stalk = 0; stalk < 6; stalk++) {
+    const x = -2.5 + row * 1.25 + .09 * Math.sin(stalk * 2 + row);
+    const z = -2.8 + stalk * 1.1 + .08 * Math.sin(row * 3 + stalk);
+    const h = .36 + .12 * (1 + Math.sin(row * 5 + stalk * 3)) / 2;
+    farmExtra.push(box(.16, h, .18, x, .1, z));
+    farmExtra.push(box(.3, .09, .22, x, h + .1, z));
+  }
   const lumberT: THREE.BufferGeometry[] = [
     cyl(0.9, 1.0, 0.5, -1.4, 0, 0.4, 8),
     box(3.4, 1.5, 2.4, 1.2, 0, 0),
@@ -257,7 +266,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       extraMat: "stone",
     },
     hut,
-    farm: { timber: merge(farmTimber), roof: merge([box(2.4, 1.2, 2.2, 2.4, 0, 2.2)]), extra: merge(farmExtra), extraMat: "crop" },
+    farm: { timber: merge(farmTimber), roof: merge([box(2.4, 1.2, 2.2, 0, 0, 0)]), extra: merge(farmExtra), extraMat: "crop" },
     lumber: { timber: merge(lumberT), roof: merge(lumberR) },
     workshop: {timber:merge([box(3.8,.2,1.5,0,1.0,0),box(.3,1,.3,-1.5,0,0),box(.3,1,.3,1.5,0,0),box(.2,2.5,.2,-2,0,-1.5),box(.2,2.5,.2,2,0,-1.5)]),roof:merge([box(5,.15,4,0,2.5,0,.12)])},
     dock: { timber: merge(dockT), roof: merge(dockR) },
