@@ -1,3 +1,11 @@
+## Latest refinement — natural conflict and richer surfaces
+
+Supersedes the earlier suggestion of mandatory pre-departure intent selection: make raid/capture/occupation/domination outcomes emerge through contextual field actions, surrender and sustained control, with changeable orders and distinct physical consequences. No compulsory objective wizard. New Civ reference images require textured/material terrain, broken rocky relief, layered vegetation and depth-aware water/shore treatment; flat recoloring is not sufficient. Desktop only. Full map coverage and actual rendered acceptance remain required.
+
+## Latest user correction — October 31, 2026
+
+Map redesign is an immediate priority: every map must include all requested geological feature families and be interesting to explore; current smooth/flat presentation is not accepted. Study actual geography and the three supplied Dawn of Man images, compare with the older single-island world, and verify close/mid/wide gameplay views plus measured feature geometry. Desktop only: stop mobile-specific work. Conflict planning must explicitly distinguish pre-departure loot, prisoner capture and intact village occupation; destruction is not a substitute for conquest. See updated INCENTIVE_FIRST_MASTER_PLAN.md and AGENTS.project.md.
+
 ## Batch 3 verified survival scenarios — 2026-10-31
 
 Physical emergency shelter fixed and tested through building destruction. Updated deliberate defense policy completes Normal first winter on seeds42/123456 with5/5founders each, no food gaps, live working societies and save roundtrips; no grants/repairs. See FIRST_WINTER_2026-10-31.json and EXECUTION_EVIDENCE_2026-10-31.md. This supersedes the earlier two-seed diagnostic failure **for this updated policy**, not full M1 scope. Fuel/clothing/warnings/balance, broader seeds and remaining M0 ownership migrations stay open; all M2–M5 and expansion backlog retained.

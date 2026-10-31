@@ -97,6 +97,13 @@ Replace player-centric relationship fields with a **directed society-pair ledger
 - Personality affects sensitivity and risk tolerance; resources and routes constrain action.
 - Rival–rival trade, warfare, treaties and recovery use the same systems as player interactions.
 
+**Updated user direction:** Distinguish loot, prisoner capture, conquest and domination through natural contextual actions and evolving circumstances, **not a mandatory pre-departure objective picker**. Taking goods and withdrawing produces a raid; deliberate capture/surrender creates prisoners needing escort; maintaining local control and accepting a village's surrender produces intact occupation; sustained leverage enables tribute, autonomy or vassalage. Surface these actions when physically and politically relevant, show consequences before committing them, and let orders change in the field. Optional standing policies may guide automation without locking the expedition into an upfront category. Occupation must never silently turn into burning the settlement.
+
+- Loot: seize finite actual goods, physically withdraw and return them.
+- Take prisoners: capture actual people, preserve bodily needs and identity, escort them into guarded custody, then support ransom/exchange/release/integration or forced-work consequences. Capturing a person is not the same outcome as carrying loot.
+- Occupy village: secure surrender or defended control, retain surviving structures, stores and residents, transfer/control them through explicit ownership and obligations, and handle resistance, garrison costs, integration or autonomy. Burning a hall does not constitute taking over a functioning village.
+- Record intent inferred from actual orders and any explicit policy, changes of orders, buildings retained/destroyed, captives captured/escaped/delivered, goods returned, occupation stability and civilian consequences. Test each objective independently, including interrupted journeys and save/load.
+
 Raids have preparation, approach, contact, fighting/looting and withdrawal phases. Loot must return physically. Strengthening defenses can redirect or deter a raid; it must not merely trigger a larger spawned army.
 
 Collapse is a process: shortages, failed obligations, departures, loss of authority, abandonment, refugees and possible refounding. Losing a hall does not erase a society. Leaders change while agreements, grievances and community histories persist.
@@ -140,7 +147,9 @@ Generate in this order:
 
 Use generation-time approximations, not expensive continuous erosion simulation.
 
-Substantial landmasses receive their own coherent relief and drainage. Standard and large worlds contain usable hills, valleys, freshwater and reachable uplands. Rare spectacular features are distributed across seeds; every island does not receive the same checklist.
+**Updated user requirement, October 31:** Every generated map must contain the full requested geological catalogue: rivers and tributaries, lakes, connected mountain ranges, foothills and rolling hills, valleys and basins, incised canyons/gorges, cliffs and terraces, plateaus, waterfall/river-barrier terrain, pillar formations, dry channels and dune/rocky-desert regions, plus readable shorelines/bays where the topology supports them. Distribute these coherently across the world rather than repeating the catalogue on every tiny island. Vary their location, prominence, scale and beauty; rarity may govern exceptional grandeur, not the absence of an expressly required feature family. Keep playable plains and usable approaches among strong relief. The earlier optional-feature interpretation is superseded.
+
+Substantial landmasses receive coherent relief and drainage. World generation must pass both measured feature coverage and rendered exploration acceptance; metadata labels or a high fraction of gentle slopes are insufficient. The user reports that the older single-island terrain was more interesting: compare against that baseline instead of assuming multiple landmasses are an improvement. Preserve a single-island option if needed; layout variety must not dilute terrain variety.
 
 - Dolomites: connected ridges, pale cliffs, foothills and usable valley routes.
 - Zhangjiajie: regional pillar formations within wooded ravines.
@@ -181,6 +190,10 @@ The player’s preferred Nabataean-inspired city develops sandstone, plaster, co
 
 Borrow layered landscape composition from [Bierstadt](https://collectionapi.metmuseum.org/api/collection/v1/iiif/10154/34358/main-image) and [Cole](https://collectionapi.metmuseum.org/api/collection/v1/iiif/10497/1655152/main-image): framing vegetation, illuminated valleys, winding waterways and atmospheric distance. Warm daylight contrasts with cool shadows; winter, storms and night retain their identity.
 
+### Advanced material and scene treatment — updated user references
+
+The four new Civ reference images emphasize varied terrain materials, textured rock and soil, shallow turquoise water grading into deep blue, readable banks and foam, dense layered vegetation, coherent biome transitions, integrated settlement density and strong light/shadow at desktop camera distances. Build original game materials/geometry from these principles, not copied screenshot textures. Flat vertex-color changes alone are insufficient. Combine macro regional composition, middle-scale rock faces/strata/banks/ground cover, and restrained small-scale albedo/normal/roughness variation. Use shared materials, instancing and distance detail to control cost. Measure texture/memory/draw calls, terrain material coverage and desktop frame time; validate close/middle/wide gameplay views. Rivers, elevated lakes and waterfalls must have physical local-water surfaces consistent with terrain and navigation, not a painted seam on a global ocean plane.
+
 ### Bierstadt and Cole landscape generation — requested direction, October 31, 2026
 
 Use Albert Bierstadt and Thomas Cole as explicit influences on the generated world itself, as well as its lighting. Translate their landscape composition into Hearthwild’s original stylized 3D terrain: grand mountain backdrops, luminous open valleys, winding rivers and reflective lakes, wooded foreground framing, waterfalls or ravines as occasional focal points, and layered distant ridges softened by atmosphere. Compose these elements into connected regions and views that reward exploration.
@@ -190,6 +203,8 @@ Allow some spectacular places to be difficult or impractical to settle: steep cl
 Centralize and measure landmark rarity (per land area), relief and ridge continuity (metres), valley openness, water curvature and visible water fraction, foreground framing, number of depth layers, focal-point prominence and atmospheric falloff (distance). Record regional beauty distributions and start-site percentiles separately from settlement viability. New composition metrics extend the current water/relief/outlook/contrast score; they are proposed work, not implemented measurements. Keep terrain composition independent of camera position, with view-dependent lighting/framing diagnostics as a separate layer. Tune daylight for warm illuminated land and cool shadows while keeping weather, seasons and nights distinct and readable.
 
 Acceptance: inspect representative ordinary, attractive and exceptional views across fixed and holdout seeds; verify coherent regional composition rather than scattered decorative stamps, measurable variation, safe player starts and bounded generation/render costs. This is artistic influence, not a promise of photorealism or a copy of a particular painting.
+
+**Platform: desktop only.** Drop mobile layout/touch implementation and mobile acceptance work. Optimize desktop controls, camera, readable terrain and panels.
 
 UI uses one compact resource/status bar, one contextual selection panel and a collapsible minimap. Primary actions use short verbs; disabled actions give one reason. Building menus expose every buildable structure. Work, cargo, storage and construction visuals reflect actual state.
 

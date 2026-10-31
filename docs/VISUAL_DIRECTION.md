@@ -1,3 +1,11 @@
+## Additional Civ visual context — October 31, 2026
+
+Four further images demand richer surface treatment: soil/rock texture and strata, varied ground cover, depth-graded water with shore foam and clear banks, coherent biome transitions, dense integrated city composition and readable light/shadow. These augment the rugged Dawn of Man close/mid-range references and Bierstadt/Cole composition. Original materials/meshes must carry the detail; flat vertex-color repainting alone is insufficient. Validate actual desktop gameplay views at close/middle/wide zoom, with a measured render/memory budget. No mobile-specific work.
+
+## User correction — October 31, 2026
+
+Desktop only; mobile/touch requirements in generic workspace guidance do not apply. Current terrain is rejected as too flat and monotonous. The three new Dawn of Man reference images require visibly rugged enclosing mountains, nested relief, broken/rolling foreground, exposed rock, broad river/lake compositions, usable fields and connected settlement space. Fortifications need weight and functional entrances: rough stone/timber compounds and recognizable towers. The master plan now requires every map to include all requested landform families, with measured geometry and actual rendered exploration review. Smooth tall mounds, feature tags and near-universal gentle terrain are not acceptance.
+
 # Hearthwild visual direction
 
 **Proposal, October 31, 2026.** This brief records the current requested direction; it does not claim these changes are implemented. It refines `ART_DIRECTION.md` and the visual preference in `REWORK_DIRECTION.md`: coherent, stylized blocky 3D with richer objects, materials and activity, sized for an M1 MacBook Air with 8 GB memory. Keep the simulation work in the existing rework plan ahead of a wholesale art replacement.
