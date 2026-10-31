@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-31",
+  "scope": "One paired40-step sequential CPU control; no rendering or FPS measurement",
+  "method": {
+    "samePrivateSave": true,
+    "sameProcess": true,
+    "sameInitialRandomStreams": true,
+    "alternateLeadOrder": true,
+    "chunkSize": 5,
+    "chunksPerVersion": 4,
+    "stepsPerVersion": 20,
+    "nicePriority": 10,
+    "decodeExcluded": true,
+    "unmeasuredWarmupSteps": 0,
+    "background": "Agent CPU/GPU/build audits paused; unrelated Apple neural compiler/Chrome/WindowServer remain active; user apps unchanged"
+  },
+  "sourceManifest": {
+    "baseline": {
+      "sha256": "2ce50b319326bd05c46e55e3490ca973784e64ca9c2640e9d1266e776895e947",
+      "files": 141,
+      "source": "fb53273"
+    },
+    "indexed": {
+      "sha256": "5dc25f8a71d9c9be04e5c0bf1df3c2a71c29b8a80e0eedba441216be7dbc65c5",
+      "files": 144,
+      "source": "atomic index blob manifest"
+    }
+  },
+  "versions": {
+    "baseline": {
+      "allArgumentsExactlyOneThirtieth": true,
+      "worldSecondsAdvanced": 0.6666666666751553,
+      "simulationErrors": 0,
+      "stepCost": {
+        "samples": 20,
+        "meanMs": 66.22268130000012,
+        "p50Ms": 52.80466699999943,
+        "p95Ms": 100.24487500000032,
+        "maxMs": 209.2770840000003,
+        "minMs": 43.912499999999454
+      },
+      "firstStepMs": 209.2770840000003,
+      "subsequentSteps": {
+        "samples": 19,
+        "meanMs": 58.69350221052642,
+        "p50Ms": 52.54395799999929,
+        "p95Ms": 100.24487500000032,
+        "maxMs": 100.24487500000032,
+        "minMs": 43.912499999999454
+      },
+      "chunkMeansMs": [
+        104.86235860000033,
+        53.897558400000165,
+        49.53219980000013,
+        56.59860839999983
+      ],
+      "navigationRevisionChanges": 0,
+      "coastalReviewTransitions": 0,
+      "coastalVoyageRecords": 0,
+      "coastalCommissionRecords": 0
+    },
+    "indexed": {
+      "allArgumentsExactlyOneThirtieth": true,
+      "worldSecondsAdvanced": 0.6666666666751553,
+      "simulationErrors": 0,
+      "stepCost": {
+        "samples": 20,
+        "meanMs": 70.82508964999992,
+        "p50Ms": 58.25145900000007,
+        "p95Ms": 102.91995899999984,
+        "maxMs": 247.7152499999993,
+        "minMs": 46.5054999999993
+      },
+      "firstStepMs": 247.7152499999993,
+      "subsequentSteps": {
+        "samples": 19,
+        "meanMs": 61.515081210526276,
+        "p50Ms": 57.92987499999981,
+        "p95Ms": 102.91995899999984,
+        "maxMs": 102.91995899999984,
+        "minMs": 46.5054999999993
+      },
+      "chunkMeansMs": [
+        114.68371679999964,
+        56.10495820000015,
+        51.88844179999978,
+        60.623241800000145
+      ],
+      "navigationRevisionChanges": 0,
+      "coastalReviewTransitions": 1,
+      "coastalVoyageRecords": 0,
+      "coastalCommissionRecords": 4
+    }
+  },
+  "indexedOverBaselineMean": 1.0694989731561926,
+  "indexedOverBaselineSubsequentMean": 1.0480731067960334,
+  "limits": [
+    "Short cold resumed-state sample; not a steady-state distribution or actual FPS.",
+    "Alternating blocks reduce but do not eliminate external contention, garbage collection and JIT variance.",
+    "Both versions execute every normal Game.step with1/30 inputs; no direct clock or event-skipping shortcuts. This is not exhaustive gameplay-event coverage."
+  ]
+}

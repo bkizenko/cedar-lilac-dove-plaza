@@ -1,3 +1,4 @@
+import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
@@ -15,7 +16,7 @@ import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {prepareRivalDefense} from './rivalOperations';
-import {influenceRadius,influenceStrength} from './territory';
+import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady} from './influenceField';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import {husbandryAI,tickHusbandry} from './husbandry';
@@ -942,6 +943,9 @@ export class Game {
     return this.navRevision;
   }
 
+  /** Read existing waypoints for diagnostics; never plans or advances a route. */
+  peekMovementRoute(id:number):Readonly<{tx:number;tz:number;revision:number;failed:boolean;points:ReadonlyArray<Readonly<{x:number;z:number}>>}>|undefined {return this.paths.get(id);}
+
   walkable(x: number, z: number) {
     if (!this.withinWorld(x, z, 1.2)) return false;
     if (this.travelHeight(x, z) < this.waterAt(x,z) + WALK_CLEARANCE) return false;
@@ -1265,7 +1269,7 @@ export class Game {
     let n = 0;
     const selected = team===0 ? this.selectedUnits() : [];
     const workers = (selected.length ? selected : this.state.units).filter(
-      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId && !isDependent(this,u) &&
+      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !isDependent(this,u) &&
         u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork &&
         militiaStoresReached(this,u),
     );
@@ -1667,6 +1671,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    pauseCoastalTrade(this,u);
     pauseProduction(this,u);
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
@@ -2287,14 +2292,7 @@ export class Game {
   }
 
   influenceAt(x: number, z: number, team: number) {
-    let v = 0;
-    for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.team !== team || b.build < 1 || b.team===3 || FORTIFICATIONS.includes(b.type)) continue;
-      const frontier=b.type==='cornerstone'?frontierStatus(this,b):null;
-      const radius=(frontier?.radius??influenceRadius(b.type))*1.45;
-      v=Math.max(v,influenceStrength(Math.hypot(b.x-x,b.z-z),radius,frontier?.strength??1));
-    }
-    return v;
+    return geographicInfluenceAt(this,x,z,team);
   }
 
   tickInfluence(dt: number) {
@@ -2304,6 +2302,7 @@ export class Game {
     if (!hall0) return;
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
+      if(!geographicInfluenceReady(this,0)||!geographicInfluenceReady(this,tr.id))continue;
       if (!tr.hostile && (tr.peaceTerm==='puppet' || (tr.recoveryUntil||0)>this.state.time)) continue;
       const hall = this.state.buildings.find(
         (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
@@ -3481,7 +3480,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
+      if(!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
@@ -3492,7 +3491,7 @@ export class Game {
       // Regular meals gradually repair hunger damage instead of leaving a death spiral.
       if (!hungry && previousHunger > 0 && !u.sickUntil) u.hp = Math.min(u.maxHp, u.hp + Math.min(dt, previousHunger / 3) * u.maxHp / 240);
       }
-      if (!prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(this,u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
+      if (!prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
@@ -3558,33 +3557,7 @@ export class Game {
   }
 
   paintTerritory() {
-    const terr = this.territory;
-    terr.fill(255);
-    this.territoryStrength.fill(0);
-    const n = FOW;
-    const cell = this.world.size / n;
-    for (const b of this.state.buildings) {
-      if (b.hp <= 0 || b.build < 1 || b.team === 3 || FORTIFICATIONS.includes(b.type)) continue;
-      const frontier=b.type==="cornerstone"?frontierStatus(this,b):null;
-      const r = (frontier?.radius ?? influenceRadius(b.type)) * 1.45;
-      const cx = ((b.x + (this.world.size/2)) / cell) | 0;
-      const cz = ((b.z + (this.world.size/2)) / cell) | 0;
-      const cr = Math.ceil(r / cell);
-      for (let iz = cz - cr; iz <= cz + cr; iz++) {
-        if (iz < 0 || iz >= n) continue;
-        for (let ix = cx - cr; ix <= cx + cr; ix++) {
-          if (ix < 0 || ix >= n) continue;
-          const wx = -(this.world.size/2) + (ix + 0.5) * cell;
-          const wz = -(this.world.size/2) + (iz + 0.5) * cell;
-          if ((wx - b.x) ** 2 + (wz - b.z) ** 2 > r * r) continue;
-          const i = iz * n + ix;
-          this.territoryStrength[i] = Math.max(this.territoryStrength[i], influenceStrength(Math.hypot(wx-b.x,wz-b.z),r,frontier?.strength??1));
-          const cur = terr[i];
-          if (cur === 255 || cur === b.team) terr[i] = b.team;
-          else terr[i] = 254;
-        }
-      }
-    }
+    paintGeographicTerritory(this);
   }
 
   enqueueTrain(bld: Building, unitType: UnitType) {
@@ -4203,6 +4176,7 @@ export class Game {
     if(prisonerAI(this,u,dt))return;
     if(societyMissionAI(this,u,dt))return;
     if(riverboatAI(this,u,dt))return;
+    if(coastalTradeAI(this,u,dt))return;
     if(u.order!=="trade"){u.procurement=undefined;u.customOffer=undefined;}
     // The horn overrides every mission, including foreign visits and settlement journeys.
     if(u.recalled) {
@@ -5530,6 +5504,7 @@ export class Game {
     const sdt = this.state.paused || this.state.ended ? 0 : Math.min(dt * spd * nightMul, 0.34);
     if (this.state.walkDirty) this.rebuildWalk();
 
+    advanceGeographicInfluence(this);
     if (sdt > 0) {
       this.navBudget = 4;
       try {
@@ -5537,6 +5512,8 @@ export class Game {
         tickProduction(this,sdt);
         tickVillageDefense(this);
         tickSocietyMissionNeeds(this,sdt);
+        tickCoastalTrade(this,sdt);
+        reviewCoastalTrade(this);
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);
         reconcileTradeReservations(this);
@@ -5563,6 +5540,7 @@ export class Game {
             if(prisonerAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(coastalTradeAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
@@ -5643,6 +5621,7 @@ export class Game {
         reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
+        tickCoastalTrade(this,0);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
@@ -5739,7 +5718,7 @@ export class Game {
       };
     } else if (units.length === 1) {
       const u = units[0];
-      const info = u.societyMissionId || u.productionProjectId || u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
+      const info = u.coastalCommissionId || u.coastalVoyageId || u.societyMissionId || u.productionProjectId || u.exploreAfterDelivery || u.campMoveId || u.contactDemand || u.contactAttackTargetId!==undefined || u.farmToolWork || u.haulageWork || u.weaponWork || u.studyCrop || u.expedition || u.scout || u.foundingJourney || /^(Sleeping|Sheltering|Seeking shelter)/.test(u.workReason || "")
         ? u.workReason || "Traveling"
         : u.emergency
         ? u.workReason || "Responding to danger"

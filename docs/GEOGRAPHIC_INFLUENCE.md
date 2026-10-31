@@ -1,0 +1,35 @@
+# Geographic influence field
+
+Influence keeps the former building radius as a **full-strength core**. On level reachable land, a town hall retains its full 49.3 m radius (34 × 1.45). The field then fades smoothly over another 36 equivalent travel metres. Frontier posts retain their existing guard-dependent radius and strength. A blocked or expensive approach can reduce influence even inside the geometric circle.
+
+`geographicInfluenceAt(game,x,z,team)` returns the continuous strength. `paintGeographicTerritory(game)` paints the existing territory and strength arrays from the same fields, including contested overlaps. `geographicInfluenceSample` reports a point strength, actual cached route cost at its explicitly reported navigation-cell centre, and a readable machine reason for an absent claim. `geographicInfluenceDiagnostics` reports each source's radius, strength, explored-cell count, maximum propagated route cost, blocked-edge counters, eligible ports/vessels, cache revision, and all tunables.
+
+## Physical propagation
+
+The field uses the game's actual walking grid (2–4 m cells at the supported map sizes), physical travel heights, local water surfaces, solid-building obstructions, and completed bridge decks. Diagonal shortcuts cannot cut blocked corners. Walking edges also check their physical midpoint, preventing a water slit or ridge between cell centres from becoming a shortcut. A rise greater than the existing 2.45 m navigation step limit blocks an edge. Otherwise, every vertical metre adds three equivalent walking metres. A real mountain pass can reconnect a field; an impassable ridge cannot be crossed by a painted circle.
+
+Actual worn trails reduce cost by up to the named 12% pace bonus. There is no separate road-building feature in the current game; the implementation consumes the existing physical trail network rather than inventing a technology flag or invisible road. Bridge completion/removal and gate state affect the real navigation revision.
+
+Sea influence requires a **completed owned dock and an actual healthy adult captain already aboard a healthy owned vessel**, or an actual healthy adult with a personal canoe available at the dock. Empty hulls, boarding reservations, children, prisoners, and technology alone provide no sea extension. The vessel must be within 24 m of the port and in the same actual navigable-water component as the port's nearest berth. A nearby vessel in a disconnected basin does not qualify. Waterfall barriers use the existing water-navigation mask. Embarkation and landing each cost eight equivalent metres; sailing costs 1.35 equivalent metres per water metre. Landing requires a real accessible bank. Ships do not grant unlimited control over other islands.
+
+## Cooperative cache and authority
+
+Equal-strength sources share one shortest-path wave, prioritized by remaining reach (source radius minus route cost). Different strengths use separate groups. Searches stop at the outer fade budget and source geometric bounds. Source diagnostics count cells visited by the winning origin in the shared wave. Local source bins and reused terrain edge costs avoid rescanning every building for every point.
+
+`advanceGeographicInfluence` advances propagation, the water-only navigation mask and texture painting with a shared2ms wall-time target, at most once per16ms across simulation substeps. Small generator chunks bound the work between checks. Paused `Game.step` calls also progress this derived calculation without advancing residents or spending supplies. No extra worker, renderer loop or serialized queue is introduced. Completed textures commit atomically; the previous texture remains intact while work is pending. Unchanged textures are neither recopied nor repainted each frame.
+
+A pending authoritative point query returns `NaN`, meaning unknown, and the sampled diagnostic explicitly reports `field-recalculating`. `Game.tickInfluence` defers each player/rival pair until both fresh fields are ready. The previous visual overlay never supplies diplomatic authority. One busy rival does not prevent other ready pairs from updating.
+
+World, water, actual height function/buffer changes and genuine terrain-pass changes invalidate the relevant graph. Navigation-grid hashes distinguish an opened pass from an identical rebuild. Actual nearby solid/deck signatures and source/crew/port/guard profiles invalidate individual societies; civilian births, unpaid drawings and distant construction do not discard unrelated progress. Crew movement inside the same operating port/basin does not restart the wave; crossing a real port or basin boundary does.
+
+Trail-cost snapshots refresh on a named10-second cadence. A soft route-cost refresh keeps already valid physical routes while its replacement computes; it does not revoke terrain/source/crew validity or repeatedly cancel unfinished work. Source/transport profile checks retain their named2-second cadence. The road snapshot is therefore an approximation during refresh, rather than an instantaneous re-evaluation of every footstep. Terrain, ownership and transport invalidation remain separate from that soft cost cache.
+
+The hard90,000-visit source cap is measurable through `blocked.budget`. A direct-route correction removes grid staircase error at the historical flat-ground ring edge while checking actual ground, steps, banks and obstructions. Derived arrays and work queues are rebuilt after load; nothing new is saved.
+
+## Verification and limits
+
+The isolated patch changes `Game.influenceAt`, `Game.paintTerritory`, a step-level slice call and a per-pair readiness guard. Ten focused scenarios cover full old-ring strength and outer fade, an actual cliff/opened pass, bridge completion/removal, real crew versus empty hull/boarding/dead crew, disconnected basins, trails/floods, uphill cost, contested painting, central hooks, and pending authority/unrelated-change stability. Tests explicitly advance cooperative work before judging completed results.
+
+The exported245-unit/408-building village exposed a severe defect in the earlier unshipped module: initial paint2.53seconds and unchanged paints0.85–1.05seconds. Shared waves and completed-paint caching first reduced warm paints below0.06ms but still left a roughly0.5-second cold stall; that synchronous implementation was held.
+
+The cooperative run split342ms of initial work across163 calls: mean2.10ms,95th percentile2.25ms, maximum3.88ms. A subsequent360 actual `Game.step` calls over12 simulation seconds completed three cache revisions with all societies ready at the end and no simulation errors. Measured influence slices averaged0.60ms per step,95th percentile2.04ms and maximum2.57ms. Overall simulation steps in that run remained slow (mean76.6ms), and a shorter baseline control was also slow (65.6ms); concurrent CPU work makes those whole-step figures unsuitable as a release speed comparison. This is a bounded-influence checkpoint, not a full smooth-play, desktop visual or campaign acceptance pass.

@@ -1,0 +1,29 @@
+{
+  "scenario": "paid NPC coastal round trip",
+  "team": 1,
+  "partner": 2,
+  "boatId": 499,
+  "actorId": 480,
+  "elapsed": 155.59999999999545,
+  "metrics": {
+    "boardings": 2,
+    "landings": 2,
+    "sailMeters": 11.693151931922337,
+    "walkMeters": 18.80159680681548,
+    "foodUsed": 0.7538236540059,
+    "waterUsed": 0.1543999999999995,
+    "offered": 12,
+    "received": 7,
+    "delivered": 7,
+    "returned": 1
+  },
+  "automaticDispatch": true,
+  "paidHull": {
+    "wood": 40,
+    "stone": 4,
+    "workSeconds": 150
+  },
+  "saveAtSea": true,
+  "interruptionResumed": true,
+  "scope": "Controlled disconnected-shore fixture with fixed existing docks and observed partner; not autonomous dock/fleet commissioning or natural-map frequency"
+}

@@ -141,6 +141,8 @@ export type Livestock = Critter & {
 
 export type Unit = {
   societyMissionId?:number;
+  coastalVoyageId?:number;
+  coastalCommissionId?:number;
   productionProjectId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
@@ -410,6 +412,9 @@ export type Particle = {
 export type GameState = {
   societyRelations?:import('./societyRelations').SocietyRelation[];
   rivalMissions?:import('./rivalActivity').RivalMission[];
+  coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
+  coastalTradeReviewAt?:number;
+  coastalCommissions?:import('./coastalCommission').CoastalCommission[];
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;

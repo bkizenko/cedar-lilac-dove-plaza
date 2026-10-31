@@ -1,0 +1,15 @@
+# Coastal trade, bounded influence and rendering opportunities
+
+This batch connects paid NPC dock and hull construction to actual coastal trade. One original adult boards the same paid boat, carries finite supplies, trades at a known foreign settlement, and physically returns cargo. Initial dock/hull investment retains local adults, meals and working material reserves. A paid canoe scout can discover separate shores through existing movement; ordinary-map discovery frequency and wide-ocean reliability remain unqualified. Naval combat is not implemented by this batch.
+
+Influence retains full strength through the previous core and fades beyond it through real traversable routes. Cliffs and disconnected water block propagation; finished bridges and actually crewed vessels at usable ports permit connected access. Point queries and painted strengths share the same derived field. Propagation and row painting now use bounded cooperative work; pending fields cannot drive control or diplomatic incidents. The actual mature village completed three updates over twelve simulated seconds, with measured influence slices p95 2.04ms/max2.57ms. This replaces a recurring synchronous repaint of roughly one second. Future excavation must invalidate through a terrain revision as well as route/source changes.
+
+The rendering loop also stops expensive simulation catch-up after a 10ms budget check, allowing at least one fixed step and at most three. Excess real-time backlog is bounded, never converted to a larger simulation step or skipped world events. Under sustained load the world clock slows. A single slow simulation step cannot be preempted by this change. The diagnostics expose limited frames and discarded real-time debt.
+
+The independent paired saved-village control, before influence was added, measured 66.2ms/step on fb53273 and70.8ms with coastal logic (+6.95%; +4.81% excluding first cold step). External system load affects absolute timings. A cold water-navigation calculation was88.9ms versus0.005ms cached. These are remaining performance limits; neither the catch-up change nor the influence slices constitute a sustained FPS guarantee. See the aggregate FRAME_BUDGET reports for exact scope.
+
+Hide/clothing production now contributes actual remaining work, walking and delivery to the village capacity forecast. Paused batches retain their real maker/slot but contribute no active labor. Full-cache blockers remain visible, and measurements neither initialize save fields nor plan routes.
+
+Final combined checks:32/32 pass, plus build/typecheck. They cover coastal roundtrips/paid commissioning, influence physical/readiness behavior, frame timing, workload and profiling. Earlier six legacy riverboat cases also pass. Desktop review confirms the new diagnostics and measured biome/settlement panels load without console errors; this is separate from full campaign qualification.
+
+Release acceptance stays20/98 (20.41%). Full trade profitability, natural-map frequency, advanced diplomacy, naval combat and campaign smoothness remain open.

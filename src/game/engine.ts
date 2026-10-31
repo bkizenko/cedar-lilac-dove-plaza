@@ -1,3 +1,4 @@
+import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
 import {rememberGraphicsQuality} from './graphics';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
@@ -809,11 +810,10 @@ export class Engine {
       if (document.hidden) {
         this.simAccumulator = 0;
       } else {
-        this.simAccumulator += dt;
-        while (this.simAccumulator >= 1 / 30) {
-          this.profile.measure('simulation',()=>this.game.step(1 / 30));
-          this.simAccumulator -= 1 / 30;
-        }
+        const scheduling=advanceFrameSimulation(this.simAccumulator,dt,
+          step=>this.profile.measure('simulation',()=>this.game.step(step)));
+        this.simAccumulator=scheduling.pendingSeconds;
+        this.profile.recordScheduling(scheduling);
       }
       this.audio.setMood(
         this.game.musicMood(),

@@ -1,3 +1,4 @@
+import {validCoastalTradeState} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
@@ -94,7 +95,7 @@ function validateGamePayload(raw: unknown) {
   if([7,8,9,10,11,12,13,14].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
-  if(!validTowerPlatformState(s))fail();
+  if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validProductionState(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();

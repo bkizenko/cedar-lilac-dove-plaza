@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-31",
+  "scope": "Independent short saved-village CPU sanity; exact indexed runtime; not browser FPS or whole-game event proof",
+  "actualMeasurement": {
+    "steps": 32,
+    "sequential": true,
+    "nicePriority": 10,
+    "unmeasuredWarmupSteps": 0,
+    "decodeExcluded": true,
+    "sceneAndDrawingExcluded": true,
+    "unchangedSavedSpeed": true,
+    "allStepArgumentsExactlyOneThirtieth": true,
+    "simulationErrors": 0,
+    "cost": {
+      "samples": 32,
+      "meanMs": 137.32455725000014,
+      "p50Ms": 117.39620900000045,
+      "p95Ms": 196.87874999999985,
+      "maxMs": 570.13375,
+      "minMs": 86.70650000000023
+    }
+  },
+  "schedulerRules": {
+    "stepSeconds": 0.03333333333333333,
+    "wallBudgetMs": 10,
+    "maximumSteps": 3,
+    "maximumPendingSeconds": 0.03333333333333333
+  },
+  "replayAssumptions": {
+    "measuredCostsReusedCyclically": true,
+    "replayWorldUpdatesExecuted": false,
+    "virtualClock": true,
+    "syntheticDrawingOverheadMilliseconds": [
+      4,
+      12
+    ],
+    "minimumModeledOpportunityGapMilliseconds": 16.666666666666668,
+    "engineElapsedCapSeconds": 0.1,
+    "modeledOpportunitiesPerComparison": 60,
+    "oldScheduler": "Exact former accumulator loop, no per-opportunity step or CPU cap",
+    "newScheduler": "Actual indexed advanceFrameSimulation function"
+  },
+  "comparisons": [
+    {
+      "syntheticDrawingOverheadMs": 4,
+      "old": {
+        "strategy": "unbounded",
+        "modeledDrawingOpportunities": 60,
+        "modeledUpdateCalls": 172,
+        "simulationWorkPerOpportunity": {
+          "samples": 60,
+          "meanMs": 397.80580823333344,
+          "p50Ms": 364.539084,
+          "p95Ms": 886.7976669999989,
+          "maxMs": 923.4414589999997,
+          "minMs": 0
+        },
+        "modeledDrawingOpportunityGap": {
+          "samples": 60,
+          "meanMs": 402.2280304555557,
+          "p50Ms": 368.539084,
+          "p95Ms": 890.7976669999989,
+          "maxMs": 927.4414589999997,
+          "minMs": 16.666666666666668
+        },
+        "maximumStepsPerOpportunity": 3,
+        "limitedOpportunities": 0,
+        "discardedWallSeconds": 0,
+        "maximumPendingWallSeconds": 0.03266666666666666,
+        "allCallbackArgumentsExactlyOneThirtieth": true,
+        "syntheticEventSentinelsFired": 24,
+        "syntheticEventSentinelsExpected": 24
+      },
+      "new": {
+        "strategy": "bounded",
+        "modeledDrawingOpportunities": 60,
+        "modeledUpdateCalls": 58,
+        "simulationWorkPerOpportunity": {
+          "samples": 60,
+          "meanMs": 133.6342895333334,
+          "p50Ms": 116.24137500000143,
+          "p95Ms": 196.87874999999985,
+          "maxMs": 570.13375,
+          "minMs": 0
+        },
+        "modeledDrawingOpportunityGap": {
+          "samples": 60,
+          "meanMs": 138.05651175555565,
+          "p50Ms": 120.24137500000143,
+          "p95Ms": 200.87874999999985,
+          "maxMs": 574.13375,
+          "minMs": 16.666666666666668
+        },
+        "maximumStepsPerOpportunity": 1,
+        "limitedOpportunities": 57,
+        "discardedWallSeconds": 3.748392250666673,
+        "maximumPendingWallSeconds": 0.03333333333333333,
+        "allCallbackArgumentsExactlyOneThirtieth": true,
+        "syntheticEventSentinelsFired": 8,
+        "syntheticEventSentinelsExpected": 8
+      }
+    },
+    {
+      "syntheticDrawingOverheadMs": 12,
+      "old": {
+        "strategy": "unbounded",
+        "modeledDrawingOpportunities": 60,
+        "modeledUpdateCalls": 172,
+        "simulationWorkPerOpportunity": {
+          "samples": 60,
+          "meanMs": 397.80580823333344,
+          "p50Ms": 364.539084,
+          "p95Ms": 886.7976669999971,
+          "maxMs": 923.4414589999997,
+          "minMs": 0
+        },
+        "modeledDrawingOpportunityGap": {
+          "samples": 60,
+          "meanMs": 409.961363788889,
+          "p50Ms": 376.539084,
+          "p95Ms": 898.7976669999971,
+          "maxMs": 935.4414589999997,
+          "minMs": 16.666666666666668
+        },
+        "maximumStepsPerOpportunity": 3,
+        "limitedOpportunities": 0,
+        "discardedWallSeconds": 0,
+        "maximumPendingWallSeconds": 0.03266666666666666,
+        "allCallbackArgumentsExactlyOneThirtieth": true,
+        "syntheticEventSentinelsFired": 24,
+        "syntheticEventSentinelsExpected": 24
+      },
+      "new": {
+        "strategy": "bounded",
+        "modeledDrawingOpportunities": 60,
+        "modeledUpdateCalls": 58,
+        "simulationWorkPerOpportunity": {
+          "samples": 60,
+          "meanMs": 133.63428953333346,
+          "p50Ms": 116.24137500000143,
+          "p95Ms": 196.87874999999985,
+          "maxMs": 570.13375,
+          "minMs": 0
+        },
+        "modeledDrawingOpportunityGap": {
+          "samples": 60,
+          "meanMs": 145.789845088889,
+          "p50Ms": 128.24137500000143,
+          "p95Ms": 208.87874999999985,
+          "maxMs": 582.13375,
+          "minMs": 16.666666666666668
+        },
+        "maximumStepsPerOpportunity": 1,
+        "limitedOpportunities": 57,
+        "discardedWallSeconds": 3.7800796666666723,
+        "maximumPendingWallSeconds": 0.03333333333333333,
+        "allCallbackArgumentsExactlyOneThirtieth": true,
+        "syntheticEventSentinelsFired": 8,
+        "syntheticEventSentinelsExpected": 8
+      }
+    }
+  ],
+  "limits": [
+    "No renderer, GPU, browser scheduling, saves, input latency or actual FPS measured.",
+    "The short32-step trace includes cold resumed-state work; it is not a steady-state percentile estimate.",
+    "Cyclic trace replay assumes the same costs despite different world progression and cannot predict campaign performance.",
+    "The CPU budget is checked between updates and cannot preempt one slow Game.step; a single long update can exceed10ms.",
+    "All real update inputs and modeled callbacks remain1/30. Debt is discarded as wall time, never applied as a larger update or direct world-time jump. Synthetic event sentinels verify contiguous callback counts only; they are not exhaustive game-event coverage."
+  ],
+  "indexedRuntimeSha256": "18eda6c454c6a2769a66a9ab746883b2b1018ea6dc028322fcf00d292b963a22",
+  "initialSaveAggregates": {
+    "livingUnits": 245,
+    "livingBuildings": 363
+  },
+  "followupControl": "See FRAME_BUDGET_PAIRED_CONTROL_2026-10-31.json: subsequently requested same-session20+20 control. This initial32-step trace is not an isolated baseline comparison and remains susceptible to external contention; source fingerprints differ."
+}

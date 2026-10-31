@@ -57,7 +57,7 @@ export function tickScouts(g: Game, dt: number) {
         u.type === "worker" &&
         u.hp > 0 &&
         !isDependent(g, u) &&
-        !u.societyMissionId && !u.emergency &&
+        !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !u.emergency &&
         !u.recalled && !u.envoy && u.drill == null && u.buildOrder === undefined &&
         !u.jobLock && !u.tamingWork&&!u.husbandryWork && !u.tributeJourney && !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
         !u.foundingJourney &&

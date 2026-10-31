@@ -1,3 +1,4 @@
+import {PRODUCTION_RECIPES,productionSlots,itemCapacity} from './production';
 import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
 import type {HaulageProject} from './haulage';
@@ -28,18 +29,21 @@ function dutySeconds(u:Unit,horizon:number){const r=WORKLOAD_RULES;let fatigue=M
  while(remaining>1e-8){if(u.resting&&work===0&&rest===0||fatigue>=r.fatigueRestThreshold){const recovery=Math.min(remaining,Math.max(0,fatigue-r.fatigueRecoveryTarget)*r.fatigueRecoverySeconds);rest+=recovery;remaining-=recovery;fatigue=Math.max(r.fatigueRecoveryTarget,fatigue-recovery/r.fatigueRecoverySeconds);if(remaining<=0)break;}
   const untilRest=Math.max(0,(r.fatigueRestThreshold-fatigue)*r.fatigueWorkSeconds),use=Math.min(remaining,untilRest);if(use<=1e-8)break;work+=use;remaining-=use;fatigue+=use/r.fatigueWorkSeconds;
  }return{work,rest};}
-function outsideRole(g:Game,u:Unit){return isDependent(g,u)?'Growing up':u.prisoner?'In custody':(u.militia||!['worker','leader'].includes(u.type))&&!(u.militia&&u.huntOnly&&u.order==='gather'&&u.node&&'species'in u.node)?'Guard / military':u.type==='leader'?'Leader':u.emergency?'Emergency response':u.shelterId!==undefined&&g.state.weather==='storm'?'Sheltering from storm':('societyMissionId' in u&&u.societyMissionId)||u.envoy||u.scout||u.expedition||u.visit||u.tributeJourney||u.foundingJourney||u.boat||u.order==='trade'||u.order==='explore'?'Away / transport mission':u.drill!==undefined?'Military practice':null;}
+function outsideRole(g:Game,u:Unit){return isDependent(g,u)?'Growing up':u.prisoner?'In custody':(u.militia||!['worker','leader'].includes(u.type))&&!(u.militia&&u.huntOnly&&u.order==='gather'&&u.node&&'species'in u.node)?'Guard / military':u.type==='leader'?'Leader':u.emergency?'Emergency response':u.shelterId!==undefined&&g.state.weather==='storm'?'Sheltering from storm':('societyMissionId' in u&&u.societyMissionId)||('coastalVoyageId' in u&&u.coastalVoyageId)||u.envoy||u.scout||u.expedition||u.visit||u.tributeJourney||u.foundingJourney||u.boat||u.order==='trade'||u.order==='explore'?'Away / transport mission':u.drill!==undefined?'Military practice':null;}
 /** Snapshot only: never calls the mutating crop(), work board, project sync,
  * route searches, reservations, assignment commands or inventory initializers. */
 export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:number}={}){
  const r=WORKLOAD_RULES,H=Math.max(r.minimumHorizonSeconds,Math.min(r.maximumHorizonSeconds,Number.isFinite(options.horizonSeconds)?options.horizonSeconds!:r.horizonSeconds)),cal=calendar(g),residents=g.state.units.filter(u=>u.team===team&&u.hp>0),adults=residents.filter(u=>!isDependent(g,u));
- const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry,activeTask:null,freeNow:!outside&&!u.resting&&u.carry===0&&(!u.waterWork||u.waterWork.paused===true)&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
+ const liveProduction=[...new Map((g.state.production?.projects||[]).filter(p=>p.team===team&&p.phase!=='complete'&&p.phase!=='lost').map(p=>[p.id,p])).values()],productionOwners=new Set(liveProduction.filter(p=>p.actorId!==null).map(p=>p.actorId!));
+ const itemLoad=(u:Unit)=>Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0);
+ const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&(!u.waterWork||u.waterWork.paused===true)&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
  const eligible=adults.filter(u=>!outsideRole(g,u)),byId=new Map(people.map(p=>[p.id,p])),home=g.campOf(team),stock=g.tribe(team),tasks:WorkloadTask[]=[],keys=new Set<string>(),claimed=new Map<number,string>();
  const speed=(u?:Unit)=>u?Math.max(.5,u.speed*predisposition(u).speed*(1-(u.fatigue||0)*.12)*loadedHaulSpeed(u)):r.fallbackWalkingMetersPerSecond;
- const nearestDrop=(x:number,z:number)=>{const drops=supplyDrops(g,team);return drops.reduce((best,d)=>Math.min(best,Math.hypot(d.x-x,d.z-z)),Infinity);};
+ const supply=supplyDrops(g,team);
+ const nearestDrop=(x:number,z:number)=>{return supply.reduce((best,d)=>Math.min(best,Math.hypot(d.x-x,d.z-z)),Infinity);};
  const trip=(x:number,z:number,u?:Unit)=>{const distance=nearestDrop(x,z);return Number.isFinite(distance)?distance/speed(u):Math.hypot(home.x-x,home.z-z)/speed(u);};
  const travel=(u:Unit,x:number,z:number)=>Math.hypot(u.x-x,u.z-z)/speed(u);
- const add=(task:WorkloadTask)=>{if(keys.has(task.id)||task.personSeconds<=1e-8)return;keys.add(task.id);task.actorIds=[...new Set(task.actorIds)];if(task.status==='active'&&task.actorIds.length&&task.actorIds.every(id=>claimed.has(id))){task.status='queued';task.blocker??='Assigned residents finish their current commitment first';}tasks.push(task);
+ const add=(task:WorkloadTask,keepZero=false)=>{if(keys.has(task.id)||task.personSeconds<=1e-8&&!keepZero)return;keys.add(task.id);task.actorIds=[...new Set(task.actorIds)];if(task.status==='active'&&task.actorIds.length&&task.actorIds.every(id=>claimed.has(id))){task.status='queued';task.blocker??='Assigned residents finish their current commitment first';}tasks.push(task);
   if(task.status!=='paused')for(const id of task.actorIds)if(!claimed.has(id)&&byId.get(id)?.capacitySeconds){claimed.set(id,task.id);byId.get(id)!.activeTask=task.label;byId.get(id)!.freeNow=false;}
  };
  const workersAt=(id:number)=>eligible.filter(u=>u.node?.id===id&&['build','gather'].includes(u.order)||u.buildOrder===id);
@@ -49,9 +53,32 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   return GATHER[kind].period*bonus*winter*subsistenceLaborMultiplier(g,kind,x,z)/(GATHER_WORK_RATE*urgency);};
  const carry=(kind:ResKind,u?:Unit)=>u?carryingCapacity(u,kind):GATHER[kind].carry;
  let incomingFood=0,incomingWood=0,incomingWater=0;
- // A loaded ordinary and water cargo share one actual return trip.
- for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0){if(u.carryType==='food')incomingFood+=u.carry;if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
-  add({id:`delivery:${u.id}`,label:'Deliver carried supplies',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
+ // Paid production owns one actor and one physical batch, even while generic
+ // unit cargo or the compatibility work references point at the same person.
+ const productionTravellers=new Set<number>(),productionIds=new Set<number>(),productionCapacity=liveProduction.length?itemCapacity(g,team):0,storedItems=Object.values(stock.items||{}).reduce((n,v)=>n+(v||0),0);
+ const heldSlots=new Map<number,number>();for(const p of liveProduction)if(p.phase!=='returning'&&!(p.phase==='paused'&&p.resumePhase==='returning'))heldSlots.set(p.workplace,(heldSlots.get(p.workplace)||0)+1);
+ const productionSpeed=(u?:Unit)=>u?Math.max(.5,g.travelSpeed(u)):r.fallbackWalkingMetersPerSecond;
+ const productionTrip=(x:number,z:number,u?:Unit)=>{const d=nearestDrop(x,z);return(Number.isFinite(d)?d:Math.hypot(home.x-x,home.z-z))/productionSpeed(u);};
+ const cachedWalk=(u:Unit,near:(x:number,z:number)=>boolean,fallback:number)=>{const path=g.peekMovementRoute(u.id);if(!path||path.failed||path.revision!==g.navigationRevision()||!near(path.tx,path.tz)||!path.points.length)return fallback;let distance=0,x=u.x,z=u.z;for(const p of path.points){distance+=Math.hypot(p.x-x,p.z-z);x=p.x;z=p.z;}return distance/productionSpeed(u);};
+ for(const p of liveProduction){
+  if(productionIds.has(p.id))continue;productionIds.add(p.id);
+  const recipe=PRODUCTION_RECIPES[p.recipe],u=residents.find(u=>u.id===p.actorId&&u.productionProjectId===p.id),b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===team&&g.finished(b)),phase=p.phase==='paused'?p.resumePhase:p.phase;
+  const practice=u?1+Math.min(.3,(u.craftingXP||0)/1200):1;
+  const hands=phase==='returning'?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
+  const walkOut=u&&b&&phase!=='returning'?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
+  const drops=supply,hasDrop=drops.length>0,walkBack=u&&phase==='returning'?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u):0;
+  const fullCache=phase==='returning'&&storedItems+Object.values(recipe.outputs).reduce((n,v)=>n+v,0)>productionCapacity;
+  const missing=!b&&phase!=='returning',away=u?outsideRole(g,u):null;
+  let blocker=p.blockedReason||null;
+  if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&phase!=='returning')blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
+  else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u)blocker='No living maker assigned';else if(away)blocker='Assigned resident has an away or military duty';
+  const blocked=missing||!hasDrop||fullCache||!u||!!away||!!p.blockedReason;
+  add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'?'paused':blocked?'blocked':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||p.phase==='paused');
+  if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
+ }
+ // A loaded ordinary, production item and water cargo share one actual return trip.
+ for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0||itemLoad(u)>0){if(u.carryType==='food'&&!u.rawHuntMeat)incomingFood+=u.carry;if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
+  if(!productionTravellers.has(u.id))add({id:`delivery:${u.id}`,label:'Deliver carried supplies',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
   if(w&&w.phase!=='returning'&&w.liters===0){add({id:`water:${u.id}`,label:'Collect drinking water',category:'Water',personSeconds:Math.max(0,SURVIVAL_RULES.collectSeconds-w.progressSeconds)+travel(u,w.bankX,w.bankZ)+trip(w.bankX,w.bankZ,u),status:w.paused?'paused':claimed.has(u.id)?'queued':'active',actorIds:w.paused?[]:[u.id],priority:1000,blocker:w.paused?'Water assignment paused':null});if(!w.paused)incomingWater+=SURVIVAL_RULES.waterTripLiters;}
  }
  // Construction belongs to the site once, regardless of two builders, a direct

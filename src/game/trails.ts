@@ -20,6 +20,7 @@ function map(g: Game) {
   return cache.map;
 }
 export function pathPace(g: Game, x: number, z: number) {
+  if(!g.state.trails?.length)return 1; // A speed query must not initialize saved state.
   const t = map(g).get(trailCell(x, z,g.world.size));
   return t ? 1 + Math.max(0, t.wear - 0.4) * 0.2 : 1;
 }

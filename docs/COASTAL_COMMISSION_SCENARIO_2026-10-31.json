@@ -1,0 +1,44 @@
+{
+  "scenario": "ordinary NPC dock and hull commissioning through physical voyage",
+  "elapsed": 408.70000000002443,
+  "initialEndowment": {
+    "wood": 220,
+    "stone": 60,
+    "food": 500,
+    "adults": 8
+  },
+  "commission": {
+    "version": 1,
+    "id": 498,
+    "team": 1,
+    "partner": 2,
+    "phase": "ready",
+    "reason": "Real boat launched and adult at the home cache; waiting for the next bounded trade review",
+    "metrics": {
+      "reviews": 3,
+      "blockedReviews": 0,
+      "dockPayments": 1,
+      "hullPayments": 1,
+      "hullsLaunched": 1,
+      "cacheArrivals": 1
+    },
+    "dockId": 499,
+    "actorId": 480,
+    "projectId": 507,
+    "boatId": 510
+  },
+  "voyage": {
+    "boardings": 2,
+    "landings": 2,
+    "sailMeters": 16.887339764483777,
+    "walkMeters": 19.338785287010204,
+    "foodUsed": 0.722577077674049,
+    "waterUsed": 0.14799999999999955,
+    "offered": 12,
+    "received": 7,
+    "delivered": 7,
+    "returned": 1
+  },
+  "saveDuringPaidHull": true,
+  "scope": "Controlled observed coasts; no boats or source docks exist initially; unrelated development review waits; no supplies granted after start"
+}

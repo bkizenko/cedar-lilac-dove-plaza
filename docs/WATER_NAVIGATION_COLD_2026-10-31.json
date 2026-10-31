@@ -1,0 +1,12 @@
+{
+  "scope": "Single cold and warm water-only navigation query on exact frozen indexed private saved-village runtime; decode excluded; no Game.step or CPU profiler",
+  "nicePriority": 10,
+  "gridWidth": 520,
+  "gridCells": 270400,
+  "coldMs": 88.8564580000002,
+  "warmMs": 0.005000000000109139,
+  "warmCacheIdentityPreserved": true,
+  "exceeds100ms": false,
+  "limitation": "One sample only, not a distribution. Cache invalidates on navigationRevision; its first synchronous rebuild cannot be preempted by the frame budget.",
+  "indexedRuntimeSha256": "18eda6c454c6a2769a66a9ab746883b2b1018ea6dc028322fcf00d292b963a22"
+}
