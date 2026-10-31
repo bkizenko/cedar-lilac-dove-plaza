@@ -455,3 +455,8 @@ canvas:focus-visible {
 .world-setup select,.world-setup button{min-height:44px;border:1px solid var(--color-bronze);border-radius:6px;padding:.5rem;background:var(--color-ink-soft);color:var(--color-parchment);font-size:16px;}
 .world-setup button{grid-column:1/-1;}
 .world-setup>span{grid-column:1/-1;text-align:center;font-size:14px;color:var(--color-parchment-dim);}
+
+/* Testing is a control panel, not an introduction. */
+.test-panel{font-size:18px;}
+.test-panel .test-notice{font-size:16px;}
+.test-panel button{min-height:44px;}

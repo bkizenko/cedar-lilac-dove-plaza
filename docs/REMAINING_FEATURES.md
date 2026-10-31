@@ -242,3 +242,11 @@ See [REFERENCE_GAME_AUDIT.md](REFERENCE_GAME_AUDIT.md) for the user's survival-f
 - [x] ~~Shared finite core/fading influence in simulation and map; slower personality-sensitive grievance cooling.~~
 - [x] ~~Stronger territory wash and terrain-matched overlay resolution.~~ Browser appearance remains unverified.
 - [ ] Full grievance event memory, negotiation/compensation/escalation responses, leader ambitions, rival operations, physical monuments/artifacts and victory/era/total-score objectives remain open in AI_INCENTIVES.md.
+
+## Latest iteration feedback — 2026-10-31
+
+- [ ] Centralize tunable rules and record comparable outcomes: real food/material throughput per worker-hour, productive/travel/rest/blocked time, population growth, raiding costs/losses/loot, and settlement development. Operation decisions now expose benefit/risk/distance/guard metrics; this is not yet whole-game instrumentation.
+- [ ] Terrain: dry tree roots and building footprints at maximum seasonal water; varied coastal shelves, rolling hills, mountainous small islands, continuous walkable ridge approaches, river/lake/hill presence per generated world, fewer cookie-cutter landforms. Existing v7 geographic forms do not prove every seed's playability/visibility. Do not silently replace saved terrain.
+- [ ] Mountain prospecting: persistent resident survey/search order, discovered mineral evidence, real digging work and depth/deposit quality. Hikeable slopes must have actual routes; cliffs remain obstacles.
+- [ ] UI: concise age progress with larger text, fewer instructional paragraphs, clear buttons; keep welcome layout for later but bypass it while iterating. Test world generation belongs in Test lab, and restart must stay within protected test state.
+- [ ] Parallel work plan and ownership boundaries: see PARALLEL_EXECUTION_PLAN.md. Proposed roles only; no new agents launched by this checkpoint.

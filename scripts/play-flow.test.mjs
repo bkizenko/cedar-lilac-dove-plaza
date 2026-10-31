@@ -10,8 +10,8 @@ test('restarting and configuring a test world preserves the exact real village a
  globalThis.localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)};
  try{
   assert.equal(e.startTestSession(),true);assert.equal(e.game.testMode,true);const saved=[...storage.entries()];e.game.tribe(0).food=9999;
-  e.restart();assert.equal(e.game.testMode,true);assert.equal(e.originalGame,real);assert.equal(e.game.awaitingStart,true);
-  e.configureNewWorld({layout:'archipelago',size:1040});assert.equal(e.game.world.options.layout,'archipelago');assert.equal(e.game.testMode,true);
+  e.restart();assert.equal(e.game.testMode,true);assert.equal(e.originalGame,real);assert.equal(e.game.awaitingStart,false);
+  e.configureNewWorld({layout:'archipelago',size:1040});assert.equal(e.game.world.options.layout,'archipelago');assert.equal(e.game.testMode,true);assert.equal(e.game.awaitingStart,false);assert.equal(e.game.state.paused,true);
   assert.equal(saveGame(e.game),false);assert.deepEqual([...storage.entries()],saved);assert.equal(JSON.stringify(real.state),before);
   e.endTestSession();assert.equal(e.game,real);assert.equal(e.originalGame,null);assert.equal(real.testMode,false);assert.equal(real.tribe(0).food,JSON.parse(before).tribes[0].food);
  }finally{globalThis.localStorage=old;}

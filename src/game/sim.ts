@@ -1,3 +1,4 @@
+import {dispatchRivalOperation,prepareRivalDefense} from './rivalOperations';
 import {influenceRadius,influenceStrength} from './territory';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
@@ -4705,7 +4706,7 @@ export class Game {
         if (u.pillage >= 0) {
           const next = this.nextPillage(u);
           if (next) {
-            u.target = next.hp>0 && this.visibleAt(next.x, next.z) ? next : null;
+            u.target = next.hp>0 && (u.team===0?this.visibleAt(next.x,next.z):rivalKnows(this,u.team,next.x,next.z)) ? next : null;
             u.tx = next.x;
             u.tz = next.z;
             u.attackDestination = { x: next.x, z: next.z };
@@ -5173,66 +5174,11 @@ export class Game {
       if (spot && rivalCanInvest(this,team,"barracks")) this.placeBuilding("barracks", spot.x, spot.z, team);
     }
 
-    const bar = this.state.buildings.find(
-      (b) => b.team === team && b.type === "barracks" && b.hp > 0,
-    );
-    if (reserve > 700 && pop >= 7 && stage >= 2 && bar && bar.queue.length < 2) {
-      const mil = this.state.units.filter(
-        (u) => u.team === team && (u.type !== "worker" || u.militia) && u.hp > 0,
-      ).length;
-      if (mil < 3 + tr.age * 2) {
-        let kind: UnitType = "spearman";
-        if (team === 1) kind = tr.age >= 1 && Math.random() < 0.55 ? "warden" : "spearman";
-        else if (team === 2) kind = Math.random() < 0.65 ? "ranger" : "spearman";
-        else if (tr.age >= 2 && Math.random() < 0.45) kind = "swordsman";
-        else if (tr.age >= 1 && Math.random() < 0.4) kind = "archer";
-        if (tr.age >= 4 && this.hasBld(team, "stables") && Math.random() < 0.35) {
-          const st = this.state.buildings.find(
-            (b) => b.team === team && b.type === "stables" && b.hp > 0,
-          );
-          if (st) this.enqueueTrain(st, "cavalry");
-        } else this.enqueueTrain(bar, kind);
-      }
-    }
+    prepareRivalDefense(this,team,reserve);
 
     tr.lastRaid -= 2;
     tr.intent = neighborIntent(this, team);
-    if (
-      tr.intent === "raid" &&
-      tr.lastRaid <= 0 &&
-      !tr.ally &&
-      this.state.time >= (tr.compactUntil || 0)
-    ) {
-      const mil = this.state.units.filter(
-        (u) => u.team === team && (u.type !== "worker" || u.militia) && u.type !== "leader" && u.hp > 0 && !isDependent(this,u) &&
-          u.carry===0 && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.envoy && !u.emergency && !u.recalled && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop && u.drill==null,
-      );
-      const youThreat = this.raidThreat(0);
-      const want = growing ? 0.28 : shrinking ? 0.08 : 0.16;
-      if (mil.length >= 2 && Math.random() < want + tr.aggro * 0.25 + youThreat * 0.2) {
-        tr.lastRaid = 360 + Math.random() * 180;
-        tr.recoveryUntil = this.state.time + tr.lastRaid;
-        const targets = this.state.buildings.filter(
-          (b) => b.team === 0 && b.hp > 0 && b.type !== "townhall",
-        );
-        if (targets.length) {
-          const disputed=tr.tension>.28?targets.filter(b=>b.type==="cornerstone"&&this.finished(b)&&rivalKnows(this,team,b.x,b.z)&&Math.hypot(b.x-hall.x,b.z-hall.z)<160).sort((a,b)=>frontierStatus(this,a).strength-frontierStatus(this,b).strength):[];
-          const t = disputed[0] || targets[(Math.random() * targets.length) | 0];
-          const n = shrinking ? 1 : 1 + ((Math.random() * Math.min(mil.length, 2 + tr.age)) | 0);
-          for (const u of mil.slice(0, n)) {
-            u.tx = t.x;
-            u.tz = t.z;
-            u.order = "attackmove";
-            u.node = null;
-            u.attackDestination = {x:t.x,z:t.z};
-            u.pillage=0;
-            u.target = t;
-          }
-          if (this.started && mil.some(u=>this.visibleAt(u.x,u.z)))
-            this.banner(tr.name + " strikes your " + (BUILDINGS[t.type]?.name || "camp"), 2);
-        }
-      } else tr.lastRaid = 14 + Math.random() * 20;
-    }
+    if(tr.intent==='raid')dispatchRivalOperation(this,team,reserve);
   }
 
   checkVictory() {

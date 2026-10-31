@@ -1,3 +1,4 @@
+import {rivalOperationIntent} from './rivalOperations';
 import {difficulty} from './difficulty';
 import {expansionCost,plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
@@ -426,30 +427,5 @@ export class WorkBoard {
 export {emergencyResponse} from './defense';
 
 export function neighborIntent(g: Game, team: number): "recover" | "trade" | "defend" | "raid" {
-  const t = g.tribe(team),
-    p = g.tribe(0);
-  if (g.state.time < (t.recoveryUntil || 0)) return "recover";
-  if (g.state.time < (t.compactUntil || 0) && !t.hostile) return "trade";
-  if (
-    (g.state.conflict === "quiet" && !t.hostile) ||
-    g.state.time < (g.state.conflict === "dangerous" ? 300 : 600) ||
-    t.ally ||
-    (t.trust || 0) > 0.35
-  )
-    return "trade";
-  const scarcity = reserveSeconds(g, team) < 150,
-    grievance = t.tension > 0.65;
-  const army = g.state.units.filter(
-    (u) => u.team === team && (u.type !== "worker" || u.militia) && u.hp > 0,
-  ).length;
-  const defenders = g.state.units.filter(
-    (u) => u.team === 0 && (u.type !== "worker" || u.militia) && u.hp > 0,
-  ).length;
-  if (
-    (t.hostile || grievance || (scarcity && t.aggro > 0.65)) &&
-    army >= Math.max(3, defenders) &&
-    p.food > 30
-  )
-    return "raid";
-  return scarcity ? "trade" : "defend";
+  return rivalOperationIntent(g,team,reserveSeconds(g,team));
 }

@@ -112,6 +112,7 @@ export class Engine {
       const saved=loadRaw();
       if(saved){this.game=decodeGame(saved);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
       else {this.game.reset();this.game.awaitingStart = true;}
+      if(this.game.awaitingStart)this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();
@@ -121,7 +122,7 @@ export class Engine {
       this.setQuality("low");
       try {
         this.game.reset();
-        this.game.awaitingStart = true;
+        this.game.enterIsland();
         this.game.state.paused = true;
         this.view.rebuild(this.game);
         this.homeLook();
@@ -139,11 +140,9 @@ export class Engine {
   }
 
   configureNewWorld(request:WorldRequest) {
-    if(!this.game.awaitingStart||(this.originalGame&&!this.game.testMode))return;
-    try {
-      this.game.reset(undefined,7,request);this.keyboard.groups.clear();this.simAccumulator=0;
-      this.view.rebuild(this.game);this.homeLook();this.pushHud();
-    }catch(error){this.game.banner(error instanceof Error?error.message:'Could not generate that world',5);this.pushHud();}
+    if(!this.game.awaitingStart&&!this.game.testMode)return;
+    if(this.originalGame&&!this.game.testMode)return;
+    this.restart(request);
   }
 
   enterIsland() {
@@ -207,20 +206,20 @@ export class Engine {
     this.pushHud();
   }
 
-  restart() {
+  restart(request?:WorldRequest) {
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {
-      this.game.reset();
-      this.game.awaitingStart = true;
+      this.game.reset(undefined,7,request);
+      this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();
     } catch (err) {
       console.error(err);
       this.setQuality("low");
-      this.game.reset();
-      this.game.awaitingStart = true;
+      this.game.reset(undefined,7,request);
+      this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
       this.homeLook();

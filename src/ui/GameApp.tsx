@@ -1,4 +1,6 @@
 import {WorldSetup} from './WorldSetup';
+// Retain the welcome layout for later; iteration opens straight onto the map.
+const SHOW_WELCOME=false;
 import {EncounterDialog} from "./EncounterDialog";
 import { SettlementLedger } from "./SettlementLedger";
 import { PlayTools } from "./PlayTools";
@@ -156,7 +158,7 @@ export function GameApp() {
       <PlayTools engine={engineRef.current} />
       <SettlementLedger engine={engineRef.current} />
       <EncounterDialog engine={engineRef.current} />
-      {hud.awaitingStart && hud.started && !fail ? (
+      {SHOW_WELCOME && hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
           <p className="font-display text-xs tracking-[0.4em] text-bronze uppercase">
             A home on open ground

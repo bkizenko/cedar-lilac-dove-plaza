@@ -275,6 +275,7 @@ test('hostile rivals dispatch trained working militia and their actual raid orde
  Object.assign(g.tribe(1),{age:1,food:1200,wood:155,stone:65,hostile:true,ally:false,trust:0,tension:1,lastRaid:0,thinkT:0,recoveryUntil:0,compactUntil:0});
  for(const u of g.state.units.slice(0,5)){u.militia=true;u.dmg=12;u.range=2.6;}
  const target=g.makeBld('hut',100,38,0);g.state.buildings.push(target,g.makeBld('barracks',25,38,1));g.rebuildWalk();g.placeBuilding=()=>null;
+ const scout=g.state.units.at(-1);scout.x=100;scout.z=38;scoutKnowledge(g,scout);scout.x=5;scout.z=46;
  assert.equal(neighborIntent(g,1),'raid');
  const oldRandom=Math.random;Math.random=()=>0;try{g.rivalTick(1,.1);}finally{Math.random=oldRandom;}
  const raider=g.state.units.find(u=>u.pillage===0&&u.order==='attackmove');assert.ok(raider);assert.equal(raider.type,'worker');assert.equal(raider.target,target);
