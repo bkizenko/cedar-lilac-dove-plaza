@@ -5,6 +5,7 @@ import type {WorldRequest} from './worldOptions';
 import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
+import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
 import {commandRiverboat,riverboatAI,syncRiverboats} from './boats';
 import {copperStudyAI,developRivalCopper} from './materialStudy';
 import {difficulty} from './difficulty';
@@ -280,8 +281,9 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 8 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 9 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
+    resetCommandDiagnostics(this);
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;
@@ -2528,11 +2530,13 @@ export class Game {
   }
 
   assignJob(job: ResKind | "hold" | "hunt" | "drill" | "rest" | "auto") {
-    const units = this.selectedUnits().filter((u) => u.type === "worker" || (job==="hunt"&&u.militia));
+    let units = this.selectedUnits().filter((u) => u.type === "worker" || (job==="hunt"&&u.militia));
     if (!units.length) {
       this.banner("Select gatherers first", 1.4);
       return;
     }
+    units = units.filter(u=>acceptWorkerCommand(this,u,`assign:${job}`));
+    if (!units.length) return;
     if(job === "rest" || job === "auto") {
       this.workBoard.reset();
       for(const u of units){
@@ -2574,6 +2578,7 @@ export class Game {
       }
       for (const u of units) {
         if (isDependent(this, u)) continue;
+        this.interruptMission(u);
         u.drill = 0;
         u.job = null;
         u.jobLock = true;
@@ -2646,6 +2651,8 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    workers = workers.filter(u=>acceptWorkerCommand(this,u,"gather"));
+    if (!workers.length) return;
     const job = this.resKind(node);
     if (!job) {
       this.issueMove(node.x, node.z);
@@ -2661,6 +2668,7 @@ export class Game {
     let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
     this.workBoard.reset();
     for (const u of workers) {
+      this.interruptMission(u);
       u.selected = true; u.job = job; u.jobLock = true; u.huntOnly = false;
       u.target = null; u.trade = null; u.node = null; u.order = "idle"; u.workCheckAt = 0;
       if (u.emergency) u.emergency.resume = undefined;

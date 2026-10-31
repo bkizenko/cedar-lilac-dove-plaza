@@ -1,3 +1,11 @@
+## Active execution — 2026-10-31
+
+The governing sequence is `INCENTIVE_FIRST_MASTER_PLAN.md`. Existing expansion scope below remains retained. Three specialist workers and one integrator delivered a first M0/geography/art batch; this is not M0–M5 completion.
+
+Implemented: direct-gather/drill paid-work suspension, physical actor checks with bounded timestamped diagnostics; v9 scenery components, tunable weighted scores and above-average viable-site selection; connected rock provinces/strata; Test Lab measurements. Legacy generation versions remain selected by saved version. See `EXECUTION_EVIDENCE_2026-10-31.md` for verification and limits.
+
+Next: sole-owner JobCoordinator/atomic ReservationLedger adapters, remaining command routes and priority diagnostics, CampAnchor cargo return/storage adapters before enabling unbuilt starts, then full first-winter scenario. Do not delete starting structures until deliveries and initial rival survival work without halls. Complete rival–rival strategy/ledger, transport-conflict chain, institutions/progression and full release gates in subsequent integrated batches. Original deferred items remain below.
+
 ## Planning handoff priority — 2026-10-31
 
 Read ASTRA_PLANNING_HANDOFF.md first for the latest user direction: incentives are central, agents have broad creative design freedom, and existing proposals may be challenged. Use a conversation fork plus durable repo context; a fresh chat does not automatically inherit all history. This is a planning-only handoff, not completion of the game.

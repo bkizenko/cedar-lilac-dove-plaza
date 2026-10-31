@@ -1,3 +1,7 @@
+## 2026-10-31 execution status
+
+First narrow M0/scenery batch implemented; master plan retained in `INCENTIVE_FIRST_MASTER_PLAN.md`. Scenic scores describe actual sampled terrain and compare habitable clearings; separate dry-land average is exposed. Metrics do not establish complete map ecology or release acceptance. Full M0 job/reservation coordination, unbuilt-camp survival, society-pair strategy, Classical campaign and hardware acceptance remain open. See `EXECUTION_EVIDENCE_2026-10-31.md`.
+
 # Remaining game work — 2026-10-31
 
 This is a readable snapshot of the two original inventories. The execution record remains [FUTURE_IMPLEMENTATION.md](FUTURE_IMPLEMENTATION.md). Partial foundations do not mean a whole feature is complete. No honest overall completion percentage is currently established.

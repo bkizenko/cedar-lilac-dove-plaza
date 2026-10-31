@@ -1,3 +1,4 @@
+import {landscapeSample,LANDSCAPE_ART_RULES} from './landscapeArt';
 import {foundationProfile} from './foundations';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
@@ -201,6 +202,7 @@ export class WorldView {
   private styleHalls:{id:number;x:number;z:number;team:number}[]=[];
   private villageStyles = new Map<string,ReturnType<typeof architectureStyle>>();
   private eraDetails: THREE.InstancedMesh | null = null;
+  private terrainLandscape = new Float32Array(0);
   private terrainBiome: Uint8Array | null = null;
   private terrainRegion: Uint8Array | null = null;
   private terrainBlend = new Float32Array(0);
@@ -493,6 +495,7 @@ export class WorldView {
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     const colors: number[] = [];
+    const landscape = new Float32Array(pos.count*5);
     const biome = new Uint8Array(pos.count);
     const region = new Uint8Array(pos.count);
     const home = game.world.camps.find((c) => c.team === 0) || { x: 0, z: 0 };
@@ -503,9 +506,13 @@ export class WorldView {
       const z = pos.getZ(i);
       const h = game.height(x, z);
       pos.setY(i, h);
-      const slope =
-        Math.abs(game.height(x + 2.4, z) - game.height(x - 2.4, z)) +
-        Math.abs(game.height(x, z + 2.4) - game.height(x, z - 2.4));
+      const heightDx=game.height(x+2.4,z)-game.height(x-2.4,z);
+      const heightDz=game.height(x,z+2.4)-game.height(x,z-2.4);
+      const art=landscapeSample(game.state.seed,x,z,h,heightDx/4.8,heightDz/4.8);
+      const artOffset=i*5;
+      landscape[artOffset]=art.exposure;landscape[artOffset+1]=art.r;
+      landscape[artOffset+2]=art.g;landscape[artOffset+3]=art.b;landscape[artOffset+4]=art.shade;
+      const slope = Math.abs(heightDx)+Math.abs(heightDz);
       const dist = Math.hypot(x, z);
       const river = h < game.world.waterY + 0.32;
       const shore = shorelineAt((px,pz)=>game.height(px,pz),x,z,water);
@@ -545,6 +552,7 @@ export class WorldView {
       else region[i] = reg.cluster;
       colors.push(0.55, 0.62, 0.32);
     }
+    this.terrainLandscape = landscape;
     this.terrainBiome = biome;
     this.terrainRegion = region;
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
@@ -2188,6 +2196,16 @@ export class WorldView {
       }
       c.r = Math.min(1, c.r + n);
       c.g = Math.min(1, c.g + n * 0.6);
+      // Exposed rock follows real slope; warm layered cliffs and pale ridges share
+      // continuous provinces. Snow remains the final seasonal layer.
+      const artOffset=i*5,art=this.terrainLandscape;
+      if (art.length && b!==0 && b!==1 && b!==6) {
+        const blend=art[artOffset]*LANDSCAPE_ART_RULES.rockBlend;
+        c.r+=(art[artOffset+1]-c.r)*blend;
+        c.g+=(art[artOffset+2]-c.g)*blend;
+        c.b+=(art[artOffset+3]-c.b)*blend;
+        c.multiplyScalar(art[artOffset+4]);
+      }
       const snowH = Math.max(0, Math.min(1, (h - 3.2) / 12));
       let cover = Math.max(
         0,

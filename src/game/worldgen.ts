@@ -1,3 +1,4 @@
+import {scenicBeautyAt,scenerySummary,SCENERY_RULES} from './scenery';
 import {dryTreeRoot} from './hydrology';
 import {geography,type LandFeature} from './geography';
 import {landforms} from './landforms';
@@ -9,6 +10,7 @@ import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;
   features?: LandFeature[];
   segs: number;
@@ -340,7 +342,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     { x: ash.x, z: ash.z, team: 2 },
   ];
   if(land){
-    const sites:{x:number;z:number;noise:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
+    const sites:{x:number;z:number;noise:number;beauty:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
     for(let z=-HALF+48;z<HALF-48;z+=20)for(let x=-HALF+48;x<HALF-48;x+=20){
       const h=sample(heights,x,z);if(h<waterY+.8||h>(version>=8?36:12))continue;
       const corners=[[-12,-12],[-12,12],[12,-12],[12,12]].map(([dx,dz])=>sample(heights,x+dx,z+dz));
@@ -348,15 +350,18 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       let approaches=0;
       for(let i=0;i<8;i++){const a=i*Math.PI/4,y=sample(heights,x+Math.sin(a)*40,z+Math.cos(a)*40);if(y>waterY+.55&&Math.abs(y-h)<4)approaches++;}
       if(approaches<6)continue;
-      sites.push({x,z,noise:siteRandom()});
+      sites.push({x,z,noise:siteRandom(),beauty:version>=9?scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z).score:0});
     }
     if(sites.length<3)throw new Error('This seed has no viable settlement sites');
     const area=heights.reduce((sum,h)=>sum+Number(h>waterY+.8),0)*(MAP/SEGS)**2;
     const teams=[0,1,2,4,5].slice(0,1+rivalCountForArea(area));
+    const beauty=(site:{beauty:number})=>site.beauty;
+    const scenicThreshold=version>=9?[...sites].map(beauty).sort((a,b)=>a-b)[Math.floor((sites.length-1)*SCENERY_RULES.playerCandidatePercentile)]:0;
     camps.length=0;
     for(const team of teams){
       let best=sites[0],score=-Infinity;
       for(const site of sites){
+        if(version>=9&&team===0&&beauty(site)<scenicThreshold)continue;
         const distance=camps.length?Math.min(...camps.map(c=>Math.hypot(c.x-site.x,c.z-site.z))):MAP*.3;
         const value=distance+site.noise*MAP*(camps.length?.06:.7);
         if(value>score){score=value;best=site;}
@@ -496,6 +501,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     return null;
   };
 
+  let scenicCampScores:number[]=[];
   const home = camps[0];
   if (home) {
     stamp(forage, "forage", home.x + 18, home.z - 8, 10, 9, 2.4, () => 24 + ((rand() * 8) | 0));
@@ -753,6 +759,23 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       }
       return close >= 12 && outer >= 8;
     };
+    if(version>=9){
+      const candidates:{x:number;z:number;score:number}[]=[];
+      for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
+        if(camps.some(c=>c.team!==0&&Math.hypot(c.x-x,c.z-z)<120))continue;
+        if(!viableClearing({...home,x,z}))continue;
+        candidates.push({x,z,score:scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z).score});
+      }
+      scenicCampScores=candidates.map(c=>c.score);
+      const mean=scenicCampScores.reduce((s,n)=>s+n,0)/(scenicCampScores.length||1);
+      const sorted=[...candidates].sort((a,b)=>a.score-b.score);
+      const threshold=Math.max(mean,sorted[Math.floor((sorted.length-1)*SCENERY_RULES.playerCandidatePercentile)]?.score??0);
+      const best=candidates.filter(c=>c.score>=threshold).sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z))[0];
+      // Exceptional layouts keep the safest available opening rather than
+      // inventing scenery or accepting an unsafe clearing to hit a preference.
+      const selected=best??[...candidates].sort((a,b)=>b.score-a.score)[0];
+      if(selected){home.x=selected.x;home.z=selected.z;biomes[0].x=home.x;biomes[0].z=home.z;}
+    }
     if (!viableClearing(home)) {
       const oldX = home.x, oldZ = home.z;
       search: for (let radius = 8; radius <= 128; radius += 8) for (let i = 0; i < 24; i++) {
@@ -865,7 +888,18 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   }
   if(version>=8)for(let i=trees.length-1;i>=0;i--)if(!dryTreeRoot((x,z)=>sample(heights,x,z),trees[i].x,trees[i].z,waterY))trees.splice(i,1);
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
+  const scenery=version>=9?(()=>{
+    const scores:number[]=[];
+    for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
+      const h=sample(heights,x,z);if(h<waterY+.8)continue;
+      scores.push(scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z).score);
+    }
+    const player=scenicBeautyAt((x,z)=>sample(heights,x,z),waterY,home.x,home.z);
+    const dryLand=scenerySummary(scores,player);
+    return {...scenerySummary(scenicCampScores,player),dryLandMean:dryLand.mean,dryLandSampleCount:scores.length};
+  })():undefined;
   return {
+    ...(scenery?{scenery}:{}),
     size: MAP,
     ...(land?{options:land.options,features:geo!.features}:{}),
     segs: SEGS,
