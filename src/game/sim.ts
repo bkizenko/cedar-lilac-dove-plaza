@@ -271,7 +271,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 5 : 1) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 6 : 1) {
     this.simulationErrors=[];
     this.chopMarks.clear();
     const s = seed ?? (Math.random() * 0xffffffff) | 0;

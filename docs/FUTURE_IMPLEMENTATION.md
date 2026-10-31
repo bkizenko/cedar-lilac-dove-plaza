@@ -1,3 +1,8 @@
+## Varied coast orientation and woodland clearings — 2026-10-30
+
+- [x] ~~New worlds use seed-varied coastline orientation/aspect and broader shoreline transitions.~~ Woodland blends broad groves with smaller canopy patches and excludes severe slopes on both axes; the400-extra-tree instance cap remains. New random starts use generator6. Old versions1–5 retain their generation and saves; a golden hash verifies v5 terrain bytes.
+- Eighteen world/construction/transport checks and typecheck/build pass. Browser fresh-world test verified visible terrain, trees and minimap with no console errors. In a disposable test copy, mouse-drawn bent palisade placed five real sections for30logs; screenshot `/tmp/hearth-new-coast-wall.png`. Player village at8086 untouched. This does not complete erosion/hydrology, full biome ecology or all bridge/wall visual QA.
+
 ## Joined wall drags and cost preview — 2026-10-30
 
 - [x] ~~Palisade, wall, trench and moat drags follow both axes using edge-joined sections.~~ Bends avoid diagonal-only gaps; the existing32-section limit, first-obstruction stop, physical labor and unpaid plans remain. Preview banner includes total logs/stone and blocked status.
