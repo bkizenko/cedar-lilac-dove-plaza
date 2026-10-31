@@ -1,3 +1,7 @@
+## Latest additions — progress, knowledge and contour farming
+
+Report batch and overall Classical-release verified-check percentages at every batch/push, with counts and a versioned stable denominator. A needs-driven Knowledge & Practices view must expose observations, samples, experiments, proven production and adoption; age readiness alone is not a tech/knowledge interface. Farms/crop rows conform to the whole terrain footprint and contours, with real terrace work on steeper ground rather than broad automatic smoothing. New context images guide first contact, color earned historical moments, unit dress and inhabited biome/material/cliff settlement families. Desktop only; all original release and expansion scope remains retained.
+
 ## Latest refinement — natural conflict and richer surfaces
 
 Supersedes the earlier suggestion of mandatory pre-departure intent selection: make raid/capture/occupation/domination outcomes emerge through contextual field actions, surrender and sustained control, with changeable orders and distinct physical consequences. No compulsory objective wizard. New Civ reference images require textured/material terrain, broken rocky relief, layered vegetation and depth-aware water/shore treatment; flat recoloring is not sufficient. Desktop only. Full map coverage and actual rendered acceptance remain required.

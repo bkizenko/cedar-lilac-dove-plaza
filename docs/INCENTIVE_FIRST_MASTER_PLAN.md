@@ -131,7 +131,7 @@ These are playable abstractions, not claims that all historical societies follow
 - Offer an **inhabited-world** start using a bounded, recorded prehistory simulation. Existing settlements must have actual development histories; disclose scenario asymmetry.
 - Preserve current population thresholds initially: **50 for Bronze, 75 for Iron, 100 for Classical**.
 - Advancement also requires demonstrated practices, functioning institutions and sustainable reserves. Reserves remain in storage; advancement does not consume them.
-- Practical discovery follows observation/sample → experiment → production → adoption. Automatic cultivation can handle routine trials after discovery; the player can prioritize them.
+- Practical discovery follows need → observation/sample → experiment → demonstrated production → adoption/teaching. Show a **Knowledge & Practices** network with actual evidence, active experiments, demonstrated uses and concrete missing conditions. Prioritize problems such as unreliable harvests, spoilage, hauling or unfamiliar ore, rather than spending generic science on a future named invention. Unknown branches can appear as questions or unmet needs instead of granting foreknowledge of a finished technology tree. Automatic routine trials may execute after discovery; the player retains priorities and scarce labor/material decisions. Existing crop trials, copper experiments and hauling practice are foundations, not a finished general knowledge system.
 - Allow smaller societies to specialize, trade for techniques and remain competitive without matching every large society’s population.
 - Maintain five victory families: **Prosperity, Commerce, Dominion, Knowledge and Legacy**.
 - Era/total scores record bounded achievements. They do not replace physical goods or reward repetitive cheap actions.
@@ -140,6 +140,8 @@ These are playable abstractions, not claims that all historical societies follow
 Difficulty profiles remain Super Easy, Easy, Normal, Hard, Survival and Apocalypse. Central profiles control resource abundance, climate severity, spoilage, starting provisions, rival decision capability, conflict tolerance and political pressure. Any resource or combat advantages must be explicit. Difficulty must not weaken command reliability.
 
 ### Geography and ecology
+
+The explicit itemized contract is `GEOGRAPHY_AND_BIOME_CATALOGUE.md`: mandatory major landform/water coverage on every map and at least eight substantial ecological regions, differentiated by actual vegetation, ground, soil/moisture, resource and seasonal/access behavior. Hills, valleys, rivers and lakes are never optional. Tiny token biome patches or palette changes do not satisfy this contract.
 
 Generate in this order:
 
@@ -159,7 +161,7 @@ Substantial landmasses receive coherent relief and drainage. World generation mu
 
 These references support connected landscape families rather than scattered decorative shapes. [Dolomites](https://whc.unesco.org/en/list/1237/), [Wulingyuan](https://whc.unesco.org/en/list/640/), [Victoria Falls](https://whc.unesco.org/en/list/509/), [Grand Canyon geology](https://www.nps.gov/grca/learn/nature/geologicformations.htm), [Tassili n’Ajjer](https://whc.unesco.org/en/list/179)
 
-Trees, terrestrial buildings and approaches must pass dry-ground checks. Farms follow terrain. Mountains provide walkable approaches, prospecting evidence and deposits whose depth/quality affect excavation. Canals and trenches require physical digging and update terrain/navigation through bounded patches.
+Trees, terrestrial buildings and approaches must pass dry-ground checks. Farms follow sampled terrain and contours across the whole plot: crop/soil meshes must neither float nor flatten the map. Productive area, slope, moisture, access and workable row direction affect the plot. Retain naturally flat fertile areas; steeper expansion requires real terrace construction and approach routes rather than free smoothing. Mountains provide walkable approaches, prospecting evidence and deposits whose depth/quality affect excavation. Canals and trenches require physical digging and update terrain/navigation through bounded patches.
 
 ### Visual direction
 
@@ -317,6 +319,10 @@ Original Astra tasks remain mapped:
 
 Later expansions proceed through regional/Medieval government, Renaissance cities, global exploration and industry, then space. Larger-map transitions preserve society identity, history and possessions through explicit regional summaries; distant regions eventually use lower-detail simulation. Do not enlarge every region at full simulation detail now.
 
+### Additional visual context and feedback
+
+Use the latest first-contact image as a cue for a readable presentation of an observed settlement, its people and material culture, while disclosing uncertainty rather than displaying hidden inventories. Historic-moment imagery should be in color and tied to actual recorded achievements/events; do not use an unrelated reward popup as proof of progression. Unit appearance should distinguish role, actual weapons/garments, era and learned local practice at desktop gameplay distances. The architectural collages emphasize inhabited material families—earthen/reed domes, corbelled stone, timber work yards, plaster courtyards, waterfront and cliff/terraced settlements—integrated with water, paths, trees and topography. They are reference principles, not a requirement to copy particular ethnic stereotypes, modern villages or later-era machines into the Stone Age.
+
 ## 6. Measurement, verification and handoff
 
 Every major mechanic has named parameters with units, a diagnostic explanation and outcome metrics. Do not maximize worker busyness or raid frequency alone.
@@ -331,6 +337,8 @@ Measure:
 - Raid preparation, contact, casualties, loot and withdrawal.
 - Household grievances, negotiation, migration and unrest.
 - Time between meaningful decisions and accomplishments.
+
+Every batch and push update reports both current-batch passed/total acceptance checks and overall Classical-release verified checks as percentages, using the versioned RELEASE_PROGRESS ledger. This is acceptance coverage, not an effort/time estimate. Unverified and partially implemented gates earn no verified credit. Keep the denominator stable within a version; disclose scope/denominator changes when new requirements are added. Deferred expansion scope remains separately visible.
 
 Use fixed regression seeds plus rotating holdout seeds. A change is retained only if it improves the intended scenario without breaking conservation, saves or the broader scenario set.
 

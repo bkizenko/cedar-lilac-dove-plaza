@@ -88,3 +88,13 @@ Integrator owns shared schemas, dispatcher/combat hooks, migration and UI wiring
 - Save/load during approach, surrender, escort, holding control and withdrawal. Preserve old pillage/treaty/forced-labor saves. Check no duplicated goods, people, weapons, project inputs or victory credit.
 
 A contextual button, an isolated annexation transfer or passing preexisting combat tests does not establish this connected behavior. Full captivity, diplomacy, control and victory backlog remains retained.
+
+## Integration contract for the isolated implementation
+
+Current isolated modules export `captureTarget`, `captureIntentAI`, `secureVillage`, `occupationActorAI`, `tickOccupation`, `occupationStatus`, `integrateOccupiedVillage`, `withdrawOccupation`, the two target-permission helpers, and explicit-order cleanup. The later integration should record the existing `massRaid` loot action without adding a modal; its live executor remains unchanged during the preceding map release.
+
+`integrateOccupiedVillage` is the contextual aftermath of a physically held village. It transfers only that local scope, preserves existing people/buildings and carried possessions, migrates local paid haulage projects without repayment, and leaves society-wide stock and distant communities alone. The recorded phase becomes `integrated`; the former society is not globally erased by this function. This is distinct from the earlier all-society peace annexation helper.
+
+New custody has escorting, custody and released/home-return phases. New captures do not set `enslavedFrom`. A released person physically retains/uses remaining pack provisions and returns leftovers only on reaching home; escaping is counted separately from an intentional release. Escorting and released people require their own physical supplies, whereas a prisoner who has reached custody consumes the captor's ordinary local supplies. Existing forced-labor saves remain separate.
+
+The integrator must still wire selection actions, shared optional types, combat permissions on every route, AI/needs hooks, assignment protection and save validators. Before those hooks are connected and rendered, these exports and focused module tests do not constitute a shipped contextual conflict feature.

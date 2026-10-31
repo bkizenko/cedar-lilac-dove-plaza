@@ -1,0 +1,1821 @@
+{
+  "schemaVersion": 1,
+  "baselineId": "hearthwild-first-release-gates-v1",
+  "auditDate": "2026-10-31",
+  "scope": "Stone, Bronze, Iron, Classical first release; desktop only",
+  "scopeSources": [
+    "docs/INCENTIVE_FIRST_MASTER_PLAN.md",
+    "docs/MAP_REDESIGN_BRIEF.md",
+    "docs/CONFLICT_OBJECTIVES_BRIEF.md",
+    "docs/MAP_VISUAL_REVIEW.md",
+    "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
+    "AGENTS.project.md"
+  ],
+  "verifiedPublishedCodeBaseline": "c25f405",
+  "planningHeadAtAudit": "75ad233",
+  "unpublishedIntegration": [
+    "v11 organic landscape/local water/materials",
+    "Natural conflict contextual capture/intact occupation/finite loot"
+  ],
+  "method": {
+    "unit": "one fixed acceptance gate",
+    "denominator": 98,
+    "weighting": "equal gate weights; no time, effort, code-volume or feature-catalogue percentage implied",
+    "creditRule": "1 only for recorded executed evidence matching the gate scope; pending/unverified/partial=0",
+    "baselineRule": "Verified narrow behavior refers to published c25f405-or-earlier evidence. This does not certify the current unpublished working tree. Regressions revoke credit; new integration gates remain pending until matching acceptance and publication.",
+    "scopeChanges": "Do not silently add/remove/split easy gates to improve percentages. Any requirement change creates a documented new baseline version and recalculated denominator.",
+    "updateRule": "After every finished batch and push, update actual evidence/status, recalculate counts and report verified/total and percent; report batch delta and published commit separately. Failed push is not published.",
+    "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
+  },
+  "overall": {
+    "verifiedGates": 15,
+    "totalGates": 98,
+    "verifiedGatePercent": 15.31
+  },
+  "milestones": {
+    "M0": {
+      "verifiedGates": 5,
+      "totalGates": 12,
+      "verifiedGatePercent": 41.67
+    },
+    "M1": {
+      "verifiedGates": 9,
+      "totalGates": 22,
+      "verifiedGatePercent": 40.91
+    },
+    "M2": {
+      "verifiedGates": 0,
+      "totalGates": 16,
+      "verifiedGatePercent": 0
+    },
+    "M3": {
+      "verifiedGates": 0,
+      "totalGates": 18,
+      "verifiedGatePercent": 0
+    },
+    "M4": {
+      "verifiedGates": 0,
+      "totalGates": 20,
+      "verifiedGatePercent": 0
+    },
+    "M5": {
+      "verifiedGates": 1,
+      "totalGates": 10,
+      "verifiedGatePercent": 10
+    }
+  },
+  "evidenceSources": {
+    "batch1": {
+      "path": "docs/EXECUTION_EVIDENCE_2026-10-31.md",
+      "section": "Verification / Delivered",
+      "kind": "recorded executed checks and actual browser review",
+      "scope": "a7031ae published baseline; narrow command/scenic adapters, not full M0 or map visual completion"
+    },
+    "batch2": {
+      "path": "docs/EXECUTION_EVIDENCE_2026-10-31.md",
+      "section": "Batch 2",
+      "kind": "recorded executed integrated checks",
+      "scope": "82ff1c2 baseline camp/coordinator/tree-slot behavior; not every executor"
+    },
+    "batch3": {
+      "path": "docs/EXECUTION_EVIDENCE_2026-10-31.md",
+      "section": "Batch 3",
+      "kind": "recorded actual Game.step shelter checks and bounded scenario results",
+      "scope": "83bfb06 baseline; first-winter defended runs predate added needs"
+    },
+    "winter": {
+      "path": "docs/FIRST_WINTER_2026-10-31.json",
+      "section": "updatedDefendedRuns / survivalGateCriteria",
+      "kind": "measured scenario artifact",
+      "scope": "Normal default-conflict defended benchmark before water/fuel rules; does not establish current combined M1 gate"
+    },
+    "batch4": {
+      "path": "docs/EXECUTION_EVIDENCE_2026-10-31.md",
+      "section": "Batch 4",
+      "kind": "recorded executed focused checks and desktop development/production interactions",
+      "scope": "c25f405 baseline; water/fuel quiet-conflict scenario and transferable haulage, not full updated combat+needs chapter"
+    },
+    "map_review": {
+      "path": "docs/MAP_VISUAL_REVIEW.md",
+      "section": "First implementation review / subsequent gallery critique",
+      "kind": "actual desktop images inspected; rejected defects recorded",
+      "scope": "Unpublished v11 art still pending fresh accepted gallery"
+    },
+    "map_brief": {
+      "path": "docs/MAP_REDESIGN_BRIEF.md",
+      "kind": "requirement/design only",
+      "scope": "Zero completion credit"
+    },
+    "conflict_brief": {
+      "path": "docs/CONFLICT_OBJECTIVES_BRIEF.md",
+      "kind": "requirement/design only",
+      "scope": "Natural conflict not yet integrated/published; zero completion credit"
+    }
+  },
+  "gates": [
+    {
+      "id": "M0-01",
+      "milestone": "M0",
+      "acceptance": "Gather/job-assignment physical actor eligibility gives one rejection reason and bounded actor assessments",
+      "catalogueRanges": [
+        "01-10",
+        "11-20"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch1"
+      ],
+      "remainingNotes": "Physical eligibility only; eventual order success/latency remains M0-10/12."
+    },
+    {
+      "id": "M0-02",
+      "milestone": "M0",
+      "acceptance": "Direct gather/drill interruption preserves already-paid transport progress and material charges",
+      "catalogueRanges": [
+        "51-60",
+        "91-100"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch1",
+        "batch4"
+      ],
+      "remainingNotes": "Direct gather/drill paid interruption and saved progress explicitly verified."
+    },
+    {
+      "id": "M0-03",
+      "milestone": "M0",
+      "acceptance": "Atomic reservation contract rejects partial claims and competing migrated actor ownership",
+      "catalogueRanges": [
+        "01-10",
+        "61-70"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch2"
+      ],
+      "remainingNotes": "Atomic contract plus migrated actor ownership checked; all-executor goods migration remains pending."
+    },
+    {
+      "id": "M0-04",
+      "milestone": "M0",
+      "acceptance": "Migrated tree workers share physical workplace slots and reconstruct ownership after save/load",
+      "catalogueRanges": [
+        "01-10",
+        "51-60"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch2"
+      ],
+      "remainingNotes": "Tree-slot reconciliation, physical work/delivery and save ownership checked."
+    },
+    {
+      "id": "M0-05",
+      "milestone": "M0",
+      "acceptance": "Paid transport projects survive maker reassignment/death and resume on a replacement without repayment",
+      "catalogueRanges": [
+        "51-60",
+        "91-100"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch4"
+      ],
+      "remainingNotes": "Replacement/original maker, death/workplace loss, cart input and legacy duration checks recorded."
+    },
+    {
+      "id": "M0-06",
+      "milestone": "M0",
+      "acceptance": "Construction interruption and paid-work resumption use a single actor/project owner",
+      "catalogueRanges": [
+        "61-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Foundations exist; single ownership and complete construction interruption acceptance not yet demonstrated."
+    },
+    {
+      "id": "M0-07",
+      "milestone": "M0",
+      "acceptance": "Gathering, construction, hauling and all crafting executors use coordinated atomic goods/capacity reservations",
+      "catalogueRanges": [
+        "11-20",
+        "51-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Tree/paid-haulage migrations are partial; other direct-mutation executors remain."
+    },
+    {
+      "id": "M0-08",
+      "milestone": "M0",
+      "acceptance": "Transport journeys, husbandry, expeditions and captivity migrate through the shared ownership contract",
+      "catalogueRanges": [
+        "31-40",
+        "91-100",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M0-09",
+      "milestone": "M0",
+      "acceptance": "Versioned simulation RNG and timestamped commands reproduce new-game outcomes across replay/save",
+      "catalogueRanges": [
+        "01-10",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Seeded world generation is not serialized simulation RNG or full deterministic replay."
+    },
+    {
+      "id": "M0-10",
+      "milestone": "M0",
+      "acceptance": "Command execution latency, blocked time, stealing and reservation failures are measured beyond eligibility",
+      "catalogueRanges": [
+        "11-20",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M0-11",
+      "milestone": "M0",
+      "acceptance": "Priority and recall changes conserve full-handed cargo, escrow and paid construction across interruption",
+      "catalogueRanges": [
+        "51-70",
+        "81-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M0-12",
+      "milestone": "M0",
+      "acceptance": "Full M0 integrated scenario passes direct override/recall/construction/paid-work resumption without repair",
+      "catalogueRanges": [
+        "11-20",
+        "51-70",
+        "91-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-01",
+      "milestone": "M1",
+      "acceptance": "Default player and rivals start as unbuilt camps with finite possessions and no automatic pen",
+      "catalogueRanges": [
+        "11-20",
+        "21-30",
+        "61-70"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch2"
+      ],
+      "remainingNotes": "v10 finite unbuilt camp opening is verified; inhabited prehistory remains M2-14."
+    },
+    {
+      "id": "M1-02",
+      "milestone": "M1",
+      "acceptance": "Goods physically reach a reachable camp before credit; recall/save never duplicates cargo",
+      "catalogueRanges": [
+        "11-20",
+        "91-100"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch2"
+      ],
+      "remainingNotes": "Camp approach, real walking/credit and save/recall conservation recorded."
+    },
+    {
+      "id": "M1-03",
+      "milestone": "M1",
+      "acceptance": "Losing a hall preserves a living society and its usable supply anchor",
+      "catalogueRanges": [
+        "21-30",
+        "61-70",
+        "111-120"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch2"
+      ],
+      "remainingNotes": "Living people retain society and camp supply after hall loss; full collapse/refounding still M2-12."
+    },
+    {
+      "id": "M1-04",
+      "milestone": "M1",
+      "acceptance": "Emergency occupants reach real entrances, respect capacity and become exposed when shelter is destroyed",
+      "catalogueRanges": [
+        "11-20",
+        "101-110"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch3"
+      ],
+      "remainingNotes": "20 actual Game.step frames, real shelter destruction and target reacquisition passed."
+    },
+    {
+      "id": "M1-05",
+      "milestone": "M1",
+      "acceptance": "All six difficulty profiles centrally control abundance/climate/provisions/pressure with explicit advantages",
+      "catalogueRanges": [
+        "01-10",
+        "11-20",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-06",
+      "milestone": "M1",
+      "acceptance": "Water collection traverses a discovered physical bank and returns finite cargo through interruption/save",
+      "catalogueRanges": [
+        "01-10",
+        "11-20",
+        "91-100"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch4"
+      ],
+      "remainingNotes": "Discovered bank collection, physical return and reassignment/recall/save conservation recorded."
+    },
+    {
+      "id": "M1-07",
+      "milestone": "M1",
+      "acceptance": "Cold consumes real stored fuel and shelter/fire benefits affect measured gradual exposure",
+      "catalogueRanges": [
+        "01-10",
+        "11-20"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch4"
+      ],
+      "remainingNotes": "Actual wood use and measured shelter/cold effects checked; no clothing completion implied."
+    },
+    {
+      "id": "M1-08",
+      "milestone": "M1",
+      "acceptance": "Desktop needs panel/ledger show actual reserves, physical-action availability and one disabled reason",
+      "catalogueRanges": [
+        "11-20"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch4"
+      ],
+      "remainingNotes": "Real desktop development/built-output controls opened and used with zero page errors."
+    },
+    {
+      "id": "M1-09",
+      "milestone": "M1",
+      "acceptance": "Rest, shelter, clothing, tool wear and repair form a viable survival production loop",
+      "catalogueRanges": [
+        "11-20",
+        "51-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Clothing and complete repair/needs production remain open."
+    },
+    {
+      "id": "M1-10",
+      "milestone": "M1",
+      "acceptance": "Tracking, hunting, carcass handling and wildlife hazards provide meaningful finite food",
+      "catalogueRanges": [
+        "11-20",
+        "31-40"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-11",
+      "milestone": "M1",
+      "acceptance": "Fishing uses actual reachable freshwater/coastal banks with physically returned catches",
+      "catalogueRanges": [
+        "11-20",
+        "31-40"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-12",
+      "milestone": "M1",
+      "acceptance": "Early animals require real capture, food and care rather than automatic initial gifts",
+      "catalogueRanges": [
+        "31-40"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-13",
+      "milestone": "M1",
+      "acceptance": "Seed-funded expandable farms follow contours and support soil/fallow/preservation/milling decisions",
+      "catalogueRanges": [
+        "01-10",
+        "41-50"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Contour-following farms are explicit latest scope; field-module presence is not current visual/gameplay acceptance."
+    },
+    {
+      "id": "M1-14",
+      "milestone": "M1",
+      "acceptance": "Food attention, local depletion/regrowth and warned hazards produce choices without broken labor",
+      "catalogueRanges": [
+        "01-10",
+        "11-20"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M1-15",
+      "milestone": "M1",
+      "acceptance": "Every map has mandatory hills/valleys/rivers/lakes; substantial landmasses have coherent drainage and reachable uplands",
+      "catalogueRanges": [
+        "01-10"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "v11 implementation and focused checks are unpublished integration work; zero credit until integrated acceptance/publish."
+    },
+    {
+      "id": "M1-16",
+      "milestone": "M1",
+      "acceptance": "Every map contains all required landscape families with organic forms and varied prominence",
+      "catalogueRanges": [
+        "01-10"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Organic v11 forms/material/water fixes are under desktop review; prior ellipse/teeth/striped fall gallery was rejected."
+    },
+    {
+      "id": "M1-17",
+      "milestone": "M1",
+      "acceptance": "Scenic scores expose geographic components and choose an above-average viable start when feasible",
+      "catalogueRanges": [
+        "01-10"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch1"
+      ],
+      "remainingNotes": "Numeric geographic score components and above-average candidate selection verified. User rejects broader art; M1-16/M5-04 remain pending."
+    },
+    {
+      "id": "M1-18",
+      "milestone": "M1",
+      "acceptance": "New terrain supports dry roots/foundations, freshwater access and prospectable mountain approaches",
+      "catalogueRanges": [
+        "01-10",
+        "51-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "New elevated water changes physical access/dry placements; unpublished v11 must pass broader scenarios."
+    },
+    {
+      "id": "M1-19",
+      "milestone": "M1",
+      "acceptance": "Water/cold neglect produces visible warnings and grace before gradual harm; legacy needs rules persist",
+      "catalogueRanges": [
+        "11-20"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch4"
+      ],
+      "remainingNotes": "Needs warnings/grace/neglect and legacy opt-in compatibility checked, not all survival pressures."
+    },
+    {
+      "id": "M1-20",
+      "milestone": "M1",
+      "acceptance": "Current Normal default-conflict unbuilt-camp scenario survives first winter with water/fuel/food/defense and no repair",
+      "catalogueRanges": [
+        "01-20",
+        "21-40",
+        "51-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Earlier defended pre-needs runs and separate quiet needs runs cannot be combined into proof of this gate."
+    },
+    {
+      "id": "M1-21",
+      "milestone": "M1",
+      "acceptance": "Every map contains at least eight substantial ecological regions with measured coverage, coherent moisture/soil/climate transitions and matching resources",
+      "catalogueRanges": [
+        "01-10"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Only three broad habitat labels are present; many-biome physical coverage and transitions are unverified."
+    },
+    {
+      "id": "M1-22",
+      "milestone": "M1",
+      "acceptance": "Biome presentation uses distinct grass/forest forms, wetland reeds, desert scrub and alpine vegetation with dry placement and bounded detail tiers",
+      "catalogueRanges": [
+        "01-10"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Distinct biome vegetation families/ground structure are not completed by recoloring the same trees or grass."
+    },
+    {
+      "id": "M2-01",
+      "milestone": "M2",
+      "acceptance": "Societies compare feasible bounded local-AI alternatives using explicit needs/costs/risks and reasons",
+      "catalogueRanges": [
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-02",
+      "milestone": "M2",
+      "acceptance": "Committed strategic plans reserve resources and use hysteresis/interruption rules",
+      "catalogueRanges": [
+        "51-70",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-03",
+      "milestone": "M2",
+      "acceptance": "Rivals develop from finite camps, scout and specialize without recurring resource gifts",
+      "catalogueRanges": [
+        "21-30",
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-04",
+      "milestone": "M2",
+      "acceptance": "Two rivals independently complete profitable physical trade through shared rules",
+      "catalogueRanges": [
+        "81-100",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Older rival economic/logistics reports and focused test files do not prove current shared-rule rival-rival completed route scenario."
+    },
+    {
+      "id": "M2-05",
+      "milestone": "M2",
+      "acceptance": "Two rivals compete/fight, negotiate a treaty and recover through the same society systems",
+      "catalogueRanges": [
+        "81-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "General directed multi-society war/treaty/recovery acceptance remains open."
+    },
+    {
+      "id": "M2-06",
+      "milestone": "M2",
+      "acceptance": "Directed society-pair ledger stores incidents/trust/grievances/agreements/dependencies/claims",
+      "catalogueRanges": [
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-07",
+      "milestone": "M2",
+      "acceptance": "Information travels through observation/envoys/routes; unknown actions do not generate remote knowledge",
+      "catalogueRanges": [
+        "71-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-08",
+      "milestone": "M2",
+      "acceptance": "Claims have defended cores/fading influence and witnessed extraction/settlement incidents",
+      "catalogueRanges": [
+        "01-10",
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-09",
+      "milestone": "M2",
+      "acceptance": "Warnings/compensation/transit denial/embargo/eviction precede proportionate escalation when appropriate",
+      "catalogueRanges": [
+        "81-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-10",
+      "milestone": "M2",
+      "acceptance": "Wealth creates learned opportunities/risks while safer geography and defense can deter or redirect attacks",
+      "catalogueRanges": [
+        "81-100",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-11",
+      "milestone": "M2",
+      "acceptance": "Arrivals, refugees, departures, aging, families and leadership preserve community identity",
+      "catalogueRanges": [
+        "21-30",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-12",
+      "milestone": "M2",
+      "acceptance": "Shortages and failed obligations cause warned gradual collapse, abandonment and possible refounding",
+      "catalogueRanges": [
+        "11-30",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-13",
+      "milestone": "M2",
+      "acceptance": "Leadership succession retains agreements, grievances and community histories",
+      "catalogueRanges": [
+        "21-30",
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-14",
+      "milestone": "M2",
+      "acceptance": "Inhabited-world start runs bounded recorded prehistory and discloses asymmetry",
+      "catalogueRanges": [
+        "21-30",
+        "61-70",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-15",
+      "milestone": "M2",
+      "acceptance": "Rival growth/investment/plan completion/recovery outcomes are measured on fixed and holdout worlds",
+      "catalogueRanges": [
+        "81-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M2-16",
+      "milestone": "M2",
+      "acceptance": "Full M2 chapter links surplus, wider access, exposed routes and independent society decisions",
+      "catalogueRanges": [
+        "01-10",
+        "51-70",
+        "81-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-01",
+      "milestone": "M3",
+      "acceptance": "Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load",
+      "catalogueRanges": [
+        "81-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-02",
+      "milestone": "M3",
+      "acceptance": "Caravan/depot/pack-animal routes scale capacity with actual equipment and escort obligations",
+      "catalogueRanges": [
+        "31-40",
+        "81-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-03",
+      "milestone": "M3",
+      "acceptance": "Markets consolidate known offers/contracts/cargo/storage with measurable handling/search benefit",
+      "catalogueRanges": [
+        "61-70",
+        "81-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-04",
+      "milestone": "M3",
+      "acceptance": "Shipment interruption and interception conserve cargo/equipment and measure profitability/reliability/loss",
+      "catalogueRanges": [
+        "81-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-05",
+      "milestone": "M3",
+      "acceptance": "Roads/bridges/canals/trenches require real work and bounded terrain/navigation updates",
+      "catalogueRanges": [
+        "01-10",
+        "61-70",
+        "91-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-06",
+      "milestone": "M3",
+      "acceptance": "Husbandry breeding/feed/products and pack transport connect to real expedition/trade needs",
+      "catalogueRanges": [
+        "31-40",
+        "91-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-07",
+      "milestone": "M3",
+      "acceptance": "Contested access and extraction support physical transit agreements, escorts or route abandonment",
+      "catalogueRanges": [
+        "01-10",
+        "81-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-08",
+      "milestone": "M3",
+      "acceptance": "Raids prepare/approach/contact/loot/withdraw; defense can deter them without automatic larger spawns",
+      "catalogueRanges": [
+        "81-90",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-09",
+      "milestone": "M3",
+      "acceptance": "Finite looting can succeed without compulsory burning and counts only physically returned goods",
+      "catalogueRanges": [
+        "81-90",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Natural non-destructive loot integration unpublished; ordinary destruction-linked loot is not this gate."
+    },
+    {
+      "id": "M3-10",
+      "milestone": "M3",
+      "acceptance": "Contextual capture/surrender preserves existing people and requires physical escort, custody and needs",
+      "catalogueRanges": [
+        "21-30",
+        "81-90",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Incidental surrender/forced-labor foundations do not complete contextual nonlethal capture/custody."
+    },
+    {
+      "id": "M3-11",
+      "milestone": "M3",
+      "acceptance": "Intact local occupation requires present control/garrison and preserves building/person/project identities",
+      "catalogueRanges": [
+        "21-30",
+        "61-70",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Local intact occupation is unpublished; society-wide treaty annexation is not this gate."
+    },
+    {
+      "id": "M3-12",
+      "milestone": "M3",
+      "acceptance": "Domination/vassalage uses local leverage and real continuing obligations rather than remote instant transfers",
+      "catalogueRanges": [
+        "81-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Remote strength-ratio treaty acceptance is not actual local sustained domination."
+    },
+    {
+      "id": "M3-13",
+      "milestone": "M3",
+      "acceptance": "Withdrawal/release returns surviving actors and possessions and updates local control/custody",
+      "catalogueRanges": [
+        "21-30",
+        "81-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Natural withdrawal/custody/control integration unpublished; zero credit."
+    },
+    {
+      "id": "M3-14",
+      "milestone": "M3",
+      "acceptance": "Negotiated aftermath preserves incidents, compensation, agreements and witnessed conflict knowledge",
+      "catalogueRanges": [
+        "71-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Player-centric peace foundations do not establish full shared-rule aftermath."
+    },
+    {
+      "id": "M3-15",
+      "milestone": "M3",
+      "acceptance": "Raids report actual casualties/loot/retreat and residents resume appropriate civilian work",
+      "catalogueRanges": [
+        "11-30",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-16",
+      "milestone": "M3",
+      "acceptance": "Captivity includes guard cost, injury/resistance/escape, ransom/exchange, integration and organized revolt",
+      "catalogueRanges": [
+        "11-30",
+        "81-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-17",
+      "milestone": "M3",
+      "acceptance": "Militia/formations/basic siege and staffed maintained walls protect actual approaches with era-correct gear",
+      "catalogueRanges": [
+        "51-70",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M3-18",
+      "milestone": "M3",
+      "acceptance": "Full M3 delivery/interception/defense/loot-withdrawal/negotiated-aftermath scenario passes with saves",
+      "catalogueRanges": [
+        "81-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current Natural-conflict integrated operation remains unpublished and unaccepted."
+    },
+    {
+      "id": "M4-01",
+      "milestone": "M4",
+      "acceptance": "Need-driven discoveries show observation/sample, performed experiment, demonstrated production and adoption",
+      "catalogueRanges": [
+        "11-20",
+        "51-60",
+        "71-80"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Existing discovery modules are foundations; visible need-led experiment/production/adoption chapter not yet demonstrated."
+    },
+    {
+      "id": "M4-02",
+      "milestone": "M4",
+      "acceptance": "Residents/players prioritize meaningful practical experiments with evidence and readable blocked reasons",
+      "catalogueRanges": [
+        "41-60",
+        "71-80"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-03",
+      "milestone": "M4",
+      "acceptance": "Teaching/successors/artifacts/records spread demonstrated techniques through learning/trade/migration",
+      "catalogueRanges": [
+        "21-30",
+        "71-90"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-04",
+      "milestone": "M4",
+      "acceptance": "Bronze/Iron/Classical advancement keeps 50/75/100 population plus practices/institutions/sustainable unspent reserves",
+      "catalogueRanges": [
+        "51-80",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-05",
+      "milestone": "M4",
+      "acceptance": "Small specialized societies remain competitive through trade and techniques without matching every population threshold",
+      "catalogueRanges": [
+        "51-60",
+        "71-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-06",
+      "milestone": "M4",
+      "acceptance": "Households request support and respond to needs/unequal burdens/allegiance without arbitrary order refusal",
+      "catalogueRanges": [
+        "11-30",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-07",
+      "milestone": "M4",
+      "acceptance": "Political complexity grows with population/diversity/distance/power and has warned negotiation/unrest stages",
+      "catalogueRanges": [
+        "21-30",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-08",
+      "milestone": "M4",
+      "acceptance": "Leaders propose projects/agreements/commitments with legitimacy and continuity consequences",
+      "catalogueRanges": [
+        "21-30",
+        "81-90",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-09",
+      "milestone": "M4",
+      "acceptance": "Council/ritual/learning/administrative institutions perform actual coordination/participation/training/delegation",
+      "catalogueRanges": [
+        "61-80",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-10",
+      "milestone": "M4",
+      "acceptance": "Practical metallurgy/material production covers garments/pottery/charcoal/copper/tin/bronze/iron with wear/workplaces",
+      "catalogueRanges": [
+        "51-60"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-11",
+      "milestone": "M4",
+      "acceptance": "Four construction families have distinct homes/stores/workshops/civic/defense silhouettes and learned diffusion",
+      "catalogueRanges": [
+        "51-70",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Palette/roof variants do not complete four functional architectural families."
+    },
+    {
+      "id": "M4-12",
+      "milestone": "M4",
+      "acceptance": "Player sandstone/plaster/courtyard/waterworks city develops maintained prosperity before selective ornament",
+      "catalogueRanges": [
+        "01-10",
+        "61-70",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-13",
+      "milestone": "M4",
+      "acceptance": "Dense neighborhoods/work yards/cargo/construction and era-appropriate residents visibly reflect real activity",
+      "catalogueRanges": [
+        "11-30",
+        "51-70",
+        "91-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "New appearance reference studies are requirements; no source implementation/acceptance credit."
+    },
+    {
+      "id": "M4-14",
+      "milestone": "M4",
+      "acceptance": "Compact desktop controls expose all buildable structures and knowledge-accurate political/resource/logistics minimap layers",
+      "catalogueRanges": [
+        "01-10",
+        "61-70",
+        "81-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Desktop-only acceptance; no mobile denominator or mobile work is counted."
+    },
+    {
+      "id": "M4-15",
+      "milestone": "M4",
+      "acceptance": "Instrumental activity/culture/era music and spatial rate-limited work/combat sounds remain readable",
+      "catalogueRanges": [
+        "21-30",
+        "61-70",
+        "101-110"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-16",
+      "milestone": "M4",
+      "acceptance": "Prosperity victory completes in a dedicated connected scenario and offers continuation",
+      "catalogueRanges": [
+        "41-70",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-17",
+      "milestone": "M4",
+      "acceptance": "Commerce victory completes in a dedicated connected scenario and offers continuation",
+      "catalogueRanges": [
+        "81-100",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-18",
+      "milestone": "M4",
+      "acceptance": "Dominion victory completes in a dedicated connected scenario without compulsory extinction/destruction",
+      "catalogueRanges": [
+        "81-90",
+        "101-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-19",
+      "milestone": "M4",
+      "acceptance": "Knowledge victory completes through demonstrated techniques and a dedicated connected scenario",
+      "catalogueRanges": [
+        "51-60",
+        "71-80",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M4-20",
+      "milestone": "M4",
+      "acceptance": "Legacy victory completes with bounded nonrepeatable era achievements, identity/history and continuation",
+      "catalogueRanges": [
+        "21-30",
+        "61-80",
+        "111-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M5-01",
+      "milestone": "M5",
+      "acceptance": "Complete current Stone-through-Classical campaign passes all required release scenarios without command repair",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "All required current release scenarios must pass together; currently incomplete."
+    },
+    {
+      "id": "M5-02",
+      "milestone": "M5",
+      "acceptance": "Published baseline migration checks preserve historical terrain hashes and camp/needs/paid-project saves",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "batch1",
+        "batch2",
+        "batch4"
+      ],
+      "remainingNotes": "Recorded historical generation hashes/roundtrips plus old-needs behavior and transferable project compatibility. New v11 qualification remains M5-01/03/09."
+    },
+    {
+      "id": "M5-03",
+      "milestone": "M5",
+      "acceptance": "Latest release candidate passes typecheck/build and clean development/production desktop interactions",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Earlier c25f405 build/desktop smoke passed, but current unpublished candidate has no final production qualification yet."
+    },
+    {
+      "id": "M5-04",
+      "milestone": "M5",
+      "acceptance": "New map gallery passes close/middle/wide same-landscape, overcast, water/fall/cliff/dune/route/contour-farm review",
+      "catalogueRanges": [
+        "01-10",
+        "41-70"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Root owns the next actual desktop gallery; raw GL cleanliness alone is not visual acceptance."
+    },
+    {
+      "id": "M5-05",
+      "milestone": "M5",
+      "acceptance": "Actual physical geometry agrees with depicted surfaces, farms, water, dry placement and navigation",
+      "catalogueRanges": [
+        "01-10",
+        "41-70",
+        "91-100"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M5-06",
+      "milestone": "M5",
+      "acceptance": "M1 MacBook Air 8GB desktop target meets median <=33ms and p95 <=50ms at 100 visible residents/60 buildings",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Target hardware figures are proposed targets, not achieved measurements."
+    },
+    {
+      "id": "M5-07",
+      "milestone": "M5",
+      "acceptance": "Separate 240-300-total-resident stress profile reports CPU/navigation/render/memory and full-pipeline costs",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Postprocess final-pass call count is not full-scene draw-call/frame-time evidence."
+    },
+    {
+      "id": "M5-08",
+      "milestone": "M5",
+      "acceptance": "Major mechanics expose named parameters/units/reasons/outcomes and meaningful-decision/chapter metrics",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M5-09",
+      "milestone": "M5",
+      "acceptance": "Fixed regression and rotating holdout scenarios improve intended outcomes without conservation/save regressions",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+    },
+    {
+      "id": "M5-10",
+      "milestone": "M5",
+      "acceptance": "Packaged published first release preserves saves/preview/later-era content and records exact evidence/remaining expansion scope",
+      "catalogueRanges": [
+        "01-120"
+      ],
+      "status": "pending",
+      "credit": 0,
+      "evidence": [],
+      "remainingNotes": "A maintained preview/batch push is not the completed first release."
+    }
+  ],
+  "catalogueCoverage": {
+    "01-10": [
+      "M0-01",
+      "M0-03",
+      "M0-04",
+      "M0-09",
+      "M1-05",
+      "M1-06",
+      "M1-07",
+      "M1-13",
+      "M1-14",
+      "M1-15",
+      "M1-16",
+      "M1-17",
+      "M1-18",
+      "M1-20",
+      "M1-21",
+      "M1-22",
+      "M2-08",
+      "M2-16",
+      "M3-05",
+      "M3-07",
+      "M4-12",
+      "M4-14",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-04",
+      "M5-05",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "11-20": [
+      "M0-01",
+      "M0-07",
+      "M0-10",
+      "M0-12",
+      "M1-01",
+      "M1-02",
+      "M1-04",
+      "M1-05",
+      "M1-06",
+      "M1-07",
+      "M1-08",
+      "M1-09",
+      "M1-10",
+      "M1-11",
+      "M1-14",
+      "M1-19",
+      "M1-20",
+      "M2-12",
+      "M3-15",
+      "M3-16",
+      "M4-01",
+      "M4-06",
+      "M4-13",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "21-30": [
+      "M1-01",
+      "M1-03",
+      "M1-20",
+      "M2-03",
+      "M2-11",
+      "M2-12",
+      "M2-13",
+      "M2-14",
+      "M3-10",
+      "M3-11",
+      "M3-13",
+      "M3-15",
+      "M3-16",
+      "M4-03",
+      "M4-06",
+      "M4-07",
+      "M4-08",
+      "M4-13",
+      "M4-15",
+      "M4-20",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "31-40": [
+      "M0-08",
+      "M1-10",
+      "M1-11",
+      "M1-12",
+      "M1-20",
+      "M3-02",
+      "M3-06",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "41-50": [
+      "M1-13",
+      "M4-02",
+      "M4-16",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-04",
+      "M5-05",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "51-60": [
+      "M0-02",
+      "M0-04",
+      "M0-05",
+      "M0-07",
+      "M0-11",
+      "M0-12",
+      "M1-09",
+      "M1-18",
+      "M1-20",
+      "M2-02",
+      "M2-16",
+      "M3-17",
+      "M4-01",
+      "M4-02",
+      "M4-04",
+      "M4-05",
+      "M4-10",
+      "M4-11",
+      "M4-13",
+      "M4-16",
+      "M4-19",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-04",
+      "M5-05",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "61-70": [
+      "M0-03",
+      "M0-06",
+      "M0-07",
+      "M0-11",
+      "M0-12",
+      "M1-01",
+      "M1-03",
+      "M1-09",
+      "M1-18",
+      "M1-20",
+      "M2-02",
+      "M2-14",
+      "M2-16",
+      "M3-03",
+      "M3-05",
+      "M3-11",
+      "M3-17",
+      "M4-04",
+      "M4-09",
+      "M4-11",
+      "M4-12",
+      "M4-13",
+      "M4-14",
+      "M4-15",
+      "M4-16",
+      "M4-20",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-04",
+      "M5-05",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "71-80": [
+      "M2-07",
+      "M3-14",
+      "M4-01",
+      "M4-02",
+      "M4-03",
+      "M4-04",
+      "M4-05",
+      "M4-09",
+      "M4-19",
+      "M4-20",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "81-90": [
+      "M0-11",
+      "M2-01",
+      "M2-03",
+      "M2-04",
+      "M2-05",
+      "M2-06",
+      "M2-07",
+      "M2-08",
+      "M2-09",
+      "M2-10",
+      "M2-13",
+      "M2-15",
+      "M2-16",
+      "M3-01",
+      "M3-02",
+      "M3-03",
+      "M3-04",
+      "M3-07",
+      "M3-08",
+      "M3-09",
+      "M3-10",
+      "M3-12",
+      "M3-13",
+      "M3-14",
+      "M3-16",
+      "M3-18",
+      "M4-03",
+      "M4-05",
+      "M4-08",
+      "M4-14",
+      "M4-17",
+      "M4-18",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "91-100": [
+      "M0-02",
+      "M0-05",
+      "M0-08",
+      "M0-11",
+      "M0-12",
+      "M1-02",
+      "M1-06",
+      "M2-04",
+      "M2-07",
+      "M2-10",
+      "M2-15",
+      "M2-16",
+      "M3-01",
+      "M3-02",
+      "M3-03",
+      "M3-04",
+      "M3-05",
+      "M3-06",
+      "M3-07",
+      "M3-13",
+      "M3-18",
+      "M4-13",
+      "M4-14",
+      "M4-17",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-05",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "101-110": [
+      "M0-08",
+      "M1-04",
+      "M2-05",
+      "M2-09",
+      "M2-10",
+      "M2-15",
+      "M2-16",
+      "M3-04",
+      "M3-07",
+      "M3-08",
+      "M3-09",
+      "M3-10",
+      "M3-11",
+      "M3-12",
+      "M3-13",
+      "M3-14",
+      "M3-15",
+      "M3-16",
+      "M3-17",
+      "M3-18",
+      "M4-13",
+      "M4-15",
+      "M4-18",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ],
+    "111-120": [
+      "M0-09",
+      "M0-10",
+      "M1-03",
+      "M1-05",
+      "M2-01",
+      "M2-02",
+      "M2-03",
+      "M2-04",
+      "M2-05",
+      "M2-06",
+      "M2-08",
+      "M2-09",
+      "M2-10",
+      "M2-11",
+      "M2-12",
+      "M2-13",
+      "M2-14",
+      "M2-15",
+      "M2-16",
+      "M3-11",
+      "M3-12",
+      "M3-14",
+      "M3-16",
+      "M4-04",
+      "M4-05",
+      "M4-06",
+      "M4-07",
+      "M4-08",
+      "M4-09",
+      "M4-11",
+      "M4-12",
+      "M4-16",
+      "M4-17",
+      "M4-18",
+      "M4-19",
+      "M4-20",
+      "M5-01",
+      "M5-02",
+      "M5-03",
+      "M5-06",
+      "M5-07",
+      "M5-08",
+      "M5-09",
+      "M5-10"
+    ]
+  },
+  "expansionNotInDenominator": [
+    "Medieval/regional government and advanced siege/full naval warfare",
+    "Renaissance cities and expanded industries/luxuries",
+    "Global exploration, later industry and advanced institutions",
+    "Space settlement",
+    "Detailed sanitation/epidemiology and long-term climate/ecological succession",
+    "Expanded species/selective breeding/orchards/pests/crop disease/advanced rotations",
+    "Large-map region summaries and low-detail distant simulation"
+  ],
+  "preservationRequirements": [
+    "Retain existing later-era saves/content while first-release milestones are completed.",
+    "Keep the existing playable preview and saved villages.",
+    "Do not delete deferred catalogue work or silently count it as complete."
+  ],
+  "baselineState": "frozen",
+  "frozenDate": "2026-10-31"
+}
