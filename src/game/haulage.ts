@@ -221,7 +221,7 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
     u.workReason = `Walking to make ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()}`;
     return true;
   }
-  job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt) * predisposition(u).strength);
+  job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt,b) * predisposition(u).strength);
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
   u.workReason = `Making ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {

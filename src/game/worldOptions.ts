@@ -1,5 +1,7 @@
 export const WORLD_LAYOUTS=['pangaea','continents','archipelago'] as const;
 export type WorldLayout=typeof WORLD_LAYOUTS[number];
 export const WORLD_SIZES=[1040,1560,2080] as const;
-export type WorldOptions={size:typeof WORLD_SIZES[number];layout:WorldLayout;randomLayout?:true};
-export type WorldRequest={size?:typeof WORLD_SIZES[number];layout?:WorldLayout|'random';randomLayout?:true};
+/** Only new V14 openings carry hint2. Absent in old saves means legacy1;
+ * request1 is internal reconstruction metadata and is never serialized. */
+export type WorldOptions={size:typeof WORLD_SIZES[number];layout:WorldLayout;randomLayout?:true;openingSiteVersion?:2};
+export type WorldRequest={size?:typeof WORLD_SIZES[number];layout?:WorldLayout|'random';randomLayout?:true;openingSiteVersion?:1|2};

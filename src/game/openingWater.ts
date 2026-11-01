@@ -26,3 +26,22 @@ export function openingWaterSurvey(t:Terrain){
   candidates(near:Point){const points:Point[]=[],used=new Set<string>();for(const b of [...banks].sort((a,b)=>Math.hypot(a.x-near.x,a.z-near.z)-Math.hypot(b.x-near.x,b.z-near.z)).slice(0,rules.candidateBankLimit))for(let i=0;i<12;i++){const a=i*Math.PI/6,x=Math.round((b.x+Math.cos(a)*rules.homeOffsetMetres)/2)*2,z=Math.round((b.z+Math.sin(a)*rules.homeOffsetMetres)/2)*2,key=`${x},${z}`;if(!used.has(key)){used.add(key);points.push({x,z});}}return points;},
  };
 }
+
+/** New openings only: physical samples cover the hall apron AND each real
+ * founding resident offset. A plane has zero radial mean rise even on a slope;
+ * positive rise detects a depression without confusing a hillside with a pit.
+ * These rules select existing ground; they never change its height. */
+export const OPENING_CAMP_RULES={maximumGrade:.22,minimumDryClearanceMetres:.55,maximumApronReliefMetres:2.4,maximumClosedDepressionMetres:.12,maximumMeanRiseAt4Metres:.22,maximumMeanRiseAt8Metres:.65,gradeProbeMetres:2,ringSamples:16} as const;
+export const OPENING_RESIDENT_OFFSETS:readonly Point[]=[{x:5,z:-3},{x:-2.5,z:Math.sin(Math.PI*2/3)*5-3},{x:-2.5,z:Math.sin(Math.PI*4/3)*5-3},{x:4,z:-5},{x:-5,z:-4}];
+export function openingCampSurvey(t:Pick<Terrain,'height'|'water'>,home:Point){
+ const r=OPENING_CAMP_RULES,points:Point[]=[home,...OPENING_RESIDENT_OFFSETS.map(p=>({x:home.x+p.x,z:home.z+p.z}))];
+ for(let z=-6;z<=6;z+=3)for(let x=-6;x<=6;x+=3)points.push({x:home.x+x,z:home.z+z});
+ let maximumGrade=0,minimumDryClearanceMetres=Infinity,maximumClosedDepressionMetres=0,maximumMeanRiseAt4Metres=-Infinity,maximumMeanRiseAt8Metres=-Infinity,low=Infinity,high=-Infinity;
+ for(const p of points){
+  const h=t.height(p.x,p.z),d=r.gradeProbeMetres,grade=Math.hypot((t.height(p.x+d,p.z)-t.height(p.x-d,p.z))/(2*d),(t.height(p.x,p.z+d)-t.height(p.x,p.z-d))/(2*d));
+  maximumGrade=Math.max(maximumGrade,grade);minimumDryClearanceMetres=Math.min(minimumDryClearanceMetres,h-t.water(p.x,p.z));low=Math.min(low,h);high=Math.max(high,h);
+  for(const radius of[4,8]){let min=Infinity,sum=0;for(let i=0;i<r.ringSamples;i++){const a=i*Math.PI*2/r.ringSamples,rise=t.height(p.x+Math.cos(a)*radius,p.z+Math.sin(a)*radius)-h;min=Math.min(min,rise);sum+=rise;}maximumClosedDepressionMetres=Math.max(maximumClosedDepressionMetres,min);if(radius===4)maximumMeanRiseAt4Metres=Math.max(maximumMeanRiseAt4Metres,sum/r.ringSamples);else maximumMeanRiseAt8Metres=Math.max(maximumMeanRiseAt8Metres,sum/r.ringSamples);}
+ }
+ const apronReliefMetres=high-low;
+ return{valid:maximumGrade<=r.maximumGrade&&minimumDryClearanceMetres>=r.minimumDryClearanceMetres&&apronReliefMetres<=r.maximumApronReliefMetres&&maximumClosedDepressionMetres<=r.maximumClosedDepressionMetres&&maximumMeanRiseAt4Metres<=r.maximumMeanRiseAt4Metres&&maximumMeanRiseAt8Metres<=r.maximumMeanRiseAt8Metres,maximumGrade,minimumDryClearanceMetres,apronReliefMetres,maximumClosedDepressionMetres,maximumMeanRiseAt4Metres,maximumMeanRiseAt8Metres};
+}

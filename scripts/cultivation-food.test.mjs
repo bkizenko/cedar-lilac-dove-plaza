@@ -12,7 +12,7 @@ function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.world.he
 test('food lots conserve real meals and older aggregate saves remain edible',()=>{
   const g=fixture(),t=g.tribe(0);t.food=20;t.foodLots=undefined;
   receiveFood(g,0,8,'fish');receiveFood(g,0,10,'grain');
-  assert.deepEqual({...foodInventory(t)},{provisions:20,berries:0,fish:8,meat:0,grain:10,pulses:0,tubers:0,milk:0});
+  assert.deepEqual({...foodInventory(t)},{provisions:20,berries:0,fish:8,meat:0,grain:10,pulses:0,tubers:0,milk:0,bread:0});
   consumeAndSpoilFood(g,0,2,1);assert.ok(t.food<36&&t.food>35);
   assert.equal(Object.values(t.foodLots).reduce((a,b)=>a+b,0),t.food);
   t.food-=5;assert.ok(Math.abs(Object.values(foodInventory(t)).reduce((a,b)=>a+b,0)-t.food)<1e-8);

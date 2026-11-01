@@ -66,6 +66,8 @@ export class Engine {
   moveMode = false;
   loggingMode = false;
   pointer = { x: 0, y: 0 };
+  private nextHoverAt=0;
+  private onPointerLeave=()=>{this.view.hoveredUnitId=null;};
   gateFacing:GateFacing="north";
   private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
@@ -262,6 +264,7 @@ export class Engine {
     window.addEventListener("beforeunload",this.onPageHide);
     c.addEventListener("pointerdown", this.onPointerDown);
     c.addEventListener("pointermove", this.onPointerMove);
+    c.addEventListener("pointerleave",this.onPointerLeave);
     c.addEventListener("pointerup", this.onPointerUp);
     c.addEventListener("pointercancel", this.onPointerUp);
     window.addEventListener("wheel", this.onWheel, { passive: false });
@@ -340,6 +343,9 @@ export class Engine {
     const p = this.canvasXY(e);
     this.pointer.x = p.x;
     this.pointer.y = p.y;
+    const now=performance.now();
+    if(this.game.state.placing||this.loggingMode||this.drag||this.panDrag||this.rotDrag)this.view.hoveredUnitId=null;
+    else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);}
     if (this.panDrag) {
       const dx = e.clientX - this.panDrag.x;
       const dy = e.clientY - this.panDrag.y;
@@ -921,6 +927,7 @@ export class Engine {
     document.removeEventListener("visibilitychange", this.onVis);
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
+    this.canvas.removeEventListener("pointerleave",this.onPointerLeave);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
     this.canvas.removeEventListener("pointercancel", this.onPointerUp);
     window.removeEventListener("wheel", this.onWheel);

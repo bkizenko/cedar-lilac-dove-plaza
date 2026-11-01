@@ -29,11 +29,13 @@ export function craftBenchReady(g: Game, u: Unit, b: Building) {
   return false;
 }
 /** Practice accrues only during hands-on crafting, never while travelling or queued. */
-export function craftingEffort(u: Unit, dt: number) {
+export const CRAFTING_WORKPLACE_RATES={townhall:1,workshop:1.25,forge:1,barracks:1,dock:1} as const;
+export function craftingWorkplaceRate(b?:Building){return b?.type==='workshop'?CRAFTING_WORKPLACE_RATES.workshop:1;}
+export function craftingEffort(u: Unit, dt: number,b?:Building) {
   const seconds = Math.max(0, dt),
     rate = 1 + Math.min(0.3, (u.craftingXP || 0) / 1200);
   u.craftingXP = Math.min(36000, (u.craftingXP || 0) + seconds);
-  return seconds * rate;
+  return seconds * rate * craftingWorkplaceRate(b);
 }
 export function craftingReport(g: Game, id: number) {
   const b = g.state.buildings.find((b) => b.id === id);
@@ -41,7 +43,7 @@ export function craftingReport(g: Game, id: number) {
   const count = craftingQueue(g, b).length,
     benches = craftingBenches(b);
   return benches
-    ? `${Math.min(count, benches)}/${benches} crafting benches reserved${count > benches ? ` · ${count - benches} waiting` : ""}. More shelters let more adults craft at once.`
+    ? `${Math.min(count, benches)}/${benches} crafting benches reserved${count > benches ? ` · ${count - benches} waiting` : ""}. ${b.type==='workshop'?'Crafting shelter: 25% faster hands-on work than the hall; three shared benches.':'A crafting shelter offers three shared benches and 25% faster hands-on work.'}`
     : "";
 }
 

@@ -13,7 +13,7 @@ export function PlotControls({game:g,building:b,refresh}:{game:Game;building:Bui
  const year=calendar(g).year,sown=b.crop?.year===year&&(b.crop.planted||0)>0,resting=b.fallowYear===year;
  const crops=g.tribe(b.team).cultivated||[];
  return <section className="rounded-lg border border-parchment/20 p-3 text-sm" aria-label="Plot details">
-   <div className="flex justify-between gap-2"><strong>{report?report.stage:'Storage capacity'}</strong><span>{report?`${report.staff}/${report.workerSlots} workers`:`${Math.floor(200*plotArea(b))} supplies`}</span></div>
+   <div className="flex justify-between gap-2"><strong>{report?report.stage:'Food storage contribution'}</strong><span>{report?`${report.staff}/${report.workerSlots} workers`:`+${Math.floor(200*plotArea(b))} food threshold`}</span></div>
    {report&&<div className="mt-2 grid grid-cols-2 gap-2"><div><span className="block text-parchment-dim">Harvest forecast</span><strong>{report.projected} / {report.potential}</strong><span className="block text-xs text-parchment-dim">{report.kind} · current / full care</span></div><div><span className="block text-parchment-dim">Work remaining</span><strong>{report.workSeconds}s</strong></div></div>}
    {report&&<p className="mt-2 text-sm text-parchment-dim">Soil {report.soil}% · Moisture {report.water}%</p>}
    {report&&<button className="mt-3 w-full rounded-md border border-bronze/40 px-3 py-2" onClick={()=>{staffField(g,b);refresh();}}>Assign farmers</button>}

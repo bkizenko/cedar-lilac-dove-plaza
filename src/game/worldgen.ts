@@ -1,4 +1,4 @@
-import {openingWaterSurvey,OPENING_WATER_RULES} from './openingWater';
+import {openingWaterSurvey,openingCampSurvey,OPENING_WATER_RULES} from './openingWater';
 import {continentalRiparian} from './continentalRiparian';
 import {variedLandforms,variedGeography,surveyVariety,validateVariety,makeLandContinuation,VARIETY_RULES,type TownCandidate} from './worldVariety';
 import {multipleLandmasses,multipleGeography,measureLandmasses,MULTILAND_RULES} from './multipleLandmasses';
@@ -832,7 +832,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       const sorted=[...candidates].sort((a,b)=>a.score-b.score);
       const threshold=Math.max(mean,sorted[Math.floor((sorted.length-1)*SCENERY_RULES.playerCandidatePercentile)]?.score??0);
       const sceneTarget=version>=11?geo?.features.find(f=>f.kind==='lake')??home:home;
-      const best=candidates.filter(c=>c.score>=threshold&&(!opening||opening.at(c))).sort((a,b)=>Math.hypot(a.x-sceneTarget.x,a.z-sceneTarget.z)-Math.hypot(b.x-sceneTarget.x,b.z-sceneTarget.z))[0];
+      const best=candidates.filter(c=>c.score>=threshold&&(!opening||opening.at(c))&&(version<14||request.openingSiteVersion===1||openingCampSurvey({height:(x,z)=>sample(heights,x,z),water:localLevel},c).valid)).sort((a,b)=>Math.hypot(a.x-sceneTarget.x,a.z-sceneTarget.z)-Math.hypot(b.x-sceneTarget.x,b.z-sceneTarget.z))[0];
       // Exceptional layouts keep the safest available opening rather than
       // inventing scenery or accepting an unsafe clearing to hit a preference.
       const selected=best??(opening?undefined:[...candidates].sort((a,b)=>b.score-a.score)[0]);

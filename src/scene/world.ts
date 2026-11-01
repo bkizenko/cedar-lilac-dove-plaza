@@ -1,3 +1,4 @@
+import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
 import {ExcavationLayer} from './excavationLayer';
 import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
@@ -72,7 +73,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "hearth","butcher","dryrack","tanner","tailor",
+  "grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -180,6 +181,7 @@ export class WorldView {
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
+  hoveredUnitId:number|null=null;
   rings!: THREE.InstancedMesh;
   resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
   workRings!: THREE.InstancedMesh;
@@ -416,8 +418,9 @@ export class WorldView {
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.9,
+        depthWrite: false,
       }),
-      40,
+      512,
     );
     this.rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.rings.count = 0;
@@ -967,6 +970,11 @@ export class WorldView {
     );
     this.camera.position.copy(this.tmpCam);
     this.camera.lookAt(this.look.x, this.look.y + 1.2, this.look.z);
+  }
+
+  hoverPerson(cx:number,cy:number,game:Game){
+    if(!pointerNearPerson(cx,cy,game.state.units,(x,y,z)=>this.project(x,y,z),u=>u.team===0||game.visibleAt(u.x,u.z)))return null;
+    const hit=this.pickEntity(cx,cy,game);return hit?.kind==='unit'?hit.id:null;
   }
 
   pickEntity(cx: number, cy: number, game: Game) {
@@ -1677,7 +1685,7 @@ export class WorldView {
         _c.set(st.unit);
         _c.offsetHSL(((u.tint || 0) - 0.5) * 0.12, 0.04, ((u.stature || 1) - 1) * 0.12);
         if (mesh.instanceColor) mesh.setColorAt(i, _c);
-        if (this.unitRingsEnabled && u.selected && ri < 40) {
+        if (unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled) && ri < instCap(this.rings)-(this.hoveredUnitId!==null&&u.id!==this.hoveredUnitId?1:0)) {
           _p.set(u.x, u.y + 0.05, u.z);
           _e.set(-Math.PI / 2, 0, 0);
           _q.setFromEuler(_e);
@@ -1692,7 +1700,7 @@ export class WorldView {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
     if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
-    if (game.state.selBld && game.state.selBld.hp > 0 && ri < 40) {
+    if (game.state.selBld && game.state.selBld.hp > 0 && ri < instCap(this.rings)) {
       const b = game.state.selBld;
       _p.set(b.x, b.y + 0.06, b.z);
       _e.set(-Math.PI / 2, 0, 0);

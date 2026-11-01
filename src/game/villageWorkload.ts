@@ -6,7 +6,7 @@ import {BUILDINGS,BUILD_TIME,GATHER,GATHER_WORK_RATE} from './constants';
 import {calendar,isDependent,foodDemand,farmHarvestEstimate} from './settlement';
 import {predisposition} from './people';
 import {farmToolRate} from './farmTools';
-import {craftingBenches} from './crafting';
+import {craftingBenches,craftingWorkplaceRate} from './crafting';
 import {carryingCapacity,loadedHaulSpeed} from './haulage';
 import {plotArea,expansionCost} from './plots';
 import {planMissing} from './construction';
@@ -105,7 +105,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
    if(herd.length)add({id:`herd:${b.id}`,label:keeper?'Assigned herd keeper':'Maintain herd care',category:'Husbandry',personSeconds:keeper?H:H*r.careDecayPerSecond/r.careGainPerWorkSecond,status:keeper?'active':'queued',actorIds:keeper?[keeper.id]:[],priority:700,blocker:!keeper?'Keeper not assigned':null});}
  }
  const craft=(id:string,label:string,u:Unit|undefined,job:{progress:number;duration:number;workplace:number;paused?:boolean},blocker?:string,strengthWork=true)=>{
-  const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience;
+  const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b);
   const row:WorkloadTask={id,label,category:'Crafting',personSeconds:Math.max(0,job.duration-job.progress)/effort+(u&&b?travel(u,b.x,b.z):0),status:job.paused?'paused':!b?'blocked':u&&!outsideRole(g,u)&&!claimed.has(u.id)?'active':'queued',actorIds:u?[u.id]:[],priority:450,blocker:job.paused?blocker||'Paid project paused':!b?'Compatible workplace missing':blocker||null};add(row);
  };
  const projects=(g.state as WorkState).haulageProjects??[],projectIds=new Set<number>();
@@ -141,11 +141,13 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  if(extraWater>1e-6){const trips=Math.ceil(extraWater/SURVIVAL_RULES.waterTripLiters),bank=eligible.find(u=>u.waterWork)?.waterWork;add({id:'needs:water',label:'Maintain drinking-water reserve',category:'Water',personSeconds:trips*(SURVIVAL_RULES.collectSeconds+(bank?trip(bank.bankX,bank.bankZ)*2:0)),status:'queued',actorIds:[],priority:1100,blocker:bank?'Another water trip needs an available adult':'Assign a discovered reachable freshwater bank; travel time not yet measured',units:extraWater});}
  // Do not invent finite work for scouting, combat, or an unbuilt research label.
  const liveWaiting=residents.filter(u=>u.workReason&&/waiting|queued|blocked|unreachable|no (reachable|free|available)|occupied/i.test(u.workReason)).map(u=>({actorId:u.id,name:u.name||`Resident ${u.id}`,reason:u.workReason!}));
+ const constructionPlans=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.build<1&&!!b.plannedCost),planIds=new Set(constructionPlans.map(b=>`build:${b.id}`));
+ const plannedConstruction={count:constructionPlans.length,paused:constructionPlans.filter(b=>b.planPaused).length,personSeconds:tasks.filter(t=>planIds.has(t.id)&&t.status!=='paused').reduce((n,t)=>n+t.personSeconds,0)};
  const total=tasks.filter(t=>t.status!=='paused').reduce((n,t)=>n+t.personSeconds,0),blocked=tasks.filter(t=>t.status==='blocked').reduce((n,t)=>n+t.personSeconds,0),paused=tasks.filter(t=>t.status==='paused').reduce((n,t)=>n+t.personSeconds,0),capacity=people.reduce((n,p)=>n+p.capacitySeconds,0),percent=capacity>0?total/capacity*100:null;
  const warnings:string[]=[];if(percent!==null&&percent>100)warnings.push(`Queued and recurring work exceeds the next ${Math.round(H/60)} minutes of adult capacity. Prioritize needs and time-sensitive harvests, or pause lower-priority work.`);
  if(!capacity&&total>0)warnings.push('No civilian adult capacity is currently available. Guards, dependents and distant missions are not spare labor.');if(blocked)warnings.push('Some work is blocked by real inputs or a missing workplace; more people alone will not resolve every delay.');
  if(liveWaiting.length||tasks.some(t=>t.blocker))warnings.push('Waiting reasons below come from current assignments, materials and bench limits. The percentage adds no random failure or new speed penalty.');
  const timedQueues=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&b.queue.length).map(b=>({buildingId:b.id,label:BUILDINGS[b.type].name,entries:b.queue.length,remainingSeconds:b.queue.reduce((n,q)=>n+Math.max(0,q.max-q.t),0),reason:'Existing training timers do not reserve hands-on labor; an available adult is required at completion'}));
- return{version:r.version,timedQueues,team,horizonSeconds:H,workloadPercent:percent,demandPersonSeconds:total,capacityPersonSeconds:capacity,runnablePersonSeconds:total-blocked,blockedPersonSeconds:blocked,pausedPersonSeconds:paused,adultResidents:adults.length,dependents:residents.length-adults.length,civilianAdults:eligible.length,effectiveAdults:capacity/H,assignedAdults:claimed.size,freeNow:people.filter(p=>p.freeNow).length,people,tasks:tasks.sort((a,b)=>b.priority-a.priority),waiting:liveWaiting,warnings,manual:team===0&&g.state.autoWorkEnabled===false,
+ return{version:r.version,timedQueues,plannedConstruction,team,horizonSeconds:H,workloadPercent:percent,demandPersonSeconds:total,capacityPersonSeconds:capacity,runnablePersonSeconds:total-blocked,blockedPersonSeconds:blocked,pausedPersonSeconds:paused,adultResidents:adults.length,dependents:residents.length-adults.length,civilianAdults:eligible.length,effectiveAdults:capacity/H,assignedAdults:claimed.size,freeNow:people.filter(p=>p.freeNow).length,people,tasks:tasks.sort((a,b)=>b.priority-a.priority),waiting:liveWaiting,warnings,manual:team===0&&g.state.autoWorkEnabled===false,
   estimate:'Remaining hands-on work uses current executor rates, tools and practice. Hauling is straight-line travel; rows, routing, interruptions, future weather and serial work can take longer. Paused projects are excluded. Existing blockers are reported without running the scheduler.',rules:r};
 }

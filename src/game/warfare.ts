@@ -56,7 +56,7 @@ export function weaponWorkAI(g:Game,u:Unit,dt:number){
   if(g.state.weather==='storm'||g.clockState().period==='Night'&&!g.state.nightWork)return false;
   if(!craftBenchReady(g,u,b))return true;
   if(!g.buildingWorkReached(u,b)){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);return true;}
-  job.progress=Math.min(job.duration,job.progress+craftingEffort(u,dt)*predisposition(u).strength);
+  job.progress=Math.min(job.duration,job.progress+craftingEffort(u,dt,b)*predisposition(u).strength);
   u.stride+=dt*5;u.facing=Math.atan2(b.x-u.x,b.z-u.z);
   u.workReason=`Making ${WEAPONS[job.kind].name.toLowerCase()} · ${Math.floor(100*job.progress/job.duration)}%`;
   if(job.progress>=job.duration){

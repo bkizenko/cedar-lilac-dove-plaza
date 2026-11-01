@@ -58,6 +58,8 @@ export const BUILDINGS: Record<
   stonewall: {name:"Stone wall",w:4,d:4,food:0,wood:0,stone:12,pop:0,hp:1000,age:2,hint:"Strong 4m defensive section. Raiders must break through or find a gap."},
   trench: {name:"Defensive trench",w:4,d:4,food:0,wood:0,stone:0,pop:0,hp:300,age:0,hint:"Dig an earthwork: crossing takes twice as long for everyone. Leave clear approaches for workers."},
   moat: {name:"Flooded moat",w:4,d:4,food:0,wood:4,stone:4,pop:0,hp:500,age:4,hint:"Medieval water-fed earthwork near a shore or river. Crossing is four times slower. Leave a dry gate approach."},
+  grindingStone: {name:"Grinding stone",w:3,d:3,food:0,wood:2,stone:6,pop:0,hp:180,age:0,hint:"Grind actual harvested grain into flour in 24 work seconds instead of 60 at a hearth. One staffed station; no passive flour."},
+  oven: {name:"Stone bread oven",w:4,d:4,food:0,wood:8,stone:8,pop:0,hp:240,age:0,hint:"Bake delivered flour with real water and fuel. Two staffed batches, 24 work seconds each instead of 45 at a hearth."},
   hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook delivered raw meat with actual logs. New hunting catches then enter the raw-food processing chain."},
   butcher: {name:"Butcher and skin yard",w:4,d:4,food:0,wood:6,stone:2,pop:0,hp:180,age:0,hint:"Clean actual animal hides and extract tannin from delivered bark-bearing logs and collected water."},
   dryrack: {name:"Skin drying rack",w:4,d:3,food:0,wood:4,stone:0,pop:0,hp:180,age:0,hint:"Two finite drying slots for cleaned skins. Requires real tending work; an empty rack produces nothing."},
@@ -116,7 +118,7 @@ export const BUILDINGS: Record<
     age: 0,
     hint: "Optional workplace: nearby cutting takes 42% less time. Known trees can be cut without it. Spent stands return most of the timber.",
   },
-  workshop: {name:"Crafting shelter",w:5.4,d:4.8,food:0,wood:18,stone:2,pop:0,hp:220,age:0,hint:"A covered workbench: make stone spears and bows three times faster than outdoor hearth crafting."},
+  workshop: {name:"Crafting shelter",w:5.4,d:4.8,food:0,wood:18,stone:2,pop:0,hp:220,age:0,hint:"Three shared benches instead of one at a hall, 25% faster hands-on work, and shorter simple-equipment recipes. Practical copper trials also need this shelter."},
   quarry: {
     name: "Quarry",
     w: 6.4,
@@ -454,7 +456,7 @@ export const BUILD_ORDER: BldType[] = [
   "keep",
   "stables",
   "university",
-  "hearth","butcher","dryrack","tanner","tailor",
+  "hearth", "grindingStone", "oven","butcher","dryrack","tanner","tailor",
   "cairn","grove",
 ];
 
@@ -538,7 +540,7 @@ export const AGE_CHOICES: {
 ];
 
 export const BUILD_TIME: Record<BldType, number> = {
-  hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
+  grindingStone:12,oven:18,hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
   palisade:12, gate:18, stonewall:24, trench:18, moat:30,
   townhall: 0,
   cornerstone: 12,

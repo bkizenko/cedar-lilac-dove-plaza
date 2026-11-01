@@ -8,7 +8,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
-  | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
+  | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -33,7 +33,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
@@ -349,7 +349,7 @@ export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "a
 
 export type Tribe = {
   items?:import('./production').ItemStock;
-  itemFreshness?:Partial<Record<'rawHide'|'cleanHide',number>>;
+  itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide',number>>;
   survival?:import('./survivalNeeds').SurvivalStock;
   seeds?: number;
   haulagePractice?: number;

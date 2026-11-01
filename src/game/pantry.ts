@@ -29,7 +29,9 @@ import { climateAt } from "./ecology";
 export function storehouses(g: Game, team: number) {
   return g.state.buildings.filter(b => b.team === team && b.type === "warehouse" && g.finished(b));
 }
-export const FOOD_KINDS: FoodKind[]=["provisions","berries","fish","meat","grain","pulses","tubers","milk"];
+/** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
+export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2};
+export const FOOD_KINDS: FoodKind[]=["provisions","berries","fish","meat","grain","pulses","tubers","milk","bread"];
 /** The existing food total remains the save/trade facade; lots refine its contents. */
 export function foodInventory(t:Tribe) {
   const lots=Object.fromEntries(FOOD_KINDS.map(k=>[k,Math.max(0,t.foodLots?.[k]||0)])) as Record<FoodKind,number>;
@@ -37,6 +39,11 @@ export function foodInventory(t:Tribe) {
   if(total>t.food&&total>0)for(const k of FOOD_KINDS)lots[k]*=t.food/total;
   else lots.provisions+=Math.max(0,t.food-total);
   return lots;
+}
+/** Remove one identified edible lot and the legacy food facade together, once. */
+export function takeFoodLot(g:Game,team:number,kind:FoodKind,amount:number){
+ if(!Number.isFinite(amount)||amount<0)return false;const t=g.tribe(team),lots=foodInventory(t);if(lots[kind]+1e-9<amount)return false;
+ lots[kind]=Math.max(0,lots[kind]-amount);t.food=Math.max(0,t.food-amount);t.foodLots=lots;return true;
 }
 export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="provisions") {
   recordSimulationEvent(g,'food_received',team,'food',amount);
@@ -50,7 +57,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
   const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
-  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065};
+  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
   return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;
 }
@@ -63,7 +70,7 @@ export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase
 export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) {
   const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true),before=t.food;
   for(const k of FOOD_KINDS)lots[k]*=Math.max(0,1-rates[k]*dt);
-  const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0),share=Math.max(0,1-demand*dt/Math.max(.0001,left));
+  const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0),nourishment=FOOD_KINDS.reduce((n,k)=>n+lots[k]*(FOOD_NOURISHMENT[k]||1),0),share=Math.max(0,1-demand*dt/Math.max(.0001,nourishment));
   for(const k of FOOD_KINDS)lots[k]*=share;
   t.food=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);t.foodLots=lots;
   recordSimulationEvent(g,'food_spoiled',team,'food',Math.max(0,before-left));

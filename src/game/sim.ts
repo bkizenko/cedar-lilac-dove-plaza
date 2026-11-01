@@ -1008,6 +1008,10 @@ export class Game {
         return "A frontier outpost needs room beyond existing settlements and posts";
       return null;
     }
+    // A real nomadic camp is already a supplied settlement anchor. A first
+    // hall there still needs valid terrain, clearance and builders below.
+    const camp=this.campOf(team);
+    if(type==='townhall'&&!hall&&Math.hypot(x-camp.x,z-camp.z)<=24)return null;
     return this.nearClump(x, z) ? null : "Plant beside a clump — berries, timber, stone, or ore";
   }
 
@@ -3024,7 +3028,10 @@ export class Game {
         u.team === 0 &&
         u.hp > 0 &&
         u.type === "worker" &&
-        !isDependent(this, u) &&
+        !isDependent(this, u) && !hasTaskCommitment(u) && !u.militia &&
+        !u.resting && !u.emergency && !u.recalled && !u.buildOrder && u.drill==null &&
+        u.escortId===undefined && !u.scout && !u.expedition && !u.envoy && !u.visit &&
+        !u.trade && !u.foundingJourney && !u.tributeJourney && u.carry===0 &&
         (u.order === "hold" || u.order === "idle"),
     );
   }

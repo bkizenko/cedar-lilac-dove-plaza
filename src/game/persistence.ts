@@ -95,6 +95,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13,14].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
   if([7,8,9,10,11,12,13,14].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   if(s.worldOptions?.randomLayout!==undefined&&(s.worldgenVersion!==14||s.worldOptions.randomLayout!==true))fail();
+  if(s.worldOptions?.openingSiteVersion!==undefined&&(s.worldgenVersion!==14||s.worldOptions.openingSiteVersion!==2))fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
@@ -598,13 +599,16 @@ function validateGamePayload(raw: unknown) {
 export function validateGameSave(raw:unknown):void {validateGamePayload(raw);}
 export function decodeGame(raw:unknown):Game {
   const {d,s}=validateGamePayload(raw),g=new Game();
+  // Missing opening hints belong to the original V14 campsite algorithm.
+  // Keep the internal legacy request out of saved options.
+  const restoreOptions=s.worldgenVersion===14&&s.worldOptions?.openingSiteVersion===undefined?{...s.worldOptions,openingSiteVersion:1 as const}:s.worldOptions;
   const v14Hintless=s.worldgenVersion===14&&s.worldOptions&&s.worldOptions.randomLayout===undefined;
   const v14Evidence=v14Hintless?[...s.trees,...s.stones,...s.forage].filter((n:any)=>Number.isFinite(n.y)):[];
   const v14Points=v14Evidence.filter((_:unknown,i:number)=>i%Math.max(1,Math.floor(v14Evidence.length/64))===0).slice(0,64);
   const v14Fit=(world:typeof g.world)=>v14Points.reduce((sum:number,n:any)=>sum+Math.min(30,Math.abs(sampleHeight(world.heights,n.x,n.z,world.size)-n.y)),0)/Math.max(1,v14Points.length);
-  try{g.reset(s.seed,s.worldgenVersion??1,s.worldOptions);}catch(original){
+  try{g.reset(s.seed,s.worldgenVersion??1,restoreOptions);}catch(original){
     if(!v14Hintless||v14Points.length<8)throw original;
-    try{g.reset(s.seed,14,{...s.worldOptions,randomLayout:true});}catch{throw original;}
+    try{g.reset(s.seed,14,{...restoreOptions,randomLayout:true});}catch{throw original;}
     if(g.world.options?.layout!==s.worldOptions.layout||v14Fit(g.world)>=.25)throw original;
     s.worldOptions={...s.worldOptions,randomLayout:true};
   }
@@ -626,7 +630,7 @@ export function decodeGame(raw:unknown):Game {
     const initial=v14Fit(g.world);
     if(initial>.25){
       let candidate:typeof g.world|undefined;
-      try{candidate=generateWorld(s.seed,14,{...s.worldOptions,randomLayout:true});}catch{/* Keep the already reconstructed world when no alternative passes. */}
+      try{candidate=generateWorld(s.seed,14,{...restoreOptions,randomLayout:true});}catch{/* Keep the already reconstructed world when no alternative passes. */}
       if(candidate){const fit=v14Fit(candidate);if(candidate.options?.layout===s.worldOptions.layout&&fit<.25&&fit<initial*.5&&initial-fit>.25){g.world=candidate;s.worldOptions={...s.worldOptions,randomLayout:true};}}
     }
   }

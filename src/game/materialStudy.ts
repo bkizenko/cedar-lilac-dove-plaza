@@ -34,7 +34,7 @@ export function copperStudyAI(g:Game,u:Unit,dt:number){
  if(!b){work.paused=true;u.order='idle';return false;}
  if(!g.buildingWorkReached(u,b)){const spot=g.interactionSpot(u,b);if(!spot){work.paused=true;u.order='idle';return false;}u.tx=spot.x;u.tz=spot.z;u.workReason='Taking copper to the crafting shelter';g.steer(u,dt);return true;}
  if(!craftBenchReady(g,u,b))return true;
- work.progress=Math.min(COPPER_STUDY_RULES.workSeconds,work.progress+craftingEffort(u,dt));u.vx=0;u.vz=0;u.stride+=dt*5;u.workReason=`Testing a copper tool · ${Math.floor(work.progress/COPPER_STUDY_RULES.workSeconds*100)}%`;
+ work.progress=Math.min(COPPER_STUDY_RULES.workSeconds,work.progress+craftingEffort(u,dt,b));u.vx=0;u.vz=0;u.stride+=dt*5;u.workReason=`Testing a copper tool · ${Math.floor(work.progress/COPPER_STUDY_RULES.workSeconds*100)}%`;
  if(work.progress>=COPPER_STUDY_RULES.workSeconds){g.tribe(u.team).copperExperiment=true;if(u.farmTool!=='ironTools')u.farmTool='copperTools';u.copperStudy=undefined;u.order='idle';g.workBoard.reset();if(u.team===0)g.banner('A workable copper tool! One prototype equips its maker.',6);}
  return true;
 }
