@@ -1,3 +1,4 @@
+import {productionPracticeRate,observationRequired} from './productionPractice';
 import {penPastureReport} from './penPasture';
 import {PEN_RULES} from './penGeometry';
 import {POTTERY_RULES,waterVesselCapacity} from './pottery';
@@ -39,7 +40,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  const r=WORKLOAD_RULES,H=Math.max(r.minimumHorizonSeconds,Math.min(r.maximumHorizonSeconds,Number.isFinite(options.horizonSeconds)?options.horizonSeconds!:r.horizonSeconds)),cal=calendar(g),residents=g.state.units.filter(u=>u.team===team&&u.hp>0),adults=residents.filter(u=>!isDependent(g,u));
  const liveProduction=[...new Map((g.state.production?.projects||[]).filter(p=>p.team===team&&p.phase!=='complete'&&p.phase!=='lost').map(p=>[p.id,p])).values()],productionOwners=new Set(liveProduction.filter(p=>p.actorId!==null).map(p=>p.actorId!));
  const itemLoad=(u:Unit)=>Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0);
- const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&(!u.waterWork||u.waterWork.paused===true)&&(!u.clayWork||u.clayWork.paused===true)&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
+ const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&(!u.waterWork||u.waterWork.paused===true)&&(!u.clayWork||u.clayWork.paused===true)&&(!u.productionApprentice||['paused','waiting'].includes(u.productionApprentice.phase))&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
  const eligible=adults.filter(u=>!outsideRole(g,u)),byId=new Map(people.map(p=>[p.id,p])),home=g.campOf(team),stock=g.tribe(team),tasks:WorkloadTask[]=[],keys=new Set<string>(),claimed=new Map<number,string>();
  const speed=(u?:Unit)=>u?Math.max(.5,u.speed*predisposition(u).speed*(1-(u.fatigue||0)*.12)*loadedHaulSpeed(u)):r.fallbackWalkingMetersPerSecond;
  const supply=supplyDrops(g,team);
@@ -59,26 +60,27 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  // Paid production owns one actor and one physical batch, even while generic
  // unit cargo or the compatibility work references point at the same person.
  const productionTravellers=new Set<number>(),productionIds=new Set<number>(),productionCapacity=liveProduction.length?itemCapacity(g,team):0,storedItems=Object.values(stock.items||{}).reduce((n,v)=>n+(v||0),0);
- const heldSlots=new Map<number,number>();for(const p of liveProduction)if(p.phase!=='returning'&&!(p.phase==='paused'&&p.resumePhase==='returning'))heldSlots.set(p.workplace,(heldSlots.get(p.workplace)||0)+1);
+ const heldSlots=new Map<number,number>();for(const p of liveProduction)if(!['returning','unloading','stored'].includes(p.phase==='paused'?p.resumePhase:p.phase))heldSlots.set(p.workplace,(heldSlots.get(p.workplace)||0)+1);
  const productionSpeed=(u?:Unit)=>u?Math.max(.5,g.travelSpeed(u)):r.fallbackWalkingMetersPerSecond;
  const productionTrip=(x:number,z:number,u?:Unit)=>{const d=nearestDrop(x,z);return(Number.isFinite(d)?d:Math.hypot(home.x-x,home.z-z))/productionSpeed(u);};
  const cachedWalk=(u:Unit,near:(x:number,z:number)=>boolean,fallback:number)=>{const path=g.peekMovementRoute(u.id);if(!path||path.failed||path.revision!==g.navigationRevision()||!near(path.tx,path.tz)||!path.points.length)return fallback;let distance=0,x=u.x,z=u.z;for(const p of path.points){distance+=Math.hypot(p.x-x,p.z-z);x=p.x;z=p.z;}return distance/productionSpeed(u);};
  for(const p of liveProduction){
   if(productionIds.has(p.id))continue;productionIds.add(p.id);
   const recipe=PRODUCTION_RECIPES[p.recipe],u=residents.find(u=>u.id===p.actorId&&u.productionProjectId===p.id),b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===team&&g.finished(b)),phase=p.phase==='paused'?p.resumePhase:p.phase;
-  const practice=u?1+Math.min(.3,(u.craftingXP||0)/1200):1;
-  const passive=phase==='curing'||phase==='ready',hands=phase==='returning'||passive?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
-  const walkOut=u&&b&&phase!=='returning'&&phase!=='curing'?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
-  const drops=supply,hasDrop=drops.length>0,walkBack=u&&phase==='returning'?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u)*(!u&&passive?2:1):0;
+  const practice=u?(1+Math.min(.3,(u.craftingXP||0)/1200))*productionPracticeRate(u,p.recipe):1;
+  const passive=phase==='curing'||phase==='ready',parked=phase==='stored',unloading=phase==='unloading',hands=phase==='returning'||unloading||passive?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
+  const walkOut=u&&b&&!['returning','unloading','stored','curing'].includes(phase)?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
+  const drops=supply,hasDrop=drops.length>0,walkBack=u&&['returning','unloading'].includes(phase)?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u)*(!u&&passive?2:1):0;
   const fullCache=phase==='returning'&&storedItems+Object.values(recipe.outputs).reduce((n,v)=>n+v,0)>productionCapacity;
-  const missing=!b&&phase!=='returning',away=u?outsideRole(g,u):null;
+  const missing=!b&&!['returning','unloading'].includes(phase),away=u?outsideRole(g,u):null;
   let blocker=p.blockedReason||null;
-  if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&phase!=='returning')blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
-  else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
-  const blocked=missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!p.blockedReason)||phase==='curing'&&p.drying?.lastRate===0;
-  add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||passive||p.phase==='paused');
+  if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&!['returning','unloading','stored'].includes(phase))blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
+  else if(parked)blocker='Paid inputs parked at cache; resume to send a collector';else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
+  const blocked=parked||missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!p.blockedReason)||phase==='curing'&&p.drying?.lastRate===0;
+  add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'||parked?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||passive||p.phase==='paused'||parked);
   if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
  }
+ for(const u of eligible){const w=u.productionApprentice;if(!w||w.phase==='waiting')continue;const b=g.state.buildings.find(b=>b.id===w.workplace&&g.finished(b));add({id:`learning:${u.id}`,label:'Learn alongside a working maker',category:'Practical learning',personSeconds:Math.max(0,observationRequired(w.recipe)-w.observedSeconds)+(b?travel(u,b.x,b.z):0),status:w.phase==='paused'?'paused':b?'active':'blocked',actorIds:w.phase==='paused'?[]:[u.id],priority:350,blocker:w.phase==='paused'?'Observation paused':b?null:'Original workplace unavailable'},true);}
  for(const u of eligible){const w=u.clayWork;if(!w||w.phase==='returning')continue;const bank=g.state.clay?.deposits.find(d=>d.id===w.depositId),missing=!bank||bank.remaining<POTTERY_RULES.clayBatch;
   add({id:`clay:${u.id}`,label:'Dig and deliver surveyed clay',category:'Materials',personSeconds:Math.max(0,POTTERY_RULES.digSeconds-w.progress)+(bank?travel(u,bank.x,bank.z)+trip(bank.x,bank.z,u):0),status:w.paused?'paused':missing?'blocked':'active',actorIds:w.paused?[]:[u.id],priority:500,blocker:w.paused?'Clay collection paused':missing?'Surveyed bank is exhausted or missing':null,units:POTTERY_RULES.clayBatch},true);
  }

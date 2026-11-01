@@ -1,6 +1,6 @@
 # Pottery production: implemented scope and evidence
 
-Checked 2026-10-31 against the current registry: **36 structures/build-menu entries, 23 processing recipes, 25 functional roles and 90 station functions**. Pottery contributes two real Stone workplaces and six recipes. The catalogue remains a mixture of real, partial and planned functions; these counts do not mean all chains work.
+Checked 2026-10-31 against the current registry: **36 structures/build-menu entries, 23 processing recipes, 25 functional roles and 106 station functions**. Pottery contributes two real Stone workplaces and six recipes. The catalogue remains a mixture of real, partial and planned functions; these counts do not mean all chains work.
 
 | Step | Real command / method | Paid input → output | Work and capacity |
 |---|---|---|---|

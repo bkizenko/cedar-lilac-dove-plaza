@@ -1,3 +1,4 @@
+import {COASTAL_BOOTSTRAP_RULES,coastalMaterialTarget,knownCoastalLaunchSites,recordCoastalReview} from './coastalStrategy';
 import {planExpansion} from './plotExpansion';
 import {expansionCost,plotArea} from './plots';
 import {assignWoodlandPlanting} from './cultivation';
@@ -10,7 +11,7 @@ import {buildingCost} from "./construction";
 import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
-import type { BldType, ResKind, Unit } from './types';
+import type { BldType, ResKind, Unit, Building } from './types';
 import { AGE_COST, BUILDINGS, LUMBER_R, QUARRY_R } from './constants';
 import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
 
@@ -108,7 +109,7 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
 /** A bounded share of the workforce secures missing materials while others grow food. */
 export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind){
   if(!isRivalTeam(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
-  const t=g.tribe(u.team),target=AGE_COST[t.age+1]?.[kind]||0;
+  const t=g.tribe(u.team),target=Math.max(AGE_COST[t.age+1]?.[kind]||0,coastalMaterialTarget(g,u.team,kind));
   if(!target||t[kind]>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
   const workers=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.type==='worker'&&!isDependent(g,v));
   const already=workers.filter(v=>v!==u&&v.order==='gather'&&v.job===kind).length;
@@ -220,8 +221,8 @@ export function rebalanceRivalLabor(g:Game,team:number){
 /** Prosperous rivals improve actual residents, not faction-wide production multipliers. */
 export function developRivalEquipment(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
- const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia);
- if(adults.length<8||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused||u.husbandryWork&&!u.husbandryWork.paused))return false;
+ const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia&&!u.prisoner);
+ if(adults.length<COASTAL_BOOTSTRAP_RULES.minimumWorkingAdults||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused||u.husbandryWork&&!u.husbandryWork.paused))return false;
  const eligible=adults.filter(u=>!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){
@@ -230,6 +231,11 @@ export function developRivalEquipment(g:Game,team:number){
   if(u.farmToolWork?.paused&&resumeFarmToolWork(g,u))return true;
  }
  const t=g.tribe(team),plan=rivalDevelopmentPlan(g,team);
+ const dock=g.state.buildings.find(b=>b.team===team&&b.type==='dock'&&g.finished(b));
+ if(dock&&!adults.some(u=>u.haulage==='canoe')&&t.wood>=HAULAGE.canoe.wood+COASTAL_BOOTSTRAP_RULES.minimumWorkingWoodAfterCanoe&&t.stone>=HAULAGE.canoe.stone){
+  for(const u of eligible.filter(u=>!u.haulage))if(beginHaulageWork(g,'canoe',team,dock.id,u.id)){recordCoastalReview(g,team,'scout-canoe-paid');return true;}
+ }
+ if(adults.length<8)return false;
  const affordable=(cost:{wood:number;stone:number;copper?:number;iron?:number})=>(['wood','stone','copper','iron'] as const).every(k=>
   t[k]-(cost[k]||0)>=(plan.saving?(plan.next?.[k]||0):k==='wood'?40:k==='stone'?6:0));
  const fields=g.state.buildings.filter(b=>b.team===team&&b.type==='farm'&&g.finished(b)).length;
@@ -259,28 +265,22 @@ export function developRivalEquipment(g:Game,team:number){
 
 const coastalReviews=new WeakMap<Game,Map<number,number>>();
 /** Fund a reachable local landing and its first boat before inland timber runs out. */
-export function developRivalCoast(g:Game,team:number){
- if(!isRivalTeam(team)||!g.tribe(team).alive||g.popNow(team)<8||reserveSeconds(g,team)<600)return false;
- if(g.state.buildings.some(b=>b.team===team&&b.hp>0&&b.type==='dock'))return false;
+export function developRivalCoast(g:Game,team:number,observedPartnerDock?:{x:number;z:number;team:number;alternatives?:{x:number;z:number}[]}){
+ if(!isRivalTeam(team)||!g.tribe(team).alive)return false;
  let reviews=coastalReviews.get(g);if(!reviews){reviews=new Map();coastalReviews.set(g,reviews);}
- const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+45)return false;
- reviews.set(team,g.state.time+45);
+ const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+45)return false;reviews.set(team,g.state.time+45);
+ const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia&&!u.prisoner);
+ if(adults.length<COASTAL_BOOTSTRAP_RULES.minimumWorkingAdults){recordCoastalReview(g,team,'coast','Retain four working adults while one builds or explores');return false;}
+ if(reserveSeconds(g,team)<COASTAL_BOOTSTRAP_RULES.homeMealSeconds){recordCoastalReview(g,team,'coast','Home meals below the coastal investment buffer');return false;}
+ const docks=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.type==='dock');
+ if(docks.length&&(!observedPartnerDock||docks.length>=COASTAL_BOOTSTRAP_RULES.maximumDocks))return false;
+ if(observedPartnerDock&&(!rivalKnows(g,team,observedPartnerDock.x,observedPartnerDock.z)||g.isFoe(team,observedPartnerDock.team)))return false;
  const t=g.tribe(team),cost=buildingCost('dock',g,team);
- if(t.wood<(cost.wood||0)+HAULAGE.canoe.wood+16||t.stone<HAULAGE.canoe.stone||!g.canAfford(team,cost))return false;
- if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)).length>=2)return false;
- const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
- const home=g.campOf(team);
- let best:{x:number;z:number;score:number}|undefined;
- for(let r=14;r<=100;r+=8)for(let i=0;i<24;i++){
-  const a=i*Math.PI/12,x=home.x+Math.cos(a)*r,z=home.z+Math.sin(a)*r;
-  if(g.height(x,z)<g.waterAt(x,z)+.3||!rivalKnows(g,team,x,z))continue;
-  if(!residents.some(u=>g.workBoard.connected(g,u.x,u.z,x,z))||!g.placementValid('dock',x,z,team))continue;
-  // Known fish improve a site; undiscovered shoals never influence its score.
-  const fish=g.state.fish.filter(n=>n.amount>0&&rivalKnows(g,team,n.x,n.z)&&Math.hypot(n.x-x,n.z-z)<24).length;
-  const score=r-Math.min(3,fish)*8;
-  if(!best||score<best.score)best={x,z,score};
- }
- return !!best&&!!g.placeBuilding('dock',best.x,best.z,team);
+ if(t.wood<(cost.wood||0)+HAULAGE.canoe.wood+16||t.stone<HAULAGE.canoe.stone||!g.canAfford(team,cost)){recordCoastalReview(g,team,'coast','Collect the real dock and scout canoe costs while keeping working timber');return false;}
+ if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)).length>=2){recordCoastalReview(g,team,'coast','Existing paid construction needs its builders first');return false;}
+ const known=rivalWorkRangeContext(g,team),best=knownCoastalLaunchSites(g,team,(x,z)=>known(x,z,'wood'),observedPartnerDock)[0];
+ if(!best){recordCoastalReview(g,team,'coast','No observed reachable gentle launch shore for this water route');return false;}
+ const built=!!g.placeBuilding('dock',best.x,best.z,team);recordCoastalReview(g,team,built?'dock-paid':'coast',built?'':'The actual dock construction command was blocked');return built;
 }
 
 

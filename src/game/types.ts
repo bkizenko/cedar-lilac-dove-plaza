@@ -146,6 +146,8 @@ export type Unit = {
   clayWork?:import('./pottery').ClayWork;
   waterVessel?:import('./pottery').WaterVessel;
   productionProjectId?:number;
+  productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
+  productionApprentice?:import('./productionPractice').ProductionApprentice;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
   garment?:{item:'skinClothes'|'leatherClothes';condition:number};
@@ -243,7 +245,8 @@ export type Unit = {
   parents?: number[];
   foundingJourney?: {x:number;z:number;leader:boolean;timber?:number};
   expedition?: {food:number;returning:boolean;forage:number};
-  scout?: {legs:number;returning:boolean};
+  scout?: {legs:number;returning:boolean;preparing?:true};
+  scoutProvisions?: import('./scoutProvisions').ScoutProvisions;
   fatigue?: number;
   resting?: boolean;
   shelterId?: number;
@@ -352,6 +355,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;
   potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   items?:import('./production').ItemStock;
   itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide',number>>;

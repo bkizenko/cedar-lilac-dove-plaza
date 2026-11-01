@@ -1,10 +1,14 @@
+import {SCOUT_PROVISION_RULES,loadScoutProvisions,tickScoutProvisions,scoutReturnBudgetLow} from './scoutProvisions';
+import {hasTaskCommitment} from './workCommitments';
+import {recordCoastalReview} from './coastalStrategy';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
-import {connectedForUnit} from "./waterTravel";
+import {connectedForUnit,requestWaterNavigation} from "./waterTravel";
 import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
-const GRID = 32;
+export const SCOUTING_RULES={gridWidth:32,paidCanoeFrontierBonusMetres:180,paidCanoeFrontierRadiusMetres:320} as const;
+const GRID = SCOUTING_RULES.gridWidth;
 export function scoutKnowledge(g: Game, u: Unit) {
   const memories = (g.state.rivalKnowledge ??= []);
   let memory = memories.find((m) => m.team === u.team);
@@ -31,7 +35,10 @@ function nextTarget(g: Game, u: Unit) {
     const x = ((i % GRID) + 0.5) * CELL - HALF,
       z = (Math.floor(i / GRID) + 0.5) * CELL - HALF;
     if (g.height(x, z) <= g.waterAt(x,z) + 0.3 || !connectedForUnit(g,u,x,z)) continue;
-    const d = Math.hypot(x - u.x, z - u.z);
+    const distance=Math.hypot(x-u.x,z-u.z);
+    // A real paid canoe surveys a nearby water-separated frontier before
+    // duplicating another pedestrian's local circuit; no partner/resource coordinates are consulted.
+    const d=distance-(u.haulage==='canoe'&&distance<=SCOUTING_RULES.paidCanoeFrontierRadiusMetres&&!g.workBoard.connected(g,u.x,u.z,x,z)?SCOUTING_RULES.paidCanoeFrontierBonusMetres:0);
     if (d < score) {
       score = d;
       best = { x, z };
@@ -40,6 +47,7 @@ function nextTarget(g: Game, u: Unit) {
   return best;
 }
 export function tickScouts(g: Game, dt: number) {
+  tickScoutProvisions(g,dt);
   g.state.scoutTimer = (g.state.scoutTimer ?? 120) - dt;
   if (g.state.scoutTimer > 0) return;
   g.state.scoutTimer = 180;
@@ -55,8 +63,8 @@ export function tickScouts(g: Game, dt: number) {
       (u) =>
         u.team === t.id &&
         u.type === "worker" &&
-        u.hp > 0 &&
-        !isDependent(g, u) &&
+        u.hp >=u.maxHp*SCOUT_PROVISION_RULES.departureHealthFraction && (u.thirstSeconds||0)<SCOUT_PROVISION_RULES.departureMaximumThirstSeconds &&
+        !isDependent(g, u) && !u.prisoner&&!u.militia&&!hasTaskCommitment(u)&&
         !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !u.emergency &&
         !u.recalled && !u.envoy && u.drill == null && u.buildOrder === undefined &&
         !u.jobLock && !u.tamingWork&&!u.husbandryWork && !u.tributeJourney && !u.visit && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
@@ -64,6 +72,8 @@ export function tickScouts(g: Game, dt: number) {
         u.carry === 0 &&
         ["idle", "gather"].includes(u.order),
     );
+    candidates.sort((a,b)=>Number(b.haulage==='canoe')-Number(a.haulage==='canoe')||a.id-b.id);
+    if(candidates[0]?.haulage==='canoe'&&requestWaterNavigation(g,false).status==='pending'){g.state.scoutTimer=Math.min(g.state.scoutTimer,1);recordCoastalReview(g,t.id,'scout-water-preparing','Preparing the current amphibious route');continue;}
     // A blocked pedestrian must not prevent a canoe owner or another resident
     // from surveying a reachable frontier. Do not expose unknown resources.
     let u:Unit|undefined,target:{x:number;z:number}|null=null;
@@ -72,7 +82,8 @@ export function tickScouts(g: Game, dt: number) {
       if(target){u=candidate;break;}
     }
     if (!u||!target) continue;
-    u.scout = { legs: 0, returning: false };
+    g.interruptMission(u);
+    u.scout = { legs: 0, returning: false,preparing:true };
     u.node = null;
     u.target = null;
     u.order = "move";
@@ -85,6 +96,17 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
   if (!u.scout) return false;
   scoutKnowledge(g, u);
   const m = u.scout;
+  if(m.preparing){
+    const homes=supplyDrops(g,u.team).map(d=>({d,p:supplyApproach(g,u,d)})).filter(row=>row.p).sort((a,b)=>Math.hypot(u.x-a.p!.x,u.z-a.p!.z)-Math.hypot(u.x-b.p!.x,u.z-b.p!.z));const home=homes[0];
+    if(!home){u.scout=undefined;u.order='idle';return true;}
+    u.order='move';u.workReason='Walking home to load finite scouting food and water';u.tx=home.p!.x;u.tz=home.p!.z;
+    if(!supplyReached(g,u,home.d,home.p!)){g.steer(u,dt);return true;}
+    if(!loadScoutProvisions(g,u)){u.scout=undefined;u.order='idle';return true;}
+    const target=nextTarget(g,u);if(!target){u.scout=undefined;u.order='idle';return true;}
+    if(u.haulage==='canoe')recordCoastalReview(g,u.team,'paid-canoe-scout-departed');
+    m.preparing=undefined;u.tx=target.x;u.tz=target.z;return true;
+  }
+  if(scoutReturnBudgetLow(g,u))m.returning=true;
   if (u.stuckT > 16 && m.returning) {
     u.scout = undefined;
     u.order = "return";u.recalled=true;u.stationOnArrival=false;

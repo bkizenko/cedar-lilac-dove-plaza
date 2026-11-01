@@ -16,6 +16,6 @@ At the cache, assign one delivered fired vessel to a resident. It leaves communa
 
 Paid firing records producing society/site and a deterministic local style, retained in delivered stock provenance and transferred to an equipped carrier. Existing unrecorded/editor-granted pottery is explicitly unrecorded rather than assigned fabricated history. Vessel trade, whole-pot transport mass, clay mineral chemistry, wheel throwing, glazes, ceramic food storage, kiln heat cycles and shard recycling remain incomplete.
 
-Registry now has 36 structures and 23 processing recipes. The 25 functional roles and 90 station functions remain grouping metadata. Pottery shelter costs 8 logs/2 stone and 14 base construction seconds; kiln 8 logs/8 stone and 20 seconds. Both must be paid, reached and completed. No world-generation resource hash is changed, no terrain is flattened, and no clay or pottery is awarded merely for constructing either workplace.
+Registry now has 36 structures and 23 processing recipes. The 25 functional roles and 106 station functions remain grouping metadata. Pottery shelter costs 8 logs/2 stone and 14 base construction seconds; kiln 8 logs/8 stone and 20 seconds. Both must be paid, reached and completed. No world-generation resource hash is changed, no terrain is flattened, and no clay or pottery is awarded merely for constructing either workplace.
 
 Execution evidence and current registry counts: [Pottery production](POTTERY_PRODUCTION.md).

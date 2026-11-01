@@ -1,0 +1,1209 @@
+{
+  "scope": "Unassisted natural V14 seed1 archipelago continuation; logs copied as emitted, not mutable callback references",
+  "initialCampaignSeconds": 5000.180000000049,
+  "finalSeconds": 6200.379999998958,
+  "actualPaidRivalBoatDispatched": true,
+  "naturalTradeCompleted": false,
+  "naturalProfitableRoundTripQualified": false,
+  "blocker": "Boat sailingOut stalled after 1.038513793109477 metres; navigation owner has exact native checkpoint",
+  "simulationErrors": [],
+  "checkpointSha256": "3fd70a76e66174c8f35340ec18303d50dbbf951f52b8d490785e4e9095c74e7c",
+  "rows": [
+    {
+      "seconds": 5000.380000000049,
+      "commissions": [],
+      "voyages": [],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": []
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5150.379999999913,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 1,
+            "blockedReviews": 1,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 1,
+            "blockedReviews": 1,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        }
+      ],
+      "voyages": [],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 4,
+            "blocked": 3,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 3,
+              "commission": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 3
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 4,
+            "blocked": 3,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 3,
+              "commission": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 3
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5300.339999999776,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 3,
+            "blockedReviews": 3,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 3,
+            "blockedReviews": 3,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        }
+      ],
+      "voyages": [],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 8,
+            "blocked": 5,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 5,
+              "commission": 3
+            },
+            "reasons": {
+              "Preparing the current water route": 5
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 8,
+            "blocked": 5,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 5,
+              "commission": 3
+            },
+            "reasons": {
+              "Preparing the current water route": 5
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5450.37999999964,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 5,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "Hull inputs paid once; the builder must travel and complete 150 seconds of bench labor",
+          "metrics": {
+            "reviews": 5,
+            "blockedReviews": 4,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "dockId": 2901,
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 12,
+            "blocked": 7,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 7,
+              "commission": 5
+            },
+            "reasons": {
+              "Preparing the current water route": 7
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 12,
+            "blocked": 7,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 7,
+              "commission": 5
+            },
+            "reasons": {
+              "Preparing the current water route": 7
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 7
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 4
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 4
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5600.3799999995035,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 6,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 15,
+            "blocked": 9,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 9,
+              "commission": 6
+            },
+            "reasons": {
+              "Preparing the current water route": 9
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 15,
+            "blocked": 9,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 9,
+              "commission": 6
+            },
+            "reasons": {
+              "Preparing the current water route": 9
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 3185,
+              "landings": 6
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5750.379999999367,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 8,
+            "blockedReviews": 8,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [
+        {
+          "version": 1,
+          "id": 3202,
+          "team": 2,
+          "partner": 1,
+          "boatId": 3201,
+          "actorId": 3041,
+          "homeDockId": 2901,
+          "foreignLanding": "beach",
+          "foreignHallId": 2882,
+          "homeSea": {
+            "x": -246.03562546570438,
+            "z": 310.5419704298734
+          },
+          "homeLand": {
+            "x": -242.57152385056662,
+            "z": 308.5419704298734
+          },
+          "foreignSea": {
+            "x": -58.614674589207226,
+            "z": -415.9103626009029
+          },
+          "foreignLand": {
+            "x": -58.614674589207226,
+            "z": -411.9103626009029
+          },
+          "phase": "sailingOut",
+          "resumePhase": "boardingOut",
+          "food": 12.56918177737396,
+          "water": 2.8336000000001107,
+          "started": 5624.5799999994815,
+          "talk": 0,
+          "traded": false,
+          "blockedReason": "",
+          "metrics": {
+            "boardings": 1,
+            "landings": 0,
+            "sailMeters": 1.038513793109477,
+            "walkMeters": 0,
+            "foodUsed": 4.464153211726941,
+            "waterUsed": 1.0064000000000124,
+            "offered": 12,
+            "received": 0,
+            "delivered": 0,
+            "returned": 0
+          },
+          "lastActor": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "lastBoat": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "give": "wood",
+          "get": "food"
+        }
+      ],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 18,
+            "blocked": 10,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 8
+            },
+            "reasons": {
+              "Preparing the current water route": 10
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 35,
+            "blocked": 28,
+            "lastStage": "dispatch",
+            "lastReason": "An existing coastal voyage owns this boat or society crew",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 6,
+              "dispatch": 18,
+              "trade-departed": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 10,
+              "Need an actually observed dry landing and connected water on both shores": 6,
+              "An existing coastal voyage owns this boat or society crew": 12
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 3185,
+              "landings": 6
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 5900.379999999231,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 10,
+            "blockedReviews": 10,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [
+        {
+          "version": 1,
+          "id": 3202,
+          "team": 2,
+          "partner": 1,
+          "boatId": 3201,
+          "actorId": 3041,
+          "homeDockId": 2901,
+          "foreignLanding": "beach",
+          "foreignHallId": 2882,
+          "homeSea": {
+            "x": -246.03562546570438,
+            "z": 310.5419704298734
+          },
+          "homeLand": {
+            "x": -242.57152385056662,
+            "z": 308.5419704298734
+          },
+          "foreignSea": {
+            "x": -58.614674589207226,
+            "z": -415.9103626009029
+          },
+          "foreignLand": {
+            "x": -58.614674589207226,
+            "z": -411.9103626009029
+          },
+          "phase": "sailingOut",
+          "resumePhase": "boardingOut",
+          "food": 7.246264593279554,
+          "water": 1.633600000000192,
+          "started": 5624.5799999994815,
+          "talk": 0,
+          "traded": false,
+          "blockedReason": "",
+          "metrics": {
+            "boardings": 1,
+            "landings": 0,
+            "sailMeters": 1.038513793109477,
+            "walkMeters": 0,
+            "foodUsed": 9.787070395820999,
+            "waterUsed": 2.206400000000018,
+            "offered": 12,
+            "received": 0,
+            "delivered": 0,
+            "returned": 0
+          },
+          "lastActor": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "lastBoat": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "give": "wood",
+          "get": "food"
+        }
+      ],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 20,
+            "blocked": 10,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 10
+            },
+            "reasons": {
+              "Preparing the current water route": 10
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 59,
+            "blocked": 52,
+            "lastStage": "dispatch",
+            "lastReason": "An existing coastal voyage owns this boat or society crew",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 6,
+              "dispatch": 42,
+              "trade-departed": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 10,
+              "Need an actually observed dry landing and connected water on both shores": 6,
+              "An existing coastal voyage owns this boat or society crew": 36
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 3185,
+              "landings": 6
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 6050.379999999094,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 11,
+            "blockedReviews": 11,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [
+        {
+          "version": 1,
+          "id": 3202,
+          "team": 2,
+          "partner": 1,
+          "boatId": 3201,
+          "actorId": 3041,
+          "homeDockId": 2901,
+          "foreignLanding": "beach",
+          "foreignHallId": 2882,
+          "homeSea": {
+            "x": -246.03562546570438,
+            "z": 310.5419704298734
+          },
+          "homeLand": {
+            "x": -242.57152385056662,
+            "z": 308.5419704298734
+          },
+          "foreignSea": {
+            "x": -58.614674589207226,
+            "z": -415.9103626009029
+          },
+          "foreignLand": {
+            "x": -58.614674589207226,
+            "z": -411.9103626009029
+          },
+          "phase": "sailingOut",
+          "resumePhase": "boardingOut",
+          "food": 1.9233474091855904,
+          "water": 0.43360000000015997,
+          "started": 5624.5799999994815,
+          "talk": 0,
+          "traded": false,
+          "blockedReason": "",
+          "metrics": {
+            "boardings": 1,
+            "landings": 0,
+            "sailMeters": 1.038513793109477,
+            "walkMeters": 0,
+            "foodUsed": 15.109987579915499,
+            "waterUsed": 3.406399999999886,
+            "offered": 12,
+            "received": 0,
+            "delivered": 0,
+            "returned": 0
+          },
+          "lastActor": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "lastBoat": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "give": "wood",
+          "get": "food"
+        }
+      ],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 21,
+            "blocked": 10,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 11
+            },
+            "reasons": {
+              "Preparing the current water route": 10
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 71,
+            "blocked": 64,
+            "lastStage": "dispatch",
+            "lastReason": "An existing coastal voyage owns this boat or society crew",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 6,
+              "dispatch": 54,
+              "trade-departed": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 10,
+              "Need an actually observed dry landing and connected water on both shores": 6,
+              "An existing coastal voyage owns this boat or society crew": 48
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 3185,
+              "landings": 6
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seconds": 6200.379999998958,
+      "commissions": [
+        {
+          "version": 1,
+          "id": 3147,
+          "team": 1,
+          "partner": 2,
+          "phase": "dock",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 13,
+            "blockedReviews": 13,
+            "dockPayments": 0,
+            "hullPayments": 0,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          }
+        },
+        {
+          "version": 1,
+          "id": 3148,
+          "team": 2,
+          "partner": 0,
+          "phase": "hull",
+          "reason": "No known reachable local coast can support a paid dock",
+          "metrics": {
+            "reviews": 6,
+            "blockedReviews": 5,
+            "dockPayments": 0,
+            "hullPayments": 1,
+            "hullsLaunched": 0,
+            "cacheArrivals": 0
+          },
+          "projectId": 3175,
+          "actorId": 3041
+        }
+      ],
+      "voyages": [
+        {
+          "version": 1,
+          "id": 3202,
+          "team": 2,
+          "partner": 1,
+          "boatId": 3201,
+          "actorId": 3041,
+          "homeDockId": 2901,
+          "foreignLanding": "beach",
+          "foreignHallId": 2882,
+          "homeSea": {
+            "x": -246.03562546570438,
+            "z": 310.5419704298734
+          },
+          "homeLand": {
+            "x": -242.57152385056662,
+            "z": 308.5419704298734
+          },
+          "foreignSea": {
+            "x": -58.614674589207226,
+            "z": -415.9103626009029
+          },
+          "foreignLand": {
+            "x": -58.614674589207226,
+            "z": -411.9103626009029
+          },
+          "phase": "sailingOut",
+          "resumePhase": "boardingOut",
+          "food": 0,
+          "water": 0,
+          "started": 5624.5799999994815,
+          "talk": 0,
+          "traded": false,
+          "blockedReason": "",
+          "metrics": {
+            "boardings": 1,
+            "landings": 0,
+            "sailMeters": 1.038513793109477,
+            "walkMeters": 0,
+            "foodUsed": 17.03333498910121,
+            "waterUsed": 3.84,
+            "offered": 12,
+            "received": 0,
+            "delivered": 0,
+            "returned": 0
+          },
+          "lastActor": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "lastBoat": {
+            "x": -247,
+            "z": 310.92731787839324
+          },
+          "give": "wood",
+          "get": "food"
+        }
+      ],
+      "diagnostics": {
+        "scope": "current loaded simulation",
+        "teams": [
+          {
+            "team": 1,
+            "reviews": 23,
+            "blocked": 10,
+            "lastStage": "commission",
+            "lastReason": "",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 13
+            },
+            "reasons": {
+              "Preparing the current water route": 10
+            }
+          },
+          {
+            "team": 2,
+            "reviews": 113,
+            "blocked": 106,
+            "lastStage": "dispatch",
+            "lastReason": "An existing coastal voyage owns this boat or society crew",
+            "stages": {
+              "water-preparing": 10,
+              "commission": 6,
+              "dispatch": 96,
+              "trade-departed": 1
+            },
+            "reasons": {
+              "Preparing the current water route": 10,
+              "Need an actually observed dry landing and connected water on both shores": 6,
+              "An existing coastal voyage owns this boat or society crew": 90
+            }
+          }
+        ]
+      },
+      "knownVillageLandings": [
+        {
+          "team": 1,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 2877,
+              "landings": 1
+            },
+            {
+              "team": 2,
+              "id": 3077,
+              "landings": 3
+            },
+            {
+              "team": 2,
+              "id": 3185,
+              "landings": 6
+            }
+          ]
+        },
+        {
+          "team": 2,
+          "known": [
+            {
+              "team": 0,
+              "id": 2867,
+              "landings": 1
+            },
+            {
+              "team": 1,
+              "id": 2882,
+              "landings": 5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

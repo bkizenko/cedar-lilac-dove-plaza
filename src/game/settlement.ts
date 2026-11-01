@@ -1,3 +1,4 @@
+import {scoutIndependentNeeds} from './scoutProvisions';
 import {constructionPriority,CONSTRUCTION_QUEUE_RULES} from './constructionQueue';
 import {coastalIndependentNeeds} from './coastalTrade';
 import {sameTypedValues} from './terrainWalkCache';
@@ -44,7 +45,7 @@ export function isDependent(g: Game, u: Unit) {
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))
+    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))
     .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;

@@ -1,6 +1,8 @@
 # Hearthwild: functional buildings, stations and settlement scale
 
-Reference checked 2026-10-31. **36 registered structures, 36 build-menu entries, 23 processing recipes and 25 functional catalogue groups.** Counts describe the current source registry, not completion of every hinted service. This document adds no implemented gameplay. Existing equipment, cultivation, husbandry and transport executors also perform work outside the 23 processing recipes.
+Reference rechecked 2026-11-01. **36 registered structures, 36 build-menu entries, 23 processing recipes and 25 functional catalogue groups.** Counts describe the current source registry, not completion of every hinted service. This document adds no implemented gameplay. Existing equipment, cultivation, husbandry and transport executors also perform work outside the 23 processing recipes.
+
+The detailed in-game inventory now has **106 function entries: 14 narrowly working foundations, 35 partial functions and 57 planned functions**. These are audited descriptions, not 106 buildings or 106 implemented systems. Partial entries state their real executor and their missing service separately. Generic stone equipment does not make flint knapping work; fresh milk does not make cheese processing work; a stables ID does not create a horse/pack-animal economy. [2026-11-01 audit and queue semantics](FUNCTION_CATALOGUE_AUDIT_2026-11-01.md).
 
 ## Reference principles and boundaries
 
@@ -136,7 +138,7 @@ The crafting shelter has three equipment benches versus one at a hall, an actual
 | `smelter` — Smelting furnace | Bronze | None | planned | Current copper/iron stocks abstract workable metal; ore-to-ingot and bronze alloying remain gaps. |
 | `smith` — Forge and smith | Bronze | `forge` | partial | Current metal equipment works; distinct ingots, heat and maintenance chains remain incomplete. |
 | `pottery` — Clay, pottery and firing | Stone | `hearth`, `dryrack`, `potter`, `kiln` | partial | Finite clay survey/extraction, shaping, weather drying, paid firing, potsherds and owned 32 L carrier jars work. Wheel throwing, glazes, detailed geology/heat cycles, food storage vessels and provenance-preserving trade remain incomplete. |
-| `dairy` — Dairy preservation | Bronze | `pen` | partial | Milk delivery exists; cheesemaking chain remains planned. |
+| `dairy` — Dairy preservation | Bronze | None | planned | Fresh milk delivery exists; no preserved dairy recipe or dedicated dairy-processing station is implemented. |
 | `smokehouse` — Smoking and salt curing | Stone | `hearth`, `smokehouse` | partial | Real meat/fish smoking uses paid fuel and staffed work, producing distinct longer-lasting food. Salt deposits, salt curing and advanced chambers remain planned. |
 | `masonry` — Stoneworking and supplied defenses | Iron | `quarry`, `stonewall`, `watchtower`, `barracks` | partial | Existing extraction/walls/guards work; dressed stone, full ammunition and repair chains remain incomplete. |
 | `civic` — Classical civic services | Classical | `market`, `temple`, `townhall` | partial | Existing civic effects are partial; full staffed service chains remain roadmap work. |
@@ -149,13 +151,13 @@ This is a functional checklist, not a requirement to build every named structure
 
 | Function / possible station | Present starting point | Manual → specialist dependency and benefit | Measure before adding capacity |
 |---|---|---|---|
-| Portable tent / shelter frame | Extend hut and mobile camp | Gather real poles/coverings → erect, pack and physically transport reusable shelter | Sheltered beds, packed mass, setup labor, warmth, durability |
+| Portable tent / shelter frame | Planned shelter equipment; huts/mobile caches are predecessors | Gather real poles/coverings → erect, pack and physically transport reusable shelter | Sheltered beds, packed mass, setup labor, warmth, durability |
 | Household sleeping/heating place | Extend hut | Shared shelter → assigned household beds, fuelled heating and repair | Occupancy, cold exposure, fuel, indoor capacity |
 | Camp cache / covered store | Extend communal stores | Ground cache → covered containers → warehouse; preserve actual carried stock during moves | Stock volume, spoilage, exposure, haul distance |
 | Basket and cordage area | Planned | Collect suitable plants → strip/twist/weave → baskets, bindings, ropes | Fibre consumed, batch time, container capacity, wear |
-| Flint knapping place | Extend equipment crafting | Hand stone work → skilled knapping bench; finite appropriate stone, failed pieces | Tool yield, waste, sharpness, breakage, useful work per tool |
-| Bone/antler tool bench | Extend hunted bone | Clean actual bone → needles, awls, hooks and handles | Species/material stock, labor, tool durability |
-| Woodworking place | Extend workshop/lumber | Hand axe shaping → bench/jigs → handles, poles, boards | Log-to-part yield, waste, travel, tool wear |
+| Flint knapping place | Planned; generic stone equipment exists | Hand stone work → skilled knapping bench; finite appropriate stone, failed pieces | Tool yield, waste, sharpness, breakage, useful work per tool |
+| Bone/antler tool bench | Planned; actual bone already feeds clothing recipes | Clean actual bone → needles, awls, hooks and handles | Species/material stock, labor, tool durability |
+| Woodworking place | Planned component chain; whole-equipment recipes/lumber exist | Hand axe shaping → bench/jigs → handles, poles, boards | Log-to-part yield, waste, travel, tool wear |
 | Binding/hafting bench | Planned | Actual cordage, handles and stone heads → assembled tools | All components conserved, strength, repair cost |
 | Hunting dressing site | Extend hunt/butcher | Physical kill and transport → field dressing or yard cutting; knife and carcass portions | Carcass mass, meat/hide/bone yields, time-to-spoil, waste |
 | Cooking and fire tending | Extend hearth/survival fire | Ignition/fuel gathering → shared hearth tending; no independent unlimited heat | Fuel, burn time, heat reach, tending labor, interruption |
@@ -207,7 +209,7 @@ These stations should emerge from practical input/output chains. A stage label m
 | Spindle / spinning shelter | Planned | Actual prepared wool/fibre → yarn; hand spindle before dedicated benches | Yarn per work hour, inputs, breakage |
 | Loom / weaving shelter | Planned | Actual yarn → finite cloth; no clothes from generic sheep count | Cloth area, loom slots, labor, waste |
 | Textile outfitter / dye place | Planned | Real cloth/thread and optional measured dyes → seasonal garments | Clothing coverage, condition, water, colorant use |
-| Dairy processing place | Extend actual milk | Delivered milk and appropriate vessels/process → cheese or other preserved dairy | Milk age, conversion loss, batches, spoilage |
+| Dairy processing place | Planned processing; actual fresh goat milk exists | Delivered milk and appropriate vessels/process → cheese or other preserved dairy | Milk age, conversion loss, batches, spoilage |
 | Salt source / salt pans | Planned | Observed deposit or actual saline water + heat/evaporation → salt | Salinity, brine/fuel/area, weather, yield |
 | Salt-curing store | Planned | Actual salt + food → finite cured batches; manual method first | Salt per food unit, curing time, quality, storage loss |
 | Brewing / fermentation area | Planned | Actual grain/fruit, water, vessels and time → fermented product | Ingredient diversion from food, batch capacity, spoilage, service |
@@ -229,7 +231,7 @@ These stations should emerge from practical input/output chains. A stage label m
 | Function / possible station | Present starting point | Required dependency and actual service | Useful scale / measurable limits |
 |---|---|---|---|
 | Bloomery | Planned | Iron ore, charcoal, air supply and real furnace work → bloom/slag | Recovery, fuel, cycle and refractory wear |
-| Bloom consolidation / smithy | Extend forge | Actual bloom or metal stock + heat/hammering → bars/tools | Work, fuel, waste, tool quality and repairs |
+| Bloom consolidation / smithy | Planned bloom processing; metal-stock forge is a predecessor | Actual bloom or metal stock + heat/hammering → bars/tools | Work, fuel, waste, tool quality and repairs |
 | Specialist toolmaker / armorer | Extend equipment recipes | Parts, bindings, metal and skill → distinct durable equipment | Bench utilization, quality, fittings, maintenance |
 | Dressed-stone yard | Planned beyond quarry | Finite blocks, suitable tools and hauling → shaped building stone | Rough-to-dressed yield, labor, load, breakage |
 | Lime burning / mortar preparation | Planned | Actual limestone, fuel and water → lime/mortar with losses | Fuel, batch heat, storage damage, use before setting |
@@ -239,7 +241,7 @@ These stations should emerge from practical input/output chains. A stage label m
 | Garrison store / training ground | Extend barracks | Owned equipment, training time, provisions and safe rotations | Ready people, injury, fatigue, stock, actual defense coverage |
 | Earthwork / ditch crew | Existing paid trench | Surveyed grade and volume, builders and access → real local terrain change | Excavated volume, work, traversability, drainage limitations |
 | Defensive supply / repair yard | Planned recurring service | Actual damaged structures and material deliveries → paid repair | Damage repaired, material/labor costs, safe access |
-| Pack-animal station / stable service | Extend later stables ID | Real appropriate animals, feed, water, tack and handlers | Carry capacity, condition, forage, return and mortality |
+| Pack-animal station / stable service | Planned actual animal service; stables ID is a predecessor | Real appropriate animals, feed, water, tack and handlers | Carry capacity, condition, forage, return and mortality |
 | Regional store / caravan waystation | Planned | Physically connected suppliers, shelters and finite stores | Route distance, demand, reserve, storage loss, convoy safety |
 | Workshop teaching / apprenticeship | Planned complete network | Real competent teacher, learner, task and supplies → retained demonstrated skill | Attendance/work time, practice success, transfer and forgetting |
 
@@ -251,20 +253,20 @@ These are Hearthwild expansion choices, beyond the official Dawn of Man period. 
 |---|---|---|---|
 | Organized marketplace / merchant stores | Partial market/contact exchange | Actual sellers, buyers, cargo and inventories → reliable local exchange | Part-time stalls before full-time merchants; delivered goods, queues, prices |
 | Public granary / emergency distribution | Partial warehouse | Actual reserve lots, workers and distribution access → ration service | Reserve-days, people reached, hauling, spoilage and issue records |
-| Water distribution / fountain | Freshwater trips; no aqueduct chain | Tested source, gradient, channels/pipes and finite cisterns → local collection points | Source yield, flow, leakage, upkeep, coverage |
+| Water distribution / fountain | Planned distribution; freshwater carrier trips already work | Tested source, gradient, channels/pipes and finite cisterns → local collection points | Source yield, flow, leakage, upkeep, coverage |
 | Aqueduct / channel / reservoir works | Planned | Surveyed real elevation and construction → delivered water with hydraulic constraints | Construction volume, flow, storage, breaches; not in current excavation scope |
 | Public bath / washing house | Planned | Actual water, fuel, drainage and staff → scheduled hygiene service | Water/fuel per visit, capacity, cleaning and waste |
 | Latrine / sewer / refuse collection | Planned | Real waste transport/drainage and safe disposal → sanitation | Coverage, pollution destination, maintenance and staff work |
 | Infirmary / healer's shelter | Planned full service | Real supplies, care skill, clean water and beds → treatment | Patients/bed, consumables, care time, outcomes; no free healing aura |
 | Communal kitchen / bakery service | Existing small hearth/oven batches | Larger supplied workplaces → regular delivered meals, not passive food income | Input/output balance, staff, meals delivered, spoilage |
-| Council hall / records office | Partial townhall | Real representatives, records and local communication → decisions/tax accounting | Staff hours, reachable households, compliance and collection costs |
-| Law / mediation / custody facility | Contextual custody exists | Actual guards, food/water, hearing and release/transfer process | Guard burden, cases, prisoner needs and time; no automatic forced labor |
+| Council hall / records office | Planned administration; townhall is a camp/civic predecessor | Real representatives, records and local communication → decisions/tax accounting | Staff hours, reachable households, compliance and collection costs |
+| Law / mediation / custody facility | Actual contextual custody; dedicated law/mediation planned | Actual guards, food/water, hearing and release/transfer process | Guard burden, cases, prisoner needs and time; no automatic forced labor |
 | Temple / festival precinct | Partial temple/grove/cairn | Actual attendance, goods, staff and local practice → community service | Participation, costs, access and measured wellbeing |
 | School / teaching workshop / library | Partial later university ID | Literate practice/materials where available, teachers and real learners | Learners per teacher, taught tasks, retained knowledge, supplies |
 | Harbor / warehouse / ship repair | Partial dock/coastal trade | Real berth access, boats, cargo handling, repair materials and crews | Berths, handling time, damage, capacity, safe route knowledge |
 | Regional administration / diplomatic lodging | Actual contacts/relations | Known societies, physical messengers and supported guests → sustained agreements | Message travel, obligations delivered, people/food costs |
-| Stone housing / fire service | Hut/stone building predecessors | Actual masonry, roofing, water and repair → denser safe settlement | Occupancy, material volume, fire response, maintenance |
-| Siege / military engineering yard | Partial defenses, not full siege chain | Actual machines, ammunition, crews and haulage → paid military capability | Assembly, transport, damage, supply, capture and repair |
+| Stone housing / fire service | Planned service; hut/stone buildings are predecessors | Actual masonry, roofing, water and repair → denser safe settlement | Occupancy, material volume, fire response, maintenance |
+| Siege / military engineering yard | Planned siege chain; paid defenses already exist | Actual machines, ammunition, crews and haulage → paid military capability | Assembly, transport, damage, supply, capture and repair |
 
 ## Later expansion: preserve the dependency chain
 
@@ -281,9 +283,22 @@ These are Hearthwild expansion choices, beyond the official Dawn of Man period. 
 | Larger sailing ship / shipyard | Paid small boats/coastal voyages | Finite hull/rigging/sail materials, deeper launch access, crews, navigation, repair and cargo handling |
 | Civil engineering / surveying | Real terrain and construction | Actual survey knowledge, graded routes, drainage, materials and work; no automatic flat foundations |
 
+## Additional explicit functions surfaced in the catalogue audit
+
+These six functions were previously absent as individually searchable entries. Listing them adds no executor or building.
+
+| Function | Current scope | Boundary |
+|---|---|---|
+| Megalith quarry / hauling / erection | Planned | Existing cairns are local markers, not a boulder-extraction/sledge/erection chain |
+| Practical copper trial bench | Partial | Actual sampled paid prototypes at real benches; full ore/furnace/teaching chain remains incomplete |
+| Water-vessel cache / carrier outfitting | Working foundation | Real pottery ownership,32 L/16 s collection and ten delivered trips; ceramic food storage remains separate |
+| Builder task coordination / material staging | Partial | Multiple saved sites, explicit priorities and physical construction; dedicated yard and general logistics remain incomplete |
+| Fuelwood stack / seasonal preparation | Partial | Real cutting/hauling and cold-fire timber consumption; splitting, seasoning and covered fuelwood stores remain planned |
+| Paid-batch cache / physical pickup | Working foundation | Original carrier unloads committed inputs physically; replacement retrieves them without a refund or second payment |
+
 ## Dependencies, useful adoption and tuning
 
-A coherent small-camp sequence is: observe a need → collect real samples/materials → try the manual task → produce a useful result → repeat it reliably → adopt a faster station when saved time or reduced losses pays its cost. Population alone neither demonstrates a technique nor supplies its materials. Existing practical crop trials, copper study, equipment practice and processing results provide real starting points; the full teaching network remains incomplete.
+A coherent small-camp sequence is: observe a need → collect real samples/materials → try the manual task → produce a useful result → repeat it reliably → adopt a faster station when saved time or reduced losses pays its cost. Population alone neither demonstrates a technique nor supplies its materials. Existing practical crop trials, copper study, equipment practice and exact-recipe production demonstrations provide real starting points. Qualified observation requires actual people/site/progress and useful delivered output; it does not create a generic school or complete teaching network.
 
 For every proposed station, implementation should expose: input quantities and provenance; worker/slot ownership; travel and delivery; active work and elapsed exposure; weather/season limits; fuel/water; output quality/quantity; spoilage/waste; capacity; repair/wear; interruption/death/replacement; saved state; current blocked reason. Service buildings additionally need actual people reached, operating inputs and staff time. These are tuning variables and diagnostics, not all currently implemented metrics.
 
@@ -297,9 +312,9 @@ Prioritize small connected cohorts rather than dozens of decorative IDs:
 
 ### In-game catalogue representation
 
-The in-game catalogue keeps 25 broad role groups and 90 grouped station entries, with search and era/implementation filters. Station entries contain purpose, stage, status, manual predecessor, dependencies, staffing guidance and useful capacity/demand measures. Actual command/readiness providers remain in the registered-structure and recipe views; station metadata itself creates no action or goods. Guidance describes a bottleneck and a suggested organization; it does not hard-lock a station by population.
+The in-game catalogue keeps 25 broad role groups and 106 grouped station entries, with search and era/implementation filters. Station entries contain purpose, stage, status, manual predecessor, dependencies, staffing guidance and useful capacity/demand measures. Actual command/readiness providers remain in the registered-structure and recipe views; station metadata itself creates no action or goods. Guidance describes a bottleneck and a suggested organization; it does not hard-lock a station by population.
 
-Only registered, actually usable structures get a build action. Only actual recipes get a processing action with authoritative costs and blocked reasons. Planned stations remain visibly planned; a group with one implemented recipe cannot claim its entire production chain works. Queue editing, repeated batches and builder priorities must use their real executor contracts when implemented, never a catalogue-only simulated completion.
+Only registered, actually usable structures get a build action. Only actual recipes get a processing action with authoritative costs and blocked reasons. Planned stations remain visibly planned; a group with one implemented recipe cannot claim its entire production chain works. Construction queue editing and High/Normal/Low priorities use their real task executor. The next ready site is chosen by priority, then village focus, then explicit list order; current paid construction continues unless deliberately interrupted. Unfundable/paused/unreachable entries stay pending, and queueing grants no materials or extra simultaneous owner. Repeated processing-batch scheduling and general all-job priorities are separate scope.
 
 ## Source and verification notes
 
@@ -311,4 +326,4 @@ Official reference sources: [Madruga Dawn of Man overview](https://www.madrugawo
 
 ## Scalable pasture update (2026-11-01)
 
-Animal pens now use dragged10–30m dimensions, perimeter-priced fences and paid extensions. Real usable area limits new animals (48/pen maximum); actual captured herds consume finite seasonal grass and physically delivered plant feed. Winter regrowth is zero. One keeper slot per8animals, actual care/feed travel, native identity and conserved overflow are measured. The natural12×10 qualification enclosure held one captured goat in nine eligible places,99m² usable pasture and120 feed capacity. Existing animals are retained if conditions reduce capacity. Other livestock species and dedicated grazing-depletion surface visuals remain planned.
+Animal pens now use dragged 10–30 m dimensions, perimeter-priced fences and paid extensions. Real usable area limits new animals (48/pen maximum); actual captured herds consume finite seasonal grass and physically delivered plant feed. Winter regrowth is zero. One keeper slot per 8 animals, actual care/feed travel, native identity and conserved overflow are measured. The natural 12×10 qualification enclosure held one captured goat in nine eligible places,99 m² usable pasture and 120 feed capacity. Existing animals are retained if conditions reduce capacity. Other livestock species and dedicated grazing-depletion surface visuals remain planned.

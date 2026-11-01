@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-01",
+  "baselineCommit": "c9d697f",
+  "qualification": "Single diagnostic samples, not a distribution or browser FPS qualification. Source save unchanged.",
+  "grid": {
+    "width": 520,
+    "cells": 270400,
+    "gridSha256": "fe922ae905bbe9663c13cd4a6f42a50e7e658c3fdd8d9dcfd46e1c1f1b21893b",
+    "labelsSha256": "d0926c19ee01093f18cb0d2024e41e7a5c7811edfdd65abe9f19f2b3550ebd05"
+  },
+  "coldBaselineMilliseconds": {
+    "initial": 49.83787500000017,
+    "sampling": 32.54312499999969,
+    "labeling": 16.40074999999979,
+    "warm": 0.0027909999998882995,
+    "irrelevantRevision": 38.32354200000009
+  },
+  "after": {
+    "synchronousColdMs": 50.10395800000015,
+    "irrelevantRevisionMs": 7.3954590000000735,
+    "cooperative": {
+      "calls": 58,
+      "wallUntilBothModesReadyMs": 1205.6989589999998,
+      "meanCallMs": 2.109704844827618,
+      "p95CallMs": 2.200666000000183,
+      "maxCallMs": 4.579791999999543,
+      "metrics": {
+        "pending": 0,
+        "slices": 58,
+        "maximumSliceMs": 4.572291000000405,
+        "builds": 2,
+        "baseReuses": 1,
+        "labelReuses": 0,
+        "restarts": 0
+      }
+    }
+  },
+  "correctness": {
+    "sameFrozenBaselineGrid": true,
+    "sameFrozenBaselineLabels": true,
+    "syncStateUnchanged": true,
+    "cooperativeStateUnchanged": true,
+    "sourceUnchanged": true
+  },
+  "freshV14ShortProfile": {
+    "scenario": {
+      "seed": 1,
+      "generation": 14,
+      "layout": "pangaea",
+      "sizeMeters": 1040,
+      "initialUnits": 22,
+      "initialTrees": 3575,
+      "warmupSteps": 10,
+      "sampledSteps": 45,
+      "stepArgumentSeconds": 0.2
+    },
+    "timingsMilliseconds": {
+      "count": 45,
+      "meanMs": 2.227731422222213,
+      "p50Ms": 1.2201669999999467,
+      "p95Ms": 7.625332999999955,
+      "maxMs": 22.05987499999992
+    },
+    "simulationErrors": [],
+    "limitation": "Only the first11 simulation seconds; no conclusion about matureV14 village performance. Profiler setup time excluded from step timings."
+  },
+  "remainingLimitations": [
+    "Legacy synchronous first command can still take about50ms.",
+    "The2ms cooperative budget is a target; observed maximum was4.58ms, including uninterruptible overhead.",
+    "Custom instance sampler closures invalidate cooperative work when simulation time changes; normal revisioned Game samplers are the qualified path."
+  ],
+  "verification": {
+    "equivalenceCasesPassed": 6,
+    "selectedRegressionCases": 36,
+    "initialSelectedRunPassed": 35,
+    "publishedBaselineReproducedStaleFacadeFailure": true,
+    "correctedCanonicalPaidProjectCasePassed": true,
+    "typecheckPassed": true
+  }
+}

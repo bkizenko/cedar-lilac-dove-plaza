@@ -22,7 +22,19 @@ export class JobCoordinator {
   for(const actor of job.actors)this.actors.set(actor,id);
   job.phase='reserved';job.blockedReason=null;this.metrics.accepted++;return true;
  }
- transition(id:string,phase:'traveling'|'working'|'returning',progress?:number){
+ /** Atomically replace actor and capacity claims. Failure retains every prior
+  * owner/slot; passive work can release hands without releasing its place. */
+ amend(id:string,actors:number[],requests:ReservationRequest[]=[]){
+  const job=this.jobs.get(id);if(!job||terminal(job.phase))return false;
+  const next=[...new Set(actors)];
+  if(next.some(actor=>!Number.isSafeInteger(actor)||actor<1)){job.blockedReason='Invalid resident ownership';return false;}
+  for(const actor of next)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;return false;}
+  const result=this.reservations.reserve(id,requests);if(!result.accepted){job.blockedReason=result.reason;return false;}
+  for(const actor of job.actors)if(!next.includes(actor)&&this.actors.get(actor)===id)this.actors.delete(actor);
+  for(const actor of next)this.actors.set(actor,id);
+  job.actors=next;if(job.phase==='proposed')this.metrics.accepted++;if(job.phase==='suspended')this.metrics.resumed++;if(job.phase==='proposed'||job.phase==='suspended')job.phase='reserved';job.blockedReason=null;return true;
+ }
+ transition(id:string,phase:'reserved'|'traveling'|'working'|'returning',progress?:number){
   const job=this.jobs.get(id);if(!job||!['reserved','traveling','working','returning'].includes(job.phase))return false;
   if(progress!==undefined&&(!Number.isFinite(progress)||progress<job.progress))return false;
   job.phase=phase;if(progress!==undefined)job.progress=progress;return true;

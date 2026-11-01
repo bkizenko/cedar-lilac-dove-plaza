@@ -1,8 +1,8 @@
 import type {Unit} from './types';
 /** New reserved activities register here so other schedulers cannot steal their owner. */
-export const COMMITTED_TASKS=['clayWork','exploreAfterDelivery','productionProjectId','campMoveId','contactDemand','contactAttackTargetId','societyMissionId','coastalVoyageId','coastalCommissionId','prisoner','captureTargetId','waterWork','boat','plantingWork','weaponWork','haulageWork','farmToolWork','tamingWork','husbandryWork','copperStudy','studyCrop'] as const;
+export const COMMITTED_TASKS=['productionApprentice','clayWork','exploreAfterDelivery','productionProjectId','campMoveId','contactDemand','contactAttackTargetId','societyMissionId','coastalVoyageId','coastalCommissionId','prisoner','captureTargetId','waterWork','boat','plantingWork','weaponWork','haulageWork','farmToolWork','tamingWork','husbandryWork','copperStudy','studyCrop'] as const;
 export type CommittedTask=typeof COMMITTED_TASKS[number];
 export function hasTaskCommitment(u:Unit,except?:CommittedTask){
- for(const key of COMMITTED_TASKS)if(key!==except&&u[key])return true;
+ for(const key of COMMITTED_TASKS){if(key==='productionApprentice'&&u.productionApprentice&&['paused','waiting'].includes(u.productionApprentice.phase))continue;if(key!==except&&u[key])return true;}
  return false;
 }

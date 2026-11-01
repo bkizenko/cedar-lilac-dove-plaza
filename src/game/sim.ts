@@ -1,3 +1,5 @@
+import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
+import {productionApprenticeAI,pauseProductionLesson,tickProductionLessons} from './productionPractice';
 import {beginDefenseNeighbors,updateDefenseNeighbors,endDefenseNeighbors} from './defenseNeighbors';
 import {clayAI,tickClay} from './pottery';
 import {queueConstruction,updateConstructionQueues,pauseConstructionQueue} from './constructionQueue';
@@ -1693,6 +1695,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    pauseProductionLesson(this,u);
     pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
@@ -3508,7 +3511,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
+      if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
@@ -3519,7 +3522,7 @@ export class Game {
       // Regular meals gradually repair hunger damage instead of leaving a death spiral.
       if (!hungry && previousHunger > 0 && !u.sickUntil) u.hp = Math.min(u.maxHp, u.hp + Math.min(dt, previousHunger / 3) * u.maxHp / 240);
       }
-      if (!prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
+      if (!scoutIndependentNeeds(u) && !prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u) && !campMoveIndependentNeeds(this,u) && u.sickUntil && this.state.time >= u.sickUntil && tr.food > 12) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
@@ -5539,6 +5542,7 @@ export class Game {
         this.state.time += sdt;
         tickClay(this);
         tickProduction(this,sdt);
+        tickProductionLessons(this);
         tickVillageDefense(this);
         tickSocietyMissionNeeds(this,sdt);
         tickCoastalTrade(this,sdt);
@@ -5575,6 +5579,7 @@ export class Game {
             if(coastalTradeAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
+            if(productionApprenticeAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
             if(societyMissionAI(this,u,sdt))continue;
@@ -5658,6 +5663,7 @@ export class Game {
         for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
+        tickScoutProvisions(this,0);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);

@@ -1,3 +1,4 @@
+import{productionOwnershipIssue}from'./productionOwnership';
 import {recordImmediateConstruction,constructionPriority} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker} from './constructionOwnership';
 import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
@@ -81,8 +82,8 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   if(b.team!==0||b.hp<=0||(g.finished(b)&&!b.expansion))return false;
   const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency)
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
-    .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u));
-  if(!chosen.length){g.banner('Select adult residents to build this project.',3);return false;}
+    .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;});
+  if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)))g.banner('Select adult residents to build this project.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     g.interruptMission(u);recordImmediateConstruction(g,u,b);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;

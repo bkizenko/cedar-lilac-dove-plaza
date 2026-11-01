@@ -1,3 +1,5 @@
+import {validScoutProvisions} from './scoutProvisions';
+import {validProductionPractice} from './productionPractice';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
@@ -104,7 +106,7 @@ function validateGamePayload(raw: unknown) {
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validProductionState(s)||!validClayState(s))fail();
+  if(!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
@@ -379,7 +381,8 @@ function validateGamePayload(raw: unknown) {
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
-    if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"))fail();
+    if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"||u.scout.preparing!==undefined&&u.scout.preparing!==true))fail();
+    if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.visit?.team!==undefined&&(!rivalTeam(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
     if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();

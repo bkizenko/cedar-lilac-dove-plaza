@@ -95,8 +95,11 @@ test('a blocked boat maker leaves work without losing paid progress or retrying 
  const {g,u}=fixture();const dock=g.makeBld('dock',0,-24,0);g.state.buildings=[dock];g.rebuildWalk();
  assert.equal(beginHaulageWork(g,'canoe',0,dock.id),true);u.haulageWork.progress=12;u.stuckT=12;
  haulageWorkAI(g,u,.1);assert.equal(u.order,'idle');assert.equal(u.haulageWork.paused,true);
- assert.equal(resumeHaulageWork(g,u),false);assert.equal(u.haulageWork.progress,12);
- u.stuckT=0;assert.equal(resumeHaulageWork(g,u),true);assert.equal(g.tribe(0).wood,80);
+ const paid=g.state.haulageProjects.find(p=>p.id===u.haulageWork.projectId);assert.ok(paid,'paid work has a canonical project owner');
+ assert.equal(resumeHaulageWork(g,u),false);
+ assert.equal(paid.work.progress,12,'failed reassignment preserves paid progress even when the actor facade detaches');
+ assert.equal(paid.work.paused,true);assert.equal(paid.actorId,null);assert.equal(g.tribe(0).wood,80,'failed reassignment neither refunds nor spends again');
+ u.stuckT=0;assert.equal(resumeHaulageWork(g,u),true);assert.equal(u.haulageWork,paid.work);assert.equal(paid.actorId,u.id);assert.equal(u.haulageWork.progress,12);assert.equal(g.tribe(0).wood,80);
  work(g,u,130,haulageWorkAI);assert.equal(u.haulage,'canoe');
 });
 

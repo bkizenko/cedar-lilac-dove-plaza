@@ -1,3 +1,4 @@
+import {waterNavigation} from '../src/game/waterTravel.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -32,7 +33,7 @@ test('rival exploration can select a canoe owner after pedestrians exhaust their
  // Mark the connected southern land as explored, leaving land beyond a water channel.
  g.height=(x,z)=>Math.abs(z)<12?g.world.waterY-2:Math.abs(z)<24?g.world.waterY+(Math.abs(z)-12)/3:4;g.rebuildWalk();
  g.state.rivalKnowledge=[{team:1,cells:Array.from({length:512},(_,i)=>512+i)}];
- g.tribe(1).food=5000;g.state.scoutTimer=0;tickScouts(g,1);
+ g.world.camps=g.world.camps.map(c=>c.team===1?{...c,x:30,z:40}:c);g.state.survivalVersion=undefined;waterNavigation(g,false);g.tribe(1).food=5000;g.state.scoutTimer=0;tickScouts(g,1);
  assert.equal(u.scout,undefined);assert.ok(sailor.scout);assert.ok(sailor.tz< -12);
  for(let i=0;i<1600&&sailor.z>=-12;i++){g.navBudget=10;g.state.time+=.1;scoutAI(g,sailor,.1);}
  assert.ok(sailor.z< -12,'scout physically crosses to the far bank');

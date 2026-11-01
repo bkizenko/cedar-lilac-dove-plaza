@@ -30,7 +30,7 @@ export function KnowledgePanel({engine,expanded=false,onChooseSite}:{engine:Engi
    {topic.limitation&&<p className="text-xs text-parchment-dim">{topic.limitation}</p>}
   </article>)}
   {g.state.paused&&<p className="text-xs text-parchment-dim">Resume play to let assigned people travel and work.</p>}
-  <p className="text-xs text-parchment-dim">Teaching networks and exchange of techniques are still future work. Current counts describe saved evidence and living residents, rather than an assumed history.</p>
+  <p className="text-xs text-parchment-dim">Practiced makers can teach someone beside actual work. Only demonstrated, delivered results establish production history; wider exchange of techniques and teaching institutions remain future work.</p>
   {feedback&&<p role="status" aria-live="polite">{feedback}</p>}
  </div>;
  if(expanded)return <section aria-label="Knowledge through practice"><h3 className="flex items-center gap-2"><BookOpen className="size-4"/>Knowledge through practice</h3>{content}</section>;
