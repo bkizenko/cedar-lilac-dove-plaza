@@ -358,7 +358,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div>{founding ? "Choose open ground near food and timber."
                 : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
                 : ["palisade","stonewall","trench","moat"].includes(hud.placing) ? "Drag a joined line · leave space for a gate"
-                : ["farm","warehouse"].includes(hud.placing) ? "Drag to size · [ ] width · Shift+[ ] depth"
+                : ["farm","warehouse","pen"].includes(hud.placing) ? "Drag to size · [ ] width · Shift+[ ] depth"
                 : "Click to build or plan · Esc cancels"}</div>
               {hud.placeIssue ? <div className="text-blood">{hud.placeIssue}</div> : hud.plotSummary ? <div className="text-ok">{hud.plotSummary}</div> : hud.banner ? <div>{hud.banner}</div> : null}
             </div>
@@ -509,7 +509,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
-                {sel.completed&&["farm","warehouse"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
+                {sel.completed&&["farm","warehouse","pen"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
                 {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}

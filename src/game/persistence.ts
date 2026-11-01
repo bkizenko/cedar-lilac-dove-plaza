@@ -1,3 +1,5 @@
+import {penHousingCapacity,penFeedCapacity} from './penGeometry';
+import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
 import {validCoastalTradeState} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
@@ -102,7 +104,7 @@ function validateGamePayload(raw: unknown) {
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validProductionState(s))fail();
+  if(!validProductionState(s)||!validClayState(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
@@ -362,7 +364,7 @@ function validateGamePayload(raw: unknown) {
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
     if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack"].includes(w.action)||!["pen","fetch","feed","deliver"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
-    if(u.tamingWork!==undefined){const w=u.tamingWork;if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
     if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
       const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);
@@ -498,7 +500,7 @@ function validateGamePayload(raw: unknown) {
       const pen=s.buildings.find((b:any)=>b.id===a.pen&&b.type==='pen'&&b.team===a.team);
       if(!pen||a.species!=='goat'||!['female','male'].includes(a.sex)||a.born< -300||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>6||a.pregnancy<0||a.pregnancy>240||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail();
       if(a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lactatingUntil>s.time+901))fail();
-      if(a.hp>0){perPen.set(a.pen,(perPen.get(a.pen)||0)+1);if((perPen.get(a.pen)||0)>8)fail();}
+      if(a.hp>0){perPen.set(a.pen,(perPen.get(a.pen)||0)+1);if((perPen.get(a.pen)||0)>penHousingCapacity(pen))fail();}
     }
   }
   for (const c of s.wildlife) {
@@ -507,7 +509,7 @@ function validateGamePayload(raw: unknown) {
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
     if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
-  for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>100||!num(p.care)||p.care<0||p.care>1)fail();}
+  for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}
   for(const u of s.units){
     for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team))fail();
   }

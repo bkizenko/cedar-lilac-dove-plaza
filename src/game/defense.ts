@@ -1,3 +1,4 @@
+import {defenseNeighbors} from './defenseNeighbors';
 import {contactYieldingTo} from './encounters';
 import {isSocietyPeaceMessengerFor} from './rivalActivity';
 import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
@@ -89,8 +90,9 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   // A visible attack on a nearby workplace raises the village alarm as well as
   // personal danger. Already armed civilians must answer it even while holding.
   let defendedSites:Building[]|null=null;
-  const foes = g.state.units.filter(e=>{
-    if(!(e.hp>0)||e.shelterId)return false;
+  const foes = defenseNeighbors(g,u).filter(e=>{
+    // isFoe(a, a) is always false; own residents need no distance calculation.
+    if(!(e.hp>0)||e.shelterId||e.team===u.team)return false;
     const distance=Math.hypot(e.x-u.x,e.z-u.z);
     // No branch below can react beyond 65 metres. Reject remote residents
     // before diplomacy/mission checks, then survey nearby workplaces lazily.

@@ -8,7 +8,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
-  | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
+  | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -143,6 +143,8 @@ export type Unit = {
   societyMissionId?:number;
   coastalVoyageId?:number;
   coastalCommissionId?:number;
+  clayWork?:import('./pottery').ClayWork;
+  waterVessel?:import('./pottery').WaterVessel;
   productionProjectId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
@@ -214,7 +216,7 @@ export type Unit = {
   farmTool?: FarmToolKind;
   farmToolWork?: FarmToolWork;
   packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
-  tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number};
+  tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver";animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
@@ -297,7 +299,7 @@ export type Building = {
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
   storeCare?: number;
-  pasture?: {condition:number;feed:number;care:number};
+  pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
   fallowYear?: number;
   cropType?: CropKind;
@@ -350,6 +352,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   items?:import('./production').ItemStock;
   itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide',number>>;
   survival?:import('./survivalNeeds').SurvivalStock;
@@ -425,6 +428,7 @@ export type GameState = {
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
+  clay?:import('./pottery').ClayState;
   production?:import('./production').ProductionState;
   campSites?:{team:number;x:number;z:number}[];
   campMove?:import('./nomadicCamp').CampMove;

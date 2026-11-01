@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import type {Building,FoodKind} from './types';
 import {foodInventory,FOOD_KINDS} from './pantry';
-import {ITEM_KINDS,ITEM_NAMES,PRODUCTION_RECIPES,PRODUCTION_RULES,itemCapacity,type ItemKind,type ItemStock} from './production';
+import {ITEM_KINDS,ITEM_NAMES,PRODUCTION_RECIPES,PRODUCTION_RULES,productionOutputs,itemCapacity,type ItemKind,type ItemStock} from './production';
 import {plotArea} from './plots';
 const amount=(n:unknown)=>Math.max(0,Number(n)||0);
 /** Read-only: these are communal stores, never invented per-building bins. */
@@ -13,7 +13,7 @@ export function villageStorageReport(g:Game,b:Building){
   for(const[k,n]of Object.entries(u.itemCargo||{}))carriedItems[k as ItemKind]=amount(carriedItems[k as ItemKind])+amount(n);waterInTransit+=amount(u.waterWork?.liters);
  }
  for(const p of g.state.production?.projects||[]){if(p.team!==0||p.phase==='complete'||p.phase==='lost')continue;const r=PRODUCTION_RECIPES[p.recipe],phase=p.phase==='paused'?p.resumePhase:p.phase;
-  if(phase==='returning'||phase==='ready'){for(const[k,n]of Object.entries(r.outputs))incomingItems[k as ItemKind]=amount(incomingItems[k as ItemKind])+amount(n);incomingFood+=r.food;}
+  if(phase==='returning'||phase==='ready'){for(const[k,n]of Object.entries(productionOutputs(p)))incomingItems[k as ItemKind]=amount(incomingItems[k as ItemKind])+amount(n);incomingFood+=r.food;}
   else{for(const[k,n]of Object.entries(r.foodInputs))paidFoodInputs[k as FoodKind]=amount(paidFoodInputs[k as FoodKind])+amount(n);for(const[k,n]of Object.entries(r.inputs))paidItems[k as ItemKind]=amount(paidItems[k as ItemKind])+amount(n);paidGrain+='grain'in r?amount(r.grain):0;}
  }
  return{complete,food:amount(t.food),foodThreshold:g.stockCap(0),foodContribution:complete?Math.floor(200*plotArea(b)):0,foodLots:FOOD_KINDS.map(kind=>({kind,amount:food[kind]})),resources:[{kind:'wood',name:'Logs',amount:amount(t.wood)},{kind:'stone',name:'Stone',amount:amount(t.stone)},{kind:'copper',name:'Copper',amount:amount(t.copper)},{kind:'iron',name:'Iron',amount:amount(t.iron)}],seeds:amount(t.seeds),water:amount(t.survival?.waterLiters),hasWater:!!t.survival,

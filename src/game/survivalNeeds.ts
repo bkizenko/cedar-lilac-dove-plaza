@@ -1,3 +1,4 @@
+import{waterVesselCapacity,wearWaterVessel}from'./pottery';
 import {coastalIndependentNeeds} from './coastalTrade';
 import {clothingWarmth} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
@@ -130,7 +131,7 @@ export function validSurvivalState(state:GameState):boolean{
   if(u.thirstSeconds!==undefined&&!finite(u.thirstSeconds))return false;if(u.coldSeconds!==undefined&&!finite(u.coldSeconds))return false;
   const w=u.waterWork;if(w!==undefined){if(!w||typeof w!=='object'||!['outbound','collecting','returning'].includes(w.phase))return false;
    for(const key of ['sourceX','sourceZ','bankX','bankZ'] as const)if(typeof w[key]!=='number'||!Number.isFinite(w[key])||Math.abs(w[key])>(state.worldOptions?.size??1040)/2+32)return false;
-   if(!finite(w.liters,SURVIVAL_RULES.waterTripLiters)||!finite(w.progressSeconds,SURVIVAL_RULES.collectSeconds)||w.paused!==undefined&&typeof w.paused!=='boolean')return false;
+   if(!finite(w.liters,waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters))||!finite(w.progressSeconds,SURVIVAL_RULES.collectSeconds*waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters)/SURVIVAL_RULES.waterTripLiters)||w.paused!==undefined&&typeof w.paused!=='boolean')return false;
    if(w.phase!=='returning'&&w.liters!==0)return false;
   }
  }
@@ -149,7 +150,7 @@ export function deliverWaterCargo(g:Game,u:Unit):number{
  const work=u.waterWork,stock=g.tribe(u.team)?.survival;if(!work||work.liters<=0||!stock)return 0;
  const drop=g.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(g,u,drop):null;
  if(!drop||!spot||!supplyReached(g,u,drop,spot))return 0;
- const liters=work.liters;stock.waterLiters+=liters;stock.waterDeliveredLiters+=liters;u.waterWork=undefined;return liters;
+ const liters=work.liters;stock.waterLiters+=liters;stock.waterDeliveredLiters+=liters;u.waterWork=undefined;wearWaterVessel(g,u);return liters;
 }
 export function waterCollectionAI(g:Game,u:Unit,dt:number){
  const w=u.waterWork;
@@ -168,8 +169,9 @@ export function waterCollectionAI(g:Game,u:Unit,dt:number){
  if(!bankClear(g,u,w.bankX,w.bankZ)||(u.stuckT??0)>30||!sourceWet(g,w)){replan();return true;}
  u.tx=w.bankX;u.tz=w.bankZ;
  if(Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5){const arrived=g.steer(u,dt);if(arrived&&Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5)replan();else u.workReason='Walking to a freshwater bank';return true;}
- w.phase='collecting';w.progressSeconds=Math.min(SURVIVAL_RULES.collectSeconds,w.progressSeconds+dt);u.workReason=`Filling water vessels · ${Math.min(100,Math.floor(w.progressSeconds/SURVIVAL_RULES.collectSeconds*100))}%`;
- if(w.progressSeconds>=SURVIVAL_RULES.collectSeconds){w.liters=SURVIVAL_RULES.waterTripLiters;w.phase='returning';g.invalidateRoute(u);}
+ const capacity=waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters),required=SURVIVAL_RULES.collectSeconds*capacity/SURVIVAL_RULES.waterTripLiters;
+ w.phase='collecting';w.progressSeconds=Math.min(required,w.progressSeconds+dt);u.workReason=`Filling water vessels · ${Math.min(100,Math.floor(w.progressSeconds/required*100))}%`;
+ if(w.progressSeconds>=required){w.liters=capacity;w.phase='returning';g.invalidateRoute(u);}
  return true;
 }
 const autoCheck=new WeakMap<Game,number>();

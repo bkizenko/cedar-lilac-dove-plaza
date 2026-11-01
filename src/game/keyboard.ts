@@ -69,7 +69,7 @@ export class KeyboardCommands {
       }
       return;
     }
-    if(g.state.placing&&["farm","warehouse"].includes(g.state.placing)&&["BracketLeft","BracketRight"].includes(code)){
+    if(g.state.placing&&["farm","warehouse","pen"].includes(g.state.placing)&&["BracketLeft","BracketRight"].includes(code)){
       event.preventDefault();e.resizePlot(code==="BracketRight"?1:-1,event.shiftKey);return;
     }
     const n = /^Digit[1-9]$/.test(code) ? Number(code.slice(-1)) : 0;

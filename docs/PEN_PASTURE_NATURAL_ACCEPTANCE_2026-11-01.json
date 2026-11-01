@@ -1,0 +1,109 @@
+{
+  "result": "PASS actual natural capture, enclosure return, finite grazing and keeper care",
+  "world": {
+    "seed": 1,
+    "version": 14,
+    "layout": "archipelago",
+    "size": 1040
+  },
+  "controlledScenario": {
+    "autoWork": false,
+    "weather": "clear",
+    "newRaidsAndCalamitiesPostponed": true,
+    "terrainEdits": false,
+    "positionTeleports": false,
+    "animalOrInventoryGrantsAfterNormalReset": false,
+    "calendarJumps": false,
+    "note": "Component acceptance fixture, not a full default-conflict campaign or winter survival run."
+  },
+  "actualExecution": {
+    "commands": [
+      "Place naturally dry cleared12x10 pen using normal construction payment",
+      "Issue build order and advance actual Game.step until completed",
+      "Physically walk an adult to discover the native goat cohort",
+      "Start capture using the normal action and advance Game.step through taming and return",
+      "Restore saved game, resume simulation and advance actual keeper work"
+    ],
+    "woodCharged": 20,
+    "tamingFoodPaid": 6,
+    "nativeReservedAnimalId": 2830,
+    "ownedAnimals": [
+      {
+        "id": 2830,
+        "x": 100.24629146474653,
+        "y": 7.792769789261307,
+        "z": -187.92278868801458,
+        "hp": 2,
+        "maxHp": 2,
+        "hunger": 3.943999999999963
+      }
+    ],
+    "nativeGoatHealthNote": "Native goats initialize with hp=maxHp=2; the captured goat retained full native health.",
+    "pen": {
+      "id": 2867,
+      "x": 103.51471862576143,
+      "z": -190.48528137423858,
+      "w": 12,
+      "d": 10,
+      "build": 1
+    },
+    "keeperId": 2759,
+    "gameTimeSeconds": 225.59999999999573,
+    "pasture": {
+      "usableAreaSquareMeters": 98.99999999999994,
+      "interiorAreaSquareMeters": 99,
+      "meanSoil": 0.8779964349763442,
+      "meanMoisture": 0.6289614697933272,
+      "productiveAreaSquareMeters": 94.39441628609868,
+      "eligibleCapacity": 9,
+      "housingCapacity": 9,
+      "animals": 1,
+      "keepers": 1,
+      "keepersNeeded": 1,
+      "biomassCapacity": 169.9099493149776,
+      "biomassFood": 169.90754931497762,
+      "regrowthPerSecond": 0.025486492397246638,
+      "demandPerSecond": 0.012,
+      "feedCapacity": 120,
+      "storedFeedSeconds": 0,
+      "winter": false
+    },
+    "pastureStock": {
+      "condition": 0.9999858748707202,
+      "feed": 0,
+      "care": 0.2018750000000006,
+      "initialFeed": 0,
+      "feedDelivered": 0,
+      "feedConsumed": 0,
+      "grazedFood": 0.21120000000000044
+    },
+    "simulationErrors": []
+  },
+  "evidence": {
+    "fixtureSha256": "e3d30eaf6a1063dde574c78d2da9cd116d5c229b0ac754fb3f95990375f5a6c5",
+    "fixture": ".play/pen-natural-v14.json",
+    "fixtureView": ".play/pen-natural-v14-view.json",
+    "mainTests": [
+      "scripts/pen-pasture.test.mjs",
+      "scripts/husbandry.test.mjs",
+      "scripts/plot-expansion.test.mjs"
+    ],
+    "originalRegression": {
+      "passed": 23,
+      "failed": 0,
+      "durationMilliseconds": 11334.246792
+    },
+    "cacheAndCleanupReview": {
+      "passed": 3,
+      "failed": 0,
+      "durationMilliseconds": 1345.7715
+    },
+    "typecheck": "Passed before the final small cache/cleanup review; parent owns combined final build."
+  },
+  "scopeLimits": [
+    "Stored winter plant-food delivery and conservation are covered by controlled husbandry/pasture tests; the natural fixture remains spring and consumes actual grazing.",
+    "Seed42 small random map had no living reachable goats within the220m pen capture range; the action was correctly blocked, and no resource was fabricated.",
+    "Pasture quantity/season/depletion is functional and visible in the pen readout; terrain texture does not yet show a dedicated grazing-depletion pattern.",
+    "Desktop visual acceptance is performed by the parent integrator."
+  ]
+}

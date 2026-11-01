@@ -537,7 +537,7 @@ export class Engine {
     }
     if(scalablePlot(type)){
       const key=type+JSON.stringify(this.plotSize);
-      if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`Store · ${cost.wood} logs · drag to size`,4);}
+      if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`${type==='pen'?'Pen':'Store'} · ${cost.wood} logs · drag to size`,4);}
     }
     if(linearStructure(type)&&this.plotStart){
       const line=joinedConstructionLine(this.game.state.buildings,type,this.plotStart,g),end=line[line.length-1];

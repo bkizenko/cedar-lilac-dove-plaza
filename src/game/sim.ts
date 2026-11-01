@@ -1,3 +1,5 @@
+import {beginDefenseNeighbors,updateDefenseNeighbors,endDefenseNeighbors} from './defenseNeighbors';
+import {clayAI,tickClay} from './pottery';
 import {queueConstruction,updateConstructionQueues,pauseConstructionQueue} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker,completeConstructionTarget,reconcileConstructionWorkers} from './constructionOwnership';
 import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,excavationWorkNeed,commitExcavation} from './excavation';
@@ -1148,9 +1150,9 @@ export class Game {
       }
       if (n < 4) return "A lumber camp needs a stand of pines";
     }
-    if (type === "farm") {
+    if (type === "farm" || type === "pen") {
       const issue=fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
-      if(issue)return issue;
+      if(issue)return type==='pen'?issue.replaceAll('field','pasture'):issue;
     }
     if (type === "dock") {
       if (this.height(x, z) < this.waterAt(x,z) - 0.12) return "The dock would sink";
@@ -1695,6 +1697,7 @@ export class Game {
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
     pauseProduction(this,u);
+    if(u.clayWork)u.clayWork.paused=true;
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
     u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;
@@ -5534,6 +5537,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        tickClay(this);
         tickProduction(this,sdt);
         tickVillageDefense(this);
         tickSocietyMissionNeeds(this,sdt);
@@ -5558,6 +5562,7 @@ export class Game {
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
+        beginDefenseNeighbors(this);
         for (const u of this.state.units) {
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
@@ -5569,6 +5574,7 @@ export class Game {
             if (emergencyResponse(this, u, sdt)) continue;
             if(coastalTradeAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
+            if(clayAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
             if(societyMissionAI(this,u,sdt))continue;
@@ -5597,8 +5603,11 @@ export class Game {
             } else this.combatAI(u, sdt);
           } catch (error) {
             this.reportSimulationError(`unit ${u.id}`,error);
+          } finally {
+            updateDefenseNeighbors(this,u);
           }
         }
+        endDefenseNeighbors(this);
         tickRivalActivity(this);
         tickOccupation(this,sdt);
         syncRiverboats(this);
@@ -5654,6 +5663,7 @@ export class Game {
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {
+        endDefenseNeighbors(this);
         this.reportSimulationError("world",err);
       }
     }

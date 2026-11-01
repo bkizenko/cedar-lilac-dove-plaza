@@ -11,3 +11,5 @@ Only explicit staged patches form tested batches. Working files and untracked re
 Current batch:83 unique checks; preservation, actual worn clothing, compact-site recovery, single construction actor ownership and measured task-list optimization. See PRESERVATION_OWNERSHIP_PERFORMANCE_BATCH_2026-10-31.md. Next requested work: exhaustive function/settlement-size building+station catalogue and multiple pending builder tasks honoring player priorities.
 
 Builder queues/station batch:41 unique checks, actual priority/queue and catalogue desktop review.90 searchable station functions,34 registered structures/17 recipes; partial/planned labels are not implemented chain credit. See BUILDER_QUEUES_STATIONS_BATCH_2026-10-31.md.
+
+2026-11-01 materials/pasture/defense batch:140 distinct checks, final build/typecheck and native desktop review. Actual pottery and useful32L worn vessels, scalable finite-pasture pens, workload corrections, exact live defense-neighbor grid. M1-12 qualified:22/98 =22.45% after publication. See MATERIALS_PASTURE_DEFENSE_BATCH_2026-11-01.md. Remaining full scope stays active.

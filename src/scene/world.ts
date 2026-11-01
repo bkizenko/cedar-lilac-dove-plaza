@@ -1,3 +1,5 @@
+import {PenFenceLayer} from './penFenceLayer';
+import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
 import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
 import {ExcavationLayer} from './excavationLayer';
@@ -74,7 +76,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
+  "potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -180,7 +182,9 @@ export class WorldView {
   riverboats: THREE.InstancedMesh | null = null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
+  private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
+  private waterVessels:WaterVesselLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
@@ -828,6 +832,7 @@ export class WorldView {
           ? this.mats.tile
           : this.mats.thatch;
       const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), capacity);
+      if(type==='pen'&&this.fieldSurface){this.fieldSurface.bind(roof.material as THREE.Material);roof.customDepthMaterial=this.fieldSurface.depth;}
       timber.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -860,7 +865,9 @@ export class WorldView {
   }
 
   private buildUnits() {
+    this.penFences=new PenFenceLayer(this.scene,this.mats.timber.clone());
     this.wornGarments=new WornGarmentLayer(this.scene);
+    this.waterVessels=new WaterVesselLayer(this.scene);
     for (const t of UNIT_TYPES) {
       const geo = unitGeo(t);
       const mat = this.mats.hide.clone();
@@ -1009,7 +1016,7 @@ export class WorldView {
         game.state.units.filter((u) => u.hp > 0 && u.type === type),
       );
     }
-    for(const [mesh,owners]of this.wornGarments?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.waterVessels?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
@@ -1465,17 +1472,17 @@ export class WorldView {
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
           const mesh=meshes[part];if(!mesh||counts[part]>=instCap(mesh))return;
           const wx=b.x+x,wz=b.z+z;
-          const ground=type==="farm"?game.height(wx,wz):foundationProfile(game,b).level;
+          const ground=type==="farm"||type==='pen'?game.height(wx,wz):foundationProfile(game,b).level;
           _p.set(wx,ground,wz);
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
-          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable?0:st.yaw,roll);
-          _s.set(scalable?sx:fort?1:st.sx,ys*(scalable||fort?1:st.sy),scalable?sz:fort?1:st.sz);
+          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw,roll);
+          _s.set(scalable?sx:fort||type==='pen'?1:st.sx,ys*(scalable||fort||type==='pen'?1:st.sy),scalable?sz:fort||type==='pen'?1:st.sz);
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
             if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
-            else if(type!=="farm")_s.y*=identity.roofHeight;
+            else if(type!=="farm"&&type!=="pen")_s.y*=identity.roofHeight;
           }
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
@@ -1498,6 +1505,7 @@ export class WorldView {
       }
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
+    this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.contourFields?.sync(game,this.camera.position);
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
@@ -1629,6 +1637,7 @@ export class WorldView {
 
   private syncUnits(game: Game) {
     this.wornGarments?.beginFrame(this.quality,this.shadowsEnabled);
+    this.waterVessels?.beginFrame(this.quality,this.shadowsEnabled);
     const grouped = new Map<UnitType, typeof game.state.units>();
     for (const t of UNIT_TYPES) grouped.set(t, []);
     for (const u of game.state.units) {
@@ -1683,6 +1692,7 @@ export class WorldView {
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
         this.wornGarments?.write(game,u,_m);
+        this.waterVessels?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
         if(tool&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
           this.farmToolMesh.setMatrixAt(tools,_m);
@@ -1706,6 +1716,7 @@ export class WorldView {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
     this.wornGarments?.endFrame();
+    this.waterVessels?.endFrame();
     if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
     if (game.state.selBld && game.state.selBld.hp > 0 && ri < instCap(this.rings)) {
       const b = game.state.selBld;
@@ -1824,6 +1835,10 @@ export class WorldView {
     if(type==='watchtower'&&towerPlatform){const geo=towerPlatformGeos(towerPlatform);add(geo.timber,mt);if(geo.extra)add(geo.extra,mt);add(geo.roof,mr);
     }else if(size&&type==='warehouse'){
       for(const m of plotModules({type,...size} as import("@/game/types").Building)){add(meshes.timber.geometry,mt,m.x,m.z,m.sx,m.sz);add(meshes.roof.geometry,mr,m.x,m.z,m.sx,m.sz);}
+    }else if(type==='pen'){
+      add(meshes.timber.geometry,mt);add(meshes.roof.geometry,mr);
+      const w=size?.w??BUILDINGS.pen.w,d=size?.d??BUILDINGS.pen.d;
+      for(const side of[-1,1]){const across=new THREE.BoxGeometry(w,.08,.1),along=new THREE.BoxGeometry(.1,.08,d);across.userData.ownedGhost=along.userData.ownedGhost=true;add(across,mt,0,side*d/2);add(along,mt,side*w/2,0);}
     }else if(size&&type==='farm'){
       add(meshes.timber.geometry,mt,0,0,size.w/BUILDINGS.farm.w,size.d/BUILDINGS.farm.d);
       add(meshes.roof.geometry,mr,(size.w-BUILDINGS.farm.w)/2,(size.d-BUILDINGS.farm.d)/2);
@@ -1838,6 +1853,7 @@ export class WorldView {
         depthWrite: false,
       }),
     );
+    if(type==='pen')pad.geometry.userData.ownedGhost=true;
     pad.rotation.x = -Math.PI / 2;
     pad.position.y = 0.08;
     if(type!=="bridge")this.ghost.add(pad);else {pad.geometry.dispose();(pad.material as THREE.Material).dispose();}
@@ -1862,6 +1878,7 @@ export class WorldView {
     while (this.ghost.children.length) {
       const ch = this.ghost.children[0] as THREE.Mesh;
       this.ghost.remove(ch);
+      if(ch.geometry?.userData.ownedGhost)ch.geometry.dispose();
       const mat = ch.material;
       if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
       else if (mat) (mat as THREE.Material).dispose();
@@ -2447,7 +2464,9 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
+    this.waterVessels?.dispose();this.waterVessels=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;

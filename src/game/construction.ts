@@ -2,7 +2,7 @@ import {recordImmediateConstruction,constructionPriority} from './constructionQu
 import {reserveConstructionWorker,releaseConstructionWorker} from './constructionOwnership';
 import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
 import {discountQuarryPlans} from "./mining";
-import {expansionCost,plotArea,type PlotSize} from './plots';
+import {expansionCost,plotArea,penFenceWood,type PlotSize} from './plots';
 import type {Game} from './sim';
 import type {Building,BldType,Cost,ResKind,Unit} from './types';
 import {BUILDINGS} from './constants';
@@ -21,6 +21,7 @@ export function buildingCost(type:BldType,g?:Game,team=0,size?:PlotSize,span?:Br
     cost.wood=halls===0?(team===0?0:20):40+20*(halls-1);
   }
   if(size){const area=plotArea({type,...size});for(const key of Object.keys(cost) as (keyof Cost)[])cost[key]=Math.ceil((cost[key]||0)*area);}
+  if(type==='pen'&&size)cost.wood=penFenceWood(size);
   return cost;
 }
 /** Rebalance unpaid drawings only; never refund already-used construction materials. */

@@ -1,7 +1,7 @@
 import {BUILDINGS} from './constants';
 import type {BldType,Building} from './types';
 export type PlotSize={w:number;d:number};
-export function scalablePlot(type:BldType){return type==='farm'||type==='warehouse';}
+export function scalablePlot(type:BldType){return type==='farm'||type==='warehouse'||type==='pen';}
 export function validPlot(type:BldType,size:PlotSize){
  const base=BUILDINGS[type];
  return scalablePlot(type)&&Number.isFinite(size.w)&&Number.isFinite(size.d)&&size.w>=base.w&&size.d>=base.d&&size.w<=base.w*3&&size.d<=base.d*3;
@@ -16,7 +16,9 @@ export function dragPlot(type:BldType,a:{x:number;z:number},b:{x:number;z:number
  const d=Math.min(base.d*3,Math.max(base.d,Math.ceil(Math.abs(b.z-a.z)/2)*2));
  return {x:a.x+Math.sign(b.x-a.x||1)*w/2,z:a.z+Math.sign(b.z-a.z||1)*d/2,w,d};
 }
+export function penFenceWood(size:PlotSize){const base=BUILDINGS.pen;return Math.ceil(base.wood*(.25+.75*(size.w+size.d)/(base.w+base.d))-1e-6);}
 export function expansionCost(b:Pick<Building,'type'|'w'|'d'>,size:PlotSize){
  const delta=Math.max(0,plotArea({...b,...size})-plotArea(b));
+ if(b.type==='pen')return{wood:Math.max(0,penFenceWood(size)-penFenceWood(b))};
  return b.type==='farm'?{seeds:Math.ceil(4*delta-1e-6)}:{wood:Math.ceil(60*delta-1e-6)};
 }

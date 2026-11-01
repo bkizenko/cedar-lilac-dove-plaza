@@ -2,16 +2,16 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**21/98 verified gates — 21.43%.** This measures acceptance evidence, not development effort or time remaining.
+**22/98 verified gates — 22.45%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: b1a811c. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: materials/pasture/defense batch following074429e. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
 | M0 | 6/12 | 50% |
-| M1 | 10/22 | 45.45% |
+| M1 | 11/22 | 50% |
 | M2 | 0/16 | 0% |
 | M3 | 2/18 | 11.11% |
 | M4 | 2/20 | 10% |
@@ -51,7 +51,7 @@ Verified baseline: b1a811c. Unverified integration earns no credit. Partial/unve
 | M1-09 | pending | Rest, shelter, clothing, tool wear and repair form a viable survival production loop | No matching executed evidence. Clothing and complete repair/needs production remain open. |
 | M1-10 | pending | Tracking, hunting, carcass handling and wildlife hazards provide meaningful finite food | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M1-11 | pending | Fishing uses actual reachable freshwater/coastal banks with physically returned catches | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M1-12 | pending | Early animals require real capture, food and care rather than automatic initial gifts | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
+| M1-12 | verified | Early animals require real capture, food and care rather than automatic initial gifts | materialsPastureDefense. Natural current V14 actual paid pen, native wild goat ID captured/returned, real care and finite grazing. Controlled winter plant-food delivery/conservation checks pass. No initial livestock gifts; broader species and full winter campaign remain separate. |
 | M1-13 | pending | Seed-funded expandable farms follow contours and support soil/fallow/preservation/milling decisions | No matching executed evidence. Contour-following farms are explicit latest scope; field-module presence is not current visual/gameplay acceptance. |
 | M1-14 | pending | Food attention, local depletion/regrowth and warned hazards produce choices without broken labor | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M1-15 | pending | Every map has mandatory hills/valleys/rivers/lakes; substantial landmasses have coherent drainage and reachable uplands | No matching executed evidence. v11 implementation and focused checks are unpublished integration work; zero credit until integrated acceptance/publish. |

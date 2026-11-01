@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "qualification": "One sequential controlled Node CPU comparison; not browser FPS or smooth-play qualification.",
+  "baselineCommit": "074429e",
+  "sourceScope": "Same indexed source including pottery/vessel support and same-team prefilter; after adds only the active-loop defense grid.",
+  "scenario": {
+    "generation": 7,
+    "mapSizeMeters": 1560,
+    "unitCount": 245,
+    "buildingCount": 408,
+    "warmupSteps": 20,
+    "sampledSteps": 120,
+    "stepArgumentSeconds": 0.03333333333333333,
+    "processPriority": "nice 10",
+    "randomCallsBefore": 3168,
+    "randomCallsAfter": 3168
+  },
+  "stepTimingsMilliseconds": {
+    "before": {
+      "count": 120,
+      "meanMs": 42.10147807500003,
+      "p50Ms": 39.090124999999716,
+      "p95Ms": 53.51866700000028,
+      "maxMs": 114.0876249999992
+    },
+    "after": {
+      "count": 120,
+      "meanMs": 34.87781424999999,
+      "p50Ms": 32.15800000000036,
+      "p95Ms": 48.630584,
+      "maxMs": 112.96962500000018
+    }
+  },
+  "percentChanges": {
+    "meanMs": -17.15774399210338,
+    "p50Ms": -17.733698728257863,
+    "p95Ms": -9.1334169440361,
+    "maxMs": -0.9799485264059382
+  },
+  "correctness": {
+    "fullEncodedStateHashMatches": true,
+    "finalEncodedStateSha256": "279a4cef425b47f04123fc78033725fffd4921da0ddaaacbf8039dab40dfae28",
+    "sourceUnchangedBefore": true,
+    "sourceUnchangedAfter": true,
+    "simulationErrorsBefore": [],
+    "simulationErrorsAfter": []
+  },
+  "scope": {
+    "cellMeters": 64,
+    "radiusMeters": 65,
+    "minimumIndexedUnits": 64,
+    "positionsUpdated": "after each actor, including early returns/errors",
+    "candidateOrder": "original units-array ordinal",
+    "fallbacks": [
+      "outside actor loop",
+      "small populations",
+      "changed state, time, units-array identity or count",
+      "unexpected coordinates or invalid membership"
+    ]
+  },
+  "rejectedCandidates": [
+    {
+      "candidate": "live-coordinate AABB before exact circle",
+      "reason": "No measured whole-step improvement; reverted.",
+      "meanMillisecondsBefore": 41.86077812499999,
+      "meanMillisecondsAfter": 42.02362425833329,
+      "fullEncodedStateHashMatches": true
+    },
+    {
+      "candidate": "allocation-free foodDemand loop",
+      "reason": "No measured whole-step improvement; reverted.",
+      "meanMillisecondsBefore": 41.25226142499999,
+      "meanMillisecondsAfter": 41.479216316666644,
+      "fullEncodedStateHashMatches": true
+    },
+    {
+      "candidate": "frame-local foodDemand/reserveSeconds caching",
+      "reason": "Not implemented or benchmarked: live food stocks, population and independent journey needs can mutate between calls within one step."
+    }
+  ],
+  "remainingLimitations": [
+    "After-change maximum sampled step remained 112.969625ms.",
+    "Cold initialization and actual browser/rendering performance were not qualified.",
+    "Future cross-actor position writers inside the loop must update/invalidate the index."
+  ],
+  "verification": {
+    "defenseTests": 40,
+    "passed": 40,
+    "failed": 0,
+    "source": "Current indexed export plus local priority-test seed harness; runtime unchanged.",
+    "priorityScenarioBodiesAndAssertionsUnchanged": true,
+    "randomnessRestoredAfterEveryPriorityScenarioIncludingAsync": true
+  }
+}

@@ -1,3 +1,6 @@
+import {penPastureReport} from './penPasture';
+import {PEN_RULES} from './penGeometry';
+import {POTTERY_RULES,waterVesselCapacity} from './pottery';
 import {PRODUCTION_RECIPES,productionSlots,itemCapacity} from './production';
 import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
@@ -36,7 +39,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  const r=WORKLOAD_RULES,H=Math.max(r.minimumHorizonSeconds,Math.min(r.maximumHorizonSeconds,Number.isFinite(options.horizonSeconds)?options.horizonSeconds!:r.horizonSeconds)),cal=calendar(g),residents=g.state.units.filter(u=>u.team===team&&u.hp>0),adults=residents.filter(u=>!isDependent(g,u));
  const liveProduction=[...new Map((g.state.production?.projects||[]).filter(p=>p.team===team&&p.phase!=='complete'&&p.phase!=='lost').map(p=>[p.id,p])).values()],productionOwners=new Set(liveProduction.filter(p=>p.actorId!==null).map(p=>p.actorId!));
  const itemLoad=(u:Unit)=>Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0);
- const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&(!u.waterWork||u.waterWork.paused===true)&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
+ const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&(!u.waterWork||u.waterWork.paused===true)&&(!u.clayWork||u.clayWork.paused===true)&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
  const eligible=adults.filter(u=>!outsideRole(g,u)),byId=new Map(people.map(p=>[p.id,p])),home=g.campOf(team),stock=g.tribe(team),tasks:WorkloadTask[]=[],keys=new Set<string>(),claimed=new Map<number,string>();
  const speed=(u?:Unit)=>u?Math.max(.5,u.speed*predisposition(u).speed*(1-(u.fatigue||0)*.12)*loadedHaulSpeed(u)):r.fallbackWalkingMetersPerSecond;
  const supply=supplyDrops(g,team);
@@ -64,22 +67,25 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   if(productionIds.has(p.id))continue;productionIds.add(p.id);
   const recipe=PRODUCTION_RECIPES[p.recipe],u=residents.find(u=>u.id===p.actorId&&u.productionProjectId===p.id),b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===team&&g.finished(b)),phase=p.phase==='paused'?p.resumePhase:p.phase;
   const practice=u?1+Math.min(.3,(u.craftingXP||0)/1200):1;
-  const hands=phase==='returning'?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
-  const walkOut=u&&b&&phase!=='returning'?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
-  const drops=supply,hasDrop=drops.length>0,walkBack=u&&phase==='returning'?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u):0;
+  const passive=phase==='curing'||phase==='ready',hands=phase==='returning'||passive?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
+  const walkOut=u&&b&&phase!=='returning'&&phase!=='curing'?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
+  const drops=supply,hasDrop=drops.length>0,walkBack=u&&phase==='returning'?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u)*(!u&&passive?2:1):0;
   const fullCache=phase==='returning'&&storedItems+Object.values(recipe.outputs).reduce((n,v)=>n+v,0)>productionCapacity;
   const missing=!b&&phase!=='returning',away=u?outsideRole(g,u):null;
   let blocker=p.blockedReason||null;
   if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&phase!=='returning')blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
-  else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u)blocker='No living maker assigned';else if(away)blocker='Assigned resident has an away or military duty';
-  const blocked=missing||!hasDrop||fullCache||!u||!!away||!!p.blockedReason;
-  add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'?'paused':blocked?'blocked':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||p.phase==='paused');
+  else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
+  const blocked=missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!p.blockedReason)||phase==='curing'&&p.drying?.lastRate===0;
+  add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||passive||p.phase==='paused');
   if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
+ }
+ for(const u of eligible){const w=u.clayWork;if(!w||w.phase==='returning')continue;const bank=g.state.clay?.deposits.find(d=>d.id===w.depositId),missing=!bank||bank.remaining<POTTERY_RULES.clayBatch;
+  add({id:`clay:${u.id}`,label:'Dig and deliver surveyed clay',category:'Materials',personSeconds:Math.max(0,POTTERY_RULES.digSeconds-w.progress)+(bank?travel(u,bank.x,bank.z)+trip(bank.x,bank.z,u):0),status:w.paused?'paused':missing?'blocked':'active',actorIds:w.paused?[]:[u.id],priority:500,blocker:w.paused?'Clay collection paused':missing?'Surveyed bank is exhausted or missing':null,units:POTTERY_RULES.clayBatch},true);
  }
  // A loaded ordinary, production item and water cargo share one actual return trip.
  for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0||itemLoad(u)>0){if(u.carryType==='food'&&!u.rawHuntMeat)incomingFood+=u.carry;if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
   if(!productionTravellers.has(u.id))add({id:`delivery:${u.id}`,label:'Deliver carried supplies',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
-  if(w&&w.phase!=='returning'&&w.liters===0){add({id:`water:${u.id}`,label:'Collect drinking water',category:'Water',personSeconds:Math.max(0,SURVIVAL_RULES.collectSeconds-w.progressSeconds)+travel(u,w.bankX,w.bankZ)+trip(w.bankX,w.bankZ,u),status:w.paused?'paused':claimed.has(u.id)?'queued':'active',actorIds:w.paused?[]:[u.id],priority:1000,blocker:w.paused?'Water assignment paused':null});if(!w.paused)incomingWater+=SURVIVAL_RULES.waterTripLiters;}
+  if(w&&w.phase!=='returning'&&w.liters===0){add({id:`water:${u.id}`,label:'Collect drinking water',category:'Water',personSeconds:Math.max(0,SURVIVAL_RULES.collectSeconds*waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters)/SURVIVAL_RULES.waterTripLiters-w.progressSeconds)+travel(u,w.bankX,w.bankZ)+trip(w.bankX,w.bankZ,u),status:w.paused?'paused':claimed.has(u.id)?'queued':'active',actorIds:w.paused?[]:[u.id],priority:1000,blocker:w.paused?'Water assignment paused':null});if(!w.paused)incomingWater+=waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters);}
  }
  // Construction belongs to the site once, regardless of two builders, a direct
  // buildOrder and the same unit.node compatibility reference.
@@ -101,8 +107,9 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   }
   if(b.type==='warehouse'&&stock.food>0){const care=Math.max(0,r.desiredStoreCare-(b.storeCare||0)+H/r.preservationCareDecaySeconds),work=Math.ceil(care/r.preservationCarePerBatch)*r.preservationWorkSeconds;
    const reserve=preservationTimberReserve(g,team),blocked=stock.wood<reserve+1?`Preservation keeps ${reserve} logs in reserve`:foodDemand(g,team)>0&&stock.food/foodDemand(g,team)<240?'Preservation waits for a safer food reserve':null;add({id:`store:${b.id}`,label:'Tend stored food',category:'Food preservation',personSeconds:work,status:blocked?'blocked':workersAt(b.id).length?'active':'queued',actorIds:workersAt(b.id).map(u=>u.id),priority:350,blocker:blocked});}
-  if(b.type==='pen'){const herd=(g.state.livestock??[]).filter(a=>a.pen===b.id&&a.hp>0),keeper=eligible.find(u=>u.husbandryWork?.pen===b.id&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);
-   if(herd.length)add({id:`herd:${b.id}`,label:keeper?'Assigned herd keeper':'Maintain herd care',category:'Husbandry',personSeconds:keeper?H:H*r.careDecayPerSecond/r.careGainPerWorkSecond,status:keeper?'active':'queued',actorIds:keeper?[keeper.id]:[],priority:700,blocker:!keeper?'Keeper not assigned':null});}
+  if(b.type==='pen'){const herd=(g.state.livestock??[]).filter(a=>a.pen===b.id&&a.hp>0),keepers=eligible.filter(u=>u.husbandryWork?.pen===b.id&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);
+   if(herd.length){const pasture=penPastureReport(g,b),care=Math.max(0,.8-(b.pasture?.care||0)+H*PEN_RULES.careDecayPerAnimalSecond*herd.length)/r.careGainPerWorkSecond,grass=pasture.winter?0:pasture.biomassFood+pasture.regrowthPerSecond*H,feed=Math.max(0,pasture.demandPerSecond*H-grass-(b.pasture?.feed||0)),person=keepers[0]??ratePeople[0],load=Math.min(carry('food',person),Math.max(8,Math.ceil(pasture.demandPerSecond*90))),haul=Math.ceil(feed/Math.max(1,load))*trip(b.x,b.z,person)*2;
+    add({id:`herd:${b.id}`,label:keepers.length?'Assigned herd keepers':'Maintain herd care and plant feed',category:'Husbandry',personSeconds:keepers.length?H*keepers.length:care+haul,status:keepers.length?'active':'queued',actorIds:keepers.map(u=>u.id),priority:700,blocker:!keepers.length?`Keeper not assigned · ${pasture.keepersNeeded} keeper slots for this herd${feed>0?` · ${Math.ceil(feed)} plant feed needs hauling`:''}`:null,units:feed});}}
  }
  const craft=(id:string,label:string,u:Unit|undefined,job:{progress:number;duration:number;workplace:number;paused?:boolean},blocker?:string,strengthWork=true)=>{
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b);
