@@ -1,0 +1,853 @@
+{
+  "baseCommit": "2e2792078df3c11a0e15abd5a7dd0fb2a8ce0048",
+  "scope": "V14 fallback only when original broad settlement survey has fewer than three sites; no height changes or relaxed geography/ecology/water/scenery gates",
+  "originalFailure": {
+    "seed": 42,
+    "size": 1040,
+    "requestLayout": "random",
+    "originalBroadSiteCount": 2,
+    "error": "This seed has no viable settlement sites"
+  },
+  "fallbackRules": {
+    "sampleSpacingMetres": 12,
+    "candidateSamplingAreaSquareMeters": 144,
+    "note": "Conservative nominal sampling proxy, including any retained original candidates; not a precise usable-land polygon union. Passing maps retain original400m\u00b2 sampling."
+  },
+  "qualification": {
+    "reliabilityAndFunctionalEcologyTests": {
+      "pass": 9,
+      "fail": 0,
+      "durationMilliseconds": 15820.29
+    },
+    "legacyOpeningCompatibilityTests": {
+      "pass": 9,
+      "fail": 0,
+      "durationMilliseconds": 21658.981375
+    },
+    "currentWorkingTypecheck": {
+      "status": "blocked_by_unrelated_source",
+      "diagnostic": "src/scene/wornGarments.ts:22 TS2367 UnitType compared to knight"
+    },
+    "sourceSha256": {
+      "src/game/openingWater.ts": "3167faa3c97dbb99187d20de4e1142357be6d1170423c89dcc1e91cf2b2926f8",
+      "src/game/worldgen.ts": "149b0a2d90556b4401f977e55a76549cfe982e53f8cb799e5b45b4efa56631b6",
+      "src/game/worldVariety.ts": "075e7a4826c82713c7a1651f1962f44df70370338125086b789019ddf524b3c2",
+      "scripts/v14-map-reliability.test.mjs": "8ad432a298e91f2c5572407dfd012696940bf818f972b30be968339e1c3469c8"
+    }
+  },
+  "recoveredOpening": {
+    "seed": 42,
+    "size": 1040,
+    "layout": "random",
+    "fallback": {
+      "kind": "compact-foundations",
+      "originalBroadSiteCount": 2,
+      "compactSiteCount": 117
+    },
+    "home": {
+      "x": -160,
+      "z": 140,
+      "team": 0
+    },
+    "terrain": {
+      "valid": true,
+      "maximumGrade": 0.1671395140637755,
+      "minimumDryClearanceMetres": 5.052749707938651,
+      "apronReliefMetres": 0.6900054476811404,
+      "maximumClosedDepressionMetres": 0.08743044494698538,
+      "maximumMeanRiseAt4Metres": 0.157812272214015,
+      "maximumMeanRiseAt8Metres": 0.4701179728098841
+    },
+    "waterIssue": null,
+    "bankDistance": 17.29915393375837,
+    "exactAnchorHallIssue": null,
+    "nearestActuallyPlaceableHall": {
+      "x": -160,
+      "z": 140
+    },
+    "beauty": 70.55901602468612,
+    "beautyCandidateMean": 62.75258882640463
+  },
+  "cases": [
+    {
+      "seed": 42,
+      "size": 1040,
+      "layout": "random",
+      "mode": "major-islands",
+      "fallback": {
+        "kind": "compact-foundations",
+        "originalBroadSiteCount": 2,
+        "compactSiteCount": 117
+      },
+      "milliseconds": 2720.395875,
+      "home": {
+        "x": -160,
+        "z": 140,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 8633.937376139516,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 32,
+          "forage": 12,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "mixed-woodland": {
+          "tree": 112,
+          "forage": 6,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "conifer-forest": {
+          "tree": 197,
+          "forage": 6,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "alpine": {
+          "tree": 20,
+          "forage": 5,
+          "stone": 5,
+          "copper": 1,
+          "iron": 2
+        },
+        "wetland": {
+          "tree": 101,
+          "forage": 33,
+          "stone": 9,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 105,
+          "forage": 13,
+          "stone": 8,
+          "copper": 2,
+          "iron": 2
+        },
+        "arid": {
+          "tree": 12,
+          "forage": 5,
+          "stone": 5,
+          "copper": 1,
+          "iron": 1
+        },
+        "warm-coast": {
+          "tree": 1069,
+          "forage": 86,
+          "stone": 19,
+          "copper": 4,
+          "iron": 4
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.059267035693836,
+        "mixed-woodland": 115.26061608075182,
+        "conifer-forest": 130.05653748464889,
+        "alpine": 11.96233500227583,
+        "wetland": 49.77426504292025,
+        "dry-scrub": 30.114197848966924,
+        "arid": 7.177401001365498,
+        "warm-coast": 68.2557082910422
+      },
+      "coniferToAridTreeDensityRatio": 18.120283018867926,
+      "biomeBoundaryCount": 180,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 7.451725300972045e-05,
+        "maxMoistureJump": 6.125496333886371e-05,
+        "maxTemperatureJump": 0.0012427893343209817
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.5786369451744267,
+        "humidity": 0.7190303933843601,
+        "drought": 0.5237999732472817
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.47270733057816
+    },
+    {
+      "seed": 42,
+      "size": 1560,
+      "layout": "random",
+      "mode": "major-islands",
+      "fallback": null,
+      "milliseconds": 2280.1989169999997,
+      "home": {
+        "x": 220,
+        "z": 220,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 20589.12,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 159,
+          "forage": 63,
+          "stone": 8,
+          "copper": 2,
+          "iron": 2
+        },
+        "mixed-woodland": {
+          "tree": 550,
+          "forage": 29,
+          "stone": 6,
+          "copper": 2,
+          "iron": 2
+        },
+        "conifer-forest": {
+          "tree": 1382,
+          "forage": 43,
+          "stone": 17,
+          "copper": 5,
+          "iron": 5
+        },
+        "alpine": {
+          "tree": 90,
+          "forage": 15,
+          "stone": 24,
+          "copper": 7,
+          "iron": 7
+        },
+        "wetland": {
+          "tree": 109,
+          "forage": 37,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 167,
+          "forage": 24,
+          "stone": 12,
+          "copper": 4,
+          "iron": 3
+        },
+        "arid": {
+          "tree": 22,
+          "forage": 5,
+          "stone": 9,
+          "copper": 3,
+          "iron": 2
+        },
+        "warm-coast": {
+          "tree": 1795,
+          "forage": 142,
+          "stone": 31,
+          "copper": 7,
+          "iron": 7
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.433500278241514,
+        "mixed-woodland": 115.04350736278448,
+        "conifer-forest": 130.04366154772657,
+        "alpine": 12.065637065637066,
+        "wetland": 48.21302193913659,
+        "dry-scrub": 30.76186265841438,
+        "arid": 7.073045267489713,
+        "warm-coast": 68.15351436729239
+      },
+      "coniferToAridTreeDensityRatio": 18.385809312638578,
+      "biomeBoundaryCount": 238,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 6.90891742670674e-05,
+        "maxMoistureJump": 5.9602978330797196e-05,
+        "maxTemperatureJump": 0.0009892499645873798
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.5973311015909957,
+        "humidity": 0.7267498274727706,
+        "drought": 0.5140845819682129
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.720302222917883
+    },
+    {
+      "seed": 1,
+      "size": 1040,
+      "layout": "random",
+      "mode": "edge-continent",
+      "fallback": null,
+      "milliseconds": 1142.9769579999993,
+      "home": {
+        "x": -162,
+        "z": 114,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 24182.74118113357,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 44,
+          "forage": 17,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "mixed-woodland": {
+          "tree": 385,
+          "forage": 21,
+          "stone": 4,
+          "copper": 1,
+          "iron": 1
+        },
+        "conifer-forest": {
+          "tree": 320,
+          "forage": 10,
+          "stone": 4,
+          "copper": 1,
+          "iron": 1
+        },
+        "alpine": {
+          "tree": 216,
+          "forage": 37,
+          "stone": 59,
+          "copper": 16,
+          "iron": 18
+        },
+        "wetland": {
+          "tree": 167,
+          "forage": 31,
+          "stone": 4,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 662,
+          "forage": 84,
+          "stone": 48,
+          "copper": 15,
+          "iron": 13
+        },
+        "arid": {
+          "tree": 129,
+          "forage": 32,
+          "stone": 52,
+          "copper": 14,
+          "iron": 13
+        },
+        "warm-coast": {
+          "tree": 754,
+          "forage": 58,
+          "stone": 13,
+          "copper": 3,
+          "iron": 3
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.112382526975285,
+        "mixed-woodland": 115.13747439690486,
+        "conifer-forest": 130.194715838723,
+        "alpine": 12.015585460155595,
+        "wetland": 47.8959146740712,
+        "dry-scrub": 30.180152940269448,
+        "arid": 7.2103643046864665,
+        "warm-coast": 67.9957003370341
+      },
+      "coniferToAridTreeDensityRatio": 18.056607175049574,
+      "biomeBoundaryCount": 374,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 7.301921425972857e-05,
+        "maxMoistureJump": 8.214801652939308e-05,
+        "maxTemperatureJump": 0.0015968818903711046
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.5571480757023112,
+        "humidity": 0.7156486225615222,
+        "drought": 0.5238890399898921
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.943836769530154
+    },
+    {
+      "seed": 42,
+      "size": 1040,
+      "layout": "continents",
+      "mode": "divided-continent",
+      "fallback": null,
+      "milliseconds": 1125.167042,
+      "home": {
+        "x": 68,
+        "z": -340,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 27466.552516845026,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 192,
+          "forage": 73,
+          "stone": 8,
+          "copper": 2,
+          "iron": 2
+        },
+        "mixed-woodland": {
+          "tree": 378,
+          "forage": 20,
+          "stone": 4,
+          "copper": 1,
+          "iron": 1
+        },
+        "conifer-forest": {
+          "tree": 2532,
+          "forage": 80,
+          "stone": 32,
+          "copper": 9,
+          "iron": 10
+        },
+        "alpine": {
+          "tree": 129,
+          "forage": 22,
+          "stone": 35,
+          "copper": 10,
+          "iron": 11
+        },
+        "wetland": {
+          "tree": 165,
+          "forage": 22,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 319,
+          "forage": 42,
+          "stone": 23,
+          "copper": 7,
+          "iron": 6
+        },
+        "arid": {
+          "tree": 116,
+          "forage": 26,
+          "stone": 48,
+          "copper": 13,
+          "iron": 12
+        },
+        "warm-coast": {
+          "tree": 1146,
+          "forage": 92,
+          "stone": 20,
+          "copper": 4,
+          "iron": 5
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 17.962693415182102,
+        "mixed-woodland": 115.01004952405454,
+        "conifer-forest": 129.99889840110788,
+        "alpine": 11.988547290129423,
+        "wetland": 48.11101608727811,
+        "dry-scrub": 30.37212444149257,
+        "arid": 6.979914473382957,
+        "warm-coast": 68.25250220319779
+      },
+      "coniferToAridTreeDensityRatio": 18.624712222025448,
+      "biomeBoundaryCount": 352,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 7.238097110418007e-05,
+        "maxMoistureJump": 6.32035587844193e-05,
+        "maxTemperatureJump": 0.0012940223672166518
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.6139328866860577,
+        "humidity": 0.7474142228676774,
+        "drought": 0.5429787934812281
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.714872426366206
+    },
+    {
+      "seed": 42,
+      "size": 1040,
+      "layout": "pangaea",
+      "mode": "edge-continent",
+      "fallback": null,
+      "milliseconds": 1036.1118749999996,
+      "home": {
+        "x": -180,
+        "z": -128,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 23171.018628616726,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 57,
+          "forage": 22,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "mixed-woodland": {
+          "tree": 1809,
+          "forage": 97,
+          "stone": 19,
+          "copper": 6,
+          "iron": 6
+        },
+        "conifer-forest": {
+          "tree": 654,
+          "forage": 21,
+          "stone": 8,
+          "copper": 2,
+          "iron": 3
+        },
+        "alpine": {
+          "tree": 155,
+          "forage": 30,
+          "stone": 41,
+          "copper": 11,
+          "iron": 13
+        },
+        "wetland": {
+          "tree": 121,
+          "forage": 16,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 603,
+          "forage": 73,
+          "stone": 44,
+          "copper": 13,
+          "iron": 12
+        },
+        "arid": {
+          "tree": 54,
+          "forage": 12,
+          "stone": 23,
+          "copper": 6,
+          "iron": 6
+        },
+        "warm-coast": {
+          "tree": 707,
+          "forage": 58,
+          "stone": 12,
+          "copper": 3,
+          "iron": 3
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.049052518139707,
+        "mixed-woodland": 114.98020391628913,
+        "conifer-forest": 130.01902694661106,
+        "alpine": 12.32596279922001,
+        "wetland": 47.8392024370675,
+        "dry-scrub": 29.991282755705836,
+        "arid": 6.946510344152453,
+        "warm-coast": 68.4310089248447
+      },
+      "coniferToAridTreeDensityRatio": 18.717171717171716,
+      "biomeBoundaryCount": 351,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 7.266265411820516e-05,
+        "maxMoistureJump": 6.818832543054043e-05,
+        "maxTemperatureJump": 0.0010921349527315272
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.601019760065963,
+        "humidity": 0.7482938012880436,
+        "drought": 0.5469550895568223
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 13.657808392495959
+    },
+    {
+      "seed": 42,
+      "size": 1040,
+      "layout": "archipelago",
+      "mode": "mainland-satellites",
+      "fallback": null,
+      "milliseconds": 875.119666999999,
+      "home": {
+        "x": -182,
+        "z": -146,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 12685.11454617519,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 59,
+          "forage": 22,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "mixed-woodland": {
+          "tree": 403,
+          "forage": 21,
+          "stone": 4,
+          "copper": 1,
+          "iron": 1
+        },
+        "conifer-forest": {
+          "tree": 479,
+          "forage": 15,
+          "stone": 6,
+          "copper": 2,
+          "iron": 2
+        },
+        "alpine": {
+          "tree": 92,
+          "forage": 18,
+          "stone": 25,
+          "copper": 7,
+          "iron": 8
+        },
+        "wetland": {
+          "tree": 61,
+          "forage": 28,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 247,
+          "forage": 30,
+          "stone": 18,
+          "copper": 5,
+          "iron": 5
+        },
+        "arid": {
+          "tree": 29,
+          "forage": 7,
+          "stone": 12,
+          "copper": 3,
+          "iron": 3
+        },
+        "warm-coast": {
+          "tree": 721,
+          "forage": 61,
+          "stone": 12,
+          "copper": 3,
+          "iron": 3
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.029694000155033,
+        "mixed-woodland": 115.10939952904238,
+        "conifer-forest": 129.92347684739232,
+        "alpine": 12.033885417242713,
+        "wetland": 47.96358702878798,
+        "dry-scrub": 29.956630782562325,
+        "arid": 6.950034702520872,
+        "warm-coast": 68.74023799638843
+      },
+      "coniferToAridTreeDensityRatio": 18.693932103715586,
+      "biomeBoundaryCount": 247,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 7.083550152897633e-05,
+        "maxMoistureJump": 6.94693740745933e-05,
+        "maxTemperatureJump": 0.0014862321082782515
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.6053765043125869,
+        "humidity": 0.7619891066578371,
+        "drought": 0.5958090278837357
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.277177623544114
+    },
+    {
+      "seed": 123456,
+      "size": 1560,
+      "layout": "continents",
+      "mode": "divided-continent",
+      "fallback": null,
+      "milliseconds": 2331.884833,
+      "home": {
+        "x": -300,
+        "z": 468,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 61719.84,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 447,
+          "forage": 169,
+          "stone": 18,
+          "copper": 5,
+          "iron": 5
+        },
+        "mixed-woodland": {
+          "tree": 5936,
+          "forage": 321,
+          "stone": 61,
+          "copper": 19,
+          "iron": 19
+        },
+        "conifer-forest": {
+          "tree": 2462,
+          "forage": 77,
+          "stone": 31,
+          "copper": 8,
+          "iron": 9
+        },
+        "alpine": {
+          "tree": 286,
+          "forage": 49,
+          "stone": 78,
+          "copper": 21,
+          "iron": 24
+        },
+        "wetland": {
+          "tree": 312,
+          "forage": 41,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 1110,
+          "forage": 142,
+          "stone": 80,
+          "copper": 24,
+          "iron": 22
+        },
+        "arid": {
+          "tree": 194,
+          "forage": 44,
+          "stone": 81,
+          "copper": 22,
+          "iron": 20
+        },
+        "warm-coast": {
+          "tree": 1066,
+          "forage": 86,
+          "stone": 18,
+          "copper": 4,
+          "iron": 4
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 17.984743144071068,
+        "mixed-woodland": 115.08158074322228,
+        "conifer-forest": 130.01689902830586,
+        "alpine": 12.015191234791962,
+        "wetland": 48.041389504804144,
+        "dry-scrub": 30.20506792058516,
+        "arid": 7.005835788987115,
+        "warm-coast": 68.22836661546339
+      },
+      "coniferToAridTreeDensityRatio": 18.558370898827956,
+      "biomeBoundaryCount": 428,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 5.510956545623502e-05,
+        "maxMoistureJump": 5.9457466005663484e-05,
+        "maxTemperatureJump": 0.001300084044495886
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.6574859034908025,
+        "humidity": 0.7904769779383957,
+        "drought": 0.5633113882073402
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 16.443760225584406
+    },
+    {
+      "seed": 9876,
+      "size": 2080,
+      "layout": "archipelago",
+      "mode": "major-islands",
+      "fallback": null,
+      "milliseconds": 4067.798500000001,
+      "home": {
+        "x": 464,
+        "z": -358,
+        "team": 0
+      },
+      "minimumConnectedBiomeAreaSquareMeters": 46307.74157748712,
+      "actualResourceCounts": {
+        "meadow": {
+          "tree": 422,
+          "forage": 163,
+          "stone": 17,
+          "copper": 5,
+          "iron": 5
+        },
+        "mixed-woodland": {
+          "tree": 3156,
+          "forage": 172,
+          "stone": 32,
+          "copper": 10,
+          "iron": 10
+        },
+        "conifer-forest": {
+          "tree": 4407,
+          "forage": 143,
+          "stone": 55,
+          "copper": 15,
+          "iron": 17
+        },
+        "alpine": {
+          "tree": 350,
+          "forage": 63,
+          "stone": 94,
+          "copper": 26,
+          "iron": 29
+        },
+        "wetland": {
+          "tree": 337,
+          "forage": 45,
+          "stone": 3,
+          "copper": 1,
+          "iron": 1
+        },
+        "dry-scrub": {
+          "tree": 367,
+          "forage": 45,
+          "stone": 27,
+          "copper": 8,
+          "iron": 7
+        },
+        "arid": {
+          "tree": 88,
+          "forage": 20,
+          "stone": 36,
+          "copper": 10,
+          "iron": 9
+        },
+        "warm-coast": {
+          "tree": 625,
+          "forage": 48,
+          "stone": 11,
+          "copper": 2,
+          "iron": 3
+        }
+      },
+      "actualTreesPerHectare": {
+        "meadow": 18.15083984026942,
+        "mixed-woodland": 115.14901262409684,
+        "conifer-forest": 130.12673442064266,
+        "alpine": 12.131194114492205,
+        "wetland": 48.0308459067957,
+        "dry-scrub": 29.96795231404445,
+        "arid": 7.0219042863986285,
+        "warm-coast": 68.0206646221944
+      },
+      "coniferToAridTreeDensityRatio": 18.531544879171467,
+      "biomeBoundaryCount": 261,
+      "maximum2mmBoundaryFieldDifferences": {
+        "maxSoilJump": 3.755475815531151e-05,
+        "maxMoistureJump": 4.102823034923819e-05,
+        "maxTemperatureJump": 0.0003921183889077362
+      },
+      "meanWetlandMinusArid": {
+        "soil": 0.6288951395408819,
+        "humidity": 0.7512233777141065,
+        "drought": 0.5281498465300816
+      },
+      "warmCoastMinusAlpineTemperatureCelsius": 14.253462650520094
+    }
+  ],
+  "M1_21_audit": {
+    "verifiedInEightCurrentV14Worlds": [
+      "All8 substantial connected provinces independently flood-counted from actual grid, meeting max6000m\u00b2/3percent-land quota.",
+      "Actual finite resource IDs/positions/stocks counted separately in generated world and live Game; all5 resource kinds present in every province.",
+      "Generation counters agree with generated nodes; live finite rival starter nodes are separately measured.",
+      "Actual gameplay habitat, soilQuality, climateAt and droughtWaterPotential queries vary by ecological conditions.",
+      "Every adjacent unlike-land biome boundary tested with2mm probes; interpolated soil/moisture/temperature continuous within stated tolerances.",
+      "Actual conifer tree densities exceed arid densities by18.06\u201318.72times in these cases."
+    ],
+    "limitations": [
+      "Finite holdouts do not prove all seeds succeed. The generator enforces connected-area coverage but does not reject every possible resource undersupply after bounded placement attempts.",
+      "Climate fields are a game model with profile offsets, elevation cooling and smoothed transitions; no coupled rainfall or groundwater simulation is claimed.",
+      "No full winter, GPU review or all-version hash sweep repeated. Versions1\u201313 branch remains untouched; two original V1-opening world hashes and two V2-opening world hashes checked by regression."
+    ],
+    "universalGateRecommendation": "Keep universal all-map resource acceptance pending until minimum functional resource coverage is enforced or wider qualification justifies that scope."
+  }
+}

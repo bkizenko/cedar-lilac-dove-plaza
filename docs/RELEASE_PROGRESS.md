@@ -2,15 +2,15 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**20/98 verified gates — 20.41%.** This measures acceptance evidence, not development effort or time remaining.
+**21/98 verified gates — 21.43%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 0993b0c. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: preservation/ownership/performance batch following2e27920. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
-| M0 | 5/12 | 41.67% |
+| M0 | 6/12 | 50% |
 | M1 | 10/22 | 45.45% |
 | M2 | 0/16 | 0% |
 | M3 | 2/18 | 11.11% |
@@ -28,7 +28,7 @@ Verified baseline: 0993b0c. Unverified integration earns no credit. Partial/unve
 | M0-03 | verified | Atomic reservation contract rejects partial claims and competing migrated actor ownership | batch2. Atomic contract plus migrated actor ownership checked; all-executor goods migration remains pending. |
 | M0-04 | verified | Migrated tree workers share physical workplace slots and reconstruct ownership after save/load | batch2. Tree-slot reconciliation, physical work/delivery and save ownership checked. |
 | M0-05 | verified | Paid transport projects survive maker reassignment/death and resume on a replacement without repayment | batch4. Replacement/original maker, death/workplace loss, cart input and legacy duration checks recorded. |
-| M0-06 | pending | Construction interruption and paid-work resumption use a single actor/project owner | No matching executed evidence. Foundations exist; single ownership and complete construction interruption acceptance not yet demonstrated. |
+| M0-06 | verified | Construction interruption and paid-work resumption use a single actor/project owner | preservationOwnershipPerformance. Actual paid native-terrain construction, interruption/death, strict save/load and replacement completion preserve one actor/project owner without repayment. Queued future tasks remain distinct from instantaneous execution; all-executor goods migration stays M0-07. |
 | M0-07 | pending | Gathering, construction, hauling and all crafting executors use coordinated atomic goods/capacity reservations | No matching executed evidence. Tree/paid-haulage migrations are partial; other direct-mutation executors remain. |
 | M0-08 | pending | Transport journeys, husbandry, expeditions and captivity migrate through the shared ownership contract | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M0-09 | pending | Versioned simulation RNG and timestamped commands reproduce new-game outcomes across replay/save | No matching executed evidence. Seeded world generation is not serialized simulation RNG or full deterministic replay. |

@@ -1,3 +1,4 @@
+import {reserveConstructionWorker,releaseConstructionWorker,completeConstructionTarget,reconcileConstructionWorkers} from './constructionOwnership';
 import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,excavationWorkNeed,commitExcavation} from './excavation';
 import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
@@ -1456,21 +1457,24 @@ export class Game {
 
   buildAI(u: Unit, dt: number) {
     const b = u.node && "type" in u.node ? (u.node as Building) : this.nearestUnbuilt(u);
-    if(b?.expansion&&expansionWork(this,u,b,dt))return;
+    if(b?.expansion){if(!reserveConstructionWorker(this,u,b))return;if(expansionWork(this,u,b,dt)){if(!b.expansion)completeConstructionTarget(this,b);else if(u.order!=='build')releaseConstructionWorker(this,u);return;}}
     if (!b || b.hp <= 0 || b.build >= 1 || b.plannedCost) {
+      releaseConstructionWorker(this,u);
       u.order = "idle";
       u.node = null;
       return;
     }
+    if(!reserveConstructionWorker(this,u,b,"traveling"))return;
     u.node = b;
     if (!this.buildingWorkReached(u,b)) {
       const approach=b.type==="bridge"?bridgeApproach(this,u,b):this.interactionSpot(u,b);
-      if(!approach){u.node=null;u.order="idle";u.blockedTask=b.id;u.retryWorkAt=this.state.time+30;u.workReason="No reachable construction approach — clear a route to the site";return;}
+      if(!approach){releaseConstructionWorker(this,u);u.node=null;u.order="idle";u.blockedTask=b.id;u.retryWorkAt=this.state.time+30;u.workReason="No reachable construction approach — clear a route to the site";return;}
       u.tx = approach.x;
       u.tz = approach.z;
       this.steer(u, dt);
       return;
     }
+    reserveConstructionWorker(this,u,b,"working");
     u.vx = 0;
     u.vz = 0;
     u.stride += dt * 8;
@@ -1483,6 +1487,7 @@ export class Game {
       if(b.type==='trench'&&!commitExcavation(this,b)){b.build=1-1e-6;u.workReason=excavationIssue(this,b)||'Digging cannot safely change this ground yet';return;}
       b.build = 1;
       b.hp = b.maxHp;
+      completeConstructionTarget(this,b);
       if(b.type==="bridge"){this.state.walkDirty=true;this.workBoard.reset();}
       if (u.team === 0) {
         this.banner(
@@ -1684,6 +1689,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
     pauseProduction(this,u);
     u.exploreAfterDelivery=undefined;
@@ -5533,6 +5539,7 @@ export class Game {
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);
         reconcileTradeReservations(this);
+        reconcileConstructionWorkers(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
         fundConstructionPlans(this);

@@ -1,3 +1,4 @@
+import {WornGarmentLayer} from './wornGarments';
 import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
 import {ExcavationLayer} from './excavationLayer';
 import {excavationTerrain} from '../game/excavation';
@@ -73,7 +74,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
+  "smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -179,6 +180,7 @@ export class WorldView {
   riverboats: THREE.InstancedMesh | null = null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
+  private wornGarments:WornGarmentLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
@@ -858,6 +860,7 @@ export class WorldView {
   }
 
   private buildUnits() {
+    this.wornGarments=new WornGarmentLayer(this.scene);
     for (const t of UNIT_TYPES) {
       const geo = unitGeo(t);
       const mat = this.mats.hide.clone();
@@ -1006,6 +1009,7 @@ export class WorldView {
         game.state.units.filter((u) => u.hp > 0 && u.type === type),
       );
     }
+    for(const [mesh,owners]of this.wornGarments?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
@@ -1624,6 +1628,7 @@ export class WorldView {
   }
 
   private syncUnits(game: Game) {
+    this.wornGarments?.beginFrame(this.quality,this.shadowsEnabled);
     const grouped = new Map<UnitType, typeof game.state.units>();
     for (const t of UNIT_TYPES) grouped.set(t, []);
     for (const u of game.state.units) {
@@ -1677,6 +1682,7 @@ export class WorldView {
         );
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
+        this.wornGarments?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
         if(tool&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
           this.farmToolMesh.setMatrixAt(tools,_m);
@@ -1699,6 +1705,7 @@ export class WorldView {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
+    this.wornGarments?.endFrame();
     if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
     if (game.state.selBld && game.state.selBld.hp > 0 && ri < instCap(this.rings)) {
       const b = game.state.selBld;
@@ -2440,6 +2447,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.wornGarments?.dispose();this.wornGarments=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;

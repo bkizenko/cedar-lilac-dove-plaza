@@ -1,0 +1,80 @@
+{
+  "qualification": "Single sequential controlled Node diagnostic pair, not browser FPS qualification",
+  "before": {
+    "sourceSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+    "sourceUnchanged": true,
+    "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+    "finalEncodedSha256": "279a4cef425b47f04123fc78033725fffd4921da0ddaaacbf8039dab40dfae28",
+    "randomCalls": 3168,
+    "warm": {
+      "count": 20,
+      "meanMs": 61.401274949999994,
+      "p50Ms": 48.664124999999785,
+      "p95Ms": 88.93037499999991,
+      "maxMs": 247.06504199999972
+    },
+    "steps": {
+      "count": 120,
+      "meanMs": 54.074668408333345,
+      "p50Ms": 47.17783299999974,
+      "p95Ms": 87.40583299999889,
+      "maxMs": 169.1787919999997
+    },
+    "methods": {
+      "refresh": {
+        "calls": 195,
+        "totalMs": 147.21841800000357,
+        "maxMs": 27.303750000000036
+      },
+      "assign": {
+        "calls": 5288,
+        "totalMs": 753.0660389999894,
+        "maxMs": 32.843292000000474
+      }
+    },
+    "time": 4747.466666667346,
+    "errors": []
+  },
+  "after": {
+    "sourceSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+    "sourceUnchanged": true,
+    "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+    "finalEncodedSha256": "279a4cef425b47f04123fc78033725fffd4921da0ddaaacbf8039dab40dfae28",
+    "randomCalls": 3168,
+    "warm": {
+      "count": 20,
+      "meanMs": 58.63100209999993,
+      "p50Ms": 49.088040999999976,
+      "p95Ms": 82.58295799999996,
+      "maxMs": 196.57683399999996
+    },
+    "steps": {
+      "count": 120,
+      "meanMs": 46.32669649999996,
+      "p50Ms": 43.562417000000096,
+      "p95Ms": 63.905791000000136,
+      "maxMs": 122.93345800000043
+    },
+    "methods": {
+      "refresh": {
+        "calls": 195,
+        "totalMs": 88.42058499999894,
+        "maxMs": 24.7123330000004
+      },
+      "assign": {
+        "calls": 5288,
+        "totalMs": 647.6443250000107,
+        "maxMs": 31.193999999999505
+      }
+    },
+    "time": 4747.466666667346,
+    "errors": []
+  },
+  "fullEncodedStateHashMatches": true,
+  "stepTimingPercentChanges": {
+    "meanMs": -14.328283716556934,
+    "p50Ms": -7.663378688884803,
+    "p95Ms": -26.886125551825646,
+    "maxMs": -27.3351839514254
+  }
+}

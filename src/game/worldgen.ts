@@ -1,4 +1,4 @@
-import {openingWaterSurvey,openingCampSurvey,OPENING_WATER_RULES} from './openingWater';
+import {openingWaterSurvey,openingCampSurvey,COMPACT_SETTLEMENT_RULES,OPENING_WATER_RULES} from './openingWater';
 import {continentalRiparian} from './continentalRiparian';
 import {variedLandforms,variedGeography,surveyVariety,validateVariety,makeLandContinuation,VARIETY_RULES,type TownCandidate} from './worldVariety';
 import {multipleLandmasses,multipleGeography,measureLandmasses,MULTILAND_RULES} from './multipleLandmasses';
@@ -19,6 +19,7 @@ import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
   size: number;
+  settlementFallback?:{kind:"compact-foundations";originalBroadSiteCount:number;compactSiteCount:number};
   openingWater?:NonNullable<ReturnType<ReturnType<typeof openingWaterSurvey>["at"]>>;
   landContinuation?:ReturnType<typeof makeLandContinuation>;
   variety?:Omit<ReturnType<typeof surveyVariety>,'componentAt'>;
@@ -368,6 +369,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     { x: ash.x, z: ash.z, team: 2 },
   ];
   let varietyCandidates:TownCandidate[]=[];
+  let settlementFallback:WorldData["settlementFallback"];
   if(land){
     const sites:{x:number;z:number;noise:number;beauty:number}[]=[],siteRandom=mulberry32(seed^0x3c721);
     for(let z=-HALF+48;z<HALF-48;z+=20)for(let x=-HALF+48;x<HALF-48;x+=20){
@@ -379,10 +381,26 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       if(approaches<6)continue;
       sites.push({x,z,noise:siteRandom(),beauty:version>=9?scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z,version>=11?localLevel:undefined,version>=11?SCENERY_RULES.backdropRadiusMeters:0).score:0});
     }
+    // Only seeds rejected by the original broad 24m village survey enter
+    // this branch. Existing valid V14 worlds (including their RNG stream) are
+    // unchanged. Compact camps still need a full hall/apron, gentle people
+    // positions and complete connected routes out to nearby working ground.
+    if(version>=14&&sites.length<COMPACT_SETTLEMENT_RULES.minimumBroadSites){
+      const originalBroadSiteCount=sites.length,rules=COMPACT_SETTLEMENT_RULES;
+      const terrain={size:MAP,height:(x:number,z:number)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies};
+      const survey=openingWaterSurvey(terrain);
+      for(let z=-HALF+rules.edgeMarginMetres;z<HALF-rules.edgeMarginMetres;z+=rules.sampleSpacingMetres)for(let x=-HALF+rules.edgeMarginMetres;x<HALF-rules.edgeMarginMetres;x+=rules.sampleSpacingMetres){
+        const h=sample(heights,x,z);if(h<localLevel(x,z)+.8||h>rules.maximumElevationMetres||sites.some(p=>Math.hypot(p.x-x,p.z-z)<rules.sampleSpacingMetres))continue;
+        if(!openingCampSurvey(terrain,{x,z}).valid)continue;
+        const routes=survey.approachesAt({x,z});if(routes.near<OPENING_WATER_RULES.nearDryApproaches||routes.outer<OPENING_WATER_RULES.outerDryApproaches)continue;
+        sites.push({x,z,noise:siteRandom(),beauty:scenicBeautyAt(terrain.height,waterY,x,z,localLevel,SCENERY_RULES.backdropRadiusMeters).score});
+      }
+      settlementFallback={kind:"compact-foundations",originalBroadSiteCount,compactSiteCount:sites.length-originalBroadSiteCount};
+    }
     if(sites.length<3)throw new Error('This seed has no viable settlement sites');
     const area=heights.reduce((sum,h)=>sum+Number(h>waterY+.8),0)*(MAP/SEGS)**2;
     const teams=[0,1,2,4,5].slice(0,1+rivalCountForArea(area));
-    const townSurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,sites):null,townCounts=new Map<number,number>();
+    const townSurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,sites,settlementFallback?COMPACT_SETTLEMENT_RULES.sampleSpacingMetres**2:400):null,townCounts=new Map<number,number>();
     if(townSurvey){varietyCandidates=sites.map(({x,z})=>({x,z}));const capacity=townSurvey.landmasses.reduce((n,p)=>n+p.townSites.length,0);if(capacity<3)throw new Error('V14 requires three physically spaced town sites');teams.length=Math.min(teams.length,capacity);}
     const beauty=(site:{beauty:number})=>site.beauty;
     const scenicThreshold=version>=9?[...sites].map(beauty).sort((a,b)=>a-b)[Math.floor((sites.length-1)*SCENERY_RULES.playerCandidatePercentile)]:0;
@@ -971,7 +989,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   if(geo&&'measure' in geo){const composed=geo as ReturnType<typeof import('./composedGeography').composedGeography>;composed.metrics.geometry=composed.measure((x:number,z:number)=>sample(heights,x,z));}
   const topology=multi||varied?measureLandmasses(heights,SEGS,MAP,localLevel):undefined;
   if(multi&&topology&&(topology.substantialLandmassCount<2||topology.substantialLandmassCount>5||topology.largestLandmassShare>MULTILAND_RULES.maximumLargestShare||topology.secondLandmassShare<MULTILAND_RULES.minimumSecondShare))throw new Error(`V13 physical landmass coverage failed: ${JSON.stringify(topology)}`);
-  const varietySurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,varietyCandidates.filter(p=>sample(heights,p.x,p.z)>localLevel(p.x,p.z)+.8)):null;
+  const varietySurvey=varied?surveyVariety(heights,SEGS,MAP,localLevel,varied.mode,varietyCandidates.filter(p=>sample(heights,p.x,p.z)>localLevel(p.x,p.z)+.8),settlementFallback?COMPACT_SETTLEMENT_RULES.sampleSpacingMetres**2:400):null;
   if(varietySurvey){validateVariety(varietySurvey);for(const part of varietySurvey.landmasses)part.startingTownCount=camps.filter(c=>varietySurvey.componentAt(c.x,c.z)===part.id).length;}
   const variety=varietySurvey?(({componentAt,...metrics})=>metrics)(varietySurvey):undefined;
   const landContinuation=varied&&variety?.continuationWidthMeters?makeLandContinuation(MAP,SEGS,heights,variety.continuationWidthMeters,(x,z)=>{
@@ -980,6 +998,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   }):undefined;
   return {
     ...(openingWater?{openingWater}:{}),
+    ...(settlementFallback?{settlementFallback}:{}),
     ...(landContinuation?{landContinuation}:{}),
     ...(variety?{variety}:{}),
     ...(topology?{topology}:{}),

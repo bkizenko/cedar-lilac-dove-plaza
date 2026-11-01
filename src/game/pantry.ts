@@ -31,7 +31,8 @@ export function storehouses(g: Game, team: number) {
 }
 /** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
 export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2};
-export const FOOD_KINDS: FoodKind[]=["provisions","berries","fish","meat","grain","pulses","tubers","milk","bread"];
+export const FOOD_KINDS: FoodKind[]=["provisions","berries","fish","meat","grain","pulses","tubers","milk","bread","driedMeat","driedFish","smokedMeat","smokedFish"];
+export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish'};
 /** The existing food total remains the save/trade facade; lots refine its contents. */
 export function foodInventory(t:Tribe) {
   const lots=Object.fromEntries(FOOD_KINDS.map(k=>[k,Math.max(0,t.foodLots?.[k]||0)])) as Record<FoodKind,number>;
@@ -57,7 +58,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
   const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
-  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018};
+  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
   return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;
 }

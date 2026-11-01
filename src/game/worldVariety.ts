@@ -57,7 +57,7 @@ export function variedGeography(seed:number,size:number,land:ReturnType<typeof v
 }
 export type TownCandidate={x:number;z:number};
 /** Full authoritative-grid components and measurable edge contact, not mode labels. */
-export function surveyVariety(heights:Float32Array,segs:number,size:number,water:(x:number,z:number)=>number,mode:LandMode,candidates:TownCandidate[]=[]){
+export function surveyVariety(heights:Float32Array,segs:number,size:number,water:(x:number,z:number)=>number,mode:LandMode,candidates:TownCandidate[]=[],candidateSamplingAreaSquareMeters=400){
  const width=segs+1,step=size/segs,labels=new Int32Array(heights.length).fill(-1),parts:{id:number;areaSquareMeters:number;edgeContactMeters:number;corners:number;usableAreaSquareMeters:number;townSites:TownCandidate[];startingTownCount:number}[]=[];
  const dry=(i:number)=>heights[i]>water(i%width*step-size/2,Math.floor(i/width)*step-size/2)+.25;
  for(let i=0;i<heights.length;i++)if(labels[i]<0&&dry(i)){const id=parts.length,q=[i];labels[i]=id;let edges=0,corners=0;
@@ -67,7 +67,7 @@ export function surveyVariety(heights:Float32Array,segs:number,size:number,water
  }
  const componentAt=(x:number,z:number)=>labels[Math.max(0,Math.min(segs,Math.round((z/size+.5)*segs)))*width+Math.max(0,Math.min(segs,Math.round((x/size+.5)*segs)))];
  const grouped=new Map<number,TownCandidate[]>();for(const p of candidates){const id=componentAt(p.x,p.z);if(id<0)continue;const list=grouped.get(id)||[];list.push(p);grouped.set(id,list);}
- for(const part of parts){const list=grouped.get(part.id)||[];part.usableAreaSquareMeters=list.length*400;const capacity=Math.min(VARIETY_RULES.maximumTownsPerLandmass,Math.max(1,Math.ceil(part.usableAreaSquareMeters/VARIETY_RULES.usableAreaPerTownSquareMeters)));
+ for(const part of parts){const list=grouped.get(part.id)||[];part.usableAreaSquareMeters=list.length*candidateSamplingAreaSquareMeters;const capacity=Math.min(VARIETY_RULES.maximumTownsPerLandmass,Math.max(1,Math.ceil(part.usableAreaSquareMeters/VARIETY_RULES.usableAreaPerTownSquareMeters)));
   for(let i=0;i<capacity;i++){let chosen:TownCandidate|undefined,best=-Infinity;for(const p of list){const d=part.townSites.length?Math.min(...part.townSites.map(t=>Math.hypot(t.x-p.x,t.z-p.z))):Math.hypot(p.x,p.z);if(i&&d<VARIETY_RULES.minimumTownSpacingMeters)continue;if(d>best){chosen=p;best=d;}}if(chosen)part.townSites.push({x:chosen.x,z:chosen.z});}
  }
  // Tiny two-mainland maps still need player plus two real neighbors. Increase

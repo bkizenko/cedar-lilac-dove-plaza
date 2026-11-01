@@ -139,6 +139,11 @@ export class WorkBoard {
   private next = 0;
   private revision = -1;
   private nodeComponents = new WeakMap<Node, number>();
+  private obstructionWorld: Game["world"] | null = null;
+  private obstructionState: Game["state"] | null = null;
+  private obstructionFootprints: number[] = [];
+  private solidFootprints: Building[] = [];
+  private obstructedResources = new WeakMap<Node, { x: number; z: number; blocked: boolean }>();
   private labels = new Int32Array(0);
   private labeledWalk = new Uint8Array(0);
   private labelNavigation(g: Game) {
@@ -186,6 +191,12 @@ export class WorkBoard {
     const n = Math.sqrt(g.walk.length),
       cx = Math.floor(((x + (g.world.size/2)) / g.world.size) * n),
       cz = Math.floor(((z + (g.world.size/2)) / g.world.size) * n);
+    // Distance zero is already the exact minimum; retain the old nearest-cell
+    // search (including its tie order) for obstructed or out-of-bounds centers.
+    if (cx >= 0 && cx < n && cz >= 0 && cz < n) {
+      const center = this.labels[cz * n + cx];
+      if (center) return center;
+    }
     let best = 0,
       distance = Infinity;
     for (let dz = -4; dz <= 4; dz++)
@@ -213,23 +224,45 @@ export class WorkBoard {
     }
     return value;
   }
+  private refreshObstructions(g: Game) {
+    const solid = g.state.buildings.filter(b => g.solidBuilding(b));
+    const footprints: number[] = [];
+    for (const b of solid) footprints.push(b.x, b.z, b.w, b.d);
+    if (this.obstructionWorld !== g.world || this.obstructionState !== g.state ||
+        footprints.length !== this.obstructionFootprints.length ||
+        footprints.some((v, i) => v !== this.obstructionFootprints[i])) {
+      this.obstructedResources = new WeakMap();
+      this.obstructionWorld = g.world;
+      this.obstructionState = g.state;
+      this.obstructionFootprints = footprints;
+    }
+    this.solidFootprints = solid;
+  }
+  private blockedResource(node: Node) {
+    if ('type' in node || 'species' in node) return false;
+    const cached = this.obstructedResources.get(node);
+    if (cached && cached.x === node.x && cached.z === node.z) return cached.blocked;
+    const blocked = this.solidFootprints.some(b =>
+      Math.abs(node.x - b.x) < b.w * .4 && Math.abs(node.z - b.z) < b.d * .4);
+    this.obstructedResources.set(node, { x: node.x, z: node.z, blocked });
+    return blocked;
+  }
   reset() {
+    this.obstructionWorld = null;
+    this.obstructionState = null;
+    this.obstructedResources = new WeakMap();
+    this.solidFootprints = [];
+    this.obstructionFootprints = [];
     this.next = 0;
     this.occupiedAt = -1;
     this.tasks.clear();
     this.revision = -1;
   }
   refresh(g: Game) {
-    if (g.state.time < this.next) return;
+    if (g.state.time < this.next && this.obstructionWorld === g.world && this.obstructionState === g.state) return;
     this.next = g.state.time + 1;
     this.tasks.clear();
-    const solid=g.state.buildings.filter(b=>g.solidBuilding(b)),obstructed=new Map<Node,boolean>();
-    const blockedResource=(node:Node)=>{
-      if('type' in node||'species' in node)return false;
-      let blocked=obstructed.get(node);
-      if(blocked===undefined){blocked=solid.some(b=>Math.abs(node.x-b.x)<b.w*.4&&Math.abs(node.z-b.z)<b.d*.4);obstructed.set(node,blocked);}
-      return blocked;
-    };
+    this.refreshObstructions(g);
     for (const t of g.state.tribes) {
       if (!t.alive || t.id === 3) continue;
       const list: Task[] = [],
@@ -238,7 +271,7 @@ export class WorkBoard {
       const buildings = g.state.buildings.filter((b) => b.team === t.id && b.hp > 0);
       const needed=new Set((["wood","stone","copper","iron"] as ResKind[]).filter(k=>constructionDemand(g,t.id,k)));
       const add = (node: Node, kind: Task["kind"], slots: number, priority: number) => {
-        if(!blockedResource(node))list.push({ node, kind, slots, priority:priority+(needed.has(kind as ResKind)?90:0) });
+        if(!this.blockedResource(node))list.push({ node, kind, slots, priority:priority+(needed.has(kind as ResKind)?90:0) });
       };
       const nearby = (n: Node, type: string, r: number) =>
         buildings.some(

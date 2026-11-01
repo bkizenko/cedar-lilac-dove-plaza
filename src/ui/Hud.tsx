@@ -83,6 +83,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   hut: <Home className="size-4" />,
   cornerstone: <Compass className="size-4" />,
   townhall: <Landmark className="size-4" />,
+  smokehouse: <Fish className="size-4" />,
   grindingStone: <Wheat className="size-4" />, oven: <Wheat className="size-4" />,
   farm: <Wheat className="size-4" />,
   lumber: <Axe className="size-4" />,
@@ -729,7 +730,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","pen","dock","grove","hearth","butcher","grindingStone","oven"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove","hearth","butcher","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =

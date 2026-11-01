@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "0993b0c",
+  "verifiedPublishedCodeBaseline": "preservation/ownership/performance batch following2e27920",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Broader procedural holdout coverage and deep excavation survival balance",
@@ -29,15 +29,15 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 20,
+    "verifiedGates": 21,
     "totalGates": 98,
-    "verifiedGatePercent": 20.41
+    "verifiedGatePercent": 21.43
   },
   "milestones": {
     "M0": {
-      "verifiedGates": 5,
+      "verifiedGates": 6,
       "totalGates": 12,
-      "verifiedGatePercent": 41.67
+      "verifiedGatePercent": 50
     },
     "M1": {
       "verifiedGates": 10,
@@ -123,6 +123,11 @@
       "section": "Scenario and source scope",
       "kind": "Executed full first-winter Game.step scenario on combined indexed source",
       "scope": "Normal/default conflict, V14 seed42 continents, actual finite unbuilt opening, explicit delegation/build/defense, physical water/fuel and strict save. One fixed scenario, not all-seed campaign qualification."
+    },
+    "preservationOwnershipPerformance": {
+      "path": "docs/PRESERVATION_OWNERSHIP_PERFORMANCE_BATCH_2026-10-31.md",
+      "kind": "Executed integrated checks, actual construction/save scenario and desktop review",
+      "scope": "Construction instantaneous actor/project ownership; other partial crafting/map/performance work earns no broader campaign credit."
     }
   },
   "gates": [
@@ -209,10 +214,12 @@
       "catalogueRanges": [
         "61-70"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Foundations exist; single ownership and complete construction interruption acceptance not yet demonstrated."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "preservationOwnershipPerformance"
+      ],
+      "remainingNotes": "Actual paid native-terrain construction, interruption/death, strict save/load and replacement completion preserve one actor/project owner without repayment. Queued future tasks remain distinct from instantaneous execution; all-executor goods migration stays M0-07."
     },
     {
       "id": "M0-07",

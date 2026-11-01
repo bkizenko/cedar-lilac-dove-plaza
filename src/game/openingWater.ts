@@ -22,6 +22,8 @@ export function openingWaterSurvey(t:Terrain){
  const seen=new Set<string>();
  for(const p of sources){if(t.height(p.x,p.z)>t.water(p.x,p.z)+.25)continue;for(const d of[8,16,24,32])for(let i=0;i<12;i++){const a=i*Math.PI/6,x=p.x+Math.cos(a)*d,z=p.z+Math.sin(a)*d,key=`${Math.round(x)},${Math.round(z)}`;if(seen.has(key))continue;seen.add(key);const c=coords(x,z);if(!dryCell(c.ix,c.iz))continue;let wetReach=false;for(let j=0;j<8;j++){const a=j*Math.PI/4,px=x+Math.cos(a)*5,pz=z+Math.sin(a)*5;if(t.height(px,pz)<t.water(px,pz)+.2)wetReach=true;}if(wetReach)banks.push({x,z,sourceX:p.x,sourceZ:p.z});}}
  return {
+  /** Count complete dry-cell routes, not merely dry endpoints across a ravine. */
+  approachesAt(home:Point){let near=0,outer=0;for(let i=0;i<24;i++){const a=i*Math.PI/12;for(const radius of[26,48]){const end={x:home.x+Math.cos(a)*radius,z:home.z+Math.sin(a)*radius};if(reachable(home,end)){if(radius===26)near++;else outer++;}}}return{near,outer};},
   at(home:Point){const bank=banks.filter(b=>Math.hypot(b.x-home.x,b.z-home.z)<=rules.knownBankDistanceMetres&&reachable(home,b)).sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z))[0];return bank?{bankX:bank.x,bankZ:bank.z,sourceX:bank.sourceX,sourceZ:bank.sourceZ,bankDistanceMetres:Math.hypot(bank.x-home.x,bank.z-home.z),surveyedDryCells:dry.size}:null;},
   candidates(near:Point){const points:Point[]=[],used=new Set<string>();for(const b of [...banks].sort((a,b)=>Math.hypot(a.x-near.x,a.z-near.z)-Math.hypot(b.x-near.x,b.z-near.z)).slice(0,rules.candidateBankLimit))for(let i=0;i<12;i++){const a=i*Math.PI/6,x=Math.round((b.x+Math.cos(a)*rules.homeOffsetMetres)/2)*2,z=Math.round((b.z+Math.sin(a)*rules.homeOffsetMetres)/2)*2,key=`${x},${z}`;if(!used.has(key)){used.add(key);points.push({x,z});}}return points;},
  };
@@ -31,6 +33,7 @@ export function openingWaterSurvey(t:Terrain){
  * founding resident offset. A plane has zero radial mean rise even on a slope;
  * positive rise detects a depression without confusing a hillside with a pit.
  * These rules select existing ground; they never change its height. */
+export const COMPACT_SETTLEMENT_RULES={sampleSpacingMetres:12,minimumBroadSites:3,maximumElevationMetres:36,edgeMarginMetres:72} as const;
 export const OPENING_CAMP_RULES={maximumGrade:.22,minimumDryClearanceMetres:.55,maximumApronReliefMetres:2.4,maximumClosedDepressionMetres:.12,maximumMeanRiseAt4Metres:.22,maximumMeanRiseAt8Metres:.65,gradeProbeMetres:2,ringSamples:16} as const;
 export const OPENING_RESIDENT_OFFSETS:readonly Point[]=[{x:5,z:-3},{x:-2.5,z:Math.sin(Math.PI*2/3)*5-3},{x:-2.5,z:Math.sin(Math.PI*4/3)*5-3},{x:4,z:-5},{x:-5,z:-4}];
 export function openingCampSurvey(t:Pick<Terrain,'height'|'water'>,home:Point){

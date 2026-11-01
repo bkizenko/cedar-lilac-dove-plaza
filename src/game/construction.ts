@@ -1,3 +1,4 @@
+import {reserveConstructionWorker,releaseConstructionWorker} from './constructionOwnership';
 import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
 import {discountQuarryPlans} from "./mining";
 import {expansionCost,plotArea,type PlotSize} from './plots';
@@ -82,17 +83,18 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     g.interruptMission(u);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
-    u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
+    u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;reserveConstructionWorker(g,u,b,u.carry>0?'returning':'reserved');u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
   }
   g.workBoard.reset();g.banner(`${chosen.length} builders assigned to ${BUILDINGS[b.type].name}. ${planStatus(g,b)}`,4);return true;
 }
 export function directedConstruction(g:Game,u:Unit,dt:number){
   if(u.buildOrder===undefined||u.emergency)return false;
   const b=g.state.buildings.find(b=>b.id===u.buildOrder&&b.team===u.team&&b.hp>0);
-  if(!b||(g.finished(b)&&!b.expansion)){u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
-  if(u.carry>0){u.order='return';u.node=null;return false;}
+  if(!b||(g.finished(b)&&!b.expansion)){releaseConstructionWorker(g,u);u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
+  if(u.carry>0){reserveConstructionWorker(g,u,b,'returning');u.order='return';u.node=null;return false;}
   u.order='build';u.node=b;
-  if(b.planPaused){u.workReason='Construction plan paused';return true;}
+  if(b.planPaused){releaseConstructionWorker(g,u);u.workReason='Construction plan paused';return true;}
+  if(!reserveConstructionWorker(g,u,b)){u.workReason='Construction waiting for the resident’s current commitment';return true;}
   if(b.plannedCost){
     // Walk outside the footprint first, so funding cannot turn a drawing into
     // a solid obstacle around the very person ordered to build it.
