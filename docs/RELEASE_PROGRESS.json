@@ -11,11 +11,11 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "finite fibre / owned baskets / coastal route / measured steering batch following5472220",
+  "verifiedPublishedCodeBaseline": "needs-driven material/trade intelligence and qualified boat delivery batch following3c69426",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
-    "Naturally profitable rival coastal exchanges and broader supplied naval warfare",
-    "Remaining metallurgy/textile/repair chains and full teaching institutions",
+    "Two independently profitable rival trades under ordinary AI review",
+    "Remaining metallurgy/textile/repair chains and full institutions",
     "Mature village frame-tail smoothness and connected campaign / holdout qualification"
   ],
   "method": {
@@ -29,40 +29,40 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 22,
+    "verifiedGates": 23,
     "totalGates": 98,
-    "verifiedGatePercent": 22.45
+    "verifiedGatePercent": 23.47
   },
   "milestones": {
     "M0": {
       "verifiedGates": 6,
       "totalGates": 12,
-      "verifiedGatePercent": 50
+      "verifiedGatePercent": 50.0
     },
     "M1": {
       "verifiedGates": 11,
       "totalGates": 22,
-      "verifiedGatePercent": 50
+      "verifiedGatePercent": 50.0
     },
     "M2": {
       "verifiedGates": 0,
       "totalGates": 16,
-      "verifiedGatePercent": 0
+      "verifiedGatePercent": 0.0
     },
     "M3": {
-      "verifiedGates": 2,
+      "verifiedGates": 3,
       "totalGates": 18,
-      "verifiedGatePercent": 11.11
+      "verifiedGatePercent": 16.67
     },
     "M4": {
       "verifiedGates": 2,
       "totalGates": 20,
-      "verifiedGatePercent": 10
+      "verifiedGatePercent": 10.0
     },
     "M5": {
       "verifiedGates": 1,
       "totalGates": 10,
-      "verifiedGatePercent": 10
+      "verifiedGatePercent": 10.0
     }
   },
   "evidenceSources": {
@@ -138,6 +138,11 @@
       "path": "docs/MATERIALS_PASTURE_DEFENSE_BATCH_2026-11-01.md",
       "kind": "Executed integrated scenarios, strict saves, natural capture and desktop review",
       "scope": "M1-12 actual early capture/food/care. Pottery, expanded pasture and measured defense optimization remain narrower than broader production/campaign/performance gates."
+    },
+    "coastalDeliveryNov1": {
+      "path": "docs/M3_DELIVERY_QUALIFICATION_2026-11-01.json",
+      "kind": "Executed combined-index Game.step coastal scenarios with strict saves and actual inventory/actor/boat assertions",
+      "scope": "M3-01 full transport/save scope; six passing cases including paid port/hull commissioning. No natural-frequency or independent-profit claim."
     }
   },
   "gates": [
@@ -834,10 +839,12 @@
       "catalogueRanges": [
         "81-100"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "coastalDeliveryNov1"
+      ],
+      "remainingNotes": "Current combined-index paid dock/hull, same-body cargo boarding/sailing/foreign exchange/home unload, at-sea and incoming-uncredited save/restore, strict ownership and exactly-once inventory conservation qualified. Controlled declared shore fixtures; natural profitable independent trade remains M2-04."
     },
     {
       "id": "M3-02",

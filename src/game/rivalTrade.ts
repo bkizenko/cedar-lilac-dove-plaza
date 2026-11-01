@@ -1,11 +1,12 @@
+import{observePartnerTrade,tradeIntelAdvice}from'./tradeIntel';
+import{hasTaskCommitment}from'./workCommitments';
 import {TRADE_PRICING} from "./tradePricing";
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
 import type {Game} from './sim';
 import type {ResKind,Unit} from './types';
-import {AGE_COST} from './constants';
 import {foodDemand,isDependent,reserveSeconds} from './settlement';
-import {rivalKnows} from './rivalDevelopment';
+import {rivalKnows,rivalMaterialReserve} from './rivalDevelopment';
 import {receiveFood} from './pantry';
 
 const goods:ResKind[]=['wood','stone','copper','iron','food'];
@@ -13,7 +14,7 @@ const worth=TRADE_PRICING.worth;
 const usable=(g:Game,team:number,k:ResKind)=>k!=='copper'&&k!=='iron'||g.tribe(team).age>=(k==='copper'?1:2);
 export function rivalTradeReserve(g:Game,team:number,k:ResKind){
   if(k==='food')return foodDemand(g,team)*900;
-  return Math.max(k==='wood'?48:k==='stone'?24:8,AGE_COST[g.tribe(team).age+1]?.[k]||0);
+  return rivalMaterialReserve(g,team,k);
 }
 export const RIVAL_REFUSAL_MEMORY=900;
 /** News travels with the returning trader, never straight from a remote market. */
@@ -24,7 +25,7 @@ export function reportRivalRefusal(g:Game,u:Unit){
  if(!home)return;
  const reports=(g.state.rivalTradeRefusals||[]).filter(r=>g.state.time-r.time<RIVAL_REFUSAL_MEMORY&&
   !(r.team===u.team&&r.partner===m.team&&r.wanted===m.wanted&&r.offered===u.carryType));
- reports.push({team:u.team,partner:m.team,wanted:m.wanted,offered:u.carryType,time:g.state.time});
+ reports.push({team:u.team,partner:m.team,wanted:m.wanted,offered:u.carryType,time:u.tradeIntelCargo?.find(r=>r.observer===u.team&&r.partner===m.team)?.observedAt??g.state.time});
  g.state.rivalTradeRefusals=reports.slice(-128);
 }
 const reviews=new WeakMap<Game,Map<number,number>>();
@@ -37,32 +38,24 @@ export function dispatchRivalBarter(g:Game,team:number){
   clock.set(team,g.state.time+120);
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.visit))return false;
   const t=g.tribe(team);
-  const wants=goods.filter(k=>k!=='food'&&usable(g,team,k)&&t[k]<rivalTradeReserve(g,team,k))
+  const wants=goods.filter(k=>usable(g,team,k)&&t[k]<rivalTradeReserve(g,team,k))
     .sort((a,b)=>(1-t[b]/rivalTradeReserve(g,team,b))-(1-t[a]/rivalTradeReserve(g,team,a)));
   if(!wants.length)return false;
   const offers=goods.filter(k=>usable(g,team,k)&&t[k]-rivalTradeReserve(g,team,k)>=12)
     .sort((a,b)=>Number(a==='food')-Number(b==='food')||(t[b]-rivalTradeReserve(g,team,b))*worth[b]-(t[a]-rivalTradeReserve(g,team,a))*worth[a]);
   if(!offers.length)return false;
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
-  const workers=adults.filter(u=>u.carry===0&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
+  const workers=adults.filter(u=>!u.prisoner&&!u.militia&&!hasTaskCommitment(u)&&u.carry===0&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&
     !u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','gather'].includes(u.order));
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));
-  let wanted:ResKind|undefined,offered:ResKind|undefined;
-  let u:Unit|undefined;
-  let destination:typeof g.state.buildings[number]|undefined;
-  // A remembered refusal rules out that offer, not every other useful deal.
-  search: for(const want of wants)for(const offer of offers){
-  if(want===offer)continue;
-  for(const candidate of workers){
-  const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&
-    g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&
-    !g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===b.team&&r.wanted===want&&r.offered===offer&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY)&&rivalKnows(g,team,b.x,b.z)&&g.interactionSpot(candidate,b))
-    .sort((a,b)=>Math.hypot(candidate.x-a.x,candidate.z-a.z)-Math.hypot(candidate.x-b.x,candidate.z-b.z));
-  if(halls.length){u=candidate;destination=halls[0];wanted=want;offered=offer;break search;}
-  }
-  }
-  if(!u||!destination||!wanted||!offered)return false;
+  const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z));
+  const choices=wants.flatMap((wanted,needIndex)=>offers.filter(offered=>offered!==wanted).flatMap((offered,offerIndex)=>halls.map(destination=>({wanted,offered,destination,advice:tradeIntelAdvice(g,team,destination.team,offered,wanted),needIndex,offerIndex}))))
+    .filter(c=>c.advice.status!=='discouraged'&&!g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===c.destination.team&&r.wanted===c.wanted&&r.offered===c.offered&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY))
+    .sort((a,b)=>a.needIndex*80+a.offerIndex*4-a.advice.score-(b.needIndex*80+b.offerIndex*4-b.advice.score));
+  let chosen:typeof choices[number]|undefined,u:Unit|undefined;
+  search:for(const choice of choices)for(const candidate of workers)if(g.interactionSpot(candidate,choice.destination)){chosen=choice;u=candidate;break search;}
+  if(!u||!chosen)return false;const{wanted,offered,destination}=chosen;
   const amount=Math.min(32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
   equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;
@@ -77,13 +70,14 @@ export function settleRivalBarter(g:Game,u:Unit){
   if(!m||!seller||!get||!give||u.carry<=0||give===get||!seller.alive||g.isFoe(u.team,seller.id))return false;
   const hall=g.state.buildings.find(b=>b.team===seller.id&&b.type==='townhall'&&g.finished(b));
   if(!hall||Math.hypot(u.x-hall.x,u.z-hall.z)>Math.max(hall.w,hall.d)*.55+3||!g.interactionSpot(u,hall))return false;
-  if(!usable(g,seller.id,get)||!usable(g,seller.id,give))return false;
+  if(!usable(g,seller.id,get)||!usable(g,seller.id,give)){observePartnerTrade(g,u,seller.id,{give,get,offered:u.carry,receivable:0,accepted:false,reason:'unusable'});return false;}
   const reserve=rivalTradeReserve(g,seller.id,get),spare=Math.floor(seller[get]-reserve);
   // A village with a glut of the offered material will decline it. A shortage
   // makes the same physical offer worth more, without exposing a remote quote.
   const value=Math.max(.45,Math.min(1.35,rivalTradeReserve(g,seller.id,give)/Math.max(1,seller[give])));
   const amount=Math.min(spare,Math.floor(u.carry*worth[give]/worth[get]*value*TRADE_PRICING.rivalTerms));
-  if(amount<4||seller[give]>rivalTradeReserve(g,seller.id,give)*3)return false;
+  if(amount<4||seller[give]>rivalTradeReserve(g,seller.id,give)*3){const reason=seller[give]>rivalTradeReserve(g,seller.id,give)*3?'offered-glut':spare<4?'requested-reserve':'low-value';observePartnerTrade(g,u,seller.id,{give,get,offered:u.carry,receivable:0,accepted:false,reason});return false;}
+  observePartnerTrade(g,u,seller.id,{give,get,offered:u.carry,receivable:amount,accepted:true,reason:'accepted'});
   g.spend(seller.id,{[get]:amount});
   if(give==='food')receiveFood(g,seller.id,u.carry,u.carryFood);else seller[give]+=u.carry;
   u.carry=amount;u.carryType=get;u.carryFood=get==='food'?'provisions':undefined;

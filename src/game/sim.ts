@@ -1,3 +1,4 @@
+import{tickTradeIntel}from'./tradeIntel';
 import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
 import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
 import {productionApprenticeAI,pauseProductionLesson,tickProductionLessons} from './productionPractice';
@@ -5669,6 +5670,7 @@ export class Game {
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);
         reconcileFibreDeaths(this);
+        tickTradeIntel(this);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);

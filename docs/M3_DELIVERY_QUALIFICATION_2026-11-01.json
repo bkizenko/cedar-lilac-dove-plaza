@@ -1,0 +1,158 @@
+{
+  "gate": "M3-01",
+  "acceptance": "Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load",
+  "scope": "Current combined INDEX snapshot, controlled disconnected shores and declared starting endowments; no natural-map-profit requirement or natural profitable trade claim",
+  "source": {
+    "head": "3c694266fbad130b09eec520f538af98617796a4",
+    "indexEntries": 496,
+    "sourceFiles": 244,
+    "indexManifestSha256": "61c077b83f2ff038dd9376e64762a88743f16bdd4ff910a2cace6d0c191811af",
+    "files": {
+      "scripts/coastal-trade.test.mjs": "f3212117a9301d608f1b5f8e6900f658247e944d",
+      "src/game/coastalCommission.ts": "d69f679a39d4deea4f8b200918e15ec44c28970b",
+      "src/game/coastalTrade.ts": "e6e4f2227793093480138145a73309b824061cce",
+      "src/game/rivalDevelopment.ts": "6da9a2b9eaef6bb6ccc6f40fb38a4a7bb9f9d672",
+      "src/game/rivalTrade.ts": "55511ebb79f43e704cde133eeca73215c7580777",
+      "src/game/settlement.ts": "7ab7bc8d6eaf14ab2ad8a51f9ddea1ba320f6ba4",
+      "src/game/sim.ts": "ee69d1d8dff544f9a105b38194a73215ffe39ee3",
+      "src/game/tradeIntel.ts": "15c7ef7fdd835601b4bc474e4831b4084872c13e"
+    }
+  },
+  "command": "node --import ./scripts/game-loader.mjs --test --test-concurrency=1 scripts/coastal-trade.test.mjs",
+  "actualResult": {
+    "passed": 6,
+    "failed": 0,
+    "simulationErrors": [],
+    "logSha256": "9312c80e627c747d230611fb8c13d2c3459dfc88d5055428b6a8d8887b0128fa"
+  },
+  "deliveryScenario": {
+    "scenario": "paid NPC coastal round trip",
+    "team": 1,
+    "partner": 2,
+    "boatId": 498,
+    "actorId": 480,
+    "elapsed": 155.59999999999545,
+    "metrics": {
+      "boardings": 2,
+      "landings": 2,
+      "sailMeters": 11.693151931922337,
+      "walkMeters": 18.80159680681548,
+      "foodUsed": 0.7538236540059,
+      "waterUsed": 0.1543999999999995,
+      "offered": 12,
+      "received": 7,
+      "delivered": 7,
+      "returned": 1
+    },
+    "automaticDispatch": true,
+    "paidHull": {
+      "wood": 40,
+      "stone": 4,
+      "workSeconds": 150
+    },
+    "saveAtSea": true,
+    "saveWithForeignCargoBeforeHomeCredit": true,
+    "interruptionResumed": true,
+    "paidNeed": {
+      "type": "fibreWorkshop",
+      "wood": 8,
+      "stone": 2
+    },
+    "scope": "Controlled disconnected-shore fixture with fixed existing docks and observed partner; not autonomous dock/fleet commissioning or natural-map frequency"
+  },
+  "commissionScenario": {
+    "scenario": "ordinary NPC dock and hull commissioning through physical voyage",
+    "elapsed": 511.9000000000479,
+    "initialEndowment": {
+      "wood": 220,
+      "stone": 36,
+      "food": 800,
+      "adults": 8
+    },
+    "commission": {
+      "version": 1,
+      "id": 500,
+      "team": 1,
+      "partner": 2,
+      "phase": "ready",
+      "reason": "Real boat launched and adult at the home cache; waiting for the next bounded trade review",
+      "metrics": {
+        "reviews": 3,
+        "blockedReviews": 0,
+        "dockPayments": 1,
+        "hullPayments": 1,
+        "hullsLaunched": 1,
+        "cacheArrivals": 1
+      },
+      "dockId": 501,
+      "actorId": 480,
+      "projectId": 511,
+      "boatId": 514
+    },
+    "voyage": {
+      "boardings": 2,
+      "landings": 2,
+      "sailMeters": 88.91720747824561,
+      "walkMeters": 68.16387245067821,
+      "foodUsed": 1.4334366892236596,
+      "waterUsed": 0.2936000000000002,
+      "offered": 12,
+      "received": 7,
+      "delivered": 7,
+      "returned": 1
+    },
+    "saveDuringPaidHull": true,
+    "scope": "Controlled observed coasts; no boats or source docks exist initially; unrelated development review waits; no supplies granted after start"
+  },
+  "assertionsActuallyExecuted": {
+    "paidHullChargedOnceWood40Stone4": true,
+    "sameActorAndBoatAcrossBoardingsLandingsAndRestores": true,
+    "physicalForeignBarterSellerStoneDebitedBuyerCargoCredited": true,
+    "incomingForeignStone7HeldOnBodyBeforeHomeCredit": true,
+    "homeStoneUnchangedAtIncomingSave": true,
+    "strictIncomingSaveRestorePreservesCargoAndFoodWater": true,
+    "strictAtSeaSaveRestoreAndPausedMissionResume": true,
+    "loadedDistantHomeCacheWalkSaveRestoresWithoutCargoLoss": true,
+    "homePhysicalDeliveryAddsExactly7StoneOnce": true,
+    "sellerReceivesExactly12WoodAndLosesExactly7Stone": true,
+    "completedActorCargoZeroAndOwnershipReleased": true,
+    "completedPackFoodAndWaterZeroAfterActualReturn": true,
+    "extraSimulationDoesNotDuplicateDelivery": true,
+    "paidDockAndHullProgressSaveDoNotChargeTwice": true
+  },
+  "firstFixtureMaterialAccountingAsserted": {
+    "startingOwnWood": 180,
+    "startingOwnStone": 36,
+    "paidHull": {
+      "wood": 40,
+      "stone": 4
+    },
+    "paidRealStoneNeedStation": {
+      "type": "fibreWorkshop",
+      "wood": 8,
+      "stone": 2
+    },
+    "ownWoodExported": 12,
+    "foreignStoneReceived": 7,
+    "ownWoodFinal": 120,
+    "ownStoneBeforeTrip": 30,
+    "ownStoneFinal": 37,
+    "sellerWoodDelta": 12,
+    "sellerStoneDelta": -7
+  },
+  "capitalAndOperatingCosts": {
+    "capitalNotAmortized": true,
+    "hullRequiredWorkSeconds": 150,
+    "journeyFoodConsumed": 0.7538236540059,
+    "journeyWaterConsumedLitres": 0.1543999999999995,
+    "unusedPackReturnedOnlyAtPhysicalCache": true
+  },
+  "setupDisclosure": [
+    "Handmade disconnected-channel terrain, initial halls/docks and observed partners in component fixture",
+    "Initial finite food/material/adult endowments declared before simulation; no supplies granted after start",
+    "A legitimate paid fibre station creates a real stone shortfall; automatic trade chooses the exchange",
+    "Second scenario starts with no source dock or boat and pays ordinary dock/hull executors",
+    "This proves physical transport/save/accounting, not common-map naval frequency or autonomous profitable bilateral trade"
+  ],
+  "M2-04": "pending: separate two-independent-profitable-traders acceptance"
+}

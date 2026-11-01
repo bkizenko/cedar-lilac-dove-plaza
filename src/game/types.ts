@@ -140,6 +140,7 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  tradeIntelCargo?:import('./tradeIntel').PartnerTradeReport[];
   societyMissionId?:number;
   coastalVoyageId?:number;
   coastalCommissionId?:number;
@@ -425,6 +426,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  tradeIntel?:import('./tradeIntel').TradeIntelState;
   excavations?:import('./excavation').TerrainCut[];
   excavationDepth?:number;
   societyRelations?:import('./societyRelations').SocietyRelation[];

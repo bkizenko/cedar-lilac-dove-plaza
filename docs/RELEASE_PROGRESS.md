@@ -2,20 +2,20 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**22/98 verified gates — 22.45%.** This measures acceptance evidence, not development effort or time remaining.
+**23/98 verified gates — 23.47%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: finite fibre / baskets / coastal route / steering batch following5472220. No additional full acceptance gates qualified in this batch. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: needs-driven material/trade intelligence and qualified boat delivery following3c69426. M3-01 newly qualified; independent profitable trade remains pending. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
-| M0 | 6/12 | 50% |
-| M1 | 11/22 | 50% |
-| M2 | 0/16 | 0% |
-| M3 | 2/18 | 11.11% |
-| M4 | 2/20 | 10% |
-| M5 | 1/10 | 10% |
+| M0 | 6/12 | 50.0% |
+| M1 | 11/22 | 50.0% |
+| M2 | 0/16 | 0.0% |
+| M3 | 3/18 | 16.67% |
+| M4 | 2/20 | 10.0% |
+| M5 | 1/10 | 10.0% |
 
 ## Fixed acceptance checklist
 
@@ -88,7 +88,7 @@ Verified baseline: finite fibre / baskets / coastal route / steering batch follo
 
 | Gate | Status | Acceptance | Evidence / limitation |
 | --- | --- | --- | --- |
-| M3-01 | pending | Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
+| M3-01 | verified | Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load | coastalDeliveryNov1. Actual paid hull/dock, same carrier/boat, at-sea and incoming-uncredited save/restore, finite foreign exchange and exactly-once home credit pass on current combined source. Controlled fixtures; M2-04 profit remains pending. |
 | M3-02 | pending | Caravan/depot/pack-animal routes scale capacity with actual equipment and escort obligations | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-03 | pending | Markets consolidate known offers/contracts/cargo/storage with measurable handling/search benefit | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-04 | pending | Shipment interruption and interception conserve cargo/equipment and measure profitability/reliability/loss | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |

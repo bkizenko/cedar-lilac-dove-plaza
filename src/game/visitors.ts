@@ -1,3 +1,4 @@
+import{observePartnerTrade,deliverTradeIntel}from'./tradeIntel';
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
 import {settleRivalBarter,reportRivalRefusal} from "./rivalTrade";
@@ -53,6 +54,7 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   if(m.phase==='outbound') {m.phase='waiting';u.order='hold';u.workReason='Visiting trader — awaiting your offer';g.banner(g.tribe(u.team).name+' has sent a trader to your village',5);}
   else {
     reportRivalRefusal(g,u);
+    deliverTradeIntel(g,u);
     if(u.carryType&&u.carry>0){if(u.carryType==='food')receiveFood(g,u.team,u.carry,u.carryFood);else g.tribe(u.team)[u.carryType]+=u.carry;}
     u.carry=0;u.carryType=null;u.carryFood=undefined;u.visit=undefined;u.order='idle';u.node=null;
   }
@@ -69,6 +71,7 @@ export function tradeWithVisitor(g:Game,id:number,give:ResKind) {
   const price=visitorPrice(g,u,give),home=g.campOf(0);
   if(!price||!u.carryType||!g.visibleAt(u.x,u.z)||Math.hypot(u.x-home.x,u.z-home.z)>35||g.tribe(0)[give]<price)return false;
   if((give==='copper'&&g.tribe(0).age<1)||(give==='iron'&&g.tribe(0).age<2))return false;
+  observePartnerTrade(g,u,0,{give:u.carryType,get:give,offered:u.carry,receivable:price,accepted:true,reason:'accepted'});
   g.spend(0,{[give]:price});
   if(u.carryType==='food')receiveFood(g,0,u.carry,u.carryFood);else g.tribe(0)[u.carryType]+=u.carry;
   u.carry=price;u.carryType=give;u.carryFood=give==='food'?'provisions':undefined;

@@ -11,7 +11,7 @@ import {difficulty} from './difficulty';
 import {expansionCost,plotArea} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
-import {rivalWorkRangeContext,rivalMaterialPriority,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
+import {rivalWorkRangeContext,rivalMaterialPriority,rivalMaterialTargets,type RivalMaterialKind,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
 import {huntable} from "./hunting";
 import {farmToolRate} from "./farmTools";
 import {carryingCapacity} from "./haulage";
@@ -362,8 +362,9 @@ export class WorkBoard {
       score = -Infinity;
     let occupied = false,
       unsafe = false;
+    const materialTargets=u.team===0?null:rivalMaterialTargets(g,u.team),materialStocks=g.tribe(u.team);
     const materialPriorities = u.team===0 ? null : Object.fromEntries(
-      (["wood","stone","copper","iron"] as ResKind[]).map(kind=>[kind,rivalMaterialPriority(g,u,kind)]));
+      (["wood","stone","copper","iron"] as ResKind[]).map(kind=>[kind,rivalMaterialPriority(g,u,kind,materialTargets!)]));
     // These predicates are invariant during one synchronous assignment scan.
     // Rebuild them on every assignment so deaths, diplomacy and completed work
     // are immediately visible without a cross-frame cache.
@@ -382,6 +383,7 @@ export class WorkBoard {
         continue;
       if(u.team===0&&g.state.laborPolicy==="food"&&reserveSeconds(g,u.team)<240&&task.kind!=="food"&&!u.jobLock)continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
+      if(materialTargets&&!u.jobLock&&['wood','stone','copper','iron'].includes(task.kind)&&materialStocks[task.kind as RivalMaterialKind]>=materialTargets[task.kind as RivalMaterialKind])continue;
       if (u.huntOnly && reserveSeconds(g,u.team)>=90 && !("species" in task.node)) continue;
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
       if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node,u.team))) continue;

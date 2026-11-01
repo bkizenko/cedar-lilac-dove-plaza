@@ -1,3 +1,4 @@
+import{validTradeIntelState}from'./tradeIntel';
 import{validFibreState}from'./fibre';
 import {validScoutProvisions} from './scoutProvisions';
 import {validProductionPractice} from './productionPractice';
@@ -107,7 +108,7 @@ function validateGamePayload(raw: unknown) {
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
+  if(!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();

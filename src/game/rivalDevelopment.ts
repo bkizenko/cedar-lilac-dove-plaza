@@ -1,3 +1,8 @@
+import {rivalTradeReserve} from './rivalTrade';
+import {knownRivalExportDemand} from './tradeIntel';
+import {hasTaskCommitment} from './workCommitments';
+import {releaseTreeWorker} from './workAllocation';
+import {SURVIVAL_RULES,ambientTemperature} from './survivalNeeds';
 import {COASTAL_BOOTSTRAP_RULES,coastalMaterialTarget,knownCoastalLaunchSites,recordCoastalReview} from './coastalStrategy';
 import {planExpansion} from './plotExpansion';
 import {expansionCost,plotArea} from './plots';
@@ -12,7 +17,7 @@ import {isRivalTeam} from "./factions";
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit, Building } from './types';
-import { AGE_COST, BUILDINGS, LUMBER_R, QUARRY_R } from './constants';
+import { AGE_COST, BUILDINGS, GATHER, LUMBER_R, QUARRY_R } from './constants';
 import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
 
 export const RIVAL_RESOURCE_RANGE=320;
@@ -106,10 +111,41 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   return (['wood','stone','copper','iron'] as ResKind[]).every(k=>t[k]-(d[k]||0)>=(p.next![k]||0));
 }
 
+export const RIVAL_MATERIAL_RULES={deliveryBufferLoads:1,coldFuelReserveSeconds:450,reviewSeconds:12,maximumReassignmentsPerReview:2} as const;
+export type RivalMaterialKind='wood'|'stone'|'copper'|'iron';
+export type RivalMaterialTargets=Record<RivalMaterialKind,number>;
+/** Stocks already paid into a foundation/project are not demanded a second
+ * time. These are finite working needs, not a quota to erase existing wealth. */
+export function rivalMaterialReserves(g:Game,team:number):RivalMaterialTargets{
+ const t=g.tribe(team),next=AGE_COST[t.age+1],planned:RivalMaterialTargets={wood:0,stone:0,copper:0,iron:0};
+ for(const b of g.state.buildings){if(b.team!==team||b.hp<=0||b.planPaused)continue;
+  for(const k of ['wood','stone','copper','iron'] as const)planned[k]+=b.plannedCost?.[k]||0;
+  if(b.expansion&&!b.expansion.paid)planned.wood+=expansionCost(b,b.expansion).wood||0;
+ }
+ const cold=g.state.survivalVersion===1&&ambientTemperature(g)<SURVIVAL_RULES.coldThresholdCelsius,residents=cold?g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit).length:0;
+ const fuel=residents*SURVIVAL_RULES.woodPerPersonColdSecond*RIVAL_MATERIAL_RULES.coldFuelReserveSeconds;
+ const working:RivalMaterialTargets={wood:BUILDINGS.lumber.wood+BUILDINGS.quarry.wood,stone:HAULAGE.canoe.stone+FARM_TOOLS.stoneHoe.stone,copper:FARM_TOOLS.copperTools.copper,iron:FARM_TOOLS.ironTools.iron};
+ const targets={} as RivalMaterialTargets;
+ for(const k of ['wood','stone','copper','iron'] as const){if(k==='copper'&&t.age<1||k==='iron'&&t.age<2){targets[k]=0;continue;}
+  targets[k]=Math.ceil(Math.max(working[k],next?.[k]||0)+planned[k]+(k==='wood'?fuel:0));
+ }
+ return targets;
+}
+
+/** Does not consult exports or partner reports: callers may safely use this
+ * own reserve while evaluating a physically returned trade report. */
+export function rivalMaterialReserve(g:Game,team:number,kind:RivalMaterialKind){return rivalMaterialReserves(g,team)[kind];}
+export function rivalMaterialTargets(g:Game,team:number):RivalMaterialTargets{
+ const reserves=rivalMaterialReserves(g,team),next=AGE_COST[g.tribe(team).age+1],ownReserves={...reserves,food:rivalTradeReserve(g,team,'food')};
+ const working:RivalMaterialTargets={wood:BUILDINGS.lumber.wood+BUILDINGS.quarry.wood,stone:HAULAGE.canoe.stone+FARM_TOOLS.stoneHoe.stone,copper:FARM_TOOLS.copperTools.copper,iron:FARM_TOOLS.ironTools.iron};
+ for(const k of ['wood','stone','copper','iron'] as const){if(reserves[k]===0)continue;const unpaidCoast=Math.max(0,coastalMaterialTarget(g,team,k)-Math.max(working[k],next?.[k]||0));reserves[k]+=Math.max(unpaidCoast,knownRivalExportDemand(g,team,k,ownReserves))+GATHER[k].carry*RIVAL_MATERIAL_RULES.deliveryBufferLoads;}
+ return reserves;
+}
+
 /** A bounded share of the workforce secures missing materials while others grow food. */
-export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind){
+export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind,targets?:RivalMaterialTargets){
   if(!isRivalTeam(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
-  const t=g.tribe(u.team),target=Math.max(AGE_COST[t.age+1]?.[kind]||0,coastalMaterialTarget(g,u.team,kind));
+  const t=g.tribe(u.team),target=(targets||rivalMaterialTargets(g,u.team))[kind as RivalMaterialKind];
   if(!target||t[kind]>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
   const workers=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.type==='worker'&&!isDependent(g,v));
   const already=workers.filter(v=>v!==u&&v.order==='gather'&&v.job===kind).length;
@@ -193,26 +229,26 @@ const laborReviews=new WeakMap<Game,Map<number,number>>();
 export function rebalanceRivalLabor(g:Game,team:number){
   if(!isRivalTeam(team))return;
   let reviews=laborReviews.get(g);if(!reviews){reviews=new Map();laborReviews.set(g,reviews);}
-  const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+12)return;
-  reviews.set(team,g.state.time+12);
+  const due=reviews.get(team)||0;if(due>g.state.time&&due<=g.state.time+RIVAL_MATERIAL_RULES.reviewSeconds)return;
+  reviews.set(team,g.state.time+RIVAL_MATERIAL_RULES.reviewSeconds);
   const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u));
   const foodWorkers=adults.filter(u=>['gather','idle'].includes(u.order)&&u.job==='food');
   const reserves=reserveSeconds(g,team);
   const foodEmergency=reserves<300&&foodWorkers.length<Math.ceil(adults.length*.65);
   const spare=reserves>=600?Math.max(0,Math.min(2,foodWorkers.length-Math.ceil(adults.length/2))):0;
-  const t=g.tribe(team),next=AGE_COST[t.age+1];
-  const shortage=(['wood','stone','copper','iron'] as ResKind[]).some(k=>(next?.[k]||0)>t[k]&&(k!=='copper'||t.age>=1)&&(k!=='iron'||t.age>=2));
-  const surplusWorkers=(shortage||foodEmergency)?adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&(foodEmergency||t[u.job]>=Math.max(60,(next?.[u.job]||0)*1.5))):[];
-  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&u.carry===0&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
+  const t=g.tribe(team),targets=rivalMaterialTargets(g,team);
+  const surplusWorkers=adults.filter(u=>u.order==='gather'&&u.job&&u.job!=='food'&&(foodEmergency||t[u.job]>=targets[u.job]));
+  const eligible=[...surplusWorkers,...(spare>0?foodWorkers:[])].filter(u=>!hasTaskCommitment(u)&&!u.militia&&!u.prisoner&&!u.resting&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&Object.values(u.itemCargo||{}).every(n=>!n)&&!u.emergency&&!u.envoy&&!u.scout&&!u.visit&&!u.expedition&&
     !u.foundingJourney&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&u.drill==null);
   let moved=0;
   for(const u of eligible){
-    if(moved>=2)break;
+    if(moved>=RIVAL_MATERIAL_RULES.maximumReassignmentsPerReview)break;
     if(!surplusWorkers.includes(u)&&moved>=spare)continue;
-    const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k)>0);
+    if(u.carry>0){if(surplusWorkers.includes(u)){releaseTreeWorker(g,u);u.node=null;u.order='return';u.workReason='Working stock ready — delivering the real carried surplus';moved++;}continue;}
+    const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k,targets)>0);
     const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)&&!b.plannedCost);
     if(!materials&&!unfinished&&!surplusWorkers.includes(u))continue;
-    u.node=null;u.job=null;u.jobLock=false;u.order='idle';u.workCheckAt=0;
+    releaseTreeWorker(g,u);u.node=null;u.job=null;u.gatherT=0;u.jobLock=false;u.order='idle';u.workCheckAt=0;
     g.workBoard.reset();g.workBoard.assign(g,u);moved++;
   }
 }

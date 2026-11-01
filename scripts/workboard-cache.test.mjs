@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WorkBoard } from '../src/game/settlement.ts';
+import { Game } from '../src/game/sim.ts';
 
 function fixture() {
   const building = {id:1,type:'hut',x:0,z:0,w:10,d:10,hp:100,solid:true};
-  const g = {world:{size:100},state:{time:0,buildings:[building],tribes:[]},solidBuilding:b=>b.solid&&b.hp>0};
+  const g = {world:{size:100},state:{time:0,buildings:[building],tribes:[]},solidBuilding:b=>b.solid!==false&&Game.prototype.solidBuilding.call(g,b)};
   return {g,building,board:new WorkBoard()};
 }
 function refresh(g,board) { g.state.time+=1.1; board.refresh(g); }
@@ -60,7 +61,8 @@ test('world/state replacement, explicit reset and moved resource invalidate cach
   assert.equal(board.blockedResource(node),true);
   node.x=40;assert.equal(board.blockedResource(node),false);
   node.x=1;assert.equal(board.blockedResource(node),true);
-  previous=board.obstructedResources;board.reset();refresh(g,board);
+  previous=board.obstructedResources;board.reset();
+  assert.equal(board.obstructionWorld,null);assert.equal(board.obstructionState,null);assert.deepEqual(board.solidFootprints,[]);assert.deepEqual(board.obstructionFootprints,[]);refresh(g,board);
   assert.notEqual(board.obstructedResources,previous);assert.equal(board.blockedResource(node),true);
 });
 test('building and wildlife task eligibility and strict footprint edges retain old behavior',()=>{
@@ -69,4 +71,25 @@ test('building and wildlife task eligibility and strict footprint edges retain o
   assert.equal(board.blockedResource({species:'deer',x:0,z:0}),false);
   assert.equal(board.blockedResource({x:4,z:0}),false);
   assert.equal(board.blockedResource({x:3.999,z:0}),true);
+});
+
+test('gates, plans, deaths and footprint changes invalidate before task use across full task resets',()=>{
+ const {g,board,building}=fixture(),node={id:2,x:1,z:1,amount:20};refresh(g,board);assert.equal(board.blockedResource(node),true);
+ const cases=[
+  [()=>{building.type='gate';building.gateOpen=true;},false],
+  [()=>{building.gateOpen=false;},true],
+  [()=>{building.plannedCost={wood:5};},false],
+  [()=>{delete building.plannedCost;},true],
+  [()=>{building.hp=0;},false],
+  [()=>{building.hp=100;},true],
+  [()=>{building.x=20;},false],
+  [()=>{building.w=100;},true],
+ ];
+ for(const [mutate,expected] of cases){const previous=board.obstructedResources;mutate();board.reset();board.refresh(g);assert.equal(board.blockedResource(node),expected);assert.notEqual(board.obstructedResources,previous);}
+});
+test('world/state changes and moved resources cannot inherit old obstruction results',()=>{
+ const {g,board}=fixture(),node={id:2,x:1,z:1,amount:20};refresh(g,board);board.blockedResource(node);
+ let map=board.obstructedResources;g.world={...g.world};board.reset();board.refresh(g);assert.notEqual(board.obstructedResources,map);assert.equal(board.blockedResource(node),true);
+ map=board.obstructedResources;g.state={...g.state,time:0};board.reset();board.refresh(g);assert.notEqual(board.obstructedResources,map);assert.equal(board.blockedResource(node),true);
+ node.x=40;board.reset();board.refresh(g);assert.equal(board.blockedResource(node),false);
 });
