@@ -9,3 +9,5 @@ Overall fixed release acceptance:21/98 =21.43% after preservation/ownership/perf
 Only explicit staged patches form tested batches. Working files and untracked reference screenshots may contain earlier unfinished code; do not blindly stage everything. Generated .vercel output is dirty by design and must not be committed. Publish isolated verified index snapshots through the managed .play/current release. Keep the live8086 game available.
 
 Current batch:83 unique checks; preservation, actual worn clothing, compact-site recovery, single construction actor ownership and measured task-list optimization. See PRESERVATION_OWNERSHIP_PERFORMANCE_BATCH_2026-10-31.md. Next requested work: exhaustive function/settlement-size building+station catalogue and multiple pending builder tasks honoring player priorities.
+
+Builder queues/station batch:41 unique checks, actual priority/queue and catalogue desktop review.90 searchable station functions,34 registered structures/17 recipes; partial/planned labels are not implemented chain credit. See BUILDER_QUEUES_STATIONS_BATCH_2026-10-31.md.

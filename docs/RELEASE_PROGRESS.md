@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop
 
 **21/98 verified gates — 21.43%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: preservation/ownership/performance batch following2e27920. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: b1a811c. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 

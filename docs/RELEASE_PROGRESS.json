@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "preservation/ownership/performance batch following2e27920",
+  "verifiedPublishedCodeBaseline": "b1a811c",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Broader procedural holdout coverage and deep excavation survival balance",
@@ -128,6 +128,11 @@
       "path": "docs/PRESERVATION_OWNERSHIP_PERFORMANCE_BATCH_2026-10-31.md",
       "kind": "Executed integrated checks, actual construction/save scenario and desktop review",
       "scope": "Construction instantaneous actor/project ownership; other partial crafting/map/performance work earns no broader campaign credit."
+    },
+    "builderQueuesStations": {
+      "path": "docs/BUILDER_QUEUES_STATIONS_BATCH_2026-10-31.md",
+      "kind": "Executed connected construction and UI/catalogue checks",
+      "scope": "Saved multiple pending builder tasks and actual priority controls; station inventory describes partial/planned functions and earns no implementation gate credit."
     }
   },
   "gates": [

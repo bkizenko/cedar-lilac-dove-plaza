@@ -247,6 +247,7 @@ export type Unit = {
   shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number;team?:number;wanted?:ResKind};
   buildOrder?: number;
+  constructionQueue?: {sites:number[];paused?:true};
   jobLock: boolean;
   huntOnly: boolean;
   stuckT: number;
@@ -287,6 +288,7 @@ export type Building = {
   expansion?: {w:number;d:number;progress:number;paid:boolean};
   plannedCost?: Cost;
   planPaused?: boolean;
+  constructionPriority?:0|1|2;
   gateOpen?: boolean;
   gateMode?: "auto" | "open" | "closed";
   gateFacing?: "north" | "east" | "south" | "west";

@@ -1,3 +1,4 @@
+import {recordImmediateConstruction,constructionPriority} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker} from './constructionOwnership';
 import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
 import {discountQuarryPlans} from "./mining";
@@ -56,7 +57,8 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
   // Convert only unpaid old farm drawings. Completed farms keep their progress.
   for(const b of g.state.buildings)if(b.type==='farm'&&b.plannedCost){b.plannedCost.wood=0;b.plannedCost.seeds=Math.ceil(4*plotArea(b));}
   if(g.state.weather==='storm')return;
-  for(const b of preferred?[preferred]:g.state.buildings){
+  const sites=preferred?[preferred]:g.state.buildings.some(b=>b.plannedCost&&b.constructionPriority!==undefined)?[...g.state.buildings].sort((a,b)=>constructionPriority(b)-constructionPriority(a)):g.state.buildings;
+  for(const b of sites){
     const cost=b.plannedCost;
     if(!cost||b.hp<=0||b.planPaused||!g.canAfford(b.team,cost))continue;
     if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z,0,b))continue;
@@ -82,7 +84,7 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   if(!chosen.length){g.banner('Select adult residents to build this project.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
-    g.interruptMission(u);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
+    g.interruptMission(u);recordImmediateConstruction(g,u,b);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
     u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;reserveConstructionWorker(g,u,b,u.carry>0?'returning':'reserved');u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
   }
   g.workBoard.reset();g.banner(`${chosen.length} builders assigned to ${BUILDINGS[b.type].name}. ${planStatus(g,b)}`,4);return true;

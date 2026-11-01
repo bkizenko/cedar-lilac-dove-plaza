@@ -388,7 +388,7 @@ export class Engine {
     if (this.rotDrag && e.button === 2) {
       const moved = Math.hypot(e.clientX - this.rotDrag.sx, e.clientY - this.rotDrag.sy);
       this.rotDrag = null;
-      if (moved < 6) this.rightClick(p.x, p.y);
+      if (moved < 6) this.rightClick(p.x, p.y,e.shiftKey);
       return;
     }
     this.rotDrag = null;
@@ -485,7 +485,7 @@ export class Engine {
     this.pushHud();
   }
 
-  rightClick(cx: number, cy: number) {
+  rightClick(cx: number, cy: number,queue=false) {
     const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
@@ -496,7 +496,7 @@ export class Engine {
     if(this.game.selectedBoat!==null){this.game.issueMove(g.x,g.z);this.pushHud();return;}
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
-    else if(ent?.kind==="building"&&ent.team===0&&!this.game.finished(ent))this.game.orderConstruction(ent);
+    else if(ent?.kind==="building"&&ent.team===0&&(!this.game.finished(ent)||ent.expansion)){if(queue)this.game.queueConstruction(ent);else this.game.orderConstruction(ent);}
     else {
       const node = this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);

@@ -1,3 +1,4 @@
+import {ConstructionSiteControls,BuilderQueueControls} from './ConstructionQueueControls';
 import {ExcavationControls,ExcavationReadout} from './ExcavationControls';
 import {TowerPlatformControls,TowerPlatformReadout} from './TowerPlatformControls';
 import {CraftingAndBuildings} from './CraftingAndBuildings';
@@ -509,7 +510,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
                 {sel.completed&&["farm","warehouse"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
-                {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build here</button>}
+                {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
+                {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
                 {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
                 {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
                 {sel.completed&&sel.type==="dock"&&<p className="text-xs text-parchment-dim">Select the canoe owner, then click across the water.</p>}
@@ -590,6 +592,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {hud.idleWorkers} idle · cycle to them (I)
               </button>
             ) : null}
+            {engine&&!selMin&&sel.kind!=='building'&&<BuilderQueueControls engine={engine}/>}
             {engine&&!selMin&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
             {showJobs ? (
               <div className="mt-1.5 grid grid-cols-4 gap-1">

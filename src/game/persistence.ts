@@ -304,6 +304,7 @@ function validateGamePayload(raw: unknown) {
     if(u.escortId!==undefined&&(!Number.isSafeInteger(u.escortId)||u.escortId<1||u.escortId===u.id))fail();
     if(u.caravanArmed!==undefined&&(typeof u.caravanArmed!=="boolean"||(u.caravanArmed&&(!u.militia||!["spearman","archer","swordsman"].includes(u.type)))))fail();
     if(u.buildOrder!==undefined&&(!Number.isSafeInteger(u.buildOrder)||u.buildOrder<1||u.team!==0))fail();
+    if(u.constructionQueue!==undefined){const q=u.constructionQueue;if(!obj(q)||u.team!==0||!Array.isArray(q.sites)||q.sites.length<1||q.sites.length>64||new Set(q.sites).size!==q.sites.length||q.sites.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1)||q.paused!==undefined&&q.paused!==true||Object.keys(q).some(k=>!['sites','paused'].includes(k)))fail();}
     if (u.workCheckAt !== undefined && !num(u.workCheckAt)) fail();
     if (u.retryWorkAt !== undefined && !num(u.retryWorkAt)) fail();
     if (u.blockedTask !== undefined && !num(u.blockedTask)) fail();
@@ -461,6 +462,7 @@ function validateGamePayload(raw: unknown) {
     if(scalablePlot(b.type)&&!validPlot(b.type,b))fail();
     if (b.build < 0 || b.build > 1) fail();
     if(b.expansion!==undefined){const e=b.expansion;if(!obj(e)||!validPlot(b.type,{w:e.w,d:e.d})||b.build!==1||b.plannedCost||e.w<b.w||e.d<b.d||(e.w===b.w&&e.d===b.d)||!num(e.progress)||e.progress<0||e.progress>1||typeof e.paid!=="boolean"||(!e.paid&&e.progress!==0))fail();}
+    if(b.constructionPriority!==undefined&&(b.team!==0||![0,1,2].includes(b.constructionPriority)))fail();
     if(b.plannedCost!==undefined){
       if(!obj(b.plannedCost)||b.build!==0||b.queue.length)fail();
       const allowed=["food","wood","stone","copper","iron","seeds"];

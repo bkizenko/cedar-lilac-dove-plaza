@@ -1,3 +1,4 @@
+import {constructionPriority,CONSTRUCTION_QUEUE_RULES} from './constructionQueue';
 import {coastalIndependentNeeds} from './coastalTrade';
 import {sameTypedValues} from './terrainWalkCache';
 import {campMoveIndependentNeeds} from './nomadicCamp';
@@ -279,9 +280,9 @@ export class WorkBoard {
         );
       for (const b of buildings) {
         if(b.plannedCost)continue;
-        if(b.expansion&&(b.expansion.paid||g.canAfford(b.team,expansionCost(b,b.expansion))))add(b,"build",2,235);
+        if(b.expansion&&(b.expansion.paid||g.canAfford(b.team,expansionCost(b,b.expansion))))add(b,"build",2,235+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
         if (!g.finished(b)) {
-          add(b, "build", 2, reserveSeconds(g,t.id) < 90 ? 120 : 235);
+          add(b, "build", 2, (reserveSeconds(g,t.id) < 90 ? 120 : 235)+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))

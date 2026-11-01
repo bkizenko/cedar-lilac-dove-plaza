@@ -1,3 +1,4 @@
+import {queueConstruction,updateConstructionQueues,pauseConstructionQueue} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker,completeConstructionTarget,reconcileConstructionWorkers} from './constructionOwnership';
 import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,excavationWorkNeed,commitExcavation} from './excavation';
 import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
@@ -1420,6 +1421,7 @@ export class Game {
   }
 
   orderConstruction(b:Building){return orderConstruction(this,b);}
+  queueConstruction(b:Building){const result=queueConstruction(this,b);this.banner(result.reason,3);return result.accepted;}
 
   assignBuilders(b: Building) {
     if(b.plannedCost)return;
@@ -1689,6 +1691,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
     pauseProduction(this,u);
@@ -5539,6 +5542,7 @@ export class Game {
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);
         reconcileTradeReservations(this);
+        updateConstructionQueues(this);
         reconcileConstructionWorkers(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
