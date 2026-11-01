@@ -1,0 +1,212 @@
+{
+  "qualification": "Passed narrow planner repair and actual natural refused-offer transport cycle; successful foreign goods delivery remains unqualified",
+  "date": "2026-11-01",
+  "source": {
+    "publishedCommit": "5472220",
+    "snapshotFilesCompared": 238,
+    "snapshotByteMismatches": [],
+    "onlyRuntimeChange": "Two explicitly qualified changes listed in runtimeChanges",
+    "simBeforeSha256": "3ba89bd979a1ffcf528d6b78fe39de526cfa439f1c8d532734cebdecbfbfbc46",
+    "simAfterSha256": "37a23d17db985acb21145a8d1002d46f8f3283a901ceb10fc764c29635c30390",
+    "inputCheckpointSha256": "969533c41c38f629e2cf5390a940c8b145a001eab02dcdc76336d9a4770c5bd2",
+    "runtimeChanges": [
+      {
+        "file": "src/game/sim.ts",
+        "change": "Only actual coastalVoyageId added to existing bounded longJourney search predicate"
+      },
+      {
+        "file": "src/game/coastalCommission.ts",
+        "change": "Observed feasible partner preference before hull payment; preserves paid projects and ports",
+        "beforeSha256": "ffedade91967dc99321cf1aa62473db095d8b85eb32eac9c337565c70aea6215",
+        "afterSha256": "c502ce62a7607cd3d2d40098757bad6d912b02c380e624a48fdc31ff79b8f8da"
+      }
+    ]
+  },
+  "sourceFixtureScripts": [
+    {
+      "path": ".play/coastal-natural-qualified-547/scripts/coastal-qualified-continuation.mjs",
+      "sha256": "8e816c3c8a3748420b497f6dc8dd07892b5e1e350a387b8f87db0459c51207c9"
+    },
+    {
+      "path": ".play/coastal-natural-qualified-547/scripts/coastal-qualified-last-leg.mjs",
+      "sha256": "89ea8cd26416960722c9810defbae97e7cd51ad549db03e01fdb6ccaea40e9ee"
+    }
+  ],
+  "initialCampaign": {
+    "seed": 1,
+    "worldgenVersion": 14,
+    "layout": "archipelago",
+    "sizeMetres": 1040,
+    "seconds": 5000.180000000049,
+    "inputSha256": "969533c41c38f629e2cf5390a940c8b145a001eab02dcdc76336d9a4770c5bd2",
+    "inputUnchanged": true,
+    "origin": "Preserved actual natural campaign with ordinary player startup; no NPC/boat/stock/knowledge/terrain grants"
+  },
+  "componentRegression": {
+    "command": "node --import ./scripts/game-loader.mjs --test scripts/coastal-trade.test.mjs",
+    "passed": 6,
+    "failed": 0,
+    "unreachableFirstPartner": 0,
+    "actingRival": 2,
+    "reachableObservedRival": 1,
+    "preservedPaidDockHullActorProgressAndSave": true
+  },
+  "naturalOutcome": {
+    "secondsAtReturn": 5692.979999999419,
+    "elapsedSimulationSeconds": 692.7999999993699,
+    "mainBoundedWallSeconds": 240.06761141699997,
+    "lastLegBoundedWallSeconds": 0.8529161250000002,
+    "actorId": 3041,
+    "boatId": 3161,
+    "voyageId": 3168,
+    "team": 2,
+    "partner": 1,
+    "ownExistingDockId": 2901,
+    "paidHull": {
+      "team": 2,
+      "boatId": 3161,
+      "hullPayments": 1,
+      "wood": 40,
+      "stone": 4,
+      "basis": "Actual paid commission count \u00d7frozenexecutor BOAT_COST; no globalstock delta claimed while residents keep gathering"
+    },
+    "hullLaborRequiredSeconds": 150,
+    "hullsLaunched": 1,
+    "newDockPayments": 0,
+    "phase": "complete",
+    "acceptedBarter": false,
+    "foreignGoodsReceived": 0,
+    "originalWoodLoaded": 12,
+    "originalWoodPhysicallyReturnedHome": 12,
+    "actorCargoAtEnd": 0,
+    "boardings": 2,
+    "landings": 2,
+    "sailedMetres": 1632.0848920669325,
+    "walkedMetres": 167.12246634550297,
+    "finalHealth": 48,
+    "finalHungerSeconds": 0,
+    "finalThirstSeconds": 0,
+    "actualAtSeaSaveLoad": true,
+    "atSeaSavePreservedCrewCargoBoatAndTerrain": true,
+    "strictFinalRestore": {
+      "strictRestore": true,
+      "time": 5692.979999999419,
+      "voyageId": 3168,
+      "actorId": 3041,
+      "boatId": 3161,
+      "team": 2,
+      "phase": "complete",
+      "cargo": 0,
+      "hp": 48,
+      "boatCount": 1
+    },
+    "refusal": "Partner already held more wood than its existing three-reserve glut ceiling; no goods were granted or foreign stock debited",
+    "returnCargoEvent": {
+      "sequence": 55039,
+      "timeSeconds": 5692.979999999419,
+      "kind": "cargo_delivered",
+      "team": 2,
+      "resource": "wood",
+      "amount": 12,
+      "actorId": 3041
+    },
+    "unusedFoodReturnEvent": {
+      "sequence": 55040,
+      "timeSeconds": 5692.979999999419,
+      "kind": "food_received",
+      "team": 2,
+      "resource": "food",
+      "amount": 7.991472999052691
+    },
+    "foodPacked": 17.033334989101213,
+    "foodConsumed": 9.041861990047769,
+    "waterPackedLitres": 3.84,
+    "waterConsumedLitres": 2.0384000000000366,
+    "unusedWaterReturnedByExecutorLitres": 1.8015999999999632,
+    "newGoodsDeliveryGateCredit": false
+  },
+  "checkpointHashes": {
+    "original5000": "969533c41c38f629e2cf5390a940c8b145a001eab02dcdc76336d9a4770c5bd2",
+    "atSea": "04c45a161fd31f0d69c287b27940e47cf678e8f3ae911c59f573b8b13e058f89",
+    "beforeLastLeg": "3d55d65f8bdfa9d30629368d088c645bce8f3adec137536ace03006dfe6111e4",
+    "returned": "2c8e48786810f6c4a460bb4bc471be6c3e46cf577a90810ca4aa64fa045ef994"
+  },
+  "phaseEvents": [
+    {
+      "time": 5438.179999999651,
+      "kind": "voyage-phase",
+      "phase": "boardingOut",
+      "traded": false
+    },
+    {
+      "time": 5441.579999999648,
+      "kind": "voyage-phase",
+      "phase": "sailingOut",
+      "traded": false
+    },
+    {
+      "time": 5442.779999999647,
+      "kind": "actual-at-sea-save-and-load",
+      "phase": null,
+      "traded": null
+    },
+    {
+      "time": 5546.5799999995525,
+      "kind": "voyage-phase",
+      "phase": "landingOut",
+      "traded": false
+    },
+    {
+      "time": 5547.179999999552,
+      "kind": "voyage-phase",
+      "phase": "trading",
+      "traded": false
+    },
+    {
+      "time": 5568.379999999533,
+      "kind": "voyage-phase",
+      "phase": "boardingHome",
+      "traded": false
+    },
+    {
+      "time": 5586.579999999516,
+      "kind": "voyage-phase",
+      "phase": "sailingHome",
+      "traded": false
+    },
+    {
+      "time": 5684.979999999427,
+      "kind": "voyage-phase",
+      "phase": "sailingHome",
+      "traded": false
+    },
+    {
+      "time": 5689.179999999423,
+      "kind": "voyage-phase",
+      "phase": "landingHome",
+      "traded": false
+    },
+    {
+      "time": 5689.779999999422,
+      "kind": "voyage-phase",
+      "phase": "unloading",
+      "traded": false
+    },
+    {
+      "time": 5692.979999999419,
+      "kind": "voyage-phase",
+      "phase": "complete",
+      "traded": false
+    }
+  ],
+  "gates": {
+    "M3-01": "pending: no accepted foreign goods delivery in this natural run",
+    "M2-04": "pending: no profitable exchange or two independent rival initiators"
+  },
+  "remaining": [
+    "Only rival2 initiated in this bounded continuation",
+    "Rival1 still reported no compatible known local coast for its other route",
+    "No common-map naval frequency, profitable natural trade or wider naval combat claim"
+  ],
+  "simulationErrors": []
+}

@@ -8,7 +8,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
-  | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
+  | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -143,6 +143,8 @@ export type Unit = {
   societyMissionId?:number;
   coastalVoyageId?:number;
   coastalCommissionId?:number;
+  fibreWork?:import('./fibre').FibreWork;
+  basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;
   waterVessel?:import('./pottery').WaterVessel;
   productionProjectId?:number;
@@ -356,6 +358,7 @@ export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "a
 
 export type Tribe = {
   productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;
+  basketOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   items?:import('./production').ItemStock;
   itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide',number>>;
@@ -432,6 +435,7 @@ export type GameState = {
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
+  fibre?:import('./fibre').FibreState;
   clay?:import('./pottery').ClayState;
   production?:import('./production').ProductionState;
   campSites?:{team:number;x:number;z:number}[];

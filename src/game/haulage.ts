@@ -1,3 +1,4 @@
+import{basketCapacityMultiplier,recordBasketDelivery}from'./fibre';
 import {workRuntime} from './workRuntime';
 import {releaseTreeWorker} from './workAllocation';
 import {hasTaskCommitment} from './workCommitments';
@@ -241,7 +242,7 @@ function usesTransport(u: HaulageUnit) {
 
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
 export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
-  return GATHER[kind].carry * (u.boat?.phase==='aboard'?5:usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
+  return GATHER[kind].carry * basketCapacityMultiplier(u,kind) * (u.boat?.phase==='aboard'?5:usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {
@@ -250,6 +251,7 @@ export function loadedHaulSpeed(u: HaulageUnit) {
 
 /** Call exactly once on an actual store delivery, immediately before clearing cargo. */
 export function recordHaulDelivery(g: Game, u: HaulageUnit) {
+  if(u.carryType==='food'&&u.carry>0)recordBasketDelivery(g,u,'food',u.carry);
   if (u.haulage !== 'sled' || !usesTransport(u) || !u.carryType || u.carry <= 0) return;
   const t = g.tribe(u.team) as HaulageTribe, previous = t.haulagePractice || 0;
   t.haulagePractice = Math.min(WHEEL_PRACTICE, previous + u.carry);

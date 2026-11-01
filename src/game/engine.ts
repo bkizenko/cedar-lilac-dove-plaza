@@ -1,3 +1,4 @@
+import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
 import {rememberGraphicsQuality} from './graphics';
@@ -565,7 +566,7 @@ export class Engine {
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined);
   }
 
   setGateFacing(facing:GateFacing){

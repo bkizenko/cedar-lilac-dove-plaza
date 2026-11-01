@@ -1,3 +1,4 @@
+import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
 import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
 import {productionApprenticeAI,pauseProductionLesson,tickProductionLessons} from './productionPractice';
 import {beginDefenseNeighbors,updateDefenseNeighbors,endDefenseNeighbors} from './defenseNeighbors';
@@ -1700,6 +1701,7 @@ export class Game {
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
     pauseProduction(this,u);
+    pauseFibreWork(this,u);
     if(u.clayWork)u.clayWork.paused=true;
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
@@ -3994,9 +3996,9 @@ export class Game {
       tz = u.tz;
     for (const b of this.state.buildings) {
       if (
-        !this.solidBuilding(b) ||
         Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
-        Math.abs(tz - b.z) > b.d * 0.4 + u.r
+        Math.abs(tz - b.z) > b.d * 0.4 + u.r ||
+        !this.solidBuilding(b)
       )
         continue;
       const spot=this.interactionSpot(u,b);
@@ -4055,7 +4057,7 @@ export class Game {
         // deliberate long journeys get this larger bounded fallback; it is cached
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
-        const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||u.order==="trade";
+        const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||!!u.coastalVoyageId||u.order==="trade";
         if(!path && longJourney && connectedForUnit(this,u,
           -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell))
           path=findPath(grid,WALK,index(u.x,u.z),end,96000);
@@ -5540,6 +5542,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        tickFibre(this);
         tickClay(this);
         tickProduction(this,sdt);
         tickProductionLessons(this);
@@ -5578,6 +5581,7 @@ export class Game {
             if (emergencyResponse(this, u, sdt)) continue;
             if(coastalTradeAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
+            if(fibreAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
             if(productionApprenticeAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
@@ -5664,6 +5668,7 @@ export class Game {
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);
+        reconcileFibreDeaths(this);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);

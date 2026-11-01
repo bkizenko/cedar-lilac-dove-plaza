@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-01",
+  "baselineCommit": "5472220",
+  "qualification": "One sequential controlled Node pair per candidate; not a distribution or browser FPS qualification. Do not compare absolute timings between differently instrumented pairs.",
+  "steerBounds": {
+    "decision": "Retain geometry-before-solidity predicate order; no cache changes.",
+    "timingMethod": {
+      "warmupSteps": 20,
+      "measuredSteps": 120,
+      "stepArgumentSeconds": 0.03333333333333333,
+      "nicePriority": 10,
+      "profilerDuringTiming": false,
+      "hotWrappersDuringTiming": false
+    },
+    "comparison": {
+      "before": {
+        "count": 120,
+        "meanMs": 39.06780936666665,
+        "p50Ms": 35.67604200000005,
+        "p95Ms": 57.69804199999999,
+        "maxMs": 109.14241599999968
+      },
+      "after": {
+        "count": 120,
+        "meanMs": 35.97901322500003,
+        "p50Ms": 31.29145900000003,
+        "p95Ms": 64.43329199999971,
+        "maxMs": 120.75979199999983
+      },
+      "percentChanges": {
+        "meanMs": -7.906243507735644,
+        "p50Ms": -12.289992819270745,
+        "p95Ms": 11.673273072246925,
+        "maxMs": 10.644235692931868
+      },
+      "sameInitialHash": true,
+      "sameFinalHash": true,
+      "finalEncodedStateSha256": "1097a9928b7e86eb51d64e8ee69bfe8d60c76f2a9f26feb9610a93ae6bc861c0",
+      "randomCallsBefore": 3165,
+      "randomCallsAfter": 3165,
+      "sourceUnchangedBefore": true,
+      "sourceUnchangedAfter": true,
+      "simulationErrorsBefore": [],
+      "simulationErrorsAfter": []
+    },
+    "extraUnmeasuredStep": {
+      "before": {
+        "steerCalls": 115,
+        "solidInSteer": 45728,
+        "totalSolid": 46255,
+        "encodedHash": "0215d4e301311a33d046f44c7368f3b267d1910f5ffb861bfdc207b38bd12a09",
+        "randomCalls": 3167
+      },
+      "after": {
+        "steerCalls": 115,
+        "solidInSteer": 52,
+        "totalSolid": 579,
+        "encodedHash": "0215d4e301311a33d046f44c7368f3b267d1910f5ffb861bfdc207b38bd12a09",
+        "randomCalls": 3167
+      },
+      "sameEncodedStateHash": true
+    },
+    "focusedTestsPassed": 3
+  },
+  "rejectedPrisonerCandidate": {
+    "candidate": "Sparse prisoner candidates",
+    "decision": "Rejected and reverted; no measured overall gain.",
+    "comparison": {
+      "before": {
+        "count": 120,
+        "meanMs": 35.516107008333385,
+        "p50Ms": 32.18908300000021,
+        "p95Ms": 54.95795799999996,
+        "maxMs": 101.38079199999993
+      },
+      "after": {
+        "count": 120,
+        "meanMs": 38.422285449999976,
+        "p50Ms": 31.882791999999426,
+        "p95Ms": 73.87637499999983,
+        "maxMs": 148.27387500000077
+      },
+      "percentChanges": {
+        "meanMs": 8.182705500309172,
+        "p50Ms": -0.9515368921841683,
+        "p95Ms": 34.423435091965885,
+        "maxMs": 46.25440586418075
+      },
+      "sameInitialHash": true,
+      "sameFinalHash": true,
+      "finalEncodedStateSha256": "1097a9928b7e86eb51d64e8ee69bfe8d60c76f2a9f26feb9610a93ae6bc861c0",
+      "randomCallsBefore": 3165,
+      "randomCallsAfter": 3165,
+      "sourceUnchangedBefore": true,
+      "sourceUnchangedAfter": true,
+      "simulationErrorsBefore": [],
+      "simulationErrorsAfter": []
+    }
+  },
+  "remainingLimits": [
+    "Steer-bounds pair95th percentile and maximum did not improve.",
+    "Large periodic WorkBoard refresh/assignment stalls remain.",
+    "WorkBoard reset obstruction-cache retention is only a static next-step proposal, not implemented or measured."
+  ]
+}

@@ -1,8 +1,8 @@
 # Hearthwild: functional buildings, stations and settlement scale
 
-Reference rechecked 2026-11-01. **36 registered structures, 36 build-menu entries, 23 processing recipes and 25 functional catalogue groups.** Counts describe the current source registry, not completion of every hinted service. This document adds no implemented gameplay. Existing equipment, cultivation, husbandry and transport executors also perform work outside the 23 processing recipes.
+Reference rechecked 2026-11-01. **37 registered structures, 37 build-menu entries, 27 processing recipes and 25 functional catalogue groups.** Counts describe the current source registry, not completion of every hinted service. This document adds no implemented gameplay. Existing equipment, cultivation, husbandry and transport executors also perform work outside the 27 processing recipes.
 
-The detailed in-game inventory now has **106 function entries: 14 narrowly working foundations, 35 partial functions and 57 planned functions**. These are audited descriptions, not 106 buildings or 106 implemented systems. Partial entries state their real executor and their missing service separately. Generic stone equipment does not make flint knapping work; fresh milk does not make cheese processing work; a stables ID does not create a horse/pack-animal economy. [2026-11-01 audit and queue semantics](FUNCTION_CATALOGUE_AUDIT_2026-11-01.md).
+The detailed in-game inventory now has **106 function entries: 14 narrowly working foundations, 36 partial functions and 56 planned functions**. These are audited descriptions, not 106 buildings or 106 implemented systems. Partial entries state their real executor and their missing service separately. Generic stone equipment does not make flint knapping work; fresh milk does not make cheese processing work; a stables ID does not create a horse/pack-animal economy. [2026-11-01 audit and queue semantics](FUNCTION_CATALOGUE_AUDIT_2026-11-01.md).
 
 ## Reference principles and boundaries
 
@@ -66,6 +66,7 @@ Costs are base registry amounts in logs/stone; food is zero for these entries. C
 | `dryrack` — Food and skin drying rack | Stone | 4 / 0 | 10 s | Two shared processing slots. Food has paid loading, weather-dependent curing and physical collection. Skin drying remains a staffed batch. |
 | `tanner` — Tanning yard | Stone | 8 / 2 | 14 s | Paid cleaned-hide/tannin/water leather batch. Passive vat curing and plant-specific chemistry remain planned. |
 | `tailor` — Skin sewing shelter | Stone | 8 / 0 | 12 s | Physical skin/leather garments, delivery and actual wearing. Textile fibres, bindings and summer clothing remain incomplete. |
+| `fibreWorkshop` — Fibre and basket shelter | Stone | 8 / 2 | 14 s | Two shared staffed fibre-processing slots. Real fibre/cordage → delivered baskets; owned baskets improve food/fibre carrying and wear on real deliveries. No free inputs. |
 | `potter` — Pottery shelter | Stone | 8 / 2 | 14 s | Two shared shaping/drying slots. Shaping 30 s versus 90 at a hearth; covered clay drying resists rain but still depends on humidity/temperature and physical pickup. |
 | `kiln` — Pottery kiln | Stone | 8 / 8 | 20 s | Two firing slots. Four dried ware +2 logs take 45 work seconds; manual hearth uses 4 logs/90 seconds. Outputs are actual vessels and failed potsherds, not guaranteed four vessels. |
 | `cairn` — Stone Cairn | Stone | 20 / 40 | 18 s | Local influence/community marker. Full monolith quarrying, sledge transport and erection chain remains planned. |
@@ -73,12 +74,16 @@ Costs are base registry amounts in logs/stone; food is zero for these entries. C
 
 Special cases: farms also require actual seeds; halls have founding/repeated-construction rules. Trenches use additional excavated volume (at least the base work), bridge spans alter requirements, and tower material/height designs determine paid cost, labor and HP. A blueprint never provides a completed service or a free terrain cut. New nomadic starts do not imply a prebuilt settlement.
 
-## Current 23 processing recipes
+## Current 27 processing recipes
 
 All inputs are finite paid stock/food lots. A worker collects and carries them, reaches the site, performs work and delivers output. Four input food units becoming four output food units is conversion, not multiplication. Weather exposure is additional elapsed curing time, not staffed work. Site slots are shared across its recipes.
 
 | Recipe | Workplace | Paid batch inputs | Output | Staffed work / exposure |
 |---|---|---|---|---|
+| `twistCordageHand` — Hand-twist plant cordage | Cooking hearth | 4 plant fibre | 4 cordage | 90 s |
+| `twistCordage` — Twist cordage at a fibre shelter | Fibre and basket shelter | 4 plant fibre | 4 cordage | 30 s |
+| `weaveBasketHand` — Hand-weave a carrying basket | Cooking hearth | 4 plant fibre, 2 cordage | 1 woven basket | 120 s |
+| `weaveBasket` — Weave a basket at a fibre shelter | Fibre and basket shelter | 4 plant fibre, 2 cordage | 1 woven basket | 45 s |
 | `formClayHand` — Hand-form clay vessels | Cooking hearth | 4 clay, 2 water | 4 formed greenware | 90 s |
 | `formClay` — Form vessels at a pottery shelter | Pottery shelter | 4 clay, 2 water | 4 formed greenware | 30 s |
 | `dryClay` — Air-dry greenware | Food and skin drying rack | 4 formed greenware | 4 dried unfired ware | 10 s + 90 effective dry s |
@@ -154,7 +159,7 @@ This is a functional checklist, not a requirement to build every named structure
 | Portable tent / shelter frame | Planned shelter equipment; huts/mobile caches are predecessors | Gather real poles/coverings → erect, pack and physically transport reusable shelter | Sheltered beds, packed mass, setup labor, warmth, durability |
 | Household sleeping/heating place | Extend hut | Shared shelter → assigned household beds, fuelled heating and repair | Occupancy, cold exposure, fuel, indoor capacity |
 | Camp cache / covered store | Extend communal stores | Ground cache → covered containers → warehouse; preserve actual carried stock during moves | Stock volume, spoilage, exposure, haul distance |
-| Basket and cordage area | Planned | Collect suitable plants → strip/twist/weave → baskets, bindings, ropes | Fibre consumed, batch time, container capacity, wear |
+| Basket and cordage area | Partial: finite observed bast, cordage and owned baskets work | Harvest actual living sources → real carry/delivery → manual hearth or faster fibre shelter | Initial/regrown/depleted stock, standing timber tradeoff, paid work, owned carrying benefit and wear; nets/rigging/hafting remain planned |
 | Flint knapping place | Planned; generic stone equipment exists | Hand stone work → skilled knapping bench; finite appropriate stone, failed pieces | Tool yield, waste, sharpness, breakage, useful work per tool |
 | Bone/antler tool bench | Planned; actual bone already feeds clothing recipes | Clean actual bone → needles, awls, hooks and handles | Species/material stock, labor, tool durability |
 | Woodworking place | Planned component chain; whole-equipment recipes/lumber exist | Hand axe shaping → bench/jigs → handles, poles, boards | Log-to-part yield, waste, travel, tool wear |
@@ -320,10 +325,12 @@ Only registered, actually usable structures get a build action. Only actual reci
 
 Registry/cost/stage/work data: `src/game/constants.ts`. Actual processing recipes/slots: `src/game/production.ts`; weather curing: `src/game/foodPreservation.ts`; food lots/spoilage: `src/game/pantry.ts`; functional grouping: `src/game/productionCatalog.ts`. Equipment bench behavior is separate from processing slots. Runtime commands override display-only hints where dynamic costs or incomplete legacy descriptions differ.
 
-Reference counts were extracted directly from `BUILDINGS`, `BUILD_ORDER`, `PRODUCTION_RECIPES` and `PRODUCTION_ROLES`: **36 / 36 / 23 / 25**. These counts and roadmap rows do not claim browser acceptance, historical accuracy, completion of the master plan or functionality for planned stations. Implementation qualification remains the relevant physical scenario, persistence, conservation and UI checks.
+Reference counts were extracted directly from `BUILDINGS`, `BUILD_ORDER`, `PRODUCTION_RECIPES` and `PRODUCTION_ROLES`: **37 / 37 / 27 / 25**. These counts and roadmap rows do not claim browser acceptance, historical accuracy, completion of the master plan or functionality for planned stations. Implementation qualification remains the relevant physical scenario, persistence, conservation and UI checks.
 
 Official reference sources: [Madruga Dawn of Man overview](https://www.madrugaworks.com/dawnofman/), [Madruga Dawn of Man FAQ](https://dawnofman.madrugaworks.com/faq.php), and [developer-published Steam overview](https://store.steampowered.com/app/858810/Dawn_of_Man/). The dependency/size recommendations and later-era roadmap above are authored Hearthwild design proposals.
 
 ## Scalable pasture update (2026-11-01)
 
 Animal pens now use dragged 10–30 m dimensions, perimeter-priced fences and paid extensions. Real usable area limits new animals (48/pen maximum); actual captured herds consume finite seasonal grass and physically delivered plant feed. Winter regrowth is zero. One keeper slot per 8 animals, actual care/feed travel, native identity and conserved overflow are measured. The natural 12×10 qualification enclosure held one captured goat in nine eligible places,99 m² usable pasture and 120 feed capacity. Existing animals are retained if conditions reduce capacity. Other livestock species and dedicated grazing-depletion surface visuals remain planned.
+
+Fibre cohort details and primary-source basis: [Finite fibre, cordage and owned baskets](FIBRE_PRODUCTION.md).

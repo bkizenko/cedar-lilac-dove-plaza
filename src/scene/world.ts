@@ -1,3 +1,5 @@
+import {FibreWorkLayer} from './fibreWorkLayer';
+import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
 import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
@@ -76,7 +78,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
+  "fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -185,6 +187,8 @@ export class WorldView {
   private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
+  private baskets:BasketLayer|null=null;
+  private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
@@ -868,6 +872,8 @@ export class WorldView {
     this.penFences=new PenFenceLayer(this.scene,this.mats.timber.clone());
     this.wornGarments=new WornGarmentLayer(this.scene);
     this.waterVessels=new WaterVesselLayer(this.scene);
+    this.baskets=new BasketLayer(this.scene);
+    this.fibreWork=new FibreWorkLayer(this.scene);
     for (const t of UNIT_TYPES) {
       const geo = unitGeo(t);
       const mat = this.mats.hide.clone();
@@ -1016,7 +1022,7 @@ export class WorldView {
         game.state.units.filter((u) => u.hp > 0 && u.type === type),
       );
     }
-    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.waterVessels?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
@@ -1506,6 +1512,7 @@ export class WorldView {
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
+    this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.contourFields?.sync(game,this.camera.position);
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
@@ -1638,6 +1645,7 @@ export class WorldView {
   private syncUnits(game: Game) {
     this.wornGarments?.beginFrame(this.quality,this.shadowsEnabled);
     this.waterVessels?.beginFrame(this.quality,this.shadowsEnabled);
+    this.baskets?.beginFrame(this.quality,this.shadowsEnabled,this.camera.position);
     const grouped = new Map<UnitType, typeof game.state.units>();
     for (const t of UNIT_TYPES) grouped.set(t, []);
     for (const u of game.state.units) {
@@ -1693,6 +1701,7 @@ export class WorldView {
         mesh.setMatrixAt(i, _m);
         this.wornGarments?.write(game,u,_m);
         this.waterVessels?.write(game,u,_m);
+        this.baskets?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
         if(tool&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
           this.farmToolMesh.setMatrixAt(tools,_m);
@@ -1717,6 +1726,7 @@ export class WorldView {
     }
     this.wornGarments?.endFrame();
     this.waterVessels?.endFrame();
+    this.baskets?.endFrame();
     if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
     if (game.state.selBld && game.state.selBld.hp > 0 && ri < instCap(this.rings)) {
       const b = game.state.selBld;
@@ -1844,7 +1854,7 @@ export class WorldView {
       add(meshes.roof.geometry,mr,(size.w-BUILDINGS.farm.w)/2,(size.d-BUILDINGS.farm.d)/2);
     }else{add(meshes.timber.geometry,mt);add(meshes.roof.geometry,mr);}
     const pad = new THREE.Mesh(
-      new THREE.PlaneGeometry(size?.w??8, size?.d??8),
+      new THREE.PlaneGeometry(size?.w??(type==='fibreWorkshop'?BUILDINGS.fibreWorkshop.w:8), size?.d??(type==='fibreWorkshop'?BUILDINGS.fibreWorkshop.d:8)),
       new THREE.MeshBasicMaterial({
         color: tint,
         transparent: true,
@@ -2467,6 +2477,8 @@ export class WorldView {
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.waterVessels?.dispose();this.waterVessels=null;
+    this.baskets?.dispose();this.baskets=null;
+    this.fibreWork?.dispose();this.fibreWork=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;

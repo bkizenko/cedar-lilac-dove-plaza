@@ -9,13 +9,21 @@ const block=(c:CoastalCommission,reason:string)=>{c.reason=reason;c.metrics.bloc
  * It never creates a finished dock, launches a free vessel or inspects remote stocks. */
 export function reviewCoastalCommissioning(g:Game){
  for(const t of g.state.tribes){if(!isRivalTeam(t.id)||!t.alive||g.state.boats?.some(b=>b.team===t.id&&b.hp>0))continue;
-  const partner=g.state.buildings.filter(b=>b.team!==t.id&&b.team!==3&&g.tribe(b.team)?.alive&&!g.isFoe(t.id,b.team)&&b.type==='townhall'&&g.finished(b)&&rivalKnows(g,t.id,b.x,b.z)).sort((a,b)=>coastalPartnerScore(g,t.id,a)-coastalPartnerScore(g,t.id,b))[0];
+  const knownHalls=g.state.buildings.filter(b=>b.team!==t.id&&b.team!==3&&g.tribe(b.team)?.alive&&!g.isFoe(t.id,b.team)&&b.type==='townhall'&&g.finished(b)&&rivalKnows(g,t.id,b.x,b.z)).sort((a,b)=>coastalPartnerScore(g,t.id,a)-coastalPartnerScore(g,t.id,b)),partner=knownHalls[0];
   if(!partner){recordCoastalReview(g,t.id,'commission','Observe another actual village before funding a trade hull');continue;}recordCoastalReview(g,t.id,'commission');const list=g.state.coastalCommissions??=[];let c=list.find(c=>c.team===t.id);if(!c){if(list.length>=COASTAL_COMMISSION_RULES.maximumRecords)continue;c={version:1,id:g.id(),team:t.id,partner:partner.team,phase:'dock',reason:'',metrics:{reviews:0,blockedReviews:0,dockPayments:0,hullPayments:0,hullsLaunched:0,cacheArrivals:0}};list.push(c);}if(c.phase==='paused'||c.phase==='loading'||c.phase==='ready')continue;c.metrics.reviews++;
   const home=g.campOf(t.id),adults=g.state.units.filter(u=>u.team===t.id&&u.type==='worker'&&u.hp>=u.maxHp*.6&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.boat&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.societyMissionId&&!u.coastalVoyageId&&Math.hypot(u.x-home.x,u.z-home.z)<=70);if(adults.length<COASTAL_COMMISSION_RULES.minimumAdults){block(c,'Retain four working adults while one builds or crews a vessel');continue;}
   if(reserveSeconds(g,t.id)<COASTAL_COMMISSION_RULES.homeMealSeconds){block(c,'Preserve 600 seconds of home meals before coastal investment');continue;}
-  const hall=g.state.buildings.find(b=>b.team===c!.partner&&b.type==='townhall'&&g.finished(b)&&rivalKnows(g,t.id,b.x,b.z)),landings=hall?observedCoastalLandings(g,t.id,hall):[];
+  const ownDocks=g.state.buildings.filter(b=>b.team===t.id&&b.type==='dock'&&b.hp>0),launches=ownDocks.map(d=>({dock:d,point:riverboatWaterPoint(g,d.x,d.z)}));
+  const routes=knownHalls.map(hall=>{const landings=observedCoastalLandings(g,t.id,hall),docks=launches.filter(({point})=>point&&landings.some(p=>{const sea=riverboatDestination(g,point,p.x,p.z);return!!sea&&Math.hypot(sea.x-p.x,sea.z-p.z)<=8;})).map(row=>row.dock.id);return{hall,landings,docks};}).sort((a,b)=>Number(!a.docks.length)-Number(!b.docks.length)||coastalPartnerScore(g,t.id,a.hall)-coastalPartnerScore(g,t.id,b.hall));
+  let route=routes.find(r=>r.hall.team===c!.partner);
+  // A blocked planning preference owns no foreign resources. Reconsider it
+  // before hull payment; actual paid sites and projects remain the same objects.
+  if(c.phase==='dock'&&c.projectId===undefined&&c.boatId===undefined&&!route?.docks.length&&routes[0]?.docks.length){c.partner=routes[0].hall.team;route=routes[0];recordCoastalReview(g,t.id,'commission-route-reconsidered');}
+  const hall=route?.hall,landings=route?.landings||[];
   if(!hall||!landings.length){block(c,'Survey a real reachable low bank or beach by the observed village');continue;}
-  const ownDocks=g.state.buildings.filter(b=>b.team===t.id&&b.type==='dock'&&b.hp>0),compatible=(d:typeof ownDocks[number])=>{const launch=riverboatWaterPoint(g,d.x,d.z);return!!launch&&landings.some(p=>{const sea=riverboatDestination(g,launch,p.x,p.z);return!!sea&&Math.hypot(sea.x-p.x,sea.z-p.z)<=8;});};
+  const compatible=(d:typeof ownDocks[number])=>!!route?.docks.includes(d.id);
+  const paidDock=ownDocks.find(d=>d.id===c!.dockId);
+  if(paidDock&&!compatible(paidDock)&&(!g.finished(paidDock)||c.projectId!==undefined)){block(c,'Preserve the paid dock or hull project while its observed route is unavailable');continue;}
   let dock=ownDocks.find(b=>b.id===c!.dockId&&compatible(b))||ownDocks.find(compatible);
   if(!dock)c.dockId=undefined;
   if(!dock){const cost=buildingCost('dock',g,t.id);if(t.wood<(cost.wood||0)+BOAT_COST.wood+12+rivalTradeReserve(g,t.id,'wood')||t.stone<BOAT_COST.stone+rivalTradeReserve(g,t.id,'stone')){block(c,'Collect dock and hull materials while preserving working reserves and trade cargo');continue;}
