@@ -285,10 +285,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             </div>
             <MinToggle open={!clockMin} onClick={() => setClockMin((v) => !v)} />
           </div>
-          <div className="mt-2 flex justify-end gap-1">
+          <div className="mt-2 grid grid-cols-4 gap-1 clock-playback">
             <IconBtn
               active={hud.paused}
-              title="Pause"
+              title={hud.paused ? "Resume" : "Pause"}
               onClick={() => engine?.setPaused(!hud.paused)}
             >
               <Pause className="size-3.5" />
@@ -314,8 +314,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             >
               <span className="text-[10px] font-semibold">4×</span>
             </IconBtn>
+          </div>
             {!clockMin ? (
-              <>
+              <div className="mt-1 flex justify-end gap-1 clock-audio">
                 <IconBtn title={hud.muted ? "Unmute" : "Mute"} onClick={() => engine?.toggleMute()}>
                   {hud.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
                 </IconBtn>
@@ -323,9 +324,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 <IconBtn title="Restart" onClick={() => engine?.restart()}>
                   <RotateCcw className="size-3.5" />
                 </IconBtn>
-              </>
+              </div>
             ) : null}
-          </div>
         </div>
         {!clockMin && !founding ? (
           <>

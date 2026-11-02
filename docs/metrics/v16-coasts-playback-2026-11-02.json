@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-02",
+  "checks": {
+    "passed": 25,
+    "total": 25,
+    "percent": 100
+  },
+  "coastRules": {
+    "generation": 16,
+    "sourceOutlineMinimumDifference": 0.09,
+    "finalOceanRasterMinimumDifference": 0.14,
+    "rasterResolution": 48,
+    "rotationSteps": 72,
+    "reflections": true,
+    "minimumComponentAreaSquareMeters": 18000,
+    "inlandFreshwaterFilled": true,
+    "boundedCandidateRetries": 16
+  },
+  "coverage": {
+    "actualV16Worlds": 8,
+    "V15FullWorldHashPreservationCases": 3,
+    "actualV16VillageSaveRoundtrip": true,
+    "negativeSeedRawLayoutCandidates": 120
+  },
+  "browser": {
+    "viewport": "1280x720 desktop",
+    "pauseResumeExpanded": true,
+    "pauseResumeCompact": true,
+    "speedSelectionResumes": true,
+    "allEightExpandedClockButtonsInsidePanel": true,
+    "generatedWorldSeed": -935736685,
+    "generation": 16,
+    "consoleErrors": 0,
+    "originalQaVillageRestored": true
+  },
+  "limits": [
+    "Approximate bounded silhouette comparison; not a mathematical guarantee of universal map uniqueness.",
+    "Cross-world persistent seed allocator covers sequential fresh games in one browser profile; no global map registry.",
+    "Final coastline metric runs only during generation/reconstruction, not each gameplay frame.",
+    "Not a completed full-campaign or target-hardware performance acceptance gate."
+  ],
+  "fullAcceptance": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 24,
+    "total": 98,
+    "percent": 24.49
+  }
+}

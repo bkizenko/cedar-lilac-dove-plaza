@@ -232,7 +232,7 @@ export class Engine {
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {
-      this.game.reset(undefined,15,request);
+      this.game.reset(undefined,16,request);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
@@ -240,7 +240,7 @@ export class Engine {
     } catch (err) {
       console.error(err);
       this.setQuality("low");
-      this.game.reset(undefined,15,request);
+      this.game.reset(undefined,16,request);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
@@ -764,10 +764,13 @@ export class Engine {
   setPaused(p: boolean) {
     this.game.state.paused = p;
     if(p)saveGame(this.game);
+    this.pushHud();
   }
 
   setSpeed(s: number) {
     this.game.state.speed = s === 4 || s === 3 ? 4 : s === 2 ? 2 : 1;
+    this.game.state.paused = false;
+    this.pushHud();
   }
 
   toggleMute() {

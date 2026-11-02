@@ -1,3 +1,4 @@
+import{measureCoastFingerprints,COAST_FINGERPRINT_RULES}from'./coastFingerprint';
 import {diverseLandforms,diverseGeography} from './coastalVariety';
 import {openingWaterSurvey,openingCampSurvey,COMPACT_SETTLEMENT_RULES,OPENING_WATER_RULES} from './openingWater';
 import {continentalRiparian} from './continentalRiparian';
@@ -19,6 +20,7 @@ import { fbm, mulberry32 } from "./rng";
 import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
+  coastVariety?:ReturnType<typeof measureCoastFingerprints>;
   generation?:{requestedSeed:number;terrainSeed:number;attempt:number;rejectedReasons:string[]};
   size: number;
   settlementFallback?:{kind:"compact-foundations";originalBroadSiteCount:number;compactSiteCount:number};
@@ -127,13 +129,13 @@ export function generateWorld(seed:number,version=1,request:WorldRequest={}):Wor
  const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
  for(let attempt=0;attempt<16;attempt++){
   const terrainSeed=attempt===0?seed:(random()*0x100000000)>>>0;
-  try{const world=generateWorldCandidate(terrainSeed,version,request);return{...world,generation:{requestedSeed:seed,terrainSeed,attempt,rejectedReasons}};}
-  catch(error){const reason=error instanceof Error?error.message:String(error);if(!/^(V1[345] |Primary landscape lacks |This seed has no viable |No dry viable)/.test(reason))throw error;rejectedReasons.push(reason);}
+  try{const world=generateWorldCandidate(terrainSeed,version,request);if(version>=16){const coast=measureCoastFingerprints(world);if(coast.minimumDifference!==null&&coast.minimumDifference<COAST_FINGERPRINT_RULES.minimumDifference)throw new Error(`V16 final coast too similar: ${coast.minimumDifference}`);world.coastVariety=coast;if(world.landscape)world.landscape.substantialLandmassCount=coast.substantialLandmassCount;}return{...world,generation:{requestedSeed:seed,terrainSeed,attempt,rejectedReasons}};}
+  catch(error){const reason=error instanceof Error?error.message:String(error);if(!/^(V1[3456] |Primary landscape lacks |This seed has no viable |No dry viable)/.test(reason))throw error;rejectedReasons.push(reason);}
  }
- throw new Error(`V15 exhausted16 measured candidates: ${rejectedReasons.join('; ')}`);
+ throw new Error(`V${version} exhausted16 measured candidates: ${rejectedReasons.join('; ')}`);
 }
 function generateWorldCandidate(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const varied=version>=15?diverseLandforms(seed,request):version>=14?variedLandforms(seed,request):null;
+  const varied=version>=15?diverseLandforms(seed,request,version>=16?16:15):version>=14?variedLandforms(seed,request):null;
   const multi=version===13?multipleLandmasses(seed,request):null;
   const land=varied??multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
   const MAP=land?.options.size??1040, HALF=MAP/2;

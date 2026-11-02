@@ -1,0 +1,20 @@
+[
+  {
+    "seed": 7,
+    "size": 1040,
+    "layout": "archipelago",
+    "hash": "2d478776d4d6f27338ecf2f67ced248d8e8df7a4f0cba6582913528503f7f12f"
+  },
+  {
+    "seed": -1197468385,
+    "size": 1040,
+    "layout": "archipelago",
+    "hash": "4b8ce76555eb3434f18777c27017c17d85bcd220e7b0ac445ab96af567e27eea"
+  },
+  {
+    "seed": 42,
+    "size": 1040,
+    "layout": "continents",
+    "hash": "418567063a8a218ed013495df30d7d578795a59f638c814cbb95eab2d8909e3e"
+  }
+]
