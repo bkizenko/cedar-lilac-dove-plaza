@@ -13,7 +13,7 @@ import {resumeWeaponWork,WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES, AGE_CHOICES, BUILDINGS } from "@/game/constants";
-import {CROPS,CROP_NAMES,CROP_TRIAL_RULES,seekCropSamples,beginCropTrial,setFieldCrop,setFieldRest} from "@/game/cultivation";
+import {CROPS,CROP_NAMES,CROP_TRIAL_RULES,cropTrialWorkplace,seekCropSamples,beginCropTrial,setFieldCrop,setFieldRest} from "@/game/cultivation";
 import { foodSpoilage, winterOutlook, storehouses, foodInventory, FOOD_KINDS } from "@/game/pantry";
 import { habitatAt, soilQuality, climateAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
@@ -61,11 +61,12 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const projects=s.buildings.filter(b=>b.team===0&&b.hp>0&&!g.finished(b));
   const knownCrops = t.cultivated || [];
   const trial = t.cropTrial;
+  const trialPlace=cropTrialWorkplace(g,0)?.kind==='camp'?'camp seed patch':'hearth';
   const trialWorkers=trial?people.filter(u=>u.studyCrop===trial.kind):[],trialWorker=trialWorkers[0];
   const readyCrop = CROPS.find(kind => !knownCrops.includes(kind) && (t.cropSamples?.[kind] || 0) >= 4);
   const sampleCrop = [...CROPS].sort((a,b) => (t.cropSamples?.[b] || 0) - (t.cropSamples?.[a] || 0))[0];
   const startTrial = (kind: typeof CROPS[number]) => {
-    if(!beginCropTrial(g,kind))g.banner("An available adult and reachable hearth are needed for the trial.",4);
+    if(!beginCropTrial(g,kind))g.banner(`An available adult and reachable ${trialPlace} are needed for the trial.`,4);
     engine.pushHud();
   };
   const close = () => {
@@ -99,14 +100,14 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           <ol className="list-decimal pl-5">
             <li>Gather wild grain, pulses or tubers and bring home 8 food for 4 samples.
               {!knownCrops.length && !trial && <> {Math.floor(t.cropSamples?.[sampleCrop] || 0)}/4 {sampleCrop} samples at home.</>}</li>
-            <li>Residents automatically test cultivation at the hearth: 4 samples, no logs or food cost. One adult works for 30–45 seconds.
+            <li>Test cultivation at the {trialPlace}: 4 samples, no logs or food cost. One adult works for 30–45 seconds; Auto work can assign one when enabled.
               {trial && <> {trial.kind} trial: {Math.floor(100*trial.progress/trial.duration)}% complete.</>}
               {!trial && knownCrops.length>0 && <> Learned: {knownCrops.join(", ")}.</>}</li>
-            <li>Place a field for 4 seed baskets. Greener ground in the placement preview means richer soil; keep it on dry land.</li>
+            <li>Mark a field for 4 seed baskets. Greener ground in the placement preview means richer soil; keep it on dry land.</li>
           </ol>
           {trial ? (
             <>
-              <button className="min-h-11" disabled={trialWorkers.length>=CROP_TRIAL_RULES.maximumPeople} title="Additional adults contribute 45% and 25% work after reaching the hearth; samples are paid once." onClick={()=>startTrial(trial.kind)}>
+              <button className="min-h-11" disabled={trialWorkers.length>=CROP_TRIAL_RULES.maximumPeople} title={`Additional adults contribute 45% and 25% work after reaching the ${trialPlace}; samples are paid once.`} onClick={()=>startTrial(trial.kind)}>
                 {trialWorker ? `Add hands · ${trialWorkers.length}/${CROP_TRIAL_RULES.maximumPeople}` : "Resume cultivation trial"}
               </button>
               <p>{trialWorker ? "Close the ledger to let work continue. Saved trials keep their existing progress and work time." : "The paid trial is paused. Resume with an available adult; materials are not charged again."}</p>

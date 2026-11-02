@@ -1,3 +1,4 @@
+import {campAnchor,supplyApproach,type SupplyDrop} from './campAnchor';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
 import type {CropKind,Unit,ResourceNode,Building} from "./types";
@@ -45,20 +46,29 @@ export function deliverSamples(g:Game,u:Unit){
     if(!amount)continue;
     t.seeds=Math.min(100000,(t.seeds||0)+amount);
     const first=!(t.cropSamples[kind]||0);t.cropSamples[kind]=(t.cropSamples[kind]||0)+amount;
-    if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Residents will test these seeds at the hearth automatically.`);
+    if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Choose Test seeds in Knowledge, or enable Auto work for a free adult to try them.`);
   }
   u.seedSamples=undefined;
 }
 export function cultivationIssue(g:Game,team=0){
-  return g.tribe(team).cultivated?.length?null:"Gather wild grain, pulses or tubers: bring home 8 crop food for 4 samples, residents will learn cultivation automatically at the hearth.";
+  if(g.tribe(team).cultivated?.length)return null;
+  const place=cropTrialWorkplace(g,team)?.kind==='camp'?'camp seed patch':'hearth';
+  return `Bring home 8 wild crop food for 4 samples. Choose Test seeds in Knowledge, or enable Auto work; an available adult must reach the ${place}.`;
+}
+/** A settlement uses its primary completed hearth; a nomadic household uses
+ * its real finite communal cache. Neither choice creates architecture or stock. */
+export function cropTrialWorkplace(g:Game,team=0):SupplyDrop|null {
+  const origin=g.campOf(team),hall=g.state.buildings.filter(b=>b.team===team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-origin.x,a.z-origin.z)-Math.hypot(b.x-origin.x,b.z-origin.z)||a.id-b.id)[0];
+  return hall||campAnchor(g,team);
 }
 export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitId?:number){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
+  const workplace=cropTrialWorkplace(g,team);if(!workplace)return false;
   const participants=g.state.units.filter(u=>u.hp>0&&u.team===team&&u.studyCrop===kind);
   if(participants.length>=CROP_TRIAL_RULES.maximumPeople||automatic&&participants.length>0)return false;
-  const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
-  if(!u||!g.state.buildings.some(b=>b.team===team&&b.type==="townhall"&&g.finished(b)))return false;
+  const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order)&&!!supplyApproach(g,u,workplace));
+  if(!u)return false;
   if(!t.cropTrial){
     if((t.cropSamples?.[kind]||0)<4)return false;
     t.cropSamples![kind]=(t.cropSamples![kind]||0)-4;
@@ -71,11 +81,11 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
   if(!u.copperStudy&&!u.studyCrop)return false;
   const t=g.tribe(u.team),trial=t.cropTrial;
   if(u.order!=="hold"||!trial||trial.kind!==u.studyCrop||isDependent(g,u)) {u.studyCrop=undefined;return false;}
-  const origin=g.campOf(u.team),hall=g.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-origin.x,a.z-origin.z)-Math.hypot(b.x-origin.x,b.z-origin.z)||a.id-b.id)[0];
-  if(!hall){u.studyCrop=undefined;u.order="idle";return false;}
-  const spot=g.interactionSpot(u,hall);
-  if(!spot){u.workReason="Cultivation trial needs a reachable hearth";return false;}
-  if(Math.hypot(u.x-spot.x,u.z-spot.z)>1){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);u.workReason="Bringing cultivation work to the hearth";return true;}
+  const workplace=cropTrialWorkplace(g,u.team);
+  if(!workplace){u.studyCrop=undefined;u.order="idle";return false;}
+  const spot=supplyApproach(g,u,workplace),place=workplace.kind==='camp'?'camp seed patch':'hearth';
+  if(!spot){u.workReason=`Cultivation trial needs a reachable ${place}`;return true;}
+  if(Math.hypot(u.x-spot.x,u.z-spot.z)>1){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);u.workReason=`Bringing cultivation work to the ${place}`;return true;}
   if(reserveSeconds(g,u.team)<60){u.workReason="Cultivation paused — food for the village comes first";u.studyCrop=undefined;u.order="idle";return false;}
   // Each real participant works only after reaching the same hearth. Stable
   // diminishing shares bound the benefit; extra samples are not charged.

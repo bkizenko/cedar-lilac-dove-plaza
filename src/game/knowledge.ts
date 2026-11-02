@@ -1,8 +1,9 @@
+import {supplyApproach} from './campAnchor';
 import {fibreKnowledgeTopics,runFibreKnowledgeAction} from './fibreKnowledge';
 import {productionKnowledgeTopics,runProductionKnowledgeAction} from './practiceKnowledge';
 import type {Game} from './sim';
 import type {Unit,CropKind,BldType,Building} from './types';
-import {CROPS,CROP_NAMES,beginCropTrial,seekCropSamples} from './cultivation';
+import {CROPS,CROP_NAMES,CROP_TRIAL_RULES,beginCropTrial,cropTrialWorkplace,seekCropSamples} from './cultivation';
 import {COPPER_STUDY_RULES,copperStudyIssue,beginCopperStudy} from './materialStudy';
 import {hasTaskCommitment,type CommittedTask} from './workCommitments';
 import {calendar,isDependent,reserveSeconds} from './settlement';
@@ -23,15 +24,18 @@ const action=(id:string,label:string,blockedReason:string|null):KnowledgeAction=
 function actorAt(g:Game,sites:Building[],except?:CommittedTask,allowLocked=false){for(const u of g.state.units)if(available(g,u,except,allowLocked))for(const site of sites)if(g.interactionSpot(u,site))return {u,site};return undefined;}
 const buildings=(g:Game,type:BldType)=>g.state.buildings.filter(b=>b.team===0&&b.type===type&&g.finished(b));
 function cropProposal(g:Game,kind:CropKind):PracticalProposal{
- const t=g.tribe(0),halls=buildings(g,'townhall');
+ const t=g.tribe(0),workplace=cropTrialWorkplace(g,0);
  if(t.cultivated?.includes(kind))return {reason:`${CROP_NAMES[kind]} cultivation is already established`};
  if(t.cropTrial&&t.cropTrial.kind!==kind)return {reason:`Finish the ${t.cropTrial.kind} trial before another crop`};
- if(g.state.units.some(u=>u.team===0&&u.hp>0&&u.studyCrop===kind))return {reason:'A resident is already working on this crop trial'};
- if(!halls.length)return {reason:'Finish a hearth where a resident can test seeds'};
+ if(g.state.units.filter(u=>u.team===0&&u.hp>0&&u.studyCrop===kind).length>=CROP_TRIAL_RULES.maximumPeople)return {reason:`All ${CROP_TRIAL_RULES.maximumPeople} seed trial places are occupied`};
+ if(!workplace)return {reason:'Need an active camp or completed hearth for seed trials'};
  if(!t.cropTrial&&(t.cropSamples?.[kind]||0)<KNOWLEDGE_RULES.cropSampleUnits)return {reason:`Bring ${KNOWLEDGE_RULES.cropSampleUnits} ${kind} samples home (${(t.cropSamples?.[kind]||0).toFixed(1)} available)`};
  if(reserveSeconds(g)<KNOWLEDGE_RULES.cropTrialFoodReserveSeconds)return {reason:'Secure one minute of food before taking a resident into trials'};
- const candidate=actorAt(g,halls);if(!candidate)return {reason:'Need an available adult with empty hands and a route to a hearth'};
- return {...candidate,reason:null};
+ // A held, uncommitted adult is awaiting a manual order even with Auto work off.
+ // Do not take a locked active gatherer, water carrier or paid project maker.
+ const u=g.state.units.filter(u=>available(g,u,undefined,u.order==='hold')).sort((a,b)=>Number(a.order==='gather')-Number(b.order==='gather')||a.id-b.id).find(u=>!!supplyApproach(g,u,workplace));
+ if(!u)return {reason:`Need an available adult with empty hands and a route to the ${workplace.kind==='camp'?'camp seed patch':'hearth'}`};
+ return {u,reason:null};
 }
 function copperProposal(g:Game):PracticalProposal{
  const sites=buildings(g,'workshop');if(!sites.length)return {reason:'Finish a crafting shelter for copper trials'};
@@ -69,8 +73,8 @@ export function knowledgeReport(g:Game):{topics:KnowledgeTopic[];foodReserveSeco
   const samples=t.cropSamples?.[kind]||0,inTransit=people.reduce((sum,u)=>sum+(u.seedSamples?.[kind]||0),0);
   const knownPatches=g.state.forage.filter(n=>n.amount>0&&n.cropCandidate===kind&&g.exploredAt(n.x,n.z)).length;
   const trial=t.cropTrial?.kind===kind?t.cropTrial:undefined,established=!!t.cultivated?.includes(kind),plots=cropFields.filter(b=>(b.cropType||'grain')===kind),planted=plots.filter(b=>b.crop?.year===year&&b.crop.planted>0).length;
-  const person=people.find(u=>u.studyCrop===kind),proposal=cropProposal(g,kind);
-  topics.push({id:`crop:${kind}`,title:`Cultivate ${kind}`,need:reserve<KNOWLEDGE_RULES.lowFoodReserveSeconds?'Repeatable harvests could reduce dependence on wild food.':'Surplus food makes it possible to spare one resident for seed trials.',stage:planted?'adoption':established?'proven':trial?'experiment':knownPatches||samples||inTransit?'observation':'need',observation:`${knownPatches} known wild patches · ${samples.toFixed(1)} samples home · ${inTransit.toFixed(1)} carried, not delivered`,experiment:trial?`${person?`Resident ${person.name||person.id}`:'No current experimenter'} · ${trial.progress.toFixed(1)}/${trial.duration} work seconds`:'Four delivered samples fund one physical trial at a hearth.',result:established?'A completed trial established this cultivation practice.':'No completed trial recorded; seeing a plant does not establish cultivation.',adoption:`${plots.length} configured fields · ${planted} actually sown this year`,...(trial?{progress:{completed:trial.progress,required:trial.duration,unit:'work seconds'}}:{}),metrics:{samplesHome:samples,samplesCarried:inTransit,knownPatches,trialWorkSeconds:trial?.progress||0,trialRequiredSeconds:trial?.duration||0,practiceEstablished:established?1:0,configuredFields:plots.length,sownFields:planted},actions:[action('samples','Find crop samples',people.some(u=>available(g,u))?null:'Need an available adult to gather or search'),...(!established?[action(`trial:${kind}`,trial?'Resume seed trial':'Test seeds',proposal.reason)]:[action('place:farm','Choose a field site',null)]),...(!buildings(g,'townhall').length?[action('place:townhall','Choose a hearth site',null)]:[])],limitation:'Established cultivation is saved practice. Field configuration alone is not a delivered harvest.'});
+  const crew=people.filter(u=>u.studyCrop===kind),person=crew[0],proposal=cropProposal(g,kind),workplace=cropTrialWorkplace(g,0),place=workplace?.kind==='camp'?'camp seed patch':'hearth';
+  topics.push({id:`crop:${kind}`,title:`Cultivate ${kind}`,need:reserve<KNOWLEDGE_RULES.lowFoodReserveSeconds?'Repeatable harvests could reduce dependence on wild food.':'Surplus food makes it possible to spare one resident for seed trials.',stage:planted?'adoption':established?'proven':trial?'experiment':knownPatches||samples||inTransit?'observation':'need',observation:`${knownPatches} known wild patches · ${samples.toFixed(1)} samples home · ${inTransit.toFixed(1)} carried, not delivered`,experiment:trial?`${person?`Resident ${person.name||person.id}`:'No current experimenter'} · ${trial.progress.toFixed(1)}/${trial.duration} work seconds`:`Four delivered samples fund one physical trial at the ${place}.`,result:established?'A completed trial established this cultivation practice.':'No completed trial recorded; seeing a plant does not establish cultivation.',adoption:`${plots.length} configured fields · ${planted} actually sown this year`,...(trial?{progress:{completed:trial.progress,required:trial.duration,unit:'work seconds'}}:{}),metrics:{samplesHome:samples,samplesCarried:inTransit,knownPatches,trialWorkSeconds:trial?.progress||0,trialRequiredSeconds:trial?.duration||0,trialParticipants:crew.length,trialMaximumParticipants:CROP_TRIAL_RULES.maximumPeople,practiceEstablished:established?1:0,configuredFields:plots.length,sownFields:planted},actions:[action('samples','Find crop samples',people.some(u=>available(g,u,undefined,u.order==='hold'))?null:'Need an available adult to gather or search'),...(!established?[action(`trial:${kind}`,trial?(crew.length?'Add experimenter':'Resume seed trial'):'Test seeds',proposal.reason)]:[action('place:farm','Choose a field site',null)]),...(!buildings(g,'townhall').length?[action('place:townhall','Choose a hearth site',null)]:[])],limitation:'Established cultivation is saved practice. Field configuration alone is not a delivered harvest.'});
  }
  const copper=people.find(u=>u.copperStudy),copperWork=copper?.copperStudy,toolUsers=people.filter(u=>u.farmTool==='copperTools'),toolsWorking=toolUsers.filter(u=>u.order==='gather'&&u.node&&'kind' in u.node&&u.node.kind==='building'&&u.node.type==='farm').length;
  const copperReady=copperProposal(g),toolsReady=copperToolsProposal(g);

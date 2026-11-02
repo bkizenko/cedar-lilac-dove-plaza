@@ -1,0 +1,52 @@
+{
+  "baseline": "c66304c",
+  "snapshot": ".play/nomadic-cultivation-review",
+  "checks": {
+    "passed": 53,
+    "total": 53,
+    "percent": 100
+  },
+  "groups": {
+    "newNomadicCultivation": 8,
+    "existingCooperativeCrop": 5,
+    "existingCultivationFood": 11,
+    "existingNomadicRelocation": 8,
+    "rootFarmingProgress": 4,
+    "newKnowledgeCommands": 8,
+    "existingKnowledge": 6,
+    "connectedCommandAndBankFishingRechecks": 3
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "nomadicTrialCompletionSeconds": {
+    "oneParticipant": 40.1,
+    "threeParticipants": 25.0
+  },
+  "sampleCost": 4,
+  "buildingsCreated": 0,
+  "runtimeSuppliesGranted": 0,
+  "scope": "Controlled physical trial, finite wild harvest and save/load cases; not full campaign acceptance",
+  "browser": {
+    "naturalV16Seed": 7,
+    "size": 1040,
+    "playerBuildings": 0,
+    "initialSamplesEndowedForInspection": 4,
+    "startViaActualKnowledgeButton": true,
+    "threeActualExperimenters": true,
+    "fourthAssignmentDisabled": true,
+    "completedViaOrdinaryPlay": true,
+    "finalPracticeEstablished": true,
+    "samplesChargedOnce": true,
+    "logsUnchanged": 58,
+    "stoneUnchanged": 16,
+    "seedsUnchanged": 4,
+    "autoWorkRemainedOff": true,
+    "consoleErrors": 0
+  },
+  "fullAcceptance": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 27,
+    "total": 98,
+    "percent": 27.55
+  }
+}
