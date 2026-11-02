@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import type {Unit,FoodKind,GameState} from './types';
-import {FOOD_KINDS,foodInventory} from './pantry';
+import{FOOD_KINDS}from'./foodKinds';
+import {foodInventory} from './pantry';
 import {FOOD_PER_PERSON_SECOND,isDependent} from './settlement';
 import {predisposition} from './people';
 import {difficulty} from './difficulty';

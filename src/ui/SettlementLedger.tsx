@@ -13,7 +13,7 @@ import {resumeWeaponWork,WEAPONS,combatPractice} from "@/game/warfare";
 import { personName, predisposition } from "@/game/people";
 import { DISCOVERIES } from "@/game/discovery";
 import { AGES, AGE_CHOICES, BUILDINGS } from "@/game/constants";
-import {CROPS,CROP_NAMES,seekCropSamples,beginCropTrial,setFieldCrop,setFieldRest} from "@/game/cultivation";
+import {CROPS,CROP_NAMES,CROP_TRIAL_RULES,seekCropSamples,beginCropTrial,setFieldCrop,setFieldRest} from "@/game/cultivation";
 import { foodSpoilage, winterOutlook, storehouses, foodInventory, FOOD_KINDS } from "@/game/pantry";
 import { habitatAt, soilQuality, climateAt } from "@/game/ecology";
 import { TradeProposal } from "./TradeProposal";
@@ -61,7 +61,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   const projects=s.buildings.filter(b=>b.team===0&&b.hp>0&&!g.finished(b));
   const knownCrops = t.cultivated || [];
   const trial = t.cropTrial;
-  const trialWorker = trial && people.find(u => u.studyCrop === trial.kind);
+  const trialWorkers=trial?people.filter(u=>u.studyCrop===trial.kind):[],trialWorker=trialWorkers[0];
   const readyCrop = CROPS.find(kind => !knownCrops.includes(kind) && (t.cropSamples?.[kind] || 0) >= 4);
   const sampleCrop = [...CROPS].sort((a,b) => (t.cropSamples?.[b] || 0) - (t.cropSamples?.[a] || 0))[0];
   const startTrial = (kind: typeof CROPS[number]) => {
@@ -106,8 +106,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </ol>
           {trial ? (
             <>
-              <button className="min-h-11" disabled={!!trialWorker} onClick={()=>startTrial(trial.kind)}>
-                {trialWorker ? `Testing ${trial.kind} · ${Math.floor(100*trial.progress/trial.duration)}%` : "Resume cultivation trial"}
+              <button className="min-h-11" disabled={trialWorkers.length>=CROP_TRIAL_RULES.maximumPeople} title="Additional adults contribute 45% and 25% work after reaching the hearth; samples are paid once." onClick={()=>startTrial(trial.kind)}>
+                {trialWorker ? `Add hands · ${trialWorkers.length}/${CROP_TRIAL_RULES.maximumPeople}` : "Resume cultivation trial"}
               </button>
               <p>{trialWorker ? "Close the ledger to let work continue. Saved trials keep their existing progress and work time." : "The paid trial is paused. Resume with an available adult; materials are not charged again."}</p>
             </>
@@ -256,8 +256,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <summary>Crop experiments and varieties</summary>
       <ul>{CROPS.filter(k=>!t.cultivated?.includes(k)).map(kind=><li key={kind}>
         {CROP_NAMES[kind]} · {(t.cropSamples?.[kind]||0).toFixed(1)} samples at home
-        {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples and 2 logs; 30–45 seconds of work"}
-        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.some(u=>u.hp>0&&u.team===0&&u.studyCrop===kind)||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4)} onClick={()=>startTrial(kind)}>{t.cropTrial?.kind===kind?"Resume cultivation trial":"Test cultivation"}</button>
+        {t.cropTrial?.kind===kind?` · trial ${Math.round(100*t.cropTrial.progress/t.cropTrial.duration)}%`:" · needs 4 samples; 30–45 work seconds"}
+        <button disabled={!!t.cropTrial&&t.cropTrial.kind!==kind||s.units.filter(u=>u.hp>0&&u.team===0&&u.studyCrop===kind).length>=CROP_TRIAL_RULES.maximumPeople||!t.cropTrial&&((t.cropSamples?.[kind]||0)<4)} onClick={()=>startTrial(kind)}>{t.cropTrial?.kind===kind?"Add hands / resume trial":"Test cultivation"}</button>
       </li>)}</ul>
       <p>Trials use an adult’s working time at the hearth. They pause for sleep, storms and urgent food needs. Wild grain, pulses and tubers occur in different habitats; pulses exhaust soil more slowly.</p>
       </details>

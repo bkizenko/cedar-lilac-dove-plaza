@@ -1,3 +1,4 @@
+import{practicalHelperAI,pausePracticalHelper,tickPracticalHelpers}from'./practicalHelpers';
 import{beginBoatExploration}from'./boatExploration';
 import {beginPrisonerGuardQueries,endPrisonerGuardQueries} from './prisonerGuardQueries';
 import {beginBuildingQueries,endBuildingQueries,nearbyStepBuildings} from './buildingQueries';
@@ -1710,6 +1711,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    pausePracticalHelper(this,u);
     if(u.boat){const hull=this.state.boats?.find(b=>b.id===u.boat!.id&&b.captain===u.id);if(hull)delete hull.exploration;}
     pauseProductionLesson(this,u);
     pauseConstructionQueue(this,u);
@@ -5556,6 +5558,7 @@ export class Game {
         tickClay(this);
         tickProduction(this,sdt);
         tickProductionLessons(this);
+        tickPracticalHelpers(this);
         tickVillageDefense(this);
         tickSocietyMissionNeeds(this,sdt);
         tickCoastalTrade(this,sdt);
@@ -5594,6 +5597,7 @@ export class Game {
             if(queuedExplorationAI(this,u,sdt))continue;
             if(fibreAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
+            if(practicalHelperAI(this,u,sdt))continue;
             if(productionApprenticeAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
@@ -5681,6 +5685,7 @@ export class Game {
         tickScoutProvisions(this,0);
         reconcileFibreDeaths(this);
         tickTradeIntel(this);
+        tickPracticalHelpers(this);
         tickProduction(this,0);
         tickCampRelocation(this,0);
         this.state.units = this.state.units.filter((u) => u.hp > 0);

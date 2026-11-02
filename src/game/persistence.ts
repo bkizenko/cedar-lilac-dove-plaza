@@ -1,3 +1,4 @@
+import{validPracticalHelpers}from'./practicalHelpers';
 import{validTradeIntelState}from'./tradeIntel';
 import{validFibreState}from'./fibre';
 import {validScoutProvisions} from './scoutProvisions';
@@ -36,7 +37,7 @@ import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
 import { prehistoricName } from "./people";
 import { FOOD_KINDS } from "./pantry";
-import {CROPS,initializeCultivation} from "./cultivation";
+import {CROPS,CROP_TRIAL_RULES,initializeCultivation} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
@@ -109,7 +110,7 @@ function validateGamePayload(raw: unknown) {
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
+  if(!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
@@ -237,6 +238,7 @@ function validateGamePayload(raw: unknown) {
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
     if(t.copperExperiment!==undefined&&typeof t.copperExperiment!=="boolean")fail();
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
+    if(s.units.filter((u:any)=>u.team===i&&u.hp>0&&u.studyCrop).length>CROP_TRIAL_RULES.maximumPeople)fail();
     if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
     if(rivalTeam(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;

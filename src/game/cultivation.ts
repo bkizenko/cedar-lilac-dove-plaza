@@ -6,6 +6,7 @@ import {calendar,crop,isDependent,reserveSeconds} from "./settlement";
 import {beginExpedition} from "./journeys";
 import {lifeEvent} from "./communities";
 
+export const CROP_TRIAL_RULES={maximumPeople:3,workFractions:[1,.45,.25]}as const;
 export const CROPS:CropKind[]=["grain","pulses","tubers"];
 export const CROP_NAMES:Record<CropKind,string>={grain:"Wild grain",pulses:"Wild pulses",tubers:"Wild tubers"};
 /** Optional fields migrate in place; existing cultivated land never loses its practice. */
@@ -54,7 +55,8 @@ export function cultivationIssue(g:Game,team=0){
 export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitId?:number){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
-  if(g.state.units.some(u=>u.hp>0&&u.team===team&&u.studyCrop===kind))return false;
+  const participants=g.state.units.filter(u=>u.hp>0&&u.team===team&&u.studyCrop===kind);
+  if(participants.length>=CROP_TRIAL_RULES.maximumPeople||automatic&&participants.length>0)return false;
   const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order));
   if(!u||!g.state.buildings.some(b=>b.team===team&&b.type==="townhall"&&g.finished(b)))return false;
   if(!t.cropTrial){
@@ -63,26 +65,27 @@ export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitI
     const home=g.campOf(team);
     t.cropTrial={kind,progress:0,duration:30+Math.round((1-soilQuality(g,home.x,home.z))*15)};
   }
-  u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
+  g.interruptMission(u);u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
 }
 export function cropStudyAI(g:Game,u:Unit,dt:number){
   if(!u.copperStudy&&!u.studyCrop)return false;
   const t=g.tribe(u.team),trial=t.cropTrial;
   if(u.order!=="hold"||!trial||trial.kind!==u.studyCrop||isDependent(g,u)) {u.studyCrop=undefined;return false;}
-  const hall=g.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+  const origin=g.campOf(u.team),hall=g.state.buildings.filter(b=>b.team===u.team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-origin.x,a.z-origin.z)-Math.hypot(b.x-origin.x,b.z-origin.z)||a.id-b.id)[0];
   if(!hall){u.studyCrop=undefined;u.order="idle";return false;}
   const spot=g.interactionSpot(u,hall);
   if(!spot){u.workReason="Cultivation trial needs a reachable hearth";return false;}
   if(Math.hypot(u.x-spot.x,u.z-spot.z)>1){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);u.workReason="Bringing cultivation work to the hearth";return true;}
   if(reserveSeconds(g,u.team)<60){u.workReason="Cultivation paused — food for the village comes first";u.studyCrop=undefined;u.order="idle";return false;}
-  // Only one participant contributes: extra villagers cannot accelerate it without limit.
-  const lead=g.state.units.find(p=>p.hp>0&&p.team===u.team&&p.studyCrop===trial.kind);
-  if(lead?.id===u.id)trial.progress=Math.min(trial.duration,trial.progress+dt);
+  // Each real participant works only after reaching the same hearth. Stable
+  // diminishing shares bound the benefit; extra samples are not charged.
+  const participants=g.state.units.filter(p=>p.hp>0&&p.team===u.team&&p.studyCrop===trial.kind).sort((a,b)=>a.id-b.id),rank=participants.indexOf(u);
+  trial.progress=Math.min(trial.duration,trial.progress+Math.max(0,dt)*(CROP_TRIAL_RULES.workFractions[rank]||0));
   u.stride+=dt*6;u.workReason=`Testing ${trial.kind} cultivation · ${Math.round(100*trial.progress/trial.duration)}%`;
   if(trial.progress>=trial.duration){
     t.cultivated??=[];t.cultivated.push(trial.kind);
     if(u.team===0){g.banner(`Learned to cultivate ${trial.kind}. Fields can now grow it.`,5);lifeEvent(g,0,`Cultivation trials established ${trial.kind}.`);}
-    t.cropTrial=undefined;u.studyCrop=undefined;u.order="idle";g.workBoard.reset();
+    t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
   }
   return true;
 }

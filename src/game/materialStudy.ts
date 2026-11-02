@@ -1,3 +1,4 @@
+import{copperHelperWork,beginCopperHelper,PRACTICAL_HELPER_RULES}from'./practicalHelpers';
 import {hasTaskCommitment} from './workCommitments';
 import {isRivalTeam} from './factions';
 import {rivalKnows} from './rivalDevelopment';
@@ -34,7 +35,7 @@ export function copperStudyAI(g:Game,u:Unit,dt:number){
  if(!b){work.paused=true;u.order='idle';return false;}
  if(!g.buildingWorkReached(u,b)){const spot=g.interactionSpot(u,b);if(!spot){work.paused=true;u.order='idle';return false;}u.tx=spot.x;u.tz=spot.z;u.workReason='Taking copper to the crafting shelter';g.steer(u,dt);return true;}
  if(!craftBenchReady(g,u,b))return true;
- work.progress=Math.min(COPPER_STUDY_RULES.workSeconds,work.progress+craftingEffort(u,dt,b));u.vx=0;u.vz=0;u.stride+=dt*5;u.workReason=`Testing a copper tool · ${Math.floor(work.progress/COPPER_STUDY_RULES.workSeconds*100)}%`;
+ const remaining=COPPER_STUDY_RULES.workSeconds-work.progress,own=Math.min(remaining,craftingEffort(u,dt,b)),help=copperHelperWork(g,u,b,dt,remaining-own);work.progress+=own+help;u.vx=0;u.vz=0;u.stride+=dt*5;u.workReason=`Testing a copper tool · ${Math.floor(work.progress/COPPER_STUDY_RULES.workSeconds*100)}%`;
  if(work.progress>=COPPER_STUDY_RULES.workSeconds){g.tribe(u.team).copperExperiment=true;if(u.farmTool!=='ironTools')u.farmTool='copperTools';u.copperStudy=undefined;u.order='idle';g.workBoard.reset();if(u.team===0)g.banner('A workable copper tool! One prototype equips its maker.',6);}
  return true;
 }
@@ -43,6 +44,8 @@ export function copperStudyAI(g:Game,u:Unit,dt:number){
 export function developRivalCopper(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600||g.tribe(team).copperExperiment)return false;
  const b=g.state.buildings.find(b=>b.team===team&&b.type==='workshop'&&g.finished(b));if(!b)return false;
+ const trial=g.state.units.find(u=>u.team===team&&u.hp>0&&u.copperStudy&&!u.copperStudy.paused);
+ if(trial){const pop=g.popNow(team),limit=pop>=PRACTICAL_HELPER_RULES.nativeTwoHelperPopulation?2:pop>=PRACTICAL_HELPER_RULES.nativeOneHelperPopulation?1:0,assigned=g.state.units.filter(u=>u.hp>0&&u.practicalHelper?.leaderId===trial.id&&u.practicalHelper.phase!=='paused').length;return assigned<limit&&beginCopperHelper(g,trial.id,true).accepted;}
  if(beginCopperStudy(g,b.id,team))return true;
  if(g.tribe(team).copper>=8||g.state.units.some(u=>u.team===team&&u.hp>0&&(u.copperStudy||u.job==='copper'&&u.order==='gather')))return false;
  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.jobLock&&!u.buildOrder&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.weaponWork&&!u.farmToolWork&&!u.haulageWork&&!u.studyCrop&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.recalled&&!u.emergency&&!u.foundingJourney&&!u.tributeJourney&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));if(!u)return false;

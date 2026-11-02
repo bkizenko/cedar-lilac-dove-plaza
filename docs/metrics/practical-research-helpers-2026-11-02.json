@@ -1,0 +1,41 @@
+{
+  "checksPassed": 64,
+  "checksTotal": 64,
+  "percent": 100,
+  "baselineId": "hearthwild-first-release-gates-v1",
+  "fullRelease": {
+    "passed": 24,
+    "total": 98,
+    "percent": 24.49
+  },
+  "scope": "Controlled Game.step authored terrain, plus natural-terrain desktop interaction fixture; no natural campaign-frequency claim",
+  "copper": {
+    "helperCounts": [
+      0,
+      1,
+      2
+    ],
+    "completionSimulationSeconds": [
+      71.6,
+      50.4,
+      43.5
+    ],
+    "helperBonusWork": [
+      0,
+      27.63212499999996,
+      36.58343749999997
+    ]
+  },
+  "cultivation": {
+    "participantCounts": [
+      1,
+      2,
+      3
+    ],
+    "completionSimulationSeconds": [
+      35,
+      24.7,
+      21.3
+    ]
+  }
+}

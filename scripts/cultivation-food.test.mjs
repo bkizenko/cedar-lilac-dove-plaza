@@ -28,13 +28,13 @@ test('fresh fish decays faster than grain and warmth/humidity raise outdoor loss
 });
 test('cultivation is not granted by seeing a plant or collecting samples away from home',()=>{
   const g=fixture(),u=g.state.units[0],n=g.state.forage[0];Object.assign(n,{cropCandidate:'grain'});
-  assert.deepEqual(g.tribe(0).cultivated,[]);assert.equal(beginCropTrial(g,'grain'),false);
+  assert.deepEqual(g.tribe(0).cultivated,[]);assert.equal(beginCropTrial(g,'grain',0,true),false,'automatic assignment does not take extra workers for an active trial');
   collectSamples(u,n,8);assert.equal(g.tribe(0).cropSamples.grain,undefined);
   Object.assign(u,{carry:8,carryType:'food',carryFood:'grain'});deliverSamples(g,u);u.carry=0;u.carryType=null;
   const wood=g.tribe(0).wood,food=g.tribe(0).food;
   assert.ok(beginCropTrial(g,'grain'));assert.equal(g.tribe(0).cropSamples.grain,0);
   assert.equal(g.tribe(0).wood,wood);assert.equal(g.tribe(0).food,food);
-  assert.deepEqual(g.tribe(0).cultivated,[]);assert.equal(beginCropTrial(g,'grain'),false);
+  assert.deepEqual(g.tribe(0).cultivated,[]);assert.equal(beginCropTrial(g,'grain',0,true),false,'automatic assignment does not take extra workers for an active trial');
 });
 test('a physical cultivation trial uses working time, survives loading and unlocks fields',()=>{
   let g=fixture();g.tribe(0).cropSamples={tubers:4};g.tribe(0).food=300;

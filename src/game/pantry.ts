@@ -1,3 +1,5 @@
+import{FOOD_KINDS}from'./foodKinds';
+export{FOOD_KINDS}from'./foodKinds';
 import {recordSimulationEvent} from './simulationEvents';
 import {difficulty} from './difficulty';
 import {AGE_COST} from "./constants";
@@ -31,7 +33,7 @@ export function storehouses(g: Game, team: number) {
 }
 /** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
 export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2};
-export const FOOD_KINDS: FoodKind[]=["provisions","berries","fish","meat","grain","pulses","tubers","milk","bread","driedMeat","driedFish","smokedMeat","smokedFish"];
+
 export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish'};
 /** The existing food total remains the save/trade facade; lots refine its contents. */
 export function foodInventory(t:Tribe) {

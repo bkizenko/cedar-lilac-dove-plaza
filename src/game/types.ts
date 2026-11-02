@@ -140,6 +140,7 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  practicalHelper?:import('./practicalHelpers').PracticalHelper;
   tradeIntelCargo?:import('./tradeIntel').PartnerTradeReport[];
   visitorRefusalCargo?:import('./visitorRefusals').VisitorRefusalCargo;
   societyMissionId?:number;
@@ -428,6 +429,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  practicalHelpers?:import('./practicalHelpers').PracticalHelperMetrics;
   tradeIntel?:import('./tradeIntel').TradeIntelState;
   excavations?:import('./excavation').TerrainCut[];
   excavationDepth?:number;
