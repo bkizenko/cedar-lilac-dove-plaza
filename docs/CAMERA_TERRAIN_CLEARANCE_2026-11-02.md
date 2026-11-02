@@ -1,0 +1,15 @@
+# Terrain-aware camera clearance
+
+The natural contour-field review showed foreground terrain rather than a missing field. In the authored V16 world (seed -935736685, Standard Archipelago), field 3101 at (-42,182) has the same 12.276809401878946m base height before and after decoding. All five nearby residents have correct ground heights, the site is visible/explored, and the contour layer emits 145 grain instances. The original default camera sightline passed 3.639m below foreground terrain.
+
+A bounded camera resolver now raises the actual eye until sampled foreground terrain clears the focus sightline. Stored yaw, pitch and requested zoom stay unchanged. At extreme enclosing cliffs it can temporarily reduce the horizontal orbit, with an overhead fallback, rather than raise the camera beyond 192m of correction. It does not flatten terrain, move people, alter crops, or reveal fog. Focus height follows the actual ground/water surface as the player pans.
+
+The source terrain adapter is bound only on authoritative WorldView rebuild and cached by target, requested orbit and game navigation revision. An unchanged paused view does no new height queries. World/terrain rebuilds and completed excavation revisions invalidate the cache. Samples beyond the rendered map are ignored rather than extruding an artificial edge wall. Runtime query counts, solve counts and cache hits are available through TerrainCameraClearance.diagnostics().
+
+Measured rules: sample spacing 3m, maximum 96 samples per line, eye clearance 2m, sightline margin 0.25m, maximum three horizontal attempts (1,0.5,0), absolute bound 289 terrain queries including focus. The natural reviewed default orbit needs only 19 queries and an 11.617m eye lift, preserving its requested horizontal offset. Dense 200-step verification changes the minimum terrain clearance from -3.639m to +0.703m.
+
+Verification: 13/13 unique cases pass (11 new camera cases and 2 existing engine frame-clock cases). These cover flat ground without drift, foreground ridges, eye below terrain, extreme cliffs, map edges, unchanged-view caching, changed terrain revision, panning across height, bounded query work, actual WorldView orbit preservation, the reproduced natural field and its 145 crop instances, and a real completed excavation invalidating the cached focus. Typecheck and production build pass.
+
+Tests reproduce the natural terrain and field from explicit generation parameters; they do not depend on a private or ignored save file. The related candidate serves on 8103 for parent browser verification. Pixel evidence and the broad M1-13 contour-rendering gate remain the integrator's responsibility; numerical line clearance alone is not claimed as a complete visual acceptance result.
+
+Integration baseline: 920952a. Only four narrow WorldView hooks are required: import, private cached adapter fields, adapter binding on rebuild, and resolved eye/focus application in updateCamera. The scoped patch is `.play/camera-clearance-world.patch`; the shared working WorldView was not overwritten or staged.

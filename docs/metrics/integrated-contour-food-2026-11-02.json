@@ -1,0 +1,116 @@
+{
+  "scope": "Controlled authored sloping farm terrain; finite initial stores and buildings; no later grants or forced completion",
+  "stages": [
+    {
+      "stage": "first-harvest",
+      "time": 1023.4000000000957,
+      "finiteYield": 936,
+      "grainDelivered": 921.1869259093884,
+      "contourRange": 0.5329998852656361,
+      "plants": 212
+    },
+    {
+      "recipe": "grindGrain",
+      "elapsed": 70.20000000001585,
+      "projectId": 3907,
+      "progress": 60
+    },
+    {
+      "recipe": "bakeBread",
+      "elapsed": 49.00000000001114,
+      "projectId": 3908,
+      "progress": 45
+    },
+    {
+      "recipe": "grindGrainStation",
+      "elapsed": 29.000000000006594,
+      "projectId": 3909,
+      "progress": 24
+    },
+    {
+      "recipe": "bakeBreadOven",
+      "elapsed": 29.39999999999918,
+      "projectId": 3910,
+      "progress": 24
+    }
+  ],
+  "initial": {
+    "people": 3,
+    "food": 900,
+    "foodLots": {
+      "provisions": 900
+    },
+    "wood": 200,
+    "stone": 80,
+    "seeds": 24,
+    "waterLiters": 160,
+    "assets": [
+      "townhall",
+      "hut",
+      "four warehouses"
+    ]
+  },
+  "preservationLogs": 101,
+  "final": {
+    "time": 3601.159999998994,
+    "food": 1352.3915992096704,
+    "grain": 965.8942655385607,
+    "seeds": 130.80000000000007,
+    "wood": 74.14507999998568,
+    "water": 69.57216000003719,
+    "fuelBurnedWood": 8.854920000000037,
+    "waterConsumedLiters": 86.4278400000311,
+    "stone": 62,
+    "soil": {
+      "fallow": 1,
+      "cultivated": 0.76
+    },
+    "production": {
+      "consumed": {
+        "flour": 8
+      },
+      "produced": {
+        "flour": 8
+      },
+      "spoiled": {
+        "rawMeat": 0
+      },
+      "lost": {},
+      "logsUsed": 2,
+      "waterUsedLiters": 4,
+      "grainUsed": 8,
+      "grainLost": 0,
+      "edibleFoodProduced": 8,
+      "edibleFoodLost": 0,
+      "foodInputsUsed": {},
+      "foodInputsLost": {},
+      "dryingExposureSeconds": 0,
+      "wetExposureSeconds": 0,
+      "completed": 4,
+      "interrupted": 1
+    },
+    "foodAccounting": {
+      "received": 1493,
+      "consumed": 459.98555079639004,
+      "spoiled": 572.6228499939396
+    }
+  },
+  "gate": "M1-13",
+  "testedCodeCommit": "c66304c",
+  "automatedScenarios": {
+    "passed": 1,
+    "total": 1
+  },
+  "authoredTerrainReconstruction": "After decode, the same controlled sloping heightfield is reinstated; actor positions, paid inventory and progress are not repaired. This is separate from natural-map reconstruction proof.",
+  "controlledSystems": [
+    "Initial completed hall/hut/stores and3adults are endowed; hearth/grindingstone/oven are paid and physically built.",
+    "Weather, births, calamities, raids and NPC thinking are delayed initially; no timers changed later.",
+    "No food, logs, stone, water, seeds, crop progress or actors are granted after fixture begins."
+  ],
+  "remainingProof": [],
+  "integratorReview": {
+    "combinedCandidateSourceSha256": "2b7e0d1436794dd587888de10c7c4e81b83c0b72d1eae1c32e7feb9134de24dc",
+    "combinedScenarioReexecution": "passed",
+    "naturalFieldBrowserProof": "screenshots/natural-contour-field-camera-fixed.png"
+  }
+}

@@ -6,7 +6,7 @@ import {PEACE_TERMS,peaceTerms,peaceDescription,peaceIssue,rejectPeace,releasePu
 import {fieldProductionSummary} from "@/game/productionReport";
 import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
-import {FARM_TOOLS,resumeFarmToolWork} from "@/game/farmTools";
+import {FARM_TOOLS,farmToolCondition,resumeFarmToolWork} from "@/game/farmTools";
 import {HAULAGE,resumeHaulageWork} from "@/game/haulage";
 import {villageAppeal,foodAttention} from "@/game/migration";
 import {resumeWeaponWork,WEAPONS,combatPractice} from "@/game/warfare";
@@ -412,8 +412,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       </section>
       <section>
         <h3>Farming tools</h3>
-        <p>Stone hoes speed sowing and tending by 25%; copper tools by 50%; iron tools by 70%. Each tool belongs to one resident. Craft stone hoes at a hearth or shelter, and metal sets at a forge. Harvesting is also faster; the field still needs seeds, water and labor.</p>
-        {people.filter(u=>u.farmTool||u.farmToolWork).map(u=><p key={u.id}>{personName(u)} · {u.farmTool?FARM_TOOLS[u.farmTool].name:"Basic hand tools"}{u.farmToolWork&&<> · making {FARM_TOOLS[u.farmToolWork.kind].name.toLowerCase()} {Math.floor(100*u.farmToolWork.progress/u.farmToolWork.duration)}%{u.farmToolWork.paused&&<button onClick={()=>{if(!resumeFarmToolWork(g,u))g.banner("Need empty hands and a reachable toolmaking workplace to resume",4);engine.pushHud();}}>Resume toolmaking</button>}</>}</p>)}
+        <p>Fresh stone hoes speed sowing and tending by 25%; copper tools by 50%; iron tools by 70%. Field work wears them down. Broken tools allow hand work; paid repairs need a real work place. Stone hoes can be made and repaired at a hearth, town hall or crafting shelter; the shelter is faster. Metal sets need compatible metalworking facilities. Fields still need seeds, water and labor.</p>
+        {people.filter(u=>u.farmTool||u.farmToolWork).map(u=><p key={u.id}>{personName(u)} · {u.farmTool?`${FARM_TOOLS[u.farmTool].name} · ${Math.round(farmToolCondition(u)*100)}%`:"Basic hand tools"}{u.farmToolWork&&<> · {u.farmToolWork.mode==='repair'?'repairing':'making'} {FARM_TOOLS[u.farmToolWork.kind].name.toLowerCase()} {Math.floor(100*u.farmToolWork.progress/u.farmToolWork.duration)}%{u.farmToolWork.paused&&<button onClick={()=>{if(!resumeFarmToolWork(g,u))g.banner("Need empty hands and a reachable toolmaking workplace to resume",4);engine.pushHud();}}>{u.farmToolWork.mode==='repair'?'Resume paid repair':'Resume toolmaking'}</button>}</>}</p>)}
         <h3>Carrying equipment</h3>
         <p>Make a sled at a hearth or crafting shelter. Its owner carries twice as much. After 60 goods have actually arrived by sled, a crafting shelter can replace a sled with a handcart carrying three times as much.</p>
         <p>{Math.floor(t.haulagePractice||0)}/60 goods delivered by sled.</p>

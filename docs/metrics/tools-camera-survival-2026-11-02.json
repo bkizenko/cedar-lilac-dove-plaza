@@ -1,0 +1,49 @@
+{
+  "baseCommit": "920952a",
+  "candidateSourceSha256": "2b7e0d1436794dd587888de10c7c4e81b83c0b72d1eae1c32e7feb9134de24dc",
+  "sourceFiles": 267,
+  "automatedChecks": {
+    "passed": 48,
+    "total": 48,
+    "percent": 100
+  },
+  "groups": {
+    "toolWearRepairHearth": 6,
+    "repairReactUi": 2,
+    "legacyFarmTools": 8,
+    "workloadPlans": 2,
+    "workloadProduction": 6,
+    "connectedM0": 1,
+    "storageQueueUi": 8,
+    "cameraClearance": 11,
+    "engineClock": 2,
+    "twoYearContourFood": 1,
+    "joinedSurvivalMaintenance": 1
+  },
+  "browser": {
+    "actualPaidRepairPauseResumeComplete": true,
+    "repairMaterialsChargedOnce": {
+      "wood": 1,
+      "stone": 1
+    },
+    "repairQueueCorrectlyLabeled": true,
+    "naturalFieldSeed": -935736685,
+    "naturalFieldId": 3101,
+    "ripeGrain": 149,
+    "groundRiseMeters": 0.7649741256298537,
+    "fieldVisibleSelectableAfterCameraFix": true,
+    "consoleErrors": 0
+  },
+  "limits": [
+    "Controlled endowments and quiet initial conditions; not full Normal campaign or frame-tail acceptance.",
+    "Camera solve microbenchmark is not whole-game FPS.",
+    "NPC unobserved-information fixes and fullM2-07 are separate pending work.",
+    "NPC repair priority/automatic upkeep remains separate work; this batch verifies physical self-repair through player commands, with wear applying to actual tool users."
+  ],
+  "fullAcceptance": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 29,
+    "total": 98,
+    "percent": 29.59
+  }
+}

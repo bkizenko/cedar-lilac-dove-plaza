@@ -1,0 +1,45 @@
+{
+  "baseline": "920952a",
+  "snapshot": ".play/camera-clearance-review",
+  "checks": {
+    "passed": 13,
+    "total": 13,
+    "percent": 100
+  },
+  "groups": {
+    "newCamera": 11,
+    "existingEngineClock": 2
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "naturalField": {
+    "seed": -935736685,
+    "worldgenVersion": 16,
+    "size": 1040,
+    "layout": "archipelago",
+    "x": -42,
+    "z": 182,
+    "height": 12.276809401878946,
+    "grainInstances": 145,
+    "oldMinimumDenseRayClearanceMetres": -3.639095408480131,
+    "newMinimumDenseRayClearanceMetres": 0.7034817310225705,
+    "eyeLiftMetres": 11.617123168059523,
+    "solveHeightQueries": 19
+  },
+  "maximumQueriesPerSolve": 289,
+  "unchangedViewQueriesPerFrame": 0,
+  "renderProof": "Pending parent browser inspection; not a full visual acceptance claim",
+  "isolatedSolverBenchmark": {
+    "scenario": "1000 changing camera orbits over actual natural V16 terrain; isolated solver only",
+    "meanMilliseconds": 0.0025567799999607816,
+    "p95Milliseconds": 0.005499999999301508,
+    "p99Milliseconds": 0.007874999999330612,
+    "maxMilliseconds": 0.13595800000075542,
+    "diagnostics": {
+      "solves": 1000,
+      "cacheHits": 0,
+      "heightQueries": 19000
+    },
+    "scope": "CPU solver measurement, not whole-game FPS or target hardware acceptance"
+  }
+}

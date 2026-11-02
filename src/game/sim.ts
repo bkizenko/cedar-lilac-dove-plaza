@@ -1,3 +1,4 @@
+import{reconcileFarmToolOwnership}from'./farmToolOwnership';
 import{nextWorldSeed}from'./worldSeeds';
 import{practicalHelperAI,pausePracticalHelper,tickPracticalHelpers}from'./practicalHelpers';
 import{beginBoatExploration}from'./boatExploration';
@@ -1741,7 +1742,7 @@ export class Game {
     if(u.tamingWork)u.tamingWork.paused=true;
     if(u.husbandryWork)u.husbandryWork.paused=true;
     pauseHaulageWork(u,this);
-    pauseFarmToolWork(u);
+    pauseFarmToolWork(u,this);
     this.paths.delete(u.id);u.stuckT=0;
   }
 
@@ -5569,6 +5570,7 @@ export class Game {
         reconcileTradeReservations(this);
         updateConstructionQueues(this);
         reconcileConstructionWorkers(this);
+        reconcileFarmToolOwnership(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
         fundConstructionPlans(this);

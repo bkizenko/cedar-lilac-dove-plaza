@@ -1,3 +1,4 @@
+import {TerrainCameraClearance,type CameraGround} from './cameraClearance';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
 import {FibreWorkLayer} from './fibreWorkLayer';
@@ -156,6 +157,9 @@ export class WorldView {
   hearth: THREE.PointLight;
   torchLights: THREE.PointLight[] = [];
   look = new THREE.Vector3(0, 1.2, 0);
+  private cameraGround:CameraGround|null=null;
+  private cameraGroundRevision:(()=>number)|null=null;
+  private cameraClearance=new TerrainCameraClearance();
   yaw = 1.12;
   pitch = 0.38;
   dist = 58;
@@ -520,6 +524,8 @@ export class WorldView {
     this.seasonAcc = 1;
     this.buildTerrain(game);
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
+    this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
+    this.cameraGroundRevision=()=>game.navigationRevision();this.cameraClearance.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
     if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
@@ -989,6 +995,10 @@ export class WorldView {
       this.look.y + Math.sin(this.pitch) * this.dist,
       this.look.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
+    if(this.cameraGround){
+      const clear=this.cameraClearance.resolve(this.cameraGround,this.look,this.tmpCam,this.cameraGroundRevision?.()??0);
+      this.look.y=clear.focusY;this.tmpCam.set(clear.x,clear.y,clear.z);
+    }
     this.camera.position.copy(this.tmpCam);
     this.camera.lookAt(this.look.x, this.look.y + 1.2, this.look.z);
   }

@@ -221,6 +221,7 @@ export type Unit = {
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
   farmTool?: FarmToolKind;
+  farmToolCondition?:number;
   farmToolWork?: FarmToolWork;
   packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};

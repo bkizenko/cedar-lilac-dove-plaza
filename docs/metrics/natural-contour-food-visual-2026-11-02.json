@@ -1,0 +1,51 @@
+{
+  "scope": "Natural V16 heightfield inspection setup; initial cleared campsite and finite household endowments; actual seed-funded base marking/expansion and ordinary spring sow/summer tend, no forced crop progress",
+  "seed": -935736685,
+  "generation": 16,
+  "size": 1040,
+  "layout": "archipelago",
+  "initial": {
+    "food": 700,
+    "wood": 100,
+    "stone": 40,
+    "seeds": 16,
+    "waterLiters": 100,
+    "clearedTrees": 234
+  },
+  "home": {
+    "x": -54,
+    "z": 146
+  },
+  "field": {
+    "id": 3101,
+    "x": -42,
+    "z": 182,
+    "w": 16.4,
+    "d": 8.2,
+    "crop": {
+      "year": 0,
+      "planted": 1,
+      "tended": 1,
+      "remaining": 149,
+      "ripened": true,
+      "water": 1,
+      "kind": "grain"
+    },
+    "survey": {
+      "samples": 60,
+      "minHeightMeters": 11.560426918348805,
+      "maxHeightMeters": 12.325401043978658,
+      "heightRangeMeters": 0.7649741256298537,
+      "maxGrade": 0.21005895734141677,
+      "wetFraction": 0,
+      "meanGradientX": 0.03160556446515684,
+      "meanGradientZ": 0.03773807033290866,
+      "contourAngleRadians": -0.6971911775320148
+    }
+  },
+  "walkedMeters": 264.08540937716407,
+  "time": 901.0000000000679,
+  "seedsRemaining": 8,
+  "terrainHash": "6bd64cc3ed9382d1253901fb1b34dada6bd148d05676e9ab798a193af4c93454",
+  "save": ".play/natural-contour-food-visual.json"
+}

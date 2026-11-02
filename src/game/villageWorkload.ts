@@ -12,7 +12,7 @@ import type {HaulageProject} from './haulage';
 import {BUILDINGS,BUILD_TIME,GATHER,GATHER_WORK_RATE} from './constants';
 import {calendar,isDependent,foodDemand,farmHarvestEstimate} from './settlement';
 import {predisposition} from './people';
-import {farmToolRate} from './farmTools';
+import {farmToolRate,FARM_TOOLS} from './farmTools';
 import {craftingBenches,craftingWorkplaceRate} from './crafting';
 import {carryingCapacity,loadedHaulSpeed} from './haulage';
 import {plotArea,expansionCost} from './plots';
@@ -128,7 +128,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  for(const u of adults){
   if(u.weaponWork)craft(`weapon:${u.id}`,`Make ${u.weaponWork.kind}`,u,u.weaponWork);
   if(u.haulageWork&&!projectIds.has(u.haulageWork.projectId??-1))craft(`haulage:legacy:${u.id}`,`Make ${u.haulageWork.kind}`,u,u.haulageWork);
-  if(u.farmToolWork)craft(`tool:${u.id}`,`Make ${u.farmToolWork.kind}`,u,u.farmToolWork);
+  if(u.farmToolWork)craft(`tool:${u.id}`,`${u.farmToolWork.mode==='repair'?'Repair':'Make'} ${FARM_TOOLS[u.farmToolWork.kind].name}`,u,u.farmToolWork);
   if(u.copperStudy){const w=u.copperStudy,b=g.state.buildings.find(b=>b.id===w.workplace&&g.finished(b)),helpers=eligible.filter(p=>p.practicalHelper?.leaderId===u.id&&p.practicalHelper.phase!=='paused').sort((a,b)=>a.id-b.id),crew=[u,...helpers],rate=crew.reduce((sum,p,i)=>sum+(1+Math.min(.3,(p.craftingXP||0)/1200))*craftingWorkplaceRate(b)*(i===0?1:PRACTICAL_HELPER_RULES.workFractions[i-1]||0),0);
    add({id:`copper:${u.id}`,label:'Test copper prototype',category:'Crafting',personSeconds:Math.max(0,90-w.progress)/Math.max(.1,rate)*crew.length+crew.reduce((sum,p)=>sum+(b?travel(p,b.x,b.z):0),0),status:w.paused?'paused':b?'active':'blocked',actorIds:crew.map(p=>p.id),priority:450,blocker:w.paused?'Prototype paused':b?null:'Original shelter unavailable'});}
   if(u.practicalHelper?.phase==='paused')add({id:`copper-helper:${u.id}`,label:'Assist copper prototype',category:'Practical learning',personSeconds:0,status:'paused',actorIds:[],priority:450,blocker:'Assistance paused'},true);

@@ -1,0 +1,565 @@
+{
+  "scenario": "M1-09 joined survival maintenance",
+  "baseCommit": "188df58",
+  "patchedToolSource": true,
+  "seed": 1,
+  "worldgenVersion": 14,
+  "layout": "pangaea",
+  "size": 1040,
+  "initialEndowment": {
+    "wood": 600,
+    "stone": 200,
+    "food": 3000,
+    "water": 300,
+    "seeds": 40,
+    "rawHide": 2,
+    "bone": 1
+  },
+  "initialSetup": "Clear/quiet component conditions, outside decision/birth timers deferred. No clock, terrain, position or inventory changes after setup; actual seasonal cold and normal body needs.",
+  "elapsedSimulationSeconds": 1391.3200000001198,
+  "ticks": 6695,
+  "originalIds": [
+    4824,
+    4825,
+    4826,
+    4827,
+    4828
+  ],
+  "ownerId": 4824,
+  "bareId": 4826,
+  "commands": [
+    {
+      "time": 0,
+      "name": "place",
+      "args": {
+        "type": "farm",
+        "x": -45.95090322016128,
+        "z": 227.8078528040323,
+        "size": {
+          "w": 16.4,
+          "d": 8.2
+        }
+      }
+    },
+    {
+      "time": 0,
+      "name": "place",
+      "args": {
+        "type": "hearth",
+        "x": -34,
+        "z": 218
+      }
+    },
+    {
+      "time": 0,
+      "name": "build",
+      "args": {
+        "id": 4933,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 11.99999999999999,
+      "name": "place",
+      "args": {
+        "type": "workshop",
+        "x": -35.685303876974544,
+        "z": 223.55570233019603
+      }
+    },
+    {
+      "time": 11.99999999999999,
+      "name": "build",
+      "args": {
+        "id": 4934,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 26.399999999999938,
+      "name": "place",
+      "args": {
+        "type": "butcher",
+        "x": -53.23879532511287,
+        "z": 221.8268343236509
+      }
+    },
+    {
+      "time": 26.399999999999938,
+      "name": "build",
+      "args": {
+        "id": 4935,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 41.00000000000004,
+      "name": "place",
+      "args": {
+        "type": "dryrack",
+        "x": -54,
+        "z": 218
+      }
+    },
+    {
+      "time": 41.00000000000004,
+      "name": "build",
+      "args": {
+        "id": 4936,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 51.20000000000019,
+      "name": "place",
+      "args": {
+        "type": "tailor",
+        "x": -53.23879532511287,
+        "z": 214.1731656763491
+      }
+    },
+    {
+      "time": 51.20000000000019,
+      "name": "build",
+      "args": {
+        "id": 4937,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 63.80000000000037,
+      "name": "place",
+      "args": {
+        "type": "hut",
+        "x": -49.55570233019602,
+        "z": 209.68530387697456
+      }
+    },
+    {
+      "time": 63.80000000000037,
+      "name": "build",
+      "args": {
+        "id": 4938,
+        "actor": 4825
+      }
+    },
+    {
+      "time": 72.8000000000005,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 73.80000000000051,
+      "name": "produce",
+      "args": {
+        "recipe": "fleshHide",
+        "site": 4935
+      }
+    },
+    {
+      "time": 96.20000000000083,
+      "name": "produce",
+      "args": {
+        "recipe": "fleshHide",
+        "site": 4935
+      }
+    },
+    {
+      "time": 116.40000000000111,
+      "name": "produce",
+      "args": {
+        "recipe": "drySkin",
+        "site": 4936
+      }
+    },
+    {
+      "time": 174.79999999999862,
+      "name": "produce",
+      "args": {
+        "recipe": "drySkin",
+        "site": 4936
+      }
+    },
+    {
+      "time": 229.39999999999552,
+      "name": "produce",
+      "args": {
+        "recipe": "sewSkinClothes",
+        "site": 4937
+      }
+    },
+    {
+      "time": 269.99999999999324,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 270.1999999999932,
+      "name": "equipGarment",
+      "args": {
+        "ownerId": 4824,
+        "item": "skinClothes"
+      }
+    },
+    {
+      "time": 270.1999999999932,
+      "name": "craftNewHoe",
+      "args": {
+        "ownerId": 4824,
+        "shopId": 4934
+      }
+    },
+    {
+      "time": 287.9999999999922,
+      "name": "sow",
+      "args": {
+        "fieldId": 4932,
+        "ownerId": 4824
+      }
+    },
+    {
+      "time": 354.9999999999884,
+      "name": "rest",
+      "args": {
+        "ownerId": 4824
+      }
+    },
+    {
+      "time": 364.99999999998784,
+      "name": "leaveRestForRepair",
+      "args": {
+        "x": -44,
+        "z": 218
+      }
+    },
+    {
+      "time": 366.59999999998774,
+      "name": "repair",
+      "args": {
+        "ownerId": 4824,
+        "shopId": 4934
+      }
+    },
+    {
+      "time": 368.9999999999876,
+      "name": "overrideRepair",
+      "args": {
+        "x": -44,
+        "z": 218
+      }
+    },
+    {
+      "time": 368.9999999999876,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 369.5999999999876,
+      "name": "resumeRepair",
+      "args": {
+        "ownerId": 4824,
+        "shopId": 4934
+      }
+    },
+    {
+      "time": 1298.920000000109,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 1299.8800000001088,
+      "name": "moveToColdGround",
+      "args": {
+        "actor": 4824,
+        "x": 11.432771950677207,
+        "z": 240.9610059419054
+      }
+    },
+    {
+      "time": 1299.8800000001088,
+      "name": "moveToColdGround",
+      "args": {
+        "actor": 4826,
+        "x": 11.432771950677207,
+        "z": 240.9610059419054
+      }
+    },
+    {
+      "time": 1363.1200000001134,
+      "name": "recall",
+      "args": {}
+    }
+  ],
+  "charges": [
+    {
+      "type": "farm",
+      "id": 4932,
+      "food": 0,
+      "wood": 0,
+      "stone": 0,
+      "copper": 0,
+      "iron": 0,
+      "seeds": 8
+    },
+    {
+      "type": "hearth",
+      "id": 4933,
+      "food": 0,
+      "wood": 4,
+      "stone": 4,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "workshop",
+      "id": 4934,
+      "food": 0,
+      "wood": 18,
+      "stone": 2,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "butcher",
+      "id": 4935,
+      "food": 0,
+      "wood": 6,
+      "stone": 2,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "dryrack",
+      "id": 4936,
+      "food": 0,
+      "wood": 4,
+      "stone": 0,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "tailor",
+      "id": 4937,
+      "food": 0,
+      "wood": 8,
+      "stone": 0,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "hut",
+      "id": 4938,
+      "food": 0,
+      "wood": 40,
+      "stone": 0,
+      "copper": 0,
+      "iron": 0
+    },
+    {
+      "type": "new stone hoe",
+      "wood": 3,
+      "stone": 2
+    },
+    {
+      "type": "stone hoe repair",
+      "wood": 1,
+      "stone": 1
+    }
+  ],
+  "incidentalLosses": [
+    {
+      "time": 198.99999999999724,
+      "wood": 12,
+      "stone": 6,
+      "reason": "A slide in the hills swallows stores"
+    },
+    {
+      "time": 669.8000000000153,
+      "wood": 12,
+      "stone": 6,
+      "reason": "A slide in the hills swallows stores"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "garment chain paid and physically delivered/equipped",
+      "time": 270.1999999999932,
+      "metrics": {
+        "consumed": {
+          "rawHide": 2,
+          "cleanHide": 2,
+          "driedSkin": 2,
+          "bone": 1
+        },
+        "produced": {
+          "cleanHide": 2,
+          "driedSkin": 2,
+          "skinClothes": 1
+        },
+        "spoiled": {
+          "rawMeat": 0
+        },
+        "lost": {},
+        "logsUsed": 0,
+        "waterUsedLiters": 0,
+        "grainUsed": 0,
+        "grainLost": 0,
+        "edibleFoodProduced": 0,
+        "edibleFoodLost": 0,
+        "foodInputsUsed": {},
+        "foodInputsLost": {},
+        "dryingExposureSeconds": 0,
+        "wetExposureSeconds": 0,
+        "completed": 5,
+        "interrupted": 0
+      }
+    },
+    {
+      "stage": "field work and real rest",
+      "time": 364.99999999998784,
+      "condition": 0.8986666666666778,
+      "sownFraction": 0.8359155555555554,
+      "fatigueBefore": 0.27916666666666634,
+      "fatigueAfter": 0.11916666666666621,
+      "shelterObserved": true
+    },
+    {
+      "stage": "paid interrupted saved repair completed",
+      "time": 376.79999999998716,
+      "progressBeforePause": 2.094661250810443,
+      "conditionAfter": 1
+    },
+    {
+      "stage": "natural outdoor cold comparison",
+      "start": {
+        "time": 1333.1200000001065,
+        "temp": 5,
+        "clothed": 0,
+        "bare": 0.06666666666666667,
+        "garmentWarmth": 2.5571166666672767
+      },
+      "duration": 30.00000000000682,
+      "delta": {
+        "clothed": 0,
+        "bare": 4.999999999999992
+      }
+    }
+  ],
+  "saves": [
+    {
+      "time": 368.9999999999876,
+      "label": "paid partial repair",
+      "sha256": "529c11452d7975ce62f187c7faf6af5721355ab5191e455004a4b0d1ecc6991a"
+    },
+    {
+      "time": 1391.3200000001198,
+      "label": "completed viable loop",
+      "sha256": "9a8e75665aca270c498508605b4ac00260d271d3263c409715c0d3bb3fb8df8e"
+    }
+  ],
+  "terrainSha256": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "terrainUnchanged": true,
+  "final": {
+    "wood": 489.94980000000686,
+    "stone": 177,
+    "food": 640.7907575195449,
+    "survival": {
+      "waterLiters": 244.34720000009574,
+      "waterConsumedLiters": 55.652800000002784,
+      "waterDeliveredLiters": 0,
+      "waterLostLiters": 0,
+      "fuelBurnedWood": 2.050199999999973,
+      "waterShortageSeconds": 0,
+      "coldExposurePersonSeconds": 10.433333333333307
+    },
+    "garment": {
+      "item": "skinClothes",
+      "condition": 0.8442888888891038
+    },
+    "tool": {
+      "kind": "stoneHoe",
+      "condition": 1
+    },
+    "production": {
+      "consumed": {
+        "rawHide": 2,
+        "cleanHide": 2,
+        "driedSkin": 2,
+        "bone": 1
+      },
+      "produced": {
+        "cleanHide": 2,
+        "driedSkin": 2,
+        "skinClothes": 1
+      },
+      "spoiled": {
+        "rawMeat": 0
+      },
+      "lost": {},
+      "logsUsed": 0,
+      "waterUsedLiters": 0,
+      "grainUsed": 0,
+      "grainLost": 0,
+      "edibleFoodProduced": 0,
+      "edibleFoodLost": 0,
+      "foodInputsUsed": {},
+      "foodInputsLost": {},
+      "dryingExposureSeconds": 0,
+      "wetExposureSeconds": 0,
+      "completed": 5,
+      "interrupted": 0
+    },
+    "events": {
+      "food_spoiled:0:food": 2087.5002893399255,
+      "food_consumed:0:food": 271.7089531405311,
+      "food_spoiled:1:food": 90.7638626502662,
+      "food_consumed:1:food": 318.1528356443631,
+      "food_spoiled:2:food": 143.1341591815441,
+      "food_consumed:2:food": 316.5291711950673,
+      "food_spoiled:3:food": 12.363543696067808,
+      "food_consumed:3:food": 190.2299442842643,
+      "cargo_delivered:1:food": 365.29413825606713,
+      "food_received:1:food": 403.8049467209852,
+      "cargo_delivered:2:wood": 119,
+      "cargo_delivered:1:wood": 159,
+      "cargo_delivered:2:stone": 28,
+      "cargo_delivered:2:food": 611.9256071601998,
+      "food_received:2:food": 700.323295056886,
+      "cargo_delivered:1:stone": 51,
+      "food_received:3:food": 99
+    }
+  },
+  "recoveryStart": {
+    "clothed": 0,
+    "bare": 0
+  },
+  "simulationErrors": [],
+  "limits": [
+    "Controlled finite endowments include raw hides/bone and demonstrated cultivation, not a fresh-camp/default-conflict campaign or hunting gate.",
+    "No target-hardware performance or all-difficulty/holdout claim.",
+    "Joined proof must be rerun on parent integrated candidate before publication/credit."
+  ],
+  "sourceSha256": {
+    "src/game/sim.ts": "02d921acc33d8222d621da240545993a50ac2e497d7c5d768e1ad7cd592f981a",
+    "src/game/farmTools.ts": "7fe5dddb88f2c251810142f10c455cb719fd0ef37bfd59901ee88a028a9656b0",
+    "src/game/farmToolOwnership.ts": "06be18aa7c225273ab99d9897ce69c8a4c355e51dfea972edcf1a98abe56e203",
+    "src/game/settlement.ts": "5e6456d39e4b7a0821563eaa4a2ce69a830a918cdc3f38bb7209c36c59e93fac",
+    "src/game/production.ts": "635bc3af439a14a8e0e77eda32d264b76d97ddbd37851e13532791ba2e417466",
+    "src/game/survivalNeeds.ts": "4b3a2206565737f0cf086451a64ed23006d7226335a27703e41a9ceb10187043",
+    "src/game/persistence.ts": "43b36f6fe94f070ba87346f4b6c27b2628e960369f6bb64a3e3bbc6eb798d3eb",
+    "scripts/m1-survival-maintenance-qualification.test.mjs": "0bb8eb0588fbafff317417fb6dd0fc5de644632305f1e2ef1b177d1382df1c86"
+  },
+  "result": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "wallMilliseconds": 13764.357584,
+    "authoritativeCombinedRerunRequired": true
+  },
+  "sourceDescription": "Isolated exported 188df58 snapshot plus farm-tool maintenance patch; parent checkout git HEAD is not the isolated snapshot identity.",
+  "integratorReview": {
+    "combinedCandidateSourceSha256": "2b7e0d1436794dd587888de10c7c4e81b83c0b72d1eae1c32e7feb9134de24dc",
+    "combinedScenarioReexecution": "passed",
+    "naturalFieldBrowserProof": null
+  }
+}
