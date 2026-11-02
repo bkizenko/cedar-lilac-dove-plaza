@@ -11,10 +11,9 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "Movement building-query optimization with exact saved-state/RNG replay following007e444",
+  "verifiedPublishedCodeBaseline": "Sparse guard-duty query optimization and qualified independent useful rival trade following9dba399",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
-    "Two independently profitable rival trades under ordinary AI review",
     "Remaining metallurgy/textile/repair chains and full institutions",
     "Mature village frame-tail smoothness and connected campaign / holdout qualification",
     "Defense horn/direct-order regressions; current-village frame-tail diagnosis; V15 diverse coasts and anti-near-duplicate islands; boat exploration/classes, cultural trade/refusal memory and known/unknown rankings"
@@ -30,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 23,
+    "verifiedGates": 24,
     "totalGates": 98,
-    "verifiedGatePercent": 23.47
+    "verifiedGatePercent": 24.49
   },
   "milestones": {
     "M0": {
@@ -46,9 +45,9 @@
       "verifiedGatePercent": 50.0
     },
     "M2": {
-      "verifiedGates": 0,
+      "verifiedGates": 1,
       "totalGates": 16,
-      "verifiedGatePercent": 0.0
+      "verifiedGatePercent": 6.25
     },
     "M3": {
       "verifiedGates": 3,
@@ -144,6 +143,11 @@
       "path": "docs/M3_DELIVERY_QUALIFICATION_2026-11-01.json",
       "kind": "Executed combined-index Game.step coastal scenarios with strict saves and actual inventory/actor/boat assertions",
       "scope": "M3-01 full transport/save scope; six passing cases including paid port/hull commissioning. No natural-frequency or independent-profit claim."
+    },
+    "autonomousUsefulTradeNov1": {
+      "path": "docs/M2_AUTONOMOUS_TRADE_QUALIFICATION_2026-11-01.json",
+      "kind": "Executed current indexed runtime Game.step scenario with two independent NPC decisions, paid hulls, strict saves and exact finite delivery/value accounting",
+      "scope": "M2-04 operating useful-need surplus, controlled authored shores; capital and broader frequency limits explicit."
     }
   },
   "gates": [
@@ -670,10 +674,12 @@
         "81-100",
         "111-120"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Older rival economic/logistics reports and focused test files do not prove current shared-rule rival-rival completed route scenario."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "autonomousUsefulTradeNov1"
+      ],
+      "remainingNotes": "Two ordinary NPC reviews independently fund actual hulls and complete useful physical round trips with strict in-transit/incoming saves and exact inventory/water accounting. Positive operating useful-need value after food under existing local scarcity factors; capital separately disclosed, not recovered. Controlled shores/endowments and two paid construction orders; not natural frequency, fleet combat or whole-campaign qualification."
     },
     {
       "id": "M2-05",

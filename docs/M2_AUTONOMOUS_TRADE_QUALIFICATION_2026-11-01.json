@@ -1,0 +1,697 @@
+{
+  "gate": "M2-04",
+  "acceptance": "Two rivals independently complete profitable physical trade through shared rules",
+  "qualificationScope": "Controlled complementary-need scenario; positive operating useful-need value under existing local barter scarcity factors after actual crew food, not global fixed-worth wealth creation, capital recovery or natural campaign frequency",
+  "publicationStatus": "Included with the source commit containing this record; exact runtime blobs recorded",
+  "source": {
+    "basePublishedCommit": "9dba399",
+    "runtimeFilesCompared": 255,
+    "runtimeByteMismatches": [],
+    "indexedRuntimeBlobs": {
+      "src/components/preview-host-bridge.tsx": "98cb15d443328b2fdb5d9ae9e3bdab0eff453612",
+      "src/game/advancement.ts": "726953ddbac9ebee5a02e22a763b64311a11b769",
+      "src/game/animalOrders.ts": "6395c56bac8cd5fda452242841ed86afb6d26168",
+      "src/game/antagonism.ts": "0b95f7dbf3a633175f573ccb2e3ccc5b6e02f98e",
+      "src/game/audio.ts": "03aa950aaa4ac8af138028b40ab3fa939e6498c5",
+      "src/game/barter.ts": "7a18b3b0830168be799b384b7827489cab831c76",
+      "src/game/boats.ts": "c713acb92a9a1ad1fe1b6cf80368976ba4ce3a8d",
+      "src/game/buildingQueries.ts": "4f912e0203d20b3583b8d742cbe499b7bc705942",
+      "src/game/campAnchor.ts": "e31ccef5711fe62f8636e299e90d5e4a111f068a",
+      "src/game/captivity.ts": "2406754627254c252c4119e756ec8afe79015718",
+      "src/game/caravanRoutes.ts": "04ff546d559c4462673b6f59d79dbfee041f264e",
+      "src/game/caravans.ts": "3d52d47214d22e57f2921935b626e35eaffe1de5",
+      "src/game/coastalCommission.ts": "d69f679a39d4deea4f8b200918e15ec44c28970b",
+      "src/game/coastalStrategy.ts": "29efcd37692f14730079d60a5b75cbc4ff365f6a",
+      "src/game/coastalTrade.ts": "e6e4f2227793093480138145a73309b824061cce",
+      "src/game/commandGateway.ts": "41c63596bf871fa547c69c6e1b487d0660806210",
+      "src/game/communities.ts": "9ad4fdf779b2c4bfcfd8f0f411173b6cfe13bf3d",
+      "src/game/composedGeography.ts": "a72b275df2b6a5d9ea0850ee5e64f77c7ef955ba",
+      "src/game/conflictIntent.ts": "cee9a01dfe5598fb1167d059f85ae8a743d81fb0",
+      "src/game/conflictMetrics.ts": "781b07cbf1f9456fb1ae559724987122ff2f6e48",
+      "src/game/constants.ts": "dac19880ccecca03fee3bc5cadd4a052fb743fee",
+      "src/game/construction.ts": "d12d0014687f50d01e22c01ec560db634fa7916d",
+      "src/game/constructionOwnership.ts": "34a70f2bc7ed785a2c4fadad49589b1345e93b07",
+      "src/game/constructionQueue.ts": "37b37289433cf0443e9335682f9964eb06e5d0bf",
+      "src/game/continentalRiparian.ts": "0af6948b056bcea228dd5ff9fb3258f5bc4c20da",
+      "src/game/craftSiteReport.ts": "e66b2e4d8185d17346f113b2a001a57ad678b612",
+      "src/game/crafting.ts": "f3687f9e6b54136f2688ef12e2e66d546917169f",
+      "src/game/crossings.ts": "08473e462880890efe97a55142cd85168c4491d6",
+      "src/game/cultivation.ts": "a51718339293b43c163bca132a4c865641f77aa0",
+      "src/game/daylight.ts": "9c563b493eb61ecc3ac89a75dd8e9d4ff96287cc",
+      "src/game/defense.ts": "8d97d2908db86b46b78738fa11002fa6c5273f89",
+      "src/game/defenseNeighbors.ts": "029cf3a609d7717df2542c3c59b3d8315adecde9",
+      "src/game/delegations.ts": "57442d3ea9a0a080c4f0698c7bac806e5bdda1b0",
+      "src/game/demobilization.ts": "89f8b65de132874d77216f515f471345890db877",
+      "src/game/difficulty.ts": "56806b676b6cf3d582ad145c0a70a6709cf2ca1d",
+      "src/game/discovery.ts": "f070afa4b0434ae5ea1b5509e6214cc35949eec7",
+      "src/game/ecologicalProvinces.ts": "3d7e644dec00a821e6328e2e718d6b5b0bf548b4",
+      "src/game/ecologicalResources.ts": "81767a9bb6f237b6c1273125dc33ecfbcfc2194c",
+      "src/game/ecology.ts": "f700b589478d74d9c394fc28174e5e0c14d65714",
+      "src/game/encounters.ts": "c0f4725e670e07b0b1e34ec5f7c0d250fa944e37",
+      "src/game/engine.ts": "fb93933be5ab89c040f72d9d1b8da5a25159867e",
+      "src/game/excavation.ts": "403d74e62bd53652ae2b404720a98305496cd900",
+      "src/game/explorationOrders.ts": "0b783ad2acf0f362511ef6ecb82563f1238eaeb2",
+      "src/game/factions.ts": "ba57d46efc9b916617d7198c923dac09c5f8db1c",
+      "src/game/farmTools.ts": "7c059398e7dd9722d18d4f5a7986af81365a92ec",
+      "src/game/farmingProgress.ts": "8f670a7ba468b5ccb242a377928f1218e4ca9f1d",
+      "src/game/fibre.ts": "b1de867c716245403e2807338b012da67e11683e",
+      "src/game/fibreKnowledge.ts": "dda1dbdabd693b8c4175c3815aab1b307c9a3044",
+      "src/game/fieldTerrain.ts": "dab26568aada688e420f7ada16eca4e66db93a17",
+      "src/game/fieldWork.ts": "d3872211d33b773a6d63c870914d214da3b115ca",
+      "src/game/fishing.ts": "5f76d93309ae0270502ee245e8911b2114ca3286",
+      "src/game/foodPreservation.ts": "ec47bcf887b9da1ebbdd3c214b037bf064919a1a",
+      "src/game/fortifications.ts": "d4244128fd4e22e13126087e96e1af58d4b62dd4",
+      "src/game/frameSimulation.ts": "b8124c712aa2b8d0904b4fb3e58beaafc0150b66",
+      "src/game/frontiers.ts": "82f3cb9cbe968ad79b8017d2c235faf5baada74e",
+      "src/game/gateGeometry.ts": "bec7bbc80a2cd241b0d58991efeb05d336d33cd7",
+      "src/game/geography.ts": "31f8e5da1093e04bcc6af1b6e70ac2e92b797feb",
+      "src/game/graphics.ts": "4c0700fb0044cc1d8b02208621b24da672365528",
+      "src/game/haulage.ts": "d31475804a06643e0986e1081e942bb41244851b",
+      "src/game/hunting.ts": "0aa29c3a0b89d2127dbec7f43770d140de07b593",
+      "src/game/husbandry.ts": "781d6f40f01e24f5955d6135f8bfd2c7371ce9d1",
+      "src/game/hydrology.ts": "1ae6876c271324528cef85fb84ec1e21184b5c81",
+      "src/game/influenceField.ts": "0fac94fdec8b1557afa3476d8f6a9b8c84d8e390",
+      "src/game/influenceWater.ts": "4bd33024886e3c78e8e37b4a33818385a0197308",
+      "src/game/jobCoordinator.ts": "d979500119c3421b5939987bbf12c9da4ec42dfa",
+      "src/game/journeys.ts": "5ea09393127ae9c12e765cbe0401515a16f3be0b",
+      "src/game/keyboard.ts": "ed6aaef70a8b939997d9988b8a72368de7577ba6",
+      "src/game/knowledge.ts": "ff6a8b2762ba693aa5ee5115edab4b5fd3db694b",
+      "src/game/labor.ts": "be1f770bf589ddf7e288fb10a06a2e752dde38a8",
+      "src/game/landforms.ts": "cb22589b65324bff92a7986271cd5d892c8e4d23",
+      "src/game/linearConstruction.ts": "c0b303b4c648f0fe0eaa23aad772c3fbf77afd8f",
+      "src/game/localEscape.ts": "56b4fe2fccc5dc788dd0f87fad5638f5fef722d3",
+      "src/game/localWater.ts": "b2d790340bf9d95b01aefac71272211795cd209b",
+      "src/game/massRaid.ts": "890079e4812231c6dfddb8a020bc69bbdb008a88",
+      "src/game/materialStudy.ts": "d80f919a8812e171a3cba3def9bf1f6a3496b33f",
+      "src/game/migration.ts": "e46907937b5a10ff169ddf59cdd92454baf1c5a4",
+      "src/game/mining.ts": "c6bfffe08df90ff063f6213eb3b8890b08253dbc",
+      "src/game/multipleLandmasses.ts": "aad88f3a7ed764eab08cf58c7ef607da6e7e6fd6",
+      "src/game/music.ts": "73078201f240b8ac6bde53ce59fffb00f7d04912",
+      "src/game/navigation.ts": "68af352345454b861facbcf7f45cc8c42b338feb",
+      "src/game/nomadicCamp.ts": "2cfd5139efce90e5a259a98bb04d65970bcfba8f",
+      "src/game/openingWater.ts": "c7586f9690ce754eac5df552db1b4cffc618b98a",
+      "src/game/packAnimals.ts": "000559afe98b99d5e75c3bf4de7c5e8ce9e7fe3f",
+      "src/game/pantry.ts": "12e712fb1f959d5efcf8b61e93690c60f417696c",
+      "src/game/peace.ts": "6ff491e494b8780db50547eace15dae6daf7e4d9",
+      "src/game/penGeometry.ts": "be21c37c043455ebb3910060909576536dba900f",
+      "src/game/penPasture.ts": "19854abd8ea19f3d266fb77e93ad770331b45590",
+      "src/game/people.ts": "808a078be53f754215b46cb0a44fd9304c26dde0",
+      "src/game/persistence.ts": "16908024a2bc9c0d2f57a15480284e0342c6263c",
+      "src/game/plotExpansion.ts": "85ad532aa81ed11df3d30b5bb8a1be521c797aa9",
+      "src/game/plotTopography.ts": "c57eff63a2ddf1ee0e3cb3cc254fe612627043b4",
+      "src/game/plots.ts": "16a44461b19f5d6eb4a5b602c18cc3517f4f2241",
+      "src/game/pottery.ts": "e6cf983bdb5b9900088a8198ceedb71df0b4c529",
+      "src/game/practiceKnowledge.ts": "3e1c29282a5b3a03fd6ec03a23021aa678b36540",
+      "src/game/prisonerGuardQueries.ts": "07e1ac1694df1683023fbe64a6bb658694b136fc",
+      "src/game/production.ts": "f9d8546d4c52b6a8f4ef713ce6e07c05d7bd261d",
+      "src/game/productionCatalog.ts": "cb6138d9c526642cb576490923598de9b0301dbc",
+      "src/game/productionOwnership.ts": "c4a2c6e67e3d4992a208b8411d7026fb36054d55",
+      "src/game/productionPractice.ts": "83155c6d8c9ee76b1ca81a07d238ba7754299641",
+      "src/game/productionReport.ts": "b2c4622accd327f4b574e1aaa6428f47a2c73005",
+      "src/game/raiders.ts": "9b390e91e2ccc2ce76a646c96686c1f47fcf540e",
+      "src/game/regionalGeography.ts": "2ea600774f3f1d0f7ec4010d3d325d6ca0a3e5ec",
+      "src/game/reservationLedger.ts": "2ca9d1b5e04b8499e65c3b05e6e29ee36dfb6fdd",
+      "src/game/riparianRepair.ts": "0c944995edb4b5798cad52ec5e6429e1006d9836",
+      "src/game/rivalActivity.ts": "95a46086be985849417c31a94488f813b357a2ef",
+      "src/game/rivalDevelopment.ts": "6da9a2b9eaef6bb6ccc6f40fb38a4a7bb9f9d672",
+      "src/game/rivalFarming.ts": "79ec67bf6d2d91f8855516b476e0bbb38fd3e84e",
+      "src/game/rivalOperations.ts": "63fceea5b7590e5f413fff0d05a627eb5b2aafcb",
+      "src/game/rivalTrade.ts": "55511ebb79f43e704cde133eeca73215c7580777",
+      "src/game/rng.ts": "e4e13de1a82795704baaf3d96d7b4469256fb7b4",
+      "src/game/runtimeProfile.ts": "1c2adc828381090b3ef63b679c0937ed02bf58d7",
+      "src/game/save.ts": "3625b8b73d6ce210af476303625d07bbd29eea88",
+      "src/game/scenery.ts": "0ad37cc230d2e25bc6390dfd5f3b2905e6c4c54f",
+      "src/game/scoutProvisions.ts": "3b8627cbcb919b5683fe0deb536e454cc54b6769",
+      "src/game/scouting.ts": "4d852926f6f78cfd682a8f44dc2e7c74c16f4f93",
+      "src/game/seaRaiderReturn.ts": "e8c0f40279907c264e369c2fb26e5a26bfabb482",
+      "src/game/settlement.ts": "7ab7bc8d6eaf14ab2ad8a51f9ddea1ba320f6ba4",
+      "src/game/sim.ts": "832041fede6ee21815fa353102629190289309fb",
+      "src/game/simulationEvents.ts": "7fdd8f9b825a3b2e7bdb32b3cf1a9bed20e65a19",
+      "src/game/societyRelations.ts": "4a3b0f096791f6081e8b953670bae51392f8680b",
+      "src/game/storageReport.ts": "c201ba631ee15dc9c255d01b0b405c0b447357e5",
+      "src/game/subsistenceBalance.ts": "461952bc763955da405ec220ae7361af04c482b3",
+      "src/game/survivalNeeds.ts": "0ab61e3078c33716ab5fa431848f561eea698044",
+      "src/game/terrainMetrics.ts": "fc0a83524bce1f72fd78a56835d121856de51565",
+      "src/game/terrainWalkCache.ts": "ef99d33330a906d946f9608dd5ca8cf3025a43f0",
+      "src/game/territory.ts": "053e32a6e5aab036bf9977bbba94a23c37f9c080",
+      "src/game/testing.ts": "4b77be63bf0e5a1ce6735fbda11a3c612067f2fc",
+      "src/game/towerPlatforms.ts": "831ba43921923b845780f5c2fa7f89f8bc967393",
+      "src/game/tradeIntel.ts": "15c7ef7fdd835601b4bc474e4831b4084872c13e",
+      "src/game/tradePlanning.ts": "a2cac6540583ea170a9c6b49972b093b8dd9bfbf",
+      "src/game/tradePricing.ts": "3ec2a2ad30ac50cf53a580f6e764a04a62a50aa1",
+      "src/game/tradeReservations.ts": "fa42e75cafbf6d16a23db113fc285a8d59a8365a",
+      "src/game/trails.ts": "1e33ca3f27f04d829a9022949686fc1d6050fc1b",
+      "src/game/transport.ts": "0c557bc3e374deaed02f01bdfb0e49a6e04ec9be",
+      "src/game/treeDesignation.ts": "9b9c825f256ff4b91196658e79de454f5e2cd152",
+      "src/game/types.ts": "d29c57c2fe68429125b4e6379972870726436528",
+      "src/game/unitFeedback.ts": "02e958f3599e16e10d31a575c8c6d442c10431bd",
+      "src/game/villageWorkload.ts": "9cbc21b5eb6948589aac17c82e202893d91d5e46",
+      "src/game/visitors.ts": "1f237334bd6154e1c2971032c328b7c9e1d71945",
+      "src/game/warfare.ts": "195f2ebda1d0a12adfb26ac22535c5f112ab5dc5",
+      "src/game/waterNavigation.ts": "b7e99b0ca5e102927ade0b1319828efb422d0a86",
+      "src/game/waterTravel.ts": "53904c58cc8e53d23ed5f6861d9c74cf88a2afde",
+      "src/game/wildlifeMovement.ts": "ec0463e63747a737e128f575ec604978e648381b",
+      "src/game/workAllocation.ts": "368d5a4f5ad8ce2497dedeb2d5f02464845270f3",
+      "src/game/workCommitments.ts": "074dfd030a11cef071ebbe6b27eb3fc89fda6c5c",
+      "src/game/workRuntime.ts": "fd687e7f3fb6ba4ff01317eb16affbad8bbb6f38",
+      "src/game/worldOptions.ts": "83505b61ca399f0da28998dcc710c24f63176257",
+      "src/game/worldVariety.ts": "b48614bf249597bfe35114971d541dc441951b90",
+      "src/game/worldgen.ts": "90fe569d98b11e1a0ccb4e683235e37d6d1cbf60",
+      "src/lib/app-data/app-data.test.ts": "58001d00a96e3ff108077f9acc6c762199fd5a91",
+      "src/lib/app-data/client.server.ts": "eb2f6e882bd083c09da1edd5b96a4d6b14aee142",
+      "src/lib/app-data/errors.ts": "81517744c90d47ba30dd42be7feff3198879ecc7",
+      "src/lib/app-data/index.ts": "32a32a72214e18b28da1ea3d08e4e9f6a59f5e99",
+      "src/lib/app-data/login.ts": "83ada786ee8a1f7fc8a450a5fba7d46eef034437",
+      "src/lib/app-data/server-only.ts": "27567c57626c596986c681e119bf78d4cf67b201",
+      "src/lib/app-data/types.ts": "ea1b107c022a1acd4803f01c9c14934c60b94df2",
+      "src/lib/auth/client.ts": "d3b267d3de8b9d5e31545ee56ed7a3ff240c601d",
+      "src/lib/auth/email-password.ts": "3abb01461af8b6c8293e9a996ec639b7009843a8",
+      "src/lib/auth/gate-identity.server.ts": "db8380095b75e0e6cd702c5df7c066c18e512e2b",
+      "src/lib/auth/gate-identity.test.ts": "ccae9f8b56f406265af82c9cb9bc5139f59f909f",
+      "src/lib/auth/gate-session-marker.ts": "4ae838d57956d66ed2f67c8d202636880e0423c2",
+      "src/lib/auth/gate-session.server.ts": "cfff0d1a292824b4d7cbe934c99d091f1324083a",
+      "src/lib/auth/gates.tsx": "587f21dbe39ccb172c780ca5dd6f74e5646fba11",
+      "src/lib/auth/isolation.server.ts": "f070e0801221046b3a1c26954cc714250addecff",
+      "src/lib/auth/middleware.ts": "c6a734242f2a63c02e365eb7303a0238b3b5bf5c",
+      "src/lib/auth/pglite-dialect.ts": "e23357c3a027360d55ad37c018883111976687d9",
+      "src/lib/auth/popup.server.ts": "9e686ae29e2b0463b7868ce755dd066479ebe8a3",
+      "src/lib/auth/preview.ts": "b8822e87c83be13fb834714f53fb5a09d07588cd",
+      "src/lib/auth/provider.tsx": "4dd72618670f44c166ff93da6020a71ab8046f05",
+      "src/lib/auth/providers.ts": "cd53b6faf1bf1ba4cef1193c42e533401bec4e65",
+      "src/lib/auth/server.ts": "66d94be9eb10e78fe46e2da2e7d950eef82580d0",
+      "src/lib/auth/use-current-user.ts": "bf9d3affa6417e89b36785a567a6ac05ddcf8429",
+      "src/lib/auth/verify.server.ts": "2bf5acc72dd13134b1ec86781aa7591e1b2dca5c",
+      "src/lib/db.ts": "49777ade8f9d5613a25f7b5272a6bf88edbe709a",
+      "src/lib/error-component.tsx": "ed63b914a50e85d75d725a90edff58586215815d",
+      "src/lib/multiplayer/index.ts": "431865e237e5098f378ddb923dfa30716a632f86",
+      "src/lib/multiplayer/p2p.ts": "3dff0109c67f9d2790bf22be439f3298871f5253",
+      "src/lib/og/site.json": "2bd95617b2ad5d673ab48ed85bd0487062845215",
+      "src/lib/preview-embedder-origin.ts": "0c248bc9ff13421683d0edc75c7a5c75bdd4318d",
+      "src/lib/preview-host-bridge.ts": "ef40a5e8c789a49d7f927894396cf7b96b078dd7",
+      "src/routeTree.gen.ts": "dceedffdc12c32138e81bb63787cac7ae5d97fcd",
+      "src/router.tsx": "a0e7546fd5d60f17e3e625b12938a829ce4dcada",
+      "src/routes/__root.tsx": "b5979265019f9d660778de9dfd91e633bbf33125",
+      "src/routes/index.tsx": "87a42972a15b83383acaddba5e021179091b73fd",
+      "src/scene/architecture.ts": "eb3db15b9368282adfa19cb5aea174e3ec9b3735",
+      "src/scene/basketLayer.ts": "a7f48cb81fd2f6875a850064b0a010c2028d670b",
+      "src/scene/biomeSceneLayer.ts": "c69e3ac2719f27208039ca9c76db90360307ecd1",
+      "src/scene/biomeVegetation.ts": "2468e71c8e2c6669fccea6be29a2245fb4a5c8f7",
+      "src/scene/buildingCharacter.ts": "5191c1e93741052500e15b677b5cb404aceaa4ef",
+      "src/scene/campVisual.ts": "e0e54ae510beb1696a74cf3e01f5cfb336cace50",
+      "src/scene/contourFields.ts": "8963007928f0040fcefebfe7c763f6087f4bebdf",
+      "src/scene/daylightArt.ts": "ed3768d362b59aefdeed9214347cc5da9ad04a1e",
+      "src/scene/depthWater.ts": "dd7ba88376b6ca3b0585e5eab83e6ceb94ffb821",
+      "src/scene/excavationLayer.ts": "02b5d330409ff7f494415cffbb107a80a0e41164",
+      "src/scene/excavationSurface.ts": "7f6ce335a3bbf8cdb4943d08b82fa09b00faa5bf",
+      "src/scene/fibreWorkLayer.ts": "4f4d665f29fe36ae19ad222bc1356f91a9a27794",
+      "src/scene/fibreWorkshop.ts": "986b8a7210f5d80fcadfd854448566e8a18bbd9b",
+      "src/scene/fieldSurface.ts": "2bd05359dfa58394ecc289bbc359ba45a2badb78",
+      "src/scene/fortifiedShelter.ts": "4b39faf35f18716cab420b7c380f2b4cb7f5411d",
+      "src/scene/foundations.ts": "015a57a5348fba1d626b9388c208e0da2dd058d8",
+      "src/scene/gateKit.ts": "1034bd5db7e60f157e1869fe0268325e237fec3e",
+      "src/scene/landContinuation.ts": "fd100ba27ecfa740fdcab6dda4bf810c0a148b49",
+      "src/scene/landscapeArt.ts": "a5df218c754f659e2a5c4e71c0379207991c83ae",
+      "src/scene/meshes.ts": "d965454ef57152dfebd3f9174d64ef0d07877e93",
+      "src/scene/penFenceLayer.ts": "6d9c4aa0e264ff4c3e970d6d65a95bb7e946fa50",
+      "src/scene/plotModules.ts": "2b961a544e97337c8608d22c17a6700281071164",
+      "src/scene/productionWorkplaces.ts": "5c302823b60a524b193d899900c0d54d15f2003a",
+      "src/scene/shoreline.ts": "43fed79fa43fa774c8542bf011bd54bc1d4c1bfc",
+      "src/scene/terrainSurface.ts": "bd7ea5919e3cf3a461e49fa2e76fedddff2d6ff2",
+      "src/scene/towerPlatformKit.ts": "bb6a56b83d50e8d51eabeb5f5d07ddbd86435fac",
+      "src/scene/towerPlatformLayer.ts": "17ce9537198aa54a94c47c607c8a09b699771fc3",
+      "src/scene/vegetationKit.ts": "8b1cab467d22ba112ae15707ff561a39a3be3369",
+      "src/scene/waterVesselLayer.ts": "c531d293f8ff0d862f8bd02f2ba856d801629f86",
+      "src/scene/wildPlants.ts": "31620b6c4886473dec615acf93ccce323ceadb60",
+      "src/scene/wildlifeInstances.ts": "4d792882c05c1c1c9ee6b882f3b729734bc1dd6b",
+      "src/scene/world.ts": "7a0c638cb8544dcdff06dab617e7e69b32793b23",
+      "src/scene/wornGarments.ts": "485d56fe86d2b7d827ff4a02d8004c9c6760acac",
+      "src/styles.css": "b6a9be1fb45435e2bf58745e6a05ff07b0b1fc48",
+      "src/ui/AgeReadiness.tsx": "7632a4730a1a818c61d8c1ed7845d1bc66f803fd",
+      "src/ui/BoatControls.tsx": "4e769eda3c9931f7b0c6aeecfc70c57ebcdaedff",
+      "src/ui/CaravanPlanner.tsx": "d1b8d871f1cee58f71cd5ad8d6d1ce210e9aa967",
+      "src/ui/ConflictControls.tsx": "1aedd0b1cdb60eb0dc9f93025a2eb230cc36ee03",
+      "src/ui/ConstructionQueueControls.tsx": "e02f2a80058ee9823e59f49af24c2641d6b999b2",
+      "src/ui/ContactActions.tsx": "fae78daa957bc1674364a752d3eea75baa209c72",
+      "src/ui/CopperStudyControl.tsx": "44f0cefff37388ed544817cad8798990e8fa661e",
+      "src/ui/CraftSiteQueue.tsx": "561284d16c844f0147b7bef2bd60928bb89d4e57",
+      "src/ui/CraftingAndBuildings.tsx": "71d0e7a01216d7fe7a64ffcb3e9e6680d474d78a",
+      "src/ui/EncounterDialog.tsx": "e6a02bcaed26710001dde26558a3872d6f6fc207",
+      "src/ui/ExcavationControls.tsx": "e0903d864e23e8e801fcc69fa91696e6180aa9c7",
+      "src/ui/FarmingProgress.tsx": "76bd043c1097266a3fe377ba18b8370fd3298de8",
+      "src/ui/GameApp.tsx": "677345f6a0708bacff86eb284da73e6e0580d9a7",
+      "src/ui/GameDisclosure.tsx": "60f8ccb494190af34c81d592c96485735bb8f96f",
+      "src/ui/GameTooltip.tsx": "be1fa0b37acea4d9d59ae3ab03415d8ebcf77e41",
+      "src/ui/GateRotationControl.tsx": "fe8d23a77af891e144038fbae505e9ea8b418998",
+      "src/ui/Hud.tsx": "a0f66cd696328ca4c24cb791589d9673519038b3",
+      "src/ui/HusbandryControls.tsx": "24e2939c7f2e54b3c4f38546938bf4ded275b70f",
+      "src/ui/KnowledgePanel.tsx": "3780b492c80d4bf8ab15669a15a62d361ee9ee49",
+      "src/ui/NeedsPanel.tsx": "4a99b905034220ee762cf0f128c2e9cd0d905c64",
+      "src/ui/NomadicCampControl.tsx": "38af2561c5f55303243bff70c793235ac1c904c1",
+      "src/ui/PaidProjects.tsx": "43768a828821afcfbe9505943ffc88241a2ae474",
+      "src/ui/PerformanceReadout.tsx": "1b72458552b836fb585b0f117d015492d8cf98fa",
+      "src/ui/PlayTools.tsx": "7c1e4b04fbf2d747134c31bb460b77175228b468",
+      "src/ui/PlotControls.tsx": "b098d7b3acecca47c7a422fcf6f9cf9b62633e19",
+      "src/ui/ProductionControls.tsx": "8aac4fa57493035af924f7dc8a8d357673821135",
+      "src/ui/SettlementLedger.tsx": "ca0362a289829641aa288050daac29a1ceb5f3bd",
+      "src/ui/StorehouseInventory.tsx": "b27f9e5cb8b06cdf1e9cc716052ebb9493747b7f",
+      "src/ui/TestPanel.tsx": "5ecde64b33318aec1e1bae22973af74efaa3643a",
+      "src/ui/TowerPlatformControls.tsx": "1270f2751eb8d8399a3ceab88e9a10ca7709a651",
+      "src/ui/TradeProposal.tsx": "ec2fc824c581bc73adeb8c62de843247f08d0fe5",
+      "src/ui/VisitingTrader.tsx": "ef0ea333195fc781bd27df0b546289af186073b7",
+      "src/ui/WorkloadPanel.tsx": "3181908a62465a4825570001d8d029ee5f39d0ac",
+      "src/ui/WorldMinimap.tsx": "799e5bbb6e20180a87070044c218568f9bc8c02b",
+      "src/ui/WorldSetup.tsx": "607437d9f6c2d9809e6782519aa362551a4ad130",
+      "src/ui/buildingHelp.ts": "5555ab41082d572ef0f00fe0cad83186329e56a7",
+      "src/ui/minimapModel.ts": "7579dfa8c9561df759d12466c0c6ddb12584326f"
+    },
+    "testSha256": "81bd5a60d4435d2c6b7d403b08e1c9098f332f3f7ccf063c850a795a79ecf89c"
+  },
+  "actualTestResult": {
+    "command": "node --import ./scripts/game-loader.mjs --test scripts/coastal-autonomous-profit.test.mjs",
+    "passed": 1,
+    "failed": 0,
+    "logSha256": "264f0ad7cbfd0e615692ae0bccb246c2e81411afcb9a1d6000073447cd85322a"
+  },
+  "valuation": {
+    "method": "Existing rival local scarcity factor clamped.45..1.35 times fixed worth at departure; only imports relieving actual own shortfall count; actual voyage food deducted",
+    "capital": "40logs/4stone paid per hull;20logs/40stone cairn;60logs warehouse; pre-existing docks declared; no amortization or capital payback claimed",
+    "capitalCompletion": [
+      {
+        "id": 514,
+        "type": "cairn",
+        "team": 1,
+        "build": 0,
+        "paid": true
+      },
+      {
+        "id": 515,
+        "type": "warehouse",
+        "team": 2,
+        "build": 1,
+        "paid": true
+      }
+    ],
+    "fixedWorthExchange": "Zero-sum before food: rival1 loses3.8 fixed-worth units, rival2 gains3.8; useful-need surplus is not minted financial wealth",
+    "water": "All litres source/use balanced with physical carrier replenishment; water labor has no invented monetary price"
+  },
+  "scenario": {
+    "scenario": "Two autonomous rival boats relieve complementary actual paid construction needs",
+    "scope": "Controlled initially observed shores, fixed finite adult/stock/infrastructure endowments; ordinary NPC reviews alone choose, fund and dispatch trade; not natural campaign frequency; unchanged fixture geometry is reconstructed after restore without rewriting actor x/z or inventories",
+    "time": 379.6000000000178,
+    "initialEndowments": {
+      "1": {
+        "wood": 180,
+        "stone": 60,
+        "food": 800,
+        "adults": 8,
+        "water": 23.04
+      },
+      "2": {
+        "wood": 140,
+        "stone": 100,
+        "food": 800,
+        "adults": 8,
+        "water": 23.04
+      }
+    },
+    "paidCapitalIds": [
+      514,
+      515
+    ],
+    "paidCapitalProgress": [
+      {
+        "id": 514,
+        "type": "cairn",
+        "team": 1,
+        "build": 0,
+        "paid": true
+      },
+      {
+        "id": 515,
+        "type": "warehouse",
+        "team": 2,
+        "build": 1,
+        "paid": true
+      }
+    ],
+    "afterCapital": {
+      "1": {
+        "wood": 120,
+        "stone": 16,
+        "food": 582.3304784303331,
+        "water": 27.7784000000021,
+        "waterConsumed": 19.261599999998943,
+        "waterDelivered": 24,
+        "waterLost": 0
+      },
+      "2": {
+        "wood": 40,
+        "stone": 96,
+        "food": 598.7667973482737,
+        "water": 27.76960000000212,
+        "waterConsumed": 19.270399999998922,
+        "waterDelivered": 24,
+        "waterLost": 0
+      }
+    },
+    "saves": [
+      {
+        "phase": "loaded-original-cargo",
+        "time": 359.50000000001324,
+        "voyages": [
+          516,
+          517
+        ]
+      },
+      {
+        "phase": "both-actual-crews-at-sea",
+        "time": 363.00000000001404,
+        "voyages": [
+          516,
+          517
+        ]
+      },
+      {
+        "phase": "incoming-foreign-cargo-2",
+        "time": 374.10000000001656,
+        "voyages": [
+          516,
+          517
+        ]
+      },
+      {
+        "phase": "incoming-foreign-cargo-1",
+        "time": 375.40000000001686,
+        "voyages": [
+          516,
+          517
+        ]
+      }
+    ],
+    "phaseEvents": [
+      {
+        "time": 359.50000000001324,
+        "id": 516,
+        "team": 1,
+        "phase": "boardingOut",
+        "cargo": 12
+      },
+      {
+        "time": 359.50000000001324,
+        "id": 517,
+        "team": 2,
+        "phase": "boardingOut",
+        "cargo": 12
+      },
+      {
+        "time": 362.60000000001395,
+        "id": 517,
+        "team": 2,
+        "phase": "sailingOut",
+        "cargo": 12
+      },
+      {
+        "time": 363.00000000001404,
+        "id": 516,
+        "team": 1,
+        "phase": "sailingOut",
+        "cargo": 12
+      },
+      {
+        "time": 363.2000000000141,
+        "id": 517,
+        "team": 2,
+        "phase": "landingOut",
+        "cargo": 12
+      },
+      {
+        "time": 363.50000000001415,
+        "id": 516,
+        "team": 1,
+        "phase": "landingOut",
+        "cargo": 12
+      },
+      {
+        "time": 364.40000000001436,
+        "id": 517,
+        "team": 2,
+        "phase": "trading",
+        "cargo": 12
+      },
+      {
+        "time": 365.30000000001456,
+        "id": 516,
+        "team": 1,
+        "phase": "trading",
+        "cargo": 12
+      },
+      {
+        "time": 369.8000000000156,
+        "id": 517,
+        "team": 2,
+        "phase": "boardingHome",
+        "cargo": 26
+      },
+      {
+        "time": 370.7000000000158,
+        "id": 516,
+        "team": 1,
+        "phase": "boardingHome",
+        "cargo": 7
+      },
+      {
+        "time": 372.70000000001625,
+        "id": 517,
+        "team": 2,
+        "phase": "sailingHome",
+        "cargo": 26
+      },
+      {
+        "time": 373.20000000001636,
+        "id": 517,
+        "team": 2,
+        "phase": "landingHome",
+        "cargo": 26
+      },
+      {
+        "time": 374.00000000001654,
+        "id": 516,
+        "team": 1,
+        "phase": "sailingHome",
+        "cargo": 7
+      },
+      {
+        "time": 374.10000000001656,
+        "id": 517,
+        "team": 2,
+        "phase": "unloading",
+        "cargo": 26
+      },
+      {
+        "time": 374.40000000001663,
+        "id": 516,
+        "team": 1,
+        "phase": "landingHome",
+        "cargo": 7
+      },
+      {
+        "time": 375.40000000001686,
+        "id": 516,
+        "team": 1,
+        "phase": "unloading",
+        "cargo": 7
+      },
+      {
+        "time": 375.900000000017,
+        "id": 517,
+        "team": 2,
+        "phase": "complete",
+        "cargo": 0
+      },
+      {
+        "time": 377.60000000001736,
+        "id": 516,
+        "team": 1,
+        "phase": "complete",
+        "cargo": 0
+      }
+    ],
+    "outcomes": [
+      {
+        "team": 1,
+        "partner": 2,
+        "actorId": 480,
+        "boatId": 512,
+        "actorFinal": {
+          "hp": 48,
+          "hunger": 0,
+          "thirst": 0,
+          "carry": 0,
+          "ownershipReleased": true
+        },
+        "departure": {
+          "actorId": 480,
+          "boatId": 512,
+          "give": "wood",
+          "get": "stone",
+          "offered": 12,
+          "stocks": {
+            "wood": 108,
+            "stone": 16,
+            "food": 522.2086768448042,
+            "water": 20.668800000001426,
+            "waterConsumed": 22.531199999999618,
+            "waterDelivered": 24,
+            "waterLost": 0
+          },
+          "ownNeedShortfall": 16,
+          "wantedReserve": 32,
+          "giveReserve": 80,
+          "giveUnitValue": 0.8888888888888888,
+          "getUnitValue": 2.9700000000000006,
+          "foodUnitValue": 0.45,
+          "homeWaterSeconds": 430.6000000000297
+        },
+        "metrics": {
+          "boardings": 2,
+          "landings": 2,
+          "sailMeters": 10.352143837809479,
+          "walkMeters": 19.00367650086436,
+          "foodUsed": 0.7069537895081235,
+          "waterUsed": 0.14479999999999957,
+          "offered": 12,
+          "received": 7,
+          "delivered": 7,
+          "returned": 1
+        },
+        "finalShortfall": 0,
+        "usefulReceivedUnits": 7,
+        "existingLocalScarcityValuation": {
+          "usefulValue": 20.790000000000006,
+          "exportValue": 10.666666666666666,
+          "foodCost": 0.31812920527865557,
+          "operatingNeedValueSurplus": 9.805204128054685
+        },
+        "wholeSocietyBilateralFlows": {
+          "communityExport": 38,
+          "communityImport": 19,
+          "usefulUnits": 16,
+          "operatingNeedValueSurplus": 13.424093016943576
+        },
+        "water": {
+          "wood": 82,
+          "stone": 35,
+          "food": 528.4425706495117,
+          "water": 23.494400000001534,
+          "waterConsumed": 23.54559999999983,
+          "waterDelivered": 24,
+          "waterLost": 0
+        },
+        "capital": {
+          "hullWood": 40,
+          "hullStone": 4,
+          "existingDockEndowment": true,
+          "paidNeed": {
+            "type": "cairn",
+            "wood": 20,
+            "stone": 40
+          }
+        },
+        "capitalNotAmortized": true
+      },
+      {
+        "team": 2,
+        "partner": 1,
+        "actorId": 490,
+        "boatId": 513,
+        "actorFinal": {
+          "hp": 48,
+          "hunger": 0,
+          "thirst": 0,
+          "carry": 0,
+          "ownershipReleased": true
+        },
+        "departure": {
+          "actorId": 490,
+          "boatId": 513,
+          "give": "stone",
+          "get": "wood",
+          "offered": 12,
+          "stocks": {
+            "wood": 40,
+            "stone": 84,
+            "food": 546.580518157185,
+            "water": 20.19280000000253,
+            "waterConsumed": 23.007199999998512,
+            "waterDelivered": 24,
+            "waterLost": 0
+          },
+          "ownNeedShortfall": 40,
+          "wantedReserve": 80,
+          "giveReserve": 32,
+          "giveUnitValue": 0.9900000000000001,
+          "getUnitValue": 1.62,
+          "foodUnitValue": 0.45475319369186595,
+          "homeWaterSeconds": 360.5857142857595
+        },
+        "metrics": {
+          "boardings": 2,
+          "landings": 2,
+          "sailMeters": 13.584523260672167,
+          "walkMeters": 19.58084597678685,
+          "foodUsed": 0.6056693594490042,
+          "waterUsed": 0.13119999999999965,
+          "offered": 12,
+          "received": 26,
+          "delivered": 26,
+          "returned": 1
+        },
+        "finalShortfall": 2,
+        "usefulReceivedUnits": 26,
+        "existingLocalScarcityValuation": {
+          "usefulValue": 42.120000000000005,
+          "exportValue": 11.88,
+          "foodCost": 0.2754300755307414,
+          "operatingNeedValueSurplus": 29.96456992446926
+        },
+        "wholeSocietyBilateralFlows": {
+          "communityExport": 19,
+          "communityImport": 38,
+          "usefulUnits": 38,
+          "operatingNeedValueSurplus": 42.47456992446926
+        },
+        "water": {
+          "wood": 78,
+          "stone": 77,
+          "food": 554.815478943262,
+          "water": 22.87360000000237,
+          "waterConsumed": 24.166399999998966,
+          "waterDelivered": 24,
+          "waterLost": 0
+        },
+        "capital": {
+          "hullWood": 40,
+          "hullStone": 4,
+          "existingDockEndowment": true,
+          "paidNeed": {
+            "type": "warehouse",
+            "wood": 60,
+            "stone": 0
+          }
+        },
+        "capitalNotAmortized": true
+      }
+    ],
+    "materialConservation": true,
+    "noAfterCompleteDuplication": true,
+    "simulationErrors": [],
+    "valuationScope": "Existing rival local scarcity factor and fixed worth at departure; only units relieving actual shortfall count. Actual food cost deducted; water fully mass-balanced and physically replenished, with no invented water price. Capital disclosed separately, not amortized or claimed recovered."
+  },
+  "limits": [
+    "Controlled pre-existing halls, docks, finite resources, available adults, quiet weather and observed shore contacts; local extractables exhausted.",
+    "Exactly two ordinary paid capital orders create complementary shortages after actual AI-paid hulls launch. No explicit trade dispatch, cargo choice or quote overrides.",
+    "Current test ends with the warehouse complete and stone cairn paid but unfinished. No claim that all capital projects completed.",
+    "Canonical authored channel geometry is reconstructed after restore; actors x/z, health, cargo, boat positions and inventories are compared.",
+    "Qualifies two autonomous shared-rule operating trades only; not native campaign frequency, fleet warfare, all-map paths or recovered startup capital."
+  ]
+}

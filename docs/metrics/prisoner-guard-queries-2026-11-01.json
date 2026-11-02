@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-01",
+  "baseline": "9dba399",
+  "sourceBlobs": {
+    "src/game/sim.ts": "832041fede6ee21815fa353102629190289309fb",
+    "src/game/captivity.ts": "2406754627254c252c4119e756ec8afe79015718",
+    "src/game/prisonerGuardQueries.ts": "07e1ac1694df1683023fbe64a6bb658694b136fc"
+  },
+  "scope": "CPU-only older private year-three saved village; no renderer/GPU/FPS/input/save latency claim",
+  "conditions": {
+    "actors": 245,
+    "buildings": 408,
+    "worldSizeMeters": 1560,
+    "warmupSteps": 20,
+    "measuredStepsPerRun": 180,
+    "inputQuantumSeconds": 0.03333333333333333,
+    "speed": "Forced4 in both variants",
+    "order": "ABBA, sequential nice10, no parallel performance work",
+    "randomStream": "LCG seed0x51ed270b restored per process",
+    "decodeExcluded": true
+  },
+  "trials": [
+    {
+      "variant": "baseline",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 41.61969441666664,
+      "p50": 37.44904200000019,
+      "p95": 63.716958999999406,
+      "max": 171.91229199999998,
+      "errors": []
+    },
+    {
+      "variant": "review",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 36.616407861111114,
+      "p50": 33.84004199999981,
+      "p95": 51.154584000000796,
+      "max": 119.07370900000024,
+      "errors": []
+    },
+    {
+      "variant": "review",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 37.260391000000034,
+      "p50": 34.54658399999971,
+      "p95": 50.00158400000055,
+      "max": 116.15787500000033,
+      "errors": []
+    },
+    {
+      "variant": "baseline",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 38.57134535555555,
+      "p50": 35.79525000000103,
+      "p95": 51.196542000000136,
+      "max": 116.8208340000001,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "meanBeforeMs": 40.09551988611109,
+    "meanAfterMs": 36.93839943055558,
+    "meanReductionPercent": 7.873998053954967,
+    "meanOfRunP95BeforeMs": 57.45675049999977,
+    "meanOfRunP95AfterMs": 50.57808400000067,
+    "p95Scope": "Mean of per-run p95, not pooled percentile",
+    "fullEncodedStateMatches": true,
+    "randomCallsMatch": true,
+    "errors": []
+  },
+  "syntheticMarkerReads": {
+    "before": {
+      "people": 500,
+      "markerReads": 250500,
+      "ordersUnchanged": true
+    },
+    "after": {
+      "people": 500,
+      "markerReads": 1000,
+      "ordersUnchanged": true
+    }
+  },
+  "limits": [
+    "One older village and two process pairs; uncontrolled external system load.",
+    "Synthetic500-resident marker counts demonstrate scan complexity only, not a real500-person FPS scenario.",
+    "No population/resources/features/timers/update-frequency cuts.",
+    "Positive guard assignments still execute the original live selection and physical escort rules.",
+    "Measured mean updates remain above a16.7ms draw budget; smooth gameplay/stutter resolution and current year-five results remain unproven."
+  ]
+}

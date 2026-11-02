@@ -1,3 +1,4 @@
+import {beginPrisonerGuardQueries,endPrisonerGuardQueries} from './prisonerGuardQueries';
 import {beginBuildingQueries,endBuildingQueries,nearbyStepBuildings} from './buildingQueries';
 import {WildlifeObstacles,moveGroundWildlife,wildlifeBodyRadius} from './wildlifeMovement';
 import{tickTradeIntel}from'./tradeIntel';
@@ -5573,7 +5574,7 @@ export class Game {
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
-        beginBuildingQueries(this);beginDefenseNeighbors(this);
+        beginPrisonerGuardQueries(this);beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
@@ -5621,7 +5622,7 @@ export class Game {
             updateDefenseNeighbors(this,u);
           }
         }
-        endBuildingQueries(this);endDefenseNeighbors(this);
+        endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);
         tickRivalActivity(this);
         tickOccupation(this,sdt);
         syncRiverboats(this);
@@ -5680,7 +5681,7 @@ export class Game {
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {
-        endBuildingQueries(this);endDefenseNeighbors(this);
+        endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);
         this.reportSimulationError("world",err);
       }
     }

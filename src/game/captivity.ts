@@ -1,3 +1,4 @@
+import {mayGuardPrisoner,invalidatePrisonerGuardQueries} from './prisonerGuardQueries';
 import {receiveFood} from './pantry';
 import {recordConflict} from './conflictMetrics';
 import {supplyApproach,supplyReached} from './campAnchor';
@@ -108,7 +109,7 @@ export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
  if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
  const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);g.interruptMission(u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
- u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0};
+ u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0};invalidatePrisonerGuardQueries(g);
  u.team=captorTeam;u.selected=false;u.homeHall=undefined;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.order='hold';u.workReason='Surrendered — waiting for a guarded route to custody';
  guard.order='hold';guard.target=null;guard.node=null;guard.pillage=-1;guard.returnAfterCombat=undefined;guard.escortId=u.id;
  recordConflict(g,'surrender',captorTeam,1,{actorId:guard.id,targetId:u.id});g.workBoard.reset();
@@ -145,7 +146,7 @@ export function releasePrisoner(g:Game,id:number,escaped=false){
 export function prisonerAI(g:Game,person:Unit,dt:number){
  const u=person as PrisonerUnit;
  if(!u.prisoner){
-  if(u.emergency||u.hp<=0)return false;
+  if(u.emergency||u.hp<=0||!mayGuardPrisoner(g,u.id))return false;
   let assigned=false,traveling:PrisonerUnit|undefined;
   // Most residents guard nobody. Read the sparse custody marker first, and
   // stop at the same first escorting person the previous filter/find selected.
@@ -204,7 +205,7 @@ export function assignPrisonerGuard(g:Game,id:number,guardId?:number){
  const u=g.state.units.find(p=>p.id===id&&p.hp>0) as PrisonerUnit|undefined;if(!u?.prisoner||u.prisoner.phase==='released')return {accepted:false,reason:'Choose a person currently in custody'};
  const guard=g.state.units.filter(p=>(guardId===undefined||p.id===guardId)&&armedPrisonerGuard(g,p,u.prisoner!.captorTeam)&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat&&(!p.escortId||guardLoad(g,p.id)>0)&&guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&['idle','hold','move'].includes(p.order)&&g.workBoard.connected(g,p.x,p.z,u.x,u.z)).sort((a,b)=>Number(b.selected)-Number(a.selected)||Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
  if(!guard)return {accepted:false,reason:'Need an available armed guard with capacity and a reachable route'};
- if(guardLoad(g,guard.id)===0)g.interruptMission(guard);u.prisoner.guardId=guard.id;guard.escortId=u.id;guard.order='move';guard.tx=u.x;guard.tz=u.z;guard.workReason='Joining prisoner escort — protection begins on arrival';
+ if(guardLoad(g,guard.id)===0)g.interruptMission(guard);u.prisoner.guardId=guard.id;invalidatePrisonerGuardQueries(g);guard.escortId=u.id;guard.order='move';guard.tx=u.x;guard.tz=u.z;guard.workReason='Joining prisoner escort — protection begins on arrival';
  return {accepted:true,reason:'Guard is physically joining the prisoner escort',guardId:guard.id};
 }
 const recordedPrisonerDeaths=new WeakSet<Unit>();
