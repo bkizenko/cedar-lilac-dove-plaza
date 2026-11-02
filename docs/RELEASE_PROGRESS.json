@@ -15,7 +15,7 @@
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
-    "Sustained mature-village frame-tail smoothness, fresh-copy stress reporting and connected campaign/holdout qualification",
+    "Long-running and fast-forward frame-tail smoothness, the100-visible-person performance target, and connected campaign/holdout qualification",
     "Full naval combat/provisions, cultural trade, rankings, broader independent society production and remaining information consumers"
   ],
   "method": {
@@ -1919,5 +1919,12 @@
     "Do not delete deferred catalogue work or silently count it as complete."
   ],
   "baselineState": "frozen",
-  "frozenDate": "2026-10-31"
+  "frozenDate": "2026-10-31",
+  "deliveryCheckpoint": {
+    "deliveredAtUtc": "2026-11-02T21:16:04Z",
+    "requestedMinimumPercent": 50,
+    "verifiedPercent": 32.65,
+    "minimumReached": false,
+    "goalRemainsActive": true
+  }
 }
