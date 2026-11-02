@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-01",
+  "baseline": "007e444",
+  "sourceBlobs": {
+    "src/game/sim.ts": "dd0686af945455b645b2d5cc79f4eee9e9ea32d1",
+    "src/game/buildingQueries.ts": "4f912e0203d20b3583b8d742cbe499b7bc705942"
+  },
+  "fixtureSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "scope": "Older private year-three saved village, CPU only; no renderer/GPU/shadows/browser saving/input latency",
+  "conditions": {
+    "actors": 245,
+    "buildings": 408,
+    "worldSizeMeters": 1560,
+    "warmupStepsPerRun": 20,
+    "measuredStepsPerRun": 180,
+    "stepSeconds": 0.03333333333333333,
+    "randomStream": "LCG seed0x51ed270b reset each process",
+    "order": "ABBA, sequential nice10, no parallel performance work",
+    "speed": "Forced4 in both variants; original save was1",
+    "decodeExcluded": true,
+    "fullEncodedStateMatches": true,
+    "randomCallsMatch": true
+  },
+  "trials": [
+    {
+      "variant": "before",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 41.70240536666671,
+      "p50": 38.88454199999978,
+      "p95": 54.1288340000001,
+      "max": 124.01816699999972,
+      "errors": []
+    },
+    {
+      "variant": "after",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 38.829992588888906,
+      "p50": 36.1180830000003,
+      "p95": 51.9639159999997,
+      "max": 118.25320800000009,
+      "errors": []
+    },
+    {
+      "variant": "after",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 44.56329857777787,
+      "p50": 40.106667000000016,
+      "p95": 71.80645800000093,
+      "max": 145.64287500000046,
+      "errors": []
+    },
+    {
+      "variant": "before",
+      "initial": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "final": "de9729db3d54a255ff82484f8a0516ed1d451df2e70654426bdd4a8d22c98f06",
+      "calls": 35191,
+      "time": 4769.466666667262,
+      "mean": 44.800002322222234,
+      "p50": 40.117958000000726,
+      "p95": 69.63900000000012,
+      "max": 172.67299999999977,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "meanBeforeMs": 43.251203844444476,
+    "meanAfterMs": 41.69664558333339,
+    "meanReductionPercent": 3.5942543164859564,
+    "meanOfRunP95BeforeMs": 61.88391700000011,
+    "meanOfRunP95AfterMs": 61.885187000000315,
+    "p95Scope": "Mean of two per-run p95 values; essentially unchanged, not a pooled percentile or reliable tail improvement"
+  },
+  "rejectedPrototypes": [
+    "Single-pass foodDemand matched saved state but did not reliably improve whole updates.",
+    "String-keyed movement buckets helped at1x but regressed the first4x pair; numeric lookup replaced per-query strings."
+  ],
+  "limits": [
+    "Two process pairs on one older village; background system load is uncontrolled.",
+    "Average improvement is modest and timings vary materially; repeated pauses remain.",
+    "No smooth60FPS/current year-five performance claim.",
+    "Population, detail, resources, timers and update frequency are unchanged.",
+    "State/RNG equality covers measured scenarios, not all possible campaigns."
+  ]
+}

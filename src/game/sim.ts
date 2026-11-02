@@ -1,3 +1,4 @@
+import {beginBuildingQueries,endBuildingQueries,nearbyStepBuildings} from './buildingQueries';
 import {WildlifeObstacles,moveGroundWildlife,wildlifeBodyRadius} from './wildlifeMovement';
 import{tickTradeIntel}from'./tradeIntel';
 import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
@@ -978,7 +979,7 @@ export class Game {
     const h = canoeHeight(this,u,x,z);
     if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.waterAt(x,z)+.3)return false;
     if ((u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
-    for (const b of this.state.buildings) {
+    for (const b of nearbyStepBuildings(this,x,z,u.r,this.navRevision)) {
       const w = b.w * 0.4 + u.r,
         d = b.d * 0.4 + u.r;
       const depth = Math.min(w - Math.abs(x - b.x), d - Math.abs(z - b.z));
@@ -5572,7 +5573,7 @@ export class Game {
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
-        beginDefenseNeighbors(this);
+        beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
@@ -5620,7 +5621,7 @@ export class Game {
             updateDefenseNeighbors(this,u);
           }
         }
-        endDefenseNeighbors(this);
+        endBuildingQueries(this);endDefenseNeighbors(this);
         tickRivalActivity(this);
         tickOccupation(this,sdt);
         syncRiverboats(this);
@@ -5679,7 +5680,7 @@ export class Game {
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {
-        endDefenseNeighbors(this);
+        endBuildingQueries(this);endDefenseNeighbors(this);
         this.reportSimulationError("world",err);
       }
     }

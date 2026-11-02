@@ -35,7 +35,8 @@ test('priority switches release all old reservations before reassigning and work
  g.setLaborPriority('wood');assert.ok(people.every(u=>u.job==='wood'&&u.order==='gather'));
  assert.equal(people.filter(u=>u.node===g.state.trees[0]).length,2);
  assert.equal(people.filter(u=>u.node===g.state.trees[1]).length,2);
- run(g,90);assert.ok(g.tribe(0).wood>0,'one priority change produces delivered timber');
+ // Logging now takes four times the former labor; allow a full load and its real return trip.
+ run(g,180);assert.ok(g.tribe(0).wood>0,'one priority change produces delivered timber');
  g.setLaborPriority('food');const before=g.state.forage.reduce((n,p)=>n+p.amount,0);run(g,90);
  assert.ok(g.state.forage.reduce((n,p)=>n+p.amount,0)<before,'workers deliver old cargo then gather the new resource');
 }));

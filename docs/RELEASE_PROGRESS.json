@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "Bounded defense targeting/direct-order fix and saved-village CPU diagnosis followingb9a761f",
+  "verifiedPublishedCodeBaseline": "Movement building-query optimization with exact saved-state/RNG replay following007e444",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Two independently profitable rival trades under ordinary AI review",
