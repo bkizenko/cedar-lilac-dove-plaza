@@ -1,0 +1,7 @@
+# Actual-bank fishing qualification — 2026-11-02
+
+Two connected scenarios pass on frozen published runtime c66304c. Both use generated V16 seed7, Standard Archipelago, its unchanged terrain, actual naturally generated fish stocks, and original residents. Finite initial500provisions/200L and a revealed chart isolate fishing; quiet weather/review delays are setup only. No fish, cargo or terrain is granted after work begins.
+
+A public gather command sends a real adult from camp to an actually reachable freshwater bank (surface0.668m) or coastal bank (sea0.42m). Every catch is taken while standing on dry ground within7m of the actual source and decreases its real stock. Before delivery, the received-food counter remains zero. Each resident carries3fish through an exact position/payload/stock save-load, receives a public recall, physically returns over the same natural terrain, then credits exactly3fish once at camp. Physical walking totals506.77m/509.14m; elapsed107.5s/106.9s. Both runs retain living residents, bounded fish stock, unchanged terrain and no simulation errors.
+
+This verifies M1-11, “Fishing uses actual reachable freshwater/coastal banks with physically returned catches.” It does not establish fishery campaign balance, hardship survival, naval fishing or first-winter completion. Exact run data is in docs/metrics/integrated-bank-fishing-2026-11-02.json. Root reran the separate M0 connected scenario on the same frozen source; it passed with no runtime patch.

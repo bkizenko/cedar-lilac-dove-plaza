@@ -1,0 +1,59 @@
+{
+  "sourceCommit": "c66304cc24ad9036132b1227c727871b54863924",
+  "passed": 2,
+  "total": 2,
+  "cases": [
+    {
+      "waterKind": "freshwater",
+      "seed": 7,
+      "generation": 16,
+      "size": 1040,
+      "source": {
+        "x": -0.4775490946583858,
+        "z": -83.4718915494547,
+        "water": 0.6681509399875005
+      },
+      "bank": {
+        "x": -6.482766055981748,
+        "z": -85.95933385982778
+      },
+      "actorId": 2942,
+      "initialStock": 40,
+      "stockAtSave": 38.61472222222222,
+      "payload": 3,
+      "delivered": 3,
+      "walkedMeters": 506.76956829559776,
+      "elapsed": 107.49999999999817,
+      "terrainUnchanged": true,
+      "saveAtBankWithRealCatch": true,
+      "scope": "Natural generated geometry and fish stock; authored finite500provisions/200L, initial revealed chart and quiet review delays; no supplied catch or terrain edits; not famine/campaign qualification"
+    },
+    {
+      "waterKind": "coastal",
+      "seed": 7,
+      "generation": 16,
+      "size": 1040,
+      "source": {
+        "x": 99.74299794901162,
+        "z": -230.16036181990057,
+        "water": 0.42
+      },
+      "bank": {
+        "x": 93.73778098768827,
+        "z": -227.67291950952747
+      },
+      "actorId": 2942,
+      "initialStock": 37,
+      "stockAtSave": 34.91368916666668,
+      "payload": 3,
+      "delivered": 3,
+      "walkedMeters": 509.1359100708311,
+      "elapsed": 106.8999999999982,
+      "terrainUnchanged": true,
+      "saveAtBankWithRealCatch": true,
+      "scope": "Natural generated geometry and fish stock; authored finite500provisions/200L, initial revealed chart and quiet review delays; no supplied catch or terrain edits; not famine/campaign qualification"
+    }
+  ],
+  "gate": "M1-11",
+  "evidenceLimit": "Controlled initial food/water and chart isolate physical fishing; not campaign balance, famine or full survival qualification."
+}

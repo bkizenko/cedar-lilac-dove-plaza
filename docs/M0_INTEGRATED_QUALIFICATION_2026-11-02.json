@@ -1,0 +1,360 @@
+{
+  "sourceCommit": "c66304cc24ad9036132b1227c727871b54863924",
+  "scope": "Controlled finite endowment on unchanged actual V14 seed1 pangaea1040 terrain; no rewards or terrain/position edits after work begins; quiet clear component scenario, not campaign/difficulty/performance qualification",
+  "scenario": "integrated priorities/direct override/recall/cargo/escrow/paid construction/production/haulage/save/replacement",
+  "elapsedSimulationSeconds": 232.39999999999534,
+  "initialEndowment": {
+    "wood": 300,
+    "stone": 150,
+    "clay": 16,
+    "water": 200
+  },
+  "originalPeople": [
+    4824,
+    4825,
+    4826,
+    4827,
+    4828
+  ],
+  "commands": [
+    {
+      "time": 0,
+      "name": "placeBuilding",
+      "args": {
+        "type": "hearth",
+        "x": -34,
+        "z": 218
+      }
+    },
+    {
+      "time": 0,
+      "name": "build",
+      "args": {
+        "site": 4932,
+        "actor": 4824
+      }
+    },
+    {
+      "time": 10.199999999999996,
+      "name": "placeBuilding",
+      "args": {
+        "type": "workshop",
+        "x": -36.928932188134524,
+        "z": 225.07106781186548
+      }
+    },
+    {
+      "time": 10.199999999999996,
+      "name": "build",
+      "args": {
+        "site": 4933,
+        "actor": 4824
+      }
+    },
+    {
+      "time": 25.199999999999942,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 26.19999999999994,
+      "name": "beginProduction",
+      "args": {
+        "recipe": "formClayHand",
+        "workplace": 4932
+      }
+    },
+    {
+      "time": 26.399999999999938,
+      "name": "moveOverride",
+      "args": {
+        "actor": 4824,
+        "x": -44,
+        "z": 218
+      }
+    },
+    {
+      "time": 26.399999999999938,
+      "name": "gather",
+      "args": {
+        "actor": 4826,
+        "node": 1133
+      }
+    },
+    {
+      "time": 98.40000000000086,
+      "name": "autoWork",
+      "args": {
+        "enabled": true
+      }
+    },
+    {
+      "time": 98.40000000000086,
+      "name": "priority",
+      "args": {
+        "kind": "food"
+      }
+    },
+    {
+      "time": 99.20000000000087,
+      "name": "autoWork",
+      "args": {
+        "enabled": false
+      }
+    },
+    {
+      "time": 99.20000000000087,
+      "name": "placeBuilding",
+      "args": {
+        "type": "hut",
+        "x": -44,
+        "z": 228
+      }
+    },
+    {
+      "time": 99.20000000000087,
+      "name": "buildWithFullHands",
+      "args": {
+        "site": 4936,
+        "actor": 4826
+      }
+    },
+    {
+      "time": 99.20000000000087,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 103.20000000000093,
+      "name": "unloadPaidBatch",
+      "args": {
+        "batchId": 4934
+      }
+    },
+    {
+      "time": 103.40000000000093,
+      "name": "build",
+      "args": {
+        "site": 4936,
+        "actor": 4824
+      }
+    },
+    {
+      "time": 103.40000000000093,
+      "name": "resumeProduction",
+      "args": {
+        "batchId": 4934
+      }
+    },
+    {
+      "time": 105.80000000000096,
+      "name": "moveOverride",
+      "args": {
+        "actor": 4824,
+        "x": -44,
+        "z": 218
+      }
+    },
+    {
+      "time": 105.80000000000096,
+      "name": "replacementBuild",
+      "args": {
+        "site": 4936,
+        "actor": 4826
+      }
+    },
+    {
+      "time": 193.39999999999756,
+      "name": "recall",
+      "args": {}
+    },
+    {
+      "time": 194.19999999999752,
+      "name": "beginHaulage",
+      "args": {
+        "kind": "sled",
+        "actor": 4826
+      }
+    },
+    {
+      "time": 198.59999999999727,
+      "name": "moveOverride",
+      "args": {
+        "actor": 4826,
+        "x": -44,
+        "z": 218
+      }
+    },
+    {
+      "time": 198.59999999999727,
+      "name": "resumeHaulageReplacement",
+      "args": {
+        "haulId": 4937,
+        "actor": 4824
+      }
+    }
+  ],
+  "saves": [
+    {
+      "label": "full timber carrier, recalled paid clay carrier, paid unbuilt hut",
+      "time": 99.20000000000087,
+      "sha256": "c46170011e837a885a1b530861684b5e75e0dad44e80fa603d4abd73763a1ded"
+    },
+    {
+      "label": "paid inputs physically parked at cache without refund",
+      "time": 103.40000000000093,
+      "sha256": "9ab3b12eae50c4027ed9d3a57d85ab10287e8f3bbbf87500e2df0cf3ca728d6c"
+    },
+    {
+      "label": "partly built paid hut and replacement production actor",
+      "time": 105.80000000000096,
+      "sha256": "b978a37dacf50ee56a81172a52719651d6f25cc5a93efdc615aa6644de4608ad"
+    },
+    {
+      "label": "paid transport progress suspended by direct movement",
+      "time": 198.59999999999727,
+      "sha256": "9ef82ba81158188c0ee592f0dfd415d53952afc4851cea64039f99644b3696de"
+    },
+    {
+      "label": "all paid projects completed and delivered",
+      "time": 230.39999999999546,
+      "sha256": "ca6f79ba73557d21afca213de68eb120c485976ca296fd0c804aad9b2cf1cf49"
+    }
+  ],
+  "terrainSha256": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "terrainUnchanged": true,
+  "timber": {
+    "sourceId": 1133,
+    "amountBefore": 46,
+    "firstFullLoad": 28,
+    "physicallyReceived": 28,
+    "initial": 300,
+    "paidWood": 70,
+    "fuelBurned": 0,
+    "final": 258
+  },
+  "stone": {
+    "initial": 150,
+    "paidStone": 7,
+    "final": 143
+  },
+  "clay": {
+    "initial": 16,
+    "charged": 4,
+    "remaining": 12,
+    "greenwareDelivered": 4,
+    "productionWaterUsedLiters": 2
+  },
+  "waterAccounting": {
+    "initial": 200,
+    "waterLiters": 188.70399999998864,
+    "waterConsumedLiters": 9.295999999999863,
+    "waterDeliveredLiters": 0,
+    "waterLostLiters": 0,
+    "fuelBurnedWood": 0,
+    "waterShortageSeconds": 0,
+    "coldExposurePersonSeconds": 0,
+    "productionUsedLiters": 2
+  },
+  "foodAccounting": {
+    "initial": 1000,
+    "received": 0,
+    "consumed": 45.28454537704863,
+    "spoiled": 134.1957377113249,
+    "final": 820.5197169116265
+  },
+  "construction": {
+    "hutId": 4936,
+    "interruptedProgress": 0.1532585513671445,
+    "originalBuilder": 4824,
+    "replacementBuilder": 4826,
+    "completed": true,
+    "chargedOnce": true
+  },
+  "production": {
+    "batchId": 4934,
+    "originalActor": 4824,
+    "replacementMaker": 4825,
+    "storedEscrow": 4,
+    "complete": "complete"
+  },
+  "transport": {
+    "haulId": 4937,
+    "originalActor": 4826,
+    "replacementActor": 4824,
+    "interruptedProgress": 5.141172980584623,
+    "ownedSleds": 1
+  },
+  "physicalWalking": [
+    {
+      "id": 4824,
+      "meters": 34.078808850270306,
+      "minHeight": 11.804023522290198,
+      "maxHeight": 12.277636442232179
+    },
+    {
+      "id": 4825,
+      "meters": 18.803921725519114,
+      "minHeight": 11.908235574490325,
+      "maxHeight": 12.302634183866456
+    },
+    {
+      "id": 4826,
+      "meters": 53.04890166828662,
+      "minHeight": 10.884191544625116,
+      "maxHeight": 12.291231842162974
+    },
+    {
+      "id": 4827,
+      "meters": 10.213684743682213,
+      "minHeight": 12.232268374064967,
+      "maxHeight": 12.275771664024525
+    },
+    {
+      "id": 4828,
+      "meters": 12.275274919233068,
+      "minHeight": 12.279011084979762,
+      "maxHeight": 12.28890766301527
+    }
+  ],
+  "simulationErrors": [],
+  "limits": [
+    "Not all executors migrated to atomic goods/capacity reservations (M0-07).",
+    "Not serialized RNG/replay proof (M0-09); seeded harness only.",
+    "No combat deaths or intercepted journeys; replacement follows explicit reassignment.",
+    "Only these declared ordinary commands; no corrective commands after timeouts."
+  ],
+  "qualification": {
+    "status": "Executed; proposed gate qualification pending integrator review/publication",
+    "gateBaseline": "hearthwild-first-release-gates-v1",
+    "gateIds": [
+      "M0-11",
+      "M0-12"
+    ],
+    "distinctTests": 1,
+    "result": "PASS",
+    "testDurationMilliseconds": 8370.963125,
+    "runnerDurationMilliseconds": 8660.625,
+    "driveGameStepCalls": 1152,
+    "postCompletionGameStepCalls": 10,
+    "totalGameStepCalls": 1162,
+    "runtimeSourceFiles": 264,
+    "runtimeFilesUnchangedFromFrozenCommit": true,
+    "runtimeManifestSha256": "974c5f0afcc24ba54378590e7fceaf432b816b0451e3b784bc4177aa223dbd69",
+    "testScriptSha256": "3e57eb0113ec376defd0c8d79f7a7787aa79ec9e11baf7f3ab07319441a26ad4",
+    "rawReportSha256": "5613cc0d8db4e6af87ddb432e5f84245b1234daabd8eaa04cb478dfbf5ee290c",
+    "rawLogSha256": "24ac4b8196a74c9e98c9242af75e5e89c956b65ee24153adcf64b66fe974f1ad"
+  },
+  "assertionCoverage": [
+    "Actual carried timber equals carryingCapacity=28; priority alone advances its physical return before recall.",
+    "Priority/recall do not credit undelivered cargo or refund paid clay, construction or transport.",
+    "Five strict save/loads preserve actual actor positions/HP/cargo, paid progress, original site identity, project ownership and available stocks.",
+    "Four paid clay inputs physically park at cache as committed capacity; available clay remains12; replacement collects/works/delivers4greenware once.",
+    "Paid hut interrupted at15.325855% and replacement finishes without another charge.",
+    "Paid sled interrupted at5.14117 workseconds; replacement retains progress, completes one owned sled, and pays8logs/1stone once.",
+    "Every Game.step checks original residents alive, no simulation errors, unchanged heightfield and at-most-one actual paid executor owner per actor.",
+    "Timber/stone/clay/water and food consumption/spoilage reconcile exactly within floating-point tolerance.",
+    "Additional2seconds after completion do not duplicate goods, deliveries or equipment."
+  ],
+  "knownSeparateIssue": "Sled rejection text mentions a hearth, but frozen haulage workplace eligibility permits only townhall/workshop. This fixture pays/builds the supported workshop; runtime behavior was not changed."
+}
