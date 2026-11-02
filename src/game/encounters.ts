@@ -7,7 +7,7 @@ import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {carryingCapacity} from './haulage';
-import {visitorPrice,tradeWithVisitor} from './visitors';
+import {visitorPrice,tradeWithVisitor,declineVisitorVisit} from './visitors';
 import {personName} from './people';
 import {lifeEvent} from './communities';
 import type {Game} from './sim';
@@ -39,7 +39,7 @@ export function answerEncounter(g:Game,reaction:'greet'|'withdraw'|'observe'){
 }
 
 export const CONTACT_RULES={version:1,talkMeters:12,exchangeMeters:3,capturePartyMeters:50,villageResponseMeters:150,riskMeters:80,maximumDemandGuards:4,trustingThreshold:.6,questionCooldownSeconds:60,visitorCampMeters:35,minimumBundleValueRatio:.65,maximumBundleValueRatio:1.55,yieldSeconds:30,experiencedCraftingSeconds:60,hungrySeconds:30,tiredFraction:.5,woundedFraction:.5} as const;
-export type ContactAction='attack'|'demand'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade';
+export type ContactAction='attack'|'demand'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade'|'decline-trade';
 export type ContactOutcome={accepted:boolean;reason:string;report?:string};
 export type ContactTrade={id:string;label:string;kind:'bundle'|'visitor';give?:ResKind;buyerId:number;strangerId:number};
 const worth:Record<ResKind,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
@@ -131,12 +131,13 @@ export function performContactAction(g:Game,action:ContactAction,id:number,perso
  else if(action==='demand')result=beginContactDemand(g,u);
  else if(action==='capture')result=beginContactCapture(g,u);
  else if(action==='question')result=questionPerson(g,u,personId,optionId||'overview');
+ else if(action==='decline-trade')result=declineVisitorVisit(g,u.id);
  else if(action==='trade')result=exchangeContact(g,u,optionId,personId);
  else if(action==='approach-trade')result=approachContactTrade(g,u,personId);
  else if(action==='release-prisoner'){const accepted=!!u.prisoner&&u.prisoner.captorTeam===0&&releasePrisoner(g,id);result={accepted,reason:accepted?'Released to walk home with their belongings and remaining provisions':'This person is not in your custody'};}
  else if(action==='ask-visitor-leave'){const issue=visitorLeaveIssue(g,u,personId);if(issue)result={accepted:false,reason:issue};else{returnPerson(g,u,'Leaving by request — taking belongings home');result={accepted:true,reason:'The visitor is walking home with the same belongings'};}}
  else {const own=speaker(g,u,personId);if(!own)result={accepted:false,reason:'Your explorer is no longer present at this meeting'};else if(!supplyDrops(g,0).some(home=>!!supplyApproach(g,own,home)))result={accepted:false,reason:'Your explorer has no reachable home cache; clear a route or crossing first'};else{returnPerson(g,own,'Returning home from first contact with existing provisions');own.order='move';result={accepted:true,reason:`${personName(own)} is returning to your camp; the foreign person remains independent`};}}
- if(result.accepted&&action==='trade')finishEncounterAction(g,id);
+ if(result.accepted&&(action==='trade'||action==='decline-trade'))finishEncounterAction(g,id);
  if(result.accepted&&['attack','demand','capture','release-prisoner','ask-visitor-leave','send-scout-home'].includes(action))finishEncounterAction(g,id);g.banner(result.reason,5);return result;
 }
 

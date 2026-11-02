@@ -24,6 +24,7 @@ export function ContactActions({engine,strangerId,personId}:{engine:Engine;stran
    {!actions.trade.options.length&&(actions.approach.reason===null?<button type="button" className={button} onClick={()=>run('approach-trade')}>Walk closer to exchange</button>:<p className={hint}>{actions.trade.reason}</p>)}
    {actions.scout&&stranger?.carryType&&<p className={hint}>{personName(actions.scout)} can carry {carryingCapacity(actions.scout,stranger.carryType)} {stranger.carryType} with their current equipment.</p>}
    <p className={hint}>{actions.safety}</p>
+   {stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<button type="button" className={button} onClick={()=>run('decline-trade')} title="Return the goods and take your answer home; repeated unchanged offers stop.">Decline this offer</button>}
   </div>}
   {(feedback||actions.question.report)&&<div className="rounded-md border border-bronze/30 p-3" role="status" aria-live="polite"><p className={hint}>{feedback||actions.question.report}</p>{branch==='talk'&&stranger?.carryType&&stranger.carry>0&&<button type="button" className={button} onClick={()=>{setBranch('trade');setFeedback('');}}>Discuss their offer</button>}</div>}
   <details><summary className="cursor-pointer text-sm text-parchment-dim">Other choices</summary><div className="mt-2 space-y-2">

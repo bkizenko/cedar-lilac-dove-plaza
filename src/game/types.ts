@@ -141,6 +141,7 @@ export type Livestock = Critter & {
 
 export type Unit = {
   tradeIntelCargo?:import('./tradeIntel').PartnerTradeReport[];
+  visitorRefusalCargo?:import('./visitorRefusals').VisitorRefusalCargo;
   societyMissionId?:number;
   coastalVoyageId?:number;
   coastalCommissionId?:number;

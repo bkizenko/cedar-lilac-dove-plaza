@@ -1,3 +1,4 @@
+import{carryVisitorRefusal,visitorOfferOnCooldown,VISITOR_REFUSAL_RULES}from'./visitorRefusals';
 import{observePartnerTrade,deliverTradeIntel}from'./tradeIntel';
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
@@ -22,7 +23,8 @@ export function tickVisitors(g:Game,dt:number) {
       .map(good=>({good,spare:t[good]-(good==='food'?foodDemand(g,t.id)*240:good==='wood'?20:10)}))
       .filter(item=>item.spare>=8).sort((a,b)=>(b.good===t.spec?30:0)+b.spare*worth[b.good]-(a.good===t.spec?30:0)-a.spare*worth[a.good]);
     if(!available.length)continue;
-    const {good,spare}=available[0],amount=Math.min(24,Math.floor(spare));
+    const chosen=available.find(({good,spare})=>{const amount=Math.min(24,Math.floor(spare));return !visitorOfferOnCooldown(g,t.id,good,amount,visitorQuoteTerms(g,t.id,good,amount));});if(!chosen)continue;
+    const {good,spare}=chosen,amount=Math.min(24,Math.floor(spare));
     equipCaravan(g,u);
     g.spend(t.id,{[good]:amount});u.carry=amount;u.carryType=good;u.carryFood=good==='food'?'provisions':undefined;
     u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=home.x;u.tz=home.z;
@@ -60,11 +62,27 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   }
   return true;
 }
-export function visitorPrice(g:Game,u:Unit,give:ResKind) {
-  if(!u.visit||u.visit.phase!=='waiting'||!u.carryType||u.carryType===give)return null;
-  const t=g.tribe(u.team),need=give==='food'?Math.max(30,foodDemand(g,u.team)*450):40;
-  const scarcity=Math.max(0.7,Math.min(1.5,need/Math.max(10,t[give])));
-  return Math.max(1,Math.ceil(u.carry*worth[u.carryType]/worth[give]/scarcity*(1.1-(t.trust||0)*0.15)));
+function visitorQuote(g:Game,team:number,offered:ResKind,amount:number,payment:ResKind){
+ if(offered===payment)return null;const t=g.tribe(team),need=payment==='food'?Math.max(30,foodDemand(g,team)*450):40;
+ const scarcity=Math.max(0.7,Math.min(1.5,need/Math.max(10,t[payment])));return Math.max(1,Math.ceil(amount*worth[offered]/worth[payment]/scarcity*(1.1-(t.trust||0)*0.15)));
+}
+function visitorQuoteTerms(g:Game,team:number,offered:ResKind,amount:number,localBuyerAge?:number){
+ const payments:ResKind[]=['food','wood','stone','copper','iron'];
+ let known=new Set<ResKind>(['food','wood','stone']);
+ if(localBuyerAge!==undefined)known=new Set(payments.filter(k=>(k!=='copper'||localBuyerAge>=1)&&(k!=='iron'||localBuyerAge>=2)));
+ else{
+  for(const r of g.state.tradeIntel?.visitorRefusals||[])if(r.seller===team&&r.buyer===0&&r.offered===offered)known.add(r.payment);
+  const report=g.state.tradeIntel?.reports.find(r=>r.observer===team&&r.partner===0);
+  if(report&&g.state.time-report.observedAt<=VISITOR_REFUSAL_RULES.needReportFreshSeconds)for(const good of report.goods)if(good.need!=='unavailable')known.add(good.kind);
+ }
+ return payments.filter(k=>k!==offered&&known.has(k)).map(payment=>({payment,price:visitorQuote(g,team,offered,amount,payment)!}));
+}
+export function visitorPrice(g:Game,u:Unit,give:ResKind){if(!u.visit||u.visit.phase!=='waiting'||!u.carryType)return null;return visitorQuote(g,u.team,u.carryType,u.carry,give);}
+/** Refusing is a real conversation, not a remote ban: this person must carry
+ * the answer home before their society changes its next offer. */
+export function declineVisitorVisit(g:Game,id:number){
+ const u=g.state.units.find(p=>p.id===id&&p.hp>0);if(!u||u.visit?.phase!=='waiting'||u.visit.team!==undefined||!u.carryType||!g.visibleAt(u.x,u.z))return {accepted:false,reason:'This trader is no longer here with an offer'};
+ if(!carryVisitorRefusal(g,u,visitorQuoteTerms(g,u.team,u.carryType,u.carry,g.tribe(0).age)))return {accepted:false,reason:'The trader needs to be here with a valid local offer'};u.visit.phase='return';u.order='move';u.node=null;u.target=null;u.workReason='Taking the declined offer and your answer home';const reason='Offer declined. The same trader is taking your answer and unchanged goods home.';g.banner(reason,5);return {accepted:true,reason};
 }
 export function tradeWithVisitor(g:Game,id:number,give:ResKind) {
   const u=g.state.units.find(u=>u.id===id&&u.hp>0);if(!u||!['food','wood','stone','copper','iron'].includes(give))return false;
