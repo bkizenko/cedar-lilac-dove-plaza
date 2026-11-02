@@ -1,0 +1,94 @@
+{
+  "scope": "Bounded actual minimap terrain callbacks on public native seed7 V16 archipelago1040; no Game.step, GPU or FPS claim",
+  "baselineHead": "8e95bca5941dea87fb6ceba5d29335272685b4d3",
+  "method": {
+    "order": "A-B-B-A",
+    "callbacksPerRun": 20,
+    "resolution": 160,
+    "syntheticTimerIntervalMilliseconds": 500,
+    "warmup": "one initial full map per branch before timing",
+    "nicePriority": 10,
+    "sourceFixture": "Public newly generated natural world; ordinary paused game, no geometry/resource/actor corrections",
+    "stateAndPixels": "full encoded state unchanged and all height/water/color bytes identical every callback",
+    "limits": "Native component callback timing, not a browser or private-village campaign benchmark; external runtime scheduling not modeled",
+    "initialSampleCountPerBranch": 1,
+    "changingTerrainScope": "Focused tests compare fresh exact physical heights, water and color outputs; performance window covers stable terrain only"
+  },
+  "sourceHashes": {
+    "baselineModel": "50dfafc84c76827af2a0ffe6c967a1f23ffe988551c4bbf1712c333b15f3c471",
+    "candidateModel": "3883c1d6bc6b42a2c225ec9d4e0b020bda00c8b08c7130746e7fe409527653bf",
+    "candidateSourceContract": "9cb1d8e9f378ccf1443d416ce7dc2f53eef71b3ce9a9215bacaefd53177e0e4f"
+  },
+  "runs": [
+    {
+      "variant": "A",
+      "timing": {
+        "count": 20,
+        "meanMs": 2.05081250000012,
+        "medianMs": 1.820625000000291,
+        "p95Ms": 2.6522920000006707,
+        "maximumMs": 3.8905830000003334
+      },
+      "resampledCallbacks": 20,
+      "callbacks": 20,
+      "preparedPixelSha256": "a6426c741454c90b3816271dca5e0a369f586cf7929185adbe9da6e72b203b1f",
+      "fullEncodedStateSha256": "8d2d01a4d5704aaca2f523dc95bf061dabc4a488916089d3261968881bde881c",
+      "stateUnchanged": true,
+      "rngUnchanged": true
+    },
+    {
+      "variant": "B",
+      "timing": {
+        "count": 20,
+        "meanMs": 0.3049478500000987,
+        "medianMs": 0.29908400000022084,
+        "p95Ms": 0.33150000000023283,
+        "maximumMs": 0.38312500000029104
+      },
+      "resampledCallbacks": 0,
+      "callbacks": 20,
+      "preparedPixelSha256": "a6426c741454c90b3816271dca5e0a369f586cf7929185adbe9da6e72b203b1f",
+      "fullEncodedStateSha256": "8d2d01a4d5704aaca2f523dc95bf061dabc4a488916089d3261968881bde881c",
+      "stateUnchanged": true,
+      "rngUnchanged": true
+    },
+    {
+      "variant": "B",
+      "timing": {
+        "count": 20,
+        "meanMs": 0.3045917499999632,
+        "medianMs": 0.2971659999984695,
+        "p95Ms": 0.3292089999995369,
+        "maximumMs": 0.34279199999946286
+      },
+      "resampledCallbacks": 0,
+      "callbacks": 20,
+      "preparedPixelSha256": "a6426c741454c90b3816271dca5e0a369f586cf7929185adbe9da6e72b203b1f",
+      "fullEncodedStateSha256": "8d2d01a4d5704aaca2f523dc95bf061dabc4a488916089d3261968881bde881c",
+      "stateUnchanged": true,
+      "rngUnchanged": true
+    },
+    {
+      "variant": "A",
+      "timing": {
+        "count": 20,
+        "meanMs": 1.822827099999904,
+        "medianMs": 1.8045000000001892,
+        "p95Ms": 1.8318749999998545,
+        "maximumMs": 2.173917000000074
+      },
+      "resampledCallbacks": 20,
+      "callbacks": 20,
+      "preparedPixelSha256": "a6426c741454c90b3816271dca5e0a369f586cf7929185adbe9da6e72b203b1f",
+      "fullEncodedStateSha256": "8d2d01a4d5704aaca2f523dc95bf061dabc4a488916089d3261968881bde881c",
+      "stateUnchanged": true,
+      "rngUnchanged": true
+    }
+  ],
+  "meanAcrossRuns": {
+    "A": 1.936819800000012,
+    "B": 0.30476980000003095,
+    "percentChange": -84.26442150167873
+  },
+  "qualified": true
+}
