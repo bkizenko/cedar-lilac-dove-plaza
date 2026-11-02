@@ -23,6 +23,8 @@ import { saveGame, loadRaw, hasSave, protectGame, exportGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
+export type VillageImportResult={applied:boolean;saved:boolean;message:string};
+
 type HudFn = (s: HudSnapshot) => void;
 
 /** A queued animation frame can predate expensive synchronous world setup.
@@ -84,6 +86,7 @@ export class Engine {
     if(depth)this.plotDepth=Math.max(1,Math.min(3,this.plotDepth+delta));else this.plotWidth=Math.max(1,Math.min(3,this.plotWidth+delta));
     this.updateGhost();this.game.banner(`Plot ${this.plotWidth} × ${this.plotDepth} · [ ] width · Shift+[ ] depth`,3);this.pushHud();
   }
+  private importSequence = 0;
   disposed = false;
   ro: ResizeObserver | null = null;
   failFrames = 0;
@@ -199,18 +202,34 @@ export class Engine {
     this.pushHud();
   }
   exportVillage() {this.protectVillage();exportGame(this.game);}
-  async importVillage(file:File) {
+  async importVillage(file:File):Promise<VillageImportResult> {
+    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,state=game.state;
+    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&game.state===state&&!this.originalGame;
+    const cancelled=():VillageImportResult=>({applied:false,saved:false,message:"Import cancelled — the active village changed."});
+    if(this.disposed)return cancelled();
     this.autosave.invalidate();
-    if(this.originalGame){this.game.banner("Leave test mode before importing a village",4);return;}
+    if(this.originalGame){const message="Leave test mode before importing a village";this.game.banner(message,4);this.pushHud();return{applied:false,saved:false,message};}
+    let restored:Game|undefined;
     try {
-      const restored=decodeGame(JSON.parse(await file.text()));
-      if(this.game.started&&!this.game.awaitingStart&&!protectGame(this.game))throw new Error("Could not protect your current village. Download it before importing another save.");
-      saveGame(this.game);
+      const text=await file.text();
+      if(!current())return cancelled();
+      restored=decodeGame(JSON.parse(text));
+      if(!current())return cancelled();
+      if(game.started&&!game.awaitingStart&&!protectGame(game))throw new Error("Could not protect your current village. Download it before importing another save.");
+      if(!current())return cancelled();
+      saveGame(game);
+      if(!current())return cancelled();
       this.restoreVillage(restored);
-      if(!saveGame(restored,true))throw new Error("Village imported but local saving failed. Keep the original file.");
-      this.game.banner("Backup imported; previous village kept as a protected checkpoint",5);
-    } catch(error) {this.game.banner(error instanceof Error?error.message:"Invalid village backup",5);}
-    this.pushHud();
+      const saved=saveGame(restored,true),message=saved?"Village imported; previous village kept as a protected checkpoint":"Village imported but local saving failed. Keep the original file.";
+      this.game.banner(message,5);this.pushHud();
+      return{applied:true,saved,message};
+    } catch(error) {
+      const applied=!!restored&&this.game===restored;
+      if(!applied&&!current())return cancelled();
+      const detail=error instanceof Error?error.message:"Invalid village backup",message=applied?`Village loaded, but could not finish: ${detail}`:detail;
+      this.game.banner(message,5);this.pushHud();
+      return{applied,saved:false,message};
+    }
   }
   private restoreVillage(restored:Game) {
     this.autosave.invalidate();

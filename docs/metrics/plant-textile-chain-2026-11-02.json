@@ -1,0 +1,169 @@
+{
+  "baselineCommit": "b0c9557",
+  "scope": "One physical plant-bast textile chain and condition-preserving seasonal wardrobe; no acceptance gate claim",
+  "sourceSha256": {
+    "src/game/textiles.ts": "8460b11fd4538fed61e44aa9060380ebe1390ccee5264d1b3becaf4e4008a122",
+    "src/game/production.ts": "ef6ee10c874d690b8cb5ec7361201df121238a12678e2921e57ea1cf9512cd55",
+    "src/game/types.ts": "73c160d0f96393a0065c829d6d016b3e0adeac282352bdad5289563c5026971a",
+    "src/game/survivalNeeds.ts": "7cfe5784f4c6b8647c1c5401fe62561d613fb3977752e4cc5977cb8b3f3ce0cb",
+    "src/game/carriedLoad.ts": "cef1289240dce13a5be7e3ffdf8acc3182cea688ed2634e56d53875e940843ae",
+    "src/scene/wornGarments.ts": "f3ac12663424ead6c7052d7adf932c46b3d991f9161cdba39ca1329e6825b075",
+    "src/ui/ProductionControls.tsx": "2237c7853b5aec3d9facfeb6e20fce1231d34587d4a5a8ec12d290d5486b86e4",
+    "src/game/productionCatalog.ts": "5b00863c33589485d350d558908e7fb0430ea3a0dbedd6325d80ef13c088cbfb",
+    "src/game/constants.ts": "dcb1e5af300999bf70502fbd2dcfab7cd323e3bab0fceaf5e144e8d1255054f4",
+    "src/game/practiceKnowledge.ts": "af33feb14e48251ca37eacbe3feb1c3a1ac2a22d300163c9cb7544815c9388cd"
+  },
+  "testSha256": {
+    "scripts/textile-production.test.mjs": "20b5ce9720e96f116da61c7759e21667d14b9c58899fa202bd63c89f640869b8",
+    "scripts/production.test.mjs": "b18524d84cdd08985db72655f296fabcb4241494bbd71111a74d1b0cb7b3f527",
+    "scripts/worn-garments.test.mjs": "967983d3db963d0dca2117c70646094c8e237b1abca68c7e6a4a115ea4dd6834",
+    "scripts/production-catalog.test.mjs": "8fb4301fc358aafa4620cd4a62c2119da094a9bd6317e1a42bb674deab741cf8"
+  },
+  "validation": {
+    "exactSourceFunctionalCases": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "functionalLog": "/tmp/textile-all-42-final.log",
+    "functionalLogSha256": "cad272c448aff727ce4598f6b3f487ccedec09759aff661c75035067f45226b1",
+    "typecheck": "passed before catalogue-only wording follow-up",
+    "typecheckLog": "/tmp/textile-final-typecheck.log",
+    "productionBuild": "passed before catalogue-only wording follow-up",
+    "buildLog": "/tmp/textile-final-build.log",
+    "catalogueFollowup": "5/5 passed, zero skips; catalogue-only descriptions/status correction",
+    "catalogueFollowupLog": "/tmp/textile-catalogue-followup-tests.log",
+    "catalogueFollowupLogSha256": "8903c4710c9120a92ec4d0fb139dd7bef4a05ce80ff9287e1d51d764e6b8fcb7"
+  },
+  "nativeScenario": {
+    "initialEndowment": {
+      "wood": 120,
+      "stone": 70,
+      "food": 1000,
+      "waterLiters": 1000
+    },
+    "seed": 1,
+    "worldgenVersion": 14,
+    "layout": "pangaea",
+    "fibreGranted": false,
+    "terrainModified": false,
+    "sourceTimberUnitsConsumed": 2,
+    "consumed": {
+      "plantFibre": 8,
+      "yarn": 4,
+      "cloth": 2,
+      "cordage": 1
+    },
+    "produced": {
+      "cordage": 4,
+      "yarn": 4,
+      "cloth": 2,
+      "lightClothes": 1
+    },
+    "paidBatchesCompleted": 4,
+    "paidBatchesInterrupted": 1,
+    "wearer": {
+      "id": 4825,
+      "x": -44,
+      "y": 12.277367493443235,
+      "z": 218,
+      "garment": {
+        "item": "lightClothes",
+        "condition": 1
+      }
+    },
+    "workplaces": [
+      {
+        "id": 4936,
+        "type": "hearth",
+        "x": -34,
+        "y": 11.760759859028653,
+        "z": 218
+      },
+      {
+        "id": 4938,
+        "type": "fibreWorkshop",
+        "x": -35.33974596215561,
+        "y": 11.370020226940515,
+        "z": 223
+      },
+      {
+        "id": 4939,
+        "type": "tailor",
+        "x": -39,
+        "y": 11.774962990741681,
+        "z": 226.6602540378444
+      }
+    ],
+    "deliveredPractice": {
+      "twistCordage": {
+        "batches": 1,
+        "failedBatches": 0,
+        "usefulOutputs": 4,
+        "firstAt": 129.00000000000122,
+        "lastAt": 129.00000000000122,
+        "makers": [
+          4825
+        ]
+      },
+      "spinYarn": {
+        "batches": 1,
+        "failedBatches": 0,
+        "usefulOutputs": 4,
+        "firstAt": 164.7999999999992,
+        "lastAt": 164.7999999999992,
+        "makers": [
+          4824
+        ]
+      },
+      "weaveCloth": {
+        "batches": 1,
+        "failedBatches": 0,
+        "usefulOutputs": 2,
+        "firstAt": 232.19999999999536,
+        "lastAt": 232.19999999999536,
+        "makers": [
+          4824
+        ]
+      },
+      "sewLightClothes": {
+        "batches": 1,
+        "failedBatches": 0,
+        "usefulOutputs": 1,
+        "firstAt": 274.399999999993,
+        "lastAt": 274.399999999993,
+        "makers": [
+          4824
+        ]
+      }
+    }
+  },
+  "thermalRules": {
+    "displayedAmbientTemperature": true,
+    "fullConditionInsulationCelsius": {
+      "lightClothes": 0.75,
+      "skinClothes": 3,
+      "leatherClothes": 4
+    },
+    "heatThresholdCelsius": 22,
+    "heatRangeCelsius": 8,
+    "maximumHeatWorkFactor": {
+      "lightClothes": 0.1,
+      "skinClothes": 0.65,
+      "leatherClothes": 1
+    },
+    "fatigueSecondsPerUnit": 600,
+    "spareLoadUnits": {
+      "lightClothes": 0.08,
+      "skinClothes": 0.12,
+      "leatherClothes": 0.16
+    }
+  },
+  "limitations": [
+    "Controlled starting construction/food/water resources; no Normal or all-biome campaign qualification.",
+    "Separate controlled stock/temperature/capture-admission cases do not claim naturally emerged foreign contact or hot-season balance.",
+    "No sheep/wool, flax cultivation/retting, dye industry, advanced dedicated loom/spinning building, cloth repairs or finite needle-tool inventory is implemented.",
+    "No private save or private-world image was used; public native QA save stays outside the repository.",
+    "Actual desktop visual proof remains for parent integration; headless geometry/controls tests are not a browser render proof.",
+    "No timing/FPS improvement or acceptance-gate credit is inferred."
+  ]
+}

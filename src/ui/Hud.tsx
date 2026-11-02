@@ -1,3 +1,4 @@
+import {VillageFileTransfer} from './VillageFileTransfer';
 import{FarmToolRepairControls}from'./FarmToolRepairControls';
 import {GameTooltip} from './GameTooltip';
 import {GameDisclosure} from './GameDisclosure';
@@ -241,9 +242,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
             Save
           </button>
-          <details><summary className="px-2 py-2 cursor-pointer">Transfer village file</summary>
-          <button className="px-2 py-2" onClick={()=>engine?.exportVillage()}>Export file</button>
-          <label className="px-2 py-2">Import file<input className="sr-only" aria-label="Import village file" type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void engine?.importVillage(file);e.target.value="";}}/></label></details>
+          <VillageFileTransfer engine={engine}/>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn · arm the village</button>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" title="Plan a bridge on explored banks for recalled or loaded residents cut off by water. Requires materials and builders." onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}}>Plan return crossing</button>

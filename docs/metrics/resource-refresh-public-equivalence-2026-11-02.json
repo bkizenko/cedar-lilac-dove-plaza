@@ -1,0 +1,62 @@
+{
+  "scope": "Public native terrain equivalence probes; deliberately authored live changes before actual Game.step, not campaign qualification",
+  "cases": [
+    {
+      "case": "storage completion/loss/owner/resize",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "taskTablesMatch": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "a19fee9144700c014bc5e9fffa41c1c9970d15664c8529b816c94cc08de5320a",
+      "externalRng": {
+        "calls": 750,
+        "state": 689914510
+      }
+    },
+    {
+      "case": "living mouths/death/dependency/team",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "taskTablesMatch": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "4d0c1a70395f3ef4ede3ce6d11c259fc29c743203c4922a42a840b0f91fe96e0",
+      "externalRng": {
+        "calls": 750,
+        "state": 689914510
+      }
+    },
+    {
+      "case": "food thresholds/job lock/policy",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "taskTablesMatch": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "3b2f42cfda66fef7d9238ec590083387be33752513f7110507cfe950f83bc578",
+      "externalRng": {
+        "calls": 5740,
+        "state": 1948583292
+      }
+    },
+    {
+      "case": "resource footprint/depletion/insertion",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "taskTablesMatch": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "d11753539b5c2aba47f85acc7dba19d113c030d2d1898ca6c2f082be96b867eb",
+      "externalRng": {
+        "calls": 751,
+        "state": 1197992085
+      }
+    }
+  ],
+  "qualified": true,
+  "baselineHead": "8e95bca5941dea87fb6ceba5d29335272685b4d3",
+  "baselineGameFingerprint": "506795cacc4d113ef4c3eb69fdfb05713602f3fbaeb9f32dc0145c8fe4eb103b",
+  "candidateGameFingerprint": "b0d105b27865d3ace1781c5a9ded07a83383d91e5307cd30ca3a2622844c41ba",
+  "runtimeAdoption": "REJECTED on performance; these checks establish outcome equivalence only"
+}

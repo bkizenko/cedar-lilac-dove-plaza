@@ -8,13 +8,14 @@ import {beginProductionLesson,productionLessonIssue,pauseProductionLesson,resume
 type Chain={id:string;title:string;need:string;recipes:ProductionRecipe[];sites:BldType[];proof?:ProductionRecipe[];use?:'vessel'|'garment'|'basket'};
 const chains:Chain[]=[
  {id:'cordage',title:'Twist useful bindings',need:'Observed bark fibres must be peeled, prepared and physically delivered before twisting cordage.',recipes:['twistCordageHand','twistCordage'],sites:['hearth','fibreWorkshop']},
+ {id:'textiles',title:'Spin and weave plant cloth',need:'Harvested bast becomes cloth through actual spinning, delivered yarn and real weaving; useful batches establish the method.',recipes:['spinYarnHand','spinYarn','weaveCloth'],sites:['hearth','fibreWorkshop'],proof:['weaveCloth']},
  {id:'baskets',title:'Weave and use carrying baskets',need:'Fibre and cordage become useful containers through paid weaving, delivery and actual personal use.',recipes:['weaveBasketHand','weaveBasket'],sites:['hearth','fibreWorkshop'],use:'basket'},
  {id:'cooking',title:'Prepare hunted food',need:'Actual raw meat needs preparation, real fuel and delivery before it becomes an edible reserve.',recipes:['cookMeat'],sites:['hearth']},
  {id:'milling',title:'Prepare grain for cooking',need:'Delivered grain can be ground by hand; repeated grain demand makes a faster stone useful.',recipes:['grindGrain','grindGrainStation'],sites:['hearth','grindingStone']},
  {id:'baking',title:'Bake useful supplied batches',need:'Flour, collected water, fuel and work must meet at an actual hearth or oven.',recipes:['bakeBread','bakeBreadOven'],sites:['hearth','oven']},
  {id:'preservation',title:'Keep meat and fish for later',need:'Surplus is useful only if drying weather or paid smoking work protects it before it spoils.',recipes:['airDryMeat','airDryFish','manualSmokeMeat','manualSmokeFish','smokeMeat','smokeFish'],sites:['dryrack','hearth','smokehouse']},
  {id:'hides',title:'Prepare hides and leather',need:'Hunted hides need actual cleaning, drying or tanning inputs rather than disappearing into a building bonus.',recipes:['fleshHide','extractTannin','drySkin','tanHide'],sites:['butcher','dryrack','tanner'],proof:['drySkin','tanHide']},
- {id:'garments',title:'Make coverings for residents',need:'Delivered coverings become useful only when an actual resident wears and maintains them.',recipes:['sewSkinClothes','sewLeatherClothes'],sites:['tailor'],use:'garment'},
+ {id:'garments',title:'Make coverings for residents',need:'Delivered coverings become useful only when an actual resident wears and maintains them.',recipes:['sewSkinClothes','sewLeatherClothes','sewLightClothes'],sites:['tailor'],use:'garment'},
  {id:'pottery',title:'Make and use water vessels',need:'Finite clay, water, weather and fuel can produce vessels that reduce repeated water-carrying journeys.',recipes:['formClayHand','formClay','dryClay','dryClayCovered','fireClayHand','fireClay'],sites:['hearth','dryrack','potter','kiln'],proof:['fireClayHand','fireClay'],use:'vessel'},
 ];
 /** Current stock is observation, saved delivered results are proof, and actual

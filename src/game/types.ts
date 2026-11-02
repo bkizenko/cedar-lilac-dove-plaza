@@ -158,7 +158,8 @@ export type Unit = {
   productionApprentice?:import('./productionPractice').ProductionApprentice;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
-  garment?:{item:'skinClothes'|'leatherClothes';condition:number};
+  garment?:import('./textiles').Garment;
+  spareGarment?:import('./textiles').Garment;
   exploreAfterDelivery?:true;
   campMoveId?:number;
   contactDemand?:{targetId:number;lastTimeSeconds:number};

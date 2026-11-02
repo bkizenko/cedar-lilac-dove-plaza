@@ -1,3 +1,4 @@
+import{tickGarmentHeat}from'./textiles';
 import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
@@ -201,6 +202,7 @@ export function tickSurvival(g:Game,dt:number){
    if(thirstDamage>0)u.hp-=thirstDamage*u.maxHp/rules.thirstFatalExposureSeconds;
    }
    const fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
+   if(u.garment)tickGarmentHeat(u,temp,dt);
    const effective=temp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+(sheltered(g,u)?rules.shelterWarmthCelsius:0);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;
    u.coldSeconds=Math.max(0,before+dt*(exposure>0?exposure:-rules.recoverySecondsPerSecond));stock.coldExposurePersonSeconds+=dt*exposure;
