@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-02",
+  "automatedChecks": {
+    "passed": 17,
+    "total": 17,
+    "percent": 100
+  },
+  "outlineAudit": {
+    "layouts": 120,
+    "minimumNormalizedDifference": 0.045,
+    "scope": "Rotation/reflection/scale normalized radial outline comparison; six physical terrain worlds checked; not a universal perceptual guarantee"
+  },
+  "browserChecks": {
+    "freshWorldSeeds": [
+      312452992,
+      -1935090127
+    ],
+    "sameOptions": {
+      "size": 1040,
+      "layout": "archipelago"
+    },
+    "consoleErrors": 0,
+    "testVillageRestored": true,
+    "desktopViewport": [
+      1440,
+      900
+    ]
+  },
+  "seedScope": "No reuse through a persisted full 32-bit permutation in sequential fresh games within one browser profile. Save/explicit seed reconstruction bypasses allocation. Storage clearance, separate profiles and concurrent tabs outside guarantee. Unique seeds alone do not prove perceptually distinct maps.",
+  "fullAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 24,
+    "total": 98,
+    "percent": 24.49
+  }
+}

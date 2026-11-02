@@ -1,3 +1,4 @@
+import{nextWorldSeed}from'./worldSeeds';
 import{practicalHelperAI,pausePracticalHelper,tickPracticalHelpers}from'./practicalHelpers';
 import{beginBoatExploration}from'./boatExploration';
 import {beginPrisonerGuardQueries,endPrisonerGuardQueries} from './prisonerGuardQueries';
@@ -329,7 +330,7 @@ export class Game {
     resetDefenseMobilization(this);
     this.simulationErrors=[];
     this.chopMarks.clear();
-    const s = seed ?? (Math.random() * 0xffffffff) | 0;
+    const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
     this.workBoard.reset();

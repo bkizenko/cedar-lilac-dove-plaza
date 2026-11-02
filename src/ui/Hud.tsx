@@ -206,7 +206,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
-          <button className="px-2 py-2" onClick={()=>setTestOpen(true)}>Test lab</button>
+          <button className="px-2 py-2" onClick={()=>{if(engine?.startTestSession())setTestOpen(true);}}>Test lab</button>
           <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"

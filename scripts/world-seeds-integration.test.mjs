@@ -1,0 +1,5 @@
+import test from'node:test';import assert from'node:assert/strict';import{createHash}from'node:crypto';
+import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
+const hash=w=>createHash('sha256').update(new Uint8Array(w.heights.buffer)).digest('hex');
+test('ordinary fresh world resets differ and saved world reconstructs the same terrain',()=>{const g=new Game();g.reset(undefined,15,{size:1040,layout:'archipelago'});g.enterIsland();const originalSeed=g.state.seed,originalTerrain=hash(g.world),save=encodeGame(g);g.reset(undefined,15,{size:1040,layout:'archipelago'});assert.notEqual(g.state.seed,originalSeed);assert.notEqual(hash(g.world),originalTerrain);const restored=decodeGame(save);assert.equal(restored.state.seed,originalSeed);assert.equal(hash(restored.world),originalTerrain);assert.equal(restored.state.worldgenVersion,15);});
+test('explicit seeds retain legacy signed integer normalization and repeat terrain',()=>{const g=new Game();g.reset(0xffffffff,1);const terrain=hash(g.world);assert.equal(g.state.seed,-1);g.reset(-1,1);assert.equal(hash(g.world),terrain);});
