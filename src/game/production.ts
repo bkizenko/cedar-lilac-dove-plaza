@@ -64,11 +64,11 @@ export function itemCapacity(g:Game,team:number){return PRODUCTION_RULES.baseIte
 function items(g:Game,team:number){return g.tribe(team).items??={};}
 function atCache(g:Game,u:Unit){return supplyDrops(g,u.team).some(drop=>{const p=supplyApproach(g,u,drop);return p&&supplyReached(g,u,drop,p);});}
 function free(g:Game,u:Unit,project?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!['occupy','capture'].includes(u.conflictIntent||'')&&!isDependent(g,u)&&!u.emergency&&!u.expedition&&!u.visit&&!u.trade&&!u.escortId&&!u.envoy&&!u.recalled&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!sum(u.itemCargo||{})&&(!hasTaskCommitment(u,'productionProjectId'))&&(!u.productionProjectId||u.productionProjectId===project)&&!['attack','attackmove'].includes(u.order)&&(u.productionProjectId===project||!['move','explore','return'].includes(u.order))&&productionActorAvailable(g,u,project);}
-function actor(g:Game,b:Building,project?:ProductionProject){return g.state.units.find(u=>u.team===b.team&&free(g,u,project?.id)&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||atCache(g,u))&&!!g.interactionSpot(u,b));}
+function actor(g:Game,b:Building,project?:ProductionProject,unitId?:number){return g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.team===b.team&&free(g,u,project?.id)&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||atCache(g,u))&&!!g.interactionSpot(u,b));}
 const live=(p:ProductionProject)=>!['complete','lost'].includes(p.phase);
 export function productionSlots(b:Pick<Building,'type'>){return ['fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone'].includes(b.type)?1:0;}
 function occupied(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
-export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number){
+export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
  if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre)return 'Finish a hearth before starting the food and hide processing chain';
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
@@ -83,12 +83,12 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number)
  if(sum(stock)-sum(r.inputs)+sum(r.outputs)+cachedProductionUnits(g,b.team)>itemCapacity(g,b.team))return 'Material storage is full; use or make room for the finished goods';
  if((g.state.production?.projects.filter(live).length||0)>=PRODUCTION_RULES.maximumProjects)return 'Too many unfinished paid batches';
  if(dryingRecipe(r)){const c=dryingConditions(g,b);if(c.wet&&!(r.preservation==='clay'&&b.type==='potter'))return r.preservation==='clay'?'Wet weather prevents exposed greenware drying; use a pottery shelter or wait':'Wet weather prevents starting air drying; use fuelled smoking or wait';if(c.frozen)return r.preservation==='clay'?'Below freezing: clay drying cannot start; wait for warmer conditions':'Below freezing: air drying cannot start; use fuelled smoking';}
- if(!actor(g,b))return 'Need an available empty-handed adult at a reachable camp or store to carry the batch inputs';
+ if(!actor(g,b,undefined,unitId))return 'Need an available empty-handed adult at a reachable camp or store to carry the batch inputs';
  return null;
 }
-export function beginProduction(g:Game,recipe:ProductionRecipe,workplace:number){
- const issue=productionIssue(g,recipe,workplace);if(issue){g.banner(issue,4);return false;}
- const b=g.state.buildings.find(b=>b.id===workplace)!,u=actor(g,b)!,r=PRODUCTION_RECIPES[recipe],s=state(g),stock=items(g,b.team),t=g.tribe(b.team);
+export function beginProduction(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number){
+ const issue=productionIssue(g,recipe,workplace,unitId);if(issue){g.banner(issue,4);return false;}
+ const b=g.state.buildings.find(b=>b.id===workplace)!,u=actor(g,b,undefined,unitId)!,r=PRODUCTION_RECIPES[recipe],s=state(g),stock=items(g,b.team),t=g.tribe(b.team);
  const p:ProductionProject={id:g.state.nextId,team:b.team,recipe,workplace,actorId:u.id,phase:'carrying',resumePhase:'carrying',progress:0,started:g.state.time,blockedReason:''};
  releaseTreeWorker(g,u);
  if(!claimProductionOwnership(g,p)){p.blockedReason=productionOwnershipReason(g,p);releaseProductionOwnership(g,{...p,phase:'lost'});g.banner(p.blockedReason,4);return false;}
@@ -105,10 +105,10 @@ export function pauseProduction(g:Game,u:Unit){const p=g.state.production?.proje
  state(g).metrics.interrupted++;claimProductionOwnership(g,p);return true;
 }
 export function pauseProductionProject(g:Game,id:number){const p=g.state.production?.projects.find(p=>p.id===id&&live(p));if(!p)return false;if(p.phase==='paused'||p.phase==='stored')return true;if(p.actorId===null&&['curing','ready'].includes(p.phase)){p.resumePhase=p.phase as ProductionProject['resumePhase'];p.phase='paused';p.blockedReason='Pickup paused; weather and food aging continue';state(g).metrics.interrupted++;claimProductionOwnership(g,p);return true;}const u=g.state.units.find(u=>u.id===p.actorId);return !!u&&pauseProduction(g,u);}
-export function resumeProduction(g:Game,id:number){const p=g.state.production?.projects.find(p=>p.id===id&&(p.phase==='paused'||p.phase==='stored'));if(!p)return false;
+export function resumeProduction(g:Game,id:number,unitId?:number){const p=g.state.production?.projects.find(p=>p.id===id&&(p.phase==='paused'||p.phase==='stored'));if(!p)return false;
  const b=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===p.team);if(!b&&!['returning','unloading'].includes(p.resumePhase)){p.blockedReason='The original workplace was destroyed or changed ownership';return false;}
  if(p.resumePhase==='curing'){const next={...p,phase:'curing' as const};if(!claimProductionOwnership(g,next)){p.blockedReason=productionOwnershipReason(g,p);return false;}p.phase='curing';p.blockedReason='';return true;}
- const stored=p.phase==='stored',u=p.actorId===null?actor(g,b!,p):g.state.units.find(u=>u.id===p.actorId&&u.team===p.team&&free(g,u,p.id));
+ const stored=p.phase==='stored',u=p.actorId===null?actor(g,b!,p,unitId):g.state.units.find(u=>u.id===p.actorId&&(unitId===undefined||u.id===unitId)&&u.team===p.team&&free(g,u,p.id));
  if(!u){p.blockedReason=p.actorId===null?'Need an available adult to collect the paid batch':'The loaded batch remains with its original carrier; use Unload batch at cache or free that resident first';return false;}
  if(stored&&(!p.cacheAnchor||!g.walkable(p.cacheAnchor.x,p.cacheAnchor.z)||!g.workBoard.connected(g,u.x,u.z,p.cacheAnchor.x,p.cacheAnchor.z))){p.blockedReason='No clear physical route to the parked paid batch; clear access to its saved cache location';return false;}
  const next={...p,actorId:u.id,phase:stored?'collecting' as const:p.resumePhase};releaseTreeWorker(g,u);if(!claimProductionOwnership(g,next)){p.blockedReason=productionOwnershipReason(g,p);return false;}

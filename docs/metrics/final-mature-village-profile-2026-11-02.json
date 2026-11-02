@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-02",
+  "hardware": {
+    "processor": "Apple M1",
+    "physicalMemoryBytes": 8589934592
+  },
+  "scope": "Actual foreground browser, separate authorized legacy-v7 village copy, final NPC-cooking candidate; normal1x; Home camera; existing visiting trade declined before reset. Not a quality comparison or full campaign/FPS acceptance.",
+  "initial": {
+    "time": 4742.80000000062,
+    "livingPeople": 245,
+    "standingBuildings": 363,
+    "speed": 1,
+    "weather": "clear"
+  },
+  "final": {
+    "time": 4840.7333333352,
+    "livingPeople": 273,
+    "standingBuildings": 364,
+    "speed": 1,
+    "weather": "flood"
+  },
+  "settings": {
+    "quality": "med",
+    "shadows": false,
+    "personCircles": true
+  },
+  "readout": "Performance\nMeasured 96 s\nReset measurements\n\n52.8 fps \u00b7 600 recent frame intervals\n\nFrame time: average 18.9 ms \u00b7 95% within 33.4 ms \u00b7 longest 50 ms\n\n0 pauses over 100 ms\n\nPeople and world: average 22.9 ms \u00b7 95% within 29.9 ms \u00b7 peak 55.4 ms\n\nScene updates: average 1.6 ms \u00b7 95% within 1.7 ms \u00b7 peak 29.1 ms\n\nDrawing submission: average 1.4 ms \u00b7 95% within 1.6 ms \u00b7 peak 2.1 ms\n\nInterface: average 1.0 ms \u00b7 95% within 1.2 ms \u00b7 peak 1.6 ms\n\nMap: average 1.7 ms \u00b7 95% within 3.1 ms \u00b7 peak 4.9 ms\n\nAutosave request / sync fallback: average 2.6 ms \u00b7 95% within 2.7 ms \u00b7 peak 2.7 ms\n\nAutosave: worker confirmed \u00b7 5 saved \u00b7 0 superseded \u00b7 0 failed \u00b7 0 synchronous fallbacks\n\nAutosave main-thread CPU: average 13.0 ms \u00b7 peak 15.5 ms (prepare/clone + commit).\n\nAutosave background CPU: average 122.1 ms \u00b7 peak 148.6 ms. Total wall latency: average 167.4 ms \u00b7 peak 207.5 ms.\n\nNavigation is included in people and world timing.\n\nFull frame: 78 drawing calls \u00b7 1,430,796 triangles \u00b7 0 lines \u00b7 520 points\n\nDrawing calls: average 78 \u00b7 95% within 78 \u00b7 peak 78\n\nResources: 146 geometries \u00b7 34 textures \u00b7 35 programs\n\nBrowser JS heap estimate: 185.1 MiB used / 224.0 MiB allocated \u00b7 4192 MiB limit. Not graphics memory.\n\nCatch-up limited in 9 of 5439 drawing frames \u00b7 0.1 s backlog discarded.\n\nRolling samples since reset. World timing is per simulation step; other rows are per operation. Drawing measures processor submission, not graphics hardware time.",
+  "measurement": {
+    "panelWindowAgeSeconds": 96,
+    "frameIntervals": 600,
+    "fps": 52.8,
+    "frameMeanMs": 18.9,
+    "frameP95Ms": 33.4,
+    "frameMaximumMs": 50,
+    "recentStallsOver100ms": 0,
+    "simulationPerStepMeanMs": 22.9,
+    "simulationPerStepP95Ms": 29.9,
+    "simulationPerStepMaxMs": 55.4,
+    "navigation": "Included in actual simulation cost; not separately timed",
+    "renderSubmissionMeanMs": 1.4,
+    "drawCalls": 78,
+    "triangles": 1430796,
+    "points": 520,
+    "geometries": 146,
+    "textures": 34,
+    "programs": 35,
+    "jsHeapUsedMiB": 185.1,
+    "jsHeapAllocatedMiB": 224,
+    "autosaveWorkerCommits": 5,
+    "autosaveFallbacks": 0,
+    "autosaveMainCpuMeanMs": 13,
+    "autosaveBackgroundCpuMeanMs": 122.1,
+    "autosaveWallLatencyMeanMs": 167.4
+  },
+  "limitations": [
+    "Frame intervals use rolling600 samples; CPU stages rolling240 operations, not entire96s maximum/p95. Do not sum different stage denominators.",
+    "Population endpoints245 and273 are in the requested band; this is a short growing actual village, not a fixed-population long stability test.",
+    "No GPU duration/VRAM estimate; renderer counts and optional JS heap are distinct measures.",
+    "No raw saves, private-world screenshots, resident identities or coordinates are published.",
+    "No causal FPS improvement or fast-forward performance acceptance is inferred."
+  ]
+}

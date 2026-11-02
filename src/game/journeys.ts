@@ -1,3 +1,4 @@
+import {rivalFoodConstructionActive} from './rivalFoodProcessing';
 import {workdayAt} from "./daylight";
 import {applyForagePressure,harvestWildPlant,wildPlantsEnabled} from "./ecology";
 import type { Game } from "./sim";
@@ -98,7 +99,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   const fatigue=u.fatigue||0;
   const offShift=!workdayAt(g.state.time,g.dayPhase()*24).working;
   const urgentFood=adult&&offShift&&!g.state.nightWork&&
-    ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock))&&reserveSeconds(g,u.team)<240;
+    ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock)||rivalFoodConstructionActive(g,u))&&reserveSeconds(g,u.team)<240;
   if(fatigue<=.12)u.resting=undefined;
   if(!u.resting&&fatigue>=.85)u.resting=true;
   const resting=u.resting||(!g.state.nightWork&&(adult?offShift&&!urgentFood:night))||g.state.weather==="storm";

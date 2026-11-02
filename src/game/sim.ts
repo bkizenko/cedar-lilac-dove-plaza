@@ -1,3 +1,4 @@
+import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
 import {COMPACT_RULES,knownDiplomaticRelation,queueDiplomaticMessage,recordDiplomaticLegal} from './diplomaticKnowledge';
@@ -5154,6 +5155,7 @@ export class Game {
     // The shared rule already checks people, institutions and a food buffer.
     if (tr.age < 5 && this.ageUpIssue(team) === null) this.tryAgeUp(team);
 
+    reviewRivalFoodProcessing(this,team);
     reviewRivalToolUpkeep(this,team);
     reviewRivalSocietyActivity(this,team,reserveSeconds(this,team));
     dispatchRivalBarter(this,team);
@@ -5189,7 +5191,7 @@ export class Game {
     if (reserve < 240) {
       for (const u of this.state.units) {
         if (u.team !== team || u.type !== "worker" || u.hp <= 0 || isDependent(this,u) ||
-            u.emergency || u.visit || u.scout || u.foundingJourney || u.expedition || u.carry > 0) continue;
+            u.emergency || u.visit || u.scout || u.foundingJourney || u.expedition || u.carry > 0 || rivalFoodConstructionActive(this,u)) continue;
         const field = u.node && "type" in u.node && u.node.type === "farm";
         const preparingField = field && calendar(this).phase < 2;
         if (u.order === "build" || (u.order === "gather" && ((!field && u.job !== "food") || (preparingField && reserve < 90)))) {

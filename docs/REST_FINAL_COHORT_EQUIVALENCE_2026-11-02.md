@@ -1,0 +1,7 @@
+# Final-source rest predicate equivalence — 2026-11-02
+
+The final NPC-cooking integration source was frozen after its retained construction-actor lock repair. Two independent source clones differ only in the `urgentFood` expression in `journeys.ts`: the baseline evaluates food urgency without the new `offShift && !nightWork` short-circuit; the candidate retains it. Both branches retain the same new NPC urgent-hearth construction classification, production implementation and all other source bytes.
+
+All four controlled public cases pass: on-shift hungry, off-shift hungry, off-shift exactly 240 reserve seconds, and explicit night work. Each branch performs five real `Game.step(1/30)` updates on unmodified generated seed123456/worldgen2 terrain. All five complete encoded-state hashes match between branches for every case, and external diagnostic RNG calls and final state match. The driver asserts clock advance and no simulation errors. Initial food, work orders and quiet/clear conditions are declared setup; there are no midrun repairs or grants.
+
+This final-source matrix is separate from the earlier intermediate/private ABBA timing. It makes no timing, frame-rate, complete NPC behavior or campaign acceptance claim. The four scenario comparisons are functional evidence, not four new unrelated tests to add to overlapping test-suite totals. Aggregate hashes, exact branch difference, source manifests and limitations are recorded in `docs/metrics/rest-final-cohort-equivalence-2026-11-02.json`. No private save was used.

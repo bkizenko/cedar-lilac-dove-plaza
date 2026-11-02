@@ -2,9 +2,9 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**31/98 verified gates — 31.63%.** This measures acceptance evidence, not development effort or time remaining.
+**32/98 verified gates — 32.65%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: This batch adds connected finite hunting qualification and final development/production desktop build checks; prior29 gates retained. Research-earned boats, physical diplomacy, improved building forms, defense orders and background autosave are delivered components without broader campaign credit.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: c15928b core plus verified local NPC hearth/cooking/resumption and final actual mature-village reporting;32/98 fixed acceptance gates. Complete campaign, broader independent AI production and sustained fast-forward performance remain pending.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
@@ -15,7 +15,7 @@ Verified baseline: This batch adds connected finite hunting qualification and fi
 | M2 | 1/16 | 6.25% |
 | M3 | 3/18 | 16.67% |
 | M4 | 2/20 | 10% |
-| M5 | 2/10 | 20% |
+| M5 | 3/10 | 30% |
 
 ## Fixed acceptance checklist
 
@@ -142,7 +142,7 @@ Verified baseline: This batch adds connected finite hunting qualification and fi
 | M5-04 | pending | New map gallery passes close/middle/wide same-landscape, overcast, water/fall/cliff/dune/route/contour-farm review | No matching executed evidence. Root owns the next actual desktop gallery; raw GL cleanliness alone is not visual acceptance. |
 | M5-05 | pending | Actual physical geometry agrees with depicted surfaces, farms, water, dry placement and navigation | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M5-06 | pending | M1 MacBook Air 8GB desktop target meets median <=33ms and p95 <=50ms at 100 visible residents/60 buildings | No matching executed evidence. Target hardware figures are proposed targets, not achieved measurements. |
-| M5-07 | pending | Separate 240-300-total-resident stress profile reports CPU/navigation/render/memory and full-pipeline costs | No matching executed evidence. Postprocess final-pass call count is not full-scene draw-call/frame-time evidence. |
+| M5-07 | verified | Separate 240-300-total-resident stress profile reports CPU/navigation/render/memory and full-pipeline costs | finalMatureProfileNov2. Actual final-source M1/8GiB foreground browser profile with245→273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim. |
 | M5-08 | pending | Major mechanics expose named parameters/units/reasons/outcomes and meaningful-decision/chapter metrics | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M5-09 | pending | Fixed regression and rotating holdout scenarios improve intended outcomes without conservation/save regressions | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M5-10 | pending | Packaged published first release preserves saves/preview/later-era content and records exact evidence/remaining expansion scope | No matching executed evidence. A maintained preview/batch push is not the completed first release. |
