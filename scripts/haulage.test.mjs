@@ -120,9 +120,11 @@ test('normal rain permits work; darkness and storms pause production without los
   g.clockState = () => ({period: 'Afternoon'});
   work(g, u, 100); assert.equal(u.haulage, 'sled');
   assert.equal(loadedHaulSpeed(u), 1);
-  u.carry = 12; assert.equal(loadedHaulSpeed(u), HAULAGE.sled.loadedSpeed);
+  u.carryType='wood';u.carry = GATHER.wood.carry; assert.ok(loadedHaulSpeed(u)<HAULAGE.sled.loadedSpeed);
+  const equippedPace=loadedHaulSpeed(u);
   u.militia = true;
-  assert.equal(loadedHaulSpeed(u), 1);
+  assert.ok(loadedHaulSpeed(u)<1,'armed people still feel the weight of actual goods');
+  assert.ok(loadedHaulSpeed(u)<equippedPace);
   assert.equal(carryingCapacity(u, 'wood'), GATHER.wood.carry);
 });
 

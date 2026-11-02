@@ -464,7 +464,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </p>
         </div>
       ) : (
-      <div className={`hud-sel hud-panel rounded-xl p-2.5 w-full ${sel.kind==='none'?'selection-empty':''}`}>
+      <div className={`hud-sel hud-panel rounded-xl p-2.5 w-full ${sel.kind==='none'?'selection-empty':''}`} style={sel.kind==='boat'?{maxHeight:'min(60vh, 420px)'}:undefined}>
         <div className="selection-header flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <div className="font-display text-xl leading-tight text-bronze-bright">
@@ -485,15 +485,15 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {selMin ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
           </button>
         </div>
-            {!selMin ? (
+            {!selMin&&sel.kind!=='boat' ? (
               <details className="selection-info mt-1"><summary>Details</summary><p>{sel.info}</p></details>
             ) : null}
         {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
           <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
         </div>}
-        {!selMin&&engine&&sel.kind!=='none'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
-        {!selMin&&engine&&sel.kind!=='none'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
         {!selMin&&engine&&sel.kind==='building'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
         {selMin ? (
           sel.kind !== "none" ? (
@@ -594,7 +594,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <button className="min-h-8 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
               <button className="min-h-8 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
             </div>}
-            {hud.idleWorkers > 0 ? (
+            {hud.idleWorkers > 0&&sel.kind!=='boat' ? (
               <button
                 type="button"
                 onClick={() => engine?.focusIdle()}
@@ -684,7 +684,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm"
               title="Armed villagers hunt with their spears or bows, butcher the catch and carry meat home"
               onClick={()=>engine?.assignJob("hunt")}>Hunt with weapons</button>}
-            {hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none" ? (
+            {sel.kind!=='boat'&&(hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none") ? (
               <button
                 type="button"
                 title="Keep scouting unknown ground until stopped, blocked or threatened. Select scouts and press period to stop. (X)"

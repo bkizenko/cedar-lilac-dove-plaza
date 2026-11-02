@@ -1,3 +1,4 @@
+import{beginBoatExploration}from'./boatExploration';
 import {beginPrisonerGuardQueries,endPrisonerGuardQueries} from './prisonerGuardQueries';
 import {beginBuildingQueries,endBuildingQueries,nearbyStepBuildings} from './buildingQueries';
 import {WildlifeObstacles,moveGroundWildlife,wildlifeBodyRadius} from './wildlifeMovement';
@@ -35,7 +36,7 @@ import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
 import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
-import {commandRiverboat,riverboatAI,syncRiverboats} from './boats';
+import {commandRiverboat,riverboatAI,syncRiverboats,riverboatLoadSpeed,recallRiverboat} from './boats';
 import {copperStudyAI,developRivalCopper} from './materialStudy';
 import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
@@ -1709,6 +1710,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    if(u.boat){const hull=this.state.boats?.find(b=>b.id===u.boat!.id&&b.captain===u.id);if(hull)delete hull.exploration;}
     pauseProductionLesson(this,u);
     pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
@@ -2769,6 +2771,7 @@ export class Game {
   }
 
   issueExplore() {
+    const riding=this.selectedUnits().find(u=>u.boat?.phase==='aboard'),boat=this.selectedBoat??riding?.boat?.id;if(boat!==undefined&&boat!==null){const issue=beginBoatExploration(this,boat);this.banner(issue||'Exploring connected water; the crew will return to its departure mooring',4);return;}
     let units=this.selectedUnits();
     if(!units.length)units=this.idleWorkers().slice(0,2);
     let sent=0,queued=0,reason='Select an available adult, then Explore (X)';
@@ -2855,6 +2858,7 @@ export class Game {
   }
 
   soundRecall() {
+    const vessels=new Set(this.state.units.filter(u=>u.team===0&&u.hp>0&&u.boat?.phase==='aboard').map(u=>u.boat!.id));
     for(const u of this.state.units) {
       if(u.team!==0||u.hp<=0)continue;
       this.interruptMission(u);
@@ -2863,6 +2867,7 @@ export class Game {
       u.order="move";u.stationOnArrival=true;u.workCheckAt=0;
       u.workReason="Recall horn — returning to the village";
     }
+    for(const id of vessels)recallRiverboat(this,id);
     this.banner("Recall horn sounded — everyone returns with what they carry",4);this.onSfx("pillage");
   }
 
@@ -3961,7 +3966,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * loadedHaulSpeed(u) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&

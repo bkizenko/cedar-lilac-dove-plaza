@@ -1648,7 +1648,7 @@ export class WorldView {
     const mesh=this.riverboats;if(!mesh)return;let count=0;
     for(const b of game.state.boats||[]){
       if(b.hp<=0||count>=instCap(mesh)||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
-      _p.set(b.x,game.world.waterY-.12,b.z);_e.set(0,b.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);mesh.setMatrixAt(count++,_m);
+      _p.set(b.x,game.waterAt(b.x,b.z)-.12,b.z);_e.set(0,b.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);mesh.setMatrixAt(count++,_m);
     }
     mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
   }

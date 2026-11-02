@@ -149,7 +149,7 @@ function validateGamePayload(raw: unknown) {
   }
   if(s.boats!==undefined){
     if(!Array.isArray(s.boats)||s.boats.length>96)fail();const ids=new Set();
-    for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();ids.add(b.id);}
+    for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();if(b.exploration!==undefined){const e=b.exploration;if(!obj(e)||!num(e.originX)||!num(e.originZ)||Math.abs(e.originX)>HALF||Math.abs(e.originZ)>HALF||!num(e.nextReviewAt)||e.nextReviewAt<0||typeof e.returning!=='boolean'||e.reason!==undefined&&!['surveyed','blocked','hungry','danger','recall'].includes(e.reason)||e.landOnReturn!==undefined&&e.landOnReturn!==true)fail();}ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
   if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].includes(s.worldgenVersion))fail();

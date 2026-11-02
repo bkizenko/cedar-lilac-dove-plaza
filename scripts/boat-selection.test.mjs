@@ -38,17 +38,18 @@ test('world hull picking follows the rendered instance order and hides unknown f
  v.camera=new THREE.PerspectiveCamera(50,800/600,.1,100);v.camera.position.set(0,15,0);v.camera.lookAt(0,0,0);v.camera.updateMatrixWorld();
  v.riverboats=new THREE.InstancedMesh(riverboatGeo(),new THREE.MeshStandardMaterial(),3);
  const own={id:3,team:0,x:0,z:0,hp:300,facing:0};
- const g={state:{boats:[{...own,id:1,hp:0},{...own,id:2,team:1,x:20},own]},world:{waterY:.42},exploredAt:()=>false,visibleAt:()=>false};
+ const g={state:{boats:[{...own,id:1,hp:0},{...own,id:2,team:1,x:20},own]},world:{waterY:.42},waterAt:()=>.42,exploredAt:()=>false,visibleAt:()=>false};
  v.syncRiverboatMeshes(g);assert.equal(v.riverboats.count,1);assert.equal(v.pickBoat(400,300,g),own);
  const p=v.waterAt(400,300,4);assert.ok(Math.abs(p.y-4)<.001);
  v.terrain=new THREE.Mesh(new THREE.PlaneGeometry(50,50).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial());v.terrain.position.y=3;v.terrain.updateMatrixWorld();
  assert.equal(v.pickBoat(400,300,g),null,'a hill in front of the hull blocks selection');
+ g.waterAt=()=>10;v.syncRiverboatMeshes(g);const elevated=new THREE.Matrix4();v.riverboats.getMatrixAt(0,elevated);assert.ok(Math.abs(elevated.elements[13]-9.88)<1e-5,'hull floats at its actual lake elevation');
  v.riverboats.geometry.dispose();v.riverboats.material.dispose();v.terrain.geometry.dispose();v.terrain.material.dispose();
 });
 test('left click selects and deselects the hull; sailing clicks use the water surface, not the seabed',()=>{
  const {g,b}=fixture();const e=Object.create(Engine.prototype);e.game=g;e.pushHud=()=>{};
  let picked=b,waterCalls=0,move;
- e.view={groundAt:()=>({x:999,z:999}),waterAt:()=>{waterCalls++;return {x:2,z:4};},pickBoat:()=>picked,pickEntity:()=>null,pickResource:()=>null};
+ e.view={groundAt:()=>({x:999,z:999}),waterAt:()=>{waterCalls++;return {x:2,z:4};},pickBoat:()=>picked,pickEntity:()=>null,pickWildlife:()=>null,pickResource:()=>null};
  e.leftClick(1,1,false);assert.equal(g.selectedBoat,b.id);e.leftClick(1,1,false);assert.equal(g.selectedBoat,null);
  g.selectBoat(b.id);picked=null;g.issueMove=(x,z)=>{move={x,z};};e.leftClick(1,1,false);assert.deepEqual(move,{x:2,z:4});
  e.rightClick(1,1);assert.deepEqual(move,{x:2,z:4});assert.ok(waterCalls>=3);

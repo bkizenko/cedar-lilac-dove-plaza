@@ -1,3 +1,4 @@
+import{carriedLoadFraction,burdenPace}from'./carriedLoad';
 import{basketCapacityMultiplier,recordBasketDelivery}from'./fibre';
 import {workRuntime} from './workRuntime';
 import {releaseTreeWorker} from './workAllocation';
@@ -246,7 +247,9 @@ export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {
-  return usesTransport(u) && u.carry > 0 && u.haulage ? HAULAGE[u.haulage].loadedSpeed : 1;
+  const capacity=carryingCapacity(u,u.carryType||'wood')/(GATHER[u.carryType||'wood']?.carry||GATHER.wood.carry);
+  const fraction=carriedLoadFraction(u,capacity);
+  return burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?HAULAGE[u.haulage].loadedSpeed:1);
 }
 
 /** Call exactly once on an actual store delivery, immediately before clearing cargo. */

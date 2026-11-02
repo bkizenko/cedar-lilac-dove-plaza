@@ -1,10 +1,17 @@
+import{boatExplorationAI,type BoatExploration}from'./boatExploration';
+import{vesselLoad}from'./carriedLoad';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {beginHaulageWork} from './haulage';
 import {waterNavigation} from './waterTravel';
-export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number};
+export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;exploration?:BoatExploration};
 export const BOAT_COST={wood:40,stone:4,seconds:150,seats:5};
-export function boatCrew(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&u.boat?.id===id);}
+export function riverboatLoadSpeed(g:Game,id:number){const b=g.state.boats?.find(b=>b.id===id&&b.hp>0);return b?vesselLoad(b,boatCrew(g,id).filter(u=>u.boat?.phase==='aboard')).pace:1;}
+const crewCache=new WeakMap<Game,{time:number;units:Unit[];count:number;boats:Map<number,Unit[]>}>();
+export function boatCrew(g:Game,id:number){
+ let cache=crewCache.get(g);if(!cache||cache.time!==g.state.time||cache.units!==g.state.units||cache.count!==g.state.units.length){cache={time:g.state.time,units:g.state.units,count:g.state.units.length,boats:new Map()};crewCache.set(g,cache);}
+ let crew=cache.boats.get(id);if(!crew){crew=g.state.units.filter(u=>u.boat?.id===id);cache.boats.set(id,crew);}return crew.filter(u=>u.hp>0&&u.boat?.id===id);
+}
 export function beginRiverboat(g:Game,dock:number,team=0,unitId?:number){
  const t=g.tribe(team);if(t.wood<BOAT_COST.wood||t.stone<BOAT_COST.stone){if(team===0)g.banner('Riverboat needs 40 logs and 4 stone',4);return false;}
  if((g.state.boats||[]).filter(b=>b.team===team&&b.hp>0).length>=12){if(team===0)g.banner('Twelve vessels already need crews',4);return false;}
@@ -33,7 +40,7 @@ export function boardRiverboat(g:Game,id:number,people=g.selectedUnits(),team=0,
  for(const u of people){
   if(boatCrew(g,id).length>=b.capacity)break;
   if(u.hp<=0||u.team!==b.team||u.boat||u.haulage||Math.hypot(u.x-b.x,u.z-b.z)>24)continue;
-  if(!preserveMission)g.interruptMission(u);u.boat={id,phase:'boarding'};u.haulage='canoe';u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);n++;
+  if(!preserveMission)g.interruptMission(u);u.boat={id,phase:'boarding'};crewCache.delete(g);u.haulage='canoe';u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);n++;
  }
  if(!n)g.banner('Select nearby residents without carts, sleds or personal canoes to board',4);
  else g.banner(`${n} residents boarding · first aboard takes the helm`,4);
@@ -54,11 +61,21 @@ export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z
 export function commandRiverboat(g:Game,id:number,x:number,z:number,preserveMission=false){
  const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u)return false;
  const p=riverboatDestination(g,b,x,z);if(!p){g.banner('No connected navigable water near that destination',4);return false;}
- if(!preserveMission)g.interruptMission(u);u.order='move';u.tx=p.x;u.tz=p.z;u.target=null;u.node=null;g.invalidateRoute(u);return true;
+ if(!preserveMission){delete b.exploration;g.interruptMission(u);}u.order='move';u.tx=p.x;u.tz=p.z;u.target=null;u.node=null;g.invalidateRoute(u);return true;
+}
+/** Recall sails the same hull to a surviving friendly dock and then lands;
+ * cargo stays on its original people until ordinary physical delivery. */
+export function recallRiverboat(g:Game,id:number){
+ const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),captain=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!captain)return false;
+ const docks=g.state.buildings.filter(d=>d.team===b.team&&d.type==='dock'&&g.finished(d)).sort((a,c)=>Number(c.id===b.dock)-Number(a.id===b.dock)||Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
+ for(const dock of docks){const p=riverboatWaterPoint(g,dock.x,dock.z),dest=p&&riverboatDestination(g,b,p.x,p.z);if(!p||!dest||Math.hypot(dest.x-p.x,dest.z-p.z)>8)continue;
+  b.exploration={originX:dest.x,originZ:dest.z,nextReviewAt:g.state.time,returning:true,reason:'recall',landOnReturn:true};captain.order='move';captain.tx=dest.x;captain.tz=dest.z;g.invalidateRoute(captain);return true;
+ }
+ delete b.exploration;captain.order='hold';captain.workReason='Recall needs a friendly dock on this connected water · crew and cargo retained';g.invalidateRoute(captain);return false;
 }
 export function landRiverboat(g:Game,id:number,preferred?:{x:number;z:number}){
  const b=g.state.boats?.find(b=>b.id===id&&b.hp>0);if(!b)return false;
- const crew=boatCrew(g,id);let n=0;
+ delete b.exploration;const crew=boatCrew(g,id);let n=0;
  for(const u of crew){
   let point:{x:number;z:number}|null=preferred&&Math.hypot(preferred.x-b.x,preferred.z-b.z)<=10&&g.walkable(preferred.x,preferred.z)&&g.height(preferred.x,preferred.z)>g.waterAt(preferred.x,preferred.z)+.3?preferred:null;
   if(preferred&&!point)continue;
@@ -88,7 +105,8 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
   u.boat=undefined;u.haulage=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();return true;
  }
  if(b.captain===u.id){
-  u.workReason=u.order==='move'?'Rowing riverboat':'At the helm · click a water destination';
+  const exploring=boatExplorationAI(g,b,u);
+  if(!exploring)u.workReason=u.order==='move'?'Rowing riverboat':'At the helm · click a water destination';
   if(u.order==='move'&&g.steer(u,dt)){u.order='hold';}
  }else u.workReason='Aboard riverboat';
  return true;
@@ -99,7 +117,7 @@ export function syncRiverboats(g:Game){
   let captain=aboard.find(u=>u.id===b.captain);
   if(!captain&&aboard.length){captain=aboard[0];b.captain=captain.id;captain.order='hold';}
   if(captain){b.x=captain.x;b.z=captain.z;b.facing=captain.facing;}
-  else delete b.captain;
+  else {delete b.captain;if(!boatCrew(g,b.id).some(u=>u.boat?.phase==='boarding'))delete b.exploration;}
   b.y=g.waterAt(b.x,b.z)+.16;
   for(let i=0;i<aboard.length;i++){
    const u=aboard[i];if(u===captain)continue;
