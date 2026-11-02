@@ -1,0 +1,53 @@
+{
+  "scope": "Defense horn/direct-order preservation",
+  "baseline": "frozen .play/boat-diplomacy-frame-integration",
+  "sourceFingerprint": {
+    "src/game/sim.ts": "fc465e3718a71c4550268a658b22d1869f766d4f78eaee378370a6a44ccbd8c4",
+    "src/game/defense.ts": "4dcacbce48d3b36727d516270e95cce4a22939a364b33b7a97c26ec40988dbc5",
+    "src/game/demobilization.ts": "1db3905ca919652e65a53877bc2d6994ca8f6226293205b8a15f385025dd1a56",
+    "src/game/defenseNeighbors.ts": "08c17303ff39a0d6ae33f4905383372ae5678718a4cca11cbb34080128be1b63"
+  },
+  "nativeWorld": {
+    "seed": 1,
+    "version": 14,
+    "layout": "pangaea",
+    "size": 1040,
+    "terrainChanged": false
+  },
+  "reproduced": {
+    "raidCompletionCancelledNewMove": {
+      "simulationSeconds": 5.6,
+      "beforeState": "healthy spearman with a newer direct Move became demobilizing=true after other defenders killed last intruder",
+      "controlLog": "/tmp/hearthwild-defense-endraid-before.log"
+    },
+    "armedArrivalBecameIdle": {
+      "beforeState": "stationOnArrival=true armed Move became idle rather than promised hold",
+      "controlLog": "/tmp/hearthwild-defense-arrival-before.log"
+    }
+  },
+  "newScenarioChecks": 5,
+  "legacyDistinctChecksPassed": 21,
+  "optionalPrivateSaveChecksSkipped": 1,
+  "finalNativeLog": "/tmp/hearthwild-defense-native-final.log",
+  "legacyRunLog": "/tmp/hearthwild-defense-orders-qualified.log",
+  "typecheckLog": "/tmp/hearthwild-defense-orders-tsc.log",
+  "sourceChanges": [
+    "src/game/defense.ts: explicit armed hold station predicate",
+    "src/game/sim.ts: combatAI Move arrival",
+    "src/game/raiders.ts: finishSeaRaid newer-command protection"
+  ],
+  "finiteWeaponInvariant": "communal spear/bow/blade stock + living actual militia owners =1 every simulated step",
+  "preservedRules": [
+    "injured shelter threshold50%",
+    "actual supply approach and finite arming",
+    "observed targets only",
+    "manual standdown",
+    "no new navigation/boat/visual behavior"
+  ],
+  "limits": [
+    "controlled finite initial stock, held authored enemies and campaign event context",
+    "not natural raid frequency/difficulty evidence",
+    "no private save used or committed",
+    "no release gate credit by this report"
+  ]
+}

@@ -1,3 +1,6 @@
+import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
+import{boatClass}from'./boatClasses';
+import {COMPACT_RULES,knownDiplomaticRelation,queueDiplomaticMessage,recordDiplomaticLegal} from './diplomaticKnowledge';
 import{reconcileFarmToolOwnership}from'./farmToolOwnership';
 import{nextWorldSeed}from'./worldSeeds';
 import{practicalHelperAI,pausePracticalHelper,tickPracticalHelpers}from'./practicalHelpers';
@@ -13,12 +16,12 @@ import {beginDefenseNeighbors,updateDefenseNeighbors,endDefenseNeighbors} from '
 import {clayAI,tickClay} from './pottery';
 import {queueConstruction,updateConstructionQueues,pauseConstructionQueue} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker,completeConstructionTarget,reconcileConstructionWorkers} from './constructionOwnership';
-import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,excavationWorkNeed,commitExcavation} from './excavation';
+import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,beginExcavationConstructionQuery,excavationWorkNeed,commitExcavation} from './excavation';
 import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
-import {productionAI,pauseProduction,tickProduction,deliverProductionCargo} from './production';
+import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
 import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
 import {terrainWalkBase} from './terrainWalkCache';
@@ -70,7 +73,7 @@ import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
-import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
+import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
@@ -222,7 +225,7 @@ export class Game {
     this.workBoard.reset();
   }
 
-  blank(): GameState {
+  blank(raidTimerSeconds=70+Math.random()*50): GameState {
     return {
       seed: 0xdae1,
       time: 0,
@@ -267,7 +270,7 @@ export class Game {
         { give: "wood", giveAmt: 36, get: "stone", getAmt: 18 },
         { give: "stone", giveAmt: 16, get: "wood", getAmt: 28 },
       ],
-      raidT: 70 + Math.random() * 50,
+      raidT: raidTimerSeconds,
       wildlife: [],
       routes: [],
       routeOffer: null,
@@ -419,6 +422,7 @@ export class Game {
       usedNames.add(settlementName);
       return {
       id: i,
+      animalProcessingVersion:1 as const,
       name: settlementName,
       short: rolled ? settlementName : TEAM_SHORT[i],
       color: rolled ? rolled[1] : TEAM_COLORS[i],
@@ -1507,6 +1511,7 @@ export class Game {
       b.build = 1;
       b.hp = b.maxHp;
       completeConstructionTarget(this,b);
+      if(['hearth','dryrack','smokehouse'].includes(b.type))activateAnimalProcessing(this,b.team);
       if(b.type==="bridge"){this.state.walkDirty=true;this.workBoard.reset();}
       if (u.team === 0) {
         this.banner(
@@ -1715,6 +1720,7 @@ export class Game {
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
 
   interruptMission(u:Unit) {
+    delete u.huntTrail;
     pausePracticalHelper(this,u);
     if(u.boat){const hull=this.state.boats?.find(b=>b.id===u.boat!.id&&b.captain===u.id);if(hull)delete hull.exploration;}
     pauseProductionLesson(this,u);
@@ -1936,7 +1942,8 @@ export class Game {
   makeHostile(team: number) {
     if (team === 3) return;
     const tr = this.tribe(team);
-    if (!tr || tr.hostile || team === 0) return;
+    if (!tr || team === 0) return;
+    if(tr.hostile){recordDiplomaticLegal(this,team,true);return;}
     declareSocietyHostility(this,0,team);
     tr.ally = false;
     tr.trust = 0;
@@ -1993,29 +2000,9 @@ export class Game {
   }
 
   offerCompact(team: number) {
-    const you = this.tribe(0);
-    const n = this.tribe(team);
-    if (!you || !n || team === 0 || team === 3 || !n.alive || n.hostile) return false;
-    if ((n.compactUntil || 0) > this.state.time) {
-      this.banner("The grazing compact with " + n.name + " still holds", 1.6);
-      return false;
-    }
-    if ((n.trust || 0) < 0.35) {
-      this.banner(n.name + " will not share the pastures yet", 1.8);
-      return false;
-    }
-    if (you.food < 20) {
-      this.banner("Need 20 food to offer grazing rights", 1.6);
-      return false;
-    }
-    you.food -= 20;
-    n.food += 12;
-    n.compactUntil = this.state.time + 480;
-    n.trust = Math.min(1, (n.trust || 0) + 0.06);
-    n.tension = Math.max(0, n.tension - 0.15);
-    n.intent = "trade";
-    this.banner(n.name + " accepts grazing rights — no raid while the compact holds", 2.6);
-    return true;
+    if(team<=0||team===3||!this.tribe(team)||this.tribe(0).food<COMPACT_RULES.food)return false;
+    if(knownDiplomaticRelation(this,team).compactUntil>this.state.time){this.banner('The known grazing compact still holds',4);return false;}
+    return this.sendDelegation(team,'compact');
   }
 
   offerPact(team?: number) {
@@ -2037,7 +2024,7 @@ export class Game {
     }
     this.spend(0, gift);
     rival.ally = true;
-    rival.aggro = 0;
+    rival.aggro = 0;recordDiplomaticLegal(this,rival.id,false);
     this.banner("Pact with " + rival.name + " — we stand together", 2.4);
     this.onSfx("age");
     const hall = this.state.buildings.find(
@@ -2380,16 +2367,16 @@ export class Game {
       tr.tension += grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,trespassers.length,overlap);
       if (trespassers.length) {
         tr.trust = Math.max(0,(tr.trust || 0)-0.008*dt);
-        if (previous < 0.28 && tr.tension >= 0.28) this.banner(tr.name + " warns your gatherers to leave their resources alone",5);
+        if (previous < 0.28 && tr.tension >= 0.28) queueDiplomaticMessage(this,tr.id,'frontier',undefined,undefined,'resources');
         if (tr.tension >= grievanceTemper(tr.aggro,tr.expand,tr.trust||0).warThreshold && !tr.hostile) {
           tr.hostile = true;
-          this.banner(tr.name + " is defending its land against your continued taking of resources. Withdraw and seek a truce.",6);
+          queueDiplomaticMessage(this,tr.id,'frontier',undefined,undefined,'resources');
         }
       }
       tr.tension = Math.max(0, Math.min(1, tr.tension));
       const band = tr.tension > 0.72 ? 3 : tr.tension > 0.52 ? 2 : tr.tension > 0.28 ? 1 : 0;
       if (band > tr.tensionBand && this.started && band >= 3) {
-        this.banner(tr.name + " is taut — a raid is likely if you stay this close", 2.4);
+        queueDiplomaticMessage(this,tr.id,'frontier',undefined,undefined,'border');
       }
       tr.tensionBand = band;
     }
@@ -2425,7 +2412,7 @@ export class Game {
             if (!obstacles.clearAt({x,z},wildlifeBodyRadius(c)) || y <= this.waterAt(x,z) + 0.35 ||
                 (!this.world.options&&Math.hypot(x, z) >= (this.world.islandR || 140) - 6) || this.visibleAt(x, z)) continue;
             c.hp = c.maxHp;
-            c.carcass=undefined;
+            c.carcass=undefined;delete c.huntDefense;
             c.grazing={x,z};
             c.x = x; c.z = z; c.y = y + (c.species === "bird" ? 8 : 0);
             c.vx = 0; c.vz = 0;
@@ -2449,6 +2436,7 @@ export class Game {
         c.facing = homeA + Math.PI / 2;
         continue;
       }
+      if(tickHuntingHazard(this,c,dt,obstacles))continue;
       c.grazing??={x:c.x,z:c.z};
       let near = false;
       for (const u of this.state.units) {
@@ -2483,6 +2471,7 @@ export class Game {
       moveGroundWildlife(this,c,dt,obstacles);
       if (Math.hypot(c.vx, c.vz) > 0.15) c.facing = Math.atan2(c.vx, c.vz);
     }
+    return obstacles;
   }
 
   tickRoutes(dt: number) {
@@ -2923,26 +2912,26 @@ export class Game {
 
   pickTradeRival(): Tribe | null {
     const focused = this.tribe(this.tradeTeam);
-    if (focused && focused.id !== 0 && focused.id !== 3 && focused.alive && !focused.hostile && knownSettlement(this,focused.id))
+    if (focused && focused.id !== 0 && focused.id !== 3 && focused.peaceTerm!=="annexation" && knownDiplomaticRelation(this,focused.id).hostile!==true && knownSettlement(this,focused.id))
       return focused;
     const selU = this.state.units.find((u) => u.selected && u.team !== 0 && u.hp > 0);
     if (selU) {
       const tr = this.tribe(selU.team);
-      if (tr?.alive && !tr.hostile && knownSettlement(this,tr.id)) {
+      if (tr && tr.peaceTerm!=="annexation" && knownDiplomaticRelation(this,tr.id).hostile!==true && knownSettlement(this,tr.id)) {
         this.tradeTeam = tr.id;
         return tr;
       }
     }
     const next =
-      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive && !t.hostile && knownSettlement(this,t.id)) ||
-      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.alive && knownSettlement(this,t.id)) ||
+      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.peaceTerm!=="annexation" && knownDiplomaticRelation(this,t.id).hostile!==true && knownSettlement(this,t.id)) ||
+      this.state.tribes.find((t) => t.id !== 0 && t.id !== 3 && t.peaceTerm!=="annexation" && knownSettlement(this,t.id)) ||
       null;
     if (next) this.tradeTeam = next.id;
     return next;
   }
 
   cycleTrade() {
-    const rivals = this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.alive && knownSettlement(this,t.id));
+    const rivals = this.state.tribes.filter((t) => t.id !== 0 && t.id !== 3 && t.peaceTerm!=="annexation" && knownSettlement(this,t.id));
     if (!rivals.length) {
       this.banner("No one left to trade with", 1.4);
       return;
@@ -2951,7 +2940,7 @@ export class Game {
     const next = rivals[(i + 1 + rivals.length) % rivals.length];
     this.tradeTeam = next.id;
     this.banner(
-      next.hostile ? next.name + " is at war — trade closed" : "Trading with " + next.name,
+      knownDiplomaticRelation(this,next.id).hostile===true ? next.name + " last reported hostilities" : "Trading with " + next.name,
       1.6,
     );
     this.onSfx("click");
@@ -2961,7 +2950,7 @@ export class Game {
     const tr = this.tribe(id);
     if (!tr || tr.id === 0) return;
     this.tradeTeam = id;
-    this.banner(tr.hostile ? tr.name + " is at war" : "Trading with " + tr.name, 1.4);
+    this.banner(knownDiplomaticRelation(this,tr.id).hostile===true ? tr.name + " last reported hostilities" : "Trading with " + tr.name, 1.4);
   }
 
   tryTrade(deal: TradeDeal) {
@@ -2970,7 +2959,7 @@ export class Game {
       this.banner("No one left to trade with", 1.4);
       return;
     }
-    if (rival.hostile) {
+    if (knownDiplomaticRelation(this,rival.id).hostile===true) {
       this.banner(rival.name + " will not trade while at war", 1.8);
       this.onSfx("invalid");
       return;
@@ -3004,8 +2993,8 @@ export class Game {
       hall = knownSettlementSite(this,team);
     if (
       !rival ||
-      !rival.alive ||
-      rival.hostile ||
+      rival.peaceTerm==="annexation" ||
+      knownDiplomaticRelation(this,team).hostile===true ||
       !hall ||
       !eligibleTradeCarrier(this,worker) ||
       !["food","wood","stone","copper","iron"].includes(deal.give) ||
@@ -4136,6 +4125,7 @@ export class Game {
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
     if(this.height(nx,nz)>this.waterAt(nx,nz)+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    if(u.haulage==="canoe")recordWaterStep(this,u,nx,nz);
     u.x = nx;
     u.z = nz;
     u.y = canoeHeight(this,u,nx,nz);
@@ -4212,7 +4202,7 @@ export class Game {
 
   proposePeace(team:number, term:PeaceTerm="whitePeace") {
     const rival=this.tribe(team);
-    if(!rival||team===0||team===3||!rival.alive||!rival.hostile) return false;
+    if(!rival||team===0||team===3||!knownSettlement(this,team)) return false;
     return this.sendDelegation(team,"peace",undefined,term);
   }
 
@@ -4220,7 +4210,7 @@ export class Game {
     return settlePeace(this,team,term);
   }
 
-  sendDelegation(team:number,kind:"trade"|"peace"|"gift",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
+  sendDelegation(team:number,kind:"trade"|"peace"|"gift"|"compact",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
     if(prisonerAI(this,u,dt))return;
@@ -4500,7 +4490,7 @@ export class Game {
     const rival = (u.tradeTeam ? this.tribe(u.tradeTeam) : null) || this.pickTradeRival();
     const local = rival ? localSettlementHall(this,u,rival.id) : undefined;
     const hall = rival ? (local || settlementJourneySite(this,u,rival.id)) : undefined;
-    if (!rival || !hall || rival.hostile) {
+    if (!rival || !hall || rival.hostile&&(!!local||knownDiplomaticRelation(this,rival.id).hostile===true)) {
       releaseTradeReservation(this,u); u.trade = null;
       u.tradeTeam = 0;
       u.order = "return";
@@ -4791,7 +4781,10 @@ export class Game {
       return;
     }
     if (u.order === "move") {
-      if (this.steer(u, dt)) u.order = "idle";
+      if (this.steer(u, dt)) {
+        u.order = u.stationOnArrival ? "hold" : "idle";
+        if(u.stationOnArrival)u.workReason="At your destination — waiting for orders";
+      }
       return;
     }
     if (u.order === "attackmove") {
@@ -4945,10 +4938,12 @@ export class Game {
     this.steer(u, dt);
   }
 
-  updateProjectiles(dt: number) {
+  updateProjectiles(dt: number,huntingOnly=false,obstacles?:WildlifeObstacles) {
     const ps = this.state.projectiles;
     for (let i = ps.length - 1; i >= 0; i--) {
       const p = ps[i];
+      if(p.wildlifeTargetId!==undefined){if(huntingOnly&&advanceHuntingProjectile(this,p,dt,obstacles))ps.splice(i,1);continue;}
+      if(huntingOnly)continue;
       p.life -= dt;
       const t = p.target;
       const gx = t && t.hp > 0 ? t.x : p.tx;
@@ -5096,6 +5091,8 @@ export class Game {
   }
 
   findOpenSpot(cx: number, cz: number, type: BldType, team: number) {
+    const finish=beginExcavationConstructionQuery(this,type);
+    try {
     if (type === "quarry") {
       for (const s of this.state.stones) {
         if (s.amount <= 0) continue;
@@ -5132,6 +5129,7 @@ export class Game {
       }
     }
     return null;
+    } finally { finish(); }
   }
 
   rivalTick(team: number, dt: number) {
@@ -5657,7 +5655,8 @@ export class Game {
         if ((this.state.time | 0) % 2 === 0) {
           for(const tr of this.state.tribes)if(isRivalTeam(tr.id)&&tr.alive)this.defendHome(tr.id);
         }
-        this.tickWildlife(sdt);
+        const huntingObstacles=this.tickWildlife(sdt);
+        this.updateProjectiles(sdt,true,huntingObstacles);
         tickHusbandry(this,sdt);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
@@ -5699,6 +5698,7 @@ export class Game {
         tickProduction(this,0);
         tickCampRelocation(this,0);
         reconcilePenWater(this);
+        reconcileWaterCargoEvidence(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {
@@ -5897,7 +5897,7 @@ export class Game {
       const b=this.state.boats?.find(b=>b.id===this.selectedBoat&&b.team===0&&b.hp>0);
       if(b) {
         const crew=this.state.units.filter(u=>u.hp>0&&u.boat?.id===b.id);
-        selection={name:'Riverboat',info:`${crew.length}/${b.capacity} seats · ${b.captain ? 'Click water to sail' : 'Board residents to take the helm'}`,hp:b.hp,maxHp:300,kind:'boat',type:'riverboat',team:b.team};
+        selection={name:b.hullClass?boatClass(b).name:'Riverboat',info:`${crew.length}/${b.capacity} seats · ${b.captain ? 'Click water to sail' : 'Board residents to take the helm'}`,hp:b.hp,maxHp:boatClass(b).maxHp,kind:'boat',type:'riverboat',team:b.team};
       } else this.selectedBoat=null;
     }
     const age = t.age;
@@ -5983,13 +5983,15 @@ export class Game {
           name: tr.short,
           color: tr.color,
           age: tr.age,
-          alive: tr.alive,
-          hostile: tr.hostile,
-          ally: tr.ally,
+          alive: tr.id===0?tr.alive:tr.peaceTerm!=="annexation",
+          hostile: tr.id===0?tr.hostile:knownDiplomaticRelation(this,tr.id).hostile===true,
+          ally: tr.id===0?tr.ally:knownDiplomaticRelation(this,tr.id).ally===true,
+          relationKnown:tr.id===0||knownDiplomaticRelation(this,tr.id).known,
+          relationStale:tr.id!==0&&knownDiplomaticRelation(this,tr.id).stale,
           spec: tr.spec,
           leader: tr.leader,
           csType: tr.csType,
-          tension: tr.tension,
+          tension: tr.id===0?tr.tension:knownDiplomaticRelation(this,tr.id).tension??0,
         })),
       trainOptions,
       buildOptions,
@@ -6017,48 +6019,48 @@ export class Game {
       trade: (() => {
         const rival = this.pickTradeRival();
         if (!rival) return null;
-        const camp = this.campOf(rival.id);
-        if (!this.exploredAt(camp.x, camp.z)) return null;
+        const camp = knownSettlementSite(this,rival.id);
+        if (!camp) return null;
         return {
           rival: rival.name,
-          hostile: rival.hostile,
-          alive: rival.alive,
+          hostile: knownDiplomaticRelation(this,rival.id).hostile===true,
+          relationKnown:knownDiplomaticRelation(this,rival.id).known,
+          relationStale:knownDiplomaticRelation(this,rival.id).stale,
+          alive: rival.peaceTerm!=="annexation",
           cd: rival.tradeCd,
           offers: this.offersFor(rival.spec),
           canCycle: this.state.tribes.filter(
             (t) =>
               t.id !== 0 &&
               t.id !== 3 &&
-              t.alive &&
-              this.exploredAt(this.campOf(t.id).x, this.campOf(t.id).z),
+              t.peaceTerm!=="annexation" &&
+              knownSettlement(this,t.id),
           ).length > 1,
-          ally: rival.ally,
+          ally: knownDiplomaticRelation(this,rival.id).ally===true,
           spec: rival.spec,
-          canPact: !rival.hostile && !rival.ally && rival.alive,
+          canPact: knownDiplomaticRelation(this,rival.id).hostile!==true && knownDiplomaticRelation(this,rival.id).ally!==true && rival.peaceTerm!=="annexation",
           leader: rival.leader,
           leaderTitle: rival.leaderTitle,
           csType: rival.csType,
         };
       })(),
-      rivalX: this.campOf(this.tradeTeam || 1).x,
-      rivalZ: this.campOf(this.tradeTeam || 1).z,
+      rivalX: knownSettlementSite(this,this.tradeTeam || 1)?.x ?? this.world.camps.find(c=>c.team===(this.tradeTeam||1))?.x ?? 0,
+      rivalZ: knownSettlementSite(this,this.tradeTeam || 1)?.z ?? this.world.camps.find(c=>c.team===(this.tradeTeam||1))?.z ?? 0,
       homeX: this.campOf(0).x,
       homeZ: this.campOf(0).z,
       camps: this.world.camps
         .filter((c) => c.team !== 0)
         .map((c) => {
           const tr = this.tribe(c.team);
-          const hall=this.state.buildings.find(b=>b.team===c.team&&b.type==="townhall"&&b.hp>0);
-          const seen=hall&&this.state.buildings.find(b=>b.team===c.team&&this.finished(b)&&this.exploredAt(b.x,b.z)&&Math.hypot(b.x-hall.x,b.z-hall.z)<40);
-          const at=seen||(hall&&this.exploredAt(hall.x,hall.z)?hall:null);
+          const at=knownSettlementSite(this,c.team);
           return {
             x: at?.x ?? c.x,
             z: at?.z ?? c.z,
             team: c.team,
             name: tr?.name || TEAM_NAMES[c.team] || "Rival",
             color: tr?.color || TEAM_COLORS[c.team] || "#8a3030",
-            alive: tr?.alive ?? false,
-            hostile: tr?.hostile ?? false,
+            alive: tr?.peaceTerm!=="annexation",
+            hostile: knownDiplomaticRelation(this,c.team).hostile===true,
             known: knownSettlement(this,c.team),
           };
         }),

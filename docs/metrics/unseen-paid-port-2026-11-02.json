@@ -1,0 +1,19 @@
+{
+  "scope": "Remaining M2-07 diagnostic: historical empty coast knowledge must not expose a later unseen paid foreign dock",
+  "historicalTerrainMapped": true,
+  "actualObserverEverPresent": false,
+  "ownContinuousVisionNearSite": false,
+  "paidLogs": 40,
+  "realBuilderWalked": 52.26028460359569,
+  "dockId": 582,
+  "beforeKnownDockIds": [],
+  "afterKnownDockIds": [
+    582
+  ],
+  "leak": true,
+  "callPaths": [
+    "reviewCoastalCommissioning → observedCoastalLandings",
+    "dispatchCoastalTrade → observedCoastalLandings",
+    "observedCoastalLandings → live foreign docks + historical terrain cells"
+  ]
+}

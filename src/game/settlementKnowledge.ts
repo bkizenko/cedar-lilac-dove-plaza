@@ -105,7 +105,10 @@ export function refreshSettlementSites(g: Game) {
 }
 export function validObservedSettlements(s: GameState) {
   for(const u of s.units){const m=u.settlementJourney;if(m===undefined)continue;
-    if(!m||typeof m!=='object'||Array.isArray(m)||Object.keys(m).some(k=>!['version','owner','siteId','x','z','recordedAt'].includes(k))||m.version!==1||!Number.isSafeInteger(m.owner)||m.owner<0||m.owner===3||m.owner===u.team||m.owner>=s.tribes.length||m.siteId!==undefined&&(!Number.isSafeInteger(m.siteId)||m.siteId<1||m.siteId>=s.nextId)||![m.x,m.z].every(n=>Number.isFinite(n)&&Math.abs(n)<=(s.worldOptions?.size??1040)/2)||!Number.isFinite(m.recordedAt)||m.recordedAt<0||m.recordedAt>s.time)return false;
+    const mission=u.societyMissionId===undefined?undefined:s.rivalMissions?.find(p=>p.id===u.societyMissionId&&p.kind==='message'&&(p.phase==='outbound'||p.phase==='contact'));
+    const partner=u.envoy?.phase==='outbound'?u.envoy.team:u.order==='trade'&&u.trade?u.tradeTeam:u.visit?.phase==='outbound'?(u.visit.team??0):mission?.partner;
+    if(!u.prisoner&&partner!==undefined&&m.owner!==partner)return false;
+    if(!m||typeof m!=='object'||Array.isArray(m)||Object.keys(m).some(k=>!['version','owner','siteId','x','z','recordedAt'].includes(k))||m.version!==1||!Number.isSafeInteger(m.owner)||m.owner<0||m.owner===3||m.owner>=s.tribes.length||m.siteId!==undefined&&(!Number.isSafeInteger(m.siteId)||m.siteId<1||m.siteId>=s.nextId)||![m.x,m.z].every(n=>Number.isFinite(n)&&Math.abs(n)<=(s.worldOptions?.size??1040)/2)||!Number.isFinite(m.recordedAt)||m.recordedAt<0||m.recordedAt>s.time)return false;
   }
   const value = s.observedSettlements;
   if (value === undefined) return true;

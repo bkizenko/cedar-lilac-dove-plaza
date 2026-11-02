@@ -1,3 +1,4 @@
+import {queueDiplomaticMessage,recordDiplomaticLegal,diplomaticSpeakerPresent} from './diplomaticKnowledge';
 import type {Game} from './sim';
 import type {PeaceTerm, Unit} from './types';
 import {knownSettlement} from './barter';
@@ -13,7 +14,7 @@ export function peacePressure(g:Game,team:number){
 function candidates(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.societyMissionId&&u.type==='worker'&&!isDependent(g,u)&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&!u.studyCrop&&!u.recalled&&!u.jobLock&&["idle","gather"].includes(u.order)&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.emergency&&!u.militia&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&u.carry===0);}
 export function peaceIssue(g:Game,team:number,term:PeaceTerm):string|null{
  const t=g.tribe(team);
- if(!peaceTerms.includes(term)||!t||team===0||team===3||!t.alive||!t.hostile||!knownSettlement(g,team))return 'Peace negotiations require a known tribe at war.';
+ if(!peaceTerms.includes(term)||!t||team===0||team===3||!t.alive||!t.hostile||!knownSettlement(g,team)&&!diplomaticSpeakerPresent(g,team))return 'Peace negotiations require a known tribe at war.';
  const required={whitePeace:0,tribute:1.25,forcedLabor:1.75,puppet:2.5,annexation:4}[term];
  if(peacePressure(g,team)<required)return 'They refuse these terms: insufficient military pressure.';
  if(term==='forcedLabor'){
@@ -47,7 +48,7 @@ export function settlePeace(g:Game,team:number,term:PeaceTerm){
   if(!g.state.tribes.some(r=>r.id>0&&r.id!==3&&r.alive))g.state.conquestAt=g.state.time;
   g.rebuildWalk();
  }
- g.workBoard.reset();g.banner(`${PEACE_TERMS[term]} agreed with ${t.name}. Open Village → Neighbor relations for treaty details.`,7);return true;
+ recordDiplomaticLegal(g,team,false);g.workBoard.reset();g.banner(`${PEACE_TERMS[term]} agreed with ${t.name}. Open Village → Neighbor relations for treaty details.`,7);return true;
 }
 export function rejectPeace(g:Game,team:number){const t=g.tribe(team);if(t){t.peaceOffer=undefined;t.nextPeaceOffer=g.state.time+300;}}
 export function releasePuppet(g:Game,team:number){const t=g.tribe(team);if(t?.peaceTerm!=='puppet')return;t.peaceTerm='whitePeace';t.tribute=undefined;t.recoveryUntil=g.state.time+600;g.banner(`${t.name} is independent again; the alliance remains.`,5);}
@@ -59,10 +60,9 @@ export function tickPeace(g:Game){
    t.tribute=undefined;
    if(t.peaceTerm==='puppet')t.peaceTerm=undefined;
    if(t.peaceOffer&&t.peaceOffer.expires<=g.state.time)t.peaceOffer=undefined;
-   if(!t.peaceOffer&&(t.nextPeaceOffer||0)<=g.state.time&&knownSettlement(g,t.id)&&peacePressure(g,t.id)>=1.25){
+   if(!t.peaceOffer&&(t.nextPeaceOffer||0)<=g.state.time&&peacePressure(g,t.id)>=1.25){
     const term:PeaceTerm=peacePressure(g,t.id)>=2?'tribute':'whitePeace';
-    t.peaceOffer={from:t.id,term,expires:g.state.time+180};t.nextPeaceOffer=g.state.time+480;
-    g.banner(`${t.name} sues for peace. Review their ${PEACE_TERMS[term].toLowerCase()} offer in Village → Neighbor relations.`,8);
+    queueDiplomaticMessage(g,t.id,'peaceOffer',term);t.nextPeaceOffer=g.state.time+480;
    }
   }else if(t.tribute){
    const c=t.tribute;

@@ -1,3 +1,4 @@
+import {tickStructureKnowledge} from '../src/game/structureKnowledge.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -18,7 +19,7 @@ function fixture(){
  for(let i=0;i<10;i++){const u=g.spawnUnit(i<4?'spearman':'worker',6+i%3,8+Math.floor(i/3),1);u.order='idle';}
  g.spawnUnit('worker',80,8,2);g.rebuildWalk();return g;
 }
-function observe(g,team,x,z){const observer=g.spawnUnit('worker',x,z,team);observer.jobLock=true;observer.order='hold';scoutKnowledge(g,observer);return observer;}
+function observe(g,team,x,z){const observer=g.spawnUnit('worker',x,z,team);observer.jobLock=true;observer.order='hold';scoutKnowledge(g,observer);tickStructureKnowledge(g,true);const home=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'),spot=g.interactionSpot(observer,home);assert.ok(spot);observer.tx=spot.x;observer.tz=spot.z;for(let i=0;i<2400&&Math.hypot(observer.x-spot.x,observer.z-spot.z)>1;i++){g.state.time+=.1;g.navBudget=50;g.steer(observer,.1);tickStructureKnowledge(g);}tickStructureKnowledge(g,true);assert.ok(g.state.structureReports?.some(p=>p.observer===team));return observer;}
 function putAtOwnCache(g,u){const home=g.state.buildings.find(b=>b.team===u.team&&b.type==='townhall'),spot=g.interactionSpot(u,home);assert.ok(spot);Object.assign(u,{x:spot.x,z:spot.z,tx:spot.x,tz:spot.z});}
 function drive(g,seconds,{combat=false,until=()=>false}={}){
  const end=g.state.time+seconds;while(g.state.time<end&&!until()){

@@ -88,9 +88,20 @@ export function migratePaidTrenches(g:Game){for(const b of g.state.buildings)if(
 }}
 
 /** Prevent a new structure from blocking the banks of already reserved digging. */
+type ConstructionQuery={state:Game['state'];buildings:Building[];length:number;trenches:Building[]};
+const constructionQueries=new WeakMap<Game,ConstructionQuery>();
+/** Only building types are indexed, within a synchronous placement search.
+ * Keep live trench objects and all original hp/progress/plan/bank predicates. */
+export function beginExcavationConstructionQuery(g:Game,type:Building['type']){
+ if(type==='trench'||type==='moat'||!Array.isArray(g.state.buildings))return()=>{};
+ const previous=constructionQueries.get(g),buildings=g.state.buildings;
+ constructionQueries.set(g,{state:g.state,buildings,length:buildings.length,trenches:buildings.filter(b=>b.type==='trench')});let closed=false;
+ return()=>{if(closed)return;closed=true;if(previous)constructionQueries.set(g,previous);else constructionQueries.delete(g);};
+}
+function constructionTrenches(g:Game){const c=constructionQueries.get(g);return c&&c.state===g.state&&c.buildings===g.state.buildings&&c.length===g.state.buildings.length?c.trenches:g.state.buildings;}
 export function excavationConstructionIssue(g:Game,type:Building['type'],x:number,z:number,w:number,d:number){
  if(type==='trench'||type==='moat')return null;
- for(const b of g.state.buildings)if(b.type==='trench'&&b.hp>0&&b.build<1&&!b.plannedCost){const bounds=cutBounds(proposal(g,b));if(Math.max(bounds.x0,x-w/2)<Math.min(bounds.x1,x+w/2)&&Math.max(bounds.z0,z-d/2)<Math.min(bounds.z1,z+d/2))return'Leave room for the trench banks being dug';}
+ for(const b of constructionTrenches(g))if(b.type==='trench'&&b.hp>0&&b.build<1&&!b.plannedCost){const bounds=cutBounds(proposal(g,b));if(Math.max(bounds.x0,x-w/2)<Math.min(bounds.x1,x+w/2)&&Math.max(bounds.z0,z-d/2)<Math.min(bounds.z1,z+d/2))return'Leave room for the trench banks being dug';}
  return null;
 }
 /** Persistence can validate without allocating any refined geometry. */

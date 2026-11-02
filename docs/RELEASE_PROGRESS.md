@@ -2,20 +2,20 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**23/98 verified gates — 23.47%.** This measures acceptance evidence, not development effort or time remaining.
+**31/98 verified gates — 31.63%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: needs-driven material/trade intelligence and qualified boat delivery following3c69426. M3-01 newly qualified; independent profitable trade remains pending. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: This batch adds connected finite hunting qualification and final development/production desktop build checks; prior29 gates retained. Research-earned boats, physical diplomacy, improved building forms, defense orders and background autosave are delivered components without broader campaign credit.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
-| M0 | 6/12 | 50.0% |
-| M1 | 11/22 | 50.0% |
-| M2 | 0/16 | 0.0% |
+| M0 | 8/12 | 66.67% |
+| M1 | 15/22 | 68.18% |
+| M2 | 1/16 | 6.25% |
 | M3 | 3/18 | 16.67% |
-| M4 | 2/20 | 10.0% |
-| M5 | 1/10 | 10.0% |
+| M4 | 2/20 | 10% |
+| M5 | 2/10 | 20% |
 
 ## Fixed acceptance checklist
 
@@ -33,8 +33,8 @@ Verified baseline: needs-driven material/trade intelligence and qualified boat d
 | M0-08 | pending | Transport journeys, husbandry, expeditions and captivity migrate through the shared ownership contract | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M0-09 | pending | Versioned simulation RNG and timestamped commands reproduce new-game outcomes across replay/save | No matching executed evidence. Seeded world generation is not serialized simulation RNG or full deterministic replay. |
 | M0-10 | pending | Command execution latency, blocked time, stealing and reservation failures are measured beyond eligibility | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M0-11 | pending | Priority and recall changes conserve full-handed cargo, escrow and paid construction across interruption | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M0-12 | pending | Full M0 integrated scenario passes direct override/recall/construction/paid-work resumption without repair | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
+| M0-11 | verified | Priority and recall changes conserve full-handed cargo, escrow and paid construction across interruption | m0Integrated20261102. Recorded full gate scenario on published c66304c; controlled initial endowment/quiet conditions do not imply completion of other campaign, RNG, ownership-migration or balance gates. |
+| M0-12 | verified | Full M0 integrated scenario passes direct override/recall/construction/paid-work resumption without repair | m0Integrated20261102. Recorded full gate scenario on published c66304c; controlled initial endowment/quiet conditions do not imply completion of other campaign, RNG, ownership-migration or balance gates. |
 
 ### M1
 
@@ -48,11 +48,11 @@ Verified baseline: needs-driven material/trade intelligence and qualified boat d
 | M1-06 | verified | Water collection traverses a discovered physical bank and returns finite cargo through interruption/save | batch4. Discovered bank collection, physical return and reassignment/recall/save conservation recorded. |
 | M1-07 | verified | Cold consumes real stored fuel and shelter/fire benefits affect measured gradual exposure | batch4. Actual wood use and measured shelter/cold effects checked; no clothing completion implied. |
 | M1-08 | verified | Desktop needs panel/ledger show actual reserves, physical-action availability and one disabled reason | batch4. Real desktop development/built-output controls opened and used with zero page errors. |
-| M1-09 | pending | Rest, shelter, clothing, tool wear and repair form a viable survival production loop | No matching executed evidence. Clothing and complete repair/needs production remain open. |
-| M1-10 | pending | Tracking, hunting, carcass handling and wildlife hazards provide meaningful finite food | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M1-11 | pending | Fishing uses actual reachable freshwater/coastal banks with physically returned catches | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
+| M1-09 | verified | Rest, shelter, clothing, tool wear and repair form a viable survival production loop | survivalMaintenance20261102. Whole-gate connected scenario passed on combined candidate; exact provenance/controlled fixture limits recorded. Does not credit full campaign balance or unrelated performance/visual gates. |
+| M1-10 | verified | Tracking, hunting, carcass handling and wildlife hazards provide meaningful finite food | expandedPlayableNov2. Connected finite native camp hunts/cooks28 food (36.8% concurrent consumption), pays for hide cleaning/drying and conserves raw cargo across pause/save. Brief actual FOW tracking is complemented by actual injury and geometry/expiry checks. No finite ammunition or full campaign claim. |
+| M1-11 | verified | Fishing uses actual reachable freshwater/coastal banks with physically returned catches | bankFishing20261102. Recorded full gate scenario on published c66304c; controlled initial endowment/quiet conditions do not imply completion of other campaign, RNG, ownership-migration or balance gates. |
 | M1-12 | verified | Early animals require real capture, food and care rather than automatic initial gifts | materialsPastureDefense. Natural current V14 actual paid pen, native wild goat ID captured/returned, real care and finite grazing. Controlled winter plant-food delivery/conservation checks pass. No initial livestock gifts; broader species and full winter campaign remain separate. |
-| M1-13 | pending | Seed-funded expandable farms follow contours and support soil/fallow/preservation/milling decisions | No matching executed evidence. Contour-following farms are explicit latest scope; field-module presence is not current visual/gameplay acceptance. |
+| M1-13 | verified | Seed-funded expandable farms follow contours and support soil/fallow/preservation/milling decisions | contourFood20261102. Whole-gate connected scenario passed on combined candidate; exact provenance/controlled fixture limits recorded. Does not credit full campaign balance or unrelated performance/visual gates. |
 | M1-14 | pending | Food attention, local depletion/regrowth and warned hazards produce choices without broken labor | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M1-15 | pending | Every map has mandatory hills/valleys/rivers/lakes; substantial landmasses have coherent drainage and reachable uplands | No matching executed evidence. v11 implementation and focused checks are unpublished integration work; zero credit until integrated acceptance/publish. |
 | M1-16 | pending | Every map contains all required landscape families with organic forms and varied prominence | No matching executed evidence. Organic v11 forms/material/water fixes are under desktop review; prior ellipse/teeth/striped fall gallery was rejected. |
@@ -70,7 +70,7 @@ Verified baseline: needs-driven material/trade intelligence and qualified boat d
 | M2-01 | pending | Societies compare feasible bounded local-AI alternatives using explicit needs/costs/risks and reasons | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M2-02 | pending | Committed strategic plans reserve resources and use hysteresis/interruption rules | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M2-03 | pending | Rivals develop from finite camps, scout and specialize without recurring resource gifts | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M2-04 | pending | Two rivals independently complete profitable physical trade through shared rules | No matching executed evidence. Older rival economic/logistics reports and focused test files do not prove current shared-rule rival-rival completed route scenario. |
+| M2-04 | verified | Two rivals independently complete profitable physical trade through shared rules | autonomousUsefulTradeNov1. Two ordinary NPC reviews independently fund actual hulls and complete useful physical round trips with strict in-transit/incoming saves and exact inventory/water accounting. Positive operating useful-need value after food under existing local scarcity factors; capital separately disclosed, not recovered. Controlled shores/endowments and two paid construction orders; not natural frequency, fleet combat or whole-campaign qualification. |
 | M2-05 | pending | Two rivals compete/fight, negotiate a treaty and recover through the same society systems | No matching executed evidence. General directed multi-society war/treaty/recovery acceptance remains open. |
 | M2-06 | pending | Directed society-pair ledger stores incidents/trust/grievances/agreements/dependencies/claims | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M2-07 | pending | Information travels through observation/envoys/routes; unknown actions do not generate remote knowledge | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
@@ -88,7 +88,7 @@ Verified baseline: needs-driven material/trade intelligence and qualified boat d
 
 | Gate | Status | Acceptance | Evidence / limitation |
 | --- | --- | --- | --- |
-| M3-01 | verified | Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load | coastalDeliveryNov1. Actual paid hull/dock, same carrier/boat, at-sea and incoming-uncredited save/restore, finite foreign exchange and exactly-once home credit pass on current combined source. Controlled fixtures; M2-04 profit remains pending. |
+| M3-01 | verified | Boat/port deliveries carry actual people/cargo through boarding, travel, unloading and save/load | coastalDeliveryNov1. Current combined-index paid dock/hull, same-body cargo boarding/sailing/foreign exchange/home unload, at-sea and incoming-uncredited save/restore, strict ownership and exactly-once inventory conservation qualified. Controlled declared shore fixtures; natural profitable independent trade remains M2-04. |
 | M3-02 | pending | Caravan/depot/pack-animal routes scale capacity with actual equipment and escort obligations | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-03 | pending | Markets consolidate known offers/contracts/cargo/storage with measurable handling/search benefit | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-04 | pending | Shipment interruption and interception conserve cargo/equipment and measure profitability/reliability/loss | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
@@ -138,7 +138,7 @@ Verified baseline: needs-driven material/trade intelligence and qualified boat d
 | --- | --- | --- | --- |
 | M5-01 | pending | Complete current Stone-through-Classical campaign passes all required release scenarios without command repair | No matching executed evidence. All required current release scenarios must pass together; currently incomplete. |
 | M5-02 | verified | Published baseline migration checks preserve historical terrain hashes and camp/needs/paid-project saves | batch1, batch2, batch4. Recorded historical generation hashes/roundtrips plus old-needs behavior and transferable project compatibility. New v11 qualification remains M5-01/03/09. |
-| M5-03 | pending | Latest release candidate passes typecheck/build and clean development/production desktop interactions | No matching executed evidence. Earlier c25f405 build/desktop smoke passed, but current unpublished candidate has no final production qualification yet. |
+| M5-03 | verified | Latest release candidate passes typecheck/build and clean development/production desktop interactions | expandedPlayableNov2. Current integrated source typecheck and production build pass; actual development Auto work and compact/expanded pause controls, actual production gallery/tooltips/save worker and final reload are clean. This gate does not imply campaign or frame-rate acceptance. |
 | M5-04 | pending | New map gallery passes close/middle/wide same-landscape, overcast, water/fall/cliff/dune/route/contour-farm review | No matching executed evidence. Root owns the next actual desktop gallery; raw GL cleanliness alone is not visual acceptance. |
 | M5-05 | pending | Actual physical geometry agrees with depicted surfaces, farms, water, dry placement and navigation | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M5-06 | pending | M1 MacBook Air 8GB desktop target meets median <=33ms and p95 <=50ms at 100 visible residents/60 buildings | No matching executed evidence. Target hardware figures are proposed targets, not achieved measurements. |

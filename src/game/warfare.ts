@@ -18,11 +18,11 @@ export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
    u.drill!=null||u.expedition||u.envoy||u.scout||u.visit||u.foundingJourney||u.tributeJourney||
    !['idle','gather','hold'].includes(u.order))return false;
  const b=g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&(workplaceId===undefined||b.id===workplaceId)&&
-   (job.kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type))&&g.interactionSpot(u,b))
+   (job.kind==='blade'?b.type==='forge':['townhall','barracks','workshop','hearth'].includes(b.type))&&g.interactionSpot(u,b))
    .sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
  if(!b)return false;
  const fraction=job.progress/job.duration;
- job.duration=WEAPONS[job.kind].seconds*(b.type==='townhall'?3:b.type==='barracks'?2:1);
+ job.duration=WEAPONS[job.kind].seconds*(['townhall','hearth'].includes(b.type)?3:b.type==='barracks'?2:1);
  job.progress=fraction*job.duration;job.workplace=b.id;job.paused=false;
  u.order='hold';u.node=null;u.target=null;u.workReason=`Resuming ${WEAPONS[job.kind].name.toLowerCase()}`;
  g.workBoard.reset();return true;
@@ -34,7 +34,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
   if(t.age<spec.age)return reject('Metalworking needs the Bronze Age; stone spears and bows are available now');
   const work=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&
     (workplaceId===undefined||b.id===workplaceId)&&
-    (kind==='blade'?b.type==='forge':['townhall','barracks','workshop'].includes(b.type)));
+    (kind==='blade'?b.type==='forge':['townhall','barracks','workshop','hearth'].includes(b.type)));
   if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Use a hearth or finish a crafting shelter for weapon making');
   for(const person of g.state.units)if(person.team===team&&person.weaponWork?.kind===kind&&person.weaponWork.paused&&resumeWeaponWork(g,person,workplaceId))return true;
   const u=g.state.units.find(u=>u.team===team&&u.hp>0&&!u.prisoner&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.recalled&&!u.tributeJourney&&!u.waterWork&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
@@ -42,7 +42,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
   const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   t.wood-=spec.wood;t.stone-=spec.stone;t.copper-=spec.copper;
-  u.weaponWork={kind,progress:0,duration:spec.seconds*(workplace.type==='townhall'?3:workplace.type==='barracks'?2:1),workplace:workplace.id};
+  u.weaponWork={kind,progress:0,duration:spec.seconds*(['townhall','hearth'].includes(workplace.type)?3:workplace.type==='barracks'?2:1),workplace:workplace.id};
   u.order='hold';u.node=null;u.target=null;u.workReason=`Making ${spec.name.toLowerCase()} — walking to the workplace`;
   if(team===0)g.banner(`${spec.name}: materials reserved; one adult leaves other work to craft it`,3);
   return true;

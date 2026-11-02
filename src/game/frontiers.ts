@@ -1,3 +1,4 @@
+import {queueDiplomaticMessage} from './diplomaticKnowledge';
 import {refreshSettlementSites} from './settlementKnowledge';
 export {validObservedSettlements} from './settlementKnowledge';
 import type {Game} from './sim';
@@ -231,6 +232,6 @@ export function tickFrontiers(g:Game){
   t.trust=Math.max(0,(t.trust||0)-dt*Math.min(.006,grievance*.003));
   let warned=warnings.get(g);if(!warned){warned=new Map();warnings.set(g,warned);}
   const last=warned.get(t.id)??-Infinity;
-  if(before<.28&&t.tension>=.28&&(g.state.time-last>120||g.state.time<last)){g.banner(`${t.name} disputes your frontier claim. Withdraw the outpost, negotiate or prepare to defend it.`,6);warned.set(t.id,g.state.time);}
+  if(before<.28&&t.tension>=.28&&(g.state.time-last>120||g.state.time<last)){const witness=g.state.observedClaims?.find(p=>p.observer===t.id&&p.active)?.witnessId;queueDiplomaticMessage(g,t.id,'frontier',undefined,witness);warned.set(t.id,g.state.time);}
  }
 }

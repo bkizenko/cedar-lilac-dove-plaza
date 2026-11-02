@@ -1,0 +1,609 @@
+{
+  "baseline": "d048d1a + stable frame/renderer diagnostics + explicitly approved validation RNG correction; no trench or rejected performance deltas",
+  "extensionPatchSha256": "d8c9f0a86bca10436dda6e0af6eca26dd964ff4b5bd8a3096124c4d54d757661",
+  "sourceFiles": {
+    "src/game/autosave.ts": "030b04e263ab04646aea3f5b26e23d69f742a5dede9d0dc36d3820b64a0d20a6",
+    "src/game/autosaveProtocol.ts": "55dfcfe507b69e239f611c775719981f3e1e5eff9ef3a8661d689df009a8bdcb",
+    "src/game/autosavePayload.ts": "6aa503ee2fae080400e51ac8422d38aa4e2e85b8676247786e4ae5e82cb245fe",
+    "src/game/autosave.worker.ts": "ed5ce3c2a1d7a54a4b05ba553563d781769e20886bd10734efb554d348b0343d",
+    "src/game/save.ts": "88158d7cbfcddd7f7140c210432bb61ac864db5894cc77844702fb002c89b413",
+    "src/game/engine.ts": "4bd79b479e65cb2a985eb630f41c8b405d0f11619d75c042b9197f593e753e8f",
+    "src/game/runtimeProfile.ts": "251a5dce4efc7465449b7c7541bfdee05c480e934e50be4ac2837cb27c5be923",
+    "src/ui/PerformanceReadout.tsx": "2ae3b7fb33dab492c7a594be6752f33fbe40478654ea8081262173d06a9d7e94",
+    "scripts/autosave-worker-controller.test.mjs": "e3825a398df7e77fb3c322558986455a620536caf99e954242a677d00eb0e74e",
+    "scripts/autosave-worker-payload.test.mjs": "c1deb04de35aaa9caa33a4ee3f37b17bd3983b081c9464e254703f30fea46702",
+    "scripts/fixtures/autosave-worker-adapter.mjs": "92fd2e59070f2a4d78ad07b16ef9362b6a71314b504213a7b01a9841001d02c7"
+  },
+  "validationPurityPatchSha256": "9d067b59bb690d55283a967061fd4ee8c0714659d4357dc084cef4698b003a01",
+  "privateInputSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "privateInputUnchanged": true,
+  "privatePayloadPublished": false,
+  "mechanismExperiment": {
+    "order": "A B B A, four sequential fresh nice10 processes",
+    "warmSavesPerProcess": 3,
+    "measuredSavesPerProcess": 12,
+    "storage": "Map-backed; no browser localStorage I/O",
+    "simulationOrRendering": false,
+    "fixedState": true,
+    "timestamps": "controlled equal stamps across variants",
+    "gameHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+    "saveRandomDraws": 0,
+    "allThreeStorageHashesEqual": true,
+    "groups": {
+      "sync": {
+        "processes": 2,
+        "measuredSaves": 24,
+        "mainBlockingMeanMs": 121.81799483333339,
+        "mainBlockingP95Ms": 146.8777909999999,
+        "mainBlockingMaxMs": 164.17954199999986,
+        "wallLatencyMeanMs": 121.81799483333339,
+        "backgroundProcessingMeanMs": 0
+      },
+      "worker": {
+        "processes": 2,
+        "measuredSaves": 24,
+        "mainBlockingMeanMs": 13.358279375000052,
+        "mainBlockingP95Ms": 16.679791000001387,
+        "mainBlockingMaxMs": 16.71312399999988,
+        "wallLatencyMeanMs": 336.2808664583331,
+        "backgroundProcessingMeanMs": 303.7924201666667
+      }
+    },
+    "runs": [
+      {
+        "mode": "sync",
+        "scope": "Serialization-only fixed authorized private snapshot; Map-backed storage, no browser I/O or simulation/rendering;3warm+12measured saves per process; Worker actual Node thread module, not browser Worker proof",
+        "sourceHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+        "inputUnchanged": true,
+        "gameInitialHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "gameFinalHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "saveRngDraws": 0,
+        "storageHashes": {
+          "dawn-of-empire-v17": "15042d10c13dfef3585a3bdf67d8db039a7ecb49fdbc28eb943dab8740d0fc47",
+          "dawn-of-empire-v17:bak": "90710b8265e369959802c8cd61b80eb9826b4033796cdfcf426b4edaf93430fe",
+          "dawn-of-empire-v17:protected": "c8ff8693e2bf954a8ace7cca427bbd1cabfb6984b81bd731ad27ac5271428501"
+        },
+        "mainCpu": {
+          "samples": 12,
+          "meanMs": 135.6649686666667,
+          "p95Ms": 164.17954199999986,
+          "maxMs": 164.17954199999986
+        },
+        "wallLatency": {
+          "samples": 12,
+          "meanMs": 135.6649686666667,
+          "p95Ms": 164.17954199999986,
+          "maxMs": 164.17954199999986
+        },
+        "workerCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "dispatchCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "commitCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "samples": [
+          {
+            "mainCpuMs": 138.49266700000044,
+            "wallLatencyMs": 138.49266700000044
+          },
+          {
+            "mainCpuMs": 126.58995800000048,
+            "wallLatencyMs": 126.58995800000048
+          },
+          {
+            "mainCpuMs": 118.1552499999998,
+            "wallLatencyMs": 118.1552499999998
+          },
+          {
+            "mainCpuMs": 142.79066599999987,
+            "wallLatencyMs": 142.79066599999987
+          },
+          {
+            "mainCpuMs": 142.15187500000047,
+            "wallLatencyMs": 142.15187500000047
+          },
+          {
+            "mainCpuMs": 132.60508300000038,
+            "wallLatencyMs": 132.60508300000038
+          },
+          {
+            "mainCpuMs": 141.5702080000001,
+            "wallLatencyMs": 141.5702080000001
+          },
+          {
+            "mainCpuMs": 146.8777909999999,
+            "wallLatencyMs": 146.8777909999999
+          },
+          {
+            "mainCpuMs": 164.17954199999986,
+            "wallLatencyMs": 164.17954199999986
+          },
+          {
+            "mainCpuMs": 133.2671249999994,
+            "wallLatencyMs": 133.2671249999994
+          },
+          {
+            "mainCpuMs": 130.97829199999978,
+            "wallLatencyMs": 130.97829199999978
+          },
+          {
+            "mainCpuMs": 110.32116700000006,
+            "wallLatencyMs": 110.32116700000006
+          }
+        ],
+        "slot": "A1"
+      },
+      {
+        "mode": "worker",
+        "scope": "Serialization-only fixed authorized private snapshot; Map-backed storage, no browser I/O or simulation/rendering;3warm+12measured saves per process; Worker actual Node thread module, not browser Worker proof",
+        "sourceHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+        "inputUnchanged": true,
+        "gameInitialHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "gameFinalHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "saveRngDraws": 0,
+        "storageHashes": {
+          "dawn-of-empire-v17": "15042d10c13dfef3585a3bdf67d8db039a7ecb49fdbc28eb943dab8740d0fc47",
+          "dawn-of-empire-v17:bak": "90710b8265e369959802c8cd61b80eb9826b4033796cdfcf426b4edaf93430fe",
+          "dawn-of-empire-v17:protected": "c8ff8693e2bf954a8ace7cca427bbd1cabfb6984b81bd731ad27ac5271428501"
+        },
+        "mainCpu": {
+          "samples": 12,
+          "meanMs": 14.182336583333457,
+          "p95Ms": 16.71312399999988,
+          "maxMs": 16.71312399999988
+        },
+        "wallLatency": {
+          "samples": 12,
+          "meanMs": 344.12593766666646,
+          "p95Ms": 386.907459,
+          "maxMs": 386.907459
+        },
+        "workerCpu": {
+          "samples": 12,
+          "meanMs": 309.95596541666686,
+          "p95Ms": 347.600500999999,
+          "maxMs": 347.600500999999
+        },
+        "dispatchCpu": {
+          "samples": 12,
+          "meanMs": 14.164867916666557,
+          "p95Ms": 16.690248999999312,
+          "maxMs": 16.690248999999312
+        },
+        "commitCpu": {
+          "samples": 12,
+          "meanMs": 0.01746866666690039,
+          "p95Ms": 0.025457999999161984,
+          "maxMs": 0.025457999999161984
+        },
+        "samples": [
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 14.41533299999901,
+            "commitCpuMs": 0.015500000000429281,
+            "workerCpuMs": 294.8894170000003,
+            "mainCpuMs": 14.430832999999438,
+            "wallLatencyMs": 331.15099999999984
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 14.856958999999733,
+            "commitCpuMs": 0.025457999999161984,
+            "workerCpuMs": 302.59008300000005,
+            "mainCpuMs": 14.882416999998895,
+            "wallLatencyMs": 336.2275839999993
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 16.66466600000058,
+            "commitCpuMs": 0.015125000000807631,
+            "workerCpuMs": 306.7477920000001,
+            "mainCpuMs": 16.679791000001387,
+            "wallLatencyMs": 341.21833399999923
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.583416999999827,
+            "commitCpuMs": 0.014208000000508036,
+            "workerCpuMs": 309.1767910000008,
+            "mainCpuMs": 11.597625000000335,
+            "wallLatencyMs": 341.93354100000033
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 15.474833999999646,
+            "commitCpuMs": 0.01708299999972951,
+            "workerCpuMs": 294.959167,
+            "mainCpuMs": 15.491916999999376,
+            "wallLatencyMs": 327.4092920000003
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 13.847459000000526,
+            "commitCpuMs": 0.021125000000211003,
+            "workerCpuMs": 290.2710420000003,
+            "mainCpuMs": 13.868584000000737,
+            "wallLatencyMs": 325.23733300000004
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 13.301707999999962,
+            "commitCpuMs": 0.014625000000705768,
+            "workerCpuMs": 305.40570899999966,
+            "mainCpuMs": 13.316333000000668,
+            "wallLatencyMs": 338.89479200000005
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.838456999999835,
+            "commitCpuMs": 0.017458000000260654,
+            "workerCpuMs": 340.99633300000005,
+            "mainCpuMs": 11.855915000000095,
+            "wallLatencyMs": 374.19095899999957
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 16.140792000001966,
+            "commitCpuMs": 0.015875000000960426,
+            "workerCpuMs": 301.95187500000065,
+            "mainCpuMs": 16.156667000002926,
+            "wallLatencyMs": 339.73729099999946
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.619375000000218,
+            "commitCpuMs": 0.01208299999962037,
+            "workerCpuMs": 297.32979199999863,
+            "mainCpuMs": 11.631457999999839,
+            "wallLatencyMs": 325.90287499999977
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 13.545165999998062,
+            "commitCpuMs": 0.01820899999984249,
+            "workerCpuMs": 327.5530830000025,
+            "mainCpuMs": 13.563374999997905,
+            "wallLatencyMs": 360.70079199999964
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 16.690248999999312,
+            "commitCpuMs": 0.022875000000567525,
+            "workerCpuMs": 347.600500999999,
+            "mainCpuMs": 16.71312399999988,
+            "wallLatencyMs": 386.907459
+          }
+        ],
+        "slot": "B1"
+      },
+      {
+        "mode": "worker",
+        "scope": "Serialization-only fixed authorized private snapshot; Map-backed storage, no browser I/O or simulation/rendering;3warm+12measured saves per process; Worker actual Node thread module, not browser Worker proof",
+        "sourceHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+        "inputUnchanged": true,
+        "gameInitialHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "gameFinalHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "saveRngDraws": 0,
+        "storageHashes": {
+          "dawn-of-empire-v17": "15042d10c13dfef3585a3bdf67d8db039a7ecb49fdbc28eb943dab8740d0fc47",
+          "dawn-of-empire-v17:bak": "90710b8265e369959802c8cd61b80eb9826b4033796cdfcf426b4edaf93430fe",
+          "dawn-of-empire-v17:protected": "c8ff8693e2bf954a8ace7cca427bbd1cabfb6984b81bd731ad27ac5271428501"
+        },
+        "mainCpu": {
+          "samples": 12,
+          "meanMs": 12.534222166666646,
+          "p95Ms": 16.458165999999437,
+          "maxMs": 16.458165999999437
+        },
+        "wallLatency": {
+          "samples": 12,
+          "meanMs": 328.4357952499998,
+          "p95Ms": 366.5385839999999,
+          "maxMs": 366.5385839999999
+        },
+        "workerCpu": {
+          "samples": 12,
+          "meanMs": 297.6288749166666,
+          "p95Ms": 329.3345420000005,
+          "maxMs": 329.3345420000005
+        },
+        "dispatchCpu": {
+          "samples": 12,
+          "meanMs": 12.517562500000091,
+          "p95Ms": 16.44291599999997,
+          "maxMs": 16.44291599999997
+        },
+        "commitCpu": {
+          "samples": 12,
+          "meanMs": 0.016659666666555495,
+          "p95Ms": 0.030917000000044936,
+          "maxMs": 0.030917000000044936
+        },
+        "samples": [
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 16.44291599999997,
+            "commitCpuMs": 0.015249999999468855,
+            "workerCpuMs": 329.3345420000005,
+            "mainCpuMs": 16.458165999999437,
+            "wallLatencyMs": 366.5385839999999
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 10.374042999999801,
+            "commitCpuMs": 0.019874999999956344,
+            "workerCpuMs": 297.74366700000064,
+            "mainCpuMs": 10.393917999999758,
+            "wallLatencyMs": 326.0596250000008
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 13.400582999999642,
+            "commitCpuMs": 0.020541999999295513,
+            "workerCpuMs": 300.126209,
+            "mainCpuMs": 13.421124999998938,
+            "wallLatencyMs": 332.50095800000054
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.707792000000154,
+            "commitCpuMs": 0.016291000000819622,
+            "workerCpuMs": 296.23354200000085,
+            "mainCpuMs": 11.724083000000974,
+            "wallLatencyMs": 326.76424999999927
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 13.250500000000102,
+            "commitCpuMs": 0.01262499999938882,
+            "workerCpuMs": 285.12724999999955,
+            "mainCpuMs": 13.26312499999949,
+            "wallLatencyMs": 317.0503749999998
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.463582999999744,
+            "commitCpuMs": 0.030917000000044936,
+            "workerCpuMs": 288.1750830000001,
+            "mainCpuMs": 11.494499999999789,
+            "wallLatencyMs": 316.9405420000003
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 15.632290999999896,
+            "commitCpuMs": 0.01787499999954889,
+            "workerCpuMs": 288.630333000001,
+            "mainCpuMs": 15.650165999999444,
+            "wallLatencyMs": 320.0549170000004
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 11.829209000001356,
+            "commitCpuMs": 0.014417000000321423,
+            "workerCpuMs": 310.59029199999895,
+            "mainCpuMs": 11.843626000001677,
+            "wallLatencyMs": 342.73762499999975
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 10.349209000001792,
+            "commitCpuMs": 0.01358299999992596,
+            "workerCpuMs": 281.95554099999936,
+            "mainCpuMs": 10.362792000001718,
+            "wallLatencyMs": 310.31966699999975
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 10.997624000001451,
+            "commitCpuMs": 0.012499999998908606,
+            "workerCpuMs": 287.85345699999925,
+            "mainCpuMs": 11.01012400000036,
+            "wallLatencyMs": 315.86454199999935
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 14.012666999997236,
+            "commitCpuMs": 0.01337500000045111,
+            "workerCpuMs": 292.1829579999994,
+            "mainCpuMs": 14.026041999997688,
+            "wallLatencyMs": 322.48249999999825
+          },
+          {
+            "mode": "worker",
+            "outcome": "committed",
+            "dispatchCpuMs": 10.750332999999955,
+            "commitCpuMs": 0.01266600000053586,
+            "workerCpuMs": 313.5936249999995,
+            "mainCpuMs": 10.762999000000491,
+            "wallLatencyMs": 343.9159579999996
+          }
+        ],
+        "slot": "B2"
+      },
+      {
+        "mode": "sync",
+        "scope": "Serialization-only fixed authorized private snapshot; Map-backed storage, no browser I/O or simulation/rendering;3warm+12measured saves per process; Worker actual Node thread module, not browser Worker proof",
+        "sourceHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+        "inputUnchanged": true,
+        "gameInitialHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "gameFinalHash": "4bed4fe994890cf65a308c9aad9b833f54a9187c8668ee02a27881614f96adf2",
+        "saveRngDraws": 0,
+        "storageHashes": {
+          "dawn-of-empire-v17": "15042d10c13dfef3585a3bdf67d8db039a7ecb49fdbc28eb943dab8740d0fc47",
+          "dawn-of-empire-v17:bak": "90710b8265e369959802c8cd61b80eb9826b4033796cdfcf426b4edaf93430fe",
+          "dawn-of-empire-v17:protected": "c8ff8693e2bf954a8ace7cca427bbd1cabfb6984b81bd731ad27ac5271428501"
+        },
+        "mainCpu": {
+          "samples": 12,
+          "meanMs": 107.97102100000006,
+          "p95Ms": 120.11633299999994,
+          "maxMs": 120.11633299999994
+        },
+        "wallLatency": {
+          "samples": 12,
+          "meanMs": 107.97102100000006,
+          "p95Ms": 120.11633299999994,
+          "maxMs": 120.11633299999994
+        },
+        "workerCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "dispatchCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "commitCpu": {
+          "samples": 0,
+          "meanMs": 0,
+          "p95Ms": null,
+          "maxMs": null
+        },
+        "samples": [
+          {
+            "mainCpuMs": 120.11633299999994,
+            "wallLatencyMs": 120.11633299999994
+          },
+          {
+            "mainCpuMs": 112.48566699999992,
+            "wallLatencyMs": 112.48566699999992
+          },
+          {
+            "mainCpuMs": 118.7240410000004,
+            "wallLatencyMs": 118.7240410000004
+          },
+          {
+            "mainCpuMs": 106.54874999999993,
+            "wallLatencyMs": 106.54874999999993
+          },
+          {
+            "mainCpuMs": 110.24470900000051,
+            "wallLatencyMs": 110.24470900000051
+          },
+          {
+            "mainCpuMs": 110.04175000000032,
+            "wallLatencyMs": 110.04175000000032
+          },
+          {
+            "mainCpuMs": 113.54820799999925,
+            "wallLatencyMs": 113.54820799999925
+          },
+          {
+            "mainCpuMs": 101.2308750000002,
+            "wallLatencyMs": 101.2308750000002
+          },
+          {
+            "mainCpuMs": 97.66079199999967,
+            "wallLatencyMs": 97.66079199999967
+          },
+          {
+            "mainCpuMs": 101.44570900000053,
+            "wallLatencyMs": 101.44570900000053
+          },
+          {
+            "mainCpuMs": 102.64558399999987,
+            "wallLatencyMs": 102.64558399999987
+          },
+          {
+            "mainCpuMs": 100.95983400000023,
+            "wallLatencyMs": 100.95983400000023
+          }
+        ],
+        "slot": "A2"
+      }
+    ]
+  },
+  "browserProof": {
+    "source": "root actual CUA on generated public paused camp, fresh50686 origin; no private save",
+    "workerConfirmed": true,
+    "initialCheckpoint": {
+      "committed": 1,
+      "failed": 0,
+      "fallbacks": 0,
+      "mainThreadMs": 27.6,
+      "backgroundProcessingMs": 119.1,
+      "wallLatencyMs": 287.3
+    },
+    "manualSaveReload": {
+      "control": "Auto work Off -> On, Save, reload",
+      "settingPersisted": true,
+      "workerCommittedAfterReload": 1,
+      "failed": 0,
+      "fallbacks": 0,
+      "mainThreadMs": 19.8,
+      "backgroundProcessingMs": 94.3,
+      "wallLatencyMs": 190.3
+    },
+    "screenshot": "screenshots/background-autosave-desktop.png",
+    "causalFpsClaim": false,
+    "builtSourceCaveat": "Public proof build predates only final pending-request dispatch-clock refresh; normal single-save path/Worker asset unchanged. Final root combined rebuild required."
+  },
+  "qualification": {
+    "fullIsolatedRunBeforeFinalPendingClockCase": {
+      "passed": 45,
+      "log": "/tmp/autosave-worker-all-tests.log"
+    },
+    "latestControllerAfterFinalClockGuard": {
+      "passed": 16,
+      "log": "/tmp/autosave-worker-controller-tests.log"
+    },
+    "uniqueCaseCoverage": 46,
+    "finalCombinedGate": "root integrator owns current final tests/type/build",
+    "isolatedTypecheck": "passed before final trivial dispatch-clock assignment",
+    "isolatedProductionBuild": "passed before final dispatch-clock assignment",
+    "workerAsset": "autosave.worker-DCaNQYjJ.js",
+    "workerAssetBytes": 759663,
+    "logs": {
+      "typecheck": "/tmp/autosave-worker-typecheck.log",
+      "build": "/tmp/autosave-worker-build.log",
+      "paired": "/tmp/autosave-serialization-progress.log"
+    }
+  },
+  "limits": [
+    "Main blocking spans and Worker processing spans are elapsed synchronous work, not OS-exclusive CPU-cycle accounting.",
+    "Node fixed-batch/Map-storage results do not predict browser FPS or localStorage write duration.",
+    "Worker validates current snapshot and all previous candidates, adding background work/latency; no total-CPU-efficiency claim.",
+    "Browser public-camp readings are observational functional evidence, not same-state A/B against mature private-save timings.",
+    "localStorage single-key primary write is atomic; multi-key copies remain best effort and no cross-tab compare-and-swap is claimed.",
+    "Validation RNG side-effect correction is explicit; no full M0 ownership/invariant completion claim."
+  ]
+}

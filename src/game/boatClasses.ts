@@ -1,0 +1,20 @@
+import type {Game} from './sim';
+export const BOAT_CLASSES={
+ riverboat:{name:'River ferry',seats:5,maxHp:300,speed:1,wood:40,stone:4,cordage:0,seconds:150,waterMeters:0,deliveredGoods:0,loadedMeters:0,wearPerMeter:0},
+ scoutCanoe:{name:'Lashed scout canoe',seats:2,maxHp:180,speed:1.18,wood:24,stone:2,cordage:4,seconds:100,waterMeters:80,deliveredGoods:8,loadedMeters:0,wearPerMeter:.008},
+ freightPunt:{name:'Braced freight punt',seats:8,maxHp:420,speed:.82,wood:64,stone:6,cordage:8,seconds:240,waterMeters:0,deliveredGoods:40,loadedMeters:300,wearPerMeter:.004},
+}as const;
+export type BoatClass=keyof typeof BOAT_CLASSES;
+export type NewBoatClass=Exclude<BoatClass,'riverboat'>;
+export const BOAT_PRACTICE_RULES={minimumCargoWaterMeters:20,loadedFraction:.2,maximumCounter:1e9,limpHpFraction:.25,minimumConditionSpeed:.65,serviceWorkSeconds:60,serviceMooringMeters:18,serviceCostFraction:.4}as const;
+export type HullOrder={version:1;class:NewBoatClass;mode:'build'|'service';boatId?:number;startHp?:number;paid:{wood:number;stone:number;cordage:number}};
+export const boatClass=(b:{hullClass?:NewBoatClass})=>BOAT_CLASSES[b.hullClass??'riverboat'];
+export function boatClassIssue(g:Game,kind:BoatClass,team=0){if(kind==='riverboat')return null;const p=g.tribe(team).boatPractice,s=BOAT_CLASSES[kind];if((p?.waterMeters??0)<s.waterMeters)return`Row ${s.waterMeters} real water metres (${Math.floor(p?.waterMeters??0)} recorded)`;if((p?.loadedMeters??0)<s.loadedMeters)return`Row ${s.loadedMeters} loaded water metres (${Math.floor(p?.loadedMeters??0)} recorded)`;if((p?.deliveredGoods??0)<s.deliveredGoods)return`Deliver ${s.deliveredGoods} real waterborne goods to stores (${Math.floor(p?.deliveredGoods??0)} delivered)`;const built=p?.built[kind]??0;if(built>0&&!p?.proven[kind]&&g.state.boats?.some(b=>b.team===team&&b.hullClass===kind&&b.hp>0))return'Demonstrate the existing prototype with a real waterborne delivery before adopting another hull';return null;}
+export function validHullOrder(work:{vessel?:unknown;duration?:unknown;hullOrder?:unknown}){const q=work.hullOrder;if(q===undefined)return true;if(!q||typeof q!=='object'||!work.vessel)return false;const h=q as HullOrder;if(h.version!==1||!['scoutCanoe','freightPunt'].includes(h.class)||!['build','service'].includes(h.mode)||!h.paid||typeof h.paid!=='object')return false;const s=BOAT_CLASSES[h.class];if(h.mode==='build')return h.boatId===undefined&&h.startHp===undefined&&work.duration===s.seconds&&h.paid.wood===s.wood&&h.paid.stone===s.stone&&h.paid.cordage===s.cordage;return Number.isSafeInteger(h.boatId)&&h.boatId!>0&&typeof h.startHp==='number'&&Number.isFinite(h.startHp)&&h.startHp>0&&h.startHp<s.maxHp&&work.duration===BOAT_PRACTICE_RULES.serviceWorkSeconds&&h.paid.wood===Math.max(1,Math.ceil(s.wood*(1-h.startHp/s.maxHp)*BOAT_PRACTICE_RULES.serviceCostFraction))&&h.paid.stone===0&&h.paid.cordage===Math.max(1,Math.ceil(s.cordage*(1-h.startHp/s.maxHp)*BOAT_PRACTICE_RULES.serviceCostFraction));}
+
+export function boatServiceProject(g:Game,id:number){return g.state.haulageProjects?.find(p=>p.work.hullOrder?.mode==='service'&&p.work.hullOrder.boatId===id);}
+export function validBoatClassState(b:{hullClass?:unknown;capacity?:unknown;hp?:unknown}){if(b.hullClass!==undefined&&!['scoutCanoe','freightPunt'].includes(String(b.hullClass)))return false;const s=BOAT_CLASSES[b.hullClass as NewBoatClass??'riverboat'];return b.capacity===s.seats&&typeof b.hp==='number'&&Number.isFinite(b.hp)&&b.hp>=0&&b.hp<=s.maxHp;}
+
+/** Select only useful, earned and actually affordable capacity. No recipe inputs
+ * are synthesized for rivals lacking a fibre/cordage supply. */
+export function chooseBoatClass(g:Game,team:number,requiredSeats=1):NewBoatClass|undefined{const t=g.tribe(team);for(const kind of ['scoutCanoe','freightPunt']as const){const s=BOAT_CLASSES[kind];if(s.seats<requiredSeats||kind==='freightPunt'&&requiredSeats<=5||boatClassIssue(g,kind,team))continue;if(t.wood>=s.wood&&t.stone>=s.stone&&(t.items?.cordage??0)>=s.cordage)return kind;}return undefined;}

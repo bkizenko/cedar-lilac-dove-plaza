@@ -30,7 +30,6 @@ import {replantStand} from "@/game/cultivation";
 import {guardFrontier} from "@/game/frontiers";
 import {massRaid} from '@/game/massRaid';
 import {staffQuarry} from "@/game/mining";
-import {craftingReport} from "../game/crafting";
 import {setGateMode} from "../game/fortifications";
 import {FARM_TOOLS,farmToolRequirement,farmToolWorkplace} from "@/game/farmTools";
 import {HAULAGE,haulageRequirement} from "@/game/haulage";
@@ -495,7 +494,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>}
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
-        {!selMin&&engine&&sel.kind==='building'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
         {selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
@@ -524,9 +523,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&["farm","warehouse","pen"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
                 {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
-                {sel.completed&&engine&&sel.buildingId&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<p className="text-xs text-parchment-dim">{craftingReport(engine.game,sel.buildingId)}</p>}
                 {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
-                {sel.completed&&sel.type==="dock"&&<p className="text-xs text-parchment-dim">Select the canoe owner, then click across the water.</p>}
+                {sel.completed&&sel.type==="dock"&&<GameTooltip title="Boat orders" description="Select a boat or its captain, then choose a reachable point on the water."><span className="text-xs text-parchment-dim">Boats &amp; fishing</span></GameTooltip>}
                 {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
                 {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
                 {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Post guards</button>}
@@ -846,7 +844,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                       {t.name}
                     </span>
                     <span className="ml-auto tabular text-parchment">
-                      {!t.alive
+                      {!t.relationKnown ? "Unknown" : t.relationStale ? "Last contact stale" : !t.alive
                         ? "Fallen"
                         : t.hostile
                           ? "War"
@@ -960,7 +958,7 @@ function TradeBlock({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     return (
       <div className="space-y-1">
         <TradeHead hud={hud} engine={engine} />
-        <p className="text-[10px] leading-snug text-blood">War with {t.rival}. Trade closed.</p>
+        <p className="text-[10px] leading-snug text-blood">{t.relationStale?'Last contact reported war with':'War with'} {t.rival}. Send a delegation for current terms.</p>
         <button
           className="rounded border border-bronze/40 px-2 py-2 text-xs"
           onClick={() => {

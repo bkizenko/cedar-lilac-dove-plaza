@@ -1,0 +1,311 @@
+{
+  "scenario": "bow: meaningful finite wildlife subsistence and hide processing",
+  "baseline": "frozen boat/diplomacy/frame integration cohort with isolated intact-boat handover fix",
+  "seed": 1,
+  "worldgenVersion": 14,
+  "layout": "pangaea",
+  "size": 1040,
+  "controlledEndowment": {
+    "wood": 100,
+    "stone": 50,
+    "food": 90,
+    "water": 200,
+    "wildlife": "one authored baseline4HP boar on unchanged clear natural dry ground; all weapon stores initially zero"
+  },
+  "setup": "Quiet/clear, external timers deferred, resident needs retained. No terrain/position/stock corrections after initial setup.",
+  "commands": [
+    {
+      "time": 0,
+      "name": "placeHearth",
+      "args": {
+        "x": -34,
+        "z": 218
+      }
+    },
+    {
+      "time": 0,
+      "name": "buildHearth",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 10.09999999999998,
+      "name": "craftBow",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 111.69999999999793,
+      "name": "recallForEquipment",
+      "args": {}
+    },
+    {
+      "time": 112.39999999999789,
+      "name": "equipActualBow",
+      "args": {}
+    },
+    {
+      "time": 112.39999999999789,
+      "name": "walkToAuthoredHuntingGround",
+      "args": {
+        "x": -50.2116570824605,
+        "z": 241.18221983093764
+      }
+    },
+    {
+      "time": 114.79999999999775,
+      "name": "publicHunt",
+      "args": {
+        "actualObservedAnimalId": 4932
+      }
+    },
+    {
+      "time": 125.89999999999712,
+      "name": "pauseWithRawCatch",
+      "args": {}
+    },
+    {
+      "time": 149.4999999999958,
+      "name": "recallBeforeCooking",
+      "args": {}
+    },
+    {
+      "time": 149.5999999999958,
+      "name": "cookFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 171.99999999999451,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 192.39999999999336,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 212.09999999999224,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 231.09999999999116,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 249.39999999999011,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 267.19999999999226,
+      "name": "cookAdditionalFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 284.39999999999617,
+      "name": "placePaidStation",
+      "args": {
+        "type": "butcher",
+        "x": -35.33974596215561,
+        "z": 223
+      }
+    },
+    {
+      "time": 284.39999999999617,
+      "name": "constructPaidStation",
+      "args": {
+        "type": "butcher",
+        "id": 4943
+      }
+    },
+    {
+      "time": 296.899999999999,
+      "name": "fleshActualHuntedHide",
+      "args": {
+        "butcherId": 4943
+      }
+    },
+    {
+      "time": 319.00000000000404,
+      "name": "placePaidStation",
+      "args": {
+        "type": "dryrack",
+        "x": -39,
+        "z": 226.6602540378444
+      }
+    },
+    {
+      "time": 319.00000000000404,
+      "name": "constructPaidStation",
+      "args": {
+        "type": "dryrack",
+        "id": 4945
+      }
+    },
+    {
+      "time": 331.2000000000068,
+      "name": "dryActualCleanedHide",
+      "args": {
+        "rackId": 4945
+      }
+    }
+  ],
+  "terrainSha256": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "terrainUnchanged": true,
+  "elapsedSeconds": 390.2000000000202,
+  "ticks": 3902,
+  "originalPeople": [
+    4824,
+    4825,
+    4826,
+    4827,
+    4828
+  ],
+  "actualHunterId": 4824,
+  "actualPreyId": 4932,
+  "preyMovementMeters": 6.299999999999976,
+  "launchedBowShots": 3,
+  "observedShots": 2,
+  "maxConcurrentHuntingFlight": 1,
+  "hunterHpBefore": 48,
+  "minimumHunterHp": 48,
+  "woundedBoarDefenseObserved": true,
+  "hazardPursuitMeters": 6.299999999999977,
+  "minimumHazardRange": 1.493745665923502,
+  "flightSaved": true,
+  "trackingObserved": false,
+  "guttingObserved": true,
+  "skinningObserved": true,
+  "rawMeatCarried": true,
+  "capital": {
+    "hearth": {
+      "food": 0,
+      "wood": 4,
+      "stone": 4,
+      "copper": 0,
+      "iron": 0
+    },
+    "weapon": {
+      "kind": "bow",
+      "wood": 3,
+      "stone": 1
+    }
+  },
+  "final": {
+    "wood": 76,
+    "stone": 43,
+    "food": 36.11306072087144,
+    "rawMeat": 2.13163874640651,
+    "remainingCarcass": 0,
+    "survival": {
+      "waterLiters": 184.39200000003638,
+      "waterConsumedLiters": 15.607999999998725,
+      "waterDeliveredLiters": 0,
+      "waterLostLiters": 0,
+      "fuelBurnedWood": 0,
+      "waterShortageSeconds": 0,
+      "coldExposurePersonSeconds": 0
+    },
+    "production": {
+      "consumed": {
+        "rawMeat": 28,
+        "rawHide": 1,
+        "cleanHide": 1
+      },
+      "produced": {
+        "cleanHide": 1,
+        "driedSkin": 1
+      },
+      "spoiled": {
+        "rawMeat": 1.8683612535935195
+      },
+      "lost": {},
+      "logsUsed": 7,
+      "waterUsedLiters": 0,
+      "grainUsed": 0,
+      "grainLost": 0,
+      "edibleFoodProduced": 28,
+      "edibleFoodLost": 0,
+      "foodInputsUsed": {},
+      "foodInputsLost": {},
+      "dryingExposureSeconds": 0,
+      "wetExposureSeconds": 0,
+      "completed": 9,
+      "interrupted": 0
+    },
+    "events": {
+      "food_spoiled:0:food": 5.854109648648667,
+      "food_consumed:0:food": 76.03282963048082,
+      "food_spoiled:1:food": 9.552905062309819,
+      "food_consumed:1:food": 88.43957174783661,
+      "food_spoiled:2:food": 10.291095931328542,
+      "food_consumed:2:food": 91.83325888529471,
+      "food_spoiled:3:food": 6.092983906485941,
+      "food_consumed:3:food": 53.22387860003138,
+      "cargo_delivered:1:food": 92.44596302598839,
+      "food_received:1:food": 111.14098091485647,
+      "cargo_delivered:2:wood": 156,
+      "cargo_delivered:1:wood": 159,
+      "cargo_delivered:2:stone": 28,
+      "cargo_delivered:1:stone": 63,
+      "cargo_delivered:2:food": 109.95467211207385,
+      "food_received:2:food": 109.95467211207385,
+      "food_received:0:food": 28
+    }
+  },
+  "snapshots": [
+    {
+      "stage": "actual hunting shot in flight",
+      "sha256": "c3cd2a5c622a6c601f275f30c440d88019d8ac7c47a7129235777d4672e2b9c5"
+    },
+    {
+      "stage": "paused actual raw catch parcel",
+      "sha256": "3c83e47e92d968c7b6fdfd9f94e5767257edb72bd49f61eef0a2f753d82d220b",
+      "carriedRawMeat": 3,
+      "remainingCarcass": 29
+    },
+    {
+      "stage": "cooked finite catch delivered",
+      "sha256": "4c606d7cfb871914057cfddba19334810a56a05046c9d4d692b0d5a8d7ea7feb"
+    }
+  ],
+  "errors": [],
+  "meaningfulSupply": {
+    "edibleFood": 28,
+    "consumed": 76.03282963048082,
+    "fractionOfConcurrentConsumption": 0.368261974940034,
+    "noCatchFoodCounterfactual": 8.113060720871438,
+    "initialFood": 90
+  },
+  "hide": {
+    "butcherId": 4943,
+    "rackId": 4945,
+    "driedSkin": 1,
+    "stationWood": 10,
+    "stationStone": 2
+  },
+  "limits": [
+    "Controlled finite initial endowment and authored actual wildlife; not untouched normal-campaign balance.",
+    "Loose stones/arrows follow existing non-inventoried ammunition assumption; no finite-ammo claim.",
+    "No target-hardware performance or full M1-10 acceptance claimed by this report."
+  ]
+}

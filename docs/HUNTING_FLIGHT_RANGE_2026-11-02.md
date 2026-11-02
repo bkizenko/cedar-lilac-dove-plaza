@@ -1,0 +1,9 @@
+# Hunting range and save admission repair — 2026-11-02
+
+The final integration review found that planar shot admission could allow prey 8 metres away horizontally but 80 metres above the hunter. Its actual three-dimensional flight needed over 2 seconds, while the existing strict save validator rejected hunting flights over 2 seconds. This could create runtime state that could not be saved.
+
+The repair measures eye-to-body distance and the bounded lead vector in three dimensions before creating a shot. Hunter reach uses the same calculation, so a hunter continues stalking rather than waiting in a position from which launch is refused. The existing two-second save bound is now the named `HUNTING_FLIGHT_RULES.maxFlightSeconds` shared with launch admission. Unsupported shots are rejected before projectile creation; a paid shot is never silently shortened. Melee and carcass reach, fixed flight direction, terrain interception, moving-target collision, damage and ammunition rules remain unchanged.
+
+Verification: four new cases passed, plus all eight existing hunting-projectile/tracking/hazard cases (12 unique cases). New cases cover the visible 80-metre authored slope, stalking after rejected led aim, legal uphill payload strict validation, the exact lifetime validation boundary, and an independently generated hillside whose terrain heights and projectile payload survive a real encode/decode with matching physical contact. The authored terrain array is not claimed to be serialized; the separate generated-terrain case verifies world reconstruction.
+
+Logs: `/tmp/hunting-flight-range-tests.log` (initial three new plus eight existing) and `/tmp/hunting-flight-range-generated-tests.log` (final four new). No isolated full build or typecheck was run during the parent's release suite; the parent must run those checks against the integrated source. No whole-game performance claim or additional completion gate is implied by this narrow correctness fix.

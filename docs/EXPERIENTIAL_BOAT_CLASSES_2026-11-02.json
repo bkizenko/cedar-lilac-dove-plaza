@@ -1,0 +1,119 @@
+{
+  "base": "79d6148",
+  "elapsedSimulationSeconds": 603.0000000000001,
+  "actualResidents": 9,
+  "scenario": "finite endowed coastal village on unchanged native seed1 V14 terrain; personal dugout initially owned, cordage finite; no midrun stock/terrain/body corrections",
+  "home": {
+    "x": 33,
+    "z": -211.87564434701787
+  },
+  "sea": {
+    "x": 34.34314575050762,
+    "z": -229.65685424949237
+  },
+  "target": {
+    "x": 214.34314575050763,
+    "z": -229.65685424949237
+  },
+  "initial": {
+    "wood": 580,
+    "stone": 100,
+    "cordage": 20
+  },
+  "prototype": {
+    "projectId": 5289,
+    "progressSaved": 2.0702527925677514,
+    "replacementId": 5281,
+    "boatId": 5290,
+    "capacity": 2,
+    "maximumHp": 180
+  },
+  "practice": {
+    "version": 1,
+    "waterMeters": 625.6058493884897,
+    "loadedMeters": 564.2026964009201,
+    "deliveredGoods": 40,
+    "built": {
+      "scoutCanoe": 1,
+      "freightPunt": 1
+    },
+    "proven": {
+      "scoutCanoe": true
+    },
+    "firstObservedAt": 21.999999999999954,
+    "lastDeliveryAt": 331.7999999999897,
+    "demonstratedAt": {
+      "scoutCanoe": 331.7999999999897
+    }
+  },
+  "demonstrationCargo": 20,
+  "service": {
+    "before": {
+      "wood": 596,
+      "cordage": 16,
+      "hp": 179.42510454565485
+    },
+    "paid": {
+      "wood": 1,
+      "stone": 0,
+      "cordage": 1
+    },
+    "afterHp": 180
+  },
+  "freight": {
+    "id": 5293,
+    "capacity": 8,
+    "actualAboard": 8,
+    "hp": 419.9007029242035,
+    "pace": 0.7480304048768246,
+    "demonstrated": false
+  },
+  "final": {
+    "wood": 531,
+    "stone": 92,
+    "cordage": 7
+  },
+  "terrain": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "simulationErrors": [],
+  "baseCommit": "79d61485a3186dc6cb25716785b165d1bfbfae09",
+  "sourceSha256": {
+    "src/game/boatClasses.ts": "b4779e77c5bb1f93b57e1b2adf811235b9e1d8ba0d8d0f3a465557f41854ee37",
+    "src/game/boatPractice.ts": "778e65fae973b46faa46489fb8ed5c82a3ef0a01e00e08836a1311ca2eeaba17",
+    "src/game/boatKnowledge.ts": "1018e021781a2fb57880b6dbd2c3ffbf9ca414c272f28e1c1170fd2ce5a2b11e",
+    "src/game/boats.ts": "b34021c945cd0668141d7673fc9cbd76af239fe021bfae88f7b0f68fe013d4c4",
+    "src/game/haulage.ts": "2596fcb7bc98daa0953a648fa2e8c6c89c859c7600d2dc3cf9e30bc9c59bfedb",
+    "src/game/types.ts": "69cb758a59133182a793e1970f2ad56bf6d23897d7586f9aaf9a90b51211d9cc",
+    "src/game/sim.ts": "3a76683737bccf2a55f77183f53703b783aa5370d5dbaf30228b5863d85e8e84",
+    "src/game/persistence.ts": "e09648f197bb04d9f5e8bf609421c9f743a9134fa65816b9d23dece1c3e27780",
+    "src/game/knowledge.ts": "885e46bb74de3a47923b361c2483818ba18ab7cd967a119a2c6a304905fc6ff6",
+    "src/game/boatExploration.ts": "6bbcd9fbe96ab2592c2bfaba88435790edf815420f2fcbd7dcfb32b87df9a220",
+    "src/game/coastalTrade.ts": "d50fa431fd5db8375f22194d5b046a2e1e1d899bbe9c5d25d4bbd73ae3a36e06",
+    "src/game/coastalCommission.ts": "bb81b7126072d2ac81c227993ef1f90aeb5d9d41b5771afab02d7c9f2eeaa07f",
+    "src/game/craftSiteReport.ts": "708a332b49a2a51d82579e5b0db50477ebdece7d3fd735afaae4ecb028dd3b09",
+    "src/game/villageWorkload.ts": "8c214abc106df4d374893f4639d46c2936111004f463f0c8112a1bb17a2e4c87",
+    "src/ui/BoatControls.tsx": "e1d245c5bd0027d1e2a4b30352dca677e9eb19a73b68fd0bdd1956c80e984fdf",
+    "src/scene/hullFleet.ts": "6df3be59f8c56441b97a0e1063b43b7f8011980aad8bf4efaa3b0e6d90e83beb",
+    "src/scene/world.ts": "f338d6c254d70d963ec196103bce55156576cd33ede64ea46e5829c4ab6564e4",
+    "scripts/boat-classes.test.mjs": "d5aa615f4ceb1d4fbaaa1bb21e148f6021f1a3279d386a4185acbbe2051845ac",
+    "scripts/boat-class-components.test.mjs": "595dae59e1a970bb143736c96a843b0b821d695daba9e473001682a5924030a5",
+    "scripts/helpers/native-boat-village.mjs": "6a897de61fd0e5edfafba549477002fd83680a2951fb375151d0a71efe1ded7e"
+  },
+  "validation": {
+    "newDistinctChecks": 7,
+    "nativeJoined": "/tmp/hearthwild-boat-classes-qualified.log: passed",
+    "finalComponents": "/tmp/hearthwild-boat-class-components-final.log: 6 passed",
+    "legacyDistinctChecks": 44,
+    "legacyLog": "/tmp/hearthwild-boat-classes-regression.log",
+    "typecheck": "passed",
+    "typecheckLog": "/tmp/hearthwild-boat-classes-tsc.log",
+    "parentCombinedBuildAndGpuRequired": true,
+    "newGateCredit": false
+  },
+  "limits": [
+    "Controlled finite nine-person coastal village on unchanged native seed1 V14 terrain; personal dugout/dock are endowed pre-existing capital, not claimed as newly produced.",
+    "Cordage is finite initial stock in the component proof; its earlier production chain is not re-qualified here. No NPC cordage/resource grants exist.",
+    "Freight prototype actually constructed, boarded by eight, sailed and saved at sea; useful freight-cargo return/proven-adoption is not yet claimed.",
+    "Current navigation footprint retained; no deep-draft, naval-combat, offshore seaworthiness, sinking or pack-provision expansion claim.",
+    "GPU and combined-source validation remain parent-owned. No natural autonomous advanced-hull adoption frequency claim."
+  ]
+}

@@ -1,3 +1,4 @@
+import {recordDiplomaticAttack,recordDiplomaticLegal} from './diplomaticKnowledge';
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 
@@ -42,13 +43,13 @@ export function recordSocietyContact(g:Game,a:Unit,b:Unit|Building){
 export function declareSocietyHostility(g:Game,from:number,to:number){
  if(!validPair(g,from,to))return false;const r=edit(g,from,to);r.known=true;r.hostile=true;r.peaceUntil=0;r.trust=0;
  const reverse=edit(g,to,from);reverse.peaceUntil=0;
- if(from===0||to===0){const rival=g.tribe(from===0?to:from);rival.hostile=true;rival.ally=false;rival.trust=0;}
+ if(from===0||to===0){const rival=g.tribe(from===0?to:from);rival.hostile=true;rival.ally=false;rival.trust=0;if(from===0)recordDiplomaticLegal(g,to,true);}
  return true;
 }
 /** The victim's own damage is firsthand evidence; no global enemy stock lookup. */
 export function recordSocietyAttack(g:Game,attacker:Unit|Building,victim:Unit|Building,damage:number){
  if(!Number.isFinite(damage)||damage<=0||!validPair(g,attacker.team,victim.team)||!(attacker.kind==='unit'?g.state.units.includes(attacker):g.state.buildings.includes(attacker))||!(victim.kind==='unit'?g.state.units.includes(victim):g.state.buildings.includes(victim)))return false;
- declareSocietyHostility(g,attacker.team,victim.team);edit(g,attacker.team,victim.team).lastContactSeconds=g.state.time;const r=edit(g,victim.team,attacker.team);r.known=true;r.hostile=true;r.lastContactSeconds=g.state.time;r.grievance=Math.min(1,r.grievance+SOCIETY_RELATION_RULES.attackGrievance);r.trust=0;return true;
+ declareSocietyHostility(g,attacker.team,victim.team);edit(g,attacker.team,victim.team).lastContactSeconds=g.state.time;const r=edit(g,victim.team,attacker.team);r.known=true;r.hostile=true;r.lastContactSeconds=g.state.time;r.grievance=Math.min(1,r.grievance+SOCIETY_RELATION_RULES.attackGrievance);r.trust=0;recordDiplomaticAttack(g,attacker,victim);return true;
 }
 /** Authoritative legal adapter; legacy peace calls can use it without claiming
  * a messenger physically arrived. The contextual acceptance below checks that. */
@@ -58,6 +59,7 @@ export function agreeSocietyTruce(g:Game,a:number,b:number){
  if(a===0||b===0){const t=g.tribe(a===0?b:a);t.hostile=false;t.ally=false;t.compactUntil=g.state.time+SOCIETY_RELATION_RULES.peaceSeconds;t.trust=Math.max(t.trust||0,SOCIETY_RELATION_RULES.peaceTrustFloor);}
  // Clear only combat commitments against this signatory. A cached target or
  // legacy pillage order must not immediately restart a witnessed truce.
+ if(a===0||b===0)recordDiplomaticLegal(g,a===0?b:a,false);
  for(const u of g.state.units){const other=u.team===a?b:u.team===b?a:null;if(other===null||u.hp<=0)continue;if(u.target?.team!==other&&u.pillage!==other)continue;u.target=null;u.pillage=-1;u.attackDestination=null;u.order='return';u.recalled=true;u.workReason='Truce agreed — withdrawing with existing possessions';if(u.emergency)u.emergency.until=g.state.time;}
  return true;
 }

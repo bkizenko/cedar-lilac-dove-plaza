@@ -1,3 +1,4 @@
+import{chooseBoatClass,BOAT_CLASSES}from'./boatClasses';
 import {knownSettlementSite} from './barter';
 import {COASTAL_BOOTSTRAP_RULES,recordCoastalReview,observedCoastalLandings,coastalPartnerScore} from './coastalStrategy';
 import type {Game} from './sim';import type {GameState,Unit} from './types';
@@ -38,12 +39,13 @@ export function reviewCoastalCommissioning(g:Game){
   }
   c.phase='hull';
   const launch=riverboatWaterPoint(g,dock.x,dock.z);if(!launch){block(c,'Completed dock has no clear physical launch water');continue;}if(!landings.some(p=>{const sea=riverboatDestination(g,launch,p.x,p.z);return!!sea&&Math.hypot(sea.x-p.x,sea.z-p.z)<=8;})){block(c,'No connected navigable water reaches the surveyed foreign landing');continue;}
-  const project=g.state.haulageProjects?.find(p=>p.team===t.id&&p.work.vessel&&(p.id===c!.projectId||p.work.workplace===dock!.id));
+  const project=g.state.haulageProjects?.find(p=>p.team===t.id&&p.work.vessel&&p.work.hullOrder?.mode!=='service'&&(p.id===c!.projectId||p.work.workplace===dock!.id));
   if(project){c.projectId=project.id;c.phase='hull';if(project.actorId!==null&&!project.work.paused){c.actorId=project.actorId;c.reason='Paid hull: a real adult is shaping the boat at the dock';continue;}const replacement=g.state.units.find(u=>free(g,u,t.id));if(replacement&&resumeHaulageProject(g,project.id,replacement.id,dock.id)){c.actorId=replacement.id;c.reason='Replacement adult resumes the same paid hull and saved progress';}else block(c,project.blockedReason||'Paid hull needs an available replacement adult and dock bench');continue;}
   const builder=g.state.units.find(u=>free(g,u,t.id)&&!!g.interactionSpot(u,dock!));if(!builder){block(c,'Need one free adult with a physical route to the dock bench');continue;}
-  if(t.wood-BOAT_COST.wood<rivalTradeReserve(g,t.id,'wood')+12||t.stone-BOAT_COST.stone<rivalTradeReserve(g,t.id,'stone')||t.food-foodDemand(g,t.id)*480<foodDemand(g,t.id)*180){block(c,'Preserve hull costs, trade cargo and home working and meal reserves');continue;}
-  if(!beginRiverboat(g,dock.id,t.id,builder.id)){block(c,'Paid boat construction is waiting for an available dock bench');continue;}
-  c.projectId=builder.haulageWork?.projectId;c.actorId=builder.id;c.phase='hull';c.metrics.hullPayments++;c.reason='Hull inputs paid once; the builder must travel and complete 150 seconds of bench labor';
+  const hullClass=chooseBoatClass(g,t.id),hullCost=BOAT_CLASSES[hullClass??'riverboat'];
+  if(t.wood-hullCost.wood<rivalTradeReserve(g,t.id,'wood')+12||t.stone-hullCost.stone<rivalTradeReserve(g,t.id,'stone')||t.food-foodDemand(g,t.id)*480<foodDemand(g,t.id)*180){block(c,'Preserve hull costs, trade cargo and home working and meal reserves');continue;}
+  if(!beginRiverboat(g,dock.id,t.id,builder.id,hullClass)){block(c,'Paid boat construction is waiting for an available dock bench');continue;}
+  c.projectId=builder.haulageWork?.projectId;c.actorId=builder.id;c.phase='hull';c.metrics.hullPayments++;c.reason=`Hull inputs paid once; the builder must travel and complete ${hullCost.seconds} seconds of bench labor`;
  }
 }
 export function tickCoastalCommissioning(g:Game){for(const c of g.state.coastalCommissions||[]){if(c.phase==='loading'&&!g.state.units.some(u=>u.id===c.actorId&&u.team===c.team&&u.hp>0&&!u.prisoner)){const old=g.state.units.find(u=>u.id===c.actorId);if(old)old.coastalCommissionId=undefined;c.phase='ready';c.reason='The launched boat remains; another actual adult must reach the home cache';continue;}if(c.phase!=='hull')continue;const project=g.state.haulageProjects?.find(p=>p.id===c.projectId);if(project?.actorId!==null&&project?.actorId!==undefined)c.actorId=project.actorId;const boat=g.state.boats?.find(b=>b.team===c.team&&b.dock===c.dockId&&b.hp>0);if(!boat)continue;c.boatId=boat.id;c.metrics.hullsLaunched++;const actor=g.state.units.find(u=>u.id===c.actorId&&u.hp>0&&u.team===c.team&&!u.prisoner);if(!actor){c.phase='ready';c.reason='The real launched boat awaits a free adult at the home cache';continue;}c.phase='loading';actor.coastalCommissionId=c.id;actor.order='hold';c.reason='Launched boat: the builder is physically returning to the home cache to load trade goods';}}

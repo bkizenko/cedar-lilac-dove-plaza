@@ -1,3 +1,4 @@
+import{boatServiceProject}from'./boatClasses';
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import{landRiverboat,type Riverboat}from'./boats';
@@ -32,6 +33,7 @@ function target(g:Game,b:Riverboat):Point|null|undefined{
 }
 export function beginBoatExploration(g:Game,id:number){
  const b=g.state.boats?.find(b=>b.id===id&&b.team===0&&b.hp>0),captain=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0&&u.boat?.phase==='aboard');
+ if(b&&boatServiceProject(g,b.id))return 'Finish or abandon this hull’s paid dock service before exploring';
  if(!b||!captain)return 'Board residents and let someone take the helm first';
  const crew=g.state.units.filter(u=>u.hp>0&&u.boat?.id===id);
  if(crew.some(u=>hasTaskCommitment(u,'boat')||u.visit||u.trade||u.expedition||u.prisoner))return 'Finish or recall this crew’s existing shipment or duty before exploring';

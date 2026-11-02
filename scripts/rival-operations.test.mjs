@@ -1,3 +1,5 @@
+import {societyMissionAI,tickRivalActivity} from '../src/game/rivalActivity.ts';
+import {tickStructureKnowledge} from '../src/game/structureKnowledge.ts';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {scoutKnowledge} from '../src/game/scouting.ts';
 import {planRivalRaid,rivalOperationIntent,dispatchRivalOperation,prepareRivalDefense,rivalMilitaryTarget} from '../src/game/rivalOperations.ts';
@@ -8,12 +10,12 @@ function fixture(){
  for(let i=0;i<12;i++){const u=g.spawnUnit('worker',8+i%3*2,8+Math.floor(i/3)*2,1);if(i<6){u.militia=true;u.dmg=12;u.range=2.6;}}
  g.rebuildWalk();return g;
 }
-function discover(g){const u=g.state.units.at(-1),old={x:u.x,z:u.z};u.x=100;u.z=0;scoutKnowledge(g,u);Object.assign(u,old);}
+function discover(g){const u=g.state.units.findLast(u=>u.team===1&&!u.militia),home=g.state.buildings.find(b=>b.team===1&&b.type==='townhall');function walk(x,z){u.tx=x;u.tz=z;for(let i=0;i<2400&&Math.hypot(u.x-x,u.z-z)>1;i++){g.state.time+=.1;g.navBudget=50;g.steer(u,.1);tickStructureKnowledge(g);}assert.ok(Math.hypot(u.x-x,u.z-z)<1);tickStructureKnowledge(g,true);}walk(82,12);scoutKnowledge(g,u);const spot=g.interactionSpot(u,home);assert.ok(spot);walk(spot.x,spot.z);}
 test('raids require discovered targets and use local defense rather than distant global armies',()=>{
  const g=fixture();assert.equal(planRivalRaid(g,1,1000),null);discover(g);
  for(let i=0;i<30;i++){const u=g.spawnUnit('worker',400,400,0);u.militia=true;u.dmg=20;}
  const plan=planRivalRaid(g,1,1000);assert.ok(plan);assert.equal(plan.metrics.observedDefenders,0);assert.ok(plan.fighters.length>=2);
- const first=g.state.units.find(u=>u.team===0);first.x=100;first.z=0;first.dmg=200;
+ const first=g.state.units.find(u=>u.team===0);first.x=100;first.z=0;first.dmg=200;discover(g);
  assert.equal(planRivalRaid(g,1,1000),null,'visible local force deters an unfavorable attack');
 });
 test('a real raid leaves armed guards and workers; neutral relations change only on arrival',()=>{
@@ -21,8 +23,8 @@ test('a real raid leaves armed guards and workers; neutral relations change only
  assert.equal(rivalOperationIntent(g,1,1000),'raid');assert.equal(dispatchRivalOperation(g,1,1000),true);
  const sent=g.state.units.filter(u=>u.pillage===0);assert.ok(sent.length>=2);assert.ok(g.state.units.some(u=>u.militia&&u.pillage!==0));assert.ok(g.state.units.some(u=>!u.militia&&u.order!=='attackmove'));
  assert.equal(g.tribe(1).hostile,false);assert.equal(g.state.units.length,pop);assert.equal(g.tribe(1).food,food);
- const u=sent[0],target=u.target,start=Math.hypot(u.x-target.x,u.z-target.z);g.vision.fill(0);
- for(let i=0;i<1200&&!g.tribe(1).hostile;i++){g.state.time+=.1;g.navBudget=10;g.combatAI(u,.1);}
+ const u=sent[0],target=g.state.rivalMissions.find(m=>m.id===u.societyMissionId).targetSite,start=Math.hypot(u.x-target.x,u.z-target.z);g.vision.fill(0);
+ for(let i=0;i<1200&&!g.tribe(1).hostile;i++){g.state.time+=.1;g.navBudget=50;if(!societyMissionAI(g,u,.1))g.combatAI(u,.1);tickRivalActivity(g);}
  assert.equal(g.tribe(1).hostile,true);assert.ok(Math.hypot(u.x-target.x,u.z-target.z)<start-40,'neutral raiders physically approach their own known target even outside player vision');
  assert.equal(dispatchRivalOperation(g,1,1000),false,'cooldown prevents repeated orders');
 });

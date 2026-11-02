@@ -1,3 +1,4 @@
+import {knownDiplomaticRelation} from '@/game/diplomaticKnowledge';
 import {NeedsPanel} from './NeedsPanel';
 import {sendCaptiveEscort} from '@/game/caravans';
 import {captiveGuardCoverage,captivityDescription,repatriateCaptive} from '@/game/captivity';
@@ -336,9 +337,9 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         </ul>
       )}
       <h3>Neighbor relations</h3>
-      {!s.tribes.some(n=>n.id>0&&n.id!==3&&n.alive&&knownSettlement(g,n.id)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
+      {!s.tribes.some(n=>n.id>0&&n.id!==3&&(knownSettlement(g,n.id)||knownDiplomaticRelation(g,n.id).known)) && <p>Explore to find another settlement. Diplomacy begins with contact.</p>}
       {s.tribes
-        .filter((n) => n.id > 0 && n.id !== 3 && (n.peaceTerm==='annexation' || (n.alive && knownSettlement(g,n.id))))
+        .filter((n) => n.id > 0 && n.id !== 3 && (n.peaceTerm==='annexation' || knownSettlement(g,n.id)||knownDiplomaticRelation(g,n.id).known))
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
             <strong>{n.name}</strong>
@@ -349,50 +350,50 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             {n.peaceTerm && <p>Treaty: {PEACE_TERMS[n.peaceTerm]}.</p>}
             {n.tribute && <p>Tribute: {n.tribute.amount} logs every two minutes. {n.tribute.paid} delivered; {n.tribute.owed} owed (including shipments on the road). {n.tribute.remaining<0?'Continues until independence.':`${n.tribute.remaining} scheduled payments left.`}</p>}
             {n.peaceTerm==='puppet' && <button onClick={()=>{releasePuppet(g,n.id);engine.pushHud();}}>Grant independence</button>}
-            {n.hostile && n.peaceOffer && n.peaceOffer.expires>s.time && <div role="status">
+            {knownDiplomaticRelation(g,n.id).hostile===true && n.peaceOffer && n.peaceOffer.expires>s.time && <div role="status">
               <p>{n.name} sues for peace: {PEACE_TERMS[n.peaceOffer.term]}. Expires in {Math.ceil(n.peaceOffer.expires-s.time)} seconds.</p>
               <button onClick={()=>{g.resolvePeaceTerm(n.id,n.peaceOffer!.term);engine.pushHud();}}>Accept peace offer</button>
               <button onClick={()=>{rejectPeace(g,n.id);engine.pushHud();}}>Reject offer</button>
               <p>You may send different terms below.</p>
             </div>}
-            <button disabled={n.hostile||s.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===n.id)} onClick={()=>{g.sendDelegation(n.id,'trade');engine.pushHud();}}>
+            <button disabled={!knownSettlement(g,n.id)||knownDiplomaticRelation(g,n.id).hostile===true||s.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===n.id)} onClick={()=>{g.sendDelegation(n.id,'trade');engine.pushHud();}}>
               {s.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===n.id)?'Trade envoy travelling':'Send trade envoy'}
             </button>
-            <TradeProposal engine={engine} team={n.id} />
-            {n.hostile && (
+            {knownSettlement(g,n.id)&&<TradeProposal engine={engine} team={n.id} />}
+            {knownDiplomaticRelation(g,n.id).hostile===true && (
               <div className="flex flex-wrap gap-1">
                 {peaceTerms.map(term => (
                   <div key={term} className="w-full">
-                    <button disabled={!!peaceIssue(g,n.id,term)} onClick={() => { g.proposePeace(n.id,term); engine.pushHud(); }}>
+                    <button disabled={!knownSettlement(g,n.id)||s.units.some(u=>u.envoy?.kind==='peace'&&u.envoy.team===n.id)} onClick={() => { g.proposePeace(n.id,term); engine.pushHud(); }}>
                       Propose {PEACE_TERMS[term].toLowerCase()}
                     </button>
-                    <p>{peaceDescription[term]} {peaceIssue(g,n.id,term)}</p>
+                    <p>{peaceDescription[term]} Terms are discussed at the actual meeting.</p>
                   </div>
                 ))}
               </div>
             )}
             <p>
-              {n.hostile ? "Hostile" : n.ally ? "Allied" : "At peace"}. Send a delegation for current trading terms; their private plans are unknown.
+              {!knownDiplomaticRelation(g,n.id).known?"Relations unknown":knownDiplomaticRelation(g,n.id).stale?"Last contact is stale":knownDiplomaticRelation(g,n.id).hostile===true ? "Hostile" : knownDiplomaticRelation(g,n.id).ally===true ? "Allied" : "At peace"}. Send a delegation for current trading terms; their private plans are unknown.
             </p>
             <button
-              disabled={t.food < 30}
+              disabled={t.food < 30||!knownSettlement(g,n.id)}
               onClick={() => {
                 g.sendDelegation(n.id,"gift");
                 engine.pushHud();
               }}
             >
-              Send gift carrier · 30 food{n.hostile ? " / seek truce" : ""}
+              Send gift carrier · 30 food{knownDiplomaticRelation(g,n.id).hostile===true ? " / seek truce" : ""}
             </button>
-            {!n.hostile ? (
+            {knownDiplomaticRelation(g,n.id).hostile!==true ? (
               <button
-                disabled={t.food < 20 || (n.trust || 0) < 0.35 || (n.compactUntil || 0) > s.time}
+                disabled={t.food < 20 || (knownDiplomaticRelation(g,n.id).compactUntil||0)>s.time || !knownSettlement(g,n.id)||s.units.some(u=>u.envoy?.kind==='compact'&&u.envoy.team===n.id)}
                 onClick={() => {
                   g.offerCompact(n.id);
                   engine.pushHud();
                 }}
               >
-                {(n.compactUntil || 0) > s.time
-                  ? `Grazing compact holds · ${Math.ceil(((n.compactUntil || 0) - s.time) / 60)} min`
+                {(knownDiplomaticRelation(g,n.id).compactUntil || 0) > s.time
+                  ? `Grazing compact holds · ${Math.ceil(((knownDiplomaticRelation(g,n.id).compactUntil || 0) - s.time) / 60)} min`
                   : "Offer grazing rights · 20 food"}
               </button>
             ) : null}

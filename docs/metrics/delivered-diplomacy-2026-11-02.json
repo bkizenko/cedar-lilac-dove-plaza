@@ -1,0 +1,62 @@
+{
+  "baseline": "79d6148",
+  "scope": "Physical player-facing diplomatic information; not full all-pair knowledge qualification",
+  "results": [
+    {
+      "scenario": "paid physical frontier complaint",
+      "paidPack": {
+        "food": 4.8373333333333335,
+        "water": 1.0749629629629631
+      },
+      "sourceAccount": {
+        "version": 1,
+        "team": 1,
+        "observedAt": 87.79999999999929,
+        "hostile": false,
+        "ally": false,
+        "trust": 0.4806567900465475,
+        "tension": 0.9986221517982288,
+        "compactUntil": 0
+      },
+      "deliveredAt": 123.59999999999725,
+      "actorId": 3978,
+      "staleAfterSeconds": 180
+    },
+    {
+      "scenario": "speaker death loses message; captivity retains it without publication"
+    },
+    {
+      "scenario": "compact local acceptance A/B",
+      "branches": [
+        {
+          "trust": 0.8,
+          "departurePaid20": true,
+          "accepted": true,
+          "physicallyReturned": true
+        },
+        {
+          "trust": 0.1,
+          "departurePaid20": true,
+          "accepted": false,
+          "physicallyReturned": true
+        }
+      ]
+    },
+    {
+      "scenario": "paid delivered peace terms",
+      "term": "tribute",
+      "deliveredAt": 41.800000000000324,
+      "strictCorruptionsRejected": 5
+    },
+    {
+      "scenario": "blocked physical message route and paid retry",
+      "firstMissionId": 3986,
+      "retryMissionId": 3987,
+      "sameCarrierId": 3978,
+      "packetUnchanged": true
+    },
+    {
+      "scenario": "known own legal status; conservative legacy private mood; inventories retained"
+    }
+  ]
+}

@@ -19,10 +19,11 @@ function advanceWorker(g,u,seconds){for(let i=0;i<seconds*10;i++){g.state.time+=
 test('building crafting reaches the resident AI, preserves priority, and recall pauses paid work',()=>{
  const {g,u,shop}=setup();assert.equal(g.craftHaulage('sled',shop.id),true);
  g.setLaborPriority('food');assert.equal(u.order,'hold');assert.ok(u.haulageWork);
- advanceWorker(g,u,20);const progress=u.haulageWork.progress;assert.ok(progress>0);
- g.soundRecall();assert.equal(u.haulageWork.paused,true);assert.equal(u.recalled,true);
- advanceWorker(g,u,50);assert.equal(u.recalled,undefined);assert.equal(u.haulageWork.progress,progress);
- assert.equal(resumeHaulageWork(g,u,shop.id),true);advanceWorker(g,u,80);assert.equal(u.haulage,'sled');
+ advanceWorker(g,u,20);const work=u.haulageWork,progress=work.progress;assert.ok(progress>0);
+ const project=g.state.haulageProjects.find(p=>p.id===work.projectId),paid={wood:g.tribe(0).wood,stone:g.tribe(0).stone};assert.ok(project);
+ g.soundRecall();assert.equal(u.haulageWork,undefined,'recall releases the resident while the paid project remains');assert.equal(project.actorId,null);assert.equal(project.work.paused,true);assert.equal(u.recalled,true);
+ advanceWorker(g,u,50);assert.equal(u.recalled,undefined);assert.equal(project.work.progress,progress);
+ assert.equal(resumeHaulageWork(g,u,shop.id),true);assert.equal(u.haulageWork.progress,progress);assert.deepEqual({wood:g.tribe(0).wood,stone:g.tribe(0).stone},paid,'resuming does not repay materials');advanceWorker(g,u,80);assert.equal(u.haulage,'sled');
 });
 
 test('real sled delivery counts cargo once and increases displayed load capacity',()=>{

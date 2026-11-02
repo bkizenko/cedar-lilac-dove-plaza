@@ -1,0 +1,37 @@
+{
+  "scope": "Controlled finite paid-hull/crew paused-save scenarios",
+  "cases": [
+    {
+      "case": "local complete moored crew",
+      "boatId": 574,
+      "captainId": 568,
+      "paidWood": 40,
+      "paidStone": 4,
+      "hullHealthRetained": 300,
+      "cargoRetained": 5,
+      "boatAndCrewTeam": 1,
+      "priorOwnerWaterEvidenceCleared": true,
+      "elapsedSeconds": 168.199999999999
+    },
+    {
+      "case": "distant sailing crew",
+      "boatId": 574,
+      "captainId": 568,
+      "retainedOriginalTeam": 0,
+      "cargoRetained": 5,
+      "actualWaterMeters": 69.18479439735073,
+      "elapsedSeconds": 167.79999999999902
+    },
+    {
+      "case": "mixed local crew",
+      "boatId": 574,
+      "crewIds": [
+        568,
+        570
+      ],
+      "retainedOriginalTeam": 0,
+      "cargoRetained": 5,
+      "elapsedSeconds": 166.3999999999991
+    }
+  ]
+}

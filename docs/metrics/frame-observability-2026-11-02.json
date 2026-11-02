@@ -1,0 +1,73 @@
+{
+  "baseline": "d048d1a",
+  "scope": "Diagnostics only; actual browser measurement pending",
+  "sourceFiles": {
+    "src/game/runtimeProfile.ts": "ea379d367f4f80d1abea9b96557ae61b5d2c130c6786076bfc32be16d8a84190",
+    "src/game/engine.ts": "c25517f38b338feac779d3dc6c3545a16d92d4a21f2f0e06939f326b0ae4e6c7",
+    "src/ui/PerformanceReadout.tsx": "ebb8d36ed9d70d146cae60fbe5e3e22ec1fe3cef1f79759faac807220626f1b4",
+    "scripts/frame-observability.test.mjs": "eaa47b47c94a6fc4651e68ed18f43b3521d5a71e650d2f7b8bbafed2e895c447"
+  },
+  "checks": {
+    "newCases": 6,
+    "existingCases": 6,
+    "totalCases": 12,
+    "passed": 12,
+    "typecheck": true,
+    "productionBuild": true
+  },
+  "rules": {
+    "frameHistoryMaximum": 600,
+    "stageSampleMaximum": 240,
+    "displayFpsWindowMilliseconds": 400,
+    "openPanelRefreshMilliseconds": 1000,
+    "closedPanelPolling": false
+  },
+  "browserQa": {
+    "status": "pending",
+    "required": [
+      "paused refresh advances on wall time",
+      "reset removes prior stalls and waits for fresh frame interval",
+      "mature save visible scene measurement at fixed quality/speed",
+      "raw FPS reflects actual frame gap rather than capped simulation delta"
+    ]
+  },
+  "limits": [
+    "Drawing measures CPU submission, not GPU execution",
+    "Simulation samples are per fixed step; other rows per operation",
+    "Per-stage samples and frame gaps are bounded rolling histories since reset",
+    "Unmeasured audio/camera/ghost/React rendering overhead can also affect total gaps",
+    "Automatic graphics reduction can change quality; record final actual quality for every measured window"
+  ],
+  "rendererExtension": {
+    "threeVersion": "0.185.1",
+    "verifiedImplementation": [
+      "three/src/renderers/webgl/WebGLInfo.js",
+      "three/src/renderers/WebGLRenderer.js",
+      "three/examples/jsm/postprocessing"
+    ],
+    "checks": {
+      "newRendererCases": 8,
+      "priorCases": 12,
+      "totalCases": 20,
+      "passed": 20,
+      "typecheck": true,
+      "productionBuild": true
+    },
+    "sourceFiles": {
+      "src/scene/renderMetrics.ts": "30b334379fab010b62e8dfe6b357df9fd432b0dd9cdc508d26de2cf0e1491b20",
+      "src/scene/world.ts": "78d8628fe62700a912393bb7b535a24632afc1809b6a3698f1fec1375c100f70",
+      "src/game/runtimeProfile.ts": "3e67ccf4cbbf476b17a5edf70b3c5d5a2d0c66b40a2fe0e398917986b04e82a4",
+      "src/game/engine.ts": "ced6971dea39d9e31f25938ed8244c3421d975fc83fbc76e595a309e3154fa88",
+      "src/ui/PerformanceReadout.tsx": "11764a903e29d4fdd7f46c1eaa2f82512b0427b811e6ffafae63591ec8ab7c34",
+      "scripts/renderer-observability.test.mjs": "8bbc3eb62f92ae2cd3125c75b24ef957fb1d0195432ffc79119b15277cf1f8d1"
+    },
+    "scope": "All submitted passes in one WorldView.render invocation; explicit once-per-frame reset, including partial compositor and fallback submissions",
+    "units": {
+      "renderCounts": "drawing calls, triangles, lines, points per complete frame",
+      "resources": "geometries, textures, programs are counts; not GPU memory bytes",
+      "optionalHeap": "browser JS heap estimate in MiB, absent if unsupported"
+    },
+    "navigation": "Included in simulation CPU; no separately measured navigation duration",
+    "browserQa": "pending root actual mature-save reset windows; no gate credit claimed"
+  }
+}

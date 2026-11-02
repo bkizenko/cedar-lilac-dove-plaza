@@ -16,7 +16,7 @@ test('renderer maps every store bay and crop patch back to one actual building w
  const store=building('warehouse',2,3),farm={...building('farm',3,2),id:2,crop:{planted:1,tended:1,ripened:true,remaining:100}};
  const game={state:{seed:345,buildings:[store,farm]},tribe:()=>({age:0}),exploredAt:()=>false,height:()=>4,world:{biomes:[]}};
  const before=JSON.stringify(game.state.buildings);v.syncBuildings(game);
- const sm=v.bldMeshes.get('warehouse'),fm=v.bldMeshes.get('farm');assert.equal(sm.timber.count,6);assert.equal(fm.timber.count,1);assert.equal(fm.roof.count,1);assert.equal(fm.extra.count,6);
+ const sm=v.bldMeshes.get('warehouse'),fm=v.bldMeshes.get('farm');assert.equal(sm.timber.count,6);assert.equal(fm.timber.count,1);assert.equal(fm.roof.count,0);assert.equal(fm.extra.count,6);
  assert.ok(v.buildingInstances.get(sm.roof).every(b=>b===store));assert.ok(v.buildingInstances.get(fm.extra).every(b=>b===farm));
  assert.equal(JSON.stringify(game.state.buildings),before);
  const mat=new THREE.Matrix4(),scale=new THREE.Vector3();sm.timber.getMatrixAt(0,mat);scale.setFromMatrixScale(mat);assert.equal(scale.x,1);assert.equal(scale.z,1);
@@ -26,7 +26,7 @@ test('renderer maps every store bay and crop patch back to one actual building w
  for(const m of v.bldMeshes.values())for(const mesh of [m.timber,m.roof,m.extra])if(mesh){mesh.geometry.dispose();mesh.material.dispose();}v.eraDetails.geometry.dispose();v.eraDetails.material.dispose();
 });
 
-test('sloped fields use terrain displacement for crops and shadows while the shed stays upright on its own ground', async()=>{
+test('sloped planted fields use terrain displacement for crops and shadows without a roof building', async()=>{
  const {FieldSurface}=await import('../src/scene/fieldSurface.ts');
  const {MAP,SEGS}=await import('../src/game/constants.ts');
  const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
@@ -46,7 +46,7 @@ test('sloped fields use terrain displacement for crops and shadows while the she
  }
  const shadow={uniforms:{},vertexShader:THREE.ShaderLib.depth.vertexShader};v.fieldSurface.depth.onBeforeCompile(shadow);
  assert.match(shadow.vertexShader,/fieldHeight\(fieldWorld.xz\)/);assert.equal(shadow.uniforms.fieldHeights.value,v.fieldSurface.texture);
- field.roof.getMatrixAt(0,m);assert.ok(Math.abs(m.elements[13]-game.height(m.elements[12],m.elements[14]))<1e-5);
+ assert.equal(field.roof.count,0);assert.equal(field.roof.geometry.getAttribute('position'),undefined);
  assert.equal(JSON.stringify(farm),before,'rendering must preserve the saved crop and plot');
  assert.ok(field.timber.geometry.attributes.color,'soil and stakes retain distinct materials');
  assert.notEqual(field.extra.material,v.mats.crop,'field deformation must not affect shared crops elsewhere');
@@ -64,11 +64,11 @@ test('a terrain-conforming field can be selected on its ground footprint without
 });
 
 test('territory and fog overlay follows every terrain vertex on enlarged maps',()=>{
- const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();
+ const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();v.scene=new THREE.Scene();v.cameraClearance={invalidate(){}};
  v.fowMesh=new THREE.Mesh(new THREE.PlaneGeometry(1040,1040,2,2),new THREE.ShaderMaterial({uniforms:{uHalf:{value:520},uSize:{value:1040}}}));
  for(const name of ['disposeWorld','buildTerrain','buildNature','buildBuildings','buildUnits','buildHearths','buildWildlife','updateCamera'])v[name]=()=>{};
  const height=(x,z)=>Math.abs(x)<1&&Math.abs(z)<1?45:4;
- const game={world:{size:2080,heights:new Float32Array(25),waterY:0,camps:[]},height};
+ const game={state:{time:0,units:[],buildings:[],tribes:[]},world:{size:2080,heights:new Float32Array(25),waterY:0,camps:[]},height,waterAt:()=>0,navigationRevision:()=>0};
  v.rebuild(game);
  assert.equal(v.fowMesh.geometry.parameters.widthSegments,4);
  const positions=v.fowMesh.geometry.getAttribute('position');

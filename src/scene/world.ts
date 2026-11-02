@@ -1,3 +1,7 @@
+import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
+import{HullFleet}from'./hullFleet';
+import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
+import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
 import {TerrainCameraClearance,type CameraGround} from './cameraClearance';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
@@ -146,6 +150,7 @@ export class WorldView {
   foundations:THREE.InstancedMesh|null=null;
   mapSize=MAP;
   renderer: THREE.WebGLRenderer;
+  latestRenderMetrics:RendererFrameMetrics|undefined;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   mats: MatKit;
@@ -188,6 +193,7 @@ export class WorldView {
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
   canoePaddles: THREE.InstancedMesh | null = null;
   riverboats: THREE.InstancedMesh | null = null;
+  hullFleet:HullFleet|null=null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   private penFences:PenFenceLayer|null=null;
@@ -204,6 +210,7 @@ export class WorldView {
   ghost: THREE.Group;
   private linePreview: THREE.InstancedMesh | null = null;
   arrows: THREE.InstancedMesh;
+  huntingStones: THREE.InstancedMesh;
   smoke: THREE.Points;
   smokeGeo: THREE.BufferGeometry;
   smokePos: Float32Array;
@@ -388,6 +395,8 @@ export class WorldView {
     this.arrows.count = 0;
     this.arrows.frustumCulled = false;
     this.scene.add(this.arrows);
+    this.huntingStones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.13,0),new THREE.MeshStandardMaterial({color:"#777467",roughness:.95}),40);
+    this.huntingStones.count=0;this.huntingStones.frustumCulled=false;this.scene.add(this.huntingStones);
 
     this.smokePos = new Float32Array(72 * 3);
     this.smokeGeo = new THREE.BufferGeometry();
@@ -827,7 +836,8 @@ export class WorldView {
     for (const type of BLD_TYPES) {
       const g = geos[type];
       const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
-      const timberMaterial=this.mats.timber.clone();
+      const timberMaterial=this.mats[g.timberMat||'timber'].clone();
+      if(type==='farm'){timberMaterial.map=null;timberMaterial.bumpMap=null;timberMaterial.roughnessMap=null;}
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       if(type === "farm") timberMaterial.vertexColors = true;
       if(type === "farm" || type === "pen") this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
@@ -838,13 +848,14 @@ export class WorldView {
       }
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
       if((type === "farm" || type === "pen") && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
-      const roofMat =
+      const roofMat = g.roofMat?this.mats[g.roofMat]:
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
           ? this.mats.tile
           : this.mats.thatch;
       const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), capacity);
       if(type==='pen'&&this.fieldSurface){this.fieldSurface.bind(roof.material as THREE.Material);roof.customDepthMaterial=this.fieldSurface.depth;}
+      if(hasBuildingCraftsmanship(type)){for(const [mesh,isRoof]of[[timber,false],[roof,true]]as const){makeCraftsmanshipAttribute(mesh.geometry,capacity);bindCraftsmanship(mesh.material as THREE.Material,isRoof);mesh.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});bindCraftsmanship(mesh.customDepthMaterial,isRoof);}}
       timber.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -861,10 +872,12 @@ export class WorldView {
       this.scene.add(timber, roof);
       let extra: THREE.InstancedMesh | undefined;
       if (g.extra) {
-        const extraMaterial = type === "farm" ? this.mats.crop.clone() : this.mats[g.extraMat || "stone"];
+        const sourceExtra=this.mats[g.extraMat||"stone"];
+        const extraMaterial = type === "farm" ? this.mats.crop.clone() : hasBuildingCraftsmanship(type)?sourceExtra.clone():sourceExtra;
         if(type === "farm") this.fieldSurface?.bind(extraMaterial);
         extra = new THREE.InstancedMesh(g.extra, extraMaterial, capacity);
         if(type === "farm" && this.fieldSurface) extra.customDepthMaterial = this.fieldSurface.depth;
+        if(hasBuildingCraftsmanship(type)){makeCraftsmanshipAttribute(extra.geometry,capacity);bindCraftsmanship(extraMaterial,false);extra.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});bindCraftsmanship(extra.customDepthMaterial,false);}
         extra.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         if(type==="farm"){extra.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(capacity*3),3);}
         extra.castShadow = true;
@@ -907,6 +920,7 @@ export class WorldView {
       mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
       this.haulageMeshes.set(kind, mesh); this.scene.add(mesh);
     }
+    this.hullFleet=new HullFleet(this.scene,this.mats.timber);
     this.riverboats=new THREE.InstancedMesh(riverboatGeo(),this.mats.timber,96);
     this.riverboats.count=0;this.riverboats.frustumCulled=false;this.scene.add(this.riverboats);
     this.canoePaddles=new THREE.InstancedMesh(canoePaddleGeo(),this.mats.timber,140);
@@ -1071,11 +1085,12 @@ export class WorldView {
     const el=this.renderer.domElement;
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
     _ray.setFromCamera(_ndc,this.camera);mesh.computeBoundingSphere();
-    const boats=(game.state.boats||[]).filter(b=>b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
+    const boats=(game.state.boats||[]).filter(b=>!b.hullClass&&b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
     const groundHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain],false)[0]:undefined;
-    for(const hit of _ray.intersectObject(mesh,false)) {
+    const extra=this.hullFleet?.pickingSources()??new Map<THREE.InstancedMesh,import("../game/boats").Riverboat[]>();for(const m of extra.keys())m.computeBoundingSphere();
+    for(const hit of _ray.intersectObjects([mesh,...extra.keys()],false)) {
       if(groundHit&&groundHit.distance+.02<hit.distance)continue;
-      const boat=hit.instanceId===undefined?null:boats[hit.instanceId];
+      const boat=hit.instanceId===undefined?null:hit.object===mesh?boats[hit.instanceId]:extra.get(hit.object as THREE.InstancedMesh)?.[hit.instanceId];
       if(boat&&(boat.team===0||game.visibleAt(boat.x,boat.z)))return boat;
     }
     return null;
@@ -1491,12 +1506,12 @@ export class WorldView {
         if(type==='watchtower'&&b.towerPlatform)continue;
         if(type==='trench'&&excavationTerrain(game).buildingIds.has(b.id))continue;
         const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
-        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b),character=buildingCharacter(game.state.seed,b.id);
+        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b),character=buildingCharacter(game.state.seed,b.id),artisan=hasBuildingCraftsmanship(type)?buildingCraftsmanship(game.state.seed,b.id,type):null;
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const scalable=type==="farm"||type==="warehouse";
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
-          const mesh=meshes[part];if(!mesh||counts[part]>=instCap(mesh))return;
+          const mesh=meshes[part];if(!mesh||!mesh.geometry.getAttribute('position')?.count||counts[part]>=instCap(mesh))return;
           const wx=b.x+x,wz=b.z+z;
           const ground=type==="farm"||type==='pen'?game.height(wx,wz):foundationProfile(game,b).level;
           _p.set(wx,ground,wz);
@@ -1513,6 +1528,7 @@ export class WorldView {
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
           const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
+          const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art&&artisan)art.setXYZW(i,artisan.x,artisan.z,artisan.brace,artisan.lift);
           if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);}
           if(mesh.instanceColor){
             _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
@@ -1525,12 +1541,11 @@ export class WorldView {
           for(const m of plotModules(b))for(const part of ['timber','roof','extra'] as const)write(part,m.x,m.z,m.sx,m.sz);
         }else if(type==="farm"){
           write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
-          // One tool shed per field; its size stays human-scaled as the plot grows.
-          write('roof',(b.w-BUILDINGS.farm.w)/2+2.4,(b.d-BUILDINGS.farm.d)/2+2.2,1,1);
+          // A marked/planted plot has no roof building or free tool/storage shed.
           if(!this.contourFields)for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
         }else for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
       }
-      for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
+      for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art)art.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
@@ -1655,9 +1670,10 @@ export class WorldView {
   }
 
   private syncRiverboatMeshes(game:Game){
+    this.hullFleet?.sync(game,this.shadowsEnabled);
     const mesh=this.riverboats;if(!mesh)return;let count=0;
     for(const b of game.state.boats||[]){
-      if(b.hp<=0||count>=instCap(mesh)||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
+      if(b.hullClass||b.hp<=0||count>=instCap(mesh)||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
       _p.set(b.x,game.waterAt(b.x,b.z)-.12,b.z);_e.set(0,b.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);mesh.setMatrixAt(count++,_m);
     }
     mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
@@ -1919,19 +1935,22 @@ export class WorldView {
 
   private syncArrows(game: Game) {
     const ps = game.state.projectiles;
-    ps.forEach((p, i) => {
-      if (i >= 40) return;
+    let arrows=0,stones=0;
+    ps.forEach((p) => {
+      if(p.huntingWeapon==='stone'){if(stones<40){_p.set(p.x,p.y,p.z);_q.identity();_s.set(1,1,1);_m.compose(_p,_q,_s);this.huntingStones.setMatrixAt(stones++,_m);}return;}
+      if (arrows >= 40) return;
       _p.set(p.x, p.y, p.z);
-      const dx = p.tx - p.x,
-        dy = p.ty - p.y,
-        dz = p.tz - p.z;
+      const dx = p.huntingVelocity?.x ?? p.tx - p.x,
+        dy = p.huntingVelocity?.y ?? p.ty - p.y,
+        dz = p.huntingVelocity?.z ?? p.tz - p.z;
       _e.set(0, Math.atan2(dx, dz), -Math.atan2(dy, Math.hypot(dx, dz)));
       _q.setFromEuler(_e);
       _s.set(1, 1, 1);
       _m.compose(_p, _q, _s);
-      this.arrows.setMatrixAt(i, _m);
+      this.arrows.setMatrixAt(arrows++, _m);
     });
-    this.arrows.count = Math.min(ps.length, 40);
+    this.arrows.count = arrows;
+    this.huntingStones.count=stones;this.huntingStones.instanceMatrix.needsUpdate=true;
     this.arrows.instanceMatrix.needsUpdate = true;
   }
 
@@ -2041,7 +2060,10 @@ export class WorldView {
   }
 
   render() {
+    this.latestRenderMetrics=undefined;
     if (this.lost || this.disposed) return;
+    beginRendererFrame(this.renderer.info);
+    try {
     try {
       if (this.composer && this.quality !== "low") this.composer.render();
       else this.renderer.render(this.scene, this.camera);
@@ -2056,6 +2078,7 @@ export class WorldView {
         this.lost = true;
       }
     }
+    } finally { this.latestRenderMetrics=rendererFrameMetrics(this.renderer.info); }
   }
 
   private onGlLost = (e: Event) => {
@@ -2507,6 +2530,7 @@ export class WorldView {
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;
+    this.hullFleet?.dispose();this.hullFleet=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
@@ -2517,6 +2541,7 @@ export class WorldView {
     const keep = new Set([
       this.ghost,
       this.arrows,
+      this.huntingStones,
       this.smoke,
       this.floaters,
       this.rings,
@@ -2564,7 +2589,8 @@ export class WorldView {
     this.villageStyles.clear();
     if(this.fieldSurface){this.fieldSurface.dispose();this.fieldSurface=null;}
     for(const [type, meshes] of this.bldMeshes){
-      if(type === "farm" && meshes.extra) (meshes.extra.material as THREE.Material).dispose();
+      if((type === "farm"||hasBuildingCraftsmanship(type)) && meshes.extra) (meshes.extra.material as THREE.Material).dispose();
+      if(hasBuildingCraftsmanship(type))for(const mesh of[meshes.timber,meshes.roof,meshes.extra])mesh?.customDepthMaterial?.dispose();
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
@@ -2597,10 +2623,7 @@ export class WorldView {
     } catch {
       /* already torn down */
     }
-    for (const k of Object.values(this.mats)) {
-      k.map?.dispose();
-      k.bumpMap?.dispose();
-      k.dispose();
-    }
+    disposeBuildingSurfaceTextures(Object.values(this.mats));
+    for (const k of Object.values(this.mats)) k.dispose();
   }
 }

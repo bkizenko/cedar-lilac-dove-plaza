@@ -1,0 +1,213 @@
+{
+  "scenario": "Owned bow and physical wildlife subsistence",
+  "baseline": "d048d1a with hunting patch",
+  "seed": 1,
+  "worldgenVersion": 14,
+  "layout": "pangaea",
+  "size": 1040,
+  "controlledEndowment": {
+    "wood": 100,
+    "stone": 50,
+    "food": 2000,
+    "water": 200,
+    "wildlife": "one authored baseline4HP boar on unchanged clear natural dry ground; all weapon stores initially zero"
+  },
+  "setup": "Quiet/clear, external timers deferred, resident needs retained. No terrain/position/stock corrections after initial setup.",
+  "commands": [
+    {
+      "time": 0,
+      "name": "placeHearth",
+      "args": {
+        "x": -34,
+        "z": 218
+      }
+    },
+    {
+      "time": 0,
+      "name": "buildHearth",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 10.09999999999998,
+      "name": "craftBow",
+      "args": {
+        "hearthId": 4933
+      }
+    },
+    {
+      "time": 111.69999999999793,
+      "name": "recallForEquipment",
+      "args": {}
+    },
+    {
+      "time": 112.39999999999789,
+      "name": "equipActualBow",
+      "args": {}
+    },
+    {
+      "time": 112.39999999999789,
+      "name": "walkToAuthoredHuntingGround",
+      "args": {
+        "x": -50.2116570824605,
+        "z": 241.18221983093764
+      }
+    },
+    {
+      "time": 114.79999999999775,
+      "name": "publicHunt",
+      "args": {
+        "actualObservedAnimalId": 4932
+      }
+    },
+    {
+      "time": 149.4999999999958,
+      "name": "recallBeforeCooking",
+      "args": {}
+    },
+    {
+      "time": 149.5999999999958,
+      "name": "cookFiniteRawMeat",
+      "args": {
+        "hearthId": 4933
+      }
+    }
+  ],
+  "terrainSha256": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "terrainUnchanged": true,
+  "elapsedSeconds": 171.99999999999451,
+  "ticks": 1720,
+  "originalPeople": [
+    4824,
+    4825,
+    4826,
+    4827,
+    4828
+  ],
+  "actualHunterId": 4824,
+  "actualPreyId": 4932,
+  "preyMovementMeters": 6.299999999999976,
+  "launchedBowShots": 3,
+  "observedShots": 2,
+  "maxConcurrentHuntingFlight": 1,
+  "hunterHpBefore": 48,
+  "minimumHunterHp": 48,
+  "woundedBoarDefenseObserved": true,
+  "flightSaved": true,
+  "trackingObserved": false,
+  "guttingObserved": true,
+  "skinningObserved": true,
+  "rawMeatCarried": true,
+  "capital": {
+    "hearth": {
+      "food": 0,
+      "wood": 4,
+      "stone": 4,
+      "copper": 0,
+      "iron": 0
+    },
+    "bow": {
+      "wood": 3,
+      "stone": 1
+    }
+  },
+  "final": {
+    "wood": 92,
+    "stone": 45,
+    "food": 1767.7556149659893,
+    "rawMeat": 27.50017478816772,
+    "remainingCarcass": 0,
+    "survival": {
+      "waterLiters": 193.12000000001603,
+      "waterConsumedLiters": 6.8799999999996855,
+      "waterDeliveredLiters": 0,
+      "waterLostLiters": 0,
+      "fuelBurnedWood": 0,
+      "waterShortageSeconds": 0,
+      "coldExposurePersonSeconds": 0
+    },
+    "production": {
+      "consumed": {
+        "rawMeat": 4
+      },
+      "produced": {},
+      "spoiled": {
+        "rawMeat": 0.49982521183231554
+      },
+      "lost": {},
+      "logsUsed": 1,
+      "waterUsedLiters": 0,
+      "grainUsed": 0,
+      "grainLost": 0,
+      "edibleFoodProduced": 4,
+      "edibleFoodLost": 0,
+      "foodInputsUsed": {},
+      "foodInputsLost": {},
+      "dryingExposureSeconds": 0,
+      "wetExposureSeconds": 0,
+      "completed": 1,
+      "interrupted": 0
+    },
+    "events": {
+      "food_spoiled:0:food": 202.72914490987137,
+      "food_consumed:0:food": 33.51524012413938,
+      "food_spoiled:1:food": 3.5175237650209397,
+      "food_consumed:1:food": 40.38759558869421,
+      "food_spoiled:2:food": 2.476385116937962,
+      "food_consumed:2:food": 41.99788768291663,
+      "food_spoiled:3:food": 2.3572414560862427,
+      "food_consumed:3:food": 23.461063862648246,
+      "cargo_delivered:1:food": 46.15499906425447,
+      "food_received:1:food": 46.15499906425447,
+      "cargo_delivered:2:wood": 156,
+      "cargo_delivered:1:wood": 131,
+      "cargo_delivered:2:stone": 28,
+      "cargo_delivered:1:stone": 63,
+      "cargo_delivered:2:food": 57.318097121207266,
+      "food_received:2:food": 57.318097121207266,
+      "food_received:0:food": 4
+    }
+  },
+  "snapshots": [
+    {
+      "stage": "actual hunting shot in flight",
+      "sha256": "a0a2dc039fdd6365df13a3e3cf9a827cad55efe84152df7543b493e119581761"
+    },
+    {
+      "stage": "cooked finite catch delivered",
+      "sha256": "00b5262ff2deee1da308eae9b74cf0c229b6d3c4e25e72db638ec904eae38e3b"
+    }
+  ],
+  "errors": [],
+  "limits": [
+    "Controlled finite initial endowment and authored actual wildlife; not untouched normal-campaign balance.",
+    "Loose stones/arrows follow existing non-inventoried ammunition assumption; no finite-ammo claim.",
+    "No target-hardware performance or full M1-10 acceptance claimed by this report."
+  ],
+  "evidence": {
+    "nativeScenario": "scripts/hunting-chain-qualification.test.mjs",
+    "components": "scripts/hunting-projectiles.test.mjs",
+    "legacyRegression": [
+      "scripts/hunting.test.mjs",
+      "scripts/warfare.test.mjs",
+      "scripts/animal-orders-live.test.mjs"
+    ],
+    "typecheck": "tsc --noEmit"
+  },
+  "scope": {
+    "nativeTracking": false,
+    "solidCornerTracking": "actual Game.step controlled flat-ground obstacle fixture; initially seen moving deer becomes occluded, actor follows saved last-seen point",
+    "nativeBoarContact": false,
+    "unarmedBoarContact": "actual Game.step controlled fixture proves physical charge and health loss; separate hazard check asserts exact6HP damage/cooldown/wall/shelter protection",
+    "finiteAmmunition": false,
+    "automaticReleaseGateCredit": false
+  },
+  "qualificationChecks": {
+    "newConnectedAndComponents": 9,
+    "previousCombinedIncludingLegacy": 37,
+    "newFinalRulesRerunPassed": true,
+    "typecheckPassed": true,
+    "parentBuildAndDesktopReviewPending": true
+  }
+}

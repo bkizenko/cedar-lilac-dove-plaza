@@ -1,3 +1,4 @@
+import {knownDiplomaticRelation,recordDiplomaticVisit} from './diplomaticKnowledge';
 import {refreshSettlementSites} from './settlementKnowledge';
 import {BUILDINGS} from './constants';
 import type {Building} from './types';
@@ -74,6 +75,7 @@ export function automaticTradeReady(g: Game, foodCost = 0) {
 export function recordTradeMeeting(g: Game, team: number, trader: Unit) {
   const hall=localSettlementHall(g,trader,team);
   if(!isRivalTeam(team)||!g.tribe(team)?.alive||g.tribe(team).hostile||trader.team!==0||trader.hp<=0||!hall||!g.buildingWorkReached(trader,hall))return undefined;
+  recordDiplomaticVisit(g,trader,team);
   const goods: ResKind[] = ["food", "wood", "stone", "copper", "iron"];
   const offers: TradeDeal[] = [];
   for (const give of goods) for (const get of goods) {
@@ -180,7 +182,7 @@ export function reportedQuote(g:Game,team:number,give:ResKind,get:ResKind,amount
   const report=g.state.tradeReports?.find(r=>r.team===team);
   if(!report)return no("Send a trade delegation and view its report when it arrives.");
   if(g.state.time-report.time>900)return no("That report is old. Send a trader to learn current terms.");
-  if(g.tribe(team)?.hostile)return no("Send a peace delegation before trading.");
+  if(knownDiplomaticRelation(g,team).hostile===true)return no("Last contact reported hostilities. Send a peace delegation before trading.");
   if(!Number.isSafeInteger(amount)||amount<1||amount>100||give===get)return no("Choose different goods and offer 1–100 items.");
   if(g.tribe(0)[give]<amount)return no("Your stores cannot cover that offer.");
   if(g.tribe(team).tradeCd>0)return no("Your previous carrier is still on the path.");

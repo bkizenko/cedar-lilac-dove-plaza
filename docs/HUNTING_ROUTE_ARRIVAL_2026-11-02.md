@@ -1,0 +1,9 @@
+# Hunting dynamic-goal arrival repair — 2026-11-02
+
+The coupled moving-deer delivery regression exposed an existing navigation-cache tolerance mismatch: navigation retains a chase route until its requested goal moves over 2 metres, and reports arrival within 0.5 metres of its cached final waypoint. A carcass requires actual 1.8-metre physical reach. A hunter at x25.6114 could therefore reach an old x26 goal and wrongly abandon a reachable x27.64375 carcass, still 2.03235 metres away.
+
+Hunting now checks the existing read-only route before steering. Only when the route has one final waypoint within 0.6 metres and its requested goal differs from the current approach by over 0.01 metres does it invalidate that stale route. Navigation then plans toward the current prey/carcass under its existing budget and collision checks. No general navigation behavior, carcass reach, remote harvesting rule or terrain is changed; distant moving-prey paths are not continuously invalidated.
+
+The new exact-position regression fails on the unchanged integrated range-fix baseline with “must physically close toward the real carcass”. It passes after the repair, requires zero immediate remote harvest, physical movement, renewed goal, finite raw-meat delivery and strict save/decode before and after delivery. Its carcass begins unprepared, so actual gutting remains required. Final focused run: 25/25 passed across hunting-route-arrival, hunting, hunting-flight-range, hunting-projectiles, native-hunting-tracking qualification and the full real-hearth/bow/hunting/processing/cooking chain.
+
+Evidence: `/tmp/hunting-route-arrival-before.log` (expected baseline failure) and `/tmp/hunting-route-arrival-tests.log` (25 passed, no skips). This is a headless correctness repair; parent integrated type/build and release checks remain required. No FPS or additional project completion credit is claimed.

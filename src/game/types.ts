@@ -116,6 +116,7 @@ export type Region = {
 export type CritterKind = "deer" | "boar" | "goat" | "bird";
 
 export type Critter = {
+  huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
   grazing?: {x:number;z:number};
   carcass?: {meat:number;diedAt:number;hides?:number;bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number};
   id: number;
@@ -140,7 +141,9 @@ export type Livestock = Critter & {
 };
 
 export type Unit = {
+  waterCargoEvidence?:import('./boatPractice').WaterCargoEvidence;
   practicalHelper?:import('./practicalHelpers').PracticalHelper;
+  structureReportCargo?:import('./structureKnowledge').StructureReport[];
   tradeIntelCargo?:import('./tradeIntel').PartnerTradeReport[];
   visitorRefusalCargo?:import('./visitorRefusals').VisitorRefusalCargo;
   societyMissionId?:number;
@@ -200,7 +203,8 @@ export type Unit = {
   captivityUnrest?: number;
   tributeJourney?: {phase:"pickup"|"deliver"|"return"; amount:number};
   settlementJourney?: {version:1;owner:number;siteId?:number;x:number;z:number;recordedAt:number};
-  envoy?: {team:number; kind:"peace"|"trade"|"gift"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
+  diplomaticAccount?:import('./diplomaticKnowledge').DiplomaticAccount;
+  envoy?: {team:number; kind:"peace"|"trade"|"gift"|"compact"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
   maturesAt?: number;
   workReason?: string;
@@ -263,6 +267,7 @@ export type Unit = {
   constructionQueue?: {sites:number[];paused?:true};
   jobLock: boolean;
   huntOnly: boolean;
+  huntTrail?:{animal:number;x:number;z:number;seenAt:number;expiresAt:number;searchStartedAt?:number};
   stuckT: number;
   pillage: number;
   stature: number;
@@ -346,6 +351,9 @@ export type Floater = {
 };
 
 export type Projectile = {
+  wildlifeTargetId?:number;
+  huntingWeapon?:"stone"|"bow";
+  huntingVelocity?:{x:number;y:number;z:number};
   attackerId?:number;
   conflictIntent?:ConflictIntent;
   x: number;
@@ -364,6 +372,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  animalProcessingVersion?:1;
   productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;
   basketOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
@@ -371,6 +380,7 @@ export type Tribe = {
   itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide',number>>;
   survival?:import('./survivalNeeds').SurvivalStock;
   seeds?: number;
+  boatPractice?:import('./boatPractice').BoatPractice;
   haulagePractice?: number;
   id: number;
   name: string;
@@ -432,9 +442,12 @@ export type Particle = {
 };
 
 export type GameState = {
+  diplomaticReports?:import('./diplomaticKnowledge').DiplomaticReport[];
+  diplomaticMessages?:import('./diplomaticKnowledge').DiplomaticMessage[];
   observedClaims?:import('./frontiers').ObservedClaim[];
   observedSettlements?:import('./settlementKnowledge').ObservedSettlement[];
   practicalHelpers?:import('./practicalHelpers').PracticalHelperMetrics;
+  structureReports?:import('./structureKnowledge').StructureReport[];
   tradeIntel?:import('./tradeIntel').TradeIntelState;
   excavations?:import('./excavation').TerrainCut[];
   excavationDepth?:number;
@@ -589,6 +602,8 @@ export type HudSnapshot = {
     color: string;
     age: number;
     alive: boolean;
+    relationKnown: boolean;
+    relationStale: boolean;
     hostile: boolean;
     ally: boolean;
     spec: string;
@@ -611,6 +626,8 @@ export type HudSnapshot = {
   canRaid: boolean;
   trade: {
     rival: string;
+    relationKnown: boolean;
+    relationStale: boolean;
     hostile: boolean;
     alive: boolean;
     cd: number;

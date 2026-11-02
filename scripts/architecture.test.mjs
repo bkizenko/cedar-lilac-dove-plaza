@@ -14,7 +14,7 @@ test('era details appear only on completed discovered buildings, stay bounded an
  const view=Object.create(WorldView.prototype);view.villageStyles=new Map();view.bldMeshes=new Map();
  view.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial(),16);
  const b={id:1,type:'hut',x:5,y:4,z:5,w:5,d:5,team:0,build:1,hp:100};let age=0;
- const game={state:{seed:345,buildings:[b]},tribe:()=>({age}),exploredAt:()=>false};
+ const game={state:{seed:345,buildings:[b]},world:{heights:new Float32Array(9)},height:()=>4,tribe:()=>({age}),exploredAt:()=>false};
  const original={...b};view.syncEraDetails(game);assert.equal(view.eraDetails.count,0);
  age=1;view.syncEraDetails(game);assert.equal(view.eraDetails.count,4);
  age=5;view.syncEraDetails(game);assert.equal(view.eraDetails.count,10);assert.deepEqual(b,original);

@@ -1,0 +1,12 @@
+{
+  "baseline": "79d6148 plus isolated delivered-diplomacy",
+  "paidLogs": 40,
+  "realBuilderWalked": 52.26028460359569,
+  "unseenPaidDockLeaked": false,
+  "physicalObserverSavedAbroad": true,
+  "publishedOnlyAfterPhysicalHomeArrival": true,
+  "unseenRelocationPreservedDatedFact": true,
+  "absencePublishedOnlyAfterRevisitAndPhysicalReturn": true,
+  "topology": "explicit controlled two-shore fixture",
+  "supplementalMutation": "unseen dock relocation; actual paid construction and observer travel use ordinary simulation"
+}

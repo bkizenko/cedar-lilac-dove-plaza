@@ -1,15 +1,16 @@
+import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {settlePeace,tickPeace,tributeJourneyAI,rejectPeace,releasePuppet,freePeople} from '../src/game/peace.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.vision.fill(2);g.tribe(1).hostile=true;g.state.contacts=[1,2];for(let i=0;i<60;i++)g.spawnUnit('spearman',g.campOf(0).x,g.campOf(0).z,0);return g;}
-test('weaker tribes offer peace, rejection has cooldown, offers persist and expire',()=>{const g=fixture();tickPeace(g);assert.ok(g.tribe(1).peaceOffer);const r=decodeGame(encodeGame(g));assert.deepEqual(r.tribe(1).peaceOffer,g.tribe(1).peaceOffer);rejectPeace(g,1);tickPeace(g);assert.equal(g.tribe(1).peaceOffer,undefined);g.state.time+=301;tickPeace(g);assert.ok(g.tribe(1).peaceOffer);g.state.time+=181;tickPeace(g);assert.equal(g.tribe(1).peaceOffer,undefined);});
+function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.vision.fill(2);g.tribe(1).hostile=true;g.state.contacts=[1,2];for(let i=0;i<60;i++)g.spawnUnit('spearman',g.campOf(0).x,g.campOf(0).z,0);endowSettlementSites(g,0);return g;}
+test('weaker tribes queue dated peace requests privately; pending policy survives save without broadcasting an offer',()=>{const g=fixture();tickPeace(g);assert.equal(g.tribe(1).peaceOffer,undefined);const pending=g.state.diplomaticMessages?.find(m=>m.team===1&&m.kind==='peaceOffer');assert.ok(pending);assert.equal(pending.phase,'queued');const r=decodeGame(encodeGame(g));assert.deepEqual(r.state.diplomaticMessages,JSON.parse(JSON.stringify(g.state.diplomaticMessages)));assert.equal(r.tribe(1).peaceOffer,undefined);g.state.time+=181;tickPeace(g);assert.equal(g.tribe(1).peaceOffer,undefined,'a private decision does not turn into a remotely delivered letter');});
 
 function deliveryFixture(){
  const g=fixture();g.world.heights.fill(4);
  g.state.buildings=[g.makeBld('townhall',0,38,0),g.makeBld('townhall',60,38,1)];
- g.state.units=g.state.units.filter(u=>u.team===0);g.spawnUnit('worker',65,50,1);g.rebuildWalk();return g;
+ g.state.units=g.state.units.filter(u=>u.team===0);g.spawnUnit('worker',65,50,1);g.rebuildWalk();endowSettlementSites(g,0,1);return g;
 }
 function journey(g){for(let i=0;i<4000&&g.state.units.some(u=>u.tributeJourney);i++){g.navBudget=10;for(const u of g.state.units)if(u.tributeJourney)tributeJourneyAI(g,u,.1);}}
 test('tribute moves in finite cargo, retains arrears, saves mid-journey and ends after six deliveries',()=>{

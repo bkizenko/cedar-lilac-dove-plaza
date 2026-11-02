@@ -1,0 +1,82 @@
+{
+  "scope": "Connected natural tracking, saved dated observation, ordinary reacquisition/conclusion and physical recall; separate food case provides edible catch",
+  "seed": 1,
+  "worldgenVersion": 14,
+  "layout": "pangaea",
+  "initial": {
+    "people": 5,
+    "food": 60,
+    "wood": 40,
+    "stone": 20,
+    "water": 100,
+    "expeditionPose": {
+      "x": -40.86737138671876,
+      "z": 241.79467667297143
+    },
+    "authoredMovingDeer": {
+      "x": -48.66160002077871,
+      "z": 237.29467667297143
+    }
+  },
+  "terrainSha256": "ad719f783ba98980307245fd27adecc8920d6cde6b2d473fec2f43524af35892",
+  "terrainUnchanged": true,
+  "actualHunterId": 4824,
+  "actualAnimalId": 4932,
+  "trackingObserved": true,
+  "trackingSeconds": 0.2,
+  "decisionObservations": [
+    {
+      "time": 0.2,
+      "observer": {
+        "x": -41.30928759911828,
+        "y": 11.33749141133789,
+        "z": 241.5395362287833
+      },
+      "animal": {
+        "x": -48.98722557260166,
+        "y": 13.707839303953607,
+        "z": 237.10667667297145
+      },
+      "visible": false,
+      "lineClear": true
+    },
+    {
+      "time": 0.30000000000000004,
+      "observer": {
+        "x": -41.75118171460233,
+        "y": 11.449058317348756,
+        "z": 241.28440854225528
+      },
+      "animal": {
+        "x": -49.29331359131523,
+        "y": 13.804374423642612,
+        "z": 236.92995667297146
+      },
+      "visible": false,
+      "lineClear": true
+    }
+  ],
+  "lostAt": 0.2,
+  "lastSeen": {
+    "animal": 4932,
+    "x": -48.66160002077871,
+    "z": 237.29467667297143,
+    "seenAt": 0.1,
+    "expiresAt": 25.1
+  },
+  "hiddenActualPoint": {
+    "x": -49.29331359131523,
+    "z": 236.92995667297146
+  },
+  "reacquired": true,
+  "conclusionAt": 0.4,
+  "physicalReturnAt": 4.200000000000001,
+  "foodProduced": 0,
+  "foodConsumed": 0.8183953983803534,
+  "waterConsumed": 0.16800000000000012,
+  "allOriginalPeopleSurvive": true,
+  "limits": [
+    "Explicit initial expedition pose and deer endowment; no midrun geometry/body/animal/visibility correction.",
+    "No food or kill claimed for this recalled encounter."
+  ]
+}

@@ -1,3 +1,8 @@
+import {activateAnimalProcessing} from './production';
+import{validBoatClassState}from'./boatClasses';
+import{validBoatPractice}from'./boatPractice';
+import {validStructureKnowledge} from './structureKnowledge';
+import {validDiplomaticKnowledge} from './diplomaticKnowledge';
 import{validObservedClaims}from'./frontiers';
 import{validObservedSettlements}from'./settlementKnowledge';
 import{validPracticalHelpers}from'./practicalHelpers';
@@ -33,7 +38,7 @@ import {scalablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
 import {reconcileTradeReservations} from "./tradeReservations";
-import {carcassStateValid} from "./hunting";
+import {carcassStateValid,HUNTING_FLIGHT_RULES,HUNTING_WEAPONS,HUNTING_TRACKING_RULES,HUNTING_HAZARD_RULES} from "./hunting";
 import {validFarmToolUnit} from "./farmTools";
 import {validHaulageUnit,validHaulageTribe} from "./haulage";
 import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
@@ -96,7 +101,7 @@ function validateGamePayload(raw: unknown) {
   if(raw.cargoVersion!==undefined&&raw.cargoVersion!==1)fail();
   const d = JSON.parse(JSON.stringify(raw)),
     s = d.state;
-  for (const [name, v] of Object.entries(Game.prototype.blank())) {
+  for (const [name, v] of Object.entries(Game.prototype.blank(0))) {
     if (!(name in s)) fail();
     if (typeof v === "number" && !num(s[name])) fail();
     if (typeof v === "string" && typeof s[name] !== "string") fail();
@@ -115,11 +120,12 @@ function validateGamePayload(raw: unknown) {
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
-  if(!validObservedClaims(s)||!validObservedSettlements(s))fail();
+  if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
+  if(!validBoatPractice(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
@@ -155,7 +161,7 @@ function validateGamePayload(raw: unknown) {
   }
   if(s.boats!==undefined){
     if(!Array.isArray(s.boats)||s.boats.length>96)fail();const ids=new Set();
-    for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||b.hp>300||b.capacity!==5||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();if(b.exploration!==undefined){const e=b.exploration;if(!obj(e)||!num(e.originX)||!num(e.originZ)||Math.abs(e.originX)>HALF||Math.abs(e.originZ)>HALF||!num(e.nextReviewAt)||e.nextReviewAt<0||typeof e.returning!=='boolean'||e.reason!==undefined&&!['surveyed','blocked','hungry','danger','recall'].includes(e.reason)||e.landOnReturn!==undefined&&e.landOnReturn!==true)fail();}ids.add(b.id);}
+    for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||!validBoatClassState(b)||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();if(b.exploration!==undefined){const e=b.exploration;if(!obj(e)||!num(e.originX)||!num(e.originZ)||Math.abs(e.originX)>HALF||Math.abs(e.originZ)>HALF||!num(e.nextReviewAt)||e.nextReviewAt<0||typeof e.returning!=='boolean'||e.reason!==undefined&&!['surveyed','blocked','hungry','danger','recall'].includes(e.reason)||e.landOnReturn!==undefined&&e.landOnReturn!==true)fail();}ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
   if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(s.worldgenVersion))fail();
@@ -370,6 +376,7 @@ function validateGamePayload(raw: unknown) {
     if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean"||(m.timber!==undefined&&(!Number.isSafeInteger(m.timber)||m.timber<20||m.timber>100000)))fail();}
     if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
     if(u.resting!==undefined&&typeof u.resting!=="boolean")fail();
+    if(u.huntTrail!==undefined){const h=u.huntTrail;if(!obj(h)||!Number.isSafeInteger(h.animal)||h.animal<1||h.animal>=s.nextId||![h.x,h.z,h.seenAt,h.expiresAt].every(num)||Math.abs(h.x)>HALF+40||Math.abs(h.z)>HALF+40||h.seenAt<0||h.seenAt>s.time||h.expiresAt<h.seenAt||h.expiresAt>h.seenAt+HUNTING_TRACKING_RULES.memorySeconds+.001||(h.searchStartedAt!==undefined&&(!num(h.searchStartedAt)||h.searchStartedAt<h.seenAt||h.searchStartedAt>s.time)))fail();}
     if(u.shelterId!==undefined&&(!Number.isSafeInteger(u.shelterId)||u.shelterId<1))fail();
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
@@ -417,7 +424,7 @@ function validateGamePayload(raw: unknown) {
     if(u.envoy!==undefined){
       const m=u.envoy;
       if(m.term!==undefined&&!['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(m.term))fail();
-      if(!obj(m)||u.team!==0||!rivalTeam(m.team)||!["peace","trade","gift"].includes(m.kind)||
+      if(!obj(m)||u.team!==0||!rivalTeam(m.team)||!["peace","trade","gift","compact"].includes(m.kind)||
         !["outbound","return"].includes(m.phase)||!num(m.talk)||m.talk<0)fail();
       if(m.report!==undefined){if(!obj(m.report)||!num(m.report.time)||m.report.time<0||m.report.time>s.time)fail();validateOffers(m.report.offers);}
     }
@@ -520,6 +527,7 @@ function validateGamePayload(raw: unknown) {
     add(c);
     if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>Math.max(1000,HALF+40)||Math.abs(c.grazing.z)>Math.max(1000,HALF+40)))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
+    if(c.huntDefense!==undefined){const h=c.huntDefense;if(c.species!=='boar'||c.hp<=0||!obj(h)||!Number.isSafeInteger(h.hunterId)||h.hunterId<1||h.hunterId>=s.nextId||![h.expiresAt,h.nextAttackAt,h.lastX,h.lastZ].every(num)||h.expiresAt<0||h.expiresAt>s.time+HUNTING_HAZARD_RULES.alertSeconds+.001||h.nextAttackAt<0||h.nextAttackAt>s.time+HUNTING_HAZARD_RULES.attackCooldownSeconds+.001||Math.abs(h.lastX)>HALF+40||Math.abs(h.lastZ)>HALF+40)fail();}
     if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}
@@ -593,6 +601,9 @@ function validateGamePayload(raw: unknown) {
     numbers(p, ["x", "y", "z", "tx", "ty", "tz", "speed", "life", "dmg", "team"]);
     if(p.attackerId!==undefined&&(!Number.isSafeInteger(p.attackerId)||p.attackerId<1||p.attackerId>=s.nextId))fail();
     if(p.conflictIntent!==undefined&&!['loot','capture','occupy','dominate'].includes(p.conflictIntent))fail();
+    if(p.wildlifeTargetId!==undefined&&(!Number.isSafeInteger(p.wildlifeTargetId)||p.wildlifeTargetId<1||p.wildlifeTargetId>=s.nextId||!['stone','bow'].includes(p.huntingWeapon)||p.target!==null||p.conflictIntent!==undefined||p.attackerId===undefined||p.speed!==HUNTING_WEAPONS[p.huntingWeapon as 'bow'|'stone'].speed||p.dmg!==HUNTING_WEAPONS[p.huntingWeapon as 'bow'|'stone'].damage))fail();
+    if(p.wildlifeTargetId!==undefined){const v=p.huntingVelocity;if(!obj(v)||![v.x,v.y,v.z].every(num)||Math.abs(Math.hypot(v.x,v.y,v.z)-p.speed)>.001||p.life<0||p.life>HUNTING_FLIGHT_RULES.maxFlightSeconds)fail();}
+    if((p.huntingWeapon!==undefined||p.huntingVelocity!==undefined)&&p.wildlifeTargetId===undefined)fail();
     p.target = resolve(p.target);
   }
   if (d.demographicVersion === undefined) {
@@ -663,6 +674,8 @@ export function decodeGame(raw:unknown):Game {
     particles: [],
     floaters: [],
   } as GameState;
+  // Existing actual own stations are legacy adoption evidence, never a phantom building.
+  for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
   syncHaulageProjects(g);
   initializeCultivation(g,s.cultivationVersion===undefined);
   g.vision.set(d.vision);

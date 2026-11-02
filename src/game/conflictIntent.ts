@@ -1,3 +1,4 @@
+import{reconcileWaterCargoEvidence}from'./boatPractice';
 import{adoptHerdWaterLoad,reconcilePenWater}from'./penWater';
 import {pauseHaulageWork} from './haulage';
 import {workRuntime} from './workRuntime';
@@ -10,7 +11,7 @@ export type ConflictIntent='loot'|'capture'|'occupy'|'dominate';
 export type ConflictUnit=Unit&{conflictIntent?:ConflictIntent;captureTargetId?:number};
 export type OccupationControl={id:number;hallId:number;formerTeam:number;controllerTeam:number;buildingIds:number[];residentIds:number[];guardIds:number[];phase:'approaching'|'holding'|'held'|'integrated'|'contested'|'withdrawn';integratedAt?:number;holdSeconds:number;createdAt:number;blockedReason?:string};
 type ConflictState=Game['state']&{occupations?:OccupationControl[]};
-export const CONFLICT_RULES={version:1,controlRadiusMeters:16,settlementScopeMeters:40,controlHoldSeconds:30,minimumGuards:1,surrenderApproachMeters:5} as const;
+export const CONFLICT_RULES={version:1,controlRadiusMeters:16,settlementScopeMeters:40,controlHoldSeconds:30,minimumGuards:1,surrenderApproachMeters:5,surrenderMooringMeters:24} as const;
 const controls=(g:Game)=>(g.state as ConflictState).occupations??((g.state as ConflictState).occupations=[]);
 // A concealed, badly wounded retreating defender cannot project control over
 // the hall. Healthy sheltered guards and anyone actively attacking still resist.
@@ -141,7 +142,19 @@ export function integrateOccupiedVillage(g:Game,id:number){
  if(!control||!status.accepted){if(control)control.blockedReason=status.reason||'Local surrender is not ready';return {accepted:false,reason:status.reason||'No recorded village control'};}
  const buildings=g.state.buildings.filter(b=>control.buildingIds.includes(b.id)&&b.team===control.formerTeam&&b.hp>0);
  const buildingIds=new Set(buildings.map(b=>b.id));
- const residents=g.state.units.filter(u=>control.residentIds.includes(u.id)&&u.team===control.formerTeam&&u.hp>0&&!(u as PrisonerUnit).prisoner&&(u.homeHall===undefined||buildingIds.has(u.homeHall)));
+ const candidates=g.state.units.filter(u=>control.residentIds.includes(u.id)&&u.team===control.formerTeam&&u.hp>0&&!(u as PrisonerUnit).prisoner&&(u.homeHall===undefined||buildingIds.has(u.homeHall)));
+ const candidateIds=new Set(candidates.map(u=>u.id));
+ // Local surrender can transfer an entire moored vessel, never a distant or
+ // mixed crew. Keeping excluded sailors with their original hull avoids a
+ // remote annexation or detaching people over water merely to satisfy a save.
+ const hulls=(g.state.boats||[]).filter(b=>{
+  if(b.team!==control.formerTeam||b.hp<=0||b.exploration||!buildingIds.has(b.dock))return false;
+  const dock=buildings.find(d=>d.id===b.dock&&d.type==='dock');if(!dock||Math.hypot(b.x-dock.x,b.z-dock.z)>CONFLICT_RULES.surrenderMooringMeters)return false;
+  if(g.state.coastalVoyages?.some(v=>v.boatId===b.id&&!['complete','lost'].includes(v.phase)))return false;
+  const crew=g.state.units.filter(u=>u.hp>0&&u.boat?.id===b.id);
+  return crew.every(u=>candidateIds.has(u.id)&&Math.hypot(u.x-b.x,u.z-b.z)<=CONFLICT_RULES.surrenderMooringMeters&&u.order!=='move');
+ });
+ const hullIds=new Set(hulls.map(b=>b.id)),residents=candidates.filter(u=>!u.boat||hullIds.has(u.boat.id));
  const paid=g.state.haulageProjects?.filter(p=>p.team===control.formerTeam&&buildingIds.has(p.work.workplace))||[];
  // Stop incompatible commitments before changing teams; never refund consumed goods.
  for(const person of residents)g.interruptMission(person);
@@ -151,14 +164,16 @@ export function integrateOccupiedVillage(g:Game,id:number){
   const runtime=workRuntime(g);runtime.finish(`haulage:${project.id}`,true);runtime.forget(`haulage:${project.id}`);
  }
  for(const building of buildings){building.team=control.controllerTeam;building.selected=false;}
+ for(const hull of hulls){hull.team=control.controllerTeam;delete hull.exploration;}
  for(const person of residents){person.team=control.controllerTeam;person.selected=false;person.target=null;person.node=null;person.pillage=-1;person.attackDestination=null;person.emergency=undefined;person.job=null;person.jobLock=false;person.order=person.carry>0?'return':'idle';person.workReason='Village surrendered intact — resuming community life';}
  for(const animal of g.state.livestock??[])if(buildingIds.has(animal.pen)&&animal.team===control.formerTeam)animal.team=control.controllerTeam;
  for(const person of residents)adoptHerdWaterLoad(g,person);
  reconcilePenWater(g);
+ reconcileWaterCargoEvidence(g);
  control.phase='integrated';control.integratedAt=g.state.time;control.blockedReason=undefined;
  g.state.walkDirty=true;g.workBoard.reset();
  recordConflict(g,'village_integrated',control.controllerTeam,1,{targetId:control.hallId});recordConflict(g,'buildings_transferred',control.controllerTeam,buildings.length,{targetId:control.hallId});recordConflict(g,'residents_transferred',control.controllerTeam,residents.length,{targetId:control.hallId});recordConflict(g,'paid_projects_transferred',control.controllerTeam,paid.length,{targetId:control.hallId});
- return {accepted:true,reason:'The local village joined intact; distant communities and unlocalized stores remain independent',buildings:buildings.length,residents:residents.length,paidProjects:paid.length};
+ return {accepted:true,reason:'The local village joined intact; distant communities and unlocalized stores remain independent',buildings:buildings.length,residents:residents.length,paidProjects:paid.length,boats:hulls.length};
 }
 
 /** A securing party is not automatically a lethal threat to uninvolved local

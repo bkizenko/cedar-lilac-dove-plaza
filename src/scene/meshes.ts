@@ -1,3 +1,5 @@
+import {civilianBuildingGeos} from './civilianBuildings';
+import {makeBuildingSurfaces,bindBuildingSurface,buildingSurfaceUV} from './buildingSurfaces';
 import {fortifiedShelterGeo} from './fortifiedShelter';
 import {productionWorkplaceGeos} from './productionWorkplaces';
 import {timberGateKit} from './gateKit';
@@ -86,15 +88,16 @@ function canvasTex(size: number, paint: (ctx: CanvasRenderingContext2D, s: numbe
 export function makeMaterials(): MatKit {
   const std = (color: string, roughness: number, metalness = 0, opts: Partial<THREE.MeshStandardMaterialParameters> = {}) =>
     new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading: true, ...opts });
+  const surfaces=makeBuildingSurfaces();
   return {
-    thatch: std("#d4b06a", 0.92, 0, {}),
-    timber: std("#b88858", 0.78),
-    plaster: std("#ead5b5", 0.86),
-    stone: std("#a8a49c", 0.9, 0, {}),
-    dark: std("#664734", 0.82),
+    thatch: bindBuildingSurface(std("#d4b06a", 0.92),surfaces.thatch),
+    timber: bindBuildingSurface(std("#b88858", 0.92),surfaces.timber),
+    plaster: bindBuildingSurface(std("#ead5b5", 0.96),surfaces.earth),
+    stone: bindBuildingSurface(std("#a8a49c", 0.96),surfaces.masonry),
+    dark: bindBuildingSurface(std("#664734", 0.96),surfaces.timber),
     crop: std("#8ab84a", 0.86),
     metal: std("#8a8884", 0.42, 0.55),
-    tile: std("#b9654f", 0.72),
+    tile: bindBuildingSurface(std("#b9654f", 0.92),surfaces.masonry),
     dirt: std("#8a6a3c", 0.95),
     bark: std("#6a4828", 0.88, 0, {}),
     leaf: std("#579b53", 0.72),
@@ -107,7 +110,7 @@ export function makeMaterials(): MatKit {
   };
 }
 
-export type BldGeo = { timber: THREE.BufferGeometry; roof: THREE.BufferGeometry; extra?: THREE.BufferGeometry; extraMat?: keyof MatKit };
+export type BldGeo = { timber: THREE.BufferGeometry; roof: THREE.BufferGeometry; extra?: THREE.BufferGeometry; extraMat?: keyof MatKit; timberMat?:keyof MatKit;roofMat?:keyof MatKit };
 
 function thatchHut(r: number, wallH: number, roofH: number): BldGeo {
   const timber: THREE.BufferGeometry[] = [];
@@ -237,7 +240,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     cone(1.4, 1.6, 0, 5.2, 0, 8),
   ];
 
-  return {
+  const result:Record<BldType,BldGeo> = {
     ...productionWorkplaceGeos(),
     palisade: {timber:merge(Array.from({length:16},(_,i)=>cyl(.2,.26,2.8,(i%4-1.5)*1.1,0,(Math.floor(i/4)-1.5)*1.1,5))),roof:merge([box(.1,.1,.1,0,0,0)])},
     gate: timberGateKit(),
@@ -256,7 +259,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     pen: {timber:merge([
       box(2,.4,.55,-2.5,0,-2.5),box(.14,1.9,.14,-3.5,0,-3.5),box(.14,1.9,.14,-1.5,0,-3.5)
     ]),roof:merge([box(3,.18,2.8,-2.5,1.9,-2.5,.08)])},
-    farm: { timber: merge(farmTimber), roof: merge([box(2.4, 1.2, 2.2, 0, 0, 0)]), extra: merge(farmExtra), extraMat: "crop" },
+    farm: { timber: merge(farmTimber), roof: new THREE.BufferGeometry(), extra: merge(farmExtra), extraMat: "crop" },
     lumber: { timber: merge(lumberT), roof: merge(lumberR) },
     workshop: {timber:merge([box(3.8,.2,1.5,0,1.0,0),box(.3,1,.3,-1.5,0,0),box(.3,1,.3,1.5,0,0),box(.2,2.5,.2,-2,0,-1.5),box(.2,2.5,.2,2,0,-1.5)]),roof:merge([box(5,.15,4,0,2.5,0,.12)])},
     dock: { timber: merge(dockT), roof: merge(dockR) },
@@ -296,6 +299,9 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       roof: merge([cone(2.2, 1.6, 0, 1.4, 0, 7)]),
     },
   };
+  const civilian=civilianBuildingGeos();for(const [role,kit]of Object.entries(civilian)){const old=result[role as keyof typeof civilian];for(const g of[old.timber,old.roof,old.extra])g?.dispose();result[role as keyof typeof civilian]=kit;}
+  for(const[type,kit]of Object.entries(result))if(!['farm','pen','trench','moat'].includes(type))for(const g of[kit.timber,kit.roof,kit.extra])if(g)buildingSurfaceUV(g);
+  return result;
 }
 
 export function unitGeo(type: UnitType): THREE.BufferGeometry {

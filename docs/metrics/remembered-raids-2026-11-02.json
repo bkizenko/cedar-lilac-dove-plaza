@@ -1,0 +1,13 @@
+{
+  "scope": "Controlled connected causal report and raid scenario; not full M2-07 qualification",
+  "paidLogs": 60,
+  "realBuilderWalked": 40.5647854781724,
+  "unknownNewWarehouseIgnored": true,
+  "reportPublishedOnlyAfterActualReturn": true,
+  "unseenChangedDefensesDidNotChangeUtility": true,
+  "legacySavedAttackOrderEndpointResumed": true,
+  "initialPlayerDestructionSpearmen": 6,
+  "actualBuildingDestroyedOutsideRaidSight": true,
+  "offscreenDestructionKeptPartyOutbound": true,
+  "partyLearnedAbsenceOnActualArrival": true
+}

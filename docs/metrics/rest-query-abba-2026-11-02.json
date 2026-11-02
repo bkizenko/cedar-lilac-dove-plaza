@@ -1,0 +1,160 @@
+{
+  "scope": "Single sequential A-B-B-A saved-village predicate trial, intermediate source not final release; no FPS claim",
+  "sourceSaveSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "sourceUnchanged": true,
+  "copyUnchanged": true,
+  "rng": "External diagnostic LCG seed0x51ed270b, exact state/draw counts recorded; not persisted game RNG",
+  "method": {
+    "warmup": 20,
+    "measuredPerRun": 100,
+    "dt": 0.03333333333333333,
+    "savedSpeedPreserved": true,
+    "onlyCommand": "Resume once per loaded branch",
+    "profiler": false,
+    "methodWrappers": false,
+    "node": "v24.22.1",
+    "arch": "arm64"
+  },
+  "runtimeSource": {
+    "A": "a3c085154c342b2a33250a1c7783df5f891515f8b36cae6eb0d8f1169446ee74",
+    "B": "3ddf7913aa92edc2d70fa79854b62721fc1e557982a9e1d8f3c863189503b5bd"
+  },
+  "runs": [
+    {
+      "variant": "A",
+      "run": 1,
+      "decodeMs": 1688.5677920000003,
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "f7ae6072583e9d47b4bb7adcfea5efc7c6863528c6ac51f90a0f551d57bd0c88",
+      "warmRng": {
+        "calls": 2108,
+        "state": 2741545255
+      },
+      "finalHash": "2db9d05559efa1847ad4c3aad47795909dc15161c327485a7f4e223c69e74dde",
+      "finalRng": {
+        "calls": 3001,
+        "state": 3993374022
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 24.70765538999997,
+        "medianMs": 23.163916999999856,
+        "p95Ms": 31.885333000000173,
+        "maxMs": 86.81808300000012
+      },
+      "wallMs": 2471.968792,
+      "processCpuMs": 3657.102,
+      "simulatedTime": 4746.8000000006705,
+      "errors": 0
+    },
+    {
+      "variant": "B",
+      "run": 1,
+      "decodeMs": 1588.6386249999996,
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "f7ae6072583e9d47b4bb7adcfea5efc7c6863528c6ac51f90a0f551d57bd0c88",
+      "warmRng": {
+        "calls": 2108,
+        "state": 2741545255
+      },
+      "finalHash": "2db9d05559efa1847ad4c3aad47795909dc15161c327485a7f4e223c69e74dde",
+      "finalRng": {
+        "calls": 3001,
+        "state": 3993374022
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 22.18504378999989,
+        "medianMs": 20.54700000000048,
+        "p95Ms": 28.255999999999403,
+        "maxMs": 84.16108299999996
+      },
+      "wallMs": 2219.674,
+      "processCpuMs": 3273.578,
+      "simulatedTime": 4746.8000000006705,
+      "errors": 0
+    },
+    {
+      "variant": "B",
+      "run": 2,
+      "decodeMs": 1733.5857909999995,
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "f7ae6072583e9d47b4bb7adcfea5efc7c6863528c6ac51f90a0f551d57bd0c88",
+      "warmRng": {
+        "calls": 2108,
+        "state": 2741545255
+      },
+      "finalHash": "2db9d05559efa1847ad4c3aad47795909dc15161c327485a7f4e223c69e74dde",
+      "finalRng": {
+        "calls": 3001,
+        "state": 3993374022
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 21.90333458000001,
+        "medianMs": 20.285499999999956,
+        "p95Ms": 29.298625000001266,
+        "maxMs": 72.1997080000001
+      },
+      "wallMs": 2191.5576249999995,
+      "processCpuMs": 2329.2,
+      "simulatedTime": 4746.8000000006705,
+      "errors": 0
+    },
+    {
+      "variant": "A",
+      "run": 2,
+      "decodeMs": 1551.6603750000013,
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "f7ae6072583e9d47b4bb7adcfea5efc7c6863528c6ac51f90a0f551d57bd0c88",
+      "warmRng": {
+        "calls": 2108,
+        "state": 2741545255
+      },
+      "finalHash": "2db9d05559efa1847ad4c3aad47795909dc15161c327485a7f4e223c69e74dde",
+      "finalRng": {
+        "calls": 3001,
+        "state": 3993374022
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 22.943748310000082,
+        "medianMs": 21.722042000001238,
+        "p95Ms": 29.06983300000138,
+        "maxMs": 70.34679099999994
+      },
+      "wallMs": 2295.530999999999,
+      "processCpuMs": 2518.374,
+      "simulatedTime": 4746.8000000006705,
+      "errors": 0
+    }
+  ],
+  "qualified": true,
+  "limits": [
+    "One short four-run cohort; no full campaign, renderer, browser frame/FPS or final release performance claim.",
+    "Wall timing observational and process CPU includes background V8 work.",
+    "Private full saved states stay local and are not staged."
+  ],
+  "meanAcrossRuns": {
+    "A": 23.825701850000026,
+    "B": 22.04418918499995,
+    "percentChange": -7.47727255304369
+  },
+  "sourceCohort": "Frozen intermediate candidate, pre-NPC-cooking/stale-hunting-route fixes; not final release"
+}

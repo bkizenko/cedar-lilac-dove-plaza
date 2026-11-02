@@ -1,0 +1,71 @@
+{
+  "scope": "Public controlled initial inputs on unmodified generated legacy terrain; five real Game.step updates perbranch, no midrun repair/grant/position/terrain changes",
+  "initialFixture": "seed123456/worldgen2; declared initial food reserve, working hours, quiet weather and food-gather order; component equivalence, not campaign qualification",
+  "cases": [
+    {
+      "case": "on-shift hungry",
+      "initialTime": 610,
+      "solarHour": 12.062781065449611,
+      "nightWork": false,
+      "foodReserveSeconds": 239.99,
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "d81cfbcd78407989ed6ee7e07076558634900c3b041d3ca80539ada4a4f763ec",
+      "externalRng": {
+        "calls": 750,
+        "state": 689914510
+      }
+    },
+    {
+      "case": "off-shift hungry",
+      "initialTime": 1260,
+      "solarHour": 1.0154230680532912,
+      "nightWork": false,
+      "foodReserveSeconds": 239.99,
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "ad4e9da5c1be8b6dcfb8aa38ae2a45e9eca2fbe7e4d9c985e08fc791d6993c79",
+      "externalRng": {
+        "calls": 756,
+        "state": 469928740
+      }
+    },
+    {
+      "case": "off-shift exact240 boundary",
+      "initialTime": 1260,
+      "solarHour": 1.0154230680532912,
+      "nightWork": false,
+      "foodReserveSeconds": 240,
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "f60f05c89d3c589c83adcd1000950ac7e766793e9d87541ffcf104433ee6c912",
+      "externalRng": {
+        "calls": 756,
+        "state": 469928740
+      }
+    },
+    {
+      "case": "explicit night work",
+      "initialTime": 1260,
+      "solarHour": 1.0154230680532912,
+      "nightWork": true,
+      "foodReserveSeconds": 239.99,
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "96adc0911e9c181aa341942ea97f62da3d47a6ad32f43e2b246aff51ce49e2b1",
+      "externalRng": {
+        "calls": 756,
+        "state": 469928740
+      }
+    }
+  ],
+  "qualified": true
+}

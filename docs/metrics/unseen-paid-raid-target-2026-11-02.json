@@ -1,0 +1,48 @@
+{
+  "scope": "Remaining M2-07 diagnostic: a paid structure built unseen on old mapped ground becomes a remote raid target",
+  "actualObserverEverPresent": false,
+  "paidLogs": 60,
+  "realBuilderWalked": 40.40891203289689,
+  "before": {
+    "target": null,
+    "reason": "No exposed known structure offers a raid target",
+    "counts": {
+      "adults": 12,
+      "readyFighters": 6,
+      "retainedGuards": 1,
+      "availableFighters": 5,
+      "knownPartners": 1,
+      "eligiblePartners": 1,
+      "knownTargets": 0,
+      "reachableTargets": 0
+    }
+  },
+  "after": {
+    "target": 504,
+    "counts": {
+      "adults": 12,
+      "readyFighters": 6,
+      "retainedGuards": 1,
+      "availableFighters": 5,
+      "knownPartners": 1,
+      "eligiblePartners": 1,
+      "knownTargets": 1,
+      "reachableTargets": 1
+    },
+    "utility": 6.049364065642182,
+    "metrics": {
+      "reward": 9.099999999999998,
+      "grievance": 0,
+      "travelCost": 1.1543396380615196,
+      "defenseCost": 1.2962962962962963,
+      "structureCost": 0.6,
+      "nightBonus": 0,
+      "observedDefenders": 6,
+      "power": 3.888,
+      "guards": 1
+    }
+  },
+  "newStoreId": 504,
+  "leak": true,
+  "callPath": "reviewRivalSocietyActivity → assessRivalPairRaid → live finished foreign buildings filtered only by historical rivalKnows"
+}

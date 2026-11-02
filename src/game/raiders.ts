@@ -1,3 +1,4 @@
+import {explicitArmedOrder} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
 import {difficulty} from './difficulty';
@@ -48,6 +49,9 @@ export function finishSeaRaid(g:Game){
  campaign.active=false;
  for(const u of g.state.units){
   if(u.team!==0||u.hp<=0||!u.militia||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.pillage>=0||u.massRaidTarget!==undefined||u.visit||u.trade||u.envoy||u.scout||u.expedition||u.foundingJourney||u.escortId!==undefined||u.huntOnly)continue;
+  // A newer healthy player command remains authoritative after the band ends.
+  // Actual alarm-controlled defenders still return their borrowed equipment.
+  if(!u.emergency&&explicitArmedOrder(g,u))continue;
   if(supplyDrops(g,0).some(b=>Math.hypot(u.x-b.x,u.z-b.z)<60))queueStandDown(g,u,true);
  }
  const hungry=g.tribe(0).food<foodDemand(g)*120;

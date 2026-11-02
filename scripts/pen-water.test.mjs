@@ -50,3 +50,18 @@ test('accepted intact occupation preserves stored or carried herd water and anim
   const copy=decodeGame(structuredClone(encodeGame(g)));assert.equal(validPenWaterState(copy.state),true);assert.equal(copy.state.buildings.find(b=>b.id===pen.id).penWater?.liters??0,pen.penWater?.liters??0);assert.equal(integrateOccupiedVillage(g,control.id).accepted,false);assert.equal(g.tribe(1).survival.waterHerdTransferredInLiters,held);
  }
 });
+
+
+test('public surrender settles loaded keeper and voyage evidence before an immediate paused save',async()=>{
+ const {acceptPrisonerSurrender}=await import('../src/game/captivity.ts'),{validBoatPractice}=await import('../src/game/boatPractice.ts');
+ const f=fixture(),{g,keeper,home}=f,carrier=g.state.units.find(u=>u.team===0&&u.type==='worker'&&u!==keeper);
+ // The opening declares an already observed foreign guard and one finite
+ // three-log parcel with historical personal-canoe evidence. Nothing is granted
+ // after physical keeper collection begins.
+ const guard=g.spawnUnit('spearman',home.x+3,home.z+3,1);guard.order='hold';g.state.contacts=[1];
+ g.tribe(0).wood-=3;carrier.carry=3;carrier.carryType='wood';carrier.waterCargoEvidence={version:1,team:0,kind:'wood',amount:3,waterMeters:25};
+ const load=fetch(f);g.state.paused=true;assert.equal(validBoatPractice(g.state),true);
+ assert.equal(acceptPrisonerSurrender(g,keeper,1).accepted,true);assert.equal(keeper.husbandryWork?.waterLiters??0,0);assert.equal(g.tribe(0).survival.waterHerdLostLiters,load);
+ assert.equal(acceptPrisonerSurrender(g,carrier,1).accepted,true);assert.equal(carrier.waterCargoEvidence,undefined);assert.equal(carrier.carry,3);assert.equal(carrier.carryType,'wood');assert.equal(g.tribe(1).boatPractice?.deliveredGoods??0,0);
+ assert.equal(validPenWaterState(g.state),true);assert.equal(validBoatPractice(g.state),true);assert.doesNotThrow(()=>decodeGame(structuredClone(encodeGame(g))));accounting(g,f.water);
+});

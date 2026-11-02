@@ -33,7 +33,7 @@ test('recall, interruption, death, war and stolen payment release escrow once wi
   if(action==='recall')g.soundRecall();
   if(action==='move')g.issueMove(25,25);
   if(action==='death')u.hp=0;
-  if(action==='war'){g.tribe(1).hostile=true;g.tradeAI(u,.1);}
+  if(action==='war'){g.makeHostile(1);g.tradeAI(u,.1);}
   if(action==='theft'){u.carry=8;g.tradeAI(u,.1);}
   reconcileTradeReservations(g);reconcileTradeReservations(g);
   assert.equal(g.tribe(1).wood,70,action);assert.equal(g.tribe(0).food,220);assert.equal(u.tradeReservation,undefined);

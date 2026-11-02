@@ -97,7 +97,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   const night=g.clockState().period === "Night";
   const fatigue=u.fatigue||0;
   const offShift=!workdayAt(g.state.time,g.dayPhase()*24).working;
-  const urgentFood=adult&&
+  const urgentFood=adult&&offShift&&!g.state.nightWork&&
     ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock))&&reserveSeconds(g,u.team)<240;
   if(fatigue<=.12)u.resting=undefined;
   if(!u.resting&&fatigue>=.85)u.resting=true;

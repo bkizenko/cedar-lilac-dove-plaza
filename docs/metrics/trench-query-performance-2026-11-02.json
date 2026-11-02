@@ -1,0 +1,269 @@
+{
+  "baseline": "d048d1a",
+  "scope": "Independent scoped trench-type view only; rejected bounds/resource broadphase/assignment candidates excluded",
+  "privateInputSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "privateSavePublished": false,
+  "privateSourceUnchanged": true,
+  "qualification": {
+    "order": "A B B A; four sequential fresh processes at nice10",
+    "warmUpdates": 20,
+    "measuredUpdates": 180,
+    "inputQuantumSeconds": 0.03333333333333333,
+    "speed": 4,
+    "initialCounts": {
+      "units": 245,
+      "buildings": 408
+    },
+    "completeInitialEncodedStateSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+    "completeFinalEncodedStateSha256": "a4fb86a74f383bf4786534b7c270afeb2d3ab16f947f7abd7ec0654d652be9ca",
+    "updateRandomCalls": 31825,
+    "allFourFullStatesAndRngEqual": true
+  },
+  "performance": {
+    "baseline": {
+      "meanMs": 31.982337158333316,
+      "pooledP95Ms": 48.97437500000024,
+      "maxMs": 101.02512500000012,
+      "settlementUpdate85MeanMs": 100.50268749999987,
+      "samples": 360,
+      "over100ms": 1
+    },
+    "candidate": {
+      "meanMs": 31.48886528611108,
+      "pooledP95Ms": 46.40599999999995,
+      "maxMs": 69.06554099999994,
+      "settlementUpdate85MeanMs": 61.14808300000004,
+      "samples": 360,
+      "over100ms": 0
+    },
+    "meanReductionPercent": 1.5429512539350432,
+    "settlementUpdate85ReductionPercent": 39.1577633185181
+  },
+  "sourceManifests": {
+    "baseline": "719cf075f73e864ef256f803dcea46e18aca683367874572b44ec3edd6ca6c27",
+    "candidate": "7c0c926a47284c9322544b0092005af77e8cae1eef3ff2f409f3951cf284fbea"
+  },
+  "sourceChecksums": {
+    "src/game/excavation.ts": "14f6d72f68ceb133da116da939f851fc3881c8819f5c7ea6a43de11e34f899e6",
+    "src/game/sim.ts": "9b9faa2000ed6aa7ee0325c0a15ceb0a9c0fb3629baf875b949bdbfa804b08d9",
+    "scripts/trench-construction-query.test.mjs": "7599f4f8f73080aa6fa2024e7e744eb0491c5e2c6bbb5ab69ec8ba6ea1b5445d"
+  },
+  "runs": [
+    {
+      "run": 0,
+      "decodeMs": 1694.952125,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "a4fb86a74f383bf4786534b7c270afeb2d3ab16f947f7abd7ec0654d652be9ca",
+      "randomCallsDuringWorldUpdates": 31825,
+      "randomCallsIncludingDecode": 33682,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 47.3338353,
+        "p50Ms": 31.46679200000017,
+        "p95Ms": 106.20716599999969,
+        "p99Ms": 221.4554169999999,
+        "maxMs": 221.4554169999999,
+        "over16_67ms": 20,
+        "over33_33ms": 8,
+        "over50ms": 3,
+        "over100ms": 2
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 32.19113821666663,
+        "p50Ms": 29.234375,
+        "p95Ms": 49.04016600000068,
+        "p99Ms": 75.48149999999987,
+        "maxMs": 99.98024999999961,
+        "over16_67ms": 180,
+        "over33_33ms": 50,
+        "over50ms": 7,
+        "over100ms": 0
+      },
+      "measuredWindowMs": 5794.669333,
+      "measuredCpuMs": 7251.444,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0,
+      "slot": "A1",
+      "variant": "baseline"
+    },
+    {
+      "run": 0,
+      "decodeMs": 1670.8788749999999,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "a4fb86a74f383bf4786534b7c270afeb2d3ab16f947f7abd7ec0654d652be9ca",
+      "randomCallsDuringWorldUpdates": 31825,
+      "randomCallsIncludingDecode": 33682,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 45.66033530000001,
+        "p50Ms": 31.488916999999674,
+        "p95Ms": 97.0417080000002,
+        "p99Ms": 217.4709580000001,
+        "maxMs": 217.4709580000001,
+        "over16_67ms": 20,
+        "over33_33ms": 8,
+        "over50ms": 3,
+        "over100ms": 1
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 31.55239188333326,
+        "p50Ms": 29.220416999999543,
+        "p95Ms": 46.68316700000014,
+        "p99Ms": 60.73716599999989,
+        "maxMs": 69.06554099999994,
+        "over16_67ms": 180,
+        "over33_33ms": 48,
+        "over50ms": 5,
+        "over100ms": 0
+      },
+      "measuredWindowMs": 5679.696,
+      "measuredCpuMs": 7148.811,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0,
+      "slot": "B1",
+      "variant": "review"
+    },
+    {
+      "run": 0,
+      "decodeMs": 1674.298625,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "a4fb86a74f383bf4786534b7c270afeb2d3ab16f947f7abd7ec0654d652be9ca",
+      "randomCallsDuringWorldUpdates": 31825,
+      "randomCallsIncludingDecode": 33682,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 45.17641035000005,
+        "p50Ms": 30.154041000000234,
+        "p95Ms": 96.9092499999997,
+        "p99Ms": 221.02070800000024,
+        "maxMs": 221.02070800000024,
+        "over16_67ms": 20,
+        "over33_33ms": 8,
+        "over50ms": 3,
+        "over100ms": 1
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 31.425338688888896,
+        "p50Ms": 29.134750000000167,
+        "p95Ms": 46.2079590000003,
+        "p99Ms": 61.5590000000002,
+        "maxMs": 66.14633299999969,
+        "over16_67ms": 180,
+        "over33_33ms": 46,
+        "over50ms": 6,
+        "over100ms": 0
+      },
+      "measuredWindowMs": 5656.831499999999,
+      "measuredCpuMs": 7238.633,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0,
+      "slot": "B2",
+      "variant": "review"
+    },
+    {
+      "run": 0,
+      "decodeMs": 1667.7429579999998,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "a4fb86a74f383bf4786534b7c270afeb2d3ab16f947f7abd7ec0654d652be9ca",
+      "randomCallsDuringWorldUpdates": 31825,
+      "randomCallsIncludingDecode": 33682,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 46.21767489999994,
+        "p50Ms": 31.101624999999785,
+        "p95Ms": 102.16558299999997,
+        "p99Ms": 212.50487499999986,
+        "maxMs": 212.50487499999986,
+        "over16_67ms": 20,
+        "over33_33ms": 9,
+        "over50ms": 4,
+        "over100ms": 2
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 31.7735361,
+        "p50Ms": 28.904125000000022,
+        "p95Ms": 48.80175000000054,
+        "p99Ms": 64.42274999999972,
+        "maxMs": 101.02512500000012,
+        "over16_67ms": 180,
+        "over33_33ms": 48,
+        "over50ms": 6,
+        "over100ms": 1
+      },
+      "measuredWindowMs": 5719.497083,
+      "measuredCpuMs": 7211.775,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0,
+      "slot": "A2",
+      "variant": "baseline"
+    }
+  ],
+  "checks": {
+    "newCases": 5,
+    "existingCases": 29,
+    "totalCases": 34,
+    "passed": 34,
+    "bankOracleComparisons": 17480,
+    "typeReadsFor372ZeroTrenchQueries": 408,
+    "typecheck": true,
+    "productionBuild": true
+  },
+  "logs": {
+    "focused": "/tmp/trench-construction-query-tests.log",
+    "compatibility": "/tmp/trench-query-compat.log",
+    "typecheck": "/tmp/trench-query-typecheck.log",
+    "build": "/tmp/trench-query-build.log",
+    "pairedProgress": "/tmp/trench-query-pairs-progress.log"
+  },
+  "limits": [
+    "Modest mean improvement; targeted periodic CPU-tail reduction, not sustained browser FPS cure",
+    "No rendering, GPU, browser autosave or UI latency measured",
+    "Warm-up excluded; updates over100ms are not guaranteed eliminated",
+    "Current feature HEAD intentionally differs from earlier1a90ade performance-only state; compare only within this d048d1a experiment",
+    "OS scheduling and other-chat load can affect wall timings"
+  ]
+}

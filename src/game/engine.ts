@@ -1,9 +1,10 @@
+import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
 import {rememberGraphicsQuality} from './graphics';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
-import {RuntimeProfile} from './runtimeProfile';
+import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
 import {linearStructure,joinedConstructionLine,placeConstructionLine} from './linearConstruction';
@@ -34,6 +35,7 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 export class Engine {
   readonly profile = new RuntimeProfile();
   game: Game;
+  readonly autosave:AutosaveController;
   private originalGame: Game | null = null;
   startTestSession(){
     if(this.originalGame)return true;
@@ -93,6 +95,8 @@ export class Engine {
     this.game = new Game();
     this.view = new WorldView(canvas);
     this.audio = new GameAudio();
+    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed});
+    this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.game.onSfx = (n) => this.audio.play(n);
     this.view.onContextLost = () => {
@@ -196,6 +200,7 @@ export class Engine {
   }
   exportVillage() {this.protectVillage();exportGame(this.game);}
   async importVillage(file:File) {
+    this.autosave.invalidate();
     if(this.originalGame){this.game.banner("Leave test mode before importing a village",4);return;}
     try {
       const restored=decodeGame(JSON.parse(await file.text()));
@@ -208,6 +213,7 @@ export class Engine {
     this.pushHud();
   }
   private restoreVillage(restored:Game) {
+    this.autosave.invalidate();
     restored.onSfx=(n)=>this.audio.play(n);restored.quality=this.game.quality;restored.muted=this.game.muted;
     this.game=restored;this.simAccumulator=0;this.keyboard.groups.clear();
     this.view.rebuild(restored);this.homeLook();this.audio.unlock();this.canvas.focus();
@@ -229,6 +235,7 @@ export class Engine {
   }
 
   restart(request?:WorldRequest) {
+    this.autosave.invalidate();
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {
@@ -793,13 +800,13 @@ export class Engine {
   private frame = (t: number) => {
     if (this.disposed) return;
     try {
-      this.profile.frame(t);
+      const frameGap=this.profile.frame(t);
       const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
-      this.fpsAcc += dt;
+      this.fpsAcc += frameGap/1000;
       if (this.fpsAcc >= 0.4) {
-        this.fps = this.frames / this.fpsAcc;
+        this.fps = this.profile.frameRate(RUNTIME_PROFILE_RULES.displayRateWindowMilliseconds);
         this.game.fps = Math.round(this.fps);
         this.frames = 0;
         this.fpsAcc = 0;
@@ -846,6 +853,7 @@ export class Engine {
       this.updateGhost();
       this.profile.measure('scene',()=>this.view.sync(this.game, dt));
       this.profile.measure('draw',()=>this.view.render());
+      this.profile.recordRenderer(this.view.latestRenderMetrics);
       this.tuneQuality(dt);
 
       this.hudAcc += dt;
@@ -856,7 +864,7 @@ export class Engine {
       this.saveAcc += dt;
       if (this.saveAcc > 18) {
         this.saveAcc = 0;
-        this.profile.measure('save',()=>saveGame(this.game));
+        this.profile.measure('save',()=>this.autosave.request());
       }
       this.failFrames = 0;
     } catch (err) {
@@ -921,6 +929,7 @@ export class Engine {
 
   dispose() {
     if(this.disposed)return;
+    this.autosave.dispose();
     saveGame(this.game);
     this.disposed = true;
     this.running = false;

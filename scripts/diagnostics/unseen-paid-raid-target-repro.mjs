@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {Game} from '../../src/game/sim.ts';
+import {initializeSurvival} from '../../src/game/survivalNeeds.ts';
+import {scoutKnowledge} from '../../src/game/scouting.ts';
+import {assessRivalPairRaid} from '../../src/game/rivalActivity.ts';
+const g=new Game();g.reset(345,2);g.enterIsland();g.state.time=800;g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.waterBodies=[];g.world.waterHeights=undefined;g.world.ecology=undefined;g.state.units=[];g.state.buildings=[];for(const k of ['trees','stones','forage','copper','iron','fish','wildlife'])g.state[k]=[];
+for(const [team,x,z]of[[0,-200,80],[1,0,0],[2,140,0]]){g.state.buildings.push(g.makeBld('townhall',x,z,team));for(let i=0;i<(team===1?12:team===2?6:1);i++){const u=g.spawnUnit(team===1&&i<6?'spearman':'worker',x+8+i%3,z+8+Math.floor(i/3),team);u.order='hold';}Object.assign(g.tribe(team),{food:1000,foodLots:{provisions:1000},wood:300,stone:100,hostile:false,ally:false,aggro:team===1?1:0,trust:0,tension:0,thinkT:100000});}
+initializeSurvival(g);for(const t of g.state.tribes)t.survival.waterLiters=200;
+g.state.rivalKnowledge=[];scoutKnowledge(g,{team:1,x:140,z:0});scoutKnowledge(g,{team:1,x:110,z:35});g.state.rivalActivityNextReview=g.state.tribes.filter(t=>t.id!==0&&t.id!==3).map(t=>({team:t.id,timeSeconds:100000}));
+g.state.autoWorkEnabled=false;g.state.birthT=100000;g.state.weather='clear';g.state.weatherT=100000;g.state.raidT=100000;g.state.visitorTimer=900;g.state.scoutTimer=900;g.state.conflict='dangerous';g.calamityT=100000;g.seaT=100000;g.rebuildWalk();g.vision.fill(2);
+const before=assessRivalPairRaid(g,1,1000,2),wood=g.tribe(2).wood;assert.equal(before.plan,null);
+assert.equal(g.placeBuilding('warehouse',110,35,2),true,g.state.banner);const store=g.state.buildings.find(b=>b.type==='warehouse'),builder=g.state.units.find(u=>u.team===2);Object.assign(builder,{order:'build',node:store});const paid=wood-g.tribe(2).wood;let witnessed=false,walked=0;
+for(let i=0;i<4000&&!g.finished(store);i++){const x=builder.x,z=builder.z;g.state.paused=false;g.step(.1);walked+=Math.hypot(builder.x-x,builder.z-z);witnessed ||= g.state.units.some(u=>u.team===1&&u.hp>0&&Math.hypot(u.x-store.x,u.z-store.z)<=26);}
+assert.ok(g.finished(store));assert.equal(witnessed,false);assert.deepEqual(g.simulationErrors,[]);const after=assessRivalPairRaid(g,1,1000,2);
+console.log(JSON.stringify({scope:'Remaining M2-07 diagnostic: a paid structure built unseen on old mapped ground becomes a remote raid target',actualObserverEverPresent:witnessed,paidLogs:paid,realBuilderWalked:walked,before:{target:before.plan?.target.id??null,reason:before.reason,counts:before.counts},after:{target:after.plan?.target.id??null,counts:after.counts,utility:after.plan?.utility,metrics:after.plan?.metrics},newStoreId:store.id,leak:after.plan?.target.id===store.id,callPath:'reviewRivalSocietyActivity → assessRivalPairRaid → live finished foreign buildings filtered only by historical rivalKnows'},null,2));

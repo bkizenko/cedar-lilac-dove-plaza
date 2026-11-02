@@ -1,3 +1,4 @@
+import {knownStructures} from './structureKnowledge';
 import type {Game} from './sim';
 import type {ResKind,Building} from './types';
 import {AGE_COST,BUILDINGS} from './constants';
@@ -34,7 +35,7 @@ export function observedCoastalLandings(g:Game,team:number,hall:Building){
  const knows=(x:number,z:number)=>{if(residents.some(u=>Math.hypot(u.x-x,u.z-z)<26)||sites.some(b=>Math.hypot(b.x-x,b.z-z)<55))return true;const cx=Math.floor((x+half)/g.world.size*32),cz=Math.floor((z+half)/g.world.size*32);return cx>=0&&cx<32&&cz>=0&&cz<32&&cells.has(cz*32+cx);};
  const seen=new Set<string>(),out:{x:number;z:number;dockId?:number}[]=[];
  const consider=(x:number,z:number,dockId?:number)=>{const key=`${Math.round(x)},${Math.round(z)}`;if(seen.has(key)||!knows(x,z))return;seen.add(key);const h=g.height(x,z),water=g.waterAt(x,z);if(h<water+.3||dockId===undefined&&h>water+COASTAL_BOOTSTRAP_RULES.maximumBankRiseMetres||!g.walkable(x,z)||!g.workBoard.connected(g,x,z,hall.x,hall.z)||![[-1,0],[1,0],[0,-1],[0,1]].every(([dx,dz])=>g.walkable(x+dx,z+dz)))return;const sea=riverboatWaterPoint(g,x,z,8);if(sea)out.push({x,z,dockId});};
- for(const d of g.state.buildings)if(d.team===hall.team&&d.type==='dock'&&g.finished(d)&&knows(d.x,d.z))for(let r=0;r<=8;r+=2)for(let i=0;i<16;i++)consider(d.x+Math.cos(i*Math.PI/8)*r,d.z+Math.sin(i*Math.PI/8)*r,d.id);
+ for(const fact of knownStructures(g,team,hall.team)){const d=fact.site;if(d.type==='dock')for(let r=0;r<=8;r+=2)for(let i=0;i<16;i++)consider(d.x+Math.cos(i*Math.PI/8)*r,d.z+Math.sin(i*Math.PI/8)*r,d.id);}
  for(let r=8;r<=160;r+=8)for(let i=0;i<32;i++)consider(hall.x+Math.cos(i*Math.PI/16)*r,hall.z+Math.sin(i*Math.PI/16)*r);
  return out.sort((a,b)=>Number(a.dockId===undefined)-Number(b.dockId===undefined)||Math.hypot(a.x-hall.x,a.z-hall.z)-Math.hypot(b.x-hall.x,b.z-hall.z));
 }

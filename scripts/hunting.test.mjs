@@ -22,7 +22,7 @@ function fixture(species = "deer") {
   return { g, u, prey };
 }
 function advance(g, u, dt = 0.1) {
-  g.state.time += dt; g.navBudget = 5; workerHuntAI(g, u, dt);
+  g.state.time += dt; g.navBudget = 5; workerHuntAI(g, u, dt);g.updateProjectiles(dt,true);
 }
 
 test("civilian hits yield no meat until the animal dies and its finite carcass is butchered", () => {
@@ -44,7 +44,7 @@ test("two civilians share one carcass with exact loads and physically deliver al
   const other = g.spawnUnit("worker", 4, 38, 0);
   u.haulage = "sled";
   const workers = [u, other], food = g.tribe(0).food;
-  for (let i = 0; i < 1800 && g.tribe(0).food < food + 32; i++) {
+  for (let i = 0; i < 1800 && (g.tribe(0).items?.rawMeat||0) < 32; i++) {
     g.state.time += 0.1; g.navBudget = 8;
     for (const p of workers) {
       if (p.order === "return") g.workerAI(p, 0.1);
@@ -54,12 +54,12 @@ test("two civilians share one carcass with exact loads and physically deliver al
       }
       assert.ok(p.carry <= carryingCapacity(p, "food"), "neither a basket nor a sled may overload");
     }
-    assert.ok(Math.abs(prey.carcass.meat + workers.reduce((n, p) => n + p.carry, 0) + g.tribe(0).food - food - 32) < 1e-8,
+    assert.ok(Math.abs(prey.carcass.meat + workers.reduce((n, p) => n + p.carry, 0) + (g.tribe(0).items?.rawMeat||0) - 32) < 1e-8,
       "meat stays conserved between carcass, carriers and delivered stores");
   }
-  assert.equal(g.tribe(0).food, food + 32); assert.equal(prey.carcass.meat, 0);
+  assert.equal(g.tribe(0).items.rawMeat,32);assert.equal(g.tribe(0).food,food); assert.equal(prey.carcass.meat, 0);
   for (const p of workers) { p.node = prey; p.order = "gather"; workerHuntAI(g, p, 10); }
-  assert.equal(g.tribe(0).food, food + 32); assert.equal(prey.carcass.meat, 0);
+  assert.equal(g.tribe(0).items.rawMeat,32);assert.equal(g.tribe(0).food,food); assert.equal(prey.carcass.meat, 0);
 });
 
 test("distant or disconnected carcasses cannot be harvested remotely", () => {
@@ -77,16 +77,16 @@ test("a Stone Age civilian physically pursues moving deer and returns a real mea
   const { g, u, prey } = fixture(); prey.x = 14;
   const food = g.tribe(0).food, start = { x: u.x, z: u.z };
   let moved = false;
-  for (let i = 0; i < 1200 && g.tribe(0).food === food; i++) {
+  for (let i = 0; i < 1200 && !(g.tribe(0).items?.rawMeat>0); i++) {
     g.state.time += 0.1; g.navBudget = 5;
     if (u.order === "return") g.workerAI(u, 0.1);
     else workerHuntAI(g, u, 0.1);
-    g.tickWildlife(0.1);
+    const obstacles=g.tickWildlife(0.1);g.updateProjectiles(.1,true,obstacles);
     moved ||= Math.hypot(u.x - start.x, u.z - start.z) > 5;
   }
   assert.ok(moved); assert.equal(prey.hp, 0);
-  assert.ok(g.tribe(0).food > food, "actual pursuit, butchery and delivery must complete");
-  assert.equal(g.tribe(0).food - food + u.carry + prey.carcass.meat, CARCASS_MEAT.deer);
+  assert.ok(g.tribe(0).items?.rawMeat>0, "actual pursuit, butchery and raw delivery must complete");assert.equal(g.tribe(0).food,food,"uncooked catch is not edible food");
+  assert.equal((g.tribe(0).items?.rawMeat||0) + u.carry + prey.carcass.meat, CARCASS_MEAT.deer);
 });
 
 test("hunters cannot discover unseen live prey or create food from legacy dead animals", () => {
@@ -148,7 +148,7 @@ test('equipped civilian hunters accept a Hunt order and deliver meat through the
  assert.equal(g.callToArms(),1);assert.equal(u.type,'archer');assert.equal(u.militia,true);assert.equal(g.tribe(0).bows,0);
  assert.equal(g.snapshot().militiaSelected,1);g.assignJob('hunt');assert.equal(u.node,prey);g.clearSelect();
  const stock=g.tribe(0).food;
- for(let i=0;i<1200&&g.tribe(0).food<=stock;i++)g.step(.1);
- assert.equal(prey.hp,0);assert.ok(g.tribe(0).food>stock,'armed civilian delivers rather than freezing in combat AI');assert.deepEqual(g.simulationErrors,[]);
+ for(let i=0;i<1200&&!(g.tribe(0).items?.rawMeat>0);i++)g.step(.1);
+ assert.equal(prey.hp,0);assert.ok(g.tribe(0).items?.rawMeat>0,'armed civilian delivers raw meat rather than freezing in combat AI');assert.equal(g.state.simulationEvents?.totals['food_received:0:food']||0,0,'no uncooked edible credit');assert.deepEqual(g.simulationErrors,[]);
  u.carry=0;u.carryType=null;u.x=hall.x;u.z=hall.z-8;g.standDown();assert.equal(u.type,'worker');assert.equal(g.tribe(0).bows,1);assert.equal(u.huntOnly,false);assert.equal(u.jobLock,false);
 });

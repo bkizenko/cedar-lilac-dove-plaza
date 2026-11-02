@@ -11,12 +11,12 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "Finite physical livestock water, thirst, automatic demand, workload and intact water/animal handover; prior NPC repair, witnessed physical trade and query-cost improvements retained. Fixed verified credit remains29/98.",
+  "verifiedPublishedCodeBaseline": "This batch adds connected finite hunting qualification and final development/production desktop build checks; prior29 gates retained. Research-earned boats, physical diplomacy, improved building forms, defense orders and background autosave are delivered components without broader campaign credit.",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
-    "Mature village frame-tail smoothness and connected campaign / holdout qualification",
-    "Defense horn/direct-order regressions; current-village frame-tail diagnosis; research-earned boat classes and full long-voyage provisions, cultural trade and known/unknown rankings"
+    "Sustained mature-village frame-tail smoothness, fresh-copy stress reporting and connected campaign/holdout qualification",
+    "Full naval combat/provisions, cultural trade, rankings, autonomous rival cooking/other processing and remaining information consumers"
   ],
   "method": {
     "unit": "one fixed acceptance gate",
@@ -29,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 29,
+    "verifiedGates": 31,
     "totalGates": 98,
-    "verifiedGatePercent": 29.59
+    "verifiedGatePercent": 31.63
   },
   "milestones": {
     "M0": {
@@ -40,9 +40,9 @@
       "verifiedGatePercent": 66.67
     },
     "M1": {
-      "verifiedGates": 14,
+      "verifiedGates": 15,
       "totalGates": 22,
-      "verifiedGatePercent": 63.64
+      "verifiedGatePercent": 68.18
     },
     "M2": {
       "verifiedGates": 1,
@@ -57,12 +57,12 @@
     "M4": {
       "verifiedGates": 2,
       "totalGates": 20,
-      "verifiedGatePercent": 10.0
+      "verifiedGatePercent": 10
     },
     "M5": {
-      "verifiedGates": 1,
+      "verifiedGates": 2,
       "totalGates": 10,
-      "verifiedGatePercent": 10.0
+      "verifiedGatePercent": 20
     }
   },
   "evidenceSources": {
@@ -157,7 +157,7 @@
     "bankFishing20261102": {
       "path": "docs/INTEGRATED_BANK_FISHING_2026-11-02.md",
       "kind": "executed connected ordinary Game.step scenario with exact accounting",
-      "scope": "Frozen c66304c; two actual V16 bank catch\u2192carry\u2192save\u2192recall\u2192physical home-delivery scenarios. Not hardship campaign balance."
+      "scope": "Frozen c66304c; two actual V16 bank catch→carry→save→recall→physical home-delivery scenarios. Not hardship campaign balance."
     },
     "survivalMaintenance20261102": {
       "path": "docs/TOOLS_CAMERA_SURVIVAL_2026-11-02.md",
@@ -168,6 +168,11 @@
       "path": "docs/M1_13_INTEGRATED_CONTOUR_FOOD_2026-11-02.md",
       "kind": "executed connected ordinary Game.step scenario and desktop rendered inspection",
       "scope": "Two actual crop cycles, finite seed-funded contour expansion/harvest/processing/storage/fallow with exact ledgers; separate natural V16 contour-field browser proof in screenshots/natural-contour-field-camera-fixed.png."
+    },
+    "expandedPlayableNov2": {
+      "path": "docs/EXPANDED_PLAYABLE_BATCH_2026-11-02.md",
+      "kind": "Executed integrated regressions, connected native hunting, type/build and actual development/production desktop review",
+      "scope": "M1-10 and M5-03 only;270 distinct checks, one optional private-fixture scenario skipped. Full M2 and sustained-frame performance remain pending."
     }
   },
   "gates": [
@@ -489,10 +494,12 @@
         "11-20",
         "31-40"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "expandedPlayableNov2"
+      ],
+      "remainingNotes": "Connected finite native camp hunts/cooks28 food (36.8% concurrent consumption), pays for hide cleaning/drying and conserves raw cargo across pause/save. Brief actual FOW tracking is complemented by actual injury and geometry/expiry checks. No finite ammunition or full campaign claim."
     },
     {
       "id": "M1-11",
@@ -1417,10 +1424,12 @@
       "catalogueRanges": [
         "01-120"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Earlier c25f405 build/desktop smoke passed, but current unpublished candidate has no final production qualification yet."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "expandedPlayableNov2"
+      ],
+      "remainingNotes": "Current integrated source typecheck and production build pass; actual development Auto work and compact/expanded pause controls, actual production gallery/tooltips/save worker and final reload are clean. This gate does not imply campaign or frame-rate acceptance."
     },
     {
       "id": "M5-04",

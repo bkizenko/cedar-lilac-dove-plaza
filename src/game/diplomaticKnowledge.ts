@@ -1,0 +1,60 @@
+import type {Game} from './sim';
+import type {GameState,Unit,PeaceTerm} from './types';
+import {isDependent} from './settlement';
+export const DIPLOMATIC_KNOWLEDGE_RULES={version:1,contactMeters:12,homeMeters:35,reviewSeconds:2,staleSeconds:180,maximumMessages:128,maximumReports:32,offerSeconds:180} as const;
+export const COMPACT_RULES={version:1,food:20,trustMinimum:.35,seconds:480,trustGain:.06,tensionRecovery:.15} as const;
+export type DiplomaticAccount={version:1;team:number;observedAt:number;hostile:boolean;ally:boolean;trust?:number;tension?:number;compactUntil:number};
+export type DiplomaticReport=DiplomaticAccount&{receivedAt:number;sourceId:number;via:'contact'|'visit'|'message'|'attack'|'agreement'};
+export type DiplomaticMessage={version:1;id:number;team:number;kind:'frontier'|'peaceOffer';subject?:'claim'|'resources'|'border';term?:PeaceTerm;createdAt:number;account:DiplomaticAccount;phase:'queued'|'carried'|'delivered'|'lost';carrierId?:number;sourceId?:number;missionId?:number;deliveredAt?:number};
+const live=(u:Unit)=>u.hp>0&&(!u.prisoner||u.prisoner.phase==='released');
+const distance=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z-b.z);
+export function diplomaticAccount(g:Game,team:number):DiplomaticAccount{const t=g.tribe(team);return {version:1,team,observedAt:g.state.time,hostile:!!t.hostile,ally:!!t.ally,trust:t.trust||0,tension:t.tension||0,compactUntil:t.compactUntil||0};}
+export function publishDiplomaticReport(g:Game,account:DiplomaticAccount,sourceId:number,via:DiplomaticReport['via']){
+ const old=g.state.diplomaticReports?.find(r=>r.team===account.team);if(old&&old.observedAt>account.observedAt)return false;
+ const report:DiplomaticReport={...account,receivedAt:g.state.time,sourceId,via};g.state.diplomaticReports=(g.state.diplomaticReports||[]).filter(r=>r.team!==account.team);g.state.diplomaticReports.push(report);return true;
+}
+/** Presentation reads dated evidence, never the current private mood. A treaty
+ * the player actually signed remains their own legal knowledge. */
+export function knownDiplomaticRelation(g:Game,team:number){const r=g.state.diplomaticReports?.find(r=>r.team===team),t=g.tribe(team),legal=!!t?.peaceTerm||!r&&((t?.compactUntil||0)>0||!!t?.ally);return {known:!!r||legal,stale:!!r&&g.state.time-r.observedAt>DIPLOMATIC_KNOWLEDGE_RULES.staleSeconds,report:r,hostile:r?.hostile??(legal?false:undefined),ally:r?.ally??(legal?!!t?.ally:undefined),trust:r?.trust,tension:r?.tension,compactUntil:r?.compactUntil??(legal?t?.compactUntil||0:0)};}
+/** The visitor is physically at a real foreign meeting place; that local
+ * discussion can reveal a dated policy account immediately in player RTS. */
+export function recordDiplomaticVisit(g:Game,visitor:Unit,team:number){if(visitor.team!==0||!live(visitor)||!g.state.units.includes(visitor))return false;const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&g.finished(b)&&distance(visitor,b)<=26&&g.buildingWorkReached(visitor,b));if(!hall||!g.state.units.some(p=>p.team===team&&live(p)&&distance(p,visitor)<=DIPLOMATIC_KNOWLEDGE_RULES.contactMeters+Math.max(hall.w,hall.d)*.5))return false;return publishDiplomaticReport(g,diplomaticAccount(g,team),visitor.id,'visit');}
+/** A player signatory knows its own declaration/agreement without inventing
+ * knowledge of the partner's private trust or grievance. */
+export function recordDiplomaticLegal(g:Game,team:number,hostile:boolean){const source=g.state.units.find(u=>u.team===0&&u.hp>0)||g.state.buildings.find(b=>b.team===0&&g.finished(b));if(!source)return false;const t=g.tribe(team),prior=g.state.diplomaticReports?.find(r=>r.team===team);if(prior&&prior.observedAt===g.state.time&&prior.hostile===hostile&&prior.ally===!!t.ally&&prior.compactUntil===(t.compactUntil||0))return true;return publishDiplomaticReport(g,{version:1,team,observedAt:g.state.time,hostile,ally:!!t.ally,compactUntil:t.compactUntil||0},source.id,'agreement');}
+export function recordDiplomaticAttack(g:Game,attacker:Unit|{id:number;team:number},victim:Unit|{id:number;team:number}){const foreign=attacker.team===0?victim:attacker;if(attacker.team!==0&&victim.team!==0||foreign.team===3)return;publishDiplomaticReport(g,{version:1,team:foreign.team,observedAt:g.state.time,hostile:true,ally:false,compactUntil:0},attacker.team===0?attacker.id:victim.id,'attack');}
+export function queueDiplomaticMessage(g:Game,team:number,kind:DiplomaticMessage['kind'],term?:PeaceTerm,sourceId?:number,subject:'claim'|'resources'|'border'='claim'){
+ if(team<=0||team===3||!g.tribe(team)||kind==='peaceOffer'&&!['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(term||''))return undefined;
+ const prior=g.state.diplomaticMessages?.find(m=>m.team===team&&m.kind===kind&&(m.phase==='queued'||m.phase==='carried'));if(prior)return prior;
+ const list=g.state.diplomaticMessages??=[];if(list.length>=DIPLOMATIC_KNOWLEDGE_RULES.maximumMessages){const i=list.findIndex(m=>m.phase==='lost'||m.phase==='delivered');if(i<0)return undefined;list.splice(i,1);}
+ const source=sourceId===undefined?undefined:g.state.units.find(u=>u.id===sourceId&&u.team===team&&live(u));
+ const m:DiplomaticMessage={version:1,id:g.id(),team,kind,subject:kind==='frontier'?subject:undefined,term:kind==='peaceOffer'?term:undefined,createdAt:g.state.time,account:diplomaticAccount(g,team),phase:source?'carried':'queued',sourceId:source?.id,carrierId:source?.id};list.push(m);return m;
+}
+export function deliverDiplomaticMessage(g:Game,id:number,speaker:Unit,receiver:Unit){const m=g.state.diplomaticMessages?.find(m=>m.id===id);if(!g.state.units.includes(speaker)||!g.state.units.includes(receiver)||!m||m.phase==='delivered'||m.phase==='lost'||m.carrierId!==speaker.id||speaker.team!==m.team||receiver.team!==0||!live(speaker)||!live(receiver)||distance(speaker,receiver)>DIPLOMATIC_KNOWLEDGE_RULES.contactMeters)return false;
+ m.phase='delivered';m.deliveredAt=g.state.time;publishDiplomaticReport(g,m.account,speaker.id,'message');
+ const t=g.tribe(m.team);if(m.kind==='frontier')g.banner(`${t.name}'s messenger ${m.subject==='resources'?'asks your gatherers to stop taking their resources':m.subject==='border'?'reports rising border tensions':'disputes your frontier claim'}. Their account is dated.`,7);
+ else if(m.term){t.peaceOffer={from:t.id,term:m.term,expires:g.state.time+DIPLOMATIC_KNOWLEDGE_RULES.offerSeconds};g.banner(`${t.name}'s messenger brings a peace offer. Review it in Neighbor relations.`,7);}
+ return true;
+}
+export function diplomaticSpeakerPresent(g:Game,team:number){return (g.state.diplomaticMessages||[]).some(m=>m.team===team&&m.kind==='peaceOffer'&&m.phase==='delivered'&&g.state.units.some(u=>u.id===m.carrierId&&live(u)&&u.team===team&&g.state.units.some(p=>p.team===0&&live(p)&&distance(p,u)<=DIPLOMATIC_KNOWLEDGE_RULES.contactMeters)));}
+const reviews=new WeakMap<Game,{state:GameState;time:number}>();
+export function tickDiplomaticKnowledge(g:Game){const prior=reviews.get(g);if(prior&&prior.state===g.state&&g.state.time>=prior.time&&g.state.time-prior.time<DIPLOMATIC_KNOWLEDGE_RULES.reviewSeconds)return;reviews.set(g,{state:g.state,time:g.state.time});
+ const players=g.state.units.filter(u=>u.team===0&&live(u));
+ const buckets=new Map<string,Unit[]>(),cell=DIPLOMATIC_KNOWLEDGE_RULES.contactMeters;
+ for(const player of players){const key=`${Math.floor(player.x/cell)}:${Math.floor(player.z/cell)}`,list=buckets.get(key)||[];list.push(player);buckets.set(key,list);}
+ const receiverNear=(u:Unit)=>{const x=Math.floor(u.x/cell),z=Math.floor(u.z/cell);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)for(const p of buckets.get(`${x+dx}:${z+dz}`)||[])if(distance(p,u)<=cell)return p;return undefined;};
+ const localSpeakers=new Map<number,Unit>();
+ const homes=new Map(g.state.tribes.filter(t=>t.id>0&&t.id!==3).map(t=>[t.id,g.campOf(t.id)]));
+ for(const u of g.state.units){if(u.team<=0||u.team===3||!live(u)||u.boat||isDependent(g,u))continue;
+  const home=homes.get(u.team);if(home&&distance(u,home)<=DIPLOMATIC_KNOWLEDGE_RULES.homeMeters)u.diplomaticAccount=diplomaticAccount(g,u.team);
+  const receiver=receiverNear(u);if(receiver&&home&&distance(u,home)<=DIPLOMATIC_KNOWLEDGE_RULES.homeMeters)localSpeakers.set(u.team,u);if(receiver&&u.diplomaticAccount)publishDiplomaticReport(g,u.diplomaticAccount,u.id,'contact');
+ }
+ for(const m of g.state.diplomaticMessages||[]){if(m.phase==='delivered'||m.phase==='lost')continue;if(m.carrierId===undefined){const speaker=localSpeakers.get(m.team);if(!speaker)continue;m.carrierId=speaker.id;m.sourceId=speaker.id;m.phase='carried';}const carrier=g.state.units.find(u=>u.id===m.carrierId);if(!carrier||carrier.hp<=0){m.phase='lost';continue;}if(carrier.prisoner&&carrier.prisoner.phase!=='released')continue;if(carrier.team!==m.team){m.phase='lost';continue;}if(m.missionId!==undefined){const mission=g.state.rivalMissions?.find(p=>p.id===m.missionId);if(mission&&mission.phase!=='completed'&&mission.phase!=='lost')continue;m.missionId=undefined;}const receiver=receiverNear(carrier);if(receiver)deliverDiplomaticMessage(g,m.id,carrier,receiver);}
+}
+export function validDiplomaticKnowledge(s:GameState){const team=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0&&n!==3&&Number(n)<s.tribes.length,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0&&Number(n)<s.nextId,finite=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,keys=(o:object,k:string[])=>Object.keys(o).every(x=>k.includes(x));
+ const account=(a:DiplomaticAccount)=>!!a&&keys(a,['version','team','observedAt','hostile','ally','trust','tension','compactUntil'])&&a.version===1&&team(a.team)&&finite(a.observedAt,s.time)&&typeof a.hostile==='boolean'&&typeof a.ally==='boolean'&&(a.trust===undefined||finite(a.trust,1))&&(a.tension===undefined||finite(a.tension,1))&&finite(a.compactUntil);
+ for(const u of s.units){if(!u||typeof u!=='object')return false;if(u.diplomaticAccount!==undefined&&(!account(u.diplomaticAccount)))return false;}
+ if(s.diplomaticReports!==undefined){if(!Array.isArray(s.diplomaticReports)||s.diplomaticReports.length>DIPLOMATIC_KNOWLEDGE_RULES.maximumReports)return false;const seen=new Set();for(const r of s.diplomaticReports){if(!r||typeof r!=='object'||Array.isArray(r))return false;const {receivedAt,sourceId,via,...a}=r;if(!account(a)||!finite(receivedAt,s.time)||receivedAt<a.observedAt||!id(sourceId)||!['contact','visit','message','attack','agreement'].includes(via)||seen.has(a.team))return false;seen.add(a.team);}}
+ if(s.diplomaticMessages!==undefined){if(!Array.isArray(s.diplomaticMessages)||s.diplomaticMessages.length>DIPLOMATIC_KNOWLEDGE_RULES.maximumMessages)return false;const seen=new Set(),carriers=new Map<number,number>();for(const m of s.diplomaticMessages){if(!m||!keys(m,['version','id','team','kind','subject','term','createdAt','account','phase','carrierId','sourceId','missionId','deliveredAt'])||m.version!==1||!id(m.id)||seen.has(m.id)||!team(m.team)||!['frontier','peaceOffer'].includes(m.kind)||!finite(m.createdAt,s.time)||!account(m.account)||m.account.team!==m.team||m.account.observedAt!==m.createdAt||!['queued','carried','delivered','lost'].includes(m.phase)||m.carrierId!==undefined&&!id(m.carrierId)||m.sourceId!==undefined&&!id(m.sourceId)||m.missionId!==undefined&&!id(m.missionId)||m.deliveredAt!==undefined&&(!finite(m.deliveredAt,s.time)||m.deliveredAt<m.createdAt)||m.phase==='delivered'&&m.deliveredAt===undefined||m.phase==='carried'&&m.carrierId===undefined||m.kind==='frontier'&&m.term!==undefined||m.subject!==undefined&&(!['claim','resources','border'].includes(m.subject)||m.kind!=='frontier')||m.kind==='peaceOffer'&&!['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(m.term||''))return false;seen.add(m.id);if(m.phase==='carried'){const count=(carriers.get(m.carrierId!)||0)+1;if(count>4)return false;carriers.set(m.carrierId!,count);}}}
+ return true;
+}

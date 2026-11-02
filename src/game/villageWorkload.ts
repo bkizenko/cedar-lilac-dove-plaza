@@ -1,4 +1,5 @@
 import{penWaterReport,PEN_WATER_RULES}from'./penWater';
+import{BOAT_CLASSES}from'./boatClasses';
 import{PRACTICAL_HELPER_RULES}from'./practicalHelpers';
 import{CROP_TRIAL_RULES}from'./cultivation';
 import{FIBRE_RULES}from'./fibre';
@@ -125,7 +126,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   const row:WorkloadTask={id,label,category:'Crafting',personSeconds:Math.max(0,job.duration-job.progress)/effort+(u&&b?travel(u,b.x,b.z):0),status:job.paused?'paused':!b?'blocked':u&&!outsideRole(g,u)&&!claimed.has(u.id)?'active':'queued',actorIds:u?[u.id]:[],priority:450,blocker:job.paused?blocker||'Paid project paused':!b?'Compatible workplace missing':blocker||null};add(row);
  };
  const projects=(g.state as WorkState).haulageProjects??[],projectIds=new Set<number>();
- for(const p of projects)if(p.team===team){projectIds.add(p.id);craft(`haulage:${p.id}`,p.work.vessel?'Build riverboat':`Make ${p.work.kind}`,eligible.find(u=>u.id===p.actorId),p.work,p.blockedReason);}
+ for(const p of projects)if(p.team===team){projectIds.add(p.id);craft(`haulage:${p.id}`,p.work.hullOrder?`${p.work.hullOrder.mode==='service'?'Service':'Build'} ${BOAT_CLASSES[p.work.hullOrder.class].name}`:p.work.vessel?'Build riverboat':`Make ${p.work.kind}`,eligible.find(u=>u.id===p.actorId),p.work,p.blockedReason);}
  for(const u of adults){
   if(u.weaponWork)craft(`weapon:${u.id}`,`Make ${u.weaponWork.kind}`,u,u.weaponWork);
   if(u.haulageWork&&!projectIds.has(u.haulageWork.projectId??-1))craft(`haulage:legacy:${u.id}`,`Make ${u.haulageWork.kind}`,u,u.haulageWork);
