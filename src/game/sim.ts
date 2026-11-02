@@ -1,3 +1,4 @@
+import {WildlifeObstacles,moveGroundWildlife,wildlifeBodyRadius} from './wildlifeMovement';
 import{tickTradeIntel}from'./tradeIntel';
 import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
 import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
@@ -17,7 +18,7 @@ import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampR
 import {terrainWalkBase} from './terrainWalkCache';
 import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {assignMarkedTrees} from './treeDesignation';
-import {fieldTopographyIssue} from './plotTopography';
+import {plotSurveyPoints,fieldTopographyIssue} from './plotTopography';
 import {captureTarget,captureIntentAI,secureVillage,occupationActorAI,tickOccupation,occupationStatus,integrateOccupiedVillage,withdrawOccupation,releaseConflictAssignment,missionMayTargetBuilding,missionMayTargetCivilian} from './conflictIntent';
 import {prisonerAI,prisonerIndependentNeeds,acceptPrisonerSurrender,provisionPrisoner,releasePrisoner,assignPrisonerGuard,recordPrisonerDeath} from './captivity';
 import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
@@ -39,7 +40,7 @@ import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
-import {plotArea,validPlot,type PlotSize} from './plots';
+import {plotArea,scalablePlot,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
@@ -82,6 +83,7 @@ import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
+import {seaRaiderReturnAI} from "./seaRaiderReturn";
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
@@ -175,6 +177,7 @@ export class Game {
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
   selectedResource: ResourceNode | null = null;
+  selectedCritter: Critter | null = null;
   selectedBoat: number | null = null;
   private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;canoe:boolean;spot:{x:number;z:number}|null}>();
   chopMarks = new Set<number>();
@@ -1096,9 +1099,8 @@ export class Game {
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
-    if(size){
-      const corners=[[-1,-1],[-1,1],[1,-1],[1,1]];
-      if(_team===0&&corners.some(([a,b])=>!this.exploredAt(x+a*d.w/2,z+b*d.d/2)))return "Explore the whole plot first";
+    if(size||scalablePlot(type)){
+      if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+1&&Math.abs(n.z-z)<d.d/2+1))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+1&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+1))return "Too close to another building";
     }
@@ -1378,8 +1380,8 @@ export class Game {
     }
     const crossing=type==="bridge"?(span??planBridge(this,x,z)):undefined;
     const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
-    const planned=team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
-    if(!planned&&!this.canAfford(team,cost))return false;
+    const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
+    if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(`Need ${Math.max(0,(cost.seeds||0)-(tribe.seeds||0))} more seeds to mark this field`,4);return false;}
     if (type === "quarry" && this.height(x,z)<10) {
       const snap = this.snapQuarry(x, z);
       if (snap) {
@@ -1403,9 +1405,9 @@ export class Game {
     configureTowerPlatform(this,b);
     configureExcavation(this,b);
     if(size){b.w=size.w;b.d=size.d;}
-    if(type==="farm")b.cropType=tribe.cultivated?.[0]||"grain";
+    if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
     if(planned)b.plannedCost=cost;
-    if (planned || BUILD_TIME[type] > 0 || (type === "townhall" && !founding)) {
+    if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || (type === "townhall" && !founding))) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
@@ -1422,6 +1424,7 @@ export class Game {
       this.onSfx("place");
       if (b.build < 1 && !planned) this.assignBuilders(b);
       if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
+      else if(type==="farm")this.banner("Field marked — assign farmers to sow in spring",4);
     }
     return true;
   }
@@ -1527,6 +1530,7 @@ export class Game {
   clearSelect() {
     this.selectedBoat = null;
     this.selectedResource = null;
+    this.selectedCritter = null;
     for (const u of this.state.units) u.selected = false;
     for (const b of this.state.buildings) b.selected = false;
     this.state.selBld = null;
@@ -1542,7 +1546,7 @@ export class Game {
     this.workBoard.reset();
     for(const u of this.state.units){
       if(u.team!==0||u.hp<=0||u.type!=='worker'||u.militia||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.jobLock||hasTaskCommitment(u)||u.emergency||u.expedition||u.envoy||u.visit||u.scout||u.foundingJourney||u.recalled||u.buildOrder||u.escortId!==undefined||u.drill!=null)continue;
-      if(enabled&&['hold','idle'].includes(u.order)){u.order='idle';u.workCheckAt=0;this.workBoard.assign(this,u);}
+      if(enabled&&['hold','idle'].includes(u.order)){u.resting=undefined;u.order='idle';u.workCheckAt=0;this.workBoard.assign(this,u);}
       else if(!enabled&&['idle','gather'].includes(u.order)){releaseTreeWorker(this,u);u.node=null;u.job=null;u.order=u.carry>0?'return':'hold';u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — waiting for your order';}
     }
     this.workBoard.reset();this.banner(enabled?'Auto work enabled — available residents follow village priorities':'Manual work — give orders to selected residents; existing commitments continue',5);
@@ -1585,6 +1589,12 @@ export class Game {
       gz = Math.floor(((z + (this.world.size/2)) / this.world.size) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] >= 1;
   }
+
+  selectCritter(animal:Critter,additive=false){
+    if(!this.state.wildlife.includes(animal)||!huntable(this,animal,0)||(animal.hp>0?!this.visibleAt(animal.x,animal.z):!this.exploredAt(animal.x,animal.z)))return;
+    if(!additive)this.clearSelect();this.selectedCritter=animal;
+  }
+
 
   selectEntity(entity: Unit | Building, additive = false, toggle = false) {
     if (entity.hp <= 0 || (entity.team !== 0 && !this.visibleAt(entity.x, entity.z))) return;
@@ -1706,7 +1716,7 @@ export class Game {
     if(u.clayWork)u.clayWork.paused=true;
     u.exploreAfterDelivery=undefined;
     interruptCampRelocation(this,u);
-    u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;
+    u.contactDemand=undefined;u.contactAttackTargetId=undefined;u.contactSurrender=undefined;u.stationOnArrival=undefined;
     cancelSocietyMission(this,u);
     releaseConflictAssignment(this,u);
     releaseTreeWorker(this,u);
@@ -2385,6 +2395,7 @@ export class Game {
   }
 
   tickWildlife(dt: number) {
+    const obstacles=new WildlifeObstacles(this.state.buildings.filter(b=>this.solidBuilding(b)));
     for (const c of this.state.wildlife) {
       if (c.hp <= 0) {
         if(updateCarcass(this,c))continue;
@@ -2401,7 +2412,7 @@ export class Game {
             const a = Math.random() * Math.PI * 2, d = 8 + Math.random() * 14;
             const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
             const y = this.height(x, z);
-            if (y <= this.waterAt(x,z) + 0.35 ||
+            if (!obstacles.clearAt({x,z},wildlifeBodyRadius(c)) || y <= this.waterAt(x,z) + 0.35 ||
                 (!this.world.options&&Math.hypot(x, z) >= (this.world.islandR || 140) - 6) || this.visibleAt(x, z)) continue;
             c.hp = c.maxHp;
             c.carcass=undefined;
@@ -2459,18 +2470,7 @@ export class Game {
       const fleeSpeed = wildlifeFleeSpeed(c);
       const velocity = Math.hypot(c.vx,c.vz);
       if (velocity > fleeSpeed) {c.vx *= fleeSpeed/velocity;c.vz *= fleeSpeed/velocity;}
-      const nx = c.x + c.vx * dt;
-      const nz = c.z + c.vz * dt;
-      const h = this.height(nx, nz);
-      if (h > this.waterAt(nx,nz) + 0.2 && this.withinWorld(nx,nz,4) && (this.world.options||Math.hypot(nx, nz) < (this.world.islandR || 140) - 6)) {
-        c.x = nx;
-        c.z = nz;
-        c.y = h;
-      } else {
-        c.vx *= -0.4;
-        c.vz *= -0.4;
-        c.wanderT = 0.4;
-      }
+      moveGroundWildlife(this,c,dt,obstacles);
       if (Math.hypot(c.vx, c.vz) > 0.15) c.facing = Math.atan2(c.vx, c.vz);
     }
   }
@@ -2618,6 +2618,7 @@ export class Game {
     units = units.filter(u=>acceptWorkerCommand(this,u,`assign:${job}`));
     if (!units.length) return;
     if(job === "rest" || job === "auto") {
+      if(job==="auto"&&this.state.autoWorkEnabled===false)this.setAutoWork(true);
       this.workBoard.reset();
       for(const u of units){
         this.interruptMission(u);
@@ -2722,9 +2723,10 @@ export class Game {
     return best;
   }
 
-  issueGather(node: ResourceNode | Building) {
-    if (!this.exploredAt(node.x, node.z)) return;
-    let workers = this.selectedUnits().filter((u) => u.type === "worker");
+  issueGather(node: ResourceNode | Building | Critter) {
+    const animal="species" in node;
+    if (animal ? !huntable(this,node,0)||(node.hp>0?!this.visibleAt(node.x,node.z):!this.exploredAt(node.x,node.z)) : !this.exploredAt(node.x,node.z)) {this.banner(animal?"Choose an actual visible animal or an explored usable carcass":"Explore this resource first",3);return;}
+    let workers = this.selectedUnits().filter((u) => u.type === "worker"||(animal&&u.militia));
     if (!workers.length) workers = this.idleWorkers().slice(0, 4);
     if (!workers.length) {
       this.banner("Need gatherers — tap Gatherer, then click the tree, bush, or stone", 2);
@@ -2744,17 +2746,17 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const capacity="type" in node&&node.type==="farm"?Math.min(12,Math.ceil(3*plotArea(node))):2;
+    const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?Math.min(12,Math.ceil(3*plotArea(node))):2;
     let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
     this.workBoard.reset();
     for (const u of workers) {
       this.interruptMission(u);
-      u.selected = true; u.job = job; u.jobLock = true; u.huntOnly = false;
+      u.selected = true; u.job = job; u.jobLock = true; u.huntOnly = animal;
       u.target = null; u.trade = null; u.node = null; u.order = "idle"; u.workCheckAt = 0;
       if (u.emergency) u.emergency.resume = undefined;
     }
     for (const u of workers) {
-      if (slots > 0 && !(node.kind==='tree'&&!reserveTreeWorker(this,node as ResourceNode,u))) {
+      if (slots > 0 && !('kind' in node&&node.kind==='tree'&&!reserveTreeWorker(this,node as ResourceNode,u))) {
         slots--; u.node = node; u.order = "gather"; u.tx = node.x; u.tz = node.z;
       }
     }
@@ -5578,6 +5580,7 @@ export class Game {
           u.vz = 0;
           try {
             if(prisonerAI(this,u,sdt))continue;
+            if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
             if(coastalTradeAI(this,u,sdt))continue;
@@ -5866,6 +5869,7 @@ export class Game {
     }
 
     if(!units.length&&!this.state.selBld&&this.selectedResource){const n=this.selectedResource;selection={name:n.cropCandidate?CROP_NAMES[n.cropCandidate]:n.kind==="tree"?"Tree":n.kind,info:`Selected · ${Math.ceil(n.amount)} remaining${n.cropCandidate?" · gather to bring samples home":""}`,hp:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource"};}
+    if(this.selectedCritter&&!units.length&&!this.state.selBld){const c=this.selectedCritter;if(!this.state.wildlife.includes(c)||!huntable(this,c,0)||(c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))this.selectedCritter=null;else selection={name:c.hp>0?`Wild ${c.species}`:`${c.species} carcass`,type:c.species,info:c.hp>0?"Living wild animal · select hunters, then right-click to hunt":"Finite carcass · butcher and carry raw meat, hides and bones home before cooking or preserving",hp:c.hp>0?c.hp:c.carcass?.meat||0,maxHp:c.hp>0?c.maxHp:32,kind:"resource"};}
     if(this.selectedBoat !== null) {
       const b=this.state.boats?.find(b=>b.id===this.selectedBoat&&b.team===0&&b.hp>0);
       if(b) {

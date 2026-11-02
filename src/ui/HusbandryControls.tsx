@@ -1,3 +1,4 @@
+import {searchForWildGoats} from '../game/animalOrders';
 import {penPastureReport} from '../game/penPasture';
 import type {Engine} from '../game/engine';
 import {assignHusbandry,beginHerdTaming,HERD,penAnimals} from '../game/husbandry';
@@ -20,6 +21,7 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
   {report&&capacity<report.housingCapacity&&<p>Wet or steep ground limits new animals. Existing animals stay in your herd.</p>}
   <p>{report?.keepers?`${report.keepers}/${report.keepersNeeded} keepers assigned`:'No keeper assigned'}{calendar(g).phase===3?' · Winter needs stored plant food':''}</p>
   <div className="boat-actions">
+   <button type="button" onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>Search woodland for goats<span>Real scout with journey food; capture needs a visible goat</span></button>
    <button type="button" disabled={!paused&&animals.length+taming>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen))}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':'6 food · find wild goats first'}</span></button>
    <button type="button" disabled={(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run(()=>assignHusbandry(g,pen))}>{keeper?'Assign another keeper':'Assign keeper'}</button>
    <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=HERD.maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'pack'))}>Fit pack harness<span>2 logs · uses one adult goat</span></button>

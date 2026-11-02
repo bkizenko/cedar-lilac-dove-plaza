@@ -10,6 +10,10 @@ export function plotArea(b:Pick<Building,'type'|'w'|'d'>){
  const base=BUILDINGS[b.type];
  return scalablePlot(b.type)?Math.max(1,Math.round(b.w*b.d/(base.w*base.d)*1e6)/1e6):1;
 }
+export const PLOT_DRAG_RULES={minimumPointerPixels:8,minimumWorldMeters:2} as const;
+export function plotDragIntent(start:{x:number;y:number}|null,pointer:{x:number;y:number},a:{x:number;z:number},b:{x:number;z:number}){
+ return !!start&&Math.hypot(pointer.x-start.x,pointer.y-start.y)>=PLOT_DRAG_RULES.minimumPointerPixels&&Math.hypot(b.x-a.x,b.z-a.z)>PLOT_DRAG_RULES.minimumWorldMeters;
+}
 export function dragPlot(type:BldType,a:{x:number;z:number},b:{x:number;z:number}){
  const base=BUILDINGS[type];
  const w=Math.min(base.w*3,Math.max(base.w,Math.ceil(Math.abs(b.x-a.x)/2)*2));

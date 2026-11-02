@@ -9,7 +9,7 @@ import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAn
 import {isDependent} from './settlement';
 import {queueStandDown} from './demobilization';
 
-export const DEFENSE_RULES={localMobilizationMetres:70,intrusionMetres:28,reviewSeconds:.5,manualAlarmSeconds:20,healthyFraction:.5,armingDangerMetres:8,shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12}} as const;
+export const DEFENSE_RULES={localMobilizationMetres:70,intrusionMetres:28,reviewSeconds:.5,manualAlarmSeconds:20,healthyFraction:.5,armingDangerMetres:8,shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12,barracks:12}} as const;
 
 /** Follow the same physical entrance and occupancy contract as ordinary rest.
  * Shelter conceals occupants; its building remains vulnerable to attack. */

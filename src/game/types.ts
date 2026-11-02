@@ -117,7 +117,7 @@ export type CritterKind = "deer" | "boar" | "goat" | "bird";
 
 export type Critter = {
   grazing?: {x:number;z:number};
-  carcass?: {meat:number;diedAt:number;hides?:number;bones?:number};
+  carcass?: {meat:number;diedAt:number;hides?:number;bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number};
   id: number;
   species: CritterKind;
   x: number;
@@ -225,6 +225,7 @@ export type Unit = {
   husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver";animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
+  seaRaidReturn?: import("./seaRaiderReturn").SeaRaiderReturn;
   seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};

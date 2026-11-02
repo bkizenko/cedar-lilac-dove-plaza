@@ -1,3 +1,6 @@
+import {GameTooltip} from './GameTooltip';
+import {GameDisclosure} from './GameDisclosure';
+import {buildingHelp} from './buildingHelp';
 import {ConstructionSiteControls,BuilderQueueControls} from './ConstructionQueueControls';
 import {ExcavationControls,ExcavationReadout} from './ExcavationControls';
 import {TowerPlatformControls,TowerPlatformReadout} from './TowerPlatformControls';
@@ -72,6 +75,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Compass,
+  Settings,
+  BookOpen,
+  ClipboardList,
+  Droplets,
+  Flame,
+  Scissors,
+  CookingPot,
+  Package,
+  Layers,
   Fish,
   Coins,
 } from "lucide-react";
@@ -81,6 +93,9 @@ import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
 import { YEAR_SECONDS } from "@/game/settlement";
 
 const BLD_ICON: Record<string, ReactNode> = {
+  hearth: <Flame className="size-4" />, butcher: <Scissors className="size-4" />,
+  dryrack: <Layers className="size-4" />, tanner: <Layers className="size-4" />, tailor: <Scissors className="size-4" />,
+  potter: <CookingPot className="size-4" />, kiln: <Flame className="size-4" />, fibreWorkshop: <Package className="size-4" />,
   hut: <Home className="size-4" />,
   cornerstone: <Compass className="size-4" />,
   townhall: <Landmark className="size-4" />,
@@ -114,34 +129,20 @@ function resWord(k: ResKind) {
 }
 
 export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
-  const compact = () => typeof window !== "undefined" && window.innerWidth <= 720;
+  const compact = () => false;
   const [interfaceHidden,setInterfaceHidden]=useState(false);
   const [selMin, setSelMin] = useState(true);
   const [clockMin, setClockMin] = useState(true);
-  const [resMin, setResMin] = useState(true);
   const [buildMin, setBuildMin] = useState(compact);
   const [mapMin, setMapMin] = useState(compact);
   const [toolsMin,setToolsMin]=useState(true);
+  const [statusPane,setStatusPane]=useState<"stores"|"work"|"food"|"craft"|"camp"|null>(null);
   const [testOpen,setTestOpen]=useState(false);
   const [buildTab,setBuildTab]=useState("Village");
   const [techOpen, setTechOpen] = useState(false);
   useEffect(() => {
     if (hud.selection.kind !== "none") setSelMin(false);
   }, [hud.selection.kind, hud.selection.name]);
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 720px)");
-    const fit = () => {
-      if (media.matches) {
-        setClockMin(true);
-        setResMin(true);
-        setBuildMin(true);
-        setMapMin(true);
-        setSelMin(true);
-      }
-    };
-    media.addEventListener("change", fit);
-    return () => media.removeEventListener("change", fit);
-  }, []);
   if (!hud.started || hud.awaitingStart) return null;
   if(interfaceHidden)return <button className="fixed bottom-3 right-3 z-50 hud-panel rounded-xl px-3 py-2" onClick={()=>setInterfaceHidden(false)}>Restore interface</button>;
   const sel = hud.selection;
@@ -171,24 +172,33 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     <div className="hud-shell font-sans text-parchment">
       <div className="hud-res">
         <div className="hud-panel resource-strip">
-          {[["Food",hud.food,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
-          <button aria-label="Expand resource details" aria-expanded={!resMin} onClick={()=>setResMin(v=>!v)}>{resMin?<ChevronDown/>:<ChevronUp/>}</button>
+          {[["Food",hud.food,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
+          <button aria-label="Expand resource details" aria-expanded={statusPane==='stores'} onClick={()=>setStatusPane(v=>v==='stores'?null:'stores')}>{statusPane==='stores'?<ChevronUp/>:<ChevronDown/>}</button>
         </div>
-        {!resMin&&<div className="hud-panel resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl><p>Seeds come home with wild crop harvests. Farms cost 4 seed baskets; replanting trees costs 1 each.</p>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div>}
-        {engine&&!founding&&<NeedsPanel engine={engine}/>}
-        {engine&&!founding&&<WorkloadPanel engine={engine}/>}
-        {engine&&!founding&&<NomadicCampControl engine={engine}/>}
-        {engine&&!founding&&<FarmingProgress engine={engine} onKnowledge={()=>setTechOpen(true)}/>}
-        {engine&&!founding&&<CraftingAndBuildings engine={engine}/>}
-        {!founding&&<div className="hud-panel objective-strip"><Compass className="size-4"/><span>{hud.objective}</span></div>}
-        <div className="quick-actions"><button onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}>Village · L</button><button type="button" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}>Auto work · {engine?.game.state.autoWorkEnabled===false?"Off":"On"}</button><button aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}>{engine?.loggingMode?"Finish tree marks · N":"Mark trees · N"}</button><button onClick={()=>engine?.focusHome()}>Home · F</button><button title="Call nearby adults to defend with real weapons; children and injured residents seek shelter" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn</button><button onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall · V</button><button onClick={()=>{setClockMin(false);setTechOpen(v=>!v);}}>Knowledge</button><button onClick={()=>{if(engine&&(engine.game.testMode||engine.startTestSession()))setTestOpen(true);}}>{engine?.game.testMode?"TEST COPY":"Test lab"}</button></div>
+
+        {statusPane&&engine&&!founding&&<div className="hud-status-drawer hud-panel" aria-label="Village details">
+          <header><span>Village</span><button aria-label="Close village details" onClick={()=>setStatusPane(null)}><X size={14}/></button></header>
+          <nav aria-label="Village detail tabs">{([['stores','Stores'],['work','Work'],['food','Food'],['craft','Craft'],['camp','Camp']] as const).map(([key,label])=><button key={key} aria-pressed={statusPane===key} onClick={()=>setStatusPane(key)}>{label}</button>)}</nav>
+          {statusPane==='stores'&&<><div className="resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
+        </div>}
+        {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
+          <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>
+          <GameTooltip title={engine?.game.state.autoWorkEnabled===false?'Enable Auto work':'Pause Auto work'} description="Available residents follow village priorities; direct orders and paid work stay protected."><button aria-label="Auto work" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}><Hammer/><span>{engine?.game.state.autoWorkEnabled===false?'Off':'On'}</span></button></GameTooltip>
+          <GameTooltip title="Workload" description="See planned work, capacity and blocked tasks."><button aria-label="Workload" aria-pressed={statusPane==='work'} onClick={()=>setStatusPane(v=>v==='work'?null:'work')}><ClipboardList/></button></GameTooltip>
+          <GameTooltip title="Mark trees" description="Drag over trees to mark them for felling (N)."><button aria-label="Mark trees" aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}><TreePine/></button></GameTooltip>
+          <GameTooltip title="Home" description="Return the camera to your settlement (F)."><button aria-label="Home" onClick={()=>engine?.focusHome()}><Home/></button></GameTooltip>
+          <GameTooltip title="Defense horn" description="Call nearby adults to take up their available weapons."><button aria-label="Defense horn" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}><Shield/></button></GameTooltip>
+          <GameTooltip title="Recall" description="Call people home (V)."><button aria-label="Recall" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}><Compass/></button></GameTooltip>
+          <GameTooltip title="Knowledge" description={hud.objective}><button aria-label="Knowledge" onClick={()=>setTechOpen(v=>!v)}><BookOpen/></button></GameTooltip>
+        </div>}
+
       </div>
       {testOpen&&engine&&<TestPanel engine={engine} close={()=>setTestOpen(false)}/>}
       <div className="hud-clock">
         {founding ? null : (
         <div className="hud-panel rounded-xl p-2 text-xs">
           <button type="button" aria-expanded={!toolsMin} aria-controls="village-controls" className="flex w-full items-center justify-between px-2 py-1.5" onClick={()=>setToolsMin(v=>!v)}>
-            Controls & save {toolsMin?<ChevronDown className="size-4"/>:<ChevronUp className="size-4"/>}
+            <Settings aria-hidden="true" className="size-3.5"/><span>Menu</span> {toolsMin?<ChevronDown className="size-4"/>:<ChevronUp className="size-4"/>}
           </button>
           {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
           {engine&&<PerformanceReadout engine={engine}/>}
@@ -196,6 +206,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
+          <button className="px-2 py-2" onClick={()=>setTestOpen(true)}>Test lab</button>
           <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"
@@ -242,7 +253,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </div>}
         </div>
         )}
-        <div className="hud-panel rounded-xl px-3 py-2 text-right">
+        <div className="hud-panel game-clock rounded-xl px-3 py-2 text-right">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-end gap-1.5">
@@ -453,7 +464,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </p>
         </div>
       ) : (
-      <div className="hud-sel hud-panel rounded-xl p-2.5 w-full">
+      <div className={`hud-sel hud-panel rounded-xl p-2.5 w-full ${sel.kind==='none'?'selection-empty':''}`}>
         <div className="selection-header flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <div className="font-display text-xl leading-tight text-bronze-bright">
@@ -481,9 +492,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
         </div>}
-        {!selMin&&engine&&<ConflictControls engine={engine}/>}
-        {!selMin&&engine&&<ProductionControls engine={engine}/>}
-        {!selMin&&engine&&<StorehouseInventory engine={engine}/>}
+        {!selMin&&engine&&sel.kind!=='none'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind!=='none'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
+        {!selMin&&engine&&sel.kind==='building'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
         {selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
@@ -733,7 +744,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","pen","dock","grove","hearth","butcher","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove","hearth","butcher","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor","potter","kiln","fibreWorkshop"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =
@@ -744,11 +755,11 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 hud.copper < (b.cost.copper || 0) ||
                 hud.iron < (b.cost.iron || 0);
               return (
-                <button
+                <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${buildingHelp(b.type,b.hint)} ${([['seeds','seeds'],['wood','logs'],['stone','stone'],['food','food'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}${unaffordable?' Supplies are not ready yet.':''}`}><button
                   key={b.type}
                   type="button"
                   disabled={!!hud.ended}
-                  title={`${b.name}${i<9?` [${i+1}]`:""}\n${b.hint}${unaffordable ? "\nPlace a plan now; construction waits for materials." : ""}`}
+                  aria-label={b.type==='farm'?'Plant field':b.name}
                   onClick={() => engine?.setPlacing(b.type)}
                   className={`w-24 shrink-0 rounded-lg border px-2 py-2 text-center transition-colors ${
                     active
@@ -760,12 +771,12 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                     {BLD_ICON[b.type] || <Landmark className="size-4" />}
                   </div>
                   <div className="text-sm font-medium leading-tight text-parchment">
-                    {shortName(b.name)}{unaffordable ? " · Plan" : ""}
+                    {b.type==='farm'?'Plant field':shortName(b.name)}
                   </div>
-                  <div className="mt-1 text-xs leading-snug text-parchment tabular">
+                  <div className="build-tile-cost mt-1 text-xs leading-snug text-parchment tabular">
                     {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}
                   </div>
-                </button>
+                </button></GameTooltip>
               );
             })}
             {hud.trainOptions

@@ -8,7 +8,7 @@ import {projectedTreeInBox} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
 import {linearStructure,joinedConstructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
-import {dragPlot,scalablePlot,type PlotSize} from './plots';
+import {dragPlot,plotDragIntent,scalablePlot,type PlotSize} from './plots';
 import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
@@ -68,11 +68,12 @@ export class Engine {
   loggingMode = false;
   pointer = { x: 0, y: 0 };
   private nextHoverAt=0;
-  private onPointerLeave=()=>{this.view.hoveredUnitId=null;};
+  private onPointerLeave=()=>{this.view.hoveredUnitId=null;this.canvas.title="";};
   gateFacing:GateFacing="north";
   private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
   plotStart: {x:number;z:number}|null=null;
+  plotPointerStart:{x:number;y:number}|null=null;
   plotSize: PlotSize|undefined;
   bridgeSpan: BridgeSpan|undefined;
   plotWidth=1;plotDepth=1;
@@ -332,6 +333,7 @@ export class Engine {
     }
     if (e.button === 0) {
       if (this.game.state.placing) {
+        this.plotPointerStart={x:p.x,y:p.y};
         this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge"||linearStructure(this.game.state.placing))?this.view.groundAt(p.x,p.y):null;
         this.drag = null;
         return;
@@ -346,7 +348,7 @@ export class Engine {
     this.pointer.y = p.y;
     const now=performance.now();
     if(this.game.state.placing||this.loggingMode||this.drag||this.panDrag||this.rotDrag)this.view.hoveredUnitId=null;
-    else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);}
+    else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(p.x,p.y,this.game):null;this.canvas.title=animal?(animal.hp>0?`Wild ${animal.species} · right-click with hunters to hunt`:`${animal.species} carcass · ${Math.ceil(animal.carcass?.meat||0)} raw meat remains`):"";}
     if (this.panDrag) {
       const dx = e.clientX - this.panDrag.x;
       const dy = e.clientY - this.panDrag.y;
@@ -396,7 +398,7 @@ export class Engine {
     this.panDrag = null;
     if (e.button === 0 && this.game.state.placing) {
       this.leftClick(p.x, p.y, e.shiftKey);
-      this.plotStart=null;this.plotSize=undefined;
+      this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;
       this.drag = null;
       this.updateGhost();
       this.pushHud();
@@ -478,8 +480,10 @@ export class Engine {
     if(entity?.kind==="building"&&entity.team===0&&!this.game.finished(entity)&&!additive&&this.game.selectedUnits().length)this.game.orderConstruction(entity);
     else if (entity) this.game.selectEntity(entity, additive, true);
     else {
-      const resource=this.view.pickResource(cx,cy,this.game);
-      if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
+      const animal=this.view.pickWildlife(cx,cy,this.game);
+      const resource=animal?null:this.view.pickResource(cx,cy,this.game);
+      if(animal)this.game.selectCritter(animal,additive);
+      else if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
       else if(!additive&&(this.game.selectedUnits().length||this.game.selectedBoat!==null))this.game.issueMove(g.x,g.z);
       else this.game.selectAt(g.x,g.z,additive);
     }
@@ -499,7 +503,7 @@ export class Engine {
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else if(ent?.kind==="building"&&ent.team===0&&(!this.game.finished(ent)||ent.expansion)){if(queue)this.game.queueConstruction(ent);else this.game.orderConstruction(ent);}
     else {
-      const node = this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
+      const node = this.view.pickWildlife(cx,cy,this.game) || this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);
       else this.game.issueMove(g.x, g.z);
     }
@@ -533,7 +537,7 @@ export class Engine {
       }
     }
     this.plotSize=scalablePlot(type)&&(this.plotWidth>1||this.plotDepth>1)?{w:BUILDINGS[type].w*this.plotWidth,d:BUILDINGS[type].d*this.plotDepth}:undefined;
-    if(this.plotStart&&scalablePlot(type)&&Math.hypot(g.x-this.plotStart.x,g.z-this.plotStart.z)>2){
+    if(this.plotStart&&scalablePlot(type)&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)){
       const plot=dragPlot(type,this.plotStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
     }
     if(scalablePlot(type)){
@@ -583,7 +587,7 @@ export class Engine {
   }
 
   setPlacing(type: BldType | null) {
-    this.bridgeSpan=undefined;this.plotStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
+    this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;

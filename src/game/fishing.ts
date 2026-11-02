@@ -6,6 +6,15 @@ import type {Building,Unit,ResourceNode} from './types';
 import {DOCK_R,GATHER,GATHER_WORK_RATE} from './constants';
 import {reserveSeconds} from "./settlement";
 import {mulberry32} from './rng';
+/** Seconds, fish units, and dimensionless habitat pressure. These keep catch
+ * finite: recovery changes wild stock, never the village inventory. */
+export const FISHERY_RULES=Object.freeze({replenishmentSpeed:2,defaultCapacityFish:8,yearSeconds:1800,seasonSeconds:450,winterProductivity:.4,droughtProductivity:.35,floodProductivity:1.2,pressureRecoverySeconds:1200,fullStockRecoverySeconds:240,maximumPressurePenalty:.8,emptyRestBaseSeconds:60,emptyRestPressureSeconds:180});
+function fishRecoveryRate(g:Game){return (Math.floor((g.state.time%FISHERY_RULES.yearSeconds)/FISHERY_RULES.seasonSeconds)===3?FISHERY_RULES.winterProductivity:1)*(g.state.weather==='drought'?FISHERY_RULES.droughtProductivity:g.state.weather==='flood'?FISHERY_RULES.floodProductivity:1);}
+/** Conservative resting estimate at current season/weather; continued catches
+ * or changing weather can change it. Includes the actual remaining rest timer. */
+export function fishRecoveryEstimateSeconds(g:Game,n:ResourceNode){
+ if(n.amount>=1)return 0;const rate=fishRecoveryRate(g),rest=n.amount<=0?Math.max(0,n.regenT)/(rate*FISHERY_RULES.replenishmentSpeed):0,pressure=Math.max(0,(n.pressure||0)-rest/FISHERY_RULES.pressureRecoverySeconds),growth=(n.maxAmt||FISHERY_RULES.defaultCapacityFish)/FISHERY_RULES.fullStockRecoverySeconds*rate*FISHERY_RULES.replenishmentSpeed*(1-FISHERY_RULES.maximumPressurePenalty*pressure);return Math.ceil(rest+Math.max(0,1-n.amount)/growth);
+}
 type WaterPoint={x:number;z:number};
 const waterCache=new WeakMap<Game,{world:Game["world"];height:Game["height"];water:number;second:number;fish:ResourceNode[];docks:Map<number,WaterPoint[]>;grounds:Map<number,ResourceNode[]>}>();
 /** Local water connectivity prevents a dock draining a separate pond across land. */
@@ -80,7 +89,7 @@ function fishingIssue(g:Game,b:Building){
   if(!water.length)return 'No connected water at this dock — choose a usable shoreline';
   const all=waterCache.get(g)?.grounds.get(b.id)||localGrounds(g,b,water),known=all.filter(n=>b.team!==0||g.exploredAt(n.x,n.z));
   if(!known.length)return all.length?'Explore the nearby shore to locate its fishing grounds':'No surveyed fishing grounds here — explore nearby water';
-  if(!known.some(n=>n.amount>=1))return 'Nearby fishing grounds are depleted — let this water recover or use another shore';
+  if(!known.some(n=>n.amount>=1)){const rest=Math.min(...known.map(n=>fishRecoveryEstimateSeconds(g,n)));return `Nearby fishing grounds are depleted — rest this water; first catch in about ${Math.max(1,Math.ceil(rest/60))} minutes at current season/weather, or use another shore`;}
   return null;
 }
 export function fishingReport(g:Game,b:Building){
@@ -104,7 +113,7 @@ export function catchDockFish(g:Game,u:Unit,b:Building){
   const taken=Math.min(1,ground.amount,Math.max(0,carryingCapacity(u,"food")-u.carry));
   if(taken<=0){u.order='return';return;}
   ground.amount=Math.max(0,ground.amount-taken);ground.pressure=Math.min(1,(ground.pressure||0)+.4*taken/Math.max(1,ground.maxAmt||8));
-  if(ground.amount===0)ground.regenT=60+(ground.pressure||0)*180;
+  if(ground.amount===0)ground.regenT=FISHERY_RULES.emptyRestBaseSeconds+(ground.pressure||0)*FISHERY_RULES.emptyRestPressureSeconds;
   u.carry+=taken;u.carryType='food';u.carryFood='fish';u.workReason='Fishing from the dock — carrying the catch home';
   if(u.team===0)g.onSfx('fish');
   if(u.carry>=carryingCapacity(u,"food")||ground.amount===0||(u.carry>=8&&reserveSeconds(g,u.team)<90))u.order='return';
@@ -112,13 +121,12 @@ export function catchDockFish(g:Game,u:Unit,b:Building){
 
 /** Rest restores a river section; catches and reproduction change stock, never village food. */
 export function renewFish(g:Game,n:ResourceNode,dt:number){
-  const capacity=n.maxAmt||8;
-  const winter=Math.floor((g.state.time%1800)/450)===3;
-  const rate=(winter?.4:1)*(g.state.weather==='drought'?.35:g.state.weather==='flood'?1.2:1);
-  n.pressure=Math.max(0,(n.pressure||0)-dt/1200);
-  if(n.amount<=0){n.regenT=Math.max(0,n.regenT-dt*rate);if(n.regenT>0)return;}
+  const capacity=n.maxAmt||FISHERY_RULES.defaultCapacityFish;
+  const rate=fishRecoveryRate(g);
+  n.pressure=Math.max(0,(n.pressure||0)-dt/FISHERY_RULES.pressureRecoverySeconds);
+  if(n.amount<=0){n.regenT=Math.max(0,n.regenT-dt*rate*FISHERY_RULES.replenishmentSpeed);if(n.regenT>0)return;}
   // A fully depleted section recovers gradually, rather than refilling in one frame.
-  n.amount=Math.min(capacity,n.amount+capacity*dt/240*rate*(1-.8*(n.pressure||0)));
+  n.amount=Math.min(capacity,n.amount+capacity*dt/FISHERY_RULES.fullStockRecoverySeconds*rate*FISHERY_RULES.replenishmentSpeed*(1-FISHERY_RULES.maximumPressurePenalty*(n.pressure||0)));
 }
 
 export function staffDock(g:Game,id:number){

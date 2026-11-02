@@ -8,7 +8,9 @@ import { carryingCapacity } from "./haulage";
 import { climateAt } from "./ecology";
 import { predisposition } from "./people";
 
-export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:number };
+export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number };
+/** Tunable game work seconds, not a historical time measurement. */
+export const CARCASS_PROCESSING_RULES={gutSeconds:2,skinSeconds:3} as const;
 export type HuntableCritter = Critter & { carcass?: Carcass };
 export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, bird: 0 } as const;
 
@@ -19,6 +21,11 @@ export function carcassStateValid(value: unknown, species: CritterKind, hp: numb
   const c = value as Carcass;
   return Number.isFinite(c.meat) && c.meat >= 0 && c.meat <= CARCASS_MEAT[species] &&
     (c.hides===undefined||Number.isFinite(c.hides)&&c.hides>=0&&c.hides<=1)&&(c.bones===undefined||Number.isFinite(c.bones)&&c.bones>=0&&c.bones<=(species==='boar'?3:2))&&
+    (c.prepared===undefined||c.prepared===true)&&
+    (c.preparationWork===undefined||Number.isFinite(c.preparationWork)&&c.preparationWork>=0&&c.preparationWork<=CARCASS_PROCESSING_RULES.gutSeconds)&&
+    (c.skinningWork===undefined||Number.isFinite(c.skinningWork)&&c.skinningWork>=0&&c.skinningWork<=CARCASS_PROCESSING_RULES.skinSeconds)&&
+    (c.prepared?c.preparationWork===CARCASS_PROCESSING_RULES.gutSeconds:!(c.preparationWork===CARCASS_PROCESSING_RULES.gutSeconds))&&
+    (!c.skinningWork||!!c.prepared)&&
     Number.isFinite(c.diedAt) && c.diedAt >= 0 && c.diedAt <= now;
 }
 
@@ -106,6 +113,10 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
   }
   u.facing = Math.atan2(c.x - u.x, c.z - u.z);
   u.stride += dt * 8;
+  if(!alive){const carcass=c.carcass!,work=dt*predisposition(u).strength*GATHER_WORK_RATE*urgency/butcheryLaborMultiplier(g,u.x,u.z);
+    if(!carcass.prepared){carcass.preparationWork=Math.min(CARCASS_PROCESSING_RULES.gutSeconds,(carcass.preparationWork||0)+work);u.workReason=`Gutting ${c.species}`;if(carcass.preparationWork>=CARCASS_PROCESSING_RULES.gutSeconds)carcass.prepared=true;return true;}
+    if(productionEnabled(g,u.team)&&((carcass.hides||0)>0||(carcass.bones||0)>0)){carcass.skinningWork=Math.min(CARCASS_PROCESSING_RULES.skinSeconds,(carcass.skinningWork||0)+work);u.workReason=`Skinning ${c.species}`;if(carcass.skinningWork>=CARCASS_PROCESSING_RULES.skinSeconds)harvestAnimalMaterials(g,u,carcass,Math.max(0,carryingCapacity(u,"food")-u.carry-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));return true;}
+  }
   if (!alive) u.gatherT += dt * predisposition(u).strength;
   u.workReason = alive ? `Hunting ${c.species}` : `Butchering ${c.species} · ${Math.ceil(c.carcass!.meat)} meat remains`;
   if (u.gatherT < period) return true;
@@ -125,7 +136,6 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
     return true;
   }
   const carcass = c.carcass!;
-  harvestAnimalMaterials(g,u,carcass,Math.max(0,carryingCapacity(u,"food")-u.carry-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
   const taken = Math.min(3, carcass.meat, Math.max(0, carryingCapacity(u, "food") - u.carry-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
   carcass.meat -= taken;
   if(taken>0&&productionEnabled(g,u.team))u.rawHuntMeat=true;

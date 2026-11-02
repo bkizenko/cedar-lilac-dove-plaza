@@ -12,6 +12,14 @@ export function planExpansion(g:Game,b:Building,axis:'w'|'d',team=0){
  const size={w:b.w,d:b.d};size[axis]=Math.min(BUILDINGS[b.type][axis]*3,size[axis]+BUILDINGS[b.type][axis]);
  if(size[axis]<=b[axis]+1e-6||!validPlot(b.type,size))return false;
  const issue=g.placementIssue(b.type,b.x,b.z,b.team,size,b.id);if(issue){if(team===0)g.banner(issue,4);return false;}
+ if(b.type==='farm'){
+  const cost=expansionCost(b,size);
+  if(!g.canAfford(b.team,cost)){if(team===0)g.banner(`Need ${Math.max(0,(cost.seeds||0)-(g.tribe(b.team).seeds||0))} more seeds to mark the extension`,4);return false;}
+  const oldArea=plotArea(b),newArea=plotArea({...b,...size});g.spend(b.team,cost);
+  if(b.crop){b.crop.planted*=oldArea/newArea;b.crop.tended*=oldArea/newArea;}
+  b.w=size.w;b.d=size.d;g.state.walkDirty=true;g.workBoard.reset();
+  if(team===0)g.banner('Field extended — new ground still needs sowing',3);return true;
+ }
  b.expansion={...size,progress:0,paid:false};g.workBoard.reset();g.assignBuilders(b);
  if(team===0)g.banner('Extension planned — original area stays open',3);return true;
 }

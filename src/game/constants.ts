@@ -168,9 +168,9 @@ export const BUILDINGS: Record<
     wood: 40,
     stone: 0,
     pop: 0,
-    hp: 480,
+    hp: 640,
     age: 0,
-    hint: "Arm existing adults from the Bronze Age. Early villagers hunt and defend without a separate profession.",
+    hint: "Emergency shelter for 12 children or injured residents through a reachable entrance. Equip existing adults from the Bronze Age using real weapons.",
   },
   forge: {
     name: "Forge",

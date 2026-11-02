@@ -143,7 +143,7 @@ test("raiders breach a reachable wall when stores are enclosed", () => {
   assert.notEqual(target, store);
   assert.equal(target?.type, "palisade");
 });
-test("raiders carry only finite ruined supplies and leave by their landing; walls yield no pantry loot", () => {
+test("raiders retain finite ruined supplies at their landing; walls yield no pantry loot", () => {
   const g = fixture(),
     u = g.spawnUnit("spearman", 0, 0, 3),
     ruin = bld(g, "warehouse", 0, 0);
@@ -157,8 +157,8 @@ test("raiders carry only finite ruined supplies and leave by their landing; wall
   assert.equal(u.seaRaid.phase, "retreat");
   u.x = -20;
   seaRaidAI(g, u, 0.1);
-  assert.equal(u.hp, 0);
-  assert.equal(u.carry, 0);
+  assert.ok(u.hp > 0);
+  assert.equal(u.carry, 8);
   const wall = bld(g, "palisade", 20, 0),
     before = g.tribe(0).food;
   g.lootBuilding(3, wall);
@@ -290,9 +290,9 @@ test("large Stone Age towns face substantial sea parties while small first villa
  assert.ok(seaRaidStrength(150,5,1,99,1,true).count<=36);
  assert.ok(seaRaidArrivalChance(.5,true)>seaRaidArrivalChance(.5,false));
 });
-test("visible shore departure explains retreat instead of silently deleting the last raider",()=>{
+test("retreat landing preserves the living raider and cargo without inventing an unseen departure",()=>{
  const g=fixture(),u=g.spawnUnit('spearman',0,0,3);g.vision.fill(2);
  u.seaRaid={x:0,z:0,goalX:40,goalZ:0,phase:'retreat',thinkAt:0,departAt:480};u.carry=4;u.carryType='wood';seaRaidAI(g,u,.1);
- assert.equal(u.hp,0);assert.equal(u.carry,0);assert.match(g.state.banner,/escaped with stolen/);
+ assert.ok(u.hp>0);assert.equal(u.carry,4);assert.match(u.workReason,/Stranded/);assert.doesNotMatch(g.state.banner,/escaped with stolen/);
  const v=g.spawnUnit('spearman',0,0,3);v.seaRaid={x:0,z:0,goalX:40,goalZ:0,phase:'retreat',thinkAt:0,departAt:480};g.vision.fill(0);g.state.banner='';seaRaidAI(g,v,.1);assert.equal(g.state.banner,'','unseen departures do not reveal remote positions');
 });

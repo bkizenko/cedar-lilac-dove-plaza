@@ -21,7 +21,7 @@ test('missing water and unexplored shore are not diagnosed as depletion; repeate
  const {g,left}=fixture();g.vision.fill(0);assert.match(fishingReport(g,left),/explore nearby water/);assert.equal(g.state.fish.length,0);
  g.vision.fill(2);g.state.time=1;fishingGrounds(g,left);assert.ok(g.state.fish.length);
  const height=g.height;let reads=0;g.height=(x,z)=>{reads++;return height(x,z);};fishingReport(g,left);const first=reads;
- for(let i=0;i<20;i++)fishingReport(g,left);assert.equal(reads,first,'no repeated terrain traversal within the same simulated second');
+ for(let i=0;i<20;i++)fishingReport(g,left);assert.equal(reads,first+20,'each report samples its live seasonal work rate once; the connected-water survey is not repeated');
  g.height=()=>4;assert.match(fishingReport(g,left),/No connected water/);
 });
 test('fishing conserves the catch and brings eight fish home promptly when reserves are scarce',()=>{

@@ -14,6 +14,7 @@ import {validProductionState} from './production';
 import {discountQuarryPlans} from "./mining";
 import {validCampMoveState} from './nomadicCamp';
 import {validContactState} from './encounters';
+import {validSeaRaiderReturns} from './seaRaiderReturn';
 import {validConflictIntentState} from './conflictIntent';
 import {validPrisonerState} from './captivity';
 import {validConflictJournal} from './conflictMetrics';
@@ -110,7 +111,7 @@ function validateGamePayload(raw: unknown) {
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
-  if(!validContactState(s))fail();
+  if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();

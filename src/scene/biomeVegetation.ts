@@ -24,7 +24,7 @@ const leafColors:Record<TreeForm,string>={broadleaf:'#668947',conifer:'#375f49',
  * ID, position and amount; no extra wood or collision is created by this kit. */
 export class BiomeVegetation {
  private scene:THREE.Scene;private seed:number;private profileAt:(x:number,z:number)=>VegetationProfile;
- private batches=new Map<TreeForm,TreeBatch>();private far:THREE.InstancedMesh[];private farIds:number[][]=[[],[]];
+ private batches=new Map<TreeForm,TreeBatch>();private far:THREE.InstancedMesh[];private farIds:number[][]=[[],[]];private farTrunk:THREE.InstancedMesh;private farTrunkIds:number[]=[];
  private cache=new Map<number,TreeForm>();private matrix=new THREE.Matrix4();private pos=new THREE.Vector3();private scale=new THREE.Vector3();private rotation=new THREE.Quaternion();private euler=new THREE.Euler();private color=new THREE.Color();
  private autumnColors={broadleaf:new THREE.Color('#a77942'),willow:new THREE.Color('#a39b53')};private snowColor=new THREE.Color('#d4e0dd');
  private bark=new THREE.MeshStandardMaterial({color:'#655444',roughness:.96});
@@ -34,6 +34,7 @@ export class BiomeVegetation {
   this.scene=scene;this.seed=seed;this.profileAt=profileAt;
   for(const form of TREE_FORMS){const kit=treeKit(form),trunk=new THREE.InstancedMesh(kit.trunk,this.bark,Math.max(1,capacity)),canopy=new THREE.InstancedMesh(kit.canopy,this.leaves,Math.max(1,capacity));
    trunk.name=`resource-${form}-trunk`;canopy.name=`resource-${form}-canopy`;trunk.count=canopy.count=0;trunk.frustumCulled=canopy.frustumCulled=false;trunk.receiveShadow=canopy.receiveShadow=true;scene.add(trunk,canopy);this.batches.set(form,{trunk,canopy,capacity:Math.max(1,capacity),crownCenter:kit.canopy.boundingBox!.getCenter(new THREE.Vector3()),crownHalf:kit.canopy.boundingBox!.getSize(new THREE.Vector3()).multiplyScalar(.5),ids:{trunk:[],canopy:[]}});}
+  this.farTrunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,1,5).translate(0,.5,0),this.bark,Math.max(1,capacity));this.farTrunk.name='resource-far-rooted-trunk';this.farTrunk.count=0;this.farTrunk.frustumCulled=false;scene.add(this.farTrunk);
   const round=new THREE.IcosahedronGeometry(1,0),needle=new THREE.ConeGeometry(1,2,6);this.far=[round,needle].map((geo,i)=>{const mesh=new THREE.InstancedMesh(geo,this.farMaterial,Math.max(1,capacity));mesh.name=i?'resource-far-needle':'resource-far-crown';mesh.count=0;mesh.frustumCulled=false;scene.add(mesh);return mesh;});
  }
  private grow(form:TreeForm,needed:number){const b=this.batches.get(form)!;if(needed<=b.capacity)return;const capacity=Math.max(needed,b.capacity*2);
@@ -50,10 +51,12 @@ export class BiomeVegetation {
  pickingSources(){
   const sources:{mesh:THREE.InstancedMesh;resourceIds:readonly number[]}[]=[];
   for(const b of this.batches.values())for(const part of ['trunk','canopy'] as const)sources.push({mesh:b[part],resourceIds:b.ids[part]});
+  sources.push({mesh:this.farTrunk,resourceIds:this.farTrunkIds});
   for(let i=0;i<2;i++)sources.push({mesh:this.far[i],resourceIds:this.farIds[i]});return sources;
  }
  sync(nodes:readonly ResourceTree[],context:VegetationContext){
   const counts=new Map<TreeForm,{trunk:number;canopy:number}>();for(const form of TREE_FORMS){counts.set(form,{trunk:0,canopy:0});const b=this.batches.get(form)!;b.ids.trunk.length=b.ids.canopy.length=0;}
+  let farTrunks=0;this.farTrunkIds.length=0;
   const farCounts=[0,0];this.farIds[0].length=this.farIds[1].length=0;
   const near=BIOME_VEGETATION_RULES.nearMetres[context.quality];
   for(const node of nodes){
@@ -72,18 +75,22 @@ export class BiomeVegetation {
     const count=counts.get(form)!;this.grow(form,Math.max(count.trunk,count.canopy)+1);const b=this.batches.get(form)!;
     this.pos.set(node.x,node.y,node.z);this.scale.set(s*(stump?.65:1),s*(stump?BIOME_VEGETATION_RULES.stumpHeightScale:1),s*(stump?.65:1));this.matrix.compose(this.pos,this.rotation,this.scale);b.trunk.setMatrixAt(count.trunk++,this.matrix);b.ids.trunk.push(node.id);
     if(!stump&&!bare){this.scale.setScalar(s);this.matrix.compose(this.pos,this.rotation,this.scale);b.canopy.setMatrixAt(count.canopy,this.matrix);b.canopy.setColorAt(count.canopy++,this.color);b.ids.canopy.push(node.id);}
-   }else if(!stump&&!bare){
-    const style=form==='conifer'||form==='stunted'?1:0,i=farCounts[style]++;this.growFar(style,i+1);const mesh=this.far[style];
+   }else if(!stump){
+    if(farTrunks>=this.farTrunk.instanceMatrix.count){const old=this.farTrunk,mesh=new THREE.InstancedMesh(old.geometry,old.material,old.instanceMatrix.count*2);mesh.name=old.name;mesh.frustumCulled=false;mesh.instanceMatrix.array.set(old.instanceMatrix.array);this.scene.remove(old);old.dispose();this.scene.add(mesh);this.farTrunk=mesh;}
     const bounds=this.batches.get(form)!;
+    this.pos.set(node.x,node.y,node.z);this.scale.set(.14*s,Math.max(.6,bounds.crownCenter.y)*s,.14*s);this.matrix.compose(this.pos,this.rotation,this.scale);this.farTrunk.setMatrixAt(farTrunks++,this.matrix);this.farTrunkIds.push(node.id);
+    if(bare)continue;
+    const style=form==='conifer'||form==='stunted'?1:0,i=farCounts[style]++;this.growFar(style,i+1);const mesh=this.far[style];
     this.pos.copy(bounds.crownCenter).applyQuaternion(this.rotation).multiplyScalar(s);this.pos.x+=node.x;this.pos.y+=node.y;this.pos.z+=node.z;
     this.scale.copy(bounds.crownHalf).multiplyScalar(s);this.matrix.compose(this.pos,this.rotation,this.scale);mesh.setMatrixAt(i,this.matrix);mesh.setColorAt(i,this.color);this.farIds[style].push(node.id);
    }
   }
   for(const form of TREE_FORMS){const b=this.batches.get(form)!,count=counts.get(form)!;for(const part of ['trunk','canopy'] as const){const mesh=b[part];mesh.count=count[part];mesh.castShadow=context.quality!=='low';mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}}
+  this.farTrunk.count=farTrunks;this.farTrunk.instanceMatrix.needsUpdate=true;
   for(let i=0;i<2;i++){const mesh=this.far[i];mesh.count=farCounts[i];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
   return {nearTrees:[...counts.values()].reduce((n,c)=>n+c.trunk,0),nearCanopies:[...counts.values()].reduce((n,c)=>n+c.canopy,0),farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length};
  }
- dispose(){for(const batch of this.batches.values())for(const part of ['trunk','canopy'] as const){const mesh=batch[part];this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}for(const mesh of this.far){this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}this.bark.dispose();this.leaves.dispose();this.farMaterial.dispose();this.cache.clear();}
+ dispose(){for(const batch of this.batches.values())for(const part of ['trunk','canopy'] as const){const mesh=batch[part];this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}for(const mesh of this.far){this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}this.scene.remove(this.farTrunk);this.farTrunk.geometry.dispose();this.farTrunk.dispose();this.bark.dispose();this.leaves.dispose();this.farMaterial.dispose();this.cache.clear();}
 }
 export type DressingPoint={x:number;y:number;z:number;kind:DressingForm;scale?:number};
 /** Tiny nonblocking dressing: no ResourceNode, navigation obstacle, free product

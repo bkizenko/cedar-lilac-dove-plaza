@@ -52,3 +52,11 @@ test('resource picking maps compacted and far instance slots to original IDs, in
  const color=new THREE.Color();near.mesh.getColorAt(0,color);assert.ok(color.r>color.g,'a real marked tree remains visibly marked');
  view.dispose();
 });
+
+test('all seven forms stay rooted at far LOD and felling removes every crown across near/far transitions',()=>{
+ for(const form of TREE_FORMS){const scene=new THREE.Scene(),view=new BiomeVegetation(scene,42,()=>({kind:'mixed-woodland',treeForms:{[form]:1}}));const n=tree(11,160),before=structuredClone(n);
+ view.sync([n],context);const trunk=scene.getObjectByName('resource-far-rooted-trunk'),m=new THREE.Matrix4();assert.equal(trunk.count,1);trunk.getMatrixAt(0,m);const bounds=trunk.geometry.boundingBox??(trunk.geometry.computeBoundingBox(),trunk.geometry.boundingBox);assert.ok(Math.abs(bounds.clone().applyMatrix4(m).min.y-n.y)<1e-5);assert.deepEqual(n,before);
+ for(const camera of[{x:0,z:0},{x:160,z:0},{x:0,z:0}]){n.amount=0;const report=view.sync([n],{...context,camera});assert.equal(report.nearCanopies+report.farCanopies,0);assert.equal(trunk.count,0);assert.ok(!view.pickingSources().filter(s=>s.mesh.name.includes('canopy')||s.mesh.name.includes('crown')||s.mesh.name.includes('needle')).some(s=>s.resourceIds.includes(n.id)));}
+ view.dispose();assert.equal(scene.children.length,0);
+ }
+});

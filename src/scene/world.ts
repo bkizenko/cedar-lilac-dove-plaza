@@ -1,3 +1,5 @@
+import {buildingCharacter,workingHearths} from './buildingCharacter';
+import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -943,12 +945,15 @@ export class WorldView {
     if (home) this.hearth.position.set(home.x + 1.6, home.y + 0.8, home.z + 4.2);
   }
 
+  private wildlifeOwners = new Map<THREE.InstancedMesh, import("@/game/types").Critter[]>();
+
   private buildWildlife() {
     const mkHerd = (geo: THREE.BufferGeometry, mat: THREE.Material, n: number) => {
       const mesh = new THREE.InstancedMesh(geo, mat, Math.max(n, 1));
       mesh.castShadow = true;
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mesh.count = 0;
+      mesh.frustumCulled = false;
       this.scene.add(mesh);
       return mesh;
     };
@@ -1034,6 +1039,19 @@ export class WorldView {
         (b.team === 0 || game.visibleAt(b.x, b.z)) &&
         Math.abs(ground.x - b.x) <= b.w / 2 && Math.abs(ground.z - b.z) <= b.d / 2);
       if (farm) return farm;
+    }
+    return null;
+  }
+
+  pickWildlife(cx:number,cy:number,game:Game){
+    const el=this.renderer.domElement;
+    _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);_ray.setFromCamera(_ndc,this.camera);
+    const terrainHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain],false)[0]:undefined;
+    for(const mesh of this.wildlifeOwners.keys())mesh.computeBoundingSphere();
+    for(const hit of _ray.intersectObjects([...this.wildlifeOwners.keys()],false)){
+      if(hit.instanceId===undefined||terrainHit&&terrainHit.distance+.02<hit.distance)continue;
+      const c=this.wildlifeOwners.get(hit.object as THREE.InstancedMesh)?.[hit.instanceId];
+      if(c&&game.state.wildlife.includes(c)&&(c.hp>0?game.visibleAt(c.x,c.z):carcassAvailable(game,c)&&game.exploredAt(c.x,c.z)))return c;
     }
     return null;
   }
@@ -1285,28 +1303,20 @@ export class WorldView {
   }
 
   private syncWildlife(game: Game) {
-    const stamp = (mesh: THREE.InstancedMesh | null, species: string) => {
-      if (!mesh) return;
-      const list = game.state.wildlife.filter((c) => c.species === species);
-      const n = Math.min(list.length, instCap(mesh));
-      for (let i = 0; i < n; i++) {
-        const c = list[i];
-        const corpse = c.hp <= 0 && carcassAvailable(game,c);
-        const hidden = (c.hp <= 0&&!corpse) || !(corpse?game.exploredAt(c.x,c.z):game.visibleAt(c.x,c.z));
-        _p.set(c.x, c.y+(corpse ? .3*c.scale : 0), c.z);
-        _haulEuler.set(corpse?Math.PI/2:0, c.facing, 0);
-        _q.setFromEuler(_haulEuler);
-        _s.setScalar(hidden ? 0.001 : c.scale);
-        _m.compose(_p, _q, _s);
-        mesh.setMatrixAt(i, _m);
+    this.wildlifeOwners.clear();
+    const stamp = (key: 'deer'|'boars'|'wildGoats'|'birds', species: string) => {
+      const old=this[key];if(!old)return;
+      const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
+      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
+      for(let i=0;i<list.length;i++){
+        const c=list[i],corpse=c.hp<=0;
+        _p.set(c.x,c.y+(corpse?.3*c.scale:0),c.z);
+        _haulEuler.set(corpse?Math.PI/2:0,c.facing,0);_q.setFromEuler(_haulEuler);_s.setScalar(c.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
-      mesh.count = n;
-      mesh.instanceMatrix.needsUpdate = true;
+      mesh.count=list.length;mesh.instanceMatrix.needsUpdate=true;
+      this.wildlifeOwners.set(mesh,list);
     };
-    stamp(this.deer, "deer");
-    stamp(this.boars, "boar");
-    stamp(this.wildGoats, "goat");
-    stamp(this.birds, "bird");
+    stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('birds','bird');
     const mesh=this.domesticGoats;
     if(mesh){
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(mesh));
@@ -1471,7 +1481,7 @@ export class WorldView {
         if(type==='watchtower'&&b.towerPlatform)continue;
         if(type==='trench'&&excavationTerrain(game).buildingIds.has(b.id))continue;
         const seen=b.team===0||game.exploredAt(b.x,b.z);if(!seen)continue;
-        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b);
+        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b),character=buildingCharacter(game.state.seed,b.id);
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const scalable=type==="farm"||type==="warehouse";
@@ -1488,7 +1498,7 @@ export class WorldView {
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
             if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
-            else if(type!=="farm"&&type!=="pen")_s.y*=identity.roofHeight;
+            else if(type!=="farm"&&type!=="pen")_s.y*=identity.roofHeight*(fort?1:character.roofHeight);
           }
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
@@ -1497,6 +1507,7 @@ export class WorldView {
           if(mesh.instanceColor){
             _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
             if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
+            if(type!=="farm"&&!fort)_c.multiplyScalar(character.tint);
             mesh.setColorAt(i,_c);
           }
         };
@@ -1954,6 +1965,10 @@ export class WorldView {
         _s.set(on ? 0.55 : 0.001, on ? flicker : 0.001, on ? 0.55 : 0.001);
         _m.compose(_p, _q, _s);
         this.flames.setMatrixAt(fi++, _m);
+      }
+      const litHearths=workingHearths(game);
+      for(const b of game.state.buildings){if(fi>=instCap(this.flames))break;if(!litHearths.has(b.id)||!(b.team===0||game.visibleAt(b.x,b.z)))continue;
+        _p.set(b.x,foundationProfile(game,b).level+.18,b.z);_q.identity();_s.set(.42,.55+Math.sin(game.state.time*8+b.id)*.06,.42);_m.compose(_p,_q,_s);this.flames.setMatrixAt(fi++,_m);
       }
       let pi=0;
       for(const h of halls){if(pi>=instCap(this.pits))break;_p.set(h.x+1.6,h.y,h.z+4.2);_q.set(0,0,0,1);_s.setScalar(1);_m.compose(_p,_q,_s);this.pits.setMatrixAt(pi++,_m);}
@@ -2485,6 +2500,7 @@ export class WorldView {
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
+    this.wildlifeOwners.clear();
     this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;
     for(const material of this.waterMaterials)material.dispose();this.waterMaterials=[];
     this.campVisual?.dispose();this.campVisual=null;

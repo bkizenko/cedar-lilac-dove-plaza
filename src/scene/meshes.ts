@@ -1,3 +1,4 @@
+import {fortifiedShelterGeo} from './fortifiedShelter';
 import {productionWorkplaceGeos} from './productionWorkplaces';
 import {timberGateKit} from './gateKit';
 import * as THREE from "three";
@@ -205,24 +206,6 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   const wareT = [box(5.4, 1.8, 4.6, 0, 0, 0)];
   const wareR = Array.from({length:4},(_,i)=>box(6.2,.28,5.4-i*1.25,0,1.8+i*.28,0));
   for(const x of [-2.65,2.65])for(const z of [-2.2,0,2.2])wareT.push(box(.2,2,.2,x,0,z));
-  const barT: THREE.BufferGeometry[] = [
-    box(7.2, 2.2, 6.4, 0, 0, 0),
-    box(2.6, 4.2, 2.6, -3.4, 0, -3.0),
-    box(2.6, 4.2, 2.6, 3.4, 0, -3.0),
-    box(0.18, 3.4, 0.18, 0, 2.0, 3.5),
-    box(0.7, 1.1, 0.12, 0, 4.6, 3.5),
-  ];
-  for (let i = 0; i < 9; i++) {
-    const x = -3.4 + i * 0.85;
-    barT.push(box(0.22, 2.6, 0.22, x, 0, 3.3));
-    barT.push(box(0.22, 2.6, 0.22, x, 0, -3.3));
-  }
-  const barR = [
-    box(5.6, 0.28, 3.8, 0, 2.2, 0, 0.45),
-    box(5.6, 0.28, 3.8, 0, 2.2, 0, -0.45),
-    cone(1.3, 1.4, -3.4, 4.2, -3.0, 8),
-    cone(1.3, 1.4, 3.4, 4.2, -3.0, 8),
-  ];
   const forgeT = [box(5.0, 1.8, 4.6, 0, 0, 0), box(1.0, 3.2, 1.0, 1.4, 0, -1.2)];
   const forgeR = [box(5.8, 0.2, 3.2, 0, 1.8, 0, 0.5), box(5.8, 0.2, 3.2, 0, 1.8, 0, -0.5)];
   const towerT: THREE.BufferGeometry[] = [box(2.6, 5.2, 2.6, 0, 0, 0), box(3.2, 0.35, 3.2, 0, 5.2, 0)];
@@ -286,7 +269,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       box(.8,.65,.8,-1.8,0,2),box(.65,.5,.65,-1.8,.65,2),
       box(.8,.7,.8,1.8,0,2),box(.8,.1,.9,1.8,.35,2)
     ]),extraMat:'dark' },
-    barracks: { timber: merge(barT), roof: merge(barR) },
+    barracks: fortifiedShelterGeo(),
     forge: { timber: merge(forgeT), roof: merge(forgeR) },
     watchtower: { timber: merge(towerT), roof: merge([box(0.1, 0.1, 0.1, 0, 0, 0)]) },
     temple: { timber: merge(templeT), roof: merge(templeR) },

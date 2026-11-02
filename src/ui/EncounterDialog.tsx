@@ -14,12 +14,12 @@ export function EncounterDialog({engine}:{engine:Engine|null}){
   <span className="encounter-eyebrow">{hostile?'Hostile encounter':'First contact'}</span>
   <h2 id="encounter-heading">{t.name}</h2>
   <p>{person?personName(person):'Your explorer'} has met {stranger?personName(stranger):'someone'} from <strong>{t.name}</strong>.</p>
-  <p>You can ask about their experience, exchange available goods, or decide who returns home.</p>
+  <p>{stranger?personName(stranger):'The visitor'} waits for your reply.</p>
   {stranger?.carryType&&stranger.carry>0&&<p>Visible cargo: {Math.floor(stranger.carry)} {stranger.carryType}.</p>}
   <ContactActions key={encounter.stranger} engine={engine} strangerId={encounter.stranger} personId={encounter.person}/>
   <div className="encounter-actions">
-   {!hostile&&<button type="button" onClick={()=>reply('greet')}>Greet peacefully and continue</button>}
-   <button type="button" onClick={()=>reply('observe')}>Keep moving</button>
+   {!hostile&&<button type="button" onClick={()=>reply('greet')}>Part on friendly terms</button>}
+   <button type="button" onClick={()=>reply('observe')}>End conversation</button>
   </div>
  </dialog>;
 }
