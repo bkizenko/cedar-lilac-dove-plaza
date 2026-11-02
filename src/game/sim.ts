@@ -321,7 +321,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 14 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 15 : 1, request:WorldRequest={}) {
     this.selectedBoat = null;
     resetCommandDiagnostics(this);
     resetDefenseMobilization(this);

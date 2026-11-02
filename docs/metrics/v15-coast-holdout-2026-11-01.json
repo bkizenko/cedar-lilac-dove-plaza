@@ -1,0 +1,223 @@
+{
+  "scenarioCount": 24,
+  "passed": 24,
+  "scope": "24 held-out natural terrain scenarios; hashes exclude generation identity metadata",
+  "scenarios": [
+    {
+      "seed": 0,
+      "size": 1040,
+      "signature": "77696d3e4fd3aa92de27b449ad35e70242e2966fbe2e5c0a4b82d279915e4da7",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 1,
+      "terrainSeed": 1384430195
+    },
+    {
+      "seed": 0,
+      "size": 1560,
+      "signature": "03a25be13304bc45b6c8fa597677573c42b8fd41d8c4a5eb8f79d0bf363c1c24",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 0
+    },
+    {
+      "seed": 0,
+      "size": 2080,
+      "signature": "c523d864ce9e40d9154cf3e6a3d3316e4e5c572bd69bcfb75da8bc4f35eba752",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 0
+    },
+    {
+      "seed": 3,
+      "size": 1040,
+      "signature": "96d28e45d974ec1ae72eea59473c9df8ffd377a1dd308820462bd8ea9ab4d1d0",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 3
+    },
+    {
+      "seed": 3,
+      "size": 1560,
+      "signature": "592a4db03c205da6b1000f666022cdbf4d9256db6be6a8917d2ea7362576dd5b",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 3
+    },
+    {
+      "seed": 3,
+      "size": 2080,
+      "signature": "3a39866386520974c9358cfaf29eaba27dbd3e2350c56aa29e34cc8b3baecb2d",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 3
+    },
+    {
+      "seed": 11,
+      "size": 1040,
+      "signature": "ea03bc33d4511c7b111c92f08451956b90efaaad56b2381ace69eee342f63a20",
+      "mode": "edge-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 11
+    },
+    {
+      "seed": 11,
+      "size": 1560,
+      "signature": "6da9b7c0a4c24d2e64123c4d8ba881d2ac07b9610c9777e4d740ee03fcfce576",
+      "mode": "edge-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 11
+    },
+    {
+      "seed": 11,
+      "size": 2080,
+      "signature": "87c224a2f1f943bf5af628429374fa95d7ff114fc9cfe7a79976a69c4d00f05d",
+      "mode": "edge-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 11
+    },
+    {
+      "seed": 29,
+      "size": 1040,
+      "signature": "df3dd7d516ee2916b75ff69f22944fb065ac75a2ea5ad8c46a152c7a3bf543cc",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 29
+    },
+    {
+      "seed": 29,
+      "size": 1560,
+      "signature": "601cf24be1d6a6f38314d2c7aa48ddc556e348bc4481033d967ae934369848d9",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 29
+    },
+    {
+      "seed": 29,
+      "size": 2080,
+      "signature": "23320cebc371db41b4142e618645eb004ecaa6eec808fbf2f41c08230c6542eb",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 29
+    },
+    {
+      "seed": 57,
+      "size": 1040,
+      "signature": "f1a004bb8bc09daacd1d47f0f3f15a5c9a576fc130b74fb43f601aad1ebf0bc8",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 2,
+      "terrainSeed": 2953969404
+    },
+    {
+      "seed": 57,
+      "size": 1560,
+      "signature": "418328fd482f284f62b91a332f05063812257b56b061ec92777e28a5cd495ee0",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 57
+    },
+    {
+      "seed": 57,
+      "size": 2080,
+      "signature": "4dcb948570f881869fedfa1f458b871c715374df461d925c8a1e4b6d8803218e",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 57
+    },
+    {
+      "seed": 83,
+      "size": 1040,
+      "signature": "c4df67415ac09841bf2bcf682203a50991837b3c2b60d1237705d1925152f208",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 83
+    },
+    {
+      "seed": 83,
+      "size": 1560,
+      "signature": "629702556d8af494a8c3c3500f5c35ee55f620e50721f6527a434aaf1ab086d7",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 83
+    },
+    {
+      "seed": 83,
+      "size": 2080,
+      "signature": "a43eaafdd0b04bd11ec7afc51299fb85713ca508f9bb01822f048a8511c6e26c",
+      "mode": "divided-continent",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 83
+    },
+    {
+      "seed": 123,
+      "size": 1040,
+      "signature": "6928b12de0908bab9c0c0149b9d2f04f285400ebe9a0e4b3f7ae5f923013f1d6",
+      "mode": "mainland-satellites",
+      "ok": true,
+      "attempt": 1,
+      "terrainSeed": 2496310711
+    },
+    {
+      "seed": 123,
+      "size": 1560,
+      "signature": "a6918f590930f6c1af656dd94ef904fb84767595f06c9fc469e9f2cea82c8423",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 123
+    },
+    {
+      "seed": 123,
+      "size": 2080,
+      "signature": "c5e05c9e77d3d931f9db6ba638eb358dc3c1adfd9b2315b15e5e75c32bf3159d",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 123
+    },
+    {
+      "seed": 999,
+      "size": 1040,
+      "signature": "f747c58657e553701d8d7ea9f367a3ae934c3377f214b9d94f9bd7eeb0b8f83e",
+      "mode": "mainland-satellites",
+      "ok": true,
+      "attempt": 1,
+      "terrainSeed": 1391468253
+    },
+    {
+      "seed": 999,
+      "size": 1560,
+      "signature": "b80ddfcc1f60e7183f945661a34d1b5d76f91e60c0f73d93625050e7d4fa30a7",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 999
+    },
+    {
+      "seed": 999,
+      "size": 2080,
+      "signature": "85c340a7afc9b0e44815cfdf4918be2bad44feddc753def289f9954af45e8f3d",
+      "mode": "major-islands",
+      "ok": true,
+      "attempt": 0,
+      "terrainSeed": 999
+    }
+  ]
+}

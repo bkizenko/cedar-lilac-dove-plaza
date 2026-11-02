@@ -1,3 +1,4 @@
+import {diverseLandforms,diverseGeography} from './coastalVariety';
 import {openingWaterSurvey,openingCampSurvey,COMPACT_SETTLEMENT_RULES,OPENING_WATER_RULES} from './openingWater';
 import {continentalRiparian} from './continentalRiparian';
 import {variedLandforms,variedGeography,surveyVariety,validateVariety,makeLandContinuation,VARIETY_RULES,type TownCandidate} from './worldVariety';
@@ -18,6 +19,7 @@ import { fbm, mulberry32 } from "./rng";
 import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
+  generation?:{requestedSeed:number;terrainSeed:number;attempt:number;rejectedReasons:string[]};
   size: number;
   settlementFallback?:{kind:"compact-foundations";originalBroadSiteCount:number;compactSiteCount:number};
   openingWater?:NonNullable<ReturnType<ReturnType<typeof openingWaterSurvey>["at"]>>;
@@ -117,8 +119,21 @@ function node(
   return { id, kind, x, z, y, amount, maxAmt: amount, regenT: 0, scale, rich };
 }
 
-export function generateWorld(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const varied=version>=14?variedLandforms(seed,request):null;
+/** Reject unsuitable V15 candidates deterministically; never publish missing
+ * geography or an unsafe camp just to make a seed succeed. Old versions keep
+ * their byte-for-byte generation path. */
+export function generateWorld(seed:number,version=1,request:WorldRequest={}):WorldData{
+ if(version<15)return generateWorldCandidate(seed,version,request);
+ const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
+ for(let attempt=0;attempt<16;attempt++){
+  const terrainSeed=attempt===0?seed:(random()*0x100000000)>>>0;
+  try{const world=generateWorldCandidate(terrainSeed,version,request);return{...world,generation:{requestedSeed:seed,terrainSeed,attempt,rejectedReasons}};}
+  catch(error){const reason=error instanceof Error?error.message:String(error);if(!/^(V1[345] |Primary landscape lacks |This seed has no viable |No dry viable)/.test(reason))throw error;rejectedReasons.push(reason);}
+ }
+ throw new Error(`V15 exhausted16 measured candidates: ${rejectedReasons.join('; ')}`);
+}
+function generateWorldCandidate(seed: number, version = 1, request: WorldRequest = {}): WorldData {
+  const varied=version>=15?diverseLandforms(seed,request):version>=14?variedLandforms(seed,request):null;
   const multi=version===13?multipleLandmasses(seed,request):null;
   const land=varied??multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
   const MAP=land?.options.size??1040, HALF=MAP/2;
@@ -218,7 +233,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
   const shorelineWidth=14+landscapeRandom()*14;
   const woodlandShift=landscapeRandom()*700;
   const waterY = WATER_Y;
-  const geo=varied?variedGeography(seed,MAP,varied):multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
+  const geo=version>=15&&varied?diverseGeography(seed,MAP,varied as ReturnType<typeof diverseLandforms>):varied?variedGeography(seed,MAP,varied):multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
   const localBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
   const waterHeights=version>=11?new Float32Array(n*n):undefined;
@@ -381,6 +396,15 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       if(approaches<6)continue;
       sites.push({x,z,noise:siteRandom(),beauty:version>=9?scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z,version>=11?localLevel:undefined,version>=11?SCENERY_RULES.backdropRadiusMeters:0).score:0});
     }
+    let v15Opening:typeof sites[number]|undefined;
+    if(version>=15){
+      const terrain={size:MAP,height:(x:number,z:number)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},opening=openingWaterSurvey(terrain),target=geo?.features.find(f=>f.kind==='lake')??{x:0,z:0};
+      for(const p of opening.candidates(target)){
+        if(!inside(p.x,p.z,72)||!openingCampSurvey(terrain,p).valid||!opening.at(p))continue;
+        const approaches=opening.approachesAt(p);if(approaches.near<OPENING_WATER_RULES.nearDryApproaches||approaches.outer<OPENING_WATER_RULES.outerDryApproaches)continue;
+        const site={...p,noise:siteRandom(),beauty:scenicBeautyAt(terrain.height,waterY,p.x,p.z,localLevel,SCENERY_RULES.backdropRadiusMeters).score};sites.push(site);if(!v15Opening||site.beauty>v15Opening.beauty)v15Opening=site;
+      }
+    }
     // Only seeds rejected by the original broad 24m village survey enter
     // this branch. Existing valid V14 worlds (including their RNG stream) are
     // unchanged. Compact camps still need a full hall/apron, gentle people
@@ -407,12 +431,13 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     camps.length=0;
     for(const team of teams){
       let best=sites[0],score=-Infinity,zone=-1;
-      if(townSurvey&&team!==0){let priority=-Infinity;for(const part of townSurvey.landmasses){const used=townCounts.get(part.id)||0;if(used>=part.townSites.length)continue;const available=sites.some(site=>townSurvey.componentAt(site.x,site.z)===part.id&&camps.every(c=>Math.hypot(c.x-site.x,c.z-site.z)>=VARIETY_RULES.minimumTownSpacingMeters));const value=part.usableAreaSquareMeters/(used+1);if(available&&value>priority){priority=value;zone=part.id;}}}
+      if(townSurvey&&team!==0){let priority=-Infinity;for(const part of townSurvey.landmasses){const used=townCounts.get(part.id)||0;if(used>=part.townSites.length)continue;const available=sites.some(site=>townSurvey.componentAt(site.x,site.z)===part.id&&camps.every(c=>Math.hypot(c.x-site.x,c.z-site.z)>=(version>=15?120:VARIETY_RULES.minimumTownSpacingMeters)));const value=part.usableAreaSquareMeters/(used+1);if(available&&value>priority){priority=value;zone=part.id;}}}
       for(const site of sites){
         if(townSurvey&&team!==0&&townSurvey.componentAt(site.x,site.z)!==zone)continue;
-        if(version>=9&&team===0&&beauty(site)<scenicThreshold)continue;
+        if(version>=9&&team===0&&!(version>=15&&v15Opening)&&beauty(site)<scenicThreshold)continue;
+        if(version>=15&&team===0&&v15Opening&&site!==v15Opening)continue;
         const distance=camps.length?Math.min(...camps.map(c=>Math.hypot(c.x-site.x,c.z-site.z))):MAP*.3;
-        if(townSurvey&&camps.length&&distance<VARIETY_RULES.minimumTownSpacingMeters)continue;
+        if(townSurvey&&camps.length&&distance<(version>=15?120:VARIETY_RULES.minimumTownSpacingMeters))continue;
         const startLake=version>=11&&team===0?geo?.features.find(f=>f.kind==='lake'):undefined;
         const value=startLake?-Math.hypot(site.x-startLake.x,site.z-startLake.z)+site.noise*2:distance+site.noise*MAP*(camps.length?.06:.7);
         if(value>score){score=value;best=site;}
@@ -823,15 +848,17 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
     };
     // A waterfront camp needs a real hall-sized dry apron and several usable
     // resource paths; it need not fit the old broad 20m village clearing.
+    const openingNavigation=version>=15?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null;
     const viableOpeningClearing=(origin:typeof home)=>{
       let low=Infinity,high=-Infinity;
       for(let dz=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz+=3)for(let dx=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx+=3){const h=sample(heights,origin.x+dx,origin.z+dz);if(h<localLevel(origin.x+dx,origin.z+dz)+.55)return false;low=Math.min(low,h);high=Math.max(high,h);}
       if(high-low>OPENING_WATER_RULES.maxFoundationReliefMetres)return false;
+      if(openingNavigation){const routes=openingNavigation.approachesAt(origin);return routes.near>=OPENING_WATER_RULES.nearDryApproaches&&routes.outer>=OPENING_WATER_RULES.outerDryApproaches;}
       let near=0,far=0;for(let i=0;i<24;i++){const a=i*Math.PI/12;if(safeApproach(origin.x+Math.cos(a)*26,origin.z+Math.sin(a)*26,origin))near++;if(safeApproach(origin.x+Math.cos(a)*48,origin.z+Math.sin(a)*48,origin))far++;}
       return near>=OPENING_WATER_RULES.nearDryApproaches&&far>=OPENING_WATER_RULES.outerDryApproaches;
     };
     if(version>=9){
-      const opening=version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null;
+      const opening=openingNavigation??(version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null);
       const candidates:{x:number;z:number;score:number}[]=[];
       for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
         if(camps.some(c=>c.team!==0&&Math.hypot(c.x-x,c.z-z)<120))continue;
@@ -839,7 +866,7 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
         candidates.push({x,z,score:scenicBeautyAt((px,pz)=>sample(heights,px,pz),waterY,x,z,version>=11?localLevel:undefined,version>=11?SCENERY_RULES.backdropRadiusMeters:0).score});
       }
       if(opening){
-        const target=geo?.features.find(f=>f.kind==='lake')??home;
+        const target=geo?.features.find(f=>f.kind==='lake')??{x:0,z:0};
         for(const p of opening.candidates(target)){
           if(!inside(p.x,p.z,72)||camps.some(c=>c.team!==0&&Math.hypot(c.x-p.x,c.z-p.z)<120)||!viableOpeningClearing({...home,...p}))continue;
           candidates.push({...p,score:scenicBeautyAt((x,z)=>sample(heights,x,z),waterY,p.x,p.z,localLevel,SCENERY_RULES.backdropRadiusMeters).score});
@@ -854,7 +881,10 @@ export function generateWorld(seed: number, version = 1, request: WorldRequest =
       // Exceptional layouts keep the safest available opening rather than
       // inventing scenery or accepting an unsafe clearing to hit a preference.
       const selected=best??(opening?undefined:[...candidates].sort((a,b)=>b.score-a.score)[0]);
-      if(opening&&!selected)throw new Error("V14 has no above-average safe clearing with an initially known reachable freshwater bank");
+      if(opening&&!selected){
+        if(version>=15){const wet=candidates.filter(c=>!!opening.at(c)),safe=wet.filter(c=>openingCampSurvey({height:(x,z)=>sample(heights,x,z),water:localLevel},c).valid);throw new Error(`V15 opening failed: ${JSON.stringify({candidates:candidates.length,threshold,maximumWaterBeauty:Math.max(...wet.map(c=>c.score)),maximumSafeWaterBeauty:Math.max(...safe.map(c=>c.score)),safeWaterCandidates:safe.length})}`);}
+        throw new Error("V14 has no above-average safe clearing with an initially known reachable freshwater bank");
+      }
       if(selected){home.x=selected.x;home.z=selected.z;biomes[0].x=home.x;biomes[0].z=home.z;}
     }
     if (!(version>=14?viableOpeningClearing(home):viableClearing(home))) {
