@@ -56,7 +56,7 @@ import {weatherWaterLevel,highWaterLevel,dryTreeRoot} from "./hydrology";
 import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
 import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
-import {raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
+import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
@@ -1891,8 +1891,7 @@ export class Game {
     let threat: Unit | Building | null = null;
     let bd = 28 * 28;
     for (const u of this.state.units) {
-      if(contactYieldingTo(this,u,team)||isSocietyPeaceMessengerFor(this,u,team))continue;
-      if (u.hp <= 0 || !this.isFoe(team, u.team)) continue;
+      if (u.hp <= 0 || (team===0&&!this.visibleAt(u.x,u.z)) || contactYieldingTo(this,u,team) || isSocietyPeaceMessengerFor(this,u,team) || !this.isFoe(team, u.team)) continue;
       const d = (u.x - hall.x) ** 2 + (u.z - hall.z) ** 2;
       if (d < bd) {
         bd = d;
@@ -1904,6 +1903,7 @@ export class Game {
       (u) => u.team === team && u.hp > 0 && u.type !== "worker" && u.type !== "leader",
     );
     for (const u of mil) {
+      if(team===0&&explicitArmedOrder(this,u))continue;
       if (u.societyMissionId || u.escortId!==undefined || u.visit || u.trade || u.recalled || u.order === "hold" || u.pillage >= 0 || Math.hypot(u.x - hall.x, u.z - hall.z) > 36)
         continue;
       if (

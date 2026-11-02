@@ -1,0 +1,13 @@
+# Defense orders and saved-village CPU diagnosis
+
+Previous goal turn made progress: published b9a761f and verified local release health. Current batch repairs the real order pipeline, without incorporating unfinished helper, visitor or geography edits.
+
+A horn now supplies its actual visible intruder to answering healthy residents, including those outside the short personal reaction radius but inside village bounds. Pursuit remains bounded by the settlement intrusion area, visibility, diplomacy and civilian protections. Automatic re-alarms and the older end-of-frame defendHome routine preserve new healthy armed direct movement/attack orders. A manual horn may deliberately replace them. Hidden enemies cannot be acquired by the old home-defense routine. Existing weapons, physical equipment pickup, shelter, injury and stand-down rules remain.
+
+Four new focused checks pass: a distant armed defender physically closes and damages the actual intruder; direct Move and Attack survive automatic alarms; an actual resident in the private saved village borrows exactly one owned weapon and physically follows a new move; hidden-threat and direct-destination preservation. The controlled scenario marks its neutral society already contacted so unrelated first-contact pausing cannot stop the setup walk.
+
+Broader checks:24/25 distinct cases pass (96%). The one timber-priority delivery test also fails unchanged in the published b9a761f source; it is recorded, not weakened or called fixed. Current defense movement, attack, finite equipment, camp stand-down and horn regressions pass. Frozen-source typecheck and production build pass.
+
+CPU evidence in metrics/defense-saved-village-cpu-2026-11-01.json reproduces substantial simulation cost in the older private year3 village:245 actors,408 buildings,120 sequential updates, mean36.18ms, p95 49.14ms, worst217.78ms, no simulation errors. This already exceeds a16.7ms drawing budget without any renderer or shadows. Worker decisions and movement are substantial contributors; the whole problem cannot be attributed to shadows. Cold decoding/world-generation samples in the CPU profile are distinguished from actual update costs. The new year5 village has not been exported/benchmarked, so this is not a claim that its exact cause is proven or its lag cured.
+
+Full-release baseline remains hearthwild-first-release-gates-v1:23/98=23.47%. No broad campaign gate is credited by this narrow correction. Remaining work includes current-village frame-tail smoothness, patrols, independent practical-study helpers, new boat mechanics, cultural trade, rankings and distinct V15 coastlines/terrain composition.

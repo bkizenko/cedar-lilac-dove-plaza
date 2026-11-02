@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "UI-first compact HUD, physical hunting/fields/contact recovery and persistent returns following71992d9",
+  "verifiedPublishedCodeBaseline": "Bounded defense targeting/direct-order fix and saved-village CPU diagnosis followingb9a761f",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Two independently profitable rival trades under ordinary AI review",

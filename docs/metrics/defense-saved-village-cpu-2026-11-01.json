@@ -1,0 +1,87 @@
+{
+  "scope": "Older private year-three save; CPU-only120steps; cold restart included; wrappers overlap; no renderer/input/browser-save/FPS evidence",
+  "units": 245,
+  "buildings": 408,
+  "worldSize": 1560,
+  "elapsedSimulation": 4.000000000050932,
+  "mean": 36.17938710833332,
+  "p50": 31.941499999999905,
+  "p95": 49.13750000000027,
+  "max": 217.7816660000001,
+  "costs": {
+    "workerAI": {
+      "calls": 27478,
+      "ms": 1660.1973759999255,
+      "max": 50.898416
+    },
+    "combatAI": {
+      "calls": 2,
+      "ms": 0.2539170000009108,
+      "max": 0.2407920000005106
+    },
+    "steer": {
+      "calls": 13244,
+      "ms": 534.3675719999569,
+      "max": 10.235666000000037
+    },
+    "separate": {
+      "calls": 120,
+      "ms": 153.15100200000006,
+      "max": 3.018416999999772
+    },
+    "updateVision": {
+      "calls": 120,
+      "ms": 24.543334000004506,
+      "max": 1.0811250000001564
+    },
+    "rebuildWalk": {
+      "calls": 0,
+      "ms": 0,
+      "max": 0
+    },
+    "tickWildlife": {
+      "calls": 120,
+      "ms": 41.35016600000108,
+      "max": 1.3682920000001104
+    },
+    "tickPeople": {
+      "calls": 120,
+      "ms": 83.14112899999736,
+      "max": 1.9672080000000278
+    },
+    "tickRegions": {
+      "calls": 120,
+      "ms": 33.03374799999847,
+      "max": 0.7442499999997381
+    },
+    "defendHome": {
+      "calls": 360,
+      "ms": 9.81162900000345,
+      "max": 0.21741700000029596
+    },
+    "paintTerritory": {
+      "calls": 120,
+      "ms": 3.53246000000172,
+      "max": 0.45404199999984485
+    },
+    "workBoard.refresh": {
+      "calls": 218,
+      "ms": 125.09904100000267,
+      "max": 27.3293749999998
+    },
+    "workBoard.assign": {
+      "calls": 5784,
+      "ms": 337.2256960000386,
+      "max": 30.49050000000034
+    }
+  },
+  "errors": [],
+  "capturedOn": "2026-11-01",
+  "sourceBaseline": "b9a761f plus the isolated defense-order fix",
+  "limits": [
+    "Private save is from October31 year3, not the new November1 year5 screenshots.",
+    "CPU timing includes cold resumed-state work and method wrappers; nested method timings overlap.",
+    "Scene, GPU, browser saving, input and visible FPS were not measured.",
+    "This is a diagnosis, not a demonstrated performance improvement."
+  ]
+}
