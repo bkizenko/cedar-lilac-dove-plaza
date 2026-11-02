@@ -1,3 +1,4 @@
+import {retainReleaseAssets} from './retain-release-assets.mjs';
 import {spawn} from 'node:child_process';
 import {cpSync,mkdirSync,openSync,closeSync,writeFileSync,readFileSync,existsSync,renameSync,symlinkSync,rmSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
@@ -13,8 +14,7 @@ if(action==='publish'){
  cpSync(build,release,{recursive:true});
  // Existing open villages may lazily request chunks from the previous release.
  // Retain immutable hashed assets without replacing any freshly built files.
- const previousAssets=resolve(folder,'current/static/assets');
- if(existsSync(previousAssets))cpSync(previousAssets,resolve(release,'static/assets'),{recursive:true,force:false,errorOnExist:false});
+ retainReleaseAssets(resolve(folder,'current'),release);
  const next=resolve(folder,'next');rmSync(next,{force:true});symlinkSync(release,next);renameSync(next,resolve(folder,'current'));
  console.log('Play release ready. The running release stays unchanged until the server restarts.');
 }else if(action==='start'||action==='status'){
