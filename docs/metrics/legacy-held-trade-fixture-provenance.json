@@ -1,0 +1,16 @@
+{
+  "sourceRuntime": "Completed witnessed-destinations candidate based on920952a, before proposal follow-up",
+  "meaning": "Already paid and held legacy escrows; imported saves preserve ownership without making new remote guarantees",
+  "fixtures": [
+    {
+      "file": "scripts/fixtures/legacy-held-trade-920952a.json",
+      "sha256": "450ac21f1da7ce3ed2bae5ca6be2954900a87c8d7f39a041d06db0d713b97210",
+      "bytes": 154463
+    },
+    {
+      "file": "scripts/fixtures/legacy-held-armed-trade-920952a.json",
+      "sha256": "1852fcdf365aa79ea898e729ca08e3d9056f4a0dfc8027808b564f96e096f46f",
+      "bytes": 154427
+    }
+  ]
+}

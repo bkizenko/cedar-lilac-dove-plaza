@@ -1,0 +1,58 @@
+{
+  "scope": "New dated proposals do not remotely reserve; existing held guarantees tested separately",
+  "results": [
+    {
+      "scenario": "dated proposal home A/B and real local acceptance/refusal",
+      "quote": {
+        "give": "wood",
+        "get": "stone",
+        "giveAmt": 20,
+        "getAmt": 24
+      },
+      "outcomes": [
+        {
+          "unseenSellerStock": 200,
+          "homeAccepted": true,
+          "minimum": 24,
+          "paidBudget": 20,
+          "escrowAtDeparture": false,
+          "walkedToMeeting": 207.53192367647398,
+          "meeting": {
+            "kind": "stone",
+            "amount": 24
+          },
+          "woodFuelConsumed": 0,
+          "physicallyHome": true
+        },
+        {
+          "unseenSellerStock": 0,
+          "homeAccepted": true,
+          "minimum": 24,
+          "paidBudget": 20,
+          "escrowAtDeparture": false,
+          "walkedToMeeting": 207.53192367647398,
+          "meeting": {
+            "kind": "wood",
+            "amount": 20
+          },
+          "woodFuelConsumed": 0,
+          "physicallyHome": true
+        },
+        {
+          "unseenSellerStock": 50,
+          "homeAccepted": true,
+          "minimum": 24,
+          "paidBudget": 20,
+          "escrowAtDeparture": false,
+          "walkedToMeeting": 207.53192367647398,
+          "meeting": {
+            "kind": "wood",
+            "amount": 20
+          },
+          "woodFuelConsumed": 0,
+          "physicallyHome": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -12,7 +13,7 @@ function fixture(){
  Object.assign(g.tribe(2),{wood:200,stone:0,food:1500,age:0,hostile:false,alive:true});
  g.state.weather='clear';g.rebuildWalk();g.clockState=()=>({period:'Afternoon'});return g;
 }
-function contact(g){scoutKnowledge(g,{team:1,x:70,z:0});}
+function contact(g){scoutKnowledge(g,{team:1,x:70,z:0});endowSettlementSites(g,1,2);}
 function totals(g,k){return [1,2].reduce((s,t)=>s+g.tribe(t)[k],0)+g.state.units.filter(u=>u.carryType===k).reduce((s,u)=>s+u.carry,0);}
 function drive(g,u,seconds){for(let i=0;i<seconds*10;i++){g.state.time+=.1;g.navBudget=10;visitorAI(g,u,.1);if(!u.visit)break;}}
 test('a known rival receives a real offer, exchanges locally and the trader carries materials home',()=>{

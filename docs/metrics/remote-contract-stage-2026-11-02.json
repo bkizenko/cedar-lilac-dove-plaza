@@ -1,0 +1,53 @@
+{
+  "scope": "Contract-stage diagnostic only: actual dated local offer report, no local escrow at report time; later home acceptance checks live seller stock and creates escrow remotely",
+  "physicalMeetingReport": 39.100000000000286,
+  "quote": {
+    "give": "wood",
+    "get": "stone",
+    "giveAmt": 20,
+    "getAmt": 24
+  },
+  "output": [
+    {
+      "unobservedStockConsumed": false,
+      "accepted": true,
+      "before": {
+        "sellerFreeStone": 200,
+        "playerWood": 200
+      },
+      "after": {
+        "sellerFreeStone": 176,
+        "playerWood": 180,
+        "escrow": {
+          "team": 1,
+          "kind": "stone",
+          "amount": 24
+        }
+      },
+      "playerPosition": {
+        "x": 219.55072629629132,
+        "z": 17.962106919134882
+      },
+      "reportTime": 39.100000000000286
+    },
+    {
+      "unobservedStockConsumed": true,
+      "accepted": false,
+      "before": {
+        "sellerFreeStone": 0,
+        "playerWood": 200
+      },
+      "after": {
+        "sellerFreeStone": 0,
+        "playerWood": 200,
+        "escrow": null
+      },
+      "playerPosition": {
+        "x": 219.55072629629132,
+        "z": 17.962106919134882
+      },
+      "reportTime": 39.100000000000286
+    }
+  ],
+  "remoteStockPrerequisiteLeak": true
+}

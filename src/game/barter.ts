@@ -1,3 +1,6 @@
+import {refreshSettlementSites} from './settlementKnowledge';
+import {BUILDINGS} from './constants';
+import type {Building} from './types';
 import {TRADE_PRICING,partialPayment} from "./tradePricing";
 import {hasTaskCommitment} from './workCommitments';
 import {carryingCapacity} from './haulage';
@@ -7,11 +10,41 @@ import { predisposition } from "./people";
 import type { Unit, ResKind, TradeDeal } from "./types";
 import { isDependent, foodDemand, calendar } from "./settlement";
 
-export function knownSettlement(g: Game, team: number) {
-  const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0);
-  return !!hall&&(g.exploredAt(hall.x,hall.z)||g.state.buildings.some(b=>b.team===team&&g.finished(b)&&
-    Math.hypot(b.x-hall.x,b.z-hall.z)<40&&g.exploredAt(b.x,b.z)));
+const settlementLandmarks=new WeakMap<object,Building>();
+/** Last witnessed site, not a pointer to the current global hall object. */
+function legacyJourney(g:Game,u:Unit,owner:number):Unit["settlementJourney"]{
+ const active=(u.order==='trade'&&u.trade&&u.tradeTeam===owner)||(u.envoy?.phase==='outbound'&&u.envoy.team===owner)||(u.visit?.phase==='outbound'&&(u.visit.team??0)===owner);
+ if(!active||!Number.isFinite(u.tx)||!Number.isFinite(u.tz)||Math.abs(u.tx)>g.world.size/2||Math.abs(u.tz)>g.world.size/2)return undefined;
+ return {version:1 as const,owner,x:u.tx,z:u.tz,recordedAt:g.state.time};
 }
+export function beginSettlementJourney(g:Game,u:Unit,site:Building){u.settlementJourney={version:1,owner:site.team,siteId:site.id>0?site.id:undefined,x:site.x,z:site.z,recordedAt:g.state.time};}
+export function settlementJourneySite(g:Game,u:Unit,owner:number){
+ const point=u.settlementJourney?.owner===owner?u.settlementJourney:legacyJourney(g,u,owner);
+ if(point){u.settlementJourney=point;return settlementMarker(g,point,owner);}
+ const site=knownSettlementSite(g,owner,u.team);if(site)beginSettlementJourney(g,u,site);return site;
+}
+export function settlementMarker(g:Game,fact:object&{x:number;z:number;siteId?:number},owner:number){
+ const cached=settlementLandmarks.get(fact);if(cached)return cached;
+ const marker:Building={id:fact.siteId??0,kind:'building',type:'townhall',team:owner,x:fact.x,z:fact.z,y:g.height(fact.x,fact.z),w:BUILDINGS.townhall.w,d:BUILDINGS.townhall.d,hp:1,maxHp:1,build:1,queue:[],selected:false,rally:null,cd:0,reclaimed:false};settlementLandmarks.set(fact,marker);return marker;
+}
+export function knownSettlementSite(g:Game,team:number,observer=0):Building|undefined {
+ refreshSettlementSites(g);
+ const fact=(g.state.observedSettlements||[]).filter(m=>m.observer===observer&&m.owner===team&&m.active).sort((a,b)=>b.observedAt-a.observedAt||a.siteId-b.siteId)[0];
+ if(fact)return settlementMarker(g,fact,team);
+ // Serialized paid/active journeys are explicit endpoint evidence, unlike
+ // old terrain. Never dereference an unknown replacement hall for recovery.
+ for(const u of g.state.units.filter(u=>u.team===observer&&u.hp>0)){
+  const active=legacyJourney(g,u,team);if(!active)continue;
+  const endpoint=u.settlementJourney?.owner===team?u.settlementJourney:active;
+  if((g.state.observedSettlements||[]).some(m=>m.observer===observer&&m.owner===team&&!m.active&&m.observedAt>=endpoint.recordedAt&&(endpoint.siteId!==undefined?m.siteId===endpoint.siteId:Math.hypot(m.x-endpoint.x,m.z-endpoint.z)<12)))continue;
+  if(endpoint)return settlementMarker(g,endpoint,team);
+ }
+ return undefined;
+}
+export function knownSettlement(g:Game,team:number){return !!knownSettlementSite(g,team);}
+/** Global entities may be read for a local meeting only after this actual
+ * living person is physically close enough to witness them. */
+export function localSettlementHall(g:Game,u:Unit,team:number){return u.hp>0&&(!u.prisoner||u.prisoner.phase==='released')?g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<=26):undefined;}
 export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
   return (
       u.team === 0 &&
@@ -39,7 +72,7 @@ export function automaticTradeReady(g: Game, foodCost = 0) {
 
 /** Only a person at the meeting can reveal current terms. */
 export function recordTradeMeeting(g: Game, team: number, trader: Unit) {
-  const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&g.finished(b));
+  const hall=localSettlementHall(g,trader,team);
   if(!isRivalTeam(team)||!g.tribe(team)?.alive||g.tribe(team).hostile||trader.team!==0||trader.hp<=0||!hall||!g.buildingWorkReached(trader,hall))return undefined;
   const goods: ResKind[] = ["food", "wood", "stone", "copper", "iron"];
   const offers: TradeDeal[] = [];
@@ -106,7 +139,7 @@ export function quoteShipment(
   const you = g.tribe(0),
     other = g.tribe(team);
   const no = (reason: string) => ({ deal: null, reason });
-  if (!other || team === 0 || team === 3 || !other.alive || !knownSettlement(g, team))
+  if (!other || team === 0 || team === 3 || !other.alive || (!knownSettlement(g, team)&&!(visitingTrader&&localSettlementHall(g,visitingTrader,team))))
     return no("Explore their settlement first.");
   if (other.hostile) return no("Agree a truce before trading.");
   if (!visitingTrader && other.tradeCd > 0) return no("Their traders are still on the path.");
@@ -156,7 +189,7 @@ export function reportedQuote(g:Game,team:number,give:ResKind,get:ResKind,amount
   const quantity=Math.min(offer.getAmt,Math.floor(offer.getAmt*amount/offer.giveAmt));
   const payment=Math.ceil(quantity*offer.giveAmt/offer.getAmt);
   if(quantity<1||quantity>200)return no("Adjust the offered quantity.");
-  return {deal:{give,get,giveAmt:payment,getAmt:quantity},reason:`Last reported ${Math.floor((g.state.time-report.time)/60)} minutes ago. Accepting checks availability and sets the promised goods aside.`};
+  return {deal:{give,get,giveAmt:payment,getAmt:quantity},reason:`Last reported ${Math.floor((g.state.time-report.time)/60)} minutes ago. The trader carries your proposal; its minimum is checked at the meeting.`};
 }
 export function proposeShipment(
   g: Game,
@@ -176,7 +209,7 @@ export function proposeShipment(
     return false;
   }
   if (!g.dispatchTrade(carrier, quote.deal, team)) return false;
-  g.banner("Shipment reserved. A carrier leaves to collect the promised goods.", 2.5);
+  g.banner("Proposal sent. Below the reported minimum, your carrier brings the budget home.", 2.5);
   return true;
 }
 

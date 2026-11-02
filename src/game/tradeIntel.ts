@@ -14,8 +14,8 @@ const usable=(g:Game,team:number,k:ResKind)=>k!=='copper'&&k!=='iron'||g.tribe(t
  * The merchant volunteers bounded policy bands and a finite quote, never totals. */
 export function observePartnerTrade(g:Game,u:Unit,partner:number,quote:TradeQuote){
  if(u.hp<=0||(u.prisoner&&u.prisoner.phase!=='released')||u.boat||u.team===partner||!g.tribe(partner)?.alive||g.isFoe(u.team,partner))return null;
- const hall=g.state.buildings.find(b=>b.team===partner&&b.type==='townhall'&&g.finished(b));
- if(!hall||Math.hypot(u.x-hall.x,u.z-hall.z)>Math.max(hall.w,hall.d)*.55+3||!g.interactionSpot(u,hall))return null;
+ const hall=g.state.buildings.find(b=>b.team===partner&&b.type==='townhall'&&g.finished(b)&&Math.hypot(u.x-b.x,u.z-b.z)<=26);
+ if(!hall||!g.buildingWorkReached(u,hall)||!g.interactionSpot(u,hall))return null;
  if(!TRADE_INTEL_GOODS.includes(quote.give)||!TRADE_INTEL_GOODS.includes(quote.get)||quote.give===quote.get||!Number.isFinite(quote.offered)||quote.offered<=0||quote.offered>TRADE_INTEL_RULES.maximumQuote||!Number.isFinite(quote.receivable)||quote.receivable<0||quote.receivable>TRADE_INTEL_RULES.maximumQuote)return null;
  const t=g.tribe(partner),s=state(g),goods=TRADE_INTEL_GOODS.map(kind=>{const allowed=usable(g,partner,kind),reserve=rivalTradeReserve(g,partner,kind),stock=t[kind];return{kind,need:(!allowed?'unavailable':stock<reserve?'needs':stock>reserve*3?'glut':'balanced')as PartnerNeed,canOffer:allowed&&stock>=reserve+4};});
  const report:PartnerTradeReport={version:1,id:g.id(),observer:u.team,partner,carrierId:u.id,hallId:hall.id,x:u.x,z:u.z,observedAt:g.state.time,goods,quote:{...quote}};

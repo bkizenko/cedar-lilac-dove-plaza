@@ -1,3 +1,5 @@
+import{validObservedClaims}from'./frontiers';
+import{validObservedSettlements}from'./settlementKnowledge';
 import{validPracticalHelpers}from'./practicalHelpers';
 import{validTradeIntelState}from'./tradeIntel';
 import{validFibreState}from'./fibre';
@@ -6,7 +8,7 @@ import {validProductionPractice} from './productionPractice';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
-import {validCoastalTradeState} from './coastalTrade';
+import {validCoastalTradeState,migrateCoastalSettlementEndpoints} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
@@ -112,6 +114,7 @@ function validateGamePayload(raw: unknown) {
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
+  if(!validObservedClaims(s)||!validObservedSettlements(s))fail();
   if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
@@ -611,6 +614,7 @@ function validateGamePayload(raw: unknown) {
 export function validateGameSave(raw:unknown):void {validateGamePayload(raw);}
 export function decodeGame(raw:unknown):Game {
   const {d,s}=validateGamePayload(raw),g=new Game();
+  migrateCoastalSettlementEndpoints(s);
   // Missing opening hints belong to the original V14 campsite algorithm.
   // Keep the internal legacy request out of saved options.
   const restoreOptions=s.worldgenVersion===14&&s.worldOptions?.openingSiteVersion===undefined?{...s.worldOptions,openingSiteVersion:1 as const}:s.worldOptions;

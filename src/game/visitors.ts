@@ -1,3 +1,4 @@
+import {knownSettlementSite,localSettlementHall,beginSettlementJourney,settlementJourneySite} from './barter';
 import{carryVisitorRefusal,visitorOfferOnCooldown,VISITOR_REFUSAL_RULES}from'./visitorRefusals';
 import{observePartnerTrade,deliverTradeIntel}from'./tradeIntel';
 import {equipCaravan} from "./caravans";
@@ -13,9 +14,9 @@ export function tickVisitors(g:Game,dt:number) {
   if(g.state.visitorTimer>0)return;
   g.state.visitorTimer=90;
   if(g.state.units.some(u=>u.visit&&u.visit.team===undefined&&u.hp>0))return;
-  const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));if(!home)return;
   const rivals=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
+    const home=knownSettlementSite(g,0,t.id);if(!home)continue;
     if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5||g.state.units.some(u=>u.team===t.id&&u.hp>0&&u.visit))continue;
     const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.recalled&&!u.envoy&&u.drill==null&&!u.buildOrder&&!u.jobLock&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&['idle','gather'].includes(u.order)&&!!g.interactionSpot(u,home));
     if(!u)continue;
@@ -27,7 +28,7 @@ export function tickVisitors(g:Game,dt:number) {
     const {good,spare}=chosen,amount=Math.min(24,Math.floor(spare));
     equipCaravan(g,u);
     g.spend(t.id,{[good]:amount});u.carry=amount;u.carryType=good;u.carryFood=good==='food'?'provisions':undefined;
-    u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=home.x;u.tz=home.z;
+    beginSettlementJourney(g,u,home);u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=home.x;u.tz=home.z;
     u.job=null;u.jobLock=false;u.stuckT=0;u.workReason='Carrying goods to meet another community';g.state.visitorTimer=360;break;
   }
 }
@@ -38,7 +39,8 @@ function cancelVisit(u:Unit){
 }
 export function visitorAI(g:Game,u:Unit,dt:number) {
   const m=u.visit;if(!m)return false;
-  const home=g.state.buildings.find(b=>b.team===(m.phase==='return'?u.team:(m.team??0))&&b.type==='townhall'&&g.finished(b));
+  const partner=m.team??0,local=m.phase!=='return'?localSettlementHall(g,u,partner):undefined;
+  const home=m.phase==='return'?g.state.buildings.find(b=>b.team===u.team&&b.type==='townhall'&&g.finished(b)):(local||settlementJourneySite(g,u,partner));
   if(!home||g.isFoe(u.team,m.team??0)){cancelVisit(u);return true;}
   if(u.stuckT>8){cancelVisit(u);return true;}
   if(m.phase==='waiting') {
@@ -48,7 +50,8 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   const approach=g.interactionSpot(u,home);
   if(!approach){cancelVisit(u);return true;}
   u.tx=approach.x;u.tz=approach.z;
-  if(Math.hypot(u.x-home.x,u.z-home.z)>Math.max(home.w,home.d)*0.55+3){g.steer(u,dt);return true;}
+  if(!g.buildingWorkReached(u,home)){g.steer(u,dt);return true;}
+  if(m.phase==='outbound'&&!local){cancelVisit(u);return true;}
   if(m.phase==='outbound'&&m.team!==undefined){
     const exchanged=settleRivalBarter(g,u);m.phase='return';u.stuckT=0;
     if(!exchanged)u.workReason='Offer declined — carrying the goods home';return true;

@@ -25,7 +25,7 @@ export function TradeProposal({engine,team}:{engine:Engine;team:number}){
  <CaravanPlanner engine={engine} team={team} give={give} get={get} budget={amount} minimum={requested}/>
  <details><summary>Reported offers & other options</summary>
  <p aria-live="polite">{quote.deal?`Last report: ${quote.deal.getAmt} ${names[get].toLowerCase()} for ${quote.deal.giveAmt} ${names[give].toLowerCase()}.`:quote.reason}</p>
- <button disabled={!quote.deal||!carrier} onClick={()=>run(()=>proposeShipment(g,team,give,get,amount))}>Reserve reported offer</button>
+ <button disabled={!quote.deal||!carrier} onClick={()=>run(()=>proposeShipment(g,team,give,get,amount))}>Send reported proposal</button>
  <button disabled={unavailable} onClick={()=>run(()=>sendOffer(g,team,give,get,amount,requested))}>Allow smaller counteroffers</button>
  </details>
  {!!travelers.length&&<details><summary>On the road · {travelers.length}</summary>{travelers.map(u=><div key={u.id}><p>{u.name||'Trader'} · {g.state.units.filter(p=>p.hp>0&&p.escortId===u.id).length} guards{u.tradeReservation?` · ${u.tradeReservation.amount} ${names[u.tradeReservation.kind]} reserved`:''}</p><button onClick={()=>run(()=>sendTradeEscort(g,u.id))}>Add armed escort</button></div>)}</details>}

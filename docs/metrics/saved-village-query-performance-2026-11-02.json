@@ -1,0 +1,1472 @@
+{
+  "baseline": "1a90ade",
+  "scope": "Performance-only branches. Does not assert state equality for root feature integration containing intentional NPC/information changes.",
+  "sourceSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "sourceSaveUnchanged": true,
+  "privateSavePublished": false,
+  "fullStateEquivalence": {
+    "qualificationProcesses": 16,
+    "breakdown": {
+      "unprofiledInitialControls": 3,
+      "scopedCpuProfile": 1,
+      "restABBA": 4,
+      "finalFrontageABBA": 4,
+      "combinedABBA": 4
+    },
+    "sameInitialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+    "sameFinalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+    "sameRandomCallsDuringUpdates": 33475,
+    "sameRandomCallsIncludingDecode": 35332,
+    "simulationErrors": 0
+  },
+  "simulationConditions": {
+    "inputStepSeconds": 0.03333333333333333,
+    "speed": 4,
+    "warmUpdates": 20,
+    "measuredUpdatesPerProcess": 180,
+    "elapsedSimulationSecondsPerProcess": 26.666666666642413,
+    "savedUnits": 245,
+    "savedBuildings": 408,
+    "supplyTerrainPopulationChanges": false,
+    "renderingMeasured": false
+  },
+  "baselineControlRuns": [
+    {
+      "run": 0,
+      "decodeMs": 1777.20425,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+      "randomCallsDuringWorldUpdates": 33475,
+      "randomCallsIncludingDecode": 35332,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 51.84072500000004,
+        "p50Ms": 35.401708000000326,
+        "p95Ms": 105.75320800000009,
+        "p99Ms": 249.90975000000026,
+        "maxMs": 249.90975000000026,
+        "over16_67ms": 20,
+        "over33_33ms": 13,
+        "over50ms": 3,
+        "over100ms": 2
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 42.420903455555504,
+        "p50Ms": 38.49491699999999,
+        "p95Ms": 65.68862500000068,
+        "p99Ms": 113.03929200000039,
+        "maxMs": 118.73874999999953,
+        "over16_67ms": 180,
+        "over33_33ms": 140,
+        "over50ms": 35,
+        "over100ms": 2
+      },
+      "measuredWindowMs": 7636.0815,
+      "measuredCpuMs": 9288.274,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0
+    },
+    {
+      "run": 1,
+      "decodeMs": 1949.3518339999991,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+      "randomCallsDuringWorldUpdates": 33475,
+      "randomCallsIncludingDecode": 35332,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 53.10377720000024,
+        "p50Ms": 38.355250000000524,
+        "p95Ms": 105.28420800000094,
+        "p99Ms": 244.57437500000015,
+        "maxMs": 244.57437500000015,
+        "over16_67ms": 20,
+        "over33_33ms": 17,
+        "over50ms": 3,
+        "over100ms": 2
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 41.37296501666651,
+        "p50Ms": 37.840040999999474,
+        "p95Ms": 60.76412500000151,
+        "p99Ms": 109.31983300000138,
+        "maxMs": 132.68945800000074,
+        "over16_67ms": 180,
+        "over33_33ms": 144,
+        "over50ms": 27,
+        "over100ms": 2
+      },
+      "measuredWindowMs": 7447.272208,
+      "measuredCpuMs": 7946.09,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0
+    },
+    {
+      "run": 2,
+      "decodeMs": 1577.1962090000015,
+      "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+      "randomCallsDuringWorldUpdates": 33475,
+      "randomCallsIncludingDecode": 35332,
+      "initialSavedCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "finalCounts": {
+        "units": 245,
+        "buildings": 408
+      },
+      "inputQuantumSeconds": 0.03333333333333333,
+      "speed": 4,
+      "warm": {
+        "samples": 20,
+        "meanMs": 41.48723549999977,
+        "p50Ms": 33.11695899999904,
+        "p95Ms": 84.00137499999983,
+        "p99Ms": 134.3270420000008,
+        "maxMs": 134.3270420000008,
+        "over16_67ms": 20,
+        "over33_33ms": 9,
+        "over50ms": 3,
+        "over100ms": 1
+      },
+      "measured": {
+        "samples": 180,
+        "meanMs": 35.86439698888884,
+        "p50Ms": 33.57879099999991,
+        "p95Ms": 50.57150000000183,
+        "p99Ms": 95.85733299999993,
+        "maxMs": 108.5269580000022,
+        "over16_67ms": 180,
+        "over33_33ms": 96,
+        "over50ms": 10,
+        "over100ms": 1
+      },
+      "measuredWindowMs": 6455.710125000001,
+      "measuredCpuMs": 6782.601,
+      "advancedSimulationSeconds": 26.666666666642413,
+      "simulationErrors": 0
+    }
+  ],
+  "scopedCpuProfile": {
+    "totalSampledWallMs": 6838.167,
+    "samples": 4633,
+    "self": [
+      {
+        "function": "workerAI",
+        "file": "game/sim.ts",
+        "line": 4222,
+        "ms": 494.085,
+        "percent": 7.23
+      },
+      {
+        "function": "interactionSpot",
+        "file": "game/sim.ts",
+        "line": 3730,
+        "ms": 380.829,
+        "percent": 5.57
+      },
+      {
+        "function": "reserveSeconds",
+        "file": "game/settlement.ts",
+        "line": 58,
+        "ms": 264.586,
+        "percent": 3.87
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/settlement.ts",
+        "line": 48,
+        "ms": 251.295,
+        "percent": 3.67
+      },
+      {
+        "function": "foodWorkTarget",
+        "file": "game/settlement.ts",
+        "line": 55,
+        "ms": 247.0,
+        "percent": 3.61
+      },
+      {
+        "function": "assign",
+        "file": "game/settlement.ts",
+        "line": 318,
+        "ms": 212.834,
+        "percent": 3.11
+      },
+      {
+        "function": "foodDemand",
+        "file": "game/settlement.ts",
+        "line": 46,
+        "ms": 202.713,
+        "percent": 2.96
+      },
+      {
+        "function": "step",
+        "file": "game/sim.ts",
+        "line": 5547,
+        "ms": 193.585,
+        "percent": 2.83
+      },
+      {
+        "function": "placementIssue",
+        "file": "game/sim.ts",
+        "line": 1088,
+        "ms": 179.542,
+        "percent": 2.63
+      },
+      {
+        "function": "stockCap",
+        "file": "game/sim.ts",
+        "line": 5498,
+        "ms": 177.871,
+        "percent": 2.6
+      },
+      {
+        "function": "emergencyResponse",
+        "file": "game/defense.ts",
+        "line": 90,
+        "ms": 136.078,
+        "percent": 1.99
+      },
+      {
+        "function": "buildField",
+        "file": "game/influenceField.ts",
+        "line": 115,
+        "ms": 133.496,
+        "percent": 1.95
+      },
+      {
+        "function": "separate",
+        "file": "game/sim.ts",
+        "line": 4145,
+        "ms": 132.916,
+        "percent": 1.94
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/sim.ts",
+        "line": 3738,
+        "ms": 125.332,
+        "percent": 1.83
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/defense.ts",
+        "line": 102,
+        "ms": 117.79,
+        "percent": 1.72
+      },
+      {
+        "function": "steer",
+        "file": "game/sim.ts",
+        "line": 3982,
+        "ms": 107.876,
+        "percent": 1.58
+      },
+      {
+        "function": "defenseNeighbors",
+        "file": "game/defenseNeighbors.ts",
+        "line": 53,
+        "ms": 102.625,
+        "percent": 1.5
+      },
+      {
+        "function": "routineRest",
+        "file": "game/journeys.ts",
+        "line": 78,
+        "ms": 101.751,
+        "percent": 1.49
+      },
+      {
+        "function": "post",
+        "file": "node:inspector",
+        "line": 115,
+        "ms": 97.625,
+        "percent": 1.43
+      },
+      {
+        "function": "(garbage collector)",
+        "file": "",
+        "line": 0,
+        "ms": 94.212,
+        "percent": 1.38
+      },
+      {
+        "function": "isDependent",
+        "file": "game/settlement.ts",
+        "line": 43,
+        "ms": 93.25,
+        "percent": 1.36
+      },
+      {
+        "function": "connected",
+        "file": "game/settlement.ts",
+        "line": 220,
+        "ms": 92.999,
+        "percent": 1.36
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/settlement.ts",
+        "line": 49,
+        "ms": 85.5,
+        "percent": 1.25
+      },
+      {
+        "function": "hasTaskCommitment",
+        "file": "game/workCommitments.ts",
+        "line": 5,
+        "ms": 74.79,
+        "percent": 1.09
+      },
+      {
+        "function": "walkable",
+        "file": "game/sim.ts",
+        "line": 971,
+        "ms": 73.708,
+        "percent": 1.08
+      },
+      {
+        "function": "scoutIndependentNeeds",
+        "file": "game/scoutProvisions.ts",
+        "line": 10,
+        "ms": 70.667,
+        "percent": 1.03
+      },
+      {
+        "function": "add",
+        "file": "game/settlement.ts",
+        "line": 277,
+        "ms": 67.418,
+        "percent": 0.99
+      },
+      {
+        "function": "campMoveIndependentNeeds",
+        "file": "game/nomadicCamp.ts",
+        "line": 54,
+        "ms": 64.75,
+        "percent": 0.95
+      },
+      {
+        "function": "voyage",
+        "file": "game/coastalTrade.ts",
+        "line": 13,
+        "ms": 63.128,
+        "percent": 0.92
+      },
+      {
+        "function": "actorMission",
+        "file": "game/rivalActivity.ts",
+        "line": 28,
+        "ms": 57.664,
+        "percent": 0.84
+      }
+    ],
+    "inclusive": [
+      {
+        "function": "(root)",
+        "file": "",
+        "line": 0,
+        "ms": 6838.167,
+        "percent": 100.0
+      },
+      {
+        "function": "(anonymous)",
+        "file": "current-saved-village-profile.mjs",
+        "line": 0,
+        "ms": 6672.744,
+        "percent": 97.58
+      },
+      {
+        "function": "step",
+        "file": "game/sim.ts",
+        "line": 5547,
+        "ms": 6558.62,
+        "percent": 95.91
+      },
+      {
+        "function": "workerAI",
+        "file": "game/sim.ts",
+        "line": 4222,
+        "ms": 2534.871,
+        "percent": 37.07
+      },
+      {
+        "function": "reserveSeconds",
+        "file": "game/settlement.ts",
+        "line": 58,
+        "ms": 1177.263,
+        "percent": 17.22
+      },
+      {
+        "function": "assign",
+        "file": "game/settlement.ts",
+        "line": 318,
+        "ms": 1145.955,
+        "percent": 16.76
+      },
+      {
+        "function": "routineRest",
+        "file": "game/journeys.ts",
+        "line": 78,
+        "ms": 1122.429,
+        "percent": 16.41
+      },
+      {
+        "function": "foodDemand",
+        "file": "game/settlement.ts",
+        "line": 46,
+        "ms": 962.385,
+        "percent": 14.07
+      },
+      {
+        "function": "interactionSpot",
+        "file": "game/sim.ts",
+        "line": 3730,
+        "ms": 697.366,
+        "percent": 10.2
+      },
+      {
+        "function": "shareLocalTransport",
+        "file": "game/haulage.ts",
+        "line": 291,
+        "ms": 630.538,
+        "percent": 9.22
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/settlement.ts",
+        "line": 48,
+        "ms": 543.712,
+        "percent": 7.95
+      },
+      {
+        "function": "foodWorkTarget",
+        "file": "game/settlement.ts",
+        "line": 55,
+        "ms": 423.371,
+        "percent": 6.19
+      },
+      {
+        "function": "buildingWorkReached",
+        "file": "game/sim.ts",
+        "line": 3762,
+        "ms": 398.916,
+        "percent": 5.83
+      },
+      {
+        "function": "supplyApproach",
+        "file": "game/campAnchor.ts",
+        "line": 20,
+        "ms": 390.452,
+        "percent": 5.71
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/haulage.ts",
+        "line": 300,
+        "ms": 386.832,
+        "percent": 5.66
+      },
+      {
+        "function": "emergencyResponse",
+        "file": "game/defense.ts",
+        "line": 90,
+        "ms": 383.784,
+        "percent": 5.61
+      },
+      {
+        "function": "advanceGeographicInfluence",
+        "file": "game/influenceField.ts",
+        "line": 229,
+        "ms": 339.789,
+        "percent": 4.97
+      },
+      {
+        "function": "startField",
+        "file": "game/influenceField.ts",
+        "line": 188,
+        "ms": 289.999,
+        "percent": 4.24
+      },
+      {
+        "function": "rivalTick",
+        "file": "game/sim.ts",
+        "line": 5131,
+        "ms": 270.581,
+        "percent": 3.96
+      },
+      {
+        "function": "buildField",
+        "file": "game/influenceField.ts",
+        "line": 115,
+        "ms": 268.415,
+        "percent": 3.93
+      },
+      {
+        "function": "refresh",
+        "file": "game/settlement.ts",
+        "line": 265,
+        "ms": 242.754,
+        "percent": 3.55
+      },
+      {
+        "function": "findOpenSpot",
+        "file": "game/sim.ts",
+        "line": 5092,
+        "ms": 238.292,
+        "percent": 3.48
+      },
+      {
+        "function": "placementValid",
+        "file": "game/sim.ts",
+        "line": 1187,
+        "ms": 234.292,
+        "percent": 3.43
+      },
+      {
+        "function": "steer",
+        "file": "game/sim.ts",
+        "line": 3982,
+        "ms": 216.125,
+        "percent": 3.16
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/settlement.ts",
+        "line": 49,
+        "ms": 215.96,
+        "percent": 3.16
+      },
+      {
+        "function": "scoutAI",
+        "file": "game/scouting.ts",
+        "line": 95,
+        "ms": 209.495,
+        "percent": 3.06
+      },
+      {
+        "function": "placementIssue",
+        "file": "game/sim.ts",
+        "line": 1088,
+        "ms": 205.96,
+        "percent": 3.01
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/scouting.ts",
+        "line": 119,
+        "ms": 191.453,
+        "percent": 2.8
+      },
+      {
+        "function": "stockCap",
+        "file": "game/sim.ts",
+        "line": 5498,
+        "ms": 179.371,
+        "percent": 2.62
+      },
+      {
+        "function": "safe",
+        "file": "game/haulage.ts",
+        "line": 293,
+        "ms": 179.122,
+        "percent": 2.62
+      },
+      {
+        "function": "separate",
+        "file": "game/sim.ts",
+        "line": 4145,
+        "ms": 168.959,
+        "percent": 2.47
+      },
+      {
+        "function": "available",
+        "file": "game/haulage.ts",
+        "line": 93,
+        "ms": 129.748,
+        "percent": 1.9
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/sim.ts",
+        "line": 3738,
+        "ms": 125.332,
+        "percent": 1.83
+      },
+      {
+        "function": "walkable",
+        "file": "game/sim.ts",
+        "line": 971,
+        "ms": 122.919,
+        "percent": 1.8
+      },
+      {
+        "function": "(anonymous)",
+        "file": "game/haulage.ts",
+        "line": 294,
+        "ms": 120.876,
+        "percent": 1.77
+      }
+    ],
+    "files": [
+      {
+        "file": "game/sim.ts",
+        "ms": 2568.703,
+        "percent": 37.56
+      },
+      {
+        "file": "game/settlement.ts",
+        "ms": 1624.842,
+        "percent": 23.76
+      },
+      {
+        "file": "game/influenceField.ts",
+        "ms": 306.372,
+        "percent": 4.48
+      },
+      {
+        "file": "game/defense.ts",
+        "ms": 272.076,
+        "percent": 3.98
+      },
+      {
+        "file": "game/haulage.ts",
+        "ms": 204.0,
+        "percent": 2.98
+      },
+      {
+        "file": "",
+        "ms": 144.464,
+        "percent": 2.11
+      },
+      {
+        "file": "game/defenseNeighbors.ts",
+        "ms": 126.001,
+        "percent": 1.84
+      },
+      {
+        "file": "game/journeys.ts",
+        "ms": 106.335,
+        "percent": 1.56
+      },
+      {
+        "file": "node:inspector",
+        "ms": 97.625,
+        "percent": 1.43
+      },
+      {
+        "file": "game/campAnchor.ts",
+        "ms": 94.082,
+        "percent": 1.38
+      },
+      {
+        "file": "game/rivalDevelopment.ts",
+        "ms": 90.703,
+        "percent": 1.33
+      },
+      {
+        "file": "game/scoutProvisions.ts",
+        "ms": 75.209,
+        "percent": 1.1
+      },
+      {
+        "file": "game/workCommitments.ts",
+        "ms": 74.79,
+        "percent": 1.09
+      },
+      {
+        "file": "game/captivity.ts",
+        "ms": 73.624,
+        "percent": 1.08
+      },
+      {
+        "file": "game/rivalActivity.ts",
+        "ms": 71.081,
+        "percent": 1.04
+      }
+    ]
+  },
+  "pairedPerformance": {
+    "rest": {
+      "order": "A B B A, sequential fresh nice10 processes",
+      "groups": {
+        "baseline": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 37.2263103166667,
+          "runMeanMs": [
+            36.79590325000001,
+            37.65671738333338
+          ],
+          "runP95Ms": [
+            50.97620800000004,
+            52.206040999999914
+          ],
+          "pooledP50Ms": 34.69200000000001,
+          "pooledP95Ms": 52.11674999999923,
+          "pooledP99Ms": 108.19008300000041,
+          "maxMs": 133.15208299999995,
+          "over100ms": 4
+        },
+        "rest": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 34.99184155277776,
+          "runMeanMs": [
+            35.04401988888889,
+            34.93966321666663
+          ],
+          "runP95Ms": [
+            49.80370800000037,
+            49.865208000000166
+          ],
+          "pooledP50Ms": 32.168125000000146,
+          "pooledP95Ms": 49.865208000000166,
+          "pooledP99Ms": 108.83066700000018,
+          "maxMs": 155.60299999999916,
+          "over100ms": 5
+        }
+      },
+      "meanReductionPercent": 6.0023911714090605,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1679.6932080000001,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 50.44749575000003,
+            "p50Ms": 36.25366699999995,
+            "p95Ms": 104.71366699999999,
+            "p99Ms": 223.14045799999985,
+            "maxMs": 223.14045799999985,
+            "over16_67ms": 20,
+            "over33_33ms": 14,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 36.79590325000001,
+            "p50Ms": 34.12824999999975,
+            "p95Ms": 50.97620800000004,
+            "p99Ms": 108.19008300000041,
+            "maxMs": 113.85295799999994,
+            "over16_67ms": 180,
+            "over33_33ms": 105,
+            "over50ms": 11,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6623.525084000001,
+          "measuredCpuMs": 8224.781,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1663.4000839999999,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.30316469999998,
+            "p50Ms": 33.05675000000019,
+            "p95Ms": 99.51929199999995,
+            "p99Ms": 214.9864590000002,
+            "maxMs": 214.9864590000002,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 1
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 35.04401988888889,
+            "p50Ms": 31.93408299999919,
+            "p95Ms": 49.80370800000037,
+            "p99Ms": 113.7722920000001,
+            "maxMs": 155.60299999999916,
+            "over16_67ms": 180,
+            "over33_33ms": 73,
+            "over50ms": 8,
+            "over100ms": 3
+          },
+          "measuredWindowMs": 6308.194165999999,
+          "measuredCpuMs": 7963.872,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "rest"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1707.053958,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 47.11010440000005,
+            "p50Ms": 33.12470799999983,
+            "p95Ms": 104.68870900000002,
+            "p99Ms": 225.64525000000003,
+            "maxMs": 225.64525000000003,
+            "over16_67ms": 20,
+            "over33_33ms": 9,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 34.93966321666663,
+            "p50Ms": 32.931250000000546,
+            "p95Ms": 49.865208000000166,
+            "p99Ms": 108.83066700000018,
+            "maxMs": 109.12829099999999,
+            "over16_67ms": 180,
+            "over33_33ms": 80,
+            "over50ms": 9,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6289.403542,
+          "measuredCpuMs": 7925.568,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "rest"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1624.233542,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 51.566768600000124,
+            "p50Ms": 36.519582999999784,
+            "p95Ms": 109.04370900000004,
+            "p99Ms": 225.94279100000017,
+            "maxMs": 225.94279100000017,
+            "over16_67ms": 20,
+            "over33_33ms": 15,
+            "over50ms": 4,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 37.65671738333338,
+            "p50Ms": 35.31137499999977,
+            "p95Ms": 52.206040999999914,
+            "p99Ms": 111.58079199999975,
+            "maxMs": 133.15208299999995,
+            "over16_67ms": 180,
+            "over33_33ms": 111,
+            "over50ms": 14,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6778.485542,
+          "measuredCpuMs": 8426.742,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    },
+    "frontage": {
+      "order": "A B B A, sequential fresh nice10 processes",
+      "groups": {
+        "baseline": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 39.714025377777816,
+          "runMeanMs": [
+            39.30939054444447,
+            40.118660211111155
+          ],
+          "runP95Ms": [
+            56.20291599999928,
+            56.394542
+          ],
+          "pooledP50Ms": 36.839750000000095,
+          "pooledP95Ms": 56.394542,
+          "pooledP99Ms": 114.20066700000007,
+          "maxMs": 131.81787499999973,
+          "over100ms": 4
+        },
+        "frontage": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 36.4363659861111,
+          "runMeanMs": [
+            35.71886968333333,
+            37.15386228888886
+          ],
+          "runP95Ms": [
+            50.170624999999745,
+            54.4565419999999
+          ],
+          "pooledP50Ms": 33.86958300000015,
+          "pooledP95Ms": 52.614708000000064,
+          "pooledP99Ms": 110.66933400000016,
+          "maxMs": 132.39183299999968,
+          "over100ms": 4
+        }
+      },
+      "meanReductionPercent": 8.25315328901599,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1652.904,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 51.499772949999986,
+            "p50Ms": 36.53445899999997,
+            "p95Ms": 105.70870799999966,
+            "p99Ms": 219.85237499999994,
+            "maxMs": 219.85237499999994,
+            "over16_67ms": 20,
+            "over33_33ms": 16,
+            "over50ms": 4,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 39.30939054444447,
+            "p50Ms": 36.71012499999961,
+            "p95Ms": 56.20291599999928,
+            "p99Ms": 114.20066700000007,
+            "maxMs": 131.81787499999973,
+            "over16_67ms": 180,
+            "over33_33ms": 137,
+            "over50ms": 15,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 7075.974875,
+          "measuredCpuMs": 8682.685,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1637.4435420000002,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 66.06877709999996,
+            "p50Ms": 39.67104199999994,
+            "p95Ms": 234.40712500000018,
+            "p99Ms": 297.36637500000006,
+            "maxMs": 297.36637500000006,
+            "over16_67ms": 20,
+            "over33_33ms": 18,
+            "over50ms": 5,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 35.71886968333333,
+            "p50Ms": 32.91112499999963,
+            "p95Ms": 50.170624999999745,
+            "p99Ms": 112.57679099999996,
+            "maxMs": 132.39183299999968,
+            "over16_67ms": 180,
+            "over33_33ms": 83,
+            "over50ms": 10,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6429.680167,
+          "measuredCpuMs": 8086.944,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "frontage"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1631.146875,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 50.075554250000025,
+            "p50Ms": 34.922833999999966,
+            "p95Ms": 108.1249170000001,
+            "p99Ms": 230.30345799999986,
+            "maxMs": 230.30345799999986,
+            "over16_67ms": 20,
+            "over33_33ms": 12,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 37.15386228888886,
+            "p50Ms": 34.30174999999963,
+            "p95Ms": 54.4565419999999,
+            "p99Ms": 110.66933400000016,
+            "maxMs": 131.8881250000004,
+            "over16_67ms": 180,
+            "over33_33ms": 104,
+            "over50ms": 14,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6688.0105,
+          "measuredCpuMs": 8393.381,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "frontage"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1723.077542,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 57.07534369999998,
+            "p50Ms": 41.17120799999975,
+            "p95Ms": 122.34470899999997,
+            "p99Ms": 247.35350000000017,
+            "maxMs": 247.35350000000017,
+            "over16_67ms": 20,
+            "over33_33ms": 20,
+            "over50ms": 6,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 40.118660211111155,
+            "p50Ms": 37.10620800000106,
+            "p95Ms": 56.394542,
+            "p99Ms": 117.97400000000016,
+            "maxMs": 121.25224999999955,
+            "over16_67ms": 180,
+            "over33_33ms": 148,
+            "over50ms": 17,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 7221.6608750000005,
+          "measuredCpuMs": 9119.511,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    },
+    "combined": {
+      "order": "A B B A, sequential fresh nice10 processes",
+      "groups": {
+        "baseline": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 38.072867458333356,
+          "runMeanMs": [
+            37.42166226111111,
+            38.7240726555556
+          ],
+          "runP95Ms": [
+            51.218166999999994,
+            53.12358299999869
+          ],
+          "pooledP50Ms": 35.17783299999974,
+          "pooledP95Ms": 52.83716699999968,
+          "pooledP99Ms": 112.69891700000016,
+          "maxMs": 175.7811670000001,
+          "over100ms": 5
+        },
+        "combined": {
+          "runs": 2,
+          "measuredSteps": 360,
+          "meanOfRunMeansMs": 32.589710999999994,
+          "runMeanMs": [
+            32.57155259444444,
+            32.60786940555554
+          ],
+          "runP95Ms": [
+            48.40583400000014,
+            47.862082999999984
+          ],
+          "pooledP50Ms": 30.077541999999994,
+          "pooledP95Ms": 48.30079099999966,
+          "pooledP99Ms": 102.34149999999954,
+          "maxMs": 111.69374999999991,
+          "over100ms": 4
+        }
+      },
+      "meanReductionPercent": 14.401742827314191,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1662.220541,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 50.34795624999998,
+            "p50Ms": 35.796957999999904,
+            "p95Ms": 103.58891700000004,
+            "p99Ms": 226.0372920000002,
+            "maxMs": 226.0372920000002,
+            "over16_67ms": 20,
+            "over33_33ms": 12,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 37.42166226111111,
+            "p50Ms": 34.93512499999997,
+            "p95Ms": 51.218166999999994,
+            "p99Ms": 114.33624999999938,
+            "maxMs": 116.66975000000002,
+            "over16_67ms": 180,
+            "over33_33ms": 111,
+            "over50ms": 13,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6736.201332999999,
+          "measuredCpuMs": 8460.978,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1666.436583,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.95887079999996,
+            "p50Ms": 31.525916000000052,
+            "p95Ms": 103.31537500000013,
+            "p99Ms": 218.41587500000014,
+            "maxMs": 218.41587500000014,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.57155259444444,
+            "p50Ms": 30.128624999999374,
+            "p95Ms": 48.40583400000014,
+            "p99Ms": 102.34149999999954,
+            "maxMs": 106.69791600000008,
+            "over16_67ms": 180,
+            "over33_33ms": 53,
+            "over50ms": 8,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5863.179291999999,
+          "measuredCpuMs": 7498.36,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "combined"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1671.409083,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.26394585000007,
+            "p50Ms": 32.13287500000024,
+            "p95Ms": 104.71062500000016,
+            "p99Ms": 216.62591599999996,
+            "maxMs": 216.62591599999996,
+            "over16_67ms": 20,
+            "over33_33ms": 9,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.60786940555554,
+            "p50Ms": 30.077541999999994,
+            "p95Ms": 47.862082999999984,
+            "p99Ms": 110.14720800000032,
+            "maxMs": 111.69374999999991,
+            "over16_67ms": 180,
+            "over33_33ms": 50,
+            "over50ms": 7,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5869.696291,
+          "measuredCpuMs": 7483.267,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "combined"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1633.879625,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 55.18094580000005,
+            "p50Ms": 36.209249999999884,
+            "p95Ms": 109.60216600000012,
+            "p99Ms": 292.6984580000001,
+            "maxMs": 292.6984580000001,
+            "over16_67ms": 20,
+            "over33_33ms": 15,
+            "over50ms": 4,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 38.7240726555556,
+            "p50Ms": 35.45537500000137,
+            "p95Ms": 53.12358299999869,
+            "p99Ms": 112.69891700000016,
+            "maxMs": 175.7811670000001,
+            "over16_67ms": 180,
+            "over33_33ms": 113,
+            "over50ms": 14,
+            "over100ms": 3
+          },
+          "measuredWindowMs": 6970.631083,
+          "measuredCpuMs": 8553.364,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    }
+  },
+  "sourceChecksums": {
+    "baseline": {
+      "sourceManifestSha256": "7a219be79385eb0371c38ff0b762354c936bbdfa8a3d042fe862546a7a2dee75",
+      "changedFileSha256": {
+        "src/game/journeys.ts": "0d8e2eed1c4d8266898aa39c3ddf3c3c5e13c4d534da61335357111354beeaa7",
+        "src/game/sim.ts": "02d921acc33d8222d621da240545993a50ac2e497d7c5d768e1ad7cd592f981a"
+      }
+    },
+    "rest": {
+      "sourceManifestSha256": "734060486ac2aca94e434dccfe7b1e9ae06176176b877824c5103f8ffc62bd2f",
+      "changedFileSha256": {
+        "src/game/journeys.ts": "a3c085154c342b2a33250a1c7783df5f891515f8b36cae6eb0d8f1169446ee74",
+        "src/game/sim.ts": "02d921acc33d8222d621da240545993a50ac2e497d7c5d768e1ad7cd592f981a"
+      }
+    },
+    "frontage": {
+      "sourceManifestSha256": "fc1476052d92af45901481c821a2324148a56671490c257f2eb4fd2a975a6e67",
+      "changedFileSha256": {
+        "src/game/journeys.ts": "0d8e2eed1c4d8266898aa39c3ddf3c3c5e13c4d534da61335357111354beeaa7",
+        "src/game/sim.ts": "07ac0b70074ff29bf5dd67a504031ec1f9d5285d72582eacab221ef5c9a46660"
+      }
+    },
+    "combined": {
+      "sourceManifestSha256": "0137194e5e0326df61dbe0f3bcc2f8d1a3c82e3323b8737d17e671ebbe4f5a23",
+      "changedFileSha256": {
+        "src/game/journeys.ts": "a3c085154c342b2a33250a1c7783df5f891515f8b36cae6eb0d8f1169446ee74",
+        "src/game/sim.ts": "07ac0b70074ff29bf5dd67a504031ec1f9d5285d72582eacab221ef5c9a46660"
+      }
+    }
+  },
+  "focusedTests": {
+    "rest": 4,
+    "frontage": 6,
+    "physicalFrontageOracleCases": 7500,
+    "passed": 10,
+    "total": 10
+  },
+  "notes": [
+    "Four additional exploratory frontage ABBA processes preceded the final cached-frontage guard; those superseded timings are not used for the final claim.",
+    "Absolute wall timings reflect OS scheduling and background load; paired counterbalanced results are the relevant comparison.",
+    "Inclusive CPU profile percentages overlap and must not be summed.",
+    "Single updates above100ms remain; this does not qualify sustained browser FPS or fix every buffering cause.",
+    "No update quantum, AI review cadence, actor count, rendering feature, gameplay result, stock or terrain was cut or approximated."
+  ],
+  "additionalCompatibilityTests": {
+    "passed": 20,
+    "total": 20,
+    "scope": "Combined performance-only branch:11cultivation/food+9haulage; integrator must deduplicate overlaps with its own batch"
+  }
+}

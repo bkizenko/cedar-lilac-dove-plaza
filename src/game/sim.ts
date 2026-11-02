@@ -60,7 +60,7 @@ import {dispatchRivalBarter} from "./rivalTrade";
 import {developRivalCrossings,planReturnCrossing} from "./crossings";
 import {weatherWaterLevel,highWaterLevel,dryTreeRoot} from "./hydrology";
 import {reconcileTreeWorkers,treeHasRoom} from "./workAllocation";
-import {reserveTradeGoods,hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
+import {hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} from "./tradeReservations";
 import {fieldProductionSummary} from "./productionReport";
 import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
@@ -70,6 +70,7 @@ import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directed
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed} from "./hunting";
+import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
 import {daylightAt,solarTimeLabel,pacedSolarHour} from "./daylight";
@@ -95,7 +96,7 @@ import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {plantingAI,cancelPlanting,tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
 import { habitatAt, soilQuality, applyForagePressure, initializeWildPlants, tickWildPlant, harvestWildPlant, wildPlantsEnabled } from "./ecology";
-import { knownSettlement, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
+import { knownSettlement, knownSettlementSite, localSettlementHall, beginSettlementJourney, settlementJourneySite, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
 import {
   WorkBoard,
@@ -2983,9 +2984,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const hall = this.state.buildings.find(
-      (b) => b.team === rival.id && b.type === "townhall" && b.hp > 0,
-    );
+    const hall = knownSettlementSite(this,rival.id);
     if (!hall) return;
     const worker = tradeCarrier(this);
     if (!worker) {
@@ -3001,7 +3000,7 @@ export class Game {
 
   dispatchTrade(worker: Unit, deal: TradeDeal, team: number, accepted = true) {
     const rival = this.tribe(team),
-      hall = this.state.buildings.find((b) => b.team === team && b.type === "townhall" && b.hp > 0);
+      hall = knownSettlementSite(this,team);
     if (
       !rival ||
       !rival.alive ||
@@ -3015,26 +3014,24 @@ export class Game {
       !this.canAfford(0, { [deal.give]: deal.giveAmt })
     )
       return false;
-    if(accepted){
-      const issue=shipmentIssue(this,team,deal);
-      if(issue){this.banner(issue,4);return false;}
-      if(!reserveTradeGoods(this,worker,team,deal))return false;
-    }
+    // A dated offer is a proposal, not a fresh remote stock guarantee. Its
+    // agreed minimum travels with this finite budget and is checked locally.
     this.spend(0, { [deal.give]: deal.giveAmt });
     rival.tradeCd = 32;
     worker.customOffer=undefined;
-    worker.procurement=undefined;
+    worker.procurement=accepted?{minimum:deal.getAmt}:undefined;
     worker.trade = { ...deal };
     worker.tradeTeam = team;
     worker.order = "trade";
     worker.carry = deal.giveAmt;
     worker.carryType = deal.give;
     worker.carryFood = deal.give==="food"?"provisions":undefined;
+    beginSettlementJourney(this,worker,hall);
     worker.tx = hall.x;
     worker.tz = hall.z;
     worker.node = null;
     worker.target = null;
-    worker.workReason = "Carrying goods to " + rival.name;
+    worker.workReason = "Carrying a trade proposal to " + rival.name;
     return true;
   }
 
@@ -3762,6 +3759,11 @@ export class Game {
   buildingWorkReached(u:Unit,b:Building) {
     if(b.type==="bridge"){const p=bridgeApproach(this,u,b);return !!p&&Math.hypot(u.x-p.x,u.z-p.z)<=1.2;}
     if(this.attackDistance(u,b)<=u.r+1.8)return true;
+    // Every sampled frontage is within this rectangle plus its 1m arrival
+    // radius. Preserve the original pending-navigation rebuild before rejecting.
+    if(this.state.walkDirty)this.rebuildWalk();
+    const reach=Math.max(u.r,.45)+2.600001;
+    if(this.approachCache.get(u)?.building!==b&&(Math.abs(u.x-b.x)>b.w*.4+reach||Math.abs(u.z-b.z)>b.d*.4+reach))return false;
     const entrance=this.interactionSpot(u,b);
     return !!entrance&&Math.hypot(u.x-entrance.x,u.z-entrance.z)<=1;
   }
@@ -4495,9 +4497,8 @@ export class Game {
       return;
     }
     const rival = (u.tradeTeam ? this.tribe(u.tradeTeam) : null) || this.pickTradeRival();
-    const hall = rival
-      ? this.state.buildings.find((b) => b.team === rival.id && b.type === "townhall" && b.hp > 0)
-      : null;
+    const local = rival ? localSettlementHall(this,u,rival.id) : undefined;
+    const hall = rival ? (local || settlementJourneySite(this,u,rival.id)) : undefined;
     if (!rival || !hall || rival.hostile) {
       releaseTradeReservation(this,u); u.trade = null;
       u.tradeTeam = 0;
@@ -4512,7 +4513,11 @@ export class Game {
       this.steer(u, dt);
       return;
     }
+    if(!local){releaseTradeReservation(this,u);u.trade=null;u.tradeTeam=0;u.order="return";u.workReason="Last known trading site is empty — bringing the offer home";return;}
     recordTradeMeeting(this,rival.id,u);
+    // Old unescrowed journeys also carry proposals. A held legacy escrow is
+    // already a paid guarantee and must retain its original collection terms.
+    if(!hasTradeReservation(u)&&!u.procurement&&!u.customOffer)u.procurement={minimum:deal.getAmt};
     if(u.procurement||u.customOffer){
       const local=quoteShipment(this,rival.id,deal.give,deal.get,deal.giveAmt,u).deal;
       if(local&&local.giveAmt<deal.giveAmt){
@@ -5150,6 +5155,7 @@ export class Game {
     // The shared rule already checks people, institutions and a food buffer.
     if (tr.age < 5 && this.ageUpIssue(team) === null) this.tryAgeUp(team);
 
+    reviewRivalToolUpkeep(this,team);
     reviewRivalSocietyActivity(this,team,reserveSeconds(this,team));
     dispatchRivalBarter(this,team);
     developRivalCrossings(this,team);

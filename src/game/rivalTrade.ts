@@ -1,3 +1,4 @@
+import {knownSettlementSite,localSettlementHall,beginSettlementJourney} from './barter';
 import{observePartnerTrade,tradeIntelAdvice}from'./tradeIntel';
 import{hasTaskCommitment}from'./workCommitments';
 import {TRADE_PRICING} from "./tradePricing";
@@ -49,7 +50,7 @@ export function dispatchRivalBarter(g:Game,team:number){
     !u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&['idle','gather'].includes(u.order));
   if(workers.length<4)return false;
   workers.sort((a,b)=>Number(a.order!=='idle')-Number(b.order!=='idle'));
-  const halls=g.state.buildings.filter(b=>isRivalTeam(b.team)&&b.team!==team&&b.type==='townhall'&&g.finished(b)&&g.tribe(b.team).alive&&!g.isFoe(team,b.team)&&rivalKnows(g,team,b.x,b.z));
+  const halls=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.id!==team&&t.alive&&!g.isFoe(team,t.id)).map(t=>knownSettlementSite(g,t.id,team)).filter((h):h is NonNullable<typeof h>=>!!h);
   const choices=wants.flatMap((wanted,needIndex)=>offers.filter(offered=>offered!==wanted).flatMap((offered,offerIndex)=>halls.map(destination=>({wanted,offered,destination,advice:tradeIntelAdvice(g,team,destination.team,offered,wanted),needIndex,offerIndex}))))
     .filter(c=>c.advice.status!=='discouraged'&&!g.state.rivalTradeRefusals?.some(r=>r.team===team&&r.partner===c.destination.team&&r.wanted===c.wanted&&r.offered===c.offered&&g.state.time-r.time<RIVAL_REFUSAL_MEMORY))
     .sort((a,b)=>a.needIndex*80+a.offerIndex*4-a.advice.score-(b.needIndex*80+b.offerIndex*4-b.advice.score));
@@ -60,7 +61,7 @@ export function dispatchRivalBarter(g:Game,team:number){
   equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;
   u.visit={phase:'outbound',wait:0,team:destination.team,wanted};u.order='move';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.stuckT=0;
-  u.tx=destination.x;u.tz=destination.z;u.workReason='Taking surplus to a known village to seek '+wanted;
+  beginSettlementJourney(g,u,destination);u.tx=destination.x;u.tz=destination.z;u.workReason='Taking surplus to a known village to seek '+wanted;
   return true;
 }
 /** Execute a finite exchange at the meeting place. Both communities keep their
@@ -68,8 +69,8 @@ export function dispatchRivalBarter(g:Game,team:number){
 export function settleRivalBarter(g:Game,u:Unit){
   const m=u.visit,seller=m?.team===undefined?null:g.tribe(m.team),get=m?.wanted,give=u.carryType;
   if(!m||!seller||!get||!give||u.carry<=0||give===get||!seller.alive||g.isFoe(u.team,seller.id))return false;
-  const hall=g.state.buildings.find(b=>b.team===seller.id&&b.type==='townhall'&&g.finished(b));
-  if(!hall||Math.hypot(u.x-hall.x,u.z-hall.z)>Math.max(hall.w,hall.d)*.55+3||!g.interactionSpot(u,hall))return false;
+  const hall=localSettlementHall(g,u,seller.id);
+  if(!hall||!g.buildingWorkReached(u,hall)||!g.interactionSpot(u,hall))return false;
   if(!usable(g,seller.id,get)||!usable(g,seller.id,give)){observePartnerTrade(g,u,seller.id,{give,get,offered:u.carry,receivable:0,accepted:false,reason:'unusable'});return false;}
   const reserve=rivalTradeReserve(g,seller.id,get),spare=Math.floor(seller[get]-reserve);
   // A village with a glut of the offered material will decline it. A shortage

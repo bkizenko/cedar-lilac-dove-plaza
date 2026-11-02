@@ -1,3 +1,4 @@
+import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -14,7 +15,7 @@ function setup(){
   g.state.forage=[];g.state.fish=[];g.state.trees=[];g.state.stones=[];g.state.wildlife=[];
   Object.assign(g.tribe(0),{food:240,wood:100,stone:0});
   Object.assign(g.tribe(1),{food:30,wood:200,stone:150,hostile:false,tradeCd:0,trust:.5,tension:0});
-  g.state.time=100;g.vision.fill(2);g.rebuildWalk();return g;
+  g.state.time=100;g.vision.fill(2);g.rebuildWalk();endowSettlementSites(g,0);return g;
 }
 function toMeeting(g,u){const h=g.state.buildings.find(b=>b.team===1);const p=g.interactionSpot(u,h);assert.ok(p);u.x=p.x;u.z=p.z;}
 function walkHome(g,u){
@@ -86,7 +87,7 @@ test('trade priority refreshes known offers with one real envoy, protects food a
   assert.equal(g.tribe(0).wood,before);assert.equal(u.carry,0);
   const copy=decodeGame(encodeGame(g));assert.equal(copy.state.laborPolicy,'trade');
   const hungry=setup();hungry.tribe(0).food=5;hungry.setLaborPriority('trade');tickTradeFocus(hungry);assert.equal(hungry.state.units.some(u=>u.envoy),false);
-  const unknown=setup();unknown.vision.fill(0);unknown.setLaborPriority('trade');tickTradeFocus(unknown);assert.equal(unknown.state.units.some(u=>u.envoy),false);
+  const unknown=setup();unknown.vision.fill(0);unknown.state.observedSettlements=undefined;unknown.setLaborPriority('trade');tickTradeFocus(unknown);assert.equal(unknown.state.units.some(u=>u.envoy),false);
 });
 
 test('trading priority advances only approved route departures and retains paused routes',()=>{

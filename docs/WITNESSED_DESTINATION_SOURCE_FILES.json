@@ -1,0 +1,17 @@
+{
+  "baseline": "920952a",
+  "sourceFiles": [
+    "src/game/frontiers.ts",
+    "src/game/settlementKnowledge.ts",
+    "src/game/types.ts",
+    "src/game/persistence.ts",
+    "src/game/barter.ts",
+    "src/game/delegations.ts",
+    "src/game/sim.ts",
+    "src/game/rivalTrade.ts",
+    "src/game/visitors.ts",
+    "src/game/tradeIntel.ts",
+    "src/game/coastalTrade.ts",
+    "src/game/coastalCommission.ts"
+  ]
+}

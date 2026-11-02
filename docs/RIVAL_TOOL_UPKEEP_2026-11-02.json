@@ -1,0 +1,97 @@
+{
+  "base": "1a90ade",
+  "scenario": "controlled established native village, no midrun material/body/terrain correction",
+  "actor": 4829,
+  "team": 1,
+  "workplace": 4933,
+  "field": 4934,
+  "initial": {
+    "wood": 600,
+    "stone": 150
+  },
+  "construction": [
+    {
+      "cost": {
+        "food": 0,
+        "wood": 60,
+        "stone": 0,
+        "copper": 0,
+        "iron": 0
+      },
+      "wood": 60,
+      "stone": 0
+    },
+    {
+      "cost": {
+        "food": 0,
+        "wood": 16,
+        "stone": 0,
+        "copper": 0,
+        "iron": 0
+      },
+      "wood": 16,
+      "stone": 0
+    }
+  ],
+  "actualFieldWear": {
+    "initial": 0.5005,
+    "atRepair": 0.45849999999999763,
+    "sown": 0.6271533333333328
+  },
+  "resumedOrdinaryWork": {
+    "target": 4935,
+    "before": {
+      "build": 0,
+      "gatherT": 0,
+      "carry": 0
+    },
+    "after": {
+      "build": 0.016551011311397624,
+      "gatherT": 0,
+      "carry": 0
+    }
+  },
+  "paidRepair": {
+    "wood": 1,
+    "stone": 1
+  },
+  "progressBeforeInterruption": 2.2358761180567046,
+  "final": {
+    "condition": 1,
+    "order": "build",
+    "job": null,
+    "nodeId": 4935,
+    "time": 46.20000000000012
+  },
+  "simulationErrors": [],
+  "fixtureDetails": {
+    "residents": 4,
+    "completedStartingSites": [
+      "townhall",
+      "workshop",
+      "farm"
+    ],
+    "startingSites": "legally placed and paid before the controlled run, declared already completed",
+    "initialFood": 300,
+    "initialWaterLiters": 200,
+    "firstNativeReviewSeconds": 30,
+    "startingHoeCondition": 0.5005,
+    "weather": "clear",
+    "conflict": "quiet",
+    "midrunCorrections": false
+  },
+  "validation": {
+    "finalRivalCasesPassed": 3,
+    "legacyMaintenanceCasesPassed": 6,
+    "legacySuiteLog": "/tmp/hearthwild-rival-tool-tests.log",
+    "finalSuiteLog": "/tmp/hearthwild-rival-tool-final.log",
+    "typecheck": "passed",
+    "noNewGateCredit": true
+  },
+  "sourceSha256": {
+    "src/game/farmTools.ts": "cc22b2111a9aded3f514c7b619b780cb27a4d7538eabc40275edf76dd90fe88d",
+    "src/game/rivalToolUpkeep.ts": "7867841248a45d5a2cd02b7d651b3c0c9caee5b48d46144418a818f053e73028",
+    "src/game/sim.ts": "dddfe4ce431ae1a581e4c7eaf566b36d5a8e0974be3397655eccd574a0646891",
+    "scripts/rival-tool-upkeep.test.mjs": "1e63899dbb0e32f808213573b0c439c53781583cbe60cfa80207f19a419b8044"
+  }
+}

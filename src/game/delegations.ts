@@ -1,9 +1,9 @@
 import type { Game } from "./sim";
 import type { Unit, PeaceTerm } from "./types";
-import { knownSettlement, tradeCarrier, recordTradeMeeting } from "./barter";
+import { knownSettlement, knownSettlementSite, localSettlementHall, beginSettlementJourney, settlementJourneySite, tradeCarrier, recordTradeMeeting } from "./barter";
 
 export function sendDelegation(g:Game,team:number,kind:"trade"|"peace"|"gift",carrier?:Unit,term:PeaceTerm="whitePeace") {
-  const hall=g.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&g.finished(b));
+  const hall=knownSettlementSite(g,team);
   if(!hall||!knownSettlement(g,team)||team===0||team===3)return false;
   if(kind==="gift"&&g.tribe(0).food<30)return false;
   if(kind==="trade"&&g.state.units.some(u=>u.hp>0&&u.envoy?.kind==='trade'&&u.envoy.team===team)){g.banner('A trade envoy is already travelling to this settlement',4);return false;}
@@ -11,6 +11,7 @@ export function sendDelegation(g:Game,team:number,kind:"trade"|"peace"|"gift",ca
   const u=carrier||tradeCarrier(g);if(!u){g.banner("Select an available adult with empty hands for the delegation",4);return false;}
   if(!g.interactionSpot(u,hall)){g.banner("The meeting place needs a reachable land route or crossing",4);return false;}
   if(kind==="gift"){g.tribe(0).food-=30;u.carry=30;u.carryType="food";}
+  beginSettlementJourney(g,u,hall);
   u.envoy={team,kind,term:kind==="peace"?term:undefined,phase:"outbound",talk:0};u.order="move";u.stationOnArrival=false;
   u.searchJob=undefined;u.node=null;u.target=null;u.pillage=-1;u.attackDestination=null;
   u.tx=hall.x;u.tz=hall.z;u.workReason=kind==="peace"?"Carrying a peace proposal":"Traveling to learn trading terms";
@@ -18,8 +19,9 @@ export function sendDelegation(g:Game,team:number,kind:"trade"|"peace"|"gift",ca
 }
 export function delegationAI(g:Game,u:Unit,dt:number) {
   const mission=u.envoy;if(!mission)return false;
-  const hall=g.state.buildings.find(b=>b.team===(mission.phase==="outbound"?mission.team:0)&&b.type==="townhall"&&g.finished(b));
-  if(!hall){u.envoy=undefined;u.order="idle";u.workReason="Delegation destination no longer exists";return true;}
+  const local=mission.phase==="outbound"?localSettlementHall(g,u,mission.team):undefined;
+  const hall=mission.phase==="outbound"?(local||settlementJourneySite(g,u,mission.team)):g.state.buildings.find(b=>b.team===0&&b.type==="townhall"&&g.finished(b));
+  if(!hall){if(mission.phase==="outbound"){mission.phase="return";u.workReason="The last known meeting site is absent — returning home";}else{u.envoy=undefined;u.order=u.carry>0?"return":"idle";}return true;}
   const entrance=g.interactionSpot(u,hall);
   if(!entrance){
     if(mission.phase==="outbound"){mission.phase="return";u.workReason="Meeting place unreachable — returning home";}
@@ -29,6 +31,7 @@ export function delegationAI(g:Game,u:Unit,dt:number) {
   u.tx=entrance.x;u.tz=entrance.z;
   if(!g.buildingWorkReached(u,hall)){g.steer(u,dt);return true;}
   if(mission.phase==="outbound") {
+    if(!local){mission.phase="return";u.workReason="The last known meeting site is empty — bringing the offer home";return true;}
     mission.talk+=dt;u.workReason="Meeting the other community";
     if(mission.talk<20)return true;
     if(mission.kind==="peace") {

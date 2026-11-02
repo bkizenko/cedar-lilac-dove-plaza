@@ -199,6 +199,7 @@ export type Unit = {
   repatriating?: boolean;
   captivityUnrest?: number;
   tributeJourney?: {phase:"pickup"|"deliver"|"return"; amount:number};
+  settlementJourney?: {version:1;owner:number;siteId?:number;x:number;z:number;recordedAt:number};
   envoy?: {team:number; kind:"peace"|"trade"|"gift"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
   maturesAt?: number;
@@ -430,6 +431,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  observedClaims?:import('./frontiers').ObservedClaim[];
+  observedSettlements?:import('./settlementKnowledge').ObservedSettlement[];
   practicalHelpers?:import('./practicalHelpers').PracticalHelperMetrics;
   tradeIntel?:import('./tradeIntel').TradeIntelState;
   excavations?:import('./excavation').TerrainCut[];
