@@ -4,7 +4,7 @@ import{GATHER}from'./constants';
  * gear capacity changes the burden fraction rather than creating inventory. */
 export const CARRIED_LOAD_RULES={itemBatchUnits:40,waterLiters:24,provisionFood:24,personMaximumPenalty:.32,maximumBurdenFraction:1.5,minimumPersonPace:.52,boatPassengerUnits:1.5,boatCargoUnitsPerSeat:5,boatMaximumPenalty:.38,minimumBoatPace:.5}as const;
 export function carriedLoadUnits(u:Unit){
- const items=Object.values(u.itemCargo||{}).reduce((sum,n)=>sum+(n||0),0),water=u.waterWork?.liters||0;
+ const items=Object.values(u.itemCargo||{}).reduce((sum,n)=>sum+(n||0),0),water=(u.waterWork?.liters||0)+(u.husbandryWork?.waterLiters||0);
  return Math.max(0,u.carry)/(GATHER[u.carryType||'wood']?.carry||GATHER.wood.carry)+items/CARRIED_LOAD_RULES.itemBatchUnits+water/CARRIED_LOAD_RULES.waterLiters+(u.expedition?.food||0)/CARRIED_LOAD_RULES.provisionFood;
 }
 export function carriedLoadFraction(u:Unit,capacityMultiplier=1){return Math.min(CARRIED_LOAD_RULES.maximumBurdenFraction,carriedLoadUnits(u)/Math.max(1,capacityMultiplier));}

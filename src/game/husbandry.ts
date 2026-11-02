@@ -1,3 +1,4 @@
+import{penWaterWorkAI,penNeedsWater,reconcilePenWater,drinkPenWater,releaseHusbandryKeeper}from'./penWater';
 import {PEN_RULES,insidePen,penFeedCapacity} from './penGeometry';
 import {surveyPenPasture,penPastureState,penPastureReport} from './penPasture';
 import {supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
@@ -44,12 +45,13 @@ export function beginHerdTaming(g:Game,penId:number) {
 }
 export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'pack'='care') {
  const pen=penAt(g,penId);if(!pen)return false;
+ const paused=g.state.units.find(u=>u.husbandryWork?.pen===penId&&u.husbandryWork.action===action&&u.husbandryWork.paused&&available(g,u,'husbandryWork'));if(paused){paused.husbandryWork!.paused=false;paused.order='hold';return true;}
  if(action==='care'){const r=penPastureReport(g,pen);if(r.keepers>=r.keepersNeeded){g.banner('This herd already has enough keepers assigned',3);return false;}}
  const animal=action==='care'?undefined:penAnimals(g,penId).filter(a=>insidePen(pen,a.x,a.z)&&g.state.time-a.born>=HERD.maturity&&
   !g.state.units.some(u=>u.hp>0&&u.husbandryWork?.animal===a.id)).sort((a,b)=>Number(a.sex==='female')-Number(b.sex==='female'))[0];
  if(action!=='care'&&!animal){g.banner('No unreserved adult goat in this pen',4);return false;}
  const u=[...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected)).find(u=>available(g,u,'husbandryWork')&&
-  (!u.husbandryWork||u.husbandryWork.paused)&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
+  (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0))&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
  if(!u){g.banner('Choose a free empty-handed adult for this pen',4);return false;}
  g.interruptMission(u);u.husbandryWork={pen:penId,action,animal:animal?.id,phase:'pen',progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();return true;
 }
@@ -63,7 +65,7 @@ function animalStep(g:Game,a:Livestock,handler:Unit,x:number,z:number,dt:number)
  g.steer(actor,dt);
  a.x=actor.x;a.y=actor.y;a.z=actor.z;a.vx=actor.vx;a.vz=actor.vz;a.facing=actor.facing;a.stuckT=actor.stuckT;
 }
-function finish(g:Game,u:Unit) {u.tamingWork=undefined;u.husbandryWork=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
+function finish(g:Game,u:Unit) {if((u.husbandryWork?.waterLiters??0)>0){releaseHusbandryKeeper(g,u);return;}u.tamingWork=undefined;u.husbandryWork=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
 function takeFeed(g:Game,limit:number) {
  const t=g.tribe(0),lots=foodInventory(t);
  // A load keeps its actual plant-food identity. Overflow can return to stores
@@ -72,6 +74,7 @@ function takeFeed(g:Game,limit:number) {
  return null;
 }
 export function husbandryAI(g:Game,u:Unit,dt:number) {
+ if(penWaterWorkAI(g,u,dt))return true;
  const tame=u.tamingWork;
  if(tame?.pen!==undefined&&!tame.paused&&u.order==='hold'&&!u.emergency){
   const pen=penAt(g,tame.pen,u.team);if(!pen){finish(g,u);return true;}
@@ -147,6 +150,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   }
   return true;
  }
+ if(penNeedsWater(g,pen)){w.phase='waterFetch';return true;}
  pasture.care=Math.min(1,pasture.care+dt*.012);w.progress+=dt;
  if((calendar(g).phase===3||pasture.condition<.2)&&pasture.feed<Math.max(1,penAnimals(g,pen.id).length*PEN_RULES.feedPerAnimalSecond*60)&&penAnimals(g,pen.id).length){w.phase='fetch';return true;}
  if(w.progress>=30){
@@ -161,6 +165,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
  return true;
 }
 export function tickHusbandry(g:Game,dt:number) {
+ reconcilePenWater(g);
  if(dt<=0)return;
  const livestock=g.state.livestock??[],activePens=new Set(livestock.filter(a=>a.hp>0).map(a=>a.pen));
  if(!livestock.length&&!g.state.buildings.some(b=>b.type==='pen'&&b.pasture&&(b.pasture.condition<1||b.pasture.care>0)))return;
@@ -180,8 +185,9 @@ export function tickHusbandry(g:Game,dt:number) {
    const grazed=arrived&&!r.winter?Math.min(need,biomass):0;biomass-=grazed;p.grazedFood!+=grazed;
    const stored=arrived?Math.min(Math.max(0,need-grazed),p.feed):0;p.feed-=stored;p.feedConsumed!+=stored;
    const fedFraction=Math.min(1,(grazed+stored)/Math.max(1e-12,need)),fed=fedFraction>=1-1e-8;
+   const hydrated=drinkPenWater(g,pen,a,dt);
    a.hunger=Math.max(0,Math.min(100,a.hunger+dt*(fed?-.3:.055*(1-fedFraction))));
-   if(a.hunger>80)a.hp=Math.max(0,a.hp-dt*.08);else if(fed&&p.care>.2)a.hp=Math.min(a.maxHp,a.hp+dt*.015);
+   if(a.hunger>80)a.hp=Math.max(0,a.hp-dt*.08);else if(fed&&hydrated&&p.care>.2)a.hp=Math.min(a.maxHp,a.hp+dt*.015);
    const adult=g.state.time-a.born>=HERD.maturity;
    if(a.hp<=0){a.carcass={meat:8,diedAt:g.state.time};occupied--;continue;}
    if(!handlers.has(a.id)&&arrived){
@@ -189,11 +195,11 @@ export function tickHusbandry(g:Game,dt:number) {
     const x=a.x+Math.sin(a.facing)*dt*.35,z=a.z+Math.cos(a.facing)*dt*.35;
     if(insidePen(pen,x,z,.15)&&g.walkable(x,z)){a.x=x;a.z=z;a.y=g.height(x,z);}else a.facing+=Math.PI;
    }
-   if(arrived&&a.sex==='female'&&adult&&a.hunger<30&&fed&&p.care>.2){
+   if(arrived&&a.sex==='female'&&adult&&a.hunger<30&&fed&&hydrated&&p.care>.2){
     if(male&&occupied+reserved<r.eligibleCapacity)a.pregnancy=Math.min(HERD.gestation,a.pregnancy+dt);
     if(a.pregnancy>=HERD.gestation&&occupied+reserved<r.eligibleCapacity&&livestock.length<PEN_RULES.maximumAnimalsTotal){
      a.pregnancy=0;a.lactatingUntil=g.state.time+HERD.lactation;
-     const id=g.id();livestock.push({...a,id,sex:id%2?'female':'male',born:g.state.time,tamedAt:g.state.time,milk:0,pregnancy:0,lactatingUntil:0,hp:a.maxHp,hunger:5,scale:.6});occupied++;
+     const id=g.id();livestock.push({...a,id,sex:id%2?'female':'male',born:g.state.time,tamedAt:g.state.time,milk:0,pregnancy:0,lactatingUntil:0,hp:a.maxHp,hunger:5,thirstSeconds:0,scale:.6});occupied++;
      if(a.team===0)g.banner('A kid was born in the animal pen',4);
     }
     if((a.lactatingUntil||0)>g.state.time)a.milk=Math.min(6,a.milk+dt*.025);

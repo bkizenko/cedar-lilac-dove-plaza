@@ -1,3 +1,4 @@
+import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
 import {coastalIndependentNeeds} from './coastalTrade';
@@ -16,7 +17,7 @@ export const SURVIVAL_RULES={version:1,waterLitersPerPersonSecond:.008,startingW
  coldThresholdCelsius:6,fireWarmthCelsius:9,shelterWarmthCelsius:5,fireRadiusMeters:48,
  woodPerPersonColdSecond:.003,coldGraceSeconds:180,coldFatalExposureSeconds:2400,
  recoverySecondsPerSecond:3} as const;
-export type SurvivalStock={waterLiters:number;waterConsumedLiters:number;waterDeliveredLiters:number;waterLostLiters:number;fuelBurnedWood:number;waterShortageSeconds:number;coldExposurePersonSeconds:number};
+export type SurvivalStock={waterHerdTransferredInLiters?:number;waterHerdTransferredOutLiters?:number;waterHerdWithdrawnLiters?:number;waterHerdReturnedLiters?:number;waterHerdConsumedLiters?:number;waterHerdLostLiters?:number;waterLiters:number;waterConsumedLiters:number;waterDeliveredLiters:number;waterLostLiters:number;fuelBurnedWood:number;waterShortageSeconds:number;coldExposurePersonSeconds:number};
 export type WaterWork={sourceX:number;sourceZ:number;bankX:number;bankZ:number;phase:'outbound'|'collecting'|'returning';progressSeconds:number;liters:number;paused?:boolean};
 const emptyStock=(waterLiters=0):SurvivalStock=>({waterLiters,waterConsumedLiters:0,waterDeliveredLiters:0,waterLostLiters:0,fuelBurnedWood:0,waterShortageSeconds:0,coldExposurePersonSeconds:0});
 const residents=(g:Game,team:number)=>g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit);
@@ -40,7 +41,7 @@ function sheltered(g:Game,u:Unit){
 function fireDemand(g:Game,team:number,temp:number){return temp<SURVIVAL_RULES.coldThresholdCelsius?residents(g,team).length*SURVIVAL_RULES.woodPerPersonColdSecond:0;}
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),temp=ambientTemperature(g);
- const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond,fuelDemand=fireDemand(g,team,temp);
+ const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team),fuelDemand=fireDemand(g,team,temp);
  const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];

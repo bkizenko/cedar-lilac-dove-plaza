@@ -35,6 +35,7 @@ import {prepareRivalDefense} from './rivalOperations';
 import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady} from './influenceField';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
+import{reconcilePenWater}from'./penWater';
 import {husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
@@ -5697,6 +5698,7 @@ export class Game {
         tickPracticalHelpers(this);
         tickProduction(this,0);
         tickCampRelocation(this,0);
+        reconcilePenWater(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {

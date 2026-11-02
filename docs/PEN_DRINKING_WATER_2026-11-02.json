@@ -1,0 +1,41 @@
+{
+  "source": "79d6148 + final parent pen-water integration",
+  "scenario": "finite endowed owned pair and paid existing pen; no midrun inventory/body/terrain correction",
+  "loadLiters": 12,
+  "loadedSpeed": 0.84,
+  "elapsed": 7.800000000000004,
+  "animalCount": 3,
+  "penWater": {
+    "ownerTeam": 0,
+    "initialLiters": 0,
+    "liters": 11.985599999999991,
+    "deliveredLiters": 12,
+    "consumedLiters": 0.014399999999999998,
+    "lostLiters": 0
+  },
+  "stock": {
+    "waterLiters": 87.68800000000017,
+    "waterConsumedLiters": 0.3120000000000002,
+    "waterDeliveredLiters": 0,
+    "waterLostLiters": 0,
+    "fuelBurnedWood": 0,
+    "waterShortageSeconds": 0,
+    "coldExposurePersonSeconds": 0,
+    "waterHerdConsumedLiters": 0.014399999999999998,
+    "waterHerdWithdrawnLiters": 12
+  },
+  "held": 11.985599999999991,
+  "simulationErrors": [],
+  "verification": {
+    "testsPassed": 51,
+    "testsTotal": 51,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "actualDesktopPenStock": "12.0 / 48 L",
+    "actualDesktopAnimals": 3,
+    "browserErrors": 0,
+    "intactHandoverCarriedAndStored": "passed",
+    "releaseGateCreditDelta": 0,
+    "overall": "29/98 (29.59%)"
+  }
+}

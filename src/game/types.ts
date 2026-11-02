@@ -136,7 +136,7 @@ export type Critter = {
 export type Livestock = Critter & {
   team: number; pen: number; sex: 'female' | 'male';
   born: number; tamedAt: number; hunger: number; milk: number;
-  pregnancy: number; lactatingUntil?: number; stuckT?: number;
+  thirstSeconds?:number; pregnancy: number; lactatingUntil?: number; stuckT?: number;
 };
 
 export type Unit = {
@@ -226,7 +226,7 @@ export type Unit = {
   farmToolWork?: FarmToolWork;
   packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
-  husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver";animal?:number;paused?:boolean};
+  husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaidReturn?: import("./seaRaiderReturn").SeaRaiderReturn;
@@ -310,6 +310,7 @@ export type Building = {
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
   storeCare?: number;
+  penWater?:import('./penWater').PenWater;
   pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
   fallowYear?: number;

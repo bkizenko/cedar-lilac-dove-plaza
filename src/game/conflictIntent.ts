@@ -1,3 +1,4 @@
+import{adoptHerdWaterLoad,reconcilePenWater}from'./penWater';
 import {pauseHaulageWork} from './haulage';
 import {workRuntime} from './workRuntime';
 import type {Game} from './sim';
@@ -151,6 +152,9 @@ export function integrateOccupiedVillage(g:Game,id:number){
  }
  for(const building of buildings){building.team=control.controllerTeam;building.selected=false;}
  for(const person of residents){person.team=control.controllerTeam;person.selected=false;person.target=null;person.node=null;person.pillage=-1;person.attackDestination=null;person.emergency=undefined;person.job=null;person.jobLock=false;person.order=person.carry>0?'return':'idle';person.workReason='Village surrendered intact — resuming community life';}
+ for(const animal of g.state.livestock??[])if(buildingIds.has(animal.pen)&&animal.team===control.formerTeam)animal.team=control.controllerTeam;
+ for(const person of residents)adoptHerdWaterLoad(g,person);
+ reconcilePenWater(g);
  control.phase='integrated';control.integratedAt=g.state.time;control.blockedReason=undefined;
  g.state.walkDirty=true;g.workBoard.reset();
  recordConflict(g,'village_integrated',control.controllerTeam,1,{targetId:control.hallId});recordConflict(g,'buildings_transferred',control.controllerTeam,buildings.length,{targetId:control.hallId});recordConflict(g,'residents_transferred',control.controllerTeam,residents.length,{targetId:control.hallId});recordConflict(g,'paid_projects_transferred',control.controllerTeam,paid.length,{targetId:control.hallId});
