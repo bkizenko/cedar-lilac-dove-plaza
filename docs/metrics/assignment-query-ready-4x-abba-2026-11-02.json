@@ -1,0 +1,228 @@
+{
+  "scope": "Single sequential sustained ready-navigation-cache 4x A-B-B-A trial; not cold async navigation, browser FPS or a campaign benchmark",
+  "sourceSaveSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "sourceUnchanged": true,
+  "copyUnchanged": true,
+  "rng": "External diagnostic LCG seed0x51ed270b, exact state/draw counts recorded; not persisted game RNG",
+  "method": {
+    "warmup": 20,
+    "measuredPerRun": 100,
+    "dt": 0.03333333333333333,
+    "ordinarySelectedSpeed": 4,
+    "onlyCommand": "Resume and speed4; actual performContactAction decline on existing encounter",
+    "profiler": false,
+    "methodWrappers": false,
+    "navigationPreparation": "Both public exact modes prepared before warmup; encoded state unchanged asserted; cold cost excluded",
+    "node": "v24.22.1",
+    "arch": "arm64"
+  },
+  "runtimeSource": {
+    "A": "5e6456d39e4b7a0821563eaa4a2ce69a830a918cdc3f38bb7209c36c59e93fac",
+    "B": "52d5a18bb4d7f5e43108e70a02f520f356d9d8a62053d3ec0e26bb098a800384"
+  },
+  "runs": [
+    {
+      "navigationCoverage": [
+        {
+          "waterOnly": true,
+          "width": 520,
+          "gridSha256": "fe922ae905bbe9663c13cd4a6f42a50e7e658c3fdd8d9dcfd46e1c1f1b21893b",
+          "labelsSha256": "d0926c19ee01093f18cb0d2024e41e7a5c7811edfdd65abe9f19f2b3550ebd05"
+        },
+        {
+          "waterOnly": false,
+          "width": 520,
+          "gridSha256": "188600831abf10899cb64926846abef5487e274bb93a53f81cf3bb6a022f5248",
+          "labelsSha256": "70fa64673b8dee22076a23f182d64303892d68fece68f18fd935e5a9d84606d3"
+        }
+      ],
+      "navigationWarmupMs": 63.08508299999994,
+      "visitorDeclines": 0,
+      "variant": "A",
+      "run": 1,
+      "decodeMs": 1675.9295,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "288be84455d6f099a2baa90528b9009b3b0ad76ec8f78b1148159368d817505d",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "f408287de2f1a52bf6f63492eca2143dde42d2a9591fca0fef386aedd644b32f",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 28.751630360000025,
+        "medianMs": 26.416667000000416,
+        "p95Ms": 45.22425000000021,
+        "maxMs": 74.52758399999993
+      },
+      "wallMs": 2876.3533329999996,
+      "processCpuMs": 3860.436,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    },
+    {
+      "navigationCoverage": [
+        {
+          "waterOnly": true,
+          "width": 520,
+          "gridSha256": "fe922ae905bbe9663c13cd4a6f42a50e7e658c3fdd8d9dcfd46e1c1f1b21893b",
+          "labelsSha256": "d0926c19ee01093f18cb0d2024e41e7a5c7811edfdd65abe9f19f2b3550ebd05"
+        },
+        {
+          "waterOnly": false,
+          "width": 520,
+          "gridSha256": "188600831abf10899cb64926846abef5487e274bb93a53f81cf3bb6a022f5248",
+          "labelsSha256": "70fa64673b8dee22076a23f182d64303892d68fece68f18fd935e5a9d84606d3"
+        }
+      ],
+      "navigationWarmupMs": 62.820958000000246,
+      "visitorDeclines": 0,
+      "variant": "B",
+      "run": 1,
+      "decodeMs": 1554.8672500000002,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "288be84455d6f099a2baa90528b9009b3b0ad76ec8f78b1148159368d817505d",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "f408287de2f1a52bf6f63492eca2143dde42d2a9591fca0fef386aedd644b32f",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 26.919263369999953,
+        "medianMs": 23.74737499999901,
+        "p95Ms": 42.00824999999895,
+        "maxMs": 71.8856250000008
+      },
+      "wallMs": 2693.0420410000006,
+      "processCpuMs": 3693.415,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    },
+    {
+      "navigationCoverage": [
+        {
+          "waterOnly": true,
+          "width": 520,
+          "gridSha256": "fe922ae905bbe9663c13cd4a6f42a50e7e658c3fdd8d9dcfd46e1c1f1b21893b",
+          "labelsSha256": "d0926c19ee01093f18cb0d2024e41e7a5c7811edfdd65abe9f19f2b3550ebd05"
+        },
+        {
+          "waterOnly": false,
+          "width": 520,
+          "gridSha256": "188600831abf10899cb64926846abef5487e274bb93a53f81cf3bb6a022f5248",
+          "labelsSha256": "70fa64673b8dee22076a23f182d64303892d68fece68f18fd935e5a9d84606d3"
+        }
+      ],
+      "navigationWarmupMs": 47.915124999999534,
+      "visitorDeclines": 0,
+      "variant": "B",
+      "run": 2,
+      "decodeMs": 1508.6414999999997,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "288be84455d6f099a2baa90528b9009b3b0ad76ec8f78b1148159368d817505d",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "f408287de2f1a52bf6f63492eca2143dde42d2a9591fca0fef386aedd644b32f",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 25.53713168000002,
+        "medianMs": 23.454334000000017,
+        "p95Ms": 39.91129100000035,
+        "maxMs": 52.96312500000022
+      },
+      "wallMs": 2554.878666999999,
+      "processCpuMs": 2912.814,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    },
+    {
+      "navigationCoverage": [
+        {
+          "waterOnly": true,
+          "width": 520,
+          "gridSha256": "fe922ae905bbe9663c13cd4a6f42a50e7e658c3fdd8d9dcfd46e1c1f1b21893b",
+          "labelsSha256": "d0926c19ee01093f18cb0d2024e41e7a5c7811edfdd65abe9f19f2b3550ebd05"
+        },
+        {
+          "waterOnly": false,
+          "width": 520,
+          "gridSha256": "188600831abf10899cb64926846abef5487e274bb93a53f81cf3bb6a022f5248",
+          "labelsSha256": "70fa64673b8dee22076a23f182d64303892d68fece68f18fd935e5a9d84606d3"
+        }
+      ],
+      "navigationWarmupMs": 50.34320800000205,
+      "visitorDeclines": 0,
+      "variant": "A",
+      "run": 2,
+      "decodeMs": 1538.7950839999994,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "288be84455d6f099a2baa90528b9009b3b0ad76ec8f78b1148159368d817505d",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "f408287de2f1a52bf6f63492eca2143dde42d2a9591fca0fef386aedd644b32f",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 27.854051720000097,
+        "medianMs": 25.677749999998923,
+        "p95Ms": 41.52770899999814,
+        "maxMs": 58.33799999999974
+      },
+      "wallMs": 2786.5367909999986,
+      "processCpuMs": 3126.838,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    }
+  ],
+  "qualified": true,
+  "limits": [
+    "One short four-run cohort; no full campaign, renderer, browser frame/FPS or final release performance claim.",
+    "Wall timing observational and process CPU includes background V8 work.",
+    "Private full saved states stay local and are not staged."
+  ],
+  "meanAcrossRuns": {
+    "A": 28.30284104000006,
+    "B": 26.228197524999985,
+    "percentChange": -7.330159937187963
+  },
+  "baselineHead": "b0c9557e32b88956df9138f197705e3482400cef",
+  "allNavigationCoverageMatches": true,
+  "allInitialAndWarmFullStatesMatch": true,
+  "cachePreparationLeavesEncodedStateUnchanged": true
+}

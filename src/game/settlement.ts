@@ -373,6 +373,11 @@ export class WorkBoard {
     const foes=g.state.units.filter(e=>e.hp>0&&g.isFoe(u.team,e.team));
     const workRange=u.team===0?null:rivalWorkRangeContext(g,u.team);
     const lumberSites=g.state.buildings.filter(b=>b.team===u.team&&b.type==='lumber'&&g.finished(b));
+    // Food stock, household membership and storage stay fixed during scoring.
+    // Reuse only within this scan; the next resident sees all live changes.
+    let taskFoodTarget: number | undefined, taskReserve: number | undefined;
+    const foodTarget = () => taskFoodTarget ??= foodWorkTarget(g, u.team);
+    const reserve = () => taskReserve ??= reserveSeconds(g, u.team);
     for (const task of list) {
       if (u.team === 0 && !("type" in task.node) &&
           ("species" in task.node&&task.node.hp>0 ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
@@ -381,12 +386,12 @@ export class WorkBoard {
       const harvestingField = task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
       const preserving = task.kind==='food' && "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
-      if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodWorkTarget(g,u.team))
+      if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodTarget())
         continue;
-      if(u.team===0&&g.state.laborPolicy==="food"&&reserveSeconds(g,u.team)<240&&task.kind!=="food"&&!u.jobLock)continue;
+      if(u.team===0&&g.state.laborPolicy==="food"&&reserve()<240&&task.kind!=="food"&&!u.jobLock)continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
       if(materialTargets&&!u.jobLock&&['wood','stone','copper','iron'].includes(task.kind)&&materialStocks[task.kind as RivalMaterialKind]>=materialTargets[task.kind as RivalMaterialKind])continue;
-      if (u.huntOnly && reserveSeconds(g,u.team)>=90 && !("species" in task.node)) continue;
+      if (u.huntOnly && reserve()>=90 && !("species" in task.node)) continue;
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
       if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node,u.team))) continue;
       if ("amount" in task.node && task.node.amount <= 0) continue;
@@ -428,7 +433,7 @@ export class WorkBoard {
       const policy = g.state.laborPolicy;
       const bonus =
         u.team === 0 && ((policy === "wood" && task.kind === "wood") || (policy === "stone" && task.kind === "stone") || (policy === "hunt" && "species" in task.node))
-          ? (reserveSeconds(g,u.team)<90?80:240)
+          ? (reserve()<90?80:240)
           : u.team===0 && policy === "food" && task.kind === "food"
           ? 70
           : u.team===0 && policy === "build" && task.kind === "build"

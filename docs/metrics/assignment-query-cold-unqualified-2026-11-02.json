@@ -1,0 +1,128 @@
+{
+  "scope": "Single sequential A-B-B-A saved-village predicate trial, published b0c9557 baseline versus assignment-local query candidate; no FPS claim",
+  "sourceSaveSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "sourceUnchanged": true,
+  "copyUnchanged": true,
+  "rng": "External diagnostic LCG seed0x51ed270b, exact state/draw counts recorded; not persisted game RNG",
+  "method": {
+    "warmup": 20,
+    "measuredPerRun": 100,
+    "dt": 0.03333333333333333,
+    "ordinarySelectedSpeed": 4,
+    "onlyCommand": "Resume and speed4; actual performContactAction decline on existing encounter",
+    "profiler": false,
+    "methodWrappers": false,
+    "node": "v24.22.1",
+    "arch": "arm64"
+  },
+  "runtimeSource": {
+    "A": "5e6456d39e4b7a0821563eaa4a2ce69a830a918cdc3f38bb7209c36c59e93fac",
+    "B": "fbac12b71f951ebb9b00b3492c2415de3014d123f895fdb43d91e003a4cccf59"
+  },
+  "runs": [
+    {
+      "visitorDeclines": 0,
+      "variant": "A",
+      "run": 1,
+      "decodeMs": 1678.0105830000002,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "e9c5c39e25961cf10af94520ec22c3ed7177fd50f6f94667e348d14f3281acc9",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "92b55bba29f39ad75aa6b44adf571e20f7696068155216e3126b29e273a119b2",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 29.193790810000024,
+        "medianMs": 26.52233299999989,
+        "p95Ms": 45.00483299999996,
+        "maxMs": 74.03841600000032
+      },
+      "wallMs": 2920.6839579999996,
+      "processCpuMs": 4055.485,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    },
+    {
+      "visitorDeclines": 0,
+      "variant": "B",
+      "run": 1,
+      "decodeMs": 1576.189625,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "e9c5c39e25961cf10af94520ec22c3ed7177fd50f6f94667e348d14f3281acc9",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "92b55bba29f39ad75aa6b44adf571e20f7696068155216e3126b29e273a119b2",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 27.73024298000002,
+        "medianMs": 24.710332999999082,
+        "p95Ms": 43.13366700000006,
+        "maxMs": 78.77608300000065
+      },
+      "wallMs": 2774.104542000001,
+      "processCpuMs": 3877.602,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    },
+    {
+      "visitorDeclines": 0,
+      "variant": "B",
+      "run": 2,
+      "decodeMs": 1542.1372499999998,
+      "initialHash": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+      "initialRng": {
+        "calls": 1724,
+        "state": 2528634791
+      },
+      "warmHash": "97df04d9d1f1eadc9fe2ec76fd3e7cf36913c15ae66cf2824864008bef289472",
+      "warmRng": {
+        "calls": 2408,
+        "state": 1965325171
+      },
+      "finalHash": "67cec789e19ef81a4738c79b1df01918639bbf25b77591e323f19d6670be2eb1",
+      "finalRng": {
+        "calls": 30698,
+        "state": 2651825821
+      },
+      "timing": {
+        "count": 100,
+        "meanMs": 25.17837413999996,
+        "medianMs": 22.939666000000216,
+        "p95Ms": 39.57224999999926,
+        "maxMs": 52.581874999999854
+      },
+      "wallMs": 2518.9407919999994,
+      "processCpuMs": 2856.781,
+      "simulatedTime": 4758.800000000605,
+      "errors": 0
+    }
+  ],
+  "qualified": false,
+  "limits": [
+    "One short four-run cohort; no full campaign, renderer, browser frame/FPS or final release performance claim.",
+    "Wall timing observational and process CPU includes background V8 work.",
+    "Private full saved states stay local and are not staged."
+  ],
+  "baselineHead": "b0c9557e32b88956df9138f197705e3482400cef",
+  "failureExplanation": "Stopped after B2 because full-state equality failed: only state.coastalTradeReviewAt differed by 1.0666666666666 simulated seconds between identical B repeats. Existing wall-budgeted asynchronous navigation readiness is nondeterministic. No timing benefit is qualified from this cohort."
+}

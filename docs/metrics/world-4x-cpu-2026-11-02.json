@@ -1,0 +1,1085 @@
+{
+  "scope": "One actual saved-village Node CPU diagnosis; not browser FPS, optimization comparison or full campaign benchmark",
+  "sourceFingerprint": "55bb3220e6d3766830bd1f74d76a17fbe14f3e9a3b5f7f680ffcc7ec36b4c5a6",
+  "sourceGameModules": 171,
+  "sourceSaveSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "sourceSaveUnchanged": true,
+  "privateLocalCopyUnchanged": true,
+  "method": {
+    "nodeVersion": "v24.22.1",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "sequential": true,
+    "nicePriority": 10,
+    "unprofiledWarmupSteps": 20,
+    "measuredSteps": 100,
+    "inputQuantumSeconds": 0.03333333333333333,
+    "ordinarySelectedSpeed": 4,
+    "visitorDeclines": 0,
+    "rng": "External diagnostic Math.random=mulberry32(7359), restored afterward; not a persisted game RNG or save-RNG equivalence claim",
+    "samplingIntervalMicroseconds": 500,
+    "decodeExcluded": true,
+    "decodeMsRecordedSeparately": 1626.928417,
+    "commands": "Ordinary Resume and speed4 selection after decode; existing visitor decline through performContactAction; no stock/body/terrain corrections"
+  },
+  "initial": {
+    "livingPeople": 245,
+    "playerPeople": 57,
+    "standingBuildings": 363,
+    "byTeam": [
+      {
+        "team": 0,
+        "people": 57,
+        "buildings": 116
+      },
+      {
+        "team": 1,
+        "people": 46,
+        "buildings": 50
+      },
+      {
+        "team": 2,
+        "people": 47,
+        "buildings": 64
+      },
+      {
+        "team": 3,
+        "people": 0,
+        "buildings": 2
+      },
+      {
+        "team": 4,
+        "people": 47,
+        "buildings": 63
+      },
+      {
+        "team": 5,
+        "people": 48,
+        "buildings": 68
+      }
+    ],
+    "nodes": {
+      "trees": 3682,
+      "stones": 98,
+      "forage": 85,
+      "fish": 34,
+      "copper": 29,
+      "iron": 21,
+      "wildlife": 51
+    }
+  },
+  "final": {
+    "livingPeople": 245,
+    "playerPeople": 57,
+    "standingBuildings": 363,
+    "byTeam": [
+      {
+        "team": 0,
+        "people": 57,
+        "buildings": 116
+      },
+      {
+        "team": 1,
+        "people": 46,
+        "buildings": 50
+      },
+      {
+        "team": 2,
+        "people": 47,
+        "buildings": 64
+      },
+      {
+        "team": 3,
+        "people": 0,
+        "buildings": 2
+      },
+      {
+        "team": 4,
+        "people": 47,
+        "buildings": 63
+      },
+      {
+        "team": 5,
+        "people": 48,
+        "buildings": 68
+      }
+    ],
+    "nodes": {
+      "trees": 3682,
+      "stones": 98,
+      "forage": 85,
+      "fish": 34,
+      "copper": 29,
+      "iron": 21,
+      "wildlife": 51
+    }
+  },
+  "simulatedSecondsAdvanced": 15.999999999985448,
+  "measuredSimulatedSecondsAdvanced": 13.333333333321207,
+  "wholeStep": {
+    "count": 100,
+    "meanMs": 33.713109169999946,
+    "medianMs": 29.71795800000018,
+    "p95Ms": 54.67962499999976,
+    "maximumMs": 81.59683300000052
+  },
+  "profiledProcessCpu": {
+    "userMilliseconds": 4506.993,
+    "systemMilliseconds": 127.897,
+    "wallMilliseconds": 3371.5905,
+    "cpuToWallRatio": 1.3746894826047233
+  },
+  "sampleCount": 4583,
+  "sampledMilliseconds": 3468.583,
+  "topSelf": [
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4216,
+      "selfMicroseconds": 291370,
+      "inclusiveMicroseconds": 1736420,
+      "selfSamples": 392,
+      "selfSamplePercent": 8.553349334497055,
+      "selfPercent": 8.400260279197585,
+      "inclusivePercent": 50.061365116533175
+    },
+    {
+      "function": "assign",
+      "file": "src/game/settlement.ts",
+      "line": 318,
+      "selfMicroseconds": 155458,
+      "inclusiveMicroseconds": 912420,
+      "selfSamples": 213,
+      "selfSamplePercent": 4.6476107353262055,
+      "selfPercent": 4.481887848726699,
+      "inclusivePercent": 26.305266444539456
+    },
+    {
+      "function": "add",
+      "file": "src/game/settlement.ts",
+      "line": 277,
+      "selfMicroseconds": 147954,
+      "inclusiveMicroseconds": 218041,
+      "selfSamples": 196,
+      "selfSamplePercent": 4.276674667248527,
+      "selfPercent": 4.265545901597281,
+      "inclusivePercent": 6.286169308907989
+    },
+    {
+      "function": "interactionSpot",
+      "file": "src/game/sim.ts",
+      "line": 3718,
+      "selfMicroseconds": 146669,
+      "inclusiveMicroseconds": 218378,
+      "selfSamples": 195,
+      "selfSamplePercent": 4.254854898538076,
+      "selfPercent": 4.228499072964378,
+      "inclusivePercent": 6.295885091981365
+    },
+    {
+      "function": "foodWorkTarget",
+      "file": "src/game/settlement.ts",
+      "line": 55,
+      "selfMicroseconds": 129536,
+      "inclusiveMicroseconds": 213411,
+      "selfSamples": 173,
+      "selfSamplePercent": 3.7748199869081387,
+      "selfPercent": 3.734550967931285,
+      "inclusivePercent": 6.152685404962199
+    },
+    {
+      "function": "step",
+      "file": "src/game/sim.ts",
+      "line": 5554,
+      "selfMicroseconds": 105962,
+      "inclusiveMicroseconds": 3271916,
+      "selfSamples": 146,
+      "selfSamplePercent": 3.1856862317259433,
+      "selfPercent": 3.054907436264319,
+      "inclusivePercent": 94.3300477457221
+    },
+    {
+      "function": "placementIssue",
+      "file": "src/game/sim.ts",
+      "line": 1095,
+      "selfMicroseconds": 100206,
+      "inclusiveMicroseconds": 109040,
+      "selfSamples": 135,
+      "selfSamplePercent": 2.9456687759109754,
+      "selfPercent": 2.888960708162382,
+      "inclusivePercent": 3.143646843682276
+    },
+    {
+      "function": "post",
+      "file": "node:inspector",
+      "line": 115,
+      "selfMicroseconds": 96792,
+      "inclusiveMicroseconds": 96792,
+      "selfSamples": 1,
+      "selfSamplePercent": 0.02181976871045167,
+      "selfPercent": 2.790534347887884,
+      "inclusivePercent": 2.790534347887884
+    },
+    {
+      "function": "stockCap",
+      "file": "src/game/sim.ts",
+      "line": 5505,
+      "selfMicroseconds": 85417,
+      "inclusiveMicroseconds": 86167,
+      "selfSamples": 115,
+      "selfSamplePercent": 2.509273401701942,
+      "selfPercent": 2.462590631390398,
+      "inclusivePercent": 2.4842132940166057
+    },
+    {
+      "function": "buildField",
+      "file": "src/game/influenceField.ts",
+      "line": 115,
+      "selfMicroseconds": 80836,
+      "inclusiveMicroseconds": 170921,
+      "selfSamples": 118,
+      "selfSamplePercent": 2.574732707833297,
+      "selfPercent": 2.33051940806952,
+      "inclusivePercent": 4.9276894916454355
+    },
+    {
+      "function": "foodDemand",
+      "file": "src/game/settlement.ts",
+      "line": 46,
+      "selfMicroseconds": 72167,
+      "inclusiveMicroseconds": 219294,
+      "selfSamples": 97,
+      "selfSamplePercent": 2.116517564913812,
+      "selfPercent": 2.080590258327392,
+      "inclusivePercent": 6.322293570602174
+    },
+    {
+      "function": "blockedResource",
+      "file": "src/game/settlement.ts",
+      "line": 245,
+      "selfMicroseconds": 69254,
+      "inclusiveMicroseconds": 70087,
+      "selfSamples": 93,
+      "selfSamplePercent": 2.029238490072005,
+      "selfPercent": 1.9966078366872007,
+      "inclusivePercent": 2.0206234073107088
+    },
+    {
+      "function": "separate",
+      "file": "src/game/sim.ts",
+      "line": 4139,
+      "selfMicroseconds": 66250,
+      "inclusiveMicroseconds": 82082,
+      "selfSamples": 88,
+      "selfSamplePercent": 1.920139646519747,
+      "selfPercent": 1.910001865315029,
+      "inclusivePercent": 2.36644185824586
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 90,
+      "selfMicroseconds": 61585,
+      "inclusiveMicroseconds": 180332,
+      "selfSamples": 83,
+      "selfSamplePercent": 1.8110408029674885,
+      "selfPercent": 1.775508903780016,
+      "inclusivePercent": 5.1990106622790915
+    },
+    {
+      "function": "(garbage collector)",
+      "file": "",
+      "line": 0,
+      "selfMicroseconds": 59833,
+      "inclusiveMicroseconds": 59833,
+      "selfSamples": 78,
+      "selfSamplePercent": 1.70194195941523,
+      "selfPercent": 1.7249983638851947,
+      "inclusivePercent": 1.7249983638851947
+    },
+    {
+      "function": "steer",
+      "file": "src/game/sim.ts",
+      "line": 3975,
+      "selfMicroseconds": 56374,
+      "inclusiveMicroseconds": 118128,
+      "selfSamples": 76,
+      "selfSamplePercent": 1.658302421994327,
+      "selfPercent": 1.6252746438531238,
+      "inclusivePercent": 3.405655854278246
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/settlement.ts",
+      "line": 48,
+      "selfMicroseconds": 55708,
+      "inclusiveMicroseconds": 99543,
+      "selfSamples": 74,
+      "selfSamplePercent": 1.6146628845734237,
+      "selfPercent": 1.6060737194410515,
+      "inclusivePercent": 2.8698462744008144
+    },
+    {
+      "function": "defenseNeighbors",
+      "file": "src/game/defenseNeighbors.ts",
+      "line": 53,
+      "selfMicroseconds": 55456,
+      "inclusiveMicroseconds": 57706,
+      "selfSamples": 76,
+      "selfSamplePercent": 1.658302421994327,
+      "selfPercent": 1.5988085047986453,
+      "inclusivePercent": 1.6636764926772691
+    },
+    {
+      "function": "hasTaskCommitment",
+      "file": "src/game/workCommitments.ts",
+      "line": 5,
+      "selfMicroseconds": 48748,
+      "inclusiveMicroseconds": 48748,
+      "selfSamples": 65,
+      "selfSamplePercent": 1.4182849661793584,
+      "selfPercent": 1.4054154102698422,
+      "inclusivePercent": 1.4054154102698422
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/defense.ts",
+      "line": 102,
+      "selfMicroseconds": 48417,
+      "inclusiveMicroseconds": 48417,
+      "selfSamples": 64,
+      "selfSamplePercent": 1.3964651974689068,
+      "selfPercent": 1.3958726084974757,
+      "inclusivePercent": 1.3958726084974757
+    },
+    {
+      "function": "routineRest",
+      "file": "src/game/journeys.ts",
+      "line": 79,
+      "selfMicroseconds": 43625,
+      "inclusiveMicroseconds": 79497,
+      "selfSamples": 59,
+      "selfSamplePercent": 1.2873663539166484,
+      "selfPercent": 1.2577182094244248,
+      "inclusivePercent": 2.29191574772753
+    },
+    {
+      "function": "cornerstoneAt",
+      "file": "src/game/sim.ts",
+      "line": 1042,
+      "selfMicroseconds": 42253,
+      "inclusiveMicroseconds": 58004,
+      "selfSamples": 57,
+      "selfSamplePercent": 1.2437268164957451,
+      "selfPercent": 1.2181631519268818,
+      "inclusivePercent": 1.6722678972940823
+    },
+    {
+      "function": "walkable",
+      "file": "src/game/sim.ts",
+      "line": 978,
+      "selfMicroseconds": 36668,
+      "inclusiveMicroseconds": 58625,
+      "selfSamples": 49,
+      "selfSamplePercent": 1.0691686668121319,
+      "selfPercent": 1.0571463909037206,
+      "inclusivePercent": 1.6901714619485826
+    },
+    {
+      "function": "available",
+      "file": "src/game/haulage.ts",
+      "line": 95,
+      "selfMicroseconds": 33873,
+      "inclusiveMicroseconds": 81829,
+      "selfSamples": 45,
+      "selfSamplePercent": 0.981889591970325,
+      "selfPercent": 0.9765659348500526,
+      "inclusivePercent": 2.359147813386619
+    },
+    {
+      "function": "refresh",
+      "file": "src/game/settlement.ts",
+      "line": 265,
+      "selfMicroseconds": 32625,
+      "inclusiveMicroseconds": 344753,
+      "selfSamples": 45,
+      "selfSamplePercent": 0.981889591970325,
+      "selfPercent": 0.9405858242400428,
+      "inclusivePercent": 9.939303744497392
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/sim.ts",
+      "line": 3726,
+      "selfMicroseconds": 30875,
+      "inclusiveMicroseconds": 30875,
+      "selfSamples": 41,
+      "selfSamplePercent": 0.8946105171285185,
+      "selfPercent": 0.8901329447788909,
+      "inclusivePercent": 0.8901329447788909
+    },
+    {
+      "function": "grow",
+      "file": "src/game/sim.ts",
+      "line": 3393,
+      "selfMicroseconds": 26372,
+      "inclusiveMicroseconds": 36331,
+      "selfSamples": 36,
+      "selfSamplePercent": 0.7855116735762601,
+      "selfPercent": 0.7603104783711389,
+      "inclusivePercent": 1.0474306078303446
+    },
+    {
+      "function": "pace",
+      "file": "src/game/influenceField.ts",
+      "line": 81,
+      "selfMicroseconds": 25668,
+      "inclusiveMicroseconds": 27127,
+      "selfSamples": 35,
+      "selfSamplePercent": 0.7636919048658084,
+      "selfPercent": 0.7400140057193384,
+      "inclusivePercent": 0.7820772920815214
+    },
+    {
+      "function": "isDependent",
+      "file": "src/game/settlement.ts",
+      "line": 43,
+      "selfMicroseconds": 23377,
+      "inclusiveMicroseconds": 23377,
+      "selfSamples": 32,
+      "selfSamplePercent": 0.6982325987344534,
+      "selfPercent": 0.673963978950482,
+      "inclusivePercent": 0.673963978950482
+    },
+    {
+      "function": "tickLumber",
+      "file": "src/game/sim.ts",
+      "line": 5532,
+      "selfMicroseconds": 23331,
+      "inclusiveMicroseconds": 23331,
+      "selfSamples": 33,
+      "selfSamplePercent": 0.7200523674449051,
+      "selfPercent": 0.6726377889760746,
+      "inclusivePercent": 0.6726377889760746
+    },
+    {
+      "function": "acquireTarget",
+      "file": "src/game/sim.ts",
+      "line": 4573,
+      "selfMicroseconds": 22794,
+      "inclusiveMicroseconds": 51207,
+      "selfSamples": 31,
+      "selfSamplePercent": 0.6764128300240018,
+      "selfPercent": 0.6571559625357098,
+      "inclusivePercent": 1.4763089134669691
+    },
+    {
+      "function": "safe",
+      "file": "src/game/haulage.ts",
+      "line": 299,
+      "selfMicroseconds": 21542,
+      "inclusiveMicroseconds": 121370,
+      "selfSamples": 29,
+      "selfSamplePercent": 0.6327732926030983,
+      "selfPercent": 0.6210605310583601,
+      "inclusivePercent": 3.4991234172571337
+    },
+    {
+      "function": "travelSpeed",
+      "file": "src/game/sim.ts",
+      "line": 3965,
+      "selfMicroseconds": 21168,
+      "inclusiveMicroseconds": 38336,
+      "selfSamples": 28,
+      "selfSamplePercent": 0.6109535238926467,
+      "selfPercent": 0.6102780299620911,
+      "inclusivePercent": 1.105235192584407
+    },
+    {
+      "function": "tickRegen",
+      "file": "src/game/sim.ts",
+      "line": 3387,
+      "selfMicroseconds": 20833,
+      "inclusiveMicroseconds": 57164,
+      "selfSamples": 29,
+      "selfSamplePercent": 0.6327732926030983,
+      "selfPercent": 0.600619907322385,
+      "inclusivePercent": 1.6480505151527294
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/settlement.ts",
+      "line": 49,
+      "selfMicroseconds": 19790,
+      "inclusiveMicroseconds": 49126,
+      "selfSamples": 28,
+      "selfSamplePercent": 0.6109535238926467,
+      "selfPercent": 0.5705499911635386,
+      "inclusivePercent": 1.416313232233451
+    }
+  ],
+  "topBySampleCount": [
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4216,
+      "selfMicroseconds": 291370,
+      "inclusiveMicroseconds": 1736420,
+      "selfSamples": 392,
+      "selfSamplePercent": 8.553349334497055,
+      "selfPercent": 8.400260279197585,
+      "inclusivePercent": 50.061365116533175
+    },
+    {
+      "function": "assign",
+      "file": "src/game/settlement.ts",
+      "line": 318,
+      "selfMicroseconds": 155458,
+      "inclusiveMicroseconds": 912420,
+      "selfSamples": 213,
+      "selfSamplePercent": 4.6476107353262055,
+      "selfPercent": 4.481887848726699,
+      "inclusivePercent": 26.305266444539456
+    },
+    {
+      "function": "add",
+      "file": "src/game/settlement.ts",
+      "line": 277,
+      "selfMicroseconds": 147954,
+      "inclusiveMicroseconds": 218041,
+      "selfSamples": 196,
+      "selfSamplePercent": 4.276674667248527,
+      "selfPercent": 4.265545901597281,
+      "inclusivePercent": 6.286169308907989
+    },
+    {
+      "function": "interactionSpot",
+      "file": "src/game/sim.ts",
+      "line": 3718,
+      "selfMicroseconds": 146669,
+      "inclusiveMicroseconds": 218378,
+      "selfSamples": 195,
+      "selfSamplePercent": 4.254854898538076,
+      "selfPercent": 4.228499072964378,
+      "inclusivePercent": 6.295885091981365
+    },
+    {
+      "function": "foodWorkTarget",
+      "file": "src/game/settlement.ts",
+      "line": 55,
+      "selfMicroseconds": 129536,
+      "inclusiveMicroseconds": 213411,
+      "selfSamples": 173,
+      "selfSamplePercent": 3.7748199869081387,
+      "selfPercent": 3.734550967931285,
+      "inclusivePercent": 6.152685404962199
+    },
+    {
+      "function": "step",
+      "file": "src/game/sim.ts",
+      "line": 5554,
+      "selfMicroseconds": 105962,
+      "inclusiveMicroseconds": 3271916,
+      "selfSamples": 146,
+      "selfSamplePercent": 3.1856862317259433,
+      "selfPercent": 3.054907436264319,
+      "inclusivePercent": 94.3300477457221
+    },
+    {
+      "function": "placementIssue",
+      "file": "src/game/sim.ts",
+      "line": 1095,
+      "selfMicroseconds": 100206,
+      "inclusiveMicroseconds": 109040,
+      "selfSamples": 135,
+      "selfSamplePercent": 2.9456687759109754,
+      "selfPercent": 2.888960708162382,
+      "inclusivePercent": 3.143646843682276
+    },
+    {
+      "function": "buildField",
+      "file": "src/game/influenceField.ts",
+      "line": 115,
+      "selfMicroseconds": 80836,
+      "inclusiveMicroseconds": 170921,
+      "selfSamples": 118,
+      "selfSamplePercent": 2.574732707833297,
+      "selfPercent": 2.33051940806952,
+      "inclusivePercent": 4.9276894916454355
+    },
+    {
+      "function": "stockCap",
+      "file": "src/game/sim.ts",
+      "line": 5505,
+      "selfMicroseconds": 85417,
+      "inclusiveMicroseconds": 86167,
+      "selfSamples": 115,
+      "selfSamplePercent": 2.509273401701942,
+      "selfPercent": 2.462590631390398,
+      "inclusivePercent": 2.4842132940166057
+    },
+    {
+      "function": "foodDemand",
+      "file": "src/game/settlement.ts",
+      "line": 46,
+      "selfMicroseconds": 72167,
+      "inclusiveMicroseconds": 219294,
+      "selfSamples": 97,
+      "selfSamplePercent": 2.116517564913812,
+      "selfPercent": 2.080590258327392,
+      "inclusivePercent": 6.322293570602174
+    },
+    {
+      "function": "blockedResource",
+      "file": "src/game/settlement.ts",
+      "line": 245,
+      "selfMicroseconds": 69254,
+      "inclusiveMicroseconds": 70087,
+      "selfSamples": 93,
+      "selfSamplePercent": 2.029238490072005,
+      "selfPercent": 1.9966078366872007,
+      "inclusivePercent": 2.0206234073107088
+    },
+    {
+      "function": "separate",
+      "file": "src/game/sim.ts",
+      "line": 4139,
+      "selfMicroseconds": 66250,
+      "inclusiveMicroseconds": 82082,
+      "selfSamples": 88,
+      "selfSamplePercent": 1.920139646519747,
+      "selfPercent": 1.910001865315029,
+      "inclusivePercent": 2.36644185824586
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 90,
+      "selfMicroseconds": 61585,
+      "inclusiveMicroseconds": 180332,
+      "selfSamples": 83,
+      "selfSamplePercent": 1.8110408029674885,
+      "selfPercent": 1.775508903780016,
+      "inclusivePercent": 5.1990106622790915
+    },
+    {
+      "function": "(garbage collector)",
+      "file": "",
+      "line": 0,
+      "selfMicroseconds": 59833,
+      "inclusiveMicroseconds": 59833,
+      "selfSamples": 78,
+      "selfSamplePercent": 1.70194195941523,
+      "selfPercent": 1.7249983638851947,
+      "inclusivePercent": 1.7249983638851947
+    },
+    {
+      "function": "steer",
+      "file": "src/game/sim.ts",
+      "line": 3975,
+      "selfMicroseconds": 56374,
+      "inclusiveMicroseconds": 118128,
+      "selfSamples": 76,
+      "selfSamplePercent": 1.658302421994327,
+      "selfPercent": 1.6252746438531238,
+      "inclusivePercent": 3.405655854278246
+    },
+    {
+      "function": "defenseNeighbors",
+      "file": "src/game/defenseNeighbors.ts",
+      "line": 53,
+      "selfMicroseconds": 55456,
+      "inclusiveMicroseconds": 57706,
+      "selfSamples": 76,
+      "selfSamplePercent": 1.658302421994327,
+      "selfPercent": 1.5988085047986453,
+      "inclusivePercent": 1.6636764926772691
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/settlement.ts",
+      "line": 48,
+      "selfMicroseconds": 55708,
+      "inclusiveMicroseconds": 99543,
+      "selfSamples": 74,
+      "selfSamplePercent": 1.6146628845734237,
+      "selfPercent": 1.6060737194410515,
+      "inclusivePercent": 2.8698462744008144
+    },
+    {
+      "function": "hasTaskCommitment",
+      "file": "src/game/workCommitments.ts",
+      "line": 5,
+      "selfMicroseconds": 48748,
+      "inclusiveMicroseconds": 48748,
+      "selfSamples": 65,
+      "selfSamplePercent": 1.4182849661793584,
+      "selfPercent": 1.4054154102698422,
+      "inclusivePercent": 1.4054154102698422
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/defense.ts",
+      "line": 102,
+      "selfMicroseconds": 48417,
+      "inclusiveMicroseconds": 48417,
+      "selfSamples": 64,
+      "selfSamplePercent": 1.3964651974689068,
+      "selfPercent": 1.3958726084974757,
+      "inclusivePercent": 1.3958726084974757
+    },
+    {
+      "function": "routineRest",
+      "file": "src/game/journeys.ts",
+      "line": 79,
+      "selfMicroseconds": 43625,
+      "inclusiveMicroseconds": 79497,
+      "selfSamples": 59,
+      "selfSamplePercent": 1.2873663539166484,
+      "selfPercent": 1.2577182094244248,
+      "inclusivePercent": 2.29191574772753
+    },
+    {
+      "function": "cornerstoneAt",
+      "file": "src/game/sim.ts",
+      "line": 1042,
+      "selfMicroseconds": 42253,
+      "inclusiveMicroseconds": 58004,
+      "selfSamples": 57,
+      "selfSamplePercent": 1.2437268164957451,
+      "selfPercent": 1.2181631519268818,
+      "inclusivePercent": 1.6722678972940823
+    },
+    {
+      "function": "walkable",
+      "file": "src/game/sim.ts",
+      "line": 978,
+      "selfMicroseconds": 36668,
+      "inclusiveMicroseconds": 58625,
+      "selfSamples": 49,
+      "selfSamplePercent": 1.0691686668121319,
+      "selfPercent": 1.0571463909037206,
+      "inclusivePercent": 1.6901714619485826
+    },
+    {
+      "function": "available",
+      "file": "src/game/haulage.ts",
+      "line": 95,
+      "selfMicroseconds": 33873,
+      "inclusiveMicroseconds": 81829,
+      "selfSamples": 45,
+      "selfSamplePercent": 0.981889591970325,
+      "selfPercent": 0.9765659348500526,
+      "inclusivePercent": 2.359147813386619
+    },
+    {
+      "function": "refresh",
+      "file": "src/game/settlement.ts",
+      "line": 265,
+      "selfMicroseconds": 32625,
+      "inclusiveMicroseconds": 344753,
+      "selfSamples": 45,
+      "selfSamplePercent": 0.981889591970325,
+      "selfPercent": 0.9405858242400428,
+      "inclusivePercent": 9.939303744497392
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/sim.ts",
+      "line": 3726,
+      "selfMicroseconds": 30875,
+      "inclusiveMicroseconds": 30875,
+      "selfSamples": 41,
+      "selfSamplePercent": 0.8946105171285185,
+      "selfPercent": 0.8901329447788909,
+      "inclusivePercent": 0.8901329447788909
+    }
+  ],
+  "topInclusive": [
+    {
+      "function": "(root)",
+      "file": "",
+      "line": 0,
+      "selfMicroseconds": 0,
+      "inclusiveMicroseconds": 3468583,
+      "selfSamples": 0,
+      "selfSamplePercent": 0,
+      "selfPercent": 0,
+      "inclusivePercent": 100
+    },
+    {
+      "function": "(anonymous)",
+      "file": "local-diagnostic-runner",
+      "line": 0,
+      "selfMicroseconds": 5334,
+      "inclusiveMicroseconds": 3377917,
+      "selfSamples": 7,
+      "selfSamplePercent": 0.15273838097316167,
+      "selfPercent": 0.15378037659759045,
+      "inclusivePercent": 97.38607956044298
+    },
+    {
+      "function": "step",
+      "file": "src/game/sim.ts",
+      "line": 5554,
+      "selfMicroseconds": 105962,
+      "inclusiveMicroseconds": 3271916,
+      "selfSamples": 146,
+      "selfSamplePercent": 3.1856862317259433,
+      "selfPercent": 3.054907436264319,
+      "inclusivePercent": 94.3300477457221
+    },
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4216,
+      "selfMicroseconds": 291370,
+      "inclusiveMicroseconds": 1736420,
+      "selfSamples": 392,
+      "selfSamplePercent": 8.553349334497055,
+      "selfPercent": 8.400260279197585,
+      "inclusivePercent": 50.061365116533175
+    },
+    {
+      "function": "assign",
+      "file": "src/game/settlement.ts",
+      "line": 318,
+      "selfMicroseconds": 155458,
+      "inclusiveMicroseconds": 912420,
+      "selfSamples": 213,
+      "selfSamplePercent": 4.6476107353262055,
+      "selfPercent": 4.481887848726699,
+      "inclusivePercent": 26.305266444539456
+    },
+    {
+      "function": "refresh",
+      "file": "src/game/settlement.ts",
+      "line": 265,
+      "selfMicroseconds": 32625,
+      "inclusiveMicroseconds": 344753,
+      "selfSamples": 45,
+      "selfSamplePercent": 0.981889591970325,
+      "selfPercent": 0.9405858242400428,
+      "inclusivePercent": 9.939303744497392
+    },
+    {
+      "function": "supplyApproach",
+      "file": "src/game/campAnchor.ts",
+      "line": 20,
+      "selfMicroseconds": 18916,
+      "inclusiveMicroseconds": 227501,
+      "selfSamples": 25,
+      "selfSamplePercent": 0.5454942177612917,
+      "selfPercent": 0.5453523816497976,
+      "inclusivePercent": 6.558903160166558
+    },
+    {
+      "function": "foodDemand",
+      "file": "src/game/settlement.ts",
+      "line": 46,
+      "selfMicroseconds": 72167,
+      "inclusiveMicroseconds": 219294,
+      "selfSamples": 97,
+      "selfSamplePercent": 2.116517564913812,
+      "selfPercent": 2.080590258327392,
+      "inclusivePercent": 6.322293570602174
+    },
+    {
+      "function": "interactionSpot",
+      "file": "src/game/sim.ts",
+      "line": 3718,
+      "selfMicroseconds": 146669,
+      "inclusiveMicroseconds": 218378,
+      "selfSamples": 195,
+      "selfSamplePercent": 4.254854898538076,
+      "selfPercent": 4.228499072964378,
+      "inclusivePercent": 6.295885091981365
+    },
+    {
+      "function": "add",
+      "file": "src/game/settlement.ts",
+      "line": 277,
+      "selfMicroseconds": 147954,
+      "inclusiveMicroseconds": 218041,
+      "selfSamples": 196,
+      "selfSamplePercent": 4.276674667248527,
+      "selfPercent": 4.265545901597281,
+      "inclusivePercent": 6.286169308907989
+    },
+    {
+      "function": "foodWorkTarget",
+      "file": "src/game/settlement.ts",
+      "line": 55,
+      "selfMicroseconds": 129536,
+      "inclusiveMicroseconds": 213411,
+      "selfSamples": 173,
+      "selfSamplePercent": 3.7748199869081387,
+      "selfPercent": 3.734550967931285,
+      "inclusivePercent": 6.152685404962199
+    },
+    {
+      "function": "advanceGeographicInfluence",
+      "file": "src/game/influenceField.ts",
+      "line": 229,
+      "selfMicroseconds": 1624,
+      "inclusiveMicroseconds": 202923,
+      "selfSamples": 3,
+      "selfSamplePercent": 0.06545930613135502,
+      "selfPercent": 0.04682027213994879,
+      "inclusivePercent": 5.850314090797308
+    },
+    {
+      "function": "startField",
+      "file": "src/game/influenceField.ts",
+      "line": 188,
+      "selfMicroseconds": 13085,
+      "inclusiveMicroseconds": 184006,
+      "selfSamples": 18,
+      "selfSamplePercent": 0.39275583678813003,
+      "selfPercent": 0.3772433872852401,
+      "inclusivePercent": 5.304932878930676
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 90,
+      "selfMicroseconds": 61585,
+      "inclusiveMicroseconds": 180332,
+      "selfSamples": 83,
+      "selfSamplePercent": 1.8110408029674885,
+      "selfPercent": 1.775508903780016,
+      "inclusivePercent": 5.1990106622790915
+    },
+    {
+      "function": "reserveSeconds",
+      "file": "src/game/settlement.ts",
+      "line": 58,
+      "selfMicroseconds": 8209,
+      "inclusiveMicroseconds": 172665,
+      "selfSamples": 11,
+      "selfSamplePercent": 0.24001745581496836,
+      "selfPercent": 0.23666724999805394,
+      "inclusivePercent": 4.977969389805578
+    },
+    {
+      "function": "buildField",
+      "file": "src/game/influenceField.ts",
+      "line": 115,
+      "selfMicroseconds": 80836,
+      "inclusiveMicroseconds": 170921,
+      "selfSamples": 118,
+      "selfSamplePercent": 2.574732707833297,
+      "selfPercent": 2.33051940806952,
+      "inclusivePercent": 4.9276894916454355
+    },
+    {
+      "function": "rivalTick",
+      "file": "src/game/sim.ts",
+      "line": 5136,
+      "selfMicroseconds": 1541,
+      "inclusiveMicroseconds": 169335,
+      "selfSamples": 2,
+      "selfSamplePercent": 0.04363953742090334,
+      "selfPercent": 0.04442736414264845,
+      "inclusivePercent": 4.881964767745214
+    },
+    {
+      "function": "shareLocalTransport",
+      "file": "src/game/haulage.ts",
+      "line": 297,
+      "selfMicroseconds": 8792,
+      "inclusiveMicroseconds": 147079,
+      "selfSamples": 12,
+      "selfSamplePercent": 0.2618372245254201,
+      "selfPercent": 0.25347526641282625,
+      "inclusivePercent": 4.240319461866704
+    },
+    {
+      "function": "scoutAI",
+      "file": "src/game/scouting.ts",
+      "line": 95,
+      "selfMicroseconds": 5250,
+      "inclusiveMicroseconds": 132174,
+      "selfSamples": 7,
+      "selfSamplePercent": 0.15273838097316167,
+      "selfPercent": 0.15135863838345515,
+      "inclusivePercent": 3.8106050799418667
+    },
+    {
+      "function": "findOpenSpot",
+      "file": "src/game/sim.ts",
+      "line": 5094,
+      "selfMicroseconds": 2417,
+      "inclusiveMicroseconds": 123541,
+      "selfSamples": 4,
+      "selfSamplePercent": 0.08727907484180668,
+      "selfPercent": 0.06968263409005926,
+      "inclusivePercent": 3.561713818005797
+    },
+    {
+      "function": "safe",
+      "file": "src/game/haulage.ts",
+      "line": 299,
+      "selfMicroseconds": 21542,
+      "inclusiveMicroseconds": 121370,
+      "selfSamples": 29,
+      "selfSamplePercent": 0.6327732926030983,
+      "selfPercent": 0.6210605310583601,
+      "inclusivePercent": 3.4991234172571337
+    },
+    {
+      "function": "placementValid",
+      "file": "src/game/sim.ts",
+      "line": 1194,
+      "selfMicroseconds": 11334,
+      "inclusiveMicroseconds": 120374,
+      "selfSamples": 16,
+      "selfSamplePercent": 0.3491162993672267,
+      "selfPercent": 0.32676167760725344,
+      "inclusivePercent": 3.4704085212895293
+    },
+    {
+      "function": "steer",
+      "file": "src/game/sim.ts",
+      "line": 3975,
+      "selfMicroseconds": 56374,
+      "inclusiveMicroseconds": 118128,
+      "selfSamples": 76,
+      "selfSamplePercent": 1.658302421994327,
+      "selfPercent": 1.6252746438531238,
+      "inclusivePercent": 3.405655854278246
+    },
+    {
+      "function": "placementIssue",
+      "file": "src/game/sim.ts",
+      "line": 1095,
+      "selfMicroseconds": 100206,
+      "inclusiveMicroseconds": 109040,
+      "selfSamples": 135,
+      "selfSamplePercent": 2.9456687759109754,
+      "selfPercent": 2.888960708162382,
+      "inclusivePercent": 3.143646843682276
+    },
+    {
+      "function": "preservationAvailable",
+      "file": "src/game/pantry.ts",
+      "line": 83,
+      "selfMicroseconds": 3084,
+      "inclusiveMicroseconds": 100418,
+      "selfSamples": 4,
+      "selfSamplePercent": 0.08727907484180668,
+      "selfPercent": 0.0889123887189668,
+      "inclusivePercent": 2.8950727141313903
+    }
+  ],
+  "stopReason": "completed100steps",
+  "simulationErrorCount": 0,
+  "limits": [
+    "Sampling and timing overhead included; no independent unprofiled comparison.",
+    "Short100step window does not qualify rare periodic events or sustained campaign balance.",
+    "No renderer/GPU/browser/minimap/UI/save/actual FPS measured.",
+    "Cooperative wall-time work can progress differently from browser scheduling.",
+    "Raw authorized save and CPU profile remain private local; report contains aggregates only."
+  ],
+  "baselineHead": "b0c9557e32b88956df9138f197705e3482400cef"
+}

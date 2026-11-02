@@ -1,0 +1,480 @@
+[
+  {
+    "seed": 345,
+    "externalRng": {
+      "seed": 952303496,
+      "draws": 17268,
+      "end": 5099884
+    },
+    "worldgenVersion": 14,
+    "layout": "pangaea",
+    "size": 1040,
+    "team": 1,
+    "camp": {
+      "x": 348,
+      "z": 208,
+      "team": 1
+    },
+    "positions": [
+      {
+        "id": 4647,
+        "x": 353,
+        "y": 12.400773481786604,
+        "z": 205
+      },
+      {
+        "id": 4648,
+        "x": 343,
+        "y": 12.710596260657676,
+        "z": 205
+      },
+      {
+        "id": 4649,
+        "x": 354,
+        "y": 12.331802970841087,
+        "z": 210
+      },
+      {
+        "id": 4650,
+        "x": 343,
+        "y": 12.617012755941357,
+        "z": 213
+      },
+      {
+        "id": 4651,
+        "x": 351,
+        "y": 12.462562575707068,
+        "z": 202
+      }
+    ],
+    "initial": {
+      "food": 35,
+      "rawMeat": 32,
+      "wood": 32,
+      "stone": 12,
+      "water": 100,
+      "people": 5,
+      "buildings": 0
+    },
+    "terrainSha256": "aadbe7e99add1e032e7902389f18788a0ae9c37d503581ac31378b3081edad1f",
+    "foundation": {
+      "id": 4748,
+      "x": 351.06146745892073,
+      "y": 12.409785582258493,
+      "z": 215.3910362600903,
+      "build": 0.009619481198221041,
+      "time": 1.4000000000000001
+    },
+    "batch": {
+      "id": 4749,
+      "actorId": 4647,
+      "phase": "working",
+      "progress": 1.000375,
+      "time": 22.900000000000055,
+      "wood": 27,
+      "raw": 27.42642781718675
+    },
+    "final": {
+      "time": 161.4999999999951,
+      "batches": 5,
+      "cookedFoodReceived": 20,
+      "accounting": {
+        "foodReceived": 26.671699151945024,
+        "foodConsumed": 29.858168131224836,
+        "foodSpoiled": 0.34659986372892604,
+        "cargoDelivered": {
+          "food": 6.671699151945025,
+          "wood": 0,
+          "stone": 0,
+          "copper": 0,
+          "iron": 0
+        }
+      },
+      "paidCosts": {
+        "wood": 24,
+        "stone": 4
+      },
+      "structures": [
+        {
+          "id": 4748,
+          "type": "hearth",
+          "x": 351.06146745892073,
+          "y": 12.409785582258493,
+          "z": 215.3910362600903,
+          "build": 1
+        },
+        {
+          "id": 4750,
+          "type": "townhall",
+          "x": 312,
+          "y": 17.08301366365872,
+          "z": 224,
+          "build": 1
+        }
+      ],
+      "survival": {
+        "waterLiters": 93.5399999999921,
+        "waterConsumedLiters": 6.459999999999732,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "food": 31.46693115699126,
+      "rawMeat": 70.95407689083795,
+      "rawConsumed": 20,
+      "rawSpoiled": 5.045923109162068,
+      "physicallyDeliveredRaw": 64,
+      "rawDeliveries": [
+        {
+          "id": 4647,
+          "amount": 20,
+          "x": 318.0978995374342,
+          "z": 218.1679546336533,
+          "atSupplyBefore": true,
+          "arrivalX": 317.9116043348111,
+          "arrivalZ": 218.27203318719677,
+          "time": 87.29999999999932
+        },
+        {
+          "id": 4648,
+          "amount": 12,
+          "x": 317.80775227668687,
+          "z": 218.5277986923454,
+          "atSupplyBefore": true,
+          "arrivalX": 317.80775227668687,
+          "arrivalZ": 218.5277986923454,
+          "time": 87.5999999999993
+        },
+        {
+          "id": 4647,
+          "amount": 15,
+          "x": 317.61712665186116,
+          "z": 217.81997128957235,
+          "atSupplyBefore": true,
+          "arrivalX": 317.57151044384796,
+          "arrivalZ": 217.8875185943826,
+          "time": 136.09999999999656
+        },
+        {
+          "id": 4648,
+          "amount": 17,
+          "x": 317.84577157762027,
+          "z": 218.1047163971644,
+          "atSupplyBefore": true,
+          "arrivalX": 317.84577157762027,
+          "arrivalZ": 218.1047163971644,
+          "time": 136.39999999999654
+        }
+      ],
+      "logsUsed": 5,
+      "wood": 3,
+      "stone": 8,
+      "water": 93.5399999999921,
+      "livingOriginalPeople": 5
+    }
+  },
+  {
+    "seed": 345,
+    "externalRng": {
+      "seed": 952303499,
+      "draws": 26778,
+      "end": 70212173
+    },
+    "worldgenVersion": 14,
+    "layout": "pangaea",
+    "size": 1040,
+    "team": 2,
+    "camp": {
+      "x": -72,
+      "z": -432,
+      "team": 2
+    },
+    "positions": [
+      {
+        "id": 4653,
+        "x": -67,
+        "y": 31.01433565489639,
+        "z": -435
+      },
+      {
+        "id": 4654,
+        "x": -74.5,
+        "y": 31.07482307311522,
+        "z": -430.6698729810778
+      },
+      {
+        "id": 4655,
+        "x": -74.5,
+        "y": 30.718783340597305,
+        "z": -439.3301270189222
+      },
+      {
+        "id": 4656,
+        "x": -77,
+        "y": 30.79656778820873,
+        "z": -435
+      },
+      {
+        "id": 4657,
+        "x": -67,
+        "y": 31.037953891189844,
+        "z": -436
+      }
+    ],
+    "initial": {
+      "food": 35,
+      "rawMeat": 32,
+      "wood": 32,
+      "stone": 12,
+      "water": 100,
+      "people": 5,
+      "buildings": 0
+    },
+    "terrainSha256": "aadbe7e99add1e032e7902389f18788a0ae9c37d503581ac31378b3081edad1f",
+    "foundation": {
+      "id": 4748,
+      "x": -68.93853254107928,
+      "y": 31.18598212434532,
+      "z": -424.6089637399097,
+      "build": 0.009830291046163687,
+      "time": 1.4000000000000001
+    },
+    "batch": {
+      "id": 4749,
+      "actorId": 4654,
+      "phase": "working",
+      "progress": 1.000375,
+      "time": 16.499999999999964,
+      "wood": 27,
+      "raw": 27.585795458345792
+    },
+    "final": {
+      "time": 218.0999999999919,
+      "batches": 5,
+      "cookedFoodReceived": 20,
+      "accounting": {
+        "foodReceived": 87.41665844528757,
+        "foodConsumed": 39.175851383338454,
+        "foodSpoiled": 1.8073193033741006,
+        "cargoDelivered": {
+          "food": 67.41665844528757,
+          "wood": 138,
+          "stone": 24,
+          "copper": 0,
+          "iron": 0
+        }
+      },
+      "paidCosts": {
+        "wood": 118,
+        "stone": 4
+      },
+      "structures": [
+        {
+          "id": 4748,
+          "type": "hearth",
+          "x": -68.93853254107928,
+          "y": 31.18598212434532,
+          "z": -424.6089637399097,
+          "build": 1
+        },
+        {
+          "id": 4751,
+          "type": "townhall",
+          "x": -156,
+          "y": 24.799044400728658,
+          "z": -412,
+          "build": 1
+        },
+        {
+          "id": 4753,
+          "type": "quarry",
+          "x": -181.67261116656252,
+          "y": 13.801317838515772,
+          "z": -401.3600020189823,
+          "build": 1
+        },
+        {
+          "id": 4755,
+          "type": "lumber",
+          "x": -164,
+          "y": 22.152555876511798,
+          "z": -430,
+          "build": 1
+        },
+        {
+          "id": 4757,
+          "type": "warehouse",
+          "x": -146,
+          "y": 28.16315269921658,
+          "z": -408,
+          "build": 1
+        }
+      ],
+      "survival": {
+        "waterLiters": 91.27599999998934,
+        "waterConsumedLiters": 8.723999999999483,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "food": 81.43348775857501,
+      "rawMeat": 8.809468393226414,
+      "rawConsumed": 20,
+      "rawSpoiled": 3.19053160677358,
+      "physicallyDeliveredRaw": 0,
+      "rawDeliveries": [],
+      "logsUsed": 5,
+      "wood": 47,
+      "stone": 32,
+      "water": 91.27599999998934,
+      "livingOriginalPeople": 5
+    }
+  },
+  {
+    "seed": 917,
+    "externalRng": {
+      "seed": 3166103300,
+      "draws": 13357,
+      "end": 1719064607
+    },
+    "worldgenVersion": 14,
+    "layout": "pangaea",
+    "size": 1040,
+    "team": 1,
+    "camp": {
+      "x": -292,
+      "z": -432,
+      "team": 1
+    },
+    "positions": [
+      {
+        "id": 4746,
+        "x": -287,
+        "y": 12.803203287068204,
+        "z": -435
+      },
+      {
+        "id": 4747,
+        "x": -297,
+        "y": 12.770373962898931,
+        "z": -435
+      },
+      {
+        "id": 4748,
+        "x": -286,
+        "y": 12.988392639160157,
+        "z": -430
+      },
+      {
+        "id": 4749,
+        "x": -297,
+        "y": 13.155171120999128,
+        "z": -427
+      },
+      {
+        "id": 4750,
+        "x": -289,
+        "y": 12.859710104677099,
+        "z": -438
+      }
+    ],
+    "initial": {
+      "food": 35,
+      "rawMeat": 32,
+      "wood": 32,
+      "stone": 12,
+      "water": 100,
+      "people": 5,
+      "buildings": 0
+    },
+    "terrainSha256": "5046e80b484d65970f1daa7de38fd92c85a36d40692426725e12fac1626ff9cf",
+    "foundation": {
+      "id": 4842,
+      "x": -288.93853254107927,
+      "y": 13.336354739823365,
+      "z": -424.6089637399097,
+      "build": 0.0101036986876002,
+      "time": 1.5000000000000002
+    },
+    "batch": {
+      "id": 4843,
+      "actorId": 4746,
+      "phase": "working",
+      "progress": 1.000375,
+      "time": 24.400000000000077,
+      "wood": 27,
+      "raw": 27.389065446056474
+    },
+    "final": {
+      "time": 167.1999999999948,
+      "batches": 5,
+      "cookedFoodReceived": 20,
+      "accounting": {
+        "foodReceived": 81.01944282778888,
+        "foodConsumed": 28.253731586525944,
+        "foodSpoiled": 1.5201386210164145,
+        "cargoDelivered": {
+          "food": 61.01944282778888,
+          "wood": 15,
+          "stone": 0,
+          "copper": 0,
+          "iron": 0
+        }
+      },
+      "paidCosts": {
+        "wood": 42,
+        "stone": 4
+      },
+      "structures": [
+        {
+          "id": 4842,
+          "type": "hearth",
+          "x": -288.93853254107927,
+          "y": 13.336354739823365,
+          "z": -424.6089637399097,
+          "build": 1
+        },
+        {
+          "id": 4844,
+          "type": "townhall",
+          "x": -336,
+          "y": 13.26455899977825,
+          "z": -430,
+          "build": 1
+        },
+        {
+          "id": 4849,
+          "type": "quarry",
+          "x": -306,
+          "y": 13.010574716646996,
+          "z": -430,
+          "build": 0.11526805059322057
+        }
+      ],
+      "survival": {
+        "waterLiters": 93.31199999999183,
+        "waterConsumedLiters": 6.687999999999707,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "food": 86.24557262024652,
+      "rawMeat": 9.357008895107679,
+      "rawConsumed": 20,
+      "rawSpoiled": 2.642991104892316,
+      "physicallyDeliveredRaw": 0,
+      "rawDeliveries": [],
+      "logsUsed": 5,
+      "wood": 0,
+      "stone": 8,
+      "water": 93.31199999999183,
+      "livingOriginalPeople": 5
+    }
+  }
+]

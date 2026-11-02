@@ -1,0 +1,43 @@
+{
+  "scope": "Public native terrain equivalence probes; deliberately authored live changes before actual Game.step, not campaign qualification",
+  "cases": [
+    {
+      "case": "storage completion/loss/owner/resize",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "5687f0ece69971be3018d0586752e73d490215e2adad8b98783336af4b27b51b",
+      "externalRng": {
+        "calls": 750,
+        "state": 689914510
+      }
+    },
+    {
+      "case": "living mouths/death/dependency/team",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "0eae7cd2910f644f6d1422a9f04b28f4ee7cba38270d21bb5b1cc32ab36f2d92",
+      "externalRng": {
+        "calls": 750,
+        "state": 689914510
+      }
+    },
+    {
+      "case": "food thresholds/job lock/policy",
+      "steps": 5,
+      "dt": 0.03333333333333333,
+      "fullStateMatches": true,
+      "rngMatches": true,
+      "finalEncodedSha256": "67163caaae1b0ea4f59e211f2213ae39bc7c54df41cf406ac1e9259036d98098",
+      "externalRng": {
+        "calls": 5740,
+        "state": 1948583292
+      }
+    }
+  ],
+  "qualified": true,
+  "baselineHead": "b0c9557e32b88956df9138f197705e3482400cef"
+}
