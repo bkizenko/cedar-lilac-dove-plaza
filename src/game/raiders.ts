@@ -1,3 +1,4 @@
+import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender}from'./raidIntent';
 import {explicitArmedOrder} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
@@ -37,10 +38,13 @@ export function raidReadiness(g:Game){
  return {adults:adults.length,buildings:buildings.length,cap:Math.max(1,Math.ceil(power*(g.state.conflict==='dangerous'?.95:.75)+towers))};
 }
 
+const strandedRaid=(u:Unit)=>u.seaRaid?.phase==='retreat'&&u.seaRaid.plan?.strandedAt!==undefined;
+const invadingRaider=(u:Unit)=>u.team===3&&u.hp>0&&!u.prisoner&&u.homeCamp===undefined&&!strandedRaid(u);
+
 /** The respite starts when a band has actually gone, including its retreat. */
 export function finishSeaRaid(g:Game){
  const campaign=g.state.raidCampaign;
- if(!campaign?.active||g.state.units.some(u=>u.team===3&&u.hp>0&&u.homeCamp===undefined))return;
+ if(!campaign?.active||g.state.units.some(invadingRaider))return;
  const now=raidReadiness(g);
  // New arrivals or construction must not conceal casualties or ruined homes.
  const survivors=campaign.people?campaign.people.filter(id=>g.state.units.some(u=>u.id===id&&u.hp>0&&u.team===0)).length:now.adults;
@@ -95,7 +99,7 @@ export function canScheduleSeaRaid(g: Game) {
   return g.state.conflict !== "quiet" &&
     g.state.time >= (g.state.conflict === "dangerous" ? 600 : 1200) &&
     g.state.units.some(u=>u.team===0&&u.hp>0&&!isDependent(g,u)) &&
-    !g.state.units.some(u => u.team === 3 && u.hp > 0 && u.homeCamp === undefined);
+    !g.state.units.some(invadingRaider)&&g.state.units.filter(u=>u.hp>0&&strandedRaid(u)).length<RAID_INTENT_RULES.maximumStrandedPeople;
 }
 
 /** Land at a real shore connected to the player's landmass, never in deep water.
@@ -262,10 +266,11 @@ export function raiderTarget(g:Game,u:Unit){
 export function seaRaidAI(g:Game,u:Unit,dt:number){
  const raid=u.seaRaid;
  if(u.team!==3||u.homeCamp!==undefined||!raid)return false;
+ observeRaidIntent(g,u);
  const nearby=g.state.units.filter(v=>v.hp>0&&Math.hypot(v.x-u.x,v.z-u.z)<18);
- const defenders=nearby.filter(v=>g.isFoe(u.team,v.team)&&(v.type!=='worker'||v.militia));
+ const defenders=nearby.filter(v=>g.isFoe(u.team,v.team)&&(raid.plan?raidThreateningDefender(u,v):(v.type!=='worker'||v.militia)));
  const allies=nearby.filter(v=>v.team===u.team);
- if(u.hp<u.maxHp*.32||defenders.length>allies.length*2+1||g.state.time>raid.departAt||u.carry>0)raid.phase='retreat';
+ if(u.hp<u.maxHp*.32||defenders.length>allies.length*2+1||g.state.time>raid.departAt||(u.carry>0&&!(raid.plan?.intent==='capture'&&!u.escortId&&!raid.plan.metrics.captives))){if(raid.phase!=='retreat'&&raid.plan)raid.plan.metrics.withdrawals++;raid.phase='retreat';}
  if(raid.phase==='retreat'){
   const breach=u.target;
   if(breach?.kind==='building'&&breach.hp>0&&['gate','palisade','stonewall'].includes(breach.type)&&!(breach.type==='gate'&&breach.gateOpen)){u.order='attack';g.combatAI(u,dt);return true;}
@@ -284,12 +289,13 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
  const intercept=defenders.filter(v=>Math.hypot(v.x-u.x,v.z-u.z)<=Math.max(7,u.range+2))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
  if(intercept){u.target=intercept;u.order='attack';g.combatAI(u,dt);return true;}
- if(!defenders.some(v=>Math.hypot(v.x-u.x,v.z-u.z)<7)){
+ if(limitedRaidAI(g,u,dt))return true;
+ if(raid.plan?.intent!=='annihilation'&&!defenders.some(v=>Math.hypot(v.x-u.x,v.z-u.z)<7)){
   const ruin=g.state.buildings.find(b=>b.hp<=0&&b.lootTeam===3&&b.raidLoot&&Object.values(b.raidLoot).some(v=>(v||0)>0)&&Math.hypot(b.x-u.x,b.z-u.z)<12);
   if(ruin){
    if(g.attackDistance(u,ruin)>u.r+1.8){u.tx=ruin.x;u.tz=ruin.z;g.steer(u,dt);return true;}
    const kind=(['food','wood','stone','copper','iron'] as const).find(k=>(ruin.raidLoot![k]||0)>0)!;
-   const amount=Math.min(12,ruin.raidLoot![kind]!);ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;raid.phase='retreat';return true;
+   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;raid.phase='retreat';return true;
   }
  }
  if(g.state.time>=raid.thinkAt){

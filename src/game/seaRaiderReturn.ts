@@ -1,3 +1,5 @@
+import{finishRaidPlan,markRaidStranded}from'./raidIntent';
+import{PRISONER_RULES}from'./captivity';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {boatCrew,boardRiverboat,commandRiverboat,landRiverboat,riverboatDestination,type Riverboat} from './boats';
@@ -23,7 +25,7 @@ function nativeLanding(g:Game,u:Unit,boat:Riverboat,dock:Building){
  * home. Use a real local camp, or retain the visible stranded body and cargo. */
 export function beginSeaRaiderReturn(g:Game,u:Unit){
  if(!u.seaRaid||u.team!==3||u.hp<=0)return false;
- const candidates=(g.state.boats||[]).filter(b=>b.team===3&&b.hp>0&&Math.hypot(b.x-u.x,b.z-u.z)<=SEA_RAIDER_RETURN_RULES.boardingMeters&&boatCrew(g,b.id).length===0).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+ const candidates=(g.state.boats||[]).filter(b=>!(u.seaRaid?.plan?.intent==='capture'&&u.escortId)&&b.team===3&&b.hp>0&&Math.hypot(b.x-u.x,b.z-u.z)<=SEA_RAIDER_RETURN_RULES.boardingMeters&&boatCrew(g,b.id).length===0).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
  if(candidates.length&&requestWaterNavigation(g,true).status==='pending'){u.order='hold';u.target=null;u.workReason='Preparing the owned-vessel return route — keeping the survivor and cargo at the landing';return false;}
  for(const boat of candidates){
   const dock=g.state.buildings.find(b=>b.id===boat.dock&&b.team===3&&b.type==='dock'&&g.finished(b));if(!dock)continue;
@@ -31,23 +33,30 @@ export function beginSeaRaiderReturn(g:Game,u:Unit){
   const origin=u.seaRaid,crew=g.state.units.filter(p=>p.hp>0&&p.team===3&&!p.prisoner&&!p.boat&&!p.haulage&&!p.seaRaidReturn&&p.seaRaid?.phase==='retreat'&&Math.hypot(p.seaRaid.x-origin.x,p.seaRaid.z-origin.z)<=SEA_RAIDER_RETURN_RULES.sharedLandingMeters&&Math.hypot(p.x-boat.x,p.z-boat.z)<=SEA_RAIDER_RETURN_RULES.boardingMeters).sort((a,b)=>Number(b===u)-Number(a===u)||a.id-b.id).slice(0,boat.capacity);
   const manifest=crew.map(p=>p.id);if(!manifest.length)continue;
   if(!boardRiverboat(g,boat.id,crew,3,true))continue;
-  for(const p of crew)if(p.boat?.id===boat.id){p.seaRaidReturn={version:1,phase:'boarding',homeCampId:destination.home.id,boatId:boat.id,crewIds:[...manifest],waterX:destination.water.x,waterZ:destination.water.z,landX:destination.land.x,landZ:destination.land.z};p.target=null;p.node=null;p.workReason='Boarding an owned vessel with remaining raid cargo';}
+  for(const p of crew)if(p.boat?.id===boat.id){if(p.seaRaid?.plan)delete p.seaRaid.plan.strandedAt;p.seaRaidReturn={version:1,phase:'boarding',homeCampId:destination.home.id,boatId:boat.id,crewIds:[...manifest],waterX:destination.water.x,waterZ:destination.water.z,landX:destination.land.x,landZ:destination.land.z};p.target=null;p.node=null;p.workReason='Boarding an owned vessel with remaining raid cargo';}
   return !!u.seaRaidReturn;
  }
- const home=reachableCamp(g,u);if(home){u.seaRaidReturn={version:1,phase:'walking',homeCampId:home.id,crewIds:[u.id]};u.order='return';u.node=null;u.target=null;u.workReason='No raid vessel — returning overland to a reachable camp';return true;}
- u.order='hold';u.target=null;u.node=null;u.workReason='Stranded at the landing — no owned vessel or reachable camp; belongings remain here';return false;
+ const home=reachableCamp(g,u);if(home){if(u.seaRaid?.plan)delete u.seaRaid.plan.strandedAt;u.seaRaidReturn={version:1,phase:'walking',homeCampId:home.id,crewIds:[u.id]};u.order='return';u.node=null;u.target=null;u.workReason='No raid vessel — returning overland to a reachable camp';return true;}
+ u.order='hold';u.target=null;u.node=null;u.workReason='Stranded at the landing — no owned vessel or reachable camp; belongings remain here';markRaidStranded(g,u);return false;
 }
 function completeReturn(g:Game,u:Unit,home:Building){
+ finishRaidPlan(g,u,'returned');
  if(u.carryType&&u.carry>0){if(u.carryType==='food')receiveFood(g,3,u.carry,u.carryFood);else g.tribe(3)[u.carryType]+=u.carry;}
  u.carry=0;u.carryType=null;u.carryFood=undefined;u.homeCamp=home.id;u.seaRaid=undefined;u.seaRaidReturn=undefined;u.order='hold';u.node=null;u.target=null;u.wanderT=5;u.workReason='Back at camp — the same survivor and remaining cargo have returned';
 }
 /** Runs immediately before the existing riverboat actor hook. It sets orders
  * without moving an aboard body; riverboatAI and syncRiverboats retain motion. */
+export function finishRaidEscortAtCamp(g:Game,u:Unit){
+ if(u.hp>0&&u.seaRaid?.plan?.intent==='capture'&&u.escortId){const captive=g.state.units.find(p=>p.id===u.escortId&&p.prisoner?.guardId===u.id&&p.prisoner.phase==='custody'&&p.prisoner.captorTeam===3),home=captive&&camps(g).find(b=>g.buildingWorkReached(u,b)&&g.buildingWorkReached(captive,b));if(home){completeReturn(g,u,home);return true;}}
+ return false;
+}
 export function seaRaiderReturnAI(g:Game,u:Unit,dt:number){
+ if(finishRaidEscortAtCamp(g,u))return true;
  const r=u.seaRaidReturn;if(!r||u.hp<=0)return false;
  const home=g.state.buildings.find(b=>b.id===r.homeCampId&&b.team===3&&b.raiderCamp&&g.finished(b));
  if(!home){if(u.boat){u.order='hold';u.workReason='Home camp lost — holding the real vessel and cargo';return true;}u.order='hold';u.workReason='Home camp lost — survivor and cargo await a real refuge';return true;}
  if(r.phase==='walking'){
+  const captive=u.seaRaid?.plan?.intent==='capture'&&u.escortId?g.state.units.find(p=>p.id===u.escortId&&p.prisoner?.guardId===u.id&&p.prisoner.phase==='escorting'):undefined;if(captive&&Math.hypot(captive.x-u.x,captive.z-u.z)>PRISONER_RULES.escortSeparationMeters*.75){u.order='hold';u.workReason='Waiting for the captive';return true;}
   if(u.boat)return false;
   const spot=g.interactionSpot(u,home);if(!spot){u.order='hold';u.workReason='Camp return blocked — cargo remains with this survivor';return true;}
   if(g.buildingWorkReached(u,home)){completeReturn(g,u,home);return true;}

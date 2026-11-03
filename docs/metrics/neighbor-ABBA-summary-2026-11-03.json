@@ -1,0 +1,25 @@
+{
+  "sourceBase": "60dfba2",
+  "candidate": "Only reuse constant exact-order four-neighbour tuple in WorkBoard.labelNavigation",
+  "scope": "One sequential instrumented Node ABBA,20warm+200actual1/30steps per owned native+authored80 case; no browser/FPS claim. Aggregate label-time includes cheap no-op lookups; no scalar sampler overrides.",
+  "results": [
+    {
+      "kind": "native-opening",
+      "allFourInitialWarmFinalEncodedStateRngWalkLabelCacheParity": true,
+      "labelTotalMeanA": 76.04416450001645,
+      "labelTotalMeanB": 58.47351650000155,
+      "labelTotalPercentChange": -23.105846603142176,
+      "allStepMeanA": 3.092409619999994,
+      "allStepMeanB": 2.380415642500009
+    },
+    {
+      "kind": "authored80",
+      "allFourInitialWarmFinalEncodedStateRngWalkLabelCacheParity": true,
+      "labelTotalMeanA": 79.31754099998761,
+      "labelTotalMeanB": 70.74824800008628,
+      "labelTotalPercentChange": -10.803780465033164,
+      "allStepMeanA": 5.321739367499999,
+      "allStepMeanB": 6.444610127500011
+    }
+  ]
+}

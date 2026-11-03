@@ -1,4 +1,5 @@
 import{validBuildingMaintenance}from'./buildingMaintenance';
+import{validRaidIntents}from'./raidIntent';
 import{validCommunityHandovers,validHandoverAssets,handedOver}from'./communityHandoverValidation';
 import{validCerealState}from'./cerealRules';
 import {activateAnimalProcessing} from './production';
@@ -128,7 +129,7 @@ function validateGamePayload(raw: unknown) {
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
-  if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
+  if(!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();

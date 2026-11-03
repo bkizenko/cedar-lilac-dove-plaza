@@ -235,7 +235,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaidReturn?: import("./seaRaiderReturn").SeaRaiderReturn;
-  seaRaid?: {x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
+  seaRaid?: {plan?:import('./raidIntent').RaidPlan;x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
   caravanRoute?:number;
@@ -450,6 +450,7 @@ export type Particle = {
 export type GameState = {
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
+  raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
   diplomaticReports?:import('./diplomaticKnowledge').DiplomaticReport[];
   diplomaticMessages?:import('./diplomaticKnowledge').DiplomaticMessage[];

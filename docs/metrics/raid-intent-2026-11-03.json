@@ -1,0 +1,81 @@
+{
+  "base": "8836777 + frozen river-objective patch",
+  "testedRollPartitionsPerProfile": 10000,
+  "scope": "selection-function partitions, not observed campaign frequencies",
+  "profiles": [
+    {
+      "id": "super-easy",
+      "band": 0.5,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 7600,
+        "capture": 1500,
+        "destructive": 900,
+        "annihilation": 0
+      }
+    },
+    {
+      "id": "easy",
+      "band": 0.75,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 7200,
+        "capture": 1649,
+        "destructive": 1151,
+        "annihilation": 0
+      }
+    },
+    {
+      "id": "normal",
+      "band": 1,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 6765,
+        "capture": 1799,
+        "destructive": 1401,
+        "annihilation": 35
+      }
+    },
+    {
+      "id": "hard",
+      "band": 1.15,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 6472,
+        "capture": 1890,
+        "destructive": 1550,
+        "annihilation": 88
+      }
+    },
+    {
+      "id": "survival",
+      "band": 1.35,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 6082,
+        "capture": 2010,
+        "destructive": 1750,
+        "annihilation": 158
+      }
+    },
+    {
+      "id": "apocalypse",
+      "band": 1.6,
+      "uniformRollPartitions": {
+        "scout": 0,
+        "loot": 5595,
+        "capture": 2159,
+        "destructive": 2000,
+        "annihilation": 246
+      }
+    }
+  ],
+  "tests": {
+    "newIntent": 13,
+    "compatibility": 29,
+    "totalDistinctPassed": 42
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "fullFleetGateCreditClaimed": false
+}

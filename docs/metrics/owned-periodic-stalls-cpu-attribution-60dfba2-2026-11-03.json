@@ -1,0 +1,246 @@
+{
+  "scope": "CPU self samples only where ancestry includes actual Game.step; initial generation/export/setup excluded. Sampling estimates, no renderer or FPS claim.",
+  "gameStepSampledMilliseconds": 7812.878000000156,
+  "topSelfSamples": [
+    {
+      "function": "step",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 5589,
+      "milliseconds": 684.6600000000001
+    },
+    {
+      "function": "updateVision",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 3588,
+      "milliseconds": 427.6429999999993
+    },
+    {
+      "function": "workerAI",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 4246,
+      "milliseconds": 426.2849999999996
+    },
+    {
+      "function": "findPath",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/navigation.ts",
+      "line": 2,
+      "milliseconds": 388.49699999999984
+    },
+    {
+      "function": "emergencyResponse",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/defense.ts",
+      "line": 90,
+      "milliseconds": 315.82599999999985
+    },
+    {
+      "function": "indexedWaterAt",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/indexedLocalWater.ts",
+      "line": 22,
+      "milliseconds": 262.16200000000003
+    },
+    {
+      "function": "tickWildlife",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 2417,
+      "milliseconds": 239.961
+    },
+    {
+      "function": "grow",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 3415,
+      "milliseconds": 231.71400000000003
+    },
+    {
+      "function": "defenseNeighbors",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/defenseNeighbors.ts",
+      "line": 53,
+      "milliseconds": 221.87800000000001
+    },
+    {
+      "function": "tickWildPlant",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/ecology.ts",
+      "line": 126,
+      "milliseconds": 217.833
+    },
+    {
+      "function": "assign",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 326,
+      "milliseconds": 177.831
+    },
+    {
+      "function": "buildField",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/influenceField.ts",
+      "line": 115,
+      "milliseconds": 170.798
+    },
+    {
+      "function": "tickLumber",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 5567,
+      "milliseconds": 165.038
+    },
+    {
+      "function": "separate",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 4169,
+      "milliseconds": 157.251
+    },
+    {
+      "function": "labelNavigation",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 161,
+      "milliseconds": 143.918
+    },
+    {
+      "function": "lakeContains",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/localWater.ts",
+      "line": 5,
+      "milliseconds": 138.749
+    },
+    {
+      "function": "refresh",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 273,
+      "milliseconds": 123.877
+    },
+    {
+      "function": "placementIssue",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 1109,
+      "milliseconds": 114.458
+    },
+    {
+      "function": "waterSurfaceAt",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/localWater.ts",
+      "line": 37,
+      "milliseconds": 106.20299999999997
+    },
+    {
+      "function": "foodDemand",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 47,
+      "milliseconds": 93.671
+    },
+    {
+      "function": "",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/defense.ts",
+      "line": 102,
+      "milliseconds": 92.584
+    },
+    {
+      "function": "add",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 285,
+      "milliseconds": 65.04100000000001
+    },
+    {
+      "function": "daylightAt",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/daylight.ts",
+      "line": 5,
+      "milliseconds": 60.997
+    },
+    {
+      "function": "routineRest",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/journeys.ts",
+      "line": 79,
+      "milliseconds": 59.91900000000001
+    },
+    {
+      "function": "tickPeople",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 3457,
+      "milliseconds": 59.498999999999995
+    },
+    {
+      "function": "tickSurvival",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/survivalNeeds.ts",
+      "line": 181,
+      "milliseconds": 58.455999999999996
+    },
+    {
+      "function": "supplyApproach",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/campAnchor.ts",
+      "line": 22,
+      "milliseconds": 54.793000000000006
+    },
+    {
+      "function": "campBonus",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 3924,
+      "milliseconds": 51.920000000000016
+    },
+    {
+      "function": "reserveSeconds",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 59,
+      "milliseconds": 48.125
+    },
+    {
+      "function": "steer",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 3997,
+      "milliseconds": 45.28999999999999
+    },
+    {
+      "function": "travelHeight",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 302,
+      "milliseconds": 45.083000000000006
+    },
+    {
+      "function": "blockedResource",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/settlement.ts",
+      "line": 253,
+      "milliseconds": 44.41900000000002
+    },
+    {
+      "function": "barbarianAI",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 4896,
+      "milliseconds": 40.54
+    },
+    {
+      "function": "walkable",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 992,
+      "milliseconds": 39.33400000000001
+    },
+    {
+      "function": "shareLocalTransport",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/haulage.ts",
+      "line": 298,
+      "milliseconds": 38.96100000000001
+    },
+    {
+      "function": "pace",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/influenceField.ts",
+      "line": 81,
+      "milliseconds": 38.376000000000005
+    },
+    {
+      "function": "",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/defenseNeighbors.ts",
+      "line": 60,
+      "milliseconds": 36.044000000000004
+    },
+    {
+      "function": "tickRegions",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/sim.ts",
+      "line": 2309,
+      "milliseconds": 35.042
+    },
+    {
+      "function": "consumeAndSpoilFood",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/pantry.ts",
+      "line": 73,
+      "milliseconds": 33.999
+    },
+    {
+      "function": "predisposition",
+      "url": "file:///Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/stall-audit-60dfba2/src/game/people.ts",
+      "line": 3,
+      "milliseconds": 33.876000000000005
+    }
+  ]
+}

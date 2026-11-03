@@ -1,3 +1,4 @@
+import{raidMayTargetBuilding,raidMayTargetCivilian}from'./raidIntent';
 import{prepareOwnedHandover}from'./communityHandover';
 import{reconcileWaterCargoEvidence}from'./boatPractice';
 import{adoptHerdWaterLoad,reconcilePenWater}from'./penWater';
@@ -23,12 +24,14 @@ export function setPartyIntent(g:Game,actors:Unit[],intent:ConflictIntent){
  for(const actor of actors){g.interruptMission(actor);const u=actor as ConflictUnit;u.conflictIntent=intent;u.captureTargetId=undefined;u.pillage=-1;u.returnAfterCombat=undefined;u.target=null;u.node=null;u.order='hold';recordConflict(g,'context_order',u.team,1,{actorId:u.id,reason:intent});}
 }
 export function missionMayTargetBuilding(_g:Game,actor:Unit,target:Building){
+ if(!raidMayTargetBuilding(actor,target))return false;
  const intent=(actor as ConflictUnit).conflictIntent;
  if(intent==='capture')return false;
  if(intent==='occupy'||intent==='loot')return ['palisade','stonewall','gate','watchtower','keep'].includes(target.type);
  return true;
 }
 export function missionMayTargetCivilian(_g:Game,actor:Unit,target:Unit){
+ if(!raidMayTargetCivilian(actor,target))return false;
  const prisoner=(target as PrisonerUnit).prisoner;
  if(prisoner&&prisoner.phase!=='released'&&(prisoner.captorTeam===actor.team||prisoner.originTeam===actor.team))return false;
  const u=actor as ConflictUnit;if(u.conflictIntent==='capture'&&u.captureTargetId===target.id)return false;

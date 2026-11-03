@@ -1,4 +1,5 @@
 import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
+import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
@@ -102,7 +103,7 @@ import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
-import {seaRaiderReturnAI} from "./seaRaiderReturn";
+import {seaRaiderReturnAI,finishRaidEscortAtCamp} from "./seaRaiderReturn";
 import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
@@ -2100,6 +2101,7 @@ export class Game {
     const goHall = n >= 6 && age >= 3 && Math.random() < 0.35;
     // A landing party travels together, instead of scattering toward unrelated outposts.
     const raidMark = goHall ? hall : marks.length ? marks[(Math.random() * marks.length) | 0] : hall;
+    const raidBandId=this.id();
     for (let i = 0; i < n; i++) {
       let type: UnitType = "spearman";
       if (age >= 1 && Math.random() < 0.28) type = "archer";
@@ -2115,7 +2117,7 @@ export class Game {
       u.tx = mark ? mark.x : home.x + 8;
       u.tz = mark ? mark.z : home.z + 8;
       u.aggroT = 80;
-      u.seaRaid={x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
+      u.seaRaid={plan:createRaidPlan(this,raidBandId,n,this.state.raidWave,u.id),x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
     }
     this.banner(`${label} · ${n} attackers landed`, 4);
     this.onSfx("horn");
@@ -5636,6 +5638,7 @@ export class Game {
           u.vx = 0;
           u.vz = 0;
           try {
+            if(finishRaidEscortAtCamp(this,u))continue;
             if(prisonerAI(this,u,sdt))continue;
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
@@ -5727,7 +5730,7 @@ export class Game {
 
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);

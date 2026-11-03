@@ -1,0 +1,29 @@
+{
+  "validity": "REJECTED FOR PRODUCTION LATENCY: instance sampler wrappers deliberately bypass terrainWalkCache. Retained only to document instrumentation error; use low-overhead report.",
+  "summaries": [
+    {
+      "kind": "native-opening",
+      "step": {
+        "samples": 900,
+        "mean": 60.53968809999989,
+        "p50": 8.800832999986596,
+        "p95": 29.613750000004075,
+        "p99": 161.90016599999217,
+        "maximum": 9489.013167000001
+      },
+      "initialSha256": "0cb6f1a8fe0eb316c529fdf2ea2f8f664e9bd762c012e2d17a91e9596f56a0a0"
+    },
+    {
+      "kind": "authored80",
+      "step": {
+        "samples": 900,
+        "mean": 67.59586825444418,
+        "p50": 30.590667000011308,
+        "p95": 109.4970420000027,
+        "p99": 301.1597499999916,
+        "maximum": 5934.523207999999
+      },
+      "initialSha256": "7b58f631973d348a01c4d7efa1e0862cfc1ec4807a2a087bcc0412069870462a"
+    }
+  ]
+}

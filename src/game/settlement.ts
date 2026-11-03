@@ -143,6 +143,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
 
 type Node = ResourceNode | Building | Critter;
 type Task = { node: Node; kind: "build" | ResKind; slots: number; priority: number };
+const NAVIGATION_NEIGHBORS = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const;
 /** Assignments themselves reserve slots, so reservations survive save/load. */
 export class WorkBoard {
   private tasks = new Map<number, Task[]>();
@@ -181,12 +182,7 @@ export class WorkBoard {
         const at = queue[head++],
           x = at % n,
           z = Math.floor(at / n);
-        for (const [dx, dz] of [
-          [1, 0],
-          [-1, 0],
-          [0, 1],
-          [0, -1],
-        ]) {
+        for (const [dx, dz] of NAVIGATION_NEIGHBORS) {
           const nx = x + dx,
             nz = z + dz;
           if (nx < 0 || nx >= n || nz < 0 || nz >= n) continue;

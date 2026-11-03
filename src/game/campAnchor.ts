@@ -13,7 +13,7 @@ export function campAnchor(g:Game,team:number):CampAnchor|null {
  return {kind:'camp',team,x:c.x,z:c.z,y:g.height(c.x,c.z),radius:CAMP_RULES.deliveryRadiusMeters};
 }
 export function supplyDrops(g:Game,team:number):SupplyDrop[]{
- const buildings=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&['townhall','warehouse','cornerstone'].includes(b.type));
+ const buildings=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&(['townhall','warehouse','cornerstone'].includes(b.type)||team===3&&b.raiderCamp===true));
  // A functioning hall supersedes the original camp's communal cache.
  const camp=primaryCommunityHome(g,team)?.kind==='camp'?campAnchor(g,team):buildings.some(b=>b.type==='townhall')?null:campAnchor(g,team);
  const inherited=inheritedCommunityCaches(g,team).filter(p=>p.kind==='camp').map(p=>({kind:'camp' as const,team,x:p.x,y:p.y,z:p.z,radius:CAMP_RULES.deliveryRadiusMeters}));
