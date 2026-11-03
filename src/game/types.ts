@@ -193,6 +193,10 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   selected: boolean;
   order: Order;
   stationOnArrival?: boolean;
+  campSupport?:import('./finiteCamp').CampSupport;
+  campTrip?:import('./finiteCamp').CampTrip;
+  campReport?:import('./finiteCamp').CampReport;
+  campObserveAt?:number;
   homeCamp?: number;
   searchJob?: "wood" | "food" | "hunt";
   recalled?: boolean;
@@ -315,6 +319,7 @@ export type Building = {
   gateMode?: "auto" | "open" | "closed";
   gateFacing?: "north" | "east" | "south" | "west";
   raiderCamp?: boolean;
+  campEconomy?:import('./finiteCamp').CampEconomy;
   lootClaimed?: boolean;
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
@@ -479,6 +484,7 @@ export type GameState = {
   occupations?:OccupationControl[];
   conflictJournal?:ConflictJournal;
   simulationEvents?:import('./simulationEvents').SimulationEventLog;
+  finiteRaiderCampVersion?:1;
   survivalVersion?:1;
   haulageProjects?:import('./haulage').HaulageProject[];
   contacts?:number[];

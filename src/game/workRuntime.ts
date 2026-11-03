@@ -1,4 +1,5 @@
 import{rebuildBuildingRepairOwnership}from'./buildingMaintenance';
+import{rebuildCampOwnership}from'./finiteCamp';
 import{rebuildFarmToolOwnership}from'./farmToolOwnership';
 import{rebuildPracticalHelpers}from'./practicalHelpers';
 import{rebuildFibreOwnership}from'./fibre';
@@ -9,6 +10,6 @@ const runtimes=new WeakMap<Game,{state:Game['state'];coordinator:JobCoordinator}
 /** Runtime ownership is reconstructed from serialized projects and legacy orders. */
 export function workRuntime(g:Game){
  let entry=runtimes.get(g);
- if(!entry||entry.state!==g.state){entry={state:g.state,coordinator:new JobCoordinator()};runtimes.set(g,entry);rebuildBuildingRepairOwnership(g,entry.coordinator);rebuildProductionOwnership(g,entry.coordinator);rebuildFibreOwnership(g,entry.coordinator);rebuildPracticalHelpers(g,entry.coordinator);rebuildFarmToolOwnership(g,entry.coordinator);}
+ if(!entry||entry.state!==g.state){entry={state:g.state,coordinator:new JobCoordinator()};runtimes.set(g,entry);rebuildBuildingRepairOwnership(g,entry.coordinator);rebuildProductionOwnership(g,entry.coordinator);rebuildFibreOwnership(g,entry.coordinator);rebuildPracticalHelpers(g,entry.coordinator);rebuildFarmToolOwnership(g,entry.coordinator);rebuildCampOwnership(g,entry.coordinator);}
  return entry.coordinator;
 }

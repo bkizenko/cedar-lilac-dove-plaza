@@ -36,6 +36,7 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 
 export class Engine {
   readonly profile = new RuntimeProfile();
+  entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
   game: Game;
   readonly autosave:AutosaveController;
   private originalGame: Game | null = null;

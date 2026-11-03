@@ -1,4 +1,5 @@
 import{validBuildingMaintenance}from'./buildingMaintenance';
+import{validFiniteCamps}from'./finiteCamp';
 import{validRaidIntents}from'./raidIntent';
 import{validCommunityHandovers,validHandoverAssets,handedOver}from'./communityHandoverValidation';
 import{validCerealState}from'./cerealRules';
@@ -129,7 +130,7 @@ function validateGamePayload(raw: unknown) {
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
-  if(!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
+  if(!validFiniteCamps(s)||!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
@@ -408,7 +409,7 @@ function validateGamePayload(raw: unknown) {
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
     if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"||u.scout.preparing!==undefined&&u.scout.preparing!==true))fail();
-    if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
+    if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')&&!(u.team===3&&u.campTrip)||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.visit?.team!==undefined&&(!rivalTeam(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
     if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();

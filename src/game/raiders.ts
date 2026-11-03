@@ -1,3 +1,4 @@
+import{finiteCampGuardAI,campTripAI}from'./finiteCamp';
 import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender}from'./raidIntent';
 import {explicitArmedOrder} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
@@ -39,7 +40,7 @@ export function raidReadiness(g:Game){
 }
 
 const strandedRaid=(u:Unit)=>u.seaRaid?.phase==='retreat'&&u.seaRaid.plan?.strandedAt!==undefined;
-const invadingRaider=(u:Unit)=>u.team===3&&u.hp>0&&!u.prisoner&&u.homeCamp===undefined&&!strandedRaid(u);
+const invadingRaider=(u:Unit)=>u.team===3&&u.hp>0&&!u.prisoner&&u.homeCamp===undefined&&!u.campSupport&&!strandedRaid(u);
 
 /** The respite starts when a band has actually gone, including its retreat. */
 export function finishSeaRaid(g:Game){
@@ -171,6 +172,7 @@ function localForage(g: Game, u: Unit, camp: Building, dt: number) {
 }
 
 export function campRaidAI(g: Game, u: Unit, dt: number) {
+  if(finiteCampGuardAI(g,u,dt))return true;
   if (u.homeCamp === undefined) return false;
   const camp = g.state.buildings.find(b => b.id === u.homeCamp && b.raiderCamp && b.hp > 0);
   if (!camp) {
@@ -266,6 +268,7 @@ export function raiderTarget(g:Game,u:Unit){
 export function seaRaidAI(g:Game,u:Unit,dt:number){
  const raid=u.seaRaid;
  if(u.team!==3||u.homeCamp!==undefined||!raid)return false;
+ campTripAI(g,u);
  observeRaidIntent(g,u);
  const nearby=g.state.units.filter(v=>v.hp>0&&Math.hypot(v.x-u.x,v.z-u.z)<18);
  const defenders=nearby.filter(v=>g.isFoe(u.team,v.team)&&(raid.plan?raidThreateningDefender(u,v):(v.type!=='worker'||v.militia)));

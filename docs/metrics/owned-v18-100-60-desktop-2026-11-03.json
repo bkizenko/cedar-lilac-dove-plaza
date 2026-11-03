@@ -1,0 +1,1037 @@
+{
+  "sourceBase": "f7c1ae6a4bf2d05f2708fa0406aad4ba6751e737 + frozen two-file worker recovery follow-up",
+  "fixture": {
+    "scope": "Authored initial performance stress fixture, not earned campaign/acceptance evidence; no runtime repair after scenario begins.",
+    "sourceBase": "f7c1ae6 + frozen autosave recovery",
+    "seed": 1,
+    "version": 18,
+    "size": 1040,
+    "layout": "continents",
+    "file": "/tmp/hearthwild-owned-UI-V18-100-residents-60-buildings.json",
+    "sha256": "7c5d5cd0977e4a263f511fa556127d0bf0dbb48d666e362d10aa07d83ffc3ea4",
+    "bytes": 1382689,
+    "playerBodies": 100,
+    "playerBuildings": 60,
+    "initialStock": {
+      "food": 2000,
+      "wood": 300,
+      "stone": 200,
+      "seeds": 100,
+      "waterLiters": 480
+    },
+    "initialKnowledge": "Authored local200m surveyed settlement area, not global reveal or earned exploration evidence.",
+    "initialBuildingEndowment": "60 finished structures admitted by ordinary placement geometry/resource clearance with extra3m separation, at most2m actual9point footprint relief, and all actual reachable entrances; authored at setup, not force-completed construction jobs.",
+    "initialBodyEndowment": "Original5 founders retained;95 new authored adults on actual connected dry walkable positions, all before scenario begins.",
+    "terrainUnchangedSha256": "7b611c6e5839f8be70ab00ec51e53364fe3b9b4147947f4984af4847f09a21e1",
+    "maximumBuildingDistanceFromNativeCamp": 55.90169943749474,
+    "created": [
+      {
+        "id": 6342,
+        "type": "townhall",
+        "x": -298,
+        "z": 186,
+        "distanceFromNativeCamp": 14.142135623730951
+      },
+      {
+        "id": 6343,
+        "type": "hut",
+        "x": -278,
+        "z": 186,
+        "distanceFromNativeCamp": 14.142135623730951
+      },
+      {
+        "id": 6344,
+        "type": "hut",
+        "x": -273,
+        "z": 176,
+        "distanceFromNativeCamp": 15
+      },
+      {
+        "id": 6345,
+        "type": "hut",
+        "x": -303,
+        "z": 171,
+        "distanceFromNativeCamp": 15.811388300841898
+      },
+      {
+        "id": 6346,
+        "type": "hut",
+        "x": -283,
+        "z": 196,
+        "distanceFromNativeCamp": 20.615528128088304
+      },
+      {
+        "id": 6347,
+        "type": "hut",
+        "x": -313,
+        "z": 176,
+        "distanceFromNativeCamp": 25
+      },
+      {
+        "id": 6348,
+        "type": "hut",
+        "x": -273,
+        "z": 196,
+        "distanceFromNativeCamp": 25
+      },
+      {
+        "id": 6349,
+        "type": "hut",
+        "x": -263,
+        "z": 176,
+        "distanceFromNativeCamp": 25
+      },
+      {
+        "id": 6350,
+        "type": "hut",
+        "x": -293,
+        "z": 201,
+        "distanceFromNativeCamp": 25.495097567963924
+      },
+      {
+        "id": 6351,
+        "type": "hut",
+        "x": -313,
+        "z": 186,
+        "distanceFromNativeCamp": 26.925824035672523
+      },
+      {
+        "id": 6352,
+        "type": "hut",
+        "x": -263,
+        "z": 186,
+        "distanceFromNativeCamp": 26.925824035672523
+      },
+      {
+        "id": 6353,
+        "type": "hut",
+        "x": -283,
+        "z": 206,
+        "distanceFromNativeCamp": 30.413812651491096
+      },
+      {
+        "id": 6354,
+        "type": "hut",
+        "x": -258,
+        "z": 166,
+        "distanceFromNativeCamp": 31.622776601683796
+      },
+      {
+        "id": 6355,
+        "type": "hut",
+        "x": -313,
+        "z": 196,
+        "distanceFromNativeCamp": 32.01562118716424
+      },
+      {
+        "id": 6356,
+        "type": "hut",
+        "x": -263,
+        "z": 196,
+        "distanceFromNativeCamp": 32.01562118716424
+      },
+      {
+        "id": 6357,
+        "type": "hut",
+        "x": -303,
+        "z": 206,
+        "distanceFromNativeCamp": 33.54101966249685
+      },
+      {
+        "id": 6358,
+        "type": "hut",
+        "x": -273,
+        "z": 206,
+        "distanceFromNativeCamp": 33.54101966249685
+      },
+      {
+        "id": 6359,
+        "type": "hut",
+        "x": -323,
+        "z": 176,
+        "distanceFromNativeCamp": 35
+      },
+      {
+        "id": 6360,
+        "type": "hut",
+        "x": -253,
+        "z": 176,
+        "distanceFromNativeCamp": 35
+      },
+      {
+        "id": 6361,
+        "type": "hut",
+        "x": -293,
+        "z": 211,
+        "distanceFromNativeCamp": 35.35533905932738
+      },
+      {
+        "id": 6362,
+        "type": "hut",
+        "x": -323,
+        "z": 186,
+        "distanceFromNativeCamp": 36.40054944640259
+      },
+      {
+        "id": 6363,
+        "type": "hut",
+        "x": -253,
+        "z": 191,
+        "distanceFromNativeCamp": 38.07886552931954
+      },
+      {
+        "id": 6364,
+        "type": "hut",
+        "x": -313,
+        "z": 206,
+        "distanceFromNativeCamp": 39.05124837953328
+      },
+      {
+        "id": 6365,
+        "type": "hut",
+        "x": -263,
+        "z": 206,
+        "distanceFromNativeCamp": 39.05124837953328
+      },
+      {
+        "id": 6366,
+        "type": "hut",
+        "x": -323,
+        "z": 196,
+        "distanceFromNativeCamp": 40.311288741492746
+      },
+      {
+        "id": 6367,
+        "type": "warehouse",
+        "x": -283,
+        "z": 216,
+        "distanceFromNativeCamp": 40.311288741492746
+      },
+      {
+        "id": 6368,
+        "type": "warehouse",
+        "x": -273,
+        "z": 216,
+        "distanceFromNativeCamp": 42.720018726587654
+      },
+      {
+        "id": 6369,
+        "type": "warehouse",
+        "x": -248,
+        "z": 161,
+        "distanceFromNativeCamp": 42.720018726587654
+      },
+      {
+        "id": 6370,
+        "type": "warehouse",
+        "x": -253,
+        "z": 201,
+        "distanceFromNativeCamp": 43.01162633521314
+      },
+      {
+        "id": 6371,
+        "type": "workshop",
+        "x": -303,
+        "z": 216,
+        "distanceFromNativeCamp": 42.720018726587654
+      },
+      {
+        "id": 6372,
+        "type": "workshop",
+        "x": -333,
+        "z": 176,
+        "distanceFromNativeCamp": 45
+      },
+      {
+        "id": 6373,
+        "type": "workshop",
+        "x": -243,
+        "z": 176,
+        "distanceFromNativeCamp": 45
+      },
+      {
+        "id": 6374,
+        "type": "workshop",
+        "x": -293,
+        "z": 221,
+        "distanceFromNativeCamp": 45.27692569068709
+      },
+      {
+        "id": 6375,
+        "type": "lumber",
+        "x": -313,
+        "z": 216,
+        "distanceFromNativeCamp": 47.169905660283014
+      },
+      {
+        "id": 6376,
+        "type": "lumber",
+        "x": -283,
+        "z": 226,
+        "distanceFromNativeCamp": 50.24937810560445
+      },
+      {
+        "id": 6377,
+        "type": "lumber",
+        "x": -303,
+        "z": 226,
+        "distanceFromNativeCamp": 52.201532544552755
+      },
+      {
+        "id": 6378,
+        "type": "lumber",
+        "x": -238,
+        "z": 161,
+        "distanceFromNativeCamp": 52.201532544552755
+      },
+      {
+        "id": 6379,
+        "type": "quarry",
+        "x": -323,
+        "z": 206,
+        "distanceFromNativeCamp": 46.09772228646443
+      },
+      {
+        "id": 6380,
+        "type": "quarry",
+        "x": -243,
+        "z": 186,
+        "distanceFromNativeCamp": 46.09772228646444
+      },
+      {
+        "id": 6381,
+        "type": "watchtower",
+        "x": -328,
+        "z": 166,
+        "distanceFromNativeCamp": 41.23105625617661
+      },
+      {
+        "id": 6382,
+        "type": "watchtower",
+        "x": -318,
+        "z": 141,
+        "distanceFromNativeCamp": 46.09772228646443
+      },
+      {
+        "id": 6383,
+        "type": "watchtower",
+        "x": -333,
+        "z": 186,
+        "distanceFromNativeCamp": 46.09772228646444
+      },
+      {
+        "id": 6384,
+        "type": "watchtower",
+        "x": -263,
+        "z": 216,
+        "distanceFromNativeCamp": 47.169905660283014
+      },
+      {
+        "id": 6385,
+        "type": "watchtower",
+        "x": -333,
+        "z": 196,
+        "distanceFromNativeCamp": 49.24428900898052
+      },
+      {
+        "id": 6386,
+        "type": "hearth",
+        "x": -303,
+        "z": 196,
+        "distanceFromNativeCamp": 25
+      },
+      {
+        "id": 6387,
+        "type": "hearth",
+        "x": -328,
+        "z": 151,
+        "distanceFromNativeCamp": 47.169905660283014
+      },
+      {
+        "id": 6388,
+        "type": "hearth",
+        "x": -243,
+        "z": 196,
+        "distanceFromNativeCamp": 49.24428900898052
+      },
+      {
+        "id": 6389,
+        "type": "hearth",
+        "x": -253,
+        "z": 211,
+        "distanceFromNativeCamp": 49.49747468305833
+      },
+      {
+        "id": 6390,
+        "type": "dryrack",
+        "x": -258,
+        "z": 136,
+        "distanceFromNativeCamp": 50
+      },
+      {
+        "id": 6391,
+        "type": "dryrack",
+        "x": -243,
+        "z": 151,
+        "distanceFromNativeCamp": 51.478150704935004
+      },
+      {
+        "id": 6392,
+        "type": "dryrack",
+        "x": -273,
+        "z": 226,
+        "distanceFromNativeCamp": 52.201532544552755
+      },
+      {
+        "id": 6393,
+        "type": "smokehouse",
+        "x": -323,
+        "z": 216,
+        "distanceFromNativeCamp": 53.15072906367325
+      },
+      {
+        "id": 6394,
+        "type": "smokehouse",
+        "x": -333,
+        "z": 206,
+        "distanceFromNativeCamp": 54.08326913195984
+      },
+      {
+        "id": 6395,
+        "type": "smokehouse",
+        "x": -318,
+        "z": 131,
+        "distanceFromNativeCamp": 54.08326913195984
+      },
+      {
+        "id": 6396,
+        "type": "butcher",
+        "x": -243,
+        "z": 206,
+        "distanceFromNativeCamp": 54.08326913195984
+      },
+      {
+        "id": 6397,
+        "type": "butcher",
+        "x": -343,
+        "z": 176,
+        "distanceFromNativeCamp": 55
+      },
+      {
+        "id": 6398,
+        "type": "grindingStone",
+        "x": -328,
+        "z": 141,
+        "distanceFromNativeCamp": 53.15072906367325
+      },
+      {
+        "id": 6399,
+        "type": "grindingStone",
+        "x": -233,
+        "z": 176,
+        "distanceFromNativeCamp": 55
+      },
+      {
+        "id": 6400,
+        "type": "oven",
+        "x": -233,
+        "z": 186,
+        "distanceFromNativeCamp": 55.901699437494734
+      },
+      {
+        "id": 6401,
+        "type": "oven",
+        "x": -313,
+        "z": 226,
+        "distanceFromNativeCamp": 55.90169943749474
+      }
+    ],
+    "entranceChecks": [
+      {
+        "id": 6342,
+        "type": "townhall",
+        "spot": {
+          "x": -292.65,
+          "z": 180.65
+        }
+      },
+      {
+        "id": 6343,
+        "type": "hut",
+        "spot": {
+          "x": -281.43,
+          "z": 182.57
+        }
+      },
+      {
+        "id": 6344,
+        "type": "hut",
+        "spot": {
+          "x": -276.51,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6345,
+        "type": "hut",
+        "spot": {
+          "x": -299.49,
+          "z": 173.34530701909674
+        }
+      },
+      {
+        "id": 6346,
+        "type": "hut",
+        "spot": {
+          "x": -283,
+          "z": 192.57
+        }
+      },
+      {
+        "id": 6347,
+        "type": "hut",
+        "spot": {
+          "x": -309.49,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6348,
+        "type": "hut",
+        "spot": {
+          "x": -276.43,
+          "z": 192.57
+        }
+      },
+      {
+        "id": 6349,
+        "type": "hut",
+        "spot": {
+          "x": -266.51,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6350,
+        "type": "hut",
+        "spot": {
+          "x": -289.57,
+          "z": 197.57
+        }
+      },
+      {
+        "id": 6351,
+        "type": "hut",
+        "spot": {
+          "x": -309.57,
+          "z": 182.57
+        }
+      },
+      {
+        "id": 6352,
+        "type": "hut",
+        "spot": {
+          "x": -266.43,
+          "z": 182.57
+        }
+      },
+      {
+        "id": 6353,
+        "type": "hut",
+        "spot": {
+          "x": -283,
+          "z": 202.57
+        }
+      },
+      {
+        "id": 6354,
+        "type": "hut",
+        "spot": {
+          "x": -261.43,
+          "z": 169.43
+        }
+      },
+      {
+        "id": 6355,
+        "type": "hut",
+        "spot": {
+          "x": -309.57,
+          "z": 192.57
+        }
+      },
+      {
+        "id": 6356,
+        "type": "hut",
+        "spot": {
+          "x": -266.43,
+          "z": 192.57
+        }
+      },
+      {
+        "id": 6357,
+        "type": "hut",
+        "spot": {
+          "x": -299.57,
+          "z": 202.57
+        }
+      },
+      {
+        "id": 6358,
+        "type": "hut",
+        "spot": {
+          "x": -276.43,
+          "z": 202.57
+        }
+      },
+      {
+        "id": 6359,
+        "type": "hut",
+        "spot": {
+          "x": -319.49,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6360,
+        "type": "hut",
+        "spot": {
+          "x": -256.51,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6361,
+        "type": "hut",
+        "spot": {
+          "x": -289.57,
+          "z": 207.57
+        }
+      },
+      {
+        "id": 6362,
+        "type": "hut",
+        "spot": {
+          "x": -319.57,
+          "z": 182.57
+        }
+      },
+      {
+        "id": 6363,
+        "type": "hut",
+        "spot": {
+          "x": -256.43,
+          "z": 187.57
+        }
+      },
+      {
+        "id": 6364,
+        "type": "hut",
+        "spot": {
+          "x": -309.57,
+          "z": 202.57
+        }
+      },
+      {
+        "id": 6365,
+        "type": "hut",
+        "spot": {
+          "x": -266.43,
+          "z": 202.57
+        }
+      },
+      {
+        "id": 6366,
+        "type": "hut",
+        "spot": {
+          "x": -319.57,
+          "z": 192.57
+        }
+      },
+      {
+        "id": 6367,
+        "type": "warehouse",
+        "spot": {
+          "x": -279.25,
+          "z": 212.25
+        }
+      },
+      {
+        "id": 6368,
+        "type": "warehouse",
+        "spot": {
+          "x": -276.75,
+          "z": 212.25
+        }
+      },
+      {
+        "id": 6369,
+        "type": "warehouse",
+        "spot": {
+          "x": -251.75,
+          "z": 164.75
+        }
+      },
+      {
+        "id": 6370,
+        "type": "warehouse",
+        "spot": {
+          "x": -256.75,
+          "z": 197.25
+        }
+      },
+      {
+        "id": 6371,
+        "type": "workshop",
+        "spot": {
+          "x": -299.73,
+          "z": 212.73
+        }
+      },
+      {
+        "id": 6372,
+        "type": "workshop",
+        "spot": {
+          "x": -329.49,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6373,
+        "type": "workshop",
+        "spot": {
+          "x": -246.51,
+          "z": 173.65469298090326
+        }
+      },
+      {
+        "id": 6374,
+        "type": "workshop",
+        "spot": {
+          "x": -289.73,
+          "z": 217.73
+        }
+      },
+      {
+        "id": 6375,
+        "type": "lumber",
+        "spot": {
+          "x": -309.33,
+          "z": 212.33
+        }
+      },
+      {
+        "id": 6376,
+        "type": "lumber",
+        "spot": {
+          "x": -283,
+          "z": 222.33
+        }
+      },
+      {
+        "id": 6377,
+        "type": "lumber",
+        "spot": {
+          "x": -299.33,
+          "z": 222.33
+        }
+      },
+      {
+        "id": 6378,
+        "type": "lumber",
+        "spot": {
+          "x": -241.67000000000002,
+          "z": 164.67
+        }
+      },
+      {
+        "id": 6379,
+        "type": "quarry",
+        "spot": {
+          "x": -319.25,
+          "z": 202.25
+        }
+      },
+      {
+        "id": 6380,
+        "type": "quarry",
+        "spot": {
+          "x": -246.75,
+          "z": 182.25
+        }
+      },
+      {
+        "id": 6381,
+        "type": "watchtower",
+        "spot": {
+          "x": -324.81,
+          "z": 169.19
+        }
+      },
+      {
+        "id": 6382,
+        "type": "watchtower",
+        "spot": {
+          "x": -314.81,
+          "z": 143.13148985496255
+        }
+      },
+      {
+        "id": 6383,
+        "type": "watchtower",
+        "spot": {
+          "x": -329.81,
+          "z": 182.81
+        }
+      },
+      {
+        "id": 6384,
+        "type": "watchtower",
+        "spot": {
+          "x": -266.19,
+          "z": 212.81
+        }
+      },
+      {
+        "id": 6385,
+        "type": "watchtower",
+        "spot": {
+          "x": -329.81,
+          "z": 192.81
+        }
+      },
+      {
+        "id": 6386,
+        "type": "hearth",
+        "spot": {
+          "x": -300.45,
+          "z": 193.45
+        }
+      },
+      {
+        "id": 6387,
+        "type": "hearth",
+        "spot": {
+          "x": -325.45,
+          "z": 153.55
+        }
+      },
+      {
+        "id": 6388,
+        "type": "hearth",
+        "spot": {
+          "x": -245.55,
+          "z": 193.45
+        }
+      },
+      {
+        "id": 6389,
+        "type": "hearth",
+        "spot": {
+          "x": -255.55,
+          "z": 208.45
+        }
+      },
+      {
+        "id": 6390,
+        "type": "dryrack",
+        "spot": {
+          "x": -260.55,
+          "z": 138.55
+        }
+      },
+      {
+        "id": 6391,
+        "type": "dryrack",
+        "spot": {
+          "x": -245.95,
+          "z": 152.97112698186194
+        }
+      },
+      {
+        "id": 6392,
+        "type": "dryrack",
+        "spot": {
+          "x": -275.55,
+          "z": 223.45
+        }
+      },
+      {
+        "id": 6393,
+        "type": "smokehouse",
+        "spot": {
+          "x": -320.05,
+          "z": 213.05
+        }
+      },
+      {
+        "id": 6394,
+        "type": "smokehouse",
+        "spot": {
+          "x": -330.05,
+          "z": 203.05
+        }
+      },
+      {
+        "id": 6395,
+        "type": "smokehouse",
+        "spot": {
+          "x": -315.05,
+          "z": 133.95
+        }
+      },
+      {
+        "id": 6396,
+        "type": "butcher",
+        "spot": {
+          "x": -245.95,
+          "z": 203.05
+        }
+      },
+      {
+        "id": 6397,
+        "type": "butcher",
+        "spot": {
+          "x": -340.05,
+          "z": 173.05
+        }
+      },
+      {
+        "id": 6398,
+        "type": "grindingStone",
+        "spot": {
+          "x": -325.45,
+          "z": 143.55
+        }
+      },
+      {
+        "id": 6399,
+        "type": "grindingStone",
+        "spot": {
+          "x": -235.55,
+          "z": 173.45
+        }
+      },
+      {
+        "id": 6400,
+        "type": "oven",
+        "spot": {
+          "x": -235.95,
+          "z": 183.05
+        }
+      },
+      {
+        "id": 6401,
+        "type": "oven",
+        "spot": {
+          "x": -310.05,
+          "z": 223.05
+        }
+      }
+    ],
+    "placementRejections": {
+      "Can't raise that in the water": 175,
+      "Too close to the trees \u2014 clear a plot first": 23,
+      "Too close to a stone outcrop": 4,
+      "Clear resources from the plot first": 5,
+      "A lumber camp needs a stand of pines": 46,
+      "That's a berry thicket": 2
+    }
+  },
+  "observation": {
+    "method": "Public native Chrome UI import and Performance disclosure only; no engine injection or private browser storage access. Authored initial endowment, not earned campaign evidence.",
+    "origin": "http://127.0.0.1:8140/",
+    "quality": "Low",
+    "shadows": false,
+    "speed": 1,
+    "actualDisplayedWindowSeconds": 97,
+    "rollingFrameSamples": 600,
+    "frames": {
+      "fps": 32.6,
+      "meanMs": 30.7,
+      "p95Ms": 50.6,
+      "maxMs": 100,
+      "pausesOver100ms": 0
+    },
+    "stages": {
+      "peopleAndWorld": {
+        "meanMs": 22.8,
+        "p95Ms": 45.9,
+        "maxMs": 83.9
+      },
+      "scene": {
+        "meanMs": 3.0,
+        "p95Ms": 5.4,
+        "maxMs": 30.7
+      },
+      "drawSubmission": {
+        "meanMs": 4.5,
+        "p95Ms": 6.2,
+        "maxMs": 6.7
+      },
+      "interface": {
+        "meanMs": 1.3,
+        "p95Ms": 1.6,
+        "maxMs": 1.9
+      },
+      "map": {
+        "meanMs": 4.8,
+        "p95Ms": 19.0,
+        "maxMs": 23.7
+      },
+      "saveRequest": {
+        "meanMs": 1.7,
+        "p95Ms": 3.1,
+        "maxMs": 3.1
+      }
+    },
+    "autosave": {
+      "mode": "worker confirmed",
+      "saved": 6,
+      "fallbacks": 0,
+      "failed": 0,
+      "superseded": 0,
+      "mainMeanMs": 19.9,
+      "mainPeakMs": 25.2,
+      "workerMeanMs": 1035.4,
+      "workerPeakMs": 1463.2,
+      "wallMeanMs": 1144.5,
+      "wallPeakMs": 1547.4
+    },
+    "renderer": {
+      "calls": 78,
+      "triangles": 444974,
+      "geometries": 188,
+      "textures": 22,
+      "programs": 27
+    },
+    "scheduling": {
+      "limitedFrames": 782,
+      "frames": 2835,
+      "discardedWallSeconds": 11.4
+    },
+    "heapMiB": {
+      "used": 236.3,
+      "allocated": 385.1,
+      "limit": 4192
+    },
+    "finalHud": {
+      "population": 100,
+      "capacity": 133,
+      "food": 1951,
+      "wood": 1653,
+      "stone": 271,
+      "seeds": 145,
+      "waterLiters": 385
+    }
+  },
+  "limits": [
+    "Only world totals 100 residents/60 finished structures are qualified. Exact camera-frustum count was not instrumented in this build; no all-visible acceptance claim.",
+    "Camera was widened through ordinary wheel gestures. HUD, terrain and structures can occlude geometry.",
+    "97 seconds is the actual displayed duration, not the intended 45 seconds. Tool latency enlarged the window; it was not restarted.",
+    "Frame and stage rows are rolling samples (600 frame intervals, 240 stage samples), not whole-window aggregates. Simulation timing is per step, others per operation.",
+    "Other agent/root heavy jobs were held; setup occurred paused before measurement.",
+    "Drawing measures CPU submission, not GPU time. No before/after improvement claim.",
+    "No private browser chrome screenshot or player village is included. Owned QA tab paused and closed afterwards."
+  ],
+  "finding": "People/world CPU dominates this controlled run. Healthy worker saving remained off-main-thread; earlier fallback cause remains unknown."
+}

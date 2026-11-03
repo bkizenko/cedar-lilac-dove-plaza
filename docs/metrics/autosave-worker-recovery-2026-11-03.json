@@ -1,0 +1,56 @@
+{
+  "sourceBase": "e5f5a8e",
+  "sourceSha256": {
+    "src/game/autosave.ts": "1f6c3afa6151c37e6bd0468f89ead1a12cfa253fa9a1f0e4e888dc0048c3d43e",
+    "src/ui/PerformanceReadout.tsx": "64c34fce0f77c0a47e6a14f702f42042f436c17c9e5a7d5a30b89620bfacb951"
+  },
+  "policy": {
+    "trigger": "Only a later ordinary autosave request; no retry timer/spin.",
+    "cooldownsMilliseconds": [
+      30000,
+      60000,
+      120000
+    ],
+    "continuedProbeCooldownMilliseconds": 300000,
+    "reset": "Only a valid worker result that commits; preflight acknowledgments, stale results and measurement resets do not reset.",
+    "immediateFallback": "Unchanged synchronous guarded save. All CAS/generation/strictcodec/old-port guards preserved."
+  },
+  "validation": {
+    "controllerReasonRecoveryTests": {
+      "passed": 30,
+      "total": 30,
+      "log": "/tmp/hearthwild-autosave-recovery-tests.log"
+    },
+    "nativeJoinedCase": "Actual native V16Game, actual timeout,current-state synchronous fallback,laterreplacement,real newer manual checkpoint races olderworker,thenvalid workercommit; strictparse/validateall3slots,exact protectedbytes,identical restoredterrain andold-port rejection. Controller-state test, not economic campaign qualification.",
+    "rateCase": "1000frequentrequests +40perretrycannotacceleratefactories;continuesoneprobeper300s andrecoverswithoutreload.",
+    "typecheck": {
+      "initialExit": 143,
+      "initialLogEmpty": true,
+      "rerunExit": 0,
+      "rerunLog": "/tmp/hearthwild-autosave-recovery-type-rerun.log"
+    },
+    "productionBuildExit": 0
+  },
+  "actualHealthyProductionUi": {
+    "origin": "http://127.0.0.1:8140/",
+    "ownedNativeChromeTab": true,
+    "world": "Freshdefaultpublicpreview;seednotinspected.",
+    "secondsSinceLoadDisplayed": 80,
+    "workerSaved": 3,
+    "fallbacks": 0,
+    "failed": 0,
+    "mainThreadMeanMs": 26.4,
+    "mainThreadPeakMs": 31.2,
+    "backgroundMeanMs": 1309,
+    "backgroundPeakMs": 2320.8,
+    "wallMeanMs": 3186,
+    "wallPeakMs": 6294.3,
+    "scope": "Healthy path observed through existing PerformanceUI under setup load, not FPS benchmark or forcedfailureproof. OwnQA tabclosedaftercheck."
+  },
+  "limits": [
+    "Earlier8136failurecause remainsunknown; timeoutundercontention is not established.",
+    "Automaticrecoveryaddresses the independentlyverifiedpermanent-disablepolicy, not a claim about the original triggeringcause.",
+    "No hiddenbrowserstate/engineinjection or privateusersave used. No actualbrowserfailurewasforced; controlledstate-machineproofplusactualhealthyproductioncheck isexplicit.",
+    "No fullgameFPS/speedup claim.100residents60buildingsstressqualification follows separately."
+  ]
+}

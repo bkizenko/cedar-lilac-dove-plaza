@@ -1,0 +1,141 @@
+{
+  "source": "f7c1ae6 + frozen autosave recovery + isolated entity census",
+  "scope": "Owned authored native V18 seed1 1040 continents initial100residents/60finishedstructures; public production UI import, no hidden state or private village",
+  "origin": "http://127.0.0.1:8141/",
+  "pausedChecks": [
+    {
+      "camera": "initial",
+      "quality": "med",
+      "residents": {
+        "intersecting": 100,
+        "represented": 100,
+        "living": 100
+      },
+      "structures": {
+        "intersecting": 37,
+        "represented": 60,
+        "present": 60
+      }
+    },
+    {
+      "camera": "10 ordinary outward wheel events",
+      "quality": "med",
+      "residents": {
+        "intersecting": 100,
+        "represented": 100,
+        "living": 100
+      },
+      "structures": {
+        "intersecting": 60,
+        "represented": 60,
+        "present": 60
+      }
+    },
+    {
+      "camera": "same widened camera",
+      "quality": "low",
+      "residents": {
+        "intersecting": 100,
+        "represented": 100,
+        "living": 100
+      },
+      "structures": {
+        "intersecting": 60,
+        "represented": 60,
+        "present": 60
+      },
+      "pausedFps": 60
+    }
+  ],
+  "runningWindow": {
+    "quality": "Low",
+    "shadows": false,
+    "speed": 1,
+    "displayedSeconds": 76,
+    "frameSamples": 600,
+    "frameFps": 20,
+    "frameMeanMs": 50.1,
+    "frameP95Ms": 84.3,
+    "frameMaxMs": 218,
+    "stallsOver100Ms": 13,
+    "peopleWorld": {
+      "meanMs": 42.2,
+      "p95Ms": 84.3,
+      "maxMs": 165.7
+    },
+    "scene": {
+      "meanMs": 4.4,
+      "p95Ms": 25.1,
+      "maxMs": 43.7
+    },
+    "drawSubmission": {
+      "meanMs": 5.2,
+      "p95Ms": 6.5,
+      "maxMs": 13.6
+    },
+    "map": {
+      "meanMs": 6.2,
+      "p95Ms": 15.3,
+      "maxMs": 36.8
+    },
+    "interface": {
+      "meanMs": 1.3,
+      "p95Ms": 1.7,
+      "maxMs": 7.6
+    },
+    "autosaveRequest": {
+      "meanMs": 2.2,
+      "p95Ms": 3.2,
+      "maxMs": 3.2
+    },
+    "autosave": {
+      "workerConfirmed": true,
+      "committed": 4,
+      "failed": 0,
+      "fallback": 0,
+      "superseded": 0,
+      "mainMeanMs": 20.1,
+      "mainPeakMs": 24.7,
+      "workerMeanMs": 1599.5,
+      "workerPeakMs": 1919.6,
+      "wallMeanMs": 1715.3,
+      "wallPeakMs": 2030.9
+    },
+    "scheduling": {
+      "limitedFrames": 783,
+      "frames": 1841,
+      "discardedWallSeconds": 16.5
+    },
+    "finalCensus": {
+      "villageTimeSeconds": 58.8,
+      "residents": {
+        "intersecting": 92,
+        "represented": 100,
+        "living": 100
+      },
+      "structures": {
+        "intersecting": 59,
+        "represented": 59,
+        "present": 59
+      },
+      "excludedPlots": 0
+    },
+    "renderer": {
+      "calls": 85,
+      "triangles": 441182,
+      "geometries": 188,
+      "textures": 22,
+      "programs": 58
+    }
+  },
+  "qualification": "FAILED maintained100/60 running view and smoothness; no acceptance credit",
+  "limits": [
+    "Conservative current model AABB/frustum intersection, not occlusion or pixel visibility.",
+    "Census refresh is on demand; start/end snapshots do not establish every intermediate frame.",
+    "Normal Auto-work remained active; residents moved and one structure was no longer present, cause not diagnosed.",
+    "Actual UI display76seconds, not intended12-second sleep; tool delays extended it.",
+    "Rolling600frame/240stage samples, not whole-window aggregate; world CPU per simulation step.",
+    "Other owners held heavy jobs during capture; QA renderer paused/closed afterwards.",
+    "No comparative speedup, GPU-time or earlier fallback-cause claim."
+  ]
+}

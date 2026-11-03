@@ -3,7 +3,7 @@ import {encodeGame} from './persistence';
 import {SAVE_KEY} from './constants';
 import {saveGame,currentSaveGeneration,invalidateAutosaveWrites,readSaveSlots,matchingSaveSlots,commitPreparedAutosave,type SaveStorage} from './save';
 import type {SaveSlots,AutosavePreflight,AutosaveSerialize,AutosaveResult} from './autosaveProtocol';
-export const AUTOSAVE_RULES=Object.freeze({timeoutMilliseconds:8000,maximumMeasurements:240});
+export const AUTOSAVE_RULES=Object.freeze({timeoutMilliseconds:8000,maximumMeasurements:240,recoveryInitialCooldownMilliseconds:30000,recoveryBackoffMultiplier:2,recoveryMaximumCooldownMilliseconds:120000,fastRecoveryAttempts:3,recoveryLongCooldownMilliseconds:300000});
 type Port=Pick<Worker,'postMessage'|'terminate'|'onmessage'|'onerror'|'onmessageerror'>;
 type Request={game:Game;state:Game['state'];generation:number;seed:number;time:number;requestedAt:number;measurement:number};
 type Active=Request&{id:number;expected:SaveSlots;dispatchCpuMs:number;workerCpuMs:number;phase:'preflight'|'serialize';timer?:ReturnType<typeof setTimeout>};
@@ -15,6 +15,7 @@ export class AutosaveController {
  private lastFailure:{reason:AutosaveFailureReason;phase:AutosaveFailurePhase}|null=null;
  private failureCounts:Partial<Record<AutosaveFailureReason,number>>={};
  private recordFailure(reason:AutosaveFailureReason,phase:AutosaveFailurePhase){this.lastFailure={reason,phase};this.failureCounts[reason]=(this.failureCounts[reason]??0)+1;}
+ private workerFailureStreak=0;private recoveryAttemptsUsed=0;private retryAfterMonotonicMilliseconds=0;
  private worker:Port|null=null;private disabled=false;private disposed=false;private confirmed=false;private nextId=0;
  private active:Active|null=null;private pending:Request|null=null;private measurement=0;private work:Work[]=[];
  private counts={requests:0,workerJobs:0,committed:0,superseded:0,failed:0,fallbacks:0,coalesced:0};
@@ -31,14 +32,23 @@ export class AutosaveController {
  private dispatch(r:Request){if(!this.current(r))return;r={...r,time:r.game.state.time};const start=this.now();let expected:SaveSlots;
   try{expected=readSaveSlots(this.storage);}catch{this.recordFailure('storage-read','storage');this.fallback(r,this.now()-start);return;}
   const job:Active={...r,id:++this.nextId,expected,dispatchCpuMs:0,workerCpuMs:0,phase:'preflight'};
-  if(this.disabled){this.fallback(job,this.now()-start);return;}
+  if(this.disabled){
+   if(this.now()<this.retryAfterMonotonicMilliseconds){this.fallback(job,this.now()-start);return;}
+   // A later ordinary autosave request owns one replacement attempt. There is
+   // no retry timer; pending/late replies cannot spin up additional workers.
+   this.disabled=false;this.confirmed=false;this.recoveryAttemptsUsed++;
+  }
   try{const port=this.port();this.active=job;
    job.timer=setTimeout(()=>this.transportFailed(port,'timeout'),this.options.timeoutMilliseconds??AUTOSAVE_RULES.timeoutMilliseconds);
    port.postMessage({id:job.id,phase:'preflight',seed:r.seed,time:r.time,expected} satisfies AutosavePreflight);job.dispatchCpuMs=this.now()-start;if(r.measurement===this.measurement)this.counts.workerJobs++;
   }catch{this.recordFailure('dispatch-error',job.phase);job.dispatchCpuMs=this.now()-start;if(this.active===job)this.clearActive(job);this.disable();this.fallback(job,job.dispatchCpuMs);}
  }
  private clearActive(job:Active){if(job.timer!==undefined)clearTimeout(job.timer);if(this.active===job)this.active=null;}
- private disable(){this.disabled=true;this.worker?.terminate();this.worker=null;}
+ private disable(){this.disabled=true;this.worker?.terminate();this.worker=null;this.workerFailureStreak++;
+  const cooldown=this.workerFailureStreak>AUTOSAVE_RULES.fastRecoveryAttempts?AUTOSAVE_RULES.recoveryLongCooldownMilliseconds:Math.min(AUTOSAVE_RULES.recoveryMaximumCooldownMilliseconds,AUTOSAVE_RULES.recoveryInitialCooldownMilliseconds*AUTOSAVE_RULES.recoveryBackoffMultiplier**(this.workerFailureStreak-1));
+  this.retryAfterMonotonicMilliseconds=this.now()+cooldown;
+ }
+ private workerSaveSucceeded(){this.workerFailureStreak=0;this.recoveryAttemptsUsed=0;this.retryAfterMonotonicMilliseconds=0;}
  private transportFailed(port:Port,reason:AutosaveFailureReason){if(port!==this.worker||this.disposed)return;const job=this.active;this.recordFailure(reason,job?.phase??'preflight');this.disable();if(job){this.clearActive(job);this.fallback(job,job.dispatchCpuMs);}this.drain();}
  private record(r:Request,result:Work){if(r.measurement!==this.measurement)return;this.work.push(result);if(this.work.length>AUTOSAVE_RULES.maximumMeasurements)this.work.shift();this.counts[result.outcome]++;}
  private fallback(r:Request,preparationCpuMs:number){if(!this.current(r)){this.record(r,{mode:'sync',outcome:'superseded',dispatchCpuMs:preparationCpuMs,commitCpuMs:0,mainCpuMs:preparationCpuMs,wallLatencyMs:this.now()-r.requestedAt});return;}
@@ -59,11 +69,12 @@ export class AutosaveController {
   if(result.status==='ready'&&job.phase!=='serialize'){this.transportFailed(port,'malformed-response');return;}
   this.clearActive(job);const start=this.now();let outcome:Work['outcome']='superseded';
   if(this.current(job)){if(result.status==='ready')outcome=commitPreparedAutosave(job.expected,job.generation,result.serialized!,result.previousPrimaryValid,this.storage);else if(result.status==='invalid')outcome='failed';}
+  if(result.status==='ready'&&outcome==='committed')this.workerSaveSucceeded();
   const commitCpuMs=this.now()-start;this.record(job,{mode:'worker',outcome,dispatchCpuMs:job.dispatchCpuMs,commitCpuMs,workerCpuMs:job.workerCpuMs,mainCpuMs:job.dispatchCpuMs+commitCpuMs,wallLatencyMs:this.now()-job.requestedAt});this.drain();
  }
  private drain(){const pending=this.pending;this.pending=null;if(pending&&this.current(pending))this.dispatch(pending);}
  resetMeasurements(){this.measurement++;this.work=[];this.failureCounts={};this.counts={requests:0,workerJobs:0,committed:0,superseded:0,failed:0,fallbacks:0,coalesced:0};}
- report(){const summary=(key:'dispatchCpuMs'|'commitCpuMs'|'workerCpuMs'|'mainCpuMs'|'wallLatencyMs')=>{const values=this.work.map(w=>w[key]).filter((n):n is number=>n!==undefined),sorted=[...values].sort((a,b)=>a-b);return{samples:values.length,meanMs:values.reduce((a,b)=>a+b,0)/Math.max(1,values.length),p95Ms:sorted[Math.max(0,Math.ceil(sorted.length*.95)-1)]??0,maxMs:sorted.at(-1)??0};};return{lastFailure:this.lastFailure?{...this.lastFailure}:null,failureCounts:{...this.failureCounts},mode:this.disabled?'synchronous fallback':this.confirmed?'worker confirmed':this.worker?'worker pending':'not started',active:!!this.active,pending:!!this.pending,counts:{...this.counts},last:this.work.at(-1)?{...this.work.at(-1)!}:null,dispatchCpu:summary('dispatchCpuMs'),commitCpu:summary('commitCpuMs'),workerCpu:summary('workerCpuMs'),mainCpu:summary('mainCpuMs'),wallLatency:summary('wallLatencyMs')};}
+ report(){const summary=(key:'dispatchCpuMs'|'commitCpuMs'|'workerCpuMs'|'mainCpuMs'|'wallLatencyMs')=>{const values=this.work.map(w=>w[key]).filter((n):n is number=>n!==undefined),sorted=[...values].sort((a,b)=>a-b);return{samples:values.length,meanMs:values.reduce((a,b)=>a+b,0)/Math.max(1,values.length),p95Ms:sorted[Math.max(0,Math.ceil(sorted.length*.95)-1)]??0,maxMs:sorted.at(-1)??0};};return{recovery:{failureStreak:this.workerFailureStreak,attemptsUsed:this.recoveryAttemptsUsed,fastAttemptsRemaining:Math.max(0,AUTOSAVE_RULES.fastRecoveryAttempts-this.recoveryAttemptsUsed),slowProbe:this.disabled&&this.workerFailureStreak>AUTOSAVE_RULES.fastRecoveryAttempts,nextAttemptInMilliseconds:this.disabled?Math.max(0,this.retryAfterMonotonicMilliseconds-this.now()):null},lastFailure:this.lastFailure?{...this.lastFailure}:null,failureCounts:{...this.failureCounts},mode:this.disabled?'synchronous fallback':this.confirmed?'worker confirmed':this.worker?'worker pending':'not started',active:!!this.active,pending:!!this.pending,counts:{...this.counts},last:this.work.at(-1)?{...this.work.at(-1)!}:null,dispatchCpu:summary('dispatchCpuMs'),commitCpu:summary('commitCpuMs'),workerCpu:summary('workerCpuMs'),mainCpu:summary('mainCpuMs'),wallLatency:summary('wallLatencyMs')};}
  dispose(){if(this.disposed)return;this.invalidate();this.disposed=true;if(this.active)this.clearActive(this.active);this.worker?.terminate();this.worker=null;if(this.options.listenToStorage!==false&&typeof window!=='undefined')window.removeEventListener('storage',this.storageChanged);}
 }
 export type AutosaveReport=ReturnType<AutosaveController['report']>;

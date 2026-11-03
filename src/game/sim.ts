@@ -1,4 +1,5 @@
 import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
+import{campSupportAI,finishCampTrip}from'./finiteCamp';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
@@ -350,6 +351,7 @@ export class Game {
     const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
+    this.state.finiteRaiderCampVersion=1;
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
@@ -4277,6 +4279,7 @@ export class Game {
       return;
     }
     if(waterCollectionAI(this,u,dt))return;
+    if(campSupportAI(this,u,dt))return;
     // New work waits for a carried water load to reach storage, just as ordinary
     // full-handed reassignment does. Explicit movement/hold orders still win.
     if(u.waterWork?.paused&&u.waterWork.liters>0&&['idle','gather','build','return'].includes(u.order)){
@@ -5730,7 +5733,7 @@ export class Game {
 
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);

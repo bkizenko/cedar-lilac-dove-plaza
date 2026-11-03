@@ -1,3 +1,4 @@
+import {countEntityFrustum,type CensusSource} from './entityFrustumCensus';
 import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
 import{HullFleet}from'./hullFleet';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
@@ -197,6 +198,7 @@ export class WorldView {
   hullFleet:HullFleet|null=null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
+  private unitInstanceOwners = new Map<UnitType, import("@/game/types").Unit[]>();
   private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
@@ -1491,6 +1493,26 @@ export class WorldView {
     this.villageStyles.set(local.key,local.style);return local.style;
   }
 
+  /** Explicit inspection only: never called by the drawing loop. */
+  entityFrustumCensus(game:Game){
+    const bodies:CensusSource[]=[],unsheltered=new Set(game.state.units.filter(u=>!u.shelterId).map(u=>u.id));
+    for(const [type,mesh]of this.unitMeshes)bodies.push({mesh,owners:this.unitInstanceOwners.get(type)||[],admitted:o=>unsheltered.has(o.id)});
+    const structures:CensusSource[]=[];
+    for(const [mesh,owners]of this.buildingInstances){
+      // Contour fields and excavations have independent terrain geometry; do not
+      // silently substitute their rectangular metadata for rendered bounds.
+      if(!(mesh instanceof THREE.InstancedMesh))continue;
+      const models=new Set(owners.filter(b=>b.type!=='farm'&&b.type!=='trench').map(b=>b.id));
+      structures.push({mesh,owners,admitted:o=>models.has(o.id)});
+    }
+    for(const [mesh,owners]of this.towerPlatforms?.sources()||[])structures.push({mesh,owners});
+    return{time:game.state.time,quality:this.quality,
+      residents:countEntityFrustum(this.camera,bodies,game.state.units),
+      structures:countEntityFrustum(this.camera,structures,game.state.buildings),
+      unsupportedPlots:game.state.buildings.filter(b=>b.team===0&&b.hp>0&&(b.type==='farm'||b.type==='trench')).length,
+      camera:{x:this.camera.position.x,y:this.camera.position.y,z:this.camera.position.z}};
+  }
+
   private syncBuildings(game: Game) {
     if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
     this.towerPlatforms.sync(game);
@@ -1693,6 +1715,7 @@ export class WorldView {
     let ri = 0, tools = 0;
     for (const t of UNIT_TYPES) {
       const list = grouped.get(t)!;
+      this.unitInstanceOwners.set(t,list);
       const mesh = this.unitMeshes.get(t);
       if (!mesh) continue;
       const cap = instCap(mesh);
@@ -2597,7 +2620,7 @@ export class WorldView {
       (meshes.roof.material as THREE.Material).dispose();
     }
     this.bldMeshes.clear();this.buildingInstances.clear();
-    this.unitMeshes.clear();
+    this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();
     this.canoePaddles=null;this.riverboats=null;
     for(const mesh of this.cargoMeshes.values())(mesh.material as THREE.Material).dispose();
