@@ -381,6 +381,7 @@ export class WorkBoard {
     const foes=g.state.units.filter(e=>e.hp>0&&g.isFoe(u.team,e.team));
     const workRange=u.team===0?null:rivalWorkRangeContext(g,u.team);
     const lumberSites=g.state.buildings.filter(b=>b.team===u.team&&b.type==='lumber'&&g.finished(b));
+    const quarrySites=g.state.buildings.filter(b=>b.team===u.team&&b.type==='quarry'&&g.finished(b));
     // Food stock, household membership and storage stay fixed during scoring.
     // Reuse only within this scan; the next resident sees all live changes.
     let taskFoodTarget: number | undefined, taskReserve: number | undefined;
@@ -421,7 +422,12 @@ export class WorkBoard {
       const lumberWork = task.kind === "wood" && lumberSites.some(b=>Math.hypot(b.x-task.node.x,b.z-task.node.z)<=LUMBER_R);
       const rivalOutpostWork = u.team!==0 && ((['wood','stone','copper','iron'].includes(task.kind)&&workRange!(task.node.x,task.node.z,task.kind as ResKind)) ||
         (task.kind==='build'&&'type' in task.node&&['lumber','quarry'].includes(task.node.type)&&Math.hypot(task.node.x-g.campOf(u.team).x,task.node.z-g.campOf(u.team).z)<RIVAL_RESOURCE_RANGE));
-      const settlementWork = rivalOutpostWork || lumberWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
+      // Completed quarries remain real workplaces after a miner unloads at home.
+      // All route, danger and worker-slot checks below still apply.
+      const quarryWork = ["stone","copper","iron"].includes(task.kind) &&
+        ("type" in task.node ? task.node.type === "quarry" && task.node.team === u.team && g.finished(task.node) :
+          quarrySites.some(b=>Math.hypot(b.x-task.node.x,b.z-task.node.z)<=QUARRY_R));
+      const settlementWork = rivalOutpostWork || lumberWork || quarryWork || markedWork || g.cornerstoneAt(task.node.x, task.node.z, u.team) ||
         (task.kind === "build" && "type" in task.node && task.node.type === "cornerstone");
       // An explicit timber focus may use discovered forests beyond routine range.
       // Connectivity, danger checks and the two-cutter reservation still apply.
