@@ -13,3 +13,10 @@ Source/evidence details: BUILDING_MAINTENANCE_2026-11-03.md and metrics/building
 ## Scope
 
 No fixed release gate is newly credited by this component batch:32/98 (32.65%). Local capture preserves separated old-custody repair claims instead of blocking integration or copying goods. Permanent disconnected-claim salvage, bridge maintenance and specialist repair yards remain unfinished. No FPS improvement or full economy/campaign completion is claimed. The distributed/random-character V18 terrain generator remains separately under qualification; sawtooth riverbanks remain explicitly pending.
+
+
+## Coupled river-loop correction
+
+This published tree also includes the independently reproduced river-edge objective retention fix described in RAID_RIVER_OBJECTIVE_2026-11-03.md. Existing three-second reviews now keep a previously observed valid reachable hostile building during a real detour, while defending/intercepting units and real retreat still take precedence.
+
+The final combined tree passes17/17 raid/navigation/physical return/first-winter cases (/tmp/maintenance-loop-coupled-tests.log), plus the52 distinct maintenance/compatibility/catalogue cases:69 distinct executed cases total. The first-winter rerun replaces the earlier counted case; it is not counted twice. Final production build passed after combining both runtime changes. No exact reconstruction of the user's unknown screenshot save or sustained FPS result is claimed.

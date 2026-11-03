@@ -1,0 +1,11 @@
+# Raid river-edge objective oscillation
+
+Base8836777; this is a navigation/target-retention correction, separate from future intent/severity changes.
+
+A controlled two-bank fixture has a real dry northern connection, an observed east warehouse at(20,0), an observed west hall at(-18,20), and one actual raider starting at(-18,0). The existing seaRaidAI/combatAI/steer executors run normally with finite navigation budgets and0.1-second increments. No movement, pathfinding or sampler is overridden.
+
+Before correction, the selected warehouse repeatedly leaves the65m local target-candidate radius while its valid path detours north. The three-second target review chooses the west hall, reversing the actor. The warehouse re-enters the candidate radius during that reversal and wins again. The120-second trace records36target changes; both buildings remain at their original300/1100HP. This recreates the reported river-edge bouncing mechanism; it is not a claim to reconstruct the user's exact unknown save.
+
+The correction retains a previously acquired living hostile building while its interaction route remains valid and the raider is not genuinely stuck. Intercepting armed defenders still override it, dead objectives are released, and existing retreat/cargo/owned-boat code remains unchanged. The same fixture now follows the actual dry northern route, reaches the east warehouse and destroys it by68.6seconds, then physically returns toward the landing with finite stolen food. The west hall remains1100HP. No survivor is replaced/despawned and no navigation shortcut or terrain change is introduced.
+
+The new three-case regression executed against unmodified8836777 fails the detour test at the first wrong target; the same regression passes with the source correction. Final raid-balance/physical return/regression suite passes16/16 (`/tmp/raid-river-objective-final-tests.log`), typecheck passes (`/tmp/raid-river-objective-types.log`). The suite retains actual paid-hull boarding/sailing/disembarkation/cargo return and no-hull stranded-survivor coverage. The direct navigation fixture does not establish a whole campaign/FPS result or a newly finite sea-raid recruitment/fleet economy. Legacy shore spawning and its conjured provisions remain existing limitations.

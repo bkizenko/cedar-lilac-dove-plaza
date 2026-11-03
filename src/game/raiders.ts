@@ -294,7 +294,13 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
  }
  if(g.state.time>=raid.thinkAt){
   raid.thinkAt=g.state.time+3;
-  const mark=raiderTarget(g,u);
+  // Keep a locally acquired objective through a real terrain detour. Re-ranking
+  // every three seconds as it crosses the sight radius can reverse the band
+  // forever between two shores, despite a valid connected route.
+  const current=u.target?.kind==='building'?u.target:null;
+  const committed=current&&current.hp>0&&g.isFoe(u.team,current.team)&&!current.plannedCost&&
+    !['trench','moat'].includes(current.type)&&u.stuckT<=6&&!!g.interactionSpot(u,current);
+  const mark=committed?current:raiderTarget(g,u);
   if(mark){u.target=mark;u.order='attack';u.tx=mark.x;u.tz=mark.z;}
   else if(!u.target||u.target.hp<=0){u.target=null;u.order='attackmove';u.tx=raid.goalX;u.tz=raid.goalZ;}
  }

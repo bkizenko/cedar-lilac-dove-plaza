@@ -1,0 +1,23 @@
+{
+  "base": "8836777",
+  "scope": "controlled ordinary navigation executors, not exact user save",
+  "baselineTargetChanges": 36,
+  "fixedTargetChanges": 2,
+  "baselineFinal": {
+    "eastHP": 300,
+    "westHP": 1100,
+    "x": -9.346933428550576,
+    "z": 68.13802990591529
+  },
+  "fixedFinal": {
+    "eastHP": 0,
+    "westHP": 1100,
+    "x": -16.99968154236179,
+    "z": 4.721585779758817
+  },
+  "fixedFirstTargetDestroyedAt": 68.60000000000038,
+  "testsPassed": 16,
+  "testsFailed": 0,
+  "baselineRegression": "same first test fails against unmodified8836777",
+  "noFPSClaim": true
+}

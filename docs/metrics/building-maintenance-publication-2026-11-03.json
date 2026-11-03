@@ -1,13 +1,13 @@
 {
   "baseline": "8836777",
-  "automatedPassed": 53,
-  "automatedTotal": 53,
+  "automatedPassed": 69,
+  "automatedTotal": 69,
   "cohorts": [
     52,
-    1
+    17
   ],
   "typecheck": "pass",
-  "productionBuild": "pass",
+  "productionBuild": "combined maintenance+loop production pass",
   "desktop": {
     "publicNativeFixture": true,
     "paymentWoodBefore": 580,
@@ -34,7 +34,8 @@
     "src/game/labor.ts": "d7433e893132f772c790c82f8a7f635e1051e6bb00df07dc2042f3f7874bfe85",
     "src/game/productionCatalog.ts": "530fca76f19dbd080d2d0b50d8f9d4dfe29bb8c62e8dab24f142f9c1e53f9e08",
     "src/ui/Hud.tsx": "85d4d04c4eb27ad25ea1b2e1725d51f88bf8c07b6cd267ab99c9ee0dadd66800",
-    "src/ui/BuildingMaintenanceControls.tsx": "a80c3fdd06cdf5fc10fd5f507152afe08ca68992bde92fe06d29ac58e6311801"
+    "src/ui/BuildingMaintenanceControls.tsx": "a80c3fdd06cdf5fc10fd5f507152afe08ca68992bde92fe06d29ac58e6311801",
+    "src/game/raiders.ts": "e9f335214430be76814df556387d77a66ec956938d7aaa7030617916bda1fa48"
   },
   "releaseGates": {
     "baseline": "hearthwild-first-release-gates-v1",
@@ -46,5 +47,6 @@
     "Legacy passive wear remains disabled unless explicitly opted into supported repair behavior",
     "Disconnected retained repair salvage, bridges and specialist repair yards remain pending",
     "No new sustained-FPS acceptance"
-  ]
+  ],
+  "combinedFirstWinter": "pass; no duplicate case credit"
 }
