@@ -1,0 +1,3 @@
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{createHash}from'node:crypto';import{generateWorld}from'../src/game/worldgen.ts';
+// Full public generated worlds captured independently from published 8836777.
+for(const r of JSON.parse(readFileSync(new URL('./fixtures/world-before-v18.json',import.meta.url),'utf8')))test(`V18 preserves full V17 world ${r.seed}/${r.request.layout}`,()=>{const world=generateWorld(r.seed,r.version,r.request),hash=createHash('sha256').update(JSON.stringify(world,(_k,v)=>ArrayBuffer.isView(v)?Array.from(v):v)).digest('hex');assert.equal(hash,r.hash);});

@@ -1,0 +1,9 @@
+{
+  "src/game/worldgen.ts": "d18daaa84025741fd283f29954eb58e83236daa0916a379119b6a8733fbe6515",
+  "src/game/coastalVariety.ts": "a526ba429396b37c3d8f1dde78c363ef06221419a5616f35780d6464498b081d",
+  "src/game/distributedGeography.ts": "6561110c3f1b5c13c368677f9ef6b6fbd8923b1f002b4d2b79f129d6787ab6e8",
+  "src/game/reliefProfiles.ts": "2ecb49728e3266a274f35694d327992df1e8c0093aea8b8df8dafb2238e253b3",
+  "src/game/distributedRiparian.ts": "0165ecfba12e8e7808c2bdb134f28286e0282eda0f231b3262002dea12e976f0",
+  "src/game/ecologicalProvinces.ts": "4ce2fc4f9e31f2234a05f3006f1c33aa0fadd336c51203c46bad625218c42840",
+  "src/game/polylineQuery.ts": "dff42191a78108adbdc523d18a2ed69a40526fba0e2cb1c8e0d4844c5200a450"
+}

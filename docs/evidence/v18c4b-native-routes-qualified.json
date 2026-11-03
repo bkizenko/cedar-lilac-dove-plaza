@@ -1,0 +1,1246 @@
+{
+  "scope": "Native V18C4b geography route fixture. Initial Quiet conflict selected; all initial people/resources/native terrain/inventories unchanged. Explicit public movement/construction/mining commands only; no vision grants, body corrections, manual AI or RNG override. Not Normal-conflict campaign/whole-geography gate evidence alone. Actual first paid trip only; no claim of repeated remote staffing. Destination survey320m retains minimum ascent/grade/placement/connectivity gates; removes obsolete fixture-only36m maximum elevation because real quarry placement has no such ceiling; original180m fixture failed seed0 admission and is preserved separately.",
+  "source": {
+    "sim": "0d230249be9e9ee686e90fa40b1dd18ba0750fae9f061a4bf83ce282ad0a9e0e",
+    "worldgen": "d18daaa84025741fd283f29954eb58e83236daa0916a379119b6a8733fbe6515",
+    "distributedGeography": "6561110c3f1b5c13c368677f9ef6b6fbd8923b1f002b4d2b79f129d6787ab6e8",
+    "reliefProfiles": "2ecb49728e3266a274f35694d327992df1e8c0093aea8b8df8dafb2238e253b3",
+    "indexedLocalWater": "3e8a1167b5ba8dcd83466a6fcf78bbf8fbe8bdbda16ccdd8d595f08731f82091",
+    "riverSurface": "1ae90b53ae750d8cd85988a114fc02842fdefb3dbf2ff7729f11bb606dec57ce",
+    "mining": "b9cc4441c94e8c7499c097a580dd8a20d31b85327db005f740fbc82c0153b8e0",
+    "persistence": "995c22e6b0e5078a934eab9f689ccfbec0b35fd81bd9bc13e8686190dcd60be5"
+  },
+  "cases": [
+    {
+      "seed": 2,
+      "size": 1040,
+      "layout": "pangaea",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 53.40000000000022
+        }
+      ],
+      "actualCalamityStoneLost": 0,
+      "reliefCharacter": "flatter",
+      "actorId": 4600,
+      "landmassAccess": {
+        "rules": {
+          "minimumSubstantialAreaSquareMetres": 18000,
+          "minimumLocalRiseMetres": 4,
+          "maximumLocalApproachRadiusMetres": 160,
+          "routeSearchBudget": 96000,
+          "physicalProbeStepMetres": 0.5,
+          "workerRadiusMetres": 0.55
+        },
+        "scope": "Every substantial actual ocean-coast component; connected local upland approach and actual half-metre worker-physics probes. Survey only, not actual people moving on other islands.",
+        "landmasses": [
+          {
+            "landmassId": 0,
+            "actualCoastAreaSquareMetres": 751076.26953125,
+            "walkableComponentCount": 29,
+            "largestWalkableComponentAreaSquareMetres": 716644,
+            "passed": true,
+            "high": {
+              "x": 313,
+              "z": 451,
+              "height": 67.79511096660906,
+              "index": 252616
+            },
+            "low": {
+              "x": 403,
+              "z": 515,
+              "height": 0.6821651683403942,
+              "index": 269301,
+              "distance": 110.4355015382282
+            },
+            "riseMetres": 67.11294579826867,
+            "routeWaypoints": 90,
+            "physicalLengthMetres": 200.71067811865439,
+            "maximumProbeRiseMetres": 0.624579561673535,
+            "blocked": null
+          }
+        ],
+        "expectedMeasuredLandmasses": 1,
+        "passed": true
+      },
+      "initial": {
+        "survival": {
+          "waterLiters": 24,
+          "waterConsumedLiters": 0,
+          "waterDeliveredLiters": 0,
+          "waterLostLiters": 0,
+          "fuelBurnedWood": 0,
+          "waterShortageSeconds": 0,
+          "coldExposurePersonSeconds": 0
+        },
+        "home": {
+          "x": -272,
+          "z": -160
+        },
+        "people": [
+          {
+            "id": 4600,
+            "x": -267,
+            "y": 11.75752143859863,
+            "z": -163
+          },
+          {
+            "id": 4601,
+            "x": -274.5,
+            "y": 12.23380049155398,
+            "z": -158.66987298107782
+          },
+          {
+            "id": 4602,
+            "x": -274.5,
+            "y": 11.714055828299669,
+            "z": -167.33012701892218
+          },
+          {
+            "id": 4603,
+            "x": -268,
+            "y": 11.73720805828388,
+            "z": -165
+          },
+          {
+            "id": 4604,
+            "x": -277,
+            "y": 12.102014864408053,
+            "z": -164
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "f65788374bcf5868bbe1e274c03261f61192f6b21e94644765a1a0937b5ea081"
+      },
+      "target": {
+        "x": -208,
+        "z": -176,
+        "height": 18.388401911808895,
+        "distance": 65.96969000988257,
+        "grade": 0.13294398558738793
+      },
+      "walkedMetres": 397.61597923714896,
+      "maximumStepRise": 1.2411771929952984,
+      "uplandArrival": {
+        "time": 41.40000000000005,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4600,
+          "hp": 48,
+          "x": -207,
+          "y": 18.652556979449844,
+          "z": -177.91022261841556,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 61.82487152053542,
+        "riseMetres": 6.8950355408512145,
+        "known": true
+      },
+      "quarryId": 4704,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 52.80000000000021,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4600,
+          "hp": 48,
+          "x": -207,
+          "y": 18.652556979449844,
+          "z": -177.91022261841556,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4704,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 1104,
+        "dug": 0,
+        "quality": 1.5899999999999999
+      },
+      "loadedSave": {
+        "time": 53.40000000000022,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4600,
+          "hp": 48,
+          "x": -207,
+          "y": 18.652556979449844,
+          "z": -177.91022261841556,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.1 m into the seam",
+          "carry": 2,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4704,
+          "build": 1,
+          "excavation": {
+            "remaining": 1102,
+            "dug": 2,
+            "quality": 1.5899999999999999
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "296f13727ee186479dde4b975ec11fbd16de31480aaa84820d64fc2d3b1c7b05"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 112.20000000000105,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4600,
+          "hp": 48,
+          "x": -274.6315999750742,
+          "y": 12.12006686466766,
+          "z": -162.71012302525267,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4704,
+          "build": 1,
+          "excavation": {
+            "remaining": 1080,
+            "dug": 24,
+            "quality": 1.5899999999999999
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "netStockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 114.20000000000108,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4600,
+          "hp": 48,
+          "x": -281.76311426343,
+          "y": 11.961088068179256,
+          "z": -169.76311426343003,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4704,
+          "build": 1,
+          "excavation": {
+            "remaining": 1080,
+            "dug": 24,
+            "quality": 1.5899999999999999
+          }
+        },
+        "stone": 40,
+        "seamInitial": 1104,
+        "seamRemaining": 1080,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "grossStoneDelivered": 24,
+        "carriedStone": 0
+      },
+      "finalSurvival": {
+        "waterLiters": 19.432000000000503,
+        "waterConsumedLiters": 4.568000000000003,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "nativeRoutePassed": true,
+      "landmassSurveyLimit": "Flat ordinary components without a4m rise are reported, not rejected; independent full native qualification checks their usable physical area. This joined proof requires genuine founder upland ascent and paid home delivery."
+    },
+    {
+      "seed": 14,
+      "size": 1040,
+      "layout": "continents",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 25.79999999999994
+        }
+      ],
+      "actualCalamityStoneLost": 0,
+      "reliefCharacter": "rolling",
+      "actorId": 6092,
+      "landmassAccess": {
+        "rules": {
+          "minimumSubstantialAreaSquareMetres": 18000,
+          "minimumLocalRiseMetres": 4,
+          "maximumLocalApproachRadiusMetres": 160,
+          "routeSearchBudget": 96000,
+          "physicalProbeStepMetres": 0.5,
+          "workerRadiusMetres": 0.55
+        },
+        "scope": "Every substantial actual ocean-coast component; connected local upland approach and actual half-metre worker-physics probes. Survey only, not actual people moving on other islands.",
+        "landmasses": [
+          {
+            "landmassId": 0,
+            "actualCoastAreaSquareMetres": 455095.21484375,
+            "walkableComponentCount": 31,
+            "largestWalkableComponentAreaSquareMetres": 430908,
+            "passed": true,
+            "high": {
+              "x": -455,
+              "z": -357,
+              "height": 34.789322603665866,
+              "index": 42152
+            },
+            "low": {
+              "x": -407,
+              "z": -241,
+              "height": 0.9707969115330654,
+              "index": 72336,
+              "distance": 125.53883861180172
+            },
+            "riseMetres": 33.8185256921328,
+            "routeWaypoints": 58,
+            "physicalLengthMetres": 139.19595949289362,
+            "maximumProbeRiseMetres": 0.6564527071439272,
+            "blocked": null
+          },
+          {
+            "landmassId": 1,
+            "actualCoastAreaSquareMetres": 429976.26953125,
+            "walkableComponentCount": 12,
+            "largestWalkableComponentAreaSquareMetres": 401680,
+            "passed": true,
+            "high": {
+              "x": -491,
+              "z": 495,
+              "height": 92.2932880108173,
+              "index": 263654
+            },
+            "low": {
+              "x": -501,
+              "z": 373,
+              "height": 8.750068048330451,
+              "index": 231929,
+              "distance": 122.40914998479484
+            },
+            "riseMetres": 83.54321996248686,
+            "routeWaypoints": 62,
+            "physicalLengthMetres": 137.25483399593926,
+            "maximumProbeRiseMetres": 0.6510447966746682,
+            "blocked": null
+          }
+        ],
+        "expectedMeasuredLandmasses": 2,
+        "passed": true
+      },
+      "initial": {
+        "survival": {
+          "waterLiters": 24,
+          "waterConsumedLiters": 0,
+          "waterDeliveredLiters": 0,
+          "waterLostLiters": 0,
+          "fuelBurnedWood": 0,
+          "waterShortageSeconds": 0,
+          "coldExposurePersonSeconds": 0
+        },
+        "home": {
+          "x": -76,
+          "z": -336
+        },
+        "people": [
+          {
+            "id": 6092,
+            "x": -71,
+            "y": 11.18930298731877,
+            "z": -339
+          },
+          {
+            "id": 6093,
+            "x": -78.5,
+            "y": 12.183244066081334,
+            "z": -334.6698729810778
+          },
+          {
+            "id": 6094,
+            "x": -78.5,
+            "y": 11.636059759420325,
+            "z": -343.3301270189222
+          },
+          {
+            "id": 6095,
+            "x": -72,
+            "y": 11.234356821500336,
+            "z": -341
+          },
+          {
+            "id": 6096,
+            "x": -81,
+            "y": 12.16998342367319,
+            "z": -340
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "0e95db524d568305db0abc3d406708c895445da50ed2fce2bdd7f4ac6b2a4e1b"
+      },
+      "target": {
+        "x": -124,
+        "z": -376,
+        "height": 17.84564088674692,
+        "distance": 62.481997407253246,
+        "grade": 0.1904612673968304
+      },
+      "walkedMetres": 124.51153366934236,
+      "maximumStepRise": 0.3445484994249579,
+      "uplandArrival": {
+        "time": 13.599999999999984,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6092,
+          "hp": 48,
+          "x": -122.45794786134236,
+          "y": 17.399137723393316,
+          "z": -374.45794786134235,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 62.49149113790054,
+        "riseMetres": 6.209834736074546,
+        "known": true
+      },
+      "quarryId": 6233,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 25.199999999999942,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6092,
+          "hp": 48,
+          "x": -122.45794786134236,
+          "y": 17.399137723393316,
+          "z": -374.45794786134235,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6233,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 696,
+        "dug": 0,
+        "quality": 1.55
+      },
+      "loadedSave": {
+        "time": 25.79999999999994,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6092,
+          "hp": 48,
+          "x": -122.45794786134236,
+          "y": 17.399137723393316,
+          "z": -374.45794786134235,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.1 m into the seam",
+          "carry": 2,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6233,
+          "build": 1,
+          "excavation": {
+            "remaining": 694,
+            "dug": 2,
+            "quality": 1.55
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "95adc0eea81ae4ea4aa3515e828a6dc1c41442776528c196e1be305a7c8d1976"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 48.200000000000145,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6092,
+          "hp": 48,
+          "x": -78.75603717620163,
+          "y": 12.105818229709792,
+          "z": -338.85698744125887,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6233,
+          "build": 1,
+          "excavation": {
+            "remaining": 672,
+            "dug": 24,
+            "quality": 1.55
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "netStockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 50.20000000000017,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6092,
+          "hp": 48,
+          "x": -86.4995517313822,
+          "y": 11.897752429103988,
+          "z": -344.4995517313822,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6233,
+          "build": 1,
+          "excavation": {
+            "remaining": 672,
+            "dug": 24,
+            "quality": 1.55
+          }
+        },
+        "stone": 40,
+        "seamInitial": 696,
+        "seamRemaining": 672,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "grossStoneDelivered": 24,
+        "carriedStone": 0
+      },
+      "finalSurvival": {
+        "waterLiters": 21.99200000000022,
+        "waterConsumedLiters": 2.0080000000000013,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "nativeRoutePassed": true,
+      "landmassSurveyLimit": "Flat ordinary components without a4m rise are reported, not rejected; independent full native qualification checks their usable physical area. This joined proof requires genuine founder upland ascent and paid home delivery."
+    },
+    {
+      "seed": 4,
+      "size": 1040,
+      "layout": "archipelago",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 26.19999999999994
+        }
+      ],
+      "actualCalamityStoneLost": 0,
+      "reliefCharacter": "hilly",
+      "actorId": 3411,
+      "landmassAccess": {
+        "rules": {
+          "minimumSubstantialAreaSquareMetres": 18000,
+          "minimumLocalRiseMetres": 4,
+          "maximumLocalApproachRadiusMetres": 160,
+          "routeSearchBudget": 96000,
+          "physicalProbeStepMetres": 0.5,
+          "workerRadiusMetres": 0.55
+        },
+        "scope": "Every substantial actual ocean-coast component; connected local upland approach and actual half-metre worker-physics probes. Survey only, not actual people moving on other islands.",
+        "landmasses": [
+          {
+            "landmassId": 0,
+            "actualCoastAreaSquareMetres": 68887.3046875,
+            "walkableComponentCount": 58,
+            "largestWalkableComponentAreaSquareMetres": 27272,
+            "passed": true,
+            "high": {
+              "x": 247,
+              "z": -239,
+              "height": 68.57355616642869,
+              "index": 73183
+            },
+            "low": {
+              "x": 301,
+              "z": -353,
+              "height": 0.7055804674441908,
+              "index": 43570,
+              "distance": 126.14277624977183
+            },
+            "riseMetres": 67.8679756989845,
+            "routeWaypoints": 116,
+            "physicalLengthMetres": 251.88225099390903,
+            "maximumProbeRiseMetres": 0.62561160356573,
+            "blocked": null
+          },
+          {
+            "landmassId": 1,
+            "actualCoastAreaSquareMetres": 131354.58984375,
+            "walkableComponentCount": 40,
+            "largestWalkableComponentAreaSquareMetres": 107680,
+            "passed": true,
+            "high": {
+              "x": -13,
+              "z": -25,
+              "height": 44.60373447124774,
+              "index": 128693
+            },
+            "low": {
+              "x": 69,
+              "z": -71,
+              "height": 0.7883807732508779,
+              "index": 116774,
+              "distance": 94.02127418834526
+            },
+            "riseMetres": 43.81535369799686,
+            "routeWaypoints": 79,
+            "physicalLengthMetres": 170.42640687119268,
+            "maximumProbeRiseMetres": 0.6391171968901688,
+            "blocked": null
+          },
+          {
+            "landmassId": 2,
+            "actualCoastAreaSquareMetres": 69729.00390625,
+            "walkableComponentCount": 19,
+            "largestWalkableComponentAreaSquareMetres": 58972,
+            "passed": true,
+            "high": {
+              "x": 257,
+              "z": 99,
+              "height": 58.893380795992336,
+              "index": 161068
+            },
+            "low": {
+              "x": 133,
+              "z": 113,
+              "height": 0.9704184715564583,
+              "index": 164646,
+              "distance": 124.78781991845199
+            },
+            "riseMetres": 57.92296232443588,
+            "routeWaypoints": 137,
+            "physicalLengthMetres": 323.7056274847713,
+            "maximumProbeRiseMetres": 0.6001090416541457,
+            "blocked": null
+          },
+          {
+            "landmassId": 3,
+            "actualCoastAreaSquareMetres": 67616.50390625,
+            "walkableComponentCount": 12,
+            "largestWalkableComponentAreaSquareMetres": 55488,
+            "passed": true,
+            "high": {
+              "x": -317,
+              "z": 143,
+              "height": 35.24476852416993,
+              "index": 172221
+            },
+            "low": {
+              "x": -381,
+              "z": 149,
+              "height": 0.6555372756261039,
+              "index": 173749,
+              "distance": 64.28063471995279
+            },
+            "riseMetres": 34.589231248543825,
+            "routeWaypoints": 47,
+            "physicalLengthMetres": 115.5391052434009,
+            "maximumProbeRiseMetres": 0.7146439772385795,
+            "blocked": null
+          }
+        ],
+        "expectedMeasuredLandmasses": 4,
+        "passed": true
+      },
+      "initial": {
+        "survival": {
+          "waterLiters": 24,
+          "waterConsumedLiters": 0,
+          "waterDeliveredLiters": 0,
+          "waterLostLiters": 0,
+          "fuelBurnedWood": 0,
+          "waterShortageSeconds": 0,
+          "coldExposurePersonSeconds": 0
+        },
+        "home": {
+          "x": 134,
+          "z": 222
+        },
+        "people": [
+          {
+            "id": 3411,
+            "x": 139,
+            "y": 5.71030726799598,
+            "z": 219
+          },
+          {
+            "id": 3412,
+            "x": 131.5,
+            "y": 5.6985014433472765,
+            "z": 223.33012701892218
+          },
+          {
+            "id": 3413,
+            "x": 131.5,
+            "y": 5.881901257615334,
+            "z": 214.66987298107782
+          },
+          {
+            "id": 3414,
+            "x": 138,
+            "y": 5.764160640423113,
+            "z": 217
+          },
+          {
+            "id": 3415,
+            "x": 129,
+            "y": 5.843240385789136,
+            "z": 218
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "b77a99a3b094c2b0908cc19288d09698e41a753809b90897d27ce5430ae52727"
+      },
+      "target": {
+        "x": 78,
+        "z": 198,
+        "height": 15.80975447434644,
+        "distance": 60.92618484691127,
+        "grade": 0.2530017048993101
+      },
+      "walkedMetres": 124.51831969980731,
+      "maximumStepRise": 0.41827613381225603,
+      "uplandArrival": {
+        "time": 13.599999999999984,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3411,
+          "hp": 48,
+          "x": 80.8721548878641,
+          "y": 15.967916295079789,
+          "z": 198.57443097757283,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 61.61209497550298,
+        "riseMetres": 10.25760902708381,
+        "known": true
+      },
+      "quarryId": 3522,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 25.59999999999994,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3411,
+          "hp": 48,
+          "x": 80.8721548878641,
+          "y": 15.967916295079789,
+          "z": 198.57443097757283,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3522,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 1139,
+        "dug": 0,
+        "quality": 1.25
+      },
+      "loadedSave": {
+        "time": 26.19999999999994,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3411,
+          "hp": 48,
+          "x": 80.8721548878641,
+          "y": 15.967916295079789,
+          "z": 198.57443097757283,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.1 m into the seam",
+          "carry": 2,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3522,
+          "build": 1,
+          "excavation": {
+            "remaining": 1137,
+            "dug": 2,
+            "quality": 1.25
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "2cef27fde652f3f85a7c94985cc46a6861ce43dc2d8bf22d73ad02378367665a"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 47.80000000000014,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3411,
+          "hp": 48,
+          "x": 130.57052051931748,
+          "y": 5.767584419801133,
+          "z": 220.58125750633457,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3522,
+          "build": 1,
+          "excavation": {
+            "remaining": 1115,
+            "dug": 24,
+            "quality": 1.25
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "netStockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 49.80000000000017,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3411,
+          "hp": 48,
+          "x": 123,
+          "y": 5.9937953362098115,
+          "z": 215,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3522,
+          "build": 1,
+          "excavation": {
+            "remaining": 1115,
+            "dug": 24,
+            "quality": 1.25
+          }
+        },
+        "stone": 40,
+        "seamInitial": 1139,
+        "seamRemaining": 1115,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "grossStoneDelivered": 24,
+        "carriedStone": 0
+      },
+      "finalSurvival": {
+        "waterLiters": 22.00800000000022,
+        "waterConsumedLiters": 1.9920000000000015,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "nativeRoutePassed": true,
+      "landmassSurveyLimit": "Flat ordinary components without a4m rise are reported, not rejected; independent full native qualification checks their usable physical area. This joined proof requires genuine founder upland ascent and paid home delivery."
+    },
+    {
+      "seed": 10,
+      "size": 1040,
+      "layout": "continents",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 25.39999999999994
+        }
+      ],
+      "actualCalamityStoneLost": 0,
+      "reliefCharacter": "mountainous",
+      "actorId": 6243,
+      "landmassAccess": {
+        "rules": {
+          "minimumSubstantialAreaSquareMetres": 18000,
+          "minimumLocalRiseMetres": 4,
+          "maximumLocalApproachRadiusMetres": 160,
+          "routeSearchBudget": 96000,
+          "physicalProbeStepMetres": 0.5,
+          "workerRadiusMetres": 0.55
+        },
+        "scope": "Every substantial actual ocean-coast component; connected local upland approach and actual half-metre worker-physics probes. Survey only, not actual people moving on other islands.",
+        "landmasses": [
+          {
+            "landmassId": 0,
+            "actualCoastAreaSquareMetres": 462885.05859375,
+            "walkableComponentCount": 124,
+            "largestWalkableComponentAreaSquareMetres": 345724,
+            "passed": true,
+            "high": {
+              "x": 435,
+              "z": -407,
+              "height": 91.32420255220849,
+              "index": 29597
+            },
+            "low": {
+              "x": 391,
+              "z": -439,
+              "height": 14.352353066664476,
+              "index": 21255,
+              "distance": 54.405882034941776
+            },
+            "riseMetres": 76.97184948554401,
+            "routeWaypoints": 217,
+            "physicalLengthMetres": 496.1320343559647,
+            "maximumProbeRiseMetres": 0.6922629331932058,
+            "blocked": null
+          },
+          {
+            "landmassId": 1,
+            "actualCoastAreaSquareMetres": 469734.1796875,
+            "walkableComponentCount": 182,
+            "largestWalkableComponentAreaSquareMetres": 300492,
+            "passed": true,
+            "high": {
+              "x": -129,
+              "z": 117,
+              "height": 86.46874788724459,
+              "index": 165555
+            },
+            "low": {
+              "x": -287,
+              "z": 109,
+              "height": 17.657475867638222,
+              "index": 163396,
+              "distance": 158.20240200452076
+            },
+            "riseMetres": 68.81127201960636,
+            "routeWaypoints": 108,
+            "physicalLengthMetres": 244.99494936611646,
+            "maximumProbeRiseMetres": 0.6997258112980802,
+            "blocked": null
+          }
+        ],
+        "expectedMeasuredLandmasses": 2,
+        "passed": true
+      },
+      "initial": {
+        "survival": {
+          "waterLiters": 24,
+          "waterConsumedLiters": 0,
+          "waterDeliveredLiters": 0,
+          "waterLostLiters": 0,
+          "fuelBurnedWood": 0,
+          "waterShortageSeconds": 0,
+          "coldExposurePersonSeconds": 0
+        },
+        "home": {
+          "x": -262,
+          "z": -152
+        },
+        "people": [
+          {
+            "id": 6243,
+            "x": -257,
+            "y": 4.303230087573711,
+            "z": -155
+          },
+          {
+            "id": 6244,
+            "x": -264.5,
+            "y": 4.044225869478337,
+            "z": -150.66987298107782
+          },
+          {
+            "id": 6245,
+            "x": -264.5,
+            "y": 4.162436773233875,
+            "z": -159.33012701892218
+          },
+          {
+            "id": 6246,
+            "x": -258,
+            "y": 4.304808976100042,
+            "z": -157
+          },
+          {
+            "id": 6247,
+            "x": -267,
+            "y": 4.0495237167064975,
+            "z": -156
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "6695f7cb2e945d5747e312fe49dc3b4c935973505415e029a11696f85f67d472"
+      },
+      "target": {
+        "x": -206,
+        "z": -128,
+        "height": 15.673393190824084,
+        "distance": 60.92618484691127,
+        "grade": 0.4268874124660903
+      },
+      "walkedMetres": 119.62294058048747,
+      "maximumStepRise": 0.44004164925645384,
+      "uplandArrival": {
+        "time": 12.399999999999988,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6243,
+          "hp": 48,
+          "x": -207.94368480663425,
+          "y": 14.793522296416906,
+          "z": -129,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 55.52046523896254,
+        "riseMetres": 10.490292208843195,
+        "known": true
+      },
+      "quarryId": 6354,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 24.799999999999944,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6243,
+          "hp": 48,
+          "x": -207.94368480663425,
+          "y": 14.793522296416906,
+          "z": -129,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6354,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 629,
+        "dug": 0,
+        "quality": 0.75
+      },
+      "loadedSave": {
+        "time": 25.39999999999994,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6243,
+          "hp": 48,
+          "x": -207.94368480663425,
+          "y": 14.793522296416906,
+          "z": -129,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.0 m into the seam",
+          "carry": 1,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6354,
+          "build": 1,
+          "excavation": {
+            "remaining": 628,
+            "dug": 1,
+            "quality": 0.75
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "23f346ca4da7e05ef29540a485f31cbb34b732b8f0c283ea57df57afca8e4df4"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 53.800000000000225,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6243,
+          "hp": 48,
+          "x": -258.60423794757634,
+          "y": 4.203561168175851,
+          "z": -150.60588113797343,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6354,
+          "build": 1,
+          "excavation": {
+            "remaining": 605,
+            "dug": 24,
+            "quality": 0.75
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "netStockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 55.80000000000025,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6243,
+          "hp": 48,
+          "x": -251.50302106987354,
+          "y": 4.326113476195411,
+          "z": -145.50302106987354,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6354,
+          "build": 1,
+          "excavation": {
+            "remaining": 605,
+            "dug": 24,
+            "quality": 0.75
+          }
+        },
+        "stone": 40,
+        "seamInitial": 629,
+        "seamRemaining": 605,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "actualCalamityStoneLost": 0,
+        "grossStoneDelivered": 24,
+        "carriedStone": 0
+      },
+      "finalSurvival": {
+        "waterLiters": 21.768000000000246,
+        "waterConsumedLiters": 2.2320000000000015,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "nativeRoutePassed": true,
+      "landmassSurveyLimit": "Flat ordinary components without a4m rise are reported, not rejected; independent full native qualification checks their usable physical area. This joined proof requires genuine founder upland ascent and paid home delivery."
+    }
+  ],
+  "completed": true,
+  "passing": 4
+}

@@ -1,0 +1,843 @@
+{
+  "sourceBaseline": "e5f5a8e",
+  "terrainSourceManifest": {
+    "base": "88367779c134b5db7ea3d8794547a938aab6b804",
+    "snapshot": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/terrain-v18-riparian-C4b-8836777",
+    "patchSha256": "65bcb428005299f60dafe962c72232cf6dfcbf0c47f78a601ca3630ea0c10a5f",
+    "files": [
+      {
+        "file": "src/game/worldgen.ts",
+        "sha256": "d18daaa84025741fd283f29954eb58e83236daa0916a379119b6a8733fbe6515"
+      },
+      {
+        "file": "src/game/coastalVariety.ts",
+        "sha256": "a526ba429396b37c3d8f1dde78c363ef06221419a5616f35780d6464498b081d"
+      },
+      {
+        "file": "src/game/distributedGeography.ts",
+        "sha256": "6561110c3f1b5c13c368677f9ef6b6fbd8923b1f002b4d2b79f129d6787ab6e8"
+      },
+      {
+        "file": "src/game/reliefProfiles.ts",
+        "sha256": "2ecb49728e3266a274f35694d327992df1e8c0093aea8b8df8dafb2238e253b3"
+      },
+      {
+        "file": "src/game/distributedRiparian.ts",
+        "sha256": "0165ecfba12e8e7808c2bdb134f28286e0282eda0f231b3262002dea12e976f0"
+      },
+      {
+        "file": "src/game/ecologicalProvinces.ts",
+        "sha256": "4ce2fc4f9e31f2234a05f3006f1c33aa0fadd336c51203c46bad625218c42840"
+      },
+      {
+        "file": "src/game/polylineQuery.ts",
+        "sha256": "dff42191a78108adbdc523d18a2ed69a40526fba0e2cb1c8e0d4844c5200a450"
+      }
+    ],
+    "scope": "Frozen C4b seven-source candidate for fresh5+20. Original quota override, protected cut-edge cap, failed legacy rollback, bounded within-world smooth outlets. No defaults/schema/index changes.",
+    "qualifiedEvidence": {
+      "exactQueryOracles": "3/3 PASS; /tmp/hearthwild-V18C4b-exact-query-tests.log",
+      "completeWorldOptimizationParity": "6/6 identical all fields and typed-array values; /tmp/hearthwild-V18C4b-exact-generation.json",
+      "twoNativeRiparianCounterexamples": "2/2 PASS; original attempt0; original8biome quotas; all2309/1588 centerline probes wet; strict whole-world reload; /tmp/hearthwild-V18C4b-riparian-tests.json",
+      "historicWorlds": "23/23 full-world fingerprints PASS, zero skips; /tmp/hearthwild-V18C4b-legacy23.log",
+      "actualPaidTrips": "4/4 original-founder trips, all four relief profiles;18logs paid,24finite stone delivered exactly once after carrying save/reload; /tmp/hearthwild-v18c4b-native-routes-qualified.json"
+    },
+    "limits": [
+      "Earlier paused full metadata equality assertion failed because legitimate initial influence/cosmetic metadata can reconcile while time is paused; corrected assertion verifies physical time/world/people/stores, not arbitrary metadata. No source change made to force pass.",
+      "Visible staircase riverbanks remain a separate V19 task; no claim these are smoothed by C4b distribution/repair.",
+      "No timing or FPS claim from interrupted deterministic generation control.",
+      "Independent current5+20 and root actual C4b desktop review remain pending. No gate credit/default promotion from this component package."
+    ]
+  },
+  "integration": {
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "typecheck": "pass",
+    "productionBuild": "pass"
+  },
+  "firstWinter": {
+    "v18FirstWinter": {
+      "survivalGate": true,
+      "needsGate": true,
+      "worldgenVersion": 18,
+      "worldOptions": {
+        "size": 1040,
+        "layout": "continents",
+        "openingSiteVersion": 2
+      },
+      "conflict": "default",
+      "waterActors": [],
+      "water": {
+        "waterLiters": 31.425199999997197,
+        "waterConsumedLiters": 160.57480000000595,
+        "waterDeliveredLiters": 168,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 25.08957000000078,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 2301.468333332952
+      },
+      "waterReserveSeconds": 245.5093749999781,
+      "maximumThirstSeconds": 0,
+      "maximumColdExposureSeconds": 209.04166666666802,
+      "completedShelters": 2,
+      "biomeRegions": [
+        {
+          "kind": "meadow",
+          "area": 175050.86537191176
+        },
+        {
+          "kind": "mixed-woodland",
+          "area": 81595.13806315234
+        },
+        {
+          "kind": "conifer-forest",
+          "area": 98457.18060509975
+        },
+        {
+          "kind": "alpine",
+          "area": 114318.93248777911
+        },
+        {
+          "kind": "wetland",
+          "area": 28436.83445633505
+        },
+        {
+          "kind": "dry-scrub",
+          "area": 118748.79112168054
+        },
+        {
+          "kind": "arid",
+          "area": 182052.89998678822
+        },
+        {
+          "kind": "warm-coast",
+          "area": 106173.70854802484
+        }
+      ],
+      "zeroFounderLoss": true,
+      "livingAdults": 16,
+      "foodReserveSeconds": 651.6401380652068,
+      "societyAlive": true,
+      "seed": 42,
+      "defended": true,
+      "incidents": [],
+      "seconds": 1800.1499999999664,
+      "initialFood": 120,
+      "food": 378.3916634411145,
+      "foodEmptySeconds": 0,
+      "estimatedFoodDelivered": 1391.6683147455853,
+      "estimatedFoodConsumed": 754.1100749913862,
+      "estimatedFoodSpoiled": 283.136989100847,
+      "estimatedOtherFoodOutflow": 96.0295872122186,
+      "originalResidents": 5,
+      "originalSurvivors": 5,
+      "ended": null,
+      "simulationErrors": [],
+      "saveRoundtrip": true,
+      "actions": [
+        {
+          "at": 0,
+          "type": "setAutoWork",
+          "enabled": true,
+          "reason": "Explicit player choice to delegate ordinary work"
+        },
+        {
+          "at": 0,
+          "type": "townhall",
+          "accepted": true,
+          "x": -372,
+          "z": -338
+        },
+        {
+          "at": 63.25,
+          "type": "warehouse",
+          "accepted": true,
+          "x": -390,
+          "z": -332
+        },
+        {
+          "at": 300,
+          "type": "workshop",
+          "accepted": true,
+          "x": -378,
+          "z": -320
+        },
+        {
+          "at": 300,
+          "type": "callToArms",
+          "armed": 2
+        },
+        {
+          "at": 310.5,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 340.5,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 387.5,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 417.5,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 455.25,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 485.25,
+          "type": "craft:spear",
+          "accepted": true
+        },
+        {
+          "at": 600.25,
+          "type": "hut",
+          "accepted": true,
+          "x": -390,
+          "z": -338
+        },
+        {
+          "at": 818.25,
+          "type": "answerEncounter",
+          "reaction": "greet",
+          "team": 2
+        }
+      ],
+      "snapshots": [
+        {
+          "seconds": 0,
+          "season": "Spring",
+          "food": 120,
+          "reserveSeconds": 666,
+          "wood": 58,
+          "population": 5,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 5
+          },
+          "reasons": [
+            {
+              "id": 5339,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5340,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5341,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5342,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5343,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "waterActors": [],
+          "water": 23.99,
+          "waterReserveSeconds": 599.75,
+          "waterDelivered": 0,
+          "fuelBurned": 0,
+          "waterWarnings": [],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 450,
+          "season": "Summer",
+          "food": 566,
+          "reserveSeconds": 2404,
+          "wood": 93,
+          "population": 8,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 3,
+            "hold": 2,
+            "idle": 3
+          },
+          "reasons": [
+            {
+              "id": 5339,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 12,
+              "hp": 48
+            },
+            {
+              "id": 5340,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 11,
+              "hp": 48
+            },
+            {
+              "id": 5341,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 15,
+              "hp": 48
+            },
+            {
+              "id": 5342,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5343,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5476,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5480,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5485,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "waterActors": [],
+          "water": 27.609999999998674,
+          "waterReserveSeconds": 431.40624999997925,
+          "waterDelivered": 24,
+          "fuelBurned": 0,
+          "waterWarnings": [],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 900,
+          "season": "Autumn",
+          "food": 562,
+          "reserveSeconds": 1287,
+          "wood": 46,
+          "population": 13,
+          "originalSurvivors": 5,
+          "orders": {
+            "return": 4,
+            "gather": 4,
+            "hold": 2,
+            "move": 1,
+            "idle": 2
+          },
+          "reasons": [
+            {
+              "id": 5339,
+              "order": "return",
+              "reason": "Working: food",
+              "carry": 2.5708067948089335,
+              "hp": 48
+            },
+            {
+              "id": 5340,
+              "order": "return",
+              "reason": "Working: food",
+              "carry": 0.5574928584367016,
+              "hp": 48
+            },
+            {
+              "id": 5341,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5342,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5343,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5352,
+              "order": "move",
+              "reason": "Sheltering inside from the storm",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 5476,
+              "order": "return",
+              "reason": "Working: food",
+              "carry": 0.3820391322095457,
+              "hp": 48
+            },
+            {
+              "id": 5480,
+              "order": "return",
+              "reason": "Working: food",
+              "carry": 0.5652650914052912,
+              "hp": 48
+            },
+            {
+              "id": 5485,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5489,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 37,
+              "hp": 48
+            },
+            {
+              "id": 5494,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5500,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5510,
+              "order": "idle",
+              "reason": "Growing up \u2014 supported by the village",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "waterActors": [],
+          "water": 38.40199999999803,
+          "waterReserveSeconds": 369.24999999998107,
+          "waterDelivered": 72,
+          "fuelBurned": 0,
+          "waterWarnings": [],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 1350,
+          "season": "Winter",
+          "food": 579,
+          "reserveSeconds": 1136,
+          "wood": 48,
+          "population": 14,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 10,
+            "return": 2,
+            "hold": 2
+          },
+          "reasons": [
+            {
+              "id": 5339,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 18,
+              "hp": 48
+            },
+            {
+              "id": 5340,
+              "order": "return",
+              "reason": "Delivering carried supplies",
+              "carry": 22,
+              "hp": 48
+            },
+            {
+              "id": 5341,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 9,
+              "hp": 48
+            },
+            {
+              "id": 5342,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5343,
+              "order": "hold",
+              "reason": "Armed civilian \u2014 ready to defend or raid",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5352,
+              "order": "gather",
+              "reason": "Working: food",
+              "carry": 22,
+              "hp": 48
+            },
+            {
+              "id": 5476,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 14,
+              "hp": 48
+            },
+            {
+              "id": 5480,
+              "order": "gather",
+              "reason": "Butchering deer \u00b7 12 meat remains",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5485,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 5,
+              "hp": 48
+            },
+            {
+              "id": 5486,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 8,
+              "hp": 48
+            },
+            {
+              "id": 5489,
+              "order": "gather",
+              "reason": "Butchering deer \u00b7 12 meat remains",
+              "carry": 12,
+              "hp": 48
+            },
+            {
+              "id": 5494,
+              "order": "gather",
+              "carry": 27,
+              "hp": 48
+            },
+            {
+              "id": 5500,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 9,
+              "hp": 48
+            },
+            {
+              "id": 5510,
+              "order": "return",
+              "reason": "Working: food",
+              "carry": 23.063034817871557,
+              "hp": 48
+            }
+          ],
+          "waterActors": [],
+          "water": 37.98519999999593,
+          "waterReserveSeconds": 339.1535714285351,
+          "waterDelivered": 120,
+          "fuelBurned": 4.629570000000005,
+          "waterWarnings": [],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        },
+        {
+          "seconds": 1800,
+          "season": "Spring",
+          "food": 378,
+          "reserveSeconds": 652,
+          "wood": 1126,
+          "population": 16,
+          "originalSurvivors": 5,
+          "orders": {
+            "gather": 16
+          },
+          "reasons": [
+            {
+              "id": 5339,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 21,
+              "hp": 48
+            },
+            {
+              "id": 5340,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 4,
+              "hp": 48
+            },
+            {
+              "id": 5341,
+              "order": "gather",
+              "reason": "Night camp \u2014 resting by the gathering grounds",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5342,
+              "order": "gather",
+              "reason": "Night camp \u2014 resting by the gathering grounds",
+              "carry": 14,
+              "hp": 48
+            },
+            {
+              "id": 5343,
+              "order": "gather",
+              "reason": "Night camp \u2014 resting by the gathering grounds",
+              "carry": 23,
+              "hp": 48
+            },
+            {
+              "id": 5352,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 7,
+              "hp": 48
+            },
+            {
+              "id": 5476,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5480,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 6,
+              "hp": 48
+            },
+            {
+              "id": 5485,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 15,
+              "hp": 48
+            },
+            {
+              "id": 5486,
+              "order": "gather",
+              "reason": "Night camp \u2014 resting by the gathering grounds",
+              "carry": 26,
+              "hp": 47
+            },
+            {
+              "id": 5489,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 6,
+              "hp": 48
+            },
+            {
+              "id": 5494,
+              "order": "gather",
+              "carry": 10,
+              "hp": 48
+            },
+            {
+              "id": 5500,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 3,
+              "hp": 48
+            },
+            {
+              "id": 5510,
+              "order": "gather",
+              "carry": 20,
+              "hp": 48
+            },
+            {
+              "id": 5536,
+              "order": "gather",
+              "reason": "Working: wood",
+              "carry": 0,
+              "hp": 48
+            },
+            {
+              "id": 5562,
+              "order": "gather",
+              "reason": "Drying and smoking stored food \u00b7 uses timber",
+              "carry": 0,
+              "hp": 48
+            }
+          ],
+          "waterActors": [],
+          "water": 31.425199999997197,
+          "waterReserveSeconds": 245.5093749999781,
+          "waterDelivered": 168,
+          "fuelBurned": 25.08957000000078,
+          "waterWarnings": [],
+          "buildings": [
+            {
+              "type": "townhall",
+              "build": 1
+            },
+            {
+              "type": "warehouse",
+              "build": 1
+            },
+            {
+              "type": "workshop",
+              "build": 1
+            },
+            {
+              "type": "hut",
+              "build": 1
+            }
+          ]
+        }
+      ],
+      "jobs": {
+        "domain": "shared migrated work",
+        "activeTreeJobs": 15,
+        "activeJobs": 15,
+        "proposed": 290,
+        "accepted": 290,
+        "ownershipConflicts": 0,
+        "suspended": 0,
+        "resumed": 0,
+        "completed": 102,
+        "canceled": 172,
+        "reservations": {
+          "attempts": 345,
+          "failures": 0,
+          "released": 274,
+          "committed": 0
+        }
+      }
+    }
+  },
+  "actualDesktop": {
+    "newDefaultExport": {
+      "seed": 1955915064,
+      "worldgenVersion": 18,
+      "size": 1560,
+      "layout": "archipelago",
+      "time": 0,
+      "founders": 5,
+      "playerBuildings": 0,
+      "sha256": "2da5754d4939decf916856f766b0229e2f777919b4703df750e3a17d391ad53d"
+    },
+    "strictImports": [
+      20261103,
+      -721349,
+      6
+    ],
+    "autoWork": "enabled and actual resumed work followed by save/reload retained On",
+    "saveReload": {
+      "food": 215,
+      "wood": 58,
+      "stone": 16,
+      "seeds": 51,
+      "waterLiters": 22,
+      "livingPeople": 5,
+      "clock": "06:51"
+    },
+    "warningsAndErrors": []
+  },
+  "limitations": [
+    "Original twenty-map relative-acreage screen remains19/20; separate fresh flatter-world geometry/route review passed.",
+    "Sawtooth banks and rectilinear repaired sidechannels are pendingV19.",
+    "No sustained FPS or all-seed guarantee.",
+    "Old saved worlds retain original version and terrain."
+  ]
+}

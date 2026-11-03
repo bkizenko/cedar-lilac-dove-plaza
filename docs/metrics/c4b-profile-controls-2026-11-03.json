@@ -1,0 +1,661 @@
+{
+  "scope": "Paired exported-terrain-function controls, identical coastline/district/water geometry; not an extra native Game acceptance case",
+  "rows": [
+    {
+      "requestedReliefSeed": 1,
+      "character": "flatter",
+      "physical": {
+        "scope": "Actual dry48m-neighborhood relief and4m grade, no universal fraction target",
+        "sampleCount": 7116,
+        "lowReliefFraction": 0.6405283867341203,
+        "hillyFraction": 0.19716132658797078,
+        "ruggedFraction": 0.16231028667790895,
+        "medianRelief48m": 3.034182981467832,
+        "p90Relief48m": 23.917378269100723,
+        "medianGrade": 0.029965499628403343,
+        "p90Grade": 0.39666614247173226,
+        "sectors": [
+          {
+            "x": 0,
+            "z": 0,
+            "samples": 567,
+            "lowReliefFraction": 0.2222222222222222,
+            "hillyFraction": 0.20282186948853614,
+            "ruggedFraction": 0.5749559082892416,
+            "medianRelief48m": 35.02293935027813
+          },
+          {
+            "x": 1,
+            "z": 0,
+            "samples": 566,
+            "lowReliefFraction": 0.7544169611307421,
+            "hillyFraction": 0.2049469964664311,
+            "ruggedFraction": 0.04063604240282685,
+            "medianRelief48m": 3.973200863230879
+          },
+          {
+            "x": 2,
+            "z": 0,
+            "samples": 300,
+            "lowReliefFraction": 0.6933333333333334,
+            "hillyFraction": 0.30333333333333334,
+            "ruggedFraction": 0.0033333333333333335,
+            "medianRelief48m": 2.8780856169187103
+          },
+          {
+            "x": 3,
+            "z": 0,
+            "samples": 440,
+            "lowReliefFraction": 0.8295454545454546,
+            "hillyFraction": 0.17045454545454544,
+            "ruggedFraction": 0,
+            "medianRelief48m": 1.8501318494532306
+          },
+          {
+            "x": 0,
+            "z": 1,
+            "samples": 576,
+            "lowReliefFraction": 0.8368055555555556,
+            "hillyFraction": 0.027777777777777776,
+            "ruggedFraction": 0.13541666666666666,
+            "medianRelief48m": 1.1251473231193345
+          },
+          {
+            "x": 1,
+            "z": 1,
+            "samples": 512,
+            "lowReliefFraction": 0.875,
+            "hillyFraction": 0.0625,
+            "ruggedFraction": 0.0625,
+            "medianRelief48m": 1.0296793228540673
+          },
+          {
+            "x": 2,
+            "z": 1,
+            "samples": 184,
+            "lowReliefFraction": 0.7391304347826086,
+            "hillyFraction": 0.2608695652173913,
+            "ruggedFraction": 0,
+            "medianRelief48m": 2.203502313295129
+          },
+          {
+            "x": 3,
+            "z": 1,
+            "samples": 476,
+            "lowReliefFraction": 0.34663865546218486,
+            "hillyFraction": 0.5819327731092437,
+            "ruggedFraction": 0.07142857142857142,
+            "medianRelief48m": 7.97626742420034
+          },
+          {
+            "x": 0,
+            "z": 2,
+            "samples": 576,
+            "lowReliefFraction": 0.9461805555555556,
+            "hillyFraction": 0.046875,
+            "ruggedFraction": 0.006944444444444444,
+            "medianRelief48m": 1.7878837698635577
+          },
+          {
+            "x": 1,
+            "z": 2,
+            "samples": 153,
+            "lowReliefFraction": 0.7058823529411765,
+            "hillyFraction": 0.29411764705882354,
+            "ruggedFraction": 0,
+            "medianRelief48m": 2.5470252513885505
+          },
+          {
+            "x": 2,
+            "z": 2,
+            "samples": 494,
+            "lowReliefFraction": 0.22267206477732793,
+            "hillyFraction": 0.3340080971659919,
+            "ruggedFraction": 0.4433198380566802,
+            "medianRelief48m": 18.378334334018188
+          },
+          {
+            "x": 3,
+            "z": 2,
+            "samples": 542,
+            "lowReliefFraction": 0.30996309963099633,
+            "hillyFraction": 0.25092250922509224,
+            "ruggedFraction": 0.43911439114391143,
+            "medianRelief48m": 18.1993290112715
+          },
+          {
+            "x": 0,
+            "z": 3,
+            "samples": 467,
+            "lowReliefFraction": 0.5738758029978587,
+            "hillyFraction": 0.3083511777301927,
+            "ruggedFraction": 0.11777301927194861,
+            "medianRelief48m": 3.9095075002641857
+          },
+          {
+            "x": 1,
+            "z": 3,
+            "samples": 220,
+            "lowReliefFraction": 0.7681818181818182,
+            "hillyFraction": 0.21818181818181817,
+            "ruggedFraction": 0.013636363636363636,
+            "medianRelief48m": 2.73967556540381
+          },
+          {
+            "x": 2,
+            "z": 3,
+            "samples": 504,
+            "lowReliefFraction": 0.7698412698412699,
+            "hillyFraction": 0.06944444444444445,
+            "ruggedFraction": 0.16071428571428573,
+            "medianRelief48m": 1.0706019646082074
+          },
+          {
+            "x": 3,
+            "z": 3,
+            "samples": 539,
+            "lowReliefFraction": 0.8256029684601113,
+            "hillyFraction": 0.061224489795918366,
+            "ruggedFraction": 0.11317254174397032,
+            "medianRelief48m": 2.6460315216894346
+          }
+        ]
+      },
+      "terrainSha256": "4eaf10dbd4292c0557e1f7833481ddd25b82d313e1e1efa9f5569aa3fcd5422f",
+      "waterHash": "838379da4e771ab564c48539745fbd516e1059b90e5347a85462c9fffe0f5ecf",
+      "districtHash": "59f7729bde123b4a81884c84ed4280ad8781d9b55c6b21419867b6e91e5f927b"
+    },
+    {
+      "requestedReliefSeed": 8,
+      "character": "rolling",
+      "physical": {
+        "scope": "Actual dry48m-neighborhood relief and4m grade, no universal fraction target",
+        "sampleCount": 7204,
+        "lowReliefFraction": 0.1951693503609106,
+        "hillyFraction": 0.5985563575791227,
+        "ruggedFraction": 0.2062742920599667,
+        "medianRelief48m": 11.029718672972425,
+        "p90Relief48m": 23.70461418168344,
+        "medianGrade": 0.13100859270688017,
+        "p90Grade": 0.6713019090785297,
+        "sectors": [
+          {
+            "x": 0,
+            "z": 0,
+            "samples": 567,
+            "lowReliefFraction": 0.06878306878306878,
+            "hillyFraction": 0.3932980599647266,
+            "ruggedFraction": 0.5379188712522046,
+            "medianRelief48m": 27.16434615697618
+          },
+          {
+            "x": 1,
+            "z": 0,
+            "samples": 566,
+            "lowReliefFraction": 0.061837455830388695,
+            "hillyFraction": 0.7879858657243817,
+            "ruggedFraction": 0.1501766784452297,
+            "medianRelief48m": 13.781179089664214
+          },
+          {
+            "x": 2,
+            "z": 0,
+            "samples": 312,
+            "lowReliefFraction": 0.02564102564102564,
+            "hillyFraction": 0.8012820512820513,
+            "ruggedFraction": 0.17307692307692307,
+            "medianRelief48m": 14.753190430063267
+          },
+          {
+            "x": 3,
+            "z": 0,
+            "samples": 448,
+            "lowReliefFraction": 0.5379464285714286,
+            "hillyFraction": 0.42410714285714285,
+            "ruggedFraction": 0.03794642857142857,
+            "medianRelief48m": 5.036365998096958
+          },
+          {
+            "x": 0,
+            "z": 1,
+            "samples": 576,
+            "lowReliefFraction": 0.22395833333333334,
+            "hillyFraction": 0.6579861111111112,
+            "ruggedFraction": 0.11805555555555555,
+            "medianRelief48m": 8.870752173084467
+          },
+          {
+            "x": 1,
+            "z": 1,
+            "samples": 518,
+            "lowReliefFraction": 0.03088803088803089,
+            "hillyFraction": 0.803088803088803,
+            "ruggedFraction": 0.16602316602316602,
+            "medianRelief48m": 12.176212847005068
+          },
+          {
+            "x": 2,
+            "z": 1,
+            "samples": 194,
+            "lowReliefFraction": 0.1134020618556701,
+            "hillyFraction": 0.5463917525773195,
+            "ruggedFraction": 0.3402061855670103,
+            "medianRelief48m": 12.058370480392977
+          },
+          {
+            "x": 3,
+            "z": 1,
+            "samples": 488,
+            "lowReliefFraction": 0.020491803278688523,
+            "hillyFraction": 0.7049180327868853,
+            "ruggedFraction": 0.27459016393442626,
+            "medianRelief48m": 14.296969790014403
+          },
+          {
+            "x": 0,
+            "z": 2,
+            "samples": 576,
+            "lowReliefFraction": 0.390625,
+            "hillyFraction": 0.5972222222222222,
+            "ruggedFraction": 0.012152777777777778,
+            "medianRelief48m": 6.5407392637539425
+          },
+          {
+            "x": 1,
+            "z": 2,
+            "samples": 166,
+            "lowReliefFraction": 0.12650602409638553,
+            "hillyFraction": 0.6927710843373494,
+            "ruggedFraction": 0.18072289156626506,
+            "medianRelief48m": 8.592020525484823
+          },
+          {
+            "x": 2,
+            "z": 2,
+            "samples": 503,
+            "lowReliefFraction": 0.011928429423459244,
+            "hillyFraction": 0.6401590457256461,
+            "ruggedFraction": 0.34791252485089463,
+            "medianRelief48m": 15.80734024536916
+          },
+          {
+            "x": 3,
+            "z": 2,
+            "samples": 544,
+            "lowReliefFraction": 0.01838235294117647,
+            "hillyFraction": 0.6544117647058824,
+            "ruggedFraction": 0.3272058823529412,
+            "medianRelief48m": 16.86679209497937
+          },
+          {
+            "x": 0,
+            "z": 3,
+            "samples": 467,
+            "lowReliefFraction": 0.0728051391862955,
+            "hillyFraction": 0.6338329764453962,
+            "ruggedFraction": 0.29336188436830835,
+            "medianRelief48m": 13.125135369477398
+          },
+          {
+            "x": 1,
+            "z": 3,
+            "samples": 224,
+            "lowReliefFraction": 0.5133928571428571,
+            "hillyFraction": 0.42410714285714285,
+            "ruggedFraction": 0.0625,
+            "medianRelief48m": 4.677775444128571
+          },
+          {
+            "x": 2,
+            "z": 3,
+            "samples": 512,
+            "lowReliefFraction": 0.361328125,
+            "hillyFraction": 0.484375,
+            "ruggedFraction": 0.154296875,
+            "medianRelief48m": 5.370388909996704
+          },
+          {
+            "x": 3,
+            "z": 3,
+            "samples": 543,
+            "lowReliefFraction": 0.570902394106814,
+            "hillyFraction": 0.3351749539594843,
+            "ruggedFraction": 0.09392265193370165,
+            "medianRelief48m": 4.785349278445469
+          }
+        ]
+      },
+      "terrainSha256": "185cf555896cefd28db7f8cb049389d76ccf4fdaa3c766e594810d93c2e41aec",
+      "waterHash": "838379da4e771ab564c48539745fbd516e1059b90e5347a85462c9fffe0f5ecf",
+      "districtHash": "59f7729bde123b4a81884c84ed4280ad8781d9b55c6b21419867b6e91e5f927b"
+    },
+    {
+      "requestedReliefSeed": 0,
+      "character": "hilly",
+      "physical": {
+        "scope": "Actual dry48m-neighborhood relief and4m grade, no universal fraction target",
+        "sampleCount": 7246,
+        "lowReliefFraction": 0.01462876069555617,
+        "hillyFraction": 0.43941484957217775,
+        "ruggedFraction": 0.5459563897322661,
+        "medianRelief48m": 19.365993131167308,
+        "p90Relief48m": 32.64609518784741,
+        "medianGrade": 0.2937988172422134,
+        "p90Grade": 1.1768709933490933,
+        "sectors": [
+          {
+            "x": 0,
+            "z": 0,
+            "samples": 567,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.23809523809523808,
+            "ruggedFraction": 0.7619047619047619,
+            "medianRelief48m": 24.310430490876026
+          },
+          {
+            "x": 1,
+            "z": 0,
+            "samples": 566,
+            "lowReliefFraction": 0.015901060070671377,
+            "hillyFraction": 0.46996466431095407,
+            "ruggedFraction": 0.5141342756183745,
+            "medianRelief48m": 21.110799757802525
+          },
+          {
+            "x": 2,
+            "z": 0,
+            "samples": 315,
+            "lowReliefFraction": 0.012698412698412698,
+            "hillyFraction": 0.19365079365079366,
+            "ruggedFraction": 0.7936507936507936,
+            "medianRelief48m": 34.13327866578716
+          },
+          {
+            "x": 3,
+            "z": 0,
+            "samples": 451,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.18403547671840353,
+            "ruggedFraction": 0.8159645232815964,
+            "medianRelief48m": 25.446927217877064
+          },
+          {
+            "x": 0,
+            "z": 1,
+            "samples": 576,
+            "lowReliefFraction": 0.022569444444444444,
+            "hillyFraction": 0.71875,
+            "ruggedFraction": 0.2586805555555556,
+            "medianRelief48m": 14.887328671186413
+          },
+          {
+            "x": 1,
+            "z": 1,
+            "samples": 520,
+            "lowReliefFraction": 0.0057692307692307696,
+            "hillyFraction": 0.5326923076923077,
+            "ruggedFraction": 0.46153846153846156,
+            "medianRelief48m": 16.747761344909733
+          },
+          {
+            "x": 2,
+            "z": 1,
+            "samples": 195,
+            "lowReliefFraction": 0.02564102564102564,
+            "hillyFraction": 0.5333333333333333,
+            "ruggedFraction": 0.441025641025641,
+            "medianRelief48m": 17.425075103845693
+          },
+          {
+            "x": 3,
+            "z": 1,
+            "samples": 489,
+            "lowReliefFraction": 0.006134969325153374,
+            "hillyFraction": 0.38650306748466257,
+            "ruggedFraction": 0.6073619631901841,
+            "medianRelief48m": 20.409320561425368
+          },
+          {
+            "x": 0,
+            "z": 2,
+            "samples": 576,
+            "lowReliefFraction": 0.008680555555555556,
+            "hillyFraction": 0.7430555555555556,
+            "ruggedFraction": 0.2482638888888889,
+            "medianRelief48m": 14.110384623209665
+          },
+          {
+            "x": 1,
+            "z": 2,
+            "samples": 173,
+            "lowReliefFraction": 0.005780346820809248,
+            "hillyFraction": 0.23121387283236994,
+            "ruggedFraction": 0.7630057803468208,
+            "medianRelief48m": 25.27503220290869
+          },
+          {
+            "x": 2,
+            "z": 2,
+            "samples": 503,
+            "lowReliefFraction": 0.0775347912524851,
+            "hillyFraction": 0.5984095427435387,
+            "ruggedFraction": 0.3240556660039761,
+            "medianRelief48m": 14.554607489088326
+          },
+          {
+            "x": 3,
+            "z": 2,
+            "samples": 543,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.3406998158379374,
+            "ruggedFraction": 0.6593001841620626,
+            "medianRelief48m": 23.2790115757963
+          },
+          {
+            "x": 0,
+            "z": 3,
+            "samples": 474,
+            "lowReliefFraction": 0.006329113924050633,
+            "hillyFraction": 0.2911392405063291,
+            "ruggedFraction": 0.7025316455696202,
+            "medianRelief48m": 22.92450589930735
+          },
+          {
+            "x": 1,
+            "z": 3,
+            "samples": 233,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.41201716738197425,
+            "ruggedFraction": 0.5879828326180258,
+            "medianRelief48m": 18.026797135581216
+          },
+          {
+            "x": 2,
+            "z": 3,
+            "samples": 517,
+            "lowReliefFraction": 0.04061895551257253,
+            "hillyFraction": 0.5125725338491296,
+            "ruggedFraction": 0.44680851063829785,
+            "medianRelief48m": 14.039299529638107
+          },
+          {
+            "x": 3,
+            "z": 3,
+            "samples": 548,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.3686131386861314,
+            "ruggedFraction": 0.6313868613138686,
+            "medianRelief48m": 21.23009472382381
+          }
+        ]
+      },
+      "terrainSha256": "9b7e136c18c4491dab3f0ae54deeff0e24948f072ed080cd6baed5cb8f5be6a7",
+      "waterHash": "838379da4e771ab564c48539745fbd516e1059b90e5347a85462c9fffe0f5ecf",
+      "districtHash": "59f7729bde123b4a81884c84ed4280ad8781d9b55c6b21419867b6e91e5f927b"
+    },
+    {
+      "requestedReliefSeed": 6,
+      "character": "mountainous",
+      "physical": {
+        "scope": "Actual dry48m-neighborhood relief and4m grade, no universal fraction target",
+        "sampleCount": 7277,
+        "lowReliefFraction": 0.0026109660574412533,
+        "hillyFraction": 0.11392057166414732,
+        "ruggedFraction": 0.8834684622784115,
+        "medianRelief48m": 37.29386935111809,
+        "p90Relief48m": 56.1818637855538,
+        "medianGrade": 0.4499801861516097,
+        "p90Grade": 2.2921668820103815,
+        "sectors": [
+          {
+            "x": 0,
+            "z": 0,
+            "samples": 567,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.005291005291005291,
+            "ruggedFraction": 0.9947089947089947,
+            "medianRelief48m": 43.41401445711743
+          },
+          {
+            "x": 1,
+            "z": 0,
+            "samples": 566,
+            "lowReliefFraction": 0.0088339222614841,
+            "hillyFraction": 0.1978798586572438,
+            "ruggedFraction": 0.7932862190812721,
+            "medianRelief48m": 33.25869526855941
+          },
+          {
+            "x": 2,
+            "z": 0,
+            "samples": 316,
+            "lowReliefFraction": 0.012658227848101266,
+            "hillyFraction": 0.18037974683544303,
+            "ruggedFraction": 0.8069620253164557,
+            "medianRelief48m": 36.329702486865315
+          },
+          {
+            "x": 3,
+            "z": 0,
+            "samples": 452,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.035398230088495575,
+            "ruggedFraction": 0.9646017699115044,
+            "medianRelief48m": 40.85557702494988
+          },
+          {
+            "x": 0,
+            "z": 1,
+            "samples": 576,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.14583333333333334,
+            "ruggedFraction": 0.8541666666666666,
+            "medianRelief48m": 35.20534943438722
+          },
+          {
+            "x": 1,
+            "z": 1,
+            "samples": 524,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.03244274809160305,
+            "ruggedFraction": 0.9675572519083969,
+            "medianRelief48m": 37.124210044665205
+          },
+          {
+            "x": 2,
+            "z": 1,
+            "samples": 200,
+            "lowReliefFraction": 0.025,
+            "hillyFraction": 0.205,
+            "ruggedFraction": 0.77,
+            "medianRelief48m": 33.727987846961604
+          },
+          {
+            "x": 3,
+            "z": 1,
+            "samples": 493,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.018255578093306288,
+            "ruggedFraction": 0.9817444219066938,
+            "medianRelief48m": 43.96448850387186
+          },
+          {
+            "x": 0,
+            "z": 2,
+            "samples": 576,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.07465277777777778,
+            "ruggedFraction": 0.9253472222222222,
+            "medianRelief48m": 35.17041777586343
+          },
+          {
+            "x": 1,
+            "z": 2,
+            "samples": 177,
+            "lowReliefFraction": 0.005649717514124294,
+            "hillyFraction": 0.02824858757062147,
+            "ruggedFraction": 0.9661016949152542,
+            "medianRelief48m": 53.272466815897744
+          },
+          {
+            "x": 2,
+            "z": 2,
+            "samples": 504,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.15079365079365079,
+            "ruggedFraction": 0.8492063492063492,
+            "medianRelief48m": 38.72278986742451
+          },
+          {
+            "x": 3,
+            "z": 2,
+            "samples": 544,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.20404411764705882,
+            "ruggedFraction": 0.7959558823529411,
+            "medianRelief48m": 27.567449481670707
+          },
+          {
+            "x": 0,
+            "z": 3,
+            "samples": 478,
+            "lowReliefFraction": 0.0041841004184100415,
+            "hillyFraction": 0.008368200836820083,
+            "ruggedFraction": 0.9874476987447699,
+            "medianRelief48m": 52.89195219823884
+          },
+          {
+            "x": 1,
+            "z": 3,
+            "samples": 239,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.008368200836820083,
+            "ruggedFraction": 0.9916317991631799,
+            "medianRelief48m": 43.094191556099126
+          },
+          {
+            "x": 2,
+            "z": 3,
+            "samples": 517,
+            "lowReliefFraction": 0.0038684719535783366,
+            "hillyFraction": 0.19342359767891681,
+            "ruggedFraction": 0.8027079303675049,
+            "medianRelief48m": 32.83361852070727
+          },
+          {
+            "x": 3,
+            "z": 3,
+            "samples": 548,
+            "lowReliefFraction": 0,
+            "hillyFraction": 0.2718978102189781,
+            "ruggedFraction": 0.7281021897810219,
+            "medianRelief48m": 24.77376426550051
+          }
+        ]
+      },
+      "terrainSha256": "437c8e7646e9ad50434e85f238aeba991d495758d1334b944a9bdd29ea78a470",
+      "waterHash": "838379da4e771ab564c48539745fbd516e1059b90e5347a85462c9fffe0f5ecf",
+      "districtHash": "59f7729bde123b4a81884c84ed4280ad8781d9b55c6b21419867b6e91e5f927b"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "sourceBase": "09d4146",
+  "diagnosticRuntimePatch": "autosave-fallback-reasons-runtime.patch",
+  "scope": "Observed existing Performance UI in owned native Chrome8137 production preview; no hidden state injection or user save. Numeric game panel only, private browser chrome excluded.",
+  "fixture": {
+    "kind": "authored80",
+    "seed": 0,
+    "version": 17,
+    "size": 1040,
+    "layout": "continents",
+    "sha256": "c6f52fdcdbecddd04994590bd2e156a74b82b078278563f5c01a2e55ecd1988a",
+    "playerBodies": 80,
+    "initialFood": 10000,
+    "nativeTerrainUnchanged": true,
+    "declaration": "Authored crowd stress, not campaign balance/qualification. Paused public import, actual80/5HUD and10000food verified, then normal1x controls."
+  },
+  "actualProfile": {
+    "secondsSinceResetDisplayed": 146,
+    "recentFrameIntervals": 600,
+    "qualityObserved": "Low",
+    "shadowsObserved": false,
+    "selectedCirclesObserved": true,
+    "fps": 32.1,
+    "frameMeanMs": 31.1,
+    "frameP95Ms": 50.7,
+    "frameMaxMs": 117,
+    "recentPausesAbove100ms": 1,
+    "peopleWorld": {
+      "meanMs": 26.7,
+      "p95Ms": 42.3,
+      "peakMs": 104.6
+    },
+    "scene": {
+      "meanMs": 2.4,
+      "p95Ms": 3.3,
+      "peakMs": 30.8
+    },
+    "drawSubmission": {
+      "meanMs": 4.9,
+      "p95Ms": 6.8,
+      "peakMs": 9.1
+    },
+    "interface": {
+      "meanMs": 1,
+      "p95Ms": 1.3,
+      "peakMs": 3.2
+    },
+    "map": {
+      "meanMs": 4.6,
+      "p95Ms": 9.1,
+      "peakMs": 27.1
+    },
+    "autosave": {
+      "mode": "worker confirmed",
+      "saved": 8,
+      "superseded": 0,
+      "failed": 0,
+      "synchronousFallbacks": 0,
+      "mainThreadMeanMs": 16.9,
+      "mainThreadPeakMs": 20.8,
+      "backgroundMeanMs": 1163.1,
+      "backgroundPeakMs": 1757.3,
+      "wallMeanMs": 1240.3,
+      "wallPeakMs": 1819.9
+    },
+    "renderer": {
+      "calls": 36,
+      "triangles": 340857,
+      "geometries": 184,
+      "textures": 22,
+      "programs": 42
+    },
+    "catchupLimitedFrames": 985,
+    "drawingFramesSinceReset": 4881,
+    "discardedBacklogSeconds": 14.9
+  },
+  "limits": [
+    "Planned20second window ran longer through slow native controls; record explicitly146s as displayed, not20.",
+    "Frame statistics are rolling600 intervals and stages rolling240 samples, not full146s averages.",
+    "Medium had been selected during setup but reverted under automatic quality reduction; clean report explicitlyLow, no controlledMedium comparison.",
+    "Node sibling process tests and owned other game views were held for the requested window; broader machine/browser background processes not controlled.",
+    "Drawing timing measures CPU submission, not GPU time; no GPU bottleneck claim.",
+    "No universalFPS or performance improvement claim; People/world stage dominates observed normal-speed stress."
+  ],
+  "historicalOldSource8136": {
+    "source": "60dfba2",
+    "setupNotQuiet": true,
+    "observedPausedFallbacks": 35,
+    "mainThreadMeanMs": 417.3,
+    "mainThreadPeakMs": 994.6,
+    "reason": "Unknown; oldcontroller did not retain cause.",
+    "workerAssetHttp": {
+      "status": 200,
+      "mime": "text/javascript",
+      "bytes": 886396
+    },
+    "builtWorkerNodeShimPreflight": "PASS; not equivalent to browser startup security environment."
+  },
+  "diagnosticActualOutcome": {
+    "freshWorldWorkerConfirmed": true,
+    "authored80WorkerConfirmed": true,
+    "failureReasonOccurred": false,
+    "causeConclusion": "Universal worker packaging and authored80 snapshot-clone failure were not reproduced. Old startup-timeout hypothesis remains unproven. No fallback/save-guard change authorized by these observations."
+  }
+}

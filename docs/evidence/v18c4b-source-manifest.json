@@ -1,0 +1,49 @@
+{
+  "base": "88367779c134b5db7ea3d8794547a938aab6b804",
+  "snapshot": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/terrain-v18-riparian-C4b-8836777",
+  "patchSha256": "65bcb428005299f60dafe962c72232cf6dfcbf0c47f78a601ca3630ea0c10a5f",
+  "files": [
+    {
+      "file": "src/game/worldgen.ts",
+      "sha256": "d18daaa84025741fd283f29954eb58e83236daa0916a379119b6a8733fbe6515"
+    },
+    {
+      "file": "src/game/coastalVariety.ts",
+      "sha256": "a526ba429396b37c3d8f1dde78c363ef06221419a5616f35780d6464498b081d"
+    },
+    {
+      "file": "src/game/distributedGeography.ts",
+      "sha256": "6561110c3f1b5c13c368677f9ef6b6fbd8923b1f002b4d2b79f129d6787ab6e8"
+    },
+    {
+      "file": "src/game/reliefProfiles.ts",
+      "sha256": "2ecb49728e3266a274f35694d327992df1e8c0093aea8b8df8dafb2238e253b3"
+    },
+    {
+      "file": "src/game/distributedRiparian.ts",
+      "sha256": "0165ecfba12e8e7808c2bdb134f28286e0282eda0f231b3262002dea12e976f0"
+    },
+    {
+      "file": "src/game/ecologicalProvinces.ts",
+      "sha256": "4ce2fc4f9e31f2234a05f3006f1c33aa0fadd336c51203c46bad625218c42840"
+    },
+    {
+      "file": "src/game/polylineQuery.ts",
+      "sha256": "dff42191a78108adbdc523d18a2ed69a40526fba0e2cb1c8e0d4844c5200a450"
+    }
+  ],
+  "scope": "Frozen C4b seven-source candidate for fresh5+20. Original quota override, protected cut-edge cap, failed legacy rollback, bounded within-world smooth outlets. No defaults/schema/index changes.",
+  "qualifiedEvidence": {
+    "exactQueryOracles": "3/3 PASS; /tmp/hearthwild-V18C4b-exact-query-tests.log",
+    "completeWorldOptimizationParity": "6/6 identical all fields and typed-array values; /tmp/hearthwild-V18C4b-exact-generation.json",
+    "twoNativeRiparianCounterexamples": "2/2 PASS; original attempt0; original8biome quotas; all2309/1588 centerline probes wet; strict whole-world reload; /tmp/hearthwild-V18C4b-riparian-tests.json",
+    "historicWorlds": "23/23 full-world fingerprints PASS, zero skips; /tmp/hearthwild-V18C4b-legacy23.log",
+    "actualPaidTrips": "4/4 original-founder trips, all four relief profiles;18logs paid,24finite stone delivered exactly once after carrying save/reload; /tmp/hearthwild-v18c4b-native-routes-qualified.json"
+  },
+  "limits": [
+    "Earlier paused full metadata equality assertion failed because legitimate initial influence/cosmetic metadata can reconcile while time is paused; corrected assertion verifies physical time/world/people/stores, not arbitrary metadata. No source change made to force pass.",
+    "Visible staircase riverbanks remain a separate V19 task; no claim these are smoothed by C4b distribution/repair.",
+    "No timing or FPS claim from interrupted deterministic generation control.",
+    "Independent current5+20 and root actual C4b desktop review remain pending. No gate credit/default promotion from this component package."
+  ]
+}

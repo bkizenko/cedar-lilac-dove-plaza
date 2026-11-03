@@ -1,0 +1,66 @@
+{
+  "sourcePatchSha256": "65bcb428005299f60dafe962c72232cf6dfcbf0c47f78a601ca3630ea0c10a5f",
+  "scope": "Strict native initial saves, revealed+paused only, no body/stock/terrain corrections. Visual QA only, not acceptance of appearance. Prior C3/C4a artifacts are separate and unchanged.",
+  "exports": [
+    {
+      "path": "/tmp/hearthwild-V18C4b-seven-source-65bcb428--721349-continents-1560.json",
+      "seed": -721349,
+      "layout": "continents",
+      "size": 1560,
+      "sha256": "ff2c3748c3f4fbf059b49e1dffa629d15df67d6993237b428d1db329b35dbd43",
+      "generation": {
+        "requestedSeed": -721349,
+        "terrainSeed": -721349,
+        "attempt": 0,
+        "rejectedReasons": []
+      },
+      "home": {
+        "x": -380,
+        "z": 140,
+        "team": 0
+      },
+      "scope": "VisualQA only; native initial bodies/resources/time0, chart revealed, paused. No stock/body/terrain/weather corrections.",
+      "metadataPath": "/tmp/hearthwild-V18C4b-seven-source-65bcb428--721349-continents-1560.json.meta.json"
+    },
+    {
+      "path": "/tmp/hearthwild-V18C4b-seven-source-65bcb428-20261103-pangaea-1040.json",
+      "seed": 20261103,
+      "layout": "pangaea",
+      "size": 1040,
+      "sha256": "34dee20a155ea57ae5aacb22c0388bcf68d3aedb869826895b21a2af24a2d105",
+      "generation": {
+        "requestedSeed": 20261103,
+        "terrainSeed": 20261103,
+        "attempt": 0,
+        "rejectedReasons": []
+      },
+      "home": {
+        "x": -260,
+        "z": -400,
+        "team": 0
+      },
+      "scope": "VisualQA only; native initial bodies/resources/time0, chart revealed, paused. No stock/body/terrain/weather corrections.",
+      "metadataPath": "/tmp/hearthwild-V18C4b-seven-source-65bcb428-20261103-pangaea-1040.json.meta.json"
+    },
+    {
+      "path": "/tmp/hearthwild-V18C4b-seven-source-65bcb428-6-archipelago-1040.json",
+      "seed": 6,
+      "layout": "archipelago",
+      "size": 1040,
+      "sha256": "3df5c6f3ffb251d9783bc633069a16c4a566036b2e827a6180048bb256435fa7",
+      "generation": {
+        "requestedSeed": 6,
+        "terrainSeed": 6,
+        "attempt": 0,
+        "rejectedReasons": []
+      },
+      "home": {
+        "x": -122,
+        "z": -152,
+        "team": 0
+      },
+      "scope": "VisualQA only; native initial bodies/resources/time0, chart revealed, paused. No stock/body/terrain/weather corrections.",
+      "metadataPath": "/tmp/hearthwild-V18C4b-seven-source-65bcb428-6-archipelago-1040.json.meta.json"
+    }
+  ]
+}

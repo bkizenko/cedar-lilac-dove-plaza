@@ -1,0 +1,53 @@
+{
+  "scope": "Full world before/after eliminating discarded legacy noise and exact bounded curve/rounded-water queries. No fields excluded, no FPS/performance claim.",
+  "rows": [
+    {
+      "seed": 1,
+      "size": 1040,
+      "layout": "pangaea",
+      "before": "43c738ca04d2f698b9ad5105b5661ce1b468e5825c86aaf02130656bc3595aad",
+      "after": "43c738ca04d2f698b9ad5105b5661ce1b468e5825c86aaf02130656bc3595aad",
+      "equal": true
+    },
+    {
+      "seed": 8,
+      "size": 1040,
+      "layout": "continents",
+      "before": "6a420e17ca53adfae890b253b8bf132866593a08c7d25671d5f73646209f2343",
+      "after": "6a420e17ca53adfae890b253b8bf132866593a08c7d25671d5f73646209f2343",
+      "equal": true
+    },
+    {
+      "seed": 0,
+      "size": 1040,
+      "layout": "continents",
+      "before": "48188408d2e7c29f046f9d8aecbc9d24cea639d975471248669d81bf276f1b27",
+      "after": "48188408d2e7c29f046f9d8aecbc9d24cea639d975471248669d81bf276f1b27",
+      "equal": true
+    },
+    {
+      "seed": 6,
+      "size": 1040,
+      "layout": "archipelago",
+      "before": "0ad3045b857ca4115f21c6702d0e4c9b91a56d04eb29a023ac45f55f342282a2",
+      "after": "0ad3045b857ca4115f21c6702d0e4c9b91a56d04eb29a023ac45f55f342282a2",
+      "equal": true
+    },
+    {
+      "seed": 20261103,
+      "size": 1040,
+      "layout": "pangaea",
+      "before": "92f8699e6106d2adac97e61d4795766850d584a2827586a1ad158a3cbc317dee",
+      "after": "92f8699e6106d2adac97e61d4795766850d584a2827586a1ad158a3cbc317dee",
+      "equal": true
+    },
+    {
+      "seed": -721349,
+      "size": 1560,
+      "layout": "continents",
+      "before": "0ccf9029fc936254a4149f1ca6bf6682a4f32cda99aeab6c79f6683e23dcce24",
+      "after": "0ccf9029fc936254a4149f1ca6bf6682a4f32cda99aeab6c79f6683e23dcce24",
+      "equal": true
+    }
+  ]
+}

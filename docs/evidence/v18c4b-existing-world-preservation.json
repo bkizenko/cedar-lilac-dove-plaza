@@ -1,0 +1,10 @@
+{
+  "base": "88367779c134b5db7ea3d8794547a938aab6b804",
+  "currentPatchSha256": "65bcb428005299f60dafe962c72232cf6dfcbf0c47f78a601ca3630ea0c10a5f",
+  "checks": 23,
+  "passed": 23,
+  "failed": 0,
+  "skipped": 0,
+  "scope": "20 complete historical generated worlds versions1\u201316 plus3 completeV17 worlds, every field/typedarray included; fixtures scripts/fixtures/world-before-v17.json and world-before-v18.json. Current seven-source freeze; not an assumption from C2/C3.",
+  "logSha256": "e871bec8edc4c99b32c51bf6fcdc3468a8f5ab8c3782ad52b456b8bf78ab7728"
+}

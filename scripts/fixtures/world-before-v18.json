@@ -1,0 +1,32 @@
+[
+  {
+    "version": 17,
+    "seed": 7,
+    "request": {
+      "size": 1040,
+      "layout": "archipelago"
+    },
+    "hash": "8aa27065b978c4ec2ce1f98649de636dc56d3cf1c26bacbeca8db8d4afb78f0e",
+    "typedArraysAsArrays": true
+  },
+  {
+    "version": 17,
+    "seed": 0,
+    "request": {
+      "size": 1040,
+      "layout": "continents"
+    },
+    "hash": "ef7e09ccf998b4e5330b0488ffc95af742cd1844f5b1d6600b4e7e138c38e511",
+    "typedArraysAsArrays": true
+  },
+  {
+    "version": 17,
+    "seed": 1,
+    "request": {
+      "size": 1040,
+      "layout": "pangaea"
+    },
+    "hash": "2898d75e8fc665ad270def5bd2682276ba479fdf5eac00ef9d7b6dd5f6a19e12",
+    "typedArraysAsArrays": true
+  }
+]

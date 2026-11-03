@@ -1,0 +1,97 @@
+{
+  "scope": "Fresh independent C4b qualification, exact seven-file runtime manifest; not transferred C3 passes. No UI/smooth-bank/FPS or blanket gate credit.",
+  "nativeFull": {
+    "passed": 5,
+    "total": 5,
+    "strictExactTerrainWaterReconstructionSeeds": [
+      10,
+      20261103,
+      39019
+    ]
+  },
+  "originalTwentyScreen": {
+    "passed": 19,
+    "total": 20,
+    "rotationKey": "2026-11-03",
+    "flaggedSeed": -1474586451,
+    "reason": "2.4769% actual remarkable footprint just below obsolete universal2.5%-dryland-relative roughness floor; original19/20 preserved."
+  },
+  "separateFlatReview": {
+    "fixedMeaningfulAcreage": true,
+    "distributed": true,
+    "usable": true,
+    "allRequiredFamilies": true,
+    "accepted": true
+  },
+  "controls": {
+    "passed": 5,
+    "total": 5
+  },
+  "nativeCases": [
+    {
+      "seed": 10,
+      "size": 1040,
+      "layout": "continents",
+      "profile": "mountainous",
+      "attempt": 0,
+      "medianRelief48m": 36.2129190300206,
+      "physicalAprons": 60,
+      "founderReachableArea": 345840,
+      "maximum220mConcentration": 0.20622638114090336,
+      "meaningfulSectors": 16,
+      "boundedValleyRouteMetres": 38.37070770809218
+    },
+    {
+      "seed": 20261103,
+      "size": 1040,
+      "layout": "pangaea",
+      "profile": "hilly",
+      "attempt": 0,
+      "medianRelief48m": 22.380606899173756,
+      "physicalAprons": 136,
+      "founderReachableArea": 691688,
+      "maximum220mConcentration": 0.27784953180497257,
+      "meaningfulSectors": 11,
+      "boundedValleyRouteMetres": 38.82293800675082
+    },
+    {
+      "seed": -721349,
+      "size": 1560,
+      "layout": "continents",
+      "profile": "mountainous",
+      "attempt": 0,
+      "medianRelief48m": 37.21777640122631,
+      "physicalAprons": 214,
+      "founderReachableArea": 100422,
+      "maximum220mConcentration": 0.09072995202193283,
+      "meaningfulSectors": 16,
+      "boundedValleyRouteMetres": 42.305423256613466
+    },
+    {
+      "seed": 73129,
+      "size": 1040,
+      "layout": "archipelago",
+      "profile": "flatter",
+      "attempt": 1,
+      "medianRelief48m": 10.421350889939609,
+      "physicalAprons": 217,
+      "founderReachableArea": 163224,
+      "maximum220mConcentration": 0.625,
+      "meaningfulSectors": 7,
+      "boundedValleyRouteMetres": 40.50156201202368
+    },
+    {
+      "seed": 39019,
+      "size": 2080,
+      "layout": "random",
+      "profile": "rolling",
+      "attempt": 0,
+      "medianRelief48m": 10.24598753634363,
+      "physicalAprons": 955,
+      "founderReachableArea": 303952,
+      "maximum220mConcentration": 0.27976878612716766,
+      "meaningfulSectors": 8,
+      "boundedValleyRouteMetres": 39.046834380385434
+    }
+  ]
+}

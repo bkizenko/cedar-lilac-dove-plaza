@@ -33,7 +33,8 @@ class Heap{items:{id:number;cost:number;owner:number}[]=[];push(item:{id:number;
 /** Derived at generation time before resource placement. Climate is deliberately
  * compressed into ecological provinces on small game maps; no real-world ethnic
  * or culture identity is inferred from a climate or a plant community. */
-export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoastBfs=false,localWater?:((x:number,z:number)=>number),localHeight?:((x:number,z:number)=>number)):EcologicalProvinceGrid{
+export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoastBfs=false,localWater?:((x:number,z:number)=>number),localHeight?:((x:number,z:number)=>number),minimumRegionAreaOverride=0):EcologicalProvinceGrid{
+ if(!Number.isFinite(minimumRegionAreaOverride)||minimumRegionAreaOverride<0)throw new Error('Ecology minimum area override must be finite and nonnegative');
  const height=(x:number,z:number)=>localHeight?localHeight(x,z):heightAt(world,x,z);
  const width=Math.ceil(world.size/ECOLOGY_RULES.cellMeters),cell=world.size/width,total=width*width,area=cell*cell;
  const point=(id:number)=>({x:(id%width+.5)*cell-world.size/2,z:(Math.floor(id/width)+.5)*cell-world.size/2});
@@ -48,7 +49,7 @@ export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoas
   if(h<world.baseWaterY+.2&&water<world.baseWaterY+.7){coast[id]=0;coastQueue.push(id);}
  }
  for(let i=0;i<coastQueue.length;i++){const at=coastQueue[i];for(const n of neighbors(at))if(safeCoastBfs?coast[n]===Infinity:coast[n]>coast[at]+cell){coast[n]=coast[at]+cell;coastQueue.push(n);}}
- const minimum=Math.max(ECOLOGY_RULES.minimumRegionAreaSquareMeters,landCells*area*ECOLOGY_RULES.minimumLandFractionPerRegion),quota=Math.ceil(minimum/area),radius=Math.sqrt(minimum/Math.PI);
+ const minimum=Math.max(ECOLOGY_RULES.minimumRegionAreaSquareMeters,landCells*area*ECOLOGY_RULES.minimumLandFractionPerRegion,minimumRegionAreaOverride),quota=Math.ceil(minimum/area),radius=Math.sqrt(minimum/Math.PI);
  const dunes=world.features?.find(f=>f.kind==='dunes'),plateau=world.features?.find(f=>f.kind==='plateau');
  const affinity=(owner:number,id:number)=>{
   const p=point(id),h=elevation[id],grade=slope[id],waterNear=Math.max(0,1-fresh[id]/96),flat=1-unit(grade),warm=1-unit(h/35),variation=noise[id]*.25;

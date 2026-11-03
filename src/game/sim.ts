@@ -340,7 +340,7 @@ export class Game {
     return best;
   }
 
-  reset(seed?: number, worldgenVersion = seed === undefined ? 16 : 1, request:WorldRequest={}) {
+  reset(seed?: number, worldgenVersion = seed === undefined ? 18 : 1, request:WorldRequest={}) {
     const preset=difficultyId(request.difficulty);
     this.selectedBoat = null;
     resetCommandDiagnostics(this);

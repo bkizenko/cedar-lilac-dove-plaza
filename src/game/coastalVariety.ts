@@ -29,7 +29,7 @@ export function outlineDifference(a:number[],b:number[]){
 /** V15 remains reproducible; V16 adds broader individual asymmetry and stricter checks.
  * Historical generation remains in worldVariety/multipleLandmasses.
  * A broad coastline skeleton and meaningful bay cuts precede terrain/water. */
-export function diverseLandforms(seed:number,request:WorldRequest={},version:15|16|17=15){
+export function diverseLandforms(seed:number,request:WorldRequest={},version:15|16|17|18=15){
  const old=variedLandforms(seed,request),size=old.options.size,rand=mulberry32(seed^0x151ca71),rules=version>=16?COASTAL_VARIETY_V16_RULES:COASTAL_VARIETY_RULES;
  const specs:{x:number;z:number;radius:number;angle:number;style:Style;primary:boolean}[]=[];
  if(old.mode==='major-islands'){

@@ -262,7 +262,7 @@ export class Engine {
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {
-      this.game.reset(undefined,16,nextRequest);
+      this.game.reset(undefined,18,nextRequest);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
@@ -270,7 +270,7 @@ export class Engine {
     } catch (err) {
       console.error(err);
       this.setQuality("low");
-      this.game.reset(undefined,16,nextRequest);
+      this.game.reset(undefined,18,nextRequest);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
