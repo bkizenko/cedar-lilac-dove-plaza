@@ -1,0 +1,40 @@
+{
+  "baseline": "62a122e43b20c5324de15dbb8ef2525d9d945ba9",
+  "sourceBefore": {
+    "src/game/settlement.ts": "d5169ff663264178ae146e52649c362243a540c23ebe4a4af4033d1297c339de",
+    "src/game/hunting.ts": "a28f29fadb4d70c52bfc4c6a5a7de1768e0bcdf81dba431a572f1fbd548a7eea"
+  },
+  "sourceAfter": {
+    "src/game/settlement.ts": "1a828ad9e584822acbdfe5a9c97887eb36d89a1b9642b3513ab2514fb70bec56",
+    "src/game/hunting.ts": "3d5a019116f204de901827d79c4eb9d419345e6f334387137f9fe5b43f549d76"
+  },
+  "unitTests": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "typecheck": "exit0",
+  "productionBuild": "exit0",
+  "shortComparison": "workboard-causal-parity-180-2026-11-03.json",
+  "lateComparison": "workboard-causal-parity-3600-2026-11-03.json",
+  "limits": [
+    "Only hunting.finishTask switches to task-only invalidation. Water, prey death, exhausted carcass, geometry and ownership retain full reset.",
+    "Full task refresh interval/call/rebuild counts unchanged.",
+    "Reset reason attribution bounded to first256calls/32buckets; global counts complete.",
+    "Counter/mutation instruments are test-only and do not wrap samplers.",
+    "No before/after FPS or user smoothness acceptance claim.",
+    "Initial100/60assets are authored finite setup on unchanged nativeV18terrain, not earned campaign proof."
+  ],
+  "existingHuntingCompatibility": {
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      "scripts/hunting.test.mjs",
+      "scripts/hunting-projectiles.test.mjs",
+      "scripts/hunting-route-arrival.test.mjs",
+      "scripts/hunting-flight-range.test.mjs",
+      "scripts/militia-camp-live.test.mjs"
+    ]
+  }
+}

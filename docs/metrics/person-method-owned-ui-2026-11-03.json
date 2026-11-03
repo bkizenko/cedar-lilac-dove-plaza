@@ -1,0 +1,169 @@
+{
+  "baseline": "f7c1ae6 + frozen recovery + frozen census + frozen coarse phases + person method probes",
+  "scope": "Owned nativeV18 seed1/1040continents authored finite100/60 setup; public production UI import, shared-load diagnostic, no private village",
+  "origin": "http://127.0.0.1:8143/",
+  "quality": "Low",
+  "shadows": false,
+  "speed": 1,
+  "displayedSeconds": 37,
+  "finalVillageTimeSeconds": 33.5,
+  "methods": [
+    {
+      "method": "Game.nearestWalk",
+      "calls": 37505,
+      "inclusiveTotalMs": 646,
+      "selfTotalMs": 646,
+      "recentInclusiveMeanMs": 0.03,
+      "recentSelfMeanMs": 0.03,
+      "recentInclusiveP95Ms": 0.2,
+      "recentSelfP95Ms": 0.2,
+      "recentInclusivePeakMs": 0.3
+    },
+    {
+      "method": "Game.steer",
+      "calls": 47560,
+      "inclusiveTotalMs": 1504,
+      "selfTotalMs": 1504,
+      "recentInclusiveMeanMs": 0.04,
+      "recentSelfMeanMs": 0.04,
+      "recentInclusiveP95Ms": 0.1,
+      "recentSelfP95Ms": 0.1,
+      "recentInclusivePeakMs": 1.3
+    },
+    {
+      "method": "Game.workerAI",
+      "calls": 123057,
+      "inclusiveTotalMs": 9912,
+      "selfTotalMs": 2504,
+      "recentInclusiveMeanMs": 0.15,
+      "recentSelfMeanMs": 0.02,
+      "recentInclusiveP95Ms": 0.2,
+      "recentSelfP95Ms": 0.1,
+      "recentInclusivePeakMs": 27
+    },
+    {
+      "method": "WorkBoard.labelNavigation",
+      "calls": 24031,
+      "inclusiveTotalMs": 654,
+      "selfTotalMs": 654,
+      "recentInclusiveMeanMs": 0.02,
+      "recentSelfMeanMs": 0.02,
+      "recentInclusiveP95Ms": 0,
+      "recentSelfP95Ms": 0,
+      "recentInclusivePeakMs": 3
+    },
+    {
+      "method": "Game.interactionSpot",
+      "calls": 14489,
+      "inclusiveTotalMs": 143,
+      "selfTotalMs": 69,
+      "recentInclusiveMeanMs": 0,
+      "recentSelfMeanMs": 0,
+      "recentInclusiveP95Ms": 0,
+      "recentSelfP95Ms": 0,
+      "recentInclusivePeakMs": 0.2
+    },
+    {
+      "method": "WorkBoard.assign",
+      "calls": 5423,
+      "inclusiveTotalMs": 4655,
+      "selfTotalMs": 1463,
+      "recentInclusiveMeanMs": 0.85,
+      "recentSelfMeanMs": 0.27,
+      "recentInclusiveP95Ms": 3.5,
+      "recentSelfP95Ms": 3.5,
+      "recentInclusivePeakMs": 30.7
+    },
+    {
+      "method": "WorkBoard.refresh",
+      "calls": 338,
+      "inclusiveTotalMs": 3089,
+      "selfTotalMs": 3089,
+      "recentInclusiveMeanMs": 8.02,
+      "recentSelfMeanMs": 8.02,
+      "recentInclusiveP95Ms": 23.8,
+      "recentSelfP95Ms": 23.8,
+      "recentInclusivePeakMs": 85.2
+    }
+  ],
+  "coarseIndividualDecisions": {
+    "meanMs": 14.1,
+    "p95Ms": 38.4,
+    "maxMs": 116.2
+  },
+  "wholeSimulation": {
+    "meanMs": 22.3,
+    "p95Ms": 46.3,
+    "maxMs": 125.2
+  },
+  "frame": {
+    "rollingSamples": 600,
+    "fps": 34.4,
+    "meanMs": 29.1,
+    "p95Ms": 50.9,
+    "maxMs": 133,
+    "stallsOver100Ms": 1
+  },
+  "finalCensus": {
+    "residentsInFrustum": 94,
+    "representedResidents": 100,
+    "livingResidents": 100,
+    "structuresInFrustum": 60,
+    "representedStructures": 60,
+    "presentStructures": 60
+  },
+  "autosaveSetupObservation": {
+    "paused": true,
+    "measuredWindowSeconds": 238,
+    "fallbacks": 11,
+    "committed": 11,
+    "lastFailureReason": "timeout",
+    "lastFailurePhase": "preflight",
+    "mainMeanMs": 485.3,
+    "mainPeakMs": 798,
+    "nextRecoverySeconds": 51
+  },
+  "autosaveLaterSamePageWithoutReload": {
+    "workerConfirmed": true,
+    "afterMeasurementReset": true,
+    "committed": 2,
+    "fallbacks": 0,
+    "failed": 0,
+    "mainMeanMs": 18.5,
+    "mainPeakMs": 23.4,
+    "workerMeanMs": 1087,
+    "workerPeakMs": 1151.5,
+    "wallMeanMs": 1173.4,
+    "wallPeakMs": 1233.3
+  },
+  "scheduling": {
+    "limitedFrames": 210,
+    "frames": 1254,
+    "discardedWallSeconds": 2.8
+  },
+  "validation": {
+    "testsPassed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "typecheck": "exit0",
+    "build": "exit0",
+    "actualGameStepsPerBranch": 180,
+    "branches": [
+      "off",
+      "on",
+      "on",
+      "off"
+    ],
+    "comparison": "Full snapshots/RNG/cache builds+hits every30steps, then restored extra step; two forced genuine cache hits; sampler references unchanged"
+  },
+  "limits": [
+    "Shared machine load and diagnostic clock/sample overhead; no clean FPS comparison.",
+    "Recent mean/p95/peak samples240 per method; calls/totals cumulative since reset.",
+    "Self excludes measured children only; profiler overhead can remain in parent self time.",
+    "338refresh calls include possible early returns, not338 proven full task rebuilds.",
+    "No sampler wrappers; exact terrain cache identities/build/hit parity tested.",
+    "Census is bounds intersection, not pixels/occlusion; end94residents fails maintained100/60 admission.",
+    "Observed preflight timeout does not establish browser underlying cause or old8136 trigger.",
+    "No source optimization or acceptance credit. Owned tab paused and closed."
+  ]
+}

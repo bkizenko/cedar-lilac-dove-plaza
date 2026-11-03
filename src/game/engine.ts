@@ -37,6 +37,7 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 export class Engine {
   readonly profile = new RuntimeProfile();
   entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
+  setPerformanceExpanded(open:boolean){this.profile.simulationPhases.enabled=open;this.profile.personMethods.setEnabled(open,this.game);}
   game: Game;
   readonly autosave:AutosaveController;
   private originalGame: Game | null = null;
@@ -139,7 +140,7 @@ export class Engine {
     const saved=loadRaw(),storedVillage=hasSave();
     try {
       if(!saved&&storedVillage)throw new Error('Your saved village could not be restored. Its saved copies have been kept.');
-      if(saved){this.game=decodeGame(saved);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
+      if(saved){this.game=decodeGame(saved);this.profile.personMethods.attach(this.game);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
       this.game.state.paused = true;
@@ -238,7 +239,7 @@ export class Engine {
   private restoreVillage(restored:Game) {
     this.autosave.invalidate();
     restored.onSfx=(n)=>this.audio.play(n);restored.quality=this.game.quality;restored.muted=this.game.muted;
-    this.game=restored;this.simAccumulator=0;this.keyboard.groups.clear();
+    this.game=restored;this.profile.personMethods.attach(restored);this.simAccumulator=0;this.keyboard.groups.clear();
     this.view.rebuild(restored);this.homeLook();this.audio.unlock();this.canvas.focus();
   }
   resumeSaved(protectedOnly=false) {
@@ -857,8 +858,9 @@ export class Engine {
       if (document.hidden) {
         this.simAccumulator = 0;
       } else {
+        if(this.profile.personMethods.enabled)this.profile.personMethods.attach(this.game);
         const scheduling=advanceFrameSimulation(this.simAccumulator,dt,
-          step=>this.profile.measure('simulation',()=>this.game.step(step)));
+          step=>this.profile.measure('simulation',()=>this.game.step(step,this.profile.simulationPhases)));
         this.simAccumulator=scheduling.pendingSeconds;
         this.profile.recordScheduling(scheduling);
       }
@@ -953,6 +955,7 @@ export class Engine {
 
   dispose() {
     if(this.disposed)return;
+    this.profile.personMethods.dispose();this.profile.simulationPhases.enabled=false;
     this.autosave.dispose();
     saveGame(this.game);
     this.disposed = true;

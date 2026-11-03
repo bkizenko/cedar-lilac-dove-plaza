@@ -127,7 +127,7 @@ function finishTask(g: Game, u: Unit, reason: string) {
   u.node = null; u.gatherT = 0; delete u.huntTrail;
   u.order = u.carry > 0 ? "return" : "idle";
   u.workReason = reason;
-  g.workBoard.reset();
+  g.workBoard.invalidateTasks();
 }
 
 /** Civilian hunting and butchery share normal paths, finite cargo and physical delivery. */

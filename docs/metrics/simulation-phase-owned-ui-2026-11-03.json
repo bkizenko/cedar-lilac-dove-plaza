@@ -1,0 +1,173 @@
+{
+  "source": "f7c1ae6 + frozen autosave recovery + frozen entity census + isolated simulation phase diagnostics",
+  "origin": "http://127.0.0.1:8142/",
+  "method": "Public owned100/60nativeV18fixture import; existing Performance UI; no hidden state injection, sampler wrappers or private village",
+  "world": {
+    "version": 18,
+    "seed": 1,
+    "size": 1040,
+    "layout": "continents",
+    "initialAuthoredResidents": 100,
+    "initialAuthoredFinishedStructures": 60,
+    "finiteInitialInputs": "See owned-v18-100-60-desktop artifact and generator"
+  },
+  "quality": "Low",
+  "shadows": false,
+  "speed": 1,
+  "displayedSeconds": 18,
+  "phaseSamplesEach": 240,
+  "phases": [
+    {
+      "phase": "preparation",
+      "meanMs": 0,
+      "p95Ms": 0.1,
+      "maxMs": 0.1
+    },
+    {
+      "phase": "navigation",
+      "meanMs": 0,
+      "p95Ms": 0.1,
+      "maxMs": 1.4
+    },
+    {
+      "phase": "geography",
+      "meanMs": 1.6,
+      "p95Ms": 2.4,
+      "maxMs": 6.5
+    },
+    {
+      "phase": "production",
+      "meanMs": 0.1,
+      "p95Ms": 0.2,
+      "maxMs": 0.6
+    },
+    {
+      "phase": "missions",
+      "meanMs": 0.1,
+      "p95Ms": 0.1,
+      "maxMs": 3
+    },
+    {
+      "phase": "construction",
+      "meanMs": 0.4,
+      "p95Ms": 0.6,
+      "maxMs": 1.2
+    },
+    {
+      "phase": "people",
+      "meanMs": 12.7,
+      "p95Ms": 36.6,
+      "maxMs": 49.5
+    },
+    {
+      "phase": "combat",
+      "meanMs": 1,
+      "p95Ms": 1.3,
+      "maxMs": 5.5
+    },
+    {
+      "phase": "ecology",
+      "meanMs": 1.2,
+      "p95Ms": 1.6,
+      "maxMs": 11.5
+    },
+    {
+      "phase": "economy",
+      "meanMs": 1.9,
+      "p95Ms": 2.4,
+      "maxMs": 5.7
+    },
+    {
+      "phase": "society",
+      "meanMs": 1.9,
+      "p95Ms": 2.8,
+      "maxMs": 7.5
+    },
+    {
+      "phase": "observation",
+      "meanMs": 0.5,
+      "p95Ms": 0.6,
+      "maxMs": 5.3
+    },
+    {
+      "phase": "rivals",
+      "meanMs": 0.2,
+      "p95Ms": 0.4,
+      "maxMs": 5.3
+    },
+    {
+      "phase": "reconciliation",
+      "meanMs": 0.1,
+      "p95Ms": 0.2,
+      "maxMs": 0.6
+    },
+    {
+      "phase": "effects",
+      "meanMs": 0,
+      "p95Ms": 0.1,
+      "maxMs": 0.1
+    }
+  ],
+  "wholeSimulation": {
+    "meanMs": 21.6,
+    "p95Ms": 46.1,
+    "maxMs": 64.9
+  },
+  "scene": {
+    "meanMs": 3,
+    "p95Ms": 5.6,
+    "maxMs": 43.3
+  },
+  "drawSubmission": {
+    "meanMs": 5,
+    "p95Ms": 6.8,
+    "maxMs": 16
+  },
+  "map": {
+    "meanMs": 5.9,
+    "p95Ms": 16.5,
+    "maxMs": 45.3
+  },
+  "frame": {
+    "rollingSamples": 505,
+    "fps": 28.4,
+    "meanMs": 35.2,
+    "p95Ms": 66.7,
+    "maxMs": 367,
+    "stallsOver100Ms": 7
+  },
+  "autosave": {
+    "workerConfirmed": true,
+    "committed": 1,
+    "failed": 0,
+    "fallback": 0,
+    "mainMs": 22.1,
+    "workerMs": 1296.3,
+    "wallMs": 1365.9
+  },
+  "finalCensus": {
+    "villageTimeSeconds": 15,
+    "residentsInFrustum": 95,
+    "residentsRepresented": 100,
+    "livingResidents": 100,
+    "structuresInFrustum": 60,
+    "structuresRepresented": 60,
+    "presentStructures": 60,
+    "excludedPlots": 0
+  },
+  "scheduling": {
+    "limitedFrames": 138,
+    "frames": 506,
+    "discardedWallSeconds": 2.5
+  },
+  "finding": "Individual decisions/work is dominant coarse simulation block. This does not yet distinguish pathfinding, steering or work candidate queries inside that block. Navigation-grid rebuild is small here; no sampler cache bypass occurred.",
+  "limits": [
+    "Shared-load diagnostic; no exclusive CPU timing hold. Not a comparable FPS acceptance benchmark.",
+    "Phase instrumentation adds bounded clock/sample cost.",
+    "240recent samples perphase,505frame intervals; p95s must not be summed.",
+    "Camera-frustum bounds are not occlusion/pixel visibility; end95/100body bounds fails maintained100/60 criterion.",
+    "No source optimization or performance gate credited.",
+    "Original earlier autosave-fallback cause remains unknown.",
+    "Owned QA tab paused and closed after observation; no private browser content included."
+  ]
+}

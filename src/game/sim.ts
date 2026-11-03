@@ -1,3 +1,4 @@
+import type {SimulationPhaseProfile} from './simulationPhaseProfile';
 import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
 import{campSupportAI,finishCampTrip}from'./finiteCamp';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
@@ -5591,18 +5592,23 @@ export class Game {
     }
   }
 
-  step(dt: number) {
+  step(dt: number, phaseProfile?:SimulationPhaseProfile) {
     if (!this.started) return;
+    const phases=phaseProfile?.begin();
+    try {
     const spd = this.state.speed >= 3 ? 4 : this.state.speed === 2 ? 2 : 1;
     const nightMul = this.isNight()?1.6:1;
     const sdt = this.state.paused || this.state.ended ? 0 : Math.min(dt * spd * nightMul, 0.34);
+    phases?.mark('navigation');
     if (this.state.walkDirty) this.rebuildWalk();
 
+    phases?.mark('geography');
     advanceGeographicInfluence(this);
     if (sdt > 0) {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        phases?.mark('production');
         tickFibre(this);
         tickClay(this);
         tickProduction(this,sdt);
@@ -5611,12 +5617,14 @@ export class Game {
         tickProductionLessons(this);
         tickPracticalHelpers(this);
         tickVillageDefense(this);
+        phases?.mark('missions');
         tickSocietyMissionNeeds(this,sdt);
         tickCoastalTrade(this,sdt);
         reviewCoastalTrade(this);
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);
         reconcileTradeReservations(this);
+        phases?.mark('construction');
         updateConstructionQueues(this);
         reconcileConstructionWorkers(this);
         reconcileFarmToolOwnership(this);
@@ -5634,6 +5642,7 @@ export class Game {
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
         }
+        phases?.mark('people');
         beginPrisonerGuardQueries(this);beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
           if (u.hp <= 0) continue;
@@ -5685,6 +5694,7 @@ export class Game {
           }
         }
         endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);
+        phases?.mark('combat');
         tickRivalActivity(this);
         tickOccupation(this,sdt);
         syncRiverboats(this);
@@ -5700,6 +5710,7 @@ export class Game {
         if ((this.state.time | 0) % 2 === 0) {
           for(const tr of this.state.tribes)if(isRivalTeam(tr.id)&&tr.alive)this.defendHome(tr.id);
         }
+        phases?.mark('ecology');
         const huntingObstacles=this.tickWildlife(sdt);
         this.updateProjectiles(sdt,true,huntingObstacles);
         tickHusbandry(this,sdt);
@@ -5707,6 +5718,7 @@ export class Game {
         tickScouts(this,sdt);
         fadeTrails(this,sdt);
         tickVisitors(this,sdt);
+        phases?.mark('economy');
         this.tickRoutes(sdt);
         tickTradeFocus(this);
         if(Math.floor(this.state.time)!==Math.floor(this.state.time-sdt))tickAutomaticCultivation(this);
@@ -5719,18 +5731,22 @@ export class Game {
           if (b.type === "townhall" && this.state.buildingMaintenanceVersion===undefined && !b.maintenance && b.hp > 0 && b.hp < b.maxHp)
             b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);
         }
+        phases?.mark('society');
         this.tickInfluence(sdt);
         tickFrontiers(this);
         this.tickRegen(sdt);
         this.tickPeople(sdt);
         tickSurvival(this,sdt);
         tickCaptivity(this,sdt);
+        phases?.mark('observation');
         this.updateVision(sdt);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
+        phases?.mark('rivals');
         for (let i = 1; i < this.state.tribes.length; i++) this.rivalTick(i, sdt);
 
+        phases?.mark('reconciliation');
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
         for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
@@ -5753,6 +5769,7 @@ export class Game {
       }
     }
 
+    phases?.mark('effects');
     const vdt = Math.min(dt, 0.05);
     for (let i = this.state.particles.length - 1; i >= 0; i--) {
       const p = this.state.particles[i];
@@ -5773,6 +5790,7 @@ export class Game {
       this.state.bannerT -= vdt;
       if (this.state.bannerT <= 0) this.state.banner = "";
     }
+    } finally { phases?.end(); }
   }
 
   entityAt(x: number, z: number): Unit | Building | null {

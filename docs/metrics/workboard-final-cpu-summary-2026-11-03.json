@@ -1,0 +1,63 @@
+{
+  "base": "62a122e43b20c5324de15dbb8ef2525d9d945ba9",
+  "snapshot": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-final-integration-62a122e",
+  "sourceFilesUnchangedDuringBothCohorts": true,
+  "fixtureSha256": "7c5d5cd0977e4a263f511fa556127d0bf0dbb48d666e362d10aa07d83ffc3ea4",
+  "finalValidation": {
+    "testsPassed": 52,
+    "failed": 0,
+    "skipped": 0,
+    "typecheck": "exit0",
+    "productionBuild": "exit0"
+  },
+  "cohorts": [
+    {
+      "artifact": "workboard-final-cpu-contaminated-2026-11-03.json",
+      "actualDriverWallSeconds": 51.283501542,
+      "classification": "Rejected as clean timing comparison: another owner disclosed repeated Git manifest subprocesses overlapping first10-15seconds. Full artifact retained.",
+      "parity": "all4complete initial/warm/final state/RNG/static-cache checkpoints identical"
+    },
+    {
+      "artifact": "workboard-final-cpu-repeat-2026-11-03.json",
+      "actualDriverWallSeconds": 28.832443625000003,
+      "classification": "One explicitly approved repeat with root/map/nomadic heavy processes and owned QA renderers held; no known agent subprocess overlap. Strong within-run drift remains.",
+      "parity": "all4complete initial/warm/final state/RNG/static-cache checkpoints identical",
+      "stepsPerBranch": {
+        "warm": 60,
+        "measured": 240,
+        "actualSimulationSeconds": 10
+      },
+      "actualPlayerCountsEveryBranch": {
+        "livingResidents": 100,
+        "presentStructures": 60
+      },
+      "summary": {
+        "meanStepMs": {
+          "baseline": 15.972911658333265,
+          "candidate": 10.93694346875001,
+          "percentChange": -31.528179065311036
+        },
+        "processCpuMs": {
+          "baseline": 5282.1775,
+          "candidate": 3792.9065,
+          "percentChange": -28.19426268806756
+        },
+        "measuredWallMs": {
+          "baseline": 3833.920021000001,
+          "candidate": 2625.1677915,
+          "percentChange": -31.52784155327064
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Node Game.step elapsed and whole-process CPU, not browser frames, GPU work, draw submission, UI, autosave or camera occlusion.",
+    "Process CPU user+system includes V8 runtime/helper/GC threads and can exceed sampling wall time.",
+    "Driver wall starts after module imports; preparation/warm/sampling durations reported separately.",
+    "Probes disabled/not attached; no sampler or non-sampler wrappers in CPU driver.",
+    "Initial authored finite100/60assets on unchanged nativeV18; no poststart repairs/grants.",
+    "Only world counts, not maintained rendered/frustum/pixel counts. No M5 performance acceptance credit.",
+    "A1\u2192A2 and B1\u2192B2 drift is substantial; a singlecohort31.5percent lower pooled elapsed is an observation, not a universal stable speedup.",
+    "Contaminated first cohort not combined into reported improvement. No further repeat or tuning performed."
+  ]
+}

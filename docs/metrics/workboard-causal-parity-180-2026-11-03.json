@@ -1,0 +1,242 @@
+{
+  "scope": "Actual nativeV18 authored finite100/60, no runtime repair/grants; bounded non-sampler diagnostic counters, no CPU/FPS claim",
+  "fixtureFile": "/tmp/hearthwild-owned-UI-V18-100-residents-60-buildings.json",
+  "runs": [
+    {
+      "name": "A",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-baseline-62a122e",
+      "steps": 180,
+      "time": 5.9999999999999885,
+      "marks": [
+        {
+          "at": 0,
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 30,
+          "state": "be840a7d80d00f1ab3f160059ea8f0285fd7384916aefbe0a39439f562cb9e2b",
+          "choices": "6406dd50078d6252a2c55dd90e1a37c221062387d40e25d573a22816a092ab23",
+          "tasks": "95e6b8bd7b3c047143213f354bc6f73e044e6913a1e6eb9a03a70d0e05d9569d",
+          "seed": 197887705,
+          "draws": 266,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 60,
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "choices": "768d6a1c944692f408c95d110a85ab6bc014eedcd050d48bafc89e97931a3f49",
+          "tasks": "73b8fbb501bd328c28b874ab6946abca08c8cf980238c07d0a9020763358d576",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        {
+          "at": 90,
+          "state": "aa41799384c9dc1e4774159d66da74dbb9fca2dd8a622b9b6d242aaa310bedaa",
+          "choices": "1355bc6f53a409fa6c6d1ee3a04e400bb107bc49e76ce0e6342c2cb8e54b549a",
+          "tasks": "87a02b9b806a722d2c8d0912083b037be0fca2e88087853a164ff117744b0f8f",
+          "seed": 493943452,
+          "draws": 739,
+          "cache": {
+            "builds": 1,
+            "hits": 8
+          }
+        },
+        {
+          "at": 120,
+          "state": "27014a66fa57694d4cad2465d7ced5a5630b8f9eedd01306dec53d35ba8c4b20",
+          "choices": "3b9f0c17d756a47fc9fbe8d74f5601d686620a701ca41e9acfe8f7fee9d46bc8",
+          "tasks": "50d508dc8d15e85581013c555617422c0cc6d9d03413baf409223efaf59666af",
+          "seed": 1131094063,
+          "draws": 872,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 150,
+          "state": "d9d9796486a366ffb8d1e6fddca0b8a17f92ff5e9c09f9be5fdc9a839f7cee66",
+          "choices": "a270f585d6d1033f37557fcff7e8ee98f4edc6975dc33378f2b63357e72fd7cb",
+          "tasks": "3b2898a69685b056c7add75dbe6315338a28ca52151b9f089c82afcba5824707",
+          "seed": 2409016209,
+          "draws": 898,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 180,
+          "state": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+          "choices": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+          "tasks": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+          "seed": 1493951251,
+          "draws": 940,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      ],
+      "counters": {
+        "reset": 55,
+        "invalidateTasks": 0,
+        "refreshCalls": 68,
+        "fullRefreshes": 37,
+        "reusedRefreshes": 31,
+        "obstructionClears": 37,
+        "labelCalls": 6673,
+        "labelRevisions": 51,
+        "labelFloodFills": 5,
+        "reasonSamples": 55,
+        "reasonBudget": 256,
+        "reasons": {
+          "reset:hunting.ts:130:finishTask": 55
+        }
+      },
+      "observedRefreshes": 37,
+      "taskTrace": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+      "choiceTrace": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+      "finalState": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+      "seed": 1493951251,
+      "draws": 940,
+      "cache": {
+        "builds": 1,
+        "hits": 9
+      },
+      "strictSave": true,
+      "simulationErrors": []
+    },
+    {
+      "name": "B",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-candidate-62a122e",
+      "steps": 180,
+      "time": 5.9999999999999885,
+      "marks": [
+        {
+          "at": 0,
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 30,
+          "state": "be840a7d80d00f1ab3f160059ea8f0285fd7384916aefbe0a39439f562cb9e2b",
+          "choices": "6406dd50078d6252a2c55dd90e1a37c221062387d40e25d573a22816a092ab23",
+          "tasks": "95e6b8bd7b3c047143213f354bc6f73e044e6913a1e6eb9a03a70d0e05d9569d",
+          "seed": 197887705,
+          "draws": 266,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 60,
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "choices": "768d6a1c944692f408c95d110a85ab6bc014eedcd050d48bafc89e97931a3f49",
+          "tasks": "73b8fbb501bd328c28b874ab6946abca08c8cf980238c07d0a9020763358d576",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        {
+          "at": 90,
+          "state": "aa41799384c9dc1e4774159d66da74dbb9fca2dd8a622b9b6d242aaa310bedaa",
+          "choices": "1355bc6f53a409fa6c6d1ee3a04e400bb107bc49e76ce0e6342c2cb8e54b549a",
+          "tasks": "87a02b9b806a722d2c8d0912083b037be0fca2e88087853a164ff117744b0f8f",
+          "seed": 493943452,
+          "draws": 739,
+          "cache": {
+            "builds": 1,
+            "hits": 8
+          }
+        },
+        {
+          "at": 120,
+          "state": "27014a66fa57694d4cad2465d7ced5a5630b8f9eedd01306dec53d35ba8c4b20",
+          "choices": "3b9f0c17d756a47fc9fbe8d74f5601d686620a701ca41e9acfe8f7fee9d46bc8",
+          "tasks": "50d508dc8d15e85581013c555617422c0cc6d9d03413baf409223efaf59666af",
+          "seed": 1131094063,
+          "draws": 872,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 150,
+          "state": "d9d9796486a366ffb8d1e6fddca0b8a17f92ff5e9c09f9be5fdc9a839f7cee66",
+          "choices": "a270f585d6d1033f37557fcff7e8ee98f4edc6975dc33378f2b63357e72fd7cb",
+          "tasks": "3b2898a69685b056c7add75dbe6315338a28ca52151b9f089c82afcba5824707",
+          "seed": 2409016209,
+          "draws": 898,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 180,
+          "state": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+          "choices": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+          "tasks": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+          "seed": 1493951251,
+          "draws": 940,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      ],
+      "counters": {
+        "reset": 0,
+        "invalidateTasks": 55,
+        "refreshCalls": 68,
+        "fullRefreshes": 37,
+        "reusedRefreshes": 31,
+        "obstructionClears": 4,
+        "labelCalls": 6673,
+        "labelRevisions": 5,
+        "labelFloodFills": 5,
+        "reasonSamples": 55,
+        "reasonBudget": 256,
+        "reasons": {
+          "invalidateTasks:hunting.ts:130:finishTask": 55
+        }
+      },
+      "observedRefreshes": 37,
+      "taskTrace": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+      "choiceTrace": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+      "finalState": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+      "seed": 1493951251,
+      "draws": 940,
+      "cache": {
+        "builds": 1,
+        "hits": 9
+      },
+      "strictSave": true,
+      "simulationErrors": []
+    }
+  ]
+}

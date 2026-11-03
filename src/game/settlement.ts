@@ -255,6 +255,16 @@ export class WorkBoard {
     this.obstructedResources.set(node, { x: node.x, z: node.z, blocked });
     return blocked;
   }
+  /** Inventory/actor-task changes do not invalidate unchanged terrain or solid
+   * footprints. Still clear node components: wildlife/resource positions may
+   * have moved since the last assignment. refreshObstructions checks the exact
+   * current footprints again on the next task rebuild. */
+  invalidateTasks() {
+    this.next=0;
+    this.occupiedAt=-1;
+    this.tasks.clear();
+    this.nodeComponents=new WeakMap();
+  }
   reset() {
     this.obstructionWorld = null;
     this.obstructionState = null;
@@ -273,9 +283,8 @@ export class WorkBoard {
     this.refreshObstructions(g);
     for (const t of g.state.tribes) {
       if (!t.alive || t.id === 3) continue;
-      const list: Task[] = [],
-        pop = g.popNow(t.id),
-        foodUrgency = reserveSeconds(g,t.id)<90 ? 320 : reserveSeconds(g, t.id) < 240 ? 180 : 80;
+      const list: Task[] = [], reserve=reserveSeconds(g,t.id),phase=calendar(g).phase,
+        foodUrgency = reserve<90 ? 320 : reserve < 240 ? 180 : 80;
       const buildings = g.state.buildings.filter((b) => b.team === t.id && b.hp > 0);
       const needed=new Set((["wood","stone","copper","iron"] as ResKind[]).filter(k=>constructionDemand(g,t.id,k)));
       const add = (node: Node, kind: Task["kind"], slots: number, priority: number) => {
@@ -289,33 +298,35 @@ export class WorkBoard {
         if(b.plannedCost)continue;
         if(b.expansion&&(b.expansion.paid||g.canAfford(b.team,expansionCost(b,b.expansion))))add(b,"build",2,235+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
         if (!g.finished(b)) {
-          add(b, "build", 2, (reserveSeconds(g,t.id) < 90 ? 120 : 235)+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
+          add(b, "build", 2, (reserve < 90 ? 120 : 235)+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))
-          add(b, "food", Math.min(12,Math.ceil(3*plotArea(b))), calendar(g).phase === 2 ? 500 : reserveSeconds(g,t.id)<90 ? 100 : 210);
+          add(b, "food", Math.min(12,Math.ceil(3*plotArea(b))), phase === 2 ? 500 : reserve<90 ? 100 : 210);
         if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency+65);
         if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
-        if (preservationAvailable(g, b)) add(b, "food", 1, calendar(g).phase === 2 ? 105 : 85);
+        if (preservationAvailable(g, b)) add(b, "food", 1, phase === 2 ? 105 : 85);
       }
       for(const n of g.state.fish)if(n.amount>=1&&!nearby(n,"dock",DOCK_R))add(n,"food",1,foodUrgency-20);
       for (const n of g.state.forage) if (n.amount > 0) add(n, "food", 2, foodUrgency+(n.cropCandidate&&!t.cultivated?.length?35:0));
+      const woodPriority=Math.max(15,95-t.wood*.35);
       for (const n of g.state.trees)
         if (n.amount > 0)
-          add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 140 : Math.max(15, 95 - t.wood * 0.35));
+          add(n, "wood", 2, t.id === 0 && g.chopMarks.has(n.id) ? 140 : woodPriority);
+      const camp=g.campOf(t.id),stonePriority=Math.max(10,65-t.stone*.4);
       for (const n of g.state.stones)
         if (
           n.amount > 0 &&
           (g.cornerstoneAt(n.x, n.z, t.id) || nearby(n, "quarry", QUARRY_R) ||
-            Math.hypot(n.x - g.campOf(t.id).x, n.z - g.campOf(t.id).z) < 28)
+            Math.hypot(n.x - camp.x, n.z - camp.z) < 28)
         )
-          add(n, "stone", 2, Math.max(10, 65 - t.stone * 0.4));
+          add(n, "stone", 2, stonePriority);
       if (t.age >= 1 || t.id===0)
         for (const n of g.state.copper) if (n.amount > 0) add(n, "copper", 2, 45 - t.copper * 0.25);
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);
       for (const n of g.state.wildlife)
-        if (huntable(g,n,t.id)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:calendar(g).phase===3?35:-10));
+        if (huntable(g,n,t.id)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:phase===3?35:-10));
       this.tasks.set(t.id, list);
     }
   }

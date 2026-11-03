@@ -1,0 +1,191 @@
+{
+  "baseline": "62a122e",
+  "scope": "One sequential A-B-B-A owned nativeV18 CPU comparison. Declared finite authored100/60 opening, no poststart resource/position repairs.60warm+240measured actual1/30steps perbranch. No sampler or method wrapping; optional diagnostic probes disabled. Dedicated quiet window requested, actual shared-machine state documented externally. Not graphics/FPS/acceptance evidence.",
+  "actualProcessWallMs": 51283.501542,
+  "runs": [
+    {
+      "name": "A",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-baseline-62a122e",
+      "scope": "Unwrapped actual nativeV18 authored100/60 Game.step only; probes disabled/not attached; no renderer or autosave worker; observed Node CPU, not browser FPS",
+      "warmSteps": 60,
+      "measuredSteps": 240,
+      "actualSimulationSeconds": 9.999999999999975,
+      "actualLivingPlayerBodies": 100,
+      "actualPresentPlayerStructures": 60,
+      "preparationMs": 2488.979792,
+      "warmWallMs": 886.0673330000004,
+      "measuredWallMs": 2987.695917,
+      "processCpuMs": 5377.35,
+      "meanStepMs": 12.447242158333347,
+      "p95StepMs": 26.11675000000014,
+      "maximumStepMs": 50.870082999999795,
+      "checkpoints": {
+        "initial": {
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        "warm": {
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        "final": {
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      }
+    },
+    {
+      "name": "B",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-final-integration-62a122e",
+      "scope": "Unwrapped actual nativeV18 authored100/60 Game.step only; probes disabled/not attached; no renderer or autosave worker; observed Node CPU, not browser FPS",
+      "warmSteps": 60,
+      "measuredSteps": 240,
+      "actualSimulationSeconds": 9.999999999999975,
+      "actualLivingPlayerBodies": 100,
+      "actualPresentPlayerStructures": 60,
+      "preparationMs": 3914.752957999999,
+      "warmWallMs": 2042.0543749999997,
+      "measuredWallMs": 5819.901875,
+      "processCpuMs": 9662.991,
+      "meanStepMs": 24.247916479166715,
+      "p95StepMs": 45.40166700000009,
+      "maximumStepMs": 78.23733299999913,
+      "checkpoints": {
+        "initial": {
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        "warm": {
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        "final": {
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      }
+    },
+    {
+      "name": "B",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-final-integration-62a122e",
+      "scope": "Unwrapped actual nativeV18 authored100/60 Game.step only; probes disabled/not attached; no renderer or autosave worker; observed Node CPU, not browser FPS",
+      "warmSteps": 60,
+      "measuredSteps": 240,
+      "actualSimulationSeconds": 9.999999999999975,
+      "actualLivingPlayerBodies": 100,
+      "actualPresentPlayerStructures": 60,
+      "preparationMs": 7619.386125000001,
+      "warmWallMs": 1955.3737079999992,
+      "measuredWallMs": 6202.672332999999,
+      "processCpuMs": 6916.545,
+      "meanStepMs": 25.841548950000075,
+      "p95StepMs": 49.038125000002765,
+      "maximumStepMs": 74.4832499999975,
+      "checkpoints": {
+        "initial": {
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        "warm": {
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        "final": {
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      }
+    },
+    {
+      "name": "A",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-baseline-62a122e",
+      "scope": "Unwrapped actual nativeV18 authored100/60 Game.step only; probes disabled/not attached; no renderer or autosave worker; observed Node CPU, not browser FPS",
+      "warmSteps": 60,
+      "measuredSteps": 240,
+      "actualSimulationSeconds": 9.999999999999975,
+      "actualLivingPlayerBodies": 100,
+      "actualPresentPlayerStructures": 60,
+      "preparationMs": 7372.395916000001,
+      "warmWallMs": 2620.787375,
+      "measuredWallMs": 6899.690167000001,
+      "processCpuMs": 8525.216,
+      "meanStepMs": 28.746948450000186,
+      "p95StepMs": 57.48554200000217,
+      "maximumStepMs": 116.23279100000218,
+      "checkpoints": {
+        "initial": {
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        "warm": {
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        "final": {
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        }
+      }
+    }
+  ]
+}

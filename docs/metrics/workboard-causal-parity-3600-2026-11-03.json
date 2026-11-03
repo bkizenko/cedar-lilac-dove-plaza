@@ -1,0 +1,2982 @@
+{
+  "scope": "Actual nativeV18 authored finite100/60, no runtime repair/grants; bounded non-sampler diagnostic counters, no CPU/FPS claim",
+  "fixtureFile": "/tmp/hearthwild-owned-UI-V18-100-residents-60-buildings.json",
+  "runs": [
+    {
+      "name": "A",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-baseline-62a122e",
+      "steps": 3600,
+      "time": 119.99999999999575,
+      "marks": [
+        {
+          "at": 0,
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 30,
+          "state": "be840a7d80d00f1ab3f160059ea8f0285fd7384916aefbe0a39439f562cb9e2b",
+          "choices": "6406dd50078d6252a2c55dd90e1a37c221062387d40e25d573a22816a092ab23",
+          "tasks": "95e6b8bd7b3c047143213f354bc6f73e044e6913a1e6eb9a03a70d0e05d9569d",
+          "seed": 197887705,
+          "draws": 266,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 60,
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "choices": "768d6a1c944692f408c95d110a85ab6bc014eedcd050d48bafc89e97931a3f49",
+          "tasks": "73b8fbb501bd328c28b874ab6946abca08c8cf980238c07d0a9020763358d576",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        {
+          "at": 90,
+          "state": "aa41799384c9dc1e4774159d66da74dbb9fca2dd8a622b9b6d242aaa310bedaa",
+          "choices": "1355bc6f53a409fa6c6d1ee3a04e400bb107bc49e76ce0e6342c2cb8e54b549a",
+          "tasks": "87a02b9b806a722d2c8d0912083b037be0fca2e88087853a164ff117744b0f8f",
+          "seed": 493943452,
+          "draws": 739,
+          "cache": {
+            "builds": 1,
+            "hits": 8
+          }
+        },
+        {
+          "at": 120,
+          "state": "27014a66fa57694d4cad2465d7ced5a5630b8f9eedd01306dec53d35ba8c4b20",
+          "choices": "3b9f0c17d756a47fc9fbe8d74f5601d686620a701ca41e9acfe8f7fee9d46bc8",
+          "tasks": "50d508dc8d15e85581013c555617422c0cc6d9d03413baf409223efaf59666af",
+          "seed": 1131094063,
+          "draws": 872,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 150,
+          "state": "d9d9796486a366ffb8d1e6fddca0b8a17f92ff5e9c09f9be5fdc9a839f7cee66",
+          "choices": "a270f585d6d1033f37557fcff7e8ee98f4edc6975dc33378f2b63357e72fd7cb",
+          "tasks": "3b2898a69685b056c7add75dbe6315338a28ca52151b9f089c82afcba5824707",
+          "seed": 2409016209,
+          "draws": 898,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 180,
+          "state": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+          "choices": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+          "tasks": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+          "seed": 1493951251,
+          "draws": 940,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 210,
+          "state": "d920a036dadcc03c6558250e6535534fcfc434f7f0a6dd4f2ef07378e419a242",
+          "choices": "07c0e56735b2f5f75c1b9b126dc5f576563405213830898b5f0edb8b87f31606",
+          "tasks": "7326dae72108de59a30616dfdccbdc3354c24c00bb332ede5bbf79ea2c781d44",
+          "seed": 4132599034,
+          "draws": 1025,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 240,
+          "state": "fcad6aad2d920c4cb2185c509e9cda6dddaf86180ca7b51a90b83cb94f4674dd",
+          "choices": "c28f13f24780c949a63343b3e9a6dddab4431f2bd10a463ee5b852373d8ad7c1",
+          "tasks": "ee851296b6285bd3aec80d8dc9bef03a6431191cda39a289c42233963c24c0e4",
+          "seed": 3669307424,
+          "draws": 1079,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 270,
+          "state": "6cca6967caf6744fe77fb15482255378607270a478ac6efa5cd9133637be5367",
+          "choices": "86bd031bd44cb2d3a5c6e33aca76ddda490b1f7b4fa30a4591141768ed6fd04a",
+          "tasks": "3d5b5cec4c0e0370981e8196c98d7c7818fa6591eaf85dd08801160c6b1cdfad",
+          "seed": 2255806736,
+          "draws": 1127,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 300,
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "choices": "a9d84d5093f3c13910636281c37b9744f35080e36de5506eb732de72e8c03b39",
+          "tasks": "256b6db9b6939059a6c65e8957755c8ce957fa3a637e7b3282b3cb26093c9f29",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 330,
+          "state": "b832e476eb338c759507293d37f5bd7944497c5aab061500e49ac83d35be0915",
+          "choices": "502ba609de5130e49942083ec91d4ab69f470ce15fc1637901c4cbef749f3f5f",
+          "tasks": "e3e6ae69d065a348b1223ee5170f6666df156d853e101836993374fe6f201a4f",
+          "seed": 2651531537,
+          "draws": 1282,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 360,
+          "state": "9d88d656fdcb74f630f79b2169b9b77f5b9f2d25905c0cf87137f4fff1fc74ea",
+          "choices": "ec608211c6fa056f3060e474471ff4cd8f1a2b3e3bceec15b077d5c0e7cb8bf6",
+          "tasks": "4970cf0d152dfa004668381ff4610550797407ae1010906fa0ab98737e5cdfe2",
+          "seed": 1162349232,
+          "draws": 1415,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 390,
+          "state": "db5e2f65d15f5d26ae5ead3f568adf89df729bba69670db05871b2d8a45e3882",
+          "choices": "e6229610bb1e6831ad81cdb55c0c2e886f4a477d5cd3ac017f8e1b9bb611a36b",
+          "tasks": "e6137f6101e44b539915f348237ca505209e8ada1d6806ca45dac3b95e9b7357",
+          "seed": 2932944591,
+          "draws": 1544,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 420,
+          "state": "45aff9034c89ff3eb62e2621df2ee266fc115320437dcc30b643e7627e4124fc",
+          "choices": "51ac953762b6f46aecc06e9078c5514c65cc9c0bb53c94a49134ff4f4175447d",
+          "tasks": "e6581e9e8cc902c89595d6bc041359035caa085cb2ad00c7a033799d3ef85a1a",
+          "seed": 311300170,
+          "draws": 1681,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 450,
+          "state": "df3a0b619c477e31b802fbab2cda87691a753fff1eaab0527bbc35c4c8271473",
+          "choices": "b1e0257f1b0e7085b710d5108b7b6d529b73cd348318c5243505ef52e7414cab",
+          "tasks": "dcfbf98667366556214acde7d1664090a912e3a2ffc75761c1ad8f4a5052b148",
+          "seed": 4252760594,
+          "draws": 1785,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 480,
+          "state": "b6d9b00369297033d0c17ea6422acd17ded17a4011ff151ccdfeb9efc3a3d38a",
+          "choices": "ae0956e0bcc1c15eabe24c037424b74b6bff2d005319bc053a780208612f52ba",
+          "tasks": "a50834207f795e8515b43dd8fca1117202fc4d9dd85f56a0ddd87e2fe74c530d",
+          "seed": 2697261134,
+          "draws": 1925,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 510,
+          "state": "854e18b016bee7924924d6caa721fde8238843426174a1b4d2c512d57c0876d2",
+          "choices": "2e76c9349c8ed5db7b583ffe5ef3fb701f07272736f088910468eead082d591b",
+          "tasks": "a50834207f795e8515b43dd8fca1117202fc4d9dd85f56a0ddd87e2fe74c530d",
+          "seed": 2543027146,
+          "draws": 2065,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 540,
+          "state": "06c9be85b7aaa58eebeaed3df2efebfb260a017d340e2b5ec6e7a5557cfe891c",
+          "choices": "a375c4729c3e4f835b11277b6adf1cc1339b211c2dedf175f84a3d9dab361521",
+          "tasks": "7680869098c53490d4f71126cec17d05fea678c156b50536d3c0577f2cd102ee",
+          "seed": 102833554,
+          "draws": 2169,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 570,
+          "state": "1b7b2f91a4292f32c377dc4f27ecb5471b2b2fdadff6bf551d2de3d70dd0bfeb",
+          "choices": "79c1c1f51721389a1cfac61d43f220b120e80bd4facd6c3357abe252535c5d7e",
+          "tasks": "97a0f80353320c31e2efd9bb5b8eeff2157688cedfa8895e986b3667b42b7aad",
+          "seed": 358827842,
+          "draws": 2281,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 600,
+          "state": "a9ed7e789dbb7521d914ee03deda1847b2e4361e713338a1d0864779ec6074be",
+          "choices": "3ade5faa20212eba3e9074fb31accd452f862aaabbaef3808f56144b6cdf3103",
+          "tasks": "14a9b7be558e0cd639e74a5f5a048193b3d5143b3457bdc8c20c0b1042c049a4",
+          "seed": 2054464754,
+          "draws": 2393,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 630,
+          "state": "57efbd86446792a49d598deb67e4f06a05e96956df2f67a3263eda846cc36872",
+          "choices": "c26ae81d1e2c28d939b5f000d74f57d26803ad0e965c30d5fed52f7fc4c15665",
+          "tasks": "c13eab9bffc23015d255f0172de35b5f886942315f7f7f6772ce48a6bc8fefba",
+          "seed": 390478036,
+          "draws": 2491,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 660,
+          "state": "8c58372247b90b204a099dac78239029d6ea8b2f7ffcaf72fcc2c290a1120bae",
+          "choices": "545c70ae3b8cb8b0439d5160de141c27e09e284fa90bb71fed72204f8687309f",
+          "tasks": "95d739da570a9398b6d9eaa658f4dda27c5cb686618ff9f515b45c1710ae3196",
+          "seed": 3444303418,
+          "draws": 2625,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 690,
+          "state": "cf408fab84f251aa7bcca2a3c5c488ccf0010284b0657f01a96594c24522c758",
+          "choices": "f5ff6ee51cdf4bb008ab8bef388b3b7fc9ccbacee98f0618168ebe435bb1266a",
+          "tasks": "1e7dd34fcd430a12fcf063f47e86e107ae7e4d0212053bf8dd50c59dfc51848a",
+          "seed": 1616918787,
+          "draws": 2716,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 720,
+          "state": "d21cf58dc4485693196264b718f12575cd5734959ee007cde6ba1a4bdb0cf39f",
+          "choices": "0522d7dd07ab10fc8478f629743046734903cec1fa4bee84690e2e48bd8262bc",
+          "tasks": "8ea6aa9efd5d14671b244900ecb3b560e33c4967214b381b16da229193701a94",
+          "seed": 626961751,
+          "draws": 2832,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 750,
+          "state": "0f74069181b53bdb73ee34a11194d841af9555c3d67284f5a1fea415fa8d27d2",
+          "choices": "d2c273a5fe8fb20b50e4c18550c20ea45f7adf187a677a9052d02f41f1a5a8c1",
+          "tasks": "6ea53f81b1b48690fc086db6e114298899528aea2cedaed36878ac2d9e635761",
+          "seed": 306078798,
+          "draws": 2949,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 780,
+          "state": "9ce8444ebe9af3854b245cdc649460493655e1f4db0f823f603d96589050b3bb",
+          "choices": "715b933ba8dceeaf25192fc1b107672a07ec4cdb915f34c8ff6d3df1cc50036b",
+          "tasks": "8c0dee1a9ed411848f06c2ed6834779fb72fd32a1738f6e14867ada0539d9ead",
+          "seed": 2497998638,
+          "draws": 3045,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 810,
+          "state": "6aa621bb27eb386e7b83ef292198ccd62b848d89b23021db09346a12368f1f6c",
+          "choices": "43f98e766a425b909cdaa0b049cbfda36fdb2bea6e2b9357dac17421c3cc66fa",
+          "tasks": "9043f8611a8861c98912188f0a752c8fd69d4504e4f3b57befb0c115dbd3a3dd",
+          "seed": 1356135060,
+          "draws": 3195,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 840,
+          "state": "bdf44218125c833be4f88d48bbb35916b605e43b566ba09c1ab4028349d1522d",
+          "choices": "afabc5845404d9635fc0052eacfb3210cdccca7b22e5cb82157871f9e187ac35",
+          "tasks": "7f621d260fe350bb108f25068b985382184b10df75b3df1a7e39f6c6e7a6d75b",
+          "seed": 1497830298,
+          "draws": 3361,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 870,
+          "state": "3541e6ae9df28e76f5b9199ab2fab16959b5cbf19db6a30b6a038febc00f3215",
+          "choices": "a2b07a322905760191d3fcc91a300dab01d4429662227d7c8fb68ae615c02c19",
+          "tasks": "8731d3de85fdb9add2be3a3526cd9076b0a4f56b2570a9e7e59440fdbd826777",
+          "seed": 4227809900,
+          "draws": 3443,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 900,
+          "state": "f0bc6aa402927541c95dd3bbaed57dc9e9a0ea1f2441e2f7d2f03bcffda0caf8",
+          "choices": "55e29b9d599cb9bce7eded954213dab603eeb30f6bafed7de2c1b889b3ef8e21",
+          "tasks": "50927b1a3f2947a5adf2320dc42e9229adb8f8dffe76e515f2a417b37e6c6f79",
+          "seed": 3044367877,
+          "draws": 5558,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 930,
+          "state": "9409d869702520a7ae652526c35731ac372046e577a23d9418ea7293d7507af9",
+          "choices": "ce69db3c8560b9b8941d31d37771f3c56cf60c6a6482cefb109b050977521f49",
+          "tasks": "2f5ca6453011cc25f47ca629f994ace36b04112a5b34c638750d55d50d71292e",
+          "seed": 3965923036,
+          "draws": 5667,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 960,
+          "state": "22f0ff5562456e93be57b68bd13969cd38c9802c6b32a8b2f51377c786de5421",
+          "choices": "58f87adf6adff7dc31115dc7310adc7119a78d3702f848cfe59757a306612c5a",
+          "tasks": "22bce4abfc9100145b6725b00463093f2afe78e66abd44a2c36d6026a6d659bd",
+          "seed": 777062387,
+          "draws": 5772,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 990,
+          "state": "6397551e809f868e68497879bee2ee8dc05ff68cae32164e97392c3c634efaff",
+          "choices": "c389a3211d1b07f31178016f3c8be2347eb7ed68b7cfa6cd714abc7fae2d31f1",
+          "tasks": "5ede422b1d11fc1f097b90dda10ca7cd10beae514ea676460a74e5f03344203d",
+          "seed": 1764403330,
+          "draws": 5929,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1020,
+          "state": "895f00456bb0358466cd426d657a453d8c0079c23a9042f951db7286b0378da5",
+          "choices": "44226196ed2f804148b180a33f89c7c865f66382267a6a758090bcd517234492",
+          "tasks": "0b87a056a8ca83dea9558fedceffd4c311b229987d5363c6cfa1576fc4cadeea",
+          "seed": 3720181251,
+          "draws": 6044,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1050,
+          "state": "a6b42fb2d8114e9f0850a66f4fbc1101fcb980c9ad438741a8b8ef057082a3bd",
+          "choices": "0b3a446d103bc0c8a8b80a4bb6329afffd6cb11a258c2c2277d1f7a92f059c71",
+          "tasks": "1609448f62057a2ad62837f8fc490e78a31339146cc7c6b38fe935df7e43fb35",
+          "seed": 1494459615,
+          "draws": 6168,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1080,
+          "state": "dfc0685b9bd0d5351d794a85f513f2ec3ed2f0209ef86c1332a5e5a6d89b482d",
+          "choices": "46c112234196e613ebb6341bfd0bc89653da91b3c9de5b928751b85082dd4118",
+          "tasks": "1744dc8bea1b6eaf1b569c64a004f4b3da720e61c3d25dd0390dc94ed83a4074",
+          "seed": 3310381555,
+          "draws": 6284,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1110,
+          "state": "265ff7982772aa02d2de9b9d9ed12803939f6d12c049c2cff6680d7be6e8f2ab",
+          "choices": "7daa233ec29d4ee53b8c74b5d305c6c21d090cc9d0e05dd1529648d3e996bee1",
+          "tasks": "b1a8215ec13e227727e2dbbc7ebf64a7af53fc45580e37af3123fe1b9604dc89",
+          "seed": 3561908221,
+          "draws": 6382,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1140,
+          "state": "3ea7c4f6ab8d373382c301617abbda8d3e970591cf7dd3ac931c4cecf721a2cb",
+          "choices": "ea5fc69c4969ca334f783128bdd8af053e23ecc915ce4386e44a6b3d660e50ac",
+          "tasks": "bb5fdceefb8f2107560daf2e4f2c420529a08b317c0c0cb1968fd59fbdda3f01",
+          "seed": 1160701384,
+          "draws": 11839,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1170,
+          "state": "a7c63cc048ab29534e0f5c5de1ed9e85dd378531850ce33d4568c97b0d5df1e3",
+          "choices": "85bca1aa3f4705e80d08be27d638c7a95cc13f9502a3c2699cf3ce77e1f9897c",
+          "tasks": "44f3f728a7734acccbf19103b28591e4fbe2ea7f9678836ca26e510a9d38158c",
+          "seed": 1605376804,
+          "draws": 11979,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1200,
+          "state": "ac780692fade5684bf141d1439cb9531e960052965668e776f45afeed0278ddc",
+          "choices": "c8be443e3cf09843f59618777cb501baa3e4fad2ebc27ce8687ccee022cf2941",
+          "tasks": "5817779245c9f7f488e5bb818cdc5b8e40c029163ca1f47af354b080699023a5",
+          "seed": 2017138525,
+          "draws": 12110,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1230,
+          "state": "377c7db631f083bfc6939aa325116c50423277d0a584061ac9389f818bf137a6",
+          "choices": "2b49718a272d8e018401a3382b261832cafc44cadb6388e8b8a2b265e132f97f",
+          "tasks": "e4a7d75969739297304c61d09f6be1934ebadd7ceef1cae57222bbed4d141d93",
+          "seed": 3981316663,
+          "draws": 12272,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1260,
+          "state": "823c90b0b68f4f62a61844bddc3f2caee197470c8b188a24c639ebdee6f3bae1",
+          "choices": "19e0bfa0793a6c6021b7bd9a84d7d44949b2db33cafd7a9a9ff255a221cc08ef",
+          "tasks": "da522c9c112e3460341a1568626b0520d4a2c99ca00d4997e34e6cce6e04c8c3",
+          "seed": 1054512685,
+          "draws": 12446,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1290,
+          "state": "cc912b77cab5ac1e62cbc0dbfc78aeb05ba9d86c0cd66e41e157e2c4de3f4fb5",
+          "choices": "baef857546edeab987547088fe262c913a830c170b20cf7cc0dc28cede835802",
+          "tasks": "883050db0f7fde38c26dff132a5ba586889d99a5493116db481bb638d97b41b4",
+          "seed": 2938558666,
+          "draws": 12561,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1320,
+          "state": "1bff11e38d31696d33b73374450791f16e1bebe1d220fa2dad22e4365d67fb76",
+          "choices": "752d60bf20996d8463d2cb3124035e65cfe6a01a589e73be4b5ba3e15edd35f7",
+          "tasks": "68a247b0505a1109ebcd9c008286de45096b26a273028b37c9f12e2baae1012d",
+          "seed": 2624048735,
+          "draws": 12696,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1350,
+          "state": "504ad7a5a273c82a5b4ce8a04ba3fd86d1b0a16fbdcfe1af81719878b5c891c1",
+          "choices": "dae7df687e280fa41f320412c0dd9c52516603a108a8932e52f75dcf04dd5be9",
+          "tasks": "6ca4bc2ea6af90dd515255f9e9f225d02e3a90f23897fa42294cb03a8fca4757",
+          "seed": 1791356474,
+          "draws": 12865,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1380,
+          "state": "76516e0d693f46af303cb26468d44268870a7471e2988abda0c481b5ed2759dd",
+          "choices": "51d154e6470b6196174956b66e6e468bf1d6c66206ef9405089158a78ea48e94",
+          "tasks": "ab2582e239a37e81b914de220be8096a064d1c813f6bdbd27112e9b0ce3e2d9a",
+          "seed": 2307835534,
+          "draws": 12997,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1410,
+          "state": "417d5e9ebb6223d9c68e486caa244fc71319715ceca753abd03274ac1e9faa98",
+          "choices": "25849024f3a63265a2ffa8ffb93171a0e8d2d1d485793fa40b41a9e0dc7a514d",
+          "tasks": "452d25a643242b65f73b04ca2fb0e90c7257e144f427b176b9c58fdb7b87b99d",
+          "seed": 2997047709,
+          "draws": 13198,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1440,
+          "state": "b18e026eab9c3cd2098f6401ca1e8f2b316725207611dff7e68706361ba8a311",
+          "choices": "426c5395165e2db7af6a2191953db90a361d869a24eca3724bf0321d57b484e1",
+          "tasks": "f66e39fb3f0ad4db2d58509e3689d6c5696dad1aa46bd4d9836b434aee42accb",
+          "seed": 3419690119,
+          "draws": 13376,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1470,
+          "state": "d23bfbc92f39a278de4658f80e0c8cd07d0b075ac77c34efe1dd144e4703a85d",
+          "choices": "f5c2175e09f56bbe90b14a2c050b1904dd357a2959c3f57748bc34e2fe65dd37",
+          "tasks": "48d4c0b480afb9a339aaace765dfa4981f05c798f0920b6bee9bff0259d7e24e",
+          "seed": 354485682,
+          "draws": 13593,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1500,
+          "state": "fe1f86a966077703c20132404c5571b2abf1fbac8f5f753a01a6d9fb2bdf4271",
+          "choices": "d732be6a90c01e1acc4562d851d362fc6e67e3998f4c99262a775949f56e90c7",
+          "tasks": "24694186531c9d44e029c6cf7acabc2b78f1aed3c11b247005540122f8e31c92",
+          "seed": 446366621,
+          "draws": 13710,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1530,
+          "state": "9722fc260a2376f48a25e16794c104c56793ae6d7d5a2ab32c03ab0da289a7eb",
+          "choices": "e4861df82e59a29eb4ca86ea2e3399d15fd9a798dbe50b73845dc6a85825f63a",
+          "tasks": "70ac97c7945a4f1051f3feff3007d95041d751f655e87a54d6ed7977175c0e11",
+          "seed": 2151163129,
+          "draws": 13866,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1560,
+          "state": "dc589e29de087c840b63649aca4f4bfe5c1b4dece56424366be915fcad6d7aa0",
+          "choices": "cfddc5ed59d08121d67bb2e9b078bf09ba3a67133bc5007e48bd56ed65bb3f66",
+          "tasks": "cd3ad3a8dfa11f92de0e7c6a6a90126af264967d559eee3e967ebcb06defe3d9",
+          "seed": 2025635849,
+          "draws": 14010,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1590,
+          "state": "b99bd13a39040254fddb52cf0e540a188d3c10a7b8303847a936ec66efc737b6",
+          "choices": "3f63e40cc1ff1032d53345ab8b9fafbd4b148636c29a298b4f1d5aa15099b132",
+          "tasks": "0aa4ef80a04530df8d1caf13a3799068359f3b52bb8620218f61e5c7cec22cbc",
+          "seed": 3227090895,
+          "draws": 14088,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1620,
+          "state": "1d2de4c58e7bd2959f398d0408ff44f524b4684cee3a83af9e97b18238088fca",
+          "choices": "3a1139ccbc1b0740d3ccab7d68da01c2aa234b68ea77dc4bdd8a699b72f367dd",
+          "tasks": "1758a66aae0e7a822ae8c0cd20f9a3c698f24cdc384ebac8e0bb4d99a9e61824",
+          "seed": 3318161812,
+          "draws": 14203,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1650,
+          "state": "756fe7a84490b073a96371afd53f0d0924b9af8d8a647ab9884c18332aa8494f",
+          "choices": "6b2c72417fc068412b8fceeada7bff626f4b86be5c1fb097b884adcf4d10a821",
+          "tasks": "c0079082e371d4d00ad6713346e17213d8963e026103ece7d062af8390e34f48",
+          "seed": 1636712148,
+          "draws": 14267,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1680,
+          "state": "40d1c4a354dcb69a3b5cacb1948125ca6d6fafc779f0aed3ac6901b696b3b45a",
+          "choices": "edf0b00386677a8da706958d19a64078744622f5fdea07c6af224732b52ba1d2",
+          "tasks": "086120af52b976b0fb1ea33491e4efd9a3a71f653259e5e43fcbeb3e1fc7aeee",
+          "seed": 590999138,
+          "draws": 14473,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1710,
+          "state": "78b617305be53f76981e4348b8ea78b49677e7bff90062389b1128d996f3f262",
+          "choices": "2b91d480421a1ca4463382cc66ba460b9a01b991c2cfcca9f6127ba6ab1572d5",
+          "tasks": "7337291c6b5747823087bacc36b93d19e06036bd5eb413c314fae55b17b6dc16",
+          "seed": 3156788655,
+          "draws": 14568,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1740,
+          "state": "e43914fc86d9e94f87fb9cf163914c5981aa41854f3c9e0a9a253e82278ef69b",
+          "choices": "01889a2e14e34e718b2962b4507aa3fa2c71100174b4b78d704198b90596833b",
+          "tasks": "e27582919ed20f150d375455cb145e5acd7ae2b7df4e069e3e4026c421ce42ab",
+          "seed": 856411631,
+          "draws": 14632,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1770,
+          "state": "a7d6f65bb355c56721e74f985b7c1f99ebb48fbb6dbd0adb95670ebfbecbacbb",
+          "choices": "7dd4daac9f94af87db25f716597221cb8ba50d4872858b8f1bb60e9020cae7ba",
+          "tasks": "1f1b157a5753e863a5065d86be7d1e80437d887d0ec4260ff2ef3c8b74ecd28b",
+          "seed": 1792165595,
+          "draws": 14708,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1800,
+          "state": "d0a83595ef45cfe7c5367aa525e6dc48e8fc3db5bd71e663fb077a36ffea91eb",
+          "choices": "ff1e46f96b2f65ba7a4ea7139e623edecd63b0753284afd9a495da43469990fe",
+          "tasks": "c0a92d6b7fcecd90d5829c4b11303481426f54a0d9de3cf06717373b44f572c2",
+          "seed": 2610467012,
+          "draws": 14827,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1830,
+          "state": "25c89b83220b849098861c8d4032e0ed9217da4ebb56a1c6c20d340c149ed639",
+          "choices": "55dfc64b3c603c59612b8f63a8acf22fe43d45c52e2d71f711d248222dd373df",
+          "tasks": "d6799ff5a645c4d72fd7ae6803370142ede5dbc13597bd2d379abf7ccc08e89c",
+          "seed": 3836798772,
+          "draws": 15003,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1860,
+          "state": "161d14b985d789b79c452f40a852e18e553207aa0411556819549484d7e18866",
+          "choices": "20d7286dad291370a0b564d9ee86b3e313dda37971a968e305debd1be81433f7",
+          "tasks": "cdf0e8b3008879e813d44d54a3c57c5e526edd4847e2f72ebed6634d66d03235",
+          "seed": 4252981424,
+          "draws": 15239,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1890,
+          "state": "c42c34c9f198313cd8e63ed803abaeb8de3fcabd68ffc01094300ee59d4e8416",
+          "choices": "185a160c2eb80a42d594ce2c09b5dc6dea98c7b0ad288be2a118f1ecb3adf8af",
+          "tasks": "b6465b9edbc5109a624ceb39b82d8a55ea1851945bb02825dbad24b99275c4ab",
+          "seed": 2605550373,
+          "draws": 15318,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1920,
+          "state": "0a895c467bd8969eabe61a9c21eaea8c8d81426a6992b846b6d2a6686781367d",
+          "choices": "35bbfcbce757491a66ac7902f18f06dd124a21ed77a9fcf23a217d3ff7ec76b2",
+          "tasks": "692ab5a1b7b2d0167876ce84862b5278fd57fa3a022fd7ce76e9ac6b8184b51c",
+          "seed": 971708284,
+          "draws": 15427,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1950,
+          "state": "2c4aac4ecb5e0ccf8247d98dbf1dfbc9a2564ea224abc3892d4b0973019d1377",
+          "choices": "123cbc5bd8b68a98fd8aca8650f4c5e845ea34c5aaf2b5a135ddd23ede844d79",
+          "tasks": "6ae59a7441092228dd2465aeec5c2c73102e4014ece70d6888db1812a6825c7d",
+          "seed": 701847170,
+          "draws": 15657,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 1980,
+          "state": "cf703ced635107410b2752282084663e5eb0eaf6f3dfdf3d31d9c2cace51e506",
+          "choices": "ff688475208f76a0b6c896a0c67eecf547000f7a35ae6188ff3834987677b727",
+          "tasks": "1fe9663af6ba3923cf3a40f9cb1334e21d21446fbe29f6e8b305a08627c32bc1",
+          "seed": 1132593832,
+          "draws": 15775,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2010,
+          "state": "8839a84558814e723aa9fa1454757ce38b6d7e4944cedd84d0d8e3a1b06fcbc0",
+          "choices": "834455a06f34a7d4751216ca0359d343a4f1f222738e5a34728a795bab5eead1",
+          "tasks": "80c39a372aadbf73c88e6433adb64525e22fca7cf093235805026743886f1583",
+          "seed": 953545742,
+          "draws": 15941,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2040,
+          "state": "f60877f30edbd5815a574e324a6238da001bf708e06779b32c4106631eff90da",
+          "choices": "d6eb7fe8303b8b15b5c90998f9ba966d4870f73bf893cbfa03bbe6759c3357ac",
+          "tasks": "c4d4090ef89c110817d6add83a7ebba9f31115457c218b0658c711261410ee71",
+          "seed": 849462127,
+          "draws": 16040,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2070,
+          "state": "58b03f5cfad52e673371978b5b16bf44c5d016976e1120ab7a98874e840cf31d",
+          "choices": "7a348f6a631d1629aa5bb7036e144588e78b910eb8b95c55aa4b86ceb96fa444",
+          "tasks": "0714b9d74d3ade501b565dc8f3163ea0bd3915296b857200cf001b97766accff",
+          "seed": 1455086102,
+          "draws": 16237,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2100,
+          "state": "863ba83fa4c1b92a08cecfef912600e78d6623d172f4d48f966428a5669128ab",
+          "choices": "662ebe448faf3f09c9407ae3f1df8432b88f80e4febfc9276612dc6a924d0d78",
+          "tasks": "de27e52d525bcd52b9dde800028fe65c4e22b34469f396d8d73f9cd4543528ef",
+          "seed": 455906269,
+          "draws": 16334,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2130,
+          "state": "f4c9916a93c1c62800362fb2f49b90d143300f62869744f2db69d711be041df3",
+          "choices": "14eeb2a7c0261f6058f9235795a0df4b5d9318a37d83f7034c93a553e59d72fa",
+          "tasks": "eb124d923ea48db9912dee6ee43b6fae554d3ae8f0ed48574b0aa838592d03ce",
+          "seed": 1681880398,
+          "draws": 20613,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2160,
+          "state": "6a2a571256bb35808902ce2409528e2b5013a654303d8d32aeab477abee61945",
+          "choices": "6901985e20a15aa737eb8b4b92f3928f263e0a3e4f2481216ddb7d1de9ac8383",
+          "tasks": "16ae7037adff5c7f9b65e46dc1091603569c0cab26a3fcc0a36a800f5fd553dd",
+          "seed": 2799871942,
+          "draws": 20701,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2190,
+          "state": "031bb7949e17ccf6435c0ba97a70a6fe96b11e34cade6b52b692b34c04158b20",
+          "choices": "9455468ec8874cb6fd714acc07b347eaa2ca6d0de6ac3ee79876171490daef66",
+          "tasks": "f17f08cfedcf8bb86c9c1e419c1a291dabf2498ae287e8c53c97245b457a6766",
+          "seed": 576688545,
+          "draws": 20754,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2220,
+          "state": "2e9cfabccc70a1982679f7744146b47dd07f323e1d2842510cb21807e76f6bd8",
+          "choices": "f50d24733a199c83439a623abe4b385b94bf2eafc6171277310f1fb75f3cd028",
+          "tasks": "cbdfa65f3e01d8a8c22778cae81b682a48e6874683cf72089e8f24bce9a3456d",
+          "seed": 1742751657,
+          "draws": 20826,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2250,
+          "state": "f9242c9a564e540fecdaed8ca65980a5140e423a50e123be852462da7415f82a",
+          "choices": "fd581b87a6dc0cc697415bc95dd5eb1bfb79c2e24d9c3c9035c0857cb4a9e07e",
+          "tasks": "07a8ae97bb709811663c5f03bcdc2282b448884f3e5f8bf4c97e1e021e58a054",
+          "seed": 3387035651,
+          "draws": 20892,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2280,
+          "state": "e31f4df7e8b7305ee4d6e9571fbce3feb799d70d658716a118091692a2708a03",
+          "choices": "e44ba771816662f4e4f96332354823d75ce7f7a2b57c4475a8b7f115cfcbad92",
+          "tasks": "55954af31df05b5fef5b7499f5beb4f29dbec97af16200b62821d32b1677cd64",
+          "seed": 3079883817,
+          "draws": 20954,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2310,
+          "state": "861c25312d2f4ddb49bd0d6dd5526772e924c128fbc241ca06412eca2fa969ae",
+          "choices": "68b1ddeb5f94b6fbfc6a1925860308194f285b363bc2e25632f833d0775b6b08",
+          "tasks": "0afaf0f489b644562c917e39db36f0d044fa788201ed4ff411701b6cdeacb9cd",
+          "seed": 3743676555,
+          "draws": 21028,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2340,
+          "state": "25f1d827eb7036f104eb4738dd3883bf27b5bc57301f03c7d857c3f16d0f32a2",
+          "choices": "4353baf9fa957867a4144f6ff52af4a5d89dd6433515a5244157675b3930e247",
+          "tasks": "8ed85a43c7ae9afa389c1f82e373f7fd9b6c7cf8503334dd6b61e629b78626a2",
+          "seed": 70470811,
+          "draws": 21300,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2370,
+          "state": "c86aa5a6bf1cca0ecf072296ba76190c25d6c0c7d8a77cb1c61b4a656145fe2a",
+          "choices": "b64375306f2d5cbbecc5d4ea5cb047a370437ec6ac5fcdf356ee861a1f64a443",
+          "tasks": "a78e48414355784723e4bf5864c0bbab6cc99b99136245e9b1f9d3bc592a5711",
+          "seed": 3474212440,
+          "draws": 21391,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2400,
+          "state": "acc736364dabc8cb6e64bc0ba521cf57fcb72c07be0fd7956c0e5d848f782a0d",
+          "choices": "af3fd1ac4139ae324b0b67fb9f43ff498220c58cd09b12e386ef5117dce9995a",
+          "tasks": "cc1e1052dc8b4ec341528b16025e0c06554b6e625bde0b7997193f69d14672dd",
+          "seed": 4150008459,
+          "draws": 21540,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2430,
+          "state": "ad7c00167317e0ff4afe86a7e849013bd096ead1d4af53d7201ff41305adf0e3",
+          "choices": "f0829a2eceefac78dfd9db43456044304b2905a8417834d81407c84e0246b6d0",
+          "tasks": "d394a8cab8a232821bb8fdb73ce7046569794a9a7d28f398af264f56aa9d2904",
+          "seed": 171159346,
+          "draws": 21657,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2460,
+          "state": "caebf80f652f6f0ad00d71e6e48d5895ef46a7c215506ae0eeb9a7e0bcdee2bc",
+          "choices": "7b1a8d89698a3e20f9a342321071b978138ecb4298263b604f39de909e2eb445",
+          "tasks": "2ee5010d6c44940e97053e5f161eaf0b8c69c4a057e7a7791528a8b80e585f74",
+          "seed": 4265382006,
+          "draws": 21837,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2490,
+          "state": "a84dc76b7e06eff027365f7551a34fda91f0fcaa789449470c5ac0ea8f2064b5",
+          "choices": "639c3558c8dc6605e22e3e7b7a77f1887f087f58ca9d1cee099501f043647716",
+          "tasks": "f625e21d22d5a31ccd36b0fba9acfc5d8cfce0dd05f0b725b751056fd14db4c2",
+          "seed": 3495264794,
+          "draws": 21921,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2520,
+          "state": "b047d7521d75714aae5daebd8110cfe8f7150ff141d4a75e451726205b344197",
+          "choices": "2162fc92e56eca9da3e02235679fb1fa3299f95abebc725faa30540947053e7f",
+          "tasks": "3b7eacece360a568eb66c60501b7dcff1d7fb2db6488e69b3b31e9538540fa60",
+          "seed": 926430708,
+          "draws": 22107,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2550,
+          "state": "cd1bc71660207130e7933b407126d1419d4ea6b4d9e00a6d07261864a69c5b4c",
+          "choices": "0f6e82f48e952b75e45f091e8711107ba12db1353550e8b86161ae9b9ba37d93",
+          "tasks": "3556208f76df389b835bba98f8511b84b9adf6632c599c610a1e343965a5f88b",
+          "seed": 3194221740,
+          "draws": 22195,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2580,
+          "state": "56f192226d54fbefd311867bd0ba20143d9534259d14b6104ee4f6954c3bc534",
+          "choices": "9bc6d3332b04d712568afa8153e2ca240f9d890e02f48151037de997531a4079",
+          "tasks": "39643a23efd066c7936d23ead352e117d48350354a843c6d05508bea5b541d34",
+          "seed": 1235046141,
+          "draws": 22510,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2610,
+          "state": "8e378e1ddac011095af812161280212dcfd1fed6e0bd4be57c4ad4c795593ae3",
+          "choices": "2082f7f7c19eff09ab7045b299f42d14433bab656662c839b337e08eafed93cd",
+          "tasks": "4a9dffb2096140f3887ab110d851a03e38a27a47a4396dd62c776bc05fc82b4d",
+          "seed": 3187749540,
+          "draws": 22603,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2640,
+          "state": "969888f3f4628f2b785eea2378a6ae0ce29339483808adc606ec541a9ed48b63",
+          "choices": "e2ab46ea58a02fcffd7f986cad3619c473595ef3de561811ace08d513234493b",
+          "tasks": "4c3607bc8a4aaf0bf0fb5e4c119bfe1fafd8edcc75984e332600213268b87dec",
+          "seed": 3367205641,
+          "draws": 22970,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2670,
+          "state": "3250f74a966c655a9fbbfc2964a818fead0061a64b51ff63e121755f4c7f1c34",
+          "choices": "84944ea6243176edd45fe0b40dce9d39c536af4bd60cb5d247f4841c80719348",
+          "tasks": "a9bde6c949039b828d2ee00b1b60c18d981824204a570812c9a28c9ab4252f9e",
+          "seed": 1574150961,
+          "draws": 23074,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2700,
+          "state": "4de1ff7e8d9062348b67441fedfea2761ee8d7109ac1075565e4c90f816eeece",
+          "choices": "3d2f39a74e6b4fa2bed659fd16451648b4408127b1fafdbadb8652865f2d4f11",
+          "tasks": "82e631feeee2f8a71c8816102c59ba416270e94da32f67fca83764b25c23a627",
+          "seed": 2768352851,
+          "draws": 23276,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2730,
+          "state": "08d513a98b7f8fe061d2db9bf00bcdb2fccb052e7b61e15ec754693b760f2a89",
+          "choices": "7d38efed63adbf3124649a2e0d3f49ae160248c71c71f8618ab8ed320efb5894",
+          "tasks": "da1e2b4063ed3177f3bc5ff6915a9150410bc042ddb315cead77fc7a35aeeff6",
+          "seed": 1774199420,
+          "draws": 23363,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2760,
+          "state": "0aff40f7d9370cd675c458c40e00d421ad73f49ac661e4e51b8205f0afba338e",
+          "choices": "7f14d3015231a91768639eff65360abf246c3228f1a209283197dbcc850c79c8",
+          "tasks": "b613407be5e5d21899b7b5d1d8dd84ac44bfdee92f2bc24a30b5a3c2326c3515",
+          "seed": 1337767104,
+          "draws": 23639,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2790,
+          "state": "b2ec9818e4d90b2f1773d7ea3b783c664c2131325a0d3682d92fd9d63705333c",
+          "choices": "bee6e32dd5539531e84178d20a527c498a26abc91b102a17f764f0f52ab8c76f",
+          "tasks": "ca5e2ac0d6391640e66d3d072e2505e36abc7b2658a3d00bd2694f1da8d03139",
+          "seed": 25846752,
+          "draws": 23799,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2820,
+          "state": "6daf2445964184f52f20d39450ab043b6c115c806d650fd789570722857899a6",
+          "choices": "67f66105806b59a2ec1ca2398bd2686f74d074444fd0f0c8f948637f8bafc6d2",
+          "tasks": "70e437cc018b41143f3dd9eb7be00e9c48aa62d5cb7d489b3a5f340719e0b9ce",
+          "seed": 42887410,
+          "draws": 23897,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2850,
+          "state": "abda1acc08c46ebe6f36bc18b7e7bfd849fd049ddfd9f4d7a0d19f5b8aa33589",
+          "choices": "0a149cc1f9679e0687263e7386ea20e62054ece39207d1daf94d100b2b082bbf",
+          "tasks": "bf4206148e76af4d413cbf1235e11825c47c7573da0c60c92b3d34613b8ec020",
+          "seed": 3861876513,
+          "draws": 29330,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2880,
+          "state": "e0365013d7512c0d14da06c8bacac4d2433e193b41fb3663170041f205c66f31",
+          "choices": "0438b3750a24b66a017aae81f0cadd46d7b6aa4266b6012e9ccad405436fb774",
+          "tasks": "fd099be0bc9264e51d105beac1981bcb65088a7799ff442b5329b1015360f59d",
+          "seed": 1797553302,
+          "draws": 29677,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2910,
+          "state": "bfdd5793be47bc1f34cc8481732de18f1c0903dab05998717fd68f2d3ffc0de0",
+          "choices": "7d9eccbb5ff45ffbb0840931505669cc99a910dae2629782a74810618d13d134",
+          "tasks": "fd099be0bc9264e51d105beac1981bcb65088a7799ff442b5329b1015360f59d",
+          "seed": 1598722497,
+          "draws": 29746,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2940,
+          "state": "05a37a7deffec2ae8470535b744261ff64b3f1308d3ab885a7efbe161ff12520",
+          "choices": "dcfb15234fc63e97e2b18b641a3d32364d9ef3d7b1a7232d7ef6b704784d533b",
+          "tasks": "e8b4ed4b1c753858b64722fd3a523d3ab53faf0f5375da84c8459724f46bd596",
+          "seed": 971938084,
+          "draws": 29899,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2970,
+          "state": "6c25b3b99b14b20cd7880692df29bb525f74202218f7c2f7ffe94a256fd229c8",
+          "choices": "725ce5ec923eb8444b33c848fcbb3af1fa47712b621b7def10b687a98319e5d5",
+          "tasks": "5262617392297535cc0d71a9c875da1a42fd626ae500be433d2c942fe8384a3c",
+          "seed": 1615497416,
+          "draws": 30015,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3000,
+          "state": "fc0371c8d54ff8d62e6e0ae9eb3923a0c9ecdea098422c40f37a053c0c10e07d",
+          "choices": "2f191b647f7c17c01564c6b436f939536d18e5e6a67873e7db02fb883433346d",
+          "tasks": "f54c46ea444fcef4ec7a2ab47e1dc440d60511e081d0b8775193484c816b310e",
+          "seed": 4224036893,
+          "draws": 30222,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3030,
+          "state": "5b706855e4b1a1a0f6b9db278a61995f9140ee7a6661abc175e60504769d4757",
+          "choices": "8498e13af6587e1437d23d84d96cbd6ce50ea658cb990d7a886cd9165bda36a1",
+          "tasks": "89fb2f9b354c3399756359477a745649ab372bd3a33a8445fab9ff6f3a982df0",
+          "seed": 2109386559,
+          "draws": 30328,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3060,
+          "state": "417e979cf37f4f119c1555e98fefa35e13c0d4e8cbd4203f147fce5c13d2e111",
+          "choices": "6f6e5b7757e39e690035e19a47a29fd92e7a036de89331324996dfe209ac6623",
+          "tasks": "89fb2f9b354c3399756359477a745649ab372bd3a33a8445fab9ff6f3a982df0",
+          "seed": 1246350192,
+          "draws": 30535,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3090,
+          "state": "0a996d61be503f1fe9716a0715f444f4486fe33f3440d5ec8f1f5a4e5c36088d",
+          "choices": "47f256787c0a5db65ea7a01b429df0697d553447291d5a2559abdbea556e9b62",
+          "tasks": "82d257a67965621411ce29ed73da7db5c20f4f128bd3e4d4cd91e3f674bcc477",
+          "seed": 3501532168,
+          "draws": 30591,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3120,
+          "state": "d0a014752da0bc8e351061109d22aaea98b47b428f37ada4476988c67c4682db",
+          "choices": "080be217fc4fc1e443a14674fe1f7f3da69a6f12944e2d4b875b7223bcd0b864",
+          "tasks": "94a5ebc03e0ebcea9690160988213425bdfd2e1ad9491aa512630071433eb64d",
+          "seed": 3209783508,
+          "draws": 31163,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3150,
+          "state": "c86a54b3a0a64f17cc87d80b4a383f51df731ff079d3cbf8d0e52bf1e0528d4f",
+          "choices": "52c73087ec772c117efef46d8a19c244b93b73c5d1fba5472882e202944d0fdb",
+          "tasks": "fffee59a0ec928b99dedd9223e0ce4e6b9e5092eb66562302ac50a9035b9ec07",
+          "seed": 237925163,
+          "draws": 31428,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3180,
+          "state": "9f5212daeb45f781f17003079a2f41e6f54a121f8673fd1a334d07caf3c89b24",
+          "choices": "a498be25672e3533090a35c803f4f9107dd1363debd777a5ddfe34aba1bd6f82",
+          "tasks": "40fa30ac3d75769d7b2982f98be642ee4343bdac0067b1889c75919f0519aa2c",
+          "seed": 2498365222,
+          "draws": 31677,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3210,
+          "state": "f417d37e7e3e37580eecc8f0738550e0435f09b52b29a141c5ad131103d136dd",
+          "choices": "856764b3db4198ef97914be0a761374bd98c3dd287e568d6a65d6426b5fbc99b",
+          "tasks": "7570131a11917578ad92799a9ca64783b408e038760068d7a8a47b8d8460d726",
+          "seed": 3186804843,
+          "draws": 31748,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3240,
+          "state": "15173b335a2efcc830589fe70fe458ee702bb1ceff8913d67568dac705736b98",
+          "choices": "d1c9876bc403330acb865b1f29484b7030f7f261a15279fcbf0d21afaed705ec",
+          "tasks": "e5622e80a0ae29d5e1c98b3608712e7ab6834e698f7fdc6773fc28c8a2f79dfa",
+          "seed": 3326205862,
+          "draws": 32317,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3270,
+          "state": "5dc2116f28e54ede52d165fb73d4f5dbb2709007267095e88c779aefb75aeab8",
+          "choices": "0bca170fbef115f1cc20f9aace7fc609fa7eb93ffb1a1ebcb397d387dcf50249",
+          "tasks": "b3ba9549c4829ca2e08e042bd5229699b3d0c4b13047e4155f723c1177db9948",
+          "seed": 2998453991,
+          "draws": 32416,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3300,
+          "state": "b47acb08b10d04d1b1143a333c1038f52cc964c92b1de52eb565d58b00ddd4df",
+          "choices": "361680fbae0133c946dd8356b67424230a2bb681140aaf858efe66c590b49da9",
+          "tasks": "daa3957841d06135a642ceeba04451a1ccdcd8f33e5c541e3b59e28ef7a64c4f",
+          "seed": 4248852580,
+          "draws": 32523,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3330,
+          "state": "3b79530eec8d3d45b28a4422709d093a55b17fec23a958feb5d64f3742690ad7",
+          "choices": "ff8c0061607691e2d59099aff8864fbc6d773612fc1393df7c1c47002ed370e5",
+          "tasks": "6b6fc28f4ff4d71d2d3bd114282289070eb2ef82d7cce4cd7ee5b03fe9ea38f7",
+          "seed": 2280227530,
+          "draws": 33553,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3360,
+          "state": "9af3314f869bd77aead56d4bca8ff70a144caad0c5d39810b0e94e9b89a1ac88",
+          "choices": "b1a61544324fc97aa777f3006115502c2ce34c5e1326979c9ca4ff82e3c7a46a",
+          "tasks": "47788442baf58f869c267b07109ad844967bc3bd612788fe599d8bfda94e6669",
+          "seed": 3043057080,
+          "draws": 33647,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3390,
+          "state": "178620af5169ed3afa3cb8b4f74263ca32b078375f5fa5e5af82a23efa045c97",
+          "choices": "07ab4b9d5d1627fee50b4bdae30abe6da02e776ca3137d7bb739ab2dc1f1649c",
+          "tasks": "4c24fde0e7706dfb24a9a9123aa62dac5d33d0a01ea8158589df992b4b784010",
+          "seed": 2599816562,
+          "draws": 33753,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3420,
+          "state": "d40795ae9be5f26b5a54707d3f83f8764bbd0c885c155e0594496816b3a722a7",
+          "choices": "eaf7e1b13832b5486b51af76caaac79dd09b250d331efd6bab419e2c2c98e3b8",
+          "tasks": "86b37bac69d84806fee1a56034bb876daebbf9a775e7d43e8a9c0118bc552cc7",
+          "seed": 2457189747,
+          "draws": 33804,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3450,
+          "state": "088da24ea050ed5316f6b0dd1a5847db0fe16e1f1a7aaebfd7bc3f64c4157c88",
+          "choices": "3647dabfb93a4ebc9657c754aac3eb7bf61e70e8ffb0487ee763f488d65d1b24",
+          "tasks": "abcab3e4762e7db5b73c888dfa764dae4214d60476b19edb3b668b15e4ffbcff",
+          "seed": 1784654097,
+          "draws": 34050,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3480,
+          "state": "9392f89b6e83bd4e4340b333169e2d00e3c79830a606bca500f396b8e1ced3c8",
+          "choices": "9b2a0ee3214a468a917de3d666c41c64cf2578fd3be1edeaef6606b2e6b11492",
+          "tasks": "50fe16efe133662cf506e7f39eb85118c11f027db35061d4ffc8778a9e5d5e6e",
+          "seed": 547943249,
+          "draws": 34114,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3510,
+          "state": "7374afabce3d720a3efbb4f010def346ae169624253545cfe4e9af8fcc395c03",
+          "choices": "af2aa3fbb9095f7de2c24bf378a35cfda93415c87535e1552f99d5d6ac86b23c",
+          "tasks": "9e37fe68ce460689165464c07cb9c5bad79d9ddfbca1d3dbd188f795a81f34d4",
+          "seed": 1550759502,
+          "draws": 34181,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3540,
+          "state": "24aa4d3130e669856f35ef039a0c28f87123aa9b11899db01f549b28417f25b4",
+          "choices": "536d234325a4ea1357763e61ab78076a6ac273c6a8b089e1bb8d8f81cec4c411",
+          "tasks": "d61c57f7364a38bdbee0dfce1d450708aea9c294c5c9c134bc6d4420827917b2",
+          "seed": 349761458,
+          "draws": 34585,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3570,
+          "state": "0a29fd7a749ed705330167569693d0d2165b719a279dc3252c4205bfc786015f",
+          "choices": "8f86d018f177cfa383fcfd2a9c8f07695d5681b7581dcc4bf98fcc8a1e244a30",
+          "tasks": "9e99ac1211900a444fa610598187c5b7ba4b9ad19a08031d6b80786d4e9e219e",
+          "seed": 2513897911,
+          "draws": 34672,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3600,
+          "state": "529d2447d36e91ac58e12151ab8c163c87259c05cdd0742f65883e086d8016d8",
+          "choices": "ce653b4e30af6f4bdede2b38a1e4d91c9491d4f2931010d1b6acc07521e95931",
+          "tasks": "3e8f96fac734e5e4fbd4ce25ac5b513c52b9d6d30d79cd888162694173f41a57",
+          "seed": 1071364871,
+          "draws": 39616,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        }
+      ],
+      "counters": {
+        "reset": 799,
+        "invalidateTasks": 0,
+        "refreshCalls": 1527,
+        "fullRefreshes": 638,
+        "reusedRefreshes": 889,
+        "obstructionClears": 628,
+        "labelCalls": 185184,
+        "labelRevisions": 749,
+        "labelFloodFills": 11,
+        "reasonSamples": 256,
+        "reasonBudget": 256,
+        "reasons": {
+          "reset:hunting.ts:130:finishTask": 246,
+          "reset:hunting.ts:69:damagePrey": 5,
+          "reset:hunting.ts:215:workerHuntAI": 5
+        }
+      },
+      "observedRefreshes": 638,
+      "taskTrace": "3e8f96fac734e5e4fbd4ce25ac5b513c52b9d6d30d79cd888162694173f41a57",
+      "choiceTrace": "ce653b4e30af6f4bdede2b38a1e4d91c9491d4f2931010d1b6acc07521e95931",
+      "finalState": "529d2447d36e91ac58e12151ab8c163c87259c05cdd0742f65883e086d8016d8",
+      "seed": 1071364871,
+      "draws": 39616,
+      "cache": {
+        "builds": 1,
+        "hits": 19
+      },
+      "strictSave": true,
+      "simulationErrors": []
+    },
+    {
+      "name": "B",
+      "source": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/workboard-causal-candidate-62a122e",
+      "steps": 3600,
+      "time": 119.99999999999575,
+      "marks": [
+        {
+          "at": 0,
+          "state": "117eef4012ed128226904fa2c03570cc23d81666a9c4b204a8bbcf1429635db5",
+          "seed": 772776759,
+          "draws": 240,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 30,
+          "state": "be840a7d80d00f1ab3f160059ea8f0285fd7384916aefbe0a39439f562cb9e2b",
+          "choices": "6406dd50078d6252a2c55dd90e1a37c221062387d40e25d573a22816a092ab23",
+          "tasks": "95e6b8bd7b3c047143213f354bc6f73e044e6913a1e6eb9a03a70d0e05d9569d",
+          "seed": 197887705,
+          "draws": 266,
+          "cache": {
+            "builds": 1,
+            "hits": 5
+          }
+        },
+        {
+          "at": 60,
+          "state": "1b223b5d836edd218bfa64dc53c9b3f88601a1ecc4d21858eef13fd90b5ece56",
+          "choices": "768d6a1c944692f408c95d110a85ab6bc014eedcd050d48bafc89e97931a3f49",
+          "tasks": "73b8fbb501bd328c28b874ab6946abca08c8cf980238c07d0a9020763358d576",
+          "seed": 2445044328,
+          "draws": 607,
+          "cache": {
+            "builds": 1,
+            "hits": 7
+          }
+        },
+        {
+          "at": 90,
+          "state": "aa41799384c9dc1e4774159d66da74dbb9fca2dd8a622b9b6d242aaa310bedaa",
+          "choices": "1355bc6f53a409fa6c6d1ee3a04e400bb107bc49e76ce0e6342c2cb8e54b549a",
+          "tasks": "87a02b9b806a722d2c8d0912083b037be0fca2e88087853a164ff117744b0f8f",
+          "seed": 493943452,
+          "draws": 739,
+          "cache": {
+            "builds": 1,
+            "hits": 8
+          }
+        },
+        {
+          "at": 120,
+          "state": "27014a66fa57694d4cad2465d7ced5a5630b8f9eedd01306dec53d35ba8c4b20",
+          "choices": "3b9f0c17d756a47fc9fbe8d74f5601d686620a701ca41e9acfe8f7fee9d46bc8",
+          "tasks": "50d508dc8d15e85581013c555617422c0cc6d9d03413baf409223efaf59666af",
+          "seed": 1131094063,
+          "draws": 872,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 150,
+          "state": "d9d9796486a366ffb8d1e6fddca0b8a17f92ff5e9c09f9be5fdc9a839f7cee66",
+          "choices": "a270f585d6d1033f37557fcff7e8ee98f4edc6975dc33378f2b63357e72fd7cb",
+          "tasks": "3b2898a69685b056c7add75dbe6315338a28ca52151b9f089c82afcba5824707",
+          "seed": 2409016209,
+          "draws": 898,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 180,
+          "state": "00357195dc0593c44ac1df0713b42154c8a9e2ae261011ac22481cd12a5bbd0f",
+          "choices": "bf43eefab6d4d018089770fec48cdc305690787e9063bc92125b0a6ae69c3f5e",
+          "tasks": "f2e1a3f68a5e447381a235585a0054bfabf96e42ee346fa0b2266cb7832198d2",
+          "seed": 1493951251,
+          "draws": 940,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 210,
+          "state": "d920a036dadcc03c6558250e6535534fcfc434f7f0a6dd4f2ef07378e419a242",
+          "choices": "07c0e56735b2f5f75c1b9b126dc5f576563405213830898b5f0edb8b87f31606",
+          "tasks": "7326dae72108de59a30616dfdccbdc3354c24c00bb332ede5bbf79ea2c781d44",
+          "seed": 4132599034,
+          "draws": 1025,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 240,
+          "state": "fcad6aad2d920c4cb2185c509e9cda6dddaf86180ca7b51a90b83cb94f4674dd",
+          "choices": "c28f13f24780c949a63343b3e9a6dddab4431f2bd10a463ee5b852373d8ad7c1",
+          "tasks": "ee851296b6285bd3aec80d8dc9bef03a6431191cda39a289c42233963c24c0e4",
+          "seed": 3669307424,
+          "draws": 1079,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 270,
+          "state": "6cca6967caf6744fe77fb15482255378607270a478ac6efa5cd9133637be5367",
+          "choices": "86bd031bd44cb2d3a5c6e33aca76ddda490b1f7b4fa30a4591141768ed6fd04a",
+          "tasks": "3d5b5cec4c0e0370981e8196c98d7c7818fa6591eaf85dd08801160c6b1cdfad",
+          "seed": 2255806736,
+          "draws": 1127,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 300,
+          "state": "c87bbfe61c18340f1c436c054f18270281c91c8d056d8bd91fac65d9d6b71c76",
+          "choices": "a9d84d5093f3c13910636281c37b9744f35080e36de5506eb732de72e8c03b39",
+          "tasks": "256b6db9b6939059a6c65e8957755c8ce957fa3a637e7b3282b3cb26093c9f29",
+          "seed": 132830967,
+          "draws": 1200,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 330,
+          "state": "b832e476eb338c759507293d37f5bd7944497c5aab061500e49ac83d35be0915",
+          "choices": "502ba609de5130e49942083ec91d4ab69f470ce15fc1637901c4cbef749f3f5f",
+          "tasks": "e3e6ae69d065a348b1223ee5170f6666df156d853e101836993374fe6f201a4f",
+          "seed": 2651531537,
+          "draws": 1282,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 360,
+          "state": "9d88d656fdcb74f630f79b2169b9b77f5b9f2d25905c0cf87137f4fff1fc74ea",
+          "choices": "ec608211c6fa056f3060e474471ff4cd8f1a2b3e3bceec15b077d5c0e7cb8bf6",
+          "tasks": "4970cf0d152dfa004668381ff4610550797407ae1010906fa0ab98737e5cdfe2",
+          "seed": 1162349232,
+          "draws": 1415,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 390,
+          "state": "db5e2f65d15f5d26ae5ead3f568adf89df729bba69670db05871b2d8a45e3882",
+          "choices": "e6229610bb1e6831ad81cdb55c0c2e886f4a477d5cd3ac017f8e1b9bb611a36b",
+          "tasks": "e6137f6101e44b539915f348237ca505209e8ada1d6806ca45dac3b95e9b7357",
+          "seed": 2932944591,
+          "draws": 1544,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 420,
+          "state": "45aff9034c89ff3eb62e2621df2ee266fc115320437dcc30b643e7627e4124fc",
+          "choices": "51ac953762b6f46aecc06e9078c5514c65cc9c0bb53c94a49134ff4f4175447d",
+          "tasks": "e6581e9e8cc902c89595d6bc041359035caa085cb2ad00c7a033799d3ef85a1a",
+          "seed": 311300170,
+          "draws": 1681,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 450,
+          "state": "df3a0b619c477e31b802fbab2cda87691a753fff1eaab0527bbc35c4c8271473",
+          "choices": "b1e0257f1b0e7085b710d5108b7b6d529b73cd348318c5243505ef52e7414cab",
+          "tasks": "dcfbf98667366556214acde7d1664090a912e3a2ffc75761c1ad8f4a5052b148",
+          "seed": 4252760594,
+          "draws": 1785,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 480,
+          "state": "b6d9b00369297033d0c17ea6422acd17ded17a4011ff151ccdfeb9efc3a3d38a",
+          "choices": "ae0956e0bcc1c15eabe24c037424b74b6bff2d005319bc053a780208612f52ba",
+          "tasks": "a50834207f795e8515b43dd8fca1117202fc4d9dd85f56a0ddd87e2fe74c530d",
+          "seed": 2697261134,
+          "draws": 1925,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 510,
+          "state": "854e18b016bee7924924d6caa721fde8238843426174a1b4d2c512d57c0876d2",
+          "choices": "2e76c9349c8ed5db7b583ffe5ef3fb701f07272736f088910468eead082d591b",
+          "tasks": "a50834207f795e8515b43dd8fca1117202fc4d9dd85f56a0ddd87e2fe74c530d",
+          "seed": 2543027146,
+          "draws": 2065,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 540,
+          "state": "06c9be85b7aaa58eebeaed3df2efebfb260a017d340e2b5ec6e7a5557cfe891c",
+          "choices": "a375c4729c3e4f835b11277b6adf1cc1339b211c2dedf175f84a3d9dab361521",
+          "tasks": "7680869098c53490d4f71126cec17d05fea678c156b50536d3c0577f2cd102ee",
+          "seed": 102833554,
+          "draws": 2169,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 570,
+          "state": "1b7b2f91a4292f32c377dc4f27ecb5471b2b2fdadff6bf551d2de3d70dd0bfeb",
+          "choices": "79c1c1f51721389a1cfac61d43f220b120e80bd4facd6c3357abe252535c5d7e",
+          "tasks": "97a0f80353320c31e2efd9bb5b8eeff2157688cedfa8895e986b3667b42b7aad",
+          "seed": 358827842,
+          "draws": 2281,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 600,
+          "state": "a9ed7e789dbb7521d914ee03deda1847b2e4361e713338a1d0864779ec6074be",
+          "choices": "3ade5faa20212eba3e9074fb31accd452f862aaabbaef3808f56144b6cdf3103",
+          "tasks": "14a9b7be558e0cd639e74a5f5a048193b3d5143b3457bdc8c20c0b1042c049a4",
+          "seed": 2054464754,
+          "draws": 2393,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 630,
+          "state": "57efbd86446792a49d598deb67e4f06a05e96956df2f67a3263eda846cc36872",
+          "choices": "c26ae81d1e2c28d939b5f000d74f57d26803ad0e965c30d5fed52f7fc4c15665",
+          "tasks": "c13eab9bffc23015d255f0172de35b5f886942315f7f7f6772ce48a6bc8fefba",
+          "seed": 390478036,
+          "draws": 2491,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 660,
+          "state": "8c58372247b90b204a099dac78239029d6ea8b2f7ffcaf72fcc2c290a1120bae",
+          "choices": "545c70ae3b8cb8b0439d5160de141c27e09e284fa90bb71fed72204f8687309f",
+          "tasks": "95d739da570a9398b6d9eaa658f4dda27c5cb686618ff9f515b45c1710ae3196",
+          "seed": 3444303418,
+          "draws": 2625,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 690,
+          "state": "cf408fab84f251aa7bcca2a3c5c488ccf0010284b0657f01a96594c24522c758",
+          "choices": "f5ff6ee51cdf4bb008ab8bef388b3b7fc9ccbacee98f0618168ebe435bb1266a",
+          "tasks": "1e7dd34fcd430a12fcf063f47e86e107ae7e4d0212053bf8dd50c59dfc51848a",
+          "seed": 1616918787,
+          "draws": 2716,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 720,
+          "state": "d21cf58dc4485693196264b718f12575cd5734959ee007cde6ba1a4bdb0cf39f",
+          "choices": "0522d7dd07ab10fc8478f629743046734903cec1fa4bee84690e2e48bd8262bc",
+          "tasks": "8ea6aa9efd5d14671b244900ecb3b560e33c4967214b381b16da229193701a94",
+          "seed": 626961751,
+          "draws": 2832,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 750,
+          "state": "0f74069181b53bdb73ee34a11194d841af9555c3d67284f5a1fea415fa8d27d2",
+          "choices": "d2c273a5fe8fb20b50e4c18550c20ea45f7adf187a677a9052d02f41f1a5a8c1",
+          "tasks": "6ea53f81b1b48690fc086db6e114298899528aea2cedaed36878ac2d9e635761",
+          "seed": 306078798,
+          "draws": 2949,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 780,
+          "state": "9ce8444ebe9af3854b245cdc649460493655e1f4db0f823f603d96589050b3bb",
+          "choices": "715b933ba8dceeaf25192fc1b107672a07ec4cdb915f34c8ff6d3df1cc50036b",
+          "tasks": "8c0dee1a9ed411848f06c2ed6834779fb72fd32a1738f6e14867ada0539d9ead",
+          "seed": 2497998638,
+          "draws": 3045,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 810,
+          "state": "6aa621bb27eb386e7b83ef292198ccd62b848d89b23021db09346a12368f1f6c",
+          "choices": "43f98e766a425b909cdaa0b049cbfda36fdb2bea6e2b9357dac17421c3cc66fa",
+          "tasks": "9043f8611a8861c98912188f0a752c8fd69d4504e4f3b57befb0c115dbd3a3dd",
+          "seed": 1356135060,
+          "draws": 3195,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 840,
+          "state": "bdf44218125c833be4f88d48bbb35916b605e43b566ba09c1ab4028349d1522d",
+          "choices": "afabc5845404d9635fc0052eacfb3210cdccca7b22e5cb82157871f9e187ac35",
+          "tasks": "7f621d260fe350bb108f25068b985382184b10df75b3df1a7e39f6c6e7a6d75b",
+          "seed": 1497830298,
+          "draws": 3361,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 870,
+          "state": "3541e6ae9df28e76f5b9199ab2fab16959b5cbf19db6a30b6a038febc00f3215",
+          "choices": "a2b07a322905760191d3fcc91a300dab01d4429662227d7c8fb68ae615c02c19",
+          "tasks": "8731d3de85fdb9add2be3a3526cd9076b0a4f56b2570a9e7e59440fdbd826777",
+          "seed": 4227809900,
+          "draws": 3443,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 900,
+          "state": "f0bc6aa402927541c95dd3bbaed57dc9e9a0ea1f2441e2f7d2f03bcffda0caf8",
+          "choices": "55e29b9d599cb9bce7eded954213dab603eeb30f6bafed7de2c1b889b3ef8e21",
+          "tasks": "50927b1a3f2947a5adf2320dc42e9229adb8f8dffe76e515f2a417b37e6c6f79",
+          "seed": 3044367877,
+          "draws": 5558,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 930,
+          "state": "9409d869702520a7ae652526c35731ac372046e577a23d9418ea7293d7507af9",
+          "choices": "ce69db3c8560b9b8941d31d37771f3c56cf60c6a6482cefb109b050977521f49",
+          "tasks": "2f5ca6453011cc25f47ca629f994ace36b04112a5b34c638750d55d50d71292e",
+          "seed": 3965923036,
+          "draws": 5667,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 960,
+          "state": "22f0ff5562456e93be57b68bd13969cd38c9802c6b32a8b2f51377c786de5421",
+          "choices": "58f87adf6adff7dc31115dc7310adc7119a78d3702f848cfe59757a306612c5a",
+          "tasks": "22bce4abfc9100145b6725b00463093f2afe78e66abd44a2c36d6026a6d659bd",
+          "seed": 777062387,
+          "draws": 5772,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 990,
+          "state": "6397551e809f868e68497879bee2ee8dc05ff68cae32164e97392c3c634efaff",
+          "choices": "c389a3211d1b07f31178016f3c8be2347eb7ed68b7cfa6cd714abc7fae2d31f1",
+          "tasks": "5ede422b1d11fc1f097b90dda10ca7cd10beae514ea676460a74e5f03344203d",
+          "seed": 1764403330,
+          "draws": 5929,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1020,
+          "state": "895f00456bb0358466cd426d657a453d8c0079c23a9042f951db7286b0378da5",
+          "choices": "44226196ed2f804148b180a33f89c7c865f66382267a6a758090bcd517234492",
+          "tasks": "0b87a056a8ca83dea9558fedceffd4c311b229987d5363c6cfa1576fc4cadeea",
+          "seed": 3720181251,
+          "draws": 6044,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1050,
+          "state": "a6b42fb2d8114e9f0850a66f4fbc1101fcb980c9ad438741a8b8ef057082a3bd",
+          "choices": "0b3a446d103bc0c8a8b80a4bb6329afffd6cb11a258c2c2277d1f7a92f059c71",
+          "tasks": "1609448f62057a2ad62837f8fc490e78a31339146cc7c6b38fe935df7e43fb35",
+          "seed": 1494459615,
+          "draws": 6168,
+          "cache": {
+            "builds": 1,
+            "hits": 9
+          }
+        },
+        {
+          "at": 1080,
+          "state": "dfc0685b9bd0d5351d794a85f513f2ec3ed2f0209ef86c1332a5e5a6d89b482d",
+          "choices": "46c112234196e613ebb6341bfd0bc89653da91b3c9de5b928751b85082dd4118",
+          "tasks": "1744dc8bea1b6eaf1b569c64a004f4b3da720e61c3d25dd0390dc94ed83a4074",
+          "seed": 3310381555,
+          "draws": 6284,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1110,
+          "state": "265ff7982772aa02d2de9b9d9ed12803939f6d12c049c2cff6680d7be6e8f2ab",
+          "choices": "7daa233ec29d4ee53b8c74b5d305c6c21d090cc9d0e05dd1529648d3e996bee1",
+          "tasks": "b1a8215ec13e227727e2dbbc7ebf64a7af53fc45580e37af3123fe1b9604dc89",
+          "seed": 3561908221,
+          "draws": 6382,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1140,
+          "state": "3ea7c4f6ab8d373382c301617abbda8d3e970591cf7dd3ac931c4cecf721a2cb",
+          "choices": "ea5fc69c4969ca334f783128bdd8af053e23ecc915ce4386e44a6b3d660e50ac",
+          "tasks": "bb5fdceefb8f2107560daf2e4f2c420529a08b317c0c0cb1968fd59fbdda3f01",
+          "seed": 1160701384,
+          "draws": 11839,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1170,
+          "state": "a7c63cc048ab29534e0f5c5de1ed9e85dd378531850ce33d4568c97b0d5df1e3",
+          "choices": "85bca1aa3f4705e80d08be27d638c7a95cc13f9502a3c2699cf3ce77e1f9897c",
+          "tasks": "44f3f728a7734acccbf19103b28591e4fbe2ea7f9678836ca26e510a9d38158c",
+          "seed": 1605376804,
+          "draws": 11979,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1200,
+          "state": "ac780692fade5684bf141d1439cb9531e960052965668e776f45afeed0278ddc",
+          "choices": "c8be443e3cf09843f59618777cb501baa3e4fad2ebc27ce8687ccee022cf2941",
+          "tasks": "5817779245c9f7f488e5bb818cdc5b8e40c029163ca1f47af354b080699023a5",
+          "seed": 2017138525,
+          "draws": 12110,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1230,
+          "state": "377c7db631f083bfc6939aa325116c50423277d0a584061ac9389f818bf137a6",
+          "choices": "2b49718a272d8e018401a3382b261832cafc44cadb6388e8b8a2b265e132f97f",
+          "tasks": "e4a7d75969739297304c61d09f6be1934ebadd7ceef1cae57222bbed4d141d93",
+          "seed": 3981316663,
+          "draws": 12272,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1260,
+          "state": "823c90b0b68f4f62a61844bddc3f2caee197470c8b188a24c639ebdee6f3bae1",
+          "choices": "19e0bfa0793a6c6021b7bd9a84d7d44949b2db33cafd7a9a9ff255a221cc08ef",
+          "tasks": "da522c9c112e3460341a1568626b0520d4a2c99ca00d4997e34e6cce6e04c8c3",
+          "seed": 1054512685,
+          "draws": 12446,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1290,
+          "state": "cc912b77cab5ac1e62cbc0dbfc78aeb05ba9d86c0cd66e41e157e2c4de3f4fb5",
+          "choices": "baef857546edeab987547088fe262c913a830c170b20cf7cc0dc28cede835802",
+          "tasks": "883050db0f7fde38c26dff132a5ba586889d99a5493116db481bb638d97b41b4",
+          "seed": 2938558666,
+          "draws": 12561,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1320,
+          "state": "1bff11e38d31696d33b73374450791f16e1bebe1d220fa2dad22e4365d67fb76",
+          "choices": "752d60bf20996d8463d2cb3124035e65cfe6a01a589e73be4b5ba3e15edd35f7",
+          "tasks": "68a247b0505a1109ebcd9c008286de45096b26a273028b37c9f12e2baae1012d",
+          "seed": 2624048735,
+          "draws": 12696,
+          "cache": {
+            "builds": 1,
+            "hits": 10
+          }
+        },
+        {
+          "at": 1350,
+          "state": "504ad7a5a273c82a5b4ce8a04ba3fd86d1b0a16fbdcfe1af81719878b5c891c1",
+          "choices": "dae7df687e280fa41f320412c0dd9c52516603a108a8932e52f75dcf04dd5be9",
+          "tasks": "6ca4bc2ea6af90dd515255f9e9f225d02e3a90f23897fa42294cb03a8fca4757",
+          "seed": 1791356474,
+          "draws": 12865,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1380,
+          "state": "76516e0d693f46af303cb26468d44268870a7471e2988abda0c481b5ed2759dd",
+          "choices": "51d154e6470b6196174956b66e6e468bf1d6c66206ef9405089158a78ea48e94",
+          "tasks": "ab2582e239a37e81b914de220be8096a064d1c813f6bdbd27112e9b0ce3e2d9a",
+          "seed": 2307835534,
+          "draws": 12997,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1410,
+          "state": "417d5e9ebb6223d9c68e486caa244fc71319715ceca753abd03274ac1e9faa98",
+          "choices": "25849024f3a63265a2ffa8ffb93171a0e8d2d1d485793fa40b41a9e0dc7a514d",
+          "tasks": "452d25a643242b65f73b04ca2fb0e90c7257e144f427b176b9c58fdb7b87b99d",
+          "seed": 2997047709,
+          "draws": 13198,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1440,
+          "state": "b18e026eab9c3cd2098f6401ca1e8f2b316725207611dff7e68706361ba8a311",
+          "choices": "426c5395165e2db7af6a2191953db90a361d869a24eca3724bf0321d57b484e1",
+          "tasks": "f66e39fb3f0ad4db2d58509e3689d6c5696dad1aa46bd4d9836b434aee42accb",
+          "seed": 3419690119,
+          "draws": 13376,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1470,
+          "state": "d23bfbc92f39a278de4658f80e0c8cd07d0b075ac77c34efe1dd144e4703a85d",
+          "choices": "f5c2175e09f56bbe90b14a2c050b1904dd357a2959c3f57748bc34e2fe65dd37",
+          "tasks": "48d4c0b480afb9a339aaace765dfa4981f05c798f0920b6bee9bff0259d7e24e",
+          "seed": 354485682,
+          "draws": 13593,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1500,
+          "state": "fe1f86a966077703c20132404c5571b2abf1fbac8f5f753a01a6d9fb2bdf4271",
+          "choices": "d732be6a90c01e1acc4562d851d362fc6e67e3998f4c99262a775949f56e90c7",
+          "tasks": "24694186531c9d44e029c6cf7acabc2b78f1aed3c11b247005540122f8e31c92",
+          "seed": 446366621,
+          "draws": 13710,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1530,
+          "state": "9722fc260a2376f48a25e16794c104c56793ae6d7d5a2ab32c03ab0da289a7eb",
+          "choices": "e4861df82e59a29eb4ca86ea2e3399d15fd9a798dbe50b73845dc6a85825f63a",
+          "tasks": "70ac97c7945a4f1051f3feff3007d95041d751f655e87a54d6ed7977175c0e11",
+          "seed": 2151163129,
+          "draws": 13866,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1560,
+          "state": "dc589e29de087c840b63649aca4f4bfe5c1b4dece56424366be915fcad6d7aa0",
+          "choices": "cfddc5ed59d08121d67bb2e9b078bf09ba3a67133bc5007e48bd56ed65bb3f66",
+          "tasks": "cd3ad3a8dfa11f92de0e7c6a6a90126af264967d559eee3e967ebcb06defe3d9",
+          "seed": 2025635849,
+          "draws": 14010,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1590,
+          "state": "b99bd13a39040254fddb52cf0e540a188d3c10a7b8303847a936ec66efc737b6",
+          "choices": "3f63e40cc1ff1032d53345ab8b9fafbd4b148636c29a298b4f1d5aa15099b132",
+          "tasks": "0aa4ef80a04530df8d1caf13a3799068359f3b52bb8620218f61e5c7cec22cbc",
+          "seed": 3227090895,
+          "draws": 14088,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1620,
+          "state": "1d2de4c58e7bd2959f398d0408ff44f524b4684cee3a83af9e97b18238088fca",
+          "choices": "3a1139ccbc1b0740d3ccab7d68da01c2aa234b68ea77dc4bdd8a699b72f367dd",
+          "tasks": "1758a66aae0e7a822ae8c0cd20f9a3c698f24cdc384ebac8e0bb4d99a9e61824",
+          "seed": 3318161812,
+          "draws": 14203,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1650,
+          "state": "756fe7a84490b073a96371afd53f0d0924b9af8d8a647ab9884c18332aa8494f",
+          "choices": "6b2c72417fc068412b8fceeada7bff626f4b86be5c1fb097b884adcf4d10a821",
+          "tasks": "c0079082e371d4d00ad6713346e17213d8963e026103ece7d062af8390e34f48",
+          "seed": 1636712148,
+          "draws": 14267,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1680,
+          "state": "40d1c4a354dcb69a3b5cacb1948125ca6d6fafc779f0aed3ac6901b696b3b45a",
+          "choices": "edf0b00386677a8da706958d19a64078744622f5fdea07c6af224732b52ba1d2",
+          "tasks": "086120af52b976b0fb1ea33491e4efd9a3a71f653259e5e43fcbeb3e1fc7aeee",
+          "seed": 590999138,
+          "draws": 14473,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1710,
+          "state": "78b617305be53f76981e4348b8ea78b49677e7bff90062389b1128d996f3f262",
+          "choices": "2b91d480421a1ca4463382cc66ba460b9a01b991c2cfcca9f6127ba6ab1572d5",
+          "tasks": "7337291c6b5747823087bacc36b93d19e06036bd5eb413c314fae55b17b6dc16",
+          "seed": 3156788655,
+          "draws": 14568,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1740,
+          "state": "e43914fc86d9e94f87fb9cf163914c5981aa41854f3c9e0a9a253e82278ef69b",
+          "choices": "01889a2e14e34e718b2962b4507aa3fa2c71100174b4b78d704198b90596833b",
+          "tasks": "e27582919ed20f150d375455cb145e5acd7ae2b7df4e069e3e4026c421ce42ab",
+          "seed": 856411631,
+          "draws": 14632,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1770,
+          "state": "a7d6f65bb355c56721e74f985b7c1f99ebb48fbb6dbd0adb95670ebfbecbacbb",
+          "choices": "7dd4daac9f94af87db25f716597221cb8ba50d4872858b8f1bb60e9020cae7ba",
+          "tasks": "1f1b157a5753e863a5065d86be7d1e80437d887d0ec4260ff2ef3c8b74ecd28b",
+          "seed": 1792165595,
+          "draws": 14708,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1800,
+          "state": "d0a83595ef45cfe7c5367aa525e6dc48e8fc3db5bd71e663fb077a36ffea91eb",
+          "choices": "ff1e46f96b2f65ba7a4ea7139e623edecd63b0753284afd9a495da43469990fe",
+          "tasks": "c0a92d6b7fcecd90d5829c4b11303481426f54a0d9de3cf06717373b44f572c2",
+          "seed": 2610467012,
+          "draws": 14827,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1830,
+          "state": "25c89b83220b849098861c8d4032e0ed9217da4ebb56a1c6c20d340c149ed639",
+          "choices": "55dfc64b3c603c59612b8f63a8acf22fe43d45c52e2d71f711d248222dd373df",
+          "tasks": "d6799ff5a645c4d72fd7ae6803370142ede5dbc13597bd2d379abf7ccc08e89c",
+          "seed": 3836798772,
+          "draws": 15003,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1860,
+          "state": "161d14b985d789b79c452f40a852e18e553207aa0411556819549484d7e18866",
+          "choices": "20d7286dad291370a0b564d9ee86b3e313dda37971a968e305debd1be81433f7",
+          "tasks": "cdf0e8b3008879e813d44d54a3c57c5e526edd4847e2f72ebed6634d66d03235",
+          "seed": 4252981424,
+          "draws": 15239,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1890,
+          "state": "c42c34c9f198313cd8e63ed803abaeb8de3fcabd68ffc01094300ee59d4e8416",
+          "choices": "185a160c2eb80a42d594ce2c09b5dc6dea98c7b0ad288be2a118f1ecb3adf8af",
+          "tasks": "b6465b9edbc5109a624ceb39b82d8a55ea1851945bb02825dbad24b99275c4ab",
+          "seed": 2605550373,
+          "draws": 15318,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1920,
+          "state": "0a895c467bd8969eabe61a9c21eaea8c8d81426a6992b846b6d2a6686781367d",
+          "choices": "35bbfcbce757491a66ac7902f18f06dd124a21ed77a9fcf23a217d3ff7ec76b2",
+          "tasks": "692ab5a1b7b2d0167876ce84862b5278fd57fa3a022fd7ce76e9ac6b8184b51c",
+          "seed": 971708284,
+          "draws": 15427,
+          "cache": {
+            "builds": 1,
+            "hits": 11
+          }
+        },
+        {
+          "at": 1950,
+          "state": "2c4aac4ecb5e0ccf8247d98dbf1dfbc9a2564ea224abc3892d4b0973019d1377",
+          "choices": "123cbc5bd8b68a98fd8aca8650f4c5e845ea34c5aaf2b5a135ddd23ede844d79",
+          "tasks": "6ae59a7441092228dd2465aeec5c2c73102e4014ece70d6888db1812a6825c7d",
+          "seed": 701847170,
+          "draws": 15657,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 1980,
+          "state": "cf703ced635107410b2752282084663e5eb0eaf6f3dfdf3d31d9c2cace51e506",
+          "choices": "ff688475208f76a0b6c896a0c67eecf547000f7a35ae6188ff3834987677b727",
+          "tasks": "1fe9663af6ba3923cf3a40f9cb1334e21d21446fbe29f6e8b305a08627c32bc1",
+          "seed": 1132593832,
+          "draws": 15775,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2010,
+          "state": "8839a84558814e723aa9fa1454757ce38b6d7e4944cedd84d0d8e3a1b06fcbc0",
+          "choices": "834455a06f34a7d4751216ca0359d343a4f1f222738e5a34728a795bab5eead1",
+          "tasks": "80c39a372aadbf73c88e6433adb64525e22fca7cf093235805026743886f1583",
+          "seed": 953545742,
+          "draws": 15941,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2040,
+          "state": "f60877f30edbd5815a574e324a6238da001bf708e06779b32c4106631eff90da",
+          "choices": "d6eb7fe8303b8b15b5c90998f9ba966d4870f73bf893cbfa03bbe6759c3357ac",
+          "tasks": "c4d4090ef89c110817d6add83a7ebba9f31115457c218b0658c711261410ee71",
+          "seed": 849462127,
+          "draws": 16040,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2070,
+          "state": "58b03f5cfad52e673371978b5b16bf44c5d016976e1120ab7a98874e840cf31d",
+          "choices": "7a348f6a631d1629aa5bb7036e144588e78b910eb8b95c55aa4b86ceb96fa444",
+          "tasks": "0714b9d74d3ade501b565dc8f3163ea0bd3915296b857200cf001b97766accff",
+          "seed": 1455086102,
+          "draws": 16237,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2100,
+          "state": "863ba83fa4c1b92a08cecfef912600e78d6623d172f4d48f966428a5669128ab",
+          "choices": "662ebe448faf3f09c9407ae3f1df8432b88f80e4febfc9276612dc6a924d0d78",
+          "tasks": "de27e52d525bcd52b9dde800028fe65c4e22b34469f396d8d73f9cd4543528ef",
+          "seed": 455906269,
+          "draws": 16334,
+          "cache": {
+            "builds": 1,
+            "hits": 12
+          }
+        },
+        {
+          "at": 2130,
+          "state": "f4c9916a93c1c62800362fb2f49b90d143300f62869744f2db69d711be041df3",
+          "choices": "14eeb2a7c0261f6058f9235795a0df4b5d9318a37d83f7034c93a553e59d72fa",
+          "tasks": "eb124d923ea48db9912dee6ee43b6fae554d3ae8f0ed48574b0aa838592d03ce",
+          "seed": 1681880398,
+          "draws": 20613,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2160,
+          "state": "6a2a571256bb35808902ce2409528e2b5013a654303d8d32aeab477abee61945",
+          "choices": "6901985e20a15aa737eb8b4b92f3928f263e0a3e4f2481216ddb7d1de9ac8383",
+          "tasks": "16ae7037adff5c7f9b65e46dc1091603569c0cab26a3fcc0a36a800f5fd553dd",
+          "seed": 2799871942,
+          "draws": 20701,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2190,
+          "state": "031bb7949e17ccf6435c0ba97a70a6fe96b11e34cade6b52b692b34c04158b20",
+          "choices": "9455468ec8874cb6fd714acc07b347eaa2ca6d0de6ac3ee79876171490daef66",
+          "tasks": "f17f08cfedcf8bb86c9c1e419c1a291dabf2498ae287e8c53c97245b457a6766",
+          "seed": 576688545,
+          "draws": 20754,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2220,
+          "state": "2e9cfabccc70a1982679f7744146b47dd07f323e1d2842510cb21807e76f6bd8",
+          "choices": "f50d24733a199c83439a623abe4b385b94bf2eafc6171277310f1fb75f3cd028",
+          "tasks": "cbdfa65f3e01d8a8c22778cae81b682a48e6874683cf72089e8f24bce9a3456d",
+          "seed": 1742751657,
+          "draws": 20826,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2250,
+          "state": "f9242c9a564e540fecdaed8ca65980a5140e423a50e123be852462da7415f82a",
+          "choices": "fd581b87a6dc0cc697415bc95dd5eb1bfb79c2e24d9c3c9035c0857cb4a9e07e",
+          "tasks": "07a8ae97bb709811663c5f03bcdc2282b448884f3e5f8bf4c97e1e021e58a054",
+          "seed": 3387035651,
+          "draws": 20892,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2280,
+          "state": "e31f4df7e8b7305ee4d6e9571fbce3feb799d70d658716a118091692a2708a03",
+          "choices": "e44ba771816662f4e4f96332354823d75ce7f7a2b57c4475a8b7f115cfcbad92",
+          "tasks": "55954af31df05b5fef5b7499f5beb4f29dbec97af16200b62821d32b1677cd64",
+          "seed": 3079883817,
+          "draws": 20954,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2310,
+          "state": "861c25312d2f4ddb49bd0d6dd5526772e924c128fbc241ca06412eca2fa969ae",
+          "choices": "68b1ddeb5f94b6fbfc6a1925860308194f285b363bc2e25632f833d0775b6b08",
+          "tasks": "0afaf0f489b644562c917e39db36f0d044fa788201ed4ff411701b6cdeacb9cd",
+          "seed": 3743676555,
+          "draws": 21028,
+          "cache": {
+            "builds": 1,
+            "hits": 13
+          }
+        },
+        {
+          "at": 2340,
+          "state": "25f1d827eb7036f104eb4738dd3883bf27b5bc57301f03c7d857c3f16d0f32a2",
+          "choices": "4353baf9fa957867a4144f6ff52af4a5d89dd6433515a5244157675b3930e247",
+          "tasks": "8ed85a43c7ae9afa389c1f82e373f7fd9b6c7cf8503334dd6b61e629b78626a2",
+          "seed": 70470811,
+          "draws": 21300,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2370,
+          "state": "c86aa5a6bf1cca0ecf072296ba76190c25d6c0c7d8a77cb1c61b4a656145fe2a",
+          "choices": "b64375306f2d5cbbecc5d4ea5cb047a370437ec6ac5fcdf356ee861a1f64a443",
+          "tasks": "a78e48414355784723e4bf5864c0bbab6cc99b99136245e9b1f9d3bc592a5711",
+          "seed": 3474212440,
+          "draws": 21391,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2400,
+          "state": "acc736364dabc8cb6e64bc0ba521cf57fcb72c07be0fd7956c0e5d848f782a0d",
+          "choices": "af3fd1ac4139ae324b0b67fb9f43ff498220c58cd09b12e386ef5117dce9995a",
+          "tasks": "cc1e1052dc8b4ec341528b16025e0c06554b6e625bde0b7997193f69d14672dd",
+          "seed": 4150008459,
+          "draws": 21540,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2430,
+          "state": "ad7c00167317e0ff4afe86a7e849013bd096ead1d4af53d7201ff41305adf0e3",
+          "choices": "f0829a2eceefac78dfd9db43456044304b2905a8417834d81407c84e0246b6d0",
+          "tasks": "d394a8cab8a232821bb8fdb73ce7046569794a9a7d28f398af264f56aa9d2904",
+          "seed": 171159346,
+          "draws": 21657,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2460,
+          "state": "caebf80f652f6f0ad00d71e6e48d5895ef46a7c215506ae0eeb9a7e0bcdee2bc",
+          "choices": "7b1a8d89698a3e20f9a342321071b978138ecb4298263b604f39de909e2eb445",
+          "tasks": "2ee5010d6c44940e97053e5f161eaf0b8c69c4a057e7a7791528a8b80e585f74",
+          "seed": 4265382006,
+          "draws": 21837,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2490,
+          "state": "a84dc76b7e06eff027365f7551a34fda91f0fcaa789449470c5ac0ea8f2064b5",
+          "choices": "639c3558c8dc6605e22e3e7b7a77f1887f087f58ca9d1cee099501f043647716",
+          "tasks": "f625e21d22d5a31ccd36b0fba9acfc5d8cfce0dd05f0b725b751056fd14db4c2",
+          "seed": 3495264794,
+          "draws": 21921,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2520,
+          "state": "b047d7521d75714aae5daebd8110cfe8f7150ff141d4a75e451726205b344197",
+          "choices": "2162fc92e56eca9da3e02235679fb1fa3299f95abebc725faa30540947053e7f",
+          "tasks": "3b7eacece360a568eb66c60501b7dcff1d7fb2db6488e69b3b31e9538540fa60",
+          "seed": 926430708,
+          "draws": 22107,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2550,
+          "state": "cd1bc71660207130e7933b407126d1419d4ea6b4d9e00a6d07261864a69c5b4c",
+          "choices": "0f6e82f48e952b75e45f091e8711107ba12db1353550e8b86161ae9b9ba37d93",
+          "tasks": "3556208f76df389b835bba98f8511b84b9adf6632c599c610a1e343965a5f88b",
+          "seed": 3194221740,
+          "draws": 22195,
+          "cache": {
+            "builds": 1,
+            "hits": 14
+          }
+        },
+        {
+          "at": 2580,
+          "state": "56f192226d54fbefd311867bd0ba20143d9534259d14b6104ee4f6954c3bc534",
+          "choices": "9bc6d3332b04d712568afa8153e2ca240f9d890e02f48151037de997531a4079",
+          "tasks": "39643a23efd066c7936d23ead352e117d48350354a843c6d05508bea5b541d34",
+          "seed": 1235046141,
+          "draws": 22510,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2610,
+          "state": "8e378e1ddac011095af812161280212dcfd1fed6e0bd4be57c4ad4c795593ae3",
+          "choices": "2082f7f7c19eff09ab7045b299f42d14433bab656662c839b337e08eafed93cd",
+          "tasks": "4a9dffb2096140f3887ab110d851a03e38a27a47a4396dd62c776bc05fc82b4d",
+          "seed": 3187749540,
+          "draws": 22603,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2640,
+          "state": "969888f3f4628f2b785eea2378a6ae0ce29339483808adc606ec541a9ed48b63",
+          "choices": "e2ab46ea58a02fcffd7f986cad3619c473595ef3de561811ace08d513234493b",
+          "tasks": "4c3607bc8a4aaf0bf0fb5e4c119bfe1fafd8edcc75984e332600213268b87dec",
+          "seed": 3367205641,
+          "draws": 22970,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2670,
+          "state": "3250f74a966c655a9fbbfc2964a818fead0061a64b51ff63e121755f4c7f1c34",
+          "choices": "84944ea6243176edd45fe0b40dce9d39c536af4bd60cb5d247f4841c80719348",
+          "tasks": "a9bde6c949039b828d2ee00b1b60c18d981824204a570812c9a28c9ab4252f9e",
+          "seed": 1574150961,
+          "draws": 23074,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2700,
+          "state": "4de1ff7e8d9062348b67441fedfea2761ee8d7109ac1075565e4c90f816eeece",
+          "choices": "3d2f39a74e6b4fa2bed659fd16451648b4408127b1fafdbadb8652865f2d4f11",
+          "tasks": "82e631feeee2f8a71c8816102c59ba416270e94da32f67fca83764b25c23a627",
+          "seed": 2768352851,
+          "draws": 23276,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2730,
+          "state": "08d513a98b7f8fe061d2db9bf00bcdb2fccb052e7b61e15ec754693b760f2a89",
+          "choices": "7d38efed63adbf3124649a2e0d3f49ae160248c71c71f8618ab8ed320efb5894",
+          "tasks": "da1e2b4063ed3177f3bc5ff6915a9150410bc042ddb315cead77fc7a35aeeff6",
+          "seed": 1774199420,
+          "draws": 23363,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2760,
+          "state": "0aff40f7d9370cd675c458c40e00d421ad73f49ac661e4e51b8205f0afba338e",
+          "choices": "7f14d3015231a91768639eff65360abf246c3228f1a209283197dbcc850c79c8",
+          "tasks": "b613407be5e5d21899b7b5d1d8dd84ac44bfdee92f2bc24a30b5a3c2326c3515",
+          "seed": 1337767104,
+          "draws": 23639,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2790,
+          "state": "b2ec9818e4d90b2f1773d7ea3b783c664c2131325a0d3682d92fd9d63705333c",
+          "choices": "bee6e32dd5539531e84178d20a527c498a26abc91b102a17f764f0f52ab8c76f",
+          "tasks": "ca5e2ac0d6391640e66d3d072e2505e36abc7b2658a3d00bd2694f1da8d03139",
+          "seed": 25846752,
+          "draws": 23799,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2820,
+          "state": "6daf2445964184f52f20d39450ab043b6c115c806d650fd789570722857899a6",
+          "choices": "67f66105806b59a2ec1ca2398bd2686f74d074444fd0f0c8f948637f8bafc6d2",
+          "tasks": "70e437cc018b41143f3dd9eb7be00e9c48aa62d5cb7d489b3a5f340719e0b9ce",
+          "seed": 42887410,
+          "draws": 23897,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2850,
+          "state": "abda1acc08c46ebe6f36bc18b7e7bfd849fd049ddfd9f4d7a0d19f5b8aa33589",
+          "choices": "0a149cc1f9679e0687263e7386ea20e62054ece39207d1daf94d100b2b082bbf",
+          "tasks": "bf4206148e76af4d413cbf1235e11825c47c7573da0c60c92b3d34613b8ec020",
+          "seed": 3861876513,
+          "draws": 29330,
+          "cache": {
+            "builds": 1,
+            "hits": 15
+          }
+        },
+        {
+          "at": 2880,
+          "state": "e0365013d7512c0d14da06c8bacac4d2433e193b41fb3663170041f205c66f31",
+          "choices": "0438b3750a24b66a017aae81f0cadd46d7b6aa4266b6012e9ccad405436fb774",
+          "tasks": "fd099be0bc9264e51d105beac1981bcb65088a7799ff442b5329b1015360f59d",
+          "seed": 1797553302,
+          "draws": 29677,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2910,
+          "state": "bfdd5793be47bc1f34cc8481732de18f1c0903dab05998717fd68f2d3ffc0de0",
+          "choices": "7d9eccbb5ff45ffbb0840931505669cc99a910dae2629782a74810618d13d134",
+          "tasks": "fd099be0bc9264e51d105beac1981bcb65088a7799ff442b5329b1015360f59d",
+          "seed": 1598722497,
+          "draws": 29746,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2940,
+          "state": "05a37a7deffec2ae8470535b744261ff64b3f1308d3ab885a7efbe161ff12520",
+          "choices": "dcfb15234fc63e97e2b18b641a3d32364d9ef3d7b1a7232d7ef6b704784d533b",
+          "tasks": "e8b4ed4b1c753858b64722fd3a523d3ab53faf0f5375da84c8459724f46bd596",
+          "seed": 971938084,
+          "draws": 29899,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 2970,
+          "state": "6c25b3b99b14b20cd7880692df29bb525f74202218f7c2f7ffe94a256fd229c8",
+          "choices": "725ce5ec923eb8444b33c848fcbb3af1fa47712b621b7def10b687a98319e5d5",
+          "tasks": "5262617392297535cc0d71a9c875da1a42fd626ae500be433d2c942fe8384a3c",
+          "seed": 1615497416,
+          "draws": 30015,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3000,
+          "state": "fc0371c8d54ff8d62e6e0ae9eb3923a0c9ecdea098422c40f37a053c0c10e07d",
+          "choices": "2f191b647f7c17c01564c6b436f939536d18e5e6a67873e7db02fb883433346d",
+          "tasks": "f54c46ea444fcef4ec7a2ab47e1dc440d60511e081d0b8775193484c816b310e",
+          "seed": 4224036893,
+          "draws": 30222,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3030,
+          "state": "5b706855e4b1a1a0f6b9db278a61995f9140ee7a6661abc175e60504769d4757",
+          "choices": "8498e13af6587e1437d23d84d96cbd6ce50ea658cb990d7a886cd9165bda36a1",
+          "tasks": "89fb2f9b354c3399756359477a745649ab372bd3a33a8445fab9ff6f3a982df0",
+          "seed": 2109386559,
+          "draws": 30328,
+          "cache": {
+            "builds": 1,
+            "hits": 16
+          }
+        },
+        {
+          "at": 3060,
+          "state": "417e979cf37f4f119c1555e98fefa35e13c0d4e8cbd4203f147fce5c13d2e111",
+          "choices": "6f6e5b7757e39e690035e19a47a29fd92e7a036de89331324996dfe209ac6623",
+          "tasks": "89fb2f9b354c3399756359477a745649ab372bd3a33a8445fab9ff6f3a982df0",
+          "seed": 1246350192,
+          "draws": 30535,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3090,
+          "state": "0a996d61be503f1fe9716a0715f444f4486fe33f3440d5ec8f1f5a4e5c36088d",
+          "choices": "47f256787c0a5db65ea7a01b429df0697d553447291d5a2559abdbea556e9b62",
+          "tasks": "82d257a67965621411ce29ed73da7db5c20f4f128bd3e4d4cd91e3f674bcc477",
+          "seed": 3501532168,
+          "draws": 30591,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3120,
+          "state": "d0a014752da0bc8e351061109d22aaea98b47b428f37ada4476988c67c4682db",
+          "choices": "080be217fc4fc1e443a14674fe1f7f3da69a6f12944e2d4b875b7223bcd0b864",
+          "tasks": "94a5ebc03e0ebcea9690160988213425bdfd2e1ad9491aa512630071433eb64d",
+          "seed": 3209783508,
+          "draws": 31163,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3150,
+          "state": "c86a54b3a0a64f17cc87d80b4a383f51df731ff079d3cbf8d0e52bf1e0528d4f",
+          "choices": "52c73087ec772c117efef46d8a19c244b93b73c5d1fba5472882e202944d0fdb",
+          "tasks": "fffee59a0ec928b99dedd9223e0ce4e6b9e5092eb66562302ac50a9035b9ec07",
+          "seed": 237925163,
+          "draws": 31428,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3180,
+          "state": "9f5212daeb45f781f17003079a2f41e6f54a121f8673fd1a334d07caf3c89b24",
+          "choices": "a498be25672e3533090a35c803f4f9107dd1363debd777a5ddfe34aba1bd6f82",
+          "tasks": "40fa30ac3d75769d7b2982f98be642ee4343bdac0067b1889c75919f0519aa2c",
+          "seed": 2498365222,
+          "draws": 31677,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3210,
+          "state": "f417d37e7e3e37580eecc8f0738550e0435f09b52b29a141c5ad131103d136dd",
+          "choices": "856764b3db4198ef97914be0a761374bd98c3dd287e568d6a65d6426b5fbc99b",
+          "tasks": "7570131a11917578ad92799a9ca64783b408e038760068d7a8a47b8d8460d726",
+          "seed": 3186804843,
+          "draws": 31748,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3240,
+          "state": "15173b335a2efcc830589fe70fe458ee702bb1ceff8913d67568dac705736b98",
+          "choices": "d1c9876bc403330acb865b1f29484b7030f7f261a15279fcbf0d21afaed705ec",
+          "tasks": "e5622e80a0ae29d5e1c98b3608712e7ab6834e698f7fdc6773fc28c8a2f79dfa",
+          "seed": 3326205862,
+          "draws": 32317,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3270,
+          "state": "5dc2116f28e54ede52d165fb73d4f5dbb2709007267095e88c779aefb75aeab8",
+          "choices": "0bca170fbef115f1cc20f9aace7fc609fa7eb93ffb1a1ebcb397d387dcf50249",
+          "tasks": "b3ba9549c4829ca2e08e042bd5229699b3d0c4b13047e4155f723c1177db9948",
+          "seed": 2998453991,
+          "draws": 32416,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3300,
+          "state": "b47acb08b10d04d1b1143a333c1038f52cc964c92b1de52eb565d58b00ddd4df",
+          "choices": "361680fbae0133c946dd8356b67424230a2bb681140aaf858efe66c590b49da9",
+          "tasks": "daa3957841d06135a642ceeba04451a1ccdcd8f33e5c541e3b59e28ef7a64c4f",
+          "seed": 4248852580,
+          "draws": 32523,
+          "cache": {
+            "builds": 1,
+            "hits": 17
+          }
+        },
+        {
+          "at": 3330,
+          "state": "3b79530eec8d3d45b28a4422709d093a55b17fec23a958feb5d64f3742690ad7",
+          "choices": "ff8c0061607691e2d59099aff8864fbc6d773612fc1393df7c1c47002ed370e5",
+          "tasks": "6b6fc28f4ff4d71d2d3bd114282289070eb2ef82d7cce4cd7ee5b03fe9ea38f7",
+          "seed": 2280227530,
+          "draws": 33553,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3360,
+          "state": "9af3314f869bd77aead56d4bca8ff70a144caad0c5d39810b0e94e9b89a1ac88",
+          "choices": "b1a61544324fc97aa777f3006115502c2ce34c5e1326979c9ca4ff82e3c7a46a",
+          "tasks": "47788442baf58f869c267b07109ad844967bc3bd612788fe599d8bfda94e6669",
+          "seed": 3043057080,
+          "draws": 33647,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3390,
+          "state": "178620af5169ed3afa3cb8b4f74263ca32b078375f5fa5e5af82a23efa045c97",
+          "choices": "07ab4b9d5d1627fee50b4bdae30abe6da02e776ca3137d7bb739ab2dc1f1649c",
+          "tasks": "4c24fde0e7706dfb24a9a9123aa62dac5d33d0a01ea8158589df992b4b784010",
+          "seed": 2599816562,
+          "draws": 33753,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3420,
+          "state": "d40795ae9be5f26b5a54707d3f83f8764bbd0c885c155e0594496816b3a722a7",
+          "choices": "eaf7e1b13832b5486b51af76caaac79dd09b250d331efd6bab419e2c2c98e3b8",
+          "tasks": "86b37bac69d84806fee1a56034bb876daebbf9a775e7d43e8a9c0118bc552cc7",
+          "seed": 2457189747,
+          "draws": 33804,
+          "cache": {
+            "builds": 1,
+            "hits": 18
+          }
+        },
+        {
+          "at": 3450,
+          "state": "088da24ea050ed5316f6b0dd1a5847db0fe16e1f1a7aaebfd7bc3f64c4157c88",
+          "choices": "3647dabfb93a4ebc9657c754aac3eb7bf61e70e8ffb0487ee763f488d65d1b24",
+          "tasks": "abcab3e4762e7db5b73c888dfa764dae4214d60476b19edb3b668b15e4ffbcff",
+          "seed": 1784654097,
+          "draws": 34050,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3480,
+          "state": "9392f89b6e83bd4e4340b333169e2d00e3c79830a606bca500f396b8e1ced3c8",
+          "choices": "9b2a0ee3214a468a917de3d666c41c64cf2578fd3be1edeaef6606b2e6b11492",
+          "tasks": "50fe16efe133662cf506e7f39eb85118c11f027db35061d4ffc8778a9e5d5e6e",
+          "seed": 547943249,
+          "draws": 34114,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3510,
+          "state": "7374afabce3d720a3efbb4f010def346ae169624253545cfe4e9af8fcc395c03",
+          "choices": "af2aa3fbb9095f7de2c24bf378a35cfda93415c87535e1552f99d5d6ac86b23c",
+          "tasks": "9e37fe68ce460689165464c07cb9c5bad79d9ddfbca1d3dbd188f795a81f34d4",
+          "seed": 1550759502,
+          "draws": 34181,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3540,
+          "state": "24aa4d3130e669856f35ef039a0c28f87123aa9b11899db01f549b28417f25b4",
+          "choices": "536d234325a4ea1357763e61ab78076a6ac273c6a8b089e1bb8d8f81cec4c411",
+          "tasks": "d61c57f7364a38bdbee0dfce1d450708aea9c294c5c9c134bc6d4420827917b2",
+          "seed": 349761458,
+          "draws": 34585,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3570,
+          "state": "0a29fd7a749ed705330167569693d0d2165b719a279dc3252c4205bfc786015f",
+          "choices": "8f86d018f177cfa383fcfd2a9c8f07695d5681b7581dcc4bf98fcc8a1e244a30",
+          "tasks": "9e99ac1211900a444fa610598187c5b7ba4b9ad19a08031d6b80786d4e9e219e",
+          "seed": 2513897911,
+          "draws": 34672,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        },
+        {
+          "at": 3600,
+          "state": "529d2447d36e91ac58e12151ab8c163c87259c05cdd0742f65883e086d8016d8",
+          "choices": "ce653b4e30af6f4bdede2b38a1e4d91c9491d4f2931010d1b6acc07521e95931",
+          "tasks": "3e8f96fac734e5e4fbd4ce25ac5b513c52b9d6d30d79cd888162694173f41a57",
+          "seed": 1071364871,
+          "draws": 39616,
+          "cache": {
+            "builds": 1,
+            "hits": 19
+          }
+        }
+      ],
+      "counters": {
+        "reset": 23,
+        "invalidateTasks": 776,
+        "refreshCalls": 1527,
+        "fullRefreshes": 638,
+        "reusedRefreshes": 889,
+        "obstructionClears": 33,
+        "labelCalls": 185184,
+        "labelRevisions": 38,
+        "labelFloodFills": 11,
+        "reasonSamples": 256,
+        "reasonBudget": 256,
+        "reasons": {
+          "invalidateTasks:hunting.ts:130:finishTask": 246,
+          "reset:hunting.ts:69:damagePrey": 5,
+          "reset:hunting.ts:215:workerHuntAI": 5
+        }
+      },
+      "observedRefreshes": 638,
+      "taskTrace": "3e8f96fac734e5e4fbd4ce25ac5b513c52b9d6d30d79cd888162694173f41a57",
+      "choiceTrace": "ce653b4e30af6f4bdede2b38a1e4d91c9491d4f2931010d1b6acc07521e95931",
+      "finalState": "529d2447d36e91ac58e12151ab8c163c87259c05cdd0742f65883e086d8016d8",
+      "seed": 1071364871,
+      "draws": 39616,
+      "cache": {
+        "builds": 1,
+        "hits": 19
+      },
+      "strictSave": true,
+      "simulationErrors": []
+    }
+  ]
+}

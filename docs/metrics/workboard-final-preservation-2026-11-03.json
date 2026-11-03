@@ -1,0 +1,22 @@
+{
+  "base": "62a122e43b20c5324de15dbb8ef2525d9d945ba9",
+  "unchanged": {
+    "src/game/autosave.ts": {
+      "unchanged": true,
+      "sha256": "1f6c3afa6151c37e6bd0468f89ead1a12cfa253fa9a1f0e4e888dc0048c3d43e"
+    },
+    "src/game/finiteCamp.ts": {
+      "unchanged": true,
+      "sha256": "875febf3c1f8bdb8b28c13063e45143c9f94e7212ea727ce93372d76da7d18f0"
+    },
+    "src/scene/world.ts": {
+      "unchanged": true,
+      "sha256": "888e17061a8f84b012658d78477159485828c1c93ac67ec5f5e7d070f09212e1"
+    },
+    "src/scene/entityFrustumCensus.ts": {
+      "unchanged": true,
+      "sha256": "6ce31990015f3046c9a7bf3cb0a08357e20412ec7eee3892c68e7986d6878782"
+    }
+  },
+  "functionalSimBody": "Exact62a122e after removing only optional phase type/argument/marks/finally; finiteCamp import and all62functional branches preserved"
+}

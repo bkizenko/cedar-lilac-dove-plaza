@@ -1,0 +1,60 @@
+{
+  "scope": "Diagnostic-only optional coarse Game.step attribution, no implementation optimization or acceptance credit",
+  "baseline": "f7c1ae6 + frozen autosave recovery + frozen entity census",
+  "tests": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "nativeOpening": {
+      "worldVersion": 18,
+      "seed": 1,
+      "size": 1040,
+      "layout": "continents",
+      "stepsPerRun": 90,
+      "modes": [
+        "absent",
+        "disabled",
+        "enabled",
+        "enabled",
+        "absent"
+      ]
+    },
+    "ownedAuthoredStress": {
+      "worldVersion": 18,
+      "seed": 1,
+      "size": 1040,
+      "playerResidents": 100,
+      "playerFinishedInitialStructures": 60,
+      "stepsPerRun": 180,
+      "modes": [
+        "absent",
+        "disabled",
+        "enabled",
+        "enabled",
+        "absent"
+      ]
+    },
+    "equality": "Complete serialized state and external RNG seed/draw count at every30steps and final; no simulation errors; actual clock advances"
+  },
+  "typecheck": "exit0",
+  "sourceConstraints": [
+    "No GameState fields or save changes",
+    "No sampler/method wrappers or monkeypatches",
+    "No timer reads when disabled",
+    "Enabled only while existing Performance disclosure open",
+    "15coarse phases, maximum240samples each",
+    "No frequency/cadence/AI-budget/terrain-cache changes"
+  ],
+  "logs": [
+    "/tmp/hearthwild-simulation-phase-tests.log",
+    "/tmp/hearthwild-simulation-phase-type.log",
+    "/tmp/hearthwild-simulation-phase-build.log"
+  ],
+  "limits": [
+    "Timers add bounded clock/sample overhead while enabled.",
+    "Phase p95 sums are not overall p95.",
+    "Each phase row has its own sample count; paused/conditional phases differ.",
+    "Owned100/60fixture is authored initial endowment and is optional if fixture absent; it executed here.",
+    "No FPS, GPU-time or universal performance claim."
+  ]
+}
