@@ -1,0 +1,162 @@
+{
+  "scope": "Controlled authored sloping farm terrain; finite initial stores and buildings; no later grants or forced completion",
+  "stages": [
+    {
+      "stage": "first-harvest",
+      "time": 1314.280000000106,
+      "finiteYield": 577,
+      "grainDelivered": 97.19553073482285,
+      "contourRange": 0.5329998852656361,
+      "plants": 67
+    },
+    {
+      "recipe": "grindGrain",
+      "elapsed": 65.0400000000111,
+      "projectId": 3966,
+      "progress": 60
+    },
+    {
+      "recipe": "bakeBread",
+      "elapsed": 48.400000000011005,
+      "projectId": 3980,
+      "progress": 45
+    },
+    {
+      "recipe": "grindGrainStation",
+      "elapsed": 28.000000000006366,
+      "projectId": 3990,
+      "progress": 24
+    },
+    {
+      "recipe": "bakeBreadOven",
+      "elapsed": 31.00000000000705,
+      "projectId": 3996,
+      "progress": 24
+    }
+  ],
+  "initial": {
+    "people": 3,
+    "food": 900,
+    "foodLots": {
+      "provisions": 900
+    },
+    "wood": 200,
+    "stone": 80,
+    "seeds": 24,
+    "waterLiters": 160,
+    "assets": [
+      "townhall",
+      "hut",
+      "four warehouses"
+    ]
+  },
+  "paidBuildings": {
+    "wood": 80,
+    "stone": 20
+  },
+  "preservationLogs": 68,
+  "cereal": {
+    "version": 1,
+    "harvestedSheaves": 1172,
+    "deliveredSheaves": 1172,
+    "lostCarriedSheaves": 0,
+    "cleanedGrain": 480,
+    "seedsAllocated": 38.40000000000003,
+    "seedsLost": 0
+  },
+  "remainingCerealItems": {
+    "grainSheaves": 204,
+    "roughGrain": 0,
+    "straw": 242,
+    "chaff": 240
+  },
+  "final": {
+    "time": 3601.159999998994,
+    "food": 1049.181119566818,
+    "grain": 352.05880048333756,
+    "seeds": 75.59999999999978,
+    "wood": 41.145079999987416,
+    "water": 69.57216000003876,
+    "fuelBurnedWood": 8.854920000000037,
+    "waterConsumedLiters": 86.4278400000311,
+    "stone": 60,
+    "soil": {
+      "fallow": 1,
+      "cultivated": 0.76
+    },
+    "production": {
+      "consumed": {
+        "grainSheaves": 968,
+        "roughGrain": 726,
+        "flour": 8
+      },
+      "produced": {
+        "roughGrain": 726,
+        "straw": 242,
+        "chaff": 240,
+        "flour": 8
+      },
+      "spoiled": {
+        "rawMeat": 0
+      },
+      "lost": {},
+      "logsUsed": 2,
+      "waterUsedLiters": 4,
+      "grainUsed": 8,
+      "grainLost": 0,
+      "edibleFoodProduced": 449.6000000000007,
+      "edibleFoodLost": 0,
+      "foodInputsUsed": {},
+      "foodInputsLost": {},
+      "dryingExposureSeconds": 0,
+      "wetExposureSeconds": 0,
+      "completed": 245,
+      "interrupted": 1
+    },
+    "foodAccounting": {
+      "received": 714.5999999999976,
+      "consumed": 459.9096400933163,
+      "spoiled": 97.50924033987053
+    }
+  },
+  "cerealJobsSummary": {
+    "complete": 100,
+    "working": 1
+  },
+  "limits": [
+    "Authored contour terrain and endowed finite starting stores/structures; not a native initial-camp-to-second-harvest campaign.",
+    "Three-plot overcommitment failed finite material capacity; minimum grain plus pulse control and paid additional store/floor used instead.",
+    "Straw/chaff feed/daub consumers, wind and moisture-aware raw crop losses remain planned.",
+    "No whole-game FPS claim or completion gate credit."
+  ],
+  "checks": {
+    "distinctCases": 97,
+    "core": {
+      "count": 11,
+      "log": "/tmp/cereal-final-eleven-tests.log"
+    },
+    "currentContourCycle": {
+      "count": 1,
+      "log": "/tmp/cereal-final-core-cycle.log"
+    },
+    "legacyToolsCatalogueAdapters": {
+      "count": 13,
+      "log": "/tmp/cereal-final-adapter-tests.log"
+    },
+    "farmingProgress": {
+      "count": 4,
+      "log": "/tmp/cereal-final-progress-tests.log"
+    },
+    "normalNativeFirstWinter": {
+      "count": 1,
+      "log": "/tmp/cereal-winter-cycle-tests.log"
+    },
+    "remainingCompatibility": {
+      "count": 67,
+      "log": "/tmp/cereal-compat-tests.log",
+      "note": "71 cases: remaining67passed; station4rerun in correctedadapter file after stale catalogue expected count was replaced with functional assertions."
+    },
+    "typecheck": "/tmp/cereal-final-types2.log",
+    "developmentBuild": "/tmp/cereal-final-build.log"
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "seed": 0,
+  "version": 17,
+  "layout": "continents",
+  "start": {
+    "x": -149,
+    "z": -365,
+    "y": 12.360770827073319
+  },
+  "target": {
+    "x": -162,
+    "z": -298
+  },
+  "actor": {
+    "id": 5924,
+    "type": "worker",
+    "team": 0,
+    "x": -149,
+    "y": 12.360770827073319,
+    "z": -365,
+    "hp": 48,
+    "r": 0.55,
+    "order": "move",
+    "tx": -162,
+    "tz": -298,
+    "stuckT": 9.999999999999996,
+    "workReason": "Moving to your destination, then waiting for orders",
+    "stationOnArrival": true
+  },
+  "time": 9.999999999999996,
+  "walkableStart": true,
+  "walkableTarget": true,
+  "startCell": 1,
+  "targetCell": 1,
+  "connected": true,
+  "frames": [
+    {
+      "time": 0.2,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 0.2,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 5,
+        "points": [],
+        "failed": true,
+        "retry": 3.2
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 0.4,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 0.4,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 5,
+        "points": [],
+        "failed": true,
+        "retry": 3.2
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 0.6000000000000001,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 0.6000000000000001,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 5,
+        "points": [],
+        "failed": true,
+        "retry": 3.2
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 0.8,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 0.8,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 5,
+        "points": [],
+        "failed": true,
+        "retry": 3.2
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 1,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 1,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 5,
+        "points": [],
+        "failed": true,
+        "retry": 3.2
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 2.1999999999999997,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 2.1999999999999997,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 7,
+        "points": [],
+        "failed": true,
+        "retry": 5.199999999999999
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 4.200000000000001,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 4.200000000000001,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 10,
+        "points": [],
+        "failed": true,
+        "retry": 7.200000000000001
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 6.200000000000003,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 6.200000000000003,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 10,
+        "points": [],
+        "failed": true,
+        "retry": 7.200000000000001
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    },
+    {
+      "time": 8.200000000000003,
+      "x": -149,
+      "z": -365,
+      "y": 12.360770827073319,
+      "order": "move",
+      "stuck": 8.200000000000003,
+      "route": {
+        "tx": -162,
+        "tz": -298,
+        "revision": 10,
+        "points": [],
+        "failed": true,
+        "retry": 10.200000000000003
+      },
+      "reason": "Moving to your destination, then waiting for orders"
+    }
+  ],
+  "paths": {
+    "24000": null,
+    "96000": {
+      "count": 380,
+      "first": [
+        {
+          "x": -151,
+          "z": -363
+        },
+        {
+          "x": -153,
+          "z": -363
+        },
+        {
+          "x": -155,
+          "z": -361
+        },
+        {
+          "x": -157,
+          "z": -361
+        }
+      ]
+    },
+    "270400": {
+      "count": 380,
+      "first": [
+        {
+          "x": -151,
+          "z": -363
+        },
+        {
+          "x": -153,
+          "z": -363
+        },
+        {
+          "x": -155,
+          "z": -361
+        },
+        {
+          "x": -157,
+          "z": -361
+        }
+      ]
+    }
+  },
+  "probes": [
+    {
+      "x": -149,
+      "z": -364.5,
+      "height": 12.361535996657151,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.80865828381746,
+      "z": -364.5380602337444,
+      "height": 12.361445455848644,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.64644660940672,
+      "z": -364.6464466094067,
+      "height": 12.361252208924617,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.53806023374435,
+      "z": -364.80865828381746,
+      "height": 12.360985675977467,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.5,
+      "z": -365,
+      "height": 12.360686434232273,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.53806023374435,
+      "z": -365.19134171618254,
+      "height": 12.3604000405321,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.64644660940672,
+      "z": -365.3535533905933,
+      "height": 12.360170095721642,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -148.80865828381746,
+      "z": -365.4619397662556,
+      "height": 12.360031606813834,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149,
+      "z": -365.5,
+      "height": 12.360005657489484,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.19134171618254,
+      "z": -365.4619397662556,
+      "height": 12.36009619829799,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.35355339059328,
+      "z": -365.3535533905933,
+      "height": 12.360289445222017,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.46193976625565,
+      "z": -365.19134171618254,
+      "height": 12.360555978169167,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.5,
+      "z": -365,
+      "height": 12.360855219914363,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.46193976625565,
+      "z": -364.80865828381746,
+      "height": 12.361141613614533,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.35355339059328,
+      "z": -364.6464466094067,
+      "height": 12.361371558424992,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    },
+    {
+      "x": -149.19134171618254,
+      "z": -364.5380602337444,
+      "height": 12.3615100473328,
+      "water": 0.42,
+      "walkable": true,
+      "canStep": true
+    }
+  ],
+  "errors": []
+}

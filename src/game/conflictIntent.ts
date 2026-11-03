@@ -1,3 +1,4 @@
+import{prepareOwnedHandover}from'./communityHandover';
 import{reconcileWaterCargoEvidence}from'./boatPractice';
 import{adoptHerdWaterLoad,reconcilePenWater}from'./penWater';
 import {pauseHaulageWork} from './haulage';
@@ -155,25 +156,12 @@ export function integrateOccupiedVillage(g:Game,id:number){
   return crew.every(u=>candidateIds.has(u.id)&&Math.hypot(u.x-b.x,u.z-b.z)<=CONFLICT_RULES.surrenderMooringMeters&&u.order!=='move');
  });
  const hullIds=new Set(hulls.map(b=>b.id)),residents=candidates.filter(u=>!u.boat||hullIds.has(u.boat.id));
- const paid=g.state.haulageProjects?.filter(p=>p.team===control.formerTeam&&buildingIds.has(p.work.workplace))||[];
- // Stop incompatible commitments before changing teams; never refund consumed goods.
- for(const person of residents)g.interruptMission(person);
- for(const project of paid){
-  const actor=g.state.units.find(u=>u.id===project.actorId);if(actor)pauseHaulageWork(actor,g);
-  project.actorId=null;project.work.paused=true;project.team=control.controllerTeam;project.blockedReason='Village joined — choose an available worker to resume paid work';
-  const runtime=workRuntime(g);runtime.finish(`haulage:${project.id}`,true);runtime.forget(`haulage:${project.id}`);
- }
- for(const building of buildings){building.team=control.controllerTeam;building.selected=false;}
- for(const hull of hulls){hull.team=control.controllerTeam;delete hull.exploration;}
- for(const person of residents){person.team=control.controllerTeam;person.selected=false;person.target=null;person.node=null;person.pillage=-1;person.attackDestination=null;person.emergency=undefined;person.job=null;person.jobLock=false;person.order=person.carry>0?'return':'idle';person.workReason='Village surrendered intact — resuming community life';}
- for(const animal of g.state.livestock??[])if(buildingIds.has(animal.pen)&&animal.team===control.formerTeam)animal.team=control.controllerTeam;
- for(const person of residents)adoptHerdWaterLoad(g,person);
- reconcilePenWater(g);
- reconcileWaterCargoEvidence(g);
- control.phase='integrated';control.integratedAt=g.state.time;control.blockedReason=undefined;
- g.state.walkDirty=true;g.workBoard.reset();
- recordConflict(g,'village_integrated',control.controllerTeam,1,{targetId:control.hallId});recordConflict(g,'buildings_transferred',control.controllerTeam,buildings.length,{targetId:control.hallId});recordConflict(g,'residents_transferred',control.controllerTeam,residents.length,{targetId:control.hallId});recordConflict(g,'paid_projects_transferred',control.controllerTeam,paid.length,{targetId:control.hallId});
- return {accepted:true,reason:'The local village joined intact; distant communities and unlocalized stores remain independent',buildings:buildings.length,residents:residents.length,paidProjects:paid.length,boats:hulls.length};
+ const plan=prepareOwnedHandover(g,control.formerTeam,control.controllerTeam,{siteIds:buildings.map(b=>b.id),residentIds:residents.map(u=>u.id),boatIds:hulls.map(b=>b.id),occupationId:control.id});
+ if(!plan.accepted)return{accepted:false,reason:plan.reason};
+ g.commitCommunityState(plan.state);
+ const paid=plan.record.productionIds.length+plan.record.haulageProjectIds.length;
+ recordConflict(g,'village_integrated',control.controllerTeam,1,{targetId:control.hallId});recordConflict(g,'buildings_transferred',control.controllerTeam,buildings.length,{targetId:control.hallId});recordConflict(g,'residents_transferred',control.controllerTeam,residents.length,{targetId:control.hallId});recordConflict(g,'paid_projects_transferred',control.controllerTeam,paid,{targetId:control.hallId});
+ return{accepted:true,reason:'The local village joined intact; distant communities and unlocalized stores remain independent',buildings:buildings.length,residents:residents.length,paidProjects:paid,boats:hulls.length};
 }
 
 /** A securing party is not automatically a lethal threat to uninvolved local

@@ -33,16 +33,17 @@ class Heap{items:{id:number;cost:number;owner:number}[]=[];push(item:{id:number;
 /** Derived at generation time before resource placement. Climate is deliberately
  * compressed into ecological provinces on small game maps; no real-world ethnic
  * or culture identity is inferred from a climate or a plant community. */
-export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoastBfs=false):EcologicalProvinceGrid{
+export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoastBfs=false,localWater?:((x:number,z:number)=>number),localHeight?:((x:number,z:number)=>number)):EcologicalProvinceGrid{
+ const height=(x:number,z:number)=>localHeight?localHeight(x,z):heightAt(world,x,z);
  const width=Math.ceil(world.size/ECOLOGY_RULES.cellMeters),cell=world.size/width,total=width*width,area=cell*cell;
  const point=(id:number)=>({x:(id%width+.5)*cell-world.size/2,z:(Math.floor(id/width)+.5)*cell-world.size/2});
  const neighbors=(id:number)=>[id%width?id-1:-1,id%width<width-1?id+1:-1,id>=width?id-width:-1,id<total-width?id+width:-1].filter(n=>n>=0);
  const eligible=new Uint8Array(total),elevation=new Float32Array(total),slope=new Float32Array(total),fresh=new Float32Array(total),aboveFreshWater=new Float32Array(total),coast=new Float32Array(total).fill(Infinity),noise=new Float32Array(total),kinds=new Uint8Array(total).fill(255);
  const coastQueue:number[]=[];let landCells=0;
  for(let id=0;id<total;id++){
-  const p=point(id),h=heightAt(world,p.x,p.z),water=waterSurfaceAt(world,p.x,p.z);elevation[id]=h;
+  const p=point(id),h=height(p.x,p.z),water=localWater?localWater(p.x,p.z):waterSurfaceAt(world,p.x,p.z);elevation[id]=h;
   eligible[id]=Number(h>=water+.25);landCells+=eligible[id];const freshwater=freshwaterDistance(world,p.x,p.z);fresh[id]=freshwater.distance;aboveFreshWater[id]=h-freshwater.waterY;
-  slope[id]=Math.max(Math.abs(heightAt(world,p.x+3,p.z)-heightAt(world,p.x-3,p.z)),Math.abs(heightAt(world,p.x,p.z+3)-heightAt(world,p.x,p.z-3)))/6;
+  slope[id]=Math.max(Math.abs(height(p.x+3,p.z)-height(p.x-3,p.z)),Math.abs(height(p.x,p.z+3)-height(p.x,p.z-3)))/6;
   noise[id]=fbm(p.x*.004+(seed%919),p.z*.004-71,3);
   if(h<world.baseWaterY+.2&&water<world.baseWaterY+.7){coast[id]=0;coastQueue.push(id);}
  }

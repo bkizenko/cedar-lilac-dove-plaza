@@ -1,0 +1,340 @@
+[
+  {
+    "seed": 7,
+    "layout": "archipelago",
+    "phantomWetEndcapSamples": 0,
+    "endExamples": [],
+    "fall": [
+      {
+        "t": 0.1,
+        "x": -3.2390482594669576,
+        "z": -90.23602218394568,
+        "visualY": 9.157,
+        "water": 9.156998911960414,
+        "height": 7.8127351950964075,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 9.156998911960443
+          }
+        ]
+      },
+      {
+        "t": 0.25,
+        "x": -2.5290327607527416,
+        "z": -89.1011888236992,
+        "visualY": 7.7425,
+        "water": 7.742499938469532,
+        "height": 6.442499960070991,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 7.742499938468995
+          }
+        ]
+      },
+      {
+        "t": 0.5,
+        "x": -1.345673596229048,
+        "z": -87.20979988995506,
+        "visualY": 5.385,
+        "water": 5.384999504834665,
+        "height": 4.084999970275614,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 5.384999504834667
+          }
+        ]
+      },
+      {
+        "t": 0.75,
+        "x": -0.16231443170535442,
+        "z": -85.31841095621093,
+        "visualY": 3.0275,
+        "water": 3.0275018192406975,
+        "height": 1.727500046657066,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 3.0275018192407117
+          }
+        ]
+      },
+      {
+        "t": 0.9,
+        "x": 0.5477010670088616,
+        "z": -84.18357759596445,
+        "visualY": 1.6129999999999995,
+        "water": 1.6129992298388043,
+        "height": 0.9827749619309538,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 1.612999229838806
+          }
+        ]
+      }
+    ],
+    "oceanCoveredMouthSamples": [
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 1,
+        "x": 111.74837977059812,
+        "z": 66.6298998376147,
+        "height": -1.157495471282594,
+        "water": 0.42,
+        "hit": []
+      },
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 2,
+        "x": 112.278778666475,
+        "z": 67.47764803799767,
+        "height": -1.1330543404337696,
+        "water": 0.42,
+        "hit": []
+      },
+      {
+        "body": "ordinary-0-brook",
+        "end": 1,
+        "d": 1,
+        "x": 268.54524974135006,
+        "z": -5.189724448706146,
+        "height": -1.1150265567538584,
+        "water": 0.42,
+        "hit": []
+      },
+      {
+        "body": "ordinary-0-brook",
+        "end": 1,
+        "d": 2,
+        "x": 268.8008989827618,
+        "z": -6.156494051747959,
+        "height": -1.1441057031680695,
+        "water": 0.42,
+        "hit": []
+      }
+    ],
+    "classification": "Only raised local water is a local-surface defect; global .42m ocean separately covers native river mouths."
+  },
+  {
+    "seed": 0,
+    "layout": "continents",
+    "phantomWetEndcapSamples": 0,
+    "endExamples": [],
+    "fall": [
+      {
+        "t": 0.1,
+        "x": -101.16857602758756,
+        "z": -295.4095898837857,
+        "visualY": 9.157,
+        "water": 9.157010638233592,
+        "height": 7.640275559930582,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 9.15701063823363
+          }
+        ]
+      },
+      {
+        "t": 0.25,
+        "x": -100.52705260114539,
+        "z": -294.2665097398044,
+        "visualY": 7.7425,
+        "water": 7.742500938395056,
+        "height": 6.37951902787127,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 7.74250093839504
+          }
+        ]
+      },
+      {
+        "t": 0.5,
+        "x": -99.45784689040843,
+        "z": -292.3613761665023,
+        "visualY": 5.385,
+        "water": 5.384987629093747,
+        "height": 4.085000069723649,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 5.384987629093729
+          }
+        ]
+      },
+      {
+        "t": 0.75,
+        "x": -98.38864117967148,
+        "z": -290.45624259320016,
+        "visualY": 3.0275,
+        "water": 3.0274900976344505,
+        "height": 1.9269757432199062,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 3.0274900976344554
+          }
+        ]
+      },
+      {
+        "t": 0.9,
+        "x": -97.7471177532293,
+        "z": -289.31316244921885,
+        "visualY": 1.6129999999999995,
+        "water": 1.6129925037626252,
+        "height": 0.820656853936971,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 1.612992503762598
+          }
+        ]
+      }
+    ],
+    "oceanCoveredMouthSamples": [
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 1,
+        "x": 43.75650870178622,
+        "z": -65.74738414718692,
+        "height": -1.8303904002897375,
+        "water": 0.42,
+        "hit": []
+      },
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 2,
+        "x": 44.245924088313295,
+        "z": -64.87533335770814,
+        "height": -1.851088723624375,
+        "water": 0.42,
+        "hit": []
+      }
+    ],
+    "classification": "Only raised local water is a local-surface defect; global .42m ocean separately covers native river mouths."
+  },
+  {
+    "seed": 1,
+    "layout": "pangaea",
+    "phantomWetEndcapSamples": 0,
+    "endExamples": [],
+    "fall": [
+      {
+        "t": 0.1,
+        "x": -45.24865042675599,
+        "z": 80.6852917036675,
+        "visualY": 9.157,
+        "water": 9.15699666731719,
+        "height": 7.8570002600202296,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 9.156996667317173
+          }
+        ]
+      },
+      {
+        "t": 0.25,
+        "x": -45.56538156446136,
+        "z": 79.02184259844302,
+        "visualY": 7.7425,
+        "water": 7.742499603126955,
+        "height": 6.442500159862907,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 7.742499603126959
+          }
+        ]
+      },
+      {
+        "t": 0.5,
+        "x": -46.09326679397031,
+        "z": 76.2494274230689,
+        "visualY": 5.385,
+        "water": 5.384999726391683,
+        "height": 4.085000020460625,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 5.3849997263916975
+          }
+        ]
+      },
+      {
+        "t": 0.75,
+        "x": -46.621152023479254,
+        "z": 73.47701224769477,
+        "visualY": 3.0275,
+        "water": 3.027499849637489,
+        "height": 1.7274999812963314,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 3.027499849637479
+          }
+        ]
+      },
+      {
+        "t": 0.9,
+        "x": -46.93788316118463,
+        "z": 71.81356314247029,
+        "visualY": 1.6129999999999995,
+        "water": 1.6130019510036893,
+        "height": 0.8465767851846382,
+        "walkable": false,
+        "hit": [
+          {
+            "mesh": "waterfall-0",
+            "y": 1.6130019510036675
+          }
+        ]
+      }
+    ],
+    "oceanCoveredMouthSamples": [
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 1,
+        "x": -113.3456955305142,
+        "z": -180.38965741520505,
+        "height": -1.8007765272707967,
+        "water": 0.42,
+        "hit": []
+      },
+      {
+        "body": "lower-river",
+        "end": 1,
+        "d": 2,
+        "x": -113.53274135529271,
+        "z": -181.37200860466479,
+        "height": -1.827057662810627,
+        "water": 0.42,
+        "hit": []
+      }
+    ],
+    "classification": "Only raised local water is a local-surface defect; global .42m ocean separately covers native river mouths."
+  }
+]

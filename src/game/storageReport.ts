@@ -1,7 +1,9 @@
+import{inheritedCacheCapacity}from'./communityCaches';
+import{cachedProductionUnits}from'./productionOwnership';
 import type {Game} from './sim';
 import type {Building,FoodKind} from './types';
 import {foodInventory,FOOD_KINDS} from './pantry';
-import {ITEM_KINDS,ITEM_NAMES,PRODUCTION_RECIPES,PRODUCTION_RULES,productionOutputs,itemCapacity,type ItemKind,type ItemStock} from './production';
+import {ITEM_KINDS,ITEM_NAMES,PRODUCTION_RECIPES,PRODUCTION_RULES,productionOutputs,itemCapacity,cerealReservedMaterials,type ItemKind,type ItemStock} from './production';
 import {plotArea} from './plots';
 const amount=(n:unknown)=>Math.max(0,Number(n)||0);
 /** Read-only: these are communal stores, never invented per-building bins. */
@@ -17,6 +19,6 @@ export function villageStorageReport(g:Game,b:Building){
   else{for(const[k,n]of Object.entries(r.foodInputs))paidFoodInputs[k as FoodKind]=amount(paidFoodInputs[k as FoodKind])+amount(n);for(const[k,n]of Object.entries(r.inputs))paidItems[k as ItemKind]=amount(paidItems[k as ItemKind])+amount(n);paidGrain+='grain'in r?amount(r.grain):0;}
  }
  return{complete,food:amount(t.food),foodThreshold:g.stockCap(0),foodContribution:complete?Math.floor(200*plotArea(b)):0,foodLots:FOOD_KINDS.map(kind=>({kind,amount:food[kind]})),resources:[{kind:'wood',name:'Logs',amount:amount(t.wood)},{kind:'stone',name:'Stone',amount:amount(t.stone)},{kind:'copper',name:'Copper',amount:amount(t.copper)},{kind:'iron',name:'Iron',amount:amount(t.iron)}],seeds:amount(t.seeds),water:amount(t.survival?.waterLiters),hasWater:!!t.survival,
-  materials:ITEM_KINDS.map(kind=>({kind,name:ITEM_NAMES[kind],amount:amount(items[kind])})),materialUsed:Object.values(items).reduce((n,v)=>n+amount(v),0),materialCapacity:itemCapacity(g,0),materialContribution:complete?PRODUCTION_RULES.warehouseCapacity:0,care:Math.max(0,Math.min(1,b.storeCare||0)),wornGarments:people.filter(u=>u.garment&&u.garment.condition>0).length,
+  materials:ITEM_KINDS.map(kind=>({kind,name:ITEM_NAMES[kind],amount:amount(items[kind])})),materialUsed:Object.values(items).reduce((n,v)=>n+amount(v),0),materialCapacity:itemCapacity(g,0),materialInheritedCapacity:inheritedCacheCapacity(g,0),materialReserved:cerealReservedMaterials(g,0),materialParked:cachedProductionUnits(g,0),materialContribution:complete?PRODUCTION_RULES.warehouseCapacity:0,care:Math.max(0,Math.min(1,b.storeCare||0)),wornGarments:people.filter(u=>u.garment&&u.garment.condition>0).length,
   carriedFood,carriedItems,carriedResources,rawMeat,waterInTransit,paidItems,paidGrain,paidFoodInputs,incomingItems,incomingFood};
 }

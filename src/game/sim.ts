@@ -1,4 +1,9 @@
+import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
+import{primaryCommunityHome}from'./communityCaches';
+import{workRuntime}from'./workRuntime';
+import{rawCerealField,threshingFloorIssue}from'./cerealRules';
+import{reviewCerealProcessing}from'./cerealProcessing';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
@@ -160,7 +165,7 @@ import type {
   SeasonMix,
   PeaceTerm,
 } from "./types";
-import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, type WorldData } from "./worldgen";
+import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampleWorldHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
@@ -303,7 +308,7 @@ export class Game {
   waterAt(x:number,z:number){return waterSurfaceAt(this.world,x,z);}
 
   height(x: number, z: number) {
-    const base=sampleHeight(this.world.heights,x,z,this.world.size);
+    const base=sampleWorldHeight(this.world,x,z);
     return this.state.excavations?.length?excavationHeightAt(this,x,z,base):base;
   }
 
@@ -314,6 +319,7 @@ export class Game {
   cancelCampMove(){return cancelCampRelocation(this);}
 
   campOf(team: number) {
+    const retained=primaryCommunityHome(this,team);if(retained)return{...retained,team};
     return (
       this.state.buildings.find(b=>b.team===team&&b.type==="townhall"&&b.hp>0) || this.state.campSites?.find(c=>c.team===team) || this.world.camps.find((c) => c.team === team) || this.world.camps[0] || { x: 0, z: 0, team }
     );
@@ -708,6 +714,7 @@ export class Game {
       cd: 0,
       build: 1,
       reclaimed: false,
+      ...(type==="farm"?{cerealProcessingVersion:1 as const}:{}),
     };
   }
 
@@ -922,10 +929,11 @@ export class Game {
   }
 
   solidBuilding(b: Building) {
-    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["threshingFloor", "trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
+    bindLocalWaterChanges(this);
     this.navRevision++;
     this.bridges=this.state.buildings.filter(b=>b.type==="bridge"&&this.finished(b)&&b.bridge);
     const cell = ((this.world.size/2) * 2) / WALK;
@@ -1367,6 +1375,7 @@ export class Game {
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
+    if(type==="threshingFloor"&&threshingFloorIssue(this,team)){if(team===0)this.banner(threshingFloorIssue(this,team)!,4);return false;}
     if(type==="farm"&&cultivationIssue(this,team)){
       if(team===0)this.banner(cultivationIssue(this,team)!,5);return false;
     }
@@ -1723,6 +1732,12 @@ export class Game {
   }
 
   invalidateRoute(u:Unit){this.paths.delete(u.id);u.stuckT=0;}
+
+  /** Commit a fully validated command draft without regenerating the world. */
+  commitCommunityState(next:GameState){
+    this.state=next;this.paths.clear();this.approachCache=new WeakMap();this.workBoard=new WorkBoard();
+    this.selectedResource=null;this.selectedCritter=null;this.selectedBoat=null;this.rebuildWalk();workRuntime(this);
+  }
 
   interruptMission(u:Unit) {
     delete u.huntTrail;
@@ -4069,9 +4084,17 @@ export class Game {
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
         const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||!!u.coastalVoyageId||u.order==="trade";
-        if(!path && longJourney && connectedForUnit(this,u,
-          -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell))
+        const intentionalGroundRoute=u.haulage!=="canoe"&&u.boat?.phase!=="aboard"&&(
+          u.team===0&&(u.order==="move"&&u.stationOnArrival===true||u.order==="attackmove"&&!!u.attackDestination)||
+          (u.order==="build"||u.order==="gather")&&!!u.node);
+        if(!path && (longJourney||intentionalGroundRoute) && connectedForUnit(this,u,
+          -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell)){
+          // A nearby destination can require a long, real river/cliff detour.
+          // Charge added ground searches against this step's shared budget;
+          // a pending search is not an unreachable job or a stuck resident.
+          if(!longJourney){if(this.navBudget<2)return false;this.navBudget-=2;}
           path=findPath(grid,WALK,index(u.x,u.z),end,96000);
+        }
         if (path) {
           points = path.map((n) => ({
             x: -(this.world.size/2) + ((n % WALK) + 0.5) * cell,
@@ -4242,7 +4265,7 @@ export class Game {
       if(!supplyReached(this,u,home,spot)){this.steer(u,dt);return;}
       deliverWaterCargo(this,u);
       if(!deliverProductionCargo(this,u))return;
-      if(u.carryType&&u.carry>0){recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);deliverSamples(this,u);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
+      if(u.carryType&&u.carry>0){if(!deliverSamples(this,u))return;recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
       finishRepatriation(this,u);
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
@@ -4335,6 +4358,7 @@ export class Game {
         u.node = null;
         return;
       }
+      if((u.itemCargo?.grainSheaves||0)>0&&!("type" in node&&rawCerealField(node as Building))){u.order="return";return;}
       const foodKind="species" in node?"meat":"type" in node?(node.type==="farm"?node.crop?.kind||node.cropType||"grain":"fish"):node.kind==="fish"?"fish":node.cropCandidate||"berries";
       if(u.carry>0&&u.carryType==="food"&&u.carryFood&&foodKind!==u.carryFood){u.order="return";return;}
       if (u.team === 0 && "species" in node && !this.visibleAt(node.x, node.z)) {
@@ -4459,12 +4483,13 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
+      const deliveredCereal=(u.itemCargo?.grainSheaves||0)>0;
       if(!deliverProductionCargo(this,u))return;
-      recordCaravanDelivery(this,u);
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
+        if(!deliverSamples(this,u))return;
+        recordCaravanDelivery(this,u);
         recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);
-        deliverSamples(this,u);
         if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else tr[u.carryType] += u.carry;
         if (u.team === 0) this.addFloater(drop.x, drop.y + 3, drop.z, "+" + u.carry, "#efe4b0");
         if (u.team === 0) this.onSfx("drop");
@@ -4472,10 +4497,11 @@ export class Game {
         u.carry = 0;
         u.carryType = null;
         u.carryFood = undefined;
-      }
+      } else recordCaravanDelivery(this,u);
       u.tradeTeam = 0;
       u.node = null;
       u.order = "idle";
+      if(deliveredCereal&&reviewCerealProcessing(this,u.team,u.id))return;
       if(u.type==="worker"||u.militia&&u.huntOnly)this.workBoard.assign(this, u);
       else {u.order="hold";u.target=null;u.pillage=-1;u.workReason="Loot delivered — awaiting orders";}
     }
@@ -5571,6 +5597,7 @@ export class Game {
         tickFibre(this);
         tickClay(this);
         tickProduction(this,sdt);
+        for(const team of this.state.tribes)reviewCerealProcessing(this,team.id);
         tickProductionLessons(this);
         tickPracticalHelpers(this);
         tickVillageDefense(this);

@@ -1,3 +1,4 @@
+import {buildLocalWaterIndex,indexedWaterAt,prepareOwnedWaterWorld} from './indexedLocalWater';
 import{measureCoastFingerprints,COAST_FINGERPRINT_RULES}from'./coastFingerprint';
 import {diverseLandforms,diverseGeography} from './coastalVariety';
 import {openingWaterSurvey,openingCampSurvey,COMPACT_SETTLEMENT_RULES,OPENING_WATER_RULES} from './openingWater';
@@ -7,10 +8,10 @@ import {multipleLandmasses,multipleGeography,measureLandmasses,MULTILAND_RULES} 
 import {buildEcologicalProvinces,provinceAt,EcologyCoverageError,type EcologicalProvinceGrid} from './ecologicalProvinces';
 import {repairRiparianTerrain} from './riparianRepair';
 import {populateEcologicalResources} from './ecologicalResources';
-import {localWaterAt,waterSurfaceAt,type LocalWaterBody,type Waterfall} from './localWater';
+import {lakeContains,localWaterAt,waterSurfaceAt,type LocalWaterBody,type Waterfall} from './localWater';
 export {waterSurfaceAt} from './localWater';
 import {scenicBeautyAt,scenerySummary,SCENERY_RULES} from './scenery';
-import {dryTreeRoot} from './hydrology';
+import {dryTreeRoot,dryTreeRootLocal} from './hydrology';
 import {geography,type LandFeature} from './geography';
 import {landforms} from './landforms';
 import type {WorldRequest,WorldOptions} from './worldOptions';
@@ -33,6 +34,7 @@ export type WorldData = {
   ecologyResourceMetrics?:ReturnType<typeof populateEcologicalResources>['regions'];
   landscape?: ReturnType<typeof import('./regionalGeography').regionalGeography>['metrics'] | ReturnType<typeof import('./composedGeography').composedGeography>['metrics'];
   waterBodies?:LocalWaterBody[];
+  localWaterVersion?:17;
   waterfalls?:Waterfall[];
   waterHeights?:Float32Array;
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
@@ -129,19 +131,19 @@ export function generateWorld(seed:number,version=1,request:WorldRequest={}):Wor
  const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
  for(let attempt=0;attempt<16;attempt++){
   const terrainSeed=attempt===0?seed:(random()*0x100000000)>>>0;
-  try{const world=generateWorldCandidate(terrainSeed,version,request);if(version>=16){const coast=measureCoastFingerprints(world);if(coast.minimumDifference!==null&&coast.minimumDifference<COAST_FINGERPRINT_RULES.minimumDifference)throw new Error(`V16 final coast too similar: ${coast.minimumDifference}`);world.coastVariety=coast;if(world.landscape)world.landscape.substantialLandmassCount=coast.substantialLandmassCount;}return{...world,generation:{requestedSeed:seed,terrainSeed,attempt,rejectedReasons}};}
-  catch(error){const reason=error instanceof Error?error.message:String(error);if(!/^(V1[3456] |Primary landscape lacks |This seed has no viable |No dry viable)/.test(reason))throw error;rejectedReasons.push(reason);}
+  try{const world=generateWorldCandidate(terrainSeed,version,request);if(version>=16){const coast=measureCoastFingerprints(world);if(coast.minimumDifference!==null&&coast.minimumDifference<COAST_FINGERPRINT_RULES.minimumDifference)throw new Error(`V16 final coast too similar: ${coast.minimumDifference}`);world.coastVariety=coast;if(world.landscape)world.landscape.substantialLandmassCount=coast.substantialLandmassCount;}return prepareOwnedWaterWorld({...world,generation:{requestedSeed:seed,terrainSeed,attempt,rejectedReasons}},version>=17);}
+  catch(error){const reason=error instanceof Error?error.message:String(error);if(!/^(V1[34567] |Primary landscape lacks |This seed has no viable |No dry viable)/.test(reason))throw error;rejectedReasons.push(reason);}
  }
  throw new Error(`V${version} exhausted16 measured candidates: ${rejectedReasons.join('; ')}`);
 }
 function generateWorldCandidate(seed: number, version = 1, request: WorldRequest = {}): WorldData {
-  const varied=version>=15?diverseLandforms(seed,request,version>=16?16:15):version>=14?variedLandforms(seed,request):null;
+  const varied=version>=15?diverseLandforms(seed,request,version>=17?17:version>=16?16:15):version>=14?variedLandforms(seed,request):null;
   const multi=version===13?multipleLandmasses(seed,request):null;
   const land=varied??multi??(version>=7?landforms(seed,request,version>=8,version>=11,version>=12):null);
   const MAP=land?.options.size??1040, HALF=MAP/2;
   const SEGS=land?Math.round(MAP/1040*256):256;
   const idx=(ix:number,iz:number)=>iz*(SEGS+1)+ix;
-  const sample=(heights:Float32Array,x:number,z:number)=>sampleHeight(heights,x,z,MAP);
+  const sample=(heights:Float32Array,x:number,z:number)=>version>=17?sampleTriangleHeight(heights,x,z,MAP):sampleHeight(heights,x,z,MAP);
   const inside=(x:number,z:number,pad=2)=>inBounds(x,z,pad,MAP);
   const rand = mulberry32(seed);
   const n = SEGS + 1;
@@ -240,7 +242,8 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
   const localBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
   const waterHeights=version>=11?new Float32Array(n*n):undefined;
   if(waterHeights)for(let iz=0;iz<n;iz++)for(let ix=0;ix<n;ix++)waterHeights[idx(ix,iz)]=Math.max(waterY,localWaterAt(localBodies,ix/SEGS*MAP-HALF,iz/SEGS*MAP-HALF)??waterY);
-  const localLevel=(x:number,z:number)=>waterHeights?sample(waterHeights,x,z):waterY;
+  let waterIndex=version>=17?buildLocalWaterIndex(localBodies,MAP,geo&&'waterfalls' in geo?geo.waterfalls as Waterfall[]:[]):undefined,waterIndexCount=localBodies.length;
+  const localLevel=(x:number,z:number)=>{if(version>=17){if(waterIndexCount!==localBodies.length){waterIndex=buildLocalWaterIndex(localBodies,MAP,geo&&'waterfalls' in geo?geo.waterfalls as Waterfall[]:[]);waterIndexCount=localBodies.length;}return Math.max(waterY,indexedWaterAt(waterIndex!,x,z,lakeContains)??waterY);}return waterHeights?sample(waterHeights,x,z):waterY;};
   for (let iz = 0; iz < n; iz++) {
     for (let ix = 0; ix < n; ix++) {
       const x = (ix / SEGS) * MAP - HALF;
@@ -400,7 +403,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     }
     let v15Opening:typeof sites[number]|undefined;
     if(version>=15){
-      const terrain={size:MAP,height:(x:number,z:number)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},opening=openingWaterSurvey(terrain),target=geo?.features.find(f=>f.kind==='lake')??{x:0,z:0};
+      const terrain={size:MAP,height:(x:number,z:number)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},opening=openingWaterSurvey(terrain,version>=17),target=geo?.features.find(f=>f.kind==='lake')??{x:0,z:0};
       for(const p of opening.candidates(target)){
         if(!inside(p.x,p.z,72)||!openingCampSurvey(terrain,p).valid||!opening.at(p))continue;
         const approaches=opening.approachesAt(p);if(approaches.near<OPENING_WATER_RULES.nearDryApproaches||approaches.outer<OPENING_WATER_RULES.outerDryApproaches)continue;
@@ -414,7 +417,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     if(version>=14&&sites.length<COMPACT_SETTLEMENT_RULES.minimumBroadSites){
       const originalBroadSiteCount=sites.length,rules=COMPACT_SETTLEMENT_RULES;
       const terrain={size:MAP,height:(x:number,z:number)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies};
-      const survey=openingWaterSurvey(terrain);
+      const survey=openingWaterSurvey(terrain,version>=17);
       for(let z=-HALF+rules.edgeMarginMetres;z<HALF-rules.edgeMarginMetres;z+=rules.sampleSpacingMetres)for(let x=-HALF+rules.edgeMarginMetres;x<HALF-rules.edgeMarginMetres;x+=rules.sampleSpacingMetres){
         const h=sample(heights,x,z);if(h<localLevel(x,z)+.8||h>rules.maximumElevationMetres||sites.some(p=>Math.hypot(p.x-x,p.z-z)<rules.sampleSpacingMetres))continue;
         if(!openingCampSurvey(terrain,{x,z}).valid)continue;
@@ -517,9 +520,9 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
 
   if(version>=12){
     const terrain={size:MAP,heights,waterY,baseWaterY:waterY,waterHeights,waterBodies:localBodies,features:geo?.features,rivers};
-    try{ecology=buildEcologicalProvinces(terrain,seed,version>=14);}catch(error){
+    try{ecology=buildEcologicalProvinces(terrain,seed,version>=14,version>=17?localLevel:undefined,version>=17?((x,z)=>sample(heights,x,z)):undefined);}catch(error){
       if(!(error instanceof EcologyCoverageError)||error.code!=='riparian-physical-coverage')throw error;
-      ecologyRepair=version>=14?continentalRiparian(terrain,error.requiredAreaSquareMeters,camps):repairRiparianTerrain(terrain,seed,version);ecology=buildEcologicalProvinces(terrain,seed,version>=14);
+      ecologyRepair=version>=14?continentalRiparian(terrain,error.requiredAreaSquareMeters,camps):repairRiparianTerrain(terrain,seed,version);if(version>=17){for(const b of localBodies)if(b.kind==='river'&&b.surfaceVersion!==2){b.surfaceVersion=2;b.startCap='round';b.endCap='butt';}waterIndex=buildLocalWaterIndex(localBodies,MAP,geo&&'waterfalls' in geo?geo.waterfalls as Waterfall[]:[]);waterIndexCount=localBodies.length;}ecology=buildEcologicalProvinces(terrain,seed,version>=14,version>=17?localLevel:undefined,version>=17?((x,z)=>sample(heights,x,z)):undefined);
     }
   }
   let nid = 1;
@@ -850,7 +853,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     };
     // A waterfront camp needs a real hall-sized dry apron and several usable
     // resource paths; it need not fit the old broad 20m village clearing.
-    const openingNavigation=version>=15?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null;
+    const openingNavigation=version>=15?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},version>=17):null;
     const viableOpeningClearing=(origin:typeof home)=>{
       let low=Infinity,high=-Infinity;
       for(let dz=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dz+=3)for(let dx=-OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx<=OPENING_WATER_RULES.campFoundationHalfExtentMetres;dx+=3){const h=sample(heights,origin.x+dx,origin.z+dz);if(h<localLevel(origin.x+dx,origin.z+dz)+.55)return false;low=Math.min(low,h);high=Math.max(high,h);}
@@ -860,7 +863,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
       return near>=OPENING_WATER_RULES.nearDryApproaches&&far>=OPENING_WATER_RULES.outerDryApproaches;
     };
     if(version>=9){
-      const opening=openingNavigation??(version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}):null);
+      const opening=openingNavigation??(version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},version>=17):null);
       const candidates:{x:number;z:number;score:number}[]=[];
       for(let z=-HALF+80;z<HALF-80;z+=20)for(let x=-HALF+80;x<HALF-80;x+=20){
         if(camps.some(c=>c.team!==0&&Math.hypot(c.x-x,c.z-z)<120))continue;
@@ -999,14 +1002,15 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     // Coastline fish sites follow actual shores on every landmass.
     for(let attempt=0;attempt<4000&&fish.length<300;attempt++)tryFish((vegetation()-.5)*MAP*.95,(vegetation()-.5)*MAP*.95);
   }
-  if(version>=8)for(let i=trees.length-1;i>=0;i--)if(!dryTreeRoot((x,z)=>sample(heights,x,z),trees[i].x,trees[i].z,localLevel(trees[i].x,trees[i].z)))trees.splice(i,1);
+  if(version>=8)for(let i=trees.length-1;i>=0;i--)if(!(version>=17?dryTreeRootLocal((x,z)=>sample(heights,x,z),localLevel,trees[i].x,trees[i].z):dryTreeRoot((x,z)=>sample(heights,x,z),trees[i].x,trees[i].z,localLevel(trees[i].x,trees[i].z))))trees.splice(i,1);
   if(version>=3)for(const tree of trees){tree.amount*=2;tree.maxAmt=tree.amount;}
   let ecologyResourceMetrics:ReturnType<typeof populateEcologicalResources>['regions']|undefined;
   if(ecology){
-    const distribution=populateEcologicalResources({size:MAP,waterY,baseWaterY:waterY,waterHeights,ecology,camps,dockSites,trees,forage,stones,copper,iron},seed,(x,z)=>sample(heights,x,z),nid);
+    const distribution=populateEcologicalResources({size:MAP,waterY,baseWaterY:waterY,waterHeights,ecology,camps,dockSites,trees,forage,stones,copper,iron},seed,(x,z)=>sample(heights,x,z),nid,version>=17?localLevel:undefined);
     nid=distribution.nextId;ecologyResourceMetrics=distribution.regions;
   }
-  const openingWater=version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies}).at(home):null;
+  if(version>=17&&waterHeights)for(let iz=0;iz<n;iz++)for(let ix=0;ix<n;ix++)waterHeights[idx(ix,iz)]=localLevel(ix/SEGS*MAP-HALF,iz/SEGS*MAP-HALF);
+  const openingWater=version>=14?openingWaterSurvey({size:MAP,height:(x,z)=>sample(heights,x,z),water:localLevel,rivers,features:geo?.features,waterBodies:localBodies},version>=17).at(home):null;
   if(version>=14&&!openingWater)throw new Error("V14 final camp lost its reachable freshwater bank");
   const scenery=version>=9?(()=>{
     const scores:number[]=[];
@@ -1036,6 +1040,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     ...(topology?{topology}:{}),
     ...(scenery?{scenery}:{}),
     ...(ecology?{ecology,ecologyResourceMetrics,...(ecologyRepair?{ecologyRepair}:{})}:{}),
+    ...(version>=17?{localWaterVersion:17 as const}:{}),
     ...(waterHeights?{waterHeights,waterBodies:localBodies,waterfalls:geo&&'waterfalls' in geo?geo.waterfalls as Waterfall[]:[]}:{}),
     size: MAP,
     ...(land?{options:land.options,features:geo!.features}:{}),
@@ -1075,6 +1080,20 @@ export function sampleHeight(heights: Float32Array, x: number, z: number, size=M
   const c = heights[(iz + 1) * nn + ix];
   const d = heights[(iz + 1) * nn + ix + 1];
   return a * (1 - fx) * (1 - fz) + b * fx * (1 - fz) + c * (1 - fx) * fz + d * fx * fz;
+}
+
+/** Match PlaneGeometry's b/c diagonal and the terrain/water shaders exactly.
+ * Explicitly selected by V17; historic bilinear terrain remains unchanged. */
+export function sampleTriangleHeight(heights:Float32Array,x:number,z:number,size=MAP){
+ const segs=Math.round(Math.sqrt(heights.length))-1,n=segs+1;
+ const gx=Math.max(0,Math.min(segs,(x/size+.5)*segs)),gz=Math.max(0,Math.min(segs,(z/size+.5)*segs));
+ const ix=Math.min(segs-1,Math.floor(gx)),iz=Math.min(segs-1,Math.floor(gz)),fx=gx-ix,fz=gz-iz,i=iz*n+ix;
+ const a=heights[i],b=heights[i+1],c=heights[i+n],d=heights[i+n+1];
+ return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);
+}
+/** Single version-aware base sampler for physics, props and refined cuts. */
+export function sampleWorldHeight(world:Pick<WorldData,'heights'|'size'|'localWaterVersion'>,x:number,z:number){
+ return world.localWaterVersion===17?sampleTriangleHeight(world.heights,x,z,world.size):sampleHeight(world.heights,x,z,world.size);
 }
 
 export function inBounds(x: number, z: number, pad = 2, size=MAP) {

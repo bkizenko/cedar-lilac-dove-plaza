@@ -1,0 +1,186 @@
+{
+  "cases": [
+    {
+      "tag": "before",
+      "sourceSha256": "59f76ac3cda66974254de40bffc697642cfbc787a9807e0a19c1c23ca2e80bab",
+      "time": 29.999999999999925,
+      "initialPosition": {
+        "x": -149,
+        "z": -365
+      },
+      "finalPosition": {
+        "x": -149,
+        "z": -365
+      },
+      "distanceFromStart": 0,
+      "events": [
+        {
+          "time": 0.2,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 5,
+          "retry": 3.2,
+          "cause": "initial"
+        },
+        {
+          "time": 1.7999999999999998,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 6,
+          "retry": 4.8,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 2.1999999999999997,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 7,
+          "retry": 5.199999999999999,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 3.0000000000000004,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 8,
+          "retry": 6,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 3.2000000000000006,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 9,
+          "retry": 6.200000000000001,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 6.200000000000003,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 9,
+          "retry": 9.200000000000003,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 9.399999999999999,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 9,
+          "retry": 12.399999999999999,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 12.599999999999987,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 9,
+          "retry": 15.599999999999987,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 15.799999999999976,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 9,
+          "retry": 18.799999999999976,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 18.799999999999965,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 10,
+          "retry": 21.799999999999965,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 21.999999999999954,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 10,
+          "retry": 24.999999999999954,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 25.199999999999942,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 10,
+          "retry": 28.199999999999942,
+          "cause": "failed-retry"
+        },
+        {
+          "time": 28.39999999999993,
+          "failed": true,
+          "remainingPoints": 0,
+          "revision": 10,
+          "retry": 31.39999999999993,
+          "cause": "failed-retry"
+        }
+      ],
+      "failedPlans": 13,
+      "periodicFailedRetries": 7,
+      "scope": "Actual planning cache object changes, not timing/FPS. RNG is not overridden; unrelated native NPC navigation revisions may differ."
+    },
+    {
+      "tag": "after",
+      "sourceSha256": "4d362010a47acccf735679c3672453fee6f44728d89a53762c7d33c59cfdbe40",
+      "time": 29.999999999999925,
+      "initialPosition": {
+        "x": -149,
+        "z": -365
+      },
+      "finalPosition": {
+        "x": -281,
+        "z": -429
+      },
+      "distanceFromStart": 146.696966567138,
+      "events": [
+        {
+          "time": 0.2,
+          "failed": false,
+          "remainingPoints": 381,
+          "revision": 5,
+          "retry": 3.2,
+          "cause": "initial"
+        },
+        {
+          "time": 1.7999999999999998,
+          "failed": false,
+          "remainingPoints": 378,
+          "revision": 6,
+          "retry": 4.8,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 2.1999999999999997,
+          "failed": false,
+          "remainingPoints": 376,
+          "revision": 7,
+          "retry": 5.199999999999999,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 3.0000000000000004,
+          "failed": false,
+          "remainingPoints": 374,
+          "revision": 8,
+          "retry": 6,
+          "cause": "navigation-revision"
+        },
+        {
+          "time": 3.2000000000000006,
+          "failed": false,
+          "remainingPoints": 373,
+          "revision": 9,
+          "retry": 6.200000000000001,
+          "cause": "navigation-revision"
+        }
+      ],
+      "failedPlans": 0,
+      "periodicFailedRetries": 0,
+      "scope": "Actual planning cache object changes, not timing/FPS. RNG is not overridden; unrelated native NPC navigation revisions may differ."
+    }
+  ]
+}

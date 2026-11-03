@@ -2,7 +2,7 @@ import {fibreWorkshopGeo} from './fibreWorkshop';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import type {BldGeo} from './meshes';
-export type ProductionWorkplaceId='fibreWorkshop'|'potter'|'kiln'|'smokehouse'|'grindingStone'|'oven'|'hearth'|'butcher'|'dryrack'|'tanner'|'tailor';
+export type ProductionWorkplaceId='threshingFloor'|'fibreWorkshop'|'potter'|'kiln'|'smokehouse'|'grindingStone'|'oven'|'hearth'|'butcher'|'dryrack'|'tanner'|'tailor';
 function box(w:number,h:number,d:number,x=0,y=0,z=0,rz=0){const g=new THREE.BoxGeometry(w,h,d);if(rz)g.rotateZ(rz);g.translate(x,y+h/2,z);return g;}
 function tub(x:number,z:number){const g=new THREE.CylinderGeometry(.76,.64,.65,12,1,true);g.translate(x,.4,z);return g;}
 function combine(gs:THREE.BufferGeometry[]){const plain=gs.map(g=>{const n=g.index?g.toNonIndexed():g;if(n!==g)g.dispose();return n;});const result=mergeGeometries(plain)!;plain.forEach(g=>g.dispose());result.computeBoundingBox();return result;}
@@ -12,6 +12,7 @@ export function productionWorkplaceGeos():Record<ProductionWorkplaceId,BldGeo>{
  const stones=Array.from({length:10},(_,i)=>{const a=i*Math.PI/5;return box(.4,.28,.35,Math.cos(a)*1.1,.02,Math.sin(a)*1.1,a);});
  const legs=[-1.25,1.25].flatMap(x=>[-.5,.5].map(z=>box(.16,.95,.16,x,0,z)));
  return{
+ threshingFloor:{timber:combine([box(.14,.5,.14,-2.7,0,-2.7),box(.14,.5,.14,2.7,0,-2.7),box(.14,.5,.14,-2.7,0,2.7),box(.14,.5,.14,2.7,0,2.7),box(.1,.1,4.5,-2.4,.18,0),box(.1,.1,4.5,2.4,.18,0)]),roof:combine([box(4.6,.08,4.6,0,.04,0)]),extra:combine([box(5.7,.12,.22,0,0,-2.7),box(5.7,.12,.22,0,0,2.7),box(.22,.12,5.2,-2.7,0,0),box(.22,.12,5.2,2.7,0,0)]),extraMat:'stone'},
  fibreWorkshop:fibreWorkshopGeo(),
  potter:{timber:combine([...legs,box(2.9,.15,1.2,0,.95,.6),...frame(3.2).map(g=>g.translate(0,0,-1)),...[-.6,.15,.9].map(y=>box(2.8,.1,.8,0,y,-1))]),roof:combine([box(3.8,.14,3.5,0,2.4,0)]),extra:combine([box(.75,.12,.65,-.7,1.1,.6),box(.75,.1,.65,.7,1.1,.6)]),extraMat:'stone'},
  kiln:{timber:combine([box(.12,1.2,.12,-1.75,0,-1.5),box(.12,1.2,.12,1.75,0,-1.5),box(3.6,.12,.12,0,1.2,-1.5)]),roof:combine([box(.6,.18,.65,0,1.65,-.25)]),extra:combine([new THREE.CylinderGeometry(1.15,1.4,1.4,14,1,true,.45,Math.PI*2-.9).translate(0,.8,0),new THREE.CylinderGeometry(1.4,1.5,.18,14).translate(0,.09,0),box(.35,.9,.45,-.5,.1,1.12),box(.35,.9,.45,.5,.1,1.12),box(1.35,.3,.45,0,1,1.12)]),extraMat:'stone'},

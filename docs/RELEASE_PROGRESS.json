@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "dee7005 plus integrated save-capacity/difficulty/local-pressure candidate checks; M3-11 revoked after reproduced paid-production ownership regression. Remaining campaign and intact handover work stays unverified.",
+  "verifiedPublishedCodeBaseline": "302e25a plus the published cereal/atomic-handover batch of November 3; M3-11 restored after final merged-source physical continuation and strict-save checks. Remaining campaign and map visual acceptance stay unverified",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -29,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 31,
+    "verifiedGates": 32,
     "totalGates": 98,
-    "verifiedGatePercent": 31.63
+    "verifiedGatePercent": 32.65
   },
   "milestones": {
     "M0": {
@@ -50,9 +50,9 @@
       "verifiedGatePercent": 6.25
     },
     "M3": {
-      "verifiedGates": 2,
+      "verifiedGates": 3,
       "totalGates": 18,
-      "verifiedGatePercent": 11.11
+      "verifiedGatePercent": 16.67
     },
     "M4": {
       "verifiedGates": 2,
@@ -182,6 +182,11 @@
     "occupationProductionRegressionNov2": {
       "path": "docs/metrics/occupation-production-gap-2026-11-02.json",
       "scope": "Actual local-control hold and public integration; valid paid project before acceptance becomes invalid afterward. Negative evidence revokes M3-11; not a passing acceptance test."
+    },
+    "atomicCommunityHandoverNov3": {
+      "path": "docs/PUBLISHED_CRAFTING_HANDOVER_2026-11-03.md",
+      "kind": "Executed final merged-source native and controlled local occupation, strict save/restore and physical continuation",
+      "scope": "M3-11 only. Actual present garrison hold and public local integration preserve person/building/paid-project IDs, local stock scope, boats/crews, stored/carried herd water and continuation; broad society, naval war and campaign gates remain unverified."
     }
   },
   "gates": [
@@ -1028,13 +1033,14 @@
         "61-70",
         "101-120"
       ],
-      "status": "unverified",
-      "credit": 0,
+      "status": "verified",
+      "credit": 1,
       "evidence": [
         "oct31gateaudit",
-        "occupationProductionRegressionNov2"
+        "occupationProductionRegressionNov2",
+        "atomicCommunityHandoverNov3"
       ],
-      "remainingNotes": "Regression reproduced against published dee7005 behavior: actual garrison holds30seconds and accepts local surrender, but a paid cook project keeps team1 while maker/site become0; immediate strict save fails. Earlier haulage preservation was narrower than the current production contracts. Full atomic scoped handover is under integration; no credit until it passes."
+      "remainingNotes": "Earlier production-owner regression repaired by atomic scoped handover. Final merged-source actual occupation and native paid-method/boat/water/save continuation passed; local parcels remain at real sites or with carriers, unrelated society stocks stay separate."
     },
     {
       "id": "M3-12",

@@ -1,3 +1,4 @@
+import{annexSociety}from'./communityHandover';
 import {queueDiplomaticMessage,recordDiplomaticLegal,diplomaticSpeakerPresent} from './diplomaticKnowledge';
 import type {Game} from './sim';
 import type {PeaceTerm, Unit} from './types';
@@ -30,6 +31,7 @@ function transferPerson(g:Game,u:Unit,team:number){
 }
 export function settlePeace(g:Game,team:number,term:PeaceTerm){
  const issue=peaceIssue(g,team,term);if(issue){g.banner(issue,5);return false;}
+ if(term==='annexation')return annexSociety(g,team);
  const t=g.tribe(team),people=term==='forcedLabor'?candidates(g,team).slice(0,2):[];
  g.agreeTruce(team);t.peaceOffer=undefined;t.peaceTerm=term;
  if(term==='tribute'||term==='puppet'){
@@ -37,17 +39,7 @@ export function settlePeace(g:Game,team:number,term:PeaceTerm){
   if(term==='puppet')t.ally=true;
  }
  if(term==='forcedLabor')for(const u of people){transferPerson(g,u,0);u.enslavedFrom=team;u.captivityUnrest=25;}
- if(term==='annexation'){
-  // Cancel contracts before ownership changes so escrow and equipment are settled once.
-  for(const u of g.state.units)if(u.team===team||u.tradeTeam===team||u.envoy?.team===team)g.interruptMission(u);
-  for(const u of g.state.units)if(u.team===team)transferPerson(g,u,0);
-  for(const b of g.state.buildings)if(b.team===team){b.team=0;b.selected=false;}
-  for(const r of g.state.regions)if(r.owner===team)r.owner=0;
-  for(const key of ['food','wood','stone','copper','iron','spears','bows','blades'] as const){g.tribe(0)[key]+=t[key];t[key]=0;}
-  t.foodLots={};g.state.routes=g.state.routes.filter(r=>r.team!==team);t.alive=false;t.ally=false;t.fallenT=g.state.time;
-  if(!g.state.tribes.some(r=>r.id>0&&r.id!==3&&r.alive))g.state.conquestAt=g.state.time;
-  g.rebuildWalk();
- }
+
  recordDiplomaticLegal(g,team,false);g.workBoard.reset();g.banner(`${PEACE_TERMS[term]} agreed with ${t.name}. Open Village → Neighbor relations for treaty details.`,7);return true;
 }
 export function rejectPeace(g:Game,team:number){const t=g.tribe(team);if(t){t.peaceOffer=undefined;t.nextPeaceOffer=g.state.time+300;}}

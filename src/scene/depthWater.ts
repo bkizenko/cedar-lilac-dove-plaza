@@ -1,3 +1,4 @@
+import {riverSurfaceData,type RiverCaps} from '../game/riverSurface';
 import * as THREE from 'three';
 import {lakeContains,type LocalWaterBody} from '../game/localWater';
 import type {TerrainSurface} from './terrainSurface';
@@ -67,7 +68,8 @@ export function makeDepthWater(surface:TerrainSurface,time:{value:number},fallin
 }
 /** One continuous grid shares every bend row. Variable-width mitered banks
  * avoid the wedge-shaped dry gaps produced by independent segment quads. */
-export function riverWaterGeometry(points:{x:number;y:number;z:number;w?:number}[],width:number){
+export function riverWaterGeometry(points:{x:number;y:number;z:number;w?:number}[],width:number,caps?:RiverCaps){
+ if(caps){const d=riverSurfaceData(points,width,caps),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(d.positions,3));g.setAttribute('uv',new THREE.BufferAttribute(d.uvs,2));g.setIndex(new THREE.BufferAttribute(d.indices,1));g.computeVertexNormals();g.computeBoundingSphere();return g;}
  const centers:{x:number;y:number;z:number;w:number;distance:number}[]=[];let along=0;
  for(let segment=1;segment<points.length;segment++){
   const a=points[segment-1],b=points[segment],len=Math.hypot(b.x-a.x,b.z-a.z),steps=Math.max(1,Math.ceil(len/2));
@@ -92,8 +94,8 @@ export function riverWaterGeometry(points:{x:number;y:number;z:number;w?:number}
 }
 /** Small river triangles are clipped against the exact physical lake footprint,
  * eliminating the doubled transparent rectangle where a river enters its lake. */
-export function clippedRiverGeometry(points:{x:number;y:number;z:number;w?:number}[],width:number,lakes:Extract<LocalWaterBody,{kind:'lake'}>[]){
- if(!lakes.length)return riverWaterGeometry(points,width);
+export function clippedRiverGeometry(points:{x:number;y:number;z:number;w?:number}[],width:number,lakes:Extract<LocalWaterBody,{kind:'lake'}>[],caps?:RiverCaps){
+ if(!lakes.length)return riverWaterGeometry(points,width,caps);
  type Vertex={x:number;y:number;z:number;u:number;v:number};
  const out:number[]=[],uvs:number[]=[],inside=(p:Vertex)=>lakes.some(l=>lakeContains(l,p.x,p.z));
  const interpolate=(a:Vertex,b:Vertex,t:number):Vertex=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});
@@ -112,7 +114,7 @@ export function clippedRiverGeometry(points:{x:number;y:number;z:number;w?:numbe
    for(const p of [a,b,c]){out.push(p.x,p.y,p.z);uvs.push(p.u,p.v);}
   }
  };
- const stitched=riverWaterGeometry(points,width),position=stitched.attributes.position,uv=stitched.attributes.uv,index=stitched.index!;
+ const stitched=riverWaterGeometry(points,width,caps),position=stitched.attributes.position,uv=stitched.attributes.uv,index=stitched.index!;
  const at=(i:number):Vertex=>({x:position.getX(i),y:position.getY(i),z:position.getZ(i),u:uv.getX(i),v:uv.getY(i)});
  for(let i=0;i<index.count;i+=3)triangle([at(index.getX(i)),at(index.getX(i+1)),at(index.getX(i+2))]);
  stitched.dispose();
@@ -126,7 +128,7 @@ export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:
    let geo:THREE.BufferGeometry;
    if(body.shoreline?.length){const shape=new THREE.Shape();body.shoreline.forEach((p,i)=>i?shape.lineTo(p.x,-p.z):shape.moveTo(p.x,-p.z));shape.closePath();geo=new THREE.ShapeGeometry(shape);geo.rotateX(-Math.PI/2);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.y=body.surfaceY;}
    else {geo=new THREE.CircleGeometry(body.rx,64);geo.rotateX(-Math.PI/2);geo.scale(1,1,body.rz/body.rx);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.set(body.x,body.surfaceY,body.z);}
-  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.pts,body.width,lakes),waterMaterial);}
+  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.pts,body.width,lakes,body.surfaceVersion===2?body:undefined),waterMaterial);}
   mesh.name=`water-${body.kind}-${body.id}`;mesh.renderOrder=1;mesh.raycast=()=>{};group.add(mesh);
  }
  for(const [index,fall] of falls.entries()){

@@ -1,0 +1,49 @@
+{
+  "scope": "Independent first-group ownership review; not full annexation qualification or acceptance credit",
+  "cases": 4,
+  "passed": 4,
+  "failed": 0,
+  "durationMs": 71527.210959,
+  "log": "/tmp/annexation-adversarial-first.log",
+  "controlledCases": [
+    "mixed-stock immediate paused save",
+    "pure detached preflight and rejected pressure",
+    "forged provenance"
+  ],
+  "nativeCase": {
+    "worldgen": 14,
+    "seed": 345,
+    "size": 1040,
+    "layout": "pangaea",
+    "terrainOverride": false,
+    "initialBuildings": "authored existing halls and hearth, no paid-building claim",
+    "paidWork": "cookMeat paid once before takeover; paused; actual public annexation; strict save/decode; ordinary resume and Game.step completion",
+    "midRunGrantsOrTerrainRepair": false
+  },
+  "checks": [
+    "mixed food kinds and total, seeds, wood, stone and material quantities conserved across ownership",
+    "earliest flour freshness unchanged",
+    "paid project/body/workplace IDs, phase, progress and origin remain",
+    "fresh GameState identity and recipient coordinator owner",
+    "immediate strict save before tick",
+    "same paused paid work completed after native restore without second input/fuel debit",
+    "forged missing handover, false origin, missing asset membership, wrong recipient and future date rejected",
+    "preflight nested draft mutation cannot mutate live stock",
+    "rejected pressure changes only presentation banner"
+  ],
+  "sourceSha256": {
+    "src/game/communityHandover.ts": "921885ec2cd5826c392fae2d57897ec210338c1b6e9942e557fa4b292db42a44",
+    "src/game/communityHandoverValidation.ts": "fdf46f2c19797879e85cb1ea201d345784b173e71fdb4515558678e6c7ad3c30",
+    "src/game/communityHandoverTypes.ts": "0f5d5895efe4d05ade9526ef2843221d46406380b2376355a0a85670b4d0e3ab",
+    "src/game/peace.ts": "efa643b6b3d62c713c1fdb273388036e91b56481b1e7d99b5c07c45274c01d0d",
+    "src/game/sim.ts": "21bd2b3c54a604344f53830347007ea34fee2dfc771663250c3ea2dcde82a99f",
+    "src/game/persistence.ts": "fe76e4ae5f07eb2ba801c0e2aed14729c7d7c62709ebd1ec45392b43d8fa471b"
+  },
+  "remaining": [
+    "owner transport/custody follow-up not reviewed in this frozen group",
+    "all paid production phases/recipes not exhausted",
+    "full food upkeep/waste accounting over long campaign not claimed",
+    "no performance or UI claim",
+    "no acceptance percentage assigned"
+  ]
+}

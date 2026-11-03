@@ -10,6 +10,9 @@ import { isDependent, reserveSeconds } from "./settlement";
 export const SCOUTING_RULES={gridWidth:32,paidCanoeFrontierBonusMetres:180,paidCanoeFrontierRadiusMetres:320} as const;
 const GRID = SCOUTING_RULES.gridWidth;
 export function scoutKnowledge(g: Game, u: Unit) {
+  // Player vision already follows actual owned bodies; inherited return packs
+  // must not create an invalid NPC-only private memory for team zero.
+  if(!isRivalTeam(u.team))return{team:u.team,cells:[] as number[]};
   const memories = (g.state.rivalKnowledge ??= []);
   let memory = memories.find((m) => m.team === u.team);
   if (!memory) {

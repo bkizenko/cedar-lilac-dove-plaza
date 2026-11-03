@@ -1,3 +1,4 @@
+import{rawCerealField,CEREAL_RULES}from'./cerealRules';
 import {rivalTradeReserve} from './rivalTrade';
 import {knownRivalExportDemand} from './tradeIntel';
 import {hasTaskCommitment} from './workCommitments';
@@ -78,7 +79,7 @@ export function rivalDevelopmentPlan(g:Game,team:number){
   const count=(type:BldType)=>g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.type===type).length;
   const fields=count('farm'),stores=count('warehouse'),pop=g.popNow(team);
   const standing=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&b.type==='farm');
-  const averageYield=standing.length?standing.reduce((sum,b)=>sum+farmHarvestEstimate(g,b,1,1,1),0)/standing.length:180;
+  const averageYield=standing.length?standing.reduce((sum,b)=>sum+farmHarvestEstimate(g,b,1,1,1)*(rawCerealField(b)?1-CEREAL_RULES.seedFraction:1),0)/standing.length:180;
   // Fund fields for all seasons and storage losses, using this biome's actual
   // output rather than assuming every farm produces the same 200 food.
   const annualNeed=[0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*YEAR_SECONDS/4,0)*1.3;

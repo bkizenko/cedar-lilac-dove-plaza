@@ -1,4 +1,5 @@
 import type{Game}from'./sim';
+import{hasDeliveredMethod}from'./inheritedKnowledge';
 import type{Unit}from'./types';
 /** Game tuning: material units are the existing finite bast-fibre inventory,
  * not a claim that goats yield wool or that flax cultivation exists. */
@@ -7,9 +8,9 @@ export type Garment={item:GarmentKind;condition:number;heatExposureSeconds?:numb
 export type GarmentKind='skinClothes'|'leatherClothes'|'lightClothes';
 export const GARMENT_KINDS:readonly GarmentKind[]=['skinClothes','leatherClothes','lightClothes'];
 export function textileRecipeIssue(g:Game,team:number,recipe:string){
- const history=g.tribe(team)?.productionPractice;
- if(recipe==='weaveCloth'&&!((history?.spinYarn?.batches||0)+(history?.spinYarnHand?.batches||0)))return 'Deliver a hand-spun or shelter-spun yarn batch to learn weaving from actual practice';
- if(recipe==='sewLightClothes'&&!(history?.weaveCloth?.batches||0))return 'Deliver an actual woven cloth batch before trying light garments';
+
+ if(recipe==='weaveCloth'&&!(hasDeliveredMethod(g,team,'spinYarn')||hasDeliveredMethod(g,team,'spinYarnHand')))return 'Deliver a hand-spun or shelter-spun yarn batch to learn weaving from actual practice';
+ if(recipe==='sewLightClothes'&&!hasDeliveredMethod(g,team,'weaveCloth'))return 'Deliver an actual woven cloth batch before trying light garments';
  return null;
 }
 export function garmentHeatBurden(u:Unit,temperatureCelsius:number){

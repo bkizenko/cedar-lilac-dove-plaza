@@ -1,0 +1,957 @@
+{
+  "scope": "Native V17 geography route fixture. Initial Quiet conflict selected; all initial people/resources/native terrain/inventories unchanged. Explicit public movement/construction/mining commands only; no vision grants, body corrections, manual AI or RNG override. Not Normal-conflict campaign/whole-geography gate evidence alone.",
+  "source": {
+    "sim": "59f76ac3cda66974254de40bffc697642cfbc787a9807e0a19c1c23ca2e80bab",
+    "worldgen": "5165e20da32ef01639d0c73094ea320ad872b1da6dd5960c5bc85e66d29ef1ce",
+    "indexedLocalWater": "3e8a1167b5ba8dcd83466a6fcf78bbf8fbe8bdbda16ccdd8d595f08731f82091",
+    "riverSurface": "1ae90b53ae750d8cd85988a114fc02842fdefb3dbf2ff7729f11bb606dec57ce",
+    "mining": "b9cc4441c94e8c7499c097a580dd8a20d31b85327db005f740fbc82c0153b8e0",
+    "persistence": "74e7ce0d075d2788ea9a697eadb0f025542851cb164447753726578622bcbc27"
+  },
+  "cases": [
+    {
+      "seed": 7,
+      "size": 1040,
+      "layout": "archipelago",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 39.800000000000026
+        }
+      ],
+      "actorId": 2788,
+      "initial": {
+        "home": {
+          "x": -70,
+          "z": -164
+        },
+        "people": [
+          {
+            "id": 2788,
+            "x": -65,
+            "y": 11.744849762549768,
+            "z": -167
+          },
+          {
+            "id": 2789,
+            "x": -72.5,
+            "y": 12.190494946918147,
+            "z": -162.66987298107782
+          },
+          {
+            "id": 2790,
+            "x": -72.5,
+            "y": 11.747530522053966,
+            "z": -171.33012701892218
+          },
+          {
+            "id": 2791,
+            "x": -66,
+            "y": 11.758037816561187,
+            "z": -169
+          },
+          {
+            "id": 2792,
+            "x": -75,
+            "y": 11.70532549344577,
+            "z": -168
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "118c56ae8a4862719133ba43c10b6a2b3f889c7ea8e054438ac98419a61ffacf"
+      },
+      "target": {
+        "x": -70,
+        "z": -92,
+        "height": 27.669879854642428,
+        "distance": 72,
+        "grade": 0.01140814715989765
+      },
+      "walkedMetres": 828.5233044311188,
+      "maximumStepRise": 1.349466822789676,
+      "uplandArrival": {
+        "time": 26.999999999999936,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 2788,
+          "hp": 48,
+          "x": -71.96316162436673,
+          "y": 27.677963127804517,
+          "z": -91,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 76.31831772128533,
+        "riseMetres": 15.93311336525475,
+        "known": true
+      },
+      "quarryId": 2898,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 39.20000000000002,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 2788,
+          "hp": 48,
+          "x": -71.96316162436673,
+          "y": 27.677963127804517,
+          "z": -91,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 2898,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 586,
+        "dug": 0,
+        "quality": 1.06
+      },
+      "loadedSave": {
+        "time": 39.800000000000026,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 2788,
+          "hp": 48,
+          "x": -71.96316162436673,
+          "y": 27.677963127804517,
+          "z": -91,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.0 m into the seam",
+          "carry": 1,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 2898,
+          "build": 1,
+          "excavation": {
+            "remaining": 585,
+            "dug": 1,
+            "quality": 1.06
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "a0508cc088e491d25b34e41092344ec2d35cdfabbc9660bc82cbf0f8474c4682"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 86.40000000000069,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 2788,
+          "hp": 48,
+          "x": -72.56311587951085,
+          "y": 12.240053022429136,
+          "z": -161.43688412048917,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 2898,
+          "build": 1,
+          "excavation": {
+            "remaining": 562,
+            "dug": 24,
+            "quality": 1.06
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 88.40000000000072,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 2788,
+          "hp": 48,
+          "x": -80.03022308720344,
+          "y": 12.3596128314246,
+          "z": -155,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 2898,
+          "build": 1,
+          "excavation": {
+            "remaining": 562,
+            "dug": 24,
+            "quality": 1.06
+          }
+        },
+        "stone": 40,
+        "seamInitial": 586,
+        "seamRemaining": 562,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "carriedStone": 0
+      },
+      "prospecting": {
+        "time": 246.99999999999451,
+        "seam": {
+          "remaining": 506,
+          "dug": 80,
+          "quality": 1.06,
+          "prospected": 1
+        },
+        "exposed": [
+          {
+            "id": 2914,
+            "kind": "copper",
+            "x": -62,
+            "z": -92,
+            "amount": 98,
+            "known": true
+          }
+        ],
+        "stone": 88,
+        "carried": 8,
+        "scope": "Actual ordinary excavation to80stone; seeded chance may truthfully report no copper. Exposed ore not mined or credited."
+      }
+    },
+    {
+      "seed": 0,
+      "size": 1040,
+      "layout": "continents",
+      "holdout": false,
+      "phase": "physical-upland-walk",
+      "passed": false,
+      "observations": [],
+      "actorId": 5924,
+      "initial": {
+        "home": {
+          "x": -154,
+          "z": -362
+        },
+        "people": [
+          {
+            "id": 5924,
+            "x": -149,
+            "y": 12.360770827073319,
+            "z": -365
+          },
+          {
+            "id": 5925,
+            "x": -156.5,
+            "y": 12.24743425803894,
+            "z": -360.6698729810778
+          },
+          {
+            "id": 5926,
+            "x": -156.5,
+            "y": 11.880562531210737,
+            "z": -369.3301270189222
+          },
+          {
+            "id": 5927,
+            "x": -150,
+            "y": 12.355358226482684,
+            "z": -367
+          },
+          {
+            "id": 5928,
+            "x": -159,
+            "y": 11.671548007084771,
+            "z": -366
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "7f71670be9a22efcc19445ac6daff376351c0c53aaa7ef5317c80a4af9f0386f"
+      },
+      "target": {
+        "x": -162,
+        "z": -298,
+        "height": 27.841120353111855,
+        "distance": 64.4980619863884,
+        "grade": 0.004245901150564032
+      },
+      "walkedMetres": 0,
+      "maximumStepRise": 0,
+      "error": "{\"time\":260.1999999999938,\"paused\":false,\"ended\":null,\"actor\":{\"id\":5924,\"hp\":48,\"x\":-149,\"y\":12.360770827073319,\"z\":-365,\"order\":\"move\",\"reason\":\"Moving to your destination, then waiting for orders\",\"carry\":0,\"carryType\":null,\"hunger\":0},\"stone\":16}",
+      "failure": {
+        "time": 260.1999999999938,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 5924,
+          "hp": 48,
+          "x": -149,
+          "y": 12.360770827073319,
+          "z": -365,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16
+      }
+    },
+    {
+      "seed": 1,
+      "size": 1040,
+      "layout": "pangaea",
+      "holdout": false,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 27.799999999999933
+        }
+      ],
+      "actorId": 4823,
+      "initial": {
+        "home": {
+          "x": -40,
+          "z": 230
+        },
+        "people": [
+          {
+            "id": 4823,
+            "x": -35,
+            "y": 11.915776238074669,
+            "z": 227
+          },
+          {
+            "id": 4824,
+            "x": -42.5,
+            "y": 12.31633991138441,
+            "z": 231.33012701892218
+          },
+          {
+            "id": 4825,
+            "x": -42.5,
+            "y": 12.308858658122572,
+            "z": 222.66987298107782
+          },
+          {
+            "id": 4826,
+            "x": -36,
+            "y": 12.07436410463773,
+            "z": 225
+          },
+          {
+            "id": 4827,
+            "x": -45,
+            "y": 12.321560038053073,
+            "z": 226
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "c9f750e6b8c1c61c87a94da0b30353759480479fecac98a38346c0294ea839e8"
+      },
+      "target": {
+        "x": -88,
+        "z": 182,
+        "height": 27.52439296428975,
+        "distance": 67.88225099390857,
+        "grade": 0.13382104346903217
+      },
+      "walkedMetres": 132.7770698668639,
+      "maximumStepRise": 1.0434696996056871,
+      "uplandArrival": {
+        "time": 14.39999999999998,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4823,
+          "hp": 48,
+          "x": -86.54094041522336,
+          "y": 27.46263598684899,
+          "z": 183.45905958477664,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 67.47060123585409,
+        "riseMetres": 15.546859748774322,
+        "known": true
+      },
+      "quarryId": 4935,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 27.199999999999935,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4823,
+          "hp": 48,
+          "x": -86.54094041522336,
+          "y": 27.46263598684899,
+          "z": 183.45905958477664,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4935,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 1180,
+        "dug": 0,
+        "quality": 1.62
+      },
+      "loadedSave": {
+        "time": 27.799999999999933,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4823,
+          "hp": 48,
+          "x": -86.54094041522336,
+          "y": 27.46263598684899,
+          "z": 183.45905958477664,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.1 m into the seam",
+          "carry": 2,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4935,
+          "build": 1,
+          "excavation": {
+            "remaining": 1178,
+            "dug": 2,
+            "quality": 1.62
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "10b56fe5ea3fe1d926ec79a84f4464450a22ce0ea648457d422c0ce6ba6e99a0"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 50.80000000000018,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4823,
+          "hp": 48,
+          "x": -42.53083322524882,
+          "y": 12.322336102853145,
+          "z": 227.41063327658853,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4935,
+          "build": 1,
+          "excavation": {
+            "remaining": 1156,
+            "dug": 24,
+            "quality": 1.62
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 52.80000000000021,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 4823,
+          "hp": 48,
+          "x": -49.762457317452515,
+          "y": 12.300747126975248,
+          "z": 220.23754268254748,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 4935,
+          "build": 1,
+          "excavation": {
+            "remaining": 1156,
+            "dug": 24,
+            "quality": 1.62
+          }
+        },
+        "stone": 40,
+        "seamInitial": 1180,
+        "seamRemaining": 1156,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "carriedStone": 0
+      }
+    },
+    {
+      "seed": 20261102,
+      "size": 1560,
+      "layout": "archipelago",
+      "holdout": true,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 23.999999999999947
+        }
+      ],
+      "actorId": 6472,
+      "initial": {
+        "home": {
+          "x": -204,
+          "z": -86
+        },
+        "people": [
+          {
+            "id": 6472,
+            "x": -199,
+            "y": 12.152035478445201,
+            "z": -89
+          },
+          {
+            "id": 6473,
+            "x": -206.5,
+            "y": 12.155894367790225,
+            "z": -84.6698729810778
+          },
+          {
+            "id": 6474,
+            "x": -206.5,
+            "y": 12.439901731676148,
+            "z": -93.3301270189222
+          },
+          {
+            "id": 6475,
+            "x": -200,
+            "y": 12.348479505685662,
+            "z": -91
+          },
+          {
+            "id": 6476,
+            "x": -209,
+            "y": 12.423591320331282,
+            "z": -90
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "27c7c86480d2f83cb769622b7a05ed2ce651512683b7cfb5869894bfcc37c3c1"
+      },
+      "target": {
+        "x": -180,
+        "z": -142,
+        "height": 27.64796908451961,
+        "distance": 60.92618484691127,
+        "grade": 0.13961197549276097
+      },
+      "walkedMetres": 116.9327055843982,
+      "maximumStepRise": 0.7923903892782391,
+      "uplandArrival": {
+        "time": 11.399999999999991,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6472,
+          "hp": 48,
+          "x": -181.5147735567133,
+          "y": 27.630237800059255,
+          "z": -139.4852264432867,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 53.42743895043958,
+        "riseMetres": 15.478202321614054,
+        "known": true
+      },
+      "quarryId": 6617,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 23.39999999999995,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6472,
+          "hp": 48,
+          "x": -181.5147735567133,
+          "y": 27.630237800059255,
+          "z": -139.4852264432867,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6617,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 1148,
+        "dug": 0,
+        "quality": 0.95
+      },
+      "loadedSave": {
+        "time": 23.999999999999947,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6472,
+          "hp": 48,
+          "x": -181.5147735567133,
+          "y": 27.630237800059255,
+          "z": -139.4852264432867,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.0 m into the seam",
+          "carry": 1,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6617,
+          "build": 1,
+          "excavation": {
+            "remaining": 1147,
+            "dug": 1,
+            "quality": 0.95
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "1eacfe208305e98f7618c603014930a316167f5ea43ae5c5b41913dac5344c16"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 51.800000000000196,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6472,
+          "hp": 48,
+          "x": -202.49999979394443,
+          "y": 12.354490852438532,
+          "z": -89.52813382036965,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6617,
+          "build": 1,
+          "excavation": {
+            "remaining": 1124,
+            "dug": 24,
+            "quality": 0.95
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 53.800000000000225,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 6472,
+          "hp": 48,
+          "x": -202.5,
+          "y": 12.411360941498168,
+          "z": -99.68652001235459,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 6617,
+          "build": 1,
+          "excavation": {
+            "remaining": 1124,
+            "dug": 24,
+            "quality": 0.95
+          }
+        },
+        "stone": 40,
+        "seamInitial": 1148,
+        "seamRemaining": 1124,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "carriedStone": 0
+      }
+    },
+    {
+      "seed": -932481187,
+      "size": 1040,
+      "layout": "pangaea",
+      "holdout": true,
+      "phase": "complete",
+      "passed": true,
+      "observations": [
+        {
+          "kind": "actual-Resume-control-after-load",
+          "time": 33.79999999999994
+        }
+      ],
+      "actorId": 3832,
+      "initial": {
+        "home": {
+          "x": -168,
+          "z": 228
+        },
+        "people": [
+          {
+            "id": 3832,
+            "x": -163,
+            "y": 11.015553811880258,
+            "z": 225
+          },
+          {
+            "id": 3833,
+            "x": -170.5,
+            "y": 10.941166063539113,
+            "z": 229.33012701892218
+          },
+          {
+            "id": 3834,
+            "x": -170.5,
+            "y": 10.899603093119657,
+            "z": 220.66987298107782
+          },
+          {
+            "id": 3835,
+            "x": -164,
+            "y": 10.980165936396672,
+            "z": 223
+          },
+          {
+            "id": 3836,
+            "x": -173,
+            "y": 10.995425092256985,
+            "z": 224
+          }
+        ],
+        "wood": 58,
+        "stone": 16,
+        "food": 120,
+        "terrainHash": "3e073447ad81992260d7f85fb9a70e3857ade79bc121baf4a73aac72213b8228"
+      },
+      "target": {
+        "x": -248,
+        "z": 212,
+        "height": 17.01785276853119,
+        "distance": 81.58431221748457,
+        "grade": 0.5741884200700698
+      },
+      "walkedMetres": 187.8671335628483,
+      "maximumStepRise": 1.2531836227941646,
+      "uplandArrival": {
+        "time": 20.39999999999996,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3832,
+          "hp": 48,
+          "x": -246.51776233751502,
+          "y": 17.943514028816153,
+          "z": 213.48223766248498,
+          "order": "move",
+          "reason": "Moving to your destination, then waiting for orders",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "stone": 16,
+        "netDistanceMetres": 84.30821712697478,
+        "riseMetres": 6.927960216935896,
+        "known": true
+      },
+      "quarryId": 3941,
+      "quarryCost": {
+        "wood": 18,
+        "stone": 0
+      },
+      "quarryCompleted": {
+        "time": 33.19999999999993,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3832,
+          "hp": 48,
+          "x": -246.51776233751502,
+          "y": 17.943514028816153,
+          "z": 213.48223766248498,
+          "order": "idle",
+          "reason": "Assigned to this construction",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3941,
+          "build": 1
+        },
+        "stone": 16
+      },
+      "seamInitial": {
+        "remaining": 571,
+        "dug": 0,
+        "quality": 1.48
+      },
+      "loadedSave": {
+        "time": 33.79999999999994,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3832,
+          "hp": 48,
+          "x": -246.51776233751502,
+          "y": 17.943514028816153,
+          "z": 213.48223766248498,
+          "order": "gather",
+          "reason": "Excavating the mountainside · 0.1 m into the seam",
+          "carry": 2,
+          "carryType": "stone",
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3941,
+          "build": 1,
+          "excavation": {
+            "remaining": 569,
+            "dug": 2,
+            "quality": 1.48
+          }
+        },
+        "stone": 16,
+        "stoneBefore": 16,
+        "sha256": "3c882ab426a7f4edf5afd0a8aef4c5d57b16c248679116d583a0b40eab6d12b5"
+      },
+      "departingLoad": 24,
+      "homeDelivery": {
+        "time": 63.80000000000037,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3832,
+          "hp": 48,
+          "x": -171.67714916903108,
+          "y": 10.929244190073204,
+          "z": 229.46071632987716,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3941,
+          "build": 1,
+          "excavation": {
+            "remaining": 547,
+            "dug": 24,
+            "quality": 1.48
+          }
+        },
+        "stone": 40,
+        "creditedStone": 24,
+        "departingLoad": 24
+      },
+      "final": {
+        "time": 65.8000000000004,
+        "paused": false,
+        "ended": null,
+        "actor": {
+          "id": 3832,
+          "hp": 48,
+          "x": -169.91310569700448,
+          "y": 10.449155103762322,
+          "z": 239.90624171268178,
+          "order": "gather",
+          "reason": "Working: stone",
+          "carry": 0,
+          "carryType": null,
+          "hunger": 0
+        },
+        "quarry": {
+          "id": 3941,
+          "build": 1,
+          "excavation": {
+            "remaining": 547,
+            "dug": 24,
+            "quality": 1.48
+          }
+        },
+        "stone": 40,
+        "seamInitial": 571,
+        "seamRemaining": 547,
+        "seamDug": 24,
+        "stockIncrease": 24,
+        "carriedStone": 0
+      }
+    }
+  ],
+  "completed": true,
+  "passing": 4
+}

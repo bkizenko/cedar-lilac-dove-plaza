@@ -1,0 +1,4026 @@
+{
+  "scope": "Unpublished V17 candidate native physical survey; no gameplay/renderer/campaign gate credit from labels or this survey alone",
+  "sourceBaseline": "37d183e49ef9519738b590845e3c6ff2919ff766",
+  "candidateBranch": "v17-exact-local-water",
+  "sourceHashes": {
+    "worldgen": "5165e20da32ef01639d0c73094ea320ad872b1da6dd5960c5bc85e66d29ef1ce",
+    "coastalVariety": "c6fa255ff765a967e4d4f94b6d2d984abebd598c6abd780b28f3f892b8223de1",
+    "composedGeography": "09dfefc4c9aeab39fe62d2b7bab3cba4303fcd6a18589c96825afb8ecc54efa7",
+    "openingWater": "d7bf8357cebff526b646ae36020db49391a5422900a3f6d54321e7cf03bb42fc"
+  },
+  "cases": [
+    {
+      "seed": 7,
+      "size": 1040,
+      "layout": "archipelago",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 4,
+        "terrainSeed": 2518791293,
+        "rejectedReasons": [
+          "V15 actual map geography failed summitCount: 2 < 3",
+          "V15 actual map geography failed summitCount: 2 < 3",
+          "V15 actual map geography failed summitCount: 2 < 3",
+          "V15 actual map geography failed summitCount: 2 < 3"
+        ]
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.2676823970218604,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 74.35132439421855,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 24.792342444910222,
+        "canyonSections": [
+          {
+            "depthMeters": 25.191267897180644,
+            "benches": [
+              {
+                "height": 9.75064200135239,
+                "variation": 0.4367755460302387,
+                "widthMeters": 20
+              },
+              {
+                "height": 24.80409391821039,
+                "variation": 0.4995302051661028,
+                "widthMeters": 24
+              },
+              {
+                "height": 16.730438041373503,
+                "variation": 0.209470103994974,
+                "widthMeters": 16
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.85986850193612,
+            "benches": [
+              {
+                "height": 9.767703658736606,
+                "variation": 0.2986193487290745,
+                "widthMeters": 40
+              },
+              {
+                "height": 23.473715913827203,
+                "variation": 0.45111345361847555,
+                "widthMeters": 10
+              },
+              {
+                "height": 16.742425280117434,
+                "variation": 0.08361371345119295,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.794467846654907,
+            "benches": [
+              {
+                "height": 9.74397777018127,
+                "variation": 0.0469427050875062,
+                "widthMeters": 24
+              },
+              {
+                "height": 24.854467845313803,
+                "variation": 0.21989320198959206,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.62509627427164,
+                "variation": 0.009243646485185053,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.756546421621817,
+            "benches": [
+              {
+                "height": 9.70338677994799,
+                "variation": 0.04033166701001001,
+                "widthMeters": 24
+              },
+              {
+                "height": 24.79455422245638,
+                "variation": 0.05325661123213976,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.57447173476989,
+                "variation": 0.0827846336922633,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.728193230870154,
+            "benches": [
+              {
+                "height": 9.750863511746001,
+                "variation": 0.3672243044444734,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.777631232032373,
+                "variation": 0.06540253071581148,
+                "widthMeters": 30
+              },
+              {
+                "height": 4.7368977976301,
+                "variation": 0.6260561386834249,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.75722410845801,
+            "benches": [
+              {
+                "height": 9.796401917120013,
+                "variation": 0.008732438009428023,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.812680849770764,
+                "variation": 0.25757736822893307,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.607192800321105,
+                "variation": 0.1559848180051766,
+                "widthMeters": 24
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.792342444910222,
+            "benches": [
+              {
+                "height": 9.847806471331154,
+                "variation": 0.05586247434609248,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.852342443569118,
+                "variation": 0.15333566895020212,
+                "widthMeters": 26
+              },
+              {
+                "height": 16.619316911185233,
+                "variation": 0.23169021696798353,
+                "widthMeters": 24
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 28.69963292154567,
+        "cliffEdgeSampleCount": 527,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 5248,
+        "pillarReliefMeters": [
+          23.789957048868352,
+          22.41540344710591,
+          15.924144333011187,
+          20.863405326127037,
+          22.57835349296138,
+          22.723380663927504,
+          22.449371546165125
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 12.999120970376062,
+        "dunesTransectReliefMeters": 6.8054736577152095,
+        "lakeWetAreaSquareMeters": 2656,
+        "valleyFlankReliefMeters": 14.804664833377359,
+        "waterfallBedDropMeters": 7.538947964930812,
+        "wetlandHeightAboveLakeMeters": 0.46830148306407615,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 70,
+          "wetSamples": 70,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 112,
+          "wetSamples": 112,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 39,
+          "wetSamples": 39,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 122,
+          "wetSamples": 121,
+          "wetFraction": 0.9918032786885246,
+          "maximumDryCenterlineRunMetres": 1.9998784287016855,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 312576,
+        "gentleLowlandAreaSquareMetres": 204096,
+        "gentleLowlandFraction": 0.652948402948403,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 2635,
+            "usableAreaSquareMetres": 84096,
+            "minimum": 0.9741312925632197,
+            "maximum": 86.56607337364782,
+            "actualReliefMetres": 85.59194208108461
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 2249,
+            "usableAreaSquareMetres": 120000,
+            "minimum": 0.9748837727766815,
+            "maximum": 14.12083308880146,
+            "actualReliefMetres": 13.145949316024778
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 1708,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -70,
+          "z": -164,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.15613835121993166,
+          "minimumDryClearanceMetres": 11.172832594651442,
+          "apronReliefMetres": 0.7699091691237214,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.073782944393047,
+          "maximumMeanRiseAt8Metres": 0.09495019901349422
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -68.35761257011366,
+          "bankZ": -170.31645322369445,
+          "sourceX": -68.35761257011366,
+          "sourceZ": -194.31645322369445,
+          "bankDistanceMetres": 6.526485868901325,
+          "surveyedDryCells": 3521
+        },
+        "beauty": 74.30681818181819,
+        "comparableMean": 66.42337008395674,
+        "dryLandMean": 66.1626776654577,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -70,
+            "z": -164,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 388,
+            "z": 368,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 88,
+            "z": 168,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 1949,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 2,
+        "minimumDifference": 0.15126676602086442,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.15126676602086442
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 175354.00390625,
+            "centroid": {
+              "x": -71.70570588235296,
+              "z": -114.39120588235295
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 146785.7421875,
+            "centroid": {
+              "x": 234.32183916123233,
+              "z": 243.76872751293
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 31009.01043731008,
+          "largestConnectedAreaSquareMeters": 30580.31444048091
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 13432.474567314044,
+          "largestConnectedAreaSquareMeters": 13432.474567314044
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 20148.711850971067,
+          "largestConnectedAreaSquareMeters": 20148.711850971067
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 12003.487911216806,
+          "largestConnectedAreaSquareMeters": 12003.487911216806
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 49871.63429779364,
+          "largestConnectedAreaSquareMeters": 49871.63429779364
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 25293.063812921126,
+          "largestConnectedAreaSquareMeters": 25293.063812921126
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 36153.36239926014,
+          "largestConnectedAreaSquareMeters": 36153.36239926014
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 129751.98837362928,
+          "largestConnectedAreaSquareMeters": 96027.90328973444
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.1743249526269612,
+      "terrainSha256": "06cdd60256f310756a248a6edef416667314925be81a75de1e113696941d53d5"
+    },
+    {
+      "seed": -1935090127,
+      "size": 1040,
+      "layout": "archipelago",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 1,
+        "terrainSeed": 3668036440,
+        "rejectedReasons": [
+          "V15 actual map geography failed summitCount: 2 < 3"
+        ]
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.2923789184390923,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 79.09548127739643,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 27.377655447476208,
+        "canyonSections": [
+          {
+            "depthMeters": 27.563990405188015,
+            "benches": [
+              {
+                "height": 9.590237691885202,
+                "variation": 0.06557242944921171,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.586157429171397,
+                "variation": 0.05868024038749198,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.565664603446685,
+                "variation": 0.3626167300964127,
+                "widthMeters": 16
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.64388766977114,
+            "benches": [
+              {
+                "height": 9.532472192140235,
+                "variation": 0.19561426784373914,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.65947848800876,
+                "variation": 0.21355370113328576,
+                "widthMeters": 42
+              },
+              {
+                "height": 16.559185858489514,
+                "variation": 0.42888757345836126,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.611175882276676,
+            "benches": [
+              {
+                "height": 9.546176727198018,
+                "variation": 0.05839434606893157,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.614617180885666,
+                "variation": 0.11162400854525245,
+                "widthMeters": 38
+              },
+              {
+                "height": 16.629323119891602,
+                "variation": 0.0588644606654114,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.577242735057958,
+            "benches": [
+              {
+                "height": 9.567321867026093,
+                "variation": 0.058009015354294036,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.592132767229423,
+                "variation": 0.31677891142187775,
+                "widthMeters": 40
+              },
+              {
+                "height": 16.61329332575745,
+                "variation": 0.017939110514674894,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.220566770683266,
+            "benches": [
+              {
+                "height": 9.647328108856092,
+                "variation": 0.11369281570562428,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.57722510120639,
+                "variation": 0.08552648325007794,
+                "widthMeters": 38
+              },
+              {
+                "height": 16.63803515339099,
+                "variation": 0.15876842608377828,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.448536017453677,
+            "benches": [
+              {
+                "height": 9.715227171538693,
+                "variation": 0.22349469417880208,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.5864885955558,
+                "variation": 0.06139098815048882,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.645444133983172,
+                "variation": 0.039988249192155934,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.377655447476208,
+            "benches": [
+              {
+                "height": 9.768157002509959,
+                "variation": 0.13252438420895807,
+                "widthMeters": 20
+              },
+              {
+                "height": 24.653675508689286,
+                "variation": 0.04094692852515891,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.671633841314247,
+                "variation": 0.3197955458611972,
+                "widthMeters": 32
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 27.64396653495435,
+        "cliffEdgeSampleCount": 604,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 15424,
+        "pillarReliefMeters": [
+          22.35656755457166,
+          20.65422530565788,
+          25.15481820486641,
+          22.220035388421003,
+          21.082606167637735,
+          25.485236994893665,
+          20.24438336653345
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 15.1050826406034,
+        "dunesTransectReliefMeters": 10.094870694530627,
+        "lakeWetAreaSquareMeters": 2640,
+        "valleyFlankReliefMeters": 16.055297225021924,
+        "waterfallBedDropMeters": 7.228639297784494,
+        "wetlandHeightAboveLakeMeters": 0.592004654433131,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 89,
+          "wetSamples": 89,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 153,
+          "wetSamples": 152,
+          "wetFraction": 0.9934640522875817,
+          "maximumDryCenterlineRunMetres": 1.9884856814304708,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 50,
+          "wetSamples": 50,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 55,
+          "wetSamples": 55,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 362752,
+        "gentleLowlandAreaSquareMetres": 202880,
+        "gentleLowlandFraction": 0.5592801693719125,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 4825,
+            "usableAreaSquareMetres": 167424,
+            "minimum": 0.9715859458996696,
+            "maximum": 90.4824507493239,
+            "actualReliefMetres": 89.51086480342423
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 450,
+            "usableAreaSquareMetres": 20224,
+            "minimum": 0.9851069835516103,
+            "maximum": 11.957654116703917,
+            "actualReliefMetres": 10.972547133152307
+          },
+          {
+            "index": 2,
+            "style": "elongated",
+            "dramatic": false,
+            "samples": 393,
+            "usableAreaSquareMetres": 15232,
+            "minimum": 0.9707792002421173,
+            "maximum": 13.171657723646867,
+            "actualReliefMetres": 12.20087852340475
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 1739,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -240,
+          "z": 0,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.19704658871287975,
+          "minimumDryClearanceMetres": 11.184693720890927,
+          "apronReliefMetres": 0.801304127619817,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.04053846032721942,
+          "maximumMeanRiseAt8Metres": 0.1477123640844339
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -247.76747045787852,
+          "bankZ": 6.751923850332005,
+          "sourceX": -251.76747045787852,
+          "sourceZ": 13.680127080607514,
+          "bankDistanceMetres": 10.29184497525578,
+          "surveyedDryCells": 3692
+        },
+        "beauty": 76.9090909090909,
+        "comparableMean": 71.75804721327518,
+        "dryLandMean": 66.10938518853665,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -240,
+            "z": 0,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 128,
+            "z": -192,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 388,
+            "z": 328,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 2022,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 3,
+        "minimumDifference": 0.15091575091575093,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.4137931034482759
+          },
+          {
+            "a": 0,
+            "b": 2,
+            "difference": 0.34288121314237574
+          },
+          {
+            "a": 1,
+            "b": 2,
+            "difference": 0.15091575091575093
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 25977.1484375,
+            "centroid": {
+              "x": 356.8263580050826,
+              "z": -299.71648665819566
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 316957.51953125,
+            "centroid": {
+              "x": -152.655656079146,
+              "z": -18.140897552720617
+            }
+          },
+          {
+            "id": 2,
+            "areaSquareMeters": 29971.09375,
+            "centroid": {
+              "x": 366.51534966960344,
+              "z": 298.4729487885462
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 29722.922446822566,
+          "largestConnectedAreaSquareMeters": 29722.922446822566
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 36867.85572730876,
+          "largestConnectedAreaSquareMeters": 36867.85572730876
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 29437.125115603118,
+          "largestConnectedAreaSquareMeters": 29437.125115603118
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 97313.99128022196,
+          "largestConnectedAreaSquareMeters": 97313.99128022196
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 23578.27982560444,
+          "largestConnectedAreaSquareMeters": 23578.27982560444
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 74736.00211388558,
+          "largestConnectedAreaSquareMeters": 74021.50878583697
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 30437.415774871188,
+          "largestConnectedAreaSquareMeters": 30437.415774871188
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 47728.15431364778,
+          "largestConnectedAreaSquareMeters": 26293.354472189192
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.251683511140155,
+      "terrainSha256": "78942fa9279fc06111d3efef357bfccfd397775dee4a2db68fca87abfdaf515c"
+    },
+    {
+      "seed": -1197468385,
+      "size": 1040,
+      "layout": "archipelago",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 2,
+        "terrainSeed": 3790437931,
+        "rejectedReasons": [
+          "V15 opening failed: {\"candidates\":340,\"threshold\":67.93729233958578,\"maximumWaterBeauty\":91.59090909090908,\"maximumSafeWaterBeauty\":61.314307230334805,\"safeWaterCandidates\":1}",
+          "V15 opening failed: {\"candidates\":319,\"threshold\":73.18181818181819,\"maximumWaterBeauty\":90.21590909090908,\"maximumSafeWaterBeauty\":64.55681818181817,\"safeWaterCandidates\":1}"
+        ]
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.5483931629608098,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 104.05639991205727,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 24.71979144202509,
+        "canyonSections": [
+          {
+            "depthMeters": 24.72120269127476,
+            "benches": [
+              {
+                "height": 9.755177898679689,
+                "variation": 0.3155413550462036,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.781202689933657,
+                "variation": 0.28651080929369144,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.657916667348857,
+                "variation": 0.014804209171391136,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.317131732533067,
+            "benches": [
+              {
+                "height": 9.695684060133107,
+                "variation": 0.5495552725475434,
+                "widthMeters": 40
+              },
+              {
+                "height": 23.857691717956275,
+                "variation": 1.2948003055723802,
+                "widthMeters": 16
+              },
+              {
+                "height": 16.66023778049628,
+                "variation": 0.018019146236042616,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.633840191122086,
+            "benches": [
+              {
+                "height": 9.690545366688497,
+                "variation": 0.12664676123526597,
+                "widthMeters": 28
+              },
+              {
+                "height": 24.724777113571797,
+                "variation": 0.14420492807619212,
+                "widthMeters": 16
+              },
+              {
+                "height": 16.564973813643384,
+                "variation": 0.06755352355681055,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.741853938714204,
+            "benches": [
+              {
+                "height": 9.65405984701545,
+                "variation": 0.43771680015901815,
+                "widthMeters": 24
+              },
+              {
+                "height": 24.819893591474393,
+                "variation": 0.03399013749253044,
+                "widthMeters": 10
+              },
+              {
+                "height": 16.58631907385043,
+                "variation": 0.0072202187912502325,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.733684699615928,
+            "benches": [
+              {
+                "height": 9.655008444579003,
+                "variation": 0.28794846783834593,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.77907948746496,
+                "variation": 0.05890892019017713,
+                "widthMeters": 18
+              },
+              {
+                "height": 4.507463117205472,
+                "variation": 0.15363655028374978,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.71979144202509,
+            "benches": [
+              {
+                "height": 9.701444357213015,
+                "variation": 0.06426233656160107,
+                "widthMeters": 20
+              },
+              {
+                "height": 24.761274324869056,
+                "variation": 0.1263017793068002,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.697632854956538,
+                "variation": 0.28439260047637305,
+                "widthMeters": 22
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.663097392846122,
+            "benches": [
+              {
+                "height": 9.747599107184415,
+                "variation": 0.01794907485006192,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.72780059977469,
+                "variation": 0.19982412732345622,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.705089448525655,
+                "variation": 0.5408367319899945,
+                "widthMeters": 16
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 28.537707330993058,
+        "cliffEdgeSampleCount": 489,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 5104,
+        "pillarReliefMeters": [
+          22.011758336346023,
+          21.669896637387687,
+          9.990575057860356,
+          20.857812479411656,
+          25.485233451131418,
+          22.75224918759752,
+          27.135687866630168
+        ],
+        "pillarCount": 6,
+        "hillsTransectReliefMeters": 14.255499472274458,
+        "dunesTransectReliefMeters": 5.552332457273488,
+        "lakeWetAreaSquareMeters": 2656,
+        "valleyFlankReliefMeters": 17.583257427739852,
+        "waterfallBedDropMeters": 8.431694918790797,
+        "wetlandHeightAboveLakeMeters": 0.24388929163223771,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 67,
+          "wetSamples": 67,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 115,
+          "wetSamples": 115,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 36,
+          "wetSamples": 36,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 72,
+          "wetSamples": 71,
+          "wetFraction": 0.9861111111111112,
+          "maximumDryCenterlineRunMetres": 1.762854343652608,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-2-brook",
+          "samples": 81,
+          "wetSamples": 81,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 360896,
+        "gentleLowlandAreaSquareMetres": 232064,
+        "gentleLowlandFraction": 0.6430218123780812,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 2094,
+            "usableAreaSquareMetres": 51392,
+            "minimum": 0.9894947464649475,
+            "maximum": 116.51773916391228,
+            "actualReliefMetres": 115.52824441744734
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 1177,
+            "usableAreaSquareMetres": 60480,
+            "minimum": 0.9775088782493896,
+            "maximum": 12.815147179823654,
+            "actualReliefMetres": 11.837638301574264
+          },
+          {
+            "index": 2,
+            "style": "lobed",
+            "dramatic": false,
+            "samples": 1217,
+            "usableAreaSquareMetres": 63872,
+            "minimum": 0.9714321411572895,
+            "maximum": 13.245319586533768,
+            "actualReliefMetres": 12.273887445376477
+          },
+          {
+            "index": 3,
+            "style": "rugged",
+            "dramatic": false,
+            "samples": 1151,
+            "usableAreaSquareMetres": 56320,
+            "minimum": 0.971865001091611,
+            "maximum": 13.126213337824895,
+            "actualReliefMetres": 12.154348336733284
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 2140,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": 180,
+          "z": 120,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.027863690302536104,
+          "minimumDryClearanceMetres": 6.363933302072378,
+          "apronReliefMetres": 0.1157146233778743,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.030315409116704883,
+          "maximumMeanRiseAt8Metres": 0.22390670286230463
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": 159.57637782089128,
+          "bankZ": 114.15920862401752,
+          "sourceX": 152.64817459061578,
+          "sourceZ": 110.15920862401752,
+          "bankDistanceMetres": 21.24239126870449,
+          "surveyedDryCells": 3668
+        },
+        "beauty": 89.30681818181819,
+        "comparableMean": 64.88517272626908,
+        "dryLandMean": 64.47122512089094,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": 180,
+            "z": 120,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": -412,
+            "z": 148,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": -112,
+            "z": -332,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 2408,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 4,
+        "minimumDifference": 0.2052529182879378,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.247870528109029
+          },
+          {
+            "a": 0,
+            "b": 2,
+            "difference": 0.21772939346811815
+          },
+          {
+            "a": 1,
+            "b": 2,
+            "difference": 0.2576243980738363
+          },
+          {
+            "a": 0,
+            "b": 3,
+            "difference": 0.26824978012313105
+          },
+          {
+            "a": 1,
+            "b": 3,
+            "difference": 0.2052529182879378
+          },
+          {
+            "a": 2,
+            "b": 3,
+            "difference": 0.28194558944765047
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 75010.25390625,
+            "centroid": {
+              "x": 293.0282590759076,
+              "z": -315.5011688668867
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 76578.125,
+            "centroid": {
+              "x": -202.71875,
+              "z": -258.24979795258616
+            }
+          },
+          {
+            "id": 2,
+            "areaSquareMeters": 140019.140625,
+            "centroid": {
+              "x": 101.16601838755298,
+              "z": 14.598472123998135
+            }
+          },
+          {
+            "id": 3,
+            "areaSquareMeters": 79845.8984375,
+            "centroid": {
+              "x": -279.2066065522944,
+              "z": 176.59363373294752
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 14004.06922975294,
+          "largestConnectedAreaSquareMeters": 13289.57590170432
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 18433.92786365438,
+          "largestConnectedAreaSquareMeters": 18433.92786365438
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 20434.509182190515,
+          "largestConnectedAreaSquareMeters": 20434.509182190515
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 39297.13304267407,
+          "largestConnectedAreaSquareMeters": 39297.13304267407
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 35153.071739992076,
+          "largestConnectedAreaSquareMeters": 35153.071739992076
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 29580.023781212843,
+          "largestConnectedAreaSquareMeters": 29580.023781212843
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 14289.866560972388,
+          "largestConnectedAreaSquareMeters": 14289.866560972388
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 194485.08389483418,
+          "largestConnectedAreaSquareMeters": 79737.45541022593
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.1698958947487341,
+      "terrainSha256": "82e88beefaa3abd6c4234171bec313521192e0ec872d740baa33b383189417ff"
+    },
+    {
+      "seed": 42,
+      "size": 1560,
+      "layout": "continents",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 0,
+        "terrainSeed": 42,
+        "rejectedReasons": []
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.2029100572586989,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 76.79173940171637,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 27.609395328005302,
+        "canyonSections": [
+          {
+            "depthMeters": 27.609395328005302,
+            "benches": [
+              {
+                "height": 9.525456390687795,
+                "variation": 0.19845447102545144,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.62411406157476,
+                "variation": 0.1424311440764079,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.53857271091643,
+                "variation": 0.031079243808910917,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.541000511252143,
+            "benches": [
+              {
+                "height": 9.66077731901367,
+                "variation": 0.060283361304723115,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.74462496555357,
+                "variation": 0.022017645370315364,
+                "widthMeters": 46
+              },
+              {
+                "height": 16.53740660318703,
+                "variation": 0.2078275684175992,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.63717360382034,
+            "benches": [
+              {
+                "height": 9.711610440866826,
+                "variation": 0.02684889245578681,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.72556803024807,
+                "variation": 0.04717487025637723,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.578566706343643,
+                "variation": 0.3716014592473975,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.62486579162061,
+            "benches": [
+              {
+                "height": 9.72104141393465,
+                "variation": 0.038669382937968066,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.642518104843266,
+                "variation": 0.17034570200503651,
+                "widthMeters": 40
+              },
+              {
+                "height": 16.562836747586537,
+                "variation": 0.22009508830243618,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.59689583010363,
+            "benches": [
+              {
+                "height": 9.748311214979527,
+                "variation": 0.35565599489705413,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.697146641207333,
+                "variation": 0.29767531021823146,
+                "widthMeters": 36
+              },
+              {
+                "height": 16.62034924806261,
+                "variation": 0.004011449476273299,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.60631823976384,
+            "benches": [
+              {
+                "height": 9.75793592130008,
+                "variation": 0.014854132246941987,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.722519391340317,
+                "variation": 0.07458850763628178,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.672353148167478,
+                "variation": 0.5677626779510483,
+                "widthMeters": 20
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.71935207952262,
+            "benches": [
+              {
+                "height": 9.767608790009184,
+                "variation": 0.020002320307963117,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.786243459614838,
+                "variation": 0.04686418591823838,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.70753456027639,
+                "variation": 0.4530650382568773,
+                "widthMeters": 28
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 26.250778993736766,
+        "cliffEdgeSampleCount": 703,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 29488,
+        "pillarReliefMeters": [
+          27.079694134027037,
+          23.805561830540334,
+          19.995098296360176,
+          26.158085519750884,
+          20.940029916338965,
+          22.52652683405249,
+          27.002521796771454
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 13.547084535450125,
+        "dunesTransectReliefMeters": 8.786894280836288,
+        "lakeWetAreaSquareMeters": 2736,
+        "valleyFlankReliefMeters": 15.467945366601567,
+        "waterfallBedDropMeters": 7.782961893509609,
+        "wetlandHeightAboveLakeMeters": 0.4906477141583938,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 102,
+          "wetSamples": 102,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 169,
+          "wetSamples": 169,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 57,
+          "wetSamples": 57,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 379,
+          "wetSamples": 379,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 2069056,
+        "gentleLowlandAreaSquareMetres": 1852352,
+        "gentleLowlandFraction": 0.895264313774011,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 16689,
+            "usableAreaSquareMetres": 891200,
+            "minimum": 0.976850374845374,
+            "maximum": 89.28805459829478,
+            "actualReliefMetres": 88.31120422344941
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 15640,
+            "usableAreaSquareMetres": 961152,
+            "minimum": 0.9811982029332151,
+            "maximum": 15.299135354849009,
+            "actualReliefMetres": 14.317937151915793
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 15186,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": 124,
+          "z": -660,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.19984864820550427,
+          "minimumDryClearanceMetres": 8.618579075153049,
+          "apronReliefMetres": 1.7838556142953852,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": -0.03925526231930698,
+          "maximumMeanRiseAt8Metres": -0.16258985937878578
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": 127.2456186763778,
+          "bankZ": -656.1840353750907,
+          "sourceX": 127.2456186763778,
+          "sourceZ": -640.1840353750907,
+          "bankDistanceMetres": 5.009553534099755,
+          "surveyedDryCells": 5080
+        },
+        "beauty": 78.28409090909092,
+        "comparableMean": 43.219937473704015,
+        "dryLandMean": 42.230724865105444,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": 124,
+            "z": -660,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": -732,
+            "z": 708,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": -732,
+            "z": -652,
+            "dry": true
+          },
+          {
+            "team": 4,
+            "x": 708,
+            "z": 728,
+            "dry": true
+          },
+          {
+            "team": 5,
+            "x": 608,
+            "z": 28,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 16742,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 2,
+        "minimumDifference": 0.1632911392405063,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.1632911392405063
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 1082095.1171875,
+            "centroid": {
+              "x": 31.957350227251936,
+              "z": -426.78760237775674
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 1011705.95703125,
+            "centroid": {
+              "x": -35.24476048514714,
+              "z": 451.7946536353404
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 240192,
+          "largestConnectedAreaSquareMeters": 237312
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 906480,
+          "largestConnectedAreaSquareMeters": 905904
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 93744,
+          "largestConnectedAreaSquareMeters": 93744
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 130320,
+          "largestConnectedAreaSquareMeters": 130320
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 94608,
+          "largestConnectedAreaSquareMeters": 94608
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 193104,
+          "largestConnectedAreaSquareMeters": 193104
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 152352,
+          "largestConnectedAreaSquareMeters": 152352
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 266832,
+          "largestConnectedAreaSquareMeters": 265536
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.2297741191347056,
+      "terrainSha256": "76db4eb981baf2410340fc0ad14aa7eb375e62269dcbedb0ba5ff98054e8dbd5"
+    },
+    {
+      "seed": 0,
+      "size": 1040,
+      "layout": "continents",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 1,
+        "terrainSeed": 1384430195,
+        "rejectedReasons": [
+          "V16 final coast too similar: 0.12433392539964472"
+        ]
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.33829883274988304,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 97.84535635736216,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 24.355559578298188,
+        "canyonSections": [
+          {
+            "depthMeters": 23.702018991539155,
+            "benches": [
+              {
+                "height": 9.77552990285556,
+                "variation": 0.30759012223597537,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.712258306272197,
+                "variation": 0.02478990604447162,
+                "widthMeters": 8
+              },
+              {
+                "height": 16.69630036457625,
+                "variation": 0.033652871373860194,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.713779510386118,
+            "benches": [
+              {
+                "height": 9.681721645345146,
+                "variation": 0.008205736098995331,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.761884172915106,
+                "variation": 0.5030761703743813,
+                "widthMeters": 20
+              },
+              {
+                "height": 16.729473865586982,
+                "variation": 0.04463336081194669,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 25.785141292962763,
+            "benches": [
+              {
+                "height": 9.660442869824744,
+                "variation": 0.059335590111631475,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.731642733704224,
+                "variation": 0.40916575642416575,
+                "widthMeters": 24
+              },
+              {
+                "height": 16.610416695817598,
+                "variation": 0.29784185077502556,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.355559578298188,
+            "benches": [
+              {
+                "height": 9.725946749308767,
+                "variation": 0.14154672386654532,
+                "widthMeters": 40
+              },
+              {
+                "height": 24.73501451346297,
+                "variation": 0.32340550380620314,
+                "widthMeters": 8
+              },
+              {
+                "height": 16.697972607282004,
+                "variation": 0.024037112792306914,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 23.612823675943623,
+            "benches": [
+              {
+                "height": 9.666637953777302,
+                "variation": 0.07601268476526002,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.714320692352302,
+                "variation": 0.04959539536647384,
+                "widthMeters": 8
+              },
+              {
+                "height": 4.549252636139391,
+                "variation": 0.09611661157056606,
+                "widthMeters": 8
+              },
+              {
+                "height": 16.76423673070205,
+                "variation": 0.11024773307441293,
+                "widthMeters": 26
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.346618331140537,
+            "benches": [
+              {
+                "height": 9.668914053377621,
+                "variation": 0.4691900632724213,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.715542742486544,
+                "variation": 0.08074230352344713,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.811224438057423,
+                "variation": 0.5593517819350389,
+                "widthMeters": 28
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.954463129344035,
+            "benches": [
+              {
+                "height": 9.699083207138148,
+                "variation": 0.09864407860480107,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.735895470456498,
+                "variation": 0.007634376266381082,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.830779831690432,
+                "variation": 0.2587558695272598,
+                "widthMeters": 16
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 28.388726070124868,
+        "cliffEdgeSampleCount": 557,
+        "terraceBenchCount": 4,
+        "plateauHighAreaSquareMeters": 5872,
+        "pillarReliefMeters": [
+          26.212094972398905,
+          21.287996722441466,
+          22.747771900563063,
+          21.131322366680187,
+          21.499663296057932,
+          20.641910754208972,
+          23.148417973457754
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 15.201872772133331,
+        "dunesTransectReliefMeters": 7.127960873601197,
+        "lakeWetAreaSquareMeters": 2736,
+        "valleyFlankReliefMeters": 14.737790479470029,
+        "waterfallBedDropMeters": 8.39639714271145,
+        "wetlandHeightAboveLakeMeters": 0.1336862579489999,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 70,
+          "wetSamples": 70,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 152,
+          "wetSamples": 152,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 38,
+          "wetSamples": 38,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 297,
+          "wetSamples": 296,
+          "wetFraction": 0.9966329966329966,
+          "maximumDryCenterlineRunMetres": 1.9941275678817678,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 864832,
+        "gentleLowlandAreaSquareMetres": 745216,
+        "gentleLowlandFraction": 0.8616887441722786,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 6457,
+            "usableAreaSquareMetres": 323072,
+            "minimum": 0.9846425991791895,
+            "maximum": 109.11846395639273,
+            "actualReliefMetres": 108.13382135721353
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 7056,
+            "usableAreaSquareMetres": 422144,
+            "minimum": 0.976183665715723,
+            "maximum": 14.25158955500676,
+            "actualReliefMetres": 13.275405889291036
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 4514,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -154,
+          "z": -362,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.16210730012375432,
+          "minimumDryClearanceMetres": 11.132156668442946,
+          "apronReliefMetres": 0.8174220745380101,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.06713700930685917,
+          "maximumMeanRiseAt8Metres": 0.10804664897227045
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -160.0054388527126,
+          "bankZ": -368.24636880321253,
+          "sourceX": -160.0054388527126,
+          "sourceZ": -400.24636880321253,
+          "bankDistanceMetres": 8.665011196727713,
+          "surveyedDryCells": 5324
+        },
+        "beauty": 79.6590909090909,
+        "comparableMean": 48.158237817678454,
+        "dryLandMean": 50.56351393056215,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -154,
+            "z": -362,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 468,
+            "z": 468,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": -452,
+            "z": 468,
+            "dry": true
+          },
+          {
+            "team": 4,
+            "x": 468,
+            "z": -472,
+            "dry": true
+          },
+          {
+            "team": 5,
+            "x": 8,
+            "z": 208,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 5153,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 2,
+        "minimumDifference": 0.23127035830618892,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.23127035830618892
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 423803.80859375,
+            "centroid": {
+              "x": -123.49136210522215,
+              "z": -282.1987567662292
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 458709.5703125,
+            "centroid": {
+              "x": 109.54367399438729,
+              "z": 269.4349275023386
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 166048.24943849916,
+          "largestConnectedAreaSquareMeters": 164333.46545118245
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 237783.37957458053,
+          "largestConnectedAreaSquareMeters": 237783.37957458053
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 33295.38908706566,
+          "largestConnectedAreaSquareMeters": 33295.38908706566
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 89454.56467168714,
+          "largestConnectedAreaSquareMeters": 89454.56467168714
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 49014.24230413529,
+          "largestConnectedAreaSquareMeters": 48871.34363852556
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 69020.05548949663,
+          "largestConnectedAreaSquareMeters": 69020.05548949663
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 168477.52675386445,
+          "largestConnectedAreaSquareMeters": 168477.52675386445
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 55873.378253402036,
+          "largestConnectedAreaSquareMeters": 55587.58092218259
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.2598582223667218,
+      "terrainSha256": "fe735fb22b7388366cdbaac6bd6e1681f6bc65f5a43dc22cb912778169e4e15d"
+    },
+    {
+      "seed": 1,
+      "size": 1040,
+      "layout": "pangaea",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 0,
+        "terrainSeed": 1,
+        "rejectedReasons": []
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.3220449701138271,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 81.16429650394741,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 27.11514939695075,
+        "canyonSections": [
+          {
+            "depthMeters": 27.70197078609396,
+            "benches": [
+              {
+                "height": 9.779360061285175,
+                "variation": 0.08706547806098719,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.79062114686285,
+                "variation": 0.5091541946240135,
+                "widthMeters": 24
+              },
+              {
+                "height": 16.643444813677384,
+                "variation": 0.1365360494639205,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.660007336403552,
+            "benches": [
+              {
+                "height": 9.713353931031051,
+                "variation": 0.14083595370780877,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.661348153925697,
+                "variation": 0.08518918202828374,
+                "widthMeters": 52
+              },
+              {
+                "height": 16.636865381866606,
+                "variation": 0.0016524743345556203,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.70246662424739,
+            "benches": [
+              {
+                "height": 9.633181124516813,
+                "variation": 0.05256959115572357,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.653366758938446,
+                "variation": 0.1813670326846406,
+                "widthMeters": 36
+              },
+              {
+                "height": 16.700462754484974,
+                "variation": 0.0036723639135942676,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.766297053741535,
+            "benches": [
+              {
+                "height": 9.611762351244673,
+                "variation": 0.10670485441705146,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.796833178593918,
+                "variation": 0.21639773814012386,
+                "widthMeters": 40
+              },
+              {
+                "height": 16.678922658956477,
+                "variation": 0.10855148229726908,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.666826120065977,
+            "benches": [
+              {
+                "height": 9.556002562418191,
+                "variation": 0.3216265982490345,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.735161146823646,
+                "variation": 0.427144731851687,
+                "widthMeters": 46
+              },
+              {
+                "height": 16.66061989577333,
+                "variation": 0.27474371297705247,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.11514939695075,
+            "benches": [
+              {
+                "height": 9.50570563519534,
+                "variation": 0.0923133221685486,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.670160256404586,
+                "variation": 0.06463886359332705,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.618987829035472,
+                "variation": 0.11258414742782108,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.644250723528362,
+            "benches": [
+              {
+                "height": 9.584999420568915,
+                "variation": 0.21306208846960928,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.663284308985027,
+                "variation": 0.22355899618313302,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.62323137373687,
+                "variation": 0.29291648311759744,
+                "widthMeters": 30
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 27.521807897657794,
+        "cliffEdgeSampleCount": 647,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 15520,
+        "pillarReliefMeters": [
+          23.288095985657314,
+          20.627473467228697,
+          21.535542026942117,
+          25.15216897340425,
+          20.645515398761177,
+          25.703988068118427,
+          22.415513577995863
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 15.3957554192748,
+        "dunesTransectReliefMeters": 9.633490360316028,
+        "lakeWetAreaSquareMeters": 2736,
+        "valleyFlankReliefMeters": 14.984138554996607,
+        "waterfallBedDropMeters": 7.977769976899337,
+        "wetlandHeightAboveLakeMeters": 0.553543572496876,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 89,
+          "wetSamples": 89,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 153,
+          "wetSamples": 153,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 50,
+          "wetSamples": 50,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 708288,
+        "gentleLowlandAreaSquareMetres": 568768,
+        "gentleLowlandFraction": 0.8030179813861028,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 11067,
+            "usableAreaSquareMetres": 568768,
+            "minimum": 0.9784081107721883,
+            "maximum": 92.64811823918268,
+            "actualReliefMetres": 91.66971012841049
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 3558,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -40,
+          "z": 230,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.19685136148926144,
+          "minimumDryClearanceMetres": 11.11715854057899,
+          "apronReliefMetres": 0.9161245492788428,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.09509494666558649,
+          "maximumMeanRiseAt8Metres": 0.0010218689061703978
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -33.8467481400156,
+          "bankZ": 232.09650887599656,
+          "sourceX": -33.84674814001559,
+          "sourceZ": 256.09650887599656,
+          "bankDistanceMetres": 6.500604427246275,
+          "surveyedDryCells": 3263
+        },
+        "beauty": 79.65286748055492,
+        "comparableMean": 59.712557807975436,
+        "dryLandMean": 56.43460208426076,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -40,
+            "z": 230,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 468,
+            "z": -232,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 468,
+            "z": 468,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 4067,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 1,
+        "minimumDifference": null,
+        "pairs": [],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 720692.578125,
+            "centroid": {
+              "x": 25.929091382705792,
+              "z": 173.2605826921316
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 57159.466243889554,
+          "largestConnectedAreaSquareMeters": 57016.56757827983
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 149614.9028933809,
+          "largestConnectedAreaSquareMeters": 149186.20689655174
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 31580.605099748976,
+          "largestConnectedAreaSquareMeters": 31580.605099748976
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 61589.32487779099,
+          "largestConnectedAreaSquareMeters": 61589.32487779099
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 23292.482494384993,
+          "largestConnectedAreaSquareMeters": 23292.482494384993
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 162189.9854670366,
+          "largestConnectedAreaSquareMeters": 162189.9854670366
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 145756.63892191835,
+          "largestConnectedAreaSquareMeters": 145756.63892191835
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 80594.84740388427,
+          "largestConnectedAreaSquareMeters": 80594.84740388427
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.2045642367635159,
+      "terrainSha256": "55628cb71245699b7b8f948e8829f802507b87ca16ee884bbeeb683a4290d3e7"
+    },
+    {
+      "seed": 83,
+      "size": 2080,
+      "layout": "random",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 0,
+        "terrainSeed": 83,
+        "rejectedReasons": []
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.2104356261496326,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 81.25072022685683,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 27.647932969710435,
+        "canyonSections": [
+          {
+            "depthMeters": 27.59251769452319,
+            "benches": [
+              {
+                "height": 9.625389312946798,
+                "variation": 0.054777951085982934,
+                "widthMeters": 20
+              },
+              {
+                "height": 24.628518735607123,
+                "variation": 0.36771563004886687,
+                "widthMeters": 24
+              },
+              {
+                "height": 16.858285578910227,
+                "variation": 0.011751125166469478,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.749725064643687,
+            "benches": [
+              {
+                "height": 9.711043114953377,
+                "variation": 0.013541311157323932,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.72641655223366,
+                "variation": 0.2810025649332317,
+                "widthMeters": 46
+              },
+              {
+                "height": 16.864393650444978,
+                "variation": 0.008746695579336716,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.74451032252645,
+            "benches": [
+              {
+                "height": 9.724108661411266,
+                "variation": 0.002082456619284301,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.71430403525177,
+                "variation": 0.21138409430573546,
+                "widthMeters": 32
+              },
+              {
+                "height": 16.799174074525002,
+                "variation": 0.31286030955932276,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.753903172408705,
+            "benches": [
+              {
+                "height": 9.726192600010911,
+                "variation": 0.001350715917341816,
+                "widthMeters": 10
+              },
+              {
+                "height": 24.624580573362632,
+                "variation": 0.09371061438756101,
+                "widthMeters": 46
+              },
+              {
+                "height": 16.756724822653084,
+                "variation": 0.008171973061251947,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.647932969710435,
+            "benches": [
+              {
+                "height": 9.738824432173253,
+                "variation": 0.019180657060228867,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.676311683994957,
+                "variation": 0.06332445628950722,
+                "widthMeters": 56
+              },
+              {
+                "height": 16.78924521659574,
+                "variation": 0.2770221980022356,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.63071803721099,
+            "benches": [
+              {
+                "height": 9.761465212546351,
+                "variation": 0.004742049437604479,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.73739508913048,
+                "variation": 0.2512212408006178,
+                "widthMeters": 20
+              },
+              {
+                "height": 16.7829964795907,
+                "variation": 0.0014828846843215615,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.756104522154732,
+            "benches": [
+              {
+                "height": 9.786541638532107,
+                "variation": 0.13185636443438753,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.786187666282217,
+                "variation": 0.01011085699785852,
+                "widthMeters": 20
+              },
+              {
+                "height": 16.762612240144108,
+                "variation": 0.017780839671761584,
+                "widthMeters": 36
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 26.99350216804261,
+        "cliffEdgeSampleCount": 695,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 26960,
+        "pillarReliefMeters": [
+          24.701698551128104,
+          24.449286380502674,
+          23.102108128002516,
+          22.486621891237412,
+          26.94901977809245,
+          24.37076154391021,
+          21.13726731676774
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 15.784025047812847,
+        "dunesTransectReliefMeters": 8.352935986262363,
+        "lakeWetAreaSquareMeters": 2640,
+        "valleyFlankReliefMeters": 16.11462402671807,
+        "waterfallBedDropMeters": 8.160083245608119,
+        "wetlandHeightAboveLakeMeters": 0.527716064983748,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 102,
+          "wetSamples": 102,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 300,
+          "wetSamples": 300,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 57,
+          "wetSamples": 57,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 641,
+          "wetSamples": 641,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 3590144,
+        "gentleLowlandAreaSquareMetres": 3344384,
+        "gentleLowlandFraction": 0.9315459212778094,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 26509,
+            "usableAreaSquareMetres": 1510784,
+            "minimum": 0.9730783490034272,
+            "maximum": 93.62967822735122,
+            "actualReliefMetres": 92.65659987834779
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 29587,
+            "usableAreaSquareMetres": 1833600,
+            "minimum": 0.9811448298967782,
+            "maximum": 15.046006701542785,
+            "actualReliefMetres": 14.064861871646007
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 16283,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": 382,
+          "z": -730,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.04120390978134837,
+          "minimumDryClearanceMetres": 10.420833487877479,
+          "apronReliefMetres": 0.16571775583120463,
+          "maximumClosedDepressionMetres": 0.008793083547990577,
+          "maximumMeanRiseAt4Metres": 0.07132553209162529,
+          "maximumMeanRiseAt8Metres": 0.15336950198421695
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": 376.44177840549554,
+          "bankZ": -731.5956408530184,
+          "sourceX": 369.51357517522,
+          "sourceZ": -727.5956408530184,
+          "bankDistanceMetres": 5.782724014289194,
+          "surveyedDryCells": 6403
+        },
+        "beauty": 65.79217685442026,
+        "comparableMean": 39.01086093230701,
+        "dryLandMean": 38.87559130421928,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": 382,
+            "z": -730,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": -992,
+            "z": 968,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 928,
+            "z": 988,
+            "dry": true
+          },
+          {
+            "team": 4,
+            "x": -992,
+            "z": -952,
+            "dry": true
+          },
+          {
+            "team": 5,
+            "x": -772,
+            "z": 8,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 18912,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 2,
+        "minimumDifference": 0.2238586156111929,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.2238586156111929
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 1713798.6328125,
+            "centroid": {
+              "x": 163.99504475549384,
+              "z": -596.6030574093334
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 1909898.046875,
+            "centroid": {
+              "x": -167.59911783640393,
+              "z": 538.7837791858215
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 1497292.2182586868,
+          "largestConnectedAreaSquareMeters": 1496006.1302681994
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 291227.4805126173,
+          "largestConnectedAreaSquareMeters": 291227.4805126173
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 484712.2737481834,
+          "largestConnectedAreaSquareMeters": 484712.2737481834
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 114604.72981899854,
+          "largestConnectedAreaSquareMeters": 114604.72981899854
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 108317.1885321707,
+          "largestConnectedAreaSquareMeters": 108317.1885321707
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 318664.02430968423,
+          "largestConnectedAreaSquareMeters": 318664.02430968423
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 493143.2950191571,
+          "largestConnectedAreaSquareMeters": 493143.2950191571
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 291084.58184700756,
+          "largestConnectedAreaSquareMeters": 291084.58184700756
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.4328307468634547,
+      "terrainSha256": "f6569ef1d54eb593916e37cfaf74d6985a1f869c29f8f3be42fab4c3acdd912d"
+    },
+    {
+      "seed": 29,
+      "size": 1560,
+      "layout": "random",
+      "holdout": false,
+      "issues": [],
+      "generation": {
+        "attempt": 0,
+        "terrainSeed": 29,
+        "rejectedReasons": []
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.3026324851292608,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 79.41520306524716,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 27.538686151491945,
+        "canyonSections": [
+          {
+            "depthMeters": 27.655830195814264,
+            "benches": [
+              {
+                "height": 9.72635949860964,
+                "variation": 0.31619174731519983,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.6152762355149,
+                "variation": 0.14870176545313996,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.695209732022768,
+                "variation": 0.0056959088372181554,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.633551872183002,
+            "benches": [
+              {
+                "height": 9.72880268404598,
+                "variation": 0.04241725025833887,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.693551870841898,
+                "variation": 0.3625691237238158,
+                "widthMeters": 30
+              },
+              {
+                "height": 16.689634082574553,
+                "variation": 0.01476372255128311,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.589123561187787,
+            "benches": [
+              {
+                "height": 9.725250460321027,
+                "variation": 0.1344621572218312,
+                "widthMeters": 32
+              },
+              {
+                "height": 24.630643273436192,
+                "variation": 0.4661328317395004,
+                "widthMeters": 38
+              },
+              {
+                "height": 16.703648855178223,
+                "variation": 0.46228137252879264,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.905226862608565,
+            "benches": [
+              {
+                "height": 9.73330459057291,
+                "variation": 0.2344142626088903,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.6178740528715,
+                "variation": 0.40708037734946956,
+                "widthMeters": 38
+              },
+              {
+                "height": 16.84529845861705,
+                "variation": 0.1413236684330279,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.538686151491945,
+            "benches": [
+              {
+                "height": 9.712607041994737,
+                "variation": 0.09479988935492045,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.590373533519333,
+                "variation": 0.21094122248425862,
+                "widthMeters": 22
+              },
+              {
+                "height": 16.849637575080926,
+                "variation": 0.29996325005997804,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.669796560681196,
+            "benches": [
+              {
+                "height": 9.720951407222556,
+                "variation": 0.08865798165991556,
+                "widthMeters": 20
+              },
+              {
+                "height": 24.60172639383912,
+                "variation": 0.14021949146155777,
+                "widthMeters": 14
+              },
+              {
+                "height": 16.850062666983124,
+                "variation": 0.011810393760995908,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.4587920880989,
+            "benches": [
+              {
+                "height": 9.787557885386978,
+                "variation": 0.07098605753617448,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.66857139132902,
+                "variation": 0.07409255003713255,
+                "widthMeters": 26
+              },
+              {
+                "height": 16.84767620626445,
+                "variation": 0.0073543042770012335,
+                "widthMeters": 18
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 26.303419326393577,
+        "cliffEdgeSampleCount": 642,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 18720,
+        "pillarReliefMeters": [
+          22.456069736253887,
+          22.581834326351863,
+          25.39183513837111,
+          20.47836821977078,
+          22.947465253387584,
+          24.428468587912306,
+          20.316342168686454
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 13.76024026300604,
+        "dunesTransectReliefMeters": 9.434858508072718,
+        "lakeWetAreaSquareMeters": 2688,
+        "valleyFlankReliefMeters": 14.890455236620337,
+        "waterfallBedDropMeters": 8.257050331897267,
+        "wetlandHeightAboveLakeMeters": 0.5306872401120959,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 92,
+          "wetSamples": 92,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 192,
+          "wetSamples": 192,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 51,
+          "wetSamples": 51,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 442,
+          "wetSamples": 442,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 1995008,
+        "gentleLowlandAreaSquareMetres": 1788288,
+        "gentleLowlandFraction": 0.896381367894264,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 15179,
+            "usableAreaSquareMetres": 818752,
+            "minimum": 0.9782723298439555,
+            "maximum": 90.73408050537108,
+            "actualReliefMetres": 89.75580817552712
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 15993,
+            "usableAreaSquareMetres": 969536,
+            "minimum": 0.9720714032649451,
+            "maximum": 15.64609100635235,
+            "actualReliefMetres": 14.674019603087405
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 6499,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -570,
+          "z": -232,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.1186740432821095,
+          "minimumDryClearanceMetres": 10.818289334223818,
+          "apronReliefMetres": 1.133443025442272,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.11039307282158328,
+          "maximumMeanRiseAt8Metres": 0.20018523378537323
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -578.5003237559115,
+          "bankZ": -231.38601555443023,
+          "sourceX": -578.5003237559115,
+          "sourceZ": -263.38601555443023,
+          "bankDistanceMetres": 8.522469175932228,
+          "surveyedDryCells": 5876
+        },
+        "beauty": 71.63363644507635,
+        "comparableMean": 43.535917524891985,
+        "dryLandMean": 43.05463201459732,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -570,
+            "z": -232,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 728,
+            "z": 728,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 728,
+            "z": -712,
+            "dry": true
+          },
+          {
+            "team": 4,
+            "x": -692,
+            "z": 728,
+            "dry": true
+          },
+          {
+            "team": 5,
+            "x": 308,
+            "z": 8,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 7974,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 2,
+        "minimumDifference": 0.15555555555555556,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.15555555555555556
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 985035.64453125,
+            "centroid": {
+              "x": -422.1301991706459,
+              "z": -147.40296452207417
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 1036214.2578125,
+            "centroid": {
+              "x": 413.4349815245437,
+              "z": 144.54142842353394
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 952992,
+          "largestConnectedAreaSquareMeters": 951120
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 137808,
+          "largestConnectedAreaSquareMeters": 137808
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 65808,
+          "largestConnectedAreaSquareMeters": 65808
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 111888,
+          "largestConnectedAreaSquareMeters": 111888
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 75888,
+          "largestConnectedAreaSquareMeters": 75888
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 155376,
+          "largestConnectedAreaSquareMeters": 155376
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 336096,
+          "largestConnectedAreaSquareMeters": 336096
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 168192,
+          "largestConnectedAreaSquareMeters": 168192
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.2686206937619913,
+      "terrainSha256": "1f60c385c03eed7b6260df70a580a31b06ad15d850f4b7107a78eb0e9c0125b4"
+    },
+    {
+      "seed": 20261102,
+      "size": 1560,
+      "layout": "archipelago",
+      "holdout": true,
+      "issues": [],
+      "generation": {
+        "attempt": 1,
+        "terrainSeed": 1946949416,
+        "rejectedReasons": [
+          "V16 final coast too similar: 0.13352685050798263"
+        ]
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.30266726765885454,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 81.32840633020068,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 26.98238911153394,
+        "canyonSections": [
+          {
+            "depthMeters": 27.19621886614121,
+            "benches": [
+              {
+                "height": 9.631537624761759,
+                "variation": 0.31451122430766,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.698800439909654,
+                "variation": 0.28915461670682774,
+                "widthMeters": 26
+              },
+              {
+                "height": 16.750255997987093,
+                "variation": 0.008010988905034822,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.49406666146111,
+            "benches": [
+              {
+                "height": 9.603248820626954,
+                "variation": 0.04936362024470675,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.689261835656882,
+                "variation": 0.6486690868319016,
+                "widthMeters": 54
+              },
+              {
+                "height": 16.742245924801484,
+                "variation": 0.0014044606890557532,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.745558617789598,
+            "benches": [
+              {
+                "height": 9.639911452626457,
+                "variation": 0.028697424364921176,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.634517269437627,
+                "variation": 0.07089502337746012,
+                "widthMeters": 30
+              },
+              {
+                "height": 16.7655043261933,
+                "variation": 0.025494589813952473,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.660020931403313,
+            "benches": [
+              {
+                "height": 9.637834804625268,
+                "variation": 0.2600891542910091,
+                "widthMeters": 40
+              },
+              {
+                "height": 24.72367354324619,
+                "variation": 0.03669248277202897,
+                "widthMeters": 24
+              },
+              {
+                "height": 16.712044896388562,
+                "variation": 0.02368859478548302,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.642214305823465,
+            "benches": [
+              {
+                "height": 9.6748014279478,
+                "variation": 0.03614072493928866,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.657089377437106,
+                "variation": 0.10487811757209542,
+                "widthMeters": 58
+              },
+              {
+                "height": 16.761790504001016,
+                "variation": 0.07029993099780896,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.98238911153394,
+            "benches": [
+              {
+                "height": 9.70863113985847,
+                "variation": 0.04135706034130315,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.6414707251321,
+                "variation": 0.3781934244199192,
+                "widthMeters": 20
+              },
+              {
+                "height": 16.791542158660672,
+                "variation": 0.08187460165543925,
+                "widthMeters": 32
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.698244003606465,
+            "benches": [
+              {
+                "height": 9.778259245325634,
+                "variation": 0.185133780574386,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.73772605717147,
+                "variation": 0.12943956761656494,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.772670905618973,
+                "variation": 0.6959660021304543,
+                "widthMeters": 38
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 27.57634015591919,
+        "cliffEdgeSampleCount": 624,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 15728,
+        "pillarReliefMeters": [
+          24.579857365952083,
+          23.518532877936718,
+          26.77484906527576,
+          24.389114195023307,
+          26.092654883601814,
+          26.443129165439274,
+          25.56156645423037
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 16.088696674631297,
+        "dunesTransectReliefMeters": 9.929602586498746,
+        "lakeWetAreaSquareMeters": 2672,
+        "valleyFlankReliefMeters": 15.456029533749652,
+        "waterfallBedDropMeters": 8.464017693431021,
+        "wetlandHeightAboveLakeMeters": 0.5498658390202387,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 89,
+          "wetSamples": 89,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 169,
+          "wetSamples": 169,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 50,
+          "wetSamples": 50,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-0-brook",
+          "samples": 104,
+          "wetSamples": 104,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "ordinary-2-brook",
+          "samples": 100,
+          "wetSamples": 100,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 812288,
+        "gentleLowlandAreaSquareMetres": 587264,
+        "gentleLowlandFraction": 0.7229751024267255,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 4608,
+            "usableAreaSquareMetres": 145344,
+            "minimum": 0.9714404546297628,
+            "maximum": 91.12558229886568,
+            "actualReliefMetres": 90.15414184423592
+          },
+          {
+            "index": 1,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 2696,
+            "usableAreaSquareMetres": 146368,
+            "minimum": 0.9714158745911987,
+            "maximum": 14.559887445889988,
+            "actualReliefMetres": 13.58847157129879
+          },
+          {
+            "index": 2,
+            "style": "rugged",
+            "dramatic": false,
+            "samples": 2319,
+            "usableAreaSquareMetres": 123328,
+            "minimum": 0.9858318888223772,
+            "maximum": 12.263640887920673,
+            "actualReliefMetres": 11.277808999098296
+          },
+          {
+            "index": 3,
+            "style": "ordinary",
+            "dramatic": false,
+            "samples": 3069,
+            "usableAreaSquareMetres": 172224,
+            "minimum": 0.9878745707182126,
+            "maximum": 13.2705788392287,
+            "actualReliefMetres": 12.282704268510487
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 5354,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -204,
+          "z": -86,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.18190300912228213,
+          "minimumDryClearanceMetres": 10.89774746821476,
+          "apronReliefMetres": 1.1465223018939774,
+          "maximumClosedDepressionMetres": 0,
+          "maximumMeanRiseAt4Metres": 0.07148950608595661,
+          "maximumMeanRiseAt8Metres": -0.027024699608893643
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -204.33709743039503,
+          "bankZ": -79.51335148080278,
+          "sourceX": -204.33709743039503,
+          "sourceZ": -55.51335148080279,
+          "bankDistanceMetres": 6.495401734241106,
+          "surveyedDryCells": 4056
+        },
+        "beauty": 76.9090909090909,
+        "comparableMean": 60.057474219760984,
+        "dryLandMean": 56.52935820891251,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -204,
+            "z": -86,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 408,
+            "z": -552,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": 428,
+            "z": 468,
+            "dry": true
+          },
+          {
+            "team": 4,
+            "x": -512,
+            "z": 508,
+            "dry": true
+          },
+          {
+            "team": 5,
+            "x": 448,
+            "z": -32,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 5953,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 4,
+        "minimumDifference": 0.1776859504132231,
+        "pairs": [
+          {
+            "a": 0,
+            "b": 1,
+            "difference": 0.3808724832214765
+          },
+          {
+            "a": 0,
+            "b": 2,
+            "difference": 0.24235294117647055
+          },
+          {
+            "a": 1,
+            "b": 2,
+            "difference": 0.3872590108968986
+          },
+          {
+            "a": 0,
+            "b": 3,
+            "difference": 0.26608187134502925
+          },
+          {
+            "a": 1,
+            "b": 3,
+            "difference": 0.1776859504132231
+          },
+          {
+            "a": 2,
+            "b": 3,
+            "difference": 0.28848015488867373
+          }
+        ],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 198971.09375,
+            "centroid": {
+              "x": 365.55389951061716,
+              "z": -280.5894886363636
+            }
+          },
+          {
+            "id": 1,
+            "areaSquareMeters": 303011.71875,
+            "centroid": {
+              "x": -202.50102124183002,
+              "z": -162.45132080610017
+            }
+          },
+          {
+            "id": 2,
+            "areaSquareMeters": 150598.14453125,
+            "centroid": {
+              "x": -397.89527397260275,
+              "z": 374.4494178082193
+            }
+          },
+          {
+            "id": 3,
+            "areaSquareMeters": 174743.359375,
+            "centroid": {
+              "x": 208.93136687759738,
+              "z": 368.15312736116357
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 37440,
+          "largestConnectedAreaSquareMeters": 36720
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 174096,
+          "largestConnectedAreaSquareMeters": 174096
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 31680,
+          "largestConnectedAreaSquareMeters": 31680
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 34704,
+          "largestConnectedAreaSquareMeters": 34704
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 46368,
+          "largestConnectedAreaSquareMeters": 46368
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 74304,
+          "largestConnectedAreaSquareMeters": 74304
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 80352,
+          "largestConnectedAreaSquareMeters": 80352
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 342432,
+          "largestConnectedAreaSquareMeters": 149616
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.206984569604892,
+      "terrainSha256": "8d62eedcd3aee17e1064f708d6a235ba702ec697356a3e77e91ed078b83a7331"
+    },
+    {
+      "seed": -932481187,
+      "size": 1040,
+      "layout": "pangaea",
+      "holdout": true,
+      "issues": [],
+      "generation": {
+        "attempt": 0,
+        "terrainSeed": -932481187,
+        "rejectedReasons": []
+      },
+      "geometry": {
+        "uplandApproachMaxGrade": 0.24151523651792484,
+        "uplandApproachGentleTargetMet": true,
+        "mountainProminenceMeters": 77.12252566130638,
+        "summitCount": 3,
+        "canyonMedianDepthMeters": 26.62128661812549,
+        "canyonSections": [
+          {
+            "depthMeters": 26.62128661812549,
+            "benches": [
+              {
+                "height": 9.769523684911922,
+                "variation": 0.15774047662764623,
+                "widthMeters": 18
+              },
+              {
+                "height": 24.769490091132855,
+                "variation": 0.06095675529531874,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.61761558891474,
+                "variation": 0.02097567990919913,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 25.778612953775255,
+            "benches": [
+              {
+                "height": 9.725965146921274,
+                "variation": 0.11996262699804028,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.69702785012809,
+                "variation": 0.5997111530930503,
+                "widthMeters": 50
+              },
+              {
+                "height": 16.612049211419198,
+                "variation": 0.020983476095018716,
+                "widthMeters": 14
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.63496079179219,
+            "benches": [
+              {
+                "height": 9.735157288847715,
+                "variation": 0.08825180043514003,
+                "widthMeters": 16
+              },
+              {
+                "height": 24.72270797425737,
+                "variation": 0.15522568010423043,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.620193813180396,
+                "variation": 0.14697248567446408,
+                "widthMeters": 12
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.720697885502897,
+            "benches": [
+              {
+                "height": 9.745118482642184,
+                "variation": 0.03519295649059906,
+                "widthMeters": 36
+              },
+              {
+                "height": 24.77256276410874,
+                "variation": 0.04178499347335318,
+                "widthMeters": 26
+              },
+              {
+                "height": 16.719304302387176,
+                "variation": 0.2875271615708357,
+                "widthMeters": 10
+              }
+            ]
+          },
+          {
+            "depthMeters": 24.71047557551724,
+            "benches": [
+              {
+                "height": 9.763759048317425,
+                "variation": 0.02071590632892395,
+                "widthMeters": 14
+              },
+              {
+                "height": 24.762113699748248,
+                "variation": 0.36501194572311135,
+                "widthMeters": 48
+              },
+              {
+                "height": 16.73471472985032,
+                "variation": 0.003938086985694866,
+                "widthMeters": 8
+              }
+            ]
+          },
+          {
+            "depthMeters": 26.736066700295442,
+            "benches": [
+              {
+                "height": 9.760186728341441,
+                "variation": 0.015223850308496267,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.729029920260018,
+                "variation": 0.8325852003214749,
+                "widthMeters": 28
+              },
+              {
+                "height": 16.761637475537395,
+                "variation": 0.47704427841206964,
+                "widthMeters": 36
+              }
+            ]
+          },
+          {
+            "depthMeters": 27.614521825422376,
+            "benches": [
+              {
+                "height": 9.719706290030311,
+                "variation": 0.011865448948515933,
+                "widthMeters": 12
+              },
+              {
+                "height": 24.676552491817194,
+                "variation": 0.03315059638702067,
+                "widthMeters": 18
+              },
+              {
+                "height": 16.76803223988219,
+                "variation": 0.08033057034773705,
+                "widthMeters": 28
+              }
+            ]
+          }
+        ],
+        "cliffMaxRiseOver16Meters": 28.467349420455424,
+        "cliffEdgeSampleCount": 634,
+        "terraceBenchCount": 3,
+        "plateauHighAreaSquareMeters": 16000,
+        "pillarReliefMeters": [
+          26.96702101205787,
+          22.885355351897207,
+          25.1369929989825,
+          23.978895369631818,
+          23.497583047664016,
+          22.58591519261131,
+          24.346885925654558
+        ],
+        "pillarCount": 7,
+        "hillsTransectReliefMeters": 14.948307290176533,
+        "dunesTransectReliefMeters": 9.799683549104905,
+        "lakeWetAreaSquareMeters": 2688,
+        "valleyFlankReliefMeters": 16.805470777837783,
+        "waterfallBedDropMeters": 7.82305058451317,
+        "wetlandHeightAboveLakeMeters": 0.44823196253823205,
+        "waterfallDropMeters": 9.43
+      },
+      "riverCourses": [
+        {
+          "id": "upper-river",
+          "samples": 88,
+          "wetSamples": 88,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "lower-river",
+          "samples": 194,
+          "wetSamples": 194,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        },
+        {
+          "id": "tributary",
+          "samples": 48,
+          "wetSamples": 48,
+          "wetFraction": 1,
+          "maximumDryCenterlineRunMetres": 0,
+          "uphillSurfaceSegments": 0
+        }
+      ],
+      "drainageConnections": {
+        "tributaryToUpperMetres": 0,
+        "upperToFallMetres": 0,
+        "fallToLowerMetres": 0
+      },
+      "ordinaryAndDramatic": {
+        "sampleStepMetres": 8,
+        "dryAreaSquareMetres": 748416,
+        "gentleLowlandAreaSquareMetres": 612928,
+        "gentleLowlandFraction": 0.818966991619634,
+        "regions": [
+          {
+            "index": 0,
+            "style": "headland-bay",
+            "dramatic": true,
+            "samples": 11694,
+            "usableAreaSquareMetres": 612928,
+            "minimum": 0.9780989041695224,
+            "maximum": 87.69671360896179,
+            "actualReliefMetres": 86.71861470479226
+          }
+        ]
+      },
+      "treeRoots": {
+        "trees": 2402,
+        "dryTreeRootFailures": 0,
+        "localCornerHighWaterFailures": 0
+      },
+      "opening": {
+        "home": {
+          "x": -168,
+          "z": 228,
+          "team": 0
+        },
+        "survey": {
+          "valid": true,
+          "maximumGrade": 0.1635992628368123,
+          "minimumDryClearanceMetres": 10.395226393479568,
+          "apronReliefMetres": 0.2003274184006898,
+          "maximumClosedDepressionMetres": 0.004410326050438229,
+          "maximumMeanRiseAt4Metres": 0.07049393363264234,
+          "maximumMeanRiseAt8Metres": 0.11107683568657423
+        },
+        "people": 5,
+        "actualOffsetsDryConnected": true,
+        "waterIssue": null,
+        "bank": {
+          "bankX": -164.5275901638118,
+          "bankZ": 224.0310961440408,
+          "sourceX": -160.5275901638118,
+          "sourceZ": 217.1028929137653,
+          "bankDistanceMetres": 5.273502430861723,
+          "surveyedDryCells": 3641
+        },
+        "beauty": 74.70115995259755,
+        "comparableMean": 57.83230828889719,
+        "dryLandMean": 55.640374008889594,
+        "playerAboveComparableMean": true,
+        "campTownhallDryFoundations": [
+          {
+            "team": 0,
+            "x": -168,
+            "z": 228,
+            "dry": true
+          },
+          {
+            "team": 1,
+            "x": 468,
+            "z": 468,
+            "dry": true
+          },
+          {
+            "team": 2,
+            "x": -472,
+            "z": -312,
+            "dry": true
+          }
+        ]
+      },
+      "resourceHeightAlignment": {
+        "nodes": 2945,
+        "maximumAbsoluteDeltaMetres": 0
+      },
+      "coasts": {
+        "version": 1,
+        "substantialLandmassCount": 1,
+        "minimumDifference": null,
+        "pairs": [],
+        "landmasses": [
+          {
+            "id": 0,
+            "areaSquareMeters": 760466.9921875,
+            "centroid": {
+              "x": -45.711280329007366,
+              "z": 147.69865092885982
+            }
+          }
+        ]
+      },
+      "ecology": [
+        {
+          "kind": "meadow",
+          "areaSquareMeters": 48299.748976086674,
+          "largestConnectedAreaSquareMeters": 48299.748976086674
+        },
+        {
+          "kind": "mixed-woodland",
+          "areaSquareMeters": 26579.15180340864,
+          "largestConnectedAreaSquareMeters": 26579.15180340864
+        },
+        {
+          "kind": "conifer-forest",
+          "areaSquareMeters": 50443.228960232525,
+          "largestConnectedAreaSquareMeters": 50443.228960232525
+        },
+        {
+          "kind": "alpine",
+          "areaSquareMeters": 259075.2807504294,
+          "largestConnectedAreaSquareMeters": 259075.2807504294
+        },
+        {
+          "kind": "wetland",
+          "areaSquareMeters": 28436.83445633505,
+          "largestConnectedAreaSquareMeters": 28008.13845950588
+        },
+        {
+          "kind": "dry-scrub",
+          "areaSquareMeters": 100029.06592680671,
+          "largestConnectedAreaSquareMeters": 98314.28193949003
+        },
+        {
+          "kind": "arid",
+          "areaSquareMeters": 168191.729422645,
+          "largestConnectedAreaSquareMeters": 168191.729422645
+        },
+        {
+          "kind": "warm-coast",
+          "areaSquareMeters": 71735.13013608138,
+          "largestConnectedAreaSquareMeters": 71735.13013608138
+        }
+      ],
+      "dryChannelMaximumCrossSectionDepthMetres": 1.358060199814211,
+      "terrainSha256": "086f4040ae2d8b675fd2877f865b858c10e2e6d520afcb0bc7de147163f75572"
+    }
+  ],
+  "completed": true,
+  "fullyPassingCases": 10
+}

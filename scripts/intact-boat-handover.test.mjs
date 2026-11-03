@@ -164,29 +164,30 @@ test("local paid moored boat and complete resident crew surrender intact before 
   g.state.paused = true;
   const result = integrateOccupiedVillage(g, control.id);
   assert.equal(result.accepted, true, result.reason);
+  const currentBoat=g.state.boats.find(b=>b.id===boat.id),currentCaptain=g.state.units.find(u=>u.id===captain.id);
   assert.doesNotThrow(() => decodeGame(structuredClone(encodeGame(g))));
-  assert.equal(boat.team, 1);
-  assert.equal(captain.team, 1);
-  assert.equal(captain.boat.id, boat.id);
-  assert.equal(boat.hp, before.boat.hp);
-  assert.equal(boat.x, before.boat.x);
-  assert.equal(boat.z, before.boat.z);
-  assert.equal(captain.hp, before.person.hp);
-  assert.equal(captain.carry, 5);
-  assert.equal(captain.carryType, "wood");
-  assert.equal(captain.waterCargoEvidence, undefined);
+  assert.equal(currentBoat.team, 1);
+  assert.equal(currentCaptain.team, 1);
+  assert.equal(currentCaptain.boat.id, currentBoat.id);
+  assert.equal(currentBoat.hp, before.boat.hp);
+  assert.equal(currentBoat.x, before.boat.x);
+  assert.equal(currentBoat.z, before.boat.z);
+  assert.equal(currentCaptain.hp, before.person.hp);
+  assert.equal(currentCaptain.carry, 5);
+  assert.equal(currentCaptain.carryType, "wood");
+  assert.equal(currentCaptain.waterCargoEvidence.team,1);assert.equal(currentCaptain.waterCargoEvidence.originTeam,0);assert.ok(currentCaptain.waterCargoEvidence.waterMeters>=25);
   assert.equal(g.tribe(1).boatPractice?.deliveredGoods ?? 0, 0);
   assert.equal(g.state.units.length, before.count);
   reports.push({
     case: "local complete moored crew",
-    boatId: boat.id,
-    captainId: captain.id,
+    boatId: currentBoat.id,
+    captainId: currentCaptain.id,
     paidWood: 40,
     paidStone: 4,
-    hullHealthRetained: boat.hp,
-    cargoRetained: captain.carry,
-    boatAndCrewTeam: boat.team,
-    priorOwnerWaterEvidenceCleared: captain.waterCargoEvidence === undefined,
+    hullHealthRetained: currentBoat.hp,
+    cargoRetained: currentCaptain.carry,
+    boatAndCrewTeam: currentBoat.team,
+    actualWaterEvidenceRetained: currentCaptain.waterCargoEvidence.waterMeters,
     elapsedSeconds: g.state.time,
   });
   assert.doesNotThrow(() => decodeGame(structuredClone(encodeGame(g))));
@@ -231,7 +232,7 @@ test("a real crew sailing away stays with its original paid hull when its home v
   assert.equal(boat.hp, before.hp);
   assert.equal(captain.carry, before.carry);
   assert.equal(captain.waterCargoEvidence.waterMeters, before.meters);
-  assert.equal(people[3].team, 1, "actual ashore residents joined locally");
+  assert.equal(g.state.units.find(u=>u.id===people[3].id).team, 1, "actual ashore residents joined locally");
   reports.push({case:"distant sailing crew",boatId:boat.id,captainId:captain.id,retainedOriginalTeam:boat.team,cargoRetained:captain.carry,actualWaterMeters:captain.waterCargoEvidence.waterMeters,elapsedSeconds:g.state.time});
   assert.doesNotThrow(() => decodeGame(structuredClone(encodeGame(g))));
 });
@@ -248,7 +249,7 @@ test("a local moored mixed surrender cohort retains the complete original hull a
     assert.equal(u.team, 0);
     assert.equal(u.boat.id, boat.id);
   }
-  assert.equal(people[2].team, 1);
+  assert.equal(g.state.units.find(u=>u.id===people[2].id).team, 1);
   assert.equal(people[1].carry, 5);
   reports.push({
     case: "mixed local crew",

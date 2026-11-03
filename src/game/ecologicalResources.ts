@@ -1,11 +1,11 @@
 import {mulberry32} from './rng';
-import {dryTreeRoot} from './hydrology';
+import {dryTreeRoot,dryTreeRootLocal} from './hydrology';
 import {waterSurfaceAt} from './localWater';
 import {provinceAt,PROVINCE_KINDS,PROVINCE_PROFILES,type EcologicalProvinceGrid} from './ecologicalProvinces';
 import type {ResourceNode} from './types';
 export const ECOLOGICAL_RESOURCE_RULES={forageAreaSquareMeters:2200,stoneAreaSquareMeters:5500,oreAreaSquareMeters:18000,protectedCampRadiusMeters:64,maximumPlacementAttemptsPerNode:90} as const;
 type ResourceWorld={size:number;waterY:number;baseWaterY:number;waterHeights?:Float32Array;ecology:EcologicalProvinceGrid;camps:{x:number;z:number;team:number}[];dockSites:{x:number;z:number}[];trees:ResourceNode[];forage:ResourceNode[];stones:ResourceNode[];copper:ResourceNode[];iron:ResourceNode[]};
-export function populateEcologicalResources(world:ResourceWorld,seed:number,height:(x:number,z:number)=>number,nextId:number){
+export function populateEcologicalResources(world:ResourceWorld,seed:number,height:(x:number,z:number)=>number,nextId:number,localWater?:((x:number,z:number)=>number)){
  const rules=ECOLOGICAL_RESOURCE_RULES,rand=mulberry32(seed^0x73ab138),grid=world.ecology;
  const cells=PROVINCE_KINDS.map(()=>[] as number[]);for(let id=0;id<grid.kinds.length;id++)if(grid.kinds[id]<8)cells[grid.kinds[id]].push(id);
  const nearCamp=(x:number,z:number,r:number=rules.protectedCampRadiusMeters)=>world.camps.some(c=>Math.hypot(c.x-x,c.z-z)<r);
@@ -32,10 +32,10 @@ export function populateEcologicalResources(world:ResourceWorld,seed:number,heig
     const id=cells[owner][Math.floor(rand()*cells[owner].length)];if(id===undefined)break;
     const x=(id%grid.width+.5)*grid.cellMeters-world.size/2+(rand()-.5)*grid.cellMeters,z=(Math.floor(id/grid.width)+.5)*grid.cellMeters-world.size/2+(rand()-.5)*grid.cellMeters;
     if(provinceAt(grid,x,z).kind!==key||nearCamp(x,z,14)||world.dockSites.some(s=>Math.hypot(s.x-x,s.z-z)<8)||crowded(x,z))continue;
-    const y=height(x,z),water=waterSurfaceAt(world,x,z);if(y<water+.85)continue;
+    const y=height(x,z),water=localWater?localWater(x,z):waterSurfaceAt(world,x,z);if(y<water+.85)continue;
     const grade=Math.max(Math.abs(height(x+2,z)-height(x-2,z)),Math.abs(height(x,z+2)-height(x,z-2)))/4;
     if(grade>(kind==='tree'||kind==='forage'?.6:1.1))continue;
-    if(kind==='tree'&&!dryTreeRoot(height,x,z,water))continue;
+    if(kind==='tree'&&!(localWater?dryTreeRootLocal(height,localWater,x,z):dryTreeRoot(height,x,z,water)))continue;
     const amount=kind==='tree'?(key==='alpine'||key==='arid'||key==='dry-scrub'?10+Math.floor(rand()*12):36+Math.floor(rand()*30)):
      kind==='forage'?40+Math.floor(rand()*26):kind==='stone'?18+Math.floor(rand()*15):10+Math.floor(rand()*12);
     const node:ResourceNode={id:nextId++,kind,x,y,z,amount,maxAmt:amount,regenT:0,scale:.85+rand()*.5,rich:.85+rand()*.3};list.push(node);add(node);count++;

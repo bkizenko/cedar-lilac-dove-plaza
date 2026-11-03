@@ -85,7 +85,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
+  "threshingFloor","fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -188,6 +188,7 @@ export class WorldView {
   private excavationLayer:ExcavationLayer|null=null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
+  private synchronizedState:Game["state"]|null=null;
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
@@ -1171,6 +1172,7 @@ export class WorldView {
 
   sync(game: Game, dt: number) {
     if (this.lost || this.disposed) return;
+    if(this.synchronizedState!==game.state){this.synchronizedState=game.state;this.buildingSyncIn=0;this.biomeScene?.sync(game,this.camera.position,this.quality,1);}
     this.landContinuation?.sync(game);
     if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);

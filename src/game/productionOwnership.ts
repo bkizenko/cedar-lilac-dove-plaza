@@ -1,7 +1,7 @@
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import type{ProductionProject}from'./production';
-import{PRODUCTION_RECIPES,productionSlots,itemCapacity}from'./production';
+import{PRODUCTION_RECIPES,productionSlots,itemCapacity,cerealReservedMaterials}from'./production';
 import type{JobCoordinator}from'./jobCoordinator';
 import{workRuntime}from'./workRuntime';
 export const productionJobId=(id:number)=>`production:${id}`;
@@ -16,11 +16,11 @@ function context(g:Game,jobs?:JobCoordinator){let c=contexts.get(g);if(c?.state=
 function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{key:string;amount:number;capacity:number}[]=[];
  const b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===p.team&&g.finished(b));
  if(!['returning','unloading','stored'].includes(phase)&&b)claims.push({key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)});
- if(['stored','collecting'].includes(phase)){const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(0,itemCapacity(g,p.team)-used)});}
+ if(['stored','collecting'].includes(phase)){const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
  return claims;
 }
 /** Saved project owns goods. This runtime claims only hands and physical space. */
-export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount])]);
+export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,...(g.state.cerealProcessing?[x.capacity]:[])])]);
  if(c.claims.get(p.id)!==signature){if(!c.jobs.job(id))c.jobs.propose({id,kind:`production:${p.recipe}`,owner:p.team,actors:[],target:p.workplace});
  if(!c.jobs.amend(id,p.actorId===null?[]:[p.actorId],claims)){c.conflicts++;return false;}c.claims.set(p.id,signature);c.amendments++;c.jobs.retarget(id,p.workplace);}
  const phase=effective(p);c.jobs.transition(id,p.phase==='paused'||phase==='stored'||phase==='ready'&&p.actorId===null?'reserved':phase==='returning'||phase==='unloading'?'returning':phase==='working'||phase==='curing'?'working':'traveling',p.progress);return true;

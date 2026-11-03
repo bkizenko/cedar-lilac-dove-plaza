@@ -1,0 +1,11 @@
+# Independent annexation follow-through: seed and cereal receipts
+
+Five independent consumer tests passed on the explicitly frozen assembly (13.41 seconds). No runtime change was authored by this reviewer. The assembly contains the root's seed receipt/finish changes, copied narrowly to avoid importing the separately active inherited-knowledge implementation. Exact assembly boundaries and source hashes are in the JSON report.
+
+A native V 14 seed 345 case annexes two finite 90,000-seed stores, strictly saves/loads and delivers one real carrier's ten grain food/five seed samples through ordinary simulation. The resulting stock is 180,005 and repeats do not duplicate the receipt. The identical shortened native fixture with the old consumer gives 100,000 instead of 180,005 (negative baseline 2.68 seconds). The carrier is initially endowed at a validated natural hall frontage; its earlier gathering/walking and the initial architecture are not claimed.
+
+At the strict 1 e 12 stored-seed boundary, both sample-bearing and ordinary-grain arrivals retain their exact cargo/sample state. Existing stock and crop sample totals remain unchanged, no food/cargo delivery event is credited, and the state still strictly saves. No capacity was freed with a test-side midrun edit.
+
+Two separate genuinely paid winnowing cases begin with six finite rough-grain portions and actual labor before annexation. After save/restore with available headroom, the same batch physically delivers 3.68 edible grain, two chaff and 0.32 seeds once; no seed fraction is discarded at the old 100,000 target. At 1 e 12 seeds, actual work finishes but the same paid batch remains in its returning phase. Grain, chaff, edible-food and seed outputs receive no partial credits; no seeds are logged as lost. The paid inputs, actor and full progress persist through an immediate paused strict save and later ordinary steps.
+
+All maps retain their native heightfield; the fixtures declare initial buildings, bodies and goods, with no midrun resource/body/terrain/position repair or forced job completion. This does not qualify upstream farming, material acquisition, long-term balance, navigation, UI or performance. The root's separate combined knowledge implementation and caravan follow-through remain separate review scopes. No acceptance percentage is assigned.

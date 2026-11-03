@@ -1,3 +1,4 @@
+import{inheritedCommunityCaches,primaryCommunityHome}from'./communityCaches';
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {connectedForUnit} from './waterTravel';
@@ -14,8 +15,9 @@ export function campAnchor(g:Game,team:number):CampAnchor|null {
 export function supplyDrops(g:Game,team:number):SupplyDrop[]{
  const buildings=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&['townhall','warehouse','cornerstone'].includes(b.type));
  // A functioning hall supersedes the original camp's communal cache.
- const camp=buildings.some(b=>b.type==='townhall')?null:campAnchor(g,team);
- return camp?[...buildings,camp]:buildings;
+ const camp=primaryCommunityHome(g,team)?.kind==='camp'?campAnchor(g,team):buildings.some(b=>b.type==='townhall')?null:campAnchor(g,team);
+ const inherited=inheritedCommunityCaches(g,team).filter(p=>p.kind==='camp').map(p=>({kind:'camp' as const,team,x:p.x,y:p.y,z:p.z,radius:CAMP_RULES.deliveryRadiusMeters}));
+ return camp?[...buildings,camp,...inherited]:[...buildings,...inherited];
 }
 export function supplyApproach(g:Game,u:Unit,drop:SupplyDrop){
  if(drop.kind!=='camp')return g.interactionSpot(u,drop);

@@ -1,3 +1,4 @@
+import{inheritedHaulageEvidence}from'./inheritedKnowledge';
 import{recordWaterCargoDelivery}from'./boatPractice';
 import{BOAT_CLASSES,BOAT_PRACTICE_RULES,validHullOrder,type HullOrder}from'./boatClasses';
 import{carriedLoadFraction,burdenPace}from'./carriedLoad';
@@ -26,7 +27,7 @@ export type HaulageWork = {
 };
 /** Paid materials and progress belong to the settlement project, independently
  * of a living assignee. Unit.haulageWork remains an executor compatibility view. */
-export type HaulageProject={id:number;team:number;actorId:number|null;lastActorId?:number;work:HaulageWork;createdAt:number;inputHaulage?:'sled';blockedReason?:string};
+export type HaulageProject=import("./communityHandoverTypes").HandoverProvenance&{id:number;team:number;actorId:number|null;lastActorId?:number;work:HaulageWork;createdAt:number;inputHaulage?:'sled';blockedReason?:string};
 type ProjectState=Game['state']&{haulageProjects?:HaulageProject[]};
 const projectKey=(id:number)=>`haulage:${id}`;
 const projects=(g:Game)=>(g.state as ProjectState).haulageProjects??((g.state as ProjectState).haulageProjects=[]);
@@ -114,7 +115,7 @@ export function haulageRequirement(g: Game, kind: HaulageKind, team = 0): string
   if(kind==='pack')return 'Tame a discovered wild goat at a hearth; pack animals cannot be crafted.';
   if(kind==='canoe')return workplaces(g,team,kind).length?null:'Finish a fishing dock to carve a dugout canoe';
   if (kind !== 'cart') return null;
-  const practice = (g.tribe(team) as HaulageTribe).haulagePractice || 0;
+  const inherited=inheritedHaulageEvidence(g.state,team),practice = Math.max((g.tribe(team) as HaulageTribe).haulagePractice || 0,inherited.sledDeliveries,inherited.cartMethod?WHEEL_PRACTICE:0);
   if (practice < WHEEL_PRACTICE)
     return `First deliver ${WHEEL_PRACTICE} goods using sleds (${Math.floor(practice)} delivered). Hauling experience prepares wheel-and-axle trials.`;
   if (!workplaces(g, team, kind).length) return 'Finish a crafting shelter to shape wheels and fit an axle';

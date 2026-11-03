@@ -1,3 +1,4 @@
+import{rawCerealField,collectCerealSheaves}from'./cerealRules';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import {constructionPriority,CONSTRUCTION_QUEUE_RULES} from './constructionQueue';
 import {coastalIndependentNeeds} from './coastalTrade';
@@ -123,7 +124,14 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
     const pace = 0.8 / open;
     if (u.gatherT >= pace) {
       u.gatherT -= pace;
-      const n = Math.min(2, c.remaining);
+      const proposed = Math.min(2, c.remaining);
+      if(rawCerealField(b)){
+        const n=collectCerealSheaves(g,u,proposed,carryingCapacity(u,'food'));c.remaining-=n;
+        u.workReason='Harvesting unthreshed cereal — grain still needs threshing and winnowing';
+        if(n<proposed||Object.values(u.itemCargo||{}).reduce((a,v)=>a+(v||0),0)>=carryingCapacity(u,'food')||c.remaining===0)u.order='return';
+        return;
+      }
+      const n=proposed;
       c.remaining -= n;
       u.carry += n;
       u.carryType = "food";
@@ -378,12 +386,14 @@ export class WorkBoard {
     let taskFoodTarget: number | undefined, taskReserve: number | undefined;
     const foodTarget = () => taskFoodTarget ??= foodWorkTarget(g, u.team);
     const reserve = () => taskReserve ??= reserveSeconds(g, u.team);
+    let rawBacklog:boolean|undefined;const cerealBacklog=()=>rawBacklog??=!!((g.tribe(u.team).items?.grainSheaves||0)>=8||(g.tribe(u.team).items?.roughGrain||0)>=6||g.state.units.some(p=>p.team===u.team&&p.hp>0&&(p.itemCargo?.grainSheaves||0)>=8));
     for (const task of list) {
       if (u.team === 0 && !("type" in task.node) &&
           ("species" in task.node&&task.node.hp>0 ? !g.visibleAt(task.node.x, task.node.z) : !g.exploredAt(task.node.x, task.node.z))) continue;
       const preparingField =
         task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
       const harvestingField = task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
+      if(harvestingField&&rawCerealField(task.node as Building)&&!u.jobLock&&reserve()<240&&cerealBacklog())continue;
       const preserving = task.kind==='food' && "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
       if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodTarget())

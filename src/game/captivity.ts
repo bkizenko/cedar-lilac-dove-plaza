@@ -1,3 +1,4 @@
+import{validHandoverProvenance}from'./communityHandoverValidation';
 import{reconcileWaterCargoEvidence}from'./boatPractice';
 import{reconcilePenWater}from'./penWater';
 import {mayGuardPrisoner,invalidatePrisonerGuardQueries} from './prisonerGuardQueries';
@@ -95,7 +96,7 @@ export function finishRepatriation(g:Game,u:Unit){
 
 /** New prisoners are held in custody, not automatically assigned forced labor.
  * Existing enslavedFrom saves retain their previous meaning. */
-export type PrisonerCustody={originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
+export type PrisonerCustody={rejoinedTeam?:number;rejoinedHandoverId?:number;originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
 export type PrisonerUnit=Unit&{prisoner?:PrisonerCustody};
 export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,defenderRadiusMeters:12,superiorityRatio:2,escortSeparationMeters:8,unguardedEscapeSeconds:30,localSupplyRadiusMeters:3,foodPerSecond:.036,waterLitersPerSecond:.008,foodGraceSeconds:60,foodFatalSeconds:160,waterGraceSeconds:180,waterFatalSeconds:1800} as const;
 export const prisonerIndependentNeeds=(u:Unit)=>!!(u as PrisonerUnit).prisoner&&(u as PrisonerUnit).prisoner!.phase!=='custody';
@@ -165,11 +166,12 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
  }
  const p=u.prisoner;if(u.hp<=0)return true;
  if(p.phase==='released'){
+  const homeTeam=p.rejoinedTeam??p.originTeam;
   prisonerTravelNeeds(g,u,Math.max(0,dt));if(u.hp<=0)return true;
-  const home=g.nearestDrop(u.x,u.z,p.originTeam),spot=home?supplyApproach(g,u,home):null;
+  const home=g.nearestDrop(u.x,u.z,homeTeam),spot=home?supplyApproach(g,u,home):null;
   if(!home||!spot){u.order='hold';u.workReason='Released — no reachable home cache for return';return true;}
   if(supplyReached(g,u,home,spot)){
-   if(p.food>0)receiveFood(g,p.originTeam,p.food);const stock=g.tribe(p.originTeam).survival;if(stock)stock.waterLiters+=p.waterLiters;
+   if(p.food>0)receiveFood(g,homeTeam,p.food);const stock=g.tribe(homeTeam).survival;if(stock)stock.waterLiters+=p.waterLiters;
    p.food=0;p.waterLiters=0;u.prisoner=undefined;u.recalled=undefined;finishRepatriation(g,u);if(u.repatriating){const origin=g.tribe(u.team);origin.trust=Math.min(1,(origin.trust||0)+.15);u.repatriating=undefined;}u.order='idle';u.workReason='Released person arrived home with remaining provisions';g.workBoard.reset();return true;
   }
   u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Released — walking home with carried provisions';return true;
@@ -198,7 +200,8 @@ export function validPrisonerState(state:unknown){
  for(const person of s.units){const u=person as PrisonerUnit,p=u.prisoner;if(p===undefined)continue;
   if(!p||typeof p!=='object'||!Number.isInteger(p.originTeam)||!Number.isInteger(p.captorTeam)||p.originTeam<0||p.captorTeam<0||p.originTeam>=s.tribes.length||p.captorTeam>=s.tribes.length||p.originTeam===p.captorTeam||!['escorting','custody','released'].includes(p.phase)||p.guardId!==undefined&&(!Number.isSafeInteger(p.guardId)||p.guardId<1)||!nonnegative(p.food)||p.food>12||!nonnegative(p.waterLiters)||p.waterLiters>4||!nonnegative(p.unguardedSeconds)||u.enslavedFrom!==undefined)return false;
   if(p.originHomeHall!==undefined&&(!Number.isSafeInteger(p.originHomeHall)||p.originHomeHall<1))return false;
-  if(u.team!==(p.phase==='released'?p.originTeam:p.captorTeam))return false;
+  if(p.rejoinedTeam!==undefined||p.rejoinedHandoverId!==undefined){if(p.phase!=='released'||!Number.isSafeInteger(p.rejoinedTeam)||!validHandoverProvenance(s,{id:u.id,team:p.rejoinedTeam!,originTeam:p.originTeam,handoverId:p.rejoinedHandoverId},'residentIds'))return false;}
+  if(u.team!==(p.phase==='released'?(p.rejoinedTeam??p.originTeam):p.captorTeam))return false;
  }
  return true;
 }

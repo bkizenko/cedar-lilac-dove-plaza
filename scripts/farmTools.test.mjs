@@ -123,12 +123,13 @@ test('tool labor rates help sowing and tending but preserve seasonal and finite 
   crop(g, field);
   const harvest = field.crop.remaining, stock = g.tribe(0).food;
   for (let i = 0; i < 40; i++) farmWork(g, u, field, .1 * farmToolRate(equipped, 2));
-  assert.ok(u.carry > 0);
-  assert.equal(field.crop.remaining + u.carry, harvest);
+  assert.ok(u.itemCargo.grainSheaves > 0);
+  assert.equal(u.carry, 0, 'marked cereal harvest remains inedible before processing');
+  assert.equal(field.crop.remaining + u.itemCargo.grainSheaves / 2, harvest);
   assert.equal(g.tribe(0).food, stock, 'harvest still needs physical delivery');
-  g.state.time = 1400; const carried = u.carry;
+  g.state.time = 1400; const carried = u.itemCargo.grainSheaves;
   farmWork(g, u, field, 100 * farmToolRate(equipped, 3));
-  assert.equal(u.carry, carried, 'tools cannot farm through winter');
+  assert.equal(u.itemCargo.grainSheaves, carried, 'tools cannot farm through winter');
   assert.equal(farmToolRate({...equipped, militia: true}, 0), 1);
 });
 

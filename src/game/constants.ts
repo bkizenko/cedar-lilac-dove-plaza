@@ -62,6 +62,7 @@ export const BUILDINGS: Record<
   potter:{name:"Pottery shelter",w:4,d:4,food:0,wood:8,stone:2,pop:0,hp:200,age:0,hint:"Two shared shaping/drying slots. Shape four clay with two water in 30s instead of90 at a hearth. Covered clay drying resists rain; real pickup required."},
   kiln:{name:"Pottery kiln",w:4,d:4,food:0,wood:8,stone:8,pop:0,hp:260,age:0,hint:"Two firing slots: actual dried ware and two logs,45s instead of90s/four logs at a hearth. Fired vessels can equip water carriers; failed ware is recorded."},
   smokehouse: {name:"Smokehouse",w:4,d:4,food:0,wood:12,stone:6,pop:0,hp:240,age:0,hint:"Two staffed smoking slots. Preserve four real meat or fish with one log and 30 work seconds, instead of two logs and 60 at a hearth."},
+  threshingFloor:{name:"Threshing floor",w:6,d:6,food:0,wood:6,stone:2,pop:0,hp:160,age:0,hint:"Two real processing slots. Separate actual cereal sheaves into rough grain and straw, then winnow in dry weather. Faster than hand work at a hearth; requires delivered hand-threshing practice."},
   grindingStone: {name:"Grinding stone",w:3,d:3,food:0,wood:2,stone:6,pop:0,hp:180,age:0,hint:"Grind actual harvested grain into flour in 24 work seconds instead of 60 at a hearth. One staffed station; no passive flour."},
   oven: {name:"Stone bread oven",w:4,d:4,food:0,wood:8,stone:8,pop:0,hp:240,age:0,hint:"Bake delivered flour with real water and fuel. Two staffed batches, 24 work seconds each instead of 45 at a hearth."},
   hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook delivered raw meat with actual logs. New hunting catches then enter the raw-food processing chain."},
@@ -460,7 +461,7 @@ export const BUILD_ORDER: BldType[] = [
   "keep",
   "stables",
   "university",
-  "hearth", "grindingStone", "oven", "smokehouse","butcher","dryrack","tanner","tailor","potter","kiln","fibreWorkshop",
+  "hearth", "threshingFloor", "grindingStone", "oven", "smokehouse","butcher","dryrack","tanner","tailor","potter","kiln","fibreWorkshop",
   "cairn","grove",
 ];
 
@@ -545,7 +546,7 @@ export const AGE_CHOICES: {
 
 export const BUILD_TIME: Record<BldType, number> = {
   fibreWorkshop:14,potter:14,kiln:20,
-  smokehouse:18,grindingStone:12,oven:18,hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
+  threshingFloor:14,smokehouse:18,grindingStone:12,oven:18,hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
   palisade:12, gate:18, stonewall:24, trench:18, moat:30,
   townhall: 0,
   cornerstone: 12,

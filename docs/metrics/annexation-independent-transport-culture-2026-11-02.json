@@ -1,0 +1,100 @@
+{
+  "scope": "Independent native transport/culture handover; test-only. Not full campaign or acceptance-gate credit.",
+  "combinedCases": 6,
+  "combinedPassed": 6,
+  "combinedFailed": 0,
+  "durationMs": 29960.532333,
+  "log": "/tmp/annexation-independent-final.log",
+  "nativeTransport": {
+    "worldgen": 14,
+    "seed": 1,
+    "size": 1040,
+    "layout": "pangaea",
+    "initialDeclaredEndowment": {
+      "sourceWorkers": 4,
+      "recipientSpearmen": 8,
+      "uninvolvedSociety2Worker": 1,
+      "sourceStoredWood": 580,
+      "sourceCarriedWood": 20,
+      "sourceStone": 100,
+      "sourceCordage": 20,
+      "sourceProvisions": 2000,
+      "sourceWater": 200,
+      "recipientWood": 40,
+      "recipientStone": 10,
+      "recipientProvisions": 500,
+      "recipientWater": 100,
+      "existingArchitecture": "dock and source hall",
+      "nightWork": true
+    },
+    "realPaidHullCount": 2,
+    "woodPaidPerHull": 40,
+    "stonePaidPerHull": 4,
+    "realCrewCount": 2,
+    "actualLoadedOutboundMinimumMeters": 45,
+    "deliveredOriginalCargoLogs": 20,
+    "sameNativeTerrainAfterRestore": true,
+    "midrunResourceOrBodyGrants": false,
+    "midrunTerrainOrPositionRepairs": false,
+    "checks": [
+      "existing afloat hull/captain/crew positions and health retained",
+      "same loaded twenty logs retained",
+      "prior actual water cargo distance retained without increment at handover",
+      "recipient gets no immediate boat practice",
+      "second paused paid hull progress and ownership retained",
+      "immediate strict save before tick and native restore",
+      "same second hull completes without another debit",
+      "original two-body crew physically returns and disembarks",
+      "twenty logs delivered once, recipient practice credited only at real arrival",
+      "recipient nomadic primary home remains anchored"
+    ]
+  },
+  "nativeCulture": {
+    "worldgen": 14,
+    "seed": 345,
+    "size": 1040,
+    "layout": "pangaea",
+    "initialDeclaredEndowment": {
+      "sourceDryWare": 4,
+      "sourceWood": 40,
+      "sourceStone": 10,
+      "sourceProvisions": 500,
+      "sourceWater": 100,
+      "recipientWood": 40,
+      "recipientStone": 10,
+      "recipientProvisions": 500,
+      "recipientWater": 100,
+      "existingArchitecture": "source and recipient halls, source hearth"
+    },
+    "actualPaidFiringWood": 4,
+    "physicalOutputVesselsPlusShards": 4,
+    "originalPotteryCultureTeam": 1,
+    "checks": [
+      "source-first building array does not change recipient primary hall",
+      "real firing progresses before public annexation",
+      "current owner becomes recipient, creator culture stays original",
+      "same progress and paid batch strictly save/restore",
+      "same paid fuel/material consumption through actual output delivery",
+      "at least one actual culturally identified pottery vessel is delivered"
+    ]
+  },
+  "sourceSha256": {
+    "src/game/communityHandover.ts": "921885ec2cd5826c392fae2d57897ec210338c1b6e9942e557fa4b292db42a44",
+    "src/game/communityHandoverValidation.ts": "fdf46f2c19797879e85cb1ea201d345784b173e71fdb4515558678e6c7ad3c30",
+    "src/game/communityHandoverTypes.ts": "0f5d5895efe4d05ade9526ef2843221d46406380b2376355a0a85670b4d0e3ab",
+    "src/game/communityCaches.ts": "ef1f272f85c5e1efccd78b9ccb74205747f54471fdb97704a09c8b1d4c59345a",
+    "src/game/peace.ts": "efa643b6b3d62c713c1fdb273388036e91b56481b1e7d99b5c07c45274c01d0d",
+    "src/game/sim.ts": "f16e5e819cd9a2131393568d4ddc90cb52c8a5454e588a37ce98c22d8d216929",
+    "src/game/persistence.ts": "fe76e4ae5f07eb2ba801c0e2aed14729c7d7c62709ebd1ec45392b43d8fa471b",
+    "src/game/production.ts": "622b0b5fb11edc238849f72c019cb28e6e682cbcc2f4976af3093c21ad397153",
+    "src/game/haulage.ts": "bed8a23aab370364fa0ca83be07bdc063cf26538cd63c6941b3bc0085f60be97",
+    "src/game/boats.ts": "b34021c945cd0668141d7673fc9cbd76af239fe021bfae88f7b0f68fe013d4c4"
+  },
+  "remaining": [
+    "owner joined keeper-water/cook/prisoner group is separate",
+    "coastal mission/commission and every work phase not independently exhausted",
+    "initial resource acquisition, architecture construction and historical innovation are not claimed",
+    "numeric overflow post-draft rejection awaits final bound freeze",
+    "no UI/performance claim or release percentage"
+  ]
+}

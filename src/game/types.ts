@@ -8,7 +8,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
-  | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
+  | "threshingFloor" | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -140,7 +140,7 @@ export type Livestock = Critter & {
   thirstSeconds?:number; pregnancy: number; lactatingUntil?: number; stuckT?: number;
 };
 
-export type Unit = {
+export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   waterCargoEvidence?:import('./boatPractice').WaterCargoEvidence;
   practicalHelper?:import('./practicalHelpers').PracticalHelper;
   structureReportCargo?:import('./structureKnowledge').StructureReport[];
@@ -320,6 +320,7 @@ export type Building = {
   pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
   fallowYear?: number;
+  cerealProcessingVersion?:1;
   cropType?: CropKind;
   crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean; water?:number; kind?:CropKind };
 };
@@ -373,6 +374,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];
   animalProcessingVersion?:1;
   productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;
   basketOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
@@ -443,6 +445,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
   diplomaticReports?:import('./diplomaticKnowledge').DiplomaticReport[];
   diplomaticMessages?:import('./diplomaticKnowledge').DiplomaticMessage[];
   observedClaims?:import('./frontiers').ObservedClaim[];
@@ -462,6 +465,7 @@ export type GameState = {
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
   fibre?:import('./fibre').FibreState;
   clay?:import('./pottery').ClayState;
+  cerealProcessing?:import('./cerealRules').CerealLedger;
   production?:import('./production').ProductionState;
   campSites?:{team:number;x:number;z:number}[];
   campMove?:import('./nomadicCamp').CampMove;

@@ -20,7 +20,7 @@ import { ContourFields } from "../src/scene/contourFields.ts";
 import * as THREE from "three";
 const report = {
   scope:
-    "Controlled authored sloping farm terrain; finite initial stores and buildings; no later grants or forced completion",
+    "Legacy pre-marker authored sloping fields loaded through strict old-shaped saves; finite initial stores; not current marked cereal balance",
   stages: [],
   initial: {
     people: 3,
@@ -174,10 +174,13 @@ function gather(g, b, people = g.state.units.filter((u) => u.team === 0)) {
     status(g),
   );
 }
-function restore(g) {
+function restore(g, legacyFields = false) {
   const old = encodeGame(g),
     before = hash(g.world.heights),
-    loaded = decodeGame(JSON.parse(JSON.stringify(old)));
+    legacy = JSON.parse(JSON.stringify(old));
+  // This case explicitly models saves from before cereal markers existed.
+  if (legacyFields) for (const b of legacy.state.buildings) if (b.type === "farm") delete b.cerealProcessingVersion;
+  const loaded = decodeGame(legacy);
   terrain(loaded);
   assert.equal(hash(loaded.world.heights), before);
   return loaded;
@@ -209,7 +212,7 @@ function batch(g, recipe, b, interrupt = false) {
   });
   return g;
 }
-test("M1-13 integrated finite-seed contour fields, seasonal harvest, paid milling/bread, preservation and fallow", () => {
+test("legacy pre-marker fields: M1-13 integrated finite-seed contour fields, seasonal harvest, paid milling/bread, preservation and fallow", () => {
   let g = fixture();
   const terrainBefore = hash(g.world.heights),
     hearth = build(g, "hearth", 0, 56),
@@ -264,8 +267,9 @@ test("M1-13 integrated finite-seed contour fields, seasonal harvest, paid millin
   assert.equal(control.crop.planted, 1, status(g));
   const fieldId = field.id,
     controlId = control.id;
-  g = restore(g);
+  g = restore(g, true);
   field = g.state.buildings.find((b) => b.id === fieldId);
+  assert.equal(field.cerealProcessingVersion, undefined, "strict legacy load preserves the absent processing marker");
   control = g.state.buildings.find((b) => b.id === controlId);
   assert.equal(field.crop.planted, 1);
   assert.equal(g.tribe(0).seeds, 12);

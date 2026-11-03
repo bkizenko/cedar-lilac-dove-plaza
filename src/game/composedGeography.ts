@@ -15,7 +15,7 @@ function nearest(x:number,z:number,path:P[]){let distance=Infinity,index=0,t=0;f
  }return{distance,index,t};}
 /** New v11 landscape only. Coarse topology is reserved before these connected
  * provinces are built; old regional geography remains available for save loads. */
-export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number,province?:{reliefScale:number;pillars:boolean;dunes:boolean;plateau:boolean;canyonWidthScale?:number;valleyShoulderReliefMeters?:number;shoreDistance?:(x:number,z:number)=>number;angleRadians?:number;mouthStepMetres?:number;broadValley?:boolean},minimumInland=140){
+export function composedGeography(seed:number,size:number,landDistance:(x:number,z:number)=>number,province?:{reliefScale:number;pillars:boolean;dunes:boolean;plateau:boolean;canyonWidthScale?:number;valleyShoulderReliefMeters?:number;shoreDistance?:(x:number,z:number)=>number;angleRadians?:number;mouthStepMetres?:number;broadValley?:boolean;hydrologyVersion?:number},minimumInland=140){
  const rules=COMPOSED_RULES,rand=mulberry32(seed^0x7741f32);let center={x:0,z:0},inland=0;
  for(let z=-size*.42;z<size*.42;z+=16)for(let x=-size*.42;x<size*.42;x+=16){const d=landDistance(x,z);if(d>inland){inland=d;center={x,z};}}
  if(inland<minimumInland)throw new Error('Primary landscape lacks space for required geological provinces');
@@ -224,6 +224,13 @@ export function composedGeography(seed:number,size:number,landDistance:(x:number
   for(const body of waterBodies)if(body.kind==='lake'){
    const d=lakeBoundaryDistance(body,x,z);
    if(d<0){const blend=smooth(-d/2);const bed=body.surfaceY-.35-1.6*smooth(-d/13);h=h*(1-blend)+bed*blend;}
+  }
+  // V17: every channel is carved after ALL bank shoulders. A later tributary
+  // must never refill the earlier trunk at their confluence.
+  if(province?.hydrologyVersion===2)for(const body of waterBodies)if(body.kind==='river'){
+   const hit=nearest(x,z,body.pts),a=body.pts[hit.index],b=body.pts[hit.index+1];if(!a||!b)continue;
+   const width=(a.w??body.width)+((b.w??body.width)-(a.w??body.width))*hit.t;
+   if(hit.distance<=width*.5)h=Math.min(h,a.y+(b.y-a.y)*hit.t-1.3);
   }
   // The waterfall's physical bed drops between upper and lower streams.
   const fw=nearest(x,z,[fall,fallLower]);if(fw.distance<rules.riverWidthMeters*.5+3){

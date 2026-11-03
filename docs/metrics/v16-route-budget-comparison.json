@@ -1,0 +1,33 @@
+{
+  "scope": "Read-only fixed-coordinate V16 comparison; no resident is moved to these coordinates. V16 native opening differs, so this is a navigation-grid comparison only.",
+  "seed": 0,
+  "version": 16,
+  "size": 1040,
+  "layout": "continents",
+  "nativeHome": {
+    "x": -154,
+    "z": -364,
+    "team": 0
+  },
+  "a": {
+    "x": -149,
+    "z": -365
+  },
+  "b": {
+    "x": -162,
+    "z": -298
+  },
+  "walkableA": true,
+  "walkableB": true,
+  "heightA": 12.360763906445024,
+  "heightB": 27.841108976736578,
+  "waterA": 0.42,
+  "waterB": 0.42,
+  "connected": true,
+  "paths": {
+    "24000": null,
+    "96000": {
+      "waypoints": 379
+    }
+  }
+}

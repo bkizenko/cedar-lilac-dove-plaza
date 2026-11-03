@@ -1,0 +1,29 @@
+{
+  "scope": "Validation-boundary failure atomicity, not campaign economy or acceptance credit",
+  "cases": 1,
+  "passed": 1,
+  "failed": 0,
+  "durationMs": 1732.622833,
+  "log": "/tmp/annexation-preflight-boundary.log",
+  "initialBoundaryEndowment": {
+    "sourceSeeds": 1000000000000.0,
+    "recipientSeeds": 1000000000000.0,
+    "eachSourceStrictlyValid": true,
+    "paidCook": true,
+    "topology": "authored initial flat policy fixture"
+  },
+  "result": {
+    "draftOverflowRejected": true,
+    "liveNestedStateUnchanged": true,
+    "nextIdUnchanged": true,
+    "paidClaimAndCoordinatorUnchanged": true,
+    "publicRefusalChangedOnlyPresentation": true,
+    "strictLiveSaveStillValid": true
+  },
+  "sourceSha256": {
+    "src/game/communityHandover.ts": "61f01dbcd1e053c9a7a751ddd56388c365cb5ba6c7ddacd6450761d37bc445ca",
+    "src/game/communityHandoverValidation.ts": "f8735f7915bcaf3fa6ba65adbd90ec1e631ac0a2b7f2f429d6e8b9798d59ca28",
+    "src/game/persistence.ts": "ea4cb45bf9cc10d081042d902907e52f888da18b250a471b75a66df4b3f10370",
+    "src/game/production.ts": "e8ac98768d73e5f9e9a79f66499ebd0becf3b9b41407439e2a2ba04b63a1b4ff"
+  }
+}

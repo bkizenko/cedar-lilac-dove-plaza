@@ -1,3 +1,5 @@
+import{validCommunityHandovers,validHandoverAssets,handedOver}from'./communityHandoverValidation';
+import{validCerealState}from'./cerealRules';
 import {activateAnimalProcessing} from './production';
 import{validBoatClassState}from'./boatClasses';
 import{validBoatPractice}from'./boatPractice';
@@ -54,6 +56,10 @@ export function encodeGame(g: Game) {
   syncRiverboats(g);
   syncHaulageProjects(g);
   reconcileTradeReservations(g);
+  return gameSnapshot(g);
+}
+/** Read-only serialization for command preflight; never reconciles live ownership. */
+export function gameSnapshot(g:Game){
   const s = g.state;
   return {
     version: SAVE_VERSION,
@@ -108,17 +114,17 @@ function validateGamePayload(raw: unknown) {
     if (typeof v === "boolean" && typeof s[name] !== "boolean") fail();
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > 20000)) fail();
   }
-  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13,14,15,16].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
-  if([7,8,9,10,11,12,13,14,15,16].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
-  if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
-  if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
+  if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||![7,8,9,10,11,12,13,14,15,16,17].includes(s.worldgenVersion)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail();
+  if([7,8,9,10,11,12,13,14,15,16,17].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
+  if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16,17].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
+  if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
+  if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validContactState(s)||!validSeaRaiderReturns(s))fail();
@@ -164,7 +170,7 @@ function validateGamePayload(raw: unknown) {
     for(const b of s.boats){if(!obj(b)||!Number.isSafeInteger(b.id)||b.id<1||b.id>=s.nextId||ids.has(b.id)||!Number.isSafeInteger(b.team)||b.team<0||b.team>=s.tribes.length||!Number.isSafeInteger(b.dock)||b.dock<1||!num(b.x)||!num(b.z)||Math.abs(b.x)>HALF||Math.abs(b.z)>HALF||!num(b.y)||!num(b.facing)||!num(b.hp)||b.hp<0||!validBoatClassState(b)||b.captain!==undefined&&(!Number.isSafeInteger(b.captain)||b.captain<1))fail();if(b.exploration!==undefined){const e=b.exploration;if(!obj(e)||!num(e.originX)||!num(e.originZ)||Math.abs(e.originX)>HALF||Math.abs(e.originZ)>HALF||!num(e.nextReviewAt)||e.nextReviewAt<0||typeof e.returning!=='boolean'||e.reason!==undefined&&!['surveyed','blocked','hungry','danger','recall'].includes(e.reason)||e.landOnReturn!==undefined&&e.landOnReturn!==true)fail();}ids.add(b.id);}
   }
   if(s.visitorTimer!==undefined&&(!num(s.visitorTimer)||s.visitorTimer<0||s.visitorTimer>1000))fail();
-  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(s.worldgenVersion))fail();
+  if(s.worldgenVersion!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(s.worldgenVersion))fail();
   if(s.cultivationVersion!==undefined&&s.cultivationVersion!==1)fail();
   const cropAmounts=(value:unknown,max:number)=>{
     if(!obj(value))fail();
@@ -243,13 +249,14 @@ function validateGamePayload(raw: unknown) {
     if(t.foodLots!==undefined){
       if(!obj(t.foodLots))fail();
       for(const [kind,amount] of Object.entries(t.foodLots))
-        if(!FOOD_KINDS.includes(kind as any)||!num(amount)||amount<0||amount>1e9)fail();
+        if(!FOOD_KINDS.includes(kind as any)||!num(amount)||amount<0||amount>1e12)fail();
     }
-    if(t.seeds!==undefined&&(!num(t.seeds)||t.seeds<0||t.seeds>100000))fail();
-    if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e9);
+    if(t.seeds!==undefined&&(!num(t.seeds)||t.seeds<0||t.seeds>1e12))fail();
+    if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e12);
     if(t.copperExperiment!==undefined&&typeof t.copperExperiment!=="boolean")fail();
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
-    if(s.units.filter((u:any)=>u.team===i&&u.hp>0&&u.studyCrop).length>CROP_TRIAL_RULES.maximumPeople)fail();
+    const inheritedActors=new Set((t.inheritedCropTrials||[]).flatMap((q:any)=>q.actorIds||[]));
+    if(s.units.filter((u:any)=>u.team===i&&u.hp>0&&u.studyCrop&&!inheritedActors.has(u.id)).length>CROP_TRIAL_RULES.maximumPeople)fail();
     if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
     if(rivalTeam(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;
@@ -398,8 +405,8 @@ function validateGamePayload(raw: unknown) {
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
     if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
-    if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"||u.scout.preparing!==undefined&&u.scout.preparing!==true))fail();
-    if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
+    if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"||u.scout.preparing!==undefined&&u.scout.preparing!==true))fail();
+    if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.visit?.team!==undefined&&(!rivalTeam(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
     if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();
@@ -418,7 +425,7 @@ function validateGamePayload(raw: unknown) {
     if(u.returnAfterCombat!==undefined&&typeof u.returnAfterCombat!=="boolean")fail();
     if(u.massRaidTarget!==undefined&&(!Number.isSafeInteger(u.massRaidTarget)||u.massRaidTarget<1))fail();
     if(u.enslavedFrom!==undefined&&(!rivalTeam(u.enslavedFrom)||u.team!==0))fail();
-    if(u.repatriating!==undefined&&(u.repatriating!==true||!rivalTeam(u.team)||u.enslavedFrom!==undefined))fail();
+    if(u.repatriating!==undefined&&(u.repatriating!==true||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')&&!(u.prisoner?.phase==='released'&&u.prisoner.rejoinedTeam===u.team&&u.prisoner.rejoinedHandoverId!==undefined)||u.enslavedFrom!==undefined))fail();
     if(u.captivityUnrest!==undefined&&(!num(u.captivityUnrest)||u.captivityUnrest<0||u.captivityUnrest>100||u.enslavedFrom===undefined))fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){

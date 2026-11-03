@@ -4,7 +4,7 @@ import type {LocalWaterBody} from './localWater';
 export const OPENING_WATER_RULES={knownBankDistanceMetres:22,navigationWidth:520,clearanceMetres:.12,maxCellRiseMetres:2.45,candidateBankLimit:256,homeOffsetMetres:16,campFoundationHalfExtentMetres:6,maxFoundationReliefMetres:3,nearDryApproaches:6,outerDryApproaches:4} as const;
 type Point={x:number;z:number};
 type Terrain={size:number;height:(x:number,z:number)=>number;water:(x:number,z:number)=>number;rivers:{pts:Point[]}[];features?:({kind:string}&Point)[];waterBodies:LocalWaterBody[]};
-export function openingWaterSurvey(t:Terrain){
+export function openingWaterSurvey(t:Terrain,requireStableFounders=false){
  const rules=OPENING_WATER_RULES,half=t.size/2,cell=t.size/rules.navigationWidth,sources:Point[]=[],banks:{x:number;z:number;sourceX:number;sourceZ:number}[]=[],dry=new Map<number,boolean>();
  const coords=(x:number,z:number)=>({ix:Math.floor((x+half)/cell),iz:Math.floor((z+half)/cell)});
  const dryCell=(ix:number,iz:number)=>{
@@ -24,7 +24,7 @@ export function openingWaterSurvey(t:Terrain){
  return {
   /** Count complete dry-cell routes, not merely dry endpoints across a ravine. */
   approachesAt(home:Point){let near=0,outer=0;for(let i=0;i<24;i++){const a=i*Math.PI/12;for(const radius of[26,48]){const end={x:home.x+Math.cos(a)*radius,z:home.z+Math.sin(a)*radius};if(reachable(home,end)){if(radius===26)near++;else outer++;}}}return{near,outer};},
-  at(home:Point){const bank=banks.filter(b=>Math.hypot(b.x-home.x,b.z-home.z)<=rules.knownBankDistanceMetres&&reachable(home,b)).sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z))[0];return bank?{bankX:bank.x,bankZ:bank.z,sourceX:bank.sourceX,sourceZ:bank.sourceZ,bankDistanceMetres:Math.hypot(bank.x-home.x,bank.z-home.z),surveyedDryCells:dry.size}:null;},
+  at(home:Point){if(requireStableFounders&&![home,...OPENING_RESIDENT_OFFSETS.map(p=>({x:home.x+p.x,z:home.z+p.z}))].every(p=>{const c=coords(p.x,p.z);return dryCell(c.ix,c.iz)&&reachable(home,p);}))return null;const bank=banks.filter(b=>Math.hypot(b.x-home.x,b.z-home.z)<=rules.knownBankDistanceMetres&&reachable(home,b)).sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z))[0];return bank?{bankX:bank.x,bankZ:bank.z,sourceX:bank.sourceX,sourceZ:bank.sourceZ,bankDistanceMetres:Math.hypot(bank.x-home.x,bank.z-home.z),surveyedDryCells:dry.size}:null;},
   candidates(near:Point){const points:Point[]=[],used=new Set<string>();for(const b of [...banks].sort((a,b)=>Math.hypot(a.x-near.x,a.z-near.z)-Math.hypot(b.x-near.x,b.z-near.z)).slice(0,rules.candidateBankLimit))for(let i=0;i<12;i++){const a=i*Math.PI/6,x=Math.round((b.x+Math.cos(a)*rules.homeOffsetMetres)/2)*2,z=Math.round((b.z+Math.sin(a)*rules.homeOffsetMetres)/2)*2,key=`${x},${z}`;if(!used.has(key)){used.add(key);points.push({x,z});}}return points;},
  };
 }

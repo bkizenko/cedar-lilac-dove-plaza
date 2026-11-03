@@ -29,7 +29,7 @@ export function outlineDifference(a:number[],b:number[]){
 /** V15 remains reproducible; V16 adds broader individual asymmetry and stricter checks.
  * Historical generation remains in worldVariety/multipleLandmasses.
  * A broad coastline skeleton and meaningful bay cuts precede terrain/water. */
-export function diverseLandforms(seed:number,request:WorldRequest={},version:15|16=15){
+export function diverseLandforms(seed:number,request:WorldRequest={},version:15|16|17=15){
  const old=variedLandforms(seed,request),size=old.options.size,rand=mulberry32(seed^0x151ca71),rules=version>=16?COASTAL_VARIETY_V16_RULES:COASTAL_VARIETY_RULES;
  const specs:{x:number;z:number;radius:number;angle:number;style:Style;primary:boolean}[]=[];
  if(old.mode==='major-islands'){
@@ -88,7 +88,7 @@ export function diverseLandforms(seed:number,request:WorldRequest={},version:15|
 /** Only one coherent dramatic catchment supplies the full map catalogue.
  * Other landmasses retain physically rolling everyday terrain and some brooks. */
 export function diverseGeography(seed:number,size:number,land:ReturnType<typeof diverseLandforms>){
- const primary=land.islands[0],drama=composedGeography(seed,size,primary.domain,{reliefScale:1,pillars:true,dunes:true,plateau:true,canyonWidthScale:.72,valleyShoulderReliefMeters:30,shoreDistance:primary.distance,angleRadians:primary.angle,mouthStepMetres:20,broadValley:true},120);
+ const primary=land.islands[0],drama=composedGeography(seed,size,primary.domain,{reliefScale:1,pillars:true,dunes:true,plateau:true,canyonWidthScale:.72,valleyShoulderReliefMeters:30,shoreDistance:primary.distance,angleRadians:primary.angle,mouthStepMetres:20,broadValley:true,...(land.version>=17?{hydrologyVersion:2}:{})},120);
  const ordinary=land.islands.slice(1).map((island,i)=>{
   const angle=island.angle+1.2,edge=radiusAlong(island.distance,island,angle,island.radius),stream=i%2===0;
   const pts=Array.from({length:10},(_,n)=>{const t=n/9,along=edge*t;return{x:island.x+Math.cos(angle)*along-Math.sin(angle)*Math.sin(t*Math.PI*2)*island.radius*.055*Math.sin(t*Math.PI),z:island.z+Math.sin(angle)*along+Math.cos(angle)*Math.sin(t*Math.PI*2)*island.radius*.055*Math.sin(t*Math.PI),y:WATER_Y+2.6*(1-t)+.12};});
@@ -98,7 +98,7 @@ export function diverseGeography(seed:number,size:number,land:ReturnType<typeof 
  });
  const ordinaryHeight=(x:number,z:number,d:number)=>{const shore=smooth(d/24),broad=fbm(x*.006+seed%331,z*.006-17,4),folds=fbm(x*.018-seed%137,z*.018+43,3);return WATER_Y+shore*(3+broad*9+Math.max(0,folds-.45)*12);};
  const metrics={...drama.metrics,...(land.version>=16?{version:6,dramaticRegionCount:1,outlineMinimumDifference:COASTAL_VARIETY_V16_RULES.minimumNormalizedOutlineDifference}:{version:5}),regions:[...drama.metrics.regions,...ordinary.map(o=>({x:o.island.x,z:o.island.z,areaSquareMeters:0,designedReliefMeters:COASTAL_VARIETY_RULES.ordinaryReliefMeters,drainageLengthMeters:o.stream?o.island.radius:0,dramatic:false,lake:false}))],landmassProfiles:land.islands.map((p,i)=>({x:p.x,z:p.z,coastStyle:p.style,dramatic:i===0,inletCutCount:p.inlets.length,outline:land.outlines[i],minimumOutlineDifference:land.outlines.length>1?Math.min(...land.outlines.filter((_,j)=>j!==i).map(o=>outlineDifference(o.normalizedRadii,land.outlines[i].normalizedRadii))):null})),requiredFeatureFamilies:[...new Set(drama.features.map(f=>f.kind))]};
- return{...drama,metrics,features:[...drama.features,...ordinary.flatMap(o=>o.features),...land.islands.flatMap(i=>i.inlets.map((p,n)=>({kind:n?'cove' as const:'bay' as const,...p.path[1],radius:p.width*2})))],rivers:[...drama.rivers,...ordinary.filter(o=>o.stream).map(o=>({pts:o.pts,w:4.5}))],waterBodies:[...drama.waterBodies,...ordinary.flatMap(o=>o.bodies)],waterfalls:drama.waterfalls,
+ return{...drama,metrics,features:[...drama.features,...ordinary.flatMap(o=>o.features),...land.islands.flatMap(i=>i.inlets.map((p,n)=>({kind:n?'cove' as const:'bay' as const,...p.path[1],radius:p.width*2})))],rivers:[...drama.rivers,...ordinary.filter(o=>o.stream).map(o=>({pts:o.pts,w:4.5}))],waterBodies:[...drama.waterBodies,...ordinary.flatMap(o=>o.bodies)].map(b=>land.version>=17&&b.kind==='river'?{...b,surfaceVersion:2 as const,startCap:(b.id==='upper-river'||b.id==='lower-river'?'butt':'round') as 'butt'|'round',endCap:'butt' as const}:b),waterfalls:drama.waterfalls,
   elevation(x:number,z:number,h:number,water:number){let owner=0,best=-Infinity;for(let i=0;i<land.islands.length;i++){const d=land.islands[i].distance(x,z);if(d>best){best=d;owner=i;}}
    if(owner===0){let result=drama.elevation(x,z,h,water);for(const peak of drama.peakMarks){const d=Math.hypot(x-peak.x,z-peak.z),width=drama.radius*.16;if(d<width)result+=28*smooth(1-d/width);}return result;}
    const o=ordinary[owner-1];let result=ordinaryHeight(x,z,best);if(o.stream){const hit=nearest(x,z,o.pts);if(hit.distance<24){const a=o.pts[hit.index],b=o.pts[hit.index+1],level=a.y+(b.y-a.y)*hit.t,blend=1-smooth((hit.distance-2.25)/21.75);result=result*(1-blend)+(level-.7)*blend;}}

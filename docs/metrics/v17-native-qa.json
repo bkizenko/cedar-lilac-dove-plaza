@@ -1,0 +1,908 @@
+{
+  "cases": [
+    {
+      "tag": "archipelago",
+      "seed": 7,
+      "size": 1040,
+      "layout": "archipelago",
+      "path": "/tmp/hearthwild-v17-native-archipelago.json",
+      "sha256": "a71ed799a1be94df4a79fefd59670200d6a7890ed8b9e69254327d4bbaa04fef",
+      "scope": "VISUAL QA ONLY: whole map chart revealed in vision buffers; ordinary initial native people/resources/terrain and paused time0; not discovery/campaign evidence",
+      "initialPeople": 20,
+      "playerPeople": 5,
+      "resources": [
+        {
+          "team": 0,
+          "food": 120,
+          "wood": 58,
+          "stone": 16
+        },
+        {
+          "team": 1,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 2,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 3,
+          "food": 60,
+          "wood": 0,
+          "stone": 0
+        }
+      ],
+      "gameplayStateHash": "77acad8f3310e890220c50a2ddeafe4ef49e4b142d0e07c086e5ed7ebfc25168",
+      "wholeMapOracleProbes": 68121,
+      "maximumWaterSurfaceDeltaMetres": 2.4975223489320797e-7,
+      "oracleSource": "actual rendered Float32 geometry buffers, including source caps and falling water",
+      "falsePositiveOceanQueries": 0,
+      "worldStructuredClone": true,
+      "strictSave": true,
+      "fullWorldRoundtrip": true,
+      "workerPayloadClone": true,
+      "ownedVsPlainRenderBuffersIdentical": true,
+      "index": {
+        "version": 17,
+        "revision": 0,
+        "cellMetres": 16,
+        "segments": 34,
+        "lakes": 1,
+        "occupiedBuckets": 106,
+        "maximumBucketCandidates": 180,
+        "wholeListQueriesPerSample": 0
+      },
+      "renderAgreement": {
+        "trianglesChecked": 3591,
+        "visibleWetCentroids": 3458,
+        "phantomVisibleCentroids": 0,
+        "examples": []
+      },
+      "views": [
+        {
+          "name": "home-close",
+          "look": {
+            "x": -70,
+            "y": 12.380179772010216,
+            "z": -164
+          },
+          "dist": 45,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 69.23076923076923,
+            "y": 54.769230769230774
+          }
+        },
+        {
+          "name": "home-mid",
+          "look": {
+            "x": -70,
+            "y": 12.380179772010216,
+            "z": -164
+          },
+          "dist": 95,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 69.23076923076923,
+            "y": 54.769230769230774
+          }
+        },
+        {
+          "name": "home-wide",
+          "look": {
+            "x": -70,
+            "y": 12.380179772010216,
+            "z": -164
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 69.23076923076923,
+            "y": 54.769230769230774
+          }
+        },
+        {
+          "name": "mountain-range",
+          "look": {
+            "x": -141.42933505577486,
+            "y": 84.66978771679202,
+            "z": -55.359008082290174
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 58.24164076065003,
+            "y": 71.4832295258015
+          }
+        },
+        {
+          "name": "lake",
+          "look": {
+            "x": -78.68685142230764,
+            "y": 8.870000267028809,
+            "z": -204.09565026584892
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 67.89433055041421,
+            "y": 48.60066918986939
+          }
+        },
+        {
+          "name": "canyon",
+          "look": {
+            "x": 34.52742193774927,
+            "y": 1.5551716059313532,
+            "z": -43.333548086078665
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 85.31191106734605,
+            "y": 73.33330029444943
+          }
+        },
+        {
+          "name": "cliff",
+          "look": {
+            "x": -39.42886396588712,
+            "y": 24.00821200786488,
+            "z": -3.3785769409736712
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 73.93402092832505,
+            "y": 79.4802189321579
+          }
+        },
+        {
+          "name": "terrace",
+          "look": {
+            "x": 63.842957546036494,
+            "y": 10.235447095381332,
+            "z": -63.78040586545306
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 89.821993468621,
+            "y": 70.18762986685337
+          }
+        },
+        {
+          "name": "plateau",
+          "look": {
+            "x": -18.811731723329142,
+            "y": 16.99480447782752,
+            "z": -14.172401105024786
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 77.10588742718014,
+            "y": 77.81963059922695
+          }
+        },
+        {
+          "name": "pillars",
+          "look": {
+            "x": -145.65194832431894,
+            "y": 8.221870722104319,
+            "z": -183.2526431342817
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 57.59200795010478,
+            "y": 51.80728567164897
+          }
+        },
+        {
+          "name": "dunes",
+          "look": {
+            "x": 44.48923280753934,
+            "y": 3.9148818307380493,
+            "z": -182.20716760125504
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 86.84449735500606,
+            "y": 51.96812806134538
+          }
+        },
+        {
+          "name": "wetland",
+          "look": {
+            "x": -64.8906337181912,
+            "y": 11.288301483064076,
+            "z": -235.88687018870058
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 70.01682558181673,
+            "y": 43.70971227866144
+          }
+        },
+        {
+          "name": "ordinary-rolling-land",
+          "look": {
+            "x": 233.62039466388524,
+            "y": 2.8317746246152935,
+            "z": 225.7782253017649
+          },
+          "dist": 120,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 115.94159917905927,
+            "y": 114.73511158488691
+          }
+        },
+        {
+          "name": "original-V16-dry-trunk-now-wet",
+          "look": {
+            "x": -19.12557369254954,
+            "y": 9.335999880469732,
+            "z": -117.98339284729498
+          },
+          "dist": 50,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 77.05760404730007,
+            "y": 61.84870879272385
+          }
+        },
+        {
+          "name": "original-V16-root-corner-rejected",
+          "look": {
+            "x": -7.936353501360658,
+            "y": 9.200346753238392,
+            "z": -93.4998622191963
+          },
+          "dist": 50,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 78.7790225382522,
+            "y": 65.61540581243133
+          }
+        }
+      ]
+    },
+    {
+      "tag": "continents",
+      "seed": 0,
+      "size": 1040,
+      "layout": "continents",
+      "path": "/tmp/hearthwild-v17-native-continents.json",
+      "sha256": "e95d778430af3b0e94167c7c787235e5a1e2c8e66ad146dfbb6dd256bca8bec5",
+      "scope": "VISUAL QA ONLY: whole map chart revealed in vision buffers; ordinary initial native people/resources/terrain and paused time0; not discovery/campaign evidence",
+      "initialPeople": 34,
+      "playerPeople": 5,
+      "resources": [
+        {
+          "team": 0,
+          "food": 120,
+          "wood": 58,
+          "stone": 16
+        },
+        {
+          "team": 1,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 2,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 3,
+          "food": 120,
+          "wood": 0,
+          "stone": 0
+        },
+        {
+          "team": 4,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 5,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        }
+      ],
+      "gameplayStateHash": "b1aec3a16c6d1ced2426ea5c30bf5fbe734c66753a3fb9125cb4151d9b366344",
+      "wholeMapOracleProbes": 68121,
+      "maximumWaterSurfaceDeltaMetres": 2.842170943040401e-14,
+      "oracleSource": "actual rendered Float32 geometry buffers, including source caps and falling water",
+      "falsePositiveOceanQueries": 0,
+      "worldStructuredClone": true,
+      "strictSave": true,
+      "fullWorldRoundtrip": true,
+      "workerPayloadClone": true,
+      "ownedVsPlainRenderBuffersIdentical": true,
+      "index": {
+        "version": 17,
+        "revision": 0,
+        "cellMetres": 16,
+        "segments": 38,
+        "lakes": 1,
+        "occupiedBuckets": 146,
+        "maximumBucketCandidates": 200,
+        "wholeListQueriesPerSample": 0
+      },
+      "renderAgreement": {
+        "trianglesChecked": 5631,
+        "visibleWetCentroids": 5404,
+        "phantomVisibleCentroids": 118,
+        "examples": [
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 520.5057983398438,
+            "z": -190.2345733642578,
+            "renderY": 0.7078306873639425,
+            "physicalWater": 0.42,
+            "terrain": 0.07168495632290223
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 520.7269083658854,
+            "z": -192.72006225585938,
+            "renderY": 0.699576715628306,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 521.0245768229166,
+            "z": -191.55677795410156,
+            "renderY": 0.7023280461629232,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 521.8410237630209,
+            "z": -191.7156982421875,
+            "renderY": 0.699576715628306,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 520.1315714518229,
+            "z": -195.046630859375,
+            "renderY": 0.6940740744272867,
+            "physicalWater": 0.42,
+            "terrain": 0.06121719622012946
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 520.9480183919271,
+            "z": -195.20555114746094,
+            "renderY": 0.6913227637608846,
+            "physicalWater": 0.42,
+            "terrain": 0.06536546605005303
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 521.2456868489584,
+            "z": -194.04226684570312,
+            "renderY": 0.6940740744272867,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 522.0621337890625,
+            "z": -194.20118713378906,
+            "renderY": 0.6913227637608846,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 522.3598022460938,
+            "z": -193.03790283203125,
+            "renderY": 0.6940740744272867,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 523.1762491861979,
+            "z": -193.1968231201172,
+            "renderY": 0.6913227637608846,
+            "physicalWater": 0.42,
+            "terrain": 0.05999999865889549
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 521.466796875,
+            "z": -196.5277557373047,
+            "renderY": 0.6858201225598654,
+            "physicalWater": 0.42,
+            "terrain": 0.09987875239691554
+          },
+          {
+            "mesh": "water-river-ordinary-0-brook",
+            "x": 522.2832438151041,
+            "z": -196.68667602539062,
+            "renderY": 0.6830687920252482,
+            "physicalWater": 0.42,
+            "terrain": 0.10402702222683911
+          }
+        ]
+      },
+      "views": [
+        {
+          "name": "home-close",
+          "look": {
+            "x": -154,
+            "y": 12.760045433044434,
+            "z": -362
+          },
+          "dist": 45,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 56.30769230769231,
+            "y": 24.30769230769231
+          }
+        },
+        {
+          "name": "home-mid",
+          "look": {
+            "x": -154,
+            "y": 12.760045433044434,
+            "z": -362
+          },
+          "dist": 95,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 56.30769230769231,
+            "y": 24.30769230769231
+          }
+        },
+        {
+          "name": "home-wide",
+          "look": {
+            "x": -154,
+            "y": 12.760045433044434,
+            "z": -362
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 56.30769230769231,
+            "y": 24.30769230769231
+          }
+        },
+        {
+          "name": "mountain-range",
+          "look": {
+            "x": -237.95712921480253,
+            "y": 108.12257163342885,
+            "z": -267.7425007077009
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 43.39121089003038,
+            "y": 38.808846044969094
+          }
+        },
+        {
+          "name": "lake",
+          "look": {
+            "x": -169.65217924197268,
+            "y": 8.870000267028809,
+            "z": -410.2930354326981
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 53.899664732004204,
+            "y": 16.87799454881568
+          }
+        },
+        {
+          "name": "canyon",
+          "look": {
+            "x": -66.41743554527027,
+            "y": 0.4775044045714884,
+            "z": -247.7734683936464
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 69.78193299303534,
+            "y": 41.88100486251594
+          }
+        },
+        {
+          "name": "cliff",
+          "look": {
+            "x": -140.61655160719974,
+            "y": 26.015599670313158,
+            "z": -212.14365424586197
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 58.36668436812312,
+            "y": 47.36251473140585
+          }
+        },
+        {
+          "name": "terrace",
+          "look": {
+            "x": -36.790662941025445,
+            "y": 10.097423621366504,
+            "z": -266.40486662407943
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 74.33989800907301,
+            "y": 39.014635903987774
+          }
+        },
+        {
+          "name": "plateau",
+          "look": {
+            "x": -119.94779787626783,
+            "y": 17.22109067652803,
+            "z": -221.73928677888463
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 61.54649263442033,
+            "y": 45.88626357247929
+          }
+        },
+        {
+          "name": "pillars",
+          "look": {
+            "x": -236.12188555625363,
+            "y": 8.458227896503832,
+            "z": -393.03025041271184
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 43.67355606826868,
+            "y": 19.533807628813562
+          }
+        },
+        {
+          "name": "dunes",
+          "look": {
+            "x": -50.19648786889377,
+            "y": 4.118474539017948,
+            "z": -383.1389706431947
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 72.27746340478558,
+            "y": 21.055542977970045
+          }
+        },
+        {
+          "name": "wetland",
+          "look": {
+            "x": -154.67547975819042,
+            "y": 10.953686257949,
+            "z": -440.74404397519004
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 56.203772344893785,
+            "y": 12.193224003816914
+          }
+        },
+        {
+          "name": "ordinary-rolling-land",
+          "look": {
+            "x": 147.60768057656554,
+            "y": 2.836025712816807,
+            "z": 263.0105181067985
+          },
+          "dist": 120,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 102.70887393485623,
+            "y": 120.46315663181515
+          }
+        }
+      ]
+    },
+    {
+      "tag": "pangaea",
+      "seed": 1,
+      "size": 1040,
+      "layout": "pangaea",
+      "path": "/tmp/hearthwild-v17-native-pangaea.json",
+      "sha256": "250532d7e99b43c5a5bd5b9754a90aa8e0c7e7b5b3ebab2a94d2fde86525500c",
+      "scope": "VISUAL QA ONLY: whole map chart revealed in vision buffers; ordinary initial native people/resources/terrain and paused time0; not discovery/campaign evidence",
+      "initialPeople": 22,
+      "playerPeople": 5,
+      "resources": [
+        {
+          "team": 0,
+          "food": 120,
+          "wood": 58,
+          "stone": 16
+        },
+        {
+          "team": 1,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 2,
+          "food": 120,
+          "wood": 58,
+          "stone": 10
+        },
+        {
+          "team": 3,
+          "food": 120,
+          "wood": 0,
+          "stone": 0
+        }
+      ],
+      "gameplayStateHash": "6cf8dd581ec3c1afd23ebce2d4ed6a739877a17cff442746194753e75bf75574",
+      "wholeMapOracleProbes": 68121,
+      "maximumWaterSurfaceDeltaMetres": 4.326130209619805e-8,
+      "oracleSource": "actual rendered Float32 geometry buffers, including source caps and falling water",
+      "falsePositiveOceanQueries": 0,
+      "worldStructuredClone": true,
+      "strictSave": true,
+      "fullWorldRoundtrip": true,
+      "workerPayloadClone": true,
+      "ownedVsPlainRenderBuffersIdentical": true,
+      "index": {
+        "version": 17,
+        "revision": 0,
+        "cellMetres": 16,
+        "segments": 27,
+        "lakes": 1,
+        "occupiedBuckets": 85,
+        "maximumBucketCandidates": 172,
+        "wholeListQueriesPerSample": 0
+      },
+      "renderAgreement": {
+        "trianglesChecked": 3967,
+        "visibleWetCentroids": 3812,
+        "phantomVisibleCentroids": 0,
+        "examples": []
+      },
+      "views": [
+        {
+          "name": "home-close",
+          "look": {
+            "x": -40,
+            "y": 12.626589349599984,
+            "z": 230
+          },
+          "dist": 45,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 73.84615384615385,
+            "y": 115.38461538461539
+          }
+        },
+        {
+          "name": "home-mid",
+          "look": {
+            "x": -40,
+            "y": 12.626589349599984,
+            "z": 230
+          },
+          "dist": 95,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 73.84615384615385,
+            "y": 115.38461538461539
+          }
+        },
+        {
+          "name": "home-wide",
+          "look": {
+            "x": -40,
+            "y": 12.626589349599984,
+            "z": 230
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 73.84615384615385,
+            "y": 115.38461538461539
+          }
+        },
+        {
+          "name": "mountain-range",
+          "look": {
+            "x": 133.66074273436664,
+            "y": 88.36260335011215,
+            "z": 102.9292071868563
+          },
+          "dist": 210,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 100.56319118990257,
+            "y": 95.83526264413173
+          }
+        },
+        {
+          "name": "lake",
+          "look": {
+            "x": -8.506210100209614,
+            "y": 8.870000267028809,
+            "z": 249.51248406935002
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 78.69135229227544,
+            "y": 118.38653601066923
+          }
+        },
+        {
+          "name": "canyon",
+          "look": {
+            "x": -68.26770313879305,
+            "y": 2.420415789371418,
+            "z": 8.073797738069445
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 69.49727644018569,
+            "y": 81.24212272893375
+          }
+        },
+        {
+          "name": "cliff",
+          "look": {
+            "x": 37.24203200609575,
+            "y": 28.16917037481759,
+            "z": -5.120890470569197
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 85.7295433855532,
+            "y": 79.21217069683551
+          }
+        },
+        {
+          "name": "terrace",
+          "look": {
+            "x": -112.204037761172,
+            "y": 19.216886978947628,
+            "z": 18.73789355051193
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 62.73784034443508,
+            "y": 82.8827528539249
+          }
+        },
+        {
+          "name": "plateau",
+          "look": {
+            "x": 7.98660599859762,
+            "y": 21.912245410420372,
+            "z": -1.848816223975425
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 81.22870861516887,
+            "y": 79.715566734773
+          }
+        },
+        {
+          "name": "pillars",
+          "look": {
+            "x": 79.9982930672356,
+            "y": 7.75203402617481,
+            "z": 255.644094495271
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 92.30742970265163,
+            "y": 119.32986069158017
+          }
+        },
+        {
+          "name": "dunes",
+          "look": {
+            "x": -143.68716602531003,
+            "y": 6.850692774230974,
+            "z": 167.22969902285502
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 57.894282149952296,
+            "y": 105.72764600351616
+          }
+        },
+        {
+          "name": "wetland",
+          "look": {
+            "x": -39.34773432531972,
+            "y": 11.373543572496876,
+            "z": 280.666668550357
+          },
+          "dist": 105,
+          "pitch": 0.55,
+          "yaw": 1.12,
+          "minimap": {
+            "x": 73.94650241148926,
+            "y": 123.17948746928568
+          }
+        }
+      ]
+    }
+  ]
+}

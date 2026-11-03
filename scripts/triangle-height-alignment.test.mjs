@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import * as THREE from 'three';
+import {sampleHeight,sampleTriangleHeight,sampleWorldHeight} from '../src/game/worldgen.ts';
+import {Game} from '../src/game/sim.ts';import {excavationTerrain,excavationHeightAt} from '../src/game/excavation.ts';
+test('V17 sampler matches actual indexed PlaneGeometry on both sides, diagonal, vertices and boundary',()=>{
+ const heights=new Float32Array([1,5,2,10]),geo=new THREE.PlaneGeometry(4,4,1,1);geo.rotateX(-Math.PI/2);const pos=geo.attributes.position;for(let i=0;i<4;i++)pos.setY(i,heights[i]);const mat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide}),mesh=new THREE.Mesh(geo,mat),ray=new THREE.Raycaster();mesh.updateMatrixWorld(true);
+ for(const x of [-1.99,-1.5,-.3,.3,1,1.99])for(const z of [-1.99,-1,.2,.8,1.99]){ray.set(new THREE.Vector3(x,100,z),new THREE.Vector3(0,-1,0));const y=ray.intersectObject(mesh)[0].point.y;assert.ok(Math.abs(sampleTriangleHeight(heights,x,z,4)-y)<1e-6);assert.equal(sampleWorldHeight({heights,size:4,localWaterVersion:17},x,z),sampleTriangleHeight(heights,x,z,4));assert.equal(sampleWorldHeight({heights,size:4},x,z),sampleHeight(heights,x,z,4));}
+ assert.equal(sampleTriangleHeight(heights,-2,-2,4),1);assert.equal(sampleTriangleHeight(heights,2,2,4),10);assert.equal(sampleTriangleHeight(heights,99,99,4),10);assert.notEqual(sampleTriangleHeight(heights,0,0,4),sampleHeight(heights,0,0,4));geo.dispose();mat.dispose();
+});
+test('V17 Game height and refined excavation samples use same actual base triangles; legacy sampler retained',()=>{
+ const g=Object.create(Game.prototype);g.world={size:4,segs:1,localWaterVersion:17,heights:new Float32Array([1,5,2,10])};g.state={excavations:[]};assert.equal(g.height(0,0),3.5);g.world.localWaterVersion=undefined;assert.equal(g.height(0,0),4.5);g.world.localWaterVersion=17;g.state.excavations=[{version:1,id:1,buildingId:1,team:0,x:0,z:0,w:1,d:1,depth:.5,volumeCubicMeters:1,workSeconds:1}];const t=excavationTerrain(g),tile=[...t.tiles.values()][0];assert.ok(tile);const n=Math.round(Math.sqrt(tile.heights.length))-1;for(let iz=0;iz<=n;iz++)for(let ix=0;ix<=n;ix++){const x=(tile.x+ix/n)*t.tileSize-2,z=(tile.z+iz/n)*t.tileSize-2;assert.equal(g.height(x,z),excavationHeightAt(g,x,z,sampleTriangleHeight(g.world.heights,x,z,4)));}
+});

@@ -498,3 +498,7 @@ canvas:focus-visible {
 .game-tooltip strong{display:block;color:var(--color-bronze-bright);font-size:13px;margin-bottom:3px;}.game-tooltip span{display:block;}
 .game-disclosure{border-top:1px solid #c5a66644;margin-top:7px;}.game-disclosure>button{display:flex;align-items:center;gap:5px;width:100%;padding:6px 0;text-align:left;color:var(--color-parchment-dim);font-size:12px;}.game-disclosure>button svg{width:13px;height:13px;}.game-disclosure-content{padding:4px 0 7px;}
 .game-disclosure-content h4{font-size:13px;}.game-disclosure-content button{min-height:30px;font-size:12px!important;}.game-disclosure-content p{font-size:12px;}
+
+/* Keep the village-wide control readable beside the compact command icons. */
+.compact-actions .village-auto-work span{font-size:12px;font-weight:500;}
+.compact-actions .village-auto-work:hover{color:var(--color-ink);}

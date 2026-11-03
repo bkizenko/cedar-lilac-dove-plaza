@@ -1,0 +1,162 @@
+{
+  "scope": "Native causal qualification of inherited methods, concurrent paid trials and adopted prototype; independent test/evidence only",
+  "baseline": {
+    "reference": ".play/handover-integration-302e25a",
+    "sourceFiles": 301,
+    "allReferenceSourceBytesMatchedAfterRun": true,
+    "sourceTreeSha256": "45e88c35c4af17a8a393531af116a3775acb78dfc395de67e2513d080d01516b",
+    "criticalSourceSha256": {
+      "game/inheritedKnowledge.ts": "1879ac08cc40a3edc5dec5b6d9f839743e46be4086fd8dba801fbdc9db0623ac",
+      "game/communityHandover.ts": "e8258c9572188bda9ed23855470540cb00da824c0d00ad2805289174629facf1",
+      "game/communityHandoverValidation.ts": "250b58966b55346869d4d3dbd14aa70e4d68e7f1684c03c7d89cfc6811d1d29a",
+      "game/cultivation.ts": "ac8d48312ed9b0c73ada6192700ea4ee6b552219db13f6e8c80d8aa40f7bed30",
+      "game/boatPractice.ts": "4564c4f5105bbb227a6317e83f98812134e845011d7ff5d454635c995ddadac6",
+      "game/boatClasses.ts": "621e1933b6bb562d82928d7b3784866bf9611d8bbaa350e90bbada84d21099ef",
+      "game/cerealRules.ts": "11b0b33d40582be464108d85d7ac587714b416a584ee26a354b18317e3055760",
+      "game/production.ts": "0992123cb1d80dcf1d4e724658e686ef035f60ab12f4cc1e2b17f2ab0736fee5",
+      "game/persistence.ts": "d99262b08b2f581270e693164768b6b8c96aeb8aa84665a77a57311dc392f630",
+      "game/sim.ts": "0d230249be9e9ee686e90fa40b1dd18ba0750fae9f061a4bf83ce282ad0a9e0e"
+    }
+  },
+  "cases": 3,
+  "passed": 3,
+  "failed": 0,
+  "durationMs": 10736.931833,
+  "log": "/tmp/native-inherited-final-merged.log",
+  "nativeMaps": [
+    {
+      "seed": 345,
+      "worldgen": 14,
+      "size": 1040,
+      "layout": "pangaea",
+      "usedBy": [
+        "local inherited method and unseen later source work",
+        "parallel original-anchor paid crop trials"
+      ]
+    },
+    {
+      "seed": 1,
+      "worldgen": 14,
+      "size": 1040,
+      "layout": "pangaea",
+      "usedBy": [
+        "actual earned and paid inherited scout prototype"
+      ]
+    }
+  ],
+  "initialEndowmentDisclosure": {
+    "allCases": "Existing native-position architecture and bodies plus finite goods; no midrun stock/body/terrain/position repair or forced work completion. This is not an untouched-start campaign.",
+    "methods": {
+      "existingStructures": "two source halls/hearths at native camps1/2; recipient hall at native camp0",
+      "sourceStored": {
+        "provisions": 2000,
+        "wood": 100,
+        "stone": 40,
+        "grainSheaves": 8,
+        "plantFibre": 4,
+        "water": 200
+      },
+      "recipientStored": {
+        "provisions": 2000,
+        "wood": 100,
+        "stone": 40,
+        "grainSheaves": 8,
+        "water": 200
+      },
+      "bodies": "one source local actual maker, one source remote actual maker, eight recipient armed witnesses"
+    },
+    "trials": {
+      "architecture": "none",
+      "bodies": "one native-camp trial actor per community, eight recipient local witnesses",
+      "eachCommunityStored": {
+        "provisions": 2000,
+        "wood": 40,
+        "stone": 10,
+        "seeds": 4,
+        "water": 200
+      },
+      "paidSamples": {
+        "recipientPulses": 4,
+        "sourceGrain": 4
+      }
+    },
+    "prototype": {
+      "existingStructures": "source dock/hall; authored initial legal recipient camp location",
+      "sourceStored": {
+        "provisions": 2000,
+        "wood": 570,
+        "stone": 100,
+        "cordage": 20,
+        "water": 200
+      },
+      "sourceBodyCargoWood": [
+        20,
+        10
+      ],
+      "recipientStored": {
+        "provisions": 500,
+        "wood": 40,
+        "stone": 10,
+        "water": 100
+      },
+      "bodies": "four source workers; eight recipient witnesses; one uninvolved society2 worker to prevent tiny-fixture conquest ending",
+      "initialNightWork": true,
+      "boatPracticeOrBuiltCounterGrants": false
+    }
+  },
+  "results": {
+    "method": {
+      "realSourceHandThreshBatches": 1,
+      "publicLocalOccupationHeldByActualGameStep": true,
+      "actualLocalIntegration": true,
+      "immediateStrictSaveRestore": true,
+      "inheritedMethodUnlocksActualPaidFloorConstructionAndCraft": true,
+      "recipientOldHandThreshBatchCounterForged": false,
+      "laterRealRemoteSpinYarnMethodRemainsUnknown": true,
+      "datedProofUnchangedByLaterSourceWork": true,
+      "sourceSocietyRemainsAlive": true,
+      "globalGrainSheavesActuallyConsumedAcrossTwoOwnerBatches": 16
+    },
+    "trials": {
+      "originalIndependentKinds": [
+        "pulses",
+        "grain"
+      ],
+      "bothProgressBeforeAnnex": true,
+      "physicalLocalPeaceOfferDeliveredBeforeNomadicAnnex": true,
+      "immediateStrictSaveRestore": true,
+      "originalSourceCampAnchorPreserved": true,
+      "recipientOriginalCampPreserved": true,
+      "realHaltAndSecondStrictSaveThenResume": true,
+      "secondSamplePayment": 0,
+      "bothAdvanceIndependentlyAndComplete": true,
+      "finalRemainingSamples": 0,
+      "finalSeedStock": 8
+    },
+    "prototype": {
+      "sourceGenericHullPaid": {
+        "wood": 40,
+        "stone": 4
+      },
+      "sourceRealWaterborneWoodDelivery": 20,
+      "sourceActualScoutHullPaid": {
+        "wood": 24,
+        "stone": 2,
+        "cordage": 4
+      },
+      "actualSourceBuiltScoutCount": 1,
+      "immediateAnnexStrictSaveRestore": true,
+      "recipientActualScoutWoodDelivery": 10,
+      "recipientProvenScout": true,
+      "recipientScoutBuiltCountBeforeAndAfter": 0,
+      "finalScoutHullCount": 1,
+      "finalStrictSaveValid": true
+    }
+  },
+  "limits": [
+    "Explicit native V14 terrain, not V16/V17 opening coverage",
+    "Initial architecture/body/goods acquisition and untouched-start survival are not qualified",
+    "No universal autonomous society planner, LOS/occlusion, all-pairs information or UI/performance claim",
+    "Does not assign release percentage or blanket acceptance credit"
+  ]
+}

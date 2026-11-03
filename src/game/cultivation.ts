@@ -1,4 +1,4 @@
-import {campAnchor,supplyApproach,type SupplyDrop} from './campAnchor';
+import {campAnchor,supplyDrops,supplyApproach,type SupplyDrop} from './campAnchor';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
 import type {CropKind,Unit,ResourceNode,Building} from "./types";
@@ -34,21 +34,19 @@ export function collectSamples(u:Unit,n:ResourceNode,food:number){
   if(n.kind!=="forage"||!n.cropCandidate||food<=0)return;
   u.seedSamples??={};u.seedSamples[n.cropCandidate]=(u.seedSamples[n.cropCandidate]||0)+food*.5;
 }
+/** Stored seed headroom is independent of automatic gathering targets. Refuse
+ * the whole receipt before mutations at the strict bound; the carrier keeps it. */
+export const STORED_SEED_LIMIT=1e12;
 export function deliverSamples(g:Game,u:Unit){
-  if(!u.seedSamples){
-    if(u.carryType==='food'&&['grain','pulses','tubers'].includes(u.carryFood||''))g.tribe(u.team).seeds=Math.min(100000,(g.tribe(u.team).seeds||0)+u.carry*.08);
-    return;
-  }
-  const t=g.tribe(u.team);t.cropSamples??={};
-  let remaining=u.carryType==="food"?u.carry*.5:0;
-  for(const kind of CROPS){
-    const amount=Math.min(remaining,u.seedSamples[kind]||0);remaining-=amount;
-    if(!amount)continue;
-    t.seeds=Math.min(100000,(t.seeds||0)+amount);
-    const first=!(t.cropSamples[kind]||0);t.cropSamples[kind]=(t.cropSamples[kind]||0)+amount;
-    if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Choose Test seeds in Knowledge, or enable Auto work for a free adult to try them.`);
-  }
-  u.seedSamples=undefined;
+ const t=g.tribe(u.team),receipts:Partial<Record<CropKind,number>>={};let total=0;
+ if(!u.seedSamples){if(u.carryType==='food'&&['grain','pulses','tubers'].includes(u.carryFood||''))total=u.carry*.08;}
+ else{let remaining=u.carryType==='food'?u.carry*.5:0;for(const kind of CROPS){const amount=Math.min(remaining,u.seedSamples[kind]||0);remaining-=amount;if(amount>0){receipts[kind]=amount;total+=amount;}}}
+ if((t.seeds||0)+total>STORED_SEED_LIMIT||CROPS.some(k=>(t.cropSamples?.[k]||0)+(receipts[k]||0)>STORED_SEED_LIMIT)){u.workReason='Seed storage is at its limit; carrying the same harvest until space is available';return false;}
+ t.seeds=(t.seeds||0)+total;
+ for(const kind of CROPS){const amount=receipts[kind]||0;if(!amount)continue;t.cropSamples??={};const first=!(t.cropSamples[kind]||0);t.cropSamples[kind]=(t.cropSamples[kind]||0)+amount;
+  if(first&&u.team===0&&!t.cultivated?.includes(kind))lifeEvent(g,u.team,`${CROP_NAMES[kind]} samples brought home. Choose Test seeds in Knowledge, or enable Auto work for a free adult to try them.`);
+ }
+ u.seedSamples=undefined;return true;
 }
 export function cultivationIssue(g:Game,team=0){
   if(g.tribe(team).cultivated?.length)return null;
@@ -61,11 +59,24 @@ export function cropTrialWorkplace(g:Game,team=0):SupplyDrop|null {
   const origin=g.campOf(team),hall=g.state.buildings.filter(b=>b.team===team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-origin.x,a.z-origin.z)-Math.hypot(b.x-origin.x,b.z-origin.z)||a.id-b.id)[0];
   return hall||campAnchor(g,team);
 }
+export function inheritedTrialWorkplace(g:Game,team:number,q:NonNullable<ReturnType<Game['tribe']>['inheritedCropTrials']>[number]):SupplyDrop|null{
+ if(q.anchor.kind==='building')return g.state.buildings.find(b=>b.id===q.anchor.id&&b.team===team&&g.finished(b))||null;
+ return supplyDrops(g,team).find(p=>p.kind==='camp'&&Math.hypot(p.x-q.anchor.x,p.z-q.anchor.z)<.01)||null;
+}
+const inheritedActors=(g:Game,team:number)=>new Set((g.tribe(team).inheritedCropTrials||[]).flatMap(q=>q.actorIds));
+export function beginInheritedCropTrial(g:Game,handoverId:number,unitId?:number,team=0){
+ const t=g.tribe(team),q=t.inheritedCropTrials?.find(q=>q.handoverId===handoverId);if(!q)return false;
+ const workplace=inheritedTrialWorkplace(g,team,q);if(!workplace)return false;
+ q.actorIds=q.actorIds.filter(id=>g.state.units.some(u=>u.id===id&&u.team===team&&u.hp>0&&u.studyCrop===q.trial.kind));
+ if(q.actorIds.length>=CROP_TRIAL_RULES.maximumPeople)return false;
+ const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&u.hp>0&&u.type==='worker'&&!u.prisoner&&!isDependent(g,u)&&!u.militia&&!u.boat&&!u.emergency&&!u.recalled&&!u.resting&&!u.shelterId&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!u.jobLock&&!hasTaskCommitment(u)&&!u.studyCrop&&['idle','hold','gather'].includes(u.order)&&!!supplyApproach(g,u,workplace));
+ if(!u)return false;g.interruptMission(u);for(const other of t.inheritedCropTrials||[])other.actorIds=other.actorIds.filter(id=>id!==u.id);q.actorIds.push(u.id);u.studyCrop=q.trial.kind;u.node=null;u.target=null;u.order='hold';u.workReason='Resuming the same paid seed trial at its original site';return true;
+}
 export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitId?:number){
   const t=g.tribe(team);
   if(!CROPS.includes(kind)||t.cultivated?.includes(kind)||t.cropTrial&&t.cropTrial.kind!==kind)return false;
   const workplace=cropTrialWorkplace(g,team);if(!workplace)return false;
-  const participants=g.state.units.filter(u=>u.hp>0&&u.team===team&&u.studyCrop===kind);
+  const inherited=inheritedActors(g,team),participants=g.state.units.filter(u=>u.hp>0&&u.team===team&&u.studyCrop===kind&&!inherited.has(u.id));
   if(participants.length>=CROP_TRIAL_RULES.maximumPeople||automatic&&participants.length>0)return false;
   const u=g.state.units.find(u=>u.team===team&&(unitId===undefined||u.id===unitId)&&!hasTaskCommitment(u)&&!(u as Unit&{prisoner?:unknown}).prisoner&&u.hp>0&&u.type==="worker"&&!isDependent(g,u)&&u.carry===0&&(!automatic||!u.recalled&&!u.jobLock&&u.buildOrder===undefined&&u.drill==null&&["idle","gather"].includes(u.order))&&!u.emergency&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&["idle","gather","hold"].includes(u.order)&&!!supplyApproach(g,u,workplace));
   if(!u)return false;
@@ -75,13 +86,13 @@ export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitI
     const home=g.campOf(team);
     t.cropTrial={kind,progress:0,duration:30+Math.round((1-soilQuality(g,home.x,home.z))*15)};
   }
-  g.interruptMission(u);u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
+  g.interruptMission(u);for(const q of t.inheritedCropTrials||[])q.actorIds=q.actorIds.filter(id=>id!==u.id);u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
 }
 export function cropStudyAI(g:Game,u:Unit,dt:number){
   if(!u.copperStudy&&!u.studyCrop)return false;
-  const t=g.tribe(u.team),trial=t.cropTrial;
+  const t=g.tribe(u.team),inherited=t.inheritedCropTrials?.find(q=>q.actorIds.includes(u.id)),trial=inherited?.trial||t.cropTrial;
   if(u.order!=="hold"||!trial||trial.kind!==u.studyCrop||isDependent(g,u)) {u.studyCrop=undefined;return false;}
-  const workplace=cropTrialWorkplace(g,u.team);
+  const workplace=inherited?inheritedTrialWorkplace(g,u.team,inherited):cropTrialWorkplace(g,u.team);
   if(!workplace){u.studyCrop=undefined;u.order="idle";return false;}
   const spot=supplyApproach(g,u,workplace),place=workplace.kind==='camp'?'camp seed patch':'hearth';
   if(!spot){u.workReason=`Cultivation trial needs a reachable ${place}`;return true;}
@@ -89,13 +100,13 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
   if(reserveSeconds(g,u.team)<60){u.workReason="Cultivation paused — food for the village comes first";u.studyCrop=undefined;u.order="idle";return false;}
   // Each real participant works only after reaching the same hearth. Stable
   // diminishing shares bound the benefit; extra samples are not charged.
-  const participants=g.state.units.filter(p=>p.hp>0&&p.team===u.team&&p.studyCrop===trial.kind).sort((a,b)=>a.id-b.id),rank=participants.indexOf(u);
+  const inheritedIds=inheritedActors(g,u.team),participants=g.state.units.filter(p=>p.hp>0&&p.team===u.team&&p.studyCrop===trial.kind&&(inherited?inherited.actorIds.includes(p.id):!inheritedIds.has(p.id))).sort((a,b)=>a.id-b.id),rank=participants.indexOf(u);
   trial.progress=Math.min(trial.duration,trial.progress+Math.max(0,dt)*(CROP_TRIAL_RULES.workFractions[rank]||0));
   u.stride+=dt*6;u.workReason=`Testing ${trial.kind} cultivation · ${Math.round(100*trial.progress/trial.duration)}%`;
   if(trial.progress>=trial.duration){
-    t.cultivated??=[];t.cultivated.push(trial.kind);
-    if(u.team===0){g.banner(`Learned to cultivate ${trial.kind}. Fields can now grow it.`,5);lifeEvent(g,0,`Cultivation trials established ${trial.kind}.`);}
-    t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
+    t.cultivated??=[];const newlyLearned=!t.cultivated.includes(trial.kind);if(newlyLearned)t.cultivated.push(trial.kind);
+    if(u.team===0&&newlyLearned){g.banner(`Learned to cultivate ${trial.kind}. Fields can now grow it.`,5);lifeEvent(g,0,`Cultivation trials established ${trial.kind}.`);}
+    if(inherited)t.inheritedCropTrials=t.inheritedCropTrials!.filter(q=>q!==inherited);else t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
   }
   return true;
 }
@@ -147,6 +158,8 @@ export function tickAutomaticCultivation(g:Game){
  if(g.state.autoWorkEnabled===false)return;
  const t=g.tribe(0);
  if(!t||reserveSeconds(g,0)<120||g.state.weather==='storm')return;
+ const inherited=t.inheritedCropTrials?.find(q=>!q.actorIds.some(id=>g.state.units.some(u=>u.id===id&&u.hp>0&&u.team===0&&u.studyCrop===q.trial.kind)));
+ if(inherited&&beginInheritedCropTrial(g,inherited.handoverId))return;
  const kind=t.cropTrial?.kind||CROPS.find(k=>!t.cultivated?.includes(k)&&(t.cropSamples?.[k]||0)>=4);
  if(!kind)return;
  beginCropTrial(g,kind,0,true);

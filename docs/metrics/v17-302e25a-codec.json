@@ -1,0 +1,45 @@
+{
+  "baseline": "302e25a",
+  "checks": 3,
+  "cases": [
+    {
+      "tag": "archipelago",
+      "rawSha256": "a71ed799a1be94df4a79fefd59670200d6a7890ed8b9e69254327d4bbaa04fef",
+      "parsedCanonicalSha256": "a71ed799a1be94df4a79fefd59670200d6a7890ed8b9e69254327d4bbaa04fef",
+      "originalCanonicalSha256": "a71ed799a1be94df4a79fefd59670200d6a7890ed8b9e69254327d4bbaa04fef",
+      "rawCharacters": 575951,
+      "storedCharacters": 69380,
+      "storedUtf16Bytes": 138760,
+      "compressionRatio": 0.12046163649338225,
+      "strictV17": true,
+      "lossless": true,
+      "scope": "Actual public native V17 save through current302e25a storage codec; no browser injection or localStorage writes."
+    },
+    {
+      "tag": "continents",
+      "rawSha256": "e95d778430af3b0e94167c7c787235e5a1e2c8e66ad146dfbb6dd256bca8bec5",
+      "parsedCanonicalSha256": "e95d778430af3b0e94167c7c787235e5a1e2c8e66ad146dfbb6dd256bca8bec5",
+      "originalCanonicalSha256": "e95d778430af3b0e94167c7c787235e5a1e2c8e66ad146dfbb6dd256bca8bec5",
+      "rawCharacters": 1210436,
+      "storedCharacters": 169827,
+      "storedUtf16Bytes": 339654,
+      "compressionRatio": 0.14030233733960326,
+      "strictV17": true,
+      "lossless": true,
+      "scope": "Actual public native V17 save through current302e25a storage codec; no browser injection or localStorage writes."
+    },
+    {
+      "tag": "pangaea",
+      "rawSha256": "250532d7e99b43c5a5bd5b9754a90aa8e0c7e7b5b3ebab2a94d2fde86525500c",
+      "parsedCanonicalSha256": "250532d7e99b43c5a5bd5b9754a90aa8e0c7e7b5b3ebab2a94d2fde86525500c",
+      "originalCanonicalSha256": "250532d7e99b43c5a5bd5b9754a90aa8e0c7e7b5b3ebab2a94d2fde86525500c",
+      "rawCharacters": 981655,
+      "storedCharacters": 134854,
+      "storedUtf16Bytes": 269708,
+      "compressionRatio": 0.137374128385227,
+      "strictV17": true,
+      "lossless": true,
+      "scope": "Actual public native V17 save through current302e25a storage codec; no browser injection or localStorage writes."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type {Game} from '../game/sim';
-import {sampleHeight} from '../game/worldgen';
+import {sampleWorldHeight} from '../game/worldgen';
 import {excavationTerrain,excavationHeightAt,EXCAVATION_RULES} from '../game/excavation';
 import type {FieldSurface} from './fieldSurface';
 /** Replaces coarse tiles with a single bounded refined mesh, including shadows. */
@@ -17,7 +17,7 @@ export class ExcavationLayer {
   const data=excavationTerrain(g);if(this.revision===data.revision)return;this.revision=data.revision;this.fields.excavations.update(data);
   const source=this.terrain.geometry,basePos=source.getAttribute('position'),baseColors=source.getAttribute('color');
   const positions:number[]=[],colors:number[]=[],rock:number[]=[],sand:number[]=[],exposure:number[]=[],normals:number[]=[],indices:number[]=[],n=EXCAVATION_RULES.subdivisions;
-  const raw=(x:number,z:number)=>sampleHeight(g.world.heights,x,z,g.world.size),height=(x:number,z:number)=>excavationHeightAt(g,x,z,raw(x,z)),earth=new THREE.Color('#99846a'),normal=new THREE.Vector3();
+  const raw=(x:number,z:number)=>sampleWorldHeight(g.world,x,z),height=(x:number,z:number)=>excavationHeightAt(g,x,z,raw(x,z)),earth=new THREE.Color('#99846a'),normal=new THREE.Vector3();
   for(const tile of data.tiles.values()){
    const offset=positions.length/3;for(let iz=0;iz<=n;iz++)for(let ix=0;ix<=n;ix++){
     const x=(tile.x+ix/n)*data.tileSize-g.world.size/2,z=(tile.z+iz/n)*data.tileSize-g.world.size/2,y=tile.heights[iz*(n+1)+ix],removed=Math.max(0,raw(x,z)-y);

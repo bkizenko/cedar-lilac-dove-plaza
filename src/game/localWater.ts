@@ -1,4 +1,5 @@
-export type LocalWaterBody={kind:'lake';id:string;x:number;z:number;rx:number;rz:number;surfaceY:number;shoreline?:{x:number;z:number}[]}|{kind:'river';id:string;pts:{x:number;z:number;y:number;w?:number}[];width:number};
+import {ownedWaterIndex,indexedWaterAt,prepareOwnedWaterWorld} from './indexedLocalWater';
+export type LocalWaterBody={kind:'lake';id:string;x:number;z:number;rx:number;rz:number;surfaceY:number;shoreline?:{x:number;z:number}[]}|{kind:'river';id:string;pts:{x:number;z:number;y:number;w?:number}[];width:number;surfaceVersion?:2;startCap?:'round'|'butt';endCap?:'round'|'butt'};
 export type Waterfall={x:number;z:number;upperY:number;lowerY:number;width:number;dx:number;dz:number};
 export type LakeBody=Extract<LocalWaterBody,{kind:'lake'}>;
 export function lakeContains(body:LakeBody,x:number,z:number){
@@ -17,7 +18,8 @@ export function lakeBoundaryDistance(body:LakeBody,x:number,z:number){
   distance=Math.min(distance,Math.hypot(x-a.x-t*dx,z-a.z-t*dz));
  }return lakeContains(body,x,z)?-distance:distance;
 }
-/** Exact shared wet footprint for rendering, terrain carving and navigation. */
+/** Historical rounded centerline footprint. V17 gameplay uses the indexed
+ * published triangle surface instead; this function preserves older terrain. */
 export function localWaterAt(bodies:LocalWaterBody[],x:number,z:number):number|null{
  let surface:number|null=null;
  for(const body of bodies){
@@ -32,7 +34,8 @@ export function localWaterAt(bodies:LocalWaterBody[],x:number,z:number):number|n
  }
  return surface;
 }
-export function waterSurfaceAt(world:{waterY:number;baseWaterY?:number;size?:number;waterBodies?:LocalWaterBody[];waterHeights?:Float32Array},x:number,z:number){
+export function waterSurfaceAt(world:{waterY:number;baseWaterY?:number;size?:number;waterBodies?:LocalWaterBody[];waterfalls?:Waterfall[];waterHeights?:Float32Array;localWaterVersion?:number},x:number,z:number){
+ if(world.localWaterVersion===17&&world.size){prepareOwnedWaterWorld(world);const {index}=ownedWaterIndex(world.waterBodies||[],world.size,world.waterfalls),surface=indexedWaterAt(index,x,z,lakeContains);return Math.max(world.waterY,surface===null?-Infinity:surface+world.waterY-(world.baseWaterY??world.waterY));}
  const grid=world.waterHeights,size=world.size;
  if(grid&&size){
   const segs=Math.round(Math.sqrt(grid.length))-1,n=segs+1,gx=(x/size+.5)*segs,gz=(z/size+.5)*segs;

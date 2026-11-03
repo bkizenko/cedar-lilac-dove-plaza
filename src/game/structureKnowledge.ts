@@ -1,3 +1,4 @@
+import{informationOwner,validInformationCustody}from'./informationCustody';
 import type { Game } from "./sim";
 import type { Building, GameState, Unit } from "./types";
 import { BUILDINGS } from "./constants";
@@ -12,7 +13,7 @@ export const STRUCTURE_KNOWLEDGE_RULES = {
   maximumCarried: 64,
 } as const;
 type Site = Pick<Building, "id" | "type" | "team" | "x" | "y" | "z" | "w" | "d" | "hp" | "maxHp">;
-export type StructureReport = {
+export type StructureReport = import("./informationCustody").InformationCustody&{
   version: 1;
   observer: number;
   witnessId: number;
@@ -27,7 +28,7 @@ const distance = (a: { x: number; z: number }, b: { x: number; z: number }) =>
   Math.hypot(a.x - b.x, a.z - b.z);
 const free = (u: Unit) => u.hp > 0 && (!u.prisoner || u.prisoner.phase === "released");
 const reviews = new WeakMap<Game, { state: GameState; time: number }>();
-const key = (p: StructureReport) => `${p.observer}:${p.site.id}`;
+const key = (p: StructureReport) => `${informationOwner(p,p.observer)}:${p.site.id}`;
 function remember(list: StructureReport[], fact: StructureReport, cap: number) {
   const at = list.findIndex((p) => key(p) === key(fact));
   if (at >= 0) {
@@ -99,7 +100,7 @@ export function tickStructureKnowledge(g: Game, force = false) {
       }
     const cargo = u.structureReportCargo || [];
     for (const old of [...nearbyMemories, ...cargo]) {
-      if (old.observer !== u.team || !old.active || distance(u, old.site) > size) continue;
+      if (informationOwner(old,old.observer) !== u.team || !old.active || distance(u, old.site) > size) continue;
       const b = byId.get(old.site.id);
       if (
         b &&
@@ -161,23 +162,13 @@ export function tickStructureKnowledge(g: Game, force = false) {
       );
     }
     if (cargo.length) u.structureReportCargo = cargo;
-    if (cargo.length && (u.team === 0 || tradeIntelHomeReached(g, u))) {
-      const reports = (g.state.structureReports ??= []);
-      for (const fact of cargo)
-        if (fact.observer === u.team)
-          remember(
-            reports,
-            { ...fact, receivedAt: g.state.time, site: { ...fact.site } },
-            STRUCTURE_KNOWLEDGE_RULES.maximumShared,
-          );
-      u.structureReportCargo = undefined;
-    }
+    if(cargo.length){const reports=(g.state.structureReports??=[]),pending:StructureReport[]=[];const home=tradeIntelHomeReached(g,u);for(const fact of cargo){if(informationOwner(fact,fact.observer)===u.team&&(home||u.team===0&&fact.holderTeam===undefined))remember(reports,{...fact,receivedAt:g.state.time,site:{...fact.site}},STRUCTURE_KNOWLEDGE_RULES.maximumShared);else pending.push(fact);}u.structureReportCargo=pending.length?pending:undefined;}
   }
 }
 export function knownStructures(g: Game, observer: number, owner?: number) {
   tickStructureKnowledge(g);
   return (g.state.structureReports || []).filter(
-    (p) => p.observer === observer && p.active && (owner === undefined || p.site.team === owner),
+    (p) => informationOwner(p,p.observer) === observer && p.site.team!==observer && p.active && (owner === undefined || p.site.team === owner),
   );
 }
 /** An inert dated target for planning only. Never pass this object to combat. */
@@ -204,6 +195,8 @@ export function validStructureKnowledge(s: GameState) {
     !!p &&
     keys(p, [
       "version",
+      "holderTeam",
+      "handoverId",
       "observer",
       "witnessId",
       "observedAt",
@@ -213,6 +206,7 @@ export function validStructureKnowledge(s: GameState) {
       "defenders",
       "defensePower",
     ]) &&
+    validInformationCustody(s,p,p.observer,p.witnessId) &&
     p.version === 1 &&
     team(p.observer) &&
     id(p.witnessId) &&

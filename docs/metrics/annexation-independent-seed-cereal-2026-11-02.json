@@ -1,0 +1,91 @@
+{
+  "scope": "Independent frozen seed receipt + winnowing consumers, test/evidence only; no acceptance credit",
+  "cases": 5,
+  "passed": 5,
+  "failed": 0,
+  "durationMs": 13414.236625,
+  "log": "/tmp/annexation-seed-cereal-after.log",
+  "causalBefore": {
+    "sameShortenedNativeFixture": true,
+    "oldConsumerResult": 100000,
+    "expectedResult": 180005,
+    "durationMs": 2675.066667,
+    "log": "/tmp/annexation-seed-receipt-short-before.log"
+  },
+  "consumerAssembly": "Owner-authorized cultivation freeze; surgical two sim delivery guards + rival-return guard; later caravan accounting order; frozen baseline cerealRules with only exact owner-authored seed-capacity/finish functions; production import/finish guard. Actively authored inherited-knowledge methods were intentionally excluded.",
+  "native": {
+    "seed": 345,
+    "worldgen": 14,
+    "size": 1040,
+    "layout": "pangaea",
+    "sameHeightfieldAfterRestore": true,
+    "noMidrunStockBodyTerrainPositionRepair": true
+  },
+  "sampleCases": [
+    {
+      "initialSourceSeeds": 90000,
+      "initialRecipientSeeds": 90000,
+      "initialCarriedGrainFood": 10,
+      "initialCarriedSamples": 5,
+      "resultStoredSeeds": 180005,
+      "cargoClearedExactlyOnce": true
+    },
+    {
+      "initialSourceSeeds": 500000000000.0,
+      "initialRecipientSeeds": 500000000000.0,
+      "initialCarriedGrainFood": 10,
+      "initialCarriedSamples": 5,
+      "resultStoredSeeds": 1000000000000.0,
+      "cargoRetained": true,
+      "sampleStateRetained": true,
+      "falseFoodDeliveryEvents": 0
+    },
+    {
+      "initialSourceSeeds": 500000000000.0,
+      "initialRecipientSeeds": 500000000000.0,
+      "initialCarriedGrainFood": 10,
+      "initialCarriedSamples": 0,
+      "resultStoredSeeds": 1000000000000.0,
+      "cargoRetained": true,
+      "falseFoodDeliveryEvents": 0
+    }
+  ],
+  "cerealCases": [
+    {
+      "initialSourceSeeds": 90000,
+      "initialRecipientSeeds": 90000,
+      "paidRoughGrain": 6,
+      "actualPaidWorkBeforeAnnexation": true,
+      "foodGrainDelivered": 3.68,
+      "chaffDelivered": 2,
+      "seedsAllocated": 0.32,
+      "seedLoss": 0,
+      "receiptCount": 1
+    },
+    {
+      "initialSourceSeeds": 1000000000000.0,
+      "initialRecipientSeeds": 0,
+      "paidRoughGrain": 6,
+      "actualPaidWorkBeforeAnnexation": true,
+      "phaseAfterFinishAttempt": "returning",
+      "grainChaffSeedPartialCredit": 0,
+      "seedLoss": 0,
+      "sameFinishedPaidBatchRetainedThroughPausedSave": true
+    }
+  ],
+  "initialArchitectureAndBodies": "Authored existing native halls/hearth and bodies. Sample carrier initially at legal native hall frontage; earlier route/acquisition not claimed. No forces complete work.",
+  "sourceSha256": {
+    "src/game/cultivation.ts": "3b9f485114c6eb34ef9de36c6bd20cdae166a0353b2d6d3841441a6f03a9649a",
+    "src/game/cerealRules.ts": "1b62c669b11ac8fa0cb58eeb72078be493514453d95f072f04f4883d3ac35a1b",
+    "src/game/production.ts": "0992123cb1d80dcf1d4e724658e686ef035f60ab12f4cc1e2b17f2ab0736fee5",
+    "src/game/sim.ts": "c81b546d2ea99f59d9321cce13deefde0c03ba6a0532ad7ac1d900e5f125a316",
+    "src/game/rivalActivity.ts": "48b6737e37bcfd4fd326d930389fadbcc44fea64deaf1d24850674f10b6a1c9f",
+    "src/game/persistence.ts": "ea4cb45bf9cc10d081042d902907e52f888da18b250a471b75a66df4b3f10370",
+    "src/game/communityHandover.ts": "61f01dbcd1e053c9a7a751ddd56388c365cb5ba6c7ddacd6450761d37bc445ca"
+  },
+  "remaining": [
+    "root combined inherited-knowledge consumer integration not covered by this frozen assembly",
+    "actual caravan return regression is root-owned; empty-carrier cleanup risk reported separately",
+    "no original farming/forage/hall acquisition or performance/UI claim"
+  ]
+}

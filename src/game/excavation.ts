@@ -1,6 +1,6 @@
 import type {Game} from './sim';
 import type {Building} from './types';
-import {sampleHeight} from './worldgen';
+import {sampleWorldHeight} from './worldgen';
 export const EXCAVATION_RULES={version:1,depths:[.5,1,1.5,2] as readonly number[],defaultDepth:1,maximumBankGrade:.30,subdivisions:16,coarseCellsPerTile:2,maximumTiles:512,maximumCuts:512,workSecondsPerCubicMeter:6,minimumWorkSeconds:18,waterClearanceMeters:.35,maximumNaturalGrade:.24} as const;
 export type TerrainCut={version:1;id:number;buildingId:number;team:number;x:number;z:number;w:number;d:number;depth:number;volumeCubicMeters:number;workSeconds:number;legacyPaid?:boolean};
 type ExcavationState={excavations?:TerrainCut[];excavationDepth?:number};
@@ -18,7 +18,7 @@ export function cutBounds(c:Pick<TerrainCut,'x'|'z'|'w'|'d'|'depth'>){const r=cu
 export type ExcavationTile={x:number;z:number;key:number;heights:Float32Array;cuts:TerrainCut[]};
 export type ExcavationTerrain={world:Game['world'];records:TerrainCut[];count:number;tileSize:number;width:number;tiles:Map<number,ExcavationTile>;revision:number;buildingIds:Set<number>};
 const cache=new WeakMap<Game,ExcavationTerrain>();
-const raw=(g:Game,x:number,z:number)=>sampleHeight(g.world.heights,x,z,g.world.size);
+const raw=(g:Game,x:number,z:number)=>sampleWorldHeight(g.world,x,z);
 function tileKeys(g:Game,cut:Pick<TerrainCut,'x'|'z'|'w'|'d'|'depth'>,size:number,width:number){const b=cutBounds(cut),half=g.world.size/2,keys:number[]=[];for(let z=Math.max(0,Math.floor((b.z0+half)/size));z<=Math.min(width-1,Math.floor((b.z1+half)/size));z++)for(let x=Math.max(0,Math.floor((b.x0+half)/size));x<=Math.min(width-1,Math.floor((b.x1+half)/size));x++)keys.push(z*width+x);return keys;}
 /** Lazy derived refinement: 289 shared samples per active tile, no global upsample. */
 export function excavationTerrain(g:Game):ExcavationTerrain{

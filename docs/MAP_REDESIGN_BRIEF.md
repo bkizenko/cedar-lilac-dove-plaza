@@ -80,3 +80,10 @@ For representative ordinary and dramatic seeds, capture desktop **close, middle 
 Review actual lit geometry with shadows and water visible; repeat one representative view in overcast light so the design does not depend on one flattering sunset. Confirm that the same cliff shown on screen blocks movement and that the visible route is traversable. Run first-winter and save/load checks after placement changes.
 
 Release evidence must state which geometric families passed, which views were inspected, and any remaining limits. A green build, a high scenic score, a feature tag or a list of designed amplitudes cannot substitute for that evidence.
+
+
+## November 3 QA: distribute interesting terrain across the world (pending)
+
+The supplied screenshot shows several major peaks, pillar groups, canyon/river cuts and lakes concentrated around the starting basin. Required feature families belong to the map as a whole. Spread substantial hills, valleys, river systems, lakes and occasional dramatic landmarks among geographically separate regions; retain ordinary plains, rolling country and quiet coasts between them. Do not repeat every dramatic feature on every island or force all landmarks into one scenic starting district. Keep the player's start above average without making it the only interesting destination.
+
+Measure actual geometric feature footprints, not labels. Record occupied land-area bins, distance between independent feature districts, per-family spread, the fraction of dramatic-feature area in the densest local district, and distances from the starting camp. Make density, spacing and clustering limits tunable per layout/size, with allowances for physically coherent mountain ranges, connected drainage and local geological clusters. Evaluate fixed seeds and rotating holdouts; show whole-map feature overlays and ordinary/interesting region samples. Preserve existing saved terrain. This is added backlog, not an implemented distribution fix or a new release-gate denominator.

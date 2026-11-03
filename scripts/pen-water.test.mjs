@@ -42,12 +42,13 @@ test('accepted intact occupation preserves stored or carried herd water and anim
   const load=fetch(f);if(!inTransit)drive(g,120,()=>pen.penWater.deliveredLiters>0);
   const held=(pen.penWater?.liters??0)+(keeper.husbandryWork?.waterLiters??0),hp=pen.hp,herd=g.state.livestock.map(a=>({id:a.id,hp:a.hp}));
   g.state.paused=true;const result=integrateOccupiedVillage(g,control.id);assert.equal(result.accepted,true,result.reason);
-  assert.equal(pen.team,1);assert.equal(pen.hp,hp);assert.equal(keeper.team,1);assert.equal((pen.penWater?.liters??0)+(keeper.husbandryWork?.waterLiters??0),held);
+  const currentPen=g.state.buildings.find(b=>b.id===pen.id),currentKeeper=g.state.units.find(u=>u.id===keeper.id);
+  assert.equal(currentPen.team,1);assert.equal(currentPen.hp,hp);assert.equal(currentKeeper.team,1);assert.equal((currentPen.penWater?.liters??0)+(currentKeeper.husbandryWork?.waterLiters??0),held);
   assert.deepEqual(g.state.livestock.map(a=>({id:a.id,hp:a.hp})),herd);assert.ok(g.state.livestock.every(a=>a.team===1));
   assert.equal(g.tribe(0).survival.waterHerdTransferredOutLiters,held);assert.equal(g.tribe(1).survival.waterHerdTransferredInLiters,held);
   assert.equal(g.tribe(0).survival.waterHerdLostLiters??0,0);assert.equal(g.tribe(1).survival.waterHerdLostLiters??0,0);
   for(const team of[0,1])assert.ok(Math.abs(herdWaterAccounting(g,team).balanceErrorLiters)<1e-7);
-  const copy=decodeGame(structuredClone(encodeGame(g)));assert.equal(validPenWaterState(copy.state),true);assert.equal(copy.state.buildings.find(b=>b.id===pen.id).penWater?.liters??0,pen.penWater?.liters??0);assert.equal(integrateOccupiedVillage(g,control.id).accepted,false);assert.equal(g.tribe(1).survival.waterHerdTransferredInLiters,held);
+  const copy=decodeGame(structuredClone(encodeGame(g)));assert.equal(validPenWaterState(copy.state),true);assert.equal(copy.state.buildings.find(b=>b.id===pen.id).penWater?.liters??0,currentPen.penWater?.liters??0);assert.equal(integrateOccupiedVillage(g,control.id).accepted,false);assert.equal(g.tribe(1).survival.waterHerdTransferredInLiters,held);
  }
 });
 

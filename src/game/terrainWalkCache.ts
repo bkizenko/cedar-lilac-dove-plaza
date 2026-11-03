@@ -9,7 +9,7 @@ export function terrainWalkBase(g:Game,build:()=>Uint8Array){
  // Test tools/custom worlds may override samplers with closures whose state is
  // not represented by WorldData. Preserve explicit rebuild semantics for them.
  if(g.height!==prototype.height||g.waterAt!==prototype.waterAt||g.travelHeight!==prototype.travelHeight)return build();
- const world=g.world,cuts=(g.state as Game['state']&{excavations?:unknown[]}).excavations,bridges=JSON.stringify(g.state.buildings.filter(b=>b.type==='bridge'&&g.finished(b)&&b.bridge).map(b=>b.bridge)),waterBodies=world.waterHeights?'':JSON.stringify(world.waterBodies||[]),old=entries.get(g);
+ const world=g.world,cuts=(g.state as Game['state']&{excavations?:unknown[]}).excavations,bridges=JSON.stringify(g.state.buildings.filter(b=>b.type==='bridge'&&g.finished(b)&&b.bridge).map(b=>b.bridge)),waterBodies=world.waterHeights&&world.localWaterVersion!==17?'':JSON.stringify(world.waterBodies||[])+(world.localWaterVersion===17?JSON.stringify(world.waterfalls||[]):''),old=entries.get(g);
  if(old?.world===world&&old.size===world.size&&old.waterY===world.waterY&&old.baseWaterY===world.baseWaterY&&old.heights===world.heights&&old.water===world.waterHeights&&old.bridges===bridges&&old.waterBodies===waterBodies&&old.cuts===cuts&&old.cutCount===(cuts?.length||0)&&sameTypedValues(world.heights,old.heightCopy)&&sameTypedValues(world.waterHeights,old.waterCopy)){old.hits++;return old.grid;}
  const grid=build();entries.set(g,{world,size:world.size,waterY:world.waterY,baseWaterY:world.baseWaterY,heights:world.heights,heightCopy:world.heights.slice(),water:world.waterHeights,waterCopy:world.waterHeights?.slice(),waterBodies,bridges,cuts,cutCount:cuts?.length||0,grid,builds:(old?.builds||0)+1,hits:old?.hits||0});return grid;
 }

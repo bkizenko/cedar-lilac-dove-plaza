@@ -15,7 +15,7 @@ function eligible(g:Game,u:Unit,ownProjectId?:number){return u.hp>0&&u.type==='w
 const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyApproach(g,u,d);return!!p&&supplyReached(g,u,d,p);});
 /** Subsistence construction must not be cancelled by the generic food-shortage
  * reassignment that was written for discretionary buildings. No fake job flag. */
-export function rivalFoodConstructionActive(g:Game,u:Unit){const b=u.order==='build'&&u.node&&'type'in u.node?u.node:null;return isRivalTeam(u.team)&&u.type==='worker'&&!u.prisoner&&!u.emergency&&!!b&&b.team===u.team&&b.type==='hearth'&&b.hp>0&&!g.finished(b)&&!b.plannedCost&&g.tribe(u.team)?.animalProcessingVersion===1&&(g.tribe(u.team).items?.rawMeat||0)>0;}
+export function rivalFoodConstructionActive(g:Game,u:Unit){const b=u.order==='build'&&u.node&&'type'in u.node?u.node:null;return isRivalTeam(u.team)&&u.type==='worker'&&!u.prisoner&&!u.emergency&&!!b&&b.team===u.team&&b.type==='hearth'&&b.hp>0&&!g.finished(b)&&!b.plannedCost&&((g.tribe(u.team)?.animalProcessingVersion===1&&(g.tribe(u.team).items?.rawMeat||0)>0)||(g.tribe(u.team).items?.grainSheaves||0)>=8||(g.tribe(u.team).items?.roughGrain||0)>=6);}
 /** An ordinary local plan pays shared construction/production costs and uses
  * existing bodies, physical cache loading, work ownership and saved projects. */
 export function reviewRivalFoodProcessing(g:Game,team:number){

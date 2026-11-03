@@ -102,7 +102,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   cornerstone: <Compass className="size-4" />,
   townhall: <Landmark className="size-4" />,
   smokehouse: <Fish className="size-4" />,
-  grindingStone: <Wheat className="size-4" />, oven: <Wheat className="size-4" />,
+  threshingFloor: <Wheat className="size-4" />, grindingStone: <Wheat className="size-4" />, oven: <Wheat className="size-4" />,
   farm: <Wheat className="size-4" />,
   lumber: <Axe className="size-4" />,
   quarry: <Pickaxe className="size-4" />,
@@ -185,7 +185,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>}
         {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
           <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>
-          <GameTooltip title={engine?.game.state.autoWorkEnabled===false?'Enable Auto work':'Pause Auto work'} description="Available residents follow village priorities; direct orders and paid work stay protected."><button aria-label="Auto work" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}><Hammer/><span>{engine?.game.state.autoWorkEnabled===false?'Off':'On'}</span></button></GameTooltip>
+          <GameTooltip title={engine?.game.state.autoWorkEnabled===false?'Enable Auto work':'Pause Auto work'} description="Village-wide Auto work. Available residents follow village priorities; direct orders and paid work stay protected."><button className="village-auto-work" aria-label="Auto work" aria-pressed={engine?.game.state.autoWorkEnabled!==false} onClick={()=>{if(engine){engine.game.setAutoWork(engine.game.state.autoWorkEnabled===false);engine.pushHud();}}}><Hammer/><span>Auto work: {engine?.game.state.autoWorkEnabled===false?'Off':'On'}</span></button></GameTooltip>
           <GameTooltip title="Workload" description="See planned work, capacity and blocked tasks."><button aria-label="Workload" aria-pressed={statusPane==='work'} onClick={()=>setStatusPane(v=>v==='work'?null:'work')}><ClipboardList/></button></GameTooltip>
           <GameTooltip title="Mark trees" description="Drag over trees to mark them for felling (N)."><button aria-label="Mark trees" aria-pressed={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}><TreePine/></button></GameTooltip>
           <GameTooltip title="Home" description="Return the camera to your settlement (F)."><button aria-label="Home" onClick={()=>engine?.focusHome()}><Home/></button></GameTooltip>
@@ -745,7 +745,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","pen","dock","grove","hearth","butcher","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor","potter","kiln","fibreWorkshop"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove","hearth","butcher","threshingFloor","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor","potter","kiln","fibreWorkshop"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const unaffordable =

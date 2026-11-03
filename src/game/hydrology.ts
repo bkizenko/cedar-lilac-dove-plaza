@@ -12,3 +12,9 @@ export function dryTreeRoot(height:(x:number,z:number)=>number,x:number,z:number
  for(let i=0;i<8;i++){const a=i*Math.PI/4;if(height(x+Math.cos(a)*radius,z+Math.sin(a)*radius)<level)return false;}
  return true;
 }
+
+/** V17 checks every root against its own actual local flood plane. */
+export function dryTreeRootLocal(height:(x:number,z:number)=>number,water:(x:number,z:number)=>number,x:number,z:number,radius=1.5){
+ const dry=(px:number,pz:number)=>height(px,pz)>=highWaterLevel(water(px,pz))+.3;
+ if(!dry(x,z))return false;for(let i=0;i<8;i++){const a=i*Math.PI/4;if(!dry(x+Math.cos(a)*radius,z+Math.sin(a)*radius))return false;}return true;
+}
