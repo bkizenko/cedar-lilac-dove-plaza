@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baselineId": "hearthwild-first-release-gates-v1",
-  "auditDate": "2026-10-31",
+  "auditDate": "2026-11-03",
   "scope": "Stone, Bronze, Iron, Classical first release; desktop only",
   "scopeSources": [
     "docs/INCENTIVE_FIRST_MASTER_PLAN.md",
@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "302e25a plus the published cereal/atomic-handover batch of November 3; M3-11 restored after final merged-source physical continuation and strict-save checks. Remaining campaign and map visual acceptance stay unverified",
+  "verifiedPublishedCodeBaseline": "2764d2c, published as 2026-11-03T16-32-00-2764d2c on ports 8086 and 8101; V18 C4b physical terrain and approach gates qualified. Organic rivers, gallery, performance and remaining campaign scope stay unverified",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -29,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 32,
+    "verifiedGates": 34,
     "totalGates": 98,
-    "verifiedGatePercent": 32.65
+    "verifiedGatePercent": 34.69
   },
   "milestones": {
     "M0": {
@@ -40,9 +40,9 @@
       "verifiedGatePercent": 66.67
     },
     "M1": {
-      "verifiedGates": 15,
+      "verifiedGates": 17,
       "totalGates": 22,
-      "verifiedGatePercent": 68.18
+      "verifiedGatePercent": 77.27
     },
     "M2": {
       "verifiedGates": 1,
@@ -187,6 +187,12 @@
       "path": "docs/PUBLISHED_CRAFTING_HANDOVER_2026-11-03.md",
       "kind": "Executed final merged-source native and controlled local occupation, strict save/restore and physical continuation",
       "scope": "M3-11 only. Actual present garrison hold and public local integration preserve person/building/paid-project IDs, local stock scope, boats/crews, stored/carried herd water and continuation; broad society, naval war and campaign gates remain unverified."
+    },
+    "v18c4b-published": {
+      "path": "docs/V18_C4B_PUBLICATION_2026-11-03.md",
+      "section": "Executed evidence / Actual desktop review / limitations",
+      "kind": "published exact-source native geometry, physical journeys, old-world preservation, winter and actual desktop saved continuation",
+      "scope": "2764d2c C4b seven-source65bcb428. Five native cases, twenty fixed/rotating generation screens19/20 with separately accepted flatter-world case; final12-family geometry guards, wet descending rivers, measured route/root/foundation probes; four paid original-founder quarry trips;27/27 final winter/save-controller cases; no smooth-bank/performance claim."
     }
   },
   "gates": [
@@ -579,10 +585,12 @@
       "catalogueRanges": [
         "01-10"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "v11 implementation and focused checks are unpublished integration work; zero credit until integrated acceptance/publish."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "v18c4b-published"
+      ],
+      "remainingNotes": "PublishedV18 enforces measured mandatory hills/valley/river/lake and other family geometry; native routes/drainage and distributed physical districts pass fixed/holdout checks. Per the user clarification, required families occur once per map; genuinely flat ordinary islands are not forced to gain an arbitrary4m hill. Real upland approaches are checked where relief exists, including four actual founder ascent/quarry journeys. Original20-map relative-area screen remains19/20; separate flatter-world review passes12 actual family gates and useful travel. Organic channel/bank presentation remainsM1-16/M5-04, not credited here."
     },
     {
       "id": "M1-16",
@@ -618,10 +626,12 @@
         "01-10",
         "51-70"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "New elevated water changes physical access/dry placements; unpublished v11 must pass broader scenarios."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "v18c4b-published"
+      ],
+      "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1–17 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
     },
     {
       "id": "M1-19",

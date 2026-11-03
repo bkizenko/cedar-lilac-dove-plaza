@@ -1,17 +1,17 @@
 # First-release acceptance progress
 
-Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
+Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-03 · desktop only.
 
-**32/98 verified gates — 32.65%.** This measures acceptance evidence, not development effort or time remaining.
+**34/98 verified gates — 34.69%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 302e25a plus the published cereal/atomic-handover batch of November 3; M3-11 restored after final merged-source physical continuation and strict-save checks. Remaining campaign and map visual acceptance stay unverified. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: 2764d2c, published as 2026-11-03T16-32-00-2764d2c on ports 8086 and 8101; V18 C4b physical terrain and approach gates qualified. Organic rivers, gallery, performance and remaining campaign scope stay unverified. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
 | Milestone | Verified / total | Verified checks |
 | --- | ---: | ---: |
 | M0 | 8/12 | 66.67% |
-| M1 | 15/22 | 68.18% |
+| M1 | 17/22 | 77.27% |
 | M2 | 1/16 | 6.25% |
 | M3 | 3/18 | 16.67% |
 | M4 | 2/20 | 10% |
@@ -54,10 +54,10 @@ Verified baseline: 302e25a plus the published cereal/atomic-handover batch of No
 | M1-12 | verified | Early animals require real capture, food and care rather than automatic initial gifts | materialsPastureDefense. Natural current V14 actual paid pen, native wild goat ID captured/returned, real care and finite grazing. Controlled winter plant-food delivery/conservation checks pass. No initial livestock gifts; broader species and full winter campaign remain separate. |
 | M1-13 | verified | Seed-funded expandable farms follow contours and support soil/fallow/preservation/milling decisions | contourFood20261102. Whole-gate connected scenario passed on combined candidate; exact provenance/controlled fixture limits recorded. Does not credit full campaign balance or unrelated performance/visual gates. |
 | M1-14 | pending | Food attention, local depletion/regrowth and warned hazards produce choices without broken labor | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
-| M1-15 | pending | Every map has mandatory hills/valleys/rivers/lakes; substantial landmasses have coherent drainage and reachable uplands | No matching executed evidence. v11 implementation and focused checks are unpublished integration work; zero credit until integrated acceptance/publish. |
+| M1-15 | verified | Every map has mandatory hills/valleys/rivers/lakes; substantial landmasses have coherent drainage and reachable uplands | v18c4b-published. PublishedV18 enforces measured mandatory hills/valley/river/lake and other family geometry; native routes/drainage and distributed physical districts pass fixed/holdout checks. Per the user clarification, required families occur once per map; genuinely flat ordinary islands are not forced to gain an arbitrary4m hill. Real upland approaches are checked where relief exists, including four actual founder ascent/quarry journeys. Original20-map relative-area screen remains19/20; separate flatter-world review passes12 actual family gates and useful travel. Organic channel/bank presentation remainsM1-16/M5-04, not credited here. |
 | M1-16 | pending | Every map contains all required landscape families with organic forms and varied prominence | No matching executed evidence. Organic v11 forms/material/water fixes are under desktop review; prior ellipse/teeth/striped fall gallery was rejected. |
 | M1-17 | verified | Scenic scores expose geographic components and choose an above-average viable start when feasible | batch1. Numeric geographic score components and above-average candidate selection verified. User rejects broader art; M1-16/M5-04 remain pending. |
-| M1-18 | pending | New terrain supports dry roots/foundations, freshwater access and prospectable mountain approaches | No matching executed evidence. New elevated water changes physical access/dry placements; unpublished v11 must pass broader scenarios. |
+| M1-18 | verified | New terrain supports dry roots/foundations, freshwater access and prospectable mountain approaches | v18c4b-published. PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1–17 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim. |
 | M1-19 | verified | Water/cold neglect produces visible warnings and grace before gradual harm; legacy needs rules persist | batch4. Needs warnings/grace/neglect and legacy opt-in compatibility checked, not all survival pressures. |
 | M1-20 | verified | Current Normal default-conflict unbuilt-camp scenario survives first winter with water/fuel/food/defense and no repair | v14winter. Current combined-index scenario passes with five founders surviving, actual automatic water deliveries, real fuel, food reserves, defense and strict save; no grants/terrain edits/repairs. Wider campaign and holdout balance remain open. |
 | M1-21 | pending | Every map contains at least eight substantial ecological regions with measured coverage, coherent moisture/soil/climate transitions and matching resources | No matching executed evidence. Eight substantial connected biomes are implemented and area-qualified across current V14 cases. Full current transition-gradient and per-region resource-distribution acceptance remains unverified. |
