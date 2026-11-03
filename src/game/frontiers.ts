@@ -1,3 +1,4 @@
+import {difficultyGrievance} from './difficulty';
 import {queueDiplomaticMessage} from './diplomaticKnowledge';
 import {refreshSettlementSites} from './settlementKnowledge';
 export {validObservedSettlements} from './settlementKnowledge';
@@ -228,8 +229,8 @@ export function tickFrontiers(g:Game){
    grievance+=Math.max(0,1-d/160)*(.5+p.value+need+Math.max(0,t.expand)*.3)*(t.trust!==undefined?1-Math.min(.7,t.trust*.5):1);
   }
   if(!grievance)continue;
-  const before=t.tension;t.tension=Math.min(1,t.tension+dt*Math.min(.24,grievance*.2));
-  t.trust=Math.max(0,(t.trust||0)-dt*Math.min(.006,grievance*.003));
+  const before=t.tension;t.tension=Math.min(1,t.tension+difficultyGrievance(g,dt*Math.min(.24,grievance*.2)));
+  t.trust=Math.max(0,(t.trust||0)-difficultyGrievance(g,dt*Math.min(.006,grievance*.003)));
   let warned=warnings.get(g);if(!warned){warned=new Map();warnings.set(g,warned);}
   const last=warned.get(t.id)??-Infinity;
   if(before<.28&&t.tension>=.28&&(g.state.time-last>120||g.state.time<last)){const witness=g.state.observedClaims?.find(p=>p.observer===t.id&&p.active)?.witnessId;queueDiplomaticMessage(g,t.id,'frontier',undefined,witness);warned.set(t.id,g.state.time);}

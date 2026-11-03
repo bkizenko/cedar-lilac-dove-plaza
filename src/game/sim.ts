@@ -1,3 +1,4 @@
+import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
@@ -332,6 +333,7 @@ export class Game {
   }
 
   reset(seed?: number, worldgenVersion = seed === undefined ? 16 : 1, request:WorldRequest={}) {
+    const preset=difficultyId(request.difficulty);
     this.selectedBoat = null;
     resetCommandDiagnostics(this);
     resetDefenseMobilization(this);
@@ -340,6 +342,7 @@ export class Game {
     const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
+    this.state.difficulty=preset;
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
@@ -635,6 +638,7 @@ export class Game {
     this.stampVision(home.x, home.z, 26, 1);
     this.updateVision(0);
     if(worldgenVersion>=10)initializeSurvival(this);
+    initializeDifficultyOpening(this);
     if(worldgenVersion>=14)initializeWildPlants(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
@@ -2365,7 +2369,7 @@ export class Game {
         !("type" in u.node && u.node.team === 0) && this.influenceAt(u.node.x,u.node.z,tr.id)>0 && rivalKnows(this,tr.id,u.x,u.z) &&
         !tr.ally && !((tr.compactUntil || 0)>this.state.time && u.job === "food"));
       const previous = tr.tension;
-      tr.tension += grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,trespassers.length,overlap);
+      tr.tension += difficultyGrievance(this,grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,trespassers.length,overlap));
       if (trespassers.length) {
         tr.trust = Math.max(0,(tr.trust || 0)-0.008*dt);
         if (previous < 0.28 && tr.tension >= 0.28) queueDiplomaticMessage(this,tr.id,'frontier',undefined,undefined,'resources');
@@ -5149,7 +5153,7 @@ export class Game {
     if(!hall)return;
     tr.thinkT -= dt;
     if (tr.thinkT > 0) return;
-    tr.thinkT = 1.6 + Math.random();
+    tr.thinkT = (1.6 + Math.random())*difficulty(this).decisionInterval;
 
     // Recognize earned readiness before trade or building plans spend its reserves.
     // The shared rule already checks people, institutions and a food buffer.
@@ -5454,6 +5458,7 @@ export class Game {
     const base = sn.spring * 12 + sn.summer * 21 + sn.autumn * 10 + sn.winter * 0;
     let temp = Math.round(base + (temps[this.state.weather] ?? 0));
     if (h < 6 || h > 21) temp -= 3;
+    temp=Math.round(difficultyTemperature(this,temp));
     let weather = names[this.state.weather] || "Clear";
     if (sn.snow > 0.55) {
       if (this.state.weather === "storm") weather = "Blizzard";

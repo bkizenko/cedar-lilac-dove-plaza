@@ -50,3 +50,7 @@ Default calm playback now uses Meditation Impromptu 01 (spring/summer) and Folk 
 | Evening Fall (Harp) | Kevin MacLeod | Incompetech, ISRC USUAN1100236 | https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN1100236 ; original download https://incompetech.com/music/royalty-free/mp3-royaltyfree/Evening%20Fall%20-%20Harp.mp3 | CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ | Title, composer, source and license credited in Controls & music | public/audio/evening-fall-harp.mp3; calm winter score | Recording unchanged; playback fades/volume/quiet gaps only |
 
 Downloaded SHA-256: `7899334b322d0b651801c3f2f0c70adb4704871863ca6fa2de1f0d84f593ee65`. Composer instrumentation lists harp only. Current calm playlist: piano in spring/early summers, folk in autumn and developed summers, harp in winter. Earlier playlist notes are historical.
+
+## Local checkpoint compression — 2026-11-02
+
+The storage-only save codec uses fflate0.8.2 by Arjun Barrett, distributed with the installed Three.js examples (`three/examples/jsm/libs/fflate.module.js`). The original module is unchanged and licensed MIT. Full exact-version notice is included at `public/licenses/fflate-0.8.2-LICENSE.txt`, from https://raw.githubusercontent.com/101arrowz/fflate/v0.8.2/LICENSE . Ordinary exported village files remain JSON.

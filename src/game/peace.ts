@@ -3,20 +3,20 @@ import type {Game} from './sim';
 import type {PeaceTerm, Unit} from './types';
 import {knownSettlement} from './barter';
 import {isDependent} from './settlement';
+import {localPeacePressure} from './localPeacePressure';
 
 export const PEACE_TERMS: Record<PeaceTerm,string> = {whitePeace:'White peace',tribute:'Tribute',forcedLabor:'Slavery',puppet:'Puppet state',annexation:'Annexation'};
 export const peaceTerms=Object.keys(PEACE_TERMS) as PeaceTerm[];
 export const peaceDescription:Record<PeaceTerm,string>={whitePeace:'Both armies withdraw. Ten minutes of protected peace.',tribute:'The defeated tribe owes 20 logs every two minutes, six payments total. Residents carry payments to your hall; missing or intercepted deliveries remain owed.',forcedLabor:'Two existing adults are enslaved and walk to your settlement. They require food, housing and nearby stationed guards. Forced work and hunger raise resistance; unguarded people may escape. You can free them.',puppet:'The tribe keeps its people and buildings, becomes your ally, and sends 10 logs every two minutes until released. Payments arrive by carrier.',annexation:'All surviving people, buildings, stores and claimed regions join your tribe. Requires overwhelming military pressure.'};
 export function peacePressure(g:Game,team:number){
- const strength=(t:number)=>g.state.units.filter(u=>u.team===t&&u.hp>0&&!isDependent(g,u)).reduce((s,u)=>s+(u.type==='worker'&&!u.militia?0.25:1)*u.hp/Math.max(1,u.maxHp),0);
- return strength(0)/Math.max(.5,strength(team));
+ return localPeacePressure(g,team).pressure;
 }
 function candidates(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.societyMissionId&&u.type==='worker'&&!isDependent(g,u)&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&!u.studyCrop&&!u.recalled&&!u.jobLock&&["idle","gather"].includes(u.order)&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.emergency&&!u.militia&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&u.carry===0);}
 export function peaceIssue(g:Game,team:number,term:PeaceTerm):string|null{
  const t=g.tribe(team);
  if(!peaceTerms.includes(term)||!t||team===0||team===3||!t.alive||!t.hostile||!knownSettlement(g,team)&&!diplomaticSpeakerPresent(g,team))return 'Peace negotiations require a known tribe at war.';
  const required={whitePeace:0,tribute:1.25,forcedLabor:1.75,puppet:2.5,annexation:4}[term];
- if(peacePressure(g,team)<required)return 'They refuse these terms: insufficient military pressure.';
+ if(peacePressure(g,team)<required)return 'They refuse these terms: insufficient witnessed military pressure near their community.';
  if(term==='forcedLabor'){
   if(candidates(g,team).length<2)return 'Two available adults are required; children and travelling people cannot be surrendered.';
   if(g.popCap(0)-g.popNow(0)<2)return 'Your village needs housing for two more people.';
@@ -60,9 +60,12 @@ export function tickPeace(g:Game){
    t.tribute=undefined;
    if(t.peaceTerm==='puppet')t.peaceTerm=undefined;
    if(t.peaceOffer&&t.peaceOffer.expires<=g.state.time)t.peaceOffer=undefined;
-   if(!t.peaceOffer&&(t.nextPeaceOffer||0)<=g.state.time&&peacePressure(g,t.id)>=1.25){
-    const term:PeaceTerm=peacePressure(g,t.id)>=2?'tribute':'whitePeace';
-    queueDiplomaticMessage(g,t.id,'peaceOffer',term);t.nextPeaceOffer=g.state.time+480;
+   if(!t.peaceOffer&&(t.nextPeaceOffer||0)<=g.state.time){
+    const pressure=peacePressure(g,t.id);
+    if(pressure>=1.25){
+     const term:PeaceTerm=pressure>=2?'tribute':'whitePeace';
+     queueDiplomaticMessage(g,t.id,'peaceOffer',term);t.nextPeaceOffer=g.state.time+480;
+    }
    }
   }else if(t.tribute){
    const c=t.tribute;

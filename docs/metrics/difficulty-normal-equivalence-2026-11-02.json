@@ -1,0 +1,18 @@
+{
+  "baselineCommit": "37d183e49ef9519738b590845e3c6ff2919ff766",
+  "normalization": "Only remove the newly explicit state.difficulty=normal label before hashing full encoded state. No resource/body/terrain/timer fields removed.",
+  "baseline": {
+    "opening": "e7e5deb194cacb02f044ef9f92579da86fe49b3520e58511d574791f822893bf",
+    "after100Steps": "5e19cd409a67acd1819b18767650084d2be36792b8613fc14b38ef6384035528",
+    "randomState": 4007004391,
+    "draws": 650,
+    "errors": []
+  },
+  "candidate": {
+    "opening": "e7e5deb194cacb02f044ef9f92579da86fe49b3520e58511d574791f822893bf",
+    "after100Steps": "5e19cd409a67acd1819b18767650084d2be36792b8613fc14b38ef6384035528",
+    "randomState": 4007004391,
+    "draws": 650,
+    "errors": []
+  }
+}

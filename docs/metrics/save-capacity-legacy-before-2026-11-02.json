@@ -1,0 +1,24 @@
+{
+  "case": "legacy raw protected checkpoint only",
+  "quotaBytes": 5242880,
+  "rawProtectedBytes": 4768730,
+  "before": {
+    "primarySaved": false,
+    "primaryAbsent": true,
+    "protectedUnchanged": true
+  },
+  "encodingOnlyExperiment": {
+    "decodedExact": true,
+    "validated": true,
+    "savedAt": 123,
+    "oldTime": 0,
+    "oldJsonSha256": "b742da5bb3e89024bcc954b397a011e1dcb324610aa8bc262c3b2cca9d331e71",
+    "compressedProtectedBytes": 721084
+  },
+  "after": {
+    "primarySaved": true,
+    "protectedStillSameEncoding": true,
+    "totalBytes": 1442314,
+    "unrelatedPreserved": true
+  }
+}

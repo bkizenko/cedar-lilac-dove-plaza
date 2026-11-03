@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "c15928b core plus verified local NPC hearth/cooking/resumption and final actual mature-village reporting;32/98 fixed acceptance gates. Complete campaign, broader independent AI production and sustained fast-forward performance remain pending.",
+  "verifiedPublishedCodeBaseline": "dee7005 plus integrated save-capacity/difficulty/local-pressure candidate checks; M3-11 revoked after reproduced paid-production ownership regression. Remaining campaign and intact handover work stays unverified.",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -29,9 +29,9 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 32,
+    "verifiedGates": 31,
     "totalGates": 98,
-    "verifiedGatePercent": 32.65
+    "verifiedGatePercent": 31.63
   },
   "milestones": {
     "M0": {
@@ -50,9 +50,9 @@
       "verifiedGatePercent": 6.25
     },
     "M3": {
-      "verifiedGates": 3,
+      "verifiedGates": 2,
       "totalGates": 18,
-      "verifiedGatePercent": 16.67
+      "verifiedGatePercent": 11.11
     },
     "M4": {
       "verifiedGates": 2,
@@ -178,6 +178,10 @@
       "path": "docs/FINAL_MATURE_VILLAGE_PROFILE_2026-11-02.md",
       "kind": "Actual foreground browser stress profile on target Apple M1/8GiB, original/final exported aggregate counts and final-source build",
       "scope": "M5-07 reporting only:245→273 people,363→364 standing structures, Medium1×, CPU/navigation-included/render/memory/save pipeline. No fast-forward/FPS target acceptance."
+    },
+    "occupationProductionRegressionNov2": {
+      "path": "docs/metrics/occupation-production-gap-2026-11-02.json",
+      "scope": "Actual local-control hold and public integration; valid paid project before acceptance becomes invalid afterward. Negative evidence revokes M3-11; not a passing acceptance test."
     }
   },
   "gates": [
@@ -1024,12 +1028,13 @@
         "61-70",
         "101-120"
       ],
-      "status": "verified",
-      "credit": 1,
+      "status": "unverified",
+      "credit": 0,
       "evidence": [
-        "oct31gateaudit"
+        "oct31gateaudit",
+        "occupationProductionRegressionNov2"
       ],
-      "remainingNotes": "Actual garrison arrival/hold, contested control and local intact surrender preserve existing buildings, residents and paid projects; remote settlements/stores remain independent."
+      "remainingNotes": "Regression reproduced against published dee7005 behavior: actual garrison holds30seconds and accepts local surrender, but a paid cook project keeps team1 while maker/site become0; immediate strict save fails. Earlier haulage preservation was narrower than the current production contracts. Full atomic scoped handover is under integration; no credit until it passes."
     },
     {
       "id": "M3-12",

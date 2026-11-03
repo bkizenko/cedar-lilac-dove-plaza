@@ -200,8 +200,8 @@ test('the same20food compact proposal departs despite unseen trust differences a
 
 test('peace terms are not exposed by a remote decision; a provisioned messenger must actually deliver them',()=>{
  const {g,builder}=relationsFixture();g.tribe(1).hostile=true;g.tribe(1).nextPeaceOffer=0;g.state.observedSettlements=g.state.observedSettlements.filter(m=>m.observer!==0);
- // Initial military endowment establishes the pre-existing pressure scenario.
- for(let i=0;i<30;i++){const u=g.spawnUnit('spearman',210+i%3,10+Math.floor(i/3),0);u.order='hold';}
+ // Initial local military endowment is visible to the actual opposing residents; remote armies cannot coerce terms.
+ for(let i=0;i<30;i++){const u=g.spawnUnit('spearman',30+i%3,10+Math.floor(i/3),0);u.order='hold';}
  tickPeace(g);assert.equal(g.tribe(1).peaceOffer,undefined);const m=g.state.diplomaticMessages.find(p=>p.kind==='peaceOffer');assert.ok(m);assert.equal(knownDiplomaticRelation(g,1).known,false);
  const person=g.state.units.find(u=>u.team===1),p=homeSpot(g,person,1);walk(g,person.id,p.x,p.z);const dest=homeSpot(g,builder,0);walk(g,builder.id,dest.x,dest.z);assert.equal(dispatchSocietyMessage(g,m.id),true);
  wait(g,()=>!!g.tribe(1).peaceOffer);assert.equal(m.phase,'delivered');assert.equal(g.tribe(1).hostile,true,'delivering terms cannot silently agree a truce');assert.ok(g.tribe(1).peaceOffer.expires>g.state.time);assert.equal(knownDiplomaticRelation(g,1).hostile,true);

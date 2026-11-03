@@ -1,0 +1,37 @@
+{
+  "scope": "Pending local intact-control ownership defect; actual guards hold before acceptance",
+  "ordered": {
+    "accepted": true,
+    "reason": "Approaching to secure local control",
+    "occupationId": 3988
+  },
+  "holdSeconds": 30,
+  "started": true,
+  "validBefore": true,
+  "accepted": true,
+  "validAfter": false,
+  "error": "Save is damaged or incompatible. The current village was not changed.",
+  "stocks": [
+    {
+      "team": 0,
+      "alive": true,
+      "items": {}
+    },
+    {
+      "team": 1,
+      "alive": true,
+      "items": {
+        "rawMeat": 3.9035772841693066,
+        "clay": 3
+      }
+    }
+  ],
+  "projects": [
+    {
+      "team": 1,
+      "actorTeam": 0,
+      "workplaceTeam": 0,
+      "phase": "paused"
+    }
+  ]
+}

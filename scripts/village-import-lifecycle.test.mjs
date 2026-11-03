@@ -1,3 +1,4 @@
+import {parseStoredSave} from '../src/game/storageCodec.ts';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { registerHooks } from "node:module";
@@ -84,8 +85,8 @@ test("actual import restores the validated village, protects old inventory and r
     assert.equal(e.game.state.seed, 23);
     assert.equal(e.game.tribe(0).food, incoming.state.tribes[0].food);
     assert.equal(e.rebuilt.length, 1);
-    assert.equal(JSON.parse(values.get(SAVE_KEY)).state.seed, 23);
-    assert.equal(JSON.parse(values.get(SAVE_KEY + ":protected")).state.seed, old.state.seed);
+    assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 23);
+    assert.equal(parseStoredSave(values.get(SAVE_KEY + ":protected")).state.seed, old.state.seed);
     assert.equal(e.shown.at(-1).game, e.game);
     assert.match(result.message, /imported/);
   }));
@@ -158,7 +159,7 @@ test("a newer import wins and an older delayed file cannot restore or save over 
     assert.equal(e.game.state.seed, 41);
     assert.equal(e.game.state.banner, banner);
     assert.equal(writes.length, count);
-    assert.equal(JSON.parse(values.get(SAVE_KEY)).state.seed, 41);
+    assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 41);
   }));
 
 test("actual disposal retains its checkpoint but delayed import never writes/restores a disposed engine", () =>
@@ -175,7 +176,7 @@ test("actual disposal retains its checkpoint but delayed import never writes/res
       const count = writes.length,
         g = e.game;
       assert.equal(e.disposed, true);
-      assert.equal(JSON.parse(values.get(SAVE_KEY)).state.seed, 17);
+      assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 17);
       d.resolve(JSON.stringify(incoming));
       const result = await pending;
       assert.equal(result.applied, false);
@@ -215,11 +216,11 @@ test("post-restore primary quota failure truthfully reports applied but unsaved,
       assert.equal(result.saved, false);
       assert.match(result.message, /imported but local saving failed/);
       assert.equal(e.game.state.seed, 23);
-      assert.equal(JSON.parse(values.get(SAVE_KEY)).state.seed, 17);
-      assert.equal(JSON.parse(values.get(SAVE_KEY + ":protected")).state.seed, 17);
+      assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 17);
+      assert.equal(parseStoredSave(values.get(SAVE_KEY + ":protected")).state.seed, 17);
       assert.equal(e.rebuilt.length, 1);
     },
-    (key, value) => key === SAVE_KEY && JSON.parse(value).state.seed === 23,
+    (key, value) => key === SAVE_KEY && parseStoredSave(value).state.seed === 23,
   ));
 
 test("read/parse/validator failures keep actual active village and publish their returned error", () =>
@@ -257,5 +258,5 @@ test("a renderer failure after actual Game replacement cannot falsely report tha
     assert.equal(result.saved, false);
     assert.match(result.message, /Village loaded.*Renderer unavailable/);
     assert.equal(e.game.state.seed, 23);
-    assert.equal(JSON.parse(values.get(SAVE_KEY)).state.seed, 17);
+    assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 17);
   }));

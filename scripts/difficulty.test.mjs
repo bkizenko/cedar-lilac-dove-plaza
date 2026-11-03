@@ -1,12 +1,13 @@
+import {climateAt} from '../src/game/ecology.ts';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {DIFFICULTIES} from '../src/game/difficulty.ts';
 import {foodDemand} from '../src/game/settlement.ts';import {foodSpoilage} from '../src/game/pantry.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 test('six difficulties scale real food needs, spoilage and incoming damage; legacy default is neutral',()=>{
- const g=new Game();g.reset(123456);g.enterIsland();const demand=foodDemand(g),spoil=foodSpoilage(g);
+ const g=new Game();g.reset(123456);g.enterIsland();const demand=foodDemand(g),spoil=foodSpoilage(g),home=g.campOf(0),climateFactor=()=>{const c=climateAt(g,home.x,home.z);return Math.max(.12,Math.min(2.8,Math.pow(2,(c.temperature-12)/12)*(.65+c.humidity*.7)));},normalClimate=climateFactor();
  assert.equal(Object.keys(DIFFICULTIES).length,6);
  for(const [id,p] of Object.entries(DIFFICULTIES)){
- g.state.difficulty=id;assert.ok(Math.abs(foodDemand(g)-demand*p.food)<1e-8);assert.ok(Math.abs(foodSpoilage(g)-spoil*p.spoil)<1e-8);
+ g.state.difficulty=id;assert.ok(Math.abs(foodDemand(g)-demand*p.food)<1e-8);assert.ok(Math.abs(foodSpoilage(g)-spoil*p.spoil*climateFactor()/normalClimate)<1e-8);
  const b=g.makeBld('hut',0,0,0);const hp=b.hp;g.applyCombatDamage(3,b,10);assert.equal(b.hp,hp-10*p.damage);
  }
  delete g.state.difficulty;assert.equal(foodDemand(g),demand);

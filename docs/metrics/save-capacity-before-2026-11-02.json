@@ -1,0 +1,279 @@
+[
+  {
+    "label": "own-QA-fresh-export",
+    "exportSource": {
+      "utf8Bytes": 3005124,
+      "sha256": "b8e832a555b737dd9b11395de48da48bfe581726bb9450479b03f3f3854fad31"
+    },
+    "worldgenVersion": 16,
+    "size": 1560,
+    "layout": "pangaea",
+    "people": 22,
+    "trees": 13286,
+    "jsonUtf8Bytes": 3005124,
+    "jsonCharacters": 3005119,
+    "jsonUtf16Bytes": 6010238,
+    "jsonSha256": "b8e832a555b737dd9b11395de48da48bfe581726bb9450479b03f3f3854fad31",
+    "compressed": {
+      "1": {
+        "compressedBytes": 976016,
+        "base64Characters": 1301356,
+        "utf16StorageBytes": 2602712
+      },
+      "6": {
+        "compressedBytes": 869325,
+        "base64Characters": 1159100,
+        "utf16StorageBytes": 2318200
+      }
+    },
+    "quotas": [
+      {
+        "quotaMiB": 5,
+        "primary": false,
+        "protectedCheckpoint": false,
+        "bytes": 42,
+        "saveKeys": [],
+        "unrelatedPreserved": true,
+        "failures": [
+          {
+            "key": "primary",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 6010364
+          },
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 6010384
+          }
+        ]
+      },
+      {
+        "quotaMiB": 10,
+        "primary": true,
+        "protectedCheckpoint": false,
+        "bytes": 6010364,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 6010322
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": [
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 12020706
+          },
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 12020706
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "native-V16-opening",
+    "worldgenVersion": 16,
+    "size": 1040,
+    "layout": "pangaea",
+    "people": 22,
+    "trees": 2828,
+    "jsonUtf8Bytes": 842325,
+    "jsonCharacters": 842318,
+    "jsonUtf16Bytes": 1684636,
+    "jsonSha256": "4576a250fc01113ed544fa17e0be82ee5696bfd4ba0b5738a967b7a03ef58838",
+    "compressed": {
+      "1": {
+        "compressedBytes": 232593,
+        "base64Characters": 310124,
+        "utf16StorageBytes": 620248
+      },
+      "6": {
+        "compressedBytes": 209546,
+        "base64Characters": 279396,
+        "utf16StorageBytes": 558792
+      }
+    },
+    "quotas": [
+      {
+        "quotaMiB": 5,
+        "primary": true,
+        "protectedCheckpoint": true,
+        "bytes": 3369502,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 1684720
+          },
+          {
+            "slot": "protected",
+            "utf16Bytes": 1684740
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": []
+      },
+      {
+        "quotaMiB": 10,
+        "primary": true,
+        "protectedCheckpoint": true,
+        "bytes": 3369502,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 1684720
+          },
+          {
+            "slot": "protected",
+            "utf16Bytes": 1684740
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": []
+      }
+    ]
+  },
+  {
+    "label": "native-V16-opening",
+    "worldgenVersion": 16,
+    "size": 1560,
+    "layout": "pangaea",
+    "people": 22,
+    "trees": 10085,
+    "jsonUtf8Bytes": 2384350,
+    "jsonCharacters": 2384343,
+    "jsonUtf16Bytes": 4768686,
+    "jsonSha256": "3986d5685bdf9aa4885c2e3d4142f8fafb2528950e3af3ef8a084112241473d2",
+    "compressed": {
+      "1": {
+        "compressedBytes": 757380,
+        "base64Characters": 1009840,
+        "utf16StorageBytes": 2019680
+      },
+      "6": {
+        "compressedBytes": 675814,
+        "base64Characters": 901088,
+        "utf16StorageBytes": 1802176
+      }
+    },
+    "quotas": [
+      {
+        "quotaMiB": 5,
+        "primary": true,
+        "protectedCheckpoint": false,
+        "bytes": 4768812,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 4768770
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": [
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 9537602
+          },
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 9537602
+          }
+        ]
+      },
+      {
+        "quotaMiB": 10,
+        "primary": true,
+        "protectedCheckpoint": true,
+        "bytes": 9537602,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 4768770
+          },
+          {
+            "slot": "protected",
+            "utf16Bytes": 4768790
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": []
+      }
+    ]
+  },
+  {
+    "label": "native-V16-opening",
+    "worldgenVersion": 16,
+    "size": 2080,
+    "layout": "pangaea",
+    "people": 22,
+    "trees": 12650,
+    "jsonUtf8Bytes": 3052324,
+    "jsonCharacters": 3052317,
+    "jsonUtf16Bytes": 6104634,
+    "jsonSha256": "9da5ed2fba9321cff3a442e3dacc29e37f65f0a15ce5efe556b1eabb398f9a76",
+    "compressed": {
+      "1": {
+        "compressedBytes": 980833,
+        "base64Characters": 1307780,
+        "utf16StorageBytes": 2615560
+      },
+      "6": {
+        "compressedBytes": 875330,
+        "base64Characters": 1167108,
+        "utf16StorageBytes": 2334216
+      }
+    },
+    "quotas": [
+      {
+        "quotaMiB": 5,
+        "primary": false,
+        "protectedCheckpoint": false,
+        "bytes": 42,
+        "saveKeys": [],
+        "unrelatedPreserved": true,
+        "failures": [
+          {
+            "key": "primary",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 6104760
+          },
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 6104780
+          }
+        ]
+      },
+      {
+        "quotaMiB": 10,
+        "primary": true,
+        "protectedCheckpoint": false,
+        "bytes": 6104760,
+        "saveKeys": [
+          {
+            "slot": "primary",
+            "utf16Bytes": 6104718
+          }
+        ],
+        "unrelatedPreserved": true,
+        "failures": [
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 12209498
+          },
+          {
+            "key": "protected",
+            "name": "QuotaExceededError",
+            "attemptedUtf16Bytes": 12209498
+          }
+        ]
+      }
+    ]
+  }
+]

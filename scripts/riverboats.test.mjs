@@ -4,6 +4,7 @@ import {SEGS,MAP,HALF} from '../src/game/constants.ts';
 import {beginRiverboat,launchRiverboat,boardRiverboat,riverboatAI,syncRiverboats,commandRiverboat,landRiverboat} from '../src/game/boats.ts';
 import {haulageWorkAI} from '../src/game/haulage.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
+import {localPeacePressure} from '../src/game/localPeacePressure.ts';
 function fixture(){
  const g=new Game();g.reset(123456);g.enterIsland();g.state.units=[];g.state.buildings=[];
  for(const kind of ['trees','stones','forage','fish','wildlife','copper','iron'])g.state[kind]=[];
@@ -13,6 +14,17 @@ function fixture(){
  for(let i=0;i<3;i++)g.spawnUnit('worker',8+i,-14,0);g.rebuildWalk();return {g,dock};
 }
 function drive(g,seconds){for(let i=0;i<seconds*10;i++){g.state.time+=.1;g.navBudget=30;for(const u of g.state.units)riverboatAI(g,u,.1);syncRiverboats(g);}}
+test('boarding and landing crews cannot coerce a land community until actual disembarkation',()=>{
+ const{g,dock}=fixture();g.state.autoWorkEnabled=false;g.state.conflict='quiet';g.state.raidT=100000;g.state.weatherT=100000;g.state.growthPolicy='stable';g.state.birthT=100000;g.state.visitorTimer=900;g.state.scoutTimer=900;g.calamityT=100000;g.seaT=100000;
+ for(const t of g.state.tribes){t.thinkT=100000;if(t.survival)t.survival.waterLiters=200;}
+ g.tribe(1).hostile=false;g.state.buildings.push(g.makeBld('townhall',22,-20,1));const witness=g.spawnUnit('worker',22,-14,1);witness.order='hold';witness.jobLock=true;
+ const crew=Array.from({length:3},(_,i)=>{const u=g.spawnUnit('spearman',8+i,-14,0);u.order='hold';return u;});g.rebuildWalk();assert.equal(localPeacePressure(g,1).observedAttackers,3);
+ // An existing fixture vessel; this case tests boarding, not paid manufacture.
+ assert.equal(launchRiverboat(g,dock),true);const boat=g.state.boats[0];assert.equal(boardRiverboat(g,boat.id,crew),3);assert.equal(localPeacePressure(g,1).observedAttackers,0);
+ for(let i=0;i<1000&&!crew.every(u=>u.boat?.phase==='aboard');i++){g.state.paused=false;g.step(.1);}assert.ok(crew.every(u=>u.boat?.phase==='aboard'));assert.equal(localPeacePressure(g,1).observedAttackers,0);
+ assert.equal(landRiverboat(g,boat.id,{x:0,z:-12}),true);assert.equal(localPeacePressure(g,1).observedAttackers,0);
+ for(let i=0;i<1000&&crew.some(u=>u.boat);i++){g.state.paused=false;g.step(.1);}assert.ok(crew.every(u=>!u.boat&&u.hp>0));assert.equal(localPeacePressure(g,1).observedAttackers,3);
+});
 test('a dock boat consumes finite materials and actual bench labor and exists apart from its builder',()=>{
  const {g,dock}=fixture();assert.equal(beginRiverboat(g,dock.id),true);
  const u=g.state.units.find(u=>u.haulageWork);assert.equal(g.tribe(0).wood,60);assert.equal(g.tribe(0).stone,26);assert.equal(g.state.boats,undefined);

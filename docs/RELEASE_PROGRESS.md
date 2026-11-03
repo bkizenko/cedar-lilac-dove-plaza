@@ -2,9 +2,9 @@
 
 Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-10-31 · desktop only.
 
-**32/98 verified gates — 32.65%.** This measures acceptance evidence, not development effort or time remaining.
+**31/98 verified gates — 31.63%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: c15928b core plus verified local NPC hearth/cooking/resumption and final actual mature-village reporting;32/98 fixed acceptance gates. Complete campaign, broader independent AI production and sustained fast-forward performance remain pending.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: dee7005 plus integrated save-capacity/difficulty/local-pressure candidate checks; M3-11 revoked after reproduced paid-production ownership regression. Remaining campaign and intact handover work stays unverified.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
@@ -13,7 +13,7 @@ Verified baseline: c15928b core plus verified local NPC hearth/cooking/resumptio
 | M0 | 8/12 | 66.67% |
 | M1 | 15/22 | 68.18% |
 | M2 | 1/16 | 6.25% |
-| M3 | 3/18 | 16.67% |
+| M3 | 2/18 | 11.11% |
 | M4 | 2/20 | 10% |
 | M5 | 3/10 | 30% |
 
@@ -98,7 +98,7 @@ Verified baseline: c15928b core plus verified local NPC hearth/cooking/resumptio
 | M3-08 | pending | Raids prepare/approach/contact/loot/withdraw; defense can deter them without automatic larger spawns | No matching executed evidence. Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. |
 | M3-09 | pending | Finite looting can succeed without compulsory burning and counts only physically returned goods | No matching executed evidence. Natural non-destructive loot integration unpublished; ordinary destruction-linked loot is not this gate. |
 | M3-10 | verified | Contextual capture/surrender preserves existing people and requires physical escort, custody and needs | oct31gateaudit. Live approach, surrender, guard capacity, finite food/water provisioning, escort/custody and strict-save scenarios passed. Broader ransom/integration/revolt remains in M3-16. |
-| M3-11 | verified | Intact local occupation requires present control/garrison and preserves building/person/project identities | oct31gateaudit. Actual garrison arrival/hold, contested control and local intact surrender preserve existing buildings, residents and paid projects; remote settlements/stores remain independent. |
+| M3-11 | unverified | Intact local occupation requires present control/garrison and preserves building/person/project identities | oct31gateaudit, occupationProductionRegressionNov2. Regression reproduced against published dee7005 behavior: actual garrison holds30seconds and accepts local surrender, but a paid cook project keeps team1 while maker/site become0; immediate strict save fails. Earlier haulage preservation was narrower than the current production contracts. Full atomic scoped handover is under integration; no credit until it passes. |
 | M3-12 | pending | Domination/vassalage uses local leverage and real continuing obligations rather than remote instant transfers | No matching executed evidence. Remote strength-ratio treaty acceptance is not actual local sustained domination. |
 | M3-13 | pending | Withdrawal/release returns surviving actors and possessions and updates local control/custody | No matching executed evidence. Natural withdrawal/custody/control integration unpublished; zero credit. |
 | M3-14 | pending | Negotiated aftermath preserves incidents, compensation, agreements and witnessed conflict knowledge | No matching executed evidence. Player-centric peace foundations do not establish full shared-rule aftermath. |

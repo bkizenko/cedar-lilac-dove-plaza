@@ -1,3 +1,4 @@
+import {difficultyTemperature} from './difficulty';
 import {provinceAt,ecologicalConditionsAt} from './ecologicalProvinces';
 import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
@@ -67,7 +68,7 @@ export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.s
   if(weather==="mist")humidity+=.1;
   if(weather==="drought"){temperature+=5;humidity-=.28;}
   if(weather==="frost")temperature-=5;
-  return {temperature,humidity:Math.max(.15,Math.min(1,humidity))};
+  return {temperature:difficultyTemperature(g,temperature),humidity:Math.max(.15,Math.min(1,humidity))};
 }
 
 /** One ordinary seasonal harvest stresses a patch; repeated stripping can exhaust it. */

@@ -1,14 +1,14 @@
-# Remaining M2-07 entity-information gaps
+# M2-07 entity information: historical counterexamples and remaining gaps
 
-These are pending defects, not qualified behavior. Diagnostics run against the delivered-diplomacy isolated candidate based on 79d6148.
+The two structure counterexamples below were measured against the earlier 79d6148 candidate. Published structure-report work subsequently repaired those port/raid consumers with dated witnessed facts. Their original reports remain regression evidence; they are not current claims that those repaired consumers still read live unseen structures. Full M2-07 remains pending for the additional paths below.
 
-## Confirmed: unseen paid foreign dock
+## Historical counterexample: unseen paid foreign dock
 
 scripts/diagnostics/unseen-paid-port-repro.mjs pays 40 logs and walks a real builder 52.260 metres to complete a foreign dock. The observer society historically mapped empty coast, but no living observer enters 26 metres during construction and its continuous home view is also excluded. observedCoastalLandings changes from zero docks to dock 582. Evidence: docs/metrics/unseen-paid-port-2026-11-02.json.
 
 Consumers: reviewCoastalCommissioning and dispatchCoastalTrade call observedCoastalLandings, which filters current global foreign docks by historical terrain cells. Old geography is not evidence of later infrastructure. A separate fix needs dated witnessed dock facts and must retain historical locations rather than reveal unseen replacement/removal.
 
-## Confirmed: unseen paid raid warehouse and current defenders
+## Historical counterexample: unseen paid raid warehouse and current defenders
 
 scripts/diagnostics/unseen-paid-raid-target-repro.mjs pays 60 logs and walks the actual builder 40.409 metres to complete a warehouse outside all opposing observations. The opposing assessment changes from no target to structure 504, utility 6.049, and also reports six current defenders. Evidence: docs/metrics/unseen-paid-raid-target-2026-11-02.json.
 
@@ -16,6 +16,10 @@ Call path: reviewRivalSocietyActivity → assessRivalPairRaid → current finish
 
 ## Additional review risks, not yet causally qualified
 
-knownPartners scans current foreign supply drops/private alive status through historical terrain. peacePressure counts global player army. rivalDevelopment coastal planning and coastalStrategy inspect current foreign ports/world blockers. Navigation feasibility may reveal changed walls/bridges via global walkability. These static audit findings need separate causal cases; no blanket claim that every path is repaired.
+knownPartners scans current foreign supply drops/private alive status through historical terrain. rivalDevelopment coastal planning and coastalStrategy inspect current foreign ports/world blockers. Navigation feasibility may reveal changed walls/bridges via global walkability. These static audit findings need separate causal cases; no blanket claim that every path is repaired.
 
 The current physical diplomatic-message batch fixes player-facing warning/relationship provenance. It does not qualify all society-pair intelligence or M2-07 overall.
+
+## Witnessed local peace pressure
+
+The current local-pressure batch removes the global player-army census from peace terms and automatic offers. Only actual armed bodies witnessed near an inhabited opposing community contribute immediate pressure; withdrawal ends that leverage without erasing messages/history. It does not qualify all military intelligence, all society-pair aftermath or M2-07 as a whole. Details: docs/LOCAL_PEACE_PRESSURE_2026-11-02.md.

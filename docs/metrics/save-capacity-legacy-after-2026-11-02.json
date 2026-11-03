@@ -1,0 +1,22 @@
+{
+  "legacyHash": "135c70c37d1d49e941e7fa28697a3b33806a752cd4ddf4d93fcfa434d64305bd",
+  "legacyBytes": 4768756,
+  "reports": [
+    {
+      "slot": "protected",
+      "quota": 5242880,
+      "totalBytes": 1442388,
+      "exactOldJson": true,
+      "savedAt": 123,
+      "currentTime": 1
+    },
+    {
+      "slot": "bak",
+      "quota": 5242880,
+      "totalBytes": 2163562,
+      "exactOldJson": true,
+      "savedAt": 123,
+      "currentTime": 1
+    }
+  ]
+}

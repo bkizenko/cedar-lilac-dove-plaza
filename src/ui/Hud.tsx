@@ -1,3 +1,4 @@
+import {WorldSetup} from './WorldSetup';
 import {VillageFileTransfer} from './VillageFileTransfer';
 import{FarmToolRepairControls}from'./FarmToolRepairControls';
 import {GameTooltip} from './GameTooltip';
@@ -13,7 +14,7 @@ import {GateRotationControl} from './GateRotationControl';
 import {WorkloadPanel} from './WorkloadPanel';
 import {NomadicCampControl} from './NomadicCampControl';
 import {PerformanceReadout} from './PerformanceReadout';
-import {DIFFICULTIES} from '../game/difficulty';
+import {DIFFICULTIES,difficultyEffects} from '../game/difficulty';
 import {FarmingProgress} from './FarmingProgress';
 import {ConflictControls} from './ConflictControls';
 import {KnowledgePanel} from './KnowledgePanel';
@@ -203,7 +204,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </button>
           {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
           {engine&&<PerformanceReadout engine={engine}/>}
-          <p className="px-2 py-2 text-xs">Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
+          <p className="px-2 py-2 text-xs" title={difficultyEffects(engine?.game.state.difficulty??'normal')}>Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
@@ -243,6 +244,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             Save
           </button>
           <VillageFileTransfer engine={engine}/>
+          {engine&&<details className="hud-world-setup"><summary className="px-2 py-2 cursor-pointer">New world</summary><WorldSetup engine={engine}/></details>}
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn · arm the village</button>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" title="Plan a bridge on explored banks for recalled or loaded residents cut off by water. Requires materials and builders." onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}}>Plan return crossing</button>
