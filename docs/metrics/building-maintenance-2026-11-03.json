@@ -1,0 +1,19 @@
+{
+  "base": "8836777",
+  "automated": {
+    "maintenance": 19,
+    "compatibility": 28,
+    "catalogue": 5,
+    "firstWinter": 1,
+    "totalDistinctPassed": 53
+  },
+  "logs": [
+    "/tmp/building-maintenance-final-v2-tests.log",
+    "/tmp/building-maintenance-final-first-winter.log",
+    "/tmp/building-maintenance-final-types.log",
+    "/tmp/building-maintenance-final-build.log"
+  ],
+  "interactiveQA": "pending parent; no browser surface available to owner",
+  "privateData": false,
+  "fullReleaseGateCreditClaimed": false
+}

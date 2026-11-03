@@ -1,3 +1,4 @@
+import{settleMaintenanceHandover}from'./buildingMaintenance';
 import{captureCommunityKnowledge}from'./inheritedKnowledge';
 import type{Game}from'./sim';import type{GameState,Unit}from'./types';
 import type{CommunityHandover,HandoverProvenance,HandoverAnchor}from'./communityHandoverTypes';
@@ -73,6 +74,7 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   recordDiplomaticLegal(draft,fromTeam,false);}
   else{const c=s.occupations?.find(c=>c.id===local.occupationId);if(c){c.phase='integrated';c.integratedAt=s.time;c.blockedReason=undefined;}}
   s.selBld=null;s.placing=null;s.walkDirty=true;
+  settleMaintenanceHandover(s,fromTeam,toTeam,!!local,siteIds,personIds);
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }

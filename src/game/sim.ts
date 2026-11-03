@@ -1,3 +1,4 @@
+import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
 import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
@@ -349,6 +350,7 @@ export class Game {
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
     this.state.difficulty=preset;
+    this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
@@ -1740,6 +1742,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    pauseBuildingRepair(this,u);
     delete u.huntTrail;
     pausePracticalHelper(this,u);
     if(u.boat){const hull=this.state.boats?.find(b=>b.id===u.boat!.id&&b.captain===u.id);if(hull)delete hull.exploration;}
@@ -3982,7 +3985,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return (u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -4296,6 +4299,7 @@ export class Game {
     if(packTamingAI(this,u,dt))return;
     if(haulageWorkAI(this,u,dt))return;
     if(farmToolWorkAI(this,u,dt))return;
+    if(buildingRepairAI(this,u,dt))return;
     if (isDependent(this, u)) {
       u.node = null;
       u.target = null;
@@ -5597,6 +5601,7 @@ export class Game {
         tickFibre(this);
         tickClay(this);
         tickProduction(this,sdt);
+        tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewCerealProcessing(this,team.id);
         tickProductionLessons(this);
         tickPracticalHelpers(this);
@@ -5705,7 +5710,7 @@ export class Game {
         this.tickYields(sdt);
         spoilRuinSupplies(this,sdt);
         for (const b of this.state.buildings) {
-          if (b.type === "townhall" && b.hp > 0 && b.hp < b.maxHp)
+          if (b.type === "townhall" && this.state.buildingMaintenanceVersion===undefined && !b.maintenance && b.hp > 0 && b.hp < b.maxHp)
             b.hp = Math.min(b.maxHp, b.hp + 8 * sdt);
         }
         this.tickInfluence(sdt);
@@ -5730,6 +5735,7 @@ export class Game {
         tickTradeIntel(this);
         tickPracticalHelpers(this);
         tickProduction(this,0);
+        tickBuildingMaintenance(this,0);
         tickCampRelocation(this,0);
         reconcilePenWater(this);
         reconcileWaterCargoEvidence(this);

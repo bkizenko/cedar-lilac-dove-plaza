@@ -1,3 +1,4 @@
+import{BuildingMaintenanceControls}from'./BuildingMaintenanceControls';
 import {WorldSetup} from './WorldSetup';
 import {VillageFileTransfer} from './VillageFileTransfer';
 import{FarmToolRepairControls}from'./FarmToolRepairControls';
@@ -523,6 +524,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
                 {sel.completed&&["farm","warehouse","pen"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
+                {engine&&sel.buildingId&&<BuildingMaintenanceControls engine={engine} buildingId={sel.buildingId}/>}
                 {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
                 {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
                 {sel.completed&&sel.type==="dock"&&<GameTooltip title="Boat orders" description="Select a boat or its captain, then choose a reachable point on the water."><span className="text-xs text-parchment-dim">Boats &amp; fishing</span></GameTooltip>}

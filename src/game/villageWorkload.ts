@@ -1,3 +1,5 @@
+import{BUILDING_MAINTENANCE}from'./buildingMaintenance';
+import{BUILDINGS as MAINTENANCE_BUILDINGS}from'./constants';
 import{rawCerealField,CEREAL_RULES}from'./cerealRules';
 import{penWaterReport,PEN_WATER_RULES}from'./penWater';
 import{BOAT_CLASSES}from'./boatClasses';
@@ -56,6 +58,8 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  const add=(task:WorkloadTask,keepZero=false)=>{if(keys.has(task.id)||task.personSeconds<=1e-8&&!keepZero)return;keys.add(task.id);task.actorIds=[...new Set(task.actorIds)];if(task.status==='active'&&task.actorIds.length&&task.actorIds.every(id=>claimed.has(id))){task.status='queued';task.blocker??='Assigned residents finish their current commitment first';}tasks.push(task);
   if(task.status!=='paused')for(const id of task.actorIds)if(!claimed.has(id)&&byId.get(id)?.capacitySeconds){claimed.set(id,task.id);byId.get(id)!.activeTask=task.label;byId.get(id)!.freeNow=false;}
  };
+ for(const b of g.state.buildings){const p=b.team===team?b.repair:undefined;if(!p)continue;const u=residents.find(u=>u.id===p.actorId),walk=u?travel(u,p.parcel.kind==='site'?b.x:p.parcel.x,p.parcel.kind==='site'?b.z:p.parcel.z)+Math.hypot(p.parcel.x-b.x,p.parcel.z-b.z)/speed(u):trip(b.x,b.z);add({id:`building-repair:${b.id}`,label:`Repair ${MAINTENANCE_BUILDINGS[b.type].name}`,category:'Maintenance',personSeconds:Math.max(0,p.duration-p.progress)+walk+Math.max(0,Math.ceil(Object.values(p.uncollected).reduce((n,v)=>n+(v||0),0)/BUILDING_MAINTENANCE.packetCapacity)-1)*Math.hypot(p.source.x-b.x,p.source.z-b.z)*2/speed(u),status:p.phase==='paused'?'paused':p.blockedReason?'blocked':u?'active':'queued',actorIds:u?[u.id]:[],priority:400+(b.constructionPriority??1)*100,blocker:p.blockedReason||null},true);}
+ for(const c of g.state.retainedBuildingRepairs||[])if(c.team===team)add({id:`retained-repair:${c.id}`,label:'Separated paid building repair',category:'Maintenance',personSeconds:Math.max(0,c.repair.duration-c.repair.progress),status:'paused',actorIds:[],priority:400,blocker:c.repair.blockedReason||'Physical materials and target have different current owners'},true);
  const workersAt=(id:number)=>eligible.filter(u=>u.node?.id===id&&['build','gather'].includes(u.order)||u.buildOrder===id);
  const ratePeople=eligible.length?eligible:adults.filter(u=>u.type==='worker'),meanStrength=ratePeople.length?ratePeople.reduce((n,u)=>n+predisposition(u).strength,0)/ratePeople.length:1;
  const resourcePeriod=(kind:ResKind,node?:{x:number;z:number;kind?:string},u?:Unit)=>{const person=u??ratePeople[0],x=node?.x??home.x,z=node?.z??home.z,probe=person?{...person,x,z,node:kind==='food'?{id:-1,kind:node?.kind==='fish'?'fish' as const:'forage' as const,x,z,y:0,amount:0,maxAmt:0,regenT:0,scale:1,rich:1}:person.node}:undefined;

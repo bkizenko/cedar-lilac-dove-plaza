@@ -264,6 +264,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   resting?: boolean;
   shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number;team?:number;wanted?:ResKind};
+  buildingRepairId?:number;
   buildOrder?: number;
   constructionQueue?: {sites:number[];paused?:true};
   jobLock: boolean;
@@ -281,6 +282,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  maintenance?:import('./buildingMaintenance').BuildingCare;
+  repair?:import('./buildingMaintenance').BuildingRepair;
   excavationDepth?:number;
   excavationVolume?:number;
   excavationWorkSeconds?:number;
@@ -445,6 +448,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
+  buildingMaintenanceVersion?:1;
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
   diplomaticReports?:import('./diplomaticKnowledge').DiplomaticReport[];
   diplomaticMessages?:import('./diplomaticKnowledge').DiplomaticMessage[];

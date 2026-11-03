@@ -1,5 +1,7 @@
 # Building and workplace catalogue
 
+Current maintenance delta: standing buildings now support finite material-paid, physically hauled builder repairs; new worlds have light measured material/weather/use wear. This does not implement a dedicated repair-yard building, bridge maintenance, household beds or mortar manufacture. See [Building maintenance](BUILDING_MAINTENANCE_2026-11-03.md).
+
 Current implementation delta: [Plant textiles and seasonal clothing](PLANT_TEXTILE_CHAIN_2026-11-02.md) adds paid bast spinning, weaving and light garments to the existing fibre shelter/tailor. The table below remains the dated October31 baseline; current executable recipes, station status and blockers come from `src/game/productionCatalog.ts` and `src/game/production.ts`. Advanced looms, flax crops, wool, dyes and repairs remain explicitly partial/planned.
 
 Audit date: 2026-10-31. This is a source audit and implementation plan, not a claim that the missing chains have shipped. The current registry has **26 building IDs**, six age labels, and substantial early survival foundations. Clothing, hides, tanning, dedicated cooking, and distinct metal-smelting inputs are still absent. Keep the existing buildings and later-era roadmap while filling those real production gaps.

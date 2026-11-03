@@ -9,3 +9,5 @@ Publish the already implemented crafting/ownership batch first. These requests a
 - Audit and implement material- and weather-dependent building maintenance cost/labor, condition, warned deterioration and prioritized paid repairs. Existing tool/equipment maintenance is not a complete building-upkeep system.
 - Give raiders measured intent/severity, from theft and captives through destructive or annihilating attacks; tune probabilities, risk/reward, force and withdrawal decisions with difficulty.
 - Reproduce the screenshot's looping raiders. Record destination changes, navigation failures, retries, target ownership and attack/withdrawal states; fix the actual loop without despawning the party or granting movement through terrain.
+
+- Screenshot07:53: smooth river bends, continuous width, tributary joins and natural banks; remove staircase/sawtooth grid edges. Measure centreline curvature, width continuity and bank-edge deviation at close/middle/wide views. Keep visible water and actual wet/dry/pathing surfaces consistent; avoid a global detail increase that harms frame time. Pending until implemented and visually/physically checked.

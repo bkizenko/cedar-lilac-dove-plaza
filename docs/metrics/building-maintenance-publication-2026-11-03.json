@@ -1,0 +1,50 @@
+{
+  "baseline": "8836777",
+  "automatedPassed": 53,
+  "automatedTotal": 53,
+  "cohorts": [
+    52,
+    1
+  ],
+  "typecheck": "pass",
+  "productionBuild": "pass",
+  "desktop": {
+    "publicNativeFixture": true,
+    "paymentWoodBefore": 580,
+    "paymentWoodAfter": 573,
+    "conditionBeforePercent": 50,
+    "conditionAfterPercent": 100,
+    "observedPhases": [
+      "loading paid materials at cache",
+      "carrying7 material units",
+      "completed after actual play"
+    ],
+    "manualSave": "Village saved \u00b7 Year1,May",
+    "consoleWarningsOrErrors": 0
+  },
+  "sourceHashes": {
+    "src/game/buildingMaintenance.ts": "134dcd44c0bf5ef6da77cad05b17e17b5f1c2de2d7bbe408a7e25cc45ac48592",
+    "src/game/types.ts": "137178955c2e4677c2dfc2edb1854e3c72b83e50e466a49f05adbd5be40b367a",
+    "src/game/sim.ts": "b7b2394338dd40b0ddf339d1d130dce449199c250589b7073402e8eda3648a20",
+    "src/game/workCommitments.ts": "08323bd8d0239544cb2de2a0005d98c4836387f85b9a540181ecd51d99df38f3",
+    "src/game/workRuntime.ts": "fbcd6d4e43b7c00bad444b08c21fb2aaf7b8ca189d564bf3c0c7bc380c396442",
+    "src/game/persistence.ts": "c86759fce2fb5d39cfd003e543a6b0828f79da47f6fee953f980818e1bebb2a3",
+    "src/game/communityHandover.ts": "8dfeea7f29688a650840f8008a9cbf343be45f5839afedce384c78c1b03b221c",
+    "src/game/villageWorkload.ts": "9c73faa688d4d06665b9024d7b5a3647e1fdd7e8eb5c8b450e2c371a3fd492db",
+    "src/game/labor.ts": "d7433e893132f772c790c82f8a7f635e1051e6bb00df07dc2042f3f7874bfe85",
+    "src/game/productionCatalog.ts": "530fca76f19dbd080d2d0b50d8f9d4dfe29bb8c62e8dab24f142f9c1e53f9e08",
+    "src/ui/Hud.tsx": "85d4d04c4eb27ad25ea1b2e1725d51f88bf8c07b6cd267ab99c9ee0dadd66800",
+    "src/ui/BuildingMaintenanceControls.tsx": "a80c3fdd06cdf5fc10fd5f507152afe08ca68992bde92fe06d29ac58e6311801"
+  },
+  "releaseGates": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 32,
+    "total": 98,
+    "percent": 32.65
+  },
+  "limits": [
+    "Legacy passive wear remains disabled unless explicitly opted into supported repair behavior",
+    "Disconnected retained repair salvage, bridges and specialist repair yards remain pending",
+    "No new sustained-FPS acceptance"
+  ]
+}
