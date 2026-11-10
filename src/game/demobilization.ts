@@ -49,6 +49,6 @@ export function demobilizationAI(g:Game,u:Unit,dt:number){
  if(finish(g,u))return false;
  u.recalled=true;u.stationOnArrival=false;g.workerAI(u,dt);
  if(finish(g,u))return true;
- if(!u.workReason?.includes('no reachable'))u.workReason='Standing down — bringing supplies and weapons home';
+ if(!u.workReason?.includes('no reachable')&&!u.workReason?.includes('cache full'))u.workReason='Standing down — bringing supplies and weapons home';
  return true;
 }

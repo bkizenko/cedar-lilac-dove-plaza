@@ -42,7 +42,7 @@ export function searchForWildGoats(g: Game, penId?: number) {
   }
   const selected = g.selectedUnits();
   const pool = [...g.state.units].sort((a, b) => Number(selected.includes(b)) - Number(selected.includes(a)));
-  let reason = 'A free adult with empty hands and journey food is needed';
+  let reason = 'No adult can leave now. Let a worker unload or finish their current order, then try again.';
   for (const u of pool) {
     if (u.team !== 0 || u.hp <= 0 || u.type !== 'worker' || u.militia || isDependent(g, u) ||
         hasTaskCommitment(u) || u.jobLock || u.emergency || u.recalled || u.expedition || u.visit ||

@@ -549,6 +549,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
                 {sel.completed&&sel.type==='pen'&&engine&&<HusbandryControls engine={engine} pen={sel.buildingId!}/>}
                 {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
+                {sel.completed&&sel.type==="townhall"&&engine&&<button type="button"
+                  className="min-h-10 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
+                  disabled={!engine.game.state.units.some(u=>u.team===0&&u.hp>0&&u.militia&&!u.prisoner)}
+                  onClick={()=>engine.standDown()}>Stand down militia</button>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
                 {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
                 {engine&&sel.buildingId&&sel.completed&&sel.team===0&&["townhall","workshop","dock"].includes(sel.type||"")&&<PaidProjects engine={engine} workplaceId={sel.buildingId}/>}

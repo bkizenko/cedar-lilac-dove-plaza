@@ -144,7 +144,14 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
     (kind === 'cart' ? u.haulage === 'sled' : !u.haulage))
     .sort((a, b) => Number(b.selected) - Number(a.selected));
   const u = candidates.find(p => nearestWorkplace(g, p, sites));
-  if (!u) return reject(kind === 'cart' ? 'Choose an available adult sled carrier with empty hands and a route to the shelter' : 'Need an available adult with empty hands and a route to the workplace');
+  if (!u) {
+    if (kind !== 'cart') return reject('No adult can start this job. Free a worker and check the route to the workplace.');
+    if (!(g.state.units as HaulageUnit[]).some(worker => civilian(g,worker) && worker.team===team && worker.haulage==='sled'))
+      return reject('Make a sled first. A handcart upgrades a sled carrier’s equipment.');
+    return reject(candidates.length
+      ? 'A sled carrier is free, but cannot reach this shelter. Clear a route or use another shelter.'
+      : 'All sled carriers are busy or loaded. Finish a delivery or free a sled carrier, then retry.');
+  }
   if (t.wood < spec.wood || t.stone < spec.stone) return reject(`Need ${spec.wood} logs and ${spec.stone} stone`);
   const b = nearestWorkplace(g, u, sites)!;
   u.haulageWork = { kind, progress: 0, duration: spec.seconds * (b.type === 'townhall' ? 2 : 1), workplace: b.id,...(hullOrder?{vessel:true,hullOrder}:{}) };
