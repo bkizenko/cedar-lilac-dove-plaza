@@ -272,6 +272,35 @@ function loadGoods(g: Game, u: Unit, p: RaidPlan, dt: number, foodOnly = false) 
   if (!foodOnly) withdraw(u, p, "Leaving with supplies");
   return true;
 }
+const supplySearch = new WeakMap<Unit, {band: number; x: number; z: number}>();
+function searchForRaidSupplies(g: Game, u: Unit, p: RaidPlan, dt: number) {
+ const raid = u.seaRaid!;
+ const prior = supplySearch.get(u);
+ let search = prior?.band === p.bandId ? prior : undefined;
+ if (!search && (Math.hypot(u.x-raid.goalX,u.z-raid.goalZ)>2 && u.stuckT<=6)) {
+  u.tx=raid.goalX;u.tz=raid.goalZ;
+ } else {
+  if (!search) {
+   const start = (Math.imul(u.id, 2654435761) >>> 0) / 4294967296 * Math.PI * 2;
+   for (let i=0;i<8;i++) {
+    const angle=start+i*Math.PI/4, radius=14+(u.id%5)*2;
+    const x=raid.goalX+Math.cos(angle)*radius,z=raid.goalZ+Math.sin(angle)*radius;
+    if(!g.walkable(x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
+    search={band:p.bandId,x,z};supplySearch.set(u,search);u.stuckT=0;break;
+   }
+  }
+  if(!search||Math.hypot(u.x-search.x,u.z-search.z)<1.4||u.stuckT>6) {
+   withdraw(u,p,"No reachable supplies found after searching the area");
+   return true;
+  }
+  u.tx=search.x;u.tz=search.z;
+ }
+ u.order="move";
+ u.workReason="Looking for a reachable supply store";
+ g.steer(u,dt);
+ return true;
+}
+
 /** Handles only new nonlethal plans; legacy and destructive parties retain combat. */
 export function limitedRaidAI(g: Game, u: Unit, dt: number) {
   const p = u.seaRaid?.plan;
@@ -361,12 +390,7 @@ export function limitedRaidAI(g: Game, u: Unit, dt: number) {
     return true;
   }
   if (loadGoods(g, u, p, dt)) return true;
-  u.order = "move";
-  u.tx = u.seaRaid!.goalX;
-  u.tz = u.seaRaid!.goalZ;
-  u.workReason = "Looking for supplies";
-  g.steer(u, dt);
-  return true;
+  return searchForRaidSupplies(g,u,p,dt);
 }
 export function finishRaidPlan(g: Game, u: Unit, outcome: "returned" | "lost" | "stranded") {
   const p = u.seaRaid?.plan;

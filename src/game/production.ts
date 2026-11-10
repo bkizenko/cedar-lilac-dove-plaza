@@ -2,7 +2,7 @@ import{inheritedCacheCapacity}from'./communityCaches';
 import{validHandoverProvenance}from'./communityHandoverValidation';
 import{carryingCapacity}from'./haulage';
 import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
-import{CEREAL_RULES,cerealLedger,cerealSeedCapacityIssue,cerealRecipeIssue,cerealWeatherIssue,isCerealRecipe,finishCerealBatch,recordCerealDelivery,recordCerealCargoLoss}from'./cerealRules';
+import{CEREAL_RULES,cerealLedger,cerealSeedCapacityIssue,cerealWeatherIssue,isCerealRecipe,finishCerealBatch,recordCerealDelivery,recordCerealCargoLoss}from'./cerealRules';
 import{TEXTILE_RULES,GARMENT_KINDS,textileRecipeIssue,type GarmentKind}from'./textiles';
 import{basketOrigin,recordBasketDelivery,recordFibreDelivery}from'./fibre';
 import{productionPracticeRate,recordProductionPractice,recordProductionPracticeWork}from'./productionPractice';
@@ -102,7 +102,7 @@ function occupied(g:Game,b:Building){return (g.state.production?.projects||[]).f
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
  if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
- const cerealIssue=cerealRecipeIssue(g,b.team,recipe);if(cerealIssue)return cerealIssue;
+ const cerealIssue=cerealWeatherIssue(g,recipe);if(cerealIssue)return cerealIssue;
  const textileIssue=textileRecipeIssue(g,b.team,recipe);if(textileIssue)return textileIssue;
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
  if(r.outputs.basket&&(g.tribe(b.team).basketOrigins?.length||0)>=256&&!g.tribe(b.team).basketOrigins?.some(o=>o.origin.site===b.id))return 'Basket provenance records are full; use an existing weaving site';

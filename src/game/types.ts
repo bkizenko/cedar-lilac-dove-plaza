@@ -492,6 +492,7 @@ export type GameState = {
   autoWorkEnabled?:boolean;
   occupations?:OccupationControl[];
   conflictJournal?:ConflictJournal;
+  seasonReports?:import('./seasonReports').SeasonReports;
   simulationEvents?:import('./simulationEvents').SimulationEventLog;
   finiteRaiderCampVersion?:1;
   survivalVersion?:1;

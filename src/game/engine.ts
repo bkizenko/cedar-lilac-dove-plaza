@@ -1,4 +1,4 @@
-import { compactGrainWorkplace, threshingFloorIssue } from './cerealRules';
+import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
 import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
@@ -646,10 +646,6 @@ export class Engine {
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="house"&&housingAdoptionIssue(this.game)){this.game.banner(housingAdoptionIssue(this.game)!,5);this.pushHud();return;}
-    if(type==="threshingFloor"){
-      const issue=threshingFloorIssue(this.game,0);
-      if(issue){this.game.state.placing=null;this.game.state.placeIssue=null;this.updateGhost();this.game.banner(issue,6);this.pushHud();return;}
-    }
     if(type==="farm"&&cultivationIssue(this.game)){
       this.game.banner(cultivationIssue(this.game)!,5);this.pushHud();return;
     }

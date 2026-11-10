@@ -2,7 +2,7 @@ import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';
 import test from'node:test';import assert from'node:assert/strict';import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
 import{farmWork,calendar}from'../src/game/settlement.ts';import{beginProduction,productionIssue,productionAI,exposedHarvestUnits,deliverProductionCargo,pauseProductionProject,resumeProduction,tickProduction,unloadProductionProject,cerealReservedMaterials,PRODUCTION_RECIPES}from'../src/game/production.ts';
-import{CEREAL_RULES,rawCerealField,threshingFloorIssue}from'../src/game/cerealRules.ts';import{reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
+import{CEREAL_RULES,rawCerealField}from'../src/game/cerealRules.ts';import{reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}
 function fixture(team=0){const g=new Game();g.reset(42,10);g.enterIsland();g.state.units=[];g.state.buildings=[];for(const k of['trees','stones','forage','fish','copper','iron','wildlife'])g.state[k]=[];g.state.autoWorkEnabled=false;g.state.time=950;g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.conflict='quiet';g.state.encounter=undefined;for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(team),{wood:100,stone:100,food:1000,foodLots:{provisions:1000},seeds:12,items:{},cultivated:['grain']});g.state.campSites=team===0?[{team:0,x:0,z:30}]:[{team:0,x:-90,z:30}];g.world.camps.find(c=>c.team===team).x=0;g.world.camps.find(c=>c.team===team).z=30;const hall=g.makeBld('townhall',0,30,team),hearth=g.makeBld('hearth',12,30,team);g.state.buildings=[hall,hearth];if(team!==0){g.state.buildings.push(g.makeBld('townhall',-90,30,0));const spectator=g.spawnUnit('worker',-90,38,0);spectator.order='hold';spectator.jobLock=true;}ground(g);const u=g.spawnUnit('worker',0,36,team),v=g.spawnUnit('worker',2,36,team);for(const p of[u,v]){p.order='hold';p.jobLock=false;}return{g,u,v,hall,hearth};}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;while(g.state.time<end&&!until()){const before=g.state.time;g.state.paused=false;g.step(.1);assert.ok(g.state.time>before,JSON.stringify({time:g.state.time,ended:g.state.ended,encounter:g.state.encounter,banner:g.state.banner}));}assert.deepEqual(g.simulationErrors,[]);}
@@ -16,7 +16,7 @@ test('new marked farm grain travels as finite inedible sheaves; paid threshing/w
  drive(g,80,()=>!u.itemCargo);assert.equal(g.tribe(0).items.grainSheaves,8);assert.equal(g.state.cerealProcessing.deliveredSheaves,8);assert.equal(g.state.simulationEvents?.totals['food_received:0:food']||0,0);
  batch(g,'threshCerealHand',hearth);assert.equal(g.tribe(0).items.grainSheaves,0);assert.equal(g.tribe(0).items.roughGrain,6);assert.equal(g.tribe(0).items.straw,2);assert.equal(g.tribe(0).seeds,seeds);
  batch(g,'winnowCerealHand',hearth);assert.equal(g.tribe(0).items.roughGrain,0);assert.equal(g.tribe(0).items.chaff,2);assert.ok(Math.abs(g.tribe(0).seeds-seeds-.32)<1e-9);assert.ok(Math.abs(g.state.simulationEvents.totals['food_received:0:food']-3.68)<1e-9);assert.equal(g.state.cerealProcessing.cleanedGrain,4);
- assert.ok(Math.abs(3.68+.32+g.tribe(0).items.straw+g.tribe(0).items.chaff-8)<1e-9);assert.equal(threshingFloorIssue(g,0),null);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ assert.ok(Math.abs(3.68+.32+g.tribe(0).items.straw+g.tribe(0).items.chaff-8)<1e-9);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 test('legacy fields, carried/stored grain, wild sample delivery and non-cereal crops keep their old contract across saves',()=>{
  const{g,u}=fixture(),field=farm(g);delete field.cerealProcessingVersion;g.tribe(0).foodLots={grain:10,provisions:990};u.x=20;u.z=40;u.node=field;u.order='gather';farmWork(g,u,field,1);assert.equal(u.carry,2);assert.equal(u.carryFood,'grain');assert.equal(u.itemCargo,undefined);
@@ -47,7 +47,7 @@ test('automatic cereal work preserves a final free adult during low edible reser
 test('cereal workload includes raw backlog and future winnowing of paid batches without double-counting project work or delivery',()=>{const{g,u,hearth}=fixture();g.tribe(0).items={grainSheaves:16,roughGrain:6};assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);const p=g.state.production.projects[0];const before=JSON.stringify(g.state);let r=measureVillageWorkload(g);let row=r.tasks.find(t=>t.id==='cereal-backlog:0');assert.equal(row.personSeconds,40+32);assert.equal(r.tasks.filter(t=>t.id===`production:${p.id}`).length,1);assert.equal(JSON.stringify(g.state),before);g.state.production.projects.push(p);r=measureVillageWorkload(g);assert.equal(r.tasks.find(t=>t.id==='cereal-backlog:0').personSeconds,72);assert.equal(r.tasks.filter(t=>t.id===`production:${p.id}`).length,1);p.phase='lost';assert.equal(measureVillageWorkload(g).tasks.find(t=>t.id==='cereal-backlog:0').personSeconds,56);});
 
 test('raw-carrier death loses finite sheaves once even without a completed hearth, and optional cereal save state is strict',()=>{const{g,u}=fixture();g.state.buildings=g.state.buildings.filter(b=>b.type!=='hearth');g.state.production=undefined;const field=farm(g);u.x=20;u.z=40;u.order='gather';u.node=field;for(let i=0;i<20&&field.crop.remaining;i++)farmWork(g,u,field,.3);assert.equal(u.itemCargo.grainSheaves,8);u.hp=0;tickProduction(g,0);assert.equal(g.state.cerealProcessing.lostCarriedSheaves,8);assert.equal(g.state.production.metrics.lost.grainSheaves,8);tickProduction(g,0);assert.equal(g.state.cerealProcessing.lostCarriedSheaves,8);for(const key of['version','harvestedSheaves']){const save=structuredClone(encodeGame(g));save.state.cerealProcessing[key]=-1;assert.throws(()=>decodeGame(save));}});
-test('prepared floors require delivered practice and keep finite independent two-person batch slots',()=>{const{g,u,v,hearth}=fixture();assert.match(threshingFloorIssue(g,0),/Deliver a hand-threshed/);g.tribe(0).items={grainSheaves:40};batch(g,'threshCerealHand',hearth);assert.equal(threshingFloorIssue(g,0),null);const a=g.makeBld('threshingFloor',20,30,0),b=g.makeBld('threshingFloor',32,30,0);g.state.buildings.push(a,b);ground(g);const w=g.spawnUnit('worker',3,36,0);w.order='hold';w.jobLock=false;assert.equal(beginProduction(g,'threshCerealFloor',a.id,u.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,v.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,w.id),false);assert.equal(g.tribe(0).items.grainSheaves,16);assert.equal(beginProduction(g,'threshCerealFloor',b.id,w.id),true);assert.equal(g.tribe(0).items.grainSheaves,8);assert.equal(g.state.production.projects.filter(p=>p.workplace===a.id).length,2);assert.equal(g.state.production.projects.filter(p=>p.workplace===b.id).length,1);drive(g,100,()=>g.state.production.projects.every(p=>p.phase==='complete'));assert.ok(g.state.production.projects.every(p=>p.phase==='complete'));assert.equal(g.tribe(0).items.roughGrain,24);assert.equal(g.tribe(0).items.straw,8);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
+test('prepared floors keep finite independent two-person batch slots',()=>{const{g,u,v,hearth}=fixture();g.tribe(0).items={grainSheaves:40};batch(g,'threshCerealHand',hearth);const a=g.makeBld('threshingFloor',20,30,0),b=g.makeBld('threshingFloor',32,30,0);g.state.buildings.push(a,b);ground(g);const w=g.spawnUnit('worker',3,36,0);w.order='hold';w.jobLock=false;assert.equal(beginProduction(g,'threshCerealFloor',a.id,u.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,v.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,w.id),false);assert.equal(g.tribe(0).items.grainSheaves,16);assert.equal(beginProduction(g,'threshCerealFloor',b.id,w.id),true);assert.equal(g.tribe(0).items.grainSheaves,8);assert.equal(g.state.production.projects.filter(p=>p.workplace===a.id).length,2);assert.equal(g.state.production.projects.filter(p=>p.workplace===b.id).length,1);drive(g,100,()=>g.state.production.projects.every(p=>p.phase==='complete'));assert.ok(g.state.production.projects.every(p=>p.phase==='complete'));assert.equal(g.tribe(0).items.roughGrain,24);assert.equal(g.tribe(0).items.straw,8);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
 
 test('Auto work takes a delivered raw catch through paid cooking or smoking, depending on meal reserves', () => {
  for (const {food, expected, kind} of [
@@ -130,11 +130,14 @@ test('Auto work preserves clean grain when water for baking is unavailable and h
  assert.ok(tribe.foodLots.grain > 4);
 });
 
-test('threshing floor placement reports hearth practice before a blueprint is attempted',()=>{
+test('a green threshing floor preview places a paid plan without prior hand-threshing',()=>{
  const {g}=fixture();
- assert.match(g.placementIssue('threshingFloor',32,38),/finished hearth.*Hand-thresh cereal sheaves/);
- assert.equal(g.placeBuilding('threshingFloor',32,38),false);
- assert.match(g.state.banner,/hand-threshed batch/);
+ const wood=g.tribe(0).wood;
+ assert.equal(g.placementIssue('threshingFloor',32,38),null);
+ assert.equal(g.placeBuilding('threshingFloor',32,38),true);
+ assert.equal(g.state.buildings.at(-1).type,'threshingFloor');
+ assert.equal(g.tribe(0).wood,wood-6);
+ assert.match(g.state.banner,/Threshing floor placed/);
 });
 
 test('grain workplaces fit beside expanded plots, while their physical footprints stay clear',()=>{
@@ -143,7 +146,6 @@ test('grain workplaces fit beside expanded plots, while their physical footprint
  plot.expansion={w:16.4,d:8.2};
  g.state.buildings.push(plot);
  const stations=[['grindingStone',3,30],['oven',4,39],['threshingFloor',6,48]];
- g.tribe(0).productionPractice={threshCerealHand:{batches:1,failedBatches:0,usefulOutputs:4,firstAt:0,lastAt:0,makers:[]}};
  for(const [type,width,z] of stations){
   const x=40+16.4/2+width/2+.5;
   // Each position is beside an expanded footprint rather than inside it.

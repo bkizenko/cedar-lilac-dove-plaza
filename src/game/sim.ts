@@ -9,7 +9,7 @@ import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
-import{rawCerealField,threshingFloorIssue,compactGrainWorkplace}from'./cerealRules';
+import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
 import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
@@ -45,6 +45,7 @@ import {plotSurveyPoints,PLOT_TOPOGRAPHY_RULES,fieldTopographyIssue} from './plo
 import {captureTarget,captureIntentAI,secureVillage,occupationActorAI,tickOccupation,occupationStatus,integrateOccupiedVillage,withdrawOccupation,releaseConflictAssignment,missionMayTargetBuilding,missionMayTargetCivilian} from './conflictIntent';
 import {prisonerAI,prisonerIndependentNeeds,acceptPrisonerSurrender,provisionPrisoner,releasePrisoner,assignPrisonerGuard,recordPrisonerDeath} from './captivity';
 import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
+import {updateSeasonReports} from './seasonReports';
 import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
@@ -1116,7 +1117,6 @@ export class Game {
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
-    if(type==="threshingFloor"){const learned=threshingFloorIssue(this,_team);if(learned)return learned;}
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
@@ -1394,7 +1394,6 @@ export class Game {
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
-    if(type==="threshingFloor"){const issue=threshingFloorIssue(this,team);if(issue){if(team===0)this.banner(issue,5);return false;}}
     if(type==="farm"&&cultivationIssue(this,team)){
       if(team===0)this.banner(cultivationIssue(this,team)!,5);return false;
     }
@@ -1470,6 +1469,7 @@ export class Game {
       if (b.build < 1) assignPlacedConstruction(this, b);
       if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
       else if(type==="farm")this.banner("Field marked — assign farmers to sow in spring",4);
+      else if(compactGrainWorkplace(type))this.banner(`${d.name} placed. Select it to see construction progress.`,4);
     }
     return true;
   }
@@ -5661,6 +5661,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        updateSeasonReports(this);
         phases?.mark('production');
         tickFibre(this);
         tickClay(this);

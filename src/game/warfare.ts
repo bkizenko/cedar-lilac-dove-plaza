@@ -1,3 +1,4 @@
+import {recordSeasonWeapon} from './seasonReports';
 import {climateAt} from './ecology';
 import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
 import type {Game} from './sim';
@@ -61,6 +62,7 @@ export function weaponWorkAI(g:Game,u:Unit,dt:number){
   u.workReason=`Making ${WEAPONS[job.kind].name.toLowerCase()} · ${Math.floor(100*job.progress/job.duration)}%`;
   if(job.progress>=job.duration){
     const key=job.kind==='spear'?'spears':job.kind==='bow'?'bows':'blades';g.tribe(u.team)[key]++;
+    recordSeasonWeapon(g,u.team);
     u.weaponWork=undefined;u.order='idle';u.workReason='Weapon ready in village stores';g.workBoard.reset();
     if(u.team===0){g.banner(`${WEAPONS[job.kind].name} ready — select adults and arm them`,3);g.onSfx('place');}
   }

@@ -367,3 +367,22 @@ test("even severe new objectives withdraw when the real band member is badly wou
   assert.equal(u.seaRaid.plan.metrics.withdrawals, 1);
   assert.ok(u.hp > 0);
 });
+
+test('a loot band arriving at an empty objective searches separate reachable approaches and withdraws',()=>{
+ const {g,u,plan}=fixture('loot');
+ g.state.buildings=[];
+ g.rebuildWalk();
+ const v=g.spawnUnit('spearman',u.x,u.z,3);
+ v.seaRaid={...u.seaRaid,plan:{...plan,actorId:v.id}};
+ for(const actor of [u,v]){
+  actor.seaRaid.goalX=actor.x;actor.seaRaid.goalZ=actor.z;
+  actor.seaRaid.plan.targetId=undefined;
+ }
+ g.steer=()=>false;
+ limitedRaidAI(g,u,.1);limitedRaidAI(g,v,.1);
+ assert.notDeepEqual([u.tx,u.tz],[v.tx,v.tz]);
+ assert.equal(u.order,'move');assert.equal(v.order,'move');
+ Object.assign(u,{x:u.tx,z:u.tz});
+ limitedRaidAI(g,u,.1);
+ assert.equal(u.seaRaid.phase,'retreat');
+});

@@ -97,3 +97,22 @@ test('grain station pointer placement keeps quarter-metre gaps on the actual bui
  assert.deepEqual(validated,{type:'oven',x:11.25,z:-14.5});
  assert.deepEqual(drawn,{...validated,ok:true});
 });
+
+test('clicking a green threshing floor ghost places a real unfinished floor',()=>{
+ const {g}=fixture(),e=Object.create(Engine.prototype);
+ for(const key of ['trees','stones','forage'])g.state[key]=[];
+ g.state.buildings=[];g.state.units=[];g.rebuildWalk();
+ Object.assign(g.tribe(0),{wood:30,stone:20});
+ g.state.placing='threshingFloor';
+ let green=false;
+ e.game=g;e.pointer={x:20,y:30};e.ghostPos={x:0,z:0};e.pushHud=()=>{};
+ e.view={setLinePreview:()=>{},groundAt:()=>({x:25.28,z:-20.48}),
+  setGhost:(_type,_x,_z,_y,ok)=>{green=ok;}};
+ e.updateGhost();assert.equal(green,true);
+ e.leftClick(20,30,false);
+ const floor=g.state.buildings.at(-1);
+ assert.equal(floor.type,'threshingFloor');
+ assert.deepEqual([floor.x,floor.z,floor.build],[25.25,-20.5,0]);
+ assert.equal(g.tribe(0).wood,24);
+ assert.match(g.state.banner,/Threshing floor placed/);
+});

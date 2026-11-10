@@ -1,4 +1,4 @@
-import { threshingFloorIssue } from '../game/cerealRules';
+import {SeasonReport} from './SeasonReport';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
 import { VillageHistory } from './VillageHistory';
@@ -373,6 +373,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       {historyOpen && engine && <VillageHistory engine={engine} close={()=>setHistoryOpen(false)}/>}
       <div className="hud-banner">
         {engine && <VillageAlerts engine={engine}/>}
+        {engine&&!hud.placing&&<SeasonReport game={engine.game}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
             <div>
@@ -770,7 +771,6 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const homeIssue=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;
-              const floorIssue=b.type==='threshingFloor'&&engine?threshingFloorIssue(engine.game,0):null;
               const unaffordable =
                 (engine?.game.tribe(0).seeds||0)<(b.cost.seeds||0) ||
                 hud.wood < (b.cost.wood || 0) ||
@@ -779,7 +779,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 hud.copper < (b.cost.copper || 0) ||
                 hud.iron < (b.cost.iron || 0);
               return (
-                <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${homeIssue||floorIssue||buildingHelp(b.type,b.hint)} ${b.type==='house'?`${HOUSING_RULES.plantFibre} plant fibre · ${HOUSING_RULES.workSeconds}s actual work + hauling. `:''}${([['seeds','seeds'],['wood','logs'],['stone','stone'],['food','food'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}${unaffordable?' Supplies are not ready yet.':''}`}><button
+                <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${homeIssue||buildingHelp(b.type,b.hint)} ${b.type==='house'?`${HOUSING_RULES.plantFibre} plant fibre · ${HOUSING_RULES.workSeconds}s actual work + hauling. `:''}${([['seeds','seeds'],['wood','logs'],['stone','stone'],['food','food'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}${unaffordable?' Supplies are not ready yet.':''}`}><button
                   key={b.type}
                   type="button"
                   disabled={!!hud.ended||!!homeIssue}
@@ -796,7 +796,6 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   </div>
                   <div className="text-sm font-medium leading-tight text-parchment">
                     {b.type==='farm'?'Plant field':shortName(b.name)}
-                    {floorIssue&&<span className="block text-[10px] text-parchment-dim">Try at hearth first</span>}
                   </div>
                   <div className="build-tile-cost mt-1 text-xs leading-snug text-parchment tabular">
                     {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}{b.type==='house'?` · ${HOUSING_RULES.plantFibre} fibre`:''}

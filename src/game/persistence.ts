@@ -35,6 +35,7 @@ import {validPrisonerState} from './captivity';
 import {validConflictJournal} from './conflictMetrics';
 import{validPenWaterState}from'./penWater';
 import {validSurvivalState} from './survivalNeeds';
+import {validSeasonReports} from './seasonReports';
 import {validSimulationEvents} from './simulationEvents';
 import {syncHaulageProjects,validHaulageProjects} from './haulage';
 import {generateWorld,sampleHeight} from './worldgen';
@@ -138,7 +139,7 @@ function validateGamePayload(raw: unknown) {
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
   if(!validBoatPractice(s))fail();
-  if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSurvivalState(s))fail();
+  if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
   if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();
