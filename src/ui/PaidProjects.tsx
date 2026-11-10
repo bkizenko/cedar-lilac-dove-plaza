@@ -12,6 +12,8 @@ export function PaidProjects({engine,workplaceId}:{engine:Engine;workplaceId:num
  if(!projects.length)return null;
  return <div className="mt-2 space-y-2 text-xs"><p className="text-parchment-dim">Paid projects · materials already committed</p>{projects.map(p=><div key={p.id} className="rounded-md border border-bronze/40 p-2">
   <p>{p.work.vessel?'Riverboat':HAULAGE[p.work.kind].name} · {Math.min(100,Math.floor(p.work.progress/p.work.duration*100))}% complete</p>
+  <progress className="w-full" aria-label={`${p.work.vessel?'Riverboat':HAULAGE[p.work.kind].name} paid work progress`}
+   value={Math.min(p.work.duration,p.work.progress)} max={p.work.duration}/>
   <p className="text-parchment-dim">{p.blockedReason||'Waiting for an available maker'}</p>
   <button type="button" className="mt-1 min-h-11 rounded-md border border-bronze/40 px-3 py-2 disabled:opacity-50" disabled={!!g.state.ended} onClick={()=>{
    const accepted=resumeHaulageProject(g,p.id,undefined,building.id),reason=accepted?'Paid work resumed — inputs preserved':p.blockedReason||'Need an available adult and a reachable crafting bench';
