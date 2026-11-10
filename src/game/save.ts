@@ -48,6 +48,33 @@ function valid(raw: string | null,reconstruct=true) {
     return null;
   }
 }
+const TEST_SAVE_KEY = SAVE_KEY + ":test-lab";
+
+export function hasTestLabSave(storage: SaveStorage = localStorage) {
+  try { return storage.getItem(TEST_SAVE_KEY) !== null; }
+  catch { return false; }
+}
+
+export function saveTestLabGame(g: Game, storage: SaveStorage = localStorage) {
+  if (!g.testMode || !g.started || g.awaitingStart) return false;
+  try {
+    const data = serializeStoredSave({...encodeGame(g), testLabRevealMap: g.revealMap});
+    storage.setItem(TEST_SAVE_KEY, data);
+    return true;
+  } catch { return false; }
+}
+
+export function loadTestLabGame(storage: SaveStorage = localStorage) {
+  const raw = storage.getItem(TEST_SAVE_KEY);
+  if (!raw) throw new Error("There is no saved Test Lab run");
+  const data = parseStoredSave(raw);
+  const game = decodeGame(data);
+  game.testMode = true;
+  game.revealMap = (data as {testLabRevealMap?: boolean}).testLabRevealMap === true;
+  game.state.paused = true;
+  return game;
+}
+
 export function saveGame(g: Game, deliberate=false) {return saveGameAttempt(g,deliberate,true);}
 function saveGameAttempt(g:Game,deliberate:boolean,allowCompaction:boolean):boolean {
   invalidateAutosaveWrites();

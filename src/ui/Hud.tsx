@@ -215,6 +215,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           </button>
           {!toolsMin&&<div id="village-controls" className="flex flex-wrap gap-2">
           {engine&&<PerformanceReadout engine={engine}/>}
+          {engine&&<p className="px-2 py-2 select-text">World seed {engine.game.state.seed} · generation {engine.game.state.worldgenVersion??1}</p>}
           <p className="px-2 py-2 text-xs" title={difficultyEffects(engine?.game.state.difficulty??'normal')}>Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
@@ -252,7 +253,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             Focus village · F
           </button>
           <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
-            Save
+            {engine?.game.testMode ? "Save test run" : "Save"}
           </button>
           <VillageFileTransfer engine={engine}/>
           {engine&&<details className="hud-world-setup"><summary className="px-2 py-2 cursor-pointer">New world</summary><WorldSetup engine={engine}/></details>}

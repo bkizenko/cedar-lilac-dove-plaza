@@ -21,7 +21,7 @@ import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
-import { saveGame, loadRaw, hasSave, protectGame, exportGame } from "./save";
+import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, loadTestLabGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
@@ -48,6 +48,16 @@ export class Engine {
     if(!saveGame(this.game,true)){this.game.banner("Save your village successfully before entering test mode",5);return false;}
     const copy=decodeGame(encodeGame(this.game));copy.testMode=true;copy.state.paused=true;
     this.originalGame=this.game;this.restoreVillage(copy);this.pushHud();return true;
+  }
+  loadTestSession() {
+    if (!this.originalGame || !this.game.testMode) return "Open the Test Lab first.";
+    try {
+      this.restoreVillage(loadTestLabGame());
+      this.pushHud();
+      return "Test Lab run loaded.";
+    } catch (error) {
+      return error instanceof Error ? error.message : "Could not load the Test Lab run.";
+    }
   }
   endTestSession(){
     if(!this.originalGame)return;
@@ -199,7 +209,11 @@ export class Engine {
     return hasSave();
   }
   saveNow() {
-    if(this.game.testMode){this.game.banner("Test copy: saving is disabled. Leave testing to return to your village.",5);return;}
+    if (this.game.testMode) {
+      this.game.banner(saveTestLabGame(this.game) ? "Test Lab run saved" : "Could not save the Test Lab run. Browser storage may be full.", 5);
+      this.pushHud();
+      return;
+    }
     const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
     this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
     this.pushHud();

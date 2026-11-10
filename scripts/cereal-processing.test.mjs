@@ -35,7 +35,7 @@ test('rain pauses the same paid winnowing work and strict save; loss releases it
  let{g,u,hearth}=fixture();g.tribe(0).items={roughGrain:6};assert.equal(beginProduction(g,'winnowCerealHand',hearth.id,u.id),true);let p=g.state.production.projects[0];drive(g,50,()=>p.phase==='working'&&p.progress>1);const progress=p.progress,seeds=g.tribe(0).seeds;g.state.weather='rain';g.state.weatherT=1000;drive(g,2);assert.equal(p.progress,progress);assert.match(p.blockedReason,/Wet weather/);assert.equal(g.tribe(0).seeds,seeds);g=decodeGame(encodeGame(g));ground(g);p=g.state.production.projects[0];assert.equal(p.progress,progress);g.state.weather='clear';u=g.state.units.find(a=>a.id===p.actorId);u.hp=0;tickProduction(g,0);assert.equal(p.phase,'paused');assert.equal(cerealReservedMaterials(g,0),2);
  const replacement=g.state.units.find(a=>a.hp>0);assert.equal(resumeProduction(g,p.id,replacement.id),true);drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.equal(g.state.production.metrics.consumed.roughGrain,6);assert.ok(Math.abs(g.tribe(0).seeds-seeds-.32)<1e-9);assert.equal(cerealReservedMaterials(g,0),0);
 });
-test('player Auto work requires opt-in and empty unlocked hands, while an actual rival uses the same paid cereal commands',()=>{
+test('hand processing requires player Auto work and empty unlocked hands, while a rival uses the same paid cereal commands',()=>{
  for(const team of[0,1]){const{g,hearth}=fixture(team);g.tribe(team).items={grainSheaves:8};const seeds=g.tribe(team).seeds;if(team===0){assert.equal(reviewCerealProcessing(g,team),false);assert.equal(g.state.production,undefined);g.setAutoWork(true);}else for(const u of g.state.units)u.jobLock=false;
  drive(g,140,()=>g.state.cerealProcessing?.cleanedGrain===4);assert.equal(g.state.cerealProcessing?.cleanedGrain,4,JSON.stringify({team,projects:g.state.production?.projects,people:g.state.units.map(u=>({id:u.id,order:u.order,job:u.jobLock,why:u.workReason}))}));assert.ok(Math.abs(g.tribe(team).seeds-seeds-.32)<1e-9);assert.equal(g.state.production.projects.filter(p=>p.phase==='complete'&&p.team===team).length,2);assert.equal(g.state.production.projects[0].workplace,hearth.id);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));}
 });
@@ -185,4 +185,24 @@ test('cooking raw meat can free material space even while exposed cereal remains
  batch(g,'cookMeat',hearth);
  assert.ok(g.tribe(0).foodLots.meat>0);
  assert.ok(g.tribe(0).items.rawMeat<3);
+});
+
+test('completed food stations turn delivered harvest into bread with village Auto work off', () => {
+ const {g, u, v} = fixture();
+ v.jobLock = true;
+ g.state.buildings.push(
+  g.makeBld('threshingFloor', 12, 44, 0),
+  g.makeBld('grindingStone', 20, 44, 0),
+  g.makeBld('oven', 28, 44, 0),
+ );
+ g.tribe(0).survival = { ...g.tribe(0).survival, waterLiters: 40 };
+ ground(g);
+ u.itemCargo = {grainSheaves: 16};
+ u.order = 'return';
+ drive(g, 270, () => (g.tribe(0).foodLots?.bread || 0) > 0);
+ assert.ok((g.tribe(0).foodLots?.bread || 0) > 0, JSON.stringify(g.state.production));
+ const completed = g.state.production.projects.filter(p => p.phase === 'complete').map(p => p.recipe);
+ for (const recipe of ['threshCerealFloor', 'winnowCerealFloor', 'grindGrainStation', 'bakeBreadOven']) assert.ok(completed.includes(recipe), recipe);
+ assert.equal(g.state.autoWorkEnabled, false);
+ assert.equal(v.jobLock, true);
 });

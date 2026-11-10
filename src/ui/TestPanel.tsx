@@ -1,3 +1,4 @@
+import {hasTestLabSave, saveTestLabGame} from '../game/save';
 import{herdWaterAccounting}from'../game/penWater';
 import {supplyAccounting} from '../game/simulationEvents';
 import {workAllocationDiagnostics} from '../game/workAllocation';
@@ -12,6 +13,7 @@ import {PROVINCE_PROFILES} from '../game/ecologicalProvinces';
 export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),[,refresh]=useState(0);
  useEffect(()=>{dialog.current?.showModal();return()=>dialog.current?.close();},[]);
+ const [saveStatus,setSaveStatus]=useState("");
  const g=engine.game;
  const terrain=useMemo(()=>terrainMetrics(g.world),[g.world]),scenery=g.world.scenery;
  const commands=commandDiagnostics(g),jobs=workAllocationDiagnostics(g),supplies=supplyAccounting(g),herdWater=herdWaterAccounting(g);
@@ -20,6 +22,14 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <header><div><h2>Test lab</h2></div><button onClick={close} aria-label="Close testing panel">×</button></header>
  {g.testMode&&<>
  <p className="test-notice">Test copy · Your village is safe</p>
+ <fieldset><legend>Saved test run</legend>
+ <p>One local save slot for the Test Lab.</p>
+ <div className="test-actions">
+ <button onClick={()=>setSaveStatus(saveTestLabGame(g) ? "Test Lab run saved." : "Could not save the Test Lab run. Browser storage may be full.")}>Save test run</button>
+ <button disabled={!hasTestLabSave()} title="Replaces the current test run with the saved one" onClick={()=>setSaveStatus(engine.loadTestSession())}>Load test run</button>
+ </div>
+ {saveStatus&&<p role="status">{saveStatus}</p>}
+ </fieldset>
  <WorldSetup engine={engine}/>
  <fieldset><legend>Landscape measurements</legend>
  <p>Seed {g.state.seed} · generation {g.state.worldgenVersion??1}</p>

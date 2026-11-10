@@ -11,7 +11,8 @@ const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyAppr
 /** One real processing dispatch per society review. Direct locks and paused
  * player batches are preserved; a material total is never credited as food. */
 export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
- const t=g.tribe(team);if(!t?.alive||team===0&&g.state.autoWorkEnabled===false||team!==0&&!isRivalTeam(team))return false;
+ const t=g.tribe(team);if(!t?.alive||team!==0&&!isRivalTeam(team))return false;
+ const dedicatedOnly=team===0&&g.state.autoWorkEnabled===false;
  if(!g.state.cerealProcessing&&(t.items?.grainSheaves||0)<CEREAL_RULES.rawBatch&&(t.items?.roughGrain||0)<CEREAL_RULES.roughBatch)return false;
  let c=reviews.get(g);if(!c||c.state!==g.state){c={state:g.state,teams:new Map()};reviews.set(g,c);}const due=c.teams.get(team)??-Infinity;if(eventActorId===undefined&&due>g.state.time&&due<=g.state.time+CEREAL_RULES.reviewSeconds)return false;c.teams.set(team,g.state.time+CEREAL_RULES.reviewSeconds);
  const jobs=g.state.production?.projects.filter(p=>p.team===team&&isCerealRecipe(p.recipe)&&!['complete','lost'].includes(p.phase))||[];
@@ -27,7 +28,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
  const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&active>0&&candidates.length<=1)return false;
  const workers=candidates.filter(u=>eventActorId===undefined||u.id===eventActorId);if(!workers.length)return false;
- const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&['hearth','threshingFloor'].includes(b.type)),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
+ const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&(b.type==='threshingFloor'||!dedicatedOnly&&b.type==='hearth')),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
  if(!finished.length){
   if(team===0)return false;let site=sites.find(b=>b.type==='hearth');if(site&&g.state.units.some(u=>u.team===team&&u.hp>0&&u.order==='build'&&u.node?.id===site!.id))return false;
   const builder=workers.find(u=>!site||g.interactionSpot(u,site));if(!builder)return false;
@@ -46,7 +47,7 @@ const grindingRecipes: ProductionRecipe[] = ['grindGrainStation', 'grindGrain'];
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
- if (team === 0 && g.state.autoWorkEnabled !== false && reviewPlayerMeals(g, eventActorId)) return true;
+ if (team === 0 && reviewPlayerMeals(g, eventActorId)) return true;
  return reviewCerealProcessing(g, team, eventActorId);
 }
 
@@ -62,7 +63,8 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  mealReviews.set(g, {state: g.state, next: g.state.time + CEREAL_RULES.reviewSeconds});
 
  const active = g.state.production?.projects.filter(p => p.team === 0 && p.phase !== 'complete' && p.phase !== 'lost') ?? [];
- const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b));
+ const dedicatedOnly = g.state.autoWorkEnabled === false;
+ const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b) && (!dedicatedOnly || b.type !== 'hearth'));
  const canPay = (recipe: ProductionRecipe) => {
   const spec = PRODUCTION_RECIPES[recipe];
   return tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
