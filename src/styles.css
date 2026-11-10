@@ -502,3 +502,36 @@ canvas:focus-visible {
 /* Keep the village-wide control readable beside the compact command icons. */
 .compact-actions .village-auto-work span{font-size:12px;font-weight:500;}
 .compact-actions .village-auto-work:hover{color:var(--color-ink);}
+
+.village-alert {
+  margin-bottom: .35rem;
+  border-color: #d88562;
+  background: #401f19;
+}
+.village-history {
+  position: absolute;
+  top: 6.5rem;
+  left: .75rem;
+  width: min(23rem, calc(100% - 1.5rem));
+  max-height: 60vh;
+  overflow: auto;
+  pointer-events: auto;
+  z-index: 12;
+  padding: .75rem;
+  font-size: .85rem;
+}
+.village-history-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+}
+.village-history li {
+  display: grid;
+  grid-template-columns: 3.75rem 1fr;
+  gap: .45rem;
+  margin-top: .5rem;
+}
+.village-history li span {
+  color: var(--color-parchment-dim);
+}

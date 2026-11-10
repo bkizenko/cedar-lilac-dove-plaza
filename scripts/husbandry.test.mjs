@@ -68,3 +68,46 @@ test('births respect places reserved by handlers bringing another goat home',()=
  g.state.units[0].tamingWork={animal:incoming.id,pen:pen.id,progress:0};tickHusbandry(g,2);assert.equal(penAnimals(g,pen.id).length,7);
  g.state.units[0].tamingWork=undefined;tickHusbandry(g,2);assert.equal(penAnimals(g,pen.id).length,8);
 });
+
+test('deliberate slaughter returns the goat hide and bones once, after the worker reaches storage',()=>{
+ const {g,pen}=fixture(),goat=animal(g,pen,'male');
+ g.tribe(0).animalProcessingVersion=1;
+ assert.equal(assignHusbandry(g,pen.id,'slaughter'),true);
+ const handler=g.state.units.find(u=>u.husbandryWork?.animal===goat.id);
+ for(let i=0;i<600&&goat.hp>0;i++)drive(g,.1);
+ assert.equal(goat.hp,0);
+ assert.deepEqual(handler.itemCargo,{rawHide:1,bone:2});
+ assert.equal(g.tribe(0).items?.rawHide||0,0);
+ assert.equal(goat.carcass.hides,0);
+ drive(g,60);
+ assert.equal(g.tribe(0).items.rawHide,1);
+ assert.equal(g.tribe(0).items.bone,2);
+ assert.equal(handler.itemCargo,undefined);
+ assert.equal(handler.husbandryWork,undefined);
+ assert.equal(assignHusbandry(g,pen.id,'slaughter'),false);
+ drive(g,20);
+ assert.equal(g.tribe(0).items.rawHide,1);
+ assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+test('a pen sends one scout and starts a real capture when the scout spots a reachable goat',async()=>{
+ const {searchForWildGoats}=await import('../src/game/animalOrders.ts');
+ const {g,pen}=fixture();
+ const goat=wild(g,36,0);
+ g.vision.fill(0);
+ g.visibleAt=()=>false;
+ const first=searchForWildGoats(g,pen.id);
+ assert.equal(first.accepted,true,first.reason);
+ const scout=g.state.units.find(u=>u.goatSearchPen===pen.id);
+ assert.ok(scout);
+ const afterDeparture=g.tribe(0).food;
+ assert.equal(searchForWildGoats(g,pen.id).accepted,true);
+ assert.equal(g.tribe(0).food,afterDeparture);
+ g.visibleAt=()=>true;
+ g.exploreAI(scout,.2);
+ assert.equal(scout.goatSearchPen,undefined);
+ assert.equal(scout.recalled,true);
+ const handler=g.state.units.find(u=>u.tamingWork?.animal===goat.id);
+ assert.ok(handler&&handler!==scout);
+ assert.equal(g.tribe(0).food,afterDeparture-HERD.tamingFood);
+});

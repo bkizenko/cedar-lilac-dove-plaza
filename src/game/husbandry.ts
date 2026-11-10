@@ -9,7 +9,8 @@ import {isDependent,calendar} from './settlement';
 import {carryingCapacity} from './haulage';
 import {foodInventory,receiveFood} from './pantry';
 import {carcassAvailable} from './hunting';
-export const HERD={capacity:8,tamingFood:6,tamingSeconds:60,maturity:300,gestation:240,lactation:900};
+import {animalProcessingEnabled,deliverProductionCargo,harvestAnimalMaterials} from './production';
+export const HERD={capacity:8,tamingFood:6,tamingSeconds:60,searchRadiusMeters:220,maturity:300,gestation:240,lactation:900};
 export const penAnimals=(g:Game,pen:number)=> (g.state.livestock||[]).filter(a=>a.pen===pen&&a.hp>0);
 const penAt=(g:Game,id:number,team=0)=>g.state.buildings.find(b=>b.id===id&&b.team===team&&b.type==='pen'&&g.finished(b));
 function available(g:Game,u:Unit,except?:'husbandryWork'|'tamingWork') {
@@ -32,7 +33,7 @@ export function beginHerdTaming(g:Game,penId:number) {
   if(u.tamingWork?.pen===penId&&u.tamingWork.paused){u.tamingWork.paused=false;u.order='hold';return true;}
   if(u.tamingWork)continue;
   const animal=g.state.wildlife.filter(a=>a.hp>0&&a.species==='goat'&&g.visibleAt(a.x,a.z)&&
-   Math.hypot(a.x-pen.x,a.z-pen.z)<220&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===a.id)&&
+   Math.hypot(a.x-pen.x,a.z-pen.z)<HERD.searchRadiusMeters&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===a.id)&&
    g.workBoard.connected(g,u.x,u.z,a.x,a.z)&&g.workBoard.connected(g,a.x,a.z,pen.x,pen.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!animal)continue;
@@ -51,7 +52,8 @@ export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'p
   !g.state.units.some(u=>u.hp>0&&u.husbandryWork?.animal===a.id)).sort((a,b)=>Number(a.sex==='female')-Number(b.sex==='female'))[0];
  if(action!=='care'&&!animal){g.banner('No unreserved adult goat in this pen',4);return false;}
  const u=[...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected)).find(u=>available(g,u,'husbandryWork')&&
-  (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0))&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
+  (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0))&&
+  (action!=='slaughter'||!Object.values(u.itemCargo||{}).some(n=>n>0))&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
  if(!u){g.banner('Choose a free empty-handed adult for this pen',4);return false;}
  g.interruptMission(u);u.husbandryWork={pen:penId,action,animal:animal?.id,phase:'pen',progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();return true;
 }
@@ -84,8 +86,8 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
    if(!wild){finish(g,u);u.workReason='The goat is gone';return true;}
    u.workReason='Approaching a goat with feed';
    if(Math.hypot(u.x-wild.x,u.z-wild.z)>2.4){u.tx=wild.x;u.tz=wild.z;g.steer(u,dt);return true;}
-   wild.vx=wild.vz=0;tame.progress=Math.min(60,tame.progress+dt);u.workReason=`Taming a herd goat · ${Math.floor(tame.progress/60*100)}%`;
-   if(tame.progress<60)return true;
+   wild.vx=wild.vz=0;tame.progress=Math.min(HERD.tamingSeconds,tame.progress+dt);u.workReason=`Taming a herd goat · ${Math.floor(tame.progress/HERD.tamingSeconds*100)}%`;
+   if(tame.progress<HERD.tamingSeconds)return true;
    if(penAnimals(g,pen.id).length>=surveyPenPasture(g,pen).eligibleCapacity){tame.paused=true;u.order='idle';u.workReason='Pen full — taming paused';return true;}
    a={...wild,team:u.team,pen:pen.id,sex:wild.id%2?'female':'male',born:g.state.time-HERD.maturity,tamedAt:g.state.time,hunger:5,milk:0,pregnancy:0};
    (g.state.livestock??=[]).push(a);
@@ -117,6 +119,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   u.workReason=w.phase==='deliver'?'Carrying herd produce to stores':'Collecting plant food for the herd';
   if(!drop||!atBuilding(g,u,drop,dt))return true;
   if(w.phase==='deliver'){
+   if(w.action==='slaughter'&&u.itemCargo&&!deliverProductionCargo(g,u))return true;
    if(u.carryType==='food'&&u.carry>0)receiveFood(g,u.team,u.carry,u.carryFood);
    u.carry=0;u.carryType=null;u.carryFood=undefined;w.phase='pen';
    if(w.action==='slaughter'){finish(g,u);return true;}
@@ -144,8 +147,14 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
    g.tribe(u.team).wood-=2;u.packAnimal={id:a.id,hp:a.hp,maxHp:a.maxHp,scale:a.scale};u.haulage='pack';
    g.state.livestock=g.state.livestock!.filter(c=>c.id!==a.id);finish(g,u);u.order='return';g.banner('A herd goat is now carrying packs for its handler',4);
   }else{
-   a.hp=0;a.carcass={meat:16,diedAt:g.state.time};
-   const amount=Math.min(carryingCapacity(u,'food'),a.carcass.meat);a.carcass.meat-=amount;
+   a.hp=0;
+   a.carcass={meat:16,diedAt:g.state.time,...(animalProcessingEnabled(g,u.team)?{hides:1,bones:2}:{})};
+   const capacity=carryingCapacity(u,'food');
+   const loaded=Object.values(u.itemCargo||{}).reduce((sum,amount)=>sum+amount,0);
+   harvestAnimalMaterials(g,u,a.carcass,Math.max(0,capacity-loaded));
+   const materials=Object.values(u.itemCargo||{}).reduce((sum,amount)=>sum+amount,0);
+   const amount=Math.min(Math.max(0,capacity-materials),a.carcass.meat);
+   a.carcass.meat-=amount;
    u.carry=amount;u.carryType='food';u.carryFood='meat';w.phase='deliver';
   }
   return true;

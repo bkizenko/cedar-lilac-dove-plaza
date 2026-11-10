@@ -48,3 +48,84 @@ test('cereal workload includes raw backlog and future winnowing of paid batches 
 
 test('raw-carrier death loses finite sheaves once even without a completed hearth, and optional cereal save state is strict',()=>{const{g,u}=fixture();g.state.buildings=g.state.buildings.filter(b=>b.type!=='hearth');g.state.production=undefined;const field=farm(g);u.x=20;u.z=40;u.order='gather';u.node=field;for(let i=0;i<20&&field.crop.remaining;i++)farmWork(g,u,field,.3);assert.equal(u.itemCargo.grainSheaves,8);u.hp=0;tickProduction(g,0);assert.equal(g.state.cerealProcessing.lostCarriedSheaves,8);assert.equal(g.state.production.metrics.lost.grainSheaves,8);tickProduction(g,0);assert.equal(g.state.cerealProcessing.lostCarriedSheaves,8);for(const key of['version','harvestedSheaves']){const save=structuredClone(encodeGame(g));save.state.cerealProcessing[key]=-1;assert.throws(()=>decodeGame(save));}});
 test('prepared floors require delivered practice and keep finite independent two-person batch slots',()=>{const{g,u,v,hearth}=fixture();assert.match(threshingFloorIssue(g,0),/Deliver a hand-threshed/);g.tribe(0).items={grainSheaves:40};batch(g,'threshCerealHand',hearth);assert.equal(threshingFloorIssue(g,0),null);const a=g.makeBld('threshingFloor',20,30,0),b=g.makeBld('threshingFloor',32,30,0);g.state.buildings.push(a,b);ground(g);const w=g.spawnUnit('worker',3,36,0);w.order='hold';w.jobLock=false;assert.equal(beginProduction(g,'threshCerealFloor',a.id,u.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,v.id),true);assert.equal(beginProduction(g,'threshCerealFloor',a.id,w.id),false);assert.equal(g.tribe(0).items.grainSheaves,16);assert.equal(beginProduction(g,'threshCerealFloor',b.id,w.id),true);assert.equal(g.tribe(0).items.grainSheaves,8);assert.equal(g.state.production.projects.filter(p=>p.workplace===a.id).length,2);assert.equal(g.state.production.projects.filter(p=>p.workplace===b.id).length,1);drive(g,100,()=>g.state.production.projects.every(p=>p.phase==='complete'));assert.ok(g.state.production.projects.every(p=>p.phase==='complete'));assert.equal(g.tribe(0).items.roughGrain,24);assert.equal(g.tribe(0).items.straw,8);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
+
+test('Auto work takes a delivered raw catch through paid cooking or smoking, depending on meal reserves', () => {
+ for (const {food, expected, kind} of [
+  {food: 24, expected: 'cookMeat', kind: 'meat'},
+  {food: 1000, expected: 'smokeMeat', kind: 'smokedMeat'},
+ ]) {
+  const {g, u, v, hearth} = fixture();
+  const smokehouse = g.makeBld('smokehouse', -12, 36, 0);
+  g.state.buildings.push(smokehouse);
+  g.rebuildWalk();
+  const tribe = g.tribe(0);
+  Object.assign(tribe, {food, foodLots: {provisions: food}, animalProcessingVersion: 1});
+  Object.assign(v, {jobLock: true, order: 'hold'});
+  g.setAutoWork(true);
+  Object.assign(u, {x: 0, z: 48, order: 'return', carry: 5, carryType: 'food', carryFood: 'meat', rawHuntMeat: true});
+  const wood = tribe.wood;
+  drive(g, 30, () => !!g.state.production?.projects.length);
+  const project = g.state.production.projects[0];
+  assert.equal(project.recipe, expected);
+  assert.equal(project.workplace, expected === 'cookMeat' ? hearth.id : smokehouse.id);
+  assert.equal(project.actorId, u.id);
+  assert.equal(project.phase, 'carrying');
+  assert.equal(tribe.foodLots[kind] ?? 0, 0);
+  assert.equal(tribe.wood, wood - 1);
+  assert.equal(g.state.production.metrics.consumed.rawMeat, 4);
+  drive(g, 100, () => project.phase === 'complete');
+  assert.equal(project.phase, 'complete', JSON.stringify(project));
+  assert.equal(g.state.production.metrics.edibleFoodProduced, 4);
+  assert.ok(tribe.foodLots[kind] > 0);
+  assert.equal(v.jobLock, true);
+  assert.doesNotThrow(() => decodeGame(encodeGame(g)));
+ }
+});
+
+test('Auto work delivers harvested grain through threshing, winnowing, grinding and baking, with collected water and fuel', () => {
+ const {g, u, v} = fixture();
+ const field = farm(g);
+ field.crop.remaining = 8;
+ const grindingStone = g.makeBld('grindingStone', 12, 45, 0);
+ const oven = g.makeBld('oven', -12, 45, 0);
+ g.state.buildings.push(grindingStone, oven);
+ g.rebuildWalk();
+ const tribe = g.tribe(0);
+ tribe.survival.waterLiters = 32;
+ const wood = tribe.wood;
+ const seeds = tribe.seeds;
+ Object.assign(v, {jobLock: true, order: 'hold'});
+ g.setAutoWork(true);
+ Object.assign(u, {x: field.x, z: field.z, y: 4, order: 'gather', node: field});
+ for (let i = 0; i < 40 && field.crop.remaining; i++) farmWork(g, u, field, .3);
+ assert.equal(u.itemCargo.grainSheaves, 16);
+ assert.equal(tribe.foodLots.grain ?? 0, 0);
+ drive(g, 420, () => g.state.production?.projects.some(p => p.recipe === 'bakeBreadOven' && p.phase === 'complete'));
+ const projects = g.state.production.projects;
+ assert.deepEqual(projects.map(p => p.recipe), ['threshCerealHand', 'winnowCerealHand', 'threshCerealHand', 'winnowCerealHand', 'grindGrainStation', 'bakeBreadOven']);
+ assert.ok(projects.every(p => p.phase === 'complete'), JSON.stringify(projects));
+ assert.equal(projects[4].workplace, grindingStone.id);
+ assert.equal(projects[5].workplace, oven.id);
+ assert.equal(g.state.production.metrics.grainUsed, 4);
+ assert.equal(g.state.production.metrics.consumed.flour, 4);
+ assert.equal(g.state.production.metrics.logsUsed, 1);
+ assert.equal(g.state.production.metrics.waterUsedLiters, 2);
+ assert.equal(tribe.wood, wood - 1);
+ assert.ok(Math.abs(tribe.seeds - seeds - .64) < 1e-9);
+ assert.ok(tribe.foodLots.bread > 0);
+ assert.doesNotThrow(() => decodeGame(encodeGame(g)));
+});
+
+test('Auto work preserves clean grain when water for baking is unavailable and honors manual mode', () => {
+ const {g} = fixture();
+ const tribe = g.tribe(0);
+ Object.assign(tribe, {food: 105, foodLots: {grain: 5, provisions: 100}, items: {rawMeat: 5}});
+ tribe.survival.waterLiters = 0;
+ drive(g, 6);
+ assert.equal(g.state.production.projects.length, 0);
+ tribe.items.rawMeat = 0;
+ g.setAutoWork(true);
+ drive(g, 6);
+ assert.equal(g.state.production.projects.length, 0);
+ assert.ok(tribe.foodLots.grain > 4);
+});

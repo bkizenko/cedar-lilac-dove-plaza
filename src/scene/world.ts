@@ -1,3 +1,6 @@
+import {HousingPacketLayer} from './housingPackets';
+import{civicPartColor}from'./classicalBuildings';
+import{BuildingGroundingLayer}from'./buildingGrounding';
 import {countEntityFrustum,type CensusSource} from './entityFrustumCensus';
 import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
 import{HullFleet}from'./hullFleet';
@@ -90,7 +93,7 @@ export const BLD_TYPES: BldType[] = [
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
-  "hut",
+  "hut", "house",
   "farm",
   "pen",  "lumber",
   "workshop",
@@ -148,7 +151,7 @@ function makeSunSprite() {
 }
 
 export class WorldView {
-  foundations:THREE.InstancedMesh|null=null;
+  foundations:BuildingGroundingLayer|null=null;
   mapSize=MAP;
   renderer: THREE.WebGLRenderer;
   latestRenderMetrics:RendererFrameMetrics|undefined;
@@ -203,6 +206,7 @@ export class WorldView {
   private wornGarments:WornGarmentLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
+  private housingPackets:HousingPacketLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailSyncAt=-1;
@@ -829,8 +833,7 @@ export class WorldView {
   }
 
   private buildBuildings() {
-    this.foundations=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#81705a',roughness:1}),2000);
-    this.foundations.count=0;this.foundations.receiveShadow=true;this.foundations.frustumCulled=false;this.scene.add(this.foundations);
+    this.foundations=new BuildingGroundingLayer(this.scene,this.mats.stone);
     this.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),1600);
     this.eraDetails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.eraDetails.count=0;this.eraDetails.castShadow=true;this.eraDetails.receiveShadow=true;this.eraDetails.frustumCulled=false;
@@ -897,6 +900,7 @@ export class WorldView {
     this.wornGarments=new WornGarmentLayer(this.scene);
     this.waterVessels=new WaterVesselLayer(this.scene);
     this.baskets=new BasketLayer(this.scene);
+    this.housingPackets=new HousingPacketLayer(this.scene);
     this.fibreWork=new FibreWorkLayer(this.scene);
     for (const t of UNIT_TYPES) {
       const geo = unitGeo(t);
@@ -1547,7 +1551,7 @@ export class WorldView {
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
             if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
-            else if(type!=="farm"&&type!=="pen")_s.y*=identity.roofHeight*(fort?1:character.roofHeight);
+            else if(type!=="farm"&&type!=="pen"&&!["market","temple","university","house"].includes(type))_s.y*=identity.roofHeight*(fort?1:character.roofHeight);
           }
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
@@ -1555,7 +1559,7 @@ export class WorldView {
           const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art&&artisan)art.setXYZW(i,artisan.x,artisan.z,artisan.brace,artisan.lift);
           if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);}
           if(mesh.instanceColor){
-            _c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
+            if(!civicPartColor(type,part,part==='timber'?identity.timber:identity.roof,_c))_c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
             if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
             if(type!=="farm"&&!fort)_c.multiplyScalar(character.tint);
             mesh.setColorAt(i,_c);
@@ -1576,16 +1580,7 @@ export class WorldView {
     this.contourFields?.sync(game,this.camera.position);
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
-    if(this.foundations){let count=0;
-      for(const b of game.state.buildings){
-        if(b.hp<=0||b.build<.2||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
-        const f=foundationProfile(game,b);if(f.level-f.bottom<.08||count>=instCap(this.foundations))continue;
-        const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],scalable=b.type==='warehouse';
-        _p.set(b.x,(f.level+f.bottom)/2,b.z);_e.set(0,scalable?0:st.yaw,0);_q.setFromEuler(_e);
-        _s.set(b.w*(scalable?1:st.sx),f.level-f.bottom,b.d*(scalable?1:st.sz));_m.compose(_p,_q,_s);this.foundations.setMatrixAt(count++,_m);
-      }
-      this.foundations.count=count;this.foundations.instanceMatrix.needsUpdate=true;
-    }
+    this.foundations?.sync(game);
   }
 
   private syncEraDetails(game:Game){
@@ -1596,6 +1591,7 @@ export class WorldView {
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
         ['warehouse','farm','pen','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
+      if(!['forge','stables','keep'].includes(b.type))continue;
       const identity=this.villageStyle(game,b.team,b),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
@@ -1608,8 +1604,8 @@ export class WorldView {
         _e.set(0,yaw,0);_q.setFromEuler(_e);_s.set(w*st.sx,h*st.sy,d*st.sz);_m.compose(_p,_q,_s);
         mesh.setMatrixAt(count,_m);_c.set(color);mesh.setColorAt(count++,_c);
       };
-      // Raised clay/stone footing, lintel, later framing and chimney.
-      block(0,.13,0,width,.26,depth);
+      // Legacy enclosed-room trim only. Ground supports belong to actual bearings.
+
       block(-.72,1.1,depth*.5,.18,2.2,.22);block(.72,1.1,depth*.5,.18,2.2,.22);
       block(0,2.2,depth*.5,1.65,.22,.26);
       if(era>=2)block(0,.1,depth*.5+.35,1.8,.2,.8);
@@ -1625,6 +1621,7 @@ export class WorldView {
   }
 
   private syncCargo(game: Game) {
+    this.housingPackets?.sync(game);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let workers=0,paddles=0;
     const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
@@ -2547,8 +2544,10 @@ export class WorldView {
   }
 
   private disposeWorld() {
+    this.foundations?.dispose();this.foundations=null;
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
+    this.housingPackets?.dispose();this.housingPackets=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;

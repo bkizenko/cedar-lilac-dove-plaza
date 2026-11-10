@@ -214,6 +214,7 @@ function selectActor(g: Game, b: Building, id?: number, manual = false) {
 export function buildingRepairIssue(g: Game, id: number) {
   const b = g.state.buildings.find((b) => b.id === id);
   if (!b || !g.finished(b) || b.hp <= 0) return "Finish a standing building first";
+  if(b.renovation)return "Finish the housing renovation before separate repair work";
   if (excluded.has(b.type)) return "This landscape structure does not use building repairs";
   if (
     b.repair ||

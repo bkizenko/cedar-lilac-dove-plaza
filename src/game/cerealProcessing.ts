@@ -1,6 +1,7 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,isCerealRecipe,rawCerealField}from'./cerealRules';
-import{beginProduction,resumeProduction,productionIssue}from'./production';
+import{beginProduction,resumeProduction,productionIssue,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{foodInventory}from'./pantry';
 import{isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
 import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildingCost}from'./construction';
@@ -20,7 +21,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  if(!rough&&!raw)return false;
  // Perishable actual meat is a faster immediate meal; leave its real hearth
  // and workers to the existing kitchen plan before processing stored crops.
- if((t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
+ if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
  const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&jobs.length>0&&candidates.length<=1)return false;
  const workers=candidates.filter(u=>eventActorId===undefined||u.id===eventActorId);if(!workers.length)return false;
  const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&['hearth','threshingFloor'].includes(b.type)),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
@@ -33,4 +34,71 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  const maker=workers.find(u=>atCache(g,u));
  if(maker){for(const b of finished){const recipe=rough?(b.type==='threshingFloor'?'winnowCerealFloor':'winnowCerealHand'):(b.type==='threshingFloor'?'threshCerealFloor':'threshCerealHand');if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);}return false;}
  const carrier=workers.find(u=>supplyDrops(g,team).some(d=>supplyApproach(g,u,d)));if(!carrier)return false;g.interruptMission(carrier);carrier.recalled=true;carrier.order='return';carrier.node=null;carrier.target=null;carrier.job=null;carrier.workReason='Returning to load the actual unprocessed cereal batch';g.invalidateRoute(carrier);g.workBoard.reset();return true;
+}
+
+const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
+const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
+const breadRecipes: ProductionRecipe[] = ['bakeBreadOven', 'bakeBread'];
+const grindingRecipes: ProductionRecipe[] = ['grindGrainStation', 'grindGrain'];
+
+/** Dispatch one existing paid recipe after a delivery or during the normal review. */
+export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
+ if (team === 0 && g.state.autoWorkEnabled !== false && reviewPlayerMeals(g, eventActorId)) return true;
+ return reviewCerealProcessing(g, team, eventActorId);
+}
+
+function reviewPlayerMeals(g: Game, eventActorId?: number) {
+ const tribe = g.tribe(0);
+ if (!tribe?.alive) return false;
+ const raw = tribe.items?.rawMeat ?? 0;
+ const flour = tribe.items?.flour ?? 0;
+ const grain = tribe.foodLots?.grain ?? 0;
+ if (raw < 4 && flour < 4 && grain < 4) return false;
+ const previous = mealReviews.get(g);
+ if (eventActorId === undefined && previous?.state === g.state && previous.next > g.state.time) return false;
+ mealReviews.set(g, {state: g.state, next: g.state.time + CEREAL_RULES.reviewSeconds});
+
+ const active = g.state.production?.projects.filter(p => p.team === 0 && p.phase !== 'complete' && p.phase !== 'lost') ?? [];
+ const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b));
+ const canPay = (recipe: ProductionRecipe) => {
+  const spec = PRODUCTION_RECIPES[recipe];
+  return tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
+ };
+ const urgent = reserveSeconds(g, 0) < CEREAL_RULES.foodTargetSeconds;
+ const recipes: ProductionRecipe[] = [];
+ if (raw >= 4 && !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat')) {
+  recipes.push(...(urgent ? meatRecipes : ['smokeMeat', 'cookMeat'] as const));
+ }
+ const canBake = breadRecipes.some(r => canPay(r) && sites.some(b => b.type === PRODUCTION_RECIPES[r].workplace));
+ if (canBake && !active.some(p => breadRecipes.includes(p.recipe) || grindingRecipes.includes(p.recipe))) {
+  if (flour >= 4) recipes.push(...breadRecipes);
+  else if (foodInventory(tribe).grain >= 4) recipes.push(...grindingRecipes);
+ }
+ const options = recipes.filter(canPay).flatMap(recipe => sites
+  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace)
+  .map(site => ({recipe, site})));
+ if (!options.length) return false;
+ const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&
+  (eventActorId === undefined || u.id === eventActorId) &&
+  (u.order !== 'gather' || !urgent || u.job !== 'food'));
+ for (const {recipe, site} of options) {
+  for (const worker of workers) {
+   if (!productionIssue(g, recipe, site.id, worker.id)) return beginProduction(g, recipe, site.id, worker.id);
+  }
+ }
+ // Let a returning villager finish the trip before sending another to load.
+ if (eventActorId !== undefined || g.state.units.some(u => u.team === 0 && u.hp > 0 && u.order === 'return')) return false;
+ const carrier = workers.find(u => u.order !== 'gather' && !atCache(g, u) &&
+  supplyDrops(g, 0).some(drop => !!supplyApproach(g, u, drop)) &&
+  options.some(({site}) => !!g.interactionSpot(u, site)));
+ if (!carrier) return false;
+ g.interruptMission(carrier);
+ carrier.order = 'return';
+ carrier.node = null;
+ carrier.target = null;
+ carrier.job = null;
+ carrier.workReason = 'Returning to collect food processing inputs';
+ g.invalidateRoute(carrier);
+ g.workBoard.reset();
+ return true;
 }

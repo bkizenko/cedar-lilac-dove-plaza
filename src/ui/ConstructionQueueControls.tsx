@@ -1,10 +1,11 @@
+import{hasConstructionWork}from'../game/constructionTargets';
 import type {Engine} from '../game/engine';
 import {BUILDINGS} from '../game/constants';
 import {planStatus} from '../game/construction';
 import {constructionPriority,setConstructionPriority,pauseConstructionQueue,resumeConstructionQueue,editConstructionQueue} from '../game/constructionQueue';
 const control='min-h-8 rounded-md border border-bronze/40 px-2 text-xs disabled:opacity-40';
 export function ConstructionSiteControls({engine,buildingId}:{engine:Engine;buildingId:number}){
- const b=engine.game.state.buildings.find(b=>b.id===buildingId);if(!b||b.team!==0||engine.game.finished(b)&&!b.expansion)return null;
+ const b=engine.game.state.buildings.find(b=>b.id===buildingId);if(!b||b.team!==0||!hasConstructionWork(b))return null;
  return <div className="space-y-2"><label className="flex items-center justify-between gap-2 text-xs">Construction priority<select aria-label="Construction priority" className={control} value={constructionPriority(b)} onChange={e=>{setConstructionPriority(engine.game,b,Number(e.target.value) as 0|1|2);engine.pushHud();}}><option value={2}>High</option><option value={1}>Normal</option><option value={0}>Low</option></select></label><button className={control} title="Add this site after current work for the two nearest available adults. Select builders and Shift-right-click sites to queue for specific people." onClick={()=>{engine.game.queueConstruction(b);engine.pushHud();}}>Queue for nearest builders</button>{b.expansion&&engine.game.finished(b)&&<button className={control} onClick={()=>{engine.game.orderConstruction(b);engine.pushHud();}}>Build now</button>}<p className="text-xs text-parchment-dim">Select builders, then Shift-right-click sites to queue several. Priority and village focus choose the next ready site.</p></div>;
 }
 export function BuilderQueueControls({engine}:{engine:Engine}){

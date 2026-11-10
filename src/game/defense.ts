@@ -4,12 +4,12 @@ import {isSocietyPeaceMessengerFor} from './rivalActivity';
 import {missionMayTargetCivilian,occupationProtectsCivilian} from './conflictIntent';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
-import {UNITS,AGE_STAT} from './constants';
+import {UNITS,AGE_STAT,BUILDINGS} from './constants';
 import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {isDependent} from './settlement';
-import {queueStandDown} from './demobilization';
+import {queueStandDown,withdrawingRaider} from './demobilization';
 
-export const DEFENSE_RULES={localMobilizationMetres:70,intrusionMetres:28,reviewSeconds:.5,manualAlarmSeconds:20,healthyFraction:.5,armingDangerMetres:8,shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,townhall:8,keep:12,barracks:12}} as const;
+export const DEFENSE_RULES={localMobilizationMetres:70,intrusionMetres:28,reviewSeconds:.5,manualAlarmSeconds:20,healthyFraction:.5,armingDangerMetres:8,shelterArrivalMetres:1,retreatMetres:8,shelterCapacity:{hut:5,house:BUILDINGS.house.pop,townhall:8,keep:12,barracks:12}} as const;
 
 /** Follow the same physical entrance and occupancy contract as ordinary rest.
  * Shelter conceals occupants; its building remains vulnerable to attack. */
@@ -101,7 +101,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   const candidates=assigned&&!nearby.includes(assigned)?[...nearby,assigned]:nearby;
   const foes = candidates.filter(e=>{
     // isFoe(a, a) is always false; own residents need no distance calculation.
-    if(!(e.hp>0)||e.shelterId||e.team===u.team)return false;
+    if(!(e.hp>0)||e.shelterId||e.team===u.team||withdrawingRaider(e))return false;
     const distance=Math.hypot(e.x-u.x,e.z-u.z);
     // Ordinary reactions stay local. A horn-assigned target may be farther
     // away only while both bodies remain inside the village alarm bounds.
@@ -192,7 +192,7 @@ export function callVillageDefense(g:Game,center:{x:number;z:number},intruders:U
 const villageCallTimes=new WeakMap<Game,Map<string,number>>();
 function automaticVillageCall(g:Game,center:{x:number;z:number},intruders:Unit[],team:number){let calls=villageCallTimes.get(g);if(!calls){calls=new Map();villageCallTimes.set(g,calls);}const key=team+':'+center.x+':'+center.z,due=calls.get(key)||0;if(g.state.time<due&&due-g.state.time<=DEFENSE_RULES.reviewSeconds)return;calls.set(key,g.state.time+DEFENSE_RULES.reviewSeconds);callVillageDefense(g,center,intruders,false,team);}
 const defenseReview=new WeakMap<Game,number>();
-export function tickVillageDefense(g:Game){if(g.state.time<(defenseReview.get(g)||0))return;defenseReview.set(g,g.state.time+DEFENSE_RULES.reviewSeconds);const foes=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&!(e.envoy?.kind==='peace'&&e.envoy.team===0)&&!isSocietyPeaceMessengerFor(g,e,0)&&!contactYieldingTo(g,e,0));if(!foes.length)return;for(const center of villageCenters(g,0)){const intruders=foes.filter(e=>Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);if(intruders.length)automaticVillageCall(g,center,intruders,0);}}
-export function soundDefenseHorn(g:Game){const selected=g.state.selBld,center=selected&&selected.team===0&&selected.type==='townhall'&&g.finished(selected)?selected:g.campOf(0);const intruders=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);return callVillageDefense(g,center,intruders);}
+export function tickVillageDefense(g:Game){if(g.state.time<(defenseReview.get(g)||0))return;defenseReview.set(g,g.state.time+DEFENSE_RULES.reviewSeconds);const foes=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&!withdrawingRaider(e)&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&!(e.envoy?.kind==='peace'&&e.envoy.team===0)&&!isSocietyPeaceMessengerFor(g,e,0)&&!contactYieldingTo(g,e,0));if(!foes.length)return;for(const center of villageCenters(g,0)){const intruders=foes.filter(e=>Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);if(intruders.length)automaticVillageCall(g,center,intruders,0);}}
+export function soundDefenseHorn(g:Game){const selected=g.state.selBld,center=selected&&selected.team===0&&selected.type==='townhall'&&g.finished(selected)?selected:g.campOf(0);const intruders=g.state.units.filter(e=>e.hp>0&&!e.shelterId&&!withdrawingRaider(e)&&g.isFoe(0,e.team)&&g.visibleAt(e.x,e.z)&&Math.hypot(e.x-center.x,e.z-center.z)<DEFENSE_RULES.intrusionMetres);return callVillageDefense(g,center,intruders);}
 
 export function resetDefenseMobilization(g:Game){defenseReview.delete(g);defenseMetrics.delete(g);villageCallTimes.delete(g);}

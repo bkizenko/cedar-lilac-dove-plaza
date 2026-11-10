@@ -1,3 +1,6 @@
+import { finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
+import{hasConstructionWork}from'./constructionTargets';
+import{planAdvancedHome,housingAI,pauseHousingWorker,tickHousing,homeUseAI,knowsHousing,housingApproach,housingFundingIssue,preferredRivalHome,housingAdoptionIssue,retainHousingProject}from'./housing';
 import type {SimulationPhaseProfile} from './simulationPhaseProfile';
 import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
 import{campSupportAI,finishCampTrip}from'./finiteCamp';
@@ -7,7 +10,7 @@ import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficu
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,threshingFloorIssue}from'./cerealRules';
-import{reviewCerealProcessing}from'./cerealProcessing';
+import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
@@ -38,7 +41,7 @@ import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampR
 import {terrainWalkBase} from './terrainWalkCache';
 import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {assignMarkedTrees} from './treeDesignation';
-import {plotSurveyPoints,fieldTopographyIssue} from './plotTopography';
+import {plotSurveyPoints,PLOT_TOPOGRAPHY_RULES,fieldTopographyIssue} from './plotTopography';
 import {captureTarget,captureIntentAI,secureVillage,occupationActorAI,tickOccupation,occupationStatus,integrateOccupiedVillage,withdrawOccupation,releaseConflictAssignment,missionMayTargetBuilding,missionMayTargetCivilian} from './conflictIntent';
 import {prisonerAI,prisonerIndependentNeeds,acceptPrisonerSurrender,provisionPrisoner,releasePrisoner,assignPrisonerGuard,recordPrisonerDeath} from './captivity';
 import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
@@ -50,7 +53,7 @@ import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluenc
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import{reconcilePenWater}from'./penWater';
-import {husbandryAI,tickHusbandry} from './husbandry';
+import {beginHerdTaming,HERD,husbandryAI,tickHusbandry} from './husbandry';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
 import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
@@ -81,7 +84,7 @@ import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
-import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction} from "./construction";
+import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction,assignPlacedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
@@ -110,7 +113,7 @@ import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidAr
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {plantingAI,cancelPlanting,tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
-import { habitatAt, soilQuality, applyForagePressure, initializeWildPlants, tickWildPlant, harvestWildPlant, wildPlantsEnabled } from "./ecology";
+import { habitatAt, habitatKindAt, soilQuality, applyForagePressure, initializeWildPlants, tickWildPlant, harvestWildPlant, wildPlantsEnabled } from "./ecology";
 import { knownSettlement, knownSettlementSite, localSettlementHall, beginSettlementJourney, settlementJourneySite, quoteShipment, shipmentIssue, proposeShipment, reportedQuote, tradeCarrier, recordTradeMeeting, eligibleTradeCarrier, automaticTradeReady } from "./barter";
 import { tickTradeFocus } from "./tradePlanning";
 import {
@@ -1112,6 +1115,7 @@ export class Game {
 
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
+    if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
@@ -1131,9 +1135,11 @@ export class Game {
       return "Too close to the shore";
     if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
     if(size||scalablePlot(type)){
+      const clearance = type === "farm" ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
-      if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+1&&Math.abs(n.z-z)<d.d/2+1))return "Clear resources from the plot first";
-      if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+1&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+1))return "Too close to another building";
+      if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
+      if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
+      if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
     }
     if (type !== "quarry") {
       for (const n of this.state.stones) {
@@ -1187,9 +1193,9 @@ export class Game {
       }
       if (n < 4) return "A lumber camp needs a stand of pines";
     }
-    if (type === "farm" || type === "pen") {
-      const issue=fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
-      if(issue)return type==='pen'?issue.replaceAll('field','pasture'):issue;
+    if (type === "pen") {
+      const issue=fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},PLOT_TOPOGRAPHY_RULES.maximumPastureGrade);
+      if(issue)return issue.replaceAll('field','pasture');
     }
     if (type === "dock") {
       if (this.height(x, z) < this.waterAt(x,z) - 0.12) return "The dock would sink";
@@ -1234,6 +1240,7 @@ export class Game {
       return;
     }
     if(b.plannedCost){
+      retainHousingProject(this,b,"Unpaid home blueprint cancelled");
       b.hp=0;this.clearSelect();this.workBoard.reset();
       this.banner("Plan cancelled — no materials were spent",2);this.onSfx("click");return;
     }
@@ -1243,9 +1250,11 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    const reservedNewHome=b.renovation?.mode==='new';
+    retainHousingProject(this,b,"Home reclaimed; paid renovation inputs remain in their actual locations");
     const d = BUILDINGS[b.type];
     const t = this.tribe(0);
-    if (d && t) {
+    if (d && t && !reservedNewHome) {
       t.wood += Math.round((d.wood || 0) * 0.65);
       t.stone += Math.round((d.stone || 0) * 0.65);
       t.copper += Math.round((d.copper || 0) * 0.65);
@@ -1264,7 +1273,7 @@ export class Game {
     this.state.selBld = null;
     this.addBurst(b.x, b.y + 1, b.z, "#c4b494", 12);
     this.addFloater(b.x, b.y + 2.4, b.z, "Reclaimed", "#efe4b0");
-    this.banner("Reclaimed " + (d?.name || "building") + " — most timber and stone returned", 1.8);
+    this.banner(reservedNewHome?"Paid new-home inputs retained at their actual locations; no duplicate salvage refund":"Reclaimed " + (d?.name || "building") + " — most timber and stone returned", 1.8);
     this.onSfx("place");
   }
 
@@ -1378,6 +1387,7 @@ export class Game {
 
   placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
     if (this.state.ended || (size&&!validPlot(type,size))) return false;
+    if(type==="house")return planAdvancedHome(this,x,z,team);
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
@@ -1439,7 +1449,7 @@ export class Game {
     if(size){b.w=size.w;b.d=size.d;}
     if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
     if(planned)b.plannedCost=cost;
-    if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || (type === "townhall" && !founding))) {
+    if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || type === "townhall")) {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
@@ -1454,7 +1464,7 @@ export class Game {
     if (team === 0) {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
       this.onSfx("place");
-      if (b.build < 1 && !planned) this.assignBuilders(b);
+      if (b.build < 1) assignPlacedConstruction(this, b);
       if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
       else if(type==="farm")this.banner("Field marked — assign farmers to sow in spring",4);
     }
@@ -1466,13 +1476,16 @@ export class Game {
 
   assignBuilders(b: Building) {
     if(b.plannedCost)return;
+    if(b.renovation&&!b.renovation.paid&&housingFundingIssue(this,b.team,b.renovation.quote))return;
     let n = 0;
     for (const u of this.state.units) {
+      if(b.renovation?.mode==='new'&&!knowsHousing(u))continue;
       if (u.team !== b.team || u.type !== "worker" || u.hp <= 0 || isDependent(this, u)) continue;
       if (hasTaskCommitment(u) || u.tributeJourney || u.buildOrder || u.drill!=null) continue;
       if (u.envoy || u.scout || u.expedition || u.foundingJourney || u.visit || u.recalled || u.order === "explore" || u.order === "build" || u.order === "hold" || u.order === "trade" || u.order === "attack" || u.carry > 0)
         continue;
       if (u.jobLock && u.order === "gather") continue;
+      if(b.renovation&&!housingApproach(this,u,b))continue;
       u.order = "build";
       if(b.type==="townhall")u.homeHall=b.id;
       u.node = b;
@@ -1480,7 +1493,7 @@ export class Game {
       u.tz = b.z;
       u.target = null;
       n++;
-      if (n >= 2) break;
+      if (n >= (b.renovation?1:2)) break;
     }
   }
 
@@ -1488,7 +1501,8 @@ export class Game {
     let best: Building | null = null;
     let bd = 1e9;
     for (const b of this.state.buildings) {
-      if (b.team !== u.team || b.hp <= 0 || (b.build >= 1&&!b.expansion) || b.plannedCost) continue;
+      if (b.team !== u.team || b.hp <= 0 || !hasConstructionWork(b) || b.plannedCost) continue;
+      if(b.renovation&&!b.renovation.paid&&housingFundingIssue(this,u.team,b.renovation.quote))continue;
       const d = Math.hypot(b.x - u.x, b.z - u.z);
       if (d < bd) {
         bd = d;
@@ -1500,6 +1514,7 @@ export class Game {
 
   buildAI(u: Unit, dt: number) {
     const b = u.node && "type" in u.node ? (u.node as Building) : this.nearestUnbuilt(u);
+    if(b?.renovation){housingAI(this,u,b,dt);return;}
     if(b?.expansion){if(!reserveConstructionWorker(this,u,b))return;if(expansionWork(this,u,b,dt)){if(!b.expansion)completeConstructionTarget(this,b);else if(u.order!=='build')releaseConstructionWorker(this,u);return;}}
     if (!b || b.hp <= 0 || b.build >= 1 || b.plannedCost) {
       releaseConstructionWorker(this,u);
@@ -1746,6 +1761,8 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    delete u.goatSearchPen;
+    pauseHousingWorker(this,u);
     pauseBuildingRepair(this,u);
     delete u.huntTrail;
     pausePracticalHelper(this,u);
@@ -2186,6 +2203,13 @@ export class Game {
       { species: "goat", n: 16 + ((random() * 11) | 0), hp: 2, scale: 0.95, near: habitatCamp("hills") },
       { species: "bird", n: 10 + ((random() * 8) | 0), hp: 1, scale: 0.7, near: -1 },
     ];
+    const playerCamp = camps.findIndex(camp => camp.team === 0);
+    const goats = kinds.find(kind => kind.species === 'goat');
+    if ((this.state.worldgenVersion ?? 1) >= 18 && goats && playerCamp >= 0 && goats.near !== playerCamp) {
+      const localHerdSize = 4;
+      goats.n -= localHerdSize;
+      kinds.splice(kinds.indexOf(goats), 0, { ...goats, n: localHerdSize, near: playerCamp });
+    }
     for (const k of kinds) {
       let placed = 0;
       let tries = 0;
@@ -2803,7 +2827,7 @@ export class Game {
     if(sent)this.onSfx('move');
   }
 
-  findExploreTarget(u: Unit): { x: number; z: number } | null {
+  findExploreTarget(u: Unit, goatPen?: Building): { x: number; z: number } | null {
     const n = FOW;
     const cell = this.world.size / n;
     let best: { x: number; z: number } | null = null;
@@ -2814,12 +2838,14 @@ export class Game {
         if (this.vision[iz * n + ix] !== 0) continue;
         const wx = -(this.world.size/2) + (ix + 0.5) * cell;
         const wz = -(this.world.size/2) + (iz + 0.5) * cell;
+        if (goatPen && Math.hypot(wx-goatPen.x,wz-goatPen.z)>=HERD.searchRadiusMeters) continue;
         if (!this.walkable(wx, wz)) continue;
         if(!connectedForUnit(this,u,wx,wz))continue;
         if (!this.world.options&&Math.hypot(wx, wz) > this.world.islandR - 8) continue;
         const d = Math.hypot(wx - u.x, wz - u.z);
         if (d < 12) continue;
-        const score = d + Math.random() * 8;
+        const habitat = goatPen ? habitatKindAt(this, wx, wz) : undefined;
+        const score = d * (habitat === 'hills' ? 0.6 : habitat === 'forest' ? 0.8 : 1) + Math.random() * 8;
         if (score < bd) {
           bd = score;
           best = { x: wx, z: wz };
@@ -2850,6 +2876,15 @@ export class Game {
   }
 
   exploreAI(u: Unit, dt: number) {
+    const pen = u.goatSearchPen === undefined ? undefined : goatSearchPen(this, u.goatSearchPen);
+    if (u.goatSearchPen !== undefined) {
+      if (!pen) { finishGoatSearch(this, u, 'Goat search ended — the pen is gone'); return; }
+      if (visibleGoatsForPen(this, pen).length) {
+        const sent = beginHerdTaming(this, pen.id);
+        finishGoatSearch(this, u, sent ? 'Wild goats spotted. A handler is taking feed to one.' : 'Wild goats spotted. Use Capture goat when a handler is free.');
+        return;
+      }
+    }
     if(u.searchJob) {
       this.workBoard.assign(this,u);
       if(u.order!=="explore")return;
@@ -2857,8 +2892,9 @@ export class Game {
 
     if(this.lootMegaliths(u))return;
     if (u.stuckT > 8) {
-      const next=this.findExploreTarget(u);
+      const next=this.findExploreTarget(u,pen);
       if(next&&connectedForUnit(this,u,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
+      if (pen) { finishGoatSearch(this,u,"Goat scout’s route is blocked — returning to camp"); return; }
       u.order = "return";
       u.workReason = "Scouting route blocked — returning toward the village";
       this.banner(u.workReason, 3);
@@ -2868,11 +2904,12 @@ export class Game {
     // just outside steer()'s point-sized arrival tolerance; recognize the area
     // as visited instead of walking back into one another forever.
     if (Math.hypot(u.x-u.tx,u.z-u.tz)<=Math.max(1.5,u.r*2) || this.steer(u, dt)) {
-      const next = this.findExploreTarget(u);
+      const next = this.findExploreTarget(u,pen);
       if (next) {
         u.tx = next.x;
         u.tz = next.z;
       } else {
+        if (pen) { finishGoatSearch(this,u,"No goats found on the reachable ground near this pen"); return; }
         u.order = "hold";
         u.workReason = "No unknown ground found — awaiting orders";
         u.gatherT = 0;
@@ -4493,7 +4530,7 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
-      const deliveredCereal=(u.itemCargo?.grainSheaves||0)>0;
+      const reviewFood=(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||u.carryFood==='grain'||(!u.carry&&!u.itemCargo));
       if(!deliverProductionCargo(this,u))return;
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
@@ -4511,7 +4548,7 @@ export class Game {
       u.tradeTeam = 0;
       u.node = null;
       u.order = "idle";
-      if(deliveredCereal&&reviewCerealProcessing(this,u.team,u.id))return;
+      if(reviewFood&&reviewAutomaticFoodProcessing(this,u.team,u.id))return;
       if(u.type==="worker"||u.militia&&u.huntOnly)this.workBoard.assign(this, u);
       else {u.order="hold";u.target=null;u.pillage=-1;u.workReason="Loot delivered — awaiting orders";}
     }
@@ -5263,8 +5300,9 @@ export class Game {
       tr.wood >= 36 &&
       Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
     ) {
-      const spot = this.findOpenSpot(hall.x, hall.z, "hut", team);
-      if (spot && rivalCanInvest(this,team,"hut")) this.placeBuilding("hut", spot.x, spot.z, team);
+      const homeType=preferredRivalHome(this,team);
+      const spot = this.findOpenSpot(hall.x, hall.z, homeType, team);
+      if (spot && rivalCanInvest(this,team,homeType)) this.placeBuilding(homeType, spot.x, spot.z, team);
     }
 
     const farms = this.state.buildings.filter(
@@ -5326,8 +5364,9 @@ export class Game {
     }
 
     if (growing && reserve > 700 && tr.wood > 50 && Math.random() < 0.45) {
-      const spot = this.findOpenSpot(hall.x, hall.z, "hut", team);
-      if (spot && rivalCanInvest(this,team,"hut")) this.placeBuilding("hut", spot.x, spot.z, team);
+      const homeType=preferredRivalHome(this,team);
+      const spot = this.findOpenSpot(hall.x, hall.z, homeType, team);
+      if (spot && rivalCanInvest(this,team,homeType)) this.placeBuilding(homeType, spot.x, spot.z, team);
     }
     // Hunger affects every person through tickPeople. Empty settlements are
     // abandoned by tickCommunities after a grace period, not random AI damage.
@@ -5531,7 +5570,7 @@ export class Game {
       if (b.hp <= 0 || b.team !== team || !this.finished(b)) continue;
       if (
         b.type !== "townhall" &&
-        b.type !== "hut" &&
+        b.type !== "hut" && b.type !== "house" &&
         b.type !== "watchtower" &&
         b.type !== "keep" &&
         b.type !== "lumber" &&
@@ -5551,7 +5590,7 @@ export class Game {
       if (b.team !== team || !this.finished(b)) continue;
       if (b.type === "warehouse") cap += Math.floor(200*plotArea(b));
       else if (b.type === "townhall") cap += 80;
-      else if (b.type === "hut") cap += 18;
+      else if (b.type === "hut" || b.type === "house") cap += 18;
     }
     return cap;
   }
@@ -5613,7 +5652,7 @@ export class Game {
         tickClay(this);
         tickProduction(this,sdt);
         tickBuildingMaintenance(this,sdt);
-        for(const team of this.state.tribes)reviewCerealProcessing(this,team.id);
+        for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
         tickProductionLessons(this);
         tickPracticalHelpers(this);
         tickVillageDefense(this);
@@ -5656,6 +5695,7 @@ export class Game {
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
             if(coastalTradeAI(this,u,sdt))continue;
+            if(homeUseAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
             if(fibreAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
@@ -5713,6 +5753,7 @@ export class Game {
         phases?.mark('ecology');
         const huntingObstacles=this.tickWildlife(sdt);
         this.updateProjectiles(sdt,true,huntingObstacles);
+        tickHousing(this,sdt);
         tickHusbandry(this,sdt);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);

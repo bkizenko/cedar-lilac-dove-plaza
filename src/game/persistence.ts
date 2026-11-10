@@ -1,3 +1,5 @@
+import{validHousingState}from'./housingValidation';
+import{relinkHousingViews}from'./housing';
 import{validBuildingMaintenance}from'./buildingMaintenance';
 import{validFiniteCamps}from'./finiteCamp';
 import{validRaidIntents}from'./raidIntent';
@@ -126,6 +128,7 @@ function validateGamePayload(raw: unknown) {
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
+  if(!validHousingState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
@@ -333,7 +336,7 @@ function validateGamePayload(raw: unknown) {
     if (u.sickUntil !== undefined && !num(u.sickUntil)) fail();
     if(u.escortId!==undefined&&(!Number.isSafeInteger(u.escortId)||u.escortId<1||u.escortId===u.id))fail();
     if(u.caravanArmed!==undefined&&(typeof u.caravanArmed!=="boolean"||(u.caravanArmed&&(!u.militia||!["spearman","archer","swordsman"].includes(u.type)))))fail();
-    if(u.buildOrder!==undefined&&(!Number.isSafeInteger(u.buildOrder)||u.buildOrder<1||u.team!==0))fail();
+    if(u.buildOrder!==undefined&&(!Number.isSafeInteger(u.buildOrder)||u.buildOrder<1||u.team!==0&&!s.buildings.some((b:Building)=>b.id===u.buildOrder&&b.team===u.team&&b.renovation?.actorId===u.id&&u.housingWorkId===b.id)))fail();
     if(u.constructionQueue!==undefined){const q=u.constructionQueue;if(!obj(q)||u.team!==0||!Array.isArray(q.sites)||q.sites.length<1||q.sites.length>64||new Set(q.sites).size!==q.sites.length||q.sites.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1)||q.paused!==undefined&&q.paused!==true||Object.keys(q).some(k=>!['sites','paused'].includes(k)))fail();}
     if (u.workCheckAt !== undefined && !num(u.workCheckAt)) fail();
     if (u.retryWorkAt !== undefined && !num(u.retryWorkAt)) fail();
@@ -430,6 +433,7 @@ function validateGamePayload(raw: unknown) {
     if(u.enslavedFrom!==undefined&&(!rivalTeam(u.enslavedFrom)||u.team!==0))fail();
     if(u.repatriating!==undefined&&(u.repatriating!==true||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')&&!(u.prisoner?.phase==='released'&&u.prisoner.rejoinedTeam===u.team&&u.prisoner.rejoinedHandoverId!==undefined)||u.enslavedFrom!==undefined))fail();
     if(u.captivityUnrest!==undefined&&(!num(u.captivityUnrest)||u.captivityUnrest<0||u.captivityUnrest>100||u.enslavedFrom===undefined))fail();
+    if(u.goatSearchPen!==undefined&&(!Number.isSafeInteger(u.goatSearchPen)||u.goatSearchPen<=0||u.goatSearchPen>=s.nextId))fail();
     if(u.searchJob!==undefined&&!["wood","food","hunt"].includes(u.searchJob))fail();
     if(u.envoy!==undefined){
       const m=u.envoy;
@@ -502,7 +506,7 @@ function validateGamePayload(raw: unknown) {
       for(const k of allowed){const n=b.plannedCost[k]??(k==='seeds'?0:undefined);if(!num(n)||n<0||n>100000)fail();}
     }
     if(b.planPaused===false&&!b.plannedCost)b.planPaused=undefined; // Older direct build orders wrote a redundant false flag.
-    if(b.planPaused!==undefined&&(typeof b.planPaused!=="boolean"||!b.plannedCost))fail();
+    if(b.planPaused!==undefined&&(typeof b.planPaused!=="boolean"||!b.plannedCost&&!b.renovation))fail();
     for (const q of b.queue) {
       if (!obj(q) || !(q.unit in UNITS)) fail();
       numbers(q, ["t", "max"]);
@@ -686,7 +690,7 @@ export function decodeGame(raw:unknown):Game {
   } as GameState;
   // Existing actual own stations are legacy adoption evidence, never a phantom building.
   for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
-  syncHaulageProjects(g);
+  syncHaulageProjects(g);relinkHousingViews(g);
   initializeCultivation(g,s.cultivationVersion===undefined);
   g.vision.set(d.vision);
   g.visAge.set(d.visAge);

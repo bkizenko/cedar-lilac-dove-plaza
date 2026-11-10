@@ -1,0 +1,584 @@
+{
+  "sourceSha256": "949ab79699fee08df81c680f2f82b58f68c06e04ecd7b90f15e96ce455c0984b",
+  "path": "/tmp/hearthwild-grounded-civic-B-949ab796-native-display.json",
+  "sha256": "fa23b5000c883fbd4845251c8056197e794eb3ce6ee111b3fb2f4a56ddd5052a",
+  "seed": 20261103,
+  "worldgenVersion": 19,
+  "time": 0,
+  "scope": "VISUAL ONLY declared initial completed13-building display endowment on unchanged nativeV19 terrain, no people/resource/stock/terrain correction or production/campaign/placement-affordability qualification. Whole chart revealed; paused. Declared initial display-only Classical-age endowment. No earned-adoption/campaign claim. Sites physically dry, gentle and resource-clear; no forced gameplay commands or grants after start.",
+  "strictSave": true,
+  "originalBodiesResourcesStocksUnchanged": true,
+  "buildings": [
+    {
+      "id": 5874,
+      "type": "townhall",
+      "label": "Town Hall",
+      "x": -194,
+      "z": 174,
+      "terrainReliefMetres": 1.5205417192899429,
+      "maximumGrade": 0.4057813927631744,
+      "profile": {
+        "level": 11.971363405722949,
+        "bottom": 11.30020634865037
+      },
+      "supportInstances": 74,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "townhall-5874-close",
+          "look": {
+            "x": -194,
+            "y": 12.971363405722949,
+            "z": 174
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "townhall-5874-mid",
+          "look": {
+            "x": -194,
+            "y": 12.971363405722949,
+            "z": 174
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.31346153846153846,
+        "normalizedY": 0.6673076923076923
+      }
+    },
+    {
+      "id": 5875,
+      "type": "market",
+      "label": "Market",
+      "x": -206,
+      "z": 180,
+      "terrainReliefMetres": 1.8030260262122635,
+      "maximumGrade": 0.2208084949348787,
+      "profile": {
+        "level": 13.328195050148604,
+        "bottom": 12.34869158887054
+      },
+      "supportInstances": 141,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "market-5875-close",
+          "look": {
+            "x": -206,
+            "y": 14.328195050148604,
+            "z": 180
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "market-5875-mid",
+          "look": {
+            "x": -206,
+            "y": 14.328195050148604,
+            "z": 180
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.30192307692307696,
+        "normalizedY": 0.6730769230769231
+      }
+    },
+    {
+      "id": 5876,
+      "type": "temple",
+      "label": "Temple",
+      "x": -212,
+      "z": 156,
+      "terrainReliefMetres": 1.2313843536376954,
+      "maximumGrade": 0.24980642729730068,
+      "profile": {
+        "level": 11.74037009496224,
+        "bottom": 11.207912651321228
+      },
+      "supportInstances": 141,
+      "stepInstances": 2,
+      "views": [
+        {
+          "name": "temple-5876-close",
+          "look": {
+            "x": -212,
+            "y": 12.74037009496224,
+            "z": 156
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "temple-5876-mid",
+          "look": {
+            "x": -212,
+            "y": 12.74037009496224,
+            "z": 156
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.29615384615384616,
+        "normalizedY": 0.65
+      }
+    },
+    {
+      "id": 5877,
+      "type": "university",
+      "label": "Academy",
+      "x": -164,
+      "z": 210,
+      "terrainReliefMetres": 1.7255603086031144,
+      "maximumGrade": 0.25299332378138,
+      "profile": {
+        "level": 25.437945851186434,
+        "bottom": 24.434874251478323
+      },
+      "supportInstances": 181,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "university-5877-close",
+          "look": {
+            "x": -164,
+            "y": 26.437945851186434,
+            "z": 210
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "university-5877-mid",
+          "look": {
+            "x": -164,
+            "y": 26.437945851186434,
+            "z": 210
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.3423076923076923,
+        "normalizedY": 0.7019230769230769
+      }
+    },
+    {
+      "id": 5878,
+      "type": "market",
+      "label": "Market",
+      "x": -218,
+      "z": 180,
+      "terrainReliefMetres": 1.7659651536207956,
+      "maximumGrade": 0.27025939028269397,
+      "profile": {
+        "level": 14.602920356252984,
+        "bottom": 13.578417840735868
+      },
+      "supportInstances": 140,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "market-5878-close",
+          "look": {
+            "x": -218,
+            "y": 15.602920356252984,
+            "z": 180
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "market-5878-mid",
+          "look": {
+            "x": -218,
+            "y": 15.602920356252984,
+            "z": 180
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.29038461538461535,
+        "normalizedY": 0.6730769230769231
+      }
+    },
+    {
+      "id": 5879,
+      "type": "temple",
+      "label": "Temple",
+      "x": -242,
+      "z": 156,
+      "terrainReliefMetres": 2.021943535437945,
+      "maximumGrade": 0.28796279286930765,
+      "profile": {
+        "level": 20.17548086604706,
+        "bottom": 19.235707203054172
+      },
+      "supportInstances": 129,
+      "stepInstances": 3,
+      "views": [
+        {
+          "name": "temple-5879-close",
+          "look": {
+            "x": -242,
+            "y": 21.17548086604706,
+            "z": 156
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "temple-5879-mid",
+          "look": {
+            "x": -242,
+            "y": 21.17548086604706,
+            "z": 156
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.2673076923076923,
+        "normalizedY": 0.65
+      }
+    },
+    {
+      "id": 5880,
+      "type": "university",
+      "label": "Academy",
+      "x": -206,
+      "z": 252,
+      "terrainReliefMetres": 0.5193038940429666,
+      "maximumGrade": 0.26845158609636244,
+      "profile": {
+        "level": 28.65714217336963,
+        "bottom": 28.3437903196959
+      },
+      "supportInstances": 122,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "university-5880-close",
+          "look": {
+            "x": -206,
+            "y": 29.65714217336963,
+            "z": 252
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "university-5880-mid",
+          "look": {
+            "x": -206,
+            "y": 29.65714217336963,
+            "z": 252
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.30192307692307696,
+        "normalizedY": 0.7423076923076923
+      }
+    },
+    {
+      "id": 5881,
+      "type": "hut",
+      "label": "Hut",
+      "x": -218,
+      "z": 168,
+      "terrainReliefMetres": 1.7396943664550797,
+      "maximumGrade": 0.33478854336062236,
+      "profile": {
+        "level": 13.474715856252189,
+        "bottom": 12.402571292368314
+      },
+      "supportInstances": 108,
+      "stepInstances": 2,
+      "views": [
+        {
+          "name": "hut-5881-close",
+          "look": {
+            "x": -218,
+            "y": 14.474715856252189,
+            "z": 168
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "hut-5881-mid",
+          "look": {
+            "x": -218,
+            "y": 14.474715856252189,
+            "z": 168
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.29038461538461535,
+        "normalizedY": 0.6615384615384615
+      }
+    },
+    {
+      "id": 5882,
+      "type": "hut",
+      "label": "Hut",
+      "x": -218,
+      "z": 192,
+      "terrainReliefMetres": 1.278433154179524,
+      "maximumGrade": 0.4315906553331019,
+      "profile": {
+        "level": 15.910501043432077,
+        "bottom": 15.133605723542484
+      },
+      "supportInstances": 110,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "hut-5882-close",
+          "look": {
+            "x": -218,
+            "y": 16.910501043432077,
+            "z": 192
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "hut-5882-mid",
+          "look": {
+            "x": -218,
+            "y": 16.910501043432077,
+            "z": 192
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.29038461538461535,
+        "normalizedY": 0.6846153846153846
+      }
+    },
+    {
+      "id": 5883,
+      "type": "hearth",
+      "label": "Cooking hearth",
+      "x": -206,
+      "z": 168,
+      "terrainReliefMetres": 0.3340856698843133,
+      "maximumGrade": 0.10380924241318013,
+      "profile": {
+        "level": 11.415122838530625,
+        "bottom": 11.157398027287634
+      },
+      "supportInstances": 31,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "hearth-5883-close",
+          "look": {
+            "x": -206,
+            "y": 12.415122838530625,
+            "z": 168
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "hearth-5883-mid",
+          "look": {
+            "x": -206,
+            "y": 12.415122838530625,
+            "z": 168
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.30192307692307696,
+        "normalizedY": 0.6615384615384615
+      }
+    },
+    {
+      "id": 5884,
+      "type": "butcher",
+      "label": "Butcher and skin yard",
+      "x": -200,
+      "z": 138,
+      "terrainReliefMetres": 0.40605922112097836,
+      "maximumGrade": 0.15022082869852046,
+      "profile": {
+        "level": 11.643892838947226,
+        "bottom": 11.17566896549762
+      },
+      "supportInstances": 24,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "butcher-5884-close",
+          "look": {
+            "x": -200,
+            "y": 12.643892838947226,
+            "z": 138
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "butcher-5884-mid",
+          "look": {
+            "x": -200,
+            "y": 12.643892838947226,
+            "z": 138
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.3076923076923077,
+        "normalizedY": 0.6326923076923077
+      }
+    },
+    {
+      "id": 5885,
+      "type": "smokehouse",
+      "label": "Smokehouse",
+      "x": -230,
+      "z": 162,
+      "terrainReliefMetres": 1.355386734008782,
+      "maximumGrade": 0.36569151067373096,
+      "profile": {
+        "level": 17.254200015744534,
+        "bottom": 16.15917665648135
+      },
+      "supportInstances": 8,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "smokehouse-5885-close",
+          "look": {
+            "x": -230,
+            "y": 18.254200015744534,
+            "z": 162
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "smokehouse-5885-mid",
+          "look": {
+            "x": -230,
+            "y": 18.254200015744534,
+            "z": 162
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.27884615384615385,
+        "normalizedY": 0.6557692307692308
+      }
+    },
+    {
+      "id": 5886,
+      "type": "barracks",
+      "label": "Barracks",
+      "x": -224,
+      "z": 228,
+      "terrainReliefMetres": 2.4682657505915806,
+      "maximumGrade": 0.3812110340818739,
+      "profile": {
+        "level": 22.995851996013624,
+        "bottom": 20.753919560291948
+      },
+      "supportInstances": 111,
+      "stepInstances": 0,
+      "views": [
+        {
+          "name": "barracks-5886-close",
+          "look": {
+            "x": -224,
+            "y": 23.995851996013624,
+            "z": 228
+          },
+          "dist": 23,
+          "pitch": 0.55,
+          "yaw": 1.12
+        },
+        {
+          "name": "barracks-5886-mid",
+          "look": {
+            "x": -224,
+            "y": 23.995851996013624,
+            "z": 228
+          },
+          "dist": 65,
+          "pitch": 0.55,
+          "yaw": 1.12
+        }
+      ],
+      "minimap": {
+        "normalizedX": 0.2846153846153846,
+        "normalizedY": 0.7192307692307692
+      }
+    }
+  ],
+  "totalSupports": 1320,
+  "overview": {
+    "look": {
+      "x": -210.6153846153846,
+      "y": 12.8257090641902,
+      "z": 181.84615384615384
+    },
+    "dist": 150,
+    "pitch": 0.6,
+    "yaw": 1.12
+  },
+  "supportCountScope": "1320 is the declared13-building display endowment only, not a full-map driver draw count."
+}

@@ -1,3 +1,5 @@
+import{hasConstructionWork}from'./constructionTargets';
+import{housingFundingIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
 import{rawCerealField,collectCerealSheaves}from'./cerealRules';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import {constructionPriority,CONSTRUCTION_QUEUE_RULES} from './constructionQueue';
@@ -295,6 +297,7 @@ export class WorkBoard {
           (b) => b.type === type && g.finished(b) && Math.hypot(b.x - n.x, b.z - n.z) < r,
         );
       for (const b of buildings) {
+        if(b.renovation){const p=b.renovation;if(!b.planPaused&&housingOwnerCanContinue(p,b.team)&&(p.paid||!housingFundingIssue(g,b.team,p.quote)))add(b,'build',1,235+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);continue;}
         if(b.plannedCost)continue;
         if(b.expansion&&(b.expansion.paid||g.canAfford(b.team,expansionCost(b,b.expansion))))add(b,"build",2,235+(constructionPriority(b)-1)*CONSTRUCTION_QUEUE_RULES.automaticPriorityDelta);
         if (!g.finished(b)) {
@@ -331,6 +334,7 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
+    if(u.housingWorkId!==undefined||u.housingUse&&!u.housingUse.paused)return;
     if(u.coastalCommissionId||u.coastalVoyageId||u.productionProjectId||u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
     if(u.team===0&&g.state.autoWorkEnabled===false&&!u.jobLock){u.order=u.carry>0?'return':'hold';u.node=null;u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — select this resident and give an order';return;}
     if(u.prisoner){u.order='hold';u.node=null;u.target=null;u.workReason='Custody and release need their own orders; no automatic labor';return;}
@@ -413,7 +417,7 @@ export class WorkBoard {
       if (u.blockedTask === task.node.id && (u.retryWorkAt || 0) > g.state.time) continue;
       if ("hp" in task.node && task.node.hp <= 0 && !("species" in task.node&&huntable(g,task.node,u.team))) continue;
       if ("amount" in task.node && task.node.amount <= 0) continue;
-      if (task.kind === "build" && g.finished(task.node as Building)&&!(task.node as Building).expansion) continue;
+      if(task.kind==='build'){const b=task.node as Building;if(!hasConstructionWork(b)||b.planPaused||b.renovation&&(!housingOwnerCanContinue(b.renovation,u.team)||b.renovation.mode==='new'&&!knowsHousing(u)))continue;}
       if (
         task.kind==='food' && "type" in task.node &&
         task.node.type === "farm" &&

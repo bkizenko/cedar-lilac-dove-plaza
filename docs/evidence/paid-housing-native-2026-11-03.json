@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "status": "13 dedicated checks passed; isolated TypeScript passed; parent integration/build/desktop review pending",
+  "sourceCohortBeforeTypeOnlyAnnotation": "365233bd0e7524b08e0661d1eccdda9f894afc32551222abcd6a00a06660d6c8",
+  "postCohortTypeOnlyProof": {
+    "scope": "Only strict callback type annotation after 13/13 runtime cohort; emitted parsed JavaScript AST identical. Printer whitespace/parenthesis formatting differs.",
+    "parsedEmittedAstSha256": "b95284d5f1d813099c320444a55cf70900e7990f7a35114e8f9235eb454f4998"
+  },
+  "scope": "Controlled native geometry/finite physical housing mechanism, not default-conflict survival or natural NPC adoption frequency",
+  "tests": {
+    "command": "node --import ./scripts/game-loader.mjs --test --test-concurrency=1 scripts/housing.test.mjs scripts/housing-ui-art.test.mjs scripts/housing-survival-npc.test.mjs scripts/housing-native-loop.test.mjs",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "durationMilliseconds": 124742.381084,
+    "log": "/tmp/hearthwild-housing-final-13.log"
+  },
+  "world": {
+    "seed": 20261103,
+    "version": 19,
+    "size": 1040,
+    "layout": "pangaea",
+    "originalFoundersUnmovedByHarness": true,
+    "originalTerrainAndResourcesPreserved": true
+  },
+  "declaredInitialEndowment": {
+    "completedHall": {
+      "x": -194,
+      "z": 174
+    },
+    "completedDamagedHut": {
+      "x": -218,
+      "z": 168,
+      "hp": 150
+    },
+    "wood": 200,
+    "stone": 80,
+    "plantFibre": 0,
+    "conflict": "quiet",
+    "autoWork": false,
+    "food": "untouched default120",
+    "water": "untouched default24liters"
+  },
+  "forbiddenCorrections": {
+    "midrunGoodsGrants": 0,
+    "bodyPositionCorrections": 0,
+    "terrainEdits": 0,
+    "timeJumps": 0,
+    "manualAIWorkCalls": 0
+  },
+  "nativeOutcome": {
+    "scope": "Controlled initial existing-hut/material endowment. Actual nativeV19 terrain/original bodies, public project commands and Game.step. Engine upgrade/use/Resume and actual new-house placement, finite input packets, native Game.step. Controlled initial wood/stone and completed old hut. Fibre starts at zero: native finite bast is surveyed, physically harvested/carried/delivered before housing. No from-scratch default survival claim.",
+    "initial": {
+      "wood": 200,
+      "stone": 80,
+      "fibre": 12,
+      "cap": 18,
+      "fuel": 0,
+      "hp": 150
+    },
+    "openingLedger": {
+      "food": 120,
+      "water": {
+        "waterLiters": 24,
+        "waterConsumedLiters": 0,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      },
+      "events": {
+        "foodReceived": 0,
+        "foodConsumed": 0,
+        "foodSpoiled": 0,
+        "cargoDelivered": {
+          "food": 0,
+          "wood": 0,
+          "stone": 0,
+          "copper": 0,
+          "iron": 0
+        }
+      }
+    },
+    "finalLedger": {
+      "food": 64.57497265965192,
+      "accounting": {
+        "foodReceived": 0,
+        "foodConsumed": 52.2108613710906,
+        "foodSpoiled": 3.214165969257479,
+        "cargoDelivered": {
+          "food": 0,
+          "wood": 0,
+          "stone": 0,
+          "copper": 0,
+          "iron": 0
+        }
+      },
+      "survival": {
+        "waterLiters": 13.072000000001204,
+        "waterConsumedLiters": 10.927999999999683,
+        "waterDeliveredLiters": 0,
+        "waterLostLiters": 0,
+        "fuelBurnedWood": 0,
+        "waterShortageSeconds": 0,
+        "coldExposurePersonSeconds": 0
+      }
+    },
+    "fibreEvidence": {
+      "enabled": true,
+      "patches": [
+        {
+          "id": 5876,
+          "treeId": 15,
+          "x": -186.43138801492287,
+          "z": 169.95146287454858,
+          "remaining": 4.2165079365078775,
+          "capacity": 16,
+          "initial": 7,
+          "harvested": 4,
+          "grown": 1.2165079365079576,
+          "sourceAlive": true
+        },
+        {
+          "id": 5877,
+          "treeId": 2614,
+          "x": -222.0271982445285,
+          "z": 164.944039798802,
+          "remaining": 1.216507936507849,
+          "capacity": 16,
+          "initial": 4,
+          "harvested": 4,
+          "grown": 1.2165079365079576,
+          "sourceAlive": true
+        },
+        {
+          "id": 5878,
+          "treeId": 2145,
+          "x": -229.7874521613121,
+          "z": 170.58584498763085,
+          "remaining": 1.216507936507774,
+          "capacity": 16,
+          "initial": 4,
+          "harvested": 4,
+          "grown": 1.2165079365079576,
+          "sourceAlive": true
+        }
+      ],
+      "metrics": {
+        "workSeconds": 72.00000000000065,
+        "harvested": 12,
+        "delivered": 12,
+        "lost": 0,
+        "regrown": 3.649523809523884,
+        "standingWoodConsumed": 3,
+        "basketsEquipped": 0,
+        "basketsWornOut": 0,
+        "basketsLost": 0,
+        "basketDeliveries": 0
+      },
+      "basketCount": 0,
+      "storedBaskets": 0,
+      "storedFibre": 12,
+      "storedCordage": 0,
+      "foodCarryMultiplier": 1.5,
+      "fibreTripBase": 4,
+      "fibreTripWithBasket": 8
+    },
+    "actorId": 5770,
+    "walkMetres": 134.99622173073178,
+    "steps": 887,
+    "time": 273.19999999999305,
+    "home": {
+      "id": 5875,
+      "type": "house",
+      "hp": 150,
+      "maxHp": 320,
+      "receipt": {
+        "version": 1,
+        "mode": "upgrade",
+        "paidBy": 0,
+        "materials": {
+          "wood": 24,
+          "stone": 8,
+          "plantFibre": 6
+        },
+        "workSeconds": 48,
+        "completedAt": 166.79999999999907,
+        "makerId": 5770,
+        "demonstrationSeconds": 30,
+        "adoptedAt": 196.99999999999736
+      }
+    },
+    "stocks": {
+      "wood": 152,
+      "stone": 64,
+      "fibre": 0
+    },
+    "newHome": {
+      "id": 5891,
+      "x": -220,
+      "z": 174,
+      "hp": 319.99999999999864,
+      "receipt": {
+        "version": 1,
+        "mode": "new",
+        "paidBy": 0,
+        "materials": {
+          "wood": 24,
+          "stone": 8,
+          "plantFibre": 6
+        },
+        "workSeconds": 48,
+        "completedAt": 273.19999999999305,
+        "makerId": 5770,
+        "demonstrationSeconds": 0
+      }
+    },
+    "observations": []
+  },
+  "publicQa": {
+    "carrying": "/tmp/hearthwild-housing-native-paid-carrying.json",
+    "finished": "/tmp/hearthwild-housing-native-paid-qa.json",
+    "camera": "/tmp/hearthwild-housing-native-paid-qa.meta.json"
+  },
+  "limits": [
+    "No from-scratch wood/hall/hut campaign proof.",
+    "No natural NPC fibre bootstrapping claim; conservative actual-stock admission tested.",
+    "Destroyed project inputs/progress retained; no new active salvage-recovery command.",
+    "No GPU/FPS or desktop visual acceptance claim.",
+    "No release gate credited by this report."
+  ]
+}

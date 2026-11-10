@@ -15,3 +15,11 @@ test('an actual generated nonflat field receives physical sowing and expands uns
  for(let i=0;i<650&&b.crop.planted<.15;i++){g.step(.2);walked+=Math.hypot(u.x-last.x,u.z-last.z);last={x:u.x,z:u.z};}
  assert.ok(b.crop.planted>=.15,'real resident must walk and sow');assert.ok(walked>1);assert.equal(b.crop.remaining,0);const plantedArea=b.crop.planted*b.w*b.d,seeds=g.tribe(0).seeds;assert.equal(planExpansion(g,b,'w'),true);assert.equal(b.expansion,undefined);assert.ok(Math.abs(b.crop.planted*b.w*b.d-plantedArea)<1e-8);assert.equal(g.tribe(0).seeds,seeds-4);assert.equal(Buffer.from(g.world.heights.buffer).toString('base64'),bytes,'natural heightfield unchanged');console.log(JSON.stringify({seed:1,version:14,site,walkedMeters:walked,sownFractionBeforeExpansion:b.crop.planted*2,terrainUnchanged:true}));
 });
+
+test('rolling fields fit close beside other plots without flattening or overlap',()=>{
+ const g=fixture(),d=BUILDINGS.farm;
+ g.height=(x,z)=>15+2*Math.sin((x-30)/3)+.08*(z-40);
+ assert.equal(g.placeBuilding('farm',30,40),true);
+ assert.match(g.placementIssue('farm',30+d.w-.25,40),/another building/);
+ assert.equal(g.placeBuilding('farm',30+d.w+.5,40),true);
+});

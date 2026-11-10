@@ -118,6 +118,9 @@ export function buildEcologicalProvinces(world:EcologyWorld,seed:number,safeCoas
  return{version:ECOLOGY_RULES.version,size:world.size,width,cellMeters:cell,kinds,freshwaterDistanceMeters:fresh,soil,moisture,temperatureOffsetCelsius,metrics:{landAreaSquareMeters:landCells*area,minimumRegionAreaSquareMeters:minimum,regions}};
 }
 function cellIndex(grid:EcologicalProvinceGrid,x:number,z:number){return Math.max(0,Math.min(grid.width-1,Math.floor((z/grid.size+.5)*grid.width)))*grid.width+Math.max(0,Math.min(grid.width-1,Math.floor((x/grid.size+.5)*grid.width)));}
+export function ecologicalTemperatureOffsetAt(grid:EcologicalProvinceGrid,x:number,z:number){
+ return grid.temperatureOffsetCelsius[cellIndex(grid,x,z)];
+}
 export function provinceAt(grid:EcologicalProvinceGrid,x:number,z:number):ProvinceProfile{return PROVINCE_PROFILES[PROVINCE_KINDS[grid.kinds[cellIndex(grid,x,z)]]]??PROVINCE_PROFILES['warm-coast'];}
 export function ecologicalConditionsAt(grid:EcologicalProvinceGrid,x:number,z:number){const profile=provinceAt(grid,x,z),gx=(x/grid.size+.5)*grid.width-.5,gz=(z/grid.size+.5)*grid.width-.5,ix=Math.max(0,Math.min(grid.width-2,Math.floor(gx))),iz=Math.max(0,Math.min(grid.width-2,Math.floor(gz))),fx=unit(gx-ix),fz=unit(gz-iz);
  const sample=(field:Float32Array)=>field[iz*grid.width+ix]*(1-fx)*(1-fz)+field[iz*grid.width+ix+1]*fx*(1-fz)+field[(iz+1)*grid.width+ix]*(1-fx)*fz+field[(iz+1)*grid.width+ix+1]*fx*fz;

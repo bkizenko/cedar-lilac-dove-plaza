@@ -1,3 +1,5 @@
+import{HOUSING_RULES,housingStatus,housingOwnerCanContinue,housingFundingIssue}from'./housing';
+import{housingMaterialTotal}from'./housingMaterials';
 import{BUILDING_MAINTENANCE}from'./buildingMaintenance';
 import{BUILDINGS as MAINTENANCE_BUILDINGS}from'./constants';
 import{rawCerealField,CEREAL_RULES}from'./cerealRules';
@@ -48,7 +50,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  const r=WORKLOAD_RULES,H=Math.max(r.minimumHorizonSeconds,Math.min(r.maximumHorizonSeconds,Number.isFinite(options.horizonSeconds)?options.horizonSeconds!:r.horizonSeconds)),cal=calendar(g),residents=g.state.units.filter(u=>u.team===team&&u.hp>0),adults=residents.filter(u=>!isDependent(g,u));
  const liveProduction=[...new Map((g.state.production?.projects||[]).filter(p=>p.team===team&&p.phase!=='complete'&&p.phase!=='lost').map(p=>[p.id,p])).values()],productionOwners=new Set(liveProduction.filter(p=>p.actorId!==null).map(p=>p.actorId!));
  const itemLoad=(u:Unit)=>Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0);
- const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u),activeTask:null,freeNow:!outside&&!u.resting&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&!(u.husbandryWork?.waterLiters??0)&&(!u.waterWork||u.waterWork.paused===true)&&(!u.fibreWork||u.fibreWork.paused===true)&&(!u.clayWork||u.clayWork.paused===true)&&(!u.productionApprentice||['paused','waiting'].includes(u.productionApprentice.phase))&&(!u.practicalHelper||u.practicalHelper.phase==='paused')&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
+ const people:WorkloadPerson[]=residents.map(u=>{const outside=outsideRole(g,u),duty=outside?{work:0,rest:0}:dutySeconds(u,H);return{id:u.id,name:u.name||`Resident ${u.id}`,role:outside||(u.militia&&u.huntOnly?'Armed hunter':'Civilian'),capacitySeconds:duty.work,restSeconds:duty.rest,fatigue:u.fatigue||0,carrying:u.carry+itemLoad(u)+(u.housingCargo?housingMaterialTotal(u.housingCargo.materials):0),activeTask:null,freeNow:!outside&&!u.resting&&!u.housingWorkId&&!u.housingCargo&&(!u.housingUse||u.housingUse.paused===true)&&!productionOwners.has(u.id)&&u.carry===0&&itemLoad(u)===0&&!(u.husbandryWork?.waterLiters??0)&&(!u.waterWork||u.waterWork.paused===true)&&(!u.fibreWork||u.fibreWork.paused===true)&&(!u.clayWork||u.clayWork.paused===true)&&(!u.productionApprentice||['paused','waiting'].includes(u.productionApprentice.phase))&&(!u.practicalHelper||u.practicalHelper.phase==='paused')&&['idle','hold'].includes(u.order),reason:outside||u.resting?'Rest or existing duty limits civilian time':u.sickUntil&&u.sickUntil>g.state.time?'Illness recorded; no invented extra work penalty':null};});
  const eligible=adults.filter(u=>!outsideRole(g,u)),byId=new Map(people.map(p=>[p.id,p])),home=g.campOf(team),stock=g.tribe(team),tasks:WorkloadTask[]=[],keys=new Set<string>(),claimed=new Map<number,string>();
  const speed=(u?:Unit)=>u?Math.max(.5,u.speed*predisposition(u).speed*(1-(u.fatigue||0)*.12)*loadedHaulSpeed(u)):r.fallbackWalkingMetersPerSecond;
  const supply=supplyDrops(g,team);
@@ -90,6 +92,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'||parked?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||passive||p.phase==='paused'||parked);
   if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
  }
+ for(const u of eligible){const w=u.housingUse;if(w){const b=g.state.buildings.find(b=>b.id===w.buildingId&&g.finished(b));add({id:`housing-use:${u.id}`,label:'Try the real home and learn its method',category:'Practical learning',personSeconds:Math.max(0,HOUSING_RULES.demonstrationSeconds-w.seconds)+(b?travel(u,b.x,b.z):0),status:w.paused?'paused':b?'active':'blocked',actorIds:w.paused?[]:[u.id],priority:350,blocker:w.paused?'Home trial paused':b?null:'The actual prototype is unavailable'},true);}}
  for(const u of eligible){const w=u.productionApprentice;if(!w||w.phase==='waiting')continue;const b=g.state.buildings.find(b=>b.id===w.workplace&&g.finished(b));add({id:`learning:${u.id}`,label:'Learn alongside a working maker',category:'Practical learning',personSeconds:Math.max(0,observationRequired(w.recipe)-w.observedSeconds)+(b?travel(u,b.x,b.z):0),status:w.phase==='paused'?'paused':b?'active':'blocked',actorIds:w.phase==='paused'?[]:[u.id],priority:350,blocker:w.phase==='paused'?'Observation paused':b?null:'Original workplace unavailable'},true);}
  for(const u of eligible){const w=u.fibreWork;if(!w||w.phase==='returning')continue;const patch=g.state.fibre?.patches.find(p=>p.id===w.patchId),source=patch&&g.state.trees.find(n=>n.id===patch.treeId&&n.amount>=FIBRE_RULES.standingWoodPerBatch),missing=!patch||!source||patch.remaining+1e-9<FIBRE_RULES.batch;const batches=Math.ceil(Math.max(0,w.target-w.loaded)/FIBRE_RULES.batch);
   add({id:`fibre:${u.id}`,label:'Harvest and deliver finite plant fibre',category:'Materials',personSeconds:Math.max(0,batches*FIBRE_RULES.harvestSeconds-w.progress)+(patch?travel(u,patch.x,patch.z)+trip(patch.x,patch.z,u):0),status:w.paused?'paused':missing?'blocked':'active',actorIds:w.paused?[]:[u.id],priority:500,blocker:w.paused?'Fibre harvesting paused':missing?'Observed living source is exhausted or missing':null,units:w.target-w.loaded},true);
@@ -107,7 +110,20 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  const planned:Partial<Record<ResKind,number>>={};
  for(const b of g.state.buildings.filter(b=>b.team===team&&b.hp>0)){
   const assigned=workersAt(b.id).map(u=>u.id),missing=b.plannedCost?planMissing(g,b):[];
-  if(b.build<1){const need=(b as Building&{excavationWorkSeconds?:number}).excavationWorkSeconds??(BUILD_TIME[b.type]||16)*plotArea(b);
+  if(b.renovation){
+   const p=b.renovation,u=eligible.find(u=>u.id===p.actorId),source=p.source??supply.reduce((a,d)=>!a||Math.hypot(d.x-b.x,d.z-b.z)<Math.hypot(a.x-b.x,a.z-b.z)?d:a,undefined as (typeof supply)[number]|undefined),distance=source?Math.hypot(source.x-b.x,source.z-b.z):Math.hypot(home.x-b.x,home.z-b.z),batches=Math.ceil((p.paid?housingMaterialTotal(p.uncollected):housingMaterialTotal(p.quote))/HOUSING_RULES.packetCapacity);
+   let walk=0;if(p.phase!=='working'){
+    if(p.parcel.kind==='carrier')walk=(u?travel(u,b.x,b.z):Math.hypot(p.parcel.x-b.x,p.parcel.z-b.z)/speed(u))+2*batches*distance/speed(u);
+    else if(p.parcel.kind==='ground'&&housingMaterialTotal(p.packet)>0)walk=(u?travel(u,p.parcel.x,p.parcel.z):0)+Math.hypot(p.parcel.x-b.x,p.parcel.z-b.z)/speed(u)+2*batches*distance/speed(u);
+    else if(batches>0)walk=(u&&source?travel(u,source.x,source.z):0)+(2*batches-1)*distance/speed(u);
+    else walk=u?Math.max(0,Math.hypot(u.x-b.x,u.z-b.z)-Math.max(b.w,b.d)/2-1.2)/speed(u):0;
+   }
+   if(!housingOwnerCanContinue(p,team))walk=0;
+   const blocked=!housingOwnerCanContinue(p,team)||!!p.blockedReason||!p.paid&&!!housingFundingIssue(g,team,p.quote);
+   add({id:`housing:${b.id}`,label:p.mode==='upgrade'?'Upgrade an existing hut':'Build an adopted timber home',category:'Construction',personSeconds:Math.max(0,p.duration-p.progress)/(u?predisposition(u).strength:meanStrength)+walk,status:b.planPaused?'paused':blocked?'blocked':u?'active':'queued',actorIds:u?[u.id]:[],priority:400+(b.constructionPriority??1)*100,blocker:b.planPaused?'Housing paused':blocked?housingStatus(g,b):null,units:housingMaterialTotal(p.quote)},true);
+   if(!p.paid&&!b.planPaused&&p.custodyTeam===team){planned.wood=(planned.wood||0)+p.quote.wood;planned.stone=(planned.stone||0)+p.quote.stone;}
+  }
+  if(b.build<1&&!b.renovation){const need=(b as Building&{excavationWorkSeconds?:number}).excavationWorkSeconds??(BUILD_TIME[b.type]||16)*plotArea(b);
    add({id:`build:${b.id}`,label:`Build ${BUILDINGS[b.type].name}`,category:'Construction',personSeconds:(1-b.build)*need/meanStrength,status:b.planPaused?'paused':missing.length?'blocked':assigned.length?'active':'queued',actorIds:assigned,priority:400,blocker:b.planPaused?'Plan paused':missing.length?'Materials missing: '+missing.map(n=>`${n.amount} ${n.kind}`).join(', '):null});
    if(b.plannedCost&&!b.planPaused)for(const kind of['food','wood','stone','copper','iron'] as const)planned[kind]=(planned[kind]||0)+(b.plannedCost[kind]||0);
   }

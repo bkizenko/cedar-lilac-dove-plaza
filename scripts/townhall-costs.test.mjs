@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {buildingCost,fundConstructionPlans} from '../src/game/construction.ts';
-import {foundingJourneyAI} from '../src/game/communities.ts';
+import {foundingJourneyAI,tickCommunities} from '../src/game/communities.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(){
  const g=new Game();g.reset(345);g.enterIsland();g.world.heights.fill(4);g.state.buildings=[];g.state.units=[];
@@ -41,4 +41,42 @@ test('higher-priced unpaid saved halls receive the reduction without changing pa
  const r=decodeGame(raw);assert.equal(r.state.buildings.at(-1).plannedCost.wood,40);assert.equal(r.tribe(0).wood,0);
  plan.plannedCost.wood=20;assert.equal(decodeGame(raw).state.buildings.at(-1).plannedCost.wood,20);
  delete plan.plannedCost;assert.equal(decodeGame(raw).state.buildings.at(-1).plannedCost,undefined);
+});
+
+test('explicit free hearth placement starts physical construction with Auto work off',()=>{
+ const g=fixture();
+ g.state.autoWorkEnabled=false;
+ const free=g.spawnUnit('worker',-9,40,0);
+ const busy=g.spawnUnit('worker',-8,40,0);
+ busy.order='hold';busy.jobLock=true;
+ const wood=g.tribe(0).wood;
+ assert.equal(g.placeBuilding('townhall',0,40),true);
+ const hall=g.state.buildings.at(-1);
+ assert.equal(hall.build,0);
+ assert.equal(free.buildOrder,hall.id);
+ assert.equal(busy.buildOrder,undefined);
+ for(let n=0;n<180&&hall.build<1;n++)g.step(.2);
+ assert.equal(hall.build,1);
+ assert.equal(g.tribe(0).wood,wood);
+ assert.equal(g.state.autoWorkEnabled,false);
+});
+
+test('a fallen player hearth stays unbuilt and a saved founding party keeps its actual timber',()=>{
+ const g=fixture();
+ g.state.autoWorkEnabled=false;
+ const old=g.makeBld('townhall',-80,40,0);
+ g.state.buildings.push(old);old.hp=0;
+ const carrier=g.spawnUnit('worker',0,50,0);
+ const wood=g.tribe(0).wood;
+ g.state.communityTimer=0;
+ tickCommunities(g,.2);
+ assert.equal(carrier.foundingJourney,undefined);
+ assert.equal(g.tribe(0).wood,wood);
+ carrier.carry=20;carrier.carryType='wood';
+ carrier.foundingJourney={x:0,z:40,leader:true,timber:20};
+ assert.equal(foundingJourneyAI(g,carrier,.2),true);
+ assert.equal(carrier.foundingJourney,undefined);
+ assert.equal(carrier.carry,20);
+ assert.equal(carrier.order,'return');
+ assert.equal(g.state.buildings.filter(b=>b.team===0&&b.type==='townhall'&&b.hp>0).length,0);
 });

@@ -1,0 +1,43 @@
+{
+  "sourceSha256": "949ab79699fee08df81c680f2f82b58f68c06e04ecd7b90f15e96ce455c0984b",
+  "checks": [
+    {
+      "name": "focused components",
+      "status": "passed",
+      "count": 24,
+      "log": "/tmp/hearthwild-grounded-art-B-components.log",
+      "logSha256": "03c81305df972bf27dd0d33f02db60d41db9f8fa1545757e8bd1e1d29e36d63d"
+    },
+    {
+      "name": "typecheck",
+      "status": "passed",
+      "count": null,
+      "log": "/tmp/hearthwild-grounded-art-B-typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "production build",
+      "status": "passed",
+      "count": null,
+      "log": "/tmp/hearthwild-grounded-art-B-build.log",
+      "logSha256": "7390ce116ca647cba6a17ac317640bf77ca8952fb596bd534731fa815205aabf"
+    }
+  ],
+  "actualModelTriangles": {
+    "market": 788,
+    "temple": 672,
+    "academy": 1008
+  },
+  "sourceScope": "Nine art/display files against frozenC2; no src/game simulation, schemas, terrain or old save output changes. constants edit is Academy label/hint only.",
+  "pending": [
+    "Actual root desktop GPU close/mid/wide review.",
+    "Paid advanced housing implementation, not delivered by this art patch.",
+    "Remaining older building forms/biome families not all38 finished."
+  ],
+  "limits": [
+    "Initial completed/Classical-age native gallery is visual-only; no paid-construction or earned-adoption claim.",
+    "Declared display buildings1320support instances; existing native buildings are additional.",
+    "Old art registry expected37 despite baseline38; test now compares complete realBUILDINGS registry.",
+    "No FPS, universalvisual-beauty or automatic gate-credit claim."
+  ]
+}

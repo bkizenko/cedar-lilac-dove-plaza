@@ -1,3 +1,4 @@
+import{HOUSING_RULES}from'./housingRules';
 import type { BldType, Cost, ResKind, UnitType } from "./types";
 
 export const MAP = 1040;
@@ -35,6 +36,19 @@ export const AGE_COST: (Cost | null)[] = [
 ];
 
 export const AGE_STAT = [1, 1.1, 1.22, 1.35, 1.5, 1.68];
+
+const HUT_BUILDING = {
+    name: "Hut",
+    w: 5.4,
+    d: 5.2,
+    food: 0,
+    wood: 40,
+    stone: 0,
+    pop: 5,
+    hp: 240,
+    age: 0,
+    hint: "Raises population cap by 5.",
+  };
 
 export const BUILDINGS: Record<
   BldType,
@@ -87,18 +101,8 @@ export const BUILDINGS: Record<
     w: 3, d: 3, food: 0, wood: 70, stone: 0, pop: 0, hp: 320, age: 0,
     hint: "Claims explored ground and serves as a local delivery point. Additional or distant claims need more armed guards; rival frontiers can provoke disputes.",
   },
-  hut: {
-    name: "Hut",
-    w: 5.4,
-    d: 5.2,
-    food: 0,
-    wood: 40,
-    stone: 0,
-    pop: 5,
-    hp: 240,
-    age: 0,
-    hint: "Raises population cap by 5.",
-  },
+  hut:HUT_BUILDING,
+  house: {name:"Timber home",w:HUT_BUILDING.w,d:HUT_BUILDING.d,food:0,wood:HOUSING_RULES.wood,stone:HOUSING_RULES.stone,pop:HUT_BUILDING.pop+HOUSING_RULES.additionalPlaces,hp:HOUSING_RULES.maximumHp,age:0,hint:`Adopted housing: ${HOUSING_RULES.wood} logs, ${HOUSING_RULES.stone} stone, ${HOUSING_RULES.plantFibre} delivered fibre; ${HOUSING_RULES.workSeconds}s work plus hauling. Try a paid prototype first.`},
   farm: {
     name: "Farm",
     w: 8.2,
@@ -249,7 +253,7 @@ export const BUILDINGS: Record<
     hint: "Train cavalry.",
   },
   university: {
-    name: "University",
+    name: "Academy",
     w: 10,
     d: 8.6,
     food: 80,
@@ -258,7 +262,7 @@ export const BUILDINGS: Record<
     pop: 10,
     hp: 640,
     age: 5,
-    hint: "Learning. +10 population.",
+    hint: "Learning house. +10 population.",
   },
   cairn: {
     name: "Stone Cairn",
@@ -441,7 +445,7 @@ export const GATHER = {
 };
 
 export const BUILD_ORDER: BldType[] = [
-  "hut",
+  "hut", "house",
   "cornerstone",
   "townhall",
   "farm",
@@ -551,6 +555,7 @@ export const BUILD_TIME: Record<BldType, number> = {
   townhall: 0,
   cornerstone: 12,
   hut: 8,
+  house:HOUSING_RULES.workSeconds,
   farm: 10,
   pen: 16,
   lumber: 10,

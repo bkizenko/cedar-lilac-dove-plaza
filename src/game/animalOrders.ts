@@ -1,11 +1,63 @@
-import type{Game}from'./sim';
-import{hasTaskCommitment}from'./workCommitments';import{isDependent}from'./settlement';import{orderExploration}from'./explorationOrders';import{beginHerdTaming}from'./husbandry';
-/** The search reveals ordinary real ground through an actual provisioned scout;
- * it never queries hidden goats to choose a remote destination or creates one. */
-export function searchForWildGoats(g:Game,penId?:number){
- const visible=g.state.wildlife.filter(c=>c.species==='goat'&&c.hp>0&&g.visibleAt(c.x,c.z));
- if(penId!==undefined&&visible.length&&beginHerdTaming(g,penId))return{accepted:true,reason:'A handler is approaching a real wild goat with the paid feed'};
- const selected=g.selectedUnits(),pool=(selected.length?selected:g.state.units.filter(u=>u.team===0)).filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&!hasTaskCommitment(u)&&(!u.jobLock||selected.includes(u))&&!u.emergency&&!u.recalled&&!u.expedition&&!u.visit&&!u.envoy&&!u.scout&&!u.buildOrder&&!u.tributeJourney&&u.escortId===undefined&&!['occupy','capture'].includes(u.conflictIntent||'')&&['hold','idle','gather'].includes(u.order));
- let reason='Choose a free adult to search for wild goats';for(const u of pool){const issue=orderExploration(g,u);if(issue){reason=issue;continue;}u.workReason=u.exploreAfterDelivery?'Goat search queued — delivering existing supplies first':'Searching unknown ground for wild goats';g.banner(u.workReason,4);return{accepted:true,reason:u.workReason};}
- g.banner(reason,4);return{accepted:false,reason};
+import type { Game } from './sim';
+import type { Building, Unit } from './types';
+import { hasTaskCommitment } from './workCommitments';
+import { isDependent } from './settlement';
+import { explorationLoad, orderExploration } from './explorationOrders';
+import { beginHerdTaming, HERD } from './husbandry';
+
+export function goatSearchPen(g: Game, id: number) {
+  return g.state.buildings.find(b => b.id === id && b.team === 0 && b.type === 'pen' && g.finished(b));
+}
+
+export function visibleGoatsForPen(g: Game, pen: Building) {
+  return g.state.wildlife.filter(a => a.species === 'goat' && a.hp > 0 &&
+    g.visibleAt(a.x, a.z) && Math.hypot(a.x - pen.x, a.z - pen.z) < HERD.searchRadiusMeters &&
+    g.workBoard.connected(g, a.x, a.z, pen.x, pen.z));
+}
+
+export function finishGoatSearch(g: Game, u: Unit, message: string) {
+  delete u.goatSearchPen;
+  u.recalled = true;
+  u.stationOnArrival = false;
+  u.order = 'return';
+  u.node = null;
+  u.target = null;
+  u.workReason = message;
+  g.banner(message, 5);
+}
+
+export function searchForWildGoats(g: Game, penId?: number) {
+  const pen = penId === undefined ? undefined : goatSearchPen(g, penId);
+  const report = (accepted: boolean, reason: string) => {
+    g.banner(reason, 5);
+    return { accepted, reason };
+  };
+  if (penId !== undefined && !pen) return report(false, 'Finish the pen before sending a scout');
+  if (pen && visibleGoatsForPen(g, pen).length) {
+    const accepted = beginHerdTaming(g, pen.id);
+    return { accepted, reason: accepted ? 'A handler is approaching a wild goat' : 'A goat is visible. Check feed, usable pen space and available handlers.' };
+  }
+  if (pen && g.state.units.some(u => u.hp > 0 && u.order === 'explore' && u.goatSearchPen === pen.id)) {
+    return report(true, 'A scout is already searching hills and woodland for this pen');
+  }
+  const selected = g.selectedUnits();
+  const pool = [...g.state.units].sort((a, b) => Number(selected.includes(b)) - Number(selected.includes(a)));
+  let reason = 'A free adult with empty hands and journey food is needed';
+  for (const u of pool) {
+    if (u.team !== 0 || u.hp <= 0 || u.type !== 'worker' || u.militia || isDependent(g, u) ||
+        hasTaskCommitment(u) || u.jobLock || u.emergency || u.recalled || u.expedition || u.visit ||
+        u.envoy || u.scout || u.buildOrder || u.escortId !== undefined || explorationLoad(u) ||
+        !['hold', 'idle', 'gather'].includes(u.order)) continue;
+    const target = pen ? g.findExploreTarget(u, pen) : undefined;
+    if (pen && !target) {
+      reason = 'No unexplored ground reachable within 220 m of this pen. Scout another area or place a pen near goat habitat.';
+      continue;
+    }
+    const issue = orderExploration(g, u, target ?? undefined);
+    if (issue) { reason = issue; continue; }
+    if (pen) u.goatSearchPen = pen.id;
+    u.workReason = 'Searching hills and woodland for wild goats';
+    return report(true, u.workReason);
+  }
+  return report(false, reason);
 }

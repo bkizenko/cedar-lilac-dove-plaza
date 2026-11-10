@@ -1,4 +1,6 @@
+import{HOUSING_RULES}from'./housingRules';
 import{tickGarmentHeat}from'./textiles';
+import{ecologicalTemperatureOffsetAt}from'./ecologicalProvinces';
 import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
@@ -33,22 +35,25 @@ export function ambientTemperature(g:Game){
  // Match the game's displayed rounded ambient temperature, including night.
  const display=g.clockState().weather.match(/(-?\d+)°C/);return display?Number(display[1]):10;
 }
-function sheltered(g:Game,u:Unit){
- // Shelter benefit belongs to an actual completed building near this resident;
- // remote housing does not heat somebody on a distant expedition.
- return g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&['hut','townhall','keep'].includes(b.type)&&
-  (u.shelterId===b.id||Math.hypot(u.x-b.x,u.z-b.z)<Math.max(b.w,b.d)*.5+4));
+export function localAirTemperature(g:Game,x:number,z:number,ambient=ambientTemperature(g)){
+ const grid=g.world.ecology;
+ return ambient+(grid?ecologicalTemperatureOffsetAt(grid,x,z):0);
 }
+function sheltered(g:Game,u:Unit){
+ const requested=u.housingUse?.buildingId??u.shelterId;let best:import('./types').Building|undefined,distance=Infinity;
+ for(const b of g.state.buildings){if(b.team!==u.team||!['hut','house','townhall','keep'].includes(b.type)||!g.finished(b))continue;const d=Math.hypot(u.x-b.x,u.z-b.z);if(u.shelterId!==b.id&&d>=Math.max(b.w,b.d)*.5+4)continue;if(b.id===requested)return b;if(d<distance){best=b;distance=d;}}return best;
+}
+
 function fireDemand(g:Game,team:number,temp:number){return temp<SURVIVAL_RULES.coldThresholdCelsius?residents(g,team).length*SURVIVAL_RULES.woodPerPersonColdSecond:0;}
 export function survivalStatus(g:Game,team=0){
- const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),temp=ambientTemperature(g);
- const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team),fuelDemand=fireDemand(g,team,temp);
+ const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),home=g.campOf(team),homeTemp=localAirTemperature(g,home.x,home.z),temp=Math.round(homeTemp);
+ const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team),fuelDemand=fireDemand(g,team,homeTemp);
  const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];
  if(enabled){
   if(waterSeconds<SURVIVAL_RULES.waterWarningSeconds)warnings.push(water<=0?'Drinking water empty — send a water carrier':'Drinking water low — collect from freshwater');
-  if(temp<SURVIVAL_RULES.coldThresholdCelsius&&fuelSeconds<180)warnings.push(fuel<=0?'No firewood — gather timber before exposure worsens':'Firewood low — gather timber for warmth');
+  if(homeTemp<SURVIVAL_RULES.coldThresholdCelsius&&fuelSeconds<180)warnings.push(fuel<=0?'No firewood — gather timber before exposure worsens':'Firewood low — gather timber for warmth');
   if(coldResidents)warnings.push(`${coldResidents} residents recovering from cold exposure — shelter and firewood help`);
  }
  return {enabled,water,waterSeconds,fuel,fuelSeconds,coldResidents,warnings,waterWorkers,
@@ -191,10 +196,10 @@ export function tickSurvival(g:Game,dt:number){
   const people=residents(g,tr.id);if(!people.length)continue;
   const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
   stock.waterLiters=Math.max(0,stock.waterLiters-used);stock.waterConsumedLiters+=used;stock.waterShortageSeconds+=dt*shortfall;
-  const fuelNeeded=fireDemand(g,tr.id,temp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
+  const home=g.campOf(tr.id),homeTemp=localAirTemperature(g,home.x,home.z,temp);
+  const fuelNeeded=fireDemand(g,tr.id,homeTemp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
   if(fuel>0)activeFires.add(tr.id);
   tr.wood=Math.max(0,tr.wood-fuel);stock.fuelBurnedWood+=fuel;
-  const home=g.campOf(tr.id);
   for(const u of people){
    if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)){
    const beforeThirst=u.thirstSeconds??0;u.thirstSeconds=Math.max(0,beforeThirst+dt*(shortfall>0?shortfall:-rules.recoverySecondsPerSecond));
@@ -202,8 +207,10 @@ export function tickSurvival(g:Game,dt:number){
    if(thirstDamage>0)u.hp-=thirstDamage*u.maxHp/rules.thirstFatalExposureSeconds;
    }
    const fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
-   if(u.garment)tickGarmentHeat(u,temp,dt);
-   const effective=temp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+(sheltered(g,u)?rules.shelterWarmthCelsius:0);
+   const localTemp=localAirTemperature(g,u.x,u.z,temp);
+   if(u.garment)tickGarmentHeat(u,localTemp,dt);
+   const shelter=sheltered(g,u);
+   const effective=localTemp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+(shelter?rules.shelterWarmthCelsius+(shelter.type==='house'?HOUSING_RULES.shelterWarmthCelsius:0):0);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;
    u.coldSeconds=Math.max(0,before+dt*(exposure>0?exposure:-rules.recoverySecondsPerSecond));stock.coldExposurePersonSeconds+=dt*exposure;
    const coldDamage=Math.max(0,u.coldSeconds-rules.coldGraceSeconds)-Math.max(0,before-rules.coldGraceSeconds);

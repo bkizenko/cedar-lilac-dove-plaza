@@ -1,3 +1,6 @@
+import{improvedHomeGeo}from'./improvedHome';
+import{classicalBuildingGeos}from'./classicalBuildings';
+import{registerGroundContacts}from'./groundContacts';
 import {civilianBuildingGeos} from './civilianBuildings';
 import {makeBuildingSurfaces,bindBuildingSurface,buildingSurfaceUV} from './buildingSurfaces';
 import {fortifiedShelterGeo} from './fortifiedShelter';
@@ -110,7 +113,7 @@ export function makeMaterials(): MatKit {
   };
 }
 
-export type BldGeo = { timber: THREE.BufferGeometry; roof: THREE.BufferGeometry; extra?: THREE.BufferGeometry; extraMat?: keyof MatKit; timberMat?:keyof MatKit;roofMat?:keyof MatKit };
+export type BldGeo = {entry?:{x:number;z:number;width:number}; timber: THREE.BufferGeometry; roof: THREE.BufferGeometry; extra?: THREE.BufferGeometry; extraMat?: keyof MatKit; timberMat?:keyof MatKit;roofMat?:keyof MatKit };
 
 function thatchHut(r: number, wallH: number, roofH: number): BldGeo {
   const timber: THREE.BufferGeometry[] = [];
@@ -255,6 +258,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       extraMat: "stone",
     },
     hut,
+    house:improvedHomeGeo(),
     // Perimeter sections are drawn by PenFenceLayer at real two-metre spacing.
     pen: {timber:merge([
       box(2,.4,.55,-2.5,0,-2.5),box(.14,1.9,.14,-3.5,0,-3.5),box(.14,1.9,.14,-1.5,0,-3.5)
@@ -299,7 +303,8 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       roof: merge([cone(2.2, 1.6, 0, 1.4, 0, 7)]),
     },
   };
-  const civilian=civilianBuildingGeos();for(const [role,kit]of Object.entries(civilian)){const old=result[role as keyof typeof civilian];for(const g of[old.timber,old.roof,old.extra])g?.dispose();result[role as keyof typeof civilian]=kit;}
+  const civilian={...civilianBuildingGeos(),...classicalBuildingGeos()};for(const [role,kit]of Object.entries(civilian)){const old=result[role as keyof typeof civilian];for(const g of[old.timber,old.roof,old.extra])g?.dispose();result[role as keyof typeof civilian]=kit;}
+  for(const[type,kit]of Object.entries(result))registerGroundContacts(type as BldType,[kit.timber,kit.extra],kit.entry);
   for(const[type,kit]of Object.entries(result))if(!['farm','pen','trench','moat'].includes(type))for(const g of[kit.timber,kit.roof,kit.extra])if(g)buildingSurfaceUV(g);
   return result;
 }

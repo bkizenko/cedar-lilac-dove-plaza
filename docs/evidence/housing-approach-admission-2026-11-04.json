@@ -1,0 +1,412 @@
+{
+  "version": 1,
+  "scope": "Actual current combined housing admission regression; public generated controlled fixtures only",
+  "cause": "All five original NPC workers lacked a physical approach at time0; old executor paid before testing target approach. Initial native stores/hall/terrain already blocked access; later construction was not the cause.",
+  "initialSurvey": {
+    "event": "initial",
+    "time": 0,
+    "target": {
+      "id": 389,
+      "x": 254.0025148633681,
+      "z": -138.03717713778502
+    },
+    "initial": [
+      {
+        "id": 393,
+        "x": 238.75741111509194,
+        "z": -144.7442131857603,
+        "order": "idle",
+        "approach": null
+      },
+      {
+        "id": 394,
+        "x": 238.2397730248869,
+        "z": -142.81236153318216,
+        "order": "idle",
+        "approach": null
+      },
+      {
+        "id": 395,
+        "x": 239.1322270259122,
+        "z": -142.591222681888,
+        "order": "idle",
+        "approach": null
+      },
+      {
+        "id": 396,
+        "x": 239.18926276767007,
+        "z": -138.82465130690855,
+        "order": "idle",
+        "approach": null
+      },
+      {
+        "id": 397,
+        "x": 239.03000450477938,
+        "z": -145.67366082494013,
+        "order": "idle",
+        "approach": null
+      }
+    ],
+    "geometry": [
+      {
+        "id": 381,
+        "type": "townhall",
+        "team": 0,
+        "x": 39.354784674367146,
+        "z": 190.43515548263667,
+        "w": 10,
+        "d": 10,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 382,
+        "type": "hut",
+        "team": 0,
+        "x": 29.861019567316408,
+        "z": 196.50523640972614,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 388,
+        "type": "townhall",
+        "team": 1,
+        "x": 243.75741111509194,
+        "z": -141.7442131857603,
+        "w": 10,
+        "d": 10,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 389,
+        "type": "hut",
+        "team": 1,
+        "x": 254.0025148633681,
+        "z": -138.03717713778502,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 390,
+        "type": "hut",
+        "team": 1,
+        "x": 237.84114563286158,
+        "z": -149.01131595152577,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 391,
+        "type": "lumber",
+        "team": 1,
+        "x": 252.75741111509194,
+        "z": -148.7442131857603,
+        "w": 6.2,
+        "d": 5.8,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 392,
+        "type": "barracks",
+        "team": 1,
+        "x": 234.75741111509194,
+        "z": -133.7442131857603,
+        "w": 8.8,
+        "d": 8.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 398,
+        "type": "cairn",
+        "team": 1,
+        "x": 255.75741111509194,
+        "z": -147.7442131857603,
+        "w": 4.2,
+        "d": 4.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 400,
+        "type": "townhall",
+        "team": 2,
+        "x": -246.02150161838694,
+        "z": -141.53620920907906,
+        "w": 10,
+        "d": 10,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 401,
+        "type": "hut",
+        "team": 2,
+        "x": -255.15278808779206,
+        "z": -133.80890539360658,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 402,
+        "type": "hut",
+        "team": 2,
+        "x": -233.7788971375646,
+        "z": -144.1197887029073,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 403,
+        "type": "lumber",
+        "team": 2,
+        "x": -256.02150161838694,
+        "z": -135.53620920907906,
+        "w": 6.2,
+        "d": 5.8,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 404,
+        "type": "barracks",
+        "team": 2,
+        "x": -227.1323778900733,
+        "z": -136.23269541223834,
+        "w": 8.8,
+        "d": 8.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 411,
+        "type": "grove",
+        "team": 2,
+        "x": -257.02150161838694,
+        "z": -134.53620920907906,
+        "w": 5.2,
+        "d": 5.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 436,
+        "type": "warehouse",
+        "team": 1,
+        "x": 234,
+        "z": -142,
+        "w": 6.6,
+        "d": 6,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 437,
+        "type": "warehouse",
+        "team": 1,
+        "x": 252,
+        "z": -130,
+        "w": 6.6,
+        "d": 6,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 438,
+        "type": "farm",
+        "team": 1,
+        "x": 244,
+        "z": -160,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 439,
+        "type": "farm",
+        "team": 1,
+        "x": 266,
+        "z": -142,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 440,
+        "type": "farm",
+        "team": 1,
+        "x": 262,
+        "z": -132,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 441,
+        "type": "warehouse",
+        "team": 2,
+        "x": -248,
+        "z": -128,
+        "w": 6.6,
+        "d": 6,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 442,
+        "type": "warehouse",
+        "team": 2,
+        "x": -264,
+        "z": -142,
+        "w": 6.6,
+        "d": 6,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 443,
+        "type": "farm",
+        "team": 2,
+        "x": -238,
+        "z": -122,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 444,
+        "type": "farm",
+        "team": 2,
+        "x": -258,
+        "z": -120,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 445,
+        "type": "farm",
+        "team": 2,
+        "x": -268,
+        "z": -132,
+        "w": 8.2,
+        "d": 8.2,
+        "solid": false,
+        "build": 1
+      },
+      {
+        "id": 503,
+        "type": "hut",
+        "team": 3,
+        "x": -85.31398889531198,
+        "z": 108.6036547029015,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      },
+      {
+        "id": 506,
+        "type": "hut",
+        "team": 3,
+        "x": 136.32509877255694,
+        "z": 10.210639444369104,
+        "w": 5.4,
+        "d": 5.2,
+        "solid": true,
+        "build": 1
+      }
+    ]
+  },
+  "originalPaidBlockedProject": {
+    "version": 1,
+    "mode": "upgrade",
+    "actorId": 393,
+    "phase": "carrying",
+    "progress": 0,
+    "duration": 48,
+    "initialHp": 140,
+    "quote": {
+      "wood": 24,
+      "stone": 8,
+      "plantFibre": 6
+    },
+    "paid": true,
+    "paidBy": 1,
+    "custodyTeam": 1,
+    "sourceTeam": 1,
+    "packetTeam": 1,
+    "uncollected": {
+      "wood": 16,
+      "stone": 8,
+      "plantFibre": 6
+    },
+    "delivered": {
+      "wood": 0,
+      "stone": 0,
+      "plantFibre": 0
+    },
+    "packet": {
+      "wood": 8,
+      "stone": 0,
+      "plantFibre": 0
+    },
+    "parcel": {
+      "kind": "carrier",
+      "x": 238.73892065843,
+      "z": -144.68116722814733
+    },
+    "createdAt": 0,
+    "blockedReason": "No physical approach to the home",
+    "source": {
+      "x": 234,
+      "z": -142,
+      "cacheId": 436
+    }
+  },
+  "preservedOriginalFailure": "/tmp/civic-housing-root-tests.log",
+  "naturalReproduction": {
+    "attempts": 1,
+    "stoppedOnFirstFailure": true,
+    "log": "/tmp/housing-reproduction-1.log"
+  },
+  "after": {
+    "checks": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "durationMilliseconds": 5580.736208,
+    "log": "/tmp/housing-current-approach-after.log"
+  },
+  "changes": [
+    "NPC renovation builder selection admits actual work frontage",
+    "Unpaid housing checks target and reachable cache before actor claim/payment",
+    "Owned caches are tried by distance until a reachable approach exists",
+    "Already-at-frontage uses existing buildingWorkReached threshold",
+    "Ownership fixture selects an accessible native owned hut before any command"
+  ],
+  "limits": [
+    "No ground/water/navigation/range/timeout changes",
+    "Existing paid inaccessible packet remains blocked and finite; no teleport/refund or automatic new route promised",
+    "Does not repair legacy generated settlement footprints",
+    "No compiler/build performed in this slot; parent integration compiler required"
+  ]
+}

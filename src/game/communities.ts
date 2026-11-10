@@ -95,7 +95,7 @@ export function tickCommunities(g: Game, dt: number) {
     }
   }
   for (const t of g.state.tribes) {
-    if (t.id === 3) continue;
+    if (t.id === 0 || t.id === 3) continue;
     const halls = g.state.buildings.filter(
       (b) => b.team === t.id && b.type === "townhall" && b.hp > 0,
     );
@@ -105,12 +105,9 @@ export function tickCommunities(g: Game, dt: number) {
     if (!survivors.length || g.state.units.some((u) => u.team === t.id && u.foundingJourney))
       continue;
     const expansion = halls.length > 0;
-    // The player chooses when and where an initial camp becomes a settlement.
-    if(!expansion&&t.id===0&&(g.state.worldgenVersion??1)>=10&&!records.some(r=>r.team===0))continue;
     if (
       expansion &&
-      (t.id === 0 ||
-        halls.length >= 5 ||
+      (halls.length >= 5 ||
         g.popNow(t.id) < 12 ||
         reserveSeconds(g, t.id) < 600 ||
         t.wood < 100 ||
@@ -164,6 +161,12 @@ export function tickCommunities(g: Game, dt: number) {
 export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
   const mission = u.foundingJourney;
   if (!mission) return false;
+  if (u.team === 0) {
+    u.foundingJourney = undefined;
+    u.order = u.carry > 0 ? "return" : "hold";
+    u.workReason = u.carry > 0 ? "Returning the founding party's timber" : "Waiting for a town hall placement";
+    return true;
+  }
   if (u.stuckT > 16) {
     u.foundingJourney = undefined;
     u.order = u.carry > 0 ? "return" : "idle";

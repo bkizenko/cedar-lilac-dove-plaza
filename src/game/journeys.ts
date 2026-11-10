@@ -111,7 +111,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   // Distant gatherers camp by their work at night instead of spending every
   // short game day repeating a round trip. Severe storms still require shelter.
   const distantWork=!!u.job&&u.order==="gather"&&g.state.weather!=="storm"&&
-    !g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&["hut","townhall","keep"].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<18);
+    !g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&["hut","house","townhall","keep"].includes(b.type)&&Math.hypot(b.x-u.x,b.z-u.z)<18);
   if(distantWork){u.fatigue=Math.max(0,(u.fatigue||0)-dt/30);u.workReason="Night camp — resting by the gathering grounds";return true;}
   // Count residents once, rather than scanning every resident for every hut.
   const occupancy=new Map<number,number>();
@@ -123,8 +123,8 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   while(!entrance){
     let nearest=Infinity;shelter=undefined;
     for(const b of g.state.buildings){
-      if(rejected.has(b.id)||b.team!==u.team||!g.finished(b)||!["hut","townhall","keep"].includes(b.type)||
-        (occupancy.get(b.id)||0)>=(b.type==="hut"?5:b.type==="keep"?12:8))continue;
+      if(rejected.has(b.id)||b.team!==u.team||!g.finished(b)||!["hut","house","townhall","keep"].includes(b.type)||
+        (occupancy.get(b.id)||0)>=(b.type==="hut"?5:b.type==="house"?7:b.type==="keep"?12:8))continue;
       const distance=(b.x-u.x)**2+(b.z-u.z)**2;
       if(distance<nearest){nearest=distance;shelter=b;}
     }

@@ -1,0 +1,46 @@
+import type { Unit } from '../game/types';
+import { personName } from '../game/people';
+import { ITEM_KINDS, ITEM_NAMES } from '../game/production';
+
+const amount = (value: number) => Number(value.toFixed(2));
+
+export function ResidentInventory({ residents }: { residents: Unit[] }) {
+  return <ul className="space-y-2 text-xs">
+    {residents.map(resident => {
+      const carried: string[] = [];
+      if (resident.carry > 0 && resident.carryType) {
+        carried.push(`${amount(resident.carry)} ${resident.carryFood ?? resident.carryType}`);
+      }
+      for (const item of ITEM_KINDS) {
+        const count = resident.itemCargo?.[item] ?? 0;
+        if (count > 0) carried.push(`${amount(count)} ${ITEM_NAMES[item]}`);
+      }
+      const water = resident.waterWork?.liters ?? 0;
+      if (water > 0) carried.push(`${amount(water)} L water`);
+      if (resident.expedition) carried.push(`${amount(resident.expedition.food)} journey food`);
+      if (resident.scoutProvisions) {
+        carried.push(`${amount(resident.scoutProvisions.food)} journey food`);
+        carried.push(`${amount(resident.scoutProvisions.water)} L journey water`);
+      }
+      const equipped: string[] = [];
+      if (resident.militia || resident.type === 'spearman' || resident.type === 'archer' || resident.type === 'swordsman') {
+        equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');
+      }
+      if (resident.farmTool) {
+        equipped.push(resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
+      }
+      if (resident.basket) equipped.push('Woven basket');
+      if (resident.waterVessel) equipped.push('Water vessel');
+      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? 'Pack goat' : resident.haulage);
+      if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
+      if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
+      return <li key={resident.id}>
+        <strong>{personName(resident)}</strong>
+        <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
+        {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
+        {resident.workReason && <div>{resident.workReason}</div>}
+        {resident.stuckT > 3 && <div className="text-blood">Movement blocked for {Math.floor(resident.stuckT)} seconds</div>}
+      </li>;
+    })}
+  </ul>;
+}

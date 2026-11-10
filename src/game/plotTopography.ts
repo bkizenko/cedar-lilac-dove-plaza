@@ -1,4 +1,4 @@
-export const PLOT_TOPOGRAPHY_RULES={sampleSpacingMeters:2,maximumOrdinaryFieldGrade:.6,dryClearanceMeters:.3} as const;
+export const PLOT_TOPOGRAPHY_RULES={sampleSpacingMeters:2,maximumOrdinaryFieldGrade:.75,maximumPastureGrade:.6,dryClearanceMeters:.3} as const;
 type Ground={height(x:number,z:number):number;waterAt(x:number,z:number):number};
 type Footprint={x:number;z:number;w:number;d:number};
 /** Include every edge and the interior, including enlarged plots. No terrain is
@@ -21,9 +21,9 @@ export function surveyFieldTopography(ground:Ground,plot:Footprint){
  }
  return{samples,minHeightMeters:minHeight,maxHeightMeters:maxHeight,heightRangeMeters:maxHeight-minHeight,maxGrade,wetFraction:wet/samples,meanGradientX:gradientX/samples,meanGradientZ:gradientZ/samples,contourAngleRadians:Math.atan2(-gradientX,gradientZ)};
 }
-export function fieldTopographyIssue(ground:Ground,plot:Footprint):string|null{
+export function fieldTopographyIssue(ground:Ground,plot:Footprint,maximumGrade:number=PLOT_TOPOGRAPHY_RULES.maximumOrdinaryFieldGrade):string|null{
  const survey=surveyFieldTopography(ground,plot);
  if(survey.wetFraction>0)return 'Part of this field is wet; reduce the plot or choose a dry bank';
- if(survey.maxGrade>PLOT_TOPOGRAPHY_RULES.maximumOrdinaryFieldGrade)return 'Part of this field is too steep; reduce the plot or use a gentler natural bench';
+ if(survey.maxGrade>maximumGrade)return 'Part of this field is too steep; reduce the plot or choose a gentler slope';
  return null;
 }

@@ -1,3 +1,4 @@
+import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
 import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
@@ -618,11 +619,16 @@ export class Engine {
     this.pushHud();
   }
 
+  upgradeHome(id:number){const r=beginHousingUpgrade(this.game,id);this.game.banner(r.reason,5);this.pushHud();return r;}
+  tryHome(id:number){const r=beginHomeUse(this.game,id);this.game.banner(r.reason,5);this.pushHud();return r;}
+  pauseHome(id:number,paused:boolean){const accepted=setHousingPaused(this.game,id,paused);this.pushHud();return accepted;}
+
   setPlacing(type: BldType | null) {
     this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
+    if(type==="house"&&housingAdoptionIssue(this.game)){this.game.banner(housingAdoptionIssue(this.game)!,5);this.pushHud();return;}
     if(type==="farm"&&cultivationIssue(this.game)){
       this.game.banner(cultivationIssue(this.game)!,5);this.pushHud();return;
     }

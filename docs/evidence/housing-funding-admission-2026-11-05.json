@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": "Shared existing NPC housing funding admission, independent of pending fibre bootstrap",
+  "checks": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "durationMilliseconds": 1646.15625,
+    "log": "/tmp/housing-funding-current-root-valid-check.log"
+  },
+  "behavior": [
+    "Same existing quote and240s meal/12logs/4stone remaining reserves checked before NPC assignment/claim and again at actual cache payment",
+    "Unpaid rejected intention reserves0actors and debits0inventory",
+    "Workload shows blocked with no actor ownership",
+    "Positive exact reserve case pays24logs8stone6fibre once leaving12logs4stone",
+    "Player material rules and paid progress/packets unchanged"
+  ],
+  "requires": "Valid public initial fixture from housing-approach fixture repair (SHA6674dd95723e11e099c51c440dfa1d607a4d439035454c59df9532eb0416a12c)",
+  "compiler": "Parent owns final compiler/build; no compiler run for this narrow patch"
+}

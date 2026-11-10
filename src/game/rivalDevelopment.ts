@@ -92,11 +92,11 @@ export function rivalDevelopmentPlan(g:Game,team:number){
 export function rivalCanInvest(g:Game,team:number,type:BldType){
   const t=g.tribe(team),d=BUILDINGS[type],p=rivalDevelopmentPlan(g,team);
   if(!g.canAfford(team,buildingCost(type,g,team)))return false;
-  const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion));
+  const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion||b.renovation));
   if(pending.length>=2||pending.some(b=>b.type===type))return false;
   if(type==='lumber'||type==='quarry'||type==='cornerstone'||missingAgeBuildings(g,team).includes(type))return true;
   // Shelter grows ahead of actual households, not all the way to the next era's population.
-  if(type==='hut')return g.popCap(team)<p.pop+3;
+  if(type==='hut'||type==='house')return g.popCap(team)<p.pop+3;
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
     const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200;
@@ -121,6 +121,7 @@ export function rivalMaterialReserves(g:Game,team:number):RivalMaterialTargets{
  const t=g.tribe(team),next=AGE_COST[t.age+1],planned:RivalMaterialTargets={wood:0,stone:0,copper:0,iron:0};
  for(const b of g.state.buildings){if(b.team!==team||b.hp<=0||b.planPaused)continue;
   for(const k of ['wood','stone','copper','iron'] as const)planned[k]+=b.plannedCost?.[k]||0;
+  if(b.renovation&&!b.renovation.paid&&!b.plannedCost){planned.wood+=b.renovation.quote.wood;planned.stone+=b.renovation.quote.stone;}
   if(b.expansion&&!b.expansion.paid)planned.wood+=expansionCost(b,b.expansion).wood||0;
  }
  const cold=g.state.survivalVersion===1&&ambientTemperature(g)<SURVIVAL_RULES.coldThresholdCelsius,residents=cold?g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit).length:0;
@@ -247,7 +248,7 @@ export function rebalanceRivalLabor(g:Game,team:number){
     if(!surplusWorkers.includes(u)&&moved>=spare)continue;
     if(u.carry>0){if(surplusWorkers.includes(u)){releaseTreeWorker(g,u);u.node=null;u.order='return';u.workReason='Working stock ready — delivering the real carried surplus';moved++;}continue;}
     const materials=(['wood','stone','copper','iron'] as ResKind[]).some(k=>rivalMaterialPriority(g,u,k,targets)>0);
-    const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)&&!b.plannedCost);
+    const unfinished=g.state.buildings.some(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion||b.renovation)&&!b.plannedCost);
     if(!materials&&!unfinished&&!surplusWorkers.includes(u))continue;
     releaseTreeWorker(g,u);u.node=null;u.job=null;u.gatherT=0;u.jobLock=false;u.order='idle';u.workCheckAt=0;
     g.workBoard.reset();g.workBoard.assign(g,u);moved++;
@@ -314,7 +315,7 @@ export function developRivalCoast(g:Game,team:number,observedPartnerDock?:{x:num
  if(observedPartnerDock&&(!rivalKnows(g,team,observedPartnerDock.x,observedPartnerDock.z)||g.isFoe(team,observedPartnerDock.team)))return false;
  const t=g.tribe(team),cost=buildingCost('dock',g,team);
  if(t.wood<(cost.wood||0)+HAULAGE.canoe.wood+16||t.stone<HAULAGE.canoe.stone||!g.canAfford(team,cost)){recordCoastalReview(g,team,'coast','Collect the real dock and scout canoe costs while keeping working timber');return false;}
- if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion)).length>=2){recordCoastalReview(g,team,'coast','Existing paid construction needs its builders first');return false;}
+ if(g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion||b.renovation)).length>=2){recordCoastalReview(g,team,'coast','Existing paid construction needs its builders first');return false;}
  const known=rivalWorkRangeContext(g,team),best=knownCoastalLaunchSites(g,team,(x,z)=>known(x,z,'wood'),observedPartnerDock)[0];
  if(!best){recordCoastalReview(g,team,'coast','No observed reachable gentle launch shore for this water route');return false;}
  const built=!!g.placeBuilding('dock',best.x,best.z,team);recordCoastalReview(g,team,built?'dock-paid':'coast',built?'':'The actual dock construction command was blocked');return built;

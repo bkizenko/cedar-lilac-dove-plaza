@@ -1,6 +1,8 @@
+import{housingStatus}from'./housing';
+import{hasConstructionWork}from'./constructionTargets';
 import{fibreOrderIssue}from'./fibre';
 import{productionOwnershipIssue}from'./productionOwnership';
-import {recordImmediateConstruction,constructionPriority} from './constructionQueue';
+import {recordImmediateConstruction,constructionPriority,queueConstruction} from './constructionQueue';
 import {reserveConstructionWorker,releaseConstructionWorker} from './constructionOwnership';
 import {towerPlatformSpec,towerBuildConfiguration} from './towerPlatforms';
 import {discountQuarryPlans} from "./mining";
@@ -10,6 +12,7 @@ import type {Building,BldType,Cost,ResKind,Unit} from './types';
 import {BUILDINGS} from './constants';
 import {foodDemand,isDependent} from './settlement';
 import {bridgeApproach,bridgeCostScale,type BridgeSpan} from './transport';
+import {hasTaskCommitment} from './workCommitments';
 
 export const BUILD_MATERIALS:ResKind[]=['food','wood','stone','copper','iron'];
 export function buildingCost(type:BldType,g?:Game,team=0,size?:PlotSize,span?:BridgeSpan):Cost {
@@ -40,9 +43,10 @@ export function planMissing(g:Game,b:Building){
   return [...BUILD_MATERIALS,'seeds' as const].map(kind=>({kind,amount:Math.max(0,Math.ceil((b.plannedCost?.[kind]||0)-(t?.[kind]||0)))})).filter(n=>n.amount>0);
 }
 export function constructionDemand(g:Game,team:number,kind:ResKind){
-  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&kind==='wood'&&(expansionCost(b,b.expansion).wood||0)>g.tribe(team).wood)));
+  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.renovation&&!b.planPaused&&!b.renovation.paid&&b.renovation.custodyTeam===team&&(kind==='wood'||kind==='stone')&&b.renovation.quote[kind]>g.tribe(team)[kind])||(b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&kind==='wood'&&(expansionCost(b,b.expansion).wood||0)>g.tribe(team).wood)));
 }
 export function planStatus(g:Game,b:Building){
+  if(b.renovation)return housingStatus(g,b)||"Housing work queued";
   if(!b.plannedCost)return g.finished(b)?'Complete':`Building ${Math.floor(b.build*100)}%`;
   if(b.planPaused)return 'Paused — materials remain available for other projects';
   const missing=planMissing(g,b);
@@ -63,6 +67,7 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
   const sites=preferred?[preferred]:g.state.buildings.some(b=>b.plannedCost&&b.constructionPriority!==undefined)?[...g.state.buildings].sort((a,b)=>constructionPriority(b)-constructionPriority(a)):g.state.buildings;
   for(const b of sites){
     const cost=b.plannedCost;
+    if(b.renovation)continue;
     if(!cost||b.hp<=0||b.planPaused||!g.canAfford(b.team,cost))continue;
     if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z,0,b))continue;
     if((cost.food||0)>0&&g.tribe(b.team).food-(cost.food||0)<foodDemand(g,b.team)*90)continue;
@@ -78,12 +83,35 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
   }
 }
 
+/** Placement itself orders construction. Only free residents may take it. */
+export function assignPlacedConstruction(g: Game, b: Building) {
+  const available = g.state.units.filter(u =>
+    u.team === 0 && u.type === 'worker' && u.hp > 0 && !isDependent(g, u) &&
+    (u.order === 'idle' || u.order === 'hold') && u.carry === 0 &&
+    !u.jobLock && !u.buildOrder && !u.constructionQueue && !u.shelterId &&
+    !u.emergency && !u.militia && !u.recalled && !u.tributeJourney &&
+    !u.envoy && !u.scout && !u.expedition && !u.foundingJourney && !u.visit &&
+    u.drill == null && u.escortId === undefined && !hasTaskCommitment(u)
+  );
+  available.sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z));
+  const builders: Unit[] = [];
+  for (const resident of available) {
+    if (!g.buildingWorkReached(resident, b) && !g.interactionSpot(resident, b)) continue;
+    builders.push(resident);
+    if (builders.length === 2) break;
+  }
+  if (!builders.length) return;
+  if (b.plannedCost) queueConstruction(g, b, builders);
+  else orderConstruction(g, b, builders);
+}
+
 /** A direct RTS order supersedes ordinary jobs while retaining carried/paid goods. */
 export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
-  if(b.team!==0||b.hp<=0||(g.finished(b)&&!b.expansion))return false;
+  if(b.team!==0||b.hp<=0||!hasConstructionWork(b))return false;
+  if(b.renovation?.actorId!==undefined&&b.renovation.actorId!==null&&!workers.some(u=>u.id===b.renovation!.actorId)){g.banner('One builder owns this housing workspot. Queue the site or pause before assigning a replacement.',4);return false;}
   const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency)
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
-    .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;});
+    .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;}).slice(0,b.renovation?1:undefined);
   if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner('Select adult residents to build this project.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
@@ -95,11 +123,12 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
 export function directedConstruction(g:Game,u:Unit,dt:number){
   if(u.buildOrder===undefined||u.emergency)return false;
   const b=g.state.buildings.find(b=>b.id===u.buildOrder&&b.team===u.team&&b.hp>0);
-  if(!b||(g.finished(b)&&!b.expansion)){releaseConstructionWorker(g,u);u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
+  if(!b||!hasConstructionWork(b)){releaseConstructionWorker(g,u);u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
   if(u.carry>0){reserveConstructionWorker(g,u,b,'returning');u.order='return';u.node=null;return false;}
   u.order='build';u.node=b;
   if(b.planPaused){releaseConstructionWorker(g,u);u.workReason='Construction plan paused';return true;}
   if(!reserveConstructionWorker(g,u,b)){u.workReason='Construction waiting for the resident’s current commitment';return true;}
+  if(b.renovation){g.buildAI(u,dt);return true;}
   if(b.plannedCost){
     // Walk outside the footprint first, so funding cannot turn a drawing into
     // a solid obstacle around the very person ordered to build it.

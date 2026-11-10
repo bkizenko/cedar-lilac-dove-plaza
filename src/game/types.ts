@@ -12,6 +12,7 @@ export type BldType =
   | "townhall"
   | "cornerstone"
   | "hut"
+  | "house"
   | "farm"
   | "pen"
   | "lumber"
@@ -198,6 +199,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   campReport?:import('./finiteCamp').CampReport;
   campObserveAt?:number;
   homeCamp?: number;
+  goatSearchPen?: number;
   searchJob?: "wood" | "food" | "hunt";
   recalled?: boolean;
   demobilizing?: boolean;
@@ -268,6 +270,10 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   resting?: boolean;
   shelterId?: number;
   visit?: {phase:"outbound"|"waiting"|"return";wait:number;team?:number;wanted?:ResKind};
+  housingWorkId?:number;
+  housingCargo?:import('./housingTypes').HousingCargo;
+  housingSkill?:import('./housingTypes').HousingSkill;
+  housingUse?:import('./housingTypes').HousingUse;
   buildingRepairId?:number;
   buildOrder?: number;
   constructionQueue?: {sites:number[];paused?:true};
@@ -286,6 +292,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  renovation?:import('./housingTypes').HousingRenovation;
+  housingReceipt?:import('./housingTypes').HousingReceipt;
   maintenance?:import('./buildingMaintenance').BuildingCare;
   repair?:import('./buildingMaintenance').BuildingRepair;
   excavationDepth?:number;
@@ -453,6 +461,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
   raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];

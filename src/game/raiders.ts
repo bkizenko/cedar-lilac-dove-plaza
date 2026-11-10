@@ -11,7 +11,7 @@ import { receiveFood } from "./pantry";
 import { applyForagePressure,harvestWildPlant,wildPlantsEnabled } from "./ecology";
 import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
-import {queueStandDown} from './demobilization';
+import {queueStandDown,withdrawingRaider} from './demobilization';
 
 /** Population matters even while a large settlement remains in the Stone Age.
  * A small first village still meets scouts; established towns face actual bands. */
@@ -42,10 +42,10 @@ export function raidReadiness(g:Game){
 const strandedRaid=(u:Unit)=>u.seaRaid?.phase==='retreat'&&u.seaRaid.plan?.strandedAt!==undefined;
 const invadingRaider=(u:Unit)=>u.team===3&&u.hp>0&&!u.prisoner&&u.homeCamp===undefined&&!u.campSupport&&!strandedRaid(u);
 
-/** The respite starts when a band has actually gone, including its retreat. */
+/** End the combat alarm when the band withdraws. Survivors still travel home. */
 export function finishSeaRaid(g:Game){
  const campaign=g.state.raidCampaign;
- if(!campaign?.active||g.state.units.some(invadingRaider))return;
+ if(!campaign?.active||g.state.units.some(u=>invadingRaider(u)&&!withdrawingRaider(u)))return;
  const now=raidReadiness(g);
  // New arrivals or construction must not conceal casualties or ruined homes.
  const survivors=campaign.people?campaign.people.filter(id=>g.state.units.some(u=>u.id===id&&u.hp>0&&u.team===0)).length:now.adults;

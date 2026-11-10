@@ -16,7 +16,7 @@ const chains:Chain[]=[
  {id:'baking',title:'Bake useful supplied batches',need:'Flour, collected water, fuel and work must meet at an actual hearth or oven.',recipes:['bakeBread','bakeBreadOven'],sites:['hearth','oven']},
  {id:'preservation',title:'Keep meat and fish for later',need:'Surplus is useful only if drying weather or paid smoking work protects it before it spoils.',recipes:['airDryMeat','airDryFish','manualSmokeMeat','manualSmokeFish','smokeMeat','smokeFish'],sites:['dryrack','hearth','smokehouse']},
  {id:'hides',title:'Prepare hides and leather',need:'Hunted hides need actual cleaning, drying or tanning inputs rather than disappearing into a building bonus.',recipes:['fleshHide','extractTannin','drySkin','tanHide'],sites:['butcher','dryrack','tanner'],proof:['drySkin','tanHide']},
- {id:'garments',title:'Make coverings for residents',need:'Delivered coverings become useful only when an actual resident wears and maintains them.',recipes:['sewSkinClothes','sewLeatherClothes','sewLightClothes'],sites:['tailor'],use:'garment'},
+ {id:'garments',title:'Make coverings for residents',need:'Delivered coverings become useful only when an actual resident wears and maintains them.',recipes:['sewSkinClothes','sewLeatherClothes','sewLightClothes','sewHideCoat'],sites:['tailor'],use:'garment'},
  {id:'pottery',title:'Make and use water vessels',need:'Finite clay, water, weather and fuel can produce vessels that reduce repeated water-carrying journeys.',recipes:['formClayHand','formClay','dryClay','dryClayCovered','fireClayHand','fireClay'],sites:['hearth','dryrack','potter','kiln'],proof:['fireClayHand','fireClay'],use:'vessel'},
 ];
 /** Current stock is observation, saved delivered results are proof, and actual

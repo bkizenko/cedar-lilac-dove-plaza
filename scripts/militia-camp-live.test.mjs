@@ -34,3 +34,19 @@ test('music distinguishes an outbound attack, an actual defense at home, and a c
 test('explicit armed hunting keeps a previously borrowed caravan weapon instead of being recalled every frame',()=>{
  const {g,u}=fixture();g.tribe(0).spears=0;g.tribe(0).bows=1;assert.equal(g.callToArms(),1);u.caravanArmed=true;u.visit={phase:'return',wait:0,team:1};const prey={id:g.id(),species:'goat',x:5,z:38,y:4,hp:2,maxHp:2,facing:0,vx:0,vz:0,wanderT:20,fly:0,scale:1};g.state.wildlife=[prey];g.workBoard.reset();g.assignJob('hunt');assert.equal(u.visit,undefined);drive(g,120,()=>(g.tribe(0).items?.rawMeat||0)>0);assert.ok((g.tribe(0).items?.rawMeat||0)>0,JSON.stringify({order:u.order,reason:u.workReason,recalled:u.recalled,node:u.node?.id,militia:u.militia}));assert.equal(u.type,'archer');assert.equal(u.militia,true);assert.equal(g.tribe(0).bows,0);g.standDown();drive(g,80,()=>!u.militia);assert.equal(g.tribe(0).bows,1);
 });
+
+test('militia physically stand down when a living raider withdraws nearby',()=>{
+ const {g,u}=fixture();
+ assert.equal(g.callToArms(),1);
+ const raider=g.spawnUnit('spearman',6,38,3);
+ raider.seaRaid={phase:'retreat',x:6,z:38,goalX:0,goalZ:38,thinkAt:9999,departAt:0};
+ raider.order='hold';
+ g.state.raidCampaign={active:true,adults:1,buildings:0,loss:0};
+ finishSeaRaid(g);
+ assert.equal(g.state.raidCampaign.active,false);
+ drive(g,40,()=>!u.militia);
+ assert.equal(u.type,'worker');
+ assert.equal(u.militia,false);
+ assert.equal(g.tribe(0).spears,1);
+ assert.ok(g.state.units.includes(raider)&&raider.hp>0);
+});

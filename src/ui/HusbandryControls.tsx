@@ -1,9 +1,10 @@
 import{penWaterReport,releaseHusbandryKeeper}from'../game/penWater';
-import {searchForWildGoats} from '../game/animalOrders';
+import {searchForWildGoats, visibleGoatsForPen} from '../game/animalOrders';
 import {penPastureReport} from '../game/penPasture';
 import type {Engine} from '../game/engine';
 import {assignHusbandry,beginHerdTaming,HERD,penAnimals} from '../game/husbandry';
 import {calendar} from '../game/settlement';
+import {animalProcessingEnabled} from '../game/production';
 export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const g=engine.game,animals=penAnimals(g,pen),b=g.state.buildings.find(b=>b.id===pen);
  const water=b?penWaterReport(g,b):null;
@@ -11,6 +12,8 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const female=animals.filter(a=>a.sex==='female').length,kids=animals.filter(a=>g.state.time-a.born<HERD.maturity).length;
  const keeper=g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);
  const pausedKeeper=g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&u.husbandryWork.paused);
+ const scouting=g.state.units.some(u=>u.hp>0&&u.order==='explore'&&u.goatSearchPen===pen);
+ const known=b?visibleGoatsForPen(g,b).length:0;
  const owned=new Set(animals.map(a=>a.id));
  const taming=g.state.units.filter(u=>u.hp>0&&u.tamingWork?.pen===pen&&!owned.has(u.tamingWork.animal)).length;
  const paused=g.state.units.some(u=>u.hp>0&&u.tamingWork?.pen===pen&&u.tamingWork.paused);
@@ -25,11 +28,14 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
   {report&&capacity<report.housingCapacity&&<p>Wet or steep ground limits new animals. Existing animals stay in your herd.</p>}
   <p>{report?.keepers?`${report.keepers}/${report.keepersNeeded} keepers assigned`:'No keeper assigned'}{calendar(g).phase===3?' · Winter needs stored plant food':''}</p>
   <div className="boat-actions">
-   <button type="button" onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>Search woodland for goats<span>Real scout with journey food; capture needs a visible goat</span></button>
-   <button type="button" disabled={!paused&&animals.length+taming>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen))}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':'6 food · find wild goats first'}</span></button>
+   <button type="button" disabled={scouting&&!known} onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>
+    {scouting&&!known?'Scout searching':'Search for goats'}
+    <span>{known?`${known} visible within reach`:`Hills and woodland within ${HERD.searchRadiusMeters} m`}</span>
+   </button>
+   <button type="button" disabled={!paused&&animals.length+taming>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen))}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel`}</span></button>
    <button type="button" disabled={!pausedKeeper&&(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run(()=>assignHusbandry(g,pen))}>{pausedKeeper?'Resume keeper':keeper?'Assign another keeper':'Assign keeper'}</button>
    <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=HERD.maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'pack'))}>Fit pack harness<span>2 logs · uses one adult goat</span></button>
-   <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=HERD.maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'slaughter'))}>Slaughter one<span>Meat carried to stores</span></button>
+   <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=HERD.maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'slaughter'))}>Slaughter one<span>{animalProcessingEnabled(g,0)?'Meat, one hide and two bones carried to stores':'Meat carried to stores'}</span></button>
    {(keeper||pausedKeeper)&&<button type="button" onClick={()=>run(()=>{releaseHusbandryKeeper(g,(keeper||pausedKeeper)!);})}>Release keeper</button>}
   </div>
   <details><summary>Herd care</summary><p>Keep a male and female to raise kids. Fed, tended mothers produce milk. A keeper brings plant food when pasture is depleted or winter comes, and carries milk home. Grass is a finite stock that regrows from usable ground, soil and seasonal moisture. More animals need more keeper trips. Keepers carry real drinking water from communal stores. Hungry or thirsty animals cannot breed or make milk; prolonged shortages harm health.</p>
