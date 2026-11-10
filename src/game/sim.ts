@@ -2114,7 +2114,7 @@ export class Game {
     this.state.raidCampaign={active:true,adults:readiness.adults,buildings:readiness.buildings,loss:0,
       people:this.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(this,u)).map(u=>u.id),
       sites:this.state.buildings.filter(b=>b.team===0&&this.finished(b)).map(b=>b.id)};
-    const n=strength.count,frail=strength.condition,label=strength.label;
+    const n=strength.count,frail=strength.condition;
     const {x:sx,z:sz}=landing;
     this.tribe(3).food+=16*n;
     const marks = this.state.buildings.filter(
@@ -2142,8 +2142,6 @@ export class Game {
       u.aggroT = 80;
       u.seaRaid={plan:createRaidPlan(this,raidBandId,n,this.state.raidWave,u.id),x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
     }
-    this.banner(`${label} · ${n} attackers landed`, 4);
-    this.onSfx("horn");
     this.callAlliesTo(home.x, home.z);
     this.defendHome(0);
     this.state.raidT = (480 + Math.random() * 240 + (1 - threat) * 120)/difficulty(this).raid;

@@ -114,3 +114,15 @@ test('timber focus reaches known distant forests without crowding or revealing h
  const unseen=fixture();unseen.state.trees.forEach(n=>n.x=160);unseen.vision.fill(0);const u=worker(unseen);
  unseen.setLaborPriority('wood');assert.notEqual(u.order,'gather');
 }));
+
+
+test('the raider landing itself sends no banner or horn',seededScenario(()=>{
+ const g=new Game();g.reset(123456,2);g.enterIsland();
+ const banners=[],sounds=[];
+ g.banner=message=>banners.push(message);
+ g.onSfx=sound=>sounds.push(sound);
+ g.spawnRaid();
+ assert.ok(g.state.units.some(u=>u.team===3&&u.seaRaid));
+ assert.deepEqual(banners,[]);
+ assert.ok(!sounds.includes('horn'));
+}));
