@@ -84,3 +84,16 @@ test('the same portable canoe owner rows across real connected water with their 
  assert.equal(u.haulage,'canoe');
  assert.equal(u.boat,undefined);
 });
+
+test('grain station pointer placement keeps quarter-metre gaps on the actual build preview',()=>{
+ const {g}=fixture(),e=Object.create(Engine.prototype);
+ let validated,drawn;
+ e.game=g;e.pointer={x:50,y:50};e.ghostPos={x:0,z:0};
+ e.view={setLinePreview:()=>{},groundAt:()=>({x:11.28,z:-14.49}),
+  setGhost:(type,x,z,y,ok)=>{drawn={type,x,z,ok};}};
+ g.state.placing='oven';
+ g.placementValid=(type,x,z)=>{validated={type,x,z};return true;};
+ e.updateGhost();
+ assert.deepEqual(validated,{type:'oven',x:11.25,z:-14.5});
+ assert.deepEqual(drawn,{...validated,ok:true});
+});

@@ -1,3 +1,4 @@
+import { compactGrainWorkplace, threshingFloorIssue } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
 import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
@@ -568,8 +569,9 @@ export class Engine {
     }
     const g = this.view.groundAt(this.pointer.x, this.pointer.y);
     if (!g) return;
-    let x = Math.round(g.x / TILE) * TILE;
-    let z = Math.round(g.z / TILE) * TILE;
+    const snap = compactGrainWorkplace(type) ? 0.25 : TILE;
+    let x = Math.round(g.x / snap) * snap;
+    let z = Math.round(g.z / snap) * snap;
     if (type === "dock") {
       const site = this.game.nearestDockSite(g.x, g.z, 14);
       if (site) {
@@ -644,6 +646,10 @@ export class Engine {
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="house"&&housingAdoptionIssue(this.game)){this.game.banner(housingAdoptionIssue(this.game)!,5);this.pushHud();return;}
+    if(type==="threshingFloor"){
+      const issue=threshingFloorIssue(this.game,0);
+      if(issue){this.game.state.placing=null;this.game.state.placeIssue=null;this.updateGhost();this.game.banner(issue,6);this.pushHud();return;}
+    }
     if(type==="farm"&&cultivationIssue(this.game)){
       this.game.banner(cultivationIssue(this.game)!,5);this.pushHud();return;
     }

@@ -15,14 +15,17 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  if(!g.state.cerealProcessing&&(t.items?.grainSheaves||0)<CEREAL_RULES.rawBatch&&(t.items?.roughGrain||0)<CEREAL_RULES.roughBatch)return false;
  let c=reviews.get(g);if(!c||c.state!==g.state){c={state:g.state,teams:new Map()};reviews.set(g,c);}const due=c.teams.get(team)??-Infinity;if(eventActorId===undefined&&due>g.state.time&&due<=g.state.time+CEREAL_RULES.reviewSeconds)return false;c.teams.set(team,g.state.time+CEREAL_RULES.reviewSeconds);
  const jobs=g.state.production?.projects.filter(p=>p.team===team&&isCerealRecipe(p.recipe)&&!['complete','lost'].includes(p.phase))||[];
- const paused=jobs.find(p=>['paused','stored'].includes(p.phase));if(paused){if(team===0)return false;const p=paused;const retained=p.actorId===null?undefined:g.state.units.find(u=>u.id===p.actorId&&u.team===team&&free(g,u,p.id)),u=retained||g.state.units.find(u=>u.team===team&&free(g,u)&&atCache(g,u));return!!u&&resumeProduction(g,p.id,u.id);}
- if(jobs.length>=CEREAL_RULES.maximumAutomaticWorkers)return false;
+ const paused=jobs.find(p=>['paused','stored'].includes(p.phase));if(paused&&team!==0){const p=paused;const retained=p.actorId===null?undefined:g.state.units.find(u=>u.id===p.actorId&&u.team===team&&free(g,u,p.id)),u=retained||g.state.units.find(u=>u.team===team&&free(g,u)&&atCache(g,u));return!!u&&resumeProduction(g,p.id,u.id);}
+ const active=jobs.filter(p=>!['paused','stored'].includes(p.phase)).length;
+ const limit=team===0?Math.min(12,Math.max(CEREAL_RULES.maximumAutomaticWorkers,
+  Math.ceil(g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.prisoner).length/5))):CEREAL_RULES.maximumAutomaticWorkers;
+ if(active>=limit)return false;
  const rough=(t.items?.roughGrain||0)>=CEREAL_RULES.roughBatch,raw=(t.items?.grainSheaves||0)>=CEREAL_RULES.rawBatch;
  if(!rough&&!raw)return false;
  // Perishable actual meat is a faster immediate meal; leave its real hearth
  // and workers to the existing kitchen plan before processing stored crops.
  if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
- const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&jobs.length>0&&candidates.length<=1)return false;
+ const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&active>0&&candidates.length<=1)return false;
  const workers=candidates.filter(u=>eventActorId===undefined||u.id===eventActorId);if(!workers.length)return false;
  const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&['hearth','threshingFloor'].includes(b.type)),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
  if(!finished.length){

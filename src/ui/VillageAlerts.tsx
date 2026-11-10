@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Engine } from '../game/engine';
 import { SURVIVAL_RULES } from '../game/survivalNeeds';
+import { exposedHarvestUnits } from '../game/production';
 import { measureVillageWorkload } from '../game/villageWorkload';
 
 export function VillageAlerts({ engine }: { engine: Engine }) {
@@ -10,18 +11,26 @@ export function VillageAlerts({ engine }: { engine: Engine }) {
     () => measureVillageWorkload(game).workloadPercent,
     [game, game.state, game.world, refreshWindow],
   );
-  let starving = 0, thirsty = 0, freezing = 0;
+  let starving = 0, thirsty = 0, freezing = 0, fullCache = 0;
   for (const resident of game.state.units) {
     if (resident.team !== 0 || resident.hp <= 0) continue;
+    if (resident.workReason?.includes('cache full')) fullCache++;
     if ((resident.hunger ?? 0) >= 60) starving++;
     if ((resident.thirstSeconds ?? 0) >= SURVIVAL_RULES.thirstGraceSeconds) thirsty++;
     if ((resident.coldSeconds ?? 0) >= SURVIVAL_RULES.coldGraceSeconds) freezing++;
   }
+  const tribe=game.tribe(0);
+  const sheaves=Math.floor(tribe.items?.grainSheaves??0);
+  const rough=Math.floor(tribe.items?.roughGrain??0);
+  const exposed=exposedHarvestUnits(game,0);
   const warnings = [
     starving > 0 && `${starving} starving`,
     thirsty > 0 && `${thirsty} dangerously thirsty`,
     freezing > 0 && `${freezing} freezing`,
-    workload !== null && workload > 100 && `Overworked · ${Math.ceil(workload)}% of capacity`,
+    fullCache>0 && `${fullCache} blocked by full material stores`,
+    exposed>=8 && `${Math.floor(exposed)} harvest units exposed to spoilage`,
+    (sheaves>=32||rough>=24) && `Process harvest at a hearth or threshing floor · ${sheaves} sheaves · ${rough} rough grain`,
+    workload !== null && workload > 100 && `Work backlog · ${Math.ceil(workload)}% of capacity`,
   ].filter(Boolean);
   return warnings.length > 0
     ? <div className="hud-toast village-alert" role="status">{warnings.join(' · ')}</div>

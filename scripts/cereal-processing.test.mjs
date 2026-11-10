@@ -1,7 +1,7 @@
 import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';
 import test from'node:test';import assert from'node:assert/strict';import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
-import{farmWork,calendar}from'../src/game/settlement.ts';import{beginProduction,productionIssue,productionAI,deliverProductionCargo,pauseProductionProject,resumeProduction,tickProduction,unloadProductionProject,cerealReservedMaterials,PRODUCTION_RECIPES}from'../src/game/production.ts';
+import{farmWork,calendar}from'../src/game/settlement.ts';import{beginProduction,productionIssue,productionAI,exposedHarvestUnits,deliverProductionCargo,pauseProductionProject,resumeProduction,tickProduction,unloadProductionProject,cerealReservedMaterials,PRODUCTION_RECIPES}from'../src/game/production.ts';
 import{CEREAL_RULES,rawCerealField,threshingFloorIssue}from'../src/game/cerealRules.ts';import{reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}
 function fixture(team=0){const g=new Game();g.reset(42,10);g.enterIsland();g.state.units=[];g.state.buildings=[];for(const k of['trees','stones','forage','fish','copper','iron','wildlife'])g.state[k]=[];g.state.autoWorkEnabled=false;g.state.time=950;g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.conflict='quiet';g.state.encounter=undefined;for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(team),{wood:100,stone:100,food:1000,foodLots:{provisions:1000},seeds:12,items:{},cultivated:['grain']});g.state.campSites=team===0?[{team:0,x:0,z:30}]:[{team:0,x:-90,z:30}];g.world.camps.find(c=>c.team===team).x=0;g.world.camps.find(c=>c.team===team).z=30;const hall=g.makeBld('townhall',0,30,team),hearth=g.makeBld('hearth',12,30,team);g.state.buildings=[hall,hearth];if(team!==0){g.state.buildings.push(g.makeBld('townhall',-90,30,0));const spectator=g.spawnUnit('worker',-90,38,0);spectator.order='hold';spectator.jobLock=true;}ground(g);const u=g.spawnUnit('worker',0,36,team),v=g.spawnUnit('worker',2,36,team);for(const p of[u,v]){p.order='hold';p.jobLock=false;}return{g,u,v,hall,hearth};}
@@ -128,4 +128,59 @@ test('Auto work preserves clean grain when water for baking is unavailable and h
  drive(g, 6);
  assert.equal(g.state.production.projects.length, 0);
  assert.ok(tribe.foodLots.grain > 4);
+});
+
+test('threshing floor placement reports hearth practice before a blueprint is attempted',()=>{
+ const {g}=fixture();
+ assert.match(g.placementIssue('threshingFloor',32,38),/finished hearth.*Hand-thresh cereal sheaves/);
+ assert.equal(g.placeBuilding('threshingFloor',32,38),false);
+ assert.match(g.state.banner,/hand-threshed batch/);
+});
+
+test('grain workplaces fit beside expanded plots, while their physical footprints stay clear',()=>{
+ const {g}=fixture();
+ const plot=g.makeBld('farm',40,48,0);
+ plot.expansion={w:16.4,d:8.2};
+ g.state.buildings.push(plot);
+ const stations=[['grindingStone',3,30],['oven',4,39],['threshingFloor',6,48]];
+ g.tribe(0).productionPractice={threshCerealHand:{batches:1,failedBatches:0,usefulOutputs:4,firstAt:0,lastAt:0,makers:[]}};
+ for(const [type,width,z] of stations){
+  const x=40+16.4/2+width/2+.5;
+  // Each position is beside an expanded footprint rather than inside it.
+  plot.z=z;
+  assert.equal(g.placementIssue(type,x,z),null,type);
+  assert.match(g.placementIssue(type,x-.6,z),/another building/);
+  assert.equal(g.placeBuilding(type,x,z),true,type);
+  assert.equal(g.state.buildings.at(-1).x,x);
+ }
+});
+
+test('a village with a full storehouse unloads real harvest and can turn the exposed backlog into edible grain',()=>{
+ const {g,u,v,hearth}=fixture();
+ g.state.buildings.push(g.makeBld('warehouse',-20,30,0));
+ g.tribe(0).items={plantFibre:100,grainSheaves:200};
+ v.itemCargo={grainSheaves:12};
+ assert.equal(deliverProductionCargo(g,v),true);
+ assert.equal(v.itemCargo,undefined);
+ assert.equal(g.tribe(0).items.grainSheaves,212);
+ assert.equal(exposedHarvestUnits(g,0),12);
+ tickProduction(g,1);
+ assert.ok(g.tribe(0).items.grainSheaves<212);
+ assert.ok(g.state.production.metrics.spoiled.grainSheaves>0);
+ batch(g,'threshCerealHand',hearth);
+ batch(g,'winnowCerealHand',hearth);
+ assert.ok(g.tribe(0).foodLots.grain>0);
+ assert.ok(g.tribe(0).items.plantFibre===100);
+ assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+test('cooking raw meat can free material space even while exposed cereal remains',()=>{
+ const {g,u,hearth}=fixture();
+ g.state.buildings.push(g.makeBld('warehouse',-20,30,0));
+ g.tribe(0).items={rawMeat:6,grainSheaves:310};
+ g.tribe(0).survival.waterLiters=10;
+ assert.equal(productionIssue(g,'cookMeat',hearth.id,u.id),null);
+ batch(g,'cookMeat',hearth);
+ assert.ok(g.tribe(0).foodLots.meat>0);
+ assert.ok(g.tribe(0).items.rawMeat<3);
 });

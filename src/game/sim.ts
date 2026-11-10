@@ -9,7 +9,7 @@ import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
-import{rawCerealField,threshingFloorIssue}from'./cerealRules';
+import{rawCerealField,threshingFloorIssue,compactGrainWorkplace}from'./cerealRules';
 import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
@@ -1116,6 +1116,7 @@ export class Game {
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
+    if(type==="threshingFloor"){const learned=threshingFloorIssue(this,_team);if(learned)return learned;}
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
@@ -1134,12 +1135,14 @@ export class Game {
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
-    if(size||scalablePlot(type)){
-      const clearance = type === "farm" || type === "warehouse" ? 0.25 : 1;
+    const compactGrainSite = compactGrainWorkplace(type);
+    if(size||scalablePlot(type)||compactGrainSite){
+      const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
       if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
+      if(compactGrainSite)return null;
     }
     if (type !== "quarry") {
       for (const n of this.state.stones) {
@@ -1391,7 +1394,7 @@ export class Game {
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);
     if (!d || !tribe) return false;
-    if(type==="threshingFloor"&&threshingFloorIssue(this,team)){if(team===0)this.banner(threshingFloorIssue(this,team)!,4);return false;}
+    if(type==="threshingFloor"){const issue=threshingFloorIssue(this,team);if(issue){if(team===0)this.banner(issue,5);return false;}}
     if(type==="farm"&&cultivationIssue(this,team)){
       if(team===0)this.banner(cultivationIssue(this,team)!,5);return false;
     }
