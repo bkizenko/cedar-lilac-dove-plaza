@@ -61,3 +61,26 @@ test('sailing screen picks hit elevated local water even though entity picking i
  const point=WorldView.prototype.waterAt.call(view,50,50,.2);assert.ok(Math.abs(point.y-10)<1e-7,'use the visible lake surface, rather than sea level');
  mesh.geometry.dispose();mesh.material.dispose();
 });
+
+test('a personal dugout takes water-surface movement orders and keeps dry landing clicks',()=>{
+ const {g}=fixture(),u=g.state.units[0],e=Object.create(Engine.prototype);
+ u.haulage='canoe';u.selected=true;e.game=g;e.pushHud=()=>{};
+ let ground={x:1,z:1},move;
+ e.view={groundAt:()=>ground,waterAt:()=>({x:4,z:2}),pickEntity:()=>null,pickWildlife:()=>null,pickResource:()=>null};
+ g.entityAt=()=>null;g.resourceAt=()=>null;
+ g.issueMove=(x,z)=>{move={x,z};};
+ e.moveMode=true;e.leftClick(10,10,false);assert.deepEqual(move,{x:4,z:2});
+ e.rightClick(10,10);assert.deepEqual(move,{x:4,z:2});
+ ground={x:2,z:-14};e.rightClick(10,10);assert.deepEqual(move,ground);
+});
+
+test('the same portable canoe owner rows across real connected water with their cargo',()=>{
+ const {g}=fixture(),u=g.state.units[0];
+ Object.assign(u,{haulage:'canoe',selected:true,x:0,z:0,y:g.waterAt(0,0)+.16,carry:4,carryType:'wood'});
+ g.issueMove(24,0);
+ for(let i=0;i<300&&u.x<22;i++){g.state.time+=.1;g.navBudget=30;g.steer(u,.1);}
+ assert.ok(u.x>=22,`canoe reached ${u.x} m`);
+ assert.equal(u.carry,4);
+ assert.equal(u.haulage,'canoe');
+ assert.equal(u.boat,undefined);
+});

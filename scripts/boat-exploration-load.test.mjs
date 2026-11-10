@@ -16,3 +16,17 @@ test('vessel slowing uses everyone’s goods; moving cargo between passengers ca
 test('the recall horn cancels boat scouting, sails to a real dock and disembarks the same loaded crew',()=>{const{g,b,c}=fixture();c.carry=9;c.carryType='wood';assert.equal(beginBoatExploration(g,b.id),null);sail(g,15);g.soundRecall();assert.equal(b.exploration?.reason,'recall');sail(g,160);assert.ok(g.state.units.every(u=>!u.boat));assert.equal(c.carry,9);assert.equal(g.state.boats[0].id,b.id);});
 
 test('cold water preparation queues the survey; candidate searches stay within their per-review budget',()=>{const{g,b}=fixture();g.world={...g.world};assert.equal(beginBoatExploration(g,b.id),null);assert.ok(b.exploration);waterNavigation(g,true);sail(g,15);const d=boatExplorationDiagnostics(g);assert.ok(d.reviews>0);assert.ok(d.maximumCellsPerReview<=BOAT_EXPLORE_RULES.searchCellsPerReview);assert.ok(d.checkedCells>0);});
+
+test('able boarded rowers increase pace with diminishing gains while waiting and cargo do not help',()=>{
+ const{g,b}=fixture(),[helm,second,third]=g.state.units;
+ second.boat.phase='boarding';third.boat.phase='boarding';
+ const solo=riverboatLoadSpeed(g,b.id);
+ second.boat.phase='aboard';const pair=riverboatLoadSpeed(g,b.id);
+ third.boat.phase='aboard';const trio=riverboatLoadSpeed(g,b.id);
+ assert.ok(trio>pair&&pair>solo);
+ assert.ok(trio-pair<pair-solo);
+ third.maturesAt=g.state.time+200;
+ assert.ok(riverboatLoadSpeed(g,b.id)<pair);
+ third.maturesAt=undefined;helm.carry=16;helm.carryType='stone';
+ assert.ok(riverboatLoadSpeed(g,b.id)<trio);
+});

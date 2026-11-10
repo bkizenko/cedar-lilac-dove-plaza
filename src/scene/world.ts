@@ -1636,8 +1636,9 @@ export class WorldView {
         const dx=Math.sin(u.facing),dz=Math.cos(u.facing),offset=kind==='canoe'?0:2.1,x=u.x-dx*offset,z=u.z-dz*offset;
         const pitch=-Math.atan2(game.travelHeight(x+dx*.8,z+dz*.8)-game.travelHeight(x-dx*.8,z-dz*.8),1.6);
         const roll=Math.atan2(game.travelHeight(x+dz*.5,z-dx*.5)-game.travelHeight(x-dz*.5,z+dx*.5),1);
-        const afloat=kind==='canoe'&&game.height(x,z)<game.world.waterY+.3;
-        _p.set(x,kind==='canoe'?(afloat?game.world.waterY-.12:u.y+1.8):game.travelHeight(x,z)+.04,z);
+        const water=kind==='canoe'?game.waterAt(x,z):0;
+        const afloat=kind==='canoe'&&game.height(x,z)<water+.3;
+        _p.set(x,kind==='canoe'?(afloat?water-.12:u.y+1.8):game.travelHeight(x,z)+.04,z);
         _haulEuler.set(kind==='canoe'?0:THREE.MathUtils.clamp(pitch,-.45,.45),u.facing,kind==='canoe'?0:THREE.MathUtils.clamp(roll,-.4,.4));
         // Subtle loaded-animal gait shares the existing instance; no extra meshes.
         if(kind==='pack'&&Math.hypot(u.vx,u.vz)>.1){
@@ -1734,7 +1735,7 @@ export class WorldView {
           !walking && (u.order === "gather" || u.order === "attack" || u.order === "build" || !!u.copperStudy&&!u.copperStudy.paused);
         const farming=!walking&&u.order==="gather"&&(!!u.plantingWork||u.node&&"type" in u.node&&u.node.type==="farm");
         const phase = u.stride;
-        const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.world.waterY+.3;
+        const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.waterAt(u.x,u.z)+.3;
         const bob = afloat ? Math.sin(game.state.time*2+u.id)*.025 : walking
           ? Math.abs(Math.sin(phase)) * 0.16
           : chopping

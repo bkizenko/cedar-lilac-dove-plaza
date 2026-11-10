@@ -474,6 +474,14 @@ export class Engine {
     }
   };
 
+  private residentMovePoint(cx:number,cy:number,ground:{x:number;z:number}) {
+    const people = this.game.selectedUnits();
+    if (!people.length || !people.every(u => u.haulage === 'canoe') ||
+      this.game.height(ground.x,ground.z) >= this.game.waterAt(ground.x,ground.z)) return ground;
+    const water = this.view.waterAt(cx,cy,this.game.world.waterY);
+    return water && this.game.height(water.x,water.z) < this.game.waterAt(water.x,water.z) ? water : ground;
+  }
+
   leftClick(cx: number, cy: number, additive: boolean) {
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
     const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
@@ -503,7 +511,8 @@ export class Engine {
       return;
     }
     if (this.moveMode) {
-      this.game.issueMove(g.x, g.z);
+      const target = boatOrder ? g : this.residentMovePoint(cx,cy,g);
+      this.game.issueMove(target.x,target.z);
       this.moveMode = false;
       return;
     }
@@ -517,7 +526,10 @@ export class Engine {
       const resource=animal?null:this.view.pickResource(cx,cy,this.game);
       if(animal)this.game.selectCritter(animal,additive);
       else if(resource){if(!additive)this.game.clearSelect();this.game.selectedResource=resource;}
-      else if(!additive&&(this.game.selectedUnits().length||this.game.selectedBoat!==null))this.game.issueMove(g.x,g.z);
+      else if(!additive&&(this.game.selectedUnits().length||this.game.selectedBoat!==null)){
+        const target = boatOrder ? g : this.residentMovePoint(cx,cy,g);
+        this.game.issueMove(target.x,target.z);
+      }
       else this.game.selectAt(g.x,g.z,additive);
     }
     this.pushHud();
@@ -538,7 +550,10 @@ export class Engine {
     else {
       const node = this.view.pickWildlife(cx,cy,this.game) || this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);
-      else this.game.issueMove(g.x, g.z);
+      else {
+        const target = this.residentMovePoint(cx,cy,g);
+        this.game.issueMove(target.x,target.z);
+      }
     }
   }
 

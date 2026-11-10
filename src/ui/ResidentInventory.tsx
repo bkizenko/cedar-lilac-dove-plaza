@@ -1,6 +1,8 @@
 import type { Unit } from '../game/types';
-import { personName } from '../game/people';
-import { ITEM_KINDS, ITEM_NAMES } from '../game/production';
+import { personName, predisposition } from '../game/people';
+import { ITEM_KINDS, ITEM_NAMES, PRODUCTION_RECIPES } from '../game/production';
+
+import { productionPracticeRate } from '../game/productionPractice';
 
 const amount = (value: number) => Number(value.toFixed(2));
 
@@ -8,6 +10,9 @@ export function ResidentInventory({ residents }: { residents: Unit[] }) {
   return <ul className="space-y-2 text-xs">
     {residents.map(resident => {
       const carried: string[] = [];
+      const traits = predisposition(resident);
+      const craftSeconds = resident.craftingXP ?? 0;
+      const skills = Object.entries(resident.productionSkills ?? {});
       if (resident.carry > 0 && resident.carryType) {
         carried.push(`${amount(resident.carry)} ${resident.carryFood ?? resident.carryType}`);
       }
@@ -39,6 +44,14 @@ export function ResidentInventory({ residents }: { residents: Unit[] }) {
         <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
         {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
         {resident.workReason && <div>{resident.workReason}</div>}
+        <details>
+          <summary>Aptitudes & practice</summary>
+          <div>Strength {Math.round(traits.strength * 100)}% · Speed {Math.round(traits.speed * 100)}% · Combat {Math.round(traits.fighting * 100)}% · Trade {Math.round(traits.trading * 100)}%</div>
+          <div>{amount(craftSeconds / 60)} min hands-on crafting · +{Math.round(Math.min(0.3, craftSeconds / 1200) * 100)}% work rate</div>
+          {skills.map(([method, skill]) => <div key={method}>
+            {PRODUCTION_RECIPES[method as keyof typeof PRODUCTION_RECIPES].name} · {skill.successfulBatches} made · {skill.taughtBatches} learned · +{Math.round((productionPracticeRate(resident, method) - 1) * 100)}% work rate
+          </div>)}
+        </details>
         {resident.stuckT > 3 && <div className="text-blood">Movement blocked for {Math.floor(resident.stuckT)} seconds</div>}
       </li>;
     })}

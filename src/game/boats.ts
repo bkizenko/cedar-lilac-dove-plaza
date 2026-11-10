@@ -4,13 +4,30 @@ import{workRuntime}from'./workRuntime';
 import{hasTaskCommitment}from'./workCommitments';
 import{boatExplorationAI,type BoatExploration}from'./boatExploration';
 import{vesselLoad}from'./carriedLoad';
+import{isDependent}from'./settlement';
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {HAULAGE,beginHaulageWork,resumeHaulageProject} from './haulage';
 import {waterNavigation} from './waterTravel';
 export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;hullClass?:NewBoatClass;exploration?:BoatExploration};
 export const BOAT_COST={wood:BOAT_CLASSES.riverboat.wood,stone:BOAT_CLASSES.riverboat.stone,seconds:BOAT_CLASSES.riverboat.seconds,seats:BOAT_CLASSES.riverboat.seats};
-export function riverboatLoadSpeed(g:Game,id:number){const b=g.state.boats?.find(b=>b.id===id&&b.hp>0);return b?vesselLoad(b,boatCrew(g,id).filter(u=>u.boat?.phase==='aboard')).pace*(b.hullClass?boatClass(b).speed*(BOAT_PRACTICE_RULES.minimumConditionSpeed+(1-BOAT_PRACTICE_RULES.minimumConditionSpeed)*Math.min(1,b.hp/boatClass(b).maxHp)):1):1;}
+// Gameplay tuning for more thrust with diminishing gains as resistance rises.
+export const ROWING_CREW_EXPONENT = 0.12;
+export function riverboatRowers(g: Game, crew: Unit[]) {
+ return crew.filter(u => u.boat?.phase === 'aboard' && !u.prisoner && !isDependent(g,u)).length;
+}
+export function riverboatLoadSpeed(g: Game, id: number) {
+ const boat = g.state.boats?.find(b => b.id === id && b.hp > 0);
+ if (!boat) return 1;
+ const crew = boatCrew(g,id).filter(u => u.boat?.phase === 'aboard');
+ const rowing = Math.pow(Math.max(1,riverboatRowers(g,crew)),ROWING_CREW_EXPONENT);
+ const hull = boatClass(boat);
+ const hullPace = boat.hullClass
+  ? hull.speed * (BOAT_PRACTICE_RULES.minimumConditionSpeed +
+    (1-BOAT_PRACTICE_RULES.minimumConditionSpeed)*Math.min(1,boat.hp/hull.maxHp))
+  : 1;
+ return vesselLoad(boat,crew).pace * rowing * hullPace;
+}
 const crewCache=new WeakMap<Game,{time:number;units:Unit[];count:number;boats:Map<number,Unit[]>}>();
 export function boatCrew(g:Game,id:number){
  let cache=crewCache.get(g);if(!cache||cache.time!==g.state.time||cache.units!==g.state.units||cache.count!==g.state.units.length){cache={time:g.state.time,units:g.state.units,count:g.state.units.length,boats:new Map()};crewCache.set(g,cache);}
