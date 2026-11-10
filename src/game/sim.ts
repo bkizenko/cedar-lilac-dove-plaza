@@ -1135,7 +1135,7 @@ export class Game {
       return "Too close to the shore";
     if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
     if(size||scalablePlot(type)){
-      const clearance = type === "farm" ? 0.25 : 1;
+      const clearance = type === "farm" || type === "warehouse" ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
@@ -1168,7 +1168,7 @@ export class Game {
     }
     for (const b of this.state.buildings) {
       // Physical footprints exist for every society, independently of player fog.
-      if (b.hp <= 0 || b.id===ignoreId) continue;
+      if (b.hp <= 0 || b.id===ignoreId || type === "warehouse") continue;
       const factor=b.expansion?.5:.42,apron=b.expansion?1:0;
       if (Math.abs(b.x - x) < ((b.expansion?.w??b.w) + d.w) * factor+apron && Math.abs(b.z - z) < ((b.expansion?.d??b.d) + d.d) * factor+apron) {
         return "Too close to another building";

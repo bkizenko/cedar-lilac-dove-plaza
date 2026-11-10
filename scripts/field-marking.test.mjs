@@ -23,3 +23,17 @@ test('rolling fields fit close beside other plots without flattening or overlap'
  assert.match(g.placementIssue('farm',30+d.w-.25,40),/another building/);
  assert.equal(g.placeBuilding('farm',30+d.w+.5,40),true);
 });
+
+test('a compact storehouse fits between dry plots without clipping them or planned expansions',()=>{
+ const g=fixture(),store=BUILDINGS.warehouse,field=BUILDINGS.farm;
+ const left=g.makeBld('farm',30-(field.w+store.w)/2-.5,40,0);
+ const right=g.makeBld('farm',30+(field.w+store.w)/2+.5,40,0);
+ g.state.buildings.push(left,right);
+ assert.equal(g.placementIssue('warehouse',30,40),null);
+ assert.match(g.placementIssue('warehouse',30.6,40),/another building/);
+ right.expansion={w:right.w+2,d:right.d};
+ assert.match(g.placementIssue('warehouse',30,40),/another building/);
+ delete right.expansion;
+ assert.equal(g.placeBuilding('warehouse',30,40),true);
+ assert.equal(g.state.buildings.at(-1).type,'warehouse');
+});
