@@ -98,7 +98,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,digStone} from "./mining";
-import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish} from "./fishing";
+import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
@@ -1697,7 +1697,7 @@ export class Game {
       return;
     }
     if (!additive) this.clearSelect();
-    const resource = this.exploredAt(x,z) ? this.resourceAt(x,z) : null;
+    const resource = this.exploredAt(x,z) ? this.resourceAt(x,z,true) : null;
     this.selectedResource = resource && "amount" in resource ? resource : null;
   }
 
@@ -2750,7 +2750,7 @@ export class Game {
     this.onSfx("move");
   }
 
-  resourceAt(x: number, z: number): ResourceNode | Building | null {
+  resourceAt(x: number, z: number, inspect = false): ResourceNode | Building | null {
     let best: ResourceNode | Building | null = null;
     let bd = 5.2;
     const consider = (n: ResourceNode | Building, nx: number, nz: number, reach: number) => {
@@ -2762,7 +2762,8 @@ export class Game {
       }
     };
     for (const n of this.state.forage) if (n.amount > 0) consider(n, n.x, n.z, 3.6);
-    for (const n of this.state.fish) if (n.amount > 0) consider(n, n.x, n.z, 3.4);
+    const inspectWater = inspect && this.height(x,z) < this.waterAt(x,z);
+    for (const n of this.state.fish) if (n.amount > 0 || inspectWater) consider(n, n.x, n.z, inspectWater ? 5.2 : 3.4);
     for (const n of this.state.trees) if (n.amount > 0) consider(n, n.x, n.z, 4.8);
     for (const n of this.state.stones) if (n.amount > 0) consider(n, n.x, n.z, 4.4);
     for (const n of this.state.copper) if (n.amount > 0) consider(n, n.x, n.z, 4);
@@ -4139,6 +4140,18 @@ export class Game {
           // a pending search is not an unreachable job or a stuck resident.
           if(!longJourney){if(this.navBudget<2)return false;this.navBudget-=2;}
           path=findPath(grid,WALK,index(u.x,u.z),end,96000);
+        }
+        // A direct ground move remains a valid order when the requested point
+        // is across a barrier. Complete it at the closest connected ground.
+        if (!path && u.team === 0 && u.order === "move" && u.stationOnArrival &&
+            u.haulage !== "canoe" && !u.boat && !u.recalled && !u.expedition && !u.scout) {
+          const fallback = this.workBoard.closestReachableCell(this,u.x,u.z,tx,tz);
+          if (fallback >= 0 && fallback !== end) {
+            if (this.navBudget < 1) return false;
+            this.navBudget--;
+            end = fallback;
+            path = findPath(grid,WALK,index(u.x,u.z),end,96000);
+          }
         }
         if (path) {
           points = path.map((n) => ({
@@ -5986,7 +5999,10 @@ export class Game {
                     ? "Allied"
                     : "Peaceful") +
             " · " +
-            (UNITS[enemy.type]?.name || enemy.type),
+            (UNITS[enemy.type]?.name || enemy.type) +
+            (enemy.team === 3 && enemy.seaRaid?.phase === 'retreat'
+              ? enemy.workReason?.startsWith('Stranded') ? ' · Stranded at the landing' : ' · Withdrawing'
+              : ''),
           hp: enemy.hp,
           maxHp: enemy.maxHp,
           kind: "unit",
@@ -5996,7 +6012,20 @@ export class Game {
       }
     }
 
-    if(!units.length&&!this.state.selBld&&this.selectedResource){const n=this.selectedResource;selection={name:n.cropCandidate?CROP_NAMES[n.cropCandidate]:n.kind==="tree"?"Tree":n.kind,info:`Selected · ${Math.ceil(n.amount)} remaining${n.cropCandidate?" · gather to bring samples home":""}`,hp:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource"};}
+    if(!units.length&&!this.state.selBld&&this.selectedResource){
+      const n=this.selectedResource;
+      const fish=n.kind==="fish";
+      const count=fish?Math.floor(n.amount):Math.ceil(n.amount);
+      const recovery=fish?fishRecoveryEstimateSeconds(this,n):0;
+      selection={
+        name:fish?"Fishing ground":n.cropCandidate?CROP_NAMES[n.cropCandidate]:n.kind==="tree"?"Tree":n.kind,
+        info:fish?(recovery?`Resting · about ${recovery} game seconds to the next fish at current conditions`:
+          "Select a resident and right-click the ground to fish from a reachable bank"):
+          `Selected · ${count} remaining${n.cropCandidate?" · gather to bring samples home":""}`,
+        hp:fish?count:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource",
+        ...(fish?{type:"fish"}:{})
+      };
+    }
     if(this.selectedCritter&&!units.length&&!this.state.selBld){const c=this.selectedCritter;if(!this.state.wildlife.includes(c)||!huntable(this,c,0)||(c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))this.selectedCritter=null;else selection={name:c.hp>0?`Wild ${c.species}`:`${c.species} carcass`,type:c.species,info:c.hp>0?"Living wild animal · select hunters, then right-click to hunt":"Finite carcass · butcher and carry raw meat, hides and bones home before cooking or preserving",hp:c.hp>0?c.hp:c.carcass?.meat||0,maxHp:c.hp>0?c.maxHp:32,kind:"resource"};}
     if(this.selectedBoat !== null) {
       const b=this.state.boats?.find(b=>b.id===this.selectedBoat&&b.team===0&&b.hp>0);

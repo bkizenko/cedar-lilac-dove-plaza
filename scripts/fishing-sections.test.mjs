@@ -30,3 +30,17 @@ test('fishing conserves the catch and brings eight fish home promptly when reser
  for(let i=0;i<8;i++)catchDockFish(g,u,left);
  assert.equal(u.carry,8);assert.equal(u.order,'return');assert.equal(u.carryFood,'fish');assert.equal(before-total(),8);assert.equal(g.tribe(0).food,0);
 });
+
+test('an exhausted explored fishing ground can be inspected without becoming a gather target',()=>{
+ const {g,left}=fixture();
+ const fish=fishingGrounds(g,left,true)[0];
+ fish.amount=0;fish.regenT=90;
+ g.state.fish=[fish];g.state.buildings=[];
+ assert.equal(g.resourceAt(fish.x,fish.z),null);
+ g.selectAt(fish.x,fish.z,false);
+ const info=g.snapshot().selection;
+ assert.equal(info.name,'Fishing ground');
+ assert.equal(info.hp,0);
+ assert.equal(info.maxHp,fish.maxAmt);
+ assert.match(info.info,/game seconds to the next fish/);
+});

@@ -226,6 +226,26 @@ export class WorkBoard {
   connected(g: Game, ax: number, az: number, bx: number, bz: number) {
     this.labelNavigation(g);const a=this.component(g,ax,az);return a!==0&&a===this.component(g,bx,bz);
   }
+  closestReachableCell(g: Game, ax: number, az: number, tx: number, tz: number) {
+    this.labelNavigation(g);
+    const component = this.component(g, ax, az);
+    if (!component) return -1;
+    const width = Math.sqrt(g.walk.length);
+    const cell = g.world.size / width;
+    const origin = -g.world.size / 2 + cell / 2;
+    let best = -1, distance = Infinity;
+    for (let i = 0; i < this.labels.length; i++) {
+      if (this.labels[i] !== component) continue;
+      const dx = origin + (i % width) * cell - tx;
+      const dz = origin + Math.floor(i / width) * cell - tz;
+      const candidate = dx * dx + dz * dz;
+      if (candidate >= distance) continue;
+      best = i;
+      distance = candidate;
+    }
+    return best;
+  }
+
   private taskComponent(g: Game, node: Node) {
     let value = this.nodeComponents.get(node);
     if (value === undefined) {

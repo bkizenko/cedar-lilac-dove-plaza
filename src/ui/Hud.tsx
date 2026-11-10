@@ -521,7 +521,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {sel.carry ? <div className="text-[11px] text-dawn mt-1">{sel.carry}</div> : null}
             {sel.kind !== "none" ? (
               <>
-                <div className="mt-1.5 text-[11px] text-parchment-dim">Condition {hpPct}%</div>
+                <div className="mt-1.5 text-[11px] text-parchment-dim">{sel.kind==="resource"&&sel.type==="fish"?`${sel.hp} / ${sel.maxHp} fish`:`Condition ${hpPct}%`}</div>
                 <div className="mt-1 h-1.5 rounded-full bg-ink overflow-hidden border border-parchment/10">
                   <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />
                 </div>

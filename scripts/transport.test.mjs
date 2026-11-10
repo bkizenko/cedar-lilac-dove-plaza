@@ -57,3 +57,31 @@ test('drawn bridge validation rejects obstructed, dry, steep, deep and overlong 
  g.state.buildings=[obstruction];assert.equal(planBridge(g,0,0),null);
  assert.equal(g.placeBuilding('bridge',0,0),false);
  });
+
+test('an unseen target across impassable water still takes a ground move to the reachable bank',()=>{
+ const {g,u}=fixture();
+ g.vision.fill(0);
+ u.selected=true;
+ g.issueMove(0,40);
+ assert.equal(u.order,'move');
+ assert.ok(!g.exploredAt(0,40));
+ drive(g,u,40,()=>g.workerAI(u,.1));
+ assert.equal(u.order,'hold');
+ assert.ok(u.z>-12&&u.z<0,JSON.stringify({z:u.z,reason:u.workReason}));
+ assert.ok(g.walkable(u.x,u.z));
+});
+
+test('Build now funds an existing bridge plan with a builder already at its bank',()=>{
+ const {g,u}=fixture();
+ Object.assign(g.tribe(0),{wood:0,stone:0});
+ assert.equal(g.placeBuilding('bridge',0,0),true);
+ const b=g.state.buildings.find(b=>b.type==='bridge');
+ assert.ok(b.plannedCost);
+ Object.assign(u,{x:b.bridge.ax,z:b.bridge.az,y:g.height(b.bridge.ax,b.bridge.az)});
+ Object.assign(g.tribe(0),{wood:100,stone:20});
+ assert.equal(g.orderConstruction(b),true);
+ drive(g,u,50,()=>g.workerAI(u,.1));
+ assert.equal(b.build,1);
+ assert.equal(g.tribe(0).wood,68);
+ assert.equal(g.tribe(0).stone,16);
+});

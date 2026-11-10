@@ -54,7 +54,7 @@ export function planStatus(g:Game,b:Building){
   if(g.state.weather==='storm')return 'Materials ready — waiting for the storm to pass';
   if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z,0,b))return 'Waiting for the foundation to become dry again';
   if((b.plannedCost.food||0)>0&&g.tribe(b.team).food-(b.plannedCost.food||0)<foodDemand(g,b.team)*90)return 'Materials ready — preserving the village meal reserve';
-  if(g.state.units.some(u=>u.hp>0&&Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r))return 'Materials ready — clear people from the planned footprint';
+  if(b.type!=='bridge'&&g.state.units.some(u=>u.hp>0&&Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r))return 'Materials ready — clear people from the planned footprint';
   return 'Materials ready — waiting for a reachable, available adult';
 }
 /** Pay once, only from actual stores. Unfunded drawings grant no building benefits. */
@@ -71,7 +71,7 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
     if(!cost||b.hp<=0||b.planPaused||!g.canAfford(b.team,cost))continue;
     if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z,0,b))continue;
     if((cost.food||0)>0&&g.tribe(b.team).food-(cost.food||0)<foodDemand(g,b.team)*90)continue;
-    if(g.state.units.some(u=>u.hp>0&&Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r))continue;
+    if(b.type!=='bridge'&&g.state.units.some(u=>u.hp>0&&Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r))continue;
     const available=g.state.units.some(u=>u.team===b.team&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&u.carry===0&&
       !u.envoy&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.visit&&!u.recalled&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&
       ['idle','gather','build'].includes(u.order)&&
@@ -109,7 +109,7 @@ export function assignPlacedConstruction(g: Game, b: Building) {
 export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
   if(b.team!==0||b.hp<=0||!hasConstructionWork(b))return false;
   if(b.renovation?.actorId!==undefined&&b.renovation.actorId!==null&&!workers.some(u=>u.id===b.renovation!.actorId)){g.banner('One builder owns this housing workspot. Queue the site or pause before assigning a replacement.',4);return false;}
-  const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency)
+  const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&(b.type!=='bridge'||!!bridgeApproach(g,u,b)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
     .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;}).slice(0,b.renovation?1:undefined);
   if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner('Select adult residents to build this project.',3);return false;}
@@ -132,7 +132,7 @@ export function directedConstruction(g:Game,u:Unit,dt:number){
   if(b.plannedCost){
     // Walk outside the footprint first, so funding cannot turn a drawing into
     // a solid obstacle around the very person ordered to build it.
-    if(Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r){
+    if(b.type!=='bridge'&&Math.abs(u.x-b.x)<b.w*.5+u.r&&Math.abs(u.z-b.z)<b.d*.5+u.r){
       const exits=Array.from({length:32},(_,i)=>{const a=i*Math.PI/16,sx=Math.sin(a),sz=Math.cos(a),r=Math.min((b.w*.5+u.r+1.2)/(Math.abs(sx)||1e-6),(b.d*.5+u.r+1.2)/(Math.abs(sz)||1e-6));return {x:b.x+sx*r,z:b.z+sz*r};})
         .filter(p=>g.walkable(p.x,p.z)&&g.workBoard.connected(g,u.x,u.z,p.x,p.z)&&g.canStep(u,p.x,p.z))
         .sort((a,c)=>Math.hypot(u.x-a.x,u.z-a.z)-Math.hypot(u.x-c.x,u.z-c.z));

@@ -277,12 +277,13 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
  if(raid.phase==='retreat'){
   const breach=u.target;
   if(breach?.kind==='building'&&breach.hp>0&&['gate','palisade','stonewall'].includes(breach.type)&&!(breach.type==='gate'&&breach.gateOpen)){u.order='attack';g.combatAI(u,dt);return true;}
-  u.order='move';u.target=null;u.tx=raid.x;u.tz=raid.z;u.workReason=u.carry?'Withdrawing to shore with stolen supplies':'Withdrawing from the raid';
+  u.order='move';u.target=null;u.tx=raid.x;u.tz=raid.z;
   if(Math.hypot(u.x-raid.x,u.z-raid.z)<5){
    u.order='hold';u.target=null;
    if(g.state.time>=raid.thinkAt){raid.thinkAt=g.state.time+SEA_RAIDER_RETURN_RULES.retrySeconds;beginSeaRaiderReturn(g,u);}
    return true;
   }
+  u.workReason=u.carry?'Withdrawing to shore with stolen supplies':'Withdrawing from the raid';
   // A newly closed perimeter can block withdrawal. Break an accessible barrier.
   if(u.stuckT>3){const wall=g.state.buildings.filter(b=>b.hp>0&&!b.plannedCost&&g.isFoe(u.team,b.team)&&['gate','palisade','stonewall'].includes(b.type)&&!(b.type==='gate'&&b.gateOpen)&&Math.hypot(b.x-u.x,b.z-u.z)<65).sort((a,b)=>a.hp-b.hp+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).find(b=>!!g.interactionSpot(u,b));if(wall){u.target=wall;u.order='attack';g.combatAI(u,dt);return true;}}
   g.steer(u,dt);return true;
