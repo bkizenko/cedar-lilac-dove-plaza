@@ -11,7 +11,8 @@ import {highWaterLevel} from './hydrology';
 export const MOUNTAIN_RULES={version:1,cellMetres:8,uplandMetres:9,minimumCells:6,summitReachMetres:8,prospectSpacingMetres:28,maximumProspects:12} as const;
 export type Massif={id:number;cells:number;areaSquareMetres:number;summit:{x:number;z:number;y:number};prominenceMetres:number;walkableFraction:number;/** Some walkable massif cell is connected on foot to home (false: another landmass). */connectedToHome:boolean;summitHikeable:boolean;approach:{x:number;z:number}|null;prospects:{x:number;z:number;y:number}[]};
 
-function walkLabels(g:Game){const W=Math.round(Math.sqrt(g.walk.length)),labels=new Int32Array(W*W).fill(-1);let next=0;const st:number[]=[];
+/** Walk-grid connected components (4-neighbour): landmasses reachable on foot. */
+export function walkLabels(g:Game){const W=Math.round(Math.sqrt(g.walk.length)),labels=new Int32Array(W*W).fill(-1);let next=0;const st:number[]=[];
  for(let s=0;s<W*W;s++){if(!g.walk[s]||labels[s]>=0)continue;labels[s]=next;st.push(s);while(st.length){const i=st.pop()!,x=i%W,z=(i/W)|0;for(const j of [x>0?i-1:-1,x<W-1?i+1:-1,z>0?i-W:-1,z<W-1?i+W:-1])if(j>=0&&g.walk[j]&&labels[j]<0){labels[j]=next;st.push(j);}}next++;}
  return{W,labels};}
 
