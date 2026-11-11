@@ -12,7 +12,7 @@ import {productionPracticeRate,observationRequired} from './productionPractice';
 import {penPastureReport} from './penPasture';
 import {PEN_RULES} from './penGeometry';
 import {POTTERY_RULES,waterVesselCapacity} from './pottery';
-import {PRODUCTION_RECIPES,productionSlots,itemCapacity} from './production';
+import {PRODUCTION_RECIPES,productionSlots,itemCapacity,floorCerealRecipes,grainBatchIssue} from './production';
 import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
 import type {HaulageProject} from './haulage';
@@ -142,8 +142,39 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
    if(herd.length){const pasture=penPastureReport(g,b),care=Math.max(0,.8-(b.pasture?.care||0)+H*PEN_RULES.careDecayPerAnimalSecond*herd.length)/r.careGainPerWorkSecond,grass=pasture.winter?0:pasture.biomassFood+pasture.regrowthPerSecond*H,feed=Math.max(0,pasture.demandPerSecond*H-grass-(b.pasture?.feed||0)),person=keepers[0]??ratePeople[0],load=Math.min(carry('food',person),Math.max(8,Math.ceil(pasture.demandPerSecond*90))),haul=Math.ceil(feed/Math.max(1,load))*trip(b.x,b.z,person)*2,water=penWaterReport(g,b),waterNeed=water.enabled?Math.max(0,water.demand*H-water.liters-water.inTransit):0,waterHaul=Math.ceil(waterNeed/PEN_WATER_RULES.loadLiters)*trip(b.x,b.z,person)*2;
     add({id:`herd:${b.id}`,label:keepers.length?'Assigned herd keepers':'Maintain herd care, feed and drinking water',category:'Husbandry',personSeconds:keepers.length?H*keepers.length:care+haul+waterHaul,status:keepers.length?'active':'queued',actorIds:keepers.map(u=>u.id),priority:700,blocker:!keepers.length?`Keeper not assigned · ${pasture.keepersNeeded} keeper slots for this herd${feed>0?` · ${Math.ceil(feed)} plant feed needs hauling`:''}${waterNeed>0?` · ${waterNeed.toFixed(1)} L drinking water needs hauling`:''}`:null,units:feed});}}
  }
- const sheaves=(g.tribe(team).items?.grainSheaves||0)+eligible.reduce((n,u)=>n+(u.itemCargo?.grainSheaves||0),0),rough=(g.tribe(team).items?.roughGrain||0)+[...new Map((g.state.production?.projects||[]).map(p=>[p.id,p])).values()].filter(p=>p.team===team&&p.recipe.startsWith('threshCereal')&&!['complete','lost','paused','stored'].includes(p.phase)).reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].outputs.roughGrain||0),0);if(sheaves||rough){const floor=g.state.buildings.some(b=>b.team===team&&b.type==='threshingFloor'&&g.finished(b)),hearth=g.state.buildings.some(b=>b.team===team&&b.type==='hearth'&&g.finished(b)),work=sheaves/CEREAL_RULES.rawBatch*((floor?CEREAL_RULES.floorThreshSeconds:CEREAL_RULES.handThreshSeconds)+(floor?CEREAL_RULES.floorWinnowSeconds:CEREAL_RULES.handWinnowSeconds))+rough/CEREAL_RULES.roughBatch*(floor?CEREAL_RULES.floorWinnowSeconds:CEREAL_RULES.handWinnowSeconds);add({id:`cereal-backlog:${team}`,label:'Thresh and winnow the delivered/carried cereal backlog',category:'Farming',personSeconds:work,status:floor||hearth?'queued':'blocked',actorIds:[],priority:900,blocker:floor||hearth?null:'A real hearth or threshing floor is required',units:sheaves+rough});}
- const pausedCereal=[...new Map((g.state.production?.projects||[]).map(p=>[p.id,p])).values()].filter(p=>p.team===team&&p.recipe.startsWith('threshCereal')&&['paused','stored'].includes(p.phase));for(const p of pausedCereal){const work=PRODUCTION_RECIPES[p.recipe].outputs.roughGrain!/CEREAL_RULES.roughBatch*(p.recipe.startsWith('threshCerealFloor')?CEREAL_RULES.floorWinnowSeconds:CEREAL_RULES.handWinnowSeconds);add({id:`cereal-paused-future:${p.id}`,label:'Winnow the paused batch after threshing resumes',category:'Farming',personSeconds:work,status:'paused',actorIds:[],priority:900,blocker:'The paid upstream threshing batch is paused'},true);}
+ const cerealProjects=[...new Map((g.state.production?.projects||[]).map(p=>[p.id,p])).values()]
+  .filter(p=>p.team===team&&p.recipe.startsWith('threshCereal')&&p.phase!=='complete'&&p.phase!=='lost');
+ const sheaves=(g.tribe(team).items?.grainSheaves||0)+eligible.reduce((n,u)=>n+(u.itemCargo?.grainSheaves||0),0);
+ const rough=(g.tribe(team).items?.roughGrain||0)+cerealProjects
+  .filter(p=>p.phase!=='paused'&&p.phase!=='stored')
+  .reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].outputs.roughGrain||0),0);
+ const floors=g.state.buildings.filter(b=>b.team===team&&b.type==='threshingFloor'&&g.finished(b));
+ const hearth=g.state.buildings.some(b=>b.team===team&&b.type==='hearth'&&g.finished(b));
+ const batchWork=(stage:'thresh'|'winnow',amount:number,useFloor:boolean)=>{
+  const winnow=stage==='winnow',input=winnow?'roughGrain':'grainSheaves';
+  const hand=PRODUCTION_RECIPES[winnow?'winnowCerealHand':'threshCerealHand'];
+  if(!useFloor)return amount/hand.inputs[input]!*hand.workSeconds;
+  const [bulk,double,standard]=floorCerealRecipes[stage];
+  let work=0;
+  for(const key of [bulk,double]){
+   const recipe=PRODUCTION_RECIPES[key],size=recipe.inputs[input]!;
+   if(amount<size||!floors.some(b=>!grainBatchIssue(g,team,key,b)))continue;
+   const batches=Math.floor(amount/size);
+   work+=batches*recipe.workSeconds;
+   amount-=batches*size;
+  }
+  const base=PRODUCTION_RECIPES[standard];
+  return work+amount/base.inputs[input]!*base.workSeconds;
+ };
+ if(sheaves||rough){
+  const useFloor=floors.length>0;
+  const work=batchWork('thresh',sheaves,useFloor)+batchWork('winnow',rough+sheaves*CEREAL_RULES.roughBatch/CEREAL_RULES.rawBatch,useFloor);
+  add({id:`cereal-backlog:${team}`,label:'Thresh and winnow the delivered/carried cereal backlog',category:'Farming',personSeconds:work,status:useFloor||hearth?'queued':'blocked',actorIds:[],priority:900,blocker:useFloor||hearth?null:'A real hearth or threshing floor is required',units:sheaves+rough});
+ }
+ for(const p of cerealProjects.filter(p=>p.phase==='paused'||p.phase==='stored')){
+  const work=batchWork('winnow',PRODUCTION_RECIPES[p.recipe].outputs.roughGrain!,p.recipe.startsWith('threshCerealFloor'));
+  add({id:`cereal-paused-future:${p.id}`,label:'Winnow the paused batch after threshing resumes',category:'Farming',personSeconds:work,status:'paused',actorIds:[],priority:900,blocker:'The paid upstream threshing batch is paused'},true);
+ }
  const craft=(id:string,label:string,u:Unit|undefined,job:{progress:number;duration:number;workplace:number;paused?:boolean},blocker?:string,strengthWork=true)=>{
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b);
   const row:WorkloadTask={id,label,category:'Crafting',personSeconds:Math.max(0,job.duration-job.progress)/effort+(u&&b?travel(u,b.x,b.z):0),status:job.paused?'paused':!b?'blocked':u&&!outsideRole(g,u)&&!claimed.has(u.id)?'active':'queued',actorIds:u?[u.id]:[],priority:450,blocker:job.paused?blocker||'Paid project paused':!b?'Compatible workplace missing':blocker||null};add(row);

@@ -203,8 +203,12 @@ export function productionAI(g:Game,u:Unit,dt:number){const p=g.state.production
  const spot=g.interactionSpot(u,b!);if(!spot){p.blockedReason='No reachable workplace entrance';u.workReason=p.blockedReason;return true;}p.blockedReason='';u.tx=spot.x;u.tz=spot.z;if(!g.buildingWorkReached(u,b!)){u.workReason=p.phase==='carrying'?'Carrying batch inputs to '+BUILDINGS[r.workplace].name.toLowerCase():'Returning to the paid batch';g.steer(u,dt);return true;}if(p.phase==='ready'){p.phase='returning';p.resumePhase='returning';p.blockedReason='';claimProductionOwnership(g,p);g.invalidateRoute(u);return true;}p.phase='working';p.resumePhase='working';const cerealWeather=cerealWeatherIssue(g,p.recipe);if(cerealWeather){p.blockedReason=cerealWeather;u.workReason=cerealWeather;return true;}u.workReason=r.name+' · '+Math.floor(p.progress/r.workSeconds*100)+'%';const before=p.progress;p.progress=Math.min(r.workSeconds,p.progress+craftingEffort(u,dt,b!)*productionPracticeRate(u,p.recipe));recordProductionPracticeWork(p,u,p.progress-before);if(p.progress>=r.workSeconds){if(p.team===0&&p.recipe.startsWith('threshCerealFloor')){finish(g,p,u,b);return true;}if(dryingRecipe(r)){p.phase='curing';p.resumePhase='curing';p.actorId=null;releaseMaker(g,u,'Rack loaded — weather exposure continues without occupying this adult');}else{p.phase='returning';p.resumePhase='returning';if(r.preservation)p.outputReadyAt=g.state.time;}p.blockedReason='';claimProductionOwnership(g,p);g.invalidateRoute(u);}return true;}
 /** A live kill grants finite material potential once. Legacy dead carcasses are never backfilled. */
 export function harvestAnimalMaterials(g:Game,u:Unit,c:{hides?:number;bones?:number},room:number){if(!animalProcessingEnabled(g,u.team)||room<=0)return;u.itemCargo??={};for(const[k,field]of [['rawHide','hides'],['bone','bones']] as const){const n=Math.min(room,Math.max(0,c[field]||0));if(n){add(u.itemCargo,k,n);c[field]=(c[field]||0)-n;room-=n;}}}
+export const floorCerealRecipes = {
+ thresh:['threshCerealFloorBulk','threshCerealFloorDouble','threshCerealFloor'],
+ winnow:['winnowCerealFloorBulk','winnowCerealFloorDouble','winnowCerealFloor'],
+} as const;
 export function startFloorCereal(g:Game,floor:Building,u:Unit,winnow:boolean,deliveredHere=false){
- const candidates:ProductionRecipe[]=winnow?['winnowCerealFloorBulk','winnowCerealFloorDouble','winnowCerealFloor']:['threshCerealFloorBulk','threshCerealFloorDouble','threshCerealFloor'];
+ const candidates=winnow?floorCerealRecipes.winnow:floorCerealRecipes.thresh;
  for(const recipe of candidates){
   if(!productionIssue(g,recipe,floor.id,u.id,deliveredHere))return beginProduction(g,recipe,floor.id,u.id,deliveredHere);
  }

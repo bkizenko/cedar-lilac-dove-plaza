@@ -516,3 +516,18 @@ test('four-load grain processing needs expanded sites and delivered practice, th
  assert.ok(Math.abs(g.state.cerealProcessing.seedsAllocated-g.state.cerealProcessing.cleanedGrain*CEREAL_RULES.seedFraction)<1e-8);
  assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
+
+test('grain workload uses unlocked batch sizes and prices the remainder at the standard rate',()=>{
+ const {g,u}=fixture(),tribe=g.tribe(0),floor=g.makeBld('threshingFloor',14,42,0);
+ g.state.buildings.push(floor);
+ ground(g);
+ tribe.items={grainSheaves:40};
+ const work=()=>measureVillageWorkload(g).tasks.find(task=>task.id==='cereal-backlog:0').personSeconds;
+ assert.equal(work(),100);
+ const practice={batches:3,failedBatches:0,usefulOutputs:24,firstAt:g.state.time,lastAt:g.state.time,makers:[u.id]};
+ tribe.productionPractice={threshCerealFloor:practice,winnowCerealFloor:practice,threshCerealFloorDouble:practice,winnowCerealFloorDouble:practice};
+ assert.equal(work(),80);
+ floor.w*=2;
+ assert.equal(work(),60);
+ assert.equal(tribe.items.grainSheaves,40);
+});
