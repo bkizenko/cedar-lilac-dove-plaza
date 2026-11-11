@@ -146,3 +146,10 @@ test('old saves without trade needs load; dangling or malformed state is rejecte
  proposeTradeOffer(g,1,2,'stone','wood');const ok=JSON.parse(JSON.stringify(encodeGame(g)));assert.doesNotThrow(()=>decodeGame(ok));ok.state.tradeNeeds.offers[0].phase='teleporting';assert.throws(()=>decodeGame(ok));
  const d=tradeNeedsDiagnostics(g);assert.equal(d.open,1);assert.ok(d.teams.find(t=>t.team===1).categories.resource>=2);
 });
+
+test('end to end through Game.step: two societies with complementary needs trade on their own review cycle, NPC to NPC, with conservation and receipts',()=>{
+ const g=fixture({stock1:{stone:240,wood:0,items:{cordage:0,basket:0}},stock2:{wood:340,stone:0,items:{cordage:0,basket:0}}});const before=snapshot(g);
+ const end=g.state.time+3000;let done=0;while(g.state.time<end&&done<1){g.state.paused=false;g.step(.2);done=g.state.tradeNeeds?.offers.filter(o=>o.phase==='complete').length||0;}
+ assert.deepEqual(g.simulationErrors,[]);assert.ok(done>=1,JSON.stringify(g.state.tradeNeeds?.teams));
+ const d=tradeNeedsDiagnostics(g);assert.ok(d.teams.some(t=>t.completed>=1));assert.deepEqual(snapshot(g),before);assert.ok(g.state.tradeNeeds.receipts.some(r=>r.stage==='delivered'));
+});

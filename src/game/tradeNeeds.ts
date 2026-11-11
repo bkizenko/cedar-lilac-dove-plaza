@@ -126,11 +126,14 @@ export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get
  s.offers.push(o);const r=row(g,from);r.proposed++;for(const k of [give,get]){r.mix[k]=(r.mix[k]||0)+1;const c=TRADE_GOODS[k].cat;r.categories[c]=(r.categories[c]||0)+1;}
  return{ok:true,offer:o};}
 
+/** What this partner's refusals taught: it did not need the offered good, or could not spare the requested one. */
+function learnedBlock(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return !!g.state.tradeNeeds?.cooldowns.some(c=>c.team===from&&c.partner===to&&c.until>g.state.time&&(c.reason==='no-need'&&c.give===give||c.reason==='no-surplus'&&c.get===get));}
 /** Ranks an NPC's needs against its surplus; recently proposed kinds are penalized so offers stay varied. */
 export function chooseTradeOffer(g:Game,team:number,partner:number){
  const mix=row(g,team).mix,wants=TRADE_KINDS.filter(k=>tradeNeed(g,team,k)>0),gives=TRADE_KINDS.filter(k=>tradeSurplus(g,team,k)>=TRADE_GOODS[k].lot);
  const out:{give:GoodKind;get:GoodKind;score:number}[]=[];
  for(const get of wants)for(const give of gives){if(give===get||cooling(g,team,partner,give,get))continue;
+  if(learnedBlock(g,team,partner,give,get))continue;
   if(TRADE_GOODS[give].cat==='resource'&&TRADE_GOODS[get].cat==='resource'){const advice=tradeIntelAdvice(g,team,partner,give as ResKind,get as ResKind);if(advice.status==='discouraged')continue;}
   const shortage=tradeNeed(g,team,get)/Math.max(1,tradeReserve(g,team,get)),glut=tradeSurplus(g,team,give)/Math.max(1,tradeReserve(g,team,give)+1);
   out.push({give,get,score:shortage*2+Math.min(2,glut)-.35*((mix[give]||0)+(mix[get]||0))-(declineRow(g,team,partner,give,get)?.declines||0)*.4});}
