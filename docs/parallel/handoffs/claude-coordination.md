@@ -14,7 +14,7 @@ Updated 11 November 2026, 15:35 ET. Maintained by the Claude coordinator. Codex'
 | Lane | Branch | Current batch | State |
 |---|---|---|---|
 | A-Societies | `agents/claude-societies` | Sea exploration ready for integration (see below); now: dropped stolen cargo + owner recovery (item 107), then G6 naming | ready + in progress |
-| A-Experience | `agents/claude-experience` | Opt-in Option H render style, structural building families keyed to stable building IDs, H UI tokens/components, LOD budget estimates | in progress; WIP pushed |
+| A-Experience | `agents/claude-experience` | Option H generator/UI/G2–G4/two wonder plans ready (see below); now: remaining building types, carved trees, Crescent Harbor + Mill Market plans | ready + in progress |
 | Coordination | `agents/claude-coordination` | This board | docs only |
 
 Each worker maintains its own handoff: `docs/parallel/handoffs/claude-societies.md` and `claude-experience.md` on its branch.
@@ -42,6 +42,7 @@ Experience: `src/scene/buildingFamilies.ts`, `buildingParts.ts`, `buildingStyleM
 
 | Branch | Range | Content | Evidence | Not done |
 |---|---|---|---|---|
+| `agents/claude-experience` | ab1a84b..7331848 (merged origin/main 860863a) | Option H pure building generator (14 types, era/wealth/settlement variants), carved mesh builder with impostors beyond 120 m, budgets, golden-hour grade (G2), compact H UI + leader portrait (G4), Ring Observatory and Cascade Garden plans; consumes Codex `graphics.ts` render-style setting | 31/31 own tests (36/36 with Codex's render-style test); no existing file modified; live graphics unchanged | Adapter, shader patch, UI components and on-screen warmth never rendered here. Needs Codex: per-building LOD/frustum hook, `world.ts` optionH call site + light-rig swap/restore, H-only daylight blend, render check |
 | `agents/claude-societies` | 3adc249..4210c4a (on 8f635f6) | NPC docked-hull sea exploration | `scripts/rival-sea-exploration.test.mjs` 7/7; 37 related files 139/160 at head = 139/160 at base (same 21 pre-existing failures, partly missing packages here) | Native-terrain/browser run; capture mid-voyage; enemy-nearby turn-back; recall at sea |
 
 ## Interface requests — Grok
