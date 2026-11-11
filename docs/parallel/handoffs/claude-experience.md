@@ -5,7 +5,8 @@
   - `src/scene/carvedPalette.ts`, `carvedTerrace.ts`, `buildingParts.ts`, `buildingFamilies.ts`, `buildingStyleMap.ts`, `carvedMesh.ts`, `carvedBudget.ts`, `renderStyle.ts` (pure, tested)
   - `src/scene/carvedBuildingLayer.ts` (three.js adapter, **unexecuted**)
   - `src/ui/h/theme.css`, `compactModel.ts`, `CompactParts.tsx`, `portraitModel.ts`, `LeaderPortrait.tsx`
-  - `scripts/carved-buildings.test.mjs`, `scripts/render-style.test.mjs`, `scripts/h-compact-ui.test.mjs`
+  - `src/scene/wonderPlans.ts` (pure, tested)
+  - `scripts/carved-buildings.test.mjs`, `scripts/render-style.test.mjs`, `scripts/h-compact-ui.test.mjs`, `scripts/wonder-plans.test.mjs`
 - **Base main / branch / commit:** base `8f635f6` (origin/main, unchanged at last fetch) / `agents/claude-experience` / head: see `git log` (commits listed in the final section).
 
 ## Item status (backlog IDs)
@@ -19,7 +20,7 @@
 | Leader encounter portrait presentation | G4 | source pushed (Societies wires content) |
 | Compact H UI tokens/components | astra_tasks `21` (HUD and teaching pass) | source pushed |
 | Far impostor cards + single shared vertex-colour material | coordination board perf item | source pushed (adapter unexecuted) |
-| Seeded wonder plan generator | qa_additions `QA-050` | see final section |
+| Seeded wonder plans: Ring Observatory, Cascade Garden (`src/scene/wonderPlans.ts`) | qa_additions `QA-050` | source pushed |
 
 ## Before → after
 
@@ -42,10 +43,12 @@ Review fixes to the crashed WIP: 4-sided cone caps were inset by 1/√2 (tower/g
 ## Checks (executed here)
 
 ```
-node --import ./scripts/game-loader.mjs --test scripts/carved-buildings.test.mjs   # 19/19 pass (incl. G2/G3)
+node --import ./scripts/game-loader.mjs --test scripts/carved-buildings.test.mjs   # 18/18 pass (incl. G2/G3)
 node --import ./scripts/game-loader.mjs --test scripts/render-style.test.mjs       # 1/1 pass
 node --import ./scripts/game-loader.mjs --test scripts/h-compact-ui.test.mjs       # 5/5 pass (incl. G4)
+node --import ./scripts/game-loader.mjs --test scripts/wonder-plans.test.mjs       # 7/7 pass
 ```
+Total: **31/31** pass (18 + 1 + 5 + 7).
 Type check: repo `tsc --noEmit` cannot run here (tsc 7 rejects `baseUrl`; no node_modules). A scratch strict tsconfig over every new file reports **0 errors** in pure TS/TSX; the only errors are missing `three` type members from an `any` stub (expected without node_modules). New files introduce no errors in existing files.
 
 ## Evidence limits — read this
@@ -74,6 +77,10 @@ Triangles per building, avg / max, at near (<30 m) / mid (30–70 m) / far (70�
 | hearth | 185 / 158 / 118 | 232 / 184 / 144 |
 
 Village estimates (`estimateVillage`): 60 buildings spread 10–190 m → ~6.2k tris, 37 draw calls (+36 shadow), ~0.9 MB resident geometry; 60 buildings all near → ~20k tris, 29 draws, ~1.5 MB; 150 buildings → ~9.2k tris, 47 draws, ~1.1 MB. Memory: 48 B/vertex non-indexed (pos, normal, colour, uv, grain); one 256² grain texture (256 KB + mips); one shared material, so one shader program. Draw calls scale with distinct (variant × LOD) buckets (cap 192), not building count — well inside an 8 GB shared-memory budget; the likely limit is draw submission and shadows, so mid/far buckets do not cast shadows. If draws are the bottleneck, next step is merging static same-LOD buildings per terrain chunk (BatchedMesh) — needs Codex's chunk/culling seam.
+
+## Wonder plans (QA-050, first two of six approved families)
+
+`generateWonderPlan(family, worldSeed, siteId, footprint)` → parts (same carved pipeline/palette), functional spaces with purposes and areas, circulation (entrances, paths, stairs with rise/tread), and five construction stages with physical volumes (m³ stone/timber/cloth/planting; no prices — Codex). Versioned (`WONDER_GENERATOR_VERSION=1`) for save reproduction. Ring Observatory: interrupted ring of 16–24 segments, arched openings with piers, entry stair, sight slot proven unobstructed from the court, gnomon and sighting frames. Cascade Garden: 2–4 terraces with real retaining walls, a water spine whose cascades equal the wall heights, stair flights to every terrace (rise ≤ 0.2 m, tread ≥ 0.28 m) in lanes kept clear of beds/trees/channels, top pergola. Based on the approved sheet and the GLB blockout descriptions; site slope/water source must come from Grok before placement. Crescent Harbor, Canyon Cistern, Assembly Court and Mill Market are not yet generated.
 
 ## Remaining / next
 
