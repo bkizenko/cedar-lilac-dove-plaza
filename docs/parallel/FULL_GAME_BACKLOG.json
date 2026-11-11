@@ -8638,8 +8638,10 @@
       "source": "docs/parallel/chat-context/scenic-map-and-full-game.md",
       "messageTimestamp": "2026-11-10T23:47",
       "requirement": "Investigate reported unrequested auto-exploration; attribute fog changes to actual observers or valid received reports before deciding whether behavior is a bug.",
-      "state": "reported-needs-reproduction",
-      "gateCreditDelta": 0
+      "state": "live-partial",
+      "gateCreditDelta": 0,
+      "evidence": "docs/metrics/test-lab-observed-fog-release-2026-11-11.json",
+      "remaining": "TestLab overlay/save fix live39115987 with35/35; exact observer-radius attribution and other unrequested exploration causes remain open, zero gate credit"
     },
     {
       "proposedID": "CHAT-G13-BOAT-DIMENSIONS",
@@ -8738,11 +8740,12 @@
     {
       "id": "CLAUDE-NPC-SEA",
       "owner": "Claude Societies",
-      "state": "integration-testing",
-      "sourceCommit": "4210c4ae86f98e0a5ee0da7f435993dc66e99f14",
-      "liveCommit": null,
-      "evidence": "14 corrected sea/witness/reservation cases passed; native now admits/boards/sails but outbound fixture save revealed invalid NPC camp entry; fixture repair/native rerun pending; not live",
-      "scope": "Physical docked-hull NPC exploration; capture/recall/loss and native publication still pending"
+      "state": "live",
+      "sourceCommit": "01e6f66d671c9ff1c406c6b935d7bf8fe1f8dcd4",
+      "liveCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
+      "evidence": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
+      "scope": "Physical paid docked-hull NPC exploration, finite provisions, actual return/cache report, owner recall/capture/interruption fixture coverage and built shared-hull crew representation; organic multi-AI,latest-map and physical hull-loss rescue remain open",
+      "integrationCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e"
     },
     {
       "id": "CLAUDE-H-SPECS",
@@ -8758,9 +8761,9 @@
       "owner": "Codex",
       "state": "live",
       "sourceCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
-      "liveCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
-      "evidence": "docs/metrics/dairy-water-release-2026-11-11.json",
-      "scope": "Finite paid milk fermentation in an actual held pottery vessel, passive aging, physical pickup/delivery and same-vessel return; cheese, broad dairy demand and spoiled-vessel recovery remain open"
+      "liveCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
+      "evidence": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
+      "scope": "Finite paid milk fermentation and same-vessel physical return; dirty/spoiled/discarded vessel now supports paid real-water cleaning, interrupted pickup and vessel-only return with origin retained; cheese/curd and broad demand remain open"
     },
     {
       "id": "CODEX-PLATFORM-CONTRACTS",
@@ -8774,13 +8777,13 @@
     {
       "id": "CLAUDE-STOLEN-CARGO",
       "owner": "Claude Societies",
-      "state": "source-pushed-review",
+      "state": "source-review-blocked",
       "catalogueIds": [
         107
       ],
       "sourceCommit": "7bfc943",
       "liveCommit": null,
-      "evidence": "Claude handoff9/9 controlled fixture; Codex native/integration checks pending; Codex source review found commitment/preemption and max64 parcel/ownership edge cases; fixes required before qualification",
+      "evidence": "docs/parallel/reviews/trade-cargo-5d9051c.json; original cap/ownership/preemption/physical-pickup defects unchanged",
       "scope": "Finite dropped carried-resource parcels and bounded pursuit/recovery; task-commitment seam, deep-water cargo and items/animals remain"
     },
     {
@@ -8800,9 +8803,45 @@
       "owner": "Codex Platform",
       "state": "live",
       "sourceCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
-      "liveCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
-      "evidence": "docs/metrics/dairy-water-release-2026-11-11.json",
-      "scope": "Bounded exact-coordinate water memo; identical paired state/RNG and modest single-pair CPU reduction; no target-FPS or full-stutter claim"
+      "liveCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
+      "evidence": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
+      "scope": "Bounded exact-coordinate memo plus allocation-free owned-index value lookup; exact state/RNG parity and one noise-scale1.98% CPU pair; no robust speedup/FPS/full-stutter claim"
+    },
+    {
+      "id": "CLAUDE-TRADE-NEEDS",
+      "owner": "Claude Societies",
+      "state": "source-review-blocked",
+      "sourceCommit": "5d9051c",
+      "liveCommit": null,
+      "evidence": "docs/parallel/reviews/trade-cargo-5d9051c.json",
+      "scope": "Actual armor/tool/animal holders, interruption, physical cache loading and strict escrow save checks need repair; player proposals and diverse boat journeys still pending"
+    },
+    {
+      "id": "CODEX-WATER-CLOCK-EXPERIMENT",
+      "owner": "Codex Platform",
+      "state": "rejected-performance",
+      "sourceCommit": null,
+      "liveCommit": null,
+      "evidence": ".play/exact-water-clock-benchmark.json;19/19 correctness/typecheck but4.48% slower in one pair",
+      "scope": "Experiment rejected; current published memo preserved; not a shipped feature"
+    },
+    {
+      "id": "CODEX-G10-OBSERVED-FOG",
+      "owner": "Codex Platform + Grok runtime seam",
+      "state": "live",
+      "sourceCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+      "liveCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+      "evidence": "docs/metrics/test-lab-observed-fog-release-2026-11-11.json",
+      "scope": "Reversible actual TestLab reveal, observed fog/age snapshots and paused resume;34regressions+1builtpublicUI=35/35, Node24 typecheck/build and both live ports verified; correct provenance tracer remains open"
+    },
+    {
+      "id": "CODEX-CULTURED-CURD",
+      "owner": "Codex Economy",
+      "state": "candidate-tested-partial",
+      "sourceCommit": null,
+      "liveCommit": null,
+      "evidence": ".play/cultured-curd-focused.log; coordinator-confirmed7/7+typecheck",
+      "scope": "Focused7/7 and typecheck passed; broad regression/build/UI/publication remain pending; not part of live138batch or gate credit"
     }
   ],
   "status_update_policy": {
@@ -8818,11 +8857,19 @@
     ],
     "completeRule": "Only the specifically proven slice is complete; parent remains partial until its full acceptance is demonstrated. Record source,merge,live commits and evidence separately. Never add98gatecreditfromsource/componentchecks.",
     "originalSourceMarkers": "Preserved as historical reference; current_delivery is the authoritative scoped overlay.",
-    "latestReconciledAtUtc": "2026-11-11T21:20:04.471387+00:00",
+    "latestReconciledAtUtc": "2026-11-11T22:26:47.741779+00:00",
     "externalRefsReviewed": {
-      "societies": "8d3325ec8cdeca09da84007fb3bcabbcc3c7dea0",
+      "societies": "5d9051c",
       "experience": "bb26421414a9b50fdf06a6f4cd4636b324173b43",
-      "coordination": "ee46b0c730a3924b32e4132431bdd8657e5b6e69"
+      "coordination": "ee46b0c730a3924b32e4132431bdd8657e5b6e69",
+      "grokWorld": "b3174e2"
+    },
+    "latestPublishedCode": "39115987e6c6488462be93d8226fb629aefbc96e",
+    "latestPublishedBatch": {
+      "passed": 35,
+      "total": 35,
+      "evidence": "docs/metrics/test-lab-observed-fog-release-2026-11-11.json",
+      "newGateCredit": 0
     }
   }
 }

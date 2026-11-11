@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-11-11T22:23:29.215679+00:00",
+  "codeCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
+  "release": "2026-11-11T22-04-13-358Z-f09578d",
+  "previousRelease": "2026-11-11T21-18-48-816Z-db3dfba",
+  "health": {
+    "8086": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T22-04-13-358Z-f09578d"
+    },
+    "8101": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T22-04-13-358Z-f09578d"
+    }
+  },
+  "batch": {
+    "passed": 138,
+    "total": 138,
+    "percent": 100,
+    "composition": {
+      "regressionAndNative": {
+        "passed": 131,
+        "total": 131,
+        "durationMs": 228210.350625
+      },
+      "workerActivityAndPickupLabels": {
+        "passed": 4,
+        "total": 4,
+        "durationMs": 824.157542
+      },
+      "builtDesktopBrowser": {
+        "passed": 3,
+        "total": 3,
+        "cases": [
+          "existing dairy lifecycle",
+          "dirty vessel recovery controls and physical return",
+          "actual native NPC hull and aboard crew representation/motion"
+        ]
+      }
+    }
+  },
+  "checks": {
+    "typecheck": "PASS Node24; .play/fronts-final-typecheck.log",
+    "build": "PASS Node24; final frozen reviewed artifact published without rebuilding; .play/fronts-final-build.log",
+    "nativeSea": {
+      "hallCost": {
+        "food": 0,
+        "wood": 20,
+        "stone": 0,
+        "copper": 0,
+        "iron": 0
+      },
+      "scope": "authored finite team1 society on unchanged seed1/V14 native coast;ordinaryGame.step;not organic multi-AI/browser/latest-map acceptance",
+      "limits": {
+        "simulationSeconds": 500,
+        "wallMilliseconds": 30000
+      },
+      "terrainSha256": "66c15128ec1c755270bc358c023179cec3d725ab5ba4c29db58eda762fa622b3",
+      "simulationSeconds": 77.89999999999985,
+      "wallMilliseconds": 3018.585459,
+      "phases": [
+        "mustering",
+        "outbound",
+        "returning",
+        "landing",
+        "unloading",
+        "complete"
+      ],
+      "hullId": 4961,
+      "crew": 3,
+      "injuredOwnerExcluded": true,
+      "reportCommitted": true,
+      "metrics": {
+        "dockPayments": 0,
+        "hullPayments": 0,
+        "hullReused": 1,
+        "foodLoaded": 44.10692469855224,
+        "waterLoaded": 10.08,
+        "foodReturned": 35.954811634987806,
+        "waterReturned": 8.216800000000205,
+        "foodLost": 0,
+        "waterLost": 0,
+        "foodUsed": 8.152113063564038,
+        "waterUsed": 1.8632000000000288,
+        "foodWithPeople": 0,
+        "waterWithPeople": 0,
+        "foodTransferred": 0,
+        "sailMeters": 621.3095620518121,
+        "legs": 6,
+        "crewLost": 0,
+        "crewReleased": 0,
+        "cellsCommitted": 47
+      },
+      "captureWritten": false
+    },
+    "builtSea": {
+      "passed": true,
+      "scope": "Built current-style Low visual inspection of actual authored native NPC voyage;public Test Lab reveal is visual-only. No NPC knowledge/autonomy/FPS/latest-map gate credit.",
+      "boatId": 4961,
+      "crewIds": [
+        4956,
+        4955,
+        4953
+      ],
+      "oneActualHullInstance": true,
+      "allAboardCrewRendered": true,
+      "movedMeters": 18.619864361287906,
+      "aboardCanoeAttachments": 0,
+      "actualNonaboardLegacyCanoeOwnerIds": [
+        4951
+      ],
+      "NPCknowledgeBefore": "[]",
+      "NPCknowledgeAfter": "[]",
+      "visualReview": {
+        "passed": true,
+        "observations": [
+          "Actual hull visibly carries its crew on deck at the shoreline and after moving into open water",
+          "No boat is balanced on an aboard actor head",
+          "The camera tracks the same moving hull; shoreline changes between samples",
+          "Current Low classic appearance reviewed only for boat representation, not Option H or target FPS"
+        ]
+      },
+      "screenshotEvidence": [
+        {
+          "name": "npc-hull-before.png",
+          "sha256": "653f21e5f934eb7385b221a9dedfff145190b8797ec4ee931947b2a1173eb13d",
+          "retained": false
+        },
+        {
+          "name": "npc-hull-after.png",
+          "sha256": "5ace15450288eee2cc119ea088f38008fff6a29b590cbf551c07719160acf26e",
+          "retained": false
+        }
+      ],
+      "errors": []
+    },
+    "builtDairy": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built desktop dairy UI; authored finite native V18 opening; no terrain/path/climate overrides; paid recipe, rendered incubation/progress/ready (manual pickup pause for inspection), physical pickup/delivery, mid/final reload and exactly-once vessel return; not live-public acceptance",
+      "finalPhase": "complete",
+      "actualVesselReturned": 1,
+      "foodProduced": 3,
+      "sameOriginCount": 1,
+      "errors": []
+    },
+    "builtVesselRecovery": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built desktop recovery UI; authored finite native V18 opening/fullvision TestLab reveal; actual discard/Clean/Pause/Resume controls, water pickup and cleaning progress, physical vessel-only return, strict mid/final reload; no terrain/path/climate/work overrides; not live-public acceptance",
+      "discardedMilk": 4,
+      "cleaningWaterPaid": 2,
+      "cleanedSeconds": 20,
+      "finalPhase": "complete",
+      "vesselsReturned": 1,
+      "sameOriginCount": 1,
+      "foodProduced": 0,
+      "errors": []
+    }
+  },
+  "foodRegressionReconciliation": "Previously104/108 dairy release is historical. Current131-case combined run passes all cases. Stale cereal/food/tool fixture assertions were repaired to actual allowed outside-cache material delivery, inedible raw sheaves and unrelated automatic meal accounting; current double-thresh passes. Real productionOwnership protection preserves already parked/collecting paid inputs when outside deliveries change cache capacity without admitting extra parked inputs. This scoped run is not whole-campaign acceptance.",
+  "performance": {
+    "shippedWaterValueHelper": {
+      "source": ".play/water-index-value-benchmark.json",
+      "distinctTests": "23/23+typecheck before combined run",
+      "sameFinalStateAnd23832RngCalls": true,
+      "singlePairMeanReductionPercent": 1.9847543241552024,
+      "conclusion": "Noise-scale one-pair CPU observation only; p95 slightly worsened, no robust speedup/FPS/stall-resolution claim"
+    },
+    "rejectedExperiments": [
+      "clock eviction:19/19 correct but4.48% slower; not integrated",
+      "interaction predicate:5new checks pass,12/13 total with pre-existing nativeV17placement issue; exact parity but11.19% slower; not integrated"
+    ]
+  },
+  "scopeLimits": [
+    "NPC sea proof is authored finite same-team society on unchanged seed1/V14 coast, not organic multi-AI success rate or latest-map coverage",
+    "Hull-loss remains physically stranded; shared rescue API design only, not implemented/native-qualified",
+    "Deep-water storms, diverse equipment trade, individual gear adapters, player-proposed deals and cargo caps/preemption fixes are not in this release",
+    "No Option H visual activation,100-visible-person FPS, full campaign or new frozen gate credit",
+    "Cultured curd passed7/7 focused+typecheck; broad regression/build/UI/publication pending, not live",
+    "G10 observed-fog/save source passed34/34+Node24 typecheck but build passed, remains pending browser/publication; inaccurate Grok provenance tracer excluded"
+  ],
+  "fullChecklist": {
+    "verified": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newGateCredit": 0
+  },
+  "evidenceFiles": [
+    {
+      "path": ".play/fronts-combined-tests.log",
+      "sha256": "2c9f369ff3b813f211a5263c297dd7c88107679097a53508ca42878e1620b345"
+    },
+    {
+      "path": ".play/fronts-worker-label-tests.log",
+      "sha256": "0ebc220f7e86c574f85521b63450972c351a71442d32bcd5e7210aa823db9798"
+    },
+    {
+      "path": ".play/fronts-final-typecheck.log",
+      "sha256": "8fa1cf5506304e8abac55868e7f1a136c9b1dde57a3981a382da4c21ea129a6f"
+    },
+    {
+      "path": ".play/fronts-final-build.log",
+      "sha256": "54ddaccc337948cd2b41f26dd92171ca2bb4df3857c280f5ec68ec91ae3e8b25"
+    },
+    {
+      "path": ".play/fronts-sea-ui/report.json",
+      "sha256": "f53dd36b322a88302ba20be0ef3d6e5aea322792aa546c69b7438bd84bd0774b"
+    },
+    {
+      "path": ".play/fronts-recovery-ui.log",
+      "sha256": "3f8b6a5156277721f5aa70dc42622705158d045880b6f204069ea9382134a9a2"
+    },
+    {
+      "path": ".play/fronts-final-dairy-ui.log",
+      "sha256": "66793418bfdbf05b795baf63b9c77b0f32c514630b140c5b6773b1d5d16054f9"
+    },
+    {
+      "path": ".play/fronts-release.json",
+      "sha256": "ace1326871009a4638b16ce7c2a741295bf31ebc3c1b68e04f87bb64e28e453a"
+    },
+    {
+      "path": ".play/releases/2026-11-11T22-04-13-358Z-f09578d/release-evidence.json",
+      "sha256": "8c724cd10b38066ec5abf2adb8b55dc2b4416fcde67a51a78a7c49e56393d710"
+    }
+  ],
+  "sourceManifest": {
+    "baseCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+    "files": [
+      {
+        "path": "scripts/cereal-processing.test.mjs",
+        "sha256": "9586f4d5689e2c556cdd6bba3d1b4878ac63395eb5a2a13af0cbaaa3c3e54253"
+      },
+      {
+        "path": "scripts/dairy-preservation.test.mjs",
+        "sha256": "ee1498cffde03a6fe56366a6371a4261b1f0b1687a883ca7faa15c6ccf9bc6c4"
+      },
+      {
+        "path": "scripts/dairy-vessel-recovery.test.mjs",
+        "sha256": "5c44e25609c518e11681214cb87a6496bd24520e29dd4c6feee0c69160a87310"
+      },
+      {
+        "path": "scripts/dairy-worker-cargo.test.mjs",
+        "sha256": "bb5a594c7184de49b1c3bd2a00faef3b5abfc37803c1bea5376553bb07edffc0"
+      },
+      {
+        "path": "scripts/diagnostics/dairy-vessel-recovery-ui.mjs",
+        "sha256": "23dd8547f3e947e99a0caa3be01225718ff8294f818f00db82f6ce0ef94021c8"
+      },
+      {
+        "path": "scripts/diagnostics/npc-sea-built-ui.mjs",
+        "sha256": "997ea80577ca3ad9dd5d93938590fbd2ca0b1847258908a7550c87d7808251eb"
+      },
+      {
+        "path": "scripts/food-preservation.test.mjs",
+        "sha256": "fb73b10b3f8f758a3cf5cb3ad9a727deddd3f8e4659d38942c4b2f0dd710e7f8"
+      },
+      {
+        "path": "scripts/instance-lod-query.test.mjs",
+        "sha256": "f09a7fa10ef2055d14b21913d1fa4c9f2d6bbc7a0fa2c5c1c79284e5388633e9"
+      },
+      {
+        "path": "scripts/npc-sea-native.test.mjs",
+        "sha256": "d73f212ae4df348b4c506379d6c8671410793371029fc728a4337c6b855d67ed"
+      },
+      {
+        "path": "scripts/production-work.test.mjs",
+        "sha256": "576e5785b78075c6fd9fdfda341d892312758d635546b7ffb27a615959fb7dff"
+      },
+      {
+        "path": "scripts/quiet-sail-toggle.test.mjs",
+        "sha256": "22453f2a607aadaea62bffcd360ff6af5a84e6e01d9e472f54f0291904ac3fe6"
+      },
+      {
+        "path": "scripts/rival-sea-exploration.test.mjs",
+        "sha256": "be9ea2d7f9176e2ca3f72b5a3b18cb0398b608a76edc236d3d064c750191fbbd"
+      },
+      {
+        "path": "scripts/sea-hull-reservation.test.mjs",
+        "sha256": "2f835dd0be7f3d9f83532a8eace4cd72ea31869296899fd6c70bcf02eea2de4a"
+      },
+      {
+        "path": "scripts/sea-observed-hull-cell.test.mjs",
+        "sha256": "2f7a501ea91147e62b4e3c0212d51fcd202a77056af761577ebe9fb50cd97473"
+      },
+      {
+        "path": "scripts/water-index-value.test.mjs",
+        "sha256": "61482c4f65613b4d1f132c5f93898bad14968d5646168a0fd7a2a947294f8896"
+      },
+      {
+        "path": "src/game/boatSailing.ts",
+        "sha256": "9ed3b996fa224c8cf4d52f4e3134a3c6fa76ee3f14b5668f8ca10f401de0b2ea"
+      },
+      {
+        "path": "src/game/boats.ts",
+        "sha256": "816e1796ec166d7c1b22006637fa772b509dff246f0f100d9dfbcb8e43a4da85"
+      },
+      {
+        "path": "src/game/cerealProcessing.ts",
+        "sha256": "d449c7817f4bb1fd738bd782a5c3a1c9e75493fc17717b11d9ebd11e79d168af"
+      },
+      {
+        "path": "src/game/coastalCommission.ts",
+        "sha256": "f51669a8dc509b8825a0d5a99bd112e42bfc2d17da29d5745475d440f35fb2a8"
+      },
+      {
+        "path": "src/game/coastalTrade.ts",
+        "sha256": "bbf995ecf7b464ad676ae6420f1b3efcacbb55129c1b53f0445e3a4ca2ad261f"
+      },
+      {
+        "path": "src/game/craftSiteReport.ts",
+        "sha256": "296a7ab593a7cc3646d5c37e9df8fcfc4e5460487d63f115cb68dbdcb6a584e4"
+      },
+      {
+        "path": "src/game/dairy.ts",
+        "sha256": "160bd182018858a7d6440c7d6cefd11a072215c4ac74b7b60956df36be68a1ca"
+      },
+      {
+        "path": "src/game/indexedLocalWater.ts",
+        "sha256": "dc807afd84d5c93c4548c2276f59ec79732bad8c8a3b52c3a2d0e06f6d12fb16"
+      },
+      {
+        "path": "src/game/localWater.ts",
+        "sha256": "1c4d8c6036e504d986af3c56038bcd055facda1b9dd5ed6e92c84e72450aed4d"
+      },
+      {
+        "path": "src/game/production.ts",
+        "sha256": "7243e476432c2a584b347c1ad61b64a9d1740c6e91d97abfd18689761bd6b07d"
+      },
+      {
+        "path": "src/game/productionCatalog.ts",
+        "sha256": "8e0bea6c1eb4c026e3c8469deeae766a2f36955546ca8d3d28d9b3a798c6b297"
+      },
+      {
+        "path": "src/game/productionOwnership.ts",
+        "sha256": "a524bdbe64da540cf16cfc241225958b7663e27ca7f8d2995bced236acd84d10"
+      },
+      {
+        "path": "src/game/rivalDevelopment.ts",
+        "sha256": "eea1ef2229da831eb3511ba6b5d55eb93e4cb6769ce1aae15f40d0de1f32e94a"
+      },
+      {
+        "path": "src/game/scoutProvisions.ts",
+        "sha256": "8ee2c9f09e8d12364d3f6000606a0b822ea2edc702704b869c617aaed567052e"
+      },
+      {
+        "path": "src/game/seaExploration.ts",
+        "sha256": "1e6d21a698b0c8b1c6a2b5a063ffb2bf73747b30911b65cdd552077e40042416"
+      },
+      {
+        "path": "src/game/seaExplorationReservations.ts",
+        "sha256": "84268b889202911f1a19a1c869a95badc7a647148b7b0cc351cffd55442d640c"
+      },
+      {
+        "path": "src/game/storageReport.ts",
+        "sha256": "f94784e974e397df0ce44864b141de1fbd91262d831db2b80c1169e97bd6e9df"
+      },
+      {
+        "path": "src/game/types.ts",
+        "sha256": "2976e6a63b7fa36c4511488fb9533e57e6d93cc679845cbcf7ecc1dd267f8dcf"
+      },
+      {
+        "path": "src/game/villageWorkload.ts",
+        "sha256": "0c01726c39c773d90ec1c822a9d82cace73c9f1389808ec9a46a1ce8e2efa84b"
+      },
+      {
+        "path": "src/game/workCommitments.ts",
+        "sha256": "3c0a23a0d512ac51d197995c07c1285252020d3718bc1f60303476cfa8a129bc"
+      },
+      {
+        "path": "src/game/workerActivity.ts",
+        "sha256": "4790606f0354208883fcf57c7ac52a6e7b52d92f0c97759186e63dc3cbeeca04"
+      },
+      {
+        "path": "src/scene/instanceCameraCull.ts",
+        "sha256": "3691e852a93a48e5a0b349a1d3c0c5b225c04df359f4fced1a8538400ef4fcb2"
+      },
+      {
+        "path": "src/ui/CraftSiteQueue.tsx",
+        "sha256": "a35a06893eef130e5161cb0e3418d56556a23963d6bd7a8f259018115387d607"
+      }
+    ],
+    "sha256": "d5c5a022ffbc47bb6edf6b8c27aab2d1a8ae2c40c6f5e233ecb4061441258ed0"
+  },
+  "pendingSource": {
+    "G10": {
+      "codeCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+      "tests": {
+        "passed": 34,
+        "total": 34
+      },
+      "typecheck": "PASS Node24",
+      "state": "source integrated and build passed; browser/publication pending",
+      "build": "PASS coordinator-confirmed; built UI running separately"
+    },
+    "culturedCurd": "7/7 focused+typecheck passed; broad regression/build/UI/publication pending; not live"
+  },
+  "retainedEvidence": {
+    "path": ".play/qualified-batches/f09578d",
+    "note": "Old .play/npc-sea-current source path in historical logs/release-evidence is historical. Isolated source was removed only after38exact source files verified against Gitf095; manifests and native fixtures/evidence retained here. Published and rollback releases/villages/art untouched.",
+    "files": [
+      {
+        "path": ".play/qualified-batches/f09578d/NPC_SEA_CURRENT_MANIFEST.json",
+        "sha256": "9e86225a220d156e5482394c199d4d3a7e1cc4088b4a20041003c41c1fdb2f95"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/DAIRY_RECOVERY_OVERLAY_MANIFEST.json",
+        "sha256": "f84b72deb9e52a1c8affbe967b9e9506b47731229e7b6b470cdb8a970d68661f"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/FRONTS_FROZEN_MANIFEST.json",
+        "sha256": "0e843040081d768fe40cbd7804e87bb436471804d2ed6795f4de82d08a2ea61f"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/cleanup.json",
+        "sha256": "f54f86c220e490dc2fb492edca272d2ad632a0ae5fac7e82019a61bb74d15011"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/WATER_VALUE_OVERLAY_MANIFEST.json",
+        "sha256": "cd0f02675676999b8c1d45b43f1b7a4f92ae7de14edb81f0d98e7210ad984791"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/FOOD_OWNERSHIP_OVERLAY_MANIFEST.json",
+        "sha256": "4c25e3b4930017555f4fa173dda6b0ffce1c006ec07617b55722eb23e2914cfb"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/native-evidence/npc-sea-native-outbound.json",
+        "sha256": "b20b755e5a569bad28cee444add1ac0dd1744291bb1c18b9f39459cf4ad7da56"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/native-evidence/npc-sea-native-evidence.json",
+        "sha256": "7489c3adc082f473c82385b124dd1c57caf70f5c1553e77b83a2a7d81e0f2602"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/native-evidence/sea-owner-recall-prep.json",
+        "sha256": "f4b29a23e188fb094f2d251d9a4dfb775b5c733e566747d4629dd014126f9d51"
+      },
+      {
+        "path": ".play/qualified-batches/f09578d/native-evidence/sea-owner-recall.diff",
+        "sha256": "95be21595f8859aaf47570d108b35ed7394f8e9ea51e5584576a0a730dc8b5b0"
+      }
+    ]
+  }
+}

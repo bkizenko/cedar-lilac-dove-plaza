@@ -1,0 +1,151 @@
+{
+  "commit": "5d9051c4a1f8acb074164c069190abc5457a7d8f",
+  "scope": "Read-only source audit of tradeNeeds/G15/G11 and stolenCargo fix status. No overlay or tests/build/browser; no native or publication credit.",
+  "headline": "Do not integrate current automatic trade lifecycle unchanged. Seeded personality/read-only stock and market arithmetic can be separated; resource-only physical trade is viable after targeted ownership/validation fixes.",
+  "blockingFindings": [
+    {
+      "priority": "P1",
+      "at": [
+        "src/game/tradeNeeds.ts:59-88",
+        "src/game/production.ts:252,361",
+        "src/game/armor.ts:24-34",
+        "scripts/trade-needs.test.mjs:73"
+      ],
+      "finding": "Armor stock is incompatible with actual production and strict saves. tradeStock/removeStock/addStock use items.paddedArmor counts, while produced armor exists only as armor.assets with stable id, condition, provenance and cache/unit/ground holder. validProductionState forbids positive items.paddedArmor. Real produced armor cannot be offered; fabricated bulk armor may be traded but makes saves invalid. Diversity test fabricates forbidden stock and does not qualify real armor transfer.",
+      "smallFix": "Temporarily exclude paddedArmor from selectable kinds until an armor-owned asset transfer/carry holder adapter preserves id/condition/projectId and physical cache pickup. Never convert assets into fresh stock counts. Test worn/ground/foreign/cached assets, damaged-condition retention, carrier death and strict reload every phase."
+    },
+    {
+      "priority": "P1",
+      "at": [
+        "src/game/tradeNeeds.ts:191-208,239-252",
+        "src/game/coastalTrade.ts:45,60",
+        "src/game/sim.ts:1753-1767"
+      ],
+      "finding": "tradeNeedsId is registered against automatic allocation but has no direct interruption/cancellation hook. pauseCoastalTrade does not release/pause trade needs. A direct order leaves tradeNeedsId and alive() true; tradeNeedsAI overwrites the new order on its next step. Emergency/body ownership changes are not reconciled as task preemption.",
+      "smallFix": "Add one domain-owned pause/interrupt adapter to existing interruptMission -> pauseCoastalTrade seam. It must return escrow only where still escrowed, retain physically carried cargo on the body, release only matching ownership, preserve new command/route, and book pack/line ownership once. Add direct move/build/production/defense preemption tests before merging automatic hooks."
+    },
+    {
+      "priority": "P1",
+      "at": [
+        "src/game/tradeNeeds.ts:193,205-207,219-232"
+      ],
+      "finding": "Non-resource goods live only in TradeLine arrays, not in unit.itemCargo/gear/physical animal holders. setCarry explicitly empties hands for these kinds. Reconcile deletes lines for a lost/captured/preempted carrier and only records lostAmount; it creates no physical item/gear/animal remnant and does not transfer that holder to a surviving captured body. Resource death uses existing carry parcels, but this does not establish diverse physical cargo.",
+      "smallFix": "First integrate resource-only lifecycle. For actual bulk items, use authoritative itemCargo with explicit ownership and condition/provenance as applicable. For gear, use domain asset holders; for animals keep live world entities following actual carrier rather than removing them from world into arrays. Define finite dropped holders or retained captive holdings on interruption/death, not just metrics."
+    },
+    {
+      "priority": "P1",
+      "at": [
+        "src/game/tradeNeeds.ts:257-272"
+      ],
+      "finding": "Strict validator does not validate animal payloads, animal identity uniqueness versus live livestock, phase-to-escrow relationship, resource TradeLine correspondence to actual carry, duplicate carrier/escort/ready membership, many metric/boolean/time/id fields, or world-sized hall bounds (permits100000m). Malformed side/line animals can pass and addStock later pushes arbitrary/duplicate entities. A proposed offer with reserved escrow and positive arbitrary amounts is also accepted.",
+      "smallFix": "Define discriminated phase/holder invariants, global held-entity IDs and exact line-to-body backreferences. Reject forged animal arrays, resource carry mismatch, duplicate person, terminal/proposed escrow, out-of-world hall and offer/receipt IDs >=nextId; validate source/target teams and all persisted numeric counters. Add targeted mutation tests and strict reload at actual resource+gear+animal transitions."
+    },
+    {
+      "priority": "P1-prior-unfixed",
+      "at": [
+        "src/game/stolenCargo.ts:58-70,249"
+      ],
+      "finding": "At parcel cap64, dropFrom clears actual carry first, then merges into arbitrary distant same-kind/owner parcel (teleports goods), or appends65th if no match (next strict save rejects). Byte-identical to reviewed8d3325e.",
+      "smallFix": "Guarantee durable local holder capacity before debiting corpse hands. If cap full, retain exact goods on the actual corpse for later bounded retry; only local physical merge allowed. Assert64/65 different-owner/kind/food cases, unchanged position and valid save."
+    },
+    {
+      "priority": "P1-prior-unfixed",
+      "at": [
+        "src/game/stolenCargo.ts:48-52,157-161"
+      ],
+      "finding": "At mark cap64 ownership writing silently fails while goods transfer succeeds. cargoOwner then falls back to carrier.team; theft/finder loses original owner. Byte-identical to prior review.",
+      "smallFix": "Acquire/update durable owner provenance before goods mutation or retain goods on prior holder/refuse transfer. No eviction of live owner marks. Test65th simultaneous foreign-owner load and subsequent death/save/recovery."
+    },
+    {
+      "priority": "P1-prior-unfixed",
+      "at": [
+        "src/game/stolenCargo.ts:87-100,148-152",
+        "src/game/workCommitments.ts:3"
+      ],
+      "finding": "Cargo trips remain root-only keyed by unitId, absent from COMMITTED_TASKS; stillValid omits build/production/haulage/direct-order commitments and endTrip unconditionally resets order/node/target/route even when another duty owns them. Adding tradeNeedsId to registry does not fix cargo trip ownership. Source and9 cargo tests unchanged from8d3325e.",
+      "smallFix": "Give CargoTrip stable id + optional unit cargoRecoveryId, register task, cancellation hook releases only matching trip and parcel claim without changing successor order. Add both-way strict refs and preemption cases; avoid a second shadow reservation map."
+    },
+    {
+      "priority": "P1-physical-pickup",
+      "at": [
+        "src/game/stolenCargo.ts:200-202"
+      ],
+      "finding": "Parcel pickup is allowed at nearestWalk spot within.6m regardless of actual parcel distance; nearestWalk may choose a point up to6m away. Additional steer-complete branch permits pickupMeters+2. This contradicts real1.8m parcel reach and deep-water retention claim.",
+      "smallFix": "Require actual parcel reach plus a body-clear final approach; nearby reachable spot alone is not parcel possession. Reuse armor ground pickup chained-clearance approach or one shared physical pickup leaf. Add across-water/wall/blocked-spot negative tests."
+    }
+  ],
+  "additionalSourceRisks": [
+    {
+      "at": "src/game/tradeNeeds.ts:169,178",
+      "finding": "Home adults counts all workers even away/committed, and spare-escort while condition uses >=3 before adding another escort: exactly3 available at home can become2. Revalidate actual eligible home reserve and use post-assignment count. Source inference, not executed."
+    },
+    {
+      "at": "src/game/tradeNeeds.ts:218-221,244",
+      "finding": "Cache readiness is latched by person id. Transition loads all goods after everyone has visited a cache at some prior time, without rechecking current supplyReached or same cache at handoff. Displacement/emergency can load remotely. Recheck exact current physical handoff inputs at transition. Return unload does use supplyApproach/supplyReached at actual cache."
+    },
+    {
+      "at": "src/game/tradeNeeds.ts:76-85",
+      "finding": "Goats disappear from live livestock into escrow; addStock later writes their x/z directly to receiving pen. No ordinary led-animal movement/needs/condition advancement is executed while escrowed; test checks counts and pen, not physical route. Pen admission checks held<capacity, not room for full lot. Keep animal integration separate."
+    },
+    {
+      "at": "src/game/tradeNeeds.ts:163",
+      "finding": "Acceptance explicitly exempts food from proposer surplus/reserve recheck. If food is consumed after proposal, acceptance may dip below home reserve. Revalidate current reserve for food too or document/test a deliberate player choice; do not call this NPC home reserve protection."
+    }
+  ],
+  "gearAndToolContract": {
+    "existingWeapons": "spears/bows/blades are existing stock counters, so transferring those counters is grounded in current data model. This does not add individual weapon identity/condition; do not claim such support. Caravans borrow actual counter weapons via equipCaravan at physical cache.",
+    "existingArmor": "armor.assets is authoritative; paddedArmor counts are explicitly forbidden by current production validator. Need a cargo holder distinct from worn unit holder, since current unit armor holder means worn and only one asset per wearer. Preserve condition/id/provenance.",
+    "existingFarmTools": "Actual farm tools are Unit.farmTool + farmToolCondition with paid work/repair contracts; these kinds do not appear in trade GoodKind. Cordage/basket are actual bulk items but labeling them tool category is not farm-tool trade. First adapter must transfer an actual owned tool and retain kind/condition; no invented tool stock.",
+    "bulkArtifacts": "pottery/cloth are actual item stock, but current lifecycle does not populate carried itemCargo or preserve production origin batches; treat physical/provenance adapter as separate acceptance."
+  },
+  "playerAndBoatStatus": {
+    "player": "proposeTradeOffer:114 explicitly rejects from===0. answerTradeOffer supports NPC->player accept/decline and timed expiry; no player-proposer API or actual UI wiring delivered. Correct status answer API source-only.",
+    "NPCBoatNeed": "tradeNeeds carriers always ground-steer toward observed hall; no boat transport/commission reservation integration. Existing coastalTrade still independently chooses resource trades; no claim that needs-based offers fund or use hulls.",
+    "seamProposal": "Expose a read-only typed need intent (team, observed partner/site, actual give/get kinds and quantities, trust/risk), then a transport owner selects legal land vs observed-water. Reuse ONE offer escrow and carrier commitment; bind existing paid hull reservation to offer only after witnessed route and physical cache admission. Do not commission a second hull because a ground offer is open or debit a second copy of goods. An actual NPC harbor/boat acceptance is a later native slice, not part of13 flat trade tests."
+  },
+  "viableIntegrationUnits": [
+    {
+      "unit": "Seeded villagePersonality plus extracted read-only stock/market arithmetic",
+      "requirements": "Do not call state-mutating proposeTradeOffer or chooseTradeOffer as pure queries: chooseTradeOffer calls row(), which creates tradeNeeds/team state. Keep automatic tick/AI hooks off until lifecycle fixes. Disable invalid armor count query. Caution is defined but unused; raidPropensity exported but raid owner not wired. No full G11 credit."
+    },
+    {
+      "unit": "stolenCargo bounded ownership repair",
+      "requirements": "Fix cap/provenance/commitment/preemption/physical reach first; targeted strict save mutations and exact conservation with local holders; then native authored finite deceased load pickup/return. Do not activate broad all-team death sweep unreviewed."
+    },
+    {
+      "unit": "Resource-only needs trade lifecycle",
+      "requirements": "Limit enabled goods to existing ResKind, fix matching task interruption, cache handoff and strict refs. Use repaired local parcel holder or retain dead carry without loss; no dependency on unqualified broad gear/animal changes. Native complementary-society ordinary steps with unchanged terrain, real observed halls, declared finite holdings, route/return/cache evidence and exact stock/escrow/carry/death ledgers."
+    },
+    {
+      "unit": "Bulk item cargo adapter",
+      "requirements": "Transfer actual itemCargo and origins at real caches, integrate burden/death/capture storage semantics. Qualify separately from armor/tools."
+    },
+    {
+      "unit": "Individual gear and live animals",
+      "requirements": "Separate domain-owned asset/animal transfer APIs preserving id/condition/actual position. No bulk armor or animal disappearance/pen teleport. Add native physical transfer and strict phase saves."
+    },
+    {
+      "unit": "Player proposer and sea transport",
+      "requirements": "Separate later vertical slices; current answer-only API and ground-carrier lifecycle do not satisfy these features."
+    }
+  ],
+  "validationEvidence": {
+    "executedByThisReview": [],
+    "sourceCounts": {
+      "tradeNeeds": 13,
+      "stolenCargo": 9,
+      "seaExploration": 13,
+      "seaStorms": 4,
+      "cultureNaming": 4,
+      "combined": 43
+    },
+    "limits": "Reported43/43 corresponds to these source test files. trade-needs fixture overwrites all terrain flat, removes world resources/rivers/features, handplaces actors/halls, suppresses weather/raids and forces Day; observed hall fixture teleports witness out and back before test steps. Its ordinary Game.step end-to-end is fixture evidence only. Armor diversity only proposes from fabricated invalid bulk stocks; animal test does not strict reload every phase or show physical led movement. No independent tests, build, browser, native or publication credit in this review."
+  },
+  "priorCargoFixStatus": {
+    "baseline": "8d3325e",
+    "latest": "5d9051c",
+    "stolenCargoSourceChanged": false,
+    "stolenCargoTestsChanged": false,
+    "conclusion": "All concrete prior cargo blockers remain. Only tradeNeedsId was added to workCommitments; no cargoRecoveryId or matching cancellation hook."
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-11-11T22:26:47.741779+00:00",
+  "codeCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+  "release": "2026-11-11T22-25-07-816Z-3911598",
+  "previousRelease": "2026-11-11T22-04-13-358Z-f09578d",
+  "health": {
+    "8086": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T22-25-07-816Z-3911598"
+    },
+    "8101": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T22-25-07-816Z-3911598"
+    }
+  },
+  "html": {
+    "8086": {
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    "8101": {
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    }
+  },
+  "batch": {
+    "passed": 35,
+    "total": 35,
+    "percent": 100,
+    "composition": {
+      "realGameAndRelevantSaveRegressions": {
+        "passed": 34,
+        "total": 34
+      },
+      "actualBuiltPublicTestLabUi": {
+        "passed": 1,
+        "total": 1
+      }
+    }
+  },
+  "checks": {
+    "regressions": [
+      {
+        "selector": [
+          "scripts/test-lab-observed-fog.test.mjs"
+        ],
+        "tests": 4,
+        "passed": 4,
+        "failed": 0,
+        "duration_ms": 4188.998375,
+        "exitCode": 0
+      },
+      {
+        "selector": [
+          "scripts/seed-testing.test.mjs",
+          "scripts/autosave-latency.test.mjs",
+          "scripts/autosave-worker-payload.test.mjs",
+          "scripts/autosave-worker-recovery.test.mjs",
+          "scripts/storage-codec.test.mjs",
+          "scripts/storage-migration.test.mjs"
+        ],
+        "tests": 30,
+        "passed": 30,
+        "failed": 0,
+        "duration_ms": 28473.8315,
+        "exitCode": 0,
+        "session": 42337,
+        "processState": "completed, polled original handle after interruption; no restart"
+      }
+    ],
+    "typecheck": {
+      "command": "npm run typecheck",
+      "runtimePath": "/Users/boriskizenko/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin",
+      "exitCode": 0,
+      "session": 10724,
+      "state": "terminal"
+    },
+    "build": "PASS Node24; exact frozen reviewed build published",
+    "builtUi": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built public Test Lab reveal/save/load/off/return controls; native seed0 sparse observations; original isolated village slots unchanged; no screenshots or original browser touched",
+      "errors": []
+    },
+    "fixture": "Real generated native seed0 with sparse initial observations. Actual public TestLab checkbox, save/load, toggle-off and return-to-original controls; original isolated browser village and its localStorage unchanged. No original user browser touched.",
+    "harnessCorrection": "An earlier UI harness re-opened Menu by toggling it closed. Harness only fixed; no source/build change and earlier attempt not counted passed.",
+    "originalSaveKeys": [
+      "SAVE_KEY",
+      "SAVE_KEY+:bak",
+      "SAVE_KEY+:protected"
+    ],
+    "fogAndAgeInvariant": "Snapshots serialize resident-observed vision AND remembered ages; visual reveal remains reversible, resumes while paused and never promotes overlay cells to earned fog. Real resident movement under reveal remains observed and persists. Reset discards prior buffers.",
+    "sourceFiles": [
+      {
+        "path": "src/game/sim.ts",
+        "sha256": "f6c9b039f7b6ab7cd8ae033004d852289eb5f35b927cfb4346aeb72668a4da3d"
+      },
+      {
+        "path": "src/game/persistence.ts",
+        "sha256": "f327ef36f7db7895487ea4e4e406806f4fbc0cb9d92e7b07f707d0eb0ff51808"
+      },
+      {
+        "path": "src/game/save.ts",
+        "sha256": "5e2eb99feeed18719894fa7601582268fb58e292f8f071f77390754fa69494f2"
+      },
+      {
+        "path": "scripts/test-lab-observed-fog.test.mjs",
+        "sha256": "af0f722051770aa4f3abea11dff0fce32085c447f2b4a6693a13fc5cd7787f0f"
+      }
+    ]
+  },
+  "scopeLimits": [
+    "Correct observer-radius provenance tracer is still excluded/unqualified; this release repairs TestLab overlay/save pollution only",
+    "Legacy saves already storing revealed fog have no reliable historical observation provenance; no reverse migration claim",
+    "No navigation/steering/field/fertility or Option H changes",
+    "No FPS/full campaign/organic multi-AI gate completion claim",
+    "Cultured curd focused7/7+typecheck is separate; broad regression/build/UI/publication remain pending"
+  ],
+  "precedingBatch": {
+    "codeCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
+    "passed": 138,
+    "total": 138,
+    "evidence": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
+    "note": "Separate preceding batch. Do not add overlapping checks into a combined completion denominator."
+  },
+  "fullChecklist": {
+    "verified": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newGateCredit": 0
+  },
+  "evidenceFiles": [
+    {
+      "path": ".play/g10-build.log",
+      "sha256": "5e23e38c369318926c148d08dd18b804cb915185d71517baf24b5223fbc10475"
+    },
+    {
+      "path": ".play/g10-built-ui.log",
+      "sha256": "a1d8e1c5201a5a16e2e6d140cff95be4e84ecb78bc2d569b8822d35e3dbe3327"
+    },
+    {
+      "path": ".play/g10-fog-candidate/.play/g10-observed-fog-manifest.json",
+      "sha256": "e06adafd4c14293509813cfd981515f9fcbf5ca0b3e6a05f2e65ee5f6175d306"
+    },
+    {
+      "path": ".play/g10-fog-candidate/.play/g10-built-ui.mjs",
+      "sha256": "c66c16129133c75e72e44cf0b49f2e4d18cea669c4b72fe6974724754d6c9004"
+    },
+    {
+      "path": ".play/releases/2026-11-11T22-25-07-816Z-3911598/release-evidence.json",
+      "sha256": "7726a08d83fb2c505ca2879ceb586aecb2f306de6ae52b745dd18029cad32159"
+    }
+  ]
+}
