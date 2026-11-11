@@ -5,6 +5,8 @@ import {Game} from '../../src/game/sim.ts';
 import {encodeGame,decodeGame} from '../../src/game/persistence.ts';
 import {SAVE_KEY} from '../../src/game/constants.ts';
 import {parseStoredSave} from '../../src/game/storageCodec.ts';
+// The native routing trial has a finite80-meal buffer (<600s target for12 adults);
+// the no-buffer emergency-eating race is covered by the actual-step unit scenario.
 const urgent=process.env.SCENARIO==='urgent';
 const g=new Game();g.reset(42,18,{size:1040,layout:'continents'});g.enterIsland();
 g.state.autoWorkEnabled=false;g.state.paused=true;g.state.weather='clear';g.state.weatherT=100000;
@@ -17,7 +19,7 @@ for(const type of ['warehouse',...Array(urgent?4:1).fill('hearth')]){
 }
 for(const u of g.state.units.filter(u=>u.team===0)){u.order='idle';u.jobLock=false;}
 if(urgent){while(g.state.units.filter(u=>u.team===0&&u.type==='worker').length<12)g.spawnUnit('worker',home.x+1,home.z+1,0);g.state.laborPolicy='food';}
-Object.assign(g.tribe(0),{wood:100,stone:100,food:urgent?24:1000,foodLots:urgent?{fish:24}:{provisions:1000},items:urgent?{}:{grainSheaves:16},seeds:12});
+Object.assign(g.tribe(0),{wood:100,stone:100,food:urgent?104:1000,foodLots:urgent?{provisions:80,fish:24}:{provisions:1000},items:urgent?{}:{grainSheaves:16},seeds:12});
 g.tribe(0).survival.waterLiters=100;
 const save={...encodeGame(g),savedAt:Date.now()};decodeGame(save);
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
