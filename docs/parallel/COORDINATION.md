@@ -1,9 +1,9 @@
-# Cross-provider coordination
+# Hearthwild coordination — active revision
 
-The latest full-trust allocation supersedes previous limited Grok/simple-task briefs. See [full implementation plan](FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md) and [complete sourced backlog](FULL_GAME_BACKLOG.json).
+**Gemini is not participating.** The governing [execution contract](EXECUTION_CONTRACT.md) defines persistent ownership, interfaces, swarming, models and frequent small merges. The [full plan](FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md) and [sourced backlog](FULL_GAME_BACKLOG.json) retain all scope.
 
-Codex: economy/livestock/crafting/discovery/prestige/integration. Claude: independent societies, trade/diplomacy/warfare. Grok: world, navigation, placement, civil engineering and territory. Gemini: visuals/UI, architecture, culture/wonders/animation and render performance. All own implementation and validation end to end. Shared file access is permitted on their separate branches; shared contracts must be documented.
+Claude: societies/international systems AND visual experience/cultures/UI design. Codex: economy/livestock/crafting/progression/prestige AND render-performance engineering/technical UI/integration. Grok: world/navigation/civil engineering AND biome/site/grounding data. See the contract for exact shared-file ownership. Use CLAUDE_SOCIETIES.md, CLAUDE_EXPERIENCE.md and GROK_WORLD.md. Prior Gemini briefs are historical only.
 
-Branches: agents/claude-societies, agents/grok-world, agents/gemini-experience. External branches do not establish that external agents are running. Connect the provider coding tool to GitHub and open its brief. Codex can fetch/review/integrate branch commits; direct live cross-provider orchestration needs authenticated installed tools.
+All have full implementation trust within persistent lanes. Shared contracts and exact file claims prevent simultaneous incompatible edits. Frequent coherent commits/pushes; small ready batches merge serially through Codex. External provider sessions still require the user to start them. Active local work uses four Codex slots total and one heavy local run at a time.
 
-Use isolated checkouts. One heavy local run at a time on8GB Mac; cloud tasks can run independently. Preserve villages and held work. No external main/deployment changes. Latest published gameplay snapshot c4e6060; frozen gate count34/98 (34.69%). Test batches are separate percentages.
+Latest verified gameplay snapshot c4e6060. Recorded frozen release acceptance34/98 (34.69%). No gameplay build is required for this coordination-only revision.

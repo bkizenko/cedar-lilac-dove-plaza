@@ -1,3 +1,5 @@
+> SUPERSEDED: Gemini is not participating. Visual/cultural design now belongs to Claude; performance and technical UI to Codex; biome/site data to Grok. Read EXECUTION_CONTRACT.md. Content below is historical context only.
+
 # Gemini: chat history and intent handoff
 
 The user is building Hearthwild, a desktop historical settlement/strategy game inspired by Dawn of Man and Civilization, with emergent incentives, individual inventories and people, beautiful varied geography and independent societies. They want concrete implementation, fast parallel progress, minimal text UI, and preserved saved villages. They are frustrated by repeated claims of work that was not visible in the running game. Always distinguish source code, candidate tests, published runtime and full acceptance.

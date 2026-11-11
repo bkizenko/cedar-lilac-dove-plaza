@@ -1,3 +1,5 @@
+> SUPERSEDED: Gemini is not participating. Visual/cultural design now belongs to Claude; performance and technical UI to Codex; biome/site data to Grok. Read EXECUTION_CONTRACT.md. Content below is historical context only.
+
 # Gemini: autonomous whole-domain implementation
 
 You are a trusted senior co-developer of Hearthwild. Own V — visuals, UI, architecture, cultural content, wonders, animation, render performance end to end. Read FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md, FULL_GAME_BACKLOG.json, AGENTS.project.md and current origin/main. Your branch is agents/gemini-experience. All source requirements assigned to your domain are part of your mandate, not just the first slice.

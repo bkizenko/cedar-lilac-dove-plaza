@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "coordinator": "Codex",
+  "providers": [
+    "Codex",
+    "Claude",
+    "Grok"
+  ],
+  "localConcurrency": {
+    "totalCodexSlots": 4,
+    "heavyRuns": 1
+  },
+  "lanes": [
+    {
+      "id": "C-Economy",
+      "owner": "Codex",
+      "first": "sheep/wool integration",
+      "state": "candidate acceptance pending"
+    },
+    {
+      "id": "C-Platform",
+      "owner": "Codex",
+      "first": "sailing integration",
+      "state": "isolated source merged and typechecked; integrated acceptance pending"
+    },
+    {
+      "id": "A-Societies",
+      "owner": "Claude",
+      "first": "NPC docked sea scouting",
+      "state": "awaiting external session"
+    },
+    {
+      "id": "A-Experience",
+      "owner": "Claude",
+      "first": "actual3D H + shared UI vertical slice",
+      "state": "awaiting external session"
+    },
+    {
+      "id": "W-World",
+      "owner": "Grok",
+      "first": "native placement/navigation and river/region coherence",
+      "state": "awaiting external session"
+    }
+  ],
+  "commitPolicy": "coherent checkpoints; target30-60 active minutes, never empty commits",
+  "mergeOwner": "Codex serial integration",
+  "template": "docs/parallel/BATCH_HANDOFF_TEMPLATE.md"
+}

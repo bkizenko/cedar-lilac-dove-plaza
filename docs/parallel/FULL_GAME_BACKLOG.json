@@ -39,7 +39,12 @@
     "C": "Codex: core economy, livestock, crafting, discovery, prestige and integration",
     "A": "Claude: NPC societies, trade, diplomacy, combat and sea",
     "W": "Grok: geography, ecology, navigation, civil infrastructure and physical territory",
-    "V": "Gemini: visuals, UI, architecture, cultural content and rendering performance"
+    "V": {
+      "label": "Visual scope distributed; not a fourth provider",
+      "primary": "Claude Experience",
+      "technical_runtime": "Codex Platform",
+      "world_data": "Grok World"
+    }
   },
   "governing_constraints": [
     {
@@ -526,7 +531,12 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 7,
         "section": "01 \u2014 Audit and freeze contracts"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
+      ]
     },
     {
       "id": "02",
@@ -552,7 +562,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 18,
         "section": "02 \u2014 Keyboard world commands"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "03",
@@ -578,7 +591,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 29,
         "section": "03 \u2014 Acoustic adaptive score"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "04",
@@ -604,7 +620,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 40,
         "section": "04 \u2014 Reliable save and resume"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": "05",
@@ -631,7 +650,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 51,
         "section": "05 \u2014 Fixed simulation cadence"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": "06",
@@ -657,7 +680,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 62,
         "section": "06 \u2014 Route around obstacles"
-      }
+      },
+      "active_provider_owners": [
+        "W"
+      ]
     },
     {
       "id": "07",
@@ -684,7 +710,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 73,
         "section": "07 \u2014 RTS selection and combat orders"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "08",
@@ -711,7 +740,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 84,
         "section": "08 \u2014 Vertical slice integration gate"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": "09",
@@ -738,7 +771,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 95,
         "section": "09 \u2014 Spatial query budget"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": "10",
@@ -765,7 +802,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 106,
         "section": "10 \u2014 Construction and repair refinement"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": "11",
@@ -791,7 +832,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 117,
         "section": "11 \u2014 Survival economy and priorities"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": "12",
@@ -817,7 +861,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 128,
         "section": "12 \u2014 Death and job animation"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "13",
@@ -843,7 +890,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 139,
         "section": "13 \u2014 Shared character rig"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "14",
@@ -870,7 +920,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 150,
         "section": "14 \u2014 Defenses and gate navigation"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "A"
+      ]
     },
     {
       "id": "15",
@@ -896,7 +950,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 161,
         "section": "15 \u2014 Soft counters and formations"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "16",
@@ -922,7 +979,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 172,
         "section": "16 \u2014 Strategic tribe director"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "17",
@@ -948,7 +1008,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 183,
         "section": "17 \u2014 Prehistoric technology graph"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": "18",
@@ -975,7 +1038,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 194,
         "section": "18 \u2014 Cohesive environment pack pass"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "W"
+      ]
     },
     {
       "id": "19",
@@ -1002,7 +1069,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 205,
         "section": "19 \u2014 Wildlife and seasonal habitat"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": "20",
@@ -1030,7 +1101,11 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 216,
         "section": "20 \u2014 Fog and scouting audit"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "A"
+      ]
     },
     {
       "id": "21",
@@ -1056,7 +1131,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 227,
         "section": "21 \u2014 HUD and teaching pass"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "22",
@@ -1082,7 +1160,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 238,
         "section": "22 \u2014 Natural SFX and environment mix"
-      }
+      },
+      "active_provider_owners": [
+        "A"
+      ]
     },
     {
       "id": "23",
@@ -1108,7 +1189,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 249,
         "section": "23 \u2014 Save migration and deterministic replay"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": "24",
@@ -1137,7 +1221,12 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 260,
         "section": "24 \u2014 Performance and balance gate"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
+      ]
     },
     {
       "id": "25",
@@ -1163,7 +1252,10 @@
         "path": "ASTRA_BACKLOG.md",
         "line": 271,
         "section": "25 \u2014 Playable alpha packaging"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     }
   ],
   "human_development_catalogue": [
@@ -1185,7 +1277,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 51,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 2,
@@ -1205,7 +1301,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 52,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 3,
@@ -1225,7 +1325,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 53,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 4,
@@ -1245,7 +1349,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 54,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 5,
@@ -1265,7 +1373,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 55,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 6,
@@ -1285,7 +1397,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 56,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 7,
@@ -1305,7 +1421,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 57,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 8,
@@ -1325,7 +1445,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 58,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 9,
@@ -1345,7 +1469,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 59,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 10,
@@ -1365,7 +1493,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 60,
         "section": "1. Landscapes and natural constraints"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 11,
@@ -1384,7 +1516,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 64,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 12,
@@ -1403,7 +1538,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 65,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 13,
@@ -1422,7 +1560,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 66,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 14,
@@ -1441,7 +1582,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 67,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 15,
@@ -1460,7 +1604,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 68,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 16,
@@ -1479,7 +1626,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 69,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 17,
@@ -1498,7 +1648,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 70,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 18,
@@ -1517,7 +1670,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 71,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 19,
@@ -1536,7 +1692,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 72,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 20,
@@ -1556,7 +1715,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 73,
         "section": "2. Survival and personal needs"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 21,
@@ -1576,7 +1739,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 77,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 22,
@@ -1595,7 +1762,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 78,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 23,
@@ -1614,7 +1784,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 79,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 24,
@@ -1633,7 +1806,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 80,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 25,
@@ -1653,7 +1829,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 81,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 26,
@@ -1673,7 +1853,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 82,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 27,
@@ -1693,7 +1877,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 83,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 28,
@@ -1712,7 +1900,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 84,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 29,
@@ -1732,7 +1923,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 85,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 30,
@@ -1752,7 +1947,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 86,
         "section": "3. People, families and mobility"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 31,
@@ -1772,7 +1971,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 90,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 32,
@@ -1792,7 +1995,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 91,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 33,
@@ -1812,7 +2019,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 92,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 34,
@@ -1832,7 +2043,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 93,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 35,
@@ -1852,7 +2067,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 94,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 36,
@@ -1872,7 +2091,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 95,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 37,
@@ -1892,7 +2115,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 96,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 38,
@@ -1912,7 +2139,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 97,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 39,
@@ -1932,7 +2163,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 98,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 40,
@@ -1952,7 +2187,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 99,
         "section": "4. Hunting, gathering and animal management"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 41,
@@ -1972,7 +2211,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 103,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 42,
@@ -1992,7 +2235,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 104,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 43,
@@ -2012,7 +2259,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 105,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 44,
@@ -2032,7 +2283,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 106,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 45,
@@ -2052,7 +2307,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 107,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 46,
@@ -2072,7 +2331,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 108,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 47,
@@ -2092,7 +2355,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 109,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 48,
@@ -2112,7 +2379,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 110,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 49,
@@ -2132,7 +2403,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 111,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 50,
@@ -2152,7 +2427,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 112,
         "section": "5. Fields and food productivity"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "W"
+      ]
     },
     {
       "id": 51,
@@ -2171,7 +2450,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 116,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 52,
@@ -2190,7 +2472,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 117,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 53,
@@ -2209,7 +2494,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 118,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 54,
@@ -2228,7 +2516,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 119,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 55,
@@ -2247,7 +2538,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 120,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 56,
@@ -2266,7 +2560,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 121,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 57,
@@ -2285,7 +2582,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 122,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 58,
@@ -2304,7 +2604,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 123,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 59,
@@ -2323,7 +2626,10 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 124,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C"
+      ]
     },
     {
       "id": 60,
@@ -2343,7 +2649,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 125,
         "section": "6. Materials, tools and production"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 61,
@@ -2364,7 +2674,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 129,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C",
+        "A"
+      ]
     },
     {
       "id": 62,
@@ -2384,7 +2699,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 130,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 63,
@@ -2404,7 +2723,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 131,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 64,
@@ -2425,7 +2748,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 132,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C",
+        "A"
+      ]
     },
     {
       "id": 65,
@@ -2445,7 +2773,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 133,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 66,
@@ -2465,7 +2797,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 134,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 67,
@@ -2485,7 +2821,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 135,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 68,
@@ -2506,7 +2846,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 136,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C",
+        "A"
+      ]
     },
     {
       "id": 69,
@@ -2526,7 +2871,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 137,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 70,
@@ -2547,7 +2896,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 138,
         "section": "7. Settlement and construction"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C",
+        "A"
+      ]
     },
     {
       "id": 71,
@@ -2567,7 +2921,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 142,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 72,
@@ -2587,7 +2945,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 143,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 73,
@@ -2607,7 +2969,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 144,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 74,
@@ -2627,7 +2993,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 145,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 75,
@@ -2647,7 +3017,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 146,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 76,
@@ -2667,7 +3041,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 147,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 77,
@@ -2687,7 +3065,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 148,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 78,
@@ -2707,7 +3089,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 149,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 79,
@@ -2727,7 +3113,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 150,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 80,
@@ -2747,7 +3137,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 151,
         "section": "8. Knowledge, science and cultural discovery"
-      }
+      },
+      "active_provider_owners": [
+        "C",
+        "A"
+      ]
     },
     {
       "id": 81,
@@ -2767,7 +3161,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 155,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 82,
@@ -2787,7 +3185,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 156,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 83,
@@ -2807,7 +3209,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 157,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 84,
@@ -2827,7 +3233,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 158,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 85,
@@ -2847,7 +3257,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 159,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 86,
@@ -2867,7 +3281,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 160,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 87,
@@ -2887,7 +3305,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 161,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 88,
@@ -2907,7 +3329,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 162,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 89,
@@ -2927,7 +3353,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 163,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 90,
@@ -2947,7 +3377,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 164,
         "section": "9. Communication, trade and diplomacy"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 91,
@@ -2967,7 +3401,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 168,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 92,
@@ -2987,7 +3425,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 169,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 93,
@@ -3007,7 +3449,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 170,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 94,
@@ -3027,7 +3473,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 171,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 95,
@@ -3047,7 +3497,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 172,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 96,
@@ -3067,7 +3521,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 173,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 97,
@@ -3087,7 +3545,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 174,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "W"
+      ]
     },
     {
       "id": 98,
@@ -3107,7 +3569,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 175,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "W"
+      ]
     },
     {
       "id": 99,
@@ -3127,7 +3593,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 176,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 100,
@@ -3147,7 +3617,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 177,
         "section": "10. Paths, transport and geography"
-      }
+      },
+      "active_provider_owners": [
+        "W",
+        "C"
+      ]
     },
     {
       "id": 101,
@@ -3167,7 +3641,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 181,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 102,
@@ -3187,7 +3665,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 182,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 103,
@@ -3207,7 +3689,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 183,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 104,
@@ -3227,7 +3713,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 184,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 105,
@@ -3247,7 +3737,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 185,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 106,
@@ -3267,7 +3761,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 186,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "W"
+      ]
     },
     {
       "id": 107,
@@ -3287,7 +3785,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 187,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 108,
@@ -3307,7 +3809,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 188,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 109,
@@ -3327,7 +3833,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 189,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C"
+      ]
     },
     {
       "id": 110,
@@ -3347,7 +3857,11 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 190,
         "section": "11. War, security and organization"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "W"
+      ]
     },
     {
       "id": 111,
@@ -3368,7 +3882,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 194,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 112,
@@ -3389,7 +3908,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 195,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 113,
@@ -3410,7 +3934,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 196,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 114,
@@ -3431,7 +3960,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 197,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 115,
@@ -3452,7 +3986,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 198,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 116,
@@ -3473,7 +4012,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 199,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 117,
@@ -3494,7 +4038,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 200,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 118,
@@ -3515,7 +4064,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 201,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 119,
@@ -3536,7 +4090,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 202,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     },
     {
       "id": 120,
@@ -3557,7 +4116,12 @@
         "path": "docs/HUMAN_DEVELOPMENT_CATALOGUE.md",
         "line": 203,
         "section": "12. Rival societies and regional government"
-      }
+      },
+      "active_provider_owners": [
+        "A",
+        "C",
+        "W"
+      ]
     }
   ],
   "geography": {
@@ -3617,7 +4181,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 17,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 2,
@@ -3632,7 +4200,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 18,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 3,
@@ -3647,7 +4219,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 19,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 4,
@@ -3662,7 +4238,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 20,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 5,
@@ -3677,7 +4257,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 21,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 6,
@@ -3692,7 +4276,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 22,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 7,
@@ -3707,7 +4295,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 23,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 8,
@@ -3722,7 +4314,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 24,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 9,
@@ -3737,7 +4333,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 25,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 10,
@@ -3752,7 +4352,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 26,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 11,
@@ -3767,7 +4371,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 27,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 12,
@@ -3782,7 +4390,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 28,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 13,
@@ -3797,7 +4409,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 29,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 14,
@@ -3812,7 +4428,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 30,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 15,
@@ -3827,7 +4447,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 31,
           "section": "Relief and exposed geology"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 16,
@@ -3842,7 +4466,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 35,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 17,
@@ -3857,7 +4485,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 36,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 18,
@@ -3872,7 +4504,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 37,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 19,
@@ -3887,7 +4523,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 38,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 20,
@@ -3902,7 +4542,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 39,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 21,
@@ -3917,7 +4561,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 40,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 22,
@@ -3932,7 +4580,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 41,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 23,
@@ -3947,7 +4599,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 42,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 24,
@@ -3962,7 +4618,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 43,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 25,
@@ -3977,7 +4637,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 44,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 26,
@@ -3992,7 +4656,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 45,
           "section": "Freshwater and drainage"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 27,
@@ -4007,7 +4675,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 49,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 28,
@@ -4022,7 +4694,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 50,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 29,
@@ -4037,7 +4713,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 51,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 30,
@@ -4052,7 +4732,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 52,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 31,
@@ -4067,7 +4751,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 53,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 32,
@@ -4082,7 +4770,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 54,
           "section": "Coast and land\u2013water transitions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 33,
@@ -4097,7 +4789,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 58,
           "section": "Additional families to track explicitly, without claiming existing support"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 34,
@@ -4112,7 +4808,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 59,
           "section": "Additional families to track explicitly, without claiming existing support"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 35,
@@ -4127,7 +4827,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 60,
           "section": "Additional families to track explicitly, without claiming existing support"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       },
       {
         "id": 36,
@@ -4142,7 +4846,11 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 61,
           "section": "Additional families to track explicitly, without claiming existing support"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "A"
+        ]
       }
     ],
     "biomes": [
@@ -4160,7 +4868,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 69,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Mixed woodland",
@@ -4176,7 +4889,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 70,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Cool conifer forest",
@@ -4192,7 +4910,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 71,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Montane/alpine",
@@ -4208,7 +4931,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 72,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Freshwater wetland/riparian",
@@ -4224,7 +4952,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 73,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Dry scrub/woodland",
@@ -4240,7 +4973,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 74,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Arid/badlands",
@@ -4256,7 +4994,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 75,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       },
       {
         "title": "Warm coastal/woodland",
@@ -4272,7 +5015,12 @@
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 76,
           "section": "What distinguishes the eight biome regions"
-        }
+        },
+        "active_provider_owners": [
+          "W",
+          "C",
+          "A"
+        ]
       }
     ]
   },
@@ -4288,6 +5036,9 @@
       },
       "suggested_owners": [
         "W"
+      ],
+      "active_provider_owners": [
+        "W"
       ]
     },
     {
@@ -4302,6 +5053,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     },
     {
@@ -4316,6 +5071,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     },
     {
@@ -4331,6 +5090,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4346,6 +5110,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4358,6 +5127,9 @@
         "section": "November 3 additional QA backlog"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -4374,6 +5146,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -4389,6 +5165,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4403,6 +5184,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     },
     {
@@ -4415,6 +5200,10 @@
         "section": "November 10 placement, soil and deposits"
       },
       "suggested_owners": [
+        "C",
+        "W"
+      ],
+      "active_provider_owners": [
         "C",
         "W"
       ]
@@ -4431,6 +5220,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     },
     {
@@ -4443,6 +5236,9 @@
         "section": "November 10 placement, soil and deposits"
       },
       "suggested_owners": [
+        "W"
+      ],
+      "active_provider_owners": [
         "W"
       ]
     },
@@ -4459,6 +5255,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -4473,6 +5273,10 @@
       "suggested_owners": [
         "C",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -4485,6 +5289,10 @@
         "section": "November 10 placement, soil and deposits"
       },
       "suggested_owners": [
+        "C",
+        "A"
+      ],
+      "active_provider_owners": [
         "C",
         "A"
       ]
@@ -4501,6 +5309,10 @@
       "suggested_owners": [
         "C",
         "W"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W"
       ]
     },
     {
@@ -4514,6 +5326,9 @@
       },
       "suggested_owners": [
         "V"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -4530,6 +5345,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4546,6 +5366,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4561,6 +5386,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4573,6 +5403,10 @@
         "section": "November 10 ceramic logistics and mechanical milling"
       },
       "suggested_owners": [
+        "C",
+        "W"
+      ],
+      "active_provider_owners": [
         "C",
         "W"
       ]
@@ -4591,6 +5425,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4607,6 +5446,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4622,6 +5466,10 @@
         "C",
         "A",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -4637,6 +5485,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -4649,6 +5501,9 @@
         "section": "November 10 post-raid recovery and domestication"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -4666,6 +5521,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4681,6 +5541,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4696,6 +5561,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4712,6 +5582,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -4724,6 +5599,10 @@
         "section": "November 10 water interaction, building geometry and landmarks"
       },
       "suggested_owners": [
+        "C",
+        "W"
+      ],
+      "active_provider_owners": [
         "C",
         "W"
       ]
@@ -4741,6 +5620,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -4755,6 +5638,10 @@
       "suggested_owners": [
         "C",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -4770,6 +5657,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4785,6 +5677,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -4800,6 +5697,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -4815,6 +5716,10 @@
         "C",
         "A",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -4829,6 +5734,10 @@
       "suggested_owners": [
         "C",
         "A"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -4841,6 +5750,11 @@
         "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
+        "C",
+        "A",
+        "W"
+      ],
+      "active_provider_owners": [
         "C",
         "A",
         "W"
@@ -4860,6 +5774,11 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     }
   ],
@@ -4877,6 +5796,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -4891,6 +5813,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -4907,6 +5832,9 @@
       },
       "suggested_owners": [
         "W"
+      ],
+      "active_provider_owners": [
+        "W"
       ]
     },
     {
@@ -4921,6 +5849,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -4937,6 +5868,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -4951,6 +5885,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -4967,6 +5904,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -4981,6 +5921,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -4997,6 +5940,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5011,6 +5957,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5027,6 +5976,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5041,6 +5993,9 @@
         "section": "Immediate corrections and status"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5057,6 +6012,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5070,6 +6028,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5085,6 +6046,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5098,6 +6062,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -5113,6 +6080,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5126,6 +6096,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5141,6 +6114,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5154,6 +6130,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5169,6 +6148,9 @@
       },
       "suggested_owners": [
         "A"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5182,6 +6164,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5197,6 +6182,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5210,6 +6198,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5225,6 +6216,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5239,6 +6233,9 @@
       },
       "suggested_owners": [
         "W"
+      ],
+      "active_provider_owners": [
+        "W"
       ]
     },
     {
@@ -5252,6 +6249,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5268,6 +6268,10 @@
       "suggested_owners": [
         "C",
         "A"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -5281,6 +6285,9 @@
         "section": "Survival, people and ecology"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5296,6 +6303,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5309,6 +6319,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5324,6 +6337,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5337,6 +6353,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5352,6 +6371,9 @@
       },
       "suggested_owners": [
         "V"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5365,6 +6387,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5380,6 +6405,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5393,6 +6421,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5408,6 +6439,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5421,6 +6455,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -5437,6 +6474,9 @@
       "suggested_owners": [
         "A",
         "V"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5451,6 +6491,9 @@
       },
       "suggested_owners": [
         "V"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5464,6 +6507,9 @@
         "section": "Exploration, knowledge and diplomacy"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -5480,6 +6526,10 @@
       "suggested_owners": [
         "A",
         "W"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -5493,6 +6543,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5508,6 +6561,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5521,6 +6577,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5536,6 +6595,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5549,6 +6611,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -5564,6 +6629,9 @@
       },
       "suggested_owners": [
         "A"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5578,6 +6646,9 @@
       },
       "suggested_owners": [
         "A"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5591,6 +6662,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "A"
+      ],
+      "active_provider_owners": [
         "A"
       ]
     },
@@ -5608,6 +6682,10 @@
         "A",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "A",
+        "W"
       ]
     },
     {
@@ -5621,6 +6699,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5636,6 +6717,9 @@
       },
       "suggested_owners": [
         "A"
+      ],
+      "active_provider_owners": [
+        "A"
       ]
     },
     {
@@ -5649,6 +6733,9 @@
         "section": "Tribes, war, settlement scale and administration"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5665,6 +6752,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     }
   ],
@@ -5683,6 +6774,11 @@
         "C",
         "A",
         "W"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -5699,6 +6795,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -5715,6 +6816,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -5728,6 +6834,10 @@
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
+        "A",
+        "W"
+      ],
+      "active_provider_owners": [
         "A",
         "W"
       ]
@@ -5744,6 +6854,9 @@
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
         "W"
+      ],
+      "active_provider_owners": [
+        "W"
       ]
     },
     {
@@ -5759,6 +6872,10 @@
       "suggested_owners": [
         "C",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     }
   ],
@@ -5777,6 +6894,11 @@
         "C",
         "A",
         "W"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A",
+        "W"
       ]
     },
     {
@@ -5793,6 +6915,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -5809,6 +6936,11 @@
         "C",
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "W",
+        "A"
       ]
     },
     {
@@ -5822,6 +6954,10 @@
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
+        "A",
+        "W"
+      ],
+      "active_provider_owners": [
         "A",
         "W"
       ]
@@ -5838,6 +6974,9 @@
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
         "W"
+      ],
+      "active_provider_owners": [
+        "W"
       ]
     },
     {
@@ -5853,6 +6992,10 @@
       "suggested_owners": [
         "C",
         "V"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -5865,6 +7008,9 @@
         "section": "November 10 ceramic logistics and mechanical milling"
       },
       "suggested_owners": [
+        "W"
+      ],
+      "active_provider_owners": [
         "W"
       ]
     },
@@ -5879,6 +7025,9 @@
       },
       "suggested_owners": [
         "C"
+      ],
+      "active_provider_owners": [
+        "C"
       ]
     },
     {
@@ -5891,6 +7040,9 @@
         "section": "November 10 water interaction, building geometry and landmarks"
       },
       "suggested_owners": [
+        "W"
+      ],
+      "active_provider_owners": [
         "W"
       ]
     },
@@ -5906,6 +7058,10 @@
       "suggested_owners": [
         "W",
         "V"
+      ],
+      "active_provider_owners": [
+        "W",
+        "A"
       ]
     },
     {
@@ -5918,6 +7074,9 @@
         "section": "Updated design contract"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     },
@@ -5932,6 +7091,10 @@
       "suggested_owners": [
         "C",
         "A"
+      ],
+      "active_provider_owners": [
+        "C",
+        "A"
       ]
     },
     {
@@ -5943,6 +7106,9 @@
         "section": "November10 pottery/culture/mediums-of-exchange request"
       },
       "suggested_owners": [
+        "C"
+      ],
+      "active_provider_owners": [
         "C"
       ]
     }
@@ -7314,5 +8480,20 @@
       }
     ]
   },
-  "status_policy": "Source markings are historical annotations, not fresh acceptance. Published baseline c4e6060. Pending work requires integration and actual executed acceptance."
+  "status_policy": "Source markings are historical annotations, not fresh acceptance. Published baseline c4e6060. Pending work requires integration and actual executed acceptance.",
+  "active_coordination_revision": {
+    "date": "2026-11-11",
+    "providers": [
+      "Codex",
+      "Claude",
+      "Grok"
+    ],
+    "gemini": "not participating",
+    "contract": "docs/parallel/EXECUTION_CONTRACT.md",
+    "former_V_scope": {
+      "Claude": "art, architecture, cultures, wonders, animation, UI design/shared presentation",
+      "Codex": "render performance infrastructure and technical UI behavior",
+      "Grok": "biome dressing data, terrain grounding/site constraints"
+    }
+  }
 }
