@@ -1834,12 +1834,16 @@ export class WorldView {
       this.rings.setMatrixAt(ri++,_m);
     }
     const resource = game.selectedResource;
-    this.resourceRing.visible=!!resource&&resource.amount>0&&game.exploredAt(resource.x,resource.z);
-    if(resource&&this.resourceRing.visible){
+    const reach=game.selectedWaterReach,marker=resource??reach;
+    this.resourceRing.visible=!!marker&&(!resource||resource.amount>0)&&game.exploredAt(marker.x,marker.z);
+    if(marker&&this.resourceRing.visible){
       // Drape the halo over the slope; a horizontal ring disappears into hills.
       const positions=this.resourceRing.geometry.getAttribute("position") as THREE.BufferAttribute;
-      for(let i=0;i<positions.count;i++)positions.setY(i,game.height(resource.x+positions.getX(i),resource.z+positions.getZ(i))+.12);
-      positions.needsUpdate=true;this.resourceRing.position.set(resource.x,0,resource.z);
+      for(let i=0;i<positions.count;i++){
+        const x=marker.x+positions.getX(i),z=marker.z+positions.getZ(i);
+        positions.setY(i,(reach?Math.max(game.height(x,z),game.waterAt(x,z)):game.height(x,z))+.12);
+      }
+      positions.needsUpdate=true;this.resourceRing.position.set(marker.x,0,marker.z);
     }
     this.rings.count = ri;
     this.rings.instanceMatrix.needsUpdate = true;

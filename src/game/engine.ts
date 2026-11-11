@@ -1,3 +1,4 @@
+import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
 import {AutosaveController} from './autosave';
@@ -545,7 +546,13 @@ export class Engine {
         const target = boatOrder ? g : this.residentMovePoint(cx,cy,g);
         this.game.issueMove(target.x,target.z);
       }
-      else this.game.selectAt(g.x,g.z,additive);
+      else {
+        const surface=this.view.waterAt(cx,cy,this.game.world.waterY);
+        const camera=this.view.camera.position;
+        const reach=surface&&surface.distanceTo(camera)<=g.distanceTo(camera)+.2?waterReachAt(this.game,surface):null;
+        if(reach){this.game.clearSelect();this.game.selectedWaterReach=reach;surveyReachFish(this.game,reach);}
+        else this.game.selectAt(g.x,g.z,additive);
+      }
     }
     this.pushHud();
   }
@@ -591,13 +598,6 @@ export class Engine {
       if (site) {
         x = site.x;
         z = site.z;
-      }
-    }
-    if (type === "quarry" && this.game.height(x,z)<10) {
-      const snap = this.game.snapQuarry(x, z);
-      if (snap) {
-        x = snap.x;
-        z = snap.z;
       }
     }
     this.plotSize=scalablePlot(type)&&(this.plotWidth>1||this.plotDepth>1)?{w:BUILDINGS[type].w*this.plotWidth,d:BUILDINGS[type].d*this.plotDepth}:undefined;

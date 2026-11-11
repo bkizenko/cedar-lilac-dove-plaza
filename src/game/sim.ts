@@ -1,3 +1,4 @@
+import type {WaterReach} from './waterReach';
 import { finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
 import{planAdvancedHome,housingAI,pauseHousingWorker,tickHousing,homeUseAI,knowsHousing,housingApproach,housingFundingIssue,preferredRivalHome,housingAdoptionIssue,retainHousingProject}from'./housing';
@@ -98,7 +99,7 @@ import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
-import {quarryAvailable,quarryReport,digStone} from "./mining";
+import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
@@ -203,6 +204,7 @@ export class Game {
   territory = new Uint8Array(FOW * FOW);
   territoryStrength = new Float32Array(FOW * FOW);
   selectedResource: ResourceNode | null = null;
+  selectedWaterReach: WaterReach | null = null;
   selectedCritter: Critter | null = null;
   selectedBoat: number | null = null;
   private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;canoe:boolean;spot:{x:number;z:number}|null}>();
@@ -1178,16 +1180,7 @@ export class Game {
       }
     }
     if (type === "quarry") {
-      let on = false;
-      for (const s of this.state.stones) {
-        if (s.amount > 0 && Math.hypot(s.x - x, s.z - z) < 8.8) {
-          on = true;
-          break;
-        }
-      }
-      if(!on&&this.height(x,z)<10)return "Place a quarry near a stone outcrop or on a mountain slope";
-      const grade=Math.max(Math.abs(this.height(x+3,z)-this.height(x-3,z)),Math.abs(this.height(x,z+3)-this.height(x,z-3)))/6;
-      if(grade>1)return "This cliff is too steep for miners — choose an accessible mountain slope";
+      return quarryPlacementIssue(this,x,z,_team);
     }
     if (type === "lumber") {
       let n = 0;
@@ -1220,20 +1213,6 @@ export class Game {
 
   placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
     return this.placementIssue(type, x, z, team,size,undefined,span) === null;
-  }
-
-  snapQuarry(x: number, z: number) {
-    let best: { x: number; z: number } | null = null;
-    let bd = 24 * 24;
-    for (const s of this.state.stones) {
-      if (s.amount <= 0) continue;
-      const d = (s.x - x) ** 2 + (s.z - z) ** 2;
-      if (d < bd) {
-        bd = d;
-        best = { x: Math.round(s.x / TILE) * TILE, z: Math.round(s.z / TILE) * TILE };
-      }
-    }
-    return best;
   }
 
   recycleSelected() {
@@ -1426,17 +1405,10 @@ export class Game {
     const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
     const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(`Need ${Math.max(0,(cost.seeds||0)-(tribe.seeds||0))} more seeds to mark this field`,4);return false;}
-    if (type === "quarry" && this.height(x,z)<10) {
-      const snap = this.snapQuarry(x, z);
-      if (snap) {
-        x = snap.x;
-        z = snap.z;
-      }
-    }
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
     const spot = this.placementValid(type, x, z, team,size,span)
       ? { x, z }
-      : size||span||type==="bridge"?null:this.findPlaceSpot(type, x, z, team);
+      : size||span||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
         this.banner(this.placementIssue(type, x, z, team,size,undefined,span) || "Can't build there", 1.8);
@@ -1581,6 +1553,7 @@ export class Game {
   clearSelect() {
     this.selectedBoat = null;
     this.selectedResource = null;
+    this.selectedWaterReach = null;
     this.selectedCritter = null;
     for (const u of this.state.units) u.selected = false;
     for (const b of this.state.buildings) b.selected = false;
@@ -1760,7 +1733,7 @@ export class Game {
   /** Commit a fully validated command draft without regenerating the world. */
   commitCommunityState(next:GameState){
     this.state=next;this.paths.clear();this.approachCache=new WeakMap();this.workBoard=new WorkBoard();
-    this.selectedResource=null;this.selectedCritter=null;this.selectedBoat=null;this.rebuildWalk();workRuntime(this);
+    this.selectedResource=null;this.selectedWaterReach=null;this.selectedCritter=null;this.selectedBoat=null;this.rebuildWalk();workRuntime(this);
   }
 
   interruptMission(u:Unit) {
@@ -6030,6 +6003,9 @@ export class Game {
       }
     }
 
+    if(!units.length&&!this.state.selBld&&this.selectedWaterReach){
+      selection={name:this.selectedWaterReach.kind==='river'?'River reach':'Lake shore',info:'Local fish and clay',hp:0,maxHp:1,kind:'resource',type:'waterReach'};
+    }
     if(!units.length&&!this.state.selBld&&this.selectedResource){
       const n=this.selectedResource;
       const fish=n.kind==="fish";

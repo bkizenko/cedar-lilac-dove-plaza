@@ -1,3 +1,4 @@
+import {WaterReachPanel} from './WaterReachPanel';
 import {SeasonReport} from './SeasonReport';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
@@ -44,7 +45,7 @@ import {FARM_TOOLS,farmToolRequirement,farmToolWorkplace} from "@/game/farmTools
 import {HAULAGE,haulageRequirement} from "@/game/haulage";
 import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
-import { FOOD_KINDS, FOOD_NAMES } from "@/game/pantry";
+import { FoodStoreReadout, readyFoodStock } from "./FoodStoreReadout";
 import { VisitingTrader } from "./VisitingTrader";
 import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
@@ -165,6 +166,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   const speed = hud.speed >= 3 ? 4 : hud.speed === 2 ? 2 : 1;
   const founding = hud.founding;
   const rate = hud.port ? 3 : 4;
+  const readyFood = Math.floor(readyFoodStock(hud));
   const stocks = (
     [
       ["food", hud.food],
@@ -182,14 +184,14 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     <div className="hud-shell font-sans text-parchment">
       <div className="hud-res">
         <div className="hud-panel resource-strip">
-          {[["Food",hud.food,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
+          {[["Food",readyFood,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={label==="Food"?"Food ready to eat · open Stores for raw supplies":String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
           <button aria-label="Expand resource details" aria-expanded={statusPane==='stores'} onClick={()=>setStatusPane(v=>v==='stores'?null:'stores')}>{statusPane==='stores'?<ChevronUp/>:<ChevronDown/>}</button>
         </div>
 
         {statusPane&&engine&&!founding&&<div className="hud-status-drawer hud-panel" aria-label="Village details">
           <header><span>Village</span><button aria-label="Close village details" onClick={()=>setStatusPane(null)}><X size={14}/></button></header>
           <nav aria-label="Village detail tabs">{([['stores','Stores'],['work','Work'],['food','Food'],['craft','Craft'],['camp','Camp']] as const).map(([key,label])=><button key={key} aria-pressed={statusPane===key} onClick={()=>setStatusPane(key)}>{label}</button>)}</nav>
-          {statusPane==='stores'&&<><div className="resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{FOOD_NAMES[kind]}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
+          {statusPane==='stores'&&<><div className="resource-details"><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
         </div>}
         {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
           <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>
@@ -501,19 +503,20 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {selMin ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
           </button>
         </div>
-            {!selMin&&sel.kind!=='boat' ? (
+            {!selMin&&sel.kind!=='boat'&&sel.type!=='waterReach' ? (
               <details className="selection-info mt-1"><summary>Details</summary><p>{sel.info}</p></details>
             ) : null}
         {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
           <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
         </div>}
-        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
-        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
         {!selMin && engine && sel.kind==='unit' && sel.team===0 &&
           <GameDisclosure label="Resident inventory"><ResidentInventory residents={engine.game.selectedUnits().filter(u=>u.team===0)}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
-        {selMin ? (
+        {sel.type==='waterReach' ? (!selMin&&engine?.game.selectedWaterReach&&
+          <WaterReachPanel engine={engine} reach={engine.game.selectedWaterReach}/>) : selMin ? (
           sel.kind !== "none" ? (
             <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
               <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />

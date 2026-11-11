@@ -1,4 +1,5 @@
 import {SeasonLedger} from './SeasonReport';
+import {readyFoodStock} from './FoodStoreReadout';
 import {knownDiplomaticRelation} from '@/game/diplomaticKnowledge';
 import {NeedsPanel} from './NeedsPanel';
 import {sendCaptiveEscort} from '@/game/caravans';
@@ -96,7 +97,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <p>They return home, unload supplies and put weapons away before resuming village priorities. Close the ledger to let them travel.</p>
           </div>}
           <strong>
-            {Math.floor(t.food)} food · {g.stockCap(0)} sheltered capacity
+            {Math.floor(readyFoodStock({food:t.food,foodLots:foods}))} ready to eat · {Math.floor(t.food)} pantry stock · {g.stockCap(0)} sheltered capacity
           </strong>
           <h4 className="mt-3 font-display text-bronze-bright">{knownCrops.length ? "Farming" : "Start farming"}</h4>
           <ol className="list-decimal pl-5">

@@ -3,7 +3,28 @@ import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {isDependent} from "./settlement";
 import {BUILDINGS,QUARRY_R} from './constants';
-export const QUARRY_RULES=Object.freeze({seamWorkerCapacity:2,surfaceWorkersPerOutcrop:2,assignmentBatchSize:2,workRadiusMetres:QUARRY_R,mountainMinimumElevationMetres:10});
+import {rivalKnows} from './rivalDevelopment';
+export const QUARRY_RULES=Object.freeze({seamWorkerCapacity:2,surfaceWorkersPerOutcrop:2,assignmentBatchSize:2,
+  workRadiusMetres:QUARRY_R,mountainMinimumElevationMetres:10,minimumSurfaceOutcrops:3,minimumSurfaceStone:32});
+
+export function quarryPlacementIssue(g:Game,x:number,z:number,team:number) {
+  const rules=QUARRY_RULES;
+  if(team===0&&!g.exploredAt(x,z))return "Explore the quarry site first";
+  if(team!==0&&!rivalKnows(g,team,x,z))return "Survey the quarry site first";
+  const grade=Math.max(Math.abs(g.height(x+3,z)-g.height(x-3,z)),Math.abs(g.height(x,z+3)-g.height(x,z-3)))/6;
+  if(grade>1)return "This cliff is too steep for miners — choose an accessible mountain slope";
+  if(g.height(x,z)>=rules.mountainMinimumElevationMetres)return null;
+  let count=0,stone=0;
+  for(const outcrop of g.state.stones){
+    if(outcrop.amount<=0||Math.hypot(outcrop.x-x,outcrop.z-z)>rules.workRadiusMetres)continue;
+    if(team===0?!g.exploredAt(outcrop.x,outcrop.z):!rivalKnows(g,team,outcrop.x,outcrop.z))continue;
+    if(!g.workBoard.connected(g,x,z,outcrop.x,outcrop.z))continue;
+    count++;
+    stone+=outcrop.amount;
+    if(count>=rules.minimumSurfaceOutcrops&&stone>=rules.minimumSurfaceStone)return null;
+  }
+  return `Quarry needs ${rules.minimumSurfaceOutcrops} reachable outcrops with ${rules.minimumSurfaceStone} stone within ${rules.workRadiusMetres} m, or a mountain seam. Surveyed ${count} outcrops · ${Math.floor(stone)} stone.`;
+}
 /** Change unpaid drawings only. Paid and partially built projects never refund
  * timber, and actual source stocks are untouched. */
 export function discountQuarryPlans(g:Game){

@@ -138,7 +138,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 240,
     age: 0,
-    hint: "A 32m work area covers nearby stone outcrops. Two miners haul finite surface stone or excavate a finite mountain seam; each site has a different yield.",
+    hint: "Build by a cluster of reachable stone outcrops or on a workable mountain seam. Miners excavate and haul finite stone.",
   },
   dock: {
     name: "Fishing Dock",

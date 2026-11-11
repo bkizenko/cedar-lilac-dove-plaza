@@ -7,3 +7,18 @@ test('every current building has concise functional help and new crafting buildi
 test('closed game details do not execute hidden child controls',()=>{let called=false;function Expensive(){called=true;throw Error('closed child executed');}const html=renderToStaticMarkup(React.createElement(GameDisclosure,{label:'Equipment'},React.createElement(Expensive)));assert.match(html,/aria-expanded="false"/);assert.equal(called,false);});
 
 test('natural selected workplace/person controls stay concise and readonly; real inventory remains behind lazy disclosure',async()=>{const{ProductionControls}=await import('../src/ui/ProductionControls.tsx'),{StorehouseInventory}=await import('../src/ui/StorehouseInventory.tsx');const g=new Game();g.reset(1,14,{size:1040,layout:'pangaea'});g.enterIsland();const home=g.campOf(0),shop=g.makeBld('workshop',home.x+14,home.z,0),store=g.makeBld('warehouse',home.x+28,home.z,0);g.state.buildings.push(shop,store);const engine={game:g,view:{},keyboard:{}};g.selectEntity(shop);let before=JSON.stringify(g.state),html=renderToStaticMarkup(React.createElement(ProductionControls,{engine}));const visible=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');assert.match(visible,/0 \/ 3 benches/);assert.ok(!visible.includes('This lists existing paid work'));assert.ok(!visible.includes('No paid batches'));assert.equal(JSON.stringify(g.state),before);const hud=renderToStaticMarkup(React.createElement(Hud,{hud:g.snapshot(),engine}));assert.match(hud,/Crafting shelter/);assert.match(buildingHelp('workshop'),/crafting benches/);assert.equal(JSON.stringify(g.state),before);g.selectEntity(store);before=JSON.stringify(g.state);html=renderToStaticMarkup(React.createElement(StorehouseInventory,{engine}));assert.match(html,/Food:/);assert.match(html,/Material cache:/);const closed=renderToStaticMarkup(React.createElement(GameDisclosure,{label:'Inventory'},React.createElement(StorehouseInventory,{engine})));assert.ok(!closed.includes('Material cache:'));assert.equal(JSON.stringify(g.state),before);g.selectEntity(g.state.units.find(u=>u.team===0));before=JSON.stringify(g.state);html=renderToStaticMarkup(React.createElement(Hud,{hud:g.snapshot(),engine}));assert.ok(!html.includes('This lists existing paid work'));assert.ok(!html.includes('Inspect fibre near'));assert.equal(JSON.stringify(g.state),before);const source=readFileSync(new URL('../src/ui/Hud.tsx',import.meta.url),'utf8');assert.match(source,/sel\.team===0&&sel\.type==='warehouse'&&<GameDisclosure label="Inventory"/,'only a usable own warehouse mounts its inventory disclosure');});
+
+test('food HUD shows ready stock while keeping raw pantry and workshop supplies visible separately',async()=>{
+ const {FoodStoreReadout}=await import('../src/ui/FoodStoreReadout.tsx');
+ const g=new Game();g.reset(1,14,'pangaea');g.enterIsland();
+ Object.assign(g.tribe(0),{food:32,foodLots:{bread:4,berries:3,fish:12,grain:13},items:{rawMeat:5,grainSheaves:8}});
+ const hud=g.snapshot(),engine={game:g,view:{},keyboard:{}},before=JSON.stringify(g.state);
+ const main=renderToStaticMarkup(React.createElement(Hud,{hud,engine}));
+ assert.match(main,/<span>Food<\/span><strong>7<\/strong>/);
+ const stores=renderToStaticMarkup(React.createElement(FoodStoreReadout,{stock:hud,items:g.tribe(0).items}));
+ assert.match(stores,/7 ready to eat · 32 pantry stock/);
+ assert.match(stores,/<dt>fresh fish<\/dt><dd>12<\/dd>/);
+ assert.match(stores,/<dt>Raw meat<\/dt><dd>5<\/dd>/);
+ assert.match(stores,/<dt>Cereal sheaves<\/dt><dd>8<\/dd>/);
+ assert.equal(JSON.stringify(g.state),before);
+});
