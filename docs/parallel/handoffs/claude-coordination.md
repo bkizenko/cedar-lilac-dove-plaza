@@ -13,7 +13,7 @@ Updated 11 November 2026, 15:35 ET. Maintained by the Claude coordinator. Codex'
 
 | Lane | Branch | Current batch | State |
 |---|---|---|---|
-| A-Societies | `agents/claude-societies` | Physical NPC sea exploration: paid docked hull, healthy crew, finite provisions, departure, voyage, return, unload, observed-only report | in progress; WIP pushed |
+| A-Societies | `agents/claude-societies` | Sea exploration ready for integration (see below); now: dropped stolen cargo + owner recovery (item 107), then G6 naming | ready + in progress |
 | A-Experience | `agents/claude-experience` | Opt-in Option H render style, structural building families keyed to stable building IDs, H UI tokens/components, LOD budget estimates | in progress; WIP pushed |
 | Coordination | `agents/claude-coordination` | This board | docs only |
 
@@ -32,6 +32,17 @@ Experience: `src/scene/buildingFamilies.ts`, `buildingParts.ts`, `buildingStyleM
 3. **LOD/culling hooks.** A per-instance LOD tier and distance band from `instanceCameraCull`/`renderMetrics` so building specs can supply near/mid/far part sets and far impostors without Claude editing the culling infrastructure.
 4. **Hull/crew/sail API confirmation.** Societies consumes the merged sailing primitives (5f1b5e9). Confirm stable entry points for: reserve hull, assign crew, load/unload cargo, depart/arrive events, hull loss. Societies will not write sailing physics.
 5. **`sim.ts` decomposition seam.** At 6,300 lines it is the main cost multiplier on every change. Request a small extraction pattern (phase registry: `{id, order, tick(g,dt)}`) so rival/naval phases can live in their own modules with one registration line.
+
+6. **Stranded crew after hull loss.** `steer` escapes only ~8 m and will not step through deep water, so people left after any hull loss cannot move. Sea exploration now releases them after 120 s; coastal trade voyages stay paused forever. Request a shared recovery (wade/swim to nearest connected shore or recover onto another hull).
+7. **Quiet sail toggle for NPCs.** `toggleSail` raises a banner for every team, so NPC crews never use a fitted rig. Request a non-UI path for AI crews.
+8. **Sail-rig/hull-service eligibility** should treat `Unit.seaExplorationId` as committed while the crew walks to the boat.
+9. **Sign-off needed (Societies batch `agents/claude-societies` 3adc249..4210c4a):** `types.ts` two optional fields (`Unit.seaExplorationId`, `GameState.seaExploration`); `workCommitments.ts` one committed-task entry; `scoutProvisions.ts` two guard lines. Nothing in sim/engine/constants/persistence/boats/boatSailing.
+
+## Ready for integration
+
+| Branch | Range | Content | Evidence | Not done |
+|---|---|---|---|---|
+| `agents/claude-societies` | 3adc249..4210c4a (on 8f635f6) | NPC docked-hull sea exploration | `scripts/rival-sea-exploration.test.mjs` 7/7; 37 related files 139/160 at head = 139/160 at base (same 21 pre-existing failures, partly missing packages here) | Native-terrain/browser run; capture mid-voyage; enemy-nearby turn-back; recall at sea |
 
 ## Interface requests — Grok
 
