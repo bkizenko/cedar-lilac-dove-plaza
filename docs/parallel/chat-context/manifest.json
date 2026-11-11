@@ -1,0 +1,41 @@
+{
+  "scope": "Four located Hearthwild chats; all locally available message records, not unrelated account conversations or hidden reasoning",
+  "exports": [
+    {
+      "file": "docs/parallel/chat-context/scenic-map-and-full-game.md",
+      "visibleMessages": 837,
+      "users": 169,
+      "assistants": 668,
+      "nonConversationMetadataOmitted": 99,
+      "bytes": 442473,
+      "sha256": "862965f8bcc99780bbcc9563155d16d95bbcb57a21a49b287ae7a2613836bb59"
+    },
+    {
+      "file": "docs/parallel/chat-context/astra-planning-fork.md",
+      "visibleMessages": 22,
+      "users": 7,
+      "assistants": 15,
+      "nonConversationMetadataOmitted": 0,
+      "bytes": 41035,
+      "sha256": "7724fbdacb44b65a08150aac4edec4b693a88325768f5793e6496808586ccb9d"
+    },
+    {
+      "file": "docs/parallel/chat-context/keyboard-music-and-earlier-game.md",
+      "visibleMessages": 929,
+      "users": 129,
+      "assistants": 800,
+      "nonConversationMetadataOmitted": 100,
+      "bytes": 418187,
+      "sha256": "a0f6fa7f61cefeae77ccb4cae6d4cd7f7297cc4525089befdf78e7f31b78e730"
+    },
+    {
+      "file": "docs/parallel/chat-context/launch-rival-progression.md",
+      "visibleMessages": 57,
+      "users": 11,
+      "assistants": 46,
+      "nonConversationMetadataOmitted": 1,
+      "bytes": 28368,
+      "sha256": "5c4a31fe0eee68c589b629d2dd0a5f51310cba9b953266a5c071172bda37ea25"
+    }
+  ]
+}

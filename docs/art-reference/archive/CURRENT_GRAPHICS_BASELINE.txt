@@ -1,0 +1,4 @@
+Existing graphics baseline: commit ebdb6e2ad062968c3f6ab871cec8c9c92b52f368
+Art baseline tag: art-baseline-2026-11-10-ebdb6e2
+Historical local release: 2026-11-11T02-11-37-ebdb6e2
+This records a historical baseline, not current publication status.

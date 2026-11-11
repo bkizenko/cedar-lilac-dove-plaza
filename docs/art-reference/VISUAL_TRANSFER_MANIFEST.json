@@ -1,0 +1,241 @@
+{
+  "scope": "Retained art and actual 3D review artifacts; no game integration or publication claimed",
+  "copiedUniqueFiles": 22,
+  "additionalIndexFiles": 1,
+  "files": [
+    {
+      "file": "archive/3d-prototypes/README.md",
+      "bytes": 1173,
+      "sha256": "33fb407017a1d60599b45d4f0f6b80e822254cdff8dccaf1437ed7018941e2d2",
+      "sourceAliases": [
+        "README.md"
+      ],
+      "kind": "3D blockout metadata"
+    },
+    {
+      "file": "archive/3d-prototypes/cascade-gardens.glb",
+      "bytes": 533948,
+      "sha256": "3f302f28a3e3afafe41a3bf5d85291c604a2d8e8f268d18e7859f63fe9194515",
+      "sourceAliases": [
+        "cascade-gardens.glb"
+      ],
+      "kind": "actual 3D GLB blockout"
+    },
+    {
+      "file": "archive/3d-prototypes/crescent-harbor.glb",
+      "bytes": 222628,
+      "sha256": "023097512bbfc70afdeb018caca158e8e81b14e03cca9be7ab61ec033f4fbddc",
+      "sourceAliases": [
+        "crescent-harbor.glb"
+      ],
+      "kind": "actual 3D GLB blockout"
+    },
+    {
+      "file": "archive/3d-prototypes/ring-observatory.glb",
+      "bytes": 277496,
+      "sha256": "355f0d8295498940b0bd51e379558ae045fd9b4d295fa398424a9613ef7637d2",
+      "sourceAliases": [
+        "ring-observatory.glb"
+      ],
+      "kind": "actual 3D GLB blockout"
+    },
+    {
+      "file": "archive/3d-prototypes/wonder-blockouts-preview.png",
+      "bytes": 172456,
+      "sha256": "922dc5e49683ae0e17abeda565ade828c56461e783e731847c0563a59c605eed",
+      "sourceAliases": [
+        "wonder-blockouts-preview.png"
+      ],
+      "kind": "actual 3D rendered preview"
+    },
+    {
+      "file": "archive/3d-prototypes/wonder-blockouts.json",
+      "bytes": 2158,
+      "sha256": "d447edc272ae31e39187b13f5eefe8481df6e0d757e2daf69e22eb5ab3849a7b",
+      "sourceAliases": [
+        "wonder-blockouts.json"
+      ],
+      "kind": "3D blockout metadata"
+    },
+    {
+      "file": "archive/CURRENT_GRAPHICS_BASELINE.txt",
+      "bytes": 248,
+      "sha256": "83fdf4dc12e51319284ac13dd355bedb5255bc9670676feb79c34c13f8b0d417",
+      "sourceAliases": [
+        "CURRENT_GRAPHICS_BASELINE.txt"
+      ],
+      "kind": "reference metadata"
+    },
+    {
+      "file": "archive/concept-manifest.json",
+      "bytes": 3681,
+      "sha256": "ed06a5713fb4161b122b322e455364a70bcddc5ab7e96e031fbd40a3db301f0d",
+      "sourceAliases": [
+        "concept-manifest.json"
+      ],
+      "kind": "reference metadata"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-21a5334a-08da-4043-983b-2e550c68d6a4.png",
+      "bytes": 3910252,
+      "sha256": "cdeda07890074b0088268746cc2700a0d7e85f83cae38773ac167946a6c3e329",
+      "sourceAliases": [
+        "exec-21a5334a-08da-4043-983b-2e550c68d6a4.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-3593d58e-8331-432f-a3aa-f261c4b8f208.png",
+      "bytes": 3558884,
+      "sha256": "4ba7a3eae4babd4aacadbcfe5a8af9e91cecee3593d5dae96a4f3995b187b318",
+      "sourceAliases": [
+        "exec-3593d58e-8331-432f-a3aa-f261c4b8f208.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-81c5c39f-e926-48ea-928e-eca6b0bf94b0.png",
+      "bytes": 3727994,
+      "sha256": "5777b3a5e77b005b26b7b1caed3eb1de6b8c591c31543a31f7cd24eb211a95e5",
+      "sourceAliases": [
+        "exec-81c5c39f-e926-48ea-928e-eca6b0bf94b0.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-a00e422b-3e7a-41d0-ac1c-9c62ff546844.png",
+      "bytes": 3372740,
+      "sha256": "e70a310244f108c0e75860f8c66d2b32b296a35dceee630be52f7d7ec6c055e0",
+      "sourceAliases": [
+        "exec-a00e422b-3e7a-41d0-ac1c-9c62ff546844.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-bd76980b-b3e1-41c1-af35-f1ad9dc32b0b.png",
+      "bytes": 3565628,
+      "sha256": "7a5201f8b74e753f3f1a765562a902cffabf2442ddfac8c112a2c0f9c050e2eb",
+      "sourceAliases": [
+        "exec-bd76980b-b3e1-41c1-af35-f1ad9dc32b0b.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-c4046bc1-e6d5-4f30-b5be-358a33161f9c.png",
+      "bytes": 3690659,
+      "sha256": "2966d18bfb2469a5732155bbe5d706cf55fbf77e3fca0928a26b32018d6c563f",
+      "sourceAliases": [
+        "exec-c4046bc1-e6d5-4f30-b5be-358a33161f9c.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-e148c534-997e-4492-a47c-b76f4469d40c.png",
+      "bytes": 3678491,
+      "sha256": "4d52544f5c7e499894619f42f73285d60a664d0e0bdcad76d5439a8a0ffb726a",
+      "sourceAliases": [
+        "exec-e148c534-997e-4492-a47c-b76f4469d40c.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/exec-fecc499c-2f14-40bc-8ec6-99b57cf095a9.png",
+      "bytes": 2989632,
+      "sha256": "d86cc71e11f19f749fe57c9d8576d8452d972301a2278205c34aebf108827cb8",
+      "sourceAliases": [
+        "exec-fecc499c-2f14-40bc-8ec6-99b57cf095a9.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-10/village-H-E-comparison.png",
+      "bytes": 3836408,
+      "sha256": "d5d7b8d23479b3865fab1ed61f506b28558fb3736ceeefbab9e040f17588c057",
+      "sourceAliases": [
+        "exec-60d7674e-c64b-42bb-84d8-93b15a5ed168.png",
+        "village-H-E-comparison.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-11/exec-34437c68-35a5-4713-b791-968fb324e09b.png",
+      "bytes": 4007291,
+      "sha256": "a169252c64e7e87b027a61a1fee7ee967d7b7582ca40d1e4b90ae1efb2eb0271",
+      "sourceAliases": [
+        "exec-34437c68-35a5-4713-b791-968fb324e09b.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/concept-sheets-2026-11-11/exec-e7d3cd10-02a5-4a84-b827-55f1928e466f.png",
+      "bytes": 4284277,
+      "sha256": "4f3b0ab6dd5de9c53cbccb58a60598fd1af3d3913b933b4130bfc6fe9af20aa4",
+      "sourceAliases": [
+        "exec-e7d3cd10-02a5-4a84-b827-55f1928e466f.png"
+      ],
+      "kind": "bitmap concept"
+    },
+    {
+      "file": "archive/index.html",
+      "bytes": 4779,
+      "sha256": "e0c04b0a0c370932925cad752bf04d2a89b68b6c60a375d773111451857c04c5",
+      "sourceAliases": [
+        "index.html"
+      ],
+      "kind": "reference metadata"
+    },
+    {
+      "file": "prototypes/option-h/option-h-model-proof-check.mjs",
+      "bytes": 2936,
+      "sha256": "66ba1bd1f02fd15828508e1ac0496ac0d7d3d089bc62f94147cfa02a055a3bcc",
+      "sourceAliases": [
+        "option-h-model-proof-check.mjs"
+      ],
+      "kind": "3D validation code"
+    },
+    {
+      "file": "prototypes/option-h/option-h-model-proof.html",
+      "bytes": 27247,
+      "sha256": "03ffe10ce90539a2fe70298d6cab17e3b5cf37c2a64941a0e9cd3392a905a7a7",
+      "sourceAliases": [
+        "option-h-model-proof.html"
+      ],
+      "kind": "actual procedural 3D HTML/Three.js artifact"
+    },
+    {
+      "file": "INDEX.md",
+      "bytes": 3756,
+      "sha256": "f3d447637851170f4d637ed79f0747ad8f34d21f86074dafc7c0a6fe3decf6bc",
+      "sourceAliases": [
+        "GitHub visual context index"
+      ],
+      "kind": "GitHub index"
+    }
+  ],
+  "reusedExistingRepoFiles": [
+    {
+      "file": "style-options-D-I.png",
+      "bytes": 3857717,
+      "sha256": "7912bc5253c8b44c4a156786d94eaa3e5684e4a57373d10cb96cdf97329d1ab0"
+    },
+    {
+      "file": "approved-wonder-concepts.png",
+      "bytes": 3508864,
+      "sha256": "706653830712978b1428f58aed2980b52b4d37d3cf40390f5606ef5a0f8aeab8"
+    },
+    {
+      "file": "README.md",
+      "bytes": 476,
+      "sha256": "77a71507b8a91f4be7a8616fa85ab3a73d7e951730967b1c83f5160acb13d8cc"
+    }
+  ],
+  "exclusions": [
+    "private game exports and saves",
+    "personal browser screenshots",
+    "caches and node_modules",
+    "older deleted development captures",
+    "superseded pre-seeded-homes HTML"
+  ],
+  "feedback": "../parallel/CLAUDE_VISUAL_FEEDBACK.md",
+  "sourceGeometryUnchanged": true
+}

@@ -1,0 +1,82 @@
+{
+  "status": "3D blockouts for art review",
+  "seed": "fixed authored prototypes",
+  "generatedAt": "2026-11-11T02:15:28.340Z",
+  "models": [
+    {
+      "file": "ring-observatory.glb",
+      "bytes": 277496,
+      "scene": "Confluence ring observatory",
+      "meshes": 4,
+      "nodes": 4,
+      "buffers": [
+        270720
+      ],
+      "triangles": 2820,
+      "dimensionsMetres": [
+        22.895756721496582,
+        5.150000107288361,
+        21.384492874145508
+      ],
+      "namedMeshes": [
+        "dark-surfaces",
+        "stone-surfaces",
+        "pale-surfaces",
+        "bronze-surfaces"
+      ],
+      "authoredParts": 165,
+      "description": "An incomplete stone ring frames a central sighting court, with an offset entry stair and open astronomical slot."
+    },
+    {
+      "file": "crescent-harbor.glb",
+      "bytes": 222628,
+      "scene": "Crescent harbor of the headland",
+      "meshes": 5,
+      "nodes": 5,
+      "buffers": [
+        216576
+      ],
+      "triangles": 2256,
+      "dimensionsMetres": [
+        36.04117965698242,
+        9.25000011920929,
+        19.149999260902405
+      ],
+      "namedMeshes": [
+        "dark-surfaces",
+        "pale-surfaces",
+        "stone-surfaces",
+        "roof-surfaces",
+        "timber-surfaces"
+      ],
+      "authoredParts": 57,
+      "description": "An open semicircular quay protects an empty navigable basin. Short finger piers and irregular working sheds face the inner water."
+    },
+    {
+      "file": "cascade-gardens.glb",
+      "bytes": 533948,
+      "scene": "Cascade teaching gardens",
+      "meshes": 6,
+      "nodes": 6,
+      "buffers": [
+        521856
+      ],
+      "triangles": 5436,
+      "dimensionsMetres": [
+        22.800000190734863,
+        15.14535813331604,
+        13.3149995803833
+      ],
+      "namedMeshes": [
+        "stone-surfaces",
+        "pale-surfaces",
+        "earth-surfaces",
+        "timber-surfaces",
+        "leaves-surfaces",
+        "water-surfaces"
+      ],
+      "authoredParts": 423,
+      "description": "Three stepped courtyards use open stone arcades, planted roof beds, and a visible gravity-fed water spine."
+    }
+  ]
+}

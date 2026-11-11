@@ -7,3 +7,7 @@ Use agents/claude-experience as landing branch and short feature branches per ba
 First deliverable: a genuine3D H building/landscape vertical slice and compact shared UI foundation, with normal-distance readability and explicit draw/memory implications. Then execute all remaining architecture/culture/wonder/animation/UI scope. Models must vary structurally by era/material/climate; no generic platform or identical huts. Concept art alone is not3D acceptance.
 
 Use Opus5.5 for hard art-direction/structural choices and Sonnet5.5 for scoped component/model implementation if available. Use your judgment. Push coherent commits often; submit small ready batches with exact files, screenshots only when needed, tests, budgets, assumptions and remaining work. Codex integrates and deploys. No direct main/deployment/save changes.
+
+## Complete visual context now in the repository
+
+Start with [visual index](../art-reference/INDEX.md) and [consolidated feedback](CLAUDE_VISUAL_FEEDBACK.md). Actual Option H procedural model source, all retained concept boards, three GLB blockouts and portable checks are uploaded. [Visible conversation exports](chat-context/README.md) preserve available user/assistant messages from four identified Hearthwild chats. Read the latest feedback first; historical assistant claims are not current acceptance evidence. Game renderer source is in src/scene.
