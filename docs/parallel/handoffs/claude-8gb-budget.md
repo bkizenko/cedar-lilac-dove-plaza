@@ -47,3 +47,6 @@ Sources: `src/game/graphics.ts` (GRAPHICS_RULES), `docs/parallel/handoffs/claude
 1. Fixed seed, fixed camera paths (close, mid, wide), 100 residents, Low/Med/High, `current` vs `optionH`.
 2. Record median and 95th-percentile frame time, draw calls, triangles, JS heap, GPU memory estimate from `renderer.info`.
 3. Accept a profile only if p95 frame time stays under 33 ms (30 fps floor) on Low and under 22 ms on Med.
+
+## Scale target (user direction, 16:49 ET)
+Eventually hundreds of residents, multiple villages, much larger maps. Rendering rule: draw nothing until it is close enough to matter. Plan: residency bands per settlement and chunk (full spec near; merged chunk mesh mid; one cluster card far; nothing beyond a far radius), hard per-frame caps on instances and draws, hysteresis against pop-in. Simulation far-LOD (reduced ticks for unobserved settlements) is Codex's lane and must keep conserved goods and observed-knowledge rules. Experience is specifying the residency helper as a pure proposal; Codex owns culling integration. Unmeasured; same measurement plan applies, with a 20-village, 500-building scenario added.
