@@ -266,3 +266,12 @@ Fetched all remotes; merged `origin/main` normally (no rebase/force; `agents/gro
 **Overlaps:** none new. `sim.ts` (World, listed) and `types.ts` (Societies, listed) are the only non-owner edits; both are on the board. No pushed PNGs, no rebase/force-push seen.
 **Request updates:** G4 -> Delivered (source, `3dae8b0`). G6 -> Partial (wonder site facts `096b111`; tides/exposure open). G2/G3/G5/G1 unchanged. Still pending with Codex: C2, C6, C9, C10, C11, C13, C14, C15, G7, G9 and the LAND merge. No new stale items.
 **World lane:** W4 ready; W5 (flags, e.g. `landformLabelVersion`) is next and planned in `grok-world.md`; awaiting Codex review of the pushed W1-W4.
+
+## Societies -> Codex primitive requests (societies head e69b8f8; blocks armor/weapons/tools/animal trade)
+1. production.tickProduction wipes itemCargo on non-combat deaths: skip trade carriers (tradeNeedsId) or call exported dropTradeCargoItems(g,u) from stolenCargo first.
+2. Armor: moveArmorAsset adapter keeping the armor index in sync; carried non-protective holder; place armor into a foreign team's cache.
+3. Weapons: body bundle holder for spears/bows/blades recognised by saves, death and capture.
+4. Farm tools: transferable tool record keeping condition (today bound to worker).
+5. Goats: Livestock.ledBy?:number honoured by husbandry and pen movement.
+6. Recovery trips: Unit.cargoRecoveryId + COMMITTED_TASKS entry.
+Done by societies: bulk goods + crafted items (cordage, baskets, pottery, cloth, leather, hide/wool coats) trade via itemCargo; NPC war goals (loot/occupy/tribute).
