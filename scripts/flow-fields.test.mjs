@@ -53,3 +53,22 @@ test('switched off (the default) the field never answers, so routing is historic
   for(let i=0;i<FLOW_FIELD_RULES.hotRequests*2;i++)assert.equal(flowPath(owner,grid,W,s,goal,1),null);assert.equal(flowFieldStats(owner).built,0);
   assert.equal(flowPath(g,grid,W,s,goal,1),null,'a Game is off unless enabled');
 });
+
+function crowd(on,goals,count=120){
+  const g=new Game();g.reset(4,18,{size:1040,layout:'pangaea'});g.enterIsland();g.testMode=true;Object.assign(g.state,{weather:'clear',weatherT:1e6,raidT:1e6,autoWorkEnabled:false});
+  setFlowFieldsEnabled(g,on);const home=g.campOf(0),rng=mulberry32(5),units=[];
+  while(units.length<count){const a=rng()*Math.PI*2,r=50+rng()*60,x=home.x+Math.cos(a)*r,z=home.z+Math.sin(a)*r;if(!g.walkable(x,z))continue;const u=g.spawnUnit('worker',x,z,0);if(u)units.push(u);}
+  g.rebuildWalk();const targets=goals.map(([dx,dz])=>({x:home.x+dx,z:home.z+dz}));units.forEach((u,i)=>{const t=targets[i%targets.length];Object.assign(u,{order:'move',tx:t.x,tz:t.z,node:null});});
+  const t0=performance.now();for(let s=0;s<120;s+=.2){g.state.paused=false;g.step(.2);for(const u of units){u.hunger=0;u.thirstSeconds=0;u.coldSeconds=0;}}
+  const ms=performance.now()-t0,arrived=units.filter((u,i)=>{const t=targets[i%targets.length];return Math.hypot(u.x-t.x,u.z-t.z)<10;}).length;
+  return{ms,arrived,stats:flowFieldStats(g),errors:g.simulationErrors.length};
+}
+test('native terrain, 120 residents: with the switch on, busy destinations are served by shared fields; arrivals match A* and the simulation is not slower',()=>{
+  for(const goals of [[[8,8]],[[8,8],[-30,20],[25,-35]]]){
+    const astar=crowd(false,goals),flow=crowd(true,goals);
+    console.log(`${goals.length} destination(s): A* ${astar.ms.toFixed(0)} ms, ${astar.arrived}/120 arrived; flow ${flow.ms.toFixed(0)} ms, ${flow.arrived}/120 arrived, ${JSON.stringify(flow.stats)}`);
+    assert.equal(astar.errors,0);assert.equal(flow.errors,0);
+    assert.ok(flow.stats.hits>300,'fields serve the crowd');assert.ok(flow.stats.built<=goals.length*12,'fields are shared, not rebuilt per resident');
+    assert.ok(flow.arrived>=astar.arrived-3,`arrivals ${flow.arrived} vs A* ${astar.arrived}`);assert.ok(flow.arrived>=60,"most of the crowd reaches a 10 m circle");
+    assert.ok(flow.ms<=astar.ms*1.1,`flow ${flow.ms} ms vs A* ${astar.ms} ms`);}
+});
