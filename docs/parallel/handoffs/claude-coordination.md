@@ -148,3 +148,12 @@ Source: user message 2026-11-11 16:04 ET in this session (not in the exported ch
 |---|---|---|---|
 | G15 | Much more diverse trade, as in Dawn of Man: tools, armor, weapons, resources, animals, artifacts, caravans that are sometimes armed. Markets raise trade frequency and improve deals. | Claude Societies (offers, caravans, escorts); Codex (market building effects, prices); Claude Experience (trade dialog/caravan visuals) | Offer mix measured per society; goods always actually held and reserved; markets measurably change visit frequency and price spread; armed escorts scale with observed risk |
 | G16 | Things happening at sea: occasional storms in deep water that endanger or delay voyages. | Claude Societies (voyage risk/abort/return consequences); Codex (hull/sail physics and weather state); Grok (deep-water extents) | Storm is a real weather/state event limited to deep water; boats caught in it are delayed, damaged or lost with exact cargo/crew conservation; NPC and player crews respond (shelter, turn back) from observed conditions only |
+
+## Status — 16:15 ET (usage limit hit; resumes 8 PM ET)
+
+Both Claude workers stopped at the 5-hour usage limit. All their work is committed and pushed; nothing is held only on disk.
+
+- `agents/claude-societies` 8a865d4: **WIP** need-based trade (`src/game/tradeNeeds.ts`, `scripts/trade-needs.test.mjs`, small edits in `coastalTrade.ts`, `types.ts`, `workCommitments.ts`). `trade-needs.test.mjs` is **10/11 — one test fails**; unreviewed; not ready to merge. Still ready from earlier: 3adc249..4210c4a sea exploration, 7bfc943/103f41f/8d3325e stolen cargo + naming.
+- `agents/claude-experience` 6338c9b: **WIP** wonder-plan edits. Earlier ready batch ab1a84b..7331848 unchanged; own suites 33/33 at this head.
+- Pending after reset: Societies — finish trade (G15), storms (G16), Codex sea-exploration review fixes; Experience — Codex review fixes, trade dialog/caravan specs, trees, Crescent Harbor/Mill Market.
+- Overall acceptance unchanged: 34/98.
