@@ -1,0 +1,52 @@
+{
+  "batch": "physical-beam-ram-2026-11-11",
+  "publishedRuntimeCommit": "e695e857b58c916d743db3c7b8704f602a2f51bd",
+  "release": "2026-11-11T19-29-44-245Z-e695e85",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 17,
+  "total": 17,
+  "percentage": 100,
+  "evidence": {
+    "automated": {
+      "passed": 16,
+      "total": 16,
+      "log": ".play/ram-candidate-tests.log"
+    },
+    "nativeBuiltUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/ram-candidate-ui.log",
+      "scope": "Unchanged V18 native terrain; controlled completed workshop/enemy gate and material stocks. Actual paid cache packets, assembly, scout observes target, two original crew deploy/damage/stand down, real Low asset, strict save/reload."
+    },
+    "typecheck": ".play/ram-candidate-typecheck.log",
+    "build": ".play/ram-candidate-build.log"
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "workingChanges": [
+    "24 timber + 4 cordage physically hauled and assembled at actual crafting shelter",
+    "Two to four living adults move an existing beam ram to reached hostile fortification frontage",
+    "Timed repeated impacts use real combat damage, require actual dry access and crew",
+    "Direct stand-down/death/capture preserve paid packets, engine ID, last crew and strict saves",
+    "Scoped/whole community transfers respect actual engine, cache and carrier custody",
+    "Shared bounded instanced ram rendering, Low shadows off, actual inventory parcels"
+  ],
+  "limitations": [
+    "First exposed beam ram only; repair, ranged/ammunition siege and enemy siege planning remain incomplete",
+    "Ram itself does not yet have a general enemy target/attack selection path; crew remain combat targets",
+    "Declared native fixture, not full campaign or 100+ villager Mac performance acceptance",
+    "Deployment uses compact selected-crew controls; broader contextual siege controls remain open"
+  ],
+  "qualificationNotes": [
+    "Initial UI fixture target was outside current sight after construction. Corrected by moving a real original scout to observe gate; visibility rule retained, no source workaround."
+  ],
+  "savesPreserved": true
+}
