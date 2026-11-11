@@ -79,7 +79,7 @@ export const BUILDINGS: Record<
   threshingFloor:{name:"Threshing floor",w:6,d:6,food:0,wood:6,stone:2,pop:0,hp:160,age:0,hint:"Two real processing slots. Separate actual cereal sheaves into rough grain and straw, then winnow in dry weather. Faster than hand work at a hearth."},
   grindingStone: {name:"Grinding stone",w:3,d:3,food:0,wood:2,stone:6,pop:0,hp:180,age:0,hint:"Grind actual harvested grain into flour in 24 work seconds instead of 60 at a hearth. One staffed station; no passive flour."},
   oven: {name:"Stone bread oven",w:4,d:4,food:0,wood:8,stone:8,pop:0,hp:240,age:0,hint:"Bake delivered flour with real water and fuel. Two staffed batches, 24 work seconds each instead of 45 at a hearth."},
-  hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook delivered raw meat with actual logs. New hunting catches then enter the raw-food processing chain."},
+  hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook raw meat and fish with firewood. When lit, nearby villagers can warm up."},
   butcher: {name:"Butcher and skin yard",w:4,d:4,food:0,wood:6,stone:2,pop:0,hp:180,age:0,hint:"Clean actual animal hides and extract tannin from delivered bark-bearing logs and collected water."},
   dryrack: {name:"Food and skin drying rack",w:4,d:3,food:0,wood:4,stone:0,pop:0,hp:180,age:0,hint:"Two loaded batch slots: skins need tending; meat and fish need loading, drying weather, then physical pickup. Rain rewets food and freezing pauses drying."},
   tanner: {name:"Tanning yard",w:4,d:4,food:0,wood:8,stone:2,pop:0,hp:180,age:0,hint:"Tan cleaned hides using actual bark tannin, collected water and worker time."},

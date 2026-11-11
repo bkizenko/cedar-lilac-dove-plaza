@@ -1,3 +1,4 @@
+import {SeasonLedger} from './SeasonReport';
 import {knownDiplomaticRelation} from '@/game/diplomaticKnowledge';
 import {NeedsPanel} from './NeedsPanel';
 import {sendCaptiveEscort} from '@/game/caravans';
@@ -86,7 +87,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         Paused while you plan. Food reserves exclude future gathering and harvests.
       </p>
       <div className="ledger-grid">
-        {open&&<NeedsPanel engine={engine} expanded/>}
+        {open&&<><NeedsPanel engine={engine} expanded/><SeasonLedger game={g}/></>}
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">

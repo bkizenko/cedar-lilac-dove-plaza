@@ -7,6 +7,7 @@ import{HullFleet}from'./hullFleet';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
 import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
 import {TerrainCameraClearance,type CameraGround} from './cameraClearance';
+import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
 import {FibreWorkLayer} from './fibreWorkLayer';
@@ -221,6 +222,7 @@ export class WorldView {
   smoke: THREE.Points;
   smokeGeo: THREE.BufferGeometry;
   smokePos: Float32Array;
+  smokeTexture: THREE.DataTexture;
   flames!: THREE.InstancedMesh;
   pits!: THREE.InstancedMesh;
   floaters: THREE.Group;
@@ -408,16 +410,29 @@ export class WorldView {
     this.smokePos = new Float32Array(72 * 3);
     this.smokeGeo = new THREE.BufferGeometry();
     this.smokeGeo.setAttribute("position", new THREE.BufferAttribute(this.smokePos, 3));
+    const puffSize=32, pixels=new Uint8Array(puffSize*puffSize*4);
+    for(let y=0;y<puffSize;y++)for(let x=0;x<puffSize;x++){
+      const i=(y*puffSize+x)*4;
+      const radius=Math.hypot((x+.5)/puffSize*2-1,(y+.5)/puffSize*2-1);
+      pixels[i]=pixels[i+1]=pixels[i+2]=255;
+      pixels[i+3]=Math.round(255*Math.max(0,1-radius)**2);
+    }
+    this.smokeTexture=new THREE.DataTexture(pixels,puffSize,puffSize);
+    this.smokeTexture.magFilter=THREE.LinearFilter;
+    this.smokeTexture.minFilter=THREE.LinearFilter;
+    this.smokeTexture.needsUpdate=true;
     this.smoke = new THREE.Points(
       this.smokeGeo,
       new THREE.PointsMaterial({
         color: "#e8e0d4",
-        size: 0.55,
+        map: this.smokeTexture,
+        size: 1.1,
         transparent: true,
         opacity: 0.38,
         depthWrite: false,
       }),
     );
+    this.smoke.frustumCulled=false;
     this.scene.add(this.smoke);
 
     this.rainPos = new Float32Array(520 * 3);
@@ -1710,6 +1725,13 @@ export class WorldView {
     for (const u of game.state.units) {
       if (u.hp > 0) grouped.get(u.type)?.push(u);
     }
+    const foodWork = new Map<number,{recipe:string;siteId:number}>();
+    for(const project of game.state.production?.projects||[]){
+      if(project.phase!=='working'||project.actorId===null||project.blockedReason)continue;
+      if(/^(threshCereal|winnowCereal|grindGrain|bakeBread|cookFish|cookMeat)/.test(project.recipe)){
+        foodWork.set(project.actorId,{recipe:project.recipe,siteId:project.workplace});
+      }
+    }
     let ri = 0, tools = 0;
     for (const t of UNIT_TYPES) {
       const list = grouped.get(t)!;
@@ -1734,6 +1756,13 @@ export class WorldView {
         const chopping =
           !walking && (u.order === "gather" || u.order === "attack" || u.order === "build" || !!u.copperStudy&&!u.copperStudy.paused);
         const farming=!walking&&u.order==="gather"&&(!!u.plantingWork||u.node&&"type" in u.node&&u.node.type==="farm");
+        const work=!walking?foodWork.get(u.id):undefined;
+        const site=work?game.state.buildings.find(b=>b.id===work.siteId):undefined;
+        const rhythm=game.state.time*(work?.recipe.startsWith('thresh')?10:5)+u.id*.75;
+        const swing=(1+Math.sin(rhythm))*.5;
+        const workPitch=work?.recipe.startsWith('thresh')?.48*swing**3:
+          work?.recipe.startsWith('winnow')?-.12*Math.sin(rhythm):
+          work?.recipe.startsWith('grind')?.25+.14*Math.sin(rhythm):.09+.31*swing;
         const phase = u.stride;
         const afloat=u.haulage==="canoe"&&game.height(u.x,u.z)<game.waterAt(u.x,u.z)+.3;
         const bob = afloat ? Math.sin(game.state.time*2+u.id)*.025 : walking
@@ -1741,8 +1770,9 @@ export class WorldView {
           : chopping
             ? Math.abs(Math.sin(phase)) * 0.08
             : 0;
-        const pitch = afloat ? 0 : walking ? Math.sin(phase) * 0.22 : farming ? .18+Math.sin(phase)*.16 : chopping ? Math.sin(phase) * 0.14 : 0;
-        const roll = afloat ? 0 : walking ? Math.sin(phase * 2) * 0.12 : 0;
+        const pitch = afloat ? 0 : walking ? Math.sin(phase) * 0.22 : work ? workPitch : farming ? .18+Math.sin(phase)*.16 : chopping ? Math.sin(phase) * 0.14 : 0;
+        const roll = afloat ? 0 : walking ? Math.sin(phase * 2) * 0.12 :
+          work?.recipe.startsWith('winnow') ? Math.sin(rhythm)*.23 : 0;
         const yScale = afloat ? 1.3 : walking ? 1.65 * (1 + Math.sin(phase * 2) * 0.045) : 1.65;
         const st = TEAM_STYLE[u.team] || TEAM_STYLE[0];
         const body =
@@ -1750,7 +1780,7 @@ export class WorldView {
           (u.stature || 1) *
           (u.team === 1 ? 1.12 : u.team === 2 ? 0.92 : 1);
         _p.set(u.x, u.y + bob, u.z);
-        _e.set(pitch, u.facing, roll);
+        _e.set(pitch, site?Math.atan2(site.x-u.x,site.z-u.z):u.facing, roll);
         _q.setFromEuler(_e);
         _s.set(
           body * st.sx,
@@ -1978,19 +2008,22 @@ export class WorldView {
   }
 
   private syncSmoke(game: Game, dt: number) {
-    const halls = game.state.buildings.filter((b) => b.type === "townhall" && b.hp > 0);
-    const n = 72;
-    for (let i = 0; i < n; i++) {
-      const h = halls[i % Math.max(halls.length, 1)];
-      if (!h) {
-        this.smokePos[i * 3 + 1] = -10;
-        continue;
-      }
-      const t = game.state.time * 0.35 + i * 0.4;
-      const k = (t % 3.2) / 3.2;
-      this.smokePos[i * 3] = h.x + 1.6 + Math.sin(t) * 0.35;
-      this.smokePos[i * 3 + 1] = h.y + 0.9 + k * 5.2;
-      this.smokePos[i * 3 + 2] = h.z + 4.2 + Math.cos(t * 0.7) * 0.28;
+    const litHearths=workingHearths(game);
+    const bakingOvens=new Set((game.state.production?.projects||[])
+      .filter(p=>p.recipe==='bakeBreadOven'&&p.phase==='working'&&!p.blockedReason).map(p=>p.workplace));
+    const halls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b)&&survivalFireActive(game,b.team)&&
+      !game.state.buildings.some(h=>h.team===b.team&&litHearths.has(h.id)));
+    const sources=game.state.buildings.filter(b=>(litHearths.has(b.id)||bakingOvens.has(b.id))&&
+      game.finished(b)&&(b.team===0||game.visibleAt(b.x,b.z)));
+    const count=Math.min(this.smokePos.length/3,sources.length*8);
+    this.smokeGeo.setDrawRange(0,count);
+    for(let i=0;i<count;i++){
+      const source=sources[i%sources.length];
+      const t=game.state.time*.55+i*.67;
+      const height=(t%3.2)/3.2;
+      this.smokePos[i*3]=source.x+Math.sin(t)*(.16+height*.55);
+      this.smokePos[i*3+1]=source.y+(source.type==='oven'?1.6:.3)+height*4.3;
+      this.smokePos[i*3+2]=source.z+Math.cos(t*.7)*(.1+height*.35);
     }
     this.smokeGeo.attributes.position.needsUpdate = true;
     if (this.flames) {
@@ -2000,7 +2033,7 @@ export class WorldView {
         (b) =>
           b.hp > 0 &&
           game.finished(b) &&
-          (b.type === "townhall" ||
+          (halls.includes(b) ||
             b.type === "hut" ||
             b.type === "watchtower" ||
             b.type === "keep" ||
@@ -2018,7 +2051,6 @@ export class WorldView {
         _m.compose(_p, _q, _s);
         this.flames.setMatrixAt(fi++, _m);
       }
-      const litHearths=workingHearths(game);
       for(const b of game.state.buildings){if(fi>=instCap(this.flames))break;if(!litHearths.has(b.id)||!(b.team===0||game.visibleAt(b.x,b.z)))continue;
         _p.set(b.x,foundationProfile(game,b).level+.18,b.z);_q.identity();_s.set(.42,.55+Math.sin(game.state.time*8+b.id)*.06,.42);_m.compose(_p,_q,_s);this.flames.setMatrixAt(fi++,_m);
       }
@@ -2074,11 +2106,13 @@ export class WorldView {
         L.distance = night ? 24 : 14;
       });
     }
-    const home = halls.find((h) => h.team === 0);
-    if (home) {
-      this.hearth.position.set(home.x + 1.6, home.y + 0.85, home.z + 4.2);
-      this.hearth.intensity = (game.isNight() ? 2.4 : 1.35) + Math.sin(game.state.time * 9) * 0.25;
-    }
+    const fire=sources.find(b=>b.team===0&&litHearths.has(b.id));
+    const home=halls.find(b=>b.team===0);
+    if(fire||home){
+      const site=(fire||home)!;
+      this.hearth.position.set(site.x+(fire?0:1.6),site.y+.85,site.z+(fire?0:4.2));
+      this.hearth.intensity=(game.isNight()?2.4:1.35)+Math.sin(game.state.time*9)*.25;
+    }else this.hearth.intensity=0;
     void dt;
   }
 
@@ -2648,6 +2682,9 @@ export class WorldView {
     } catch {
       /* already torn down */
     }
+    this.smokeTexture.dispose();
+    (this.smoke.material as THREE.PointsMaterial).dispose();
+    this.smokeGeo.dispose();
     disposeBuildingSurfaceTextures(Object.values(this.mats));
     for (const k of Object.values(this.mats)) k.dispose();
   }

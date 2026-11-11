@@ -44,7 +44,7 @@ import {FARM_TOOLS,farmToolRequirement,farmToolWorkplace} from "@/game/farmTools
 import {HAULAGE,haulageRequirement} from "@/game/haulage";
 import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
-import { FOOD_KINDS } from "@/game/pantry";
+import { FOOD_KINDS, FOOD_NAMES } from "@/game/pantry";
 import { VisitingTrader } from "./VisitingTrader";
 import { reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
@@ -189,7 +189,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {statusPane&&engine&&!founding&&<div className="hud-status-drawer hud-panel" aria-label="Village details">
           <header><span>Village</span><button aria-label="Close village details" onClick={()=>setStatusPane(null)}><X size={14}/></button></header>
           <nav aria-label="Village detail tabs">{([['stores','Stores'],['work','Work'],['food','Food'],['craft','Craft'],['camp','Camp']] as const).map(([key,label])=><button key={key} aria-pressed={statusPane===key} onClick={()=>setStatusPane(key)}>{label}</button>)}</nav>
-          {statusPane==='stores'&&<><div className="resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{kind}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
+          {statusPane==='stores'&&<><div className="resource-details"><strong>Food in stores</strong><dl>{FOOD_KINDS.map(kind=><div key={kind}><dt>{FOOD_NAMES[kind]}</dt><dd>{Math.floor(hud.foodLots?.[kind]||0)}</dd></div>)}</dl>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
         </div>}
         {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
           <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>
@@ -374,7 +374,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       {historyOpen && engine && <VillageHistory engine={engine} close={()=>setHistoryOpen(false)}/>}
       <div className="hud-banner">
         {engine && <VillageAlerts engine={engine}/>}
-        {engine&&!hud.placing&&<SeasonReport game={engine.game}/>}
+        {engine&&<SeasonReport game={engine.game} hidden={!!hud.placing}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
             <div>
@@ -534,6 +534,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 People join through birth or migration. Select adults to drill; right-click an enemy to fight.
               </p>
             )}
+            {sel.kind==="resource"&&sel.type==="tree"&&engine&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>{
+              const tree=engine.game.selectedResource;
+              if(tree?.kind==="tree"){engine.game.markChop([tree.id],false);engine.pushHud();}
+            }}>Fell tree</button>}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}

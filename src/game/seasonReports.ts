@@ -27,6 +27,14 @@ function sample(g: Game, season: number, weapons: number, partial = false): Seas
  };
 }
 
+export function currentSeasonReport(g: Game) {
+ const report=g.state.seasonReports;
+ if(!report)return undefined;
+ const current=sample(g,report.active.season,report.weaponsMade,report.active.partial);
+ for(const key of SEASON_METRICS)current.totals[key]=Math.max(0,current.totals[key]-report.active.totals[key]);
+ return current;
+}
+
 export function updateSeasonReports(g: Game) {
  const season = Math.floor(g.state.time / (YEAR_SECONDS / 4));
  const report = g.state.seasonReports;

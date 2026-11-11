@@ -5,12 +5,12 @@ import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
 import {coastalIndependentNeeds} from './coastalTrade';
-import {clothingWarmth} from './production';
+import {clothingWarmth,PRODUCTION_RECIPES} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
 import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
 import type {Game} from './sim';
-import type {GameState,Unit} from './types';
+import type {Building,GameState,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
 import {supplyApproach,supplyReached} from './campAnchor';
@@ -25,9 +25,46 @@ export type WaterWork={sourceX:number;sourceZ:number;bankX:number;bankZ:number;p
 const emptyStock=(waterLiters=0):SurvivalStock=>({waterLiters,waterConsumedLiters:0,waterDeliveredLiters:0,waterLostLiters:0,fuelBurnedWood:0,waterShortageSeconds:0,coldExposurePersonSeconds:0});
 const residents=(g:Game,team:number)=>g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit);
 const burningFires=new WeakMap<Game,Set<number>>();
+const heatingHearths=new WeakMap<Game,Set<number>>();
+export const hearthHeating=(g:Game,id:number)=>heatingHearths.get(g)?.has(id)??false;
+const huddles=new WeakMap<Unit,{state:GameState;fire:Building;spot:{x:number;z:number}}>();
+const warmingReason='Warming up by the lit hearth';
+
+export function fireWarmingAI(g:Game,u:Unit,dt:number){
+ const visit=huddles.get(u);
+ if(!visit)return false;
+ if(visit.state!==g.state||u.order!=='hold'||u.workReason!==warmingReason||u.emergency||
+    hasTaskCommitment(u)||u.stuckT>=5||!g.finished(visit.fire)||!hearthHeating(g,visit.fire.id)||(u.coldSeconds??0)<=0){
+  huddles.delete(u);
+  if(u.order==='hold'&&u.workReason===warmingReason){
+   u.order=g.state.autoWorkEnabled===false?'hold':'idle';
+   u.workReason='Warmed up at the hearth';
+  }
+  return false;
+ }
+ u.tx=visit.spot.x;u.tz=visit.spot.z;
+ if(Math.hypot(u.x-u.tx,u.z-u.tz)>1&&u.stuckT<5)g.steer(u,dt);
+ return true;
+}
+
+function sendColdResidentsToFire(g:Game,people:Unit[],fires:Building[]){
+ for(const u of people){
+  if(u.team!==0||(u.coldSeconds??0)<12||huddles.has(u)||!free(g,u,true)||!['hold','idle'].includes(u.order))continue;
+  if(fires.some(b=>Math.hypot(b.x-u.x,b.z-u.z)<6))continue;
+  const nearby=fires.filter(b=>Math.hypot(b.x-u.x,b.z-u.z)<SURVIVAL_RULES.fireRadiusMeters)
+   .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
+  for(const fire of nearby){
+   const spot=g.interactionSpot(u,fire);
+   if(!spot)continue;
+   u.order='hold';u.node=null;u.target=null;u.workReason=warmingReason;u.stuckT=0;
+   huddles.set(u,{state:g.state,fire,spot});g.invalidateRoute(u);
+   break;
+  }
+ }
+}
 export const survivalFireActive=(g:Game,team=0)=>g.state.survivalVersion===1&&(burningFires.get(g)?.has(team)??false);
 export function initializeSurvival(g:Game){
- burningFires.delete(g);
+ burningFires.delete(g);heatingHearths.delete(g);
  g.state.survivalVersion=1;autoCheck.delete(g);
  for(const t of g.state.tribes)t.survival=emptyStock(residents(g,t.id).length*SURVIVAL_RULES.waterLitersPerPersonSecond*SURVIVAL_RULES.startingWaterSeconds);
 }
@@ -187,6 +224,10 @@ export function tickSurvival(g:Game,dt:number){
  if(g.state.survivalVersion!==1||dt<=0)return;
  const temp=ambientTemperature(g),rules=SURVIVAL_RULES;
  const activeFires=new Set<number>();burningFires.set(g,activeFires);
+ const litHearths=new Set<number>();heatingHearths.set(g,litHearths);
+ const review=g.state.time>=(autoCheck.get(g)??0);
+ const cooking=new Set((g.state.production?.projects||[]).filter(p=>p.phase==='working'&&PRODUCTION_RECIPES[p.recipe].wood>0).map(p=>p.workplace));
+ const hearths=g.state.buildings.filter(b=>b.type==='hearth'&&g.finished(b));
  const reconcileLost=()=>{for(const u of g.state.units)if(u.hp<=0&&u.waterWork){
   const stock=g.tribe(u.team)?.survival;if(stock)stock.waterLostLiters+=u.waterWork.liters;
   u.waterWork=undefined;
@@ -199,6 +240,9 @@ export function tickSurvival(g:Game,dt:number){
   const home=g.campOf(tr.id),homeTemp=localAirTemperature(g,home.x,home.z,temp);
   const fuelNeeded=fireDemand(g,tr.id,homeTemp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
   if(fuel>0)activeFires.add(tr.id);
+  const fires=hearths.filter(b=>b.team===tr.id&&(fireFraction>0||cooking.has(b.id)));
+  for(const hearth of fires)litHearths.add(hearth.id);
+  if(review&&fires.length)sendColdResidentsToFire(g,people,fires);
   tr.wood=Math.max(0,tr.wood-fuel);stock.fuelBurnedWood+=fuel;
   for(const u of people){
    if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)){
@@ -206,7 +250,8 @@ export function tickSurvival(g:Game,dt:number){
    const thirstDamage=Math.max(0,u.thirstSeconds-rules.thirstGraceSeconds)-Math.max(0,beforeThirst-rules.thirstGraceSeconds);
    if(thirstDamage>0)u.hp-=thirstDamage*u.maxHp/rules.thirstFatalExposureSeconds;
    }
-   const fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
+   let fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
+   for(const hearth of fires)if(Math.hypot(u.x-hearth.x,u.z-hearth.z)<=8)fire=Math.max(fire,cooking.has(hearth.id)?1:fireFraction);
    const localTemp=localAirTemperature(g,u.x,u.z,temp);
    if(u.garment)tickGarmentHeat(u,localTemp,dt);
    const shelter=sheltered(g,u);
@@ -220,7 +265,7 @@ export function tickSurvival(g:Game,dt:number){
  reconcileLost();
  // At most one ordinary carrier per society; automatic survival execution never
  // overrides a direct order or takes an actor from paid/reserved work.
- if(g.state.time>=(autoCheck.get(g)??0)){
+ if(review){
   autoCheck.set(g,g.state.time+5);
   for(const tr of g.state.tribes){const status=survivalStatus(g,tr.id);if(status.enabled&&status.waterSeconds<rules.autoCollectBelowSeconds&&!status.waterWorkers)beginWaterCollection(g,tr.id,true);}
  }

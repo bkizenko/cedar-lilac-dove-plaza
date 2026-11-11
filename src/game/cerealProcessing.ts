@@ -2,7 +2,7 @@ import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,isCerealRecipe,rawCerealField}from'./cerealRules';
 import{beginProduction,resumeProduction,productionIssue,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory}from'./pantry';
-import{isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
+import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
 import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildingCost}from'./construction';
 const reviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,number>}>();
@@ -42,29 +42,58 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
 
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
+const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
 const breadRecipes: ProductionRecipe[] = ['bakeBreadOven', 'bakeBread'];
 const grindingRecipes: ProductionRecipe[] = ['grindGrainStation', 'grindGrain'];
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
  if (team === 0 && reviewPlayerMeals(g, eventActorId)) return true;
- return reviewCerealProcessing(g, team, eventActorId);
+ if (reviewCerealProcessing(g, team, eventActorId)) return true;
+ return team === 0 && eventActorId === undefined && reviewPlantedGrain(g);
+}
+
+const harvestReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
+function reviewPlantedGrain(g: Game) {
+ if (g.state.autoWorkEnabled !== false || calendar(g).phase !== 2) return false;
+ const previous = harvestReviews.get(g);
+ if (previous?.state === g.state && previous.next > g.state.time) return false;
+ harvestReviews.set(g, {state: g.state, next: g.state.time + CEREAL_RULES.reviewSeconds});
+ const floors = g.state.buildings.filter(b => b.team === 0 && b.type === 'threshingFloor' && g.finished(b));
+ if (!floors.length) return false;
+ const fields = g.state.buildings.filter(b => b.team === 0 && g.finished(b) && rawCerealField(b) && farmAvailable(g,b) &&
+  !g.state.units.some(u => u.hp > 0 && u.order === 'gather' && u.node === b));
+ for (const field of fields) {
+  const worker = g.state.units.find(u => u.team === 0 && u.order !== 'gather' && free(g,u) &&
+   !!g.interactionSpot(u,field) && floors.some(floor => g.workBoard.connected(g,field.x,field.z,floor.x,floor.z) || !!g.interactionSpot(u,floor)));
+  if (!worker) continue;
+  worker.node = field;
+  worker.order = 'gather';
+  worker.job = 'food';
+  worker.gatherT = 0;
+  worker.workReason = 'Harvesting a ripe field for the threshing floor';
+  g.invalidateRoute(worker);
+  g.workBoard.reset();
+  return true;
+ }
+ return false;
 }
 
 function reviewPlayerMeals(g: Game, eventActorId?: number) {
  const tribe = g.tribe(0);
  if (!tribe?.alive) return false;
  const raw = tribe.items?.rawMeat ?? 0;
+ const fish = tribe.foodLots?.fish ?? 0;
  const flour = tribe.items?.flour ?? 0;
  const grain = tribe.foodLots?.grain ?? 0;
- if (raw < 4 && flour < 4 && grain < 4) return false;
+ if (raw < 4 && fish < 4 && flour < 4 && grain < 4) return false;
  const previous = mealReviews.get(g);
  if (eventActorId === undefined && previous?.state === g.state && previous.next > g.state.time) return false;
  mealReviews.set(g, {state: g.state, next: g.state.time + CEREAL_RULES.reviewSeconds});
 
  const active = g.state.production?.projects.filter(p => p.team === 0 && p.phase !== 'complete' && p.phase !== 'lost') ?? [];
  const dedicatedOnly = g.state.autoWorkEnabled === false;
- const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b) && (!dedicatedOnly || b.type !== 'hearth'));
+ const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b));
  const canPay = (recipe: ProductionRecipe) => {
   const spec = PRODUCTION_RECIPES[recipe];
   return tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
@@ -74,10 +103,15 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  if (raw >= 4 && !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat')) {
   recipes.push(...(urgent ? meatRecipes : ['smokeMeat', 'cookMeat'] as const));
  }
- const canBake = breadRecipes.some(r => canPay(r) && sites.some(b => b.type === PRODUCTION_RECIPES[r].workplace));
+ if (fish >= 4 && !active.some(p => fishRecipes.includes(p.recipe))) {
+  recipes.push(...(urgent ? fishRecipes : ['smokeFish', 'airDryFish', 'cookFish'] as const));
+ }
+ const baking = dedicatedOnly ? breadRecipes.slice(0, 1) : breadRecipes;
+ const grinding = dedicatedOnly ? grindingRecipes.slice(0, 1) : grindingRecipes;
+ const canBake = baking.some(r => canPay(r) && sites.some(b => b.type === PRODUCTION_RECIPES[r].workplace));
  if (canBake && !active.some(p => breadRecipes.includes(p.recipe) || grindingRecipes.includes(p.recipe))) {
-  if (flour >= 4) recipes.push(...breadRecipes);
-  else if (foodInventory(tribe).grain >= 4) recipes.push(...grindingRecipes);
+  if (flour >= 4) recipes.push(...baking);
+  else if (foodInventory(tribe).grain >= 4) recipes.push(...grinding);
  }
  const options = recipes.filter(canPay).flatMap(recipe => sites
   .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace)

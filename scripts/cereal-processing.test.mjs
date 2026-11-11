@@ -1,3 +1,4 @@
+import {consumeAndSpoilFood} from '../src/game/pantry.ts';
 import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';
 import test from'node:test';import assert from'node:assert/strict';import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
@@ -116,14 +117,13 @@ test('Auto work delivers harvested grain through threshing, winnowing, grinding 
  assert.doesNotThrow(() => decodeGame(encodeGame(g)));
 });
 
-test('Auto work preserves clean grain when water for baking is unavailable and honors manual mode', () => {
+test('automatic processing preserves clean grain when water for baking is unavailable', () => {
  const {g} = fixture();
  const tribe = g.tribe(0);
- Object.assign(tribe, {food: 105, foodLots: {grain: 5, provisions: 100}, items: {rawMeat: 5}});
+ Object.assign(tribe, {food: 105, foodLots: {grain: 5, provisions: 100}, items: {}});
  tribe.survival.waterLiters = 0;
  drive(g, 6);
  assert.equal(g.state.production.projects.length, 0);
- tribe.items.rawMeat = 0;
  g.setAutoWork(true);
  drive(g, 6);
  assert.equal(g.state.production.projects.length, 0);
@@ -187,22 +187,62 @@ test('cooking raw meat can free material space even while exposed cereal remains
  assert.ok(g.tribe(0).items.rawMeat<3);
 });
 
-test('completed food stations turn delivered harvest into bread with village Auto work off', () => {
+test('with Auto work off a ripe field sends grain directly to a floor and then makes bread', () => {
  const {g, u, v} = fixture();
  v.jobLock = true;
  g.state.buildings.push(
-  g.makeBld('threshingFloor', 12, 44, 0),
-  g.makeBld('grindingStone', 20, 44, 0),
-  g.makeBld('oven', 28, 44, 0),
+  g.makeBld('threshingFloor', 35, 46, 0),
+  g.makeBld('grindingStone', 20, 54, 0),
+  g.makeBld('oven', 28, 54, 0),
  );
  g.tribe(0).survival = { ...g.tribe(0).survival, waterLiters: 40 };
  ground(g);
- u.itemCargo = {grainSheaves: 16};
- u.order = 'return';
- drive(g, 270, () => (g.tribe(0).foodLots?.bread || 0) > 0);
+ const field = farm(g);
+ field.crop.remaining = 8;
+ drive(g, 100, () => !!g.state.production?.projects.length);
+ const first = g.state.production.projects[0];
+ const floor = g.state.buildings.find(b => b.type === 'threshingFloor');
+ assert.equal(first.workplace, floor.id);
+ assert.equal(first.actorId, u.id);
+ assert.ok(g.buildingWorkReached(u, floor));
+ assert.ok(Math.hypot(u.x, u.z - 30) > 20, 'first batch starts at the floor, away from the village cache');
+ drive(g, 300, () => (g.tribe(0).foodLots?.bread || 0) > 0);
  assert.ok((g.tribe(0).foodLots?.bread || 0) > 0, JSON.stringify(g.state.production));
  const completed = g.state.production.projects.filter(p => p.phase === 'complete').map(p => p.recipe);
  for (const recipe of ['threshCerealFloor', 'winnowCerealFloor', 'grindGrainStation', 'bakeBreadOven']) assert.ok(completed.includes(recipe), recipe);
  assert.equal(g.state.autoWorkEnabled, false);
  assert.equal(v.jobLock, true);
+});
+
+test('fresh fish is cooked at the hearth with Auto work off and credits only delivered fish', () => {
+ const {g,u,v,hearth} = fixture();
+ v.jobLock = true;
+ Object.assign(u, {x:0,z:48,order:'return',carry:5,carryType:'food',carryFood:'fish'});
+ drive(g, 120, () => g.state.production?.projects.some(p => p.phase === 'complete'));
+ const project = g.state.production.projects[0];
+ assert.equal(project.recipe, 'cookFish');
+ assert.equal(project.workplace, hearth.id);
+ assert.equal(g.state.production.metrics.foodInputsUsed.fish, 4);
+ assert.ok(g.tribe(0).foodLots.cookedFish > 0);
+ assert.doesNotThrow(() => decodeGame(encodeGame(g)));
+});
+
+test('emergency grain, fish and meat provide a tenth of their normal value and risky rations can cause illness', () => {
+ const {g,u}=fixture();
+ const tribe=g.tribe(0);
+ Object.assign(tribe,{food:4,foodLots:{provisions:1,grain:3},items:{rawMeat:2}});
+ consumeAndSpoilFood(g,0,.5,1);
+ assert.ok(tribe.foodLots.grain>2.99,'grain is held back while meals are available');
+ Object.assign(tribe,{food:4,foodLots:{grain:2,fish:2},items:{rawMeat:2}});
+ const random=Math.random;
+ try {
+  Math.random=()=>0;
+  const deficit=consumeAndSpoilFood(g,0,1,1);
+  assert.ok(deficit>.399&&deficit<.401);
+  assert.equal(tribe.food,0);
+  assert.equal(tribe.items.rawMeat,0);
+  assert.ok(u.sickUntil>g.state.time);
+ } finally {
+  Math.random=random;
+ }
 });

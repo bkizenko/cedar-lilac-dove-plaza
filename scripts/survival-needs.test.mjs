@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {SURVIVAL_RULES as R,initializeSurvival,tickSurvival,survivalStatus,beginWaterCollection,waterCollectionAI,pauseWaterCollection,deliverWaterCargo,validSurvivalState} from '../src/game/survivalNeeds.ts';
+import {SURVIVAL_RULES as R,initializeSurvival,tickSurvival,survivalStatus,beginWaterCollection,waterCollectionAI,fireWarmingAI,hearthHeating,pauseWaterCollection,deliverWaterCargo,validSurvivalState} from '../src/game/survivalNeeds.ts';
 import {supplyApproach} from '../src/game/campAnchor.ts';
 function fixture(){const g=new Game();g.reset(42,10,{size:1040,layout:'pangaea'});g.enterIsland();initializeSurvival(g);g.clockState=()=>({weather:'Clear · 12°C'});for(const u of g.state.units){u.order='hold';u.jobLock=true;}return g;}
 test('finite drinking water is consumed once; legacy rules stay untouched',()=>{
@@ -47,4 +47,26 @@ test('needs death reconciles loaded water in the same tick before cleanup',()=>{
  const g=fixture(),u=g.state.units.find(u=>u.team===0),s=g.tribe(0).survival;s.waterLiters=0;u.hp=.001;u.thirstSeconds=R.thirstGraceSeconds;
  u.waterWork={sourceX:0,sourceZ:0,bankX:0,bankZ:0,phase:'returning',progressSeconds:R.collectSeconds,liters:24};
  tickSurvival(g,1);assert.ok(u.hp<=0);assert.equal(s.waterLostLiters,24);assert.equal(u.waterWork,undefined);
+});
+
+test('cold idle residents walk to a fuelled hearth and release the visit when the fire goes out',()=>{
+ const g=fixture(),u=g.state.units.find(p=>p.team===0&&p.type==='worker');
+ g.clockState=()=>({weather:'Cold · 1°C'});
+ g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];
+ g.state.buildings=[];
+ const hearth=g.makeBld('hearth',0,0,0);
+ g.state.buildings.push(hearth);
+ Object.assign(u,{x:15,z:0,y:4,order:'hold',jobLock:false,coldSeconds:20});
+ g.state.autoWorkEnabled=false;
+ g.rebuildWalk();
+ g.tribe(0).wood=30;
+ tickSurvival(g,1);
+ assert.equal(hearthHeating(g,hearth.id),true);
+ assert.match(u.workReason,/lit hearth/);
+ assert.equal(fireWarmingAI(g,u,.1),true);
+ assert.ok(Math.hypot(u.tx-hearth.x,u.tz-hearth.z)<6);
+ g.tribe(0).wood=0;
+ tickSurvival(g,1);
+ assert.equal(hearthHeating(g,hearth.id),false);
+ assert.equal(fireWarmingAI(g,u,.1),false);
 });

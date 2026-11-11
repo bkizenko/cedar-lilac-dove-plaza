@@ -34,7 +34,7 @@ export function storehouses(g: Game, team: number) {
 /** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
 export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2};
 
-export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish'};
+export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish',cookedFish:'cooked fish'};
 /** The existing food total remains the save/trade facade; lots refine its contents. */
 export function foodInventory(t:Tribe) {
   const lots=Object.fromEntries(FOOD_KINDS.map(k=>[k,Math.max(0,t.foodLots?.[k]||0)])) as Record<FoodKind,number>;
@@ -60,7 +60,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
   const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
-  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065};
+  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065,cookedFish:.0004};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
   return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;
 }
@@ -70,14 +70,44 @@ export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase
   const total=Math.max(1,t.food);
   return FOOD_KINDS.reduce((n,k)=>n+food*lots[k]/total*rates[k],0);
 }
+export const EMERGENCY_RATIONS = {nourishment: 0.1, illnessPerRawUnit: 0.025, illnessSeconds: 120};
+
 export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) {
   const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true),before=t.food;
+  const rawRules=team===0;
+  const normalKinds=rawRules?FOOD_KINDS.filter(k=>k!=='fish'&&k!=='grain'):FOOD_KINDS;
   for(const k of FOOD_KINDS)lots[k]*=Math.max(0,1-rates[k]*dt);
-  const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0),nourishment=FOOD_KINDS.reduce((n,k)=>n+lots[k]*(FOOD_NOURISHMENT[k]||1),0),share=Math.max(0,1-demand*dt/Math.max(.0001,nourishment));
-  for(const k of FOOD_KINDS)lots[k]*=share;
+  const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);
+  const nourishment=normalKinds.reduce((n,k)=>n+lots[k]*(FOOD_NOURISHMENT[k]||1),0);
+  const required=demand*dt,share=Math.max(0,1-required/Math.max(.0001,nourishment));
+  for(const k of normalKinds)lots[k]*=share;
+  let deficit=Math.max(0,required-nourishment),risky=0,emergencyUnits=0;
+  const consumeEmergency=(available:number,nutrition:number,unsafe=false)=>{
+    const eaten=Math.min(available,deficit/nutrition);
+    deficit=Math.max(0,deficit-eaten*nutrition);
+    if(unsafe)risky+=eaten;
+    return eaten;
+  };
+  if(rawRules&&deficit>0){
+    lots.grain-=consumeEmergency(lots.grain,EMERGENCY_RATIONS.nourishment);
+    for(const kind of ['roughGrain','grainSheaves'] as const){
+      if(t.items?.[kind]){const eaten=consumeEmergency(t.items[kind]!,EMERGENCY_RATIONS.nourishment*(kind==='grainSheaves'?.5:1));t.items[kind]!-=eaten;emergencyUnits+=eaten;}
+    }
+    lots.fish-=consumeEmergency(lots.fish,EMERGENCY_RATIONS.nourishment,true);
+    if(t.items?.rawMeat){const eaten=consumeEmergency(t.items.rawMeat,EMERGENCY_RATIONS.nourishment,true);t.items.rawMeat-=eaten;emergencyUnits+=eaten;}
+  }
+  if(risky>0&&Math.random()<1-Math.exp(-risky*EMERGENCY_RATIONS.illnessPerRawUnit)){
+    const resident=g.state.units.find(u=>u.team===team&&u.hp>0&&!u.sickUntil&&!u.expedition&&!u.prisoner&&!u.visit);
+    if(resident){
+      resident.sickUntil=g.state.time+EMERGENCY_RATIONS.illnessSeconds;
+      resident.hp=Math.max(1,resident.hp-resident.maxHp*.12);
+      g.banner('A resident fell ill after eating raw meat or fish',4);
+    }
+  }
   t.food=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);t.foodLots=lots;
   recordSimulationEvent(g,'food_spoiled',team,'food',Math.max(0,before-left));
-  recordSimulationEvent(g,'food_consumed',team,'food',Math.max(0,left-t.food));
+  recordSimulationEvent(g,'food_consumed',team,'food',Math.max(0,left-t.food)+emergencyUnits);
+  return required>0?Math.min(1,deficit/required):0;
 }
 export function preservationTimberReserve(g:Game,team:number){return Math.max(16,AGE_COST[g.tribe(team).age+1]?.wood||0);}
 export function preservationAvailable(g: Game, b: Building) {

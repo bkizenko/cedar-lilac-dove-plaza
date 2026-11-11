@@ -35,7 +35,7 @@ import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTra
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
-import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing} from './production';
+import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing,availableThreshingFloor,beginProduction} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
 import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
 import {terrainWalkBase} from './terrainWalkCache';
@@ -44,7 +44,7 @@ import {assignMarkedTrees} from './treeDesignation';
 import {plotSurveyPoints,PLOT_TOPOGRAPHY_RULES,fieldTopographyIssue} from './plotTopography';
 import {captureTarget,captureIntentAI,secureVillage,occupationActorAI,tickOccupation,occupationStatus,integrateOccupiedVillage,withdrawOccupation,releaseConflictAssignment,missionMayTargetBuilding,missionMayTargetCivilian} from './conflictIntent';
 import {prisonerAI,prisonerIndependentNeeds,acceptPrisonerSurrender,provisionPrisoner,releasePrisoner,assignPrisonerGuard,recordPrisonerDeath} from './captivity';
-import {initializeSurvival,tickSurvival,waterCollectionAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
+import {initializeSurvival,tickSurvival,waterCollectionAI,fireWarmingAI,pauseWaterCollection,deliverWaterCargo} from './survivalNeeds';
 import {updateSeasonReports} from './seasonReports';
 import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
@@ -3556,12 +3556,13 @@ export class Game {
       if (b.type === "warehouse" && b.storeCare) b.storeCare = Math.max(0, b.storeCare - dt / 900);
     }
     const counts = this.state.tribes.map((tr) => this.popNow(tr.id));
+    const mealDeficits = new Map<number,number>();
     for (const tr of this.state.tribes) {
       if (!tr.alive && this.popNow(tr.id) === 0) continue;
       const pop = counts[tr.id];
       const upkeep = foodDemand(this, tr.id);
-      consumeAndSpoilFood(this,tr.id,upkeep,dt);
-      if (tr.id === 0 && tr.food < 8 && this.state.bannerT <= 0)
+      mealDeficits.set(tr.id,consumeAndSpoilFood(this,tr.id,upkeep,dt));
+      if (tr.id === 0 && reserveSeconds(this,0) < 35 && this.state.bannerT <= 0)
         this.banner("The stores run thin", 2);
     }
 
@@ -3582,10 +3583,11 @@ export class Game {
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
       if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
-      const hungry = (u.expedition ? u.expedition.food < 0.01 : tr.food < 0.01), previousHunger = u.hunger || 0;
-      u.hunger = hungry ? Math.min(1200, previousHunger + dt) : Math.max(0, previousHunger - dt * 3);
+      const deficit = u.expedition ? Number(u.expedition.food < 0.01) : mealDeficits.get(tr.id)??0;
+      const hungry = deficit > 0.001, previousHunger = u.hunger || 0;
+      u.hunger = hungry ? Math.min(1200, previousHunger + dt * deficit) : Math.max(0, previousHunger - dt * 3);
       if (hungry) {
-        const exposure = Math.max(0, previousHunger + dt - 60) - Math.max(0, previousHunger - 60);
+        const exposure = Math.max(0, previousHunger + dt * deficit - 60) - Math.max(0, previousHunger - 60);
         u.hp -= exposure * u.maxHp * predisposition(u).appetite / 160;
         if (u.hp <= 0 && u.team === 0) this.banner("Hunger takes a villager", 3);
       }
@@ -4331,6 +4333,7 @@ export class Game {
       return;
     }
     if(waterCollectionAI(this,u,dt))return;
+    if(fireWarmingAI(this,u,dt))return;
     if(campSupportAI(this,u,dt))return;
     // New work waits for a carried water load to reach storage, just as ordinary
     // full-handed reassignment does. Explicit movement/hold orders still win.
@@ -4529,6 +4532,19 @@ export class Game {
       return;
     }
     if (u.order === "return") {
+      const threshing = availableThreshingFloor(this,u);
+      if (threshing) {
+        const {floor,spot}=threshing;
+        u.tx=spot.x;u.tz=spot.z;
+        u.workReason="Carrying harvested sheaves directly to the threshing floor";
+        if(!this.buildingWorkReached(u,floor)){this.steer(u,dt);return;}
+        if(deliverProductionCargo(this,u,floor)){
+          u.node=null;u.order="idle";
+          if(beginProduction(this,'threshCerealFloor',floor.id,u.id,true))return;
+          this.workBoard.assign(this,u);
+          return;
+        }
+      }
       const candidates=supplyDrops(this,u.team)
         .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
       let drop:SupplyDrop|undefined,spot:{x:number;z:number}|null=null;
@@ -4544,7 +4560,7 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
-      const reviewFood=(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||u.carryFood==='grain'||(!u.carry&&!u.itemCargo));
+      const reviewFood=(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||['grain','fish'].includes(u.carryFood||'')||(!u.carry&&!u.itemCargo));
       if(!deliverProductionCargo(this,u))return;
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
@@ -5138,7 +5154,7 @@ export class Game {
     return true;
   }
 
-  markChop(ids: number[]) {
+  markChop(ids: number[], clearExisting=true) {
     let n = 0;
     for (const id of ids) {
       const tree = this.state.trees.find((t) => t.id === id && t.amount > 0);
@@ -5148,7 +5164,7 @@ export class Game {
     }
     if (!n) {
       let cleared = 0;
-      for (const id of ids) if (this.chopMarks.delete(id)) cleared++;
+      for (const id of ids) if (clearExisting&&this.chopMarks.delete(id)) cleared++;
       if (cleared) { this.workBoard.reset(); this.banner("Cleared the tree marks", 1.2); }
       return 0;
     }
@@ -6025,7 +6041,7 @@ export class Game {
           "Select a resident and right-click the ground to fish from a reachable bank"):
           `Selected · ${count} remaining${n.cropCandidate?" · gather to bring samples home":""}`,
         hp:fish?count:n.amount,maxHp:Math.max(1,n.maxAmt),kind:"resource",
-        ...(fish?{type:"fish"}:{})
+        ...(fish||n.kind==="tree"?{type:n.kind}:{})
       };
     }
     if(this.selectedCritter&&!units.length&&!this.state.selBld){const c=this.selectedCritter;if(!this.state.wildlife.includes(c)||!huntable(this,c,0)||(c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))this.selectedCritter=null;else selection={name:c.hp>0?`Wild ${c.species}`:`${c.species} carcass`,type:c.species,info:c.hp>0?"Living wild animal · select hunters, then right-click to hunt":"Finite carcass · butcher and carry raw meat, hides and bones home before cooking or preserving",hp:c.hp>0?c.hp:c.carcass?.meat||0,maxHp:c.hp>0?c.maxHp:32,kind:"resource"};}
