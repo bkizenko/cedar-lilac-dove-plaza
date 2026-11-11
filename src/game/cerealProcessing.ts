@@ -10,6 +10,7 @@ function free(g:Game,u:Unit,projectId?:number){return u.hp>0&&u.type==='worker'&
 const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);});
 const cerealPickupReason='Returning to load the actual unprocessed cereal batch';
 const mealPickupReason='Returning to collect food processing inputs';
+const rawFoodGatherer=(u:Unit)=>u.order==='gather'&&u.job==='food'&&!!u.node&&('kind'in u.node&&u.node.kind==='fish'||'type'in u.node&&rawCerealField(u.node as Building));
 export const isCerealPickup=(u:Unit)=>u.order==='return'&&u.workReason===cerealPickupReason;
 function activePickup(g:Game,team:number,reason:string){
  return g.state.units.some(u=>u.team===team&&u.hp>0&&u.order==='return'&&u.workReason===reason&&
@@ -123,10 +124,30 @@ export const grindingRecipes: ProductionRecipe[] = ['grindGrainBulk','grindGrain
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
+ // Ready meals take the next free hands and kitchen slots before restoring
+ // slower upstream work. Existing paid batches retain every input and actor.
+ if(team===0&&urgentReadyMealInputs(g)){
+  if(reviewPlayerMeals(g,eventActorId))return true;
+  if(activeFoodWorkers(g)>=mealWorkerLimit(g))return false;
+  return reviewInterruptedFoodProcessing(g,team,eventActorId);
+ }
  if (reviewInterruptedFoodProcessing(g,team,eventActorId)) return true;
  if (team === 0 && reviewPlayerMeals(g, eventActorId)) return true;
  if (reviewCerealProcessing(g, team, eventActorId)) return true;
  return team === 0 && eventActorId === undefined && reviewPlantedGrain(g);
+}
+
+function mealWorkerLimit(g:Game){const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;return Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));}
+function activeFoodWorkers(g:Game){return(g.state.production?.projects||[]).filter(p=>p.team===0&&p.actorId!==null&&!['paused','stored','complete','lost'].includes(p.phase)&&
+ (isCerealRecipe(p.recipe)||PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
+function urgentReadyMealInputs(g:Game){
+ if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
+ const t=g.tribe(0),food=foodInventory(t);
+ return (['cookFish','cookMeat','cookPorridge',...breadRecipes,'smokeFish','smokeMeat']as ProductionRecipe[]).some(recipe=>{
+  const r=PRODUCTION_RECIPES[recipe];return t.wood>=r.wood&&(t.survival?.waterLiters??0)>=r.water&&food.grain>=r.grain&&
+   Object.entries(r.foodInputs).every(([kind,n])=>(food[kind as keyof typeof food]||0)>=(n||0))&&Object.entries(r.inputs).every(([kind,n])=>((t.items as Record<string,number>|undefined)?.[kind]||0)>=(n||0))&&
+   g.state.buildings.some(b=>b.team===0&&g.finished(b)&&!b.plannedCost&&b.type===r.workplace&&!grainBatchIssue(g,0,recipe,b));
+ });
 }
 
 const recoveryReviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,number>}>();
@@ -205,11 +226,13 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
   return !grainBatchIssue(g,0,recipe) && tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
  };
  const urgent = reserveSeconds(g, 0) < CEREAL_RULES.foodTargetSeconds;
+ const quickMeals=urgent&&urgentReadyMealInputs(g);
+ if(urgent&&activeFoodWorkers(g)>=mealWorkerLimit(g))return false;
  const recipes: ProductionRecipe[] = [];
- if (raw >= 4 && !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat')) {
+ if (raw >= 4 && (urgent || !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat'))) {
   recipes.push(...(urgent ? meatRecipes : ['smokeMeat', 'cookMeat'] as const));
  }
- if (fish >= 4 && !active.some(p => fishRecipes.includes(p.recipe))) {
+ if (fish >= 4 && (urgent || !active.some(p => fishRecipes.includes(p.recipe)))) {
   recipes.push(...(urgent ? fishRecipes : ['smokeFish', 'airDryFish', 'cookFish'] as const));
  }
  const baking = breadRecipes;
@@ -224,17 +247,18 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  if (assignedGrainJobs<grainLimit) {
   if (canBake && flour >= 4) recipes.push(...baking.filter(recipe=>flour>=(PRODUCTION_RECIPES[recipe].inputs.flour??0)));
   if (cleanGrain) {
-   if ((urgent || !canBake || !canGrind)&&!grainJobs.some(p=>p.recipe==='cookPorridge')) recipes.push('cookPorridge');
-   if (canBake && canGrind) recipes.push(...grinding.filter(recipe=>grain>=PRODUCTION_RECIPES[recipe].grain));
+   if ((urgent || !canBake || !canGrind)&&(urgent||!grainJobs.some(p=>p.recipe==='cookPorridge'))) recipes.push('cookPorridge');
+   if (canBake && canGrind&&!quickMeals) recipes.push(...grinding.filter(recipe=>grain>=PRODUCTION_RECIPES[recipe].grain));
   }
  }
+ if(urgent)recipes.sort((a,b)=>{const x=PRODUCTION_RECIPES[a],y=PRODUCTION_RECIPES[b];return x.workSeconds+x.exposureSeconds-y.workSeconds-y.exposureSeconds;});
  const options = recipes.filter(canPay).flatMap(recipe => sites
   .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));
  if (!options.length) return false;
  const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&
   (eventActorId === undefined || u.id === eventActorId) &&
-  (u.order !== 'gather' || !urgent || u.job !== 'food'));
+  (u.order !== 'gather' || !urgent || u.job !== 'food'||rawFoodGatherer(u)));
  for (const {recipe, site} of options) {
   for (const worker of workers) {
    if (!productionIssue(g, recipe, site.id, worker.id)) return beginProduction(g, recipe, site.id, worker.id);
@@ -244,7 +268,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  // can stall independently and may be on another landmass.
  if (eventActorId !== undefined || activePickup(g,0,mealPickupReason)) return false;
  const drops = supplyDrops(g,0);
- const carrier = workers.find(u => (u.order !== 'gather' || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food') && !atCache(g, u) &&
+ const carrier = workers.find(u => (u.order !== 'gather' || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food'||urgent&&rawFoodGatherer(u)) && !atCache(g, u) &&
   drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
  return !!carrier && sendForInputs(g,carrier,mealPickupReason);

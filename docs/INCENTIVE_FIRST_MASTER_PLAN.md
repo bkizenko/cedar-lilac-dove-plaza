@@ -2,6 +2,14 @@
 
 The [settlement economy and art plan](SETTLEMENT_ECONOMY_AND_ART_PLAN.md) expands the farming, specialization, expansion, civic works, exchange, interface and performance tracks.
 
+## Latest scope correction: visual proposals and physical village activity
+
+H and E are retained visual directions for **planning/proposals only**. Preserve the current art and original sheets; do not begin scene implementation or integrate an aesthetic overhaul under this request. The carved-world document is a reviewable proposal, not authorization or evidence of shipped art.
+
+Next connected requirements are shared, docked canoes that people can leave and reuse; needs-based mineral/tool trade; explicit finite labor agreements using real named residents; and an audit of the user's actual saved world where foreign explorers, traders and raids are not being observed. Workload must constrain real available labor and queues without breaking commands or introducing arbitrary failures. Existing shared-boat, barter, mission and workload modules are partial foundations, not current-campaign acceptance.
+
+The actionable source/status/acceptance entries are [BOAT-SHARED, TRADE-NEEDS, TRADE-LABOR, WORLD-ACTIVITY-LIVE and WORKLOAD-CONSEQUENCES](QA_BACKLOG_2026-11-03.md#latest-user-corrections--shared-boats-useful-trade-and-observable-societies). Preserve the complete earlier campaign and expansion scope and the frozen 98 release gates.
+
 ## 1. Product decisions and diagnosis
 
 Build an original **real-time survival-to-civilization game** in which a settlement becomes a city-state through useful work, difficult choices and interactions with other societies.

@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-10",
+  "codeCommit": "b9e957d",
+  "release": "2026-11-11T04-12-45-b9e957d",
+  "scope": "Interrupted food-job recovery, Auto work off continuity and ready-food workload measurement; not historical balance or complete food security",
+  "componentChecks": {
+    "passed": 71,
+    "total": 71,
+    "note": "9 recovery +18 workload +44 cereal/preservation. The latter combines35 initial successes and9 corrected-contract reruns, not a single clean44 run."
+  },
+  "integrationChecks": {
+    "passed": 3,
+    "total": 3,
+    "cases": [
+      {
+        "port": 8086,
+        "nativeWorldgen": 18,
+        "autoWork": false,
+        "breadAfterPublicSaveReload": 3.989310011007506,
+        "errors": []
+      },
+      {
+        "port": 8101,
+        "nativeWorldgen": 18,
+        "autoWork": false,
+        "breadAfterPublicSaveReload": 3.989310011007506,
+        "errors": []
+      },
+      {
+        "scenario": "Separate actual exported village copy,90 simulation seconds",
+        "sourceUnchanged": true,
+        "foodProducedIncludingIntermediateGrain": 202.23999999999523,
+        "retainedRecoveredRecipes": [
+          "grindGrainDouble",
+          "bakeBreadDouble",
+          "winnowCerealFloorDouble"
+        ],
+        "note": "Other original jobs may have left the bounded completed history; do not infer their outcome from absent rows. This total includes clean grain and is not a ready-meal total."
+      }
+    ]
+  },
+  "overallFirstReleaseGates": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newCredit": 0
+  },
+  "liveUI": "Current53-person main village saved and reloaded without population loss; Secure food reserves confirmed. Thresh/winnow/grind/bake/cook progress visible. Left paused. Separate57-person Test Lab backup exported.",
+  "remaining": [
+    "Emergency kitchen scheduler still throttles same-recipe parallelism; followup in progress.",
+    "Three material delivery blockers and one unreachable workshop approach observed.",
+    "Straw/chaff storage and demand-driven milling need further design.",
+    "No multi-season survival or native hardware FPS acceptance claimed."
+  ]
+}
