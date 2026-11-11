@@ -57,3 +57,12 @@ test('click surveys keep depleted nodes and clay work uses the selected reach on
  assert.equal(u.clayWork.depositId,surveyed.digger.deposit.id);
  assert.equal(u.clayWork.loaded,0);
 });
+
+test('clay bank command uses an unlocked working gatherer; protected orders and paid actors stay untouched',()=>{
+ const g=fixture(),reach=waterReachAt(g,{x:0,z:0}),u=g.spawnUnit('worker',0,8,0);u.order='gather';u.job='wood';u.jobLock=false;
+ assert.equal(workReachClay(g,reach,true),true,'working adult can survey instead of requiring idle');
+ assert.equal(waterReachReport(g,reach).digger.person,u);
+ u.jobLock=true;assert.equal(waterReachReport(g,reach).digger,undefined);assert.match(waterReachReport(g,reach).clayIssue,/available/);assert.equal(workReachClay(g,reach,false),false);assert.equal(u.order,'gather');
+ u.foodRole=true;u.productionProjectId=999;assert.equal(waterReachReport(g,reach).digger,undefined);delete u.productionProjectId;
+ assert.equal(workReachClay(g,reach,false),true,'broad Food role may accept explicit clay command');assert.equal(u.clayWork.loaded,0);assert.equal(u.order,'hold');
+});

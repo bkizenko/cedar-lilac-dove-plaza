@@ -13,14 +13,15 @@ export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:num
 export const BOAT_COST={wood:BOAT_CLASSES.riverboat.wood,stone:BOAT_CLASSES.riverboat.stone,seconds:BOAT_CLASSES.riverboat.seconds,seats:BOAT_CLASSES.riverboat.seats};
 // Gameplay tuning for more thrust with diminishing gains as resistance rises.
 export const ROWING_CREW_EXPONENT = 0.12;
+export function canRowRiverboat(g:Game,u:Unit){return u.hp>0&&(!u.prisoner||u.prisoner.phase==='released')&&!isDependent(g,u);}
 export function riverboatRowers(g: Game, crew: Unit[]) {
- return crew.filter(u => u.boat?.phase === 'aboard' && !u.prisoner && !isDependent(g,u)).length;
+ return crew.filter(u => u.boat?.phase === 'aboard' && canRowRiverboat(g,u)).length;
 }
 export function riverboatLoadSpeed(g: Game, id: number) {
  const boat = g.state.boats?.find(b => b.id === id && b.hp > 0);
  if (!boat) return 1;
  const crew = boatCrew(g,id).filter(u => u.boat?.phase === 'aboard');
- const rowing = Math.pow(Math.max(1,riverboatRowers(g,crew)),ROWING_CREW_EXPONENT);
+ const rowing = Math.pow(riverboatRowers(g,crew.filter(u=>u.team===boat.team)),ROWING_CREW_EXPONENT);
  const hull = boatClass(boat);
  const hullPace = boat.hullClass
   ? hull.speed * (BOAT_PRACTICE_RULES.minimumConditionSpeed +
@@ -82,7 +83,7 @@ export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z
  return best;
 }
 export function commandRiverboat(g:Game,id:number,x:number,z:number,preserveMission=false){
- const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u)return false;if(boatServiceProject(g,id)){g.banner('This hull is reserved for paid dock service',4);return false;}
+ const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u||u.team!==b.team||u.boat?.id!==id||u.boat.phase!=='aboard'||!canRowRiverboat(g,u))return false;if(boatServiceProject(g,id)){g.banner('This hull is reserved for paid dock service',4);return false;}
  const p=riverboatDestination(g,b,x,z);if(!p){g.banner('No connected navigable water near that destination',4);return false;}
  if(!preserveMission){delete b.exploration;g.interruptMission(u);}u.order='move';u.tx=p.x;u.tz=p.z;u.target=null;u.node=null;g.invalidateRoute(u);return true;
 }
@@ -120,7 +121,7 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
  if(ride.phase==='boarding'){
   u.tx=b.x;u.tz=b.z;u.workReason='Boarding riverboat';
   if(Math.hypot(u.x-b.x,u.z-b.z)>1.5){g.steer(u,dt);return true;}
-  ride.phase='aboard';u.order='hold';b.captain??=u.id;g.invalidateRoute(u);
+  ride.phase='aboard';u.order='hold';if(u.team===b.team&&canRowRiverboat(g,u))b.captain??=u.id;g.invalidateRoute(u);
  }
  if(ride.phase==='landing'){
   u.tx=ride.x!;u.tz=ride.z!;u.workReason='Disembarking';
@@ -128,6 +129,7 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
   u.boat=undefined;u.haulage=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();return true;
  }
  if(boatServiceProject(g,b.id)){if(b.captain===u.id)u.order='hold';u.workReason='Moored for paid hull service · crew and cargo retained';return true;}
+ if(b.captain===u.id&&(u.team!==b.team||!canRowRiverboat(g,u))){delete b.captain;u.order='hold';}
  if(b.captain===u.id){
   const exploring=boatExplorationAI(g,b,u);
   if(!exploring)u.workReason=u.order==='move'?'Rowing riverboat':'At the helm · click a water destination';
@@ -138,8 +140,8 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
 export function syncRiverboats(g:Game){
  for(const b of g.state.boats||[]){
   const aboard=boatCrew(g,b.id).filter(u=>u.boat?.phase==='aboard');
-  let captain=aboard.find(u=>u.id===b.captain);
-  if(!captain&&aboard.length){captain=aboard[0];b.captain=captain.id;captain.order='hold';}
+  let captain=aboard.find(u=>u.id===b.captain&&u.team===b.team&&canRowRiverboat(g,u));
+  if(!captain){captain=aboard.find(u=>u.team===b.team&&canRowRiverboat(g,u));if(captain){b.captain=captain.id;captain.order='hold';}}
   if(captain){b.x=captain.x;b.z=captain.z;b.facing=captain.facing;}
   else {delete b.captain;if(!boatCrew(g,b.id).some(u=>u.boat?.phase==='boarding'))delete b.exploration;}
   b.y=g.waterAt(b.x,b.z)+.16;

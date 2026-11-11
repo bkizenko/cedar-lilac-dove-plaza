@@ -485,7 +485,7 @@ export function beginHomeUse(g: Game, id: number, team = 0, actorId?: number) {
           !u.housingCargo &&
           !Object.values(u.itemCargo || {}).some((n) => !!n) &&
           !hasTaskCommitment(u, "housingUse") &&
-          !u.jobLock &&
+          (!u.jobLock || u.foodRole === true) &&
           ["idle", "hold", "gather"].includes(u.order),
       )
       .sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z)),

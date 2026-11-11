@@ -9,3 +9,7 @@ test('automatic Build now keeps loaded materials and direct exploration intact a
 test('an explicitly selected paid maker remains protected rather than silently replacing the selection with a free adult',()=>{
  const{g,makers,free,site}=fixture();assert.equal(orderConstruction(g,site,[makers[0]]),false);assert.ok(makers[0].productionProjectId);assert.equal(free.order,'hold');assert.equal(free.buildOrder,undefined);
 });
+test('Build now reuses an unpaid queue owner for the same site and preserves other queued projects',()=>{
+ const {g,free,site}=fixture();const other=g.makeBld('hut',60,40,0);other.build=0;g.state.buildings.push(other);g.rebuildWalk();free.constructionQueue={sites:[other.id,site.id]};assert.equal(orderConstruction(g,site),true);assert.equal(free.buildOrder,site.id);assert.deepEqual(free.constructionQueue.sites,[site.id,other.id]);
+ const f=fixture();f.free.constructionQueue={sites:[f.site.id],paused:true};assert.equal(orderConstruction(f.g,f.site),false);assert.equal(f.free.buildOrder,undefined);assert.equal(f.free.constructionQueue.paused,true);
+});

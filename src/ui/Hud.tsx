@@ -939,8 +939,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         </div>
       </div>}
       {techOpen && !founding ? (
-        <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-ink/70 px-3">
-          <div className="hud-panel max-h-[80dvh] w-full max-w-3xl overflow-y-auto rounded-2xl p-4">
+        <div className="pointer-events-auto absolute inset-0 z-20 flex items-start justify-start bg-ink/45 p-3 pt-28">
+          <div className="hud-panel max-h-[70dvh] w-full max-w-[30rem] overflow-y-auto rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div className="font-display text-lg text-parchment">Knowledge &amp; ages</div>
               <button

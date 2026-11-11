@@ -112,7 +112,7 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   // Select usable adults before the nearest-two limit; paid makers and loaded
   // carriers must not hide a free builder farther from the selected building.
   const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.emergency&&
-    !u.jobLock&&!u.buildOrder&&!u.constructionQueue&&!u.stationOnArrival&&!u.resting&&!u.shelterId&&!u.recalled&&!u.envoy&&!u.scout&&!u.expedition&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&
+    !u.jobLock&&!u.buildOrder&&(!u.constructionQueue||!u.constructionQueue.paused&&u.constructionQueue.sites.includes(b.id))&&!u.stationOnArrival&&!u.resting&&!u.shelterId&&!u.recalled&&!u.envoy&&!u.scout&&!u.expedition&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&
     u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order)&&
     (b.type==='bridge'?!!bridgeApproach(g,u,b):g.buildingWorkReached(u,b)||!!g.interactionSpot(u,b)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))

@@ -1,3 +1,4 @@
+import{Hammer,Pause,Play,Package,ChevronDown}from'lucide-react';
 import{GameTooltip}from'./GameTooltip';
 import{craftingWorkplaceRate}from'../game/crafting';
 import{FOOD_NAMES}from'../game/pantry';
@@ -30,14 +31,24 @@ export function CraftSiteQueue({engine}:{engine:Engine}){
   })}</ul> : <p className="text-parchment-dim">No batches drying or awaiting pickup.</p>}
  </details>}
  <GameTooltip title="Workplace capacity" description="Benches are shared. Loaded, drying and ready batches reserve slots; returning batches release them."><p tabIndex={0} className="text-parchment-dim">{[...(report.benches>0?[`${report.benchesReserved} / ${report.benches} benches${report.benchWaiting?` · ${report.benchWaiting} waiting`:''}`]:[]),...(report.slots>0?[`${report.slotsReserved} / ${report.slots} batch slots`]:[]),...(craftingWorkplaceRate(b)>1?[`+${Math.round((craftingWorkplaceRate(b)-1)*100)}% equipment work`]:[])].join(' · ')}</p></GameTooltip>
- {report.jobs.map(job=><article className="space-y-1 rounded border border-bronze/30 p-2" key={job.id}><strong>{job.label}</strong><p>{job.phase} · {job.actor}</p><progress className="w-full" aria-label={`${job.label} work progress`} value={Math.min(job.required,job.progress)} max={job.required}/><p>{job.progress.toFixed(1)} / {job.required} {job.progressUnit||'work seconds'} · {Math.min(100,Math.floor(job.progress/Math.max(.001,job.required)*100))}%</p><p className="text-parchment-dim">{job.reason}</p> {job.cacheLocation&&<div className="space-y-1">
-  <p>{job.cacheLocation.name}{job.cacheLocation.contents&&` · ${job.cacheLocation.contents}`}</p>
-  <button type="button" className="rounded border border-bronze/40 px-2 py-1" onClick={()=>{
-   const cache=job.cacheLocation!;
-   engine.focusMinimap(cache.x,cache.z);
-   engine.canvas?.focus();
-  }}>Show cache on map</button>
- </div>}{job.details&&<details><summary>Work details</summary><p>{job.details}</p></details>}{(job.paused||job.canPause)&&<button type="button" className="min-h-11 rounded border border-bronze/40 px-3 py-2" disabled={!!g.state.ended} onClick={()=>run(job)}>{job.paused?'Resume paid work':'Pause paid work'}</button>}{job.canUnload&&<button type="button" className="min-h-11 rounded border border-bronze/40 px-3 py-2" disabled={!!g.state.ended} title="Free this worker by carrying the paid inputs to storage. The batch stays paid and can be resumed." onClick={()=>run(job,'unload')}>Unload batch at cache</button>}</article>)}
+ <div className="grid gap-2" style={{gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,170px),1fr))'}}>{report.jobs.map(job=>{
+ const percent=Math.min(100,Math.floor(job.progress/Math.max(.001,job.required)*100));
+ return <article className="min-w-0 space-y-1 rounded-md border border-parchment/15 p-2" key={job.id} aria-label={job.label}>
+  <div className="flex items-start gap-2"><Hammer size={16} className="mt-0.5 shrink-0 text-bronze" aria-hidden="true"/><strong className="min-w-0 flex-1 font-medium">{job.label}</strong><span className="text-parchment-dim">{percent}%</span></div>
+  <GameTooltip title={job.phase} description={`${job.actor} · ${job.reason}`}><span tabIndex={0} className="block max-w-full truncate text-parchment-dim">{job.phase}</span></GameTooltip>
+  <progress className="h-1.5 w-full" aria-label={`${job.label} work progress`} value={Math.min(job.required,job.progress)} max={job.required}/>
+  <p className="truncate text-parchment-dim">{job.actor}</p>
+  <div className="flex flex-wrap items-center gap-2">
+   {(job.paused||job.canPause)&&<GameTooltip title={job.paused?'Resume paid work':'Pause paid work'} description="Paid materials and completed work remain with this batch."><button type="button" aria-label={job.paused?'Resume paid work':'Pause paid work'} className="flex items-center gap-1 rounded border border-bronze/40 px-2 py-1" disabled={!!g.state.ended} onClick={()=>run(job)}>{job.paused?<Play size={11} aria-hidden="true"/>:<Pause size={11} aria-hidden="true"/>}{job.paused?'Resume':'Pause'}</button></GameTooltip>}
+   {job.canUnload&&<GameTooltip title="Unload batch at cache" description="Carry the paid inputs to storage and free this worker. The same paid batch can be resumed later."><button type="button" aria-label="Unload batch at cache" className="flex items-center gap-1 rounded border border-bronze/40 px-2 py-1" disabled={!!g.state.ended} onClick={()=>run(job,'unload')}><Package size={11} aria-hidden="true"/>Store batch</button></GameTooltip>}
+  </div>
+  <details><summary className="flex cursor-pointer items-center gap-1 text-parchment-dim"><ChevronDown size={11} aria-hidden="true"/>Details</summary><div className="mt-1 space-y-1">
+   <p>{job.progress.toFixed(1)} / {job.required} {job.progressUnit||'work seconds'}</p><p>{job.reason}</p>{job.details&&<p>{job.details}</p>}
+   {job.cacheLocation&&<><p>{job.cacheLocation.name}{job.cacheLocation.contents&&` · ${job.cacheLocation.contents}`}</p><button type="button" className="rounded border border-bronze/40 px-2 py-1" onClick={()=>{const cache=job.cacheLocation!;engine.focusMinimap(cache.x,cache.z);engine.canvas?.focus();}}>Show cache on map</button></>}
+  </div></details>
+ </article>;
+ })}</div>
+
  {feedback&&Date.now()<feedback.expires&&report.jobs.some(job=>job.id===feedback.jobId&&job.paused===feedback.paused)&&<p role="status">{feedback.text}</p>}
  </section>;
 }

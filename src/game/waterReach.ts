@@ -1,7 +1,7 @@
 import {fishingBank,fishRecoveryEstimateSeconds,fishHabitatCell,FISHERY_RULES} from './fishing';
 import {mulberry32} from './rng';
 import {lakeContains} from './localWater';
-import {beginClayGather,clayIssue,POTTERY_RULES,surveyClay} from './pottery';
+import {beginClayGather,clayIssue,clayWorkerAvailable,POTTERY_RULES,surveyClay} from './pottery';
 import type {Game} from './sim';
 
 type Point = {x:number;z:number};
@@ -78,12 +78,16 @@ export function waterReachReport(g:Game,reach:WaterReach){
   const person=workers.find(u=>!!fishingBank(g,u,node));
   return person?[{node,person}]:[];
  })[0];
+ const clayWorkers=g.state.units.filter(u=>clayWorkerAvailable(g,u)&&(!u.jobLock||u.foodRole===true||!!u.clayWork))
+  .sort((a,b)=>Number(b.selected)-Number(a.selected)||distance(a,reach)-distance(b,reach));
  const digger=clay.flatMap(deposit=>{
-  const person=workers.find(u=>!clayIssue(g,u.id,deposit.id));
+  const person=clayWorkers.find(u=>!clayIssue(g,u.id,deposit.id));
   return person?[{deposit,person}]:[];
  })[0];
- const surveyor=workers.filter(u=>distance(u,reach)<=POTTERY_RULES.surveyRadius+8).sort((a,b)=>distance(a,reach)-distance(b,reach))[0];
+ const surveyor=clayWorkers.filter(u=>distance(u,reach)<=POTTERY_RULES.surveyRadius+8).sort((a,b)=>distance(a,reach)-distance(b,reach))[0];
  return {
+  clayIssue:digger?null:!clay.length?'Survey this bank first':clay.every(d=>d.remaining<POTTERY_RULES.clayBatch)?'Clay bank exhausted':!clayWorkers.length?'Needs an available empty-handed adult':clayIssue(g,clayWorkers[0].id,clay[0].id),
+  surveyIssue:surveyor?null:!clayWorkers.length?'Needs an available empty-handed adult':`Bring an adult within ${POTTERY_RULES.surveyRadius} m of this bank`,
   fishCount:fish.reduce((sum,node)=>sum+node.amount,0),
   fishCapacity:fish.reduce((sum,node)=>sum+node.maxAmt,0),
   fishRecovery:fish.length&&!grounds.length?Math.min(...fish.map(node=>fishRecoveryEstimateSeconds(g,node))):0,

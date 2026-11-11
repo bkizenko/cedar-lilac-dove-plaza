@@ -1,3 +1,4 @@
+import {bridgeWorkApproach} from './bridgeWorkApproach';
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 
@@ -52,12 +53,7 @@ export function bridgeHeight(g:Game,span:BridgeSpan,x:number,z:number){
   const t=Math.max(0,Math.min(1,((x-span.ax)*dx+(z-span.az)*dz)/(dx*dx+dz*dz)));
   return g.height(span.ax,span.az)*(1-t)+g.height(span.bx,span.bz)*t+.18;
 }
-export function bridgeApproach(g:Game,u:Unit,b:Building){
-  if(!b.bridge)return null;
-  const {ax,az,bx,bz}=b.bridge;
-  return [{x:ax,z:az},{x:bx,z:bz}].filter(p=>g.walkable(p.x,p.z)&&g.workBoard.connected(g,u.x,u.z,p.x,p.z))
-    .sort((a,c)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(c.x-u.x,c.z-u.z))[0]||null;
-}
+export function bridgeApproach(g:Game,u:Unit,b:Building){return bridgeWorkApproach(g,u,b);}
 
 /** Survey the full deck, including islands between otherwise clear banks. */
 function bridgeDeckBlocked(g:Game,s:BridgeSpan){

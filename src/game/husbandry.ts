@@ -13,15 +13,18 @@ import {animalProcessingEnabled,deliverProductionCargo,harvestAnimalMaterials} f
 export const HERD={capacity:8,tamingFood:6,tamingSeconds:60,searchRadiusMeters:220,maturity:300,gestation:240,lactation:900};
 export const penAnimals=(g:Game,pen:number)=> (g.state.livestock||[]).filter(a=>a.pen===pen&&a.hp>0);
 const penAt=(g:Game,id:number,team=0)=>g.state.buildings.find(b=>b.id===id&&b.team===team&&b.type==='pen'&&g.finished(b));
-function available(g:Game,u:Unit,except?:'husbandryWork'|'tamingWork') {
+function available(g:Game,u:Unit,except?:'husbandryWork'|'tamingWork',searchPen?:number) {
+ const searching=searchPen!==undefined&&u.goatSearchPen===searchPen&&u.order==='explore';
+ const ownTamingPack=except==='tamingWork'&&!!u.tamingWork&&!!u.expedition;
  return u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!isDependent(g,u)&&u.enslavedFrom===undefined&&
-  !u.emergency&&!u.recalled&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&
-  !u.buildOrder&&u.drill==null&&!u.haulage&&u.carry===0&&!hasTaskCommitment(u,except)&&['idle','hold','gather','return'].includes(u.order);
+  !u.emergency&&!u.recalled&&(!u.expedition||searching||ownTamingPack)&&!u.scout&&!u.visit&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&
+  !u.buildOrder&&u.drill==null&&(!u.haulage||(searching||ownTamingPack)&&['sled','cart','pack'].includes(u.haulage))&&u.carry===0&&
+  (except!=='tamingWork'||!Object.values(u.itemCargo||{}).some(n=>n>0)&&(!u.jobLock||u.foodRole===true))&&!hasTaskCommitment(u,except)&&(searching||['idle','hold','gather','return'].includes(u.order));
 }
 function keeper(g:Game,pen:number){return g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);}
-export function beginHerdTaming(g:Game,penId:number) {
+export function beginHerdTaming(g:Game,penId:number,unitId?:number) {
  const pen=penAt(g,penId);if(!pen)return false;
- const paused=g.state.units.find(u=>u.tamingWork?.pen===penId&&u.tamingWork.paused&&available(g,u,'tamingWork'));
+ const paused=g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.tamingWork?.pen===penId&&u.tamingWork.paused&&available(g,u,'tamingWork'));
  const returningOwned=paused&&(g.state.livestock||[]).some(a=>a.id===paused.tamingWork!.animal&&a.hp>0);
  if(!returningOwned&&(g.state.livestock?.length||0)>=PEN_RULES.maximumAnimalsTotal){g.banner('Care for the existing herds before capturing more animals',4);return false;}
  if(paused){paused.tamingWork!.paused=false;paused.order='hold';return true;}
@@ -29,7 +32,7 @@ export function beginHerdTaming(g:Game,penId:number) {
  const reserved=g.state.units.filter(u=>u.hp>0&&u.tamingWork?.pen===penId&&!owned.has(u.tamingWork.animal)).length;
  if(penAnimals(g,penId).length+reserved>=surveyPenPasture(g,pen).eligibleCapacity){g.banner('This enclosure has no unreserved usable places — enlarge it or restore dry pasture',4);return false;}
  for(const u of [...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected))){
-  if(!available(g,u,'tamingWork'))continue;
+  if(unitId!==undefined&&u.id!==unitId||!available(g,u,'tamingWork',penId))continue;
   if(u.tamingWork?.pen===penId&&u.tamingWork.paused){u.tamingWork.paused=false;u.order='hold';return true;}
   if(u.tamingWork)continue;
   const animal=g.state.wildlife.filter(a=>a.hp>0&&a.species==='goat'&&g.visibleAt(a.x,a.z)&&
@@ -37,8 +40,9 @@ export function beginHerdTaming(g:Game,penId:number) {
    g.workBoard.connected(g,u.x,u.z,a.x,a.z)&&g.workBoard.connected(g,a.x,a.z,pen.x,pen.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!animal)continue;
-  if(g.tribe(0).food<HERD.tamingFood){g.banner('Bring six food for taming',4);return false;}
-  g.interruptMission(u);g.tribe(0).food-=HERD.tamingFood;
+  const searchPack=u.goatSearchPen===penId&&u.expedition?u.expedition:undefined;
+  if((searchPack?searchPack.food:g.tribe(0).food)<HERD.tamingFood){g.banner('Bring six food for taming',4);return false;}
+  g.interruptMission(u);if(searchPack)searchPack.food-=HERD.tamingFood;else g.tribe(0).food-=HERD.tamingFood;
   u.tamingWork={animal:animal.id,pen:penId,progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
   g.banner('A handler is approaching a wild goat, then will lead it to the pen',4);return true;
  }
@@ -67,7 +71,7 @@ function animalStep(g:Game,a:Livestock,handler:Unit,x:number,z:number,dt:number)
  g.steer(actor,dt);
  a.x=actor.x;a.y=actor.y;a.z=actor.z;a.vx=actor.vx;a.vz=actor.vz;a.facing=actor.facing;a.stuckT=actor.stuckT;
 }
-function finish(g:Game,u:Unit) {if((u.husbandryWork?.waterLiters??0)>0){releaseHusbandryKeeper(g,u);return;}u.tamingWork=undefined;u.husbandryWork=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
+function finish(g:Game,u:Unit) {if((u.husbandryWork?.waterLiters??0)>0){releaseHusbandryKeeper(g,u);return;}u.tamingWork=undefined;u.husbandryWork=undefined;u.order=u.expedition?'return':'idle';if(u.expedition){u.recalled=true;u.stationOnArrival=false;}u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
 function takeFeed(g:Game,limit:number) {
  const t=g.tribe(0),lots=foodInventory(t);
  // A load keeps its actual plant-food identity. Overflow can return to stores
@@ -104,7 +108,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   const target=tame.penGateReached||insidePen(pen,a.x,a.z)?pen:gate;
   u.tx=target.x;u.tz=target.z;g.steer(u,dt);animalStep(g,a,u,u.x,u.z,dt);
   if(insidePen(pen,a.x,a.z,.25)){
-   finish(g,u);if(!keeper(g,pen.id)){u.husbandryWork={pen:pen.id,action:'care',phase:'pen',progress:0};u.order='hold';}
+   finish(g,u);if(!u.expedition&&!keeper(g,pen.id)){u.husbandryWork={pen:pen.id,action:'care',phase:'pen',progress:0};u.order='hold';}
    g.banner('Goat brought home. A fed breeding pair can raise kids; mothers provide milk.',5);
   }
   return true;

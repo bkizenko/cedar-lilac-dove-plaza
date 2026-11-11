@@ -25,11 +25,10 @@ export function WaterReachPanel({engine,reach}:{engine:Engine;reach:WaterReach})
   <section aria-label="Local clay deposits">
    {report.clayCapacity>0?<Stock name="Clay" amount={report.clayCount} capacity={report.clayCapacity}/>:<p>Clay bank unsurveyed.</p>}
    <div className="flex flex-wrap gap-2">
-    <button className={button} disabled={!report.surveyor} onClick={()=>refresh(()=>workReachClay(game,reach,true))}>Survey bank</button>
-    {report.clayCapacity>0&&<button className={button} disabled={!report.digger} onClick={()=>refresh(()=>workReachClay(game,reach,false))}>Dig clay</button>}
+    <button className={button} disabled={!report.surveyor} title={report.surveyIssue||undefined} onClick={()=>refresh(()=>workReachClay(game,reach,true))}>Survey bank</button>
+    {report.clayCapacity>0&&<button className={button} disabled={!report.digger} title={report.clayIssue||undefined} onClick={()=>refresh(()=>workReachClay(game,reach,false))}>Dig clay</button>}
    </div>
-   {report.clayCapacity>0&&report.clayCount===0?<p className="text-parchment-dim">Exhausted clay does not replenish.</p>:
-    !report.surveyor&&<p className="text-parchment-dim">Bring a free adult near this bank to survey it.</p>}
+   {(report.clayCapacity>0?report.clayIssue:report.surveyIssue)&&<p className="text-parchment-dim">{report.clayCapacity>0?report.clayIssue:report.surveyIssue}</p>}
   </section>
  </div>;
 }

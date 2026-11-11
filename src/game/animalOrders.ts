@@ -2,7 +2,7 @@ import type { Game } from './sim';
 import type { Building, Unit } from './types';
 import { hasTaskCommitment } from './workCommitments';
 import { isDependent } from './settlement';
-import { explorationLoad, orderExploration } from './explorationOrders';
+import { orderExploration } from './explorationOrders';
 import { beginHerdTaming, HERD } from './husbandry';
 
 export function goatSearchPen(g: Game, id: number) {
@@ -15,8 +15,22 @@ export function visibleGoatsForPen(g: Game, pen: Building) {
     g.workBoard.connected(g, a.x, a.z, pen.x, pen.z));
 }
 
+/** Only observed animals or genuinely unknown reachable ground guide a search. */
+export function goatSearchTarget(g: Game, u: Unit, pen: Building) {
+  const goat = visibleGoatsForPen(g, pen).find(a => g.workBoard.connected(g, u.x, u.z, a.x, a.z));
+  return goat ? { x: goat.x, z: goat.z } : g.findExploreTarget(u, pen);
+}
+
+/** The discovering scout can keep their real provisions and become the handler. */
+export function captureGoatFromSearch(g: Game, u: Unit, pen: Building) {
+  if (beginHerdTaming(g, pen.id, u.id)) return true;
+  finishGoatSearch(g, u, 'Wild goats spotted — capture needs feed, usable pen space and a clear route. Returning to camp.');
+  return false;
+}
+
 export function finishGoatSearch(g: Game, u: Unit, message: string) {
   delete u.goatSearchPen;
+  delete u.exploreAfterDelivery;
   u.recalled = true;
   u.stationOnArrival = false;
   u.order = 'return';
@@ -35,9 +49,9 @@ export function searchForWildGoats(g: Game, penId?: number) {
   if (penId !== undefined && !pen) return report(false, 'Finish the pen before sending a scout');
   if (pen && visibleGoatsForPen(g, pen).length) {
     const accepted = beginHerdTaming(g, pen.id);
-    return { accepted, reason: accepted ? 'A handler is approaching a wild goat' : 'A goat is visible. Check feed, usable pen space and available handlers.' };
+    if (accepted) return { accepted, reason: 'A handler is approaching a wild goat' };
   }
-  if (pen && g.state.units.some(u => u.hp > 0 && u.order === 'explore' && u.goatSearchPen === pen.id)) {
+  if (pen && g.state.units.some(u => u.hp > 0 && (u.order === 'explore' || u.exploreAfterDelivery) && u.goatSearchPen === pen.id)) {
     return report(true, 'A scout is already searching hills and woodland for this pen');
   }
   const selected = g.selectedUnits();
@@ -45,10 +59,10 @@ export function searchForWildGoats(g: Game, penId?: number) {
   let reason = 'No adult can leave now. Let a worker unload or finish their current order, then try again.';
   for (const u of pool) {
     if (u.team !== 0 || u.hp <= 0 || u.type !== 'worker' || u.militia || isDependent(g, u) ||
-        hasTaskCommitment(u) || u.jobLock || u.emergency || u.recalled || u.expedition || u.visit ||
-        u.envoy || u.scout || u.buildOrder || u.escortId !== undefined || explorationLoad(u) ||
-        !['hold', 'idle', 'gather'].includes(u.order)) continue;
-    const target = pen ? g.findExploreTarget(u, pen) : undefined;
+        hasTaskCommitment(u) || (u.jobLock && !u.foodRole) || u.emergency || u.recalled || u.expedition || u.visit ||
+        u.envoy || u.scout || u.buildOrder || u.escortId !== undefined ||
+        !['hold', 'idle', 'gather', 'return'].includes(u.order)) continue;
+    const target = pen ? goatSearchTarget(g, u, pen) : undefined;
     if (pen && !target) {
       reason = 'No unexplored ground reachable within 220 m of this pen. Scout another area or place a pen near goat habitat.';
       continue;
@@ -56,7 +70,7 @@ export function searchForWildGoats(g: Game, penId?: number) {
     const issue = orderExploration(g, u, target ?? undefined);
     if (issue) { reason = issue; continue; }
     if (pen) u.goatSearchPen = pen.id;
-    u.workReason = 'Searching hills and woodland for wild goats';
+    u.workReason = u.exploreAfterDelivery ? 'Goat search queued — unloading existing supplies first' : 'Searching hills and woodland for wild goats';
     return report(true, u.workReason);
   }
   return report(false, reason);

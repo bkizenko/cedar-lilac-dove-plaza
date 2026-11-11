@@ -1,7 +1,7 @@
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
-import { finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
+import { captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
 import{planAdvancedHome,housingAI,pauseHousingWorker,tickHousing,homeUseAI,knowsHousing,housingApproach,housingFundingIssue,preferredRivalHome,housingAdoptionIssue,retainHousingProject}from'./housing';
 import type {SimulationPhaseProfile} from './simulationPhaseProfile';
@@ -2838,8 +2838,7 @@ export class Game {
     if (u.goatSearchPen !== undefined) {
       if (!pen) { finishGoatSearch(this, u, 'Goat search ended — the pen is gone'); return; }
       if (visibleGoatsForPen(this, pen).length) {
-        const sent = beginHerdTaming(this, pen.id);
-        finishGoatSearch(this, u, sent ? 'Wild goats spotted. A handler is taking feed to one.' : 'Wild goats spotted. Use Capture goat when a handler is free.');
+        captureGoatFromSearch(this, u, pen);
         return;
       }
     }

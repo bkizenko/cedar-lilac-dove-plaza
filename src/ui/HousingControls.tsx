@@ -16,13 +16,13 @@ export function HousingControls({ engine, buildingId }: { engine: Engine; buildi
         <button onClick={() => engine.pauseHome(b.id, !b.planPaused)}>
           {b.planPaused ? "Resume housing work" : "Pause housing work"}
         </button>
-        <span className="text-parchment-dim">Original shelter stays open during its upgrade.</span>
+
       </div>
     );
   if (b.type === "hut")
     return (
       <GameTooltip
-        title="Improve this home"
+        title="Upgrade to timber home"
         description={`${housingQuoteText()}. One builder collects finite packets from the cache. Adds ${HOUSING_RULES.additionalPlaces} places and ${HOUSING_RULES.shelterWarmthCelsius}°C while sheltered after completion. Existing damage remains.`}
       >
         <button
@@ -30,17 +30,17 @@ export function HousingControls({ engine, buildingId }: { engine: Engine; buildi
           title={issue || undefined}
           onClick={() => engine.upgradeHome(b.id)}
         >
-          Improve home · {housingQuoteText()}
+          Upgrade to timber home · {housingQuoteText()}
         </button>
       </GameTooltip>
     );
   if (!b.housingReceipt) return null;
   return (
     <GameTooltip
-      title="Learn through actual use"
+      title="Learn timber-home construction"
       description="An available adult must walk here and try the paid home for 30 seconds. Residents who learn this method can build timber homes. Ordinary needs continue."
     >
-      <button onClick={() => engine.tryHome(b.id)}>Try home · learn its method</button>
+      <button onClick={() => engine.tryHome(b.id)}>Learn timber-home construction</button>
     </GameTooltip>
   );
 }
