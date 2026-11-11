@@ -47,7 +47,8 @@ None. Route state and the stall watchdog stay in memory only. The persisted `stu
 - `node --import ./scripts/game-loader.mjs --test scripts/site-sample.test.mjs`: 5/5 pass.
 - Navigation/route regression set (`local-corridor`, `local-escape`, `navigation-rebuild`, `navigation-neighbor-labels`, `intentional-ground-routes`, `bridge-work-approach`, `hunting-route-arrival`, `ground-laid-workplaces`, `natural-river-route`, `water-navigation-preparation`, `site-preparation-runtime`, `worker-activity`, `cold-paid-recovery`, `v17`/`v18c4b-native-routes`): every failure also fails on unmodified main (see below).
 - `hunting-projectiles`, `coastal-trade`, `cereal-processing`, `barracks-shelter`: an earlier draft regressed hunting stalking and coastal beach. That was fixed in `Keep the established straight-line check…`, and all four files now pass, apart from cereal tests that flake on main too.
-- `npx tsc --noEmit`: pass. `npx eslint` on new files: clean. `sim.ts` has the same 19 problems (1 error) as main.
+- After merging main `860863a`: `npx tsc --noEmit` passes, and the post-merge focused set passes 32/32 (`tight-space-routing`, `site-sample`, `local-corridor`, `local-escape`, `hunting-projectiles`, `graphics-render-style`).
+- `npx tsc --noEmit` at W1 head: pass. `npx eslint` on new files: clean. `sim.ts` has the same 19 problems (1 error) as main.
 - **Full-suite comparison (`npm test`, same base 8f635f6, run concurrently on one box):** main 2334 tests, 2169 pass, 160 fail. Branch at `5f2b1b2`: 2340 tests, 2175 pass, 160 fail (+6 new tight-space tests; `site-sample` was committed after this run started and ran separately, 5/5).
   - Failure-set difference: two failures only on the branch and two only on main.
     - Branch-only: `townhall-costs` "explicit free hearth placement…" fails intermittently on main too (1 of 6 isolated main runs; 1 of 3 branch runs). `cereal-processing` "practiced threshing floor…" also flakes on main.
@@ -81,7 +82,7 @@ Source pushed to `agents/grok-world`; ready for Codex review/merge. Not publishe
 
 ## User-sentiment additions (from docs/parallel/chat-context, missed or underweighted in the handoff/backlog)
 
-Each item has a source pointer (`file#message`); all are W-owned unless marked. They are also recorded in `FULL_GAME_BACKLOG.json` under `grok_world_additions`.
+Each item has a source pointer (`file#message`, where `#` is the `## N. user` heading number in the export); all are W-owned unless marked. Per the board's single-writer rule, `FULL_GAME_BACKLOG.json`, `CURRENT_STATUS.md` and `TASK_LANES.json` are left to Codex: these GW rows are the intake list for Codex to copy after review. GW items overlap Claude's G1–G12 only where noted; none duplicate them.
 
 | ID | Requirement | User quote / source | Batch |
 |---|---|---|---|
@@ -99,6 +100,8 @@ Each item has a source pointer (`file#message`); all are W-owned unless marked. 
 | GW-12 | **Smooth, non-blocky rivers and smoother, less pronounced trails.** | "shuoldn't have blocky rivers like this. should be smooth" — scenic#368; "trails should be smoother, less blocky, and less pronounced" — keyboard#187 | W3 data; Claude renders |
 | GW-13 | **Mountains are hikeable**; residents can be assigned to a mountain to prospect. | "almost all are hikable and climabel … assign people to mountains and have them just go and start looking for minerals" — keyboard#903 | W4 (routes/admissibility; mining economy is Codex) |
 | GW-14 | **Multiple towns per large island**; settlement planning supports more than one settlement per landmass. | "possible to have multiple townds per island depending on size" — scenic#65 | W4 |
+| G10 (board) | **Fog provenance:** the map auto-explored without anyone being sent. Fog may only clear from actual observers or valid returned reports. Accepted as W; reproduce first (COMPLETION_LOG `CHAT-G10-FOG-PROVENANCE`). | "it autoexplored a lot fior nme idk y" — scenic#482 | W2 |
+| G14 (board) | **Deep-water port and draft admission** for larger hulls; W supplies water-depth/site admission, Codex the hulls (COMPLETION_LOG `CHAT-G14-DEEPWATER-PORTS`). | keyboard#841 "deep water ports" | W3 |
 | GW-15 | **Scenic beauty is measured, with above-average player starts** (Bierstadt/Cole sublime vistas). | "even how beautiful a place is is measurable" — scenic#2; "albert bierstadt and thomas cole style" — scenic#9 | W3 (metric audit) |
 
 ### Board items for other owners (not implemented by Grok)
@@ -106,6 +109,13 @@ Each item has a source pointer (`file#message`); all are W-owned unless marked. 
 - **Claude Experience:** buildings themselves slope with terrain, with no oversized platforms; use `sampleSite` (scenic#440, #582, #432). Smooth river and trail rendering from W data (scenic#368).
 - **Claude Societies:** raiders retreat to a real camp or off-map instead of idling at the shore (scenic#693, #690). NPC villages clear forest for building (scenic#649).
 - **Codex:** score/prestige value of claimed land (scenic#786); the clay → mud-brick chain (scenic#767; W supplies finite reach clay in GW-04).
+
+## Coordination log
+
+- 11 Nov, after W1: read `COORDINATION.md`, `CURRENT_STATUS.md`, `TASK_LANES.json`, `EXECUTION_CONTRACT.md`, `COMPLETION_LOG.md` and the Claude board (`handoffs/claude-coordination.md`, including Codex's round-1 response). Fetched `agents/claude-*` (societies and experience WIP, no handoff files yet), `agents/gemini-*` (stale), `agents/grok-*` (none ahead) and `work/codex-*`. No open GitHub issues or PRs.
+- Adopted the board's standardization rules: new behaviour goes in new modules, with one wiring hunk in shared files; optional save fields only; no reformatting; merge `origin/main` into this branch rather than rebasing pushed commits; canonical backlog and status files are single-writer (Codex).
+- Merged `origin/main` `860863a` into this branch. The W1 code was first rebased onto `8f635f6` before it was ever pushed; nothing pushed was rewritten.
+- File claims are disjoint from Claude's (`seaExploration.ts`, `coastal*`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`, `src/scene/building*`, `carved*`) and from Codex's platform files. The only shared hunk is `Game.steer()` in `sim.ts`.
 
 ## Next batch order
 
