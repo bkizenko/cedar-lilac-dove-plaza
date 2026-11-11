@@ -65,6 +65,16 @@ export function societyKnownCells(g:Game,team:number,v?:SeaExploration){
  const known=new Set<number>(g.state.rivalKnowledge?.find(m=>m.team===team)?.cells||[]);for(const i of v?.report.cells||[])known.add(i);
  for(const u of g.state.units)if(u.team===team&&u.hp>0){const i=cellOf(g,u.x,u.z);if(i>=0)known.add(i);}
  for(const b of g.state.buildings)if(b.team===team&&['townhall','cornerstone','lumber','quarry','dock'].includes(b.type)&&g.finished(b)){const i=cellOf(g,b.x,b.z);if(i>=0)known.add(i);}
+ // A moored hull can occupy a water cell just across the dock's dry cell edge.
+ // Seed that actual witnessed water point; ownership alone never reveals a
+ // remote hull/coast. Unknown frontier destinations are still not inspected.
+ for(const b of g.state.boats||[]){
+  if(b.team!==team||b.hp<=0)continue;
+  const witnessed=g.state.units.some(u=>u.team===team&&u.hp>0&&distance(u,b)<=R.sightMeters)||
+   g.state.buildings.some(d=>d.team===team&&d.type==='dock'&&d.hp>0&&g.finished(d)&&distance(d,b)<=R.sightMeters);
+  if(!witnessed||g.height(b.x,b.z)>=g.waterAt(b.x,b.z)+.1)continue;
+  const i=cellOf(g,b.x,b.z);if(i>=0)known.add(i);
+ }
  return known;
 }
 type Nav={labels:Int32Array;width:number};

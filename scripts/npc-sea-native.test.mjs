@@ -5,6 +5,8 @@ import {writeFileSync} from 'node:fs';
 import {nativeBoatVillage} from './helpers/native-boat-village.mjs';
 import {launchRiverboat,BOAT_COST} from '../src/game/boats.ts';
 import {waterNavigation} from '../src/game/waterTravel.ts';
+import {buildingCost} from '../src/game/construction.ts';
+import {BUILDINGS} from '../src/game/constants.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 
 const LIMITS={simulationSeconds:500,wallMilliseconds:30000};
@@ -27,6 +29,26 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
  const stock=g.tribe(0),npc=g.tribe(team);
  Object.assign(npc,{alive:true,wood:stock.wood,stone:stock.stone,food:stock.food,foodLots:structuredClone(stock.foodLots),items:structuredClone(stock.items)});
  npc.survival.waterLiters=200;
+ // The first camp-only scenario was superseded by ordinary NPC refounding at
+ // its original inland site. This fixture instead declares a paid completed
+ // shore hall as the real cache,at an actually admissible clear native site.
+ let hallSite;const def=BUILDINGS.townhall;
+ for(let radius=12;radius<=44&&!hallSite;radius+=4)for(let i=0;i<24;i++){
+  const a=i*Math.PI/12,x=home.x+Math.cos(a)*radius,z=home.z+Math.sin(a)*radius;
+  if(Math.hypot(x-dock.x,z-dock.z)>55||g.placementIssue('townhall',x,z,team)!==null)continue;
+  if([...g.state.trees,...g.state.stones,...g.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<def.w/2+.25&&Math.abs(n.z-z)<def.d/2+.25))continue;
+  const probe={...people[1],x,z,y:g.height(x,z)};
+  if(!g.workBoard.connected(g,home.x,home.z,x,z)||!g.walkable(probe.x,probe.z))continue;
+  hallSite={x,z};break;
+ }
+ assert.ok(hallSite,'an admissible clear shore hall within real crew/cache reach exists');
+ const hallCost=buildingCost('townhall',g,team);assert.ok(g.canAfford(team,hallCost));g.spend(team,hallCost);
+ const hall=g.makeBld('townhall',hallSite.x,hallSite.z,team);g.state.buildings.push(hall);g.rebuildWalk();
+ const hallApproach=g.interactionSpot(people[1],hall);assert.ok(hallApproach,'real hall entrance remains reachable');
+ // Actor positions are authored here before the first step only. Leave the
+ // footprint clear and put each person on a real reachable native standing point.
+ for(let i=0;i<people.length;i++){const u=people[i],p=g.nearestWalk(u,hallApproach.x+(i%3)*1.2,hallApproach.z+Math.floor(i/3)*1.2);assert.ok(g.walkable(p.x,p.z));u.x=p.x;u.z=p.z;u.y=g.height(p.x,p.z);}
+
  const playerHome=g.world.camps.find(c=>c.team===0);
  assert.ok(playerHome,'native player camp exists');
  g.state.campSites=[{team,...home},{team:0,x:playerHome.x,z:playerHome.z}];
@@ -62,7 +84,7 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
   }
   if(['complete','failed','lost'].includes(voyage.phase))break;
  }
- assert.ok(voyage,'a normal Game.step admitted the mission');
+ assert.ok(voyage,JSON.stringify({reason:'a normal Game.step did not admit the mission',time:g.state.time,teams:g.state.seaExploration.teams,boat:g.state.boats,people:people.map(u=>({id:u.id,hp:u.hp,order:u.order,boat:u.boat,why:u.workReason,jobLock:u.jobLock,haulage:u.haulage})),cache:g.campOf(team)}));
  assert.equal(voyage.phase,'complete',JSON.stringify({phase:voyage.phase,reason:voyage.reason,phases:[...phases],metrics:voyage.metrics}));
  for(const phase of ['mustering','outbound','returning','landing','unloading','complete'])assert.ok(phases.has(phase),'physically visited '+phase);
  assert.ok(observedAboard,'a moving NPC shared hull carried its actual crew');
@@ -72,10 +94,10 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
  assert.ok(voyage.metrics.sailMeters>16&&voyage.metrics.foodLoaded>0&&voyage.metrics.foodReturned>0);
  for(const kind of ['food','water']){const m=voyage.metrics;assert.ok(Math.abs(m[kind+'Loaded']-(m[kind+'Returned']+m[kind+'Used']+m[kind+'Lost']+m[kind+'WithPeople']))<1e-6,kind+' voyage conservation');}
  assert.equal(voyage.home.length,voyage.crew.length);
- for(const id of voyage.crew){const u=g.state.units.find(u=>u.id===id);assert.ok(u&&!u.boat&&!u.haulage&&!u.scoutProvisions&&u.seaExplorationId===undefined);assert.ok(Math.hypot(u.x-home.x,u.z-home.z)<=5,'report carrier reached the real communal cache');}
+ for(const id of voyage.crew){const u=g.state.units.find(u=>u.id===id);assert.ok(u&&!u.boat&&!u.haulage&&!u.scoutProvisions&&u.seaExplorationId===undefined);assert.ok(g.buildingWorkReached(u,hall),'report carrier reached the actual hall entrance/cache');}
  assert.equal(voyage.reportCommitted,true);assert.ok(voyage.metrics.cellsCommitted>0);
  const memory=new Set(g.state.rivalKnowledge.find(row=>row.team===team).cells);assert.ok(voyage.report.cells.every(cell=>memory.has(cell)));
  assert.equal(terrainHash(g),originalTerrain,'original height/water arrays unchanged');assert.equal(g.height,height);assert.equal(g.waterAt,waterAt);assert.equal(g.steer,steer);
  const copy=decodeGame(encodeGame(g));assert.equal(terrainHash(copy),originalTerrain);assert.equal(copy.state.boats[0].id,hullId);assert.equal(copy.state.seaExploration.voyages.find(v=>v.id===voyage.id).reportCommitted,true);
- console.log(JSON.stringify({scope:'authored finite team1 society on unchanged seed1/V14 native coast;ordinaryGame.step;not organic multi-AI/browser/latest-map acceptance',limits:LIMITS,terrainSha256:originalTerrain,simulationSeconds:g.state.time-startTime,wallMilliseconds:performance.now()-wallStart,phases:[...phases],hullId,crew: voyage.crew.length,injuredOwnerExcluded:true,reportCommitted: true,metrics:voyage.metrics,captureWritten}));
+ console.log(JSON.stringify({hallCost,scope:'authored finite team1 society on unchanged seed1/V14 native coast;ordinaryGame.step;not organic multi-AI/browser/latest-map acceptance',limits:LIMITS,terrainSha256:originalTerrain,simulationSeconds:g.state.time-startTime,wallMilliseconds:performance.now()-wallStart,phases:[...phases],hullId,crew: voyage.crew.length,injuredOwnerExcluded:true,reportCommitted: true,metrics:voyage.metrics,captureWritten}));
 });
