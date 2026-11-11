@@ -1,0 +1,56 @@
+{
+  "batch": "workflows-bridge-clay-goats-2026-11-11",
+  "publishedRuntimeCommit": "28c8621c2c603c56a530a28c5a712afe1101575f",
+  "release": "2026-11-11T18-47-04-708Z-28c8621",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 112,
+  "total": 112,
+  "percentage": 100,
+  "evidence": {
+    "automated": {
+      "passed": 111,
+      "total": 111,
+      "log": ".play/workflows-candidate-tests.log"
+    },
+    "typecheck": ".play/workflows-candidate-typecheck.log",
+    "build": ".play/workflows-candidate-build.log",
+    "disposableUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/workflows-candidate-ui-final.log"
+    }
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "workingChanges": [
+    "compact recipe cards and actual paid queues",
+    "compact knowledge and optional details",
+    "actual meeting conversation topics and finite exchange/treaty revalidation",
+    "dry-bank bridge construction approaches",
+    "Build now reuses same-site queued owner",
+    "loaded goat search physically unloads then retains search goal",
+    "discovering goat scout can tame with actual carried provisions and return unused pack",
+    "river clay picker accepts eligible ordinary working adults, actual four-unit dig/delivery/save",
+    "clear timber-home upgrade/demonstration actions",
+    "only able aboard adults propel/helm rowed boats"
+  ],
+  "limitations": [
+    "No current 100+ resident village export used; local blockers may remain.",
+    "Goats still require actual reachable habitat; no invented animals and no guarantee of capture.",
+    "Sailing, armor, siege, canals, new brick materials and generated runtime wonders remain incomplete.",
+    "Site preparation and seeded H art remain separate pending work/prototypes."
+  ],
+  "qualificationNotes": [
+    "Pen-water fixtures now select actual free keeper/carrier after automatic pen construction; declared surrender cargo carrier starts beside real captor before water journey. Existing finite-load, custody, ownership, save and loss assertions retained; all twelve tests pass.",
+    "UI fixture initially tried a toolbar button behind a modal overlay; corrected to use the actual Close action. Final artifact passed without source workaround."
+  ],
+  "savesPreserved": true
+}
