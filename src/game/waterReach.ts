@@ -1,4 +1,4 @@
-import {fishingBank,fishRecoveryEstimateSeconds} from './fishing';
+import {fishingBank,fishRecoveryEstimateSeconds,fishHabitatCell,FISHERY_RULES} from './fishing';
 import {mulberry32} from './rng';
 import {lakeContains} from './localWater';
 import {beginClayGather,clayIssue,POTTERY_RULES,surveyClay} from './pottery';
@@ -6,7 +6,7 @@ import type {Game} from './sim';
 
 type Point = {x:number;z:number};
 export type WaterReach = Point & {kind:'river'|'lake'};
-export const WATER_REACH_RULES = {radius:24,wetStep:2,bankTolerance:7,habitatCell:12,minimumFish:36,fishCapacityRange:24} as const;
+export const WATER_REACH_RULES = {radius:24,wetStep:2,bankTolerance:7,habitatCell:FISHERY_RULES.habitatCell,minimumFish:36,fishCapacityRange:24} as const;
 
 const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.z-b.z);
 const wet=(g:Game,x:number,z:number)=>g.height(x,z)<=g.waterAt(x,z)+.04;
@@ -43,8 +43,7 @@ function sameWater(g:Game,reach:WaterReach,point:Point,bankTolerance=0){
  * occupies its cell, including when a dock has already surveyed that water. */
 export function surveyReachFish(g:Game,reach:WaterReach){
  const {radius,habitatCell:cell,minimumFish,fishCapacityRange}=WATER_REACH_RULES;
- const cellKey=(x:number,z:number)=>`${Math.floor(x/cell)}:${Math.floor(z/cell)}`;
- const knownCells=new Set(g.state.fish.map(node=>cellKey(node.x,node.z)));
+ const knownCells=new Set(g.state.fish.map(node=>fishHabitatCell(node.x,node.z)));
  for(let cz=Math.floor((reach.z-radius)/cell);cz<=Math.floor((reach.z+radius)/cell);cz++){
   for(let cx=Math.floor((reach.x-radius)/cell);cx<=Math.floor((reach.x+radius)/cell);cx++){
    if(knownCells.has(`${cx}:${cz}`))continue;

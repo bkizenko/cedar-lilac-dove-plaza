@@ -101,7 +101,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
-import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds} from "./fishing";
+import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
@@ -4458,20 +4458,17 @@ export class Game {
           }
         }
         if ("amount" in node && !seasonalForage) {
-          node.amount -= (node.kind === "fish" || node.kind === "stone") ? gained : 1;
+          if(node.kind==='fish')consumeFishStock(node,gained);else node.amount-=node.kind==='stone'?gained:1;
           if(node.kind==="forage")applyForagePressure(node);
-          else if(node.kind==="fish")node.pressure=Math.min(1,(node.pressure||0)+.4*gained/Math.max(1,node.maxAmt||8));
           if (node.amount <= 0) {
             node.amount = 0;
             if (node.kind === "tree") this.chopMarks.delete(node.id);
-            node.regenT =
+            if(node.kind!=="fish")node.regenT =
               node.kind === "tree"
                 ? 600 + Math.random() * 600
                 : node.kind === "forage"
                   ? 240 + (node.pressure||0)*900 + Math.random() * 120
-                  : node.kind === "fish"
-                    ? 55 + Math.random() * 40
-                    : 190 + Math.random() * 80;
+                  : 190 + Math.random() * 80;
             this.addBurst(
               node.x,
               u.y + 1,

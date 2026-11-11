@@ -1,0 +1,45 @@
+{
+  "status": "candidate qualified; publication pending",
+  "changes": [
+    "Bank and dock share finite catch/pressure/exhaustion rest",
+    "Connected habitat survey reuse without replenishing old stock",
+    "Read-only actual worker recipe/stage/progress/source/destination/cargo/blocker UI"
+  ],
+  "sourceChecks": {
+    "passed": 15,
+    "total": 15,
+    "logs": [
+      ".play/fish-activity-candidate-tests.log",
+      ".play/fish-activity-regression.log"
+    ]
+  },
+  "renderedAcceptance": {
+    "passed": 3,
+    "total": 3,
+    "logs": [
+      "/tmp/hearthwild-worker-activity-browser.log",
+      "/tmp/hearthwild-fish-activity-grain-browser.log"
+    ],
+    "scope": "Real53 save copy paused activity readout; native separate12-person fish/grain pipeline AutoOFF/ON and save/reload"
+  },
+  "batch": {
+    "passed": 18,
+    "total": 18,
+    "percentage": 100
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "firstReleaseGates": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  },
+  "remaining": [
+    "Current live river total not captured",
+    "Full food ecology/labor balance not calibrated",
+    "Fish stocks not globally reduced or deleted",
+    "Legacy stranded raiders and unqualified field/trade/raid development remain separate"
+  ]
+}

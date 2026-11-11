@@ -3,10 +3,12 @@ import { personName, predisposition } from '../game/people';
 import { ITEM_KINDS, ITEM_NAMES, PRODUCTION_RECIPES } from '../game/production';
 
 import { productionPracticeRate } from '../game/productionPractice';
+import type { Game } from '../game/sim';
+import { WorkerActivity } from './WorkerActivity';
 
 const amount = (value: number) => Number(value.toFixed(2));
 
-export function ResidentInventory({ residents }: { residents: Unit[] }) {
+export function ResidentInventory({ residents, game }: { residents: Unit[]; game?:Game }) {
   return <ul className="space-y-2 text-xs">
     {residents.map(resident => {
       const carried: string[] = [];
@@ -43,7 +45,7 @@ export function ResidentInventory({ residents }: { residents: Unit[] }) {
         <strong>{personName(resident)}</strong>
         <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
         {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
-        {resident.workReason && <div>{resident.workReason}</div>}
+        {game?<WorkerActivity state={game.state} resident={resident}/>:resident.workReason&&<div>{resident.workReason}</div>}
         <details>
           <summary>Aptitudes & practice</summary>
           <div>Strength {Math.round(traits.strength * 100)}% · Speed {Math.round(traits.speed * 100)}% · Combat {Math.round(traits.fighting * 100)}% · Trade {Math.round(traits.trading * 100)}%</div>

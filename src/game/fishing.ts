@@ -9,7 +9,20 @@ import {reserveSeconds} from "./settlement";
 import {mulberry32} from './rng';
 /** Seconds, fish units, and dimensionless habitat pressure. These keep catch
  * finite: recovery changes wild stock, never the village inventory. */
-export const FISHERY_RULES=Object.freeze({replenishmentSpeed:2,defaultCapacityFish:8,yearSeconds:1800,seasonSeconds:450,winterProductivity:.4,droughtProductivity:.35,floodProductivity:1.2,pressureRecoverySeconds:1200,fullStockRecoverySeconds:240,maximumPressurePenalty:.8,emptyRestBaseSeconds:60,emptyRestPressureSeconds:180});
+export const FISHERY_RULES=Object.freeze({replenishmentSpeed:2,defaultCapacityFish:8,habitatCell:12,yearSeconds:1800,seasonSeconds:450,winterProductivity:.4,droughtProductivity:.35,floodProductivity:1.2,pressureRecoverySeconds:1200,fullStockRecoverySeconds:240,maximumPressurePenalty:.8,emptyRestBaseSeconds:60,emptyRestPressureSeconds:180});
+/** One saved habitat cell identity for dock and reach surveys. Water
+ * connectivity is still checked by the caller; a cell alone is not an ocean. */
+export const fishHabitatCell=(x:number,z:number)=>`${Math.floor(x/FISHERY_RULES.habitatCell)}:${Math.floor(z/FISHERY_RULES.habitatCell)}`;
+/** Charge only actual catches to the same finite node. Repeated attempts at an
+ * empty node do not restart its rest timer; recovery never credits a village. */
+export function consumeFishStock(n:ResourceNode,requested:number){
+ const taken=Number.isFinite(requested)?Math.max(0,Math.min(requested,n.amount)):0;
+ if(taken<=0)return 0;
+ n.amount=Math.max(0,n.amount-taken);
+ n.pressure=Math.min(1,(n.pressure||0)+.4*taken/Math.max(1,n.maxAmt||FISHERY_RULES.defaultCapacityFish));
+ if(n.amount===0)n.regenT=FISHERY_RULES.emptyRestBaseSeconds+(n.pressure||0)*FISHERY_RULES.emptyRestPressureSeconds;
+ return taken;
+}
 function fishRecoveryRate(g:Game){return (Math.floor((g.state.time%FISHERY_RULES.yearSeconds)/FISHERY_RULES.seasonSeconds)===3?FISHERY_RULES.winterProductivity:1)*(g.state.weather==='drought'?FISHERY_RULES.droughtProductivity:g.state.weather==='flood'?FISHERY_RULES.floodProductivity:1);}
 /** Conservative resting estimate at current season/weather; continued catches
  * or changing weather can change it. Includes the actual remaining rest timer. */
@@ -62,14 +75,14 @@ function localGrounds(g:Game,b:Building,water:WaterPoint[]){
  * are never refilled by a new dock, clicking again, moving away, or loading. */
 function surveyFishingWater(g:Game,b:Building,water:WaterPoint[]){
   if(!g.finished(b)||!water.length)return;
-  const sections=12,existing=g.state.fish.filter(n=>Math.hypot(n.x-b.x,n.z-b.z)<=DOCK_R+15&&touchesWater(g,n,water));
+  const sections=FISHERY_RULES.habitatCell,existing=g.state.fish.filter(n=>Math.hypot(n.x-b.x,n.z-b.z)<=DOCK_R+15&&touchesWater(g,n,water));
   for(let iz=Math.floor((b.z-DOCK_R)/sections);iz<=Math.floor((b.z+DOCK_R)/sections);iz++)
     for(let ix=Math.floor((b.x-DOCK_R)/sections);ix<=Math.floor((b.x+DOCK_R)/sections);ix++){
       const cx=(ix+.5)*sections,cz=(iz+.5)*sections;
       let site:WaterPoint|undefined,best=Infinity;
       for(const p of water){if(Math.floor(p.x/sections)!==ix||Math.floor(p.z/sections)!==iz)continue;const d=(p.x-cx)**2+(p.z-cz)**2;if(d<best){site=p;best=d;}}
       if(!site||Math.hypot(site.x-b.x,site.z-b.z)>DOCK_R||
-        (b.team===0&&!g.exploredAt(site.x,site.z))||existing.some(n=>Math.hypot(n.x-site!.x,n.z-site!.z)<10))continue;
+        (b.team===0&&!g.exploredAt(site.x,site.z))||existing.some(n=>fishHabitatCell(n.x,n.z)===fishHabitatCell(site!.x,site!.z)||Math.hypot(n.x-site!.x,n.z-site!.z)<10))continue;
       const random=mulberry32(g.state.seed^Math.imul(ix,73856093)^Math.imul(iz,19349663));
       const capacity=36+Math.floor(random()*24);
       const n:ResourceNode={id:g.id(),kind:'fish',x:site.x,z:site.z,y:g.waterAt(site.x,site.z)+.1,
@@ -125,10 +138,8 @@ export function fishingBank(g:Game,u:Unit,n:ResourceNode){
 export function catchDockFish(g:Game,u:Unit,b:Building){
   const ground=fishingGrounds(g,b)[0];
   if(!ground){u.node=null;u.order=u.carry>0?'return':'idle';u.workReason=fishingIssue(g,b)||'Finding other food work';g.workBoard.reset();return;}
-  const taken=Math.min(1,ground.amount,Math.max(0,carryingCapacity(u,"food")-u.carry));
+  const taken=consumeFishStock(ground,Math.min(1,Math.max(0,carryingCapacity(u,"food")-u.carry)));
   if(taken<=0){u.order='return';return;}
-  ground.amount=Math.max(0,ground.amount-taken);ground.pressure=Math.min(1,(ground.pressure||0)+.4*taken/Math.max(1,ground.maxAmt||8));
-  if(ground.amount===0)ground.regenT=FISHERY_RULES.emptyRestBaseSeconds+(ground.pressure||0)*FISHERY_RULES.emptyRestPressureSeconds;
   u.carry+=taken;u.carryType='food';u.carryFood='fish';u.workReason='Fishing from the dock — carrying the catch home';
   if(u.team===0)g.onSfx('fish');
   if(u.carry>=carryingCapacity(u,"food")||ground.amount===0||(u.carry>=8&&reserveSeconds(g,u.team)<90))u.order='return';
