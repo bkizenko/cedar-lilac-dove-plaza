@@ -1734,7 +1734,7 @@ export class WorldView {
     const foodWork = new Map<number,{recipe:string;siteId:number}>();
     for(const project of game.state.production?.projects||[]){
       if(project.phase!=='working'||project.actorId===null||project.blockedReason)continue;
-      if(/^(threshCereal|winnowCereal|grindGrain|bakeBread|cookFish|cookMeat)/.test(project.recipe)){
+      if(/^(threshCereal|winnowCereal|grindGrain|bakeBread|cookFish|cookMeat|cookPorridge)/.test(project.recipe)){
         foodWork.set(project.actorId,{recipe:project.recipe,siteId:project.workplace});
       }
     }

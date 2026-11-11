@@ -55,6 +55,7 @@ export const PRODUCTION_RECIPES={
  sewHideCoat:recipe({name:'Sew a lined hide coat',workplace:'tailor',inputs:{driedSkin:2,leather:1,bone:1},wood:0,water:0,workSeconds:TEXTILE_RULES.hideCoatSewSeconds,outputs:{hideCoat:1},food:0}),
  grindGrain:recipe({name:'Hand-grind grain',workplace:'hearth',inputs:{},grain:4,wood:0,water:0,workSeconds:60,outputs:{flour:4},food:0}),
  grindGrainStation:recipe({name:'Grind grain at a stone',workplace:'grindingStone',inputs:{},grain:4,wood:0,water:0,workSeconds:24,outputs:{flour:4},food:0}),
+ cookPorridge:recipe({name:'Cook grain porridge',workplace:'hearth',inputs:{},grain:4,wood:1,water:2,workSeconds:18,outputs:{},food:4,foodKind:'porridge'}),
  bakeBread:recipe({name:'Bake hearth bread',workplace:'hearth',inputs:{flour:4},wood:1,water:2,workSeconds:45,outputs:{},food:4,foodKind:'bread'}),
  bakeBreadOven:recipe({name:'Bake oven bread',workplace:'oven',inputs:{flour:4},wood:1,water:2,workSeconds:24,outputs:{},food:4,foodKind:'bread'}),
  airDryMeat:recipe({name:'Air-dry meat',workplace:'dryrack',inputs:{rawMeat:4},wood:0,water:0,workSeconds:10,outputs:{},food:4,foodKind:'driedMeat',preservation:'air',exposureSeconds:60}),

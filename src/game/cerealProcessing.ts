@@ -62,12 +62,12 @@ export function harvestBacklogAlert(g:Game){
  if((winnow||thresh)&&!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
  if(winnow&&cerealWeatherIssue(g,'winnowCerealFloor'))return alert('winnowing resumes in dry weather');
  if(bake||grind){
-  if(!has('oven')&&!hand)return alert('finish a bread oven');
-  if(!bake&&!has('grindingStone')&&!hand)return alert('finish a grinding stone');
-  if((t.survival?.waterLiters??0)<PRODUCTION_RECIPES.bakeBreadOven.water)return alert('collect drinking water for baking');
-  if(t.wood<PRODUCTION_RECIPES.bakeBreadOven.wood)return alert('gather firewood for baking');
+  if(!has('oven')&&!hand&&(!grind||!has('hearth')))return alert(grind?'finish a cooking hearth or bread oven':'finish a bread oven');
+  if(!bake&&!has('grindingStone')&&!hand&&!has('hearth'))return alert('finish a grinding stone or cook grain at a hearth');
+  if((t.survival?.waterLiters??0)<PRODUCTION_RECIPES.bakeBreadOven.water)return alert('collect drinking water for grain meals');
+  if(t.wood<PRODUCTION_RECIPES.bakeBreadOven.wood)return alert('gather firewood for grain meals');
  }
- const grainProjects=projects.filter(p=>isCerealRecipe(p.recipe)||p.recipe.startsWith('grindGrain')||p.recipe.startsWith('bakeBread'));
+ const grainProjects=projects.filter(p=>isCerealRecipe(p.recipe)||p.recipe.startsWith('grindGrain')||p.recipe.startsWith('bakeBread')||p.recipe==='cookPorridge');
  if(grainProjects.some(p=>p.phase==='paused'||p.phase==='stored'))return alert('resume a paused grain batch at its workplace');
  if(grainProjects.some(p=>!p.blockedReason))return recentRisk||exposed?alert('processing underway · check storage and workplace capacity'):null;
  return alert('keep a worker and a clear route available');
@@ -142,9 +142,14 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  const baking = dedicatedOnly ? breadRecipes.slice(0, 1) : breadRecipes;
  const grinding = dedicatedOnly ? grindingRecipes.slice(0, 1) : grindingRecipes;
  const canBake = baking.some(r => canPay(r) && sites.some(b => b.type === PRODUCTION_RECIPES[r].workplace));
- if (canBake && !active.some(p => breadRecipes.includes(p.recipe) || grindingRecipes.includes(p.recipe))) {
-  if (flour >= 4) recipes.push(...baking);
-  else if (foodInventory(tribe).grain >= 4) recipes.push(...grinding);
+ const cleanGrain=grain>=4&&foodInventory(tribe).grain>=4;
+ const canGrind=grinding.some(r=>sites.some(b=>b.type===PRODUCTION_RECIPES[r].workplace));
+ if (!active.some(p => breadRecipes.includes(p.recipe) || grindingRecipes.includes(p.recipe) || p.recipe==='cookPorridge')) {
+  if (canBake && flour >= 4) recipes.push(...baking);
+  else if (cleanGrain) {
+   if (urgent || !canBake || !canGrind) recipes.push('cookPorridge');
+   if (canBake && canGrind) recipes.push(...grinding);
+  }
  }
  const options = recipes.filter(canPay).flatMap(recipe => sites
   .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace)

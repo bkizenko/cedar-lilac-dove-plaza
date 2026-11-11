@@ -293,3 +293,22 @@ test('the urgent harvest alert points to the current bottleneck and clears with 
  tribe.items={};
  assert.equal(harvestBacklogAlert(g),null);
 });
+
+test('a village with Auto work off cooks clean grain at a hearth before it has a mill or oven', () => {
+ const {g, hearth}=fixture();
+ const tribe=g.tribe(0);
+ tribe.foodLots={provisions:100,grain:12};
+ tribe.food=112;
+ tribe.survival.waterLiters=40;
+ const initialWood=tribe.wood;
+ drive(g,130,()=>g.state.production?.projects.some(p=>p.recipe==='cookPorridge'&&p.phase==='complete'));
+ assert.equal(g.state.autoWorkEnabled,false);
+ const job=g.state.production.projects.find(p=>p.recipe==='cookPorridge');
+ assert.equal(job.workplace,hearth.id);
+ assert.equal(job.phase,'complete');
+ assert.equal(g.state.production.metrics.grainUsed,4);
+ assert.equal(g.state.production.metrics.waterUsedLiters,2);
+ assert.equal(tribe.wood,initialWood-1);
+ assert.ok(tribe.foodLots.porridge>0);
+ assert.ok(decodeGame(encodeGame(g)).tribe(0).foodLots.porridge>0);
+});
