@@ -5,7 +5,9 @@ import {hasTaskCommitment} from './workCommitments';
 import {queueStandDown} from './demobilization';
 import {declareSocietyHostility} from './societyRelations';
 import {recordConflict} from './conflictMetrics';
-import type {ConflictUnit} from './conflictIntent';
+import {integrateOccupiedVillage,type ConflictUnit} from './conflictIntent';
+import {isRivalTeam} from './factions';
+import {villagePersonality} from './villagePersonality';
 import type {PrisonerUnit} from './captivity';
 
 /**
@@ -32,7 +34,7 @@ export type Domination={id:number;overlord:number;subject:number;hallId:number;t
 export type DominationState={version:1;list:Domination[]};
 export const DOMINATION_RULES={version:1,communityRadiusMeters:40,autonomyRadiusMeters:120,
  terms:{tribute:{amount:10,intervalSeconds:120,requiredLeverage:1},puppet:{amount:6,intervalSeconds:120,requiredLeverage:.75},autonomy:{amount:4,intervalSeconds:180,requiredLeverage:.5}},
- lapseSeconds:180,resistanceLowLeverage:.4,resistanceDefault:.15,resistanceUnanswered:.3,resistanceRecovery:.05,minimumDefense:.5,civilianDefense:.25,carryTimeoutSeconds:600,maximumCarry:20,maximum:128,maximumGarrison:64} as const;
+ lapseSeconds:180,annexAfterSeconds:900,annexMaxResistance:20,resistanceLowLeverage:.4,resistanceDefault:.15,resistanceUnanswered:.3,resistanceRecovery:.05,minimumDefense:.5,civilianDefense:.25,carryTimeoutSeconds:600,maximumCarry:20,maximum:128,maximumGarrison:64} as const;
 const R=DOMINATION_RULES;
 const st=(g:Game)=>g.state as Game['state']&{dominations?:DominationState};
 const dist=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -113,6 +115,7 @@ export function tickDomination(g:Game){
   d.reason=low?`Leverage weak (${m.leverage.toFixed(2)} < ${need}); lapses in ${Math.ceil(R.lapseSeconds-d.leverageLowSeconds)}s`:m.threats>0&&!m.overlordPresent?'Raiders threaten the community and no overlord force answers':'Obligations enforced by present force';
   while(g.state.time>=d.obligation.nextDueAt){d.obligation.owed+=d.obligation.amount;d.obligation.dueCount++;d.obligation.nextDueAt+=d.obligation.intervalSeconds;}
   reconcileCarry(g,d,hall);
+  if(isRivalTeam(d.overlord)&&villagePersonality(g,d.overlord).boldness>=1&&!annexIssue(g,d.id)){annexDominated(g,d.id,d.overlord);return;}// state may have been replaced by the handover
  }
 }
 const carrierBusy=(g:Game,u:Unit)=>u.carry>0||hasTaskCommitment(u)||!!u.societyMissionId||u.tradeNeedsId!==undefined||!!u.tributeJourney||!!u.emergency||!!u.recalled||!!u.trade||!!u.visit||!!u.scout||!!u.expedition||!!u.envoy||!!u.foundingJourney||!!u.buildOrder||!['idle','gather','hold'].includes(u.order)||u.militia||u.type!=='worker'||isDependent(g,u)||!!(u as PrisonerUnit).prisoner||u.boat!==undefined&&u.boat!==null;
@@ -198,4 +201,35 @@ export function validDominationState(state:unknown){
   if(d.carry!==undefined){const c=d.carry;if(!c||!id(c.unitId)||!['pickup','deliver','return'].includes(c.phase)||!fin(c.amount,R.maximumCarry)||!fin(c.startedAt)||carriers.has(c.unitId))return false;carriers.add(c.unitId);}
  }
  return true;
+}
+
+/** Escalation: a puppet or tributary held loyally for long (full leverage, paid up, low resistance) can be
+ * annexed locally — the garrison becomes the holding party and the existing local handover moves the
+ * community intact. NPC overlords escalate on their own when bold. */
+export function annexIssue(g:Game,id:number,actorTeam?:number){
+ const d=dominations(g).find(d=>d.id===id);if(!d||d.phase!=='active'||actorTeam!==undefined&&d.overlord!==actorTeam)return'No active arrangement of yours here';
+ if(d.terms==='autonomy')return'Autonomous communities are not held by a garrison';
+ if(g.state.time-d.createdAt<R.annexAfterSeconds)return`Rule must last longer first (${Math.ceil(R.annexAfterSeconds-(g.state.time-d.createdAt))}s)`;
+ if(d.resistance>R.annexMaxResistance)return'Resistance is still too high';
+ if(d.leverage<R.terms[d.terms].requiredLeverage)return'Leverage is not present';
+ if(d.obligation.owed>d.obligation.amount)return'Obligations are in arrears';
+ if(!d.garrisonIds.length)return'A garrison must be present';
+ return null;
+}
+export function annexDominated(g:Game,id:number,actorTeam=0){
+ const issue=annexIssue(g,id,actorTeam);if(issue)return{accepted:false,reason:issue};
+ const d=dominations(g).find(d=>d.id===id)!,hall=g.state.buildings.find(b=>b.id===d.hallId)!;
+ const st2=g.state as Game['state']&{occupations?:import('./conflictIntent').OccupationControl[]},list=st2.occupations??=(st2.occupations=[]);
+ const buildings=g.connectedCamp(hall).filter(b=>b.team===d.subject&&b.hp>0&&dist(b,hall)<=40).map(b=>b.id);if(!buildings.includes(hall.id))buildings.unshift(hall.id);
+ const residents=g.state.units.filter(u=>u.team===d.subject&&u.hp>0&&!(u as PrisonerUnit).prisoner&&(u.homeHall===hall.id||u.homeHall===undefined&&dist(u,hall)<=40)).map(u=>u.id);
+ const guards=d.garrisonIds.filter(gid=>g.state.units.some(u=>u.id===gid&&u.hp>0&&dist(u,hall)<=16));
+ if(!guards.length)return{accepted:false,reason:'The garrison must stand at the hall'};
+ const control={id:g.id(),hallId:hall.id,formerTeam:d.subject,controllerTeam:d.overlord,buildingIds:buildings.slice(0,256),residentIds:residents.slice(0,4096),guardIds:guards,phase:'held' as const,holdSeconds:30,createdAt:g.state.time};
+ list.push(control);for(const gid of guards){const u=g.state.units.find(x=>x.id===gid) as ConflictUnit;u.conflictIntent='occupy';}
+ const r=integrateOccupiedVillage(g,control.id);
+ const after=dominations(g).find(x=>x.id===id);
+ if(!r.accepted){const c=(g.state as typeof st2).occupations?.find(c=>c.id===control.id);if(c)c.phase='withdrawn';for(const gid of guards){const u=g.state.units.find(x=>x.id===gid) as ConflictUnit|undefined;if(u)u.conflictIntent='dominate';}return{accepted:false,reason:r.reason};}
+ if(after&&after.phase==='active'){after.phase='released';after.endedAt=g.state.time;after.endReason='Annexed after sustained loyal rule';after.reason=after.endReason;after.garrisonIds=[];if(after.obligation.owed>0){after.obligation.forgiven+=after.obligation.owed;after.obligation.owed=0;}}
+ recordConflict(g,'puppet_annexed',d.overlord,1,{targetId:d.hallId});
+ return{accepted:true,reason:'The community joined intact after long, loyal rule'};
 }

@@ -26,9 +26,10 @@ export type Interrogation={prisonerId:number;captorTeam:number;progressSeconds:n
 export type RansomPhase='proposed'|'pickup'|'carrying'|'paid'|'refused'|'failed';
 export type Ransom={id:number;prisonerId:number;captorTeam:number;originTeam:number;kind:'wood'|'food';amount:number;phase:RansomPhase;proposedAt:number;answerAt:number;carrierId?:number;carried:number;reason:string};
 export type CaptiveIntegration={unitId:number;originTeam:number;captorTeam:number;at:number};
-export type CaptiveDealingsState={version:1;custodySince:{prisonerId:number;since:number}[];interrogations:Interrogation[];intel:CaptiveIntel[];ransoms:Ransom[];integrations:CaptiveIntegration[]};
+export type RevoltPressure={prisonerId:number;pressure:number};
+export type CaptiveDealingsState={version:1;revolt?:RevoltPressure[];custodySince:{prisonerId:number;since:number}[];interrogations:Interrogation[];intel:CaptiveIntel[];ransoms:Ransom[];integrations:CaptiveIntegration[]};
 export const CAPTIVE_DEALINGS_RULES={version:1,interrogationSeconds:45,ransomAfterSeconds:120,integrateAfterSeconds:600,npcIntegrateAfterSeconds:900,ransomAnswerSeconds:20,playerAnswerSeconds:600,ransomJourneySeconds:900,ransomWood:15,ransomFood:12,originReserveWood:10,
- maximumIntel:128,maximumRansoms:128,maximumIntegrations:512,maximumTracked:512} as const;
+ revoltGroupMeters:12,revoltGuardMeters:18,revoltMinimum:3,revoltRatio:2,revoltHungerSeconds:60,revoltThreshold:60,maximumIntel:128,maximumRansoms:128,maximumIntegrations:512,maximumTracked:512} as const;
 const R=CAPTIVE_DEALINGS_RULES;
 const st=(g:Game)=>g.state as Game['state']&{captiveDealings?:CaptiveDealingsState};
 const root=(g:Game)=>st(g).captiveDealings??=(st(g).captiveDealings={version:1,custodySince:[],interrogations:[],intel:[],ransoms:[],integrations:[]});
@@ -117,6 +118,7 @@ export function tickCaptiveDealings(g:Game){
   if(!held(g,r.prisonerId)){r.phase='failed';r.reason='The captive is no longer held';continue;}
   if(g.state.time-r.proposedAt>R.ransomJourneySeconds+R.playerAnswerSeconds&&r.phase==='pickup'){r.phase='failed';r.reason='The ransom never set out';r.carrierId=undefined;c.order='idle';}
  }
+ tickCaptiveRevolt(g,prisoners,d);
  // NPC captors act on their own captives.
  for(const u of prisoners){const p=u.prisoner!;if(p.captorTeam===0||!isRivalTeam(p.captorTeam)||p.phase!=='custody')continue;
   if(!d.intel.some(i=>i.prisonerId===u.id&&i.captorTeam===p.captorTeam)&&!d.interrogations.some(i=>i.prisonerId===u.id))interrogateCaptive(g,u.id,p.captorTeam);
@@ -125,6 +127,27 @@ export function tickCaptiveDealings(g:Game){
   const since=custodySeconds(g,u.id),pending=d.ransoms.some(r=>r.prisonerId===u.id&&OPEN_RANSOM.includes(r.phase)),tried=d.ransoms.some(r=>r.prisonerId===u.id);
   if(since>=R.ransomAfterSeconds&&!pending&&!tried)proposeRansom(g,u.id,p.captorTeam);
   else if(since>=R.npcIntegrateAfterSeconds&&!pending)integrateCaptive(g,u.id,p.captorTeam);
+ }
+}
+/** Organized revolt: captives held together who clearly outnumber the guards present, or are going hungry
+ * while outnumbering them, build pressure; when it boils over the whole group breaks out together. A
+ * single captive cannot revolt (individual unguarded escape is handled in captivity.ts). */
+function tickCaptiveRevolt(g:Game,prisoners:PrisonerUnit[],d:CaptiveDealingsState){
+ const list=d.revolt??=[];const held=new Set(prisoners.map(u=>u.id));d.revolt=list.filter(r=>held.has(r.prisonerId));
+ const custody=prisoners.filter(u=>u.prisoner!.phase==='custody');
+ for(const u of custody){
+  const group=custody.filter(o=>o.prisoner!.captorTeam===u.prisoner!.captorTeam&&dist(o,u)<=R.revoltGroupMeters);
+  const guards=g.state.units.filter(p=>p.team===u.prisoner!.captorTeam&&p.hp>0&&!(p as PrisonerUnit).prisoner&&(p.militia||!['worker','leader'].includes(p.type))&&dist(p,u)<=R.revoltGuardMeters).length;
+  const outnumber=group.length>=R.revoltMinimum&&group.length>=R.revoltRatio*Math.max(1,guards);
+  const hungry=(u.hunger||0)>R.revoltHungerSeconds;
+  let r=d.revolt!.find(x=>x.prisonerId===u.id);if(!r){r={prisonerId:u.id,pressure:0};d.revolt!.push(r);}
+  r.pressure=Math.max(0,Math.min(R.revoltThreshold,r.pressure+(outnumber?1+(hungry?1:0):-1)));
+ }
+ for(const u of custody){const r=d.revolt!.find(x=>x.prisonerId===u.id);if(!r||r.pressure<R.revoltThreshold||!u.prisoner||u.prisoner.phase!=='custody')continue;
+  const group=custody.filter(o=>o.prisoner&&o.prisoner.phase==='custody'&&o.prisoner.captorTeam===u.prisoner!.captorTeam&&dist(o,u)<=R.revoltGroupMeters);
+  const captor=u.prisoner.captorTeam;for(const o of group){endCustodyGuard(g,o);releasePrisoner(g,o.id,true);o.repatriating=undefined;}
+  d.revolt=d.revolt!.filter(x=>!group.some(o=>o.id===x.prisonerId));recordConflict(g,'captive_revolt',captor,group.length);
+  if(captor===0)g.banner(`${group.length} captives rose together against too few guards and broke out.`,6);
  }
 }
 /** Drives a ransom carrier: collect at home store, carry to the captor's store nearest the captive, return. */
@@ -162,6 +185,7 @@ export function validCaptiveDealingsState(state:unknown){
  const carriers=new Set<number>();for(const r of d.ransoms){if(!r||!id(r.id)||ids.has(r.id)||!id(r.prisonerId)||!team(r.captorTeam)||!team(r.originTeam)||r.captorTeam===r.originTeam||!['wood','food'].includes(r.kind)||!fin(r.amount,1e4)||!['proposed','pickup','carrying','paid','refused','failed'].includes(r.phase)||!fin(r.proposedAt)||!fin(r.answerAt)||!fin(r.carried,1e4)||typeof r.reason!=='string'||r.reason.length>300)return false;ids.add(r.id);
   if(r.carrierId!==undefined){if(!id(r.carrierId))return false;if(r.phase==='pickup'||r.phase==='carrying'){if(carriers.has(r.carrierId))return false;carriers.add(r.carrierId);}}
   if((r.phase==='pickup'||r.phase==='carrying')&&r.carrierId===undefined)return false;if(r.phase!=='carrying'&&r.carried>0)return false;}
+ if(d.revolt!==undefined){if(!Array.isArray(d.revolt)||d.revolt.length>R.maximumTracked)return false;const rv=new Set<number>();for(const r of d.revolt){if(!r||!id(r.prisonerId)||rv.has(r.prisonerId)||!fin(r.pressure,R.revoltThreshold))return false;rv.add(r.prisonerId);}}
  for(const i of d.integrations)if(!i||!id(i.unitId)||!team(i.originTeam)||!team(i.captorTeam)||!fin(i.at))return false;
  return true;
 }
