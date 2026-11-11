@@ -1,13 +1,13 @@
 # Current Hearthwild execution status
 
-Updated11 November2026. Read this short status before historical handoffs.
+Updated 2026-11-11T21:03:32.280919+00:00. Read this before historical handoffs.
 
-- Published gameplay: **5f1b5e9**, release **2026-11-11T20-21-59-065Z-5f1b5e9**, verified on8086 and8101.
-- Latest batch: **95/95 (100%)** —93regressions +2built native UI scenarios. Full frozen first-release checklist: **34/98 (34.69%)**, no new full-gate credit.
-- Live slices: actual sheep capture/fleece/wool coats and paid practical square-sail rigs, atop previously published food/route/trade, armor/ram, clearing/goat queue/identity work. Read docs/metrics/sheep-wool-sailing-2026-11-11.json for assumptions and limits.
-- Sheep appear only in new maps; old saves keep original wildlife. Broader livestock/horses/dairy, ship/naval warfare, full campaign/performance and all remaining backlog still active.
-- Codex next: dairy preservation source work; autosave-frame timing candidate419b3c0 has29focused checks and typecheck, not integrated or published.
-- Claude/Grok: persistent external ownership follows EXECUTION_CONTRACT.md. Last bounded remote audit found no external commits ahead of main; that is not evidence the sessions are running. Fetch current refs on the next handoff.
-- All retained art and available visible context: docs/art-reference/INDEX.md, CLAUDE_VISUAL_FEEDBACK.md and chat-context/README.md. Includes13concept sheets,3GLBs, latest procedural H study and1845visible messages from4identified local Hearthwild chats. Older deleted/missing attachments are not recreated; hidden reasoning/tools/private villages are excluded.
-- Remaining held visual/UI source is separately pushed on work/visual-held-2026-11-11 for review; see HELD_VISUAL_WORK.md. Not a qualified release or art approval.
-- Completed sheep/sailing candidates/test server cleaned after publication; source/evidence in Git and .play/qualified-batches/5f1b5e9. Logs retained. Current/rollback releases, approved art and user villages preserved.
+- Playable code **860863a**, release **2026-11-11T20-45-37-133Z-860863a**, verified on8086 and8101. Latest platform batch **35/35 (100%)**:34 focused checks +1 built native WebWorker/UI/save-reload case. Overall frozen checklist **34/98 (34.69%)**, zero new gate credit.
+- Live gameplay remains sheep capture/care, fleece-to-owned-wool-coats and paid wind-assisted hull rigs from5f1b5e9 (95/95 batch), atop food/routes/trade, armor/ram, clearing/goat queues/identity. The platform update adds measurable save/frame diagnostics and a safe render-style preference API; it does not activate Option H.
+- Dairy candidate:5/5 focused, typecheck and1/1 native V18 physical preparation/incubation/delivery/save case passed. Built UI/integration/publication pending. Broader livestock, horses and cheese remain open.
+- NPC sea exploration: Claude4210c4a integrated into isolated84d2792 candidate with reservation/quiet-sail/LOD contracts;24/24 and typecheck passed. Native test prepared, not yet executed. Hull-loss recovery, capture/recall coverage and publication remain open.
+- New Claude source: stolen cargo/recovery7bfc943 and cultural names103f41f, handoff8d3325e. Reported9/9 and4/4 fixture checks belong to Claude; Codex integration pending. Experiencebb26421 expands H building specs; no rendered/default-style acceptance.
+- Performance: untouched53-player-person save clone profiled at mean59.92ms/p9596.05ms per simulation step. Indexed water queries are a concrete hot path. Exact-coordinate cache passed18/18 and typecheck; one same-RNG100-step pair preserved state and23832 RNG calls, mean62.97→58.02ms (7.86% observed reduction). Candidate unmerged/unpublished; no FPS or stutter-resolution claim.
+- Shared backlog: FULL_GAME_BACKLOG.json and COMPLETION_LOG.md are canonical scoped delivery records; agents own their handoffs, Codex reconciles tested/merged/live states. Latest reviewed Claude boardee46b0c. No external session is assumed active from a branch assignment alone.
+- Art and1845 visible context messages retained at docs/art-reference/INDEX.md, CLAUDE_VISUAL_FEEDBACK.md and chat-context/README.md. Option H means the original warm carved-wood bottom-middle panel. Held visual source remains separate on work/visual-held-2026-11-11; no broad art approval implied.
+- All saved villages, current/rollback releases and the full ongoing goal remain preserved. Hourly reminders were canceled by the user.
