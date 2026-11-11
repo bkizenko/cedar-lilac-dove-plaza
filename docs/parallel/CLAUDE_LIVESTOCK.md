@@ -1,3 +1,5 @@
+> SUPERSEDED by the latest user correction. Livestock remains with Codex. Use CLAUDE_SOCIETIES.md instead.
+
 # Claude: physical livestock and wool
 
 Read COORDINATION.md, docs/INCENTIVE_FIRST_MASTER_PLAN.md, husbandry.ts, penPasture.ts, penWater.ts, animalOrders.ts and existing animal/production persistence checks. Work only on agents/claude-livestock from latest origin/main. Do not redo Codex's pending goat queues or site preparation.

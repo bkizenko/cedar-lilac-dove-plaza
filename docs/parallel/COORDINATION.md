@@ -2,13 +2,15 @@
 
 Published gameplay baseline: e695e85 (paid armor, goat-search interruption fix, staffed beam ram). Read latest origin/main before starting; later accepted batches may already be present. The full goal and frozen hearthwild-first-release-gates-v1 checklist remain in force:34/98 verified, not a percentage of lines written.
 
+Latest user correction: Codex retains livestock/wool/dairy and complex prestige. See WHOLE_GAME_WORKSPLIT.md for the entire game allocation. Old external livestock/prestige briefs are superseded.
+
 ## Ownership
 
 | Owner | Task brief | Branch | First deliverable |
 |---|---|---|---|
 | Codex integrator | Existing master plan and active batches | main | Release combined automatic clearing, persistent goat searches and identity; continue sailing and integration |
-| Claude Code | CLAUDE_LIVESTOCK.md | agents/claude-livestock | Real sheep/flock capture, pasture, wool and clothing chain, strictly saved |
-| Grok Build | GROK_PRESTIGE.md | agents/grok-prestige | Measured prestige, bounded awareness diffusion and legible ledger breakdown |
+| Claude Code | CLAUDE_SOCIETIES.md | agents/claude-societies | Actual NPC docked-hull sea exploration, then the broader international track |
+| Grok Build | GROK_SIMPLE_TASKS.md | agents/grok-simple | Short truthful building help and primary-reference catalogue; no simulation/prestige |
 
 Use an isolated branch/worktree or cloud checkout. Never use the dirty canonical worktree as an external agent's scratch directory. Do not merge or push to main, change play-server symlinks, refresh the user's running village, restore/delete saves, or include unrelated held edits. Commit only owned changes and push your branch, then return commit/PR, exact files, executed tests and limitations. Codex reviews and integrates. No new accounts, API keys, paid requests or downloaded asset packages are required by these briefs.
 

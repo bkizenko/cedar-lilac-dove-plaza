@@ -1,3 +1,5 @@
+> SUPERSEDED by the latest user correction. Prestige remains with Codex. Use GROK_SIMPLE_TASKS.md instead.
+
 # Grok: prestige and awareness
 
 Read COORDINATION.md, the master plan's territory/score section, existing settlement/migration, leader dialogue, society relations and observed-intelligence modules. Work only on agents/grok-prestige from latest origin/main. Codex owns current food/goat/site/identity/sailing integration; avoid those implementations.
