@@ -177,3 +177,9 @@ Both Claude workers stopped at the 5-hour usage limit. All their work is committ
 Shared-file sign-offs requested of Codex (Societies): `types.ts` optional fields `Unit.seaExplorationId/tradeNeedsId`, `GameState.seaExploration/droppedCargo/tradeNeeds/seaStorms`; `workCommitments.ts` entries; `coastalTrade.ts` hooks; seams in `people.ts`, `raiders.ts`, `scoutProvisions.ts`. Consider a dedicated sea-state event instead of the `weather==='storm'` gate.
 
 In progress: Societies — surrender/captives/conquest (Opus). Experience — culture grammar, culture armor/unit looks, ruins.
+
+## PM check-in (main f09578d)
+- No file overlap among agents/grok-world, agents/claude-societies, agents/claude-experience.
+- Main moved (Codex NPC sea voyages, dairy vessels, instance-LOD tests) and touches coastalTrade.ts, coastalCommission.ts, rivalDevelopment.ts, boats.ts, boatSailing.ts, which agents/claude-societies also edits: societies worker told to merge origin/main, retest (npc-sea-native, sea-hull-reservation), push before new scope.
+- agents/claude-experience (51b575c) touches no files changed on main; merge main at next batch.
+- Render run 43106700599 still in progress; no PNGs pushed pending user review.
