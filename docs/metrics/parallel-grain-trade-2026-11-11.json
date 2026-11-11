@@ -1,0 +1,41 @@
+{
+  "status": "candidate qualified; publication pending",
+  "scope": "Independent dedicated grinding and baking while quick fish/meat meals retain shared kitchens; visitor cache quote/accept parity and exact receipts",
+  "sourceChecks": {
+    "passed": 29,
+    "total": 29,
+    "log": ".play/urgent-processing-candidate-tests.log"
+  },
+  "renderedAcceptance": {
+    "passed": 2,
+    "total": 2,
+    "log": "/tmp/hearthwild-parallel-grain-native8102.log",
+    "autoWork": [
+      "off",
+      "on"
+    ],
+    "nativeTerrain": "V18 seed42",
+    "simulationSecondsEach": 56,
+    "assertions": [
+      "cooked fish and delivered bread while raw fish remains",
+      "physical paid grain/flour pipeline",
+      "save/reload",
+      "unchanged terrain and residents",
+      "no JavaScript or simulation errors"
+    ],
+    "limitations": "Controlled finite starting supplies and completed infrastructure; not the current player village or full campaign balance."
+  },
+  "batch": {
+    "passed": 31,
+    "total": 31,
+    "percentage": 100
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "firstReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  }
+}

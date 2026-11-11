@@ -15,14 +15,14 @@ export function ContactActions({engine,strangerId,personId}:{engine:Engine;stran
  return <section className="mt-3 space-y-3" aria-label="Contact actions">
   <div className="grid grid-cols-2 gap-2">
    <button type="button" className={button} aria-expanded={branch==='talk'} onClick={()=>{setBranch(branch==='talk'?null:'talk');setFeedback('');}}>Talk</button>
-   <button type="button" className={button} aria-expanded={branch==='trade'} onClick={()=>{setBranch(branch==='trade'?null:'trade');setFeedback('');}}>Trade carried goods</button>
+   <button type="button" className={button} aria-expanded={branch==='trade'} onClick={()=>{setBranch(branch==='trade'?null:'trade');setFeedback('');}}>Trade</button>
   </div>
   {branch==='talk'&&<div className="space-y-2" aria-label="Conversation topics">{actions.conversation.map(topic=><button type="button" key={topic.id} className={button} onClick={()=>run('question',topic.id)}>{topic.label}</button>)}</div>}
   {branch==='trade'&&<div className="space-y-2" aria-label="Trade offers">
    <p className={hint}>{stranger?.carryType&&stranger.carry>0?`They offer ${Math.floor(stranger.carry)} ${stranger.carryType}.`:'They have no bundle to offer.'}</p>
    {actions.trade.options.map(offer=><button type="button" key={offer.id} className={button} onClick={()=>run('trade',offer.id)}>{offer.label}</button>)}
    {!actions.trade.options.length&&(actions.approach.reason===null?<button type="button" className={button} onClick={()=>run('approach-trade')}>Walk closer to exchange</button>:<p className={hint}>{actions.trade.reason}</p>)}
-   {actions.scout&&stranger?.carryType&&<p className={hint}>{personName(actions.scout)} can carry {carryingCapacity(actions.scout,stranger.carryType)} {stranger.carryType} with their current equipment.</p>}
+   {actions.trade.options.some(o=>o.kind==='visitor')?<p className={hint}>Purchases go into village stores.</p>:actions.scout&&stranger?.carryType&&<p className={hint}>{personName(actions.scout)} can carry {carryingCapacity(actions.scout,stranger.carryType)} {stranger.carryType} with their current equipment.</p>}
    <p className={hint}>{actions.safety}</p>
    {stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<button type="button" className={button} onClick={()=>run('decline-trade')} title="Return the goods and take your answer home; repeated unchanged offers stop.">Decline this offer</button>}
   </div>}

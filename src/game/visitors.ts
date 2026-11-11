@@ -1,3 +1,5 @@
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
+import {lifeEvent} from './communities';
 import {knownSettlementSite,localSettlementHall,beginSettlementJourney,settlementJourneySite} from './barter';
 import{carryVisitorRefusal,visitorOfferOnCooldown,VISITOR_REFUSAL_RULES}from'./visitorRefusals';
 import{observePartnerTrade,deliverTradeIntel}from'./tradeIntel';
@@ -87,15 +89,36 @@ export function declineVisitorVisit(g:Game,id:number){
  const u=g.state.units.find(p=>p.id===id&&p.hp>0);if(!u||u.visit?.phase!=='waiting'||u.visit.team!==undefined||!u.carryType||!g.visibleAt(u.x,u.z))return {accepted:false,reason:'This trader is no longer here with an offer'};
  if(!carryVisitorRefusal(g,u,visitorQuoteTerms(g,u.team,u.carryType,u.carry,g.tribe(0).age)))return {accepted:false,reason:'The trader needs to be here with a valid local offer'};u.visit.phase='return';u.order='move';u.node=null;u.target=null;u.workReason='Taking the declined offer and your answer home';const reason='Offer declined. The same trader is taking your answer and unchanged goods home.';g.banner(reason,5);return {accepted:true,reason};
 }
-export function tradeWithVisitor(g:Game,id:number,give:ResKind) {
-  const u=g.state.units.find(u=>u.id===id&&u.hp>0);if(!u||!['food','wood','stone','copper','iron'].includes(give))return false;
-  const price=visitorPrice(g,u,give),home=g.campOf(0);
-  if(!price||!u.carryType||!g.visibleAt(u.x,u.z)||Math.hypot(u.x-home.x,u.z-home.z)>35||g.tribe(0)[give]<price)return false;
-  if((give==='copper'&&g.tribe(0).age<1)||(give==='iron'&&g.tribe(0).age<2))return false;
-  observePartnerTrade(g,u,0,{give:u.carryType,get:give,offered:u.carry,receivable:price,accepted:true,reason:'accepted'});
-  g.spend(0,{[give]:price});
-  if(u.carryType==='food')receiveFood(g,0,u.carry,u.carryFood);else g.tribe(0)[u.carryType]+=u.carry;
-  u.carry=price;u.carryType=give;u.carryFood=give==='food'?'provisions':undefined;
-  u.visit!.phase='return';u.order='move';g.tribe(u.team).trust=Math.min(1,(g.tribe(u.team).trust||0)+0.1);
-  g.banner('Goods exchanged locally; the trader carries payment home',4);return true;
+/** Quotes and acceptance use the same actual cache frontage, including remote
+ * stores and relocated settlements. The original camp circle is not a cache. */
+export function visitorTradeCache(g:Game,u:Unit){
+ return supplyDrops(g,0).find(drop=>{const at=supplyApproach(g,u,drop);return !!at&&supplyReached(g,u,drop,at);});
 }
+export function visitorTradeIssue(g:Game,u:Unit|undefined,give:ResKind):string|null{
+ if(!u||u.hp<=0||u.visit?.phase!=='waiting'||u.visit.team!==undefined||!u.carryType||u.carry<=0)return 'This trader no longer has that offer.';
+ if(!['food','wood','stone','copper','iron'].includes(give)||give===u.carryType)return 'Choose a different resource as payment.';
+ if(g.isFoe(0,u.team)||u.prisoner)return 'This person cannot agree to a peaceful trade.';
+ if(!g.visibleAt(u.x,u.z))return 'Reach and see this trader before exchanging goods.';
+ if(!visitorTradeCache(g,u))return 'Meet this trader at a village cache to pay from stores.';
+ if((give==='copper'&&g.tribe(0).age<1)||(give==='iron'&&g.tribe(0).age<2))return 'Your village has not adopted this metal as a trade good.';
+ const price=visitorPrice(g,u,give);
+ if(!price)return 'This payment is no longer offered.';
+ if(g.tribe(0)[give]<price)return `Need ${Math.ceil(price-g.tribe(0)[give])} more ${give==='wood'?'logs':give} in village stores.`;
+ return null;
+}
+export function acceptVisitorTrade(g:Game,id:number,give:ResKind){
+ const u=g.state.units.find(u=>u.id===id&&u.hp>0),issue=visitorTradeIssue(g,u,give);
+ if(issue||!u)return {accepted:false,reason:issue||'This trader is no longer here.'};
+ const price=visitorPrice(g,u,give)!,purchase={kind:u.carryType!,amount:u.carry,food:u.carryFood};
+ observePartnerTrade(g,u,0,{give:purchase.kind,get:give,offered:purchase.amount,receivable:price,accepted:true,reason:'accepted'});
+ g.spend(0,{[give]:price});
+ if(purchase.kind==='food')receiveFood(g,0,purchase.amount,purchase.food);else g.tribe(0)[purchase.kind]+=purchase.amount;
+ u.carry=price;u.carryType=give;u.carryFood=give==='food'?'provisions':undefined;
+ u.visit!.phase='return';u.order='move';g.tribe(u.team).trust=Math.min(1,(g.tribe(u.team).trust||0)+0.1);
+ const label=(kind:ResKind)=>kind==='wood'?'logs':kind;
+ const reason=`Paid ${price} ${label(give)}; received ${purchase.amount} ${label(purchase.kind)} in village stores. The trader carries your payment home.`;
+ lifeEvent(g,0,`Trade: ${reason}`);
+ return {accepted:true,reason};
+}
+/** Compatibility for existing automatic and test callers. */
+export function tradeWithVisitor(g:Game,id:number,give:ResKind){return acceptVisitorTrade(g,id,give).accepted;}

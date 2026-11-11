@@ -1,8 +1,8 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
 import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
-import{foodInventory}from'./pantry';
-import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
+import{foodInventory,FOOD_NOURISHMENT}from'./pantry';
+import{calendar,farmAvailable,isDependent,reserveSeconds,foodDemand}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
 import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildingCost}from'./construction';
 const reviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,number>}>();
@@ -150,7 +150,7 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
 
 function mealWorkerLimit(g:Game){const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;return Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));}
 function activeFoodWorkers(g:Game){return(g.state.production?.projects||[]).filter(p=>p.team===0&&p.actorId!==null&&!['paused','stored','complete','lost'].includes(p.phase)&&
- !isCerealRecipe(p.recipe)&&(PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
+ !isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace)&&(PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
 function urgentReadyMealInputs(g:Game){
  if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
  const t=g.tribe(0),food=foodInventory(t);
@@ -171,7 +171,7 @@ function reviewInterruptedFoodProcessing(g:Game,team:number,eventActorId?:number
  const due=review.teams.get(team)??-Infinity;if(eventActorId===undefined&&due>g.state.time&&due<=g.state.time+CEREAL_RULES.reviewSeconds)return false;
  review.teams.set(team,g.state.time+CEREAL_RULES.reviewSeconds);
  for(const p of projects){
-  if(p.team!==team||!['paused','stored'].includes(p.phase)||p.pauseCause==='manual'||!allowKitchen&&!isCerealRecipe(p.recipe))continue;
+  if(p.team!==team||!['paused','stored'].includes(p.phase)||p.pauseCause==='manual'||!allowKitchen&&!isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace))continue;
   const spec=PRODUCTION_RECIPES[p.recipe];
   if(!isCerealRecipe(p.recipe)&&!spec.grain&&!spec.food&&!spec.outputs.flour)continue;
   if(p.pauseCause!=='interrupted'&&!/^(Direct order paused paid work|Maker lost;|Pickup paused; paid inputs|Pickup adult lost;|Pickup route blocked;|No route to the workshop;)/.test(p.blockedReason))continue;
@@ -238,12 +238,12 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  };
  const urgent = reserveSeconds(g, 0) < CEREAL_RULES.foodTargetSeconds;
  const quickMeals=urgent&&urgentReadyMealInputs(g);
- if(urgent&&activeFoodWorkers(g)>=mealWorkerLimit(g))return false;
+ const kitchenOpen=!urgent||activeFoodWorkers(g)<mealWorkerLimit(g);
  const recipes: ProductionRecipe[] = [];
- if (raw >= 4 && (urgent || !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat'))) {
+ if (kitchenOpen && raw >= 4 && (urgent || !active.some(p => meatRecipes.includes(p.recipe) || p.recipe === 'manualSmokeMeat' || p.recipe === 'airDryMeat'))) {
   recipes.push(...(urgent ? meatRecipes : ['smokeMeat', 'cookMeat'] as const));
  }
- if (fish >= 4 && (urgent || !active.some(p => fishRecipes.includes(p.recipe)))) {
+ if (kitchenOpen && fish >= 4 && (urgent || !active.some(p => fishRecipes.includes(p.recipe)))) {
   recipes.push(...(urgent ? fishRecipes : ['smokeFish', 'airDryFish', 'cookFish'] as const));
  }
  const baking = breadRecipes;
@@ -252,17 +252,29 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  const cleanGrain=grain>=4&&foodInventory(tribe).grain>=4;
  const canGrind=grinding.some(r=>sites.some(b=>b.type===PRODUCTION_RECIPES[r].workplace));
  const grainJobs=active.filter(p=>breadRecipes.includes(p.recipe)||grindingRecipes.includes(p.recipe)||p.recipe==='cookPorridge');
- const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;
- const grainLimit=Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));
- const assignedGrainJobs=grainJobs.filter(p=>p.actorId!==null&&p.phase!=='paused').length;
- if (assignedGrainJobs<grainLimit) {
-  if (canBake && flour >= 4) recipes.push(...baking.filter(recipe=>flour>=(PRODUCTION_RECIPES[recipe].inputs.flour??0)));
-  if (cleanGrain) {
-   if ((urgent || !canBake || !canGrind)&&(urgent||!grainJobs.some(p=>p.recipe==='cookPorridge'))) recipes.push('cookPorridge');
-   if (canBake && canGrind&&!quickMeals) recipes.push(...grinding.filter(recipe=>grain>=PRODUCTION_RECIPES[recipe].grain));
-  }
+ const grainLimit=mealWorkerLimit(g);
+ const assignedGrainJobs=grainJobs.filter(p=>p.actorId!==null&&p.phase!=='paused'&&PRODUCTION_RECIPES[p.recipe].workplace==='hearth').length;
+ const dedicatedOvens=sites.filter(b=>b.type==='oven');
+ // Flour is a short working buffer, not the whole grain harvest. Count paid
+ // milling outputs too so independent stations cannot each reserve the same
+ // apparent shortage. Existing reserved inputs and batches remain untouched.
+ const futureFlour=flour+active.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].outputs.flour||0),0);
+ const flourTarget=Math.max(4,foodDemand(g,0)*CEREAL_RULES.flourBufferSeconds/(FOOD_NOURISHMENT.bread??1),
+  dedicatedOvens.reduce((n,b)=>n+productionSlots(b),0)*4*CEREAL_RULES.flourBatchesPerOvenSlot);
+ if (canBake && flour >= 4) recipes.push(...baking.filter(recipe=>
+  flour>=(PRODUCTION_RECIPES[recipe].inputs.flour??0)&&
+  (PRODUCTION_RECIPES[recipe].workplace==='oven'||kitchenOpen&&assignedGrainJobs<grainLimit)));
+ if(cleanGrain){
+  if(kitchenOpen&&assignedGrainJobs<grainLimit&&(urgent||!canBake||!canGrind)&&(urgent||!grainJobs.some(p=>p.recipe==='cookPorridge')))recipes.push('cookPorridge');
+  if(canBake&&canGrind&&futureFlour<flourTarget)recipes.push(...grinding.filter(recipe=>
+   grain>=PRODUCTION_RECIPES[recipe].grain&&
+   (PRODUCTION_RECIPES[recipe].workplace==='grindingStone'&&(!quickMeals||dedicatedOvens.length>0)||
+    !quickMeals&&kitchenOpen&&assignedGrainJobs<grainLimit)));
  }
- if(urgent)recipes.sort((a,b)=>{const x=PRODUCTION_RECIPES[a],y=PRODUCTION_RECIPES[b];return x.workSeconds+x.exposureSeconds-y.workSeconds-y.exposureSeconds;});
+ if(urgent)recipes.sort((a,b)=>{const x=PRODUCTION_RECIPES[a],y=PRODUCTION_RECIPES[b];
+  if(x.workplace===y.workplace&&['grindingStone','oven'].includes(x.workplace))return (x.workSeconds+x.exposureSeconds)/(x.food||x.outputs.flour||1)-(y.workSeconds+y.exposureSeconds)/(y.food||y.outputs.flour||1);
+  return x.workSeconds+x.exposureSeconds-y.workSeconds-y.exposureSeconds;
+ });
  const options = recipes.filter(canPay).flatMap(recipe => sites
   .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));

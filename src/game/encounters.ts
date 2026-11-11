@@ -5,9 +5,9 @@ import {captureTarget} from './conflictIntent';
 import {releasePrisoner,PRISONER_RULES} from './captivity';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
-import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
+import {supplyDrops,supplyApproach} from './campAnchor';
 import {carryingCapacity} from './haulage';
-import {visitorPrice,tradeWithVisitor,declineVisitorVisit} from './visitors';
+import {visitorPrice,visitorTradeCache,visitorTradeIssue,acceptVisitorTrade,declineVisitorVisit} from './visitors';
 import {personName} from './people';
 import {lifeEvent} from './communities';
 import type {Game} from './sim';
@@ -80,17 +80,17 @@ function questionPerson(g:Game,u:Unit,personId?:number,topic='overview'):Contact
  if(topic==='overview'||topic==='cargo')parts.push(u.carry>0&&u.carryType?`I’m carrying ${Math.floor(u.carry)} ${labels[u.carryType]}.`:'My hands are empty. I’ve no bundle to offer.');
  const report=`${topic==='overview'?'':topicLabels[topic]+': '}“${parts.join(' ').slice(0,240)}”`;lifeEvent(g,0,`[Contact ${u.id}] ${report}`);return {accepted:true,reason:'Their reply is recorded in village history',report};
 }
-function atOwnCache(g:Game,u:Unit){return supplyDrops(g,0).some(drop=>{const spot=supplyApproach(g,u,drop);return !!spot&&supplyReached(g,u,drop,spot);});}
+
 export function contactTradeOptions(g:Game,id:number,personId?:number):{reason:string|null;options:ContactTrade[]}{
  const u=target(g,id),issue=contactIssue(g,u,personId);if(issue||!u)return {reason:issue,options:[]};if(u.prisoner)return {reason:'Prisoner exchange and ransom are not available yet',options:[]};if(g.isFoe(0,u.team))return {reason:'An uncontrolled hostile party will not exchange goods',options:[]};
  if(!u.carryType||u.carry<=0)return {reason:'This person has no carried goods to offer',options:[]};
  if(u.trade||u.tributeJourney||u.envoy||u.visit?.team!==undefined&&u.visit.team!==0||hasTaskCommitment(u))return {reason:'These goods belong to an ongoing journey or protected duty',options:[]};
  const buyer=speaker(g,u,personId)!;if(Math.hypot(buyer.x-u.x,buyer.z-u.z)>CONTACT_RULES.exchangeMeters)return {reason:'Bring your carrier within 3 metres for a physical exchange',options:[]};
  if(buyer.escortId!==undefined||buyer.conflictIntent==='occupy'||buyer.conflictIntent==='capture'||hasTaskCommitment(buyer))return {reason:'Choose a carrier who is free of guard, custody or paid work',options:[]};
- const options:ContactTrade[]=[];
- if(u.visit?.phase==='waiting'&&atOwnCache(g,u))for(const give of goods){const price=visitorPrice(g,u,give);if(price&&g.tribe(0)[give]>=price&&!(give==='copper'&&g.tribe(0).age<1)&&!(give==='iron'&&g.tribe(0).age<2))options.push({id:`visitor:${give}`,kind:'visitor',give,buyerId:buyer.id,strangerId:u.id,label:`Pay ${price} ${give} from this cache for ${u.carry} ${u.carryType}`});}
+ const options:ContactTrade[]=[];let cacheIssue:string|null=null;
+ if(u.visit?.phase==='waiting'&&visitorTradeCache(g,u))for(const give of goods){const price=visitorPrice(g,u,give);if(price){const issue=visitorTradeIssue(g,u,give);if(!issue)options.push({id:`visitor:${give}`,kind:'visitor',give,buyerId:buyer.id,strangerId:u.id,label:`Pay ${price} ${give} from this cache for ${u.carry} ${u.carryType}`});else cacheIssue??=issue;}}
  if(buyer.carryType&&buyer.carry>0&&buyer.carryType!==u.carryType){const ratio=buyer.carry*worth[buyer.carryType]/(u.carry*worth[u.carryType]);if(ratio>=CONTACT_RULES.minimumBundleValueRatio&&ratio<=CONTACT_RULES.maximumBundleValueRatio&&buyer.carry<=carryingCapacity(u,buyer.carryType)&&u.carry<=carryingCapacity(buyer,u.carryType))options.push({id:'bundle',kind:'bundle',buyerId:buyer.id,strangerId:u.id,label:`Exchange your ${buyer.carry} ${buyer.carryType} for their ${u.carry} ${u.carryType}`});}
- return {options,reason:options.length?null:buyer.carry>0?'Neither complete carried bundle is a fair, usable exchange; bring a different offer':'Bring a carrier with an offer, or meet an offering trader at your cache'};
+ return {options,reason:options.length?null:cacheIssue??(buyer.carry>0?'Neither complete carried bundle is a fair, usable exchange; bring a different offer':'Bring a carrier with an offer, or meet an offering trader at your cache')};
 }
 /** A normal saved move order approaches the meeting; goods remain on their
  * original bodies until the player confirms a revalidated local exchange. */
@@ -113,12 +113,14 @@ function approachContactTrade(g:Game,u:Unit,personId?:number):ContactOutcome{
 export function contactSafety(g:Game,id:number){const u=target(g,id);if(!u)return 'The person has left this meeting';const relation=g.isFoe(0,u.team)?'Relations are hostile. ':(g.tribe(u.team).trust||0)>=CONTACT_RULES.trustingThreshold?'Relations are trusting. ':'Trust is still limited. ';let hostile=0,armed=0;for(const p of g.state.units){if(p.hp<=0||!g.visibleAt(p.x,p.z)||Math.hypot(p.x-u.x,p.z-u.z)>CONTACT_RULES.riskMeters)continue;if(p.team===0&&armedAdult(g,p))armed++;else if(g.isFoe(0,p.team))hostile++;}return relation+(hostile?`${hostile} hostile ${hostile===1?'person is':'people are'} visible nearby; ${armed} armed villagers nearby.`:armed?`${armed} armed ${armed===1?'villager is':'villagers are'} nearby. No hostile party is currently visible here.`:'No armed villager or hostile party is currently visible nearby.');}
 function returnPerson(g:Game,u:Unit,reason:string){g.interruptMission(u);u.recalled=true;u.stationOnArrival=false;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.huntOnly=false;u.pillage=-1;u.attackDestination=null;u.workReason=reason;}
 function exchangeContact(g:Game,u:Unit,optionId:string|undefined,personId?:number):ContactOutcome{
- const proposal=contactTradeOptions(g,u.id,personId),option=optionId?proposal.options.find(o=>o.id===optionId):proposal.options[0];if(!option)return {accepted:false,reason:proposal.reason||'This offer is no longer available'};
- if(option.kind==='visitor'){const accepted=tradeWithVisitor(g,u.id,option.give!);return {accepted,reason:accepted?'Existing goods exchanged at the cache; the trader carries payment home':'The trader or goods are no longer available'};}
+ const proposal=contactTradeOptions(g,u.id,personId),option=optionId?proposal.options.find(o=>o.id===optionId):proposal.options[0];if(!option){const give=optionId?.startsWith('visitor:')?optionId.slice(8) as ResKind:undefined;return {accepted:false,reason:proposal.reason||(give&&goods.includes(give)?visitorTradeIssue(g,u,give):null)||'This offer is no longer available'};}
+ if(option.kind==='visitor')return acceptVisitorTrade(g,u.id,option.give!);
  const buyer=target(g,option.buyerId)!;const payment={amount:buyer.carry,kind:buyer.carryType!,food:buyer.carryFood},purchase={amount:u.carry,kind:u.carryType!,food:u.carryFood};
  returnPerson(g,buyer,'Carrying the exchanged goods home');returnPerson(g,u,'Exchange complete — taking payment home');
  buyer.carry=purchase.amount;buyer.carryType=purchase.kind;buyer.carryFood=purchase.kind==='food'?purchase.food:undefined;u.carry=payment.amount;u.carryType=payment.kind;u.carryFood=payment.kind==='food'?payment.food:undefined;
- return {accepted:true,reason:'The two carried bundles were exchanged; both people must bring their goods home'};
+ const label=(kind:ResKind)=>kind==='wood'?'logs':kind;
+ const reason=`Exchanged ${payment.amount} ${label(payment.kind)} for ${purchase.amount} ${label(purchase.kind)}. ${personName(buyer)} now carries the purchase home; village stores update on delivery.`;
+ lifeEvent(g,0,`Trade: ${reason}`);return {accepted:true,reason};
 }
 function visitorLeaveIssue(g:Game,u:Unit|undefined,personId?:number){const issue=contactIssue(g,u,personId);if(issue||!u)return issue;if(u.prisoner)return 'Use Release prisoner to return home for someone in your custody';if(g.isFoe(0,u.team))return 'You cannot send an uncontrolled hostile party home';if((u.type!=='worker'||u.militia)&&!u.caravanArmed)return 'This armed party is not under your control';if(!u.visit&&Math.hypot(u.x-g.campOf(0).x,u.z-g.campOf(0).z)>CONTACT_RULES.visitorCampMeters)return 'They are not visiting your camp; you can send your own explorer home';if(u.trade||u.tributeJourney||u.envoy||u.escortId!==undefined||hasTaskCommitment(u))return 'This person has a protected journey or duty and cannot be dismissed as a visitor';if(!supplyDrops(g,u.team).some(home=>!!supplyApproach(g,u,home)))return 'This person has no reachable home camp; clear a route before asking them to return';return null;}
 export function contactActions(g:Game,id:number,personId?:number){const u=target(g,id);return {attack:{reason:attackContactIssue(g,id,personId)},demand:{reason:demandContactIssue(g,id)},conversation:CONTACT_TOPICS.map(topic=>({...topic,reason:questionIssue(g,u,personId,topic.id)})),capture:{reason:captureContactIssue(g,id)},question:{reason:questionIssue(g,u,personId),report:lastContactReport(g,id)},trade:contactTradeOptions(g,id,personId),approach:{reason:approachContactTradeIssue(g,id,personId)},safety:contactSafety(g,id),leave:{reason:visitorLeaveIssue(g,u,personId)},scout:u?speaker(g,u,personId):undefined,prisoner:!!u?.prisoner&&u.prisoner.captorTeam===0&&u.prisoner.phase!=='released'};}
