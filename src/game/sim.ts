@@ -433,6 +433,7 @@ export class Game {
     this.tradeTeam = 1;
     this.looted.clear();
     this.visAge.fill(0);
+    this.observedFog = undefined;
 
     const specRoll = Math.random();
     const folk = [
@@ -660,6 +661,7 @@ export class Game {
       }
     }
     this.vision.fill(0);
+    this.observedFog = undefined;
     this.territory.fill(255);
     this.chopMarks.clear();
     const home = this.campOf(0);
@@ -3588,9 +3590,16 @@ export class Game {
     }
   }
 
+  /** Real observed fog under the Test Lab reveal overlay (G10). Reveal used to
+   * overwrite vision, so switching it off left the whole map explored. */
+  private observedFog?: {vision: Uint8Array; age: Float32Array};
+  /** Fog as actually observed by residents, ignoring any Test Lab reveal. */
+  observedVision(): Uint8Array { return this.observedFog?.vision ?? this.vision; }
+
   updateVision(dt = 0) {
     const vis = this.vision;
     const age = this.visAge;
+    if (this.observedFog) { vis.set(this.observedFog.vision); age.set(this.observedFog.age); this.observedFog = undefined; }
     for (let i = 0; i < vis.length; i++) if (vis[i] === 2) vis[i] = 1;
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
@@ -3612,7 +3621,7 @@ export class Game {
         age[i] = Math.min(age[i], 55);
       }
     }
-    if(this.testMode&&this.revealMap){vis.fill(2);age.fill(0);}
+    if(this.testMode&&this.revealMap){this.observedFog={vision:vis.slice(),age:age.slice()};vis.fill(2);age.fill(0);}
     this.paintTerritory();
   }
 
