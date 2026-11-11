@@ -14,7 +14,7 @@ export function variedLandforms(seed:number,request:WorldRequest={}){
  const randomLayout=request.randomLayout===true||request.layout===undefined||request.layout==='random',selection=randomLayout?'random':request.layout;
  let mode:LandMode;
  if(selection==='pangaea')mode='edge-continent';else if(selection==='continents')mode='divided-continent';else if(selection==='archipelago')mode=rand()<VARIETY_RULES.archipelagoMainlandProbability?'mainland-satellites':'major-islands';else{let roll=rand();mode='major-islands';for(const [key,weight] of Object.entries(VARIETY_RULES.randomWeights)){roll-=weight;if(roll<0){mode=key as LandMode;break;}}}
- const options:WorldOptions={size,layout:mode==='edge-continent'?'pangaea':mode==='divided-continent'?'continents':'archipelago',...(randomLayout?{randomLayout:true as const}:{}),...(request.openingSiteVersion===1?{}:{openingSiteVersion:2 as const}),...(request.riverProfileVersion===2?{riverProfileVersion:2 as const}:{})};
+ const options:WorldOptions={size,layout:mode==='edge-continent'?'pangaea':mode==='divided-continent'?'continents':'archipelago',...(randomLayout?{randomLayout:true as const}:{}),...(request.openingSiteVersion===1?{}:{openingSiteVersion:2 as const}),...(request.riverProfileVersion===2?{riverProfileVersion:2 as const}:{}),...(request.tideVersion===1?{tideVersion:1 as const}:{})};
  if(mode==='major-islands'){const old=multipleLandmasses(seed,options);return{...old,options,mode,islands:old.islands.map(i=>({...i,domain:i.distance,primary:true} as Island))};}
  const angle=rand()*Math.PI*2,nx=Math.cos(angle),nz=Math.sin(angle),tx=-nz,tz=nx,islands:Island[]=[];
  const island=(x:number,z:number,rx:number,rz:number,primary=true)=>{

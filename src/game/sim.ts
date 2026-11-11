@@ -109,6 +109,7 @@ import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
 import {flowPath} from "./flowFields";
+import {advanceTide} from "./tides";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -3112,6 +3113,7 @@ export class Game {
 
   tickEvents(dt: number) {
     this.tickWeather(dt);
+    advanceTide(this); // Grok W5: no-op unless worldOptions.tideVersion===1
     if (this.state.event === "herd") this.state.event = "none";
     this.state.eventT = 120;
     this.tickCalamity(dt);
