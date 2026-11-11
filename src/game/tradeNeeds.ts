@@ -13,6 +13,7 @@ import {receiveFood} from './pantry';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {penHousingCapacity} from './penGeometry';
 import type {ItemKind} from './production';
+import {villagePersonality} from './villagePersonality';
 
 /**
  * TRADE-NEEDS / G15. Societies propose trades from what they actually lack and actually hold.
@@ -88,7 +89,7 @@ function removeStock(g:Game,team:number,k:GoodKind,n:number):{ok:boolean;animals
 
 // ---- Markets (read from building state; no economy file is edited).
 export function marketCount(g:Game,team:number){return Math.min(TRADE_NEEDS_RULES.maximumMarketsCounted,g.state.buildings.filter(b=>b.team===team&&b.type==='market'&&b.hp>0&&g.finished(b)).length);}
-export function tradeReviewSeconds(g:Game,team:number){return TRADE_NEEDS_RULES.reviewSeconds/(1+TRADE_NEEDS_RULES.marketFrequencyGain*marketCount(g,team));}
+export function tradeReviewSeconds(g:Game,team:number){return TRADE_NEEDS_RULES.reviewSeconds/(1+TRADE_NEEDS_RULES.marketFrequencyGain*marketCount(g,team))/villagePersonality(g,team).sociability;}
 export function tradeSpread(g:Game,a:number,b:number){return Math.max(TRADE_NEEDS_RULES.minimumSpread,TRADE_NEEDS_RULES.baseSpread-TRADE_NEEDS_RULES.spreadPerMarket*Math.min(TRADE_NEEDS_RULES.maximumMarketsCounted,marketCount(g,a)+marketCount(g,b)));}
 
 // ---- Observed trust and risk.
@@ -121,7 +122,7 @@ export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get
  giveAmt=Math.min(giveAmt,surplus,TRADE_GOODS[give].maxLot);if(giveAmt<TRADE_GOODS[give].lot)return no('no-surplus');
  const getAmt=Math.min(TRADE_GOODS[get].maxLot,Math.floor(giveAmt*wg/wt*(1-spread)+1e-9));if(getAmt<TRADE_GOODS[get].lot)return no('low-value');
  const fair=giveAmt*wg/wt,{trust,risk}=observedRisk(g,from,to,site,giveAmt*wg);
- const o:TradeOffer={id:g.id(),from,to,give:{kind:give,amount:giveAmt},get:{kind:get,amount:getAmt},fairGet:fair,spread,phase:'proposed',createdAt:g.state.time,answerAt:g.state.time+TRADE_NEEDS_RULES.answerDelayBase+dist(g.campOf(from),site)*TRADE_NEEDS_RULES.answerDelayPerMeter,hall:{x:site.x,z:site.z},reserved:false,carriers:[],escorts:[],ready:[],lines:[],risk,trust,escortsWanted:escortsForRisk(risk),escortsArmed:0,escortsLost:0,carriersLost:0,paid:false,reason:'Proposed from observed need',lostAmount:0,lostToParcel:0,needAmount:need,volume:giveAmt*wg};
+ const o:TradeOffer={id:g.id(),from,to,give:{kind:give,amount:giveAmt},get:{kind:get,amount:getAmt},fairGet:fair,spread,phase:'proposed',createdAt:g.state.time,answerAt:g.state.time+TRADE_NEEDS_RULES.answerDelayBase+dist(g.campOf(from),site)*TRADE_NEEDS_RULES.answerDelayPerMeter,hall:{x:site.x,z:site.z},reserved:false,carriers:[],escorts:[],ready:[],lines:[],risk,trust,escortsWanted:escortsForRisk(risk/villagePersonality(g,from).boldness),escortsArmed:0,escortsLost:0,carriersLost:0,paid:false,reason:'Proposed from observed need',lostAmount:0,lostToParcel:0,needAmount:need,volume:giveAmt*wg};
  const s=root(g);while(s.offers.length>=TRADE_NEEDS_RULES.maximumOffers){const i=s.offers.findIndex(x=>!OPEN.includes(x.phase));if(i<0)return no('slots');s.offers.splice(i,1);}
  s.offers.push(o);const r=row(g,from);r.proposed++;for(const k of [give,get]){r.mix[k]=(r.mix[k]||0)+1;const c=TRADE_GOODS[k].cat;r.categories[c]=(r.categories[c]||0)+1;}
  return{ok:true,offer:o};}
@@ -153,7 +154,7 @@ function decline(g:Game,o:TradeOffer,reason:string,coolFrom=true){o.phase='decli
  if(coolFrom){const s=root(g);let c=declineRow(g,o.from,o.to,o.give.kind,o.get.kind);if(!c){c={team:o.from,partner:o.to,give:o.give.kind,get:o.get.kind,until:0,declines:0,reason};s.cooldowns.push(c);}c.declines++;c.reason=reason;c.until=g.state.time+Math.min(TRADE_NEEDS_RULES.maximumCooldownSeconds,TRADE_NEEDS_RULES.cooldownSeconds*Math.pow(2,c.declines-1));while(s.cooldowns.length>TRADE_NEEDS_RULES.maximumCooldowns)s.cooldowns.shift();}}
 function qualifies(g:Game,o:TradeOffer){const t=g.tribe(o.to);
  if(!t?.alive||g.isFoe(o.from,o.to))return'foe';
- if(o.to!==0){if(tradeStock(g,o.to,o.give.kind)>=tradeReserve(g,o.to,o.give.kind)*1.25+1&&tradeNeed(g,o.to,o.give.kind)<=0)return'no-need';
+ if(o.to!==0){if(tradeStock(g,o.to,o.give.kind)>=tradeReserve(g,o.to,o.give.kind)*(1+.25*villagePersonality(g,o.to).sociability)+1&&tradeNeed(g,o.to,o.give.kind)<=0)return'no-need';
   if(tradeSurplus(g,o.to,o.get.kind)<o.get.amount)return'no-surplus';}
  else if(tradeStock(g,0,o.get.kind)<o.get.amount)return'no-surplus';
  return'';}

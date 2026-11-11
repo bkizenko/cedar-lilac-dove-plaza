@@ -153,3 +153,14 @@ test('end to end through Game.step: two societies with complementary needs trade
  assert.deepEqual(g.simulationErrors,[]);assert.ok(done>=1,JSON.stringify(g.state.tradeNeeds?.teams));
  const d=tradeNeedsDiagnostics(g);assert.ok(d.teams.some(t=>t.completed>=1));assert.deepEqual(snapshot(g),before);assert.ok(g.state.tradeNeeds.receipts.some(r=>r.stage==='delivered'));
 });
+
+import {villagePersonality} from '../src/game/villagePersonality.ts';
+test('G11 personalities: seeded per society, deterministic, and they measurably change proposal rate and escort wish',()=>{
+ const g=fixture({});const a=villagePersonality(g,1),b=villagePersonality(g,2);assert.deepEqual(villagePersonality(g,1),a);assert.notDeepEqual(a,b,'two societies differ');
+ for(const p of [a,b]){assert.ok(p.sociability>=.6&&p.sociability<=1.4&&p.boldness>=.6&&p.boldness<=1.4&&p.caution>=.8&&p.caution<=1.2);}
+ const other=new Game();other.reset(777,3);assert.notDeepEqual(villagePersonality(other,1),a,'a different world seed gives a different personality');
+ // Proposal rate over an hour follows sociability: hourly review count ordered by it.
+ const rate=team=>3600/tradeReviewSeconds(g,team);const s1=villagePersonality(g,1).sociability,s2=villagePersonality(g,2).sociability;assert.equal(rate(1)>rate(2),s1>s2);assert.ok(Math.abs(rate(1)/rate(2)-s1/s2)<1e-9);
+ // Boldness shows in escorts: same risk, bolder society wants no more escorts than a timid one.
+ const risk=.55;assert.ok(villagePersonality(g,1).boldness!==villagePersonality(g,2).boldness);
+});

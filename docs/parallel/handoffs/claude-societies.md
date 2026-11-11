@@ -8,7 +8,7 @@
 | Need-based caravan trade with actually held goods; diverse goods; armed caravans; markets | TRADE-NEEDS, G15 | source pushed (see "TRADE-NEEDS / G15") |
 | Sea storms in deep water: delay/damage/turn back/loss | G16 | source pushed (see "G16 sea storms") |
 | Codex review of sea exploration (paid hull service + sail fitting admission; capture/recall/interruption tests) | BOAT-SHARED follow-up | source pushed (commit 01e6f66) |
-| Chat-derived gaps from agents/claude-coordination handoff: G5 rise-and-fall, G6 culture naming, G11 village personalities | G5 / G6 / G11 (coordination IDs) | G6 source pushed (see "G6 culture naming" below); G5 / G11 queued |
+| Chat-derived gaps from agents/claude-coordination handoff: G5 rise-and-fall, G6 culture naming, G11 village personalities | G5 / G6 / G11 (coordination IDs) | G6 source pushed (see "G6 culture naming" below); G5 queued; G11 source pushed (see "G11 village personalities") |
 
 - Lane / task ID: A-Societies · NPC docked-hull sea exploration (deliverable 1).
 - Owner / claimed files: Claude Societies. New `src/game/seaExploration.ts`, `scripts/rival-sea-exploration.test.mjs`; orchestration hooks in `coastalTrade.ts`, `coastalCommission.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`; registry line in `workCommitments.ts`.
@@ -106,3 +106,6 @@ Files: new `src/game/seaStorms.ts`, `scripts/sea-storms.test.mjs` (4 tests); `se
 - Sea-exploration crews react only to a storm within its radius + 40 m sight: outbound turns home (`storm`), lands and unloads with exact pack ledgers. Coastal-trade voyages take the same hull damage/loss but have no turn-back reaction yet.
 - Save: optional `state.seaStorms`, validated in the coastal-trade validator.
 Interface requests: **Grok** — canonical deep-water extents (this module uses `waterAt - height >= 2.5 m`); **Codex** — weather owner may replace the `weather==='storm'` gate with a dedicated sea-state event; hull-physics owner may want storm drag instead of damage-driven slowdown. Tests lower `deepMeters` to 0.9 because the fixture channel is 1 m deep and boats are boarded by wading.
+
+## G11 — village personalities (status: source pushed, not merged)
+New `src/game/villagePersonality.ts` (pure function of world seed and team, nothing saved, no shared-file edit): sociability, boldness (both 0.6-1.4) and caution (0.8-1.2). Consumed in `tradeNeeds.ts`: sociability divides the review interval (proposal rate) and loosens acceptance of an offered good; boldness divides observed risk when choosing escort count. Tested in `scripts/trade-needs.test.mjs` (determinism, per-society and per-seed difference, measured review-rate ratio equals the sociability ratio). **Raid rate is not wired** (no raid file edited): `raidPropensity(g,team)` is exported for the raid owner (Codex) to scale launch rate. `caution` is defined but not yet applied to reserves.
