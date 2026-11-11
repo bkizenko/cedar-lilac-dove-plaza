@@ -3,9 +3,12 @@ import {mulberry32} from './rng';
 import {lakeContains} from './localWater';
 import {beginClayGather,clayIssue,clayWorkerAvailable,POTTERY_RULES,surveyClay} from './pottery';
 import type {Game} from './sim';
+import {riverSectionAt,sectionCentrelinePoint,fishRecoveryPerMinute,type RiverSection} from './waterSections';
 
 type Point = {x:number;z:number};
-export type WaterReach = Point & {kind:'river'|'lake'};
+/** A river reach is a whole channel section (GW-04) when one owns the point;
+ * lakes and legacy reaches keep the radius rule. */
+export type WaterReach = Point & {kind:'river'|'lake';section?:RiverSection};
 export const WATER_REACH_RULES = {radius:24,wetStep:2,bankTolerance:7,habitatCell:FISHERY_RULES.habitatCell,minimumFish:36,fishCapacityRange:24} as const;
 
 const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -20,7 +23,7 @@ export function waterReachAt(g:Game,point:Point):WaterReach|null{
   for(let i=1;i<river.pts.length;i++){
    const a=river.pts[i-1],b=river.pts[i],dx=b.x-a.x,dz=b.z-a.z;
    const t=Math.min(1,Math.max(0,((point.x-a.x)*dx+(point.z-a.z)*dz)/(dx*dx+dz*dz||1)));
-   if(distance(point,{x:a.x+t*dx,z:a.z+t*dz})<=river.w*.5+2)return {...point,kind:'river'};
+   if(distance(point,{x:a.x+t*dx,z:a.z+t*dz})<=river.w*.5+2){const section=riverSectionAt(g,point);return section?{...point,kind:'river',section}:{...point,kind:'river'};}
   }
  }
  return null;
@@ -28,6 +31,15 @@ export function waterReachAt(g:Game,point:Point):WaterReach|null{
 
 /** Bank nodes in older worlds can be a few metres above the waterline. */
 function sameWater(g:Game,reach:WaterReach,point:Point,bankTolerance=0){
+ if(reach.section){
+  // Exclusive section ownership: never counted in two sections, never hidden ground.
+  if(!g.exploredAt(point.x,point.z)||riverSectionAt(g,point)?.id!==reach.section.id)return false;
+  // Same water as the channel: wet all the way to the centreline (a bank node
+  // may sit within bankTolerance of dry ground), so a separate pond is excluded.
+  const c=sectionCentrelinePoint(reach.section,point),span=distance(c,point),count=Math.max(1,Math.ceil(span/WATER_REACH_RULES.wetStep));
+  for(let step=0;step<=count;step++){const t=step/count;if((1-t)*span<=bankTolerance)break;if(!wet(g,c.x+(point.x-c.x)*t,c.z+(point.z-c.z)*t))return false;}
+  return bankTolerance>0||wet(g,point.x,point.z);
+ }
  const span=distance(reach,point);
  if(span>WATER_REACH_RULES.radius||!g.exploredAt(point.x,point.z))return false;
  const count=Math.max(1,Math.ceil(span/WATER_REACH_RULES.wetStep));
@@ -44,8 +56,9 @@ function sameWater(g:Game,reach:WaterReach,point:Point,bankTolerance=0){
 export function surveyReachFish(g:Game,reach:WaterReach){
  const {radius,habitatCell:cell,minimumFish,fishCapacityRange}=WATER_REACH_RULES;
  const knownCells=new Set(g.state.fish.map(node=>fishHabitatCell(node.x,node.z)));
- for(let cz=Math.floor((reach.z-radius)/cell);cz<=Math.floor((reach.z+radius)/cell);cz++){
-  for(let cx=Math.floor((reach.x-radius)/cell);cx<=Math.floor((reach.x+radius)/cell);cx++){
+ const box=reach.section?reach.section.corners.reduce((b,p)=>({x0:Math.min(b.x0,p.x),x1:Math.max(b.x1,p.x),z0:Math.min(b.z0,p.z),z1:Math.max(b.z1,p.z)}),{x0:Infinity,x1:-Infinity,z0:Infinity,z1:-Infinity}):{x0:reach.x-radius,x1:reach.x+radius,z0:reach.z-radius,z1:reach.z+radius};
+ for(let cz=Math.floor(box.z0/cell);cz<=Math.floor(box.z1/cell);cz++){
+  for(let cx=Math.floor(box.x0/cell);cx<=Math.floor(box.x1/cell);cx++){
    if(knownCells.has(`${cx}:${cz}`))continue;
    const center={x:(cx+.5)*cell,z:(cz+.5)*cell};
    let bank:Point|undefined;
@@ -91,6 +104,9 @@ export function waterReachReport(g:Game,reach:WaterReach){
   fishCount:fish.reduce((sum,node)=>sum+node.amount,0),
   fishCapacity:fish.reduce((sum,node)=>sum+node.maxAmt,0),
   fishRecovery:fish.length&&!grounds.length?Math.min(...fish.map(node=>fishRecoveryEstimateSeconds(g,node))):0,
+  /** Fish regrowing per game minute across this reach right now (GW-04). */
+  fishRecoveryPerMinute:fishRecoveryPerMinute(g,fish),
+  section:reach.section??null,
   clayCount:clay.reduce((sum,deposit)=>sum+deposit.remaining,0),
   clayCapacity:clay.reduce((sum,deposit)=>sum+deposit.initial,0),
   fisher,digger,surveyor,
