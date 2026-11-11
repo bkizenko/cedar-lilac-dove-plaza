@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {SEGS} from '../src/game/constants.ts';
 import {knownSettlementSite} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-import {proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
+import {TRADE_SELECTABLE_KINDS,proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
 
 function ground(g){const size=g.world.size;for(let z=0;z<=SEGS;z++)for(let x=0;x<=SEGS;x++)g.world.heights[z*(SEGS+1)+x]=4;g.world.rivers=[];g.world.features=[];g.rebuildWalk();for(const u of g.state.units)u.y=g.height(u.x,u.z);for(const b of g.state.buildings)b.y=g.height(b.x,b.z);void size;const clock=g.clockState.bind(g);g.clockState=()=>({...clock(),period:'Day'});}
 /** Flat dry world; halls 70 m apart; each rival has 10 adults and mutually observed halls. */
@@ -69,30 +69,16 @@ test('no offering what cannot be delivered: proposer that lost its goods before 
  const h=fixture({stock1:{stone:220,wood:0},stock2:{wood:320,stone:0}});for(const u of h.state.units.filter(u=>u.team===1))u.jobLock=true;const p=proposeTradeOffer(h,1,2,'stone','wood').offer;h.state.time=p.answerAt+1;tickTradeNeeds(h,.1);assert.equal(p.reason,'no-carriers');
 });
 
-test('diverse goods: tools, weapons, armor, artifacts and animals are offered only from real holdings, and the offer mix is measured per society',()=>{
- const g=fixture({stock1:{spears:9,blades:9,wood:0,cloth:0,items:{paddedArmor:6,pottery:24,cordage:0,basket:0,cloth:0}},stock2:{wood:400,stone:300,copper:80,items:{cordage:30,basket:12,paddedArmor:0,pottery:0,cloth:12}}});
- for(const t of [1,2])for(const [i,k] of [[0,'wood']])void i;
- const kinds=new Set();
- for(const [give,get] of [['spears','wood'],['paddedArmor','cordage'],['pottery','basket'],['blades','stone'],['pottery','copper']]){const r=proposeTradeOffer(g,1,2,give,get);assert.equal(r.ok,true,give+'->'+get+' '+JSON.stringify(r));kinds.add(TRADE_GOODS[give].cat);kinds.add(TRADE_GOODS[get].cat);g.state.tradeNeeds.offers.pop();g.state.tradeNeeds.offers.length=0;}
- for(const c of ['weapon','armor','artifact','tool','resource'])assert.ok(kinds.has(c),c);
- assert.equal(proposeTradeOffer(g,1,2,'iron','wood').ok,false,'iron not held');assert.equal(proposeTradeOffer(g,1,2,'goat','wood').ok,false,'no goats held');
- const mix=g.state.tradeNeeds.teams.find(t=>t.team===1);assert.ok(Object.keys(mix.categories).length>=5,JSON.stringify(mix.categories));assert.ok(Object.keys(mix.mix).length>=8,JSON.stringify(mix.mix));
- // Automatic review picks varied goods over time (kind-mix penalty) for the same society.
- const h=fixture({stock1:{wood:0,stone:0,spears:6,blades:3,items:{pottery:12,paddedArmor:5,cloth:10,cordage:0,basket:0}},stock2:{wood:400,stone:300,copper:90,items:{cordage:30,basket:12}}});
- const seen=new Set();for(let i=0;i<14;i++){h.state.tradeNeeds&&(h.state.tradeNeeds.offers.length=0);h.state.tradeNeeds&&(h.state.tradeNeeds.cooldowns.length=0);h.state.time+=TRADE_NEEDS_RULES.reviewSeconds+1;reviewTradeNeeds(h);const o=h.state.tradeNeeds.offers.at(-1);if(o&&o.from===1)seen.add(o.give.kind);}
- assert.ok(seen.size>=3,'society 1 offered '+[...seen]);
+test('goods without a physical journey holder (tools, weapons, armor, artifacts, animals) are not offered until holders exist; resources still trade varied',()=>{
+ const g=fixture({stock1:{spears:9,blades:9,wood:0,stone:220,items:{pottery:24}},stock2:{wood:400,stone:0,copper:80,items:{cordage:30}}});
+ for(const [give,get] of [['spears','wood'],['paddedArmor','cordage'],['pottery','basket'],['blades','stone'],['goat','wood']])assert.equal(proposeTradeOffer(g,1,2,give,get).reason,'no-physical-holder',give+'->'+get);
+ assert.equal(proposeTradeOffer(g,1,2,'stone','wood').ok,true,'resources keep trading');
+ assert.ok(TRADE_SELECTABLE_KINDS.every(k=>TRADE_GOODS[k].cat==='resource'));
+ const h=fixture({stock1:{wood:0,stone:300,copper:60,spears:6,items:{pottery:12}},stock2:{wood:400,stone:0,copper:0}});
+ const seen=new Set();for(let i=0;i<10;i++){h.state.tradeNeeds&&(h.state.tradeNeeds.offers.length=0);h.state.tradeNeeds&&(h.state.tradeNeeds.cooldowns.length=0);h.state.time+=TRADE_NEEDS_RULES.reviewSeconds+1;reviewTradeNeeds(h);const o=h.state.tradeNeeds?.offers.find(o=>o.from===1);if(o){seen.add(o.give.kind);assert.equal(TRADE_GOODS[o.give.kind].cat,'resource');assert.equal(TRADE_GOODS[o.get.kind].cat,'resource');}}
+ assert.ok(seen.size>=1,'society 1 offered '+[...seen]);
 });
 
-test('animals: a goat is reserved, led by a carrier and delivered into a partner pen; none created, none destroyed',()=>{
- let g=fixture({stock1:{wood:0,stone:0},stock2:{wood:340,stone:0}});
- const pen1=g.makeBld('pen',20,-14,1),pen2=g.makeBld('pen',dist2(),-14,2);g.state.buildings.push(pen1,pen2);finish(g);ground(g);
- for(let i=0;i<5;i++)g.state.livestock.push({id:g.id(),species:'goat',x:20,y:4,z:-14,facing:0,vx:0,vz:0,wanderT:0,hp:20,maxHp:20,fly:0,scale:1,team:1,pen:pen1.id,sex:i%2?'female':'male',born:0,tamedAt:0,hunger:0,milk:0,pregnancy:0});
- const before=snapshot(g);assert.equal(before.goat,5);
- const o0=proposeTradeOffer(g,1,2,'goat','wood');assert.equal(o0.ok,true,JSON.stringify(o0));const id=o0.offer.id;g.state.time=o0.offer.answerAt+1;g.tribe(2).wood=g.tribe(2).wood;tickTradeNeeds(g,.1);
- let o=g.state.tradeNeeds.offers.find(o=>o.id===id);assert.equal(o.phase,'loading',o.reason);assert.equal(snapshot(g).goat,5,'reserved goat still counted');assert.ok(g.state.livestock.length<5,'goat left the herd into escrow');
- const end=g.state.time+700;while(g.state.time<end&&!['complete','failed'].includes(o.phase)){g.state.paused=false;g.step(.1);o=g.state.tradeNeeds.offers.find(x=>x.id===id);}
- assert.equal(o.phase,'complete',JSON.stringify(o));assert.equal(snapshot(g).goat,5);assert.equal(g.state.livestock.filter(a=>a.team===2).length,o.giveDelivered);assert.ok(g.state.livestock.filter(a=>a.team===2).every(a=>a.pen===pen2.id));
-});
 function dist2(){return 70+20;}
 
 test('armed caravans: escort count and arming scale with observed risk and trust; unarmable escorts are not counted',()=>{

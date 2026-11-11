@@ -7,9 +7,9 @@ import {requestWaterNavigation,tickWaterNavigationPreparation} from './waterTrav
 import {recordCoastalReview,observedCoastalLandings,coastalPartnerScore} from './coastalStrategy';
 import {TRADE_PRICING} from './tradePricing';
 import {reviewCoastalCommissioning,tickCoastalCommissioning,coastalCommissionAI,pauseCoastalCommission,validCoastalCommissionState} from './coastalCommission';
-import {stolenCargoAI,tickStolenCargo,validDroppedCargoState} from './stolenCargo';
+import {stolenCargoAI,tickStolenCargo,validDroppedCargoState,cancelCargoTrip} from './stolenCargo';
 import {tickSeaStorms,validSeaStormState} from './seaStorms';
-import {tradeNeedsAI,tickTradeNeeds,reviewTradeNeeds,validTradeNeedsState} from './tradeNeeds';
+import {tradeNeedsAI,tickTradeNeeds,reviewTradeNeeds,validTradeNeedsState,pauseTradeNeeds} from './tradeNeeds';
 import {reviewSeaExploration,tickSeaExploration,seaExplorationAI,pauseSeaExploration,validSeaExplorationState,seaExplorationOwnsBoat} from './seaExploration';
 import type {Game} from './sim';import type {Unit,ResKind,GameState,Building} from './types';
 import {boardRiverboat,commandRiverboat,landRiverboat,riverboatDestination,boatCrew,type Riverboat} from './boats';
@@ -42,7 +42,7 @@ export function dispatchCoastalTrade(g:Game,team:number,boatId:number,partner:nu
  g.spend(team,{[give]:amount,food:food+(give==='food'?amount:0)});if(t.survival)t.survival.waterLiters-=water;crew.carry=amount;crew.carryType=give;crew.carryFood=give==='food'?'provisions':undefined;
  const v:CoastalVoyage={version:1,id:g.id(),team,partner,boatId,actorId:crew.id,homeDockId:dock.id,foreignDockId,...(foreignDockId===undefined?{foreignLanding:'beach' as const}:{}),foreignHallId:hall.id,foreignHallSite:{x:hall.x,z:hall.z},homeSea:{x:boat.x,z:boat.z},homeLand,foreignSea,foreignLand,phase:'boardingOut',resumePhase:'boardingOut',food,water,started:g.state.time,talk:0,traded:false,blockedReason:'',metrics:{boardings:0,landings:0,sailMeters:0,walkMeters:0,foodUsed:0,waterUsed:0,offered:amount,received:0,delivered:0,returned:0},lastActor:{x:crew.x,z:crew.z},lastBoat:{x:boat.x,z:boat.z},give,get};list.push(v);crew.coastalVoyageId=v.id;if(distance(crew,boat)<=24)boardRiverboat(g,boatId,[crew],team,true);return {accepted:true as const,voyageId:v.id,reason:'Cargo and provisions loaded at the actual cache; crew will walk to the paid boat'};
 }
-export function pauseCoastalTrade(g:Game,u:Unit){pauseCoastalCommission(g,u);pauseSeaExploration(g,u);const v=voyage(g,u);if(!v||v.phase==='paused')return false;v.resumePhase=v.phase;v.phase='paused';v.blockedReason='Direct order paused the voyage; the same body, boat, cargo and provisions remain owned';return true;}
+export function pauseCoastalTrade(g:Game,u:Unit){pauseCoastalCommission(g,u);pauseSeaExploration(g,u);pauseTradeNeeds(g,u);cancelCargoTrip(g,u);const v=voyage(g,u);if(!v||v.phase==='paused')return false;v.resumePhase=v.phase;v.phase='paused';v.blockedReason='Direct order paused the voyage; the same body, boat, cargo and provisions remain owned';return true;}
 export function resumeCoastalTrade(g:Game,id:number){const v=g.state.coastalVoyages?.find(v=>v.id===id&&v.phase==='paused'),u=v&&g.state.units.find(u=>u.id===v.actorId&&u.hp>0&&u.team===v.team);if(!v||!u||u.prisoner||u.emergency||u.boat&&u.boat.id!==v.boatId||!g.state.boats?.some(b=>b.id===v.boatId&&b.hp>0))return false;v.phase=v.resumePhase;if(v.phase==='sailingOut'||v.phase==='sailingHome'){const p=v.phase==='sailingOut'?v.foreignSea:v.homeSea;if(!commandRiverboat(g,v.boatId,p.x,p.z,true)){v.phase='paused';return false;}}v.blockedReason='';return true;}
 function row(g:Game,v:CoastalVoyage,b:Riverboat,u:Unit,target:Point,next:CoastalPhase){if(commandRiverboat(g,b.id,target.x,target.z,true)){v.phase=next;v.blockedReason='';v.metrics.boardings++;}else v.blockedReason='The actual boat cannot reach the planned connected water';}
 export function tickCoastalTrade(g:Game,dt:number){tickWaterNavigationPreparation(g);tickCoastalCommissioning(g);tickSeaExploration(g,dt);tickStolenCargo(g,dt);tickTradeNeeds(g,dt);tickSeaStorms(g,dt);

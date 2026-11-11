@@ -4,7 +4,7 @@ import {isDependent,reserveSeconds} from './settlement';
 import {isRivalTeam} from './factions';
 import {villagePersonality} from './villagePersonality';
 import {carryingCapacity} from './haulage';
-import {markStolenLoad} from './stolenCargo';
+import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
 import {queueStandDown} from './demobilization';
 import {acceptPrisonerSurrender,PRISONER_RULES,type PrisonerUnit} from './captivity';
 import {agreeSocietyTruce} from './societyRelations';
@@ -170,7 +170,7 @@ export function acceptCapitulation(g:Game,id:number,outcome:CapitulationOutcome,
  }
  if(outcome==='loot'){
   const t=g.tribe(f.defenderTeam);let taken=0;
-  for(const u of present){if(u.carry>0)continue;const kind=(['food','wood','stone'] as ResKind[]).filter(k=>(t[k]||0)>=1).sort((a,b)=>(t[b]||0)-(t[a]||0))[0];if(!kind)break;
+  for(const u of present){if(u.carry>0||!stolenMarkRoom(g,u))continue;const kind=(['food','wood','stone'] as ResKind[]).filter(k=>(t[k]||0)>=1).sort((a,b)=>(t[b]||0)-(t[a]||0))[0];if(!kind)break;
    const amount=Math.floor(Math.min(t[kind]||0,carryingCapacity(u,kind)));if(amount<1)continue;
    if(kind==='food')g.spend(f.defenderTeam,{food:amount});else t[kind]-=amount;
    u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;markStolenLoad(g,u,f.defenderTeam);taken+=amount;

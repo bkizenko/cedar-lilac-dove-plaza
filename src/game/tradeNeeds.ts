@@ -33,6 +33,10 @@ export const TRADE_GOODS:Record<GoodKind,Good>={
  pottery:{cat:'artifact',worth:2.5,lot:2,maxLot:8,perCarrier:8},cloth:{cat:'artifact',worth:3,lot:2,maxLot:8,perCarrier:8},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
 };
 export const TRADE_KINDS=Object.keys(TRADE_GOODS) as GoodKind[];
+/** Goods that currently have a physical holder for the whole journey (carried resource loads, dropped as
+ * parcels on death). Tools/weapons/armor/artifacts/animals stay in saves and observations but are not
+ * offered until item/gear/animal holders exist (Codex review trade-cargo-5d9051c, P1). */
+export const TRADE_SELECTABLE_KINDS=TRADE_KINDS.filter(k=>TRADE_GOODS[k].cat==='resource');
 const WEAPONS=['spears','bows','blades'],ITEMS=['paddedArmor','cordage','basket','pottery','cloth'];
 export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumObservations:64,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
 
@@ -61,6 +65,8 @@ function receipt(g:Game,o:TradeOffer,stage:TradeReceiptStage,team:number,kind:Go
 export function tradeStock(g:Game,team:number,k:GoodKind):number{const t=g.tribe(team);if(!t)return 0;
  if(k==='goat')return(g.state.livestock||[]).filter(a=>a.team===team&&a.hp>0&&a.species==='goat'&&!a.pregnancy&&a.sex!==undefined).length;
  if(WEAPONS.includes(k))return Math.floor((t as unknown as Record<string,number>)[k]||0);if(ITEMS.includes(k))return Math.floor(t.items?.[k as ItemKind]||0);return Math.floor(t[k as ResKind]||0);}
+/** Adults actually near home and not already committed elsewhere — the ones who would stay behind. */
+function homeAdultCount(g:Game,team:number){const home=g.campOf(team);return g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.prisoner&&u.tradeNeedsId===undefined&&!hasTaskCommitment(u)&&!u.societyMissionId&&!u.expedition&&!u.boat&&dist(u,home)<=TRADE_NEEDS_RULES.hallMeters*3).length;}
 function adults(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)).length;}
 function pop(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u.hp>0).length;}
 export function tradeReserve(g:Game,team:number,k:GoodKind):number{
@@ -116,6 +122,7 @@ export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get
  const player=from===0&&playerGiveAmount!==undefined;
  if(from===0&&!player||from===3||!g.tribe(from)?.alive||!g.tribe(to)?.alive||from===to||to===3||give===get)return no('invalid');
  if(!TRADE_GOODS[give]||!TRADE_GOODS[get]||g.isFoe(from,to))return no('foe');
+ if(!TRADE_SELECTABLE_KINDS.includes(give)||!TRADE_SELECTABLE_KINDS.includes(get))return no('no-physical-holder');
  const site=knownSettlementSite(g,to,from);if(!site)return no('partner-unknown');
  if(cooling(g,from,to,give,get))return no('cooldown');
  if(root(g).offers.some(o=>OPEN.includes(o.phase)&&o.from===from))return no('already-trading');
@@ -140,7 +147,7 @@ export function proposePlayerTrade(g:Game,to:number,give:GoodKind,get:GoodKind,g
 function learnedBlock(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return !!g.state.tradeNeeds?.cooldowns.some(c=>c.team===from&&c.partner===to&&c.until>g.state.time&&(c.reason==='no-need'&&c.give===give||c.reason==='no-surplus'&&c.get===get));}
 /** Ranks an NPC's needs against its surplus; recently proposed kinds are penalized so offers stay varied. */
 export function chooseTradeOffer(g:Game,team:number,partner:number){
- const mix=row(g,team).mix,wants=TRADE_KINDS.filter(k=>tradeNeed(g,team,k)>0),gives=TRADE_KINDS.filter(k=>tradeSurplus(g,team,k)>=TRADE_GOODS[k].lot);
+ const mix=row(g,team).mix,wants=TRADE_SELECTABLE_KINDS.filter(k=>tradeNeed(g,team,k)>0),gives=TRADE_SELECTABLE_KINDS.filter(k=>tradeSurplus(g,team,k)>=TRADE_GOODS[k].lot);
  const out:{give:GoodKind;get:GoodKind;score:number}[]=[];
  for(const get of wants)for(const give of gives){if(give===get||cooling(g,team,partner,give,get))continue;
   if(learnedBlock(g,team,partner,give,get))continue;
@@ -178,7 +185,7 @@ function commitPlan(g:Game,o:TradeOffer):CommitPlan{
  if(!pool.length)return{blocker:'no-carriers'};
  const carriers:Unit[]=[];let capGive=0,capGet=0;for(const u of pool){if(capGive>=o.give.amount&&capGet>=o.get.amount||carriers.length>=TRADE_NEEDS_RULES.maximumCarriers)break;carriers.push(u);capGive+=capacity(u,o.give.kind);capGet+=capacity(u,o.get.kind);}
  if(capGive<o.give.amount||capGet<o.get.amount)return{blocker:'too-heavy'};
- const homeAdults=adults(g,o.from)-carriers.length;if(homeAdults<TRADE_NEEDS_RULES.minimumHomeAdults)return{blocker:'home-short'};
+ const homeAdults=homeAdultCount(g,o.from)-carriers.length;if(homeAdults<TRADE_NEEDS_RULES.minimumHomeAdults)return{blocker:'home-short'};
  let pg:number|undefined,pt:number|undefined;
  if(o.get.kind==='goat'){const pen=penRoom(g,o.from,home);if(!pen)return{blocker:'no-pen'};pg=pen.id;}
  if(o.give.kind==='goat'){const hall=g.state.buildings.find(b=>b.team===o.to&&b.type==='townhall'&&g.finished(b));const pen=hall?penRoom(g,o.to,hall):undefined;if(!pen)return{blocker:'partner-no-pen'};pt=pen.id;}
@@ -197,7 +204,7 @@ function commit(g:Game,o:TradeOffer){
  o.give.animals=gs.animals;o.get.animals=ts.animals;o.give.penId=pt;o.get.penId=pg;o.reserved=true;
  // The proposer's escorts: existing free militia first; otherwise a worker is armed from real stock at the cache.
  const escorts=g.state.units.filter(u=>u.team===o.from&&u.hp>0&&u.militia&&!u.caravanArmed&&free(g,u,o.from)&&!carriers.includes(u)).sort((x,y)=>dist(x,home)-dist(y,home)||x.id-y.id).slice(0,o.escortsWanted);
- const spare=pool.filter(u=>!carriers.includes(u)&&!escorts.includes(u));while(escorts.length<o.escortsWanted&&spare.length&&(t.spears>0||t.bows>0||(t.blades||0)>0)&&adults(g,o.from)-carriers.length-escorts.length>=TRADE_NEEDS_RULES.minimumHomeAdults)escorts.push(spare.shift()!);
+ const spare=pool.filter(u=>!carriers.includes(u)&&!escorts.includes(u));while(escorts.length<o.escortsWanted&&spare.length&&(t.spears>0||t.bows>0||(t.blades||0)>0)&&homeAdultCount(g,o.from)-carriers.length-escorts.length-1>=TRADE_NEEDS_RULES.minimumHomeAdults)escorts.push(spare.shift()!);
  for(const u of [...carriers,...escorts]){g.interruptMission(u);u.tradeNeedsId=o.id;u.order='hold';u.node=null;u.target=null;u.job=null;u.stuckT=0;u.workReason='Gathering goods for a needs-based trade';}
  o.carriers=carriers.map(u=>u.id);o.escorts=escorts.map(u=>u.id);o.ready=[];o.phase='loading';o.startedAt=g.state.time;o.reason='Carriers gathering the reserved goods at the home cache';row(g,o.from).accepted++;return'';}
 export function answerTradeOffer(g:Game,id:number,accept:boolean,asPlayer=true){
@@ -237,6 +244,8 @@ export function tickTradeNeeds(g:Game,_dt:number){
   reconcile(g,o);if(!OPEN.includes(o.phase))continue;
   const age=g.state.time-(o.startedAt??o.createdAt);
   if(o.phase==='loading'){if(age>TRADE_NEEDS_RULES.loadingSeconds){abort(g,o,'loading-timeout');continue;}
+   // Readiness is re-checked at the handoff: every carrier must be standing at a cache right now.
+   if(o.carriers.every(id=>o.ready.includes(id))&&o.escorts.every(id=>o.ready.includes(id)||!alive(g,o,id))&&!o.carriers.every(id=>atCacheNow(g,unitOf(g,id)!,o.from))){o.ready=o.ready.filter(id=>atCacheNow(g,unitOf(g,id)!,o.from));continue;}
    if(o.carriers.every(id=>o.ready.includes(id))&&o.escorts.every(id=>o.ready.includes(id)||!alive(g,o,id))){
     const lines:TradeLine[]=[];let left=o.give.amount,animals=o.give.animals?[...o.give.animals]:undefined;
     for(const id of o.carriers){const u=unitOf(g,id)!;const take=Math.min(left,capacity(u,o.give.kind));if(take<=0)continue;lines.push({unitId:id,kind:o.give.kind,amount:take,animals:animals?animals.splice(0,take):undefined});left-=take;}
@@ -285,6 +294,20 @@ export function observePartnerStock(g:Game,viewer:number,partner:number,observer
 export function observedPartnerStock(g:Game,viewer:number,partner:number){
  const r=g.state.tradeNeeds?.observations?.find(r=>r.viewer===viewer&&r.partner===partner);
  if(!r)return null;return{partner,observedAt:r.observedAt,ageSeconds:Math.max(0,g.state.time-r.observedAt),stock:{...r.stock},source:'carriers at partner hall' as const};}
+function atCacheNow(g:Game,u:Unit|undefined,team:number){if(!u)return false;for(const d of supplyDrops(g,team)){const p=supplyApproach(g,u,d);if(p&&supplyReached(g,u,d,p))return true;}return false;}
+/** Interruption seam (via pauseCoastalTrade ← interruptMission): a direct order or emergency releases this
+ * person from the offer without overwriting the new command. A carried resource load stays physically on the
+ * body (it already belongs to the carrier's own society before and after payment); escrow is reconciled by
+ * the normal lifecycle (unpaid partner escrow refunded, offer fails if no carrier remains). */
+export function pauseTradeNeeds(g:Game,u:Unit){
+ const id=u.tradeNeedsId;if(id===undefined)return false;u.tradeNeedsId=undefined;
+ const o=g.state.tradeNeeds?.offers.find(o=>o.id===id);if(!o)return true;
+ for(const l of o.lines.filter(l=>l.unitId===u.id)){if(TRADE_GOODS[l.kind].cat==='resource'&&u.carryType===l.kind&&u.carry>=l.amount)receipt(g,o,'refunded',u.team,l.kind,l.amount,u.id);else{o.lostAmount+=l.amount;receipt(g,o,'lost',o.from,l.kind,l.amount,u.id);}}
+ o.lines=o.lines.filter(l=>l.unitId!==u.id);
+ if(o.carriers.includes(u.id)){o.carriers=o.carriers.filter(x=>x!==u.id);o.carriersLost++;}
+ o.escorts=o.escorts.filter(x=>x!==u.id);o.ready=o.ready.filter(x=>x!==u.id);note(g,o.from,'interrupted');
+ if(!o.carriers.length&&ACTIVE.includes(o.phase)){if(o.phase==='loading'){abort(g,o,'carrier-interrupted');}else{if(!o.paid&&o.get.amount>0)refundEscrow(g,o,'get');finishOffer(g,o,'failed','carrier-interrupted');}}
+ return true;}
 export function tradeNeedsDiagnostics(g:Game){const s=g.state.tradeNeeds;return{rules:TRADE_NEEDS_RULES,teams:s?.teams??[],open:(s?.offers||[]).filter(o=>OPEN.includes(o.phase)).length,offers:s?.offers.length??0,receipts:s?.receipts.length??0};}
 
 export function validTradeNeedsState(s:GameState){
@@ -296,7 +319,11 @@ export function validTradeNeedsState(s:GameState){
  for(const r of t.teams)if(!Number.isInteger(r.team)||r.team<0||r.team>=teams||!fin(r.nextReviewAt)||!fin(r.proposed)||!fin(r.declined)||!fin(r.completed)||!fin(r.failed)||!r.mix||!r.reasons)return false;
  for(const c of t.cooldowns)if(!TRADE_GOODS[c.give]||!TRADE_GOODS[c.get]||!Number.isInteger(c.team)||!Number.isInteger(c.partner)||!fin(c.until)||!fin(c.declines))return false;
  for(const r of t.receipts)if(!['loaded','paid','delivered','refunded','lost'].includes(r.stage)||!TRADE_GOODS[r.kind]||!fin(r.amount))return false;
- for(const o of t.offers){if(ids.has(o.id)||!Number.isInteger(o.id)||o.id<1)return false;ids.add(o.id);
+ const half=(s.worldOptions?.size||1040)/2;
+ for(const o of t.offers){if(ids.has(o.id)||!Number.isInteger(o.id)||o.id<1||o.id>=s.nextId)return false;ids.add(o.id);
+  if(Math.abs(o.hall?.x)>half||Math.abs(o.hall?.z)>half)return false;if(o.phase==='proposed'&&o.reserved)return false;
+  const members=[...(o.carriers||[]),...(o.escorts||[])];if(new Set(members).size!==members.length||new Set(o.ready||[]).size!==(o.ready||[]).length||(o.ready||[]).some((id:number)=>!members.includes(id)))return false;
+  if(['outbound','returning','aborting'].includes(o.phase))for(const id of o.carriers||[]){const res=(o.lines||[]).filter((l:TradeLine)=>l.unitId===id&&TRADE_GOODS[l.kind]?.cat==='resource');if(!res.length)continue;const u=s.units.find(u=>u.id===id);if(!u||res.length>1||u.carryType!==res[0].kind||Math.abs(u.carry-res[0].amount)>1e-6)return false;}
   if(!phases.includes(o.phase)||!Number.isInteger(o.from)||!Number.isInteger(o.to)||o.from<0||o.from>=teams||o.to<0||o.to>=teams||o.from===o.to||!TRADE_GOODS[o.give.kind]||!TRADE_GOODS[o.get.kind]||!fin(o.give.amount)||!fin(o.get.amount)||!fin(o.fairGet)||!fin(o.spread,1)||!fin(o.risk,1)||!fin(o.trust,1)||!fin(o.createdAt)||!fin(o.answerAt)||!o.hall||!Number.isFinite(o.hall.x)||!Number.isFinite(o.hall.z)||Math.abs(o.hall.x)>1e5||Math.abs(o.hall.z)>1e5)return false;
   if(!Array.isArray(o.carriers)||!Array.isArray(o.escorts)||!Array.isArray(o.lines)||!Array.isArray(o.ready)||o.carriers.length>TRADE_NEEDS_RULES.maximumCarriers||o.escorts.length>TRADE_NEEDS_RULES.maximumEscorts)return false;
   const open=ACTIVE.includes(o.phase);if(!open&&(o.carriers.length||o.escorts.length||o.lines.length))return false;if(open&&!o.reserved)return false;
