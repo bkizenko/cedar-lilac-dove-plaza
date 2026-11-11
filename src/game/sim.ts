@@ -108,6 +108,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
+import {flowPath} from "./flowFields";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -4114,7 +4115,8 @@ export class Game {
               }
             }
         }
-        let path = findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
+        // Claude request 3 (Grok): busy goals share one flow field; equal-cost paths, null falls back to A*.
+        let path = flowPath(this, grid, WALK, index(u.x, u.z), end, this.navRevision) ?? findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
         // Coarse cells can close a real body-sized passage in a dense camp.
         // Spend shared navigation budget once; ordinary route following still
         // collision-checks every actual movement with this actor's radius.
