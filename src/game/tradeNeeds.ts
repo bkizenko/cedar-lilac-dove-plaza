@@ -34,7 +34,7 @@ export const TRADE_GOODS:Record<GoodKind,Good>={
 };
 export const TRADE_KINDS=Object.keys(TRADE_GOODS) as GoodKind[];
 const WEAPONS=['spears','bows','blades'],ITEMS=['paddedArmor','cordage','basket','pottery','cloth'];
-export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
+export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumObservations:64,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
 
 export type TradeOfferPhase='proposed'|'loading'|'outbound'|'returning'|'aborting'|'complete'|'declined'|'failed';
 export type TradeReceiptStage='loaded'|'paid'|'delivered'|'refunded'|'lost';
@@ -46,7 +46,9 @@ export type TradeOffer={id:number;from:number;to:number;give:TradeSide;get:Trade
 export type TradeCooldown={team:number;partner:number;give:GoodKind;get:GoodKind;until:number;declines:number;reason:string};
 export type TradeReceipt={id:number;offerId:number;time:number;stage:TradeReceiptStage;team:number;kind:GoodKind;amount:number;unitId?:number;fairAmount?:number};
 export type TradeTeamRow={team:number;nextReviewAt:number;proposed:number;accepted:number;declined:number;completed:number;failed:number;mix:Partial<Record<GoodKind,number>>;categories:Partial<Record<GoodCategory,number>>;reasons:Record<string,number>};
-export type TradeNeedsState={version:1;teams:TradeTeamRow[];offers:TradeOffer[];cooldowns:TradeCooldown[];receipts:TradeReceipt[]};
+/** What a viewer's own people saw at a partner hall. Optional save field (default absent = never observed). */
+export type TradeStockObservation={viewer:number;partner:number;observedAt:number;observerId:number;stock:Partial<Record<GoodKind,number>>};
+export type TradeNeedsState={version:1;teams:TradeTeamRow[];offers:TradeOffer[];cooldowns:TradeCooldown[];receipts:TradeReceipt[];observations?:TradeStockObservation[]};
 const OPEN:TradeOfferPhase[]=['proposed','loading','outbound','returning','aborting'];
 const ACTIVE:TradeOfferPhase[]=['loading','outbound','returning','aborting'];
 const dist=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -159,17 +161,30 @@ function qualifies(g:Game,o:TradeOffer){const t=g.tribe(o.to);
  else if(tradeStock(g,0,o.get.kind)<o.get.amount)return'no-surplus';
  return'';}
 /** Both sides' goods move into escrow only if both still hold them, the proposer has living carriers, and animals have pen room. */
-function commit(g:Game,o:TradeOffer){
- const t=g.tribe(o.from);if(tradeStock(g,o.from,o.give.kind)-tradeReserve(g,o.from,o.give.kind)<o.give.amount&&o.give.kind!=='food')return'proposer-short';if(tradeStock(g,o.from,o.give.kind)<o.give.amount)return'proposer-short';
- if(tradeStock(g,o.to,o.get.kind)<o.get.amount)return'partner-short';
+type CommitReady={blocker:'';home:{x:number;z:number};pool:Unit[];carriers:Unit[];pg?:number;pt?:number};
+type CommitPlan={blocker:string}|CommitReady;
+/** Pure: every admission check of the accept path, without moving goods or people. */
+function commitPlan(g:Game,o:TradeOffer):CommitPlan{
+ if(tradeStock(g,o.from,o.give.kind)-tradeReserve(g,o.from,o.give.kind)<o.give.amount&&o.give.kind!=='food')return{blocker:'proposer-short'};if(tradeStock(g,o.from,o.give.kind)<o.give.amount)return{blocker:'proposer-short'};
+ if(tradeStock(g,o.to,o.get.kind)<o.get.amount)return{blocker:'partner-short'};
  const home=g.campOf(o.from),pool=g.state.units.filter(u=>u.type==='worker'&&free(g,u,o.from)&&!u.militia&&supplyDrops(g,o.from).length>0).sort((a,b)=>Number(b.haulage==='pack')-Number(a.haulage==='pack')||dist(a,home)-dist(b,home)||a.id-b.id);
- if(!pool.length)return'no-carriers';
+ if(!pool.length)return{blocker:'no-carriers'};
  const carriers:Unit[]=[];let capGive=0,capGet=0;for(const u of pool){if(capGive>=o.give.amount&&capGet>=o.get.amount||carriers.length>=TRADE_NEEDS_RULES.maximumCarriers)break;carriers.push(u);capGive+=capacity(u,o.give.kind);capGet+=capacity(u,o.get.kind);}
- if(capGive<o.give.amount||capGet<o.get.amount)return'too-heavy';
- const homeAdults=adults(g,o.from)-carriers.length;if(homeAdults<TRADE_NEEDS_RULES.minimumHomeAdults)return'home-short';
+ if(capGive<o.give.amount||capGet<o.get.amount)return{blocker:'too-heavy'};
+ const homeAdults=adults(g,o.from)-carriers.length;if(homeAdults<TRADE_NEEDS_RULES.minimumHomeAdults)return{blocker:'home-short'};
  let pg:number|undefined,pt:number|undefined;
- if(o.get.kind==='goat'){const pen=penRoom(g,o.from,home);if(!pen)return'no-pen';pg=pen.id;}
- if(o.give.kind==='goat'){const hall=g.state.buildings.find(b=>b.team===o.to&&b.type==='townhall'&&g.finished(b));const pen=hall?penRoom(g,o.to,hall,pg!==undefined?[]:[]):undefined;if(o.to!==0&&!pen)return'partner-no-pen';if(o.to===0&&!pen)return'partner-no-pen';pt=pen!.id;}
+ if(o.get.kind==='goat'){const pen=penRoom(g,o.from,home);if(!pen)return{blocker:'no-pen'};pg=pen.id;}
+ if(o.give.kind==='goat'){const hall=g.state.buildings.find(b=>b.team===o.to&&b.type==='townhall'&&g.finished(b));const pen=hall?penRoom(g,o.to,hall):undefined;if(!pen)return{blocker:'partner-no-pen'};pt=pen.id;}
+ return{blocker:'',home,pool,carriers,pg,pt};}
+/** Dry run for UI: the exact reason the accept path would decline this offer now, or '' if it would launch.
+ * Shares qualifies()/commitPlan() with answerTradeOffer, so the dialog never duplicates the checks. */
+export function tradeAnswerBlocker(g:Game,offer:TradeOffer|number):string{
+ const o=typeof offer==='number'?g.state.tradeNeeds?.offers.find(x=>x.id===offer):g.state.tradeNeeds?.offers.find(x=>x.id===offer.id)??offer;
+ if(!o||o.phase!=='proposed')return'not-open';
+ return qualifies(g,o)||commitPlan(g,o).blocker;}
+function commit(g:Game,o:TradeOffer){
+ const t=g.tribe(o.from),plan=commitPlan(g,o);if(plan.blocker!=='')return plan.blocker;
+ const {home,pool,carriers,pg,pt}=plan as CommitReady;
  const gs=removeStock(g,o.from,o.give.kind,o.give.amount);if(!gs.ok)return'proposer-short';
  const ts=removeStock(g,o.to,o.get.kind,o.get.amount);if(!ts.ok){addStock(g,o.from,o.give.kind,o.give.amount,gs.animals);return'partner-short';}
  o.give.animals=gs.animals;o.get.animals=ts.animals;o.give.penId=pt;o.get.penId=pg;o.reserved=true;
@@ -225,6 +240,7 @@ export function tickTradeNeeds(g:Game,_dt:number){
   if(o.phase==='outbound'&&g.isFoe(o.from,o.to)){abort(g,o,'became-foe');continue;}
   if(o.phase==='outbound'){const us=o.carriers.map(id=>unitOf(g,id)!);
    if(us.every(u=>localSettlementHall(g,u,o.to))){
+    observePartnerStock(g,o.from,o.to,us[0]);
     // Meeting: partner receives the offered goods and pays from its reserved escrow.
     for(const l of o.lines){addStock(g,o.to,l.kind,l.amount,l.animals,o.give.penId);receipt(g,o,'paid',o.to,l.kind,l.amount,l.unitId);o.giveDelivered=(o.giveDelivered||0)+l.amount;}
     o.lines=[];let left=o.get.amount,animals=o.get.animals?[...o.get.animals]:undefined;
@@ -252,6 +268,16 @@ export function tradeNeedsAI(g:Game,u:Unit,dt:number){
  if(o.phase==='returning'||o.phase==='aborting'){if(atCache())unload(g,o,u);return true;}
  return true;}
 
+/** Carriers standing at the partner hall see that partner's stores; nothing is learned remotely. */
+export function observePartnerStock(g:Game,viewer:number,partner:number,observer:Unit){
+ if(!localSettlementHall(g,observer,partner)||observer.team!==viewer)return false;
+ const s=root(g),list=s.observations??=[],stock:Partial<Record<GoodKind,number>>={};for(const k of TRADE_KINDS)stock[k]=tradeStock(g,partner,k);
+ const i=list.findIndex(r=>r.viewer===viewer&&r.partner===partner);const rec={viewer,partner,observedAt:g.state.time,observerId:observer.id,stock};
+ if(i>=0)list[i]=rec;else list.push(rec);while(list.length>TRADE_NEEDS_RULES.maximumObservations)list.shift();return true;}
+/** Last-observed knowledge only: a copy of what the viewer's own people saw and when; never live partner stock. */
+export function observedPartnerStock(g:Game,viewer:number,partner:number){
+ const r=g.state.tradeNeeds?.observations?.find(r=>r.viewer===viewer&&r.partner===partner);
+ if(!r)return null;return{partner,observedAt:r.observedAt,ageSeconds:Math.max(0,g.state.time-r.observedAt),stock:{...r.stock},source:'carriers at partner hall' as const};}
 export function tradeNeedsDiagnostics(g:Game){const s=g.state.tradeNeeds;return{rules:TRADE_NEEDS_RULES,teams:s?.teams??[],open:(s?.offers||[]).filter(o=>OPEN.includes(o.phase)).length,offers:s?.offers.length??0,receipts:s?.receipts.length??0};}
 
 export function validTradeNeedsState(s:GameState){
@@ -269,5 +295,8 @@ export function validTradeNeedsState(s:GameState){
   const open=ACTIVE.includes(o.phase);if(!open&&(o.carriers.length||o.escorts.length||o.lines.length))return false;if(open&&!o.reserved)return false;
   for(const l of o.lines)if(!o.carriers.includes(l.unitId)||!TRADE_GOODS[l.kind]||!fin(l.amount))return false;
   for(const id of [...o.carriers,...o.escorts]){const u=s.units.find(u=>u.id===id);if(!u||u.tradeNeedsId!==o.id)return false;}}
+ if(t.observations!==undefined){if(!Array.isArray(t.observations)||t.observations.length>TRADE_NEEDS_RULES.maximumObservations)return false;const pairs=new Set<string>();
+  for(const r of t.observations){if(!r||!Number.isInteger(r.viewer)||!Number.isInteger(r.partner)||r.viewer<0||r.partner<0||r.viewer>=teams||r.partner>=teams||r.viewer===r.partner||!fin(r.observedAt)||!Number.isSafeInteger(r.observerId)||r.observerId<1||!r.stock||typeof r.stock!=='object'||Array.isArray(r.stock))return false;
+   const key=r.viewer+':'+r.partner;if(pairs.has(key))return false;pairs.add(key);for(const [k,n]of Object.entries(r.stock))if(!TRADE_GOODS[k as GoodKind]||!fin(n))return false;}}
  for(const u of refs){const o=t.offers.find(o=>o.id===u.tradeNeedsId&&ACTIVE.includes(o.phase));if(!o||(!o.carriers.includes(u.id)&&!o.escorts.includes(u.id)))return false;}
  return true;}
