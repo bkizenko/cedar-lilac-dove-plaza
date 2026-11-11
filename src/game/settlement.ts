@@ -356,6 +356,7 @@ export class WorkBoard {
   assign(g: Game, u: Unit) {
     if(u.housingWorkId!==undefined||u.housingUse&&!u.housingUse.paused)return;
     if(u.coastalCommissionId||u.coastalVoyageId||u.productionProjectId||u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
+    if(Object.values(u.itemCargo||{}).some(n=>(n||0)>0)){u.order='return';u.node=null;u.workReason='Delivering carried materials before another assignment';return;}
     if(u.team===0&&g.state.autoWorkEnabled===false&&!u.jobLock){u.order=u.carry>0?'return':'hold';u.node=null;u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — select this resident and give an order';return;}
     if(u.prisoner){u.order='hold';u.node=null;u.target=null;u.workReason='Custody and release need their own orders; no automatic labor';return;}
     if(u.waterWork&&!u.waterWork.paused)return;

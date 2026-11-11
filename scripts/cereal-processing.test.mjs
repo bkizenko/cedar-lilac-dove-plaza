@@ -551,3 +551,33 @@ test('workload shows clean grain and flour separately and excludes inputs commit
  assert.equal(after.find(row=>row.id==='flour-backlog:0').personSeconds,24);
  assert.equal(after.filter(row=>row.id.startsWith('production:')).length,1);
 });
+
+test('changing village focus preserves the same paid threshing worker and inputs through delivery',()=>{
+ const {g,u,v}=fixture();const floor=g.makeBld('threshingFloor',12,42,0);g.state.buildings.push(floor);ground(g);g.tribe(0).items={grainSheaves:8};v.jobLock=true;
+ assert.equal(beginProduction(g,'threshCerealFloor',floor.id,u.id),true);const p=g.state.production.projects.at(-1);
+ drive(g,40,()=>p.phase==='working'&&p.progress>1);const progress=p.progress,paid=g.state.production.metrics.consumed.grainSheaves;
+ g.setLaborPriority('food');assert.equal(p.phase,'working');assert.equal(p.actorId,u.id);assert.equal(u.productionProjectId,p.id);assert.equal(p.progress,progress);assert.equal(g.state.production.metrics.consumed.grainSheaves,paid);
+ drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.equal(g.state.production.metrics.consumed.grainSheaves,8);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+test('secure food dispatch redirects empty unlocked non-food gathering to stored harvest while respecting direct locks',()=>{
+ const {g,u,v}=fixture();const floor=g.makeBld('threshingFloor',12,42,0);g.state.buildings.push(floor);ground(g);g.tribe(0).items={grainSheaves:32};g.state.autoWorkEnabled=true;g.state.laborPolicy='food';
+ Object.assign(u,{x:55,z:55,order:'gather',job:'wood',jobLock:false});Object.assign(v,{x:57,z:55,order:'gather',job:'wood',jobLock:true});
+ assert.equal(reviewCerealProcessing(g,0),true);assert.equal(u.order,'return');assert.equal(v.order,'gather');assert.equal(v.jobLock,true);
+ drive(g,120,()=>!!g.state.production?.metrics.produced.roughGrain);assert.ok(g.state.production.metrics.produced.roughGrain>=6);assert.equal(v.jobLock,true);
+});
+
+test('a harvest beyond covered capacity still passes through threshing, winnowing, grinding and bread with Auto work off',()=>{
+ const {g,u,v}=fixture();v.jobLock=true;const floor=g.makeBld('threshingFloor',12,42,0),mill=g.makeBld('grindingStone',-12,42,0),oven=g.makeBld('oven',-12,54,0),store=g.makeBld('warehouse',20,54,0);g.state.buildings.push(floor,mill,oven,store);ground(g);
+ const t=g.tribe(0);t.items={grainSheaves:2409};t.survival.waterLiters=200;const initial=t.items.grainSheaves;
+ drive(g,300,()=>g.state.production?.projects.some(p=>p.recipe==='bakeBreadOven'&&p.phase==='complete'));
+ assert.ok(g.state.production?.projects.some(p=>p.recipe==='threshCerealFloor'&&p.phase==='complete'));assert.ok(g.state.production.projects.some(p=>p.recipe==='winnowCerealFloor'&&p.phase==='complete'));assert.ok(g.state.production.projects.some(p=>p.recipe==='grindGrainStation'&&p.phase==='complete'));assert.ok(g.state.production.projects.some(p=>p.recipe==='bakeBreadOven'&&p.phase==='complete'),JSON.stringify(g.state.production.projects));
+ assert.ok(g.state.production.metrics.edibleFoodProduced>0);assert.ok(g.state.production.metrics.grainUsed>=4);assert.ok(t.items.grainSheaves<initial);assert.equal(g.state.autoWorkEnabled,false);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+test('milled flour can use exposed storehouse sacks but ordinary goods cannot overflow and wet flour spoils',()=>{
+ const {g,u,v}=fixture();v.jobLock=true;const mill=g.makeBld('grindingStone',-12,42,0);g.state.buildings.push(mill);ground(g);const t=g.tribe(0);t.items={plantFibre:1000};t.foodLots={provisions:1000,grain:8};t.food=1008;
+ assert.match(productionIssue(g,'grindGrainStation',mill.id,u.id),/storage is full/);
+ const store=g.makeBld('warehouse',20,54,0);g.state.buildings.push(store);ground(g);assert.equal(productionIssue(g,'grindGrainStation',mill.id,u.id),null);assert.equal(beginProduction(g,'grindGrainStation',mill.id,u.id),true);const p=g.state.production.projects.at(-1);drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.ok(t.items.flour>0);assert.equal(g.state.production.metrics.grainUsed,4);
+ const flour=t.items.flour;g.state.weather='rain';tickProduction(g,10);assert.ok(t.items.flour<flour);assert.ok(g.state.production.metrics.spoiled.flour>0);assert.equal(t.items.plantFibre,1000);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});

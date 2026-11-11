@@ -1572,7 +1572,7 @@ export class Game {
     for(const u of this.state.units){
       if(u.team!==0||u.hp<=0||u.type!=='worker'||u.militia||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||u.jobLock||hasTaskCommitment(u)||u.emergency||u.expedition||u.envoy||u.visit||u.scout||u.foundingJourney||u.recalled||u.buildOrder||u.escortId!==undefined||u.drill!=null)continue;
       if(enabled&&['hold','idle'].includes(u.order)){u.resting=undefined;u.order='idle';u.workCheckAt=0;this.workBoard.assign(this,u);}
-      else if(!enabled&&['idle','gather'].includes(u.order)){releaseTreeWorker(this,u);u.node=null;u.job=null;u.order=u.carry>0?'return':'hold';u.workReason=u.carry>0?'Delivering supplies before waiting for your order':'Manual work — waiting for your order';}
+      else if(!enabled&&['idle','gather'].includes(u.order)){const loaded=u.carry>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0);releaseTreeWorker(this,u);u.node=null;u.job=null;u.order=loaded?'return':'hold';u.workReason=loaded?'Delivering supplies before waiting for your order':'Manual work — waiting for your order';}
     }
     this.workBoard.reset();this.banner(enabled?'Auto work enabled — available residents follow village priorities':'Manual work — give orders to selected residents; existing commitments continue',5);
   }

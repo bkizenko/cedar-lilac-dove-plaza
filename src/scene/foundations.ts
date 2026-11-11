@@ -1,12 +1,15 @@
 import {expandedGrainWorkplace} from '../game/plots';
 import{buildingGroundContacts,type GroundContact}from'./groundContacts';
 import type {Game} from '../game/sim';
-import type {Building} from '../game/types';
+import type {Building,BldType} from '../game/types';
+/** Ground-laid work areas follow the actual earth instead of becoming raised rooms. */
+export function terrainLaidWorkplace(type:BldType){return type==='hearth'||type==='threshingFloor';}
 import {TEAM_STYLE} from '../game/constants';
 const groundWork=new Set(['farm','pen','dock','bridge','lumber','quarry','grove','cairn','cornerstone','palisade','gate','stonewall','trench','moat']);
 const cache=new WeakMap<Building,{world:Game['world'];banks:Game['world']['bankTerrain'];height:Game['height'];contacts:readonly GroundContact[]|undefined;terrainRevision:number;team:number;heights:Float32Array;w:number;d:number;x:number;z:number;axisAligned:boolean;profile:{level:number;bottom:number}}>();
 /** Rigid walls sit above their highest footprint corner; a footing fills below. */
 export function foundationProfile(g:Game,b:Building){
+ if(terrainLaidWorkplace(b.type)){const level=g.height(b.x,b.z);return {level,bottom:level};}
  if(groundWork.has(b.type))return {level:b.y,bottom:b.y};
  const axisAligned=b.type==='warehouse'||expandedGrainWorkplace(b)||b.type==='watchtower'&&!!b.towerPlatform;
  const terrainRevision=g.terrainRevision?.()??g.state?.excavations?.length??0;

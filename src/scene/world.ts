@@ -35,7 +35,7 @@ import {TerrainSurface,duneSandWeight} from './terrainSurface';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
-import {foundationProfile} from './foundations';
+import {foundationProfile,terrainLaidWorkplace} from './foundations';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
@@ -872,21 +872,21 @@ export class WorldView {
       if(type==='farm'){timberMaterial.map=null;timberMaterial.bumpMap=null;timberMaterial.roughnessMap=null;}
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       if(type === "farm") timberMaterial.vertexColors = true;
-      if(type === "farm" || type === "pen") this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
+      if(type === "farm" || type === "pen" || terrainLaidWorkplace(type)) this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
       if(type==='farm'&&this.contourFields){
         g.timber.setAttribute('fieldRows',new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
         const positions=g.timber.attributes.position,colors=g.timber.attributes.color,soilColor=new THREE.Color('#795632');
         for(let i=0;i<positions.count;i++)if(Math.abs(positions.getY(i)-.075)<.002)colors.setXYZ(i,soilColor.r,soilColor.g,soilColor.b);
       }
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
-      if((type === "farm" || type === "pen") && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
+      if((type === "farm" || type === "pen" || terrainLaidWorkplace(type)) && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
       const roofMat = g.roofMat?this.mats[g.roofMat]:
         type === "cornerstone" ? this.mats.hide :
         type === "keep" || type === "temple" || type === "university"
           ? this.mats.tile
           : this.mats.thatch;
       const roof = new THREE.InstancedMesh(g.roof, roofMat.clone(), capacity);
-      if(type==='pen'&&this.fieldSurface){this.fieldSurface.bind(roof.material as THREE.Material);roof.customDepthMaterial=this.fieldSurface.depth;}
+      if((type==='pen'||terrainLaidWorkplace(type))&&this.fieldSurface){this.fieldSurface.bind(roof.material as THREE.Material);roof.customDepthMaterial=this.fieldSurface.depth;}
       if(hasBuildingCraftsmanship(type)){for(const [mesh,isRoof]of[[timber,false],[roof,true]]as const){makeCraftsmanshipAttribute(mesh.geometry,capacity);bindCraftsmanship(mesh.material as THREE.Material,isRoof);mesh.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});bindCraftsmanship(mesh.customDepthMaterial,isRoof);}}
       timber.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
@@ -905,10 +905,10 @@ export class WorldView {
       let extra: THREE.InstancedMesh | undefined;
       if (g.extra) {
         const sourceExtra=this.mats[g.extraMat||"stone"];
-        const extraMaterial = type === "farm" ? this.mats.crop.clone() : hasBuildingCraftsmanship(type)?sourceExtra.clone():sourceExtra;
-        if(type === "farm") this.fieldSurface?.bind(extraMaterial);
+        const extraMaterial = type === "farm" ? this.mats.crop.clone() : hasBuildingCraftsmanship(type)||terrainLaidWorkplace(type)?sourceExtra.clone():sourceExtra;
+        if(type === "farm"||terrainLaidWorkplace(type)) this.fieldSurface?.bind(extraMaterial);
         extra = new THREE.InstancedMesh(g.extra, extraMaterial, capacity);
-        if(type === "farm" && this.fieldSurface) extra.customDepthMaterial = this.fieldSurface.depth;
+        if((type === "farm"||terrainLaidWorkplace(type)) && this.fieldSurface) extra.customDepthMaterial = this.fieldSurface.depth;
         if(hasBuildingCraftsmanship(type)){makeCraftsmanshipAttribute(extra.geometry,capacity);bindCraftsmanship(extraMaterial,false);extra.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});bindCraftsmanship(extra.customDepthMaterial,false);}
         extra.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         if(type==="farm"){extra.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(capacity*3),3);}
@@ -2666,7 +2666,7 @@ export class WorldView {
     this.villageStyles.clear();
     if(this.fieldSurface){this.fieldSurface.dispose();this.fieldSurface=null;}
     for(const [type, meshes] of this.bldMeshes){
-      if((type === "farm"||hasBuildingCraftsmanship(type)) && meshes.extra) (meshes.extra.material as THREE.Material).dispose();
+      if((type === "farm"||terrainLaidWorkplace(type)||hasBuildingCraftsmanship(type)) && meshes.extra) (meshes.extra.material as THREE.Material).dispose();
       if(hasBuildingCraftsmanship(type))for(const mesh of[meshes.timber,meshes.roof,meshes.extra])mesh?.customDepthMaterial?.dispose();
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();

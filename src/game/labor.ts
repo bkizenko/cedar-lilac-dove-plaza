@@ -15,6 +15,7 @@ export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPol
     if(u.type!=='worker'||u.boat)continue;
     // Paid active projects and dispatched shipments keep their commitments.
     // Paused projects are stored progress, not a reason to exclude a worker.
+    if(u.productionProjectId!==undefined&&g.state.production?.projects.some(p=>p.id===u.productionProjectId&&p.actorId===u.id&&!['paused','stored','complete','lost'].includes(p.phase)))continue;
     if(u.buildingRepairId!==undefined||u.practicalHelper&&u.practicalHelper.phase!=='paused'||u.envoy||u.order==='trade'||u.visit||u.foundingJourney||u.studyCrop||u.drill!=null||
       (u.order==='hold'&&(u.copperStudy&&!u.copperStudy.paused||u.tamingWork&&!u.tamingWork.paused||u.husbandryWork&&!u.husbandryWork.paused||u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused)))continue;
     u.job=null;u.jobLock=false;u.huntOnly=false;u.searchJob=undefined;u.workCheckAt=0;
@@ -27,7 +28,7 @@ export function applyLaborPriority(g:Game,policy:NonNullable<GameState['laborPol
     }
     g.interruptMission(u);
     u.stationOnArrival=undefined;u.gatherT=0;
-    u.order=u.carry>0?'return':'idle';
+    u.order=u.carry>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0)?'return':'idle';
     if(u.order==='idle')available.push(u);
   }
   g.workBoard.reset();

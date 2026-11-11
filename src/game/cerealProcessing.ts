@@ -66,7 +66,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  }
  if(eventActorId!==undefined||activePickup(g,team,cerealPickupReason))return false;
  const drops=supplyDrops(g,team);
- const carrier=workers.find(u=>u.order!=='gather'&&!atCache(g,u)&&
+ const carrier=workers.find(u=>(u.order!=='gather'||(team===0&&g.state.laborPolicy==='food'||urgent)&&u.job!=='food')&&!atCache(g,u)&&
   drops.some(d=>supplyApproach(g,u,d))&&eligible.some(b=>g.interactionSpot(u,b)));
  return !!carrier&&sendForInputs(g,carrier,cerealPickupReason);
 }
@@ -214,7 +214,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  // can stall independently and may be on another landmass.
  if (eventActorId !== undefined || activePickup(g,0,mealPickupReason)) return false;
  const drops = supplyDrops(g,0);
- const carrier = workers.find(u => u.order !== 'gather' && !atCache(g, u) &&
+ const carrier = workers.find(u => (u.order !== 'gather' || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food') && !atCache(g, u) &&
   drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
  return !!carrier && sendForInputs(g,carrier,mealPickupReason);
