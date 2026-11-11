@@ -1,16 +1,19 @@
 # Cross-agent completion and request intake
 
-This is the readable scoped overlay on FULL_GAME_BACKLOG.json. Original source IDs and the98-gate denominator are unchanged. Latest live source5f1b5e9; overall34/98 (34.69%).
+This is the readable scoped overlay on FULL_GAME_BACKLOG.json. Original source IDs and the98-gate denominator are unchanged. Latest live source860863a; overall34/98 (34.69%).
 
-## Proven completed slices
+## Scoped delivery states
 
-- **CODEX-SHEEP-CAPTURE — live**: Finite fresh-map sheep, paid capture/physical lead and care; broader domestication not complete
-- **CODEX-WOOL-CLOTHING — live**: Finite fleece through paid textiles to owned wool coat; shears/dyes/repair and full climate balance pending
-- **CODEX-SAIL-RIG — live**: Paid wind-assisted physical hull and cargo demonstration; naval combat/offshore/tacking/legacycanoemigration pending
-- **CLAUDE-NPC-SEA — source-pushed-wip**: agents/claude-societies commit declares incomplete/untested
-- **CLAUDE-H-SPECS — source-pushed-wip**: agents/claude-experience pure structural source; adapter and executed acceptance pending
-- **CODEX-DAIRY — candidate-tested**: Isolated dairy candidate5/5 focused checks and typecheck; build/native UI pending
-- **CODEX-PLATFORM-CONTRACTS — integration-testing**: Autosave-frame timing + render-style preference final frozen34 checks; built UI pending final artifact
+- **CODEX-SHEEP-CAPTURE — live**: Finite fresh-map sheep, paid capture/physical lead and care; broader domestication not complete. Evidence: docs/metrics/sheep-wool-sailing-2026-11-11.json.
+- **CODEX-WOOL-CLOTHING — live**: Finite fleece through paid textiles to owned wool coat; shears/dyes/repair and full climate balance pending. Evidence: docs/metrics/sheep-wool-sailing-2026-11-11.json.
+- **CODEX-SAIL-RIG — live**: Paid wind-assisted physical hull and cargo demonstration; naval combat/offshore/tacking/legacycanoemigration pending. Evidence: docs/metrics/sheep-wool-sailing-2026-11-11.json.
+- **CLAUDE-NPC-SEA — integration-testing**: Physical docked-hull NPC exploration; capture/recall/loss and native publication still pending. Evidence: Claude 7/7 focused; Codex integrated candidate84d2792 24/24 including reservation/quiet-sail/LOD contracts + typecheck; native scenario prepared, not run.
+- **CLAUDE-H-SPECS — source-pushed-review**: Seeded H structures, compact UI/portrait and two wonder spec families; current live renderer unchanged. Evidence: Claude reports31/31 prior focused cases; latest remaining-building expansion/review fixes not independently rerun here; adapter/render acceptance pending.
+- **CODEX-DAIRY — candidate-native-tested**: Finite held-vessel fermented milk; no cheese, broader herd products or automatic demand completion. Evidence: 5/5 focused + typecheck + 1/1 unchanged V18 native physical delivery/reload; .play/dairy-native.log; built UI and publication pending.
+- **CODEX-PLATFORM-CONTRACTS — live**: 35/35 qualified: autosave-frame diagnostics and render-style preference contract; no H activation or target-FPS claim. Evidence: docs/metrics/platform-contracts-2026-11-11.json.
+- **CLAUDE-STOLEN-CARGO — source-pushed-review**: Finite dropped carried-resource parcels and bounded pursuit/recovery; task-commitment seam, deep-water cargo and items/animals remain. Evidence: Claude handoff9/9 controlled fixture; Codex native/integration checks pending; Codex source review found commitment/preemption and max64 parcel/ownership edge cases; fixes required before qualification.
+- **CLAUDE-CULTURAL-NAMES — source-pushed-review**: Seed/team/id culture-based given names; saved existing names retained; settlement names not migrated. Evidence: Claude handoff4/4 and collision measurement; integration pending.
+- **CODEX-EXACT-WATER-MEMO — candidate-tested**: Bounded exact-coordinate query cache; one sequential pair only, not FPS/stutter/campaign proof; not merged or published. Evidence: 18/18 parity/focused tests + typecheck; same-RNG100-step pair identical final state and23832 RNG calls; mean62.97→58.02ms (7.86%); .play/exact-water-memo-benchmark.json.
 
 ## Additional explicit feedback retained
 
