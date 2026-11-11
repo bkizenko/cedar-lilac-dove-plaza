@@ -1,0 +1,50 @@
+{
+  "batch": "padded-armor-2026-11-11",
+  "publishedRuntimeCommit": "9c8102102ac1a01d04f8c3eb878a646ef0eadea2",
+  "release": "2026-11-11T19-05-03-508Z-9c81021",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 86,
+  "total": 86,
+  "percentage": 100,
+  "evidence": {
+    "automated": {
+      "passed": 85,
+      "total": 85,
+      "logs": [
+        ".play/armor-candidate-tests.log",
+        ".play/armor-storage-ui-final.log"
+      ]
+    },
+    "nativeUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/armor-candidate-ui.log"
+    },
+    "typecheck": ".play/armor-candidate-typecheck.log",
+    "build": ".play/armor-candidate-build.log"
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "workingChanges": [
+    "Paid padded torso armor: eight cloth, two cordage, actual maker travel and delivery",
+    "One persistent armor asset through cache, wearer, ground, capture and save/reload",
+    "Condition-scaled combat protection, wear and foot movement burden",
+    "Full-store completion leaves real armor outside and frees maker",
+    "Visible instanced worn and dropped armor; Low shadows disabled",
+    "Compact equipment controls and inventory/storage accounting"
+  ],
+  "limitations": [
+    "Only padded torso armor; repair, helmets, shields, metal armor and siege pending",
+    "Controlled native-terrain crafting/UI acceptance, not full campaign or battle acceptance",
+    "No current 100+ resident village export or Mac frame-time performance qualification"
+  ],
+  "savesPreserved": true
+}
