@@ -2,6 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {SEGS} from '../src/game/constants.ts';
 import {launchRiverboat} from '../src/game/boats.ts';
 import {initializeSurvival} from '../src/game/survivalNeeds.ts';
+import {waterNavigation} from '../src/game/waterNavigation.ts';
 import {knownSettlementSite} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {reviewSeaExploration,cancelSeaExploration,SEA_EXPLORATION_RULES} from '../src/game/seaExploration.ts';
@@ -22,11 +23,12 @@ function fixture({hull=false,locked=0}={}){const g=new Game();g.reset(123456,3);
  ground(g);Object.assign(g.tribe(1),{wood:180,stone:36});initializeSurvival(g);g.state.coastalTradeReviewAt=1e8;g.state.scoutTimer=1000;
  g.state.seaExploration={version:1,teams:g.state.tribes.filter(t=>t.id>0&&t.id!==3).map(t=>({team:t.id,nextReviewAt:t.id===1?0:1e9,reviews:0,lastReason:'',reasons:{}})),voyages:[]};
  if(hull){assert.equal(launchRiverboat(g,dock),true);}
- return {g,dock,canoe};}
+ waterNavigation(g,true);return {g,dock,canoe};}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;while(g.state.time<end&&!until()){g.state.paused=false;g.step(.1);}assert.deepEqual(g.simulationErrors,[]);}
 const voyage=g=>g.state.seaExploration.voyages.find(v=>v.team===1);
-function reload(g){const copy=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));ground(copy);copy.seaT=1e9;copy.calamityT=1e9;return copy;}
+function reload(g){const copy=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));ground(copy);copy.seaT=1e9;copy.calamityT=1e9;waterNavigation(copy,true);return copy;}
 function ledger(v){const m=v.metrics;return m.foodLoaded-(m.foodReturned+m.foodUsed+m.foodLost+m.foodWithPeople);}
+function waterLedger(v){const m=v.metrics;return m.waterLoaded-(m.waterReturned+m.waterUsed+m.waterLost+m.waterWithPeople);}
 /** Drives to each phase, saving and strictly reloading at every transition. */
 function driveThroughPhases(g,id,seconds,stop=['complete','failed','lost']){const seen=[];let v=g.state.seaExploration.voyages.find(v=>v.id===id),phase=v.phase;seen.push(phase);const end=g.state.time+seconds;
  while(g.state.time<end&&!stop.includes(v.phase)){g.state.paused=false;g.step(.1);assert.deepEqual(g.simulationErrors,[]);v=g.state.seaExploration.voyages.find(v=>v.id===id);if(v.phase!==phase){phase=v.phase;seen.push(phase);g=reload(g);v=g.state.seaExploration.voyages.find(v=>v.id===id);assert.equal(v.phase,phase,'phase survives strict save/load');}}
@@ -43,7 +45,7 @@ test('no hull: the rival pays a real hull, crews it with healthy adults, explore
  assert.equal(g.tribe(1).wood,wood-40,'hull paid exactly once');assert.equal(g.state.boats.length,1);const b=g.state.boats[0];assert.equal(b.id,v.boatId);assert.equal(b.team,1);assert.ok(Math.hypot(b.x-v.homeSea.x,b.z-v.homeSea.z)<=4,'hull back at the home dock');
  assert.ok(v.crew.length>=2&&v.crew.length<=3);assert.ok(!v.crew.includes(canoe.id),'injured canoe owner is neither crew nor blocker');assert.equal(v.home.length,v.crew.length);
  assert.ok(v.metrics.legs>=1&&v.metrics.sailMeters>40,JSON.stringify(v.metrics));assert.ok(v.returnReason,'return reason recorded');
- assert.ok(v.metrics.foodLoaded>0&&v.metrics.foodReturned>0&&v.metrics.foodUsed>0);assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));
+ assert.ok(v.metrics.foodLoaded>0&&v.metrics.foodReturned>0&&v.metrics.foodUsed>0);assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(v.metrics.waterLoaded>0&&Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
  assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined&&!u.boat));
  const memory=new Set(g.state.rivalKnowledge.find(m=>m.team===1).cells);assert.ok(v.reportCommitted);assert.ok(v.report.cells.every(c=>memory.has(c)));assert.ok(v.metrics.cellsCommitted>4);assert.ok(v.report.coastCells.length>0);
  const size=g.world.size,hallCell=Math.floor((150+size/2)/size*32)*32+Math.floor((150+size/2)/size*32);assert.ok(!memory.has(hallCell),'unseen inland hall cell stays unknown');assert.equal(knownSettlementSite(g,2,1),undefined);assert.deepEqual(v.report.halls,[]);
@@ -65,7 +67,7 @@ test('provision exhaustion turns the voyage home early and leftover food returns
  const {g}=fixture({hull:true});reviewSeaExploration(g);const v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>10);assert.equal(v.phase,'outbound');
  // Consume (not delete) the packs: food actually eaten so far is booked as used.
  for(const u of activeCrew(g,v)){const p=u.scoutProvisions,eat=p.food-.6;p.food-=eat;p.foodUsed+=eat;}
- drive(g,2);assert.equal(v.phase,'returning');assert.equal(v.returnReason,'provisions');drive(g,300,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'complete',JSON.stringify(v));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));
+ drive(g,2,()=>v.phase!=='outbound');assert.equal(v.phase,'returning');assert.equal(v.returnReason,'provisions');drive(g,300,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'complete',JSON.stringify(v));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));
 });
 
 test('per-society rejection reasons: partner known, no crew, no hull materials; cancel before departure refunds packs',()=>{
@@ -85,4 +87,13 @@ test('old saves without sea exploration load as no voyages; dangling crew refere
 
 test('the old personal-canoe equipment path stays blocked by the injured owner, yet the hull voyage departs',()=>{
  const {g,canoe}=fixture({hull:true});g.tribe(1).food=2000;assert.equal(canoe.haulage,'canoe');reviewSeaExploration(g);const v=voyage(g);assert.equal(v.phase,'mustering');assert.ok(!v.crew.includes(canoe.id));drive(g,200,()=>v.phase==='outbound');assert.equal(v.phase,'outbound');assert.equal(canoe.boat,undefined);void developRivalEquipment;
+});
+
+test('hull loss in open water: bounded wait, survivors released with their packs, report unconfirmed, no free hull',()=>{
+ let {g}=fixture({hull:true});const boatId=g.state.boats[0].id,wood=g.tribe(1).wood;reviewSeaExploration(g);let v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>15);assert.equal(v.phase,'outbound',v.reason);
+ g.state.boats.find(b=>b.id===boatId).hp=0;drive(g,1);assert.equal(v.failure,'hull-lost',v.reason);g=reload(g);v=voyage(g);
+ drive(g,400,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'lost',JSON.stringify(v));assert.equal(v.failure,'hull-lost');assert.equal(v.reportCommitted,false,'nobody physically brought the report home');assert.ok(v.metrics.foodWithPeople>0,'released survivors keep their actual packs');assert.ok(g.state.time-v.landingAt<=SEA_EXPLORATION_RULES.landingSeconds+1);
+ assert.ok(!g.state.boats?.some(b=>b.id===boatId&&b.hp>0),'no free replacement hull');assert.equal(g.tribe(1).wood,wood,'nothing repaid or refunded for the lost hull');
+ assert.ok(g.state.units.every(u=>u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
+ assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
 });
