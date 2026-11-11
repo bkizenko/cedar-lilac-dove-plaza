@@ -26,3 +26,20 @@ for(const {seed,size,layout,waterKind} of scenarios)test(`integrated V19 ${seed}
  while(actor.carry>0&&g.state.time-recalledAt<180)step();assert.equal(actor.carry,0,actor.workReason);assert.equal(received(),payload);assert.equal(g.state.simulationEvents.totals['cargo_delivered:0:food'],payload);assert.ok(Math.hypot(actor.x-home.x,actor.z-home.z)<=6,'Credit requires physical home arrival');assert.equal(terrainHash(g.world),terrain);assert.ok(fish().amount>=0&&fish().amount<=(fish().maxAmt||initialStock));
  console.log(JSON.stringify({waterKind,seed,generation:19,size,layout,source,bank,actorId,initialStock,stockAtSave:stock,payload,delivered:received(),walkedMeters:walked,elapsed:g.state.time-began,terrainUnchanged:true,saveAtBankWithRealCatch:true,scope:'Natural generated geometry and fish stock; authored finite500provisions/200L, initial revealed chart and quiet review delays; no supplied catch or terrain edits; not famine/campaign qualification'}));
  }finally{Math.random=previous;}});
+
+test('a fishing approach stays fixed while walking and refreshes after navigation changes',()=>{
+ const node={x:0,z:0},worker={x:-12,z:0,y:1,order:'gather',node,stuckT:0};
+ let revision=1,blocked=false;
+ const g={world:{waterY:0},height:()=>1,waterAt:()=>0,travelHeight:()=>1,
+  navigationRevision:()=>revision,walkable:()=>true,workBoard:{connected:()=>true},
+  canStep:(_u,x)=>!blocked||x>=0};
+ const left=fishingBank(g,worker,node);
+ assert.ok(left.x<0);
+ worker.x=12;
+ assert.equal(fishingBank(g,worker,node),left);
+ revision++;
+ blocked=true;
+ const right=fishingBank(g,worker,node);
+ assert.ok(right.x>0);
+ assert.notEqual(right,left);
+});
