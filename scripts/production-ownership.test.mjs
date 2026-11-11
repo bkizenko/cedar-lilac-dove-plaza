@@ -14,3 +14,26 @@ test('Explore automatically parks the real carried paid batch before beginning a
 test('strict saves reject a duplicated physical processing slot and an unanchored stored paid parcel',()=>{const g=fixture(),h=site(g,'hearth'),p=begin(g,'formClayHand',h),raw=JSON.parse(JSON.stringify(encodeGame(g))),copy=JSON.parse(JSON.stringify(p));copy.id=raw.state.nextId++;const other=raw.state.units.find(u=>u.team===0&&u.id!==p.actorId);copy.actorId=other.id;other.productionProjectId=copy.id;raw.state.production.projects.push(copy);assert.throws(()=>decodeGame(raw));const originalActor=p.actorId,stored=JSON.parse(JSON.stringify(encodeGame(g)));stored.state.production.projects[0].phase='stored';stored.state.production.projects[0].actorId=null;stored.state.units.find(u=>u.id===originalActor).productionProjectId=undefined;assert.throws(()=>decodeGame(stored));});
 
 test('returning finished output unloads normally after workplace destruction and never becomes refunded input',()=>{const g=fixture(),h=site(g,'hearth'),p=begin(g,'formClayHand',h);drive(g,250,()=>p.phase==='returning');assert.equal(p.phase,'returning');const u=g.state.units.find(u=>u.id===p.actorId),paid=g.state.production.metrics.consumed.clay;assert.equal(pauseProductionProject(g,p.id),true);h.hp=0;assert.equal(unloadProductionProject(g,p.id),true,p.blockedReason);drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.equal(g.tribe(0).items.greenware,4);assert.equal(g.state.production.metrics.consumed.clay,paid);assert.equal(workRuntime(g).activeJob(u.id),undefined);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
+
+test('blocked cache orders keep the current paid batch moving and report why',()=>{
+ const g=fixture(),hearth=site(g,'hearth'),project=begin(g,'formClayHand',hearth);
+ const worker=g.state.units.find(u=>u.id===project.actorId);
+ const paid=g.state.production.metrics.consumed.clay;
+ const connected=g.workBoard.connected;
+ g.workBoard.connected=()=>false;
+ assert.equal(unloadProductionProject(g,project.id),false);
+ assert.equal(project.phase,'carrying');
+ assert.match(orderExploration(g,worker),/No reachable cache/);
+ assert.equal(worker.exploreAfterDelivery,undefined);
+ assert.equal(project.actorId,worker.id);
+ g.workBoard.connected=connected;
+ const stock=g.tribe(0).items;
+ stock.bone=10000;
+ assert.equal(unloadProductionProject(g,project.id),false);
+ assert.match(project.blockedReason,/No room/);
+ assert.equal(project.phase,'carrying');
+ delete stock.bone;
+ drive(g,120,()=>project.phase==='complete');
+ assert.equal(project.phase,'complete');
+ assert.equal(g.state.production.metrics.consumed.clay,paid);
+});

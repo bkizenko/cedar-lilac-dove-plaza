@@ -6,7 +6,7 @@ import{CEREAL_RULES,CEREAL_STORAGE_RULES,storedCerealKinds,compactGrainWorkplace
 import{TEXTILE_RULES,GARMENT_KINDS,textileRecipeIssue,type GarmentKind}from'./textiles';
 import{basketOrigin,recordBasketDelivery,recordFibreDelivery}from'./fibre';
 import{productionPracticeRate,recordProductionPractice,recordProductionPracticeWork}from'./productionPractice';
-import{claimProductionOwnership,releaseProductionOwnership,productionOwnershipReason,productionActorAvailable,cachedProductionUnits}from'./productionOwnership';
+import{claimProductionOwnership,releaseProductionOwnership,productionOwnershipReason,productionActorAvailable,cachedProductionUnits,paidInputUnits}from'./productionOwnership';
 import{releaseTreeWorker}from'./workAllocation';
 import{potteryOrigin,validPotteryOrigin,advanceClayDrying,type PotteryOrigin}from'./pottery';
 import {PRESERVATION_RULES,emptyDryingExposure,advanceDrying,dryingConditions,validDryingExposure,type DryingExposure} from './foodPreservation';
@@ -189,6 +189,13 @@ export function unloadProductionProject(g:Game,id:number){const p=g.state.produc
  if(phase==='stored')return true;
  if(!['carrying','unloading'].includes(phase)||p.actorId===null){p.blockedReason='Only inputs carried by a living resident can be unloaded; work already at a site stays there';return false;}
  const u=g.state.units.find(u=>u.id===p.actorId&&u.hp>0&&u.team===p.team);if(!u){p.blockedReason='The original paid-load carrier is unavailable';return false;}
+ if(!supplyDrops(g,p.team).some(drop=>supplyApproach(g,u,drop))){
+  p.blockedReason='No reachable cache for the carried paid inputs';g.banner(p.blockedReason,4);return false;
+ }
+ const occupied=sum(g.tribe(p.team).items||{})+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id);
+ if(occupied+paidInputUnits(p)>itemCapacity(g,p.team)){
+  p.blockedReason='No room to park this paid batch at the cache';g.banner(p.blockedReason,4);return false;
+ }
  const next={...p,phase:'unloading' as const,resumePhase:'unloading' as const};if(!claimProductionOwnership(g,next)){p.blockedReason=productionOwnershipReason(g,p);return false;}
  p.phase='unloading';p.resumePhase='unloading';p.blockedReason='';u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return true;
 }
