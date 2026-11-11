@@ -27,7 +27,7 @@ import {TowerPlatformLayer} from './towerPlatformLayer';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
-import {GRAPHICS_RULES,loadGraphicsQuality} from '../game/graphics';
+import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
@@ -295,7 +295,7 @@ export class WorldView {
       failIfMajorPerformanceCaveat: false,
     });
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, GRAPHICS_RULES.profiles[this.quality].pixelRatio),
+      graphicsPixelRatio(this.quality,canvas.clientWidth||800,canvas.clientHeight||600,window.devicePixelRatio||1),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
     this.renderer.shadowMap.enabled = this.shadowsEnabled;
@@ -509,6 +509,9 @@ export class WorldView {
     const w = el.clientWidth;
     const h = el.clientHeight;
     if (!w || !h) return;
+    const ratio=graphicsPixelRatio(this.quality,w,h,window.devicePixelRatio||1);
+    this.renderer.setPixelRatio(ratio);
+    this.composer?.setPixelRatio(ratio);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -519,8 +522,9 @@ export class WorldView {
   applyQuality(q: "low" | "med" | "high") {
     this.quality = q;
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, GRAPHICS_RULES.profiles[q].pixelRatio),
+      graphicsPixelRatio(q,this.renderer.domElement?.clientWidth||800,this.renderer.domElement?.clientHeight||600,window.devicePixelRatio||1),
     );
+    this.composer?.setPixelRatio(this.renderer.getPixelRatio?.()??graphicsPixelRatio(q,800,600,window.devicePixelRatio||1));
     this.renderer.shadowMap.enabled = this.shadowsEnabled && q !== "low";
     this.sun.castShadow = this.shadowsEnabled && q !== "low";
     const map = q === "high" ? 1024 : 512;

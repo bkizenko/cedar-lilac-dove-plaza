@@ -190,3 +190,21 @@ Review visual choices independently:
 - Flag templates include a square field, swallowtail, pennant, hoist band, diagonal split and vertical standard. The motif library can start with reeds, a confluence, a pass, a sail, a spindle and a wheel. Check each on a map marker, a shield and a ship before finalizing.
 - Unit equipment concepts include padded linen, reinforced hide, bronze scale, lamellar, mail and brigandine. Compare the same unit and animation at the same scale, with armor type identifiable before the faction dye. Keep access tied to local materials, production knowledge and period.
 - Trade objects include a lidded grain jar, a netted water vessel, a sealed transport amphora, a shallow dish, a spindle and weights. Vary actual form and function along with surface patterns. Reserve specialist illustrations for close inspection and landmark moments.
+
+## 14. User art preferences and preserved baseline, November 10
+
+The user favors H (tactile timber/handmade model) and E (romantic landscape with a disappearing HUD), with a Renaissance-like atmosphere. Handmade Model and Winter Realism are also liked. Treat these as favored directions for the next measured prototype. Earlier A/B/C interfaces, all flags, tribal variations, armor concepts and wonder examples remain available for review. Verify the letter against its original sheet before discarding any alternatives.
+
+All ten PNG concept sheets were archived with SHA-256 hashes in /Users/boriskizenko/Documents/Hearthwild Art Archive/concept-manifest.json. Originals remain in the generated-image directory. The existing graphics source is pinned by Git tag art-baseline-2026-11-10-ebdb6e2. The corresponding playable snapshot is .play/releases/2026-11-11T02-11-37-ebdb6e2. The archive is outside the game bundle to avoid adding concept sheets to the downloaded game. The user explicitly requested preserving these references.
+
+The armor and wonder sheets were generated as original 2D concepts. Their 3D blockouts, game meshes, rigging, animations, collision, material atlases and LODs are separate deliverables. The next offline model examples are a ring observatory, crescent harbor and terraced cascade garden. Blockouts establish actual scale, openings and silhouettes. They still need production art and gameplay integration.
+
+### Local variety
+
+Use deterministic local procedural generation from a saved campaign seed, region, materials and the approved parts catalogue. Vary floor plan, bay count, entrance, terrace elevations, roof silhouette, ornament, wear, banners and palette within structural rules. Save the selected design and generator version. Reproduce the same village when loading it, while fresh campaign seeds choose different combinations. Tests should reject recent near-duplicates and check clear doors, terrain contact, navigable courts and bounded size. An always-running local language or image model is unnecessary for this first version. Optional offline AI asset authoring can expand the catalogue later, after memory and generation-time checks.
+
+### Mac render budget prototype
+
+Hardware was rechecked as Apple M1 and 8 GB RAM. Low, Medium and High now cap internal render pixels at 1.2, 2.1 and 3.2 million respectively, in addition to their existing device-pixel-ratio caps. Reapply the budget on resize and keep postprocessing targets synchronized. HTML controls retain their CSS dimensions. This caps GPU fill and render-target size on large displays. It does not establish a frame-rate improvement by itself.
+
+Prototype assets should share one palette/material atlas per family and mesh parts across instances. Initial review targets are 2,000–8,000 triangles per ordinary building, 15,000–40,000 per close wonder, and 1,000–3,000 per close resident, with simpler middle/distant versions. These are provisional budgets to measure against scene draw calls, visibility and actual animation cost. Use a shared skeleton and a small visible-nearby actor pool. Author idle, walk/carry, work and combat clips against real props. Favor baked contact shading and keep optional shadows controllable. Winter is a material/weather variation on the same assets.
