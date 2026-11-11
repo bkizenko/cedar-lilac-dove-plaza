@@ -20,3 +20,15 @@ Each river segment is sampled at intervals of at most 2 m, with lateral tests at
 | 1, pangaea, 1,040 m | 19 | 420 | 0 | 4.259 m | 5 | 0 | 305 |
 
 The V19 lower river removed the sampled width jumps in all three worlds. The largest remaining jump count in the continents preview came from the ordinary brook and the riparian side channel, at four each. The continents generations also differ by two sections due to generation-specific side-channel geometry. Mean width error increased in the other two previews. Follow-up qualification needs to distinguish isolated banks from joins, inspect corresponding views at multiple zooms, and verify traversability and rendering cost.
+
+## Isolated banks and nearby water
+
+The survey also builds a second water index for each river that omits the river itself. At every lateral sample it checks whether the lake, sea, falls, or another river would leave water over the same physical terrain. A section with any such sample is classified as near other water. A jump is counted as isolated only if both adjacent sections pass that check. The category includes proximity within the scan window, even when the visible bodies are separated by a narrow strip of dry ground.
+
+| Seed | V18 isolated sections | V18 mean width error | V19 isolated sections | V19 mean width error |
+| --- | ---: | ---: | ---: | ---: |
+| 7 | 81 | 0.385 m | 81 | 0.311 m |
+| 42 | 560 | 2.053 m | 421 | 0.262 m |
+| 1 | 32 | 0.641 m | 32 | 0.258 m |
+
+All jumps of at least 2 m in this sample had nearby water on at least one of the two sections. This includes the lower rivers. At seed 42, the eligible sections differ between versions, so the means compare each version's isolated reaches and are not a matched-location improvement estimate. Future visual and route checks should sample across the actual connections and inspect whether transitions follow the intended banks, particularly at the riparian side channel and ordinary brook.

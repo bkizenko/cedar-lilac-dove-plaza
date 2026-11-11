@@ -1,5 +1,7 @@
 import {generateWorld,sampleWorldHeight} from '../../src/game/worldgen.ts';
-import {waterSurfaceAt} from '../../src/game/localWater.ts';
+import {lakeContains,waterSurfaceAt} from '../../src/game/localWater.ts';
+
+import {buildLocalWaterIndex,indexedWaterAt} from '../../src/game/indexedLocalWater.ts';
 
 const cases = [
   {seed:7,size:1040,layout:'archipelago'},
@@ -12,8 +14,11 @@ const depthThreshold = .05;
 const metres = value => Number(value.toFixed(3));
 
 function measureRiver(world,river) {
+  const otherWater=buildLocalWaterIndex(world.waterBodies.filter(body=>body!==river),world.size,world.waterfalls);
+  let isolatedSections=0,isolatedWidthError=0;
+  const isolatedJumps=[];
   let sections=0, dryCenters=0, longestDryRun=0, dryRun=0;
-  let lateralDeviation=0, widthError=0, widthJumps=0, previousWidth;
+  let lateralDeviation=0, widthError=0, widthJumps=0, previous;
   for (let i=1;i<river.pts.length;i++) {
     const a=river.pts[i-1], b=river.pts[i];
     const dx=b.x-a.x, dz=b.z-a.z, distance=Math.hypot(dx,dz);
@@ -35,7 +40,7 @@ function measureRiver(world,river) {
         dryCenters++;
         dryRun+=distance/rows;
         longestDryRun=Math.max(longestDryRun,dryRun);
-        previousWidth=undefined;
+        previous=undefined;
         continue;
       }
       dryRun=0;
@@ -50,8 +55,24 @@ function measureRiver(world,river) {
       const left=edge(-1),right=edge(1),width=left+right;
       widthError+=Math.abs(width-designedWidth);
       lateralDeviation+=Math.abs(left-right)/2;
-      if (previousWidth!==undefined&&Math.abs(width-previousWidth)>=2) widthJumps++;
-      previousWidth=width;
+      let joined=false;
+      for (let step=Math.ceil(-limit/lateralStep);step<=Math.floor(limit/lateralStep);step++) {
+        const offset=step*lateralStep, px=x+nx*offset,pz=z+nz*offset;
+        const local=indexedWaterAt(otherWater,px,pz,lakeContains);
+        const other=Math.max(world.waterY,local===null?-Infinity:local+world.waterY-(world.baseWaterY??world.waterY));
+        if (other-sampleWorldHeight(world,px,pz)<=depthThreshold) continue;
+        joined=true;
+        break;
+      }
+      if (!joined) {
+        isolatedSections++;
+        isolatedWidthError+=Math.abs(width-designedWidth);
+      }
+      if (previous&&Math.abs(width-previous.width)>=2) {
+        widthJumps++;
+        if (!joined&&!previous.joined) isolatedJumps.push({x:metres(x),z:metres(z),from:metres(previous.width),to:metres(width)});
+      }
+      previous={width,joined};
     }
   }
   const wetSections=sections-dryCenters;
@@ -59,7 +80,8 @@ function measureRiver(world,river) {
     id:river.id,sections,dryCenters,longestDryRunMetres:metres(longestDryRun),
     meanWidthErrorMetres:metres(widthError/Math.max(1,wetSections)),
     meanBankAsymmetryMetres:metres(lateralDeviation/Math.max(1,wetSections)),
-    widthJumpsAtLeastTwoMetres:widthJumps,
+    widthJumpsAtLeastTwoMetres:widthJumps,isolatedSections,
+    isolatedMeanWidthErrorMetres:metres(isolatedWidthError/Math.max(1,isolatedSections)),isolatedJumps,
   };
 }
 
