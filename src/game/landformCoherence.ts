@@ -1,4 +1,5 @@
 import {sampleHeight,sampleWorldHeight,type WorldData} from './worldgen';
+import {landformLabelsEnabled,landformHabitatAt} from './landformLabels';
 import {waterSurfaceAt} from './localWater';
 import {highWaterLevel} from './hydrology';
 import {provinceAt} from './ecologicalProvinces';
@@ -10,7 +11,7 @@ import {provinceAt} from './ecologicalProvinces';
 export const LANDFORM_COHERENCE_RULES={version:2,riverStepMetres:4,riseToleranceMetres:.05,wetMinimumMetres:.02,bankOffsetMetres:4,bankFreeboardMetres:.3,mouthSearchMetres:14,regionGrid:64,fragmentCells:3} as const;
 type World=Pick<WorldData,'size'|'heights'|'rivers'|'biomes'|'baseWaterY'|'waterY'>&Partial<Pick<WorldData,'bankTerrain'|'ecology'|'waterBodies'|'waterfalls'|'waterHeights'|'localWaterVersion'>>;
 export function worldHeight(world:World){return (x:number,z:number)=>world.bankTerrain?sampleWorldHeight(world as WorldData,x,z):sampleHeight(world.heights,x,z,world.size);}
-export function habitatAt(world:World,x:number,z:number){if(world.ecology)return provinceAt(world.ecology,x,z).baseHabitat;let best='plains',bd=Infinity;for(const b of world.biomes){const d=(b.x-x)**2+(b.z-z)**2;if(d<bd){bd=d;best=b.kind;}}return best;}
+export function habitatAt(world:World,x:number,z:number){if(world.ecology)return landformLabelsEnabled(world as unknown as Parameters<typeof landformLabelsEnabled>[0])?landformHabitatAt(world as unknown as Parameters<typeof landformHabitatAt>[0],x,z):provinceAt(world.ecology,x,z).baseHabitat;let best='plains',bd=Infinity;for(const b of world.biomes){const d=(b.x-x)**2+(b.z-z)**2;if(d<bd){bd=d;best=b.kind;}}return best;}
 
 function resample(pts:{x:number;z:number}[],step:number){const out:{x:number;z:number;tx:number;tz:number}[]=[];let carry=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=b.x-a.x,dz=b.z-a.z,l=Math.hypot(dx,dz);if(l<1e-9)continue;let s=carry;for(;s<=l;s+=step)out.push({x:a.x+dx*s/l,z:a.z+dz*s/l,tx:dx/l,tz:dz/l});carry=s-l;}const e=pts.at(-1),p=pts.at(-2);if(e&&p){const l=Math.hypot(e.x-p.x,e.z-p.z)||1;out.push({x:e.x,z:e.z,tx:(e.x-p.x)/l,tz:(e.z-p.z)/l});}return out;}
 
