@@ -1,3 +1,4 @@
+/** @deprecated Carved-wood terrace terrain is dropped from the H style (user direction): use biomeTerrain.ts. Kept only so the old review diorama and its tests still run. */
 /** Carved contour terrace treatment for Option H. Pure functions over a
  * height sampler: stepped band colour from height, darkened carved risers
  * at band edges (constant width in metres regardless of slope), and a
