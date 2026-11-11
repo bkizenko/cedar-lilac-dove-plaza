@@ -1,0 +1,60 @@
+{
+  "batch": "food-routing-trade-housing-2026-11-11",
+  "publishedRuntimeCommit": "3ec1beb0fb26fb830b386a556fe72d6f55b5071f",
+  "release": "2026-11-11T17-41-05-295Z-3ec1beb",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 111,
+  "total": 111,
+  "percentage": 100,
+  "evidence": {
+    "automated": {
+      "passed": 110,
+      "total": 110,
+      "log": ".play/food-reliability-candidate-tests.log"
+    },
+    "typecheck": ".play/food-reliability-candidate-typecheck.log",
+    "build": ".play/food-reliability-candidate-build.log",
+    "disposableBrowserUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/food-reliability-candidate-ui.log"
+    }
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "scope": [
+    "automatic finite grain processing, spare-worker and harvest eligibility",
+    "Food role retained through processing; explicit gather locks protected",
+    "bounded precise local routing within 28m",
+    "automatic free-builder selection",
+    "physical trade loading and direct village proposal dialog",
+    "wood/stone timber home quotes with paid legacy conservation",
+    "stable camera pitch during zoom",
+    "existing raider residents no longer blocked by legacy stranded count"
+  ],
+  "limits": [
+    "No current 100-person village export inspected; this does not establish the cause of every idle resident.",
+    "Ambiguous old Food locks need Food reapplied once; no legacy lock guessing.",
+    "Local routing does not replace distant component connectivity.",
+    "Legacy stranded raiders still require a physical escape solution.",
+    "Historical calculator and chat 3D preview are not live balance/art overhauls."
+  ],
+  "preserved": [
+    "player saves and village checkpoints",
+    "approved art references",
+    "full development goal and unchanged 98 gates"
+  ],
+  "qualificationNotes": [
+    "Earlier trade fixtures assumed remote payment; revised to walk actual carrier to cache while preserving conservation assertions.",
+    "Manual bread assertion already failed on published HEAD: flour could be reserved by automatic baking; now accounts for actual stored plus paid flour.",
+    "Initial UI check exposed missing explicit field names and Escape clearing selection; corrected and passed against final artifact."
+  ]
+}
