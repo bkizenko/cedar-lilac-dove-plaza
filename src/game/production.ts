@@ -11,7 +11,7 @@ import{releaseTreeWorker}from'./workAllocation';
 import{potteryOrigin,validPotteryOrigin,advanceClayDrying,type PotteryOrigin}from'./pottery';
 import {PRESERVATION_RULES,emptyDryingExposure,advanceDrying,dryingConditions,validDryingExposure,type DryingExposure} from './foodPreservation';
 import {BUILDINGS} from './constants';
-import {plotArea} from './plots';
+import {expandedGrainWorkplace,plotArea} from './plots';
 import type {Game} from './sim';
 import type {Unit,Building,GameState,BldType,FoodKind} from './types';
 import {isDependent} from './settlement';
@@ -32,7 +32,9 @@ export const PRODUCTION_RECIPES={
  threshCerealFloor:recipe({name:'Thresh cereal on a prepared floor',workplace:'threshingFloor',inputs:{grainSheaves:CEREAL_RULES.rawBatch},wood:0,water:0,workSeconds:CEREAL_RULES.floorThreshSeconds,outputs:{roughGrain:CEREAL_RULES.roughBatch,straw:CEREAL_RULES.strawPerBatch},food:0}),
  winnowCerealFloor:recipe({name:'Winnow grain on a prepared floor',workplace:'threshingFloor',inputs:{roughGrain:CEREAL_RULES.roughBatch},wood:0,water:0,workSeconds:CEREAL_RULES.floorWinnowSeconds,outputs:{chaff:CEREAL_RULES.chaffPerBatch},food:CEREAL_RULES.cleanGrainPerBatch*(1-CEREAL_RULES.seedFraction),foodKind:'grain'}),
  threshCerealFloorDouble:recipe({name:'Thresh a double batch',workplace:'threshingFloor',inputs:{grainSheaves:2*CEREAL_RULES.rawBatch},wood:0,water:0,workSeconds:1.5*CEREAL_RULES.floorThreshSeconds,outputs:{roughGrain:2*CEREAL_RULES.roughBatch,straw:2*CEREAL_RULES.strawPerBatch},food:0}),
+ threshCerealFloorBulk:recipe({name:'Thresh a four-load batch',workplace:'threshingFloor',inputs:{grainSheaves:4*CEREAL_RULES.rawBatch},wood:0,water:0,workSeconds:2*CEREAL_RULES.floorThreshSeconds,outputs:{roughGrain:4*CEREAL_RULES.roughBatch,straw:4*CEREAL_RULES.strawPerBatch},food:0}),
  winnowCerealFloorDouble:recipe({name:'Winnow a double batch',workplace:'threshingFloor',inputs:{roughGrain:2*CEREAL_RULES.roughBatch},wood:0,water:0,workSeconds:1.5*CEREAL_RULES.floorWinnowSeconds,outputs:{chaff:2*CEREAL_RULES.chaffPerBatch},food:2*CEREAL_RULES.cleanGrainPerBatch*(1-CEREAL_RULES.seedFraction),foodKind:'grain'}),
+ winnowCerealFloorBulk:recipe({name:'Winnow a four-load batch',workplace:'threshingFloor',inputs:{roughGrain:4*CEREAL_RULES.roughBatch},wood:0,water:0,workSeconds:2*CEREAL_RULES.floorWinnowSeconds,outputs:{chaff:4*CEREAL_RULES.chaffPerBatch},food:4*CEREAL_RULES.cleanGrainPerBatch*(1-CEREAL_RULES.seedFraction),foodKind:'grain'}),
  spinYarnHand:recipe({name:'Hand-spin bast yarn',workplace:'hearth',inputs:{plantFibre:4},wood:0,water:0,workSeconds:TEXTILE_RULES.handSpinSeconds,outputs:{yarn:4},food:0}),
  spinYarn:recipe({name:'Spin bast yarn at a fibre shelter',workplace:'fibreWorkshop',inputs:{plantFibre:4},wood:0,water:0,workSeconds:TEXTILE_RULES.shelterSpinSeconds,outputs:{yarn:4},food:0}),
  weaveCloth:recipe({name:'Weave bast cloth',workplace:'fibreWorkshop',inputs:{yarn:4},wood:0,water:0,workSeconds:TEXTILE_RULES.weaveSeconds,outputs:{cloth:2},food:0}),
@@ -59,10 +61,12 @@ export const PRODUCTION_RECIPES={
  grindGrain:recipe({name:'Hand-grind grain',workplace:'hearth',inputs:{},grain:4,wood:0,water:0,workSeconds:60,outputs:{flour:4},food:0}),
  grindGrainStation:recipe({name:'Grind grain at a stone',workplace:'grindingStone',inputs:{},grain:4,wood:0,water:0,workSeconds:24,outputs:{flour:4},food:0}),
  grindGrainDouble:recipe({name:'Grind a double batch',workplace:'grindingStone',inputs:{},grain:8,wood:0,water:0,workSeconds:36,outputs:{flour:8},food:0}),
+ grindGrainBulk:recipe({name:'Grind a four-load batch',workplace:'grindingStone',inputs:{},grain:16,wood:0,water:0,workSeconds:48,outputs:{flour:16},food:0}),
  cookPorridge:recipe({name:'Cook grain porridge',workplace:'hearth',inputs:{},grain:4,wood:1,water:2,workSeconds:18,outputs:{},food:4,foodKind:'porridge'}),
  bakeBread:recipe({name:'Bake hearth bread',workplace:'hearth',inputs:{flour:4},wood:1,water:2,workSeconds:45,outputs:{},food:4,foodKind:'bread'}),
  bakeBreadOven:recipe({name:'Bake oven bread',workplace:'oven',inputs:{flour:4},wood:1,water:2,workSeconds:24,outputs:{},food:4,foodKind:'bread'}),
  bakeBreadDouble:recipe({name:'Bake a double oven batch',workplace:'oven',inputs:{flour:8},wood:1,water:3,workSeconds:36,outputs:{},food:8,foodKind:'bread'}),
+ bakeBreadBulk:recipe({name:'Bake a four-load oven batch',workplace:'oven',inputs:{flour:16},wood:2,water:6,workSeconds:48,outputs:{},food:16,foodKind:'bread'}),
  airDryMeat:recipe({name:'Air-dry meat',workplace:'dryrack',inputs:{rawMeat:4},wood:0,water:0,workSeconds:10,outputs:{},food:4,foodKind:'driedMeat',preservation:'air',exposureSeconds:60}),
  airDryFish:recipe({name:'Air-dry fish',workplace:'dryrack',inputs:{},foodInputs:{fish:4},wood:0,water:0,workSeconds:10,outputs:{},food:4,foodKind:'driedFish',preservation:'air',exposureSeconds:60}),
  manualSmokeMeat:recipe({name:'Smoke meat at the hearth',workplace:'hearth',inputs:{rawMeat:4},wood:2,water:0,workSeconds:60,outputs:{},food:4,foodKind:'smokedMeat',preservation:'smoke'}),
@@ -110,9 +114,19 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
 }
 export function occupiedProductionSlots(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
 export const DOUBLE_GRAIN_BATCH_RULES={minimumDemonstrations:3} as const;
-export function doubleGrainBatchIssue(g:Game,team:number,recipe:ProductionRecipe){
- const prerequisite=recipe==='grindGrainDouble'?'grindGrainStation':recipe==='bakeBreadDouble'?'bakeBreadOven':recipe==='threshCerealFloorDouble'?'threshCerealFloor':recipe==='winnowCerealFloorDouble'?'winnowCerealFloor':null;
+const bulkGrainPrerequisites: Partial<Record<ProductionRecipe,ProductionRecipe>> = {
+ grindGrainBulk:'grindGrainDouble', bakeBreadBulk:'bakeBreadDouble',
+ threshCerealFloorBulk:'threshCerealFloorDouble', winnowCerealFloorBulk:'winnowCerealFloorDouble',
+};
+const doubleGrainPrerequisites: Partial<Record<ProductionRecipe,ProductionRecipe>> = {
+ grindGrainDouble:'grindGrainStation', bakeBreadDouble:'bakeBreadOven',
+ threshCerealFloorDouble:'threshCerealFloor', winnowCerealFloorDouble:'winnowCerealFloor',
+};
+export function grainBatchIssue(g:Game,team:number,recipe:ProductionRecipe,workplace?:Building){
+ const bulk=bulkGrainPrerequisites[recipe];
+ const prerequisite=bulk||doubleGrainPrerequisites[recipe];
  if(!prerequisite)return null;
+ if(bulk&&workplace&&!expandedGrainWorkplace(workplace))return 'Complete a workplace extension for four-load batches';
  const completed=g.tribe(team).productionPractice?.[prerequisite]?.batches??0;
  const required=DOUBLE_GRAIN_BATCH_RULES.minimumDemonstrations;
  return completed<required?`Deliver ${required} successful batches of ${PRODUCTION_RECIPES[prerequisite].name.toLowerCase()} first (${completed}/${required})`:null;
@@ -120,7 +134,7 @@ export function doubleGrainBatchIssue(g:Game,team:number,recipe:ProductionRecipe
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number,deliveredHere=false){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
  if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
- const doubleBatchIssue=doubleGrainBatchIssue(g,b.team,recipe);if(doubleBatchIssue)return doubleBatchIssue;
+ const doubleBatchIssue=grainBatchIssue(g,b.team,recipe,b);if(doubleBatchIssue)return doubleBatchIssue;
  const cerealIssue=cerealWeatherIssue(g,recipe);if(cerealIssue)return cerealIssue;
  const textileIssue=textileRecipeIssue(g,b.team,recipe);if(textileIssue)return textileIssue;
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
@@ -190,7 +204,7 @@ export function productionAI(g:Game,u:Unit,dt:number){const p=g.state.production
 /** A live kill grants finite material potential once. Legacy dead carcasses are never backfilled. */
 export function harvestAnimalMaterials(g:Game,u:Unit,c:{hides?:number;bones?:number},room:number){if(!animalProcessingEnabled(g,u.team)||room<=0)return;u.itemCargo??={};for(const[k,field]of [['rawHide','hides'],['bone','bones']] as const){const n=Math.min(room,Math.max(0,c[field]||0));if(n){add(u.itemCargo,k,n);c[field]=(c[field]||0)-n;room-=n;}}}
 export function startFloorCereal(g:Game,floor:Building,u:Unit,winnow:boolean,deliveredHere=false){
- const candidates:ProductionRecipe[]=winnow?['winnowCerealFloorDouble','winnowCerealFloor']:['threshCerealFloorDouble','threshCerealFloor'];
+ const candidates:ProductionRecipe[]=winnow?['winnowCerealFloorBulk','winnowCerealFloorDouble','winnowCerealFloor']:['threshCerealFloorBulk','threshCerealFloorDouble','threshCerealFloor'];
  for(const recipe of candidates){
   if(!productionIssue(g,recipe,floor.id,u.id,deliveredHere))return beginProduction(g,recipe,floor.id,u.id,deliveredHere);
  }

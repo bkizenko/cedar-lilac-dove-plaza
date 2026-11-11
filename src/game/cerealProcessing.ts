@@ -1,6 +1,6 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,resumeProduction,startFloorCereal,productionIssue,doubleGrainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -103,7 +103,7 @@ export function harvestBacklogAlert(g:Game){
  }else{
   if(!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
   if(winnow&&cerealWeatherIssue(g,'winnowCerealFloor'))return alert('winnowing resumes in dry weather');
-  recipes=winnow?['winnowCerealHand','winnowCerealFloor','winnowCerealFloorDouble']:['threshCerealHand','threshCerealFloor','threshCerealFloorDouble'];
+  recipes=winnow?['winnowCerealHand','winnowCerealFloor','winnowCerealFloorDouble','winnowCerealFloorBulk']:['threshCerealHand','threshCerealFloor','threshCerealFloorDouble','threshCerealFloorBulk'];
  }
  const grainProjects=projects.filter(p=>recipes.includes(p.recipe));
  if(grainProjects.some(p=>!p.blockedReason&&p.actorId!==null&&p.phase!=='paused'&&p.phase!=='stored'))return recentRisk||exposed?alert('processing underway · check storage and workplace capacity'):null;
@@ -119,8 +119,8 @@ export function harvestBacklogAlert(g:Game){
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
 const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
-const breadRecipes: ProductionRecipe[] = ['bakeBreadDouble','bakeBreadOven', 'bakeBread'];
-const grindingRecipes: ProductionRecipe[] = ['grindGrainDouble','grindGrainStation', 'grindGrain'];
+const breadRecipes: ProductionRecipe[] = ['bakeBreadBulk','bakeBreadDouble','bakeBreadOven', 'bakeBread'];
+const grindingRecipes: ProductionRecipe[] = ['grindGrainBulk','grindGrainDouble','grindGrainStation', 'grindGrain'];
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
@@ -172,7 +172,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b));
  const canPay = (recipe: ProductionRecipe) => {
   const spec = PRODUCTION_RECIPES[recipe];
-  return !doubleGrainBatchIssue(g,0,recipe) && tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
+  return !grainBatchIssue(g,0,recipe) && tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
  };
  const urgent = reserveSeconds(g, 0) < CEREAL_RULES.foodTargetSeconds;
  const recipes: ProductionRecipe[] = [];
@@ -199,7 +199,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
   }
  }
  const options = recipes.filter(canPay).flatMap(recipe => sites
-  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&occupiedProductionSlots(g,site)<productionSlots(site))
+  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));
  if (!options.length) return false;
  const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&

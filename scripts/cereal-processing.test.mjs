@@ -478,3 +478,41 @@ test('a practiced threshing floor processes double loads and preserves the exact
  assert.equal(g.state.production.metrics.produced.straw,10);
  assert.ok(Math.abs(g.tribe(0).seeds-initialSeed-1.6)<1e-9);
 });
+
+test('four-load grain processing needs expanded sites and delivered practice, then makes real bread',()=>{
+ let {g}=fixture();
+ const sites=[
+  ['threshCerealFloorBulk','threshCerealFloorDouble',g.makeBld('threshingFloor',14,42,0)],
+  ['winnowCerealFloorBulk','winnowCerealFloorDouble',null],
+  ['grindGrainBulk','grindGrainDouble',g.makeBld('grindingStone',25,44,0)],
+  ['bakeBreadBulk','bakeBreadDouble',g.makeBld('oven',36,44,0)],
+ ];
+ sites[1][2]=sites[0][2];
+ const buildings=[...new Set(sites.map(([, ,building])=>building))];
+ g.state.buildings.push(...buildings);
+ ground(g);
+ const tribe=g.tribe(0);
+ assert.match(productionIssue(g,sites[0][0],buildings[0].id),/workplace extension/);
+ for(const building of buildings)building.w*=2;
+ ground(g);
+ assert.match(productionIssue(g,sites[0][0],buildings[0].id),/0\/3/);
+ tribe.productionPractice=Object.fromEntries(sites.map(([,prior])=>[prior,{
+  batches:3,failedBatches:0,usefulOutputs:24,firstAt:g.state.time-10,lastAt:g.state.time,makers:[g.state.units[0].id],
+ }]));
+ tribe.items={grainSheaves:96};
+ tribe.survival.waterLiters=100;
+ drive(g,180,()=>g.state.production?.projects.some(p=>p.recipe==='threshCerealFloorBulk'&&p.phase==='working'));
+ assert.ok(g.state.production.projects.some(p=>p.recipe==='threshCerealFloorBulk'));
+ g=decodeGame(encodeGame(g));ground(g);
+ const bulkKeys=sites.map(([key])=>key);
+ drive(g,500,()=>bulkKeys.every(key=>g.state.production?.projects.some(p=>p.recipe===key&&p.phase==='complete')));
+ const jobs=g.state.production.projects;
+ for(const key of bulkKeys)assert.ok(jobs.some(p=>p.recipe===key&&p.phase==='complete'),key);
+ const metrics=g.state.production.metrics;
+ assert.equal(metrics.consumed.grainSheaves,jobs.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].inputs.grainSheaves||0),0));
+ assert.equal(metrics.logsUsed,jobs.reduce((n,p)=>n+PRODUCTION_RECIPES[p.recipe].wood,0));
+ assert.equal(metrics.waterUsedLiters,jobs.reduce((n,p)=>n+PRODUCTION_RECIPES[p.recipe].water,0));
+ assert.ok(g.tribe(0).foodLots.bread>0);
+ assert.ok(Math.abs(g.state.cerealProcessing.seedsAllocated-g.state.cerealProcessing.cleanedGrain*CEREAL_RULES.seedFraction)<1e-8);
+ assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});

@@ -2023,7 +2023,7 @@ export class WorldView {
   private syncSmoke(game: Game, dt: number) {
     const litHearths=workingHearths(game);
     const bakingOvens=new Set((game.state.production?.projects||[])
-      .filter(p=>(p.recipe==='bakeBreadOven'||p.recipe==='bakeBreadDouble')&&p.phase==='working'&&!p.blockedReason).map(p=>p.workplace));
+      .filter(p=>(p.recipe==='bakeBreadOven'||p.recipe==='bakeBreadDouble'||p.recipe==='bakeBreadBulk')&&p.phase==='working'&&!p.blockedReason).map(p=>p.workplace));
     const halls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b)&&survivalFireActive(game,b.team)&&
       !game.state.buildings.some(h=>h.team===b.team&&litHearths.has(h.id)));
     const sources=game.state.buildings.filter(b=>(litHearths.has(b.id)||bakingOvens.has(b.id))&&
