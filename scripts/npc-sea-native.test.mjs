@@ -5,6 +5,7 @@ import {writeFileSync} from 'node:fs';
 import {nativeBoatVillage} from './helpers/native-boat-village.mjs';
 import {launchRiverboat,BOAT_COST} from '../src/game/boats.ts';
 import {waterNavigation} from '../src/game/waterTravel.ts';
+import {supplyDrops,supplyApproach,supplyReached} from '../src/game/campAnchor.ts';
 import {buildingCost} from '../src/game/construction.ts';
 import {BUILDINGS} from '../src/game/constants.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
@@ -12,7 +13,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 const LIMITS={simulationSeconds:500,wallMilliseconds:30000};
 function terrainHash(g){const hash=createHash('sha256');for(const array of [g.world.heights,g.world.waterHeights])if(array)hash.update(Buffer.from(array.buffer,array.byteOffset,array.byteLength));return hash.digest('hex');}
 
-// Prepared for the integrator: this test has NOT been executed by its author.
+// Bounded native-geometry acceptance; authored setup and remaining limits are explicit.
 // Authored finite actors/stocks/dock/paid existing hull on the helper's unchanged
 // seed1/V14/pangaea1040 coast. This is native geometry + ordinary executors,
 // not organic settlement growth, multi-AI autonomy, browser or latest-map proof.
@@ -51,7 +52,8 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
 
  const playerHome=g.world.camps.find(c=>c.team===0);
  assert.ok(playerHome,'native player camp exists');
- g.state.campSites=[{team,...home},{team:0,x:playerHome.x,z:playerHome.z}];
+ // campSites is the existing player-only relocation field; NPC home is the real hall.
+ g.state.campSites=[{team:0,x:playerHome.x,z:playerHome.z}];
  // One declared independent player observer prevents the ordinary no-player
  // defeat rule. Its separate finite200food/50water are outside voyage metrics.
  Object.assign(stock,{wood:0,stone:0,food:200,foodLots:{provisions:200},items:{}});stock.survival.waterLiters=50;
@@ -65,14 +67,40 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
  // Existing helper/navigation contract: prime the connected water graph only.
  // No height, water, collision, path, steering or clock function is overridden.
  waterNavigation(g,true);g.state.paused=false;g.state.speed=1;
- const startTime=g.state.time,phases=new Set();
+ const startTime=g.state.time,phases=new Set(),deliveredAtCache=new Set();
  let voyage,observedAboard=false,captureWritten=false;
  while(g.state.time-startTime<LIMITS.simulationSeconds){
   assert.ok(performance.now()-wallStart<LIMITS.wallMilliseconds,'native mission exceeded30s wall bound');
   assert.equal(g.state.ended,null,'ordinary game must remain active');
+  const beforeReach=new Map(),returnedBefore=voyage?{food:voyage.metrics.foodReturned,water:voyage.metrics.waterReturned}:undefined;
+  const eventSequence=g.state.simulationEvents?.nextSequence??1;
+  const waterBefore={total:npc.survival.waterLiters+g.state.units.filter(u=>u.team===team).reduce((n,u)=>n+(u.scoutProvisions?.water??0),0),consumed:npc.survival.waterConsumedLiters,delivered:npc.survival.waterDeliveredLiters,lost:npc.survival.waterLostLiters};
+  if(voyage?.phase==='unloading')for(const id of voyage.crew){const u=g.state.units.find(u=>u.id===id);if(!u)continue;
+   const row=supplyDrops(g,u.team).map(d=>({d,p:supplyApproach(g,u,d)})).filter(r=>r.p).sort((a,b)=>Math.hypot(u.x-a.p.x,u.z-a.p.z)-Math.hypot(u.x-b.p.x,u.z-b.p.z))[0];
+   beforeReach.set(id,{reached:!!row&&supplyReached(g,u,row.d,row.p),cacheId:row?.d.id,x:u.x,z:u.z,approach:row?.p,pack:u.scoutProvisions&&{...u.scoutProvisions}});
+  }
   g.step(.1);assert.deepEqual(g.simulationErrors,[]);
   voyage=g.state.seaExploration.voyages.find(v=>v.team===team);
   if(!voyage)continue;phases.add(voyage.phase);
+  // The delivery executes before later work/separation. Require the SAME
+  // pre-step supply query/entrance,then match removed packs to real receipt
+  // events and the exact once-only voyage return totals.
+  let returnedFood=0,returnedWater=0;const matchedReceipts=new Set();
+  for(const id of voyage.home)if(!deliveredAtCache.has(id)){
+   const u=g.state.units.find(u=>u.id===id),before=beforeReach.get(id);
+   assert.ok(before?.reached&&before.cacheId===hall.id,JSON.stringify({reason:'delivery must start within the actual cache entrance',unit:id,before}));
+   assert.ok(before.pack&&u&&!u.boat&&!u.haulage&&!u.scoutProvisions&&u.seaExplorationId===undefined);
+   const receipt=g.state.simulationEvents.recent.find(e=>e.sequence>=eventSequence&&!matchedReceipts.has(e.sequence)&&e.kind==='food_received'&&e.team===team&&Math.abs(e.amount-before.pack.food)<1e-6);
+   assert.ok(receipt,'removed pack food is physically received into the cache exactly once');matchedReceipts.add(receipt.sequence);
+   returnedFood+=before.pack.food;returnedWater+=before.pack.water;deliveredAtCache.add(id);
+  }
+  if(returnedFood||returnedWater){
+   assert.ok(Math.abs(voyage.metrics.foodReturned-returnedBefore.food-returnedFood)<1e-6);
+   assert.ok(Math.abs(voyage.metrics.waterReturned-returnedBefore.water-returnedWater)<1e-6);
+   const waterAfter=npc.survival.waterLiters+g.state.units.filter(u=>u.team===team).reduce((n,u)=>n+(u.scoutProvisions?.water??0),0);
+   const expectedWater=waterBefore.total+(npc.survival.waterDeliveredLiters-waterBefore.delivered)-(npc.survival.waterConsumedLiters-waterBefore.consumed)-(npc.survival.waterLostLiters-waterBefore.lost);
+   assert.ok(Math.abs(waterAfter-expectedWater)<1e-6,'pack water transfers into the real stock with no duplication or loss,after ordinary consumption/collection');
+  }
   if(voyage.phase==='outbound'&&voyage.metrics.sailMeters>8){
    assert.equal(voyage.reportCommitted,false,'observations remain with crew until actual home delivery');
    assert.ok(voyage.crew.every(id=>{const u=g.state.units.find(u=>u.id===id);return u&&crewIds.has(id)&&u.boat?.id===hullId&&u.boat.phase==='aboard';}));
@@ -94,7 +122,8 @@ test('NPC native unchanged coast: existing paid hull physically explores, return
  assert.ok(voyage.metrics.sailMeters>16&&voyage.metrics.foodLoaded>0&&voyage.metrics.foodReturned>0);
  for(const kind of ['food','water']){const m=voyage.metrics;assert.ok(Math.abs(m[kind+'Loaded']-(m[kind+'Returned']+m[kind+'Used']+m[kind+'Lost']+m[kind+'WithPeople']))<1e-6,kind+' voyage conservation');}
  assert.equal(voyage.home.length,voyage.crew.length);
- for(const id of voyage.crew){const u=g.state.units.find(u=>u.id===id);assert.ok(u&&!u.boat&&!u.haulage&&!u.scoutProvisions&&u.seaExplorationId===undefined);assert.ok(g.buildingWorkReached(u,hall),'report carrier reached the actual hall entrance/cache');}
+ assert.equal(deliveredAtCache.size,voyage.crew.length,'every crew member physically unloaded before returning to ordinary work');
+ for(const id of voyage.crew){const u=g.state.units.find(u=>u.id===id);assert.ok(u&&!u.boat&&!u.scoutProvisions&&u.seaExplorationId===undefined);}
  assert.equal(voyage.reportCommitted,true);assert.ok(voyage.metrics.cellsCommitted>0);
  const memory=new Set(g.state.rivalKnowledge.find(row=>row.team===team).cells);assert.ok(voyage.report.cells.every(cell=>memory.has(cell)));
  assert.equal(terrainHash(g),originalTerrain,'original height/water arrays unchanged');assert.equal(g.height,height);assert.equal(g.waterAt,waterAt);assert.equal(g.steer,steer);
