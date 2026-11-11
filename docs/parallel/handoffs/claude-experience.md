@@ -297,3 +297,15 @@ Same as Batch 3: instancing adapters and wiring into the carved layer, `TradeDia
 
 ### Next action
 Wiring (instancing adapters, siteGrounding, TradeDialog, animation, audio director, minimal components) still needs a browser or the Codex seams.
+
+## Batch 6: civic families, culture-by-default, residency proposal
+
+Status: pure specs and tests only; nothing rendered, nothing heard, `tsc` unusable in this checkout (not type-checked). No existing live file edited.
+
+- `src/scene/buildingFamiliesCivic.ts`: 19 families (marketHall, shrine, archive, lyceum, fortBarracks, smithy, kilnYard, storeBarn, dryingYard, tannery, loomHouse, bakeryOven, windmill, horseMill, harborStore, shipyard, beacon, gatehouse, townHall), each with a real-world reference in `notes.reference`. `generateCivic(family,ctx,key)` = generate, seeded additions (porch, stack, woodpile, fence, prosperity banner), culture dress, fit to footprint, ground every LOD tier.
+- Variation: era, wealth, material, climate, seeded structure (>=8 structural signatures in 25 seeds per family), town hall by era (<=1 longhall ring, 2 moot hall, 3+ arcaded hall, 5+ palace with clock tower), market hall small/medium/large (stalls ring + well), shrine in 3 grammars (terrace, colonnade, pavilion) chosen from the culture key, fort walls closed except the gate (gap == entry width; `gateOpen:false` closes leaves).
+- Culture is the default: passing `culture` takes material/climate/tradition from `Culture.architecture` (unless `pinned`) and dresses roof pitch scale, finials, banner, doorway form (post/arch/gable), courtyard wall, stilts. Test: 6 cultures give >=4 distinct silhouettes for every family; all footprint-true and grounded at all tiers.
+- Triangle budgets (near/mid/far, worst of 25 seeds x contexts, +15%) are embedded in `scripts/civic-buildings.test.mjs`.
+- Proposed new sim ids for Codex (family ready, no sim id yet): `archive`, `granary`, `windmill`, `horsemill`, `shipyard`, `gatehouse`, `beacon`. Existing ids remapped via `CIVIC_ROLES`: market, temple, university, barracks, forge, kiln, warehouse, smokehouse, dryrack, tanner, fibreWorkshop, oven, townhall, watchtower. The live `familyForType` is unchanged; wiring is a Codex decision.
+- `src/scene/visibleSet.ts` (PROPOSAL, pure): `visibleSet({camera,settlements,previous})` returns per-chunk residency (full / merged / impostor / none), one cluster card per far settlement, stats, and `state` to feed back as `previous` (hysteresis 12 m). Defaults: bands 60/140/320/far 900, caps 260 draws, 2500 instances, 150 full buildings, 40 cards; caps enforced by degrading farthest chunks first. Tests: 20 villages / 500 buildings, sweep and dense layout (worst frame 29 and 177 draws). Codex owns culling; renderMetrics and instanceCameraCull untouched.
+- Limits: chunk costs are modelled (draws = distinct kinds when full), not measured in a browser; cluster card and merged-chunk meshes are not built here.
