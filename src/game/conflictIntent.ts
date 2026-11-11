@@ -12,6 +12,7 @@ import {recordConflict} from './conflictMetrics';
 import {queueStandDown} from './demobilization';
 import {capitulationYielded,tickCapitulation,validCapitulationState} from './capitulation';
 import {createDomination,dominationCarrierAI,dominationGarrisonAI,tickDomination,validDominationState,dominations,type DominationTerms} from './domination';
+import {tickRivalSiege} from './rivalSiege';
 import {tickRaiderSettlement,validRaiderSettlementState} from './raiderSettlement';
 import {tickAlliances,allianceReliefAI,validAllianceState} from './alliances';
 import {captiveDealingsAI,tickCaptiveDealings,validCaptiveDealingsState} from './captiveDealings';
@@ -119,7 +120,7 @@ export function tickOccupation(g:Game,dt:number){
   if(control.holdSeconds>=CONFLICT_RULES.controlHoldSeconds&&control.phase!=='held'){control.phase='held';recordConflict(g,'occupation_secured',control.controllerTeam,1,{targetId:hall.id});}
  }
  // Societies-owned follow-on systems ride this existing hook (no new sim.ts wiring).
- if(Math.floor(g.state.time)!==Math.floor(g.state.time-dt)){tickAlliances(g);tickRaiderSettlement(g);tickCapitulation(g);tickDomination(g);tickCaptiveDealings(g);tickConflictStandDown(g);}
+ if(Math.floor(g.state.time)!==Math.floor(g.state.time-dt)){tickAlliances(g);tickRaiderSettlement(g);tickCapitulation(g);tickRivalSiege(g);tickDomination(g);tickCaptiveDealings(g);tickConflictStandDown(g);}
 }
 export function withdrawOccupation(g:Game,id:number){const control=controls(g).find(c=>c.id===id);if(!control||control.phase==='withdrawn'||control.phase==='integrated'||control.phase==='dominated')return false;control.phase='withdrawn';for(const u of g.state.units)if(control.guardIds.includes(u.id)&&(u as ConflictUnit).conflictIntent==='occupy'){(u as ConflictUnit).conflictIntent=undefined;u.pillage=-1;u.target=null;if(u.militia)queueStandDown(g,u);else{u.order='return';u.recalled=true;}u.workReason='Withdrawing from occupation with possessions';}recordConflict(g,'occupation_withdrawn',control.controllerTeam,1,{targetId:control.hallId});return true;}
 /** Dispatcher hook for an explicit override; preserve the custody status itself. */

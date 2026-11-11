@@ -12,6 +12,7 @@ import {recordConflict} from './conflictMetrics';
 import {CONFLICT_RULES,integrateOccupiedVillage,type ConflictUnit,type OccupationControl} from './conflictIntent';
 import {createDomination,type DominationTerms} from './domination';
 import {alliesOf} from './alliances';
+import {siegeUnderWay} from './rivalSiege';
 
 /**
  * Natural capitulation. A community does not surrender because an attacker picked
@@ -28,11 +29,11 @@ export type CapitulationOutcome='occupy'|'annex'|'tribute'|'puppet'|'autonomy'|'
 export type CapitulationFront={id:number;hallId:number;defenderTeam:number;attackerTeam:number;phase:CapitulationPhase;openedAt:number;lastMeasuredAt:number;
  residentIds:number[];armedAtOpen:number;buildingIds:number[];hallHpAtOpen:number;
  casualties:number;captured:number;lostArmed:number;buildingLoss:number;occupiedSeconds:number;starvingSeconds:number;unrelievedSeconds:number;absentSeconds:number;
- ratio:number;score:number;threshold:number;refusals:number;yieldedIds:number[];capitulatedAt?:number;expiresAt?:number;outcome?:CapitulationOutcome;resolvedAt?:number;reason:string};
+ siegeSeconds?:number;ratio:number;score:number;threshold:number;refusals:number;yieldedIds:number[];capitulatedAt?:number;expiresAt?:number;outcome?:CapitulationOutcome;resolvedAt?:number;reason:string};
 export type CapitulationState={version:1;fronts:CapitulationFront[]};
 export const CAPITULATION_RULES={version:1,communityRadiusMeters:55,reliefRadiusMeters:150,minimumPressureSeconds:20,minimumRatio:1.5,civilianDefense:.25,minimumDefense:.5,
  starvationReserveSeconds:60,starvationFullSeconds:120,occupationFullSeconds:30,unrelievedFullSeconds:180,reliefShare:.5,relievedAfterAbsentSeconds:120,offerSeconds:180,refusalStep:.15,
- weights:{casualties:.3,lostArmed:.3,buildings:.15,occupied:.25,starving:.2,unrelieved:.15},baseThreshold:.5,maximumFronts:256,maximumIds:256} as const;
+ weights:{casualties:.3,lostArmed:.3,buildings:.15,occupied:.25,starving:.2,unrelieved:.15,siege:.2},siegeFullSeconds:60,baseThreshold:.5,maximumFronts:256,maximumIds:256} as const;
 const R=CAPITULATION_RULES;
 const OPEN:CapitulationPhase[]=['pressed','capitulated'];
 const st=(g:Game)=>g.state as Game['state']&{capitulation?:CapitulationState;occupations?:OccupationControl[]};
@@ -68,12 +69,12 @@ export function measureFront(g:Game,f:CapitulationFront){
  const hallLoss=hall?clamp01(1-hall.hp/Math.max(1,f.hallHpAtOpen)):1;
  const occupied=(st(g).occupations||[]).some(c=>c.hallId===f.hallId&&c.controllerTeam===f.attackerTeam&&(c.phase==='holding'||c.phase==='held'));
  const relief=hall?g.state.units.filter(u=>(u.team===f.defenderTeam||allies.includes(u.team)&&dist(u,hall)<=R.reliefRadiusMeters&&free(u)&&armed(u)||isRivalTeam(f.defenderTeam)&&u.team===0&&g.isAlly(f.defenderTeam)&&!g.isFoe(0,f.defenderTeam))&&free(u)&&armed(u)&&!isDependent(g,u)&&dist(u,hall)>R.communityRadiusMeters&&dist(u,hall)<=R.reliefRadiusMeters):[];
- return{hall,attackers,defenders,attackPower,defensePower,ratio:attackPower/Math.max(R.minimumDefense,defensePower),dead,captured,armedNow,lostBuildings,hallLoss,occupied,reliefPower:power(relief,false),starving:reserveSeconds(g,f.defenderTeam)<R.starvationReserveSeconds};
+ return{hall,attackers,defenders,attackPower,defensePower,ratio:attackPower/Math.max(R.minimumDefense,defensePower),dead,captured,armedNow,lostBuildings,hallLoss,occupied,siege:hall?siegeUnderWay(g,hall,f.attackerTeam):false,reliefPower:power(relief,false),starving:reserveSeconds(g,f.defenderTeam)<R.starvationReserveSeconds};
 }
 export function frontScore(f:CapitulationFront){
  const w=R.weights,n=Math.max(1,f.residentIds.length);
  return w.casualties*clamp01((f.casualties+f.captured)/n)+w.lostArmed*(f.armedAtOpen?clamp01(f.lostArmed/f.armedAtOpen):0)+w.buildings*clamp01(f.buildingLoss)
-  +w.occupied*clamp01(f.occupiedSeconds/R.occupationFullSeconds)+w.starving*clamp01(f.starvingSeconds/R.starvationFullSeconds)+w.unrelieved*clamp01(f.unrelievedSeconds/R.unrelievedFullSeconds);
+  +w.occupied*clamp01(f.occupiedSeconds/R.occupationFullSeconds)+w.starving*clamp01(f.starvingSeconds/R.starvationFullSeconds)+w.unrelieved*clamp01(f.unrelievedSeconds/R.unrelievedFullSeconds)+w.siege*clamp01((f.siegeSeconds||0)/R.siegeFullSeconds);
 }
 function openFront(g:Game,hall:Building,attacker:number){
  const defender=hall.team,residents=g.state.units.filter(u=>u.team===defender&&u.hp>0&&!(u as PrisonerUnit).prisoner&&(u.homeHall===hall.id||u.homeHall===undefined&&dist(u,hall)<=R.communityRadiusMeters)).slice(0,R.maximumIds);
@@ -109,6 +110,7 @@ export function tickCapitulation(g:Game){
   f.absentSeconds=0;
   if(m.occupied)f.occupiedSeconds+=dt;
   if(m.starving)f.starvingSeconds+=dt;
+  if(m.siege)f.siegeSeconds=(f.siegeSeconds||0)+dt;
   if(m.reliefPower<m.attackPower*R.reliefShare)f.unrelievedSeconds+=dt;else f.unrelievedSeconds=Math.max(0,f.unrelievedSeconds-dt);
   f.score=frontScore(f);
   if(f.phase==='capitulated'){if(g.state.time>=(f.expiresAt??Infinity)){f.phase='expired';f.resolvedAt=g.state.time;f.yieldedIds=[];f.reason='Terms were not accepted in time';}continue;}
@@ -220,7 +222,7 @@ export function validCapitulationState(state:unknown){
  const seen=new Set<number>(),open=new Set<string>();
  for(const f of c.fronts){
   if(!f||!id(f.id)||seen.has(f.id)||!id(f.hallId)||!team(f.defenderTeam)||!team(f.attackerTeam)||f.defenderTeam===f.attackerTeam||!['pressed','capitulated','accepted','refused','relieved','expired'].includes(f.phase))return false;seen.add(f.id);
-  if(!ids(f.residentIds)||!ids(f.buildingIds)||!ids(f.yieldedIds)||!fin(f.openedAt)||!fin(f.lastMeasuredAt)||!fin(f.armedAtOpen,4096)||!fin(f.hallHpAtOpen)||!fin(f.casualties,4096)||!fin(f.captured,4096)||!fin(f.lostArmed,4096)||!fin(f.buildingLoss,1)||!fin(f.occupiedSeconds)||!fin(f.starvingSeconds)||!fin(f.unrelievedSeconds)||!fin(f.absentSeconds)||!fin(f.ratio,1e6)||!fin(f.score,10)||!fin(f.threshold,10)||!fin(f.refusals,1e6)||typeof f.reason!=='string'||f.reason.length>300)return false;
+  if(!ids(f.residentIds)||!ids(f.buildingIds)||!ids(f.yieldedIds)||!fin(f.openedAt)||!fin(f.lastMeasuredAt)||!fin(f.armedAtOpen,4096)||!fin(f.hallHpAtOpen)||!fin(f.casualties,4096)||!fin(f.captured,4096)||!fin(f.lostArmed,4096)||!fin(f.buildingLoss,1)||!fin(f.occupiedSeconds)||!fin(f.starvingSeconds)||!fin(f.unrelievedSeconds)||!fin(f.absentSeconds)||f.siegeSeconds!==undefined&&!fin(f.siegeSeconds)||!fin(f.ratio,1e6)||!fin(f.score,10)||!fin(f.threshold,10)||!fin(f.refusals,1e6)||typeof f.reason!=='string'||f.reason.length>300)return false;
   if(f.capitulatedAt!==undefined&&!fin(f.capitulatedAt)||f.expiresAt!==undefined&&!fin(f.expiresAt)||f.resolvedAt!==undefined&&!fin(f.resolvedAt))return false;
   if(f.outcome!==undefined&&!['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(f.outcome))return false;
   if(f.phase==='capitulated'&&(f.expiresAt===undefined||f.capitulatedAt===undefined))return false;
