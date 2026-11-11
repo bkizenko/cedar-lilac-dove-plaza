@@ -210,21 +210,25 @@ export function productionOutputs(p:ProductionProject):ItemStock{const r=PRODUCT
 function releaseMaker(g:Game,u:Unit,reason:string){u.productionProjectId=undefined;u.jobLock=false;u.job=null;u.node=null;u.huntOnly=false;u.workCheckAt=0;u.order=g.state.autoWorkEnabled===false?'hold':'idle';u.workReason=reason;}
 function finish(g:Game,p:ProductionProject,u:Unit,atFloor?:Building){const seedIssue=cerealSeedCapacityIssue(g,p.team,p.recipe);if(seedIssue){p.blockedReason=seedIssue;return false;}const r=PRODUCTION_RECIPES[p.recipe],stock=items(g,p.team),s=state(g),outputs=productionOutputs(p);if(!isCerealRecipe(p.recipe)&&sum(outputs)>0&&sum(stock)+sum(outputs)+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id)>itemCapacity(g,p.team)){p.blockedReason='Material storage is full; carrier is keeping the finished batch';return false;}for(const[k,n]of Object.entries(outputs)){if(k==='roughGrain')mixStoredCerealAge(g.tribe(p.team),k,stock[k]||0,n,g.state.time);add(stock,k as ItemKind,n);add(s.metrics.produced,k as ItemKind,n);}if(p.basketOrigin&&(outputs.basket||0)>0){const t=g.tribe(p.team);t.basketOrigins??=[];const existing=t.basketOrigins.find(o=>o.origin.team===p.basketOrigin!.team&&o.origin.site===p.basketOrigin!.site);if(existing)existing.count+=outputs.basket!;else t.basketOrigins.push({origin:p.basketOrigin,count:outputs.basket!});}if(p.pottery&&(outputs.pottery||0)>0){const t=g.tribe(p.team);t.potteryOrigins??=[];const existing=t.potteryOrigins.find(o=>o.origin.team===p.pottery!.origin.team&&o.origin.site===p.pottery!.origin.site);if(existing)existing.count+=outputs.pottery!;else t.potteryOrigins.push({origin:p.pottery.origin,count:outputs.pottery!});}if(r.food)receiveFood(g,p.team,r.food,r.foodKind);finishCerealBatch(g,p.team,p.recipe);s.metrics.edibleFoodProduced=(s.metrics.edibleFoodProduced||0)+r.food;recordProductionPractice(g,p,u,outputs);p.phase='complete';releaseProductionOwnership(g,p);p.actorId=null;p.finished=g.state.time;p.blockedReason='';s.metrics.completed++;releaseMaker(g,u,'Processed batch delivered; ready for village work');if(atFloor&&startFloorCereal(g,atFloor,u,true,true))return true;
 if(isCerealRecipe(p.recipe)||r.outputs.flour)reviewAutomaticFoodProcessing(g,p.team,u.id);return true;}
-export function productionAI(g:Game,u:Unit,dt:number){const p=g.state.production?.projects.find(p=>p.id===u.productionProjectId&&p.actorId===u.id&&live(p));if(!p||p.phase==='paused')return false;if(!claimProductionOwnership(g,p)){p.blockedReason=productionOwnershipReason(g,p);u.workReason=p.blockedReason;return true;}const b=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===p.team);if(!b&&!['returning','unloading'].includes(p.phase)){p.blockedReason='Workplace unavailable; paid work is paused';pauseProduction(g,u);return true;}const r=PRODUCTION_RECIPES[p.recipe];u.order='hold';
+export function productionAI(g:Game,u:Unit,dt:number){const p=g.state.production?.projects.find(p=>p.id===u.productionProjectId&&p.actorId===u.id&&live(p));if(!p||p.phase==='paused')return false;if(!claimProductionOwnership(g,p)){p.blockedReason=productionOwnershipReason(g,p);u.workReason=p.blockedReason;return true;}const b=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===p.team);if(!b&&!['returning','unloading','collecting'].includes(p.phase)){p.blockedReason='Workplace unavailable; paid work is paused';pauseProduction(g,u);return true;}const r=PRODUCTION_RECIPES[p.recipe];u.order='hold';
  if(p.phase==='collecting'){
   const anchor=p.cacheAnchor;
-  if(!anchor||!g.walkable(anchor.x,anchor.z)||!g.workBoard.connected(g,u.x,u.z,anchor.x,anchor.z)){
-   const stored:ProductionProject={...p,actorId:null,phase:'stored',resumePhase:'carrying',
-    blockedReason:'Pickup route blocked; the paid batch remains at its cache'};
+  const cacheReachable=anchor&&g.walkable(anchor.x,anchor.z)&&g.workBoard.connected(g,u.x,u.z,anchor.x,anchor.z);
+  const atParcel=anchor&&Math.hypot(u.x-anchor.x,u.z-anchor.z)<=1;
+  const workplaceBlocked=!b||(atParcel&&!g.interactionSpot(u,b));
+  if(!cacheReachable||workplaceBlocked){
+   const reason=workplaceBlocked?'No route to the workshop; the paid batch remains at its cache':
+    'Pickup route blocked; the paid batch remains at its cache';
+   const stored:ProductionProject={...p,actorId:null,phase:'stored',resumePhase:'carrying',blockedReason:reason};
    if(claimProductionOwnership(g,stored)){
     Object.assign(p,stored);
-    releaseMaker(g,u,p.blockedReason);
+    releaseMaker(g,u,reason);
     g.invalidateRoute(u);
    }else{p.blockedReason=productionOwnershipReason(g,stored);u.workReason=p.blockedReason;}
    return true;
   }
   u.tx=anchor.x;u.tz=anchor.z;u.workReason='Walking to collect the same paid inputs at their saved cache';
-  if(Math.hypot(u.x-anchor.x,u.z-anchor.z)>1){g.steer(u,dt);return true;}
+  if(!atParcel){g.steer(u,dt);return true;}
   p.phase='carrying';p.resumePhase='carrying';p.cacheAnchor=undefined;p.blockedReason='';
   claimProductionOwnership(g,p);g.invalidateRoute(u);return true;
  }

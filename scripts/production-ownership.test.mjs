@@ -63,3 +63,31 @@ test('a cut pickup route releases the worker and another reachable worker collec
  assert.equal(project.phase,'complete');
  assert.equal(g.state.production.metrics.consumed.clay,paid);
 });
+
+test('a closed workshop approach prevents collecting a stored parcel until it can be delivered',()=>{
+ const g=fixture(),hearth=site(g,'hearth'),project=begin(g,'formClayHand',hearth);
+ assert.equal(unloadProductionProject(g,project.id),true);
+ drive(g,100,()=>project.phase==='stored');
+ assert.equal(project.phase,'stored');
+ const paid=g.state.production.metrics.consumed.clay;
+ const anchor=project.cacheAnchor;
+ assert.equal(resumeProduction(g,project.id),true,project.blockedReason);
+ const worker=g.state.units.find(u=>u.id===project.actorId);
+ const spot=g.interactionSpot;
+ g.interactionSpot=function(person,building){
+  if(building===hearth)return null;
+  return spot.call(this,person,building);
+ };
+ drive(g,75,()=>project.phase==='stored');
+ assert.equal(project.phase,'stored');
+ assert.equal(project.cacheAnchor,anchor);
+ assert.match(project.blockedReason,/No route to the workshop/);
+ assert.equal(worker.productionProjectId,undefined);
+ assert.equal(cachedProductionUnits(g,0),4);
+ assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ g.interactionSpot=spot;
+ assert.equal(resumeProduction(g,project.id),true,project.blockedReason);
+ drive(g,160,()=>project.phase==='complete');
+ assert.equal(project.phase,'complete');
+ assert.equal(g.state.production.metrics.consumed.clay,paid);
+});
