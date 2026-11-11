@@ -44,3 +44,24 @@ test('an exhausted explored fishing ground can be inspected without becoming a g
  assert.equal(info.maxHp,fish.maxAmt);
  assert.match(info.info,/game seconds to the next fish/);
 });
+
+test('automatic and manual food selection skip fish without a reachable dry bank',()=>{
+ const {g}=fixture();
+ g.state.buildings=[];
+ g.state.autoWorkEnabled=true;
+ g.state.laborPolicy='food';
+ g.state.trees=[];g.state.forage=[];g.state.stones=[];g.state.copper=[];g.state.iron=[];g.state.wildlife=[];
+ g.height=(x,z)=>x>=0&&x<=24||Math.hypot(x+18,z)<2?0:4;
+ g.waterAt=()=>.42;
+ g.rebuildWalk();
+ const fisher=g.spawnUnit('worker',-4,0,0);
+ fisher.order='idle';fisher.job='food';fisher.jobLock=true;
+ const fish=(x)=>({id:g.id(),kind:'fish',x,y:.52,z:0,amount:15,maxAmt:15,regenT:0,scale:1,rich:1});
+ const inaccessible=fish(8),reachable=fish(-18);
+ g.state.fish=[inaccessible,reachable];
+ assert.equal(g.findNode(fisher,'food'),reachable);
+ g.workBoard.reset();
+ g.workBoard.assign(g,fisher);
+ assert.equal(fisher.node,reachable);
+ assert.equal(fisher.order,'gather');
+});

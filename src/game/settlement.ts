@@ -21,7 +21,7 @@ import {carryingCapacity} from "./haulage";
 import {beginExpedition} from "./journeys";
 import {bridgeApproach} from './transport';
 import {quarryAvailable} from "./mining";
-import {fishingGrounds} from "./fishing";
+import {fishingBank,fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
 import { readyNourishment, preservationAvailable } from "./pantry";
 import {fieldTerrain} from "./fieldTerrain";
@@ -465,7 +465,8 @@ export class WorkBoard {
       const timberFocus = u.team===0 && task.kind==='wood' &&
         (g.state.laborPolicy==='wood' || (u.jobLock && u.job==='wood'));
       const routineRange = timberFocus ? 220 : 100;
-      if ((distance > routineRange && !settlementWork) || (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin))) continue;
+      const bankFish = "kind" in task.node && task.node.kind === "fish";
+      if ((distance > routineRange && !settlementWork) || (!bankFish && (u.haulage==="canoe" ? ("type" in task.node ? !g.interactionSpot(u,task.node) : !connectedForUnit(g,u,task.node.x,task.node.z)) : !origin || ("type" in task.node&&task.node.type==="bridge" ? !bridgeApproach(g,u,task.node) : this.taskComponent(g, task.node) !== origin)))) continue;
       if (
         foes.some(e=>Math.hypot(e.x-task.node.x,e.z-task.node.z)<14)
       ) {
@@ -488,6 +489,7 @@ export class WorkBoard {
             : 0;
       const value = task.priority + bonus + (materialPriorities?.[task.kind]||0) + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
       if (value > score) {
+        if(bankFish&&!fishingBank(g,u,task.node as ResourceNode))continue;
         score = value;
         best = task;
       }

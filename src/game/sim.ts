@@ -3834,6 +3834,7 @@ export class Game {
           ("species" in n && n.hp>0 ? !this.visibleAt(x, z) : !this.exploredAt(x, z))) return;
       const d = (x - u.x) ** 2 + (z - u.z) ** 2 + extra;
       if (d < bd) {
+        if("kind" in n&&n.kind==="fish"&&!fishingBank(this,u,n))return;
         bd = d;
         best = n;
       }
@@ -3852,7 +3853,7 @@ export class Game {
         (b) => b.team === u.team && b.type === "dock" && this.finished(b),
       );
       for (const n of this.state.fish) {
-        if (n.amount <= 0) continue;
+        if (n.amount < 1) continue;
         const nearDock = docks.some((d) => Math.hypot(d.x - n.x, d.z - n.z) < DOCK_R);
         consider(n, n.x, n.z, nearDock ? -50 : 0);
       }
