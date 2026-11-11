@@ -17,10 +17,8 @@ export const WONDER_GENERATOR_VERSION=1;
 export type WonderFamily='ringObservatory'|'cascadeGarden'|'crescentHarbor'|'millMarket';
 /** Site facts Grok supplies at placement; only the harbour and market consume them. */
 export type WonderSite={tidalRangeM?:number;exposed?:boolean;flow?:'still'|'river'|'tidal';flowDir?:1|-1;flowSpeedMps?:number;riverWidthM?:number;bankHeightM?:number};
-/** Seats per hull class, mirrored from src/game/boatClasses.ts (a test fails if they drift or a class is added). */
-export const HULL_SEATS={riverboat:5,scoutCanoe:2,freightPunt:8} as const;
-/** Real hull footprint from seats: ~4.4 m / 1.0 m for a 2-seat canoe up to ~9.8 m / 2.3 m for an 8-seat punt. Assumption: boatClasses.ts has no dimensions yet (G13). */
-export const hullSize=(seats:number)=>({length:Math.round((2.6+.9*seats)*100)/100,beam:Math.round((.55+.22*seats)*100)/100});
+import {HULL_SEATS,hullSize} from './hullSizes';
+export {HULL_SEATS,hullSize};
 export type Berth={id:string;hullClass:keyof typeof HULL_SEATS;seats:number;x:number;z:number;yaw:number;length:number;beam:number;bollards:{x:number;z:number}[];/** quay-walk point where a crew steps aboard */boarding:[number,number]};
 export type WonderStage={id:string;label:string;partIndices:number[];volumeM3:Partial<Record<'stone'|'timber'|'earth'|'cloth'|'planting',number>>};
 export type WonderSpace={id:string;label:string;purpose:string;areaM2:number};
