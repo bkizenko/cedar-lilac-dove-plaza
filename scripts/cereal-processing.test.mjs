@@ -343,3 +343,32 @@ test('two oven slots and a separate mill process grain in parallel with Auto wor
  assert.equal(g.state.production.projects.filter(p=>ids.includes(p.id)&&p.phase==='complete').length,3);
  assert.ok(g.tribe(0).foodLots.bread>0);
 });
+
+test('delivered mill and oven practice unlocks larger physical batches with paid inputs',()=>{
+ let {g}=fixture();
+ const tribe=g.tribe(0),oven=g.makeBld('oven',12,44,0),mill=g.makeBld('grindingStone',20,44,0);
+ g.state.buildings.push(oven,mill);
+ ground(g);
+ tribe.food=1040;tribe.foodLots={provisions:1000,grain:40};
+ tribe.survival.waterLiters=100;
+ assert.match(productionIssue(g,'grindGrainDouble',mill.id),/0\/3/);
+ assert.match(productionIssue(g,'bakeBreadDouble',oven.id),/0\/3/);
+ const doubled=(recipe)=>g.state.production?.projects.find(p=>p.recipe===recipe);
+ drive(g,450,()=>!!doubled('bakeBreadDouble'));
+ assert.ok(doubled('grindGrainDouble'));
+ const bread=doubled('bakeBreadDouble');
+ assert.ok(bread);
+ assert.equal(tribe.productionPractice.grindGrainStation.batches,3);
+ assert.equal(tribe.productionPractice.bakeBreadOven.batches,3);
+ const paidRecipes=g.state.production.projects.map(project=>PRODUCTION_RECIPES[project.recipe]);
+ const paid=(amount)=>paidRecipes.reduce((total,recipe)=>total+amount(recipe),0);
+ assert.equal(g.state.production.metrics.grainUsed,paid(recipe=>recipe.grain));
+ assert.equal(g.state.production.metrics.consumed.flour,paid(recipe=>recipe.inputs.flour||0));
+ assert.equal(g.state.production.metrics.logsUsed,paid(recipe=>recipe.wood));
+ assert.equal(g.state.production.metrics.waterUsedLiters,paid(recipe=>recipe.water));
+ g=decodeGame(encodeGame(g));ground(g);
+ drive(g,150,()=>doubled('bakeBreadDouble').phase==='complete');
+ assert.equal(doubled('bakeBreadDouble').phase,'complete');
+ assert.equal(g.tribe(0).productionPractice.bakeBreadDouble.usefulOutputs,8);
+ assert.equal(g.state.autoWorkEnabled,false);
+});

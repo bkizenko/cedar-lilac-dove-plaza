@@ -55,9 +55,11 @@ export const PRODUCTION_RECIPES={
  sewHideCoat:recipe({name:'Sew a lined hide coat',workplace:'tailor',inputs:{driedSkin:2,leather:1,bone:1},wood:0,water:0,workSeconds:TEXTILE_RULES.hideCoatSewSeconds,outputs:{hideCoat:1},food:0}),
  grindGrain:recipe({name:'Hand-grind grain',workplace:'hearth',inputs:{},grain:4,wood:0,water:0,workSeconds:60,outputs:{flour:4},food:0}),
  grindGrainStation:recipe({name:'Grind grain at a stone',workplace:'grindingStone',inputs:{},grain:4,wood:0,water:0,workSeconds:24,outputs:{flour:4},food:0}),
+ grindGrainDouble:recipe({name:'Grind a double batch',workplace:'grindingStone',inputs:{},grain:8,wood:0,water:0,workSeconds:36,outputs:{flour:8},food:0}),
  cookPorridge:recipe({name:'Cook grain porridge',workplace:'hearth',inputs:{},grain:4,wood:1,water:2,workSeconds:18,outputs:{},food:4,foodKind:'porridge'}),
  bakeBread:recipe({name:'Bake hearth bread',workplace:'hearth',inputs:{flour:4},wood:1,water:2,workSeconds:45,outputs:{},food:4,foodKind:'bread'}),
  bakeBreadOven:recipe({name:'Bake oven bread',workplace:'oven',inputs:{flour:4},wood:1,water:2,workSeconds:24,outputs:{},food:4,foodKind:'bread'}),
+ bakeBreadDouble:recipe({name:'Bake a double oven batch',workplace:'oven',inputs:{flour:8},wood:1,water:3,workSeconds:36,outputs:{},food:8,foodKind:'bread'}),
  airDryMeat:recipe({name:'Air-dry meat',workplace:'dryrack',inputs:{rawMeat:4},wood:0,water:0,workSeconds:10,outputs:{},food:4,foodKind:'driedMeat',preservation:'air',exposureSeconds:60}),
  airDryFish:recipe({name:'Air-dry fish',workplace:'dryrack',inputs:{},foodInputs:{fish:4},wood:0,water:0,workSeconds:10,outputs:{},food:4,foodKind:'driedFish',preservation:'air',exposureSeconds:60}),
  manualSmokeMeat:recipe({name:'Smoke meat at the hearth',workplace:'hearth',inputs:{rawMeat:4},wood:2,water:0,workSeconds:60,outputs:{},food:4,foodKind:'smokedMeat',preservation:'smoke'}),
@@ -101,9 +103,18 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
    g.state.buildings.some(b=>b.team===u.team&&b.type==='warehouse'&&g.finished(b));
 }
 export function occupiedProductionSlots(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
+export const DOUBLE_GRAIN_BATCH_RULES={minimumDemonstrations:3} as const;
+export function doubleGrainBatchIssue(g:Game,team:number,recipe:ProductionRecipe){
+ const prerequisite=recipe==='grindGrainDouble'?'grindGrainStation':recipe==='bakeBreadDouble'?'bakeBreadOven':null;
+ if(!prerequisite)return null;
+ const completed=g.tribe(team).productionPractice?.[prerequisite]?.batches??0;
+ const required=DOUBLE_GRAIN_BATCH_RULES.minimumDemonstrations;
+ return completed<required?`Deliver ${required} successful batches of ${PRODUCTION_RECIPES[prerequisite].name.toLowerCase()} first (${completed}/${required})`:null;
+}
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number,deliveredHere=false){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
  if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
+ const doubleBatchIssue=doubleGrainBatchIssue(g,b.team,recipe);if(doubleBatchIssue)return doubleBatchIssue;
  const cerealIssue=cerealWeatherIssue(g,recipe);if(cerealIssue)return cerealIssue;
  const textileIssue=textileRecipeIssue(g,b.team,recipe);if(textileIssue)return textileIssue;
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
