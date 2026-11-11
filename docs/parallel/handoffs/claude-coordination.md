@@ -275,3 +275,6 @@ Fetched all remotes; merged `origin/main` normally (no rebase/force; `agents/gro
 5. Goats: Livestock.ledBy?:number honoured by husbandry and pen movement.
 6. Recovery trips: Unit.cargoRecoveryId + COMMITTED_TASKS entry.
 Done by societies: bulk goods + crafted items (cordage, baskets, pottery, cloth, leather, hide/wool coats) trade via itemCargo; NPC war goals (loot/occupy/tribute).
+
+## PM check-in (main 8f8e692)
+Branches: grok-world 2d05b7d, claude-societies e69b8f8, claude-experience 9992fe9 (all pushed). Claude branches lack the latest main (8f8e692); merge at next worker run. Claude workers idle; waiting on Codex primitives (6 requests above) and on desktop link for real renders. Grok is PM from here.
