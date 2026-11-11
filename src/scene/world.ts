@@ -18,6 +18,7 @@ import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
 import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
+import {WornArmorLayer} from './wornArmor';
 import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
 import {admitVisibleUnits} from './unitRenderAdmission';
 import {ensureInstanceCapacity} from './instanceCapacity';
@@ -213,6 +214,7 @@ export class WorldView {
   private unitInstanceOwners = new Map<UnitType, import("@/game/types").Unit[]>();
   private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
+  private wornArmor:WornArmorLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
   private housingPackets:HousingPacketLayer|null=null;
@@ -927,6 +929,7 @@ export class WorldView {
   private buildUnits() {
     this.penFences=new PenFenceLayer(this.scene,this.mats.timber.clone());
     this.wornGarments=new WornGarmentLayer(this.scene);
+    this.wornArmor=new WornArmorLayer(this.scene);
     this.waterVessels=new WaterVesselLayer(this.scene);
     this.baskets=new BasketLayer(this.scene);
     this.housingPackets=new HousingPacketLayer(this.scene);
@@ -1087,7 +1090,7 @@ export class WorldView {
         this.unitInstanceOwners.get(type)??[],
       );
     }
-    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.wornArmor?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
@@ -1745,6 +1748,7 @@ export class WorldView {
 
   private syncUnits(game: Game) {
     this.wornGarments?.beginFrame(this.quality,this.shadowsEnabled);
+    this.wornArmor?.beginFrame(this.quality,this.shadowsEnabled);
     this.waterVessels?.beginFrame(this.quality,this.shadowsEnabled);
     this.baskets?.beginFrame(this.quality,this.shadowsEnabled,this.camera.position);
     const grouped = new Map<UnitType, typeof game.state.units>();
@@ -1813,6 +1817,7 @@ export class WorldView {
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
         this.wornGarments?.write(game,u,_m);
+        this.wornArmor?.write(game,u,_m);
         this.waterVessels?.write(game,u,_m);
         this.baskets?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
@@ -1838,6 +1843,8 @@ export class WorldView {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
     this.wornGarments?.endFrame();
+    this.wornArmor?.writeGround(game,this.camera);
+    this.wornArmor?.endFrame();
     this.waterVessels?.endFrame();
     this.baskets?.endFrame();
     if(this.farmToolMesh){this.farmToolMesh.count=tools;this.farmToolMesh.instanceMatrix.needsUpdate=true;if(this.farmToolMesh.instanceColor)this.farmToolMesh.instanceColor.needsUpdate=true;}
@@ -2609,6 +2616,7 @@ export class WorldView {
     this.foundations?.dispose();this.foundations=null;
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
+    this.wornArmor?.dispose();this.wornArmor=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;

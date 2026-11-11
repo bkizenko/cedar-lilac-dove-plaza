@@ -463,6 +463,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  armor?:import('./armor').ArmorState;
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;

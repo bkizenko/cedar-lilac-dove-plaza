@@ -1,3 +1,4 @@
+import {validArmorState,reconcileArmorHolders} from './armor';
 import {validTradeLoadingUnit} from './tradeLoading';
 import{validHousingState}from'./housingValidation';
 import{relinkHousingViews}from'./housing';
@@ -60,6 +61,7 @@ import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
+  reconcileArmorHolders(g);
   syncRiverboats(g);
   syncHaulageProjects(g);
   reconcileTradeReservations(g);
@@ -139,6 +141,7 @@ function validateGamePayload(raw: unknown) {
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
+  if(!validArmorState(s))fail();
   if(!validBoatPractice(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];

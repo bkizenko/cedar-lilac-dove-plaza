@@ -1,3 +1,4 @@
+import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
@@ -3970,7 +3971,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return armorMovementMultiplier(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -4694,6 +4695,7 @@ export class Game {
     if(target.kind==='building'&&(intent==='capture'||(intent==='occupy'||intent==='loot')&&!['palisade','stonewall','gate','watchtower','keep'].includes(target.type)))return;
     if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
+    if(target.kind==='unit')dmg=armorCombatDamage(this,target,dmg);
     if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     if(attackerTeam===0&&target.team!==3)this.makeHostile(target.team);
     if(target.team===0&&attackerTeam!==3)this.makeHostile(attackerTeam);
@@ -5793,6 +5795,7 @@ export class Game {
         tickCampRelocation(this,0);
         reconcilePenWater(this);
         reconcileWaterCargoEvidence(this);
+        reconcileArmorHolders(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {

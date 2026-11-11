@@ -1,3 +1,4 @@
+import {ArmorControls} from './ArmorControls';
 import{Fish,Wheat,Flame,Shirt,Package,Leaf,Scissors,Clock}from'lucide-react';
 import{GameDisclosure}from'./GameDisclosure';import{GameTooltip}from'./GameTooltip';import type{Unit}from'../game/types';
 import{surveyFibre,beginFibreGather,fibreGatherIssue,returnFibreLoad,equipBasket,fibreReport,FIBRE_RULES}from'../game/fibre';
@@ -9,7 +10,7 @@ export function ProductionControls({engine}:{engine:Engine}){
  const recipes=useMemo(()=>b&&b.team===0&&g.finished(b)?(Object.entries(PRODUCTION_RECIPES)as[ProductionRecipe,typeof PRODUCTION_RECIPES[ProductionRecipe]][]).filter(([,r])=>r.workplace===b.type).map(([id,r])=>({id,...r,issue:productionIssue(g,id,b.id),seconds:productionWorkSeconds(id,b)})):[],[g,g.state,g.world,b,window,revision]);
  const craftSite=!!b&&b.team===0&&g.finished(b)&&!!(craftingBenches(b)||productionSlots(b));if(!recipes.length&&!people.length&&!craftSite)return null;
  const run=(action:()=>boolean)=>{const okay=action();setFeedback(okay?'Order accepted':g.state.banner);setRevision(n=>n+1);engine.pushHud();engine.canvas?.focus();},button='min-h-11 rounded-md border border-bronze/40 px-3 py-2 text-left text-sm disabled:opacity-50';
- return<section className="mt-3 space-y-2" aria-label="Physical production">{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
+ return<section className="mt-3 space-y-2" aria-label="Physical production">{!!people.length&&<ArmorControls engine={engine} people={people} run={run}/>}{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
  <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-medium">Make a batch</h3><GameTooltip title="Physical processing" description="An adult loads real inputs, works, and carries the batch home. Inputs are paid once; drying batches need later pickup."><span tabIndex={0} className="text-xs text-parchment-dim">{recipes.length} recipes</span></GameTooltip></div>
  <div className="grid grid-cols-2 gap-2" aria-label="Workplace recipes">{recipes.map(r=>{
  const inputs=[...(r.grain?[`${r.grain} grain`]:[]),...Object.entries(r.foodInputs).map(([k,n])=>`${n} ${FOOD_NAMES[k as FoodKind]}`),...Object.entries(r.inputs).map(([k,n])=>`${n} ${ITEM_NAMES[k as ItemKind]}`),...(r.wood?[`${r.wood} logs`]:[]),...(r.water?[`${r.water} L water`]:[])],outputs=[...Object.entries(r.outputs).map(([k,n])=>`${n} ${ITEM_NAMES[k as ItemKind]}`),...(r.food?[`${r.food} ${FOOD_NAMES[r.foodKind]}`]:[])];

@@ -1,3 +1,4 @@
+import {wornArmor} from '../game/armor';
 import type { Unit } from '../game/types';
 import { personName, predisposition } from '../game/people';
 import { ITEM_KINDS, ITEM_NAMES, PRODUCTION_RECIPES } from '../game/production';
@@ -39,6 +40,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
       if (resident.haulage) equipped.push(resident.haulage === 'pack' ? 'Pack goat' : resident.haulage);
+      const armor=game&&wornArmor(game,resident);if(armor)equipped.push(`Padded armor (${Math.round(armor.condition*100)}%)`);
       if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
       if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
       return <li key={resident.id}>
