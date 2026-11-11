@@ -1,3 +1,4 @@
+import {communityResidency} from '@/game/communities';
 import {civicPrestige} from '@/game/civicPrestige';
 import {SeasonLedger} from './SeasonReport';
 import {readyFoodStock} from './FoodStoreReadout';
@@ -73,6 +74,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
     if(!beginCropTrial(g,kind))g.banner(`An available adult and reachable ${trialPlace} are needed for the trial.`,4);
     engine.pushHud();
   };
+  const residence=open?communityResidency(g,0):null;
   const close = () => {
     engine.keyboard.ledger = false;
     engine.pushHud();
@@ -90,6 +92,14 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       </p>
       <div className="ledger-grid">
         {open&&<><NeedsPanel engine={engine} expanded/><SeasonLedger game={g}/></>}
+        {residence&&residence.rows.length>0&&<section aria-label="Settlements">
+          <h3>Settlements</h3>
+          <ul className="space-y-1">{residence.rows.map(row=><li key={row.id} className="flex items-center justify-between gap-2">
+            <span>{row.name} · {row.residents} {row.residents===1?'resident':'residents'}</span>
+            <button type="button" onClick={()=>{close();engine.focusMinimap(row.x,row.z);}}>Show on map</button>
+          </li>)}</ul>
+          {residence.unassigned>0&&<p>{residence.unassigned} without a completed hall assigned</p>}
+        </section>}
         {open&&<section>
           <h3>Prestige</h3>
           <p>{g.prestige()} settlement prestige · {civicPrestige(g).total} from landmarks</p>

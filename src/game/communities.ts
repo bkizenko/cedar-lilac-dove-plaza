@@ -9,6 +9,21 @@ export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: n
   if (history.length > 256) history.shift();
   if (team === 0 || (x !== undefined && z !== undefined && g.visibleAt(x, z))) g.banner(text, 4);
 }
+export function communityResidency(g:Game,team:number){
+  const halls=g.state.buildings.filter(b=>b.type==='townhall'&&b.team===team&&g.finished(b));
+  const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.prisoner);
+  const counts=new Map<number,number>();
+  for(const resident of residents){
+    if(resident.homeHall!==undefined)counts.set(resident.homeHall,(counts.get(resident.homeHall)??0)+1);
+  }
+  const rows=halls.map(hall=>({
+    id:hall.id,x:hall.x,z:hall.z,
+    name:g.state.communities?.find(record=>record.hall===hall.id&&record.team===team)?.name??'Town Hall',
+    residents:counts.get(hall.id)??0,
+  }));
+  const unassigned=residents.length-rows.reduce((total,row)=>total+row.residents,0);
+  return {rows,unassigned};
+}
 function settlementSite(g: Game, u: Unit, expanding: boolean) {
   let best: { x: number; z: number } | null = null,
     score = -Infinity;
@@ -48,8 +63,10 @@ export function tickCommunities(g: Game, dt: number) {
   g.state.communityTimer = 30;
   const records = (g.state.communities ??= []);
   for (const hall of g.state.buildings.filter((b) => b.type === "townhall" && b.team !== 3)) {
+    if(hall.hp>0&&!g.finished(hall))continue;
     let record = records.find((c) => c.hall === hall.id);
     if (!record) {
+      if (!g.finished(hall)) continue;
       record = {
         hall: hall.id,
         team: hall.team,
@@ -63,11 +80,11 @@ export function tickCommunities(g: Game, dt: number) {
     for (const u of g.state.units.filter((u) => u.team === hall.team && u.hp > 0))
       if (u.homeHall === undefined)
         u.homeHall = g.state.buildings
-          .filter((b) => b.team === u.team && b.type === "townhall" && b.hp > 0)
+          .filter((b) => b.team === u.team && b.type === "townhall" && g.finished(b))
           .sort(
             (a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z),
           )[0]?.id;
-    const residents = g.state.units.filter((u) => u.hp > 0 && u.homeHall === hall.id).length;
+    const residents = g.state.units.filter((u) => u.hp > 0 && u.team === hall.team && !u.prisoner && u.homeHall === hall.id).length;
     if (hall.hp <= 0) {
       if (record.status !== "abandoned")
         lifeEvent(
