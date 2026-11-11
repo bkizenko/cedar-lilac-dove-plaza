@@ -240,6 +240,7 @@ export class Game {
       precise?: boolean;
       retry: number;
       stalled?: boolean;
+      nearest?: boolean;
     }
   >();
   seaT = 180;
@@ -4090,7 +4091,7 @@ export class Game {
           }
       }
       let points = [{ x: tx, z: tz }],
-        failed = false;
+        failed = false, nearestEnd = false;
       if (!direct) {
         const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
         const cell = this.world.size / WALK;
@@ -4114,7 +4115,7 @@ export class Game {
               }
             }
         }
-        let path = findPath(grid, WALK, index(u.x, u.z), end);
+        let path = findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
         // Coarse cells can close a real body-sized passage in a dense camp.
         // Spend shared navigation budget once; ordinary route following still
         // collision-checks every actual movement with this actor's radius.
@@ -4144,7 +4145,10 @@ export class Game {
         }
         // A direct ground move remains a valid order when the requested point
         // is across a barrier. Complete it at the closest connected ground.
-        if (!path && !corridor && u.team === 0 && u.order === "move" && u.stationOnArrival &&
+        // Attack-moves get the same rule: an order into unseen or unreachable
+        // ground must still go as close as it can, or standing still hints at
+        // hidden water (GW-07).
+        if (!path && !corridor && u.team === 0 && (u.order === "move" && u.stationOnArrival || u.order === "attackmove" && !!u.attackDestination) &&
             u.haulage !== "canoe" && !u.boat && !u.recalled && !u.expedition && !u.scout) {
           const fallback = this.workBoard.closestReachableCell(this,u.x,u.z,tx,tz);
           if (fallback >= 0 && fallback !== end) {
@@ -4152,11 +4156,13 @@ export class Game {
             this.navBudget--;
             end = fallback;
             path = findPath(grid,WALK,index(u.x,u.z),end,96000);
+            if (path) nearest = true;
           }
         }
         if (corridor) {
           points=corridor;precise=true;
         } else if (path) {
+          nearestEnd = nearest;
           points = path.map((n) => ({
             x: -(this.world.size/2) + ((n % WALK) + 0.5) * cell,
             z: -(this.world.size/2) + (Math.floor(n / WALK) + 0.5) * cell,
@@ -4169,7 +4175,7 @@ export class Game {
           failed = true;
         }
       }
-      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3, stalled: false };
+      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3, stalled: false, nearest: nearestEnd };
       this.paths.set(u.id, route);
     }
     while (
@@ -4185,7 +4191,7 @@ export class Game {
     const dx = point.x - u.x,
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
-    if (d < (route.precise ? .12 : .5) && route.points.length===1) {this.paths.delete(u.id);clearRouteProgress(u);u.stuckT=0;return true;}
+    if (route.points.length===1 && (d < (route.precise ? .12 : .5) || route.nearest && d < ROUTE_PROGRESS_RULES.nearestArrivalMetres)) {this.paths.delete(u.id);clearRouteProgress(u);u.stuckT=0;return true;}
     const step = Math.min(this.travelSpeed(u)*dt, d);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;

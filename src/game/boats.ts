@@ -73,7 +73,7 @@ export function boardRiverboat(g:Game,id:number,people=g.selectedUnits(),team=0,
  else g.banner(`${n} residents boarding · first aboard takes the helm`,4);
  g.workBoard.reset();return n;
 }
-export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z:number){
+export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z:number,closestWhenUnexplored=false){
  const nav=waterNavigation(g,true),cell=g.world.size/nav.width;
  const idx=(px:number,pz:number)=>Math.floor((pz+(g.world.size/2))/cell)*nav.width+Math.floor((px+(g.world.size/2))/cell);
  const label=nav.labels[idx(b.x,b.z)];if(!label)return null;
@@ -83,11 +83,19 @@ export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z
   if(nav.labels[idx(px,pz)]!==label||g.height(px,pz)>=g.waterAt(px,pz)+.3)continue;
   const d=dx*dx+dz*dz;if(d<score){score=d;best={x:px,z:pz};}
  }
+ // An order into unexplored ground sails as close as this water allows; a
+ // refusal would reveal that hidden ground is not connected water (GW-07).
+ if(!best&&closestWhenUnexplored&&!g.exploredAt(x,z))for(let i=0;i<nav.labels.length;i++){
+  if(nav.labels[i]!==label)continue;
+  const px=-(g.world.size/2)+(i%nav.width+.5)*cell,pz=-(g.world.size/2)+(Math.floor(i/nav.width)+.5)*cell;
+  if(Math.abs(px)>(g.world.size/2)-5||Math.abs(pz)>(g.world.size/2)-5||g.height(px,pz)>=g.waterAt(px,pz)+.3)continue;
+  const d=(px-x)**2+(pz-z)**2;if(d<score){score=d;best={x:px,z:pz};}
+ }
  return best;
 }
 export function commandRiverboat(g:Game,id:number,x:number,z:number,preserveMission=false){
  const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u||u.team!==b.team||u.boat?.id!==id||u.boat.phase!=='aboard'||!canRowRiverboat(g,u))return false;if(boatServiceProject(g,id)||sailRigProject(g,id)){g.banner('This hull is reserved for paid dock service',4);return false;}
- const p=riverboatDestination(g,b,x,z);if(!p){g.banner('No connected navigable water near that destination',4);return false;}
+ const p=riverboatDestination(g,b,x,z,b.team===0&&!preserveMission);if(!p){g.banner('No connected navigable water near that destination',4);return false;}
  if(!preserveMission){delete b.exploration;g.interruptMission(u);}u.order='move';u.tx=p.x;u.tz=p.z;u.target=null;u.node=null;g.invalidateRoute(u);return true;
 }
 /** Recall sails the same hull to a surviving friendly dock and then lands;

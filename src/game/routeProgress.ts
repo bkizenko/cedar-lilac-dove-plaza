@@ -4,7 +4,10 @@ type Point={x:number;z:number};
  * A step that moves the body but never brings it meaningfully closer to the
  * active waypoint is not progress: wall sliding, sidestep oscillation and a
  * coarse-cell recovery tug-of-war all move a little every frame. */
-export const ROUTE_PROGRESS_RULES={minimumGainMetres:.25,stallSeconds:3,preciseDirectMetres:28,directSampleMetres:.25} as const;
+export const ROUTE_PROGRESS_RULES={minimumGainMetres:.25,stallSeconds:3,preciseDirectMetres:28,directSampleMetres:.25,
+ /** A move completed at the closest reachable ground (target unseen or across
+  * water) settles within this radius so a group does not contend for one cell. */
+ nearestArrivalMetres:2.5} as const;
 type Watch={tx:number;tz:number;route:object;points:number;best:number;since:number};
 const watches=new WeakMap<Unit,Watch>();
 /** Records one movement sample and returns seconds since the actor last made
