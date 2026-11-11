@@ -1,5 +1,5 @@
 {
-  "status": "candidate qualified; publication recorded separately",
+  "status": "published and postpublication checked",
   "sourceChecks": {
     "passed": 49,
     "total": 49,
@@ -72,5 +72,16 @@
     "total": 98,
     "percent": 34.69,
     "newCredit": 0
+  },
+  "commit": "08dcc70",
+  "release": "2026-11-11T13-39-20-08dcc70",
+  "postpublication": {
+    "passed": 16,
+    "total": 16,
+    "logs": [
+      ".play/raid-camera-published8086.log",
+      ".play/raid-camera-published8101.log",
+      ".play/finite-raid-published8086.log"
+    ]
   }
 }

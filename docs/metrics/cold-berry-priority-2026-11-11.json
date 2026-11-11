@@ -1,5 +1,5 @@
 {
-  "status": "candidate qualified; publication pending",
+  "status": "published and postpublication checked",
   "scope": "Recall empty unlocked foragers for urgent food processing; physical hearth recovery preserving paid batches; truthful storecare workload",
   "sourceChecks": {
     "passed": 22,
@@ -34,5 +34,18 @@
     "passed": 24,
     "total": 24,
     "percentage": 100
+  },
+  "commit": "b90ed9b",
+  "release": "2026-11-11T14-40-48-220Z-b90ed9b",
+  "ports": [
+    8086,
+    8101
+  ],
+  "postpublication": {
+    "passed": 2,
+    "total": 2,
+    "port": 8086,
+    "log": "/tmp/hearthwild-native-berry-published8086.log",
+    "simulationSecondsEach": 56
   }
 }
