@@ -1,5 +1,5 @@
 {
-  "status": "candidate qualified; publication pending",
+  "status": "published and postpublication checked",
   "scope": "Read-only actual warmth visit overrides paid task stage/destination while preserving recipe/progress/cargo. No simulation behavior changed.",
   "sourceChecks": {
     "passed": 7,
@@ -26,5 +26,16 @@
     "total": 98,
     "percentage": 34.69,
     "changed": false
+  },
+  "commit": "9c653f0",
+  "release": "2026-11-11T15-26-19-018Z-9c653f0",
+  "ports": [
+    8086,
+    8101
+  ],
+  "postpublication": {
+    "passed": 1,
+    "total": 1,
+    "log": ".play/warm-activity-published-browser.log"
   }
 }
