@@ -158,7 +158,7 @@ function crescentHarbor(seed:number,fp:{w:number;d:number},site?:WonderSite):Won
  const add=(g:string,p:Part)=>{groups[g].push(parts.length);parts.push(p);};
  const tidal=site?.tidalRangeM??0,quayH=Math.round(clamp(range(r,1,1.4)+tidal*.35,1,2.2)*100)/100,exposed=site?.exposed??chance01(r,.5);
  const quayW=range(r,3,3.6),wd=range(r,3.6,4.2),maxOuter=Math.min(fp.w/2-.2,fp.d-.4)/1;
- const Rb=clamp(range(r,9,11.5),7,maxOuter-quayW-wd-.2),outer=Rb+quayW+wd,zc=-fp.d/2+outer+.15,C=[0,zc] as const;
+ const Rb=clamp(range(r,9,11.5),7,maxOuter-quayW-wd-.2),outer=Rb+quayW+wd,zc=-fp.d/2+outer+1,C=[0,zc] as const;
  const phi=range(r,95,108)*Math.PI/180,a0=-Math.PI/2-phi,a1=-Math.PI/2+phi,at=(a:number,rad:number):[number,number]=>[C[0]+Math.cos(a)*rad,C[1]+Math.sin(a)*rad],yawT=(a:number)=>-a-Math.PI/2;
  const aStreet=-Math.PI/2+range(r,-.25,.25),streetHalf=2.6/(Rb+quayW);
  // Basin surface (water at y=0) and the quay arc: solid segments tangent to the circle.
@@ -172,19 +172,19 @@ function crescentHarbor(seed:number,fp:{w:number;d:number},site?:WonderSite):Won
  const stairs:Stair[]=[],landTop=at(aStreet,Rb+quayW-.2),landBot=at(aStreet,Rb+quayW+(ln-1)*tread);
  stairs.push({fromLevel:0,toLevel:quayH,x:landTop[0],zBottom:landBot[1],zTop:landTop[1],steps:ln,riseM:lr,treadM:tread,width:ew,bottom:landBot,top:landTop});
  // Stairs down to the water at 2-3 seeded angles away from the street and horns.
- const nW=pick(r,[2,3]),stairAngles:number[]=[];
- for(let i=0;i<nW;i++){const a=a0+.5+(i+.5)/nW*(a1-a0-1)+range(r,-.08,.08);if(Math.abs(a-aStreet)>.45)stairAngles.push(a);}
+ const nW=pick(r,[1,2,2]),stairAngles:number[]=[];
+ for(let i=0;i<nW;i++){const a=nW===1?aStreet+pick(r,[-1,1])*range(r,.7,1.1):a0+.7+(i?.78:.22)*(a1-a0-1.4)+range(r,-.06,.06);stairAngles.push(a);}
  const sw=1.5;
  for(const a of stairAngles){for(let k=0;k<ln-1;k++){const [x,z]=at(a,Rb-(k+.5)*tread);add('waterStairs',part('box','stone',[sw,quayH-lr*(k+1),tread],[x,0,z],1,[0,yawT(a),0]));}
   const top=at(a,Rb+.5),bot=at(a,Rb-(ln-1)*tread);stairs.push({fromLevel:0,toLevel:quayH,x:top[0],zBottom:bot[1],zTop:top[1],steps:ln,riseM:lr,treadM:tread,width:sw,bottom:bot,top});}
  // Berths: pack real hull classes along the quay, skipping stair zones; hulls lie tangent with all corners inside the basin.
  const classes=Object.keys(HULL_SEATS) as (keyof typeof HULL_SEATS)[],berths:Berth[]=[],walk=Rb+quayW/2;
  let a=a0+.42;const aEnd=a1-.42;let guard=0;
- while(a<aEnd&&guard++<40){
+ while(a<aEnd&&guard++<400){
   const cls=pick(r,classes),h=hullSize(HULL_SEATS[cls]),half=h.length/2,span=(h.length+.9)/(Rb+.2),mid=a+span/2;
   const rh=Math.sqrt((Rb-.2)**2-half**2)-h.beam/2;if(rh<=1||Rb-(rh+h.beam/2)>1.6){a+=.12;continue;}
-  const blocked=[aStreet,...stairAngles].some(s=>Math.abs(s-mid)<span/2+(sw/2+.9)/Rb+.12);
-  if(blocked){a+=.1;continue;}if(mid+span/2>aEnd)break;
+  const blocked=stairAngles.some(s=>Math.abs(s-mid)<span/2+(sw/2+.9)/Rb+.12);
+  if(blocked){a+=.1;continue;}if(mid+span/2>aEnd){a+=.15;continue;}
   const [hx,hz]=at(mid,rh+h.beam/2-h.beam/2),id=`berth-${berths.length+1}`,bol=[-1,1].map(s=>{const aa=mid+s*(half-.5)/Rb;const [bx,bz]=at(aa,Rb+.3);return {x:bx,z:bz};});
   berths.push({id,hullClass:cls,seats:HULL_SEATS[cls],x:hx,z:hz,yaw:yawT(mid),length:h.length,beam:h.beam,bollards:bol,boarding:at(mid,Rb+quayW*.5)});
   for(const b of bol)add('berthing',part('cylinder','woodDark',[.28,.45,.24],[b.x,quayH+.16,b.z],1,undefined,6));
@@ -229,7 +229,7 @@ function millMarket(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderP
  const r=seededRandom(seed),parts:Part[]=[],groups:Record<string,number[]>={channel:[],courts:[],mill:[],bridge:[],stalls:[],rails:[]};
  const add=(g:string,p:Part)=>{groups[g].push(parts.length);parts.push(p);};
  const bankH=Math.round(clamp(site?.bankHeightM??range(r,.8,1.1),.6,1.6)*100)/100,Wc=clamp(site?.riverWidthM??range(r,5,6.4),4.5,8),waterY=.3,fast=(site?.flowSpeedMps??1)>1.5;
- const dir=site?.flowDir??pick(r,[1,-1] as const),W=fp.w-.4,zc=range(r,-1.2,1.2),z0=zc-Wc/2,z1=zc+Wc/2,Dn=Math.min(8.4,z0-(-fp.d/2)-.3),Ds=Math.min(5,fp.d/2-.2-z1);
+ const dir=site?.flowDir??pick(r,[1,-1] as const),W=fp.w-.4,zc=range(r,-1.2,1.2),z0=zc-Wc/2,z1=zc+Wc/2,Dn=Math.min(8.6,z0-(-fp.d/2)-.3-1.9),Ds=Math.min(5,fp.d/2-.2-z1-1.9);
  add('channel',part('box','water',[fp.w,waterY,Wc],[0,0,zc],2));
  add('courts',part('box','stone',[W,bankH,Dn],[0,0,z0-Dn/2],2));add('courts',part('box','stone',[Math.min(W,16),bankH,Ds],[0,0,z1+Ds/2],2));
  for(const [zz,dd] of[[z0-.18,.36],[z1+.18,.36]])add('courts',part('box','stoneDark',[W,.12,dd],[0,bankH,zz],0));
@@ -242,12 +242,12 @@ function millMarket(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderP
  const R=range(r,1.4,1.8),tw=range(r,.7,.95),dip=.2,ya=waterY-dip+R;
  add('mill',part('cylinder','woodDark',[2*R,tw,2*R],[mx,ya,z0+.04],2,[Math.PI/2,0,0],12));
  const nP=pick(r,[8,10,12]);for(let i=0;i<nP;i++){const a=i/nP*Math.PI*2,px=mx+Math.cos(a)*(R-.08),py=ya+Math.sin(a)*(R-.08);
-  if(py-.16<.02)continue;add('mill',part('box','woodMid',[.3,.12,tw+.06],[px,py-.06,z0+.04],1,[0,0,a]));}
+  if(py-.26<.03)continue;add('mill',part('box','woodMid',[.3,.12,tw+.06],[px,py-.06,z0+.04],1,[0,0,a]));}
  add('mill',part('cylinder','woodEdge',[.24,1.1,.24],[mx,ya,z0-.5],1,[Math.PI/2,0,0],6));
  if(fast){add('mill',part('box','stone',[.5,waterY+.5,Wc],[mx-dir*(R+1.6),0,zc],1));add('mill',part('box','woodDark',[.14,.7,Wc*.6],[mx-dir*(R+1.6),waterY+.5,zc],0));}
  // Arch bridge: voussoirs on abutments, haunch fill, slab deck, parapets, steps down to each court.
- const bx=dir*range(r,1.5,5.5)*-1+ (dir>0?-1:1)*0,B=2.4,span=Wc,sp=bankH+.35,f=range(r,1.2,1.6),t=.35,Rr=(span*span/4+f*f)/(2*f),cy=sp+f-Rr,th0=Math.asin(span/2/Rr);
- const nV=9,yD=sp+f+t+.5,ab=1.1;
+ const bx=-dir*range(r,1.5,5.5),B=2.4,span=Wc,sp=bankH+.35,f=range(r,1,1.3),t=.35,Rr=(span*span/4+f*f)/(2*f),cy=sp+f-Rr,th0=Math.asin(span/2/Rr);
+ const nV=9,yD=sp+f+t+.35,ab=1.1;
  for(const s of[-1,1])add('bridge',part('box','stoneDark',[B,sp,ab],[bx,0,s<0?z0-ab/2+.02:z1+ab/2-.02],2));
  const vl=2*Rr*Math.sin(th0/(nV-1))*1.12;
  for(let i=0;i<nV;i++){const ph=-th0+i*2*th0/(nV-1);add('bridge',part('box','stone',[B,t,vl],[bx,cy+Math.cos(ph)*Rr,zc+Math.sin(ph)*Rr],2,[ph,0,0]));}
@@ -256,15 +256,15 @@ function millMarket(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderP
   add('bridge',part('box','stone',[B,Math.max(.05,yD-.3-yE+.02),sl],[bx,yE-.01,zz],1));}
  const deckL=span+2*ab;add('bridge',part('box','stoneDark',[B,.3,deckL],[bx,yD-.3,zc],2));
  for(const s of[-1,1])add('bridge',part('box','stone',[.28,.62,deckL],[bx+s*(B/2-.14),yD,zc],1));
- const H3=yD-bankH,{n:bn,rise:br}=steppedRise(H3),btread=.34,stairs:Stair[]=[];
+ const H3=yD-bankH,{n:bn,rise:br}=steppedRise(H3),btread=.28,stairs:Stair[]=[];
  for(const [sgn,edge] of[[-1,z0],[1,z1]] as const){
   for(let k=0;k<bn-1;k++)add('bridge',part('box','stone',[B,H3-br*(k+1)+0,btread],[bx,bankH,edge+sgn*(ab-.02+(k+.5)*btread)],1));
   const top:[number,number]=[bx,edge+sgn*(ab-.02)],bot:[number,number]=[bx,edge+sgn*(ab-.02+(bn-1)*btread)];
   stairs.push({fromLevel:bankH,toLevel:yD,x:bx,zBottom:bot[1],zTop:top[1],steps:bn,riseM:br,treadM:btread,width:B,bottom:bot,top});}
- // Market stalls along the north court's back edge, facing the channel; clear aisle in front.
- const sd=1.3,sw=range(r,2,2.5),nS=pick(r,[3,4,5]),sx0=dir*(W/2-1.3)*-1,backZ=-fp.d/2+.5,fz=backZ+sd,stalls:NonNullable<WonderPlan['stalls']>=[];
- const aisleZ=fz+1.25,xStart=-dir*0+ (dir>0?bx+B/2+2:-(W/2-1.4)) ;void sx0;void xStart;
- const stallXs:number[]=[];for(let i=0;i<nS;i++){const x=(dir>0?-1:1)*(-W/2+1.4)*0+(dir>0?bx+B/2+2.4+sw/2+i*(sw+.5):bx-B/2-2.4-sw/2-i*(sw+.5));if(Math.abs(x)+sw/2<=W/2-.4&&Math.abs(x-mx)>mw/2+sw/2+.5)stallXs.push(x);}
+ // Market stalls along the north court's back edge, facing the channel; clear aisle in front, joined to the bridge's north steps.
+ const sd=1.3,sw=range(r,2,2.5),nS=pick(r,[3,4,5]),stalls:NonNullable<WonderPlan['stalls']>=[];
+ const tailZ=z0-ab+.02-(bn-1)*btread-.4,aisleZ=tailZ-.2,fz=aisleZ-1.25,backZ=fz-sd;
+ const stallXs:number[]=[];for(let i=0;i<nS;i++){const x=dir>0?bx+B/2+2.4+sw/2+i*(sw+.5):bx-B/2-2.4-sw/2-i*(sw+.5);if(Math.abs(x)+sw/2<=W/2-.4&&Math.abs(x-mx)>mw/2+sw/2+.5&&backZ>=z0-Dn+.15)stallXs.push(x);}
  stallXs.forEach((x,i)=>{const h=range(r,2,2.3);
   for(const dx of[-sw/2+.07,sw/2-.07])for(const [dz,hh] of[[-sd/2+.07,h+.25],[sd/2-.07,h]] as const)add('stalls',beam('woodDark',[x+dx,bankH,backZ+sd/2+dz],[x+dx,bankH+hh,backZ+sd/2+dz],.09,1));
   add('stalls',part('box','woodMid',[sw,.85,.35],[x,bankH,fz-.2],2));add('stalls',part('wedge',i%2?'cloth':'woodLight',[sw+.25,.35,sd+.25],[x,bankH+h-.05,backZ+sd/2],2));
@@ -272,25 +272,23 @@ function millMarket(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderP
  // Guard rail posts along both bank edges, broken at the bridge, so nobody walks into the water.
  for(const [zz,s] of[[z0-.18,-1],[z1+.18,1]] as const){const lo=-W/2+.3,hi=W/2-.3;for(let x=lo;x<=hi;x+=1.6){if(Math.abs(x-bx)<B/2+.4)continue;if(s<0&&Math.abs(x-mx)<mw/2+.2)continue;
   add('rails',part('cylinder','woodDark',[.12,.8,.1],[x,bankH+.12,zz],0,undefined,5));}}
- // Circulation: north entrance by steps (court to ground), aisle, mill door, bridge, south landing and entrance.
- const {n:en,rise:er}=steppedRise(bankH);
- const northGate:[number,number]=[bx+dir*(-1)*0+(dir>0?-4.5:4.5)*0+ (stallXs.length?stallXs[0]:0)*0,z0-Dn],ePath:[number,number]=[bx,z0-Dn-.9];void northGate;
- for(let k=0;k<en-1;k++)add('courts',part('box','stone',[2.4,bankH-er*(k+1),.32],[bx,0,z0-Dn-(k+.5)*.32],1));
- const nTop:[number,number]=[bx,z0-Dn+.1],nBot:[number,number]=[bx,z0-Dn-(en-1)*.32];
- stairs.push({fromLevel:0,toLevel:bankH,x:bx,zBottom:nBot[1],zTop:nTop[1],steps:en,riseM:er,treadM:.32,width:2.4,bottom:nBot,top:nTop});
- for(let k=0;k<en-1;k++)add('courts',part('box','stone',[2.4,bankH-er*(k+1),.32],[bx,0,z1+Ds+(k+.5)*.32],1));
- const sTop:[number,number]=[bx,z1+Ds-.1],sBot:[number,number]=[bx,z1+Ds+(en-1)*.32];
- stairs.push({fromLevel:0,toLevel:bankH,x:bx,zBottom:sBot[1],zTop:sTop[1],steps:en,riseM:er,treadM:.32,width:2.4,bottom:sBot,top:sTop});
- const brN:[number,number]=[bx,z0-ab],brS:[number,number]=[bx,z1+ab];
- // The north steps and bridge approach share the court's centre line at bx; the aisle runs east-west at aisleZ.
- const aisle:[number,number][]=[[bx,aisleZ]];if(stallXs.length)for(const x of[...stallXs].sort((a,b)=>Math.abs(a-bx)-Math.abs(b-bx)))aisle.push([x,aisleZ]);
+ // Circulation: north entry steps (court to ground), aisle to stalls and mill door, bridge, south landing and steps.
+ const {n:en,rise:er}=steppedRise(bankH),etread=.32;
+ const nTop:[number,number]=[bx,z0-Dn+.1],nBot:[number,number]=[bx,z0-Dn-(en-1)*etread];
+ for(let k=0;k<en-1;k++)add('courts',part('box','stone',[2.4,bankH-er*(k+1),etread],[bx,0,z0-Dn-(k+.5)*etread],1));
+ stairs.push({fromLevel:0,toLevel:bankH,x:bx,zBottom:nBot[1],zTop:nTop[1],steps:en,riseM:er,treadM:etread,width:2.4,bottom:nBot,top:nTop});
+ const sTop:[number,number]=[bx,z1+Ds-.1],sBot:[number,number]=[bx,z1+Ds+(en-1)*etread];
+ for(let k=0;k<en-1;k++)add('courts',part('box','stone',[2.4,bankH-er*(k+1),etread],[bx,0,z1+Ds+(k+.5)*etread],1));
+ stairs.push({fromLevel:0,toLevel:bankH,x:bx,zBottom:sBot[1],zTop:sTop[1],steps:en,riseM:er,treadM:etread,width:2.4,bottom:sBot,top:sTop});
+ const brN:[number,number]=[bx,z0-ab],brS:[number,number]=[bx,z1+ab],bridgeTail:[number,number]=[bx,tailZ];
+ const aisle:[number,number][]=[[bx,aisleZ],...[...stallXs].sort((p,q)=>Math.abs(p-bx)-Math.abs(q-bx)).map(x=>[x,aisleZ] as [number,number])];
  const millDoor:[number,number]=[mx+mw*.2,z0-md-.8],millWalk:[number,number][]=[[bx,aisleZ],[millDoor[0],aisleZ],millDoor];
- const entrances=[{x:ePath[0],z:ePath[1],width:2.4,facing:-Math.PI/2},{x:sBot[0],z:sBot[1]+.6,width:2.4,facing:Math.PI/2}];
+ const entrances=[{x:nBot[0],z:nBot[1],width:2.4,facing:-Math.PI/2},{x:sBot[0],z:sBot[1],width:2.4,facing:Math.PI/2}];
  const labels:Record<string,string>={channel:'Millstream channel',courts:'Stone-faced courts and entry steps',mill:'Mill house, wheel and hoist',bridge:'Arched bridge and approach steps',stalls:'Market stalls',rails:'Bank guard rails'};
  const keys=Object.keys(groups).filter(k=>groups[k].length);
  return {family:'millMarket',version:WONDER_GENERATOR_VERSION,seed,footprint:{...fp},parts,channel:{z0,z1,x0:-fp.w/2,x1:fp.w/2},waterSurfaceY:waterY,courtY:bankH,
   wheel:{x:mx,y:ya,z0:z0+.04,z1:z0+.04+tw,radius:R,bottomY:ya-R,immersionM:Math.round((waterY-(ya-R))*1000)/1000},bridge:{x:bx,width:B,spanZ0:z0,spanZ1:z1,deckY:yD},stalls,aisleHalfWidth:1.2,
   stages:keys.map(k=>stage(k==='channel'?'groundworks':k,labels[k],parts,groups[k])),
   spaces:[{id:'market',label:'Market court',purpose:'Sell and trade goods from stalls along a clear aisle',areaM2:Math.round(W*Dn)},{id:'mill',label:'Mill house',purpose:'Grind grain with an undershot wheel turned by the channel',areaM2:Math.round(mw*md)},{id:'landing',label:'South landing',purpose:'Receive carts and walkers crossing the bridge',areaM2:Math.round(Math.min(W,16)*Ds)}],
-  circulation:{entrances,paths:[[ePath,nBot,nTop,[bx,aisleZ]],aisle,millWalk,[brN,[bx,zc],brS],[brS,sTop,sBot]],stairs:stairs.concat([])}};
+  circulation:{entrances,paths:[[nBot,nTop,[bx,aisleZ]],[[bx,aisleZ],bridgeTail,brN,[bx,zc],brS,sTop,sBot],aisle,millWalk],stairs}};
 }
