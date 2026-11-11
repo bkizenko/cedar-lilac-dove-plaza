@@ -2753,13 +2753,29 @@ export class Game {
   issueGather(node: ResourceNode | Building | Critter) {
     const animal="species" in node;
     if (animal ? !huntable(this,node,0)||(node.hp>0?!this.visibleAt(node.x,node.z):!this.exploredAt(node.x,node.z)) : !this.exploredAt(node.x,node.z)) {this.banner(animal?"Choose an actual visible animal or an explored usable carcass":"Explore this resource first",3);return;}
-    let workers = this.selectedUnits().filter((u) => u.type === "worker"||(animal&&u.militia));
-    if (!workers.length) workers = this.idleWorkers().slice(0, 4);
-    if (!workers.length) {
-      this.banner("Need gatherers — tap Gatherer, then click the tree, bush, or stone", 2);
+    const fish="kind" in node&&node.kind==="fish";
+    if(fish&&node.amount<1){
+      this.banner(`Fishing ground depleted · first catch in about ${Math.max(1,Math.ceil(fishRecoveryEstimateSeconds(this,node)/60))} min`,4);
       this.onSfx("invalid");
       return;
     }
+    let workers = this.selectedUnits().filter((u) => u.type === "worker"||(animal&&u.militia));
+    const fromIdle=workers.length===0;
+    if(fromIdle)workers=this.idleWorkers();
+    if (!workers.length) {
+      this.banner("Select an available worker to gather here", 2);
+      this.onSfx("invalid");
+      return;
+    }
+    if(fish){
+      workers=workers.filter(u=>!!fishingBank(this,u,node));
+      if(!workers.length){
+        this.banner("No reachable fishing bank for these workers · try another shore",4);
+        this.onSfx("invalid");
+        return;
+      }
+    }
+    if(fromIdle)workers=workers.slice(0,4);
     workers = workers.filter(u=>acceptWorkerCommand(this,u,"gather"));
     if (!workers.length) return;
     const job = this.resKind(node);

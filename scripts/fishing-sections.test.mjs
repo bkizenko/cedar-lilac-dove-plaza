@@ -64,4 +64,11 @@ test('automatic and manual food selection skip fish without a reachable dry bank
  g.workBoard.assign(g,fisher);
  assert.equal(fisher.node,reachable);
  assert.equal(fisher.order,'gather');
+ g.clearSelect();g.selectEntity(fisher);
+ g.issueGather(inaccessible);
+ assert.equal(fisher.node,reachable,'an impossible direct order leaves the existing job in place');
+ assert.match(g.state.banner,/No reachable fishing bank/);
+ reachable.amount=0;
+ g.issueGather(reachable);
+ assert.match(g.state.banner,/Fishing ground depleted/);
 });
