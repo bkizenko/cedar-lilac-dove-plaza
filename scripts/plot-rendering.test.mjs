@@ -14,7 +14,7 @@ test('renderer maps every store bay and crop patch back to one actual building w
  const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
  v.mats=new Proxy({}, {get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
  const store=building('warehouse',2,3),farm={...building('farm',3,2),id:2,crop:{planted:1,tended:1,ripened:true,remaining:100}};
- const game={state:{seed:345,buildings:[store,farm]},tribe:()=>({age:0}),exploredAt:()=>false,height:()=>4,world:{biomes:[]}};
+ const game={state:{seed:345,buildings:[store,farm]},tribe:()=>({age:0}),exploredAt:()=>false,terrainRevision:()=>0,height:()=>4,world:{biomes:[]}};
  const before=JSON.stringify(game.state.buildings);v.syncBuildings(game);
  const sm=v.bldMeshes.get('warehouse'),fm=v.bldMeshes.get('farm');assert.equal(sm.timber.count,6);assert.equal(fm.timber.count,1);assert.equal(fm.roof.count,0);assert.equal(fm.extra.count,6);
  assert.ok(v.buildingInstances.get(sm.roof).every(b=>b===store));assert.ok(v.buildingInstances.get(fm.extra).every(b=>b===farm));
@@ -35,7 +35,7 @@ test('sloped planted fields use terrain displacement for crops and shadows witho
  v.fieldSurface=new FieldSurface(heights);
  v.mats=new Proxy({}, {get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
  const farm={...building('farm',3,2),crop:{planted:1,tended:1,ripened:true,remaining:100}};
- const game={state:{seed:345,buildings:[farm]},tribe:()=>({age:0}),exploredAt:()=>false,height:(x,z)=>4+x*.2+z*.1,world:{biomes:[]}};
+ const game={state:{seed:345,buildings:[farm]},tribe:()=>({age:0}),exploredAt:()=>false,terrainRevision:()=>0,height:(x,z)=>4+x*.2+z*.1,world:{biomes:[]}};
  const before=JSON.stringify(farm);v.syncBuildings(game);
  const field=v.bldMeshes.get('farm'),m=new THREE.Matrix4();
  for(const mesh of [field.timber,field.extra]){
@@ -78,12 +78,13 @@ test('territory and fog overlay follows every terrain vertex on enlarged maps',(
 });
 test('rigid buildings clear uphill terrain and receive full-depth footings without rewriting saved placement',async()=>{
  const {foundationProfile}=await import('../src/scene/foundations.ts');
- const b=building('townhall'),before=JSON.stringify(b),g={world:{heights:new Float32Array(9)},height:(x,z)=>4+x*.2+z*.1};
+ const b=building('townhall'),before=JSON.stringify(b),g={world:{heights:new Float32Array(9)},terrainRevision:()=>0,height:(x,z)=>4+x*.2+z*.1};
  const f=foundationProfile(g,b);assert.ok(f.level>4);assert.ok(f.bottom<4);
  assert.equal(JSON.stringify(b),before);assert.equal(foundationProfile(g,b),f,'cached support calculation');
  const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();v.mats=new Proxy({},{get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
  const game={...g,state:{seed:345,buildings:[b]},tribe:()=>({age:0}),finished:b=>b.build>=1&&b.hp>0,exploredAt:()=>true};v.syncBuildings(game);
- const matrix=new THREE.Matrix4();v.bldMeshes.get('townhall').timber.getMatrixAt(0,matrix);assert.ok(Math.abs(matrix.elements[13]-f.level)<.00001);assert.equal(v.foundations.count,1);
+ const matrix=new THREE.Matrix4();v.bldMeshes.get('townhall').timber.getMatrixAt(0,matrix);assert.ok(Math.abs(matrix.elements[13]-f.level)<.00001);assert.ok(v.foundations.mesh.count>1,'wall bearings receive separate support strips');
+ assert.equal(v.foundations.metrics.overflow,0);
 });
 
 test('expanded grain bays render at human scale and select the same workshop',()=>{
@@ -106,4 +107,18 @@ test('expanded grain bays render at human scale and select the same workshop',()
   assert.equal(matrix.elements[12],BUILDINGS[workshop.type].w/2);
   assert.equal(new THREE.Vector3().setFromMatrixScale(matrix).x,1);
  }
+});
+
+test('expanded foreign grain bays and their footings use the same axis-aligned footprint',async()=>{
+ const {buildingGroundSupports}=await import('../src/scene/buildingGrounding.ts');
+ const {buildingGeos}=await import('../src/scene/meshes.ts');
+ buildingGeos();
+ const foreign={...building('threshingFloor',2,1),team:1};
+ const own={...foreign,team:0};
+ const g={state:{},world:{heights:new Float32Array(9)},height:(x,z)=>4+x*.09+z*.07,terrainRevision:()=>0};
+ const ownSupports=buildingGroundSupports(g,own);
+ assert.ok(ownSupports.length>0);
+ assert.deepEqual(buildingGroundSupports(g,foreign),ownSupports);
+ assert.notDeepEqual(buildingGroundSupports(g,building('threshingFloor')),
+  buildingGroundSupports(g,{...building('threshingFloor'),team:1}),'ordinary foreign sites retain team styling');
 });

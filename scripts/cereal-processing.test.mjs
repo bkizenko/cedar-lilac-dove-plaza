@@ -294,6 +294,22 @@ test('the urgent harvest alert points to the current bottleneck and clears with 
  assert.equal(harvestBacklogAlert(g),null);
 });
 
+test('the urgent harvest alert prioritizes stored flour over wet grain or a missing threshing floor',()=>{
+ const {g}=fixture(),tribe=g.tribe(0);
+ tribe.items={flour:4,roughGrain:24,grainSheaves:32};
+ tribe.food=5;
+ tribe.foodLots={grain:5};
+ g.state.weather='rain';
+ assert.match(harvestBacklogAlert(g),/finish a bread oven to bake the stored flour/);
+ const oven=g.makeBld('oven',28,36,0);
+ g.state.buildings.push(oven);
+ tribe.survival.waterLiters=0;
+ assert.match(harvestBacklogAlert(g),/collect drinking water/);
+ tribe.survival.waterLiters=24;
+ tribe.wood=0;
+ assert.match(harvestBacklogAlert(g),/gather firewood/);
+});
+
 test('a village with Auto work off cooks clean grain at a hearth before it has a mill or oven', () => {
  const {g, hearth}=fixture();
  const tribe=g.tribe(0);

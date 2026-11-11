@@ -1,3 +1,4 @@
+import {expandedGrainWorkplace} from '../game/plots';
 import * as T from 'three';import type{Game}from'../game/sim';import type{Building}from'../game/types';import{TEAM_STYLE}from'../game/constants';import{foundationProfile}from'./foundations';import{buildingGroundContacts,groundEntryFor,groundContactVersion,GROUNDING_RULES as R,type GroundContact}from'./groundContacts';
 const excluded=new Set(['farm','pen','dock','bridge','grove','cairn','cornerstone','palisade','gate','stonewall','trench','moat']);
 export type GroundSupport=Readonly<{x:number;z:number;y:number;length:number;width:number;height:number;yaw:number;kind?:'step'}>;
@@ -5,7 +6,7 @@ type Cache={world:Game['world'];state:Game['state'];height:Game['height'];height
 /** Only actual wall/column/leg bearing lines receive supports. No filled plot. */
 export function buildingGroundSupports(g:Game,b:Building):readonly GroundSupport[]{
  if(excluded.has(b.type)||b.type==='watchtower'&&b.towerPlatform)return[];const contacts=buildingGroundContacts(b);if(!contacts?.length)return[];const revision=g.terrainRevision(),old=cache.get(b);if(old&&old.world===g.world&&old.state===g.state&&old.height===g.height&&old.heights===g.world.heights&&old.revision===revision&&old.team===b.team&&old.x===b.x&&old.y===b.y&&old.z===b.z&&old.w===b.w&&old.d===b.d&&old.contacts===contacts)return old.supports;
- const f=foundationProfile(g,b),st=TEAM_STYLE[b.team]||TEAM_STYLE[0],warehouse=b.type==='warehouse',c=warehouse?1:Math.cos(st.yaw),s=warehouse?0:Math.sin(st.yaw),supports:GroundSupport[]=[],sx=warehouse?1:st.sx,sz=warehouse?1:st.sz;
+ const f=foundationProfile(g,b),st=TEAM_STYLE[b.team]||TEAM_STYLE[0],axisAligned=b.type==='warehouse'||expandedGrainWorkplace(b),yaw=axisAligned?0:st.yaw,c=Math.cos(yaw),s=Math.sin(yaw),supports:GroundSupport[]=[],sx=axisAligned?1:st.sx,sz=axisAligned?1:st.sz;
  const world=(x:number,z:number)=>({x:b.x+c*x*sx+s*z*sz,z:b.z-s*x*sx+c*z*sz});
  for(const line of contacts){const a=world(line.ax,line.az),v=world(line.bx,line.bz),dx=v.x-a.x,dz=v.z-a.z,len=Math.hypot(dx,dz);if(len<.01)continue;const n=Math.ceil(len/R.maximumStripLengthMetres),nx=-dz/len,nz=dx/len;
   for(let i=0;i<n;i++){const ax=a.x+dx*i/n,az=a.z+dz*i/n,bx=a.x+dx*(i+1)/n,bz=a.z+dz*(i+1)/n,x=(ax+bx)/2,z=(az+bz)/2;let bottom=Infinity;for(const t of[0,.25,.5,.75,1])for(const side of[-.5,0,.5])bottom=Math.min(bottom,g.height(ax+(bx-ax)*t+nx*R.stripWidthMetres*side,az+(bz-az)*t+nz*R.stripWidthMetres*side));
@@ -15,7 +16,7 @@ export function buildingGroundSupports(g:Game,b:Building):readonly GroundSupport
  }
  const entry=groundEntryFor(b.type);
  if(entry){const e=world(entry.x,entry.z),direction={x:s,z:c},width=entry.width*sx,margin=Math.max(.18,width/2),bounds=[Math.abs(direction.x)>.00001?(b.w/2-margin-Math.sign(direction.x)*(e.x-b.x))/Math.abs(direction.x):Infinity,Math.abs(direction.z)>.00001?(b.d/2-margin-Math.sign(direction.z)*(e.z-b.z))/Math.abs(direction.z):Infinity],length=Math.min(1.25,...bounds);
-  if(length>.25){const end={x:e.x+direction.x*length,z:e.z+direction.z*length},gap=f.level-g.height(end.x,end.z);if(gap>.24){const n=Math.min(8,Math.ceil(gap/.2)),tread=length/n;for(let i=0;i<n;i++){const x=e.x+direction.x*(i+.5)*tread,z=e.z+direction.z*(i+.5)*tread,top=f.level-gap*i/n;let bottom=Infinity;for(const a of[-.5,0,.5])for(const b of[-.5,.5])bottom=Math.min(bottom,g.height(x+c*width*a+direction.x*tread*b,z-s*width*a+direction.z*tread*b));if(top-bottom>.06){bottom-=R.burialMetres;supports.push(Object.freeze({x,z,y:(top+bottom)/2,length:width,width:tread+.012,height:top-bottom,yaw:st.yaw,kind:'step'}));}}}}
+  if(length>.25){const end={x:e.x+direction.x*length,z:e.z+direction.z*length},gap=f.level-g.height(end.x,end.z);if(gap>.24){const n=Math.min(8,Math.ceil(gap/.2)),tread=length/n;for(let i=0;i<n;i++){const x=e.x+direction.x*(i+.5)*tread,z=e.z+direction.z*(i+.5)*tread,top=f.level-gap*i/n;let bottom=Infinity;for(const a of[-.5,0,.5])for(const b of[-.5,.5])bottom=Math.min(bottom,g.height(x+c*width*a+direction.x*tread*b,z-s*width*a+direction.z*tread*b));if(top-bottom>.06){bottom-=R.burialMetres;supports.push(Object.freeze({x,z,y:(top+bottom)/2,length:width,width:tread+.012,height:top-bottom,yaw,kind:'step'}));}}}}
  }
  const frozen=Object.freeze(supports);cache.set(b,{world:g.world,state:g.state,height:g.height,heights:g.world.heights,revision,team:b.team,x:b.x,y:b.y,z:b.z,w:b.w,d:b.d,contacts,supports:frozen});return frozen;
 }

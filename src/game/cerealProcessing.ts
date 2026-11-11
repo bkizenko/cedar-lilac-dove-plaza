@@ -59,21 +59,33 @@ export function harvestBacklogAlert(g:Game){
  if(!recentRisk&&!exposed&&sheaves<32&&rough<24&&reserveSeconds(g)>=CEREAL_STORAGE_RULES.urgentReserveSeconds)return null;
  const sites=g.state.buildings.filter(b=>b.team===0&&g.finished(b));
  const has=(kind:Building['type'])=>sites.some(b=>b.type===kind);
- const hand=g.state.autoWorkEnabled!==false&&has('hearth');
+ const hearth=has('hearth');
+ const hand=g.state.autoWorkEnabled!==false&&hearth;
+ const oven=has('oven');
  const projects=g.state.production?.projects.filter(p=>p.team===0&&p.phase!=='complete'&&p.phase!=='lost')??[];
  const prefix=recentRisk||exposed?'Harvest at risk':'Harvest backlog';
  const alert=(action:string)=>`${prefix} · ${action}`;
- if((winnow||thresh)&&!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
- if(winnow&&cerealWeatherIssue(g,'winnowCerealFloor'))return alert('winnowing resumes in dry weather');
- if(bake||grind){
-  if(!has('oven')&&!hand&&(!grind||!has('hearth')))return alert(grind?'finish a cooking hearth or bread oven':'finish a bread oven');
-  if(!bake&&!has('grindingStone')&&!hand&&!has('hearth'))return alert('finish a grinding stone or cook grain at a hearth');
-  if((t.survival?.waterLiters??0)<PRODUCTION_RECIPES.bakeBreadOven.water)return alert('collect drinking water for grain meals');
-  if(t.wood<PRODUCTION_RECIPES.bakeBreadOven.wood)return alert('gather firewood for grain meals');
+ let recipes:readonly ProductionRecipe[];
+ if(bake){
+  if(!oven&&!hand)return alert('finish a bread oven to bake the stored flour');
+  recipes=breadRecipes;
+ }else if(grind){
+  if(!oven&&!hand&&!hearth)return alert('finish a cooking hearth or bread oven');
+  if(!has('grindingStone')&&!hand&&!hearth)return alert('finish a grinding stone or cook grain at a hearth');
+  recipes=[...grindingRecipes,'cookPorridge'];
+ }else{
+  if(!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
+  if(winnow&&cerealWeatherIssue(g,'winnowCerealFloor'))return alert('winnowing resumes in dry weather');
+  recipes=winnow?['winnowCerealHand','winnowCerealFloor','winnowCerealFloorDouble']:['threshCerealHand','threshCerealFloor','threshCerealFloorDouble'];
  }
- const grainProjects=projects.filter(p=>isCerealRecipe(p.recipe)||p.recipe.startsWith('grindGrain')||p.recipe.startsWith('bakeBread')||p.recipe==='cookPorridge');
+ const grainProjects=projects.filter(p=>recipes.includes(p.recipe));
+ if(grainProjects.some(p=>!p.blockedReason&&p.actorId!==null&&p.phase!=='paused'&&p.phase!=='stored'))return recentRisk||exposed?alert('processing underway · check storage and workplace capacity'):null;
  if(grainProjects.some(p=>p.phase==='paused'||p.phase==='stored'))return alert('resume a paused grain batch at its workplace');
- if(grainProjects.some(p=>!p.blockedReason))return recentRisk||exposed?alert('processing underway · check storage and workplace capacity'):null;
+ if(bake||grind){
+  const meal=grind&&hearth?PRODUCTION_RECIPES.cookPorridge:PRODUCTION_RECIPES.bakeBreadOven;
+  if((t.survival?.waterLiters??0)<meal.water)return alert('collect drinking water for grain meals');
+  if(t.wood<meal.wood)return alert('gather firewood for grain meals');
+ }
  return alert('keep a worker and a clear route available');
 }
 
