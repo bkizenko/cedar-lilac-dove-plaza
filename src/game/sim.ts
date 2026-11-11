@@ -107,6 +107,7 @@ import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
+import {turnableBuilding,turnedFootprint} from "./footprints";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -1131,13 +1132,14 @@ export class Game {
     return b;
   }
 
-  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
+  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan,quarterTurn=false): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
-    const d = size??BUILDINGS[type];
+    if(quarterTurn&&(size||!turnableBuilding(type)))return "That building can't be turned"; // GW-08 (Grok): quarter turn = swapped footprint
+    const d = size??(quarterTurn?turnedFootprint(type):BUILDINGS[type]);
     const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
     if(prep?.issue)return prep.issue;
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
@@ -1154,7 +1156,7 @@ export class Game {
     if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
-    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
+    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))) return "Can't raise that in the water";
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
@@ -1229,8 +1231,8 @@ export class Game {
     return null;
   }
 
-  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
-    return this.placementIssue(type, x, z, team,size,undefined,span) === null;
+  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
+    return this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn) === null;
   }
 
   recycleSelected() {
@@ -1386,7 +1388,7 @@ export class Game {
     return null;
   }
 
-  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
+  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
     if (this.state.ended || (size&&(!scalablePlot(type)||!validPlot(type,size)))) return false;
     if(type==="house")return planAdvancedHome(this,x,z,team);
     const d = BUILDINGS[type];
@@ -1425,12 +1427,12 @@ export class Game {
     const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(`Need ${Math.max(0,(cost.seeds||0)-(tribe.seeds||0))} more seeds to mark this field`,4);return false;}
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
-    const spot = this.placementValid(type, x, z, team,size,span)
+    const spot = this.placementValid(type, x, z, team,size,span,quarterTurn)
       ? { x, z }
-      : team===0||size||span||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
+      : team===0||size||span||quarterTurn||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
-        this.banner(this.placementIssue(type, x, z, team,size,undefined,span) || "Can't build there", 1.8);
+        this.banner(this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn) || "Can't build there", 1.8);
         this.onSfx("invalid");
       }
       return false;
@@ -1439,6 +1441,7 @@ export class Game {
     configureTowerPlatform(this,b);
     configureExcavation(this,b);
     if(size){b.w=size.w;b.d=size.d;}
+    if(quarterTurn){const t=turnedFootprint(type);b.w=t.w;b.d=t.d;}
     if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
     if(planned)b.plannedCost=cost;
     if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || type === "townhall")) {
