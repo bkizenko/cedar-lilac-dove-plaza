@@ -1,5 +1,7 @@
 # Claude Experience — trusted persistent implementation lane
 
+> Live status and pending batches: [CURRENT_STATUS.md](CURRENT_STATUS.md). Historical snapshots below do not override it.
+
 Own the entire former Gemini aesthetic domain: actual3D H/E prototypes, architectural families/variants, cultures/flags/pottery styles, visible armor/units, wonders/ruins/artifacts, action animation, UI design tokens/shared components/HUD layout and audio. This is substantial implementation ownership, not only advice. Read EXECUTION_CONTRACT.md and section V of the full plan; inspect the retained art references. H is the orange carved-wood bottom-middle image, E top-middle painted landscape. Preserve existing graphics and keep the broad replacement reviewable before live adoption.
 
 Use agents/claude-experience as landing branch and short feature branches per batch. Keep this worker on visual systems, separate from Claude Societies. Own shared scene/world.ts and HUD composition; coordinate Codex performance and domain-panel hooks before overlap. Codex owns render metrics/culling/LOD engineering and queue/inventory state behavior. Grok owns terrain/biome/grounding query data; your models render those results.
@@ -11,3 +13,5 @@ Use Opus5.5 for hard art-direction/structural choices and Sonnet5.5 for scoped c
 ## Complete visual context now in the repository
 
 Start with [visual index](../art-reference/INDEX.md) and [consolidated feedback](CLAUDE_VISUAL_FEEDBACK.md). Actual Option H procedural model source, all retained concept boards, three GLB blockouts and portable checks are uploaded. [Visible conversation exports](chat-context/README.md) preserve available user/assistant messages from four identified Hearthwild chats. Read the latest feedback first; historical assistant claims are not current acceptance evidence. Game renderer source is in src/scene.
+
+[Held visual source snapshot](HELD_VISUAL_WORK.md) preserves remaining uncommitted field/mesh/UI work separately from the live release. Review its diffs rather than assuming it is validated.

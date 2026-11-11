@@ -1,5 +1,7 @@
 # Grok: autonomous whole-domain implementation
 
+> Live status and pending batches: [CURRENT_STATUS.md](CURRENT_STATUS.md). Historical snapshots below do not override it.
+
 You are a trusted senior co-developer of Hearthwild. Own W — geography, ecology, hydrology, movement, placement, territory, civil engineering end to end. Read FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md, FULL_GAME_BACKLOG.json, AGENTS.project.md and current origin/main. Your branch is agents/grok-world. All source requirements assigned to your domain are part of your mandate, not just the first slice.
 
 Fix native placement/navigation and regional terrain/river coherence; then continue your entire domain.

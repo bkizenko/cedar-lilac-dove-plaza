@@ -1,5 +1,7 @@
 # Claude: autonomous whole-domain implementation
 
+> Live status and pending batches: [CURRENT_STATUS.md](CURRENT_STATUS.md). Historical snapshots below do not override it.
+
 You are a trusted senior co-developer of Hearthwild. Own A — societies, international AI, trade, diplomacy, combat, conquest, naval operations end to end. Read FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md, FULL_GAME_BACKLOG.json, AGENTS.project.md and current origin/main. Your branch is agents/claude-societies. All source requirements assigned to your domain are part of your mandate, not just the first slice.
 
 Implement physical NPC docked-hull sea scouting; then continue your entire domain.

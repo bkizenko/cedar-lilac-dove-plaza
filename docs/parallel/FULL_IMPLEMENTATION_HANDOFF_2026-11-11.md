@@ -1,5 +1,7 @@
 # Hearthwild — full implementation and cross-model handoff
 
+> Live status and pending batches: [CURRENT_STATUS.md](CURRENT_STATUS.md). Historical snapshots below do not override it.
+
 Snapshot: 11 November 2026. Read current origin/main before work. This is the whole game programme, not a promise to finish it in one day. The latest user requests override contradictory historical proposals. All owners have full trust and end-to-end responsibility for design, implementation, tests and reviewable deliverables within their domains.
 
 ## Active coordination override
