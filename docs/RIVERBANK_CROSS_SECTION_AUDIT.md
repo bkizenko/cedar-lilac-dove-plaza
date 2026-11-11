@@ -32,3 +32,16 @@ The survey also builds a second water index for each river that omits the river 
 | 1 | 32 | 0.641 m | 32 | 0.258 m |
 
 All jumps of at least 2 m in this sample had nearby water on at least one of the two sections. This includes the lower rivers. At seed 42, the eligible sections differ between versions, so the means compare each version's isolated reaches and are not a matched-location improvement estimate. Future visual and route checks should sample across the actual connections and inspect whether transitions follow the intended banks, particularly at the riparian side channel and ordinary brook.
+
+## Shoreline access and rendering smoke check
+
+The integrated fishing test now runs four trips across the three surveyed V19 layouts. It verifies that the original worker reaches dry ground beside a generated fishing site, depletes the finite stock, retains the catch when saved at the bank, and adds food only after returning home. Both the coarse height grid and the refined tile heights are hashed before saving, after restoration, and after delivery.
+
+| Seed | Water | Distance walked | Catch delivered |
+| --- | --- | ---: | ---: |
+| 7 | Freshwater | 660.1 m | 3 |
+| 7 | Coast | 827.8 m | 3 |
+| 42 | Freshwater | 90.2 m | 4 |
+| 1 | Freshwater | 96.5 m | 3 |
+
+The seed 7 browser session restored the 320-tile V19 preview on port 8101 and drew the tributary join at camera distances of 30, 75 and 160 m without page errors or a lost WebGL context. The renderer reported approximately 596,000 triangles per sampled frame. This was a headless render check, so visual approval and interactive Mac frame-time measurements remain open. A separate seed 42 browser attempt timed out before the scene loaded. The four fishing trips provide bank-access evidence and do not qualify all crossing or boat routes.
