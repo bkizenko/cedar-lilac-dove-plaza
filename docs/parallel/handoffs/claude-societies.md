@@ -160,3 +160,9 @@ Sources: user message history (2026-09-27 → 2026-11-11), CLAUDE_SOCIETIES.md, 
 | 8 | Sea storms (G16) | storms delay/damage/turn back/loss | `seaStorms.ts` (this branch) | Integrated into main? No — main's 34e9e1f excluded it; still branch-only | Needs Codex integration |
 
 Execution order this session: 1 → 2, each with focused tests, then report.
+
+### Audit execution status
+- **Rank 1 done (source + tests):** `proposePlayerTrade(g, to, give, get, giveAmount)` in `tradeNeeds.ts` — player names an amount from what it actually holds of any trade good (resources, tools, weapons, armor, artifacts, animals); partner answers from its own need/surplus after the message delay; same escrow/carrier/receipt/parcel path; player reserve is the player's choice. `scripts/trade-player.test.mjs` 2/2 (end-to-end conservation, refusal reasons). Experience: wire the village dialog to `proposePlayerTrade` + `tradeAnswerBlocker` + `observedPartnerStock`.
+- **Rank 2 done (source + tests):** `src/game/alliances.ts` — NPC pacts from mutual trust (≥0.5) plus a shared, already-known enemy; partner joins the war on whoever enters an ally's community; sends real armed relief (keeps ≥1 armed at home, ≤4 per call, 300 s) that physically marches and fights; allied relief/defenders count in capitulation measurement; pacts break on partner hostility, lapse below 0.3 trust; relief stands down. Optional save `state.alliances`, validated via `validConflictIntentState`. `scripts/alliances.test.mjs` 4/4.
+- Regression fix from base-vs-head run: stand-down sweep only clears occupy marks left by an ended occupation (annexation-water-custody preset an intent before creating its control).
+- Next in rank: 4 raider camps settling into productive societies, 5 NPC siege-ram use + siege pressure term, 3 escalation/captive revolt.

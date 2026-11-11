@@ -11,6 +11,7 @@ import {agreeSocietyTruce} from './societyRelations';
 import {recordConflict} from './conflictMetrics';
 import {CONFLICT_RULES,integrateOccupiedVillage,type ConflictUnit,type OccupationControl} from './conflictIntent';
 import {createDomination,type DominationTerms} from './domination';
+import {alliesOf} from './alliances';
 
 /**
  * Natural capitulation. A community does not surrender because an attacker picked
@@ -59,13 +60,14 @@ export function measureFront(g:Game,f:CapitulationFront){
  const hall=g.state.buildings.find(b=>b.id===f.hallId);
  const attackers=hall&&hall.hp>0?presentAttackers(g,hall,f.attackerTeam,f.defenderTeam):[];
  const defenders=hall&&hall.hp>0?localDefenders(g,hall,f.defenderTeam):[];
- const attackPower=power(attackers,false),defensePower=power(defenders);
+ const allies=alliesOf(g,f.defenderTeam),allyLocal=hall&&allies.length?g.state.units.filter(u=>allies.includes(u.team)&&free(u)&&armed(u)&&!isDependent(g,u)&&dist(u,hall)<=R.communityRadiusMeters):[];
+ const attackPower=power(attackers,false),defensePower=power(defenders)+power(allyLocal,false);
  let dead=0,captured=0;for(const id of f.residentIds){const u=g.state.units.find(p=>p.id===id);if(!u||u.hp<=0)dead++;else{const p=(u as PrisonerUnit).prisoner;if(p&&p.phase!=='released'&&p.originTeam===f.defenderTeam)captured++;}}
  const armedNow=defenders.filter(armed).length;
  const lostBuildings=f.buildingIds.filter(id=>{const b=g.state.buildings.find(x=>x.id===id);return!b||b.hp<=0||b.team!==f.defenderTeam;}).length;
  const hallLoss=hall?clamp01(1-hall.hp/Math.max(1,f.hallHpAtOpen)):1;
  const occupied=(st(g).occupations||[]).some(c=>c.hallId===f.hallId&&c.controllerTeam===f.attackerTeam&&(c.phase==='holding'||c.phase==='held'));
- const relief=hall?g.state.units.filter(u=>(u.team===f.defenderTeam||isRivalTeam(f.defenderTeam)&&u.team===0&&g.isAlly(f.defenderTeam)&&!g.isFoe(0,f.defenderTeam))&&free(u)&&armed(u)&&!isDependent(g,u)&&dist(u,hall)>R.communityRadiusMeters&&dist(u,hall)<=R.reliefRadiusMeters):[];
+ const relief=hall?g.state.units.filter(u=>(u.team===f.defenderTeam||allies.includes(u.team)&&dist(u,hall)<=R.reliefRadiusMeters&&free(u)&&armed(u)||isRivalTeam(f.defenderTeam)&&u.team===0&&g.isAlly(f.defenderTeam)&&!g.isFoe(0,f.defenderTeam))&&free(u)&&armed(u)&&!isDependent(g,u)&&dist(u,hall)>R.communityRadiusMeters&&dist(u,hall)<=R.reliefRadiusMeters):[];
  return{hall,attackers,defenders,attackPower,defensePower,ratio:attackPower/Math.max(R.minimumDefense,defensePower),dead,captured,armedNow,lostBuildings,hallLoss,occupied,reliefPower:power(relief,false),starving:reserveSeconds(g,f.defenderTeam)<R.starvationReserveSeconds};
 }
 export function frontScore(f:CapitulationFront){

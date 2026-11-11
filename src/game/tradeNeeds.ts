@@ -111,17 +111,20 @@ function cooling(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return
 function declineRow(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get);}
 export type TradeProposal={ok:true;offer:TradeOffer}|{ok:false;reason:string};
 /** A proposal moves nothing: stocks are checked and reserved only on acceptance. */
-export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get:GoodKind,wantAmount?:number):TradeProposal{
+export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get:GoodKind,wantAmount?:number,playerGiveAmount?:number):TradeProposal{
  const no=(reason:string)=>{note(g,from,reason);return{ok:false as const,reason};};
- if(from===0||from===3||!g.tribe(from)?.alive||!g.tribe(to)?.alive||from===to||to===3||give===get)return no('invalid');
+ const player=from===0&&playerGiveAmount!==undefined;
+ if(from===0&&!player||from===3||!g.tribe(from)?.alive||!g.tribe(to)?.alive||from===to||to===3||give===get)return no('invalid');
  if(!TRADE_GOODS[give]||!TRADE_GOODS[get]||g.isFoe(from,to))return no('foe');
  const site=knownSettlementSite(g,to,from);if(!site)return no('partner-unknown');
  if(cooling(g,from,to,give,get))return no('cooldown');
  if(root(g).offers.some(o=>OPEN.includes(o.phase)&&o.from===from))return no('already-trading');
  const spread=tradeSpread(g,from,to),wg=TRADE_GOODS[give].worth,wt=TRADE_GOODS[get].worth,declines=declineRow(g,from,to,give,get)?.declines??0,scale=Math.pow(TRADE_NEEDS_RULES.declineScale,declines);
  const need=Math.max(1,Math.ceil(Math.min(wantAmount??tradeNeed(g,from,get),TRADE_GOODS[get].maxLot)*scale));
- let giveAmt=Math.ceil(need*wt/wg/(1-spread));const surplus=tradeSurplus(g,from,give);
- giveAmt=Math.min(giveAmt,surplus,TRADE_GOODS[give].maxLot);if(giveAmt<TRADE_GOODS[give].lot)return no('no-surplus');
+ let giveAmt=Math.ceil(need*wt/wg/(1-spread));const surplus=player?tradeStock(g,from,give):tradeSurplus(g,from,give);
+ // The player names the amount it offers from what it actually holds; NPCs offer only beyond reserve.
+ if(player){if(!Number.isFinite(playerGiveAmount)||playerGiveAmount!<1)return no('invalid');giveAmt=Math.floor(playerGiveAmount!);if(giveAmt>surplus)return no('no-surplus');if(giveAmt>TRADE_GOODS[give].maxLot)return no('too-large');}
+ else giveAmt=Math.min(giveAmt,surplus,TRADE_GOODS[give].maxLot);if(giveAmt<TRADE_GOODS[give].lot)return no('no-surplus');
  const getAmt=Math.min(TRADE_GOODS[get].maxLot,Math.floor(giveAmt*wg/wt*(1-spread)+1e-9));if(getAmt<TRADE_GOODS[get].lot)return no('low-value');
  const fair=giveAmt*wg/wt,{trust,risk}=observedRisk(g,from,to,site,giveAmt*wg);
  const o:TradeOffer={id:g.id(),from,to,give:{kind:give,amount:giveAmt},get:{kind:get,amount:getAmt},fairGet:fair,spread,phase:'proposed',createdAt:g.state.time,answerAt:g.state.time+TRADE_NEEDS_RULES.answerDelayBase+dist(g.campOf(from),site)*TRADE_NEEDS_RULES.answerDelayPerMeter,hall:{x:site.x,z:site.z},reserved:false,carriers:[],escorts:[],ready:[],lines:[],risk,trust,escortsWanted:escortsForRisk(risk/villagePersonality(g,from).boldness),escortsArmed:0,escortsLost:0,carriersLost:0,paid:false,reason:'Proposed from observed need',lostAmount:0,lostToParcel:0,needAmount:need,volume:giveAmt*wg};
@@ -129,6 +132,10 @@ export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get
  s.offers.push(o);const r=row(g,from);r.proposed++;for(const k of [give,get]){r.mix[k]=(r.mix[k]||0)+1;const c=TRADE_GOODS[k].cat;r.categories[c]=(r.categories[c]||0)+1;}
  return{ok:true,offer:o};}
 
+/** Player-originated needs trade with any village it has located: the player names what it gives and how much;
+ * the partner answers from its own need and surplus after the message travels; goods and people then move on the
+ * same escrow/carrier/receipt path as NPC trades (player carriers are its own free adults). */
+export function proposePlayerTrade(g:Game,to:number,give:GoodKind,get:GoodKind,giveAmount:number){return proposeTradeOffer(g,0,to,give,get,undefined,giveAmount);}
 /** What this partner's refusals taught: it did not need the offered good, or could not spare the requested one. */
 function learnedBlock(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return !!g.state.tradeNeeds?.cooldowns.some(c=>c.team===from&&c.partner===to&&c.until>g.state.time&&(c.reason==='no-need'&&c.give===give||c.reason==='no-surplus'&&c.get===get));}
 /** Ranks an NPC's needs against its surplus; recently proposed kinds are penalized so offers stay varied. */
@@ -165,7 +172,7 @@ type CommitReady={blocker:'';home:{x:number;z:number};pool:Unit[];carriers:Unit[
 type CommitPlan={blocker:string}|CommitReady;
 /** Pure: every admission check of the accept path, without moving goods or people. */
 function commitPlan(g:Game,o:TradeOffer):CommitPlan{
- if(tradeStock(g,o.from,o.give.kind)-tradeReserve(g,o.from,o.give.kind)<o.give.amount&&o.give.kind!=='food')return{blocker:'proposer-short'};if(tradeStock(g,o.from,o.give.kind)<o.give.amount)return{blocker:'proposer-short'};
+ if(o.from!==0&&tradeStock(g,o.from,o.give.kind)-tradeReserve(g,o.from,o.give.kind)<o.give.amount&&o.give.kind!=='food')return{blocker:'proposer-short'};if(tradeStock(g,o.from,o.give.kind)<o.give.amount)return{blocker:'proposer-short'};
  if(tradeStock(g,o.to,o.get.kind)<o.get.amount)return{blocker:'partner-short'};
  const home=g.campOf(o.from),pool=g.state.units.filter(u=>u.type==='worker'&&free(g,u,o.from)&&!u.militia&&supplyDrops(g,o.from).length>0).sort((a,b)=>Number(b.haulage==='pack')-Number(a.haulage==='pack')||dist(a,home)-dist(b,home)||a.id-b.id);
  if(!pool.length)return{blocker:'no-carriers'};
