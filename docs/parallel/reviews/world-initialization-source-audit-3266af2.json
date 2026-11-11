@@ -1,0 +1,150 @@
+{
+  "recordedAtUtc": "2026-11-11T22:45:47.390266+00:00",
+  "committedHead": "0bbcdb5127e18fc3d3b75ec41865bae93b96ed2a",
+  "evidence": "Static source call graph, no Game construction or world generation executed; current held source read-only. All counts below count public generateWorld calls, not measured milliseconds or internal candidate attempts.",
+  "sourcePaths": [
+    {
+      "path": "src/game/sim.ts",
+      "sha256": "7278840db05ff92c77518d1cd8fd463409f2774c26522bf688c516bedfd11389"
+    },
+    {
+      "path": "src/game/persistence.ts",
+      "sha256": "f327ef36f7db7895487ea4e4e406806f4fbc0cb9d92e7b07f707d0eb0ff51808"
+    },
+    {
+      "path": "src/game/save.ts",
+      "sha256": "5e2eb99feeed18719894fa7601582268fb58e292f8f071f77390754fa69494f2"
+    },
+    {
+      "path": "src/game/engine.ts",
+      "sha256": "a13570d31f4277833f7ba88813f2680d369a8bafb916d3c86d88a598d3daa434"
+    },
+    {
+      "path": "src/game/autosavePayload.ts",
+      "sha256": "21e37f20f42a4727e4f19c5857418393ee24f1584496c815f20da9951b64fe66"
+    },
+    {
+      "path": "src/game/communityHandover.ts",
+      "sha256": "191790c00568f2cb4cae5691c5f779108e843af377af030ae53865421fad03aa"
+    },
+    {
+      "path": "src/game/commandGateway.ts",
+      "sha256": "ec426421a864f4e6803550f53cad919d2ad03a0e33126d4f671a46a7e028d21e"
+    },
+    {
+      "path": "src/game/worldgen.ts",
+      "sha256": "081f6a3094ce0bc5d87a4b2a21cb9d7046657e37109193944090e3ffcff1b385"
+    },
+    {
+      "path": "scripts/autosave-latency.test.mjs",
+      "sha256": "0a04a550e9946804d7303af5a230836bee9dc6ee48f201c1ab623e05b1e680c7"
+    }
+  ],
+  "findings": [
+    {
+      "at": "src/game/sim.ts:248-253,358-369",
+      "finding": "Constructor eagerly generates default v1 world0xdae1; normal reset immediately replaces it with requested world. Constructor also allocates walk/state/diagnostics and draws global RNG in calamityT initializer and blank default raid timer; preserve those unrelated semantics."
+    },
+    {
+      "at": "src/game/persistence.ts:662-698",
+      "finding": "Every valid decode constructs Game then reset(save seed/version/options), so ordinary restore has2generateWorld calls. Legacy V7/V14 evidence/fallback generation is deliberate and must stay intact."
+    },
+    {
+      "at": "src/game/save.ts:42-47,98-112;src/game/engine.ts:114,154-159",
+      "finding": "loadRaw uses valid(raw,reconstruct=true) on all three slots before selecting candidate; each successful candidate is fully decoded but returned only as raw payload. Engine.begin then decodes the winning raw again. Saved startup with3valid ordinary candidates has9public generation calls including initial Engine Game. No new generation in hasSave."
+    }
+  ],
+  "callCounts": [
+    {
+      "path": "new Game only",
+      "current": 1,
+      "afterLazyOwnWorldBeforeAnyRead": 0,
+      "afterFirstDefaultWorldRead": 1
+    },
+    {
+      "path": "new Game();reset(explicit seed/version)",
+      "current": 2,
+      "proposedLazy": 1
+    },
+    {
+      "path": "decodeGame valid ordinary save, no legacy repair",
+      "current": 2,
+      "proposedLazy": 1
+    },
+    {
+      "path": "Engine construction+fresh begin without saves, normal reset succeeds",
+      "current": 2,
+      "proposedLazy": 1
+    },
+    {
+      "path": "Engine construction+begin withNvalid ordinary save slots",
+      "currentFormula": "1+2N+2",
+      "proposedLazyFormula": "N+1",
+      "whenN3": {
+        "current": 9,
+        "proposed": 4
+      },
+      "assumption": "Engine pre-begin does not read default world; no reset or worldgen failure/fallback."
+    },
+    {
+      "path": "resumeSaved ordinary,3valid slots;existing Engine already initialized",
+      "current": 8,
+      "proposedLazy": 4
+    },
+    {
+      "path": "resumeSaved protectedOnly;one valid protected ordinary candidate",
+      "current": 4,
+      "proposedLazy": 2
+    },
+    {
+      "path": "Test Lab copy entry or direct file import;current village already initialized",
+      "current": 2,
+      "proposedLazy": 1
+    },
+    {
+      "path": "ordinary autosave Worker preflight/prepare, synchronous saveGame and protected snapshot",
+      "current": 0,
+      "proposedLazy": 0
+    },
+    {
+      "path": "validateGameSave, community-handover preflight and worker-command eligibility",
+      "current": 0,
+      "proposedLazy": 0
+    }
+  ],
+  "countLimits": [
+    "Decode V7/V14 may perform extra deliberate evidence reconstruction; count2is normal path, not an upper bound.",
+    "generateWorld v15+ can internally try up to16 candidates; public-call count is not equivalent to candidate count or equal time.",
+    "Repeated initialization/restoration cost is plausibly material for tests/import/startup; this source audit supplies no measured latency, memory reduction or cause of periodic steady-state stalls."
+  ],
+  "preflightEvidence": {
+    "structural": "persistence.ts123-130 uses Game.prototype.blank(0), not constructor, avoiding default raid-timer RNG. validateGameSave661 invokes this only.",
+    "autosave": "autosavePayload.ts7-17 calls validateGameSave; no decodeGame/newGame. saveGameAttempt uses valid(old,false). Existing autosave latency/Worker tests executed in earlier G10 qualification, but not rerun here.",
+    "command": "communityHandover.ts44-52 clones a draft via Object.assign(Object.create(prototype),g), then state structuredClone and read-only snapshot validation. commandGateway has eligibility/state checks, no Game construction.",
+    "testBlindSpot": "scripts/autosave-latency.test.mjs wraps Game.prototype.reset and asserts1reset per decode. It cannot see constructor generateWorld, so it does not disprove the second generation. Its prior whole-test duration must not be attributed to constructor work."
+  },
+  "recommendedFirstPatch": {
+    "scope": "sim.ts constructor/world initialization only, after root coordinates shared Game ownership; leave persistence/save/engine behavior and fallback semantics unchanged initially.",
+    "design": "Lazy per-instance OWN enumerable world property. At construction install getter/setter with Object.defineProperty. On first getter call, generate default0xdae1 once then replace own property with normal writable value. On reset assignment, setter directly installs provided requested WorldData as normal writable own property without ever generating default world. Preserve blank/walk/workBoard/runtime/RNG initialization. No shared cached WorldData.",
+    "whyOwnProperty": "Preserve existing Object.assign draft/command preflight semantics and public own world shape. Avoid JS#private lazy storage: prototype-only draft copies lack private slots. An ordinary TypeScript-private backing property is possible but changes enumerable shape; if chosen, explicitly qualify all Object.assign/Game snapshot consumers.",
+    "factoryAlternative": "Explicit internal deferred-world construction plus Game.createForReset(seed,version,options) can avoid public lazy property, but must prevent half-initialized Game escape and requires migrating callers. Keep normal newGame contract working; do not introduce undefined-world casts or shared default mutable world.",
+    "notThisPatch": [
+      "Do not skip reset inside decodeGame: it initializes runtime caches/fields and consumes global RNG; a direct world assignment can change game semantics.",
+      "Do not weaken loadRaw to structural validation then reconstruct only winner without preserving fallback selection: previously a terrain-incompatible but structurally valid primary is rejected before seed/newest candidate selection.",
+      "Do not claim a simulation-worker migration or periodic-frame improvement based on constructor source alone."
+    ]
+  },
+  "optionalSecondPatch": "After first patch is qualified, eliminate duplicate successful restore via a dedicated loadSavedGame returning the already reconstructed winning Game+raw. Preserve all current primary/backup/protected selection, active-first valid seed and savedAt/time ordering, corrupt/reconstruction-failing fallback, refusal to overwrite protected slots and import cancellation. This is a separate save/engine contract, not a generic structural-only replacement.",
+  "acceptanceBeforeMerge": [
+    "Instrument actual public generation entry/candidate counts in an isolated test harness (not only reset); prove requested resets and ordinary decodes1public generation, bare default first read1, second read0additional, invalid raw0before Game construction. Report legacy extra candidates separately.",
+    "Run two independent default Game instances: world objects, heights/water arrays/ecology/resource arrays must not share mutation. Reset one and mutate terrain/water; other unchanged. Repeated reads on one instance preserve its world/cache identity.",
+    "With fixed seeded global Math.random stream, compare baseline/candidate exact RNG calls/order and final full encodeGame payload for newGame+reset and strict decode+same subsequent steps. Preserve calamityT and blank raid-timer draws; no changed game seed cursor or Date.random substitute.",
+    "Preserve exact published terrain hashes and restored opening sites for all supported saved worldgen versions, especially V7 omitted random layout, V14 hintless openingSiteVersion/randomLayout, V17 local water, V18/V19 multi-candidate generation. Existing native/V14/V15 save suites plus representative retained saved villages, not regenerated replacement fixtures.",
+    "Original input/save primary/backup/protected bytes untouched on failed candidate generation/import; native dimensions/features/heights/terrain triangle+water surfaces and ownership/runtime diagnostics unchanged after strict reload.",
+    "Actual Engine fresh start/saved begin/import/protected restore/TestLab entry/save/load/exit and public UI behavior; no half-initialized world before view rebuild. Prototype draft/preflight still zero generation/RNG/live mutation.",
+    "Worker and synchronous autosave tests must remain zero terrain-generation and no validation randomness; pure commands/preflight retain same no-generation guarantee.",
+    "Only after correctness, measure paired cold/warm startup/import/decode times and peak memory with named real save inputs and unchanged source hashes; do not infer speedup from reduced calls alone."
+  ],
+  "ownership": "No shared sim/persistence/save/engine/source edits made. Food custody leaf remains unwired and typed loads disabled. No heavy checks while camera lane owns resources.",
+  "sequencing": "Grok execution PM decides scheduling and file claims after current camera batch. Claude high-level design role retained. Codex implementation/integration support only; this audit does not authorize source edits."
+}

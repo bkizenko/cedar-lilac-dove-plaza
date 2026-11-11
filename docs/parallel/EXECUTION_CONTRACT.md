@@ -10,6 +10,14 @@ This supersedes earlier wording assigning overall execution leadership to Codex 
 
 This is the governing coordination revision. Gemini is not participating. Preserve the whole original plan and later backlog. Codex integrates; Claude and Grok are trusted independent owners, not limited assistants. Persistent domains reduce context switching. Small shared changes are coordinated, not prohibited.
 
+## Current execution order — latest explicit user instruction
+
+1. Measured simulation speed on an actual native100-resident Low-profile run: target p95<33ms; cut demonstrated hot paths and implement an authoritative Web Worker simulation with real measurements.
+2. Normal whole-branch merges, behind game options: agents/claude-societies at least55fc655, agents/claude-experience at least9992fe9, and agents/grok-world. Wire the board hooks. No partial branch landing, rebasing or force-pushing shared work.
+3. Then knowledge/provenance redesign, livestock/horses/cheese, crafting and saves. Preserve already qualified pending work; it is not a new published release.
+
+[COMPLETION_PLAN.md](COMPLETION_PLAN.md) is the supplied plan from Claude coordination commit e8a48af. Codex owns canonical backlog reconciliation and native/built evidence before gate credit. This order overrides earlier queue wording below; all original scope remains.
+
 ## Persistent domain ownership
 
 | Lane | Primary owner | Scope | First deliverable |
