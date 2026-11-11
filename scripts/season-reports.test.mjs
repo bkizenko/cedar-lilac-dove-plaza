@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {updateSeasonReports, recordSeasonWeapon, validSeasonReports, SEASON_REPORT_LIMIT} from '../src/game/seasonReports.ts';
+import {updateSeasonReports, recordSeasonWeapon, currentSeasonReport, validSeasonReports, SEASON_REPORT_LIMIT} from '../src/game/seasonReports.ts';
 import {recordSimulationEvent} from '../src/game/simulationEvents.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 
@@ -31,4 +31,30 @@ test('season boundaries record actual receipts, deliveries, weapons and end stoc
  assert.equal(validSeasonReports(bad,g.state.time),false);
  for(let i=2;i<=SEASON_REPORT_LIMIT+3;i++){g.state.time=i*450;updateSeasonReports(g);}
  assert.equal(g.state.seasonReports.history.length,SEASON_REPORT_LIMIT);
+});
+
+test('food use and pantry spoilage have their own season baselines across legacy saves',()=>{
+ let g=new Game();g.reset(42,10);g.enterIsland();
+ g.state.time=450;
+ recordSimulationEvent(g,'food_consumed',0,'food',19);
+ recordSimulationEvent(g,'food_spoiled',0,'food',5);
+ updateSeasonReports(g);
+ assert.deepEqual(currentSeasonReport(g).foodFlow,{eaten:0,spoiled:0,partial:false});
+ recordSimulationEvent(g,'food_consumed',0,'food',8);
+ recordSimulationEvent(g,'food_spoiled',0,'food',2);
+ recordSimulationEvent(g,'food_spoiled',1,'food',13);
+ g.state.time=900;updateSeasonReports(g);
+ assert.deepEqual(g.state.seasonReports.history[0].foodFlow,{eaten:8,spoiled:2,partial:false});
+ delete g.state.seasonReports.history[0].foodFlow;
+ delete g.state.seasonReports.active.foodFlow;
+ g.state.time=930;
+ g=decodeGame(encodeGame(g));
+ assert.equal(currentSeasonReport(g).foodFlow,undefined);
+ updateSeasonReports(g);
+ recordSimulationEvent(g,'food_consumed',0,'food',3);
+ assert.deepEqual(currentSeasonReport(g).foodFlow,{eaten:3,spoiled:0,partial:true});
+ assert.equal(g.state.seasonReports.history[0].foodFlow,undefined);
+ const bad=structuredClone(g.state.seasonReports);
+ bad.active.foodFlow.spoiled=-1;
+ assert.equal(validSeasonReports(bad,g.state.time),false);
 });
