@@ -84,7 +84,7 @@ export function slab(w, d, h, hex, grain = .6) {
 
 /** Indexed terrain grid. `height(x,z)` is the display height; `colorHeight`
  * (default = height) is what carvedTerrainColorsForPositions samples. */
-export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height, waterY, seed = 0, pathWeight, name = 'terrain', grain = .35, grainAmplitude = null }) {
+export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height, waterY, seed = 0, pathWeight, name = 'terrain', grain = .35, grainAmplitude = null, natural = false }) {
   const nx = Math.round((x1 - x0) / step) + 1, nz = Math.round((z1 - z0) / step) + 1;
   const pos = new Float32Array(nx * nz * 3), nrm = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2), gr = new Float32Array(nx * nz).fill(grain);
   const H = new Float32Array(nx * nz);
@@ -94,7 +94,8 @@ export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height
     const n = [-(hr - hl) / (2 * step), 1, -(hu - hd) / (2 * step)], l = Math.hypot(...n); nrm[k * 3] = n[0] / l; nrm[k * 3 + 1] = n[1] / l; nrm[k * 3 + 2] = n[2] / l;
   }
   let col;
-  if (grainAmplitude == null) col = terrace.carvedTerrainColorsForPositions(pos, colorHeight, waterY, seed, pathWeight);
+  if (natural) { col = naturalTerrainColors(pos, height, waterY, pathWeight, seed); gr.fill(0); }
+  else if (grainAmplitude == null) col = terrace.carvedTerrainColorsForPositions(pos, colorHeight, waterY, seed, pathWeight);
   else { // same as carvedTerrainColorsForPositions, with the grain term rescaled (preview proposal)
     col = new Float32Array(nx * nz * 3); const path = palette.hexToRgb(palette.CARVED_TERRAIN.path), A = palette.CARVED_TERRAIN.grainAmplitude;
     for (let k = 0; k < nx * nz; k++) {
@@ -107,6 +108,32 @@ export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height
   const idx = [];
   for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
   return { name, cast: true, flat: false, pos: f32(pos), nrm: f32(nrm), col: f32(col), grain: f32(gr), uv: f32(uv), idx: u32(idx), mat: u8(new Uint8Array(nx * nz).fill(MAT.terrain)), tris: idx.length / 3 };
+}
+
+/** Natural (non-carved) terrain palette for the golden-hour review: grass, dry
+ * grass, soil, rock on steep slopes, sandy banks, riverbed. Preview-only values;
+ * the generator has no natural terrain palette (carvedTerrace is the H look). */
+export const NATURAL_TERRAIN = { grass: '#7d8a46', grassDry: '#a59c5c', soil: '#9a7a52', rock: '#8f877a', bank: '#bba57a', bed: '#5f7479', path: '#c8ad80' };
+const vhash = (x, z, s) => { const h = Math.sin(x * 127.1 + z * 311.7 + s * 74.7) * 43758.5453; return h - Math.floor(h); };
+export function valueNoise(x, z, s = 0) { const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf);
+  const a = vhash(xi, zi, s), b = vhash(xi + 1, zi, s), c = vhash(xi, zi + 1, s), d = vhash(xi + 1, zi + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+export function naturalTerrainColors(pos, height, waterY, pathWeight, seed = 0) {
+  const n = pos.length / 3, out = new Float32Array(n * 3), C = Object.fromEntries(Object.entries(NATURAL_TERRAIN).map(([k, v]) => [k, palette.hexToRgb(v)]));
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * Math.max(0, Math.min(1, t)));
+  for (let i = 0; i < n; i++) {
+    const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2], e = .6;
+    const slope = Math.hypot(height(x + e, z) - height(x - e, z), height(x, z + e) - height(x, z - e)) / (2 * e);
+    const n1 = valueNoise(x * .06, z * .06, seed), n2 = valueNoise(x * .35, z * .35, seed + 7), n3 = valueNoise(x * 1.7, z * 1.7, seed + 3);
+    let c = mix(C.grass, C.grassDry, n1 * 1.3 - .25 + (y - waterY) * .03);
+    c = mix(c, C.soil, (n2 - .72) * 3);
+    c = mix(c, C.rock, (slope - .55) * 2.2);
+    const above = y - waterY;
+    if (above < .9) c = mix(c, C.bank, 1 - above / .9);
+    if (above < 0) c = mix(C.bank, C.bed, Math.min(1, -above / 1.0));
+    const p = pathWeight ? pathWeight(x, z) : 0; if (p > 0 && above > 0) c = mix(c, C.path, p * .9);
+    const k = .93 + n3 * .12; out[i * 3] = c[0] * k; out[i * 3 + 1] = c[1] * k; out[i * 3 + 2] = c[2] * k;
+  }
+  return out;
 }
 
 /** Flat water surface (grain = -1 flags water in the shader), palette water swatch. */

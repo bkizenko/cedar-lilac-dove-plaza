@@ -4,7 +4,7 @@
 // (unitAppearance.ts). Grammar data is generator output; how a grammar token is
 // drawn here (flag cells, lathe pots, body stand-in, roof/ground tinting) is
 // this preview's interpretation and is listed in the handoff note.
-import { Soup, specMesh, slab, terrainMesh, grainTexture, style, families, trees, caravans, palette, terrace, parts as P, MAT, constants } from './scene-lib.mjs';
+import { NATURAL_TERRAIN, Soup, specMesh, slab, terrainMesh, grainTexture, style, families, trees, caravans, palette, terrace, parts as P, MAT, constants } from './scene-lib.mjs';
 import { rigFor } from './rigs.mjs';
 const S = '../../src/scene/';
 const culture = await import(S + 'cultureGrammar.ts');
@@ -119,16 +119,16 @@ export function buildCivVillage(civ, soup, ox = 0, oz = 0) {
   return { cul, apps };
 }
 
-function groundSoup(civ, cul, w, d, ox, oz) {
-  const g = new Soup('ground'), band = hexRgb(palette.CARVED_TERRAIN.bands[0]), gr = hexRgb(cul.palette.ground), m = slab(w, d, .8, palette.CARVED_TERRAIN.bands[0], .45);
+function groundSoup(civ, cul, w, d, ox, oz, natural = true) {
+  const g = new Soup('ground'), band = hexRgb(natural ? NATURAL_TERRAIN.grass : palette.CARVED_TERRAIN.bands[0]), gr = hexRgb(cul.palette.ground), m = slab(w, d, .8, palette.CARVED_TERRAIN.bands[0], .45);
   const t = mixRgb(band, gr, .3); for (let i = 0; i < m.colors.length; i += 3) { m.colors[i] = t[0]; m.colors[i + 1] = t[1]; m.colors[i + 2] = t[2]; }
-  g.add(m, { x: ox, z: oz }); const sq = slab(9, 7, .05, palette.CARVED_TERRAIN.path, .3); g.add(sq, { x: ox + 1, z: oz + 2.5, y: .05 });
+  g.add(m, { x: ox, z: oz }); const sq = slab(9, 7, .05, natural ? NATURAL_TERRAIN.path : palette.CARVED_TERRAIN.path, natural ? 0 : .3); g.add(sq, { x: ox + 1, z: oz + 2.5, y: .05 });
   return g;
 }
 
 export function civScene(civ) {
-  return ({ rig }) => {
-    const soup = new Soup('civ'), { cul, apps } = buildCivVillage(civ, soup), ground = groundSoup(civ, cul, 46, 36, 0, 0);
+  return ({ rig, terrain = 'natural' }) => {
+    const soup = new Soup('civ'), { cul, apps } = buildCivVillage(civ, soup), ground = groundSoup(civ, cul, 46, 36, 0, 0, terrain !== 'carved');
     const p = cul.palette, labels = [
       { x: 12, y: 16, text: `${civ.title} — culture seed ${civ.input.seed}`, align: 'left', size: 14, weight: 700 },
       { x: 12, y: 36, text: `${cul.climate} · ${cul.material} · craft ${cul.craft}${cul.coastal ? ' · coastal' : ''} · motifs ${cul.motifs.join(', ')} · ${civ.season}`, align: 'left', size: 10 },
@@ -143,10 +143,10 @@ export function civScene(civ) {
   };
 }
 
-export function civLineupScene({ rig }) {
+export function civLineupScene({ rig, terrain = 'natural' }) {
   const soup = new Soup('civs'), gsoup = new Soup('ground'), labels = [], cw = 50, cd = 40;
   CIVS.forEach((civ, i) => {
-    const ox = -cw + (i % 3) * cw, oz = -cd / 2 + Math.floor(i / 3) * cd, { cul } = buildCivVillage(civ, soup, ox, oz), g = groundSoup(civ, cul, 46, 36, ox, oz);
+    const ox = -cw + (i % 3) * cw, oz = -cd / 2 + Math.floor(i / 3) * cd, { cul } = buildCivVillage(civ, soup, ox, oz), g = groundSoup(civ, cul, 46, 36, ox, oz, terrain !== 'carved');
     gsoup.p.push(...g.p); gsoup.n.push(...g.n); gsoup.c.push(...g.c); gsoup.g.push(...g.g); gsoup.u.push(...g.u); gsoup.m.push(...g.m); gsoup.tris += g.tris;
     labels.push({ world: [ox, 0, oz + 19.5], text: `${civ.title} · ${cul.climate}/${cul.material}/${cul.craft}`, size: 10 });
   });

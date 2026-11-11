@@ -40,6 +40,10 @@ BLENDER=$HOME/blender/blender node tools/blender/run.mjs [--samples=96] [--quick
 the Blender job (workflow_dispatch, or push to `agents/claude-experience-render`
 touching these tools) and uploads PNGs as 7-day artifacts.
 
+## Terrain and rig defaults
+
+The default is natural terrain (grass, soil, rock, sandy banks) under the warm `golden` rig, following user feedback after review 1. `--terrain=carved` restores the carved-wood terraces with the `tuned` rig, and `village-carved` is kept for comparison. All three backends accept `--terrain` and `--rig`.
+
 ## Single scene
 
 ```

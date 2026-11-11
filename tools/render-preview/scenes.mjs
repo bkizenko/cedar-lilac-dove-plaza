@@ -94,7 +94,8 @@ function rawHeight(x, z) {
   return h;
 }
 const dispHeight = (x, z) => { const h = rawHeight(x, z); return h < WATER_Y ? h : terrace.terracedHeight(h, WATER_Y, 1); };
-const groundAt = (x, z) => { let m = -Infinity; for (const [dx, dz] of [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]]) m = Math.max(m, dispHeight(x + dx, z + dz)); return m; };
+let HEIGHT_FN = dispHeight;
+const groundAt = (x, z) => { let m = -Infinity; for (const [dx, dz] of [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]]) m = Math.max(m, HEIGHT_FN(x + dx, z + dz)); return m; };
 
 function villagePaths() {
   const br = polyAt(RIVER, .5), gate = [CHURCH[0], CHURCH[1] + 11];
@@ -109,10 +110,11 @@ function villagePaths() {
   ];
 }
 
-function villageScene({ rig, lodTier = 0, hero = false } = {}) {
+function villageScene({ rig, lodTier = 0, hero = false, terrain: tmode = 'natural' } = {}) {
+  const natural = tmode !== 'carved', H = natural ? (x, z) => rawHeight(x, z) : dispHeight; HEIGHT_FN = H;
   const soup = new Soup('village'), labels = [], paths = villagePaths();
   const pathW = (x, z) => { let m = Infinity; for (const p of paths) m = Math.min(m, polyDist(x, z, p)); return 1 - sstep(.75, 1.2, m); };
-  const terrain = terrainMesh({ x0: -80, x1: 80, z0: -80, z1: 80, step: .3, height: dispHeight, colorHeight: rawHeight, waterY: WATER_Y, seed: 5, pathWeight: pathW, grainAmplitude: rigFor(rig).terrainGrainAmplitude ?? null });
+  const terrain = terrainMesh({ x0: -80, x1: 80, z0: -80, z1: 80, step: .3, height: H, colorHeight: rawHeight, waterY: WATER_Y, seed: 5, pathWeight: pathW, grainAmplitude: rigFor(rig).terrainGrainAmplitude ?? null, natural });
   const water = waterMesh(-80, 80, -80, 80, SURFACE_Y);
   let id = 100;
   const put = (type, x, z, yaw, extra = {}, era = 2) => {
@@ -146,14 +148,14 @@ function villageScene({ rig, lodTier = 0, hero = false } = {}) {
   { const m = polyAt(RIVER, .74), off = RIVER_HALF + 1.9, x = m.p[0] + m.n[0] * off, z = m.p[1] + m.n[1] * off;
     put('grindingStone', x, z, Math.atan2(m.n[1], -m.n[0]), { reviewWatermill: true, waterSide: '+x' }); }
   // bridge across the river (long axis = local z), deck meets the banks
-  { const br = polyAt(RIVER, .5); put('bridge', br.p[0], br.p[1], Math.atan2(br.n[0], br.n[1]), { y: BRIDGE_Y }); }
+  { const br = polyAt(RIVER, .5); put('bridge', br.p[0], br.p[1], Math.atan2(br.n[0], br.n[1]), { y: natural ? LAND_RAW - 1.05 : BRIDGE_Y }); }
   // across the river: cottages and fields
   [[30, 2, -.6], [38, -6, -.55], [42, 10, -.7], [24, -10, -.5]].forEach(([x, z, yaw], k) => put('house', x, z, yaw, { prosperity: .3 + k * .2 }));
   [[22, 34, -.35], [33, 26, -.35], [44, 21, -.35], [30, 42, -.35]].forEach(([x, z, yaw]) => put('farm', x, z, yaw));
   // trees: lollipop broadleaf clumps, a few cypress by the church
   const treeAt = (x, z, k, species = null) => {
     const inst = trees.treeInstance({ worldSeed: WORLD, id: k, habitat: 'plains', season: 'summer' }), sp = species || 'broadleaf';
-    const spec = trees.treeSpec(sp, inst.variant); soup.add(specMesh(spec, lodTier), { x, z, y: dispHeight(x, z), yaw: inst.yaw, scale: inst.scale, tint: inst.tint });
+    const spec = trees.treeSpec(sp, inst.variant); soup.add(specMesh(spec, lodTier), { x, z, y: H(x, z), yaw: inst.yaw, scale: inst.scale, tint: inst.tint });
   };
   let k = 0; const rnd = P.seededRandom(99);
   const clump = (cx, cz, n, rx, rz, sp) => { for (let i = 0; i < n; i++) { const x = cx + (rnd() - .5) * 2 * rx, z = cz + (rnd() - .5) * 2 * rz; if (polyDist(x, z, RIVER) < RIVER_HALF + 2 || pathW(x, z) > .2) continue; treeAt(x, z, k++, sp); } };
@@ -163,7 +165,7 @@ function villageScene({ rig, lodTier = 0, hero = false } = {}) {
   clump(8, 58, 5, 8, 4, 'shrub');
   return { width: 800, height: 500, background: '#e2b884',
     camera: hero ? { eye: [-12, 34, 38], target: [-4, 0, -2], fov: 36, near: 3, far: 900, dof: { fstop: .08 } } : { eye: [-7, 55, 60], target: [-1, 0, 4], fov: 38, near: 4, far: 900, dof: { fstop: .12 } },
-    rig: rigFor(rig), shadow: { center: [0, 0, 0], radius: 95 }, grain: grainTexture(), meshes: [terrain, water, soup.encode()], labels: [], stats: { tris: terrain.tris + soup.tris } };
+    rig: rigFor(rig), background: natural ? '#e8c9a0' : '#e2b884', shadow: { center: [0, 0, 0], radius: 95 }, grain: grainTexture(), meshes: [terrain, water, soup.encode()], labels: [], stats: { tris: terrain.tris + soup.tris } };
 }
 
 // ------------------------------------------------------------- closeup
@@ -291,6 +293,7 @@ export const SCENES = {
   village: villageScene,
   'village-mid': o => villageScene({ ...o, lodTier: 1 }),
   'village-hero': o => villageScene({ ...o, hero: true }),
+  'village-carved': o => villageScene({ ...o, terrain: 'carved', rig: o.rig === 'golden' ? 'tuned' : o.rig }),
   closeup: closeupScene,
   lod: lodScene,
   caravans: caravanScene,

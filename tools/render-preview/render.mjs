@@ -20,12 +20,12 @@ if (sceneName === 'all') {
   const { OUTPUTS } = await import('./outputs.mjs');
   const dir = path.resolve(out || path.join(here, '../../docs/art-reference/h-renders'));
   fs.mkdirSync(dir, { recursive: true });
-  for (const [name, file] of OUTPUTS) { const scene = await SCENES[name]({ rig: flags.rig || 'tuned' }); await renderToPng(scene, path.join(dir, file)); console.error('[render] ' + file); }
+  for (const [name, file] of OUTPUTS) { const scene = await SCENES[name]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' }); await renderToPng(scene, path.join(dir, file)); console.error('[render] ' + file); }
   process.exit(0);
 }
 if (!sceneName || sceneName === 'list' || !SCENES[sceneName]) { console.log('scenes:', Object.keys(SCENES).join(', ')); process.exit(sceneName === 'list' ? 0 : 1); }
 const t0 = Date.now();
-const scene = await SCENES[sceneName]({ rig: flags.rig || 'tuned' });
+const scene = await SCENES[sceneName]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' });
 console.error(`[render] built ${sceneName} in ${Date.now() - t0} ms`);
 const outPath = path.resolve(out || `${sceneName}.png`);
 await renderToPng(scene, outPath);

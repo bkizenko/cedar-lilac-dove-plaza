@@ -26,7 +26,7 @@ const wanted = pos.length > 1 ? pos.slice(1) : BLENDER_OUTPUTS.map(o => o[0]);
 const materials = MAT_IDS.map(id => ({ id, hex: palette.CARVED_MATERIALS[id]?.hex ?? (id === 'terrain' ? palette.CARVED_TERRAIN.bands[0] : palette.CARVED_TERRAIN.bands[2]), grain: palette.CARVED_MATERIALS[id]?.grain ?? .5, roughness: palette.CARVED_MATERIALS[id]?.roughness ?? .9 }));
 for (const name of wanted) {
   if (!SCENES[name]) { console.error('unknown scene', name); process.exitCode = 1; continue; }
-  const s = await SCENES[name]({ rig: flags.rig || 'tuned' }), dir = path.join(outDir, name);
+  const s = await SCENES[name]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' }), dir = path.join(outDir, name);
   fs.mkdirSync(dir, { recursive: true });
   const meshes = s.meshes.map((m, i) => {
     const base = `${i}-${m.name}`, files = {};

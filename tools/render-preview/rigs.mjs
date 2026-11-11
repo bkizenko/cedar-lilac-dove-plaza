@@ -23,7 +23,19 @@ export const TUNED = {
   blender: { saturation: .9, value: 1.0, sun_strength: 4.2, sky_strength: .35, sky_tint: '#ffd9ad', sun_angle_deg: 3 },
 };
 
+/** Natural terrain + warm golden-hour grade (user direction after review 1):
+ * low warm sun, soft sky fill, long soft shadows. Proposal only. */
+export const GOLDEN = {
+  label: 'golden-hour rig (natural terrain)', exposure: 1.08,
+  hemiSky: '#ffe6c4', hemiGround: '#6e5a3c', hemiIntensity: 1.25,
+  sun: '#ffcf96', sunIntensity: 3.4,
+  bounce: '#b9cde0', bounceIntensity: .3,
+  fog: '#e8c9a0', fogNearMetres: 110, fogFarMetres: 420,
+  sunDir: [-.68, .4, .45], shadows: true, shadowSoft: 2.2,
+  albedoSat: .95, waterSky: '#c4d3da',
+  blender: { saturation: 1.0, value: 1.0, sun_strength: 4.0, sky_strength: .4, sky_tint: '#ffd2a0', sun_angle_deg: 3.5 },
+};
 export function rigFor(name) {
-  const base = name === 'adapter' ? adapterRig() : { ...TUNED };
+  const base = name === 'adapter' ? adapterRig() : name === 'golden' ? { ...GOLDEN } : { ...TUNED };
   return process.env.RIG_JSON ? { ...base, ...JSON.parse(process.env.RIG_JSON) } : base; // tuning hook
 }

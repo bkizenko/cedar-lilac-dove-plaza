@@ -43,7 +43,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
 
 async function renderOne(name, outPath, tone = flags.tone || 'neutral') {
-  const scene = await SCENES[name]({ rig: flags.rig || 'tuned' }), W = scene.width || 800, H = scene.height || 500;
+  const scene = await SCENES[name]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' }), W = scene.width || 800, H = scene.height || 500;
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text()); });
   page.on('pageerror', e => console.error('[pageerror]', e.message));
