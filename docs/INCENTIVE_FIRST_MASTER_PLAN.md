@@ -478,3 +478,48 @@ Today’s active sequence: publish the completed food/routing repair; publish co
 | Personal abilities | Expose existing aptitude/practice foundations through compact resident stats, owned equipment and task history; add measurable specialization gains and teaching without making every early worker a fixed profession. | Two actual residents progress through paid work at different rates, histories persist, effects on duration/quality are visible and bounded. |
 
 The completion sequence remains reliability and usable UI → physical construction/material chains → armor/siege and navigation/transport → independent societies and negotiated conflict → specialized settlements/cultures/wonders → full campaign/performance acceptance. Work proceeds in parallel where file ownership and acceptance are independent; more concept boards or finer prose never count as shipped game systems.
+
+
+## November 11 scope clarification: lifelike societies before later ages
+
+Latest user direction supersedes urgency to reach the 1700s: retain later mounted armies, chariots, firearms/muskets and later ship/weapon families in the long-term plan; do not make them today’s critical path. Progression is not exclusively technology. Craft mastery, household wealth, civic organization, art, religion, prestige, diplomatic relationships and settlement specialization must change the experience within an age. Existing completed structures are not automatically replaced on an era transition.
+
+### Immediate execution priorities
+
+1. Animal husbandry reliability: Find goat is a persistent actionable order with actual search/capture/escort/pen delivery, clear bounded failure reasons and recovery. No invented animals or teleportation. Diagnose why the current path fails despite prior local fixes. Later pastoral starts begin with finite actual herds, mobile grazing and shepherd work, not a free completed pen.
+2. Automatic site preparation: accepted building/field placement queues finite tree/loose-stone clearing before construction/sowing, keeps real paid materials, respects water/steep terrain/other structures, and does not trap workers.
+3. Equipment and siege: padded armor now published in runtime9c81021, acceptance86/86 for its bounded batch; repair, shields/helmets/metal remain open. First staffed ram is being integrated; helper checks are not delivery.
+4. Usable physical trade, sea travel and society-to-society operations, then occupation/tribute/autonomy and visible cultural specialization. Existing modules do not establish campaign acceptance.
+
+### Identity, architecture and armor
+
+- Player can name the tribe, choose/edit a symbol, flag composition and palette. These identifiers persist on diplomacy, territory flags, ships, armor and civic buildings; readable enemy/allied markings remain distinct.
+- Every production building family requires at least one identified real structure/photo or archaeological reconstruction reference with source, date/region, construction/material notes and uncertainty. Sources inform original generated forms; photographs are not automatically licensed game textures. No claim that the current entire catalogue has this provenance yet.
+- Same-style houses vary structurally: plot constraints, dimensions, roof geometry/pitch, bays, doors, windows, courtyards, extensions, repairs and material batches. Culture controls coherent construction grammar; household means, makers and site control individual variation. Save the generated identity, do not reroll on load. Age/practice constrains available methods; stone is not globally a late invention.
+- Armor needs society-specific textile weave, color placement, bindings, plates, helmets and shield/flag motifs, further varied by maker, quality and wear. Cosmetic motifs never imply protection absent actual equipment/material mechanics. Share geometry/material batches at distance and preserve Low mode. The first functional padded vest is a foundation, not the completed cultural armor system.
+- Existing H/E art remains review/proposal work. No broad live aesthetic replacement before approval and performance proof.
+
+Historical reference findings: Skara Brae has Neolithic stone houses and fitted stone furnishings (Historic Environment Scotland: https://www.historicenvironment.scot/visit/all/skara-brae/history-and-stories/). Mesa Verde developed from pithouses to adobe and multi-story shaped-stone buildings, fitted to limited alcove space (NPS: https://home.nps.gov/articles/mesaverde.htm). Historic England documents local-material vernacular variation and altered buildings across time (https://heritagecalling.com/2022/08/25/a-guide-to-traditional-english-buildings/). Design implication: ecology, materials, structural knowledge, wealth and building history jointly govern form; avoid a universal huts→wood→stone ladder. This is a scoped study, not a completed global architectural survey or live rebalance.
+
+### Territory, expansion and score — explicit pending implementation
+
+Separate physical control, territorial claims, reputation/prestige and score. A flag records a claim; it does not create workers, remove another army or project control through impassable terrain. Two supported incompatible claims create a contested area with actual diplomatic/military choices.
+
+Itemize claim/control anchors: inhabited camp, working settlement, supplied outpost, staffed fort, guarded pass/bridge, accessible port/sea route, monument/prestige influence, and unsupported flag claim. Actual population, supply, access, garrison, distance and opposition determine strength. Mountains/water inhibit physical reach until real transport/infrastructure exists. Culture can spread beyond military control without owning the land.
+
+Versioned tunable score components: controlled usable area; finite accessible resource value and strategic chokepoints; sustained healthy population; food security measured in population-days (not raw seed/chaff totals); demonstrated/adopted practices; completed useful trade; defended victories/war aims; maintained civic works/art/wonders/prestige. Display the breakdown and known-versus-unknown rivals without revealing private stocks. Weights are game design coefficients, not historical measurements. Use caps/diminishing returns and sustained snapshots: no infinite score from repeated flags, recycled battles, zero-value circular trades or hoarding spoiled goods. Optional hill/pass objectives reward holding an actually contested useful place for a declared interval, not arbitrary free points. Existing98 gates remain unchanged.
+
+### Other requested systems retained as open acceptance
+
+- Tool durability, repair/replacement and age/material-appropriate tools/weapons; finite animals, horses, burden animals, shepherding, mounted/chariot logistics.
+- Guarded visible caravans/pack animals/carts, real cargo and losses; need-based mineral/tool/labor exchange; pottery/container clarity and finite capacities.
+- New ship classes, rowing/sailing practice and crew/load/wind limits; actual inter-society raids, alliances and trade. Verify directed society pairs rather than only player encounters.
+- Player and rival fires/disasters with causes, mitigation and recoverable loss; no unfair unseen instant destruction.
+- Contextual surrender: loot, release/custody/enslavement, annexation, autonomous puppet/tribute terms can combine only where physical custody/control and political consent/coercion support them. Present concise choices in-world after actual events, not another mandatory pre-raid menu. These remain unfinished campaign behavior.
+- Canals and the six approved generated wonder grammars remain required, with physical excavation/construction, maintenance and measurable function/prestige as specified above.
+
+### Engine decision and execution cost
+
+Keep publishing the current Three.js/TypeScript game. Do not start a wholesale migration or build a custom engine now. Evaluate an existing engine in an isolated later prototype using identical representative settlement/population/camera/assets and measured Mac frame-time, RAM and save compatibility. Godot supports command-line/headless workflows (https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html), so automation need not mimic manual editor clicking, but visual inspection and actual hardware acceptance remain necessary. An engine change does not repair simulation rules by itself.
+
+No credible total remaining usage estimate exists for the expanded game. Report bounded delivered batches with actual acceptance; preserve the frozen34/98 baseline until complete-gate evidence exists. Smaller frozen batches, one heavy build/browser at a time and parallel independent source work are the execution strategy; another giant plan or more simultaneous render tests is not the critical path.

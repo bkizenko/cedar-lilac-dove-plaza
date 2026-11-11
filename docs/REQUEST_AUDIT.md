@@ -135,3 +135,8 @@ Validation: 311 script/game checks and 32 application/auth checks passed; after 
 - **RUIN-EXPLORATION:** Distinct visibly ruined ancient sites with explorable artifacts and occasional recoverable ancient knowledge. Generate coherent culture/site histories; discoveries must not silently grant unrelated technology.
 
 Diagnosis checkpoint: restored 53-person export at time11394 contains8382.77015 actual sheaves; misreading the seed HUD does not invalidate the verified processing stalls. Current screenshot alone cannot establish current harvest adequacy. Crop rotation/yield balance remains separate from operational dispatch and storage bugs.
+
+
+### Latest November 11 additions and priority correction
+
+Tracked in the master plan’s “lifelike societies before later ages” section: reliable queued goat capture (immediate); pastoral starts/shepherding; era/material/site-based reference-backed architectural variation; culture-specific individually varied armor; player tribe name/symbol/flags; explicit claim versus control/contested flags and scored expansion; sustained measurable score components; durability; horses/chariots/burden animals; guarded caravans; usable pottery/container trade; disasters affecting the player; later firearms/1700s retained but deferred. Godot migration deferred pending a separate measured prototype; current game continues shipping. These entries are requirements, not completion claims. Padded torso armor shipped9c81021; rest of cultural equipment remains open.
