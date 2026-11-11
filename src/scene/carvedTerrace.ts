@@ -9,7 +9,7 @@ import {CARVED_TERRAIN,hexToRgb} from './carvedPalette';
 export type HeightSampler=(x:number,z:number)=>number;
 export type TerraceSample={band:number;edge:number;grain:number;rgb:[number,number,number]};
 
-const bandRgb=CARVED_TERRAIN.bands.map(hexToRgb),riserRgb=hexToRgb(CARVED_TERRAIN.riser),shoreRgb=hexToRgb(CARVED_TERRAIN.shore),bedRgb=hexToRgb(CARVED_TERRAIN.riverbed);
+const bandRgb=CARVED_TERRAIN.bands.map(c=>hexToRgb(c)),riserRgb=hexToRgb(CARVED_TERRAIN.riser),shoreRgb=hexToRgb(CARVED_TERRAIN.shore),bedRgb=hexToRgb(CARVED_TERRAIN.riverbed);
 const mix=(a:readonly number[],b:readonly number[],t:number):[number,number,number]=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 
 export function terraceBand(height:number,waterY:number,bandMetres:number=CARVED_TERRAIN.bandMetres){return Math.floor((height-waterY)/bandMetres);}
@@ -44,6 +44,20 @@ export function terracedHeight(height:number,waterY:number,strength=.7){
  const step=CARVED_TERRAIN.bandMetres,rel=(height-waterY)/step,band=Math.floor(rel),frac=rel-band;
  const riser=.18,t=frac<1-riser?0:(frac-(1-riser))/riser,stepped=waterY+(band+t*t*(3-2*t))*step;
  return height+(stepped-height)*Math.max(0,Math.min(1,strength));
+}
+
+/** Vertex colours for arbitrary terrain vertices (xyz triples, Y up), so the
+ * adapter can recolour the existing game terrain geometry without assuming a
+ * grid layout. `pathWeight` (0..1 per vertex, optional) inlays light path
+ * strips, as on the board; Grok's trail/route grid is the authoritative input. */
+export function carvedTerrainColorsForPositions(positions:ArrayLike<number>,sample:HeightSampler,waterY:number,seed=0,pathWeight?:(x:number,z:number)=>number){
+ const n=Math.floor(positions.length/3),out=new Float32Array(n*3),path=hexToRgb(CARVED_TERRAIN.path);
+ for(let i=0;i<n;i++){
+  const x=positions[i*3],z=positions[i*3+2],s=carvedTerraceSample(sample,x,z,waterY,seed);let rgb=s.rgb;
+  const p=pathWeight?Math.max(0,Math.min(1,pathWeight(x,z))):0;if(p>0&&s.band>=0)rgb=mix(rgb,path,p);
+  out[i*3]=rgb[0];out[i*3+1]=rgb[1];out[i*3+2]=rgb[2];
+ }
+ return out;
 }
 
 /** Vertex colours for a regular grid of (segments+1)^2 vertices covering

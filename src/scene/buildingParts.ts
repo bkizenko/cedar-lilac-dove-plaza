@@ -11,8 +11,12 @@ import type {CarvedMaterialId} from './carvedPalette';
  * (taper), size[1] = height. cone: size[0] = base diameter, size[1] = height.
  * prism: gable roof, triangle in X/Y (w × rise), extruded along Z (d).
  * wedge: lean-to slope, full height at -Z edge falling to zero at +Z.
- * sphere: ellipsoid w × h × d resting on its base. */
-export type PartShape='box'|'cylinder'|'cone'|'prism'|'wedge'|'sphere';
+ * sphere: ellipsoid w × h × d resting on its base.
+ * pyramid: square/rectangular base w × d (axis-aligned in the part frame),
+ *   apex at height h; used for tower and gate caps so the cap really covers
+ *   the masonry below (a 4-sided cone would be inset by 1/sqrt2).
+ * hip: hipped roof, base w × d, ridge along Z shortened by `inset` at each end. */
+export type PartShape='box'|'cylinder'|'cone'|'prism'|'wedge'|'sphere'|'pyramid'|'hip';
 /** Coarsest LOD tier at which a part is still drawn: 2 = core massing
  * (near, mid and far), 1 = near and mid, 0 = near-only detail. */
 export type LodTier=0|1|2;
@@ -20,6 +24,8 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
  rot?:readonly [number,number,number];mat:CarvedMaterialId;lod:LodTier;sides?:number;
  /** Impostor parts drawn only at tiers >= onlyFrom (e.g. a far palisade wall). */
  onlyFrom?:LodTier;
+ /** Hip roof: ridge shortening at each end in metres (shape 'hip' only). */
+ inset?:number;
  /** Beam endpoints, kept so footprint fitting can rebuild the beam exactly. */
  ends?:readonly [readonly [number,number,number],readonly [number,number,number]]};
 export type BuildingSpec={family:string;variantKey:string;footprint:{w:number;d:number};parts:Part[];
@@ -46,7 +52,9 @@ export function beam(mat:CarvedMaterialId,a:[number,number,number],b:[number,num
  return {shape:'box',mat,size:[thick,len,thick],pos:[a[0],a[1]+thick/2*Math.abs(Math.sin(pitch)),a[2]],rot:[pitch,yaw,0],lod,ends:[a,b]};
 }
 
-/** Rotation order Y·X·Z applied about the part's base centre. */
+/** Rotation order Y·X·Z applied about the part's base centre (three.js
+ * Euler order 'YXZ'). Exported so the mesh builder and adapter agree. */
+export function rotatePoint(v:[number,number,number],rot:readonly [number,number,number]):[number,number,number]{return rotate(v,rot);}
 function rotate(v:[number,number,number],rot:readonly [number,number,number]):[number,number,number]{
  const [rx,ry,rz]=rot;let [x,y,z]=v;
  // Z
@@ -79,12 +87,15 @@ export function partsAtLod(spec:BuildingSpec,tier:LodTier){return spec.parts.fil
 /** Mark a part as a far-LOD impostor. */
 export function far(p:Part):Part{return {...p,lod:2,onlyFrom:2};}
 export function lodForDistance(metres:number):LodTier{return metres<LOD_DISTANCES_METRES[0]?0:metres<LOD_DISTANCES_METRES[1]?1:2;}
+/** Render tier including the far impostor card (3) beyond the last LOD distance. */
+export type RenderTier=LodTier|3;
+export function renderTierForDistance(metres:number):RenderTier{return metres>=LOD_DISTANCES_METRES[2]?3:lodForDistance(metres);}
 
 /** Uniformly shrink X/Z (never Y) so every part stays inside footprint minus
  * margin. Generators already aim inside; this is a final guarantee so no
  * base, eave or wheel ever exceeds the navigation rectangle. */
-export function fitToFootprint(spec:BuildingSpec,margin=.1):BuildingSpec{
- const b=specBounds(spec),hw=spec.footprint.w/2-margin,hd=spec.footprint.d/2-margin;
+export function fitToFootprint(spec:BuildingSpec,margin=.1,marginZ=margin):BuildingSpec{
+ const b=specBounds(spec),hw=spec.footprint.w/2-margin,hd=spec.footprint.d/2-marginZ;
  const s=Math.min(1,hw/Math.max(1e-6,Math.abs(b.minX),Math.abs(b.maxX)),hd/Math.max(1e-6,Math.abs(b.minZ),Math.abs(b.maxZ)));
  if(s>=1)return spec;
  const parts=spec.parts.map(p=>{
@@ -94,7 +105,7 @@ export function fitToFootprint(spec:BuildingSpec,margin=.1):BuildingSpec{
   const tilted=p.rot&&(Math.abs(p.rot[0])>1e-6||Math.abs(p.rot[2])>1e-6);
   const size:[number,number,number]=tilted?[p.size[0]*s,p.size[1]*s,p.size[2]*s]:[p.size[0]*s,p.size[1],p.size[2]*s];
   const pos:[number,number,number]=[p.pos[0]*s,tilted?p.pos[1]:p.pos[1],p.pos[2]*s];
-  return {...p,size,pos};
+  return {...p,size,pos,...(p.inset!==undefined?{inset:p.inset*s}:{})};
  });
  const entry=spec.entry?{x:spec.entry.x*s,z:spec.entry.z*s,width:spec.entry.width*s}:undefined;
  return {...spec,parts,...(entry?{entry}:{})};
@@ -112,9 +123,22 @@ export function floatingParts(spec:BuildingSpec,tolerance=.06){
  return out;
 }
 
-/** Estimated triangles for one part at its declared segment count. */
+/** Triangles for one part at its declared segment count. carvedMesh.ts emits
+ * exactly this many (tested), so budgets are counts, not guesses. */
+export const SPHERE_SEGMENTS={lon:8,lat:6} as const;
 export function partTriangles(p:Part){
  const n=p.sides??8;
- switch(p.shape){case 'box':return 12;case 'prism':return 8;case 'wedge':return 8;case 'cone':return n*2;case 'cylinder':return n*4;case 'sphere':return 80;}
+ switch(p.shape){case 'box':return 12;case 'prism':return 8;case 'wedge':return 8;case 'hip':return 8;case 'pyramid':return 6;case 'cone':return n*2;case 'cylinder':return n*4;case 'sphere':return SPHERE_SEGMENTS.lon*2+SPHERE_SEGMENTS.lon*(SPHERE_SEGMENTS.lat-2)*2;}
 }
 export function specTriangles(spec:BuildingSpec,tier:LodTier){return partsAtLod(spec,tier).reduce((sum,p)=>sum+partTriangles(p),0);}
+
+/** Compact structural fingerprint used by tests to prove variation is
+ * structural (massing, roof form, part mix), not a recolour. Materials are
+ * deliberately excluded. */
+export function structuralSignature(spec:BuildingSpec){
+ const b=specBounds(spec),shapes:Record<string,number>={};
+ for(const p of spec.parts)shapes[p.shape]=(shapes[p.shape]??0)+1;
+ const roof=spec.parts.find(p=>p.shape==='prism'||p.shape==='hip'||p.shape==='cone'||p.shape==='pyramid'||p.shape==='wedge');
+ const pitch=roof?(roof.size[1]/Math.max(.01,roof.size[0]/2)).toFixed(1):'none';
+ return [spec.family,(b.maxX-b.minX).toFixed(1),(b.maxZ-b.minZ).toFixed(1),b.maxY.toFixed(1),pitch,spec.entry?`${spec.entry.x.toFixed(1)},${spec.entry.z.toFixed(1)}`:'-',Object.entries(shapes).sort().map(([k,v])=>k+v).join('.')].join('|');
+}

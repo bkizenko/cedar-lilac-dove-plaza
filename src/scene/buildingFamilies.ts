@@ -12,15 +12,19 @@ export type BuildMaterial='wattle'|'timber'|'stone'|'mudbrick';
 export type Climate='temperate'|'cold'|'wet'|'arid';
 export type Trade='bench'|'forge'|'kiln'|'loom'|'rack'|'saw'|'smoke'|'oven'|'pottery';
 export type WallAxis='x'|'z'|'corner';
+/** Learned local building habits of one settlement (G3): two villages of the
+ * same era and climate still differ in pitch, proportions and annex habits. */
+export type Tradition={pitchBiasDeg:number;annexBias:number;proportion:number;porchBias:number};
+export const NEUTRAL_TRADITION:Tradition={pitchBiasDeg:0,annexBias:0,proportion:1,porchBias:0};
 export type FamilyContext={seed:number;era:number;material:BuildMaterial;climate:Climate;wealth:number;
- footprint:{w:number;d:number};trade?:Trade;waterSide?:'+x'|'-x'|'+z'|'-z';wallAxis?:WallAxis;scale?:'small'|'large'};
+ tradition?:Tradition;footprint:{w:number;d:number};trade?:Trade;waterSide?:'+x'|'-x'|'+z'|'-z';wallAxis?:WallAxis;scale?:'small'|'large'};
 type Generator=(ctx:FamilyContext,r:Rng)=>{parts:Part[];entry?:{x:number;z:number;width:number}};
 export type FamilyId='roundhouse'|'cottage'|'longhouse'|'granary'|'storehouse'|'watermill'|'quernShelter'|'workshop'|'palisade'|'gate'|'tower'|'church'|'marketStalls'|'hearth';
 
 /** Roof pitch in radians: snow sheds off steep thatch, arid roofs are low. */
 export function roofPitch(ctx:FamilyContext,r:Rng){
  const [lo,hi]={cold:[46,56],wet:[40,50],temperate:[32,45],arid:[14,24]}[ctx.climate];
- const thatchBonus=roofMaterial(ctx)==='thatch'?4:0;return (range(r,lo,hi)+thatchBonus)*Math.PI/180;
+ const thatchBonus=roofMaterial(ctx)==='thatch'?4:0,bias=ctx.tradition?.pitchBiasDeg??0;return Math.max(10,range(r,lo,hi)+thatchBonus+bias)*Math.PI/180;
 }
 export function roofMaterial(ctx:FamilyContext):CarvedMaterialId{
  if(ctx.era<=1||ctx.material==='wattle')return 'thatch';
@@ -37,16 +41,27 @@ export function maxStoreys(material:BuildMaterial,era:number){return material===
 function gableRoof(parts:Part[],ctx:FamilyContext,span:number,length:number,eave:number,pitch:number,cx:number,cz:number,axis:'x'|'z',overhang=.22,mat?:CarvedMaterialId){
  const rise=Math.max(.25,span/2*Math.tan(pitch)),m=mat??roofMaterial(ctx),rot:[number,number,number]|undefined=axis==='x'?[0,Math.PI/2,0]:undefined;
  parts.push(part('prism',m,[span+2*overhang,rise,length+2*overhang],[cx,eave,cz],2,rot));
+ roofCourses(parts,span/2+overhang,rise,length+2*overhang-.08,eave,cx,cz,axis,m==='thatch'?2:3);
  const half=(length+2*overhang)/2;
  parts.push(axis==='x'?part('box','woodEdge',[length+2*overhang,.12,.14],[cx,eave+rise-.04,cz],1):part('box','woodEdge',[.14,.12,length+2*overhang],[cx,eave+rise-.04,cz],1));
  // Bargeboards at both gable ends read the pitch at mid distance.
  for(const s of[-1,1]){const ex=axis==='x'?cx+s*half:cx,ez=axis==='z'?cz+s*half:cz;parts.push(part('box','woodEdge',axis==='x'?[.08,.1,span+2*overhang]:[span+2*overhang,.1,.08],[ex,eave-.05,ez],0));}
  return rise;
 }
+/** Carved shingle/thatch course lines laid on both roof slopes (near LOD
+ * only): the board's roofs read as stacked boards, not flat planes. */
+function roofCourses(parts:Part[],halfSpan:number,rise:number,length:number,eave:number,cx:number,cz:number,axis:'x'|'z',perSide:number){
+ const a=Math.atan2(rise,halfSpan);
+ for(const side of[-1,1])for(let i=0;i<perSide;i++){
+  const t=.22+i*(.62/Math.max(1,perSide-1)),lx=side*halfSpan*(1-t),y=eave+rise*t,theta=side<0?a:-a;
+  const pos:[number,number,number]=axis==='z'?[cx+lx,y,cz]:[cx,y,cz-lx];
+  parts.push(part('box','woodDark',[.12,.035,length],pos,0,axis==='z'?[0,0,theta]:[0,Math.PI/2,theta]));
+ }
+}
 function door(parts:Part[],x:number,z:number,w=.85,h=1.55,face:'+z'|'-z'|'+x'|'-x'='+z'){
  const t=.07,along=face==='+z'||face==='-z';parts.push(part('box','woodEdge',along?[w,h,t]:[t,h,w],[x,0,z],1));
 }
-function windowAt(parts:Part[],x:number,y:number,z:number,face:'z'|'x'){parts.push(part('box','woodEdge',face==='z'?[.45,.42,.06]:[.06,.42,.45],[x,y,z],0));}
+function windowAt(parts:Part[],x:number,y:number,z:number,face:'z'|'x'){parts.push(part('box','recess',face==='z'?[.45,.42,.06]:[.06,.42,.45],[x,y,z],0));}
 
 /** Prehistoric/Iron Age roundhouse (e.g. Butser/Castell Henllys reconstructions):
  * wattle-and-daub drum, steep conical thatch, porch, sometimes a store lean-to. */
@@ -57,11 +72,11 @@ const roundhouse:Generator=(ctx,r)=>{
  parts.push(part('cone','thatch',[2*(R+ov),roofH,2*(R+ov)],[0,wallH-.12,0],2,undefined,12));
  // Woven wattle courses show as dark bands only near the camera.
  for(const y of[.35,.8])parts.push(part('cylinder','woodDark',[2*R+.03,.07,2*R+.03],[0,y,0],0,undefined,12));
- const porch=chance(r,.55+ctx.wealth*.3);
+ const porch=chance(r,.55+ctx.wealth*.3+(ctx.tradition?.porchBias??0));
  if(porch){const pw=range(r,.9,1.2),pd=range(r,.55,.8),z0=R-.1;for(const sx of[-1,1])parts.push(beam('woodDark',[sx*pw/2,0,z0+pd],[sx*pw/2,wallH*.95,z0+pd],.12,1));
   parts.push(part('prism','thatch',[pw+.4,.45,pd+.25],[0,wallH*.92,z0+pd/2],1));}
  door(parts,0,R-.02,.8,Math.min(1.5,wallH*.92));
- if(chance(r,.35+ctx.wealth*.2)){const lx=-R*.9,lw=range(r,.7,1),ld=range(r,1.2,1.8);parts.push(part('box','woodMid',[lw,wallH*.7,ld],[lx-lw/2+.2,0,-R*.2],2),part('wedge','thatch',[ld+.2,.5,lw+.25],[lx-lw/2+.2,wallH*.7,-R*.2],1,[0,-Math.PI/2,0]));}
+ if(chance(r,.35+ctx.wealth*.2+(ctx.tradition?.annexBias??0))){const lx=-R*.9,lw=range(r,.7,1),ld=range(r,1.2,1.8);parts.push(part('box','woodMid',[lw,wallH*.7,ld],[lx-lw/2+.2,0,-R*.2],2),part('wedge','thatch',[ld+.2,.5,lw+.25],[lx-lw/2+.2,wallH*.7,-R*.2],1,[0,-Math.PI/2,0]));}
  if(chance(r,.5))parts.push(part('cone','thatch',[.5,.35,.5],[0,wallH-.12+roofH*.84,0],0,undefined,6));
  return {parts,entry:{x:0,z:R,width:.8}};
 };
@@ -70,7 +85,7 @@ const roundhouse:Generator=(ctx,r)=>{
  * Germanic Fachwerk): bays, side door, chimney, optional lean-to and upper floor. */
 const cottage:Generator=(ctx,r)=>{
  const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large';
- const L=w*range(r,large?.66:.58,large?.8:.72),D=d*range(r,.46,.6),bays=Math.max(2,Math.min(4,Math.round(L/range(r,1.5,2.1))));
+ const prop=ctx.tradition?.proportion??1,L=Math.min(w*.84,w*range(r,large?.66:.58,large?.8:.72)*prop),D=Math.min(d*.7,d*range(r,.46,.6)/prop),bays=Math.max(2,Math.min(4,Math.round(L/range(r,1.5,2.1))));
  const storeys=Math.min(maxStoreys(ctx.material,ctx.era),ctx.era>=3&&ctx.wealth>.62?2:1),wallH=range(r,1.75,2.25),eave=wallH*storeys;
  const wm=wallMaterial(ctx),cz=range(r,-.3,.05)*d*.2,pitch=roofPitch(ctx,r);
  if(ctx.material==='stone'||ctx.era>=2)parts.push(part('box','stoneDark',[L+.12,.25,D+.12],[0,0,cz],1));
@@ -85,7 +100,7 @@ const cottage:Generator=(ctx,r)=>{
  const rise=gableRoof(parts,ctx,D,L,eave,pitch,0,cz,'x',range(r,.16,.3));
  if(ctx.era>=1&&ctx.climate!=='arid'||chance(r,.3)){const end=pick(r,[-1,1]),onRidge=chance(r,.35),cw=range(r,.45,.65);
   const cx=onRidge?range(r,-L/4,L/4):end*(L/2-cw/2-.05);parts.push(part('box',ctx.era>=1?'stone':'plaster',[cw,eave+rise+.55,cw],[cx,0,cz],2));}
- if(chance(r,.25+ctx.wealth*.45)){const side=pick(r,[-1,1]),room=(w/2-L/2)-.15;
+ if(chance(r,.25+ctx.wealth*.45+(ctx.tradition?.annexBias??0))){const side=pick(r,[-1,1]),room=(w/2-L/2)-.15;
   if(room>.6){const lw=Math.min(room,range(r,.9,1.5)),ld=D*range(r,.55,.85),lx=side*(L/2+lw/2);parts.push(part('box',wm,[lw,wallH*.72,ld],[lx,0,cz-(D-ld)/2],2),part('wedge',roofMaterial(ctx),[ld+.2,.55,lw+.15],[lx,wallH*.72,cz-(D-ld)/2],1,[0,side>0?Math.PI/2:-Math.PI/2,0]));}
   else{const ld=Math.min(d/2+cz-D/2-.15,range(r,.8,1.2)),back=cz-D/2-ld/2;if(ld>.5)parts.push(part('box',wm,[L*.55,wallH*.7,ld],[0,0,back],2),part('wedge',roofMaterial(ctx),[L*.55+.2,.5,ld+.15],[0,wallH*.7,back],1,[0,Math.PI,0]));}}
  if(chance(r,.4))parts.push(part('box','woodMid',[.9,.45,.5],[doorX+(doorX>0?-1:1)*.9,0,cz+D/2+.35],0)); // bench by the door
@@ -100,8 +115,8 @@ const longhouse:Generator=(ctx,r)=>{
  // Bowed walls: the longhouse is wider amidships than at the ends.
  parts.push(part('box',wm,[L,wallH,D],[0,0,0],2),part('box',wm,[L*.62,wallH,D+.24],[0,0,0],1));
  const rise=D/2*Math.tan(pitch),ridge=L-2*hip;
- parts.push(part('prism',roofMaterial(ctx),[D+.6,rise,ridge],[0,wallH,0],2,[0,Math.PI/2,0]));
- for(const s of[-1,1])parts.push(part('wedge',roofMaterial(ctx),[D+.6,rise,hip+.3],[s*(ridge/2+(hip+.3)/2),wallH,0],2,[0,s>0?Math.PI/2:-Math.PI/2,0]));
+ // One true hipped roof: sloped ends come down nearly as low as the eaves.
+ parts.push({...part('hip',roofMaterial(ctx),[D+.6,rise,L+.6],[0,wallH,0],2,[0,Math.PI/2,0]),inset:hip+.3});
  parts.push(part('box','woodEdge',[ridge,.14,.16],[0,wallH+rise-.05,0],1));
  const doors=large?2:pick(r,[1,2]);const dx=doors===1?range(r,-L/4,L/4):L*.28;
  for(let i=0;i<doors;i++){const x=doors===1?dx:(i?dx:-dx);door(parts,x,D/2+.15,.9,Math.min(1.5,wallH));parts.push(part('prism',roofMaterial(ctx),[1.2,.4,.7],[x,wallH*.9,D/2+.15],1));}
@@ -218,7 +233,7 @@ const palisade:Generator=(ctx,r)=>{
  const parts:Part[]=[],{w,d}=ctx.footprint,axis=ctx.wallAxis??'x',h=range(r,2.4,3.1);
  const stake=(x:number,z:number)=>{const sh=h*range(r,.9,1.08),rad=range(r,.24,.32);parts.push(part('cylinder','woodMid',[rad,sh,rad*.9],[x,0,z],1,undefined,6),part('cone','woodLight',[rad*.9,.4,rad*.9],[x,sh,z],0,undefined,6));};
  if(axis==='corner'){for(let i=0;i<10;i++){const a=i/10*Math.PI*2;stake(Math.cos(a)*(w/2-.4),Math.sin(a)*(d/2-.4));}parts.push(far(part('cylinder','woodMid',[w-.6,h,d-.6],[0,0,0],2,undefined,8)));return {parts};}
- const n=Math.round(w/.36),len=axis==='x'?w:d;
+ const len=axis==='x'?w:d,n=Math.round(len/.36);
  for(let i=0;i<n;i++){const t=-len/2+.18+i*(len-.36)/(n-1),off=(i%2?.08:-.08);axis==='x'?stake(t,off):stake(off,t);}
  for(const y of[.9,h*.72])parts.push(part('box','woodDark',axis==='x'?[len-.2,.12,.12]:[.12,.12,len-.2],axis==='x'?[0,y,-.25]:[-.25,y,0],1));
  // Far impostor: one plank wall replaces the stakes beyond the mid LOD distance.
@@ -232,7 +247,7 @@ const palisade:Generator=(ctx,r)=>{
 const gate:Generator=(ctx,r)=>{
  const parts:Part[]=[],{w}=ctx.footprint,towers=ctx.era>=1&&chance(r,.5+ctx.wealth*.3),h=range(r,3,3.6),open=range(r,1.8,2.2);
  for(const s of[-1,1]){const x=s*(open/2+.35);
-  if(towers){parts.push(part('box','woodMid',[.75,h+1.2,.9],[x,0,0],2),part('cone',roofMaterial(ctx),[1.15,.9,1.15],[x,h+1.2,0],2,[0,Math.PI/4,0],4));}
+  if(towers){parts.push(part('box','woodMid',[.75,h+1.2,.9],[x,0,0],2),part('pyramid',roofMaterial(ctx),[1.05,.9,1.2],[x,h+1.2,0],2));}
   else parts.push(part('cylinder','woodDark',[.5,h+.3,.45],[x,0,0],2,undefined,8));
   // Flanking palisade stubs to the cell edge.
   const stub=w/2-(open/2+.75);if(stub>.2)parts.push(part('box','woodMid',[stub,h*.85,.3],[s*(open/2+.75+stub/2),0,0],2));}
@@ -249,7 +264,7 @@ const tower:Generator=(ctx,r)=>{
   // Either a crenellated fighting top with a small turret cap, or a tall pyramid roof (bell/watch).
   const crenel=chance(r,.5),cap=top*(crenel?range(r,.35,.55):range(r,.8,1.25));
   if(crenel)for(let i=0;i<4;i++)for(const s of[-1,1])parts.push(part('box','stone',i<2?[.4,.45,.3]:[.3,.45,.4],i<2?[s*top*.3,h,(i?1:-1)*(top/2-.15)]:[(i===2?1:-1)*(top/2-.15),h,s*top*.3],0));
-  parts.push(part('cone',roofMaterial(ctx),crenel?[top*.6,cap,top*.6]:[top*1.05,cap,top*1.05],[0,h,0],2,[0,Math.PI/4,0],4));
+  parts.push(part('pyramid',roofMaterial(ctx),crenel?[top*.45,cap,top*.45]:[top*1.08,cap,top*1.08],[0,h,0],2));
   windowAt(parts,0,h*.35,base/2+.02,'z');windowAt(parts,0,h*.75,top/2+.02,'z');door(parts,0,base/2+.03,.8,1.7);return {parts,entry:{x:0,z:base/2,width:.8}};}
  const top=base*range(r,.55,.7),plat=h*range(r,.72,.8);
  for(const sx of[-1,1])for(const sz of[-1,1])parts.push(beam('woodDark',[sx*base/2,0,sz*base/2],[sx*top/2,plat,sz*top/2],.18,2));
@@ -257,7 +272,7 @@ const tower:Generator=(ctx,r)=>{
  parts.push(part('box','woodMid',[top+.5,.18,top+.5],[0,plat,0],2));
  for(const s of[-1,1])parts.push(part('box','woodLight',[top+.5,.55,.06],[0,plat+.18,s*(top/2+.22)],0),part('box','woodLight',[.06,.55,top+.5],[s*(top/2+.22),plat+.18,0],0));
  const capH=h-plat;for(const sx of[-1,1])for(const sz of[-1,1])parts.push(beam('woodDark',[sx*top/2,plat+.18,sz*top/2],[sx*top/2,plat+capH*.55,sz*top/2],.1,1));
- parts.push(part('cone',roofMaterial(ctx),[top+.9,capH*.7,top+.9],[0,plat+capH*.55,0],2,[0,Math.PI/4,0],4));
+ parts.push(part('pyramid',roofMaterial(ctx),[top+.7,capH*.7,top+.7],[0,plat+capH*.55,0],2));
  if(chance(r,.4))parts.push(part('sphere','iron',[.35,.4,.35],[0,plat+capH*.55-.45,0],0)); // alarm bell
  parts.push(beam('woodLight',[.2,0,base/2-.05],[.2,plat,top/2],.07,0),beam('woodLight',[-.2,0,base/2-.05],[-.2,plat,top/2],.07,0));
  return {parts};
@@ -279,7 +294,7 @@ const church:Generator=(ctx,r)=>{
  if(stone){const th=wallH+range(r,2.8,4.2),tx=towerFront?0:NW/2+towerW/2-.05,tz=towerFront?frontZ+towerW/2:frontZ-towerW/2;
   parts.push(part('box',wm,[towerW,th,towerW],[tx,0,tz],2));
   for(const [fx,fz] of[[0,1],[0,-1],[1,0],[-1,0]])parts.push(part('box','woodEdge',fx?[.06,.7,.45]:[.45,.7,.06],[tx+fx*(towerW/2+.02),th-1.1,tz+fz*(towerW/2+.02)],0));
-  parts.push(part('cone',roofMaterial(ctx),[towerW*1.08,range(r,1.6,2.6),towerW*1.08],[tx,th,tz],2,[0,Math.PI/4,0],4));
+  parts.push(part('pyramid',roofMaterial(ctx),[towerW*1.1,range(r,1.6,2.6),towerW*1.1],[tx,th,tz],2));
   door(parts,towerFront?0:0,towerFront?tz+towerW/2+.03:frontZ+.03,1,2);return {parts,entry:{x:0,z:towerFront?tz+towerW/2:frontZ,width:1}};}
  // Timber shrine: porch gable and a freestanding bell frame.
  const pz=frontZ,pd=Math.min(1.2,d/2-pz-.1);for(const s of[-1,1])parts.push(beam('woodDark',[s*NW*.35,0,pz+pd-.1],[s*NW*.35,wallH*.9,pz+pd-.1],.16,1));
@@ -344,5 +359,8 @@ export function generateFamily(family:FamilyId,ctx:FamilyContext,variantKey:stri
  let parts=out.parts,entry=out.entry;
  if(family==='watermill'&&ctx.waterSide){const q=waterTurns[ctx.waterSide];parts=rotateParts(parts,q);
   if(entry){const a=q*Math.PI/2,c=Math.round(Math.cos(a)),s=Math.round(Math.sin(a));entry={x:entry.x*c+entry.z*s,z:-entry.x*s+entry.z*c,width:entry.width};}}
- return fitToFootprint({family,variantKey,footprint:{...ctx.footprint},parts,...(entry?{entry}:{}),notes:{reference:def.reference}});
+ // Wall segments and gates run to the cell edge so neighbouring cells join
+ // without gaps; everything else keeps a 10 cm clearance inside its footprint.
+ const margin=family==='palisade'||family==='gate'?.02:.1;
+ return fitToFootprint({family,variantKey,footprint:{...ctx.footprint},parts,...(entry?{entry}:{}),notes:{reference:def.reference}},margin);
 }
