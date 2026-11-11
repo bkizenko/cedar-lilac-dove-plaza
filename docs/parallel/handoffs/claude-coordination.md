@@ -234,8 +234,26 @@ No gameplay source-file overlap among `agents/grok-world`, `agents/claude-societ
 
 ### Decisions needed from Boris
 
-1. **eraMode default** (`fixed` vs `morph`). Completion Plan: Claude recommends **fixed**. Experience code currently defaults to **`morph`**. This should be chosen before the kit is wired or saved.
-2. **Which Codex backlog items move to Claude workers**, knowledge/tech first (Completion Plan).
-3. **GW-03 camera** over mountains: Grok's dolly-before-lift proposal vs Codex's in-flight fixed-angle collision work. World has not changed camera code.
-4. (Optional) AGENTS.md / AGENTS.project.md trim, as proposed in the Roles update; Codex owns the files.
+Decided 18:08 ET — see [Boris decisions](#boris-decisions--2026-11-11-1808-et) below:
+
+1. **eraMode default = `fixed`.** Buildings keep their build-time look; only an explicit rebuild or extension changes it, and that upgrade must deliver tangible gameplay value, not just looks.
+2. **GW-03 mountain camera = Codex's fixed-angle collision approach.** Grok's dolly-before-lift proposal is withdrawn; Grok will not touch camera code.
+
+Still open:
+
+1. **Knowledge/tech ownership** — still open. Boris asked for clarification (he thinks it is one knowledge base). It remains Codex's per the Completion Plan until he decides.
+2. (Optional) AGENTS.md / AGENTS.project.md trim, as proposed in the Roles update; Codex owns the files. Not decided at 18:08 ET.
+
+## Boris decisions — 2026-11-11, 18:08 ET
+
+Recorded by PM from Boris's decisions at about 18:08 ET. These close two of the open items from the 18:05 ET check-in and from [COMPLETION_PLAN.md](../COMPLETION_PLAN.md). Knowledge/tech ownership stays open.
+
+1. **eraMode default = `fixed`.** Buildings keep the look of their build-time era. Only an explicit rebuild or building extension changes the look. Boris's added requirement: a rebuild/extension upgrade must deliver tangible gameplay value, not just looks (for example healthier residents, more productive capacity/throughput, or durability).
+   - **Claude Experience:** flip `DEFAULT_ERA_MODE` to `'fixed'` in `src/scene/civBuildings.ts` (it currently defaults to `'morph'`).
+   - **Codex (economy owner):** define the gameplay benefits of rebuild/extend and the hook Experience consumes. Do not leave upgrades as a visual-only change.
+   - **Save flag:** this needs an optional save field for built era and extensions, with a validator, so old saves load unchanged. Codex owns persistence; Experience should not invent a required field.
+
+2. **GW-03 mountain camera:** use Codex's fixed-angle collision approach. Grok's dolly-before-lift proposal is **withdrawn**. Grok will not touch camera code (including `cameraClearance.ts` and camera contracts). Codex continues the authorized fixed-angle collision batch.
+
+3. **Knowledge/tech ownership: still open.** Boris asked for clarification (he thinks it is one knowledge base). It remains Codex's per the Completion Plan until he decides. No lane move until that answer lands.
 
