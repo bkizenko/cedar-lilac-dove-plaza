@@ -10,17 +10,10 @@ export function craftingBenches(b: Building) {
         : 0;
 }
 export function craftingQueue(g: Game, b: Building) {
-  return g.state.units
-    .filter(
-      (u) =>
-        u.hp > 0 &&
-        u.team === b.team &&
-        u.order === "hold" &&
-        [u.weaponWork, u.haulageWork, u.farmToolWork, u.copperStudy,u.practicalHelper?{workplace:u.practicalHelper.workplace,paused:u.practicalHelper.phase==='paused'}:undefined].some(
-          (j) => j && !j.paused && j.workplace === b.id,
-        ),
-    )
-    .sort((a, b) => a.id - b.id);
+  return g.state.units.filter(u=>{
+    const ram=u.siegeRamId?g.state.siegeRams?.assets.find(a=>a.id===u.siegeRamId&&a.makerId===u.id&&a.progress<150&&a.phase!=='paused'&&a.phase!=='broken'):undefined;
+    return u.hp>0&&u.team===b.team&&(u.order==='hold'||!!ram)&&[ram?{workplace:ram.workplaceId,paused:false}:undefined,u.weaponWork,u.haulageWork,u.farmToolWork,u.copperStudy,u.practicalHelper?{workplace:u.practicalHelper.workplace,paused:u.practicalHelper.phase==='paused'}:undefined].some(j=>j&&!j.paused&&j.workplace===b.id);
+  }).sort((a,b)=>a.id-b.id);
 }
 export function craftBenchReady(g: Game, u: Unit, b: Building) {
   const index = craftingQueue(g, b).indexOf(u);

@@ -1,3 +1,4 @@
+import {siegeRamCarriedMaterials} from '../game/siegeRam';
 import {wornArmor} from '../game/armor';
 import type { Unit } from '../game/types';
 import { personName, predisposition } from '../game/people';
@@ -30,6 +31,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         carried.push(`${amount(resident.scoutProvisions.food)} journey food`);
         carried.push(`${amount(resident.scoutProvisions.water)} L journey water`);
       }
+      const ramPacket=game&&siegeRamCarriedMaterials(game,resident);if(ramPacket)carried.push(`Ram materials · ${ramPacket.wood} timber · ${ramPacket.cordage} cordage`);
       const equipped: string[] = [];
       if (resident.militia || resident.type === 'spearman' || resident.type === 'archer' || resident.type === 'swordsman') {
         equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');

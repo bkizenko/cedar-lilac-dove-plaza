@@ -1,3 +1,4 @@
+import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {civicPrestige} from './civicPrestige';
@@ -1742,6 +1743,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    interruptSiegeRam(this,u);
     u.foodRole=undefined;
     u.tradeLoading=undefined;
     delete u.goatSearchPen;
@@ -3972,7 +3974,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return armorMovementMultiplier(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return siegeRamMovementMultiplier(this,u)*armorMovementMultiplier(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -5639,6 +5641,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        reconcileSiegeRams(this);
         updateSeasonReports(this);
         phases?.mark('production');
         tickFibre(this);
@@ -5690,6 +5693,7 @@ export class Game {
             if(coastalTradeAI(this,u,sdt))continue;
             if(homeUseAI(this,u,sdt))continue;
             if(fireWarmingAI(this,u,sdt))continue;
+            if(siegeRamAI(this,u,sdt))continue;
             if(queuedExplorationAI(this,u,sdt))continue;
             if(fibreAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
@@ -5797,6 +5801,7 @@ export class Game {
         reconcilePenWater(this);
         reconcileWaterCargoEvidence(this);
         reconcileArmorHolders(this);
+        reconcileSiegeRams(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0);
         this.checkVictory();
       } catch (err) {

@@ -1,3 +1,4 @@
+import {SiegeRamLayer} from './siegeRams';
 import {InstanceCameraCull} from './instanceCameraCull';
 import {HousingPacketLayer} from './housingPackets';
 import{civicPartColor}from'./classicalBuildings';
@@ -215,6 +216,7 @@ export class WorldView {
   private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
   private wornArmor:WornArmorLayer|null=null;
+  private siegeRamLayer:SiegeRamLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
   private housingPackets:HousingPacketLayer|null=null;
@@ -930,6 +932,7 @@ export class WorldView {
     this.penFences=new PenFenceLayer(this.scene,this.mats.timber.clone());
     this.wornGarments=new WornGarmentLayer(this.scene);
     this.wornArmor=new WornArmorLayer(this.scene);
+    this.siegeRamLayer=new SiegeRamLayer(this.scene);
     this.waterVessels=new WaterVesselLayer(this.scene);
     this.baskets=new BasketLayer(this.scene);
     this.housingPackets=new HousingPacketLayer(this.scene);
@@ -1222,6 +1225,7 @@ export class WorldView {
     this.buildingSyncIn-=dt;
     if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
     this.syncUnits(game);
+    this.siegeRamLayer?.sync(game,this.camera,this.quality,this.shadowsEnabled);
     this.syncTrails(game);
     this.syncCargo(game);
     this.syncRiverboatMeshes(game);
@@ -2617,6 +2621,7 @@ export class WorldView {
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
+    this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;

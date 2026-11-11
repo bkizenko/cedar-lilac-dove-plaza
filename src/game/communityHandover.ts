@@ -1,3 +1,4 @@
+import {settleSiegeRamHandover,reconcileSiegeRams} from './siegeRam';
 import {settleArmorHandover,reconcileArmorHolders} from './armor';
 import {mixStoredCerealAge,storedCerealKinds} from './cerealRules';
 import{settleHousingHandover}from'./housing';
@@ -82,7 +83,7 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   settleMaintenanceHandover(s,fromTeam,toTeam,!!local,siteIds,personIds);
   // Unpaid requests belong to their original owner and bench; cancellation moves no goods.
   if(s.cartUpgradeRequests)s.cartUpgradeRequests=s.cartUpgradeRequests.filter(r=>s.units.some(u=>u.id===r.ownerId&&u.team===r.team&&u.hp>0&&u.haulage==='sled'&&!u.haulageWork)&&s.buildings.some(b=>b.id===r.workplace&&b.team===r.team&&b.type==='workshop'&&b.hp>0&&b.build>=1));
-  settleArmorHandover(s,r);reconcileArmorHolders(draft);
+  settleArmorHandover(s,r);reconcileArmorHolders(draft);settleSiegeRamHandover(s,r);reconcileSiegeRams(draft);
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }
