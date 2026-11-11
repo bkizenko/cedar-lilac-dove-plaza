@@ -699,7 +699,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 >
                   <Sword className="size-3.5 text-bronze" />
                 </JobBtn>}
-                <JobBtn active={false} label="Auto work" title="Release stop orders and job locks; follow village priorities" onClick={() => engine?.assignJob("auto")}>
+                <JobBtn active={false} label="Auto work" title="Enable village-wide Auto work and release the selected workers’ job locks" onClick={() => engine?.assignJob("auto")}>
                   <Play className="size-3.5 text-parchment" />
                 </JobBtn>
                 <JobBtn

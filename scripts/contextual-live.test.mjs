@@ -39,7 +39,13 @@ test('cached building targets and arrows cannot burn an occupation hall after in
 test('manual work prevents resource seeking but direct orders and explicit Auto work remain functional',()=>{
  const {g}=fixture(),u=g.spawnUnit('worker',0,60,0);assert.equal(u.order,'hold');g.state.trees=[{id:g.id(),kind:'tree',x:8,z:65,y:4,amount:40,maxAmt:40,regenT:0,scale:1,rich:1}];
  drive(g,2);assert.equal(u.node,null);assert.equal(u.job,null);u.selected=true;g.issueGather(g.state.trees[0]);assert.equal(u.node,g.state.trees[0]);assert.equal(u.jobLock,true);drive(g,3);assert.ok(['gather','return'].includes(u.order));
- g.assignJob('auto');assert.equal(u.jobLock,false);drive(g,1);assert.ok(['hold','return'].includes(u.order));g.setAutoWork(true);assert.notEqual(u.order,'hold');
+ assert.equal(g.state.autoWorkEnabled,false,'a direct gather order leaves the village in manual mode');
+ g.assignJob('auto');
+ assert.equal(g.state.autoWorkEnabled,true,'explicit Auto work enables village assignment');
+ assert.equal(u.jobLock,false);
+ drive(g,30,()=>u.order==='gather'&&u.node===g.state.trees[0]);
+ assert.equal(u.order,'gather');
+ assert.equal(u.node,g.state.trees[0]);
  const loaded=roundtrip(g);assert.equal(loaded.state.autoWorkEnabled,true);const invalid=encodeGame(g);invalid.state.autoWorkEnabled='yes';assert.throws(()=>decodeGame(invalid));
 });
 
