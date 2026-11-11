@@ -11,7 +11,7 @@
  *  - One InstancedMesh per resident (variant key x LOD tier); buildings using
  *    the same variant share geometry. Beyond the far LOD, one instanced
  *    crossed-quad impostor card draw serves every distant building.
- *  - Nothing is created unless the caller selects the 'carvedH' render style;
+ *  - Nothing is created unless the caller selects the 'optionH' render style (src/game/graphics.ts);
  *    the classic renderer remains the default and the fallback. */
 import * as THREE from 'three';
 import {renderTierForDistance,type BuildingSpec,type LodTier,type RenderTier} from './buildingParts';

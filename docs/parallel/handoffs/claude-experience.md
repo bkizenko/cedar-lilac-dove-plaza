@@ -7,7 +7,7 @@
   - `src/ui/h/theme.css`, `compactModel.ts`, `CompactParts.tsx`, `portraitModel.ts`, `LeaderPortrait.tsx`
   - `src/scene/wonderPlans.ts` (pure, tested)
   - `scripts/carved-buildings.test.mjs`, `scripts/render-style.test.mjs`, `scripts/h-compact-ui.test.mjs`, `scripts/wonder-plans.test.mjs`
-- **Base main / branch / commit:** base `8f635f6` (origin/main, unchanged at last fetch) / `agents/claude-experience` / head: see `git log` (commits listed in the final section).
+- **Base main / branch / commit:** started from `8f635f6`; merged origin/main `860863a` / `agents/claude-experience` / head: see `git log` (commits listed in the final section).
 
 ## Item status (backlog IDs)
 
@@ -15,16 +15,16 @@
 |---|---|---|
 | Option H carved palette, light rig, grain, terrace colours | astra_tasks `18` (Cohesive environment pack pass) | source pushed |
 | Structural building families keyed to stable building IDs | request_audit row "More useful buildings, Dawn of Man breadth"; astra `18` | source pushed |
-| Era/wealth variants per building ID; per-village tradition | G3 | source pushed |
-| Golden-hour-dominant daytime grade (H rig only) | G2 | source pushed (grade function; Codex daylight wiring needed) |
-| Leader encounter portrait presentation | G4 | source pushed (Societies wires content) |
+| Era/wealth variants per building ID; per-village tradition | G3 (board; no backlog ID yet) | source pushed |
+| Golden-hour-dominant daytime grade (H rig only; winter/storm/night exceptions kept) | `CHAT-G2-GOLDEN-HOUR` (G2) | source pushed (grade function; Codex daylight wiring needed) |
+| Leader encounter portrait presentation | `CHAT-G4-LEADER-PRESENTATION` (G4) | source pushed (Societies wires content) |
 | Compact H UI tokens/components | astra_tasks `21` (HUD and teaching pass) | source pushed |
 | Far impostor cards + single shared vertex-colour material | coordination board perf item | source pushed (adapter unexecuted) |
 | Seeded wonder plans: Ring Observatory, Cascade Garden (`src/scene/wonderPlans.ts`) | qa_additions `QA-050` | source pushed |
 
 ## Before → after
 
-Before: live graphics only; WIP generator (a3755ea) unreviewed. After: nothing changes in the running game (render style defaults to `classic`; no live file wires the new layer). New pure modules generate footprint-true, structurally varied carved buildings and their triangle meshes; an adapter and UI parts are ready for opt-in integration.
+Before: live graphics only; WIP generator (a3755ea) unreviewed. After: nothing changes in the running game (render style defaults to `current`; no live file wires the new layer). New pure modules generate footprint-true, structurally varied carved buildings and their triangle meshes; an adapter and UI parts are ready for opt-in integration.
 
 Review fixes to the crashed WIP: 4-sided cone caps were inset by 1/√2 (tower/gate/church roofs narrower than walls) → new `pyramid` shape; longhouse "hips" were vertical-backed wedges poking out of the roof → true `hip` shape; palisade/gate segments left 20 cm gaps between cells → wall margin 2 cm; palisade stake count used width not wall length; windows now dark `recess`; carved roof course lines (near LOD) added; palette re-measured from the original board (wood hue 27–31°, sat ~0.6; the proof's default "natural" palette was grey-brown and its "warm" palette rendered beige under the game's cool sky light — hence a warm H light rig).
 
@@ -32,11 +32,11 @@ Review fixes to the crashed WIP: 4-sided cone caps were inset by 1/√2 (tower/g
 
 - Building identity: input `{worldSeed, type: BldType, id, era, habitat, footprint (w,d from the Building), waterSide?, wallAxis?, settlementSeed?, prosperity?}`; output variant key + `BuildingSpec` (metres, Y up, origin at footprint base centre, entrance +Z). Deterministic; generator version is implicit in source — a save should store nothing new (all inputs already exist), so no migration.
 - Unmapped types (farm, pen, dock, bridge, quarry, keep, stables, university, cairn, grove, cornerstone, stonewall, trench, moat, threshingFloor) return `null` → keep the classic renderer.
-- Render style: `resolveRenderStyle(search, stored)` → `'classic' | 'carvedH'`, default classic; `?render=h` opts in.
+- Render style: Codex's `graphics.ts` contract (`'current'` default, `'optionH'` opt-in); `resolveRenderStyle(search, stored)` adds a review-only `?render=h` override.
 
 ## Interface requests
 
-- **Codex:** (1) render-style setting in graphics settings using `src/scene/renderStyle.ts` values (or rename — tell me); default classic. (2) LOD/culling hook: per-building camera distance or tier + frustum pre-filter, so `CarvedBuildingLayer.sync(instances, cameraPos, tierFor)` receives visible buildings only. (3) world.ts call site when style = carvedH: hide classic building meshes for mapped types, build `CarvedInstance[]` (x, y = foundation level, z, yaw from facing/gate rotation, progress = build fraction), call `applyCarvedLightRig` once and keep its restore. (4) daylight: lerp sun/hemi towards `carvedDaylightGrade(t)` in H style only, without changing daylight share. (5) Render-check on integration — I cannot.
+- **Codex:** (1) DONE on main: `src/game/graphics.ts` `RenderStyle='current'|'optionH'`; `src/scene/renderStyle.ts` now consumes it (plus a non-persisted `?render=h` review override) — no second stored key. (2) LOD/culling hook: per-building camera distance or tier + frustum pre-filter, so `CarvedBuildingLayer.sync(instances, cameraPos, tierFor)` receives visible buildings only. (3) world.ts call site when style = carvedH: hide classic building meshes for mapped types, build `CarvedInstance[]` (x, y = foundation level, z, yaw from facing/gate rotation, progress = build fraction), call `applyCarvedLightRig` once and keep its restore. (4) daylight: lerp sun/hemi towards `carvedDaylightGrade(t)` in H style only, without changing daylight share. (5) Render-check on integration — I cannot.
 - **Grok:** terrain height sampler `(x,z)=>y` and water level for `carvedTerrainColorsForPositions`; path/trail weight `(x,z)=>0..1` for inlaid paths; `waterSide` for grinding-stone sites adjacent to flowing water; settlement identity (founding hall id) for `settlementSeed`; biome → `habitat` mapping (`plains|forest|hills|desert|tundra|wetland`).
 - **Societies:** wire `LeaderPortrait` beside `LeaderConversation` with actual relation value and observed goods only.
 

@@ -125,10 +125,11 @@ export function woodGrainPixels(size:number=CARVED_GRAIN.textureSize,seed=7){
  * reads like the board's late-afternoon light rather than flat white noon.
  * Returns colours to lerp the H rig towards; it never touches the classic rig
  * and does not change the simulation clock or daylight duration. */
-export function carvedDaylightGrade(t:number){
+export function carvedDaylightGrade(t:number,conditions:{winter?:boolean;storm?:number}={}){
  const x=Math.max(0,Math.min(1,t)),noon=Math.exp(-Math.pow((x-.5)/.16,2));
  // warmth 1 = full golden hour, ~0.62 at noon; edges stay warm but dimmer.
- const warmth=1-.38*noon,edge=Math.min(1,Math.min(x,1-x)/.08);
+ // The user's exceptions (CHAT-G2): winter and storms are NOT golden.
+ const storm=Math.max(0,Math.min(1,conditions.storm??0)),warmth=(1-.38*noon)*(conditions.winter?.45:1)*(1-.75*storm),edge=Math.min(1,Math.min(x,1-x)/.08);
  const lerp=(a:string,b:string,k:number)=>{const A=hexToRgb(a),B=hexToRgb(b);return '#'+A.map((v,i)=>Math.round((v+(B[i]-v)*k)*255).toString(16).padStart(2,'0')).join('');};
- return {warmth,sun:lerp('#fff6ea','#ffd49a',warmth),hemiSky:lerp('#fff3e2','#ffdcae',warmth),sunIntensity:CARVED_LIGHT_RIG.sunIntensity*(.55+.45*edge)*(.9+.1*noon),hemiIntensity:CARVED_LIGHT_RIG.hemiIntensity*(.75+.25*edge)};
+ return {warmth,sun:lerp('#fff6ea','#ffd49a',warmth),hemiSky:lerp('#fff3e2','#ffdcae',warmth),sunIntensity:CARVED_LIGHT_RIG.sunIntensity*(.55+.45*edge)*(.9+.1*noon)*(1-.6*storm),hemiIntensity:CARVED_LIGHT_RIG.hemiIntensity*(.75+.25*edge)};
 }

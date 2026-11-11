@@ -198,4 +198,5 @@ test('G2: daytime grade is golden-hour dominant with a gentle noon dip',async()=
  assert.ok(warm>=60,'warm for most of the day: '+warm);
  assert.ok(carvedDaylightGrade(.5).warmth<carvedDaylightGrade(.2).warmth&&carvedDaylightGrade(.5).warmth>.5);
  assert.deepEqual(carvedDaylightGrade(.3),carvedDaylightGrade(.3));
+ assert.ok(carvedDaylightGrade(.25,{winter:true}).warmth<.5,'winter is not golden');assert.ok(carvedDaylightGrade(.25,{storm:1}).warmth<.3&&carvedDaylightGrade(.25,{storm:1}).sunIntensity<carvedDaylightGrade(.25).sunIntensity,'storms are not golden');
 });
