@@ -123,6 +123,23 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
    !n||kind==='grainSheaves'||rawMeat&&['rawHide','bone'].includes(kind))&&
    g.state.buildings.some(b=>b.team===u.team&&b.type==='warehouse'&&g.finished(b));
 }
+/** Finite gathered raw materials can be laid beside the actual reached cache.
+ * This does not create covered capacity or admit manufactured cargo. */
+export const LOOSE_GATHERED_MATERIALS:readonly ItemKind[]=['plantFibre','clay','rawHide','bone','tannin'];
+function canLeaveLooseMaterialsOutside(g:Game,u:Unit){const entries=Object.entries(u.itemCargo||{}).filter(([,n])=>(n||0)>0);return entries.length>0&&entries.every(([kind])=>LOOSE_GATHERED_MATERIALS.includes(kind as ItemKind))&&atCache(g,u);}
+/** Converting existing item units into no more units needs no extra storage;
+ * the real paid work and physical return trip still have to finish. */
+function nonExpandingItemBatch(recipe:ProductionRecipe){const r=PRODUCTION_RECIPES[recipe];return sum(r.inputs)>0&&sum(r.outputs)<=sum(r.inputs);}
+export function productionParkingStorageIssue(g:Game,p:ProductionProject,u?:Unit){
+ const r=PRODUCTION_RECIPES[p.recipe],foodParcel=!!(isCerealRecipe(p.recipe)||r.grain||r.inputs.flour||r.inputs.rawMeat||Object.values(r.foodInputs).some(n=>n));
+ const outside=foodParcel&&g.state.buildings.some(b=>b.team===p.team&&b.type==='warehouse'&&g.finished(b)&&(!u||!!supplyApproach(g,u,b)));
+ const occupied=sum(g.tribe(p.team).items||{})+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id);
+ return occupied+paidInputUnits(p)>itemCapacity(g,p.team)&&!outside?'No room to park this paid batch at the cache':null;
+}
+export function productionOutputStorageIssue(g:Game,p:ProductionProject,u?:Unit){
+ const outputs=productionOutputs(p);if(!sum(outputs)||isCerealRecipe(p.recipe)||nonExpandingItemBatch(p.recipe)||canLeaveFlourOutside(g,p.team,p.recipe,u))return null;
+ return sum(g.tribe(p.team).items||{})+sum(outputs)+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id)>itemCapacity(g,p.team)?'Material storage is full; carrier is keeping the finished batch':null;
+}
 export function occupiedProductionSlots(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
 export const DOUBLE_GRAIN_BATCH_RULES={minimumDemonstrations:3} as const;
 const bulkGrainPrerequisites: Partial<Record<ProductionRecipe,ProductionRecipe>> = {
@@ -159,7 +176,7 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,
  if(t.wood<r.wood)return `Need ${r.wood} delivered log for this batch`;
  if((t.survival?.waterLiters||0)<r.water)return `Need ${r.water} litres of collected water`;
  const used=sum(stock)+cachedProductionUnits(g,b.team)+cerealReservedMaterials(g,b.team);
- if(!canLeaveFlourOutside(g,b.team,recipe)&&used-sum(r.inputs)+sum(r.outputs)>Math.max(itemCapacity(g,b.team),isCerealRecipe(recipe)||!sum(r.outputs)?used:0))return 'Material storage is full; use or make room for the finished goods';
+ if(!canLeaveFlourOutside(g,b.team,recipe)&&used-sum(r.inputs)+sum(r.outputs)>Math.max(itemCapacity(g,b.team),isCerealRecipe(recipe)||!sum(r.outputs)||nonExpandingItemBatch(recipe)?used:0))return 'Material storage is full; use or make room for the finished goods';
  if((g.state.production?.projects.filter(live).length||0)>=PRODUCTION_RULES.maximumProjects)return 'Too many unfinished paid batches';
  if(dryingRecipe(r)){const c=dryingConditions(g,b);if(c.wet&&!(r.preservation==='clay'&&b.type==='potter'))return r.preservation==='clay'?'Wet weather prevents exposed greenware drying; use a pottery shelter or wait':'Wet weather prevents starting air drying; use fuelled smoking or wait';if(c.frozen)return r.preservation==='clay'?'Below freezing: clay drying cannot start; wait for warmer conditions':'Below freezing: air drying cannot start; use fuelled smoking';}
  if(!actor(g,b,undefined,unitId,deliveredHere&&(isCerealRecipe(recipe)&&b.type==='threshingFloor')))return 'Need an available empty-handed adult at a reachable camp or store to carry the batch inputs';
@@ -207,21 +224,16 @@ export function unloadProductionProject(g:Game,id:number){const p=g.state.produc
  if(phase==='stored')return true;
  if(!['carrying','unloading'].includes(phase)||p.actorId===null){p.blockedReason='Only inputs carried by a living resident can be unloaded; work already at a site stays there';return false;}
  const u=g.state.units.find(u=>u.id===p.actorId&&u.hp>0&&u.team===p.team);if(!u){p.blockedReason='The original paid-load carrier is unavailable';return false;}
- const inputRecipe=PRODUCTION_RECIPES[p.recipe],foodParcel=!!(isCerealRecipe(p.recipe)||inputRecipe.grain||inputRecipe.inputs.flour||inputRecipe.inputs.rawMeat||Object.values(inputRecipe.foodInputs).some(n=>n));
- const outside=foodParcel&&supplyDrops(g,p.team).some(drop=>drop.kind!=='camp'&&drop.type==='warehouse'&&!!supplyApproach(g,u,drop));
  if(!supplyDrops(g,p.team).some(drop=>supplyApproach(g,u,drop))){
   p.blockedReason='No reachable cache for the carried paid inputs';g.banner(p.blockedReason,4);return false;
  }
- const occupied=sum(g.tribe(p.team).items||{})+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id);
- if(occupied+paidInputUnits(p)>itemCapacity(g,p.team)&&!outside){
-  p.blockedReason='No room to park this paid batch at the cache';g.banner(p.blockedReason,4);return false;
- }
+ const storageIssue=productionParkingStorageIssue(g,p,u);if(storageIssue){p.blockedReason=storageIssue;g.banner(p.blockedReason,4);return false;}
  const next={...p,phase:'unloading' as const,resumePhase:'unloading' as const};if(!claimProductionOwnership(g,next)){p.blockedReason=productionOwnershipReason(g,p);return false;}
  p.phase='unloading';p.resumePhase='unloading';p.pauseCause='manual';p.blockedReason='';u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return true;
 }
 export function productionOutputs(p:ProductionProject):ItemStock{const r=PRODUCTION_RECIPES[p.recipe];return p.pottery?{pottery:Math.max(0,(r.outputs.pottery||0)-p.pottery.broken),potsherds:p.pottery.broken}:r.outputs;}
 function releaseMaker(g:Game,u:Unit,reason:string){u.productionProjectId=undefined;u.jobLock=false;u.job=null;u.node=null;u.huntOnly=false;u.workCheckAt=0;u.order=g.state.autoWorkEnabled===false?'hold':'idle';u.workReason=reason;}
-function finish(g:Game,p:ProductionProject,u:Unit,atFloor?:Building){const seedIssue=cerealSeedCapacityIssue(g,p.team,p.recipe);if(seedIssue){p.blockedReason=seedIssue;return false;}const r=PRODUCTION_RECIPES[p.recipe],stock=items(g,p.team),s=state(g),outputs=productionOutputs(p);if(!isCerealRecipe(p.recipe)&&!canLeaveFlourOutside(g,p.team,p.recipe,u)&&sum(outputs)>0&&sum(stock)+sum(outputs)+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id)>itemCapacity(g,p.team)){p.blockedReason='Material storage is full; carrier is keeping the finished batch';return false;}for(const[k,n]of Object.entries(outputs)){if(k==='roughGrain')mixStoredCerealAge(g.tribe(p.team),k,stock[k]||0,n,g.state.time);add(stock,k as ItemKind,n);add(s.metrics.produced,k as ItemKind,n);}if(p.basketOrigin&&(outputs.basket||0)>0){const t=g.tribe(p.team);t.basketOrigins??=[];const existing=t.basketOrigins.find(o=>o.origin.team===p.basketOrigin!.team&&o.origin.site===p.basketOrigin!.site);if(existing)existing.count+=outputs.basket!;else t.basketOrigins.push({origin:p.basketOrigin,count:outputs.basket!});}if(p.pottery&&(outputs.pottery||0)>0){const t=g.tribe(p.team);t.potteryOrigins??=[];const existing=t.potteryOrigins.find(o=>o.origin.team===p.pottery!.origin.team&&o.origin.site===p.pottery!.origin.site);if(existing)existing.count+=outputs.pottery!;else t.potteryOrigins.push({origin:p.pottery.origin,count:outputs.pottery!});}if(r.food)receiveFood(g,p.team,r.food,r.foodKind,'production');finishCerealBatch(g,p.team,p.recipe);s.metrics.edibleFoodProduced=(s.metrics.edibleFoodProduced||0)+r.food;recordProductionPractice(g,p,u,outputs);p.phase='complete';releaseProductionOwnership(g,p);p.actorId=null;p.finished=g.state.time;p.blockedReason='';s.metrics.completed++;releaseMaker(g,u,'Processed batch delivered; ready for village work');if(atFloor&&startFloorCereal(g,atFloor,u,true,true))return true;
+function finish(g:Game,p:ProductionProject,u:Unit,atFloor?:Building){const seedIssue=cerealSeedCapacityIssue(g,p.team,p.recipe);if(seedIssue){p.blockedReason=seedIssue;return false;}const r=PRODUCTION_RECIPES[p.recipe],stock=items(g,p.team),s=state(g),outputs=productionOutputs(p);const storageIssue=productionOutputStorageIssue(g,p,u);if(storageIssue){p.blockedReason=storageIssue;return false;}for(const[k,n]of Object.entries(outputs)){if(k==='roughGrain')mixStoredCerealAge(g.tribe(p.team),k,stock[k]||0,n,g.state.time);add(stock,k as ItemKind,n);add(s.metrics.produced,k as ItemKind,n);}if(p.basketOrigin&&(outputs.basket||0)>0){const t=g.tribe(p.team);t.basketOrigins??=[];const existing=t.basketOrigins.find(o=>o.origin.team===p.basketOrigin!.team&&o.origin.site===p.basketOrigin!.site);if(existing)existing.count+=outputs.basket!;else t.basketOrigins.push({origin:p.basketOrigin,count:outputs.basket!});}if(p.pottery&&(outputs.pottery||0)>0){const t=g.tribe(p.team);t.potteryOrigins??=[];const existing=t.potteryOrigins.find(o=>o.origin.team===p.pottery!.origin.team&&o.origin.site===p.pottery!.origin.site);if(existing)existing.count+=outputs.pottery!;else t.potteryOrigins.push({origin:p.pottery.origin,count:outputs.pottery!});}if(r.food)receiveFood(g,p.team,r.food,r.foodKind,'production');finishCerealBatch(g,p.team,p.recipe);s.metrics.edibleFoodProduced=(s.metrics.edibleFoodProduced||0)+r.food;recordProductionPractice(g,p,u,outputs);p.phase='complete';releaseProductionOwnership(g,p);p.actorId=null;p.finished=g.state.time;p.blockedReason='';s.metrics.completed++;releaseMaker(g,u,'Processed batch delivered; ready for village work');if(atFloor&&startFloorCereal(g,atFloor,u,true,true))return true;
 if(isCerealRecipe(p.recipe)||r.outputs.flour)reviewAutomaticFoodProcessing(g,p.team,u.id);return true;}
 export function productionAI(g:Game,u:Unit,dt:number){const p=g.state.production?.projects.find(p=>p.id===u.productionProjectId&&p.actorId===u.id&&live(p));if(!p||p.phase==='paused')return false;if(!claimProductionOwnership(g,p)){p.blockedReason=productionOwnershipReason(g,p);u.workReason=p.blockedReason;return true;}const b=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===p.team);if(!b&&!['returning','unloading','collecting'].includes(p.phase)){p.blockedReason='Workplace unavailable; paid work is paused';pauseProduction(g,u);return true;}const r=PRODUCTION_RECIPES[p.recipe];u.order='hold';
  if(p.phase==='collecting'){
@@ -272,7 +284,7 @@ export function availableThreshingFloor(g:Game,u:Unit){
  }
 }
 export function deliverProductionCargo(g:Game,u:Unit,floor?:Building){
- if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&sum(stock)+incoming+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)&&!canLeaveHarvestOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
+ if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&sum(stock)+incoming+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)&&!canLeaveHarvestOutside(g,u)&&!canLeaveLooseMaterialsOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
  if(k==='grainSheaves'||k==='roughGrain')mixStoredCerealAge(g.tribe(u.team),k,stock[k]||0,n!,g.state.time);
  add(stock,k as ItemKind,n!);
 }if(fibre){recordBasketDelivery(g,u,'fibre',fibre);recordFibreDelivery(g,u,fibre);}u.itemCargo=undefined;if(u.rawHuntMeat&&u.carryType==='food'&&u.carryFood==='meat'){add(stock,'rawMeat',u.carry);u.carry=0;u.carryType=null;u.carryFood=undefined;u.rawHuntMeat=undefined;}return true;}

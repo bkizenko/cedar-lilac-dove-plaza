@@ -185,7 +185,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     <div className="hud-shell font-sans text-parchment">
       <div className="hud-res">
         <div className="hud-panel resource-strip">
-          {[["Food",readyFood,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Seeds",Math.floor(engine?.game.tribe(0).seeds||0),<Wheat key="seed"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={label==="Food"?"Food ready to eat · open Stores for raw supplies":String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
+          {[["Food",readyFood,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={label==="Food"?"Food ready to eat · open Stores for raw supplies":String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
           <button aria-label="Expand resource details" aria-expanded={statusPane==='stores'} onClick={()=>setStatusPane(v=>v==='stores'?null:'stores')}>{statusPane==='stores'?<ChevronUp/>:<ChevronDown/>}</button>
         </div>
 

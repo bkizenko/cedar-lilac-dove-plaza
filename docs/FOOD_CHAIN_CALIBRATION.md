@@ -72,3 +72,13 @@ Run the same saved 10-, 30-, 50- and 100-person communities through multiple sea
 6. Ordinary small-village survival without specialist staff at every station, followed by measurable gains from workshop scale, skilled specialists and mills.
 
 Retune yield, work and transport together after these traces exist. Do not make a stranded-worker bug disappear by granting free food, instant processing, fake deliveries or global worker efficiency.
+
+## Operational diagnosis versus water/labor balance — 2026-11-11
+
+The restored53-person export at time11394 contained8382.77015 actual sheaves. It was not merely a misread seed/chaff counter. Full kitchens incorrectly prevented the dispatcher from admitting new independent threshing-floor work; this is corrected in b4bc89f, without changing crop yield, food consumption or recipe cost. A separate three-person loose-fibre unloading blockage is being corrected separately. Workload percentage is a read-only forecast, not a random order-refusal mechanic.
+
+Current dry threshing, winnowing and grinding each consume zero water. A standard porridge or bread batch uses2litres for4game food portions; double/bulk ovens use3/8 and6/16. Game portions are not kilograms, so these numbers are not a validated historical mass ratio. Fish/meat cooking uses no recipe water. No operational evidence supports water cost as the explanation for the empty stations.
+
+Ancient Egyptian sequence: harvest, thresh, winnow, sieve, measure and store grain/straw ([UCL Digital Egypt](https://www.ucl.ac.uk/museums-static/digitalegypt/foodproduction/cereal.html)). FAO distinguishes drying/cleaning and grain storage before subsequent processing; some crops can also store in the ear ([FAO post-harvest systems](https://www.fao.org/4/T0522E/T0522E03.htm)). This supports retaining a dry reserve and preparing near-term meals; it does not prove that all crops need identical dehusking steps or that the game labor times are accurate. Do not force the entire harvest through to perishable bread at once.
+
+Current crop rotation, planted area, soil and seasonal demand require separate measured balance assessment. Do not diagnose insufficient planting from the compact seed counter. Chaff/straw are byproducts with possible uses, not ready food; their current accumulation/weighted-storage gap must be fixed without pretending they are edible grain.

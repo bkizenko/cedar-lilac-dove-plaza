@@ -73,7 +73,7 @@ Begin with one male/female-neutral base proportion and interchangeable clothing/
 
 ## Apple M1, 8 GB: provisional budgets to test
 
-These are **targets for the prototype**, not measurements or promised FPS. The shipped pixel ceilings are already 1.2 million Low and 2.1 million Medium; shadows default off. Keep those existing limits and native-resolution HTML controls.
+These are **targets for the prototype**, not measurements or promised FPS. The shipped pixel ceilings are now 0.8 million Low (b4bc89f; native disposable-browser observation799617pixels) and 2.1 million Medium; shadows default off. Keep those existing limits and native-resolution HTML controls.
 
 | Budget | Low | Medium |
 |---|---:|---:|
@@ -106,3 +106,15 @@ Acceptance requires:
 - Native M1 qualification aims for p95 ≤16.7 ms in the standard scene and ≤33.3 ms in the 300-person Medium stress scene. Software-rendered headless checks prove rendering correctness only. If the budget fails, reduce detail, view range, water effects and nearby animation pool before removing gameplay.
 
 Only after that review should the style pack expand to additional cultures, naval forces, armor, flags and generated wonder families. The full backlog remains active; this prototype does not replace food reliability, geography, diplomacy or combat work.
+
+## Fidelity clarification and actual host — 2026-11-11
+
+User explicitly means matching the original H image's material, form, detail and composition in navigable3D, not reusing the current crude models with wood colors. Earlier generated wonder pictures are illustrations unless a real model/renderer capture exists. Do not call those pictures proof of delivered3D. Keep visual overhaul in chat review and separate from the live village.
+
+Read-only host inspection: MacBookAir10,1; Apple M1,7GPUcores,8GBunifiedmemory;2560×1600display. This establishes the hardware, not measured performance of a nonexistent H scene. The current scene already instances many repeated objects; the improvement requires better assets and shading plus measured budgets, not merely introducing the word instancing.
+
+A credible full-H candidate uses actual bevels/recesses/roof silhouettes and modular construction, baked material/AO/normal detail, consistent grain direction, restrained blue water, smooth contact shading, LODs that preserve silhouette, shared compressed texture sets, and camera-local high detail. Ordinary houses must not sit on oversized square slabs. Avoid allocating unique4K textures for every house or separate animated rigs for hundreds of offscreen units. Not drawing offscreen objects does not release memory; bounded asset residency and explicit disposal are separate requirements.
+
+Proposed interactive review: orbit an actual house, mill and terrain/river slice in daylight, then a living settlement. Show close/normal/wide views with honest native frame timing and process/memory trend. Initial busy-scene target30fps sustained (p95framegap≤33.3ms),60fps where feasible; do not promise measured throughput or near-photographic offline lighting. Existing earlier60fps targets remain stretch targets pending this actual host prototype. No acceptance credit from generated pictures or software-rendered headless FPS.
+
+Sources: [Three.js object submission costs](https://threejs.org/manual/pages/optimize-lots-of-objects.html); [Three.js decoded texture memory](https://threejs.org/manual/pages/textures.html); [Blender render baking](https://docs.blender.org/manual/en/latest/render/cycles/baking.html). These support implementation techniques, not a guarantee of matching the concept or FPS.

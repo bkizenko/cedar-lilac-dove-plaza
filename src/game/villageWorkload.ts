@@ -14,7 +14,7 @@ import {productionPracticeRate,observationRequired} from './productionPractice';
 import {penPastureReport} from './penPasture';
 import {PEN_RULES} from './penGeometry';
 import {POTTERY_RULES,waterVesselCapacity} from './pottery';
-import {PRODUCTION_RECIPES,productionSlots,itemCapacity,floorCerealRecipes,grainBatchIssue} from './production';
+import {PRODUCTION_RECIPES,productionSlots,productionOutputStorageIssue,productionParkingStorageIssue,floorCerealRecipes,grainBatchIssue} from './production';
 import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
 import type {HaulageProject} from './haulage';
@@ -73,7 +73,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  let incomingFood=0,incomingWood=0,incomingWater=0,readyFieldHarvest=0;
  // Paid production owns one actor and one physical batch, even while generic
  // unit cargo or the compatibility work references point at the same person.
- const productionTravellers=new Set<number>(),productionIds=new Set<number>(),productionCapacity=liveProduction.length?itemCapacity(g,team):0,storedItems=Object.values(stock.items||{}).reduce((n,v)=>n+(v||0),0);
+ const productionTravellers=new Set<number>(),productionIds=new Set<number>();
  const heldSlots=new Map<number,number>();for(const p of liveProduction)if(!['returning','unloading','stored'].includes(p.phase==='paused'?p.resumePhase:p.phase))heldSlots.set(p.workplace,(heldSlots.get(p.workplace)||0)+1);
  const productionSpeed=(u?:Unit)=>u?Math.max(.5,g.travelSpeed(u)):r.fallbackWalkingMetersPerSecond;
  const productionTrip=(x:number,z:number,u?:Unit)=>{const d=nearestDrop(x,z);return(Number.isFinite(d)?d:Math.hypot(home.x-x,home.z-z))/productionSpeed(u);};
@@ -85,12 +85,14 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   const passive=phase==='curing'||phase==='ready',parked=phase==='stored',unloading=phase==='unloading',hands=phase==='returning'||unloading||passive?0:Math.max(0,recipe.workSeconds-p.progress)/practice;
   const walkOut=u&&b&&!['returning','unloading','stored','curing'].includes(phase)?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
   const drops=supply,hasDrop=drops.length>0,walkBack=u&&['returning','unloading'].includes(phase)?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u)*(!u&&passive?2:1):0;
-  const fullCache=phase==='returning'&&storedItems+Object.values(recipe.outputs).reduce((n,v)=>n+v,0)>productionCapacity;
+  const storageIssue=phase==='returning'?productionOutputStorageIssue(g,p):phase==='unloading'?productionParkingStorageIssue(g,p):null,fullCache=!!storageIssue;
+  const staleStorage=p.phase!=='paused'&&!fullCache&&/^(Material (?:storage|cache).*(?:full|no room)|No room to park)/.test(p.blockedReason);
+  const reportedReason=staleStorage?'':p.blockedReason;
   const missing=!b&&!['returning','unloading'].includes(phase),away=u?outsideRole(g,u):null;
-  let blocker=p.blockedReason||null;
+  let blocker=reportedReason||null;
   if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&!['returning','unloading','stored'].includes(phase))blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
-  else if(parked)blocker='Paid inputs parked at cache; resume to send a collector';else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker='Material storage is full; the carrier retains the finished batch';else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
-  const blocked=parked||missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!p.blockedReason)||phase==='curing'&&p.drying?.lastRate===0;
+  else if(parked)blocker='Paid inputs parked at cache; resume to send a collector';else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker=storageIssue;else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
+  const blocked=parked||missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!reportedReason)||phase==='curing'&&p.drying?.lastRate===0;
   add({id:`production:${p.id}`,label:recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'||parked?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:450,blocker},blocked||passive||p.phase==='paused'||parked);
   if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
  }

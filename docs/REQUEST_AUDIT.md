@@ -124,3 +124,14 @@ A row leaves partial/missing only when its acceptance is implemented, saved, rea
 Civilian rest/storm shelter and night-work fatigue, journey meals/camping/refund, shared traffic paths, independent rival geographic scouting, secondary halls costing 20 timber plus labor, physical resident-led expansion/refounding, abandonment, stable names/traits/parent IDs and village life history are implemented. Mineral grade is persistent. These are bounded foundations: faction stores are still global, scouts share knowledge before arriving home, traders still use legacy contact knowledge, and family/social simulation is incomplete. The full 120-item human-development overhaul remains open. See the catalogue execution table for remaining dependencies.
 
 Validation: 311 script/game checks and 32 application/auth checks passed; after the final mission/urgent-food guards, 20 relevant checks passed. Final typecheck and production build are recorded with this delivery. The old saved village was resumed paused in the browser with its original population and supplies.
+
+## New requests — 2026-11-11 (pending implementation/acceptance)
+
+- **RESOURCE-VOLUME:** Remove seeds from the compact main HUD; retain measurable planting reserve in farm/storage detail. Replace equal-count storage with explicit per-item volume/weight (seed portions, sheaves, chaff, tools and weapons differ). Do not erase existing inventories or equate displayed seeds with edible grain.
+- **CEREAL-BYPRODUCTS:** Chaff/straw need bounded handling and useful historically grounded outlets (fodder where suitable, bedding, compost, fuel/building mix); do not let unwanted byproducts immobilize food workers. Distinguish useful stores, exposed piles and disposal; no unlimited protected storage.
+- **RIVAL-CITY-PLANNING:** Some growing villages develop organized streets, civic cores, markets and production districts. Others remain organically irregular. Seed/culture/site-driven planning, terrain access and clearing labor must remain physical.
+- **VILLAGE-REQUESTS:** Neighboring villages offer need-based quests/requests with actual goods, relationships and consequences, not repeatable free rewards.
+- **WOODLAND-RESIDENTS:** Scattered independent woodland inhabitants with homes, inventories and contextual conversations.
+- **RUIN-EXPLORATION:** Distinct visibly ruined ancient sites with explorable artifacts and occasional recoverable ancient knowledge. Generate coherent culture/site histories; discoveries must not silently grant unrelated technology.
+
+Diagnosis checkpoint: restored 53-person export at time11394 contains8382.77015 actual sheaves; misreading the seed HUD does not invalidate the verified processing stalls. Current screenshot alone cannot establish current harvest adequacy. Crop rotation/yield balance remains separate from operational dispatch and storage bugs.

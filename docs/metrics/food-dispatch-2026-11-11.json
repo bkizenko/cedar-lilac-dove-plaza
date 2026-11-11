@@ -1,0 +1,42 @@
+{
+  "commit": "b4bc89f",
+  "release": "2026-11-11T05-09-54-b4bc89f",
+  "batch": {
+    "passed": 10,
+    "total": 10,
+    "percent": 100,
+    "scopes": {
+      "focusedFoodSimulationChecks": {
+        "passed": 8,
+        "total": 8,
+        "log": ".play/urgent-food-meat-final.log",
+        "limitations": "Focused ordinary-step and controlled-terrain fixtures; not a seasonal campaign balance qualification."
+      },
+      "publishedNativeBrowserEndpoints": {
+        "passed": 2,
+        "total": 2,
+        "ports": [
+          8086,
+          8101
+        ],
+        "scenario": "Auto work off; fish kitchen plus independent threshing and winnowing floors; delivered cooked food; save/reload; protected checkpoint restoration preserves replaced run. Controlled initial stocks and quiet conditions on native V18 terrain.",
+        "log": ".play/mixed-upstream-published-browser.log",
+        "limitations": "Software-rendered browser correctness; does not prove native GPU speed or solve remaining storage/pathfinding issues."
+      }
+    }
+  },
+  "firstReleaseGates": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newCredit": 0
+  },
+  "pending": [
+    "loose gathered-material storage recovery",
+    "volume-weighted storage and chaff outlets",
+    "full-season crop/labor calibration",
+    "finite camp raid publication",
+    "native Option H art prototype"
+  ]
+}
