@@ -64,7 +64,7 @@ Latest delivery (2026-10-14): direct construction overrides, quarry staffing/sto
 11. Hunger, diet and physically available food.
 12. ~~Sleep/rest with chosen night shifts and fatigue.~~ — seasonal 16–18-hour adult work windows now include lamplit hours; fatigue recovery, off-shift sleep and explicit night-work exceptions are implemented. Explicit Rest resumes automatically; Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.
 13. Shelter capacity, warmth, fuel and storm refuge.
-14. Clothing suited to cold, heat and wet conditions.
+14. Clothing suited to cold, heat and wet conditions. **Partial published11Nov:** Owned wool coats through paid textile stages;6C gameplay warmth and hot-work burden. Remaining: Broader cold/heat/wet clothing balance, dyes, repair, seasonal and whole-campaign acceptance. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
 15. Injury, illness, care, recovery and readable death causes.
 16. ~~Seasonal food reserve forecasts and preservation losses.~~ — implemented and regression-tested
 17. Expedition provisions, camping and return decisions.
@@ -93,9 +93,9 @@ Latest delivery (2026-10-14): direct construction overrides, quarry staffing/sto
 34. Fleeing/aggressive wildlife and sustainable reproduction.
 35. Carcass transport, butchery and useful hides/bone.
 36. Seasonal wild foods, fishing and traps.
-37. Animal capture/taming and species-specific domestic uses.
-38. Pens, fodder, pasture, veterinary care and breeding.
-39. Milk, meat, wool, transport and animal traction where species permit.
+37. Animal capture/taming and species-specific domestic uses. **Partial published11Nov:** Fresh-map real sheep capture and physical leading, alongside previously qualified goat work. Remaining: Old-map sheep import/trade, broader species and all remaining species-specific uses. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
+38. Pens, fodder, pasture, veterinary care and breeding. **Partial published11Nov:** Same-species breeding and finite fleece regrowth conditional on feed, water and keeper care. Remaining: Veterinary depth, full seasonal grazing/pastoral balance and broader species. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
+39. Milk, meat, wool, transport and animal traction where species permit. **Partial published11Nov:** Finite sheep fleece→paid shearing/carry/wash/spin/weave-or-felt/sew→owned wool coat. Remaining: Milk/cheese/preserved dairy (dairy source only, not this published batch); transport, traction, horses and other species products. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
 40. **Accepted extension:** selective breeding, pack dogs and working horses.
 
 ## 5. Fields and food productivity
@@ -167,13 +167,13 @@ Latest delivery (2026-10-14): direct construction overrides, quarry staffing/sto
 
 91. ~~Trails develop through repeated passage; unused paths fade.~~ — implemented and regression-tested
 92. Later engineered roads with real labor/material/upkeep costs.
-93. River boats, launch sites, ports and land/water transfer.
+93. River boats, launch sites, ports and land/water transfer. **Partial published11Nov:** Paid rig on existing physical ferry/freight hull, actual rowers/cargo, wind-assisted voyage and return with save custody. Remaining: Legacy equipped portable canoe migration, broader ports/hull classes and shipping scale remain separate. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
 94. Pack animals, sledges/carts and capacity/speed tradeoffs.
 95. Local stores, carriers, hauling priorities and route reliability.
 96. Bridges/fords/choke points as strategic constraints.
 97. Expedition escorts and raider ambush risk.
 98. Sea arrivals and raids grounded in actual movement.
-99. **Accepted extension:** navigation knowledge and seasonal sailing conditions.
+99. **Accepted extension:** navigation knowledge and seasonal sailing conditions. **Partial published11Nov:** Practical rowing/delivery prerequisites, paid square-sail rig trial and real wind-assisted cargo-return demonstration. Deterministic weather/time wind game coefficients. Remaining: Seasonal navigation depth, tacking, offshore seaworthiness, rig repair and empirically calibrated historical speeds. [Evidence](metrics/sheep-wool-sailing-2026-11-11.json).
 100. **Accepted extension:** warehouses serving regional supply networks.
 
 ## 11. War, security and organization
