@@ -3596,11 +3596,11 @@ export class Game {
     }
   }
 
-  /** Real observed fog under the Test Lab reveal overlay (G10). Reveal used to
-   * overwrite vision, so switching it off left the whole map explored. */
+  /** Resident observations underneath the reversible Test Lab reveal overlay. */
   private observedFog?: {vision: Uint8Array; age: Float32Array};
-  /** Fog as actually observed by residents, ignoring any Test Lab reveal. */
+  /** Borrowed read-only view; callers that retain it must copy it. */
   observedVision(): Uint8Array { return this.observedFog?.vision ?? this.vision; }
+  observedVisionAge(): Float32Array { return this.observedFog?.age ?? this.visAge; }
 
   updateVision(dt = 0) {
     const vis = this.vision;

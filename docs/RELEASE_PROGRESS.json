@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "db3dfbaee3d94893f242fd8abb34b9ce420e4146, published as 2026-11-11T21-18-48-816Z-db3dfba on8086/8101; latest dairy/water batch104/108 (4retained failures), no new gate credit. Full campaign and target performance remain unverified.",
+  "verifiedPublishedCodeBaseline": "39115987e6c6488462be93d8226fb629aefbc96e, published as 2026-11-11T22-25-07-816Z-3911598 on8086/8101 with health+HTML200 verified; latest reversible TestLab fog/save batch35/35 (34regressions+1builtpublicUI), preceding f095 NPC sea/vessel batch138/138 separately. Zero new gate credit; full campaign and target performance remain unverified.",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -209,6 +209,18 @@
       "path": "docs/metrics/dairy-water-release-2026-11-11.json",
       "passed": 104,
       "total": 108,
+      "newGateCredit": 0
+    },
+    "npcSeaVesselRecoveryNov11": {
+      "path": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
+      "passed": 138,
+      "total": 138,
+      "newGateCredit": 0
+    },
+    "testLabObservedFogNov11": {
+      "path": "docs/metrics/test-lab-observed-fog-release-2026-11-11.json",
+      "passed": 35,
+      "total": 35,
       "newGateCredit": 0
     }
   },

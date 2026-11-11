@@ -1,5 +1,13 @@
 # Three-provider execution contract — 11 November 2026
 
+## Leadership change — latest user instruction
+
+Grok is the execution project manager. Claude leads high-level design and systems thinking. Codex implements, debugs, tests and provides technical integration/release support; it does not set programme priorities over Grok.
+
+Grok owns task sequencing, assignments, execution coordination and backlog reconciliation. Claude supplies design decisions and acceptance intent. Existing exact file claims stay in effect until Grok explicitly reassigns them, preventing concurrent edits. Gemini is not participating. Preserve the complete original plan, all later requirements, saved villages and the frozen98-gate denominator.
+
+This supersedes earlier wording assigning overall execution leadership to Codex or Claude. Current authorized camera/food/navigation work remains in progress; source, validated and live states must be reported separately. Communication is through this repository; no direct cross-provider live-chat connection is claimed.
+
 This is the governing coordination revision. Gemini is not participating. Preserve the whole original plan and later backlog. Codex integrates; Claude and Grok are trusted independent owners, not limited assistants. Persistent domains reduce context switching. Small shared changes are coordinated, not prohibited.
 
 ## Persistent domain ownership
