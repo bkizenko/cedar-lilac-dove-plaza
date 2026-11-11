@@ -1,6 +1,111 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W4 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W5 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+
+## Batch W5 — ready (earthworks as labour, water works, tides, hills labels, flow fields at 120 residents)
+
+World status lives only in this file (the PM relays it). Boris's decisions are noted: camera = Codex's fixed-angle collision (no camera code touched), and eraMode defaults to fixed with rebuild/extension upgrades.
+
+- **Base:** latest main (`8f8e692`, already merged; no new main commits since).
+- **Commits:**
+  - `0fb6099`: wonder earthworks.
+  - `c7c9039`: water works.
+  - `a3ae419`: tides plus a terrain walk cache per water level.
+  - `f66b7b1`: hills/plains labels.
+  - `19d9eed` and `7fd6b6b`: flow fields at 120 residents.
+
+### Save impact (exact)
+- **Unchanged without the new options.** Unflagged generation is byte-identical to main for all 48 hash worlds (v18/v19 × 1040/1560 × 3 layouts × seeds 1, 2, 3, 5), same hashes as main `0bbcdb5`. The habitat path is identical when the option is off (tested label-for-label).
+- **Two new optional `worldOptions` keys**, saved with the world, both absent by default. Old saves don't have them:
+  - `tideVersion: 1`.
+  - `landformLabelVersion: 2`.
+  They round-trip today because persistence passes `worldOptions` through (tested). **Codex:** add validators (`=== 1` / `=== 2` when present) next to the `riverProfileVersion` one.
+- **Earthworks add no save state.** They are ordinary trench buildings and excavation records, with the existing validators. Progress is derived from the live digs.
+
+### Shared-file edits this batch
+- **`sim.ts`:** one import and one wiring line after `tickWeather`: `advanceTide(this)`. It is a no-op unless `worldOptions.tideVersion===1`.
+- **World-lane files:**
+  - `worldOptions.ts` and `worldVariety.ts`: the two option keys.
+  - `ecology.ts`: `habitatKindAt` reads relief labels only when opted in.
+  - `landformCoherence.ts`: the same label source for its habitat probe.
+  - `terrainWalkCache.ts`: keeps one exact grid per water level.
+- The complete earlier `sim.ts` list is in W4 below and is unchanged.
+
+### What landed (native evidence for each)
+1. **Wonder earthworks as real labour (`wonderEarthworks.ts`).**
+   - A wonder cut (cistern pit, sunken court) runs as ordinary excavation digs on a 4 m lattice. Each dig takes the deepest 0.5–2 m depth up to its need that validates: the same trench buildings, workers, `excavationWorkNeed` (6 s/m³), save records and validators. Nothing edits terrain directly.
+   - Preview (`planWonderEarthwork`) and commission (`executeWonderEarthwork`) share `stageIssue`, and commission is all-or-nothing (a tree on one bank refuses the whole earthwork; tested).
+   - Digs go out in batches whose banks don't overlap an unfinished dig. Overlapping digs in progress would each charge for the shared soil (measured: 11,886 work-seconds asked against 4,074 real), so batching makes each later dig pay only the soil that's left.
+   - `continueWonderEarthwork` (the wonder owner's tick or UI) lays out the next batch, and `wonderEarthworkProgress` reads progress from the live digs.
+   - **Native, pangaea 4, 12 × 12 m cistern, 5 workers:**
+     - Planned 679 m³ and 4,074 work-seconds; dug 679 m³ and paid 4,089 (the difference is the 18 s minimum per dig).
+     - The centre fell 27.83 → 25.83 m (design floor 25.93).
+     - The cut survives save and reload.
+   - Fill is never conjured: a court is cut-only (orchestra levelled to its lowest ground, tiers at half the natural grade), and any fill or depth shortfall is reported.
+   - **Finding:** the existing trench rule allows at most 0.24 natural grade under the banks, and that's what limits physical wonders:
+
+     | World | Cistern sites | Digs validate now | After clearing trees/stones |
+     |---|---|---|---|
+     | Pangaea 4 | 649 | 6 | 14 |
+     | Archipelago 2 | 83 | 0 | 0 |
+     | Continents 7 | 125 | 0 | 0 |
+
+     Assembly courts: 3 of 113 now and 4 after clearing on pangaea 4; 0 on the other two worlds.
+   - **Proposal (Codex/Boris):** a shored-cut rule. Steeper banks and deeper than 2 m when revetted, at a timber/stone cost, recorded as an optional `shoring` field on the dig with a validator. Not done: it changes an existing rule.
+   - Rule the game already has: later player digs aren't auto-assigned by the job board, so the player (or the wonder owner) orders diggers.
+2. **Water works site rules (GW-05/06, `waterWorks.ts`).** Pure queries. Recipes, inventories, outputs and jobs stay Codex's; these are the hooks.
+   - `wellSite`:
+     - Groundwater is the nearest fresh level pulled toward sea level with distance and rising at 35% of relief under higher ground. The dig goes to the dry-season table; minimum 1 m, at most 12 m by hand.
+     - Refused within 40 m of the sea (brackish).
+     - Native, 20 m lattice:
+       - Pangaea 4: 419 fresh well sites; 1,259 are deeper than hand-dug wells allow (upland).
+       - Archipelago 2: 304 sites, median depth 2.3 m.
+       - Continents 7: 1,340 sites, median depth 2.6 m.
+   - `watermillSite`:
+     - The wheel stands in the river and the house on dry bank. Head comes from the real water surface along the river section or a waterfall within 30 m.
+     - Wheels are overshot (head ≥ 1 m), undershot (width ≥ 6 m) or breastshot.
+     - Native: 120 / 80 / 113 sites; more than 90% of wheels are in water (asserted).
+   - `windmillSite`: at least 2.5 m above the surrounding rings, horizon ≤ 0.1 rad all round (the sailing wind changes direction), and clear of trees. Native: 55 / 27 / 14 sites.
+   - `aqueductRoute`: a constant-fall channel from a fresh source. The cut is limited to one dig (2 m; deeper needs a tunnel) and the arcade to 12 m. Native: 6 of 77 straight routes are feasible.
+   - `cisternCatchment`: upslope catchment by steepest descent on an 8 m grid, giving seasonal litres. A summit gathers ≤ 9 cells; a native hollow gathers more than 4 times that.
+   - `canalRoute`: level reaches with locks every 2.5 m of rise, dig volume and work, refusing cuts over 2 m and water standing above the ground (embankment fill is never dug). A native archipelago canal across a land strip is feasible.
+   - **Codex hooks:** a well or windmill or watermill building type validated with these site functions; the well as a fresh source for `survivalNeeds`' water collection; mill power index → recipe rate; aqueduct/canal construction as linear excavation work.
+3. **Tides behind a game option (`tides.ts`, `worldOptions.tideVersion: 1`, default off).**
+   - Six stepped stages over a 720 s period, 0.3 m amplitude.
+   - Combined with weather, the level stays inside the seasonal envelope the game already handles (drought −0.18 … flood +0.55), so tides can't create a water state weather couldn't.
+   - Phase comes from saved game time, so a reloaded game stands at the same tide (tested).
+   - **Exact behaviour:** the tide uses the game's single water-level channel (`world.waterY`), as weather does. So, exactly as with floods, river and lake surfaces shift with it. A sea-only tide needs `waterSurfaceAt` to separate the sea offset, plus every cache keyed on `waterY`; that's proposed, not done.
+   - **Native, archipelago 2:**
+     - Walkable cells go from 75,911 at low tide to 72,003 at high.
+     - A walk rebuild after a level change costs about 310 ms, so `terrainWalkCache` now keeps one exact grid per level: returning tide or weather levels cost 0 ms. Parity with a fresh build is tested, and the existing cache invalidation tests pass.
+   - `tideFacts(g)` gives stage, offset, range and seconds to high water, for Experience/Societies (and to replace `tides: false` in wonder facts when on).
+4. **Hills vs plains as an opt-in setting (`landformLabels.ts`, `worldOptions.landformLabelVersion: 2`).**
+   - Terrain, water, camps and resource positions are unchanged (tested).
+   - The compatibility habitat family (plains/forest/hills, used by cultivation crop candidates, wild-plant species, animal grazing and discovery) is read from measured relief. Open ground rougher than the world's own 60th-percentile relief (at least 3 m) is hills; smoother open ground is plains. Woodland stays woodland, and two majority passes clean up speckle.
+   - **Native:** hills are rougher than plains at 8, 24 and 48 m on **6/6 worlds** (historic labels: 2/6). Speckle is 1.1–1.7% (historic 0.3–0.9%).
+   - With the option, forage species and crop candidates follow the new labels, which is the intended gameplay change. Forage still stands in the same places.
+5. **Flow fields at 120 residents on native terrain (test added).**
+   - Pangaea 4, 120 residents ordered to busy destinations for 120 sim-seconds, with `Math.random` seeded identically for both runs.
+
+     | Destinations | Sim time, A* → flow | Arrivals within 10 m, A* → flow | Fields built |
+     |---|---|---|---|
+     | 1 | 7.2 s → 4.1 s | 82 → 87 | 8 (963 hits) |
+     | 3 | 7.0 s → 4.4 s | 72 → 79 | 18 |
+
+   - **Codex:** this is the native 100+ run that gates `setFlowFieldsEnabled(game, true)`. A full-economy run needs a working-village fixture; my 115-worker auto-work attempt didn't start gathering, so it isn't evidence.
+
+### Checks (W5)
+- W2–W5 set plus save and cache tests (22 files): 83 tests pass.
+- The one failure seen during the run was the unseeded flow-field crowd test (random-dependent). It is now seeded and passes deterministically twice.
+- `tsc` and eslint are clean on all new and touched files.
+
+### Next (W6 proposal)
+- Shored cuts (with Codex), so wonders work on catchment slopes.
+- A sea-only tide (`waterSurfaceAt` split plus cache keys).
+- Aqueduct and canal routing around terrain (not just straight lines).
+- Building-type hooks for wells, mills and windmills (Codex recipes).
+- Territory/influence while dominated, wired once Societies merges.
+- `b.expansion` already reserves expansion footprints in placement, so eraMode extension upgrades can reuse it; Grok will supply terrain checks for any new footprint shape.
 
 ## Batch W4 — ready (rivers, deep water, flow fields, territory, mountains, towns, wonder sites, dominated territory)
 
@@ -325,4 +430,5 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 - **W2:** done (above). Follow-ups awaiting other owners: engine wiring of `planFieldArea`/`fertilityPreview` (Codex/Claude); camera dolly-before-lift decision (Boris/Claude); `observedVision()` in Test Lab saves (Codex).
 - **W3:** done (above). Follow-ups awaiting other owners: the `quarterTurn` control and mesh yaw; a decision on a section stock cap; `observedVision()` in saves.
 - **W4:** done (above). Awaiting other owners: `riverProfileVersion` in new-world requests plus a validator; enabling flow fields; a ruling on the W1/W2 steer switch; Societies adopting `deepWaterAt` / `pickDeepWaterPoint` and `dominationSpheres`; Claude adopting `wonderSiteRules` / `wonderTerrainCut`.
-- **W5:** physical wonder cuts through excavation work; tides behind a game option; hills relief/label opt-in flag; GW-05 wells; GW-06 watermills, windmills, aqueducts, cisterns and canals; native-terrain runs of flow fields at 100+ residents once Codex's worker sim lands.
+- **W5:** done (above). Awaiting other owners: validators for `tideVersion` and `landformLabelVersion`; a shored-cut rule decision; building-type hooks for water works; enabling flow fields.
+- **W6:** shored cuts, sea-only tide, routed aqueducts and canals, water-works building hooks, dominated-territory wiring after the Societies merge.
