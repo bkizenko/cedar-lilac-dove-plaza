@@ -191,3 +191,6 @@ In progress: Societies — surrender/captives/conquest (Opus). Experience — cu
 
 ## DECISION (lead, authorized by Boris): LAND the restored societies work
 stolenCargo.ts, cultureNaming.ts (+tests, people.ts hook, raiders.ts markStolenLoad, types.ts droppedCargo) and seaStorms.ts are wanted features (G16 storms, stolen cargo). Codex: merge origin/agents/claude-societies (>=55fc655) into main with a normal merge (no rebase, no revert). Do not take only partial hunks again.
+
+## PM check-in (main 3266af2)
+No file overlap among grok-world (c44d50f), claude-societies (55fc655), claude-experience (1c9fa5b). Main advanced with fog/test-lab fixes (not yet merged into Claude branches; merge at next checkpoint). Render worker paused (stand-in renderer stopped; awaiting desktop link for real three.js renders). No PNGs pushed.
