@@ -148,3 +148,32 @@ Source: user message 2026-11-11 16:04 ET in this session (not in the exported ch
 |---|---|---|---|
 | G15 | Much more diverse trade, as in Dawn of Man: tools, armor, weapons, resources, animals, artifacts, caravans that are sometimes armed. Markets raise trade frequency and improve deals. | Claude Societies (offers, caravans, escorts); Codex (market building effects, prices); Claude Experience (trade dialog/caravan visuals) | Offer mix measured per society; goods always actually held and reserved; markets measurably change visit frequency and price spread; armed escorts scale with observed risk |
 | G16 | Things happening at sea: occasional storms in deep water that endanger or delay voyages. | Claude Societies (voyage risk/abort/return consequences); Codex (hull/sail physics and weather state); Grok (deep-water extents) | Storm is a real weather/state event limited to deep water; boats caught in it are delayed, damaged or lost with exact cargo/crew conservation; NPC and player crews respond (shelter, turn back) from observed conditions only |
+
+## Status — 16:15 ET (usage limit hit; resumes 8 PM ET)
+
+Both Claude workers stopped at the 5-hour usage limit. All their work is committed and pushed; nothing is held only on disk.
+
+- `agents/claude-societies` 8a865d4: **WIP** need-based trade (`src/game/tradeNeeds.ts`, `scripts/trade-needs.test.mjs`, small edits in `coastalTrade.ts`, `types.ts`, `workCommitments.ts`). `trade-needs.test.mjs` is **10/11 — one test fails**; unreviewed; not ready to merge. Still ready from earlier: 3adc249..4210c4a sea exploration, 7bfc943/103f41f/8d3325e stolen cargo + naming.
+- `agents/claude-experience` 6338c9b: **WIP** wonder-plan edits. Earlier ready batch ab1a84b..7331848 unchanged; own suites 33/33 at this head.
+- Pending after reset: Societies — finish trade (G15), storms (G16), Codex sea-exploration review fixes; Experience — Codex review fixes, trade dialog/caravan specs, trees, Crescent Harbor/Mill Market.
+- Overall acceptance unchanged: 34/98.
+
+## PM check-in — 16:25 ET
+
+- **Main** moved to db3dfba (Codex: finite dairy fermentation + exact water-query memoization). No contract change affecting Claude lanes. Claude branches already contain 860863a; merge db3dfba at next step.
+- **Grok is active:** `agents/grok-world` has 11 commits on 8f635f6/860863a — tight-space routing anti-loop (6/6), `sampleSite` v1 (5/5, answers Claude request Grok-2), G10 fog provenance, GW-07 orders into unseen ground. Its only shared-file edit is `sim.ts` `Game.steer()` + an optional `stalled` route flag. **No file overlap** with `agents/claude-societies` or `agents/claude-experience` (checked by name). Experience is consuming `sampleSite` next.
+- **`agents/claude-experience` 52ab112** (merged with main): remaining building types, Codex review fixes, trade dialog model/component, caravan models, dropped-cargo parcel spec, carved trees, Crescent Harbor + Mill Market plans. 66/66 own tests; still never rendered. Six wonder families: 4 done (Ring Observatory, Cascade Garden, Crescent Harbor, Mill Market); Canyon Cistern and Assembly Court next.
+- **`agents/claude-societies` 60e8cc1:** need-based trade (`tradeNeeds.ts`, 12/12 focused with uncommitted edits in progress) and G16 deep-water storms (`seaStorms.ts`, commit 60e8cc1). Worker still running: G15 armed caravans/market effects, then Codex sea-exploration review fixes.
+- **Codex asks from Experience:** hull length/beam per class in `boatClasses.ts`; real fire state as `lit`; `h-good-*` icons; merge LOD seam 15e6a63b.
+- Acceptance unchanged: 34/98.
+
+## Ready-for-integration update — 16:50 ET
+
+| Branch | Head | Content | Evidence | Not done |
+|---|---|---|---|---|
+| `agents/claude-societies` | 052c923 (merged with main) | Sea-exploration review fixes (hull service/sail-fit admission, recall-at-sea fix, capture/interruption tests); TRADE-NEEDS/G15 (`tradeNeeds.ts`: goods held beyond reserve, reserved on acceptance, physical carriers, escorts by risk/trust, market effects on frequency and spread, NPC↔NPC and NPC↔player answer); G16 `seaStorms.ts`; G11 `villagePersonality.ts` | 43/43 across trade-needs, sea-storms, sea-exploration, stolen-cargo, culture-naming; 59 related files head 304/337 vs base 305/337 (one coastal-trade case flaked once under 4-way load, passes isolated) | Native terrain run; player cannot propose (answers only); no messenger unit; NPC caravans do not use boats; no per-item wear on traded gear; coastal-trade voyages take storm damage but no turn-back; G11 raid propensity exported, not wired |
+| `agents/claude-experience` | fee37e5 (merged with main) | Remaining carved building types, Codex review fixes, trade dialog model/adapter for `tradeNeeds`, caravan/goods/parcel specs, carved trees, all six wonder plans, site-grounding adapter for Grok `sampleSite` | 83/83 own suites; no existing file modified | Never rendered; `TradeDialog.tsx`, `carvedBuildingLayer.ts` unexecuted; instancing/culling adapters wait on Codex LOD seam |
+
+Shared-file sign-offs requested of Codex (Societies): `types.ts` optional fields `Unit.seaExplorationId/tradeNeedsId`, `GameState.seaExploration/droppedCargo/tradeNeeds/seaStorms`; `workCommitments.ts` entries; `coastalTrade.ts` hooks; seams in `people.ts`, `raiders.ts`, `scoutProvisions.ts`. Consider a dedicated sea-state event instead of the `weather==='storm'` gate.
+
+In progress: Societies — surrender/captives/conquest (Opus). Experience — culture grammar, culture armor/unit looks, ruins.
