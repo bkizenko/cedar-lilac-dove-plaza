@@ -19,7 +19,7 @@ export type FamilyBudget={family:FamilyId;samples:number;trisAvg:[number,number,
 export function familyBudgets(worldSeed=1):FamilyBudget[]{
  const acc=new Map<FamilyId,{n:number;sum:[number,number,number];max:[number,number,number]}>();
  for(const type of CARVED_TYPES)for(const era of[0,1,2,3,5])for(const habitat of['plains','forest','hills','desert'] as const)for(let id=1;id<=6;id++){
-  const fp=BUILDINGS[type as keyof typeof BUILDINGS],input={worldSeed,type,id,era,habitat,footprint:{w:fp.w,d:fp.d},...(type==='grindingStone'&&id%2?{waterSide:'+x' as const}:{})};
+  const fp=BUILDINGS[type as keyof typeof BUILDINGS],input={worldSeed,type,id,era,habitat,footprint:{w:fp.w,d:fp.d},...(type==='grindingStone'&&id%2?{waterSide:'+x' as const,reviewWatermill:true}:{})};
   const spec=carvedBuildingSpec(input);if(!spec)continue;const f=spec.family as FamilyId,a=acc.get(f)??{n:0,sum:[0,0,0],max:[0,0,0]};
   for(const t of[0,1,2] as const){const n=specTriangles(spec,t);a.sum[t]+=n;a.max[t]=Math.max(a.max[t],n);}a.n++;acc.set(f,a);
  }

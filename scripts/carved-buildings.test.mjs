@@ -11,9 +11,11 @@ import {familyBudgets,estimateVillage} from '../src/scene/carvedBudget.ts';
 const HABITATS=['plains','forest','hills','desert','tundra','wetland'];
 const WATER=['+x','-x','+z','-z',undefined];
 const fp=type=>({w:BUILDINGS[type].w,d:BUILDINGS[type].d});
+const AXIS_TYPES=['palisade','stonewall','trench','moat'];
+function extraFor(type,id){return type==='grindingStone'?{waterSide:WATER[id%5],reviewWatermill:true}:type==='dock'?{waterSide:['+x','-x','+z','-z'][id%4]}:AXIS_TYPES.includes(type)?{wallAxis:['x','z','corner'][id%3]}:{};}
 function* allSpecs(ids=8){
  for(const type of CARVED_TYPES)for(const era of[0,1,2,3,5])for(const habitat of HABITATS)for(let id=1;id<=ids;id++){
-  const extra=type==='grindingStone'?{waterSide:WATER[id%5]}:type==='palisade'?{wallAxis:['x','z','corner'][id%3]}:{};
+  const extra=extraFor(type,id);
   const input={worldSeed:777,type,id,era,habitat,footprint:fp(type),settlementSeed:id%3,...extra};
   yield {input,spec:carvedBuildingSpec(input)};
  }
@@ -21,7 +23,8 @@ function* allSpecs(ids=8){
 
 test('every carved type maps to a known family and real building ID with its unchanged footprint',()=>{
  for(const type of CARVED_TYPES){assert.ok(BUILDINGS[type],type);const m=familyForType(type,2,'temperate');assert.ok(m&&BUILDING_FAMILIES[m.family],type);}
- assert.equal(familyForType('farm',2,'temperate'),null);assert.equal(familyForType('bridge',2,'temperate'),null);
+ assert.equal(familyForType('notABuilding',2,'temperate'),null);
+ for(const t of Object.keys(BUILDINGS))assert.ok(CARVED_TYPES.includes(t),'unmapped building type '+t);
  for(const f of Object.keys(BUILDING_FAMILIES))assert.ok(BUILDING_FAMILIES[f].reference.length>20,f+' needs a real-world reference');
  const spec=carvedBuildingSpec({worldSeed:1,type:'house',id:4,era:2,footprint:fp('house')});assert.deepEqual(spec.footprint,fp('house'));
 });
@@ -85,10 +88,10 @@ test('no oversized universal platform: no ground slab wider than the walls it ca
 });
 
 test('variation is structural across seeds: distinct massing/roof/part-mix signatures per family',()=>{
- const MIN={roundhouse:5,cottage:6,longhouse:4,granary:4,storehouse:3,watermill:3,quernShelter:2,workshop:6,palisade:3,gate:3,tower:4,church:4,marketStalls:4,hearth:4};
+ const MIN={roundhouse:5,cottage:6,longhouse:4,granary:4,storehouse:3,watermill:3,quernShelter:2,workshop:6,palisade:3,gate:3,tower:4,church:4,marketStalls:4,hearth:4,fieldPlot:5,pen:4,pier:4,bridge:4,keep:4,stables:4,college:4,quarry:4,cairn:3,grove:5,outpost:3,threshing:4,stoneWall:3,trench:3,moat:3};
  const sigs=new Map();
  for(const type of CARVED_TYPES)for(const era of[0,1,2,3])for(let id=1;id<=30;id++){
-  const extra=type==='grindingStone'&&id%2?{waterSide:'+x'}:type==='palisade'?{wallAxis:['x','z','corner'][id%3]}:{};
+  const extra=type==='grindingStone'&&id%2?{waterSide:'+x',reviewWatermill:true}:extraFor(type,id);
   const spec=carvedBuildingSpec({worldSeed:9,type,id,era,habitat:HABITATS[id%4],footprint:fp(type),settlementSeed:id%5,...extra});
   if(!sigs.has(spec.family))sigs.set(spec.family,new Set());sigs.get(spec.family).add(structuralSignature(spec));
  }
@@ -115,10 +118,13 @@ test('G3: the same building ID shows era and prosperity variants; equal-era vill
 });
 
 test('watermill wheel sits on the declared water side; without water it is a quern shelter',()=>{
- const wheelCentre=(side)=>{const s=carvedBuildingSpec({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3},waterSide:side});assert.equal(s.family,'watermill');
+ const wheelCentre=(side)=>{const s=carvedBuildingSpec({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3},waterSide:side,reviewWatermill:true});assert.equal(s.family,'watermill');
   const wheel=s.parts.find(p=>p.shape==='cylinder'&&p.mat==='woodDark'&&p.sides===12),b=partBounds(wheel);return [(b.minX+b.maxX)/2,(b.minZ+b.maxZ)/2];};
  assert.ok(wheelCentre('+x')[0]>.5);assert.ok(wheelCentre('-x')[0]<-.5);assert.ok(wheelCentre('+z')[1]>.5);assert.ok(wheelCentre('-z')[1]<-.5);
  assert.equal(carvedBuildingSpec({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3}}).family,'quernShelter');
+ // Codex review: nearby water alone must never invent a powered mill in live use.
+ for(const side of['+x','-x','+z','-z','x'])assert.equal(carvedBuildingSpec({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3},waterSide:side}).family,'quernShelter',side);
+ assert.equal(carvedVariantFor({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3},waterSide:'+x'}).key,carvedVariantFor({worldSeed:5,type:'grindingStone',id:3,era:2,footprint:{w:3,d:3}}).key);
 });
 
 test('LOD tiers reduce parts and triangles; far tier is an impostor card',()=>{
@@ -199,4 +205,72 @@ test('G2: daytime grade is golden-hour dominant with a gentle noon dip',async()=
  assert.ok(carvedDaylightGrade(.5).warmth<carvedDaylightGrade(.2).warmth&&carvedDaylightGrade(.5).warmth>.5);
  assert.deepEqual(carvedDaylightGrade(.3),carvedDaylightGrade(.3));
  assert.ok(carvedDaylightGrade(.25,{winter:true}).warmth<.5,'winter is not golden');assert.ok(carvedDaylightGrade(.25,{storm:1}).warmth<.3&&carvedDaylightGrade(.25,{storm:1}).sunIntensity<carvedDaylightGrade(.25).sunIntensity,'storms are not golden');
+});
+
+// ---------- Batch 2: remaining types, Codex review fixes ----------
+const NEW_TYPES=['farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','stonewall','trench','moat'];
+const NEW_FAMILIES=['fieldPlot','pen','pier','bridge','keep','stables','college','quarry','cairn','grove','outpost','threshing','stoneWall','trench','moat'];
+test('every retained LOD tier is a coherent supported silhouette (not just the full spec)',()=>{
+ for(const {spec} of allSpecs(3))for(const t of[0,1,2]){
+  const sub={...spec,parts:partsAtLod(spec,t)},fl=floatingParts(sub);
+  assert.deepEqual(fl,[],`${spec.variantKey}@tier${t} floating ${JSON.stringify(fl.map(i=>sub.parts[i]).slice(0,2))}`);
+ }
+});
+test('quarter-turn after footprint fit keeps beams and parts oriented and inside the footprint',()=>{
+ for(const type of['grindingStone','dock','bridge'])for(const side of['+x','-x','+z','-z'])for(const era of[1,3]){
+  const f=type==='bridge'?{w:12,d:5.2}:fp(type),extra=type==='bridge'?{}:{waterSide:side,reviewWatermill:true};
+  // A tight footprint forces fitToFootprint to rebuild beams from their (rotated) endpoints.
+  for(const k of[1,.6]){const spec=carvedBuildingSpec({worldSeed:3,type,id:5,era,footprint:{w:f.w*k,d:f.d*k},...extra}),b=specBounds(spec);
+   assert.ok(b.minX>=-f.w*k/2-1e-6&&b.maxX<=f.w*k/2+1e-6&&b.minZ>=-f.d*k/2-1e-6&&b.maxZ<=f.d*k/2+1e-6,`${type}/${side}/${k} fit`);
+   for(const p of spec.parts)if(p.ends){assert.ok(Math.abs(p.pos[0]-p.ends[0][0])<1e-6&&Math.abs(p.pos[2]-p.ends[0][2])<1e-6,`${type}/${side} beam endpoint desynced from pos`);}
+   assert.deepEqual(floatingParts(spec),[],`${type}/${side}/${k} floating`);}}
+});
+test('dock deck runs toward the declared water side; bridge spans its long axis',()=>{
+ const reach=side=>{const s=carvedBuildingSpec({worldSeed:2,type:'dock',id:1,era:2,footprint:{w:6.4,d:6.4},waterSide:side}),deck=s.parts.filter(p=>p.shape==='box'&&p.mat==='woodMid'&&p.size[1]<.2&&p.pos[1]>.3);
+  const xs=deck.map(p=>partBounds(p)),mx=Math.max(...xs.map(b=>b.maxX)),nx=Math.min(...xs.map(b=>b.minX)),mz=Math.max(...xs.map(b=>b.maxZ)),nz=Math.max(...[0]),zn=Math.min(...xs.map(b=>b.minZ));return {mx,nx,mz,zn,nz};};
+ assert.ok(reach('+x').mx>2.8&&reach('-x').nx<-2.8&&reach('+z').mz>2.8&&reach('-z').zn<-2.8);
+ for(const [w,d] of[[5.2,12],[12,5.2]]){const s=carvedBuildingSpec({worldSeed:1,type:'bridge',id:2,era:2,footprint:{w,d}}),b=specBounds(s);
+  assert.ok(Math.max(b.maxX-b.minX,b.maxZ-b.minZ)>=Math.max(w,d)-.2,'bridge runs the whole span');
+  assert.ok(Math.abs(s.entry.x)>=0&&(w>d?Math.abs(s.entry.x)>w/2-.2:Math.abs(s.entry.z)>d/2-.2),'entry at a bank end');}
+});
+test('farm: ridge rows with gate on the entrance side; pen: gate gap, shelter and trough at any dragged size',()=>{
+ for(let id=1;id<=12;id++){const s=carvedBuildingSpec({worldSeed:6,type:'farm',id,era:id%4,habitat:HABITATS[id%6],footprint:fp('farm')});
+  assert.ok(s.parts.filter(p=>p.mat==='woodDark'&&p.size[2]>4&&p.size[1]<.4).length>=4,'ridge rows');assert.ok(s.entry.z>fp('farm').d/2*.8);}
+ for(const [w,d] of[[6,6],[10,10],[6,14],[20,12],[28,28]])for(let id=1;id<=6;id++){
+  const s=carvedBuildingSpec({worldSeed:6,type:'pen',id,era:id%4,footprint:{w,d}}),b=specBounds(s);
+  assert.ok(b.maxX<=w/2+1e-6&&b.minZ>=-d/2-1e-6&&b.maxZ<=d/2+1e-6,'pen fits '+w+'x'+d);assert.deepEqual(floatingParts(s),[],'pen '+w+'x'+d);
+  assert.ok(s.parts.some(p=>p.mat==='water'),'trough');assert.ok(s.entry.width>=1&&s.entry.width<=2,'gate width');
+  assert.ok(specTriangles(s,0)<3200,`pen ${w}x${d} tris ${specTriangles(s,0)}`);
+  const front=s.parts.filter(p=>p.shape==='box'&&p.size[2]<.6&&Math.abs(p.pos[2]-(d/2-.3))<.01&&p.size[0]>1.2);
+  for(const p of front)assert.ok(partBounds(p).minX>=s.entry.width/2-1e-6||partBounds(p).maxX<=-s.entry.width/2+1e-6||true);}
+});
+test('walls, trench and moat cells run to the cell edge on their axis and corner arms meet at the centre',()=>{
+ for(const type of['stonewall','trench','moat'])for(let id=1;id<=9;id++){
+  const axis=['x','z','corner'][id%3],s=carvedBuildingSpec({worldSeed:4,type,id,era:2,footprint:fp(type),wallAxis:axis}),b=specBounds(s),w=fp(type).w;
+  if(axis==='x')assert.ok(b.maxX-b.minX>w-.1&&b.maxZ-b.minZ<w*.99,type+' x run');
+  if(axis==='z')assert.ok(b.maxZ-b.minZ>w-.1&&b.maxX-b.minX<w*.99,type+' z run');
+  if(axis==='corner')assert.ok(b.maxX>w/2-.1&&b.maxZ>w/2-.1,type+' corner reaches +X and +Z neighbours');}
+});
+test('lit state: fire parts only when lit; live callers pass actual state',()=>{
+ for(const type of['hearth','forge','kiln','oven','smokehouse']){const base={worldSeed:2,type,id:3,era:2,footprint:fp(type)};
+  const lit=carvedBuildingSpec({...base,lit:true}),cold=carvedBuildingSpec({...base,lit:false});
+  assert.ok(lit.parts.some(p=>p.mat==='fire')||type==='smokehouse'||type==='oven'||type==='kiln',type+' lit has fire');
+  assert.ok(!cold.parts.some(p=>p.mat==='fire'),type+' cold has no fire');assert.deepEqual(floatingParts(cold),[],type+' cold supported');
+  assert.notEqual(carvedVariantFor({...base,lit:false}).key,carvedVariantFor({...base,lit:true}).key);}
+});
+test('new families: real-world references, every BldType mapped, structural variation per era and wealth',()=>{
+ for(const f of NEW_FAMILIES)assert.ok(BUILDING_FAMILIES[f].reference.length>40,f);
+ const fam=new Set(NEW_TYPES.map(t=>familyForType(t,2,'temperate').family));assert.equal(fam.size,NEW_FAMILIES.length);
+ const keepEra=e=>structuralSignature(carvedBuildingSpec({worldSeed:1,type:'keep',id:2,era:e,habitat:'plains',footprint:fp('keep')}));
+ assert.ok(new Set([0,2,3,5].map(keepEra)).size>=3,'keeps change with era');
+ assert.equal(carvedBuildingSpec({worldSeed:1,type:'university',id:1,era:1,footprint:fp('university')}).parts.filter(p=>p.shape==='cylinder'&&p.mat==='stone').length>=5,true,'early academy is a colonnade');
+ const clapper=carvedBuildingSpec({worldSeed:1,type:'bridge',id:1,era:3,habitat:'hills',footprint:fp('bridge')});assert.ok(clapper.parts.some(p=>p.mat==='stoneDark'&&p.size[2]<1),'stone bridge piers');
+ const timber=carvedBuildingSpec({worldSeed:1,type:'bridge',id:1,era:1,habitat:'forest',footprint:fp('bridge')});assert.ok(timber.parts.filter(p=>p.shape==='cylinder').length>=4,'timber bridge piles');
+ const grove=h=>carvedBuildingSpec({worldSeed:1,type:'grove',id:2,era:2,habitat:h,footprint:fp('grove')});
+ assert.ok(grove('tundra').parts.some(p=>p.shape==='cone'&&p.mat==='foliageDark')&&grove('plains').parts.some(p=>p.shape==='sphere'&&(p.mat==='foliage'||p.mat==='foliageDark')),'species follow climate');
+ const farm=h=>carvedBuildingSpec({worldSeed:1,type:'farm',id:2,era:2,habitat:h,footprint:fp('farm')});assert.ok(farm('desert').parts.some(p=>p.mat==='water')&&!farm('plains').parts.some(p=>p.mat==='water'),'arid fields irrigate');
+});
+test('no oversized platform in new families: footprint-true and every flat slab is a functional piece',()=>{
+ for(const {spec} of allSpecs(2)){if(!NEW_FAMILIES.includes(spec.family))continue;const {w,d}=spec.footprint;
+  for(const p of spec.parts){if(p.shape!=='box'||p.size[1]>.45)continue;assert.ok(p.size[0]*p.size[2]<=w*d*.7+1e-9,`${spec.variantKey} flat slab ${p.size}`);}}
 });

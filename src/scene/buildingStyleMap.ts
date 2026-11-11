@@ -17,17 +17,24 @@ export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:numb
  settlementSeed?:number;
  /** Actual household/civic prosperity 0..1 from simulation state, when known.
   * Quantised into three tiers so the variant pool stays bounded. */
- prosperity?:number};
+ prosperity?:number;
+ /** Review-only decorative powered watermill. The live game keeps grindingStone a
+  * hand quern: nearby water alone never creates a mill, flume or mechanism. */
+ reviewWatermill?:boolean;
+ /** Actual state: is the fire burning (hearth, forge, kiln, oven, smokehouse)? Live
+  * callers must pass real state; omitted means lit (review/preview only). */
+ lit?:boolean};
 type Mapping={family:FamilyId;trade?:Trade;scale?:'small'|'large'};
 
 /** Variants per family: distinct geometries kept resident per era/material bucket. */
 export const VARIANTS_PER_FAMILY:Record<FamilyId,number>={roundhouse:4,cottage:5,longhouse:3,granary:4,storehouse:3,watermill:3,quernShelter:2,
- workshop:3,palisade:3,gate:2,tower:3,church:3,marketStalls:3,hearth:3};
+ workshop:3,palisade:3,gate:2,tower:3,church:3,marketStalls:3,hearth:3,
+ fieldPlot:4,pen:3,pier:3,bridge:3,keep:3,stables:3,college:3,quarry:3,cairn:3,grove:4,outpost:3,threshing:3,stoneWall:3,trench:3,moat:3};
 
-/** Stable building type -> family. Types not listed keep the classic renderer
- * even when the carved style is enabled (farm, pen, dock, bridge, earthworks,
- * keep, stables, university, cairn, grove, cornerstone, stonewall, threshing
- * floor are deliberately left for a later batch). */
+/** Stable building type -> family. Every BldType is mapped (batch 2 added farm,
+ * pen, dock, bridge, keep, stables, university, quarry, cairn, grove,
+ * cornerstone, threshing floor, stone wall, trench, moat); an unknown future
+ * type still returns null and keeps the classic renderer. */
 export function familyForType(type:string,era:number,climate:Climate,waterSide?:string):Mapping|null{
  switch(type){
   case 'hut':return era<=1?{family:'roundhouse'}:{family:'cottage',scale:'small'};
@@ -52,10 +59,25 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   case 'temple':return {family:'church'};
   case 'market':return {family:'marketStalls'};
   case 'hearth':return {family:'hearth'};
+  case 'farm':return {family:'fieldPlot'};
+  case 'pen':return {family:'pen'};
+  case 'dock':return {family:'pier'};
+  case 'bridge':return {family:'bridge'};
+  case 'keep':return {family:'keep'};
+  case 'stables':return {family:'stables'};
+  case 'university':return {family:'college'};
+  case 'quarry':return {family:'quarry'};
+  case 'cairn':return {family:'cairn'};
+  case 'grove':return {family:'grove'};
+  case 'cornerstone':return {family:'outpost'};
+  case 'threshingFloor':return {family:'threshing'};
+  case 'stonewall':return {family:'stoneWall'};
+  case 'trench':return {family:'trench'};
+  case 'moat':return {family:'moat'};
   default:return null;
  }
 }
-export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth'] as const;
+export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth','farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','stonewall','trench','moat'] as const;
 
 export function climateFor(habitat:Habitat='plains'):Climate{
  return habitat==='hills'||habitat==='tundra'?'cold':habitat==='forest'||habitat==='wetland'?'wet':habitat==='desert'?'arid':'temperate';
@@ -84,7 +106,7 @@ export function variantIndexFor(worldSeed:number,id:number,count:number){return 
 export type CarvedVariantKey={key:string;family:FamilyId;ctx:FamilyContext};
 /** Resolve a building to its shared variant key and generation context. */
 export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|null{
- const era=eraBucket(input.era),habitat=input.habitat??'plains',climate=climateFor(habitat),map=familyForType(input.type,era,climate,input.waterSide);
+ const era=eraBucket(input.era),habitat=input.habitat??'plains',climate=climateFor(habitat),map=familyForType(input.type,era,climate,input.reviewWatermill?input.waterSide:undefined);
  if(!map)return null;
  const material=materialFor(era,habitat),count=VARIANTS_PER_FAMILY[map.family],index=variantIndexFor(input.worldSeed,input.id,count);
  // Wealth is a property of the variant (spread across the pool), so richer and
@@ -95,9 +117,9 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const wealth=tier<0?spread:Math.min(1,tier*.4+spread*.2);
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.waterSide??'',input.wallAxis??'',fw,fd,input.settlementSeed??'',tier].join('|');
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
-  ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{})};
+  ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.lit===false?{lit:false}:{})};
  return {key,family:map.family,ctx};
 }
 export function carvedBuildingSpec(input:CarvedBuildingInput):BuildingSpec|null{
