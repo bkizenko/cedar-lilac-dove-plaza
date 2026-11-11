@@ -93,3 +93,33 @@ Cultured curd passed7/7 focused tests and typecheck; broader regression/build/UI
 Source **39115987e6c6488462be93d8226fb629aefbc96e**, release **2026-11-11T22-25-07-816Z-3911598**, verified health+HTML200 on8086 and8101. **35/35**=34realGame/save/autosave/storage regressions+1actualbuiltpublicTestLabUI, Node24 typecheck/build passed. Native seed0 sparse observations; public reveal/save/load/off/return controls preserve the original isolated village/localStorage and real observed fog/age. An earlier menu-toggle harness failure was corrected test-only, with no source/build change. Evidence: docs/metrics/test-lab-observed-fog-release-2026-11-11.json.
 
 Precedingf095138/138 remains a distinct published batch; no combined overlapping denominator or new gate credit (34/98). Grok: correct-radius provenance tracer is still excluded and needs your owned fixes. Curd7/7+typecheck remains pending broader regression/build/UI/publication.
+
+## Follow-up source review — Claude9a40164 vs5d9051c
+
+No previous trade/cargo blocker is repaired in this delta. The only trade changes extract commitPlan/tradeAnswerBlocker and add last-observed partner-stock snapshots with3new controlled fixture tests. These are useful dialog seams, not physical inventory/task/save fixes.
+
+Still blocked: positive bulk items.paddedArmor conflicts with actual armor assets and strict production saves; real farming tools/condition are absent; item/gear/animal cargo lacks physical holders; direct interruption remains unhooked; loading still trusts latched ready IDs; core escrow/animal/line↔carry validation unchanged; player-from0 proposals rejected; needs-driven boat transport absent. stolenCargo.ts, its9tests, workCommitments.ts, armor.ts and farmTools.ts are byte-identical to the blocked baseline: parcel64/provenance64, preemption and distant pickup defects persist.
+
+New narrow fixes: tradeAnswerBlocker object fallback can preview an unregistered offer that answerTradeOffer cannot accept; reject detached/stale IDs. Observation records need observedAt<=state.time and historical observer IDs<nextId. Preserve valid history after observer death. Do not present a society-wide snapshot as a visible individual cache inventory.
+
+Fresh PM board2de0593 requires current-main merge and shared native sea/reservation retest before scope expansion;9a mergedf095 but newerG10/source-doc seams must also be preserved. Canonical backlog/status stay Codex-owned; Claude board/hand-off remains Claude-owned. No source or canonical edits and no tests run here. Detailed exact-line review and byte hashes: docs/parallel/reviews/trade-cargo-9a40164.json.
+
+## Scout food custody contract — coordination requested, runtime disabled
+
+Proposed contract: [contracts/scout-food-custody-v1.md](../contracts/scout-food-custody-v1.md). Claude Societies: please coordinate sea/camp consumers before typed loads are enabled. Proposed optional ScoutProvisions.foodCustody holds actual kind/physical units/cache-origin lots plus a distinct legacyUnits unknown bucket. Unit already imports ScoutProvisions, so no types.ts edit is required for that field. Origin labels are historical cache provenance, not container/vessel assets.
+
+Present scout and boat withdrawal budgets use rate×seconds and p.food/rate; those decisions must use nourishment. Existing food/foodUsed/paidFood/sea conservation counters stay physical units. Migrate sea dead-mate transfer, handOverPack usage reset, finiteCamp budgets/strict paid counters, custody/rescue, cache receipts, handover and carried-load volume through the typed API; never scalar-cast bread/curd/whey or invent legacy food identity. Coastal trade/commission remain explicit separate legacy scalars until coordinated. Root permission is still required before any shared types/captive holder edit.
+
+Only new leaf+9 kernel tests exist in an isolated .play candidate; neither committed nor executed. No runtime/source change is published by this contract. Typed loading stays DISABLED until every consumer and strict save/physical cache handoff preserves actual kind, origin, physical volume and nourishment. Please confirm owned sea/camp/custody hooks in your handoff; Codex will integrate shared persistence/volume seams with qualified tests when the resource lane is granted.
+
+## Execution leadership handoff — 2026-11-11T22:45:11.395433+00:00
+
+User appoints Grok execution PM and Claude high-level design lead. Codex continues assigned implementation/debug/test/integration support and defers programme sequencing to Grok. Existing file claims remain until Grok reassigns them.
+
+Current live: code3911598, release2026-11-11T22-25-07-816Z-3911598 on8086/8101;35/35 scoped fog/save batch, precedingf095138/138 separate; overall34/98 unchanged. CanonicalHEAD before this docs handoff3266af2. Saved villages untouched.
+
+Current authorized batch, NOT LIVE: fixed-angle camera collision correction (latest user priority; source under focused validation), exact GrokW1 narrow movement fix (6controlled checks+typecheck; native normalGame.step moves original worker through1.2m authored warehouse gap and settles hold after8.15s versus baseline20s/195route-discard loop), curd/whey (124passed/1failed/1skipped original126-check run; pottery test-only legitimate all-shard handling repaired4/4, source runtime/typecheck unchanged). Original failure and evidence retained. Root is preparing one combined frozen build; do not duplicate these files without claims.
+
+Knowledge screen: compact row/search/progress/primary-action/Details implementation28c8621 is already live; no additional redesign has shipped. Grouped/activity-based overview and workshop-context actions remain requested UX work; Claude design lead should specify concise interaction design, Grok assigns execution.
+
+New proposed scout-food custody contract is docs/parallel/contracts/scout-food-custody-v1.md. Runtime typed loads DISABLED until sea/camp/return/consumption/save consumers migrate; no kind/energy conservation completion claim. Source audit also found redundant default-world generation during constructor+reset/load; proposal only, no measured speedup or source change. Grok decides sequencing after camera.

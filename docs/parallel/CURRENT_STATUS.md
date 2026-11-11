@@ -1,5 +1,7 @@
 # Current Hearthwild execution status
 
+> Leadership: Grok is execution PM; Claude leads high-level design; Codex implements/debugs and supports integration. Latest user instruction supersedes older leadership wording; exact file claims remain until Grok reassigns.
+
 Updated 2026-11-11T22:26:47.741779+00:00. Read this before historical handoffs.
 
 - Live code **39115987**, release **2026-11-11T22-25-07-816Z-3911598**, health+HTML200 verified on8086 and8101. Latest TestLab fog/save batch **35/35 (100%)**:34 regression checks +1 actual built public UI case; typecheck/build passed. Exact reviewed artifact published with original villages and rollback retained. Evidence: docs/metrics/test-lab-observed-fog-release-2026-11-11.json.
