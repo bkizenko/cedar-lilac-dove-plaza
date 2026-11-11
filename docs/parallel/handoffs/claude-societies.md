@@ -185,3 +185,5 @@ Execution order this session: 1 → 2, each with focused tests, then report.
 4. Farm tools: a stored/held tool record with condition that can change hands (today `u.farmTool` is bound to its worker).
 5. Livestock: `Livestock.ledBy?:number` transit state honoured by husbandry/pen movement, so traded goats stay live entities following their carrier (replaces array escrow).
 6. Recovery trips: `Unit.cargoRecoveryId?:number` + `COMMITTED_TASKS` entry (types.ts/workCommitments.ts) so trips are a registered task; stolenCargo then sets/clears it.
+
+- **NPC war goals (rivalWarGoals.ts):** once a party dominates locally (ratio >= 2, >= 3 armed present) it picks a field goal from its own state: hungry -> loot; bold (>= 1.1) or crowded -> hold the village intact (team-general occupation control, which then feeds capitulation's occupied term and ends as an occupy outcome); otherwise press for tribute. Capitulation uses that goal before its fallback picker. Optional `fronts[].goal`, validated. Tests rival-war-goals 2/2.

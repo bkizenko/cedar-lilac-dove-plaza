@@ -13,6 +13,7 @@ import {CONFLICT_RULES,integrateOccupiedVillage,type ConflictUnit,type Occupatio
 import {createDomination,type DominationTerms} from './domination';
 import {alliesOf} from './alliances';
 import {siegeUnderWay} from './rivalSiege';
+import {warGoalOutcome} from './rivalWarGoals';
 
 /**
  * Natural capitulation. A community does not surrender because an attacker picked
@@ -29,7 +30,7 @@ export type CapitulationOutcome='occupy'|'annex'|'tribute'|'puppet'|'autonomy'|'
 export type CapitulationFront={id:number;hallId:number;defenderTeam:number;attackerTeam:number;phase:CapitulationPhase;openedAt:number;lastMeasuredAt:number;
  residentIds:number[];armedAtOpen:number;buildingIds:number[];hallHpAtOpen:number;
  casualties:number;captured:number;lostArmed:number;buildingLoss:number;occupiedSeconds:number;starvingSeconds:number;unrelievedSeconds:number;absentSeconds:number;
- siegeSeconds?:number;ratio:number;score:number;threshold:number;refusals:number;yieldedIds:number[];capitulatedAt?:number;expiresAt?:number;outcome?:CapitulationOutcome;resolvedAt?:number;reason:string};
+ siegeSeconds?:number;goal?:'hold'|'tribute'|'loot';ratio:number;score:number;threshold:number;refusals:number;yieldedIds:number[];capitulatedAt?:number;expiresAt?:number;outcome?:CapitulationOutcome;resolvedAt?:number;reason:string};
 export type CapitulationState={version:1;fronts:CapitulationFront[]};
 export const CAPITULATION_RULES={version:1,communityRadiusMeters:55,reliefRadiusMeters:150,minimumPressureSeconds:20,minimumRatio:1.5,civilianDefense:.25,minimumDefense:.5,
  starvationReserveSeconds:60,starvationFullSeconds:120,occupationFullSeconds:30,unrelievedFullSeconds:180,reliefShare:.5,relievedAfterAbsentSeconds:120,offerSeconds:180,refusalStep:.15,
@@ -131,6 +132,7 @@ function capitulate(g:Game,f:CapitulationFront,defenders:Unit[]){
 }
 /** The attacker's own needs and present strength decide; nothing about the defender is read beyond what its party sees locally. */
 export function npcCapitulationOutcome(g:Game,f:CapitulationFront):CapitulationOutcome{
+ const field=warGoalOutcome(f);if(field)return field;
  const hall=g.state.buildings.find(b=>b.id===f.hallId),present=hall?presentAttackers(g,hall,f.attackerTeam,f.defenderTeam):[];
  const p=villagePersonality(g,f.attackerTeam),hungry=reserveSeconds(g,f.attackerTeam)<200,room=g.popCap(f.attackerTeam)-g.popNow(f.attackerTeam);
  if(hungry)return'loot';
@@ -222,7 +224,7 @@ export function validCapitulationState(state:unknown){
  const seen=new Set<number>(),open=new Set<string>();
  for(const f of c.fronts){
   if(!f||!id(f.id)||seen.has(f.id)||!id(f.hallId)||!team(f.defenderTeam)||!team(f.attackerTeam)||f.defenderTeam===f.attackerTeam||!['pressed','capitulated','accepted','refused','relieved','expired'].includes(f.phase))return false;seen.add(f.id);
-  if(!ids(f.residentIds)||!ids(f.buildingIds)||!ids(f.yieldedIds)||!fin(f.openedAt)||!fin(f.lastMeasuredAt)||!fin(f.armedAtOpen,4096)||!fin(f.hallHpAtOpen)||!fin(f.casualties,4096)||!fin(f.captured,4096)||!fin(f.lostArmed,4096)||!fin(f.buildingLoss,1)||!fin(f.occupiedSeconds)||!fin(f.starvingSeconds)||!fin(f.unrelievedSeconds)||!fin(f.absentSeconds)||f.siegeSeconds!==undefined&&!fin(f.siegeSeconds)||!fin(f.ratio,1e6)||!fin(f.score,10)||!fin(f.threshold,10)||!fin(f.refusals,1e6)||typeof f.reason!=='string'||f.reason.length>300)return false;
+  if(!ids(f.residentIds)||!ids(f.buildingIds)||!ids(f.yieldedIds)||!fin(f.openedAt)||!fin(f.lastMeasuredAt)||!fin(f.armedAtOpen,4096)||!fin(f.hallHpAtOpen)||!fin(f.casualties,4096)||!fin(f.captured,4096)||!fin(f.lostArmed,4096)||!fin(f.buildingLoss,1)||!fin(f.occupiedSeconds)||!fin(f.starvingSeconds)||!fin(f.unrelievedSeconds)||!fin(f.absentSeconds)||f.siegeSeconds!==undefined&&!fin(f.siegeSeconds)||f.goal!==undefined&&!['hold','tribute','loot'].includes(f.goal)||!fin(f.ratio,1e6)||!fin(f.score,10)||!fin(f.threshold,10)||!fin(f.refusals,1e6)||typeof f.reason!=='string'||f.reason.length>300)return false;
   if(f.capitulatedAt!==undefined&&!fin(f.capitulatedAt)||f.expiresAt!==undefined&&!fin(f.expiresAt)||f.resolvedAt!==undefined&&!fin(f.resolvedAt))return false;
   if(f.outcome!==undefined&&!['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(f.outcome))return false;
   if(f.phase==='capitulated'&&(f.expiresAt===undefined||f.capitulatedAt===undefined))return false;
