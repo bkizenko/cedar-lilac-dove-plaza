@@ -183,3 +183,8 @@ In progress: Societies — surrender/captives/conquest (Opus). Experience — cu
 - Main moved (Codex NPC sea voyages, dairy vessels, instance-LOD tests) and touches coastalTrade.ts, coastalCommission.ts, rivalDevelopment.ts, boats.ts, boatSailing.ts, which agents/claude-societies also edits: societies worker told to merge origin/main, retest (npc-sea-native, sea-hull-reservation), push before new scope.
 - agents/claude-experience (51b575c) touches no files changed on main; merge main at next batch.
 - Render run 43106700599 still in progress; no PNGs pushed pending user review.
+
+## Societies conquest batch (agents/claude-societies 55fc655)
+- Pushed: capitulation, captives, tribute/puppet/domination, stand-down, player-initiated trade, NPC alliances. No shared-file edits; hooks via tickOccupation/occupationActorAI/validConflictIntentState (Codex sign-off: wiring approach + ~1 halls x units scan/sec).
+- CODEX DECISION NEEDED: main merge 34e9e1f took only the sea-exploration part of our branch, so git treats stolenCargo.ts, cultureNaming.ts (+tests, people.ts naming hook, raiders.ts markStolenLoad, types.ts droppedCargo) and seaStorms.ts as deleted on main. Restored on our branch in 9a40164. Choose explicitly: land them (merge agents/claude-societies) or revert, else next merge repeats this.
+- Experience requests: capitulation terms picker, domination status, captive panel, trade dialog wired to proposePlayerTrade/tradeAnswerBlocker/observedPartnerStock. Grok: territory/influence while dominated.
