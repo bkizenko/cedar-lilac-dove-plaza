@@ -12,6 +12,7 @@ import {recordConflict} from './conflictMetrics';
 import {queueStandDown} from './demobilization';
 import {capitulationYielded,tickCapitulation,validCapitulationState} from './capitulation';
 import {createDomination,dominationCarrierAI,dominationGarrisonAI,tickDomination,validDominationState,dominations,type DominationTerms} from './domination';
+import {tickRaiderSettlement,validRaiderSettlementState} from './raiderSettlement';
 import {tickAlliances,allianceReliefAI,validAllianceState} from './alliances';
 import {captiveDealingsAI,tickCaptiveDealings,validCaptiveDealingsState} from './captiveDealings';
 export type ConflictIntent='loot'|'capture'|'occupy'|'dominate';
@@ -118,7 +119,7 @@ export function tickOccupation(g:Game,dt:number){
   if(control.holdSeconds>=CONFLICT_RULES.controlHoldSeconds&&control.phase!=='held'){control.phase='held';recordConflict(g,'occupation_secured',control.controllerTeam,1,{targetId:hall.id});}
  }
  // Societies-owned follow-on systems ride this existing hook (no new sim.ts wiring).
- if(Math.floor(g.state.time)!==Math.floor(g.state.time-dt)){tickAlliances(g);tickCapitulation(g);tickDomination(g);tickCaptiveDealings(g);tickConflictStandDown(g);}
+ if(Math.floor(g.state.time)!==Math.floor(g.state.time-dt)){tickAlliances(g);tickRaiderSettlement(g);tickCapitulation(g);tickDomination(g);tickCaptiveDealings(g);tickConflictStandDown(g);}
 }
 export function withdrawOccupation(g:Game,id:number){const control=controls(g).find(c=>c.id===id);if(!control||control.phase==='withdrawn'||control.phase==='integrated'||control.phase==='dominated')return false;control.phase='withdrawn';for(const u of g.state.units)if(control.guardIds.includes(u.id)&&(u as ConflictUnit).conflictIntent==='occupy'){(u as ConflictUnit).conflictIntent=undefined;u.pillage=-1;u.target=null;if(u.militia)queueStandDown(g,u);else{u.order='return';u.recalled=true;}u.workReason='Withdrawing from occupation with possessions';}recordConflict(g,'occupation_withdrawn',control.controllerTeam,1,{targetId:control.hallId});return true;}
 /** Dispatcher hook for an explicit override; preserve the custody status itself. */
@@ -130,12 +131,12 @@ export function validConflictIntentState(state:unknown){
  const id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0;
  const ids=(v:unknown,max:number)=>Array.isArray(v)&&v.length<=max&&v.every(id)&&new Set(v).size===v.length;
  for(const person of s.units){const u=person as ConflictUnit;if(u.conflictIntent!==undefined&&!['loot','capture','occupy','dominate'].includes(u.conflictIntent))return false;if(u.captureTargetId!==undefined&&(!id(u.captureTargetId)||u.conflictIntent!=='capture'))return false;}
- if(s.occupations===undefined)return validCapitulationState(s)&&validDominationState(s)&&validCaptiveDealingsState(s)&&validAllianceState(s);
+ if(s.occupations===undefined)return validCapitulationState(s)&&validDominationState(s)&&validCaptiveDealingsState(s)&&validAllianceState(s)&&validRaiderSettlementState(s);
  if(!Array.isArray(s.occupations)||s.occupations.length>1024)return false;
  const seen=new Set<number>(),activeSites=new Set<string>();for(const c of s.occupations){
   if(!c||!id(c.id)||seen.has(c.id)||!id(c.hallId)||!Number.isInteger(c.formerTeam)||!Number.isInteger(c.controllerTeam)||c.formerTeam<0||c.controllerTeam<0||c.formerTeam>=s.tribes.length||c.controllerTeam>=s.tribes.length||c.formerTeam===c.controllerTeam||!ids(c.buildingIds,256)||!c.buildingIds.includes(c.hallId)||!ids(c.residentIds,4096)||!ids(c.guardIds,512)||!['approaching','holding','held','integrated','contested','withdrawn','dominated'].includes(c.phase)||!Number.isFinite(c.holdSeconds)||c.holdSeconds<0||c.holdSeconds>CONFLICT_RULES.controlHoldSeconds||!Number.isFinite(c.createdAt)||c.createdAt<0||c.blockedReason!==undefined&&(typeof c.blockedReason!=='string'||c.blockedReason.length>500)||c.integratedAt!==undefined&&(!Number.isFinite(c.integratedAt)||c.integratedAt<0))return false;seen.add(c.id);const site=`${c.controllerTeam}:${c.hallId}`;if(c.phase!=='withdrawn'&&c.phase!=='integrated'&&c.phase!=='dominated'){if(activeSites.has(site))return false;activeSites.add(site);}
  }
- return validCapitulationState(s)&&validDominationState(s)&&validCaptiveDealingsState(s)&&validAllianceState(s);
+ return validCapitulationState(s)&&validDominationState(s)&&validCaptiveDealingsState(s)&&validAllianceState(s)&&validRaiderSettlementState(s);
 }
 
 /** Read-only contextual status; local presence is checked again on acceptance. */
