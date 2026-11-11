@@ -1,3 +1,6 @@
+import {sailRigProject} from './boatSailing';
+import {SEA_EXPLORATION_ACTIVE_HULL_PHASES,seaExplorationOwnsBoat} from './seaExplorationReservations';
+export {seaExplorationOwnsBoat} from './seaExplorationReservations';
 import type {Game} from './sim';
 import type {GameState,Unit} from './types';
 import {BOAT_CLASSES,boatServiceProject,chooseBoatClass} from './boatClasses';
@@ -39,7 +42,7 @@ export type SeaExplorationState={version:1;teams:SeaExplorationTeam[];voyages:Se
 type CrewUnit=Unit&{seaExplorationId?:number};
 
 const R=SEA_EXPLORATION_RULES;
-const ACTIVE:SeaExplorationPhase[]=['mustering','outbound','returning','landing','unloading'];
+const ACTIVE:readonly SeaExplorationPhase[]=SEA_EXPLORATION_ACTIVE_HULL_PHASES;
 const OPEN:SeaExplorationPhase[]=['commission','ready',...ACTIVE];
 const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.z-b.z);
 const rate=(u:Unit)=>FOOD_PER_PERSON_SECOND*predisposition(u).appetite;
@@ -51,7 +54,6 @@ const openVoyage=(g:Game,team:number)=>g.state.seaExploration?.voyages.find(v=>v
 const activeCrew=(v:SeaExploration)=>v.crew.filter(id=>!v.home.includes(id)&&!v.left.includes(id));
 const unitVoyage=(g:Game,u:CrewUnit)=>u.seaExplorationId===undefined?undefined:g.state.seaExploration?.voyages.find(v=>v.id===u.seaExplorationId&&ACTIVE.includes(v.phase));
 /** A hull owned by a committed crew is unavailable to trade dispatch. */
-export function seaExplorationOwnsBoat(g:Game,boatId:number){return !!g.state.seaExploration?.voyages.some(v=>v.boatId===boatId&&ACTIVE.includes(v.phase));}
 /** Trade commissioning waits while this society is already paying for a hull. */
 export function seaExplorationCommissioning(g:Game,team:number){return !!g.state.seaExploration?.voyages.some(v=>v.team===team&&v.phase==='commission');}
 export function seaExplorationIndependentNeeds(g:Game,u:Unit){return !!unitVoyage(g,u as CrewUnit);}
@@ -89,7 +91,7 @@ function frontierFrom(g:Game,team:number,from:Point,v?:SeaExploration):{cell:num
 // ---- Eligibility.
 function healthyFree(g:Game,u:CrewUnit,team:number){return u.team===team&&u.hp>0&&u.type==='worker'&&u.hp>=u.maxHp*R.departureHealthFraction&&(u.thirstSeconds||0)<60&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.haulage&&!u.boat&&!u.scoutProvisions&&u.seaExplorationId===undefined&&!hasTaskCommitment(u)&&!u.jobLock&&!u.buildOrder&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.trade&&!u.emergency&&!u.recalled&&!u.resting&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&u.carry===0&&['idle','hold','gather'].includes(u.order);}
 function homeAdults(g:Game,team:number){const home=g.campOf(team);return g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.boat&&!(u as CrewUnit).seaExplorationId&&!u.coastalVoyageId&&!u.societyMissionId&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&Math.hypot(u.x-home.x,u.z-home.z)<=70);}
-function idleHull(g:Game,team:number){return(g.state.boats||[]).filter(b=>b.team===team&&b.hp>0&&!boatServiceProject(g,b.id)&&!boatCrew(g,b.id).length&&!g.state.coastalVoyages?.some(v=>v.boatId===b.id&&v.phase!=='complete'&&v.phase!=='lost')&&!seaExplorationOwnsBoat(g,b.id)).map(b=>({b,dock:g.state.buildings.find(d=>d.id===b.dock&&d.team===team&&d.type==='dock'&&g.finished(d))})).filter(r=>r.dock&&distance(r.b,r.dock)<=R.boardingMeters+8).sort((a,c)=>a.b.id-c.b.id)[0];}
+function idleHull(g:Game,team:number){return(g.state.boats||[]).filter(b=>b.team===team&&b.hp>0&&!boatServiceProject(g,b.id)&&!sailRigProject(g,b.id)&&!boatCrew(g,b.id).length&&!g.state.coastalVoyages?.some(v=>v.boatId===b.id&&v.phase!=='complete'&&v.phase!=='lost')&&!seaExplorationOwnsBoat(g,b.id)).map(b=>({b,dock:g.state.buildings.find(d=>d.id===b.dock&&d.team===team&&d.type==='dock'&&g.finished(d))})).filter(r=>r.dock&&distance(r.b,r.dock)<=R.boardingMeters+8).sort((a,c)=>a.b.id-c.b.id)[0];}
 function knowsPartner(g:Game,team:number){return g.state.tribes.some(t=>t.id!==team&&t.id!==3&&t.alive&&!g.isFoe(team,t.id)&&!!knownSettlementSite(g,t.id,team));}
 function dryLanding(g:Game,near:Point,team:number){const drop=supplyDrops(g,team)[0];if(!drop)return null;for(let r=0;r<=16;r+=2)for(let i=0;i<24;i++){const a=i*Math.PI/12,p={x:near.x+Math.cos(a)*r,z:near.z+Math.sin(a)*r};if(!g.walkable(p.x,p.z)||g.height(p.x,p.z)<=g.waterAt(p.x,p.z)+.3||!g.workBoard.connected(g,p.x,p.z,drop.x,drop.z))continue;if([[-1,0],[1,0],[0,-1],[0,1]].every(([x,z])=>g.walkable(p.x+x,p.z+z)))return p;}return null;}
 
@@ -105,7 +107,8 @@ function reviewTeam(g:Game,team:number){
  const open=openVoyage(g,team);if(open&&ACTIVE.includes(open.phase))return true;
  if(knowsPartner(g,team)){if(open?.phase==='ready'){open.phase='complete';open.reason='A partner hall is known; the idle hull is left for trade';}return reject(g,team,'partner-known');}
  if(open?.phase==='commission')return advanceCommission(g,open);
- const hull=open?.boatId!==undefined?(()=>{const b=g.state.boats?.find(b=>b.id===open.boatId&&b.team===team&&b.hp>0);const dock=b&&g.state.buildings.find(d=>d.id===b.dock&&d.team===team&&g.finished(d));return b&&dock&&!boatCrew(g,b.id).length&&!g.state.coastalVoyages?.some(v=>v.boatId===b.id&&v.phase!=='complete'&&v.phase!=='lost')?{b,dock}:undefined;})():idleHull(g,team);
+ if(open?.phase==='ready'&&open.boatId!==undefined&&sailRigProject(g,open.boatId)){open.reason='The paid hull waits for its existing sail fitting';return reject(g,team,'hull-pending',open.reason);}
+ const hull=open?.boatId!==undefined?(()=>{const b=g.state.boats?.find(b=>b.id===open.boatId&&b.team===team&&b.hp>0);const dock=b&&g.state.buildings.find(d=>d.id===b.dock&&d.team===team&&g.finished(d));return b&&dock&&!sailRigProject(g,b.id)&&!boatCrew(g,b.id).length&&!g.state.coastalVoyages?.some(v=>v.boatId===b.id&&v.phase!=='complete'&&v.phase!=='lost')?{b,dock}:undefined;})():idleHull(g,team);
  if(open?.phase==='ready'&&!hull){open.phase='failed';open.failure='hull-reassigned';open.reason='The commissioned hull is no longer idle at its dock';}
  if(hull){const launch=riverboatWaterPoint(g,hull.b.x,hull.b.z)||hull.b;const frontier=frontierFrom(g,team,launch,open?.phase==='ready'?open:undefined);if(frontier===undefined){teamRow(g,team).nextReviewAt=g.state.time+1;return reject(g,team,'water-preparing');}if(!frontier.length)return reject(g,team,'no-frontier','No unknown water adjoins this society’s known coast');return muster(g,team,hull.b,hull.dock!.id,open?.phase==='ready'?open:undefined);}
  if(g.state.haulageProjects?.some(p=>p.team===team&&p.work.vessel&&p.work.hullOrder?.mode!=='service')||g.state.coastalCommissions?.some(c=>c.team===team&&(c.phase==='dock'||c.phase==='hull')))return reject(g,team,'hull-pending','Another paid hull is already being made');
@@ -139,10 +142,11 @@ function advanceCommission(g:Game,v:SeaExploration){
  if(!g.finished(dock)){const assigned=g.state.units.find(u=>u.team===v.team&&u.hp>0&&(u.buildOrder===dock.id||u.order==='build'&&u.node?.id===dock.id));if(assigned){v.builderId=assigned.id;v.reason='Paid dock: builder working at the foundation';return true;}
   const builder=g.state.units.find(u=>healthyFree(g,u,v.team)&&!!g.interactionSpot(u,dock));if(!builder){fail(g,v,'no-builder','Paid dock waits for an available adult with a route');return false;}
   g.interruptMission(builder);builder.order='build';builder.node=dock;builder.tx=dock.x;builder.tz=dock.z;builder.workReason='Building the paid exploration dock';v.builderId=builder.id;v.reason=builder.workReason;return true;}
- const launched=g.state.boats?.find(b=>b.team===v.team&&b.dock===dock.id&&b.hp>0&&!seaExplorationOwnsBoat(g,b.id)&&!g.state.coastalVoyages?.some(c=>c.boatId===b.id&&c.phase!=='complete'&&c.phase!=='lost'));
- const project=g.state.haulageProjects?.find(p=>p.team===v.team&&p.work.vessel&&p.work.hullOrder?.mode!=='service'&&(p.id===v.projectId||p.work.workplace===dock.id));
+ const launched=g.state.boats?.find(b=>b.team===v.team&&b.dock===dock.id&&b.hp>0&&!sailRigProject(g,b.id)&&!seaExplorationOwnsBoat(g,b.id)&&!g.state.coastalVoyages?.some(c=>c.boatId===b.id&&c.phase!=='complete'&&c.phase!=='lost'));
+ const project=g.state.haulageProjects?.find(p=>p.team===v.team&&p.work.vessel&&!p.work.sailRigOrder&&p.work.hullOrder?.mode!=='service'&&(p.id===v.projectId||p.work.workplace===dock.id));
  if(project){v.projectId=project.id;if(project.actorId!==null&&!project.work.paused){v.builderId=project.actorId;v.reason='Paid hull: an adult is shaping it at the dock';return true;}const next=g.state.units.find(u=>healthyFree(g,u,v.team));if(next&&resumeHaulageProject(g,project.id,next.id,dock.id)){v.builderId=next.id;v.reason='A replacement adult resumes the same paid hull';return true;}fail(g,v,'no-builder',project.blockedReason||'Paid hull waits for an adult');return false;}
  if(launched&&(v.projectId!==undefined||!boatCrew(g,launched.id).length)){v.boatId=launched.id;v.phase='ready';v.reason='Paid hull launched; awaiting a healthy crew and provisions';teamRow(g,v.team).nextReviewAt=g.state.time;return true;}
+ if(g.state.boats?.some(b=>b.team===v.team&&b.dock===dock.id&&b.hp>0&&sailRigProject(g,b.id))){fail(g,v,'hull-pending','The dock hull waits for its existing paid sail fitting');return false;}
  const {kind,spec}=hullSpec(g,v.team);
  if(t.wood<spec.wood+R.hullReserveWood||t.stone<spec.stone||(t.items?.cordage??0)<spec.cordage){fail(g,v,'no-hull-materials',`Need ${spec.wood} logs and ${spec.stone} stone in actual stores for a hull`);return false;}
  const builder=g.state.units.find(u=>healthyFree(g,u,v.team)&&!!g.interactionSpot(u,dock));if(!builder){fail(g,v,'no-builder','Need a free adult with a route to the dock bench');return false;}

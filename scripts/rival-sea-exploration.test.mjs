@@ -97,3 +97,20 @@ test('hull loss in open water: bounded wait, survivors released with their packs
  assert.ok(g.state.units.every(u=>u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
  assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
 });
+
+
+test('paid sail fitting excludes idle, ready and commissioning hull admission without extra payment',()=>{
+ for(const phase of ['idle','ready','commission']){
+  const {g,dock}=fixture({hull:true}),boat=g.state.boats[0];
+  // The admission boundary receives an already-paid rig task; no extra inputs
+  // or work progress are fabricated or executed by this selection regression.
+  g.state.haulageProjects=[{id:g.id(),team:1,actorId:null,work:{kind:'canoe',vessel:true,workplace:dock.id,paused:true,sailRigOrder:{boatId:boat.id}},blockedReason:'Awaiting existing rig maker'}];
+  if(phase!=='idle')g.state.seaExploration.voyages.push({id:g.id(),team:1,phase,boatId:boat.id,dockId:dock.id,crew:[],home:[],left:[],reason:'',metrics:{hullPayments:0}});
+  const stocks=JSON.stringify({wood:g.tribe(1).wood,stone:g.tribe(1).stone,items:g.tribe(1).items}),projects=JSON.stringify(g.state.haulageProjects),units=JSON.stringify(g.state.units);
+  reviewSeaExploration(g);
+  assert.equal(JSON.stringify({wood:g.tribe(1).wood,stone:g.tribe(1).stone,items:g.tribe(1).items}),stocks,phase+' no extra hull or rig payment');
+  assert.equal(JSON.stringify(g.state.haulageProjects),projects,phase+' cannot resume rig as hull construction');assert.equal(JSON.stringify(g.state.units),units,phase+' no crew commandeered');
+  assert.ok(!g.state.seaExploration.voyages.some(v=>v.phase==='mustering'),phase+' rig hull not admitted');
+  assert.equal(g.state.seaExploration.teams.find(t=>t.team===1).reasons['hull-pending'],1);
+ }
+});
