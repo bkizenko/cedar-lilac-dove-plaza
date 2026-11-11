@@ -309,3 +309,34 @@ Status: pure specs and tests only; nothing rendered, nothing heard, `tsc` unusab
 - Proposed new sim ids for Codex (family ready, no sim id yet): `archive`, `granary`, `windmill`, `horsemill`, `shipyard`, `gatehouse`, `beacon`. Existing ids remapped via `CIVIC_ROLES`: market, temple, university, barracks, forge, kiln, warehouse, smokehouse, dryrack, tanner, fibreWorkshop, oven, townhall, watchtower. The live `familyForType` is unchanged; wiring is a Codex decision.
 - `src/scene/visibleSet.ts` (PROPOSAL, pure): `visibleSet({camera,settlements,previous})` returns per-chunk residency (full / merged / impostor / none), one cluster card per far settlement, stats, and `state` to feed back as `previous` (hysteresis 12 m). Defaults: bands 60/140/320/far 900, caps 260 draws, 2500 instances, 150 full buildings, 40 cards; caps enforced by degrading farthest chunks first. Tests: 20 villages / 500 buildings, sweep and dense layout (worst frame 29 and 177 draws). Codex owns culling; renderMetrics and instanceCameraCull untouched.
 - Limits: chunk costs are modelled (draws = distinct kinds when full), not measured in a browser; cluster card and merged-chunk meshes are not built here.
+
+## Batch 7: per-civ architecture bible (user direction after reviewing renders)
+
+User direction: (1) terrain is NATURAL, never carved wood; only the warm golden-hour grade stays; wood only where a building is timber. (2) Concept art (docs/art-reference/approved-wonder-concepts.png) is the fidelity target: fitted ashlar, timber-framed thatch and tile roofs, canvas awnings, cream banners with simple emblems (sun-star, waves, mountain and river, water drop), natural dry-grass hills and red rock. (3) Cultures must differ in MATERIAL, plan, roof and civic building, not tint. (4) Invented civs, inspiration only. (5) Every building individually imperfect. (6) People differ by cut, headgear, colour and insignia.
+
+Rule for every civ below: a distinct primary wall material (own swatch, own course pattern), a distinct roof form, a distinct plan, a distinct civic building, a banner emblem. Nothing is copied from a real culture; each is an invented blend of climate logic and construction method.
+
+| id | inspiration (loose) | biome | wall | roof | house plan | civic building |
+|---|---|---|---|---|---|---|
+| sandrill | Nabatean | canyon, arid | rose sandstone, rock-cut | flat, stepped parapet | facade cut into a cliff face with a single bay | carved tomb-temple facade with a crowning urn; cistern hall |
+| nilemark | Egyptian | river desert | whitewashed mudbrick, battered walls | flat with palm-rib shade | block house, roof terrace | pylon gate temple with papyrus-bundle columns |
+| tigrane | Mesopotamian | river plain, arid | baked brick with bitumen bands | barrel vault and flat | courtyard block | stepped ziggurat with a shrine on top |
+| hanrei | East Asian | wet temperate | timber post-and-beam on stone plinth, paper screens | upturned-eave tile hip | pavilion with veranda | tiered pagoda hall |
+| vedara | South Asian | monsoon | laterite and carved sandstone | flat with chhatri pavilions | haveli courtyard | curvilinear tower temple with a stepped tank |
+| aureline | Greco-Roman | mediterranean | white ashlar limestone | low terracotta gable | atrium house | columned temple with pediment; basilica |
+| sahelan | West African | savanna | rammed earth with projecting beam ends | flat; conical thatch granaries | buttressed block | tall buttressed mud hall with spiked pinnacles |
+| quillan | Andean | high mountain | fitted polygonal stone, trapezoid doors | steep grass thatch | terraced rectangle | trapezoid ceremonial hall on terraces |
+| kaaltun | Mesoamerican | jungle, hot | plastered limestone, corbelled | palm thatch on platforms | pole-and-thatch house on a low platform | stepped pyramid with a roof comb temple |
+| mekhari | Southeast Asian | tropical wet | bamboo and woven reed on stilts | huge saddle (boat) thatch | stilt house | tiered saddle-roof hall |
+| brythen | Britannic | cool temperate | wattle and daub | conical thatch | roundhouse in a ditch ring | great round hall, ring rampart |
+| rusvolt | Russian | boreal | notched logs | steep plank gable | log cabin with carved lintel | wooden tiered church with onion domes |
+| steppan | Central Asian | steppe | felt over lattice | felt dome | yurt | great yurt with banner poles; mudbrick caravanserai in late eras |
+| skoldar | Nordic | cold coast | turf over stave frame | turf, low | earth-banked longhouse | stave hall with dragon-head gables |
+
+Age grammar (era 0..5): 0-1 dwellings are the poorest local form (reed, wattle, hide, turf); 2-3 add the signature wall material and a civic hall; 4-5 add stone or fired plinths, second storeys, civic monuments and carved trim. Wealth adds trim, banners, size; wear adds lean, rubble, patched roofs.
+
+Per-instance imperfection (seeded): footprint scale +-6%, wall lean up to 1.5 degrees, uneven heights, roof pitch and overhang jitter, off-centre doors, optional add-ons (lean-to, stack, porch), rubble and patched roofs by wear.
+
+People: each civ takes its own cut, headwear, dye palette and emblem through the culture (unitAppearance renders only owned gear, so distinction is by garment cut, headwear, dye, trim motif and sash/insignia, never invented armor).
+
+Terrain: new `biomeTerrain.ts` replaces the carved terrace in the H style: grass, dirt, rock on slopes, sand at shores, snow by height and latitude, brown savanna or steppe per biome, isotropic noise (no grain stripes). `carvedTerrace.ts` is deprecated; keep only the golden-hour grade.
