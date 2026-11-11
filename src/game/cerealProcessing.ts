@@ -1,6 +1,6 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory,FOOD_NOURISHMENT}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds,foodDemand}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -153,7 +153,7 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
 
 function mealWorkerLimit(g:Game){const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;return Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));}
 function activeFoodWorkers(g:Game){return(g.state.production?.projects||[]).filter(p=>p.team===0&&p.actorId!==null&&!['paused','stored','complete','lost'].includes(p.phase)&&
- !isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace)&&(PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
+ !isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace)&&(productionFoodOutput(p)>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
 function urgentReadyMealInputs(g:Game){
  if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
  const t=g.tribe(0),food=foodInventory(t);
@@ -176,7 +176,7 @@ function reviewInterruptedFoodProcessing(g:Game,team:number,eventActorId?:number
  for(const p of projects){
   if(p.team!==team||!['paused','stored'].includes(p.phase)||p.pauseCause==='manual'||!allowKitchen&&!isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace))continue;
   const spec=PRODUCTION_RECIPES[p.recipe];
-  if(!isCerealRecipe(p.recipe)&&!spec.grain&&!spec.food&&!spec.outputs.flour)continue;
+  if(!isCerealRecipe(p.recipe)&&!spec.grain&&!productionFoodOutput(p)&&!spec.outputs.flour)continue;
   if(p.pauseCause!=='interrupted'&&!/^(Direct order paused paid work|Maker lost;|Pickup paused; paid inputs|Pickup adult lost;|Pickup route blocked;|No route to the workshop;)/.test(p.blockedReason))continue;
   p.pauseCause='interrupted';
   if(p.actorId===null)for(const maker of p.practiceWorkers||[]){

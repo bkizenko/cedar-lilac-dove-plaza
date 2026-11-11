@@ -1,5 +1,5 @@
 import {exactWaterMemoAt} from './exactWaterMemo';
-import {ownedWaterIndex,prepareOwnedWaterWorld} from './indexedLocalWater';
+import {ownedWaterIndexValue,prepareOwnedWaterWorld} from './indexedLocalWater';
 export type LocalWaterBody={kind:'lake';id:string;x:number;z:number;rx:number;rz:number;surfaceY:number;shoreline?:{x:number;z:number}[]}|{kind:'river';id:string;pts:{x:number;z:number;y:number;w?:number}[];width:number;surfaceVersion?:2;startCap?:'round'|'butt';endCap?:'round'|'butt'};
 export type Waterfall={x:number;z:number;upperY:number;lowerY:number;width:number;dx:number;dz:number};
 export type LakeBody=Extract<LocalWaterBody,{kind:'lake'}>;
@@ -36,7 +36,7 @@ export function localWaterAt(bodies:LocalWaterBody[],x:number,z:number):number|n
  return surface;
 }
 export function waterSurfaceAt(world:{waterY:number;baseWaterY?:number;size?:number;waterBodies?:LocalWaterBody[];waterfalls?:Waterfall[];waterHeights?:Float32Array;localWaterVersion?:number},x:number,z:number){
- if(world.localWaterVersion===17&&world.size){prepareOwnedWaterWorld(world);const {index}=ownedWaterIndex(world.waterBodies||[],world.size,world.waterfalls),surface=exactWaterMemoAt(world,index,x,z,lakeContains);return Math.max(world.waterY,surface===null?-Infinity:surface+world.waterY-(world.baseWaterY??world.waterY));}
+ if(world.localWaterVersion===17&&world.size){prepareOwnedWaterWorld(world);const index=ownedWaterIndexValue(world.waterBodies||[],world.size,world.waterfalls),surface=exactWaterMemoAt(world,index,x,z,lakeContains);return Math.max(world.waterY,surface===null?-Infinity:surface+world.waterY-(world.baseWaterY??world.waterY));}
  const grid=world.waterHeights,size=world.size;
  if(grid&&size){
   const segs=Math.round(Math.sqrt(grid.length))-1,n=segs+1,gx=(x/size+.5)*segs,gz=(z/size+.5)*segs;
