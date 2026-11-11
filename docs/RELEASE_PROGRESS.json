@@ -157,7 +157,7 @@
     "bankFishing20261102": {
       "path": "docs/INTEGRATED_BANK_FISHING_2026-11-02.md",
       "kind": "executed connected ordinary Game.step scenario with exact accounting",
-      "scope": "Frozen c66304c; two actual V16 bank catch→carry→save→recall→physical home-delivery scenarios. Not hardship campaign balance."
+      "scope": "Frozen c66304c; two actual V16 bank catch\u2192carry\u2192save\u2192recall\u2192physical home-delivery scenarios. Not hardship campaign balance."
     },
     "survivalMaintenance20261102": {
       "path": "docs/TOOLS_CAMERA_SURVIVAL_2026-11-02.md",
@@ -177,7 +177,7 @@
     "finalMatureProfileNov2": {
       "path": "docs/FINAL_MATURE_VILLAGE_PROFILE_2026-11-02.md",
       "kind": "Actual foreground browser stress profile on target Apple M1/8GiB, original/final exported aggregate counts and final-source build",
-      "scope": "M5-07 reporting only:245→273 people,363→364 standing structures, Medium1×, CPU/navigation-included/render/memory/save pipeline. No fast-forward/FPS target acceptance."
+      "scope": "M5-07 reporting only:245\u2192273 people,363\u2192364 standing structures, Medium1\u00d7, CPU/navigation-included/render/memory/save pipeline. No fast-forward/FPS target acceptance."
     },
     "occupationProductionRegressionNov2": {
       "path": "docs/metrics/occupation-production-gap-2026-11-02.json",
@@ -193,6 +193,11 @@
       "section": "Executed evidence / Actual desktop review / limitations",
       "kind": "published exact-source native geometry, physical journeys, old-world preservation, winter and actual desktop saved continuation",
       "scope": "2764d2c C4b seven-source65bcb428. Five native cases, twenty fixed/rotating generation screens19/20 with separately accepted flatter-world case; final12-family geometry guards, wet descending rivers, measured route/root/foundation probes; four paid original-founder quarry trips;27/27 final winter/save-controller cases; no smooth-bank/performance claim."
+    },
+    "sheepWoolSailingNov11": {
+      "path": "docs/metrics/sheep-wool-sailing-2026-11-11.json",
+      "kind": "Published exact-source regression plus native built UI",
+      "scope": "95/95 batch only; finite sheep/wool clothing and paid square sail on native terrain. No additional complete98-gate credit."
     }
   },
   "gates": [
@@ -631,7 +636,7 @@
       "evidence": [
         "v18c4b-published"
       ],
-      "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1–17 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
+      "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1\u201317 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
     },
     {
       "id": "M1-19",
@@ -1508,7 +1513,7 @@
       "evidence": [
         "finalMatureProfileNov2"
       ],
-      "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245→273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
+      "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245\u2192273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
     },
     {
       "id": "M5-08",

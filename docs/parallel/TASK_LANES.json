@@ -15,13 +15,13 @@
       "id": "C-Economy",
       "owner": "Codex",
       "first": "sheep/wool integration",
-      "state": "candidate acceptance pending"
+      "state": "sheep/wool published95/95 batch; broader livestock/dairy next"
     },
     {
       "id": "C-Platform",
       "owner": "Codex",
       "first": "sailing integration",
-      "state": "isolated source merged and typechecked; integrated acceptance pending"
+      "state": "sailing published; autosave-frame timing candidate29/29,typecheck; native acceptance pending"
     },
     {
       "id": "A-Societies",

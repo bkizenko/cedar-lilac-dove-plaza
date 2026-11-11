@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-11",
+  "codeCommit": "5f1b5e9c4398107b39ca207159bb6451a6922b8f",
+  "release": "2026-11-11T20-21-59-065Z-5f1b5e9",
+  "publishedPorts": [
+    8086,
+    8101
+  ],
+  "batch": {
+    "passed": 95,
+    "total": 95,
+    "percent": 100,
+    "regressionCases": 93,
+    "builtNativeUiScenarios": 2
+  },
+  "firstRelease": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newGateCredit": 0
+  },
+  "changes": [
+    "Fresh-world deterministic real sheep with finite fleece; legacy saves retain exact wildlife without inserted sheep",
+    "Actual sheep capture and physical leading; same-species breeding; feed/water/keeper-dependent fleece regrowth",
+    "Paid shearing/carrying/washing/spinning/weaving or felting/sewing into owned wool coats;6C gameplay warmth and hot-work burden",
+    "Paused clipped fleece parcel can resume from actual UI even when the sheep has no fleece left",
+    "Paid8logs8cloth4cordage120s dock sail rig on the same registered hull; real rowers, load, condition and deterministic wind affect movement",
+    "Practical rowing/loaded-delivery evidence precedes sail trials; useful wind-assisted cargo return establishes demonstration; strict saved custody and project reconciliation"
+  ],
+  "evidence": {
+    "typecheck": ".play/livestock-sailing-typecheck.log",
+    "regressions": ".play/livestock-sailing-tests.log",
+    "build": ".play/livestock-sailing-build.log",
+    "builtUi": ".play/livestock-sailing-ui.log",
+    "diagnostic": "scripts/diagnostics/livestock-sailing-ui.mjs",
+    "nativeSheep": "scripts/sheep-native.test.mjs",
+    "nativeSailing": "scripts/sailing-native.test.mjs"
+  },
+  "fixtures": [
+    "Native sheep seed42 V18 pangaea unchanged heights/rivers/features; authored finished pen, observed opening, finite household supplies and suppressed unrelated events; original resident/wildlife positions retained",
+    "Native sailing seed1 V14 unchanged coast; authored completed dock,3residents,finite materials,existing hull and priorrowing evidence; ordinary Game.step cargo voyage/return",
+    "Built UI disposable headless Chrome1440x900 Low: actual Capture sheep,Clip,Resume fleece delivery,save/reload; Fit rig,Board,Raise/Lower sail,save/reload and functional instance counts"
+  ],
+  "limitations": [
+    "No sheep inserted into legacy campaigns; old-map sheep trade/import remains future work",
+    "No shears/tool consumption,automated wool demand,seasonal clipping profile,dyes or garment repair yet",
+    "Horses,broader burden animals,cheese/preserved dairy and pastoral starts remain unfinished",
+    "Sail force values are explicit game coefficients,not empirically calibrated historical speeds",
+    "No tacking,offshore seaworthiness,rig repair or naval combat; personal portable legacy canoes unchanged",
+    "No100+resident smoothness or whole-campaign claim; overall98gate credit unchanged"
+  ],
+  "preservation": [
+    "Actual user browser/villages untouched; all UI imports used isolated disposable browser context",
+    "Canonical held sim/meshes edits preserved by clean three-way merges and excluded from published runtime",
+    "Previous release retained for rollback;immutable lazy chunks retained"
+  ],
+  "sourceQualificationNotes": [
+    "First separate native sheep test assertion corrected from strict false to falsy ended-state null without changing runtime or terrain; final frozen native case passed in combined93",
+    "Node21/Node22 launch-only loader errors occurred in separate candidate checks; final combined suite used frozen modern Node and passed93/93",
+    "Portable older-shaped legacy fixture replaces hardcoded private53person export path; historical actual53 export audit stays separate from this batch"
+  ]
+}
