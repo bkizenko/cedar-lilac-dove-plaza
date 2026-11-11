@@ -1,6 +1,27 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W2 (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W3 in progress (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+
+## Batch W3 — in progress (review fixes, observed water routes, river sections)
+
+- **Base main:** `9faabf9` merged (`dfcdc20`; append-only board conflict resolved by keeping both sides). Code commits so far: `f41f395` (W2 review fixes), `26bd1c8` (`planObservedWaterRoute`), `cfcf3a8` (GW-04 river sections).
+- **Codex review of `b3174e2` — answered:**
+  1. Fertility summary leak: fixed. `fertilityPreview` now reports `state: 'complete' | 'partial' | 'unknown'`. Hidden cells never contribute. All-hidden gives `summary: null`. The harvest `fieldTerrain()` value is used only when every placement survey point is explored. New all-hidden and mixed-visibility regressions.
+  2. `observedVision()` persistence: acknowledged; Codex owns `encodeGame`. No Grok edit.
+  3. Divergent sight radii: fixed. New `sightRadii.ts` is the single source used by both `Game.updateVision` (shared `sim.ts` hunk: two calls replaced, values unchanged) and the tracer. Attribution now uses `stampVision`'s exact cell-centre predicate (no tolerance). New boundary test covers tower 22/30, fortification 5, unfinished dock 12 and finished dock `DOCK_R+4`.
+  4. Evidence class: agreed. The anti-loop and unseen-command results are source/fixture evidence, not 100+-resident timing or native ferry-arrival qualification.
+- **Claude request 1 — delivered (`26bd1c8`):** `planObservedWaterRoute(g, team, fromDockId, target, {maxNodes?, navigation?, knows?})` returns either `{waypoints, reachesTarget, endsAtFrontier, expandedNodes}` or `{rejected: 'unobserved'|'no-water-connection'|'budget'|'preparing'|'no-dock', expandedNodes}`.
+  - Knowledge: team 0 uses its fog. NPC teams use `teamKnowledge`, which follows exactly the `rivalKnows` rules (parity test on 600 points per team), plus the team's own finished docks (`DOCK_R+4`).
+  - The navigation grid is never read at an unobserved cell (a guarded-grid test throws on any such read). Scrambling every hidden cell gives a byte-identical plan.
+  - `preparing` means the cached water navigation is still building; it is never proof that no route exists.
+  - Evidence limit: the longest fixture route is 140 m (a river), 244 nodes, about 1 ms. There is no open-sea or 100+-voyage measurement yet.
+- **GW-04 river sections (`cfcf3a8`):** each river is cut into deterministic ~48 m channel sections with oriented rectangles (`section.corners` for display).
+  - Clicking anywhere in a section selects the whole section (`waterReachAt(...).section`). Fish and clay membership is exclusive (nearest centreline) and requires water connected to the channel, so a separate pond is excluded (an existing `water-reach` test caught this, and it passes).
+  - Re-surveys never duplicate fish. `waterReachReport` adds `fishRecoveryPerMinute` (the game's own `renewFish` run on copies) and `section`.
+  - **Save impact: none.** Sections are derived from the world; fish nodes and clay deposits keep their persisted shapes. No new save field was needed, so no Codex save coordination is required for this slice.
+  - Measured stock: 33/18/17 sections (seeds 0/1/7); median 208–330 fish per section; 440–600 fish per 100 m of river. Whether that is superabundant ("50 rivers worth of fish") is a stock-balance call for Codex: W supplies the section budget seam if a cap is wanted.
+  - For Claude: draw the selection from `section.corners` instead of the fixed ring (`world.ts` resource ring); show `fishRecoveryPerMinute` in `WaterReachPanel`.
+- **Checks:** `fog-provenance` 6/6, `field-area` 5/5, `observed-water-route` 5/5, `river-sections` 5/5. Fishing/pottery/clay regression set (26 files, 120 tests): 118 pass. The 2 failures (`station-catalogue` "search combines terms…" and "audited statuses…") fail identically on main `9faabf9`. `tsc` passes; eslint is clean on new and changed files.
 
 ## Batch W2 — fixture repair, fog provenance, unseen moves, whole-area fields, fertility preview
 
@@ -42,7 +63,11 @@ None. `observedFog` and the route `nearest` flag are in-memory only. No persiste
 - Reveal/vision regression set (`seed-testing`, `riverboats`): only `riverboats` "paid hull construction resumes…" fails, and it fails identically on main.
 - Move/boat regression set (62 files that use `issueMove`, attack-move, riverboats or `steer`; 638 tests): failure set identical to main except two branch-only names, `warfare` "arming selected adults…" and `witnessed-frontier-claims` "paid unseen town creation…". Both fail 3/3 on unmodified main too, so they were just missing from main's concurrent log. Main-only: V17 (now fixed), threshing floor and camp raider (known flaky).
 - `npx tsc --noEmit`: pass. `eslint` on new and changed files: clean, apart from the pre-existing `sim.ts` `prefer-const` error at the `bld` line, which is on main too.
-- Full suite: FULL_SUITE_PLACEHOLDER
+- Full suite: `npm test`, run concurrently on one box. **Main `f6c0747`: 2346 tests, 2180 pass, 161 fail, 5 skipped. Branch at W2 head `b3174e2`: 2370 tests, 2213 pass, 152 fail, 5 skipped** (+24 tests: the W2 suites).
+  - Main-only (fixed or flaky): the 8 `v17`/`v18c4b-native-routes` upland-quarry tests and `intentional-ground-routes` native V17 (fixed by `19f9944`). Also `townhall-costs` "explicit free hearth placement…" and "new village civilians defeat a finite camp raider" (known flaky).
+  - Branch-only: `production` "actual two finite hunted animals feed a physical skin-clothing chain…" and `emergency-shelter` "real Game.step preserves occupied shelter…". Both are flaky on unmodified main `9faabf9` too: 3 isolated runs per tree went branch 2/3 clean, W3 head 2/3 clean, main 2/3 clean, and one main run failed both.
+  - Result: no new deterministic failure; 9 fewer failures than main.
+  - Suite-generated tracked files were restored and not committed.
 
 ### Rollback
 
@@ -139,7 +164,7 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 | GW-01 | Repeated **tight-space stuck/loop** failures, raised repeatedly with escalating frustration. Precise local routing plus anti-loop are acceptance-critical, not polish. | "need better and morew precise nav in tight areas. people constantly get stuck and in loops" — scenic#749; also scenic#585, #745; keyboard#185, #187, #265 | W1 delivered (`2a9fa79`, `5f2b1b2`) |
 | GW-02 | **Whole drawn area plants as one field**; fields roll over hills; obstacles queue for clearing instead of blocking. Only genuinely steep or wet ground is refused, by actual sampled grade. | "I should have been able to plant this whole area as one field" — scenic#690; "plant fields that roll up and down the hill" — scenic#432; "can't plant fields on perfectly fine ground" — scenic#751; "fields arent being fully planted" — scenic#696 | W2 delivered: planner/API + audit `b789597`; engine wiring requested from Codex |
 | GW-03 | **Stable camera over mountains and while zooming** (no angle change on zoom, no terrain jitter). Not in the backlog at all. | "camera is unstable when going over the mtns" — scenic#649; "why does the camerwa angle change when you zoom in and out?" — scenic#745 | W2 measured; flat-ground zoom already fixed on main (`3ec1beb`); mountain lift = dolly-before-lift proposal on the board (contract decision) |
-| GW-04 | **River fish/clay are finite per clickable rectangular reach section**, with visible remaining quantity, depletion/refill rates and uneven richness. No point-circle superabundance. | "river should be clickable in sections … resource depletion rates that you can see" — scenic#458; "selection for river shouldnt be these little circles but big rectangular sections" — scenic#696; "50 rivers worth of fish in one river" — scenic#712 | W3 |
+| GW-04 | **River fish/clay are finite per clickable rectangular reach section**, with visible remaining quantity, depletion/refill rates and uneven richness. No point-circle superabundance. | "river should be clickable in sections … resource depletion rates that you can see" — scenic#458; "selection for river shouldnt be these little circles but big rectangular sections" — scenic#696; "50 rivers worth of fish in one river" — scenic#712 | W3 sections/rates delivered `cfcf3a8`; stock cap = Codex balance call; rectangle drawing = Claude |
 | GW-05 | **Wells as a building**; water collection automatic from wells and freshwater. | "well should be a bbuilding" — scenic#696; "water should be one of those things people auto gather" — scenic#696 | W5 |
 | GW-06 | **River currents and elevation drive watermills and windmills**, plus Roman-scale works (aqueducts, cisterns, canals). Backlog has no watermill/cistern entry. | "windmills and watermills should definitely be a thing, but will need currents in rivers from that and elevation … build some crazy stuff like the romans did" — scenic#448; "ability to dig canals" — scenic#777 | W5 |
 | GW-07 | **Moves to unseen ground still go, or go as close as possible**, without revealing water or hinting at hidden terrain. | "if i tell people to go to an areas thats not in line of sight thehy sjould still go or go as close as tehy can b otherwise its hinting" — scenic#458 | W2 delivered `403f506` |
