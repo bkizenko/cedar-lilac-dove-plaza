@@ -112,10 +112,15 @@ export function dispatchExistingCampRaid(g:Game){
  for(const camp of g.state.buildings){
   if(camp.team!==3||!camp.raiderCamp||!g.finished(camp)||!camp.campEconomy||g.state.time-camp.campEconomy.lastDispatchAt<FINITE_CAMP_RULES.dispatchIntervalSeconds)continue;
   const reports=camp.campEconomy.knownSites.filter(r=>r.team===0&&g.state.time-r.observedAt<=FINITE_CAMP_RULES.reportLifetimeSeconds);
-  for(const report of reports)for(const u of g.state.units){
-   if(u.hp<=0||u.team!==3||u.homeCamp!==camp.id||!beginCampTrip(g,u,report))continue;
-   const ready=raidReadiness(g);
-   g.state.raidWave++;
+  for(const report of reports){
+   const sent:Unit[]=[];
+   for(const u of g.state.units){
+    if(u.hp<=0||u.team!==3||u.homeCamp!==camp.id||!beginCampTrip(g,u,report))continue;
+    sent.push(u);
+   }
+   if(!sent.length)continue;
+   for(const u of sent)if(u.seaRaid?.plan)u.seaRaid.plan.initialBand=sent.length;
+   const ready=raidReadiness(g);g.state.raidWave++;
    g.state.raidCampaign={active:true,adults:ready.adults,buildings:ready.buildings,loss:0,
     people:g.state.units.filter(p=>p.team===0&&p.hp>0&&!isDependent(g,p)).map(p=>p.id),
     sites:g.state.buildings.filter(b=>b.team===0&&g.finished(b)).map(b=>b.id)};

@@ -51,20 +51,21 @@ test('militia physically stand down when a living raider withdraws nearby',()=>{
  assert.ok(g.state.units.includes(raider)&&raider.hp>0);
 });
 
-test('a full material cache explains the blocked stand-down and resumes once space opens',()=>{
+test('a full manufactured cache retains cargo without preventing physical weapon return, then delivery resumes once space opens',()=>{
  const {g,u}=fixture();
  assert.equal(g.callToArms(),1);
  g.tribe(0).items={bone:100};
- u.itemCargo={clay:4};
+ u.itemCargo={cloth:4};
  g.standDown();
  drive(g,1);
- assert.equal(u.militia,true);
+ assert.equal(u.militia,false);
  assert.match(u.workReason,/Material cache full/);
- assert.equal(u.itemCargo.clay,4);
+ assert.equal(u.itemCargo.cloth,4);
+ assert.equal(g.tribe(0).spears,1);
  g.tribe(0).items.bone=96;
- drive(g,3,()=>!u.militia);
+ drive(g,3,()=>!u.itemCargo);
  assert.equal(u.type,'worker');
  assert.equal(u.itemCargo,undefined);
- assert.equal(g.tribe(0).items.clay,4);
+ assert.equal(g.tribe(0).items.cloth,4);
  assert.equal(g.tribe(0).spears,1);
 });

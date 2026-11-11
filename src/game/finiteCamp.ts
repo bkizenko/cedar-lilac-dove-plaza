@@ -3,6 +3,7 @@ import type { Unit, Building, GameState } from "./types";
 import type { JobCoordinator } from "./jobCoordinator";
 import { workRuntime } from "./workRuntime";
 import { hasTaskCommitment } from "./workCommitments";
+import { findPath } from "./navigation";
 import { createRaidPlan } from "./raidIntent";
 import { loadScoutProvisions, returnScoutPackAtCache } from "./scoutProvisions";
 import { UNITS } from "./constants";
@@ -16,6 +17,10 @@ export const FINITE_CAMP_RULES = Object.freeze({
   homeMealSeconds: 90,
   homeWaterSeconds: 120,
   outwardSeconds: 55,
+  onsiteSeconds: 150,
+  returnReserveSeconds: 30,
+  maximumTravelSeconds: 600,
+  maximumOutboundPeople: 12,
   dispatchIntervalSeconds: 120,
   waterLowLiters: 8,
   waterReadyLiters: 18,
@@ -126,10 +131,23 @@ function claim(g: Game, u: Unit, jobs = workRuntime(g)) {
   const id = jobId(u);
   if (!jobs.job(id))
     jobs.propose({ id, kind: "camp-trip", owner: 3, actors: [u.id], target: trip.campId });
-  return jobs.amend(id, [u.id], [{ key: `camp:${trip.campId}:outbound`, amount: 1, capacity: 1 }]);
+  return jobs.amend(id, [u.id], [{ key: `camp:${trip.campId}:outbound`, amount: 1, capacity: FINITE_CAMP_RULES.maximumOutboundPeople }]);
 }
 export function rebuildCampOwnership(g: Game, jobs: JobCoordinator) {
   for (const u of g.state.units) if (u.campTrip) claim(g, u, jobs);
+}
+/** Measure the actual bounded ground route before paying a pack. The same
+ * budget covers outward travel, useful time at the objective and a real return. */
+export function campTripBudget(g:Game,u:Unit,report:CampReport){
+ if(g.state.walkDirty)g.rebuildWalk();
+ const target=g.state.buildings.find(b=>b.id===report.siteId&&b.hp>0),spot=target?g.interactionSpot(u,target):g.walkable(report.x,report.z)?{x:report.x,z:report.z}:null;
+ if(!spot)return null;
+ const width=Math.sqrt(g.walk.length),cell=g.world.size/width,index=(x:number,z:number)=>Math.floor((z+g.world.size/2)/cell)*width+Math.floor((x+g.world.size/2)/cell);
+ const route=findPath(g.walk,width,index(u.x,u.z),index(spot.x,spot.z));if(!route)return null;
+ let length=0,x=u.x,z=u.z;for(const id of route){const nx=(id%width+.5)*cell-g.world.size/2,nz=(Math.floor(id/width)+.5)*cell-g.world.size/2;length+=Math.hypot(nx-x,nz-z);x=nx;z=nz;}length+=Math.hypot(spot.x-x,spot.z-z);
+ const speed=g.travelSpeed(u)*.75;if(!Number.isFinite(speed)||speed<=0)return null;
+ const walkingSeconds=Math.ceil(length/speed),outwardSeconds=Math.max(FINITE_CAMP_RULES.outwardSeconds,walkingSeconds+FINITE_CAMP_RULES.onsiteSeconds),budgetSeconds=Math.max(FINITE_CAMP_RULES.travelSeconds,walkingSeconds*2+FINITE_CAMP_RULES.onsiteSeconds+FINITE_CAMP_RULES.returnReserveSeconds);
+ return budgetSeconds<=FINITE_CAMP_RULES.maximumTravelSeconds?{walkingSeconds,outwardSeconds,budgetSeconds,length}:null;
 }
 /** A camp sends an existing body, never a replacement spawn. Paid packs use the
  * same actual food/water consumption and cache-return executor as scouts. */
@@ -149,7 +167,8 @@ export function beginCampTrip(g: Game, u: Unit, report: CampReport) {
     !b.campEconomy?.knownSites.some((p) => JSON.stringify(p) === JSON.stringify(report))
   )
     return false;
-  if (g.state.units.some((p) => p.campTrip?.campId === b.id && p.hp > 0)) return false;
+  if (g.state.units.filter((p) => p.campTrip?.campId === b.id && p.hp > 0).length>=FINITE_CAMP_RULES.maximumOutboundPeople) return false;
+  const budget=campTripBudget(g,u,report);if(!budget)return false;
   const id = g.state.nextId,
     trip: CampTrip = {
       version: 1,
@@ -171,7 +190,7 @@ export function beginCampTrip(g: Game, u: Unit, report: CampReport) {
   }
   if (
     !loadScoutProvisions(g, u, {
-      budgetSeconds: FINITE_CAMP_RULES.travelSeconds,
+      budgetSeconds: budget.budgetSeconds,
       homeMealSeconds: FINITE_CAMP_RULES.homeMealSeconds,
       homeWaterSeconds: FINITE_CAMP_RULES.homeWaterSeconds,
     })
@@ -196,7 +215,7 @@ export function beginCampTrip(g: Game, u: Unit, report: CampReport) {
     goalZ: report.z,
     phase: "raid",
     thinkAt: 0,
-    departAt: g.state.time + FINITE_CAMP_RULES.outwardSeconds,
+    departAt: g.state.time + budget.outwardSeconds,
   };
   u.homeCamp = undefined;
   u.campReport = undefined;
@@ -434,7 +453,7 @@ export function validFiniteCamps(s: GameState) {
     finite(r.observedAt) &&
     r.observedAt <= s.time;
   const trips = new Set<number>(),
-    camps = new Set<number>();
+    camps = new Map<number,number>(),paid=new Map<number,{food:number;water:number}>();
   for (const u of s.units) {
     if (
       u.campObserveAt !== undefined &&
@@ -518,15 +537,17 @@ export function validFiniteCamps(s: GameState) {
         Math.abs(u.scoutProvisions.food + u.scoutProvisions.foodUsed - t.paidFood) > 1e-6 ||
         Math.abs(u.scoutProvisions.water + u.scoutProvisions.waterUsed - t.paidWater) > 1e-6 ||
         trips.has(t.id) ||
-        camps.has(t.campId)
+        (camps.get(t.campId)||0)>=FINITE_CAMP_RULES.maximumOutboundPeople
       )
         return false;
       trips.add(t.id);
-      camps.add(t.campId);
+      camps.set(t.campId,(camps.get(t.campId)||0)+1);
+      const total=paid.get(t.campId)||{food:0,water:0};total.food+=t.paidFood;total.water+=t.paidWater;paid.set(t.campId,total);
     }
   }
   for (const b of s.buildings) {
-    const e = b.campEconomy;
+    const e = b.campEconomy,active=camps.get(b.id)||0,committed=paid.get(b.id);
+    if(active&&(!e||active+e.returns+e.lost>e.departures||committed!.food>e.foodPaid+1e-6||committed!.water>e.waterPaid+1e-6))return false;
     if (b.campEconomy !== undefined && !e) return false;
     if (
       e &&

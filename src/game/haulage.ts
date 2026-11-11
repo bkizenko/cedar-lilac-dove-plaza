@@ -28,7 +28,40 @@ export type HaulageWork = {
 /** Paid materials and progress belong to the settlement project, independently
  * of a living assignee. Unit.haulageWork remains an executor compatibility view. */
 export type HaulageProject=import("./communityHandoverTypes").HandoverProvenance&{id:number;team:number;actorId:number|null;lastActorId?:number;work:HaulageWork;createdAt:number;inputHaulage?:'sled';blockedReason?:string};
-type ProjectState=Game['state']&{haulageProjects?:HaulageProject[]};
+export type CartUpgradeRequest={id:number;team:number;ownerId:number;workplace:number;createdAt:number;blockedReason?:string};
+type ProjectState=Game['state']&{haulageProjects?:HaulageProject[];cartUpgradeRequests?:CartUpgradeRequest[]};
+const maximumCartRequests=200;
+const reviewingCartRequests=new WeakSet<Game>();
+const cartReviews=new WeakMap<Game,{state:Game['state'];next:number}>();
+export const queuedCartUpgrades=(g:Game)=>(g.state as ProjectState).cartUpgradeRequests||[];
+/** A request is unpaid intent. The sled stays with its real owner until work starts. */
+export function cartUpgradeCandidate(g:Game,team=0,unitId?:number){
+ return g.state.units.filter(u=>u.team===team&&civilian(g,u)&&u.haulage==='sled'&&!u.haulageWork&&(unitId===undefined||u.id===unitId)).sort((a,b)=>Number(b.selected)-Number(a.selected)||a.id-b.id)[0];
+}
+function pruneCartRequests(g:Game){const s=g.state as ProjectState;if(s.cartUpgradeRequests)s.cartUpgradeRequests=s.cartUpgradeRequests.filter(r=>g.state.units.some(u=>u.id===r.ownerId&&u.team===r.team&&u.hp>0&&u.haulage==='sled'&&!u.haulageWork));}
+function queueCartUpgrade(g:Game,team:number,workplaceId?:number,unitId?:number){
+ if(reviewingCartRequests.has(g))return false;
+ const owner=cartUpgradeCandidate(g,team,unitId),site=workplaces(g,team,'cart',workplaceId)[0];if(!owner||!site)return false;
+ const s=g.state as ProjectState,list=s.cartUpgradeRequests??=[];
+ let request=list.find(r=>r.ownerId===owner.id);
+ if(!request){if(list.length>=maximumCartRequests)return false;request={id:g.id(),team,ownerId:owner.id,workplace:site.id,createdAt:g.state.time};list.push(request);}else request.workplace=site.id;
+ request.blockedReason='Queued upgrade — waiting for this sled owner to finish their order and unload; no materials paid';
+ if(team===0)g.banner(request.blockedReason,4);return true;
+}
+function reviewCartUpgradeRequests(g:Game){
+ pruneCartRequests(g);const list=queuedCartUpgrades(g);if(!list.length)return;
+ const review=cartReviews.get(g);if(review?.state===g.state&&review.next>g.state.time)return;cartReviews.set(g,{state:g.state,next:g.state.time+1});
+ for(const r of [...list]){
+  const u=g.state.units.find(u=>u.id===r.ownerId)!;
+  if(!available(g,u)||u.jobLock){r.blockedReason='Waiting for this sled owner to finish their order and unload; no materials paid';continue;}
+  const sites=workplaces(g,r.team,'cart',r.workplace),site=nearestWorkplace(g,u,sites);
+  if(!site){r.blockedReason='Waiting for a reachable completed crafting shelter; no materials paid';continue;}
+  if(g.tribe(r.team).wood<HAULAGE.cart.wood||g.tribe(r.team).stone<HAULAGE.cart.stone){r.blockedReason='Waiting for 24 logs and 4 stone; no materials paid';continue;}
+  if(craftingQueue(g,site).length>=craftingBenches(site)){r.blockedReason='Waiting for a free crafting bench; no materials paid';continue;}
+  reviewingCartRequests.add(g);
+  try{if(beginHaulageWork(g,'cart',r.team,site.id,u.id)){const current=(g.state as ProjectState).cartUpgradeRequests!;current.splice(current.indexOf(r),1);}else r.blockedReason='Waiting for compatible paid work or a free bench; no materials paid';}finally{reviewingCartRequests.delete(g);}
+ }
+}
 const projectKey=(id:number)=>`haulage:${id}`;
 const projects=(g:Game)=>(g.state as ProjectState).haulageProjects??((g.state as ProjectState).haulageProjects=[]);
 function registerProject(g:Game,u:HaulageUnit){
@@ -41,6 +74,7 @@ function registerProject(g:Game,u:HaulageUnit){
 /** Adopt legacy jobs and relink the compatibility view after JSON save/load.
  * This does not reassign workers or discard paused compatibility views. */
 export function syncHaulageProjects(g:Game){
+ pruneCartRequests(g);
  for(const u of g.state.units)if(u.haulageWork)registerProject(g,u);
  for(const p of projects(g)){
   const u=p.actorId===null?undefined:g.state.units.find(u=>u.id===p.actorId);
@@ -74,6 +108,7 @@ export function reconcileHaulageProjects(g:Game){
   const job=workRuntime(g).activeJob(u.id);
   if(job?.id!==projectKey(p.id)){releaseTreeWorker(g,u);if(!reserveProject(g,p,u,b))detachHaulageProject(g,u,p,p.blockedReason||'Bench unavailable');}
  }
+ reviewCartUpgradeRequests(g);
 }
 export function haulageProjectDiagnostics(g:Game){const all=projects(g);return {projects:all.length,active:all.filter(p=>p.actorId!==null&&!p.work.paused).length,suspended:all.filter(p=>p.work.paused).length,coordinator:{...workRuntime(g).metrics}};}
 function completeProject(g:Game,u:HaulageUnit){const id=u.haulageWork?.projectId;if(id===undefined)return;const list=projects(g),index=list.findIndex(p=>p.id===id);if(index>=0)list.splice(index,1);const runtime=workRuntime(g);runtime.finish(projectKey(id));runtime.forget(projectKey(id));}
@@ -94,7 +129,7 @@ function civilian(g: Game, u: HaulageUnit) {
 }
 
 function available(g: Game, u: HaulageUnit) {
-  return civilian(g, u) && u.carry === 0 && !hasTaskCommitment(u,'haulageWork') &&
+  return civilian(g, u) && u.carry === 0 && !Object.values(u.itemCargo||{}).some(n=>(n||0)>0) && !hasTaskCommitment(u,'haulageWork') &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled && !u.buildOrder && !u.tributeJourney && !u.resting && !u.shelterId &&
     ['idle', 'gather', 'hold'].includes(u.order);
@@ -126,7 +161,7 @@ export function haulageRequirement(g: Game, kind: HaulageKind, team = 0): string
 export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplaceId?: number, unitId?: number, hullOrder?:HullOrder) {
   const original=HAULAGE[kind],profile=hullOrder?BOAT_CLASSES[hullOrder.class]:null,spec=hullOrder?{...original,wood:hullOrder.paid.wood,stone:hullOrder.paid.stone,seconds:hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:profile!.seconds}:original, t = g.tribe(team) as HaulageTribe;
   const reject = (reason: string) => {
-    if (team === 0) { g.banner(reason, 4); g.onSfx('invalid'); }
+    if (team === 0&&!reviewingCartRequests.has(g)) { g.banner(reason, 4); g.onSfx('invalid'); }
     return false;
   };
   if (!spec || !t) return false;
@@ -136,9 +171,10 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   const sites = workplaces(g, team, kind, workplaceId);
   if (!sites.length) return reject(kind === 'cart' ? 'Make handcarts at a completed crafting shelter' : 'Make sleds at a hearth or completed crafting shelter');
   syncHaulageProjects(g);
+  if(kind==='cart'&&!reviewingCartRequests.has(g)&&queuedCartUpgrades(g).some(r=>r.team===team&&(unitId===undefined||r.ownerId===unitId)))return queueCartUpgrade(g,team,workplaceId,unitId);
   const pending=projects(g).filter(p=>p.team===team&&p.work.kind===kind&&p.work.paused&&(hullOrder?p.work.hullOrder?.class===hullOrder.class&&p.work.hullOrder.mode===hullOrder.mode&&p.work.hullOrder.boatId===hullOrder.boatId:!p.work.vessel));
   for(const p of pending)if(resumeHaulageProject(g,p.id,unitId,workplaceId))return true;
-  if(pending.length)return reject(pending[0].blockedReason||'Paid transport work is waiting for an available adult and bench');
+  if(pending.length)return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(pending[0].blockedReason||'Paid transport work is waiting for an available adult and bench');
   const candidates = (g.state.units as HaulageUnit[]).filter(u => u.team === team &&
     (unitId === undefined || u.id === unitId) && available(g, u) && !u.haulageWork && !u.farmToolWork &&
     (kind === 'cart' ? u.haulage === 'sled' : !u.haulage))
@@ -148,6 +184,7 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
     if (kind !== 'cart') return reject('No adult can start this job. Free a worker and check the route to the workplace.');
     if (!(g.state.units as HaulageUnit[]).some(worker => civilian(g,worker) && worker.team===team && worker.haulage==='sled'))
       return reject('Make a sled first. A handcart upgrades a sled carrier’s equipment.');
+    if(queueCartUpgrade(g,team,workplaceId,unitId))return true;
     return reject(candidates.length
       ? 'A sled carrier is free, but cannot reach this shelter. Clear a route or use another shelter.'
       : 'All sled carriers are busy or loaded. Finish a delivery or free a sled carrier, then retry.');
@@ -156,7 +193,7 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   const b = nearestWorkplace(g, u, sites)!;
   u.haulageWork = { kind, progress: 0, duration: spec.seconds * (b.type === 'townhall' ? 2 : 1), workplace: b.id,...(hullOrder?{vessel:true,hullOrder}:{}) };
   const project=registerProject(g,u)!;releaseTreeWorker(g,u);
-  if(!reserveProject(g,project,u,b)){const list=projects(g);list.splice(list.indexOf(project),1);workRuntime(g).finish(projectKey(project.id),true);workRuntime(g).forget(projectKey(project.id));u.haulageWork=undefined;return reject(project.blockedReason||'No free crafting bench');}
+  if(!reserveProject(g,project,u,b)){const list=projects(g);list.splice(list.indexOf(project),1);workRuntime(g).finish(projectKey(project.id),true);workRuntime(g).forget(projectKey(project.id));u.haulageWork=undefined;return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(project.blockedReason||'No free crafting bench');}
   t.wood -= spec.wood;t.stone -= spec.stone;if(hullOrder)(t.items??={}).cordage=(t.items?.cordage??0)-hullOrder.paid.cordage;
   u.order = 'hold'; u.node = null; u.target = null; u.trade = null; u.searchJob = undefined;
   u.workReason = `Making ${spec.name.toLowerCase()} — walking to the workplace`;
@@ -325,13 +362,24 @@ export function shareLocalTransport(g:Game){
 /** Validate project/actor cross references before relinking untrusted saved JSON. */
 export function validHaulageProjects(state:unknown){
  if(!record(state))return false;
+ const requestIds=new Set<number>(),requestOwners=new Set<number>();
+ if(state.cartUpgradeRequests!==undefined){
+  if(!Array.isArray(state.cartUpgradeRequests)||state.cartUpgradeRequests.length>maximumCartRequests||!Array.isArray(state.units)||!Array.isArray(state.tribes)||!Number.isSafeInteger(state.nextId))return false;
+  for(const r of state.cartUpgradeRequests){
+   if(!record(r)||Object.keys(r).some(k=>!['id','team','ownerId','workplace','createdAt','blockedReason'].includes(k))||!Number.isSafeInteger(r.id)||Number(r.id)<1||Number(r.id)>=Number(state.nextId)||requestIds.has(Number(r.id))||!Number.isInteger(r.team)||Number(r.team)<0||Number(r.team)>=state.tribes.length||!Number.isSafeInteger(r.ownerId)||requestOwners.has(Number(r.ownerId))||!Number.isSafeInteger(r.workplace)||Number(r.workplace)<1||Number(r.workplace)>=Number(state.nextId)||!finite(r.createdAt)||r.createdAt<0||!finite(state.time)||r.createdAt>state.time||r.blockedReason!==undefined&&(typeof r.blockedReason!=='string'||r.blockedReason.length>500))return false;
+   const owner=state.units.find(u=>record(u)&&u.id===r.ownerId);
+   if(!record(owner)||owner.team!==r.team||!finite(owner.hp)||owner.hp<=0||owner.haulage!=='sled'||owner.haulageWork!==undefined)return false;
+   for(const key of ['units','buildings','trees','stones','forage','fish','copper','iron','critters','boats'])if(Array.isArray(state[key])&&(state[key] as unknown[]).some(v=>record(v)&&v.id===r.id))return false;
+   requestIds.add(Number(r.id));requestOwners.add(Number(r.ownerId));
+  }
+ }
  if(state.haulageProjects===undefined)return Array.isArray(state.units)&&state.units.every(u=>!record(u)||!record(u.haulageWork)||u.haulageWork.projectId===undefined);
  if(!Array.isArray(state.haulageProjects)||state.haulageProjects.length>10000||!Array.isArray(state.units)||!Array.isArray(state.tribes))return false;
  const ids=new Set<number>(),actors=new Set<number>();
  const entityIds=new Set<number>();
  for(const key of ['units','buildings','trees','stones','forage','fish','copper','iron','critters','boats']){const list=state[key];if(Array.isArray(list))for(const entity of list)if(record(entity)&&Number.isSafeInteger(entity.id))entityIds.add(Number(entity.id));}
  for(const value of state.haulageProjects){
-  if(!record(value)||!Number.isSafeInteger(value.id)||Number(value.id)<1||!Number.isSafeInteger(state.nextId)||Number(value.id)>=Number(state.nextId)||entityIds.has(Number(value.id))||ids.has(Number(value.id))||!Number.isInteger(value.team)||Number(value.team)<0||Number(value.team)>=state.tribes.length||!finite(value.createdAt)||value.createdAt<0||finite(state.time)&&value.createdAt>state.time||!record(value.work)||value.work.projectId!==value.id)return false;
+  if(!record(value)||!Number.isSafeInteger(value.id)||Number(value.id)<1||!Number.isSafeInteger(state.nextId)||Number(value.id)>=Number(state.nextId)||entityIds.has(Number(value.id))||requestIds.has(Number(value.id))||ids.has(Number(value.id))||!Number.isInteger(value.team)||Number(value.team)<0||Number(value.team)>=state.tribes.length||!finite(value.createdAt)||value.createdAt<0||finite(state.time)&&value.createdAt>state.time||!record(value.work)||value.work.projectId!==value.id)return false;
   ids.add(Number(value.id));
   if(value.lastActorId!==undefined&&(!Number.isSafeInteger(value.lastActorId)||Number(value.lastActorId)<1||Number(value.lastActorId)>=Number(state.nextId)))return false;
   if(value.inputHaulage!==undefined&&value.inputHaulage!=='sled'||value.work.kind==='cart'&&value.inputHaulage!=='sled'||value.work.kind!=='cart'&&value.inputHaulage!==undefined||value.blockedReason!==undefined&&(typeof value.blockedReason!=='string'||value.blockedReason.length>500))return false;

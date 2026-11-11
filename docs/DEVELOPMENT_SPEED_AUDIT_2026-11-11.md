@@ -34,3 +34,22 @@ OpenAI's official guidance warns that blanket document-reading instructions and 
 
 - https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra
 - https://developers.openai.com/cookbook/examples/codex/iterating-development-workflows-with-codex
+
+## Yesterday versus today — measured comparison
+
+Windows in America/New_York: November10,17:50–23:40 versus November11,08:39–10:44. Commit cadence is not publication cadence or feature completion.
+
+| Measure | Yesterday evening | Today morning |
+|---|---:|---:|
+| All commits |49|8|
+| Commits changing runtime source |42|5|
+| Median runtime commit gap |4.85min|25.45min|
+| Median source files/runtime commit |3|6|
+| Median runtime changed lines/commit |35|104|
+| Non-runtime commits |7|3|
+
+Today's recorded Vite stages total about7s versus45s in yesterday's food-recovery candidate. Compiler stages therefore do not explain the slower visible code iteration. Larger bundles explain part of the difference but lines/files are not a complexity measure. Integration, repeated qualification, documentation and responding/replanning added controllable overhead; logs do not isolate model-service latency or prove a hardware slowdown.
+
+Only five retained release folders fall in each window; their label gaps are about27.1min yesterday versus25.7min today. Old releases may have been pruned, so those folders are not a complete publication log and cannot establish equal delivery speed. Do not present the5×commit-gap ratio as a measured5×publication slowdown.
+
+Use explicit candidate directories and run snapshot preparation separately from candidate commands. Fail fast on a relevant test failure. Freeze a batch before qualification; move unrelated findings into the next batch. For a changed test-only contract that accidentally belongs to another unpublished patch, restore the exact applicable published contract, document that provenance and rerun that case—never weaken a newly failing behavior just to pass.

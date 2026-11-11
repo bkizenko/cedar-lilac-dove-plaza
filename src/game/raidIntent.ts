@@ -325,7 +325,7 @@ export function limitedRaidAI(g: Game, u: Unit, dt: number) {
     g.steer(u, dt);
     return true;
   }
-  if (g.state.time - p.selectedAt >= RAID_INTENT_RULES.limitedRaidSeconds) {
+  if (!u.campTrip && g.state.time - p.selectedAt >= RAID_INTENT_RULES.limitedRaidSeconds) {
     withdraw(u, p, "Withdrawing");
     return true;
   }

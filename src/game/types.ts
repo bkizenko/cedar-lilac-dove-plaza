@@ -497,6 +497,7 @@ export type GameState = {
   finiteRaiderCampVersion?:1;
   survivalVersion?:1;
   haulageProjects?:import('./haulage').HaulageProject[];
+  cartUpgradeRequests?:import('./haulage').CartUpgradeRequest[];
   contacts?:number[];
   encounter?:{team:number;person:number;stranger:number;resume:boolean};
   cultivationVersion?: number;

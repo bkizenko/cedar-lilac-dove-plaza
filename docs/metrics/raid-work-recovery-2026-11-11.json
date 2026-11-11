@@ -1,0 +1,54 @@
+{
+  "status": "qualified candidate; publication pending",
+  "scope": [
+    "Existing finite raid groups retain a real camp guard",
+    "Actual route/speed/return supplies replace short departure deadline",
+    "Safe physical militia disarm no longer waits for manufactured-item storage",
+    "Busy real sled owners keep an unpaid upgrade request through save/load"
+  ],
+  "sourceChecks": {
+    "passed": 66,
+    "total": 66,
+    "logs": [
+      ".play/raid-recovery-candidate-tests.log",
+      ".play/raid-recovery-music-contract.log"
+    ],
+    "qualificationNote": "Initial set65/66 included a test hunk for a separate unpublished music change. Candidate test restored the exact published music expectation, retaining new cargo/weapon assertions; targeted rerun1/1 passes. Runtime source unchanged by this test correction."
+  },
+  "nativeAcceptance": {
+    "passed": 1,
+    "total": 1,
+    "log": ".play/raid-recovery-candidate-browser.log",
+    "scenario": "Native V18 controlled finite departure\u2192walk\u2192actual4 goods looted\u2192retreat\u2192sameactor home\u2192save/reload; no replacement bodies or vessel grants",
+    "simulationSeconds": 21
+  },
+  "batch": {
+    "passed": 67,
+    "total": 67,
+    "percentage": 100
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "sourceSha256": {
+    "src/game/finiteCamp.ts": "788a21555c5a43e28cd0510c87a1fb9108fc78063aca67ece8e64e0868fac4b1",
+    "src/game/raiders.ts": "9f9103645fcc97fa7b7b925d9e7ab19f3e0f2769febe6cd1edf65bced7e1c759",
+    "src/game/raidIntent.ts": "c050264f567da13583dc1b54a3381d81699136a738538da78dc521a5b2af09d6",
+    "src/game/demobilization.ts": "d0408d098f4e14abc7b2b9fe8e8e0581d85b1f94ce36678ebb3660ee28a6d698",
+    "src/game/haulage.ts": "4599c8e397606d7b4bb23f70e4b4f807eac2028c3e4b01d134d4a91fe351e7e2",
+    "src/game/knowledge.ts": "e7eefe5931ee1743ce6e2f6b35cbb8267a9fe741958e3b3f963164256fef7efa",
+    "src/game/types.ts": "e27974954d5fb0a797c49c02669b3eb107da0a2472a7c9e3040f48fd04ba7e80"
+  },
+  "limitations": [
+    "Legacy shore-stranded12-person party remains unresolved",
+    "Native acceptance is not naval warfare, difficulty balance or a complete conflict chapter",
+    "Fresh camps still start with two residents; this patch permits groups only where real residents exist",
+    "Manufactured cargo still needs delivery/storage after weapon return"
+  ],
+  "firstReleaseGates": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  }
+}

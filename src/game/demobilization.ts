@@ -8,6 +8,11 @@ export function militiaStoresReached(g:Game,u:Unit){
  const approach=camp?supplyApproach(g,u,camp):null;
  return !!camp&&!!approach&&supplyReached(g,u,camp,approach)||g.state.buildings.some(b=>b.team===u.team&&g.finished(b)&&['townhall','warehouse','barracks'].includes(b.type)&&Math.hypot(u.x-b.x,u.z-b.z)<20);
 }
+/** Returning borrowed weapons needs the same physical cache frontage as cargo,
+ * rather than the wider neighborhood used to answer an arming call. */
+function standDownStoresReached(g:Game,u:Unit){
+ return supplyDrops(g,u.team).some(drop=>{const p=supplyApproach(g,u,drop);return !!p&&supplyReached(g,u,drop,p);})||g.state.buildings.some(b=>b.team===u.team&&b.type==='barracks'&&g.finished(b)&&!!g.interactionSpot(u,b)&&g.buildingWorkReached(u,b));
+}
 /** A withdrawing raider remains a real resident, and can still fight if attacked. */
 export function withdrawingRaider(u: Unit) {
  return u.team===3 && u.seaRaid?.phase==='retreat' && u.order!=='attack' && u.order!=='attackmove';
@@ -16,13 +21,13 @@ function threatened(g:Game,u:Unit){
  return !!u.emergency||g.state.units.some(e=>e.hp>0&&!withdrawingRaider(e)&&g.isFoe(u.team,e.team)&&Math.hypot(e.x-u.x,e.z-u.z)<25);
 }
 function finish(g:Game,u:Unit){
- if(!u.militia||u.carry>0||(u.waterWork?.liters??0)>0||Object.values(u.itemCargo??{}).some(amount=>(amount??0)>0)||u.expedition||!militiaStoresReached(g,u)||threatened(g,u))return false;
+ if(!u.militia||u.carry>0||(u.waterWork?.liters??0)>0||u.expedition||!standDownStoresReached(g,u)||threatened(g,u))return false;
  const t=g.tribe(u.team);
  if(u.type==='swordsman')t.blades++;else if(u.type==='archer')t.bows++;else t.spears++;
- const d=UNITS.worker;
- Object.assign(u,{type:'worker',militia:false,range:d.range,dmg:d.dmg,rof:d.rof,order:'idle',huntOnly:false,target:null,node:null,pillage:-1});
+ const loaded=Object.values(u.itemCargo??{}).some(amount=>(amount??0)>0),d=UNITS.worker;
+ Object.assign(u,{type:'worker',militia:false,range:d.range,dmg:d.dmg,rof:d.rof,order:loaded?'return':'idle',huntOnly:false,target:null,node:null,pillage:-1});
  u.demobilizing=undefined;u.recalled=undefined;u.stationOnArrival=undefined;u.caravanArmed=undefined;u.escortId=undefined;u.attackDestination=null;
- u.workCheckAt=0;u.workReason='Stood down — returning to village work';g.workBoard.reset();
+ u.workCheckAt=0;u.workReason=loaded?'Stood down — keeping carried materials for delivery':'Stood down — returning to village work';g.workBoard.reset();
  return true;
 }
 export function standDownMilitia(g:Game,team=0){
