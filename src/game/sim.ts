@@ -77,6 +77,7 @@ import {ancientSiteYield} from './discovery';
 import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
 import {localCorridor,LOCAL_CORRIDOR_RULES} from './localCorridor';
+import {clearRouteProgress,preciseSegmentClear,routeStallSeconds,ROUTE_PROGRESS_RULES} from './routeProgress';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
@@ -238,6 +239,7 @@ export class Game {
       failed: boolean;
       precise?: boolean;
       retry: number;
+      stalled?: boolean;
     }
   >();
   seaT = 180;
@@ -4000,8 +4002,24 @@ export class Game {
     if (this.state.walkDirty) this.rebuildWalk();
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
+    let tx = u.tx,
+      tz = u.tz;
+    for (const b of this.state.buildings) {
+      if (
+        Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
+        Math.abs(tz - b.z) > b.d * 0.4 + u.r ||
+        !this.solidBuilding(b)
+      )
+        continue;
+      const spot=this.interactionSpot(u,b);
+      if(spot){tx=spot.x;tz=spot.z;}
+
+    }
+    // A retained route whose every segment was validated for this body may
+    // cross coarse-blocked cells. Do not let coarse-cell recovery pull the
+    // actor back out of a real passage it is already following.
     const retained=this.paths.get(u.id);
-    const retainedPrecise=retained?.precise&&!retained.failed&&retained.revision===this.navRevision&&Math.hypot(retained.tx-u.tx,retained.tz-u.tz)<=2;
+    const retainedPrecise=retained?.precise&&!retained.failed&&retained.revision===this.navRevision&&Math.hypot(retained.tx-tx,retained.tz-tz)<=2;
     if(u.haulage!=="canoe"&&!retainedPrecise&&!this.walkable(u.x,u.z)){
       let escape:{x:number;z:number}|null=null;
       search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
@@ -4022,25 +4040,17 @@ export class Game {
         const dx=escape.x-u.x,dz=escape.z-u.z,distance=Math.hypot(dx,dz);
         const step=Math.min(distance,this.travelSpeed(u)*dt);
         const nx=u.x+dx/distance*step,nz=u.z+dz/distance*step;
-        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.travelHeight(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;u.stuckT=0;this.paths.delete(u.id);return false;}
+        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.travelHeight(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;
+          // Replan from the recovered position, but keep a stalled route's
+          // escalation so recovery and the same straight line cannot loop.
+          if(retained){retained.failed=true;retained.retry=Math.min(retained.retry,this.state.time);}
+          if(!retained?.stalled)u.stuckT=0;return false;}
       }
-    }
-    let tx = u.tx,
-      tz = u.tz;
-    for (const b of this.state.buildings) {
-      if (
-        Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
-        Math.abs(tz - b.z) > b.d * 0.4 + u.r ||
-        !this.solidBuilding(b)
-      )
-        continue;
-      const spot=this.interactionSpot(u,b);
-      if(spot){tx=spot.x;tz=spot.z;}
-
     }
     const distance = Math.hypot(tx - u.x, tz - u.z);
     if (distance < 0.5) {
       this.paths.delete(u.id);
+      clearRouteProgress(u);
       u.stuckT = 0;
       return true;
     }
@@ -4053,15 +4063,25 @@ export class Game {
     ) {
       if (this.navBudget <= 0) return false;
       this.navBudget--;
-      let direct = true;
-      const samples = Math.ceil(distance);
-      for (let i = 1; i <= samples; i++)
-        if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
-          direct = false;
-          break;
-        }
+      // A stalled route to the same destination escalates: never retry the
+      // same straight line, and prefer the fine body-sized corridor search.
+      const escalate=!!route?.stalled&&Math.hypot(route.tx-tx,route.tz-tz)<=2;
+      const fineGround=u.haulage!=="canoe"&&!u.boat;
+      let direct = !escalate, precise=false;
+      if(direct&&fineGround&&distance<=ROUTE_PROGRESS_RULES.preciseDirectMetres){
+        // Short straight moves get the same chained fine-spacing body test as
+        // movement, so they can be followed through coarse-blocked cells.
+        direct=precise=preciseSegmentClear(this,u,tx,tz);
+      } else if(direct){
+        const samples = Math.ceil(distance);
+        for (let i = 1; i <= samples; i++)
+          if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
+            direct = false;
+            break;
+          }
+      }
       let points = [{ x: tx, z: tz }],
-        failed = false,precise=false;
+        failed = false;
       if (!direct) {
         const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
         const cell = this.world.size / WALK;
@@ -4090,7 +4110,7 @@ export class Game {
         // Spend shared navigation budget once; ordinary route following still
         // collision-checks every actual movement with this actor's radius.
         let corridor:{x:number;z:number}[]|null=null;
-        if((!path||end!==goal)&&u.haulage!=="canoe"&&!u.boat&&distance<=LOCAL_CORRIDOR_RULES.maximumDestinationMetres){
+        if((!path||end!==goal||escalate)&&u.haulage!=="canoe"&&!u.boat&&distance<=LOCAL_CORRIDOR_RULES.maximumDestinationMetres){
           if(this.navBudget<=0)return false;
           this.navBudget--;corridor=localCorridor(this,u,tx,tz);
         }
@@ -4140,7 +4160,7 @@ export class Game {
           failed = true;
         }
       }
-      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3 };
+      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3, stalled: false };
       this.paths.set(u.id, route);
     }
     while (
@@ -4156,7 +4176,7 @@ export class Game {
     const dx = point.x - u.x,
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
-    if (d < (route.precise ? .12 : .5) && route.points.length===1) {this.paths.delete(u.id);u.stuckT=0;return true;}
+    if (d < (route.precise ? .12 : .5) && route.points.length===1) {this.paths.delete(u.id);clearRouteProgress(u);u.stuckT=0;return true;}
     const step = Math.min(this.travelSpeed(u)*dt, d);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
@@ -4177,6 +4197,7 @@ export class Game {
         u.stuckT += dt;
         if (u.stuckT > 1) {
           route.failed = true;
+          route.stalled = true;
           route.retry = this.state.time + 1;
         }
         return false;
@@ -4191,7 +4212,16 @@ export class Game {
     u.y = canoeHeight(this,u,nx,nz);
     u.facing = Math.atan2(dx, dz);
     u.stride += step * 3.6;
-    u.stuckT = 0;
+    // Moving is not the same as progressing. Oscillation or wall sliding that
+    // never closes on the waypoint becomes a stall: replan with escalation and
+    // let job-level stuck handling see the real time without progress.
+    const stall=routeStallSeconds(u,route,this.state.time);
+    if(stall>=ROUTE_PROGRESS_RULES.stallSeconds){
+      u.stuckT=Math.max(u.stuckT,stall);
+      // First stall replans at once; repeated stalls back off up to 3 s so
+      // an unrecoverable route cannot spend shared navigation budget per frame.
+      if(!route.stalled){route.stalled=true;route.failed=true;route.retry=this.state.time+Math.min(3,stall-ROUTE_PROGRESS_RULES.stallSeconds);}
+    } else u.stuckT = 0;
     return false;
   }
 
