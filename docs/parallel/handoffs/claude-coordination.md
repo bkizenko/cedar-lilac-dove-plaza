@@ -157,3 +157,12 @@ Both Claude workers stopped at the 5-hour usage limit. All their work is committ
 - `agents/claude-experience` 6338c9b: **WIP** wonder-plan edits. Earlier ready batch ab1a84b..7331848 unchanged; own suites 33/33 at this head.
 - Pending after reset: Societies — finish trade (G15), storms (G16), Codex sea-exploration review fixes; Experience — Codex review fixes, trade dialog/caravan specs, trees, Crescent Harbor/Mill Market.
 - Overall acceptance unchanged: 34/98.
+
+## PM check-in — 16:25 ET
+
+- **Main** moved to db3dfba (Codex: finite dairy fermentation + exact water-query memoization). No contract change affecting Claude lanes. Claude branches already contain 860863a; merge db3dfba at next step.
+- **Grok is active:** `agents/grok-world` has 11 commits on 8f635f6/860863a — tight-space routing anti-loop (6/6), `sampleSite` v1 (5/5, answers Claude request Grok-2), G10 fog provenance, GW-07 orders into unseen ground. Its only shared-file edit is `sim.ts` `Game.steer()` + an optional `stalled` route flag. **No file overlap** with `agents/claude-societies` or `agents/claude-experience` (checked by name). Experience is consuming `sampleSite` next.
+- **`agents/claude-experience` 52ab112** (merged with main): remaining building types, Codex review fixes, trade dialog model/component, caravan models, dropped-cargo parcel spec, carved trees, Crescent Harbor + Mill Market plans. 66/66 own tests; still never rendered. Six wonder families: 4 done (Ring Observatory, Cascade Garden, Crescent Harbor, Mill Market); Canyon Cistern and Assembly Court next.
+- **`agents/claude-societies` 60e8cc1:** need-based trade (`tradeNeeds.ts`, 12/12 focused with uncommitted edits in progress) and G16 deep-water storms (`seaStorms.ts`, commit 60e8cc1). Worker still running: G15 armed caravans/market effects, then Codex sea-exploration review fixes.
+- **Codex asks from Experience:** hull length/beam per class in `boatClasses.ts`; real fire state as `lit`; `h-good-*` icons; merge LOD seam 15e6a63b.
+- Acceptance unchanged: 34/98.
