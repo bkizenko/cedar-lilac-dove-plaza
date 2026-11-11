@@ -403,14 +403,14 @@ function additions(parts:Part[],ctx:CivicContext,entry:{x:number;z:number;width:
  return out;
 }
 /** Tier-0 grounding: a near-only part with nothing beneath it gets a short post (the far tiers are handled by ensureTierSupport). */
-function ensureNearSupport(parts:Part[],footprint:{w:number;d:number}):Part[]{
+export function ensureNearSupport(parts:Part[],footprint:{w:number;d:number}):Part[]{
  let out=parts;for(let g=0;g<40;g++){const spec={family:'',variantKey:'',footprint,parts:out,notes:{reference:''}},fl=floatingParts(spec);if(!fl.length)break;
   let low=out[fl[0]],ly=Infinity;for(const i of fl){const b=partBounds(out[i]);if(b.minY<ly){ly=b.minY;low=out[i];}}
   const b=partBounds(low);out=[...out,part('box','woodDark',[Math.max(.15,(b.maxX-b.minX)*.2),ly,Math.max(.15,(b.maxZ-b.minZ)*.2)],[(b.minX+b.maxX)/2,0,(b.minZ+b.maxZ)/2],0)];}
  return out;
 }
 /** Tiers 1 and 2: a far-tier part with nothing beneath gets a pier that exists only from that tier (same rule as the live pipeline, with a deeper guard). */
-function ensureTiers(parts:Part[],footprint:{w:number;d:number}):Part[]{
+export function ensureTiers(parts:Part[],footprint:{w:number;d:number}):Part[]{
  let out=parts;const mk=(ps:Part[])=>({family:'',variantKey:'',footprint,parts:ps,notes:{reference:''}});
  for(const tier of[1,2] as const)for(let g=0;g<80;g++){const sub=partsAtLod(mk(out),tier),fl=floatingParts(mk(sub));if(!fl.length)break;
   let low=sub[fl[0]],ly=Infinity;for(const i of fl){const b=partBounds(sub[i]);if(b.minY<ly){ly=b.minY;low=sub[i];}}
@@ -418,7 +418,7 @@ function ensureTiers(parts:Part[],footprint:{w:number;d:number}):Part[]{
  return out;
 }
 /** A tier must draw something: when no part is marked core, promote the heaviest. */
-function ensureCore(parts:Part[]):Part[]{
+export function ensureCore(parts:Part[]):Part[]{
  if(parts.some(p=>p.lod===2&&!p.onlyFrom))return parts;let k=0,best=-1;parts.forEach((p,i)=>{const v=p.size[0]*p.size[1]*p.size[2];if(v>best){best=v;k=i;}});return parts.map((p,i)=>i===k?{...p,lod:2 as const}:p);
 }
 /** Same pipeline as generateFamily plus culture dress and additions: generate, dress, fit inside the footprint, ground every LOD tier. */
