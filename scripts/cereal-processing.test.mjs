@@ -3,7 +3,7 @@ import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';
 import test from'node:test';import assert from'node:assert/strict';import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
 import{farmWork,calendar}from'../src/game/settlement.ts';import{beginProduction,productionIssue,productionAI,exposedHarvestUnits,deliverProductionCargo,pauseProductionProject,resumeProduction,tickProduction,unloadProductionProject,cerealReservedMaterials,PRODUCTION_RECIPES}from'../src/game/production.ts';
-import{CEREAL_RULES,CEREAL_STORAGE_RULES,rawCerealField}from'../src/game/cerealRules.ts';import{harvestBacklogAlert,reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
+import{CEREAL_RULES,CEREAL_STORAGE_RULES,rawCerealField}from'../src/game/cerealRules.ts';import{harvestBacklogAlert,reviewCerealProcessing,reviewAutomaticFoodProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}
 function fixture(team=0){const g=new Game();g.reset(42,10);g.enterIsland();g.state.units=[];g.state.buildings=[];for(const k of['trees','stones','forage','fish','copper','iron','wildlife'])g.state[k]=[];g.state.autoWorkEnabled=false;g.state.time=950;g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.conflict='quiet';g.state.encounter=undefined;for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(team),{wood:100,stone:100,food:1000,foodLots:{provisions:1000},seeds:12,items:{},cultivated:['grain']});g.state.campSites=team===0?[{team:0,x:0,z:30}]:[{team:0,x:-90,z:30}];g.world.camps.find(c=>c.team===team).x=0;g.world.camps.find(c=>c.team===team).z=30;const hall=g.makeBld('townhall',0,30,team),hearth=g.makeBld('hearth',12,30,team);g.state.buildings=[hall,hearth];if(team!==0){g.state.buildings.push(g.makeBld('townhall',-90,30,0));const spectator=g.spawnUnit('worker',-90,38,0);spectator.order='hold';spectator.jobLock=true;}ground(g);const u=g.spawnUnit('worker',0,36,team),v=g.spawnUnit('worker',2,36,team);for(const p of[u,v]){p.order='hold';p.jobLock=false;}return{g,u,v,hall,hearth};}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;while(g.state.time<end&&!until()){const before=g.state.time;g.state.paused=false;g.step(.1);assert.ok(g.state.time>before,JSON.stringify({time:g.state.time,ended:g.state.ended,encounter:g.state.encounter,banner:g.state.banner}));}assert.deepEqual(g.simulationErrors,[]);}
@@ -327,6 +327,30 @@ test('a village with Auto work off cooks clean grain at a hearth before it has a
  assert.equal(tribe.wood,initialWood-1);
  assert.ok(tribe.foodLots.porridge>0);
  assert.ok(decodeGame(encodeGame(g)).tribe(0).foodLots.porridge>0);
+});
+
+test('an unrelated returning carrier cannot block dispatch to bake existing flour',()=>{
+ const {g,u,v}=fixture(),tribe=g.tribe(0),oven=g.makeBld('oven',12,44,0);
+ g.state.buildings.push(oven);
+ ground(g);
+ Object.assign(u,{order:'return',carry:5,carryType:'wood',x:60,z:36});
+ Object.assign(v,{x:24,z:36});
+ tribe.items={flour:4};
+ tribe.survival.waterLiters=40;
+ assert.equal(reviewAutomaticFoodProcessing(g,0),true);
+ assert.equal(v.order,'return');
+ assert.equal(v.workReason,'Returning to collect food processing inputs');
+ const other=g.spawnUnit('worker',26,36,0);
+ g.state.time+=CEREAL_RULES.reviewSeconds;
+ assert.equal(reviewAutomaticFoodProcessing(g,0),false);
+ assert.notEqual(other.order,'return','one active pickup is enough');
+ v.stuckT=CEREAL_RULES.reviewSeconds+1;
+ g.state.time+=CEREAL_RULES.reviewSeconds;
+ assert.equal(reviewAutomaticFoodProcessing(g,0),true);
+ assert.equal(other.order,'return','a stalled pickup frees the dispatch');
+ drive(g,140,()=>g.state.production?.projects.some(p=>p.recipe==='bakeBreadOven'&&p.phase==='complete'));
+ assert.equal(g.state.production?.metrics.edibleFoodProduced,4);
+ assert.equal(g.state.production?.metrics.consumed.flour,4);
 });
 
 test('two oven slots and a separate mill process grain in parallel with Auto work off', () => {

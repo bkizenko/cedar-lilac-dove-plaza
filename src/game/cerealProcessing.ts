@@ -90,6 +90,8 @@ export function harvestBacklogAlert(g:Game){
 }
 
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
+const mealPickup = new WeakMap<Game['state'], Unit>();
+const mealPickupReason = 'Returning to collect food processing inputs';
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
 const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
 const breadRecipes: ProductionRecipe[] = ['bakeBreadDouble','bakeBreadOven', 'bakeBread'];
@@ -183,8 +185,12 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
    if (!productionIssue(g, recipe, site.id, worker.id)) return beginProduction(g, recipe, site.id, worker.id);
   }
  }
- // Let a returning villager finish the trip before sending another to load.
- if (eventActorId !== undefined || g.state.units.some(u => u.team === 0 && u.hp > 0 && u.order === 'return')) return false;
+ // Only an active food pickup reserves this dispatch. Other deliveries
+ // can stall independently and may be on another landmass.
+ const pickup = mealPickup.get(g.state);
+ if (eventActorId !== undefined || (pickup && pickup.hp > 0 && pickup.order === 'return' &&
+  pickup.workReason === mealPickupReason &&
+  pickup.stuckT <= CEREAL_RULES.reviewSeconds)) return false;
  const carrier = workers.find(u => u.order !== 'gather' && !atCache(g, u) &&
   supplyDrops(g, 0).some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
@@ -194,7 +200,8 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  carrier.node = null;
  carrier.target = null;
  carrier.job = null;
- carrier.workReason = 'Returning to collect food processing inputs';
+ carrier.workReason = mealPickupReason;
+ mealPickup.set(g.state, carrier);
  g.invalidateRoute(carrier);
  g.workBoard.reset();
  return true;
