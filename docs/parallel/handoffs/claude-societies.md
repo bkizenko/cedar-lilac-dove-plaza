@@ -11,7 +11,7 @@
 - Lane / task ID: A-Societies · NPC docked-hull sea exploration (deliverable 1).
 - Owner / claimed files: Claude Societies. New `src/game/seaExploration.ts`, `scripts/rival-sea-exploration.test.mjs`; orchestration hooks in `coastalTrade.ts`, `coastalCommission.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`; registry line in `workCommitments.ts`.
 - Shared-file edits needing Codex sign-off: `src/game/types.ts` only — two optional fields: `Unit.seaExplorationId?:number`, `GameState.seaExploration?:SeaExplorationState`. No edits to sim.ts/engine.ts/constants.ts/persistence.ts/boats.ts/boatSailing.ts. `scoutProvisions.ts` (two guard lines so a sea crew's pack is not refunded mid-voyage and a dead crewmate's pack is reconciled by the voyage) and `workCommitments.ts` (`seaExplorationId` registered as a committed task) are small shared seams — please confirm.
-- Base main / branch / commit: base origin/main 8f635f6 · branch agents/claude-societies · head: see `git log` (WIP 4b2411b finished in the commit after bfd7865).
+- Base main / branch / commit: base origin/main 8f635f6 · branch agents/claude-societies · head 3adc249 (WIP 4b2411b + merge bfd7865 + finish 3adc249).
 
 ## Before → after
 Before: rivals funded a hull only after observing a foreign hall (coastalCommission), so a society with an unknown coast never went to sea; the old personal-canoe equipment path could be blocked by one injured canoe owner.
@@ -51,6 +51,6 @@ Fixture only: authored flat world with one straight water channel (|z|<8), a fin
 
 ## Rollback / next batch
 Rollback: revert the sea-exploration commits. Saves written mid-voyage by this build carry `seaExploration`/`seaExplorationId`; whether an older build accepts those extra fields was not verified.
-Next: raiders physically returning to camp with bounded pursuit recovering dropped stolen cargo, or need-based caravan trade with actually held goods.
+Next: backlog 107 audit result — raiders already return physically (`seaRaiderReturn.ts` boat/overland return, `campRaidAI` carries stolen goods to camp). The missing piece is recovery: there is no ground-cargo entity, so a raider killed while carrying stolen goods has nowhere to drop them. Proposed batch: a new `stolenCargo.ts` (societies) holding finite dropped parcels `{id,team(owner),kind,amount,x,z,droppedAt,fromRaidId}` in optional `state.droppedCargo`, created at the death reconciliation of a team-3 carrier, recovered by the original owner's nearest free adult within a bounded pursuit radius/time, otherwise reclaimed by raiders; needs Codex sign-off for one death-hook line in sim.ts and Claude Experience for a parcel mesh. Then TRADE-NEEDS caravans, then G5/G6/G11.
 
 State: source pushed to agents/claude-societies; ready for Codex review; not merged/published.
