@@ -8660,6 +8660,26 @@
       "requirement": "Explicit deep-water port infrastructure and depth/draft admission for larger vessels, coordinated with actual water-route and cargo infrastructure.",
       "state": "pending-refinement-of-existing-port-scope",
       "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-G15-DIVERSE-TRADE-MARKETS",
+      "boardID": "G15",
+      "owner": "A-Societies (offers, caravans, escorts) + C-Economy (market building effects, prices) + A-Experience (trade/caravan presentation)",
+      "source": "user message 2026-11-11 16:04 ET in the Claude coordination session (not in exported chats); recorded on docs/parallel/handoffs/claude-coordination.md",
+      "messageTimestamp": "2026-11-11T21:04:00Z",
+      "requirement": "Much more diverse trade as in Dawn of Man: tools, armor, weapons, resources, animals and artifacts, with caravans that are sometimes armed. Markets increase trade frequency and give better deals. Only goods actually held may be offered; goods reserved on acceptance; escorts scale with observed risk and trust.",
+      "state": "pending (caravan/need-based trade work in progress on agents/claude-societies; unmerged)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-G16-SEA-STORMS",
+      "boardID": "G16",
+      "owner": "A-Societies (voyage risk and crew response) + C-Platform (weather state, hull physics) + W-World (deep-water extents)",
+      "source": "user message 2026-11-11 16:04 ET in the Claude coordination session (not in exported chats); recorded on docs/parallel/handoffs/claude-coordination.md",
+      "messageTimestamp": "2026-11-11T21:04:00Z",
+      "requirement": "Things happening at sea: occasional storms in deep water that delay, damage or endanger voyages, with exact crew/cargo conservation; crews react only to observed conditions; no invented global weather.",
+      "state": "pending",
+      "gateCreditDelta": 0
     }
   ],
   "coordination_proposals": [
