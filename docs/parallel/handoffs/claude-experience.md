@@ -154,3 +154,56 @@ Total **66/66** pass. Not run: `tsc --noEmit` (no node_modules here; repo tsc re
 
 ### Next action
 Canyon Cistern and Assembly Court wonder plans; instancing adapter for trees and caravans once the culling seam merges; an H-vs-E render review (cannot be done here).
+
+## Batch 3 (merged with origin/main; nothing rendered, nothing run in the browser)
+
+### Status
+- Site grounding adapter: DONE as pure code, tested (`b65841f`). Not wired into the live carved layer.
+- Trade dialog mapping to Societies `tradeNeeds`: DONE as a pure adapter, tested (`622840c`). `TradeDialog.tsx` is still unexecuted and does not yet call the adapter.
+- Canyon Cistern and Assembly Court wonder plans: DONE as pure plans, tested (`1ba661c`). No terrain, water mesh or placement code consumes them yet.
+- Interface requests below: recorded only, nothing built for them.
+
+### New / changed files
+- `src/scene/siteGrounding.ts`: `SiteSampleLike` (structural mirror of Grok's `SiteSample` v1, `src/game/siteSample.ts`; no import from the sim), `groundSite`, `plinthSpec`, `habitatFromSite`, `siteHeightAt`, `wonderSiteIssues`, `wonderSiteFromSample`, `GROUNDING_RULES`.
+- `src/ui/h/tradeNeedsAdapter.ts`: `tradeNeedsInput`, `tradeNeedsView`, `offerSides`, `reasonText`, structural `OfferLike` (mirrors `TradeOffer`).
+- `src/ui/h/tradeModel.ts`: `limits.relationBlocks`, `leader.trust` -> `leader.trustText`.
+- `src/scene/goodsVisuals.ts`: visuals for every `GoodKind` (food, spears, bows, blades, paddedArmor, basket, goat); `led` flag.
+- `src/scene/caravanModels.ts`: `cargo.led` (animals walk on a lead; not loaded, not in `fill`).
+- `src/scene/wonderPlans.ts`: `canyonCistern`, `assemblyCourt`; `WonderSite.grade`; plan fields `cistern`, `assembly`. Generator version stays 1 (existing seeds unchanged).
+- Tests: `site-grounding.test.mjs` (7), `trade-dialog.test.mjs` (9), `wonder-plans.test.mjs` (21).
+
+### Site grounding: how it uses SiteSample v1
+- Floor level = max(mean height, max height - 1.2 m). Plinth boxes sit wholly under the footprint, follow the lattice depth, and are capped at 1.2 m (verdict `steep` beyond 2.4 m visible or grade > 0.6). The footprint is never moved or resized; no terrain edits.
+- Entrance steps (rise 0.18, tread 0.3) are specified for the +Z edge only when it sits below the floor; they lie outside the footprint, so the caller must reserve that strip.
+- `downhillRadians` is returned in the building frame (`downhillLocalRadians = downhill - yaw`); the `atan2(x,z)` convention from SiteSample is assumed, not checked against Grok's tests.
+- `wetFraction > 0.02` gives verdict `wet`. Habitat is the heaviest mapped habitat across `biomeShares` (forest kinds add up); unknown kinds fall back to plains.
+- Wonder facts: flow direction from the sign of downhill x, speed from sqrt(meanGrade), bank height from relief, `exposed` from warm-coast share, `grade` from meanGrade. Wonder suitability (`wonderSiteIssues`) uses wet and grade thresholds I chose; Grok/Codex should replace them with real placement rules.
+
+### Societies `tradeNeeds` mapping, and mismatches found
+- Offers to team 0 are mirrored: the player pays `offer.get` and receives `offer.give`. Only accept or decline exists (`answerTradeOffer`); counter is always disabled in the view.
+- Acceptance fails on war ('foe') or when the player's stock is below `get.amount`; the adapter predicts only those two. All proposer-side failures ('no-carriers', 'too-heavy', 'home-short', 'no-pen') appear only after acceptance as a decline, so the UI cannot warn about them.
+- Mismatches:
+  1. Route trust is 0..1 (`offer.trust`) while the portrait stance uses a relation value; both are shown separately and neither drives the other. The engine ignores relation for accept, so the dialog does not block on a hostile relation.
+  2. `qualifies` and `commit` are not exported; the adapter re-implements the war and stock checks. A drift risk.
+  3. No partner stock is exposed to the player, so partner `knowledge` is `'unknown'` and no partner stock is drawn.
+  4. Price: the proposer asks `fairGet * (1 - spread)`, so the player pays about `1 - spread` of worth. The dialog calls that "In your favour" (ratio <= 0.9) or "Fair". Confirm with Societies that this is intended.
+  5. A goat is a living animal (`animals`), not a load; caravan models list it under `cargo.led`, and the live livestock renderer must draw it.
+  6. Reason codes seen in the engine and mapped to text: foe, refused, expired, no-need, no-surplus, proposer-short, partner-short, no-carriers, too-heavy, home-short, no-pen, partner-no-pen, carrier-lost, loading-timeout, journey-timeout, became-foe, invalid, cooldown. New codes fall through as raw text.
+- Not verified: I did not run the real engine; the adapter test uses offers I constructed with the same field names.
+
+### Wonder plans 5 and 6
+- Canyon Cistern: y=0 is the pit floor; rim walk at `rimY` (2.0-4.2 m, from `bankHeightM`). One entry stair up the front wall, two stepwell flights descend the side walls into the water (rise <= 0.18, tread 0.3). Catchment chain on one side wall: gutter, 1-2 silt tanks (2 when `flowSpeedMps >= 1.5`), inlet spout above the water; lowered overflow weir on the opposite wall; draw-off is the lowest dry step on each flight. Shade roof on piers covers 30-50% of the back (up to 90% when `exposed`), never over the flights. `capacityM3` subtracts submerged steps and piers. Stages: groundworks, flights, roof, catchment, lifting (m³ by material; water carries no volume).
+- Assembly Court: bema at the centre of a paved floor, 5-10 raked tiers round it (`grade > 0.25` gives 6-7), 3-5 radial aisle stairs (rise 0.19, tread 0.45), crown wall open at each aisle (taller when `exposed`), stoa colonnade with a 3.6 m central gate on the +Z side. Tier rise (0.34-0.40) is chosen so every row clears the row in front by >= 0.1 m of sightline to the speaker; the test recomputes that from the plan numbers. Seats are counted at 0.5 m per seat.
+- Not checked: acoustics, crowd flow, and whether a real stairway of 0.19 m rise suits horses. Footprints used in tests: cistern 30x30, assembly 32x28.
+- Known limits: the cistern floor y=0 means the pit is modelled as raised walls on level ground; Grok's terrain would have to supply the real cut. Water bodies are `water` material boxes; the real water mesh is separate.
+
+### Checks (executed here, Node via `scripts/game-loader.mjs`)
+- `wonder-plans` 21/21, `site-grounding` 7/7, `trade-dialog` 9/9, `caravan-models` 8/8, `carved-buildings` 26/26, `carved-trees` 6/6, `render-style` 1/1, `h-compact-ui` 5/5: 83/83. No test touches a renderer; no screenshot or browser check was run.
+
+### Interface requests (requests only; nothing built)
+- **Codex:** (1) hull length and beam per boat class in `boatClasses.ts` (or confirm the seat formula) to replace `hullSize`; (2) a `lit` fire state per building (hearth, kiln, forge) so `lit` comes from real state instead of the preview default; (3) icon art for the `h-good-*` ids that `goodIconId` returns (grain, pulses, tubers, berries, provisions, bread, porridge, fish, meat, milk, wood, stone, copper, iron, spear, bow, blade, armor, basket, goat, cordage, pot, hide, cloth, parcel).
+- **Societies:** export a dry-run of the accept check (e.g. `tradeAnswerBlocker(g,offerId)`) so the dialog stops re-implementing `qualifies`/`commit`; expose the partner's last-observed stock if the player is meant to see it.
+- **Grok:** tide range and river width are not in `SiteSample`; wonder placement rules (cistern needs a catchment slope, assembly court wants a hillside facing open ground); terrain cut for the cistern pit and the cavea.
+
+### Next action
+Instancing adapter for trees and caravans once `InstanceCameraCull.query` merges; wiring `siteGrounding` into the carved layer and `tradeNeedsView` into `TradeDialog.tsx` (both need a browser to check); an H-vs-E render review (cannot be done here).
