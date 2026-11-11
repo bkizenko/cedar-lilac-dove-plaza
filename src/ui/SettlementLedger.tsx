@@ -1,3 +1,4 @@
+import {civicPrestige} from '@/game/civicPrestige';
 import {SeasonLedger} from './SeasonReport';
 import {readyFoodStock} from './FoodStoreReadout';
 import {knownDiplomaticRelation} from '@/game/diplomaticKnowledge';
@@ -6,7 +7,7 @@ import {sendCaptiveEscort} from '@/game/caravans';
 import {captiveGuardCoverage,captivityDescription,repatriateCaptive} from '@/game/captivity';
 import {buildingCost} from "@/game/construction";
 import {PEACE_TERMS,peaceTerms,peaceDescription,peaceIssue,rejectPeace,releasePuppet,freePeople} from '@/game/peace';
-import {fieldProductionSummary} from "@/game/productionReport";
+import {fieldProductionReport,fieldProductionSummary} from "@/game/productionReport";
 import {planStatus,planMissing} from "@/game/construction";
 import {workdayAt,solarTimeLabel} from "@/game/daylight";
 import {FARM_TOOLS,farmToolCondition,resumeFarmToolWork} from "@/game/farmTools";
@@ -89,6 +90,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       </p>
       <div className="ledger-grid">
         {open&&<><NeedsPanel engine={engine} expanded/><SeasonLedger game={g}/></>}
+        {open&&<section>
+          <h3>Prestige</h3>
+          <p>{g.prestige()} settlement prestige · {civicPrestige(g).total} from landmarks</p>
+          <ul>{civicPrestige(g).landmarks.map(row=><li key={row.type}>{BUILDINGS[row.type].name} × {row.count} · {row.points.toFixed(1)}</li>)}</ul>
+        </section>}
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">
@@ -269,9 +275,11 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         <p>No finished fields. Forage and hunt while you establish your first farm.</p>
       ) : (
         <ul>
-          {farms.map((b) => (
-            <li key={b.id}>
+          {farms.map((b) => {
+            const field=fieldProductionReport(g,b);
+            return <li key={b.id}>
               Field {b.id} · {fieldProductionSummary(g,b)} · fertility {Math.round((b.fertility??1)*100)}%
+              <p className="text-xs text-parchment-dim">{Math.round(field.areaSquareMetres)} m² · soil {field.soil}% · {field.harvestUnitsPerSquareMetre.toFixed(1)} potential crop units/m² · {Math.ceil(field.sowSeconds+field.tendSeconds+field.harvestSeconds)} worker-seconds before hauling and processing</p>
               <button
                 disabled={cal.phase !== 0 || b.crop?.year===cal.year && b.crop.planted>0}
                 onClick={() => {
@@ -283,7 +291,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
               </button>
               <label> Next crop <select value={b.cropType||b.crop?.kind||"grain"} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
             </li>
-          ))}
+          })}
         </ul>
       )}
       <details>

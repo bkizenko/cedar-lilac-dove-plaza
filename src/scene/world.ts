@@ -2,6 +2,8 @@ import {HousingPacketLayer} from './housingPackets';
 import{civicPartColor}from'./classicalBuildings';
 import{BuildingGroundingLayer}from'./buildingGrounding';
 import {countEntityFrustum,type CensusSource} from './entityFrustumCensus';
+import {fishMarkerHeight} from './resourceSurface';
+import {BankTerrainLayer} from './bankTerrainLayer';
 import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
 import{HullFleet}from'./hullFleet';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
@@ -190,6 +192,7 @@ export class WorldView {
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
+  private bankLayer:BankTerrainLayer|null=null;
   private excavationLayer:ExcavationLayer|null=null;
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
@@ -557,7 +560,8 @@ export class WorldView {
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraClearance.invalidate();
-    this.fieldSurface = new FieldSurface(game.world.heights,game.world.size);
+    this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
+    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
     if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
     this.buildNature(game);
@@ -649,7 +653,8 @@ export class WorldView {
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
     geo.setAttribute("surfaceRock",new THREE.BufferAttribute(surfaceRock,1));
     geo.setAttribute("surfaceSand",new THREE.BufferAttribute(surfaceSand,1));
-    this.terrainSurface=new TerrainSurface(game.world.heights,game.world.size,game.state.seed);
+    if(game.world.bankTerrain)geo.setAttribute('surfaceBank',new THREE.BufferAttribute(new Float32Array(pos.count),1));
+    this.terrainSurface=new TerrainSurface(game.world.heights,game.world.size,game.state.seed,game.world.bankTerrain,game.world.bankTerrain?geo.getAttribute('color').array as Float32Array:undefined);
     const ecology=(game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology;
     if(ecology){const attributes=biomeSurfaceAttributes(ecology,pos as THREE.BufferAttribute);
       geo.setAttribute('biomeCover',new THREE.BufferAttribute(attributes.cover,4));
@@ -795,7 +800,7 @@ export class WorldView {
     this.fish = new THREE.InstancedMesh(fishGeo(), fishMat, Math.max(nFish, 1));
     this.fish.castShadow = false;
     game.state.fish.forEach((f, i) => {
-      _p.set(f.x, game.world.waterY + 0.12, f.z);
+      _p.set(f.x, game.world.localWaterVersion===17?fishMarkerHeight(game,f):game.world.waterY+.12, f.z);
       _e.set(0, i * 0.9, 0.15);
       _q.setFromEuler(_e);
       _s.set(f.scale, f.scale, f.scale);
@@ -1092,7 +1097,7 @@ export class WorldView {
   pickWildlife(cx:number,cy:number,game:Game){
     const el=this.renderer.domElement;
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);_ray.setFromCamera(_ndc,this.camera);
-    const terrainHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain],false)[0]:undefined;
+    const terrainHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[]),this.excavationLayer.mesh]:[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[])],false)[0]:undefined;
     for(const mesh of this.wildlifeOwners.keys())mesh.computeBoundingSphere();
     for(const hit of _ray.intersectObjects([...this.wildlifeOwners.keys()],false)){
       if(hit.instanceId===undefined||terrainHit&&terrainHit.distance+.02<hit.distance)continue;
@@ -1108,7 +1113,7 @@ export class WorldView {
     _ndc.set(cx/(el.clientWidth||1)*2-1,-cy/(el.clientHeight||1)*2+1);
     _ray.setFromCamera(_ndc,this.camera);mesh.computeBoundingSphere();
     const boats=(game.state.boats||[]).filter(b=>!b.hullClass&&b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
-    const groundHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain],false)[0]:undefined;
+    const groundHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[]),this.excavationLayer.mesh]:[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[])],false)[0]:undefined;
     const extra=this.hullFleet?.pickingSources()??new Map<THREE.InstancedMesh,import("../game/boats").Riverboat[]>();for(const m of extra.keys())m.computeBoundingSphere();
     for(const hit of _ray.intersectObjects([mesh,...extra.keys()],false)) {
       if(groundHit&&groundHit.distance+.02<hit.distance)continue;
@@ -1165,7 +1170,7 @@ export class WorldView {
     const h = el.clientHeight || 1;
     _ndc.set((cx / w) * 2 - 1, -(cy / h) * 2 + 1);
     _ray.setFromCamera(_ndc, this.camera);
-    const hits = _ray.intersectObjects(this.excavationLayer?[this.terrain,this.excavationLayer.mesh]:[this.terrain], false);
+    const hits = _ray.intersectObjects(this.excavationLayer?[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[]),this.excavationLayer.mesh]:[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[])], false);
     if (hits[0]) return hits[0].point.clone();
     _ground.set(new THREE.Vector3(0, 1, 0), -this.look.y);
     if (_ray.ray.intersectPlane(_ground, _hit)) return _hit.clone();
@@ -1195,6 +1200,7 @@ export class WorldView {
     if (this.lost || this.disposed) return;
     if(this.synchronizedState!==game.state){this.synchronizedState=game.state;this.buildingSyncIn=0;this.biomeScene?.sync(game,this.camera.position,this.quality,1);}
     this.landContinuation?.sync(game);
+    this.bankLayer?.sync(game);
     if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);
     this.biomeScene?.sync(game,this.camera.position,this.quality,dt);
@@ -1493,7 +1499,7 @@ export class WorldView {
         const f = game.state.fish[i];
         const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z);
         const bob = Math.sin(t * 1.6 + i) * 0.08;
-        _p.set(f.x, game.world.waterY + 0.1 + bob, f.z);
+        _p.set(f.x, fishMarkerHeight(game,f) + bob, f.z);
         _e.set(0, t * 0.4 + i, 0.12);
         _q.setFromEuler(_e);
         _s.setScalar(gone ? 0.001 : f.scale);
@@ -2478,7 +2484,7 @@ export class WorldView {
         }
       }
     }
-    colAttr.needsUpdate = true;
+    colAttr.needsUpdate = true;if(this.terrainSurface?.bankColors)this.terrainSurface.bankColors.needsUpdate=true;
 
     if (!this.biomeScene&&this.treesLeaf?.instanceColor) {
       const nTree = this.treesLeaf.count;
@@ -2592,6 +2598,7 @@ export class WorldView {
     this.fibreWork?.dispose();this.fibreWork=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
     this.landContinuation?.dispose();this.landContinuation=null;
+    this.bankLayer?.dispose();this.bankLayer=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;
     this.hullFleet?.dispose();this.hullFleet=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;

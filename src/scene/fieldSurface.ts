@@ -1,3 +1,4 @@
+import type {BankSurface} from './bankSurface';
 import * as THREE from 'three';
 import {MAP} from '../game/constants';
 import {ExcavationSurface} from './excavationSurface';
@@ -6,14 +7,16 @@ import {ExcavationSurface} from './excavationSurface';
 // calls instead of rebuilding a unique mesh for each growing plot.
 export class FieldSurface {
   readonly excavations:ExcavationSurface;
+  private readonly sharedCuts:boolean;private readonly banks?:BankSurface;
   readonly texture: THREE.DataTexture;
   readonly segments:number;
   readonly size:number;
   readonly depth = new THREE.MeshDepthMaterial({depthPacking: THREE.RGBADepthPacking});
 
-  constructor(heights: Float32Array,size=MAP) {
+  constructor(heights: Float32Array,size=MAP,banks?:BankSurface,cuts?:ExcavationSurface) {
+    this.banks=banks;this.sharedCuts=!!cuts;
     this.size=size;
-    this.excavations=new ExcavationSurface(size);
+    this.excavations=cuts??new ExcavationSurface(size);
     this.segments=Math.round(Math.sqrt(heights.length))-1;
     this.texture = new THREE.DataTexture(heights, this.segments + 1, this.segments + 1, THREE.RedFormat, THREE.FloatType);
     this.texture.minFilter = this.texture.magFilter = THREE.NearestFilter;
@@ -23,12 +26,13 @@ export class FieldSurface {
   }
 
   bind(material: THREE.Material,options:{furrows?:boolean}={}) {
-    material.customProgramCacheKey = () => options.furrows?'hearth-contour-field-v3-cuts':'hearth-field-surface-v2-cuts';
+    material.customProgramCacheKey = () => (options.furrows?'hearth-contour-field-v3-cuts':'hearth-field-surface-v2-cuts')+(this.banks?`-banks-v19-${this.size}-${this.banks.gridSubdivisions}`:'');
     material.onBeforeCompile = shader => {
-      this.excavations.bind(shader);
+      this.excavations.bind(shader);this.banks?.bind(shader);
       shader.uniforms.fieldHeights = {value: this.texture};
       shader.vertexShader = `
         ${options.furrows?'attribute vec4 fieldRows;varying vec4 vFieldRows;varying vec2 vFieldWorldXZ;':''}
+        ${this.banks?.glsl??''}
         ${this.excavations.glsl}
         uniform sampler2D fieldHeights;
         float fieldHeight(vec2 worldXZ) {
@@ -44,7 +48,7 @@ export class FieldSurface {
           // Match the terrain plane's actual triangles, including valley creases.
           float baseHeight=f.x + f.y <= 1. ? a + (b-a)*f.x + (c-a)*f.y
             : d + (c-d)*(1.-f.x) + (b-d)*(1.-f.y);
-          return refinedExcavationHeight(worldXZ,baseHeight);
+          return refinedExcavationHeight(worldXZ,${this.banks?'refinedBankHeight(worldXZ,baseHeight)':'baseHeight'});
         }
       ` + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
@@ -68,5 +72,5 @@ export class FieldSurface {
     };
   }
 
-  dispose() { this.texture.dispose(); this.depth.dispose(); this.excavations.dispose(); }
+  dispose() { this.texture.dispose(); this.depth.dispose(); if(!this.sharedCuts)this.excavations.dispose(); }
 }

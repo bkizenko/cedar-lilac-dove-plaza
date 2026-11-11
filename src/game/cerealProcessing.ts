@@ -1,6 +1,6 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
-import{CEREAL_RULES,isCerealRecipe,rawCerealField}from'./cerealRules';
-import{beginProduction,resumeProduction,productionIssue,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
+import{beginProduction,resumeProduction,productionIssue,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -38,6 +38,39 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  const maker=workers.find(u=>atCache(g,u));
  if(maker){for(const b of finished){const recipe=rough?(b.type==='threshingFloor'?'winnowCerealFloor':'winnowCerealHand'):(b.type==='threshingFloor'?'threshCerealFloor':'threshCerealHand');if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);}return false;}
  const carrier=workers.find(u=>supplyDrops(g,team).some(d=>supplyApproach(g,u,d)));if(!carrier)return false;g.interruptMission(carrier);carrier.recalled=true;carrier.order='return';carrier.node=null;carrier.target=null;carrier.job=null;carrier.workReason='Returning to load the actual unprocessed cereal batch';g.invalidateRoute(carrier);g.workBoard.reset();return true;
+}
+
+/** One stable instruction for the most urgent processing backlog. The alert
+ * disappears as the stock clears, while ordinary progress stays in the ledger. */
+export function harvestBacklogAlert(g:Game){
+ const t=g.tribe(0),items=t.items;
+ const sheaves=items?.grainSheaves??0,rough=items?.roughGrain??0;
+ const flour=items?.flour??0,grain=t.foodLots?.grain?foodInventory(t).grain:0;
+ const thresh=sheaves>=CEREAL_RULES.rawBatch,winnow=rough>=CEREAL_RULES.roughBatch;
+ const grind=grain>=PRODUCTION_RECIPES.grindGrainStation.grain,bake=flour>=(PRODUCTION_RECIPES.bakeBreadOven.inputs.flour??4);
+ if(!thresh&&!winnow&&!grind&&!bake)return null;
+ const recentRisk=storedCerealKinds.some(kind=>(items?.[kind]??0)>0&&t.itemFreshness?.[kind]!==undefined&&
+  g.state.time-t.itemFreshness[kind]!>=CEREAL_STORAGE_RULES[kind].coveredGraceSeconds-CEREAL_STORAGE_RULES.spoilageWarningLeadSeconds);
+ const exposed=(thresh||winnow)&&exposedHarvestUnits(g,0)>=CEREAL_RULES.rawBatch;
+ if(!recentRisk&&!exposed&&sheaves<32&&rough<24&&reserveSeconds(g)>=CEREAL_STORAGE_RULES.urgentReserveSeconds)return null;
+ const sites=g.state.buildings.filter(b=>b.team===0&&g.finished(b));
+ const has=(kind:Building['type'])=>sites.some(b=>b.type===kind);
+ const hand=g.state.autoWorkEnabled!==false&&has('hearth');
+ const projects=g.state.production?.projects.filter(p=>p.team===0&&p.phase!=='complete'&&p.phase!=='lost')??[];
+ const prefix=recentRisk||exposed?'Harvest at risk':'Harvest backlog';
+ const alert=(action:string)=>`${prefix} · ${action}`;
+ if((winnow||thresh)&&!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
+ if(winnow&&cerealWeatherIssue(g,'winnowCerealFloor'))return alert('winnowing resumes in dry weather');
+ if(bake||grind){
+  if(!has('oven')&&!hand)return alert('finish a bread oven');
+  if(!bake&&!has('grindingStone')&&!hand)return alert('finish a grinding stone');
+  if((t.survival?.waterLiters??0)<PRODUCTION_RECIPES.bakeBreadOven.water)return alert('collect drinking water for baking');
+  if(t.wood<PRODUCTION_RECIPES.bakeBreadOven.wood)return alert('gather firewood for baking');
+ }
+ const grainProjects=projects.filter(p=>isCerealRecipe(p.recipe)||p.recipe.startsWith('grindGrain')||p.recipe.startsWith('bakeBread'));
+ if(grainProjects.some(p=>p.phase==='paused'||p.phase==='stored'))return alert('resume a paused grain batch at its workplace');
+ if(grainProjects.some(p=>!p.blockedReason))return recentRisk||exposed?alert('processing underway · check storage and workplace capacity'):null;
+ return alert('keep a worker and a clear route available');
 }
 
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();

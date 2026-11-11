@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Engine } from '../game/engine';
 import { SURVIVAL_RULES } from '../game/survivalNeeds';
 import { exposedHarvestUnits } from '../game/production';
+import { harvestBacklogAlert } from '../game/cerealProcessing';
 import { measureVillageWorkload } from '../game/villageWorkload';
 
 export function VillageAlerts({ engine }: { engine: Engine }) {
@@ -19,17 +20,15 @@ export function VillageAlerts({ engine }: { engine: Engine }) {
     if ((resident.thirstSeconds ?? 0) >= SURVIVAL_RULES.thirstGraceSeconds) thirsty++;
     if ((resident.coldSeconds ?? 0) >= SURVIVAL_RULES.coldGraceSeconds) freezing++;
   }
-  const tribe=game.tribe(0);
-  const sheaves=Math.floor(tribe.items?.grainSheaves??0);
-  const rough=Math.floor(tribe.items?.roughGrain??0);
-  const exposed=exposedHarvestUnits(game,0);
+  const harvest=harvestBacklogAlert(game);
+  const exposed=harvest?0:exposedHarvestUnits(game,0);
   const warnings = [
     starving > 0 && `${starving} starving`,
     thirsty > 0 && `${thirsty} dangerously thirsty`,
     freezing > 0 && `${freezing} freezing`,
     fullCache>0 && `${fullCache} blocked by full material stores`,
     exposed>=8 && `${Math.floor(exposed)} harvest units exposed to spoilage`,
-    (sheaves>=32||rough>=24) && `Process harvest at a hearth or threshing floor · ${sheaves} sheaves · ${rough} rough grain`,
+    harvest,
     workload !== null && workload > 100 && `Work backlog · ${Math.ceil(workload)}% of capacity`,
   ].filter(Boolean);
   return warnings.length > 0

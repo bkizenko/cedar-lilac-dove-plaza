@@ -1,3 +1,4 @@
+import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
 import { finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -5601,9 +5602,9 @@ export class Game {
   prestige() {
     const t = this.tribe(0);
     const owned = this.state.regions.filter((r) => r.owner === 0).length;
-    const blds = this.state.buildings.filter((b) => b.team === 0 && this.finished(b)).length;
+    const monuments = civicPrestige(this).total;
     const allies = this.state.tribes.filter((tr) => tr.id !== 0 && tr.alive && tr.ally).length;
-    return Math.round(this.popNow(0) * 2 + owned * 14 + t.age * 22 + blds * 3 + allies * 12);
+    return Math.round(this.popNow(0) * 2 + owned * 14 + t.age * 22 + monuments + allies * 12);
   }
 
   bankTrade(give: ResKind, get: ResKind) {

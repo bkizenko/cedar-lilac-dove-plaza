@@ -1,3 +1,4 @@
+import {FISHING_BANK_RADII} from './shallowFishSites';
 import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {connectedForUnit} from "./waterTravel";
 import {carryingCapacity} from "./haulage";
@@ -100,7 +101,7 @@ export function fishingReport(g:Game,b:Building){
 export function fishingBank(g:Game,u:Unit,n:ResourceNode){
   if(u.haulage==="canoe"&&g.height(n.x,n.z)<=g.waterAt(n.x,n.z)+.3&&connectedForUnit(g,u,n.x,n.z))return {x:n.x,z:n.z};
   let best:{x:number;z:number}|null=null,score=Infinity;
-  for(const radius of [1,2,3.5,5,6.5])for(let i=0;i<16;i++){
+  for(const radius of FISHING_BANK_RADII)for(let i=0;i<16;i++){
     const x=n.x+Math.sin(i*Math.PI/8)*radius,z=n.z+Math.cos(i*Math.PI/8)*radius;
     if(!g.walkable(x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
     const distance=Math.hypot(x-u.x,z-u.z);if(distance<score){score=distance;best={x,z};}

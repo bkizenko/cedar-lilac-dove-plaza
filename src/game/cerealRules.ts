@@ -1,8 +1,26 @@
-import type{Game}from'./sim';import type{BldType,Building,Unit,GameState}from'./types';
+import type{Game}from'./sim';import type{BldType,Building,Unit,GameState,Tribe}from'./types';
 /** Material units are conserved processing portions, not kilograms. Existing
  * crop potential is clean-grain-equivalent; its stalk/husk mass travels too. */
 export const CEREAL_RULES={version:1,sheavesPerPotentialGrain:2,rawBatch:8,roughBatch:6,strawPerBatch:2,chaffPerBatch:2,cleanGrainPerBatch:4,seedFraction:.08,handThreshSeconds:24,handWinnowSeconds:16,floorThreshSeconds:12,floorWinnowSeconds:8,reviewSeconds:5,foodTargetSeconds:600,maximumAutomaticWorkers:2}as const;
 export type CerealLedger={version:1;harvestedSheaves:number;deliveredSheaves:number;lostCarriedSheaves:number;cleanedGrain:number;seedsAllocated:number;seedsLost:number};
+export const CEREAL_STORAGE_RULES={
+ grainSheaves:{coveredGraceSeconds:900,coveredLossPerSecond:.000035},
+ roughGrain:{coveredGraceSeconds:1800,coveredLossPerSecond:.000015},
+ exposedDryLossPerSecond:.00008,
+ exposedWetLossPerSecond:.00035,
+ urgentReserveSeconds:240,
+ spoilageWarningLeadSeconds:120,
+} as const;
+export const storedCerealKinds=['grainSheaves','roughGrain'] as const;
+export type StoredCerealKind=typeof storedCerealKinds[number];
+/** The timestamp represents the mean age of the bulk stock. New material
+ * changes that age in proportion to its actual share of the combined stock. */
+export function mixStoredCerealAge(tribe:Tribe,kind:StoredCerealKind,prior:number,incoming:number,time:number,incomingSince=time){
+ if(incoming<=0)return;
+ const age=tribe.itemFreshness??={};
+ const previousSince=prior>0?age[kind]??time:incomingSince;
+ age[kind]=Math.min(time,previousSince+(incomingSince-previousSince)*(incoming/(prior+incoming)));
+}
 export const cerealRecipes=['threshCerealHand','winnowCerealHand','threshCerealFloor','winnowCerealFloor']as const;
 export const isCerealRecipe=(key:string)=>cerealRecipes.includes(key as typeof cerealRecipes[number]);
 export function cerealLedger(g:Game){return g.state.cerealProcessing??={version:1,harvestedSheaves:0,deliveredSheaves:0,lostCarriedSheaves:0,cleanedGrain:0,seedsAllocated:0,seedsLost:0};}

@@ -1,5 +1,7 @@
 # Hearthwild: incentive-first development plan
 
+The [settlement economy and art plan](SETTLEMENT_ECONOMY_AND_ART_PLAN.md) expands the farming, specialization, expansion, civic works, exchange, interface and performance tracks.
+
 ## 1. Product decisions and diagnosis
 
 Build an original **real-time survival-to-civilization game** in which a settlement becomes a city-state through useful work, difficult choices and interactions with other societies.

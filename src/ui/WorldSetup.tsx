@@ -7,6 +7,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
   const [busy, setBusy] = useState(false);
+  const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
     <div className="world-setup">
       <p className="text-xs">
@@ -55,6 +56,10 @@ export function WorldSetup({ engine }: { engine: Engine }) {
           <option value={2080}>Huge · 4× area</option>
         </select>
       </label>
+      {engine.game.testMode&&<label>
+        <input type="checkbox" checked={previewRiverbanks} onChange={e=>setPreviewRiverbanks(e.target.checked)}/>
+        Experimental riverbanks
+      </label>}
       <button
         type="button"
         disabled={busy}
@@ -62,7 +67,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
           setBusy(true);
           requestAnimationFrame(() => {
             try {
-              engine.configureNewWorld({ layout, size, difficulty: preset });
+              engine.configureNewWorld({ layout, size, difficulty: preset },previewRiverbanks);
             } finally {
               setBusy(false);
             }

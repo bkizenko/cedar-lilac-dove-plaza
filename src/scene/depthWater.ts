@@ -12,6 +12,7 @@ export function makeDepthWater(surface:TerrainSurface,time:{value:number},fallin
  }]);
  // Keep the scene's single clock reference (UniformsUtils normally clones it).
  uniforms.uTime=time;uniforms.uHeights={value:surface.heights};
+ if(surface.banks)Object.assign(uniforms,surface.banks.uniforms);if(surface.bankCuts)Object.assign(uniforms,surface.bankCuts.uniforms);
  return new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:true,side:THREE.DoubleSide,uniforms,
  vertexShader:`varying vec3 vWPos;varying vec2 vWaterUv;
   #include <fog_pars_vertex>
@@ -21,6 +22,8 @@ export function makeDepthWater(surface:TerrainSurface,time:{value:number},fallin
  fragmentShader:`uniform float uTime;uniform float uLight;uniform vec3 uSunDirection;uniform vec3 uColor;uniform vec3 uDeep;uniform sampler2D uHeights;
   uniform float uTerrainSize;uniform float uSegments;uniform float uFalling;
   varying vec3 vWPos;varying vec2 vWaterUv;
+  ${surface.banks?.glsl??''}
+  ${surface.bankCuts?.glsl??''}
   #include <fog_pars_fragment>
   float flowHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
   float flowNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(flowHash(i),flowHash(i+vec2(1.,0.)),f.x),mix(flowHash(i+vec2(0.,1.)),flowHash(i+vec2(1.)),f.x),f.y);}
@@ -30,7 +33,8 @@ export function makeDepthWater(surface:TerrainSurface,time:{value:number},fallin
    vec2 uv=(cell+.5)*texel;
    float a=texture2D(uHeights,uv).r,b=texture2D(uHeights,uv+vec2(texel,0.)).r;
    float c=texture2D(uHeights,uv+vec2(0.,texel)).r,d=texture2D(uHeights,uv+vec2(texel)).r;
-   return f.x+f.y<=1.?a+(b-a)*f.x+(c-a)*f.y:d+(c-d)*(1.-f.x)+(b-d)*(1.-f.y);
+   float base=f.x+f.y<=1.?a+(b-a)*f.x+(c-a)*f.y:d+(c-d)*(1.-f.x)+(b-d)*(1.-f.y);
+   return ${surface.banks?'refinedExcavationHeight(worldXZ,refinedBankHeight(worldXZ,base))':'base'};
   }
   void main(){
    float depth=max(0.,vWPos.y-bedHeight(vWPos.xz));

@@ -9,6 +9,7 @@ export class LandContinuation {
  constructor(scene:THREE.Scene,g:Game,surface:TerrainSurface,ground:THREE.MeshStandardMaterial){
   const data=g.world.landContinuation!,half=g.world.size/2;
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(data.positions,3));geometry.setIndex(new THREE.BufferAttribute(data.indices,1));geometry.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(data.positions.length).fill(.42),3));geometry.setAttribute('surfaceRock',new THREE.Float32BufferAttribute(new Float32Array(data.positions.length/3).fill(.15),1));geometry.setAttribute('surfaceSand',new THREE.Float32BufferAttribute(new Float32Array(data.positions.length/3),1));geometry.computeVertexNormals();geometry.computeBoundingSphere();
+  if(g.world.bankTerrain)geometry.setAttribute('surfaceBank',new THREE.BufferAttribute(new Float32Array(data.positions.length/3),1));
   if(g.world.ecology){const a=biomeSurfaceAttributes(g.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}
   const material=ground.clone();surface.bind(material,!!g.world.ecology);const prior=material.onBeforeCompile,key=material.customProgramCacheKey();
   material.transparent=true;material.depthWrite=false;material.customProgramCacheKey=()=>`${key}-bounded-border-v1`;

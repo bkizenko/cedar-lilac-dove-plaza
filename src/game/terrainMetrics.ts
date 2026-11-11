@@ -1,9 +1,9 @@
-import {sampleHeight,type WorldData} from './worldgen';
+import {sampleHeight,sampleWorldHeight,type WorldData} from './worldgen';
 import {dryTreeRoot,highWaterLevel} from './hydrology';
 /** Offline/diagnostic sampling, never a per-frame renderer scan. */
 export function terrainMetrics(world:WorldData){
  const n=96,cell=world.size/n,heights:number[]=[];let samples=0,hills=0,walkable=0;
- const height=(x:number,z:number)=>sampleHeight(world.heights,x,z,world.size);
+ const height=(x:number,z:number)=>world.bankTerrain?sampleWorldHeight(world,x,z):sampleHeight(world.heights,x,z,world.size);
  const high=highWaterLevel(world.baseWaterY);
  for(let iz=1;iz<n-1;iz++)for(let ix=1;ix<n-1;ix++){
   samples++;const x=(ix/n-.5)*world.size,z=(iz/n-.5)*world.size,h=height(x,z);

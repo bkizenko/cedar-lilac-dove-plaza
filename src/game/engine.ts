@@ -183,13 +183,13 @@ export class Engine {
     this.pushHud();
   }
 
-  configureNewWorld(request:WorldRequest) {
+  configureNewWorld(request:WorldRequest,previewRiverbanks=false) {
     if(this.originalGame&&!this.game.testMode)return false;
     if(!this.game.awaitingStart&&!this.game.testMode){
       if(!protectGame(this.game)){this.game.banner("Could not protect this village. Export it before starting another world.",5);this.pushHud();return false;}
       saveGame(this.game);
     }
-    this.restart(request);return true;
+    this.restart(request,previewRiverbanks&&this.game.testMode?19:18);return true;
   }
 
   enterIsland() {
@@ -275,13 +275,13 @@ export class Engine {
     this.pushHud();
   }
 
-  restart(request?:WorldRequest) {
+  restart(request?:WorldRequest,generation:18|19=18) {
     const nextRequest={...request,difficulty:request?.difficulty??this.game.state.difficulty??'normal'};
     this.autosave.invalidate();
     this.simAccumulator = 0;
     this.keyboard.groups.clear();
     try {
-      this.game.reset(undefined,18,nextRequest);
+      this.game.reset(undefined,generation,nextRequest);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);
@@ -289,7 +289,7 @@ export class Engine {
     } catch (err) {
       console.error(err);
       this.setQuality("low");
-      this.game.reset(undefined,18,nextRequest);
+      this.game.reset(undefined,generation,nextRequest);
       this.game.enterIsland();
       this.game.state.paused = true;
       this.view.rebuild(this.game);

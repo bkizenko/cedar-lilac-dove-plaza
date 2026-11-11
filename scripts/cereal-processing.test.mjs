@@ -3,7 +3,7 @@ import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';
 import test from'node:test';import assert from'node:assert/strict';import{Game}from'../src/game/sim.ts';import{encodeGame,decodeGame}from'../src/game/persistence.ts';
 import{farmWork,calendar}from'../src/game/settlement.ts';import{beginProduction,productionIssue,productionAI,exposedHarvestUnits,deliverProductionCargo,pauseProductionProject,resumeProduction,tickProduction,unloadProductionProject,cerealReservedMaterials,PRODUCTION_RECIPES}from'../src/game/production.ts';
-import{CEREAL_RULES,rawCerealField}from'../src/game/cerealRules.ts';import{reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
+import{CEREAL_RULES,CEREAL_STORAGE_RULES,rawCerealField}from'../src/game/cerealRules.ts';import{harvestBacklogAlert,reviewCerealProcessing}from'../src/game/cerealProcessing.ts';import{villageStorageReport}from'../src/game/storageReport.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}
 function fixture(team=0){const g=new Game();g.reset(42,10);g.enterIsland();g.state.units=[];g.state.buildings=[];for(const k of['trees','stones','forage','fish','copper','iron','wildlife'])g.state[k]=[];g.state.autoWorkEnabled=false;g.state.time=950;g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.conflict='quiet';g.state.encounter=undefined;for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(team),{wood:100,stone:100,food:1000,foodLots:{provisions:1000},seeds:12,items:{},cultivated:['grain']});g.state.campSites=team===0?[{team:0,x:0,z:30}]:[{team:0,x:-90,z:30}];g.world.camps.find(c=>c.team===team).x=0;g.world.camps.find(c=>c.team===team).z=30;const hall=g.makeBld('townhall',0,30,team),hearth=g.makeBld('hearth',12,30,team);g.state.buildings=[hall,hearth];if(team!==0){g.state.buildings.push(g.makeBld('townhall',-90,30,0));const spectator=g.spawnUnit('worker',-90,38,0);spectator.order='hold';spectator.jobLock=true;}ground(g);const u=g.spawnUnit('worker',0,36,team),v=g.spawnUnit('worker',2,36,team);for(const p of[u,v]){p.order='hold';p.jobLock=false;}return{g,u,v,hall,hearth};}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;while(g.state.time<end&&!until()){const before=g.state.time;g.state.paused=false;g.step(.1);assert.ok(g.state.time>before,JSON.stringify({time:g.state.time,ended:g.state.ended,encounter:g.state.encounter,banner:g.state.banner}));}assert.deepEqual(g.simulationErrors,[]);}
@@ -245,4 +245,51 @@ test('emergency grain, fish and meat provide a tenth of their normal value and r
  } finally {
   Math.random=random;
  }
+});
+
+
+test('stored cereal spoils measurably after its own grace period and reload preserves the age',()=>{
+ let {g}=fixture();
+ let tribe=g.tribe(0);
+ tribe.items={grainSheaves:24,roughGrain:18};
+ const pantryBefore=tribe.food;
+ const {coveredGraceSeconds,coveredLossPerSecond}=CEREAL_STORAGE_RULES.grainSheaves;
+ tickProduction(g,1);
+ const placedAt=g.state.time;
+ assert.equal(tribe.itemFreshness.grainSheaves,placedAt);
+ g.state.time=placedAt+coveredGraceSeconds;
+ tickProduction(g,1);
+ assert.equal(tribe.items.grainSheaves,24);
+ g=decodeGame(encodeGame(g));
+ tribe=g.tribe(0);
+ assert.equal(tribe.itemFreshness.grainSheaves,placedAt);
+ g.state.time+=100;
+ tickProduction(g,100);
+ const loss=24*100*coveredLossPerSecond;
+ assert.ok(Math.abs(tribe.items.grainSheaves-(24-loss))<1e-9);
+ assert.ok(Math.abs(g.state.production.metrics.spoiled.grainSheaves-loss)<1e-9);
+ assert.equal(tribe.items.roughGrain,18);
+ assert.equal(tribe.food,pantryBefore);
+});
+
+test('the urgent harvest alert points to the current bottleneck and clears with the backlog',()=>{
+ const {g}=fixture(),tribe=g.tribe(0);
+ assert.equal(harvestBacklogAlert(g),null);
+ tribe.items={grainSheaves:32};
+ assert.match(harvestBacklogAlert(g),/finish a threshing floor/);
+ g.state.buildings.push(g.makeBld('threshingFloor',30,35,0));
+ assert.match(harvestBacklogAlert(g),/clear route/);
+ tribe.items={roughGrain:24};
+ g.state.weather='rain';
+ assert.match(harvestBacklogAlert(g),/dry weather/);
+ g.state.weather='clear';
+ tribe.items={flour:4};
+ tribe.food=0;
+ tribe.foodLots={};
+ assert.match(harvestBacklogAlert(g),/finish a bread oven/);
+ g.state.buildings.push(g.makeBld('oven',34,35,0));
+ tribe.survival.waterLiters=0;
+ assert.match(harvestBacklogAlert(g),/collect drinking water/);
+ tribe.items={};
+ assert.equal(harvestBacklogAlert(g),null);
 });

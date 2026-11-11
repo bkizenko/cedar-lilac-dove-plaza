@@ -30,13 +30,13 @@ export function minimapTerrainColor(height:number,water:number,biome:string,reli
 export function fogMinimapColor(color:RGB,explored:boolean,visible:boolean):RGB{return!explored?[25,32,35]:visible?color:color.map(v=>v*.65) as unknown as RGB;}
 type TerrainSource=Pick<Game,'world'|'height'|'waterAt'|'navigationRevision'>;
 export type MinimapTerrain={size:number;resolution:number;heights:Float32Array;water:Float32Array;colors:Uint8ClampedArray;sampledAtMilliseconds:number};
-type TerrainCache={world:Game['world'];revision:number;heightSource:Game['world']['heights'];waterY:number;validatedAtMilliseconds:number;staticSource:StaticMinimapSource|null;data:MinimapTerrain};
+type TerrainCache={world:Game['world'];banks:Game['world']['bankTerrain'];revision:number;heightSource:Game['world']['heights'];waterY:number;validatedAtMilliseconds:number;staticSource:StaticMinimapSource|null;data:MinimapTerrain};
 const terrainCaches=new WeakMap<object,TerrainCache>();
 /** Display/fog retain their 2 Hz cadence. Exact known terrain inputs are
  * revalidated at that cadence; unchanged terrain reuses its prepared pixels. */
 export function sampleMinimapTerrain(g:TerrainSource,nowMilliseconds:number,resolution:number=MINIMAP_RULES.pixels):MinimapTerrain{
  const old=terrainCaches.get(g),revision=g.navigationRevision(),canonical=canonicalMinimapSource(g);
- if(old&&old.world===g.world&&old.heightSource===g.world.heights&&old.revision===revision&&old.waterY===g.world.waterY&&old.data.resolution===resolution&&
+ if(old&&old.world===g.world&&old.banks===g.world.bankTerrain&&old.heightSource===g.world.heights&&old.revision===revision&&old.waterY===g.world.waterY&&old.data.resolution===resolution&&
     (!old.staticSource||(canonical&&old.staticSource.state===g.state))&&nowMilliseconds>=old.validatedAtMilliseconds){
   if(nowMilliseconds-old.validatedAtMilliseconds<MINIMAP_RULES.terrainRefreshMilliseconds)return old.data;
   if(canonical&&old.staticSource&&sameMinimapSource(g,old.staticSource)){old.validatedAtMilliseconds=nowMilliseconds;return old.data;}
@@ -50,7 +50,7 @@ export function sampleMinimapTerrain(g:TerrainSource,nowMilliseconds:number,reso
   const left=heights[z*resolution+Math.max(0,x-1)],right=heights[z*resolution+Math.min(resolution-1,x+1)],up=heights[Math.max(0,z-1)*resolution+x],down=heights[Math.min(resolution-1,z+1)*resolution+x];
   writeTerrainColor(colors,i*3,heights[i],water[i],biome,((left-right)*.5+(down-up)*.35)/(size/resolution)*.18);
  }
- const data={size,resolution,heights,water,colors,sampledAtMilliseconds:nowMilliseconds};terrainCaches.set(g,{world:g.world,revision,heightSource:g.world.heights,waterY:g.world.waterY,validatedAtMilliseconds:nowMilliseconds,staticSource:canonical?captureMinimapSource(g):null,data});return data;
+ const data={size,resolution,heights,water,colors,sampledAtMilliseconds:nowMilliseconds};terrainCaches.set(g,{world:g.world,banks:g.world.bankTerrain,revision,heightSource:g.world.heights,waterY:g.world.waterY,validatedAtMilliseconds:nowMilliseconds,staticSource:canonical?captureMinimapSource(g):null,data});return data;
 }
 /** Fill a reused canvas buffer without making coordinate/color arrays per pixel. */
 export function paintMinimapFog(g:Pick<Game,'exploredAt'|'visibleAt'>,terrain:MinimapTerrain,pixels:Uint8ClampedArray){
