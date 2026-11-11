@@ -1,3 +1,4 @@
+import {foodDemand,reserveSeconds} from '../src/game/settlement.ts';
 import test from 'node:test';import assert from 'node:assert/strict';import {Game} from '../src/game/sim.ts';import {BUILDINGS} from '../src/game/constants.ts';import {beginProduction,productionIssue,productionSlots,PRODUCTION_RECIPES,resumeProduction,pauseProductionProject,tickProduction} from '../src/game/production.ts';import {foodInventory,consumeAndSpoilFood,FOOD_NOURISHMENT,EMERGENCY_RATIONS} from '../src/game/pantry.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';import {craftingBenches,craftingEffort,craftingWorkplaceRate} from '../src/game/crafting.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.waterHeights=undefined;for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}
 function fixture(){const g=new Game();g.reset(42,10);g.enterIsland();g.state.autoWorkEnabled=false;g.state.units=g.state.units.filter(u=>u.team===0);g.state.buildings=[];g.state.campSites=[{team:0,x:0,z:30}];g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.conflict='quiet';g.state.visitorTimer=900;g.state.encounter=undefined;g.state.contacts=[];for(const k of ['trees','forage','stones','copper','iron','fish','wildlife'])g.state[k]=[];for(const t of g.state.tribes)t.thinkT=10000;for(const[i,u]of g.state.units.entries())Object.assign(u,{x:i*.4,z:30,order:'hold',jobLock:true});const neighbor=g.spawnUnit('worker',100,100,1);neighbor.order='hold';neighbor.jobLock=true;g.state.buildings.push(g.makeBld('townhall',100,100,1));Object.assign(g.tribe(0),{food:120,foodLots:{grain:16,provisions:104},wood:60,stone:24,items:{}});g.tribe(0).survival.waterLiters=24;const hearth=g.makeBld('hearth',12,30,0);g.spend(0,{wood:BUILDINGS.hearth.wood,stone:BUILDINGS.hearth.stone});g.state.buildings.push(hearth);ground(g);return{g,hearth};}
@@ -72,3 +73,16 @@ test('bread provides normal nourishment while raw grain is reserved for emergenc
  assert.ok(foodInventory(g.tribe(0)).grain>9.99,'ordinary meals leave raw grain for processing apart from spoilage');
 });
 test('paused paid grain and flour batches age and expire without refund, output or a second debit',()=>{for(const[recipe,life]of [['grindGrain',7200],['bakeBread',3600]]){const{g,hearth}=fixture();if(recipe==='bakeBread')g.tribe(0).items={flour:4};assert.equal(beginProduction(g,recipe,hearth.id),true);const p=g.state.production.projects[0];assert.equal(pauseProductionProject(g,p.id),true);const food=g.tribe(0).food,wood=g.tribe(0).wood;g.state.time=life+1;tickProduction(g,0);assert.equal(p.phase,'lost');assert.match(p.blockedReason,/spoiled/);assert.equal(g.tribe(0).food,food);assert.equal(g.tribe(0).wood,wood);assert.equal(g.state.production.metrics.edibleFoodProduced,0);assert.equal(g.tribe(0).items.flour||0,0);if(recipe==='grindGrain')assert.equal(g.state.production.metrics.grainLost,4);else assert.equal(g.state.production.metrics.lost.flour,4);}});
+
+test('reserve forecasts use actual nourishment and keep emergency raw stocks out of ordinary meals',()=>{
+ const {g}=fixture(),tribe=g.tribe(0),rate=Math.max(0.055,foodDemand(g));
+ Object.assign(tribe,{food:45,foodLots:{bread:10,grain:20,fish:10,berries:5}});
+ assert.equal(reserveSeconds(g),17/rate);
+ assert.equal(tribe.food,45);
+ assert.deepEqual(tribe.foodLots,{bread:10,grain:20,fish:10,berries:5});
+ tribe.foodLots=undefined;
+ assert.equal(reserveSeconds(g),45/rate,'legacy stocks are provisions');
+ const rival=g.tribe(1);
+ Object.assign(rival,{food:30,foodLots:{bread:10,grain:20}});
+ assert.equal(reserveSeconds(g,1),32/Math.max(0.055,foodDemand(g,1)));
+});

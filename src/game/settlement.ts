@@ -23,7 +23,7 @@ import {bridgeApproach} from './transport';
 import {quarryAvailable} from "./mining";
 import {fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
-import { foodInventory, preservationAvailable } from "./pantry";
+import { readyNourishment, preservationAvailable } from "./pantry";
 import {fieldTerrain} from "./fieldTerrain";
 import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
@@ -59,10 +59,7 @@ export function foodWorkTarget(g:Game,team=0){
   return team===0 ? Infinity : g.stockCap(team);
 }
 export function reserveSeconds(g: Game, team = 0) {
-  const tribe=g.tribe(team);
-  const lots=team===0&&(tribe.foodLots?.fish||tribe.foodLots?.grain)?foodInventory(tribe):null;
-  const ready=lots?Math.max(0,tribe.food-lots.fish-lots.grain):tribe.food;
-  return ready / Math.max(0.055, foodDemand(g, team));
+  return readyNourishment(g.tribe(team), team) / Math.max(0.055, foodDemand(g, team));
 }
 /** Shared by real ripening and read-only production forecasts. */
 export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b.crop?.water??1){

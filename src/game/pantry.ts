@@ -43,6 +43,15 @@ export function foodInventory(t:Tribe) {
   else lots.provisions+=Math.max(0,t.food-total);
   return lots;
 }
+const playerReadyKinds = FOOD_KINDS.filter(kind => kind !== 'grain' && kind !== 'fish');
+function nourishmentOf(lots: Record<FoodKind,number>, kinds: readonly FoodKind[]) {
+  return kinds.reduce((total, kind) => total + lots[kind] * (FOOD_NOURISHMENT[kind] ?? 1), 0);
+}
+export function readyNourishment(tribe: Tribe, team: number) {
+  const lots = tribe.foodLots;
+  if (!lots?.bread && (team !== 0 || (!lots?.fish && !lots?.grain))) return tribe.food;
+  return nourishmentOf(foodInventory(tribe), team === 0 ? playerReadyKinds : FOOD_KINDS);
+}
 /** Remove one identified edible lot and the legacy food facade together, once. */
 export function takeFoodLot(g:Game,team:number,kind:FoodKind,amount:number){
  if(!Number.isFinite(amount)||amount<0)return false;const t=g.tribe(team),lots=foodInventory(t);if(lots[kind]+1e-9<amount)return false;
@@ -75,10 +84,10 @@ export const EMERGENCY_RATIONS = {nourishment: 0.1, illnessPerRawUnit: 0.025, il
 export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) {
   const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true),before=t.food;
   const rawRules=team===0;
-  const normalKinds=rawRules?FOOD_KINDS.filter(k=>k!=='fish'&&k!=='grain'):FOOD_KINDS;
+  const normalKinds=rawRules?playerReadyKinds:FOOD_KINDS;
   for(const k of FOOD_KINDS)lots[k]*=Math.max(0,1-rates[k]*dt);
   const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);
-  const nourishment=normalKinds.reduce((n,k)=>n+lots[k]*(FOOD_NOURISHMENT[k]||1),0);
+  const nourishment=nourishmentOf(lots,normalKinds);
   const required=demand*dt,share=Math.max(0,1-required/Math.max(.0001,nourishment));
   for(const k of normalKinds)lots[k]*=share;
   let deficit=Math.max(0,required-nourishment),risky=0,emergencyUnits=0;

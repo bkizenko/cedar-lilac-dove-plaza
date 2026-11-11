@@ -133,7 +133,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
             <button className="min-h-11" onClick={()=>{seekCropSamples(g);engine.pushHud();}}>Find and gather crop seeds</button>
           )}
           <p>Forage and hunt while fields grow. Sow in spring, tend in summer, then carry the autumn harvest home.</p>
-          <p>{Math.round(reserveSeconds(g) / 60)} minutes of food before spoilage</p>
+          <p>{Math.round(reserveSeconds(g) / 60)} minutes of ready food at current demand, excluding spoilage</p>
           <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
           <p>Food work continues when stores fill; extra supplies are kept outdoors.</p>
           {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 200 more food</button>}
