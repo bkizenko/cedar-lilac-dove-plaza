@@ -5,3 +5,30 @@ test('reset clears all diagnostic samples, scheduling and the prior frame bounda
 test('measurement history stays bounded and p95 retains real periodic costs',()=>{let now=0;const p=new RuntimeProfile(()=>now);p.frame(0);for(let i=1;i<=1000;i++){p.frame(i*16);p.measure('draw',()=>{now+=i%20===0?90:2;});}const r=p.report();assert.equal(r.frames.samples,RUNTIME_PROFILE_RULES.maximumFrames);assert.equal(r.stages.draw.samples,RUNTIME_PROFILE_RULES.maximumStageSamples);assert.equal(r.stages.draw.p95Ms,2);assert.equal(r.stages.draw.maxMs,90);assert.equal(r.frames.fps,62.5);});
 test('reading reports is detached and invalid timestamps never poison later raw FPS',()=>{const p=new RuntimeProfile(()=>0);p.frame(100);p.frame(Number.NaN);p.frame(Infinity);p.frame(120);const r=p.report();assert.equal(r.frames.meanMs,20);r.scheduling.frames=900;r.frames.meanMs=900;assert.equal(p.report().scheduling.frames,0);assert.equal(p.report().frames.meanMs,20);assert.equal(p.frameRate(),50);});
 test('an operation that throws is measured and resetting does not suppress subsequent measurements',()=>{let now=0;const p=new RuntimeProfile(()=>now);assert.throws(()=>p.measure('save',()=>{now=120;throw Error('original');}),/original/);assert.equal(p.report().stages.save.maxMs,120);p.reset();p.measure('map',()=>{now+=3;});assert.equal(p.report().stages.map.maxMs,3);assert.equal(p.report().stages.save,undefined);});
+
+
+test('async autosave work is correlated to adjacent raw animation callbacks, not capped deltas',()=>{
+ const p=new RuntimeProfile(()=>0);p.frame(100);
+ p.recordMainThreadWork({stage:'snapshot',startMilliseconds:110,endMilliseconds:125,durationMilliseconds:999});
+ p.recordMainThreadWork({stage:'clone',startMilliseconds:125,endMilliseconds:130,durationMilliseconds:5});
+ assert.equal(p.report().mainThreadWork[0].afterFrame,null);
+ p.frame(NaN);assert.equal(p.report().mainThreadWork[0].afterFrame,null);
+ p.frame(350);
+ const work=p.report().mainThreadWork;
+ assert.deepEqual(work.map(w=>[w.stage,w.durationMilliseconds,w.beforeFrame,w.afterFrame,w.frameGapMs]),[['snapshot',15,1,2,250],['clone',5,1,2,250]]);
+ p.frame(366);assert.equal(p.report().mainThreadWork[0].frameGapMs,250,'later frames do not relabel old work');
+ work[0].durationMilliseconds=0;assert.equal(p.report().mainThreadWork[0].durationMilliseconds,15,'report is detached');
+});
+test('async task retention is bounded, reset removes pending correlations and invalid intervals are rejected',()=>{
+ const p=new RuntimeProfile(()=>0);p.frame(0);
+ for(let i=0;i<1000;i++)p.recordMainThreadWork({stage:'commit',startMilliseconds:i,endMilliseconds:i+1,durationMilliseconds:1});
+ p.recordMainThreadWork({stage:'commit',startMilliseconds:NaN,endMilliseconds:1,durationMilliseconds:1});
+ p.recordMainThreadWork({stage:'commit',startMilliseconds:5,endMilliseconds:4,durationMilliseconds:1});
+ const r=p.report();assert.equal(r.mainThreadWork.length,RUNTIME_PROFILE_RULES.maximumStageSamples);assert.equal(r.mainThreadWork[0].startMilliseconds,760);
+ p.reset();p.frame(1000);assert.deepEqual(p.report().mainThreadWork,[]);
+ p.recordMainThreadWork({stage:'commit',startMilliseconds:1001,endMilliseconds:1002,durationMilliseconds:1});p.frame(1016);assert.equal(p.report().mainThreadWork[0].beforeFrame,1);assert.equal(p.report().mainThreadWork[0].frameGapMs,16);
+});
+test('a task before the first animation callback is retained without inventing a preceding frame gap',()=>{
+ const p=new RuntimeProfile(()=>0);p.recordMainThreadWork({stage:'sync-fallback',startMilliseconds:1,endMilliseconds:8,durationMilliseconds:7});p.frame(10);
+ assert.deepEqual(p.report().mainThreadWork[0],{stage:'sync-fallback',startMilliseconds:1,endMilliseconds:8,durationMilliseconds:7,beforeFrame:null,afterFrame:1,frameGapMs:null});
+});

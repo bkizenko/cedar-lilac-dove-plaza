@@ -113,7 +113,7 @@ export class Engine {
     this.game = new Game();
     this.view = new WorldView(canvas);
     this.audio = new GameAudio();
-    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed});
+    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.game.onSfx = (n) => this.audio.play(n);
