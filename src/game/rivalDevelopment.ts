@@ -261,7 +261,7 @@ export function developRivalEquipment(g:Game,team:number){
  if(!isRivalTeam(team)||reserveSeconds(g,team)<600)return false;
  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.militia&&!u.prisoner);
  if(adults.length<COASTAL_BOOTSTRAP_RULES.minimumWorkingAdults||adults.some(u=>u.weaponWork&&!u.weaponWork.paused||u.haulageWork&&!u.haulageWork.paused||u.farmToolWork&&!u.farmToolWork.paused||u.tamingWork&&!u.tamingWork.paused||u.husbandryWork&&!u.husbandryWork.paused))return false;
- const eligible=adults.filter(u=>!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
+ const eligible=adults.filter(u=>!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.seaExplorationId&&!u.boat&&!u.jobLock&&!u.plantingWork&&!u.copperStudy&&!u.buildOrder&&!u.tributeJourney&&!u.emergency&&!u.recalled&&!u.envoy&&!u.trade&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.studyCrop&&u.drill==null&&u.carry===0&&['idle','gather'].includes(u.order));
  // Resume paid projects before reserving any new materials.
  for(const u of eligible){
   if(u.weaponWork?.paused&&resumeWeaponWork(g,u))return true;
