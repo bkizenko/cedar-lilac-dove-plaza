@@ -98,11 +98,27 @@ test('hull loss in open water: bounded wait, survivors released with their packs
  assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
 });
 
+
+test('paid sail fitting excludes idle, ready and commissioning hull admission without extra payment',()=>{
+ for(const phase of ['idle','ready','commission']){
+  const {g,dock}=fixture({hull:true}),boat=g.state.boats[0];
+  // The admission boundary receives an already-paid rig task; no extra inputs
+  // or work progress are fabricated or executed by this selection regression.
+  g.state.haulageProjects=[{id:g.id(),team:1,actorId:null,work:{kind:'canoe',vessel:true,workplace:dock.id,paused:true,sailRigOrder:{boatId:boat.id}},blockedReason:'Awaiting existing rig maker'}];
+  if(phase!=='idle')g.state.seaExploration.voyages.push({id:g.id(),team:1,phase,boatId:boat.id,dockId:dock.id,crew:[],home:[],left:[],reason:'',metrics:{hullPayments:0}});
+  const stocks=JSON.stringify({wood:g.tribe(1).wood,stone:g.tribe(1).stone,items:g.tribe(1).items}),projects=JSON.stringify(g.state.haulageProjects),units=JSON.stringify(g.state.units);
+  reviewSeaExploration(g);
+  assert.equal(JSON.stringify({wood:g.tribe(1).wood,stone:g.tribe(1).stone,items:g.tribe(1).items}),stocks,phase+' no extra hull or rig payment');
+  assert.equal(JSON.stringify(g.state.haulageProjects),projects,phase+' cannot resume rig as hull construction');assert.equal(JSON.stringify(g.state.units),units,phase+' no crew commandeered');
+  assert.ok(!g.state.seaExploration.voyages.some(v=>v.phase==='mustering'),phase+' rig hull not admitted');
+  assert.equal(g.state.seaExploration.teams.find(t=>t.team===1).reasons['hull-pending'],1);
+ }
+});
+
 // ---- Codex review round 1: admission against paid hull work, plus capture/recall/interruption.
 import {beginBoatService,recallRiverboat} from '../src/game/boats.ts';
 import {beginSailRig,sailRigProject} from '../src/game/boatSailing.ts';
 import {boatServiceProject} from '../src/game/boatClasses.ts';
-function packFood(g,v){return [...v.crew].map(id=>g.state.units.find(u=>u.id===id)).filter(Boolean).reduce((n,u)=>n+(u.scoutProvisions?.food||0),0);}
 function startPaidService(g,dock,exclude=[]){const b=g.state.boats[0];b.hullClass='freightPunt';b.hp=Math.max(1,b.hp*.4);Object.assign(g.tribe(1),{wood:200,items:{...(g.tribe(1).items||{}),cordage:20,cloth:20}});const maker=g.state.units.find(u=>u.team===1&&u.type==='worker'&&!u.haulage&&!exclude.includes(u.id));assert.equal(beginBoatService(g,b.id,dock.id,1,maker.id),true,g.state.banner);assert.ok(boatServiceProject(g,b.id));return maker;}
 function startPaidRig(g,dock){const b=g.state.boats[0];b.hullClass='freightPunt';const t=g.tribe(1);Object.assign(t,{wood:200,items:{...(t.items||{}),cordage:20,cloth:20},boatPractice:{...(t.boatPractice||{}),waterMeters:1e5,deliveredGoods:1e3}});const maker=g.state.units.find(u=>u.team===1&&u.type==='worker'&&!u.haulage);const ok=beginSailRig(g,b.id,dock.id,1,maker.id);return {ok,maker};}
 
@@ -117,7 +133,7 @@ test('idle-hull admission rejects a hull under paid service OR paid sail fitting
  }
 });
 
-test('a ready voyage is not mustered once paid service or a sail fitting takes the hull; it goes back to its failed state without pack loads',()=>{
+test('a ready voyage is not mustered once paid service or a sail fitting takes the hull; it waits ready without pack loads',()=>{
  for(const kind of ['service','rig']){
   const {g,dock}=fixture({hull:true});reviewSeaExploration(g);let v=voyage(g);assert.equal(v.phase,'mustering');
   // Return to 'ready': cancel before anyone loads, then mark ready as a commissioned hull would be.
@@ -125,14 +141,22 @@ test('a ready voyage is not mustered once paid service or a sail fitting takes t
   v.phase='ready';v.failure=undefined;v.crew=[];v.home=[];v.left=[];for(const u of g.state.units)u.seaExplorationId=undefined;
   if(kind==='service')startPaidService(g,dock);else assert.ok(startPaidRig(g,dock).ok);
   g.state.seaExploration.teams.find(t=>t.team===1).nextReviewAt=0;reviewSeaExploration(g);
-  assert.notEqual(v.phase,'mustering',`${kind}: ready voyage must not muster onto a hull held by paid work`);assert.ok(g.state.units.every(u=>!u.scoutProvisions));
+  assert.equal(v.phase,'ready',`${kind}: ready voyage waits for existing paid work`);assert.ok(g.state.units.every(u=>!u.scoutProvisions));
  }
 });
 
-test('mustering stops and returns packs when paid hull service begins mid-muster (no pointless boarding timeout)',()=>{
- const {g,dock}=fixture({hull:true});const food=g.tribe(1).food;reviewSeaExploration(g);const v=voyage(g);drive(g,40,()=>activeCrew(g,v).some(u=>u.scoutProvisions));
- const loaded=packFood(g,v);startPaidService(g,dock,v.crew);
- drive(g,300,()=>['failed','complete','lost'].includes(v.phase));assert.equal(v.failure,'hull-reassigned',JSON.stringify(v));assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));void food;void loaded;
+test('reserved mustering hull rejects new service; pre-existing paid work defensively returns loaded packs',()=>{
+ const {g,dock}=fixture({hull:true});reviewSeaExploration(g);const v=voyage(g);drive(g,40,()=>activeCrew(g,v).some(u=>u.scoutProvisions));
+ const b=g.state.boats[0];b.hullClass='freightPunt';b.hp=Math.max(1,b.hp*.4);
+ const maker=g.state.units.find(u=>u.team===1&&!u.haulage&&!v.crew.includes(u.id));
+ const stock=JSON.stringify(g.tribe(1)),projects=JSON.stringify(g.state.haulageProjects);
+ assert.equal(beginBoatService(g,b.id,dock.id,1,maker.id),false,'reservation blocks new paid work');
+ assert.equal(JSON.stringify(g.tribe(1)),stock,'rejected service charges nothing');assert.equal(JSON.stringify(g.state.haulageProjects),projects);
+ // Defensive reconciliation fixture only: a legacy/racing already-paid work
+ // record, not permission for beginBoatService to bypass the reservation.
+ const donor=fixture({hull:true});startPaidService(donor.g,donor.dock);const existing=structuredClone(boatServiceProject(donor.g,donor.g.state.boats[0].id));
+ existing.id=g.id();existing.actorId=null;existing.work.paused=true;existing.work.workplace=dock.id;existing.work.hullOrder.boatId=b.id;g.state.haulageProjects=[existing];
+ drive(g,300,()=>['failed','complete','lost'].includes(v.phase));assert.equal(v.failure,'hull-reassigned',JSON.stringify(v));assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));
 });
 
 test('a crew member captured mid-voyage: leaves the voyage, pack follows the existing captivity rule, rest of the crew finishes with exact ledgers',()=>{
