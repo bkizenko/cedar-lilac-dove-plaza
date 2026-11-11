@@ -12,7 +12,7 @@ import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficu
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
-import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
+import{isCerealPickup,reviewAutomaticFoodProcessing}from'./cerealProcessing';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
@@ -4534,7 +4534,7 @@ export class Game {
       const dx=Math.abs(u.x-drop.x)-((drop.kind==='camp'?0:drop.w*.4)+u.r),dz=Math.abs(u.z-drop.z)-((drop.kind==='camp'?0:drop.d*.4)+u.r);
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
-      const reviewFood=(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||['grain','fish'].includes(u.carryFood||'')||(!u.carry&&!u.itemCargo));
+      const reviewFood=isCerealPickup(u)||(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||['grain','fish'].includes(u.carryFood||'')||(!u.carry&&!u.itemCargo));
       if(!deliverProductionCargo(this,u))return;
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);

@@ -329,6 +329,43 @@ test('a village with Auto work off cooks clean grain at a hearth before it has a
  assert.ok(decodeGame(encodeGame(g)).tribe(0).foodLots.porridge>0);
 });
 
+test('wet weather holds winnowing while workers can still thresh delivered sheaves',()=>{
+ const {g}=fixture(),tribe=g.tribe(0),floor=g.makeBld('threshingFloor',14,42,0);
+ g.state.buildings.push(floor);
+ ground(g);
+ g.state.weather='rain';
+ tribe.items={grainSheaves:8,roughGrain:6};
+ assert.equal(reviewCerealProcessing(g,0),true);
+ const project=g.state.production.projects.at(-1);
+ assert.equal(project.recipe,'threshCerealFloor');
+ assert.equal(tribe.items.roughGrain,6,'the wet batch stays available');
+ drive(g,80,()=>project.phase==='complete');
+ assert.equal(project.phase,'complete');
+ assert.equal(tribe.items.roughGrain,12);
+});
+
+test('an off-site grain worker loads a real batch after arriving, including across a save',()=>{
+ let {g,u,v}=fixture();
+ const floor=g.makeBld('threshingFloor',14,42,0);
+ g.state.buildings.push(floor);
+ ground(g);
+ Object.assign(u,{x:24,z:36});
+ Object.assign(v,{x:26,z:36});
+ g.tribe(0).items={grainSheaves:8};
+ assert.equal(reviewCerealProcessing(g,0),true);
+ assert.equal(u.order,'return');
+ assert.equal(u.recalled,undefined);
+ assert.equal(g.state.production?.projects.length??0,0,'no charge before pickup');
+ g=decodeGame(encodeGame(g));ground(g);
+ assert.equal(reviewCerealProcessing(g,0),false,'the saved pickup already has a worker');
+ assert.notEqual(g.state.units.find(worker=>worker.id===v.id).order,'return');
+ drive(g,120,()=>g.state.production?.projects.some(p=>p.recipe==='winnowCerealFloor'&&p.phase==='complete'));
+ const projects=g.state.production?.projects??[];
+ assert.equal(projects.filter(p=>p.recipe==='threshCerealFloor'&&p.phase==='complete').length,1);
+ assert.equal(projects.filter(p=>p.recipe==='winnowCerealFloor'&&p.phase==='complete').length,1);
+ assert.ok(g.tribe(0).foodLots.grain>0);
+});
+
 test('an unrelated returning carrier cannot block dispatch to bake existing flour',()=>{
  const {g,u,v}=fixture(),tribe=g.tribe(0),oven=g.makeBld('oven',12,44,0);
  g.state.buildings.push(oven);

@@ -8,6 +8,24 @@ import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildi
 const reviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,number>}>();
 function free(g:Game,u:Unit,projectId?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&(!u.jobLock||projectId!==undefined&&u.productionProjectId===projectId)&&!u.buildOrder&&!u.recalled&&!u.emergency&&!u.resting&&!u.shelterId&&!u.expedition&&!u.envoy&&!u.visit&&!u.scout&&!u.foundingJourney&&!u.tributeJourney&&!u.trade&&u.drill==null&&!hasTaskCommitment(u,projectId!==undefined&&u.productionProjectId===projectId?'productionProjectId':undefined)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&['idle','hold','gather'].includes(u.order);}
 const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);});
+const cerealPickupReason='Returning to load the actual unprocessed cereal batch';
+const mealPickupReason='Returning to collect food processing inputs';
+export const isCerealPickup=(u:Unit)=>u.order==='return'&&u.workReason===cerealPickupReason;
+function activePickup(g:Game,team:number,reason:string){
+ return g.state.units.some(u=>u.team===team&&u.hp>0&&u.order==='return'&&u.workReason===reason&&
+  !u.carry&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&u.stuckT<=CEREAL_RULES.reviewSeconds);
+}
+function sendForInputs(g:Game,u:Unit,reason:string){
+ g.interruptMission(u);
+ u.order='return';
+ u.node=null;
+ u.target=null;
+ u.job=null;
+ u.workReason=reason;
+ g.invalidateRoute(u);
+ g.workBoard.reset();
+ return true;
+}
 /** One real processing dispatch per society review. Direct locks and paused
  * player batches are preserved; a material total is never credited as food. */
 export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
@@ -22,7 +40,8 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
   Math.ceil(g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!isDependent(g,u)&&!u.prisoner).length/5))):CEREAL_RULES.maximumAutomaticWorkers;
  if(active>=limit)return false;
  const rough=(t.items?.roughGrain||0)>=CEREAL_RULES.roughBatch,raw=(t.items?.grainSheaves||0)>=CEREAL_RULES.rawBatch;
- if(!rough&&!raw)return false;
+ const winnow=rough&&!cerealWeatherIssue(g,'winnowCerealFloor');
+ if(!winnow&&!raw)return false;
  // Perishable actual meat is a faster immediate meal; leave its real hearth
  // and workers to the existing kitchen plan before processing stored crops.
  if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
@@ -35,13 +54,21 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
   if(!site){const cost=buildingCost('hearth',g,team);if(!g.canAfford(team,cost))return false;const home=g.campOf(team),point=g.findOpenSpot(home.x,home.z,'hearth',team);if(!point||!rivalKnows(g,team,point.x,point.z))return false;if(!g.placeBuilding('hearth',point.x,point.z,team))return false;site=g.state.buildings.find(b=>b.team===team&&b.type==='hearth'&&b.x===point.x&&b.z===point.z&&!g.finished(b));if(!site)return false;}
   if(!g.interactionSpot(builder,site))return false;g.interruptMission(builder);builder.order='build';builder.node=site;builder.job=null;builder.jobLock=false;builder.target=null;builder.workReason='Building a real hearth to hand-process the cereal harvest';g.invalidateRoute(builder);g.workBoard.reset();return true;
  }
- const maker=workers.find(u=>atCache(g,u));
- if(maker){for(const b of finished){
-  if(b.type==='threshingFloor'){if(startFloorCereal(g,b,maker,rough))return true;continue;}
-  const recipe=rough?'winnowCerealHand':'threshCerealHand';
-  if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);
- }return false;}
- const carrier=workers.find(u=>supplyDrops(g,team).some(d=>supplyApproach(g,u,d)));if(!carrier)return false;g.interruptMission(carrier);carrier.recalled=true;carrier.order='return';carrier.node=null;carrier.target=null;carrier.job=null;carrier.workReason='Returning to load the actual unprocessed cereal batch';g.invalidateRoute(carrier);g.workBoard.reset();return true;
+ const recipe=winnow?'winnowCerealHand':'threshCerealHand';
+ const eligible=finished.filter(b=>occupiedProductionSlots(g,b)<productionSlots(b));
+ if(!eligible.length)return false;
+ for(const maker of workers){
+  if(!atCache(g,maker))continue;
+  for(const b of eligible){
+   if(b.type==='threshingFloor'){if(startFloorCereal(g,b,maker,winnow))return true;continue;}
+   if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);
+  }
+ }
+ if(eventActorId!==undefined||activePickup(g,team,cerealPickupReason))return false;
+ const drops=supplyDrops(g,team);
+ const carrier=workers.find(u=>u.order!=='gather'&&!atCache(g,u)&&
+  drops.some(d=>supplyApproach(g,u,d))&&eligible.some(b=>g.interactionSpot(u,b)));
+ return !!carrier&&sendForInputs(g,carrier,cerealPickupReason);
 }
 
 /** One stable instruction for the most urgent processing backlog. The alert
@@ -90,8 +117,6 @@ export function harvestBacklogAlert(g:Game){
 }
 
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
-const mealPickup = new WeakMap<Game['state'], Unit>();
-const mealPickupReason = 'Returning to collect food processing inputs';
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
 const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
 const breadRecipes: ProductionRecipe[] = ['bakeBreadDouble','bakeBreadOven', 'bakeBread'];
@@ -187,22 +212,10 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  }
  // Only an active food pickup reserves this dispatch. Other deliveries
  // can stall independently and may be on another landmass.
- const pickup = mealPickup.get(g.state);
- if (eventActorId !== undefined || (pickup && pickup.hp > 0 && pickup.order === 'return' &&
-  pickup.workReason === mealPickupReason &&
-  pickup.stuckT <= CEREAL_RULES.reviewSeconds)) return false;
+ if (eventActorId !== undefined || activePickup(g,0,mealPickupReason)) return false;
+ const drops = supplyDrops(g,0);
  const carrier = workers.find(u => u.order !== 'gather' && !atCache(g, u) &&
-  supplyDrops(g, 0).some(drop => !!supplyApproach(g, u, drop)) &&
+  drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
- if (!carrier) return false;
- g.interruptMission(carrier);
- carrier.order = 'return';
- carrier.node = null;
- carrier.target = null;
- carrier.job = null;
- carrier.workReason = mealPickupReason;
- mealPickup.set(g.state, carrier);
- g.invalidateRoute(carrier);
- g.workBoard.reset();
- return true;
+ return !!carrier && sendForInputs(g,carrier,mealPickupReason);
 }
