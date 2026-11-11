@@ -4124,9 +4124,12 @@ export class Game {
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
         const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||!!u.coastalVoyageId||u.order==="trade";
+        const productionJourney=u.productionProjectId!==undefined&&this.state.production?.projects.some(p=>
+          p.id===u.productionProjectId&&p.actorId===u.id&&p.team===u.team&&
+          ['collecting','carrying','returning','unloading'].includes(p.phase));
         const intentionalGroundRoute=u.haulage!=="canoe"&&u.boat?.phase!=="aboard"&&(
           u.team===0&&(u.order==="move"&&u.stationOnArrival===true||u.order==="attackmove"&&!!u.attackDestination)||
-          (u.order==="build"||u.order==="gather")&&!!u.node);
+          (u.order==="build"||u.order==="gather")&&!!u.node||productionJourney);
         if(!path && (longJourney||intentionalGroundRoute) && connectedForUnit(this,u,
           -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell)){
           // A nearby destination can require a long, real river/cliff detour.
@@ -4218,6 +4221,13 @@ export class Game {
   separate(dt: number) {
     // Query nearby buckets instead of comparing every pair across the island.
     const us = this.state.units;
+    // Paid carriers retain a hold order so the ordinary work board cannot
+    // steal them. They still yield while travelling; actual makers stay put.
+    const productionTravel=new Map((this.state.production?.projects||[])
+      .filter(p=>p.actorId!==null&&['collecting','carrying','returning','unloading'].includes(p.phase))
+      .map(p=>[p.actorId!,p]));
+    const canYield=(u:Unit)=>u.order!=="hold"||
+      productionTravel.get(u.id)?.id===u.productionProjectId&&productionTravel.get(u.id)?.team===u.team;
     const cell = Math.max(2, ...us.map((u) => u.r * 2));
     const buckets = new Map<string, number[]>();
     for (let i = 0; i < us.length; i++) {
@@ -4248,12 +4258,12 @@ export class Game {
             const nx = d > 0.0001 ? dx / d : 1;
             const nz = d > 0.0001 ? dz / d : 0;
             const push = (min - d) * 0.5 * Math.min(1, dt * 8);
-            if (a.order !== "hold" && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
+            if (canYield(a) && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
               a.x += nx * push;
               a.z += nz * push;
               a.y = canoeHeight(this,a,a.x,a.z);
             }
-            if (b.order !== "hold" && this.canStep(b, b.x - nx * push, b.z - nz * push)) {
+            if (canYield(b) && this.canStep(b, b.x - nx * push, b.z - nz * push)) {
               b.x -= nx * push;
               b.z -= nz * push;
               b.y = canoeHeight(this,b,b.x,b.z);
