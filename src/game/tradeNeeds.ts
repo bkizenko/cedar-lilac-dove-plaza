@@ -22,22 +22,26 @@ import {villagePersonality} from './villagePersonality';
  * meet at the partner's real hall, are paid from the partner's escrow and carry the payment home.
  * Receipts record load / payment / delivery / loss. Declined offers cool down and change.
  */
-export type GoodCategory='resource'|'weapon'|'armor'|'tool'|'artifact'|'animal';
-export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'goat';
+export type GoodCategory='resource'|'weapon'|'armor'|'tool'|'artifact'|'clothing'|'animal';
+export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'leather'|'skinClothes'|'hideCoat'|'woolCloth'|'woolCoat'|'goat';
 type Good={cat:GoodCategory;worth:number;lot:number;maxLot:number;perCarrier:number};
 export const TRADE_GOODS:Record<GoodKind,Good>={
  food:{cat:'resource',worth:TRADE_PRICING.worth.food,lot:8,maxLot:36,perCarrier:0},wood:{cat:'resource',worth:TRADE_PRICING.worth.wood,lot:8,maxLot:36,perCarrier:0},stone:{cat:'resource',worth:TRADE_PRICING.worth.stone,lot:8,maxLot:36,perCarrier:0},
  copper:{cat:'resource',worth:TRADE_PRICING.worth.copper,lot:2,maxLot:24,perCarrier:0},iron:{cat:'resource',worth:TRADE_PRICING.worth.iron,lot:2,maxLot:24,perCarrier:0},
  spears:{cat:'weapon',worth:3,lot:2,maxLot:8,perCarrier:8},bows:{cat:'weapon',worth:4,lot:2,maxLot:6,perCarrier:6},blades:{cat:'weapon',worth:7,lot:1,maxLot:4,perCarrier:4},
  paddedArmor:{cat:'armor',worth:5,lot:1,maxLot:4,perCarrier:4},cordage:{cat:'tool',worth:1.5,lot:4,maxLot:16,perCarrier:16},basket:{cat:'tool',worth:1.5,lot:2,maxLot:8,perCarrier:8},
- pottery:{cat:'artifact',worth:2.5,lot:2,maxLot:8,perCarrier:8},cloth:{cat:'artifact',worth:3,lot:2,maxLot:8,perCarrier:8},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
+ pottery:{cat:'artifact',worth:2.5,lot:2,maxLot:8,perCarrier:8},cloth:{cat:'artifact',worth:3,lot:2,maxLot:8,perCarrier:8},
+ leather:{cat:'tool',worth:3,lot:2,maxLot:8,perCarrier:8},skinClothes:{cat:'clothing',worth:4,lot:1,maxLot:6,perCarrier:6},hideCoat:{cat:'clothing',worth:6,lot:1,maxLot:4,perCarrier:4},woolCloth:{cat:'artifact',worth:4,lot:2,maxLot:8,perCarrier:8},woolCoat:{cat:'clothing',worth:7,lot:1,maxLot:4,perCarrier:4},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
 };
 export const TRADE_KINDS=Object.keys(TRADE_GOODS) as GoodKind[];
+/** Bulk goods with an existing body holder: the carrier's own itemCargo (the same holder production uses). */
+export const TRADE_BULK_ITEMS:GoodKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
 /** Goods that currently have a physical holder for the whole journey (carried resource loads, dropped as
- * parcels on death). Tools/weapons/armor/artifacts/animals stay in saves and observations but are not
- * offered until item/gear/animal holders exist (Codex review trade-cargo-5d9051c, P1). */
-export const TRADE_SELECTABLE_KINDS=TRADE_KINDS.filter(k=>TRADE_GOODS[k].cat==='resource');
-const WEAPONS=['spears','bows','blades'],ITEMS=['paddedArmor','cordage','basket','pottery','cloth'];
+ * parcels on death) and bulk items carried in the body's itemCargo (dropped as item parcels on death).
+ * Armor assets, weapons, farm tools and animals stay in saves/observations but are not offered until
+ * Codex-owned holder adapters exist (board request; review trade-cargo-5d9051c P1). */
+export const TRADE_SELECTABLE_KINDS=TRADE_KINDS.filter(k=>TRADE_GOODS[k].cat==='resource'||TRADE_BULK_ITEMS.includes(k));
+const WEAPONS=['spears','bows','blades'],ITEMS=['paddedArmor','cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
 export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumObservations:64,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
 
 export type TradeOfferPhase='proposed'|'loading'|'outbound'|'returning'|'aborting'|'complete'|'declined'|'failed';
@@ -111,7 +115,7 @@ export function observedRisk(g:Game,from:number,to:number,hall:{x:number;z:numbe
 export function escortsForRisk(risk:number){return risk<.4?0:risk<.6?1:risk<.8?2:3;}
 
 // ---- Proposal.
-const free=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>=u.maxHp*.6&&!u.prisoner&&!isDependent(g,u)&&u.carry===0&&!hasTaskCommitment(u)&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&u.tradeNeedsId===undefined&&['idle','gather','hold'].includes(u.order);
+const free=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>=u.maxHp*.6&&!u.prisoner&&!isDependent(g,u)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&u.tradeNeedsId===undefined&&['idle','gather','hold'].includes(u.order);
 function capacity(u:Unit,k:GoodKind){const good=TRADE_GOODS[k];return good.cat==='resource'?Math.floor(carryingCapacity(u,k as ResKind)):good.perCarrier*(u.haulage==='pack'?2:1);}
 function cooling(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get&&c.until>g.state.time);}
 function declineRow(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get);}
@@ -195,7 +199,7 @@ function commitPlan(g:Game,o:TradeOffer):CommitPlan{
 /** Dry run for UI: the exact reason the accept path would decline this offer now, or '' if it would launch.
  * Shares qualifies()/commitPlan() with answerTradeOffer, so the dialog never duplicates the checks. */
 export function tradeAnswerBlocker(g:Game,offer:TradeOffer|number):string{
- const o=typeof offer==='number'?g.state.tradeNeeds?.offers.find(x=>x.id===offer):g.state.tradeNeeds?.offers.find(x=>x.id===offer.id)??offer;
+ const id=typeof offer==='number'?offer:offer.id,o=g.state.tradeNeeds?.offers.find(x=>x.id===id);// never a detached caller object
  if(!o||o.phase!=='proposed')return'not-open';
  return qualifies(g,o)||commitPlan(g,o).blocker;}
 function commit(g:Game,o:TradeOffer){
@@ -221,7 +225,8 @@ function evaluate(g:Game,o:TradeOffer){if(o.to===0){if(g.state.time>=o.answerAt+
 const unitOf=(g:Game,id:number)=>g.state.units.find(u=>u.id===id);
 const alive=(g:Game,o:TradeOffer,id:number)=>{const u=unitOf(g,id);return!!u&&u.hp>0&&u.team===o.from&&!u.prisoner&&u.tradeNeedsId===o.id;};
 function release(g:Game,u:Unit){u.tradeNeedsId=undefined;if(u.carry>0&&!u.carryType)u.carry=0;u.order=u.militia&&!u.caravanArmed?'hold':'idle';u.target=null;u.node=null;u.workReason='Home from trading';}
-function setCarry(u:Unit,lines:TradeLine[]){const l=lines.find(l=>l.unitId===u.id&&TRADE_GOODS[l.kind].cat==='resource');if(l){u.carry=l.amount;u.carryType=l.kind as ResKind;u.carryFood=l.kind==='food'?'provisions':undefined;}else{u.carry=0;u.carryType=null;u.carryFood=undefined;}}
+function setCarry(u:Unit,lines:TradeLine[]){const l=lines.find(l=>l.unitId===u.id&&TRADE_GOODS[l.kind].cat==='resource');if(l){u.carry=l.amount;u.carryType=l.kind as ResKind;u.carryFood=l.kind==='food'?'provisions':undefined;}else{u.carry=0;u.carryType=null;u.carryFood=undefined;}
+ const items=lines.filter(l=>l.unitId===u.id&&TRADE_BULK_ITEMS.includes(l.kind));if(items.length){const cargo:Partial<Record<ItemKind,number>>={};for(const x of items)cargo[x.kind as ItemKind]=(cargo[x.kind as ItemKind]||0)+x.amount;u.itemCargo=cargo;}else if(u.tradeNeedsId!==undefined)u.itemCargo=undefined;}
 function finishOffer(g:Game,o:TradeOffer,phase:'complete'|'failed',reason:string){o.phase=phase;o.reason=reason;for(const id of [...o.carriers,...o.escorts]){const u=unitOf(g,id);if(u&&u.tradeNeedsId===o.id)release(g,u);}o.carriers=[];o.escorts=[];o.ready=[];if(phase==='complete')row(g,o.from).completed++;else{row(g,o.from).failed++;note(g,o.from,'failed-'+reason);}}
 function refundEscrow(g:Game,o:TradeOffer,side:'give'|'get'){const s=o[side],team=side==='give'?o.from:o.to;if(s.amount>0)addStock(g,team,s.kind,s.amount,s.animals);if(s.amount>0)receipt(g,o,'refunded',team,s.kind,s.amount);s.amount=0;s.animals=undefined;}
 function abort(g:Game,o:TradeOffer,reason:string){
@@ -234,7 +239,7 @@ function unload(g:Game,o:TradeOffer,u:Unit){for(const l of o.lines.filter(l=>l.u
 function reconcile(g:Game,o:TradeOffer){
  const before=o.carriersLost;
  for(const id of [...o.carriers]){if(alive(g,o,id))continue;const u=unitOf(g,id);o.carriers=o.carriers.filter(x=>x!==id);o.carriersLost++;
-  for(const l of o.lines.filter(l=>l.unitId===id)){o.lostAmount+=l.amount;if(TRADE_GOODS[l.kind].cat==='resource')o.lostToParcel+=l.amount;receipt(g,o,'lost',o.from,l.kind,l.amount,id);}
+  for(const l of o.lines.filter(l=>l.unitId===id)){o.lostAmount+=l.amount;if(TRADE_GOODS[l.kind].cat==='resource'||TRADE_BULK_ITEMS.includes(l.kind))o.lostToParcel+=l.amount;receipt(g,o,'lost',o.from,l.kind,l.amount,id);}
   o.lines=o.lines.filter(l=>l.unitId!==id);o.ready=o.ready.filter(x=>x!==id);if(u&&u.tradeNeedsId===o.id){u.tradeNeedsId=undefined;}}
  for(const id of [...o.escorts]){if(alive(g,o,id))continue;o.escorts=o.escorts.filter(x=>x!==id);o.escortsLost++;const u=unitOf(g,id);if(u&&u.tradeNeedsId===o.id)u.tradeNeedsId=undefined;}
  const lost=o.carriersLost>before;if(lost&&!o.paid&&(o.phase==='loading'||o.phase==='outbound')&&o.carriers.length){abort(g,o,'carrier-lost');return;}
@@ -304,7 +309,7 @@ function atCacheNow(g:Game,u:Unit|undefined,team:number){if(!u)return false;for(
 export function pauseTradeNeeds(g:Game,u:Unit){
  const id=u.tradeNeedsId;if(id===undefined)return false;u.tradeNeedsId=undefined;
  const o=g.state.tradeNeeds?.offers.find(o=>o.id===id);if(!o)return true;
- for(const l of o.lines.filter(l=>l.unitId===u.id)){if(TRADE_GOODS[l.kind].cat==='resource'&&u.carryType===l.kind&&u.carry>=l.amount)receipt(g,o,'refunded',u.team,l.kind,l.amount,u.id);else{o.lostAmount+=l.amount;receipt(g,o,'lost',o.from,l.kind,l.amount,u.id);}}
+ for(const l of o.lines.filter(l=>l.unitId===u.id)){if(TRADE_GOODS[l.kind].cat==='resource'&&u.carryType===l.kind&&u.carry>=l.amount||TRADE_BULK_ITEMS.includes(l.kind)&&(u.itemCargo?.[l.kind as ItemKind]||0)>=l.amount)receipt(g,o,'refunded',u.team,l.kind,l.amount,u.id);else{o.lostAmount+=l.amount;receipt(g,o,'lost',o.from,l.kind,l.amount,u.id);}}
  o.lines=o.lines.filter(l=>l.unitId!==u.id);
  if(o.carriers.includes(u.id)){o.carriers=o.carriers.filter(x=>x!==u.id);o.carriersLost++;}
  o.escorts=o.escorts.filter(x=>x!==u.id);o.ready=o.ready.filter(x=>x!==u.id);note(g,o.from,'interrupted');
@@ -325,14 +330,14 @@ export function validTradeNeedsState(s:GameState){
  for(const o of t.offers){if(ids.has(o.id)||!Number.isInteger(o.id)||o.id<1||o.id>=s.nextId)return false;ids.add(o.id);
   if(Math.abs(o.hall?.x)>half||Math.abs(o.hall?.z)>half)return false;if(o.phase==='proposed'&&o.reserved)return false;
   const members=[...(o.carriers||[]),...(o.escorts||[])];if(new Set(members).size!==members.length||new Set(o.ready||[]).size!==(o.ready||[]).length||(o.ready||[]).some((id:number)=>!members.includes(id)))return false;
-  if(['outbound','returning','aborting'].includes(o.phase))for(const id of o.carriers||[]){const res=(o.lines||[]).filter((l:TradeLine)=>l.unitId===id&&TRADE_GOODS[l.kind]?.cat==='resource');if(!res.length)continue;const u=s.units.find(u=>u.id===id);if(!u||res.length>1||u.carryType!==res[0].kind||Math.abs(u.carry-res[0].amount)>1e-6)return false;}
+  if(['outbound','returning','aborting'].includes(o.phase))for(const id of o.carriers||[]){const res=(o.lines||[]).filter((l:TradeLine)=>l.unitId===id&&TRADE_GOODS[l.kind]?.cat==='resource');const its=(o.lines||[]).filter((l:TradeLine)=>l.unitId===id&&TRADE_BULK_ITEMS.includes(l.kind));const u=s.units.find(u=>u.id===id);for(const l of its){const want=its.filter((x:TradeLine)=>x.kind===l.kind).reduce((n:number,x:TradeLine)=>n+x.amount,0);if(!u||Math.abs(((u.itemCargo as Record<string,number>|undefined)?.[l.kind]||0)-want)>1e-6)return false;}if(!res.length)continue;if(!u||res.length>1||u.carryType!==res[0].kind||Math.abs(u.carry-res[0].amount)>1e-6)return false;}
   if(!phases.includes(o.phase)||!Number.isInteger(o.from)||!Number.isInteger(o.to)||o.from<0||o.from>=teams||o.to<0||o.to>=teams||o.from===o.to||!TRADE_GOODS[o.give.kind]||!TRADE_GOODS[o.get.kind]||!fin(o.give.amount)||!fin(o.get.amount)||!fin(o.fairGet)||!fin(o.spread,1)||!fin(o.risk,1)||!fin(o.trust,1)||!fin(o.createdAt)||!fin(o.answerAt)||!o.hall||!Number.isFinite(o.hall.x)||!Number.isFinite(o.hall.z)||Math.abs(o.hall.x)>1e5||Math.abs(o.hall.z)>1e5)return false;
   if(!Array.isArray(o.carriers)||!Array.isArray(o.escorts)||!Array.isArray(o.lines)||!Array.isArray(o.ready)||o.carriers.length>TRADE_NEEDS_RULES.maximumCarriers||o.escorts.length>TRADE_NEEDS_RULES.maximumEscorts)return false;
   const open=ACTIVE.includes(o.phase);if(!open&&(o.carriers.length||o.escorts.length||o.lines.length))return false;if(open&&!o.reserved)return false;
   for(const l of o.lines)if(!o.carriers.includes(l.unitId)||!TRADE_GOODS[l.kind]||!fin(l.amount))return false;
   for(const id of [...o.carriers,...o.escorts]){const u=s.units.find(u=>u.id===id);if(!u||u.tradeNeedsId!==o.id)return false;}}
  if(t.observations!==undefined){if(!Array.isArray(t.observations)||t.observations.length>TRADE_NEEDS_RULES.maximumObservations)return false;const pairs=new Set<string>();
-  for(const r of t.observations){if(!r||!Number.isInteger(r.viewer)||!Number.isInteger(r.partner)||r.viewer<0||r.partner<0||r.viewer>=teams||r.partner>=teams||r.viewer===r.partner||!fin(r.observedAt)||!Number.isSafeInteger(r.observerId)||r.observerId<1||!r.stock||typeof r.stock!=='object'||Array.isArray(r.stock))return false;
+  for(const r of t.observations){if(!r||!Number.isInteger(r.viewer)||!Number.isInteger(r.partner)||r.viewer<0||r.partner<0||r.viewer>=teams||r.partner>=teams||r.viewer===r.partner||!fin(r.observedAt)||r.observedAt>s.time+1e-6||!Number.isSafeInteger(r.observerId)||r.observerId<1||r.observerId>=s.nextId||!r.stock||typeof r.stock!=='object'||Array.isArray(r.stock))return false;
    const key=r.viewer+':'+r.partner;if(pairs.has(key))return false;pairs.add(key);for(const [k,n]of Object.entries(r.stock))if(!TRADE_GOODS[k as GoodKind]||!fin(n))return false;}}
  for(const u of refs){const o=t.offers.find(o=>o.id===u.tradeNeedsId&&ACTIVE.includes(o.phase));if(!o||(!o.carriers.includes(u.id)&&!o.escorts.includes(u.id)))return false;}
  return true;}

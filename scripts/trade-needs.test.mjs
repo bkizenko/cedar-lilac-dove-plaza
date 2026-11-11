@@ -69,13 +69,13 @@ test('no offering what cannot be delivered: proposer that lost its goods before 
  const h=fixture({stock1:{stone:220,wood:0},stock2:{wood:320,stone:0}});for(const u of h.state.units.filter(u=>u.team===1))u.jobLock=true;const p=proposeTradeOffer(h,1,2,'stone','wood').offer;h.state.time=p.answerAt+1;tickTradeNeeds(h,.1);assert.equal(p.reason,'no-carriers');
 });
 
-test('goods without a physical journey holder (tools, weapons, armor, artifacts, animals) are not offered until holders exist; resources still trade varied',()=>{
+test('goods without a physical journey holder (weapons, armor assets, animals) are not offered until holders exist; resources and bulk items trade',()=>{
  const g=fixture({stock1:{spears:9,blades:9,wood:0,stone:220,items:{pottery:24}},stock2:{wood:400,stone:0,copper:80,items:{cordage:30}}});
- for(const [give,get] of [['spears','wood'],['paddedArmor','cordage'],['pottery','basket'],['blades','stone'],['goat','wood']])assert.equal(proposeTradeOffer(g,1,2,give,get).reason,'no-physical-holder',give+'->'+get);
+ for(const [give,get] of [['spears','wood'],['paddedArmor','cordage'],['blades','stone'],['goat','wood']])assert.equal(proposeTradeOffer(g,1,2,give,get).reason,'no-physical-holder',give+'->'+get);
  assert.equal(proposeTradeOffer(g,1,2,'stone','wood').ok,true,'resources keep trading');
- assert.ok(TRADE_SELECTABLE_KINDS.every(k=>TRADE_GOODS[k].cat==='resource'));
+ assert.ok(TRADE_SELECTABLE_KINDS.every(k=>!['weapon','armor','animal'].includes(TRADE_GOODS[k].cat)));
  const h=fixture({stock1:{wood:0,stone:300,copper:60,spears:6,items:{pottery:12}},stock2:{wood:400,stone:0,copper:0}});
- const seen=new Set();for(let i=0;i<10;i++){h.state.tradeNeeds&&(h.state.tradeNeeds.offers.length=0);h.state.tradeNeeds&&(h.state.tradeNeeds.cooldowns.length=0);h.state.time+=TRADE_NEEDS_RULES.reviewSeconds+1;reviewTradeNeeds(h);const o=h.state.tradeNeeds?.offers.find(o=>o.from===1);if(o){seen.add(o.give.kind);assert.equal(TRADE_GOODS[o.give.kind].cat,'resource');assert.equal(TRADE_GOODS[o.get.kind].cat,'resource');}}
+ const seen=new Set();for(let i=0;i<10;i++){h.state.tradeNeeds&&(h.state.tradeNeeds.offers.length=0);h.state.tradeNeeds&&(h.state.tradeNeeds.cooldowns.length=0);h.state.time+=TRADE_NEEDS_RULES.reviewSeconds+1;reviewTradeNeeds(h);const o=h.state.tradeNeeds?.offers.find(o=>o.from===1);if(o){seen.add(o.give.kind);assert.ok(TRADE_SELECTABLE_KINDS.includes(o.give.kind)&&TRADE_SELECTABLE_KINDS.includes(o.get.kind));}}
  assert.ok(seen.size>=1,'society 1 offered '+[...seen]);
 });
 

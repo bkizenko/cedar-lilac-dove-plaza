@@ -172,3 +172,16 @@ Execution order this session: 1 → 2, each with focused tests, then report.
 - **G15/G16 wiring (0997c22):** coastal traders turn home on sighting a storm (`stormTurnbacks`); walking needs-caravans refuse partners without a land route (`no-land-route`), leaving overseas partners to the existing need-driven boat trade. Armed escorts and market frequency/spread already existed. Tests 2/2.
 - Shared-file edits still none; all wiring through societies-owned hooks (`tickOccupation`, `occupationActorAI`, `pauseCoastalTrade`, `validConflictIntentState`, `validCoastalTradeState`).
 - Next: physical item/gear/animal trade holders (re-enable G15 diversity per Codex review), NPC war goals that choose occupation vs tribute targets, native-terrain acceptance run (Codex).
+
+
+## Diverse trade holders (Boris priority) — status and Codex interface requests
+- **Done (societies files only):** bulk goods trade again — cordage, basket, pottery, cloth, leather, skinClothes, hideCoat, woolCloth, woolCoat. They ride in the carrier's own `itemCargo` (the holder production already uses), are paid at the partner hall into `tribe.items`, and a trade carrier killed in combat leaves real item parcels (`stolenCargo` `PARCEL_ITEMS`) owned by its society that the owners recover. Validator checks item lines == body itemCargo. Tests `trade-items` 3/3; `trade-needs` diversity test updated. Detached-offer and future-observation review cautions fixed.
+- **Still refused (`no-physical-holder`) until Codex primitives exist:** armor assets, weapons, farm tools, animals.
+
+### Requests for Codex (shared/owned files — not edited here)
+1. `production.tickProduction` death branch clears any `itemCargo` as lost. Combat deaths are reconciled first (tickCoastalTrade runs in the same step's reconciliation), but a death set before the next step's tickProduction destroys trade goods. Ask: skip `itemCargo` for units with `tradeNeedsId`, or call an exported `dropTradeCargoItems(g,u)` from stolenCargo first.
+2. Armor: an adapter `moveArmorAsset(g, armorId, holder)` that updates `changed()` revision, plus a non-protective `carried` holder kind and placement into a foreign team's cache holder at delivery. Then tradeNeeds trades real `ArmorAsset` ids with condition/provenance.
+3. Weapons (`tribe.spears/bows/blades` counts): a body bundle holder (e.g. `weaponCargo`) recognised by validators, death reconciliation (ground holder) and capture.
+4. Farm tools: a stored/held tool record with condition that can change hands (today `u.farmTool` is bound to its worker).
+5. Livestock: `Livestock.ledBy?:number` transit state honoured by husbandry/pen movement, so traded goats stay live entities following their carrier (replaces array escrow).
+6. Recovery trips: `Unit.cargoRecoveryId?:number` + `COMMITTED_TASKS` entry (types.ts/workCommitments.ts) so trips are a registered task; stolenCargo then sets/clears it.
