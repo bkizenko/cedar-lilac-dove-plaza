@@ -7,7 +7,7 @@ import {provinceAt} from './ecologicalProvinces';
  * Rivers: does the water surface only fall downstream, do the banks contain it,
  * does the channel end in other water. Regions: are habitats contiguous rather
  * than speckled, and does relief agree with the habitat label. */
-export const LANDFORM_COHERENCE_RULES={version:1,riverStepMetres:4,riseToleranceMetres:.05,bankOffsetMetres:4,bankFreeboardMetres:.3,mouthSearchMetres:14,regionGrid:64,fragmentCells:3} as const;
+export const LANDFORM_COHERENCE_RULES={version:2,riverStepMetres:4,riseToleranceMetres:.05,wetMinimumMetres:.02,bankOffsetMetres:4,bankFreeboardMetres:.3,mouthSearchMetres:14,regionGrid:64,fragmentCells:3} as const;
 type World=Pick<WorldData,'size'|'heights'|'rivers'|'biomes'|'baseWaterY'|'waterY'>&Partial<Pick<WorldData,'bankTerrain'|'ecology'|'waterBodies'|'waterfalls'|'waterHeights'|'localWaterVersion'>>;
 export function worldHeight(world:World){return (x:number,z:number)=>world.bankTerrain?sampleWorldHeight(world as WorldData,x,z):sampleHeight(world.heights,x,z,world.size);}
 export function habitatAt(world:World,x:number,z:number){if(world.ecology)return provinceAt(world.ecology,x,z).baseHabitat;let best='plains',bd=Infinity;for(const b of world.biomes){const d=(b.x-x)**2+(b.z-z)**2;if(d<bd){bd=d;best=b.kind;}}return best;}
@@ -20,17 +20,23 @@ export function riverCoherence(world:World,probe:LandformProbe={}){
  const R=LANDFORM_COHERENCE_RULES,h=probe.height??worldHeight(world),surface=probe.surface??((x:number,z:number)=>waterSurfaceAt(world,x,z));
  return world.rivers.map((river,index)=>{
   let s=resample(river.pts,R.riverStepMetres);if(s.length<2)return{index,samples:s.length,lengthMetres:0,dropMetres:0,gradientPer100m:0,rises:0,riseMetres:0,containedFraction:1,dryBedFraction:0,sinuosity:1,mouth:'none' as const};
-  const ys=s.map(p=>surface(p.x,p.z));if(ys[0]<ys.at(-1)!){s=s.reverse().map(p=>({...p,tx:-p.tx,tz:-p.tz}));ys.reverse();}
-  let length=0,rises=0,riseMetres=0,contained=0,dry=0;
-  for(let i=0;i<s.length;i++){if(i){length+=Math.hypot(s[i].x-s[i-1].x,s[i].z-s[i-1].z);const up=ys[i]-ys[i-1];if(up>R.riseToleranceMetres){rises++;riseMetres+=up;}}
+  // Only wet samples describe the water surface: a dry spring head or bar reports the
+  // background level, which is not water flowing uphill (counted in dryBedFraction instead).
+  let ys=s.map(p=>surface(p.x,p.z)),wet=s.map((p,i)=>ys[i]>h(p.x,p.z)+R.wetMinimumMetres);
+  const firstWet=wet.indexOf(true),lastWet=wet.lastIndexOf(true);
+  if(firstWet>=0&&ys[firstWet]<ys[lastWet]){s=s.reverse().map(p=>({...p,tx:-p.tx,tz:-p.tz}));ys=ys.reverse();wet=wet.reverse();}
+  let length=0,rises=0,riseMetres=0,contained=0,dry=0,prev=-1;
+  for(let i=0;i<s.length;i++){if(i)length+=Math.hypot(s[i].x-s[i-1].x,s[i].z-s[i-1].z);
+   if(wet[i]){if(prev>=0){const up=ys[i]-ys[prev];if(up>R.riseToleranceMetres){rises++;riseMetres+=up;}}prev=i;}
    const off=river.w/2+R.bankOffsetMetres,nx=-s[i].tz,nz=s[i].tx,need=ys[i]+R.bankFreeboardMetres;
    if(h(s[i].x+nx*off,s[i].z+nz*off)>=need&&h(s[i].x-nx*off,s[i].z-nz*off)>=need)contained++;
-   if(h(s[i].x,s[i].z)>=ys[i])dry++;}
-  const end=s.at(-1)!,chord=Math.hypot(end.x-s[0].x,end.z-s[0].z),high=highWaterLevel(world.baseWaterY);
+   if(!wet[i])dry++;}
+  const end=s.at(-1)!,chord=Math.hypot(end.x-s[0].x,end.z-s[0].z);
   const beyond={x:end.x+end.tx*R.mouthSearchMetres,z:end.z+end.tz*R.mouthSearchMetres};
+  const outlet=[4,8,R.mouthSearchMetres].some(d=>{const x=end.x+end.tx*d,z=end.z+end.tz*d;return surface(x,z)>h(x,z)+.1&&surface(x,z)<=ys.at(-1)!+R.riseToleranceMetres;});
   const joins=world.rivers.some((o,j)=>j!==index&&o.pts.some((p,k)=>k<o.pts.length-1&&segDist(end,p,o.pts[k+1])<o.w/2+R.mouthSearchMetres));
   const edge=Math.max(Math.abs(beyond.x),Math.abs(beyond.z))>=world.size/2-2;
-  const mouth=h(beyond.x,beyond.z)<Math.max(high,surface(beyond.x,beyond.z))-.1?'open-water' as const:joins?'confluence' as const:edge?'map-edge' as const:'dead-end' as const;
+  const mouth=outlet?'open-water' as const:joins?'confluence' as const:edge?'map-edge' as const:'dead-end' as const;
   return{index,samples:s.length,lengthMetres:+length.toFixed(1),dropMetres:+(ys[0]-ys.at(-1)!).toFixed(2),gradientPer100m:+((ys[0]-ys.at(-1)!)/Math.max(1,length)*100).toFixed(3),rises,riseMetres:+riseMetres.toFixed(2),containedFraction:+(contained/s.length).toFixed(3),dryBedFraction:+(dry/s.length).toFixed(3),sinuosity:+(length/Math.max(1,chord)).toFixed(3),mouth};
  });
 }
