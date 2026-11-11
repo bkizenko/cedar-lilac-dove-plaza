@@ -100,7 +100,7 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
    !n||kind==='grainSheaves'||rawMeat&&['rawHide','bone'].includes(kind))&&
    g.state.buildings.some(b=>b.team===u.team&&b.type==='warehouse'&&g.finished(b));
 }
-function occupied(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
+export function occupiedProductionSlots(g:Game,b:Building){return (g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number,deliveredHere=false){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
  if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
@@ -109,7 +109,7 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
  if(r.outputs.basket&&(g.tribe(b.team).basketOrigins?.length||0)>=256&&!g.tribe(b.team).basketOrigins?.some(o=>o.origin.site===b.id))return 'Basket provenance records are full; use an existing weaving site';
  if(r.outputs.pottery&&(g.tribe(b.team).potteryOrigins?.length||0)>=256&&!g.tribe(b.team).potteryOrigins?.some(o=>o.origin.site===b.id))return 'Pottery provenance records are full; use an existing firing site';
- if(occupied(g,b)>=productionSlots(b))return 'All workplace slots contain paid work; resume or finish those batches first';
+ if(occupiedProductionSlots(g,b)>=productionSlots(b))return 'All workplace slots contain paid work; resume or finish those batches first';
  const t=g.tribe(b.team),stock=t.items||{};for(const[k,n]of Object.entries(r.inputs))if((stock[k as ItemKind]||0)<n)return `Need ${n} ${ITEM_NAMES[k as ItemKind]} delivered to the camp cache`;
  for(const[k,n]of Object.entries(r.foodInputs))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} actual ${k} delivered to the food cache`;
  if(r.grain&&foodInventory(t).grain+1e-9<r.grain)return `Need ${r.grain} actual grain delivered to the food cache`;
@@ -176,7 +176,7 @@ export function availableThreshingFloor(g:Game,u:Unit){
  if(u.team!==0||(u.itemCargo?.grainSheaves||0)<CEREAL_RULES.rawBatch||u.carry>0||
     Object.entries(u.itemCargo||{}).some(([kind,n])=>kind!=='grainSheaves'&&n))return;
  if(sum(g.tribe(u.team).items||{})+sum(u.itemCargo||{})+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)&&!canLeaveHarvestOutside(g,u))return;
- for(const floor of g.state.buildings.filter(b=>b.team===u.team&&b.type==='threshingFloor'&&g.finished(b)&&occupied(g,b)<productionSlots(b))
+ for(const floor of g.state.buildings.filter(b=>b.team===u.team&&b.type==='threshingFloor'&&g.finished(b)&&occupiedProductionSlots(g,b)<productionSlots(b))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))){
   const spot=g.interactionSpot(u,floor);
   if(spot)return {floor,spot};

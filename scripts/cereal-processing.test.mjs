@@ -312,3 +312,34 @@ test('a village with Auto work off cooks clean grain at a hearth before it has a
  assert.ok(tribe.foodLots.porridge>0);
  assert.ok(decodeGame(encodeGame(g)).tribe(0).foodLots.porridge>0);
 });
+
+test('two oven slots and a separate mill process grain in parallel with Auto work off', () => {
+ let {g}=fixture();
+ const tribe=g.tribe(0);
+ const oven=g.makeBld('oven',12,44,0),mill=g.makeBld('grindingStone',20,44,0);
+ g.state.buildings.push(oven,mill);
+ ground(g);
+ for(let i=0;i<5;i++){
+  const worker=g.spawnUnit('worker',i*.4,36,0);
+  worker.order='hold';
+  worker.jobLock=false;
+ }
+ tribe.food=1016;tribe.foodLots={provisions:1000,grain:16};
+ tribe.items={flour:8};
+ tribe.survival.waterLiters=60;
+ drive(g,30,()=>g.state.production?.projects.length>=3);
+ const paid=g.state.production.projects;
+ assert.equal(paid.filter(p=>p.workplace===oven.id).length,2);
+ assert.equal(paid.filter(p=>p.workplace===mill.id).length,1);
+ assert.equal(new Set(paid.map(p=>p.actorId)).size,3);
+ assert.ok(paid.every(p=>p.phase==='working'||p.phase==='carrying'));
+ assert.equal(g.state.production.metrics.grainUsed,4);
+ assert.equal(g.state.production.metrics.consumed.flour,8);
+ assert.equal(g.state.production.metrics.logsUsed,2);
+ g=decodeGame(encodeGame(g));ground(g);
+ assert.equal(g.state.autoWorkEnabled,false);
+ const ids=paid.map(p=>p.id);
+ drive(g,120,()=>g.state.production.projects.filter(p=>ids.includes(p.id)&&p.phase==='complete').length===3);
+ assert.equal(g.state.production.projects.filter(p=>ids.includes(p.id)&&p.phase==='complete').length,3);
+ assert.ok(g.tribe(0).foodLots.bread>0);
+});

@@ -1,6 +1,6 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,resumeProduction,productionIssue,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{beginProduction,resumeProduction,productionIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -144,15 +144,19 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  const canBake = baking.some(r => canPay(r) && sites.some(b => b.type === PRODUCTION_RECIPES[r].workplace));
  const cleanGrain=grain>=4&&foodInventory(tribe).grain>=4;
  const canGrind=grinding.some(r=>sites.some(b=>b.type===PRODUCTION_RECIPES[r].workplace));
- if (!active.some(p => breadRecipes.includes(p.recipe) || grindingRecipes.includes(p.recipe) || p.recipe==='cookPorridge')) {
+ const grainJobs=active.filter(p=>breadRecipes.includes(p.recipe)||grindingRecipes.includes(p.recipe)||p.recipe==='cookPorridge');
+ const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;
+ const grainLimit=Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));
+ const assignedGrainJobs=grainJobs.filter(p=>p.actorId!==null&&p.phase!=='paused').length;
+ if (assignedGrainJobs<grainLimit) {
   if (canBake && flour >= 4) recipes.push(...baking);
-  else if (cleanGrain) {
-   if (urgent || !canBake || !canGrind) recipes.push('cookPorridge');
+  if (cleanGrain) {
+   if ((urgent || !canBake || !canGrind)&&!grainJobs.some(p=>p.recipe==='cookPorridge')) recipes.push('cookPorridge');
    if (canBake && canGrind) recipes.push(...grinding);
   }
  }
  const options = recipes.filter(canPay).flatMap(recipe => sites
-  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace)
+  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));
  if (!options.length) return false;
  const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&
