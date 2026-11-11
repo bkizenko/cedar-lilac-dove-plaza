@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../../src/game/sim.ts';
 import {encodeGame,decodeGame} from '../../src/game/persistence.ts';
 import {SAVE_KEY} from '../../src/game/constants.ts';
+import {parseStoredSave} from '../../src/game/storageCodec.ts';
 const urgent=process.env.SCENARIO==='urgent';
 const g=new Game();g.reset(42,18,{size:1040,layout:'continents'});g.enterIsland();
 g.state.autoWorkEnabled=false;g.state.paused=true;g.state.weather='clear';g.state.weatherT=100000;
@@ -23,9 +24,10 @@ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--ena
 try{for(const port of (process.env.PORTS||'8086,8101').split(',').map(Number)){
  const context=await browser.newContext({viewport:{width:1280,height:800}}),page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.addInitScript(({key,save})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(save));},{key:SAVE_KEY,save});
+ await page.addInitScript(({key,save})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(save));localStorage.setItem('hearthwild:graphics-quality','low');},{key:SAVE_KEY,save});
  await page.goto(`http://127.0.0.1:${port}`,{waitUntil:'commit',timeout:20000});
  await page.getByRole('button',{name:'Village',exact:true}).waitFor({timeout:120000}).catch(async e=>{console.error(JSON.stringify({errors,body:(await page.locator('body').innerText()).slice(0,4000)}));throw e;});
+ const pixels=await page.locator('canvas').first().evaluate(c=>c.width*c.height);assert.ok(pixels<=801000,`Low back buffer ${pixels}`);
  const before=await page.evaluate(()=>{const g=window.__engine.game;return {auto:g.state.autoWorkEnabled,raw:g.tribe(0).items.grainSheaves,version:g.state.worldgenVersion};});
  assert.equal(before.auto,false);if(!urgent)assert.equal(before.raw,16);
  // Advance the ordinary simulation on native terrain, with no completion,
@@ -44,6 +46,18 @@ try{for(const port of (process.env.PORTS||'8086,8101').split(',').map(Number)){
  await page.getByRole('button',{name:'Village',exact:true}).waitFor({timeout:120000}).catch(async e=>{console.error(JSON.stringify({errors,body:(await page.locator('body').innerText()).slice(0,4000)}));throw e;});
  const restored=await page.evaluate(()=>({auto:window.__engine.game.state.autoWorkEnabled,bread:window.__engine.game.tribe(0).foodLots?.bread||0,cookedFish:window.__engine.game.tribe(0).foodLots?.cookedFish||0}));
  assert.equal(restored.auto,false);assert.ok(urgent?restored.cookedFish>0:restored.bread>0);assert.deepEqual(errors,[]);
- console.log(JSON.stringify({port,scenario:urgent?'parallel urgent kitchens':'hand cereal chain',before,result,restored,scope:'Native V18 terrain, Auto work off, rendered release and public Save/reload; controlled initial stocks and quiet conditions, not a full campaign balance gate'}));
+ let checkpoint;
+ if(process.env.TEST_CHECKPOINT==='1'){
+  const protectedRaw=JSON.stringify(save);
+  await page.evaluate(({key,raw})=>localStorage.setItem(key+':protected',raw),{key:SAVE_KEY,raw:protectedRaw});
+  await page.getByRole('button',{name:'Menu',exact:true}).click();
+  await page.getByRole('button',{name:'Restore checkpoint',exact:true}).click();
+  await page.waitForFunction(()=>window.__engine.game.state.time===0);
+  checkpoint=await page.evaluate(key=>({time:window.__engine.game.state.time,paused:window.__engine.game.state.paused,protected:localStorage.getItem(key+':protected'),backup:localStorage.getItem(key+':bak')}),SAVE_KEY);
+  assert.equal(checkpoint.time,0);assert.equal(checkpoint.paused,true);assert.equal(checkpoint.protected,protectedRaw);
+  assert.equal(parseStoredSave(checkpoint.backup).state.time,result.time,'the run being replaced remains in the rolling backup');
+  checkpoint={restored:true,currentRunPreserved:true};
+ }
+ console.log(JSON.stringify({port,pixels,scenario:urgent?'parallel urgent kitchens':'hand cereal chain',before,result,restored,checkpoint,scope:'Native V18 terrain, Auto work off, rendered release and public Save/reload; controlled initial stocks and quiet conditions, not a full campaign balance gate'}));
  await context.close();
 }}finally{await browser.close();}

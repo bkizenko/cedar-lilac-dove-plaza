@@ -60,3 +60,16 @@ test('all seven forms stay rooted at far LOD and felling removes every crown acr
  view.dispose();assert.equal(scene.children.length,0);
  }
 });
+
+test('Low uses fewer detailed trees and a shorter far range without changing resources or picking IDs',()=>{
+ const scene=new THREE.Scene(),view=new BiomeVegetation(scene,42,()=>({kind:'conifer-forest'}));
+ const nodes=[tree(1,24),tree(2,34),tree(3,450)],original=structuredClone(nodes);
+ let report=view.sync(nodes,{...context,quality:'low'});
+ assert.equal(report.nearTrees,1);assert.equal(report.farCanopies,1);
+ const ids=view.pickingSources().flatMap(source=>source.resourceIds);
+ assert.ok(ids.includes(1)&&ids.includes(2));assert.ok(!ids.includes(3));
+ report=view.sync(nodes,{...context,quality:'med'});
+ assert.equal(report.nearTrees,2);assert.equal(report.farCanopies,1);
+ assert.ok(view.pickingSources().flatMap(source=>source.resourceIds).includes(3));
+ assert.deepEqual(nodes,original);view.dispose();
+});

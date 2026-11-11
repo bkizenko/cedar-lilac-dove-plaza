@@ -266,6 +266,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
             Load
           </button>
+          <button className="px-2 py-2" disabled={engine?.game.testMode} title="Restore the last protected village; save the current run first." onClick={() => engine?.resumeSaved(true)}>
+            Restore checkpoint
+          </button>
           </div>}
         </div>
         )}

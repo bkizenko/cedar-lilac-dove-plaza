@@ -17,3 +17,13 @@ test('large desktop viewports stay inside the selected pixel budget without chan
  }
  assert.equal(graphicsPixelRatio('med',1280,800,1),1);
 });
+
+test('Low limits render pixels while Medium and High budgets remain unchanged',async()=>{
+ const {graphicsPixelRatio}=await import('../src/game/graphics.ts');
+ assert.equal(GRAPHICS_RULES.profiles.low.maximumPixels,800000);
+ assert.equal(GRAPHICS_RULES.profiles.med.maximumPixels,2100000);
+ assert.equal(GRAPHICS_RULES.profiles.high.maximumPixels,3200000);
+ const ratio=graphicsPixelRatio('low',2560,1600,2);
+ assert.ok(Math.abs(2560*1600*ratio*ratio-800000)<.001);
+ assert.equal(GRAPHICS_RULES.defaultUnitRings,true);
+});

@@ -127,7 +127,15 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
  // Ready meals take the next free hands and kitchen slots before restoring
  // slower upstream work. Existing paid batches retain every input and actor.
  if(team===0&&urgentReadyMealInputs(g)){
-  if(reviewPlayerMeals(g,eventActorId))return true;
+  // Reserve all currently usable urgent kitchen batches before this same
+  // simulation step consumes emergency raw rations. Only follow-up admissions
+  // bypass the normal review timer, and the shared worker cap bounds the loop.
+  let dispatched=false;const limit=mealWorkerLimit(g);
+  for(let i=0;i<limit;i++){
+   if(!reviewPlayerMeals(g,i===0?eventActorId:undefined,i>0))break;
+   dispatched=true;
+  }
+  if(dispatched)return true;
   if(activeFoodWorkers(g)>=mealWorkerLimit(g))return false;
   return reviewInterruptedFoodProcessing(g,team,eventActorId);
  }
@@ -207,7 +215,7 @@ function reviewPlantedGrain(g: Game) {
  return false;
 }
 
-function reviewPlayerMeals(g: Game, eventActorId?: number) {
+function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false) {
  const tribe = g.tribe(0);
  if (!tribe?.alive) return false;
  const raw = tribe.items?.rawMeat ?? 0;
@@ -216,7 +224,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number) {
  const grain = tribe.foodLots?.grain ?? 0;
  if (raw < 4 && fish < 4 && flour < 4 && grain < 4) return false;
  const previous = mealReviews.get(g);
- if (eventActorId === undefined && previous?.state === g.state && previous.next > g.state.time) return false;
+ if (!urgentFollowup&&eventActorId === undefined && previous?.state === g.state && previous.next > g.state.time) return false;
  mealReviews.set(g, {state: g.state, next: g.state.time + CEREAL_RULES.reviewSeconds});
 
  const active = g.state.production?.projects.filter(p => p.team === 0 && p.phase !== 'complete' && p.phase !== 'lost') ?? [];

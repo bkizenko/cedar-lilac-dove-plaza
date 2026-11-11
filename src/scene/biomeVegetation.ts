@@ -4,7 +4,7 @@ export const VEGETATION_BIOMES=['meadow','mixed-woodland','conifer-forest','alpi
 export type VegetationBiome=typeof VEGETATION_BIOMES[number];
 export type VegetationProfile={kind:VegetationBiome;treeForms?:Partial<Record<TreeForm,number>>};
 export type ResourceTree={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean};
-export const BIOME_VEGETATION_RULES={version:1,nearMetres:{low:38,med:75,high:115},farMetres:700,stumpHeightScale:.075,
+export const BIOME_VEGETATION_RULES={version:1,nearMetres:{low:28,med:75,high:115},farMetres:700,lowFarMetres:420,stumpHeightScale:.075,
  dressingMaxInstances:{low:0,med:512,high:1024},dressingDistanceMetres:65} as const;
 const defaults:Record<VegetationBiome,Partial<Record<TreeForm,number>>>={
  meadow:{broadleaf:1},'mixed-woodland':{broadleaf:.8,conifer:.2},'conifer-forest':{conifer:1},alpine:{stunted:1},wetland:{willow:.85,broadleaf:.15},'dry-scrub':{scrub:.7,acacia:.3},arid:{scrub:.6,acacia:.4},'warm-coast':{palm:.6,acacia:.4},
@@ -61,7 +61,7 @@ export class BiomeVegetation {
   const near=BIOME_VEGETATION_RULES.nearMetres[context.quality];
   for(const node of nodes){
    if(!context.known(node.x,node.z))continue;
-   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>BIOME_VEGETATION_RULES.farMetres)continue;
+   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>(context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres:BIOME_VEGETATION_RULES.farMetres))continue;
    let form=this.cache.get(node.id);if(!form){form=resourceTreeForm(node.id,this.profileAt(node.x,node.z),this.seed);this.cache.set(node.id,form);}
    const stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
    const deciduous=form==='broadleaf'||form==='willow',bare=deciduous&&context.winter>.8&&context.snow<.4;
