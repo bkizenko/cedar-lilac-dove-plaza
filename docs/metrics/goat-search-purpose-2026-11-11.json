@@ -1,0 +1,46 @@
+{
+  "batch": "goat-search-purpose-2026-11-11",
+  "publishedRuntimeCommit": "de034f25a69473af448297571db417fd20a02168",
+  "release": "2026-11-11T19-21-07-192Z-de034f2",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 33,
+  "total": 33,
+  "percentage": 100,
+  "evidence": {
+    "targeted": {
+      "passed": 32,
+      "total": 32,
+      "log": ".play/goat-candidate-tests.log",
+      "nativeScope": "Unchanged V18 seed42 pangaea: generated goat, naturally legal pen, ordinary Game.step, actual animal ID delivered once, strict save/reload; controlled provision/workforce fixture."
+    },
+    "builtUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/goat-candidate-ui.log"
+    },
+    "typecheck": ".play/goat-candidate-typecheck.log",
+    "build": ".play/goat-candidate-build.log",
+    "baselineFailure": ".play/goat-baseline-purpose-regression.log"
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "workingChanges": [
+    "Dedicated goat scouts no longer abandon pen search to collect unrelated ruin loot",
+    "Visible goats reserved by a living handler do not falsely abort another search",
+    "Same scout uses actual carried feed, captures and physically escorts existing animal into pen"
+  ],
+  "limitations": [
+    "Search remains observed and route/radius bounded; no invented animals or guaranteed nearby habitat",
+    "No-free-adult persistent pen order still pending follow-up; current command gives retry reason",
+    "Not full animal-husbandry or seasonal campaign acceptance"
+  ],
+  "savesPreserved": true
+}
