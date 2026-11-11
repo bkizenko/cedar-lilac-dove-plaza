@@ -22,7 +22,7 @@ test('a prisoner guard stands down once the last person in their custody is rele
  releasePrisoner(g,b.id);drive(g,2);assert.equal(guard.demobilizing,true,'duty over: back to work');
 });
 test('orphaned occupation or garrison marks are swept so soldiers return to useful work',()=>{
- const {g}=fixture();const a=militia(g,10,40),b=g.spawnUnit('spearman',12,40,0);a.conflictIntent='occupy';b.conflictIntent='dominate';a.order='hold';b.order='hold';
+ const {g}=fixture();const a=militia(g,10,40),b=g.spawnUnit('spearman',12,40,0);a.conflictIntent='occupy';b.conflictIntent='dominate';g.state.occupations=[{id:g.id(),hallId:g.state.buildings[1].id,formerTeam:1,controllerTeam:0,buildingIds:[g.state.buildings[1].id],residentIds:[],guardIds:[a.id],phase:'withdrawn',holdSeconds:0,createdAt:0}];a.order='hold';b.order='hold';
  tickConflictStandDown(g);assert.equal(a.conflictIntent,undefined);assert.equal(b.conflictIntent,undefined);assert.equal(a.demobilizing,true);assert.equal(b.recalled,true);assert.equal(b.stationOnArrival,true,'professional soldiers report back to their station');
  assert.ok(g.state.conflictJournal.totals['stood_down:0']>=2);
 });

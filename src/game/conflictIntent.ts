@@ -203,12 +203,13 @@ export function standDownGuards(g:Game,ids:number[],intent:ConflictIntent){
 /** Militia/garrison stand-down sweep: anyone still marked for occupation, domination or prisoner
  * duty that no longer exists returns home. Ongoing custody keeps its guards. */
 export function tickConflictStandDown(g:Game){
- const live=new Set<number>(),garrison=new Set<number>(),guarding=new Set<number>();
- for(const c of controls(g))if(!['withdrawn','integrated','dominated'].includes(c.phase))for(const id of c.guardIds)live.add(id);
+ const live=new Set<number>(),ended=new Set<number>(),garrison=new Set<number>(),guarding=new Set<number>();
+ for(const c of controls(g))for(const id of c.guardIds)(['withdrawn','integrated','dominated'].includes(c.phase)?ended:live).add(id);
  for(const d of dominations(g))if(d.phase==='active')for(const id of d.garrisonIds)garrison.add(id);
  for(const p of g.state.units){const custody=(p as PrisonerUnit).prisoner;if(p.hp>0&&custody&&custody.phase!=='released'&&custody.guardId!==undefined)guarding.add(custody.guardId);}
  for(const person of g.state.units){const u=person as ConflictUnit;if(u.hp<=0)continue;
-  if(u.conflictIntent==='occupy'&&!live.has(u.id)&&!u.captureTargetId){u.conflictIntent=undefined;queueStandDown(g,u);u.workReason='Occupation ended — returning to village work';recordConflict(g,'stood_down',u.team,1,{actorId:u.id,reason:'occupation'});continue;}
+  // Only marks left behind by an occupation that actually ended; a party just told to secure a village keeps its order.
+  if(u.conflictIntent==='occupy'&&ended.has(u.id)&&!live.has(u.id)&&!u.captureTargetId){u.conflictIntent=undefined;queueStandDown(g,u);u.workReason='Occupation ended — returning to village work';recordConflict(g,'stood_down',u.team,1,{actorId:u.id,reason:'occupation'});continue;}
   if(u.conflictIntent==='dominate'&&!garrison.has(u.id)){u.conflictIntent=undefined;queueStandDown(g,u);u.workReason='Garrison duty ended — returning to village work';recordConflict(g,'stood_down',u.team,1,{actorId:u.id,reason:'garrison'});continue;}
   // A guard whose last prisoner was released, ransomed, integrated or died.
   if((u.workReason==='Prisoner escort finished'||u.workReason==='Guarding prisoners in custody')&&!guarding.has(u.id)){if(u.escortId!==undefined&&g.state.units.some(p=>p.id===u.escortId&&p.hp>0&&(p as PrisonerUnit).prisoner?.phase!=='released'&&!!(p as PrisonerUnit).prisoner))continue;u.escortId=undefined;queueStandDown(g,u);u.workReason='Prisoner duty ended — returning to village work';recordConflict(g,'stood_down',u.team,1,{actorId:u.id,reason:'custody'});}
