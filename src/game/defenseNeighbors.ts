@@ -49,13 +49,15 @@ export function updateDefenseNeighbors(g:Game,u:Unit) {
 export function endDefenseNeighbors(g:Game) {const index=indexes.get(g);if(index)index.active=false;}
 /** Conservative spatial candidates in original array order. The caller retains
  * every exact distance, diplomacy, visibility and protection predicate. Outside
- * the audited loop (including direct calls), uncertainty always means full scan. */
-export function defenseNeighbors(g:Game,u:Unit):Unit[] {
+ * the audited loop (including direct calls), uncertainty always means full scan.
+ * Optional same-team pruning reads live membership, never snapshotted diplomacy.
+ * Default callers and every fallback retain the original array/order contract. */
+export function defenseNeighbors(g:Game,u:Unit,excludeTeam?:number):Unit[] {
   const index=indexes.get(g);if(!index||!usable(g,index)||keyAt(u.x,u.z)===null)return g.state.units;
   const cell=DEFENSE_NEIGHBOR_RULES.cellMeters,radius=DEFENSE_NEIGHBOR_RULES.radiusMeters,found:Entry[]=[];
   for(let cz=Math.floor((u.z-radius)/cell);cz<=Math.floor((u.z+radius)/cell);cz++)
     for(let cx=Math.floor((u.x-radius)/cell);cx<=Math.floor((u.x+radius)/cell);cx++) {
-      const bucket=index.buckets.get(cx+cz*65536);if(bucket)for(const entry of bucket)found.push(entry);
+      const bucket=index.buckets.get(cx+cz*65536);if(bucket)for(const entry of bucket)if(excludeTeam===undefined||entry.unit.team!==excludeTeam)found.push(entry);
     }
   found.sort((a,b)=>a.ordinal-b.ordinal);
   return found.map(entry=>entry.unit);
