@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-11-11T21:20:04.471387+00:00",
+  "codeCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+  "release": "2026-11-11T21-18-48-816Z-db3dfba",
+  "health": {
+    "8086": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T21-18-48-816Z-db3dfba"
+    },
+    "8101": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T21-18-48-816Z-db3dfba"
+    }
+  },
+  "batch": {
+    "passed": 104,
+    "total": 108,
+    "percent": 96.3,
+    "composition": {
+      "sharedProduction": {
+        "passed": 79,
+        "total": 83
+      },
+      "dairyWaterNative": {
+        "passed": 24,
+        "total": 24
+      },
+      "builtDairyUi": {
+        "passed": 1,
+        "total": 1
+      }
+    }
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "build": "PASS; exact reviewed artifact published",
+    "builtUi": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built desktop dairy UI; authored finite native V18 opening; no terrain/path/climate overrides; paid recipe, rendered incubation/progress/ready (manual pickup pause for inspection), physical pickup/delivery, mid/final reload and exactly-once vessel return; not live-public acceptance",
+      "paid": {
+        "id": 6354,
+        "phase": "carrying",
+        "milk": 0,
+        "pottery": 0,
+        "origin": 0,
+        "logs": 99,
+        "water": 299,
+        "start": 0
+      },
+      "passive": {
+        "phase": "curing",
+        "resumePhase": "curing",
+        "time": 31.99999999999992,
+        "actor": null,
+        "dairy": {
+          "version": 1,
+          "fermentSeconds": 0,
+          "elapsedSeconds": 0,
+          "hotSeconds": 0,
+          "temperatureCelsius": 11.060493047942535,
+          "vesselOrigin": {
+            "version": 1,
+            "team": 0,
+            "site": 6353,
+            "style": "Village 1 · combed waves"
+          }
+        },
+        "pottery": 0
+      },
+      "pausedReady": {
+        "phase": "paused",
+        "resumePhase": "ready",
+        "time": 157.99999999999957,
+        "actor": null,
+        "dairy": {
+          "version": 1,
+          "fermentSeconds": 90,
+          "elapsedSeconds": 126.00000000000125,
+          "hotSeconds": 0,
+          "temperatureCelsius": 17.566512459495065,
+          "vesselOrigin": {
+            "version": 1,
+            "team": 0,
+            "site": 6353,
+            "style": "Village 1 · combed waves"
+          }
+        },
+        "pottery": 0
+      },
+      "ready": {
+        "phase": "ready",
+        "pottery": 0
+      },
+      "complete": {
+        "phase": "complete",
+        "resumePhase": "returning",
+        "time": 160.39999999999944,
+        "actor": null,
+        "dairy": {
+          "version": 1,
+          "fermentSeconds": 90,
+          "elapsedSeconds": 126.00000000000125,
+          "hotSeconds": 0,
+          "temperatureCelsius": 17.566512459495065,
+          "vesselOrigin": {
+            "version": 1,
+            "team": 0,
+            "site": 6353,
+            "style": "Village 1 · combed waves"
+          }
+        },
+        "pottery": 1
+      },
+      "result": {
+        "phase": "complete",
+        "pottery": 1,
+        "origin": {
+          "origin": {
+            "version": 1,
+            "team": 0,
+            "site": 6353,
+            "style": "Village 1 · combed waves"
+          },
+          "count": 1
+        },
+        "food": 2.9991612056464754,
+        "metrics": {
+          "consumed": {
+            "pottery": 1
+          },
+          "produced": {
+            "pottery": 1
+          },
+          "spoiled": {
+            "rawMeat": 4.275215858451431
+          },
+          "lost": {},
+          "logsUsed": 1,
+          "waterUsedLiters": 1,
+          "grainUsed": 0,
+          "grainLost": 0,
+          "edibleFoodProduced": 3,
+          "edibleFoodLost": 0,
+          "foodInputsUsed": {
+            "milk": 4
+          },
+          "foodInputsLost": {},
+          "dryingExposureSeconds": 0,
+          "wetExposureSeconds": 0,
+          "completed": 1,
+          "interrupted": 1
+        },
+        "errors": []
+      },
+      "after": {
+        "pottery": 1,
+        "produced": 3
+      },
+      "errors": []
+    },
+    "retainedFailures": [
+      {
+        "case": "parked paid cereal inputs occupy cache space once, survive replacement pickup and release future output space on real loss",
+        "candidate": "true !== false at cereal-processing.test.mjs:42:560",
+        "baseline": "same failed assertion"
+      },
+      {
+        "case": "a practiced threshing floor processes double loads and preserves the exact grain and seed yield through a save",
+        "candidate": "missing job at cereal-processing.test.mjs:463 in full suite",
+        "baseline": "passes selected; candidate also passes selected; full-suite/order/RNG-sensitive failure unresolved and not counted passed"
+      },
+      {
+        "case": "two shared rack slots remain occupied without workers and paused wet batches rewet and spoil without refunds or output",
+        "candidate": "edibleFoodProduced4 !== 0 at food-preservation.test.mjs:7:1139",
+        "baseline": "same failed assertion"
+      },
+      {
+        "case": "crafted stone hoe actually speeds seasonal farm work without granting extra crops",
+        "candidate": "retained harvest18 !== 20 at production-work.test.mjs:46",
+        "baseline": "same failed assertion"
+      }
+    ]
+  },
+  "performance": {
+    "scope": "One sequential original/candidate process pair; same private save bytes, fixed Math.random seed and identical100steps dt.05; saved speed4 retained, clone-only unpaused",
+    "sameInitialState": true,
+    "sameFinalState": true,
+    "sameRandomCalls": true,
+    "randomCallsEach": 23832,
+    "originalShaUnchangedBoth": true,
+    "sampleSize": 100,
+    "advancedGameSecondsEach": 20.00000000007276,
+    "people": 152,
+    "playerPeople": 53,
+    "buildings": 243,
+    "baseline": {
+      "step": {
+        "samples": 100,
+        "meanMs": 62.97143873,
+        "p95Ms": 90.8471669999999,
+        "maxMs": 565.3357080000005
+      },
+      "firstStepMs": 565.3357080000005,
+      "subsequentSteps": {
+        "samples": 99,
+        "meanMs": 57.897052171717164,
+        "p95Ms": 90.8471669999999,
+        "maxMs": 234.93854099999953
+      },
+      "simulationErrorCount": 0,
+      "wallMs": 10505.942167000001
+    },
+    "candidate": {
+      "step": {
+        "samples": 100,
+        "meanMs": 58.02426367999994,
+        "p95Ms": 88.90933300000052,
+        "maxMs": 441.055292
+      },
+      "firstStepMs": 441.055292,
+      "subsequentSteps": {
+        "samples": 99,
+        "meanMs": 54.155263393939336,
+        "p95Ms": 88.90933300000052,
+        "maxMs": 257.33050000000003
+      },
+      "simulationErrorCount": 0,
+      "wallMs": 9982.608,
+      "memo": {
+        "entries": 4859,
+        "columns": 1467,
+        "hits": 4749807,
+        "misses": 2790139,
+        "invalidations": 0,
+        "capacityResets": 170,
+        "bypasses": 7,
+        "maximumEntriesPerWorld": 16384
+      }
+    },
+    "observedMeanReductionPercent": 7.856220454501372,
+    "observedSubsequentMeanReductionPercent": 6.462831245155687,
+    "limits": [
+      "Only one sequential pair; process ordering/JIT/thermal/noise can affect7.86% observed delta; no robust speed guarantee.",
+      "First sample includes cold caches; subsequent99 mean improved but subsequent maximum worsened from234.94ms to257.33ms.",
+      "Cache reset170times in100steps; memory bounded but miss/allocation churn remains. Do not increase cap without8GB memory review.",
+      "Node CPU only, no render/browser/FPS/autosave or whole-campaign claim; no new98-gate credit.",
+      "Owned derived index contents assumed immutable; supported replacement invalidates by index identity."
+    ]
+  },
+  "dairyRules": {
+    "milk": 4,
+    "potteryVesselsHeld": 1,
+    "logs": 1,
+    "waterLiters": 1,
+    "staffedPreparationSeconds": 30,
+    "effectiveFermentationSeconds": 90,
+    "outputFermentedMilk": 3,
+    "sameVesselReturnedAfterPhysicalDelivery": true,
+    "recipeCreation": "explicit order; automatic pickup/delivery after preparation; no unsolicited fermentation demand"
+  },
+  "acceptanceAssumptions": [
+    "V18 seed42 pangaea1040; original actor positions/terrain/rivers/features retained; no path, steering or climate override.",
+    "Authored observed home scene uses full vision for TestLab/UI inspection only; not NPC fog or witnessed-information proof.",
+    "One legal completed hearth, actual communal camp cache, four delivered goat-milk units, one origin-tracked pottery vessel and finite water/log stocks are declared opening supplies.",
+    "Native simulation passed through strict reload during actual-climate incubation and after delivery; maximum300 simulation seconds.",
+    "Built UI script/helper are prepared and syntaxchecked only; root must run against the single frozen build before any built/live acceptance claim."
+  ],
+  "scopeLimits": [
+    "No full food-chain or winter/campaign completion claim: four retained regression failures remain",
+    "No cheese, horses, advanced dairy workplaces or vessel-recovery-after-spoilage workflow",
+    "Raw or spoiled/discarded dairy currently loses its held vessel; recover-and-clean workflow remains open",
+    "No target-FPS/full-stutter-resolution claim from one CPU pair",
+    "No NPC sea exploration or Option H renderer activated in this release"
+  ],
+  "fullChecklist": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newGateCredit": 0
+  },
+  "sourceManifest": {
+    "files": [
+      {
+        "path": "src/game/dairy.ts",
+        "sha256": "bedfcb9e296ac29647edc55fdfe7dc1e8c529db0263577c3312a6a9af55e0024",
+        "baseSha256": null
+      },
+      {
+        "path": "src/game/types.ts",
+        "sha256": "7af4007e11e58b971126eb07a489880c1342ef45b33962fa5ad172343683aad5",
+        "baseSha256": "7e2563b8bab56c0f50008ee6c2e7bec399368f43eeb7ca2178fe962afeb6e684"
+      },
+      {
+        "path": "src/game/foodKinds.ts",
+        "sha256": "55a24ac95052210e5a9733d279f2b8cab6582b835955b7115245481c11fae760",
+        "baseSha256": "0e812fe5474e4d678227455f6a2954a06ccb3346380327e90107e88e22994e39"
+      },
+      {
+        "path": "src/game/pantry.ts",
+        "sha256": "4331c13537e247a895f01f18b235c85b67237aa1ad381ef3171f5f61c34e2553",
+        "baseSha256": "7a95d8995e9bc12b694e9a33a65c537d1b30add4b0fa691dabafcf2c9e0a476a"
+      },
+      {
+        "path": "src/game/production.ts",
+        "sha256": "a344c66f624041b15b8c9e9bd638247b128af582ac0c38e29d6b7aec033ab5cb",
+        "baseSha256": "59943d0fc39ac079bacc646edc35dfe68ed7380961297013beb6eb991013e01b"
+      },
+      {
+        "path": "src/game/practiceKnowledge.ts",
+        "sha256": "c89ec88cf8bd9ccc65d91e6edb43bc3d45757fdc571a28e0e85e3f5948bbaaa6",
+        "baseSha256": "b25d7fe704548c10eabbbaef1540b57de33b79ea8b947d1b23cd3b3c814b3f3b"
+      },
+      {
+        "path": "src/game/productionCatalog.ts",
+        "sha256": "34797902a910c4a4d4b1a2274b981682b4d1aeb56e08b9d0808a5db0ebc9763a",
+        "baseSha256": "666bec388e325d8f3db1b40a11872de46ea3be4701d8a487cf8009341ee09b01"
+      },
+      {
+        "path": "src/game/craftSiteReport.ts",
+        "sha256": "6af130176a4f1a68ef6597a78b23cecc26ebe1479060589ddcc6bafa99ada415",
+        "baseSha256": "9e498b1f3bb72ea8e81423cd33a04530be468ff18b15a8bfc18afdc689190716"
+      },
+      {
+        "path": "src/ui/ProductionControls.tsx",
+        "sha256": "f083f30127f79dbe704814904287a5d7fbeaea59fa99fe188e6f6624b4f7df0b",
+        "baseSha256": "36b60b16fe08970dcf1156fdff43a305864997cdb7e288f9a722305b9e3e676a"
+      },
+      {
+        "path": "src/ui/CraftSiteQueue.tsx",
+        "sha256": "97baad99f105e25ed71e68e873ef8ca2c94a217311a475cdd696fafa005157ad",
+        "baseSha256": "bf831c670c0f3fc6ea3ec3d605816d49e218261d50db85f474199dd2a0b419a3"
+      },
+      {
+        "path": "scripts/dairy-preservation.test.mjs",
+        "sha256": "dfa7dca1cc26512c824addde9aa0153bd03792df17f32ca6f4174ff123a27740",
+        "baseSha256": null
+      },
+      {
+        "path": "scripts/dairy-native.test.mjs",
+        "sha256": "8c148a462d0bec61a1c2284a62a4828a0abddcec1aaacb3d53cdf2257fde8df6",
+        "baseSha256": null
+      },
+      {
+        "path": "src/game/exactWaterMemo.ts",
+        "sha256": "89ad6b5396e38780a5eded7f2c15fe6bac5992325261467139abef905b7c5413",
+        "baseSha256": null
+      },
+      {
+        "path": "src/game/localWater.ts",
+        "sha256": "f3e6adfe59a15e15ba1ae6a6e578c56a8132be08e2b55bd31482eff0c5e92a22",
+        "baseSha256": "682acafebaf340dd967c85dd3fda344243281c346e6a0365a6cedae62e6ea74c"
+      },
+      {
+        "path": "scripts/exact-water-memo.test.mjs",
+        "sha256": "8f2a24bb091e0c64b444fbdfd5c3a407c24a4ba2bf6e677e52b63c33be50b1f8",
+        "baseSha256": null
+      },
+      {
+        "path": "scripts/helpers/native-dairy-village.mjs",
+        "sha256": "134f1ee98880a0806286d229d6f4f9e32f8f82cbdf9ca44a64b01124f4eb4451",
+        "baseSha256": null
+      },
+      {
+        "path": "scripts/diagnostics/dairy-ui-browser.mjs",
+        "sha256": "61f35b6f4a011d61fe98c22f70148aa47bad115c51686108d0fd25971ee854ca",
+        "baseSha256": null
+      }
+    ],
+    "sha256": "f0d15ef098526552f2194b3ea866acdc9b65e2bf40a22aa0c7c80f16183ea191"
+  }
+}

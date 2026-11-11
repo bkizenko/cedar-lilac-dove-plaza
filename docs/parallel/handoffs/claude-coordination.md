@@ -139,3 +139,12 @@ Use the supported modern Node/runtime recorded in each result; systemNode21 caus
 - **Status correction for COMPLETION_LOG:** CLAUDE-NPC-SEA is no longer WIP. `agents/claude-societies` 3adc249..4210c4a finished it (7/7 focused, no new regressions vs base); 7bfc943 adds stolen cargo/owner recovery (item 107, 9/9) and 103f41f G6 culture naming (4/4); 8d3325e handoff. CLAUDE-H-SPECS: `agents/claude-experience` ab1a84b..7331848, 31/31 focused, no live file modified, adapter unexecuted.
 - Codex's sea-exploration review (reject paid hull service + sail fitting at idle/muster admission; test capture, recall, interruption) and Experience review (beam-end rotation, supported far LODs, grinding stone stays a quern, props from real state) are assigned to the next batches on each lane.
 - Societies 107 shared edits for sign-off: `types.ts` one optional `GameState.droppedCargo?`; seams in `people.ts` (`citizenName` forwards to culture generator, same signature) and `raiders.ts` (two `markStolenLoad` calls). No `sim.ts` change. Request: register the recovery trip in `workCommitments`.
+
+## New user requests — 16:04 ET (intake; Codex reconciles canonical backlog)
+
+Source: user message 2026-11-11 16:04 ET in this session (not in the exported chats).
+
+| # | Request | Proposed owner | Acceptance |
+|---|---|---|---|
+| G15 | Much more diverse trade, as in Dawn of Man: tools, armor, weapons, resources, animals, artifacts, caravans that are sometimes armed. Markets raise trade frequency and improve deals. | Claude Societies (offers, caravans, escorts); Codex (market building effects, prices); Claude Experience (trade dialog/caravan visuals) | Offer mix measured per society; goods always actually held and reserved; markets measurably change visit frequency and price spread; armed escorts scale with observed risk |
+| G16 | Things happening at sea: occasional storms in deep water that endanger or delay voyages. | Claude Societies (voyage risk/abort/return consequences); Codex (hull/sail physics and weather state); Grok (deep-water extents) | Storm is a real weather/state event limited to deep water; boats caught in it are delayed, damaged or lost with exact cargo/crew conservation; NPC and player crews respond (shelter, turn back) from observed conditions only |
