@@ -23,10 +23,12 @@ export function scoutReturnBudgetLow(g:Game,u:Unit){const p=u.scoutProvisions;if
 /** A retained pack survives interruption. It is refunded only at an actual own
  * supply approach, or transferred/lost with the actual captured/dead body. */
 export function tickScoutProvisions(g:Game,dt:number){for(const u of g.state.units){const p=u.scoutProvisions;if(!p)continue;const stock=g.tribe(u.team).survival;
+ // A dead sea-exploration crewmate's pack is reconciled aboard by its voyage.
+ if(u.seaExplorationId!==undefined&&u.hp<=0)continue;
  if(u.hp<=0||u.prisoner){if(u.prisoner){const food=Math.min(p.food,Math.max(0,12-u.prisoner.food)),water=Math.min(p.water,Math.max(0,4-u.prisoner.waterLiters));u.prisoner.food+=food;u.prisoner.waterLiters+=water;p.food-=food;p.water-=water;}if(stock)stock.waterLostLiters+=p.water;u.scoutProvisions=undefined;continue;}
  const need=rate(u)*dt,waterNeed=g.state.survivalVersion===1?SCOUT_PROVISION_RULES.waterLitersPerSecond*dt:0,food=Math.min(p.food,need),water=Math.min(p.water,waterNeed);p.food-=food;p.water-=water;p.foodUsed+=food;p.waterUsed+=water;if(u.campTrip){u.campTrip.foodUsed=p.foodUsed;u.campTrip.waterUsed=p.waterUsed;}if(stock)stock.waterConsumedLiters+=water;
  const hunger=u.hunger||0,thirst=u.thirstSeconds||0;u.hunger=Math.max(0,hunger+(food+1e-8<need?dt:-dt*3));u.thirstSeconds=Math.max(0,thirst+(water+1e-8<waterNeed?dt:-dt*3));u.hp=Math.max(0,u.hp-Math.max(0,Math.max(0,u.hunger-60)-Math.max(0,hunger-60))*u.maxHp*predisposition(u).appetite/160-Math.max(0,Math.max(0,u.thirstSeconds-180)-Math.max(0,thirst-180))*u.maxHp/1800);
- if(u.scout&&!u.scout.returning||u.campTrip)continue;
+ if(u.scout&&!u.scout.returning||u.campTrip||u.seaExplorationId!==undefined)continue;
  returnScoutPackAtCache(g,u);
 }}
 export function validScoutProvisions(p:unknown,time:number){if(!p||typeof p!=='object')return false;const row=p as ScoutProvisions;return row.version===1&&['food','water','foodUsed','waterUsed','started'].every(k=>typeof row[k as keyof ScoutProvisions]==='number'&&Number.isFinite(row[k as keyof ScoutProvisions])&&row[k as keyof ScoutProvisions]>=0)&&row.food+row.foodUsed<=100&&row.water+row.waterUsed<=20&&row.started<=time;}

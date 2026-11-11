@@ -151,6 +151,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   societyMissionId?:number;
   coastalVoyageId?:number;
   coastalCommissionId?:number;
+  seaExplorationId?:number;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;
@@ -490,6 +491,7 @@ export type GameState = {
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
   coastalTradeReviewAt?:number;
   coastalCommissions?:import('./coastalCommission').CoastalCommission[];
+  seaExploration?:import('./seaExploration').SeaExplorationState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
