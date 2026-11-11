@@ -11,6 +11,7 @@ export function goatSearchPen(g: Game, id: number) {
 
 export function visibleGoatsForPen(g: Game, pen: Building) {
   return g.state.wildlife.filter(a => a.species === 'goat' && a.hp > 0 &&
+    !g.state.units.some(u => u.hp > 0 && u.tamingWork?.animal === a.id) &&
     g.visibleAt(a.x, a.z) && Math.hypot(a.x - pen.x, a.z - pen.z) < HERD.searchRadiusMeters &&
     g.workBoard.connected(g, a.x, a.z, pen.x, pen.z));
 }

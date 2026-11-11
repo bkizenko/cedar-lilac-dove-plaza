@@ -2848,7 +2848,8 @@ export class Game {
       if(u.order!=="explore")return;
     }
 
-    if(this.lootMegaliths(u))return;
+    // A dedicated animal search must not be replaced by an unrelated ruin haul.
+    if(!pen&&this.lootMegaliths(u))return;
     if (u.stuckT > 8) {
       const next=this.findExploreTarget(u,pen);
       if(next&&connectedForUnit(this,u,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
