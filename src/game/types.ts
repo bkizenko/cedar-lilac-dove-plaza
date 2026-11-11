@@ -154,6 +154,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;
   waterVessel?:import('./pottery').WaterVessel;
+  sitePreparationId?:number;
   productionProjectId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
@@ -295,6 +296,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  sitePreparation?:import('./sitePreparation').SitePreparation;
   renovation?:import('./housingTypes').HousingRenovation;
   housingReceipt?:import('./housingTypes').HousingReceipt;
   maintenance?:import('./buildingMaintenance').BuildingCare;
@@ -335,6 +337,7 @@ export type Building = {
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
   storeCare?: number;
+  goatSearch?:import('./animalOrders').GoatSearchOrder;
   penWater?:import('./penWater').PenWater;
   pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
@@ -393,6 +396,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  identity?:import('./societyIdentity').SocietyIdentity;
   inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];
   animalProcessingVersion?:1;
   productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;

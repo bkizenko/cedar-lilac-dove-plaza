@@ -1,3 +1,4 @@
+import {SocietyFlag} from './SocietyFlag';
 import {useState} from 'react';
 import type {Engine} from '../game/engine';
 import {leaderDialogue,chooseLeaderDialogue,type LeaderTopic} from '../game/leaderDialogue';
@@ -13,7 +14,7 @@ export function LeaderConversation({engine,personId,strangerId}:{engine:Engine;p
   setTopic(result.view.topic);engine.pushHud();
  };
  return <section className="space-y-3" aria-label="Conversation">
-  <p className="text-sm text-parchment-dim">{view.name} · {view.role==='leader'?'Community leader':'Community representative'}</p>
+  <p className="text-sm text-parchment-dim"><SocietyFlag game={engine.game} team={engine.game.state.units.find(u=>u.id===strangerId)?.team}/>{" "}{view.name} · {view.role==='leader'?'Community leader':'Community representative'}</p>
   <div className="max-h-56 space-y-3 overflow-y-auto rounded-md border border-bronze/30 p-3" role="log" aria-label="Meeting conversation" aria-live="polite">
    {turns.length?turns.map((turn,index)=><div key={index}><p className="mb-1 text-xs text-parchment-dim">You: {turn.question}</p><p className="text-sm">{view.name}: {turn.reply}</p></div>):<p className="text-sm">{view.name}: {view.issue||view.reply}</p>}
   </div>

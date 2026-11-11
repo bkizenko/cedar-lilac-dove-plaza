@@ -1,5 +1,5 @@
 import{penWaterReport,releaseHusbandryKeeper}from'../game/penWater';
-import {searchForWildGoats, visibleGoatsForPen} from '../game/animalOrders';
+import {searchForWildGoats, visibleGoatsForPen, cancelGoatSearch, goatSearchOrderLabel} from '../game/animalOrders';
 import {penPastureReport} from '../game/penPasture';
 import type {Engine} from '../game/engine';
 import {assignHusbandry,beginHerdTaming,HERD,penAnimals} from '../game/husbandry';
@@ -12,7 +12,8 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const female=animals.filter(a=>a.sex==='female').length,kids=animals.filter(a=>g.state.time-a.born<HERD.maturity).length;
  const keeper=g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);
  const pausedKeeper=g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&u.husbandryWork.paused);
- const scouting=g.state.units.some(u=>u.hp>0&&u.order==='explore'&&u.goatSearchPen===pen);
+ const searchActive=!!b?.goatSearch&&!['complete','exhausted'].includes(b.goatSearch.state);
+ const searchStatus=b?goatSearchOrderLabel(b):null;
  const known=b?visibleGoatsForPen(g,b).length:0;
  const owned=new Set(animals.map(a=>a.id));
  const taming=g.state.units.filter(u=>u.hp>0&&u.tamingWork?.pen===pen&&!owned.has(u.tamingWork.animal)).length;
@@ -28,10 +29,12 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
   {report&&capacity<report.housingCapacity&&<p>Wet or steep ground limits new animals. Existing animals stay in your herd.</p>}
   <p>{report?.keepers?`${report.keepers}/${report.keepersNeeded} keepers assigned`:'No keeper assigned'}{calendar(g).phase===3?' · Winter needs stored plant food':''}</p>
   <div className="boat-actions">
-   <button type="button" disabled={scouting&&!known} onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>
-    {scouting&&!known?'Scout searching':'Search for goats'}
+   <button type="button" disabled={searchActive} onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>
+    {searchActive?'Goat search queued':'Search for goats'}
     <span>{known?`${known} visible within reach`:`Hills and woodland within ${HERD.searchRadiusMeters} m`}</span>
    </button>
+   {searchActive&&<button type="button" onClick={()=>run(()=>cancelGoatSearch(g,pen))}>Cancel search</button>}
+   {searchStatus&&<span role="status">{searchStatus}</span>}
    <button type="button" disabled={!paused&&animals.length+taming>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen))}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel`}</span></button>
    <button type="button" disabled={!pausedKeeper&&(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run(()=>assignHusbandry(g,pen))}>{pausedKeeper?'Resume keeper':keeper?'Assign another keeper':'Assign keeper'}</button>
    <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=HERD.maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'pack'))}>Fit pack harness<span>2 logs · uses one adult goat</span></button>

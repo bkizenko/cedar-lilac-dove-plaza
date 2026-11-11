@@ -1,3 +1,5 @@
+import {sitePreparationSurvey} from '../src/game/sitePreparation.ts';
+import {BUILDINGS} from '../src/game/constants.ts';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game}from'../src/game/sim.ts';import {workRuntime}from'../src/game/workRuntime.ts';import {reserveTreeWorker,reconcileTreeWorkers}from'../src/game/workAllocation.ts';import {reserveConstructionWorker,reconcileConstructionWorkers,constructionOwnershipDiagnostics}from'../src/game/constructionOwnership.ts';import {encodeGame,decodeGame}from'../src/game/persistence.ts';
 function fixture(){const g=new Game();g.reset(345,2);g.enterIsland();g.world.heights.fill(4);g.vision.fill(2);g.state.time=100;g.state.units=[];g.state.buildings=[];const hall=g.makeBld('townhall',0,38,0);hall.build=1;const b=g.makeBld('hut',18,38,0);b.build=.2;b.hp=50;g.state.buildings.push(hall,b);g.spawnUnit('worker',12,38,0);const u=g.state.units.at(-1);u.order='idle';u.selected=true;g.rebuildWalk();return{g,b,u};}
@@ -12,7 +14,7 @@ test('actual paid site survives interruption/death and save/load, then a replace
  const g=new Game();g.reset(345,2);g.enterIsland();g.state.autoWorkEnabled=false;g.state.weather='clear';g.state.weatherT=10000;
  const home=g.campOf(0),original=g.state.units.find(u=>u.team===0&&u.type==='worker'),replacement=g.state.units.find(u=>u.team===0&&u.type==='worker'&&u!==original);
  assert.ok(original&&replacement);for(const u of g.state.units.filter(u=>u.team===0)){g.interruptMission(u);u.order='hold';}
- const spot=g.findDryFoundation('hut',home.x+18,home.z,48,(x,z)=>g.placementValid('hut',x,z));assert.ok(spot);
+ const spot=g.findDryFoundation('hut',home.x+18,home.z,48,(x,z)=>g.placementValid('hut',x,z)&&sitePreparationSurvey(g,{...BUILDINGS.hut,type:'hut',x,z}).clearable.length===0);assert.ok(spot);
  const woodBefore=g.tribe(0).wood;assert.equal(g.placeBuilding('hut',spot.x,spot.z),true);const site=g.state.buildings.at(-1),charged=woodBefore-g.tribe(0).wood;assert.ok(charged>0);assert.equal(site.plannedCost,undefined);
  for(const u of g.state.units.filter(u=>u.team===0)){g.interruptMission(u);u.order='hold';}g.clearSelect();original.selected=true;g.orderConstruction(site);
  const check=(game)=>{const jobs=workRuntime(game);for(const u of game.state.units){const job=jobs.activeJob(u.id);if(job){assert.equal(job.actors.filter(id=>id===u.id).length,1);if(job.kind==='construction')assert.equal(jobs.reservations.used(`tree:${u.node?.id}:slots`),0);}}};

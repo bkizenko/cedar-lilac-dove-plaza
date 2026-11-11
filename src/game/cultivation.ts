@@ -1,3 +1,4 @@
+import {siteBlocksRegrowth} from './sitePreparation';
 import {campAnchor,supplyDrops,supplyApproach,type SupplyDrop} from './campAnchor';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
@@ -173,6 +174,7 @@ export function replantStand(g:Game,buildingId:number,team=0,limit=4,silent=fals
  for(const n of g.state.trees){
   if(planted>=Math.max(0,Math.min(4,limit))||(t.seeds||0)<(team===0?1:5))break;
   if(n.amount>0||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||(team===0&&!g.exploredAt(n.x,n.z)))continue;
+  if(siteBlocksRegrowth(g,n))continue;
   if(g.state.buildings.some(site=>g.solidBuilding(site)&&Math.abs(site.x-n.x)<site.w*.4&&Math.abs(site.z-n.z)<site.d*.4))continue;
   t.seeds!--;n.regenT=120;n.planted=true;planted++;
  }
@@ -188,6 +190,7 @@ export function assignWoodlandPlanting(g:Game,buildingId:number,team=0,reserve=8
  let assigned=0;
  for(const n of g.state.trees){
   if(assigned>=4||(t.seeds||0)<=reserve)break;
+  if(siteBlocksRegrowth(g,n))continue;
   if(n.amount>0||n.planted||n.regenT<=120||Math.hypot(n.x-b.x,n.z-b.z)>28||!known(n.x,n.z)||!g.walkable(n.x,n.z)||
      g.state.units.some(p=>p.hp>0&&p.plantingWork?.treeId===n.id))continue;
   const u=g.state.units.find(p=>p.team===team&&p.hp>0&&p.type==='worker'&&!isDependent(g,p)&&!p.militia&&!p.jobLock&&!p.buildOrder&&!p.tributeJourney&&p.drill==null&&!p.studyCrop&&!p.copperStudy&&!p.plantingWork&&!p.weaponWork&&!p.haulageWork&&!p.farmToolWork&&!p.tamingWork&&!p.emergency&&!p.recalled&&!p.expedition&&!p.scout&&!p.trade&&!p.visit&&!p.envoy&&!p.foundingJourney&&p.carry===0&&['idle','gather'].includes(p.order)&&Math.hypot(p.x-b.x,p.z-b.z)<35&&g.workBoard.connected(g,p.x,p.z,n.x,n.z));

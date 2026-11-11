@@ -1,3 +1,4 @@
+import {sitePreparationSurvey,reserveSitePreparation} from './sitePreparation';
 import type { Game } from "./sim";
 import type { Building, Unit, GameState } from "./types";
 import type { HousingMaterials, HousingRenovation, HousingCargo } from "./housingTypes";
@@ -136,6 +137,7 @@ export function planAdvancedHome(g: Game, x: number, z: number, team = 0) {
     iron: 0,
   };
   b.renovation = newProject(g, b, "new");
+  if(team===0&&sitePreparationSurvey(g,b).clearable.length&&!reserveSitePreparation(g,b,'unpaid',{}))return false;
   g.state.buildings.push(b);
   g.state.walkDirty = true;
   g.workBoard.reset();

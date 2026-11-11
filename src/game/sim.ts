@@ -1,9 +1,10 @@
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
+import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
-import { captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
+import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
 import{planAdvancedHome,housingAI,pauseHousingWorker,tickHousing,homeUseAI,knowsHousing,housingApproach,housingFundingIssue,preferredRivalHome,housingAdoptionIssue,retainHousingProject}from'./housing';
 import type {SimulationPhaseProfile} from './simulationPhaseProfile';
@@ -947,7 +948,7 @@ export class Game {
   }
 
   solidBuilding(b: Building) {
-    return b.hp > 0 && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["threshingFloor", "trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !pendingSitePreparation(b) && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["threshingFloor", "trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -1129,6 +1130,9 @@ export class Game {
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
     const d = size??BUILDINGS[type];
+    const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
+    if(prep?.issue)return prep.issue;
+    if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
     const excavation=type==='trench'?excavationIssue(this,{id:ignoreId??-1,team:_team,x,z,w:d.w,d:d.d}):excavationConstructionIssue(this,type,x,z,d.w,d.d);
     if(excavation)return excavation;
     if(type==="bridge"){
@@ -1147,7 +1151,7 @@ export class Game {
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
-      if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
+      if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&!prep?.clearable.includes(n)&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
       if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
       if(compactGrainSite)return null;
@@ -1155,7 +1159,7 @@ export class Game {
     if (type !== "quarry") {
       for (const n of this.state.stones) {
         if (n.amount <= 0) continue;
-        if (Math.hypot(n.x - x, n.z - z) < Math.max(d.w, d.d) * 0.38 + 1.1) {
+        if (!prep?.clearable.includes(n)&&Math.hypot(n.x - x, n.z - z) < Math.max(d.w, d.d) * 0.38 + 1.1) {
           return "Too close to a stone outcrop";
         }
       }
@@ -1164,7 +1168,7 @@ export class Game {
     if (type !== "quarry" && type !== "lumber") {
       for (const n of this.state.trees) {
         if (n.amount <= 0) continue;
-        if (Math.hypot(n.x - x, n.z - z) < Math.max(d.w, d.d) * 0.28 + 1.15) {
+        if (!prep?.clearable.includes(n)&&Math.hypot(n.x - x, n.z - z) < Math.max(d.w, d.d) * 0.28 + 1.15) {
           return "Too close to the trees — clear a plot first";
         }
       }
@@ -1172,7 +1176,7 @@ export class Game {
     if (type !== "quarry") {
       for (const n of this.state.forage) {
         if (n.amount <= 0) continue;
-        if (Math.hypot(n.x - x, n.z - z) < 1.85) {
+        if (!prep?.clearable.includes(n)&&Math.hypot(n.x - x, n.z - z) < 1.85) {
           return "That's a berry thicket";
         }
       }
@@ -1227,6 +1231,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    if(cancelSitePreparation(this,b)){this.clearSelect();this.banner('Site cancelled — reserved construction materials returned; gathered goods stay with their carriers',3);return;}
     if(b.plannedCost){
       retainHousingProject(this,b,"Unpaid home blueprint cancelled");
       b.hp=0;this.clearSelect();this.workBoard.reset();
@@ -1414,7 +1419,7 @@ export class Game {
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
     const spot = this.placementValid(type, x, z, team,size,span)
       ? { x, z }
-      : size||span||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
+      : team===0||size||span||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
         this.banner(this.placementIssue(type, x, z, team,size,undefined,span) || "Can't build there", 1.8);
@@ -1422,7 +1427,6 @@ export class Game {
       }
       return false;
     }
-    if(!planned)this.spend(team, cost);
     const b = this.makeBld(type, spot.x, spot.z, team,undefined,span);
     configureTowerPlatform(this,b);
     configureExcavation(this,b);
@@ -1433,7 +1437,10 @@ export class Game {
       b.build = 0;
       b.hp = Math.max(16, Math.floor(b.maxHp * 0.14));
     }
+    const clearing=team===0&&!['bridge','quarry','trench','moat'].includes(type)&&sitePreparationSurvey(this,b).clearable.length>0;
+    if(clearing){if(!reserveSitePreparation(this,b,planned?'unpaid':'fresh',planned?{}:cost))return false;}else if(!planned)this.spend(team,cost);
     this.state.buildings.push(b);
+    if(clearing)reviewSitePreparations(this,true);
     if(team!==0&&b.build<1)this.assignBuilders(b);
     this.state.walkDirty = true;
     if (type === "townhall" && team === 0) {
@@ -1445,7 +1452,8 @@ export class Game {
       this.addFloater(spot.x, b.y + 3, spot.z, d.name, "#efe4b0");
       this.onSfx("place");
       if (b.build < 1) assignPlacedConstruction(this, b);
-      if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
+      if(clearing)this.banner('Site reserved — clearing resources before construction or planting',4);
+      else if(planned)this.banner(`${d.name} planned — ${planStatus(this,b)}`,4);
       else if(type==="farm")this.banner("Field marked — assign farmers to sow in spring",4);
       else if(compactGrainWorkplace(type))this.banner(`${d.name} placed. Select it to see construction progress.`,4);
     }
@@ -1495,6 +1503,7 @@ export class Game {
 
   buildAI(u: Unit, dt: number) {
     const b = u.node && "type" in u.node ? (u.node as Building) : this.nearestUnbuilt(u);
+    if(b&&pendingSitePreparation(b)){if(!assignSitePreparation(this,u,b))u.workReason='Site clearing must finish before construction';return;}
     if(b?.renovation){housingAI(this,u,b,dt);return;}
     if(b?.expansion){if(!reserveConstructionWorker(this,u,b))return;if(expansionWork(this,u,b,dt)){if(!b.expansion)completeConstructionTarget(this,b);else if(u.order!=='build')releaseConstructionWorker(this,u);return;}}
     if (!b || b.hp <= 0 || b.build >= 1 || b.plannedCost) {
@@ -1744,6 +1753,7 @@ export class Game {
 
   interruptMission(u:Unit) {
     interruptSiegeRam(this,u);
+    if(u.sitePreparationId!==undefined)releaseSitePreparationWorker(this,u);
     u.foodRole=undefined;
     u.tradeLoading=undefined;
     delete u.goatSearchPen;
@@ -2853,7 +2863,7 @@ export class Game {
     // A dedicated animal search must not be replaced by an unrelated ruin haul.
     if(!pen&&this.lootMegaliths(u))return;
     if (u.stuckT > 8) {
-      const next=this.findExploreTarget(u,pen);
+      const next=(pen?goatSearchTarget(this,u,pen):this.findExploreTarget(u));
       if(next&&connectedForUnit(this,u,next.x,next.z)){u.tx=next.x;u.tz=next.z;u.stuckT=0;this.paths.delete(u.id);return;}
       if (pen) { finishGoatSearch(this,u,"Goat scout’s route is blocked — returning to camp"); return; }
       u.order = "return";
@@ -2865,7 +2875,7 @@ export class Game {
     // just outside steer()'s point-sized arrival tolerance; recognize the area
     // as visited instead of walking back into one another forever.
     if (Math.hypot(u.x-u.tx,u.z-u.tz)<=Math.max(1.5,u.r*2) || this.steer(u, dt)) {
-      const next = this.findExploreTarget(u,pen);
+      const next = (pen?goatSearchTarget(this,u,pen):this.findExploreTarget(u));
       if (next) {
         u.tx = next.x;
         u.tz = next.z;
@@ -3400,6 +3410,7 @@ export class Game {
     const flood = this.state.weather === "flood";
     const grow = (list: ResourceNode[]) => {
       for (const n of list) {
+        if(n.amount<=0&&siteBlocksRegrowth(this,n))continue;
         if(tickWildPlant(this,n,dt))continue;
         if(n.kind==="fish"){renewFish(this,n,dt);continue;}
         if(n.pressure&&!(this.state.units.some(u=>u.hp>0&&u.order==="gather"&&u.node===n)))n.pressure=Math.max(0,n.pressure-dt/7200);
@@ -5666,6 +5677,7 @@ export class Game {
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
         fundConstructionPlans(this);
+        reviewSitePreparations(this);
         tickGates(this);
         if(this.state.walkDirty)this.rebuildWalk();
         for (const b of this.state.buildings)
@@ -5717,6 +5729,7 @@ export class Game {
             if(expeditionAI(this,u,sdt))continue;
             if(u.order==='explore'){this.workerAI(u,sdt);continue;}
             if(routineRest(this,u,sdt))continue;
+            if(sitePreparationAI(this,u,sdt))continue;
             // Armed citizens keep their equipment while fulfilling an explicit shipment.
             if(u.visit||(u.order==="trade"&&u.trade)){this.workerAI(u,sdt);continue;}
             if (u.team !== 0 && u.type === "worker") this.workerAI(u, sdt);
@@ -5753,6 +5766,7 @@ export class Game {
         this.updateProjectiles(sdt,true,huntingObstacles);
         tickHousing(this,sdt);
         tickHusbandry(this,sdt);
+        tickGoatSearchOrders(this);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
         fadeTrails(this,sdt);

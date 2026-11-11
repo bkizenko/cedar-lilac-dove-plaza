@@ -1,4 +1,6 @@
 import {SiegeRamControls} from './SiegeRamControls';
+import {SocietyFlag} from './SocietyFlag';
+import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {TradeProposal} from './TradeProposal';
 import {tradeJourney} from '../game/caravans';
 import {WaterReachPanel} from './WaterReachPanel';
@@ -205,6 +207,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     <div className="hud-shell font-sans text-parchment">
       <div className="hud-res">
         <div className="hud-panel resource-strip">
+          {engine&&<GameTooltip title={engine.game.tribe(0).name} description="Your community flag. Edit it in Camp or the village ledger."><span aria-label={`Community: ${engine.game.tribe(0).name}`}><SocietyFlag game={engine.game} team={0}/><span className="ml-1 hidden max-w-24 truncate text-xs xl:inline">{engine.game.tribe(0).name}</span></span></GameTooltip>}
           {[["Food",readyFood,<Wheat key="f"/>],["Logs",hud.wood,<TreePine key="w"/>],["Stone",hud.stone,<Mountain key="s"/>],["Water",`${Math.floor(engine?.game.tribe(0).survival?.waterLiters||0)} L`,<Droplets key="water"/>],["People",`${hud.pop}/${hud.popCap}`,<Users key="p"/>]].map(([label,value,icon])=><div className="resource-cell" key={String(label)} title={label==="Food"?"Food ready to eat · open Stores for raw supplies":String(label)}>{icon}<div><span>{label}</span><strong>{value}</strong></div></div>)}
           <button aria-label="Expand resource details" aria-expanded={statusPane==='stores'} onClick={()=>setStatusPane(v=>v==='stores'?null:'stores')}>{statusPane==='stores'?<ChevronUp/>:<ChevronDown/>}</button>
         </div>
@@ -212,7 +215,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {statusPane&&engine&&!founding&&<div className="hud-status-drawer hud-panel" aria-label="Village details">
           <header><span>Village</span><button aria-label="Close village details" onClick={()=>setStatusPane(null)}><X size={14}/></button></header>
           <nav aria-label="Village detail tabs">{([['stores','Stores'],['work','Work'],['food','Food'],['craft','Craft'],['camp','Camp']] as const).map(([key,label])=><button key={key} aria-pressed={statusPane===key} onClick={()=>setStatusPane(key)}>{label}</button>)}</nav>
-          {statusPane==='stores'&&<><div className="resource-details"><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<NomadicCampControl engine={engine}/>}
+          {statusPane==='stores'&&<><div className="resource-details"><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/></>}
         </div>}
         {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
           <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>

@@ -1,4 +1,7 @@
 import {validSiegeRamState,reconcileSiegeRams} from './siegeRam';
+import {validSitePreparationState,reconcileSitePreparationWorkers} from './sitePreparation';
+import {validSocietyIdentities} from './societyIdentity';
+import {validGoatSearchOrder} from './animalOrders';
 import {validArmorState,reconcileArmorHolders} from './armor';
 import {validTradeLoadingUnit} from './tradeLoading';
 import{validHousingState}from'./housingValidation';
@@ -62,6 +65,7 @@ import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
+  reconcileSitePreparationWorkers(g);
   reconcileArmorHolders(g);
   reconcileSiegeRams(g);
   syncRiverboats(g);
@@ -134,7 +138,7 @@ function validateGamePayload(raw: unknown) {
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
-  if(!validHousingState(s))fail();
+  if(!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
   if(!validCampMoveState(s))fail();
@@ -144,6 +148,7 @@ function validateGamePayload(raw: unknown) {
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s))fail();
+  if(!validSocietyIdentities(s))fail();
   if(!validBoatPractice(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
@@ -553,6 +558,7 @@ function validateGamePayload(raw: unknown) {
     if(c.huntDefense!==undefined){const h=c.huntDefense;if(c.species!=='boar'||c.hp<=0||!obj(h)||!Number.isSafeInteger(h.hunterId)||h.hunterId<1||h.hunterId>=s.nextId||![h.expiresAt,h.nextAttackAt,h.lastX,h.lastZ].every(num)||h.expiresAt<0||h.expiresAt>s.time+HUNTING_HAZARD_RULES.alertSeconds+.001||h.nextAttackAt<0||h.nextAttackAt>s.time+HUNTING_HAZARD_RULES.attackCooldownSeconds+.001||Math.abs(h.lastX)>HALF+40||Math.abs(h.lastZ)>HALF+40)fail();}
     if (!["deer", "boar", "goat", "bird"].includes(c.species)||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
+  for(const b of s.buildings)if(b.goatSearch!==undefined&&(b.type!=='pen'||b.team!==0||!validGoatSearchOrder(b.goatSearch,s.time,s.nextId)))fail();
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}
   for(const u of s.units){
     for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team)&&!(w===u.husbandryWork&&w.phase==='waterReturn'&&(w.waterLiters??0)>0&&w.releaseAfterWater===true))fail();

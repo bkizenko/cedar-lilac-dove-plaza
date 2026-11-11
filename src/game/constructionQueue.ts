@@ -1,3 +1,4 @@
+import {releaseSitePreparationWorker,pendingSitePreparation} from './sitePreparation';
 import{hasConstructionWork}from'./constructionTargets';
 import{pauseHousingWorker,housingMaterialIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
 import type {Game} from './sim';
@@ -28,7 +29,7 @@ export function queueConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
 /** An explicit Build now command keeps existing pending sites, but puts this
  * site first. Legacy residents without a queue retain their existing behavior. */
 export function recordImmediateConstruction(g:Game,u:Builder,b:Building){if(!u.constructionQueue)return;const active=u.buildOrder;const existing=u.constructionQueue.sites,ordered=[...new Set([b.id,...(active?[active]:[]),...existing])];u.constructionQueue={sites:ordered.length<=CONSTRUCTION_QUEUE_RULES.maximumSites?ordered:existing};wake(g);}
-export function pauseConstructionQueue(g:Game,u:Builder){if(!u.constructionQueue)return false;pauseHousingWorker(g,u);u.constructionQueue.paused=true;if(u.buildOrder!==undefined){releaseConstructionWorker(g,u);u.buildOrder=undefined;if(u.order==='build'){u.node=null;u.order=u.carry>0?'return':'hold';}}wake(g);return true;}
+export function pauseConstructionQueue(g:Game,u:Builder){if(!u.constructionQueue)return false;if(u.sitePreparationId!==undefined)releaseSitePreparationWorker(g,u);pauseHousingWorker(g,u);u.constructionQueue.paused=true;if(u.buildOrder!==undefined){releaseConstructionWorker(g,u);u.buildOrder=undefined;if(u.order==='build'){u.node=null;u.order=u.carry>0?'return':'hold';}}wake(g);return true;}
 export function resumeConstructionQueue(g:Game,u:Builder){if(!u.constructionQueue)return false;delete u.constructionQueue.paused;wake(g);return true;}
 export function editConstructionQueue(g:Game,u:Builder,id:number,direction:'remove'|'up'|'down'){
  const q=u.constructionQueue;if(!q)return false;const at=q.sites.indexOf(id);if(at<0)return false;
@@ -44,7 +45,7 @@ export function updateConstructionQueues(g:Game){
  for(const worker of g.state.units){const u=worker as Builder,q=u.constructionQueue;if(!q)continue;q.sites=q.sites.filter(id=>{const b=buildings.get(id);return!!b&&live(g,b);});if(!q.sites.length){u.constructionQueue=undefined;continue;}
   if(q.paused||!adult(g,u)||u.emergency||u.militia||u.recalled||u.envoy||u.scout||u.expedition||u.foundingJourney||u.visit||u.escortId!==undefined||hasTaskCommitment(u)||!['idle','hold','gather','return','build'].includes(u.order))continue;
   const active=u.buildOrder!==undefined?buildings.get(u.buildOrder):undefined;if(active&&live(g,active)&&!active.planPaused)continue;
-  const ready=q.sites.map((id,index)=>({b:buildings.get(id)! as Site,index})).filter(({b})=>!b.planPaused&&(!b.renovation||(housingOwnerCanContinue(b.renovation,b.team)&&!g.state.units.some(other=>other!==u&&other.hp>0&&other.buildOrder===b.id)&&(b.renovation.mode!=='new'||knowsHousing(u))&&(b.renovation.paid||!housingMaterialIssue(g,b.team,b.renovation.quote))))&&(!b.plannedCost||g.state.weather!=='storm'&&g.canAfford(0,b.plannedCost))&&(b.type==='bridge'?!!bridgeApproach(g,u,b):g.workBoard.connected(g,u.x,u.z,b.x,b.z))).sort((a,b)=>constructionPriority(b.b)-constructionPriority(a.b)||focusMatch(g,b.b)-focusMatch(g,a.b)||a.index-b.index);
+  const ready=q.sites.map((id,index)=>({b:buildings.get(id)! as Site,index})).filter(({b})=>!b.planPaused&&!(pendingSitePreparation(b)&&b.sitePreparation?.paused)&&(!b.renovation||(housingOwnerCanContinue(b.renovation,b.team)&&!g.state.units.some(other=>other!==u&&other.hp>0&&other.buildOrder===b.id)&&(b.renovation.mode!=='new'||knowsHousing(u))&&(b.renovation.paid||!housingMaterialIssue(g,b.team,b.renovation.quote))))&&(!b.plannedCost||g.state.weather!=='storm'&&g.canAfford(0,b.plannedCost))&&(b.type==='bridge'?!!bridgeApproach(g,u,b):g.workBoard.connected(g,u.x,u.z,b.x,b.z))).sort((a,b)=>constructionPriority(b.b)-constructionPriority(a.b)||focusMatch(g,b.b)-focusMatch(g,a.b)||a.index-b.index);
   const selected=ready[0]?.b;if(!selected)continue;const retained=q.sites.slice();if(orderConstruction(g,selected,[u]))u.constructionQueue={sites:retained};
  }
 }

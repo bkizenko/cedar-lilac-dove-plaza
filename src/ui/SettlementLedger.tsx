@@ -1,3 +1,5 @@
+import {SocietyIdentityEditor} from './SocietyIdentityEditor';
+import {SocietyFlag} from './SocietyFlag';
 import {communityResidency} from '@/game/communities';
 import {civicPrestige} from '@/game/civicPrestige';
 import {SeasonLedger} from './SeasonReport';
@@ -81,6 +83,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
   };
   return (
     <dialog ref={ref} className="play-guide settlement-ledger" onCancel={close}>
+      <SocietyIdentityEditor engine={engine}/>
       <h2 className="font-display text-2xl text-bronze-bright">The village ledger</h2>
       <p><strong>{habitat.name}</strong> · {habitat.advice}</p>
       <p className="mt-2">
@@ -362,7 +365,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
         .filter((n) => n.id > 0 && n.id !== 3 && (n.peaceTerm==='annexation' || knownSettlement(g,n.id)||knownDiplomaticRelation(g,n.id).known))
         .map((n) => (
           <section key={n.id} className="ledger-neighbor">
-            <strong>{n.name}</strong>
+            <SocietyFlag game={g} team={n.id}/>{" "}<strong>{n.name}</strong>
             {s.tradeReports?.filter(r=>r.team===n.id&&r.observation).map(r=><div key={r.team} className="ledger-report">
               <p>Trader report · {Math.floor((s.time-r.time)/60)} minutes ago. Estimated {r.observation!.populationLow}–{r.observation!.populationHigh} people near this settlement; {r.observation!.buildings} completed buildings observed. Distant towns and travelers are not counted.</p>
               <p>{Object.keys(r.observation!.stocks).length?`They reported: ${Object.entries(r.observation!.stocks).map(([kind,level])=>`${kind==='wood'?'logs':kind} ${level}`).join(' · ')}.`:'They kept their supply levels private. Trade offers are the available evidence.'} Send another trader to refresh this account.</p>

@@ -1,3 +1,4 @@
+import {pendingSitePreparation,assignSitePreparation,sitePreparationStatus} from './sitePreparation';
 import{housingStatus}from'./housing';
 import{hasConstructionWork}from'./constructionTargets';
 import{fibreOrderIssue}from'./fibre';
@@ -46,6 +47,7 @@ export function constructionDemand(g:Game,team:number,kind:ResKind){
   return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.renovation&&!b.planPaused&&!b.renovation.paid&&b.renovation.custodyTeam===team&&(kind==='wood'||kind==='stone')&&b.renovation.quote[kind]>g.tribe(team)[kind])||(b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&(kind==='wood'||kind==='stone')&&(expansionCost(b,b.expansion)[kind]||0)>g.tribe(team)[kind])));
 }
 export function planStatus(g:Game,b:Building){
+  if(pendingSitePreparation(b)){const status=sitePreparationStatus(g,b);return status.issue||`Clearing site · ${status.remaining.length} resources remain`;}
   if(b.renovation)return housingStatus(g,b)||"Housing work queued";
   if(!b.plannedCost)return g.finished(b)?'Complete':`Building ${Math.floor(b.build*100)}%`;
   if(b.planPaused)return 'Paused — materials remain available for other projects';
@@ -67,7 +69,7 @@ export function fundConstructionPlans(g:Game,preferred?:Building){
   const sites=preferred?[preferred]:g.state.buildings.some(b=>b.plannedCost&&b.constructionPriority!==undefined)?[...g.state.buildings].sort((a,b)=>constructionPriority(b)-constructionPriority(a)):g.state.buildings;
   for(const b of sites){
     const cost=b.plannedCost;
-    if(b.renovation)continue;
+    if(b.renovation||pendingSitePreparation(b))continue;
     if(!cost||b.hp<=0||b.planPaused||!g.canAfford(b.team,cost))continue;
     if(b.type!=='dock'&&b.type!=='bridge'&&!g.dryFoundation(b.type,b.x,b.z,0,b))continue;
     if((cost.food||0)>0&&g.tribe(b.team).food-(cost.food||0)<foodDemand(g,b.team)*90)continue;
@@ -108,6 +110,7 @@ export function assignPlacedConstruction(g: Game, b: Building) {
 /** A direct RTS order supersedes ordinary jobs while retaining carried/paid goods. */
 export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
   if(b.team!==0||b.hp<=0||!hasConstructionWork(b))return false;
+  if(pendingSitePreparation(b)&&b.sitePreparation?.paused){g.banner('Resume site clearing before assigning builders',3);return false;}
   if(b.renovation?.actorId!==undefined&&b.renovation.actorId!==null&&!workers.some(u=>u.id===b.renovation!.actorId)){g.banner('One builder owns this housing workspot. Queue the site or pause before assigning a replacement.',4);return false;}
   // Select usable adults before the nearest-two limit; paid makers and loaded
   // carriers must not hide a free builder farther from the selected building.
@@ -120,6 +123,7 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner(workers.length?'Select adult residents to build this project.':'No free builder can reach this site. Existing orders and carried goods are kept.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
+    if(pendingSitePreparation(b)){g.interruptMission(u);recordImmediateConstruction(g,u,b);if(u.carry>0||Object.values(u.itemCargo||{}).some(n=>n>0)){u.sitePreparationId=b.id;u.order='return';u.node=null;}else assignSitePreparation(g,u,b);queueConstruction(g,b,[u]);continue;}
     g.interruptMission(u);recordImmediateConstruction(g,u,b);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
     u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;reserveConstructionWorker(g,u,b,u.carry>0?'returning':'reserved');u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
   }
@@ -129,6 +133,7 @@ export function directedConstruction(g:Game,u:Unit,dt:number){
   if(u.buildOrder===undefined||u.emergency)return false;
   const b=g.state.buildings.find(b=>b.id===u.buildOrder&&b.team===u.team&&b.hp>0);
   if(!b||!hasConstructionWork(b)){releaseConstructionWorker(g,u);u.buildOrder=undefined;u.node=null;u.order=u.carry>0?'return':'idle';return false;}
+  if(pendingSitePreparation(b)){if(!assignSitePreparation(g,u,b))u.workReason=sitePreparationStatus(g,b).issue||'Waiting for site clearance';return true;}
   if(u.carry>0){reserveConstructionWorker(g,u,b,'returning');u.order='return';u.node=null;return false;}
   u.order='build';u.node=b;
   if(b.planPaused){releaseConstructionWorker(g,u);u.workReason='Construction plan paused';return true;}

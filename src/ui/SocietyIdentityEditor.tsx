@@ -1,0 +1,11 @@
+import {useEffect,useState} from 'react';
+import type {Engine} from '../game/engine';
+import {societyIdentity,savePlayerIdentity,IDENTITY_SYMBOLS,IDENTITY_PATTERNS} from '../game/societyIdentity';
+import {SocietyFlag} from './SocietyFlag';
+export function SocietyIdentityEditor({engine}:{engine:Engine}){
+ const g=engine.game,[name,setName]=useState(g.tribe(0).name),[design,setDesign]=useState(()=>({...societyIdentity(g,0)})),[reply,setReply]=useState('');
+ const savedKey=JSON.stringify([g.tribe(0).name,g.tribe(0).identity||null,g.state.seed]);
+ useEffect(()=>{setName(g.tribe(0).name);setDesign({...societyIdentity(g,0)});},[g.state,savedKey]);
+ const save=()=>{const result=savePlayerIdentity(g,name,design);setReply(result.reason);if(result.accepted)engine.pushHud();};
+ return <details className="mt-2 text-sm"><summary className="cursor-pointer">Community name & flag</summary><div className="mt-2 space-y-2" aria-label="Community identity"><div className="flex flex-wrap items-center gap-2"><SocietyFlag identity={design} label="Flag preview"/><label>Name <input aria-label="Community name" maxLength={40} className="max-w-full rounded border border-bronze/40 bg-transparent px-2 py-1" value={name} onChange={e=>setName(e.target.value)}/></label></div><div className="flex flex-wrap gap-2"><label>Symbol <select aria-label="Flag symbol" className="bg-transparent" value={design.symbol} onChange={e=>setDesign({...design,symbol:e.target.value as typeof design.symbol})}>{IDENTITY_SYMBOLS.map(v=><option key={v}>{v}</option>)}</select></label><label>Pattern <select aria-label="Flag pattern" className="bg-transparent" value={design.pattern} onChange={e=>setDesign({...design,pattern:e.target.value as typeof design.pattern})}>{IDENTITY_PATTERNS.map(v=><option key={v}>{v}</option>)}</select></label>{(['primary','secondary','emblem']as const).map(key=><label key={key}>{key} <input aria-label={`Flag ${key} color`} type="color" value={design[key]} onChange={e=>setDesign({...design,[key]:e.target.value})}/></label>)}</div><p className="text-xs text-parchment-dim">Flag and equipment stitching only. Map colors and relationships stay separate.</p><button type="button" className="rounded border border-bronze/40 px-3 py-1" onClick={save}>Save identity</button>{reply&&<p role="status">{reply}</p>}</div></details>;
+}
