@@ -38,3 +38,28 @@ test('blocked cache orders keep the current paid batch moving and report why',()
  assert.equal(project.phase,'complete');
  assert.equal(g.state.production.metrics.consumed.clay,paid);
 });
+
+test('a cut pickup route releases the worker and another reachable worker collects the same paid parcel',()=>{
+ const g=fixture(),hearth=site(g,'hearth'),project=begin(g,'formClayHand',hearth);
+ assert.equal(unloadProductionProject(g,project.id),true);
+ drive(g,100,()=>project.phase==='stored');
+ assert.equal(project.phase,'stored');
+ const paid=g.state.production.metrics.consumed.clay,anchor=project.cacheAnchor;
+ assert.equal(resumeProduction(g,project.id),true,project.blockedReason);
+ const first=g.state.units.find(u=>u.id===project.actorId);
+ const connected=g.workBoard.connected;
+ g.workBoard.connected=function(game,ax,az,bx,bz){
+  if(ax===first.x&&az===first.z&&bx===anchor.x&&bz===anchor.z)return false;
+  return connected.call(this,game,ax,az,bx,bz);
+ };
+ drive(g,2,()=>project.phase==='stored');
+ assert.equal(project.phase,'stored');
+ assert.equal(project.cacheAnchor,anchor);
+ assert.equal(first.productionProjectId,undefined);
+ assert.equal(cachedProductionUnits(g,0),4);
+ assert.equal(resumeProduction(g,project.id),true,project.blockedReason);
+ assert.notEqual(project.actorId,first.id);
+ drive(g,160,()=>project.phase==='complete');
+ assert.equal(project.phase,'complete');
+ assert.equal(g.state.production.metrics.consumed.clay,paid);
+});
