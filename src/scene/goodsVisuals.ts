@@ -8,13 +8,15 @@ import {part,type Part} from './buildingParts';
 import type {CarvedMaterialId} from './carvedPalette';
 
 export type LoadStyle='sack'|'basket'|'logs'|'block'|'ingots'|'pots'|'jug'|'coil'|'bundle'|'crate';
-export type GoodVisual={icon:string;style:LoadStyle;mat:CarvedMaterialId;/** amount one carried unit stands for */unit:number};
+export type GoodVisual={icon:string;style:LoadStyle;mat:CarvedMaterialId;/** amount one carried unit stands for */unit:number;/** walks beside the carrier on a lead instead of being loaded (living animals) */led?:boolean};
 export const GOODS_VISUAL:Record<string,GoodVisual>={
  grain:{icon:'grain',style:'sack',mat:'cloth',unit:20},pulses:{icon:'pulses',style:'sack',mat:'woodLight',unit:20},tubers:{icon:'tubers',style:'basket',mat:'thatch',unit:15},
  berries:{icon:'berries',style:'basket',mat:'thatch',unit:10},provisions:{icon:'provisions',style:'basket',mat:'woodLight',unit:12},bread:{icon:'bread',style:'basket',mat:'plaster',unit:10},porridge:{icon:'porridge',style:'pots',mat:'tile',unit:8},
  fish:{icon:'fish',style:'basket',mat:'plaster',unit:10},driedFish:{icon:'fish',style:'bundle',mat:'woodLight',unit:12},smokedFish:{icon:'fish',style:'bundle',mat:'woodDark',unit:12},cookedFish:{icon:'fish',style:'basket',mat:'plaster',unit:8},
  meat:{icon:'meat',style:'bundle',mat:'woodDark',unit:10},driedMeat:{icon:'meat',style:'bundle',mat:'woodDark',unit:12},smokedMeat:{icon:'meat',style:'bundle',mat:'woodEdge',unit:12},milk:{icon:'milk',style:'jug',mat:'plaster',unit:8},
  wood:{icon:'wood',style:'logs',mat:'trunk',unit:10},stone:{icon:'stone',style:'block',mat:'stone',unit:8},copper:{icon:'copper',style:'ingots',mat:'tile',unit:6},iron:{icon:'iron',style:'ingots',mat:'iron',unit:6},
+ food:{icon:'provisions',style:'basket',mat:'woodLight',unit:12},spears:{icon:'spear',style:'bundle',mat:'woodMid',unit:6},bows:{icon:'bow',style:'bundle',mat:'woodDark',unit:6},blades:{icon:'blade',style:'ingots',mat:'iron',unit:4},paddedArmor:{icon:'armor',style:'bundle',mat:'cloth',unit:4},
+ basket:{icon:'basket',style:'basket',mat:'thatch',unit:6},goat:{icon:'goat',style:'crate',mat:'woodLight',unit:1,led:true},
  cordage:{icon:'cordage',style:'coil',mat:'thatch',unit:6},pottery:{icon:'pot',style:'pots',mat:'tile',unit:6},hides:{icon:'hide',style:'bundle',mat:'woodMid',unit:6},cloth:{icon:'cloth',style:'bundle',mat:'cloth',unit:8},
 };
 const FALLBACK:GoodVisual={icon:'parcel',style:'crate',mat:'woodLight',unit:10};

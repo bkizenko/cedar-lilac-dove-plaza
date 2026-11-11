@@ -44,3 +44,33 @@ test('proposal edge cases: none, one-sided, same good, partner stock only enforc
  assert.equal(tradeDialogView({...base,limits:{counterAllowed:false}}).counter.enabled,false);
  assert.deepEqual(tradeDialogView(base),tradeDialogView(base));
 });
+
+// ---- Societies tradeNeeds adapter (shapes mirror src/game/tradeNeeds.ts TradeOffer; engine not imported).
+import {tradeNeedsView,offerSides,reasonText} from '../src/ui/h/tradeNeedsAdapter.ts';
+import {goodVisual,GOODS_VISUAL} from '../src/scene/goodsVisuals.ts';
+import {caravanSpec} from '../src/scene/caravanModels.ts';
+const offer=(o={})=>({id:7,from:2,to:0,give:{kind:'copper',amount:6},get:{kind:'grain',amount:20},fairGet:23,spread:.13,phase:'proposed',answerAt:100,risk:.3,trust:.62,escortsWanted:1,reason:'Proposed from observed need',...o});
+const names={player:'Ashfield',partner:'Riverfolk',society:'Riverfolk',leader:'Oda'};
+test('adapter: offer to the player is mirrored (player pays get, receives give); accept uses exact stock',()=>{
+ assert.deepEqual(offerSides(offer()),{give:[{kind:'grain',amount:20}],get:[{kind:'copper',amount:6}]});
+ const ok=tradeNeedsView({offer:offer(),playerHeld:[{kind:'grain',amount:30}],names,relation:20,now:50});assert.equal(ok.accept.enabled,true);assert.equal(ok.counter.enabled,false);assert.equal(ok.actions.counter,false);
+ assert.equal(ok.fairness.ratioText,'In your favour');assert.equal(ok.journey.riskText,'Some risk on the road');assert.equal(ok.leader.trustText,'Trade history is thin');
+ const short=tradeNeedsView({offer:offer(),playerHeld:[{kind:'grain',amount:5}],names,relation:20,now:50});assert.equal(short.accept.enabled,false);assert.match(short.blocker.reason,/hold 5 of the 20 grain/);assert.equal(short.decline.enabled,true);
+});
+test('adapter: relation never blocks (engine decides on war and stock only); war does; unknown partner stock is not invented',()=>{
+ const hostile=tradeNeedsView({offer:offer(),playerHeld:[{kind:'grain',amount:30}],names,relation:-80,now:50});assert.equal(hostile.accept.enabled,true,'engine ignores relation');assert.equal(hostile.leader.stance,'hostile');
+ const war=tradeNeedsView({offer:offer(),playerHeld:[{kind:'grain',amount:30}],names,relation:-80,now:50,atWar:true});assert.equal(war.accept.enabled,false);assert.match(war.blocker.reason,/at war/);
+ assert.equal(hostile.partner.held.chips.length,0);assert.equal(hostile.partner.heldNote,'Their stores are unknown to you');
+});
+test('adapter: answered, expired and finished offers cannot be accepted and say why in the engine reason codes',()=>{
+ const v=(o,now=50)=>tradeNeedsView({offer:offer(o),playerHeld:[{kind:'grain',amount:99}],names,now});
+ assert.equal(v({phase:'declined',reason:'no-surplus'}).accept.reason,'You no longer hold enough to pay');assert.equal(v({phase:'outbound'}).accept.reason,'This trade is already under way');assert.equal(v({phase:'complete'}).accept.reason,'This trade is finished');
+ assert.equal(v({},100+600).accept.reason,'The offer lapsed before you answered');assert.equal(v({},100+599).accept.enabled,true);assert.equal(reasonText('zzz'),'zzz');
+ for(const code of['foe','refused','expired','no-need','no-surplus','proposer-short','partner-short','no-carriers','too-heavy','home-short','no-pen','partner-no-pen'])assert.notEqual(reasonText(code),code,code);
+});
+test('every engine GoodKind has a visual; goats are led, not loaded',()=>{
+ const kinds=['food','wood','stone','copper','iron','spears','bows','blades','paddedArmor','cordage','basket','pottery','cloth','goat'];
+ for(const k of kinds)assert.ok(GOODS_VISUAL[k],k+' has a visual');assert.equal(goodVisual('goat').led,true);assert.ok(!goodVisual('spears').led);
+ const c=caravanSpec({carrier:'cart',seed:3,cargo:[{kind:'goat',amount:2},{kind:'spears',amount:8}],capacity:160});assert.deepEqual(c.cargo.led,{goat:2});assert.ok(!c.cargo.kinds.includes('goat')&&c.cargo.kinds.includes('spears'));
+ const only=caravanSpec({carrier:'packAnimal',seed:3,cargo:[{kind:'goat',amount:1}]});assert.equal(only.cargo.fill,0,'a led goat does not fill the pack');assert.equal(only.loadPartIndices.length,0);
+});

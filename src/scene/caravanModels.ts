@@ -17,7 +17,7 @@ export type CargoStack={kind:string;amount:number};
 export type CarrierKind='packAnimal'|'sled'|'cart'|'boat'|'stall';
 export type CaravanInput={carrier:CarrierKind;seed:number;cargo:readonly CargoStack[];/** amount the carrier can hold in total; default per carrier */capacity?:number;
  escort?:boolean;boatClass?:keyof typeof HULL_SEATS;era?:number};
-export type CaravanSpec=BuildingSpec&{cargo:{kinds:string[];units:Record<string,number>;slots:number;overflowKinds:string[];fill:number};loadPartIndices:number[]};
+export type CaravanSpec=BuildingSpec&{cargo:{kinds:string[];units:Record<string,number>;slots:number;overflowKinds:string[];fill:number;/** living animals walking on a lead (not loaded, not in `fill`) */led:Record<string,number>};loadPartIndices:number[]};
 const DEFAULT_CAPACITY:Record<CarrierKind,number>={packAnimal:60,sled:80,cart:160,boat:240,stall:120};
 const ESCORT_W=.8;
 
@@ -86,7 +86,7 @@ function escortParts(side:1|-1,x0:number,z:number):Part[]{
 
 export function caravanSpec(input:CaravanInput):CaravanSpec{
  const {parts:carrier,dims,reference}=body(input.carrier,input),parts=[...carrier],{slots}=layout(input.carrier,dims);
- const r=seededRandom(hashSeed(input.seed,'cargo',input.carrier)),live=input.cargo.filter(c=>c.amount>0&&Number.isFinite(c.amount)).sort((a,b)=>b.amount-a.amount||a.kind.localeCompare(b.kind));
+ const r=seededRandom(hashSeed(input.seed,'cargo',input.carrier)),stacks=input.cargo.filter(c=>c.amount>0&&Number.isFinite(c.amount)),led:Record<string,number>={},live=stacks.filter(c=>{if(goodVisual(c.kind).led){led[c.kind]=(led[c.kind]||0)+c.amount;return false;}return true;}).sort((a,b)=>b.amount-a.amount||a.kind.localeCompare(b.kind));
  const total=live.reduce((s,c)=>s+c.amount,0),cap=input.capacity??DEFAULT_CAPACITY[input.carrier],fill=cap>0?Math.min(1,total/cap):0;
  const wanted=total>0?Math.max(1,Math.round(fill*slots.length)):0,units:Record<string,number>={},overflow:string[]=[];
  // Largest-remainder split of `wanted` slots over the kinds actually carried (each present kind gets >=1 while slots remain).
@@ -109,7 +109,7 @@ export function caravanSpec(input:CaravanInput):CaravanSpec{
  const mb=specBounds({family:'',variantKey:'',footprint:{w,d:dims.d},parts,notes:{reference:''}}),up=(v:number)=>Math.ceil(v*20-1e-9)/20;
  const fit=(declared:number,m:number)=>m<=declared+1e-6?declared:up(m),footprint={w:fit(Math.round(w*100)/100,2*Math.max(-mb.minX,mb.maxX)),d:fit(dims.d,2*Math.max(-mb.minZ,mb.maxZ))},variantKey=`caravan|${input.carrier}|${input.carrier==='boat'?input.boatClass??'riverboat':''}|${input.escort?'escort':''}|${order.join(',')}`;
  return {family:'caravan:'+input.carrier,variantKey,footprint,parts:ensureTierSupport(parts,footprint),notes:{reference},
-  cargo:{kinds:shown.map(c=>c.kind),units,slots:slots.length,overflowKinds:overflow,fill:Math.round(fill*100)/100},loadPartIndices:loadIdx};
+  cargo:{kinds:shown.map(c=>c.kind),units,slots:slots.length,overflowKinds:overflow,fill:Math.round(fill*100)/100,led},loadPartIndices:loadIdx};
 }
 
 /** Dropped cargo parcel (Societies request, backlog 107 stolen cargo): a small heap

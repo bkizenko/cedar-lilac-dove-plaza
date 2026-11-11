@@ -17,15 +17,15 @@ import {goodIconId} from '../../scene/goodsVisuals';
 export type Stack={kind:string;amount:number;label?:string};
 export type SideInput={name:string;held:readonly Stack[];offers:readonly Stack[];wants:readonly Stack[];knowledge:'exact'|'observed'|'unknown'};
 export type LimitsInput={/** the simulation's own reason trade cannot proceed right now */hardBlock?:string;atWar?:boolean;routeBlocked?:string;
- /** total units the carrier/caravan can move in one trip */carryCapacity?:number;counterAllowed?:boolean};
-export type TradeDialogInput={player:SideInput;partner:SideInput;leader:{name:string;society:string;relation?:number};
+ /** total units the carrier/caravan can move in one trip */carryCapacity?:number;counterAllowed?:boolean;/** false when the engine decides on goods and war only (tradeNeeds): relation is shown but never blocks */relationBlocks?:boolean};
+export type TradeDialogInput={player:SideInput;partner:SideInput;leader:{name:string;society:string;relation?:number;/** observed route trust 0..1 (TradeOffer.trust), separate from relation */trust?:number};
  proposal:{give:readonly Stack[];get:readonly Stack[]}|null;limits?:LimitsInput};
 
 export type ChipView=QuantityView&{kind:string;icon:string;amount:number};
 export type ChipRow={chips:ChipView[];more:number};
 export type ActionView={enabled:boolean;reason?:string};
 export type TradeDialogView={
- leader:{name:string;society:string;stance:PortraitView['stance'];stanceText:string;relationText:string};
+ leader:{name:string;society:string;stance:PortraitView['stance'];stanceText:string;relationText:string;trustText:string};
  player:{name:string;held:ChipRow;offers:ChipRow;wants:ChipRow};
  partner:{name:string;held:ChipRow;heldNote:string;offers:ChipRow;wants:ChipRow};
  proposal:{give:ChipRow;get:ChipRow}|null;
@@ -53,7 +53,7 @@ export function tradeDialogView(input:TradeDialogInput):TradeDialogView{
  const hard:{sev:number;reason:string;remedy?:string}[]=[],soft:{sev:number;reason:string;remedy?:string}[]=[];
  if(limits.hardBlock)hard.push({sev:100,reason:limits.hardBlock});
  if(limits.atWar)hard.push({sev:95,reason:`${leader.society} is at war with you`,remedy:'Make peace first'});
- else if(stance==='hostile')hard.push({sev:90,reason:`${leader.name} refuses to deal while relations are this bad`,remedy:'Send a gift or wait for tempers to cool'});
+ else if(stance==='hostile'&&limits.relationBlocks!==false)hard.push({sev:90,reason:`${leader.name} refuses to deal while relations are this bad`,remedy:'Send a gift or wait for tempers to cool'});
  if(limits.routeBlocked)hard.push({sev:80,reason:limits.routeBlocked});
  if(!proposal||(give.length===0&&get.length===0))soft.push({sev:75,reason:'Choose goods to offer or ask for'});
  else if(give.length===0)soft.push({sev:74,reason:'You are offering nothing',remedy:'Add goods you hold'});
@@ -65,7 +65,7 @@ export function tradeDialogView(input:TradeDialogInput):TradeDialogView{
  const all=[...hard,...soft].sort((a,b)=>b.sev-a.sev||a.reason.localeCompare(b.reason)),top=all[0];
  const counterBlock=hard[0]??((limits.counterAllowed===false)?{sev:0,reason:'They will not haggle over this'}:undefined);
  return {
-  leader:{name:leader.name,society:leader.society,stance,stanceText,relationText:leader.relation===undefined||!Number.isFinite(leader.relation)?'Relation not yet known':`Relation ${Math.round(leader.relation)}`},
+  leader:{name:leader.name,society:leader.society,stance,stanceText,relationText:leader.relation===undefined||!Number.isFinite(leader.relation)?'Relation not yet known':`Relation ${Math.round(leader.relation)}`,trustText:leader.trust===undefined||!Number.isFinite(leader.trust)?'':leader.trust>=.75?'A trusted trading partner':leader.trust>=.4?'Trade history is thin':'Past trade went badly'},
   player:{name:player.name,held:row(player.held),offers:row(player.offers),wants:row(player.wants)},
   partner:{name:partner.name,held:partner.knowledge==='unknown'?{chips:[],more:0}:row(partner.held),
    heldNote:partner.knowledge==='exact'?'Their stores':partner.knowledge==='observed'?'Last seen holding':'Their stores are unknown to you',
