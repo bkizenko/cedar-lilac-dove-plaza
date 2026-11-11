@@ -5,7 +5,7 @@ import {initializeSurvival} from '../src/game/survivalNeeds.ts';
 import {waterNavigation} from '../src/game/waterNavigation.ts';
 import {knownSettlementSite} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-import {reviewSeaExploration,cancelSeaExploration,SEA_EXPLORATION_RULES} from '../src/game/seaExploration.ts';
+import {reviewSeaExploration,cancelSeaExploration,pauseSeaExploration,SEA_EXPLORATION_RULES} from '../src/game/seaExploration.ts';
 import {developRivalEquipment} from '../src/game/rivalDevelopment.ts';
 
 // Controlled fixture: one water channel (|z|<8) crossing the map between dry
@@ -96,4 +96,82 @@ test('hull loss in open water: bounded wait, survivors released with their packs
  assert.ok(!g.state.boats?.some(b=>b.id===boatId&&b.hp>0),'no free replacement hull');assert.equal(g.tribe(1).wood,wood,'nothing repaid or refunded for the lost hull');
  assert.ok(g.state.units.every(u=>u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
  assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
+});
+
+// ---- Codex review round 1: admission against paid hull work, plus capture/recall/interruption.
+import {beginBoatService,recallRiverboat} from '../src/game/boats.ts';
+import {beginSailRig,sailRigProject} from '../src/game/boatSailing.ts';
+import {boatServiceProject} from '../src/game/boatClasses.ts';
+function packFood(g,v){return [...v.crew].map(id=>g.state.units.find(u=>u.id===id)).filter(Boolean).reduce((n,u)=>n+(u.scoutProvisions?.food||0),0);}
+function startPaidService(g,dock,exclude=[]){const b=g.state.boats[0];b.hullClass='freightPunt';b.hp=Math.max(1,b.hp*.4);Object.assign(g.tribe(1),{wood:200,items:{...(g.tribe(1).items||{}),cordage:20,cloth:20}});const maker=g.state.units.find(u=>u.team===1&&u.type==='worker'&&!u.haulage&&!exclude.includes(u.id));assert.equal(beginBoatService(g,b.id,dock.id,1,maker.id),true,g.state.banner);assert.ok(boatServiceProject(g,b.id));return maker;}
+function startPaidRig(g,dock){const b=g.state.boats[0];b.hullClass='freightPunt';const t=g.tribe(1);Object.assign(t,{wood:200,items:{...(t.items||{}),cordage:20,cloth:20},boatPractice:{...(t.boatPractice||{}),waterMeters:1e5,deliveredGoods:1e3}});const maker=g.state.units.find(u=>u.team===1&&u.type==='worker'&&!u.haulage);const ok=beginSailRig(g,b.id,dock.id,1,maker.id);return {ok,maker};}
+
+test('idle-hull admission rejects a hull under paid service OR paid sail fitting; nothing is mustered or loaded',()=>{
+ for(const kind of ['service','rig']){
+  const {g,dock}=fixture({hull:true});const wood=g.tribe(1).wood;let paid;
+  if(kind==='service')startPaidService(g,dock);else{paid=startPaidRig(g,dock);assert.ok(paid.ok,g.state.banner);assert.ok(sailRigProject(g,g.state.boats[0].id));}
+  const food=g.tribe(1).food,before=g.tribe(1).wood;reviewSeaExploration(g);
+  const open=voyage(g);assert.ok(!open||open.phase==='failed'&&open.failure==='hull-pending'&&!open.crew.length,`${kind}: no voyage opened on a hull held by paid work`);assert.equal(g.state.boats.length,1,`${kind}: no second hull commissioned`);
+  const row=g.state.seaExploration.teams.find(t=>t.team===1);assert.equal(row.reasons['hull-pending'],1,`${kind}: rejected at hull admission`);assert.ok(!row.reasons['no-crew']&&!row.reasons['no-provisions']);
+  assert.equal(g.tribe(1).food,food);assert.equal(g.tribe(1).wood,before);assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined));void wood;
+ }
+});
+
+test('a ready voyage is not mustered once paid service or a sail fitting takes the hull; it goes back to its failed state without pack loads',()=>{
+ for(const kind of ['service','rig']){
+  const {g,dock}=fixture({hull:true});reviewSeaExploration(g);let v=voyage(g);assert.equal(v.phase,'mustering');
+  // Return to 'ready': cancel before anyone loads, then mark ready as a commissioned hull would be.
+  assert.equal(cancelSeaExploration(g,v.id),true);drive(g,60,()=>['failed','complete'].includes(v.phase));
+  v.phase='ready';v.failure=undefined;v.crew=[];v.home=[];v.left=[];for(const u of g.state.units)u.seaExplorationId=undefined;
+  if(kind==='service')startPaidService(g,dock);else assert.ok(startPaidRig(g,dock).ok);
+  g.state.seaExploration.teams.find(t=>t.team===1).nextReviewAt=0;reviewSeaExploration(g);
+  assert.notEqual(v.phase,'mustering',`${kind}: ready voyage must not muster onto a hull held by paid work`);assert.ok(g.state.units.every(u=>!u.scoutProvisions));
+ }
+});
+
+test('mustering stops and returns packs when paid hull service begins mid-muster (no pointless boarding timeout)',()=>{
+ const {g,dock}=fixture({hull:true});const food=g.tribe(1).food;reviewSeaExploration(g);const v=voyage(g);drive(g,40,()=>activeCrew(g,v).some(u=>u.scoutProvisions));
+ const loaded=packFood(g,v);startPaidService(g,dock,v.crew);
+ drive(g,300,()=>['failed','complete','lost'].includes(v.phase));assert.equal(v.failure,'hull-reassigned',JSON.stringify(v));assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));void food;void loaded;
+});
+
+test('a crew member captured mid-voyage: leaves the voyage, pack follows the existing captivity rule, rest of the crew finishes with exact ledgers',()=>{
+ let {g}=fixture({hull:true});reviewSeaExploration(g);let v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>15);assert.equal(v.phase,'outbound',v.reason);
+ const boat=g.state.boats[0],victim=activeCrew(g,v).find(u=>u.id!==boat.captain),crew0=v.crew.length;assert.ok(victim.scoutProvisions.food>0);assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))),'pre-capture state saves strictly');
+ const guard=g.spawnUnit('worker',victim.x,victim.z,2);victim.prisoner={originTeam:1,captorTeam:2,phase:'custody',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0};victim.team=2;
+ drive(g,.3);
+ assert.ok(v.left.includes(victim.id),'captured crewman leaves the voyage roster');assert.equal(victim.seaExplorationId,undefined);assert.equal(v.metrics.crewLost,1);assert.equal(v.crew.length,crew0);
+ assert.equal(victim.scoutProvisions,undefined,'captive pack resolved by the captivity rule, not carried on');
+ assert.ok(victim.prisoner.food>=0&&victim.prisoner.food<=12,'captive received only the rule-capped share');
+ assert.notEqual(v.phase,'lost','two crew remain, so the voyage is not lost');
+ // A foreign prisoner aboard a hull is not a persistence-valid state, so the capture is exercised in memory and the strict reload is taken from the pre-capture save above.
+ drive(g,600,()=>['complete','lost','failed'].includes(v.phase));
+ assert.equal(v.phase,'complete',JSON.stringify(v));assert.deepEqual(v.home.sort(),v.crew.filter(id=>id!==victim.id).sort());
+ assert.ok(Math.abs(ledger(v))<1e-6,'food ledger exact: '+JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,'water ledger exact: '+JSON.stringify(v.metrics));
+ assert.ok(g.state.units.filter(u=>u.id!==victim.id).every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined&&!u.boat));
+});
+
+test('recall of a boat already at sea (recallRiverboat): the voyage returns, everyone lands and unloads, ledgers exact, hull and crew retained',()=>{
+ let {g}=fixture({hull:true});reviewSeaExploration(g);let v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>15);assert.equal(v.phase,'outbound',v.reason);
+ const boat=g.state.boats[0],crew0=v.crew.length,wood=g.tribe(1).wood,woodBoat=boat.hp;
+ assert.equal(recallRiverboat(g,boat.id),true);drive(g,.5);
+ assert.equal(v.phase,'returning',v.reason);assert.equal(v.returnReason,'recall','owner recall is recorded as the return reason');
+ g=reload(g);v=voyage(g);
+ drive(g,600,()=>['complete','lost','failed'].includes(v.phase));
+ assert.equal(v.phase,'complete',JSON.stringify(v));assert.equal(v.home.length,crew0);assert.equal(v.left.length,0);
+ assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));assert.equal(g.tribe(1).wood,wood);
+ assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined&&!u.boat),'every crew member unloaded and ashore');
+ const b=g.state.boats.find(b=>b.id===boat.id);assert.ok(b&&b.hp>0&&b.hp>=woodBoat-1e-6,'hull retained');assert.equal(g.state.boats.length,1);
+});
+
+test('direct order to a crew member ashore mid-muster: releases only that person, pack booked, rest of crew conserved and the voyage never boards a short crew',()=>{
+ let {g}=fixture({hull:true});reviewSeaExploration(g);let v=voyage(g);drive(g,40,()=>activeCrew(g,v).some(u=>u.scoutProvisions));
+ const victim=activeCrew(g,v).find(u=>u.scoutProvisions&&!u.boat);assert.ok(victim,'a crew member is ashore with a loaded pack');const crew0=v.crew.length;
+ assert.equal(pauseSeaExploration(g,victim),true);
+ assert.equal(victim.seaExplorationId,undefined);const pack=victim.scoutProvisions.food;assert.ok(pack>0&&v.metrics.foodWithPeople>=pack-1e-9,'the freed person keeps the real pack and the voyage books it as with-people');assert.ok(v.left.includes(victim.id));assert.equal(v.metrics.crewReleased,1);assert.equal(v.crew.length,crew0);
+ g=reload(g);v=voyage(g);
+ drive(g,700,()=>['complete','lost','failed'].includes(v.phase));
+ assert.ok(['complete','failed'].includes(v.phase),JSON.stringify(v));
+ assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
+ assert.ok(g.state.units.every(u=>!u.scoutProvisions&&u.seaExplorationId===undefined&&!u.boat));assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
 });
