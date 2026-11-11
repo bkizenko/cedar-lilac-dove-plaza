@@ -124,6 +124,8 @@ export function proposeTradeOffer(g:Game,from:number,to:number,give:GoodKind,get
  if(!TRADE_GOODS[give]||!TRADE_GOODS[get]||g.isFoe(from,to))return no('foe');
  if(!TRADE_SELECTABLE_KINDS.includes(give)||!TRADE_SELECTABLE_KINDS.includes(get))return no('no-physical-holder');
  const site=knownSettlementSite(g,to,from);if(!site)return no('partner-unknown');
+ // Walking caravans need a land route; overseas partners are served by the boat path (coastalTrade).
+ {const home=g.campOf(from);if(!g.workBoard.connected(g,home.x,home.z,site.x,site.z))return no('no-land-route');}
  if(cooling(g,from,to,give,get))return no('cooldown');
  if(root(g).offers.some(o=>OPEN.includes(o.phase)&&o.from===from))return no('already-trading');
  const spread=tradeSpread(g,from,to),wg=TRADE_GOODS[give].worth,wt=TRADE_GOODS[get].worth,declines=declineRow(g,from,to,give,get)?.declines??0,scale=Math.pow(TRADE_NEEDS_RULES.declineScale,declines);
