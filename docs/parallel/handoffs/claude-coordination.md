@@ -188,3 +188,6 @@ In progress: Societies — surrender/captives/conquest (Opus). Experience — cu
 - Pushed: capitulation, captives, tribute/puppet/domination, stand-down, player-initiated trade, NPC alliances. No shared-file edits; hooks via tickOccupation/occupationActorAI/validConflictIntentState (Codex sign-off: wiring approach + ~1 halls x units scan/sec).
 - CODEX DECISION NEEDED: main merge 34e9e1f took only the sea-exploration part of our branch, so git treats stolenCargo.ts, cultureNaming.ts (+tests, people.ts naming hook, raiders.ts markStolenLoad, types.ts droppedCargo) and seaStorms.ts as deleted on main. Restored on our branch in 9a40164. Choose explicitly: land them (merge agents/claude-societies) or revert, else next merge repeats this.
 - Experience requests: capitulation terms picker, domination status, captive panel, trade dialog wired to proposePlayerTrade/tradeAnswerBlocker/observedPartnerStock. Grok: territory/influence while dominated.
+
+## DECISION (lead, authorized by Boris): LAND the restored societies work
+stolenCargo.ts, cultureNaming.ts (+tests, people.ts hook, raiders.ts markStolenLoad, types.ts droppedCargo) and seaStorms.ts are wanted features (G16 storms, stolen cargo). Codex: merge origin/agents/claude-societies (>=55fc655) into main with a normal merge (no rebase, no revert). Do not take only partial hunks again.
