@@ -1,5 +1,5 @@
 import {breadRecipes,grindingRecipes} from './cerealProcessing';
-import {foodInventory} from './pantry';
+import {foodInventory,readyNourishment,FOOD_NOURISHMENT} from './pantry';
 import{HOUSING_RULES,housingStatus,housingOwnerCanContinue,housingFundingIssue}from'./housing';
 import{housingMaterialTotal}from'./housingMaterials';
 import{BUILDING_MAINTENANCE}from'./buildingMaintenance';
@@ -70,7 +70,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   const bonus=probe?g.campBonus(probe,kind):1,winter=cal.phase===3&&kind==='food'?(node?.kind==='fish'?1.65:2.2):1,urgency=kind==='food'&&foodDemand(g,team)>0&&stock.food/foodDemand(g,team)<240?1.25:1;
   return GATHER[kind].period*bonus*winter*subsistenceLaborMultiplier(g,kind,x,z)/(GATHER_WORK_RATE*urgency);};
  const carry=(kind:ResKind,u?:Unit)=>u?carryingCapacity(u,kind):GATHER[kind].carry;
- let incomingFood=0,incomingWood=0,incomingWater=0;
+ let incomingFood=0,incomingWood=0,incomingWater=0,readyFieldHarvest=0;
  // Paid production owns one actor and one physical batch, even while generic
  // unit cargo or the compatibility work references point at the same person.
  const productionTravellers=new Set<number>(),productionIds=new Set<number>(),productionCapacity=liveProduction.length?itemCapacity(g,team):0,storedItems=Object.values(stock.items||{}).reduce((n,v)=>n+(v||0),0);
@@ -103,7 +103,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   add({id:`clay:${u.id}`,label:'Dig and deliver surveyed clay',category:'Materials',personSeconds:Math.max(0,POTTERY_RULES.digSeconds-w.progress)+(bank?travel(u,bank.x,bank.z)+trip(bank.x,bank.z,u):0),status:w.paused?'paused':missing?'blocked':'active',actorIds:w.paused?[]:[u.id],priority:500,blocker:w.paused?'Clay collection paused':missing?'Surveyed bank is exhausted or missing':null,units:POTTERY_RULES.clayBatch},true);
  }
  // A loaded ordinary, production item and water cargo share one actual return trip.
- for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0||itemLoad(u)>0){if(u.carryType==='food'&&!u.rawHuntMeat)incomingFood+=u.carry;if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
+ for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0||itemLoad(u)>0){if(u.carryType==='food'&&!u.rawHuntMeat){const kind=u.carryFood||'provisions';if(team!==0||kind!=='grain'&&kind!=='fish')incomingFood+=u.carry*(FOOD_NOURISHMENT[kind]??1);}if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
   if(!productionTravellers.has(u.id)&&(!u.fibreWork||u.fibreWork.phase==='returning'))add({id:`delivery:${u.id}`,label:'Deliver carried supplies',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
   if(w&&w.phase!=='returning'&&w.liters===0){add({id:`water:${u.id}`,label:'Collect drinking water',category:'Water',personSeconds:Math.max(0,SURVIVAL_RULES.collectSeconds*waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters)/SURVIVAL_RULES.waterTripLiters-w.progressSeconds)+travel(u,w.bankX,w.bankZ)+trip(w.bankX,w.bankZ,u),status:w.paused?'paused':claimed.has(u.id)?'queued':'active',actorIds:w.paused?[]:[u.id],priority:1000,blocker:w.paused?'Water assignment paused':null});if(!w.paused)incomingWater+=waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters);}
  }
@@ -136,6 +136,9 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
    const harvest=phase===2?(c?.ripened?c.remaining:farmHarvestEstimate(g,b,c?.planted??0,c?.tended??0,c?.water??1)):0;
    const base=phase===0?(1-(c?.planted??0))*r.fieldSowWorkSeconds*area:phase===1&&(c?.planted??0)>0?(1-(c?.tended??0))*r.fieldTendWorkSeconds*area:phase===2?harvest*r.fieldHarvestSecondsPerTwoFood/2:0;
    const work=base/(GATHER_WORK_RATE*econ*toolRate),person=pool[0],slots=Math.min(12,Math.ceil(3*area)),cols=Math.min(slots,Math.max(1,Math.floor((b.w-2.4)/1.8))),rows=Math.ceil(slots/cols),rowTravel=Math.max(0,(b.d-2.4)/rows*.32-1)/speed(person)*Math.floor(work/r.fieldRowWorkSeconds),haul=harvest?Math.ceil(harvest*(rawCerealField(b)?CEREAL_RULES.sheavesPerPotentialGrain:1)/carry('food',person))*trip(b.x,b.z,person)*2:0;
+   // Raw cereal requires another paid chain; only directly edible crops offset
+   // future collection, and remaining field stock excludes already carried loads.
+   if(harvest>0&&(team!==0||(c?.kind||b.cropType||'grain')!=='grain'))readyFieldHarvest+=harvest;
    add({id:`field:${b.id}:${cal.year}:${phase}`,label:phase===0?'Sow field':phase===1?'Tend field':'Harvest field',category:'Farming',personSeconds:work+rowTravel+haul,status:crew.length?'active':'queued',actorIds:crew.map(u=>u.id),priority:phase===2?950:650,blocker:null,deadlineSeconds:cal.remaining,units:harvest});
   }
   if(b.type==='warehouse'&&stock.food>0){const care=Math.max(0,r.desiredStoreCare-(b.storeCare||0)+H/r.preservationCareDecaySeconds),work=Math.ceil(care/r.preservationCarePerBatch)*r.preservationWorkSeconds;
@@ -235,7 +238,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   add({id:`hunt:${id}`,label:node.hp>0?`Hunt and butcher ${node.species}`:'Butcher hunting catch',category:'Hunting',personSeconds:attack+processing+Math.ceil(meat/carry('food',person))*trip(node.x,node.z,person)*2,status:'active',actorIds:crew.map(u=>u.id),priority:850,blocker:null,units:meat});}
  for(const u of eligible)if(u.order==='gather'&&u.node&&'type'in u.node&&u.node.type==='dock'&&!claimed.has(u.id)){const nodes=resourceNodes.get('food')??new Map<number,ResourceNode>();for(const n of g.state.fish)if(n.amount>0&&Math.hypot(n.x-u.node.x,n.z-u.node.z)<=20)nodes.set(n.id,n);resourceNodes.set('food',nodes);const crew=resourceActors.get('food')??[];crew.push(u);resourceActors.set('food',crew);}
  if(team===0)for(const n of g.state.trees)if(g.chopMarks.has(n.id)&&n.amount>0&&g.exploredAt(n.x,n.z)){const nodes=resourceNodes.get('wood')??new Map();nodes.set(n.id,n);resourceNodes.set('wood',nodes);}
- const fieldFood=tasks.filter(t=>t.category==='Farming'||t.category==='Hunting').reduce((n,t)=>n+(t.units||0),0),needs=survivalStatus(g,team),required:Record<ResKind,number>={food:Math.max(0,foodDemand(g,team)*(H+r.reserveTargetSeconds)+(planned.food||0)-stock.food-incomingFood-fieldFood),wood:Math.max(0,needs.fuelDemandWoodPerSecond*H+(planned.wood||0)-stock.wood-incomingWood),stone:Math.max(0,(planned.stone||0)-stock.stone),copper:Math.max(0,(planned.copper||0)-stock.copper),iron:Math.max(0,(planned.iron||0)-stock.iron)};
+ const fieldFood=readyFieldHarvest+(team===0?0:tasks.filter(t=>t.category==='Hunting').reduce((n,t)=>n+(t.units||0),0)),needs=survivalStatus(g,team),required:Record<ResKind,number>={food:Math.max(0,foodDemand(g,team)*(H+r.reserveTargetSeconds)+(planned.food||0)-readyNourishment(stock,team)-incomingFood-fieldFood),wood:Math.max(0,needs.fuelDemandWoodPerSecond*H+(planned.wood||0)-stock.wood-incomingWood),stone:Math.max(0,(planned.stone||0)-stock.stone),copper:Math.max(0,(planned.copper||0)-stock.copper),iron:Math.max(0,(planned.iron||0)-stock.iron)};
  for(const kind of['food','wood','stone','copper','iron'] as const){const nodes=[...(resourceNodes.get(kind)?.values()??[])],crew=resourceActors.get(kind)??[],person=crew[0]??ratePeople[0],period=resourcePeriod(kind,nodes[0],person),finite=nodes.reduce((n,p)=>n+positive(p.amount)*resourcePeriod(kind,p,person)+Math.ceil(positive(p.amount)/carry(kind,person))*trip(p.x,p.z,person)*2,0),units=nodes.reduce((n,p)=>n+positive(p.amount),0);
   let known=units;if(crew.some(u=>u.jobLock)){const list=kind==='wood'?g.state.trees:kind==='food'?[...g.state.forage,...g.state.fish]:kind==='stone'?g.state.stones:kind==='copper'?g.state.copper:g.state.iron;known=list.reduce((n,p)=>n+((team===0?g.exploredAt(p.x,p.z):rivalKnows(g,team,p.x,p.z))?positive(p.amount):0),0);}
   const requested=Math.max(units,required[kind]),recurring=crew.some(u=>u.jobLock)?Math.min(H*crew.length,known*period):0,work=Math.max(finite,recurring,required[kind]*period+Math.ceil(required[kind]/carry(kind,person))*trip(nodes[0]?.x??home.x,nodes[0]?.z??home.z,person)*2);

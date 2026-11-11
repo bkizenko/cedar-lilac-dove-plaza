@@ -1,7 +1,7 @@
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import type{ProductionProject}from'./production';
-import{PRODUCTION_RECIPES,productionSlots,itemCapacity,cerealReservedMaterials}from'./production';
+import{PRODUCTION_RECIPES,productionSlots,itemCapacity,cerealReservedMaterials,outsideFoodCache,PRODUCTION_RULES}from'./production';
 import type{JobCoordinator}from'./jobCoordinator';
 import{workRuntime}from'./workRuntime';
 export const productionJobId=(id:number)=>`production:${id}`;
@@ -16,7 +16,7 @@ function context(g:Game,jobs?:JobCoordinator){let c=contexts.get(g);if(c?.state=
 function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{key:string;amount:number;capacity:number}[]=[];
  const b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===p.team&&g.finished(b));
  if(!['returning','unloading','stored'].includes(phase)&&b)claims.push({key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)});
- if(['stored','collecting'].includes(phase)){const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
+ if(['stored','collecting'].includes(phase)){const outside=outsideFoodCache(g,p);if(outside){claims.push({key:`production:outside-food:${outside.id}:parcels`,amount:1,capacity:PRODUCTION_RULES.maximumProjects});return claims;}const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
  return claims;
 }
 /** Saved project owns goods. This runtime claims only hands and physical space. */
