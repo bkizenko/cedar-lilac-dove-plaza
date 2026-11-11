@@ -1,5 +1,13 @@
 # Hearthwild coordination — active revision
 
+## Leadership change — latest user instruction
+
+Grok is the execution project manager. Claude leads high-level design and systems thinking. Codex implements, debugs, tests and provides technical integration/release support; it does not set programme priorities over Grok.
+
+Grok owns task sequencing, assignments, execution coordination and backlog reconciliation. Claude supplies design decisions and acceptance intent. Existing exact file claims stay in effect until Grok explicitly reassigns them, preventing concurrent edits. Gemini is not participating. Preserve the complete original plan, all later requirements, saved villages and the frozen98-gate denominator.
+
+This supersedes earlier wording assigning overall execution leadership to Codex or Claude. Current authorized camera/food/navigation work remains in progress; source, validated and live states must be reported separately. Communication is through this repository; no direct cross-provider live-chat connection is claimed.
+
 > Live status and pending batches: [CURRENT_STATUS.md](CURRENT_STATUS.md). Historical snapshots below do not override it.
 
 **Gemini is not participating.** The governing [execution contract](EXECUTION_CONTRACT.md) defines persistent ownership, interfaces, swarming, models and frequent small merges. The [full plan](FULL_IMPLEMENTATION_HANDOFF_2026-11-11.md) and [sourced backlog](FULL_GAME_BACKLOG.json) retain all scope.

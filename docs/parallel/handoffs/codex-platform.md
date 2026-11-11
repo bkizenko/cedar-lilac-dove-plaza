@@ -103,3 +103,23 @@ Still blocked: positive bulk items.paddedArmor conflicts with actual armor asset
 New narrow fixes: tradeAnswerBlocker object fallback can preview an unregistered offer that answerTradeOffer cannot accept; reject detached/stale IDs. Observation records need observedAt<=state.time and historical observer IDs<nextId. Preserve valid history after observer death. Do not present a society-wide snapshot as a visible individual cache inventory.
 
 Fresh PM board2de0593 requires current-main merge and shared native sea/reservation retest before scope expansion;9a mergedf095 but newerG10/source-doc seams must also be preserved. Canonical backlog/status stay Codex-owned; Claude board/hand-off remains Claude-owned. No source or canonical edits and no tests run here. Detailed exact-line review and byte hashes: docs/parallel/reviews/trade-cargo-9a40164.json.
+
+## Scout food custody contract — coordination requested, runtime disabled
+
+Proposed contract: [contracts/scout-food-custody-v1.md](../contracts/scout-food-custody-v1.md). Claude Societies: please coordinate sea/camp consumers before typed loads are enabled. Proposed optional ScoutProvisions.foodCustody holds actual kind/physical units/cache-origin lots plus a distinct legacyUnits unknown bucket. Unit already imports ScoutProvisions, so no types.ts edit is required for that field. Origin labels are historical cache provenance, not container/vessel assets.
+
+Present scout and boat withdrawal budgets use rate×seconds and p.food/rate; those decisions must use nourishment. Existing food/foodUsed/paidFood/sea conservation counters stay physical units. Migrate sea dead-mate transfer, handOverPack usage reset, finiteCamp budgets/strict paid counters, custody/rescue, cache receipts, handover and carried-load volume through the typed API; never scalar-cast bread/curd/whey or invent legacy food identity. Coastal trade/commission remain explicit separate legacy scalars until coordinated. Root permission is still required before any shared types/captive holder edit.
+
+Only new leaf+9 kernel tests exist in an isolated .play candidate; neither committed nor executed. No runtime/source change is published by this contract. Typed loading stays DISABLED until every consumer and strict save/physical cache handoff preserves actual kind, origin, physical volume and nourishment. Please confirm owned sea/camp/custody hooks in your handoff; Codex will integrate shared persistence/volume seams with qualified tests when the resource lane is granted.
+
+## Execution leadership handoff — 2026-11-11T22:45:11.395433+00:00
+
+User appoints Grok execution PM and Claude high-level design lead. Codex continues assigned implementation/debug/test/integration support and defers programme sequencing to Grok. Existing file claims remain until Grok reassigns them.
+
+Current live: code3911598, release2026-11-11T22-25-07-816Z-3911598 on8086/8101;35/35 scoped fog/save batch, precedingf095138/138 separate; overall34/98 unchanged. CanonicalHEAD before this docs handoff3266af2. Saved villages untouched.
+
+Current authorized batch, NOT LIVE: fixed-angle camera collision correction (latest user priority; source under focused validation), exact GrokW1 narrow movement fix (6controlled checks+typecheck; native normalGame.step moves original worker through1.2m authored warehouse gap and settles hold after8.15s versus baseline20s/195route-discard loop), curd/whey (124passed/1failed/1skipped original126-check run; pottery test-only legitimate all-shard handling repaired4/4, source runtime/typecheck unchanged). Original failure and evidence retained. Root is preparing one combined frozen build; do not duplicate these files without claims.
+
+Knowledge screen: compact row/search/progress/primary-action/Details implementation28c8621 is already live; no additional redesign has shipped. Grouped/activity-based overview and workshop-context actions remain requested UX work; Claude design lead should specify concise interaction design, Grok assigns execution.
+
+New proposed scout-food custody contract is docs/parallel/contracts/scout-food-custody-v1.md. Runtime typed loads DISABLED until sea/camp/return/consumption/save consumers migrate; no kind/energy conservation completion claim. Source audit also found redundant default-world generation during constructor+reset/load; proposal only, no measured speedup or source change. Grok decides sequencing after camera.
