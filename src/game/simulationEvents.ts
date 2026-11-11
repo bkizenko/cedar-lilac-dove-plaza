@@ -1,6 +1,6 @@
 import type {Game} from './sim';
 export const SIMULATION_EVENT_RULES={version:1,recentLimit:256,maxTeams:32,continuousBucketSeconds:1} as const;
-export const EVENT_KINDS=['food_received','food_consumed','food_spoiled','cargo_delivered'] as const;
+export const EVENT_KINDS=['food_received','ready_food_received','ready_nourishment_received','ready_food_produced','ready_nourishment_produced','food_consumed','food_spoiled','cargo_delivered'] as const;
 export type SimulationEventKind=typeof EVENT_KINDS[number];
 export type SimulationEvent={sequence:number;timeSeconds:number;kind:SimulationEventKind;team:number;resource:'food'|'wood'|'stone'|'copper'|'iron';amount:number;actorId?:number};
 export type SimulationEventLog={version:1;nextSequence:number;recent:SimulationEvent[];totals:Record<string,number>};
@@ -31,7 +31,7 @@ export function validSimulationEvents(value:unknown){
  const log=value as SimulationEventLog;
  if(log.version!==1||!Number.isSafeInteger(log.nextSequence)||log.nextSequence<1||!Array.isArray(log.recent)||log.recent.length>SIMULATION_EVENT_RULES.recentLimit||!log.totals||typeof log.totals!=='object'||Array.isArray(log.totals))return false;
  const entries=Object.entries(log.totals);if(entries.length>EVENT_KINDS.length*SIMULATION_EVENT_RULES.maxTeams*5)return false;
- if(entries.some(([key,n])=>! /^(food_received|food_consumed|food_spoiled|cargo_delivered):([0-9]|[12][0-9]|3[01]):(food|wood|stone|copper|iron)$/.test(key)||!Number.isFinite(n)||n<0))return false;
+ if(entries.some(([key,n])=>! /^(food_received|ready_food_received|ready_nourishment_received|ready_food_produced|ready_nourishment_produced|food_consumed|food_spoiled|cargo_delivered):([0-9]|[12][0-9]|3[01]):(food|wood|stone|copper|iron)$/.test(key)||!Number.isFinite(n)||n<0))return false;
  let previous=0;
  for(const e of log.recent){
   if(!e||!Number.isSafeInteger(e.sequence)||e.sequence<=previous||e.sequence>=log.nextSequence||!Number.isFinite(e.timeSeconds)||e.timeSeconds<0||!EVENT_KINDS.includes(e.kind)||!Number.isInteger(e.team)||e.team<0||e.team>=SIMULATION_EVENT_RULES.maxTeams||!['food','wood','stone','copper','iron'].includes(e.resource)||!Number.isFinite(e.amount)||e.amount<=0||e.actorId!==undefined&&(!Number.isSafeInteger(e.actorId)||e.actorId<1))return false;

@@ -1,3 +1,4 @@
+import {InstanceCameraCull} from './instanceCameraCull';
 import {HousingPacketLayer} from './housingPackets';
 import{civicPartColor}from'./classicalBuildings';
 import{BuildingGroundingLayer}from'./buildingGrounding';
@@ -1544,7 +1545,10 @@ export class WorldView {
       camera:{x:this.camera.position.x,y:this.camera.position.y,z:this.camera.position.z}};
   }
 
+  private readonly buildingCameraCull=new InstanceCameraCull();
+
   private syncBuildings(game: Game) {
+    this.buildingCameraCull.begin(this.camera);
     if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
     this.towerPlatforms.sync(game);
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
@@ -1583,6 +1587,10 @@ export class WorldView {
           }
           if(type==="farm"&&part==="extra"){const c=b.crop;const growth=c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);_s.y*=growth;}
           _q.setFromEuler(_e);_m.compose(_p,_q,_s);
+          // Shader-grounded surfaces have different bounds; preserve those and
+          // off-camera shadow casters. Rigid parts outside the view need no instance.
+          const rigid=type!=='farm'&&type!=='pen'&&!terrainLaidWorkplace(type)&&type!=='trench'&&type!=='moat';
+          if(rigid&&!this.renderer.shadowMap.enabled&&!this.buildingCameraCull.visible(mesh,_m,8+this.dist*.12))return;
           const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
           const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art&&artisan)art.setXYZW(i,artisan.x,artisan.z,artisan.brace,artisan.lift);
           if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);}

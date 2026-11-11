@@ -3,7 +3,7 @@ import type {Game} from '../game/sim';
 import {currentSeasonReport,SEASON_METRICS,SEASON_NAMES,type SeasonMetric} from '../game/seasonReports';
 
 const labels: Record<SeasonMetric,string> = {
- food:'Food into stores',wood:'Logs delivered',stone:'Stone delivered',
+ food:'All food receipts (gross)',wood:'Logs delivered',stone:'Stone delivered',
  copper:'Copper delivered',iron:'Iron delivered',weapons:'Weapons made',
 };
 const period = (season:number) => `${SEASON_NAMES[season%4]}, Year ${Math.floor(season/4)+1}`;
@@ -13,10 +13,14 @@ const change = (now:number,prior:number) => {
  return delta===0?'0':`${delta>0?'+':'−'}${units(Math.abs(delta))}`;
 };
 type ReportRow=NonNullable<ReturnType<typeof currentSeasonReport>>;
-type HistoryMetric=SeasonMetric|'eaten'|'spoiled';
-const historyLabels:Record<HistoryMetric,string>={...labels,eaten:'Food eaten',spoiled:'Food spoiled in pantry'};
-const historyMetrics=[...SEASON_METRICS,'eaten','spoiled'] as const;
+type HistoryMetric=SeasonMetric|'eaten'|'spoiled'|'readyProduced'|'readyReceived'|'readyStock'|'readyNourishment';
+const historyLabels:Record<HistoryMetric,string>={...labels,eaten:'Food eaten',spoiled:'Food spoiled in pantry',readyProduced:'Ready meals made',readyReceived:'Ready food received',readyStock:'Ready food in stock',readyNourishment:'Ready nourishment in stock'};
+const historyMetrics=['readyProduced','readyReceived','readyStock','readyNourishment',...SEASON_METRICS,'eaten','spoiled'] as const;
 function historyValue(row:ReportRow,metric:HistoryMetric){
+ if(metric==='readyProduced')return row.readyFood?.produced;
+ if(metric==='readyReceived')return row.readyFood?.received;
+ if(metric==='readyStock')return row.readyFood?.stock;
+ if(metric==='readyNourishment')return row.readyFood?.nourishment;
  return metric==='eaten'||metric==='spoiled'?row.foodFlow?.[metric]:row.totals[metric];
 }
 
@@ -33,7 +37,12 @@ function Totals({row,prior}:{row:ReportRow;prior?:ReportRow}){
  return <table className="w-full text-left text-xs tabular-nums">
   <thead className="text-parchment-dim"><tr><th scope="col">Resource</th><th scope="col" className="text-right">Added</th>
    <th scope="col" className="text-right">In stock</th>{prior&&<th scope="col" className="text-right">Change</th>}</tr></thead>
-  <tbody>{SEASON_METRICS.map(key=><tr key={key} className="border-t border-parchment/10">
+  <tbody>{(['produced','received','nourishmentReceived']as const).map(key=><tr key={key} className="border-t border-parchment/10">
+   <th scope="row" className="py-1.5 pr-3 font-normal">{key==='produced'?'Ready meals made':key==='received'?'Ready food received':'Ready nourishment received'}</th>
+   <td className="text-right">{row.readyFood?units(row.readyFood[key]):'Unrecorded'}{row.readyFood?.partial?'*':''}</td>
+   <td className="pl-3 text-right">{key==='produced'?'—':row.readyFood?units(key==='received'?row.readyFood.stock:row.readyFood.nourishment):'Unrecorded'}</td>
+   {prior&&<td className="pl-3 text-right">{row.readyFood&&!row.readyFood.partial&&prior.readyFood&&!prior.readyFood.partial?change(row.readyFood[key],prior.readyFood[key]):'—'}</td>}
+  </tr>)}{SEASON_METRICS.map(key=><tr key={key} className="border-t border-parchment/10">
    <th scope="row" className="py-1.5 pr-3 font-normal">{labels[key]}</th>
    <td className="text-right">{units(row.totals[key])}</td><td className="pl-3 text-right">{units(row.stock[key])}</td>
    {prior&&<td className="pl-3 text-right">{change(row.totals[key],prior.totals[key])}</td>}
@@ -62,11 +71,12 @@ export function SeasonReport({game,hidden=false}:{game:Game;hidden?:boolean}) {
   {prior&&<p className="text-parchment-dim">Change from {period(prior.season)}</p>}
   <Totals row={latest} prior={prior}/>
   <FoodFlow row={latest}/>
+  <p className="text-xs text-parchment-dim">Ready food excludes raw grain and fish. Nourishment includes bread’s 20% bonus. Gross receipts include intermediate products. * Partial recording.</p>
  </aside>;
 }
 
 export function SeasonLedger({game}:{game:Game}){
- const [metric,setMetric]=useState<HistoryMetric>('food');
+ const [metric,setMetric]=useState<HistoryMetric>('readyProduced');
  const current=currentSeasonReport(game);
  if(!current)return null;
  const rows=game.state.seasonReports?.history.slice(-8)??[];
@@ -83,7 +93,7 @@ export function SeasonLedger({game}:{game:Game}){
    <ol className="space-y-1" aria-label={`${historyLabels[metric]} by season`}>
     {rows.map(row=>{
      const value=historyValue(row,metric);
-     const partial=metric==='eaten'||metric==='spoiled'?row.foodFlow?.partial:row.partial;
+     const partial=metric.startsWith('ready')?row.readyFood?.partial:metric==='eaten'||metric==='spoiled'?row.foodFlow?.partial:row.partial;
      return <li key={row.season} className="grid grid-cols-[8rem_1fr_4rem] items-center gap-2 text-xs">
       <span>{period(row.season)}{partial?' · partial':''}</span>
       <div className="h-1.5 rounded-full bg-parchment/15" aria-hidden="true">{value!==undefined&&<div className="h-full rounded-full bg-bronze" style={{width:`${value/maximum*100}%`}}/>}</div>
@@ -92,6 +102,6 @@ export function SeasonLedger({game}:{game:Game}){
     })}
    </ol>
   </>}
-  <p className="text-xs text-parchment-dim">Food into stores includes deliveries and finished batches. Stock reflects what is on hand.</p>
+  <p className="text-xs text-parchment-dim">Meals made counts completed cooking, smoking and baking. Ready receipts also include gathered food and trade; do not add them to meals made. Ready food excludes unprocessed grain and fresh fish. Food counts are physical units; nourishment includes bread’s 20% bonus. Gross receipts include intermediate grain and finished meals and must not be added to ready-food receipts. * Recording began partway through this season.</p>
  </section>;
 }

@@ -47,6 +47,10 @@ const playerReadyKinds = FOOD_KINDS.filter(kind => kind !== 'grain' && kind !== 
 function nourishmentOf(lots: Record<FoodKind,number>, kinds: readonly FoodKind[]) {
   return kinds.reduce((total, kind) => total + lots[kind] * (FOOD_NOURISHMENT[kind] ?? 1), 0);
 }
+export function readyFoodStock(tribe: Tribe) {
+  const lots=foodInventory(tribe);
+  return {units:playerReadyKinds.reduce((total,kind)=>total+lots[kind],0),nourishment:nourishmentOf(lots,playerReadyKinds)};
+}
 export function readyNourishment(tribe: Tribe, team: number) {
   const lots = tribe.foodLots;
   if (!lots?.bread && (team !== 0 || (!lots?.fish && !lots?.grain))) return tribe.food;
@@ -57,8 +61,13 @@ export function takeFoodLot(g:Game,team:number,kind:FoodKind,amount:number){
  if(!Number.isFinite(amount)||amount<0)return false;const t=g.tribe(team),lots=foodInventory(t);if(lots[kind]+1e-9<amount)return false;
  lots[kind]=Math.max(0,lots[kind]-amount);t.food=Math.max(0,t.food-amount);t.foodLots=lots;return true;
 }
-export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="provisions") {
+export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="provisions",source:'receipt'|'production'='receipt') {
   recordSimulationEvent(g,'food_received',team,'food',amount);
+  if(kind!=='grain'&&kind!=='fish'){
+    recordSimulationEvent(g,'ready_food_received',team,'food',amount);
+    recordSimulationEvent(g,'ready_nourishment_received',team,'food',amount*(FOOD_NOURISHMENT[kind]??1));
+    if(source==='production'){recordSimulationEvent(g,'ready_food_produced',team,'food',amount);recordSimulationEvent(g,'ready_nourishment_produced',team,'food',amount*(FOOD_NOURISHMENT[kind]??1));}
+  }
   const t=g.tribe(team),lots=foodInventory(t);lots[kind]+=amount;t.food+=amount;t.foodLots=lots;
 }
 function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:boolean) {
