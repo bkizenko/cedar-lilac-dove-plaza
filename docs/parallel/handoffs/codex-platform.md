@@ -123,3 +123,21 @@ Current authorized batch, NOT LIVE: fixed-angle camera collision correction (lat
 Knowledge screen: compact row/search/progress/primary-action/Details implementation28c8621 is already live; no additional redesign has shipped. Grouped/activity-based overview and workshop-context actions remain requested UX work; Claude design lead should specify concise interaction design, Grok assigns execution.
 
 New proposed scout-food custody contract is docs/parallel/contracts/scout-food-custody-v1.md. Runtime typed loads DISABLED until sea/camp/return/consumption/save consumers migrate; no kind/energy conservation completion claim. Source audit also found redundant default-world generation during constructor+reset/load; proposal only, no measured speedup or source change. Grok decides sequencing after camera.
+
+## Constructor/world initialization audit — for Grok sequencing
+
+Source-only report: [world-initialization-source-audit-3266af2.json](../reviews/world-initialization-source-audit-3266af2.json). No new execution priority or shared source claim. Grok decides scheduling after the current camera batch.
+
+Normal Game constructor+reset and decode each call generateWorld twice. With three valid ordinary saved slots, Engine startup source path is1initial Game +3candidate decodes×2 +1winner decode×2 =9public generation calls. Autosave structural validation and command/community preflight generate0worlds. Legacy reconstruction and internal multi-candidate worldgen retries are separate; none of these are measured timings or speedup claims.
+
+Small proposed first change: lazy per-instance own enumerable world getter/setter, installing ordinary writable world on reset assignment or first default-world read. Preserve blank/walk/workBoard/RNG draws and Object.assign draft behavior; never share a mutable cached WorldData or expose an uninitialized Game. Ordinary decode would then need1generation; saved startup source count9→4 while preserving save selection. A later loadRaw/Engine restore dedup is separate and must preserve terrain-failure fallback. Report lists exact RNG, historical terrain, saved-slot, isolation, preflight and actual UI acceptance. No sim/persistence/engine changes or Game/world execution occurred here; typed scout-food loads remain disabled.
+
+## Ordered completion execution — latest user instruction
+
+Read COMPLETION_PLAN.md copied from origin/agents/claude-coordination e8a48af. First native100residentLow sim p95<33ms and actual authoritative WebWorker; then normal WHOLE branch merges behind options (societies>=55fc655,experience>=9992fe9,world), then knowledge provenance/known-partly-unknown, livestock/horses/cheese/crafting/saves. Pending camera/nav/dairy candidates are preserved, NOT published ahead of this order. No branch cherrypick/partial landing is planned.
+
+Explicit branch fetch corrected remote config which only fetched main; current heads1f77972/9992fe9/70ed21c replace stale trackingrefs. Earlier trade/source reviews must be reconciled against these actual current heads.
+
+Native100 baseline: mean30.84ms,p9545.30ms (target33missed),180unprofiled actualsteps+20warm. Scenario is a declared100resident scale clone of real71resident village,29adults authored before timing on connected native positions; original file/terrain unchanged, all348livingunits and404livingstructures retained. Parallel phase-profile pass has exact state/RNG parity and identifies people23.19msmean as dominant. No render/FPS/earnedcampaign claim. Evidence: docs/metrics/sim-speed-native100-baseline-2026-11-11.json. Existing100/60authoredfixture was rejected because not every building entrance remains reachable under current code; its failure retained locally rather than waiving the guard.
+
+Seven original CHAT proposals accepted/reconciled in FULL_GAME_BACKLOG.json; laterG14/G15/G16rows retained. Every row has acceptance criteria; G9/G10recordonlyscopedlivepartial evidence. All gate credits stay unchanged34/98.

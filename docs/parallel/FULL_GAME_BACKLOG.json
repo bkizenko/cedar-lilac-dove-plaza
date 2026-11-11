@@ -29,7 +29,34 @@
       "implementation_and_technical_integration": "Codex",
       "file_claims": "Existing claims remain until Grok explicitly reassigns; no simultaneous incompatible edits",
       "scope": "Entire original plan and later backlog unchanged; fixed98-gate baseline unchanged"
-    }
+    },
+    "supplemental_chat_reconciliation": {
+      "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+      "acceptedIDs": [
+        "CHAT-G7-FOOD-TASTE",
+        "CHAT-G2-GOLDEN-HOUR",
+        "CHAT-G9-LAB-FLOW",
+        "CHAT-G4-LEADER-PRESENTATION",
+        "CHAT-G6-CULTURAL-NAMES",
+        "CHAT-G10-FOG-PROVENANCE",
+        "CHAT-G13-BOAT-DIMENSIONS"
+      ],
+      "acceptedCount": 7,
+      "otherSupplementalRowsPreserved": [
+        "CHAT-G14-DEEPWATER-PORTS",
+        "CHAT-G15-TRADE-DIVERSITY",
+        "CHAT-G16-DEEPWATER-STORMS"
+      ],
+      "fixedChecklist": "hearthwild-first-release-gates-v1",
+      "gateDenominator": 98,
+      "gateCreditDelta": 0,
+      "rule": "Accepted scope is not implementation or acceptance credit."
+    },
+    "current_execution_order": [
+      "Measured native100residentLow sim p95<33ms and authoritative WebWorker",
+      "Whole normal merges of societies>=55fc655,experience>=9992fe9,world with game options and board hooks",
+      "Knowledge provenance/states; livestock/horses/cheese; crafting; saves"
+    ]
   },
   "counts": {
     "astra_tasks": 25,
@@ -8588,8 +8615,20 @@
       "userIntent": "Quantify food enjoyment separately from calories and relate bread-versus-porridge benefit to labor; user supplied a tentative ranking.",
       "proposedRequirement": "Document tunable taste/enjoyment units and test morale/benefit versus preparation labor; treat supplied ranking as tentative, no new unsafe starvation food implied.",
       "missingFromFullHandoff": "Food chains are present; distinct hedonic/taste metric and user ranking not itemized.",
-      "state": "pending",
-      "gateCreditDelta": 0
+      "state": "accepted-pending",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G7-FOOD-TASTE",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Keep a tunable enjoyment metric separate from nourishment, risk, preservation and labor; supplied ordering is a design proposal, not a completed rule.",
+        "acceptanceEvidenceRequired": [
+          "Actual production/consumption records expose enjoyment and labor separately.",
+          "Native population chooses affordable meals without starvation caused by taste scoring; built food details stay concise."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G2-GOLDEN-HOUR",
@@ -8600,8 +8639,20 @@
       "userIntent": "Golden-hour appearance most of the time except winter/storms/night.",
       "proposedRequirement": "Preserve explicit time/weather exceptions and daylight behavior while reviewing warm low-angle grading.",
       "missingFromFullHandoff": "General H palette does not explicitly retain this lighting-time request.",
-      "state": "pending",
-      "gateCreditDelta": 0
+      "state": "accepted-pending-built-review",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G2-GOLDEN-HOUR",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Warm golden-hour direction remains requested with winter/storm/night exceptions; no new art approval inferred.",
+        "acceptanceEvidenceRequired": [
+          "Built lighting across representative day/season/weather states matches approved direction.",
+          "Low-profile performance and dominant daylight pacing remain measured."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G9-LAB-FLOW",
@@ -8615,8 +8666,24 @@
       "userIntent": "One-click test-mode entry, restart without leaving, save inside test lab.",
       "proposedRequirement": "Track these three separate UI actions and acceptance; native lab scenario only, no private village overwrite.",
       "missingFromFullHandoff": "Testing scenarios exist but these requested user-facing lab actions are not explicit.",
-      "state": "pending",
-      "gateCreditDelta": 0
+      "state": "live-partial",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G9-LAB-FLOW",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Live3911598 built workflow proves Test Lab entry, save/load and safe return; restart inside Test Lab still needs specific native/built proof.",
+        "acceptanceEvidenceRequired": [
+          "Entry clones the village through one Test Lab action without changing original slots.",
+          "Restart a test world without leaving Test Lab, retaining original village.",
+          "Save/reload the lab and return to byte-preserved primary/backup/protected village."
+        ],
+        "gateCreditDelta": 0
+      },
+      "evidence": [
+        "docs/metrics/test-lab-observed-fog-release-2026-11-11.json"
+      ]
     },
     {
       "proposedID": "CHAT-G4-LEADER-PRESENTATION",
@@ -8627,8 +8694,20 @@
       "userIntent": "Leader interactions pop up as a live on-screen scene/portrait from Stone Age.",
       "proposedRequirement": "Track era availability and actual leader presentation separately from contextual dialog contents.",
       "missingFromFullHandoff": "Contextual dialog is present; Stone-Age-onward visible leader scene is not explicit.",
-      "state": "pending",
-      "gateCreditDelta": 0
+      "state": "accepted-pending-native-built",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G4-LEADER-PRESENTATION",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Track visible leader scene/portrait from Stone Age separately from dialog text and offer execution.",
+        "acceptanceEvidenceRequired": [
+          "A real encountered leader is presented in a built Stone Age interaction and later-era interaction.",
+          "Displayed identity, available actions and goods come from actual encounter/observed state; no fabricated inventory."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G6-CULTURAL-NAMES",
@@ -8637,8 +8716,20 @@
       "source": "docs/parallel/chat-context/keyboard-music-and-earlier-game.md",
       "messageTimestamp": "2026-10-03T18:42;2026-10-03T19:57",
       "requirement": "Culture/seed-dependent ancient-sounding names; no routine surnames in small villages; quantify repetitive stock-name collisions across seeds. Seeded saves remain reproducible.",
-      "state": "pending-refinement-of-existing-culture-scope",
-      "gateCreditDelta": 0
+      "state": "accepted-pending-native-built",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G6-CULTURAL-NAMES",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Refines existing cultural identity scope; source candidates do not establish published diversity.",
+        "acceptanceEvidenceRequired": [
+          "Seed/culture names vary measurably across seeds without excessive repeats.",
+          "Small-village people lack routine surnames; old saves retain existing names and seeded reload reproduces new names."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G10-FOG-PROVENANCE",
@@ -8650,7 +8741,20 @@
       "state": "live-partial",
       "gateCreditDelta": 0,
       "evidence": "docs/metrics/test-lab-observed-fog-release-2026-11-11.json",
-      "remaining": "TestLab overlay/save fix live39115987 with35/35; exact observer-radius attribution and other unrequested exploration causes remain open, zero gate credit"
+      "remaining": "TestLab overlay/save fix live39115987 with35/35; exact observer-radius attribution and other unrequested exploration causes remain open, zero gate credit",
+      "canonicalID": "CHAT-G10-FOG-PROVENANCE",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Reversible Test Lab overlay/save behavior is live; real observer/report attribution and other auto-exploration causes remain open.",
+        "acceptanceEvidenceRequired": [
+          "Every newly observed region is attributable to an actual observer or valid physically delivered report using actual radii.",
+          "No hidden fertility/stock/path information leaks through preview or report.",
+          "Test Lab reveal remains reversible through saved/reloaded sessions."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G13-BOAT-DIMENSIONS",
@@ -8659,8 +8763,20 @@
       "source": "docs/parallel/chat-context/keyboard-music-and-earlier-game.md:5856",
       "messageTimestamp": "2026-10-31T13:42:08.455Z",
       "requirement": "Player-adjustable boat dimensions within feasible class/design bounds, with real geometry and corresponding material/labor/seating/load consequences rather than cosmetic arbitrary scaling.",
-      "state": "pending",
-      "gateCreditDelta": 0
+      "state": "accepted-pending",
+      "gateCreditDelta": 0,
+      "canonicalID": "CHAT-G13-BOAT-DIMENSIONS",
+      "reconciliation": {
+        "status": "accepted into canonical full scope",
+        "authority": "Latest user instruction to reconcile seven proposed CHAT items",
+        "recordedAtUtc": "2026-11-11T23:03:26.338073+00:00",
+        "scopeDecision": "Class-bounded player dimensions must affect real hull geometry, material/labor cost, seating, load and physical admission; no cosmetic-only completion.",
+        "acceptanceEvidenceRequired": [
+          "A built design action changes feasible dimensions within class/technology limits.",
+          "Construction pays matching materials/labor and actual hull dimensions affect seats/cargo/draft/route admission; strict save/reload preserves them."
+        ],
+        "gateCreditDelta": 0
+      }
     },
     {
       "proposedID": "CHAT-G14-DEEPWATER-PORTS",
