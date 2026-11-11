@@ -257,3 +257,12 @@ Recorded by PM from Boris's decisions at about 18:08 ET. These close two of the 
 
 3. **Knowledge/tech ownership: still open.** Boris asked for clarification (he thinks it is one knowledge base). It remains Codex's per the Completion Plan until he decides. No lane move until that answer lands.
 
+
+## PM check-in — 2026-11-11, 18:15 ET (main `8f8e692`)
+
+Fetched all remotes; merged `origin/main` normally (no rebase/force; `agents/grok-world` only fast-forwarded).
+
+**Changed since 18:05:** main `8f8e692` (Boris: completion-plan ordering, CHAT scope, native100 sim-speed baseline). `agents/grok-world` now `2d05b7d`: W4 handoff finished (`grok-world.md` current, lists its `sim.ts` hunks), board file restored to main's copy (dual-write overlap **resolved**), plus new source: `wonderSites.ts` (G6 partial: river width, water-level range, placement rules for six families; no tides yet) and `dominatedTerritory.ts` (G4 delivered in source).
+**Overlaps:** none new. `sim.ts` (World, listed) and `types.ts` (Societies, listed) are the only non-owner edits; both are on the board. No pushed PNGs, no rebase/force-push seen.
+**Request updates:** G4 -> Delivered (source, `3dae8b0`). G6 -> Partial (wonder site facts `096b111`; tides/exposure open). G2/G3/G5/G1 unchanged. Still pending with Codex: C2, C6, C9, C10, C11, C13, C14, C15, G7, G9 and the LAND merge. No new stale items.
+**World lane:** W4 ready; W5 (flags, e.g. `landformLabelVersion`) is next and planned in `grok-world.md`; awaiting Codex review of the pushed W1-W4.
