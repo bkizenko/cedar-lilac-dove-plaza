@@ -1,0 +1,54 @@
+{
+  "batch": "site-preparation-goat-orders-identity-2026-11-11",
+  "publishedRuntimeCommit": "c4e6060ec7c822947936d21e0c125b24ea044d60",
+  "release": "2026-11-11T19-47-17-122Z-c4e6060",
+  "ports": [
+    8086,
+    8101
+  ],
+  "passed": 94,
+  "total": 94,
+  "percentage": 100,
+  "evidence": {
+    "automated": {
+      "passed": 93,
+      "total": 93,
+      "log": ".play/settlement-candidate-tests.log",
+      "nativeRecheck": ".play/settlement-goat-native-recheck.log",
+      "note": "92 original passes retained plus corrected native-case1/1. Original full log keeps nondeterministic failure; only test RNG made reproducible, no runtime workaround."
+    },
+    "nativeBuiltUI": {
+      "passed": 1,
+      "total": 1,
+      "log": ".play/settlement-candidate-ui.log",
+      "scope": "Actual identity editor buttons/reload; Hut toolbar plus projected world-pointer placement over native tree, pending strict reload, ordinary physical clear/haul/exit/build; goat queue/Cancel/waiting reload, Auto work off."
+    },
+    "typecheck": ".play/settlement-candidate-typecheck.log",
+    "build": ".play/settlement-candidate-build.log"
+  },
+  "overall": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "newGateCredit": 0
+  },
+  "workingChanges": [
+    "New paid player sites queue observed trees, loose stones and forage for ordinary finite clearing before construction/sowing",
+    "Receipt records original quote/type/geometry through upgrades/expansion; no flattening, deletion or free goods",
+    "Automatic assigned clearing works with Auto off, respects paused builder queues, death, cancellation and scoped community handover",
+    "Queued pen search waits for adult/feed/space and dispatches automatically; Cancel preserves paid progress/cargo",
+    "Search patrols bounded remembered unseen terrain as well as unexplored land, with no hidden animal targets",
+    "Community name, original symbols/pattern/palette save and display in HUD, contacts and leader conversation",
+    "Actual worn padded armor receives a tiny bounded affiliation stitch; map colors and armor mechanics unchanged"
+  ],
+  "limitations": [
+    "New-site preparation only; existing extensions still use earlier obstruction rules",
+    "Large original stone outcrops and quarry/bridge/excavation sites retain dedicated rules; no arbitrary landmark erasure",
+    "Goats may be absent/dead/unreachable; searching does not guarantee capture or add sheep/horses",
+    "A captured stray whose handler dies waits Capture paused; keeper retrieval or explicit cancellation/reissue remains necessary",
+    "Identity customization is not the full cultural architecture/armor overhaul",
+    "No current100+ villager saved-run or Mac frame-time acceptance"
+  ],
+  "savesPreserved": true
+}
