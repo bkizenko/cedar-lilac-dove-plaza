@@ -2,7 +2,7 @@ import{Hammer,Pause,Play,Package,ChevronDown}from'lucide-react';
 import{GameTooltip}from'./GameTooltip';
 import{craftingWorkplaceRate}from'../game/crafting';
 import{FOOD_NAMES}from'../game/pantry';
-import{ITEM_NAMES,PRODUCTION_RECIPES,productionOutputs,type ItemKind}from'../game/production';
+import{ITEM_NAMES,PRODUCTION_RECIPES,productionOutputs,discardDairyProject,type ItemKind}from'../game/production';
 import{useState}from'react';import type{Engine}from'../game/engine';import{craftSiteReport,controlCraftSiteJob,type CraftSiteJob}from'../game/craftSiteReport';
 export function CraftSiteQueue({engine}:{engine:Engine}){
  const[,setRevision]=useState(0),[feedback,setFeedback]=useState<{text:string;jobId:string;paused:boolean;expires:number}|null>(null),g=engine.game,b=g.state.selBld,report=b?craftSiteReport(g,b):null;if(!b||!report||!report.benches&&!report.slots&&!report.jobs.length)return null;
@@ -27,8 +27,8 @@ export function CraftSiteQueue({engine}:{engine:Engine}){
      if (quantity > 0) goods.push(`${quantity} ${FOOD_NAMES[kind as keyof typeof FOOD_NAMES]}`);
     }
    }
-   return <li key={project.id}>{goods.join(' · ') || recipe.name} · {phase === 'ready' ? 'awaiting pickup' : 'drying'}</li>;
-  })}</ul> : <p className="text-parchment-dim">No batches drying or awaiting pickup.</p>}
+   return <li key={project.id}>{goods.join(' · ') || recipe.name} · {phase === 'ready' ? 'awaiting pickup' : project.dairy ? 'fermenting in held vessel' : 'drying'}</li>;
+  })}</ul> : <p className="text-parchment-dim">No passive batches or goods awaiting pickup.</p>}
  </details>}
  <GameTooltip title="Workplace capacity" description="Benches are shared. Loaded, drying and ready batches reserve slots; returning batches release them."><p tabIndex={0} className="text-parchment-dim">{[...(report.benches>0?[`${report.benchesReserved} / ${report.benches} benches${report.benchWaiting?` · ${report.benchWaiting} waiting`:''}`]:[]),...(report.slots>0?[`${report.slotsReserved} / ${report.slots} batch slots`]:[]),...(craftingWorkplaceRate(b)>1?[`+${Math.round((craftingWorkplaceRate(b)-1)*100)}% equipment work`]:[])].join(' · ')}</p></GameTooltip>
  <div className="grid gap-2" style={{gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,170px),1fr))'}}>{report.jobs.map(job=>{
@@ -41,6 +41,7 @@ export function CraftSiteQueue({engine}:{engine:Engine}){
   <div className="flex flex-wrap items-center gap-2">
    {(job.paused||job.canPause)&&<GameTooltip title={job.paused?'Resume paid work':'Pause paid work'} description="Paid materials and completed work remain with this batch."><button type="button" aria-label={job.paused?'Resume paid work':'Pause paid work'} className="flex items-center gap-1 rounded border border-bronze/40 px-2 py-1" disabled={!!g.state.ended} onClick={()=>run(job)}>{job.paused?<Play size={11} aria-hidden="true"/>:<Pause size={11} aria-hidden="true"/>}{job.paused?'Resume':'Pause'}</button></GameTooltip>}
    {job.canUnload&&<GameTooltip title="Unload batch at cache" description="Carry the paid inputs to storage and free this worker. The same paid batch can be resumed later."><button type="button" aria-label="Unload batch at cache" className="flex items-center gap-1 rounded border border-bronze/40 px-2 py-1" disabled={!!g.state.ended} onClick={()=>run(job,'unload')}><Package size={11} aria-hidden="true"/>Store batch</button></GameTooltip>}
+   {job.kind==='production'&&g.state.production?.projects.some(p=>p.id===job.projectId&&p.dairy)&&<button type="button" className="rounded border border-bronze/40 px-2 py-1" onClick={()=>{if(discardDairyProject(g,job.projectId!)){setRevision(n=>n+1);engine.pushHud();}}}>Discard milk batch and vessel</button>}
   </div>
   <details><summary className="flex cursor-pointer items-center gap-1 text-parchment-dim"><ChevronDown size={11} aria-hidden="true"/>Details</summary><div className="mt-1 space-y-1">
    <p>{job.progress.toFixed(1)} / {job.required} {job.progressUnit||'work seconds'}</p><p>{job.reason}</p>{job.details&&<p>{job.details}</p>}
