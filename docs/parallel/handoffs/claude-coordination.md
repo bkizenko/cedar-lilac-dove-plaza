@@ -120,3 +120,7 @@ stolenCargo.ts, cultureNaming.ts (+tests, people.ts hook, raiders.ts markStolenL
 
 ## PM check-in (main 3266af2)
 No file overlap among grok-world (c44d50f), claude-societies (55fc655), claude-experience (1c9fa5b). Main advanced with fog/test-lab fixes (not yet merged into Claude branches; merge at next checkpoint). Render worker paused (stand-in renderer stopped; awaiting desktop link for real three.js renders). No PNGs pushed.
+
+## Roles update (Boris, 17:45 ET)
+Grok becomes PM; Claude becomes high-level architect (intent analysis from all Grok/Codex chats + codebase, completion plan). Concept art under docs/art-reference stays in the repo untouched.
+Space proposal for Codex sign-off: AGENTS.md (19 KB) + AGENTS.project.md (11 KB) load every session; trim to a short core (commands, conventions, lane ownership, test command) and point to docs/ by path. Not edited by Claude; Codex owns these files.
