@@ -14,9 +14,9 @@ import {beam,hashSeed,part,partBounds,pick,range,rotatePoint,seededRandom,type P
 import type {CarvedMaterialId} from './carvedPalette';
 
 export const WONDER_GENERATOR_VERSION=1;
-export type WonderFamily='ringObservatory'|'cascadeGarden'|'crescentHarbor'|'millMarket';
+export type WonderFamily='ringObservatory'|'cascadeGarden'|'crescentHarbor'|'millMarket'|'canyonCistern'|'assemblyCourt';
 /** Site facts Grok supplies at placement; only the harbour and market consume them. */
-export type WonderSite={tidalRangeM?:number;exposed?:boolean;flow?:'still'|'river'|'tidal';flowDir?:1|-1;flowSpeedMps?:number;riverWidthM?:number;bankHeightM?:number};
+export type WonderSite={tidalRangeM?:number;exposed?:boolean;flow?:'still'|'river'|'tidal';flowDir?:1|-1;flowSpeedMps?:number;riverWidthM?:number;bankHeightM?:number;/** mean ground grade of the site (SiteSample.meanGrade) */grade?:number};
 import {HULL_SEATS,hullSize} from './hullSizes';
 export {HULL_SEATS,hullSize};
 export type Berth={id:string;hullClass:keyof typeof HULL_SEATS;seats:number;x:number;z:number;yaw:number;length:number;beam:number;bollards:{x:number;z:number}[];/** quay-walk point where a crew steps aboard */boarding:[number,number]};
@@ -29,6 +29,10 @@ export type WonderPlan={family:WonderFamily;version:number;seed:number;footprint
  sightAzimuth?:number;levels?:number[];
  /** Harbour: water basin (circle), berths for real hull classes, y of the quay top. */
  basin?:{cx:number;cz:number;r:number};berths?:Berth[];quayTopY?:number;
+ /** Canyon cistern: pit, rim, water levels and the catchment chain (gutter, silt tank, inlet, overflow, draw-off). */
+ cistern?:{x0:number;x1:number;z0:number;z1:number;rimY:number;waterY:number;capacityM3:number;catchmentSide:1|-1;roofCover:number;inlet:{x:number;z:number;y:number};siltTanks:{x:number;z:number}[];overflow:{x:number;z:number;y:number};drawOff:{x:number;z:number;y:number}[];source:[number,number]};
+ /** Assembly court: bema at the centre, tiers rising round it, radial aisles, seat count and the worst sight clearance over the row in front. */
+ assembly?:{cx:number;cz:number;orchestraR:number;bema:{x:number;z:number;topY:number};tiers:{r0:number;r1:number;topY:number;seats:number}[];aisles:number[];seats:number;rise:number;depth:number;sightClearanceM:number;eyeAboveSeatM:number;speakerHeadM:number};
  /** Mill market: channel rectangle, water surface y, wheel immersion, court level, bridge, stalls. */
  channel?:{z0:number;z1:number;x0:number;x1:number};waterSurfaceY?:number;wheel?:{x:number;y:number;z0:number;z1:number;radius:number;bottomY:number;immersionM:number};courtY?:number;bridge?:{x:number;width:number;spanZ0:number;spanZ1:number;deckY:number};stalls?:{id:string;x:number;z:number;access:[number,number]}[];aisleHalfWidth?:number};
 
@@ -128,9 +132,122 @@ function cascadeGarden(seed:number,fp:{w:number;d:number}):WonderPlan{
 }
 const chance01=(r:Rng,p:number)=>r()<p;
 
+/** Canyon Cistern: a stone-walled stepwell cistern (cf. Nabataean rock cisterns and Gujarati stepwells).
+ * y=0 is the pit floor; the rim walk stands at rimY on four retaining walls. A single entry stair climbs
+ * the front wall; two stepped flights descend either side wall into the water, so the draw-off step
+ * always stands just above the waterline. Rain gutter -> silt tank -> inlet spout on the catchment
+ * wall; a lowered weir on the opposite wall is the overflow; a shaded roof on piers covers the back. */
+function canyonCistern(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderPlan{
+ const r=seededRandom(seed),parts:Part[]=[],groups:Record<string,number[]>={walls:[],flights:[],roof:[],catchment:[],lifting:[]};
+ const add=(g:string,p:Part)=>{groups[g].push(parts.length);parts.push(p);};
+ const m=.3,mx=m+range(r,0,2.2),mz=m+range(r,0,1.4),t=range(r,1.5,1.9),tread=.3,gw=3.2,sw=range(r,2.2,2.6),cs:1|-1=site?.flowDir??(chance01(r,.5)?1:-1);
+ let H=clamp(site?.bankHeightM!==undefined?2.2+site.bankHeightM*1.2:range(r,2.4,3.6),2,4.2),n=0,run=0,pd=0;
+ for(;;){n=Math.max(2,Math.ceil(H/.18));run=n*tread;pd=fp.d-2*mz-2*t-run;if(pd>=run+4.5||H<=2.01)break;H=Math.max(2,H-.15);}
+ const rise=H/n,zb=-fp.d/2+mz,zbi=zb+t,zfo=fp.d/2-mz-run,zfi=zfo-t,px1=fp.w/2-mx-t,px0=-px1,pw=px1-px0,zmid=(zbi+zfi)/2;
+ const waterY=Math.round(H*range(r,.3,.6)*100)/100;
+ // Retaining walls: back, front (the entry stair climbs onto it) and the two side walls (the overflow wall has a lowered weir).
+ add('walls',part('box','stone',[pw+2*t,H,t],[0,0,zb+t/2],2));add('walls',part('box','stone',[pw+2*t,H,t],[0,0,zfo-t/2],2));
+ const ovl=2.4,zov=zbi+pd*range(r,.3,.5);
+ add('walls',part('box','stone',[t,H,pd],[cs*(px1+t/2),0,zmid],2));
+ const lo=zbi,hi=zfi;
+ add('walls',part('box','stone',[t,H,zov-ovl/2-lo],[-cs*(px1+t/2),0,(lo+zov-ovl/2)/2],2));add('walls',part('box','stoneDark',[t,H-.35,ovl],[-cs*(px1+t/2),0,zov],2));add('walls',part('box','stone',[t,H,hi-(zov+ovl/2)],[-cs*(px1+t/2),0,(hi+zov+ovl/2)/2],2));
+ add('walls',part('box','water',[pw,waterY,pd],[0,0,zmid],2));
+ // Entry stair up the front wall (treads end at the wall-top walk).
+ for(let k=0;k<n-1;k++)add('walls',part('box','stone',[gw,H-rise*(k+1),tread],[0,0,zfo+(k+.5)*tread],1));
+ // Descending flights, one inside each side wall, from the front-wall walk toward the back.
+ const xf=px1-sw/2;
+ for(const s of[-1,1])for(let k=0;k<n-1;k++)add('flights',part('box',k%2?'stone':'stoneDark',[sw,H-rise*(k+1),tread],[s*xf,0,zfi-(k+.5)*tread],1));
+ // Roof on piers over the back of the basin: shade slows evaporation. Never over the flights.
+ const exposed=site?.exposed??chance01(r,.5),maxCover=Math.max(0,(pd-run-1.6)/pd),cover=clamp(exposed?.9:range(r,.3,.5),0,maxCover),cl=cover*pd,roofY=H-.45;
+ let nP=0;
+ if(cl>3){nP=Math.ceil(pw/4.5)+1;const zr=zbi+cl;
+  for(let i=0;i<nP;i++){const x=px0+.55+i*(pw-1.1)/(nP-1);add('roof',part('box','stone',[.8,roofY,.8],[x,0,zr-.6],2));}
+  add('roof',part('box','stoneDark',[pw,.35,cl],[0,roofY,zbi+cl/2],2));}
+ // Catchment chain on the catchment wall: rain gutter from the canyon, silt tank(s), spout over the water.
+ const zi=zbi+Math.max(cl,0)+2,wallX=cs*(px1+t/2),fast=(site?.flowSpeedMps??1)>=1.5,tanks:{x:number;z:number}[]=[];
+ const tz=[zb+1.3,...(fast?[zb+3.3]:[])];
+ for(const z of tz){add('catchment',part('box','stone',[1.4,.7,1.6],[wallX,H,z],2));add('catchment',part('box','stoneDark',[1.4,.4,.14],[wallX,H+.7,z],1));tanks.push({x:wallX,z});}
+ const zLast=tz[tz.length-1]+.8,tl=zi-zLast;
+ if(tl>.2){add('catchment',part('box','stoneDark',[.8,.18,tl],[wallX,H,(zLast+zi)/2],2));for(const o of[-.35,.35])add('catchment',part('box','stone',[.1,.25,tl],[wallX+o,H+.18,(zLast+zi)/2],1));}
+ const xa=wallX,xb=cs*(px1-.9);
+ add('catchment',part('box','stoneDark',[Math.abs(xa-xb),.3,.7],[(xa+xb)/2,H-.05,zi],2));
+ const xs=cs*(px1-.8);add('catchment',part('box','water',[.22,H-waterY-.15,.22],[xs,waterY,zi],1));
+ // Windlass on the back wall for buckets and jars.
+ const wx=-cs*pw*.2;for(const o of[-1,1])add('lifting',part('box','woodDark',[.25,1.5,.25],[wx+o,H,zb+t/2],1));
+ add('lifting',part('cylinder','woodMid',[.2,2.2,.2],[wx,H+1.4,zb+t/2],1,[0,0,-Math.PI/2],6));
+ add('lifting',beam('woodDark',[wx,H+1.4,zb+t/2],[wx,H+1.4,zbi+1.6],.1,1));
+ // Draw-off: lowest step still above the water on each flight.
+ const kd=clamp(Math.floor((H-waterY)/rise)-1,0,n-2),drawOff=[-1,1].map(s=>({x:s*xf,z:zfi-(kd+.5)*tread,y:H-rise*(kd+1)}));
+ let sub=0;for(let k=0;k<n-1;k++)sub+=2*sw*tread*Math.min(waterY,H-rise*(k+1));sub+=nP*.64*waterY;
+ const capacity=Math.round((pw*pd*waterY-sub)*10)/10;
+ const topEntry:[number,number]=[0,zfo],botEntry:[number,number]=[0,zfo+run],stairs:Stair[]=[{fromLevel:0,toLevel:H,x:0,zBottom:botEntry[1],zTop:topEntry[1],steps:n,riseM:rise,treadM:tread,width:gw,bottom:botEntry,top:topEntry}];
+ const heads:[number,number][]=[],feet:[number,number][]=[];
+ for(const s of[-1,1]){const top:[number,number]=[s*xf,zfi],bot:[number,number]=[s*xf,zfi-(n-1)*tread];heads.push([s*xf,zfi+t/2]);feet.push(bot);stairs.push({fromLevel:0,toLevel:H,x:s*xf,zBottom:bot[1],zTop:top[1],steps:n,riseM:rise,treadM:tread,width:sw,bottom:bot,top});}
+ const labels:Record<string,string>={walls:'Retaining walls, entry stair and basin',flights:'Stepwell flights',roof:'Shade roof on piers',catchment:'Gutter, silt tanks and inlet',lifting:'Bucket windlass'};
+ const keys=Object.keys(groups).filter(k=>groups[k].length);
+ return {family:'canyonCistern',version:WONDER_GENERATOR_VERSION,seed,footprint:{...fp},parts,levels:[0,waterY,H],
+  cistern:{x0:px0,x1:px1,z0:zbi,z1:zfi,rimY:H,waterY,capacityM3:capacity,catchmentSide:cs,roofCover:Math.round(cl/pd*100)/100,inlet:{x:xs,z:zi,y:H-.05},siltTanks:tanks,overflow:{x:-cs*(px1+t/2),z:zov,y:H-.35},drawOff,source:[wallX,zb]},
+  stages:keys.map(k=>stage(k==='walls'?'groundworks':k,labels[k],parts,groups[k])),
+  spaces:[{id:'basin',label:'Cistern basin',purpose:'Store rain and canyon runoff behind stone walls',areaM2:Math.round(pw*pd)},{id:'catchment',label:'Catchment gutter',purpose:'Carry runoff through silt tanks before it enters the basin',areaM2:Math.round(.8*Math.max(1,zi-zb))},{id:'rim',label:'Rim walk',purpose:'Reach both stepwell flights from the entry stair',areaM2:Math.round((pw+2*t)*t)}],
+  circulation:{entrances:[{x:botEntry[0],z:botEntry[1],width:gw,facing:Math.PI/2}],paths:[[botEntry,topEntry,heads[0],feet[0]],[topEntry,heads[1],feet[1]]],stairs}};
+}
+
+/** Assembly Court: a stepped stone meeting circle (cf. the Pnyx and Greek bouleuterion). A bema stands at the
+ * centre of a paved floor; tiers rise round it with radial aisle stairs; a crown wall shelters the back; a
+ * colonnade (stoa) closes the open side with a central gate. Tier rise is chosen so every row sees the
+ * speaker over the head of the row in front. */
+function assemblyCourt(seed:number,fp:{w:number;d:number},site?:WonderSite):WonderPlan{
+ const r=seededRandom(seed),parts:Part[]=[],groups:Record<string,number[]>={ground:[],tiers:[],aisles:[],crown:[],bema:[],stoa:[]};
+ const add=(g:string,p:Part)=>{groups[g].push(parts.length);parts.push(p);};
+ const m=.3,grade=site?.grade??range(r,0,.2),exposed=site?.exposed??chance01(r,.5),phi=range(r,104,112)*Math.PI/180,depth=range(r,.85,1),R0=range(r,4,5),wall=.8;
+ let N=grade>.25?pick(r,[6,7]):pick(r,[8,9,10]);const maxR=Math.min(fp.w/2-.4,(fp.d-m-3.2)/(1-Math.cos(phi)));
+ while(N>5&&R0+N*depth+wall>maxR)N--;
+ const Rout=R0+N*depth+wall,cx=0,cz=-fp.d/2+m+Rout,a0=-Math.PI/2-phi,a1=-Math.PI/2+phi;
+ // Rise from sightlines: eye 1.1 m above the tread, speaker's head 1.55 m over the bema.
+ const bemaH=.9,eye=1.1,head=bemaH+1.55,clearAt=(rise:number)=>{let c=Infinity;for(let k=1;k<N;k++){const rk=R0+(k+.5)*depth,rf=R0+(k-.5)*depth,yk=(k+1)*rise+eye,yf=k*rise+eye,line=head+(yk-head)*rf/rk;c=Math.min(c,line-yf);}return c;};
+ let rise=.34;while(rise<.4&&clearAt(rise)<.12)rise=Math.round((rise+.01)*100)/100;
+ const clear=Math.round(clearAt(rise)*1000)/1000;
+ const nA=pick(r,[3,4,5]),aw=.9,aisles:number[]=[];for(let i=0;i<nA;i++)aisles.push(a0+(i+.5)*(a1-a0)/nA);
+ const at=(a:number,rad:number):[number,number]=>[cx+Math.cos(a)*rad,cz+Math.sin(a)*rad],yawT=(a:number)=>-a-Math.PI/2;
+ add('ground',part('cylinder','plaster',[2*R0,.1,2*R0],[cx,0,cz],2,undefined,28));
+ const tiers:NonNullable<WonderPlan['assembly']>['tiers']=[];let seats=0;
+ for(let k=0;k<N;k++){const rm=R0+(k+.5)*depth,top=(k+1)*rise,ha=(aw/2+.05)/rm;let tierSeats=0;
+  const bounds=[a0,...aisles.flatMap(a=>[a-ha,a+ha]),a1];
+  for(let w=0;w<bounds.length;w+=2){const b0=bounds[w],b1=bounds[w+1],len=(b1-b0)*rm,ns=Math.max(1,Math.ceil(len/2.4)),da=(b1-b0)/ns;
+   for(let i=0;i<ns;i++){const a=b0+(i+.5)*da,[x,z]=at(a,rm);add('tiers',part('box',k%2?'stone':'stoneDark',[da*rm*1.04,top,depth],[x,0,z],2,[0,yawT(a),0]));}
+   tierSeats+=Math.floor(len/.5);}
+  seats+=tierSeats;tiers.push({r0:R0+k*depth,r1:R0+(k+1)*depth,topY:top,seats:tierSeats});}
+ // Aisle stairs: two treads per tier (half rise, half depth).
+ const stairs:Stair[]=[];
+ for(const a of aisles){for(let k=0;k<N;k++)for(const h of[0,1]){const rr=R0+k*depth+depth*(h?.75:.25),[x,z]=at(a,rr);add('aisles',part('box','plaster',[aw,(k+1)*rise-(h?0:rise/2),depth/2],[x,0,z],1,[0,yawT(a),0]));}
+  const bot=at(a,R0+.05),top=at(a,R0+N*depth);stairs.push({fromLevel:0,toLevel:N*rise,x:bot[0],zBottom:bot[1],zTop:top[1],steps:2*N,riseM:rise/2,treadM:depth/2,width:aw,bottom:bot,top});}
+ // Crown wall behind the top tier, open at each aisle exit.
+ const crownH=N*rise+(exposed?1.5:.9),rc=R0+N*depth+wall/2,hc=(aw/2+.5)/rc,cn=Math.ceil((a1-a0)*rc/2.4),dc=(a1-a0)/cn;
+ for(let i=0;i<cn;i++){const a=a0+(i+.5)*dc;if(aisles.some(q=>Math.abs(q-a)<hc+dc/2*.9))continue;const [x,z]=at(a,rc);add('crown',part('box','stoneDark',[dc*rc*1.04,crownH,wall],[x,0,z],2,[0,yawT(a),0]));}
+ // Bema with five stair treads facing the gate.
+ const bw=3.2,bd=2.2,bn=Math.ceil(bemaH/.18),br=bemaH/bn;
+ add('bema',part('box','stone',[bw,bemaH,bd],[cx,0,cz],2));for(let k=0;k<bn-1;k++)add('bema',part('box','stone',[1.6,bemaH-br*(k+1),.3],[cx,0,cz+bd/2+(k+.5)*.3],1));
+ add('bema',part('box','woodMid',[1,.8,.5],[cx,bemaH,cz-.5],1));
+ // Stoa: columns and a plank roof along the open side, with a central gate gap.
+ const zS=fp.d/2-1.3,gate=3.6,sides=[-1,1],colH=3.3;
+ for(const s of sides){const x0=gate/2+.8,x1=fp.w/2-.9,nc=Math.max(1,Math.floor((x1-x0)/2.8)+1),xs:number[]=[];for(let i=0;i<nc;i++)xs.push(x0+i*(x1-x0)/Math.max(1,nc-1));
+  for(const x of xs){add('stoa',part('box','stoneDark',[.8,.25,.8],[s*x,0,zS],2));add('stoa',part('cylinder','stone',[.55,colH-.25,.55],[s*x,.25,zS],2,undefined,8));}
+  const L=x1-x0+1.2,cxm=s*(x0+x1)/2;add('stoa',part('box','woodDark',[L,.3,1.9],[cxm,colH,zS],1));add('stoa',part('box',exposed?'tile':'woodMid',[L+.2,.14,2.2],[cxm,colH+.3,zS],1));}
+ const front:[number,number]=[0,zS+1.4],ringR=R0-.9,ringPt=(a:number)=>at(a,ringR),lead:[number,number]=[0,cz+ringR];
+ // Floor ring path: from the gate point (angle 90 deg) round to every aisle foot, east then west, on a circle clear of the bema.
+ const sweep=(from:number,to:number,extra:number[])=>{const dir=to>from?1:-1,out:number[]=[];for(let a=from;dir>0?a<=to+1e-9:a>=to-1e-9;a+=dir*Math.PI/10)out.push(a);return [...out,to,...extra].sort((p,q)=>dir*(p-q));};
+ const pathE=sweep(Math.PI/2,-Math.PI/2,aisles.filter(a=>a>-Math.PI/2)).map(ringPt),pathW=sweep(Math.PI/2,3*Math.PI/2,aisles.filter(a=>a<=-Math.PI/2).map(a=>a+Math.PI*2)).map(ringPt);
+ const bemaFoot:[number,number]=[cx,cz+bd/2+(bn-1)*.3+.2];
+ return {family:'assemblyCourt',version:WONDER_GENERATOR_VERSION,seed,footprint:{...fp},parts,levels:[0,bemaH,N*rise],
+  assembly:{cx,cz,orchestraR:R0,bema:{x:cx,z:cz,topY:bemaH},tiers,aisles,seats,rise,depth,sightClearanceM:clear,eyeAboveSeatM:eye,speakerHeadM:head},
+  stages:['ground','crown','tiers','aisles','bema','stoa'].filter(k=>groups[k].length).map(k=>stage(k==='ground'?'groundworks':k,{ground:'Floor, crown wall and retaining stone',crown:'Crown wall',tiers:'Seating tiers',aisles:'Aisle stairs',bema:'Bema',stoa:'Stoa colonnade'}[k]!,parts,groups[k])),
+  spaces:[{id:'orchestra',label:'Paved floor',purpose:'Gather before debate and cross between aisles',areaM2:Math.round(Math.PI*R0*R0)},{id:'cavea',label:'Seating tiers',purpose:`Seat about ${seats} citizens with a view of the speaker`,areaM2:Math.round((a1-a0)/2*((R0+N*depth)**2-R0**2))},{id:'stoa',label:'Stoa',purpose:'Shelter heralds and waiting petitioners from sun and rain',areaM2:Math.round(2*(fp.w/2-1.7)*1.9)}],
+  circulation:{entrances:[{x:front[0],z:front[1],width:gate,facing:Math.PI/2}],paths:[[front,[0,zS-.2],lead],[lead,...pathE],[lead,...pathW],[lead,bemaFoot]],stairs}};
+}
+
 export function generateWonderPlan(family:WonderFamily,worldSeed:number,siteId:number,footprint:{w:number;d:number},site?:WonderSite):WonderPlan{
  const seed=hashSeed(worldSeed,'wonder',family,siteId,WONDER_GENERATOR_VERSION);
- return family==='ringObservatory'?ringObservatory(seed,footprint):family==='cascadeGarden'?cascadeGarden(seed,footprint):family==='crescentHarbor'?crescentHarbor(seed,footprint,site):millMarket(seed,footprint,site);
+ return family==='ringObservatory'?ringObservatory(seed,footprint):family==='cascadeGarden'?cascadeGarden(seed,footprint):family==='crescentHarbor'?crescentHarbor(seed,footprint,site):family==='canyonCistern'?canyonCistern(seed,footprint,site):family==='assemblyCourt'?assemblyCourt(seed,footprint,site):millMarket(seed,footprint,site);
 }
 /** True when the straight segment (ax,az)->(bx,bz) at height y passes
  * through any part. Yaw-only boxes are tested in their own frame (exact);

@@ -4,7 +4,7 @@ import {specBounds,partBounds,floatingParts,structuralSignature} from '../src/sc
 import {CARVED_MATERIALS} from '../src/scene/carvedPalette.ts';
 import {BOAT_CLASSES} from '../src/game/boatClasses.ts';
 import {buildCarvedMesh} from '../src/scene/carvedMesh.ts';
-const FP={ringObservatory:{w:26,d:26},cascadeGarden:{w:22,d:18},crescentHarbor:{w:48,d:40},millMarket:{w:34,d:28}};
+const FP={ringObservatory:{w:26,d:26},cascadeGarden:{w:22,d:18},crescentHarbor:{w:48,d:40},millMarket:{w:34,d:28},canyonCistern:{w:30,d:30},assemblyCourt:{w:32,d:28}};
 const plans=function*(){for(const f of Object.keys(FP))for(let site=1;site<=25;site++)yield generateWonderPlan(f,4242,site,FP[f]);};
 const asSpec=p=>({family:p.family,variantKey:p.family+p.seed,footprint:p.footprint,parts:p.parts,notes:{reference:''}});
 
@@ -125,4 +125,51 @@ test('mill market site variants: bank height and flow change the plan; fast wate
  const a=generateWonderPlan('millMarket',3,1,FP.millMarket,{bankHeightM:.7,flowDir:1,flowSpeedMps:.5}),b=generateWonderPlan('millMarket',3,1,FP.millMarket,{bankHeightM:1.4,flowDir:-1,flowSpeedMps:2.5});
  assert.ok(b.courtY>a.courtY+.5);assert.ok(b.parts.length>a.parts.length-5&&b.parts.some(q=>q.mat==='stone'&&q.size[2]===b.channel.z1-b.channel.z0),'sluice weir at fast water');
  assert.ok(Math.sign(a.wheel.x)!==Math.sign(b.wheel.x),'mill moves with flow direction');
+});
+
+// ---- Canyon Cistern and Assembly Court
+const cisterns=function*(){for(let site=1;site<=25;site++)yield generateWonderPlan('canyonCistern',31,site,FP.canyonCistern,{flowDir:site%2?1:-1,flowSpeedMps:site%3?1:2,bankHeightM:.6+(site%5)*.2,exposed:site%2===0});};
+test('cistern: water chain is physically ordered (inlet above water, overflow between water and rim, draw-off just above the waterline)',()=>{
+ for(const p of cisterns()){const c=p.cistern,L=p.family+p.seed;
+  assert.ok(c.waterY>0&&c.waterY<c.rimY,L+' water below rim');assert.ok(c.inlet.y>c.waterY+.5,L+' inlet pours from above');
+  assert.ok(c.overflow.y>c.waterY&&c.overflow.y<c.rimY,L+' overflow weir');assert.ok(Math.sign(c.overflow.x)===-c.catchmentSide&&Math.sign(c.inlet.x)===c.catchmentSide,L+' inlet and overflow on opposite walls');
+  assert.equal(c.drawOff.length,2);for(const d of c.drawOff)assert.ok(d.y>=c.waterY-1e-6&&d.y<c.waterY+.19+.01,L+' draw-off is the lowest dry step '+d.y+' vs '+c.waterY);
+  assert.ok(c.siltTanks.length>=1&&c.siltTanks.every(t=>t.z<c.inlet.z&&Math.sign(t.x)===c.catchmentSide),L+' silt tanks sit upstream of the inlet');
+  const max=(c.x1-c.x0)*(c.z1-c.z0)*c.waterY;assert.ok(c.capacityM3>max*.7&&c.capacityM3<max,L+' capacity '+c.capacityM3+' of '+max);}
+});
+test('cistern: entry stair, rim walk and both flights are walkable (rise <= 0.18, tread >= 0.3) and the walk is unobstructed',()=>{
+ for(const p of cisterns()){const L=p.family+p.seed;assert.equal(p.circulation.stairs.length,3);
+  for(const s of p.circulation.stairs){assert.ok(s.riseM<=.18+1e-6&&s.treadM>=.3-1e-9,L+' stair');assert.ok(Math.abs(s.riseM*s.steps-p.cistern.rimY)<1e-6,L+' rise adds up to the rim');}
+  for(const path of p.circulation.paths)for(let i=1;i<path.length;i++){const stairSeg=path[i-1][0]===path[i][0]&&Math.abs(path[i-1][1]-path[i][1])>1.5;if(i===1&&path[0][1]>path[1][1]+3)continue;if(!stairSeg)assert.equal(segmentBlocked(p,path[i-1],path[i],p.cistern.rimY+.4),false,L+' rim walk blocked');}
+  const [fw,fe]=p.circulation.stairs.slice(1);for(const f of[fw,fe]){const lo=Math.min(f.zBottom,f.zTop),hi=Math.max(f.zBottom,f.zTop);
+   const roofPiers=p.parts.filter(q=>q.shape==='box'&&q.size[0]===.8&&q.size[2]===.8);for(const q of roofPiers){const b=partBounds(q);assert.ok(b.maxZ<lo-.2||b.minZ>hi+.2,L+' roof pier on a flight');}}}
+});
+test('cistern site variants: catchment side, rim height, roof cover and a second silt tank follow the site',()=>{
+ const g=(site,id=3)=>generateWonderPlan('canyonCistern',31,id,FP.canyonCistern,site);
+ assert.equal(g({flowDir:1}).cistern.catchmentSide,1);assert.equal(g({flowDir:-1}).cistern.catchmentSide,-1);
+ assert.ok(g({bankHeightM:1.5}).cistern.rimY>g({bankHeightM:.6}).cistern.rimY+.5);assert.ok(g({exposed:true}).cistern.roofCover>g({exposed:false}).cistern.roofCover);
+ assert.equal(g({flowSpeedMps:.5}).cistern.siltTanks.length,1);assert.equal(g({flowSpeedMps:2.2}).cistern.siltTanks.length,2);
+ assert.notDeepEqual(g({flowDir:1}).parts,g({flowDir:-1}).parts);
+});
+const courts=function*(){for(let site=1;site<=25;site++)yield generateWonderPlan('assemblyCourt',88,site,FP.assemblyCourt,{grade:(site%6)*.08,exposed:site%2===0});};
+test('assembly court: every tier sees the speaker over the row in front (recomputed from the plan numbers)',()=>{
+ for(const p of courts()){const a=p.assembly,L=p.family+p.seed;let worst=Infinity;
+  for(let k=1;k<a.tiers.length;k++){const rk=(a.tiers[k].r0+a.tiers[k].r1)/2,rf=(a.tiers[k-1].r0+a.tiers[k-1].r1)/2,eyeK=a.tiers[k].topY+a.eyeAboveSeatM,eyeF=a.tiers[k-1].topY+a.eyeAboveSeatM,line=a.speakerHeadM+(eyeK-a.speakerHeadM)*rf/rk;worst=Math.min(worst,line-eyeF);}
+  assert.ok(worst>=.1-1e-9,L+' clearance '+worst);assert.ok(Math.abs(worst-a.sightClearanceM)<.01,L+' reported clearance matches');
+  assert.ok(a.tiers.every((t,i)=>Math.abs(t.topY-(i+1)*a.rise)<1e-9&&Math.abs(t.r1-t.r0-a.depth)<1e-9),L+' uniform rake');assert.ok(a.speakerHeadM===a.bema.topY+1.55);}
+});
+test('assembly court: aisle stairs are walkable and the gate reaches every aisle foot over clear floor; seats are the sum of the tiers',()=>{
+ for(const p of courts()){const a=p.assembly,L=p.family+p.seed;assert.equal(p.circulation.stairs.length,a.aisles.length);
+  for(const s of p.circulation.stairs){assert.ok(s.riseM<=.2+1e-9&&s.treadM>=.28,L+' aisle stair '+s.riseM+'/'+s.treadM);assert.ok(Math.abs(s.riseM*s.steps-a.tiers[a.tiers.length-1].topY)<1e-6);}
+  for(const path of p.circulation.paths)for(let i=1;i<path.length;i++)assert.equal(segmentBlocked(p,path[i-1],path[i],.5),false,L+' floor path blocked');
+  const feet=p.circulation.paths.flat();for(const s of p.circulation.stairs){const near=Math.min(...feet.map(q=>Math.hypot(q[0]-s.bottom[0],q[1]-s.bottom[1])));assert.ok(near<=.95+1e-6,L+' an aisle foot is within one step of the floor path ('+near.toFixed(2)+')');
+   assert.equal(segmentBlocked(p,[a.cx+(s.bottom[0]-a.cx)*(a.orchestraR-.9)/a.orchestraR,a.cz+(s.bottom[1]-a.cz)*(a.orchestraR-.9)/a.orchestraR],s.bottom,.5),false,L+' aisle foot blocked');}
+  assert.equal(a.seats,a.tiers.reduce((n,t)=>n+t.seats,0));assert.ok(a.seats>=150&&a.seats<=1200,L+' seats '+a.seats);
+  assert.equal(p.circulation.entrances.length,1);const gate=p.circulation.entrances[0];assert.ok(Math.abs(gate.x)<1e-9&&gate.width>=3);}
+});
+test('assembly court site variants: steep ground gives fewer tiers; exposure raises the crown wall and roofs the stoa in tile',()=>{
+ const g=(site,id=4)=>generateWonderPlan('assemblyCourt',88,id,FP.assemblyCourt,site);
+ assert.ok(g({grade:.35}).assembly.tiers.length<g({grade:.05}).assembly.tiers.length);
+ const top=pl=>Math.max(...pl.parts.filter(q=>q.shape==='box'&&q.mat==='stoneDark'&&q.size[2]===.8).map(q=>partBounds(q).maxY));
+ assert.ok(top(g({exposed:true}))>top(g({exposed:false}))+.5);assert.ok(g({exposed:true}).parts.some(q=>q.mat==='tile')&&!g({exposed:false}).parts.some(q=>q.mat==='tile'));
 });

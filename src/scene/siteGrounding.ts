@@ -65,12 +65,12 @@ export function wonderSiteIssues(family:WonderFamily,s:SiteSampleLike):string[]{
  const out:string[]=[],g=s.maxGrade,w=s.wetFraction;
  if(family==='crescentHarbor'){if(w<.3)out.push(`Harbour needs open water over at least 30% of the site (${Math.round(w*100)}% wet)`);if(g>.5)out.push('Quay ground is too steep');}
  else if(family==='millMarket'){if(w<.08||w>.55)out.push(`Mill market needs a stream crossing 8-55% of the site (${Math.round(w*100)}% wet)`);if(g>.5)out.push('Court ground is too steep');}
- else{if(w>.02)out.push('Part of the site is under water');if(family==='cascadeGarden'?g>.55:g>.3)out.push(`Ground is too steep for this wonder (grade ${g.toFixed(2)})`);}
+ else{if(w>.02)out.push('Part of the site is under water');if(family==='cascadeGarden'?g>.55:family==='assemblyCourt'?g>.4:g>.3)out.push(`Ground is too steep for this wonder (grade ${g.toFixed(2)})`);}
  return out;
 }
 /** Wonder site facts derivable from a SiteSample: flow runs downhill (X sign), faster on steeper ground;
  * bank height from relief; open coast from the warm-coast province. Tide and river width are NOT in SiteSample (Grok to supply). */
 export function wonderSiteFromSample(s:SiteSampleLike):WonderSite{
  const share=s.biomeShares['warm-coast']??0,flowSpeedMps=Math.round(Math.max(.3,Math.min(3,Math.sqrt(Math.max(0,s.meanGrade))*3))*100)/100;
- return {flowDir:Math.sin(s.downhillRadians)>=0?1:-1,flowSpeedMps,bankHeightM:Math.round(Math.max(.6,Math.min(1.6,s.heightRangeMetres*.5))*100)/100,exposed:share>=.3||s.biome==='warm-coast',flow:s.meanGrade>.02?'river':'still'};
+ return {flowDir:Math.sin(s.downhillRadians)>=0?1:-1,flowSpeedMps,bankHeightM:Math.round(Math.max(.6,Math.min(1.6,s.heightRangeMetres*.5))*100)/100,exposed:share>=.3||s.biome==='warm-coast',flow:s.meanGrade>.02?'river':'still',grade:Math.round(s.meanGrade*1000)/1000};
 }
