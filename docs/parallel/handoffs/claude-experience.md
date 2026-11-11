@@ -250,3 +250,50 @@ Instancing adapter for trees and caravans once `InstanceCameraCull.query` merges
 
 ### Next action
 Same as Batch 3: instancing adapters and wiring into the carved layer, `TradeDialog.tsx`, once a browser or the Codex culling seam is available.
+
+## Batch 5 (pure specs and models; no existing live file edited; nothing rendered or heard)
+
+### Status
+- Animation clips: DONE, tested (`b857dea`). `src/scene/animationClips.ts`.
+- Audio state spec: DONE, tested (`8c5451b`). `src/scene/audioState.ts`.
+- Minimal UI models and components: DONE, models tested (`src/ui/h/minimalModels.ts`, `src/ui/h/MinimalParts.tsx`). The components are not wired, not run in a browser and not type-checked (see Checks).
+- The render worker (`agents/claude-experience-render`) was not touched.
+
+### Animation clips
+- Clips: idle, walk, carry, row, fight, thresh, winnow, grind, bake, tend, chop, quarry, plant, harvest, craft. Each is a keyframe table (7 body parts plus a root offset) that loops seamlessly (tested).
+- Selection reads real state names: `Unit.order`, `ProductionProject.phase` and recipe id (every one of the real recipe ids in `PRODUCTION_RECIPES` maps to a clip, tested), node kind, `fieldAction`, boat rowing, carried load. Thresh, winnow, grind and bake recipes drive their own clips; cook, smoke, kiln and ferment recipes drive `tend`; other working recipes drive `craft`. `curing` and `paused` always give `idle`, so no one pretends to work.
+- Phase comes from real progress: seconds of work done for work clips, metres walked for walk and carry, metres rowed for row. Wall-clock time drives only idle breathing. A paused task keeps its progress, so its pose freezes.
+- Load: stride is up to 30% shorter, bob up to 80% larger, lean up to 14 degrees; the walk clip itself ignores load.
+- Variation: per-unit phase offset, speed 0.92 to 1.08 and amplitude 0.95 to 1.05; one shared rig.
+- LOD: under 35 m full, under 70 m trunk, legs and tool arm only, beyond that no animation and no effects. Distances are my choice.
+- Effects: fixed pool, caps dust 96, chaff 96, smoke 48, steam 32; at most 6 alive per source; spawn-rate limits per kind per second. Smoke and steam are emitted only when the caller says a real fire is lit; dust only on dry ground, none at mid tier. 100,000 spawn attempts never exceed the caps (tested).
+- Not checked: how any pose looks on the live body mesh, joint axis conventions against the existing rig, and whether the rates feel right. The part axes (rx forward) are a convention I chose.
+
+### Audio state spec
+- `MusicDirector(seed).step(input, dt)` gives calm, trade, attack or defense. Inputs are `Game.musicMood()` ('raid' becomes defense, 'pillage' becomes attack), a real "trade in progress" boolean, age, season and calm mode. There is no timer or random state change; a property test over 20,000 steps shows defense and attack exist only within 20 s of their real flag, and a raid is answered in the same step.
+- Rules: defense is immediate; leaving combat needs 20 s quiet; trade needs 5 s of real trade to start and lingers 15 s; calm tracks match the live `peacefulMusic` for every age, season and calm setting (tested against `music.ts`). Track choice is seeded; rests between pieces are seeded gaps of 20 to 40 s.
+- Skip: next track in the state's pool, never the same, lasts until the state changes; skipping during defense does not end defense (as `music.ts` allows peaceful pieces during battle).
+- Palette: every track in the tables is a shipped acoustic recording; the source has no oscillator or random call (tested). The instrument lists are policy (allowed and forbidden classes); the `acoustic` flag per track is the asset author's declaration. I have not listened to the tracks.
+- Ambient mixer `ambientMix`: wind, birds, crickets, frogs, insects, surf, rain, river, fire, murmur and snow hush from biome, season, hour, weather, water distance, lit-fire distance and people count; a smoother bounds gain change. No fire sound without a lit fire in range.
+- Mismatches: attack and defense share the single shipped battle track; trade shares folk and village with calm. No ambient audio files exist, so the layers are ids and gains only.
+
+### Minimal UI models
+- Knowledge cards: at most 40 words each, clipped from real `KnowledgeTopic` fields; evidence chips only from real fields (seen, trial count, proven result, limit); an unexplored topic shows "none yet". In-progress topics sort first.
+- Crafting boxes: icon (from `goodIconId` or recipe family), label up to 4 words, percent, state, and a cause line only when stalled; at most 14 words per box; list capped at 4 plus "+N more".
+- Ledger: tabs production, history and comparison from real `SeasonReports` samples; partial seasons are never compared; the season-end report exists only within 90 s after a season ends and is otherwise null.
+- Notifications: urgent kinds only (starvation, dehydration, freezing, homeless, sickness, workers-idle, blocked-critical), urgency at least 0.6, one line "cause - remedy" up to 18 words, one per kind, at most 3, 60 s repeat gate. Raid, landing, arrival, attack and enemy ids and kinds are never shown, even when supplied (tested).
+- Word caps are tested by counting what each view would display, with 200-word source strings.
+- Mismatches: there is no existing notification or "need signal" shape in the sim, so `Signal` is my structural type; Codex or Societies must say where urgency comes from. The knowledge model assumes `knowledge.ts` field names as of this merge.
+
+### Checks (executed here, Node via `scripts/game-loader.mjs`)
+- `animation-clips` 8/8, `audio-state` 8/8, `minimal-ui` 6/6 (new, 22 tests); earlier files unchanged. Total 125/125.
+- Type-checking was NOT done: `tsc` in this checkout fails on its own configuration (`baseUrl` removed, missing `@types/node` and `vite/client`), so `MinimalParts.tsx` and all new `.ts` files are verified only by the Node test loader, which strips types.
+- No browser, audio device or screenshot was used.
+
+### Interface requests
+- **Codex:** (1) per-unit data for clips: distance walked (odometer) and whether a unit is moving, rowing, in range of its target, plus the node kind or field action being worked; (2) a `lit` fire query by position (shared with `lit` in the building request); (3) separate battle tracks for attack and defense, a trade-piece pool and ambient loops (wind, birds, crickets, frogs, surf, river, fire, murmur) as acoustic recordings; (4) a "trade in progress" boolean for the music director (suggest: any open offer awaiting the player, or a caravan or envoy trading); (5) where the minimal components should be mounted.
+- **Societies:** an urgent-need signal source (`{kind, urgency, cause, remedy}` per village need) so notices come from real shortages rather than a parallel check.
+- **Grok:** biome and coastal flag per listener position and a water distance query, for the ambient mixer.
+
+### Next action
+Wiring (instancing adapters, siteGrounding, TradeDialog, animation, audio director, minimal components) still needs a browser or the Codex seams.
