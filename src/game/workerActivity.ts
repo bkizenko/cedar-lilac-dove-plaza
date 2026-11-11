@@ -1,6 +1,6 @@
 import type { GameState, Unit } from './types';
 import { BUILDINGS } from './constants';
-import { ITEM_NAMES, PRODUCTION_RECIPES, productionOutputs } from './production';
+import { ITEM_NAMES, PRODUCTION_RECIPES, productionOutputs, productionFoodOutput } from './production';
 import { fireWarmingVisit } from './survivalNeeds';
 
 const quantity = (n:number) => Number(n.toFixed(2));
@@ -34,7 +34,7 @@ export function workerActivity(state:GameState,u:Unit) {
  let batchCargo:string[]=[];
  if(p&&recipe){
   if(p.phase==='carrying'||p.phase==='unloading'||p.phase==='paused'&&['carrying','unloading'].includes(p.resumePhase))batchCargo=[...bundle(recipe.inputs),...Object.entries(recipe.foodInputs||{}).map(([k,n])=>`${quantity(n!)} ${k}`),...(recipe.grain?[`${recipe.grain} clean grain`]:[]),...(recipe.wood?[`${recipe.wood} logs`]:[]),...(recipe.water?[`${recipe.water} L water`]:[])];
-  if(p.phase==='returning')batchCargo=[...bundle(productionOutputs(p)),...(recipe.food?[`${recipe.food} ${recipe.foodKind||'cooked meat'}`]:[])];
+  if(p.phase==='returning')batchCargo=[...bundle(productionOutputs(p)),...(productionFoodOutput(p)?[`${productionFoodOutput(p)} ${recipe.foodKind||'cooked meat'}`]:[])];
  }
  return {stage,source,destination,cargo,batchCargo,blocked,recipe:recipe?.name,projectId:p?.id,progress:p&&recipe?Math.min(1,p.progress/recipe.workSeconds):undefined,workSeconds:p?.progress,requiredWorkSeconds:recipe?.workSeconds,batchAgeSeconds:p?Math.max(0,state.time-p.started):undefined};
 }
