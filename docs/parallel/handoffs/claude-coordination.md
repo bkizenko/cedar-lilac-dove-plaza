@@ -124,3 +124,118 @@ No file overlap among grok-world (c44d50f), claude-societies (55fc655), claude-e
 ## Roles update (Boris, 17:45 ET)
 Grok becomes PM; Claude becomes high-level architect (intent analysis from all Grok/Codex chats + codebase, completion plan). Concept art under docs/art-reference stays in the repo untouched.
 Space proposal for Codex sign-off: AGENTS.md (19 KB) + AGENTS.project.md (11 KB) load every session; trim to a short core (commands, conventions, lane ownership, test command) and point to docs/ by path. Not edited by Claude; Codex owns these files.
+
+## PM check-in — 2026-11-11, 18:05 ET (main `0bbcdb5`)
+
+Fetched all remotes. This branch merged `origin/main` `0bbcdb5` with a normal merge before this note (no rebase/force). Live published code remains **39115987** (G10 Test Lab fog/save, 35/35); preceding **f09578d** sea/dairy batch 138/138 is separate. Frozen acceptance **34/98**, no new gate credit. Top-of-board BLUF (15:35 ET) is stale; use this section and [CURRENT_STATUS.md](../CURRENT_STATUS.md).
+
+### Status per lane / branch
+
+| Lane | Branch | Head | vs main | State |
+|---|---|---|---|---|
+| Platform / Economy (Codex, integrator) | `main` | `0bbcdb5` | — | Live 39115987. Current authorized unpublished work (from `codex-platform.md`): fixed-angle camera collision, narrow Grok W1 movement, cultured curd. Sim-speed / Web Worker still open (Completion Plan phase 1). |
+| World (Grok) | `agents/grok-world` | `0d98101` | **31 ahead, 0 behind** | W1–W4 source pushed. Merged main at `9252ded` and took main's observed-fog hunk (`observedVision` / `observedVisionAge` + persistence). Flow fields now behind a per-game switch, **default off**. Handoff `grok-world.md` is stale (still says W4 is next). Ready for Codex review; not live except the already-published G10 overlay seam. |
+| Societies (Claude) | `agents/claude-societies` | `1f77972` | 24 ahead, **2 behind** (docs only: 3266af2, 0bbcdb5) | Sea exploration already live from an earlier partial merge. Unmerged: stolen cargo, G6 names, tradeNeeds/G15, seaStorms/G16, personalities, conquest/captives/alliances, raider settlement, siege, escalation/revolt. **LAND decision still open for Codex.** Last Codex trade review was `9a40164`; Societies later claims P1 fixes in `b4386e8`. Fixture evidence only; not native. |
+| Experience (Claude) | `agents/claude-experience` | `9992fe9` | 39 ahead, **31 behind** | Batches 1–8 pure modules (Option H families, wonders, site grounding, civ bible, people, wonder kit, eraMode). No existing gameplay file modified; nothing rendered here. Must merge main before further work or integration. |
+| Experience render | `agents/claude-experience-render` | `00b20f4` | 40 ahead, 31 behind | Preview tooling only. **5 experience commits not merged** (biome terrain, 14 civs, people, wonder kit, eraMode). PNGs kept on local `agents/claude-experience-render-pngs`, not pushed. Stand-in WebGL, not in-game three.js. |
+| PM / architect docs | `agents/claude-coordination` | this commit | 0 behind after this merge | Board + Completion Plan. |
+| Stale / leftover | `agents/claude-livestock`, `agents/gemini-experience`, `agents/grok-prestige`, `agents/grok-simple`, `work/codex-livestock-sailing` | — | ahead 0 | Do not revive. Gemini is not participating. |
+| Leftover | `work/codex-instance-lod-contract` `15e6a63` | 1 ahead, 44 behind | Feature already live on main as `d4d3cba`. Retire the branch. |
+| Parked | `work/visual-held-2026-11-11` `7f8ae41` | 1 ahead, 45 behind | Held visuals for review; not a live merge candidate. |
+
+### Overlap matrix
+
+No gameplay source-file overlap among `agents/grok-world`, `agents/claude-societies`, and `agents/claude-experience` (name-checked against each tip vs `origin/main`).
+
+| File | Branches | Hunks / area | Listed on board / handoff? | Verdict |
+|---|---|---|---|---|
+| `docs/parallel/handoffs/claude-coordination.md` | `agents/claude-coordination` + `agents/grok-world` | Both append to the same board. Tips have **diverged**: official board has later PM/LAND/roles text; Grok's copy has W3/W4 responses the official board was missing, and lacks those later sections. | Dual-write, not a claimed seam | **Flag.** When Codex merges World, take this official board and keep `grok-world.md` for World status. **Grok: stop editing this file.** |
+| Experience `src/scene/*`, `src/ui/h/*`, tests, `claude-experience.md` | `agents/claude-experience` + `agents/claude-experience-render` | Render is a downstream merge of Experience, now stale by the five Batch 7–8 commits | Expected | Not a hostile overlap. Render must merge Experience before more previews. |
+| `src/game/sim.ts` (Codex is integration owner) | `agents/grok-world` only | `steer()` tight-space / stall / unseen fallback; `placementIssue` / `placementValid` / `placeBuilding` trailing `quarterTurn=false`; `updateVision` sight-radii helpers (G10 overlay already live); `flowPath` seam **behind a switch, default off** | Listed in `grok-world.md`; later hunks were not on this official board until now | Allowed shared seams if Codex reviews. Fog/persistence conflict **resolved** by Grok merge `9252ded`. |
+| `src/game/boats.ts` (Codex owns boat primitives) | `agents/grok-world` | `riverboatDestination(..., closestWhenUnexplored)`; only the player's `commandRiverboat` passes true | Listed in World W2 handoff | Allowed if Codex reviews. |
+| `src/game/types.ts` (Codex is integration owner) | `agents/claude-societies` | Optional `Unit.tradeNeedsId`, `GameState.droppedCargo` / `tradeNeeds` / `seaStorms`. (`seaExplorationId` / `seaExploration` already live on main.) | Listed | Allowed optional fields; still needs Codex sign-off + trade re-review. |
+| `docs/parallel/FULL_GAME_BACKLOG.json` (Codex single-writer) | `agents/claude-coordination` | Additive proposed rows `CHAT-CIV-ARCHITECTURE`, `CHAT-NATURAL-TERRAIN`, `CHAT-WONDERS-UNIQUE`, `CHAT-ERA-FIXED`, `CHAT-CONQUEST-PUPPET`, `CHAT-KNOWLEDGE-TECH-CLARITY`, `CHAT-SIM-SPEED` | Marked "Codex reconciles" | **Rule miss.** Codex should copy or reject; future proposals belong on this board or `COMPLETION_PLAN.md`, not the canonical JSON. Survived this branch's merge of main. |
+| `src/game/people.ts`, `workCommitments.ts`, `coastalTrade.ts`, `seaExploration.ts`, `raiders.ts` | `agents/claude-societies` | Small hooks (naming, commitments, storm turn-back, cargo marks) | Listed | OK if Codex reviews. |
+| `src/scene/world.ts`, `engine.ts`, `persistence.ts`, `save.ts` | no unmerged non-owner edits vs current main | Grok no longer diffs persistence/save after taking main's G10 hunk | — | Clean. |
+
+### Interface-request table
+
+| # | Who asked whom | For what | Status | Last activity |
+|---|---|---|---|---|
+| C1 | Experience → Codex | Persist `renderStyle` `'current' | 'optionH'` | **Delivered** (live `graphics.ts`) | 860863a |
+| C2 | Experience / plan → Codex | Sim in a Web Worker; p95 <33 ms Low @ 100 residents | **Pending** (proposal retained; phase 1 of Completion Plan) | platform handoff |
+| C3 | Experience → Codex | LOD / frustum hooks | **Delivered** (live `d4d3cba` `InstanceCameraCull.query`) | leftover `work/codex-instance-lod-contract` is stale |
+| C4 | Societies → Codex | Hull / crew / sail API confirmation | **Delivered** (seams confirmed; sea exploration live) | f09578d |
+| C5 | Societies → Codex | `sim.ts` phase-registry decomposition | **Partial** (Codex: small hooks yes, no generic registry) | platform handoff |
+| C6 | Societies → Codex | Real stranded-crew rescue after hull loss (not a 120 s release) | **Pending / open** | platform handoff |
+| C7 | Societies → Codex | Quiet NPC `toggleSail` | **Delivered** | `1a6e71e` on main |
+| C8 | Societies → Codex | Sail-rig / hull-service eligibility during sea muster | **Delivered** (live sea admission) | f09578d / 01e6f66 |
+| C9 | Societies → Codex | Sign-off: optional `types.ts` trade/cargo/storm fields; hook-riding conquest wiring; market price hook | **Pending** | listed; not signed at current head |
+| C10 | Experience → Codex | `world.ts` Option H adapter, light-rig, H-only daylight lerp, render-check | **Pending** | needs desktop / three.js |
+| C11 | Experience → Codex | Hull length/beam per class; `h-good-*` icons; wonder-kit preset save location | **Pending** (Codex: `boatClasses` does not yet publish length/beam) | platform handoff |
+| C12 | Experience → Codex | Wire `lit` from real fire | **Partial** (input is `survivalNeeds.hearthHeating`; H adapter not wired) | platform handoff |
+| C13 | Codex → Experience | `CarvedBuildingLayer` lifetime bucket eviction so close buildings are not stuck as impostors | **Pending** | Experience review of bb26421 |
+| C14 | Codex → Societies | Repair stolen-cargo conservation / custody (cap, provenance, preemption, pickup reach) | **Chasing re-review** — last review `9a40164` still blocked; Societies claims P1 fixes in `b4386e8` at later head `1f77972` | reviews JSON on main |
+| C15 | Codex → Societies | Confirm scout-food custody consumers; typed loads stay disabled | **Pending** | `contracts/scout-food-custody-v1.md` |
+| G1 | Societies → Grok | Water-route query, observed water only | **Delivered (source)** `planObservedWaterRoute` `26bd1c8` | Societies should consume it |
+| G2 | Experience → Grok | `sampleSite` height/biome/slope | **Delivered (source)** W1; Experience `siteGrounding.ts` adapted | — |
+| G3 | Experience → Grok | Flow fields for busy goals | **Delivered (source, switch default off)** `d2929b5` / `0d98101` | awaiting Codex enable |
+| G4 | Societies → Grok | Territory / influence while `occupation.phase==='dominated'` (shift to overlord, revert on lapse/rebellion) | **Pending** | `landValue.ts` measures claims; does not hook domination |
+| G5 | Societies → Grok | Canonical deep-water extents for G16 | **Delivered (source)** `deepWater.ts` `b7bb032` (`deepMetres` 2.5, `pickDeepWaterPoint`) | Societies should consume it |
+| G6 | Experience → Grok | Tide range, exposure, flow, river width, bank height, harbour/market terrain levels | **Pending** | Experience batches 2–3 |
+| G7 | Grok → Codex | `engine.ts` R-key / rotate ghost passing `quarterTurn` to preview and commit | **Pending** | GW-08 `346faad` |
+| G8 | Grok → Experience | Mesh yaw = `buildingQuarterTurns(b) * π/2`; draw river `section.corners` + `fishRecoveryPerMinute` | **Pending** | W3 |
+| G9 | Grok → Codex | Wire `planFieldArea` / `fertilityPreview`; optional per-section fish cap | **Pending** | W2/W3 |
+| G10a | Board / Codex → Grok | G10 fog overlay + persist observed vision | **Delivered live** 39115987 (Codex persistence) + World sight-radii fix `f41f395`, now merged with main | tracer still not in the live batch |
+| G11 | Grok → Boris / Claude | Camera dolly-before-lift over mountains (GW-03); no camera code changed on World | **Pending decision** | Do not collide with Codex's authorized camera-collision batch |
+| E1 | Societies → Experience | Capitulation terms picker, domination status, captive panel, trade dialog → `proposePlayerTrade` / `tradeAnswerBlocker` / `observedPartnerStock`; dropped-parcel visual | **Pending** (parcel/caravan specs exist, not wired or rendered) | Societies conquest batch |
+
+### Actions requested
+
+**Codex (integrator)**
+1. Honour the LAND decision: merge `origin/agents/claude-societies` (head `1f77972`, includes >=`55fc655`) with a **normal merge of the whole branch**, no partial hunks. Re-review trade/cargo at this head (`b4386e8` and later) before publishing. If conservation/custody still fails, say so and hold publication, but do not drop naming, storms, or conquest from the merge the way `34e9e1f` did.
+2. Queue World `agents/grok-world` `0d98101` (already on main). Review the `sim.ts` / `boats.ts` seams above. Leave the flow-field switch **off** until you enable it. G10 overlay is already live — do not regress `observedVisionAge`.
+3. Experience `9992fe9` is mostly new files and is safe to merge after Experience merges main; keep Option H off by default.
+4. Phase 1 speed work (hot paths + worker) remains the Completion Plan gate. C6 stranded-crew rescue stays open. C11 hull dimensions stay open.
+5. Reconcile the proposed `CHAT-*` backlog rows from this branch; copy accepted GW intake from `grok-world.md`. Please do not leave `TASK_LANES.json` saying "awaiting external session" / coordinator Codex.
+6. Retire `work/codex-instance-lod-contract`. Keep replies in `codex-platform.md`, not this board.
+7. AGENTS.md trim proposal is yours to accept or reject (you own those files).
+
+**Claude Societies**
+1. Merge origin/main at the next checkpoint (2 docs commits behind).
+2. Call `planObservedWaterRoute` for NPC voyages (G1 delivered). Call `deepWaterExtents` / `deepWaterAt` / `pickDeepWaterPoint` for G16 instead of an ad-hoc `waterAt-height >= 2.5` test (same 2.5 m default).
+3. Confirm scout-food custody consumers in `claude-societies.md` (C15). Typed loads stay disabled until you and Codex agree.
+4. Pause further `types.ts` / trade-holder expansion until Codex re-reviews `1f77972`, unless Codex says continue.
+
+**Claude Experience**
+1. Merge origin/main (31 behind) before more commits.
+2. Render worker: merge `agents/claude-experience` (Batch 7–8) before more previews. Push no PNGs until Boris reviews. Carved-terrace critique is likely stale once biome terrain is in the preview.
+3. Fix C13 bucket eviction. Consume G8 (yaw + river section draw) and E1 (conquest/trade/captive UI + parcel mesh). Keep eraMode default unchanged until Boris decides (see below).
+
+**Grok World**
+1. **Stop editing this board file.** Status, claims, and evidence go only in `docs/parallel/handoffs/grok-world.md`. PM will transcribe.
+2. Update `grok-world.md` for already-pushed W4: GW-12 river-profile v2 `e158781`, G16 deep water `b7bb032`, flow fields + switch `d2929b5`/`0d98101`, GW-09 land value `10d6d81`, GW-13 mountains `1b7cade`, GW-14 town capacity `70ed21c`.
+3. Implement G4: territory/influence follows the overlord while a community is dominated and reverts on lapse/rebellion. `landValue` is not that hook.
+4. Supply G6 site facts (tide, exposure, flow speed/direction, river width, bank height, harbour/market levels) as a pure query if they are not already derivable from `sampleSite` / `deepWater`.
+5. Do not touch `cameraClearance.ts` or camera contracts; Codex has an authorized camera-collision batch, and GW-03 still waits on Boris/Claude.
+
+### Rule / process flags
+
+- No rebase or force-push evidence of already-pushed work. No render PNGs on any remote branch.
+- Non-owner shared-file edits that were listed (Grok `sim.ts`/`boats.ts`, Societies `types.ts` + hooks): OK pending Codex review. Unlisted dual-write of this board, and Claude's edit of `FULL_GAME_BACKLOG.json`, are the two process misses.
+- Almost all unmerged "ready" work is fixture-only. Completion Plan: a feature counts only after native-terrain or built-UI evidence. Do not flip backlog/gate state from these branches.
+- `TASK_LANES.json` on main is stale.
+
+### Unmerged ready batches waiting on Codex
+
+1. `agents/claude-societies` `1f77972` — LAND already decided; re-review trade first; 2 behind (docs).
+2. `agents/grok-world` `0d98101` — on main, switch-guarded flow fields, remaining nav/placement/civil seams.
+3. `agents/claude-experience` `9992fe9` — new-file visual modules; 31 behind; Option H stays off.
+
+### Decisions needed from Boris
+
+1. **eraMode default** (`fixed` vs `morph`). Completion Plan: Claude recommends **fixed**. Experience code currently defaults to **`morph`**. This should be chosen before the kit is wired or saved.
+2. **Which Codex backlog items move to Claude workers**, knowledge/tech first (Completion Plan).
+3. **GW-03 camera** over mountains: Grok's dolly-before-lift proposal vs Codex's in-flight fixed-angle collision work. World has not changed camera code.
+4. (Optional) AGENTS.md / AGENTS.project.md trim, as proposed in the Roles update; Codex owns the files.
+
