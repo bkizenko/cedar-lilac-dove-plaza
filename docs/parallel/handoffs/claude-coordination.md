@@ -43,6 +43,39 @@ Experience: `src/scene/buildingFamilies.ts`, `buildingParts.ts`, `buildingStyleM
 
 Already present: capped pixel ratio, InstancedMesh for units/trees/rocks/wildlife. Claude Experience will add, inside its own files: merged/batched building geometry (BatchedMesh where available), far-distance impostor cards for buildings and trees, one shared material per palette with vertex-color shading (no per-building materials), and baked contour edge shading instead of extra lights. Codex-lane items are requests 2 and 3 above.
 
+## Chat-derived gaps not in FULL_GAME_BACKLOG.json or the full handoff
+
+Found by reading every user message in [chat-context](../chat-context/README.md) and keyword-checking the backlog and handoff. Sources cite the export file and message timestamp (UTC) so they can be found with ctrl+F. Proposed owners follow the contract; owners should claim or reassign. These do not change the 98-gate denominator.
+
+| # | Gap | Source | Proposed owner | Acceptance |
+|---|---|---|---|---|
+| G1 | Era score and victory conditions that give AI societies something to strive for; monuments/artifacts feed legacy score | keyboard-music… 2026-10-31T14:40, 14:45 | Codex prestige formula; Claude Societies AI goal selection | Each rival has a measurable goal it pursues; score visible; different villages pick different goals |
+| G2 | Golden-hour light dominant during play | keyboard-music… 2026-10-31T13:42 | Claude Experience with Codex daylight | Daytime grading warm and low-angle for most of the day without breaking the daylight-share rule |
+| G3 | Buildings visibly change on age advance and with wealth (huts → timber → masonry, more ornate when rich); per-village style | keyboard-music… 2026-10-04T22:16, 2026-10-31T14:06, 14:08 | Claude Experience | Same building ID renders different era/wealth variants; two villages of equal era look different |
+| G4 | Leader encounter shown as an on-screen portrait/scene from the Stone Age on | keyboard-music… 2026-10-31T14:37 | Claude Experience (presentation) + Societies (dialog content) | Meeting a leader opens a portrait dialog with context from actual relations and goods |
+| G5 | Rise and fall: some villages become powerful, others collapse; the game never ends just because NPC villages all fail | keyboard-music… 2026-10-03T16:41, 18:42; 2026-10-31T14:40 | Claude Societies | Seeded runs show divergent rival trajectories; zero-rival state continues play and new societies can refound |
+| G6 | Name generation: strange ancient-sounding names, no surnames in small villages, no recurring stock names across games | keyboard-music… 2026-10-03T18:42, 19:57 | Claude Societies (culture naming) | Name corpus varies by culture/seed; repetition rate measured across seeds |
+| G7 | Food taste/enjoyment ranking separate from calories (cooked meat > smoked meat > raw meat > cooked fish …; bread vs porridge proportional to effort) | scenic-map… 2026-11-11T16:51 | Codex | Tunable taste table with documented units; effect on morale measurable |
+| G8 | Periodic stutter / "buffering every few seconds" and lag at 30+ people | keyboard-music… 2026-10-14T17:38; scenic-map… 2026-10-31T18:39, 20:04 | Codex (sim worker, request 2 above) | Frame-time spikes measured before/after on 8 GB Mac at 100 residents |
+| G9 | Test lab: one click to enter, restart without leaving, save inside it | keyboard-music… 2026-10-31T14:37, 14:55; scenic-map… 2026-11-10T23:47 | Codex technical UI | All three actions work from the test lab screen |
+| G10 | Map auto-explored without the player sending anyone | scenic-map… 2026-11-10T23:47 | Grok (fog/visibility) | Fog only clears from actual observers |
+| G11 | Village personalities with different incentives, not uniform city-state behavior | keyboard-music… 2026-10-31T14:32 | Claude Societies | Personality parameters change measured proposal/raid/trade rates per society |
+| G12 | Fun-loop measure: whether a short session has a threat, a decision and a payoff (Claude proposal from repeated "not fun"/"spectator sport" feedback, e.g. keyboard-music… 2026-10-03T18:26, 2026-10-05T00:16) | Claude analysis, not a user requirement | Codex + Claude review | Proposed metric only until the user approves it |
+
+## Backlog and to-do status updates
+
+- Claude workers record per-item status (in progress / source pushed / ready / merged) in their lane handoff with backlog IDs from FULL_GAME_BACKLOG.json.
+- FULL_GAME_BACKLOG.json and CURRENT_STATUS.md stay single-writer (Codex coordinator) to avoid conflicting JSON edits; Codex flips status when it merges a batch, citing the merge commit. Claude does not edit them directly unless Codex delegates.
+- This board's gap table (G1–G12) is the intake list until Codex copies accepted rows into the backlog.
+
+## Standardization rules for all lanes (to avoid merge hell)
+
+- New behavior goes in a new named module; shared files get one registration/wiring line, listed in the handoff as a shared-file edit.
+- Save fields are optional with a documented default; validators extend the existing `valid*State` pattern.
+- No reformatting of lines you did not change. No renames of exported symbols without a forwarding export.
+- Merge `origin/main` into your branch (no rebase/force-push of pushed commits). Fetch main before each new batch.
+- One handoff file per lane on that lane's branch; this board lists cross-lane requests.
+
 ## Merge order proposal
 
 1. Societies sea exploration (gameplay; depends only on merged sailing).
