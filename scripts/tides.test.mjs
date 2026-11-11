@@ -42,3 +42,24 @@ test('a revisited sea level reuses its exact terrain walk grid (parity with a fr
   b.world.waterY=base+.3;b.rebuildWalk();assert.deepEqual(Array.from(a.walk),Array.from(b.walk));
   a.world.waterY=base+.15;a.rebuildWalk();b.world.waterY=base+.15;b.rebuildWalk();assert.deepEqual(Array.from(a.walk),Array.from(b.walk));
 });
+
+test('tides v2 are sea-only on native terrain: the sea rises and falls, rivers and lakes stay at the weather level, walk grid parity holds',async()=>{
+  const {seaOnlyTides}=await import('../src/game/tides.ts');const {seaSurfaceY}=await import('../src/game/localWater.ts');
+  const g=world({tideVersion:2});Object.assign(g.state,{weather:'clear',weatherT:1e6});assert.equal(seaOnlyTides(g),true);
+  const base=g.world.baseWaterY,lake=(g.world.waterBodies||[]).find(b=>b.kind==='lake'),river=(g.world.waterBodies||[]).find(b=>b.kind==='river');
+  const inland=[lake&&{x:lake.x,z:lake.z},river&&river.pts[Math.floor(river.pts.length/2)]].filter(Boolean);assert.ok(inland.length>0);
+  const inland0=inland.map(p=>g.waterAt(p.x,p.z));let sea=null;for(let x=-500;x<=500&&!sea;x+=10)if(g.height(x,-500)<base-2)sea={x,z:-500};assert.ok(sea,'a sea point');
+  const seas=new Set(),walks=new Map();
+  drive(g,TIDE_RULES.periodSeconds,()=>{assert.equal(g.world.waterY,weatherWaterLevel(base,'clear'),'waterY stays the weather level');
+    inland.forEach((p,i)=>assert.equal(g.waterAt(p.x,p.z),inland0[i],'inland water never carries the tide'));
+    const s=g.waterAt(sea.x,sea.z);assert.equal(s,seaSurfaceY(g.world));seas.add(s);
+    assert.ok(s>=weatherWaterLevel(base,'drought')-1e-9&&s<=weatherWaterLevel(base,'flood')+1e-9);if(!walks.has(s))walks.set(s,walkable(g));});
+  assert.ok(seas.size>=4,`sea levels ${[...seas]}`);const ordered=[...walks].sort((a,b)=>a[0]-b[0]);assert.ok(ordered[0][1]>ordered.at(-1)[1],'more shore at low tide');
+  console.log('v2 sea levels',[...seas].map(v=>(v-base).toFixed(2)).join(' '),'walk cells low→high',ordered.map(o=>o[1]).join(' '));
+  // parity: a tide level reached through the cache equals a fresh build at that level
+  const fresh=world({tideVersion:2});fresh.world.waterY=g.world.waterY;fresh.world.seaTideY=g.world.seaTideY;fresh.rebuildWalk();
+  const again=world({tideVersion:2});for(const t of [.15,-.15,g.world.seaTideY??0]){again.world.seaTideY=t;again.rebuildWalk();}
+  assert.deepEqual(Array.from(again.walk),Array.from(fresh.walk));
+  // a reload recomputes the runtime tide from saved time
+  const back=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));assert.equal(back.world.seaTideY,undefined,'never saved');back.state.paused=false;back.step(.01);assert.equal(back.world.seaTideY,g.world.seaTideY);
+});

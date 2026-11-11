@@ -43,6 +43,8 @@ export type WorldData = {
   waterBodies?:LocalWaterBody[];
   localWaterVersion?:17;
   waterfalls?:Waterfall[];
+  /** Runtime-only sea tide offset (tides v2); never saved, recomputed from game time. */
+  seaTideY?:number;
   waterHeights?:Float32Array;
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;

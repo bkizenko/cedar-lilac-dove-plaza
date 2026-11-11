@@ -13,7 +13,7 @@ export type DeepWaterExtents={version:number;cellMetres:number;deepMetres:number
 
 const cache=new WeakMap<object,{key:string;value:DeepWaterExtents}>();
 export function deepWaterExtents(g:Pick<Game,'world'|'state'|'waterAt'|'height'>,deepMetres:number=DEEP_WATER_RULES.deepMetres):DeepWaterExtents{
- const key=`${g.world.waterY}|${deepMetres}|${g.state?.excavations?.length??0}`,old=cache.get(g.world);if(old?.key===key)return old.value;
+ const key=`${g.world.waterY}|${g.world.seaTideY??0}|${deepMetres}|${g.state?.excavations?.length??0}`,old=cache.get(g.world);if(old?.key===key)return old.value;
  const size=g.world.size,cell=DEEP_WATER_RULES.cellMetres,n=Math.max(1,Math.round(size/cell)),c=size/n,N=n*n;
  const depth=new Float32Array(N),labels=new Int32Array(N).fill(-1),offshore=new Float32Array(N).fill(Infinity);
  const cx=(i:number)=>((i%n)+.5)*c-size/2,cz=(i:number)=>(Math.floor(i/n)+.5)*c-size/2;
