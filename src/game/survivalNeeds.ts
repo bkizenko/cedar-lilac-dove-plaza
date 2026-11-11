@@ -30,6 +30,17 @@ export const hearthHeating=(g:Game,id:number)=>heatingHearths.get(g)?.has(id)??f
 const huddles=new WeakMap<Unit,{state:GameState;fire:Building;spot:{x:number;z:number};productionId?:number}>();
 const warmingReason='Warming up by the lit hearth';
 
+/** Read the real transient warmth visit without creating, advancing or clearing it. */
+export function fireWarmingVisit(state:GameState,u:Unit){
+ const visit=huddles.get(u);
+ if(!visit||visit.state!==state||u.hp<=0||u.order!=='hold'||u.workReason!==warmingReason||u.emergency||u.stuckT>=5||(u.coldSeconds??0)<=0||visit.fire.hp<=0||visit.fire.build<1||!state.buildings.includes(visit.fire))return undefined;
+ if(visit.productionId!==undefined){
+  const p=state.production?.projects.find(p=>p.id===visit.productionId&&p.id===u.productionProjectId&&p.actorId===u.id&&p.team===u.team);
+  if(!p||p.pauseCause||!['collecting','carrying','working','ready','returning'].includes(p.phase)||hasTaskCommitment(u,'productionProjectId'))return undefined;
+ }else if(hasTaskCommitment(u))return undefined;
+ return {fireId:visit.fire.id,x:visit.fire.x,z:visit.fire.z,atFire:Math.hypot(u.x-visit.spot.x,u.z-visit.spot.z)<=1};
+}
+
 function warmingProduction(g:Game,u:Unit){
  const p=g.state.production?.projects.find(p=>p.id===u.productionProjectId&&p.actorId===u.id&&p.team===u.team);
  return p&&!p.pauseCause&&['collecting','carrying','working','ready','returning'].includes(p.phase)&&!hasTaskCommitment(u,'productionProjectId')?p:undefined;

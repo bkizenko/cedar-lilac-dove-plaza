@@ -1,0 +1,30 @@
+{
+  "status": "candidate qualified; publication pending",
+  "scope": "Read-only actual warmth visit overrides paid task stage/destination while preserving recipe/progress/cargo. No simulation behavior changed.",
+  "sourceChecks": {
+    "passed": 7,
+    "total": 7,
+    "log": ".play/warm-activity-candidate-tests.log",
+    "physicalWarmth": "Controlled65m real navigation/cold recovery test verifies travel\u2192warming with progress held\u2192original batch completion"
+  },
+  "renderedAcceptance": {
+    "passed": 1,
+    "total": 1,
+    "log": ".play/warm-activity-candidate-browser.log",
+    "scope": "Real53 saved winnower activity UI; unchanged simulation and input export"
+  },
+  "batch": {
+    "passed": 8,
+    "total": 8,
+    "percentage": 100
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "firstReleaseGates": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  }
+}

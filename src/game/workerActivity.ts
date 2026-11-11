@@ -1,6 +1,7 @@
 import type { GameState, Unit } from './types';
 import { BUILDINGS } from './constants';
 import { ITEM_NAMES, PRODUCTION_RECIPES, productionOutputs } from './production';
+import { fireWarmingVisit } from './survivalNeeds';
 
 const quantity = (n:number) => Number(n.toFixed(2));
 const point = (p:{x:number;z:number}) => `${Math.round(p.x)}, ${Math.round(p.z)}`;
@@ -27,6 +28,8 @@ export function workerActivity(state:GameState,u:Unit) {
  if(!p&&u.waterWork){stage=u.waterWork.paused?'Water collection paused':u.waterWork.phase==='collecting'?'Collecting water':u.waterWork.phase==='outbound'?'Walking to water':'Delivering water';source=`Water source · ${point({x:u.waterWork.sourceX,z:u.waterWork.sourceZ})}`;}
  if(p&&b&&['carrying','working','ready','curing'].includes(p.phase))destination=`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`;
  if(['move','explore','return','attackmove'].includes(u.order)||p&&['collecting','returning','unloading'].includes(p.phase))destination=`Current waypoint · ${point({x:u.tx,z:u.tz})}`;
+ const warmth=fireWarmingVisit(state,u);
+ if(warmth){stage=warmth.atFire?'Warming at fire':'Walking to warmth';destination=`Lit hearth #${warmth.fireId} · ${point(warmth)}`;}
  const blocked=p?.blockedReason||(u.stuckT>3?`Movement blocked · ${Math.floor(u.stuckT)}s`:undefined);
  let batchCargo:string[]=[];
  if(p&&recipe){
