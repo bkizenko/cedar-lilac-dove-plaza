@@ -207,3 +207,46 @@ Canyon Cistern and Assembly Court wonder plans; instancing adapter for trees and
 
 ### Next action
 Instancing adapter for trees and caravans once `InstanceCameraCull.query` merges; wiring `siteGrounding` into the carved layer and `tradeNeedsView` into `TradeDialog.tsx` (both need a browser to check); an H-vs-E render review (cannot be done here).
+
+## Batch 4 (pure specs only; no existing live file edited; nothing rendered)
+
+### Status
+- Culture grammar: DONE, tested (`c2f1e54`). `src/scene/cultureGrammar.ts`.
+- Unit appearance: DONE, tested (`7d80143`). `src/scene/unitAppearance.ts`.
+- Ruins: DONE, tested (`ruins.ts`, commit after `7d80143`). `src/scene/ruins.ts`.
+- None of these is wired into the renderer, the sim or any UI. Nothing was drawn.
+
+### Culture grammar
+- `generateCulture({seed, climate?, material?, craft?, coastal?})` gives a palette (5 colours built from climate-gated pigments with seeded jitter), a flag grammar (12 divisions, 16 charges, 16 border motifs, 4 placements), a pottery form with lathe profile, handles, decoration, technique and firing, dress for all four seasons, and an architectural habit (material, `FamilyContext.tradition`-compatible bias, courtyard, stilts, ornament, roof tone).
+- It is not mapped to any modern ethnicity. Motifs are neutral technique tokens (stepped, meander, spiral, wave, lozenge, zigzag, dots, comb, scroll, lattice, chevron, radiate, knot, cloud, reed, feather) inspired by river-terrace, canyon, brush-scroll, wave-spiral, woven and impressed traditions. Climate and craft only bias the draw; a test shows 60 cultures in one climate still give at least 8 pottery forms and 55 flag layouts.
+- Diversity over 300 seeds (seeds 1-300, executed): 300 distinct palettes, 300 distinct flag layouts, 300 distinct pottery keys, all 12 pottery forms, 11+ flag divisions and 15+ charges used. These count distinct combinations including small colour jitter; the coarse layout (division, charge, placement) has at least 120 distinct values.
+- Dress uses only real `GarmentKind` ids (`skinClothes`, `leatherClothes`, `lightClothes`, `hideCoat`, `woolCoat`), gated by climate and season (arid summer is always `lightClothes`; cold winter is always at least 1.35 heat burden; winter is never lighter than summer). `dressFor(culture, season, ownedGarment)` returns the real garment when one is passed.
+- `toSocietyIdentity(culture)` projects the flag onto the existing `SocietyIdentity` shape (symbol, pattern, primary, secondary, emblem). Every projection passes `identityIssue` (tested for 300 seeds), including the 3:1 emblem contrast rule. It does not edit `societyIdentity.ts` or any state.
+- Limits: the colour names are real pigments, but I did not check the palettes visually. Flag layouts are specs, not drawn. Pottery profiles are numbers, not meshes.
+
+### Unit appearance
+- `unitAppearance({type, seed, gear, culture, season, era?, affiliation?})` returns `UnitPart[]` (each with a `slot`), `slotColors`, a shared `geometryKey`, an instance `tint`, `brightness` (same constants as `wornGarments.ts` and `wornArmor.ts`), what was `rendered`, what was `ignored`, and the body `fit` (mirrors `wornGarmentFit`).
+- Rendered only from real state: an owned garment (`Unit.garment.item` with condition above 0), an owned `paddedTorso` asset, and the weapon implied by the real unit type (spearman, archer, swordsman; none for worker, leader, warden, ranger, cavalry). Headwear is part of the garment cut and appears only with a garment. There is no shield, helmet or mail anywhere in the sim, so none is drawn. Unknown armor kinds are listed in `ignored`.
+- Culture chooses cut (wrap, tunic, poncho, robe, kilt, cape, trousers), headwear, dye and trim motif. Skins and hides take 20% of the dye, wool and light cloth 80 to 85%. Era only adds trim richness (era 2 and 3).
+- One culture gives at most 4 geometry variants (hem, sash) for any number of units; individual variation beyond that is a tint within 5%.
+- LOD triangle budgets, measured max over 300 cultures x 4 seasons x 4 unit types x 5 garments with armor and era 3: near 728 (budget 800), mid 312 (budget 340), far 108 (budget 120). Budgets are set from the measurements, not from a target.
+- Not checked: how the parts look on the live body, and that the existing live garment and armor layers still draw their own geometry; this module replaces neither.
+
+### Ruins
+- `ruinSpec(source, {seed, decay, overgrowth?, climate?})` takes any building or wonder spec (parts and footprint) and returns a `RuinSpec` with `ruin.standing`, `rubble`, `fallen`, `growth` part indices, volume stats and `slots`.
+- Physical rules: roofs fail first and are all gone at decay 0.6 or more; a sound building (decay 0) keeps its roof; timber walls and posts rot to stumps, stone survives lower; walls are cut into segments with a broken skyline; fallen stone becomes rubble beside the wall it came from, never more than fell (tested for every source); fallen roof timbers and thatch litter lie inside; anything left hanging falls too; fire, cloth and water are dropped; far-tier supports of the clean building are dropped and regenerated, so every LOD tier is supported.
+- Growth: wet and temperate ruins get shrubs, vines on standing faces and saplings; arid ruins get sand drifts. Footprint unchanged.
+- Artifact slots (`kind`: hearth, threshold, rubble, roofFall, floorPit, wallNiche, foundation): each has a position inside the footprint, depth, rarity 0 to 2, access (open, under-rubble, in-wall, under-wall, dug) and the covering part index when it has one. Slots never lie inside open air, never inside a standing wall unless they are wall niches or foundation deposits, and are at least 0.55 m apart. Content belongs to the game.
+- Tested on every carved building type (except the four axis walls) at eras 0, 2, 3 and 12 wonder plans, at decays 0.25, 0.6 and 0.9. Extra triangles over the source at decay 0.5 with overgrowth 0.8 (executed, worst case): near 2984, mid 1228, far 388. A large wonder ruin is therefore heavy at the near tier.
+- Known limits: rubble and growth are ground-level boxes and spheres; no leaning or toppled walls; the dig depth (`depthM`) is data only; ruins of palisades, stone walls, trenches and moats are untested because those families are axis-dependent; I did not look at any ruin.
+
+### Checks (executed here, Node via `scripts/game-loader.mjs`)
+- `culture-grammar` 6/6, `unit-appearance` 8/8, `ruins` 6/6, `wonder-plans` 21/21; previous files unchanged. No renderer, browser or screenshot check.
+
+### Interface requests
+- **Societies:** (1) culture to naming hooks: a stable `cultureSeed` per society so names, greetings and trade-good preferences can be drawn from the same grammar (`Culture.key`, `motifs`, `craft`, `climate` are available); (2) diplomacy hooks: culture traits are descriptive only here, so say which of them (if any) should feed relation or trade preferences; (3) adopt `toSocietyIdentity(culture)` when founding a society, if Societies wants culture-driven flags.
+- **Codex:** (1) an armor ownership snapshot: a function returning, for each visible unit id, `{garment?: {item, condition}, armor?: {kind, condition}}` from `Unit.garment` and `wornArmor(g, u)`, so the renderer need not touch sim state per part; (2) tell us whether shields, helmets or mail will ever exist as owned items; until they do none is drawn; (3) a per-unit culture id (or settlement seed) the layer can pass to `unitAppearance`; (4) a ruined-building state in the sim (abandoned or destroyed with a decay value) before `ruinSpec` can be used.
+- **Grok:** the artifact slots need a terrain-aware dig depth and a rule for what may be buried where; ruins should sit on the same `SiteSample` plinth as the original building.
+
+### Next action
+Same as Batch 3: instancing adapters and wiring into the carved layer, `TradeDialog.tsx`, once a browser or the Codex culling seam is available.
