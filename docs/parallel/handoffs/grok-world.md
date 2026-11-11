@@ -1,10 +1,10 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W3 in progress (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W3 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
 
-## Batch W3 — in progress (review fixes, observed water routes, river sections)
+## Batch W3 — ready (review fixes, observed water routes, river sections, quarter-turn footprints, landform metrics)
 
-- **Base main:** `9faabf9` merged (`dfcdc20`; append-only board conflict resolved by keeping both sides). Code commits so far: `f41f395` (W2 review fixes), `26bd1c8` (`planObservedWaterRoute`), `cfcf3a8` (GW-04 river sections).
+- **Base main:** `9faabf9` merged (`dfcdc20`; append-only board conflict resolved by keeping both sides). Code commits: `f41f395` (W2 review fixes), `26bd1c8` (`planObservedWaterRoute`), `cfcf3a8` (GW-04 river sections), `346faad` (GW-08 quarter-turn footprints), `2ee0fa2` (landform coherence metrics). Main `f09578d` merged afterwards (clean, no conflicts).
 - **Codex review of `b3174e2` — answered:**
   1. Fertility summary leak: fixed. `fertilityPreview` now reports `state: 'complete' | 'partial' | 'unknown'`. Hidden cells never contribute. All-hidden gives `summary: null`. The harvest `fieldTerrain()` value is used only when every placement survey point is explored. New all-hidden and mixed-visibility regressions.
   2. `observedVision()` persistence: acknowledged; Codex owns `encodeGame`. No Grok edit.
@@ -21,7 +21,24 @@ Updated 11 November 2026, W3 in progress (ET). Lane **W-World** (Grok): geograph
   - **Save impact: none.** Sections are derived from the world; fish nodes and clay deposits keep their persisted shapes. No new save field was needed, so no Codex save coordination is required for this slice.
   - Measured stock: 33/18/17 sections (seeds 0/1/7); median 208–330 fish per section; 440–600 fish per 100 m of river. Whether that is superabundant ("50 rivers worth of fish") is a stock-balance call for Codex: W supplies the section budget seam if a cap is wanted.
   - For Claude: draw the selection from `section.corners` instead of the fixed ring (`world.ts` resource ring); show `fishRecoveryPerMinute` in `WaterReachPanel`.
-- **Checks:** `fog-provenance` 6/6, `field-area` 5/5, `observed-water-route` 5/5, `river-sections` 5/5. Fishing/pottery/clay regression set (26 files, 120 tests): 118 pass. The 2 failures (`station-catalogue` "search combines terms…" and "audited statuses…") fail identically on main `9faabf9`. `tsc` passes; eslint is clean on new and changed files.
+- **GW-08 quarter-turn footprints (`346faad`):** new `footprints.ts` (`turnableBuilding`, `turnedFootprint`, `buildingQuarterTurns`).
+  - **Shared `sim.ts` hunk (flagged for Codex):** a trailing optional `quarterTurn=false` parameter on `placementIssue`, `placementValid` and `placeBuilding`. When it is set, the footprint is the catalogue `w`/`d` swapped. The same `d` feeds site preparation, explored-site, excavation, shore, dry-foundation and overlap checks, so preview and commit run one validation. `placeBuilding` stores the swapped `b.w/b.d` and never relocates a turned plan. All existing callers are unchanged (default false).
+  - Collision, the walk grid and saves already read each building's own `w`/`d` (no code reads `BUILDINGS[b.type].w` for a placed building), so a turned building is solid over its turned rectangle. Spacing rules are unchanged: no shrinking through solid buildings.
+  - **Save impact: none.** The turn is derived from the saved footprint (`buildingQuarterTurns(b)` is 1 when `w`/`d` equal the swapped catalogue pair). `persistence.ts` only checks that `w`/`d` are numbers; the round trip is tested.
+  - Turnable: dryrack, hut, lumber, workshop, barracks, forge, temple, market, stables, university. Excluded: square footprints, drawn plots (already any rectangle), linear works, bridge, dock, quarry, trench/moat, gate, house (its own planner).
+  - **Tighter gaps, measured:** ordinary buildings already pass at an edge gap of −1.25 m (the 0.42 overlap factor); drawn plots and warehouses stop at +0.5 m (0.25 m clearance). Spacing was not the blocker; orientation was. A turned barracks now fits a slot about 0.25 m narrower than an unturned one, and anything tighter is still refused.
+  - **Needs other owners:** an R-key or rotate button in the placement ghost (`engine.ts`, Codex) passing `quarterTurn` to both preview and commit, and the mesh yaw `buildingQuarterTurns(b)*π/2` (Claude/renderer). Until that is wired, players see no change.
+- **Landform coherence metrics (`2ee0fa2`, GW-11/12/15 measurement):** new `landformCoherence.ts` (offline diagnostics, about 2–12 ms per world).
+  - Per river: downstream inferred from the water surface; `rises` and `riseMetres` (the surface climbing downstream by more than 5 cm); `containedFraction` (both banks 4 m beyond the edge above surface + 0.3 m); `dryBedFraction`; drop, gradient and sinuosity; `mouth` = open-water / confluence / map-edge / dead-end.
+  - Regional: habitat contiguity on a 64² land grid (`speckledFraction`, fragment patches of 3 cells or fewer), per-habitat patch counts, median relief by habitat and `hillsRougherThanPlains`.
+  - **Baseline (worldgen 24, 1040 m, seeds 1–3):**
+    - Pangaea: 3 rivers, 0.82–0.92 km in total, containment 0.76–0.80, no dead ends. Seed 3 has one 0.15 m rise on the short tributary.
+    - Continents: 4 rivers, containment 0.70–0.78. Seed 2 has a 0.07 m tributary rise.
+    - Archipelago: containment 0.60–0.70. **Seed 2 has two short rivers (73 m and 61 m) that rise about 3 m going downstream and dead-end.** This is a real GW-12 defect for W4.
+    - Speckle is at most 1.1% everywhere. Relief contradicts the label on some maps: pangaea seeds 1–3 and continents seed 2 have hills smoother than plains. That is input for GW-11 (no universal gentle-land bias; hills should read as hills).
+  - The metrics do not change generation.
+- **Checks (W3, merged tree on `f09578d`):** `quarter-turn-footprints` 3/3, `landform-coherence` 4/4. All W2+W3 water, fog and placement files: 11 files, 55/55. Shared water/sea files vs main `f09578d` (`npc-sea-native`, `rival-sea-exploration`, `water-index-value`, `water-reach`): 23/23 on both. Placement/plot/save set (10 files, 50 tests): 49 pass; the one failure (`scalable-plots` "plans preserve their area seed bill…") fails identically on main. `tsc` passes; eslint has no new findings (`sim.ts` has the same 1 error and 18 warnings as main).
+- **Checks (earlier W3 commits):** `fog-provenance` 6/6, `field-area` 5/5, `observed-water-route` 5/5, `river-sections` 5/5. Fishing/pottery/clay regression set (26 files, 120 tests): 118 pass. The 2 failures (`station-catalogue` "search combines terms…" and "audited statuses…") fail identically on main `9faabf9`. `tsc` passes; eslint is clean on new and changed files.
 
 ## Batch W2 — fixture repair, fog provenance, unseen moves, whole-area fields, fertility preview
 
@@ -191,11 +208,12 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 - Adopted the board's standardization rules: new behaviour goes in new modules, with one wiring hunk in shared files; optional save fields only; no reformatting; merge `origin/main` into this branch rather than rebasing pushed commits; canonical backlog and status files are single-writer (Codex).
 - Merged `origin/main` `860863a` into this branch. The W1 code was first rebased onto `8f635f6` before it was ever pushed; nothing pushed was rewritten.
 - 11 Nov, W2: merged `origin/main` `f6c0747` (docs-only change; one append-only conflict in `claude-coordination.md`, resolved by keeping both sections). Re-read the board (Claude integration round 1 reply, Codex reconcile) and `codex-platform.md`. Checked every remote agent branch: none touches `src/scene/cameraClearance.ts`, `world.ts` camera code, `boats.ts`, `fieldArea`/`fertility` or the edited fixtures. Noted: `findExploreTarget` uses `Math.random` (unseeded) in the sim, so explorer targets are not replay-deterministic (flagged for Codex, not changed).
+- 11 Nov, W3: merged main `9faabf9` and then `f09578d` (clean). Re-read the board on main and on `agents/claude-coordination` (PM check-ins through 17:02 ET): no new asks to Grok. The camera proposal has no Claude reply yet. The G16 deep-water extent ask is still open (W4). No file overlap with the Claude branches (PM-verified).
 - File claims are disjoint from Claude's (`seaExploration.ts`, `coastal*`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`, `src/scene/building*`, `carved*`) and from Codex's platform files. The only shared hunk is `Game.steer()` in `sim.ts`.
 
 ## Next batch order
 
 - **W2:** done (above). Follow-ups awaiting other owners: engine wiring of `planFieldArea`/`fertilityPreview` (Codex/Claude); camera dolly-before-lift decision (Boris/Claude); `observedVision()` in Test Lab saves (Codex).
-- **W3:** GW-04 finite reach fish/clay; GW-08 rotated tight footprints; Claude request 1 (observed water routes); GW-11/12/15 terrain coherence metrics.
-- **W4:** flow fields (Claude request 3); GW-09 territory and claims; GW-13 mountains; GW-14 multiple towns.
+- **W3:** done (above). Follow-ups awaiting other owners: the `quarterTurn` control and mesh yaw; a decision on a section stock cap; `observedVision()` in saves.
+- **W4:** GW-12 fix for archipelago rivers that rise or dead-end, gated on `landformCoherence` (0 rising rivers and 0 dead ends across the seed matrix); G16 deep-water extents for Societies' `seaStorms`; flow fields (Claude request 3); GW-09 territory and claims; GW-13 mountains; GW-14 multiple towns.
 - **W5:** GW-05 wells; GW-06 watermills, windmills, aqueducts, cisterns and canals.
