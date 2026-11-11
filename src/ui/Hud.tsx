@@ -1,3 +1,5 @@
+import {TradeProposal} from './TradeProposal';
+import {tradeJourney} from '../game/caravans';
 import {WaterReachPanel} from './WaterReachPanel';
 import {SeasonReport} from './SeasonReport';
 import { ResidentInventory } from './ResidentInventory';
@@ -48,7 +50,7 @@ import {staffDock} from "@/game/fishing";
 import { WEAPONS } from "@/game/warfare";
 import { FoodStoreReadout, readyFoodStock } from "./FoodStoreReadout";
 import { VisitingTrader } from "./VisitingTrader";
-import { reportedQuote, tradeCarrier } from "@/game/barter";
+import { knownSettlement, reportedQuote, tradeCarrier } from "@/game/barter";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   X,
@@ -152,6 +154,23 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   const [buildTab,setBuildTab]=useState("Village");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [techOpen, setTechOpen] = useState(false);
+  const [tradeOpen,setTradeOpen]=useState<number|null>(null);
+  useEffect(()=>{
+    if(tradeOpen===null)return;
+    const previous=document.activeElement as HTMLElement|null;
+    const dialog=document.querySelector<HTMLElement>('[data-trade-dialog]');
+    dialog?.querySelector<HTMLElement>('button,input,select')?.focus();
+    const key=(e:KeyboardEvent)=>{
+      if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();setTradeOpen(null);return;}
+      if(e.key!=='Tab'||!dialog)return;
+      const choices=Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,[tabindex="0"]')).filter(node=>node.getClientRects().length>0);
+      const first=choices[0],last=choices.at(-1);
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    };
+    window.addEventListener('keydown',key,true);
+    return()=>{window.removeEventListener('keydown',key,true);previous?.focus();};
+  },[tradeOpen]);
   useEffect(() => {
     if (hud.selection.kind !== "none") setSelMin(false);
   }, [hud.selection.kind, hud.selection.name]);
@@ -545,6 +564,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               const tree=engine.game.selectedResource;
               if(tree?.kind==="tree"){engine.game.markChop([tree.id],false);engine.pushHud();}
             }}>Fell tree</button>}
+            {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-9 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
@@ -758,7 +778,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             ) : null}
             {sel.kind === "none" ? (
               <div className="hud-trade-mobile mt-1.5">
-                <TradeBlock hud={hud} engine={engine} />
+                <TradeBlock hud={hud} engine={engine} onOffer={setTradeOpen} />
               </div>
             ) : null}
           </>
@@ -791,7 +811,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 hud.copper < (b.cost.copper || 0) ||
                 hud.iron < (b.cost.iron || 0);
               return (
-                <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${homeIssue||buildingHelp(b.type,b.hint)} ${b.type==='house'?`${HOUSING_RULES.plantFibre} plant fibre · ${HOUSING_RULES.workSeconds}s actual work + hauling. `:''}${([['seeds','seeds'],['wood','logs'],['stone','stone'],['food','food'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}${unaffordable?' Supplies are not ready yet.':''}`}><button
+                <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${homeIssue||buildingHelp(b.type,b.hint)} ${b.type==='house'?`${HOUSING_RULES.plantFibre>0?`${HOUSING_RULES.plantFibre} plant fibre · `:''}${HOUSING_RULES.workSeconds}s actual work + hauling. `:''}${([['seeds','seeds'],['wood','logs'],['stone','stone'],['food','food'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}${unaffordable?' Supplies are not ready yet.':''}`}><button
                   key={b.type}
                   type="button"
                   disabled={!!hud.ended||!!homeIssue}
@@ -810,7 +830,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                     {b.type==='farm'?'Plant field':shortName(b.name)}
                   </div>
                   <div className="build-tile-cost mt-1 text-xs leading-snug text-parchment tabular">
-                    {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}{b.type==='house'?` · ${HOUSING_RULES.plantFibre} fibre`:''}
+                    {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}{b.type==='house'&&HOUSING_RULES.plantFibre>0?` · ${HOUSING_RULES.plantFibre} fibre`:''}
                   </div>
                 </button></GameTooltip>
               );
@@ -904,7 +924,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             )}
             {hud.trade && !founding ? (
               <div className="px-2 pb-2">
-                <TradeBlock hud={hud} engine={engine} />
+                <TradeBlock hud={hud} engine={engine} onOffer={setTradeOpen} />
               </div>
             ) : null}
             </details>
@@ -912,6 +932,12 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         )}
       </div>
 
+      {tradeOpen!==null&&engine&&!founding&&<div className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-ink/70 px-3">
+        <div data-trade-dialog role="dialog" aria-modal="true" aria-label="Offer trade" className="hud-panel max-h-[80dvh] w-full max-w-xl overflow-y-auto rounded-2xl p-4">
+          <div className="flex items-center justify-between"><h2 className="font-display text-lg">Trade · {engine.game.tribe(tradeOpen)?.name}</h2><button type="button" className="rounded border border-parchment/30 px-3 py-1" onClick={()=>setTradeOpen(null)}>Close</button></div>
+          {knownSettlement(engine.game,tradeOpen)?<TradeProposal key={tradeOpen} engine={engine} team={tradeOpen} expanded/>:<p>Find their settlement before sending a shipment.</p>}
+        </div>
+      </div>}
       {techOpen && !founding ? (
         <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-ink/70 px-3">
           <div className="hud-panel max-h-[80dvh] w-full max-w-3xl overflow-y-auto rounded-2xl p-4">
@@ -990,8 +1016,10 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   );
 }
 
-function TradeBlock({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
+function TradeBlock({ hud, engine, onOffer }: { hud: HudSnapshot; engine: Engine | null; onOffer:(team:number)=>void }) {
   const t = hud.trade;
+  const rival=engine?.game.pickTradeRival();
+  const journeys=rival?engine!.game.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeTeam===rival.id&&tradeJourney(u)):[];
   if (!t) return null;
   if (!t.alive) return null;
   if (t.hostile) {
@@ -1016,9 +1044,10 @@ function TradeBlock({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   return (
     <div className="space-y-1">
       <TradeHead hud={hud} engine={engine} />
-      <p className="text-xs text-parchment-dim">Their stores are private. These are the goods they are willing to offer.</p>
+      {rival&&engine&&knownSettlement(engine.game,rival.id)&&<button type="button" className="w-full rounded border border-bronze/40 px-2 py-2 text-xs" onClick={()=>onOffer(rival.id)}>Offer trade</button>}
+      {!!journeys.length&&<p className="text-xs text-parchment-dim">{journeys.length} trader{journeys.length===1?'':'s'} travelling</p>}
       {t.cd > 0 ? (
-        <p className="text-[10px] text-parchment-dim">Caravan out · {Math.ceil(t.cd)}s</p>
+        <p className="text-[10px] text-parchment-dim">Reported deals refresh in {Math.ceil(t.cd)}s</p>
       ) : t.offers.length ? (
         t.offers.map((o) => (
           <TradeBtn key={o.give + o.get + o.giveAmt} deal={o} hud={hud} engine={engine} />

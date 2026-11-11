@@ -1,3 +1,4 @@
+import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
 import { finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
@@ -71,6 +72,7 @@ import {plotArea,scalablePlot,validPlot,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
+import {localCorridor,LOCAL_CORRIDOR_RULES} from './localCorridor';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
@@ -230,6 +232,7 @@ export class Game {
       revision: number;
       points: { x: number; z: number }[];
       failed: boolean;
+      precise?: boolean;
       retry: number;
     }
   >();
@@ -1738,6 +1741,8 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    u.foodRole=undefined;
+    u.tradeLoading=undefined;
     delete u.goatSearchPen;
     pauseHousingWorker(this,u);
     pauseBuildingRepair(this,u);
@@ -2671,6 +2676,7 @@ export class Game {
       this.interruptMission(u);
       u.pillage=-1;u.attackDestination=null;
       u.job = real;
+      if(job==="food")u.foodRole=true;
       u.jobLock = true;
       u.huntOnly = huntOnly;
       u.trade = null;
@@ -3021,25 +3027,8 @@ export class Game {
       !this.canAfford(0, { [deal.give]: deal.giveAmt })
     )
       return false;
-    // A dated offer is a proposal, not a fresh remote stock guarantee. Its
-    // agreed minimum travels with this finite budget and is checked locally.
-    this.spend(0, { [deal.give]: deal.giveAmt });
-    rival.tradeCd = 32;
-    worker.customOffer=undefined;
-    worker.procurement=accepted?{minimum:deal.getAmt}:undefined;
-    worker.trade = { ...deal };
-    worker.tradeTeam = team;
-    worker.order = "trade";
-    worker.carry = deal.giveAmt;
-    worker.carryType = deal.give;
-    worker.carryFood = deal.give==="food"?"provisions":undefined;
-    beginSettlementJourney(this,worker,hall);
-    worker.tx = hall.x;
-    worker.tz = hall.z;
-    worker.node = null;
-    worker.target = null;
-    worker.workReason = "Carrying a trade proposal to " + rival.name;
-    return true;
+    // The offer is unpaid until the real carrier reaches a friendly cache.
+    return beginTradeLoading(this,worker,deal,team,hall,accepted);
   }
 
   haltSelected() {
@@ -3995,7 +3984,9 @@ export class Game {
     if (this.state.walkDirty) this.rebuildWalk();
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
-    if(u.haulage!=="canoe"&&!this.walkable(u.x,u.z)){
+    const retained=this.paths.get(u.id);
+    const retainedPrecise=retained?.precise&&!retained.failed&&retained.revision===this.navRevision&&Math.hypot(retained.tx-u.tx,retained.tz-u.tz)<=2;
+    if(u.haulage!=="canoe"&&!retainedPrecise&&!this.walkable(u.x,u.z)){
       let escape:{x:number;z:number}|null=null;
       search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
         const x=u.x+Math.sin(i*Math.PI/12)*radius,z=u.z+Math.cos(i*Math.PI/12)*radius;
@@ -4054,7 +4045,7 @@ export class Game {
           break;
         }
       let points = [{ x: tx, z: tz }],
-        failed = false;
+        failed = false,precise=false;
       if (!direct) {
         const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
         const cell = this.world.size / WALK;
@@ -4079,6 +4070,14 @@ export class Game {
             }
         }
         let path = findPath(grid, WALK, index(u.x, u.z), end);
+        // Coarse cells can close a real body-sized passage in a dense camp.
+        // Spend shared navigation budget once; ordinary route following still
+        // collision-checks every actual movement with this actor's radius.
+        let corridor:{x:number;z:number}[]|null=null;
+        if((!path||end!==goal)&&u.haulage!=="canoe"&&!u.boat&&distance<=LOCAL_CORRIDOR_RULES.maximumDestinationMetres){
+          if(this.navBudget<=0)return false;
+          this.navBudget--;corridor=localCorridor(this,u,tx,tz);
+        }
         // A river can require a long detour even when the store is close. Only
         // deliberate long journeys get this larger bounded fallback; it is cached
         // with the normal route and failed routes retain the retry cooldown.
@@ -4090,7 +4089,7 @@ export class Game {
         const intentionalGroundRoute=u.haulage!=="canoe"&&u.boat?.phase!=="aboard"&&(
           u.team===0&&(u.order==="move"&&u.stationOnArrival===true||u.order==="attackmove"&&!!u.attackDestination)||
           (u.order==="build"||u.order==="gather")&&!!u.node||productionJourney);
-        if(!path && (longJourney||intentionalGroundRoute) && connectedForUnit(this,u,
+        if(!path && !corridor && (longJourney||intentionalGroundRoute) && connectedForUnit(this,u,
           -(this.world.size/2)+(end%WALK+.5)*cell,-(this.world.size/2)+(Math.floor(end/WALK)+.5)*cell)){
           // A nearby destination can require a long, real river/cliff detour.
           // Charge added ground searches against this step's shared budget;
@@ -4100,7 +4099,7 @@ export class Game {
         }
         // A direct ground move remains a valid order when the requested point
         // is across a barrier. Complete it at the closest connected ground.
-        if (!path && u.team === 0 && u.order === "move" && u.stationOnArrival &&
+        if (!path && !corridor && u.team === 0 && u.order === "move" && u.stationOnArrival &&
             u.haulage !== "canoe" && !u.boat && !u.recalled && !u.expedition && !u.scout) {
           const fallback = this.workBoard.closestReachableCell(this,u.x,u.z,tx,tz);
           if (fallback >= 0 && fallback !== end) {
@@ -4110,7 +4109,9 @@ export class Game {
             path = findPath(grid,WALK,index(u.x,u.z),end,96000);
           }
         }
-        if (path) {
+        if (corridor) {
+          points=corridor;precise=true;
+        } else if (path) {
           points = path.map((n) => ({
             x: -(this.world.size/2) + ((n % WALK) + 0.5) * cell,
             z: -(this.world.size/2) + (Math.floor(n / WALK) + 0.5) * cell,
@@ -4123,12 +4124,12 @@ export class Game {
           failed = true;
         }
       }
-      route = { tx, tz, revision: this.navRevision, points, failed, retry: this.state.time + 3 };
+      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3 };
       this.paths.set(u.id, route);
     }
     while (
       route.points.length > 1 &&
-      Math.hypot(route.points[0].x - u.x, route.points[0].z - u.z) < 0.6
+      Math.hypot(route.points[0].x - u.x, route.points[0].z - u.z) < (route.precise ? .12 : .6)
     )
       route.points.shift();
     const point = route.points[0];
@@ -4139,7 +4140,7 @@ export class Game {
     const dx = point.x - u.x,
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
-    if (d < 0.5 && route.points.length===1) {this.paths.delete(u.id);u.stuckT=0;return true;}
+    if (d < (route.precise ? .12 : .5) && route.points.length===1) {this.paths.delete(u.id);u.stuckT=0;return true;}
     const step = Math.min(this.travelSpeed(u)*dt, d);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
@@ -4543,6 +4544,7 @@ export class Game {
   }
 
   tradeAI(u: Unit, dt: number) {
+    if(tradeLoadingAI(this,u,dt))return;
     const deal = u.trade;
     if (!deal) {
       u.order = "idle";

@@ -56,6 +56,7 @@ export function eligibleTradeCarrier(g: Game, u: Unit, automatic = false) {
       !u.envoy && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.recalled &&
       !hasTaskCommitment(u) && u.drill == null &&
       u.carry === 0 &&
+      !Object.values(u.itemCargo||{}).some(n=>(n||0)>0) && !((u.waterWork?.liters||0)>0) &&
       (automatic ? u.enslavedFrom===undefined && !u.jobLock && ["idle", "gather"].includes(u.order) : ["idle", "hold", "gather"].includes(u.order))
   );
 }

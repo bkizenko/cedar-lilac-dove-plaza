@@ -1,7 +1,7 @@
 import type{Game}from'./sim';import type{BldType,Building,Unit,GameState,Tribe}from'./types';
 /** Material units are conserved processing portions, not kilograms. Existing
  * crop potential is clean-grain-equivalent; its stalk/husk mass travels too. */
-export const CEREAL_RULES={version:1,sheavesPerPotentialGrain:2,rawBatch:8,roughBatch:6,strawPerBatch:2,chaffPerBatch:2,cleanGrainPerBatch:4,seedFraction:.08,handThreshSeconds:24,handWinnowSeconds:16,floorThreshSeconds:12,floorWinnowSeconds:8,reviewSeconds:5,foodTargetSeconds:600,maximumAutomaticWorkers:2,adultsPerAutomaticMealJob:3,maximumAutomaticMealJobs:200,flourBufferSeconds:60,flourBatchesPerOvenSlot:2}as const;
+export const CEREAL_RULES={version:1,sheavesPerPotentialGrain:2,rawBatch:8,roughBatch:6,strawPerBatch:2,chaffPerBatch:2,cleanGrainPerBatch:4,seedFraction:.08,handThreshSeconds:24,handWinnowSeconds:16,floorThreshSeconds:12,floorWinnowSeconds:8,reviewSeconds:5,foodTargetSeconds:600,maximumAutomaticWorkers:2,backloggedHarvestPriority:100,adultsPerAutomaticMealJob:3,maximumAutomaticMealJobs:200,flourBufferSeconds:60,flourBatchesPerOvenSlot:2}as const;
 export type CerealLedger={version:1;harvestedSheaves:number;deliveredSheaves:number;lostCarriedSheaves:number;cleanedGrain:number;seedsAllocated:number;seedsLost:number};
 export const CEREAL_STORAGE_RULES={
  grainSheaves:{coveredGraceSeconds:900,coveredLossPerSecond:.000035},

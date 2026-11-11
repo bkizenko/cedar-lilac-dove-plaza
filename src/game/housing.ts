@@ -27,6 +27,13 @@ export const housingQuote = (): HousingMaterials => ({
   stone: HOUSING_RULES.stone,
   plantFibre: HOUSING_RULES.plantFibre,
 });
+/** Reprice only never-paid proposals; paid legacy packets/receipts keep every unit. */
+function refreshUnpaidHousingQuote(p:HousingRenovation){
+ if(!p.paid&&p.progress===0&&p.quote.plantFibre>HOUSING_RULES.plantFibre&&[p.uncollected,p.delivered,p.packet].every(m=>housingMaterialTotal(m)===0)){
+  p.quote={...p.quote,plantFibre:HOUSING_RULES.plantFibre};
+  if(p.blockedReason?.includes('delivered plant fibre'))p.blockedReason=undefined;
+ }
+}
 export function housingMaterialIssue(g: Game, team: number, quote = housingQuote()) {
   const t = g.tribe(team);
   if (!t) return "Community missing";
@@ -587,6 +594,7 @@ export function tickHousing(g: Game, dt: number) {
   for (const b of g.state.buildings) {
     const p = b.renovation;
     if (!p) continue;
+    refreshUnpaidHousingQuote(p);
     const u = p.actorId === null ? undefined : g.state.units.find((u) => u.id === p.actorId);
     if (p.actorId !== null && !u) {
       p.actorId = null;
@@ -794,7 +802,9 @@ export function housingOwnerCanContinue(p: HousingRenovation, team: number) {
 export function relinkHousingViews(g: Game) {
   for (const b of g.state.buildings) {
     const p = b.renovation;
-    if (!p || p.actorId === null) continue;
+    if(!p)continue;
+    refreshUnpaidHousingQuote(p);
+    if(p.actorId===null)continue;
     const u = g.state.units.find((u) => u.id === p.actorId);
     if (u?.housingCargo?.buildingId === b.id) u.housingCargo.materials = p.packet;
   }
@@ -856,7 +866,7 @@ export function setHousingPaused(g: Game, id: number, paused: boolean, team = 0)
   return true;
 }
 export function housingQuoteText(q = housingQuote(), duration: number = HOUSING_RULES.workSeconds) {
-  return `${q.wood} logs · ${q.stone} stone · ${q.plantFibre} fibre · ${duration}s work + hauling`;
+  return [`${q.wood} logs`,`${q.stone} stone`,...(q.plantFibre>0?[`${q.plantFibre} fibre`]:[]),`${duration}s work + hauling`].join(" · ");
 }
 
 /** Preserve all reserved material buckets before a target is removed outside Game.step. */

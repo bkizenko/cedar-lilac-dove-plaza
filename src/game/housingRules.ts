@@ -2,7 +2,8 @@ export const HOUSING_RULES = {
   version: 1,
   wood: 24,
   stone: 8,
-  plantFibre: 6,
+  // Basic timber joinery and stone footing do not require textile practice.
+  plantFibre: 0,
   workSeconds: 48,
   packetCapacity: 8,
   additionalPlaces: 2,

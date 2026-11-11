@@ -1,3 +1,4 @@
+import {validTradeLoadingUnit} from './tradeLoading';
 import{validHousingState}from'./housingValidation';
 import{relinkHousingViews}from'./housing';
 import{validBuildingMaintenance}from'./buildingMaintenance';
@@ -417,6 +418,8 @@ function validateGamePayload(raw: unknown) {
     if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();
     if(u.visit?.team!==undefined&&(!rivalTeam(u.visit.team)||u.visit.team===u.team||!["food","wood","stone","copper","iron"].includes(u.visit.wanted)||u.visit.phase==="waiting"))fail();
     if(u.visit?.wanted!==undefined&&u.visit.team===undefined)fail();
+    if(!validTradeLoadingUnit(u))fail();
+    if(u.foodRole!==undefined&&u.foodRole!==true)fail();
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
     if(u.tradeReservation!==undefined){

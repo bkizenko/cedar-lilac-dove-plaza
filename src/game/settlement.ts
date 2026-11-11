@@ -1,6 +1,6 @@
 import{hasConstructionWork}from'./constructionTargets';
 import{housingFundingIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
-import{rawCerealField,collectCerealSheaves}from'./cerealRules';
+import{rawCerealField,collectCerealSheaves,CEREAL_RULES}from'./cerealRules';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import {constructionPriority,CONSTRUCTION_QUEUE_RULES} from './constructionQueue';
 import {coastalIndependentNeeds} from './coastalTrade';
@@ -426,7 +426,7 @@ export class WorkBoard {
       const preparingField =
         task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase < 2;
       const harvestingField = task.kind==='food' && "type" in task.node && task.node.type === "farm" && calendar(g).phase===2;
-      if(harvestingField&&rawCerealField(task.node as Building)&&!u.jobLock&&reserve()<240&&cerealBacklog())continue;
+      const deferredHarvest=harvestingField&&rawCerealField(task.node as Building)&&!u.jobLock&&reserve()<240&&cerealBacklog();
       const preserving = task.kind==='food' && "type" in task.node && task.node.type === "warehouse";
       if (preserving && !preservationAvailable(g, task.node as Building)) continue;
       if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodTarget())
@@ -488,7 +488,10 @@ export class WorkBoard {
           : u.team===0 && policy === "build" && task.kind === "build"
             ? 90
             : 0;
-      const value = task.priority + bonus + (materialPriorities?.[task.kind]||0) + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
+      // Existing stored food gets first use of real processing slots. A full
+      // kitchen lowers upstream urgency; it must not forbid saving ripe crops.
+      const priority=deferredHarvest?Math.min(task.priority,CEREAL_RULES.backloggedHarvestPriority):task.priority;
+      const value = priority + bonus + (materialPriorities?.[task.kind]||0) + (lumberWork ? 35 : 0) - distance * 0.8 - count * 15;
       if (value > score) {
         if(bankFish&&!fishingBank(g,u,task.node as ResourceNode))continue;
         score = value;

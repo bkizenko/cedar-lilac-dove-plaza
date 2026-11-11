@@ -102,7 +102,7 @@ export const BUILDINGS: Record<
     hint: "Claims explored ground and serves as a local delivery point. Additional or distant claims need more armed guards; rival frontiers can provoke disputes.",
   },
   hut:HUT_BUILDING,
-  house: {name:"Timber home",w:HUT_BUILDING.w,d:HUT_BUILDING.d,food:0,wood:HOUSING_RULES.wood,stone:HOUSING_RULES.stone,pop:HUT_BUILDING.pop+HOUSING_RULES.additionalPlaces,hp:HOUSING_RULES.maximumHp,age:0,hint:`Adopted housing: ${HOUSING_RULES.wood} logs, ${HOUSING_RULES.stone} stone, ${HOUSING_RULES.plantFibre} delivered fibre; ${HOUSING_RULES.workSeconds}s work plus hauling. Try a paid prototype first.`},
+  house: {name:"Timber home",w:HUT_BUILDING.w,d:HUT_BUILDING.d,food:0,wood:HOUSING_RULES.wood,stone:HOUSING_RULES.stone,pop:HUT_BUILDING.pop+HOUSING_RULES.additionalPlaces,hp:HOUSING_RULES.maximumHp,age:0,hint:`Adopted housing: ${HOUSING_RULES.wood} logs, ${HOUSING_RULES.stone} stone; ${HOUSING_RULES.workSeconds}s work plus hauling. Try a paid prototype first.`},
   farm: {
     name: "Farm",
     w: 8.2,

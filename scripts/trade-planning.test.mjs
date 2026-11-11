@@ -1,3 +1,4 @@
+import {finishTradeLoading} from './helpers/finish-trade-loading.mjs';
 import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -26,7 +27,7 @@ function walkHome(g,u){
 test('procurement learns terms at arrival and physically returns finite goods',()=>{
   const g=setup(),ours=g.tribe(0).food,theirs=g.tribe(1).wood;
   assert.equal(sendProcurement(g,1,'food','wood',20,5),true);
-  const u=g.state.units.find(u=>u.procurement);assert.ok(u);
+  const u=g.state.units.find(u=>u.procurement);assert.ok(u);finishTradeLoading(g,u,ours);
   assert.equal(g.tribe(0).food,ours-20);assert.equal(u.carry,20);
   assert.equal(g.tribe(1).wood,theirs);assert.equal(g.state.tradeReports,undefined,'no remote terms');
   toMeeting(g,u);const quote=quoteShipment(g,1,'food','wood',20,u).deal;assert.ok(quote);
@@ -40,7 +41,7 @@ test('procurement learns terms at arrival and physically returns finite goods',(
 test('a minimum return is binding and a refused budget travels home without a remote refund',()=>{
   const g=setup(),before=g.tribe(0).food,theirs=g.tribe(1).wood;
   assert.equal(sendProcurement(g,1,'food','wood',20,200),true);
-  const u=g.state.units.find(u=>u.procurement);toMeeting(g,u);g.tradeAI(u,.1);
+  const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,before);toMeeting(g,u);g.tradeAI(u,.1);
   assert.equal(u.order,'return');assert.equal(u.carryType,'food');assert.equal(u.carry,20);
   assert.equal(g.tribe(0).food,before-20);assert.equal(g.tribe(1).wood,theirs);
   walkHome(g,u);assert.equal(g.tribe(0).food,before);
@@ -48,7 +49,7 @@ test('a minimum return is binding and a refused budget travels home without a re
 
 test('changed local needs, conflict and stolen budgets prevent the planned purchase',()=>{
   for(const failure of ['shortage','war','theft']){
-    const g=setup();sendProcurement(g,1,'food','wood',20,5);const u=g.state.units.find(u=>u.procurement);
+    const g=setup();sendProcurement(g,1,'food','wood',20,5);const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,240);
     if(failure==='shortage')g.tribe(1).wood=24;
     if(failure==='war')g.tribe(1).hostile=true;
     if(failure==='theft')u.carry=12;
@@ -59,7 +60,7 @@ test('changed local needs, conflict and stolen budgets prevent the planned purch
 });
 
 test('saved procurement preserves its budget and minimum; recall cancels the purchase and returns cargo',()=>{
-  const g=setup();sendProcurement(g,1,'food','wood',20,12);
+  const g=setup();sendProcurement(g,1,'food','wood',20,12);finishTradeLoading(g,g.state.units.find(u=>u.procurement),240);
   const saved=decodeGame(encodeGame(g)),u=saved.state.units.find(u=>u.procurement);
   assert.deepEqual(u.procurement,{minimum:12});assert.equal(u.carry,20);assert.equal(saved.tribe(0).food,220);
   // Saves regenerate terrain from the seed; restore this fixture's artificial flat map.
@@ -98,7 +99,7 @@ test('trading priority advances only approved route departures and retains pause
 });
 
 test('loading a fully stolen current shipment cannot regenerate its budget',()=>{
-  const g=setup();sendProcurement(g,1,'food','wood',4,1);const u=g.state.units.find(u=>u.procurement);
+  const g=setup();sendProcurement(g,1,'food','wood',4,1);const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,240);
   u.carry=0;u.carryType=null;
   const raw=encodeGame(g);assert.equal(raw.cargoVersion,1);
   for(const marker of [true,false]){

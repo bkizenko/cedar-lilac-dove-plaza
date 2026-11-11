@@ -1,3 +1,4 @@
+import {finishTradeLoading} from './helpers/finish-trade-loading.mjs';
 import {readFileSync} from 'node:fs';
 import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
@@ -21,7 +22,7 @@ function legacyFixture(armed=false){const file=armed?'legacy-held-armed-trade-92
 test('a loaded legacy paid guarantee retains finite escrow when new proposals depart and seller free stock is spent',()=>{
  const g=legacyFixture(),u=g.state.units[0];
  assert.equal(g.tribe(1).wood,40);assert.deepEqual(u.tradeReservation,{team:1,kind:'wood',amount:30});
- assert.equal(g.dispatchTrade(g.state.units[1],deal,1),true);assert.equal(g.state.units[1].carry,20);assert.equal(g.state.units[1].tradeReservation,undefined);assert.equal(g.tribe(1).wood,40,'new unguaranteed proposals cannot consume the legacy escrow');
+ const loadingStock=g.tribe(0).food;assert.equal(g.dispatchTrade(g.state.units[1],deal,1),true);finishTradeLoading(g,g.state.units[1],loadingStock);assert.equal(g.state.units[1].carry,20);assert.equal(g.state.units[1].tradeReservation,undefined);assert.equal(g.tribe(1).wood,40,'new unguaranteed proposals cannot consume the legacy escrow');
  g.tribe(1).wood=0;const hall=g.state.buildings[1],spot=g.interactionSpot(u,hall);u.x=spot.x;u.z=spot.z;
  g.tradeAI(u,.1);assert.equal(u.carryType,'wood');assert.equal(u.carry,30);assert.equal(u.tradeReservation,undefined);
  assert.equal(g.tribe(1).wood,0);assert.equal(g.tribe(1).food,50);assert.equal(g.tribe(0).wood,100,'goods still have to travel home');
@@ -54,7 +55,7 @@ test('accepted contracts survive save/load; old offers remain negotiable; malfor
  const g=fixture(),u=g.state.units[0];u.selected=true;g.tribe(0).spears=1;g.tribe(0).bows=0;g.tribe(0).blades=0;
  const health=u.hp;assert.equal(g.callToArms(),1);assert.equal(u.type,'spearman');
  assert.equal(eligibleTradeCarrier(g,u),true);assert.equal(eligibleTradeCarrier(g,u,true),false);assert.equal(tradeCarrier(g),u);
- assert.equal(g.dispatchTrade(u,{...deal,getAmt:5},1),true);assert.equal(u.hp,health);assert.equal(g.tribe(0).spears,0);
+ assert.equal(g.dispatchTrade(u,{...deal,getAmt:5},1),true);finishTradeLoading(g,u,240);assert.equal(u.hp,health);assert.equal(g.tribe(0).spears,0);
  const restored=decodeGame(encodeGame(g)),saved=restored.state.units.find(p=>p.id===u.id);assert.equal(saved.militia,true);assert.equal(saved.tradeReservation,undefined);assert.deepEqual(saved.procurement,{minimum:5});
  const hall=g.state.buildings[1],spot=g.interactionSpot(u,hall);u.x=spot.x;u.z=spot.z;
  // Exercise the real simulation dispatcher: military AI used to swallow the shipment.

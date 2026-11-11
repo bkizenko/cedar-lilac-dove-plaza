@@ -1042,7 +1042,7 @@ export class WorldView {
     this.dist = THREE.MathUtils.clamp(this.dist, 14, 230);
     this.tmpCam.set(
       this.look.x + Math.sin(this.yaw) * Math.cos(this.pitch) * this.dist,
-      this.look.y + Math.sin(this.pitch) * this.dist,
+      this.look.y + 1.2 + Math.sin(this.pitch) * this.dist,
       this.look.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
     if(this.cameraGround){

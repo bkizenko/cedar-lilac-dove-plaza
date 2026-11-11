@@ -19,7 +19,7 @@ function stopCommerce(g:Game,source:number,only?:Set<number>){
  // Avoid recording this ownership/cancellation as a new food harvest.
  for(const u of g.state.units){if(only&&!only.has(u.id))continue;if(u.team!==source&&u.tradeTeam!==source&&u.tradeReservation?.team!==source)continue;
   const e=u.tradeReservation,hadReservation=!!e;if(e){const t=g.tribe(e.team);if(e.kind==='food'){const lots=foodInventory(t);lots.provisions+=e.amount;t.food+=e.amount;t.foodLots=lots;}else t[e.kind]+=e.amount;delete u.tradeReservation;}
-  if(u.trade||hadReservation){u.trade=null;u.tradeTeam=0;u.customOffer=undefined;u.procurement=undefined;u.order='return';u.node=null;u.target=null;}
+  if(u.trade||hadReservation){delete u.tradeLoading;u.trade=null;u.tradeTeam=0;u.customOffer=undefined;u.procurement=undefined;u.order='return';u.node=null;u.target=null;}
   if(u.visit){delete u.visit;u.order='return';u.node=null;u.target=null;}
   if(u.envoy){delete u.envoy;u.order='return';u.node=null;u.target=null;}
  }
@@ -79,6 +79,8 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   s.selBld=null;s.placing=null;s.walkDirty=true;
   settleHousingHandover(s,fromTeam,toTeam,!local,siteIds,personIds);
   settleMaintenanceHandover(s,fromTeam,toTeam,!!local,siteIds,personIds);
+  // Unpaid requests belong to their original owner and bench; cancellation moves no goods.
+  if(s.cartUpgradeRequests)s.cartUpgradeRequests=s.cartUpgradeRequests.filter(r=>s.units.some(u=>u.id===r.ownerId&&u.team===r.team&&u.hp>0&&u.haulage==='sled'&&!u.haulageWork)&&s.buildings.some(b=>b.id===r.workplace&&b.team===r.team&&b.type==='workshop'&&b.hp>0&&b.build>=1));
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }

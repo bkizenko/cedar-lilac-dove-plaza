@@ -182,9 +182,16 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   const u = candidates.find(p => nearestWorkplace(g, p, sites));
   if (!u) {
     if (kind !== 'cart') return reject('No adult can start this job. Free a worker and check the route to the workplace.');
+    const underway=projects(g).find(p=>p.team===team&&p.work.kind==='cart'&&!p.work.paused&&p.actorId!==null&&(unitId===undefined||p.actorId===unitId));
+    if(underway){
+      const maker=g.state.units.find(person=>person.id===underway.actorId),reason=underway.blockedReason||maker?.workReason;
+      if(team===0)g.banner(`Handcart work already assigned · ${Math.floor(underway.work.progress/underway.work.duration*100)}%${reason?` · ${reason}`:''}. No new materials charged.`,5);
+      return true;
+    }
     if (!(g.state.units as HaulageUnit[]).some(worker => civilian(g,worker) && worker.team===team && worker.haulage==='sled'))
       return reject('Make a sled first. A handcart upgrades a sled carrier’s equipment.');
     if(queueCartUpgrade(g,team,workplaceId,unitId))return true;
+    if(queuedCartUpgrades(g).length>=maximumCartRequests)return reject('The upgrade queue is full. Let an existing request start before adding another.');
     return reject(candidates.length
       ? 'A sled carrier is free, but cannot reach this shelter. Clear a route or use another shelter.'
       : 'All sled carriers are busy or loaded. Finish a delivery or free a sled carrier, then retry.');

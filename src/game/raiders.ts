@@ -95,12 +95,13 @@ export function establishRaiderCamps(g: Game) {
     }
   }
 }
-/** Permanent land guards must not suppress arrivals from the sea forever. */
+/** Existing camp dispatch cannot add people: obsolete shore survivors must not
+ * suppress its finite residents. Keep the old population cap for legacy rules. */
 export function canScheduleSeaRaid(g: Game) {
   return g.state.conflict !== "quiet" &&
     g.state.time >= (g.state.conflict === "dangerous" ? 600 : 1200) &&
     g.state.units.some(u=>u.team===0&&u.hp>0&&!isDependent(g,u)) &&
-    !g.state.units.some(invadingRaider)&&g.state.units.filter(u=>u.hp>0&&strandedRaid(u)).length<RAID_INTENT_RULES.maximumStrandedPeople;
+    !g.state.units.some(invadingRaider)&&(g.state.finiteRaiderCampVersion===1||g.state.units.filter(u=>u.hp>0&&strandedRaid(u)).length<RAID_INTENT_RULES.maximumStrandedPeople);
 }
 
 /** Scheduled pressure may dispatch an observed, provisioned camp resident.

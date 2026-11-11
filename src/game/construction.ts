@@ -109,10 +109,15 @@ export function assignPlacedConstruction(g: Game, b: Building) {
 export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUnits()){
   if(b.team!==0||b.hp<=0||!hasConstructionWork(b))return false;
   if(b.renovation?.actorId!==undefined&&b.renovation.actorId!==null&&!workers.some(u=>u.id===b.renovation!.actorId)){g.banner('One builder owns this housing workspot. Queue the site or pause before assigning a replacement.',4);return false;}
-  const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&(b.type!=='bridge'||!!bridgeApproach(g,u,b)))
+  // Select usable adults before the nearest-two limit; paid makers and loaded
+  // carriers must not hide a free builder farther from the selected building.
+  const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.emergency&&
+    !u.jobLock&&!u.buildOrder&&!u.constructionQueue&&!u.stationOnArrival&&!u.resting&&!u.shelterId&&!u.recalled&&!u.envoy&&!u.scout&&!u.expedition&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&
+    u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order)&&
+    (b.type==='bridge'?!!bridgeApproach(g,u,b):g.buildingWorkReached(u,b)||!!g.interactionSpot(u,b)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
     .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;}).slice(0,b.renovation?1:undefined);
-  if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner('Select adult residents to build this project.',3);return false;}
+  if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner(workers.length?'Select adult residents to build this project.':'No free builder can reach this site. Existing orders and carried goods are kept.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     g.interruptMission(u);recordImmediateConstruction(g,u,b);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;

@@ -35,3 +35,14 @@ test('a native mountain pan keeps the actual terrain ray clear without terrain e
  for(let x=peakX-25;x<=peakX+25;x+=.5){const focus={x,y:ground.height(x,peakZ)+.55,z:peakZ},eye=desired(focus,Math.PI/2,.2,100),r=cache.resolve(ground,focus,eye,g.navigationRevision(),1/60);if(last)maxStep=Math.max(maxStep,Math.hypot(r.x-last.x,r.y-last.y,r.z-last.z));minimum=Math.min(minimum,rayMin(ground,{...focus,y:r.focusY},r,400));assert.ok([r.x,r.y,r.z].every(Number.isFinite));last=r;frames++;}
  assert.ok(peak>30);assert.ok(minimum>.1,`native peak view crossed terrain by ${minimum}m`);assert.deepEqual(g.world.heights,before);console.log(JSON.stringify({nativeMountainPan:{seed:42,version:18,peakX,peakZ,peakHeight:peak,frames,maximumCameraStepMetres:maxStep,minimumRayClearanceMetres:minimum,...cache.diagnostics()}}));
 });
+
+test('ordinary zoom never becomes a false terrain raise on clear level ground',()=>{
+ const ground={size:1040,height:()=>4},focus={x:0,y:4.55,z:0},cache=new TerrainCameraClearance();
+ for(const dist of [230,58,14,80,20,230,14]){const eye=desired(focus,1.12,.38,dist),r=cache.resolve(ground,focus,eye,0,1/60);assert.equal(r.raisedMetres,0);assert.equal(r.horizontalFraction,1);assert.ok(Math.abs(r.y-eye.y)<1e-10);}
+});
+test('actual rendered camera keeps the requested view angle while zooming in and out',async()=>{
+ const {WorldView}=await import('../src/scene/world.ts'),THREE=await import('three');
+ for(const pitch of [.2,.38,1.1]){const v={pan:{x:0,z:0},mapSize:1040,look:new THREE.Vector3(0,4.55,0),tmpCam:new THREE.Vector3(),yaw:1.12,pitch,dist:58,camera:new THREE.PerspectiveCamera(),cameraGround:{size:1040,height:()=>4},cameraGroundRevision:()=>1,cameraClearance:new TerrainCameraClearance()};
+  for(const dist of [230,58,14,80,20,230,14]){v.dist=dist;WorldView.prototype.updateCamera.call(v,1/60);const direction=v.camera.getWorldDirection(new THREE.Vector3()),angle=Math.atan2(-direction.y,Math.hypot(direction.x,direction.z));assert.ok(Math.abs(angle-pitch)<1e-9,`${dist}m zoom changed ${pitch} pitch to ${angle}`);assert.equal(v.pitch,pitch);assert.equal(v.yaw,1.12);assert.equal(v.dist,dist);}
+ }
+});

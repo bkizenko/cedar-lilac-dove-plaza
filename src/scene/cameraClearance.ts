@@ -55,7 +55,9 @@ export class TerrainCameraClearance {
   const target=this.target!;
   if(!this.result){this.result=target;return target;}
   const seconds=Math.max(0,Math.min(.1,Number.isFinite(dt)?dt:0)),decay=Math.exp(-CAMERA_CLEARANCE_RULES.settleRatePerSecond*seconds);
-  const baseY=target.y-target.raisedMetres,carriedRaise=Math.max(0,this.result.y-baseY),radius=Math.max(.01,Math.hypot(desired.x-focus.x,desired.z-focus.z));
+  // Carry only the terrain correction, never the previous absolute eye height.
+  // Otherwise deliberate zoom-in or downhill movement becomes a false lift.
+  const carriedRaise=Math.max(0,this.result.raisedMetres),radius=Math.max(.01,Math.hypot(desired.x-focus.x,desired.z-focus.z));
   let raise=Math.max(target.raisedMetres,carriedRaise-Math.min(carriedRaise*(1-decay),CAMERA_CLEARANCE_RULES.maximumDescentMetresPerSecond*seconds));
   let fraction=Math.min(target.horizontalFraction,this.result.horizontalFraction+Math.min((1-this.result.horizontalFraction)*(1-decay),CAMERA_CLEARANCE_RULES.maximumOrbitReturnMetresPerSecond*seconds/radius));
   if(raise-target.raisedMetres<.02)raise=target.raisedMetres;

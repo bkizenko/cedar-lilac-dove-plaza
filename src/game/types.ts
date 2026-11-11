@@ -254,6 +254,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   aggroT: number;
   stride: number;
   trade: TradeDeal | null;
+  tradeLoading?:true;
+  foodRole?:true;
   tradeTeam: number;
   tradeReservation?: {team:number;kind:ResKind;amount:number};
   ageT: number;

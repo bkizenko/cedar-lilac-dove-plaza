@@ -88,7 +88,7 @@ export function foodSpoilage(g: Game, team = 0, food = g.tribe(team).food, phase
   const total=Math.max(1,t.food);
   return FOOD_KINDS.reduce((n,k)=>n+food*lots[k]/total*rates[k],0);
 }
-export const EMERGENCY_RATIONS = {nourishment: 0.1, illnessPerRawUnit: 0.025, illnessSeconds: 120};
+export const EMERGENCY_RATIONS = {nourishment: 0.1, illnessPerRawUnit: 0.025, illnessSeconds: 120,processingGrainBuffer:4};
 
 export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) {
   const t=g.tribe(team),lots=foodInventory(t),rates=lossRates(g,team,t.food,calendar(g).phase,true),before=t.food;
@@ -107,10 +107,19 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
     return eaten;
   };
   if(rawRules&&deficit>0){
-    lots.grain-=consumeEmergency(lots.grain,EMERGENCY_RATIONS.nourishment);
+    // A basic winnowing batch yields 3.68 food grain after seed retention,
+    // below a four-grain cooking/milling batch. Do not eat that working buffer
+    // raw while rough grain/sheaves can cover this same emergency ration.
+    const roughNutrition=(t.items?.roughGrain||0)*EMERGENCY_RATIONS.nourishment+(t.items?.grainSheaves||0)*EMERGENCY_RATIONS.nourishment*.5;
+    let hearth=false,mill=false,oven=false;
+    if(lots.grain>0&&roughNutrition>=deficit)for(const b of g.state.buildings)if(b.team===team&&g.finished(b)){hearth||=b.type==='hearth';mill||=b.type==='grindingStone';oven||=b.type==='oven';}
+    const workingGrain=roughNutrition>=deficit&&(hearth||mill&&oven)?Math.min(lots.grain,EMERGENCY_RATIONS.processingGrainBuffer):0;
+    lots.grain-=consumeEmergency(Math.max(0,lots.grain-workingGrain),EMERGENCY_RATIONS.nourishment);
     for(const kind of ['roughGrain','grainSheaves'] as const){
       if(t.items?.[kind]){const eaten=consumeEmergency(t.items[kind]!,EMERGENCY_RATIONS.nourishment*(kind==='grainSheaves'?.5:1));t.items[kind]!-=eaten;emergencyUnits+=eaten;}
     }
+    // If alternative rations cannot cover the need, the buffer is edible too.
+    lots.grain-=consumeEmergency(lots.grain,EMERGENCY_RATIONS.nourishment);
     lots.fish-=consumeEmergency(lots.fish,EMERGENCY_RATIONS.nourishment,true);
     if(t.items?.rawMeat){const eaten=consumeEmergency(t.items.rawMeat,EMERGENCY_RATIONS.nourishment,true);t.items.rawMeat-=eaten;emergencyUnits+=eaten;}
   }
