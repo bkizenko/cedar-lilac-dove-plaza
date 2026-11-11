@@ -1,12 +1,13 @@
 import {FOW} from './constants.ts';
 import type {Game} from './sim.ts';
-import type {Unit,Building} from './types.ts';
+import type {Unit} from './types.ts';
+import {unitSightRadius,buildingSightRadius} from './sightRadii.ts';
 
 /** Fog provenance (G10). Diagnostic, read-only: attributes every fog cell that
  * changes from unexplored to explored during one step to the team-0 observer
- * whose sight circle covers it. Sight radii mirror Game.updateVision. Holds no
+ * whose sight circle covers it, using Game.updateVision's own radii. Holds no
  * save state and never writes vision. */
-export const FOG_PROVENANCE_RULES={version:1,unitSight:{worker:11,archer:16,ranger:16,other:13},buildingSight:{townhall:18,dock:20,fortification:5,other:12,watchtowerMax:30}} as const;
+export const FOG_PROVENANCE_RULES={version:2} as const;
 
 export type FogSource=
  |{kind:'player-order';unitId:number;order:string}
@@ -18,8 +19,8 @@ export type FogSource=
  |{kind:'test-reveal'}
  |{kind:'unattributed'};
 
-export function unitSight(u:Pick<Unit,'type'>){const s=FOG_PROVENANCE_RULES.unitSight;return u.type==='worker'?s.worker:u.type==='archer'||u.type==='ranger'?s.archer:s.other;}
-function buildingSight(b:Building){const s=FOG_PROVENANCE_RULES.buildingSight;return b.type==='watchtower'?s.watchtowerMax:b.type==='townhall'?s.townhall:b.type==='dock'?s.dock:s.other;}
+/** Radii come from sightRadii.ts, the same function Game.updateVision stamps with. */
+export const unitSight=unitSightRadius;
 
 /** Classify why a unit is where it is. Player commands are distinguished from
  * autonomous labour by the settlement's own search/expedition markers. */
@@ -41,14 +42,14 @@ export function attributeReveals(g:Game,before:Uint8Array):FogTick{
  const n=FOW,size=g.world.size,cell=size/n,vis=g.vision,bySource=new Map<string,{source:FogSource;cells:number}>(),unattributed:number[]=[];let revealed=0;
  const observers:{x:number;z:number;r:number;source:FogSource}[]=[];
  for(const u of g.state.units)if(u.team===0&&u.hp>0)observers.push({x:u.x,z:u.z,r:unitSight(u),source:classifyObserver(u)});
- for(const b of g.state.buildings)if(b.team===0&&b.hp>0&&!b.plannedCost)observers.push({x:b.x,z:b.z,r:buildingSight(b),source:{kind:'building',buildingId:b.id,type:b.type}});
+ for(const b of g.state.buildings)if(b.team===0&&b.hp>0&&!b.plannedCost)observers.push({x:b.x,z:b.z,r:buildingSightRadius(b,g.finished(b),g.state.agePicks[2]==='army'),source:{kind:'building',buildingId:b.id,type:b.type}});
  const testReveal=g.testMode&&g.revealMap;
  for(let i=0;i<vis.length;i++){
   if(before[i]!==0||vis[i]===0)continue;revealed++;
   const wx=-size/2+(i%n+.5)*cell,wz=-size/2+((i/n|0)+.5)*cell;
   let src:FogSource|undefined;
   // Prefer a moving unit over a building; ties go to the nearest observer.
-  let best=1e9;for(const o of observers){const d=Math.hypot(o.x-wx,o.z-wz);if(d<=o.r+cell*.75){const rank=d+(o.source.kind==='building'?1e3:0);if(rank<best){best=rank;src=o.source;}}}
+  let best=1e9;for(const o of observers){const d=Math.hypot(o.x-wx,o.z-wz);if((o.x-wx)**2+(o.z-wz)**2<=o.r*o.r){const rank=d+(o.source.kind==='building'?1e3:0);if(rank<best){best=rank;src=o.source;}}}
   if(!src&&testReveal)src={kind:'test-reveal'};
   if(!src){unattributed.push(i);continue;}
   const k=key(src),e=bySource.get(k);if(e)e.cells++;else bySource.set(k,{source:src,cells:1});

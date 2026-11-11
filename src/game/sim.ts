@@ -106,6 +106,7 @@ import {mulberry32} from "./rng";
 import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
+import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -3604,16 +3605,11 @@ export class Game {
     for (let i = 0; i < vis.length; i++) if (vis[i] === 2) vis[i] = 1;
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
-      this.stampVision(
-        u.x,
-        u.z,
-        u.type === "archer" || u.type === "ranger" ? 16 : u.type === "worker" ? 11 : 13,
-        2,
-      );
+      this.stampVision(u.x, u.z, unitSightRadius(u), 2);
     }
     for (const b of this.state.buildings) {
       if (b.team !== 0 || b.hp <= 0 || b.plannedCost) continue;
-      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : FORTIFICATIONS.includes(b.type)?5:12, 2);
+      this.stampVision(b.x, b.z, buildingSightRadius(b, this.finished(b), this.state.agePicks[2] === "army"), 2);
     }
     for (let i = 0; i < vis.length; i++) {
       if (vis[i] === 2) age[i] = 0;

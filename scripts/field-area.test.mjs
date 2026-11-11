@@ -54,11 +54,20 @@ test('GW-02: one wet or unexplored tile is refused alone; the admissible rest st
 
 test('GW-10: fertility preview uses the harvest terrain numbers and hides unexplored cells',()=>{
  const g=lab(0,'continents',false),home=g.campOf(0);
- const near=fertilityPreview(g,{x:home.x+6,z:home.z+6,w:16,d:16});
- const t=fieldTerrain(g,{type:'farm',x:home.x+6,z:home.z+6,w:16,d:16});
- assert.equal(near.summary.soil,t.soil);assert.equal(near.summary.grainYieldFactor,t.grain);
- assert.equal(near.columns*near.rows,near.cells.length);assert.ok(near.cells.some(Boolean));
- for(const c of near.cells.filter(Boolean)){assert.ok(c.greenness>=0&&c.greenness<=1);assert.equal(c.greenness,fertilityGreenness(c.soil,c.crops));}
+ const near=fertilityPreview(g,{x:home.x+2,z:home.z+2,w:8.2,d:8.2});
+ const t=fieldTerrain(g,{type:'farm',x:home.x+2,z:home.z+2,w:8.2,d:8.2});
+ assert.equal(near.state,'complete');assert.equal(near.summary.soil,t.soil);assert.equal(near.summary.grainYieldFactor,t.grain);
+ assert.equal(near.columns*near.rows,near.cells.length);
+ for(const c of near.cells){assert.ok(c);assert.ok(c.greenness>=0&&c.greenness<=1);assert.equal(c.greenness,fertilityGreenness(c.soil,c.crops));}
+});
+
+test('GW-10 review: an all-hidden plot reports unknown with no summary; mixed visibility summarises only explored cells',()=>{
+ const g=lab(0,'continents',false),home=g.campOf(0);
  const far=fertilityPreview(g,{x:home.x+300,z:home.z+300,w:16,d:16});
- assert.equal(far.exploredFraction,0);assert.ok(far.cells.every(c=>c===null),'no terrain leak in fog');
+ assert.equal(far.state,'unknown');assert.equal(far.summary,null);assert.equal(far.exploredFraction,0);assert.ok(far.cells.every(c=>c===null),'no terrain leak in fog');
+ // A plot straddling the fog edge.
+ let mixed=null;for(let r=10;r<60&&!mixed;r+=2){const p=fertilityPreview(g,{x:home.x+r,z:home.z,w:24.6,d:8.2});if(p.exploredFraction>0&&p.exploredFraction<1)mixed=p;}
+ assert.ok(mixed,'a plot straddles explored and unexplored ground');assert.equal(mixed.state,'partial');
+ const known=mixed.cells.filter(Boolean);assert.ok(known.length&&known.length<mixed.cells.length);
+ const soil=known.reduce((a,c)=>a+c.soil,0)/known.length;assert.ok(Math.abs(mixed.summary.soil-soil)<1e-12,'summary = explored cells only');
 });

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {FOW} from '../src/game/constants.ts';
 import {traceFog,attributeReveals,classifyObserver} from '../src/game/fogProvenance.ts';
+import {buildingSightRadius,unitSightRadius} from '../src/game/sightRadii.ts';
+import {DOCK_R} from '../src/game/constants.ts';
 
 const explored=v=>v.reduce((a,c)=>a+(c?1:0),0);
 const fresh=()=>{const g=new Game();g.reset(0,undefined,{size:1040,layout:'continents'});g.state.conflict='quiet';g.enterIsland();return g;};
@@ -43,4 +45,21 @@ test('G10: autonomous labour is classified separately from player orders',()=>{
  c.order='move';assert.equal(classifyObserver(c).kind,'player-order');
  const before=g.vision.slice();a.x+=60;g.updateVision(0);const tick=attributeReveals(g,before);
  assert.ok(tick.revealed>0&&tick.unattributed.length===0);assert.ok([...tick.bySource.values()].some(e=>e.source.kind==='search-party'));
+});
+
+test('G10 review: attribution uses the live sight radii, including towers, fortifications and docks',()=>{
+ assert.equal(buildingSightRadius({type:'watchtower'},true,false),22);assert.equal(buildingSightRadius({type:'watchtower'},true,true),30);
+ assert.equal(buildingSightRadius({type:'palisade'},true,false),5);assert.equal(buildingSightRadius({type:'dock'},false,false),12);
+ assert.equal(buildingSightRadius({type:'dock'},true,false),DOCK_R+4);assert.equal(unitSightRadius({type:'worker'}),11);assert.equal(unitSightRadius({type:'archer'}),16);
+ // Boundary: a lone unfinished dock in fresh fog. Everything it reveals lies
+ // within its live 12 m radius, and nothing beyond 12 m is credited to it.
+ for(const finished of [false,true]){
+  const g=fresh();const home=g.campOf(0),x=home.x+150,z=home.z+150;
+  const b=g.makeBld('dock',x,z,0);if(!finished){b.build=.2;}g.state.buildings.push(b);
+  for(const u of g.state.units)if(u.team===0)u.hp=0;
+  const before=g.vision.slice();g.updateVision(0);const tick=attributeReveals(g,before);
+  assert.equal(tick.unattributed.length,0);const r=buildingSightRadius(b,g.finished(b),false);
+  const cells=[...tick.bySource.values()].find(e=>e.source.kind==='building'&&e.source.buildingId===b.id)?.cells??0;
+  const expected=Math.PI*r*r/((g.world.size/192)**2);assert.ok(cells>expected*.7&&cells<expected*1.3,`${finished?'finished':'unfinished'} dock credited ${cells} cells for r=${r}`);
+ }
 });
