@@ -507,9 +507,10 @@
       "status": "verified",
       "credit": 1,
       "evidence": [
-        "survivalMaintenance20261102"
+        "survivalMaintenance20261102",
+        "sheepWoolSailingNov11"
       ],
-      "remainingNotes": "Whole-gate connected scenario passed on combined candidate; exact provenance/controlled fixture limits recorded. Does not credit full campaign balance or unrelated performance/visual gates."
+      "remainingNotes": "Whole-gate connected scenario passed on combined candidate; exact provenance/controlled fixture limits recorded. Does not credit full campaign balance or unrelated performance/visual gates. November11 scoped addendum: Additional published owned wool-coat survival pathway; no new complete-gate credit."
     },
     {
       "id": "M1-10",
@@ -551,9 +552,10 @@
       "status": "verified",
       "credit": 1,
       "evidence": [
-        "materialsPastureDefense"
+        "materialsPastureDefense",
+        "sheepWoolSailingNov11"
       ],
-      "remainingNotes": "Natural current V14 actual paid pen, native wild goat ID captured/returned, real care and finite grazing. Controlled winter plant-food delivery/conservation checks pass. No initial livestock gifts; broader species and full winter campaign remain separate."
+      "remainingNotes": "Natural current V14 actual paid pen, native wild goat ID captured/returned, real care and finite grazing. Controlled winter plant-food delivery/conservation checks pass. No initial livestock gifts; broader species and full winter campaign remain separate. November11 scoped addendum: Additional fresh-map finite sheep capture, leading, care and fleece evidence; legacy wildlife preserved."
     },
     {
       "id": "M1-13",
@@ -915,9 +917,10 @@
       "status": "verified",
       "credit": 1,
       "evidence": [
-        "coastalDeliveryNov1"
+        "coastalDeliveryNov1",
+        "sheepWoolSailingNov11"
       ],
-      "remainingNotes": "Current combined-index paid dock/hull, same-body cargo boarding/sailing/foreign exchange/home unload, at-sea and incoming-uncredited save/restore, strict ownership and exactly-once inventory conservation qualified. Controlled declared shore fixtures; natural profitable independent trade remains M2-04."
+      "remainingNotes": "Current combined-index paid dock/hull, same-body cargo boarding/sailing/foreign exchange/home unload, at-sea and incoming-uncredited save/restore, strict ownership and exactly-once inventory conservation qualified. Controlled declared shore fixtures; natural profitable independent trade remains M2-04. November11 scoped addendum: Additional paid square-sail assistance and physical return/save/UI evidence; original transport gate remains verified."
     },
     {
       "id": "M3-02",
@@ -981,8 +984,10 @@
       ],
       "status": "pending",
       "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+      "evidence": [
+        "sheepWoolSailingNov11"
+      ],
+      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit. November11 scoped addendum: Sheep breeding/feed/fleece product slice now published; pack transport and actual expedition/trade coupling still pending."
     },
     {
       "id": "M3-07",
