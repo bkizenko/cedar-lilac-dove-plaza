@@ -531,3 +531,23 @@ test('grain workload uses unlocked batch sizes and prices the remainder at the s
  assert.equal(work(),60);
  assert.equal(tribe.items.grainSheaves,40);
 });
+
+test('workload shows clean grain and flour separately and excludes inputs committed to paid work',()=>{
+ const {g,u}=fixture(),tribe=g.tribe(0);
+ const oven=g.makeBld('oven',14,42,0),mill=g.makeBld('grindingStone',26,42,0);
+ g.state.buildings.push(oven,mill);
+ ground(g);
+ tribe.food=1016;
+ tribe.foodLots={grain:16,provisions:1000};
+ tribe.items={flour:8};
+ tribe.survival.waterLiters=1;
+ const rows=()=>measureVillageWorkload(g).tasks;
+ assert.equal(rows().find(row=>row.id==='flour-backlog:0').blocker,'Collect drinking water');
+ tribe.survival.waterLiters=40;
+ assert.equal(rows().find(row=>row.id==='flour-backlog:0').personSeconds,48);
+ assert.equal(rows().find(row=>row.id==='clean-grain-backlog:0').personSeconds,96);
+ assert.equal(beginProduction(g,'bakeBreadOven',oven.id,u.id),true);
+ const after=rows();
+ assert.equal(after.find(row=>row.id==='flour-backlog:0').personSeconds,24);
+ assert.equal(after.filter(row=>row.id.startsWith('production:')).length,1);
+});

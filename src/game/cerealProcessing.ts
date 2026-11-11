@@ -119,8 +119,8 @@ export function harvestBacklogAlert(g:Game){
 const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
 const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
-const breadRecipes: ProductionRecipe[] = ['bakeBreadBulk','bakeBreadDouble','bakeBreadOven', 'bakeBread'];
-const grindingRecipes: ProductionRecipe[] = ['grindGrainBulk','grindGrainDouble','grindGrainStation', 'grindGrain'];
+export const breadRecipes: ProductionRecipe[] = ['bakeBreadBulk','bakeBreadDouble','bakeBreadOven', 'bakeBread'];
+export const grindingRecipes: ProductionRecipe[] = ['grindGrainBulk','grindGrainDouble','grindGrainStation', 'grindGrain'];
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {

@@ -1,3 +1,5 @@
+import {breadRecipes,grindingRecipes} from './cerealProcessing';
+import {foodInventory} from './pantry';
 import{HOUSING_RULES,housingStatus,housingOwnerCanContinue,housingFundingIssue}from'./housing';
 import{housingMaterialTotal}from'./housingMaterials';
 import{BUILDING_MAINTENANCE}from'./buildingMaintenance';
@@ -174,6 +176,35 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  for(const p of cerealProjects.filter(p=>p.phase==='paused'||p.phase==='stored')){
   const work=batchWork('winnow',PRODUCTION_RECIPES[p.recipe].outputs.roughGrain!,p.recipe.startsWith('threshCerealFloor'));
   add({id:`cereal-paused-future:${p.id}`,label:'Winnow the paused batch after threshing resumes',category:'Farming',personSeconds:work,status:'paused',actorIds:[],priority:900,blocker:'The paid upstream threshing batch is paused'},true);
+ }
+ if(team===0){
+  const tribe=g.tribe(team),grain=tribe.foodLots?.grain?foodInventory(tribe).grain:0,flour=tribe.items?.flour??0;
+  const sites=g.state.buildings.filter(b=>b.team===team&&g.finished(b));
+  const enabled=(keys:typeof breadRecipes)=>keys.filter(key=>sites.some(b=>b.type===PRODUCTION_RECIPES[key].workplace&&
+   (b.type!=='hearth'||g.state.autoWorkEnabled!==false)&&!grainBatchIssue(g,team,key,b)));
+  const ovens=enabled(breadRecipes),mills=enabled(grindingRecipes);
+  const suppliedOvens=ovens.filter(key=>tribe.wood>=PRODUCTION_RECIPES[key].wood&&(tribe.survival?.waterLiters??0)>=PRODUCTION_RECIPES[key].water);
+  const porridge=sites.some(b=>b.type==='hearth');
+  const estimate=(amount:number,keys:typeof breadRecipes,input:(key:typeof breadRecipes[number])=>number)=>{
+   let work=0;
+   for(const key of keys){
+    const size=input(key),count=Math.floor((amount+1e-9)/size);
+    work+=count*PRODUCTION_RECIPES[key].workSeconds;
+    amount-=count*size;
+   }
+   return work;
+  };
+  const baking=flour>=4,grinding=grain>=4;
+  const bakeBlocker=!ovens.length?'Finish a bread oven':tribe.wood<1?'Gather firewood':(tribe.survival?.waterLiters??0)<2?'Collect drinking water':null;
+  if(baking){
+   add({id:'flour-backlog:0',label:'Bake flour already in stores',category:'Production',personSeconds:estimate(flour,suppliedOvens.length?suppliedOvens:ovens.length?ovens:['bakeBreadOven'],key=>PRODUCTION_RECIPES[key].inputs.flour!),status:bakeBlocker?'blocked':'queued',actorIds:[],priority:880,blocker:bakeBlocker,units:flour});
+  }
+  if(grinding){
+   const millToBread=mills.length>0&&!bakeBlocker;
+   const blocker=millToBread?null:porridge?tribe.wood<1?'Gather firewood':(tribe.survival?.waterLiters??0)<2?'Collect drinking water':null:!mills.length&&ovens.length?'Finish a grinding stone or cooking hearth':bakeBlocker;
+   const keys=millToBread?mills:porridge?['cookPorridge' as const]:['grindGrainStation' as const];
+   add({id:'clean-grain-backlog:0',label:millToBread||!porridge?'Grind clean grain already in stores':'Cook clean grain into porridge',category:'Production',personSeconds:estimate(grain,keys,key=>PRODUCTION_RECIPES[key].grain),status:blocker?'blocked':'queued',actorIds:[],priority:870,blocker,units:grain});
+  }
  }
  const craft=(id:string,label:string,u:Unit|undefined,job:{progress:number;duration:number;workplace:number;paused?:boolean},blocker?:string,strengthWork=true)=>{
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b);
