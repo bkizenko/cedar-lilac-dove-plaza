@@ -29,7 +29,7 @@ function sendForInputs(g:Game,u:Unit,reason:string){
 }
 /** One real processing dispatch per society review. Direct locks and paused
  * player batches are preserved; a material total is never credited as food. */
-export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
+export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number,floorsOnly=false){
  const t=g.tribe(team);if(!t?.alive||team!==0&&!isRivalTeam(team))return false;
  if(!g.state.cerealProcessing&&(t.items?.grainSheaves||0)<CEREAL_RULES.rawBatch&&(t.items?.roughGrain||0)<CEREAL_RULES.roughBatch)return false;
  let c=reviews.get(g);if(!c||c.state!==g.state){c={state:g.state,teams:new Map()};reviews.set(g,c);}const due=c.teams.get(team)??-Infinity;if(eventActorId===undefined&&due>g.state.time&&due<=g.state.time+CEREAL_RULES.reviewSeconds)return false;c.teams.set(team,g.state.time+CEREAL_RULES.reviewSeconds);
@@ -47,7 +47,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
  if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
  const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&active>0&&candidates.length<=1)return false;
  const workers=candidates.filter(u=>eventActorId===undefined||u.id===eventActorId);if(!workers.length)return false;
- const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&(b.type==='threshingFloor'||b.type==='hearth')),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
+ const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&(b.type==='threshingFloor'||!floorsOnly&&b.type==='hearth')),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
  if(!finished.length){
   if(team===0)return false;let site=sites.find(b=>b.type==='hearth');if(site&&g.state.units.some(u=>u.team===team&&u.hp>0&&u.order==='build'&&u.node?.id===site!.id))return false;
   const builder=workers.find(u=>!site||g.interactionSpot(u,site));if(!builder)return false;
@@ -136,8 +136,11 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
    dispatched=true;
   }
   if(dispatched)return true;
-  if(activeFoodWorkers(g)>=mealWorkerLimit(g))return false;
-  return reviewInterruptedFoodProcessing(g,team,eventActorId);
+  if(reviewInterruptedFoodProcessing(g,team,eventActorId,activeFoodWorkers(g)<mealWorkerLimit(g)))return true;
+  // A full kitchen must not freeze separate threshing floors. Keep their
+  // independent workforce bound, and reserve hearths for the waiting meals.
+  if(reviewCerealProcessing(g,team,eventActorId,true))return true;
+  return eventActorId===undefined&&reviewPlantedGrain(g);
  }
  if (reviewInterruptedFoodProcessing(g,team,eventActorId)) return true;
  if (team === 0 && reviewPlayerMeals(g, eventActorId)) return true;
@@ -147,7 +150,7 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
 
 function mealWorkerLimit(g:Game){const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;return Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));}
 function activeFoodWorkers(g:Game){return(g.state.production?.projects||[]).filter(p=>p.team===0&&p.actorId!==null&&!['paused','stored','complete','lost'].includes(p.phase)&&
- (isCerealRecipe(p.recipe)||PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
+ !isCerealRecipe(p.recipe)&&(PRODUCTION_RECIPES[p.recipe].food>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
 function urgentReadyMealInputs(g:Game){
  if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
  const t=g.tribe(0),food=foodInventory(t);
@@ -162,13 +165,13 @@ const recoveryReviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,num
 /** Resume incidental interruptions, never a player's explicit Pause or Unload.
  * Legacy saves used text for every pause, so recognize only known incidental
  * reasons and retain that classification before a failed retry changes it. */
-function reviewInterruptedFoodProcessing(g:Game,team:number,eventActorId?:number){
+function reviewInterruptedFoodProcessing(g:Game,team:number,eventActorId?:number,allowKitchen=true){
  const projects=g.state.production?.projects;if(!projects?.length)return false;
  let review=recoveryReviews.get(g);if(!review||review.state!==g.state){review={state:g.state,teams:new Map()};recoveryReviews.set(g,review);}
  const due=review.teams.get(team)??-Infinity;if(eventActorId===undefined&&due>g.state.time&&due<=g.state.time+CEREAL_RULES.reviewSeconds)return false;
  review.teams.set(team,g.state.time+CEREAL_RULES.reviewSeconds);
  for(const p of projects){
-  if(p.team!==team||!['paused','stored'].includes(p.phase)||p.pauseCause==='manual')continue;
+  if(p.team!==team||!['paused','stored'].includes(p.phase)||p.pauseCause==='manual'||!allowKitchen&&!isCerealRecipe(p.recipe))continue;
   const spec=PRODUCTION_RECIPES[p.recipe];
   if(!isCerealRecipe(p.recipe)&&!spec.grain&&!spec.food&&!spec.outputs.flour)continue;
   if(p.pauseCause!=='interrupted'&&!/^(Direct order paused paid work|Maker lost;|Pickup paused; paid inputs|Pickup adult lost;|Pickup route blocked;|No route to the workshop;)/.test(p.blockedReason))continue;

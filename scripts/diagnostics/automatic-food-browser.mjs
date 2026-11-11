@@ -7,19 +7,20 @@ import {SAVE_KEY} from '../../src/game/constants.ts';
 import {parseStoredSave} from '../../src/game/storageCodec.ts';
 // The native routing trial has a finite80-meal buffer (<600s target for12 adults);
 // the no-buffer emergency-eating race is covered by the actual-step unit scenario.
-const urgent=process.env.SCENARIO==='urgent';
+const mixed=process.env.SCENARIO==='mixed';
+const urgent=process.env.SCENARIO==='urgent'||mixed;
 const g=new Game();g.reset(42,18,{size:1040,layout:'continents'});g.enterIsland();
 g.state.autoWorkEnabled=false;g.state.paused=true;g.state.weather='clear';g.state.weatherT=100000;
 g.state.raidT=100000;g.state.birthT=100000;g.state.visitorTimer=900;g.state.conflict='quiet';g.state.growthPolicy='stable';
 for(const t of g.state.tribes)t.thinkT=100000;
 const home=g.campOf(0);
-for(const type of ['warehouse',...Array(urgent?4:1).fill('hearth')]){
+for(const type of ['warehouse',...Array(urgent&&!mixed?4:1).fill('hearth'),...(mixed?['threshingFloor','threshingFloor']:[])]){
  const p=g.findOpenSpot(home.x,home.z,type,0);assert.ok(p,`native ${type} site`);
  const b=g.makeBld(type,p.x,p.z,0);b.build=1;g.state.buildings.push(b);g.rebuildWalk();
 }
 for(const u of g.state.units.filter(u=>u.team===0)){u.order='idle';u.jobLock=false;}
 if(urgent){while(g.state.units.filter(u=>u.team===0&&u.type==='worker').length<12)g.spawnUnit('worker',home.x+1,home.z+1,0);g.state.laborPolicy='food';}
-Object.assign(g.tribe(0),{wood:100,stone:100,food:urgent?104:1000,foodLots:urgent?{provisions:80,fish:24}:{provisions:1000},items:urgent?{}:{grainSheaves:16},seeds:12});
+Object.assign(g.tribe(0),{wood:100,stone:100,food:urgent?104:1000,foodLots:urgent?{provisions:80,fish:24}:{provisions:1000},items:urgent?(mixed?{grainSheaves:64}:{}):{grainSheaves:16},seeds:12});
 g.tribe(0).survival.waterLiters=100;
 const save={...encodeGame(g),savedAt:Date.now()};decodeGame(save);
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
@@ -37,10 +38,11 @@ try{for(const port of (process.env.PORTS||'8086,8101').split(',').map(Number)){
  let result;
  for(let block=0;block<120;block++){
   result=await page.evaluate(()=>{const e=window.__engine,g=e.game;g.state.paused=false;for(let i=0;i<40;i++)g.step(.1);g.state.paused=true;e.pushHud();return {time:g.state.time,bread:g.tribe(0).foodLots?.bread||0,cookedFish:g.tribe(0).foodLots?.cookedFish||0,auto:g.state.autoWorkEnabled,errors:g.simulationErrors,projects:g.state.production?.projects.map(p=>({recipe:p.recipe,phase:p.phase,reason:p.blockedReason}))||[]};});
-  if(urgent?result.projects.filter(p=>p.recipe==='cookFish'&&p.phase==='complete').length>=4:result.projects.some(p=>p.recipe==='bakeBread'&&p.phase==='complete'))break;
+  if(urgent?result.projects.filter(p=>p.recipe==='cookFish'&&p.phase==='complete').length>=(mixed?1:4)&&(!mixed||result.projects.some(p=>p.recipe==='threshCerealFloor')):result.projects.some(p=>p.recipe==='bakeBread'&&p.phase==='complete'))break;
   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(r)));
  }
- if(urgent){assert.ok(result.projects.filter(p=>p.recipe==='cookFish'&&p.phase==='complete').length>=4,JSON.stringify(result));assert.ok(result.cookedFish>0);}else{
+ if(mixed)assert.ok(result.projects.some(p=>p.recipe==='threshCerealFloor'),JSON.stringify(result));
+ if(urgent){assert.ok(result.projects.filter(p=>p.recipe==='cookFish'&&p.phase==='complete').length>=(mixed?1:4),JSON.stringify(result));assert.ok(result.cookedFish>0);}else{
  assert.ok(result.projects.some(p=>p.recipe==='bakeBread'&&p.phase==='complete'),JSON.stringify(result));
  for(const recipe of ['threshCerealHand','winnowCerealHand','grindGrain','bakeBread'])assert.ok(result.projects.some(p=>p.recipe===recipe&&p.phase==='complete'),recipe);assert.ok(result.bread>0);}
  assert.equal(result.auto,false);assert.deepEqual(result.errors,[]);assert.deepEqual(errors,[]);
@@ -60,6 +62,6 @@ try{for(const port of (process.env.PORTS||'8086,8101').split(',').map(Number)){
   assert.equal(parseStoredSave(checkpoint.backup).state.time,result.time,'the run being replaced remains in the rolling backup');
   checkpoint={restored:true,currentRunPreserved:true};
  }
- console.log(JSON.stringify({port,pixels,scenario:urgent?'parallel urgent kitchens':'hand cereal chain',before,result,restored,checkpoint,scope:'Native V18 terrain, Auto work off, rendered release and public Save/reload; controlled initial stocks and quiet conditions, not a full campaign balance gate'}));
+ console.log(JSON.stringify({port,pixels,scenario:mixed?'kitchens and idle floors':urgent?'parallel urgent kitchens':'hand cereal chain',before,result,restored,checkpoint,scope:'Native V18 terrain, Auto work off, rendered release and public Save/reload; controlled initial stocks and quiet conditions, not a full campaign balance gate'}));
  await context.close();
 }}finally{await browser.close();}
