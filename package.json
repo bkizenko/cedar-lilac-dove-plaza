@@ -24,7 +24,11 @@
     "play:publish": "node scripts/play.mjs publish",
     "play:status": "node scripts/play.mjs status",
     "play:stop": "node scripts/play.mjs stop",
-    "play:service": "node scripts/install-play-service.mjs"
+    "play:service": "node scripts/install-play-service.mjs",
+    "audit:food": "node --import ./scripts/game-loader.mjs scripts/audit-food-state.mjs",
+    "check:food-dispatch": "node --import ./scripts/game-loader.mjs --test --test-concurrency=2 scripts/parallel-grain-kitchens.test.mjs scripts/urgent-parallel-meals.test.mjs",
+    "check:fish": "node --import ./scripts/game-loader.mjs --test --test-concurrency=2 scripts/fish-stock-conservation.test.mjs scripts/fishing-rest-recovery.test.mjs scripts/water-reach.test.mjs",
+    "check:activity": "node --import ./scripts/game-loader.mjs --test --test-concurrency=2 scripts/worker-activity.test.mjs scripts/cold-paid-recovery.test.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",

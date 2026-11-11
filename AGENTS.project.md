@@ -1,5 +1,16 @@
 # Hearthwild user direction
 
+## Current execution policy — November 11
+
+- User has stopped current visual/art edits because a complete overhaul may replace them. Preserve pending visual source, but do not edit or publish it until explicitly resumed. The full gameplay goal remains active.
+- Diagnose source and current state first. Use `npm run audit:food -- EXPORTED_VILLAGE.json` for a read-only snapshot of real food stocks, slots, jobs, blockers and nominal mill capacity; it never advances the world or edits a save.
+- Run the smallest relevant changed-contract regression first (`check:food-dispatch`, `check:fish`, `check:activity`), then the affected integration set once after the patch is frozen. These are selectors, not substitutes for save/conservation or release checks.
+- Do not start long seasonal/campaign playthroughs for ordinary diagnosis. Use them only for an unresolved question requiring elapsed seasons or explicit acceptance of that scope; the user has stopped the current seasonal run. Do not restart seasonal observation for this food incident. Never count the stopped partial run as winter acceptance.
+- Build one exact frozen runtime candidate per integrated batch; reuse that artifact for publication. Rebuild only after relevant source changes. Documentation/tooling-only changes do not need a game build or browser session.
+- Keep source work parallel only across independent ownership. Run at most one expensive build/browser/simulation process at a time on this 8 GB Mac. Do not multiply agents just to reread the same code.
+- Preserve full scope and the fixed 98-gate denominator, but keep the next execution context short: current release, current defect, owned files, evidence and next action. Read historical plans only when their scope is relevant; don't repeatedly copy their contents into new reports.
+
+
 - Desktop-only game and UI. Do not spend implementation or acceptance effort on mobile layouts, touch controls or mobile QA unless the user later requests it. This overrides the workspace's generic mobile guidance.
 - Governing scope and order: docs/INCENTIVE_FIRST_MASTER_PLAN.md plus latest user corrections below. Keep the full campaign goal active; ship verified integrated batches and push regularly.
 - Every generated map must contain the full requested geological feature catalogue, with visibly varied and explorable terrain. Do not substitute a high gentle-ground fraction, feature metadata, one smooth ridge or a few recolored slopes for real rivers, lakes, canyons, hills, mountain ranges, valleys, cliffs, terraces and plateaus, plus the requested pillar/waterfall/dune landscape families. Distribute across the map; every tiny island need not repeat everything. Vary prominence and composition, not whether a required family exists. Preserve safe usable starts and above-average measured player beauty. Research landform relationships and inspect rendered terrain at gameplay scale.

@@ -1,0 +1,45 @@
+{
+  "status": "Food dispatch incident closed with published targeted evidence; balance and complete winter acceptance remain open",
+  "runtime": "9c653f0",
+  "readOnlyAudit": {
+    "wallSeconds": 3.725894292,
+    "inputUnchanged": true,
+    "millSlots": 3,
+    "nominalDoubleBatchBreadNourishmentPerSecond": 0.8,
+    "demandPerSecond": 1.9320143312805165,
+    "scope": "Nominal work capacity before hauling, skills and interruptions; not full sustainable supply"
+  },
+  "stoppedObservation": {
+    "status": "stopped at user request; no restart",
+    "simulatedSeconds": 570.180000000244,
+    "winterTested": false,
+    "peopleBefore": 53,
+    "peopleAfter": 53,
+    "readyNourishmentBefore": 0,
+    "readyNourishmentAfter": 203.51849277244628,
+    "readyMealsProducedDelta": 992,
+    "sampleWallSpanSeconds": 116.79528641700745,
+    "notAcceptanceCredit": true
+  },
+  "lastObservedSlots": {
+    "grindingStone": "all3 working on double batches",
+    "hearth": "all6 occupied",
+    "smokehouse": "both slots occupied",
+    "flour": 2.761138595395261,
+    "minimumBreadFlour": 4
+  },
+  "remaining": [
+    "Throughput/travel/workforce constraints",
+    "One unreachable workplace entrance and one cache-route blocker in sample",
+    "Rain pauses real winnowing/air drying",
+    "No completed winter balance test",
+    "Current live village differs from protected53 export"
+  ],
+  "firstReleaseGates": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  }
+}
