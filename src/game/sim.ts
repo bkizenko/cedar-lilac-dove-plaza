@@ -4068,11 +4068,11 @@ export class Game {
       const escalate=!!route?.stalled&&Math.hypot(route.tx-tx,route.tz-tz)<=2;
       const fineGround=u.haulage!=="canoe"&&!u.boat;
       let direct = !escalate, precise=false;
-      if(direct&&fineGround&&distance<=ROUTE_PROGRESS_RULES.preciseDirectMetres){
-        // Short straight moves get the same chained fine-spacing body test as
-        // movement, so they can be followed through coarse-blocked cells.
-        direct=precise=preciseSegmentClear(this,u,tx,tz);
-      } else if(direct){
+      // Short straight moves that pass the same chained fine-spacing body test
+      // as movement are precise, so they can be followed through coarse-blocked
+      // cells. Otherwise keep the established one-metre straight-line check.
+      if(direct&&fineGround&&distance<=ROUTE_PROGRESS_RULES.preciseDirectMetres)precise=preciseSegmentClear(this,u,tx,tz);
+      if(direct&&!precise){
         const samples = Math.ceil(distance);
         for (let i = 1; i <= samples; i++)
           if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
