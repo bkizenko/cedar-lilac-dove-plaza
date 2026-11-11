@@ -23,7 +23,9 @@ function reload(g){const copy=decodeGame(JSON.parse(JSON.stringify(encodeGame(g)
 const KINDS=Object.keys(TRADE_GOODS);
 /** Everything of one kind anywhere: stocks, escrow, carried lines, dropped parcels, recorded loss of non-parcelled goods. */
 function total(g,k){let n=0;for(const t of g.state.tribes.map(t=>t.id))n+=tradeStock(g,t,k);for(const o of g.state.tradeNeeds?.offers||[]){if(o.reserved)for(const s of [o.give,o.get])if(s.kind===k)n+=s.amount;for(const l of o.lines)if(l.kind===k)n+=l.amount;n+=o.lostAmount&&o.give.kind===k||o.get.kind===k?o.lostAmount-o.lostToParcel:0;}
- for(const p of g.state.droppedCargo?.parcels||[])if(p.kind===k)n+=p.amount;return n;}
+ for(const p of g.state.droppedCargo?.parcels||[])if(p.kind===k)n+=p.amount;
+ // Recovery runners carrying a recovered parcel home hold goods that are in neither stock nor parcel yet.
+ for(const u of g.state.units)if(u.tradeNeedsId===undefined&&u.carry>0&&u.carryType===k)n+=u.carry;return n;}
 function snapshot(g){return Object.fromEntries(KINDS.filter(k=>k!=='food').map(k=>[k,total(g,k)]));}
 const offer=g=>g.state.tradeNeeds.offers[0];
 function setup(g,a={},b={}){Object.assign(g.tribe(1),a);Object.assign(g.tribe(2),b);}
