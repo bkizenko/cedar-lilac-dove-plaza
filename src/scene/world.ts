@@ -1,4 +1,5 @@
 import {SiegeRamLayer} from './siegeRams';
+import {SailRigs} from './sailRigs';
 import {InstanceCameraCull} from './instanceCameraCull';
 import {HousingPacketLayer} from './housingPackets';
 import{civicPartColor}from'./classicalBuildings';
@@ -70,6 +71,7 @@ import {
   firepitGeo,
   flameGeo,
   goatGeo,
+  sheepGeo,
   deerGeo,
   boarGeo,
   birdGeo,
@@ -210,6 +212,7 @@ export class WorldView {
   canoePaddles: THREE.InstancedMesh | null = null;
   riverboats: THREE.InstancedMesh | null = null;
   hullFleet:HullFleet|null=null;
+  private sailRigs:SailRigs|null=null;
   farmToolMesh: THREE.InstancedMesh | null = null;
   unitMeshes = new Map<UnitType, THREE.InstancedMesh>();
   private unitInstanceOwners = new Map<UnitType, import("@/game/types").Unit[]>();
@@ -248,6 +251,8 @@ export class WorldView {
   deer: THREE.InstancedMesh | null = null;
   boars: THREE.InstancedMesh | null = null;
   wildGoats: THREE.InstancedMesh | null = null;
+  wildSheep: THREE.InstancedMesh | null = null;
+  domesticSheep: THREE.InstancedMesh | null = null;
   domesticGoats: THREE.InstancedMesh | null = null;
   birds: THREE.InstancedMesh | null = null;
   private tmpCam = new THREE.Vector3();
@@ -962,6 +967,7 @@ export class WorldView {
       mesh.castShadow = this.quality !== 'low'; mesh.receiveShadow = true;
       this.haulageMeshes.set(kind, mesh); this.scene.add(mesh);
     }
+    this.sailRigs=new SailRigs(this.scene,this.mats.timber);
     this.hullFleet=new HullFleet(this.scene,this.mats.timber);
     this.riverboats=new THREE.InstancedMesh(riverboatGeo(),this.mats.timber,96);
     this.riverboats.count=0;this.riverboats.frustumCulled=false;this.scene.add(this.riverboats);
@@ -1029,6 +1035,8 @@ export class WorldView {
     this.boars = mkHerd(boarGeo(), boarMat, 10);
     this.wildGoats = mkHerd(goatGeo(), this.mats.hideDark, 96);
     this.domesticGoats = mkHerd(goatGeo(), this.mats.hide, 96);
+    const sheepMat=new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true});
+    this.wildSheep=mkHerd(sheepGeo(),sheepMat,32);this.domesticSheep=mkHerd(sheepGeo(),sheepMat,96);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
   }
 
@@ -1084,8 +1092,9 @@ export class WorldView {
     for(const [mesh,owners]of this.towerPlatforms?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     if(this.domesticGoats){
       this.domesticGoats.computeBoundingSphere();
-      sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
+      sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='goat').slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
     }
+    if(this.domesticSheep){this.domesticSheep.computeBoundingSphere();sources.set(this.domesticSheep,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='sheep').slice(0,instCap(this.domesticSheep)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));}
     for (const [type, mesh] of this.unitMeshes) {
       mesh.computeBoundingSphere();
       sources.set(
@@ -1129,7 +1138,7 @@ export class WorldView {
     _ray.setFromCamera(_ndc,this.camera);mesh.computeBoundingSphere();
     const boats=(game.state.boats||[]).filter(b=>!b.hullClass&&b.hp>0&&(b.team===0||game.exploredAt(b.x,b.z))).slice(0,instCap(mesh));
     const groundHit=this.terrain?_ray.intersectObjects(this.excavationLayer?[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[]),this.excavationLayer.mesh]:[this.terrain,...(this.bankLayer?[this.bankLayer.mesh]:[])],false)[0]:undefined;
-    const extra=this.hullFleet?.pickingSources()??new Map<THREE.InstancedMesh,import("../game/boats").Riverboat[]>();for(const m of extra.keys())m.computeBoundingSphere();
+    const extra=new Map<THREE.InstancedMesh,import("../game/boats").Riverboat[]>([...(this.hullFleet?.pickingSources()??[]),...(this.sailRigs?.pickingSources()??[])]);for(const m of extra.keys())m.computeBoundingSphere();
     for(const hit of _ray.intersectObjects([mesh,...extra.keys()],false)) {
       if(groundHit&&groundHit.distance+.02<hit.distance)continue;
       const boat=hit.instanceId===undefined?null:hit.object===mesh?boats[hit.instanceId]:extra.get(hit.object as THREE.InstancedMesh)?.[hit.instanceId];
@@ -1374,7 +1383,7 @@ export class WorldView {
 
   private syncWildlife(game: Game) {
     this.wildlifeOwners.clear();
-    const stamp = (key: 'deer'|'boars'|'wildGoats'|'birds', species: string) => {
+    const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'birds', species: string) => {
       const old=this[key];if(!old)return;
       const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
       const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
@@ -1386,15 +1395,16 @@ export class WorldView {
       mesh.count=list.length;mesh.instanceMatrix.needsUpdate=true;
       this.wildlifeOwners.set(mesh,list);
     };
-    stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('birds','bird');
-    const mesh=this.domesticGoats;
+    stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('wildSheep','sheep');stamp('birds','bird');
+    for(const [mesh,species]of [[this.domesticGoats,'goat'],[this.domesticSheep,'sheep']] as const){
     if(mesh){
-      const animals=(game.state.livestock||[]).filter(a=>a.hp>0).slice(0,instCap(mesh));
+      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species===species).slice(0,instCap(mesh));
       for(let i=0;i<animals.length;i++){
         const a=animals[i],seen=a.team===0||game.visibleAt(a.x,a.z);
         _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
+    }
     }
   }
 
@@ -1742,6 +1752,7 @@ export class WorldView {
 
   private syncRiverboatMeshes(game:Game){
     this.hullFleet?.sync(game,this.shadowsEnabled);
+    this.sailRigs?.sync(game,this.shadowsEnabled);
     const mesh=this.riverboats;if(!mesh)return;let count=0;
     for(const b of game.state.boats||[]){
       if(b.hullClass||b.hp<=0||count>=instCap(mesh)||b.team!==0&&!game.exploredAt(b.x,b.z))continue;
@@ -2631,10 +2642,12 @@ export class WorldView {
     this.bankLayer?.dispose();this.bankLayer=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;
     this.hullFleet?.dispose();this.hullFleet=null;
+    this.sailRigs?.dispose();this.sailRigs=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
     this.wildlifeOwners.clear();
+    if(this.wildSheep&&!this.lost)(this.wildSheep.material as THREE.Material).dispose();
     this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;
     for(const material of this.waterMaterials)material.dispose();this.waterMaterials=[];
     this.campVisual?.dispose();this.campVisual=null;
@@ -2684,6 +2697,7 @@ export class WorldView {
         if (m.geometry) m.geometry.dispose();
       });
     }
+    this.wildSheep=null;this.domesticSheep=null;
     if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
     this.villageStyles.clear();

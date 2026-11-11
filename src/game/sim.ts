@@ -1,3 +1,4 @@
+import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
@@ -665,6 +666,7 @@ export class Game {
     if(worldgenVersion>=10)initializeSurvival(this);
     initializeDifficultyOpening(this);
     if(worldgenVersion>=14)initializeWildPlants(this);
+    initializeSheep(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 

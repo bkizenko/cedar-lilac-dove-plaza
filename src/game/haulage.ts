@@ -1,3 +1,5 @@
+import {SAILING_RULES,type SailRigOrder} from './sailingRules';
+import {validSailRigOrder,sailRigPhysicalIssue,finishSailRig} from './boatSailing';
 import{inheritedHaulageEvidence}from'./inheritedKnowledge';
 import{recordWaterCargoDelivery}from'./boatPractice';
 import{BOAT_CLASSES,BOAT_PRACTICE_RULES,validHullOrder,type HullOrder}from'./boatClasses';
@@ -23,7 +25,7 @@ export const HAULAGE = {
 export const WHEEL_PRACTICE = 60;
 export type HaulageKind = keyof typeof HAULAGE;
 export type HaulageWork = {
-  kind: HaulageKind; progress: number; duration: number; workplace: number; paused?: boolean; vessel?:boolean; hullOrder?:HullOrder; projectId?:number;
+  kind: HaulageKind; progress: number; duration: number; workplace: number; paused?: boolean; vessel?:boolean; hullOrder?:HullOrder; sailRigOrder?:SailRigOrder; projectId?:number;
 };
 /** Paid materials and progress belong to the settlement project, independently
  * of a living assignee. Unit.haulageWork remains an executor compatibility view. */
@@ -158,25 +160,26 @@ export function haulageRequirement(g: Game, kind: HaulageKind, team = 0): string
 }
 
 /** Reserve materials once. The selected civilian must walk to a real workplace. */
-export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplaceId?: number, unitId?: number, hullOrder?:HullOrder) {
-  const original=HAULAGE[kind],profile=hullOrder?BOAT_CLASSES[hullOrder.class]:null,spec=hullOrder?{...original,wood:hullOrder.paid.wood,stone:hullOrder.paid.stone,seconds:hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:profile!.seconds}:original, t = g.tribe(team) as HaulageTribe;
+export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplaceId?: number, unitId?: number, hullOrder?:HullOrder,sailRigOrder?:SailRigOrder) {
+  const original=HAULAGE[kind],profile=hullOrder?BOAT_CLASSES[hullOrder.class]:null,spec=sailRigOrder?{...original,name:'Mast and sail rig',wood:sailRigOrder.paid.wood,stone:0,seconds:SAILING_RULES.workSeconds}:hullOrder?{...original,wood:hullOrder.paid.wood,stone:hullOrder.paid.stone,seconds:hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:profile!.seconds}:original, t = g.tribe(team) as HaulageTribe;
   const reject = (reason: string) => {
     if (team === 0&&!reviewingCartRequests.has(g)) { g.banner(reason, 4); g.onSfx('invalid'); }
     return false;
   };
   if (!spec || !t) return false;
   if(hullOrder&&(!validHullOrder({vessel:true,duration:spec.seconds,hullOrder})||kind!=='canoe'||(t.items?.cordage??0)<hullOrder.paid.cordage))return reject('The hull needs its exact paid inputs, dock and recorded practice');
+  if(sailRigOrder&&(!validSailRigOrder({kind,vessel:true,duration:spec.seconds,sailRigOrder})||(t.items?.cloth||0)<sailRigOrder.paid.cloth||(t.items?.cordage||0)<sailRigOrder.paid.cordage))return reject('Needs the exact paid mast, cloth and rigging');
   const issue = haulageRequirement(g, kind, team);
   if (issue) return reject(issue);
   const sites = workplaces(g, team, kind, workplaceId);
   if (!sites.length) return reject(kind === 'cart' ? 'Make handcarts at a completed crafting shelter' : 'Make sleds at a hearth or completed crafting shelter');
   syncHaulageProjects(g);
   if(kind==='cart'&&!reviewingCartRequests.has(g)&&queuedCartUpgrades(g).some(r=>r.team===team&&(unitId===undefined||r.ownerId===unitId)))return queueCartUpgrade(g,team,workplaceId,unitId);
-  const pending=projects(g).filter(p=>p.team===team&&p.work.kind===kind&&p.work.paused&&(hullOrder?p.work.hullOrder?.class===hullOrder.class&&p.work.hullOrder.mode===hullOrder.mode&&p.work.hullOrder.boatId===hullOrder.boatId:!p.work.vessel));
+  const pending=projects(g).filter(p=>p.team===team&&p.work.kind===kind&&p.work.paused&&(sailRigOrder?p.work.sailRigOrder?.boatId===sailRigOrder.boatId:hullOrder?p.work.hullOrder?.class===hullOrder.class&&p.work.hullOrder.mode===hullOrder.mode&&p.work.hullOrder.boatId===hullOrder.boatId:!p.work.vessel));
   for(const p of pending)if(resumeHaulageProject(g,p.id,unitId,workplaceId))return true;
   if(pending.length)return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(pending[0].blockedReason||'Paid transport work is waiting for an available adult and bench');
   const candidates = (g.state.units as HaulageUnit[]).filter(u => u.team === team &&
-    (unitId === undefined || u.id === unitId) && available(g, u) && !u.haulageWork && !u.farmToolWork &&
+    (unitId === undefined || u.id === unitId) && (!sailRigOrder||unitId!==undefined||!u.jobLock||u.foodRole===true) && available(g, u) && !u.haulageWork && !u.farmToolWork &&
     (kind === 'cart' ? u.haulage === 'sled' : !u.haulage))
     .sort((a, b) => Number(b.selected) - Number(a.selected));
   const u = candidates.find(p => nearestWorkplace(g, p, sites));
@@ -198,10 +201,10 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   }
   if (t.wood < spec.wood || t.stone < spec.stone) return reject(`Need ${spec.wood} logs and ${spec.stone} stone`);
   const b = nearestWorkplace(g, u, sites)!;
-  u.haulageWork = { kind, progress: 0, duration: spec.seconds * (b.type === 'townhall' ? 2 : 1), workplace: b.id,...(hullOrder?{vessel:true,hullOrder}:{}) };
+  u.haulageWork = { kind, progress: 0, duration: spec.seconds * (b.type === 'townhall' ? 2 : 1), workplace: b.id,...(sailRigOrder?{vessel:true,sailRigOrder}:hullOrder?{vessel:true,hullOrder}:{}) };
   const project=registerProject(g,u)!;releaseTreeWorker(g,u);
   if(!reserveProject(g,project,u,b)){const list=projects(g);list.splice(list.indexOf(project),1);workRuntime(g).finish(projectKey(project.id),true);workRuntime(g).forget(projectKey(project.id));u.haulageWork=undefined;return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(project.blockedReason||'No free crafting bench');}
-  t.wood -= spec.wood;t.stone -= spec.stone;if(hullOrder)(t.items??={}).cordage=(t.items?.cordage??0)-hullOrder.paid.cordage;
+  t.wood -= spec.wood;t.stone -= spec.stone;if(sailRigOrder){(t.items??={}).cloth=(t.items?.cloth||0)-sailRigOrder.paid.cloth;t.items.cordage=(t.items.cordage||0)-sailRigOrder.paid.cordage;}if(hullOrder)(t.items??={}).cordage=(t.items?.cordage??0)-hullOrder.paid.cordage;
   u.order = 'hold'; u.node = null; u.target = null; u.trade = null; u.searchJob = undefined;
   u.workReason = `Making ${spec.name.toLowerCase()} — walking to the workplace`;
   g.workBoard.reset();
@@ -234,7 +237,7 @@ export function resumeHaulageProject(g:Game,id:number,unitId?:number,workplaceId
  const previous=p.actorId===null?undefined:g.state.units.find(u=>u.id===p.actorId);
  if(previous&&!p.work.paused&&previous.hp>0){p.blockedReason='This project already has an active worker';return false;}
  if(previous)detachHaulageProject(g,previous,p,'Reassigning suspended transport project');
- const sites=workplaces(g,p.team,p.work.kind,workplaceId).filter(b=>p.work.hullOrder?.mode!=='service'||!hullServicePhysicalIssue(g,p.work.hullOrder.boatId!,b,p.team));
+ const sites=workplaces(g,p.team,p.work.kind,workplaceId).filter(b=>(p.work.hullOrder?.mode!=='service'||!hullServicePhysicalIssue(g,p.work.hullOrder.boatId!,b,p.team))&&(!p.work.sailRigOrder||!sailRigPhysicalIssue(g,p.work.sailRigOrder.boatId,b,p.team)));
  if(!sites.length){p.work.paused=true;p.blockedReason='Complete a compatible workplace before resuming this project';return false;}
  const candidates=g.state.units.filter(u=>u.team===p.team&&(unitId===undefined||u.id===unitId)&&available(g,u)&&!u.haulageWork&&u.stuckT<=8&&
   (p.work.kind==='cart'?p.inputHaulage==='sled'&&!u.haulage:!u.haulage)).sort((a,b)=>Number(b.selected)-Number(a.selected)||a.id-b.id);
@@ -243,7 +246,7 @@ export function resumeHaulageProject(g:Game,id:number,unitId?:number,workplaceId
   const b=nearestWorkplace(g,u,sites);if(!b)continue;
   reachable=true;releaseTreeWorker(g,u);if(!reserveProject(g,p,u,b)){benchReason=p.blockedReason;continue;}
   const fraction=p.work.progress/p.work.duration;
-  p.work.duration=p.work.hullOrder?(p.work.hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:BOAT_CLASSES[p.work.hullOrder.class].seconds):p.work.vessel?150:HAULAGE[p.work.kind].seconds*(b.type==='townhall'?2:1);p.work.progress=fraction*p.work.duration;
+  p.work.duration=p.work.sailRigOrder?SAILING_RULES.workSeconds:p.work.hullOrder?(p.work.hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:BOAT_CLASSES[p.work.hullOrder.class].seconds):p.work.vessel?150:HAULAGE[p.work.kind].seconds*(b.type==='townhall'?2:1);p.work.progress=fraction*p.work.duration;
   p.work.workplace=b.id;p.work.paused=false;p.actorId=u.id;p.lastActorId=u.id;u.haulageWork=p.work;
   u.order='hold';u.node=null;u.target=null;u.trade=null;u.searchJob=undefined;
   u.workReason=`Resuming ${p.work.vessel?'riverboat':HAULAGE[p.work.kind].name.toLowerCase()}`;g.workBoard.reset();return true;
@@ -258,6 +261,7 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
   if(coordinator.activeJob(u.id)?.id!==projectKey(project.id)){const site=workplaces(g,u.team,job.kind,job.workplace)[0];releaseTreeWorker(g,u);if(!site||!reserveProject(g,project,u,site)){job.paused=true;u.workReason=project.blockedReason||'Transport work waiting for a bench';return true;}}
   if (g.state.weather === 'storm' || g.clockState().period === 'Night' && !g.state.nightWork) return false;
   const b = workplaces(g, u.team, job.kind, job.workplace)[0];
+  if(job.sailRigOrder&&(!b||sailRigPhysicalIssue(g,job.sailRigOrder.boatId,b,u.team))){const reason=b?sailRigPhysicalIssue(g,job.sailRigOrder.boatId,b,u.team):'Rigging dock missing';pauseHaulageWork(u,g);u.workReason=reason||'Sail fitting paused';return true;}
   if(job.hullOrder?.mode==='service'&&(!b||hullServicePhysicalIssue(g,job.hullOrder.boatId!,b,u.team))){const reason=b?hullServicePhysicalIssue(g,job.hullOrder.boatId!,b,u.team):'Service dock missing';pauseHaulageWork(u,g);u.workReason=reason||'Owned hull unavailable at this dock';return true;}
   const spot = b && g.interactionSpot(u, b);
   if (!b || !spot) {
@@ -276,13 +280,14 @@ export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {
   coordinator.transition(projectKey(project.id),'working',job.progress/job.duration);
   if (!g.buildingWorkReached(u, b)) {
     u.tx = spot.x; u.tz = spot.z; g.steer(u, dt);
-    u.workReason = `Walking to make ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()}`;
+    u.workReason = `Walking to make ${job.sailRigOrder?'sail rig':job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()}`;
     return true;
   }
   job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt,b) * predisposition(u).strength);
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-  u.workReason = `Making ${job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
+  u.workReason = `Making ${job.sailRigOrder?'sail rig':job.vessel?'riverboat':HAULAGE[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {
+    if(job.sailRigOrder){if(!finishSailRig(g,b,job.sailRigOrder)){u.workReason='Waiting for the same hull at its rigging dock';return true;}completeProject(g,u);u.haulageWork=undefined;u.order='idle';g.workBoard.reset();g.banner('Sail rig fitted to the same hull — board, raise sail and demonstrate a cargo return',5);return true;}
     if(job.vessel){if(!(job.hullOrder?.mode==='service'?completeHullService(g,b,job.hullOrder):launchRiverboat(g,b,job.hullOrder?.class))){u.workReason='Riverboat ready — waiting for clear launch water';return true;}completeProject(g,u);u.haulageWork=undefined;u.order='idle';g.workBoard.reset();if(u.team===0)g.banner('Riverboat launched. Select residents and board from this dock.',5);return true;}
     completeProject(g,u);u.haulage = job.kind; u.haulageWork = undefined; u.order = 'idle';
     u.workReason = `${HAULAGE[job.kind].name} ready — carrying capacity ×${HAULAGE[job.kind].capacity}`;
@@ -329,8 +334,8 @@ export function validHaulageUnit(v: unknown) {
   const w = v.haulageWork;
   if (!record(w) || w.kind !== 'sled' && w.kind !== 'cart' && w.kind !== 'canoe') return false;
   if(w.vessel!==undefined&&(typeof w.vessel!=='boolean'||w.kind!=='canoe'))return false;
-  if(!validHullOrder(w))return false;
-  const durations = w.hullOrder?[((w.hullOrder as HullOrder).mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:BOAT_CLASSES[(w.hullOrder as HullOrder).class].seconds)]:w.vessel?[150]:w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [w.kind==='canoe'?HAULAGE.canoe.seconds:HAULAGE.cart.seconds];
+  if(!validHullOrder(w)||!validSailRigOrder(w))return false;
+  const durations = w.sailRigOrder?[SAILING_RULES.workSeconds]:w.hullOrder?[((w.hullOrder as HullOrder).mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:BOAT_CLASSES[(w.hullOrder as HullOrder).class].seconds)]:w.vessel?[150]:w.kind === 'sled' ? [HAULAGE.sled.seconds, HAULAGE.sled.seconds * 2] : [w.kind==='canoe'?HAULAGE.canoe.seconds:HAULAGE.cart.seconds];
   if (!finite(w.duration) || !durations.includes(w.duration) ||
     !finite(w.progress) || w.progress < 0 || w.progress > w.duration ||
     !Number.isSafeInteger(w.workplace) || Number(w.workplace) < 1 ||
@@ -399,7 +404,7 @@ export function validHaulageProjects(state:unknown){
    if(!record(actor)||actor.team!==value.team||!finite(actor.hp)||actor.hp<=0||!record(actor.haulageWork)||actor.haulageWork.projectId!==value.id)return false;
    // JSON duplicates object values: require the serialized facade to agree exactly.
    for(const key of ['kind','progress','duration','workplace','paused','vessel','projectId'])if(actor.haulageWork[key]!==value.work[key])return false;
-   if(JSON.stringify(actor.haulageWork.hullOrder)!==JSON.stringify(value.work.hullOrder))return false;
+   if(JSON.stringify(actor.haulageWork.hullOrder)!==JSON.stringify(value.work.hullOrder)||JSON.stringify(actor.haulageWork.sailRigOrder)!==JSON.stringify(value.work.sailRigOrder))return false;
    if(value.work.kind==='cart'&&actor.haulage!==undefined&&actor.haulage!=='sled')return false;
   }
  }

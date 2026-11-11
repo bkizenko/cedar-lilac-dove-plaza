@@ -1,3 +1,5 @@
+import {SAILING_RULES} from './sailingRules';
+import {sailForce,sailRigProject} from './boatSailing';
 import{BOAT_CLASSES,BOAT_PRACTICE_RULES,boatClass,boatClassIssue,boatServiceProject,type NewBoatClass,type HullOrder}from'./boatClasses';
 import{recordHullBuilt}from'./boatPractice';
 import{workRuntime}from'./workRuntime';
@@ -9,7 +11,7 @@ import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {HAULAGE,beginHaulageWork,resumeHaulageProject} from './haulage';
 import {waterNavigation} from './waterTravel';
-export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;hullClass?:NewBoatClass;exploration?:BoatExploration};
+export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;hullClass?:NewBoatClass;exploration?:BoatExploration;sailRig?:import('./sailingRules').SailRig};
 export const BOAT_COST={wood:BOAT_CLASSES.riverboat.wood,stone:BOAT_CLASSES.riverboat.stone,seconds:BOAT_CLASSES.riverboat.seconds,seats:BOAT_CLASSES.riverboat.seats};
 // Gameplay tuning for more thrust with diminishing gains as resistance rises.
 export const ROWING_CREW_EXPONENT = 0.12;
@@ -27,7 +29,8 @@ export function riverboatLoadSpeed(g: Game, id: number) {
   ? hull.speed * (BOAT_PRACTICE_RULES.minimumConditionSpeed +
     (1-BOAT_PRACTICE_RULES.minimumConditionSpeed)*Math.min(1,boat.hp/hull.maxHp))
   : 1;
- return vesselLoad(boat,crew).pace * rowing * hullPace;
+ const force=sailForce(g,boat,g.state.units.find(u=>u.id===boat.captain)?.facing??boat.facing);
+ return vesselLoad(boat,crew).pace * Math.max(rowing*SAILING_RULES.minimumRaisedRowingFraction,rowing+force.bonus-force.drag) * hullPace;
 }
 const crewCache=new WeakMap<Game,{time:number;units:Unit[];count:number;boats:Map<number,Unit[]>}>();
 export function boatCrew(g:Game,id:number){
@@ -59,7 +62,7 @@ export function launchRiverboat(g:Game,b:Building,hullClass?:NewBoatClass){
  (g.state.boats??=[]).push(boat);if(hullClass)recordHullBuilt(g,b.team,hullClass);return true;
 }
 export function boardRiverboat(g:Game,id:number,people=g.selectedUnits(),team=0,preserveMission=false){
- const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hp>0);if(!b)return 0;if(boatServiceProject(g,id)){if(team===0)g.banner('Finish or abandon this boat’s paid dock service before boarding',4);return 0;}
+ const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hp>0);if(!b)return 0;if(boatServiceProject(g,id)||sailRigProject(g,id)){if(team===0)g.banner('Finish or abandon this boat’s paid dock service before boarding',4);return 0;}
  let n=0;
  for(const u of people){
   if(boatCrew(g,id).length>=b.capacity)break;
@@ -83,14 +86,14 @@ export function riverboatDestination(g:Game,b:Pick<Riverboat,'x'|'z'>,x:number,z
  return best;
 }
 export function commandRiverboat(g:Game,id:number,x:number,z:number,preserveMission=false){
- const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u||u.team!==b.team||u.boat?.id!==id||u.boat.phase!=='aboard'||!canRowRiverboat(g,u))return false;if(boatServiceProject(g,id)){g.banner('This hull is reserved for paid dock service',4);return false;}
+ const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),u=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!u||u.team!==b.team||u.boat?.id!==id||u.boat.phase!=='aboard'||!canRowRiverboat(g,u))return false;if(boatServiceProject(g,id)||sailRigProject(g,id)){g.banner('This hull is reserved for paid dock service',4);return false;}
  const p=riverboatDestination(g,b,x,z);if(!p){g.banner('No connected navigable water near that destination',4);return false;}
  if(!preserveMission){delete b.exploration;g.interruptMission(u);}u.order='move';u.tx=p.x;u.tz=p.z;u.target=null;u.node=null;g.invalidateRoute(u);return true;
 }
 /** Recall sails the same hull to a surviving friendly dock and then lands;
  * cargo stays on its original people until ordinary physical delivery. */
 export function recallRiverboat(g:Game,id:number){
- const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),captain=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!captain)return false;if(boatServiceProject(g,id))return landRiverboat(g,id);
+ const b=g.state.boats?.find(b=>b.id===id&&b.hp>0),captain=b&&g.state.units.find(u=>u.id===b.captain&&u.hp>0);if(!b||!captain)return false;if(boatServiceProject(g,id)||sailRigProject(g,id))return landRiverboat(g,id);
  const docks=g.state.buildings.filter(d=>d.team===b.team&&d.type==='dock'&&g.finished(d)).sort((a,c)=>Number(c.id===b.dock)-Number(a.id===b.dock)||Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
  for(const dock of docks){const p=riverboatWaterPoint(g,dock.x,dock.z),dest=p&&riverboatDestination(g,b,p.x,p.z);if(!p||!dest||Math.hypot(dest.x-p.x,dest.z-p.z)>8)continue;
   b.exploration={originX:dest.x,originZ:dest.z,nextReviewAt:g.state.time,returning:true,reason:'recall',landOnReturn:true};captain.order='move';captain.tx=dest.x;captain.tz=dest.z;g.invalidateRoute(captain);return true;
@@ -128,11 +131,11 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
   if(Math.hypot(u.x-u.tx,u.z-u.tz)>1||!g.walkable(u.x,u.z)||g.height(u.x,u.z)<=g.waterAt(u.x,u.z)+.3){g.steer(u,dt);return true;}
   u.boat=undefined;u.haulage=undefined;u.order='idle';u.node=null;g.invalidateRoute(u);g.workBoard.reset();return true;
  }
- if(boatServiceProject(g,b.id)){if(b.captain===u.id)u.order='hold';u.workReason='Moored for paid hull service · crew and cargo retained';return true;}
+ if(boatServiceProject(g,b.id)||sailRigProject(g,b.id)){if(b.captain===u.id)u.order='hold';u.workReason='Moored for paid hull service · crew and cargo retained';return true;}
  if(b.captain===u.id&&(u.team!==b.team||!canRowRiverboat(g,u))){delete b.captain;u.order='hold';}
  if(b.captain===u.id){
   const exploring=boatExplorationAI(g,b,u);
-  if(!exploring)u.workReason=u.order==='move'?'Rowing riverboat':'At the helm · click a water destination';
+  if(!exploring)u.workReason=u.order==='move'?(b.sailRig?.raised?'Sailing and rowing':'Rowing riverboat'):'At the helm · click a water destination';
   if(u.order==='move'&&g.steer(u,dt)){u.order='hold';}
  }else u.workReason='Aboard riverboat';
  return true;
@@ -153,10 +156,10 @@ export function syncRiverboats(g:Game){
 }
 
 /** Service works on the same owned hull at this actual shore workplace. */
-export function hullServicePhysicalIssue(g:Game,id:number,dock:Building,team:number){const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hp>0&&b.hullClass);if(!b)return'The original owned hull is unavailable';if(dock.team!==team||dock.type!=='dock'||!g.finished(dock))return'Finish an owned service dock';if(Math.hypot(b.x-dock.x,b.z-dock.z)>BOAT_PRACTICE_RULES.serviceMooringMeters)return'Moor the actual boat at this dock';if(g.state.coastalVoyages?.some(v=>v.boatId===id&&!['complete','lost'].includes(v.phase)))return'Finish or recall the paid voyage before reserving this hull for service';if(b.exploration||boatCrew(g,id).some(u=>u.boat?.phase==='aboard'&&u.order==='move'||hasTaskCommitment(u,'boat')||u.visit||u.trade))return'Finish the crew’s voyage and stop the hull at the dock first';return null;}
+export function hullServicePhysicalIssue(g:Game,id:number,dock:Building,team:number){const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hp>0&&b.hullClass);if(!b)return'The original owned hull is unavailable';if(sailRigProject(g,id))return'Finish the paid sail fitting first';if(dock.team!==team||dock.type!=='dock'||!g.finished(dock))return'Finish an owned service dock';if(Math.hypot(b.x-dock.x,b.z-dock.z)>BOAT_PRACTICE_RULES.serviceMooringMeters)return'Moor the actual boat at this dock';if(g.state.coastalVoyages?.some(v=>v.boatId===id&&!['complete','lost'].includes(v.phase)))return'Finish or recall the paid voyage before reserving this hull for service';if(b.exploration||boatCrew(g,id).some(u=>u.boat?.phase==='aboard'&&u.order==='move'||hasTaskCommitment(u,'boat')||u.visit||u.trade))return'Finish the crew’s voyage and stop the hull at the dock first';return null;}
 export function beginBoatService(g:Game,id:number,dockId:number,team=0,unitId?:number){const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hullClass&&b.hp>0),dock=g.state.buildings.find(d=>d.id===dockId);if(!b||!dock)return false;const pending=boatServiceProject(g,id);if(pending)return pending.work.paused?resumeHaulageProject(g,pending.id,unitId,dockId):false;const issue=hullServicePhysicalIssue(g,id,dock,team);if(issue){if(team===0)g.banner(issue,4);return false;}const s=boatClass(b);if(b.hp>=s.maxHp-1e-8)return false;const missing=1-b.hp/s.maxHp,order:HullOrder={version:1,class:b.hullClass!,mode:'service',boatId:id,startHp:b.hp,paid:{wood:Math.max(1,Math.ceil(s.wood*missing*BOAT_PRACTICE_RULES.serviceCostFraction)),stone:0,cordage:Math.max(1,Math.ceil(s.cordage*missing*BOAT_PRACTICE_RULES.serviceCostFraction))}};return beginHaulageWork(g,'canoe',team,dockId,unitId,order);}
 export function completeHullService(g:Game,dock:Building,order:HullOrder){if(order.mode!=='service'||hullServicePhysicalIssue(g,order.boatId!,dock,dock.team))return false;const b=g.state.boats!.find(b=>b.id===order.boatId&&b.team===dock.team&&b.hullClass===order.class)!;if(!b)return false;const maximum=boatClass(b).maxHp;b.hp=Math.min(maximum,b.hp+(maximum-order.startHp!));if(b.hp>=maximum-1e-8)b.hp=maximum;return true;}
 export function abandonBoatService(g:Game,id:number,team=0){const p=boatServiceProject(g,id);if(!p||p.team!==team)return false;const u=g.state.units.find(u=>u.id===p.actorId);if(u?.haulageWork?.projectId===p.id){u.haulageWork=undefined;if(u.order==='hold')u.order='idle';}const j=workRuntime(g);j.finish(`haulage:${p.id}`,true);j.forget(`haulage:${p.id}`);g.state.haulageProjects=g.state.haulageProjects!.filter(q=>q!==p);g.workBoard.reset();return true;}
 
-export function boatConstructionIssue(g:Game,kind:keyof typeof BOAT_CLASSES,dockId?:number,team=0){const t=g.tribe(team),s=BOAT_CLASSES[kind];if(!t)return'No living boat owner';const pending=g.state.haulageProjects?.find(p=>p.team===team&&p.work.vessel&&(p.work.hullOrder?.class??'riverboat')===kind&&p.work.hullOrder?.mode!=='service');if(pending)return pending.work.paused?null:'The paid hull already has an active builder';const issue=boatClassIssue(g,kind,team);if(issue)return issue;const docks=g.state.buildings.filter(b=>b.team===team&&b.type==='dock'&&g.finished(b)&&(dockId===undefined||b.id===dockId));if(!docks.length)return'Finish an actual dock for hull work';if(t.wood<s.wood||t.stone<s.stone||(t.items?.cordage??0)<s.cordage)return`Need ${s.wood} logs, ${s.stone} stone${s.cordage?` and ${s.cordage} delivered cordage`:''}`;if(!g.state.units.some(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!u.haulage&&!u.buildOrder&&!u.resting&&!u.shelterId&&!hasTaskCommitment(u)&&!u.jobLock&&u.carry===0&&['idle','hold','gather'].includes(u.order)&&docks.some(b=>g.interactionSpot(u,b))))return'Need an empty-handed available adult and a reachable dock bench';return null;}
+export function boatConstructionIssue(g:Game,kind:keyof typeof BOAT_CLASSES,dockId?:number,team=0){const t=g.tribe(team),s=BOAT_CLASSES[kind];if(!t)return'No living boat owner';const pending=g.state.haulageProjects?.find(p=>p.team===team&&p.work.vessel&&!p.work.sailRigOrder&&(p.work.hullOrder?.class??'riverboat')===kind&&p.work.hullOrder?.mode!=='service');if(pending)return pending.work.paused?null:'The paid hull already has an active builder';const issue=boatClassIssue(g,kind,team);if(issue)return issue;const docks=g.state.buildings.filter(b=>b.team===team&&b.type==='dock'&&g.finished(b)&&(dockId===undefined||b.id===dockId));if(!docks.length)return'Finish an actual dock for hull work';if(t.wood<s.wood||t.stone<s.stone||(t.items?.cordage??0)<s.cordage)return`Need ${s.wood} logs, ${s.stone} stone${s.cordage?` and ${s.cordage} delivered cordage`:''}`;if(!g.state.units.some(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!u.haulage&&!u.buildOrder&&!u.resting&&!u.shelterId&&!hasTaskCommitment(u)&&!u.jobLock&&u.carry===0&&['idle','hold','gather'].includes(u.order)&&docks.some(b=>g.interactionSpot(u,b))))return'Need an empty-handed available adult and a reachable dock bench';return null;}
 export function boatServiceQuote(b:Riverboat){if(!b.hullClass)return null;const s=boatClass(b),missing=Math.max(0,1-b.hp/s.maxHp);return{wood:Math.max(1,Math.ceil(s.wood*missing*BOAT_PRACTICE_RULES.serviceCostFraction)),stone:0,cordage:Math.max(1,Math.ceil(s.cordage*missing*BOAT_PRACTICE_RULES.serviceCostFraction)),seconds:BOAT_PRACTICE_RULES.serviceWorkSeconds};}

@@ -1,3 +1,5 @@
+import {SailRigControls} from './SailRigControls';
+import {abandonSailRig} from '../game/boatSailing';
 import{useState}from'react';
 import{BOAT_CLASSES,boatClass,boatServiceProject,type BoatClass}from'../game/boatClasses';
 import{beginBoatExploration}from'../game/boatExploration';
@@ -18,6 +20,7 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
   const orphaned=dock===undefined?[]:(g.state.haulageProjects??[]).filter(p=>p.team===0&&p.work.workplace===dock&&p.work.hullOrder?.mode==='service'&&!g.state.boats?.some(b=>b.id===p.work.hullOrder!.boatId&&b.team===0&&b.hp>0));
   const controls=<div className="craft-options">
       {personalCanoes&&<button type="button" onClick={()=>run(()=>{engine.moveMode=true;engine.canvas.focus();g.banner('Click connected water to paddle, or dry ground to carry the canoe ashore',4);})}>Paddle dugout</button>}
+      {dock!==undefined&&(g.state.haulageProjects||[]).filter(p=>p.team===0&&p.work.workplace===dock&&p.work.sailRigOrder&&!g.state.boats?.some(b=>b.id===p.work.sailRigOrder!.boatId&&b.team===0&&b.hp>0)).map(p=><div key={p.id} className="text-xs"><span>Rig parts retained · original hull unavailable</span><button title="No material refund" onClick={()=>run(()=>abandonSailRig(g,p.work.sailRigOrder!.boatId))}>Abandon</button></div>)}
       {orphaned.map(p=><div key={p.id}><small>The original service hull is lost; paid materials remain spent.</small><button type="button" onClick={()=>run(()=>abandonBoatService(g,p.work.hullOrder!.boatId!))}>Abandon lost hull service · no refund</button></div>)}
       {dock!==undefined&&<><label>Hull type<select value={kind} onChange={e=>setKind(e.target.value as BoatClass)}>{Object.entries(BOAT_CLASSES).map(([id,s])=><option key={id} value={id}>{s.name} · {s.seats} seats</option>)}</select></label><button type="button" disabled={!!hullIssue} onClick={()=>run(()=>beginRiverboat(g,dock,0,undefined,kind==='riverboat'?undefined:kind))}><strong>Build {BOAT_CLASSES[kind].name.toLowerCase()} · {BOAT_CLASSES[kind].seats} seats</strong><span>{BOAT_CLASSES[kind].wood} logs · {BOAT_CLASSES[kind].stone} stone{BOAT_CLASSES[kind].cordage?` · ${BOAT_CLASSES[kind].cordage} cordage`:''} · {BOAT_CLASSES[kind].seconds}s work</span></button>{hullIssue&&<small>{hullIssue}</small>}</>}
       {boats.map(b=>{
@@ -31,12 +34,13 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
           {b.hullClass&&b.hp<boatClass(b).maxHp-1e-8&&!service&&<button type="button" disabled={!serviceDock||!serviceMaterials} onClick={()=>run(()=>serviceDock&&beginBoatService(g,b.id,serviceDock.id))}>Service this hull<span>{quote?.wood} logs · {quote?.cordage} cordage · 60 work seconds</span></button>}
           {service&&<><span>{service.work.paused?'Paused paid service':'Hull reserved for dock service'} · {Math.floor(service.work.progress/service.work.duration*100)}%</span>{service.work.paused&&<button type="button" disabled={!serviceDock} onClick={()=>run(()=>serviceDock&&beginBoatService(g,b.id,serviceDock.id))}>Resume paid service</button>}<button type="button" onClick={()=>run(()=>abandonBoatService(g,b.id))}>Abandon service · no refund</button></>}
           {!b.captain&&<p>Bring residents close, then board.</p>}
+          <SailRigControls engine={engine} boat={b}/>
           <div className="boat-actions">
             <button type="button" disabled={!free||!people.length} onClick={()=>run(()=>boardRiverboat(g,b.id,people.slice(0,free)))}>
               Board {Math.min(free,people.length)||''}
             </button>
             {!focused&&<button type="button" onClick={()=>run(()=>{g.selectBoat(b.id);engine.view.look.x=b.x;engine.view.look.z=b.z;})}>Select boat</button>}
-            {focused&&<button type="button" disabled={!b.captain} onClick={()=>{engine.moveMode=true;engine.canvas.focus();g.banner('Click connected water to row',3);engine.pushHud();}}>Row</button>}
+            {focused&&<button type="button" disabled={!b.captain} onClick={()=>{engine.moveMode=true;engine.canvas.focus();g.banner('Click connected water to row',3);engine.pushHud();}}>{b.sailRig?.raised?'Sail / row':'Row'}</button>}
             <button type="button" disabled={!b.captain||!!b.exploration} onClick={()=>run(()=>{const issue=beginBoatExploration(g,b.id);if(issue)g.banner(issue,4);})}>Explore water</button>
             <button type="button" disabled={!crew.length} onClick={()=>run(()=>{engine.moveMode=false;landRiverboat(g,b.id);})}>Land</button>
             {b.captain&&<button type="button" onClick={()=>run(()=>{engine.moveMode=false;delete b.exploration;const captain=crew.find(u=>u.id===b.captain);if(captain){captain.order='hold';g.invalidateRoute(captain);}})}>Stop</button>}
