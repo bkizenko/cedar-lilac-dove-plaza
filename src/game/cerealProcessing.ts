@@ -11,6 +11,7 @@ const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyAppr
 const cerealPickupReason='Returning to load the actual unprocessed cereal batch';
 const mealPickupReason='Returning to collect food processing inputs';
 const rawFoodGatherer=(u:Unit)=>u.order==='gather'&&u.job==='food'&&!!u.node&&('kind'in u.node&&u.node.kind==='fish'||'type'in u.node&&rawCerealField(u.node as Building));
+const forageFoodGatherer=(u:Unit)=>u.order==='gather'&&u.job==='food'&&!!u.node&&'kind'in u.node&&u.node.kind==='forage';
 export const isCerealPickup=(u:Unit)=>u.order==='return'&&u.workReason===cerealPickupReason;
 function activePickup(g:Game,team:number,reason:string){
  return g.state.units.some(u=>u.team===team&&u.hp>0&&u.order==='return'&&u.workReason===reason&&
@@ -45,7 +46,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number,f
  // Perishable actual meat is a faster immediate meal; leave its real hearth
  // and workers to the existing kitchen plan before processing stored crops.
  if(team!==0&&(t.items?.rawMeat||0)>=4&&reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds)return false;
- const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))));if(urgent&&active>0&&candidates.length<=1)return false;
+ const urgent=reserveSeconds(g,team)<240;const candidates=g.state.units.filter(u=>u.team===team&&free(g,u)&&!(urgent&&u.order==='gather'&&u.job==='food'&&u.node&&!("type"in u.node&&rawCerealField(u.node as Building))&&!(team===0&&(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u))));if(urgent&&active>0&&candidates.length<=1)return false;
  const workers=candidates.filter(u=>eventActorId===undefined||u.id===eventActorId);if(!workers.length)return false;
  const sites=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&!b.plannedCost&&(b.type==='threshingFloor'||!floorsOnly&&b.type==='hearth')),finished=sites.filter(b=>g.finished(b)).sort((a,b)=>Number(b.type==='threshingFloor')-Number(a.type==='threshingFloor'));
  if(!finished.length){
@@ -66,7 +67,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number,f
  }
  if(eventActorId!==undefined||activePickup(g,team,cerealPickupReason))return false;
  const drops=supplyDrops(g,team);
- const carrier=workers.find(u=>(u.order!=='gather'||(team===0&&g.state.laborPolicy==='food'||urgent)&&u.job!=='food')&&!atCache(g,u)&&
+ const carrier=workers.find(u=>(u.order!=='gather'||(team===0&&g.state.laborPolicy==='food'||urgent)&&u.job!=='food'||team===0&&(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u))&&!atCache(g,u)&&
   drops.some(d=>supplyApproach(g,u,d))&&eligible.some(b=>g.interactionSpot(u,b)));
  return !!carrier&&sendForInputs(g,carrier,cerealPickupReason);
 }
@@ -281,7 +282,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  if (!options.length) return false;
  const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&
   (eventActorId === undefined || u.id === eventActorId) &&
-  (u.order !== 'gather' || !urgent || u.job !== 'food'||rawFoodGatherer(u)));
+  (u.order !== 'gather' || !urgent || u.job !== 'food'||rawFoodGatherer(u)||(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u)));
  for (const {recipe, site} of options) {
   for (const worker of workers) {
    if (!productionIssue(g, recipe, site.id, worker.id)) return beginProduction(g, recipe, site.id, worker.id);
@@ -291,7 +292,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  // can stall independently and may be on another landmass.
  if (eventActorId !== undefined || activePickup(g,0,mealPickupReason)) return false;
  const drops = supplyDrops(g,0);
- const carrier = workers.find(u => (u.order !== 'gather' || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food'||urgent&&rawFoodGatherer(u)) && !atCache(g, u) &&
+ const carrier = workers.find(u => (u.order !== 'gather' || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food'||urgent&&rawFoodGatherer(u)||(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u)) && !atCache(g, u) &&
   drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
  return !!carrier && sendForInputs(g,carrier,mealPickupReason);

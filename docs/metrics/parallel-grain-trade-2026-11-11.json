@@ -1,5 +1,5 @@
 {
-  "status": "candidate qualified; publication pending",
+  "status": "published and postpublication checked",
   "scope": "Independent dedicated grinding and baking while quick fish/meat meals retain shared kitchens; visitor cache quote/accept parity and exact receipts",
   "sourceChecks": {
     "passed": 29,
@@ -37,5 +37,17 @@
     "total": 98,
     "percentage": 34.69,
     "changed": false
+  },
+  "commit": "06faa8f",
+  "release": "2026-11-11T14-25-00-06faa8f",
+  "ports": [
+    8086,
+    8101
+  ],
+  "postpublication": {
+    "passed": 2,
+    "total": 2,
+    "port": 8086,
+    "log": "/tmp/hearthwild-parallel-grain-published8086.log"
   }
 }

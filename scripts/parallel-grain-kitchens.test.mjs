@@ -24,3 +24,27 @@ test('independent stages preserve a manually paused paid mill batch and its grai
  const {g}=pipeline(false);g.state.paused=false;for(let i=0;i<60;i++)g.step(.1);const p=g.state.production.projects.find(p=>PRODUCTION_RECIPES[p.recipe].workplace==='grindingStone');assert.ok(p);const maker=g.state.units.find(u=>u.id===p.actorId);assert.equal(pauseProduction(g,maker,'manual'),true);const id=p.id,heldGrain=g.tribe(0).foodLots.grain,charged=g.state.production.metrics.grainUsed;
  g.state.time+=5;reviewAutomaticFoodProcessing(g,0);assert.equal(p.phase,'paused');assert.equal(p.pauseCause,'manual');assert.equal(g.state.production.projects.filter(q=>q.id===id).length,1);assert.equal(g.tribe(0).foodLots.grain,heldGrain-(g.state.production.metrics.grainUsed-charged),'every charged grain unit remains reserved exactly once');assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
+
+function distantBerries(g,people){
+ for(const [i,u]of people.entries()){
+  const node={id:g.id(),kind:'forage',x:98+(i%2),z:36+Math.floor(i/2)*3,y:4,amount:500,maxAmt:500,regenT:0,rich:1,scale:1};g.state.forage.push(node);
+  Object.assign(u,{x:node.x,z:node.z,y:4,order:'gather',job:'food',node,jobLock:false});
+ }
+ g.rebuildWalk();
+}
+test('ordinary urgent food review recalls an empty unlocked distant berry gatherer for existing fish/grain stations',()=>{
+ const {g,people}=pipeline(true);distantBerries(g,people);people[1].jobLock=true;people[2].carry=3;people[2].carryType='food';people[2].carryFood='berries';
+ const direct=people[1].node,loaded=people[2].node;g.state.paused=false;g.step(.1);
+ assert.equal(people[0].order,'return');assert.match(people[0].workReason,/collect food processing inputs/);assert.equal(people[1].jobLock,true);assert.equal(people[1].node,direct);assert.equal(people[1].productionProjectId,undefined);assert.equal(people[2].node,loaded);assert.ok(people[2].carry>=3);assert.equal(people[2].productionProjectId,undefined);
+ const end=g.state.time+240;
+ while(g.state.time<end&&!g.state.production?.projects.some(p=>p.recipe.startsWith('bakeBread')&&p.phase==='complete')){g.step(.1);assert.deepEqual(g.simulationErrors,[]);}
+ assert.ok(g.state.production.projects.some(p=>p.recipe==='cookFish'&&p.phase==='complete'));assert.ok(g.state.production.projects.some(p=>p.recipe.startsWith('bakeBread')&&p.phase==='complete'),'stored grain reaches actual milling/baking instead of every adult remaining on distant berries');assert.ok(g.tribe(0).foodLots.fish>4);assert.equal(people[1].jobLock,true);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+test('distant berry work remains intact when no usable cooking or grain infrastructure exists',()=>{
+ const {g,people}=pipeline(true);distantBerries(g,people);g.state.buildings=g.state.buildings.filter(b=>b.type==='townhall');g.rebuildWalk();const nodes=people.map(u=>u.node);g.state.paused=false;g.step(.1);
+ assert.ok(!g.state.production?.projects.length);for(const [i,u]of people.entries()){assert.equal(u.order,'gather');assert.equal(u.node,nodes[i]);assert.equal(u.productionProjectId,undefined);}
+});
+test('urgent processing cannot recall directly locked berry gatherers even when every station is idle',()=>{
+ const {g,people}=pipeline(true);distantBerries(g,people);for(const u of people)u.jobLock=true;const nodes=people.map(u=>u.node);g.state.paused=false;g.step(.1);
+ assert.ok(!g.state.production?.projects.length);for(const [i,u]of people.entries()){assert.equal(u.order,'gather');assert.equal(u.node,nodes[i]);assert.equal(u.jobLock,true);assert.equal(u.productionProjectId,undefined);}
+});

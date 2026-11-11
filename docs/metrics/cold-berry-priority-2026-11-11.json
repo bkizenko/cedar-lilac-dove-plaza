@@ -1,0 +1,38 @@
+{
+  "status": "candidate qualified; publication pending",
+  "scope": "Recall empty unlocked foragers for urgent food processing; physical hearth recovery preserving paid batches; truthful storecare workload",
+  "sourceChecks": {
+    "passed": 22,
+    "total": 22,
+    "log": ".play/cold-berry-candidate-tests.log"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "limitations": [
+    "Current live village has not been exported or directly inspected in this batch.",
+    "Cold worker preservation is verified in actual-step controlled temperature/navigation tests; native winter campaign acceptance remains open.",
+    "Fish stock balance and raid duration/captive behavior remain unresolved."
+  ],
+  "firstReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69,
+    "changed": false
+  },
+  "renderedAcceptance": {
+    "passed": 2,
+    "total": 2,
+    "log": "/tmp/hearthwild-native-berry8102.log",
+    "autoWork": [
+      "off",
+      "on"
+    ],
+    "simulationSecondsEach": 64,
+    "observed": "Real unlocked berry gatherer reassigned to food inputs at 0.1 seconds, before gathering distant berries; cooked fish and delivered bread, finite fish remaining, save/reload, no errors"
+  },
+  "batch": {
+    "passed": 24,
+    "total": 24,
+    "percentage": 100
+  }
+}
