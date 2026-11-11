@@ -42,7 +42,7 @@ import {generateWorld,sampleHeight} from './worldgen';
 import {WORLD_LAYOUTS,WORLD_SIZES} from './worldOptions';
 import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
-import {scalablePlot,validPlot} from './plots';
+import {expandablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
 import {reconcileTradeReservations} from "./tradeReservations";
@@ -496,7 +496,7 @@ function validateGamePayload(raw: unknown) {
     if(b.excavation!==undefined){const e=b.excavation;if(!obj(e)||!num(e.remaining)||!num(e.dug)||!num(e.quality)||e.remaining<0||e.remaining>1200||e.dug<0||e.dug>1200||e.quality<.65||e.quality>1.65||(e.prospected!==undefined&&(!Number.isInteger(e.prospected)||e.prospected<0||e.prospected>3)))fail();}
     if (!(b.type in BUILDINGS) || !s.tribes[b.team] || !Array.isArray(b.queue)) fail();
     numbers(b, ["hp", "maxHp", "w", "d", "cd", "build"]);
-    if(scalablePlot(b.type)&&!validPlot(b.type,b))fail();
+    if(expandablePlot(b.type)&&!validPlot(b.type,b))fail();
     if (b.build < 0 || b.build > 1) fail();
     if(b.expansion!==undefined){const e=b.expansion;if(!obj(e)||!validPlot(b.type,{w:e.w,d:e.d})||b.build!==1||b.plannedCost||e.w<b.w||e.d<b.d||(e.w===b.w&&e.d===b.d)||!num(e.progress)||e.progress<0||e.progress>1||typeof e.paid!=="boolean"||(!e.paid&&e.progress!==0))fail();}
     if(b.constructionPriority!==undefined&&(b.team!==0||![0,1,2].includes(b.constructionPriority)))fail();

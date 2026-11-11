@@ -158,3 +158,32 @@ Start first person as an optional walkabout of the same village with local inspe
 ## 12. Approval and release boundaries
 
 The concept sheets are review material. First choose or combine an interface direction, a world style, and a small group of landmark/flag/armor families. Produce the same nine in-game UI states as functional prototypes. Ship the approved visual direction only after a side-by-side play test and the Mac budget. Gameplay, historical research and terrain qualification can progress alongside the review. Keep the play build and player saves isolated from concept and asset trials.
+
+## 13. Expanded art review
+
+Compare these desktop directions using identical saved villages and selections. Each changes framing, material treatment or information hierarchy. The concept plates are illustrations of possible directions. Playable prototypes will establish readability, animation and performance.
+
+| Concept | World treatment | Interface to prototype |
+| --- | --- | --- |
+| 01 River Painting | Warm light, cool depth, irregular wooded slopes | Low charcoal rail with commands grouped by task |
+| 02 Field Atlas | Engraved contour lines and sparse green tint | Ivory margin inspector, pinned only while selected |
+| 03 Handmade Model | Timber and reed miniatures with legible tools and exposed joints | Matte bottom dock with a short illustrated job queue |
+| 04 Winter Realism | Diffuse light, visible breath and fires, muted winter materials | Sparse corner controls, warmer accents reserved for urgent events |
+| 05 Ink Wash | Celadon river terraces, brush silhouettes, soft distance layers | Narrow left command strip and contextual corner card |
+| 06 Copperplate City | Hatched architecture and subdued rust ink | Top-left action grid and a separate small minimap |
+| 07 Stone and Sun | Sun-bleached masonry, mineral colors, deep open courtyards | Linen inspector with dark typography and minimal ornament |
+| 08 Coastal Modernism | Graphic headlands, cool sea, distinct silhouettes | Plain edge rail with compact text actions |
+| 09 Archaeological Fieldwork | Exposed earth sections and restrained survey marks | Footprint and route layers available on demand |
+| 10 Fresco Fragments | Matte mineral red, lime and blue on milestone illustrations | History plates in the ledger, with plain controls in play |
+| 11 Cast Bronze | Dark patina and warm hearth contrast | Bone-colored labels, simple command tabs |
+| 12 Waterworks Drawing | Cyan channels, white contours and grade marks | A temporary engineering lens showing head, flow and construction phases |
+
+For the next functional comparison use the same idle, workshop and first-contact states at 1440 × 900. Measure unobstructed idle view (target 85% or more), queue and inventory access (at most two actions), small-text contrast (at least 4.5:1), grayscale team and selection legibility, and p95 frame time in the same 150-resident save. Existing references point to compact work overlays, stable command positions, focused contact scenes and separate production history. [Dawn of Man](https://www.madrugaworks.com/dawnofman/) · [Civilization VII first-contact imagery](https://www.gamesradar.com/games/strategy/civilization-7-diplomacy/) · [Manor Lords](https://hoodedhorse.com/games/manor-lords) · [Age of Empires II commands](https://staging.ageofempires.com/learn-to-play/control-resources-aoe2/) · [Anno 1800 production statistics](https://store.steampowered.com/app/1125794/Anno_1800__The_Passage/)
+
+Review visual choices independently:
+
+- Ordinary architecture varies by floor plan, roof axis, open frontage, annexes, entrance and terrain contact. Compare ring dwellings with courtyard homes, open timber workshops with kiln yards, canopy markets with covered arcades, and channel-side mills with tower-and-barn mills. Check close, working and map zoom.
+- Civic silhouettes include an open ring temple, a quadrangular teaching court, a terraced archive and a layered cliff keep. Wonder families include a stepped flood observatory, a ring cistern, a crescent harbor and a hillside cascade garden. Site approaches, material availability and construction staging affect the resulting plan.
+- Flag templates include a square field, swallowtail, pennant, hoist band, diagonal split and vertical standard. The motif library can start with reeds, a confluence, a pass, a sail, a spindle and a wheel. Check each on a map marker, a shield and a ship before finalizing.
+- Unit equipment concepts include padded linen, reinforced hide, bronze scale, lamellar, mail and brigandine. Compare the same unit and animation at the same scale, with armor type identifiable before the faction dye. Keep access tied to local materials, production knowledge and period.
+- Trade objects include a lidded grain jar, a netted water vessel, a sealed transport amphora, a shallow dish, a spindle and weights. Vary actual form and function along with surface patterns. Reserve specialist illustrations for close inspection and landmark moments.

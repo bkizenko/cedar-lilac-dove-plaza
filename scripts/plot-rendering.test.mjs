@@ -85,3 +85,25 @@ test('rigid buildings clear uphill terrain and receive full-depth footings witho
  const game={...g,state:{seed:345,buildings:[b]},tribe:()=>({age:0}),finished:b=>b.build>=1&&b.hp>0,exploredAt:()=>true};v.syncBuildings(game);
  const matrix=new THREE.Matrix4();v.bldMeshes.get('townhall').timber.getMatrixAt(0,matrix);assert.ok(Math.abs(matrix.elements[13]-f.level)<.00001);assert.equal(v.foundations.count,1);
 });
+
+test('expanded grain bays render at human scale and select the same workshop',()=>{
+ const view=Object.create(WorldView.prototype);
+ view.scene=new THREE.Scene();
+ view.bldMeshes=new Map();
+ view.buildingInstances=new Map();
+ view.villageStyles=new Map();
+ view.mats=new Proxy({},{get(target,key){return target[key]??=new THREE.MeshStandardMaterial();}});
+ view.buildBuildings();
+ const grain=['threshingFloor','grindingStone','oven'].map((type,index)=>({...building(type,2,1),id:index+1}));
+ const game={state:{seed:345,buildings:grain},tribe:()=>({age:0}),exploredAt:()=>true,height:()=>4,terrainRevision:()=>0,world:{biomes:[]}};
+ view.syncBuildings(game);
+ for(const workshop of grain){
+  const {timber}=view.bldMeshes.get(workshop.type);
+  assert.equal(timber.count,2);
+  assert.deepEqual(view.buildingInstances.get(timber),[workshop,workshop]);
+  const matrix=new THREE.Matrix4();
+  timber.getMatrixAt(1,matrix);
+  assert.equal(matrix.elements[12],BUILDINGS[workshop.type].w/2);
+  assert.equal(new THREE.Vector3().setFromMatrixScale(matrix).x,1);
+ }
+});

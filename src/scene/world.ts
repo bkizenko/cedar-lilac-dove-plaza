@@ -40,6 +40,8 @@ import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
 import {plotModules} from './plotModules';
+import {expandedGrainWorkplace} from '../game/plots';
+import {compactGrainWorkplace} from '../game/cerealRules';
 import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID} from "@/game/trails";
 import * as THREE from "three";
@@ -861,7 +863,7 @@ export class WorldView {
     const geos = buildingGeos();
     for (const type of BLD_TYPES) {
       const g = geos[type];
-      const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:80;
+      const capacity=["farm","warehouse"].includes(type)?2304:["palisade","gate","stonewall","trench","moat"].includes(type)?1024:compactGrainWorkplace(type)?720:80;
       const timberMaterial=this.mats[g.timberMat||'timber'].clone();
       if(type==='farm'){timberMaterial.map=null;timberMaterial.bumpMap=null;timberMaterial.roughnessMap=null;}
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
@@ -1558,7 +1560,8 @@ export class WorldView {
         const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],identity=this.villageStyle(game,b.team,b),character=buildingCharacter(game.state.seed,b.id),artisan=hasBuildingCraftsmanship(type)?buildingCraftsmanship(game.state.seed,b.id,type):null;
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
-        const scalable=type==="farm"||type==="warehouse";
+        const modular=type==="warehouse"||expandedGrainWorkplace(b);
+        const scalable=type==="farm"||modular;
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
           const mesh=meshes[part];if(!mesh||!mesh.geometry.getAttribute('position')?.count||counts[part]>=instCap(mesh))return;
           const wx=b.x+x,wz=b.z+z;
@@ -1586,7 +1589,7 @@ export class WorldView {
             mesh.setColorAt(i,_c);
           }
         };
-        if(type==="warehouse"){
+        if(modular){
           for(const m of plotModules(b))for(const part of ['timber','roof','extra'] as const)write(part,m.x,m.z,m.sx,m.sz);
         }else if(type==="farm"){
           write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
@@ -1943,7 +1946,7 @@ export class WorldView {
     mr.color.set(ok ? "#8aaa58" : "#a05048");
     const add=(geometry:THREE.BufferGeometry,material:THREE.Material,x=0,z=0,sx=1,sz=1)=>{const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,0,z);mesh.scale.set(sx,1,sz);this.ghost.add(mesh);};
     if(type==='watchtower'&&towerPlatform){const geo=towerPlatformGeos(towerPlatform);add(geo.timber,mt);if(geo.extra)add(geo.extra,mt);add(geo.roof,mr);
-    }else if(size&&type==='warehouse'){
+    }else if(size&&(type==='warehouse'||expandedGrainWorkplace({type,...size}))){
       for(const m of plotModules({type,...size} as import("@/game/types").Building)){add(meshes.timber.geometry,mt,m.x,m.z,m.sx,m.sz);add(meshes.roof.geometry,mr,m.x,m.z,m.sx,m.sz);}
     }else if(type==='pen'){
       add(meshes.timber.geometry,mt);add(meshes.roof.geometry,mr);

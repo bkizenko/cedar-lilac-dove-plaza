@@ -43,7 +43,7 @@ export function planMissing(g:Game,b:Building){
   return [...BUILD_MATERIALS,'seeds' as const].map(kind=>({kind,amount:Math.max(0,Math.ceil((b.plannedCost?.[kind]||0)-(t?.[kind]||0)))})).filter(n=>n.amount>0);
 }
 export function constructionDemand(g:Game,team:number,kind:ResKind){
-  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.renovation&&!b.planPaused&&!b.renovation.paid&&b.renovation.custodyTeam===team&&(kind==='wood'||kind==='stone')&&b.renovation.quote[kind]>g.tribe(team)[kind])||(b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&kind==='wood'&&(expansionCost(b,b.expansion).wood||0)>g.tribe(team).wood)));
+  return g.state.buildings.some(b=>b.team===team&&b.hp>0&&((b.renovation&&!b.planPaused&&!b.renovation.paid&&b.renovation.custodyTeam===team&&(kind==='wood'||kind==='stone')&&b.renovation.quote[kind]>g.tribe(team)[kind])||(b.plannedCost&&!b.planPaused&&(b.plannedCost[kind]||0)>g.tribe(team)[kind])||(b.expansion&&!b.expansion.paid&&(kind==='wood'||kind==='stone')&&(expansionCost(b,b.expansion)[kind]||0)>g.tribe(team)[kind])));
 }
 export function planStatus(g:Game,b:Building){
   if(b.renovation)return housingStatus(g,b)||"Housing work queued";

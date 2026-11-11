@@ -34,6 +34,7 @@ import {CopperStudyControl} from './CopperStudyControl';
 import {AgeReadiness} from './AgeReadiness';
 import {WorldMinimap} from './WorldMinimap';
 import {PlotControls} from './PlotControls';
+import {expandablePlot} from '../game/plots';
 import {beginPackTaming} from "@/game/packAnimals";
 import {TestPanel} from "./TestPanel";
 import {replantStand} from "@/game/cultivation";
@@ -545,7 +546,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
-                {sel.completed&&["farm","warehouse","pen"].includes(sel.type||"")&&engine?.game.state.selBld&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
+                {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
                 {engine&&sel.buildingId&&<HousingControls engine={engine} buildingId={sel.buildingId}/>}
                 {engine&&sel.buildingId&&<BuildingMaintenanceControls engine={engine} buildingId={sel.buildingId}/>}

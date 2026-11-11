@@ -1,5 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {Game} from '../src/game/sim.ts';import {planExpansion} from '../src/game/plotExpansion.ts';
+import {Game} from '../src/game/sim.ts';import {planExpansion,grainExpansionPracticeIssue} from '../src/game/plotExpansion.ts';
+import {beginProduction,occupiedProductionSlots,productionIssue,productionSlots} from '../src/game/production.ts';
+import {initializeSurvival} from '../src/game/survivalNeeds.ts';
+import {supplyDrops,supplyApproach} from '../src/game/campAnchor.ts';
 import {BUILDINGS} from '../src/game/constants.ts';import {fieldProductionReport} from '../src/game/productionReport.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(type='warehouse'){
@@ -38,3 +41,64 @@ test('extensions reserve their footprint against another plan and reject obstruc
 });
 
 test('legacy direct-builder pause flags load without changing the finished store',()=>{const {g,b}=fixture();b.planPaused=false;const r=decodeGame(encodeGame(g));const restored=r.state.buildings.find(n=>n.id===b.id);assert.equal(restored.planPaused,undefined);assert.equal(restored.build,1);});
+
+test('grain workshops require demonstrated practice and retain base slots until a paid extension finishes',()=>{
+ for(const [type,recipe,baseSlots] of [
+  ['threshingFloor','threshCerealFloor',2],
+  ['grindingStone','grindGrainStation',1],
+  ['oven','bakeBreadOven',2],
+ ]){
+  let {g,b,u}=fixture(type);
+  const cost=BUILDINGS[type];
+  g.tribe(0).stone=100;
+  assert.equal(planExpansion(g,b,'w'),false);
+  assert.match(grainExpansionPracticeIssue(g,b),/0\/3/);
+  g.tribe(0).productionPractice={[recipe]:{batches:3,failedBatches:0,usefulOutputs:12,firstAt:g.state.time,lastAt:g.state.time,makers:[u.id]}};
+  assert.equal(grainExpansionPracticeIssue(g,b),null);
+  assert.equal(planExpansion(g,b,'w'),true,g.state.banner);
+  assert.equal(productionSlots(b),baseSlots);
+  assert.equal(g.tribe(0).wood,500);
+  assert.equal(g.tribe(0).stone,100);
+  g.orderConstruction(b);
+  for(let i=0;i<1000&&!b.expansion.paid;i++){g.navBudget=10;g.workerAI(u,.1);}
+  assert.equal(b.expansion.paid,true);
+  assert.equal(productionSlots(b),baseSlots);
+  const snapshot=encodeGame(g),buildingId=b.id,unitId=u.id;
+  g=decodeGame(snapshot);
+  g.world.heights.fill(4);g.rebuildWalk();
+  b=g.state.buildings.find(n=>n.id===buildingId);u=g.state.units.find(n=>n.id===unitId);
+  drive(g,u,b);
+  assert.equal(b.expansion,undefined);
+  assert.equal(b.w,cost.w*2);
+  assert.equal(productionSlots(b),baseSlots+1);
+  assert.equal(g.tribe(0).wood,500-cost.wood);
+  assert.equal(g.tribe(0).stone,100-cost.stone);
+  assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ }
+});
+
+test('an extended oven accepts three concurrent funded batches and validates them after save',()=>{
+ const {g,b,u}=fixture('oven'),t=g.tribe(0);
+ t.stone=100;
+ t.productionPractice={bakeBreadOven:{batches:3,failedBatches:0,usefulOutputs:12,firstAt:g.state.time,lastAt:g.state.time,makers:[u.id]}};
+ assert.equal(planExpansion(g,b,'w'),true);
+ drive(g,u,b);
+ assert.equal(productionSlots(b),3);
+ t.items={flour:24};
+ initializeSurvival(g);
+ t.survival.waterLiters=24;
+ const crew=Array.from({length:4},()=>g.spawnUnit('worker',20,40,0));
+ const logs=t.wood;
+ for(const worker of crew.slice(0,3)){
+  const cache=supplyDrops(g,0).map(drop=>supplyApproach(g,worker,drop)).find(Boolean);
+  assert.ok(cache);
+  Object.assign(worker,cache);
+  assert.equal(beginProduction(g,'bakeBreadOven',b.id,worker.id,true),true,productionIssue(g,'bakeBreadOven',b.id,worker.id,true));
+ }
+ assert.equal(occupiedProductionSlots(g,b),3);
+ assert.equal(t.items.flour,12);
+ assert.equal(t.wood,logs-3);
+ assert.match(productionIssue(g,'bakeBreadOven',b.id,crew[3].id,true),/slots/);
+ const r=decodeGame(encodeGame(g));
+ assert.equal(occupiedProductionSlots(r,r.state.buildings.find(n=>n.id===b.id)),3);
+});

@@ -1,3 +1,4 @@
+import {expandedGrainWorkplace} from '../game/plots';
 import{buildingGroundContacts,type GroundContact}from'./groundContacts';
 import type {Game} from '../game/sim';
 import type {Building} from '../game/types';
@@ -7,7 +8,7 @@ const cache=new WeakMap<Building,{world:Game['world'];banks:Game['world']['bankT
 /** Rigid walls sit above their highest footprint corner; a footing fills below. */
 export function foundationProfile(g:Game,b:Building){
  if(groundWork.has(b.type))return {level:b.y,bottom:b.y};
- const axisAligned=b.type==='warehouse'||b.type==='watchtower'&&!!b.towerPlatform;
+ const axisAligned=b.type==='warehouse'||expandedGrainWorkplace(b)||b.type==='watchtower'&&!!b.towerPlatform;
  const terrainRevision=g.terrainRevision?.()??g.state?.excavations?.length??0;
  const contacts=b.type==='watchtower'&&b.towerPlatform?undefined:buildingGroundContacts(b);
  const old=cache.get(b);if(old&&old.contacts===contacts&&old.world===g.world&&old.banks===g.world.bankTerrain&&old.height===g.height&&old.terrainRevision===terrainRevision&&old.team===b.team&&old.heights===g.world.heights&&old.w===b.w&&old.d===b.d&&old.x===b.x&&old.z===b.z&&old.axisAligned===axisAligned)return old.profile;

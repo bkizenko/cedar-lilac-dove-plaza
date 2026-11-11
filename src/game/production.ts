@@ -2,7 +2,7 @@ import{inheritedCacheCapacity}from'./communityCaches';
 import{validHandoverProvenance}from'./communityHandoverValidation';
 import{carryingCapacity}from'./haulage';
 import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
-import{CEREAL_RULES,CEREAL_STORAGE_RULES,storedCerealKinds,mixStoredCerealAge,cerealBatchScale,cerealLedger,cerealSeedCapacityIssue,cerealWeatherIssue,isCerealRecipe,finishCerealBatch,recordCerealDelivery,recordCerealCargoLoss}from'./cerealRules';
+import{CEREAL_RULES,CEREAL_STORAGE_RULES,storedCerealKinds,compactGrainWorkplace,mixStoredCerealAge,cerealBatchScale,cerealLedger,cerealSeedCapacityIssue,cerealWeatherIssue,isCerealRecipe,finishCerealBatch,recordCerealDelivery,recordCerealCargoLoss}from'./cerealRules';
 import{TEXTILE_RULES,GARMENT_KINDS,textileRecipeIssue,type GarmentKind}from'./textiles';
 import{basketOrigin,recordBasketDelivery,recordFibreDelivery}from'./fibre';
 import{productionPracticeRate,recordProductionPractice,recordProductionPracticeWork}from'./productionPractice';
@@ -11,6 +11,7 @@ import{releaseTreeWorker}from'./workAllocation';
 import{potteryOrigin,validPotteryOrigin,advanceClayDrying,type PotteryOrigin}from'./pottery';
 import {PRESERVATION_RULES,emptyDryingExposure,advanceDrying,dryingConditions,validDryingExposure,type DryingExposure} from './foodPreservation';
 import {BUILDINGS} from './constants';
+import {plotArea} from './plots';
 import type {Game} from './sim';
 import type {Unit,Building,GameState,BldType,FoodKind} from './types';
 import {isDependent} from './settlement';
@@ -87,7 +88,10 @@ function atCache(g:Game,u:Unit){return supplyDrops(g,u.team).some(drop=>{const p
 function free(g:Game,u:Unit,project?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!['occupy','capture'].includes(u.conflictIntent||'')&&!isDependent(g,u)&&!u.emergency&&!u.expedition&&!u.visit&&!u.trade&&!u.escortId&&!u.envoy&&!u.recalled&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!sum(u.itemCargo||{})&&(!hasTaskCommitment(u,'productionProjectId'))&&(!u.productionProjectId||u.productionProjectId===project)&&!['attack','attackmove'].includes(u.order)&&(u.productionProjectId===project||!['move','explore','return'].includes(u.order))&&productionActorAvailable(g,u,project);}
 function actor(g:Game,b:Building,project?:ProductionProject,unitId?:number,deliveredHere=false){return g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.team===b.team&&free(g,u,project?.id)&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||(deliveredHere?g.buildingWorkReached(u,b):atCache(g,u)))&&!!g.interactionSpot(u,b));}
 const live=(p:ProductionProject)=>!['complete','lost'].includes(p.phase);
-export function productionSlots(b:Pick<Building,'type'>){return ['threshingFloor','fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone'].includes(b.type)?1:0;}
+export function productionSlots(b:Pick<Building,'type'|'w'|'d'>){
+ const base=['threshingFloor','fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone'].includes(b.type)?1:0;
+ return compactGrainWorkplace(b.type)?base+plotArea(b)-1:base;
+}
 export function cerealReservedMaterials(g:Game,team:number,exceptProject?:number){if(!g.state.cerealProcessing)return 0;let total=0;for(const p of g.state.production?.projects||[]){if(p.team!==team||p.id===exceptProject||!live(p)||!isCerealRecipe(p.recipe))continue;const r=PRODUCTION_RECIPES[p.recipe],phase=p.phase==='paused'?p.resumePhase:p.phase,parked=['stored','collecting'].includes(phase)?sum(r.inputs)+r.grain+Object.values(r.foodInputs).reduce((n,v)=>n+(v||0),0):0;total+=Math.max(0,sum(r.outputs)-parked);}return total;}
 /** Covered capacity is still reserved for paid work. Delivered harvest can
  * exceed it at a village that has a real storehouse, where it is exposed. */
@@ -122,6 +126,7 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
  if(r.outputs.basket&&(g.tribe(b.team).basketOrigins?.length||0)>=256&&!g.tribe(b.team).basketOrigins?.some(o=>o.origin.site===b.id))return 'Basket provenance records are full; use an existing weaving site';
  if(r.outputs.pottery&&(g.tribe(b.team).potteryOrigins?.length||0)>=256&&!g.tribe(b.team).potteryOrigins?.some(o=>o.origin.site===b.id))return 'Pottery provenance records are full; use an existing firing site';
+ if(b.expansion?.progress===1&&compactGrainWorkplace(b.type)&&g.solidBuilding(b))return 'Workshop extension needs clear ground before taking new work';
  if(occupiedProductionSlots(g,b)>=productionSlots(b))return 'All workplace slots contain paid work; resume or finish those batches first';
  const t=g.tribe(b.team),stock=t.items||{};for(const[k,n]of Object.entries(r.inputs))if((stock[k as ItemKind]||0)<n)return `Need ${n} ${ITEM_NAMES[k as ItemKind]} delivered to the camp cache`;
  for(const[k,n]of Object.entries(r.foodInputs))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} actual ${k} delivered to the food cache`;

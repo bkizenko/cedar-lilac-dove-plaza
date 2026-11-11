@@ -1369,7 +1369,7 @@ export class Game {
   }
 
   placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
-    if (this.state.ended || (size&&!validPlot(type,size))) return false;
+    if (this.state.ended || (size&&(!scalablePlot(type)||!validPlot(type,size)))) return false;
     if(type==="house")return planAdvancedHome(this,x,z,team);
     const d = BUILDINGS[type];
     const tribe = this.tribe(team);

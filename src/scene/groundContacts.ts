@@ -1,3 +1,4 @@
+import {expandedGrainWorkplace} from '../game/plots';
 import type * as THREE from 'three';
 import{plotModules}from'./plotModules';
 import type {Building,BldType} from '../game/types';
@@ -25,4 +26,4 @@ export function registerGroundContacts(type:BldType,geometries:(THREE.BufferGeom
 }
 
 const expanded=new WeakMap<Building,{w:number;d:number;source:readonly GroundContact[];contacts:readonly GroundContact[]}>();
-export function buildingGroundContacts(b:Building){const source=groundContactsFor(b.type);if(!source||b.type!=='warehouse')return source;const old=expanded.get(b);if(old&&old.w===b.w&&old.d===b.d&&old.source===source)return old.contacts;const contacts=Object.freeze(plotModules(b).flatMap(m=>source.map(l=>Object.freeze({ax:m.x+l.ax*m.sx,az:m.z+l.az*m.sz,bx:m.x+l.bx*m.sx,bz:m.z+l.bz*m.sz}))));expanded.set(b,{w:b.w,d:b.d,source,contacts});return contacts;}
+export function buildingGroundContacts(b:Building){const source=groundContactsFor(b.type);if(!source||(b.type!=='warehouse'&&!expandedGrainWorkplace(b)))return source;const old=expanded.get(b);if(old&&old.w===b.w&&old.d===b.d&&old.source===source)return old.contacts;const contacts=Object.freeze(plotModules(b).flatMap(m=>source.map(l=>Object.freeze({ax:m.x+l.ax*m.sx,az:m.z+l.az*m.sz,bx:m.x+l.bx*m.sx,bz:m.z+l.bz*m.sz}))));expanded.set(b,{w:b.w,d:b.d,source,contacts});return contacts;}
