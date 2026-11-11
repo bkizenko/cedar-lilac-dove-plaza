@@ -166,3 +166,14 @@ Both Claude workers stopped at the 5-hour usage limit. All their work is committ
 - **`agents/claude-societies` 60e8cc1:** need-based trade (`tradeNeeds.ts`, 12/12 focused with uncommitted edits in progress) and G16 deep-water storms (`seaStorms.ts`, commit 60e8cc1). Worker still running: G15 armed caravans/market effects, then Codex sea-exploration review fixes.
 - **Codex asks from Experience:** hull length/beam per class in `boatClasses.ts`; real fire state as `lit`; `h-good-*` icons; merge LOD seam 15e6a63b.
 - Acceptance unchanged: 34/98.
+
+## Ready-for-integration update — 16:50 ET
+
+| Branch | Head | Content | Evidence | Not done |
+|---|---|---|---|---|
+| `agents/claude-societies` | 052c923 (merged with main) | Sea-exploration review fixes (hull service/sail-fit admission, recall-at-sea fix, capture/interruption tests); TRADE-NEEDS/G15 (`tradeNeeds.ts`: goods held beyond reserve, reserved on acceptance, physical carriers, escorts by risk/trust, market effects on frequency and spread, NPC↔NPC and NPC↔player answer); G16 `seaStorms.ts`; G11 `villagePersonality.ts` | 43/43 across trade-needs, sea-storms, sea-exploration, stolen-cargo, culture-naming; 59 related files head 304/337 vs base 305/337 (one coastal-trade case flaked once under 4-way load, passes isolated) | Native terrain run; player cannot propose (answers only); no messenger unit; NPC caravans do not use boats; no per-item wear on traded gear; coastal-trade voyages take storm damage but no turn-back; G11 raid propensity exported, not wired |
+| `agents/claude-experience` | fee37e5 (merged with main) | Remaining carved building types, Codex review fixes, trade dialog model/adapter for `tradeNeeds`, caravan/goods/parcel specs, carved trees, all six wonder plans, site-grounding adapter for Grok `sampleSite` | 83/83 own suites; no existing file modified | Never rendered; `TradeDialog.tsx`, `carvedBuildingLayer.ts` unexecuted; instancing/culling adapters wait on Codex LOD seam |
+
+Shared-file sign-offs requested of Codex (Societies): `types.ts` optional fields `Unit.seaExplorationId/tradeNeedsId`, `GameState.seaExploration/droppedCargo/tradeNeeds/seaStorms`; `workCommitments.ts` entries; `coastalTrade.ts` hooks; seams in `people.ts`, `raiders.ts`, `scoutProvisions.ts`. Consider a dedicated sea-state event instead of the `weather==='storm'` gate.
+
+In progress: Societies — surrender/captives/conquest (Opus). Experience — culture grammar, culture armor/unit looks, ruins.
