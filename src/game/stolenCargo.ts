@@ -1,0 +1,274 @@
+import type {Game} from './sim';
+import type {FoodKind,GameState,ResKind,Unit} from './types';
+import {GATHER} from './constants';
+import {FOOD_KINDS} from './foodKinds';
+import {isDependent} from './settlement';
+import {hasTaskCommitment} from './workCommitments';
+import {receiveFood} from './pantry';
+import {recordSimulationEvent} from './simulationEvents';
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
+import {connectedForUnit} from './waterTravel';
+
+/** Dropped cargo: finite parcels left where a carrier died.
+ * Conservation rules:
+ *  - a parcel is created ONLY by moving the exact `carry` of a dead carrier into it;
+ *  - a pickup moves exactly min(parcel, carry capacity) from the parcel into a living
+ *    unit's hands; the parcel is deleted at zero; nothing else creates or removes goods;
+ *  - a deposit moves a unit's hands into the depositing team's stock through the same
+ *    path as ordinary hauling.
+ * The original owner is remembered by a `CargoMark` written where goods are stolen
+ * (raiders) or picked up from a parcel; unmarked goods belong to the carrier's team. */
+export const STOLEN_CARGO_RULES={version:1,scanSeconds:3,ownerRecoveryMeters:70,ownerHomeMeters:160,finderMeters:18,finderGraceSeconds:240,
+ pickupMeters:1.8,walkSeconds:240,returnSeconds:240,maximumTrips:12,maximumParcels:64,maximumMarks:64,maximumRest:32,
+ healthFraction:.6,mergeMeters:2.5,chaseDispatchMeters:30,chaseSeconds:40,chaseDistanceMeters:60,chaseMaximumPerRaider:3,chaseQuitHealthFraction:.45,restSeconds:120,
+ maximumDelivered:1e9} as const;
+export const STOLEN_CARGO_REASONS=['no-owner-adult','too-far','unreachable','no-cache','claimed','not-eligible','busy','walk-timeout','return-timeout','parcel-gone','carry-full',
+ 'pursuit-time','pursuit-distance','pursuit-hurt','pursuit-ended','claimant-lost'] as const;
+export type StolenCargoReason=typeof STOLEN_CARGO_REASONS[number];
+export type DroppedParcel={id:number;kind:ResKind;amount:number;food?:FoodKind;x:number;z:number;originalOwnerTeam:number;fromTeam:number;droppedAt:number;claimedBy?:number;lastReason?:StolenCargoReason};
+/** Whose goods a unit is currently holding (only written when that differs from the unit's own team). */
+export type CargoMark={unitId:number;owner:number};
+export type CargoTripPhase='chase'|'walk'|'return';
+export type CargoTrip={unitId:number;team:number;phase:CargoTripPhase;startedAt:number;deadline:number;originX:number;originZ:number;parcelId?:number;raiderId?:number;owner:number;finder:boolean};
+export type DroppedCargoState={version:1;parcels:DroppedParcel[];marks:CargoMark[];trips:CargoTrip[];rest:{unitId:number;until:number}[];
+ reasons:Partial<Record<StolenCargoReason,number>>;ledger:{dropped:number;pickedUp:number;deposited:number;depositedByOwner:number;depositedByFinder:number};nextScanAt:number};
+type Point={x:number;z:number};
+const R=STOLEN_CARGO_RULES;
+const KINDS:ResKind[]=['food','wood','stone','copper','iron'];
+
+function root(g:Game){return g.state.droppedCargo??={version:1,parcels:[],marks:[],trips:[],rest:[],reasons:{},ledger:{dropped:0,pickedUp:0,deposited:0,depositedByOwner:0,depositedByFinder:0},nextScanAt:0};}
+function note(g:Game,reason:StolenCargoReason,parcel?:DroppedParcel){const s=root(g);s.reasons[reason]=(s.reasons[reason]||0)+1;if(parcel)parcel.lastReason=reason;}
+const unitOf=(g:Game,id:number)=>g.state.units.find(u=>u.id===id);
+const capacity=(kind:ResKind)=>GATHER[kind].carry;
+const tripOf=(g:Game,id:number)=>g.state.droppedCargo?.trips.find(t=>t.unitId===id);
+const markOf=(g:Game,id:number)=>g.state.droppedCargo?.marks.find(m=>m.unitId===id);
+const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.z-b.z);
+
+/** Record that `thief` now holds goods taken from `owner`. Called where raiders take goods. */
+export function markStolenLoad(g:Game,thief:Unit,owner:number){
+ if(owner===thief.team||thief.carry<=0)return;
+ const s=root(g);const m=s.marks.find(m=>m.unitId===thief.id);
+ if(m)m.owner=owner;else if(s.marks.length<R.maximumMarks)s.marks.push({unitId:thief.id,owner});
+}
+/** Who owns the goods this unit holds right now. */
+export function cargoOwner(g:Game,u:Unit){return markOf(g,u.id)?.owner??u.team;}
+export function droppedParcels(g:Game){return g.state.droppedCargo?.parcels??[];}
+
+// ---- Creation: only from a dead carrier's exact hands.
+function dropFrom(g:Game,u:Unit){
+ const kind=u.carryType;if(!kind||!(u.carry>0)||!Number.isFinite(u.carry))return;
+ const s=root(g),owner=cargoOwner(g,u),amount=u.carry,food=kind==='food'?u.carryFood:undefined;
+ u.carry=0;u.carryType=null;u.carryFood=undefined;
+ s.ledger.dropped+=amount;
+ const near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind===kind&&p.food===food&&p.originalOwnerTeam===owner&&distance(p,u)<=R.mergeMeters);
+ if(near){near.amount+=amount;return;}
+ if(s.parcels.length>=R.maximumParcels){
+  // Never destroy goods: fold into the nearest same-kind parcel instead of refusing.
+  const any=s.parcels.filter(p=>p.kind===kind&&p.food===food&&p.originalOwnerTeam===owner).sort((a,b)=>distance(a,u)-distance(b,u))[0];
+  if(any){any.amount+=amount;return;}
+ }
+ s.parcels.push({id:g.id(),kind,amount,...(food?{food}:{}),x:u.x,z:u.z,originalOwnerTeam:owner,fromTeam:u.team,droppedAt:g.state.time});
+}
+
+// ---- Eligibility for physical recovery.
+function freeAdult(g:Game,u:Unit){
+ return u.type==='worker'&&u.team!==3&&u.hp>=u.maxHp*R.healthFraction&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.boat&&!u.jobLock&&u.carry===0&&
+  !u.emergency&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.trade&&!u.tributeJourney&&!u.foundingJourney&&!u.recalled&&!u.buildOrder&&u.escortId===undefined&&
+  !u.societyMissionId&&!u.seaExplorationId&&!u.scoutProvisions&&!u.haulage&&u.drill==null&&!u.conflictIntent&&u.massRaidTarget===undefined&&u.pillage<0&&
+  !hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order);
+}
+const resting=(g:Game,id:number)=>!!g.state.droppedCargo?.rest.some(r=>r.unitId===id&&r.until>g.state.time);
+function candidate(g:Game,u:Unit){return freeAdult(g,u)&&!tripOf(g,u.id)&&!resting(g,u.id);}
+
+function releaseClaim(g:Game,trip:CargoTrip){
+ const p=trip.parcelId===undefined?undefined:root(g).parcels.find(p=>p.id===trip.parcelId);
+ if(p&&p.claimedBy===trip.unitId)delete p.claimedBy;
+}
+function endTrip(g:Game,trip:CargoTrip,reason?:StolenCargoReason,restSeconds=0){
+ const s=root(g);releaseClaim(g,trip);
+ const i=s.trips.indexOf(trip);if(i>=0)s.trips.splice(i,1);
+ const u=unitOf(g,trip.unitId);
+ if(reason)note(g,reason,trip.parcelId===undefined?undefined:s.parcels.find(p=>p.id===trip.parcelId));
+ if(restSeconds>0){s.rest=s.rest.filter(r=>r.unitId!==trip.unitId&&r.until>g.state.time);if(s.rest.length<R.maximumRest)s.rest.push({unitId:trip.unitId,until:g.state.time+restSeconds});}
+ if(u&&u.hp>0){u.order=u.carry>0?'return':'idle';u.target=null;u.node=null;u.workReason=u.carry>0?'Carrying recovered goods home':'';g.invalidateRoute(u);u.stuckT=0;}
+}
+function begin(g:Game,u:Unit,trip:Omit<CargoTrip,'unitId'|'team'|'startedAt'|'originX'|'originZ'>){
+ const s=root(g);if(s.trips.length>=R.maximumTrips)return false;
+ g.interruptMission(u);u.target=null;u.node=null;u.order='move';u.stationOnArrival=false;
+ s.trips.push({...trip,unitId:u.id,team:u.team,startedAt:g.state.time,originX:u.x,originZ:u.z});return true;
+}
+/** Claim one parcel for one unit; refuses if another unit already holds the claim. */
+export function claimParcel(g:Game,u:Unit,parcelId:number){
+ const s=root(g),p=s.parcels.find(p=>p.id===parcelId);if(!p||!(p.amount>0))return false;
+ if(p.claimedBy!==undefined&&unitOf(g,p.claimedBy)?.hp){note(g,'claimed',p);return false;}
+ if(!candidate(g,u)){note(g,'not-eligible',p);return false;}
+ const finder=u.team!==p.originalOwnerTeam;
+ if(!connectedForUnit(g,u,p.x,p.z)){note(g,'unreachable',p);return false;}
+ if(!begin(g,u,{phase:'walk',deadline:g.state.time+R.walkSeconds,parcelId:p.id,owner:p.originalOwnerTeam,finder}))return false;
+ p.claimedBy=u.id;u.workReason=finder?'Picking up goods left on the ground':'Fetching our goods left where a carrier fell';return true;
+}
+
+// ---- Dispatch (bounded scan on a fixed cadence).
+function dispatch(g:Game){
+ const s=root(g);
+ for(const p of [...s.parcels].sort((a,b)=>a.id-b.id)){
+  if(p.claimedBy!==undefined)continue;
+  const owner=g.tribe(p.originalOwnerTeam),home=owner?.alive?supplyDrops(g,p.originalOwnerTeam)[0]:undefined;
+  let best:Unit|undefined,bestD=Infinity,sawOwner=false;
+  for(const u of g.state.units){
+   if(u.hp<=0||!candidate(g,u))continue;
+   const d=distance(u,p);
+   if(u.team===p.originalOwnerTeam){
+    sawOwner=true;
+    if(d>R.ownerRecoveryMeters)continue;
+    if(home&&distance(home,p)>R.ownerHomeMeters)continue;
+   }else{
+    if(g.state.time-p.droppedAt<R.finderGraceSeconds||d>R.finderMeters)continue;
+    if(!supplyDrops(g,u.team).length)continue;
+   }
+   // The owner is always preferred over a finder at similar distance.
+   const rank=d+(u.team===p.originalOwnerTeam?0:40);
+   if(rank<bestD){best=u;bestD=rank;}
+  }
+  if(!best){if(!sawOwner)note(g,'no-owner-adult',p);else note(g,'too-far',p);continue;}
+  claimParcel(g,best,p.id);
+ }
+ // Bounded pursuit: owner adults near a living carrier of their goods.
+ for(const m of s.marks){
+  const raider=unitOf(g,m.unitId);if(!raider||raider.hp<=0||!(raider.carry>0))continue;
+  const chasers=s.trips.filter(t=>t.phase==='chase'&&t.raiderId===raider.id).length;
+  if(chasers>=R.chaseMaximumPerRaider)continue;
+  const near=g.state.units.filter(u=>u.team===m.owner&&u.hp>0&&candidate(g,u)&&distance(u,raider)<=R.chaseDispatchMeters).sort((a,b)=>distance(a,raider)-distance(b,raider)||a.id-b.id)[0];
+  if(!near)continue;
+  if(begin(g,near,{phase:'chase',deadline:g.state.time+R.chaseSeconds,raiderId:raider.id,owner:m.owner,finder:false}))near.workReason='Chasing a raider who took our goods';
+ }
+}
+
+// ---- Per-unit execution. Returns true while this system owns the unit's step.
+function stillValid(g:Game,u:Unit,trip:CargoTrip){
+ if(u.hp<=0)return 'claimant-lost' as const;
+ if(u.prisoner||u.emergency||u.recalled||u.boat||u.societyMissionId||u.seaExplorationId||u.expedition||u.envoy||u.visit||u.trade||u.scout||u.foundingJourney||u.tributeJourney||u.conflictIntent||u.massRaidTarget!==undefined)return 'busy' as const;
+ if(u.team!==trip.team)return 'busy' as const;
+ return null;
+}
+function pickUp(g:Game,u:Unit,trip:CargoTrip){
+ const s=root(g),p=s.parcels.find(p=>p.id===trip.parcelId);
+ if(!p||!(p.amount>0)){endTrip(g,trip,'parcel-gone');return;}
+ if(u.carry>0){endTrip(g,trip,'carry-full');return;}
+ const take=Math.min(p.amount,capacity(p.kind));
+ p.amount-=take;u.carry=take;u.carryType=p.kind;u.carryFood=p.food;s.ledger.pickedUp+=take;
+ const owner=p.originalOwnerTeam;
+ if(owner!==u.team){const m=s.marks.find(m=>m.unitId===u.id);if(m)m.owner=owner;else if(s.marks.length<R.maximumMarks)s.marks.push({unitId:u.id,owner});}
+ delete p.claimedBy;
+ if(p.amount<=1e-9){s.parcels.splice(s.parcels.indexOf(p),1);}
+ trip.phase='return';trip.parcelId=undefined;trip.deadline=g.state.time+R.returnSeconds;
+ u.workReason=trip.finder?'Taking found goods to our cache':'Carrying our recovered goods home';
+}
+function deposit(g:Game,u:Unit,trip:CargoTrip){
+ const kind=u.carryType,amount=u.carry;if(!kind||!(amount>0)){endTrip(g,trip);return;}
+ const s=root(g);
+ recordSimulationEvent(g,'cargo_delivered',u.team,kind,amount,u.id);
+ if(kind==='food')receiveFood(g,u.team,amount,u.carryFood);else g.tribe(u.team)[kind]+=amount;
+ u.carry=0;u.carryType=null;u.carryFood=undefined;s.ledger.deposited+=amount;
+ if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;
+ s.marks=s.marks.filter(m=>m.unitId!==u.id);
+ endTrip(g,trip);
+}
+function stand(g:Game,u:Unit,trip:CargoTrip,reason:StolenCargoReason){endTrip(g,trip,reason,R.restSeconds);}
+
+export function stolenCargoAI(g:Game,u:Unit,dt:number){
+ const s=g.state.droppedCargo;if(!s)return false;
+ const trip=s.trips.find(t=>t.unitId===u.id);if(!trip)return false;
+ const issue=stillValid(g,u,trip);if(issue){endTrip(g,trip,issue);return false;}
+ const now=g.state.time;
+ if(trip.phase==='chase'){
+  const raider=unitOf(g,trip.raiderId!);
+  if(!raider||raider.hp<=0||!(raider.carry>0)||!markOf(g,raider.id)||markOf(g,raider.id)!.owner!==trip.owner){stand(g,u,trip,'pursuit-ended');return false;}
+  if(now>trip.deadline){stand(g,u,trip,'pursuit-time');return false;}
+  if(distance(u,{x:trip.originX,z:trip.originZ})>R.chaseDistanceMeters){stand(g,u,trip,'pursuit-distance');return false;}
+  if(u.hp<u.maxHp*R.chaseQuitHealthFraction){stand(g,u,trip,'pursuit-hurt');return false;}
+  u.cd=Math.max(0,u.cd-dt);u.tx=raider.x;u.tz=raider.z;u.order='move';
+  const reach=u.range+raider.r+.35;
+  if(distance(u,raider)>reach)g.steer(u,dt);
+  else{u.facing=Math.atan2(raider.x-u.x,raider.z-u.z);u.stride+=dt*10;if(u.cd<=0){u.cd=u.rof;g.dealDamage(u,raider);}}
+  return true;
+ }
+ if(trip.phase==='walk'){
+  const p=s.parcels.find(p=>p.id===trip.parcelId);
+  if(!p||!(p.amount>0)||p.claimedBy!==u.id&&p.claimedBy!==undefined){endTrip(g,trip,p?'claimed':'parcel-gone');return false;}
+  if(now>trip.deadline){endTrip(g,trip,'walk-timeout');return false;}
+  const spot=g.nearestWalk(u,p.x,p.z);u.tx=spot.x;u.tz=spot.z;u.order='move';
+  if(distance(u,p)<=R.pickupMeters||distance(u,spot)<=.6){pickUp(g,u,trip);return true;}
+  if(g.steer(u,dt)&&distance(u,p)<=R.pickupMeters+2)pickUp(g,u,trip);
+  return true;
+ }
+ // return: walk to a real cache and put the goods into the stock.
+ if(now>trip.deadline){endTrip(g,trip,'return-timeout');return false;}
+ if(!(u.carry>0)){endTrip(g,trip);return false;}
+ let drop,spot:Point|null=null;
+ for(const d of [...supplyDrops(g,u.team)].sort((a,b)=>distance(a,u)-distance(b,u))){const p=supplyApproach(g,u,d);if(p){drop=d;spot=p;break;}}
+ if(!drop||!spot){endTrip(g,trip,'no-cache');return false;}
+ if(supplyReached(g,u,drop,spot)){deposit(g,u,trip);return true;}
+ u.tx=spot.x;u.tz=spot.z;u.order='move';
+ if(g.steer(u,dt)&&supplyReached(g,u,drop,spot))deposit(g,u,trip);
+ return true;
+}
+
+// ---- World tick: sweep deaths, prune, and dispatch. Runs inside tickCoastalTrade (both call sites).
+export function tickStolenCargo(g:Game,dt:number){
+ const s=g.state.droppedCargo;
+ if(!s&&!g.state.units.some(u=>u.hp<=0&&u.carry>0&&u.carryType))return;
+ for(const u of g.state.units){
+  if(u.hp>0||!(u.carry>0))continue;
+  const trip=tripOf(g,u.id);dropFrom(g,u);
+  if(trip)endTrip(g,trip,'claimant-lost');
+ }
+ const r=root(g);
+ for(const t of [...r.trips]){
+  const u=unitOf(g,t.unitId);
+  if(!u||u.hp<=0){endTrip(g,t,'claimant-lost');continue;}
+  // Higher-priority duties (defense emergency, orders) pre-empt the trip before its AI runs; never hold a claim forever.
+  const issue=stillValid(g,u,t);
+  if(issue){endTrip(g,t,issue);continue;}
+  if(g.state.time>t.deadline)endTrip(g,t,t.phase==='chase'?'pursuit-time':t.phase==='walk'?'walk-timeout':'return-timeout',t.phase==='chase'?R.restSeconds:0);
+ }
+ r.marks=r.marks.filter(m=>{const u=unitOf(g,m.unitId);return !!u&&u.hp>0&&u.carry>0;});
+ r.rest=r.rest.filter(x=>x.until>g.state.time);
+ if(dt<=0)return;
+ if(g.state.time<r.nextScanAt)return;
+ r.nextScanAt=g.state.time+R.scanSeconds;
+ if(r.parcels.length||r.marks.length)dispatch(g);
+}
+
+// ---- Persistence validation (runs inside validCoastalTradeState's existing path).
+export function validDroppedCargoState(s:GameState){
+ const root=s.droppedCargo;if(root===undefined)return true;
+ const half=(s.worldOptions?.size??1040)/2,fin=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,id=(n:unknown)=>Number.isSafeInteger(n)&&(n as number)>0&&(n as number)<s.nextId,
+  point=(x:unknown,z:unknown)=>typeof x==='number'&&typeof z==='number'&&Number.isFinite(x)&&Number.isFinite(z)&&Math.abs(x)<=half&&Math.abs(z)<=half;
+ if(!root||typeof root!=='object'||root.version!==1||!Array.isArray(root.parcels)||!Array.isArray(root.marks)||!Array.isArray(root.trips)||!Array.isArray(root.rest))return false;
+ if(root.parcels.length>R.maximumParcels||root.marks.length>R.maximumMarks||root.trips.length>R.maximumTrips||root.rest.length>R.maximumRest||!fin(root.nextScanAt))return false;
+ const l=root.ledger;if(!l||typeof l!=='object'||!['dropped','pickedUp','deposited','depositedByOwner','depositedByFinder'].every(k=>fin((l as any)[k],1e12)))return false;
+ if(!root.reasons||typeof root.reasons!=='object'||Object.entries(root.reasons).some(([k,n])=>!(STOLEN_CARGO_REASONS as readonly string[]).includes(k)||!fin(n,1e12)))return false;
+ const alive=new Map(s.units.map(u=>[u.id,u]));
+ const pids=new Set<number>();
+ for(const p of root.parcels){
+  if(!p||!id(p.id)||pids.has(p.id)||!KINDS.includes(p.kind)||!(typeof p.amount==='number'&&Number.isFinite(p.amount)&&p.amount>0&&p.amount<=1e7)||!point(p.x,p.z)||!s.tribes[p.originalOwnerTeam]||!s.tribes[p.fromTeam]||!fin(p.droppedAt,s.time+1e-6))return false;
+  if(p.food!==undefined&&(p.kind!=='food'||!FOOD_KINDS.includes(p.food)))return false;
+  if(p.lastReason!==undefined&&!(STOLEN_CARGO_REASONS as readonly string[]).includes(p.lastReason))return false;
+  if(p.claimedBy!==undefined&&(!id(p.claimedBy)||!alive.has(p.claimedBy)||!root.trips.some((t:CargoTrip)=>t.unitId===p.claimedBy&&t.parcelId===p.id&&t.phase==='walk')))return false;
+  pids.add(p.id);
+ }
+ const mids=new Set<number>();
+ for(const m of root.marks){if(!m||!id(m.unitId)||mids.has(m.unitId)||!alive.has(m.unitId)||!s.tribes[m.owner])return false;mids.add(m.unitId);}
+ const tids=new Set<number>();
+ for(const t of root.trips){
+  if(!t||!id(t.unitId)||tids.has(t.unitId)||!['chase','walk','return'].includes(t.phase)||!s.tribes[t.team]||!s.tribes[t.owner]||typeof t.finder!=='boolean'||!fin(t.startedAt,s.time+1e-6)||!fin(t.deadline)||!point(t.originX,t.originZ))return false;
+  const u=alive.get(t.unitId);if(!u||u.team!==t.team)return false;
+  if(t.phase==='walk'&&(t.parcelId===undefined||!pids.has(t.parcelId)))return false;
+  if(t.phase==='chase'&&(!id(t.raiderId)||!alive.has(t.raiderId!)))return false;
+  if(t.phase==='return'&&t.parcelId!==undefined)return false;
+  tids.add(t.unitId);
+ }
+ for(const r of root.rest)if(!r||!id(r.unitId)||!fin(r.until))return false;
+ return true;
+}

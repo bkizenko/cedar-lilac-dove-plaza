@@ -492,6 +492,7 @@ export type GameState = {
   coastalTradeReviewAt?:number;
   coastalCommissions?:import('./coastalCommission').CoastalCommission[];
   seaExploration?:import('./seaExploration').SeaExplorationState;
+  droppedCargo?:import('./stolenCargo').DroppedCargoState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;
