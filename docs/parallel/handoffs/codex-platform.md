@@ -44,7 +44,7 @@ Codedb3dfbaee3d94893f242fd8abb34b9ce420e4146 / 2026-11-11T21-18-48-816Z-db3dfba 
 
 Current dairy scope:4actualmilk+1vessel+1log+1L,30s staffed prep then90 effective climate-dependent fermentation seconds, releases adult but holds vessel/slot, real pickup returns3food+samevessel once. BuiltUI inspection pauses pickup deliberately to expose transient ready state; native case proves unpaused automatic delivery separately. No cheese/horses/full autodemand/spoiled-vessel recovery yet. Explicit discard currently loses vessel; proper recovery/cleaning remains backlog. Exact memo source unchanged from the parity benchmark; clock eviction remains separate untested candidate. No visual default change or NPC sea publication.
 
-## Cross-lane integration round — current frozen candidate
+## Prior cross-lane integration round — superseded by published f095 batch below
 
 - Sea source now combines Claude01e6f66 owner-recall/capture/interruption work with Codex paid-hull reservation/ready-wait fixes and witnessed-hull water-cell admission. Prior native proof:3crew, samehull4961,621.31m/6legs,47reportedcells, actualcacheunloads, food/waterconserved and terrain/strictreload preserved. Latest main-current combined source is under one serial regression run; not published yet.
 - Real paid-cache defect found: allowed loose-material outside delivery could shrink existing parked paid cereal capacity, blocking later collection. Candidate protects only parcels already physically stored/collecting, retaining new-parking admission. Root owns productionOwnership.ts; dairy recovery owns its separate production/cereal/workload paths. Four targeted corrections pass; a new no-extra-parking regression is included in the combined run.
@@ -61,3 +61,65 @@ Navigation/site slices are independently reviewable; no broad W2 acceptance yet.
 4. Source anti-loop/unseen command tests are useful, but no100+resident paired timing/native ferry-arrival proof exists. Classify those as source/fixture evidence. Root will preserve reservation guard hunks in boats.ts and preexisting held Game edits when integrating surgical steer/updateVision changes.
 
 Next Codex-owned physical hull-loss recovery contract is prepared: a real nearby crewed same-team rescue hull, capacity-reserved pickup at existing1.5m embark range, normal travel/landing/cache delivery. No broad24m waterwalking, freecanoe, teleport or timeout removal. Trade needs a real cache-unload adapter; replacing every lost voyage's boatId with a shared rescue hull violates existing unique-hull validation. Scope remains open until implementation/native qualification.
+
+## Blocking trade/cargo review — exact Claude5d9051c
+
+Detailed source review is in ../reviews/trade-cargo-5d9051c.json. Please prioritize these repairs before broad G15 integration; they are not cosmetic/typing complaints:
+
+- Padded armor is state.armor.assets with actual holder/condition. tradeNeeds currently reads/writes positive tribe.items.paddedArmor, which the current production validator explicitly rejects. Its diversity fixture fabricates forbidden bulk armor. Use real asset transfer preserving ID, condition and provenance; no substitute count.
+- Farm tools are not implemented by trading cordage/baskets under a tools label. Need real owned tool adapter and condition accounting. Non-resource cargo currently has no actual Unit item/gear/animal holder and disappears on capture/preemption reconciliation.
+- TradeNeeds lacks a pause/direct-order hook: interrupted carriers can overwrite new commands. Cache loads rely on remembered ready IDs rather than current physical supplyReached. Strict validation must bind escrow/phase, unique memberships, line↔actual carried quantities and animal identity.
+- Original stolenCargo defects are unchanged: cap64 remote merge/65th invalid parcel, mark-cap owner loss, root-only trip preemption and distant pickup. Repair actual conservation/custody before counting item107 done.
+- Player-from0 proposals are explicitly rejected; current API is answer-only. Boat journeys remain a separate resource loop, not boat-capable diverse trade. Retain both requested scopes as pending.
+
+Requested merge sequence supports the full requirement: fix shared cargo/interrupt/save ownership; then physical needs-driven resource deals; then actual item, armor/tool and animal adapters. Pure personality/market arithmetic can travel independently, but does not complete diverse trade. Root will not count reported43/43 fixtures as published/native acceptance. Please keep new conquest work isolated while these existing trade blockers are repaired.
+
+## Published NPC sea / vessel recovery / paid-cache integration — 2026-11-11T22:24:32.852387+00:00
+
+Live source **f09578da5ba49396edc3a580ca55cbb05c5c476e**, exact frozen reviewed release **2026-11-11T22-04-13-358Z-f09578d**, verified on8086/8101. **138/138** =131regression/native +4worker activity/pickup-label +3built browser checks; typecheck and production build passed. Evidence: docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json. Frozen checklist stays34/98 (34.69%), zero new gate credit.
+
+Sea source combines Claude owner-recall/capture/interruption with Codex reservation/ready-wait and actual witnessed hull-cell admission. Native unchanged seed1/V14 coast passed in77.9simseconds,3.02swall on this combined run: same paid hull4961,3crew,621.31m/6legs,47reported cells, actual reached-cache unloads and exact food/water ledgers. Built visual review passed: one real hull moves18.62m with crew rendered aboard, no head-carried canoe for aboard crew; injured personal-canoe owner remains independently ashore. Visual-only TestLab reveal adds no NPC knowledge. Screenshots were inspected then deleted per user request; hashes remain in the report.
+
+Dirty/spoiled/discarded dairy vessels now support actual paid2L-water cleaning,20s work, physical pickup/return, pause/resume and strict reload. Same pottery origin returned once with no ghost fermented food; normal fermentation still produces3food and returns its vessel. Existing paid parked/collecting cereal capacity survives later outside deliveries without admitting extra parked inputs. Prior four food regression failures are preserved historically; corrected contracts/current combined run pass. Broad food/campaign, organic multi-AI, latest-map naval qualification and physical stranded-crew rescue remain open.
+
+## Prior G10 source-qualified checkpoint — superseded by publication below — 39115987e6c6488462be93d8226fb629aefbc96e
+
+Only the reversible observedFog/updateVision/reset seam from Grok b3174e2 was integrated, plus Codex observed-age snapshot and paused lab-resume persistence seams. No steer/navigation/field/fertility or inaccurate provenance tracer. Four new realGame tests and30relevant save/autosave/storage checks passed34/34 unchanged; Node24 typecheck passed. Actual resident movement under reveal persists only real fog and remembered ages; primary SAVE_KEY, :bak and :protected bytes plus original live village remain unchanged. Build passed; browser/publication pending; current live staysf095. Please correct tracer sight radii on your owned branch and preserve the observedVision()/observedVisionAge() seam when merging main.
+
+Cultured curd passed7/7 focused tests and typecheck; broader regression/build/UI remain pending, not live. Clock eviction and interaction-predicate performance experiments were rejected and are not in the live release. Trade/cargo blockers above remain pending actual ownership/physical/save repairs; reported43/43 fixtures are not publication or native credit.
+
+## G10 published — 2026-11-11T22:26:47.741779+00:00
+
+Source **39115987e6c6488462be93d8226fb629aefbc96e**, release **2026-11-11T22-25-07-816Z-3911598**, verified health+HTML200 on8086 and8101. **35/35**=34realGame/save/autosave/storage regressions+1actualbuiltpublicTestLabUI, Node24 typecheck/build passed. Native seed0 sparse observations; public reveal/save/load/off/return controls preserve the original isolated village/localStorage and real observed fog/age. An earlier menu-toggle harness failure was corrected test-only, with no source/build change. Evidence: docs/metrics/test-lab-observed-fog-release-2026-11-11.json.
+
+Precedingf095138/138 remains a distinct published batch; no combined overlapping denominator or new gate credit (34/98). Grok: correct-radius provenance tracer is still excluded and needs your owned fixes. Curd7/7+typecheck remains pending broader regression/build/UI/publication.
+
+## Follow-up source review — Claude9a40164 vs5d9051c
+
+No previous trade/cargo blocker is repaired in this delta. The only trade changes extract commitPlan/tradeAnswerBlocker and add last-observed partner-stock snapshots with3new controlled fixture tests. These are useful dialog seams, not physical inventory/task/save fixes.
+
+Still blocked: positive bulk items.paddedArmor conflicts with actual armor assets and strict production saves; real farming tools/condition are absent; item/gear/animal cargo lacks physical holders; direct interruption remains unhooked; loading still trusts latched ready IDs; core escrow/animal/line↔carry validation unchanged; player-from0 proposals rejected; needs-driven boat transport absent. stolenCargo.ts, its9tests, workCommitments.ts, armor.ts and farmTools.ts are byte-identical to the blocked baseline: parcel64/provenance64, preemption and distant pickup defects persist.
+
+New narrow fixes: tradeAnswerBlocker object fallback can preview an unregistered offer that answerTradeOffer cannot accept; reject detached/stale IDs. Observation records need observedAt<=state.time and historical observer IDs<nextId. Preserve valid history after observer death. Do not present a society-wide snapshot as a visible individual cache inventory.
+
+Fresh PM board2de0593 requires current-main merge and shared native sea/reservation retest before scope expansion;9a mergedf095 but newerG10/source-doc seams must also be preserved. Canonical backlog/status stay Codex-owned; Claude board/hand-off remains Claude-owned. No source or canonical edits and no tests run here. Detailed exact-line review and byte hashes: docs/parallel/reviews/trade-cargo-9a40164.json.
+
+## Scout food custody contract — coordination requested, runtime disabled
+
+Proposed contract: [contracts/scout-food-custody-v1.md](../contracts/scout-food-custody-v1.md). Claude Societies: please coordinate sea/camp consumers before typed loads are enabled. Proposed optional ScoutProvisions.foodCustody holds actual kind/physical units/cache-origin lots plus a distinct legacyUnits unknown bucket. Unit already imports ScoutProvisions, so no types.ts edit is required for that field. Origin labels are historical cache provenance, not container/vessel assets.
+
+Present scout and boat withdrawal budgets use rate×seconds and p.food/rate; those decisions must use nourishment. Existing food/foodUsed/paidFood/sea conservation counters stay physical units. Migrate sea dead-mate transfer, handOverPack usage reset, finiteCamp budgets/strict paid counters, custody/rescue, cache receipts, handover and carried-load volume through the typed API; never scalar-cast bread/curd/whey or invent legacy food identity. Coastal trade/commission remain explicit separate legacy scalars until coordinated. Root permission is still required before any shared types/captive holder edit.
+
+Only new leaf+9 kernel tests exist in an isolated .play candidate; neither committed nor executed. No runtime/source change is published by this contract. Typed loading stays DISABLED until every consumer and strict save/physical cache handoff preserves actual kind, origin, physical volume and nourishment. Please confirm owned sea/camp/custody hooks in your handoff; Codex will integrate shared persistence/volume seams with qualified tests when the resource lane is granted.
+
+## Execution leadership handoff — 2026-11-11T22:45:11.395433+00:00
+
+User appoints Grok execution PM and Claude high-level design lead. Codex continues assigned implementation/debug/test/integration support and defers programme sequencing to Grok. Existing file claims remain until Grok reassigns them.
+
+Current live: code3911598, release2026-11-11T22-25-07-816Z-3911598 on8086/8101;35/35 scoped fog/save batch, precedingf095138/138 separate; overall34/98 unchanged. CanonicalHEAD before this docs handoff3266af2. Saved villages untouched.
+
+Current authorized batch, NOT LIVE: fixed-angle camera collision correction (latest user priority; source under focused validation), exact GrokW1 narrow movement fix (6controlled checks+typecheck; native normalGame.step moves original worker through1.2m authored warehouse gap and settles hold after8.15s versus baseline20s/195route-discard loop), curd/whey (124passed/1failed/1skipped original126-check run; pottery test-only legitimate all-shard handling repaired4/4, source runtime/typecheck unchanged). Original failure and evidence retained. Root is preparing one combined frozen build; do not duplicate these files without claims.
+
+Knowledge screen: compact row/search/progress/primary-action/Details implementation28c8621 is already live; no additional redesign has shipped. Grouped/activity-based overview and workshop-context actions remain requested UX work; Claude design lead should specify concise interaction design, Grok assigns execution.
+
+New proposed scout-food custody contract is docs/parallel/contracts/scout-food-custody-v1.md. Runtime typed loads DISABLED until sea/camp/return/consumption/save consumers migrate; no kind/energy conservation completion claim. Source audit also found redundant default-world generation during constructor+reset/load; proposal only, no measured speedup or source change. Grok decides sequencing after camera.

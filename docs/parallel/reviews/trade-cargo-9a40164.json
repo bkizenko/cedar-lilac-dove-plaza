@@ -1,0 +1,166 @@
+{
+  "recordedAtUtc": "2026-11-11T22:29:57.824569+00:00",
+  "baseline": "5d9051c4a1f8acb074164c069190abc5457a7d8f",
+  "reviewedCommit": "9a401643c4d6ca61ddaeed95a4ad1b340d44c1d6",
+  "scope": "Read-only exact source delta review, no tests/build/browser/source overlay/canonical edits. Conquest modules outside this audit.",
+  "verdict": "0 of12 tracked previous blockers repaired. Two useful new API seams do not resolve physical inventory/task/save blockers.",
+  "blockerDelta": [
+    {
+      "blocker": "Actual armor holder/id/condition",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts26,32,36,61-88; production.ts255,384",
+      "evidence": "Still paddedArmor bulk count in tribe.items. Real armor is state.armor.assets; production skips count output and validator forbids positive paddedArmor in both stock and itemCargo. Diversity fixture still injects forbidden bulk stock. No real armor transfer adapter."
+    },
+    {
+      "blocker": "Actual farming tool ownership/condition",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts26-33; farmTools.ts",
+      "evidence": "GoodKind still omits stoneHoe/copperTools/ironTools; cordage/basket labels do not transfer Unit.farmTool/farmToolCondition. FarmTools source unchanged; no adapter."
+    },
+    {
+      "blocker": "Physical item/gear/animal cargo and captured-body custody",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts78-85,208,220-222",
+      "evidence": "Non-resource goods remain only TradeLine/escrow arrays; setCarry clears hands for them, no itemCargo/asset holder. Reconcile deletes lines on loss/capture/ownership mismatch and books metrics. Live goats removed from world and placed into receiving pen by x/z assignment. No physical following/captive-holder/drop transfer implemented."
+    },
+    {
+      "blocker": "Direct command interruption/task ownership",
+      "status": "unchanged",
+      "at": "coastalTrade.ts45; tradeNeeds.ts206-223,255-268",
+      "evidence": "pauseCoastalTrade still does not call a trade-needs cancellation hook. tradeNeedsAI still overrides order while matching marker remains; alive() checks body/team/custody/marker, not superseding task. No matching-owner release that preserves successor order/route."
+    },
+    {
+      "blocker": "Physical cache loading at current handoff",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts233-237,260,266",
+      "evidence": "Loading transition still trusts remembered ready IDs without current supplyReached. Return unload still legitimately calls supplyApproach/supplyReached; that was already true before and is not a new repair."
+    },
+    {
+      "blocker": "Strict core escrow/line/animal validation",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts283-297",
+      "evidence": "Core validator unchanged apart from line shifts. Still no animal payload/schema/identity checks, duplicate membership checks, phase-specific escrow/carry invariants, exact line↔resource carry quantity, bounded world hall coordinates or strict offer/receipt IDs/time/counter validation. New observations validator is separate and does not repair these."
+    },
+    {
+      "blocker": "Player proposes an actual requested deal",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts116,196-202",
+      "evidence": "from===0 remains explicitly rejected. answerTradeOffer remains answer-only for NPC proposals. New tradeAnswerBlocker previews existing acceptance, not a proposer API. No messenger or player request flow."
+    },
+    {
+      "blocker": "Needs-driven NPC boat transport/capacity reservation",
+      "status": "unchanged",
+      "at": "tradeNeeds.ts256-268; coastalTrade.ts",
+      "evidence": "Needs carriers still ground-steer to hall; coastalTrade is separate resource loop. No one-offer escrow shared with hull commissioning/reservation. No diverse sea trade acceptance."
+    },
+    {
+      "blocker": "Parcel cap64 local conservation/valid saves",
+      "status": "unchanged-byte-identical",
+      "at": "stolenCargo.ts58-70,249",
+      "evidence": "At cap, exact carry debited before durable holder; arbitrary remote merge or65th parcel persists. No new cap tests."
+    },
+    {
+      "blocker": "Original-owner provenance cap64",
+      "status": "unchanged-byte-identical",
+      "at": "stolenCargo.ts48-52,157-161",
+      "evidence": "Mark writes still silently fail at cap after goods transfer; cargoOwner falls back to carrier.team."
+    },
+    {
+      "blocker": "Cargo trip shared commitment and safe preemption",
+      "status": "unchanged-byte-identical",
+      "at": "stolenCargo.ts87-100,148-152; workCommitments.ts3",
+      "evidence": "Trips remain root-only with unitId and no saved trip-id marker/registered commitment. endTrip overwrites successor order/node/target/route. New workCommitments file is byte-identical to blocked5d."
+    },
+    {
+      "blocker": "Actual parcel pickup reach",
+      "status": "unchanged-byte-identical",
+      "at": "stolenCargo.ts200-202",
+      "evidence": "Still permits nearestWalk reached point irrespective of actual parcel distance, and pickupMeters+2 branch; no body-clear final parcel approach."
+    }
+  ],
+  "byteEqualityProof": [
+    {
+      "path": "src/game/stolenCargo.ts",
+      "unchanged": true,
+      "baselineSha256": "01108c0791a49cb40424157fc5cb6216136aee2263fe255955b61e9185dbdfe5",
+      "currentSha256": "01108c0791a49cb40424157fc5cb6216136aee2263fe255955b61e9185dbdfe5"
+    },
+    {
+      "path": "scripts/stolen-cargo.test.mjs",
+      "unchanged": true,
+      "baselineSha256": "ca1823b70ee70c8d3ef75edc642255f5dc6f964879ac28a9cee1ba41fe34a259",
+      "currentSha256": "ca1823b70ee70c8d3ef75edc642255f5dc6f964879ac28a9cee1ba41fe34a259"
+    },
+    {
+      "path": "src/game/workCommitments.ts",
+      "unchanged": true,
+      "baselineSha256": "d5551417245bf5c537688f69daf82b76157ebb235af30ed739dbc6acfb851012",
+      "currentSha256": "d5551417245bf5c537688f69daf82b76157ebb235af30ed739dbc6acfb851012"
+    },
+    {
+      "path": "src/game/armor.ts",
+      "unchanged": true,
+      "baselineSha256": "4c7a9d3e2ca8674256d3a749b857366ea3deb89131eaaaee48d37e2235b7df57",
+      "currentSha256": "4c7a9d3e2ca8674256d3a749b857366ea3deb89131eaaaee48d37e2235b7df57"
+    },
+    {
+      "path": "src/game/farmTools.ts",
+      "unchanged": true,
+      "baselineSha256": "cc22b2111a9aded3f514c7b619b780cb27a4d7538eabc40275edf76dd90fe88d",
+      "currentSha256": "cc22b2111a9aded3f514c7b619b780cb27a4d7538eabc40275edf76dd90fe88d"
+    },
+    {
+      "path": "scripts/trade-needs.test.mjs",
+      "unchanged": true,
+      "baselineSha256": "358e597e61a8e3454b49ab0e0c6ba1ebb907dfc5809e22d0195bfb447788bf90",
+      "currentSha256": "358e597e61a8e3454b49ab0e0c6ba1ebb907dfc5809e22d0195bfb447788bf90"
+    }
+  ],
+  "newUsefulWork": [
+    {
+      "at": "tradeNeeds.ts164-193",
+      "name": "commitPlan + tradeAnswerBlocker(g, offer|id)",
+      "assessment": "Positive structural extraction: same qualifies/commitPlan paths used by actual commit and read-only acceptance preview. Existing behavior preserved by design; does not remove previous invalid goods/task/loading rules. All helper allocations remain bounded small party lists; no performance claim.",
+      "newTestSource": "trade-answer-blocker.test.mjs33-50 has dry-run no-stock/no-person mutations, verdict parity and NPC->player insufficient-stock rejection."
+    },
+    {
+      "at": "tradeNeeds.ts272-281",
+      "name": "observePartnerStock + observedPartnerStock",
+      "assessment": "Positive scoped stale-knowledge seam: physically present living own observer at partner hall records a copy, accessor returns copy and age, remote changes do not update it. It samples society-wide tradeStock at visit, not individually visible cache contents; no local-cache knowledge claim.",
+      "newTestSource": "trade-answer-blocker.test.mjs51-66 exercises fixture physical hall arrival, stale copy, mutation isolation, strict reload and absence compatibility."
+    }
+  ],
+  "newSeamCautions": [
+    {
+      "at": "tradeNeeds.ts298-300",
+      "finding": "Observation validation checks pair uniqueness/bounded64 and nonnegative recognized stocks, but observedAt is not bounded by state.time; observerId not bounded by nextId and no actual provenance record validation. Add future-time/out-of-range id mutations. Do not require still-living observer for historical knowledge; a valid historical ID can survive death."
+    },
+    {
+      "at": "tradeNeeds.ts181-184",
+      "finding": "Object form falls back to caller object absent from state, while answerTradeOffer resolves stored id only. A proposed detached object can receive empty blocker even though acceptance cannot occur. Return not-open for unregistered object IDs, or make object form explicitly internal preview-only. Test absent/stale ids."
+    }
+  ],
+  "newTestClaims": {
+    "testsAdded": 3,
+    "executedHere": 0,
+    "sourceClassification": "Copied flat dry fixture clears native terrain/rivers/features, suppresses risks and overrides clock to Day; setup relocates witness to hall and back. Actual Game.step later is controlled fixture evidence, not native/published qualification. Existing13trade tests and9cargo tests unchanged. No broad readiness from reported greens."
+  },
+  "PMBoard": {
+    "fetchedRef": "agents/claude-coordination",
+    "exactCommit": "2de05933054623c5c8276acf6e10e88b9b9ca10b",
+    "latestSection": "PM check-in (main f09578d)",
+    "instructions": [
+      "Claude owns board and lane handoffs; Codex canonical backlog/current status remain single writer; append owned response rather than rewriting other claims.",
+      "Read main before each batch, merge updated main into pushed branch, no force push/rebase. Latest PM names coastalTrade/coastalCommission/rivalDevelopment/boats/boatSailing overlaps and tells Societies to merge main and rerun native sea/reservation before new scope.",
+      "9a40164 merged f095 but not newer39115987 G10/current docs; preserve those seams at next merge. Sea/inventory shared API changes require Codex sign-off; later conquest hook riding also needs explicit timing/per-second cost review.",
+      "Pure data or small adapter slices can land once qualified; no demand to finish full art/trade overhaul first. Source, fixture, native and published evidence remain distinct."
+    ],
+    "caution": "Older board heading and some no-overlap assertions are stale relative to its latest PM section; do not infer currently active external sessions from branch names."
+  },
+  "viableIntegrationOrder": [
+    "Review/qualify isolated read-only acceptance blocker and last-observed stock seam as a small dialog contract after detached-offer and observation-time/id checks; do not automatically enable trade lifecycle.",
+    "First repair exact cargo holder cap/provenance/preemption/reach and strict ownership, then resource-only needs trade with interruption and current-cache loading proof.",
+    "Add actual bulk-item/armor/tool/animal holders in domain-specific adapters retaining identity/condition/physical position; player proposer and boat transport remain separate required slices.",
+    "Keep new surrender/captive/conquest modules isolated from trade repair and from current live G10; root reviews their integration separately."
+  ]
+}

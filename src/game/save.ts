@@ -71,6 +71,8 @@ export function loadTestLabGame(storage: SaveStorage = localStorage) {
   const game = decodeGame(data);
   game.testMode = true;
   game.revealMap = (data as {testLabRevealMap?: boolean}).testLabRevealMap === true;
+  // A paused restored lab displays the overlay immediately; saved fog stays real.
+  game.updateVision(0);
   game.state.paused = true;
   return game;
 }
