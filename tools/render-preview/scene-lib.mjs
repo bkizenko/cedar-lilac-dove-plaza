@@ -84,7 +84,7 @@ export function slab(w, d, h, hex, grain = .6) {
 
 /** Indexed terrain grid. `height(x,z)` is the display height; `colorHeight`
  * (default = height) is what carvedTerrainColorsForPositions samples. */
-export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height, waterY, seed = 0, pathWeight, name = 'terrain', grain = .35 }) {
+export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height, waterY, seed = 0, pathWeight, name = 'terrain', grain = .35, grainAmplitude = null }) {
   const nx = Math.round((x1 - x0) / step) + 1, nz = Math.round((z1 - z0) / step) + 1;
   const pos = new Float32Array(nx * nz * 3), nrm = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2), gr = new Float32Array(nx * nz).fill(grain);
   const H = new Float32Array(nx * nz);
@@ -93,7 +93,17 @@ export function terrainMesh({ x0, x1, z0, z1, step, height, colorHeight = height
     const k = j * nx + i, hl = H[j * nx + Math.max(0, i - 1)], hr = H[j * nx + Math.min(nx - 1, i + 1)], hd = H[Math.max(0, j - 1) * nx + i], hu = H[Math.min(nz - 1, j + 1) * nx + i];
     const n = [-(hr - hl) / (2 * step), 1, -(hu - hd) / (2 * step)], l = Math.hypot(...n); nrm[k * 3] = n[0] / l; nrm[k * 3 + 1] = n[1] / l; nrm[k * 3 + 2] = n[2] / l;
   }
-  const col = terrace.carvedTerrainColorsForPositions(pos, colorHeight, waterY, seed, pathWeight);
+  let col;
+  if (grainAmplitude == null) col = terrace.carvedTerrainColorsForPositions(pos, colorHeight, waterY, seed, pathWeight);
+  else { // same as carvedTerrainColorsForPositions, with the grain term rescaled (preview proposal)
+    col = new Float32Array(nx * nz * 3); const path = palette.hexToRgb(palette.CARVED_TERRAIN.path), A = palette.CARVED_TERRAIN.grainAmplitude;
+    for (let k = 0; k < nx * nz; k++) {
+      const x = pos[k * 3], z = pos[k * 3 + 2], s = terrace.carvedTerraceSample(colorHeight, x, z, waterY, seed); let rgb = s.rgb;
+      if (s.band >= 0) { const f = (1 + s.grain * grainAmplitude) / (1 + s.grain * A); rgb = rgb.map(c => Math.min(1, c * f)); }
+      const p = pathWeight ? Math.max(0, Math.min(1, pathWeight(x, z))) : 0; if (p > 0 && s.band >= 0) rgb = rgb.map((c, i) => c + (path[i] - c) * p);
+      col[k * 3] = rgb[0]; col[k * 3 + 1] = rgb[1]; col[k * 3 + 2] = rgb[2];
+    }
+  }
   const idx = [];
   for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
   return { name, cast: true, flat: false, pos: f32(pos), nrm: f32(nrm), col: f32(col), grain: f32(gr), uv: f32(uv), idx: u32(idx), mat: u8(new Uint8Array(nx * nz).fill(MAT.terrain)), tris: idx.length / 3 };

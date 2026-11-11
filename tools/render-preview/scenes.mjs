@@ -3,6 +3,7 @@
 // and the review terrain heightfield (coloured by carvedTerrainColorsForPositions).
 import { Soup, specMesh, impostorMesh, slab, terrainMesh, waterMesh, grainTexture, style, families, trees, caravans, wonders, constants, palette, terrace, parts as P } from './scene-lib.mjs';
 import { rigFor } from './rigs.mjs';
+import { CIVS, civScene, civLineupScene } from './civ.mjs';
 
 const B = constants.BUILDINGS;
 const WORLD = 1207;
@@ -111,7 +112,7 @@ function villagePaths() {
 function villageScene({ rig, lodTier = 0, hero = false } = {}) {
   const soup = new Soup('village'), labels = [], paths = villagePaths();
   const pathW = (x, z) => { let m = Infinity; for (const p of paths) m = Math.min(m, polyDist(x, z, p)); return 1 - sstep(.75, 1.2, m); };
-  const terrain = terrainMesh({ x0: -80, x1: 80, z0: -80, z1: 80, step: .3, height: dispHeight, colorHeight: rawHeight, waterY: WATER_Y, seed: 5, pathWeight: pathW });
+  const terrain = terrainMesh({ x0: -80, x1: 80, z0: -80, z1: 80, step: .3, height: dispHeight, colorHeight: rawHeight, waterY: WATER_Y, seed: 5, pathWeight: pathW, grainAmplitude: rigFor(rig).terrainGrainAmplitude ?? null });
   const water = waterMesh(-80, 80, -80, 80, SURFACE_Y);
   let id = 100;
   const put = (type, x, z, yaw, extra = {}, era = 2) => {
@@ -161,7 +162,7 @@ function villageScene({ rig, lodTier = 0, hero = false } = {}) {
   treeAt(-20, -14, k++, 'cypress'); treeAt(8, -22, k++, 'cypress'); treeAt(12, 20, k++, 'cypress');
   clump(8, 58, 5, 8, 4, 'shrub');
   return { width: 800, height: 500, background: '#e2b884',
-    camera: hero ? { eye: [-10, 44, 50], target: [-2, 0, 0], fov: 36, near: 3, far: 900, dof: { fstop: .08 } } : { eye: [-4, 66, 70], target: [0, 0, 2], fov: 38, near: 5, far: 900, dof: { fstop: .12 } },
+    camera: hero ? { eye: [-12, 34, 38], target: [-4, 0, -2], fov: 36, near: 3, far: 900, dof: { fstop: .08 } } : { eye: [-7, 55, 60], target: [-1, 0, 4], fov: 38, near: 4, far: 900, dof: { fstop: .12 } },
     rig: rigFor(rig), shadow: { center: [0, 0, 0], radius: 95 }, grain: grainTexture(), meshes: [terrain, water, soup.encode()], labels: [], stats: { tris: terrain.tris + soup.tris } };
 }
 
@@ -169,10 +170,10 @@ function villageScene({ rig, lodTier = 0, hero = false } = {}) {
 function closeupScene({ rig }) {
   const soup = new Soup('close'), base = new Soup('plinth'), labels = [];
   const items = [['cottage', 'house', {}, { era: 2, prosperity: .9 }], ['longhouse', 'barracks', {}, { era: 2, prosperity: .5 }], ['church', 'temple', {}, { era: 2, prosperity: .8 }], ['workshop', 'forge', {}, { era: 2, prosperity: .5 }], ['granary', 'warehouse', {}, { era: 2, prosperity: .5 }], ['watermill', 'grindingStone', { reviewWatermill: true, waterSide: '+x' }, { era: 2, prosperity: .5 }]];
-  base.add(slab(66, 16, .6, palette.CARVED_TERRAIN.bands[0], .5));
-  items.forEach(([fam, type, extra, col], i) => { const x = -27.5 + i * 11; soup.add(specMesh(familySpec(fam, type, col, extra), 0), { x, z: 0, yaw: -.55 }); labels.push({ world: [x, 0, 6.5], text: fam, size: 11 }); });
+  base.add(slab(46, 26, .6, palette.CARVED_TERRAIN.bands[0], .5));
+  items.forEach(([fam, type, extra, col], i) => { const x = -14.5 + (i % 3) * 14.5, z = -5.5 + Math.floor(i / 3) * 12; soup.add(specMesh(familySpec(fam, type, col, extra), 0), { x, z, yaw: -.55 }); labels.push({ world: [x, 0, z + 5.2], text: fam, size: 11 }); });
   labels.push({ x: 12, y: 16, text: 'Close-up: near-LOD detail (roof courses, recessed windows, grain)', align: 'left', size: 14, weight: 700 });
-  return { width: 800, height: 500, background: '#e7c493', camera: sheetCamera(0, 0, 21, 38), rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: 40 }, grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
+  return { width: 800, height: 500, background: '#e7c493', camera: sheetCamera(0, .5, 14.2, 40), rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: 40 }, grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
 }
 
 // ------------------------------------------------------------------- LOD
@@ -203,17 +204,17 @@ function caravanScene({ rig }) {
   const cargoA = [{ kind: 'grain', amount: 30 }, { kind: 'pottery', amount: 8 }, { kind: 'cloth', amount: 6 }];
   const row1 = [['pack animal', { carrier: 'packAnimal', seed: 7, cargo: [{ kind: 'grain', amount: 30 }, { kind: 'hides', amount: 10 }] }], ['pack + escort', { carrier: 'packAnimal', seed: 8, cargo: [{ kind: 'copper', amount: 20 }], escort: true }],
     ['sled', { carrier: 'sled', seed: 3, cargo: [{ kind: 'wood', amount: 50 }, { kind: 'stone', amount: 20 }] }], ['cart', { carrier: 'cart', seed: 4, cargo: cargoA.concat([{ kind: 'iron', amount: 20 }, { kind: 'fish', amount: 30 }]) }],
-    ['cart, empty', { carrier: 'cart', seed: 5, cargo: [] }], ['cart + goat', { carrier: 'cart', seed: 9, cargo: [{ kind: 'bread', amount: 40 }, { kind: 'goat', amount: 2 }] }]];
+    ['cart, empty', { carrier: 'cart', seed: 5, cargo: [] }], ['cart + goat (led, not drawn)', { carrier: 'cart', seed: 9, cargo: [{ kind: 'bread', amount: 40 }, { kind: 'goat', amount: 2 }] }]];
   const row2 = [['scout canoe', { carrier: 'boat', boatClass: 'scoutCanoe', seed: 1, cargo: [{ kind: 'berries', amount: 20 }] }], ['riverboat', { carrier: 'boat', boatClass: 'riverboat', seed: 2, cargo: cargoA }], ['freight punt', { carrier: 'boat', boatClass: 'freightPunt', seed: 3, cargo: [{ kind: 'stone', amount: 120 }, { kind: 'wood', amount: 60 }] }],
     ['stall', { carrier: 'stall', seed: 6, cargo: [{ kind: 'pottery', amount: 30 }, { kind: 'bread', amount: 20 }, { kind: 'cloth', amount: 20 }] }], ['stall, sparse', { carrier: 'stall', seed: 7, cargo: [{ kind: 'meat', amount: 10 }] }]];
   const rows = [row1, row2], cell = 6.2;
   base.add(slab(44, 22, .6, palette.CARVED_TERRAIN.bands[0], .5));
-  rows.forEach((row, r) => row.forEach(([name, inp], c) => { const x = -cell * (row.length - 1) / 2 + c * cell, z = -6 + r * 9; const spec = caravans.caravanSpec(inp); soup.add(specMesh(spec, 0), { x, z, yaw: -.6 }); labels.push({ world: [x, 0, z + 3.6], text: name, size: 10 }); }));
+  rows.forEach((row, r) => row.forEach(([name, inp], c) => { const x = -cell * (row.length - 1) / 2 + c * cell - (r ? 5 : 0), z = -6 + r * 9; const spec = caravans.caravanSpec(inp); soup.add(specMesh(spec, 0), { x, z, yaw: -.6 }); labels.push({ world: [x, 0, z + 3.6], text: name, size: 10 }); }));
   // parcels and market stalls family
   ['grain', 'wood', 'pottery', 'cloth', 'fish'].forEach((kind, i) => { const spec = caravans.parcelSpec(kind, 30, i); soup.add(specMesh(spec, 0), { x: -14 + i * 2.2, z: 10.5, yaw: .3 }); });
   labels.push({ world: [-9.6, 0, 12.3], text: 'dropped parcels', size: 10 });
-  soup.add(specMesh(familySpec('marketStalls', 'market', { era: 3, prosperity: .9 }), 0), { x: 9, z: 9.5, yaw: -.4 });
-  labels.push({ world: [9, 0, 14], text: 'marketStalls family (era 3, rich)', size: 10 });
+  soup.add(specMesh(familySpec('marketStalls', 'market', { era: 3, prosperity: .9 }), 0), { x: 15.5, z: 8.5, yaw: -.4 });
+  labels.push({ world: [15.5, 0, 13.5], text: 'marketStalls family (era 3, rich)', size: 10 });
   labels.push({ x: 12, y: 16, text: 'Caravans, boats, stalls and parcels (caravanModels.ts) — loads come from the passed cargo', align: 'left', size: 13, weight: 700 });
   return { width: 800, height: 500, background: '#e7c493', camera: sheetCamera(0, 2, 13.5, 42), rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: 30 }, grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
 }
@@ -237,7 +238,53 @@ function wonderScene({ rig }) {
   return { width: 800, height: 500, background: '#e7c493', camera: sheetCamera(0, 3, 58, 52), rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: 110 }, grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
 }
 
+// ------------------------------------------------------------ civic families
+const civicMod = await import('../../src/scene/buildingFamiliesCivic.ts');
+export const CIVIC_IDS = Object.keys(civicMod.CIVIC_FAMILIES);
+/** Civic spec: base context from the style map (same seeding rules), then the civic generator. */
+export function civicSpec(family, { era = 2, prosperity = .5, size = 0, culture = null, id = 11, habitat = 'plains' } = {}) {
+  const fp = civicMod.CIVIC_FAMILIES[family].sizes[size];
+  const v = style.carvedVariantFor({ worldSeed: WORLD, type: 'house', id, era, habitat, footprint: fp, prosperity, settlementSeed: 3 });
+  const ctx = { ...v.ctx, footprint: fp, ...(culture ? { culture, tradition: undefined } : {}) };
+  return civicMod.generateCivic(family, ctx, `civic|${family}|${era}|${prosperity}|${size}|${culture ? culture.key : '-'}|${v.key}`);
+}
+const CIVIC_COLS = [{ era: 0, prosperity: .5, label: 'E0' }, { era: 2, prosperity: .2, label: 'E2 poor' }, { era: 2, prosperity: .9, label: 'E2 rich' }, { era: 3, prosperity: .6, label: 'E3 stone' }, { era: 5, prosperity: .8, label: 'E5' }];
+function civicSheet(list, title) {
+  return async ({ rig }) => {
+    const soup = new Soup('civic'), base = new Soup('plinths'), labels = [];
+    const cell = 13.5, rowD = 16.5, blocksAcross = 2, gap = 6, blockW = CIVIC_COLS.length * cell, perCol = Math.ceil(list.length / blocksAcross);
+    const totalW = blocksAcross * blockW + gap, totalD = perCol * rowD;
+    base.add(slab(totalW + 14, totalD + 14, .6, palette.CARVED_TERRAIN.bands[0], .5));
+    list.forEach((family, i) => {
+      const bx = Math.floor(i / perCol), row = i % perCol, x0 = -totalW / 2 + bx * (blockW + gap), z = -totalD / 2 + rowD * (row + .5), fp = civicMod.CIVIC_FAMILIES[family].sizes[0];
+      base.add(slab(blockW - 1, rowD - 2.2, .25, palette.CARVED_TERRAIN.bands[2], .6), { x: x0 + blockW / 2, z, y: .25 });
+      labels.push({ world: [x0 + .3, .3, z + rowD / 2 - 1.1], text: `${family}  (${fp.w}×${fp.d} m)`, align: 'left', size: 10 });
+      CIVIC_COLS.forEach((col, c) => soup.add(specMesh(civicSpec(family, col), 0), { x: x0 + cell * (c + .5), y: .25, z, yaw: -.5 }));
+    });
+    CIVIC_COLS.forEach((col, c) => { for (let bx = 0; bx < blocksAcross; bx++) labels.push({ world: [-totalW / 2 + bx * (blockW + gap) + cell * (c + .5), 0, -totalD / 2 - 2.5], text: col.label, size: 10, bg: 'rgba(120,70,30,.75)' }); });
+    labels.push({ x: 12, y: 16, text: title, align: 'left', size: 14, weight: 700 });
+    return { width: 800, height: 500, background: '#e7c493', camera: sheetCamera(0, 2, totalW / 2 / 1.6 * 1.02), rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: Math.max(totalW, totalD) * .62 },
+      grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
+  };
+}
+/** Town centre: market hall, shrine, town hall, fort barracks, smithy round a paved square. */
+function townCentreScene({ rig }) {
+  const soup = new Soup('town'), base = new Soup('ground'), labels = [];
+  base.add(slab(70, 54, .8, palette.CARVED_TERRAIN.bands[0], .45));
+  base.add(slab(20, 16, .05, palette.CARVED_TERRAIN.path, .3), { x: 0, z: 2, y: .05 });
+  const put = (fam, x, z, yaw, o = {}) => { const sp = civicSpec(fam, { era: 3, prosperity: .7, ...o }); soup.add(specMesh(sp, 0), { x, z, yaw }); labels.push({ world: [x, 0, z + sp.footprint.d / 2 + 1.5], text: fam, size: 10 }); };
+  put('townHall', 0, -12, 0, { size: 2 }); put('marketHall', 0, 4, 0, { size: 1 }); put('shrine', -19, -6, Math.PI / 2, { size: 2 });
+  put('fortBarracks', 20, -6, -Math.PI / 2, { size: 1 }); put('smithy', 15, 12, -.4);
+  [[-18, 12, .3], [-26, 16, .2], [26, 16, -.2], [-27, -18, .1], [27, -19, -.1]].forEach(([x, z, yaw], k) => soup.add(specMesh(style.carvedBuildingSpec({ worldSeed: WORLD, type: 'house', id: 300 + k, era: 3, habitat: 'plains', footprint: { w: B.house.w, d: B.house.d }, prosperity: .6 }), 0), { x, z, yaw }));
+  const r = P.seededRandom(5); for (let i = 0; i < 12; i++) { const x = (i % 2 ? 1 : -1) * (31 + r() * 2), z = -22 + i * 4; soup.add(specMesh(trees.treeSpec('broadleaf', i % 4), 0), { x, z, yaw: r() * 6, scale: .9 + r() * .2 }); }
+  labels.push({ x: 12, y: 16, text: 'Town centre (buildingFamiliesCivic.ts, era 3, no culture): market hall, shrine, town hall, fort barracks, smithy', align: 'left', size: 12, weight: 700 });
+  return { width: 800, height: 500, background: '#e7c493', camera: { eye: [-8, 40, 48], target: [0, 0, 0], fov: 40, near: 3, far: 600 }, rig: { ...rigFor(rig), fogNearMetres: 1e4, fogFarMetres: 2e4 }, shadow: { center: [0, 0, 0], radius: 50 }, grain: grainTexture(), meshes: [base.encode(), soup.encode()], labels };
+}
+
 export const SCENES = {
+  'civic-1': civicSheet(CIVIC_IDS.slice(0, 10), 'Civic families 1/2 (buildingFamiliesCivic.ts), near LOD, no culture'),
+  'civic-2': civicSheet(CIVIC_IDS.slice(10), 'Civic families 2/2 (buildingFamiliesCivic.ts), near LOD, no culture'),
+  'town-centre': townCentreScene,
   'families-1': familySheet(FAMILY_TYPES.slice(0, 10), 'Building families 1/3: near LOD, columns = era / prosperity'),
   'families-2': familySheet(FAMILY_TYPES.slice(10, 20), 'Building families 2/3: near LOD, columns = era / prosperity'),
   'families-3': familySheet(FAMILY_TYPES.slice(20), 'Building families 3/3: near LOD, columns = era / prosperity'),
@@ -248,4 +295,6 @@ export const SCENES = {
   lod: lodScene,
   caravans: caravanScene,
   wonders: wonderScene,
+  'civ-lineup': civLineupScene,
+  ...Object.fromEntries(CIVS.map(c => ['civ-' + c.id, civScene(c)])),
 };
