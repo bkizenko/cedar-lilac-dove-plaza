@@ -4115,7 +4115,7 @@ export class Game {
               }
             }
         }
-        // Claude request 3 (Grok): busy goals share one flow field; equal-cost paths, null falls back to A*.
+        // Claude request 3 (Grok): busy goals share one flow field when switched on (setFlowFieldsEnabled); equal-cost paths, null falls back to A*.
         let path = flowPath(this, grid, WALK, index(u.x, u.z), end, this.navRevision) ?? findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
         // Coarse cells can close a real body-sized passage in a dense camp.
         // Spend shared navigation budget once; ordinary route following still

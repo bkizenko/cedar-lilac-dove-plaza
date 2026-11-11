@@ -12,6 +12,12 @@ type Field={goal:number;dist:Float32Array;used:number};
 type OwnerState={revision:number;grids:Map<Uint8Array,{counts:Map<number,number>;fields:Map<number,Field>}>;tick:number;stats:FlowFieldStats};
 export type FlowFieldStats={built:number;hits:number;misses:number;evicted:number;buildMs:number};
 const owners=new WeakMap<object,OwnerState>();
+/** Integration switch (completion plan: new behaviour behind a switch). Off by default:
+ * `flowPath` then always returns null and routing is exactly the historic A*. Codex
+ * enables it per game (e.g. from a game option) after its Phase-1 performance run. */
+const enabled=new WeakMap<object,boolean>();
+export function setFlowFieldsEnabled(owner:object,on:boolean){enabled.set(owner,on);if(!on)owners.delete(owner);}
+export function flowFieldsEnabled(owner:object){return enabled.get(owner)===true;}
 
 export function flowFieldStats(owner:object):FlowFieldStats{return owners.get(owner)?.stats??{built:0,hits:0,misses:0,evicted:0,buildMs:0};}
 export function resetFlowFields(owner:object){owners.delete(owner);}
@@ -19,6 +25,7 @@ export function resetFlowFields(owner:object){owners.delete(owner);}
 /** A path in `findPath`'s form (cells after `start`, ending at `goal`), or null so the
  * caller falls back to `findPath` (goal not hot yet, start outside the field, or blocked). */
 export function flowPath(owner:object,grid:Uint8Array,width:number,start:number,goal:number,revision:number):number[]|null{
+ if(!flowFieldsEnabled(owner))return null;
  if(start<0||goal<0||start>=grid.length||goal>=grid.length||!grid[goal])return null;
  if(start===goal)return [];
  let st=owners.get(owner);if(!st){st={revision,grids:new Map(),tick:0,stats:{built:0,hits:0,misses:0,evicted:0,buildMs:0}};owners.set(owner,st);}
