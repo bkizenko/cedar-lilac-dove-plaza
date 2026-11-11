@@ -372,3 +372,32 @@ test('delivered mill and oven practice unlocks larger physical batches with paid
  assert.equal(g.tribe(0).productionPractice.bakeBreadDouble.usefulOutputs,8);
  assert.equal(g.state.autoWorkEnabled,false);
 });
+
+test('a practiced threshing floor processes double loads and preserves the exact grain and seed yield through a save',()=>{
+ let {g,v}=fixture();
+ v.jobLock=true;
+ const floor=g.makeBld('threshingFloor',12,44,0);
+ g.state.buildings.push(floor);
+ ground(g);
+ const tribe=g.tribe(0),initialSeed=tribe.seeds;
+ tribe.items={grainSheaves:40};
+ assert.match(productionIssue(g,'threshCerealFloorDouble',floor.id),/0\/3/);
+ assert.match(productionIssue(g,'winnowCerealFloorDouble',floor.id),/0\/3/);
+ drive(g,300,()=>g.state.production?.projects.some(p=>p.recipe==='winnowCerealFloorDouble'));
+ const job=g.state.production.projects.find(p=>p.recipe==='winnowCerealFloorDouble');
+ assert.ok(job);
+ assert.equal(g.state.production.metrics.consumed.grainSheaves,40);
+ assert.equal(g.state.production.metrics.consumed.roughGrain,30);
+ g.state.weather='rain';
+ drive(g,2);
+ assert.equal(job.progress,0);
+ assert.match(job.blockedReason,/Wet weather/);
+ g=decodeGame(encodeGame(g));ground(g);
+ g.state.weather='clear';
+ drive(g,100,()=>g.state.production.projects.find(p=>p.id===job.id).phase==='complete');
+ assert.equal(g.state.production.projects.find(p=>p.id===job.id).phase,'complete');
+ assert.equal(g.state.cerealProcessing.cleanedGrain,20);
+ assert.equal(g.state.production.metrics.produced.chaff,10);
+ assert.equal(g.state.production.metrics.produced.straw,10);
+ assert.ok(Math.abs(g.tribe(0).seeds-initialSeed-1.6)<1e-9);
+});

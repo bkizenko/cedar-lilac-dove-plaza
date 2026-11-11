@@ -37,7 +37,7 @@ import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTra
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
-import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing,availableThreshingFloor,beginProduction} from './production';
+import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing,availableThreshingFloor,startFloorCereal} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
 import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
 import {terrainWalkBase} from './terrainWalkCache';
@@ -4514,7 +4514,7 @@ export class Game {
         if(!this.buildingWorkReached(u,floor)){this.steer(u,dt);return;}
         if(deliverProductionCargo(this,u,floor)){
           u.node=null;u.order="idle";
-          if(beginProduction(this,'threshCerealFloor',floor.id,u.id,true))return;
+          if(startFloorCereal(this,floor,u,false,true))return;
           this.workBoard.assign(this,u);
           return;
         }

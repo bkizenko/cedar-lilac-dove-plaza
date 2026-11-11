@@ -1,6 +1,6 @@
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,resumeProduction,productionIssue,doubleGrainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{beginProduction,resumeProduction,startFloorCereal,productionIssue,doubleGrainBatchIssue,productionSlots,occupiedProductionSlots,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -36,7 +36,11 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number){
   if(!g.interactionSpot(builder,site))return false;g.interruptMission(builder);builder.order='build';builder.node=site;builder.job=null;builder.jobLock=false;builder.target=null;builder.workReason='Building a real hearth to hand-process the cereal harvest';g.invalidateRoute(builder);g.workBoard.reset();return true;
  }
  const maker=workers.find(u=>atCache(g,u));
- if(maker){for(const b of finished){const recipe=rough?(b.type==='threshingFloor'?'winnowCerealFloor':'winnowCerealHand'):(b.type==='threshingFloor'?'threshCerealFloor':'threshCerealHand');if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);}return false;}
+ if(maker){for(const b of finished){
+  if(b.type==='threshingFloor'){if(startFloorCereal(g,b,maker,rough))return true;continue;}
+  const recipe=rough?'winnowCerealHand':'threshCerealHand';
+  if(!productionIssue(g,recipe,b.id,maker.id))return beginProduction(g,recipe,b.id,maker.id);
+ }return false;}
  const carrier=workers.find(u=>supplyDrops(g,team).some(d=>supplyApproach(g,u,d)));if(!carrier)return false;g.interruptMission(carrier);carrier.recalled=true;carrier.order='return';carrier.node=null;carrier.target=null;carrier.job=null;carrier.workReason='Returning to load the actual unprocessed cereal batch';g.invalidateRoute(carrier);g.workBoard.reset();return true;
 }
 

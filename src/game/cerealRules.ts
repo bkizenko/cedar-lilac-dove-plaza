@@ -21,7 +21,7 @@ export function mixStoredCerealAge(tribe:Tribe,kind:StoredCerealKind,prior:numbe
  const previousSince=prior>0?age[kind]??time:incomingSince;
  age[kind]=Math.min(time,previousSince+(incomingSince-previousSince)*(incoming/(prior+incoming)));
 }
-export const cerealRecipes=['threshCerealHand','winnowCerealHand','threshCerealFloor','winnowCerealFloor']as const;
+export const cerealRecipes=['threshCerealHand','winnowCerealHand','threshCerealFloor','winnowCerealFloor','threshCerealFloorDouble','winnowCerealFloorDouble']as const;
 export const isCerealRecipe=(key:string)=>cerealRecipes.includes(key as typeof cerealRecipes[number]);
 export function cerealLedger(g:Game){return g.state.cerealProcessing??={version:1,harvestedSheaves:0,deliveredSheaves:0,lostCarriedSheaves:0,cleanedGrain:0,seedsAllocated:0,seedsLost:0};}
 export function rawCerealField(b:Building){return b.type==='farm'&&b.cerealProcessingVersion===1&&(b.crop?.kind||b.cropType||'grain')==='grain';}
@@ -32,8 +32,9 @@ export function collectCerealSheaves(g:Game,u:Unit,potential:number,capacity:num
 }
 export function recordCerealDelivery(g:Game,u:Unit){const n=u.itemCargo?.grainSheaves||0;if(n>0)cerealLedger(g).deliveredSheaves+=n;}
 export function recordCerealCargoLoss(g:Game,u:Unit){const n=u.itemCargo?.grainSheaves||0;if(n>0)cerealLedger(g).lostCarriedSheaves+=n;}
-export function cerealSeedCapacityIssue(g:Game,team:number,recipe:string){return recipe.startsWith('winnowCereal')&&(g.tribe(team).seeds||0)+CEREAL_RULES.cleanGrainPerBatch*CEREAL_RULES.seedFraction>1e12?'Seed storage is full; keeping the same finished grain batch until space is available':null;}
-export function finishCerealBatch(g:Game,team:number,recipe:string){if(!recipe.startsWith('winnowCereal'))return true;if(cerealSeedCapacityIssue(g,team,recipe))return false;const t=g.tribe(team),m=cerealLedger(g),seed=CEREAL_RULES.cleanGrainPerBatch*CEREAL_RULES.seedFraction;t.seeds=(t.seeds||0)+seed;m.cleanedGrain+=CEREAL_RULES.cleanGrainPerBatch;m.seedsAllocated+=seed;return true;}
+export const cerealBatchScale=(recipe:string)=>recipe.endsWith('FloorDouble')?2:1;
+export function cerealSeedCapacityIssue(g:Game,team:number,recipe:string){return recipe.startsWith('winnowCereal')&&(g.tribe(team).seeds||0)+CEREAL_RULES.cleanGrainPerBatch*cerealBatchScale(recipe)*CEREAL_RULES.seedFraction>1e12?'Seed storage is full; keeping the same finished grain batch until space is available':null;}
+export function finishCerealBatch(g:Game,team:number,recipe:string){if(!recipe.startsWith('winnowCereal'))return true;if(cerealSeedCapacityIssue(g,team,recipe))return false;const t=g.tribe(team),m=cerealLedger(g),seed=CEREAL_RULES.cleanGrainPerBatch*cerealBatchScale(recipe)*CEREAL_RULES.seedFraction;t.seeds=(t.seeds||0)+seed;m.cleanedGrain+=CEREAL_RULES.cleanGrainPerBatch*cerealBatchScale(recipe);m.seedsAllocated+=seed;return true;}
 export function compactGrainWorkplace(type: BldType) {
  return type === 'threshingFloor' || type === 'grindingStone' || type === 'oven';
 }
