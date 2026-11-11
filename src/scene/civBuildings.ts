@@ -7,8 +7,10 @@ import {beam,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,type 
 import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic';
 import {CIVS,matId,materialTable,type CivId,type CivMaterials,type Swatch} from './civStyles';
 export type CivRole='house'|'civic'|'granary'|'market';
-export type CivContext={seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean};
-export type CivSpec=BuildingSpec&{civ:CivId;role:CivRole;materials:Record<string,Swatch>;banners:{pos:readonly[number,number,number];size:readonly[number,number,number]}[];imperfection:{scale:number;lean:number;offDoor:number;patches:number}};
+/** eraMode 'morph' (default): the look follows `era`. 'fixed': the look is set by the building's own build-time culture/wealth (`built`, else the era it was first generated at) and never morphs when the world's era advances; only an explicit rebuild (new `built`) or extension (`extensions`) changes it. */
+export type EraMode='morph'|'fixed';export const ERA_MODES:EraMode[]=['morph','fixed'];export const DEFAULT_ERA_MODE:EraMode='morph';
+export type CivContext={seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean;eraMode?:EraMode;built?:{era:number;wealth:number};/** later additions, each built with the techniques of its own era */extensions?:{era:number}[]};
+export type CivSpec=BuildingSpec&{civ:CivId;role:CivRole;materials:Record<string,Swatch>;banners:{pos:readonly[number,number,number];size:readonly[number,number,number]}[];imperfection:{scale:number;lean:number;offDoor:number;patches:number};eraMode:EraMode;builtEra:number;extensionEras:number[]};
 type V=[number,number,number];type Slot=keyof CivMaterials;
 type G={civ:CivId;r:Rng;w:number;d:number;era:number;wealth:number;wear:number;parts:Part[];
  B:(s:Slot,size:V,pos:V,lod?:LodTier,rot?:V)=>void;Cy:(s:Slot,dia:number,h:number,pos:V,lod?:LodTier,sides?:number,top?:number)=>void;Pr:(shape:Part['shape'],s:Slot,size:V,pos:V,lod?:LodTier,rot?:V,sides?:number)=>void;
@@ -184,15 +186,41 @@ function imperfect(g:G,parts:Part[],wear:number,r:Rng){
  return {parts:out,lean:leanDeg,patches};
 }
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
- const r=seededRandom(ctx.seed),g=mk(civ,ctx,r),sc=jit(r,.06);
+ const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
+ const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
  // builders read g.w/g.d, so run them on a view scaled by the instance's size jitter (still fitted back into the footprint below)
- const view:G={...g,w:ctx.footprint.w*Math.min(1,sc),d:ctx.footprint.d*Math.min(1,sc)};
- const out=role==='house'?(ctx.era<=1?poor(view):HOUSE[civ](view)):role==='civic'?(ctx.era<=1?poor(view):CIVIC[civ](view)):BUILD[role](view);
- if(ctx.era>1&&role!=='market')addons(view,seededRandom(ctx.seed^0x51ed270b));
+ const view:G={...g,w:c2.footprint.w*Math.min(1,sc),d:c2.footprint.d*Math.min(1,sc)};
+ const out=role==='house'?(c2.era<=1?poor(view):HOUSE[civ](view)):role==='civic'?(c2.era<=1?poor(view):CIVIC[civ](view)):BUILD[role](view);
+ if(c2.era>1&&role!=='market')addons(view,seededRandom(ctx.seed^0x51ed270b));
+ if(role!=='market')techniques(view,c2.era);
  const im=imperfect(view,g.parts,ctx.wear,seededRandom(ctx.seed^0x9e3779b1));
  const ref=`${CIVS[civ].name}: ${CIVS[civ].inspiration}`,e=out.entry;
- const fit=fitToFootprint({family:`civ.${civ}.${role}`,variantKey,footprint:{...ctx.footprint},parts:im.parts,...(e?{entry:e}:{}),notes:{reference:ref}},.1);
+ const fit=fitToFootprint({family:`civ.${civ}.${role}`,variantKey,footprint:{...c2.footprint},parts:im.parts,...(e?{entry:e}:{}),notes:{reference:ref}},.1);
  const {w,d}=fit.footprint,entry=fit.entry?{...fit.entry,x:Math.max(-w/2,Math.min(w/2,fit.entry.x)),z:Math.max(-d/2,Math.min(d/2,fit.entry.z))}:undefined;
  const own=new Set(Object.keys(materialTable(civ))),parts=ensureTiers(ensureNearSupport(ensureCore(fit.parts),fit.footprint),fit.footprint).map(p=>own.has(p.mat)?p:{...p,mat:matId(civ,'wall2') as Part['mat']}),cloth=matId(civ,'cloth');
- return {...fit,...(entry?{entry}:{}),parts,civ,role,materials:materialTable(civ),banners:parts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.6).map(p=>({pos:p.pos,size:p.size})),imperfection:{scale:sc,lean:im.lean,offDoor:g.off,patches:im.patches}};
+ const sh=ext.length?-fp0.w*.15:0,shifted=sh?parts.map(p=>({...p,pos:[p.pos[0]+sh,p.pos[1],p.pos[2]] as V,...(p.ends?{ends:[[p.ends[0][0]+sh,p.ends[0][1],p.ends[0][2]],[p.ends[1][0]+sh,p.ends[1][1],p.ends[1][2]]] as const}:{})})):parts;
+ const annexParts:Part[]=[];ext.slice(0,2).forEach((e,i)=>{const vg=mk(civ,{...ctx,era:e.era,wealth:look.wealth,footprint:fp0},seededRandom(ctx.seed+i*7+1)),aw=fp0.w*.26,ad=fp0.d*(.45-i*.1),x=fp0.w*.355,z=-fp0.d*.1+i*fp0.d*.34,h=range(vg.r,2.2,3);vg.B(e.era>=3?'wall':'wall2',[aw,h,ad],[x,0,z],2);roofFor(vg,Math.min(aw,ad)*.8,Math.min(aw,ad)*.8,h,x,z);vg.door(x,z+ad/2+.02,.8,1.7);annexParts.push(...vg.parts.filter(q=>{const b=partBounds(q);return b.minX>=-fp0.w/2&&b.maxX<=fp0.w/2&&b.minZ>=-fp0.d/2&&b.maxZ<=fp0.d/2;}));});
+ const outParts=ext.length?ensureTiers(ensureNearSupport([...shifted,...annexParts],fp0),fp0):parts;
+ return {...fit,footprint:{...fp0},...(entry?{entry:{...entry,x:entry.x+sh}}:{}),parts:outParts,eraMode:ctx.eraMode??DEFAULT_ERA_MODE,builtEra:look.era,extensionEras:ext.map(e=>e.era),civ,role,materials:materialTable(civ),banners:outParts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.6).map(p=>({pos:p.pos,size:p.size})),imperfection:{scale:sc,lean:im.lean,offDoor:g.off,patches:im.patches}};
 }
+
+/** Techniques a builder of this era commands (applied once, at build time): era 3 dressed plinth and door frame, era 4 corner quoins, era 5 cornice band. */
+function techniques(g:G,era:number){
+ const walls=g.parts.filter(p=>p.shape==='box'&&p.size[1]>1.4&&p.lod===2&&!p.rot);if(!walls.length||era<3)return;
+ const bs=walls.map(partBounds),x0=Math.min(...bs.map(b=>b.minX)),x1=Math.max(...bs.map(b=>b.maxX)),z0=Math.min(...bs.map(b=>b.minZ)),z1=Math.max(...bs.map(b=>b.maxZ)),h=Math.max(...bs.map(b=>b.maxY));
+ g.B('wall2',[x1-x0+.1,.3,z1-z0+.1],[(x0+x1)/2,0,(z0+z1)/2],2);
+ g.B('trim',[.12,1.9,.1],[-.55,0,z1+.02],0);g.B('trim',[.12,1.9,.1],[.55,0,z1+.02],0);g.B('trim',[1.3,.14,.12],[0,1.9,z1+.02],0);
+ if(era>=4)for(const x of[x0,x1])for(const z of[z0,z1])g.B('trim',[.3,h*.9,.3],[x+(x<0?.1:-.1),.3,z+(z<0?.1:-.1)],1);
+ if(era>=5)g.B('trim',[x1-x0+.2,.22,z1-z0+.2],[(x0+x1)/2,h*.9,(z0+z1)/2],1);
+}
+/** Layered village: each building keeps the era it was built in. Older eras stay standing next to newer ones; the newest buildings use the current techniques. Returns per-building `built` (feed with eraMode 'fixed'). */
+export function villageLayers(seed:number,currentEra:number,count:number):{built:{era:number;wealth:number}}[]{
+ const r=seededRandom(seed^0x2545f491),out:{built:{era:number;wealth:number}}[]=[];
+ for(let i=0;i<count;i++){const age=Math.floor(Math.pow(r(),1.6)*(currentEra+1));out.push({built:{era:Math.max(0,currentEra-age),wealth:Math.round((.15+r()*.7)*100)/100}});}
+ if(count>=4&&currentEra>=2){out[0].built.era=currentEra;out[count-1].built.era=Math.max(0,currentEra-2);}
+ return out;
+}
+/** Explicit rebuild: the only way a building's base look changes. */
+export const rebuild=(ctx:CivContext,era:number,wealth=ctx.built?.wealth??ctx.wealth):CivContext=>({...ctx,eraMode:'fixed',built:{era,wealth},extensions:[]});
+/** Explicit extension: adds a wing built with its own era's techniques; the base is untouched. */
+export const extend=(ctx:CivContext,era:number):CivContext=>({...ctx,eraMode:'fixed',built:ctx.built??{era:ctx.era,wealth:ctx.wealth},extensions:[...(ctx.extensions??[]),{era}].slice(0,2)});
