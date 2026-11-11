@@ -16,17 +16,19 @@ function mesh(geometry,capacity=140){
   m.count=0;return m;
 }
 function fixture(){
-  const view=Object.create(WorldView.prototype);
+  const view=Object.create(WorldView.prototype);view.scene=new THREE.Scene();
   view.cargoMeshes=new Map(["food","wood","stone","copper","iron"].map(k=>[k,mesh(cargoGeo(k),420)]));
   view.haulageMeshes=new Map(['sled','cart','canoe','pack'].map(k=>[k,mesh(haulageGeo(k))]));
   view.canoePaddles=mesh(canoePaddleGeo());
   view.farmToolMesh=mesh(farmToolHeadGeo());
   view.unitMeshes=new Map([['worker',mesh(unitGeo('worker'))]]);
+  view.unitInstanceOwners=new Map();
+  view.wildlifeOwners=new Map();
   view.rings=mesh(new THREE.PlaneGeometry(),40);view.workRings=mesh(new THREE.PlaneGeometry(),40);
   view.resourceRing=new THREE.Mesh(new THREE.RingGeometry(1,1.2),new THREE.MeshBasicMaterial());
   view.ghost=new THREE.Group();view.ghost.visible=false;
   const person=(id,extra={})=>({id,type:'worker',team:0,hp:40,x:id*5,y:4,z:15,facing:0,carry:0,carryType:null,stride:0,vx:0,vz:0,stature:1,tint:.5,r:.4,order:'gather',militia:false,...extra});
-  const game={state:{units:[],buildings:[],selBld:null,placing:null,time:20,weather:'clear',wildlife:[]},world:{biomes:[],rivers:[],waterY:0},height:()=>4,visibleAt:(x)=>x<100,exploredAt:(x)=>x<150,travelHeight:()=>4};
+  const game={state:{units:[],buildings:[],selBld:null,placing:null,time:20,weather:'clear',wildlife:[]},world:{biomes:[],rivers:[],waterY:0},height:()=>4,waterAt:()=>0,visibleAt:(x)=>x<100,exploredAt:(x)=>x<150,travelHeight:()=>4};
   return {view,game,person};
 }
 const matrix=(mesh,index=0)=>{const m=new THREE.Matrix4();mesh.getMatrixAt(index,m);return m;};
@@ -110,12 +112,13 @@ test('farm-tool heads use their owner’s body transform and distinct materials,
   view.syncUnits(game);assert.equal(view.farmToolMesh.count,0);
 });
 
-test('equipment never outlives the renderer’s visible-owner capacity',()=>{
+test('body and equipment grow for an actual carrier beyond the initial pool',()=>{
   const {view,game,person}=fixture();
   game.state.units=Array.from({length:140},(_,i)=>person(i));
   game.state.units.push(person(999,{haulage:'cart',carry:20,carryType:'wood'}));
-  view.syncCargo(game);
-  assert.equal(view.haulageMeshes.get('cart').count,0);assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),0);
+  view.syncUnits(game);view.syncCargo(game);
+  assert.equal(view.unitMeshes.get('worker').count,141);assert.equal(view.unitMeshes.get('worker').instanceMatrix.count,256);
+  assert.equal(view.haulageMeshes.get('cart').count,1);assert.equal([...view.cargoMeshes.values()].reduce((n,m)=>n+m.count,0),1);
 });
 
 test('finite fresh carcasses lie on their side and exhausted, spoiled or unseen carcasses disappear',()=>{
@@ -130,10 +133,10 @@ test('finite fresh carcasses lie on their side and exhausted, spoiled or unseen 
   assert.ok(s.x>.9,'known carcasses remain visible as gathering sites after the hunter leaves');
   for(const changes of [{carcass:{meat:0,diedAt:0}},{carcass:undefined},{x:200}]){
     game.state.wildlife=[{...fresh,...changes}];view.syncWildlife(game);body=matrix(view.deer);body.decompose(p,q,s);
-    assert.ok(s.x<.01);
+    assert.equal(view.deer.count,0);
   }
   game.state.time=1e6;game.state.wildlife=[fresh];view.syncWildlife(game);matrix(view.deer).decompose(p,q,s);
-  assert.ok(s.x<.01);
+  assert.equal(view.deer.count,0);
 });
 
 test('newly exposed ore grows its render capacity without losing fog or depletion visibility',()=>{
@@ -176,7 +179,7 @@ test('ruin cargo reuses bounded shared batches and reveals only currently visibl
  view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,1);assert.equal(view.cargoMeshes.get('wood').count,2);assert.equal(view.cargoMeshes.get('stone').count,0);
  const m=matrix(view.cargoMeshes.get('food'));assert.ok(m.elements.every(Number.isFinite));assert.ok(m.elements[13]>4);
  game.state.buildings[0].raidLoot.food=0;view.syncCargo(game);assert.equal(view.cargoMeshes.get('food').count,0);
- game.state.buildings=Array.from({length:500},(_,id)=>({id,hp:0,x:20,z:20,raidLoot:{wood:10}}));view.syncCargo(game);assert.equal(view.cargoMeshes.get('wood').count,420);
+ game.state.buildings=Array.from({length:500},(_,id)=>({id,hp:0,x:20,z:20,raidLoot:{wood:10}}));view.syncCargo(game);assert.equal(view.cargoMeshes.get('wood').count,501);
  assert.equal(matrix(view.cargoMeshes.get('wood'),0).elements[12],5,'resident cargo keeps priority over ruin decoration');
 });
 

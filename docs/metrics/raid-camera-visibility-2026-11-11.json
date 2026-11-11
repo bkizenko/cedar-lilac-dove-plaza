@@ -1,0 +1,76 @@
+{
+  "status": "candidate qualified; publication recorded separately",
+  "sourceChecks": {
+    "passed": 49,
+    "total": 49,
+    "sets": [
+      {
+        "passed": 46,
+        "total": 46,
+        "log": ".play/raid-navigation-qualified-tests.log"
+      },
+      {
+        "passed": 3,
+        "total": 3,
+        "log": ".play/raid-native-regression-candidate.log"
+      }
+    ]
+  },
+  "renderedCandidateChecks": {
+    "passed": 13,
+    "total": 13,
+    "nativeVillage": 4,
+    "compactKnowledge": 3,
+    "authoredCrowd300": 4,
+    "nativeRaidFrontier": 1,
+    "nativeRaidDefended": 1
+  },
+  "batchPassed": 62,
+  "batchTotal": 62,
+  "percent": 100,
+  "evidence": {
+    "nativeWorld": {
+      "seed": -1815620580,
+      "visibleWorkers": 55,
+      "selectedAndPicked": 15398,
+      "cameraPoses": 41,
+      "maximumEyeStepMetres": 0.9433981132056941,
+      "minimumRayClearanceMetres": 2.093209935498237,
+      "physicalStateUnchanged": true
+    },
+    "crowd": {
+      "authoredWorkers": 300,
+      "renderedBodies": 300,
+      "pickingOwners": 300,
+      "selectionRings": 300,
+      "instanceCapacity": 512,
+      "geometryMaterialShared": true,
+      "simulationPaused": true
+    },
+    "frontierRaid": {
+      "goodsStolen": 4,
+      "sameActorReturned": true,
+      "elapsedSimulationSeconds": 21,
+      "saveReload": true
+    },
+    "defendedRaid": {
+      "reason": "4 nearby defenders overwhelm 1 raider",
+      "sameActorReturned": true,
+      "goodsStolen": 0
+    }
+  },
+  "limits": [
+    "Rendered correctness uses softwareWebGL, not nativeGPU FPS qualification",
+    "Finite camp departures replace artificial shore-spawned waves; true overseas outbound raiding and larger finite warbands remain open",
+    "Existing legacy stranded shore parties may still need a real escape route",
+    "Compact knowledge is functional UI, not the proposed H visual overhaul",
+    "The H model study remains separate from live game assets"
+  ],
+  "firstReleaseGates": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newCredit": 0
+  }
+}

@@ -1,3 +1,4 @@
+import {prepareFiniteRaid} from './finite-raid-fixture.mjs';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Game } from "../src/game/sim.ts";
@@ -246,16 +247,18 @@ test("versioned raid plan saves remain strict and validation consumes no random 
   delete old.state.units.find((v) => v.id === u.id).seaRaid.plan;
   assert.doesNotThrow(() => validateGameSave(old));
 });
-test("ordinary fresh native sea-raid creation assigns only new parties a shared versioned scout plan", () => {
+test("ordinary native scheduled dispatch assigns existing residents a shared versioned camp plan", () => {
   const g = new Game();
   g.reset(42, 16, { size: 1040, layout: "continents" });
   g.enterIsland();
   g.state.time = 1300;
   g.state.contacts = [1, 2, 3];
-  g.spawnRaid();
+  const {crew}=prepareFiniteRaid(g);const ids=g.state.units.map(u=>u.id);g.spawnRaid();
+  assert.deepEqual(g.state.units.map(u=>u.id),ids);
   const party = g.state.units.filter((u) => u.seaRaid);
-  assert.ok(party.length > 0, "Real native shore landing exists");
-  assert.ok(party.every((u) => u.seaRaid.plan?.version === 1 && u.seaRaid.plan.intent === "scout"));
+  assert.ok(party.length > 0, "A real finite native camp can dispatch");
+  assert.ok(party.every((u) => u.seaRaid.plan?.version === 1 && u.seaRaid.plan.intent === "loot"));
+  assert.ok(party.every(u=>crew.includes(u)));
   assert.equal(new Set(party.map((u) => u.seaRaid.plan.bandId)).size, 1);
   assert.equal(party[0].seaRaid.plan.initialBand, party.length);
   assert.doesNotThrow(() => decodeGame(encodeGame(g)));

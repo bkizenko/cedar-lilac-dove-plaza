@@ -245,7 +245,14 @@ export function campTripAI(g: Game, u: Unit) {
       p.food <= 0.001 ||
       (g.state.survivalVersion === 1 && p.water <= 0.001))
   ) {
+    const reason = g.state.time >= r.departAt
+      ? "Withdrawing: outward journey deadline reached"
+      : !p ? "Withdrawing: travel provisions are missing"
+      : p.food <= 0.001 ? "Withdrawing: carried travel food exhausted"
+      : "Withdrawing: carried drinking water exhausted";
+    if(r.plan){r.plan.reason=reason;r.plan.metrics.withdrawals++;}
     r.phase = "retreat";
+    u.workReason = reason;
     u.target = null;
     u.node = null;
     u.seaRaidReturn = undefined;

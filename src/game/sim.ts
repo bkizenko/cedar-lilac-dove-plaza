@@ -112,7 +112,7 @@ import { personName, citizenName, prehistoricName, predisposition } from "./peop
 import { sendDelegation, delegationAI } from "./delegations";
 import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
 import {seaRaiderReturnAI,finishRaidEscortAtCamp} from "./seaRaiderReturn";
-import { establishRaiderCamps, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
+import { establishRaiderCamps, dispatchExistingCampRaid, campRaidAI, seaRaidAI, seaRaidStrength, seaRaidArrivalChance, canScheduleSeaRaid, findRaiderLanding, raidReadiness, finishSeaRaid } from "./raiders";
 import { recordDiscoveries, hasTradition } from "./discovery";
 import { receiveFood, consumeAndSpoilFood, preserveFood, growthFoodNeed, foodInventory } from "./pantry";
 import {plantingAI,cancelPlanting,tickManagedWoodland,initializeCultivation,collectSamples,deliverSamples,cultivationIssue,cropStudyAI,beginCropTrial,tickAutomaticCultivation,CROPS,CROP_NAMES} from "./cultivation";
@@ -2077,48 +2077,8 @@ export class Game {
   }
 
   spawnRaid() {
-    const home = this.campOf(0);
-    const age = this.tribe(0)?.age ?? 0;
-    const threat = this.raidThreat(0);
-    const landing=findRaiderLanding(this);
-    if(!landing){this.state.raidT=60;return;}
-    this.state.raidWave += 1;
-    const readiness=raidReadiness(this);
-    const strength=seaRaidStrength(readiness.adults,age,threat,this.state.raidWave,Math.random(),this.state.conflict==="dangerous",readiness.cap,this.state.raidCampaign?.loss||0,difficulty(this).band);
-    this.state.raidCampaign={active:true,adults:readiness.adults,buildings:readiness.buildings,loss:0,
-      people:this.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(this,u)).map(u=>u.id),
-      sites:this.state.buildings.filter(b=>b.team===0&&this.finished(b)).map(b=>b.id)};
-    const n=strength.count,frail=strength.condition;
-    const {x:sx,z:sz}=landing;
-    this.tribe(3).food+=16*n;
-    const marks = this.state.buildings.filter(
-      (b) => b.team === 0 && this.finished(b) && !FORTIFICATIONS.includes(b.type) && b.type !== "townhall" && b.type !== "keep",
-    );
-    const hall = this.state.buildings.find((b) => b.team === 0 && b.type === "townhall");
-    const goHall = n >= 6 && age >= 3 && Math.random() < 0.35;
-    // A landing party travels together, instead of scattering toward unrelated outposts.
-    const raidMark = goHall ? hall : marks.length ? marks[(Math.random() * marks.length) | 0] : hall;
-    const raidBandId=this.id();
-    for (let i = 0; i < n; i++) {
-      let type: UnitType = "spearman";
-      if (age >= 1 && Math.random() < 0.28) type = "archer";
-      if (n >= 5 && age >= 2 && i === 0) type = "swordsman";
-      let x=sx+(Math.random()-.5)*6,z=sz+(Math.random()-.5)*6;
-      if(!this.walkable(x,z)||!this.workBoard.connected(this,sx,sz,x,z)){x=sx;z=sz;}
-      const u = this.spawnUnit(type,x,z,3);
-      u.hp = Math.max(20, Math.round(u.hp * frail));
-      u.maxHp = u.hp;
-      u.dmg *= frail;
-      u.order = "attackmove";
-      const mark = raidMark;
-      u.tx = mark ? mark.x : home.x + 8;
-      u.tz = mark ? mark.z : home.z + 8;
-      u.aggroT = 80;
-      u.seaRaid={plan:createRaidPlan(this,raidBandId,n,this.state.raidWave,u.id),x:sx,z:sz,goalX:u.tx,goalZ:u.tz,phase:"raid",thinkAt:0,departAt:this.state.time+480};
-    }
-    this.callAlliesTo(home.x, home.z);
-    this.defendHome(0);
-    this.state.raidT = (480 + Math.random() * 240 + (1 - threat) * 120)/difficulty(this).raid;
+    const sent=dispatchExistingCampRaid(this);
+    this.state.raidT=sent?(480+Math.random()*240)/difficulty(this).raid:60;
   }
 
   tickRaiders(dt: number) {

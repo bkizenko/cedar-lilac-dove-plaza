@@ -286,20 +286,21 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       ) : (
         <ul>
           {farms.map((b) => {
-            const field=fieldProductionReport(g,b);
+            const field=fieldProductionReport(g,b),sown=b.crop?.year===cal.year&&(b.crop.planted||0)>0,canRest=cal.phase===0&&!sown;
             return <li key={b.id}>
               Field {b.id} · {fieldProductionSummary(g,b)} · fertility {Math.round((b.fertility??1)*100)}%
               <p className="text-xs text-parchment-dim">{Math.round(field.areaSquareMetres)} m² · soil {field.soil}% · {field.harvestUnitsPerSquareMetre.toFixed(1)} potential crop units/m² · {Math.ceil(field.sowSeconds+field.tendSeconds+field.harvestSeconds)} worker-seconds before hauling and processing</p>
               <button
-                disabled={cal.phase !== 0 || b.crop?.year===cal.year && b.crop.planted>0}
+                disabled={!canRest}
+                title={canRest?"Choose fallow before sowing; soil recovers next spring.":"Choose fallow next spring, before sowing begins."}
                 onClick={() => {
                   setFieldRest(g,b.id,b.fallowYear!==cal.year);
                   engine.pushHud();
                 }}
               >
-                {b.fallowYear === cal.year ? "Cultivate this year" : "Rest field this year"}
+                {b.fallowYear === cal.year ? "Plant this spring" : "Rest this year"}
               </button>
-              <label> Next crop <select value={b.cropType||b.crop?.kind||"grain"} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
+              <label title="Changes after sowing apply next spring; standing crops stay unchanged."> {sown||cal.phase!==0?"Next spring":"Plant"} <select value={b.cropType||b.crop?.kind||"grain"} onChange={e=>{setFieldCrop(g,b.id,e.target.value as "grain"|"pulses"|"tubers");engine.pushHud();}}>{(t.cultivated?.length?t.cultivated:["grain"]).map(k=><option key={k} value={k}>{k}</option>)}</select></label>
             </li>
           })}
         </ul>
@@ -307,9 +308,8 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
       <details>
         <summary>Soil and crop rotation</summary>
         <p>
-          Repeated cropping reduces soil fertility. Leave a field unsown for a year to restore it;
-          rotate between fields to preserve yields. Resting a field cancels any sowing already
-          completed this spring.
+          Choose fallow in spring before sowing. The unsown field recovers fertility next spring.
+          Pulses exhaust soil more slowly; changing crop after sowing plans next spring’s crop.
         </p>
       </details>
       {people.some(u=>u.enslavedFrom!==undefined)&&<section><h3>Captivity and guards</h3><p>Assign an escort to accompany a returning captive, or station armed adults near captive workers. Each idle or holding guard watches up to three people within 18 meters; a travelling escort watches their assigned person. Hunger and forced work build resistance; at 100% they may escape with carried goods. You can free them here at any time.</p><ul>{people.filter(u=>u.enslavedFrom!==undefined).map(u=><li key={u.id}>{personName(u)} · {captivityDescription(u,guards.has(u.id))}{u.recalled&&<button onClick={()=>{sendCaptiveEscort(g,u.id);engine.pushHud();}}>Assign escort</button>}<button onClick={()=>{repatriateCaptive(g,u.id);engine.pushHud();}}>Send home</button></li>)}</ul>{[...new Set(people.filter(u=>u.enslavedFrom!==undefined).map(u=>u.enslavedFrom!))].map(team=><button key={team} onClick={()=>{freePeople(g,team);engine.pushHud();}}>Free captives from {g.tribe(team)?.name||"the former settlement"}</button>)}</section>}

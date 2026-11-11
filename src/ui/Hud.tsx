@@ -925,9 +925,13 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 Close
               </button>
             </div>
+            <div className="mt-3 flex items-center justify-between gap-3 border-b border-parchment/15 pb-2 text-sm">
+              <span>{AGES[hud.age]}{AGES[hud.age+1]&&<span className="text-parchment-dim"> → {AGES[hud.age+1]}</span>}</span>
+              {AGES[hud.age+1]&&<GameTooltip title={`Advance to ${AGES[hud.age+1]}`} description={hud.ageIssue||'Requirements met'}><button type="button" className="rounded-md border border-bronze/40 px-3 py-1.5 text-xs disabled:opacity-50" disabled={!hud.canAge||!!hud.ended} onClick={()=>{engine?.ageUp();setTechOpen(false);}}>Advance</button></GameTooltip>}
+            </div>
+            <GameDisclosure label="Next age requirements"><AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/></GameDisclosure>
             {engine&&<KnowledgePanel engine={engine} expanded onChooseSite={()=>setTechOpen(false)}/>}
-            <AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <GameDisclosure label="Buildings by age"><div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AGES.map((name, age) => (
                 <div
                   key={name}
@@ -962,7 +966,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   </ul>
                 </div>
               ))}
-            </div>
+            </div></GameDisclosure>
           </div>
         </div>
       ) : null}

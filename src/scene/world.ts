@@ -19,6 +19,8 @@ import {PenFenceLayer} from './penFenceLayer';
 import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
 import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
+import {admitVisibleUnits} from './unitRenderAdmission';
+import {ensureInstanceCapacity} from './instanceCapacity';
 import {ExcavationLayer} from './excavationLayer';
 import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
@@ -1044,7 +1046,7 @@ export class WorldView {
       this.look.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
     if(this.cameraGround){
-      const clear=this.cameraClearance.resolve(this.cameraGround,this.look,this.tmpCam,this.cameraGroundRevision?.()??0);
+      const clear=this.cameraClearance.resolve(this.cameraGround,this.look,this.tmpCam,this.cameraGroundRevision?.()??0,dt);
       this.look.y=clear.focusY;this.tmpCam.set(clear.x,clear.y,clear.z);
     }
     this.camera.position.copy(this.tmpCam);
@@ -1082,7 +1084,7 @@ export class WorldView {
       mesh.computeBoundingSphere();
       sources.set(
         mesh,
-        game.state.units.filter((u) => u.hp > 0 && u.type === type),
+        this.unitInstanceOwners.get(type)??[],
       );
     }
     for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
@@ -1659,11 +1661,15 @@ export class WorldView {
   private syncCargo(game: Game) {
     this.housingPackets?.sync(game);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
-    const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let workers=0,paddles=0;
-    const bodies=this.unitMeshes.get('worker'),workerCap=bodies?instCap(bodies):140;
-    for (const u of game.state.units) {
-      if(u.hp>0&&u.type==='worker'&&++workers>workerCap)continue;
-      if (u.hp<=0 || u.shelterId || (u.team!==0&&!game.visibleAt(u.x,u.z))) continue;
+    const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
+    const visible=game.state.units.filter(u=>u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z)));
+    const neededCargo:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0},neededVehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};
+    for(const u of visible){const kind=u.boat?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;if(kind)neededVehicles[kind]++;const cargo=u.plantingWork?'food':u.carryType;if(cargo&&(u.plantingWork||u.carry>0))neededCargo[cargo]++;}
+    for(const b of game.state.buildings||[])if(b.hp<=0&&b.raidLoot&&game.visibleAt(b.x,b.z))for(const kind of Object.keys(CARGO_COLORS)as ResKind[])if((b.raidLoot[kind]||0)>0)neededCargo[kind]++;
+    for(const [kind,mesh]of this.cargoMeshes)this.cargoMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededCargo[kind]));
+    for(const [kind,mesh]of this.haulageMeshes)this.haulageMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededVehicles[kind]));
+    if(this.canoePaddles)this.canoePaddles=ensureInstanceCapacity(this.scene,this.canoePaddles,neededVehicles.canoe);
+    for (const u of visible) {
       const kind=u.boat?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
       const vehicle=kind&&this.haulageMeshes.get(kind);
       const index=kind?vehicles[kind]:0;
@@ -1753,25 +1759,21 @@ export class WorldView {
         foodWork.set(project.actorId,{recipe:project.recipe,siteId:project.workplace});
       }
     }
+    let feedback=0,toolCount=0;
+    for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool)toolCount++;}
+    const selectedBoat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
+    this.rings=ensureInstanceCapacity(this.scene,this.rings,feedback+(game.state.selBld&&game.state.selBld.hp>0?1:0)+(selectedBoat?1:0));
+    if(this.farmToolMesh)this.farmToolMesh=ensureInstanceCapacity(this.scene,this.farmToolMesh,toolCount);
     let ri = 0, tools = 0;
     for (const t of UNIT_TYPES) {
-      const list = grouped.get(t)!;
+      const old = this.unitMeshes.get(t);
+      if (!old){this.unitInstanceOwners.set(t,[]);continue;}
+      const list=admitVisibleUnits(grouped.get(t)!,grouped.get(t)!.length,u=>u.team===0||game.visibleAt(u.x,u.z),this.hoveredUnitId);
+      const mesh=ensureInstanceCapacity(this.scene,old,list.length);this.unitMeshes.set(t,mesh);
       this.unitInstanceOwners.set(t,list);
-      const mesh = this.unitMeshes.get(t);
-      if (!mesh) continue;
-      const cap = instCap(mesh);
-      const n = Math.min(list.length, cap);
+      const n=list.length;
       for (let i = 0; i < n; i++) {
         const u = list[i];
-        const seen = !u.shelterId && (u.team === 0 || game.visibleAt(u.x, u.z));
-        if (!seen) {
-          _p.set(u.x, u.y, u.z);
-          _q.identity();
-          _s.set(0.001, 0.001, 0.001);
-          _m.compose(_p, _q, _s);
-          mesh.setMatrixAt(i, _m);
-          continue;
-        }
         const spd = Math.hypot(u.vx, u.vz);
         const walking = spd > 0.35;
         const chopping =
@@ -1821,7 +1823,7 @@ export class WorldView {
         _c.set(st.unit);
         _c.offsetHSL(((u.tint || 0) - 0.5) * 0.12, 0.04, ((u.stature || 1) - 1) * 0.12);
         if (mesh.instanceColor) mesh.setColorAt(i, _c);
-        if (unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled) && ri < instCap(this.rings)-(this.hoveredUnitId!==null&&u.id!==this.hoveredUnitId?1:0)) {
+        if (unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled) && ri < instCap(this.rings)) {
           _p.set(u.x, u.y + 0.05, u.z);
           _e.set(-Math.PI / 2, 0, 0);
           _q.setFromEuler(_e);
@@ -1849,8 +1851,8 @@ export class WorldView {
       this.rings.setMatrixAt(ri, _m);
       ri++;
     }
-    const boat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
-    if(boat&&ri<40){
+    const boat=selectedBoat;
+    if(boat&&ri<instCap(this.rings)){
       _p.set(boat.x,game.world.waterY+.08,boat.z);_e.set(-Math.PI/2,0,0);_q.setFromEuler(_e);_s.set(4,4,1);_m.compose(_p,_q,_s);
       this.rings.setMatrixAt(ri++,_m);
     }

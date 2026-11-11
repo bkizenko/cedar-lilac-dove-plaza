@@ -1,3 +1,4 @@
+import {prepareFiniteRaid} from './finite-raid-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
@@ -90,12 +91,12 @@ test('first sight of hostile raiders warns without pausing combat or opening a t
  tickEncounters(g);assert.equal(g.state.paused,false);assert.equal(g.state.encounter,undefined);assert.ok(g.state.contacts.includes(3));
 }));
 
-test('new village civilians defeat a landed sea scout in the real simulation on two landscapes',seededScenario(()=>{
+test('new village civilians defeat a finite camp raider in the real simulation on two landscapes',seededScenario(()=>{
  for(const seed of [123456,98765]){
   const g=new Game();g.reset(seed,2);g.enterIsland();g.state.conflict='quiet';g.state.paused=false;
   g.state.units=g.state.units.filter(u=>u.team===0);const people=g.state.units.map(u=>u.id);
-  const random=Math.random;try{Math.random=()=>.2;g.spawnRaid();}finally{Math.random=random;}
-  const raiders=g.state.units.filter(u=>u.team===3);assert.equal(raiders.length,1);
+  prepareFiniteRaid(g);const random=Math.random;try{Math.random=()=>.2;g.spawnRaid();}finally{Math.random=random;}
+  const raiders=g.state.units.filter(u=>u.team===3&&u.seaRaid);assert.equal(raiders.length,1);
   for(let i=0;i<4000&&raiders.some(u=>u.hp>0)&&!g.state.paused;i++)g.step(.2);
   assert.equal(g.state.paused,false,`seed ${seed}: no greeting freezes a raid`);
   assert.ok(raiders.every(u=>u.hp<=0),`seed ${seed}: landed raider reaches and is defeated by defenders; `+JSON.stringify(raiders.map(u=>({x:u.x,z:u.z,hp:u.hp,order:u.order,stuck:u.stuckT}))));
@@ -116,9 +117,9 @@ test('timber focus reaches known distant forests without crowding or revealing h
 }));
 
 
-test('the raider landing itself sends no banner or horn',seededScenario(()=>{
+test('a distant finite camp dispatch sends no banner or horn',seededScenario(()=>{
  const g=new Game();g.reset(123456,2);g.enterIsland();
- const banners=[],sounds=[];
+ prepareFiniteRaid(g);const banners=[],sounds=[];
  g.banner=message=>banners.push(message);
  g.onSfx=sound=>sounds.push(sound);
  g.spawnRaid();

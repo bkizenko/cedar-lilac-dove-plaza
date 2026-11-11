@@ -1,3 +1,4 @@
+import {prepareFiniteRaid,destructiveFixtureIntent} from './finite-raid-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game/sim.ts';
@@ -101,21 +102,19 @@ test('destroying a camp stops gathering and preserves the finite surviving band'
   assert.equal(node.amount,0);assert.ok(node.regenT>=240);
 });
 
-test('spawned sea scouts walk from their landing to damage an undefended village', () => {
-  const g=fixture(123456,2), previous=new Set(g.state.units.map(u=>u.id));
+test('finite camp raiders walk from their real home to damage an undefended village', () => {
+  const g=fixture(123456,2);prepareFiniteRaid(g);const previous=new Set(g.state.units.map(u=>u.id));
   g.spawnRaid();
-  const attackers=g.state.units.filter(u=>!previous.has(u.id)&&u.team===3);
+  const attackers=g.state.units.filter(u=>previous.has(u.id)&&u.team===3&&u.seaRaid);destructiveFixtureIntent(attackers);
   assert.ok(attackers.length>0);
   assert.equal(new Set(attackers.map(u=>`${u.seaRaid.goalX},${u.seaRaid.goalZ}`)).size,1,'landing party shares its approach objective');
   assert.ok(attackers.every(u=>g.walkable(u.x,u.z)));
-  g.state.units=attackers;
-  g.state.buildings=g.state.buildings.filter(b=>b.team===0);
   g.rebuildWalk();
-  const hp=g.state.buildings.reduce((n,b)=>n+b.hp,0);
-  for(let step=0;step<3000&&g.state.buildings.reduce((n,b)=>n+b.hp,0)>=hp;step++) {
+  const targets=g.state.buildings.filter(b=>b.team===0),hp=targets.reduce((n,b)=>n+b.hp,0);
+  for(let step=0;step<3000&&targets.reduce((n,b)=>n+b.hp,0)>=hp;step++) {
     g.state.time+=.2;g.navBudget=4;
     for(const u of attackers){u.cd=Math.max(0,u.cd-.2);g.barbarianAI(u,.2);}
     g.updateProjectiles(.2);
   }
-  assert.ok(g.state.buildings.reduce((n,b)=>n+b.hp,0)<hp,'landing must result in a physically delivered attack');
+  assert.ok(targets.reduce((n,b)=>n+b.hp,0)<hp,'landing must result in a physically delivered attack');
 });

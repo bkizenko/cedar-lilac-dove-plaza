@@ -1,6 +1,6 @@
-import{finiteCampGuardAI,campTripAI}from'./finiteCamp';
+import{finiteCampGuardAI,campTripAI,beginCampTrip,FINITE_CAMP_RULES}from'./finiteCamp';
 import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender}from'./raidIntent';
-import {explicitArmedOrder} from './defense';
+import {explicitArmedOrder,hasLocalLootPursuer} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
 import {difficulty} from './difficulty';
@@ -45,7 +45,7 @@ const invadingRaider=(u:Unit)=>u.team===3&&u.hp>0&&!u.prisoner&&u.homeCamp===und
 /** End the combat alarm when the band withdraws. Survivors still travel home. */
 export function finishSeaRaid(g:Game){
  const campaign=g.state.raidCampaign;
- if(!campaign?.active||g.state.units.some(u=>invadingRaider(u)&&!withdrawingRaider(u)))return;
+ if(!campaign?.active||g.state.units.some(u=>invadingRaider(u)&&(!withdrawingRaider(u)||hasLocalLootPursuer(g,u))))return;
  const now=raidReadiness(g);
  // New arrivals or construction must not conceal casualties or ruined homes.
  const survivors=campaign.people?campaign.people.filter(id=>g.state.units.some(u=>u.id===id&&u.hp>0&&u.team===0)).length:now.adults;
@@ -101,6 +101,28 @@ export function canScheduleSeaRaid(g: Game) {
     g.state.time >= (g.state.conflict === "dangerous" ? 600 : 1200) &&
     g.state.units.some(u=>u.team===0&&u.hp>0&&!isDependent(g,u)) &&
     !g.state.units.some(invadingRaider)&&g.state.units.filter(u=>u.hp>0&&strandedRaid(u)).length<RAID_INTENT_RULES.maximumStrandedPeople;
+}
+
+/** Scheduled pressure may dispatch an observed, provisioned camp resident.
+ * It never materializes a new body, vessel, shore landing or food allowance.
+ * Missing reports/crew/route provisions leave the same finite world unchanged;
+ * ordinary camp patrols continue gathering their own evidence independently. */
+export function dispatchExistingCampRaid(g:Game){
+ if(g.state.conflict==='quiet'||g.state.finiteRaiderCampVersion!==1)return false;
+ for(const camp of g.state.buildings){
+  if(camp.team!==3||!camp.raiderCamp||!g.finished(camp)||!camp.campEconomy||g.state.time-camp.campEconomy.lastDispatchAt<FINITE_CAMP_RULES.dispatchIntervalSeconds)continue;
+  const reports=camp.campEconomy.knownSites.filter(r=>r.team===0&&g.state.time-r.observedAt<=FINITE_CAMP_RULES.reportLifetimeSeconds);
+  for(const report of reports)for(const u of g.state.units){
+   if(u.hp<=0||u.team!==3||u.homeCamp!==camp.id||!beginCampTrip(g,u,report))continue;
+   const ready=raidReadiness(g);
+   g.state.raidWave++;
+   g.state.raidCampaign={active:true,adults:ready.adults,buildings:ready.buildings,loss:0,
+    people:g.state.units.filter(p=>p.team===0&&p.hp>0&&!isDependent(g,p)).map(p=>p.id),
+    sites:g.state.buildings.filter(b=>b.team===0&&g.finished(b)).map(b=>b.id)};
+   return true;
+  }
+ }
+ return false;
 }
 
 /** Land at a real shore connected to the player's landmass, never in deep water.
@@ -273,7 +295,14 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
  const nearby=g.state.units.filter(v=>v.hp>0&&Math.hypot(v.x-u.x,v.z-u.z)<18);
  const defenders=nearby.filter(v=>g.isFoe(u.team,v.team)&&(raid.plan?raidThreateningDefender(u,v):(v.type!=='worker'||v.militia)));
  const allies=nearby.filter(v=>v.team===u.team);
- if(u.hp<u.maxHp*.32||defenders.length>allies.length*2+1||g.state.time>raid.departAt||(u.carry>0&&!(raid.plan?.intent==='capture'&&!u.escortId&&!raid.plan.metrics.captives))){if(raid.phase!=='retreat'&&raid.plan)raid.plan.metrics.withdrawals++;raid.phase='retreat';}
+ const withdrawal=u.hp<u.maxHp*.32?'Withdrawing: serious injury':
+  defenders.length>allies.length*2+1?`Withdrawing: ${defenders.length} nearby defenders overwhelm ${allies.length} raiders`:
+  g.state.time>raid.departAt?'Withdrawing: outward journey deadline reached':
+  u.carry>0&&!(raid.plan?.intent==='capture'&&!u.escortId&&!raid.plan.metrics.captives)?'Leaving with carried supplies':null;
+ if(withdrawal){
+  if(raid.phase!=='retreat'&&raid.plan){raid.plan.metrics.withdrawals++;raid.plan.reason=withdrawal;}
+  raid.phase='retreat';
+ }
  if(raid.phase==='retreat'){
   const breach=u.target;
   if(breach?.kind==='building'&&breach.hp>0&&['gate','palisade','stonewall'].includes(breach.type)&&!(breach.type==='gate'&&breach.gateOpen)){u.order='attack';g.combatAI(u,dt);return true;}
