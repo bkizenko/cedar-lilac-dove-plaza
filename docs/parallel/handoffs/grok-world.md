@@ -1,6 +1,115 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W3 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W4 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+
+## Batch W4 — ready (rivers, deep water, flow fields, territory, mountains, towns, wonder sites, dominated territory)
+
+The board is relayed by the PM worker. From W4 on, Grok status and answers live only in this file; `claude-coordination.md` is not edited on `agents/grok-world`.
+
+- **Base:** main `0bbcdb5` merged (`9252ded`, normal merge). Conflict: main shipped its own version of the G10 observed-fog hunk in `sim.ts`; main's side was taken (it adds `observedVisionAge`). Main's `test-lab-observed-fog` passes 4/4 on the branch.
+- **Code commits:**
+  - `e158781`: GW-12 river profile v2 and the wet-only river metric.
+  - `b7bb032`: G16 deep-water extents.
+  - `d2929b5` and `dacc651`: flow fields.
+  - `0d98101`: the flow-field switch.
+  - `10d6d81`: GW-09 land value and claims.
+  - `1b7cade`: GW-13 mountains.
+  - `70ed21c`: GW-14 town capacity.
+  - `096b111`: wonder site facts.
+  - `3dae8b0`: territory while dominated.
+
+### Save impact (exact)
+- **Existing saves load the stored world unchanged.** A save stores seed + `worldgenVersion` + `worldOptions` and regenerates the world on load (`decodeGame` → `reset`). With the new flag absent, generation is byte-identical to main.
+  - Evidence: SHA-1 over heights, water heights, water bodies, rivers, trees, stones, camps, fish, options, dock sites and waterfalls for 48 worlds (worldgen 18 and 19 × 1040/1560 × pangaea/continents/archipelago × seeds 1, 2, 3, 5). Branch = main `0bbcdb5` for all 48, after the final river code and the merge.
+  - `v14-random-save`, `v15-save`, `terrain-quality` and `test-lab-observed-fog` all pass on the branch.
+- **New optional field:** `worldOptions.riverProfileVersion?: 2`.
+  - It is set only when a new-world request asks for it, and saved inside `worldOptions`. Old saves don't have it.
+  - `persistence.ts` does not validate unknown `worldOptions` keys, so it round-trips today (tested). Codex should add an explicit validator (`=== 2` when present) in its file.
+- No other state is persisted by W4. Deep water, flow fields, land value, mountains, town capacity, wonder sites and dominated territory are all derived or in-memory.
+
+### Shared-file edits on this branch (complete list vs main `0bbcdb5`; owner Codex)
+- **`sim.ts` W4:**
+  - Import `flowPath` and one wiring line in `Game.steer()`: `flowPath(...) ?? findPath(...)`.
+  - **Behind a switch:** `setFlowFieldsEnabled(game, true)`. Default off, so routing is exactly the historic A*.
+- **`sim.ts` W3:**
+  - `updateVision` calls `unitSightRadius` / `buildingSightRadius` (values unchanged).
+  - Trailing optional `quarterTurn=false` on `placementIssue` / `placementValid` / `placeBuilding`. It is off unless a caller passes it.
+- **`sim.ts` W1/W2 — not behind a switch:**
+  - `steer()` stall escalation, route `stalled` / `nearest` fields, interaction-spot target before route reuse, the attack-move closest-reachable fallback (GW-07), and `ROUTE_PROGRESS_RULES` arrival.
+  - These are bug fixes for stuck and looping residents and for orders into unseen ground, not new systems. **Codex: rule whether they need a switch;** Grok will add one on request.
+- **World-lane files touched:**
+  - `worldgen.ts`: one line choosing settled water bodies when `riverProfileVersion===2`.
+  - `worldOptions.ts`: two optional type fields.
+  - `worldVariety.ts`: carries the flag into options.
+- **Untouched:** `types.ts`, `persistence.ts`, `save.ts`, `world.ts`, `engine.ts`, `constants.ts`. No camera code.
+
+### What landed (native-terrain evidence for each)
+1. **GW-12 rivers (`e158781`).**
+   - **Correction to W3:** the archipelago "rivers that rise ~3 m and dead-end" were a metric artefact, not terrain. A dry spring head reports the background level, which flipped the orientation. Metric v2 counts only wet samples and orients by the first and last wet sample. Mouths are found by water beyond the end that is no higher than the river's surface.
+   - **Real defect found:** the composed tributary dips below the primary lake it feeds, so water steps up 0.07–0.15 m into the lake (9 of 24 v18 1040 worlds). Fix: `riverProfiles.settleRiverInflows`. Upstream of the last point where a river's course is inside a lake it doesn't rise from, the surface is at least that lake's level, with an entry point inserted. The input is copied, never mutated.
+   - Opt-in via `riverProfileVersion: 2`, so historic worlds are unchanged.
+   - **Native matrix with the flag** (95 worlds, 437 rivers): **0 rising rivers and 0 dead ends**, and **no player start moved** (camps identical to unflagged) in every world. That covers v18 at 1040, 1560 and 2080 (24 worlds each: 3 layouts × seeds 1–8) and v19 at 1040 (23 worlds). v19 pangaea 6 can't generate even unflagged; that's existing behaviour, and identical on main.
+   - Terrain heights are untouched (only the water surface over the tributary's last reach rises, by at most 0.16 m), so scenic starts can't degrade.
+   - **Codex ask:** new-world requests (`engine.restart` / Test Lab) should pass `riverProfileVersion: 2`, plus the validator above.
+   - **Hills vs plains: measured, not changed.** "Hills" is an ecological-province label independent of the terrain. On continents seed 7 (v18 1040), median relief over 48 m is 1.2 m for hills against 3.4 m for plains; pangaea 1–3 are similar. Fixing that means reshaping terrain under hill provinces or relabelling habitat from relief; both move trees and resources and re-run opening-site qualification, so it doesn't fit cleanly. Proposed for W5 as a second opt-in flag (`landformLabelVersion`), gated on `hillsRougherThanPlains` across the seed matrix.
+2. **G16 deep-water extents (`b7bb032`, `deepWater.ts`).**
+   - 8 m grid sampled with the game's own `waterAt − height`. That matches Societies' `deepWater()` 2.5 m predicate exactly at cell centres (tested every 7th cell).
+   - Regions are open sea (touching the map edge) or inland. `offshoreMetres` uses a chamfer distance to the nearest dry cell. The cache is keyed to the water level, so floods and droughts recompute.
+   - `pickDeepWaterPoint(g, seededUnit, {near, minOffshoreMetres, openSeaOnly})` is a deterministic, area-uniform storm spawn.
+   - Native: archipelago seed 2 at 1040 has 7 regions (2 open sea); 46 ms on a 2080 map. Simulation-side truth only.
+   - **For Societies:** swap `deepWater()` for `deepWaterAt(g,x,z).deep` and spawn with `pickDeepWaterPoint` so storms stay on open sea and off the beach.
+3. **Shared flow fields (`d2929b5`, `0d98101`, Claude request 3).**
+   - One reverse Dijkstra field per hot goal cell, with `findPath`'s exact move rules. Paths have the same optimal cost as A* (native check: 150 starts on a v18 walk grid, every first-attempt A* route matched at equal cost).
+   - Built after 8 requests to one goal in a nav revision, LRU of 8 fields, discarded on any walk rebuild. Field cap 140k expansions; when it returns null, the existing A* fallbacks run unchanged.
+   - Measured: 120 residents to one goal take 314 ms with A* against 49–63 ms with the field (build 22–30 ms). An early 22-resident game over 300 sim-seconds built none, so overhead there is nil.
+   - Default **off**. Codex can enable it after the Phase-1 perf run.
+4. **GW-09 land value and claims (`10d6d81`).**
+   - `landValueField` on the 192² territory grid: soil + fresh water (cached per world), plus standing finite resources weighted by remaining amount, trail wear, and finished bridges/docks. Water cells are worth 0.
+   - `claimSummary` gives owned cells, area and value per team. Contested cells (254) are attributed to every team whose real influence reaches them.
+   - Codex owns any score use. Borders at rivers were already handled by the geographic influence costs (water/cliff/port).
+5. **GW-13 mountains (`1b7cade`).**
+   - `mountainSurvey`: relative massifs (median known land + 9 m, so no universal gentle bias), summit, prominence, walkable share, `connectedToHome`, summit hikeability on the real walk grid (verified with `findPath`), approach point, and up to 12 prospect targets spaced ≥ 28 m.
+   - Native: every home-landmass massif summit is hikeable on pangaea 1 (6/6) and pangaea 4 (12/12). Unhikeable ones are on other landmasses.
+   - For the player, everything is clipped to explored cells, including the median baseline.
+   - Mining yields are Codex's; prospecting jobs are Codex/Claude.
+6. **GW-14 multiple towns (`70ed21c`).** `townCapacity` per landmass (walk-grid components).
+   - Sites are tested with the real `placementIssue('townhall')`, so spacing, clump, terrain and the explored-site rule all apply.
+   - Two capacities: what the current 75 m rule admits, and towns whose full territories don't overlap (about 170 m spacing from existing constants).
+   - Native results:
+     - Pangaea 4: 717k m², 23 non-overlapping towns.
+     - Archipelago 2: 4, 1, 3 and 2 towns on four islands.
+     - Continents 2 (1560): 29 and 21.
+   - The current five-hall cap ignores island size; scaling it is a rules call for Codex/Boris.
+   - Cost is 40 ms to 1.3 s, so it is an on-demand query, not per frame.
+7. **Wonder site facts for Claude Experience (`096b111`, `wonderSites.ts`).**
+   - `siteWaterFacts`: nearest river section id, distance and width. `tides: false`: the game has no tides; the seasonal water-level range is 0.73 m (drought −0.18 … flood +0.55). Also flood clearance.
+   - `wonderSiteRules` covers all six families:
+     - Cistern needs a catchment: at least 40% of a ring 24 m out stands 2 m or more above the rim.
+     - Assembly court needs a hillside (grade 0.12–0.5) facing open ground: the downhill apron is gentle, dry and unbuilt.
+     - Observatory needs at least 6 m prominence.
+     - Harbour needs 2.5 m of depth at its face and a shore.
+     - Cascade garden needs a 3 m or greater drop and running water within 40 m.
+     - Mill market must be on a river at least 6 m wide, within 25 m, and at most 40% wet.
+     - The player can't site on unexplored ground.
+   - Native qualifying sites (two worlds, 20 m lattice): cistern 750, court 138, observatory 113, garden 90, mill 134, **harbour 1**. Deep harbour faces are rare, which is input for G14.
+   - `wonderTerrainCut` gives cut and fill for the cistern pit (floor = rim − depth) and the cavea (tiers raked uphill from the bema), with work seconds at the game's excavation rate (6 s/m³), so the cut isn't free. Exact on synthetic ground.
+   - Replace `wonderSiteIssues` thresholds with `wonderSiteRules`.
+8. **Territory while dominated (`3dae8b0`, `dominatedTerritory.ts`).**
+   - A hook distinct from land value. It reads `state.dominations` structurally (Societies' shape).
+   - An active tribute, puppet or autonomy gives the overlord a sphere over the subject's own painted territory within 40 m (120 m for autonomy). Strength = terms weight (0.5 / 0.8 / 0.3) × leverage. Ownership never transfers; lapsed, released or rebelled arrangements give no sphere.
+   - Third-party teams contesting the subject's land are listed for the protection duty.
+   - Native test: real halls and influence fields on pangaea 4.
+
+### Checks (W4)
+- New suites: `river-profiles` 3/3, `landform-coherence` 4/4, `deep-water` 4/4, `flow-fields` 5/5, `land-value` 2/2, `mountains` 3/3, `town-capacity` 4/4, `wonder-sites` 4/4, `dominated-territory` 3/3.
+- W2–W4 set with save tests on the merged tree: 61/61.
+- Routing set (17 files) vs main `f09578d`: branch 60 of 65 pass, main 39 of 54. **No branch-only failures.** The 5 branch failures (caravan routes) fail on main too, and the branch passes 10 that fail on main (W2 fixture repairs).
+- `tsc` passes. Eslint is clean on new files; `sim.ts` has the same 1 error and 18 warnings as main.
+
+### Folded into W5 planning (from the completion plan)
+- **Tides:** a real tidal water level would be a new world-state system. It would need a sim water-level hook (Codex) and a saved phase. Proposal: tide range per coast from deep-water/open-sea extents, driven by `weatherWaterLevel` plus a tide term, behind a game option.
+- **River width:** already exposed per section (`riverWidthMetres`, `siteWaterFacts`). Width variation along rivers (narrows and broads) goes with the hills opt-in flag.
+- **Terrain cuts:** wonder cuts are computed; making them physical (like trenches, through `excavation.ts` work) needs a persisted cut record (optional field and validator, Codex).
 
 ## Batch W3 — ready (review fixes, observed water routes, river sections, quarter-turn footprints, landform metrics)
 
@@ -215,5 +324,5 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 
 - **W2:** done (above). Follow-ups awaiting other owners: engine wiring of `planFieldArea`/`fertilityPreview` (Codex/Claude); camera dolly-before-lift decision (Boris/Claude); `observedVision()` in Test Lab saves (Codex).
 - **W3:** done (above). Follow-ups awaiting other owners: the `quarterTurn` control and mesh yaw; a decision on a section stock cap; `observedVision()` in saves.
-- **W4:** GW-12 fix for archipelago rivers that rise or dead-end, gated on `landformCoherence` (0 rising rivers and 0 dead ends across the seed matrix); G16 deep-water extents for Societies' `seaStorms`; flow fields (Claude request 3); GW-09 territory and claims; GW-13 mountains; GW-14 multiple towns.
-- **W5:** GW-05 wells; GW-06 watermills, windmills, aqueducts, cisterns and canals.
+- **W4:** done (above). Awaiting other owners: `riverProfileVersion` in new-world requests plus a validator; enabling flow fields; a ruling on the W1/W2 steer switch; Societies adopting `deepWaterAt` / `pickDeepWaterPoint` and `dominationSpheres`; Claude adopting `wonderSiteRules` / `wonderTerrainCut`.
+- **W5:** physical wonder cuts through excavation work; tides behind a game option; hills relief/label opt-in flag; GW-05 wells; GW-06 watermills, windmills, aqueducts, cisterns and canals; native-terrain runs of flow fields at 100+ residents once Codex's worker sim lands.
