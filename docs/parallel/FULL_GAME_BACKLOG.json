@@ -8660,6 +8660,26 @@
       "requirement": "Explicit deep-water port infrastructure and depth/draft admission for larger vessels, coordinated with actual water-route and cargo infrastructure.",
       "state": "pending-refinement-of-existing-port-scope",
       "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-G15-TRADE-DIVERSITY",
+      "boardID": "G15",
+      "owner": "A-Societies offers/caravans + C-Economy prices/market effects + A-Experience trade visuals",
+      "source": "docs/parallel/handoffs/claude-coordination.md — New user requests16:04ET; remote ba143b7",
+      "messageTimestamp": "2026-11-11T16:04:00-05:00 (reported by Claude coordination board)",
+      "requirement": "Broader physically held trade in tools, armor, weapons, resources, animals and artifacts; risk-sensitive escorted caravans; markets measurably increase visit frequency and improve price spread.",
+      "state": "pending-refinement-of-existing-trade-scope",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-G16-DEEPWATER-STORMS",
+      "boardID": "G16",
+      "owner": "A-Societies voyage response + C-Platform weather/hull/sail effects + W-World depth/extents",
+      "source": "docs/parallel/handoffs/claude-coordination.md — New user requests16:04ET; remote ba143b7",
+      "messageTimestamp": "2026-11-11T16:04:00-05:00 (reported by Claude coordination board)",
+      "requirement": "Occasional real deep-water storms delay, damage or endanger actual player/NPC voyages; shelter/turn-back responses use observed conditions and preserve exact cargo/crew accounting.",
+      "state": "pending-refinement-of-existing-weather-naval-scope",
+      "gateCreditDelta": 0
     }
   ],
   "coordination_proposals": [
@@ -8721,7 +8741,7 @@
       "state": "integration-testing",
       "sourceCommit": "4210c4ae86f98e0a5ee0da7f435993dc66e99f14",
       "liveCommit": null,
-      "evidence": "Claude 7/7 focused; Codex integrated candidate84d2792 24/24 including reservation/quiet-sail/LOD contracts + typecheck; native scenario prepared, not run",
+      "evidence": "14 corrected sea/witness/reservation cases passed; native now admits/boards/sails but outbound fixture save revealed invalid NPC camp entry; fixture repair/native rerun pending; not live",
       "scope": "Physical docked-hull NPC exploration; capture/recall/loss and native publication still pending"
     },
     {
@@ -8736,11 +8756,11 @@
     {
       "id": "CODEX-DAIRY",
       "owner": "Codex",
-      "state": "candidate-native-tested",
-      "sourceCommit": null,
-      "liveCommit": null,
-      "evidence": "5/5 focused + typecheck + 1/1 unchanged V18 native physical delivery/reload; .play/dairy-native.log; built UI and publication pending",
-      "scope": "Finite held-vessel fermented milk; no cheese, broader herd products or automatic demand completion"
+      "state": "live",
+      "sourceCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+      "liveCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+      "evidence": "docs/metrics/dairy-water-release-2026-11-11.json",
+      "scope": "Finite paid milk fermentation in an actual held pottery vessel, passive aging, physical pickup/delivery and same-vessel return; cheese, broad dairy demand and spoiled-vessel recovery remain open"
     },
     {
       "id": "CODEX-PLATFORM-CONTRACTS",
@@ -8778,11 +8798,11 @@
     {
       "id": "CODEX-EXACT-WATER-MEMO",
       "owner": "Codex Platform",
-      "state": "candidate-tested",
-      "sourceCommit": null,
-      "liveCommit": null,
-      "evidence": "18/18 parity/focused tests + typecheck; same-RNG100-step pair identical final state and23832 RNG calls; mean62.97→58.02ms (7.86%); .play/exact-water-memo-benchmark.json",
-      "scope": "Bounded exact-coordinate query cache; one sequential pair only, not FPS/stutter/campaign proof; not merged or published"
+      "state": "live",
+      "sourceCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+      "liveCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
+      "evidence": "docs/metrics/dairy-water-release-2026-11-11.json",
+      "scope": "Bounded exact-coordinate water memo; identical paired state/RNG and modest single-pair CPU reduction; no target-FPS or full-stutter claim"
     }
   ],
   "status_update_policy": {
@@ -8798,7 +8818,7 @@
     ],
     "completeRule": "Only the specifically proven slice is complete; parent remains partial until its full acceptance is demonstrated. Record source,merge,live commits and evidence separately. Never add98gatecreditfromsource/componentchecks.",
     "originalSourceMarkers": "Preserved as historical reference; current_delivery is the authoritative scoped overlay.",
-    "latestReconciledAtUtc": "2026-11-11T21:03:32.280919+00:00",
+    "latestReconciledAtUtc": "2026-11-11T21:20:04.471387+00:00",
     "externalRefsReviewed": {
       "societies": "8d3325ec8cdeca09da84007fb3bcabbcc3c7dea0",
       "experience": "bb26421414a9b50fdf06a6f4cd4636b324173b43",
