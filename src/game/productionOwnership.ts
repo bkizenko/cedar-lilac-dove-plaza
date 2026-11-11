@@ -16,7 +16,13 @@ function context(g:Game,jobs?:JobCoordinator){let c=contexts.get(g);if(c?.state=
 function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{key:string;amount:number;capacity:number}[]=[];
  const b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===p.team&&g.finished(b));
  if(!['returning','unloading','stored'].includes(phase)&&b)claims.push({key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)});
- if(['stored','collecting'].includes(phase)){const outside=outsideFoodCache(g,p);if(outside){claims.push({key:`production:outside-food:${outside.id}:parcels`,amount:1,capacity:PRODUCTION_RULES.maximumProjects});return claims;}const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
+ if(['stored','collecting'].includes(phase)){const outside=outsideFoodCache(g,p);if(outside){claims.push({key:`production:outside-food:${outside.id}:parcels`,amount:1,capacity:PRODUCTION_RULES.maximumProjects});return claims;}const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);
+ // New loose gathered goods may be unloaded outside. They must not revoke
+ // space already held by real paid parcels or stop their physical collection.
+ // Only parcels already stored/collecting in saved state count: a proposed
+ // new unload gets no extra admission capacity from its own future claim.
+ let alreadyPlaced=0;for(const q of g.state.production?.projects||[])if(q.team===p.team&&live(q)&&['stored','collecting'].includes(effective(q))&&!outsideFoodCache(g,q))alreadyPlaced+=paidInputUnits(q);
+ claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(alreadyPlaced,0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
  return claims;
 }
 /** Saved project owns goods. This runtime claims only hands and physical space. */

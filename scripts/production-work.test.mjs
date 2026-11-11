@@ -1,3 +1,4 @@
+import {CEREAL_RULES} from '../src/game/cerealRules.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {GATHER,GATHER_WORK_RATE} from '../src/game/constants.ts';
@@ -43,7 +44,7 @@ test('crafted stone hoe actually speeds seasonal farm work without granting extr
  farm.crop={year:0,planted:0,tended:0,remaining:0,ripened:false,kind:'grain',water:1};
  g.state.time=100;farmWork(g,u,farm,10);assert.ok(Math.abs(farm.crop.planted-10/180*1.25*GATHER_WORK_RATE)<1e-9);
  g.state.time=1000;farm.crop={year:0,planted:1,tended:1,remaining:20,ripened:true,kind:'grain',water:1};u.carry=0;u.gatherT=0;u.order='gather';
- farmWork(g,u,farm,1);assert.equal(farm.crop.remaining+u.carry,20,'tool improves labor, never multiplies harvested stock');
+ farmWork(g,u,farm,1);assert.equal(u.carry,0,'raw cereal is carried as physical sheaves, not ready food');assert.ok((u.itemCargo?.grainSheaves||0)>0);assert.equal(farm.crop.remaining+(u.itemCargo?.grainSheaves||0)/CEREAL_RULES.sheavesPerPotentialGrain,20,'tool improves labor without creating potential grain; sheaves retain the declared raw conversion');
 });
 
 test('invalid equipment cannot enter a saved village',()=>{

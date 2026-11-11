@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {nativeDairyVillage} from '../helpers/native-dairy-village.mjs';
+const fixture=nativeDairyVillage();
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>localStorage.setItem('hearthwild:graphics-quality','low'));
+ await page.goto(process.env.HEARTHWILD_TEST_URL||'http://127.0.0.1:8102',{waitUntil:'commit'});
+ await page.waitForFunction(()=>window.__engine?.game);
+ const imported=await page.evaluate(async f=>{const e=window.__engine;e.autosave.invalidate();return e.importVillage(new File([JSON.stringify(f.save)],'native-dairy-vessel-recovery.json',{type:'application/json'}));},fixture);
+ assert.equal(imported.applied,true,JSON.stringify(imported));
+ const focus=async()=>page.evaluate(id=>{const e=window.__engine,g=e.game,b=g.state.buildings.find(b=>b.id===id);g.selectEntity(b);e.view.look.set(b.x,g.height(b.x,b.z),b.z);g.raidT=g.seaT=g.calamityT=10000;e.pushHud();},fixture.hearth);
+ const hash=async()=>page.evaluate(async()=>{const g=window.__engine.game,value=JSON.stringify({heights:Array.from(g.world.heights),rivers:g.world.rivers,features:g.world.features});return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(b=>b.toString(16).padStart(2,'0')).join('');});
+ await focus();assert.equal(await hash(),fixture.terrain);
+ await page.getByRole('button',{name:'Ferment milk in a vessel',exact:true}).click();
+ const opening=await page.evaluate(()=>{const g=window.__engine.game,p=g.state.production.projects.find(p=>p.recipe==='fermentMilk');return {id:p?.id,start:g.state.time};});assert.ok(opening.id);
+ const snapshot=async()=>page.evaluate(({id,hearth})=>{const g=window.__engine.game,p=g.state.production.projects.find(p=>p.id===id),t=g.tribe(0);return {phase:p.phase,resumePhase:p.resumePhase,actor:p.actorId,dairy:p.dairy,pottery:t.items.pottery,origin:t.potteryOrigins[0],milk:t.foodLots.milk||0,food:t.foodLots.fermentedMilk||0,water:t.survival.waterLiters,metrics:g.state.production.metrics,slots:g.state.production.projects.filter(q=>q.workplace===hearth&&!['complete','lost','returning','unloading','stored'].includes(q.phase)&&!(q.phase==='paused'&&['returning','unloading'].includes(q.resumePhase))).length,errors:g.simulationErrors};},{id:opening.id,hearth:fixture.hearth});
+ const drive=async target=>page.evaluate(({id,start,target})=>{const e=window.__engine,g=e.game,p=g.state.production.projects.find(p=>p.id===id);const done=()=>target==='water-collected'?p.dairy?.recovery?.waterCollected&&!p.dairy.recovery.waterDelivered:target==='cleaning'?p.phase==='working'&&p.dairy.recovery.cleanedSeconds>0&&p.dairy.recovery.cleanedSeconds<20:p.phase===target;while(g.state.time-start<300&&!done()){g.state.paused=false;const before=g.state.time;g.step(.2);if(g.state.time<=before||p.phase==='lost'||g.state.ended||g.simulationErrors.length)throw Error(JSON.stringify({phase:p.phase,reason:p.blockedReason,errors:g.simulationErrors}));}g.state.paused=true;e.pushHud();if(!done())throw Error(JSON.stringify({target,phase:p.phase,recovery:p.dairy?.recovery,time:g.state.time-start}));return {phase:p.phase,elapsed:g.state.time-start};},{...opening,target});
+ await drive('curing');
+ const queue=page.getByRole('region',{name:'Selected workplace queue'});
+ await queue.getByRole('button',{name:'Discard milk; keep vessel for cleaning',exact:true}).click();
+ const dirty=await snapshot();assert.equal(dirty.phase,'paused');assert.ok(dirty.dairy.recovery);assert.equal(dirty.pottery,0);assert.equal(dirty.origin.count,0);assert.equal(dirty.slots,1);assert.equal(dirty.metrics.foodInputsUsed.milk,4);assert.equal(dirty.metrics.foodInputsLost.milk,4);assert.equal(dirty.metrics.edibleFoodProduced,0);assert.equal(dirty.food,0);assert.equal(dirty.milk,0);
+ const recoveryJob=queue.getByRole('article',{name:'Clean and recover dairy vessel',exact:true});
+ await recoveryJob.getByText('Dirty vessel awaiting cleanup',{exact:true}).waitFor({state:'visible'});
+ await queue.getByText(/1 \/ 1 batch slots/).waitFor({state:'visible'});
+ await recoveryJob.getByText('Details',{exact:true}).click();
+ await recoveryJob.getByText(/Milk lost; zero edible output/).waitFor({state:'visible'});
+ assert.equal(await recoveryJob.getByText(/3 fermented milk/).count(),0);
+ // The explicit cleanup action must choose its own available adult and reserve real water.
+ await recoveryJob.getByRole('button',{name:'Clean and recover vessel',exact:true}).click();
+ const admitted=await snapshot();assert.notEqual(admitted.actor,null);assert.equal(admitted.dairy.recovery.waterPaid,true);assert.equal(admitted.metrics.waterUsedLiters,3);assert.ok(Math.abs(admitted.water-(dirty.water-2))<1e-8);assert.equal(admitted.pottery,0);assert.equal(admitted.slots,1);
+ await drive('water-collected');
+ // Pause the actual carried water parcel through the UI; no actor positions or work progress are edited.
+ await recoveryJob.getByRole('button',{name:'Pause paid work',exact:true}).click();
+ const mid=await snapshot();assert.equal(mid.phase,'paused');assert.equal(mid.resumePhase,'carrying');assert.equal(mid.dairy.recovery.waterCollected,true);assert.equal(mid.dairy.recovery.waterDelivered,false);assert.equal(mid.dairy.recovery.cleanedSeconds,0);
+ await page.evaluate(()=>window.__engine.saveNow());
+ await page.reload({waitUntil:'commit'});
+ await page.waitForFunction(id=>window.__engine?.game?.state?.production?.projects.some(p=>p.id===id&&p.phase==='paused'&&p.dairy?.recovery?.waterCollected),opening.id);
+ await focus();assert.equal(await hash(),fixture.terrain);
+ const restored=await snapshot();assert.deepEqual(restored.dairy.recovery,mid.dairy.recovery);assert.equal(restored.actor,mid.actor);assert.equal(restored.metrics.waterUsedLiters,3);assert.equal(restored.pottery,0);
+ await recoveryJob.getByRole('button',{name:'Resume paid work',exact:true}).click();
+ await drive('cleaning');
+ await recoveryJob.getByText('Cleaning held vessel',{exact:true}).waitFor({state:'visible'});
+ await recoveryJob.getByText('Details',{exact:true}).click();
+ await recoveryJob.getByText(/20 work seconds/).waitFor({state:'visible'});
+ const progress=recoveryJob.getByRole('progressbar',{name:'Clean and recover dairy vessel work progress',exact:true});assert.equal(await progress.getAttribute('max'),'20');assert.ok(Number(await progress.getAttribute('value'))>0);
+ const returning=await drive('returning');const carrying=await snapshot();assert.equal(carrying.pottery,0);assert.equal(carrying.slots,0);assert.equal(carrying.food,0);assert.equal(carrying.dairy.recovery.cleanedSeconds,20);assert.equal(carrying.metrics.waterUsedLiters,3);
+ const complete=await drive('complete'),result=await snapshot();assert.equal(result.pottery,1);assert.equal(result.origin.count,1);assert.deepEqual(result.origin.origin,fixture.origin);assert.equal(result.food,0);assert.equal(result.milk,0);assert.equal(result.metrics.foodInputsLost.milk,4);assert.equal(result.metrics.edibleFoodProduced,0);assert.equal(result.metrics.waterUsedLiters,3);assert.deepEqual(result.errors,[]);
+ const history=await page.evaluate(()=>window.__engine.game.tribe(0).productionPractice?.fermentMilk);assert.equal(history,undefined,'cleaning cannot establish a successful milk fermentation demonstration');
+ await page.evaluate(()=>window.__engine.saveNow());await page.reload({waitUntil:'commit'});
+ await page.waitForFunction(id=>window.__engine?.game?.state?.production?.projects.some(p=>p.id===id&&p.phase==='complete'),opening.id);
+ assert.equal(await hash(),fixture.terrain);const final=await snapshot();assert.equal(final.pottery,1);assert.equal(final.origin.count,1);assert.deepEqual(final.origin.origin,fixture.origin);assert.equal(final.metrics.edibleFoodProduced,0);assert.equal(final.metrics.foodInputsLost.milk,4);
+ await page.evaluate(()=>{const g=window.__engine.game;for(let i=0;i<5;i++){g.state.paused=false;g.step(.2);}g.state.paused=true;});const stable=await snapshot();assert.equal(stable.pottery,1);assert.equal(stable.origin.count,1);assert.equal(stable.metrics.edibleFoodProduced,0);assert.equal(stable.metrics.waterUsedLiters,3);assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({passed:1,total:1,scope:'Built desktop recovery UI; authored finite native V18 opening/fullvision TestLab reveal; actual discard/Clean/Pause/Resume controls, water pickup and cleaning progress, physical vessel-only return, strict mid/final reload; no terrain/path/climate/work overrides; not live-public acceptance',opening,dirty,admitted,mid,returning,complete,result,final:stable,errors}));await context.close();
+}finally{await browser.close();}

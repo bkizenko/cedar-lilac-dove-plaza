@@ -39,7 +39,7 @@ test('hand food processing continues with player Auto work off while a rival use
  drive(g,140,()=>g.state.cerealProcessing?.cleanedGrain===4);assert.equal(g.state.cerealProcessing?.cleanedGrain,4,JSON.stringify({team,projects:g.state.production?.projects,people:g.state.units.map(u=>({id:u.id,order:u.order,job:u.jobLock,why:u.workReason}))}));assert.ok(Math.abs(g.tribe(team).seeds-seeds-.32)<1e-9);assert.equal(g.state.production.projects.filter(p=>p.phase==='complete'&&p.team===team).length,2);assert.equal(g.state.production.projects[0].workplace,hearth.id);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));}
 });
 
-test('parked paid cereal inputs occupy cache space once, survive replacement pickup and release future output space on real loss',()=>{let{g,u,v,hearth}=fixture();g.tribe(0).items={grainSheaves:8,plantFibre:92};assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);let p=g.state.production.projects[0];assert.equal(unloadProductionProject(g,p.id),true);drive(g,30,()=>p.phase==='stored');assert.equal(p.phase,'stored');assert.equal(cachedProductionUnits(g,0),8);assert.equal(cerealReservedMaterials(g,0),0);v.itemCargo={plantFibre:1};assert.equal(deliverProductionCargo(g,v),false);v.itemCargo=undefined;const copy=decodeGame(encodeGame(g));assert.equal(cachedProductionUnits(copy,0),8);assert.equal(cerealReservedMaterials(copy,0),0);assert.equal(resumeProduction(g,p.id,v.id),true);assert.notEqual(p.actorId,u.id);drive(g,80,()=>p.phase==='working');assert.equal(p.phase,'working');assert.equal(cachedProductionUnits(g,0),0);assert.equal(cerealReservedMaterials(g,0),8);hearth.hp=0;tickProduction(g,0);assert.equal(p.phase,'lost');assert.equal(cerealReservedMaterials(g,0),0);assert.equal(g.tribe(0).items.grainSheaves,0);assert.equal(g.state.production.metrics.lost.grainSheaves,8);assert.equal(g.tribe(0).items.roughGrain||0,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
+test('parked paid cereal inputs occupy cache space once, survive replacement pickup and release future output space on real loss',()=>{let{g,u,v,hearth}=fixture();g.tribe(0).items={grainSheaves:8,plantFibre:92};assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);let p=g.state.production.projects[0];assert.equal(unloadProductionProject(g,p.id),true);drive(g,30,()=>p.phase==='stored');assert.equal(p.phase,'stored');assert.equal(cachedProductionUnits(g,0),8);assert.equal(cerealReservedMaterials(g,0),0);v.itemCargo={plantFibre:1};assert.equal(deliverProductionCargo(g,v),true,'loose material is unloaded outside rather than blocking the paid cereal parcel');assert.equal(g.tribe(0).items.plantFibre,93);assert.equal(v.itemCargo,undefined);assert.equal(cachedProductionUnits(g,0),8,'outside delivery never duplicates or refunds the parked paid sheaves');const copy=decodeGame(encodeGame(g));assert.equal(cachedProductionUnits(copy,0),8);assert.equal(cerealReservedMaterials(copy,0),0);assert.equal(resumeProduction(g,p.id,v.id),true);assert.notEqual(p.actorId,u.id);drive(g,80,()=>p.phase==='working');assert.equal(p.phase,'working');assert.equal(cachedProductionUnits(g,0),0);assert.equal(cerealReservedMaterials(g,0),8);hearth.hp=0;tickProduction(g,0);assert.equal(p.phase,'lost');assert.equal(cerealReservedMaterials(g,0),0);assert.equal(g.tribe(0).items.grainSheaves,0);assert.equal(g.state.production.metrics.lost.grainSheaves,8);assert.equal(g.tribe(0).items.roughGrain||0,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));});
 test('owned basket/sled/cart cereal loads remain strictly saveable at their actual capacity; other material limits are unchanged',()=>{for(const mode of['basket','sled','cart']){const{g,u}=fixture();if(mode==='basket'){g.tribe(0).items={basket:1};assert.equal(equipBasket(g,u.id),true);u.basket.condition=1/24;}else u.haulage=mode;const b=farm(g);b.crop.remaining=100;u.x=20;u.z=40;u.y=4;u.order='gather';u.node=b;for(let i=0;i<100&&u.order!=='return';i++)farmWork(g,u,b,.3);const expected=mode==='basket'?60:mode==='sled'?80:120;assert.equal(u.itemCargo.grainSheaves,expected);assert.doesNotThrow(()=>decodeGame(encodeGame(g)),mode);const bad=structuredClone(encodeGame(g));bad.state.units.find(a=>a.id===u.id).itemCargo.grainSheaves=expected+1;assert.throws(()=>decodeGame(bad));const other=structuredClone(encodeGame(g));other.state.units.find(a=>a.id===u.id).itemCargo={cloth:41};assert.throws(()=>decodeGame(other));if(mode==='basket'){drive(g,100,()=>!u.itemCargo);assert.equal((g.tribe(0).items.grainSheaves||0)+(g.state.production.metrics.consumed.grainSheaves||0),60);assert.equal(g.state.cerealProcessing.deliveredSheaves,60);assert.equal(u.basket,undefined);assert.equal(g.state.fibre.metrics.basketsWornOut,1);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));}}});
 test('automatic cereal work preserves a final free adult during low edible reserves and never unlocks directly assigned farmers',()=>{const{g,u,v,hearth}=fixture();g.tribe(0).food=1;g.tribe(0).foodLots={provisions:1};g.tribe(0).items={grainSheaves:16};g.state.autoWorkEnabled=true;assert.equal(reviewCerealProcessing(g,0,u.id),true);assert.equal(g.state.production.projects.length,1);assert.equal(reviewCerealProcessing(g,0,v.id),false);assert.equal(v.productionProjectId,undefined);assert.equal(g.state.production.projects.length,1);v.jobLock=true;const stock=g.tribe(0).items.grainSheaves;g.state.time+=6;assert.equal(reviewCerealProcessing(g,0),false);assert.equal(v.jobLock,true);assert.equal(g.tribe(0).items.grainSheaves,stock);assert.equal(g.state.production.projects[0].workplace,hearth.id);});
 
@@ -450,6 +450,8 @@ test('delivered mill and oven practice unlocks larger physical batches with paid
 
 test('a practiced threshing floor processes double loads and preserves the exact grain and seed yield through a save',()=>{
  let {g,v}=fixture();
+ // Keep this finite two-worker throughput scenario closed to unrelated immigration.
+ g.setGrowthPolicy('stable');
  v.jobLock=true;
  const floor=g.makeBld('threshingFloor',12,44,0);
  g.state.buildings.push(floor);
@@ -578,4 +580,25 @@ test('milled flour can use exposed storehouse sacks but ordinary goods cannot ov
  assert.match(productionIssue(g,'grindGrainStation',mill.id,u.id),/storage is full/);
  const store=g.makeBld('warehouse',20,54,0);g.state.buildings.push(store);ground(g);assert.equal(productionIssue(g,'grindGrainStation',mill.id,u.id),null);assert.equal(beginProduction(g,'grindGrainStation',mill.id,u.id),true);const p=g.state.production.projects.at(-1);drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.ok(t.items.flour>0);assert.equal(g.state.production.metrics.grainUsed,4);
  const flour=t.items.flour;g.state.weather='rain';tickProduction(g,10);assert.ok(t.items.flour<flour);assert.ok(g.state.production.metrics.spoiled.flour>0);assert.equal(t.items.plantFibre,1000);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+
+test('outside loose deliveries preserve old paid parcels without admitting another over-capacity parked batch',()=>{
+ const {g,u,v,hearth}=fixture();g.setGrowthPolicy('stable');v.jobLock=true;
+ g.tribe(0).items={grainSheaves:16,plantFibre:84};
+ assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);
+ const existing=g.state.production.projects.at(-1);
+ assert.equal(unloadProductionProject(g,existing.id),true);
+ drive(g,30,()=>existing.phase==='stored');assert.equal(existing.phase,'stored');
+ v.itemCargo={plantFibre:1};assert.equal(deliverProductionCargo(g,v),true);
+ assert.equal(cachedProductionUnits(g,0),8);assert.equal(g.tribe(0).items.plantFibre,85);
+ assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);
+ const next=g.state.production.projects.at(-1),paid=g.state.production.metrics.consumed.grainSheaves;
+ assert.notEqual(next.id,existing.id);assert.equal(paid,16);
+ assert.equal(unloadProductionProject(g,next.id),false,'protecting already placed parcels does not grant space for a new parked load');
+ assert.match(next.blockedReason,/No room to park/);assert.equal(next.phase,'carrying');
+ assert.equal(existing.phase,'stored');assert.equal(existing.actorId,null);assert.equal(cachedProductionUnits(g,0),8);
+ const copy=decodeGame(encodeGame(g));assert.equal(cachedProductionUnits(copy,0),8);
+ assert.equal(copy.state.production.projects.find(p=>p.id===next.id).actorId,u.id);
+ assert.equal(copy.tribe(0).items.grainSheaves,0);assert.equal(copy.state.production.metrics.consumed.grainSheaves,16);
 });
