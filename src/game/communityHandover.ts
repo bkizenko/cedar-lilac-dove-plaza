@@ -1,3 +1,4 @@
+import {reconcileSailRigProjects} from './boatSailing';
 import {settleSiegeRamHandover,reconcileSiegeRams} from './siegeRam';
 import {reconcileSitePreparationWorkers} from './sitePreparation';
 import {settleArmorHandover,reconcileArmorHolders} from './armor';
@@ -86,6 +87,7 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   if(s.cartUpgradeRequests)s.cartUpgradeRequests=s.cartUpgradeRequests.filter(r=>s.units.some(u=>u.id===r.ownerId&&u.team===r.team&&u.hp>0&&u.haulage==='sled'&&!u.haulageWork)&&s.buildings.some(b=>b.id===r.workplace&&b.team===r.team&&b.type==='workshop'&&b.hp>0&&b.build>=1));
   settleArmorHandover(s,r);reconcileArmorHolders(draft);settleSiegeRamHandover(s,r);reconcileSiegeRams(draft);
   reconcileSitePreparationWorkers(draft);
+  reconcileSailRigProjects(draft);
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }

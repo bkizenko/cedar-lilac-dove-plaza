@@ -14,7 +14,7 @@ export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:numb
 /** Tunable game work seconds, not a historical time measurement. */
 export const CARCASS_PROCESSING_RULES={gutSeconds:2,skinSeconds:3} as const;
 export type HuntableCritter = Critter & { carcass?: Carcass };
-export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, bird: 0 } as const;
+export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, sheep:16, bird: 0 } as const;
 
 /** Old dead wildlife has no carcass field: loading cannot recreate eaten meat. */
 export function carcassStateValid(value: unknown, species: CritterKind, hp: number, now: number) {

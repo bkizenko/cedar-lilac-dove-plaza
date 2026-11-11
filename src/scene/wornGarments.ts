@@ -24,6 +24,12 @@ export function wornGarmentGeometry(kind:Kind){
   for(const x of[-.13,0,.13])parts.push(box(.012,.38,.014,x,.32,.224,'#ead9b6'));
   return joinGarment(parts);
  }
+ if(kind==='woolCoat'){
+  const parts=[shell(.221,.255,.59,.26,'#a9a28d'),ring(.20,.024,.85,'#c9c2a8'),shell(.256,.256,.045,.28,'#7c7764'),box(.025,.43,.025,0,.29,.238,'#646353')];
+  for(const x of[-.277,.147])parts.push(box(.13,.25,.24,x,.52,-.12,'#99947e'));
+  for(const y of[.43,.55,.67])parts.push(box(.055,.018,.02,0,y,.256,'#d1c9ad'));
+  return joinGarment(parts);
+ }
  if(kind==='hideCoat'){
   const parts=[shell(.223,.26,.64,.24,'#654735'),ring(.199,.032,.849,'#e1c697'),
    shell(.253,.253,.06,.25,'#d1b28a'),shell(.236,.236,.044,.48,'#35271f'),

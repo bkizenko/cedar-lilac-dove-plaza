@@ -114,7 +114,7 @@ export type Region = {
   clusterName: string;
 };
 
-export type CritterKind = "deer" | "boar" | "goat" | "bird";
+export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "bird";
 
 export type Critter = {
   huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
@@ -122,6 +122,7 @@ export type Critter = {
   carcass?: {meat:number;diedAt:number;hides?:number;bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number};
   id: number;
   species: CritterKind;
+  fleece?:import('./sheep').SheepFleece;
   x: number;
   y: number;
   z: number;
@@ -238,7 +239,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   farmToolWork?: FarmToolWork;
   packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
-  husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
+  husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaidReturn?: import("./seaRaiderReturn").SeaRaiderReturn;
@@ -569,6 +570,7 @@ export type GameState = {
   deals: TradeDeal[];
   raidT: number;
   wildlife: Critter[];
+  sheepVersion?:1;
   livestock?: Livestock[];
   routes: TradeRoute[];
   routeOffer: RouteOffer | null;

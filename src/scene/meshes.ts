@@ -663,3 +663,14 @@ export function riverboatGeo(){return merge([
  ...[-1.8,-.9,0,.9,1.8].map(z=>box(2.4,.15,.3,0,.5,z)),
  ...[-2.4,-1.2,0,1.2,2.4].flatMap(z=>[-1,1].map(side=>box(.14,.8,.14,side*1.23,.08,z))),
  ]);}
+
+/** A compact fleece silhouette and dark face distinguish actual sheep. */
+export function sheepGeo(){
+ const pieces:THREE.BufferGeometry[]=[];
+ function part(g:THREE.BufferGeometry,color:string,x=0,y=0,z=0){g.translate(x,y,z);const c=new THREE.Color(color),a=new Float32Array(g.attributes.position.count*3);for(let i=0;i<a.length;i+=3){a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b;}g.setAttribute('color',new THREE.BufferAttribute(a,3));pieces.push(g);}
+ const body=new THREE.IcosahedronGeometry(.36,1);body.scale(1.4,1,.92);part(body,'#d5d0b9',0,.54,0);
+ const head=new THREE.SphereGeometry(.15,6,5);head.scale(1.2,1,.8);part(head,'#524b40',.46,.67,0);
+ for(const z of[-.13,.13])part(new THREE.BoxGeometry(.16,.045,.10),'#746b57',.43,.73,z);
+ for(const x of[-.25,.25])for(const z of[-.17,.17])part(new THREE.CylinderGeometry(.045,.036,.38,5),'#5e5547',x,.20,z);
+ return merge(pieces);
+}

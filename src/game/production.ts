@@ -1,3 +1,4 @@
+import {SHEEP_RULES} from './sheep';
 import {ARMOR_RULES} from './armorRules';
 import {armorStoredUnits,armorDeliveryIssue,deliverProducedArmor} from './armor';
 import{inheritedCacheCapacity}from'./communityCaches';
@@ -21,10 +22,10 @@ import {hasTaskCommitment} from './workCommitments';
 import {CAMP_RULES,supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {craftingEffort} from './crafting';
 import {receiveFood,foodInventory,takeFoodLot,FOOD_KINDS} from './pantry';
-export const ITEM_KINDS=['plantFibre','cordage','basket','clay','greenware','dryWare','pottery','potsherds','flour','rawMeat','rawHide','bone','cleanHide','driedSkin','tannin','leather','skinClothes','leatherClothes','hideCoat','yarn','cloth','lightClothes','grainSheaves','roughGrain','straw','chaff','paddedArmor'] as const;
+export const ITEM_KINDS=['plantFibre','cordage','basket','clay','greenware','dryWare','pottery','potsherds','flour','rawMeat','rawHide','bone','cleanHide','driedSkin','tannin','leather','skinClothes','leatherClothes','hideCoat','yarn','cloth','lightClothes','grainSheaves','roughGrain','straw','chaff','paddedArmor','rawWool','cleanWool','woolYarn','woolCloth','felt','woolCoat'] as const;
 export type ItemKind=typeof ITEM_KINDS[number];
 export type ItemStock=Partial<Record<ItemKind,number>>;
-export const ITEM_NAMES:Record<ItemKind,string>={plantFibre:'plant fibre',cordage:'cordage',basket:'woven baskets',clay:'clay',greenware:'formed greenware',dryWare:'dried unfired ware',pottery:'fired pottery vessels',potsherds:'potsherds',flour:'flour',rawMeat:'raw meat',rawHide:'raw hides',bone:'bones',cleanHide:'cleaned hides',driedSkin:'dried skins',tannin:'bark tannin',leather:'leather',skinClothes:'skin clothing',leatherClothes:'leather clothing',hideCoat:'lined hide coat',yarn:'spun bast yarn',cloth:'woven bast cloth',lightClothes:'light plant-fibre clothing',grainSheaves:'unthreshed cereal sheaves',roughGrain:'grain with chaff',straw:'straw',chaff:'chaff',paddedArmor:'padded torso armor'};
+export const ITEM_NAMES:Record<ItemKind,string>={plantFibre:'plant fibre',cordage:'cordage',basket:'woven baskets',clay:'clay',greenware:'formed greenware',dryWare:'dried unfired ware',pottery:'fired pottery vessels',potsherds:'potsherds',flour:'flour',rawMeat:'raw meat',rawHide:'raw hides',bone:'bones',cleanHide:'cleaned hides',driedSkin:'dried skins',tannin:'bark tannin',leather:'leather',skinClothes:'skin clothing',leatherClothes:'leather clothing',hideCoat:'lined hide coat',yarn:'spun bast yarn',cloth:'woven bast cloth',lightClothes:'light plant-fibre clothing',grainSheaves:'unthreshed cereal sheaves',roughGrain:'grain with chaff',straw:'straw',chaff:'chaff',paddedArmor:'padded torso armor',rawWool:'raw fleece',cleanWool:'cleaned wool',woolYarn:'wool yarn',woolCloth:'woven wool',felt:'wool felt',woolCoat:'wool coat'};
 export const PRODUCTION_RULES={version:1,baseItemCapacity:100,warehouseCapacity:200,rawMeatSpoilPerSecond:.0008,flourLifetimeSeconds:3600,rawHideLifetimeSeconds:900,cleanHideLifetimeSeconds:1800,skinWarmthCelsius:3,leatherWarmthCelsius:4,garmentLifeSeconds:7200,carryCapacity:12,maximumProjects:200,retainedFinishedProjects:100} as const;
 export type ProductionRecipeSpec={name:string;workplace:BldType;inputs:ItemStock;grain:number;wood:number;water:number;workSeconds:number;outputs:ItemStock;food:number;foodKind:FoodKind;foodInputs:Partial<Record<FoodKind,number>>;preservation:null|'air'|'clay'|'smoke';exposureSeconds:number};
 const recipe=(r:Omit<ProductionRecipeSpec,'grain'|'foodKind'|'foodInputs'|'preservation'|'exposureSeconds'>&Partial<Pick<ProductionRecipeSpec,'grain'|'foodKind'|'foodInputs'|'preservation'|'exposureSeconds'>>):ProductionRecipeSpec=>({grain:0,foodKind:'meat',foodInputs:{},preservation:null,exposureSeconds:0,...r});
@@ -38,6 +39,12 @@ export const PRODUCTION_RECIPES={
  threshCerealFloorBulk:recipe({name:'Thresh a four-load batch',workplace:'threshingFloor',inputs:{grainSheaves:4*CEREAL_RULES.rawBatch},wood:0,water:0,workSeconds:2*CEREAL_RULES.floorThreshSeconds,outputs:{roughGrain:4*CEREAL_RULES.roughBatch,straw:4*CEREAL_RULES.strawPerBatch},food:0}),
  winnowCerealFloorDouble:recipe({name:'Winnow a double batch',workplace:'threshingFloor',inputs:{roughGrain:2*CEREAL_RULES.roughBatch},wood:0,water:0,workSeconds:1.5*CEREAL_RULES.floorWinnowSeconds,outputs:{chaff:2*CEREAL_RULES.chaffPerBatch},food:2*CEREAL_RULES.cleanGrainPerBatch*(1-CEREAL_RULES.seedFraction),foodKind:'grain'}),
  winnowCerealFloorBulk:recipe({name:'Winnow a four-load batch',workplace:'threshingFloor',inputs:{roughGrain:4*CEREAL_RULES.roughBatch},wood:0,water:0,workSeconds:2*CEREAL_RULES.floorWinnowSeconds,outputs:{chaff:4*CEREAL_RULES.chaffPerBatch},food:4*CEREAL_RULES.cleanGrainPerBatch*(1-CEREAL_RULES.seedFraction),foodKind:'grain'}),
+ washWool:recipe({name:'Wash raw fleece',workplace:'fibreWorkshop',inputs:{rawWool:4},wood:0,water:2,workSeconds:SHEEP_RULES.washSeconds,outputs:{cleanWool:3},food:0}),
+ spinWool:recipe({name:'Spin wool yarn',workplace:'fibreWorkshop',inputs:{cleanWool:3},wood:0,water:0,workSeconds:SHEEP_RULES.spinSeconds,outputs:{woolYarn:3},food:0}),
+ weaveWool:recipe({name:'Weave wool cloth',workplace:'fibreWorkshop',inputs:{woolYarn:4},wood:0,water:0,workSeconds:SHEEP_RULES.weaveSeconds,outputs:{woolCloth:2},food:0}),
+ feltWool:recipe({name:'Work wool into felt',workplace:'fibreWorkshop',inputs:{cleanWool:4},wood:0,water:2,workSeconds:SHEEP_RULES.feltSeconds,outputs:{felt:2},food:0}),
+ sewWoolCoat:recipe({name:'Sew a woven wool coat',workplace:'tailor',inputs:{woolCloth:2,cordage:1},wood:0,water:0,workSeconds:SHEEP_RULES.sewSeconds,outputs:{woolCoat:1},food:0}),
+ sewFeltCoat:recipe({name:'Sew a felt wool coat',workplace:'tailor',inputs:{felt:2,cordage:1},wood:0,water:0,workSeconds:SHEEP_RULES.sewSeconds,outputs:{woolCoat:1},food:0}),
  spinYarnHand:recipe({name:'Hand-spin bast yarn',workplace:'hearth',inputs:{plantFibre:4},wood:0,water:0,workSeconds:TEXTILE_RULES.handSpinSeconds,outputs:{yarn:4},food:0}),
  spinYarn:recipe({name:'Spin bast yarn at a fibre shelter',workplace:'fibreWorkshop',inputs:{plantFibre:4},wood:0,water:0,workSeconds:TEXTILE_RULES.shelterSpinSeconds,outputs:{yarn:4},food:0}),
  weaveCloth:recipe({name:'Weave bast cloth',workplace:'fibreWorkshop',inputs:{yarn:4},wood:0,water:0,workSeconds:TEXTILE_RULES.weaveSeconds,outputs:{cloth:2},food:0}),
@@ -129,7 +136,7 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
 }
 /** Finite gathered raw materials can be laid beside the actual reached cache.
  * This does not create covered capacity or admit manufactured cargo. */
-export const LOOSE_GATHERED_MATERIALS:readonly ItemKind[]=['plantFibre','clay','rawHide','bone','tannin'];
+export const LOOSE_GATHERED_MATERIALS:readonly ItemKind[]=['plantFibre','clay','rawHide','bone','tannin','rawWool'];
 function canLeaveLooseMaterialsOutside(g:Game,u:Unit){const entries=Object.entries(u.itemCargo||{}).filter(([,n])=>(n||0)>0);return entries.length>0&&entries.every(([kind])=>LOOSE_GATHERED_MATERIALS.includes(kind as ItemKind))&&atCache(g,u);}
 /** Converting existing item units into no more units needs no extra storage;
  * the real paid work and physical return trip still have to finish. */
@@ -165,7 +172,7 @@ export function grainBatchIssue(g:Game,team:number,recipe:ProductionRecipe,workp
 }
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number,deliveredHere=false){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
- if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
+ if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!r.inputs.rawWool&&!r.inputs.cleanWool&&!r.inputs.woolYarn&&!r.inputs.woolCloth&&!r.inputs.felt&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
  const doubleBatchIssue=grainBatchIssue(g,b.team,recipe,b);if(doubleBatchIssue)return doubleBatchIssue;
  const cerealIssue=cerealWeatherIssue(g,recipe);if(cerealIssue)return cerealIssue;
  const textileIssue=textileRecipeIssue(g,b.team,recipe);if(textileIssue)return textileIssue;
@@ -301,6 +308,7 @@ const GARMENT_WARMTH:Readonly<Record<GarmentKind,number>>={
  skinClothes:PRODUCTION_RULES.skinWarmthCelsius,
  leatherClothes:PRODUCTION_RULES.leatherWarmthCelsius,
  hideCoat:TEXTILE_RULES.hideCoatWarmthCelsius,
+ woolCoat:SHEEP_RULES.warmthCelsius,
 };
 export function clothingWarmth(u:Unit){
  return u.garment?Math.max(0,u.garment.condition)*GARMENT_WARMTH[u.garment.item]:0;
