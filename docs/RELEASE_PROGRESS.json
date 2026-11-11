@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "860863a33f810b2e2bcaf6d42ca7696627a15672, published as 2026-11-11T20-45-37-133Z-860863a on ports8086 and8101; latest qualified platform slice35/35, no new gate credit. Full campaign and target performance remain unverified.",
+  "verifiedPublishedCodeBaseline": "db3dfbaee3d94893f242fd8abb34b9ce420e4146, published as 2026-11-11T21-18-48-816Z-db3dfba on8086/8101; latest dairy/water batch104/108 (4retained failures), no new gate credit. Full campaign and target performance remain unverified.",
   "planningHeadAtAudit": "75ad233",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -203,6 +203,12 @@
       "path": "docs/metrics/platform-contracts-2026-11-11.json",
       "passed": 35,
       "total": 35,
+      "newGateCredit": 0
+    },
+    "dairyWaterNov11": {
+      "path": "docs/metrics/dairy-water-release-2026-11-11.json",
+      "passed": 104,
+      "total": 108,
       "newGateCredit": 0
     }
   },
