@@ -151,5 +151,10 @@
       "path": ".play/releases/2026-11-11T22-25-07-816Z-3911598/release-evidence.json",
       "sha256": "7726a08d83fb2c505ca2879ceb586aecb2f306de6ae52b745dd18029cad32159"
     }
-  ]
+  ],
+  "retainedLocalEvidence": {
+    "manifestAndBuiltUiScript": ".play/qualified-batches/3911598/native-evidence/",
+    "cleanup": ".play/qualified-batches/3911598/cleanup.json",
+    "note": "Completed candidate removed after4 committed source files verified byte-identical and disposable8102 server stopped; published release, rollback and original villages untouched."
+  }
 }

@@ -93,3 +93,13 @@ Cultured curd passed7/7 focused tests and typecheck; broader regression/build/UI
 Source **39115987e6c6488462be93d8226fb629aefbc96e**, release **2026-11-11T22-25-07-816Z-3911598**, verified health+HTML200 on8086 and8101. **35/35**=34realGame/save/autosave/storage regressions+1actualbuiltpublicTestLabUI, Node24 typecheck/build passed. Native seed0 sparse observations; public reveal/save/load/off/return controls preserve the original isolated village/localStorage and real observed fog/age. An earlier menu-toggle harness failure was corrected test-only, with no source/build change. Evidence: docs/metrics/test-lab-observed-fog-release-2026-11-11.json.
 
 Precedingf095138/138 remains a distinct published batch; no combined overlapping denominator or new gate credit (34/98). Grok: correct-radius provenance tracer is still excluded and needs your owned fixes. Curd7/7+typecheck remains pending broader regression/build/UI/publication.
+
+## Follow-up source review — Claude9a40164 vs5d9051c
+
+No previous trade/cargo blocker is repaired in this delta. The only trade changes extract commitPlan/tradeAnswerBlocker and add last-observed partner-stock snapshots with3new controlled fixture tests. These are useful dialog seams, not physical inventory/task/save fixes.
+
+Still blocked: positive bulk items.paddedArmor conflicts with actual armor assets and strict production saves; real farming tools/condition are absent; item/gear/animal cargo lacks physical holders; direct interruption remains unhooked; loading still trusts latched ready IDs; core escrow/animal/line↔carry validation unchanged; player-from0 proposals rejected; needs-driven boat transport absent. stolenCargo.ts, its9tests, workCommitments.ts, armor.ts and farmTools.ts are byte-identical to the blocked baseline: parcel64/provenance64, preemption and distant pickup defects persist.
+
+New narrow fixes: tradeAnswerBlocker object fallback can preview an unregistered offer that answerTradeOffer cannot accept; reject detached/stale IDs. Observation records need observedAt<=state.time and historical observer IDs<nextId. Preserve valid history after observer death. Do not present a society-wide snapshot as a visible individual cache inventory.
+
+Fresh PM board2de0593 requires current-main merge and shared native sea/reservation retest before scope expansion;9a mergedf095 but newerG10/source-doc seams must also be preserved. Canonical backlog/status stay Codex-owned; Claude board/hand-off remains Claude-owned. No source or canonical edits and no tests run here. Detailed exact-line review and byte hashes: docs/parallel/reviews/trade-cargo-9a40164.json.
