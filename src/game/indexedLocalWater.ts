@@ -43,7 +43,17 @@ function validateBodies(input:readonly LocalWaterBody[]){
 export function ownWaterBodies(input:readonly LocalWaterBody[]):LocalWaterBody[]{if(owned.has(input as LocalWaterBody[]))return input as LocalWaterBody[];validateBodies(input);const result=freezeData(copyData(input)) as LocalWaterBody[];owned.set(result,{indexes:[]});return result;}
 const EMPTY_FALLS:Waterfall[]=[];const ownedFalls=new WeakSet<Waterfall[]>();
 function ownFalls(input:readonly Waterfall[]){if(ownedFalls.has(input as Waterfall[]))return input as Waterfall[];if(!Array.isArray(input)||input.length>128||!input.every(f=>f&&['x','z','upperY','lowerY','width','dx','dz'].every(k=>Number.isFinite(f[k as keyof Waterfall]))&&f.width>0))throw new TypeError('Invalid falling water');const result=freezeData(copyData(input)) as Waterfall[];ownedFalls.add(result);return result;}
-export function ownedWaterIndex(bodies:LocalWaterBody[],size:number,falls:readonly Waterfall[]=EMPTY_FALLS){let o=owned.get(bodies);if(!o){bodies=ownWaterBodies(bodies);o=owned.get(bodies)!;}let entry=o.indexes.find(e=>e.size===size&&e.falls===falls);if(!entry){entry={size,falls,index:buildLocalWaterIndex(bodies,size,falls)};if(o.indexes.length>=INDEXED_WATER_RULES.maximumCachedSizes)o.indexes.shift();o.indexes.push(entry);}return{bodies,index:entry.index};}
+/** Allocation-free cache hit for already-owned descriptors. The bounded cache
+ * and index construction are identical to the public wrapper's prior contract. */
+export function ownedWaterIndexValue(bodies:LocalWaterBody[],size:number,falls:readonly Waterfall[]=EMPTY_FALLS):LocalWaterIndex {
+ let o=owned.get(bodies);if(!o){bodies=ownWaterBodies(bodies);o=owned.get(bodies)!;}
+ for(let i=0;i<o.indexes.length;i++){const entry=o.indexes[i];if(entry.size===size&&entry.falls===falls)return entry.index;}
+ const entry={size,falls,index:buildLocalWaterIndex(bodies,size,falls)};if(o.indexes.length>=INDEXED_WATER_RULES.maximumCachedSizes)o.indexes.shift();o.indexes.push(entry);return entry.index;
+}
+/** Retain normalized owned bodies and a fresh wrapper for existing consumers. */
+export function ownedWaterIndex(bodies:LocalWaterBody[],size:number,falls:readonly Waterfall[]=EMPTY_FALLS){
+ if(!owned.has(bodies))bodies=ownWaterBodies(bodies);return{bodies,index:ownedWaterIndexValue(bodies,size,falls)};
+}
 
 type WaterWorld={localWaterVersion?:number;waterBodies?:LocalWaterBody[];waterfalls?:Waterfall[];size?:number;waterHeights?:Float32Array;waterY?:number;baseWaterY?:number};type Owner={current:LocalWaterBody[];falls:Waterfall[];revision:number;listeners:Set<()=>void>};const owners=new WeakMap<object,Owner>();
 function refreshRaster(world:WaterWorld,bodies:LocalWaterBody[],falls:Waterfall[]=world.waterfalls||EMPTY_FALLS){
