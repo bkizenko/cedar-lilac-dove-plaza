@@ -1,5 +1,5 @@
 {
-  "status": "qualified candidate; publication pending",
+  "status": "published; exact qualified artifact served on both game ports",
   "scope": [
     "Existing finite raid groups retain a real camp guard",
     "Actual route/speed/return supplies replace short departure deadline",
@@ -50,5 +50,11 @@
     "total": 98,
     "percentage": 34.69,
     "changed": false
+  },
+  "commit": "2c90109",
+  "release": "2026-11-11T16-12-17-503Z-2c90109",
+  "publicationHealth": {
+    "8086": "verified",
+    "8101": "verified"
   }
 }
