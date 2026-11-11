@@ -1,0 +1,41 @@
+{
+  "commit": "5b3429b",
+  "release": "2026-11-11T05-27-06-5b3429b",
+  "focusedChecks": {
+    "passed": 9,
+    "total": 9
+  },
+  "browserChecks": {
+    "passed": 3,
+    "total": 3,
+    "endpoints": [
+      "candidate8102",
+      "published8086",
+      "published8101"
+    ],
+    "scope": "Separate contexts loaded actual53-person exported village; ordinary20.06simulationseconds, all3carriers unload exactly12fibre, useful food work resumes, 53people remain, no errors; publicsave/reload; seed counter removed from resource strip. No original save modification or resource grants."
+  },
+  "batchPassed": 12,
+  "batchTotal": 12,
+  "percent": 100,
+  "broaderRegression": {
+    "passed": 30,
+    "total": 32,
+    "skipped": 1,
+    "failed": 1,
+    "failure": "Existing stone-hoe harvest accounting expected20 versus18; reproduced identically with baseline production/workload source. Affected workload policy fixture updated to genuinely expanding recipe and rerun6/6."
+  },
+  "limitations": [
+    "20seconds is not a seasonal survival qualification",
+    "No independent workshop buffer or new rendered outside pile implemented",
+    "Storage still uses equal item portions, not physical volume",
+    "Full-year yield/labor balance remains to qualify"
+  ],
+  "firstReleaseGates": {
+    "checklist": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newCredit": 0
+  }
+}
