@@ -522,6 +522,7 @@ export type GameState = {
   rivalKnowledge?: {team:number;cells:number[]}[];
   scoutTimer?: number;
   tradeNeeds?:import('./tradeNeeds').TradeNeedsState;
+  seaStorms?:import('./seaStorms').SeaStormState;
   rivalTradeRefusals?: {team:number;partner:number;wanted:ResKind;offered:ResKind;time:number}[];
   conquestAt?: number;
   difficulty?: import("./difficulty").Difficulty;

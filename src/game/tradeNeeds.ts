@@ -208,7 +208,7 @@ export function tickTradeNeeds(g:Game,_dt:number){
  const s=g.state.tradeNeeds;if(!s)return;
  for(const o of s.offers){if(!OPEN.includes(o.phase))continue;
   if(o.phase==='proposed'){if(g.state.time>=o.answerAt)evaluate(g,o);continue;}
-  reconcile(g,o);if(!OPEN.includes(o.phase)||o.phase==='proposed')continue;
+  reconcile(g,o);if(!OPEN.includes(o.phase))continue;
   const age=g.state.time-(o.startedAt??o.createdAt);
   if(o.phase==='loading'){if(age>TRADE_NEEDS_RULES.loadingSeconds){abort(g,o,'loading-timeout');continue;}
    if(o.carriers.every(id=>o.ready.includes(id))&&o.escorts.every(id=>o.ready.includes(id)||!alive(g,o,id))){

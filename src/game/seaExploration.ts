@@ -2,6 +2,7 @@ import type {Game} from './sim';
 import type {GameState,Unit} from './types';
 import {BOAT_CLASSES,boatServiceProject,chooseBoatClass} from './boatClasses';
 import {sailRigProject} from './boatSailing';
+import {observedSeaStorm} from './seaStorms';
 import {beginRiverboat,boardRiverboat,boatCrew,commandRiverboat,landRiverboat,riverboatWaterPoint,BOAT_COST,type Riverboat} from './boats';
 import {requestWaterNavigation} from './waterTravel';
 import {knownSettlementSite} from './barter';
@@ -26,7 +27,7 @@ export const SEA_EXPLORATION_RULES={version:1,firstReviewSeconds:150,reviewSecon
  maximumLegs:6,maximumVoyageSeconds:420,musterSeconds:360,landingSeconds:120,boardingMeters:24,dangerMeters:24,hullReserveWood:12,maximumRecords:64,maximumLandings:16,maximumHalls:16,maximumProbed:64,gridWidth:32} as const;
 export const SEA_EXPLORATION_REASONS=['partner-known','water-preparing','no-frontier','no-reachable-water','no-hull-materials','no-builder','hull-pending','no-crew','no-provisions','home-meals','hull-lost','crew-lost','route-blocked','hull-reassigned','cancelled'] as const;
 export type SeaExplorationReason=typeof SEA_EXPLORATION_REASONS[number];
-export const SEA_RETURN_REASONS=['surveyed','legs','time','provisions','blocked','danger','recall','crew'] as const;
+export const SEA_RETURN_REASONS=['surveyed','legs','time','provisions','blocked','danger','recall','crew','storm'] as const;
 export type SeaReturnReason=typeof SEA_RETURN_REASONS[number];
 export const SEA_PHASES=['commission','ready','mustering','outbound','returning','landing','unloading','complete','failed','lost'] as const;
 export type SeaExplorationPhase=typeof SEA_PHASES[number];
@@ -219,7 +220,8 @@ export function tickSeaExploration(g:Game,_dt:number){
    if(!crew.some(u=>u.boat)){v.phase='landing';v.landingAt=g.state.time;v.returnReason??='recall';v.reason='Hull landed by recall; crew carrying leftover provisions and the report to the cache';continue;}
    observe(g,v,b!);const captain=g.state.units.find(u=>u.id===b!.captain&&u.hp>0);
    if(v.phase==='outbound'){
-    if(provisionsLow(g,v,b!))beginReturn(g,v,'provisions');
+    if(observedSeaStorm(g,b!))beginReturn(g,v,'storm');
+    else if(provisionsLow(g,v,b!))beginReturn(g,v,'provisions');
     else if(g.state.time-(v.departedAt??0)>R.maximumVoyageSeconds)beginReturn(g,v,'time');
     else if(g.state.units.some(p=>p.hp>0&&g.isFoe(v.team,p.team)&&distance(p,b!)<R.dangerMeters))beginReturn(g,v,'danger');
     else if(!captain)v.reason='Waiting for an able crew member to take the helm';
