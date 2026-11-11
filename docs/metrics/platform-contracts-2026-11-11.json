@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-11-11T21:03:32.280919+00:00",
+  "codeCommit": "860863a33f810b2e2bcaf6d42ca7696627a15672",
+  "release": "2026-11-11T20-45-37-133Z-860863a",
+  "health": {
+    "8086": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T20-45-37-133Z-860863a"
+    },
+    "8101": {
+      "service": "hearthwild-play",
+      "release": "2026-11-11T20-45-37-133Z-860863a"
+    }
+  },
+  "executedBatch": {
+    "passed": 35,
+    "total": 35,
+    "percent": 100,
+    "focused": 34,
+    "builtNativeUi": 1
+  },
+  "fullReleaseChecklist": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "newGateCredit": 0
+  },
+  "scope": [
+    "Bounded autosave snapshot/clone/commit timings correlated with uncapped frame intervals",
+    "Safe current/optionH render-style preference contract, current remains default",
+    "Native built UI actual WebWorker save, visible diagnostic labels and strict reload preserve paused seed/time/food/unit count"
+  ],
+  "limitations": [
+    "Observability is not a speedup or proof of causality",
+    "No Option H runtime activation or visual approval",
+    "No 100-person target-FPS acceptance"
+  ],
+  "localEvidence": {
+    ".play/platform-contract-regression.log": "c7a18d27e4cb298834ebb93e53a4dd0082d466bf559afac4e6b1f1530d5dab01",
+    ".play/platform-contract-typecheck.log": "8fa1cf5506304e8abac55868e7f1a136c9b1dde57a3981a382da4c21ea129a6f",
+    ".play/platform-contract-build.log": "10edef359866665c682de78b744d83197217eae805790e4538041587ea9c4e98",
+    ".play/platform-contract-ui.log": "510a2f6c75e5dfa63d1d0287ebb4c1e0d31a8e51a91d847331acea4110e6a64b"
+  }
+}
