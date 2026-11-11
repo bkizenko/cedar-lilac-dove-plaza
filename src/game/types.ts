@@ -152,6 +152,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   coastalVoyageId?:number;
   coastalCommissionId?:number;
   seaExplorationId?:number;
+  tradeNeedsId?:number;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;
@@ -520,6 +521,7 @@ export type GameState = {
   trails?: {cell:number;wear:number;last:number;angle:number;x?:number;z?:number}[];
   rivalKnowledge?: {team:number;cells:number[]}[];
   scoutTimer?: number;
+  tradeNeeds?:import('./tradeNeeds').TradeNeedsState;
   rivalTradeRefusals?: {team:number;partner:number;wanted:ResKind;offered:ResKind;time:number}[];
   conquestAt?: number;
   difficulty?: import("./difficulty").Difficulty;
