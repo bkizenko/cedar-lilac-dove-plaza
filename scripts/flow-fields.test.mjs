@@ -42,7 +42,7 @@ test('a non-walkable start (inside a footprint edge) still gets an equally short
 test('one shared field is much cheaper than per-resident A* for 120 residents',()=>{
   const g=fixture(),grid=g.walk,home=g.campOf(0),goal=Math.floor((home.z+520)/2)*W+Math.floor((home.x+520)/2),starts=walkableCells(grid,mulberry32(8),120,goal,90);
   let t=performance.now();for(const s of starts)findPath(grid,W,s,goal);const astar=performance.now()-t;
-  const owner={};t=performance.now();for(const s of starts)flowPath(owner,grid,W,s,goal,1)??findPath(grid,W,s,goal);const flow=performance.now()-t;
+  const owner={};t=performance.now();for(const s of starts){const p=flowPath(owner,grid,W,s,goal,1)??findPath(grid,W,s,goal);assert.ok(p===null||Array.isArray(p));}const flow=performance.now()-t;
   console.log(`120 routes: A* ${astar.toFixed(1)} ms, flow field ${flow.toFixed(1)} ms (build ${flowFieldStats(owner).buildMs.toFixed(1)} ms)`);
   assert.ok(flow<astar*.6,`${flow} vs ${astar}`);
 });
