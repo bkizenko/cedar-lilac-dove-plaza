@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {AutosaveController} from '../src/game/autosave.ts';import {SAVE_KEY} from '../src/game/constants.ts';import {invalidateAutosaveWrites} from '../src/game/save.ts';
 class Port{onmessage=null;onerror=null;onmessageerror=null;jobs=[];preflights=[];flushed=0;terminated=false;postMessage(value){const v=structuredClone(value);if(v.phase==='preflight')this.preflights.push(v);else this.jobs.push({...v,expected:this.preflights.find(p=>p.id===v.id).expected});}terminate(){this.terminated=true;}flush(){while(this.flushed<this.preflights.length){const job=this.preflights[this.flushed++];this.onmessage?.({data:{id:job.id,status:'preflight',previousPrimaryValid:!!job.expected.primary,validCandidates:0,workerCpuMs:40}});}}reply(job=this.jobs.at(-1),extra={}){this.onmessage?.({data:{id:job.id,status:'ready',serialized:JSON.stringify(job.snapshot),previousPrimaryValid:!!job.expected.primary,validCandidates:0,workerCpuMs:40,...extra}});this.flush();}}
-function fixture(options={}){let clock=0,current={started:true,awaitingStart:false,testMode:false,state:{seed:1,time:10,food:20}},allowed=true,encodes=0,syncs=0;const map=new Map(),writes=[],port=new Port();const storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>{writes.push(k);clock+=2;if(options.fail?.(k))throw Error('quota');map.set(k,v);}};const controller=new AutosaveController({getGame:()=>current,allowed:()=>allowed,storage,createWorker:options.createWorker??(()=>port),encode:g=>{encodes++;clock+=2;return{state:{...g.state}};},now:()=>clock,wallNow:()=>1000,listenToStorage:options.listenToStorage??false,timeoutMilliseconds:options.timeoutMilliseconds,syncSave:g=>{syncs++;invalidateAutosaveWrites();storage.setItem(SAVE_KEY,JSON.stringify({state:{...g.state}}));return true;}});const request=controller.request.bind(controller);controller.request=()=>{const value=request();if(options.autoPreflight!==false)port.flush();return value;};return{controller,port,map,writes,storage,get g(){return current;},setGame:g=>current=g,setAllowed:v=>allowed=v,clock:v=>clock=v,encodes:()=>encodes,syncs:()=>syncs};}
+function fixture(options={}){let clock=0,current={started:true,awaitingStart:false,testMode:false,state:{seed:1,time:10,food:20}},allowed=true,encodes=0,syncs=0;const map=new Map(),writes=[],port=new Port();const storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>{writes.push(k);clock+=2;if(options.fail?.(k))throw Error('quota');map.set(k,v);}};const controller=new AutosaveController({onMainThreadWork:options.onMainThreadWork,getGame:()=>current,allowed:()=>allowed,storage,createWorker:options.createWorker??(()=>port),encode:g=>{encodes++;clock+=2;return{state:{...g.state}};},now:()=>clock,wallNow:()=>1000,listenToStorage:options.listenToStorage??false,timeoutMilliseconds:options.timeoutMilliseconds,syncSave:g=>{syncs++;invalidateAutosaveWrites();storage.setItem(SAVE_KEY,JSON.stringify({state:{...g.state}}));return true;}});const request=controller.request.bind(controller);controller.request=()=>{const value=request();if(options.autoPreflight!==false)port.flush();return value;};return{controller,port,map,writes,storage,get g(){return current;},setGame:g=>current=g,setAllowed:v=>allowed=v,clock:v=>clock=v,encodes:()=>encodes,syncs:()=>syncs};}
 test('one immutable active clone and one latest pending marker bound the queue and preserve actual snapshot values',()=>{const f=fixture();try{f.controller.request();const first=f.port.jobs[0];f.g.state.food=99;f.g.state.time=11;f.controller.request();f.g.state.time=12;f.controller.request();assert.equal(f.encodes(),1);assert.equal(f.port.jobs.length,1);assert.equal(first.snapshot.state.food,20);f.clock(100);f.port.reply(first);assert.equal(f.port.jobs.length,2);assert.equal(f.encodes(),2);assert.equal(f.port.jobs[1].snapshot.state.time,12);const stored=JSON.parse(f.map.get(SAVE_KEY));assert.equal(stored.state.food,20);f.port.reply(first);assert.equal(JSON.parse(f.map.get(SAVE_KEY)).state.time,10,'late duplicate cannot commit over a new job');f.port.reply(f.port.jobs[1]);assert.equal(JSON.parse(f.map.get(SAVE_KEY)).state.time,12);assert.equal(f.g.state.food,99);const r=f.controller.report();assert.equal(r.counts.committed,2);assert.equal(r.counts.coalesced,1);assert.equal(r.active,false);assert.equal(r.pending,false);assert.equal(r.last.mainCpuMs,r.last.dispatchCpuMs+r.last.commitCpuMs);assert.equal(r.last.workerCpuMs,80);}finally{f.controller.dispose();}});
 test('manual generation, restart state, replacement game, seed/time reversal and disabled/test states supersede in-flight jobs',()=>{for(const change of[f=>invalidateAutosaveWrites(),f=>f.controller.invalidate(),f=>f.g.state={...f.g.state},f=>f.setGame({...f.g,state:{...f.g.state}}),f=>f.g.state.seed=9,f=>f.g.state.time=0,f=>f.g.testMode=true,f=>f.g.awaitingStart=true,f=>f.g.started=false,f=>f.setAllowed(false)]){const f=fixture();try{f.controller.request();change(f);f.port.reply();assert.equal(f.map.has(SAVE_KEY),false);assert.equal(f.controller.report().counts.superseded,1);}finally{f.controller.dispose();}}});
 test('any changed storage slot rejects the stale result and leaves those exact bytes untouched',()=>{for(const key of[SAVE_KEY,SAVE_KEY+':bak',SAVE_KEY+':protected']){const f=fixture();try{f.controller.request();f.map.set(key,'newer external bytes');f.port.reply();assert.equal(f.map.get(key),'newer external bytes');assert.equal(f.writes.length,0);assert.equal(f.controller.report().counts.superseded,1);}finally{f.controller.dispose();}}});
@@ -18,3 +18,40 @@ test('generation or storage changes before preflight completion prevent all live
 test('the later serialization clock is guarded and duplicate preflight acknowledgments do not disrupt it',()=>{const f=fixture({autoPreflight:false});try{f.controller.request();f.g.state.time=15;f.port.flush();assert.equal(f.port.jobs[0].snapshot.state.time,15);const p=f.port.preflights[0];f.port.onmessage({data:{id:p.id,status:'preflight',previousPrimaryValid:false,validCandidates:0,workerCpuMs:40}});assert.equal(f.syncs(),0);f.g.state.time=14;f.port.reply();assert.equal(f.map.size,0);assert.equal(f.controller.report().counts.superseded,1);}finally{f.controller.dispose();}});
 test('a serialization-phase DataCloneError falls back after preflight without losing the latest state',()=>{const f=fixture();try{f.g.state.unserializable=()=>{};f.controller.request();assert.equal(f.encodes(),1);assert.equal(f.syncs(),1);assert.equal(f.port.terminated,true);assert.equal(JSON.parse(f.map.get(SAVE_KEY)).state.time,10);assert.equal(f.controller.report().active,false);}finally{f.controller.dispose();}});
 test('a pending request preflights the latest dispatch clock rather than an older request already covered by the active snapshot',()=>{const f=fixture({autoPreflight:false});try{f.controller.request();f.g.state.time=11;f.controller.request();f.g.state.time=15;f.port.flush();assert.equal(f.port.jobs[0].snapshot.state.time,15);f.g.state.time=20;f.port.reply(f.port.jobs[0]);assert.equal(f.port.preflights[1].time,20);assert.equal(f.port.jobs[1].snapshot.state.time,20);f.port.reply(f.port.jobs[1]);assert.equal(JSON.parse(f.map.get(SAVE_KEY)).state.time,20);}finally{f.controller.dispose();}});
+
+
+test('asynchronous worker replies separate snapshot, clone and durable commit intervals',()=>{
+ const work=[],f=fixture({autoPreflight:false,onMainThreadWork:w=>work.push(w)});
+ try{
+  const post=f.port.postMessage.bind(f.port);
+  f.port.postMessage=value=>{post(value);if(value.phase==='serialize')f.clock(7);};
+  f.controller.request();assert.deepEqual(work,[],'request does not include later snapshot/clone');
+  f.port.flush();
+  assert.deepEqual(work,[
+   {stage:'snapshot',startMilliseconds:0,endMilliseconds:2,durationMilliseconds:2},
+   {stage:'clone',startMilliseconds:2,endMilliseconds:7,durationMilliseconds:5},
+  ]);
+  f.clock(100);f.port.reply();
+  assert.deepEqual(work.at(-1),{stage:'commit',startMilliseconds:100,endMilliseconds:104,durationMilliseconds:4});
+  assert.equal(f.controller.report().counts.committed,1);
+  assert.equal(f.controller.report().last.mainCpuMs,11,'worker wait is excluded');
+ }finally{f.controller.dispose();}
+});
+test('diagnostic observer failure cannot trigger save fallback or alter committed bytes',()=>{
+ const f=fixture({onMainThreadWork:()=>{throw Error('diagnostics unavailable');}});
+ try{f.controller.request();f.port.reply();assert.equal(f.syncs(),0);assert.equal(f.controller.report().counts.committed,1);assert.equal(JSON.parse(f.map.get(SAVE_KEY)).state.food,20);}finally{f.controller.dispose();}
+});
+test('throwing clone and synchronous recovery retain independent elapsed segments',()=>{
+ const work=[],f=fixture({autoPreflight:false,onMainThreadWork:w=>work.push(w)});
+ try{
+  const post=f.port.postMessage.bind(f.port);
+  f.port.postMessage=value=>{if(value.phase==='serialize'){f.clock(5);throw Error('DataCloneError');}post(value);};
+  f.controller.request();f.port.flush();
+  assert.deepEqual(work.map(w=>[w.stage,w.durationMilliseconds]),[['snapshot',2],['clone',3],['sync-fallback',2]]);
+  assert.equal(f.controller.report().counts.committed,1);assert.equal(f.syncs(),1);
+ }finally{f.controller.dispose();}
+});
+test('measurement reset suppresses late timing events without cancelling save durability',()=>{
+ const work=[],f=fixture({autoPreflight:false,onMainThreadWork:w=>work.push(w)});
+ try{f.controller.request();f.controller.resetMeasurements();f.port.flush();f.port.reply();assert.deepEqual(work,[]);assert.ok(f.map.has(SAVE_KEY));}finally{f.controller.dispose();}
+});
