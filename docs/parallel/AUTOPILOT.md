@@ -658,7 +658,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CHAT-G15-TRADE-DIVERSITY | chat |  | Claude | Claude W2 | source-pushed-not-live | Claude drives offers/frequency/UI; Codex W7 prices |
 | CHAT-G16-DEEPWATER-STORMS | chat |  | Claude | Claude W2 | source-pushed-not-live | storms source-pushed; consume Grok deepWater; Codex weather/hull effects if needed |
 | CHAT-G2-GOLDEN-HOUR | chat | Preserve explicit time/weather exceptions and daylight behavior while reviewing warm low-angle grading. | Claude | Claude T8 | source-pushed-not-live | grade function source-pushed; daylight lerp not wired |
-| CHAT-G4-LEADER-PRESENTATION | chat | Track era availability and actual leader presentation separately from contextual dialog contents. | Claude | Claude T6 | source-pushed-not-live | LeaderPortrait source-pushed; not wired |
+| CHAT-G4-LEADER-PRESENTATION | chat | Track era availability and actual leader presentation separately from contextual dialog contents. | Claude | Claude T6 | source-pushed-not-live | LeaderPortrait wired in EncounterDialog beside LeaderConversation (council/EncounterPortrait.tsx; real flag colours, recorded relation only) 1d87743 |
 | CHAT-G6-CULTURAL-NAMES | chat |  | Claude | Claude W2 | source-pushed-not-live | source-pushed 103f41f / e69b8f8 |
 | CHAT-G7-FOOD-TASTE | chat | Document tunable taste/enjoyment units and test morale/benefit versus preparation labor; treat supplied ranking as tentative, no new unsa… | Codex | Codex W3 | not started | accepted-pending |
 | CHAT-G9-LAB-FLOW | chat | Track these three separate UI actions and acceptance; native lab scenario only, no private village overwrite. | Codex | — (done) | done/live | live-partial: lab enter/restart/save exists at 39115987; only remaining actions on audit |
@@ -907,7 +907,7 @@ Boris has no past villages he cares about. Old-save compatibility is no longer a
 
 ## Claude status — 22:09 ET
 Claude is active: marriage alliances (marryHouses) and expansion drivers (expansionDrivers.ts: push/pull/enablers/brakes feeding NPC settle/migrate/conquer/trade/explore modes with plain-language reasons) are pushed to integration (72cf269). Next: UI panels (council dossier, handover card, factions strip, diplomacy sheet, expansion "why"), then a player marriage button. Codex: run the full suite natively on the merged integration tree (Claude's sandbox lacks node_modules). The reassignment of Claude's river/trail drawing is cancelled.
-| UI-COUNCIL-LANE-B | Claude | in progress | handover card, factions strip, glory bars, chronicle done (60c7bd1); next diplomacy sheet, LeaderPortrait, capitulation/trade UI, theme variant behind setting | council/CouncilParts.tsx, councilLayout.ts |
+| UI-COUNCIL-LANE-B | Claude | in progress | handover card, factions strip, glory bars, chronicle done (60c7bd1); diplomacy sheet + LeaderPortrait wiring done (1d87743); next capitulation/captive/trade UI, theme variant behind setting | council/CouncilParts.tsx, councilLayout.ts |
 
 | AUD-RIVER-DRAW | Claude D audit | smoothRivers(g) (channelSmoothness.ts) is not yet drawn: world.ts still shows raw heightmap water edges. Needs a bank-ribbon mesh pass plus optional current arrows from riverCurrentProfile | Claude | Claude D T4 remainder | not started | trails ribbons drawn (world.ts syncTrails); rivers next |
 | AUD-FISH-PANEL | Claude D audit | fishRecoveryPerMinute (QA-048) has no panel and mesh yaw ignores buildingQuarterTurns | Claude | Claude D T5 | not started | |
