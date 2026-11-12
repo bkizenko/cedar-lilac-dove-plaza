@@ -164,7 +164,8 @@ export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorI
 function mealWorkerLimit(g:Game){const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)).length;return Math.min(CEREAL_RULES.maximumAutomaticMealJobs,Math.max(1,Math.ceil(adults/CEREAL_RULES.adultsPerAutomaticMealJob)));}
 function activeFoodWorkers(g:Game){return(g.state.production?.projects||[]).filter(p=>p.team===0&&p.actorId!==null&&!['paused','stored','complete','lost'].includes(p.phase)&&
  !isCerealRecipe(p.recipe)&&!['grindingStone','oven'].includes(PRODUCTION_RECIPES[p.recipe].workplace)&&(productionFoodOutput(p)>0||PRODUCTION_RECIPES[p.recipe].grain>0||!!PRODUCTION_RECIPES[p.recipe].outputs.flour)).length;}
-function urgentReadyMealInputs(g:Game){
+/** Pure shared admission policy: payable ready meals have priority over optional wild crafts. */
+export function urgentReadyMealInputs(g:Game){
  if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
  const t=g.tribe(0),food=foodInventory(t);
  return (['cookFish','cookMeat','cookPorridge',...breadRecipes,'smokeFish','smokeMeat']as ProductionRecipe[]).some(recipe=>{

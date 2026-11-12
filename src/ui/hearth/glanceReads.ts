@@ -5,7 +5,7 @@
 import type {Game} from '@/game/sim';
 import {reserveSeconds} from '@/game/settlement';
 import {simulationDaySeconds} from '@/game/calendarPacing';
-import {SURVIVAL_RULES} from '@/game/survivalNeeds';
+import {SURVIVAL_RULES,collectedWaterDemand} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
 import {harvestBacklogAlert} from '@/game/cerealProcessing';
 import {measureVillageWorkload} from '@/game/villageWorkload';
@@ -19,10 +19,10 @@ const residents=(g:Game)=>g.state.units.filter(u=>u.team===0&&u.hp>0&&!u.expedit
 export function foodDays(g:Game):number|null{
  const s=reserveSeconds(g,0);return Number.isFinite(s)?s/simulationDaySeconds:null;
 }
-/** Days of collected water at the survival rule's per-person draw. Null before survival rules apply or with no residents. */
+/** Days of collected water at the survival rule's per-person draw. Null before survival rules apply or with no current draw. */
 export function waterDays(g:Game):number|null{
  if(g.state.survivalVersion!==1)return null;const stock=g.tribe(0).survival?.waterLiters;if(stock===undefined)return null;
- const use=residents(g).length*SURVIVAL_RULES.waterLitersPerPersonSecond*simulationDaySeconds;
+ const use=collectedWaterDemand(g,0)*simulationDaySeconds;
  return use>0?stock/use:null;
 }
 

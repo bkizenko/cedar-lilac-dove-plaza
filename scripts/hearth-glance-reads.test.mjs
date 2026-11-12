@@ -86,3 +86,12 @@ test('overlay reads: a rival the player has not met never shows a border',()=>{
  const S=g.world.size,seen=new Set();for(let z=-S/2;z<S/2;z+=S/96)for(let x=-S/2;x<S/2;x+=S/96)seen.add(src.teamAt(x,z));
  assert.ok(!seen.has(rival.id),'unmet rival territory is not on the map');
 });
+
+test('water meter matches existing household runway including declared real herd, without changing saved state',async()=>{
+ const{nativeDairyVillage}=await import('./helpers/native-dairy-village.mjs'),{decodeGame,encodeGame}=await import('../src/game/persistence.ts'),{survivalStatus,collectedWaterDemand,SURVIVAL_RULES}=await import('../src/game/survivalNeeds.ts');
+ // Declared valid metadata opening only: one legal pen and one owned goat, no domestication or production claim.
+ let g=decodeGame(nativeDairyVillage().save);const home=g.campOf(0);let pen;for(let r=16;r<60&&!pen;r+=4)for(let i=0;i<24&&!pen;i++){const x=home.x+Math.cos(i*Math.PI/12)*r,z=home.z+Math.sin(i*Math.PI/12)*r;if(!g.placementIssue('pen',x,z,0))pen=g.makeBld('pen',x,z,0);}assert.ok(pen);g.state.buildings.push(pen);g.state.livestock=[{id:g.id(),species:'goat',team:0,pen:pen.id,sex:'female',x:pen.x,y:g.height(pen.x,pen.z),z:pen.z,facing:0,vx:0,vz:0,wanderT:100,hp:24,maxHp:24,fly:0,scale:1,born:-300,tamedAt:0,hunger:0,milk:0,pregnancy:0,lactatingUntil:0}];g=decodeGame(encodeGame(g));
+ const before=JSON.stringify(encodeGame(g)),status=survivalStatus(g),days=waterDays(g);
+ assert.ok(g.state.livestock.some(a=>a.team===0&&a.hp>0));assert.ok(status.waterDemandLitersPerSecond>mine(g).length*SURVIVAL_RULES.waterLitersPerPersonSecond);
+ assert.equal(collectedWaterDemand(g),status.waterDemandLitersPerSecond);assert.ok(Math.abs(days*simulationDaySeconds-status.waterSeconds)<1e-9);assert.equal(JSON.stringify(encodeGame(g)),before);
+});
