@@ -926,3 +926,16 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-UI-RIVER-HOVER | Claude D audit | UI: hovering a river section should outline its corners and show fish/clay in a tooltip before a click opens WaterReachPanel | Claude | Claude B | not started | |
 | AUD-FEEL-WEATHER-AUDIO | Claude D audit | game feel: weather/season/time-of-day should drive ambience (wind, rain, river, night insects) and hearth-light flicker; check existing audio hooks before adding | Claude | Claude B/C | not started | |
 | AUD-INTEG-SHIPPING-HOOKS | Claude D audit | work/shipping-waiting-hooks-2026-11-11 (9e4a145) conflicts with integration in engine.ts, persistence.ts, sim.ts, types.ts, worldOptions.ts, worldVariety.ts, ruins.ts, Hud.tsx, WorldSetup.tsx (17 hunks, Grok World wiring); not merged by integrator | Grok/Codex | Grok T-wiring | not started | Grok to merge integration into the branch or the reverse, keeping both sides |
+
+## Throughput (Grok PM, hourly)
+
+| Hour ending (ET) | Agent | Commits (all branches) | Commits on main | Features live on main | Note |
+|---|---|---|---|---|---|
+| 11-12 00:00 | Codex | 20 (prev 39) | 20 | 3 (goat reservations/handover, real pack-animal care, knowledge provenance) | steady; on target (target 3/h) |
+| 11-12 00:00 | Claude | 24 (prev 26) | 5 (board/docs only) | 0 on main (~10 features waiting on integration) | shipping, but not landing — target 2 live/h |
+| 11-12 00:00 | Grok | 0 (prev 11) | 0 | 0 | idle — no World batch running |
+| 11-12 00:00 | Total | 44 | 25 | 3 | integration 67 commits ahead of main |
+
+## Process improvements
+
+- 11-12 00:05 ET — Bottleneck: Claude's and Grok's work piles up on integration/2026-11-11 (67 commits not on main) because Claude can't run tests and Grok was idle. Fix: Grok PM now verifies (tsc + full suite vs main baseline) and lands integration on main every run, and restarted a Grok World batch (landing first, then B3 and T-items). Expected: Claude features-live/h goes from 0 to 2+, integration lag under 15 commits by 01:00. Check next run; if lag persists, have Claude commit directly to short work branches that I land each hour.
