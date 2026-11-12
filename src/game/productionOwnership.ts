@@ -1,15 +1,17 @@
+import {packedItemStorageUnits,packedFoodLiters,FOOD_PACKED_LITERS,INVENTORY_VOLUME_RULES} from './inventoryVolume';
 import {bindCharcoalLoad} from './carriedLoad';
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import type{ProductionProject}from'./production';
-import{PRODUCTION_RECIPES,productionSlots,itemCapacity,cerealReservedMaterials,outsideFoodCache,PRODUCTION_RULES}from'./production';
+import{PRODUCTION_RECIPES,productionSlots,itemCapacity,cerealReservedMaterials,outsideFoodCache,PRODUCTION_RULES,storedItemUnits,productionRecovery,productionOutputs}from'./production';
 import type{JobCoordinator}from'./jobCoordinator';
 import{workRuntime}from'./workRuntime';
 export const productionJobId=(id:number)=>`production:${id}`;
 const effective=(p:ProductionProject)=>p.phase==='paused'?p.resumePhase:p.phase;
 const live=(p:ProductionProject)=>p.phase!=='complete'&&p.phase!=='lost';
 export function paidInputUnits(p:ProductionProject){const r=PRODUCTION_RECIPES[p.recipe];return (p.charcoal?p.charcoal.woodLogs:0)+Object.values(r.inputs).reduce((n,v)=>n+(v||0),0)+r.grain+Object.values(r.foodInputs).reduce((n,v)=>n+(v||0),0);}
-export function cachedProductionUnits(g:Game,team:number){let total=0;for(const p of g.state.production?.projects||[])if(p.team===team&&['stored','collecting'].includes(effective(p)))total+=paidInputUnits(p);return total;}
+export function paidInputStorageUnits(p:ProductionProject){const r=PRODUCTION_RECIPES[p.recipe];if(productionRecovery(p))return packedItemStorageUnits(productionOutputs(p));return packedItemStorageUnits(r.inputs)+(packedFoodLiters(r.foodInputs)+r.grain*FOOD_PACKED_LITERS.grain+(p.charcoal?p.charcoal.woodLogs*INVENTORY_VOLUME_RULES.parkedLogLiters:0))/INVENTORY_VOLUME_RULES.litersPerStorageUnit;}
+export function cachedProductionUnits(g:Game,team:number){let total=0;for(const p of g.state.production?.projects||[])if(p.team===team&&['stored','collecting'].includes(effective(p)))total+=paidInputStorageUnits(p);return total;}
 type Context={state:Game['state'];jobs:JobCoordinator;claims:Map<number,string>;rebuilds:number;amendments:number;conflicts:number};
 const contexts=new WeakMap<Game,Context>();
 function context(g:Game,jobs?:JobCoordinator){let c=contexts.get(g);if(c?.state===g.state)return c;const coordinator=jobs||workRuntime(g);c=contexts.get(g);if(c?.state===g.state)return c;c={state:g.state,jobs:coordinator,claims:new Map(),rebuilds:0,amendments:0,conflicts:0};contexts.set(g,c);return c;}
@@ -17,17 +19,17 @@ function context(g:Game,jobs?:JobCoordinator){let c=contexts.get(g);if(c?.state=
 function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{key:string;amount:number;capacity:number}[]=[];
  const b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===p.team&&g.finished(b));
  if(!['returning','unloading','stored'].includes(phase)&&b)claims.push({key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)});
- if(['stored','collecting'].includes(phase)){const outside=outsideFoodCache(g,p);if(outside){claims.push({key:`production:outside-food:${outside.id}:parcels`,amount:1,capacity:PRODUCTION_RULES.maximumProjects});return claims;}const used=Object.values(g.tribe(p.team).items||{}).reduce((n,v)=>n+(v||0),0);
+ if(['stored','collecting'].includes(phase)){const outside=outsideFoodCache(g,p);if(outside){claims.push({key:`production:outside-food:${outside.id}:parcels`,amount:1,capacity:PRODUCTION_RULES.maximumProjects});return claims;}const used=storedItemUnits(g,p.team);
  // New loose gathered goods may be unloaded outside. They must not revoke
  // space already held by real paid parcels or stop their physical collection.
  // Only parcels already stored/collecting in saved state count: a proposed
  // new unload gets no extra admission capacity from its own future claim.
- let alreadyPlaced=0;for(const q of g.state.production?.projects||[])if(q.team===p.team&&live(q)&&['stored','collecting'].includes(effective(q))&&!outsideFoodCache(g,q))alreadyPlaced+=paidInputUnits(q);
- claims.push({key:`production:cache:${p.team}:units`,amount:paidInputUnits(p),capacity:Math.max(alreadyPlaced,0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))});}
+ let alreadyPlaced=0;for(const q of g.state.production?.projects||[])if(q.team===p.team&&live(q)&&['stored','collecting'].includes(effective(q))&&!outsideFoodCache(g,q))alreadyPlaced+=paidInputStorageUnits(q);
+ claims.push({key:`production:cache:${p.team}:units`,amount:paidInputStorageUnits(p),capacity:Math.max(alreadyPlaced,0,itemCapacity(g,p.team)-used-cerealReservedMaterials(g,p.team,p.id))+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits});}
  return claims;
 }
 /** Saved project owns goods. This runtime claims only hands and physical space. */
-export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(p.charcoal&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCharcoalLoad(u,p);}if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,...(g.state.cerealProcessing?[x.capacity]:[])])]);
+export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(p.charcoal&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCharcoalLoad(u,p);}if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,x.capacity])]);
  if(c.claims.get(p.id)!==signature){if(!c.jobs.job(id))c.jobs.propose({id,kind:`production:${p.recipe}`,owner:p.team,actors:[],target:p.workplace});
  if(!c.jobs.amend(id,p.actorId===null?[]:[p.actorId],claims)){c.conflicts++;return false;}c.claims.set(p.id,signature);c.amendments++;c.jobs.retarget(id,p.workplace);}
  const phase=effective(p);c.jobs.transition(id,p.phase==='paused'||phase==='stored'||phase==='ready'&&p.actorId===null?'reserved':phase==='returning'||phase==='unloading'?'returning':phase==='working'||phase==='curing'?'working':'traveling',p.progress);return true;
