@@ -20,8 +20,9 @@ export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:n
  <label>Receive<select aria-label="Receive" value={get} onChange={e=>setGet(e.target.value as ResKind)}>{goods.map(k=><option key={k} value={k}>{names[k]}</option>)}</select></label>
  <label>Minimum<input aria-label="Minimum" type="number" min={1} max={200} value={requested} onChange={e=>setRequested(Number(e.target.value))}/></label>
  </div>
- <p>{Math.floor(g.tribe(0)[give])} {names[give].toLowerCase()} in your stores</p>
- <button disabled={unavailable} onClick={()=>run(()=>sendProcurement(g,team,give,get,amount,requested))}>Negotiate shipment</button>
+ <div className="trade-summary" role="status" aria-label="Exchange summary"><span><b>{amount}</b> {names[give].toLowerCase()}</span><span aria-hidden="true" className="trade-arrow">→</span><span>at least <b>{requested}</b> {names[get].toLowerCase()}</span></div>
+ <p className={'trade-stock'+(g.tribe(0)[give]<amount?' trade-short':'')}>{Math.floor(g.tribe(0)[give])} {names[give].toLowerCase()} in your stores{g.tribe(0)[give]<amount?' — not enough for this offer':''}</p>
+ <button className="trade-primary" disabled={unavailable} onClick={()=>run(()=>sendProcurement(g,team,give,get,amount,requested))}>Negotiate shipment</button>
  <p className="text-xs text-parchment-dim">Goods return with your trader. Below your minimum, the budget comes back.</p>
  {!!receipt&&<p role="status">{receipt}</p>}
  <CaravanPlanner engine={engine} team={team} give={give} get={get} budget={amount} minimum={requested}/>
