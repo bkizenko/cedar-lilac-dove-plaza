@@ -33,6 +33,7 @@ export function requestPackPasture(g:Game,penId:number,unitId?:number){
  const people=g.state.units.filter(u=>u.hp>0&&u.team===pen.team&&u.type==='worker'&&!u.prisoner&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0&&(unitId===undefined||u.id===unitId))
   .sort((a,b)=>Number(b.selected)-Number(a.selected)||Math.hypot(a.x-pen.x,a.z-pen.z)-Math.hypot(b.x-pen.x,b.z-pen.z));
  const u=people[0];if(!u)return {accepted:false,reason:'Choose a living worker with their actual working animal'};
+ if(u.draftCart)return {accepted:false,reason:'Unhitch the actual cart before returning this animal to pasture'};
  if(u.packPastureOrder?.pen===penId&&u.packPastureOrder.animal===u.packAnimal!.id)return {accepted:true,reason:'This animal already has a pasture return queued'};
  if((g.state.livestock?.length||0)>=PEN_RULES.maximumAnimalsTotal)return {accepted:false,reason:'The existing herds have no room for another pasture animal'};
  if(penPlacesOccupied(g,pen.id)+penPlacesReserved(g,pen.id,u.id)+herdRules(u.packAnimal!.species).places>surveyPenPasture(g,pen).eligibleCapacity)return {accepted:false,reason:'This pen needs enough unreserved dry pasture places for the working animal'};

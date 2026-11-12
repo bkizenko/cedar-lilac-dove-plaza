@@ -1,3 +1,4 @@
+import {validDraftCarts} from './draftCart';
 import {bindCopperSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
@@ -188,6 +189,7 @@ function validateGamePayload(raw: unknown) {
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
   if(!validPackPastureOrders(s))fail();
+  if(!validDraftCarts(s))fail();
   if(s.cattleVersion!==undefined&&s.cattleVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validCopperStudies(s)||!validTradedTeaching(s)||!validArmorRepairs(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
