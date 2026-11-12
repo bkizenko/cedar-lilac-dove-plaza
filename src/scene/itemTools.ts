@@ -417,7 +417,8 @@ function anchor(c:Ctx){
  const b=c.b;
  if(c.era<3){ // a stone anchor: a pierced slab, a rope, and a wooden stock lashed across
   b.ellipsoid([0,.35,0],[.28,.38,.1],c.paint('stone',{len:.6,tint:'#7e7a70',tintAmount:.3}),c.sd(9));
-  b.ring([0,.68,0],[0,0,1],.05,.016,c.paint('stone',{len:.1,tint:'#5a574f',tintAmount:.4}),b.pick(14,10,6),4);
+  b.ring([0,.68,0],[0,0,1],.05,.016,c.era>=2?c.paint('bronze',{len:.1}):c.paint('stone',{len:.1,tint:'#5a574f',tintAmount:.4}),b.pick(14,10,6),4);
+  if(c.era>=1)b.rod([0,.1,-.28],[0,.1,.28],()=>.02,5,c.wood2(.7),{segs:1});
   b.rod([-.3,.18,.0],[.3,.18,0],()=>.025,5,c.wood2(.7),{segs:1});b.rod([0,.05,-.28],[0,.05,.28],()=>.025,5,c.wood2(.7),{segs:1});
   lashing(c,.1,.24,.1,0,{mat:'cord'});
  }else{ // an iron anchor: shank, two curved arms with flukes, a stock, a ring
@@ -427,7 +428,7 @@ function anchor(c:Ctx){
    b.loft([{c:[s*.48,.3,0],w:.03,h:.14},{c:[s*.55,.34,0],w:.16,h:.14},{c:[s*.56,.37,0],w:.01,h:.04}],'x',m,{shape:'oct'});}
   b.rod([-.4,1.08,0],[.4,1.08,0],()=>.03,c.sd(7),c.wood2(.8),{segs:1});
  }
- if(c.lod<2)b.tube([[0,.68,0],[.2,.9,.1],[.5,.7,.3],[.8,.4,.5],[1.0,.04,.7]],()=>.018,5,c.paint('cord',{len:1.5,tint:c.st.cordColour,tintAmount:.15}),{caps:true});
+ if(c.lod<2)b.tube([[0,.68,0],[.2,.9,.1],[.5,.7,.3],[.8,.4,.5],[1.0,.04,.7]],()=>c.era===0?.024:.018,5,c.era===0?c.paint('sinew',{len:1.5}):c.paint('cord',{len:1.5,tint:c.st.cordColour,tintAmount:.15}),{caps:true});
  makerMark(c,[0,.4,.1],c.era<3?'stone':c.metal,2.5,[0,0,0]);
 }
 function ropeCoil(c:Ctx){
@@ -455,13 +456,13 @@ function bailer(c:Ctx){
 
 export const TOOL_GENERATORS:Gen[]=[
  {id:'hoe',name:'Hoe',category:'farm',frame:'hand',gen:hoe},{id:'spade',name:'Spade and digging stick',category:'farm',frame:'hand',gen:spade},{id:'sickle',name:'Sickle',category:'farm',frame:'hand',gen:sickle},
- {id:'flail',name:'Flail',category:'farm',frame:'hand',gen:flail},{id:'quern',name:'Quern',category:'farm',frame:'world',gen:quern,budget:[4000,1800,500]},{id:'ard',name:'Ard (scratch plough)',category:'farm',frame:'world',gen:ard,budget:[6000,2600,800]},
+ {id:'flail',name:'Flail',category:'farm',frame:'hand',gen:flail},{id:'quern',name:'Quern',category:'farm',frame:'world',gen:quern,budget:[4000,1900,1000]},{id:'ard',name:'Ard (scratch plough)',category:'farm',frame:'world',gen:ard,budget:[6000,2600,800]},
  {id:'mallet',name:'Mallet',category:'craft',frame:'hand',gen:mallet},{id:'hammer',name:'Hammer',category:'craft',frame:'hand',gen:hammer},{id:'fellingAxe',name:'Felling axe',category:'craft',frame:'hand',gen:fellingAxe},
  {id:'pickaxe',name:'Quarry pick',category:'craft',frame:'hand',gen:pickaxe},{id:'staff',name:'Staff',category:'craft',frame:'hand',gen:staff},{id:'standard',name:'Standard',category:'craft',frame:'hand',gen:standard},
  {id:'skinningKnife',name:'Skinning knife',category:'hunt',frame:'hand',gen:skinningKnife},{id:'scraper',name:'Hide scraper',category:'hunt',frame:'hand',gen:scraper},{id:'snare',name:'Snare',category:'hunt',frame:'world',gen:snare,budget:[4000,1800,500]},
- {id:'huntNet',name:'Hunting net',category:'hunt',frame:'world',gen:huntNet,budget:[9000,4000,1200]},{id:'deadfall',name:'Deadfall trap',category:'hunt',frame:'world',gen:deadfall,budget:[4000,1800,500]},{id:'hideFrame',name:'Hide frame',category:'hunt',frame:'world',gen:hideFrame,budget:[6000,2600,800]},
- {id:'fishingRod',name:'Fishing rod',category:'fish',frame:'hand',gen:fishingRod},{id:'leister',name:'Fish spear',category:'fish',frame:'hand',gen:leister},{id:'fishNet',name:'Fishing net',category:'fish',frame:'world',gen:fishNet,budget:[9000,4000,1200]},{id:'fishTrap',name:'Fish trap',category:'fish',frame:'world',gen:fishTrap,budget:[5000,2200,700]},
- {id:'pot',name:'Clay pot',category:'carry',frame:'world',gen:pot,budget:[4000,1800,500]},{id:'basket',name:'Basket',category:'carry',frame:'world',gen:basket,budget:[4000,1800,500]},{id:'waterskin',name:'Waterskin',category:'carry',frame:'world',gen:waterskin},
+ {id:'huntNet',name:'Hunting net',category:'hunt',frame:'world',gen:huntNet,budget:[9000,4000,1200]},{id:'deadfall',name:'Deadfall trap',category:'hunt',frame:'world',gen:deadfall,budget:[4000,1800,500]},{id:'hideFrame',name:'Hide frame',category:'hunt',frame:'world',gen:hideFrame,budget:[7000,4000,900]},
+ {id:'fishingRod',name:'Fishing rod',category:'fish',frame:'hand',gen:fishingRod},{id:'leister',name:'Fish spear',category:'fish',frame:'hand',gen:leister},{id:'fishNet',name:'Fishing net',category:'fish',frame:'world',gen:fishNet,budget:[9000,4000,1300]},{id:'fishTrap',name:'Fish trap',category:'fish',frame:'world',gen:fishTrap,budget:[5000,2200,700]},
+ {id:'pot',name:'Clay pot',category:'carry',frame:'world',gen:pot,budget:[4000,1800,500]},{id:'basket',name:'Basket',category:'carry',frame:'world',gen:basket,budget:[4000,1800,600]},{id:'waterskin',name:'Waterskin',category:'carry',frame:'world',gen:waterskin},
  {id:'pack',name:'Pack',category:'carry',frame:'world',gen:pack},{id:'sack',name:'Sack',category:'carry',frame:'world',gen:sack},{id:'torch',name:'Torch',category:'light',frame:'hand',gen:torch},
  {id:'handcart',name:'Handcart',category:'carry',frame:'world',gen:handcart,budget:[9000,4000,1200]},{id:'harness',name:'Yoke and harness',category:'carry',frame:'world',gen:harness},
  {id:'oar',name:'Oar',category:'ship',frame:'hand',gen:oar},{id:'steerOar',name:'Steering oar',category:'ship',frame:'hand',gen:steerOar},{id:'anchor',name:'Anchor',category:'ship',frame:'world',gen:anchor},

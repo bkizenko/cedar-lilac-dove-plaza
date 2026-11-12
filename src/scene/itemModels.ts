@@ -14,7 +14,7 @@ export type ItemCategory='melee'|'ranged'|'shield'|'siege'|'farm'|'craft'|'hunt'
 export type Frame='hand'|'world';
 export type ItemDef={id:string;name:string;category:ItemCategory;frame:Frame;/** the weapon id this is the model of, when it is a weapon */weapon?:string;
  /** tri budget at LOD 0/1/2 */budget:readonly [number,number,number];gen:(c:Ctx)=>void;/** eras with a distinct form (others reuse the nearest) */eras?:readonly number[]};
-const hb=[5200,2400,700] as const,wb=[12000,5000,1400] as const,sb=[26000,11000,3200] as const;
+const hb=[5200,2800,800] as const,wb=[12000,6000,2600] as const,sb=[26000,11000,3200] as const;
 const D=(id:string,name:string,category:ItemCategory,frame:Frame,gen:(c:Ctx)=>void,budget:readonly [number,number,number]=hb,weapon?:string):[string,ItemDef]=>[id,{id,name,category,frame,gen,budget,weapon}];
 export const ITEM_DEFS:Readonly<Record<string,ItemDef>>=Object.freeze(Object.fromEntries([
  // melee weapons (ids are WEAPONS keys)
