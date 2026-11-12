@@ -276,22 +276,31 @@ CIVIC.kaaltun=g=>{const {w,d,r}=g;let y=0;
  for(const s of[-1,1]){g.B('wall2',[.5,4.2,.45],[s*w*.43,0,d*.3],2);g.B('accent',[.7,.5,.5],[s*w*.43,4.2,d*.3],1);g.B('cloth',[.04,1.4,.7],[s*w*.43+.4*s,3.1,d*.3],1);}
  g.banner(w*.1,d*.42,2.4);return {entry:{x:0,z:d*.47,width:2}};};
 /** Mekhari: stilt-house river folk. Woven houses on posts with a plank deck, ladder and upturned saddle roofs; the civic hall is a long stilt longhouse with tall upswept gable ends and a gangway. */
-const saddle=(g:G,W:number,D:number,y:number,rise:number,up:number)=>{P(g,'prism','roof',[W*1.12,rise,D*1.1],[0,y,0]);for(const s of[-1,1]){P(g,'cone','accent',[.26,.7+up*.6,.26],[0,y+rise*.5,s*(D*.55+.1)],[s*.5,0,0],6,1);}};
+const saddle=(g:G,W:number,D:number,y:number,rise:number,up:number)=>{
+ // rounded thatch hull (a flattened dome under the ridge) so the roof sags like a woven saddle, then the upswept horns and a bound ridge pole
+ P(g,'sphere','roof',[W*1.1,rise*1.15,D*1.06],[0,y-rise*.12,0],undefined,8);g.B('trim',[W*.98,.1,.12],[0,y+rise*.86,0],1);
+ for(const s of[-1,1]){P(g,'cone','accent',[.22,.8+up*.6,.22],[0,y+rise*.42,s*(D*.5+.12)],[s*.55,0,0],6,1);}};
+/** woven round-pole stilt: tapered 8-sided pile with a lashed collar */
+const pile=(g:G,x:number,z:number,h:number,t:number)=>{P(g,'cylinder','trim',[t*2.2,h,t*2.2],[x,0,z],undefined,6);};
 HOUSE.mekhari=g=>{const {w,d,r}=g,W=w*.76*jit(r,.05),D=d*.68,st=range(r,1.5,1.9),y=st+.2,h=range(r,1.9,2.2);
- for(let i=0;i<3;i++)for(const sz of[-1,1])g.post('trim',-W*.46+i*W*.46,sz*D*.46,st,.18,2);
- g.B('wall2',[W+.4,.2,D+.8],[0,st,.1],2);g.B('wall',[W*.86,h,D*.74],[0,y,-D*.04],2);
- for(let i=1;i<5;i++)g.B('wall2',[.05,h*.9,.05],[-W*.43+i*W*.172,y+.05,D*.33+.02],0);g.B('wall2',[W*.86,.06,.05],[0,y+h*.5,D*.33+.02],0);
- g.B('accent',[.85,1.5,.08],[g.off*.3,y,D*.33+.03],0);for(const s of[-1,1])g.B('accent',[.55,.6,.06],[s*W*.3,y+1.0,D*.33+.03],0);
+ for(let i=0;i<3;i++)for(const sz of[-1,1])pile(g,-W*.46+i*W*.46,sz*D*.46,st,.09);
+ g.B('wall2',[W+.4,.2,D+.8],[0,st,.1],2);
+ // woven drum wall (12-sided, belly-bulged by a trim band) instead of a crate
+ P(g,'cylinder','wall',[W*.9,h,D*.78],[0,y,-D*.04],undefined,10);P(g,'cylinder','trim',[W*.93,.1,D*.81],[0,y+h*.5,-D*.04],undefined,10,1);
+ for(let i=1;i<5;i++)g.B('wall2',[.05,h*.9,.05],[-W*.38+i*W*.152,y+.05,D*.34+.02],0);
+ g.B('accent',[.85,1.5,.08],[g.off*.3,y,D*.36+.03],0);for(const s of[-1,1])g.B('accent',[.55,.6,.06],[s*W*.3,y+1.0,D*.35+.03],0);
  saddle(g,W,D,y+h,range(r,1.4,1.7),range(r,.5,.8));
- g.B('wall2',[W+.4,.7,.07],[0,y,D*.5+.5],1);for(const s of[-1,1])g.post('trim',s*(W*.5+.1),D*.5+.5,y+.9,.08,1);
+ g.B('wall2',[W+.4,.7,.07],[0,y,D*.5+.5],1);for(const s of[-1,1])pile(g,s*(W*.5+.1),D*.5+.5,y+.9,.05);
  P(g,'box','trim',[.5,st+.7,.08],[g.off*.3+W*.28,.03,D*.5+.9],[-.5,0,0],undefined,1);P(g,'sphere','wall2',[2.6,.5,.85],[-W*.8,0,D*.5+1.3],[0,.3,0],undefined,0);
  return {entry:{x:g.off*.3,z:D*.5+1,width:1}};};
 CIVIC.mekhari=g=>{const {w,d,r}=g,W=w*.86,D=d*.44,st=2.1,y=st+.25,h=2.5;
- for(let i=0;i<5;i++)for(const sz of[-1,1])g.post('trim',-W*.46+i*W*.23,sz*D*.46,st,.24,2);
- g.B('wall2',[W+.6,.25,D+1.2],[0,st,.2],2);g.B('wall',[W*.92,h,D*.84],[0,y,-D*.04],2);
- for(let i=1;i<9;i++)g.B('wall2',[.06,h*.88,.06],[-W*.46+i*W*.092,y+.05,D*.38+.03],0);g.B('wall2',[W*.92,.08,.06],[0,y+h*.55,D*.38+.03],0);
- g.B('accent',[1.3,1.9,.1],[0,y,D*.38+.04],0);saddle(g,W,D*1.15,y+h,2.3,1.3);
- g.B('wall2',[W+.6,.8,.08],[0,y,D*.5+.8],1);for(let i=0;i<=4;i++)g.post('trim',-W*.5+i*W*.25,D*.5+.8,y+.9,.09,1);
+ for(let i=0;i<5;i++)for(const sz of[-1,1])pile(g,-W*.46+i*W*.23,sz*D*.46,st,.12);
+ g.B('wall2',[W+.6,.25,D+1.2],[0,st,.2],2);
+ // long woven drum hall with a bound waist and sill band
+ P(g,'cylinder','wall',[W*.94,h,D*.88],[0,y,-D*.04],undefined,12);P(g,'cylinder','trim',[W*.97,.12,D*.91],[0,y+h*.55,-D*.04],undefined,12,1);
+ for(let i=1;i<9;i++)g.B('wall2',[.06,h*.88,.06],[-W*.4+i*W*.1,y+.05,D*.4+.03],0);
+ g.B('accent',[1.3,1.9,.1],[0,y,D*.4+.04],0);saddle(g,W,D*1.15,y+h,2.3,1.3);
+ g.B('wall2',[W+.6,.8,.08],[0,y,D*.5+.8],1);for(let i=0;i<=4;i++)pile(g,-W*.5+i*W*.25,D*.5+.8,y+.9,.06);
  for(let i=0;i<9;i++)g.B('wall2',[1.6,.14,.6],[W*.16,i*.0+i*st/9*.9,D*.5+1.1+(9-i)*.58],1);
  g.banner(-W*.42,D*.5+.8,y+3.6);return {entry:{x:0,z:D*.5+2,width:1.6}};};
 /** Skoldar: turf longhouses. A fieldstone footing, timber stud wall and a low, thick turf-sod hip roof with a ridge beam, smoke vent and lean-to porch; the civic hall adds a gabled porch, carved posts and a shield-hung wall. */
