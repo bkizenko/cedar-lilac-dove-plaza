@@ -1,0 +1,89 @@
+{
+  "release": "2026-11-12T17-44-30-211Z-0d4f855",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T17-44-30-211Z-0d4f855",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T17-21-22-575Z-dc2d7a9",
+  "commit": "0d4f855d99870a096c4930d7497f922dac582fe2",
+  "retained": {
+    "linked": 1375,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 98,
+    "total": 98,
+    "percent": 100,
+    "nativeAndShared": {
+      "passed": 93,
+      "total": 93,
+      "groups": {
+        "geologyAndPublishedTerrainCompatibility": 12,
+        "navalConservation": 13,
+        "annexationReceiptsAndTransport": 4,
+        "tradedSuccessorAndTeaching": 8,
+        "societyCommandersInfluenceWeapons": 56
+      },
+      "qualificationNotes": [
+        "Each case counted once, not once per retry.",
+        "Initial annexation fixtures ignored real burned chaff and already paid autonomous hull; corrected conservation/admission checks passed.",
+        "Initial new naval fixtures used invalid timer/aboard authoring; corrected to strict-valid opening and real boarding/sailing.",
+        "Initial successor negative case paused after observation ended; corrected genuine watching-time probe passed."
+      ]
+    },
+    "built": {
+      "passed": 5,
+      "total": 5,
+      "scope": "Actual new-world lifecycle and rendered geology presets, ordinary steps and durable terrain/body restoration, original village import. Optional compiled paid-hull resume only; no naval/commander UI, campaign or performance credit.",
+      "naval": {
+        "paidProgress": 3,
+        "replacement": 5282,
+        "noSecondAdmissionCharge": true,
+        "realHull": true
+      },
+      "successor": {
+        "retainedReceipts": 2,
+        "sameBodiesAndOwners": true,
+        "noSkillOnImport": true
+      },
+      "worlds": [
+        {
+          "preset": "river-valley",
+          "heightHash": 1222454688,
+          "geology": true
+        },
+        {
+          "preset": "highland",
+          "heightHash": 1263644905,
+          "geology": true
+        }
+      ],
+      "originalUnchanged": true,
+      "errors": []
+    },
+    "builtHarnessCorrection": "Normalize absent optional cropTrial versus undefined before comparing durable state; no runtime change."
+  },
+  "typecheck": "PASS on same frozen product source",
+  "build": "PASS from a79558e; subsequent commits change qualification harness only",
+  "working": [
+    "Fresh worlds receive coherent rock/soil/landform geology; old generation20/21 anchors and saved physical state remain unchanged.",
+    "Port capacity rejects before payment; typed food and captured hull supplies conserved; actual paid commission resumes with replacement worker without second admission charge.",
+    "Paid foreign teacher origin survives genuine successful successor lessons and lawful community handover; strict imports grant no new skill.",
+    "Whole incoming influence/commander/naval/weapon foundations and casus-holder unrest included, optional saved switches retain old-save paths."
+  ],
+  "limits": [
+    "No complete player-facing naval/commander controls or naval campaign acceptance claimed; typed backend and native physical scenarios only.",
+    "Geology native coverage five presets, rendered lifecycle coverage two; not all seeds or whole campaign.",
+    "Successor migration is actual lawful community handover, not an arbitrary long settler voyage; artifacts/written-record channels remain open.",
+    "Private browser qualification was substantially slower than native tests; no 100-visible-person/FPS or new performance credit.",
+    "Existing two visitor fixture failures from prior batch remain open, not rerun or credited here."
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}
