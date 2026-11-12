@@ -6,45 +6,85 @@ import {soilQuality,riverDistance} from './ecology';
 import {readyFoodStock} from './pantry';
 import {foodDemand} from './settlement';
 import {informationOwner} from './informationCustody';
-import {ownPrestigeView,observedPrestigeView,usefulTradeCount,prestigeCellInfrastructure,type PrestigeFacts,type PrestigeView,type PrestigeObservation} from './prestigeScore';
+import {ownPrestigeView,observedPrestigeView,usefulTradeCount,type PrestigeFacts,type PrestigeView,type PrestigeObservation} from './prestigeScore';
 
 /** Food reserves use the actual simulation day counter, not visual daylight. */
-export const PRESTIGE_GAME_RULES={version:1,calendarDaySeconds:simulationDaySeconds,territoryReviewSeconds:15,cellsPerTick:256,maximumUsefulGrade:.6} as const;
+export const PRESTIGE_GAME_RULES={version:1,calendarDaySeconds:simulationDaySeconds,territoryReviewSeconds:15,cellsPerTick:256,maximumUsefulGrade:.6,qualityAreaSquareMetres:1000} as const;
 export type PrestigeTerritorySnapshot={measuredAt:number;usableArea:number;resourcesAndChokepoints:number};
 export type GamePrestigeView=PrestigeView&{territoryMeasuredAt:number|null;territoryUpdating:boolean;communityName?:string};
-type Job={territory:Uint8Array;n:number;cell:number;next:number;started:number;area:number;resources:number;extra:Map<number,number>};
-type Cache={state:Game['state'];world:Game['world'];nextReview:number;land?:PrestigeTerritorySnapshot;job?:Job};
+type Node={x:number;z:number;amount:number;maxAmt?:number};
+type Phase='land'|'nodes'|'trails'|'buildings';
+type Job={territory:Uint8Array;size:number;n:number;cell:number;next:number;phase:Phase;kind:number;started:number;area:number;resources:number;useful:Set<number>;bonuses:Map<number,{nodes:number;trail:number;crossing:number}>;nodeLists:{nodes:Node[];length:number;weight:number}[];trails:Game['state']['trails'];trailLength:number;buildings:Game['state']['buildings'];buildingLength:number;lastWork:number;totalWork:number};
+type Cache={state:Game['state'];world:Game['world'];territory:Uint8Array;size:number;nextReview:number;lastWork?:number;totalWork?:number;land?:PrestigeTerritorySnapshot;job?:Job};
 const caches=new WeakMap<Game,Cache>();
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 function beginLand(g:Game):Job{
- const territory=g.territory.slice(),n=Math.round(Math.sqrt(territory.length)),cell=g.world.size/n,half=g.world.size/2,extra=new Map<number,number>(),resources=new Map<number,number>(),trails=new Map<number,number>(),crossings=new Map<number,number>();
- const index=(x:number,z:number)=>{const ix=Math.floor((x+half)/cell),iz=Math.floor((z+half)/cell);return ix<0||iz<0||ix>=n||iz>=n?-1:iz*n+ix;};
- for(const [kind,weight]of Object.entries(LAND_VALUE_RULES.resource))for(const p of (g.state as unknown as Record<string,{x:number;z:number;amount:number;maxAmt?:number}[]>)[kind]||[]){const i=index(p.x,p.z);if(i<0||territory[i]!==0||!(p.amount>0))continue;resources.set(i,(resources.get(i)||0)+weight*clamp(p.amount/Math.max(1,p.maxAmt??p.amount)));}
- for(const [i,value]of resources)extra.set(i,Math.min(LAND_VALUE_RULES.resourceCap,value));
- for(const t of g.state.trails||[]){if(t.x===undefined||t.z===undefined)continue;const i=index(t.x,t.z);if(i>=0&&territory[i]===0)trails.set(i,(trails.get(i)||0)+clamp(t.wear));}
- for(const b of g.state.buildings)if((b.type==='bridge'||b.type==='dock')&&b.hp>0&&g.finished(b)){const i=index(b.x,b.z);if(i>=0&&territory[i]===0)crossings.set(i,(crossings.get(i)||0)+1);}
- for(const i of new Set([...trails.keys(),...crossings.keys()]))extra.set(i,(extra.get(i)||0)+prestigeCellInfrastructure(trails.get(i)||0,crossings.get(i)||0,LAND_VALUE_RULES.trailWear,LAND_VALUE_RULES.crossing));
- return{territory,n,cell,next:0,started:g.state.time,area:0,resources:0,extra};
+ // Constant-size setup only: no grid copy, entity scan, or spread of map keys.
+ // Entity list lengths are frozen; values are sampled progressively, not an
+ // atomic world snapshot. Completion publishes a dated result all at once.
+ const territory=g.territory,n=Math.round(Math.sqrt(territory.length));
+ const nodeLists=Object.entries(LAND_VALUE_RULES.resource).map(([kind,weight])=>{const nodes=(g.state as unknown as Record<string,Node[]>)[kind]||[];return{nodes,length:nodes.length,weight};});
+ return{territory,size:g.world.size,n,cell:g.world.size/n,next:0,phase:'land',kind:0,started:g.state.time,area:0,resources:0,useful:new Set(),bonuses:new Map(),nodeLists,trails:g.state.trails,trailLength:g.state.trails?.length||0,buildings:g.state.buildings,buildingLength:g.state.buildings.length,lastWork:0,totalWork:0};
 }
-/** Simulation cadence only. Consumes already-painted ownership, never causes a
- * geographic influence query/repaint or invokes the HUD's observation helpers. */
+function landIndex(job:Job,x:number,z:number){
+ if(!Number.isFinite(x)||!Number.isFinite(z))return -1;
+ const ix=Math.floor((x+job.size/2)/job.cell),iz=Math.floor((z+job.size/2)/job.cell);
+ return ix<0||iz<0||ix>=job.n||iz>=job.n?-1:iz*job.n+ix;
+}
+function landBonus(g:Game,job:Job,x:number,z:number,kind:'nodes'|'trail'|'crossing',value:number){
+ const i=landIndex(job,x,z);
+ if(i<0||!job.useful.has(i)||job.territory[i]!==0||!g.exploredAt(x,z)||!Number.isFinite(value)||value<=0)return;
+ let row=job.bonuses.get(i);if(!row){row={nodes:0,trail:0,crossing:0};job.bonuses.set(i,row);}
+ const cap=kind==='nodes'?LAND_VALUE_RULES.resourceCap:1,old=row[kind];row[kind]=Math.min(cap,old+value);
+ job.resources+=(row[kind]-old)*(kind==='nodes'?1:kind==='trail'?LAND_VALUE_RULES.trailWear:LAND_VALUE_RULES.crossing);
+}
+/** Derived progress only; reads never start sampling. Initial land is unavailable;
+ * a refresh retains its previous dated result and explicitly reports it stale.
+ * Each work item is one land cell OR one node/trail/building, including rejects. */
+export function prestigeTerritoryProgress(g:Game){
+ const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world&&c.territory===g.territory&&c.size===g.world.size;
+ const job=valid?c.job:undefined;
+ return{available:!!(valid&&c.land),stale:!!(valid&&c.land&&(job||g.state.time>=c.nextReview)),phase:job?.phase??null,lastWork:valid?c.lastWork??0:0,totalWork:valid?c.totalWork??0:0,startedAt:job?.started??null,measuredAt:valid?c.land?.measuredAt??null:null};
+}
+/** Simulation cadence only. One shared budget covers setup indexing AND physical
+ * land sampling. Uses painted ownership and explored cells, never paints land. */
 export function tickPrestigeEvidence(g:Game){
- let c=caches.get(g);if(!c||c.state!==g.state||c.world!==g.world){c={state:g.state,world:g.world,nextReview:g.state.time};caches.set(g,c);}
+ let c=caches.get(g);if(!c||c.state!==g.state||c.world!==g.world||c.territory!==g.territory||c.size!==g.world.size){c={state:g.state,world:g.world,territory:g.territory,size:g.world.size,nextReview:g.state.time};caches.set(g,c);}
  if(!c.job&&g.state.time>=c.nextReview)c.job=beginLand(g);
- const job=c.job;if(!job)return;const end=Math.min(job.territory.length,job.next+PRESTIGE_GAME_RULES.cellsPerTick),half=g.world.size/2;
- for(;job.next<end;job.next++){
-  const i=job.next;if(job.territory[i]!==0)continue;
-  const x=-half+(i%job.n+.5)*job.cell,z=-half+(Math.floor(i/job.n)+.5)*job.cell,h=g.height(x,z);
-  if(h<g.waterAt(x,z)+.1)continue;
-  const grade=Math.max(Math.abs(g.height(x+3,z)-h),Math.abs(g.height(x-3,z)-h),Math.abs(g.height(x,z+3)-h),Math.abs(g.height(x,z-3)-h))/3;
-  if(grade>PRESTIGE_GAME_RULES.maximumUsefulGrade)continue;
-  const useful=LAND_VALUE_RULES.soil*soilQuality(g,x,z)+LAND_VALUE_RULES.freshwater*Math.max(0,1-riverDistance(g,x,z)/LAND_VALUE_RULES.freshwaterMetres);
-  job.area+=job.cell*job.cell;job.resources+=Math.max(0,useful)+(job.extra.get(i)||0);
+ c.lastWork=0;const job=c.job;if(!job)return;job.lastWork=0;
+ while(job.lastWork<PRESTIGE_GAME_RULES.cellsPerTick){
+  if(job.phase==='land'){
+   if(job.next===job.territory.length){job.phase='nodes';job.next=0;continue;}
+   const i=job.next++;job.lastWork++;job.totalWork++;
+   if(job.territory[i]!==0)continue;
+   const x=-job.size/2+(i%job.n+.5)*job.cell,z=-job.size/2+(Math.floor(i/job.n)+.5)*job.cell;
+   if(!g.exploredAt(x,z))continue;
+   const h=g.height(x,z);if(h<g.waterAt(x,z)+.1)continue;
+   const grade=Math.max(Math.abs(g.height(x+3,z)-h),Math.abs(g.height(x-3,z)-h),Math.abs(g.height(x,z+3)-h),Math.abs(g.height(x,z-3)-h))/3;
+   if(grade>PRESTIGE_GAME_RULES.maximumUsefulGrade)continue;
+   const useful=LAND_VALUE_RULES.soil*soilQuality(g,x,z)+LAND_VALUE_RULES.freshwater*Math.max(0,1-riverDistance(g,x,z)/LAND_VALUE_RULES.freshwaterMetres);
+   if(!Number.isFinite(useful)||!Number.isFinite(h)||!Number.isFinite(grade))continue;
+   const area=job.cell*job.cell;job.area+=area;job.resources+=Math.max(0,useful)*area/PRESTIGE_GAME_RULES.qualityAreaSquareMetres;job.useful.add(i);
+  }else if(job.phase==='nodes'){
+   const list=job.nodeLists[job.kind];
+   if(!list){job.phase='trails';job.next=0;continue;}
+   if(job.next===list.length){job.kind++;job.next=0;continue;}
+   const p=list.nodes[job.next++];job.lastWork++;job.totalWork++;
+   if(p&&p.amount>0)landBonus(g,job,p.x,p.z,'nodes',list.weight*clamp(p.amount/Math.max(1,p.maxAmt??p.amount)));
+  }else if(job.phase==='trails'){
+   if(job.next===job.trailLength){job.phase='buildings';job.next=0;continue;}
+   const t=job.trails?.[job.next++];job.lastWork++;job.totalWork++;
+   if(t&&t.x!==undefined&&t.z!==undefined)landBonus(g,job,t.x,t.z,'trail',clamp(t.wear));
+  }else{
+   if(job.next===job.buildingLength){c.land={measuredAt:job.started,usableArea:job.area,resourcesAndChokepoints:job.resources};c.job=undefined;c.nextReview=g.state.time+PRESTIGE_GAME_RULES.territoryReviewSeconds;c.lastWork=job.lastWork;c.totalWork=job.totalWork;return;}
+   const b=job.buildings[job.next++];job.lastWork++;job.totalWork++;
+   if(b&&(b.type==='bridge'||b.type==='dock')&&b.hp>0&&g.finished(b))landBonus(g,job,b.x,b.z,'crossing',1);
+  }
  }
- if(job.next===job.territory.length){c.land={measuredAt:job.started,usableArea:job.area,resourcesAndChokepoints:job.resources};c.job=undefined;c.nextReview=g.state.time+PRESTIGE_GAME_RULES.territoryReviewSeconds;}
+ c.lastWork=job.lastWork;c.totalWork=job.totalWork;
 }
 export function collectOwnPrestige(g:Game):PrestigeFacts{
- const t=g.tribe(0),c=caches.get(g),land=c?.state===g.state&&c.world===g.world?c.land:undefined;
+ const t=g.tribe(0),c=caches.get(g),land=c?.state===g.state&&c.world===g.world&&c.territory===g.territory&&c.size===g.world.size?c.land:undefined;
  let healthyPopulation=0;for(const u of g.state.units)if(u.team===0&&u.hp>0&&!u.visit&&(!u.prisoner||u.prisoner.phase==='released')&&(u.sickUntil??0)<=g.state.time)healthyPopulation+=clamp(u.hp/Math.max(1,u.maxHp));
  const demonstratedPractices=Object.entries(t.productionPractice||{}).filter(([,p])=>p&&p.batches>0&&p.usefulOutputs>0).map(([id])=>id.replace(/(Double|Bulk)$/,''));
  const boat=t.boatPractice;
@@ -69,7 +109,7 @@ function rivalObservation(g:Game,viewer:number,subject:number,source=g.state.str
 }
 export function gamePrestigeView(g:Game,viewer=0,subject=0):GamePrestigeView{
  if(viewer!==0||subject!==0)return reportedPrestigeView(g,viewer,subject);
- const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world;
+ const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world&&c.territory===g.territory&&c.size===g.world.size;
  return{...ownPrestigeView(0,collectOwnPrestige(g)),communityName:g.tribe(0).name,territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job:true};
 }
 
