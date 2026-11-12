@@ -69,7 +69,7 @@ test('council read model and marry command: JSON-safe, gated, and the UI action 
  const b0=tiesBetween(g,0,1).bond,r=applyEngineCommand(g,{kind:'marry-houses',team:1});
  assert.equal(r.accepted,true,r.reason);assert.ok(tiesBetween(g,0,1).bond>b0);
  const c2=JSON.parse(JSON.stringify(applyEngineReadQuery(g,{kind:'rulers-council'}))).council;
- if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);}else assert.equal(c2.handover,undefined);
+ if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);assert.ok(Array.isArray(c2.handover.rivals)&&c2.handover.rivals.length<=3,'rival claimants listed');assert.ok(c2.handover.pressure&&Number.isFinite(c2.handover.pressure.unrest)&&c2.handover.pressure.claimsAgainst>=0,'unrest and claims pressure on the handover card');JSON.parse(JSON.stringify(c2.handover));}else assert.equal(c2.handover,undefined);
 });
 
 test('fosterage and hostages: real wards, tie effects, term end, war breaks the pledge, JSON round-trip',async()=>{
@@ -210,4 +210,16 @@ test('AUD-SOC-TRIBUTE-LEDGER: marriage, fosterage, hostage and claim commands mo
  marryHouses(g,0,1);fosterHouses(g,0,1);exchangeHostages(g,0,1);
  grantClaim(g,0,1,'raid',50,10);citeClaim(g,0,1,'raid');settleWards(g);
  assert.equal(snap(),before,'diplomatic kin commands must not create or move goods, people on the map, or buildings');
+});
+test('era gating: bands send small slow parties and get no organised explore/trade speed-up; states are uncapped; old saves unchanged',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*3;advanceRulers(g);const set=(tier,mode)=>{g.state.rulers.societies['1'].civ.polity.tier=tier;g.state.time+=31;return mode;};
+ const plan=(tier)=>{set(tier);return R.expansionParty(g,1);};
+ const band=plan('band'),chief=plan('chiefdom'),state=plan('state');
+ assert.ok(band.crew<=R.ERA_REACH.band.crew&&chief.crew<=R.ERA_REACH.chiefdom.crew&&state.crew<=4);
+ assert.ok(band.cooldown>=state.cooldown||band.cooldown===3600,'bands are slower or capped');
+ assert.ok(band.cooldown<=3600&&state.cooldown>=900);
+ set('band');assert.equal(R.journeyPermit(g,1,'explore').reserve,450);assert.equal(R.journeyPermit(g,1,'trade').cadence,120);
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
+ assert.equal(R.expansionParty(old,1),null);assert.equal(R.journeyPermit(old,1,'explore'),null);
 });

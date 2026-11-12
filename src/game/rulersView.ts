@@ -2,7 +2,7 @@ import {societyIdentity} from './societyIdentity';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
 import type {Game} from './sim';
 import {rulersOf} from './rulersState';
-import {ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween} from './rulersRuntime';
+import {ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf} from './rulersRuntime';
 import {familyFeatures} from './familyScale';
 import {dossier,relationWord,traitWord} from './kinshipBridge';
 import {generateFactions,stepFactions,coalitionLoss,type FactionKind} from './houses';
@@ -23,7 +23,7 @@ export type CouncilModel={
  expansion?:{mode:string;drive:number;why:string[]};
  neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[]}[];
  log:string[];
- handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[]};
+ handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
 /** One kinsman living in another house: who, which way, why, and when they go home. */
 export type WardLine={name:string;age:number;kind:'foster'|'hostage';heldByUs:boolean;sinceYear:number;endsIn:number;effect:string};
@@ -50,7 +50,9 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const hp=f.showSuccessionUI&&head?heir(d,me.civ.polity.succession,makeRng(hash32('handover-preview',d.generation,d.rulerId))):undefined;
  const handover:CouncilModel['handover']=f.showSuccessionUI&&head?{law:me.civ.polity.succession,rulerAge:head.age,yearlyRisk:Math.round(yearlyDeathChance(head.age)*100),extinct:!hp&&!d.regent,regent:d.regent?d.people[d.regent]?.name:undefined,
   heir:hp?{name:hp.name,age:hp.age,role:role(hp.id),adult:hp.age>=16,legit:hp.legit,claim:hp.claimStrength,headline:hp.ruler?dossier(hp.ruler).headline:'untested'}:undefined,
-  others:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.parent===d.rulerId).map(p=>({name:p.name,age:p.age,role:role(p.id)}))}:undefined;
+  others:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.parent===d.rulerId).map(p=>({name:p.name,age:p.age,role:role(p.id)})),
+  rivals:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.age>=16&&p.claimStrength>0).sort((x,y)=>y.claimStrength-x.claimStrength).slice(0,3).map(p=>({name:p.name,age:p.age,role:role(p.id),claim:p.claimStrength,legit:p.legit})),
+  pressure:(u=>u?{unrest:Math.round(u.value),stage:u.stage,claimsAgainst:claimsOf(g,team).filter(c=>Number(c.target)===team).length,why:u.why}:undefined)(unrestOf(g,team))}:undefined;
  return {
   handover,enabled:true,stage:f.stage,showSuccession:f.showSuccessionUI,showFactions:f.factions,
   ruler:person?{...(({name,age,headline,contradiction,wants,fears,competences,values})=>({name,age,headline,contradiction,wants:wants.map(String),fears:String(fears),competences,values:values as string[]}))(dossier(person))}:undefined,
