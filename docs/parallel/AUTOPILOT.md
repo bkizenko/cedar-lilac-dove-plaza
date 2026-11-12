@@ -791,14 +791,14 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | source-pushed-not-live | sheep/goats partial; broader species open |
 | INC-WILDFIRE | incentive | Player and rival fires/disasters with causes, mitigation, recoverable loss | Grok | Grok W7 | not started | wildfire/flood; building fire is INC-BUILDING-FIRE |
 | INC-WONDERS | incentive | Six wonder grammars as seeded 3D paid construction with function/prestige | Claude | Claude W1 | source-pushed-not-live | wonderKit 9992fe9; earthworks labour is Grok W15 |
-| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | not started | https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1 head cbffbc8; after Claude T1–T2 |
+| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | done/live | Normal whole-branch merges landed339d9b8; release2026-11-12T01-58-40-150Z-339d9b8 on8086/8101;24/24focused+1/1built native53save/queue/restore;tsc+buildPASS; no gate credit |
 | SCENIC-START-HOOK | incentive | scenicStartReport feeds new-game town-hall pick | Grok | Grok T7 | source-pushed-not-live | 59f0e24 |
 | SIEGE-S1 | incentive | Staffed timber ram: paid build, crew, reachable gate/wall, recovery | Claude | Claude W2 | source-pushed-not-live | rivalSiege.ts 0d1713a |
 | SIEGE-S2 | incentive | Projectile siege engine: ammo, crew, reload, range, collision | Claude | Claude N3 | not started | after S1 is live |
 | SIEGE-S3 | incentive | Societies choose siege from observed defenses; surrender/occupation alternatives | Claude | Claude W2 | source-pushed-not-live |  |
 | WONDER-EARTHWORKS | incentive | Wonder cuts as ordinary excavation labour | Grok | Grok W15 | source-pushed-not-live | wonderEarthworks.ts on agents/grok-world; wire into live wonder jobs |
 | CP-1 | completion-plan | Phase 1 Speed: profile hot paths, Worker, p95 <33ms Low @ 100 residents | Codex | Codex N3 | not started | Worker parked (C2); unpark after N3 |
-| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | not started | PR #1 is the vehicle |
+| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | live-partial | Whole Societies/Experience/World +curd landed/live339d9b8; remaining named hook rows stay open;25/25batch checks, tsc+buildPASS |
 | CP-3 | completion-plan | Phase 3 See the real game: desktop three.js screenshots vs concept art | Claude | Claude W1 | not started | Claude self-reviews against concept art; pre-approved |
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
