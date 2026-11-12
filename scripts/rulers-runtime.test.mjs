@@ -339,3 +339,26 @@ test('lane A: citing a casus belli strains the holder (unrest), fades yearly, ro
  const d0=R.cbDebtOf(g,2);R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),Math.max(0,d0-4));
  for(let i=0;i<40;i++)R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),0);assert.ok(!('2' in g.state.rulers.cbDebt),'faded entries are dropped');
 });
+
+test('AUD-SOC-SUCCESSION-WAR: a ruler dying mid-front or mid-exchange changes the throne only; fronts, claims and wards are untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9700+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:5,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};
+  d.people[t+'-heir']={...k,id:t+'-heir',name:'Heir'+t,age:30,parent:d.rulerId,spouse:undefined,ruler:undefined,legit:true,claimStrength:90};}
+ const f=R.fosterHouses(g,0,1);
+ R.grantClaim(g,2,1,'claim',60,50);
+ const front={id:1,hallId:1,defenderTeam:1,attackerTeam:2,phase:'pressed',openedAt:1,lastMeasuredAt:1,residentIds:[],armedAtOpen:3,buildingIds:[],hallHpAtOpen:100,casualties:1,captured:0,lostArmed:0,buildingLoss:0,occupiedSeconds:0,starvingSeconds:0,unrelievedSeconds:0,absentSeconds:0,ratio:.3,score:.2,threshold:.5,refusals:1,yieldedIds:[],reason:'test'};
+ g.state.capitulation={version:1,fronts:[front]};
+ const frontBefore=JSON.stringify(g.state.capitulation),claimsBefore=JSON.stringify(R.claimsOf(g)),wardsBefore=JSON.stringify(R.wardsOf(g));
+ const d1=g.state.rulers.societies['1'].dynasty,old=d1.rulerId;d1.people[old].alive=false;
+ g.state.time=RULERS_YEAR_SECONDS*(g.state.rulers.year+1)+1;advanceRulers(g);
+ const after=g.state.rulers.societies['1'].dynasty;
+ assert.notEqual(after.rulerId,old,'the throne passes');assert.ok(after.people[after.rulerId].alive);
+ assert.equal(JSON.stringify(g.state.capitulation),frontBefore,'succession does not reset pressed/relieved front state');
+ assert.equal(JSON.stringify(R.claimsOf(g)),claimsBefore,'claims against the house outlive its ruler');
+ assert.equal(JSON.stringify(R.wardsOf(g)),wardsBefore,'wards stay where they are: no free release on a death');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'save round-trip after succession mid-war');
+ void f;
+});
