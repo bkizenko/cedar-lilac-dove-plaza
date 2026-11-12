@@ -9,7 +9,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(){const g=new Game();g.reset(42,18,{size:1040,layout:'pangaea'});g.enterIsland();g.state.paused=true;return g;}
 test('real Game owner score uses ready nourishment, body health and successful distinct methods rather than age flags or raw hoards',()=>{
  const g=fixture(),t=g.tribe(0);t.food=100;t.foodLots={grain:100};t.items={grainSheaves:10000,rawMeat:10000};
- const raw=collectOwnPrestige(g);assert.equal(raw.foodSecurity,0);assert.equal(raw.demonstratedPractices.length,0);assert.equal(raw.defendedWarAims,undefined);
+ const raw=collectOwnPrestige(g);assert.equal(raw.foodSecurity,0);assert.equal(raw.demonstratedPractices.length,0);assert.equal(raw.defendedWarAims,0);
  t.foodLots={bread:100};const cooked=collectOwnPrestige(g);assert.equal(cooked.foodSecurity,readyFoodStock(t).nourishment/foodDemand(g,0)/PRESTIGE_GAME_RULES.calendarDaySeconds);assert.ok(cooked.foodSecurity>0);
  const before=g.prestige();t.age=3;for(const r of g.state.regions)r.owner=0;for(const tr of g.state.tribes)tr.ally=true;assert.equal(g.prestige(),before,'age/region/alliance flags earn no points');
  const row={batches:1,failedBatches:0,usefulOutputs:4,firstAt:0,lastAt:0,makers:[]};t.productionPractice={grindGrainDouble:{...row},grindGrainBulk:{...row},sewHideCoat:{...row,batches:0,failedBatches:9,usefulOutputs:0}};

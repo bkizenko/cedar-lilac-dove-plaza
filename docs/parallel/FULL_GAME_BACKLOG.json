@@ -2325,7 +2325,17 @@
       "active_provider_owners": [
         "C",
         "W"
-      ]
+      ],
+      "current_delivery": {
+        "status": "live-partial",
+        "scope": "Working horses captured from finite fresh-world herds and trained at solid stable entrance into actual pack animals.",
+        "remaining": "Selective breeding, pack dogs, riding and traction.",
+        "sourceCommit": "8097842329f10cf46090ebca596f719f2d2238f4",
+        "liveCommit": "455cd372348335345d7737e623e6465b1d2c459e",
+        "evidence": "docs/metrics/horse-stable-release-2026-11-12.json",
+        "batch": "25/25 scoped",
+        "gateCreditDelta": 0
+      }
     },
     {
       "id": 41,
@@ -9158,6 +9168,24 @@
       "liveCommit": "38b41033352f06dacf15aa7d22e3cdf763c5d463",
       "evidence": "docs/metrics/knowledge-provenance-release-2026-11-12.json",
       "scope": "Known/partly/unknown + real observed/demonstrated/taught/inherited provenance, paid successful/failed/teaching and crop receipts, physically owned free resident exact-method migration. Trading/captured techniques and full M4-03 acceptance remain open."
+    },
+    {
+      "id": "CODEX-SETTLED-WAR-PRESTIGE",
+      "owner": "Codex Platform",
+      "state": "live",
+      "sourceCommit": "1ca3d7a",
+      "liveCommit": "a6e8cbd824b03b10ed2280ec77821f7a7466577b",
+      "evidence": "docs/metrics/war-prestige-release-2026-11-12.json",
+      "scope": "Weighted accepted political outcomes and defense-only player townhall relief. Correct active obligation linkage, idempotent strict reload, no forced player surrender, unknown foreign war values. Raider-band objective scoring remains separate/open."
+    },
+    {
+      "id": "CODEX-HORSE-STABLE-PACK",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "8097842329f10cf46090ebca596f719f2d2238f4",
+      "liveCommit": "455cd372348335345d7737e623e6465b1d2c459e",
+      "evidence": "docs/metrics/horse-stable-release-2026-11-12.json",
+      "scope": "Fresh finite native horses; paid capture, physical pen/stable leading, actual same-ID pack conversion; weighted finite pasture/feed/water/keeper demand; strict custody/scale/birth/save handling. No terrain/nav changes. Riding, traction, broader species and full M3-06 remain open."
     }
   ],
   "status_update_policy": {

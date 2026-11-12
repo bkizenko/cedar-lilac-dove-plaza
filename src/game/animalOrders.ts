@@ -3,7 +3,7 @@ import type { Building, Unit } from './types';
 import { hasTaskCommitment } from './workCommitments';
 import { isDependent } from './settlement';
 import { orderExploration } from './explorationOrders';
-import { beginHerdTaming, HERD, penPlacesOccupied } from './husbandry';
+import { beginHerdTaming, HERD, penPlacesOccupied, penPlacesReserved } from './husbandry';
 import {surveyPenPasture} from './penPasture';
 import {insidePen} from './penGeometry';
 import {FOW} from './constants';
@@ -129,14 +129,14 @@ export function cancelGoatSearch(g:Game,penId:number){
 }
 function tickGoatSearchOrder(g:Game,pen:Building){
  const q=pen.goatSearch;if(!q||q.state==='complete'||q.state==='exhausted')return;
- const handler=g.state.units.find(u=>u.hp>0&&u.tamingWork?.pen===pen.id);
+ const handler=g.state.units.find(u=>u.hp>0&&u.tamingWork?.pen===pen.id&&(g.state.wildlife.find(a=>a.id===u.tamingWork!.animal)?.species??g.state.livestock?.find(a=>a.id===u.tamingWork!.animal)?.species)==='goat');
  if(handler){q.state='capturing';q.animal=handler.tamingWork!.animal;q.reason=handler.tamingWork!.paused?'paused':undefined;return;}
  if(q.animal!==undefined){const a=g.state.livestock?.find(a=>a.id===q.animal&&a.hp>0&&a.pen===pen.id);if(a){if(insidePen(pen,a.x,a.z,.25)){q.state='complete';delete q.reason;}else{q.state='capturing';q.reason='paused';}return;}}
  const scout=g.state.units.find(u=>u.hp>0&&u.goatSearchPen===pen.id&&(u.order==='explore'||u.exploreAfterDelivery));
  if(scout){q.state='searching';delete q.reason;return;}
  if(g.state.time<q.nextAttemptAt)return;
  q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;q.state='waiting';delete q.reason;
- const reserved=g.state.units.filter(u=>u.hp>0&&u.tamingWork?.pen===pen.id).length;
+ const reserved=penPlacesReserved(g,pen.id);
  if(penPlacesOccupied(g,pen.id)+reserved>=surveyPenPasture(g,pen).eligibleCapacity){q.reason='space';return;}
  if(g.tribe(0).food<HERD.tamingFood){q.reason='food';return;}
  const result=attemptGoatSearch(g,pen.id,true);

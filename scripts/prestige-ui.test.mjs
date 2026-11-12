@@ -12,7 +12,7 @@ const {PrestigeReadout}=await import('../src/ui/PrestigeReadout.tsx');
 const owner=()=>({...ownPrestigeView(0,{usableArea:1000,resourcesAndChokepoints:3,healthyPopulation:20,foodSecurity:8,demonstratedPractices:['bake'],usefulTrade:2,civicWorks:14}),territoryMeasuredAt:10,territoryUpdating:false});
 test('compact prestige shows eight contribution meters, actual units and explicit unavailable evidence without mutating facts',()=>{
  const view=owner(),before=JSON.stringify(view),html=renderToStaticMarkup(React.createElement(PrestigeReadout,{view}));
- assert.equal((html.match(/<meter /g)||[]).length,8);assert.match(html,/Food security prestige/);assert.match(html,/simulation days of actual edible reserve/);assert.match(html,/No verified defended objective recorded/);assert.match(html,/aria-label="Your prestige"/);assert.equal(JSON.stringify(view),before);
+ assert.equal((html.match(/<meter /g)||[]).length,8);assert.match(html,/Food security prestige/);assert.match(html,/simulation days of actual edible reserve/);assert.match(html,/No verified objective outcome recorded/);assert.match(html,/aria-label="Your prestige"/);assert.equal(JSON.stringify(view),before);
 });
 test('unknown rivals hide even an injected name and total; observed rivals show only dated partial evidence',()=>{
  const unknown={...observedPrestigeView(0,1,1000,[]),communityName:'SecretName',total:998877,territoryMeasuredAt:null,territoryUpdating:false};

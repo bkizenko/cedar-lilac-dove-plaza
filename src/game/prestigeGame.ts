@@ -1,3 +1,4 @@
+import {settledWarPrestige} from './warPrestige';
 import {simulationDaySeconds} from './calendarPacing';
 import type {Game} from './sim';
 import {CIVIC_PRESTIGE_RULES,civicPrestige} from './civicPrestige';
@@ -94,7 +95,7 @@ export function collectOwnPrestige(g:Game):PrestigeFacts{
  }
  const sailed=boat?.sailing;if(sailed&&sailed.deliveredGoods>0&&sailed.demonstratedAt!==undefined&&sailed.demonstratedAt>=0&&sailed.demonstratedAt<=g.state.time)demonstratedPractices.push('sailed-cargo-delivery');
  const demand=foodDemand(g,0),reserve=demand>0?readyFoodStock(t).nourishment/demand:0;
- return{usableArea:land?.usableArea,resourcesAndChokepoints:land?.resourcesAndChokepoints,healthyPopulation,foodSecurity:reserve/PRESTIGE_GAME_RULES.calendarDaySeconds,demonstratedPractices,usefulTrade:usefulTradeCount(g.state.tradeNeeds?.receipts||[],0,g.state.tradeNeeds?.offers||[]),civicWorks:civicPrestige(g,0).total};
+ return{usableArea:land?.usableArea,resourcesAndChokepoints:land?.resourcesAndChokepoints,healthyPopulation,foodSecurity:reserve/PRESTIGE_GAME_RULES.calendarDaySeconds,demonstratedPractices,usefulTrade:usefulTradeCount(g.state.tradeNeeds?.receipts||[],0,g.state.tradeNeeds?.offers||[]),defendedWarAims:settledWarPrestige(g.state,0).value,civicWorks:civicPrestige(g,0).total};
 }
 /** Public retained reports only; no live foreign entity/stock lookup. Report
  * custody honors actual community handover without silently revealing originals. */

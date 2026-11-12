@@ -424,11 +424,11 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-34 | catalogue | Fleeing/aggressive wildlife and sustainable reproduction. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
 | CAT-35 | catalogue | Carcass transport, butchery and useful hides/bone. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
 | CAT-36 | catalogue | Seasonal wild foods, fishing and traps. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
-| CAT-37 | catalogue | Animal capture/taming and species-specific domestic uses. | Codex | Codex W1 | source-pushed-not-live | sheep capture live 5f1b5e9; old-map import and other species remain |
-| CAT-38 | catalogue | Pens, fodder, pasture, veterinary care and breeding. | Codex | Codex W1 | source-pushed-not-live | sheep breeding/feed live; veterinary/seasonal grazing remain |
+| CAT-37 | catalogue | Animal capture/taming and species-specific domestic uses. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
+| CAT-38 | catalogue | Pens, fodder, pasture, veterinary care and breeding. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | CAT-39 | catalogue | Milk, meat, wool, transport and animal traction where species permit. | Codex | Codex T7 | live-partial | wool/dairy vessel live; cultured curd confirmed41f5870 with7native/focused+1built flow, same2pots/cloth return; meat/transport/traction remain W1 |
 | CAT-4 | catalogue | Local shortages that encourage exploration, exchange or migration. | Grok | Grok W7 | not started | local shortages encouraging migration |
-| CAT-40 | catalogue | **Accepted extension:** selective breeding, pack dogs and working horses. | Codex | Codex W1 | not started | selective breeding, pack dogs, horses; chariots later L4 |
+| CAT-40 | catalogue | **Accepted extension:** selective breeding, pack dogs and working horses. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | CAT-41 | catalogue | Land clearing and viable low-timber fields. | Grok | Grok W9 | not started | land clearing / site prep |
 | CAT-42 | catalogue | Sowing, tending and time-limited harvest labor. | Codex | — (done) | done/live | historical source-struck: sowing/tending/harvest labor |
 | CAT-43 | catalogue | Seeds, soil exhaustion, fallow, manure and crop rotation. | Codex | Codex W8 | not started | soil exhaustion / fallow / manure / rotation |
@@ -663,7 +663,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CHAT-G6-CULTURAL-NAMES | chat |  | Claude | Claude W2 | source-pushed-not-live | source-pushed 103f41f / e69b8f8 |
 | CHAT-G7-FOOD-TASTE | chat | Document tunable taste/enjoyment units and test morale/benefit versus preparation labor; treat supplied ranking as tentative, no new unsa… | Codex | Codex W3 | not started | accepted-pending |
 | CHAT-G9-LAB-FLOW | chat | Track these three separate UI actions and acceptance; native lab scenario only, no private village overwrite. | Codex | — (done) | done/live | live-partial: lab enter/restart/save exists at 39115987; only remaining actions on audit |
-| BOARD-G1 | board-gap | Era score and victory conditions that give AI societies something to strive for | Codex | Codex T6 | live-partial | 41f5870 measurable prestige formula and compact ledger live; AI goals/victory and verified defended outcomes remain Claude W2 integration |
+| BOARD-G1 | board-gap | Era score and victory conditions that give AI societies something to strive for | Codex | Codex T6 | live-partial | a6e8cbd: all eight formula components wired, including weighted settled political outcomes and player defense-only fronts;37/37scoped native/built checks, tsc/buildPASS. Raider-goal scoring, broader trade/AI/victory remain open; docs/metrics/war-prestige-release-2026-11-12.json |
 | BOARD-G10 | board-gap | Map auto-explored without the player sending anyone | Grok | Grok W13 | source-pushed-not-live | same as CHAT-G10 |
 | BOARD-G11 | board-gap | Village personalities with different incentives | Claude | Claude W2 | source-pushed-not-live | village personalities source-pushed |
 | BOARD-G12 | board-gap | Fun-loop measure: threat, decision and payoff in a short session | Claude | Claude L2 | gated on Boris | fun-loop metric; default no until the decision card says yes |
@@ -775,7 +775,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-GEO-INFLUENCE | incentive | Influence decays along real routes; mountains/seas block until transport | Grok | Grok W14 | not started |  |
 | INC-GOAT-FIND | incentive | Find-goat is a persistent order: search, capture, escort, pen, bounded failures | Codex | Codex W1 | not started | diagnose existing path; no invented animals |
 | INC-GRAPHICS-QUALITY | incentive | Low/Medium/High remembered; no color shift from pipeline swaps | Codex | Codex W10 | source-pushed-not-live | settings exist; remember/pipeline leftovers |
-| INC-HORSES | incentive | Stables, horses, burden animals, riding; chariots later | Codex | Codex W1 | not started | chariots are Codex L4 |
+| INC-HORSES | incentive | Stables, horses, burden animals, riding; chariots later | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | INC-HOUSE-VARIATION | incentive | Valid footprint/frame/roof variation fitted to terrain; identity saved | Claude | Claude W1 | source-pushed-not-live |  |
 | INC-HUNT-PREP | incentive | Hunting with real weapons; carcass transport, butchery, hide curing | Codex | — (done) | done/live | covered by verified M1-10 |
 | INC-IRRIGATION | incentive | Crops/cisterns from real channels; finite throughput; no universal bonus | Grok | Grok W3 | not started |  |
@@ -786,7 +786,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-PERSONAL-ABILITIES | incentive | Compact resident stats, practice, teaching, bounded specialization | Codex | Codex W9 | not started |  |
 | INC-QUARRY | incentive | Lower quarry startup cost; show reachable deposit area/capacity | Codex | Codex W9 | not started |  |
 | INC-RAIDER-INCENTIVES | incentive | Wealth tempts; defense deters; raiders have camps and can settle | Claude | Claude W2 | source-pushed-not-live |  |
-| INC-SCORE | incentive | Versioned prestige/score components with caps; no infinite flags | Codex | Codex T6 | live-partial | 41f5870 ledger/owner evidence and capped weights live;20 focused cases+actual built ledger pass; defended-war outcome source and other trade histories remain open |
+| INC-SCORE | incentive | Versioned prestige/score components with caps; no infinite flags | Codex | Codex T6 | live-partial | a6e8cbd: all eight formula components wired, including weighted settled political outcomes and player defense-only fronts;37/37scoped native/built checks, tsc/buildPASS. Raider-goal scoring, broader trade/AI/victory remain open; docs/metrics/war-prestige-release-2026-11-12.json |
 | INC-SIEGE | incentive | Siege deployment, crew, ammunition, no remote damage | Claude | Claude W2 | source-pushed-not-live | staffed ram source-pushed |
 | INC-SITE-PREP | incentive | Placement queues tree/stone clearing; paid materials; no trapped workers | Grok | Grok W9 | not started |  |
 | INC-TOWERS | incentive | Paid material-dependent tower height; unfinished towers do not shoot | Claude | Claude N3 | not started |  |
@@ -795,7 +795,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-TRIBE-FLAG | incentive | Player names tribe, symbol, flag, palette; persist on diplomacy and gear | Claude | Claude W6 | not started |  |
 | INC-UNBUILT-CAMP | incentive | Fresh society starts with people and supplies, no completed structures | Codex | — (done) | done/live | M1-01 verified |
 | INC-WATER-HEARTH | incentive | Collected water; hearths consume real fuel; cooking/curing fuel | Codex | Codex W9 | source-pushed-not-live | M1-06/07 live; cooking/curing chain leftovers |
-| INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | source-pushed-not-live | sheep/goats partial; broader species open |
+| INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | INC-WILDFIRE | incentive | Player and rival fires/disasters with causes, mitigation, recoverable loss | Grok | Grok W7 | not started | wildfire/flood; building fire is INC-BUILDING-FIRE |
 | INC-WONDERS | incentive | Six wonder grammars as seeded 3D paid construction with function/prestige | Claude | Claude W1 | source-pushed-not-live | wonderKit 9992fe9; earthworks labour is Grok W15 |
 | PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | done/live | Normal whole-branch merges landed339d9b8; release2026-11-12T01-58-40-150Z-339d9b8 on8086/8101;24/24focused+1/1built native53save/queue/restore;tsc+buildPASS; no gate credit |
@@ -926,6 +926,9 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-UI-RIVER-HOVER | Claude D audit | UI: hovering a river section should outline its corners and show fish/clay in a tooltip before a click opens WaterReachPanel | Claude | Claude B | not started | |
 | AUD-FEEL-WEATHER-AUDIO | Claude D audit | game feel: weather/season/time-of-day should drive ambience (wind, rain, river, night insects) and hearth-light flicker; check existing audio hooks before adding | Claude | Claude B/C | not started | |
 | AUD-INTEG-SHIPPING-HOOKS | Claude D audit | work/shipping-waiting-hooks-2026-11-11 (9e4a145) conflicts with integration in engine.ts, persistence.ts, sim.ts, types.ts, worldOptions.ts, worldVariety.ts, ruins.ts, Hud.tsx, WorldSetup.tsx (17 hunks, Grok World wiring); not merged by integrator | Grok/Codex | Grok T-wiring | not started | Grok to merge integration into the branch or the reverse, keeping both sides |
+
+| AUD-PLAYER-DEFENSE-PRESTIGE | audit | Player townhall defense records formally held objectives without automatic surrender | Codex | Codex T6 | done/live | a6e8cbd; native actual physical departure/relief/reload and overwhelming-pressure no-yield;37/37batch scoped; docs/metrics/war-prestige-release-2026-11-12.json |
+| AUD-RAID-OUTCOME-PRESTIGE | audit | Record actual theft/captive/destruction raid outcomes before scoring band defense; retaining a hall alone proves no theft defeat | Codex/Claude | Codex T6 / Claude raid intent contract | not started | Band3 remains excluded; need retained actual objective/ownership/witness results, not kill/retreat totals |
 
 ## Throughput (Grok PM, hourly)
 
