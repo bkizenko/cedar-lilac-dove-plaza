@@ -83,3 +83,8 @@ test('captives navigation exists without offers and the no-house fallback still 
  const nav=renderToStaticMarkup(h(Screen,{title:'Council',onClose(){},tabs:[only],tab:'terms',setTab(){}},h(CaptiveList,{captives:[captive],send(){},feedback:[]})));assert.match(nav,/role="tab"/);assert.match(nav,/>Captives<\/span>/);
  const fallback=renderToStaticMarkup(h(CouncilWithoutHouse,{onClose(){},terms:null,captives:h(CaptiveList,{captives:[captive],send(){},feedback:[]})}));assert.match(fallback,/No ruling house yet/);assert.match(fallback,/Held captive/);assert.match(fallback,/Assign guard/);assert.match(fallback,/Release to walk home/);assert.match(fallback,/Food 0/);assert.match(fallback,/Water 0 L/);
 });
+test('neighbour news feed renders only supplied agreements, newest first, and nothing when empty',async()=>{
+ const {NeighbourNews}=await import('../src/ui/council/CouncilParts.tsx');const {NeighbourNewsFeed}=await import('../src/ui/hearth/councilCards.tsx');
+ const news=[{time:9,kind:'marriage',with:1,text:'12: A marriage joins the houses'},{time:3,kind:'truce',with:2,text:'4: A truce is sworn'}],nameOf=t=>t===1?'Marsh Folk':'Ridge Clan';
+ for(const C of [NeighbourNews,NeighbourNewsFeed]){const html=renderToStaticMarkup(h(C,{news,nameOf}));assert.match(html,/Neighbour news/);assert.ok(html.indexOf('Marsh Folk')<html.indexOf('Ridge Clan'));assert.doesNotMatch(html,/12:|4:/);assert.equal(renderToStaticMarkup(h(C,{news:[],nameOf})),'');}
+});

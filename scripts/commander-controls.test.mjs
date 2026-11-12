@@ -32,3 +32,10 @@ test('compact sheet renders actual owner admission, radius, capacity and earned 
  try{const{CommanderControlSheet}=await import('../src/ui/CommanderControls.tsx');for(const raw of[readyPromotionSave,earnedSave]){const g=decodeGame(raw),member=g.state.commanders.roster.find(c=>c.team===0).memberIds[0],before=JSON.stringify(encodeGame(g)),model=commanderControlsModel(g,[member],[]),html=renderToStaticMarkup(React.createElement(CommanderControlSheet,{model,run(){assert.fail('Rendering cannot dispatch');}}));assert.match(html,/Command to manage/);assert.match(html,/Release selected/);assert.match(html,new RegExp(`${model.commanders[0].capacity} people`));assert.match(html,/timber/);if(model.commanders[0].promotionPoints)assert.match(html,/Earned commander promotion/);else assert.doesNotMatch(html,/Earned commander promotion/);assert.equal(JSON.stringify(encodeGame(g)),before);}
  }finally{hook.deregister();}
 });
+test('replacement overflow notice only appears when members or hulls were released',async()=>{
+ const {replacementOverflowNotice}=await import('../src/ui/CommanderControls.tsx');
+ assert.equal(replacementOverflowNotice({members:3,boats:0,kind:'army'},{members:3,boats:0}),'');
+ assert.equal(replacementOverflowNotice({members:3,boats:0,kind:'army'},undefined),'');
+ assert.match(replacementOverflowNotice({members:5,boats:0,kind:'army'},{members:3,boats:0}),/2 people returned to ordinary, unassigned duty/);
+ assert.match(replacementOverflowNotice({members:0,boats:2,kind:'fleet'},{members:0,boats:1}),/1 hull returned/);
+});

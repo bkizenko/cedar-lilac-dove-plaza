@@ -7,7 +7,11 @@ Updated 2026-11-12T14:12:51.582884+00:00
 
 **Verified acceptance:** 37/98 (37.76%), unchanged hearthwild-first-release-gates-v1. M0-10, M3-12 and M3-13 now have native, built and matching published evidence. This is acceptance coverage, not effort or a claim of full-game completion. Other partial work remains uncredited.
 
-- Latest verified LIVE: **8ae8cd7**, **2026-11-12T18-58-54-747Z-8ae8cd7**,8086/8101: iron ore/bloom/iron tool chain, paid draft carts with actual models and owner recovery, display hint/H lighting fixes. **69/69 scoped checks**, compiler/buildPASS. Original53 unchanged; frozen gates37/98. docs/metrics/iron-draft-display-release-2026-11-12.json.
+- Latest verified LIVE: **dfbc553**, **2026-11-12T19-24-19-343Z-dfbc553**,8086/8101: Port & fleet owner controls, real paid hull resume/launch/supply/save, Claude roof snow on Village/H with Classic unchanged. **24/24 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Campaign/performance and later method records remain open. docs/metrics/naval-snow-release-2026-11-12.json.
+
+- Previous verified LIVE: **b45407b**, **2026-11-12T19-04-31-509Z-b45407b**,8086/8101: owner Commander controls, explicit paid adoption on old saves, real membership and earned promotion; prior iron/cart/display included. **21/21 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Naval controls in progress, no campaign/performance credit. docs/metrics/commander-controls-release-2026-11-12.json.
+
+- Previous verified LIVE: **8ae8cd7**, **2026-11-12T18-58-54-747Z-8ae8cd7**,8086/8101: iron ore/bloom/iron tool chain, paid draft carts with actual models and owner recovery, display hint/H lighting fixes. **69/69 scoped checks**, compiler/buildPASS. Original53 unchanged; frozen gates37/98. docs/metrics/iron-draft-display-release-2026-11-12.json.
 
 - Previous verified LIVE: **0d4f855**, **2026-11-12T17-44-30-211Z-0d4f855**,8086/8101: fresh geology with unchanged old terrain, naval paid-work/typed-food/prize conservation, paid foreign-method successor lineage, whole pending society/influence/commander foundations. **98/98 scoped checks** (93native/shared+5built),tsc/buildPASS; this test count is separate from unchanged **37/98 release gates**. Original53 preserved. Player naval/commander controls, campaign and100-person performance remain open; slow private-browser qualification is not a performance pass. docs/metrics/world-economy-release-2026-11-12.json.
 

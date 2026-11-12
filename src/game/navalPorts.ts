@@ -51,6 +51,8 @@ export function portInfluenceReachMeters(g:Game,dock:Building,ships:number){
 export type NavalOutcome={accepted:boolean;reason:string;id?:number};
 const no=(reason:string):NavalOutcome=>({accepted:false,reason});
 const freeBuilder=(g:Game,u:Unit|undefined,team:number)=>!!u&&u.team===team&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.boat&&!u.emergency&&!u.recalled&&!hasTaskCommitment(u)&&!u.jobLock&&!u.carry;
+/** Same admission predicate used by paid port work; safe for owner read models. */
+export const navalBuilderAvailable=freeBuilder;
 export function portWorkIssue(g:Game,dockId:number,work:PortWork,builderId:number,team=0):string|null{
  const spec=PORT_WORK_SPECS[work],dock=dockOf(g,dockId),u=g.state.units.find(u=>u.id===builderId);
  if(!spec)return 'Unknown port work';if(!dock||dock.team!==team)return 'Choose one of your finished docks';
@@ -72,12 +74,16 @@ export function beginPortWork(g:Game,dockId:number,work:PortWork,builderId:numbe
  g.interruptMission(u);s.projects.push(p);(u as Unit&{portWorkId?:number}).portWorkId=p.id;u.order='hold';u.node=null;u.target=null;
  return {accepted:true,reason:`${spec.name} begun; materials set aside and the builder is walking to the dock`,id:p.id};
 }
-export function resumePortWork(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
+export function resumePortWorkIssue(g:Game,projectId:number,builderId:number,team=0):string|null{
  const p=st(g).naval?.projects.find(p=>p.id===projectId),u=g.state.units.find(u=>u.id===builderId);
- if(!p||p.phase!=='paused'||p.team!==team)return no('No paused port work of your society with that id');
- const dock=dockOf(g,p.dockId);if(!dock||dock.team!==team)return no('The original dock is no longer available');
- if(!freeBuilder(g,u,p.team))return no('The new builder must be a free, healthy adult on land');
- pauseNavalProject(g,p);g.interruptMission(u!);p.builderId=builderId;p.phase='building';(u as Unit&{portWorkId?:number}).portWorkId=p.id;u!.order='hold';u!.node=null;u!.target=null;return {accepted:true,reason:'Work resumes',id:p.id};
+ if(!p||p.phase!=='paused'||p.team!==team)return 'No paused port work of your society with that id';
+ const dock=dockOf(g,p.dockId);if(!dock||dock.team!==team)return 'The original dock is no longer available';
+ return freeBuilder(g,u,p.team)?null:'The new builder must be a free, healthy adult on land';
+}
+export function resumePortWork(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
+ const issue=resumePortWorkIssue(g,projectId,builderId,team);if(issue)return no(issue);
+ const p=st(g).naval!.projects.find(p=>p.id===projectId)!,u=g.state.units.find(u=>u.id===builderId)!;
+ pauseNavalProject(g,p);g.interruptMission(u);p.builderId=builderId;p.phase='building';(u as Unit&{portWorkId?:number}).portWorkId=p.id;u.order='hold';u.node=null;u.target=null;return {accepted:true,reason:'Work resumes',id:p.id};
 }
 /** Pausing keeps the same paid project/progress and releases only its matching actor. */
 export function pauseNavalProject(g:Game,p:PortProject|VesselCommission){
@@ -167,19 +173,25 @@ export function tickBlockades(g:Game,dt:number){
 // -- naval supply --------------------------------------------------------------------------------------------------------
 export const stowCapacity=(g:Game,boatId:number)=>{const b=g.state.boats?.find(b=>b.id===boatId);return b?{food:b.capacity*R.foodCapacityPerSeat,missiles:R.missileCapacity}:{food:0,missiles:0};};
 /** Load rations and missiles from the society's real stores at its own harbour. Everything loaded leaves the stores. */
-export function resupplyVessel(g:Game,boatId:number,want:{food?:number;missileLoads?:number}={},team=0):NavalOutcome{
- if(want.food!==undefined&&(!Number.isFinite(want.food)||want.food<0)||want.missileLoads!==undefined&&(!Number.isFinite(want.missileLoads)||want.missileLoads<0))return no('Supply quantities must be finite and nonnegative');
+export function vesselSupplyQuote(g:Game,boatId:number,want:{food?:number;missileLoads?:number}={},team=0){
+ const empty=(issue:string)=>({issue,food:0,loads:0,missiles:0,wood:0,dockId:undefined as number|undefined});
+ if(want.food!==undefined&&(!Number.isFinite(want.food)||want.food<0)||want.missileLoads!==undefined&&(!Number.isFinite(want.missileLoads)||want.missileLoads<0))return empty('Supply quantities must be finite and nonnegative');
  const v=vesselOf(g,boatId),b=g.state.boats?.find(b=>b.id===boatId&&b.hp>0);
- if(!v||!b||v.team!==team||b.team!==team)return no('Not one of your commissioned hulls');
+ if(!v||!b||v.team!==team||b.team!==team)return empty('Not one of your commissioned hulls');
  const dock=g.state.buildings.find(d=>d.team===team&&d.type==='dock'&&d.hp>0&&g.finished(d)&&dist(d,b)<=R.harbourMeters);
- if(!dock)return no('A hull is resupplied only while moored at one of your finished docks');
- if(dockBlockaded(g,dock))return no('The harbour is blockaded; nothing can be loaded');
+ if(!dock)return empty('A hull is resupplied only while moored at one of your finished docks');
+ if(dockBlockaded(g,dock))return empty('The harbour is blockaded; nothing can be loaded');
  const t=g.tribe(team),cap=stowCapacity(g,boatId);
  const food=Math.max(0,Math.min(want.food??cap.food-v.stores.food,cap.food-v.stores.food,t.food-1)),loads=Math.max(0,Math.min(want.missileLoads??Math.ceil((cap.missiles-v.stores.missiles)/R.missilesPerWood),Math.ceil((cap.missiles-v.stores.missiles)/R.missilesPerWood),t.wood));
- if(!(food>0)&&!(loads>0))return no('Nothing to load, or the stores cannot spare it');
+ if(!(food>0)&&!(loads>0))return empty('Nothing to load, or the stores cannot spare it');
+ return {issue:null,food,loads,missiles:loads*R.missilesPerWood,wood:loads*R.woodPerMissileLoad,dockId:dock.id};
+}
+export function resupplyVessel(g:Game,boatId:number,want:{food?:number;missileLoads?:number}={},team=0):NavalOutcome{
+ const quote=vesselSupplyQuote(g,boatId,want,team);if(quote.issue)return no(quote.issue);
+ const v=vesselOf(g,boatId)!,t=g.tribe(team),cap=stowCapacity(g,boatId),{food,loads}=quote;
  const lots=foodInventory(t),aboardLots=v.stores.foodLots??{provisions:v.stores.food};let left=food;
  for(const kind of FOOD_KINDS){const amount=Math.min(left,lots[kind]);if(amount>0){takeFoodLot(g,team,kind,amount);aboardLots[kind]=(aboardLots[kind]??0)+amount;left-=amount;}}
- v.stores.foodLots=aboardLots;t.wood-=loads*R.woodPerMissileLoad;v.stores.food=Math.min(cap.food,v.stores.food+food);v.stores.missiles=Math.min(cap.missiles,v.stores.missiles+loads*R.missilesPerWood);v.lastDockId=dock.id;v.atSeaSeconds=0;
+ v.stores.foodLots=aboardLots;t.wood-=quote.wood;v.stores.food=Math.min(cap.food,v.stores.food+food);v.stores.missiles=Math.min(cap.missiles,v.stores.missiles+quote.missiles);v.lastDockId=quote.dockId;v.atSeaSeconds=0;
  return {accepted:true,reason:`Loaded ${Math.round(food)} food and ${loads*R.missilesPerWood} missiles from the stores`};
 }
 /** Speed multiplier a supply-starved hull suffers; 1 otherwise. Read by boat movement. */

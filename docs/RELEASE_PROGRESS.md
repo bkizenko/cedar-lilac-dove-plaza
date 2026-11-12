@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 8ae8cd7c6d85b31445c573bb89708e8f57d7e0f6 published as 2026-11-12T18-58-54-747Z-8ae8cd7 on8086/8101.69/69 scoped checks (63native/shared+6built), compiler/buildPASS: paid ore→bloom→iron→owned used/repaired tool; actual same-asset draft cart hitch/interruption/haul/detach/recovery and rendering; display hint and H-only lighting. Original53 preserved. Separate frozen acceptance37/98 unchanged; commander/naval controls, broader metallurgy, campaign/performance remain open. Partial/unverified gates earn zero.
+Verified baseline: dfbc553efc12f2e3a17dc2745a49b8b48cb8c7bd published as 2026-11-12T19-24-19-343Z-dfbc553 on8086/8101.24/24 scoped checks (19native/shared+5built), compiler/buildPASS: actual contextual port/fleet owner controls, same paid hull resume→physical launch,30rations/24missiles loaded for real4logs, strict durable restore, original53 pure read; real linked snow shaders for Village/H with Classic clear. Earlier iron/draft/commander retained; original53 unchanged. Frozen acceptance37/98 unchanged; campaign/performance and method records remain open. Partial/unverified gates earn zero.
 
 ## Milestone counts
 

@@ -1,0 +1,117 @@
+{
+  "release": "2026-11-12T19-24-19-343Z-dfbc553",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T19-24-19-343Z-dfbc553",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T19-04-31-509Z-b45407b",
+  "commit": "dfbc553efc12f2e3a17dc2745a49b8b48cb8c7bd",
+  "retained": {
+    "linked": 1392,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 24,
+    "total": 24,
+    "nativeAndShared": 19,
+    "built": 5,
+    "groups": {
+      "navalOwnerAndRegression": 17,
+      "roofSnowNative": 2
+    },
+    "navalBuilt": {
+      "passed": 4,
+      "total": 4,
+      "scope": "Actual dock controls, genuine paid Resume, ordinary compiled Game.step launch, actual finite harbour supply and durable restore. Optional original53 pure read. No authored goods/XP, teleport, campaign or full-gate credit.",
+      "launch": {
+        "projectId": 5302,
+        "boatId": 5318,
+        "paid": {
+          "wood": 46,
+          "stone": 5,
+          "cordage": 4,
+          "copper": 0
+        },
+        "time": 411.69999999999044,
+        "noSecondCharge": true
+      },
+      "supply": {
+        "boatId": 5318,
+        "food": 30,
+        "wood": 4,
+        "missiles": 24,
+        "durable": true
+      },
+      "legacy": {
+        "population": 53,
+        "pureQuery": true,
+        "contextualDockOpened": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    },
+    "snowBuilt": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Actual saved village and linked WebGL snow uniforms under visual-only season probes. No clock, stock, population or performance claim.",
+      "actualRenderer": [
+        {
+          "style": "village",
+          "cover": 1,
+          "linkedSnowPrograms": 4,
+          "liveSnowUniforms": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "allLinked": true
+        },
+        {
+          "style": "optionH",
+          "cover": 1,
+          "linkedSnowPrograms": 4,
+          "liveSnowUniforms": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "allLinked": true
+        },
+        {
+          "style": "current",
+          "cover": 0,
+          "linkedSnowPrograms": 4,
+          "liveSnowUniforms": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "allLinked": true
+        }
+      ],
+      "errors": []
+    },
+    "notes": [
+      "Native button label and built nested-label selectors corrected in harness only; no extra passing case counted for retries.",
+      "Renderer probe changes visual adapter inputs only, no simulation clock/body/goods edits."
+    ]
+  },
+  "compiler": "PASS",
+  "productionBuild": "PASS",
+  "frozenAcceptance": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "original53SaveSHA256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "remaining": [
+    "No naval campaign or 100-resident performance credit",
+    "Later Claude commander replacement capacity resolution is not in this frozen artifact",
+    "Written method records source in progress, not live"
+  ]
+}
