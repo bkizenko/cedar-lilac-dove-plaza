@@ -111,7 +111,7 @@ export function HearthCaptiveCard({engine}:{engine:Engine}){
  return <CaptiveList captives={list} send={c=>void fb.send(c)} feedback={fb.items}/>;
 }
 export function CaptiveList({captives,send,feedback}:{captives:Captive[];send:(c:{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number})=>void;feedback:Parameters<typeof FeedbackList>[0]['items']}){
- if(!captives.length)return null;
+ if(!captives.length)return feedback.length?<FeedbackList items={feedback}/>:null;
  const teams=[...new Map(captives.map(c=>[c.fromTeam,c.fromName])).entries()];
  return <section className="hw-card hw-captives" aria-label="Captives">
   <div className="hw-card-head"><h3>Held captive</h3><span className="hw-chip hw-chip-soft"><Users size={16}/>{captives.length}</span></div>
