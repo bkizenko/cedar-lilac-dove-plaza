@@ -58,6 +58,7 @@ LOOP: pull origin/main → next item → build → focused test + tsc → merge 
 WORK QUEUE — do in order, one at a time. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean. Do not re-do items marked done/live.
 
 TONIGHT
+B1 (PM bug 2026-11-11 21:40 ET, player-facing saves, do first). scripts/play-flow.test.mjs regressed at T1 integration d657e26: Engine.beginLifecycle calls this.autosave.invalidate() (engine.ts:63, from Worker lifecycle 27dafd9) and startTestSession is now async, so 'a failed durable save never creates a disposable copy or reports test entry success' fails (pass at de24669). Confirm a failed durable save still refuses test entry in the built game, then fix code or fixture. Done: play-flow green.
 T1. Integration: review and merge PR #1 (https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1, head integration/2026-11-11) and LAND the whole agents/claude-societies branch after Claude finishes the curd UI conflict and the fixed-camera world.ts review. Normal merge, no partial hunks. Restore green tests (canal-breach fix is Grok's). Done: those branches are on main without dropping naming, storms, conquest, World W7, or Worker/curd behavior.
 T2. WQ-14 Societies primitives in types/persistence/production/husbandry/workCommitments: do not wipe itemCargo on trade carriers (or call dropTradeCargoItems); moveArmorAsset; weapon body-bundle holder; transferable farm-tool record with condition; Livestock.ledBy honoured by husbandry/pens; Unit.cargoRecoveryId + COMMITTED_TASKS. Done: armor/weapons/tools/animals can be traded without ghost inventory.
 T3. C6: real wade/swim-to-shore after hull loss (steer/deep water), not a 120s release. Coastal trade must not pause forever. Done: stranded crew reach a connected shore or another hull on a native water test.
@@ -170,6 +171,7 @@ LOOP: pull origin/main → next item → build → focused test + tsc → merge 
 WORK QUEUE — do in order. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean.
 
 TONIGHT
+B1 (PM 2026-11-11 21:40 ET). Reconcile Codex's World handoff work/shipping-waiting-hooks-2026-11-11 9e4a145 with agents/grok-world: normal merge conflicts in src/game/{engine,persistence,sim}.ts, src/scene/ruins.ts, src/ui/{Hud,WorldSetup}.tsx; keep both behaviours, then land on main. Done: draft wiring is live or explicitly superseded on the board.
 T1. Land World W7 (agents/grok-world c0b54fa, already in PR #1) and fix the merge-induced canal-breach failure (scripts/canal-breach.test.mjs on integration cbffbc8: breach.length actual 8, expected 9). Done: canal-breach 3/3 on the landed tree; a finished channel can breach, an unfinished one cannot.
 T2. WQ-1..3 validators in persistence.ts: optional worldOptions.riverProfileVersion===2, tideVersion===1|2, landformLabelVersion===2; absent = historic. Done: old saves load; flagged worlds persist.
 T3. Canal/aqueduct commission UI: planAqueductWorks/planCanalWorks, same plan for preview and commit; validCanalWorks in persistence (INC-CANALS, GW-06 jobs). Done: the player can commit a line as ordinary digs in the built game.
