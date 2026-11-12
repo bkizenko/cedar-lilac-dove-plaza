@@ -44,7 +44,7 @@ test('native queued find captures an existing generated goat, physically leads i
    if(u.tamingWork){seenCapture=true;animalId=u.tamingWork.animal;assert.ok(sourceIds.includes(animalId));
     if(!reloaded&&u.tamingWork.progress>0&&u.tamingWork.progress<HERD.tamingSeconds){
      const paid=structuredClone(u.tamingWork),pack=structuredClone(u.expedition),stock=g.tribe(0).food;g=decodeGame(encodeGame(g));u=g.state.units.find(p=>p.id===workerId);pen=g.state.buildings.find(b=>b.id===penId);
-     assert.deepEqual(u.tamingWork,paid);assert.deepEqual(u.expedition,pack);assert.equal(g.tribe(0).food,stock);assert.equal(terrain(g),hash);reloaded=true;
+     assert.deepEqual(u.tamingWork,paid);assert.deepEqual(u.expedition,pack);assert.equal(g.tribe(0).food,stock);assert.equal(terrain(g),hash);assert.equal(g.state.paused,true);g.state.paused=false;reloaded=true;
     }
    }
   }
