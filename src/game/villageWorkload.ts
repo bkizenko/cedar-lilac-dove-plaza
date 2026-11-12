@@ -105,9 +105,16 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  for(const u of eligible){const w=u.clayWork;if(!w||w.phase==='returning')continue;const bank=g.state.clay?.deposits.find(d=>d.id===w.depositId),missing=!bank||bank.remaining<POTTERY_RULES.clayBatch;
   add({id:`clay:${u.id}`,label:'Dig and deliver surveyed clay',category:'Materials',personSeconds:Math.max(0,POTTERY_RULES.digSeconds-w.progress)+(bank?travel(u,bank.x,bank.z)+trip(bank.x,bank.z,u):0),status:w.paused?'paused':missing?'blocked':'active',actorIds:w.paused?[]:[u.id],priority:500,blocker:w.paused?'Clay collection paused':missing?'Surveyed bank is exhausted or missing':null,units:POTTERY_RULES.clayBatch},true);
  }
+ // Animal return is one parent husbandry job, including its existing delivery leg.
+ for(const u of eligible){const w=u.packPastureOrder;if(!w||!u.packAnimal)continue;
+  const pen=g.state.buildings.find(b=>b.id===w.pen&&b.team===team&&b.type==='pen'&&g.finished(b));
+  const unloading=w.phase==='unloading',queued=w.phase==='queued';
+  const route=pen?travel(u,pen.x,pen.z):0,delivery=unloading?trip(u.x,u.z,u):0;
+  add({id:`pack-pasture:${u.id}`,label:unloading?'Unload supplies and return working animal':'Return working animal to pasture',category:'Husbandry',personSeconds:route+delivery,status:queued?'queued':pen?'active':'blocked',actorIds:queued?[]:[u.id],priority:700,blocker:w.reason||(!pen?'Original pasture unavailable':null)},true);
+ }
  // A loaded ordinary, production item and water cargo share one actual return trip.
  for(const u of eligible){const w=u.waterWork,loadedWater=w?.liters??0;if(u.carry>0||loadedWater>0||itemLoad(u)>0){if(u.carryType==='food'&&!u.rawHuntMeat){const kind=u.carryFood||'provisions';if(team!==0||kind!=='grain'&&kind!=='fish')incomingFood+=u.carry*(FOOD_NOURISHMENT[kind]??1);}if(u.carryType==='wood')incomingWood+=u.carry;incomingWater+=loadedWater;
-  if(!productionTravellers.has(u.id)&&(!u.fibreWork||u.fibreWork.phase==='returning'))add({id:`delivery:${u.id}`,label:'Carry supplies to storage',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
+  if(!productionTravellers.has(u.id)&&(!u.packPastureOrder||u.packPastureOrder.phase==='queued')&&(!u.fibreWork||u.fibreWork.phase==='returning'))add({id:`delivery:${u.id}`,label:'Carry supplies to storage',category:'Hauling',personSeconds:trip(u.x,u.z,u),status:'active',actorIds:[u.id],priority:1000,blocker:/unreachable|no reachable|blocked/i.test(u.workReason||'')?u.workReason!:null});}
   if(w&&w.phase!=='returning'&&w.liters===0){add({id:`water:${u.id}`,label:'Collect drinking water',category:'Water',personSeconds:Math.max(0,SURVIVAL_RULES.collectSeconds*waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters)/SURVIVAL_RULES.waterTripLiters-w.progressSeconds)+travel(u,w.bankX,w.bankZ)+trip(w.bankX,w.bankZ,u),status:w.paused?'paused':claimed.has(u.id)?'queued':'active',actorIds:w.paused?[]:[u.id],priority:1000,blocker:w.paused?'Water assignment paused':null});if(!w.paused)incomingWater+=waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters);}
  }
  // Construction belongs to the site once, regardless of two builders, a direct
