@@ -268,7 +268,7 @@ export function tickSurvival(g:Game,dt:number){
  const activeFires=new Set<number>();burningFires.set(g,activeFires);
  const litHearths=new Set<number>();heatingHearths.set(g,litHearths);
  const review=g.state.time>=(autoCheck.get(g)??0);
- const cooking=new Set((g.state.production?.projects||[]).filter(p=>p.phase==='working'&&PRODUCTION_RECIPES[p.recipe].wood>0).map(p=>p.workplace));
+ const cooking=new Set((g.state.production?.projects||[]).filter(p=>p.phase==='working'&&!p.charcoal&&PRODUCTION_RECIPES[p.recipe].wood>0).map(p=>p.workplace));
  const hearths=g.state.buildings.filter(b=>b.type==='hearth'&&g.finished(b));
  const reconcileLost=()=>{for(const u of g.state.units)if(u.hp<=0&&u.waterWork){
   const stock=g.tribe(u.team)?.survival;if(stock)stock.waterLostLiters+=u.waterWork.liters;
