@@ -32,6 +32,7 @@ import {wildPlantsEnabled} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
+import {carvedDaylightGrade} from './carvedPalette';
 import {CARVED_TYPES} from './buildingStyleMap';
 import {fabricContext} from '@/game/buildingFabric';
 import {hearthHeating} from '@/game/survivalNeeds';
@@ -1395,6 +1396,8 @@ export class WorldView {
                 : "#fff4d2",
     );
     sunCol.lerp(_c.set("#ffe0aa"),art.warmth*.75);
+    // Option H only (opt-in renderStyle): golden-hour daylight grade (CHAT-G2). Winter, storms and night are exempt inside carvedDaylightGrade/this gate; default 'current' look is untouched.
+    if(this.renderStyle==='carved'&&!night){const gr=carvedDaylightGrade(day,{winter:sn.snow>0.4||wx==='frost',storm:wx==='storm'?1:wet?.5:0});sunCol.lerp(_c.set(gr.sun),.55);}
     this.hemi.color.set(
       night
         ? "#c4d0e8"
