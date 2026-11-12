@@ -1,3 +1,4 @@
+import {recordTradedTeachingDelivery} from './tradedTeaching';
 import type {Game} from './sim';
 import {capturedMethodSourcesForPerson,type CapturedMethodSource} from './capturedKnowledge';
 import{handedOver}from'./communityHandoverValidation';
@@ -44,6 +45,7 @@ export function recordProductionPractice(g:Game,project:ProductionProject,_carri
  history.lastAt=g.state.time;if(useful>0){history.batches++;history.usefulOutputs+=useful;history.lastSuccessfulAt=g.state.time;}else{history.failedBatches++;history.lastFailedAt=g.state.time;}
  const makers=(p.practiceWorkers||[]).filter(w=>w.work+1e-8>=r.workSeconds*PRODUCTION_PRACTICE_RULES.minimumContributionFraction);
  for(const maker of makers){if(!history.makers.includes(maker.id)&&history.makers.length<16)history.makers.push(maker.id);const u=g.state.units.find(u=>u.id===maker.id&&u.team===p.team&&freeWorker(g,u));if(!u||!useful)continue;u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.successfulBatches++;}
+ recordTradedTeachingDelivery(g,p,useful,makers.map(m=>m.id));
  for(const u of g.state.units){const w=u.productionApprentice;if(!w||w.projectId!==p.id)continue;const teacher=g.state.units.find(person=>person.id===w.teacherId&&person.team===p.team&&freeWorker(g,person)),qualified=useful>0&&freeWorker(g,u)&&u.team===p.team&&!!teacher&&w.phase!=='paused'&&makers.some(m=>m.id===w.teacherId)&&w.observedSeconds+1e-8>=observationRequired(p.recipe);
   if(qualified){u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.taughtBatches++;skill.observedSeconds+=w.observedSeconds;skill.lastTaughtAt=g.state.time;skill.lastTeacherId=w.teacherId;retainMethodSources(skill,capturedMethodSourcesForPerson(g.state,teacher!,p.recipe).filter(source=>source.learnedAt<=w.started),g.state.time);}
   finishLesson(g,u,qualified?`Learned ${r.name.toLowerCase()} from actual observed work and delivered output`:'The batch did not complete a demonstrated lesson',qualified);
