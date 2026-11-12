@@ -70,3 +70,17 @@ test('cold idle residents walk to a fuelled hearth and release the visit when th
  assert.equal(hearthHeating(g,hearth.id),false);
  assert.equal(fireWarmingAI(g,u,.1),false);
 });
+test('a finished well is a drinking-water source when no river bank is in reach',()=>{
+ const g=fixture();g.exploredAt=()=>true;g.world.rivers=[];g.world.features=[];g.world.waterBodies=[];
+ g.world.heights.fill(4);
+ const u=g.state.units.find(p=>p.team===0&&p.type==='worker');
+ Object.assign(u,{x:0,z:0,y:4,order:'idle',jobLock:false,selected:true});
+ g.state.buildings=g.state.buildings.filter(b=>b.type==='townhall');
+ const well=g.makeBld('well',6,0,0);well.build=1;g.state.buildings.push(well);
+ g.rebuildWalk();
+ const denied=(()=>{const buildings=g.state.buildings;g.state.buildings=buildings.filter(b=>b!==well);g.rebuildWalk();const r=beginWaterCollection(g);g.state.buildings=buildings;g.rebuildWalk();return r;})();
+ assert.equal(denied.accepted,false);
+ const result=beginWaterCollection(g);assert.equal(result.accepted,true,result.reason);
+ assert.ok(Math.hypot(u.waterWork.sourceX-well.x,u.waterWork.sourceZ-well.z)<.6);
+ assert.ok(Math.hypot(u.waterWork.bankX-well.x,u.waterWork.bankZ-well.z)>1);
+});
