@@ -1,0 +1,19 @@
+{
+  "scope": "Remaining M2-07 diagnostic: unseen second town changes player frontier appraisal for a known society",
+  "newHallEverObserved": false,
+  "before": {
+    "guards": 0,
+    "needed": 3,
+    "strength": 0.25,
+    "radius": 28,
+    "nearRival": 100
+  },
+  "after": {
+    "guards": 0,
+    "needed": 3,
+    "strength": 0.25,
+    "radius": 28,
+    "nearRival": 55
+  },
+  "leak": true
+}

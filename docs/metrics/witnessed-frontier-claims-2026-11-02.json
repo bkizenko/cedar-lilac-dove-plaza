@@ -1,0 +1,85 @@
+{
+  "runtimeBaseline": "920952a",
+  "scope": "Focused witnessed frontier claims; not full M2-07 qualification",
+  "results": [
+    {
+      "scenario": "paid outpost / actual observer / stale memory / saved return / actual empty-site revisit",
+      "paidLogs": 70,
+      "builderWalked": 106.68024514284276,
+      "observerWalked": 272.75832773220725,
+      "lastKnownBeforeRevisit": {
+        "version": 1,
+        "observer": 1,
+        "owner": 0,
+        "postId": 3984,
+        "x": 100,
+        "z": 0,
+        "observedAt": 62.60000000000062,
+        "witnessId": 3978,
+        "active": true,
+        "value": 0.38599999999999995,
+        "woodland": false,
+        "mineralRich": false
+      },
+      "afterRevisit": {
+        "version": 1,
+        "observer": 1,
+        "owner": 0,
+        "postId": 3984,
+        "x": 100,
+        "z": 0,
+        "observedAt": 103.19999999999841,
+        "witnessId": 3978,
+        "active": false,
+        "value": 0.38599999999999995,
+        "woodland": false,
+        "mineralRich": false
+      }
+    },
+    {
+      "scenario": "unseen destroyed and replacement post",
+      "oldId": 3984,
+      "replacementId": 3985,
+      "memories": [
+        {
+          "version": 1,
+          "observer": 1,
+          "owner": 0,
+          "postId": 3984,
+          "x": 100,
+          "z": 0,
+          "observedAt": 88.69999999999924,
+          "witnessId": 3978,
+          "active": false,
+          "value": 0.38599999999999995,
+          "woodland": false,
+          "mineralRich": false
+        },
+        {
+          "version": 1,
+          "observer": 1,
+          "owner": 0,
+          "postId": 3985,
+          "x": 100,
+          "z": 0,
+          "observedAt": 88.69999999999924,
+          "witnessId": 3978,
+          "active": true,
+          "value": 0.38599999999999995,
+          "woodland": false,
+          "mineralRich": false
+        }
+      ]
+    },
+    {
+      "scenario": "strict validation",
+      "rejectedMutations": 9,
+      "legacySaveAccepted": true,
+      "removedWitnessAndPostAccepted": true
+    },
+    {
+      "scenario": "dead body is not an observer",
+      "tension": 0
+    }
+  ]
+}

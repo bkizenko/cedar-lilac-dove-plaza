@@ -27,8 +27,8 @@ test('Hunt with weapons cancels a raid and completes real hunting, butchery and 
  const prey={id:g.id(),species:'goat',x:4,z:38,y:4,hp:2,maxHp:2,facing:0,vx:0,vz:0,wanderT:20,fly:0,scale:1};g.state.wildlife=[prey];g.workBoard.reset();g.assignJob('hunt');assert.equal(u.huntOnly,true);assert.equal(u.pillage,-1);assert.equal(u.returnAfterCombat,undefined);assert.equal(u.node,prey);assert.equal(u.demobilizing,undefined);
  drive(g,160,()=>(g.tribe(0).items?.rawMeat||0)>0);assert.equal(prey.hp,0);const delivered=g.tribe(0).items?.rawMeat||0;assert.ok(delivered>0,JSON.stringify({x:u.x,z:u.z,order:u.order,reason:u.workReason,carry:u.carry,node:u.node?.id}));assert.ok(delivered<=16);assert.equal(g.state.simulationEvents?.totals['food_received:0:food']||0,0,'uncooked catch remains raw');assert.equal(u.militia,true);assert.equal(g.tribe(0).bows,0);assert.equal(g.musicMood(),'peace');g.standDown();drive(g,80,()=>!u.militia);assert.equal(g.tribe(0).bows,1);
 });
-test('music distinguishes an outbound attack, an actual defense at home, and a completed return',()=>{
- const {g,u}=fixture();assert.equal(g.musicMood(),'peace');assert.equal(g.callToArms(),1);const hall=g.makeBld('townhall',100,38,1);g.state.buildings.push(hall);g.rebuildWalk();g.issuePillage(hall);assert.equal(g.musicMood(),'pillage');const foe=g.spawnUnit('spearman',8,38,3);foe.order='attack';foe.target=u;assert.equal(g.musicMood(),'raid');foe.hp=0;g.standDown();drive(g,100,()=>!u.militia);assert.equal(g.musicMood(),'peace');
+test('music waits for actual weapon contact, distinguishes defense at home, and ends after a completed return',()=>{
+ const {g,u}=fixture();assert.equal(g.musicMood(),'peace');assert.equal(g.callToArms(),1);const hall=g.makeBld('townhall',100,38,1);g.state.buildings.push(hall);g.rebuildWalk();g.issuePillage(hall);assert.equal(g.musicMood(),'peace');const foe=g.spawnUnit('spearman',u.x+1,u.z,3);foe.order='attack';foe.target=u;assert.equal(g.musicMood(),'raid');foe.hp=0;g.standDown();drive(g,100,()=>!u.militia);assert.equal(g.musicMood(),'peace');
 });
 
 test('explicit armed hunting keeps a previously borrowed caravan weapon instead of being recalled every frame',()=>{

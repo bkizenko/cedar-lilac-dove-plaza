@@ -58,6 +58,7 @@ export function dispatchRivalOperation(g:Game,team:number,reserve:number){
  const result=dispatchPairRaid(g,team,reserve,plan.target.team);if(!result.accepted)return false;
  // Relations change only when the actual force reaches hostile territory/contact.
  t.lastRaid=360+Math.random()*180;t.recoveryUntil=g.state.time+t.lastRaid;
- if(g.started&&plan.fighters.some(u=>g.visibleAt(u.x,u.z)))g.banner(`${t.name} is sending an armed raiding party`,3);
+ // Dispatch is not contact with the player. The force may raid another
+ // society, turn back, or never reach the village; movement alone emits no alarm.
  return true;
 }

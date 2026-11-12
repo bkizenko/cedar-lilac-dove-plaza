@@ -18,7 +18,7 @@ import {projectedTreeInBox} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
 import {linearStructure,joinedConstructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
-import {dragPlot,plotDragIntent,scalablePlot,type PlotSize} from './plots';
+import {dragPlot,plotDragIntent,scalablePlot,maximumPlotAxisMultiple,fieldSeedIssue,type PlotSize} from './plots';
 import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
@@ -195,9 +195,10 @@ export class Engine {
   bridgeSpan: BridgeSpan|undefined;
   plotWidth=1;plotDepth=1;
   plotPreviewKey="";
+  private nextFieldPreviewAt=0;
   resizePlot(delta:number,depth=false){
-    if(depth)this.plotDepth=Math.max(1,Math.min(3,this.plotDepth+delta));else this.plotWidth=Math.max(1,Math.min(3,this.plotWidth+delta));
-    this.updateGhost();this.game.banner(`Plot ${this.plotWidth} × ${this.plotDepth} · [ ] width · Shift+[ ] depth`,3);this.pushHud();
+    if(depth)this.plotDepth=Math.max(1,Math.min(maximumPlotAxisMultiple(this.game.state.placing??"farm"),this.plotDepth+delta));else this.plotWidth=Math.max(1,Math.min(maximumPlotAxisMultiple(this.game.state.placing??"farm"),this.plotWidth+delta));
+    this.updateGhost(true);this.game.banner(`Plot ${this.plotWidth} × ${this.plotDepth} · [ ] width · Shift+[ ] depth`,3);this.pushHud();
   }
   private importSequence = 0;
   disposed = false;
@@ -629,7 +630,7 @@ export class Engine {
       return;
     }
     if (this.game.state.placing) {
-      this.updateGhost();
+      this.updateGhost(true);
       if(linearStructure(this.game.state.placing)&&this.plotStart){
         placeConstructionLine(this.game,this.game.state.placing,this.plotStart,g);
         this.pushHud();return;
@@ -703,7 +704,10 @@ export class Engine {
     }
   }
 
-  private updateGhost() {
+  private updateGhost(force=false) {
+    // A 131m field has 4,489 full-footprint survey points. Preview at most 5Hz;
+    // clicks always refresh the exact pointer and validate again in placeBuilding.
+    if(this.game.state.placing==='farm'){const now=performance.now();if(!force&&now<this.nextFieldPreviewAt)return;this.nextFieldPreviewAt=now+200;}
     this.view.setLinePreview([]);
     const type = this.game.state.placing;
     if (!type) {
@@ -752,8 +756,8 @@ export class Engine {
       const snap=this.gateFacingExplicit?snapGate(this.game.state.buildings,{x,z},this.gateFacing):suggestGateSnap(this.game.state.buildings,{x,z},this.gateFacing);
       if(snap){x=snap.x;z=snap.z;this.gateFacing=snap.facing;}
     }
-    const okPlace = this.game.placementValid(type, x, z, 0,this.plotSize,this.bridgeSpan);
-    const issue = okPlace ? null : this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
+    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
+    const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
@@ -779,6 +783,7 @@ export class Engine {
   pauseHome(id:number,paused:boolean){const accepted=setHousingPaused(this.game,id,paused);this.pushHud();return accepted;}
 
   setPlacing(type: BldType | null) {
+    this.nextFieldPreviewAt=0;
     this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
     this.loggingMode = false;
