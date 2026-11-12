@@ -8,7 +8,7 @@ import {FOOD_PER_PERSON_SECOND,foodDemand} from './settlement';
 import {predisposition} from './people';
 import {foodInventory,readyFoodStock,FOOD_NOURISHMENT,takeFoodLot} from './pantry';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
-import {dropFoodUnits} from './stolenCargo';
+import {dropFoodUnits,cargoOwner} from './stolenCargo';
 
 export const PACK_JOURNEY_CARE_RULES={maximumFoodUnits:100,maximumWaterLiters:20,homeMealSeconds:90,homeWaterSeconds:180,homeWaterRate:.008,tolerance:1e-6} as const;
 export const PACK_JOURNEY_FEED_KINDS=['grain','pulses','tubers','berries','provisions'] as const;
@@ -90,7 +90,7 @@ export function returnPackJourneyCare(g:Game,u:Unit){
  * Water has the same explicit wilderness-loss accounting as scouting packs. */
 export function reconcilePackJourneyCare(g:Game,u:Unit){
  const p=u.packJourneySupplies;if(!p)return;
- if(u.hp<=0){for(const kind of PACK_JOURNEY_FEED_KINDS){const n=p.feed[kind]||0;if(n<=0)continue;const moved=dropFoodUnits(g,u,kind,n,p.origin.team);p.feed[kind]=Math.max(0,n-moved);p.feedDropped=(p.feedDropped||0)+moved;}if(p.waterLiters>0){const s=g.tribe(u.team).survival;if(s)s.waterLostLiters+=p.waterLiters;p.waterLost=(p.waterLost||0)+p.waterLiters;p.waterLiters=0;}if(feedHeld(p)<1e-10)delete u.packJourneySupplies;return;}
+ if(u.hp<=0){for(const kind of PACK_JOURNEY_FEED_KINDS){const n=p.feed[kind]||0;if(n<=0)continue;const moved=dropFoodUnits(g,u,kind,n,cargoOwner(g,u));p.feed[kind]=Math.max(0,n-moved);p.feedDropped=(p.feedDropped||0)+moved;}if(p.waterLiters>0){const s=g.tribe(u.team).survival;if(s)s.waterLostLiters+=p.waterLiters;p.waterLost=(p.waterLost||0)+p.waterLiters;p.waterLiters=0;}if(feedHeld(p)<1e-10)delete u.packJourneySupplies;return;}
  if(!u.expedition&&!u.scout&&!u.visit&&!u.trade&&!u.envoy&&!u.boat)returnPackJourneyCare(g,u);
 }
 
