@@ -16,4 +16,4 @@ export const METHOD_RECORD_METHODS={
 export type MethodRecipe=keyof typeof METHOD_RECORD_METHODS;
 export function isMethodRecipe(value:unknown):value is MethodRecipe{return typeof value==='string'&&Object.hasOwn(METHOD_RECORD_METHODS,value);}
 export const methodRecordTitle=(recipe:MethodRecipe)=>METHOD_RECORD_METHODS[recipe].title;
-export const METHOD_RECORD_RULES={version:1,maximumRecords:64,maximumStudies:16,qualifiedBatches:3,clay:1,wood:1,authorSeconds:60,studySeconds:45,studyWood:1,loadUnits:1,recipe:'twistCordage'} as const;
+export const METHOD_RECORD_RULES={version:1,maximumRecords:64,maximumStudies:16,maximumAcquisitions:8,qualifiedBatches:3,clay:1,wood:1,authorSeconds:60,studySeconds:45,studyWood:1,loadUnits:1,recipe:'twistCordage'} as const;

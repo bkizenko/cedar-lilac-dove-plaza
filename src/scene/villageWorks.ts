@@ -39,7 +39,11 @@ export const workshop:Generator=(ctx,r)=>{
       const sx=-W*.2;box(parts,'stoneDark',[1.5*k,.85*k,1.1*k],[sx,.1,zb+.85],2);box(parts,'stone',[1.0*k,.12,.8*k],[sx,.95*k,zb+.85],1);
       chimney(parts,sx,zb+.55,.95*k,h+rise*.9,.8*k,'stone');
       parts.push(part('pyramid','stoneDark',[1.5*k,.6,1.1*k],[sx,.95*k+.1,zb+.85],1));
-      if(lit)box(parts,'fire',[.55*k,.14,.45*k],[sx,.95*k,zb+.95],0);
+      if(lit){box(parts,'fire',[.55*k,.14,.45*k],[sx,.95*k,zb+.95],0);
+        // working-forge stage (lit only): tall ember cones in the pan, a glowing stoke mouth on the hearth face, a hot bloom on the anvil
+        parts.push(part('cone','fire',[.42*k,.5*k,.34*k],[sx,.98*k,zb+.95],1,undefined,6),part('cone','fire',[.2*k,.34*k,.2*k],[sx+.2*k,.98*k,zb+.82],0,undefined,5));
+        box(parts,'fire',[.5*k,.2*k,.05],[sx,.5*k,zb+.85+.55*k],0);box(parts,'fire',[.22*k,.07*k,.14*k],[W*.2-.12*k,.72*k,fz+.1],0);}
+      box(parts,'stoneDark',[.55*k,.16*k,.4*k],[sx-1.0*k,.1,zb+.95],0);box(parts,'woodDark',[.35*k,.1*k,.3*k],[sx+.2*k,.1,zb+1.65*k],0); // charcoal heap and slag scale
       box(parts,'woodDark',[.5*k,.42*k,.5*k],[W*.2,.1,fz+.1],1);box(parts,'iron',[.62*k,.2*k,.26*k],[W*.2,.52*k,fz+.1],0);parts.push(part('wedge','iron',[.3*k,.14,.22*k],[W*.2+.4*k,.52*k,fz+.1],0,[0,Math.PI/2,0]));
       box(parts,'woodMid',[1.0*k,.36*k,.5*k],[W*.4,.1,fz+.4],1);box(parts,'water',[.85*k,.05,.36*k],[W*.4,.46*k,fz+.4],0);
       box(parts,'woodEdge',[.5*k,.3*k,.7*k],[sx+1.05*k,.5*k,zb+.95],0);parts.push(part('wedge','woodLight',[.5*k,.3*k,.5*k],[sx+1.05*k,.8*k,zb+.95],0,[0,Math.PI/2,0])); // bellows
