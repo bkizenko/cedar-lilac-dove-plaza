@@ -24,6 +24,6 @@ export function CommanderControlSheet({model,run,busy=false}:{model:CommanderCon
 export function CommanderControls({engine}:{engine:Engine}){
  const g=engine.game,people=g.selectedUnits().filter(u=>u.team===0&&u.hp>0).slice(0,32),selectedBoat=g.state.boats?.find(b=>b.id===g.selectedBoat&&b.team===0&&b.hp>0),unitIds=people.map(u=>u.id);if(!unitIds.length&&selectedBoat?.captain)unitIds.push(selectedBoat.captain);
  const boatIds=[...new Set([...people.flatMap(u=>u.boat?[u.boat.id]:[]),...(selectedBoat?[selectedBoat.id]:[])])].slice(0,32),query={kind:'commander-controls' as const,unitIds,boatIds},read=useOwnerReadModels(engine,[query])(query),action=useLifecycleAction(engine),[feedback,setFeedback]=useState('');
- const run=(command:EngineDispatchCommand)=>{void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:selectedBoat?.id}),reply=>{setFeedback(reply.reason);engine.pushHud();});};
+ const epoch=engine.dispatchEpoch;const run=(command:EngineDispatchCommand)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:selectedBoat?.id}),reply=>{if(reply.epoch!==epoch||engine.dispatchEpoch!==epoch)return;setFeedback(reply.reason);engine.pushHud();});};
  return <>{read.model?<CommanderControlSheet model={read.model} run={run} busy={action.busy}/>:<p className="text-xs">{read.issue}</p>}{(feedback||action.error)&&<p role="status" className="text-xs text-parchment-dim">{action.error||feedback}</p>}</>;
 }

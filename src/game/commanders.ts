@@ -110,9 +110,10 @@ export function commanderAppointmentIssue(g:Game,unitId:number,kind:CommanderKin
  if(!own(g,u,team)||u.prisoner)return 'Only a healthy, free adult can be given command';
  if(hasTaskCommitment(u,kind==='fleet'?'boat':undefined))return 'Finish or release their paid work before giving them command';
  if(roster.some(c=>c.unitId===u.id&&isLive(c)))return 'Already a commander';
- if(kind==='fleet'&&u.boat?.phase!=='aboard')return 'A fleet commander must be aboard one of the hulls';
  const live=activeCommandersOf(g,team),replacing=opts.replaces!==undefined?roster.find(c=>c.id===opts.replaces&&c.team===team&&c.replacedBy===undefined):undefined;
  if(opts.replaces!==undefined&&(!replacing||replacing.status==='serving'||replacing.status==='retired'))return 'Only a fallen or captured commander can be replaced';
+ if(replacing&&replacing.kind!==kind)return 'Replace a field commander with field command, or a fleet commander with fleet command';
+ if(kind==='fleet'&&u.boat?.phase!=='aboard')return 'A fleet commander must be aboard one of the hulls';
  const slots=commandSlots(g,team);if(live.length-(replacing&&isLive(replacing)?1:0)>=slots)return `This society can field ${slots} commander${slots===1?'':'s'}; build barracks or a keep for more`;
  if(roster.length>=R.maximumRoster&&!roster.some(c=>!isLive(c)))return 'Too many standing commanders';
  if(!opts.free&&g.tribe(team).wood<R.standardWood)return `A commander's standard needs ${R.standardWood} timber`;
