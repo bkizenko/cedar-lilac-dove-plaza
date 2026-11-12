@@ -28,6 +28,7 @@ import {KnowledgePanel} from '../KnowledgePanel';
 import {AgeReadiness} from '../AgeReadiness';
 import {PerformanceReadout} from '../PerformanceReadout';
 import {VillageSaveButton} from '../VillageSaveButton';
+import {SaveStatus} from './SaveStatus';
 import {VillageFileTransfer} from '../VillageFileTransfer';
 import {WaterEngineeringControls} from '../WaterEngineeringControls';
 import {WorldSetup} from '../WorldSetup';
@@ -186,7 +187,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
  return <Screen title="Menu" icon={<Settings size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab}>
   {tab==='play'&&<div className="hw-stack">
    <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
-   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}</section>
+   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/></section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <label>Graphics<select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
     <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>

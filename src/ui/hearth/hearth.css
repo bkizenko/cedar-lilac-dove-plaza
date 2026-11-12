@@ -380,3 +380,9 @@
 .hw-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--hw-dock-h,88px) + var(--hw-s3));z-index:5;display:flex;align-items:center;gap:10px;max-width:min(640px,calc(100% - 24px));padding:8px 8px 8px 14px;border-radius:12px;background:rgba(40,28,16,.9);border:1px solid var(--hw-line);color:var(--hw-ink,#f5e8c8);font-size:var(--hw-fs-s);line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .hw-hint-link{background:none;border:0;padding:0;color:var(--hw-accent,#f0c060);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .hw-hint-x{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;border-radius:8px;background:rgba(255,236,190,.1);border:1px solid var(--hw-line);color:inherit;cursor:pointer}
+.hw-save-status{display:grid;gap:8px;margin-top:10px}
+.hw-save-line{margin:0;display:grid;gap:2px;font-size:var(--hw-fs-s)}.hw-save-line span{color:var(--hw-dim);font-weight:400}
+.hw-save-slots{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.hw-save-slots li{display:grid;grid-template-columns:84px 92px 1fr auto;gap:6px 12px;align-items:baseline;padding:6px 10px;border-radius:8px;background:rgba(255,236,190,.06);border:1px solid var(--hw-line);font-size:var(--hw-fs-s);font-variant-numeric:tabular-nums}
+.hw-save-slots li b{min-width:76px}.hw-save-slots li span{color:var(--hw-dim)}
+.hw-save-empty,.hw-save-note{margin:0;font-size:13px;color:var(--hw-dim)}
