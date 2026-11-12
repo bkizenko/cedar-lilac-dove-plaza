@@ -236,3 +236,23 @@ test('expansion parties: read model shows real founding units, supplies and posi
  us[0].stuckT=9;assert.match(expansionParties(g,1)[0].status,/struggling/);
  delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
 });
+
+test('lane A: domestic pressure executor overthrows a house after sustained uprising, through heir(); counter saved; old saves untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);const t=1,id='1';
+ const d0=g.state.rulers.societies[id].dynasty;const kid={...Object.values(d0.people).find(p=>p.alive),id:'heirx',name:'Heirx',age:30,parent:d0.rulerId,spouse:undefined,legit:true,claimStrength:80};d0.people.heirx=kid;
+ // press the house: heavy claims against it, full weariness, no legitimacy pillar
+ g.state.rulers.claims=Array.from({length:6},(_,i)=>({holder:'2',target:id,kind:'claim',strength:100,expiresTick:1e9,since:0}));
+ g.state.rulers.weary={...(g.state.rulers.weary??{}),[id]:100};
+ const pol=g.state.rulers.societies[id].civ.polity;pol.institutionalization=0;
+ g.tribe(t).food=0;g.state.tribes[t].food=0;
+ const u=R.unrestOf(g,t);
+ assert.ok(u.stage==='uprising'||u.stage==='civilWar','fixture reaches uprising: '+u.stage);
+ const before=g.state.rulers.societies[id].dynasty.rulerId;let fell=[];
+ for(let y=0;y<R.UPRISING_YEARS&&!fell.length;y++)fell=R.domesticPressure(g);
+ assert.equal(fell.length,1,'house falls after the streak');
+ const d=g.state.rulers.societies[id].dynasty;assert.notEqual(d.rulerId,before);assert.ok(d.people[before].alive,'the old ruler is not killed');assert.equal(d.people[d.rulerId].legit,false);
+ assert.equal(g.state.rulers.unrestYears[id],0);assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'save round-trip');
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.unrestYears={1:'x'};assert.equal(validRulersState(bad),false);
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(R.domesticPressure(old),[]);
+});
