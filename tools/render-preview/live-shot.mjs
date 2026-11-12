@@ -35,7 +35,7 @@ page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')console.error(
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
 await page.goto(`http://127.0.0.1:${server.address().port}/`);
 await page.waitForFunction(()=>window.hwLive===true,null,{timeout:120000});
-const opts={shot,style:flags.style||'village',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null,...(flags.skins?{skins:String(flags.skins).split(',')}:{})};
+const opts={shot,style:flags.style||'village',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null,...(flags.skins?{skins:String(flags.skins).split(',')}:{}),...(flags.family?{family:flags.family}:{})};
 const info=await page.evaluate(o=>window.hwShot(o),opts);
 if(info&&info.steps){info.images=[];for(const st of info.steps){const meta=await page.evaluate(id=>window.hwStep(id),st);if(!meta)continue;const raw=await page.locator('#c').screenshot();info.images.push({...meta,url:'data:image/png;base64,'+raw.toString('base64')});}}
 console.error('[live]',JSON.stringify({...info,images:info.images?.map(i=>({...i,url:undefined}))}));

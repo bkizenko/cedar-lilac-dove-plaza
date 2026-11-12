@@ -38,7 +38,7 @@ export const EXTRA_EMBLEMS:Emblem[]=[
 
 /** Extra registry skins: each is ONE data object over a civ grammar (omitted fields inherit from `base`). Not part of the approved ten; they exist so a game can open with a look nobody has seen. */
 export const SKIN_SPECS:SkinSpec[]=[
- {id:'ember-basalt',name:'Emberfall',base:'sandrill',palette:{wall:'#4a4348',wall2:'#352f33',roof:'#2f2a2e',trim:'#8a7a70',accent:'#d2542a',cloth:'#b8402a'},banner:'hanging',emblem:'anvilHammer',dress:{body:'#3b3338',trim:'#d2542a'},note:'basalt cliff-cut city lit by forge ember'},
+ {id:'ember-basalt',name:'Emberfall',base:'sandrill',palette:{wall:'#6b6268',wall2:'#524a50',roof:'#3f383d',trim:'#a8968a',accent:'#d2542a',cloth:'#b8402a'},banner:'hanging',emblem:'anvilHammer',dress:{body:'#3b3338',trim:'#d2542a'},note:'basalt cliff-cut city lit by forge ember'},
  {id:'frost-slate',name:'Frostmere',base:'skoldar',palette:{wall:'#8f9aa0',wall2:'#6d7a82',roof:'#dfe6ea',trim:'#c9d3d8',accent:'#3d6f96',cloth:'#3d6f96',ground:'#a9b8bd'},banner:'pennant',emblem:'twinWaves',dress:{body:'#5d7f9a',trim:'#e2eaee'},note:'pale-stone coast under snow roofs'},
  {id:'verdant-thatch',name:'Verdance',base:'brythen',palette:{wall:'#d1bf8a',wall2:'#b3a06a',roof:'#6f8a45',trim:'#6a4f30',accent:'#4a7a3a',cloth:'#5a8a3f'},banner:'streamers',emblem:'oakLeaf',dress:{body:'#5a8a3f',trim:'#d9c25a'},note:'ochre roundhouses under living green thatch'},
  {id:'cobalt-dome',name:'Cobalt Reach',base:'aureline',palette:{wall:'#f0e8d4',wall2:'#dcd0b4',roof:'#2e5f9a',trim:'#c9a85a',accent:'#2e7fb0',cloth:'#2e5f9a'},banner:'swallow',emblem:'crescentStar',dress:{body:'#2e5f9a',trim:'#e8d08a'},note:'limewashed courts with cobalt roofs'},

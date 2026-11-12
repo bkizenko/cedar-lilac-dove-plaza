@@ -44,6 +44,7 @@ import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/gra
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {setBuildingGrammar} from './buildingFamilies';
 import {skinOfTeam} from '@/game/skinState';
+import {WonderLayer} from './wonderLayer';
 /** Banners hang at half-mast this many sim seconds after a succession (two dynastic years). */
 const MOURNING_SECONDS=180;
 import {millPowerKw,MILL_RULES} from '@/game/millPower';
@@ -1802,6 +1803,7 @@ export class WorldView {
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art)art.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
     this.syncCarvedBuildings(carvedList);
+    this.syncWonders(game);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.contourFields?.sync(game,this.camera.position);
@@ -1825,6 +1827,14 @@ export class WorldView {
     const kw=millPowerKw(game,b);if(kw<MILL_RULES.minKw)return 0;
     if(b.type==='watermill')return Math.min(2.4,.45+.6*Math.sqrt(kw/MILL_RULES.referenceKw));
     return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);
+  }
+
+  private wonderLayer:WonderLayer|null=null;
+  /** Wonders (state.wonders) drawn through the owner's skin; nothing is built until a record exists. */
+  private syncWonders(game:Game){
+    const list=game.state.wonders;if(!list?.length&&!this.wonderLayer)return;
+    const layer=this.wonderLayer||(this.wonderLayer=new WonderLayer(this.scene));
+    layer.sync(list||[],this.camera.position,t=>this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,t):null,(x,z)=>game.height(x,z),(x,z)=>game.exploredAt(x,z));
   }
 
   private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
@@ -2937,7 +2947,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
-    this.carvedLayer?.dispose();this.carvedLayer=null;this.carvedOwners.clear();
+    this.carvedLayer?.dispose();this.carvedLayer=null;this.wonderLayer?.dispose();this.wonderLayer=null;this.carvedOwners.clear();
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();

@@ -1,0 +1,18 @@
+/* Skin picker (WorldSetup). Uses the Hearth variables when present and falls back to the same wood/parchment values elsewhere. */
+.skin-pick{display:grid;gap:8px;margin:0;padding:10px;border:1px solid var(--hw-line,rgba(246,226,184,.25));border-radius:var(--hw-r-m,14px);color:var(--hw-text,#f8efd9)}
+.skin-pick legend{padding:0 6px;font-size:14px;font-weight:700;color:var(--hw-dim,#dccfae)}
+.skin-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.skin-modes button,.skin-chips button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 8px;border-radius:10px;border:1px solid var(--hw-line,rgba(246,226,184,.25));background:rgba(255,236,190,.07);color:inherit;font:600 14px/1.2 inherit;cursor:pointer}
+.skin-modes button:hover,.skin-chips button:hover{background:rgba(255,236,190,.16)}
+.skin-modes button.is-on,.skin-chips button.is-on{background:linear-gradient(180deg,var(--hw-gold-2,#f6d58c),var(--hw-gold,#e3ad4f));color:var(--hw-gold-ink,#2b2016);border-color:var(--hw-gold-2,#f6d58c)}
+.skin-modes button:focus-visible,.skin-chips button:focus-visible{outline:3px solid var(--hw-gold-2,#f6d58c);outline-offset:2px}
+.skin-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:6px;max-height:208px;overflow:auto}
+.skin-chips button{justify-content:flex-start;padding:4px 8px}
+.skin-dots{display:inline-grid;grid-template-columns:repeat(2,10px);gap:2px;flex:none}
+.skin-dots i{display:block;width:10px;height:10px;border-radius:3px;border:1px solid rgba(0,0,0,.3)}
+.skin-chips b{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skin-view{display:flex;align-items:center;gap:12px;min-height:76px}
+.skin-view>div{display:grid;gap:2px}
+.skin-preview{flex:none;border-radius:8px}
+.skin-banner{display:inline-block;line-height:0}
+.skin-note{color:var(--hw-dim,#dccfae)}
