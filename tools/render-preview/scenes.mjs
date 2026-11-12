@@ -4,6 +4,7 @@
 import { Soup, specMesh, impostorMesh, slab, terrainMesh, waterMesh, grainTexture, style, families, trees, caravans, wonders, constants, palette, terrace, parts as P } from './scene-lib.mjs';
 import { rigFor } from './rigs.mjs';
 import { CIVS, civScene, civLineupScene } from './civ.mjs';
+import { civBuildingsScene } from './civ-bldgs.mjs';
 
 const B = constants.BUILDINGS;
 const WORLD = 1207;
@@ -299,5 +300,6 @@ export const SCENES = {
   caravans: caravanScene,
   wonders: wonderScene,
   'civ-lineup': civLineupScene,
+  'civ-bldgs': civBuildingsScene(),
   ...Object.fromEntries(CIVS.map(c => ['civ-' + c.id, civScene(c)])),
 };

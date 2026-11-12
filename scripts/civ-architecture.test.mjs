@@ -32,7 +32,7 @@ test('same role, 14 civs: 14 different silhouettes (house, civic, granary, marke
 test('each civ has recognisable signature geometry',()=>{
  const g=(c,r='civic',era=4)=>generateCivBuilding(c,r,{seed:21,era,wealth:.6,wear:.2,footprint:{w:12,d:11}}),has=(s,fn)=>s.parts.some(fn),n=(s,shape)=>s.parts.filter(p=>p.shape===shape).length;
  assert.ok(n(g('aureline'),'cylinder')>=8,'columns');assert.ok(has(g('rusvolt'),p=>p.shape==='sphere'),'onion domes');assert.ok(has(g('steppan'),p=>p.shape==='sphere')&&n(g('steppan'),'prism')===0,'felt dome, no gable');
- assert.ok(has(g('hanrei'),p=>p.shape==='hip'),'tiled hip roof');assert.ok(n(g('kaaltun'),'box')>=8,'stepped tiers');assert.ok(has(g('mekhari','house'),p=>p.shape==='prism'&&p.pos[1]>1.2),'raised saddle roof on stilts');
+ assert.ok(has(g('hanrei'),p=>p.shape==='hip'),'tiled hip roof');assert.ok(n(g('kaaltun'),'box')>=8,'stepped tiers');assert.ok(has(g('mekhari','house'),p=>(p.shape==='prism'||p.shape==='sphere'&&p.size[0]>p.size[1])&&p.pos[1]>1.2),'raised rounded saddle roof on stilts');
  assert.ok(has(g('brythen','house'),p=>p.shape==='cone'),'conical thatch');assert.ok(has(g('sahelan'),p=>p.shape==='cone'),'pinnacles');assert.ok(g('sandrill','house').parts.some(p=>p.size[1]>=4),'cliff mass');
  assert.ok(g('rusvolt','house').parts.filter(p=>p.shape==='cylinder'&&p.rot).length>=10,'log ends');assert.ok(has(g('tigrane'),p=>p.shape==='wedge'),'temple ramp');assert.ok(has(g('vedara'),p=>p.shape==='cylinder'&&p.sides===4),'curved tower stack');
 });

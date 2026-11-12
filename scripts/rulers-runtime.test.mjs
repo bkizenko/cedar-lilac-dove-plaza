@@ -166,3 +166,17 @@ test('AUD-SOC-SAVE-ROUNDTRIP: wards validate, malformed wards are rejected, and 
   assert.equal(validRulersState({...s,wards:[bad]}),false,'malformed ward rejected');
  assert.equal(validRulersState({...s,wards:'x'}),false);
 });
+
+test('lane A: a party mid-expedition survives save/load with its packed food, and rulers state/wards ride along',async()=>{
+ const {encodeGame,decodeGame}=await import('../src/game/persistence.ts');const {beginExpedition}=await import('../src/game/journeys.ts');
+ const {foodDemand}=await import('../src/game/settlement.ts');
+ const g=fixture(),u=g.state.units.find(u=>u.team===0&&u.type==='worker'&&u.maturesAt===undefined);
+ g.tribe(0).food=200;assert.ok(beginExpedition(g,u));const packed=u.expedition.food,left=g.tribe(0).food;
+ g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
+ g.state.rulers.wards=[{kind:'foster',person:'x',from:'0',to:'1',since:1}];
+ const back=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
+ const v=back.state.units.find(x=>x.id===u.id);assert.ok(v.expedition,'party still out after reload');
+ assert.equal(v.expedition.food,packed);assert.equal(back.tribe(0).food,left,'no food invented or lost across reload');
+ assert.equal(packed+back.tribe(0).food,200,'packed + stores still equals the starting stock');
+ assert.equal(back.state.rulers.wards.length,1,'wards survive reload');assert.ok(foodDemand(back,0)>=0);
+});
