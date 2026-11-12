@@ -13,11 +13,11 @@ test('six ages have distinct stable material palettes, with local roof variation
 test('era details appear only on completed discovered buildings, stay bounded and do not change their simulation footprint',()=>{
  const view=Object.create(WorldView.prototype);view.villageStyles=new Map();view.bldMeshes=new Map();
  view.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial(),16);
- const b={id:1,type:'hut',x:5,y:4,z:5,w:5,d:5,team:0,build:1,hp:100};let age=0;
+ const b={id:1,type:'forge',x:5,y:4,z:5,w:5,d:5,team:0,build:1,hp:100};let age=0;
  const game={state:{seed:345,buildings:[b]},world:{heights:new Float32Array(9)},height:()=>4,tribe:()=>({age}),exploredAt:()=>false};
  const original={...b};view.syncEraDetails(game);assert.equal(view.eraDetails.count,0);
- age=1;view.syncEraDetails(game);assert.equal(view.eraDetails.count,4);
- age=5;view.syncEraDetails(game);assert.equal(view.eraDetails.count,10);assert.deepEqual(b,original);
+ age=1;view.syncEraDetails(game);assert.equal(view.eraDetails.count,3);
+ age=5;view.syncEraDetails(game);assert.equal(view.eraDetails.count,9);assert.deepEqual(b,original);
  for(let i=0;i<view.eraDetails.count;i++){const m=new THREE.Matrix4();view.eraDetails.getMatrixAt(i,m);assert.ok(m.elements.every(Number.isFinite));}
  game.state.buildings=[{...b,team:1},{...b,build:.5},{...b,type:'farm'}];view.syncEraDetails(game);assert.equal(view.eraDetails.count,0);
  game.state.buildings=Array.from({length:100},(_,i)=>({...b,id:i}));view.syncEraDetails(game);assert.equal(view.eraDetails.count,16);
