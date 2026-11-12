@@ -426,6 +426,7 @@ export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "a
 
 export type Tribe = {
   copperMetallurgyVersion?:1;
+  ironMetallurgyVersion?:1;
   foodExperience?:import("./foodExperience").FoodExperience;
   identity?:import('./societyIdentity').SocietyIdentity;
   inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];

@@ -1,5 +1,5 @@
 import {validDraftCarts} from './draftCart';
-import {bindCopperSmeltLoad} from './carriedLoad';
+import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';
@@ -326,6 +326,7 @@ function validateGamePayload(raw: unknown) {
     }
     if(t.seeds!==undefined&&(!num(t.seeds)||t.seeds<0||t.seeds>1e12))fail();
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e12);
+    if(t.ironMetallurgyVersion!==undefined&&t.ironMetallurgyVersion!==1)fail();
     if(t.copperExperiment!==undefined&&typeof t.copperExperiment!=="boolean")fail();
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     const inheritedActors=new Set((t.inheritedCropTrials||[]).flatMap((q:any)=>q.actorIds||[]));
@@ -790,5 +791,6 @@ export function decodeGame(raw:unknown):Game {
   setFlowFieldsEnabled(g,false);
   initializePenBeddingTracking(g);
   for(const p of g.state.production?.projects||[])if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCopperSmeltLoad(u,p);}
+  for(const p of g.state.production?.projects||[])if((p.recipe==='smeltIron'||p.recipe==='consolidateIron')&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindIronSmeltLoad(u,p);}
   return g;
 }
