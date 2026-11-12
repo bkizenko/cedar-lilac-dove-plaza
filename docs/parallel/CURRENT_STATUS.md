@@ -4,9 +4,10 @@
 
 Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
 
-- Latest LIVE economy/custody release: **bd1667a**, release **2026-11-12T02-26-11-652Z-bd1667a** on8086/8101. Preserves dead trader cargo/recovery claims; physical armor/tool/weapon/animal custody and burden; legacy hunting compatibility.56/56focused+1/1built native53 import/render/workshop owner-query/save/restore; tsc/buildPASS; old villages/prior release retained. Gear/animal trade consumer remains open/off, C6 source unqualified. Frozen acceptance stays34/98.
-- Follow-up qualification:51/52checks(98.08percent), tscPASS; B1 actualbuilt failedwrite safely refusesLab, crop two-cycle and ownedcaravan/hunt/barter regressions pass. One knownWorldsurvey fixture awaits Grok. These are test/diagnostic-only commits; runtimebd1667a unchanged, no rebuild/gate credit.
-- AUTOPILOT.md on origin/main governs: Worker parked; Codex T2 WQ14 active. Grok owns World wiring; Claude owns UI/visuals/diplomacy. Anyone may edit shared files under temporary collision claims.
+- Latest LIVE release: **687e82a**, **2026-11-12T03-16-12-212Z-687e82a** verified on8086/8101. Hull-loss survivors swim/wade physically to reachable shore and return cargo to actual cache; incremental search handles native270400-cell grids with bounded work. Actual native107m recovery and strict midwater reload pass. Offshore captive rescue remains unsupported.
+- Current batch14/14(100percent):12focused +2actualbuilt native53 render/queue/save/restore/failed-write safety; tsc/buildPASS. C11 advisory hull dimensions + bounded authoring-preset storage included; Experience UI consumers remain open. Priorbd1667a release and villages retained. Frozen acceptance unchanged34/98(34.69percent).
+- WQ14 custody backends remain live; gear/animal trade consumer is still open/off. Prior test-only follow-up51/52 remains scoped evidence; World survey fixture belongs to Grok.
+- AUTOPILOT governs: Worker parked; Codex now T5 paid era rebuild/extensions then T6 prestige. Grok PM/World; Claude architect/UI/visuals/diplomacy. Any provider may edit any file under collision coordination.
 
 ## Historical pre-integration evidence (superseded where AUTOPILOT differs)
 
