@@ -7,6 +7,9 @@
  * variant index) so instancing stays possible: a village of 60 houses draws a
  * handful of distinct cottages, not 60 unique meshes. */
 import {hashSeed,type BuildingSpec} from './buildingParts';
+import {generateCivBuilding,type CivContext,type CivRole} from './civBuildings';
+import {lookOf,roleForType,skinSignature,villageRetint,type CivSkin} from './civSkin';
+import type {CivId} from './civStyles';
 import {generateFamily,getBuildingGrammar,type BuildMaterial,type Climate,type FamilyContext,type FamilyId,type Trade,type Tradition,type WallAxis} from './buildingFamilies';
 
 export type Habitat='plains'|'forest'|'hills'|'desert'|'tundra'|'wetland';
@@ -23,7 +26,13 @@ export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:numb
  reviewWatermill?:boolean;
  /** Actual state: is the fire burning (hearth, forge, kiln, oven, smokehouse)? Live
   * callers must pass real state; omitted means lit (review/preview only). */
- lit?:boolean};
+ lit?:boolean;
+ /** The society's CivSkin (civSkin.ts): its grammar draws houses, halls and markets, its palette repaints every other family. Absent/neutral = the plain Village grammar. */
+ skin?:CivSkin|null;
+ /** A ruler has just died: this society's banners hang at half-mast (skin grammars only). */
+ mourning?:boolean;
+ /** Building condition 0..1 (hp/maxHp); quantised to three wear tiers for skin grammars. */
+ condition?:number};
 type Mapping={family:FamilyId;trade?:Trade;scale?:'small'|'large'};
 
 /** Variants per family: distinct geometries kept resident per era/material bucket. */
@@ -109,7 +118,14 @@ export function traditionFor(worldSeed:number,settlementSeed:number|undefined):T
 export function prosperityTier(p:number|undefined){return p===undefined?-1:p<.34?0:p<.67?1:2;}
 export function variantIndexFor(worldSeed:number,id:number,count:number){return hashSeed(worldSeed,'variant',id)%count;}
 
-export type CarvedVariantKey={key:string;family:FamilyId;ctx:FamilyContext};
+/** Cache-key fragment for the skin-dependent inputs of a building (empty without a skin). */
+export function skinKeyPart(b:Pick<CarvedBuildingInput,'skin'|'mourning'|'condition'|'type'>){
+ const k=b.skin&&b.skin.grammar?skinSignature(b.skin):'';
+ return k?`${k}:${b.mourning?'m':''}:${b.condition===undefined||b.condition>=.7?0:b.condition>=.4?1:2}`:'';
+}
+export type CarvedVariantKey={key:string;family:FamilyId;ctx:FamilyContext;
+ /** Skin grammar variant: drawn by generateCivBuilding instead of the Village family. */civ?:{grammar:CivId;role:CivRole;ctx:CivContext};
+ /** Skin repaint of the Village family's materials. */tint?:ReturnType<typeof villageRetint>};
 /** Resolve a building to its shared variant key and generation context. */
 export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|null{
  const era=eraBucket(input.era),habitat=input.habitat??'plains',climate=climateFor(habitat),map=familyForType(input.type,era,climate,input.reviewWatermill?input.waterSide:undefined);
@@ -123,11 +139,21 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const wealth=tier<0?spread:Math.min(1,tier*.4+spread*.2);
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar()].join('|');
+ const skin=input.skin&&input.skin.grammar?input.skin:null,role=skin?roleForType(input.type):null,wearTier=input.condition===undefined||input.condition>=.7?0:input.condition>=.4?1:2,mourn=!!(skin&&input.mourning);
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'']:[])].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
   ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.lit===false?{lit:false}:{})};
- return {key,family:map.family,ctx};
+ if(skin&&role){
+  const look=lookOf(skin),cctx:CivContext={seed:ctx.seed,era,wealth,wear:[.1,.35,.6][wearTier],footprint:{w:fw,d:fd},eraMode:'fixed',built:{era,wealth},...(input.lit===false?{lit:false}:{}),...(mourn?{mourning:true}:{}),...(look?{look}:{})};
+  return {key,family:map.family,ctx,civ:{grammar:skin.grammar!,role,ctx:cctx}};
+ }
+ return skin?{key,family:map.family,ctx,tint:villageRetint(skin)}:{key,family:map.family,ctx};
+}
+/** The spec for a resolved variant: the skin's civ grammar, or the Village family (repainted from the skin when one is worn). */
+export function variantSpec(v:CarvedVariantKey):BuildingSpec{
+ if(v.civ)return generateCivBuilding(v.civ.grammar,v.civ.role,v.civ.ctx,v.key) as BuildingSpec;
+ const spec=generateFamily(v.family,v.ctx,v.key);return v.tint?{...spec,materials:v.tint}:spec;
 }
 export function carvedBuildingSpec(input:CarvedBuildingInput):BuildingSpec|null{
- const v=carvedVariantFor(input);return v?generateFamily(v.family,v.ctx,v.key):null;
+ const v=carvedVariantFor(input);return v?variantSpec(v):null;
 }

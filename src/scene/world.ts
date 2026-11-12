@@ -43,6 +43,9 @@ import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {setBuildingGrammar} from './buildingFamilies';
+import {skinOfTeam} from '@/game/skinState';
+/** Banners hang at half-mast this many sim seconds after a succession (two dynastic years). */
+const MOURNING_SECONDS=180;
 import {millPowerKw,MILL_RULES} from '@/game/millPower';
 import {watermillSite} from '@/game/waterWorks';
 import {setCarvedPalette} from './carvedPalette';
@@ -240,6 +243,22 @@ export class WorldView {
     setBuildingGrammar(style==='optionH'?'legacy':'village');setCarvedPalette(style==='optionH'?'honey':'village');
   }
   getStyle():RenderStyle{return this.styleId;}
+  /** CivSkins (civSkin.ts): when on (default, village style only) every society's buildings are drawn through its own skin; off = the neutral Village grammar for all. Never deletes the old grammars. */
+  private skinsOn=(()=>{try{if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('skins')==='0')return false;}catch{/* on */}try{if(typeof localStorage!=='undefined'&&localStorage.getItem('hearthwild.skins')==='0')return false;}catch{/* on */}return true;})();
+  setSkinsEnabled(on:boolean){this.skinsOn=on;}
+  getSkinsEnabled(){return this.skinsOn;}
+  /** Per team: the ruler last seen and the sim time until which the banners hang at half-mast (a succession just happened). Visual only, never saved. */
+  private mourning=new Map<number,{ruler:string;until:number}>();
+  private updateMourning(game:Game){
+    const soc=game.state.rulers?.societies;if(!soc)return;
+    for(const [id,sr] of Object.entries(soc)){
+      const team=Number(id),ruler=sr.dynasty?.rulerId;if(!ruler)continue;
+      const m=this.mourning.get(team);
+      if(!m)this.mourning.set(team,{ruler,until:0});
+      else if(m.ruler!==ruler){m.ruler=ruler;m.until=game.state.time+MOURNING_SECONDS;}
+    }
+  }
+
   setRenderStyle(style:'current'|'carved'){this.setStyle(style==='carved'?'optionH':'current');}
   getRenderStyle(){return this.renderStyle;}
   private contourFields: ContourFields | null = null;
@@ -1713,6 +1732,7 @@ export class WorldView {
     if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
     this.towerPlatforms.sync(game);
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
+    this.updateMourning(game);
     const carvedList:(CarvedInstance&{b:import("@/game/types").Building})[]=[];
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
@@ -1733,9 +1753,10 @@ export class WorldView {
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
         if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
           const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
+          const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
           carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
             settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
-            yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
+            ...(skin?{skin,...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
           continue;
         }
         const scalable=type==="farm"||modular;
@@ -2908,7 +2929,7 @@ export class WorldView {
     this.wildCattle=null;this.domesticCattle=null;this.packCattle=null;
     if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
-    this.villageStyles.clear();
+    this.villageStyles.clear();this.mourning.clear();
     if(this.fieldSurface){this.fieldSurface.dispose();this.fieldSurface=null;}
     for(const [type, meshes] of this.bldMeshes){
       if((type === "farm"||terrainLaidWorkplace(type)||hasBuildingCraftsmanship(type)) && meshes.extra) (meshes.extra.material as THREE.Material).dispose();

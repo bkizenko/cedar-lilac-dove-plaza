@@ -15,10 +15,10 @@
  *    the classic renderer remains the default and the fallback. */
 import * as THREE from 'three';
 import {partsAtLod,renderTierForDistance,type BuildingSpec,type LodTier,type PartAnim,type RenderTier} from './buildingParts';
-import {generateFamily,getBuildingGrammar} from './buildingFamilies';
-import {carvedVariantFor,prosperityTier,type CarvedBuildingInput} from './buildingStyleMap';
+import {getBuildingGrammar} from './buildingFamilies';
+import {carvedVariantFor,prosperityTier,skinKeyPart,variantSpec,type CarvedBuildingInput} from './buildingStyleMap';
 import {buildCarvedMesh,impostorCard,type CarvedMeshData} from './carvedMesh';
-import {CARVED_GRAIN,CARVED_LIGHT_RIG,carvedSwatch,getCarvedPalette,woodGrainPixels} from './carvedPalette';
+import {CARVED_GRAIN,CARVED_LIGHT_RIG,getCarvedPalette,specSwatch,woodGrainPixels} from './carvedPalette';
 import {ensureInstanceCapacity} from './instanceCapacity';
 
 export const CARVED_LAYER_RULES=Object.freeze({maximumBuckets:192,initialInstances:16,cardInitialInstances:256});
@@ -98,8 +98,8 @@ export class CarvedBuildingLayer{
  }
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
-  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}`;
-  if(!this.keys.has(k)){const v=carvedVariantFor(b);this.keys.set(k,v?v.key:null);if(v&&!this.specs.has(v.key))this.specs.set(v.key,generateFamily(v.family,v.ctx,v.key));}
+  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
+  if(!this.keys.has(k)){const v=carvedVariantFor(b);this.keys.set(k,v?v.key:null);if(v&&!this.specs.has(v.key))this.specs.set(v.key,variantSpec(v));}
   return this.keys.get(k)??null;
  }
  private bucket(variantKey:string,tier:LodTier){
@@ -136,7 +136,7 @@ export class CarvedBuildingLayer{
    const spec=this.specs.get(key);if(!spec)continue;const card=impostorCard(spec);
    if(this.card.count>=this.card.mesh.instanceMatrix.count)this.card.mesh=ensureInstanceCapacity(this.scene,this.card.mesh,this.card.count+1);
    this.q.setFromAxisAngle(this.up,inst.yaw);this.p.set(inst.x,inst.y,inst.z);this.s.set(card.width,card.height*grow,card.depth);this.m.compose(this.p,this.q,this.s);
-   this.c.set(carvedSwatch(card.wall).hex);this.card.mesh.setMatrixAt(this.card.count,this.m);this.card.mesh.setColorAt(this.card.count,this.c);this.card.count++;this.card.owners.push(inst);
+   this.c.set(specSwatch(spec.materials,card.wall).hex);this.card.mesh.setMatrixAt(this.card.count,this.m);this.card.mesh.setColorAt(this.card.count,this.c);this.card.count++;this.card.owners.push(inst);
   }
   for(const b of this.buckets.values()){b.mesh.count=b.count;b.mesh.visible=b.count>0;b.mesh.instanceMatrix.needsUpdate=true;for(const ro of b.rotors){ro.mesh.count=b.count;ro.mesh.visible=b.count>0;}}
   this.animate(0);

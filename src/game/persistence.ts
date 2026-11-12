@@ -50,6 +50,7 @@ import {validGuardDuties} from './guardDuty';
 import {validRaidReports} from './raidReports';
 import {validTransit} from './transit';
 import {validRulersState} from './rulersState';
+import {ensureSkins} from './skinState';
 import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
 import {validTowerPlatformState} from './towerPlatforms';
@@ -752,6 +753,7 @@ export function decodeGame(raw:unknown):Game {
     particles: [],
     floaters: [],
   } as GameState;
+  ensureSkins(g.state); // old saves and damaged skin records are re-derived from the seed; a valid record is kept exactly
   // Existing actual own stations are legacy adoption evidence, never a phantom building.
   for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
   restoreCargoRecoveryCommitments(g.state);
