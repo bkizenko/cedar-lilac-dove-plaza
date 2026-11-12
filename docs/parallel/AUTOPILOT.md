@@ -1017,6 +1017,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 08:00 | Claude | ~69 (since 05:00 ET, incl. lanes A-D) | 12 landed by PM at 08:10 (integration + M0-10 + Codex tribute) | society decision layer, combat doctrine, production-delivery cue, Sandrill fins (rulersVersion 2 new games) | shipping and landing; lane D audit rows added |
 | 11-12 08:00 | Grok | 11 (Grok PM 3, World 8) | 0 | 0 World features live | Grok out; Claude+Codex PM duty. World rows reassigned to Claude queue |
 | 11-12 08:00 | Total | ~110 | integration lag 0 after 08:10 landing | ~6 | native-only failures (not regressions, fail identically on own branches): command-execution-native #5 contention, domination-native #6 custody release; tsc diff clean vs main (navBudget visibility fixed) |
+| 11-12 09:00 | Codex | 19 (since 08:00 ET, all on main) | 19 | 1 (witnessed raider objective settlement + physical captive recovery, landed 09:10) | on target; separate T6 agent shipping raid-outcome prestige |
+| 11-12 09:00 | Claude | 62 (since 08:00 ET) | 62 | village grammar defences (palisade/gatehouse/curtain), lane D merges | shipping and landing; integration lag 0 |
+| 11-12 09:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue; no board lines to miss |
+| 11-12 09:00 | Total | 81 | integration 0 ahead of main | ~2 | stale: work/shipping-waiting-hooks-2026-11-11 conflicts with main (engine/sim/types/persistence), not landed; native raid-outcome test fails in sandbox (native-only), tsc diff nil |
 
 ## Process improvements
 
