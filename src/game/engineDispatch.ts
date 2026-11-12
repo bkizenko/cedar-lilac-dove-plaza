@@ -107,8 +107,8 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     return{accepted,reason:accepted?'Original paid project updated':g.state.banner||'Project cannot make that transition',projectId:project.id};
    }
    case 'dairy-clean':case 'dairy-discard':{
-    const project=g.state.production?.projects.find(p=>p.id===command.projectId&&p.team===0);if(!project)return no('Original dairy project unavailable');
-    const accepted=command.kind==='dairy-clean'?queueDairyVesselCleaning(g,project.id,command.unitId):discardDairyProject(g,project.id);return{accepted,reason:accepted?'Original held vessel updated':g.state.banner||'Dairy request refused',projectId:project.id};
+    const project=g.state.production?.projects.find(p=>p.id===command.projectId&&p.team===0);if(!project)return no('Original vessel project unavailable');
+    const accepted=command.kind==='dairy-clean'?queueDairyVesselCleaning(g,project.id,command.unitId):discardDairyProject(g,project.id);return{accepted,reason:accepted?'Original held vessel updated':g.state.banner||'Vessel request refused',projectId:project.id};
    }
    case 'marry-houses':{
     const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
