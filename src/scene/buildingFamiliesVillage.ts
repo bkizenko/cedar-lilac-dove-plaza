@@ -11,6 +11,8 @@ import {cistern,hearth,threshing,well,workshop} from './villageWorks';
 import {church,college,keep,tower} from './villageCivic';
 import {granary,marketStalls,stables} from './villageTrade';
 import {gate,palisade,stoneWall as stoneWallCell} from './villageDefence';
+import {aqueduct,canal,moat,trench} from './villageEarthworks';
+import {bridge,cairn,fieldPlot,grove,outpost,pen,pier,quarry} from './villageLand';
 export type VillageDef={reference:string;generate:Generator};
 const TAU=Math.PI*2;
 
@@ -156,6 +158,18 @@ const windmill:Generator=(ctx,r)=>{
 };
 
 export const VILLAGE_FAMILIES:Partial<Record<FamilyId,VillageDef>>={
+  trench:{reference:'Field fortification ditches (Roman fossa, Iron Age ditch-and-bank): duckboarded cut between spoil banks, revetted in timber, dry stone, mud or dressed stone by the society, sharpened stakes on the lip; cells close at run ends, corners, tees and crosses',generate:trench},
+  moat:{reference:'Water-filled moats (Bodiam, moated manors, Chinese and Mesopotamian town moats): kerbed water cut between grassy banks, reeds in the shallows, mooring post; kerb in timber, mud or stone by the society; run ends closed by a bank',generate:moat},
+  canal:{reference:'Kerbed navigation canals (Roman fossa, English narrow-boat canals): water channel with towpath, bollards, windlass stop-gate at run ends and occasional footbridges',generate:canal},
+  aqueduct:{reference:'Roman arcaded aqueducts (Pont du Gard, Segovia): piers at cell centres, half-arches meeting at the crown on the cell edge so cells tile into one arcade, coursed stone trough with water, header tank at the end of a line',generate:aqueduct},
+  fieldPlot:{reference:'Ridge-and-furrow strip fields (Laxton, Midland open fields): crop rows on ridges, wattle hurdle, dry-stone, mud or post-and-rail boundary by the society, headland, gate, shaduf on arid fields, tool shed, scarecrow and hay cart',generate:fieldPlot},
+  pen:{reference:'Wattle-hurdle fold (Butser), dry-stone sheepfold, mud-brick kraal or post-and-rail corral: gate with a leaf swung open, lean-to shelter, water trough, hay rack and stack',generate:pen},
+  pier:{reference:'Timber jetties and boathouses (Hedeby, Hanseatic quays): pile bents with X-bracing, planked deck, T-head with lantern, a skiff tied alongside, net hut, drying racks and a swing hoist',generate:pier},
+  bridge:{reference:'Timber trestle bridges on pile bents (Iron Age and Roman river crossings) and segmental-arch stone packhorse bridges with cutwaters, coped parapets and corner pillars',generate:bridge},
+  quarry:{reference:'Roman and medieval stone quarries: stepped jointed benches with drill-and-wedge lines, a treadwheel crane, a sledge on rollers with a dressed block, stacked cut stone and rubble kerb',generate:quarry},
+  cairn:{reference:'Kerbed chambered cairns (Maeshowe, Clava): rings of fitted stones narrowing to a capstone, passage and lintel, offering cloth strips; later a memorial cross and a stepped marker cairn',generate:cairn},
+  grove:{reference:'Sacred groves (Celtic nemeton, Germanic holy grove): ring of old trees by climate round an altar stone with offering bowl and fire, carved entrance posts with ribbons, charms hung from the boughs, waymark stones',generate:grove},
+  outpost:{reference:'Frontier signal posts and boundary stones (Roman limes, Hadrian milecastles): marker mast with banner and beacon basket on a stacked-stone ring, carved boundary stone, rubble kerb',generate:outpost},
   palisade:{reference:'Iron Age and Slavic gorod stockades (Trelleborg, Biskupin): hewn logs of uneven height with sharpened tips, lashed inner rails, outer earth bank and a plank wall-walk with ladder; corner cells ring a watch post',generate:palisade},
   gate:{reference:'Timber stockade gatehouses (Trelleborg, motte-and-bailey gates): hewn-log towers with hoarded gallery and slits, lintel walkway with rail and lantern, strapped double plank leaves with drop bar or a raised portcullis, flanking stockade logs',generate:gate},
   stoneWall:{reference:'Roman and medieval curtain walls (Hadrian, Conwy, Carcassonne): battered footing, staggered courses, buttress piers, weep spouts, coping, merlons and arrow slits, round corner tower with conical cap',generate:stoneWallCell},

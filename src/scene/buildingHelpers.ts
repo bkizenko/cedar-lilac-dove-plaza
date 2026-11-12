@@ -6,13 +6,26 @@ export type BuildMaterial='wattle'|'timber'|'stone'|'mudbrick';
 export type Climate='temperate'|'cold'|'wet'|'arid';
 export type Trade='bench'|'forge'|'kiln'|'loom'|'rack'|'saw'|'smoke'|'oven'|'pottery';
 export type WallAxis='x'|'z'|'corner';
+/** Which neighbours a tiled cell (wall, gate, trench, moat, canal, aqueduct) touches, in the cell's own frame: bit 1 = +X, 2 = -X, 4 = +Z, 8 = -Z. */
+export const JOIN={px:1,nx:2,pz:4,nz:8} as const;
+export const joinOfAxis=(axis:WallAxis|undefined)=>axis==='z'?JOIN.pz|JOIN.nz:axis==='corner'?JOIN.px|JOIN.pz:JOIN.px|JOIN.nx;
+/** Cultural FORMS a society's skin chooses (civSkin.ts formsOf; data in civSkinData.ts): the shape of walls, gates and great-hall roofs, not just colours. */
+export type WallStyle='log'|'drystone'|'mudbrick'|'ashlar';
+export type GateShape='stockade'|'arch'|'lintel'|'pylon'|'pavilion';
+export type HallForm='gable'|'thatchHip'|'terrace'|'vault'|'stave'|'turf'|'felt'|'upturned'|'saddle';
+export type WallCap='plain'|'tile'|'thatch'|'turf';
+export type SkinForms={wall:WallStyle;gate:GateShape;hall:HallForm;cap:WallCap};
+export const NEUTRAL_FORMS:SkinForms={wall:'log',gate:'stockade',hall:'gable',cap:'plain'};
 /** Learned local building habits of one settlement (G3): two villages of the
  * same era and climate still differ in pitch, proportions and annex habits. */
 export type Tradition={pitchBiasDeg:number;annexBias:number;proportion:number;porchBias:number};
 export const NEUTRAL_TRADITION:Tradition={pitchBiasDeg:0,annexBias:0,proportion:1,porchBias:0};
 export type FamilyContext={seed:number;era:number;material:BuildMaterial;climate:Climate;wealth:number;
  tradition?:Tradition;footprint:{w:number;d:number};trade?:Trade;waterSide?:'+x'|'-x'|'+z'|'-z';wallAxis?:WallAxis;scale?:'small'|'large';
- /** false removes fire parts (cold hearth/forge); undefined = lit. */lit?:boolean};
+ /** false removes fire parts (cold hearth/forge); undefined = lit. */lit?:boolean;
+ /** Tiled cells: neighbour mask (JOIN bits). Absent = derived from wallAxis (legacy). */join?:number;
+ /** Gate leaves swung open against the towers. */gateOpen?:boolean;
+ /** The society's cultural forms (walls, gates, hall roofs); absent = the neutral Village forms. */form?:SkinForms};
 export type Generator=(ctx:FamilyContext,r:Rng)=>{parts:Part[];entry?:{x:number;z:number;width:number}};
 export type CoreFamilyId='roundhouse'|'cottage'|'longhouse'|'granary'|'storehouse'|'watermill'|'quernShelter'|'workshop'|'palisade'|'gate'|'tower'|'church'|'marketStalls'|'hearth';
 export type ExtraFamilyId='fieldPlot'|'pen'|'pier'|'bridge'|'keep'|'stables'|'college'|'quarry'|'cairn'|'grove'|'outpost'|'threshing'|'stoneWall'|'trench'|'moat'|'well'|'cistern'|'millHouse'|'windmill'|'aqueduct'|'canal';

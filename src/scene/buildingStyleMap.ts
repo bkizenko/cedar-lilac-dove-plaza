@@ -8,13 +8,15 @@
  * handful of distinct cottages, not 60 unique meshes. */
 import {hashSeed,type BuildingSpec} from './buildingParts';
 import {generateCivBuilding,type CivContext,type CivRole} from './civBuildings';
-import {lookOf,roleForType,skinSignature,villageRetint,type CivSkin} from './civSkin';
+import {formsOf,lookOf,roleForType,skinSignature,villageRetint,type CivSkin} from './civSkin';
 import type {CivId} from './civStyles';
 import {generateFamily,getBuildingGrammar,type BuildMaterial,type Climate,type FamilyContext,type FamilyId,type Trade,type Tradition,type WallAxis} from './buildingFamilies';
 
 export type Habitat='plains'|'forest'|'hills'|'desert'|'tundra'|'wetland';
 export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:number;habitat?:Habitat;footprint:{w:number;d:number};
  waterSide?:'+x'|'-x'|'+z'|'-z';wallAxis?:WallAxis;
+ /** Tiled cells (walls, gate, trench, moat, canal, aqueduct): which of the four neighbours the cell touches (JOIN bits in buildingHelpers). Wins over wallAxis. */join?:number;
+ /** Gate leaves swung open (the gate is unlocked and nothing hostile is near). */gateOpen?:boolean;
  /** Stable settlement identity (e.g. founding town-hall id or team). Gives the
   * village its own building tradition; omitted means one world-wide tradition. */
  settlementSeed?:number;
@@ -49,7 +51,7 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   case 'hut':return era<=1?{family:'roundhouse'}:{family:'cottage',scale:'small'};
   case 'house':return climate==='cold'||climate==='wet'?(era<=2?{family:'longhouse'}:{family:'cottage',scale:'large'}):{family:'cottage',scale:'large'};
   case 'townhall':return {family:'longhouse',scale:'large'};
-  case 'barracks':return {family:'longhouse'};
+  case 'barracks':return {family:'longhouse',scale:'large'};
   case 'warehouse':return era<=2?{family:'granary'}:{family:'storehouse'};
   case 'grindingStone':return waterSide?{family:'watermill'}:{family:'quernShelter'};
   case 'workshop':return {family:'workshop',trade:'bench'};
@@ -140,9 +142,9 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
  const skin=input.skin&&input.skin.grammar?input.skin:null,role=skin?roleForType(input.type):null,wearTier=input.condition===undefined||input.condition>=.7?0:input.condition>=.4?1:2,mourn=!!(skin&&input.mourning);
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'']:[])].join('|');
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.join??'',input.gateOpen?'open':'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'']:[])].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
-  ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.lit===false?{lit:false}:{})};
+  ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.join!==undefined?{join:input.join}:{}),...(input.gateOpen?{gateOpen:true}:{}),...(skin?{form:formsOf(skin)}:{}),...(input.lit===false?{lit:false}:{})};
  if(skin&&role){
   const look=lookOf(skin),cctx:CivContext={seed:ctx.seed,era,wealth,wear:[.1,.35,.6][wearTier],footprint:{w:fw,d:fd},eraMode:'fixed',built:{era,wealth},...(input.lit===false?{lit:false}:{}),...(mourn?{mourning:true}:{}),...(look?{look}:{})};
   return {key,family:map.family,ctx,civ:{grammar:skin.grammar!,role,ctx:cctx}};

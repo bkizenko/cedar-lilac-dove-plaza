@@ -27,9 +27,15 @@ function flatSite(g:Game,cx:number,cz:number,w:number,radius:number){
   return best;
 }
 const SKIN_VILLAGE=['townhall','hut','house','house','hut','house','workshop','forge','hearth','temple','market','well','university','barracks','watchtower','stables','oven'];
+/** Staging rules the live game enforces: 'house' needs a unit that has demonstrated housing (housingAdoptionIssue), and every placement
+ * needs its tribe at the building's age (university is age 5) plus its cost. Without this the harness silently dropped houses and the academy. */
+function teach(g:Game,team:number){
+  const t=g.tribe(team);t.age=Math.max(t.age,5);t.wood+=9999;t.stone+=9999;t.food+=999;
+  const u=g.state.units.find(q=>q.team===team&&q.hp>0);if(u&&!(u as any).housingSkill)(u as any).housingSkill={version:1,sourceHouseId:0,originTeam:team,demonstratedAt:0};
+}
 /** place a small village of `types` around a camp for `team` (test-only: ownership is rewritten after placement so any team can be staged) */
 function settle(g:Game,camp:{x:number;z:number},team:number,types:string[],tight=1){
-  const placed:string[]=[];let n=0;
+  const placed:string[]=[];let n=0;teach(g,team);
   for(const type of types){let ok=false;for(let k=n;k<n+90&&!ok;k++){const a=k*2.399,r=(6+Math.sqrt(k)*5.4)*tight,x=camp.x+Math.cos(a)*r,z=camp.z+Math.sin(a)*r;if(!dry(g,x,z)||g.placementIssue(type as any,x,z,0))continue;
     if(!g.placeBuilding(type as any,x,z,0))continue;const b=g.state.buildings.filter(q=>q.type===type&&q.hp>0).pop()!;b.build=1;b.plannedCost=undefined as any;b.team=team;ok=true;n=k+1;placed.push(type);}}
   return placed;
@@ -44,9 +50,17 @@ w.hwShot=async(o:Opts)=>{
   if(o.shot==='watermill'||o.shot==='all'){const s=findSite(g,'watermill',12);if(s){const b=finish(g,'watermill',s.x,s.z);if(b){focus={x:b.x,z:b.z};info.mill={x:b.x,z:b.z,site:watermillSite(g,b.x,b.z)};}}}
   if(o.shot==='windmill'||o.shot==='all'){const s=findSite(g,'windmill',20);if(s){const b=finish(g,'windmill',s.x,s.z);if(b){focus=focus&&o.shot==='all'?focus:{x:b.x,z:b.z};info.wind={x:b.x,z:b.z,site:windmillSite(g,b.x,b.z)};}}}
   if(o.shot==='village'){
-    const camp=g.world.camps.find(c=>c.team===0)||g.world.camps[0],types=['townhall','hut','house','house','hut','warehouse','workshop','forge','kiln','potter','oven','hearth','smokehouse','grindingStone','tanner','tailor','butcher','dryrack','fibreWorkshop','threshingFloor','temple','market','barracks','watchtower','stables','keep','university','well','cistern','lumber','quarry','cairn','grove'];
+    teach(g,0);const camp=g.world.camps.find(c=>c.team===0)||g.world.camps[0],types=['townhall','hut','house','house','hut','warehouse','workshop','forge','kiln','potter','oven','hearth','smokehouse','grindingStone','tanner','tailor','butcher','dryrack','fibreWorkshop','threshingFloor','temple','market','barracks','watchtower','stables','keep','university','well','cistern','lumber','quarry','cairn','grove'];
     focus={x:camp.x,z:camp.z};const placed:string[]=[];let n=0;
     for(const type of types){let ok=false;for(let k=n;k<n+80&&!ok;k++){const a=k*2.399,r=7+Math.sqrt(k)*5.2,x=camp.x+Math.cos(a)*r,z=camp.z+Math.sin(a)*r;if(!dry(g,x,z)||g.placementIssue(type as any,x,z,0))continue;const b=finish(g,type,x,z);if(b){ok=true;n=k+1;placed.push(type);}}}
+    info.placed=placed;
+  }
+  if(o.shot==='defence'){// a palisade run with a gate and a stone-wall corner beside the camp, plus a warehouse
+    teach(g,0);const camp=g.world.camps.find(c=>c.team===0)||g.world.camps[0];focus={x:camp.x,z:camp.z};const placed:string[]=[];
+    const cx=Math.round(camp.x/2)*2+14,cz=Math.round(camp.z/2)*2;focus={x:cx+6,z:cz+4};
+    const run:[string,number,number][]=[['palisade',0,0],['palisade',4,0],['gate',8,0],['palisade',12,0],['stonewall',16,0],['stonewall',16,4],['stonewall',16,8],['palisade',0,4],['palisade',0,8]];
+    for(const [t,dx,dz] of run){const b=finish(g,t as any,cx+dx,cz+dz);if(b)placed.push(t);}
+    for(const [t,dx,dz] of [['warehouse',-8,-14],['dock',-20,6]] as [string,number,number][]){const b=finish(g,t as any,cx+dx,cz+dz);if(b)placed.push(t);}
     info.placed=placed;
   }
   if(o.shot==='skins'){// one village, the player's slot wears each requested skin in turn (contact sheet)
