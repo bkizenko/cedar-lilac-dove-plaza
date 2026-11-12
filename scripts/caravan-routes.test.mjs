@@ -2,12 +2,18 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {planCaravan,tickCaravanRoutes,waitForCaravan} from '../src/game/caravanRoutes.ts';
 import {recoverCaravanEquipment,escortAI} from '../src/game/caravans.ts';import {eligibleTradeCarrier} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
+import {refreshSettlementSites} from '../src/game/settlementKnowledge.ts';
 function fixture(){
  const g=new Game();g.reset(123456);g.enterIsland();g.world.heights.fill(4);g.state.units=[];
  for(const k of ['trees','stones','forage','fish','wildlife','copper','iron'])g.state[k]=[];
  g.state.buildings=[g.makeBld('townhall',0,0,0),g.makeBld('townhall',70,0,1)];g.vision.fill(2);g.state.weather='clear';g.clockState=()=>({period:'Afternoon'});
  Object.assign(g.tribe(0),{food:5000,wood:500,stone:50,spears:10});Object.assign(g.tribe(1),{alive:true,hostile:false,food:5000,wood:2000,stone:500,trust:.8,tension:0,age:0});
- for(let i=0;i<16;i++)g.spawnUnit('worker',8+i%4,8+Math.floor(i/4),0);g.rebuildWalk();return g;
+ // One of the same sixteen adults is authored as a real nearby witness.
+ // Revealed render fog alone never teaches a society a foreign settlement.
+ for(let i=0;i<16;i++)g.spawnUnit('worker',i===15?52:8+i%4,i===15?0:8+Math.floor(i/4),0);
+ refreshSettlementSites(g);
+ assert.ok(g.state.observedSettlements?.some(m=>m.observer===0&&m.owner===1&&m.active));
+ g.rebuildWalk();return g;
 }
 function trip(g,r,seconds=600){for(let i=0;i<seconds*10&&r.caravan.trips===0;i++){
  g.state.time+=.1;g.navBudget=40;
