@@ -649,7 +649,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | GAP-VILLAGE-REQUESTS | master-gap | Neighboring villages offer need-based quests/requests with actual goods, relationships and consequences, not repeatable free rewards. | Claude | Claude W2 | not started |  |
 | GAP-WOODLAND-RESIDENTS | master-gap | Scattered independent woodland inhabitants with homes, inventories and contextual conversations. | Grok | Grok N1 | not started | driver including conversations; Claude reviews dialog |
 | CHAT-G10-FOG-PROVENANCE | chat |  | Grok | Grok W13 | source-pushed-not-live | overlay live 39115987; exact-radius attribution open |
-| CHAT-G13-BOAT-DIMENSIONS | chat |  | Codex | Codex T4 | not started | C11 hull length/beam |
+| CHAT-G13-BOAT-DIMENSIONS | chat |  | Codex | Codex T4 | done/live | 687e82a advisory class metre dimensions match measured mesh envelopes;1focusedPASS; no collision/seat changes |
 | CHAT-G14-DEEPWATER-PORTS | chat |  | Grok | Grok W10 | not started | Grok drives depth/admission; Codex hulls already in T4/N5 |
 | CHAT-G15-TRADE-DIVERSITY | chat |  | Claude | Claude W2 | source-pushed-not-live | Claude drives offers/frequency/UI; Codex W7 prices |
 | CHAT-G16-DEEPWATER-STORMS | chat |  | Claude | Claude W2 | source-pushed-not-live | storms source-pushed; consume Grok deepWater; Codex weather/hull effects if needed |
@@ -702,7 +702,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | E1 | interface | Capitulation terms, domination status, captive panel, trade dialog, dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | same as WQ-13 |
 | IFACE-C1 | interface | Persist renderStyle current \| optionH | Codex | — (done) | done/live | graphics.ts renderStyle live 860863a |
 | IFACE-C10 | interface | world.ts Option H adapter, light-rig, H-only daylight lerp, render-check | Claude | Claude T8 | not started | Option H world.ts adapter — Claude drives |
-| IFACE-C11 | interface | Hull length/beam per class; h-good icons; wonder-kit preset save location | Codex | Codex T4 | not started | hull length/beam; h-good icons / wonder-kit preset save if still missing |
+| IFACE-C11 | interface | Hull length/beam per class; h-good icons; wonder-kit preset save location | Codex | Codex T4 | live-partial | 687e82a dimensions and bounded injected wonder preset store5/5focused; Experience mesh/preset UI consumers and icons still require own wiring |
 | IFACE-C12 | interface | Wire lit from real fire | Claude | Claude T8 | source-pushed-not-live | lit input is survivalNeeds.hearthHeating; H adapter not wired |
 | IFACE-C13 | interface | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer eviction |
 | IFACE-C14 | interface | Repair stolen-cargo conservation / custody | Claude | Claude W2 | source-pushed-not-live | stolen-cargo conservation; last review 9a40164 blocked, P1 fixes claimed b4386e8 / 1f77972 |
@@ -711,7 +711,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | IFACE-C3 | interface | LOD / frustum hooks | Codex | — (done) | done/live | InstanceCameraCull.query live d4d3cba |
 | IFACE-C4 | interface | Hull / crew / sail API confirmation | Codex | — (done) | done/live | hull/crew/sail seams confirmed; sea exploration live f09578d |
 | IFACE-C5 | interface | sim.ts phase-registry decomposition | Codex | Codex W10 | source-pushed-not-live | small hooks yes, no generic phase registry; only if it unblocks a hook |
-| IFACE-C6 | interface | Real stranded-crew rescue after hull loss | Codex | Codex T3 | not started | real wade/swim-to-shore after hull loss |
+| IFACE-C6 | interface | Real stranded-crew rescue after hull loss | Codex | Codex T3 | done/live | 687e82a on8086/8101; native original survivor swims107m, strict midwater reload, physical cache cargo delivery; bounded planner; offshore captive rescue remains unsupported |
 | IFACE-C7 | interface | Quiet NPC toggleSail | Codex | — (done) | done/live | quiet NPC toggleSail 1a6e71e |
 | IFACE-C8 | interface | Sail-rig / hull-service eligibility during sea muster | Codex | — (done) | done/live | sail-rig / hull-service eligibility during sea muster f09578d / 01e6f66 |
 | IFACE-C9 | interface | Sign-off optional types.ts trade/cargo/storm fields and conquest wiring | Codex | Codex T2 | not started | optional types.ts trade/cargo/storm fields; single-owner rule lifted — still implement/wire with T2 |
