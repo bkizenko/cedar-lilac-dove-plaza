@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useActionFeedback,FeedbackList} from './council/useActionFeedback';
 import type {Engine} from '../game/engine';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {CouncilPanelClassic} from './council/CouncilPanelClassic';
@@ -13,11 +13,11 @@ const STAGE_NOTE:Record<string,string>={household:'A small household. The leader
 export function CouncilPanel({engine}:{engine:Engine}){
  const [layout,setLayout]=useCouncilLayout();
  const read=useOwnerReadModels(engine,[QUERY]),res=read(QUERY),c=res.model?.council;
- const [feedback,setFeedback]=useState('');
+ const fb=useActionFeedback(engine);
  if(layout==='classic')return <><LayoutToggle layout={layout} set={setLayout}/><CouncilPanelClassic engine={engine}/></>;
  if(!c)return <p className="text-xs text-parchment-dim">{res.issue}</p>;
  if(!c.enabled)return <><CapitulationTerms engine={engine}/><p className="text-xs text-parchment-dim">This village predates ruling houses.</p></>;
- const marry=async(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages'='marry-houses')=>{try{const r=await engine.dispatch({kind,team});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
+ const marry=(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages'='marry-houses')=>fb.send({kind,team});
  return <section aria-label="Council" className="mt-2 space-y-2 text-xs">
   <LayoutToggle layout={layout} set={setLayout}/>
   <CapitulationTerms engine={engine}/>
@@ -34,7 +34,8 @@ export function CouncilPanel({engine}:{engine:Engine}){
   <FameFeed log={c.log}/>
   {c.expansion&&<Card label="Expansion" title={MODE_LABEL[c.expansion.mode]??c.expansion.mode}>
    {c.expansion.why.length>0?<p className="text-parchment-dim">Because {c.expansion.why.join('; ')}.</p>:<p className="text-parchment-dim">Nothing presses the people to leave.</p>}</Card>}
-  <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)} feedback={feedback}/>
+  <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)}/>
+  <FeedbackList items={fb.items}/>
  </section>;
 }
 function LayoutToggle({layout,set}:{layout:'current'|'classic';set:(l:'current'|'classic')=>void}){
