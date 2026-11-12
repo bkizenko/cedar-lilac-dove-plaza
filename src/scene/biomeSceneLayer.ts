@@ -12,7 +12,7 @@ export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;ma
  height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;
  seasonMix:()=>{winter:number;autumn:number;snow:number}};
 export const BIOME_SCENE_RULES={treeRefreshSeconds:.1,dressingRefreshSeconds:.5,dressingCellMetres:6,dressingRadiusMetres:65,
- dressingMaxCandidates:1024,painterCellMetres:3.6,painterMaxCandidates:1500,dryClearanceMetres:.3,maximumDressingGrade:.65,bankSearchMetres:11,buildingMarginMetres:.7} as const;
+ dressingMaxCandidates:1024,painterCellMetres:3.2,painterMaxCandidates:1500,dryClearanceMetres:.3,maximumDressingGrade:.65,bankSearchMetres:11,buildingMarginMetres:.7} as const;
 /** All coefficients affect an actual surface channel, not an independent flat
  * biome paint layer. The active terrain shader is intentionally untouched here. */
 export const BIOME_SURFACE_PROFILES:Record<ProvinceKind,{organic:number;litter:number;grit:number;damp:number;roughness:number;microHeightMetres:number;detailScaleMetres:number;tint:[number,number,number];dressingDensity:number}>={
@@ -81,9 +81,9 @@ function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number,sit
  if(site.soil<.22)return pick([['pebbles',30],['rocks',12],['cushion',kind==='alpine'?14:4],['drygrass',16],['grass',8],['bush',2]]);
  if(site.cover>.3){ // under canopy: a forest floor of ferns, moss, fungi and deadwood, drier kinds keep grass and bushes
   const dry=kind==='dry-scrub'||kind==='arid',wet=moisture>.45&&!dry;
-  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2]]):pick([['fern',24],['bracken',wet?12:3],['moss',14],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',9],['bush',4],['rocks',3]]);
+  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2],['sapling',3]]):pick([['fern',22],['bracken',wet?12:3],['moss',13],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',8],['bush',5],['sapling',11],['pinelet',kind==='conifer-forest'||kind==='alpine'?14:4],['rocks',3]]);
  }
- if(site.cover>.07||site.edge>.25)return kind==='dry-scrub'||kind==='arid'?pick([['bush',14],['drygrass',22],['pebbles',10],['rocks',4]]):pick([['bush',15],['tallgrass',16],['bracken',moisture>.45?9:3],['flowers',10],['grass',24],['fern',8],['stump',1.5],['rocks',2]]);
+ if(site.cover>.07||site.edge>.25)return kind==='dry-scrub'||kind==='arid'?pick([['bush',14],['drygrass',22],['pebbles',10],['rocks',4]]):pick([['bush',15],['tallgrass',16],['bracken',moisture>.45?9:3],['flowers',10],['grass',24],['fern',8],['stump',1.5],['sapling',7],['rocks',2]]);
  switch(kind){
   case 'meadow':return pick([['grass',50],['tallgrass',14],['flowers',22],['shrub',3],['pebbles',3],['rocks',1.2]]);
   case 'mixed-woodland':return pick([['grass',36],['fern',22],['shrub',12],['tallgrass',8],['flowers',6],['log',2.4],['rocks',2.6],['pebbles',3]]);
@@ -111,7 +111,7 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
   let site:FloorSite=NO_SITE;
   if(floor){const cover=floor.cover(x,z),around=[floor.cover(x+9,z),floor.cover(x-9,z),floor.cover(x,z+9),floor.cover(x,z-9)];
    site={cover,edge:Math.max(...around,cover)-Math.min(...around,cover),soil:gq?Math.max(0,Math.min(1,gq.soil)):Math.max(0,Math.min(1,cond.soil)),slope:0};}
-  const density=Math.min(1,art.dressingDensity*(site.cover>.3?1.3:1.1))*(1-.55*Math.pow(d/rules.dressingRadiusMetres,2))*(floor?.35+.65*Math.min(1,site.soil*1.4):1);
+  const density=Math.min(1,art.dressingDensity*(site.cover>.3?1.75:1.1))*(1-.55*Math.pow(d/rules.dressingRadiusMetres,2))*(floor?.35+.65*Math.min(1,site.soil*1.4):1);
   if(hash(ix,iz,game.state.seed,103)>density)continue;
   let bank=false;
   if(cond.moisture>.45)for(const [ax,az] of [[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,-.7]]){const px=x+ax*rules.bankSearchMetres*.6,pz=z+az*rules.bankSearchMetres*.6;if(game.height(px,pz)<game.waterAt(px,pz)+.12){bank=true;break;}}
@@ -147,7 +147,7 @@ export class CanopyCover{
   let alive=0,sum=0;for(const t of trees)if(t.amount>0||t.planted){alive++;sum+=t.x*.37+t.z*.73;}
   const key=`${trees.length}|${alive}|${Math.round(sum)}`;if(key===this.key)return;this.key=key;this.cells.clear();
   const c=this.cell;
-  for(const t of trees){if(t.amount<=0&&!t.planted)continue;const r=2.4*t.scale*(t.planted?.5:1),cx=Math.floor(t.x/c),cz=Math.floor(t.z/c),span=Math.ceil(r/c);
+  for(const t of trees){if(t.amount<=0&&!t.planted)continue;const r=3.4*t.scale*(t.planted?.5:1),cx=Math.floor(t.x/c),cz=Math.floor(t.z/c),span=Math.ceil(r/c);
    for(let dz=-span;dz<=span;dz++)for(let dx=-span;dx<=span;dx++){const px=(cx+dx+.5)*c,pz=(cz+dz+.5)*c,d=Math.hypot(px-t.x,pz-t.z);if(d>r+c*.5)continue;const k=this.idx(cx+dx,cz+dz);this.cells.set(k,Math.min(1,(this.cells.get(k)??0)+(1-Math.max(0,d-r*.4)/(r+c*.6))*.55));}}
  }
  cover=(x:number,z:number)=>{const ix=Math.floor(x/this.cell),iz=Math.floor(z/this.cell);let s=0;for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)s+=(this.cells.get(this.idx(ix+dx,iz+dz))??0)*(dx||dz?.7:1.6);return Math.min(1,s/4.4);};

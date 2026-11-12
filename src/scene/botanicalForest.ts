@@ -10,7 +10,7 @@ import {painterSway,type PainterSway} from './painterVegetationMaterial';
 export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean};
 export type ForestOptions={seed:number;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
-export const FOREST_LOD={fullFraction:1.2,midFraction:2.4} as const;
+export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
 type Rec={sp:number;v:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
 const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=>{let c=AUTUMN_CACHE.get(hex);if(!c){c=new THREE.Color(hex);AUTUMN_CACHE.set(hex,c);}return c;};
@@ -106,7 +106,7 @@ export class BotanicalForest{
     density=1-Math.min(1,ctx.winter*1.25)-smooth(.55,1.05,ctx.autumn*(.55+.45*rec.timing))*.85;density=Math.max(0,Math.min(1,density));
    }
    const snow=ctx.snow>.15?Math.min(1,ctx.snow*(sp.evergreen?1.05:.9)):0;if(snow>0&&density>.3)this.color.lerp(this.snowColor,snow*.25);
-   this.color.multiplyScalar(.9+.2*rec.hue[2]);
+   this.color.multiplyScalar(1.04+.2*rec.hue[2]);
    if(ctx.marked?.(node.id))this.color.set('#c58e43');
    if(distance<=near*2.2&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier<2){
