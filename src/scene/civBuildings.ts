@@ -8,7 +8,7 @@ import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic'
 import {CIVS,matId,materialTable,type CivId,type CivMaterials,type Swatch} from './civStyles';
 export type CivRole='house'|'civic'|'granary'|'market';
 /** eraMode 'morph' (default): the look follows `era`. 'fixed': the look is set by the building's own build-time culture/wealth (`built`, else the era it was first generated at) and never morphs when the world's era advances; only an explicit rebuild (new `built`) or extension (`extensions`) changes it. */
-export type EraMode='morph'|'fixed';export const ERA_MODES:EraMode[]=['morph','fixed'];export const DEFAULT_ERA_MODE:EraMode='morph';
+export type EraMode='morph'|'fixed';export const ERA_MODES:EraMode[]=['morph','fixed'];export const DEFAULT_ERA_MODE:EraMode='fixed';
 export type CivContext={seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean;eraMode?:EraMode;built?:{era:number;wealth:number};/** later additions, each built with the techniques of its own era */extensions?:{era:number}[]};
 export type CivSpec=BuildingSpec&{civ:CivId;role:CivRole;materials:Record<string,Swatch>;banners:{pos:readonly[number,number,number];size:readonly[number,number,number]}[];imperfection:{scale:number;lean:number;offDoor:number;patches:number};eraMode:EraMode;builtEra:number;extensionEras:number[]};
 type V=[number,number,number];type Slot=keyof CivMaterials;
@@ -178,6 +178,8 @@ function addons(g:G,r:Rng){const {w,d}=g;
  if(chance(r,.3))for(let i=0;i<pick(r,[2,3]);i++)g.Cy('accent',.4,.5,[-w*.3+i*.5,0,d/2-.5],0,8);
 }
 
+/** ARCHIVE: the first-generation per-civ grammars are kept verbatim and selectable (GRAMMAR_SET 'legacy'); never deleted. */
+const LEGACY_HOUSE:Record<CivId,(g:G)=>Out>={...HOUSE},LEGACY_CIVIC:Record<CivId,(g:G)=>Out>={...CIVIC};
 // ---------------------------------------------------------------- original grammars (Experience lane): not copies of any real tradition
 const P=(g:G,shape:Part['shape'],s:Slot,size:V,pos:V,rot?:V,sides?:number,lod:LodTier=2)=>void g.parts.push(part(shape,matId(g.civ,s) as Part['mat'],size,pos,lod,rot,sides));
 const yawOf=(x:number,z:number)=>Math.atan2(x,z);
@@ -192,12 +194,12 @@ HOUSE.aureline=g=>{const {w,d,r}=g,n=5,R=w*.7,span=1.45,h=range(r,1.7,2.1),ch=2*
  g.B('wall2',[1.8,.3,.9],[g.off*.3,.3,R*.72-R+.2+2.1],1);P(g,'wedge','wall2',[.5,hh0(h)+1.6,1.4],[w*.46,.3,-d*.25],[0,Math.PI,0],undefined,1);
  return {entry:{x:g.off*.3,z:R*.72-R+2.4,width:1.2}};};
 const hh0=(h:number)=>h+.4;
-CIVIC.aureline=g=>{const {w,d,r}=g,R=Math.min(w,d)*.48,n=14,gate=.34;
- P(g,'cylinder','wall2',[R*2.2,.35,R*2.2],[0,0,0],undefined,28);P(g,'cylinder','roof',[R*1.4,.1,R*1.4],[0,.35,0],undefined,28,1);P(g,'cylinder','trim',[R*1.5,.12,R*1.5],[0,.33,0],undefined,28,1);
+CIVIC.aureline=g=>{const {w,d,r}=g,R=Math.min(w,d)*.48,n=12,gate=.34;
+ P(g,'cylinder','wall2',[R*2.2,.35,R*2.2],[0,0,0],undefined,20);P(g,'cylinder','roof',[R*1.4,.1,R*1.4],[0,.35,0],undefined,20,0);P(g,'cylinder','trim',[R*1.5,.12,R*1.5],[0,.33,0],undefined,20,0);
  for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=Math.sin(a),z=Math.cos(a);if(Math.abs(Math.atan2(x,z))<gate)continue;const ph=i%2?4.4:3.4;
-  P(g,'box','wall',[.8,ph,1.0],[x*R,.35,z*R],[0,a,0]);P(g,'sphere','trim',[.7,.55,.9],[x*R,.35+ph,z*R],[0,a,0],undefined,1);
-  const b=a+Math.PI/n,len=2*R*Math.sin(Math.PI/n)*1.02;P(g,'box','wall2',[len,.35,.9],[Math.sin(b)*R,.35+3.2,Math.cos(b)*R],[0,b,0]);if(i%2)P(g,'box','roof',[len*.9,.9,.12],[Math.sin(b)*R,.35+1.2,Math.cos(b)*R],[0,b,0],undefined,1);}
- P(g,'box','wall',[1.5,2.6,1.5],[0,.35,0]);P(g,'pyramid','wall2',[1.5,6.2,1.5],[0,2.95,0]);P(g,'sphere','accent',[.7,.7,.7],[0,9.1,0],undefined,undefined,1);
+  P(g,'cylinder','wall',[.85,ph,.72],[x*R,.35,z*R],undefined,6,1);P(g,'pyramid','trim',[.95,.55,.95],[x*R,.35+ph,z*R],[0,a,0],undefined,1);
+  const b=a+Math.PI/n,len=2*R*Math.sin(Math.PI/n)*1.02;P(g,'box','wall2',[len,.35,.9],[Math.sin(b)*R,.35+3.2,Math.cos(b)*R],[0,b,0],undefined,1);if(i%2)P(g,'box','roof',[len*.9,.9,.12],[Math.sin(b)*R,.35+1.2,Math.cos(b)*R],[0,b,0],undefined,1);}
+ P(g,'box','wall',[1.5,2.6,1.5],[0,.35,0]);P(g,'pyramid','wall2',[1.5,6.2,1.5],[0,2.95,0]);P(g,'pyramid','accent',[.7,.9,.7],[0,9.1,0],undefined,undefined,1);
  P(g,'box','cloth',[.05,3,2.4],[0,5.4,0],[0,.5,0],undefined,1);for(let i=0;i<4;i++)g.B('wall2',[1.8,.2,.8],[0,.35+i*.0,R*.55+i*.55-.1],1);
  g.banner(R*.9,R*1.0,4.6);return {entry:{x:0,z:R,width:1.8}};};
 /** Hanrei: grounded lattice houses under three folded slate roofs; the civic hall is a peacock fan of radiating gabled wings behind a gate hall. */
@@ -205,7 +207,7 @@ HOUSE.hanrei=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.7,h=range(r,2.3,2.7),y=
  g.B('wall2',[W+.7,.35,D+.7],[0,0,0],2);g.B('wall',[W*.88,h,D*.8],[0,.35,0],2);
  for(let i=0;i<=5;i++){g.B('wall2',[.07,h*.88,.05],[-W*.4+i*W*.16,.4,D*.4+.03],0);g.B('wall2',[.05,h*.88,.07],[W*.44+.03,.4,-D*.35+i*D*.14],0);}
  for(const k of[.33,.66])g.B('wall2',[W*.82,.07,.05],[0,.35+h*k,D*.4+.03],0);
- P(g,'hip','roof',[W*1.4,.95,D*1.4],[0,y-.7,0],undefined,undefined,undefined,2);
+ P(g,'hip','roof',[W*1.4,.95,D*1.4],[0,y-.7,0],undefined,undefined,2);
  const ra=range(r,1.9,2.2),rb=range(r,1.4,1.7);
  P(g,'prism','roof',[W*1.22,ra,D*.8],[-W*.04,y,-D*.14]);P(g,'prism','roof',[D*.9,rb,W*.72],[W*.2,y-.05,D*.12],[0,Math.PI/2,0]);P(g,'prism','roof',[W*.8,ra*.55,D*.5],[-W*.26,y-.05,D*.22]);
  for(const [x,z,yy] of[[-W*.04,-D*.54,ra],[-W*.04,D*.4,ra],[W*.2+W*.36,D*.12,rb]] as [number,number,number][])P(g,'cone','accent',[.3,.7,.3],[x,y+yy-.1,z],undefined,6,1);
@@ -216,7 +218,7 @@ CIVIC.hanrei=g=>{const {w,d,r}=g,n=7,hz=d*.18,R=d*.62;
  g.B('accent',[w*.96,.4,d*.96],[0,0,0],2);
  for(let i=0;i<n;i++){const t=i/(n-1)*2-1,a=1-Math.abs(t),th=t*1.2,dx=Math.sin(th),dz=-Math.cos(th),L=R*(.85+.4*a),wh=1.3+a*1.3,rise=1.1+a*1.7,cx=dx*(L/2+1),cz=hz+dz*(L/2+1),yw=yawOf(dx,dz);
   P(g,'box','wall',[1.5,wh,L*.94],[cx,.4,cz],[0,yw,0]);P(g,'prism','roof',[2.0,rise,L*1.04],[cx,.4+wh,cz],[0,yw,0]);P(g,'cone','accent',[.3,.7,.3],[cx+dx*L*.5,.4+wh+rise*.9,cz+dz*L*.5],undefined,6,1);}
- P(g,'cylinder','wall',[R*.72,4,R*.66],[0,.4,hz+.4],undefined,8);P(g,'cone','roof',[R*.95,2.2,R*.95],[0,4.4,hz+.4],undefined,8);P(g,'sphere','accent',[.5,.7,.5],[0,6.5,hz+.4]);
+ P(g,'box','wall',[R*.8,4,R*.74],[0,.4,hz+.4]);P(g,'hip','roof',[R*1.05,2.2,R*.98],[0,4.4,hz+.4]);P(g,'sphere','accent',[.5,.7,.5],[0,6.5,hz+.4]);
  for(const s of[-1,1]){g.post('wall2',s*2,hz+R*.5,3.4,.18,2);P(g,'sphere','accent',[.6,.8,.6],[s*2,3.2,hz+R*.5],undefined,undefined,1);}
  g.door(0,hz+R*.35,1.3,2.2);g.banner(w*.4,d*.38,4.2);return {entry:{x:0,z:hz+R*.55,width:1.4}};};
 /** Steppan: oval felt halls. A timber footing, low felt wall and a flattened felt dome with lashing bands, smoke cap and a cloth-awning porch; the civic hall pairs three domes under one timber porch. */
@@ -245,7 +247,7 @@ CIVIC.steppan=g=>{const {w,d,r}=g,W=w*.5,D=d*.6;
 HOUSE.sandrill=g=>{const {w,d,r}=g;
  for(let i=0;i<3;i++){const s=1-.24*i,ox=(r()-.5)*.9,oz=(r()-.5)*.6;P(g,'box',i%2?'wall2':'wall',[w*.82*s,1.4,d*.7*s],[ox,i*1.5,oz],[0,(r()-.5)*.35,0]);P(g,'box','trim',[w*.82*s+.5,.16,d*.7*s+.5],[ox,i*1.5+1.4,oz],[0,(r()-.5)*.2,0],undefined,1);}
  g.B('accent',[.95,1.5,.12],[g.off*.4,0,d*.35+.04],0);P(g,'box','accent',[1.3,.2,.5],[g.off*.4,1.55,d*.35+.1],undefined,undefined,1);
- for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,3.4,4),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
+ for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,4.1,4.7),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
  for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
 CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
  for(const s of[-1,1])P(g,'box','wall',[w*.34,s<0?7:5.9,d*.7],[s*(w*.17+gap/2),0,-d*.05]);
@@ -278,7 +280,7 @@ HOUSE.mekhari=g=>{const {w,d,r}=g,W=w*.76*jit(r,.05),D=d*.68,st=range(r,1.5,1.9)
  g.B('accent',[.85,1.5,.08],[g.off*.3,y,D*.33+.03],0);for(const s of[-1,1])g.B('accent',[.55,.6,.06],[s*W*.3,y+1.0,D*.33+.03],0);
  saddle(g,W,D,y+h,range(r,1.4,1.7),range(r,.5,.8));
  g.B('wall2',[W+.4,.7,.07],[0,y,D*.5+.5],1);for(const s of[-1,1])g.post('trim',s*(W*.5+.1),D*.5+.5,y+.9,.08,1);
- P(g,'box','trim',[.5,st+.7,.08],[g.off*.3+W*.28,0,D*.5+.9],[-.5,0,0],undefined,1);P(g,'sphere','wall2',[2.6,.5,.85],[-W*.8,0,D*.5+1.3],[0,.3,0],undefined,0);
+ P(g,'box','trim',[.5,st+.7,.08],[g.off*.3+W*.28,.03,D*.5+.9],[-.5,0,0],undefined,1);P(g,'sphere','wall2',[2.6,.5,.85],[-W*.8,0,D*.5+1.3],[0,.3,0],undefined,0);
  return {entry:{x:g.off*.3,z:D*.5+1,width:1}};};
 CIVIC.mekhari=g=>{const {w,d,r}=g,W=w*.86,D=d*.44,st=2.1,y=st+.25,h=2.5;
  for(let i=0;i<5;i++)for(const sz of[-1,1])g.post('trim',-W*.46+i*W*.23,sz*D*.46,st,.24,2);
@@ -318,7 +320,7 @@ CIVIC.nilemark=g=>{const {w,d,r}=g,tw=w*.26,td=d*.34,zf=d*.28;
  g.B('wall2',[w*.96,.35,d*.96],[0,0,0],2);
  for(const s of[-1,1]){const x=s*w*.3;g.B('wall',[tw,3.8,td],[x,.35,zf],2);g.B('wall',[tw*.9,2.4,td*.9],[x,4.15,zf],2);g.B('trim',[tw*.95,.25,td*.95],[x,6.55,zf],1);g.B('wall2',[tw*.7,.5,.2],[x,6.8,zf+td*.45],0);g.post('trim',x,zf+td*.5,9.2,.1,1);P(g,'box','cloth',[.04,1.2,.8],[x+.42,8.1,zf+td*.5],undefined,undefined,1);}
  g.B('wall',[w*.34,2.9,td*.8],[0,.35,zf],2);g.B('trim',[w*.34,.22,td*.8],[0,3.25,zf],1);g.B('accent',[1.5,2.3,.1],[0,.35,zf+td*.4+.03],0);g.B('trim',[2,.2,.14],[0,2.7,zf+td*.4+.05],0);
- for(let i=0;i<6;i++)for(const s of[-1,1]){const x=s*(w*.12+(i%3)*w*.14),z=-d*.1-Math.floor(i/3)*d*.18;if(i<3||true){g.Cy('wall2',.62,2.8,[x,.35,z],2,10,.52);g.Cy('trim',.82,.22,[x,3.15,z],1,10);}}
+ for(let i=0;i<6;i++)for(const s of[-1,1]){const x=s*(w*.12+(i%3)*w*.14),z=-d*.1-Math.floor(i/3)*d*.18;if(i<3||true){g.Cy('wall2',.62,2.8,[x,.35,z],1,8,.52);g.Cy('trim',.82,.22,[x,3.15,z],0,8);}}
  g.B('wall',[w*.78,.3,d*.4],[0,3.37,-d*.14],1);g.B('wall',[w*.7,2.9,.3],[0,.35,-d*.34],2);for(let i=0;i<3;i++)g.B('wall2',[1.6,.2,.6],[0,i*.0,zf+td*.5+.3+(2-i)*.4],1);
  return {entry:{x:0,z:zf+td*.5+1,width:1.6}};};
 /** Tigrane: baked-brick courtyard houses with vaulted rooms and pilasters; the civic hall is a three-tier brick terrace with a pilastered face, grand ramp and a vaulted shrine under a glazed band. */
@@ -342,13 +344,17 @@ HOUSE.rusvolt=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.7,h=range(r,2.1,2.6),r
  P(g,'prism','roof',[W*1.12,rise,D*1.1],[0,h,0]);P(g,'prism','roof',[D*1.12,rise*.88,W*1.1],[0,h,0],[0,Math.PI/2,0]);
  for(const s of[-1,1]){P(g,'cone','accent',[.34,.8,.34],[0,h+rise-.1,s*D*.56],undefined,6,1);P(g,'cone','accent',[.34,.8,.34],[s*W*.56,h+rise*.88-.1,0],undefined,6,1);}
  g.B('accent',[.9,1.7,.08],[g.off*.3,0,D*.5+.02],0);g.post('wall2',-.9,D*.5+.7,h,.16,1);g.post('wall2',.9,D*.5+.7,h,.16,1);P(g,'wedge','roof',[2.2,.7,1.4],[0,h,D*.5+.4],undefined,undefined,1);
+ for(const x of[-1,1])for(const z of[-1,1])for(let j=0;j<3;j++)P(g,'cylinder','wall2',[.3,.5,.3],[x*W*.5,.3+j*(h-.5)/2.4,z*D*.5+(z>0?-.02:.02)],[z>0?Math.PI/2:-Math.PI/2,0,0],6,0);
  return {entry:{x:g.off*.3,z:D*.5+.8,width:1}};};
 CIVIC.rusvolt=g=>{const {w,d,r}=g,b=Math.min(w,d)*.82;
- g.B('wall',[b,2.3,b],[0,0,0],2);for(const x of[-1,1])for(const z of[-1,1])P(g,'cone','accent',[.5,2.2,.5],[x*b*.52,0,z*b*.52],[x*.35,0,-z*.35],6,1);
+ g.B('wall',[b,2.3,b],[0,0,0],2);for(const x of[-1,1])for(const z of[-1,1])P(g,'cone','accent',[.5,2.2,.5],[x*b*.52,.2,z*b*.52],[x*.35,0,-z*.35],6,1);
  let y=2.3;for(let i=0;i<4;i++){const s=b*.8*(.8**i),rot:V=[0,i%2?Math.PI/4:0,0];g.parts.push(part('box',matId(g.civ,'wall2') as Part['mat'],[s,1.3,s],[0,y,0],2,rot));g.B('wall',[s*1.04,.1,s*1.04],[0,y+.5,0],0,rot);
   P(g,'pyramid','roof',[s*1.38,1.9,s*1.38],[0,y+1.3,0],rot);y+=1.3+.95;}
  P(g,'cone','accent',[.5,2.2,.5],[0,y,0],undefined,6);P(g,'sphere','trim',[.5,.5,.5],[0,y+2.1,0],undefined,undefined,1);
  g.door(0,b*.5+.02,1.3,2);g.banner(b*.55,b*.55,4.2);return {entry:{x:0,z:b*.5,width:1.4}};};
+const ORIGINAL_HOUSE:Record<CivId,(g:G)=>Out>={...HOUSE},ORIGINAL_CIVIC:Record<CivId,(g:G)=>Out>={...CIVIC};
+export type GrammarSet='original'|'legacy';export const GRAMMAR_SETS:GrammarSet[]=['original','legacy'];let grammarSet:GrammarSet='original';
+export const setGrammarSet=(g:GrammarSet)=>{grammarSet=g;};export const getGrammarSet=()=>grammarSet;
 export const ROLE_LIST:CivRole[]=['house','civic','granary','market'];
 /** Seeded individual imperfection: wall lean, uneven heights, size jitter, rubble and patches by wear. */
 function imperfect(g:G,parts:Part[],wear:number,r:Rng){
@@ -357,12 +363,22 @@ function imperfect(g:G,parts:Part[],wear:number,r:Rng){
  for(let i=0;i<Math.round(wear*6);i++){const a=r()*Math.PI*2,rr=Math.min(g.w,g.d)*.32+r()*.5;out.push(part('box',matId(g.civ,'wall2') as Part['mat'],[.3+r()*.3,.2+r()*.2,.3+r()*.3],[Math.cos(a)*rr*.9,0,Math.sin(a)*rr*.9],0,[0,r()*3,0]));patches++;}
  return {parts:out,lean:leanDeg,patches};
 }
+/** Era marks for the original grammars: the same hall reads older or richer by what its builders could afford, never by a global era swap.
+ * era>=3 a proud plinth course; era>=4 gate posts at the front corners; era>=5 pennants on them. Sized from the parts already built. */
+function eraMarks(g:G,era:number,wealth:number){
+ let a=1e9,b=-1e9,c=1e9,d=-1e9;for(const p of g.parts){if(p.lod<1)continue;const q=partBounds(p);a=Math.min(a,q.minX);b=Math.max(b,q.maxX);c=Math.min(c,q.minZ);d=Math.max(d,q.maxZ);}
+ if(!(b>a&&d>c))return;const cx=(a+b)/2,cz=(c+d)/2;
+ g.B('wall2',[b-a+.16,.14,d-c+.16],[cx,0,cz],1);
+ if(era>=4)for(const sx of[a-.05,b+.05]){g.post('trim',sx,d+.35,1.5+wealth*.5,.09,1);if(era>=5)g.banner(sx,d+.35,1.5+wealth*.5);}
+}
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
  const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
  // builders read g.w/g.d, so run them on a view scaled by the instance's size jitter (still fitted back into the footprint below)
  const view:G={...g,w:c2.footprint.w*Math.min(1,sc),d:c2.footprint.d*Math.min(1,sc)};
- const out=role==='house'?(c2.era<=1?poor(view):HOUSE[civ](view)):role==='civic'?(c2.era<=1?poor(view):CIVIC[civ](view)):BUILD[role](view);
+ const out=role==='house'?(c2.era<=1?poor(view):(grammarSet==='legacy'?LEGACY_HOUSE:ORIGINAL_HOUSE)[civ](view)):role==='civic'?(c2.era<=1?poor(view):(grammarSet==='legacy'?LEGACY_CIVIC:ORIGINAL_CIVIC)[civ](view)):BUILD[role](view);
+ if(grammarSet==='original'&&role==='civic'&&!view.parts.some(p=>p.mat===matId(civ,'cloth')&&p.size[2]<.1&&p.size[1]>.6))view.banner(view.w*.36,view.d*.46,3.2);
+ if(grammarSet==='original'&&(role==='house'||role==='civic')&&c2.era>=3)eraMarks(view,c2.era,c2.wealth);
  if(c2.era>1&&role!=='market')addons(view,seededRandom(ctx.seed^0x51ed270b));
  if(role!=='market')techniques(view,c2.era);
  const im=imperfect(view,g.parts,ctx.wear,seededRandom(ctx.seed^0x9e3779b1));

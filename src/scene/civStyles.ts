@@ -62,7 +62,7 @@ export const CIVS:Record<CivId,CivStyle>={
   materials:{wall:S('#bdb59f',1,'felt'),wall2:S('#8a6a40',.8,'beam'),roof:S('#efe9d8',1,'felt'),trim:S('#2a6a8a',.7),accent:S('#c43a2a',.6),cloth:S('#2a6a8a',.9,'cloth'),ground:S('#a8a060',1)},
   emblem:E('horsetail',[{k:'circle',c:[.5,.2],r:.09},poly(.46,.28,.54,.28,.6,.9,.4,.9),{k:'line',w:.04,pts:[[.2,.4],[.5,.32],[.8,.4]]}]),dress:{cut:'trousers',headwear:'cap',body:'#2a6a8a',trim:'#c43a2a',motif:'chevron'}},
  skoldar:{id:'skoldar',name:'Skoldar',inspiration:'cold-coast turf longhouse seafarers',biome:'tundra',climate:'cold',coastal:true,course:'turf',roof:'turfLow',plan:'longhouse',civic:'staveHall',poorHouse:'earth-banked skin tent',granary:'cellar',culturalNote:'turf over stave frames, earth berms, carved gable heads, tiered stave halls',
-  materials:{wall:S('#8c877b',1,'polygonal'),wall2:S('#a99b78',.9,'log'),roof:S('#7d8654',1,'turf'),trim:S('#a4865a',.8,'turf'),accent:S('#8a4b3a',.65),cloth:S('#4a5f78',.9,'cloth'),ground:S('#7a8a68',1)},
+  materials:{wall:S('#788288',1,'turf'),wall2:S('#a99b78',.9,'log'),roof:S('#7d8654',1,'turf'),trim:S('#a4865a',.8,'turf'),accent:S('#8a4b3a',.65),cloth:S('#4a5f78',.9,'cloth'),ground:S('#7a8a68',1)},
   emblem:E('prowHead',[poly(.2,.8,.2,.5,.35,.3,.5,.2,.62,.28,.6,.4,.75,.45,.8,.6,.7,.8),wave(.9,.03,3)],'trim'),dress:{cut:'cape',headwear:'hood',body:'#3a5a7a',trim:'#b98a4a',motif:'knot'}},
 };
 export const CIV_IDS=Object.keys(CIVS) as CivId[];
