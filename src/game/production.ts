@@ -132,10 +132,17 @@ export function productionSlots(b:Pick<Building,'type'|'w'|'d'>){
 export function cerealReservedMaterials(g:Game,team:number,exceptProject?:number){if(!g.state.cerealProcessing)return 0;let total=0;for(const p of g.state.production?.projects||[]){if(p.team!==team||p.id===exceptProject||!live(p)||!isCerealRecipe(p.recipe))continue;const r=PRODUCTION_RECIPES[p.recipe],phase=p.phase==='paused'?p.resumePhase:p.phase,parked=['stored','collecting'].includes(phase)?paidInputStorageUnits(p):0;total+=Math.max(0,packedItemStorageUnits(r.outputs)-parked);}return total;}
 /** Covered capacity is still reserved for paid work. Delivered harvest can
  * exceed it at a village that has a real storehouse, where it is exposed. */
-export function exposedHarvestByKind(g:Game,team:number){
+/** Real delivered overflow: loose residues yield covered space to food first.
+ * Future output reservations do not expose goods that physically fit today.
+ * This derives location without deleting, duplicating or converting stock. */
+export function exposedMaterialByKind(g:Game,team:number){
  const stock=g.tribe(team).items||{},outside:ItemStock={};
- let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)+cerealReservedMaterials(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
- for(const kind of ['grainSheaves','roughGrain','flour','rawMeat'] as const){const n=Math.min(stock[kind]||0,liters/itemPackedLiters(kind));if(n>0)outside[kind]=n;liters=Math.max(0,liters-itemPackedLiters(kind,n));}return outside;
+ let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
+ for(const kind of ['chaff','straw','grainSheaves','roughGrain','flour','rawMeat'] as const){const n=Math.min(stock[kind]||0,liters/itemPackedLiters(kind));if(n>0)outside[kind]=n;liters=Math.max(0,liters-itemPackedLiters(kind,n));}return outside;
+}
+export function exposedHarvestByKind(g:Game,team:number){
+ const outside=exposedMaterialByKind(g,team);
+ delete outside.chaff;delete outside.straw;return outside;
 }
 /** Quantity facade for urgency scoring. Exposure itself is allocated by packed volume. */
 export function exposedHarvestUnits(g:Game,team:number){return sum(exposedHarvestByKind(g,team));}
