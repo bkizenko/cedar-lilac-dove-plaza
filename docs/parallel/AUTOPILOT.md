@@ -1061,6 +1061,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 16:00 | Claude | ~17 (since 15:00 ET, all branches) | 2 via PM landing 16:1x (ui2 glance-trend village-local + minimap footprint fixes) | 2 (UI/UX phase 2: supply meters, priority stack, pins, minimap layers, Help; lane A rival commander news) | shipping; lanes A-D posted <1h |
 | 11-12 16:00 | Grok | 0 | 0 | 0 | out (hours 16+); World rows with Claude/PM queue |
 | 11-12 16:00 | Total | ~64 | main ahead of integration; integration to be synced to main | ~5 | focused sweep 142/142 pass; tsc diff nil (4 ImportMeta only); work/shipping-waiting-hooks-2026-11-11 still held (19h, conflicting); open rows ~4 not-started by grep, ~7 done-marked by table grep |
+| 11-12 17:00 | Codex | ~20 (since 16:00 ET, all branches) | ~18 | 3 (LIVE c480569 UI2/wild consumers; LIVE 9555f70 diplomatic voice + near-LOD people qualified; demonstrated method records across craft families) | active, on target |
+| 11-12 17:00 | Claude | ~8 (since 16:00 ET) | landed (lane A/B diplomatic voice, lane C near-LOD hands, lane D merges) | 2 (rival ruler diplomatic voice in Hearth/Diplomacy; near-LOD rounded hands + shoulder yoke) | active; lanes posted <1h |
+| 11-12 17:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
+| 11-12 17:00 | Total | ~28 | integration lag 0; 1 Codex commit landed 17:1x | ~5 | focused sweep 123 tests, 119 pass, 1 fail (method-record-visibility needs typescript/three, sandbox-only), 3 skip; tsc diff nil; rows ~4 not-started by grep; remaining unmerged branches are old held/stale (shipping-waiting-hooks still conflicting) |
 
 ## Process improvements
 
