@@ -20,3 +20,8 @@ test('capitulation terms are valid engine commands and offers query is accepted'
  for(const t of TERMS)assert.ok(isEngineDispatchCommand({kind:'accept-capitulation',frontId:3,outcome:t.id}),t.id);
  assert.equal(isEngineDispatchCommand({kind:'accept-capitulation',frontId:3,outcome:'nope'}),false);assert.ok(isEngineDispatchCommand({kind:'refuse-capitulation',frontId:3}));
 });
+test('classic palette restores the original tokens and the toggle renders both choices',async()=>{
+ const {UiThemeToggle}=await import('../src/ui/uiTheme.tsx');const {readFileSync}=await import('node:fs');
+ const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');assert.match(css,/:root\[data-hw-ui="classic"\]\{[^}]*--color-ink:#1a1610/);
+ const html=renderToStaticMarkup(h(UiThemeToggle));assert.match(html,/Field/);assert.match(html,/Classic/);assert.match(html,/aria-pressed="true"/);
+});

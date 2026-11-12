@@ -541,3 +541,5 @@ canvas:focus-visible {
 .encounter-portrait svg{width:100%;height:auto;border-radius:.4rem;}
 .encounter-portrait figcaption{font-size:.75rem;line-height:1.3;color:var(--color-parchment);margin-top:.3rem;}
 @media (max-width:30rem){.encounter-talk{flex-direction:column;}.encounter-portrait{width:7rem;}}
+/* Classic palette: the original warm-brown tokens, selectable from the HUD (data-hw-ui="classic"). */
+:root[data-hw-ui="classic"]{--color-ink:#1a1610;--color-ink-soft:#241e16;--color-ink-panel:#16120e;--color-parchment:#e8dcc4;--color-parchment-dim:#c4b494;--color-bronze:#a88448;--color-bronze-bright:#c4a468;--color-blood:#8a3a32;--color-ok:#6a8a48;}
