@@ -866,6 +866,10 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | AUDIT-UI-TOOLTIP-REASONS | audit | Every disabled build/trade/boat button shows a one-line reason on hover and long-press (mobile) | Claude | Claude B | not started | reuses existing blocker strings; no new rules |
 | AUDIT-FEEL-FIRST-10-MIN | audit | First ten minutes of a new game gives a clear next goal, a visible success (first shelter/fire/meal) and no dead idle time | Claude | Claude B | not started | goal strip from real state; no free goods |
 | AUDIT-FEEL-PAUSE-SPEED-CLARITY | audit | Pause, speed and day/night state obvious at all times; commands while paused queue visibly and resume cleanly | Claude | Claude B | not started | HUD only |
+| AUDIT-SOC-RIVAL-RECORD-FRESHWATER | audit | Rival method-record producer native test fails on sandbox world gen (no natural freshwater near generated rival); Codex native run must confirm seed/fixture, never relax the freshwater rule | Claude | Codex | not started | HUD only |
+| AUDIT-VIS-WORN-GEAR-WEAR | audit | Armor, banners and tools should show wear and damage after raids and long seasons (scuffs, torn cloth), cosmetic only, no stat change | Claude | Claude C | not started | HUD only |
+| AUDIT-UI-REJECTED-ORDER-FEEDBACK | audit | A refused command (no path, no stock, wrong owner) gives one visible toast with the reason, not a silent drop | Claude | Claude B | not started | HUD only |
+| AUDIT-FEEL-SEASON-CUE | audit | Season change gets a short readable cue (HUD tint, chronicle line, field state) so players plan stores before winter | Claude | Claude B | not started | HUD only |
 | MS-1 | milestone | Unbuilt camp → first winter → sustainable surplus | Codex | — (done) | done/live | M1-20 verified |
 | MS-2 | milestone | Priority change/direct override during hauling and paid work | Codex | Codex N6 | source-pushed-not-live | M0 construction gates live; connected scenario still to re-run |
 | MS-3 | milestone | Rival–rival trade, conflict, treaty and recovery | Claude | Claude N7 | not started |  |
