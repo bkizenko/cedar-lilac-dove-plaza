@@ -2,6 +2,7 @@ import {buildingCost} from './construction';
 import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
+import { receiveFood, takeFoodLot } from "./pantry";
 import { soilQuality } from "./ecology";
 import { expansionParty } from './rulersRuntime';
 import { noteSettlement } from './societyRuntime';
@@ -167,6 +168,8 @@ export function tickCommunities(g: Game, dt: number) {
       if (i === 0) {
         u.carry = timber;
         u.carryType = "wood";
+        const want = plan?.rations ?? 0;
+        if (want > 0 && takeFoodLot(g, t.id, "provisions", want)) u.foundingJourney.rations = want; // real stores leave home with the party
       }
     }
     lifeEvent(
@@ -180,6 +183,12 @@ export function tickCommunities(g: Game, dt: number) {
     );
   }
 }
+/** Unspent party provisions go back to the home pantry (turned back / dispersed) or to the new hearth's stores (arrival). Lost only if the leader dies. */
+function landRations(g: Game, u: Unit) {
+  const r = u.foundingJourney?.rations ?? 0;
+  if (r > 0) receiveFood(g, u.team, r, "provisions");
+  if (u.foundingJourney) u.foundingJourney.rations = 0;
+}
 export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
   const mission = u.foundingJourney;
   if (!mission) return false;
@@ -190,6 +199,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
     return true;
   }
   if (u.stuckT > 16) {
+    landRations(g, u);
     if (mission.leader) lifeEvent(g, u.team, g.tribe(u.team).name + "'s founding party turned back, unable to find a way through" + (u.carry > 0 ? "; the timber comes home" : ""), u.x, u.z);
     u.foundingJourney = undefined;
     u.order = u.carry > 0 ? "return" : "idle";
@@ -222,6 +232,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
       return true;
     }
     if (u.carryType !== "wood" || u.carry < (mission.timber??20)) {
+      landRations(g, u);
       u.foundingJourney = undefined;
       u.order = "idle";
       return true;
@@ -241,6 +252,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
           person.stuckT = 0;
           person.workReason = "The original site is unsafe — moving to dry foundations";
         } else {
+          landRations(g, person);
           person.foundingJourney = undefined;
           person.order = person.carry > 0 ? "return" : "idle";
           person.workReason = "Settlement site is blocked or flooded — timber retained";
@@ -258,6 +270,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
     g.tribe(u.team).alive = true;
     lifeEvent(g, u.team, g.tribe(u.team).name + " began raising a new settlement", hall.x, hall.z);
   }
+  landRations(g, u);
   u.homeHall = hall.id;
   u.foundingJourney = undefined;
   u.node = hall;
