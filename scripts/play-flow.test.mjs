@@ -19,7 +19,13 @@ function engineFixture(real){
 }
 const villageKeys=[SAVE_KEY,SAVE_KEY+':bak',SAVE_KEY+':protected'];
 test('restarting and configuring a test world preserves the exact real village and durable save',async()=>{
- const real=setup();real.state.paused=true;const before=JSON.stringify(real.state),storage=new Map(),old=globalThis.localStorage;let e;
+ const real=setup();real.state.paused=true;
+ // Canonical checkpoint reconciliation initializes the optional empty haulage
+ // registry. Prove that exact normalization before recording the frozen owner;
+ // any physical, stock, clock or other field change is still a hard failure.
+ const beforeCheckpoint=structuredClone(real.state);assert.equal(Object.hasOwn(beforeCheckpoint,'haulageProjects'),false);
+ encodeGame(real);assert.deepEqual(real.state,{...beforeCheckpoint,haulageProjects:[]});
+ const before=JSON.stringify(real.state),storage=new Map(),old=globalThis.localStorage;let e;
  globalThis.localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)};
  const villageSlots=()=>villageKeys.map(k=>[k,storage.get(k)??null]);
  try{
@@ -53,10 +59,14 @@ test('night pacing advances the whole simulation faster while pause still freeze
  g.state.paused=true;const paused=g.state.time;g.step(.1);assert.equal(g.state.time,paused);assert.deepEqual(g.simulationErrors,[]);
 });
 test('outbound trade envoys walk to the settlement and report at arrival; duplicate dispatch is blocked',()=>{
- const g=setup();g.state.units=[];g.state.buildings=[];g.world.heights.fill(4);g.height=()=>4;g.vision.fill(2);
- const own=g.makeBld('townhall',0,0,0),foreign=g.makeBld('townhall',40,0,1);g.state.buildings=[own,foreign];const u=g.spawnUnit('worker',9,0,0);g.rebuildWalk();
- g.tribe(1).hostile=false;assert.equal(sendDelegation(g,1,'trade'),true);assert.equal(sendDelegation(g,1,'trade'),false);
+ const g=setup();g.state.units=[];g.state.buildings=[];g.world.heights.fill(4);g.height=()=>4;g.vision.fill(0);
+ const own=g.makeBld('townhall',0,0,0),foreign=g.makeBld('townhall',40,0,1);g.state.buildings=[own,foreign];const u=g.spawnUnit('worker',15,0,0);g.rebuildWalk();
+ // This actual adult witnesses the nearby hall, then still has to walk to its
+ // solid-building frontage and hold a meeting; fog alone invents no endpoint.
+ g.state.time=2;g.updateVision(0);
+ const initialX=u.x;g.tribe(1).hostile=false;assert.equal(sendDelegation(g,1,'trade',u),true,g.state.banner);assert.equal(sendDelegation(g,1,'trade',u),false);
+ assert.ok(g.state.observedSettlements?.some(m=>m.observer===0&&m.owner===1&&m.siteId===foreign.id&&m.witnessId===u.id&&m.active),'dispatch uses a physically witnessed endpoint');
  assert.equal(g.state.tradeReports?.find(r=>r.team===1),undefined);
  for(let i=0;i<1000&&u.envoy?.phase!=='return';i++){g.state.time+=.1;g.navBudget=15;delegationAI(g,u,.1);}
- assert.ok(g.state.tradeReports?.find(r=>r.team===1));assert.equal(u.envoy.phase,'return');
+ assert.ok(g.state.tradeReports?.find(r=>r.team===1));assert.equal(u.envoy.phase,'return');assert.ok(u.x>initialX,'the same envoy actually walked to the meeting');assert.ok(g.buildingWorkReached(u,foreign));
 });
