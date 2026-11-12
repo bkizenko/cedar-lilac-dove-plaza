@@ -1,3 +1,4 @@
+import {navalOwnerControls,type NavalOwnerControlsModel} from './navalOwnerControls';
 import {commanderControlsModel} from './commanderControls';
 import {draftCartChoices} from './draftCart';
 import {personName} from './people';
@@ -26,6 +27,7 @@ import {capitulationOffers} from './capitulation';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
+ |{kind:'naval-controls';dockId?:number;boatId?:number;builderId?:number}
  |{kind:'commander-controls';unitIds:number[];boatIds:number[]}
  |{kind:'draft-cart-choices';unitId:number}
  |{kind:'traded-teaching-offers';teacherId:number;learnerIds:number[]}
@@ -47,6 +49,7 @@ export type EngineReadQuery=
  |{kind:'captives'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
+ |({kind:'naval-controls'}&NavalOwnerControlsModel)
  |({kind:'commander-controls'}&ReturnType<typeof commanderControlsModel>)
  |({kind:'draft-cart-choices';unitId:number}&ReturnType<typeof draftCartChoices>)
  |{kind:'traded-teaching-offers';teacherId:number;offers:ReturnType<typeof teachingOffers>;learner:{id:number;good:ResKind}|null;issue:string|null}
@@ -72,6 +75,7 @@ const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&
 export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
+ if(q.kind==='naval-controls')return Object.keys(q).every(k=>['kind','dockId','boatId','builderId'].includes(k))&&['dockId','boatId','builderId'].every(k=>q[k]===undefined||id(q[k]));
  if(q.kind==='commander-controls')return Object.keys(q).every(k=>['kind','unitIds','boatIds'].includes(k))&&Array.isArray(q.unitIds)&&Array.isArray(q.boatIds)&&list(q.unitIds)&&list(q.boatIds)&&q.unitIds.length<=32&&q.boatIds.length<=32;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
  if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers'||q.kind==='captives')return Object.keys(q).length===1;
@@ -101,6 +105,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
   const learner=carriers.find(u=>u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u)&&!u.boat&&!u.emergency&&!u.recalled&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order));
   return{kind:query.kind,teacherId:query.teacherId,offers:teachingOffers(g,query.teacherId),learner:learner?{id:learner.id,good:learner.carryType!}:null,issue:learner?null:!carriers.length?'Bring your adult carrying payment within 26 metres of this artisan':'Nearby payment carriers must finish their current duty before learning'};
  }
+ if(query.kind==='naval-controls')return{kind:query.kind,...navalOwnerControls(g,query)};
  if(query.kind==='commander-controls')return{kind:query.kind,...commanderControlsModel(g,query.unitIds,query.boatIds)};
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
  if(query.kind==='combat-doctrine')return{kind:query.kind,combat:combatModel(g)};

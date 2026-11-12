@@ -64,14 +64,18 @@ export function commissionVessel(g:Game,dockId:number,designId:string,builderId:
  return {accepted:true,reason:`${d.name} laid down; materials set aside, the shipwright is walking to the dock`,id:rec.id};
 }
 /** Reassign the original paid hull; this never charges its materials again. */
-export function resumeVesselCommission(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
+export function resumeVesselCommissionIssue(g:Game,projectId:number,builderId:number,team=0):string|null{
  const c=navalState(g)?.commissions.find(c=>c.id===projectId),u=g.state.units.find(u=>u.id===builderId);
- if(!c||c.team!==team||c.phase!=='paused')return no('No paused hull commission of your society with that id');
- const dock=dockOf(g,c.dockId);if(!dock||dock.team!==team)return no('The original dock is no longer available');
- if(!freeBuilder(g,u,team))return no('The replacement shipwright must be a free, healthy adult on land');
- if(dockBlockaded(g,dock))return no('The harbour is blockaded');
- if(navalState(g)?.commissions.some(p=>p!==c&&p.dockId===c.dockId&&p.phase==='building'))return no('This dock is already building a hull');
- pauseNavalProject(g,c);g.interruptMission(u!);c.builderId=builderId;c.phase='building';(u as PortWorker).portWorkId=c.id;u!.order='hold';u!.node=null;u!.target=null;
+ if(!c||c.team!==team||c.phase!=='paused')return 'No paused hull commission of your society with that id';
+ const dock=dockOf(g,c.dockId);if(!dock||dock.team!==team)return 'The original dock is no longer available';
+ if(!freeBuilder(g,u,team))return 'The replacement shipwright must be a free, healthy adult on land';
+ if(dockBlockaded(g,dock))return 'The harbour is blockaded';
+ return navalState(g)?.commissions.some(p=>p!==c&&p.dockId===c.dockId&&p.phase==='building')?'This dock is already building a hull':null;
+}
+export function resumeVesselCommission(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
+ const issue=resumeVesselCommissionIssue(g,projectId,builderId,team);if(issue)return no(issue);
+ const c=navalState(g)!.commissions.find(c=>c.id===projectId)!,u=g.state.units.find(u=>u.id===builderId)!;
+ pauseNavalProject(g,c);g.interruptMission(u);c.builderId=builderId;c.phase='building';(u as PortWorker).portWorkId=c.id;u.order='hold';u.node=null;u.target=null;
  return {accepted:true,reason:'The paid hull resumes with its replacement shipwright',id:c.id};
 }
 function tickCommissions(g:Game,dt:number){
