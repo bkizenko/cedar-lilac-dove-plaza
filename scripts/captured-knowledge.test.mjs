@@ -117,7 +117,10 @@ test('native capture, physical 600s custody and free integration grant no skills
   // The actual assigned guard now uses built-in prisonerAI exclusively; the
   // other original party members finish their arrival orders and defend normally.assert.ok(teacher.prisoner.food>0);assert.equal(integrateCaptive(g,teacher.id).accepted,false);
   // Later live-person counts and foreign stocks do not rewrite capture evidence.
+  const personalAtCapture=structuredClone(teacher.productionSkills),foreignWood=g.tribe(origin).wood;
   teacher.productionSkills[METHOD].successfulBatches=9;teacher.productionSkills[LATER_METHOD]={successfulBatches:3,taughtBatches:0,observedSeconds:0};g.tribe(origin).wood+=17;assert.deepEqual(teacher.prisoner.methods,captured);
+  // Keep adversarial metadata probes out of the productive native run.
+  teacher.productionSkills=personalAtCapture;g.tribe(origin).wood=foreignWood;
   const escortHistory=[],lastHp=new Map(party.map(u=>[u.id,u.hp]));let lastGuard=guard.id;
   const keepActualEscort=()=>{
    const held=teacher.prisoner,current=g.state.units.find(u=>u.id===held?.guardId);
@@ -133,6 +136,7 @@ test('native capture, physical 600s custody and free integration grant no skills
   assert.equal(integrateCaptive(g,teacher.id).accepted,false,'Physical arrival alone does not satisfy 600 seconds');
   const custodyStart=g.state.time;drive(g,CAPTIVE_DEALINGS_RULES.integrateAfterSeconds+2,()=>custodySeconds(g,teacher.id)>=CAPTIVE_DEALINGS_RULES.integrateAfterSeconds,()=>{assert.equal(teacher.prisoner?.phase,'custody');assert.deepEqual(teacher.prisoner.methods,captured);keepActualEscort();assert.ok(party.some(u=>u.hp>0),'At least one original party guard must survive actual custody');});assert.ok(g.state.time-custodyStart>=599.8);
   const integration=integrateCaptive(g,teacher.id);assert.equal(integration.accepted,true,integration.reason);assert.equal(teacher.prisoner,undefined);assert.equal(teacher.enslavedFrom,undefined);assert.equal(teacher.team,0);const entry=g.state.captiveDealings.integrations.find(i=>i.unitId===teacher.id);assert.deepEqual(entry.methods,captured);noGrant(g,learner);assert.equal(teacher.productionSkills[METHOD].successfulBatches,9,'Integration does not award another batch');
+  const laterState=structuredClone(g.state),laterTeacher=laterState.units.find(u=>u.id===teacher.id);laterTeacher.productionSkills[LATER_METHOD]={successfulBatches:3,taughtBatches:0,observedSeconds:0};assert.deepEqual(capturedMethodSourcesForPerson(laterState,laterTeacher,LATER_METHOD),[],'A later locally acquired method is not retroactively captured');
   const sources=capturedMethodSourcesForPerson(g.state,teacher,METHOD);assert.equal(sources.length,1);assert.equal(sources[0].successfulBatchesAtCapture,3);assert.equal(sources[0].taughtBatchesAtCapture,0);assert.equal(sources[0].integratedAt,entry.at);assert.deepEqual(capturedMethodSourcesForPerson(g.state,teacher,LATER_METHOD),[],'A method acquired only after capture is not a captured source');assert.deepEqual(capturedRecipeSources(g.state,0,[LATER_METHOD]),[]);
   // A failed firing consumes its real inputs and grants no lesson; the second paid attempt uses the finite opening reserve.
   let completed=false;for(let attempt=0;attempt<2;attempt++){
