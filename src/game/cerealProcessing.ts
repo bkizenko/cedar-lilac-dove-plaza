@@ -1,3 +1,4 @@
+import {millIssue} from './millPower';
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
 import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
@@ -101,7 +102,7 @@ export function harvestBacklogAlert(g:Game){
   recipes=breadRecipes;
  }else if(grind){
   if(!oven&&!hand&&!hearth)return alert('finish a cooking hearth or bread oven');
-  if(!has('grindingStone')&&!hand&&!hearth)return alert('finish a grinding stone or cook grain at a hearth');
+  if(!has('grindingStone')&&!has('watermill')&&!has('windmill')&&!hand&&!hearth)return alert('finish a grinding stone or cook grain at a hearth');
   recipes=[...grindingRecipes,'cookPorridge'];
  }else{
   if(!has('threshingFloor')&&!hand)return alert('finish a threshing floor to start processing');
@@ -123,7 +124,7 @@ const mealReviews = new WeakMap<Game, {state: Game['state']; next: number}>();
 const meatRecipes: ProductionRecipe[] = ['cookMeat', 'smokeMeat'];
 const fishRecipes: ProductionRecipe[] = ['cookFish', 'smokeFish', 'airDryFish', 'manualSmokeFish'];
 export const breadRecipes: ProductionRecipe[] = ['bakeBreadBulk','bakeBreadDouble','bakeBreadOven', 'bakeBread'];
-export const grindingRecipes: ProductionRecipe[] = ['grindGrainBulk','grindGrainDouble','grindGrainStation', 'grindGrain'];
+export const grindingRecipes: ProductionRecipe[] = ['grindGrainWatermill','grindGrainWindmill','grindGrainBulk','grindGrainDouble','grindGrainStation', 'grindGrain'];
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
@@ -271,7 +272,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
   if(kitchenOpen&&assignedGrainJobs<grainLimit&&(urgent||!canBake||!canGrind)&&(urgent||!grainJobs.some(p=>p.recipe==='cookPorridge')))recipes.push('cookPorridge');
   if(canBake&&canGrind&&futureFlour<flourTarget)recipes.push(...grinding.filter(recipe=>
    grain>=PRODUCTION_RECIPES[recipe].grain&&
-   (PRODUCTION_RECIPES[recipe].workplace==='grindingStone'&&(!quickMeals||dedicatedOvens.length>0)||
+   (['grindingStone','watermill','windmill'].includes(PRODUCTION_RECIPES[recipe].workplace)&&(!quickMeals||dedicatedOvens.length>0)||
     !quickMeals&&kitchenOpen&&assignedGrainJobs<grainLimit)));
  }
  if(urgent)recipes.sort((a,b)=>{const x=PRODUCTION_RECIPES[a],y=PRODUCTION_RECIPES[b];
@@ -279,7 +280,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
   return x.workSeconds+x.exposureSeconds-y.workSeconds-y.exposureSeconds;
  });
  const options = recipes.filter(canPay).flatMap(recipe => sites
-  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
+  .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&!millIssue(g,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));
  if (!options.length) return false;
  const workers = g.state.units.filter(u => u.team === 0 && free(g, u) &&
