@@ -1,6 +1,8 @@
 import {bindWildCraftLoad} from './carriedLoad';
 import {hasTaskCommitment} from './workCommitments';
-import {isDependent} from './settlement';
+import {isDependent,reserveSeconds} from './settlement';
+import {CEREAL_RULES} from './cerealRules';
+import {urgentReadyMealInputs} from './cerealProcessing';
 import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {clearCargoApproach} from './farmToolCargo';
 import {connectedForUnit} from './waterTravel';
@@ -362,10 +364,14 @@ export function collectWildBatch(g:Game,unitId:number,projectId?:number):{accept
 function directWild(g:Game,team:number){
  const w=g.state.wildCraft!;if(g.state.autoWorkEnabled===false)return;
  if(w.lastDirector!==undefined&&g.state.time-w.lastDirector<5)return;w.lastDirector=g.state.time;
+ // Preserve the existing food scheduler's next free hands and kitchen slots.
+ // Already-paid/direct wild work is untouched; only new optional admissions wait.
+ const lowFood=reserveSeconds(g,team)<CEREAL_RULES.foodTargetSeconds;
+ if(team===0&&urgentReadyMealInputs(g))return;
  const idle=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&u.order==='idle'&&u.wildWorkId===undefined&&wildAdult(g,u)&&u.carry<=0&&!u.productionProjectId&&!u.husbandryWork&&!u.expedition&&!u.shelterId&&!u.boat&&!u.prisoner).sort((a,b)=>a.id-b.id);
  if(!idle.length)return;
  const t=g.tribe(team),stock=wildStock(g,team);
- const order:WildRecipeId[]=['softenHide','frameDry','brainTan','barkTan','soakHide','twistSinew','renderFat','dryBerries'];
+ const order:WildRecipeId[]=lowFood?['renderFat','softenHide','frameDry','brainTan','barkTan','soakHide','twistSinew','dryBerries']:['softenHide','frameDry','brainTan','barkTan','soakHide','twistSinew','renderFat','dryBerries'];
  for(const id of order){const r=WILD_RECIPES[id];
   if(id==='soakHide'&&!((t.items?.cleanHide||0)>0))continue;
   if(id==='dryBerries'&&foodInventory(t).berries<12)continue; // keep the fresh reserve; only surplus is preserved
