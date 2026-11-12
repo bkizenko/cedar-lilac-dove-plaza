@@ -18,17 +18,17 @@ function spearHead(c:Ctx,y:number,S:number,r:number){
    const L=.24*S,P=c.paint('antler',{len:L});
    b.rod([0,y-.02,0],[0,y+L,0],t=>.0125*S*Math.pow(1-t,.8)+.0012,c.sd(7),P,{segs:6});
    for(let k=0;k<3;k++)for(const s of [-1,1]){const yk=y+.07*S+k*.05*S;b.rod([s*.01*S,yk,0],[s*.034*S,yk+.045*S,0],t=>.0042*(1-t)+.0008,4,P,{segs:1,caps:'a'});}
-   lashing(c,y-.065*S,y+.03*S,r*1.25,8,{mat:'sinew'});
+   lashing(c,y-.065*S,y+.03*S,r*1.0,8,{mat:'sinew'});
   }else{
    const L=.17*S,W=.026*S,m=stoneOf(c)==='obsidian'?'obsidian':stoneOf(c)==='chert'?'chert':'flint';
    b.blade({y0:y-.02,y1:y+L,w:t=>W*leaf(t),th:t=>.0058*S*(.5+.5*Math.sin(Math.PI*Math.min(1,t*1.15))),chip:chip*1.8,steps:b.pick(20,12,6),section:'lens'},c.paint(m,{len:L}));
    b.ellipsoid([0,y+.004,0],[r*1.55,.034*S,r*1.55],c.paint('pitch',{len:.05}),5);
-   lashing(c,y-.075*S,y+.03*S,r*1.32,10,{mat:'sinew'});
+   lashing(c,y-.075*S,y+.03*S,r*1.45,10,{mat:'sinew'});
   }
  }else if(c.era===1){
   const L=.2*S,W=.03*S;
   b.blade({y0:y+.004,y1:y+L,w:t=>W*Math.min(1,.35+t*2.4)*Math.pow(1-t,.55),th:t=>.0052*S*(1-t*.5),chip:chip,section:'diamond',steps:b.pick(10,7,4)},mp(c,L));
-  lashing(c,y-.085*S,y+.012,r*1.28,9,{mat:'cord'});
+  lashing(c,y-.085*S,y+.012,r*1.0,9,{mat:'cord'});
   for(const s of [-1,1])b.ellipsoid([s*(r*1.4),y-.03*S,0],[.0045,.0045,.0045],mp(c,.01),4);
  }else{
   const sock=(c.era===2?.1:c.era===3?.115:.1)*S,L=(c.era===2?.23:c.era===3?.26:.3)*S,W=(c.era===2?.03:c.era===3?.028:.024)*S,m=mp(c,L);
@@ -74,7 +74,7 @@ export function spearFamily(c:Ctx,kind:'spear'|'javelin'|'pike'){
 // ---------------------------------------------------------------------------------------------------------------- hafted head helpers
 /** a wedge/axe head extending along +Z from the haft, edge at the far end; heights and thicknesses taper to the edge */
 function wedge(c:Ctx,y:number,z0:number,z1:number,o:{w0:number;w1:number;h0:number;h1:number;drop?:number;paint:Paint;shape?:'oct'|'rect'}){
- const n=c.b.pick(8,5,3),secs=Array.from({length:n+1},(_,i)=>{const t=i/n;return {c:[0,y-(o.drop??0)*t*t,z0+(z1-z0)*t] as V3,w:Math.max(.0016,o.w0+(o.w1-o.w0)*Math.pow(t,.9)),h:o.h0+(o.h1-o.h0)*Math.pow(t,.8)};});
+ const n=c.b.pick(12,8,4),corner=(t:number)=>t<.84?1:Math.sqrt(Math.max(.05,1-Math.pow((t-.84)/.16,2)*.8)),secs=Array.from({length:n+1},(_,i)=>{const t=i/n,h=(o.h0+(o.h1-o.h0)*Math.pow(t,.8))*corner(t);return {c:[0,y-(o.drop??0)*t*t,z0+(z1-z0)*t] as V3,w:Math.max(.0016,o.w0+(o.w1-o.w0)*Math.pow(t,.9)),h};});
  c.b.loft(secs,'z',edgeGlint(o.paint,.82),{shape:o.shape??'oct'});
 }
 /** a hafted tool's handle with a butt swell; returns top y */

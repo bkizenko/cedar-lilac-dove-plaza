@@ -29,7 +29,7 @@ export function makeCtx(req:ItemReq):Ctx{
 }
 /** a shaft path with a slight, wear-dependent warp */
 export function shaftPath(c:Ctx,x:number,y0:number,y1:number,z=0,warp=.01):V3[]{
- const n=c.b.pick(9,6,3),wx=(c.r('wx')-.5)*warp*(1+c.wear*3),wz=(c.r('wz')-.5)*warp*(1+c.wear*3);
+ const n=c.b.pick(24,10,3),wx=(c.r('wx')-.5)*warp*(1+c.wear*3),wz=(c.r('wz')-.5)*warp*(1+c.wear*3);
  return Array.from({length:n+1},(_,i)=>{const t=i/n,s=Math.sin(t*Math.PI);return [x+wx*s,y0+(y1-y0)*t,z+wz*s] as V3;});
 }
 /** A tapered wooden shaft from y0 to y1; radius r0 at the bottom, r1 at the top, with a slight swell where the hand goes. */
@@ -47,15 +47,14 @@ export function splinters(c:Ctx,at:V3,r:number,dir:V3=[0,1,0],len=.09){
 }
 /** a wound lashing with a tail; wear frays it (loose turns, dangling end) */
 export function lashing(c:Ctx,y0:number,y1:number,r:number,turns:number,o:{x?:number;z?:number;mat?:MatId;cord?:number;paint?:Paint}={}){
- const cx=o.x??0,cz=o.z??0,cord=o.cord??.0028,p=o.paint??(o.mat?c.paint(o.mat,{len:.1}):c.wrap(.1));
- const fray=c.wear>.55?Math.round(turns*.2):0;
- c.b.lash([cx,y0,cz],[cx,y1,cz],r,turns-fray,cord,p);
+ const cx=o.x??0,cz=o.z??0,cord=o.cord??.0034,p=o.paint??(o.mat?c.paint(o.mat,{len:.1}):c.wrap(.1));
+ const dense=Math.max(3,Math.min(30,Math.round(Math.abs(y1-y0)/(cord*2.05)))),fray=c.wear>.55?Math.round(dense*.2):0;void turns;
+ c.b.lash([cx,y0,cz],[cx,y1,cz],r+cord*.7,dense-fray,cord,p);
  if(c.lod===0&&c.wear>.35){c.b.rod([cx+r,y0,cz],[cx+r+.012,y0-.035-.03*c.wear,cz+.006],()=>cord*.8,4,p,{segs:1});}
 }
 /** a bound grip: leather/cord overlapped turns with a dyed accent band at each end */
 export function gripWrap(c:Ctx,y0:number,y1:number,r:number,o:{x?:number;z?:number;bands?:boolean}={}){
- const L=Math.abs(y1-y0),turns=Math.round(L*c.b.pick(110,70,40)/ (c.st.wrapKind==='leather'?1.4:1));
- lashing(c,y0,y1,r,Math.max(4,turns),{x:o.x,z:o.z,cord:c.st.wrapKind==='leather'?.0042:.0032});
+ lashing(c,y0,y1,r,0,{x:o.x,z:o.z,cord:c.st.wrapKind==='leather'?.0042:.0034});
  if(o.bands!==false&&c.lod<2){for(const y of [y0+.006,y1-.006])c.b.ring([o.x??0,y,o.z??0],[0,1,0],r+.002,.003,c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.9}),c.b.pick(14,10,6),4);}
 }
 /** Decorated wood paint: society decoration (bands, chevrons, dots, spirals, steps) in the accent over the shaft grain. */

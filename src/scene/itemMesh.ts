@@ -178,12 +178,12 @@ export class MeshBuilder{
   for(let i=0;i<=steps;i++){const t=i/steps,y=o.y0+(o.y1-o.y0)*t,w=Math.max(0,o.w(t)),th=Math.max(.0004,o.th(t)),bz=o.bend?.(t)??0,sx=o.sweep?.(t)??0;
    const ch=chip>0&&i>0&&i<steps?[(R()-.5)*chip,(R()-.5)*chip]:[0,0];jit.push(ch);
    rings.push(prof.map(([u,v])=>{const side=u<0?0:1,e=Math.abs(u)>.9?ch[side]:0;return [cx[0]+sx+u*(w+e),cx[1]+y,cx[2]+bz+v*th] as V3;}));}
-  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:sec!=='flat'&&chip===0,capA:true,capB:false});
+  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:false,capA:true,capB:false});
  }
  /** Helical lashing from a to b around radius r. Near: a real wound cord; mid: fewer turns; far: a dark band. */
  lash(a:V3,b:V3,r:number,turns:number,cord:number,paint:Paint){
   if(this.lod===2){this.rod(a,b,()=>r+cord*.6,6,paint,{segs:1});return this;}
-  const steps=Math.max(6,Math.round(turns*this.pick(10,6,4))),dir=v3.sub(b,a),L=v3.len(dir),al=alignY(dir),path:V3[]=[];
+  const steps=Math.max(6,Math.round(turns*this.pick(7,5,3))),dir=v3.sub(b,a),L=v3.len(dir),al=alignY(dir),path:V3[]=[];
   for(let i=0;i<=steps;i++){const t=i/steps,ang=t*turns*TAU;path.push(v3.add(a,apply(al,[Math.cos(ang)*r,t*L,Math.sin(ang)*r])));}
   return this.tube(path,()=>cord,this.pick(5,4,3),paint,{caps:true});
  }

@@ -16,7 +16,7 @@ export const MATERIALS:Readonly<Record<MatId,Base>>=Object.freeze({
  flint:B('#6d6b63',.2,0,'#34332f'),obsidian:B('#1d1d24',.12,0,'#08080b'),chert:B('#a5804f',.2,0,'#6b4d2c'),bone:B('#e2d7b9',.1,.4,'#a8946a'),antler:B('#c8b592',.12,.5,'#8a7656'),horn:B('#4b3b2b',.14,.5,'#1e1610'),ivory:B('#efe6cc',.06,.3,'#c0ad84'),
  stone:B('#8d897f',.2,0,'#5b5850'),basalt:B('#54585b',.14,0,'#2c2f31'),shell:B('#e8ddd0',.08,0,'#b9a89a'),
  copper:B('#b9744a',.12,0,'#7b4128'),bronze:B('#b28b3c',.1,0,'#6e5120'),iron:B('#7d7f84',.1,0,'#3b3c40'),steel:B('#c6cacf',.07,0,'#7e848b'),gold:B('#d6ae38',.05,0,'#8c6b1a'),lead:B('#6f7378',.06,0,'#3a3d40'),
- ash:B('#bb9d6b',.1,.9,'#7e6339'),oak:B('#8b6a42',.1,.9,'#53391e'),yew:B('#a56a3c',.1,.9,'#5e3217'),birch:B('#d3c3a1',.07,.5,'#4a3f33'),bamboo:B('#c9b55a',.06,.4,'#6e5e24'),cedar:B('#a4603c',.09,.9,'#5d2e18'),pine:B('#c59b62',.09,.9,'#8a6330'),ebony:B('#4a3628',.08,.7,'#1f1710'),elm:B('#9b7a50',.1,.9,'#5c4125'),willow:B('#b59868',.08,.8,'#7a5f37'),
+ ash:B('#b8a27c',.1,.9,'#7e6339'),oak:B('#826648',.1,.9,'#53391e'),yew:B('#a56a3c',.1,.9,'#5e3217'),birch:B('#d3c3a1',.07,.5,'#4a3f33'),bamboo:B('#c9b55a',.06,.4,'#6e5e24'),cedar:B('#a4603c',.09,.9,'#5d2e18'),pine:B('#c2a273',.09,.9,'#8a6330'),ebony:B('#4a3628',.08,.7,'#1f1710'),elm:B('#96795a',.1,.9,'#5c4125'),willow:B('#b39d78',.08,.8,'#7a5f37'),
  leather:B('#704a2c',.13,.2,'#3d2514'),rawhide:B('#cdb68c',.1,.2,'#8f7a52'),sinew:B('#b9a06c',.08,.5,'#7b6738'),cord:B('#c4b184',.1,.6,'#85744d'),linen:B('#d8cdaa',.07,.4,'#a79a74'),wool:B('#cbbd9c',.12,.3,'#8c7e5e'),felt:B('#b8ad94',.12,0,'#7f7560'),pitch:B('#2a2018',.08,0,'#0f0b08'),clay:B('#b5694a',.1,0,'#7a3f27'),wicker:B('#bd9d66',.09,.7,'#7e6334'),hair:B('#8a3426',.12,.5,'#3d140d'),feather:B('#d9d2c0',.12,.6,'#6b5f4a'),hide:B('#8a6b45',.14,.2,'#4d3a22'),ochre:B('#b5532c',.1,0,'#7a3319'),char:B('#2e2a27',.12,0,'#100e0d'),fire:B('#ff9a2a',.2,0,'#e04a12'),water:B('#6a93a8',.08,0,'#3c5f73'),
 });
 const PATINA:Partial<Record<MatId,string>>={copper:'#4f9b7c',bronze:'#4d8c6c',iron:'#8e4a28',steel:'#6d5b45',lead:'#b8bcbc',gold:'#b8923a'};
@@ -62,7 +62,7 @@ export function paintFor(mat:MatId,o:PaintOpts={}):Paint{
     if(a>.84&&len>.12)c=rgbMix(c,hexRgb(mat==='iron'?'#a9abb0':'#ecefef'),mat==='copper'||mat==='bronze'?.2:.45*(1-wear*.6));
     const worn=clamp(wear*1.1+age*.9);
     if(patina&&worn>0){
-     const m=vnoise(p[0]*9+3,p[1]*9,p[2]*9+1,seed+6)*.7+vnoise(p[0]*27,p[1]*27,p[2]*27,seed+2)*.3,cover=m+worn*.95-.55;
+     const m=vnoise(p[0]*9+3,p[1]*9,p[2]*9+1,seed+6)*.7+vnoise(p[0]*27,p[1]*27,p[2]*27,seed+2)*.3,cover=m*.55+worn*1.25-.72;
      // patina collects in recesses: less on exposed edges
      const edgeKeep=a>.88?.55:1;if(cover>0)c=rgbMix(c,patina,clamp(cover*2.2)*edgeKeep*(mat==='gold'?.3:mat==='steel'?.45:1));
     }
