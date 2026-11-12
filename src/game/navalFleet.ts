@@ -2,13 +2,14 @@ import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
 import {FOOD_PER_PERSON_SECOND} from './settlement';
+import {FOOD_KINDS} from './pantry';
 import {hasTaskCommitment} from './workCommitments';
 import {combatPractice} from './warfare';
 import {boatClass,boatClassIssue} from './boatClasses';
 import {launchRiverboat} from './boats';
 import {awardCommanderXp,commandersOf,fleetAuraFor} from './commanders';
 import {SHIP_DESIGNS,shipDesign,designStrength,navalMatchup,PORT_TIERS,type ShipDesign,type NavalMode} from './navalClasses';
-import {NAVAL_RULES,ensureNaval,navalState,dockOf,portRecord,portTier,hasWork,noteEvent,vesselOf,dockBlockaded,tickNavalPorts,tickBlockades,type NavalOutcome} from './navalPorts';
+import {NAVAL_RULES,ensureNaval,navalState,dockOf,portRecord,portTier,hasWork,noteEvent,vesselOf,dockBlockaded,tickNavalPorts,tickBlockades,pauseNavalProject,type NavalOutcome} from './navalPorts';
 
 /**
  * Warships, ramming, boarding and naval supply on top of the existing hulls.
@@ -44,6 +45,8 @@ export function commissionIssue(g:Game,dockId:number,designId:string,builderId:n
  if(!freeBuilder(g,u,team))return 'The shipwright must be a free, healthy adult on land';
  const base=d.baseHull==='riverboat'?null:boatClassIssue(g,d.baseHull,team);if(base)return base;
  const s=navalState(g);
+ if((s?.commissions.length??0)>=NAVAL_RULES.maximumProjects)return 'Too many hull commissions are under way';
+ if((s?.vessels.length??0)+(s?.commissions.length??0)>=NAVAL_RULES.maximumVessels)return 'Too many commissioned hulls';
  if(s?.commissions.some(c=>c.builderId===builderId||c.dockId===dockId&&c.phase==='building'))return 'This dock or shipwright is already building a hull';
  if(dockBlockaded(g,dock))return 'The harbour is blockaded';
  const moored=(g.state.boats??[]).filter(b=>b.team===team&&b.hp>0&&dist(b,dock)<=NAVAL_RULES.harbourMeters).length+(s?.commissions.filter(c=>c.dockId===dockId).length??0);
@@ -57,23 +60,34 @@ export function commissionVessel(g:Game,dockId:number,designId:string,builderId:
  const d=shipDesign(designId)!,t=g.tribe(team),c=d.cost,u=g.state.units.find(u=>u.id===builderId)!,s=ensureNaval(g);
  t.wood-=c.wood;t.stone-=c.stone;if(c.cordage)(t.items??={}).cordage=(t.items?.cordage||0)-c.cordage;t.copper-=c.copper;
  const rec={id:g.id(),dockId,team,design:designId,builderId,progress:0,paid:{...c},phase:'building' as const};
- s.commissions.push(rec);(u as PortWorker).portWorkId=rec.id;g.interruptMission?.(u);u.order='hold';u.node=null;u.target=null;
+ g.interruptMission(u);s.commissions.push(rec);(u as PortWorker).portWorkId=rec.id;u.order='hold';u.node=null;u.target=null;
  return {accepted:true,reason:`${d.name} laid down; materials set aside, the shipwright is walking to the dock`,id:rec.id};
+}
+/** Reassign the original paid hull; this never charges its materials again. */
+export function resumeVesselCommission(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
+ const c=navalState(g)?.commissions.find(c=>c.id===projectId),u=g.state.units.find(u=>u.id===builderId);
+ if(!c||c.team!==team||c.phase!=='paused')return no('No paused hull commission of your society with that id');
+ const dock=dockOf(g,c.dockId);if(!dock||dock.team!==team)return no('The original dock is no longer available');
+ if(!freeBuilder(g,u,team))return no('The replacement shipwright must be a free, healthy adult on land');
+ if(dockBlockaded(g,dock))return no('The harbour is blockaded');
+ if(navalState(g)?.commissions.some(p=>p!==c&&p.dockId===c.dockId&&p.phase==='building'))return no('This dock is already building a hull');
+ pauseNavalProject(g,c);g.interruptMission(u!);c.builderId=builderId;c.phase='building';(u as PortWorker).portWorkId=c.id;u!.order='hold';u!.node=null;u!.target=null;
+ return {accepted:true,reason:'The paid hull resumes with its replacement shipwright',id:c.id};
 }
 function tickCommissions(g:Game,dt:number){
  const s=navalState(g);if(!s)return;
  for(const c of s.commissions.slice()){
   const dock=dockOf(g,c.dockId),d=shipDesign(c.design);
-  if(!dock||!d){s.commissions=s.commissions.filter(x=>x!==c);continue;}
+  if(!dock||dock.team!==c.team||!d){pauseNavalProject(g,c);continue;}
   if(c.phase==='paused')continue;
   const u=g.state.units.find(u=>u.id===c.builderId) as PortWorker|undefined;
-  if(!u||u.hp<=0||u.team!==c.team||u.prisoner||u.portWorkId!==c.id){c.phase='paused';continue;}
+  if(!u||u.hp<=0||u.team!==c.team||u.prisoner||u.boat||u.emergency||u.recalled||u.portWorkId!==c.id){pauseNavalProject(g,c);continue;}
   const spot=g.interactionSpot(u,dock);if(!spot)continue;
   u.order='move';u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);
   if(dist(u,spot)<=NAVAL_RULES.builderReachMeters){c.progress+=dt;u.order='hold';}
   if(c.progress<d.workSeconds)continue;
   const before=g.state.boats?.length??0;
-  if(!launchRiverboat(g,dock,d.baseHull==='riverboat'?undefined:d.baseHull)||(g.state.boats?.length??0)===before){c.phase='paused';continue;}
+  if(!launchRiverboat(g,dock,d.baseHull==='riverboat'?undefined:d.baseHull)||(g.state.boats?.length??0)===before){pauseNavalProject(g,c);continue;}
   const boat=g.state.boats![g.state.boats!.length-1];
   s.vessels.push({boatId:boat.id,team:c.team,design:c.design,commissionedAt:g.state.time,stores:{food:0,missiles:0},atSeaSeconds:0,lastDockId:dock.id,captures:0,rams:0});
   s.commissions=s.commissions.filter(x=>x!==c);delete u.portWorkId;u.order='idle';
@@ -159,8 +173,9 @@ function tickBoardings(g:Game,dt:number){
    const dock=g.state.buildings.filter(d=>d.team===a.team&&d.type==='dock'&&d.hp>0&&g.finished(d)).sort((p,q)=>dist(p,t)-dist(q,t)||p.id-q.id)[0];
    const prize=att.filter(u=>u.id!==a.captain).sort((p,q)=>(q.combatXP||0)-(p.combatXP||0)||p.id-q.id)[0]??att[0];
    if(!dock||!prize){t.hp=0;noteEvent(g,{kind:'sunk',team:a.team,other:t.team,text:'The prize is scuttled; there is no harbour to take her to'});end();continue;}
+   if(prize.id===a.captain)delete a.captain;
    const oldTeam=t.team;t.team=a.team;t.dock=dock.id;t.captain=prize.id;prize.boat={id:t.id,phase:'aboard'};prize.x=t.x;prize.z=t.z;
-   const rec=vesselOf(g,t.id);if(rec){rec.team=a.team;rec.stores={food:0,missiles:0};rec.atSeaSeconds=0;}
+   const rec=vesselOf(g,t.id);if(rec){rec.team=a.team;rec.atSeaSeconds=0;}
    const mine=vesselOf(g,a.id);if(mine)mine.captures++;
    noteEvent(g,{kind:'capture',team:a.team,other:oldTeam,text:`${ad.name} takes a ${td.name} as a prize`});
    const cmd=commandersOf(g,a.team).find(c=>c.kind==='fleet'&&c.boatIds.includes(a.id));if(cmd)awardCommanderXp(g,cmd.id,12);
@@ -180,17 +195,24 @@ export function boardNearest(g:Game,attackerId:number,team=0):NavalOutcome{
 }
 
 // -- supply at sea --------------------------------------------------------------------------------------------------------------
+export function navalIndependentFood(g:Game,u:Unit){
+ if(u.boat?.phase!=='aboard'||u.hp<=0||u.prisoner||u.coastalVoyageId||u.societyMissionId||u.scoutProvisions||u.expedition)return false;
+ const v=vesselOf(g,u.boat.id),b=boatById(g,u.boat.id);if(!v||!b||v.team!==u.team||b.team!==u.team)return false;
+ return !g.state.buildings.some(d=>d.team===u.team&&d.type==='dock'&&d.hp>0&&g.finished(d)&&dist(d,b)<=NAVAL_RULES.seaRadiusMeters);
+}
 function tickSupply(g:Game,dt:number){
  const s=navalState(g);if(!s)return;
  for(const v of s.vessels){
   const b=boatById(g,v.boatId);if(!b||b.team!==v.team)continue;
   const home=g.state.buildings.some(d=>d.team===v.team&&d.type==='dock'&&d.hp>0&&g.finished(d)&&dist(d,b)<=NAVAL_RULES.seaRadiusMeters);
   if(home){v.atSeaSeconds=0;continue;}
-  const crew=aboard(g,b.id);if(!crew.length)continue;
+  const crew=aboard(g,b.id).filter(u=>navalIndependentFood(g,u));if(!crew.length)continue;
   v.atSeaSeconds+=dt;
   const need=crew.length*FOOD_PER_PERSON_SECOND*dt,eaten=Math.min(v.stores.food,need);v.stores.food-=eaten;
+  if(v.stores.foodLots){let left=eaten;for(const k of FOOD_KINDS){const n=Math.min(left,v.stores.foodLots[k]??0);v.stores.foodLots[k]=(v.stores.foodLots[k]??0)-n;left-=n;}}
+  const fraction=need>0?Math.min(1,eaten/need):1;
+  for(const u of crew){const previous=u.hunger||0,deficit=1-fraction;u.hunger=Math.min(1200,Math.max(0,previous+dt*deficit-dt*3*fraction));const exposure=Math.max(0,previous+dt*deficit-60)-Math.max(0,previous-60);if(deficit>0)u.hp=Math.max(0,u.hp-exposure*u.maxHp/160);}
   if(eaten+1e-9<need){
-   for(const u of crew)u.hunger=(u.hunger||0)+dt;
    if(!s.events.some(e=>e.kind==='starved'&&e.team===v.team&&g.state.time-e.at<120))noteEvent(g,{kind:'starved',team:v.team,text:`${shipDesign(v.design)?.name??'A hull'} has run out of rations at sea`});
   }
  }

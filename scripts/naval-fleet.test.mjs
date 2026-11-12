@@ -178,7 +178,7 @@ test('naval supply comes out of the real stores, is eaten at sea, and starvation
  boat.x=300;boat.z=300;for(const u of g.state.units.filter(u=>u.boat?.id===boat.id)){u.x=300;u.z=300;}
  const v=vesselOf(g,boat.id),start=v.stores.food;h.run(10);assert.ok(v.stores.food<start&&v.atSeaSeconds>=10);
  assert.equal(resupplyVessel(g,boat.id,{food:5},0).accepted,false,'no loading at sea');
- v.stores.food=0;h.run(5);assert.ok(navalSpeedMultiplier(g,boat.id)<1);assert.ok(navalSpeedFactor(g,boat)<1);assert.ok(navalState(g).events.some(e=>e.kind==='starved'));
+ v.stores.food=0;v.stores.foodLots={};h.run(5);assert.ok(navalSpeedMultiplier(g,boat.id)<1);assert.ok(navalSpeedFactor(g,boat)<1);assert.ok(navalState(g).events.some(e=>e.kind==='starved'));
  assert.ok(g.state.units.filter(u=>u.boat?.id===boat.id).every(u=>(u.hunger||0)>0),'real crew go hungry');
  // Back at the harbour the clock resets and loading works.
  boat.x=-10;boat.z=0;for(const u of g.state.units.filter(u=>u.boat?.id===boat.id)){u.x=-10;u.z=0;}h.run(2);assert.equal(v.atSeaSeconds,0);assert.equal(resupplyVessel(g,boat.id,{food:5},0).accepted,true);
