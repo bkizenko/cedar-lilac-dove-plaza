@@ -7,7 +7,7 @@ const SIZE = 1040;
 const cache = new Map();
 const build = (preset, seed) => {
   const key = `${preset}:${seed}`;
-  if (!cache.has(key)) cache.set(key, generateWorld(seed, 20, { size: SIZE, preset }));
+  if (!cache.has(key)) cache.set(key, generateWorld(seed, 21, { size: SIZE, preset }));
   return cache.get(key);
 };
 const SEEDS = [3, 41];
@@ -132,7 +132,7 @@ test('generation stays inside a loose time budget (CPU seconds, retries included
   // measured ~1.5-3 s per 1040 map on a loaded 2-core box; the guard is ~4x that so it only catches regressions
   for (const [preset, seed] of [['highland', 41], ['pangaea', 41], ['archipelago', 41]]) {
     const before = process.cpuUsage();
-    const w = generateWorld(seed, 20, { size: SIZE, preset });
+    const w = generateWorld(seed, 21, { size: SIZE, preset });
     const used = process.cpuUsage(before), ms = (used.user + used.system) / 1000;
     assert.ok(ms < 12000, `${preset}/${seed} took ${Math.round(ms)} ms CPU`);
     assert.ok(w.generation.attempt <= 1, `${preset}/${seed} needed ${w.generation.attempt + 1} candidates`);
