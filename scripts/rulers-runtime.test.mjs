@@ -271,3 +271,13 @@ test('save round-trip: claims, wards, unrest counters and weariness survive a JS
  assert.ok(rulersOf(a.state)&&rulersOf(b.state),'both still valid after more years');
  const bad=JSON.parse(JSON.stringify(saved));bad.claims=[{holder:1}];assert.equal(rulersOf({rulers:bad}),null,'corrupt claims are rejected, not loaded');
 });
+
+test('casus belli is visible in the council neighbour view, both directions, and lapses (no hidden declarations)',async()=>{
+ const {casusLines}=await import('../src/game/rulersView.ts');
+ const r={year:10,claims:[{holder:'0',target:'1',kind:'raid',strength:55,expiresTick:22},{holder:'1',target:'0',kind:'tribute',strength:40,expiresTick:12},{holder:'1',target:'2',kind:'claim',strength:30,expiresTick:30},{holder:'0',target:'1',kind:'claim',strength:30,expiresTick:9}]};
+ const l=casusLines(r,0,1);
+ assert.equal(l.length,2);
+ assert.ok(l.find(x=>x.byUs&&x.kind==='raid'&&x.endsIn===12&&x.cost===14&&/raids/.test(x.reason)));
+ assert.ok(l.find(x=>!x.byUs&&x.kind==='tribute'&&x.endsIn===2&&/They hold/.test(x.reason)));
+ assert.equal(casusLines({year:10},0,1).length,0);
+});

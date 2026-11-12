@@ -2,6 +2,7 @@ import {societyIdentity} from './societyIdentity';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
 import type {Game} from './sim';
 import {rulersOf} from './rulersState';
+import {liveClaims,cbLegitimacyCost} from './unrest';
 import {expansionParties,type PartyLine,ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf} from './rulersRuntime';
 import {familyFeatures} from './familyScale';
 import {dossier,relationWord,traitWord} from './kinshipBridge';
@@ -22,10 +23,18 @@ export type CouncilModel={
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
  parties?:PartyLine[];
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[]}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[];casus?:CasusLine[]}[];
  log:string[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
+/** A standing grievance between two houses, in plain words: who holds it, the cause, how strong, when it lapses and what citing it costs the holder. */
+export type CasusLine={byUs:boolean;kind:string;strength:number;endsIn:number;cost:number;reason:string};
+const CB_WORDS:Record<string,string>={claim:'a claim on their lands',tribute:'unpaid tribute',holy:'a sacred grievance',reconquest:'lands once held',defence:'a wrong done in defence',raid:'raids and cattle-lifting',succession:'a disputed succession',liberation:'kin held under their rule'};
+export function casusLines(r:NonNullable<ReturnType<typeof rulersOf>>,team:number,other:number):CasusLine[]{
+ return liveClaims(r.claims??[],r.year).filter(c=>(Number(c.holder)===team&&Number(c.target)===other)||(Number(c.holder)===other&&Number(c.target)===team)).map(c=>{
+  const byUs=Number(c.holder)===team;
+  return {byUs,kind:c.kind,strength:Math.round(c.strength),endsIn:Math.max(0,c.expiresTick-r.year),cost:cbLegitimacyCost(c.kind),reason:(byUs?'We hold ':'They hold ')+(CB_WORDS[c.kind]??c.kind)+'; citing it costs the holder '+cbLegitimacyCost(c.kind)+' legitimacy.'};});
+}
 /** One kinsman living in another house: who, which way, why, and when they go home. */
 export type WardLine={name:string;age:number;kind:'foster'|'hostage';heldByUs:boolean;sinceYear:number;endsIn:number;effect:string};
 export function wardLines(r:NonNullable<ReturnType<typeof rulersOf>>,team:number,other:number):WardLine[]{
@@ -44,7 +53,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const exp=expansionOf(g,team);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),wards:wardLines(r,team,i),
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });
