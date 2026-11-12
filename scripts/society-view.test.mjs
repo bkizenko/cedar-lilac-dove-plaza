@@ -1,0 +1,20 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {Game} from '../src/game/sim.ts';
+import {applyEngineReadQuery,isEngineReadQuery} from '../src/game/engineReadModels.ts';
+import {societyDecisionsModel} from '../src/game/societyView.ts';
+import * as S from '../src/game/societyRuntime.ts';
+import {recordSocietyContact} from '../src/game/societyRelations.ts';
+test('society-decisions read model is a valid query, off for old saves, and lists only met societies',()=>{
+ assert.ok(isEngineReadQuery({kind:'society-decisions'}));assert.equal(isEngineReadQuery({kind:'society-decisions',x:1}),false);
+ const old=new Game();old.reset(5,10,{rulersVersion:1});old.enterIsland();assert.deepEqual(societyDecisionsModel(old),{enabled:false,societies:[],own:[]});
+ const g=new Game();g.reset(5,10,{rulersVersion:2});g.enterIsland();S.ensureDecisions(g);
+ assert.equal(societyDecisionsModel(g).societies.length,0,'unmet societies stay hidden');
+ const d=S.ensureDecisions(g);d.plans['1']={id:1,kind:'fortify',since:0,until:600,reserve:{food:0,wood:0,stone:0},people:1,score:50,reasons:['threat close']};
+ d.director['1']={window:0,posture:'defend',since:0,boldness:.5,caution:.5,scores:{develop:0,defend:50,recover:0,raid:0},reasons:['threat close']};
+ d.agreements.push({id:1,a:0,b:1,kind:'pact',since:0,bound:'house',signer:'x',status:'standing',note:''});
+ const ua=g.state.units.find(u=>u.team===0&&u.hp>0),ub=g.state.units.find(u=>u.team===1&&u.hp>0);ub.x=ua.x+1;ub.z=ua.z;assert.ok(recordSocietyContact(g,ua,ub));
+ const before=JSON.stringify(g.state);
+ const m=applyEngineReadQuery(g,{kind:'society-decisions'}).societies;
+ assert.equal(JSON.stringify(g.state),before);
+ const line=m.societies.find(s=>s.team===1);assert.ok(line);assert.equal(line.plan.kind,'fortify');assert.equal(line.posture.kind,'defend');assert.equal(line.agreements[0].kind,'pact');
+});

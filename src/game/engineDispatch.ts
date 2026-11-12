@@ -18,6 +18,9 @@ import {setSitePreparationPaused} from './sitePreparation';
 import {orderConstruction} from './construction';
 import {acceptCapitulation,refuseCapitulation,type CapitulationOutcome} from './capitulation';
 import {marryHouses,fosterHouses,exchangeHostages} from './rulersRuntime';
+import {setPreferredFormation} from './combatDoctrine';
+import {validFormationKind,type FormationKind} from './formations';
+import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
  |{kind:'begin-era-upgrade';buildingId:number;mode:'rebuild'}
@@ -48,6 +51,7 @@ export type EngineDispatchCommand=
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
  |{kind:'dairy-clean';projectId:number;unitId?:number}|{kind:'dairy-discard';projectId:number}
  |{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
+ |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
  |{kind:'boat-stop';boatId:number}
  |{kind:'construction-priority';buildingId:number;priority:0|1|2}
@@ -144,6 +148,12 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
     return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
    }
+   case 'set-formation':return setPreferredFormation(g,command.formation)?{accepted:true,reason:'Groups of four or more will form up this way when ordered to move'}:no('Combat doctrine is not enabled for this save');
+   case 'guard-duty':{
+    const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');
+    const r=assignGuardDuty(g,u.id,command.duty,u.x,u.z);return r.accepted?{accepted:true,reason:command.duty==='patrol'?'On patrol':'Standing watch'}:no(r.reason);
+   }
+   case 'release-guard':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0);if(!u)return no('Original owned person unavailable');return releaseGuardDuty(g,u.id)?{accepted:true,reason:'Back to ordinary work'}:no('That person is not on duty');}
    case 'accept-capitulation':return acceptCapitulation(g,command.frontId,command.outcome,0);
    case 'refuse-capitulation':{const ok=refuseCapitulation(g,command.frontId,0);return ok?{accepted:true,reason:'Terms refused; they will resist harder'}:no('No offer to refuse here');}
    case 'boat-stop':{
@@ -193,6 +203,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'survey-fibre':{unitId:id},'return-fibre':{unitId:id},'equip-basket':{unitId:id},'survey-clay':{unitId:id},'equip-water-vessel':{unitId:id},'swap-clothing':{unitId:id},'gather-fibre':{unitId:id,patchId:id},'gather-clay':{unitId:id,depositId:id},'equip-clothing':{unitId:id,item:v=>GARMENT_KINDS.includes(v as GarmentKind)},
   'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
+  'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
   'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},

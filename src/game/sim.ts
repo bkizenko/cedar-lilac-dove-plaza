@@ -261,7 +261,7 @@ export class Game {
   onSfx: (name: string) => void = () => {};
   onProductionDelivery:(delivery:ProductionDelivery)=>void=()=>{};
   private navRevision = 0;
-  private navBudget = 4;
+  navBudget = 4;
   private paths = new Map<
     number,
     {
