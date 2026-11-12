@@ -2110,7 +2110,7 @@ export class WorldView {
     if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing, towerPlatform?:TowerPlatform) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing, towerPlatform?:TowerPlatform, quarterTurn=false) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
@@ -2118,7 +2118,7 @@ export class WorldView {
     }
     this.ghost.visible = true;
     this.ghost.position.set(x, y, z);
-    this.ghost.rotation.set(0,type==='gate'?gateOrientation(gateFacing).yawRadians:0,0);this.ghost.scale.set(1,1,1);
+    this.ghost.rotation.set(0,type==='gate'?gateOrientation(gateFacing).yawRadians:quarterTurn?Math.PI/2:0,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'');

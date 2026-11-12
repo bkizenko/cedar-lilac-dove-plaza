@@ -126,6 +126,7 @@ import {flowPath,setFlowFieldsEnabled} from "./flowFields";
 import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
+import {tickWaterEngineering} from "./waterEngineering";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
@@ -3172,6 +3173,7 @@ export class Game {
   }
 
   tickEvents(dt: number) {
+    tickWaterEngineering(this); // Grok T3: lay deferred canal/aqueduct stages, keep digs queued
     this.tickWeather(dt);
     advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
     if (this.state.event === "herd") this.state.event = "none";

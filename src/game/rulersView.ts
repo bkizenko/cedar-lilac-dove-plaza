@@ -21,10 +21,18 @@ export type CouncilModel={
  factions:{kind:FactionKind;power:number;loyalty:number;demand:string}[];coalitionLoss:number;
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[]}[];
  log:string[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[]};
 };
+/** One kinsman living in another house: who, which way, why, and when they go home. */
+export type WardLine={name:string;age:number;kind:'foster'|'hostage';heldByUs:boolean;sinceYear:number;endsIn:number;effect:string};
+export function wardLines(r:NonNullable<ReturnType<typeof rulersOf>>,team:number,other:number):WardLine[]{
+ return (r.wards??[]).filter(w=>(Number(w.from)===team&&Number(w.to)===other)||(Number(w.from)===other&&Number(w.to)===team)).flatMap(w=>{
+  const p=r.societies[w.from]?.dynasty.people[w.person];if(!p||!p.alive)return [];
+  const endsIn=Math.max(0,w.kind==='foster'?16-p.age:w.since+8-r.year);
+  return [{name:p.name,age:p.age,kind:w.kind,heldByUs:Number(w.to)===team,sinceYear:w.since,endsIn,effect:w.kind==='foster'?'Goes home at sixteen and the bond rises; war between the houses breaks the fostering and leaves a grudge.':'Held for eight years as a pledge; war between the houses breaks it and leaves a grudge.'}];});
+}
 export function councilModel(g:Game,team=0):CouncilModel{
  const empty:CouncilModel={enabled:false,stage:'household',showSuccession:false,showFactions:false,factions:[],coalitionLoss:0,glory:[],gloryScore:0,neighbours:[],log:[]};
  if(!rulersEnabled(g))return empty;ensureRulers(g);const r=rulersOf(g.state);const me=r?.societies[String(team)];if(!r||!me)return empty;
@@ -35,7 +43,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const exp=expansionOf(g,team);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),wards:wardLines(r,team,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });

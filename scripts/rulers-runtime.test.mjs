@@ -197,3 +197,17 @@ test('lane A: war-weariness builds in a long war, feeds unrest and peace pressur
  assert.equal(R.wearinessOf(g,1),0,'peace heals');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;R.tireOfWar(old);assert.equal(old.state.rulers,undefined);assert.equal(R.warPeaceBonus(old,1),0);
 });
+test('AUD-SOC-TRIBUTE-LEDGER: marriage, fosterage, hostage and claim commands move no goods, units or buildings (no free dowry, no teleporting)',async()=>{
+ const {marryHouses,fosterHouses,exchangeHostages,grantClaim,citeClaim,settleWards}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();fosterHouses(g,0,1);
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9500+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:6,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};
+  d.people[t+'-maid']={...k,id:t+'-maid',name:'Maid'+t,age:20,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};}
+ const snap=()=>JSON.stringify({res:[0,1].map(t=>{const x=g.tribe(t);return [x.food,x.wood,x.stone,x.copper,x.iron];}),
+  units:g.state.units.map(u=>[u.id,u.team,Math.round(u.x*100),Math.round(u.y*100)]),bld:g.state.buildings.map(b=>[b.id,b.team,b.x,b.y]),stock:g.state.deals?.length??0});
+ const before=snap();
+ marryHouses(g,0,1);fosterHouses(g,0,1);exchangeHostages(g,0,1);
+ grantClaim(g,0,1,'raid',50,10);citeClaim(g,0,1,'raid');settleWards(g);
+ assert.equal(snap(),before,'diplomatic kin commands must not create or move goods, people on the map, or buildings');
+});

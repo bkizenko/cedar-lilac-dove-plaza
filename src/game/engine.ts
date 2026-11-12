@@ -5,6 +5,8 @@ import {parseStoredSave,serializeStoredSave} from './storageCodec';
 import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
+import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
+import {turnableBuilding} from "./footprints";
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -178,6 +180,32 @@ export class Engine {
   /** Selection is local presentation plus validated digest before worker ticks. */
   setWorkerSelection(selection:EngineSelection){if(!this.workerHost)throw new Error('No authoritative worker');this.workerHost.select(selection);}
 
+  private waterDraft:{state:Game['state'];kind:WaterEngineeringKind;source:WaterEngineeringPoint|null;target:WaterEngineeringPoint|null;plan:ReturnType<typeof previewWaterEngineering>|null}|null=null;
+  /** Grok World T3: canal/aqueduct tool. Two world clicks; preview and commit share one planner. */
+  beginWaterEngineering(kind:WaterEngineeringKind){
+    this.game.state.placing=null;this.loggingMode=false;this.moveMode=false;
+    this.waterDraft={state:this.game.state,kind,source:null,target:null,plan:null};this.updateGhost();this.pushHud();
+  }
+  cancelWaterEngineering(){this.waterDraft=null;this.pushHud();}
+  waterEngineeringStatus(){
+    if(this.waterDraft&&this.waterDraft.state!==this.game.state)this.waterDraft=null;
+    const d=this.waterDraft,p=d?.plan,issue=p?.issues[0]??null;
+    return{kind:d?.kind??null,source:d?.source??null,issue,canCommit:!!p&&!issue,
+      summary:!d?'Choose a water project.':!d.source?'Click the water source.':!d.target?'Click the destination.':issue??`${Math.round(p!.lengthMetres)} m · ${p!.stages.length} digs · ${Math.round(p!.workSeconds)} work-s${d.kind==='aqueduct'?' · channel earthworks only':''}`};
+  }
+  chooseWaterEngineeringPoint(point:WaterEngineeringPoint){
+    const d=this.waterDraft;if(!d||d.state!==this.game.state)return false;
+    if(!Number.isFinite(point.x)||!Number.isFinite(point.z)||Math.abs(point.x)>this.game.world.size/2||Math.abs(point.z)>this.game.world.size/2||!this.game.exploredAt(point.x,point.z)){this.game.banner('Explore the project site first',3);this.pushHud();return false;}
+    if(!d.source||d.target){d.source={...point};d.target=null;d.plan=null;}
+    else{d.target={...point};d.plan=previewWaterEngineering(this.game,d.kind,d.source,d.target);}
+    this.pushHud();return true;
+  }
+  commitWaterEngineering(){
+    const d=this.waterDraft;if(!d?.source||!d.target||d.state!==this.game.state)return{ok:false,reason:'Choose the source and destination first'};
+    const result=commissionWaterEngineering(this.game,d.kind,d.source,d.target);
+    if(result.ok)this.waterDraft=null;else d.plan=previewWaterEngineering(this.game,d.kind,d.source,d.target);this.pushHud();return result;
+  }
+
   readonly profile = new RuntimeProfile();
   entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
   setPerformanceExpanded(open:boolean){this.profile.simulationPhases.enabled=open;this.profile.personMethods.setEnabled(open,this.game);}
@@ -232,6 +260,11 @@ export class Engine {
   private nextHoverAt=0;
   private onPointerLeave=()=>{this.view.hoveredUnitId=null;this.canvas.title="";};
   gateFacing:GateFacing="north";
+  /** GW-08 / T8 (Grok): quarter-turn for the current placement; preview and commit both read it. */
+  quarterTurn=false;
+  /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
+  rotatePlacement(){const t=this.game.state.placing;if(!t||!turnableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.quarterTurn=!this.quarterTurn;this.updateGhost(true);this.pushHud();return true;}
+  canRotatePlacement(){const t=this.game.state.placing;return !!t&&t!=='gate'&&turnableBuilding(t);}
   private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
   plotStart: {x:number;z:number}|null=null;
@@ -457,9 +490,13 @@ export class Engine {
   };
 
   private onKeyDown = (e: KeyboardEvent) => {
+    if(e.code==='Escape'&&this.waterDraft)this.cancelWaterEngineering();
     const target=e.target as HTMLElement|null;
     if(e.code==='KeyR'&&this.game.state.placing==='gate'&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
       e.preventDefault();if(!e.repeat)this.setGateFacing(rotateGateFacing(this.gateFacing,e.shiftKey?-1:1));return;
+    }
+    if(e.code==='KeyR'&&this.canRotatePlacement()&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
+      e.preventDefault();if(!e.repeat)this.rotatePlacement();return;
     }
     this.keyboard.key(e);
   };
@@ -496,6 +533,7 @@ export class Engine {
       return;
     }
     if (e.button === 0) {
+      if(this.waterDraft){this.drag=null;return;}
       if (this.game.state.placing) {
         this.plotPointerStart={x:p.x,y:p.y};
         this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge"||linearStructure(this.game.state.placing))?this.view.groundAt(p.x,p.y):null;
@@ -552,6 +590,7 @@ export class Engine {
     const p = this.canvasXY(e);
     this.pointer.x = p.x;
     this.pointer.y = p.y;
+    if(e.button===0&&this.waterDraft){this.leftClick(p.x,p.y,false);this.drag=null;return;}
     if (this.rotDrag && e.button === 2) {
       const moved = Math.hypot(e.clientX - this.rotDrag.sx, e.clientY - this.rotDrag.sy);
       this.rotDrag = null;
@@ -629,6 +668,7 @@ export class Engine {
       const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length){void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);}
       return;
     }
+    if(this.waterDraft){const point=this.view.groundAt(cx,cy);if(point)this.chooseWaterEngineeringPoint(point);return;}
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
     const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) {
@@ -642,7 +682,7 @@ export class Engine {
         this.pushHud();return;
       }
       if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
-      else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
+      else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn());
       this.updateGhost();
       this.pushHud();
       return;
@@ -762,14 +802,16 @@ export class Engine {
       const snap=this.gateFacingExplicit?snapGate(this.game.state.buildings,{x,z},this.gateFacing):suggestGateSnap(this.game.state.buildings,{x,z},this.gateFacing);
       if(snap){x=snap.x;z=snap.z;this.gateFacing=snap.facing;}
     }
-    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
+    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan,this.placementTurn());
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined,this.placementTurn());
   }
+  /** The quarter turn only applies to turnable, unsized placements (same rule as placementIssue). */
+  private placementTurn(){const t=this.game.state.placing;return this.quarterTurn&&!!t&&!this.plotSize&&turnableBuilding(t);}
 
   setGateFacing(facing:GateFacing){
     this.gateFacing=normalizeGateFacing(facing);this.gateFacingExplicit=true;this.updateGhost();this.pushHud();
@@ -789,9 +831,10 @@ export class Engine {
   pauseHome(id:number,paused:boolean){const accepted=setHousingPaused(this.game,id,paused);this.pushHud();return accepted;}
 
   setPlacing(type: BldType | null) {
-    this.nextFieldPreviewAt=0;
+    this.nextFieldPreviewAt=0;this.waterDraft=null;
     this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
+    if(type!==this.game.state.placing)this.quarterTurn=false;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="house"&&housingAdoptionIssue(this.game)){this.game.banner(housingAdoptionIssue(this.game)!,5);this.pushHud();return;}
