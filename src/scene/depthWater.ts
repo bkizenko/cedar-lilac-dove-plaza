@@ -2,16 +2,19 @@ import {riverSurfaceData,type RiverCaps} from '../game/riverSurface';
 import * as THREE from 'three';
 import {lakeContains,type LocalWaterBody} from '../game/localWater';
 import type {TerrainSurface} from './terrainSurface';
+import {painterWaterFragment,painterWaterUniforms,type PainterWaterKind} from './painterWater';
 export const WATER_ART_RULES={shallowMetres:.35,deepMetres:5,foamMetres:.85,waveNormalStrength:.10,glintPower:96,fallSegments:10} as const;
 export type RenderWaterBody=LocalWaterBody;
 export type RenderWaterfall={x:number;z:number;upperY:number;lowerY:number;width:number;dx:number;dz:number};
-export function makeDepthWater(surface:TerrainSurface,time:{value:number},falling=false){
+/** style 'painterly' is the 2026 map look (painterWater.ts); 'classic' is the archived shader below, unchanged. */
+export function makeDepthWater(surface:TerrainSurface,time:{value:number},falling=false,style:'classic'|'painterly'='classic',kind:PainterWaterKind='sea'){
  const uniforms=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{
   uTime:time,uLight:{value:1},uSunDirection:{value:new THREE.Vector3(.5,1,.3).normalize()},uColor:{value:new THREE.Color('#53b5b8')},uDeep:{value:new THREE.Color('#123d61')},
   uHeights:{value:surface.heights},uTerrainSize:{value:surface.size},uSegments:{value:surface.segments},uFalling:{value:falling?1:0},
  }]);
  // Keep the scene's single clock reference (UniformsUtils normally clones it).
  uniforms.uTime=time;uniforms.uHeights={value:surface.heights};
+ if(style==='painterly')Object.assign(uniforms,painterWaterUniforms());
  if(surface.banks)Object.assign(uniforms,surface.banks.uniforms);if(surface.bankCuts)Object.assign(uniforms,surface.bankCuts.uniforms);
  return new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:true,side:THREE.DoubleSide,uniforms,
  vertexShader:`varying vec3 vWPos;varying vec2 vWaterUv;
@@ -19,7 +22,7 @@ export function makeDepthWater(surface:TerrainSurface,time:{value:number},fallin
   void main(){vec4 w=modelMatrix*vec4(position,1.);vWPos=w.xyz;vWaterUv=uv;vec4 mvPosition=viewMatrix*w;gl_Position=projectionMatrix*mvPosition;
   #include <fog_vertex>
   }`,
- fragmentShader:`uniform float uTime;uniform float uLight;uniform vec3 uSunDirection;uniform vec3 uColor;uniform vec3 uDeep;uniform sampler2D uHeights;
+ fragmentShader:style==='painterly'?painterWaterFragment(surface,falling,falling?'fall':kind):`uniform float uTime;uniform float uLight;uniform vec3 uSunDirection;uniform vec3 uColor;uniform vec3 uDeep;uniform sampler2D uHeights;
   uniform float uTerrainSize;uniform float uSegments;uniform float uFalling;
   varying vec3 vWPos;varying vec2 vWaterUv;
   ${surface.banks?.glsl??''}
@@ -124,7 +127,7 @@ export function clippedRiverGeometry(points:{x:number;y:number;z:number;w?:numbe
  stitched.dispose();
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(out,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.computeVertexNormals();geo.computeBoundingSphere();return geo;
 }
-export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:RenderWaterfall[],waterMaterial:THREE.Material,fallMaterial:THREE.Material){
+export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:RenderWaterfall[],waterMaterial:THREE.Material,fallMaterial:THREE.Material,riverMaterial:THREE.Material=waterMaterial){
  const lakes=bodies.filter((body):body is Extract<LocalWaterBody,{kind:'lake'}>=>body.kind==='lake');
  for(const body of bodies){
   let mesh:THREE.Mesh;
@@ -132,7 +135,7 @@ export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:
    let geo:THREE.BufferGeometry;
    if(body.shoreline?.length){const shape=new THREE.Shape();body.shoreline.forEach((p,i)=>i?shape.lineTo(p.x,-p.z):shape.moveTo(p.x,-p.z));shape.closePath();geo=new THREE.ShapeGeometry(shape);geo.rotateX(-Math.PI/2);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.y=body.surfaceY;}
    else {geo=new THREE.CircleGeometry(body.rx,64);geo.rotateX(-Math.PI/2);geo.scale(1,1,body.rz/body.rx);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.set(body.x,body.surfaceY,body.z);}
-  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.pts,body.width,lakes,body.surfaceVersion===2?body:undefined),waterMaterial);}
+  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.pts,body.width,lakes,body.surfaceVersion===2?body:undefined),riverMaterial);}
   mesh.name=`water-${body.kind}-${body.id}`;mesh.renderOrder=1;mesh.raycast=()=>{};group.add(mesh);
  }
  for(const [index,fall] of falls.entries()){
