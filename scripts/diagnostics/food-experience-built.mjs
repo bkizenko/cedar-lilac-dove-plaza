@@ -1,0 +1,19 @@
+// Private-profile built check on the user's unchanged checkpoint file. No screenshots.
+import assert from 'node:assert/strict';
+import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {chromium} from 'playwright';
+const file=process.argv[2];if(!file)throw Error('Pass an existing village checkpoint');
+const bytes=readFileSync(file),hash=b=>createHash('sha256').update(b).digest('hex'),original=hash(bytes),profile=mkdtempSync(join(tmpdir(),'hearthwild-meals-built-'));
+const errors=[],report={scope:'One built check: import existing village without invented meal history, ordinary simulation consumes existing finite foods, compact Stores meal readout, durable restoration; no campaign, historical-balance or performance credit.',target:process.env.HEARTHWILD_BUILT_URL||'http://127.0.0.1:8103/',passed:0,total:1};let context,stage='launch';
+try{
+ context=await chromium.launchPersistentContext(profile,{channel:'chrome',headless:true,viewport:{width:1440,height:1000},args:['--enable-unsafe-swiftshader']});const page=context.pages()[0]||await context.newPage();page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('hearthwild:graphics-quality','low'));
+ await page.goto(report.target,{waitUntil:'commit',timeout:20000});await page.waitForFunction(()=>window.__engine?.game,null,{timeout:45000});
+ stage='import unchanged legacy village';const imported=await page.evaluate(async source=>window.__engine.importVillage(new File([source],'existing-village.json',{type:'application/json'})),bytes.toString('utf8'));assert.equal(imported.applied,true,imported.message);
+ const legacy=await page.evaluate(()=>{const e=window.__engine,g=e.game;g.state.paused=true;e.pushHud();return{meal:g.tribe(0).foodExperience,time:g.state.time,food:g.tribe(0).food,pop:g.popNow(0)};});assert.equal(legacy.meal,undefined,'Legacy villages must not invent old meal credit');
+ stage='ordinary consumption of existing finite stock';const eaten=await page.evaluate(()=>{const e=window.__engine,g=e.game;if(e.isWorkerSession)throw Error('Native simulation required');for(let i=0;i<10;i++){g.state.paused=false;g.step(.2);}g.state.paused=true;e.pushHud();return{meal:g.tribe(0).foodExperience,time:g.state.time,food:g.tribe(0).food,errors:g.simulationErrors};});assert.ok(eaten.time>legacy.time);assert.ok(eaten.meal.nourishmentEaten>0);assert.deepEqual(eaten.errors,[]);
+ stage='actual compact Stores UI';await page.getByRole('button',{name:'Expand resource details',exact:true}).click();const readout=page.getByLabel('Meal enjoyment',{exact:true});await readout.waitFor({state:'visible'});assert.match(await readout.innerText(),/Meals \d+\.\d\/10 · Food mood [+-]\d+%/);assert.ok((await readout.innerText()).length<65);
+ stage='durable save and exact meal restore';const result=await page.evaluate(async()=>{const e=window.__engine,before=JSON.stringify(e.game.tribe(0).foodExperience),save=await e.saveNow();if(!save.saved)throw Error(save.message);await e.resumeSaved();return{same:before===JSON.stringify(e.game.tribe(0).foodExperience),paused:e.game.state.paused,errors:e.game.simulationErrors};});assert.equal(result.same,true);assert.equal(result.paused,true);assert.deepEqual(result.errors,[]);assert.deepEqual(errors,[]);report.passed=1;report.evidence={openingPopulation:legacy.pop,secondsAdvanced:eaten.time-legacy.time,nourishmentEaten:eaten.meal.nourishmentEaten,hedons:eaten.meal.hedons,uiVisible:true,durableRestore:true};
+}catch(error){report.failure={stage,message:error.message.slice(0,1000)};process.exitCode=1;}finally{await context?.close();rmSync(profile,{recursive:true,force:true});report.originalUnchanged=hash(readFileSync(file))===original;assert.equal(report.originalUnchanged,true);report.errors=errors;console.log(JSON.stringify(report,null,2));}
