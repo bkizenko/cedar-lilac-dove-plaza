@@ -24,3 +24,17 @@ for(const [version,seed,expected] of [[20,1454491798,PUBLISHED_V20],[21,14544917
   if(version===21){assert.notEqual(heightHash(restored),PUBLISHED_V20,'fresh V21 must retain current generator rather than silently reuse V20');const bad=structuredClone(raw);bad.state.worldgenVersion=22;assert.throws(()=>validateGameSave(bad),'unqualified future versions stay rejected');}
  });
 }
+
+// Fresh opt-in geology must survive actual simulation and strict regeneration;
+// the old v20/v21 golden anchors above intentionally have no geology flag.
+test('fresh geology worlds retain native terrain, people and the explicit option through ordinary steps and strict reload',()=>{
+ for(const preset of ['river-valley','highland','steppe','lakeland','archipelago']){
+  const g=new Game();g.reset(3,21,{size:1040,preset,geologyVersion:1});g.enterIsland();
+  assert.equal(g.world.options.geologyVersion,1);assert.ok(g.world.mapgen?.geology,preset);
+  const terrain=heightHash(g);g.state.paused=false;for(let i=0;i<8;i++)g.step(.2);g.state.paused=true;
+  assert.deepEqual(g.simulationErrors,[],preset);assert.ok(!g.state.ended,preset);assert.equal(heightHash(g),terrain);
+  const physical=bodies(g),save=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(save);const restored=decodeGame(save);
+  assert.equal(restored.state.worldOptions.geologyVersion,1,preset);assert.equal(heightHash(restored),terrain,preset);
+  assert.deepEqual(bodies(restored),physical,preset);assert.deepEqual(restored.state.tribes,g.state.tribes,preset);
+ }
+});
