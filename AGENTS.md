@@ -1,5 +1,14 @@
 # App Builder Workspace
 
+## Shared write permission — latest user instruction
+
+Claude, Grok and Codex may edit **any repository source file**, including `sim.ts`, `types.ts`, `constants.ts`, `engine.ts`, persistence/save files, `world.ts`, shared UI, build scripts and cross-domain hooks. No file is Codex-only. No Codex approval or one-line-hook request is required before implementing a complete feature on an agent branch.
+
+Grok leads execution and sequencing. Claude resolves merge conflicts and continues complex visual and nonvisual systems, diplomacy, leaders and succession. Exact file claims are temporary collision warnings, not permission gates: announce the files, coordinate an existing active edit directly, and proceed. Do not overwrite another agent's uncommitted work.
+
+Any provider may commit, push, review and normally merge ready whole branches under Grok's sequencing. No rebasing/force-pushing shared work. Whoever publishes must run the relevant checks, preserve villages/rollback and distinguish source from live gameplay. Existing save/conservation rules and the fixed98-gate checklist remain. Current Codex priority is wiring waiting features and shipping the clean integration; expanding the experimental Worker is deferred.
+
+
 **The single source of truth** for the App Builder sandbox contract. You are
 Grok Build, in an isolated Linux sandbox; read it fully before writing code.
 Prompts are often short and casual — read intent generously and ship a
