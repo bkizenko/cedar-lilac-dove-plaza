@@ -28,7 +28,8 @@ import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction
 import {combatMusicMood} from './combatMusic';
 import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
-import {tickNaval} from './navalFleet';
+import {tickNaval,navalIndependentFood} from './navalFleet';
+import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -1843,6 +1844,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    pauseNavalWork(this,u);
     cancelPackPasture(this,u);
     interruptSiegeRam(this,u);
     if(u.sitePreparationId!==undefined)releaseSitePreparationWorker(this,u);
@@ -3653,7 +3655,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
+      if(!navalIndependentFood(this,u)&&!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const deficit = u.expedition ? Number(u.expedition.food < 0.01) : mealDeficits.get(tr.id)??0;
       const hungry = deficit > 0.001, previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt * deficit) : Math.max(0, previousHunger - dt * 3);
@@ -5869,6 +5871,7 @@ export class Game {
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
             if(homeUseAI(this,u,sdt))continue;
             if(fireWarmingAI(this,u,sdt))continue;
