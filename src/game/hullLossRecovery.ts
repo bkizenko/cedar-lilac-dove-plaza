@@ -3,11 +3,13 @@ import type {GameState,Unit} from './types';
 import {requestWaterNavigation} from './waterTravel';
 import {supplyDrops,supplyApproach} from './campAnchor';
 
-export const HULL_RECOVERY_RULES={version:1,swimMetresPerSecond:.85,wadeMetresPerSecond:1.1,probeMetres:.35,maximumPathPoints:1024,maximumCells:65536,maximumShoreCandidates:32,retrySeconds:3} as const;
+export const HULL_RECOVERY_RULES={version:1,swimMetresPerSecond:.85,wadeMetresPerSecond:1.1,swimFeetDepthMetres:1.1,verticalMetresPerSecond:1.5,probeMetres:.35,maximumPathPoints:1024,maximumCells:65536,maximumShoreCandidates:32,retrySeconds:3} as const;
 type Point={x:number;z:number};
 export type HullLossRecovery={version:1;hullId:number;startedAt:number;nextSearchAt:number;revision:number;path:Point[]};
 const R=HULL_RECOVERY_RULES;
-export function recoverySurfaceHeight(g:Game,x:number,z:number){return Math.max(g.travelHeight(x,z),g.waterAt(x,z)+.16);}
+/** Unit y is its feet, not its head or a hull surface. Deep swimmers keep their
+ * torso submerged; a shallow wader's feet stay on actual ground/deck. */
+export function recoverySurfaceHeight(g:Game,x:number,z:number){return Math.max(g.travelHeight(x,z),g.waterAt(x,z)-R.swimFeetDepthMetres);}
 export function recoveryAshore(g:Game,u:Unit){return g.walkable(u.x,u.z)&&g.travelHeight(u.x,u.z)>g.waterAt(u.x,u.z)+.3;}
 /** A missing real hull transfers no equipment, cargo, ownership or position. */
 export function beginHullLossRecovery(g:Game,u:Unit,hullId:number){
@@ -49,23 +51,34 @@ function plan(g:Game,u:Unit):Point[]|undefined{
 /** Called only by Game.steer's explicit recovery seam. No ordinary actor gains
  * swimming permission; the same canStep solid/radius/boundary rules still apply. */
 export function steerHullRecovery(g:Game,u:Unit,dt:number){
- const r=u.hullRecovery;if(!r)return false;
- if(recoveryAshore(g,u)){delete u.hullRecovery;u.y=g.travelHeight(u.x,u.z);u.order='hold';u.vx=0;u.vz=0;g.invalidateRoute(u);return true;}
- if(!(dt>0)||!Number.isFinite(dt))return false;
+ const r=u.hullRecovery;if(!r||!(dt>0)||!Number.isFinite(dt))return false;
+ const seconds=Math.min(dt,.34),vertical=R.verticalMetresPerSecond*seconds;
+ const settle=(target=recoverySurfaceHeight(g,u.x,u.z))=>{u.y+=Math.max(-vertical,Math.min(vertical,target-u.y));};
+ const landed=()=>{if(!recoveryAshore(g,u)||Math.abs(u.y-g.travelHeight(u.x,u.z))>1e-6)return false;delete u.hullRecovery;u.order='hold';u.vx=0;u.vz=0;g.invalidateRoute(u);return true;};
+ if(recoveryAshore(g,u)){settle(g.travelHeight(u.x,u.z));return landed();}
  const revision=g.navigationRevision();if(r.revision!==revision){r.path=[];r.nextSearchAt=g.state.time;r.revision=revision;}
- if(!r.path.length){if(g.state.time<r.nextSearchAt)return false;const path=plan(g,u);if(path===undefined){u.workReason='Hull lost — preparing a connected shore route';return false;}r.path=path;r.nextSearchAt=g.state.time+R.retrySeconds;if(!path.length){u.workReason='Hull lost — no physically reachable shore yet; cargo remains with survivor';return false;}}
- const p=r.path[0],distance=Math.hypot(p.x-u.x,p.z-u.z);if(distance<1e-8){r.path.shift();return false;}
- const depth=g.waterAt(u.x,u.z)-g.height(u.x,u.z),speed=depth>.8?R.swimMetresPerSecond:R.wadeMetresPerSecond;
- const step=Math.min(distance,speed*Math.min(dt,.34)),x=u.x+(p.x-u.x)/distance*step,z=u.z+(p.z-u.z)/distance*step;
- if(!segmentClear(g,u,u,{x,z})){r.path=[];r.nextSearchAt=g.state.time+R.retrySeconds;u.workReason='Hull lost — shore approach blocked; retaining body and cargo';return false;}
- u.vx=(x-u.x)/dt;u.vz=(z-u.z)/dt;u.x=x;u.z=z;u.y=recoverySurfaceHeight(g,x,z);u.facing=Math.atan2(p.x-x,p.z-z);u.stride+=step*3.6;
- if(step===distance)r.path.shift();u.workReason=depth>.8?'Swimming toward a connected shore with carried supplies':'Wading toward dry shore with carried supplies';
- if(recoveryAshore(g,u)){delete u.hullRecovery;u.y=g.travelHeight(u.x,u.z);u.vx=0;u.vz=0;g.invalidateRoute(u);return true;}
- return false;
+ if(!r.path.length){if(g.state.time<r.nextSearchAt){settle();return false;}const path=plan(g,u);if(path===undefined){settle();u.workReason='Hull lost — preparing a connected shore route';return false;}r.path=path;r.nextSearchAt=g.state.time+R.retrySeconds;if(!path.length){settle();u.workReason='Hull lost — no physically reachable shore yet; cargo remains with survivor';return false;}}
+ const p=r.path[0],distance=Math.hypot(p.x-u.x,p.z-u.z);if(distance<1e-8){settle();r.path.shift();return false;}
+ const depth=g.waterAt(u.x,u.z)-g.height(u.x,u.z),swimming=depth>R.swimFeetDepthMetres,speed=swimming?R.swimMetresPerSecond:R.wadeMetresPerSecond;
+ const step=Math.min(distance,speed*seconds),x=u.x+(p.x-u.x)/distance*step,z=u.z+(p.z-u.z)/distance*step;
+ if(!g.canStep(u,x,z)||!segmentClear(g,u,u,{x,z})){settle();r.path=[];r.nextSearchAt=g.state.time+R.retrySeconds;u.workReason='Hull lost — shore approach blocked; retaining body and cargo';return false;}
+ const ground=g.travelHeight(x,z),target=recoverySurfaceHeight(g,x,z),nextY=u.y+Math.max(-vertical,Math.min(vertical,target-u.y));
+ // A valid shore step can rise faster than bounded vertical settling. Clamber
+ // at the actual shore edge before advancing, never place feet under its ground.
+ if(ground>nextY+1e-6){settle(target);u.vx=0;u.vz=0;u.workReason='Climbing out at the connected shore';return false;}
+ u.vx=(x-u.x)/dt;u.vz=(z-u.z)/dt;u.x=x;u.z=z;u.y=nextY;u.facing=Math.atan2(p.x-x,p.z-z);u.stride+=step*3.6;
+ if(step===distance)r.path.shift();u.workReason=swimming?'Swimming toward a connected shore with carried supplies':'Wading toward dry shore with carried supplies';
+ return landed();
 }
 /** Runs before ordinary riverboat/work/mission executors for this survivor. */
 export function hullLossRecoveryAI(g:Game,u:Unit,dt:number){
- if(!u.hullRecovery)return false;if(u.hp<=0||u.prisoner){delete u.hullRecovery;return false;}
+ // Captivity returns to the prisoner executor; rescuing a captive offshore is
+ // still a separate limitation, never permission to escape the guard's custody.
+ if(u.hp<=0||u.prisoner){delete u.hullRecovery;return false;}
+ // Bootstrap here, before seaRaiderReturnAI can hold a missing-hull actor.
+ // riverboatAI remains a compatible entry, not the only initializer.
+ if(!u.hullRecovery&&u.boat&&!g.state.boats?.some(b=>b.id===u.boat!.id&&b.hp>0))beginHullLossRecovery(g,u,u.boat.id);
+ if(!u.hullRecovery)return false;
  u.order='hold';g.steer(u,dt);return true;
 }
 export function validHullLossRecovery(s:GameState){
