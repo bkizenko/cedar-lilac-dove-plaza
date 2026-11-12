@@ -47,6 +47,8 @@ export function treeSpec(species:TreeSpecies,variant:number):BuildingSpec{
   for(let i=0;i<tiers;i++){const k=1-i*.24,d=base*k,y=bole+i*h0*.62,mat:CarvedMaterialId=i%2?'foliage':'foliageDark';
    // Whorls are rounded cones; the far tier keeps only the lowest and the top.
    parts.push(part('cone',mat,[d,h0*range(r,1.05,1.25),d],[0,y,0],i<=1?1:0,undefined,8));}
+  // Drooping skirt: a wide shallow lower whorl so spruce/pine read as layered boughs rather than stacked party hats (mid + near only).
+  parts.push(part('cone','foliageDark',[base*1.18,h0*.55,base*1.18],[0,bole-.08,0],1,undefined,8));
   parts.push(far(part('cone','foliageDark',[base,(tiers-1)*h0*.62+h0*1.1,base*.9],[0,bole,0],2,undefined,8)));
  }else if(species==='cypress'){
   const h=range(r,4.6,6.4),w=range(r,1.1,1.5),bole=.6;half=w/2+.5;
