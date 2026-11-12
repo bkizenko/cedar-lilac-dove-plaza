@@ -288,3 +288,33 @@ Fetched all remotes; merged `origin/main` normally (no rebase/force).
 **Rule violations:** none seen (no rebase/force-push, no pushed PNGs).
 **Requests:** no changes; G6 tides now delivered in source (W5/W6); still pending with Codex: C2, C6, C9, C10, C11, C13, C14, C15, G7, G9, LAND merge, and the six societies primitives. Claude branches still lack latest main.
 **World lane:** W6 in progress (water routing/extension footprints); next after W6 per `grok-world.md`.
+
+## Velocity plan, 2026-11-11 20:10 ET
+
+Approved by Boris at 20:10 ET.
+
+**(a) Integration lands tonight via a normal-merge PR.** The clean `integration/2026-11-11` branch goes to `main` through a normal-merge pull request, not a direct push to main. Codex reviews before anything lands. The PR will be opened after the post-merge focused tests finish; the URL will be appended here. Main stays untouched until that review and merge.
+
+**(b) Codex works only on the wiring queue until it is empty.** No new side branches until these are wired and turned on in the built game (or explicitly rejected with evidence).
+
+| ID | Request | Owner | Status |
+|---|---|---|---|
+| WQ-1 | Validator for optional `worldOptions.riverProfileVersion` (`=== 2` when present; absent = historic v1) | Codex (persistence) | Pending. World shipped opt-in river profile v2; no validator yet. |
+| WQ-2 | Validator for optional `worldOptions.tideVersion` (`=== 1` or `=== 2` when present; absent = off) | Codex (persistence) | Pending. World shipped tides v1/v2, default off, runtime `seaTideY` not saved. |
+| WQ-3 | Validator for optional `worldOptions.landformLabelVersion` (`=== 2` when present; absent = historic labels) | Codex (persistence) | Pending. World shipped opt-in hills/plains labels. |
+| WQ-4 | Water-works as real building types: aqueducts, canals, wells, cisterns, watermills, windmills (recipes, placement, labour, admission) | Codex (economy / engine) | Pending. World has site rules and commission/dig/breach hooks (`waterWorks.ts`, `waterLineWorks.ts`, `canalBreach.ts`). Not live buildings. |
+| WQ-5 | Flow fields: enable the existing per-game switch after review (default off = historic A*) | Codex | Pending. World shipped `flowFields.ts` and a `sim.ts` seam behind a switch, default off. |
+| WQ-6 | Sea mesh raised by runtime `world.seaTideY` (rivers and lakes stay at the weather level) | Claude Experience (`world.ts` / water mesh); Codex if a render-platform hook is required | Pending. World shipped sea-only tides v2. |
+| WQ-7 | Extension footprints and eraMode rebuild/extend **gameplay** benefits (healthier residents, more capacity/throughput, durability), plus an optional save field for built era/extensions with a validator | Codex (economy) defines the benefits and hook; Experience consumes them and flips `DEFAULT_ERA_MODE` to `'fixed'` | Pending. Boris decided 18:08 ET (see above). World has terrain checks for one-sided wings. Experience head `9992fe9` still defaults to `'morph'`. |
+| WQ-8 | Placement rotate control: R-key or ghost button in `engine.ts` passing `quarterTurn` to both preview and commit | Codex (engine) | Pending (board G7). |
+| WQ-9 | Mesh yaw = `buildingQuarterTurns(b) * π/2`; draw river `section.corners` and show `fishRecoveryPerMinute` | Claude Experience | Pending (board G8). |
+| WQ-10 | Wire `planFieldArea` / `fertilityPreview`; optional per-section fish cap | Codex | Pending (board G9). |
+| WQ-11 | Option H `world.ts` call site, light-rig swap/restore, H-only daylight lerp, render-check. Default `renderStyle` stays `'current'` | Codex + Experience | Pending (board C10). |
+| WQ-12 | `CarvedBuildingLayer` lifetime bucket eviction so close buildings are not stuck as impostors | Claude Experience | Pending (board C13). |
+| WQ-13 | Capitulation terms picker, domination status, captive panel, trade dialog (`proposePlayerTrade` / `tradeAnswerBlocker` / `observedPartnerStock`), dropped-parcel visual | Claude Experience | Pending (board E1). |
+| WQ-14 | Six Societies primitives that block armor / weapons / tools / animal trade (itemCargo on death, armor adapter, weapon holder, farm-tool record, `Livestock.ledBy`, `cargoRecoveryId`) | Codex | Pending (board list under Societies → Codex). |
+
+**(c) Claude's lane.** Claude keeps diplomacy, leaders, succession, international systems and the visual overhaul, and resolves the Worker/curd UI conflict in `src/ui/CraftSiteQueue.tsx` and `src/ui/ProductionControls.tsx`. Guidance from the merge handoff: retain both curd/food mechanics and async typed owner commands / read-model queries; do not restore main-thread mutation or route/eligibility helpers against the readonly projection. Curd (`work/codex-curd-2026-11-11` `be54590`) was **not** merged into `integration/2026-11-11`; the conflict was aborted without resolution and is left for Claude.
+
+**(d) Progress measure.** Progress is measured in features turned on in the built game, not in docs. Source-pushed or fixture-only work does not count until it is visible or playable on a published build (and, per the Completion Plan, has native-terrain or built-UI evidence). Frozen acceptance stays 34/98 until then.
+
