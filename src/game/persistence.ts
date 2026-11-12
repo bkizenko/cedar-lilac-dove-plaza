@@ -1,3 +1,4 @@
+import {bindCopperSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';
@@ -782,5 +783,6 @@ export function decodeGame(raw:unknown):Game {
   discountQuarryPlans(g);
   setFlowFieldsEnabled(g,false);
   initializePenBeddingTracking(g);
+  for(const p of g.state.production?.projects||[])if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCopperSmeltLoad(u,p);}
   return g;
 }
