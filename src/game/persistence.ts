@@ -28,6 +28,7 @@ import {validProductionPractice} from './productionPractice';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
+import {validCanalWorks} from './canalBreach';
 import {validCoastalTradeState,migrateCoastalSettlementEndpoints} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validRivalActivityState} from './rivalActivity';
@@ -142,6 +143,7 @@ function validateGamePayload(raw: unknown) {
   const HALF=(s.worldOptions?.size??1040)/2;
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
+  if(!validCanalWorks(s,HALF*2))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();

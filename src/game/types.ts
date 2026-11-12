@@ -487,6 +487,7 @@ export type GameState = {
   tradeIntel?:import('./tradeIntel').TradeIntelState;
   excavations?:import('./excavation').TerrainCut[];
   excavationDepth?:number;
+  canalWorks?:import('./canalBreach').CanalWork[];
   societyRelations?:import('./societyRelations').SocietyRelation[];
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
