@@ -2,7 +2,7 @@ import type {FoodKind} from './types';
 
 /** Unwired custody kernel: quantities are physical food units, never nourishment. */
 export const PACKED_FOOD_RULES={version:1,maximumUnits:100,maximumLots:64,tolerance:1e-7} as const;
-export type PackedFoodOrigin={team:number;anchorKind:'camp'|'building';buildingId?:number;x:number;z:number;loadedAt:number};
+export type PackedFoodOrigin={team:number;anchorKind:'camp'|'building'|'forage';buildingId?:number;x:number;z:number;loadedAt:number};
 export type PackedFoodLot<K extends string=FoodKind>={kind:K;units:number;origin:PackedFoodOrigin};
 export type PackedFoodCustody<K extends string=FoodKind>={version:1;legacyUnits:number;lots:PackedFoodLot<K>[]};
 /** Missing custody is explicitly unidentified legacy scalar food. */
@@ -81,7 +81,7 @@ export function validPackedFoodCustody<K extends string>(value:unknown,food:numb
  if(Object.keys(v).some(k=>!['version','legacyUnits','lots'].includes(k)))return false;
  for(const l of v.lots){const o=l.origin;
   if(Object.keys(l).some(k=>!['kind','units','origin'].includes(k))||typeof o!=='object'||Array.isArray(o)||Object.keys(o).some(k=>!['team','anchorKind','buildingId','x','z','loadedAt'].includes(k)))return false;
-  if(!Number.isSafeInteger(o.team)||o.team<0||o.team>=bounds.teamCount||!['camp','building'].includes(o.anchorKind)||!Number.isFinite(o.x)||!Number.isFinite(o.z)||Math.abs(o.x)>bounds.worldHalf||Math.abs(o.z)>bounds.worldHalf||!finite(o.loadedAt,bounds.time))return false;
+  if(!Number.isSafeInteger(o.team)||o.team<0||o.team>=bounds.teamCount||!['camp','building','forage'].includes(o.anchorKind)||!Number.isFinite(o.x)||!Number.isFinite(o.z)||Math.abs(o.x)>bounds.worldHalf||Math.abs(o.z)>bounds.worldHalf||!finite(o.loadedAt,bounds.time))return false;
   if(o.anchorKind==='building'?(!Number.isSafeInteger(o.buildingId)||o.buildingId!<1||o.buildingId!>=bounds.nextId):o.buildingId!==undefined)return false;
  }
  return true;

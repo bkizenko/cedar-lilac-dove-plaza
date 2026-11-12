@@ -1,3 +1,5 @@
+import {validExpeditionProvisions} from './expeditionProvisions';
+import {validPackJourneySupplies} from './packJourneyCare';
 import {validMethodRecordPickups} from './methodRecordPickup';
 import {validMethodRecords,reconcileMethodRecords} from './methodRecords';
 import {validDraftCarts} from './draftCart';
@@ -193,6 +195,7 @@ function validateGamePayload(raw: unknown) {
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
   if(!validPackPastureOrders(s))fail();
+  if(!validPackJourneySupplies(s))fail();
   if(!validDraftCarts(s))fail();
   if(s.cattleVersion!==undefined&&s.cattleVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
@@ -484,7 +487,7 @@ function validateGamePayload(raw: unknown) {
     if(u.plantingWork!==undefined){const p=u.plantingWork;if(!obj(p)||!Number.isSafeInteger(p.treeId)||p.treeId<1||!num(p.progress)||p.progress<0||p.progress>12)fail();}
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.studyCrop!==undefined&&!CROPS.includes(u.studyCrop))fail();
-    if(u.expedition!==undefined){const e=u.expedition;if(!obj(e)||!num(e.food)||e.food<0||e.food>24||typeof e.returning!=="boolean"||!num(e.forage)||e.forage<0||e.forage>8.5)fail();}
+    if(u.expedition!==undefined&&!validExpeditionProvisions(u.expedition,{time:s.time,worldHalf:HALF,teamCount:s.tribes.length,nextId:s.nextId}))fail();
     if(u.scout!==undefined&&(!obj(u.scout)||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')||!Number.isSafeInteger(u.scout.legs)||u.scout.legs<0||u.scout.legs>5||typeof u.scout.returning!=="boolean"||u.scout.preparing!==undefined&&u.scout.preparing!==true))fail();
     if(u.scoutProvisions!==undefined&&(!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')&&!(u.team===3&&u.campTrip)||!validScoutProvisions(u.scoutProvisions,s.time)))fail();
     if(u.visit!==undefined&&(!obj(u.visit)||!rivalTeam(u.team)||!["outbound","waiting","return"].includes(u.visit.phase)||!num(u.visit.wait)||u.visit.wait<0||u.visit.wait>121))fail();

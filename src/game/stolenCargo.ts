@@ -70,6 +70,24 @@ export function cargoOwner(g:Game,u:Unit){return markOf(g,u.id)?.owner??u.team;}
 export function cancelCargoTrip(g:Game,u:Unit){const t=tripOf(g,u.id);if(!t)return false;endTrip(g,t,'busy');return true;}
 export function droppedParcels(g:Game){return g.state.droppedCargo?.parcels??[];}
 
+/** Transfer only actual packet goods to a local finite parcel. At a full table
+ * the unaccepted remainder stays on its physical body for a later retry. */
+export function dropFoodUnits(g:Game,u:Unit,food:FoodKind,units:number,originalOwnerTeam=u.team){
+ if(u.hp>0||!Number.isFinite(units)||units<=0)return 0;
+ const s=root(g),near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind==='food'&&p.food===food&&p.originalOwnerTeam===originalOwnerTeam&&distance(p,u)<=R.mergeMeters);
+ if(!near&&s.parcels.length>=R.maximumParcels){note(g,'parcel-cap');return 0;}
+ if(near)near.amount+=units;else s.parcels.push({id:g.id(),kind:'food',food,amount:units,x:u.x,z:u.z,originalOwnerTeam,fromTeam:u.team,droppedAt:g.state.time});
+ s.ledger.dropped+=units;return units;
+}
+function dropExpeditionFood(g:Game,u:Unit){
+ const e=u.expedition;if(!e||u.hp>0)return;
+ if(e.foodCustody){
+  const p=e.foodCustody;const legacy=dropFoodUnits(g,u,'provisions',p.legacyUnits);p.legacyUnits-=legacy;e.food-=legacy;
+  for(const lot of p.lots){const dropped=dropFoodUnits(g,u,lot.kind,lot.units);lot.units-=dropped;e.food-=dropped;}
+  p.lots=p.lots.filter(l=>l.units>1e-10);
+ }else e.food-=dropFoodUnits(g,u,'provisions',e.food);
+ if(e.food<1e-9)delete u.expedition;
+}
 // ---- Creation: only from a dead carrier's exact hands.
 function dropFrom(g:Game,u:Unit){
  const kind=u.carryType;if(!kind||!(u.carry>0)||!Number.isFinite(u.carry))return;
@@ -97,7 +115,7 @@ export function dropTradeCargoItems(g:Game,u:Unit){
  if(heldItems(u).length)u.tradeCargoPending=true;else delete u.tradeCargoPending;
 }
 /** Bounded parcel tables leave undropped goods at the actual death site until room exists. */
-export function cargoBodyMustRemain(u:Unit){return u.hp<=0&&(!!u.tradeCargoPending||u.carry>0&&!!u.carryType);}
+export function cargoBodyMustRemain(u:Unit){return u.hp<=0&&(!!u.tradeCargoPending||u.carry>0&&!!u.carryType||(u.expedition?.food??0)>0||Object.values(u.packJourneySupplies?.feed??{}).some(n=>(n??0)>0));}
 /** Explicit legacy-save migration: existing trips acquire their own reservation, never a new trip. */
 export function restoreCargoRecoveryCommitments(s:GameState){for(const t of s.droppedCargo?.trips||[]){const u=s.units.find(u=>u.id===t.unitId);if(u&&u.cargoRecoveryId===undefined)u.cargoRecoveryId=u.id;}}
 // ---- Eligibility for physical recovery.
@@ -255,11 +273,11 @@ export function stolenCargoAI(g:Game,u:Unit,dt:number){
 // ---- World tick: sweep deaths, prune, and dispatch. Runs inside tickCoastalTrade (both call sites).
 export function tickStolenCargo(g:Game,dt:number){
  const s=g.state.droppedCargo;
- if(!s&&!g.state.units.some(u=>u.hp<=0&&(u.carry>0&&u.carryType||(u.tradeNeedsId!==undefined||u.tradeCargoPending||u.itemCargo?.copperOre||u.itemCargo?.copperMetal||u.itemCargo?.ironOre||u.itemCargo?.ironBloom||u.itemCargo?.ironMetal)&&heldItems(u).length)))return;
+ if(!s&&!g.state.units.some(u=>u.hp<=0&&((u.expedition?.food??0)>0||Object.values(u.packJourneySupplies?.feed??{}).some(n=>(n??0)>0)||u.carry>0&&u.carryType||(u.tradeNeedsId!==undefined||u.tradeCargoPending||u.itemCargo?.copperOre||u.itemCargo?.copperMetal||u.itemCargo?.ironOre||u.itemCargo?.ironBloom||u.itemCargo?.ironMetal)&&heldItems(u).length)))return;
  for(const u of g.state.units){
   if(u.hp>0||!holds(u))continue;
   dropTradeCargoItems(g,u);
-  const trip=tripOf(g,u.id);dropFrom(g,u);
+  const trip=tripOf(g,u.id);dropExpeditionFood(g,u);dropFrom(g,u);
   if(trip)endTrip(g,trip,'claimant-lost');
  }
  const r=root(g);

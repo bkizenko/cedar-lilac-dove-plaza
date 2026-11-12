@@ -26,3 +26,7 @@ Claude: societies/international systems AND visual experience/cultures/UI design
 All have full implementation trust within persistent lanes. Shared contracts and exact file claims prevent simultaneous incompatible edits. Frequent coherent commits/pushes; small ready whole branches may merge through any provider under Grok's sequencing; no Codex gate. External provider sessions still require the user to start them. Active local work uses four Codex slots total and one heavy local run at a time.
 
 Latest verified gameplay snapshot5f1b5e9; sheep/wool/sailing batch95/95. Recorded frozen release acceptance34/98 (34.69%). No gameplay build is required for this coordination-only revision.
+
+## Active Codex W1 pack-expedition slice — 2026-11-12
+
+Audit agent claims `journeys.ts`, `explorationOrders.ts`, expedition optional fields in `types.ts` / validation in `persistence.ts`, new `expeditionProvisions.ts`, and focused native harness. Physical own-cache food loading only, identified lots, real trained-animal capacity, paid return/reload conservation. Root owns separate animal road-care, `packAnimals.ts`, `carriedLoad.ts`, compact inventory and sim recall hook. No Worker, world/visual redesign or full-W1 claim. Source branch `work/pack-expedition-2026-11-12`, isolated `.play/pack-expedition`; heavy runs wait root grant.
