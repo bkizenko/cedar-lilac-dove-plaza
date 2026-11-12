@@ -2,7 +2,6 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {captureCommunityKnowledge,inheritedKnowledgeProofs,hasDeliveredMethod,validCommunityKnowledgeSnapshot} from '../src/game/inheritedKnowledge.ts';
 import {textileRecipeIssue} from '../src/game/textiles.ts';
-import {threshingFloorIssue} from '../src/game/cerealRules.ts';
 import {inheritedTrialWorkplace,beginCropTrial,beginInheritedCropTrial,cropStudyAI} from '../src/game/cultivation.ts';
 import {knowledgeReport} from '../src/game/knowledge.ts';
 import {PRODUCTION_RECIPES} from '../src/game/production.ts';
@@ -12,7 +11,7 @@ const history=(maker)=>({batches:2,failedBatches:0,usefulOutputs:8,firstAt:0,las
 test('frozen delivered methods unlock inherited practice without crediting new output or learning future offscreen methods',()=>{
  const g=fixture(),maker=g.state.units.find(u=>u.team===1);g.tribe(1).productionPractice={spinYarnHand:history(maker.id),threshCerealHand:history(maker.id)};
  const r=record(g);r.knowledge=captureCommunityKnowledge(g,r);g.state.communityHandovers=[r];
- assert.equal(textileRecipeIssue(g,0,'weaveCloth'),null);assert.equal(threshingFloorIssue(g,0),null);assert.equal(g.tribe(0).productionPractice,undefined);
+ assert.equal(textileRecipeIssue(g,0,'weaveCloth'),null);assert.equal(hasDeliveredMethod(g,0,'threshCerealHand'),true,'the frozen source retains demonstrated hand threshing');assert.equal(g.tribe(0).productionPractice,undefined);
  g.tribe(1).productionPractice.weaveCloth=history(maker.id);assert.equal(hasDeliveredMethod(g,0,'weaveCloth'),false);assert.match(textileRecipeIssue(g,0,'sewLightClothes'),/woven/);
  const before=JSON.stringify(g.state);knowledgeReport(g);inheritedKnowledgeProofs(g.state,0);assert.equal(JSON.stringify(g.state),before);
  assert.equal(validCommunityKnowledgeSnapshot(g.state,r,k=>Object.hasOwn(PRODUCTION_RECIPES,k)),true);

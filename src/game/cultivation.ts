@@ -2,7 +2,7 @@ import {siteBlocksRegrowth} from './sitePreparation';
 import {campAnchor,supplyDrops,supplyApproach,type SupplyDrop} from './campAnchor';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
-import type {CropKind,Unit,ResourceNode,Building} from "./types";
+import type {CropKind,Unit,ResourceNode,Building,GameState} from "./types";
 import {HABITATS,habitatAt,habitatKindAt,soilQuality} from "./ecology";
 import {calendar,crop,isDependent,reserveSeconds} from "./settlement";
 import {beginExpedition} from "./journeys";
@@ -10,6 +10,23 @@ import {lifeEvent} from "./communities";
 
 export const CROP_TRIAL_RULES={maximumPeople:3,workFractions:[1,.45,.25]}as const;
 export const CROPS:CropKind[]=["grain","pulses","tubers"];
+export type CultivationEvidence={demonstratedAt:number;actorIds:number[];inheritedSourceTeam?:number};
+/** Historical receipts are earned only by positive staffed work, never inferred
+ * from a field, an age, or a legacy cultivated flag. */
+export function validCultivationEvidence(s:GameState){
+ const actors=(ids:unknown,required=false)=>Array.isArray(ids)&&ids.length<=CROP_TRIAL_RULES.maximumPeople&&(!required||ids.length>0)&&new Set(ids).size===ids.length&&ids.every(id=>Number.isSafeInteger(id)&&id>0&&id<s.nextId);
+ for(const t of s.tribes){
+  for(const trial of [t.cropTrial,...(t.inheritedCropTrials||[]).map(q=>q.trial)])if(trial?.workActorIds!==undefined&&!actors(trial.workActorIds))return false;
+  const evidence=t.cultivationEvidence;if(evidence===undefined)continue;
+  if(!evidence||typeof evidence!=='object'||Array.isArray(evidence)||Object.keys(evidence).length>CROPS.length)return false;
+  for(const [kind,r]of Object.entries(evidence)){
+   if(!CROPS.includes(kind as CropKind)||!t.cultivated?.includes(kind as CropKind)||!r||typeof r!=='object'||Array.isArray(r)||Object.keys(r).some(k=>!['demonstratedAt','actorIds','inheritedSourceTeam'].includes(k))||!Number.isFinite(r.demonstratedAt)||r.demonstratedAt<0||r.demonstratedAt>s.time||!actors(r.actorIds,true))return false;
+   if(r.inheritedSourceTeam!==undefined&&(!Number.isSafeInteger(r.inheritedSourceTeam)||!s.tribes.some(q=>q.id===r.inheritedSourceTeam)))return false;
+  }
+ }
+ return true;
+}
+
 export const CROP_NAMES:Record<CropKind,string>={grain:"Wild grain",pulses:"Wild pulses",tubers:"Wild tubers"};
 /** Optional fields migrate in place; existing cultivated land never loses its practice. */
 export function initializeCultivation(g:Game,legacy=false){
@@ -102,10 +119,20 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
   // Each real participant works only after reaching the same hearth. Stable
   // diminishing shares bound the benefit; extra samples are not charged.
   const inheritedIds=inheritedActors(g,u.team),participants=g.state.units.filter(p=>p.hp>0&&p.team===u.team&&p.studyCrop===trial.kind&&(inherited?inherited.actorIds.includes(p.id):!inheritedIds.has(p.id))).sort((a,b)=>a.id-b.id),rank=participants.indexOf(u);
+  const before=trial.progress;
   trial.progress=Math.min(trial.duration,trial.progress+Math.max(0,dt)*(CROP_TRIAL_RULES.workFractions[rank]||0));
+  if(trial.progress>before){
+   const ids=trial.workActorIds??=[];
+   // At most three most recent real contributors. A replacement adult is not
+   // credited for earlier work; deceased contributors remain historical facts.
+   if(!ids.includes(u.id)){if(ids.length>=CROP_TRIAL_RULES.maximumPeople)ids.shift();ids.push(u.id);}
+  }
   u.stride+=dt*6;u.workReason=`Testing ${trial.kind} cultivation · ${Math.round(100*trial.progress/trial.duration)}%`;
   if(trial.progress>=trial.duration){
     t.cultivated??=[];const newlyLearned=!t.cultivated.includes(trial.kind);if(newlyLearned)t.cultivated.push(trial.kind);
+    if(trial.workActorIds?.length&&t.cultivationEvidence?.[trial.kind]===undefined){
+     t.cultivationEvidence??={};t.cultivationEvidence[trial.kind]={demonstratedAt:g.state.time,actorIds:[...trial.workActorIds],...(inherited?{inheritedSourceTeam:inherited.sourceTeam}:{})};
+    }
     if(u.team===0&&newlyLearned){g.banner(`Learned to cultivate ${trial.kind}. Fields can now grow it.`,5);lifeEvent(g,0,`Cultivation trials established ${trial.kind}.`);}
     if(inherited)t.inheritedCropTrials=t.inheritedCropTrials!.filter(q=>q!==inherited);else t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
   }
