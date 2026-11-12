@@ -22,7 +22,9 @@ export class DraftCartLayer {
  private looseOwners:LooseDraftCart[]=[];
  private matrices=new Map<Unit,THREE.Matrix4>();
  private disposed=false;
- constructor(private scene:THREE.Scene,material:THREE.Material){
+ private scene:THREE.Scene;
+ constructor(scene:THREE.Scene,material:THREE.Material){
+  this.scene=scene;
   this.attached=new THREE.InstancedMesh(this.geometry,material,DRAFT_CART_RENDER.initialInstances);this.loose=new THREE.InstancedMesh(this.geometry,material,DRAFT_CART_RENDER.initialInstances);
   this.attached.name='actual-attached-draft-carts';this.loose.name='actual-loose-draft-carts';
   for(const mesh of [this.attached,this.loose]){mesh.count=0;mesh.visible=false;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(mesh);}
