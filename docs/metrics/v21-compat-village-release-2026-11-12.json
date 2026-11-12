@@ -1,0 +1,87 @@
+{
+  "release": "2026-11-12T15-36-29-657Z-d7ddb83",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T15-36-29-657Z-d7ddb83",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T15-18-42-322Z-714b47e",
+  "commit": "d7ddb834e445c1c0be1734c8ea28cf2f2bd1e377",
+  "retained": {
+    "linked": 1348,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 53,
+    "total": 53,
+    "nativeAndShared": 50,
+    "nativeEvidence": "35art/preference/compatibility cases PASS in initial sweep;15map cases rerun PASS against explicit freshV21 after splitting frozenV20. Initial5latest-feature failures requested20; assertions unchanged, fixture generation corrected. Repeated cases not double-counted.",
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Original53 post-migration save continuity; real Menu World V21 river-valley and approved skin; actual resident movement; saved physical map survives archived Classic reload; optional actually earned toolmaking readout. No campaign, frame-rate or full-era credit.",
+      "original": {
+        "population": 53,
+        "version": 18,
+        "heights": "ee8e5a39ba3a83913c36eb95193ff34fb3f9acd469a9193046dca313a80c8f5f",
+        "mapStyle": "painterly",
+        "triangles": 1222326
+      },
+      "originalCivic": {
+        "skipped": "No civic record earned yet; no time jump or injected civic state"
+      },
+      "newMap": {
+        "seed": 1300845962,
+        "version": 21,
+        "preset": "river-valley",
+        "size": 1040,
+        "skin": "civ:aureline",
+        "homeDry": true,
+        "movedMetres": 6.497149619859777,
+        "heights": "d7ed11a69f4162809976a3314d299c0a5a4f36d2288f9a0f47b35b74d8e15585",
+        "triangles": 1134914
+      },
+      "newMapCivic": {
+        "passed": true,
+        "knownSocieties": 0
+      },
+      "classic": {
+        "mapStyle": "classic",
+        "triangles": 1126520,
+        "physicalStateUnchanged": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "compatibility": {
+    "publishedV20Seed": 1454491798,
+    "preset": "river-valley",
+    "size": 1040,
+    "publishedV20HeightSha256": "7467c9768d2e1db2170d45a2324d6e80f55961d6e02468487756974be3305dc6",
+    "incomingV21HeightSha256": "752327eb0f367ab87a80f83815b11219cfc0a4b54b0532762eb3fe611ecbcada",
+    "exactFrozenGenerator": "10TS files byte-identical to714b47e in src/game/mapgenV20; generation20 keeps published terrain, freshworlds explicitly21; native ordinary steps and strictsave preserve physical IDs/cargo/equipment/camps/goods"
+  },
+  "working": [
+    "FreshV21 map generation with deltas, physical ford data, varied archipelagos, longer headwaters, smoothed coasts and climate-biome boundaries, ecology-linked wildlife",
+    "Claude newer village halls/landmarks/earthworks, connected defenses/gates, modular warehouse plots and carved line details",
+    "Original53 version18 terrain and physical stock/body state retained through durable restore",
+    "Actual freshV21 known dry camp, real resident Move, first normal Society review, durable save and archived Classic reload",
+    "PublishedV20 generator remains exactly reproducible instead of silently adopting V21 physics"
+  ],
+  "visualReview": "Actual old53 village and fresh21 camp screenshots reviewed, no shader/page/sim errors. Temporary images deleted after review. Not an approved-final-art or FPS claim.",
+  "limits": [
+    "Not every full required landscape/biome/visual quality gate is qualified",
+    "No100-resident p95/FPS or fullcampaign claim; Worker parked",
+    "Broader armor/naval/specialization/civilization backlog remains active"
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}

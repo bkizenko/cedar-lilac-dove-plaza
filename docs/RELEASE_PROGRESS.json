@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "714b47eb7025896e308a13756afcdc3560c7502d published as 2026-11-12T15-18-42-322Z-714b47e on8086/8101.67/67 scoped V20/civic/skins/painter/toolmaking/safety checks; includes food2424c08 and raid95978dd; inherited37/98 unchanged. LaterV21/newart source pending; Worker parked.",
+  "verifiedPublishedCodeBaseline": "d7ddb834e445c1c0be1734c8ea28cf2f2bd1e377 published as 2026-11-12T15-36-29-657Z-d7ddb83 on8086/8101.53/53 scoped freshV21/publishedV20-compat/village-art checks; includes all prior food/raid/tool/civic batches; inherited37/98 unchanged. Fullcampaign and100-resident p95/FPS open; Worker parked.",
   "planningHeadAtAudit": "ba2f2e2",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
