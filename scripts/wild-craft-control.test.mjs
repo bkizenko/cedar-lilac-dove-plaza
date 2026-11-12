@@ -18,7 +18,7 @@ test('commands are strict, refuse without wild-craft and the plan is pure',()=>{
  const g=fixture();assert.equal(applyEngineCommand(g,{kind:'wild-begin',recipe:'renderFat'}).accepted,false);
  assert.equal(applyEngineReadQuery(g,{kind:'wild-craft'}).wild.plan.enabled,false);
  enableWildCraft(g);const before=JSON.stringify(g.state.wildCraft),plan=applyEngineReadQuery(g,{kind:'wild-craft'}).wild.plan;
- assert.equal(plan.enabled,true);assert.equal(plan.recipes.length,10);assert.ok(plan.hands.length>0);assert.equal(JSON.stringify(g.state.wildCraft),before);
+ assert.equal(plan.enabled,true);assert.equal(plan.recipes.length,11);assert.ok(plan.hands.length>0);assert.equal(JSON.stringify(g.state.wildCraft),before);
  assert.match(plan.recipes.find(r=>r.id==='renderFat').issue,/Need/);
 });
 test('typed begin assigns a free adult to a real station, debits stock once, and finishes',()=>{
