@@ -8,9 +8,11 @@ export type NavalControlContext={dockId?:number;boatId?:number;builderId?:number
 /** Owner facts and shared authoritative readiness only. Never initializes naval
  * state, makes a project, mutates a person, or reveals foreign cargo/rosters. */
 export function navalOwnerControls(g:Game,query:NavalControlContext={}){
- const s=navalState(g),view=navalView(g,0),available=g.state.units.filter(u=>navalBuilderAvailable(g,u,0)),builder=query.builderId===undefined?available[0]:g.state.units.find(u=>u.id===query.builderId&&u.team===0&&u.hp>0);
+ const s=navalState(g),view=navalView(g,0),available=g.state.units.filter(u=>navalBuilderAvailable(g,u,0));
+ const ports=view.ports.map((p,index)=>({id:p.dockId,name:`Harbour ${index+1}`,tier:p.tierName,works:p.works,moored:p.moored,moorage:p.moorage,blockaded:p.blockaded})),dock=query.dockId===undefined?ports[0]:ports.find(p=>p.id===query.dockId),anchor=dock&&g.state.buildings.find(b=>b.id===dock.id);
+ let nearest=available[0];if(anchor)for(const u of available)if(!nearest||Math.hypot(u.x-anchor.x,u.z-anchor.z)<Math.hypot(nearest.x-anchor.x,nearest.z-anchor.z))nearest=u;
+ const builder=query.builderId===undefined?nearest:g.state.units.find(u=>u.id===query.builderId&&u.team===0&&u.hp>0),bid=builder?.id??-1;
  const builders=available.slice(0,128).map(u=>({id:u.id,name:personName(u)}));if(builder&&!builders.some(b=>b.id===builder.id))builders.unshift({id:builder.id,name:personName(builder)});
- const bid=builder?.id??-1,ports=view.ports.map((p,index)=>({id:p.dockId,name:`Harbour ${index+1}`,tier:p.tierName,works:p.works,moored:p.moored,moorage:p.moorage,blockaded:p.blockaded})),dock=query.dockId===undefined?ports[0]:ports.find(p=>p.id===query.dockId);
  const boats=(g.state.boats||[]).filter(b=>b.team===0&&b.hp>0).map((b,index)=>{const v=view.vessels.find(v=>v.boatId===b.id);return{id:b.id,name:`${designOfBoat(g,b.id).name} · ${index+1}`,hp:b.hp,crew:boatCrew(g,b.id).filter(u=>u.boat?.phase==='aboard'&&u.hp>0).length,commissioned:!!v,food:v?.stores.food??0,missiles:v?.stores.missiles??0,starved:v?.starved??false};}),boat=query.boatId===undefined?boats[0]:boats.find(b=>b.id===query.boatId);
  const works=PORT_WORK_IDS.map(id=>{const spec=PORT_WORK_SPECS[id];return{id,name:spec.name,wood:spec.wood,stone:spec.stone,cordage:spec.cordage,seconds:spec.workSeconds,issue:dock?portWorkIssue(g,dock.id,id,bid,0):'Choose an owned finished dock'};});
  const designs=Object.values(SHIP_DESIGNS).map(spec=>({id:spec.id,name:spec.name,wood:spec.cost.wood,stone:spec.cost.stone,cordage:spec.cost.cordage,copper:spec.cost.copper,seconds:spec.workSeconds,issue:dock?commissionIssue(g,dock.id,spec.id,bid,0):'Choose an owned finished dock'}));

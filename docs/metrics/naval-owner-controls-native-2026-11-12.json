@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-12",
+  "branch": "work/naval-owner-controls-2026-11-12",
+  "base": "a9f208f",
+  "status": "source-native-qualified-not-built-or-live",
+  "scope": [
+    "contextual lazy owner controls inside existing BoatControls",
+    "typed owner naval-controls read query",
+    "existing port-work/resume-port-work/commission/resume-commission/resupply/board commands",
+    "shared pure readiness extraction, no new rules or goods"
+  ],
+  "checks": {
+    "uniquePassed": 17,
+    "newOwnerCases": 4,
+    "existingConservationCases": 3,
+    "existingFleetCases": 10,
+    "typecheck": "PASS",
+    "newCases": [
+      "pure owner read and malformed/foreign context",
+      "actual UI handlers to paid port and hull physical progress, strict saves, resume, launch and finite supply",
+      "real costs/blockers and lazy closed contextual UI",
+      "stale render village epoch/disposed/late reply protection"
+    ],
+    "initialHarnessCorrection": "Expected Build breakwater but actual authoritative label is Build breakwater and quay. Harness only corrected; failed connected case rerun passes."
+  },
+  "nativeFixture": {
+    "seed": 42,
+    "generation": 14,
+    "layout": "pangaea",
+    "size": 1040,
+    "opening": "Finite authored completed dock, two eligible workers,900wood600stone100copper200cordage1000typedfood. Natural terrain unchanged; no granted work/hull progress or movement edits after execution starts.",
+    "portWork": "Breakwater and quay, paid and physically worked",
+    "commission": {
+      "projectId": 5302,
+      "progress": 2,
+      "required": 170,
+      "woodPaid": 46,
+      "stonePaid": 5,
+      "cordagePaid": 4,
+      "replacementId": 5282,
+      "dockId": 5281
+    },
+    "completedHull": {
+      "boatId": 5317,
+      "rationsLoaded": 30,
+      "missilesLoaded": 24
+    },
+    "camera": {
+      "x": 288,
+      "z": -416
+    }
+  },
+  "limits": [
+    "built/UI/browser qualification and publication pending",
+    "existing backend does not add a new route-admission rule; no World/navigation changes",
+    "no new naval art, AI, ship types, missile firing or complete naval campaign credit"
+  ]
+}

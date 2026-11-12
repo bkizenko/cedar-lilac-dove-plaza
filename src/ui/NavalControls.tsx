@@ -34,12 +34,17 @@ export function NavalControlsView({model:m,choice,choose,run,selectHull,busy=fal
   {feedback&&<p role="status">{feedback}</p>}
  </section>;
 }
+/** Capture the render's village identity, never a newer epoch at click time. */
+export function navalCommandRunner(engine:Pick<Engine,'disposed'|'dispatchEpoch'|'dispatch'>,epoch:number,feedback:(text:string)=>void,busy:(value:boolean)=>void){return async(command:EngineDispatchCommand)=>{
+ const current=()=>!engine.disposed&&engine.dispatchEpoch===epoch;if(!current())return;busy(true);
+ try{const result=await engine.dispatch(command);if(current()&&result.epoch===epoch)feedback(result.reason);}catch(error){if(current())feedback(error instanceof Error?error.message:String(error));}finally{if(current())busy(false);}
+};}
 function NavalControlsInner({engine,dockId,boatId}:{engine:Engine;dockId?:number;boatId?:number}){
  const[choice,setChoice]=useState<Choice>({dockId,boatId,workId:'breakwater',designId:'riverPatrol'}),[feedback,setFeedback]=useState(''),[busy,setBusy]=useState(false);
  const query={kind:'naval-controls' as const,dockId:choice.dockId,boatId:choice.boatId,builderId:choice.builderId},read=useOwnerReadModels(engine,[query]),reply=read(query);
- const run=async(command:EngineDispatchCommand)=>{const epoch=engine.dispatchEpoch;setBusy(true);try{const result=await engine.dispatch(command);if(engine.dispatchEpoch===epoch&&result.epoch===epoch)setFeedback(result.reason);}catch(error){if(engine.dispatchEpoch===epoch)setFeedback(error instanceof Error?error.message:String(error));}finally{if(engine.dispatchEpoch===epoch)setBusy(false);}};
+ const epoch=engine.dispatchEpoch,run=navalCommandRunner(engine,epoch,setFeedback,setBusy);
  if(!reply.model)return <p className="text-xs text-parchment/60">{reply.issue}</p>;
- return <NavalControlsView model={reply.model} choice={choice} choose={next=>setChoice(old=>({...old,...next}))} run={run} busy={busy} feedback={feedback} selectHull={id=>{engine.game.selectBoat(id);engine.pushHud();}}/>;
+ return <NavalControlsView model={reply.model} choice={choice} choose={next=>setChoice(old=>({...old,...next}))} run={run} busy={busy} feedback={feedback} selectHull={id=>{if(!engine.disposed&&engine.dispatchEpoch===epoch){engine.game.selectBoat(id);engine.pushHud();}}}/>;
 }
 /** Closed disclosure performs no readiness/route queries. Existing BoatControls
  * provides this same contextual entry in both Hearth and Classic interfaces. */
