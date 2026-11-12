@@ -9,7 +9,7 @@ test('publishing preserves old hashed assets for an open village and never overw
  const root=mkdtempSync(join(tmpdir(),'hearthwild-release-test-'));
  try{
   for(const path of ['scripts','.vercel/output/functions/__server.func','.vercel/output/static/assets','.play/releases/old/static/assets'])mkdirSync(join(root,path),{recursive:true});
-  cpSync(new URL('./play.mjs',import.meta.url),join(root,'scripts/play.mjs'));
+  for(const file of ['play.mjs','retain-release-assets.mjs'])cpSync(new URL('./'+file,import.meta.url),join(root,'scripts',file));
   writeFileSync(join(root,'.vercel/output/functions/__server.func/index.mjs'),'export default {}');
   writeFileSync(join(root,'.vercel/output/static/assets/new-hash.js'),'new');
   writeFileSync(join(root,'.vercel/output/static/assets/shared.js'),'new shared');

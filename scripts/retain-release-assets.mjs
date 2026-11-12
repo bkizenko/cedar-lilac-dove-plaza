@@ -1,4 +1,4 @@
-import {constants,copyFileSync,existsSync,linkSync,mkdirSync,readdirSync} from 'node:fs';
+import {constants,copyFileSync,existsSync,linkSync,mkdirSync,readdirSync,lstatSync} from 'node:fs';
 import {join,relative} from 'node:path';
 /** Old pages may still request earlier chunks/audio. Both release trees are
  * immutable: share old files, while keeping every freshly built file intact. */
@@ -25,11 +25,11 @@ export function retainReleaseAssets(previous,release){
  // Private compressed assets retain their ORIGINAL public URL. A new raw build
  // always wins, and compressed chunks stay hardlinked across later releases.
  function compressed(dir,relativePath='assets'){
-  if(!existsSync(dir))return;
+  if(!existsSync(dir)||!lstatSync(dir).isDirectory()||lstatSync(dir).isSymbolicLink())return;
   for(const e of readdirSync(dir,{withFileTypes:true})){const from=join(dir,e.name),rel=join(relativePath,e.name);if(e.isDirectory()){compressed(from,rel);continue;}if(!e.isFile()||!e.name.endsWith('.gz'))continue;
    const to=join(release,'.retained-text',rel);if(existsSync(join(release,'static',rel.slice(0,-3)))||existsSync(to)){result.existing++;continue;}mkdirSync(join(to,'..'),{recursive:true});try{linkSync(from,to);result.linked++;}catch(error){if(error.code==='EEXIST'){result.existing++;continue;}if(!['EXDEV','EPERM','ENOTSUP','EOPNOTSUPP'].includes(error.code))throw error;try{copyFileSync(from,to,constants.COPYFILE_EXCL);result.copied++;}catch(e){if(e.code==='EEXIST')result.existing++;else throw e;}}
   }
  }
- compressed(join(previous,'.retained-text','assets'));
+ const privateRoot=join(previous,'.retained-text');if(existsSync(privateRoot)&&lstatSync(privateRoot).isDirectory()&&!lstatSync(privateRoot).isSymbolicLink())compressed(join(privateRoot,'assets'));
  return result;
 }
