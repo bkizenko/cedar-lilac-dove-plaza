@@ -399,7 +399,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-12 | catalogue | Sleep/rest with chosen night shifts and fatigue. | Codex | — (done) | done/live | historical source-struck: seasonal work windows / fatigue |
 | CAT-120 | catalogue | **Accepted extension:** federations, vassalage and alliances as alternatives to conquest. | Claude | Claude W2 | source-pushed-not-live | vassalage/alliances source-pushed e69b8f8 |
 | CAT-13 | catalogue | Shelter capacity, warmth, fuel and storm refuge. | Codex | Codex W9 | source-pushed-not-live | shelter/fuel partly live M1-07/09 |
-| CAT-14 | catalogue | Clothing suited to cold, heat and wet conditions. | Codex | Codex W3 | source-pushed-not-live | wool coats live 5f1b5e9; heat/wet/repair/dyes remain |
+| CAT-14 | catalogue | Clothing suited to cold, heat and wet conditions. | Codex | Codex W3 | live-partial | 290b188 wet/dry insulation, heat retained, real fuel drying, same-garment paid repair, compact controls;62/62scoped,tsc/build; docs/metrics/garment-weather-repair-release-2026-11-12.json. Dyes/other-owner textile service remain open. |
 | CAT-15 | catalogue | Injury, illness, care, recovery and readable death causes. | Codex | Codex W9 | not started | injury/illness/care |
 | CAT-16 | catalogue | Seasonal food reserve forecasts and preservation losses. | Codex | — (done) | done/live | historical source-struck: seasonal reserves / preservation |
 | CAT-17 | catalogue | Expedition provisions, camping and return decisions. | Codex | Codex W9 | source-pushed-not-live | scout provisions exist; expedition leftovers |
@@ -608,7 +608,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | REQ-18 | request-audit | Night sleeping and shelter in storms | Codex | Codex W9 | not started | night sleeping and storm shelter — status said missing coherent schedule |
 | REQ-19 | request-audit | Shelter degradation, repairs, fuel and meaningful weather consequences | Codex | Codex W9 | source-pushed-not-live | repairs exist in part |
 | REQ-20 | request-audit | Named villagers, personality, life updates, personal connection | Claude | Claude W2 | source-pushed-not-live | names/traits exist; G6 naming source-pushed |
-| REQ-21 | request-audit | Warm/light clothing | Codex | Codex W3 | not started | warm/light clothing leftovers (audit said missing item recipes) |
+| REQ-21 | request-audit | Warm/light clothing | Codex | Codex W3 | live-partial | 290b188 wet/dry insulation, heat retained, real fuel drying, same-garment paid repair, compact controls;62/62scoped,tsc/build; docs/metrics/garment-weather-repair-release-2026-11-12.json. Dyes/other-owner textile service remain open. |
 | REQ-22 | request-audit | Hunting remembered and useful, no dedicated early hunter unit | Codex | — (done) | done/live | civilian hunting implemented (M1-10) |
 | REQ-23 | request-audit | Domesticated animals matter | Codex | Codex W1 | source-pushed-not-live | sheep live; broader domestication remains |
 | REQ-24 | request-audit | Prehistoric nomadic hunting age; follow herds where advantageous | Codex | Codex W1 | not started | nomadic hunting age |
@@ -786,7 +786,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-MILITIA-BARRACKS | incentive | Militia stand down to civilian work; barracks are real infrastructure | Claude | Claude W2 | source-pushed-not-live |  |
 | INC-MINIMAP-SQUARE | incentive | Replace irregular minimap camera outline with a thin muted square | Claude | Claude W10 | not started |  |
 | INC-NAVAL | incentive | Ports, vessel roles, naval combat, supplies, repair | Codex | Codex N5 | source-pushed-not-live | sail/sea exploration live; combat leftover |
-| INC-PERISH-CLOTHES | incentive | Perishable food and distinct hot/cold clothing | Codex | Codex W3 | source-pushed-not-live | preservation and wool coats partial |
+| INC-PERISH-CLOTHES | incentive | Perishable food and distinct hot/cold clothing | Codex | Codex W3 | live-partial | 290b188 wet/dry insulation, heat retained, real fuel drying, same-garment paid repair, compact controls;62/62scoped,tsc/build; docs/metrics/garment-weather-repair-release-2026-11-12.json. Dyes/other-owner textile service remain open. |
 | INC-PERSONAL-ABILITIES | incentive | Compact resident stats, practice, teaching, bounded specialization | Codex | Codex W9 | not started |  |
 | INC-QUARRY | incentive | Lower quarry startup cost; show reachable deposit area/capacity | Codex | Codex W9 | not started |  |
 | INC-RAIDER-INCENTIVES | incentive | Wealth tempts; defense deters; raiders have camps and can settle | Claude | Claude W2 | source-pushed-not-live |  |

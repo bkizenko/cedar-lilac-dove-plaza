@@ -9249,6 +9249,15 @@
       "liveCommit": "c60c1281445f4abca3e65405b76db6fe53fc0229",
       "evidence": "docs/metrics/brewing-release-2026-11-12.json",
       "scope": "Primitive hearth malting and two real beer chains, actual paid inputs and same held vessel; finite climate-dependent passive work, spoilage, cleaning and physical delivery. Exact knowledge history, compact queues, old saves preserved. Dedicated breweries/fruit drinks/filled container service remain catalogue work."
+    },
+    {
+      "id": "CODEX-GARMENT-WEATHER-REPAIR",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "7eac49b",
+      "liveCommit": "290b188067be2f2bc5e1d8853a36a57a6404ae9c",
+      "evidence": "docs/metrics/garment-weather-repair-release-2026-11-12.json",
+      "scope": "Persistent actual wet clothing, physical roofs/paid-fire drying and tunable warmth; original owned garment escrow with paid patches/cordage, owner travel/base work, shared sewing slot and compact controls; strict saves/custody, no duplicate/refund. Dyes and broader textile service remain open."
     }
   ],
   "status_update_policy": {
