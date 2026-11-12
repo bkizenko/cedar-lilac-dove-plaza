@@ -87,7 +87,7 @@ import {localEscapeStep} from './localEscape';
 import {localCorridor,LOCAL_CORRIDOR_RULES} from './localCorridor';
 import {clearRouteProgress,preciseSegmentClear,routeStallSeconds,ROUTE_PROGRESS_RULES} from './routeProgress';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
-import {packTamingAI,releasePackAnimal} from "./packAnimals";
+import {packTamingAI,releasePackAnimal,tickPackAnimals} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
 import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
@@ -5834,6 +5834,7 @@ export class Game {
         this.updateProjectiles(sdt,true,huntingObstacles);
         tickHousing(this,sdt);
         tickHusbandry(this,sdt);
+        tickPackAnimals(this,sdt);
         tickGoatSearchOrders(this);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);

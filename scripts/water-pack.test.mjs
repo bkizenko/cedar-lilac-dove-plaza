@@ -66,7 +66,7 @@ test('canoe fishers reach known offshore fish, consume finite stock and haul the
 
 
 test('a pack goat survives a handler loss exactly once as a wild animal',()=>{
- const {g,u}=fixture();u.haulage='pack';u.hp=0;releasePackAnimal(g,u);assert.equal(u.haulage,undefined);assert.equal(g.state.wildlife.length,1);releasePackAnimal(g,u);assert.equal(g.state.wildlife.length,1);assert.equal(g.state.wildlife[0].x,u.x);
+ const {g,u}=fixture();u.haulage='pack';u.packAnimal={id:g.id(),hp:24,maxHp:24,scale:1};u.hp=0;releasePackAnimal(g,u);assert.equal(u.haulage,undefined);assert.equal(g.state.wildlife.length,1);releasePackAnimal(g,u);assert.equal(g.state.wildlife.length,1);assert.equal(g.state.wildlife[0].x,u.x);
 });
 
 
@@ -147,7 +147,7 @@ test('hunters respect their own taming reservation while other tribes remain abl
 test('a tamed goat retains its original identity and condition through saves and release',()=>{
  const {g,u}=fixture(),c=goat(g);c.hp=17;c.scale=1.3;
  assert.equal(beginPackTaming(g,g.state.buildings[0].id),true);work(g,u,100,packTamingAI);
- assert.deepEqual(u.packAnimal,{id:c.id,hp:17,maxHp:30,scale:1.3});
+ assert.deepEqual(u.packAnimal,{id:c.id,hp:17,maxHp:30,scale:1.3,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0});
  const copy=decodeGame(encodeGame(g)),handler=copy.state.units.find(p=>p.id===u.id);handler.hp=0;
  releasePackAnimal(copy,handler);const freed=copy.state.wildlife.find(p=>p.id===c.id);
  assert.ok(freed);assert.equal(freed.hp,17);assert.equal(freed.maxHp,30);assert.equal(freed.scale,1.3);
