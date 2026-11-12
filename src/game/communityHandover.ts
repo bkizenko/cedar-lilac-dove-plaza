@@ -88,6 +88,10 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   settleArmorHandover(s,r);reconcileArmorHolders(draft);settleSiegeRamHandover(s,r);reconcileSiegeRams(draft);
   reconcileSitePreparationWorkers(draft);
   reconcileSailRigProjects(draft);
+  // Player construction queues are unpaid intent, not custody of the paid
+  // projects settled above. A former player cannot carry that UI-only intent
+  // into a non-player society (nor bypass its strict save ownership rule).
+  if(fromTeam===0&&toTeam!==0)for(const u of people)delete u.constructionQueue;
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }
