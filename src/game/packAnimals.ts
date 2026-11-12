@@ -1,3 +1,4 @@
+import {consumePackJourneyCare,reconcilePackJourneyCare} from './packJourneyCare';
 import {herdRules} from './animalSpecies';
 import {packAnimalFrom,PACK_ANIMAL_RULES,packAnimalPosition} from './packAnimalState';
 import {foodInventory,takeFoodLot} from './pantry';
@@ -62,9 +63,11 @@ export function releasePackAnimal(g:Game,u:Unit){
 export function tickPackAnimals(g:Game,dt:number){
  if(!(dt>0)||!Number.isFinite(dt))return;
  for(const u of g.state.units){
+  reconcilePackJourneyCare(g,u);
   const a=u.packAnimal;if(u.hp<=0||u.haulage!=='pack'||!a||a.hp<=0)continue;
   a.hunger=Math.min(100,(a.hunger??0)+PACK_ANIMAL_RULES.hungerPerSecond*dt);
   if(g.state.survivalVersion===1)a.thirstSeconds=(a.thirstSeconds??0)+dt;
+  if(consumePackJourneyCare(g,u,dt))continue;
   // Aboard hulls, prisoners and travelling bodies cannot draw remote communal supplies.
   if(u.boat||u.prisoner)continue;
   const drop=g.nearestDrop(u.x,u.z,u.team);if(!drop)continue;
