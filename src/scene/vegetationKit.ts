@@ -19,13 +19,18 @@ function branch(a:[number,number,number],b:[number,number,number],radius:number)
  const positions=g.attributes.position;for(let i=0;i<positions.count;i++)if(positions.getY(i)<0)positions.setY(i,0);g.computeVertexNormals();return g;
 }
 function crown(x:number,y:number,z:number,rx:number,ry:number,rz:number){const g=new THREE.IcosahedronGeometry(1,1);g.scale(rx,ry,rz);g.translate(x,y,z);return g;}
+/** Low-poly satellite lobe (60 vertices) so the richer set stays inside the per-part vertex budget. */
+function lobe(x:number,y:number,z:number,rx:number,ry:number,rz:number){const g=new THREE.IcosahedronGeometry(1,0);g.scale(rx,ry,rz);g.translate(x,y,z);return g;}
 function needle(x:number,y:number,z:number,radius:number,height:number){const g=new THREE.ConeGeometry(radius,height,8,1);g.translate(x,y+height*.5,z);return g;}
 function tintCrown(g:THREE.BufferGeometry){
  const pos=g.attributes.position,colors=new Float32Array(pos.count*3);g.computeBoundingBox();const box=g.boundingBox!,height=box.max.y-box.min.y;
  for(let i=0;i<pos.count;i++){const light=.73+.23*(pos.getY(i)-box.min.y)/Math.max(.1,height);colors.set([light,light,light],i*3);}
  g.setAttribute('color',new THREE.BufferAttribute(colors,3));return g;
 }
-export function treeKit(form:TreeForm){
+/** ARCHIVE: 'legacy' keeps the first seven blobby silhouettes verbatim; 'lobed' (default) adds lobed crowns, drooping palm ribs and willow strands. */
+export type VegetationSet='lobed'|'legacy';export const VEGETATION_SETS:VegetationSet[]=['lobed','legacy'];let vegetationSet:VegetationSet='lobed';
+export const setVegetationSet=(s:VegetationSet)=>{vegetationSet=s;};export const getVegetationSet=()=>vegetationSet;
+export function treeKit(form:TreeForm,set:VegetationSet=vegetationSet){
  let trunk:THREE.BufferGeometry[],leaf:THREE.BufferGeometry[];
  switch(form){
  case 'broadleaf':
@@ -54,6 +59,16 @@ export function treeKit(form:TreeForm){
  case 'scrub':
   trunk=[branch([0,0,0],[-.5,1.8,.2],.11),branch([0,0,0],[.65,1.7,-.2],.1),branch([0,.4,0],[0,2.25,.3],.09)];
   leaf=[crown(-.5,1.8,.2,.9,.7,.8),crown(.6,1.7,-.1,.9,.7,.7),crown(0,2.2,.3,.8,.6,.7)];break;
+ }
+ if(set==='lobed'){
+  // Small satellite lobes break the single-blob outline; same footprint, trunk untouched (no collision change).
+  if(form==='broadleaf')leaf.push(lobe(-2.3,4.2,.5,.8,.7,.75),crown(2.2,4.5,-.9,.85,.7,.8),crown(.4,6.3,-.3,.9,.65,.85),crown(-.4,4.1,1.5,.75,.6,.7));
+  else if(form==='acacia')leaf.push(lobe(-2.6,4.55,.1,.8,.38,.7),crown(2.7,4.7,-.3,.85,.4,.7),crown(.2,5.6,.5,.7,.3,.6));
+  else if(form==='scrub')leaf.push(lobe(-1.1,1.3,.3,.45,.35,.4),crown(1.2,1.2,-.2,.45,.35,.4));
+  else if(form==='palm'){for(let i=0;i<7;i++){const a=i*Math.PI*2/7+.45,dx=Math.cos(a),dz=Math.sin(a),g=new THREE.BufferGeometry();
+   g.setAttribute('position',new THREE.Float32BufferAttribute([.8,6.2,.2,.8+dx*1.6-dz*.22,6.45,.2+dz*1.6+dx*.22,.8+dx*3.4,5.0,.2+dz*3.4,.8+dx*1.6+dz*.22,6.45,.2+dz*1.6-dx*.22],3));
+   g.setAttribute('uv',new THREE.Float32BufferAttribute([.5,0,0,.4,.5,1,1,.4],2));g.setIndex([0,1,2,0,2,3]);g.computeVertexNormals();leaf.push(g);}}
+  else if(form==='willow')for(let i=0;i<5;i++){const a=i*Math.PI*2/5+.3;leaf.push(lobe(Math.cos(a)*2.4,2.4,Math.sin(a)*2,.35,1.5,.35));}
  }
  return {trunk:merge(trunk),canopy:tintCrown(merge(leaf))};
 }
