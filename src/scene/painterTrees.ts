@@ -163,6 +163,11 @@ export function painterTreeKit(form:PainterForm){
 export function painterFarRound(){
  return mergeParts([lump([0,0,0],[1,.92,1],301,{center:[0,0,0],radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom},.22),lump([.38,.28,.1],[.62,.55,.6],302,{center:[0,0,0],radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom},.2,0)]);
 }
+/** Botanical far crown: one big lump plus three satellites so a far canopy keeps a clustered, lobed outline (about 380 triangles). */
+export function painterFarClustered(){
+ const crown={center:[0,0,0] as V3,radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom};
+ return mergeParts([lump([0,0,0],[1,.88,1],301,crown,.24),lump([.52,.22,.1],[.55,.5,.55],302,crown,.22,0),lump([-.48,.16,-.2],[.52,.46,.5],303,crown,.22,0),lump([.04,.5,-.34],[.46,.4,.44],304,crown,.2,0)]);
+}
 export function painterFarNeedle(){
  return mergeParts([skirt(-1,1,.9,311,NEEDLE,.2,8),skirt(-.15,.75,.9,312,NEEDLE,.2,8),skirt(.55,.45,.6,313,NEEDLE,.15,7)]);
 }
@@ -170,7 +175,7 @@ export function painterFarNeedle(){
 export function contactShadowGeometry(){const g=new THREE.CircleGeometry(1,20);g.rotateX(-Math.PI/2);g.translate(0,0,0);return g;}
 
 // ---- undergrowth ------------------------------------------------------------------------------------------------
-export type PainterDressing='grass'|'tallgrass'|'flowers'|'bloom'|'reeds'|'scrub'|'pebbles'|'fern'|'shrub'|'rocks'|'log'|'cattail'|'agave'|'drygrass'|'cushion'|'bracken'|'bush'|'mushroom'|'stump'|'deadwood'|'moss';
+export type PainterDressing='grass'|'tallgrass'|'flowers'|'bloom'|'reeds'|'scrub'|'pebbles'|'fern'|'shrub'|'rocks'|'log'|'cattail'|'agave'|'drygrass'|'cushion'|'bracken'|'bush'|'mushroom'|'stump'|'deadwood'|'moss'|'sapling'|'pinelet';
 export function blade(x:number,z:number,h:number,w:number,lean:number,angle:number,base:V3,tip:V3,bend=.5){
  const dx=Math.cos(angle),dz=Math.sin(angle),nx=-dz,nz=dx,pos:number[]=[],col:number[]=[];
  const pts=[[0,0],[.5,.55],[1,1]];
@@ -194,7 +199,7 @@ function tuft(count:number,radius:number,hMin:number,hMax:number,seed:number,bas
  return mergeParts(parts);
 }
 function solid(g:THREE.BufferGeometry,color:V3){const n=g.attributes.position.count,c=new Float32Array(n*3);for(let i=0;i<n;i++)c.set(color,i*3);g.setAttribute('color',new THREE.BufferAttribute(c,3));return g;}
-const DRESSING_ALBEDO:Record<PainterDressing,number>={grass:.58,tallgrass:.62,flowers:.55,bloom:1,reeds:.6,scrub:.45,pebbles:.9,fern:.5,shrub:.5,rocks:.85,log:.9,cattail:.6,agave:.5,drygrass:.6,cushion:.5,bracken:.5,bush:.5,mushroom:.9,stump:.9,deadwood:.9,moss:.7};
+const DRESSING_ALBEDO:Record<PainterDressing,number>={grass:.58,tallgrass:.62,flowers:.55,bloom:1,reeds:.6,scrub:.45,pebbles:.9,fern:.5,shrub:.5,rocks:.85,log:.9,cattail:.6,agave:.5,drygrass:.6,cushion:.5,bracken:.5,bush:.5,mushroom:.9,stump:.9,deadwood:.9,moss:.7,sapling:.5,pinelet:.5};
 /** Geometry colours above are authored as friendly 0..1.3 sRGB-ish values; the material works in linear light, so scale per kind. */
 export function painterDressing(form:PainterDressing):THREE.BufferGeometry{
  const g=dressingRaw(form),k=DRESSING_ALBEDO[form],col=g.attributes.color,pos=g.attributes.position;
@@ -256,7 +261,7 @@ function dressingRaw(form:PainterDressing):THREE.BufferGeometry{
   const parts:THREE.BufferGeometry[]=[lump([0,.12,0],[.34,.17,.3],450,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1),lump([.3,.09,.08],[.2,.11,.18],451,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1),lump([-.26,.08,-.1],[.18,.1,.16],452,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1)];
   for(const [x,z] of [[.05,.08],[-.1,-.04],[.2,.14],[-.2,-.12]]){const f=new THREE.IcosahedronGeometry(.03,0);f.translate(x,.25-.05*Math.abs(x),z);parts.push(solid(f,[1.2,1.1,.5]));}
   return mergeParts(parts);}
- case 'bracken':case 'bush':case 'mushroom':case 'stump':case 'deadwood':case 'moss':return dressingRaw('fern');
+ case 'bracken':case 'bush':case 'mushroom':case 'stump':case 'deadwood':case 'moss':case 'sapling':case 'pinelet':return dressingRaw('fern');
  case 'rocks':return painterRock(432,true);
  case 'log':{
   const g=new THREE.CylinderGeometry(.16,.19,1.9,7);g.rotateZ(Math.PI/2);g.translate(0,.17,0);const base=solid(g,[.5,.38,.28]);
