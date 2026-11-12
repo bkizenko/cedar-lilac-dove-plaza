@@ -359,8 +359,8 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ASTRA-09 | astra | Spatial query budget | Codex | Codex N4 | not started | p95 <8ms target is historical; current speed work is M5-06 / Worker parked |
 | ASTRA-10 | astra | Construction and repair refinement | Codex | — (done) | done/live | construction reservation / cancel / repair paths are in the live game (M0 construction gates verified); patch on audit |
 | ASTRA-11 | astra | Survival economy and priorities | Codex | Codex N4 | source-pushed-not-live | survival loop partly live (M1 verified); remaining winter-warning/priority leftovers |
-| ASTRA-12 | astra | Death and job animation | Claude | Claude N2 | not started |  |
-| ASTRA-13 | astra | Shared character rig | Claude | Claude N2 | not started |  |
+| ASTRA-12 | astra | Death and job animation | Claude | Claude N2 | shipped 0a3d49a/d2b672c: job/fight clips from real order/state, 4 death falls; tests + sheets; particles not rendered |  |
+| ASTRA-13 | astra | Shared character rig | Claude | Claude N2 | shipped 0a3d49a/d2b672c: 7-bone rig, per-civ garb/insignia, LOD+budget test, legacy set switchable (?people=legacy) |  |
 | ASTRA-14 | astra | Defenses and gate navigation | Grok | Grok W12 | source-pushed-not-live | palisades/gates historically implemented (CAT-65 struck); open-gate / closed-gate routing still to prove |
 | ASTRA-15 | astra | Soft counters and formations | Claude | Claude N3 | not started |  |
 | ASTRA-16 | astra | Strategic tribe director | Claude | Claude N4 | source-pushed-not-live | rival director exists in part; 30-minute seeded defend/recover/raid without cheats still open |
@@ -1044,5 +1044,5 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-SOC-TRADED-LABEL | audit | When Codex ships `traded` provenance, council/knowledge panels show "Learned from <society> (date)" | Claude | Claude lane B | source-pushed-not-live (441ee5d) | depends on traded-method-v1 implementation |
 | AUD-VIS-VILLAGE-PEOPLE-SCALE | audit | Check people/animal/building relative scale and silhouette at default orbit after less-blocky house passes; one render sheet per society | Claude | Claude lane C | not started | SwiftShader sheet; no collision/footprint change |
 | AUD-UI-390-PANELS | audit | 390px screenshot pass of council, diplomacy, water reach, stores panels (no horizontal overflow, 44px targets) | Claude | Claude lane B | not started | needs Chrome harness; Playwright available in cloud runs |
-| AUD-FEEL-FOOD-AND-WORK-FEEDBACK | audit | Game feel: visible/audible cue when a meal, brew or paid batch finishes (small, non-spammy, respects reduced motion) | Claude | Claude lane B/C | not started | reads Codex food/brew completion events; no new goods |
+| AUD-FEEL-FOOD-AND-WORK-FEEDBACK | audit | Game feel: visible/audible cue when a meal, brew or paid batch finishes (small, non-spammy, respects reduced motion) | Claude | Claude lane B/C | source-pushed-not-live (WorkDeliveryCue on Engine.subscribeProductionDeliveries, coalesced 1.2s, 5s toast, tests scripts/work-delivery-cue.test.mjs) | reads Codex food/brew completion events; no new goods |
 | AUD-TEST-NATIVE-ONLY-LIST | audit | Sandbox lacks three/typescript: carved-layer-eviction, construction-queue-ui, era-grounding-live, fixed-camera-collision, instance-camera-cull, WorldView camera tests are native-only for Codex; 0 new fails vs main at 744865e+ | Claude | integrator | done/live | tsc 74 baseline errors identical to main (TS5.9, tsconfig.check.json) |

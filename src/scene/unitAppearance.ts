@@ -46,9 +46,9 @@ function trimBand(motif:Motif|'none',r:number,y:number,rich:number,slot:Slot='tr
   out.push({...part('box',SLOT_MAT[slot],size,[x,py,z],0,rot),slot});}
  return out;
 }
-const P=(slot:Slot,shape:Part['shape'],size:[number,number,number],pos:[number,number,number],lod:LodTier,rot?:[number,number,number],sides?:number):UnitPart=>({...part(shape,SLOT_MAT[slot],size,pos,lod,rot,sides),slot});
+export const P=(slot:Slot,shape:Part['shape'],size:[number,number,number],pos:[number,number,number],lod:LodTier,rot?:[number,number,number],sides?:number):UnitPart=>({...part(shape,SLOT_MAT[slot],size,pos,lod,rot,sides),slot});
 
-function garmentParts(item:GarmentId,cut:Dress['cut'],v:number,motif:Motif|'none',rich:number):UnitPart[]{
+export function garmentParts(item:GarmentId,cut:Dress['cut'],v:number,motif:Motif|'none',rich:number):UnitPart[]{
  const out:UnitPart[]=[],long=item==='hideCoat'||item==='woolCoat',hem=(long?.22:item==='lightClothes'?.24:.3)-(v%2?.04:0),top=.88,dia=item==='lightClothes'?.46:item==='skinClothes'?.5:.54,h=top-hem;
  const sash=v>=2;
  switch(cut){
@@ -68,7 +68,7 @@ function garmentParts(item:GarmentId,cut:Dress['cut'],v:number,motif:Motif|'none
  out.push(...trimBand(motif,dia/2+.005,hem+.04,rich));
  return out;
 }
-function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):UnitPart[]{
+export function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):UnitPart[]{
  // Headwear is cut from the owned garment (never free gear); era only adds trim richness, near-LOD only.
  const hood=(item==='hideCoat'||item==='woolCoat'||item==='skinClothes')&&kind==='hood',side=v%2?1:-1;
  switch(kind){
@@ -82,7 +82,7 @@ function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):UnitPar
 }
 /** Insignia and banners are cut from the owned garment's cloth (a sash, shoulder cloth, chest patch, a leader's standard);
  * they are never free gear, appear only on a drawn garment, and only at near LOD. Era only adds richness. */
-function insigniaParts(type:UnitKind,rich:number,v:number):UnitPart[]{
+export function insigniaParts(type:UnitKind,rich:number,v:number):UnitPart[]{
  const side=v%2?1:-1;
  switch(type){
   case 'worker':return rich>=1?[P('trim','box',[.5,.05,.03],[0,.7,.19],0,[0,0,side*.65])]:[];
@@ -91,14 +91,14 @@ function insigniaParts(type:UnitKind,rich:number,v:number):UnitPart[]{
   case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[])];
   default:return [];}
 }
-function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
+export function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
  // Sleeveless quilted torso, as in wornArmor.ts: shell, quilting rows, shoulder pads, belt.
  const out:UnitPart[]=[P('padding','cylinder',[.56,.49,.5],[0,.34,0],2,undefined,8),P('stitch','cylinder',[.58,.04,.52],[0,.34,0],1,undefined,8),P('stitch','box',[.08,.07,.03],[0,.36,.27],0)];
  for(const y of[.46,.57,.68,.79])out.push(P('stitch','box',[.4,.025,.02],[0,y,.255],0));
  for(const s of[-1,1])out.push(P('padding','box',[.07,.11,.24],[s*.205,.74,0],1));
  return [...out,...trimBand(motif==='none'?'none':motif,.285,.8,Math.min(1,rich))];
 }
-function weaponParts(type:UnitKind):{parts:UnitPart[];weapon?:'spear'|'bow'|'blade'}{
+export function weaponParts(type:UnitKind):{parts:UnitPart[];weapon?:'spear'|'bow'|'blade'}{
  if(type==='spearman')return {weapon:'spear',parts:[{...beam('trunk',[.22,.1,.1],[.3,1.9,.7],.05,2),slot:'wood'},P('metal','pyramid',[.09,.2,.09],[.3,1.9,.7],1,[0,0,0],undefined)]};
  if(type==='archer')return {weapon:'bow',parts:[{...beam('trunk',[.22,.5,.05],[.22,.8,.2],.04,1),slot:'wood'},{...beam('trunk',[.22,.8,.2],[.22,1.1,.05],.04,1),slot:'wood'},{...beam('woodInlay',[.22,.5,.05],[.22,1.1,.05],.015,0),slot:'trim'}]};
  if(type==='swordsman')return {weapon:'blade',parts:[P('metal','box',[.06,.7,.04],[.25,.55,.1],2,[0,0,-.4]),P('wood','box',[.14,.04,.05],[.25,.5,.1],1,[0,0,-.4]),P('wood','box',[.05,.14,.05],[.23,.42,.1],0,[0,0,-.4])]};
