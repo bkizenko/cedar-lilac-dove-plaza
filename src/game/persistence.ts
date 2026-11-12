@@ -1,3 +1,4 @@
+import {validFoodExperience} from './foodExperience';
 import {validPackPastureOrders} from './packPasture';
 import {herdRules,isDraftSpecies} from './animalSpecies';
 import {validPackAnimal,validPackHarness} from './packAnimalState';
@@ -290,6 +291,7 @@ function validateGamePayload(raw: unknown) {
       "fallenT",
     ]);
     if (!Number.isInteger(t.age) || t.age < 0 || t.age > 5) fail();
+    if(!validFoodExperience(t.foodExperience,s.time))fail();
     if(t.foodLots!==undefined){
       if(!obj(t.foodLots))fail();
       for(const [kind,amount] of Object.entries(t.foodLots))

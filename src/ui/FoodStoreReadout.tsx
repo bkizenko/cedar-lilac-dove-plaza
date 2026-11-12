@@ -1,6 +1,7 @@
 import {FOOD_KINDS,FOOD_NAMES} from '@/game/pantry';
 import type {ItemStock} from '@/game/production';
 import type {HudSnapshot} from '@/game/types';
+import type {foodExperienceReport} from '@/game/foodExperience';
 
 type FoodStock = Pick<HudSnapshot,'food'|'foodLots'>;
 const readyKinds=FOOD_KINDS.filter(kind=>kind!=='grain'&&kind!=='fish');
@@ -16,7 +17,7 @@ export function readyFoodStock(stock:FoodStock){
   :stock.food;
 }
 
-export function FoodStoreReadout({stock,items}:{stock:FoodStock;items?:ItemStock}){
+export function FoodStoreReadout({stock,items,experience}:{stock:FoodStock;items?:ItemStock;experience?:ReturnType<typeof foodExperienceReport>}){
  const stored=stock.foodLots?FOOD_KINDS.reduce((sum,kind)=>sum+(stock.foodLots?.[kind]??0),0):stock.food;
  const ready=readyKinds.flatMap(kind=>{
   const amount=stock.foodLots?.[kind]??0;
@@ -29,6 +30,7 @@ export function FoodStoreReadout({stock,items}:{stock:FoodStock;items?:ItemStock
  return <>
   <strong>Food in stores</strong>
   <p className="mt-1 tabular-nums">{Math.floor(readyFoodStock(stock))} ready to eat · {Math.floor(stored)} pantry stock</p>
+  {experience?.tasted&&<p title="Enjoyment of meals actually eaten, separate from nutrition. Food mood has a small, bounded effect on village appeal." aria-label="Meal enjoyment">Meals {experience.taste.toFixed(1)}/10 · Food mood {experience.mood>=0?'+':''}{Math.round(experience.mood*100)}%</p>}
   {ready.length>0&&<dl aria-label="Ready to eat">{ready.map(({name,amount})=><div key={name}><dt>{name}</dt><dd>{Math.floor(amount)}</dd></div>)}</dl>}
   {processing.length>0&&<>
    <strong className="mt-2 block">For processing</strong>
