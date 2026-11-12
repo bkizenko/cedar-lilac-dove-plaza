@@ -25,6 +25,12 @@ export function HandoverCard({h}:{h:NonNullable<CouncilModel['handover']>}){
 }
 
 /** The last few things the house did or suffered, newest first. */
+/** Neighbour news (Field palette): agreements the player is party to, newest first. */
+export function NeighbourNews({news,nameOf}:{news:{time:number;kind:string;with:number;text:string}[];nameOf:(team:number)=>string}){
+ if(!news.length)return null;
+ return <Card label="Neighbour news" title="Neighbour news"><ul className="space-y-1">{news.map((n,i)=><li key={i} className={'border-l-2 pl-2 '+(i===0?'border-bronze-bright text-parchment':'border-parchment/15 text-parchment-dim')}><b>{nameOf(n.with)}</b> · {n.text.replace(/^\d+:\s*/,'')}</li>)}</ul></Card>;
+}
+
 export function FameFeed({log}:{log:string[]}){
  if(!log.length)return null;
  return <Card label="Chronicle" title="Chronicle"><ol className="space-y-1">{[...log].reverse().map((l,i)=><li key={i} className={'border-l-2 pl-2 '+(i===0?'border-bronze-bright text-parchment':'border-parchment/15 text-parchment-dim')}>{l}</li>)}</ol></Card>;
