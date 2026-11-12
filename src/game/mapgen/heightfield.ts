@@ -72,7 +72,7 @@ export class HeightField {
     return h;
   }
   /** World height (water level = WATER_Y). */
-  at(x: number, z: number) {
+  at(x: number, z: number): number {
     let h = this.base(x, z);
     const half = this.size / 2;
     const list = this.grid.get(clamp(Math.floor((z + half) / CELL), 0, this.gw - 1) * this.gw + clamp(Math.floor((x + half) / CELL), 0, this.gw - 1));
