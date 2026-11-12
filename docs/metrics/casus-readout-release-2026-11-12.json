@@ -1,0 +1,62 @@
+{
+  "release": "2026-11-12T16-05-27-984Z-4e5ce86",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T16-05-27-984Z-4e5ce86",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T15-36-29-657Z-d7ddb83",
+  "commit": "4e5ce86ce5e20983f1e0fcdcf2c198d61da802fa",
+  "retained": {
+    "linked": 1354,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 9,
+    "total": 9,
+    "nativeAndShared": 6,
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Authored prior-diplomacy history only: built Hearth and archived Diplomacy readouts, existing known relation filtering, durable claims and rejected malformed import; generated terrain/people/stocks unchanged. No earned-war/contact or full gate credit.",
+      "hearth": {
+        "neighbour": "Nimila",
+        "claims": 2,
+        "titles": [
+          "We hold raids and cattle-lifting; citing it costs the holder 14 legitimacy.",
+          "They hold unpaid tribute; citing it costs the holder 10 legitimacy."
+        ]
+      },
+      "archived": {
+        "visible": true,
+        "directionAndLapseAndCost": true
+      },
+      "save": {
+        "restored": true,
+        "invalidImportRejected": true,
+        "physicalStateUnchanged": true
+      },
+      "fixtureUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "buildSource": "947fb5a;4e5ce86 changes harness selectors only, source/package/Vite diff empty",
+  "working": [
+    "Known-neighbour grievances show holder, reason, lapse and legitimacy cost in Hearth and archived Diplomacy",
+    "Strict save admission rejects malformed claim types, owners, self-targets and invalid strength/expiry",
+    "Existing claims and physical terrain/people/stocks preserved through durable save/reload"
+  ],
+  "limits": [
+    "Prior diplomatic history explicitly authored for this readout test, not earned-war/campaign evidence",
+    "No new full release gate credit or100-resident frame-rate claim"
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}
