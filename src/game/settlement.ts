@@ -47,10 +47,13 @@ export function isDependent(g: Game, u: Unit) {
   return u.maturesAt !== undefined && u.maturesAt > g.state.time;
 }
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
-  const mouths = g.state.units
-    .filter((u) => u.team === team && u.hp > 0 && !u.expedition && !scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))
-    .reduce((sum, u) => sum + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
-      (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0), 0);
+  let mouths = 0;
+  for (const u of g.state.units) {
+    if (!(u.team === team && u.hp > 0 && !u.expedition && !scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))) continue;
+    // Keep the original left-to-right sum; only the temporary filtered array goes away.
+    mouths = mouths + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
+      (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1)+(u.haulage==="pack"?(phase===3?.35:.08):0);
+  }
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
   return mouths * FOOD_PER_PERSON_SECOND * weather * (team===0?difficulty(g).food:1);
 }
