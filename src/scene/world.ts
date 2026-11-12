@@ -1435,9 +1435,9 @@ export class WorldView {
   private ensureExcavationLayer(game:Game){
     if(this.excavationLayer||!this.terrain?.geometry?.index||!this.fieldSurface)return;
     this.excavationLayer=new ExcavationLayer(this.terrain,this.fieldSurface,geometry=>{
-      const ecology=game.world.ecology;if(!ecology)return;
-      const a=biomeSurfaceAttributes(ecology,geometry.getAttribute('position') as THREE.BufferAttribute);
-      geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));
+      const positions=geometry.getAttribute('position') as THREE.BufferAttribute,ecology=game.world.ecology;
+      if(ecology){const a=biomeSurfaceAttributes(ecology,positions);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}
+      if(this.mapStyle==='painterly'&&this.surfaceGeology){const g=this.surfaceGeology.attributes(positions,undefined,(x,z)=>game.waterAt(x,z));geometry.setAttribute('geoRock',new THREE.BufferAttribute(g.rock,4));geometry.setAttribute('geoState',new THREE.BufferAttribute(g.state,4));}
     });this.scene.add(this.excavationLayer.mesh);
   }
 

@@ -21,8 +21,8 @@ test('people adapter: actual bounded geometry exhaustion restores the legacy set
  const g=new Game();g.reset(42);g.enterIsland();const scene=new THREE.Scene(),ad=new A.PeopleAdapter(scene,'rig');
  // Fill the real allocator with actual tiny geometry, then present an unseen outfit.
  // This is renderer resource admission, never an invented simulation person or item.
- for(let i=0;i<R.PEOPLE_RULES.maxVariants;i++)assert.ok(ad.layer.variant('capacity-probe:'+i,()=>new THREE.BoxGeometry(.01,.01,.01)));
  const living=g.state.units.filter(u=>u.hp>0);ad.begin(g,new THREE.Vector3(0,300,400),'low',false,living);
+ for(let i=0;i<R.PEOPLE_RULES.maxVariants;i++){const v=ad.layer.variant('capacity-probe:'+i,()=>new THREE.BoxGeometry(.01,.01,.01));assert.ok(v);v.count=1;}
  for(const u of living)ad.write(u,[1.65,1.65,1.65],0,u.facing,1);
  assert.ok(ad.layer.stats.fallbacks>0);ad.end(g);assert.equal(ad.active,false);assert.equal(ad.set,'legacy');assert.equal(ad.layer,null);ad.dispose();
 });
