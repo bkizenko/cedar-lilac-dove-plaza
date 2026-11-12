@@ -1,3 +1,4 @@
+import {buildSeparationNeighbors} from './separationNeighbors';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -4215,23 +4216,19 @@ export class Game {
     const canYield=(u:Unit)=>u.order!=="hold"||
       productionTravel.get(u.id)?.id===u.productionProjectId&&productionTravel.get(u.id)?.team===u.team;
     const cell = Math.max(2, ...us.map((u) => u.r * 2));
-    const buckets = new Map<string, number[]>();
-    for (let i = 0; i < us.length; i++) {
-      const u = us[i];
-      if (u.hp <= 0||u.boat?.phase==='aboard') continue;
-      const key = `${Math.floor(u.x / cell)},${Math.floor(u.z / cell)}`;
-      const bucket = buckets.get(key) || [];
-      bucket.push(i);
-      buckets.set(key, bucket);
-    }
+    const buckets = buildSeparationNeighbors(us,cell);
     for (let i = 0; i < us.length; i++) {
       const a = us[i];
       if (a.hp <= 0||a.boat?.phase==='aboard') continue;
       const cx = Math.floor(a.x / cell),
         cz = Math.floor(a.z / cell);
-      for (let z = cz - 1; z <= cz + 1; z++)
+      for (let z = cz - 1; z <= cz + 1; z++) {
+        const row=buckets.get(z);
+        if(!row)continue;
         for (let x = cx - 1; x <= cx + 1; x++) {
-          for (const j of buckets.get(`${x},${z}`) || []) {
+          const bucket=row.get(x);
+          if(!bucket)continue;
+          for (const j of bucket) {
             if (j <= i) continue;
             const b = us[j];
             const dx = a.x - b.x,
@@ -4256,6 +4253,7 @@ export class Game {
             }
           }
         }
+      }
     }
   }
 
