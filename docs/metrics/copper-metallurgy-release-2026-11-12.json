@@ -1,0 +1,69 @@
+{
+  "release": "2026-11-12T16-28-12-475Z-01603e2",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T16-28-12-475Z-01603e2",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T16-05-27-984Z-4e5ce86",
+  "commit": "01603e23b53e50140f28cd0c06e4084af94fedaf",
+  "retained": {
+    "linked": 1359,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 52,
+    "total": 52,
+    "nativeAndShared": 49,
+    "nativeEvidence": "Initial6-file36-case sweep:34PASS,1legacy direct-metal expectation failed under fresh ore rule,1original-village case skipped withoutpath. Explicit legacy-profile fixture correction and actual original53 path rerun2PASS =>36uniquePASS. New smelt-burden/ore-death followup adds2unique cases (whole5case finalPASS,3repeated notcountedtwice). Existing stolen-cargo/equipment11PASS =>49unique. One canonical-reference phase-test rerunPASS is not extra credit.",
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Actually earned ore/smelting/tool readouts and durable storage, plus original53 legacy copper preservation; authored native opening not a full campaign. No new full gate or performance credit.",
+      "earned": {
+        "actor": {
+          "id": 6224,
+          "condition": 0.9995555555555555
+        },
+        "smelts": 2,
+        "finiteFuelGuard": true
+      },
+      "durable": {
+        "restored": true,
+        "invalidVersionRejected": true
+      },
+      "legacy": {
+        "population": 53,
+        "copper": 123,
+        "notConverted": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "working": [
+    "Fresh player extraction carries finite copper ore; existing copper stocks, loaded copper and paid jobs retain their meaning and quantities",
+    "Normal Knowledge adoption for saved villages; actual8ore+2charcoal,90base-work kiln recipe physically returns4usableCu once",
+    "Actual finite native mining, two smelts, paid prototype, same owned copper tool used and worn on fields; native terrain unchanged",
+    "Authoritative smelt packet burden through carrying/returning/manual pause/reload; no copiedinventory or failed/tentative-claim ghost loads",
+    "Ordinary mined-ore itemCargo death parcel can be physically recovered to ore storage with exact conservation",
+    "Fractional earned toolmaking percentage displayed; Claude whole conifer bough integration ba1f4e3 included"
+  ],
+  "historicalReference": "https://historicengland.org.uk/images-books/publications/archaeometallurgy-guidelines-best-practice/heag003-archaeometallurgy-guidelines/",
+  "balanceScope": "Ore/fuel/output amounts and workseconds are named game-unit tuning parameters, not historical ore grades, kilograms or labor measurements. Native opening explicitly provides finite charcoal4/provisions/legal workplaces; charcoal production itself qualified separately.",
+  "limits": [
+    "W4 partial: tin/bronze/iron still require real finite source chains",
+    "Fresh NPCs retain old copper profile until their own infrastructure/adoption/smelting scheduler exists; not NPC metallurgy acceptance",
+    "No new ore trade/pricing; internal paid-smelt death keeps existing batch loss behavior, not loose-parcel recovery",
+    "No campaign or100visible-resident p95/FPS claim; Worker remainsparked"
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}
