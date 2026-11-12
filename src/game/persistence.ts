@@ -1,5 +1,5 @@
 import {restoreCargoRecoveryCommitments} from './stolenCargo';
-import {validFarmToolCargo} from './farmToolCargo';
+import {validFarmToolCargo,reconcileFarmToolCargo} from './farmToolCargo';
 import {validSailingState,reconcileSailRigProjects} from './boatSailing';
 import {validFleece} from './sheep';
 import {validSiegeRamState,reconcileSiegeRams} from './siegeRam';
@@ -73,6 +73,7 @@ export function encodeGame(g: Game) {
   reconcileSitePreparationWorkers(g);
   reconcileSailRigProjects(g);
   reconcileArmorHolders(g);
+  reconcileFarmToolCargo(g);
   reconcileSiegeRams(g);
   syncRiverboats(g);
   syncHaulageProjects(g);

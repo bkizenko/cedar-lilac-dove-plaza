@@ -1,3 +1,4 @@
+import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
 import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
@@ -5880,7 +5881,8 @@ export class Game {
         reconcileArmorHolders(this);
         reconcileSiegeRams(this);
         tickStolenCargo(this,0);
-        this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u));
+        reconcileFarmToolCargo(this);
+        this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u));
         this.checkVictory();
       } catch (err) {
         endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);

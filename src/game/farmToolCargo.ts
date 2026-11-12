@@ -91,7 +91,7 @@ export function validFarmToolCargo(s:GameState){
  for(const t of c.tools){if(!t||!id(t.id)||ids.has(t.id)||s.units.some(u=>u.id===t.id)||s.buildings.some(b=>b.id===t.id)||!['stoneHoe','copperTools','ironTools'].includes(t.kind)||!finite(t.condition)||t.condition<0||t.condition>1||!team(t.team)||!team(t.originalOwnerTeam))return false;ids.add(t.id);
   const h=t.holder;if(!h||!finite(h.x)||!finite(h.z)||Math.abs(h.x)>half||Math.abs(h.z)>half)return false;
   if(h.kind==='carrier'){const u=units.find(u=>u.id===h.unitId);if(!id(h.unitId)||carriers.has(h.unitId)||!u||u.farmToolCargoId!==t.id)return false;carriers.add(h.unitId);}
-  else if(h.kind==='cache'){if(!team(h.team)||h.team!==t.team||h.buildingId!==undefined&&!id(h.buildingId))return false;}
+  else if(h.kind==='cache'){if(!team(h.team)||h.team!==t.team||h.buildingId!==undefined&&(!id(h.buildingId)||!s.buildings.some(b=>b.id===h.buildingId&&b.team===h.team&&b.hp>0&&b.build>=1&&(['townhall','warehouse','cornerstone'].includes(b.type)||b.team===3&&b.raiderCamp)&&Math.hypot(b.x-h.x,b.z-h.z)<.01)))return false;}
   else if(h.kind!=='ground')return false;
  }
  return units.every(u=>u.farmToolCargoId===undefined||id(u.farmToolCargoId)&&c.tools.some(t=>t.id===u.farmToolCargoId&&t.holder.kind==='carrier'&&t.holder.unitId===u.id));
