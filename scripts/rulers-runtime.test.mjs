@@ -69,7 +69,7 @@ test('council read model and marry command: JSON-safe, gated, and the UI action 
  const b0=tiesBetween(g,0,1).bond,r=applyEngineCommand(g,{kind:'marry-houses',team:1});
  assert.equal(r.accepted,true,r.reason);assert.ok(tiesBetween(g,0,1).bond>b0);
  const c2=JSON.parse(JSON.stringify(applyEngineReadQuery(g,{kind:'rulers-council'}))).council;
- if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);}else assert.equal(c2.handover,undefined);
+ if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);assert.ok(Array.isArray(c2.handover.rivals)&&c2.handover.rivals.length<=3,'rival claimants listed');assert.ok(c2.handover.pressure&&Number.isFinite(c2.handover.pressure.unrest)&&c2.handover.pressure.claimsAgainst>=0,'unrest and claims pressure on the handover card');JSON.parse(JSON.stringify(c2.handover));}else assert.equal(c2.handover,undefined);
 });
 
 test('fosterage and hostages: real wards, tie effects, term end, war breaks the pledge, JSON round-trip',async()=>{
