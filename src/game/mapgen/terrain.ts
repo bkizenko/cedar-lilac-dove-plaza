@@ -292,8 +292,8 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
       const u = (i % n) / (n - 1) - 0.5, v = ((i / n) | 0) / (n - 1) - 0.5;
       const z = smoothstep(0.05, 0.4, zone.fbm(u * 1.8 + 9, v * 1.8, 3) + preset.plateau - 0.42) * smoothstep(25, 120, signed[i]);
       if (z <= 0) continue;
-      const q = h[i] / level, f = q - Math.floor(q), terraced = (Math.floor(q) + smoothstep(0.1, 0.4, f)) * level;
-      h[i] = h[i] * (1 - z) + terraced * z;
+      const q = h[i] / level, f = q - Math.floor(q), terraced = (Math.floor(q) + smoothstep(0.2, 0.85, f)) * level;
+      h[i] = h[i] * (1 - z * 0.7) + terraced * z * 0.7;
     }
   }
   // ---- 5. stream-power erosion ------------------------------------------------
