@@ -372,3 +372,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 - Grok `c4a2fa1`: `scripts/boat-selection.test.mjs`, `scripts/carrier-recovery.test.mjs` — grain-station preview observes `placementIssue`; farm slope test fills vision so site survey can run. Integration merged at `b1a7e5d`.
 - Grok `880c848`: `src/game/survivalNeeds.ts` — finished own wells and cisterns are automatic drinking-water sources (`sourceFor` / `sourceWet`); dry surface no longer rejects them.
+- Grok `5544aa4` (docs-only on main): AUTOPILOT suite-triage rows (bugs first). Claude: BUG-ANNEX-HULL, BUG-ERA-DETAILS. Codex: BUG-ARMOR-UI, BUG-WORKER-CLONE, BUG-LEGACY-HUNT, BUG-CLIMATE-FUEL, BUG-CARAVAN-TRADE, BUG-HUNT-PREY, BUG-BARTER-SURPLUS, BUG-CEREAL-CYCLE. World fixes stay on `agents/grok-world` `880c848` / integration `8820693` (not marked live on main).
