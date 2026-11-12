@@ -21,7 +21,7 @@ export type WonderPreset={v:1;seed:number;civ:CivId;family:WonderFunction;option
 type V3=[number,number,number];
 /** Piece generators work in a canonical frame at scale k; every dimension is multiplied once, so (kit,variant,size,civ) fully determines the mesh. */
 type Gen=(c:C)=>void;type C={civ:CivId;v:number;k:number;parts:Part[];m:(s:keyof CivMaterials|'water'|'fire'|'foliage')=>Part['mat'];
- b:(s:keyof CivMaterials,sz:V3,p:V3,lod?:LodTier,rot?:V3)=>void;cy:(s:keyof CivMaterials|'water'|'fire'|'foliage',d:number,h:number,p:V3,lod?:LodTier,sides?:number,top?:number)=>void;x:(shape:Part['shape'],s:keyof CivMaterials|'water'|'fire'|'foliage',sz:V3,p:V3,lod?:LodTier,rot?:V3,sides?:number)=>void};
+ b:(s:keyof CivMaterials|'water'|'fire'|'foliage',sz:V3,p:V3,lod?:LodTier,rot?:V3)=>void;cy:(s:keyof CivMaterials|'water'|'fire'|'foliage',d:number,h:number,p:V3,lod?:LodTier,sides?:number,top?:number)=>void;x:(shape:Part['shape'],s:keyof CivMaterials|'water'|'fire'|'foliage',sz:V3,p:V3,lod?:LodTier,rot?:V3,sides?:number)=>void};
 const mkC=(civ:CivId,v:number,size:Size):C=>{const k=K[size],parts:Part[]=[],m=(s:string)=>(s==='water'||s==='fire'||s==='foliage'?`shared.${s}`:matId(civ,s as keyof CivMaterials)) as Part['mat'],sc=(a:V3):V3=>[a[0]*k,a[1]*k,a[2]*k];
  return {civ,v,k,parts,m,b:(s,sz,p,lod=1,rot)=>void parts.push(part('box',m(s),sc(sz),sc(p),lod,rot)),cy:(s,d,h,p,lod=1,sides=12,top)=>void parts.push(part('cylinder',m(s),[d*k,h*k,(top??d)*k],sc(p),lod,undefined,sides)),x:(shape,s,sz,p,lod=1,rot,sides)=>void parts.push(part(shape,m(s),sc(sz),sc(p),lod,rot,sides))};};
 const PIECES:Record<KitId,{variants:number;radius:number;gen:Gen}>={
