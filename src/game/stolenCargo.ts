@@ -53,13 +53,13 @@ const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.z-b.z);
 
 /** Record that `thief` now holds goods taken from `owner`. Called where raiders take goods. */
 /** Returns false when provenance could not be recorded (mark cap full); callers must not move goods then. */
-export function stolenMarkRoom(g:Game,thief:Unit){const s=g.state.droppedCargo;return !s||s.marks.some(m=>m.unitId===thief.id)||s.marks.filter(m=>{const u=g.state.units.find(x=>x.id===m.unitId);return !!u&&u.hp>0&&holds(u);}).length<R.maximumMarks;}
+export function stolenMarkRoom(g:Game,thief:Unit){const s=g.state.droppedCargo;return !s||s.marks.some(m=>m.unitId===thief.id)||s.marks.filter(m=>{const u=g.state.units.find(x=>x.id===m.unitId);return !!u&&(u.hp>0||cargoBodyMustRemain(u))&&holds(u);}).length<R.maximumMarks;}
 export function markStolenLoad(g:Game,thief:Unit,owner:number){
- if(owner===thief.team||thief.carry<=0)return true;
+ if(owner===thief.team||!holds(thief))return true;
  const s=root(g);const m=s.marks.find(m=>m.unitId===thief.id);
  if(m){m.owner=owner;return true;}
  // Make room only by pruning marks whose holder no longer carries anything; never evict a live owner mark.
- if(s.marks.length>=R.maximumMarks)s.marks=s.marks.filter(x=>{const u=g.state.units.find(y=>y.id===x.unitId);return !!u&&u.hp>0&&holds(u);});
+ if(s.marks.length>=R.maximumMarks)s.marks=s.marks.filter(x=>{const u=g.state.units.find(y=>y.id===x.unitId);return !!u&&(u.hp>0||cargoBodyMustRemain(u))&&holds(u);});
  if(s.marks.length>=R.maximumMarks){note(g,'mark-cap');return false;}
  s.marks.push({unitId:thief.id,owner});return true;
 }
@@ -268,7 +268,7 @@ export function tickStolenCargo(g:Game,dt:number){
   if(issue){endTrip(g,t,issue);continue;}
   if(g.state.time>t.deadline)endTrip(g,t,t.phase==='chase'?'pursuit-time':t.phase==='walk'?'walk-timeout':'return-timeout',t.phase==='chase'?R.restSeconds:0);
  }
- r.marks=r.marks.filter(m=>{const u=unitOf(g,m.unitId);return !!u&&u.hp>0&&holds(u);});
+ r.marks=r.marks.filter(m=>{const u=unitOf(g,m.unitId);return !!u&&(u.hp>0||cargoBodyMustRemain(u))&&holds(u);});
  r.rest=r.rest.filter(x=>x.until>g.state.time);
  if(dt<=0)return;
  if(g.state.time<r.nextScanAt)return;

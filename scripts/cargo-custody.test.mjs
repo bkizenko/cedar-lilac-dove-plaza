@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {nativeDairyVillage} from './helpers/native-dairy-village.mjs';
 import {decodeGame,encodeGame} from '../src/game/persistence.ts';
 import {tickProduction} from '../src/game/production.ts';
-import {tickStolenCargo,claimParcel,cancelCargoTrip,validDroppedCargoState,STOLEN_CARGO_RULES} from '../src/game/stolenCargo.ts';
+import {tickStolenCargo,claimParcel,cancelCargoTrip,validDroppedCargoState,markStolenLoad,STOLEN_CARGO_RULES} from '../src/game/stolenCargo.ts';
 import {hasTaskCommitment} from '../src/game/workCommitments.ts';
 
 // Finite authored custody cases on unchanged native terrain, not a trade/campaign gate.
@@ -13,7 +13,7 @@ test('production-first death preserves trade items in real parcels, including a 
  tickStolenCargo(g,0); // Creates the parcel ledger, moving these exact three goods.
  assert.equal(u.itemCargo,undefined);assert.equal(g.state.droppedCargo.parcels[0].amount,3);
  g.state.droppedCargo.parcels=[];g.state.droppedCargo.ledger.dropped=0;
- u.itemCargo={cordage:3};
+ u.itemCargo={cordage:3};markStolenLoad(g,u,1);
  // Reserve a finite outside pile from existing settlement stone, away from the body.
  const reserve=STOLEN_CARGO_RULES.maximumParcels;assert.ok(g.tribe(0).stone>=reserve||g.tribe(0).wood>=reserve);
  const kind=g.tribe(0).stone>=reserve?'stone':'wood';g.tribe(0)[kind]-=reserve;
@@ -28,7 +28,7 @@ test('production-first death preserves trade items in real parcels, including a 
  const removed=g.state.droppedCargo.parcels.pop();g.tribe(0)[removed.kind]+=removed.amount;
  tickProduction(g,0);tickStolenCargo(g,0);
  assert.equal(u.itemCargo,undefined);assert.equal(u.tradeCargoPending,undefined);
- assert.equal(g.state.droppedCargo.parcels.filter(p=>p.kind==='cordage').reduce((n,p)=>n+p.amount,0),3);
+ assert.equal(g.state.droppedCargo.parcels.filter(p=>p.kind==='cordage').reduce((n,p)=>n+p.amount,0),3);assert.equal(g.state.droppedCargo.parcels.find(p=>p.kind==='cordage').originalOwnerTeam,1,'capacity retry preserves the original owner mark');
  tickProduction(g,0);tickStolenCargo(g,0);
  assert.equal(g.state.droppedCargo.ledger.dropped,3,'repeated ticks cannot duplicate the parcel');
  g.state.paused=false;g.step(.1);assert.ok(!g.state.units.includes(u),'empty corpse may now be removed');assert.deepEqual(g.simulationErrors,[]);

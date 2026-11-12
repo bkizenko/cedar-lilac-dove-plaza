@@ -1,3 +1,4 @@
+import {EQUIPMENT_LOAD_RULES} from './equipmentLoadRules';
 import type {Game} from './sim';
 import type {GameState,Unit} from './types';
 import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
@@ -7,7 +8,7 @@ export type WeaponCargoKind=typeof WEAPON_CARGO_KINDS[number];
 export type WeaponCargo=Partial<Record<WeaponCargoKind,number>>;
 export type DroppedWeaponCargo={id:number;team:number;x:number;z:number;droppedAt:number;stock:WeaponCargo};
 /** Game load units, not historical kilograms. Carried weapons never arm their holder. */
-export const WEAPON_CARGO_LOAD_UNITS:Record<WeaponCargoKind,number>={spears:1,bows:1,blades:1};
+export const WEAPON_CARGO_LOAD_UNITS=EQUIPMENT_LOAD_RULES.weapons;
 export const WEAPON_CARGO_RULES={maximumCarrierUnits:40,maximumGroundBundles:128,maximumGroundCount:10000000,pickupMeters:1.8,mergeMeters:1.8} as const;
 export type WeaponCargoResult={accepted:boolean;reason:string};
 const known=(kind:unknown):kind is WeaponCargoKind=>typeof kind==='string'&&(WEAPON_CARGO_KINDS as readonly string[]).includes(kind);
@@ -26,7 +27,7 @@ export function loadWeaponCargo(g:Game,unitId:number,kind:WeaponCargoKind,amount
  const u=receiver(g,unitId);if(!u||!known(kind)||!positive(amount))return no('Choose a living carrier, weapon kind and whole positive amount');
  const team=sourceTeam??u.team;if(!reached(g,u,team,cacheId))return no('Walk to the actual source cache');
  const stock=g.tribe(team);if(!Number.isSafeInteger(stock[kind])||stock[kind]<amount)return no('Not enough real weapons remain in that cache');
- if(weaponCargoLoad(u)+amount*WEAPON_CARGO_LOAD_UNITS[kind]>WEAPON_CARGO_RULES.maximumCarrierUnits)return no('Weapon bundle exceeds carrier load');
+ if(weaponCargoLoad(u)+(u.armorCargoId===undefined?0:EQUIPMENT_LOAD_RULES.armor)+(u.farmToolCargoId===undefined?0:EQUIPMENT_LOAD_RULES.farmTool)+amount*WEAPON_CARGO_LOAD_UNITS[kind]>WEAPON_CARGO_RULES.maximumCarrierUnits)return no('Weapon bundle exceeds carrier load');
  stock[kind]-=amount;(u.weaponCargo??={})[kind]=(u.weaponCargo?.[kind]||0)+amount;return yes('Existing weapons loaded onto the carrier');
 }
 export function deliverWeaponCargo(g:Game,unitId:number,kind:WeaponCargoKind,amount:number,targetTeam?:number,cacheId?:number):WeaponCargoResult{
@@ -49,7 +50,7 @@ export function pickupWeaponCargo(g:Game,unitId:number,bundleId:number,kind:Weap
  const u=receiver(g,unitId),drop=g.state.droppedWeaponCargo?.find(p=>p.id===bundleId);if(!u||!drop||!known(kind)||!positive(amount)||(drop.stock[kind]||0)<amount)return no('Actual ground weapons are unavailable');
  const distance=Math.hypot(u.x-drop.x,u.z-drop.z);if(distance>WEAPON_CARGO_RULES.pickupMeters||!connectedForUnit(g,u,drop.x,drop.z))return no('Walk to the actual dropped weapon bundle');
  let probe=u;const steps=Math.max(1,Math.ceil(distance/.4));for(let i=1;i<=steps;i++){const x=u.x+(drop.x-u.x)*i/steps,z=u.z+(drop.z-u.z)*i/steps;if(!g.canStep(probe,x,z))return no('No clear approach to the dropped weapons');probe={...u,x,z,y:g.travelHeight(x,z)};}
- if(weaponCargoLoad(u)+amount*WEAPON_CARGO_LOAD_UNITS[kind]>WEAPON_CARGO_RULES.maximumCarrierUnits)return no('Weapon bundle exceeds carrier load');
+ if(weaponCargoLoad(u)+(u.armorCargoId===undefined?0:EQUIPMENT_LOAD_RULES.armor)+(u.farmToolCargoId===undefined?0:EQUIPMENT_LOAD_RULES.farmTool)+amount*WEAPON_CARGO_LOAD_UNITS[kind]>WEAPON_CARGO_RULES.maximumCarrierUnits)return no('Weapon bundle exceeds carrier load');
  (u.weaponCargo??={})[kind]=(u.weaponCargo?.[kind]||0)+amount;drop.stock[kind]!-=amount;
  if(!WEAPON_CARGO_KINDS.some(k=>(drop.stock[k]||0)>0))g.state.droppedWeaponCargo=g.state.droppedWeaponCargo!.filter(p=>p!==drop);return yes('Existing ground weapons picked up');
 }

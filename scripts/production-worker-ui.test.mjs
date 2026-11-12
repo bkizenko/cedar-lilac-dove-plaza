@@ -10,6 +10,8 @@ import {nativeDairyVillage} from './helpers/native-dairy-village.mjs';
 import {decodeGame} from '../src/game/persistence.ts';
 import {applyEngineReadQuery} from '../src/game/engineReadModels.ts';
 import {applyEngineCommand} from '../src/game/engineDispatch.ts';
+import {armorCombatDamage,wornArmor} from '../src/game/armor.ts';
+import {supplyDrops} from '../src/game/campAnchor.ts';
 
 // One actual ReactDOM browser, with explicit deferred transport acknowledgements.
 // Native eligibility and command admission run on the separate Node owner Game.
@@ -72,5 +74,26 @@ test('actual React production controls fail closed on pending or missing owner f
   assert.equal(owner.state.production.projects.length,1);assert.equal(owner.state.production.metrics.foodInputsUsed.milk,4);assert.equal(owner.state.production.metrics.consumed.pottery,1);assert.deepEqual(errors,[]);
   await page.evaluate(()=>window.__productionUi.unmount());
   console.log(JSON.stringify({scope:'Actual ReactDOM in isolated headless Chromium, deferred transport; native query/admission on separate actual nativeV18 Game. Full-vision authored dairy opening; no Worker execution/WebGL/campaign credit.',passed:1,total:1,recipeMakerUnselected:true,actualPaidOnce:true,missingAndErrorFactsFailClosed:true,ackBeforeFeedback:true,oldEpochAckAndQueryIgnored:true,errors}));
+ }finally{await context?.close();await browser?.close();}
+});
+
+test('actual React armor controls wait for owner facts, equip one real local asset, show wear and put away without mutating the projection',{timeout:60000},async()=>{
+ const f=nativeDairyVillage(),owner=decodeGame(f.save),u=owner.state.units.find(u=>u.id===f.worker),drop=supplyDrops(owner,0).find(d=>d.kind==='camp');
+ assert.ok(drop);owner.clearSelect();u.selected=true;owner.state.selBld=null;
+ // One finite authored armor asset at the actual native cache; this checks UI/custody, not earned crafting.
+ const asset={id:owner.id(),team:0,kind:'paddedTorso',condition:1,projectId:owner.id(),createdAt:owner.state.time,holder:{kind:'cache',x:drop.x,z:drop.z}};
+ owner.state.armor={version:1,assets:[asset],metrics:{crafted:1,damagePrevented:0}};
+ const query={kind:'armor-choice',unitId:u.id},ready=applyEngineReadQuery(owner,query);assert.equal(ready.availableArmorId,asset.id);
+ const source=await uiBundle(),initial=clone(owner.state),bytes=JSON.stringify(initial),errors=[];let browser,context;
+ try{
+  browser=await chromium.launch({channel:'chrome',headless:true});context=await browser.newContext();const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.setContent('<!doctype html><div id="root"></div>');await page.addScriptTag({content:source});await page.evaluate(state=>window.__startProductionUi(state),initial);
+  await page.waitForFunction(()=>window.__productionUi.reads.length>0);assert.equal(await page.getByRole('button',{name:/^Equip/}).count(),0,'pending owner facts never imply permission');
+  await page.evaluate(model=>window.__productionUi.resolveRead(0,model),ready);await page.getByRole('button',{name:'Equip · 100%',exact:true}).click();await page.waitForFunction(()=>window.__productionUi.commands.length===1);
+  const first=await page.evaluate(()=>window.__productionUi.commands[0]);assert.deepEqual(first.command,{kind:'equip-armor',unitId:u.id,armorId:asset.id});const equipped=applyEngineCommand(owner,first.command,first.selection);assert.equal(equipped.accepted,true,equipped.reason);assert.equal(wornArmor(owner,u).id,asset.id);
+  assert.equal(await page.evaluate(()=>JSON.stringify(window.__productionUi.state)),bytes,'display never equips or debits by itself');
+  armorCombatDamage(owner,u,25);assert.equal(asset.condition,.9);await page.evaluate(result=>window.__productionUi.resolveCommand(0,result),equipped);await page.evaluate(state=>window.__productionUi.replaceDisplay(state),clone(owner.state));
+  await page.waitForFunction(()=>window.__productionUi.reads.some(r=>!r.done));const read=await page.evaluate(()=>window.__productionUi.reads.find(r=>!r.done));await page.evaluate(({index,model})=>window.__productionUi.resolveRead(index,model),{index:read.index,model:applyEngineReadQuery(owner,query)});
+  const progress=page.getByRole('progressbar',{name:'Armor condition',exact:true});await progress.waitFor();assert.equal(await progress.getAttribute('value'),'0.9');assert.ok((await page.locator('[aria-label="Armor"]').innerText()).includes('90%'));
+  await page.getByRole('button',{name:'Put away',exact:true}).click();await page.waitForFunction(()=>window.__productionUi.commands.length===2);const next=await page.evaluate(()=>window.__productionUi.commands[1]);assert.equal(next.command.kind,'unequip-armor');const stored=applyEngineCommand(owner,next.command,next.selection);assert.equal(stored.accepted,true,stored.reason);assert.equal(wornArmor(owner,u),undefined);assert.equal(asset.holder.kind,'cache');assert.equal(asset.condition,.9);assert.equal(owner.state.armor.assets.length,1);assert.deepEqual(errors,[]);await page.evaluate(()=>window.__productionUi.unmount());
  }finally{await context?.close();await browser?.close();}
 });

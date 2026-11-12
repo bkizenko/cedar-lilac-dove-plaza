@@ -8,7 +8,7 @@ const totals=g=>Object.fromEntries(WEAPON_CARGO_KINDS.map(k=>[k,g.state.tribes.r
 
 test('real stock loads once and foreign delivery requires physical cache reach without arming the carrier',()=>{
  const{g,u,foreign}=fixture(),before=totals(g),combat={type:u.type,dmg:u.dmg,militia:u.militia};
- assert.equal(loadWeaponCargo(g,u.id,'spears',3).accepted,true);assert.equal(weaponCargoLoad(u),3);assert.equal(g.tribe(0).spears,5);assert.equal(loadWeaponCargo(g,u.id,'spears',6).accepted,false);assert.deepEqual(totals(g),before);
+ assert.equal(loadWeaponCargo(g,u.id,'spears',3).accepted,true);assert.equal(weaponCargoLoad(u),9);assert.equal(g.tribe(0).spears,5);assert.equal(loadWeaponCargo(g,u.id,'spears',6).accepted,false);assert.deepEqual(totals(g),before);
  assert.equal(deliverWeaponCargo(g,u.id,'spears',3,1,foreign.id).accepted,false);assert.equal(u.weaponCargo.spears,3);
  arrive(g,u,foreign);assert.equal(deliverWeaponCargo(g,u.id,'spears',3,1,foreign.id).accepted,true);assert.equal(u.weaponCargo,undefined);assert.equal(deliverWeaponCargo(g,u.id,'spears',3,1,foreign.id).accepted,false);assert.deepEqual(totals(g),before);assert.deepEqual({type:u.type,dmg:u.dmg,militia:u.militia},combat);
 });
