@@ -309,7 +309,7 @@ function finishEraWork(g:Game,u:Unit,b:Building,p:HousingRenovation,dt:number){
  }
  const issue=commitEraUpgrade(g,b,p,u.id);if(issue){p.blockedReason=issue;return true;}
  delete b.renovation;delete b.planPaused;delete u.housingWorkId;u.buildOrder=undefined;u.node=null;u.order='idle';
- completeConstructionTarget(g,b);if(u.team===0)g.banner('Paid building work finished; added durability can be filled by real repair work',5);return true;
+ completeConstructionTarget(g,b);if(u.team===0)g.banner(p.mode==='extend'?'Extension finished':'Rebuild finished',4);return true;
 }
 export function housingAI(g: Game, u: Unit, b: Building, dt: number) {
   const p = b.renovation;
