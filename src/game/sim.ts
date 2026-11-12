@@ -111,6 +111,7 @@ import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
 import {flowPath,setFlowFieldsEnabled} from "./flowFields";
+import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
@@ -685,10 +686,25 @@ export class Game {
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
+  /** Relocate the unbuilt camp to the best nearby scenic town-hall site (GW-15). */
+  applyScenicHallSuggestion(){
+    if((this.state.worldgenVersion??1)<CAMP_RULES.unbuiltGeneration)return null;
+    if(this.state.buildings.some(b=>b.team===0&&b.type==='townhall'&&b.hp>0))return null;
+    const report=scenicStartReport(this);if(!report?.bestNearby)return report??null;
+    const p=report.bestNearby;
+    this.state.campSites=[{team:0,x:p.x,z:p.z}];
+    for(const u of this.state.units){
+      if(u.team!==0||u.hp<=0)continue;
+      u.order='move';u.tx=p.x+(Math.random()-.5)*6;u.tz=p.z+(Math.random()-.5)*6;
+    }
+    return report;
+  }
+
   enterIsland() {
     this.awaitingStart = false;
     this.state.paused = false;
     this.state.founding = false;
+    if(!this.testMode)this.applyScenicHallSuggestion();
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
   }
 
@@ -700,6 +716,7 @@ export class Game {
     this.state.walkDirty = true;
     this.state.founding = true;
     this.state.placing = "townhall";
+    const scenic=this.applyScenicHallSuggestion();
     const home = this.campOf(0);
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
@@ -707,7 +724,7 @@ export class Game {
       u.tx = home.x + (Math.random() - 0.5) * 6;
       u.tz = home.z + (Math.random() - 0.5) * 6;
     }
-    this.banner("The band is still walking. Plant the hall on berries or timber.", 5);
+    this.banner(scenic?.bestNearby?"The band is walking toward a fine view. Plant the hall on open ground nearby.":"The band is still walking. Plant the hall on berries or timber.", 5);
   }
 
   nearClump(x: number, z: number) {
@@ -5811,7 +5828,7 @@ export class Game {
         phases?.mark('combat');
         tickRivalActivity(this);
         tickOccupation(this,sdt);
-        syncRiverboats(this);
+        syncRiverboats(this,sdt);
         this.separate(sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
