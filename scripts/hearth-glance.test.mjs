@@ -170,3 +170,7 @@ test('wiring: Help carries every key the old tip banners named; the map layers a
 test('wiring: no new key bindings (existing keys are untouched, there is no hotbar or radial)',()=>{
  for(const f of ['glance.tsx','overlayReads.ts','help.tsx'])assert.doesNotMatch(read(f),/keydown|onKeyDown|addEventListener\('key/,f);
 });
+
+
+test('supply history belongs to one actual village even when replacement time moves forward',()=>{const a={},b={},t=new TrendTracker(DAY);t.push(0,20,a);t.push(DAY,100,a);assert.equal(t.trend(),'up');t.push(DAY*4,500,b);assert.equal(t.samples.length,1);assert.equal(t.trend(),null,'a different village cannot inherit the previous society trend');t.push(DAY*5,200,b);assert.equal(t.trend(),'down');});
+test('large resource marks never paint their neighbouring unexplored pixels',()=>{const out=new Uint8ClampedArray(4*4*4),src={worldSize:4,pixels:4,explored:(x,z)=>x>=0&&x<1&&z>=0&&z<1,color:()=>[255,255,255],resources:[{x:.1,z:.1,kind:'iron'}]};assert.equal(paintOverlays(src,new Set(['resources']),out),true);for(let y=0;y<4;y++)for(let x=0;x<4;x++)assert.equal(out[(y*4+x)*4+3]>0,x===2&&y===2,`pixel ${x}/${y}`);});
