@@ -5,7 +5,7 @@ import { priorityFlood, accumulate, DX, DZ, type Flow } from './flow';
 import { components, type Terrain } from './terrain';
 import type { Climate } from './climate';
 import type { PresetSpec } from './presets';
-export type RiverPoint = { x: number; z: number; y: number; w: number; ford?: boolean; fp: number };
+export type RiverPoint = { x: number; z: number; y: number; w: number; ford?: boolean; fp: number; /** geology layer: 0..1 gorge, gravel-braid and terrace strength */ gorge?: number; braid?: number; terr?: number };
 export type Chain = {
   id: string;
   pts: RiverPoint[];
@@ -16,7 +16,7 @@ export type Chain = {
   lakeId?: string;
   source: 'spring' | 'lake' | 'delta';
 };
-export type Lake = { id: string; cells: number[]; level: number; x: number; z: number; areaM2: number; depth: number; kind: 'valley' | 'tarn' | 'basin' };
+export type Lake = { origin?: string; id: string; cells: number[]; level: number; x: number; z: number; areaM2: number; depth: number; kind: 'valley' | 'tarn' | 'basin' };
 export type Delta = { x: number; z: number; dx: number; dz: number; radius: number; chain: string };
 export type Hydrology = {
   chains: Chain[];
@@ -29,6 +29,8 @@ export type Hydrology = {
   rec: Int32Array;
   lakeMask: Int32Array;
   riverCells: Uint8Array;
+  /** geology layer: waterfalls, oxbow lakes and knickpoints found on the final chains */
+  fluvial?: import('./geology/fluvial').FluvialResult;
 };
 const smoothPath = (pts: { x: number; z: number }[], passes: number, fixedEnds: [boolean, boolean]) => {
   for (let k = 0; k < passes; k++) {

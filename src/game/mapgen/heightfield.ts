@@ -5,7 +5,7 @@ import type { Terrain } from './terrain';
 import type { Hydrology, Chain } from './hydro';
 import { WATER_Y } from '../constants';
 import type { LocalWaterBody } from '../localWater';
-type Seg = { ax: number; az: number; ay: number; aw: number; afp: number; bx: number; bz: number; by: number; bw: number; bfp: number; ford: boolean; chain: number };
+type Seg = { ag: number; bg: number; abr: number; bbr: number; at: number; bt: number; ax: number; az: number; ay: number; aw: number; afp: number; bx: number; bz: number; by: number; bw: number; bfp: number; ford: boolean; chain: number };
 const CELL = 32;
 /** Catmull-Rom bicubic limited to the four nearest samples' range: no overshoot at coasts. */
 function limitedCubic(f: Float32Array, n: number, size: number, x: number, z: number) {
@@ -47,7 +47,7 @@ export class HeightField {
   private addChain(ch: Chain, k: number) {
     const half = this.size / 2;
     for (let i = 1; i < ch.pts.length; i++) {
-      const a = ch.pts[i - 1], b = ch.pts[i], seg: Seg = { ax: a.x, az: a.z, ay: a.y, aw: a.w, afp: a.fp, bx: b.x, bz: b.z, by: b.y, bw: b.w, bfp: b.fp, ford: !!(a.ford && b.ford), chain: k };
+      const a = ch.pts[i - 1], b = ch.pts[i], seg: Seg = { ag: a.gorge ?? 0, bg: b.gorge ?? 0, abr: a.braid ?? 0, bbr: b.braid ?? 0, at: a.terr ?? 0, bt: b.terr ?? 0, ax: a.x, az: a.z, ay: a.y, aw: a.w, afp: a.fp, bx: b.x, bz: b.z, by: b.y, bw: b.w, bfp: b.fp, ford: !!(a.ford && b.ford), chain: k };
       const reach = Math.max(a.w, b.w) * 0.5 + Math.max(a.fp, b.fp) * 2.1 + 22;
       const x0 = Math.floor((Math.min(a.x, b.x) - reach + half) / CELL), x1 = Math.floor((Math.max(a.x, b.x) + reach + half) / CELL);
       const z0 = Math.floor((Math.min(a.z, b.z) - reach + half) / CELL), z1 = Math.floor((Math.max(a.z, b.z) + reach + half) / CELL);
@@ -89,10 +89,15 @@ export class HeightField {
         if (e >= reach) continue;
         const y = s.ay + (s.by - s.ay) * tt;
         let target: number;
+        const gorge = s.ford ? 0 : s.ag + (s.bg - s.ag) * tt, braid = s.ford ? 0 : s.abr + (s.bbr - s.abr) * tt, terr = s.ford ? 0 : s.at + (s.bt - s.at) * tt;
         if (e <= 0) {
-          const q = clamp(-e / (w * 0.5)), depthMax = s.ford ? 0.22 : clamp(0.45 + 0.06 * w, 0.8, 1.7);
+          const q = clamp(-e / (w * 0.5)), depthMax = s.ford ? 0.22 : clamp(0.45 + 0.06 * w, 0.8, 1.7) + gorge * 1.4;
           target = y - depthMax * (1 - (1 - q) * (1 - q));
-        } else target = y + 0.42 * smoothstep(0, 3, e) + 0.032 * e * (1 + e / (fp * 1.2));
+          // gravel bars: braided reaches break the bed into shallow threads and exposed bars
+          if (braid > 0.01) { const bar = smoothstep(0.52, 0.72, this.detail.fbm(x * 0.07 + 5, z * 0.07, 2) * 0.5 + 0.5) * smoothstep(0.1, 0.4, q); target += braid * bar * (depthMax + 0.5); }
+        } else if (gorge > 0.01) target = y + 0.42 * smoothstep(0, 3, e) + 0.03 * e + gorge * (8 + 4 * gorge) * smoothstep(0, 9, e);
+        else if (terr > 0.01) target = y + 0.42 * smoothstep(0, 3, e) + 0.012 * e + terr * (1.3 * smoothstep(fp * 0.55, fp * 0.55 + 4, e) + 1.5 * smoothstep(fp * 1.1, fp * 1.1 + 5, e));
+        else target = y + 0.42 * smoothstep(0, 3, e) + 0.032 * e * (1 + e / (fp * 1.2));
         const k = 1 - smoothstep(fp, reach, e);
         if (count >= oe.length) { this.growScratch(); return this.at(x, z); }
         oe[count] = e; ok[count] = k; od[count] = target - h; count++;

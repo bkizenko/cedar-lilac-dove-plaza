@@ -375,7 +375,7 @@ export class Engine {
 
   async configureNewWorld(request:WorldRequest,previewRiverbanks=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart(request,previewRiverbanks&&this.game.testMode?19:21);
+    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
   }
 
   enterIsland() {
