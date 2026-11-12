@@ -1,0 +1,31 @@
+{
+  "release": "2026-11-12T04-40-52-421Z-233d95a",
+  "commit": "233d95a4d6cbd82312ce432e28b6443bd9134c97",
+  "builtSource": "0a61cdd",
+  "portsVerified": [
+    8086,
+    8101
+  ],
+  "scope": "Existing pack goats only: actual identity/condition, finite plant feed and drinking water only at physically reached cache, welfare-adjusted new load limits, existing held cargo preserved, no invented release; compact owner facts. No horses/stables/traction/grazing-route or campaign claim.",
+  "checks": {
+    "passed": 45,
+    "total": 45,
+    "focusedAcrossFinalRuns": {
+      "husbandry": 10,
+      "waterPack": 16,
+      "packWelfare": 5,
+      "tradeNeeds": 12
+    },
+    "builtNativeSaveImportRestore": 1,
+    "builtPackOwnerInventoryOrdinaryDispatchRestore": 1,
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "nativeEvidence": "Seed42V18 original resident physically reached native camp supply entrance, finite authored opening animal/feed/water, strict reload, unchanged terrain. Actual paid taming/cargo conservation separately checked in controlled fixture. Built private53 copied save used one original native wild goat as explicitly authored pack custody; no earned-capture claim. Original private save bytes unchanged.",
+  "performance": "No new performance target credit; cheap distance gate before supply-approach navigation. Existing p95 limit remains unresolved.",
+  "frozenChecklist": {
+    "passed": 34,
+    "total": 98
+  },
+  "open": "Horses/stables/broader species/traction; pack grazing and away-from-cache watering; knowledge acquisition channels; full integration PR."
+}
