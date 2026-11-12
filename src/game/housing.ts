@@ -1,3 +1,5 @@
+import {eraUpgradeIssue,planEraChange,ensureBuildingFabric,eraUpgradeCommitIssue,commitEraUpgrade,fabricMaximumHp,supportsEraUpgrade,ERA_UPGRADE_RULES,type EraUpgradeMode} from './buildingFabric';
+import type {ExtensionSide} from './extensionFootprints';
 import {sitePreparationSurvey,reserveSitePreparation} from './sitePreparation';
 import type { Game } from "./sim";
 import type { Building, Unit, GameState } from "./types";
@@ -30,7 +32,7 @@ export const housingQuote = (): HousingMaterials => ({
 });
 /** Reprice only never-paid proposals; paid legacy packets/receipts keep every unit. */
 function refreshUnpaidHousingQuote(p:HousingRenovation){
- if(!p.paid&&p.progress===0&&p.quote.plantFibre>HOUSING_RULES.plantFibre&&[p.uncollected,p.delivered,p.packet].every(m=>housingMaterialTotal(m)===0)){
+ if(!p.eraChange&&!p.paid&&p.progress===0&&p.quote.plantFibre>HOUSING_RULES.plantFibre&&[p.uncollected,p.delivered,p.packet].every(m=>housingMaterialTotal(m)===0)){
   p.quote={...p.quote,plantFibre:HOUSING_RULES.plantFibre};
   if(p.blockedReason?.includes('delivered plant fibre'))p.blockedReason=undefined;
  }
@@ -118,6 +120,14 @@ export function beginHousingUpgrade(g: Game, id: number, team = 0) {
     accepted: true,
     reason: `Upgrade planned · ${housingQuoteText(b.renovation.quote, b.renovation.duration)}; original home stays open`,
   };
+}
+/** Paid fabric work shares the existing physical cache/packet/site ownership ledger. */
+export function beginEraUpgrade(g:Game,id:number,mode:EraUpgradeMode,side?:ExtensionSide,team=0){
+ const issue=eraUpgradeIssue(g,id,mode,side,team);if(issue)return{accepted:false,reason:issue};
+ const b=g.state.buildings.find(b=>b.id===id&&b.team===team)!;ensureBuildingFabric(g,b);
+ const q=ERA_UPGRADE_RULES[mode];b.renovation={...newProject(g,b,'upgrade'),mode,eraChange:planEraChange(g,b,mode,side),duration:q.workSeconds,quote:{wood:q.wood,stone:q.stone,plantFibre:q.plantFibre}};
+ g.workBoard.reset();if(team===0)queueConstruction(g,b);else g.assignBuilders(b);
+ return{accepted:true,reason:`Paid ${mode} planned; original building and current health remain unchanged`};
 }
 /** Menu placement is a real saved construction site; knowledge grants no materials. */
 export function planAdvancedHome(g: Game, x: number, z: number, team = 0) {
@@ -284,6 +294,23 @@ export function pauseHousingWorker(g: Game, u: Unit) {
   delete u.housingWorkId;
   releaseHousingClaim(g,u,targetId);
 }
+/** Finished labour must not send the builder back into the future wing each tick. */
+function finishEraWork(g:Game,u:Unit,b:Building,p:HousingRenovation,dt:number){
+ const blocked=eraUpgradeCommitIssue(g,b,p);
+ if(blocked){
+  p.blockedReason=blocked;u.workReason=blocked;
+  const t=p.eraChange!.target;
+  if(p.mode==='extend'&&Math.abs(u.x-t.x)<t.w/2+u.r&&Math.abs(u.z-t.z)<t.d/2+u.r){
+   const exits=[{x:t.x+t.w/2+u.r+1.2,z:t.z},{x:t.x-t.w/2-u.r-1.2,z:t.z},{x:t.x,z:t.z+t.d/2+u.r+1.2},{x:t.x,z:t.z-t.d/2-u.r-1.2}]
+    .filter(v=>g.walkable(v.x,v.z)&&g.workBoard.connected(g,u.x,u.z,v.x,v.z)).sort((a,c)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(c.x-u.x,c.z-u.z));
+   if(exits.length){u.tx=exits[0].x;u.tz=exits[0].z;g.steer(u,dt);}
+  }
+  return true;
+ }
+ const issue=commitEraUpgrade(g,b,p,u.id);if(issue){p.blockedReason=issue;return true;}
+ delete b.renovation;delete b.planPaused;delete u.housingWorkId;u.buildOrder=undefined;u.node=null;u.order='idle';
+ completeConstructionTarget(g,b);if(u.team===0)g.banner('Paid building work finished; added durability can be filled by real repair work',5);return true;
+}
 export function housingAI(g: Game, u: Unit, b: Building, dt: number) {
   const p = b.renovation;
   if (!p) return false;
@@ -386,6 +413,7 @@ export function housingAI(g: Game, u: Unit, b: Building, dt: number) {
     p.parcel = { kind: "carrier", x: u.x, z: u.z };
     p.phase = "carrying";
   }
+  if(p.eraChange&&p.progress+1e-8>=p.duration&&housingMaterialsEqual(p.delivered,p.quote))return finishEraWork(g,u,b,p,dt);
   const spot = housingApproach(g,u,b);
   if (!spot) {
     p.blockedReason = "No physical approach to the home";
@@ -429,14 +457,16 @@ export function housingAI(g: Game, u: Unit, b: Building, dt: number) {
     b.hp = Math.min(b.maxHp, b.hp + ((b.maxHp - p.initialHp) * work) / p.duration);
   }
   if (p.progress + 1e-8 >= p.duration) {
+    if(p.eraChange)return finishEraWork(g,u,b,p,dt);
     const hp = b.hp;
     b.type = "house";
     b.build = 1;
     b.maxHp = HOUSING_RULES.maximumHp;
+    if(b.fabric){b.fabric.baseMaxHp=HOUSING_RULES.maximumHp;b.maxHp=fabricMaximumHp(b.fabric);}
     b.hp = Math.min(hp, b.maxHp);
     b.housingReceipt = {
       version: 1,
-      mode: p.mode,
+      mode: p.mode as "upgrade"|"new",
       paidBy: p.paidBy,
       materials: { ...p.quote },
       workSeconds: p.progress,
@@ -803,6 +833,7 @@ export function housingOwnerCanContinue(p: HousingRenovation, team: number) {
 
 export function relinkHousingViews(g: Game) {
   for (const b of g.state.buildings) {
+    if(supportsEraUpgrade(b.type))ensureBuildingFabric(g,b);
     const p = b.renovation;
     if(!p)continue;
     refreshUnpaidHousingQuote(p);
