@@ -41,7 +41,7 @@ export function methodRecordPickupAI(g:Game,u:Unit,dt:number){
  if(!own(g,u,id)){cancelMethodRecordPickup(g,u,'Record pickup stopped — its person or asset is reserved');return false;}
  const destination=approach(g,u,r);if(!destination){cancelMethodRecordPickup(g,u,'Record pickup blocked — no reachable dry approach');return false;}
  const reached=destination.drop?supplyReached(g,u,destination.drop,destination.point):clearCargoApproach(g,u,r.holder);
- if(reached){cancelMethodRecordPickup(g,u,undefined,true);const accepted=pickupMethodRecord(g,u,id);u.workReason=accepted?'Carrying the same cordage method record':'Record pickup stopped — the physical item or resident is no longer available';return true;}
+ if(reached){cancelMethodRecordPickup(g,u,undefined,true);const accepted=pickupMethodRecord(g,u,id);u.workReason=accepted?'Carrying the same physical method record':'Record pickup stopped — the physical item or resident is no longer available';return true;}
  u.order='hold';u.tx=destination.point.x;u.tz=destination.point.z;u.workReason=r.holder.kind==='cache'?'Walking to the method record’s actual cache':'Walking to the dropped method record';g.steer(u,dt);return true;
 }
 export function rebuildMethodRecordPickupOwnership(g:Game,jobs:JobCoordinator){for(const u of g.state.units)if(u.methodRecordPickupId!==undefined){const r=record(g,u.methodRecordPickupId);if(u.hp<=0||u.prisoner||u.emergency||u.boat||!r||r.team!==u.team||r.holder.kind==='carrier'||!own(g,u,u.methodRecordPickupId,jobs)){delete u.methodRecordPickupId;jobs.finish(key(u),true);jobs.forget(key(u));u.workReason='Record pickup stopped — its custody or resident changed';}}}
