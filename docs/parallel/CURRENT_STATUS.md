@@ -2,12 +2,14 @@
 
 > Leadership: Grok is execution PM; Claude leads high-level design; Codex implements/debugs and supports integration. Anyone may edit and wire any repository file; coordinate active edits, no Codex approval gate.
 
-Updated 2026-11-12T12:29:26.741193+00:00
+Updated 2026-11-12T13:47:19.988082+00:00
 
 
-**Acceptance reporting correction:** 34/98 is the previous verified gate baseline, not a freshly audited estimate of current game completion. Do not interpret it as zero work since that audit. The98 criteria are unchanged; a current whole-gate audit is in progress, and partial slices remain distinct from genuinely complete gates.
+**Verified acceptance:** 37/98 (37.76%), unchanged hearthwild-first-release-gates-v1. M0-10, M3-12 and M3-13 now have native, built and matching published evidence. This is acceptance coverage, not effort or a claim of full-game completion. Other partial work remains uncredited.
 
-- Latest verified LIVE: **004ffee**, **2026-11-12T12-39-37-682Z-004ffee**,8086/8101: Claude shared people rig, real task/fight/death clips and actual delivery cue; legacy switch and capacity-safe fallback.38/38 scoped,tsc/build PASS; original53 restored unchanged. docs/metrics/people-animation-release-2026-11-12.json. No100-resident FPS or full visual-overhaul claim.
+- Latest verified LIVE: **74c8791**, **2026-11-12T13-45-25-912Z-74c8791**,8086/8101: command execution diagnostics; real continuing tribute/protectorate/autonomy and saved physical release/custody returns; whole Claude society/combat/Hearth UI through7fbe946, readable trade-notification actions. **104/104 unique scoped checks** (97native/shared+7built across controls and focused remainder); tsc/build PASS, original53 unchanged. Worker parked; no100-resident FPS/full-suite claim. Newer source now on main is preserved for the next checked release, not silently included in this frozen artifact. docs/metrics/command-domination-release-2026-11-12.json.
+
+- Previous verified LIVE: **004ffee**, **2026-11-12T12-39-37-682Z-004ffee**,8086/8101: Claude shared people rig, real task/fight/death clips and actual delivery cue; legacy switch and capacity-safe fallback.38/38 scoped,tsc/build PASS; original53 restored unchanged. docs/metrics/people-animation-release-2026-11-12.json. No100-resident FPS or full visual-overhaul claim.
 
 - Previous verified LIVE: **cac9bec**, **2026-11-12T12-27-08-466Z-cac9bec**,8086/8101: real residue cooking/baking + automatic food eligibility, whole Claude NPC expansion read model.32/32 scoped,tsc/build PASS, original53 village restore unchanged. docs/metrics/meal-residue-fuel-release-2026-11-12.json.
 - Previous verified LIVE: **e5f5bdd**, **2026-11-12T12-18-32-314Z-e5f5bdd**: whole Claude integration throughb45ef0b and residue-before-grain outdoor exposure;68/68 scoped,tsc/build PASS. docs/metrics/integration-release-2026-11-12.json.
