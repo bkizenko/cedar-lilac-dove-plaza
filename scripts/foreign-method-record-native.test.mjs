@@ -11,6 +11,7 @@ import {workRuntime} from '../src/game/workRuntime.ts';
 import {declareSocietyHostility} from '../src/game/societyRelations.ts';
 import {supplyDrops,supplyApproach,supplyReached} from '../src/game/campAnchor.ts';
 import {beginProduction,productionIssue,pauseProductionProject,resumeProduction} from '../src/game/production.ts';
+import {prepareOwnedHandover} from '../src/game/communityHandover.ts';
 import {isDependent} from '../src/game/settlement.ts';
 import {knowledgeReport,runKnowledgeAction} from '../src/game/knowledge.ts';
 
@@ -57,5 +58,6 @@ test('strict genuine custody receipts reject impossible times, teams, handover l
   r=>r.acquisitions=Array.from({length:9},()=>structuredClone(r.acquisitions[0])),
   r=>r.acquisitions.push({...r.acquisitions[0],fromTeam:r.source.team}),
  ]){const bad=structuredClone(learnedSave),r=bad.state.methodRecords.records.find(r=>r.source.team!==0);change(r,bad.state);assert.equal(validMethodRecords(bad.state),false,JSON.stringify(r.acquisitions));assert.throws(()=>decodeGame(bad));}
+ const {g,r}=fixture(),origin=structuredClone(r.source),plan=prepareOwnedHandover(g,r.team,0);assert.equal(plan.accepted,true,plan.reason);g.commitCommunityState(plan.state);const inherited=methodRecords(g).find(v=>v.id===r.id);assert.deepEqual(inherited.source,origin);assert.equal(inherited.acquisitions[0].kind,'inherited');assert.ok(inherited.acquisitions[0].handoverId);const lawful=encodeGame(g);assert.doesNotThrow(()=>decodeGame(lawful));const forged=structuredClone(lawful),journal=forged.state.methodRecords.records.find(v=>v.id===r.id).acquisitions[0];journal.at-=.1;assert.equal(validMethodRecords(forged.state),false,'inherited custody must match actual legal handover time');assert.throws(()=>decodeGame(forged));
  const old=structuredClone(learnedSave);delete old.state.methodRecords.records[0].acquisitions;assert.doesNotThrow(()=>decodeGame(old),'optional absence keeps old records valid');
 });
