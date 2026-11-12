@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 0d4f855d99870a096c4930d7497f922dac582fe2 published as 2026-11-12T17-44-30-211Z-0d4f855 on8086/8101.98/98 scoped functional checks (93native/shared+5built) across geology/save compatibility, paid naval conservation, traded successors and society/influence foundations. This scoped test count is separate from unchanged37/98 release gates. Full naval UI/campaign, artifacts/records and100-person performance remain open; private browser was slow, no performance credit; Worker parked. Partial/unverified gates earn zero.
+Verified baseline: 8ae8cd7c6d85b31445c573bb89708e8f57d7e0f6 published as 2026-11-12T18-58-54-747Z-8ae8cd7 on8086/8101.69/69 scoped checks (63native/shared+6built), compiler/buildPASS: paid ore→bloom→iron→owned used/repaired tool; actual same-asset draft cart hitch/interruption/haul/detach/recovery and rendering; display hint and H-only lighting. Original53 preserved. Separate frozen acceptance37/98 unchanged; commander/naval controls, broader metallurgy, campaign/performance remain open. Partial/unverified gates earn zero.
 
 ## Milestone counts
 
