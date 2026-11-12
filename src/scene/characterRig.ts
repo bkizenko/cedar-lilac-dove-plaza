@@ -216,7 +216,7 @@ export function farParts(o:RigOutfit,culture?:Culture):RigPart[]{
  place(o.itemR,[.21,.6,.1],0);place(o.itemL,[-.22,.64,.08],0);return out;
 }
 /** `near/mid/far` are the ceiling over every kit (leader, helmet, shield, armor, richest trim); `typical` is what an ordinary garment-and-weapon person must fit. */
-export const RIG_BUDGET={near:2300,mid:1700,far:900,typical:{near:1500,mid:820,far:380},/** the original gear-only budgets (garment+headwear+insignia+armor) */gear:APPEARANCE_RULES.budget} as const;
+export const RIG_BUDGET={near:2400,mid:1700,far:900,typical:{near:1500,mid:820,far:380},/** the original gear-only budgets (garment+headwear+insignia+armor) */gear:APPEARANCE_RULES.budget} as const;
 const tri=(parts:readonly RigPart[],tier:LodTier)=>parts.filter(p=>p.lod>=tier&&(p.onlyFrom??0)<=tier).reduce((n,p)=>n+partTriangles(p),0);
 /** Triangles one person costs at a tier, items included (far uses the merged silhouette). */
 export function rigTriangles(o:RigOutfit,tier:LodTier,culture?:Culture):number{

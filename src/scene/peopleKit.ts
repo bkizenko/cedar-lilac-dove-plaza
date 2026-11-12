@@ -44,12 +44,14 @@ export function bodyParts(c:KitCtx){
   const leg:RigBone=sd<0?'legL':'legR',arm:RigBone=sd<0?'armL':'armR',x=sd*.085*hp,legCol=trousers?(cut.lower==='leggings'?pal.cloth2:cloth):sk;
   bones[leg].push(Q(legCol,'cylinder',[.07*lt,.25,.098*lt],[x,.07,0],2,undefined,6),Q(legCol,'cylinder',[.098*lt,.24,.132*lt],[x,.27,0],2,undefined,6));
   const ax=sd*(.17+.04*sh),upper=sleeveUp&&covered?cloth:sk,lower=sleeveLow&&covered?(cut.sleeve==='wide'?pal.cloth2:cloth):sk;
-  bones[arm].push(Q(upper,'cylinder',[.074*lt,.16,.095*lt],[ax,.71,0],2,undefined,6),Q(lower,'cylinder',[.056*lt,.16,.074*lt],[ax,.55,0],2,undefined,6),Q(sk,'box',[.07*hand,.075*hand,.075*hand],[ax,.48,.01],1));
+  bones[arm].push(Q(upper,'cylinder',[.074*lt,.16,.095*lt],[ax,.71,0],2,undefined,6),Q(lower,'cylinder',[.056*lt,.16,.074*lt],[ax,.55,0],2,undefined,6),Q(sk,'box',[.07*hand,.075*hand,.075*hand],[ax,.48,.01],1,undefined,undefined,1),
+   // near only: a rounded mitten fist instead of the box hand (24 vs 12 tris); mid keeps the box so the far/mid budgets are unchanged
+   Q(sk,'cylinder',[.066*hand,.07*hand,.072*hand],[ax,.4825,.012],0,undefined,6));
   if(cut.sleeve==='wide'&&covered)bones[arm].push(Q(pal.cloth2,'cone',[.15,.1,.15],[ax,.42,0],1,[Math.PI,0,0],6),Q(pal.trim,'cylinder',[.15,.02,.15],[ax,.42,0],0,undefined,6));
  }
  const torsoCol=covered?cloth:sk,hipCol=cut.lower!=='none'||covered?cloth:sk;
  bones.hips.push(Q(hipCol,'cylinder',[.31*hp,.16,.28*w],[0,.42,0],2,undefined,7));
- bones.spine.push(Q(torsoCol,'cylinder',[.27*w,tw-.5+.22,.34*ch],[0,tw-.14,0],2,undefined,8),Q(torsoCol,'box',[.38*sh+.06,.085,.2*ch],[0,.805,0],1),Q(sk,'cylinder',[.09*b.neck,.07+.02*b.neck,.078*b.neck],[0,.885,0],0,undefined,5));
+ bones.spine.push(Q(torsoCol,'cylinder',[.27*w,tw-.5+.22,.34*ch],[0,tw-.14,0],2,undefined,8),Q(torsoCol,'box',[.38*sh+.06,.085,.2*ch],[0,.805,0],1,undefined,undefined,1),Q(torsoCol,'cylinder',[.092,.38*sh+.06,.2*ch],[0,.8,0],0,[0,0,Math.PI/2],8),Q(sk,'cylinder',[.09*b.neck,.07+.02*b.neck,.078*b.neck],[0,.885,0],0,undefined,5));
  void cls;
 }
 
