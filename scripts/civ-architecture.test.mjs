@@ -58,3 +58,13 @@ test('LOD tiers shrink, every tier draws, and triangle budgets hold',()=>{
  const worst=[0,0,0],per={};for(const {c,r,i,s} of all(8)){const n=[0,1,2].map(t=>tri(s,t));assert.ok(n[0]>=n[1]&&n[1]>=n[2]&&n[2]>0,`${c}/${r}#${i} ${n}`);for(let t=0;t<3;t++){worst[t]=Math.max(worst[t],n[t]);}per[c]=Math.max(per[c]??0,n[0]);}
  console.log('# worst near/mid/far',JSON.stringify(worst),'heaviest civ near',JSON.stringify(per));assert.ok(worst[0]<=BUDGET.near&&worst[1]<=BUDGET.mid&&worst[2]<=BUDGET.far,JSON.stringify(worst));
 });
+test('mourning banners hang at half-mast, stay inside the footprint and budgets, and change nothing otherwise',()=>{
+ for(const c of CIV_IDS)for(const r of['house','civic']){
+  const a=generateCivBuilding(c,r,ctx(3,{wealth:.9})),b=generateCivBuilding(c,r,ctx(3,{wealth:.9,mourning:true}));
+  const cloth=matId(c,'cloth'),top=s=>Math.max(...s.parts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.3).map(p=>p.pos[1]+p.size[1]/2));
+  if(!a.parts.some(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.3))continue;
+  assert.ok(top(b)<=top(a)+1e-9,c+' '+r+' mourning cloth must not rise');
+  assert.ok(partsAtLod(b,'near').length>=partsAtLod(a,'near').length);
+  assert.ok(tri(b,'mid')<=tri(a,'mid')+0,c+' '+r+' mid budget unchanged (band is near-only)');
+ }
+});
