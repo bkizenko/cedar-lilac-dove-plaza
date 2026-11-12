@@ -1,3 +1,4 @@
+import {MethodRecordLayer} from './methodRecordLayer';
 import {DraftCartLayer,DRAFT_CART_RENDER} from './draftCartLayer';
 import {SiegeRamLayer} from './siegeRams';
 import {SailRigs} from './sailRigs';
@@ -321,6 +322,7 @@ export class WorldView {
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
   private housingPackets:HousingPacketLayer|null=null;
+  private methodRecordMarkers:MethodRecordLayer|null=null;
   private draftCarts:DraftCartLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
@@ -1150,6 +1152,7 @@ export class WorldView {
       this.scene.add(mesh);this.cargoMeshes.set(kind,mesh);
     }
     this.draftCarts=new DraftCartLayer(this.scene,this.mats.timber);
+    this.methodRecordMarkers=new MethodRecordLayer(this.scene,this.mats.stone);
     for (const kind of ['sled', 'cart', 'canoe', 'pack'] as const) {
       const mesh = new THREE.InstancedMesh(haulageGeo(kind), kind==='pack'?this.mats.hide:this.mats.timber, 140);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1329,6 +1332,9 @@ export class WorldView {
     return null;
   }
 
+  pickMethodRecord(cx:number,cy:number,game:Game){
+    const el=this.renderer.domElement;_ndc.set((cx/(el.clientWidth||1))*2-1,(-cy/(el.clientHeight||1))*2+1);_ray.setFromCamera(_ndc,this.camera);return this.methodRecordMarkers?.pick(_ray,game)??null;
+  }
   pickDraftCart(cx:number,cy:number,game:Game){
     const el=this.renderer.domElement;_ndc.set((cx/(el.clientWidth||1))*2-1,(-cy/(el.clientHeight||1))*2+1);_ray.setFromCamera(_ndc,this.camera);return this.draftCarts?.pickLoose(_ray,game)??null;
   }
@@ -2012,6 +2018,7 @@ export class WorldView {
   private syncCargo(game: Game) {
     this.housingPackets?.sync(game);
     this.draftCarts?.sync(game,this.quality,this.shadowsEnabled);
+    this.methodRecordMarkers?.sync(game,this.quality,this.shadowsEnabled);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
     let horses=0,cattle=0,ards=0;this.packHorseOwners=[];this.packCattleOwners=[];this.woodenArdOwners=[];
@@ -3007,6 +3014,7 @@ export class WorldView {
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;
+    this.methodRecordMarkers?.dispose();this.methodRecordMarkers=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;

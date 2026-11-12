@@ -1,0 +1,104 @@
+{
+  "release": "2026-11-12T20-05-20-589Z-0eb4b35",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-05-20-589Z-0eb4b35",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T19-24-19-343Z-dfbc553",
+  "commit": "0eb4b35d30452d26b0c9fdf85f9216574d46838b",
+  "retained": {
+    "linked": 1397,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 70,
+    "total": 70,
+    "nativeAndShared": 65,
+    "built": 5,
+    "groups": {
+      "methodRecords": 5,
+      "methodVisibilityAndWalking": 4,
+      "sharedProductionToolsAndKnowledge": 26,
+      "commanderPolicy": 10,
+      "earnedDraftRecovery": 1,
+      "commanderAndCouncilUI": 19
+    },
+    "knowledgeBuilt": {
+      "passed": 4,
+      "total": 4,
+      "scope": "Actual earned Knowledge provenance, same-asset physical return, real paid workshop Resume and Knowledge replication, durable restore and original53 absence/purity. No goods/XP/coordinate grants, campaign, captured-foreign-artifact or full-gate credit.",
+      "earned": {
+        "recordId": 6371,
+        "source": {
+          "recipe": "twistCordage",
+          "makerId": 6224,
+          "makerName": "Dawyyyn",
+          "team": 0,
+          "teamName": "Dawnfolk",
+          "successfulBatches": 3,
+          "demonstratedAt": 90.40000000000074
+        },
+        "strictDurable": true
+      },
+      "physicalReturn": {
+        "recordId": 6371,
+        "paidProject": 6370,
+        "sameAsset": true
+      },
+      "paidStudy": {
+        "projectId": 6373,
+        "recordId": 6372,
+        "readerId": 6229,
+        "sourceTeam": 1,
+        "replicationProject": 6375,
+        "actualCordage": 4,
+        "noSecondCharge": true
+      },
+      "legacy": {
+        "population": 53,
+        "pureRead": true,
+        "absentStatePreserved": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    },
+    "pickupBuilt": {
+      "passed": 1,
+      "total": 1,
+      "scope": "One actual paused built renderer/selected-original walking pickup/inventory/strict durable restore over an earned native record. No authoring grants, foreign pickup, campaign or full-gate credit.",
+      "presentation": "Private QA presentation capped near6Hz; not a gameplay/FPS claim",
+      "input": "actual projected canvas right-click",
+      "recordId": 6371,
+      "actorId": 6223,
+      "actualWalking": true,
+      "carriedMesh": true,
+      "inventory": true,
+      "strictDurableRestore": true,
+      "inputUnchanged": true,
+      "errors": []
+    },
+    "notes": [
+      "Unique cases only; retries and expanded assertions not counted again.",
+      "Reported commander inconsistency was different resident IDs from separate legacy resets; fixed to one saved opening.",
+      "Reported cart recovery failure waited for an already-unloaded manual worker to walk home without an order; removed only irrelevant cache admission condition.",
+      "New paid study and replication Resume now bind actual original learner; wrong-person requests preserve state.",
+      "Private pickup QA presentation capped near6Hz calls real Engine.frame; no gameplay performance credit."
+    ]
+  },
+  "compiler": "PASS",
+  "productionBuild": "PASS",
+  "frozenAcceptance": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "original53SaveSHA256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "remaining": [
+    "One exact demonstrated cordage record; broader method records and captured foreign artifacts remain open",
+    "Pending pickup must finish/cancel before community handover; unsafe splits refuse atomically",
+    "No campaign/100-resident performance credit",
+    "Newer canonical wild-craft/visual/UI source excluded from exact reviewed artifact"
+  ]
+}

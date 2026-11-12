@@ -1,3 +1,4 @@
+import {methodRecords} from '../game/methodRecords';
 import {draftCartCapacity} from '../game/draftCart';
 import {toolmakingPracticeRate} from "../game/crafting";
 import {packCapacityMultiplier} from '../game/packAnimalState';
@@ -17,6 +18,8 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
   return <ul className="space-y-2 text-xs">
     {residents.map(resident => {
       const carried: string[] = [];
+      const record=game&&resident.team===0?methodRecords(game).find(r=>r.team===0&&r.id===resident.methodRecordCargoId&&r.holder.kind==='carrier'&&r.holder.unitId===resident.id):undefined;
+      if(record)carried.push(`Cordage method record · ${record.source.makerName}`);
       const traits = predisposition(resident);
       const craftSeconds = resident.craftingXP ?? 0;
       const skills = Object.entries(resident.productionSkills ?? {});
