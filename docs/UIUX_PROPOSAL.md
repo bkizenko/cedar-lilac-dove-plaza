@@ -110,7 +110,7 @@ Known leftovers seen in the renders, not fixed here: on a 390 px phone the PAUSE
 
 - `scripts/hearth-size-floor.test.mjs` (new): 3/3 pass. Floor tokens, no literal text under 16 px in `hearth.css`, token blocks scoped away from the archived themes.
 - `minimal-ui` 6/6 and `h-compact-ui` 5/5 pass, before and after.
-- `council-ui` 9/13 pass before and after; the 4 failures are `Cannot find package 'lucide-react'` (not installed in this sandbox) on the capitulation, captive and captives screens, unrelated to this change.
+- `council-ui` 9 pass before and after (13 tests at base, 14 after merging integration); the 4 to 5 failures are `Cannot find package 'lucide-react'` (not installed in this sandbox) on the capitulation, captive and captives screens, unrelated to this change.
 - `compact-hud` fails to load before and after for the same reason (`lucide-react` imported by `Hud.tsx`).
 - Type check: standalone `tsc` over `HudHearth`, `parts`, `commandPanels`, `kit` shows only the known sandbox noise (missing react types make JSX `key` props error); no real errors in the new files.
 - Render harness needed one fix to run here: a stub for `three/examples/jsm/libs/fflate.module.js` (`tools/render-preview/shims/fflate.js`), because `three` is not installed.

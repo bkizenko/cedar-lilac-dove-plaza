@@ -3,6 +3,8 @@ import {Flag,Users,Crown,Sparkles,UserPlus,UserMinus,ChevronsUp,Replace,Anchor,S
 import type {Engine} from '@/game/engine';
 import type {EngineDispatchCommand} from '@/game/engineDispatch';
 import {vesselOf,stowCapacity} from '@/game/navalPorts';
+import {commandersOf} from '@/game/commanders';
+import {replacementOverflowNotice} from '../CommanderControls';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useLifecycleAction} from '../useLifecycleAction';
 import {cx,IconBtn,Stat} from './kit';
@@ -25,7 +27,12 @@ export function CommanderStrip({engine}:{engine:Engine}){
  const cand=model.candidate,rows=model.commanders;
  if(!rows.length&&!cand)return null;
  const c=rows[Math.min(pick,Math.max(0,rows.length-1))],epoch=engine.dispatchEpoch;
- const run=(command:EngineDispatchCommand)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:boat?.id}),reply=>{if(reply.epoch!==epoch||engine.dispatchEpoch!==epoch)return;setNote(reply.reason);setPromote(false);engine.pushHud();});};
+ const run=(command:EngineDispatchCommand)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;
+  // A replacement that cannot hold everyone says so, in the same words as the legacy sheet.
+  const old=command.kind==='commander-order'&&command.action==='replace'&&command.replacesId!==undefined?commandersOf(g,0).find(x=>x.id===command.replacesId):undefined,before=old?{members:old.memberIds.length,boats:old.boatIds.length,kind:old.kind}:undefined;
+  void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:boat?.id}),reply=>{if(reply.epoch!==epoch||engine.dispatchEpoch!==epoch)return;
+   const fresh=before&&reply.accepted?commandersOf(g,0).find(x=>x.replaces===old?.id):undefined,extra=before?replacementOverflowNotice(before,fresh&&{members:fresh.memberIds.length,boats:fresh.boatIds.length}):'';
+   setNote(extra?`${reply.reason} ${extra}`:reply.reason);setPromote(false);engine.pushHud();});};
  const busy=action.busy,wood=model.standardWood;
  return <div className="hw-cmd" role="group" aria-label="Command">
   {c&&<><div className="hw-row hw-cmd-head">
