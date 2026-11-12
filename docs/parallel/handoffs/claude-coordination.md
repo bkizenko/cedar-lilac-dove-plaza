@@ -355,3 +355,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 ## Decision — 2026-11-11 20:25 ET (Boris)
 - Single-owner file rule is lifted. Every agent (Grok, Claude, Codex) may edit and wire any file, including sim.ts / types.ts / persistence.ts / save.ts / world.ts. To avoid collisions, post one line here per shared-file edit (file, purpose, SHA), merge from main before each batch, and keep merges normal (no rebase or force-push).
 - Velocity-mode prompts are in effect for all three agents: features turned on in the built game, daily merge to main, no docs unless asked.
+
+- Grok `25841d2`: `src/game/persistence.ts` — validators for optional `worldOptions.riverProfileVersion` (2), `tideVersion` (1|2) and `landformLabelVersion` (2); absent keys stay historic so old saves load.
