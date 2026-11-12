@@ -10,7 +10,7 @@ const inputs=process.argv.slice(2).map(file=>({file,bytes:readFileSync(file)}));
 assert.ok(inputs.length===2||inputs.length===3,'Pass earned commander export, untouched original53, and optional genuinely earned pre-promotion export');
 for(const i of inputs)i.hash=hash(i.bytes);
 const profile=mkdtempSync(join(tmpdir(),'hearthwild-commanders-built-')),errors=[];
-const report={passed:0,total:inputs.length===3?4:3,scope:'Actual earned native commander readout; real release/reassign and durable save; original53 pure reads and paid first appointment only if actually eligible. No invented XP/goods, campaign, performance or full-gate credit.'};
+const report={passed:0,total:inputs.length===3?5:4,scope:'Actual earned native commander readout; real release/reassign and durable save; original53 pure reads and paid first appointment only if actually eligible. No invented XP/goods, campaign, performance or full-gate credit.'};
 let context,stage='launch';
 try{
  context=await chromium.launchPersistentContext(profile,{channel:'chrome',headless:true,viewport:{width:1440,height:1000},args:['--enable-unsafe-swiftshader']});
@@ -18,6 +18,8 @@ try{
  await page.addInitScript(()=>localStorage.setItem('hearthwild:graphics-quality','low'));
  await page.goto(process.env.HEARTHWILD_BUILT_URL||'http://127.0.0.1:8103/',{waitUntil:'commit'});
  await page.waitForFunction(()=>window.__engine?.game,null,{timeout:60000});
+ // Functional UI checks retain real frames at a private 6Hz; no performance claim.
+ await page.evaluate(()=>{const e=window.__engine;let last=-Infinity;e.view.renderer.setAnimationLoop(t=>{if(t-last>=160){last=t;e.frame(t);}});});
  const load=async input=>{const data=JSON.parse(input.bytes);data.state.paused=true;const r=await page.evaluate(async data=>window.__engine.importVillage(new File([JSON.stringify(data)],'private-village.json',{type:'application/json'})),data);assert.equal(r.applied,true,r.message);return data;};
  const snapshot=()=>page.evaluate(()=>{const s=window.__engine.game.state;return JSON.parse(JSON.stringify({seed:s.seed,time:s.time,commanders:s.commanders,tribes:s.tribes,units:s.units.map(({selected,target,node,...u})=>u),buildings:s.buildings,boats:s.boats}));});
  const select=async ids=>page.evaluate(ids=>{const e=window.__engine,g=e.game;g.clearSelect();for(const id of ids){const u=g.state.units.find(u=>u.id===id&&u.team===0);if(!u)throw Error('Missing actual owned selected person');u.selected=true;}e.pushHud();},ids);
@@ -49,6 +51,11 @@ try{
 
  stage='original53 pure commander reads and actual paid adoption when admitted';const original=await load(inputs[1]);assert.equal(original.state.units.filter(u=>u.team===0&&u.hp>0).length,53);
  const legacyBefore=await snapshot();
+ stage='original53 actual military tab, single selection card and desktop size floor';
+ const soldier=original.state.units.find(u=>u.team===0&&u.hp>0&&(u.militia||!['worker','leader'].includes(u.type)));assert.ok(soldier,'Original village has a real armed resident');await select([soldier.id]);
+ const card=page.locator('section.hw-sel');await card.waitFor();assert.equal(await card.count(),1);await card.getByRole('tab',{name:'Command',exact:true}).click();await card.getByRole('group',{name:'Command',exact:true}).waitFor();
+ const dimensions=await card.evaluate(el=>{const r=el.getBoundingClientRect(),b=el.querySelector('button.hw-btn'),br=b.getBoundingClientRect(),svg=b.querySelector('svg');return{font:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize),hit:Math.min(br.width,br.height),icon:Math.min(svg.getBoundingClientRect().width,svg.getBoundingClientRect().height),inside:r.x>=0&&r.y>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1};});assert.ok(dimensions.font>=16&&dimensions.hit>=48&&dimensions.icon>=24&&dimensions.inside,JSON.stringify(dimensions));assert.deepEqual(await snapshot(),legacyBefore);report.hearth={realMilitaryTab:true,singleSelectionCard:true,dimensions};report.passed++;
+ stage='original53 civilian commander controls and paid adoption';
  const eligible=await page.evaluate(async()=>{const e=window.__engine;for(const u of e.game.state.units.filter(u=>u.team===0&&u.hp>0)){const r=await e.readModel({kind:'commander-controls',unitIds:[u.id],boatIds:[]});if(r.model.candidate&&!r.model.candidate.armyIssue)return u.id;}return null;});
  assert.deepEqual(await snapshot(),legacyBefore,'Querying actual owner availability must not enable or alter the original village');
  const chosen=eligible??original.state.units.find(u=>u.team===0&&u.hp>0).id;await select([chosen]);await open();assert.deepEqual(await snapshot(),legacyBefore,'Opening legacy controls is pure');
