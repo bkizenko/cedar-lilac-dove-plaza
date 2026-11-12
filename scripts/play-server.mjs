@@ -1,3 +1,4 @@
+import {compressedStaticFile,containedRegularFile,readRetainedText,retainedEncoding} from './retained-text-storage.mjs';
 // A production snapshot: no file watcher or hot reload can interrupt a village.
 import {createServer} from 'node:http';
 import {Readable} from 'node:stream';
@@ -16,10 +17,18 @@ export function createPlayServer(root,app){
       const url=new URL(req.url||'/','http://127.0.0.1');
       if(url.pathname==='/__hearthwild_health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({service:'hearthwild-play',release:root.split(sep).pop()}));return;}
       const file=staticPath(resolve(root,'static'),url.href);
-      if(file&&existsSync(file)&&statSync(file).isFile()){
+      if(file&&existsSync(file)&&containedRegularFile(resolve(root,'static'),file)){
         if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
-        res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream','cache-control':url.pathname.startsWith('/assets/')?'public, max-age=31536000, immutable':'no-cache'});
-        res.end(req.method==='HEAD'?undefined:readFileSync(file));return;
+        let body,available=true;try{if(req.method!=='HEAD')body=readFileSync(file);}catch(error){if(error.code==='ENOENT')available=false;else throw error;}
+        if(available){res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream','cache-control':url.pathname.startsWith('/assets/')?'public, max-age=31536000, immutable':'no-cache'});res.end(body);return;}
+      }
+      const compressed=file&&compressedStaticFile(root,file);
+      if(compressed){
+        if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
+        const encoding=retainedEncoding(req.headers['accept-encoding']);if(!encoding){res.writeHead(406,{'vary':'Accept-Encoding'});res.end();return;}
+        const body=encoding==='gzip'?readFileSync(compressed):readRetainedText(compressed);
+        res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream','cache-control':url.pathname.startsWith('/assets/')?'public, max-age=31536000, immutable':'no-cache','vary':'Accept-Encoding','content-length':body.length,...(encoding==='gzip'?{'content-encoding':'gzip'}:{})});
+        res.end(req.method==='HEAD'?undefined:body);return;
       }
       if(url.pathname.startsWith('/assets/')){res.writeHead(404);res.end('Asset unavailable');return;}
       const method=req.method||'GET',headers=new Headers();

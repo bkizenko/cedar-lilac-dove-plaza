@@ -9288,6 +9288,15 @@
       "liveCommit": "2051c074bebdb52101fccd7ffc6315dc2164020f",
       "evidence": "docs/metrics/charcoal-copper-release-2026-11-12.json",
       "scope": "Finite paid timber -> covered clamp charring/cooling -> real charcoal delivery -> physically loaded copper prototype -> owned tool used/worn. Paid inputs, actor, resume/custody/loss and old saves conserved; no existing tool overwritten. Ore refining, tin/bronze/iron chains and clamp mesh remain open."
+    },
+    {
+      "id": "CODEX-PEOPLE-TERRAIN-CONTROLS",
+      "owner": "Codex integration / Claude visuals and UI",
+      "state": "live-partial",
+      "sourceCommit": "e32707ded49eb7a4b86824f0e6ff9f3e61f6796a",
+      "liveCommit": "2128ed737f8bdfa3ed5d8ae73427b59f5467a012",
+      "evidence": "docs/metrics/people-terrain-controls-release-2026-11-12.json",
+      "scope": "Whole peoplev2/surface geology/Hearth selection integration, bounded unused rig cache and excavation geology continuity; actual civilian and military commander controls, compact hit floor, physical paid appointment and earned promotion.35/35 scoped; old53 unchanged. Full visual fidelity/100-person performance/campaign remain open. WildCraft activation OFF pending separate custody qualification."
     }
   ],
   "status_update_policy": {
