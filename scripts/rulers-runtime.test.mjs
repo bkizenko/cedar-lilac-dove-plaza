@@ -71,3 +71,25 @@ test('council read model and marry command: JSON-safe, gated, and the UI action 
  const c2=JSON.parse(JSON.stringify(applyEngineReadQuery(g,{kind:'rulers-council'}))).council;
  if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);}else assert.equal(c2.handover,undefined);
 });
+
+test('fosterage and hostages: real wards, tie effects, term end, war breaks the pledge, JSON round-trip',async()=>{
+ const {fosterHouses,exchangeHostages,wardsOf,settleWards,tiesBetween}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();
+ assert.equal(fosterHouses(g,0,1),null,'a household does not foster');
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9000+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:6,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};
+  d.people[t+'-youth']={...k,id:t+'-youth',name:'Youth'+t,age:18,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:2};}
+ const b0=tiesBetween(g,0,1).bond,f=fosterHouses(g,0,1);
+ if(!f)return assert.fail('fosterage should happen at house scale');
+ assert.equal(f.wards.length,2);assert.ok(tiesBetween(g,0,1).bond>b0);assert.equal(wardsOf(g,0).length,2);
+ assert.equal(g.state.rulers.societies['0'].dynasty.people['0-kid'].alive,true,'child stays in own dynasty record');
+ const h=exchangeHostages(g,0,1);const tiers=['0','1'].map(t=>g.state.rulers.societies[t].civ.polity.tier);
+ if(tiers.every(t=>t==='state')){assert.ok(h);assert.equal(h.wards.length,2);assert.equal(wardsOf(g,0).length,4);}else assert.equal(h,null,'hostage exchange needs state-tier courts');
+ assert.deepEqual(JSON.parse(JSON.stringify(g.state.rulers)).wards,g.state.rulers.wards);assert.ok(rulersOf(g.state));
+ g.state.rulers.societies['0'].dynasty.people['0-kid'].age=16;settleWards(g);
+ assert.ok(!wardsOf(g,0).some(w=>w.person==='0-kid'),'fosterling goes home at 16');
+ const n=wardsOf(g,0).length;g.state.rulers.societies['1'].dynasty.people['1-kid'].alive=false;settleWards(g);assert.ok(wardsOf(g,0).length<=n);
+ const {nudgeSocietyRelation}=await import('../src/game/societyRelations.ts');
+ g.tribe(1).hostile=true;settleWards(g);assert.equal(wardsOf(g,0).length,0,'war ends every pledge');
+});

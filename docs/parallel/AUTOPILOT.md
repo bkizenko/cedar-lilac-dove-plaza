@@ -862,6 +862,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
 | RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | wired behind worldOptions.rulersVersion | Game.step advanceRulers; new games carry rulersVersion:1; persistence validates; UI panels still to do |
+| RULERS-WARDS | societies | Fosterage and hostage exchange commands (foster-houses, exchange-hostages) via engineDispatch; wards persist in rulers.wards, end at 16/8y/war | Claude | Claude A | done: rulers 33/33 on integration/2026-11-11 | next: NPC marriages/alliances, expansion parties, casus belli |
 | RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | done (source+wired) | familyScale.ts gates heirs/claims/great persons by population; rulers-runtime tests 3/3 |
 
 ## Roles update — 2026-11-11 20:51 ET (Boris)

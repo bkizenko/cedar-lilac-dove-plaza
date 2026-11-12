@@ -1,7 +1,7 @@
 /** Runtime glue for the rulers lane. One call from Game.step. Off unless worldOptions.rulersVersion===1 (set for new games).
  * Old saves have no `rulers` field and no option: nothing happens. Pure state in/out lives in rulersState.ts. */
 import type {Game} from './sim';
-import {initRulers,stepRulersYear,rulersOf,type RulersState} from './rulersState';
+import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
 import {marry} from './dynasty';
 import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
@@ -98,3 +98,49 @@ export function expansionOf(g:Game,team:number):Drivers|null{
 }
 /** Multiplier for the rival expansion roll. 1 when rulers are off, so old saves behave exactly as before. */
 export const expansionDrive=(g:Game,team:number)=>expansionOf(g,team)?.drive??1;
+
+const WARD_ID=(w:Ward)=>w.from+':'+w.person;
+/** Kin currently held by another house (fosterlings, hostages). They stay in their own dynasty record; the ward list says where they live. */
+export const wardsOf=(g:Game,team?:number):Ward[]=>(rulersOf(st(g))?.wards??[]).filter(w=>team===undefined||Number(w.from)===team||Number(w.to)===team);
+function tieChange(g:Game,a:number,b:number,action:import('./ties').TieAction,pa:number,pb:number){
+ const r=ensureRulers(g)!,sa=r.societies[String(a)],sb=r.societies[String(b)];
+ const es=effects(action,{rankGap:0,sameFaith:sa.civ.faith.id===sb.civ.faith.id,culturalGap:sa.civ.silhouette===sb.civ.silhouette?0:.5,aRulerHonor:sa.civ.ruler.traits.honor,bRulerHonor:sb.civ.ruler.traits.honor,atWar:societyRelation(g,a,b).hostile});
+ const k=Math.min(kinshipEffectScale(pa),kinshipEffectScale(pb)),scaled=es.map(e=>({...e,delta:e.delta*k})),key=tieKey(a,b);
+ st(g).rulers={...r,ties:{...(r.ties??{}),[key]:apply(r.ties?.[key]??noTies(),scaled)}};
+ const sum=(l:keyof Ties)=>scaled.filter(e=>e.ledger===l).reduce((t,e)=>t+e.delta,0)/100;
+ for(const [f,t] of [[a,b],[b,a]])nudgeSocietyRelation(g,f,t,{trust:sum('trust'),grievance:sum('grievance')});
+ return es.map(e=>e.why);
+}
+const held=(r:RulersState,id:string,from:string)=>(r.wards??[]).some(w=>w.from===from&&w.person===id);
+/** Fosterage: a child of the player's house is raised in another society's hall, and one of theirs in ours. Needs both to be at kingroup scale
+ * with the fosterage feature. Children stay in their own dynasty record (no teleporting people); the ward list records where they live and
+ * they go home at 16. Returns the cause chain or null. */
+export function fosterHouses(g:Game,a:number,b:number):{why:string[];wards:Ward[]}|null{return exchangeKin(g,a,b,'fosterage');}
+/** Hostage exchange: each house sends a non-heir kinsman to the other as a living pledge. Held until the term ends; breaks if war comes. */
+export function exchangeHostages(g:Game,a:number,b:number):{why:string[];wards:Ward[]}|null{return exchangeKin(g,a,b,'hostageExchange');}
+function exchangeKin(g:Game,a:number,b:number,action:'fosterage'|'hostageExchange'){
+ const r=ensureRulers(g);if(!r||a===b)return null;
+ const sa=r.societies[String(a)],sb=r.societies[String(b)];if(!sa||!sb)return null;
+ const pa=livingPeople(g,a),pb=livingPeople(g,b),fa=familyFeatures(sa.civ.polity.tier,pa),fb=familyFeatures(sb.civ.polity.tier,pb);
+ if(!(action==='fosterage'?fa.fosterage&&fb.fosterage:fa.envoyHeirs&&fb.envoyHeirs))return null;
+ if(societyRelation(g,a,b).hostile)return null;
+ const pick=(s:typeof sa,from:string)=>Object.values(s.dynasty.people).filter(p=>p.alive&&!p.spouse&&p.id!==s.dynasty.rulerId&&!held(r,p.id,from)&&(action==='fosterage'?p.age>=3&&p.age<16:p.age>=10))
+  .sort((x,y)=>x.claimStrength-y.claimStrength)[0];
+ const x=pick(sa,String(a)),y=pick(sb,String(b));if(!x||!y)return null;
+ const wards:Ward[]=[{kind:action==='fosterage'?'foster':'hostage',person:x.id,from:String(a),to:String(b),since:r.year},{kind:action==='fosterage'?'foster':'hostage',person:y.id,from:String(b),to:String(a),since:r.year}];
+ st(g).rulers={...st(g).rulers!,wards:[...(r.wards??[]),...wards]};
+ return {why:tieChange(g,a,b,action,pa,pb),wards};
+}
+/** Yearly: fosterlings go home at 16 (bond rises), hostages after a 8-year term; the dead are removed; war breaks the pledge with a grievance. */
+export function settleWards(g:Game){
+ const r=ensureRulers(g);if(!r?.wards?.length)return;
+ const keep:Ward[]=[],done:Ward[]=[];
+ for(const w of r.wards){
+  const p=r.societies[w.from]?.dynasty.people[w.person];
+  if(!p||!p.alive){done.push(w);continue;}
+  const term=w.kind==='foster'?p.age>=16:r.year-w.since>=8,war=societyRelation(g,Number(w.from),Number(w.to)).hostile;
+  if(term||war){done.push(w);if(war)tieChange(g,Number(w.from),Number(w.to),'breakPact',livingPeople(g,Number(w.from)),livingPeople(g,Number(w.to)));}
+  else keep.push(w);
+ }
+ if(done.length)st(g).rulers={...st(g).rulers!,wards:keep};
+}

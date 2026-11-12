@@ -15,7 +15,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
  if(layout==='classic')return <><LayoutToggle layout={layout} set={setLayout}/><CouncilPanelClassic engine={engine}/></>;
  if(!c)return <p className="text-xs text-parchment-dim">{res.issue}</p>;
  if(!c.enabled)return <p className="text-xs text-parchment-dim">This village predates ruling houses.</p>;
- const marry=async(team:number)=>{try{const r=await engine.dispatch({kind:'marry-houses',team});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
+ const marry=async(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages'='marry-houses')=>{try{const r=await engine.dispatch({kind,team});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
  return <section aria-label="Council" className="mt-2 space-y-2 text-xs">
   <LayoutToggle layout={layout} set={setLayout}/>
   <p className="text-parchment-dim">{STAGE_NOTE[c.stage]}</p>
@@ -33,7 +33,8 @@ export function CouncilPanel({engine}:{engine:Engine}){
    {c.expansion.why.length>0?<p className="text-parchment-dim">Because {c.expansion.why.join('; ')}.</p>:<p className="text-parchment-dim">Nothing presses the people to leave.</p>}</Card>}
   {c.neighbours.length>0&&<Card label="Neighbours" title="Neighbouring houses">
    <ul>{c.neighbours.map(n=><li key={n.team} className="border-b border-parchment/10 py-1 last:border-0"><div className="flex items-center justify-between gap-2"><span>{n.name}: <b>{n.bond}</b> <span className="text-parchment-dim">trust {n.trust}</span></span>
-    {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team)}>Arrange a marriage</button>}</div>
+    {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team)}>Arrange a marriage</button>}
+    {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team,'foster-houses')}>Foster children</button>}</div>
     {n.means.length>0&&<p className="text-parchment-dim">{n.means.join('; ')}</p>}</li>)}</ul>
    {feedback&&<p role="status">{feedback}</p>}</Card>}
  </section>;
