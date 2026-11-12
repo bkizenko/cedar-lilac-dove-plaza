@@ -53,7 +53,7 @@ export function patrolWaypoint(d:Pick<GuardDuty,'id'|'x'|'z'|'radius'>,leg:numbe
  const a=a0+(leg%n)*Math.PI*2/n;return {x:d.x+Math.cos(a)*r,z:d.z+Math.sin(a)*r};
 }
 /** Return false so the normal combat order machinery still drives movement and fighting. */
-export function guardDutyAI(g:Game,u:Unit,dt:number){
+export function guardDutyAI(g:Game,u:Unit,dt:number):boolean{
  const d=dutyOf(g,u);if(!d||!doctrineOf(g)?.guardDuty)return false;
  if(u.emergency||u.prisoner)return false;
  const R=GUARD_DUTY_RULES;
@@ -61,7 +61,14 @@ export function guardDutyAI(g:Game,u:Unit,dt:number){
  if(u.order==='attack'&&u.target&&u.target.hp>0&&Math.hypot(u.x-d.x,u.z-d.z)<=d.radius*R.leashFactor)return false;
  u.node=null;u.job=null;
  // Anything hostile inside the post's reach is met, never chased past the leash (checked above).
- if(u.order!=='attack'){const foe=g.acquireTarget(u,Math.min(d.radius,GUARD_DUTY_RULES.postRadius));if(foe&&foe.kind==='unit'){u.target=foe;u.order='attack';u.attackDestination=null;u.workReason='Meeting an intruder';return false;}}
+ if(u.order!=='attack'){
+  const reach=Math.min(d.radius,GUARD_DUTY_RULES.postRadius);let foe:Unit|undefined,best=reach*reach;
+  for(const o of g.state.units){
+   if(o.hp<=0||o.team===u.team||o.prisoner||o.shelterId||o.boat?.phase==='aboard'||!g.isFoe(u.team,o.team)||u.team===0&&!g.visibleAt(o.x,o.z))continue;
+   const q=(o.x-u.x)**2+(o.z-u.z)**2;if(q<best){best=q;foe=o;}
+  }
+  if(foe){u.target=foe;u.order='attack';u.attackDestination=null;u.workReason='Meeting an intruder';return false;}
+ }
  let tx=d.x,tz=d.z;
  if(d.kind==='patrol'){
   const w=patrolWaypoint(d,d.leg);tx=w.x;tz=w.z;

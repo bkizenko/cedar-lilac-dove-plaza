@@ -6,6 +6,7 @@ import {mulberry32} from '../src/game/rng.ts';
 export function skirmish({seed=1,left,right,doctrine=true,formation='line',flags={},steps=1800,dt=.1,gap=26}){
  const g=new Game();g.reset(777,3);g.enterIsland();g.world.heights.fill(4);
  g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,38,0)];g.state.conflict='quiet';g.state.weather='clear';g.state.paused=false;g.vision.fill(2);g.rebuildWalk();
+ if(!doctrine)delete g.state.combatDoctrine;
  if(doctrine){enableCombatDoctrine(g,flags);g.state.combatDoctrine.preferred=formation;}
  declareSocietyHostility(g,1,2);
  const rand=mulberry32(seed*7919+13),make=(types,team,x0,dir)=>types.map((type,i)=>{const u=g.spawnUnit(type,x0+dir*(rand()*3),50+(i-types.length/2)*1.8+rand()*.6,team);u.militia=true;return u;});

@@ -45,6 +45,7 @@ test('formation geometry has real spacing without touching collision radii, and 
 function army(extra=0){
  const g=new Game();g.reset(4242,3);g.enterIsland();g.world.heights.fill(4);g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,38,0)];
  g.state.conflict='quiet';g.state.weather='clear';g.vision.fill(2);g.rebuildWalk();
+ assert.equal(g.state.combatDoctrine?.counters,true,'new games start with the doctrine on');delete g.state.combatDoctrine;
  const units=['spearman','spearman','swordsman','spearman','archer','archer','swordsman','spearman'].slice(0,8+extra).map((t,i)=>{const u=g.spawnUnit(t,40+i*1.5,50+(i%2),0);u.militia=true;u.selected=true;return u;});
  return {g,units};
 }

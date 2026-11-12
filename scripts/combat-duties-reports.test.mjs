@@ -14,7 +14,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function world(){
  const g=new Game();g.reset(4242,3);g.enterIsland();g.world.heights.fill(4);g.state.units=[];
  for(const k of ['trees','stones','forage','fish','wildlife','copper','iron'])g.state[k]=[];
- g.state.buildings=[g.makeBld('townhall',0,0,0),g.makeBld('townhall',70,0,1)];g.state.conflict='quiet';g.state.weather='clear';g.vision.fill(2);g.rebuildWalk();
+ g.state.buildings=[g.makeBld('townhall',0,0,0),g.makeBld('townhall',70,0,1)];g.state.conflict='quiet';g.state.weather='clear';g.vision.fill(2);g.rebuildWalk();delete g.state.combatDoctrine;
  return g;
 }
 const armed=(g,type,x,z,team=0)=>{const u=g.spawnUnit(type,x,z,team);u.militia=true;return u;};
@@ -130,7 +130,7 @@ function tradeWorld(){
  g.state.buildings=[g.makeBld('townhall',0,0,0),g.makeBld('townhall',70,0,1)];g.vision.fill(2);g.state.weather='clear';g.clockState=()=>({period:'Afternoon'});
  Object.assign(g.tribe(0),{food:5000,wood:500,stone:50,spears:10});Object.assign(g.tribe(1),{alive:true,hostile:false,food:5000,wood:2000,stone:500,trust:.8,tension:0,age:0});
  for(let i=0;i<16;i++)g.spawnUnit('worker',i===15?52:8+i%4,i===15?0:8+Math.floor(i/4),0);
- refreshSettlementSites(g);g.rebuildWalk();return g;
+ refreshSettlementSites(g);g.rebuildWalk();delete g.state.combatDoctrine;return g;
 }
 test('a contested route needs a face-to-face agreement or armed escorts, and war blocks it', () => {
  const g=tradeWorld();enableCombatDoctrine(g);

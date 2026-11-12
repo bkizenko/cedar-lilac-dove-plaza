@@ -21,7 +21,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
+import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
@@ -401,6 +401,7 @@ export class Game {
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
+    enableCombatDoctrine(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
