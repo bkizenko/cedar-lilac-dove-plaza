@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "74c87910a1aaf35b570b7f342e92dbc8ce0fb0de published as 2026-11-12T13-45-25-912Z-74c8791 on8086/8101.104/104 unique scoped checks; full suite not claimed; Worker parked. Three newly verified whole gates; later main source remains pending separate validation.",
+  "verifiedPublishedCodeBaseline": "2d31e94d62e3ed5cc1ef32993fe7251d4c7c8de9 published as 2026-11-12T14-10-08-201Z-2d31e94 on8086/8101.55/55scoped incoming village/Council/audio checks; inherited prior verified37/98 unchanged. Full suite/performance target not claimed; Worker parked; later main source pending.",
   "planningHeadAtAudit": "ba2f2e2",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -232,6 +232,12 @@
       "passed": 104,
       "total": 104,
       "newGateCredit": 3
+    },
+    "villageCouncilAudio20261112": {
+      "path": "docs/metrics/village-council-audio-release-2026-11-12.json",
+      "passed": 55,
+      "total": 55,
+      "newGateCredit": 0
     }
   },
   "gates": [
