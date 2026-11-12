@@ -247,6 +247,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
+  /** Actual productive seconds guiding a horse-drawn ard; not an age grant. */
+  draftPracticeSeconds?:number;
   farmToolWork?: FarmToolWork;
   packAnimal?: import('./packAnimalState').PackAnimal;
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};

@@ -433,6 +433,26 @@ export function haulageGeo(kind: HaulageKind): THREE.BufferGeometry {
   return merge(parts);
 }
 
+/** One shared wooden ard draw, in the pack horse's local frame (+Z forward).
+ * The share and handles trail behind its hind legs; traces run along its sides. */
+export function woodenArdGeo(): THREE.BufferGeometry {
+  const parts = [
+    box(.10, .13, 1.45, 0, .34, -1.40), // draft beam
+    box(.15, .34, .24, 0, .05, -1.91), // wooden earth-share stock
+    box(.24, .07, .48, 0, .02, -2.04), // ground-working share
+    box(1.02, .10, .13, 0, 1.06, .19), // body-height yoke
+  ];
+  for (const side of [-1, 1]) {
+    parts.push(box(.045, .045, 1.68, side * .43, .75, -.61));
+    const handle = new THREE.BoxGeometry(.07, .80, .07);
+    handle.rotateX(-.58); handle.translate(side * .21, .68, -2.08); parts.push(handle);
+    parts.push(box(.30, .06, .10, side * .21, .98, -2.31));
+  }
+  parts.push(box(.88, .10, .12, 0, .36, -1.39));
+  const geo = merge(parts); geo.computeBoundingBox(); geo.computeBoundingSphere();
+  return geo;
+}
+
 /** Fits the worker's existing wooden handle, avoiding a second overlapping tool. */
 export function farmToolHeadGeo(): THREE.BufferGeometry {
   const blade = box(.15, .09, .38, .49, 1.04, .34);

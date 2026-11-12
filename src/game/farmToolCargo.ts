@@ -88,7 +88,7 @@ export function validFarmToolCargo(s:GameState){
  if(!c||c.version!==1||!Array.isArray(c.tools)||c.tools.length>R.maximumRecords)return false;
  const finite=(v:unknown)=>typeof v==='number'&&Number.isFinite(v),id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0&&Number(v)<s.nextId,team=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>=0&&Number(v)<s.tribes.length;
  const ids=new Set<number>(),carriers=new Set<number>(),half=(s.worldOptions?.size??1040)/2;
- for(const t of c.tools){if(!t||!id(t.id)||ids.has(t.id)||s.units.some(u=>u.id===t.id)||s.buildings.some(b=>b.id===t.id)||!['stoneHoe','copperTools','ironTools'].includes(t.kind)||!finite(t.condition)||t.condition<0||t.condition>1||!team(t.team)||!team(t.originalOwnerTeam))return false;ids.add(t.id);
+ for(const t of c.tools){if(!t||!id(t.id)||ids.has(t.id)||s.units.some(u=>u.id===t.id)||s.buildings.some(b=>b.id===t.id)||!['woodenArd','stoneHoe','copperTools','ironTools'].includes(t.kind)||!finite(t.condition)||t.condition<0||t.condition>1||!team(t.team)||!team(t.originalOwnerTeam))return false;ids.add(t.id);
   const h=t.holder;if(!h||!finite(h.x)||!finite(h.z)||Math.abs(h.x)>half||Math.abs(h.z)>half)return false;
   if(h.kind==='carrier'){const u=units.find(u=>u.id===h.unitId);if(!id(h.unitId)||carriers.has(h.unitId)||!u||u.farmToolCargoId!==t.id)return false;carriers.add(h.unitId);}
   else if(h.kind==='cache'){if(!team(h.team)||h.team!==t.team||h.buildingId!==undefined&&(!id(h.buildingId)||!s.buildings.some(b=>b.id===h.buildingId&&b.team===h.team&&b.hp>0&&b.build>=1&&(['townhall','warehouse','cornerstone'].includes(b.type)||b.team===3&&b.raiderCamp)&&Math.hypot(b.x-h.x,b.z-h.z)<.01)))return false;}

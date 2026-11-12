@@ -72,6 +72,8 @@ import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
 import { carryingCapacity } from "@/game/haulage";
 import type { FarmToolUnit } from "@/game/farmTools";
+import { draftTractionReady, farmToolRate } from "@/game/farmTools";
+import { calendar } from "@/game/settlement";
 import {carcassAvailable} from "@/game/hunting";
 import { isFertile } from "@/game/worldgen";
 import {
@@ -95,6 +97,7 @@ import {
   riverboatGeo,
   cargoGeo,
   farmToolHeadGeo,
+  woodenArdGeo,
   fishGeo,
   dockPostGeo,
   type MatKit,
@@ -236,6 +239,8 @@ export class WorldView {
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
   private packHorses: THREE.InstancedMesh | null = null;
+  private woodenArds: THREE.InstancedMesh | null = null;
+  private woodenArdOwners: import("@/game/types").Unit[] = [];
   private packHorseOwners: import("@/game/types").Unit[] = [];
   private domesticHorseOwners: import("@/game/types").Building[] = [];
   canoePaddles: THREE.InstancedMesh | null = null;
@@ -1042,6 +1047,11 @@ export class WorldView {
     this.farmToolMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(140 * 3), 3);
     this.farmToolMesh.count = 0; this.farmToolMesh.frustumCulled = false;
     this.scene.add(this.farmToolMesh);
+    this.woodenArds = new THREE.InstancedMesh(woodenArdGeo(), this.mats.timber, 32);
+    this.woodenArds.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.woodenArds.count=0;this.woodenArds.frustumCulled=false;
+    this.woodenArds.castShadow=this.quality!=='low';this.woodenArds.receiveShadow=true;
+    this.scene.add(this.woodenArds);
   }
 
   private buildHearths(game: Game) {
@@ -1165,6 +1175,7 @@ export class WorldView {
     if(this.domesticSheep){this.domesticSheep.computeBoundingSphere();sources.set(this.domesticSheep,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='sheep').slice(0,instCap(this.domesticSheep)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));}
     if(this.domesticHorses){this.domesticHorses.computeBoundingSphere();sources.set(this.domesticHorses,this.domesticHorseOwners);}
     if(this.packHorses){this.packHorses.computeBoundingSphere();sources.set(this.packHorses,this.packHorseOwners);}
+    if(this.woodenArds){this.woodenArds.computeBoundingSphere();sources.set(this.woodenArds,this.woodenArdOwners);}
     for (const [type, mesh] of this.unitMeshes) {
       mesh.computeBoundingSphere();
       sources.set(
@@ -1783,12 +1794,15 @@ export class WorldView {
     this.housingPackets?.sync(game);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
-    let horses=0;this.packHorseOwners=[];
+    let horses=0,ards=0;this.packHorseOwners=[];this.woodenArdOwners=[];
+    const spring=calendar(game).phase===0;
+    const ploughing=(u:import("@/game/types").Unit)=>spring&&u.farmTool==='woodenArd'&&farmToolRate(u,0)>1&&u.order==='gather'&&u.node&&'type' in u.node&&u.node.type==='farm'&&draftTractionReady(u);
     const visible=game.state.units.filter(u=>u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z)));
     const neededCargo:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0},neededVehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};
     for(const u of visible){const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;if(kind&&!(kind==='pack'&&u.packAnimal?.species==='horse'))neededVehicles[kind]++;const cargo=u.plantingWork?'food':u.carryType;if(cargo&&(u.plantingWork||u.carry>0))neededCargo[cargo]++;}
     for(const b of game.state.buildings||[])if(b.hp<=0&&b.raidLoot&&game.visibleAt(b.x,b.z))for(const kind of Object.keys(CARGO_COLORS)as ResKind[])if((b.raidLoot[kind]||0)>0)neededCargo[kind]++;
     if(this.packHorses)this.packHorses=ensureInstanceCapacity(this.scene,this.packHorses,visible.filter(u=>!u.boat&&u.haulage==='pack'&&u.packAnimal?.species==='horse'&&u.packAnimal.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
+    if(this.woodenArds)this.woodenArds=ensureInstanceCapacity(this.scene,this.woodenArds,visible.filter(u=>!u.boat&&ploughing(u)).length);
     for(const [kind,mesh]of this.cargoMeshes)this.cargoMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededCargo[kind]));
     for(const [kind,mesh]of this.haulageMeshes)this.haulageMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededVehicles[kind]));
     if(this.canoePaddles)this.canoePaddles=ensureInstanceCapacity(this.scene,this.canoePaddles,neededVehicles.canoe);
@@ -1813,7 +1827,12 @@ export class WorldView {
         }
         _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
         vehicle!.setMatrixAt(index,_haulMatrix);
-        if(horse){horses++;this.packHorseOwners.push(u);}else vehicles[kind!]++;
+        if(horse){
+          horses++;this.packHorseOwners.push(u);
+          if(this.woodenArds&&ploughing(u)){
+            this.woodenArds.setMatrixAt(ards++,_haulMatrix);this.woodenArdOwners.push(u);
+          }
+        }else vehicles[kind!]++;
         if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
           const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
           const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
@@ -1853,6 +1872,7 @@ export class WorldView {
       }
     }
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
+    if(this.woodenArds){this.woodenArds.count=ards;this.woodenArds.instanceMatrix.needsUpdate=true;}
     if(this.packHorses){this.packHorses.count=horses;this.packHorses.instanceMatrix.needsUpdate=true;}
     if(this.canoePaddles){this.canoePaddles.count=paddles;this.canoePaddles.instanceMatrix.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
@@ -1887,7 +1907,7 @@ export class WorldView {
       }
     }
     let feedback=0,toolCount=0;
-    for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool)toolCount++;}
+    for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool&&(u as FarmToolUnit).farmTool!=='woodenArd')toolCount++;}
     const selectedBoat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
     this.rings=ensureInstanceCapacity(this.scene,this.rings,feedback+(game.state.selBld&&game.state.selBld.hp>0?1:0)+(selectedBoat?1:0));
     if(this.farmToolMesh)this.farmToolMesh=ensureInstanceCapacity(this.scene,this.farmToolMesh,toolCount);
@@ -1944,7 +1964,7 @@ export class WorldView {
         this.waterVessels?.write(game,u,_m);
         this.baskets?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
-        if(tool&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
+        if(tool&&tool!=='woodenArd'&&u.type==='worker'&&!u.militia&&this.farmToolMesh&&tools<instCap(this.farmToolMesh)){
           this.farmToolMesh.setMatrixAt(tools,_m);
           _c.set(FARM_TOOL_COLORS[tool]);this.farmToolMesh.setColorAt(tools,_c);tools++;
         }
@@ -2754,7 +2774,8 @@ export class WorldView {
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
-    this.wildlifeOwners.clear();this.packHorseOwners=[];this.domesticHorseOwners=[];
+    this.wildlifeOwners.clear();this.packHorseOwners=[];this.domesticHorseOwners=[];this.woodenArdOwners=[];
+    if(!this.lost)this.woodenArds?.dispose();
     if(!this.lost){for(const mesh of [this.wildHorses,this.domesticHorses,this.packHorses])mesh?.dispose();if(this.wildHorses)(this.wildHorses.material as THREE.Material).dispose();}
     if(this.wildSheep&&!this.lost)(this.wildSheep.material as THREE.Material).dispose();
     this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;
@@ -2807,7 +2828,7 @@ export class WorldView {
       });
     }
     this.wildSheep=null;this.domesticSheep=null;
-    this.wildHorses=null;this.domesticHorses=null;this.packHorses=null;
+    this.wildHorses=null;this.domesticHorses=null;this.packHorses=null;this.woodenArds=null;
     if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
     this.villageStyles.clear();

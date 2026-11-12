@@ -9186,6 +9186,15 @@
       "liveCommit": "455cd372348335345d7737e623e6465b1d2c459e",
       "evidence": "docs/metrics/horse-stable-release-2026-11-12.json",
       "scope": "Fresh finite native horses; paid capture, physical pen/stable leading, actual same-ID pack conversion; weighted finite pasture/feed/water/keeper demand; strict custody/scale/birth/save handling. No terrain/nav changes. Riding, traction, broader species and full M3-06 remain open."
+    },
+    {
+      "id": "CODEX-HORSE-FARM-TRACTION",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "5161127",
+      "liveCommit": "46217d49627cf02971332eaa4bc3a3938915ba6a",
+      "evidence": "docs/metrics/horse-traction-release-2026-11-12.json",
+      "scope": "Paid wooden ard at real workshop; existing trained horse required; physical spring row work earns individual practice, wears tool, and accelerates labor only. Real finite repair, asset-cargo condition and strict saves. Draft carts/riding/broader animals remain open."
     }
   ],
   "status_update_policy": {
