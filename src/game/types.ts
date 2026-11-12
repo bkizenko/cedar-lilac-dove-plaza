@@ -265,6 +265,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaRaid?: {plan?:import('./raidIntent').RaidPlan;x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   siegeRamId?:number;
   craftingXP?: number;
+  craftingPractice?:{toolmaking?:import("./crafting").ToolmakingPractice};
   copperStudy?:import('./materialStudy').CopperStudy;
   caravanRoute?:number;
   hullRecovery?:import('./hullLossRecovery').HullLossRecovery;

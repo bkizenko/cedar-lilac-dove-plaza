@@ -133,7 +133,7 @@ export class BiomeDressing {
   for(const kind of ['grass','flowers','reeds','scrub','pebbles'] as const)this.add(kind,dressingKit(kind),new THREE.MeshStandardMaterial({color:colors[kind],roughness:1,side:THREE.DoubleSide}));}
  private add(kind:string,geo:THREE.BufferGeometry,mat:THREE.Material){const mesh=new THREE.InstancedMesh(geo,mat,BIOME_VEGETATION_RULES.dressingMaxInstances.high);mesh.name=`nonblocking-${kind}`;mesh.count=0;mesh.frustumCulled=false;mesh.receiveShadow=true;mesh.raycast=()=>{};this.scene.add(mesh);this.batches.set(kind,mesh);if(this.style==='painterly')mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BIOME_VEGETATION_RULES.dressingMaxInstances.high*3).fill(1),3);}
  setTime(t:number){if(this.sway)this.sway.uTime.value=t;}
- private tone(point:DressingPoint,context:Pick<VegetationContext,'winter'|'autumn'|'snow'>|undefined,kind:string){
+ private tone(point:DressingPoint,context:Partial<Pick<VegetationContext,'winter'|'autumn'|'snow'>>|undefined,kind:string){
   const c=this.color,dry=point.tone??.3,hue=point.hue??.5;
   if(kind==='rocks'||kind==='pebbles'||kind==='log'){c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
   c.setRGB(.9+hue*.2,.95+(1-hue)*.08,.8+hue*.15);c.lerp(new THREE.Color(1.15,.95,.62),Math.min(1,dry*.8));

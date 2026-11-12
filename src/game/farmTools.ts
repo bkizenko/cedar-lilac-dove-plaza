@@ -3,7 +3,7 @@ import {packCapacityMultiplier} from './packAnimalState';
 import{claimFarmToolOwnership,releaseFarmToolOwnership}from'./farmToolOwnership';
 import{releaseTreeWorker}from'./workAllocation';
 import {hasTaskCommitment} from './workCommitments';
-import {craftBenchReady,craftingEffort,craftingQueue,craftingBenches} from './crafting';
+import {craftBenchReady,toolmakingEffort,recordToolmakingCompletion,craftingQueue,craftingBenches} from './crafting';
 import type { Game } from './sim';
 import type { Building, Unit } from './types';
 import { isDependent } from './settlement';
@@ -141,11 +141,11 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
     u.workReason = `Walking to ${job.mode==='repair'?'repair':'make'} ${FARM_TOOLS[job.kind].name.toLowerCase()}`;
     return true;
   }
-  job.progress = Math.min(job.duration, job.progress + craftingEffort(u,dt,b) * predisposition(u).strength);
+  job.progress = Math.min(job.duration, job.progress + toolmakingEffort(u,dt,b,job.duration-job.progress,predisposition(u).strength));
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
   u.workReason = `${job.mode==='repair'?'Repairing':'Making'} ${FARM_TOOLS[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {
-    u.farmTool = job.kind;u.farmToolCondition=1;releaseFarmToolOwnership(g,u,true); u.farmToolWork = undefined; u.order = 'idle';
+    u.farmTool = job.kind;u.farmToolCondition=1;recordToolmakingCompletion(u,job.mode==="repair");releaseFarmToolOwnership(g,u,true); u.farmToolWork = undefined; u.order = 'idle';
     u.workReason = job.kind==='woodenArd'?'Wooden ard ready — spring preparation with a trained draft animal; hand tending and harvest':`${FARM_TOOLS[job.kind].name} ready — faster sowing, tending and harvest work`;
     g.workBoard.reset();
     if (u.team === 0) { g.banner(u.workReason, 4); g.onSfx('place'); }
