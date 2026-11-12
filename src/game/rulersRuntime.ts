@@ -325,8 +325,18 @@ export function domesticPressure(g:Game):string[]{
  * state or rulers) give []. Newest first. `sinceTime` filters by sim time of the agreement. */
 export type NeighbourNews={time:number;kind:string;a:number;b:number;text:string};
 export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
- const d=(st(g).rulers as unknown as {decisions?:{agreements?:{kind:string;a:number;b:number;since:number;note:string}[]}}|undefined)?.decisions;
+ const d=(st(g).rulers as unknown as {decisions?:{agreements?:{kind:string;a:number;b:number;since:number;note:string}[];history?:Record<string,{year:number;kind:string;text:string}[]>}}|undefined)?.decisions;
  const out:NeighbourNews[]=[];
+ // A change of ruler is public at a court the player has met (the same fact the rival court card shows). Only the public part of the
+ // chronicle line is reported: who succeeded whom and whether the claim was contested, never the private agreement and grievance tallies.
+ if(rulersEnabled(g))for(const [id,list] of Object.entries(d?.history??{})){
+  const t=Number(id);if(!Number.isInteger(t)||t===0||t===3||!g.tribe(t)||!societyRelation(g,0,t).known)continue;
+  for(const h of list){
+   if(h.kind!=='succession')continue;const time=h.year*RULERS_YEAR_SECONDS;if(time<sinceTime)continue;
+   const m=/^(.+?) succeeded (.+?) \((child|sibling|kin|none)(, contested)?\)/.exec(h.text);if(!m)continue;
+   out.push({time,kind:'succession',a:t,b:t,text:`${g.tribe(t).name}: ${m[1]} succeeded ${m[2]}${m[4]?', and the claim is disputed':''}`});
+  }
+ }
  const sees=(a:number,b:number)=>a===0||b===0;
  for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
  const roster=(st(g) as unknown as {commanders?:{roster:{id:number;unitId:number;team:number;name:string;status:string;fellAt?:number;capturedAt?:number;capturedBy?:number;replacedBy?:number;replaces?:number;seenByPlayer?:boolean;appointedAt:number}[]}}).commanders?.roster??[];
