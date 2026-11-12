@@ -1,4 +1,4 @@
-import{commandIssued,commandOwnerBefore,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
+import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
@@ -1056,6 +1056,9 @@ export class Game {
 
   /** Permanent cuts are append-only within a world; reset/load changes world identity. */
   terrainRevision(){return this.state.excavations?.length||0;}
+
+  /** Read-only diagnostic; observing it never spends path searches. */
+  navigationBudgetRemaining(){return this.navBudget;}
 
   navigationRevision() {
     return this.navRevision;
@@ -4563,6 +4566,7 @@ export class Game {
       const urgency = t === "food" && reserveSeconds(this, u.team) < 240 ? 1.25 : 1;
       const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency);
       u.gatherT += dt;
+      commandUsefulWork(this,u,dt);
       u.stride += dt * 9;
       u.facing = Math.atan2(node.x - u.x, node.z - u.z);
       if (u.gatherT >= period) {
