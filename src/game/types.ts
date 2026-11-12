@@ -258,6 +258,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
   caravanRoute?:number;
+  hullRecovery?:import('./hullLossRecovery').HullLossRecovery;
   boat?: {id:number;phase:'boarding'|'aboard'|'landing';x?:number;z?:number};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
