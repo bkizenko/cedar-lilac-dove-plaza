@@ -33,7 +33,7 @@ const LEGACY_KIND:Record<number,ProvinceKind>={0:'meadow',1:'warm-coast',2:'mead
  * triangle scale; softening it keeps rock edges painterly instead of pixelated. */
 export function blurGrid(a:Float32Array,passes:number){
  const w=Math.round(Math.sqrt(a.length));if(w*w!==a.length)return;
- let src=a,dst=new Float32Array(a.length);
+ let src=a,dst:Float32Array=new Float32Array(a.length);
  for(let p=0;p<passes;p++){
   for(let y=0;y<w;y++)for(let x=0;x<w;x++){let sum=0,c=0;for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=w)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;sum+=src[yy*w+xx];c++;}}dst[y*w+x]=sum/c;}
   const t=src;src=dst;dst=t;
