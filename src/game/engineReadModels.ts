@@ -1,3 +1,6 @@
+import {fabricContext,eraUpgradeBenefits,eraUpgradeIssue,planEraChange,supportsEraUpgrade,ERA_UPGRADE_RULES,type FabricRect,type EraUpgradeMode} from './buildingFabric';
+import type {ExtensionSide} from './extensionFootprints';
+import type {HousingMaterials} from './housingTypes';
 import {planStatus} from './construction';
 import type {Game} from './sim';
 import {PRODUCTION_RECIPES,productionIssue,type ProductionRecipe} from './production';
@@ -8,13 +11,16 @@ import {armorEquipIssue,wornArmor} from './armor';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
+ |{kind:'building-fabric';buildingId:number}
  |{kind:'construction-status';buildingIds:number[]}
  |{kind:'recipe-issues';workplaceId:number}
  |{kind:'fibre-issues';unitId:number;patchIds:number[]}
  |{kind:'clay-issues';unitId:number;depositIds:number[]}
  |{kind:'armor-choice';unitId:number}
  |{kind:'rulers-council'};
+export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
+ |{kind:'building-fabric';buildingId:number;context:ReturnType<typeof fabricContext>;benefits:ReturnType<typeof eraUpgradeBenefits>;work?:{mode:EraUpgradeMode;phase:string;progress:number;duration:number;paid:boolean;paused:boolean;blockedReason?:string};choices:FabricUpgradeChoice[]}
  |{kind:'construction-status';statuses:{buildingId:number;status:string}[]}
  |{kind:'recipe-issues';workplaceId:number;issues:{recipe:ProductionRecipe;issue:string|null}[]}
  |{kind:'fibre-issues';unitId:number;issues:{patchId:number;issue:string|null}[]}
@@ -28,6 +34,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
  if(q.kind==='rulers-council')return Object.keys(q).length===1;
+ if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
  if(q.kind==='construction-status')return Object.keys(q).every(k=>['kind','buildingIds'].includes(k))&&list(q.buildingIds);
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='armor-choice')return Object.keys(q).every(k=>['kind','unitId'].includes(k))&&id(q.unitId);
@@ -39,6 +46,14 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
 export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadModel{
  if(!isEngineReadQuery(query))throw new Error('Unsupported or malformed owner read query');
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
+ if(query.kind==='building-fabric'){
+  const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');
+  // One open building, exactly five choices; no population/source cross product.
+  const intents:Pick<FabricUpgradeChoice,'mode'|'side'>[]=[{mode:'rebuild'},...(['north','south','east','west'] as const).map(side=>({mode:'extend' as const,side}))];
+  const choices=intents.map(({mode,side})=>{const q=ERA_UPGRADE_RULES[mode],issue=eraUpgradeIssue(g,b.id,mode,side);return{mode,...(side?{side}:{}),issue,quote:{wood:q.wood,stone:q.stone,plantFibre:q.plantFibre},workSeconds:q.workSeconds,...(!issue&&supportsEraUpgrade(b.type)?{target:planEraChange(g,b,mode,side).target}:{})};});
+  const p=b.renovation,work=p&&(p.mode==='rebuild'||p.mode==='extend')?{mode:p.mode,phase:p.phase,progress:p.progress,duration:p.duration,paid:p.paid,paused:b.planPaused===true,...(p.blockedReason?{blockedReason:p.blockedReason}:{})}:undefined;
+  return{kind:query.kind,buildingId:b.id,context:fabricContext(b),benefits:eraUpgradeBenefits(b),...(work?{work}:{}),choices};
+ }
  if(query.kind==='construction-status'){return{kind:query.kind,statuses:query.buildingIds.flatMap(buildingId=>{const b=g.state.buildings.find(b=>b.id===buildingId&&b.team===0&&b.hp>0);return b?[{buildingId,status:planStatus(g,b)}]:[];})};}
  if(query.kind==='recipe-issues'){
   const b=g.state.buildings.find(b=>b.id===query.workplaceId&&b.team===0&&g.finished(b));
