@@ -1,3 +1,4 @@
+import {recordPenBeddingCargoReturn} from './penBedding';
 import {packedItemStorageUnits,packedItemLiters,packedFoodLiters,itemPackedLiters,seedReserveLiters,INVENTORY_VOLUME_RULES} from './inventoryVolume';
 import {emitProductionDelivery} from './productionDelivery';
 import {bindCharcoalLoad} from './carriedLoad';
@@ -334,7 +335,8 @@ export function availableThreshingFloor(g:Game,u:Unit){
  }
 }
 export function deliverProductionCargo(g:Game,u:Unit,floor?:Building){
- if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&storedItemUnits(g,u.team)+(packedItemStorageUnits(u.itemCargo||{})+(u.rawHuntMeat?itemPackedLiters('rawMeat',u.carry)/INVENTORY_VOLUME_RULES.litersPerStorageUnit:0))+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits&&!canLeaveHarvestOutside(g,u)&&!canLeaveLooseMaterialsOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
+ if(floor&&(u.husbandryWork?.beddingUnits||0)>0)return false;
+ if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&storedItemUnits(g,u.team)+(packedItemStorageUnits(u.itemCargo||{})+(u.rawHuntMeat?itemPackedLiters('rawMeat',u.carry)/INVENTORY_VOLUME_RULES.litersPerStorageUnit:0))+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits&&!canLeaveHarvestOutside(g,u)&&!canLeaveLooseMaterialsOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordPenBeddingCargoReturn(g,u,u.itemCargo?.straw||0);recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
  if(k==='grainSheaves'||k==='roughGrain')mixStoredCerealAge(g.tribe(u.team),k,stock[k]||0,n!,g.state.time);
  add(stock,k as ItemKind,n!);
 }if(fibre){recordBasketDelivery(g,u,'fibre',fibre);recordFibreDelivery(g,u,fibre);}u.itemCargo=undefined;if(u.rawHuntMeat&&u.carryType==='food'&&u.carryFood==='meat'){add(stock,'rawMeat',u.carry);u.carry=0;u.carryType=null;u.carryFood=undefined;u.rawHuntMeat=undefined;}return true;}
