@@ -1,7 +1,7 @@
 import {validMethodRecordPickups} from './methodRecordPickup';
 import {validMethodRecords,reconcileMethodRecords} from './methodRecords';
 import {validDraftCarts} from './draftCart';
-import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
+import {bindWildCraftLoad,bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';
@@ -794,6 +794,7 @@ export function decodeGame(raw:unknown):Game {
   discountQuarryPlans(g);
   setFlowFieldsEnabled(g,false);
   initializePenBeddingTracking(g);
+  for(const p of g.state.wildCraft?.projects||[])if(p.actorId>0){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindWildCraftLoad(u,p);}
   for(const p of g.state.production?.projects||[])if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCopperSmeltLoad(u,p);}
   for(const p of g.state.production?.projects||[])if((p.recipe==='smeltIron'||p.recipe==='consolidateIron')&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindIronSmeltLoad(u,p);}
   return g;
