@@ -1,4 +1,4 @@
-import {ContactActions} from './ContactActions';
+import {ContactActions,TradedTeachingActions} from './ContactActions';
 import {useState} from 'react';
 import type {Engine} from '../game/engine';
 import {personName} from '../game/people';
@@ -18,8 +18,9 @@ export function ConflictControls({engine}:{engine:Engine}){
  const foreign=g.state.units.filter(u=>u.selected&&u.team!==0&&u.hp>0&&g.visibleAt(u.x,u.z));
  const nearby=selected.length?g.state.units.filter(u=>u.team!==0&&u.hp>0&&g.visibleAt(u.x,u.z)&&selected.some(p=>Math.hypot(p.x-u.x,p.z-u.z)<=12)).slice(0,3):[];
  const contactPeople=[...new Map([...foreign,...nearby,...targets].map(u=>[u.id,u])).values()].slice(0,6);
+ const lessonTeachers=[...new Set(selected.filter(u=>u.team===0&&u.tradedTeaching).flatMap(u=>{const o=g.state.teachingOffers?.find(o=>o.id===u.tradedTeaching!.offerId&&o.learner.id===u.id&&!['reported','cancelled','lost'].includes(o.phase));return o&&!contactPeople.some(p=>p.id===o.teacher.id)?[o.teacher.id]:[];}))];
  const prisoners=selected.filter(u=>(u as PrisonerUnit).prisoner?.captorTeam===0&&(u as PrisonerUnit).prisoner?.phase!=='released') as PrisonerUnit[];
- if(!contactPeople.length&&!prisoners.length&&!control&&(!hall||hall.team===0))return null;
+ if(!contactPeople.length&&!lessonTeachers.length&&!prisoners.length&&!control&&(!hall||hall.team===0))return null;
  const run=(fn:()=>{accepted:boolean;reason:string})=>{const result=fn();setFeedback(result.reason);g.banner(result.reason,5);engine.pushHud();};
  const button='min-h-11 rounded-md border border-bronze/40 px-3 py-2 text-left text-xs disabled:opacity-50';
  return <section className="mt-2 space-y-2" aria-label="Encounter actions">
@@ -31,6 +32,7 @@ export function ConflictControls({engine}:{engine:Engine}){
    <button className={button} onClick={()=>run(()=>{const accepted=withdrawOccupation(g,control.id);return{accepted,reason:accepted?'The garrison is withdrawing with its possessions':'This garrison can no longer withdraw from that control record'};})}>Withdraw garrison</button>
   </div>}
   {contactPeople.map(u=><div key={u.id} className="space-y-2"><p className="text-xs">{personName(u)}</p><ContactActions engine={engine} strangerId={u.id}/></div>)}
+  {lessonTeachers.map(teacherId=><TradedTeachingActions key={teacherId} engine={engine} teacherId={teacherId} open={false}/>)}
   {prisoners.map(u=><div key={u.id} className="space-y-2 text-xs">
    <p>{personName(u)} · {u.prisoner!.phase} · {u.prisoner!.food.toFixed(1)} food · {u.prisoner!.waterLiters.toFixed(1)} L carried water</p>
    <button className={button} onClick={()=>run(()=>assignPrisonerGuard(g,u.id))}>Assign an available guard</button>

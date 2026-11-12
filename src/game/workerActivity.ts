@@ -29,6 +29,7 @@ export function workerActivity(state:GameState,u:Unit) {
  if(p&&b&&['carrying','working','ready','curing'].includes(p.phase))destination=`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`;
  if(['move','explore','return','attackmove'].includes(u.order)||p&&['collecting','returning','unloading'].includes(p.phase))destination=`Current waypoint · ${point({x:u.tx,z:u.tz})}`;
  if(u.garmentRepair&&u.garmentRepair.phase!=='paused'){const w=u.garmentRepair,b=state.buildings.find(b=>b.id===w.workplaceId);stage=w.phase==='paused'?'Garment repair paused':w.phase==='working'?'Repairing original garment':'Carrying garment to tailor';destination=b?`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`:undefined;}
+ if(u.tradedTeaching){const offer=state.teachingOffers?.find(o=>o.id===u.tradedTeaching!.offerId);if(offer){stage=offer.phase==='returning'?'Bringing learned method home':offer.phase==='observing'?'Observing foreign artisan':offer.phase==='armed'?'Waiting for agreed demonstration':'Carrying teaching payment';destination=`${offer.phase==='returning'?'Home cache':'Teaching workshop'} · ${point({x:u.tx,z:u.tz})}`;}}
  const warmth=fireWarmingVisit(state,u);
  if(warmth){stage=warmth.atFire?'Warming at fire':'Walking to warmth';destination=`Lit hearth #${warmth.fireId} · ${point(warmth)}`;}
  const blocked=p?.blockedReason||(u.stuckT>3?`Movement blocked · ${Math.floor(u.stuckT)}s`:undefined);

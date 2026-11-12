@@ -1,3 +1,7 @@
+import {teachingOffers,TRADED_TEACHING_RULES} from './tradedTeaching';
+import {hasTaskCommitment} from './workCommitments';
+import {isDependent} from './settlement';
+import type {ResKind} from './types';
 import {garmentRepairIssue} from './garmentRepair';
 import {fabricContext,eraUpgradeBenefits,eraUpgradeIssue,planEraChange,supportsEraUpgrade,ERA_UPGRADE_RULES,type FabricRect,type EraUpgradeMode} from './buildingFabric';
 import type {ExtensionSide} from './extensionFootprints';
@@ -13,6 +17,7 @@ import {capitulationOffers} from './capitulation';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
+ |{kind:'traded-teaching-offers';teacherId:number;learnerIds:number[]}
  |{kind:'building-fabric';buildingId:number}
  |{kind:'construction-status';buildingIds:number[]}
  |{kind:'recipe-issues';workplaceId:number}
@@ -24,6 +29,7 @@ export type EngineReadQuery=
  |{kind:'capitulation-offers'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
+ |{kind:'traded-teaching-offers';teacherId:number;offers:ReturnType<typeof teachingOffers>;learner:{id:number;good:ResKind}|null;issue:string|null}
  |{kind:'building-fabric';buildingId:number;context:ReturnType<typeof fabricContext>;benefits:ReturnType<typeof eraUpgradeBenefits>;work?:{mode:EraUpgradeMode;phase:string;progress:number;duration:number;paid:boolean;paused:boolean;blockedReason?:string};choices:FabricUpgradeChoice[]}
  |{kind:'construction-status';statuses:{buildingId:number;status:string}[]}
  |{kind:'recipe-issues';workplaceId:number;issues:{recipe:ProductionRecipe;issue:string|null}[]}
@@ -40,6 +46,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
  if(q.kind==='rulers-council'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
+ if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
  if(q.kind==='construction-status')return Object.keys(q).every(k=>['kind','buildingIds'].includes(k))&&list(q.buildingIds);
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
@@ -52,6 +59,15 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
 /** Authoritative native read model. Routing/ownership caches never initialize on the display copy. */
 export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadModel{
  if(!isEngineReadQuery(query))throw new Error('Unsupported or malformed owner read query');
+ if(query.kind==='traded-teaching-offers'){
+  const teacher=g.state.units.find(u=>u.id===query.teacherId&&u.hp>0),owned=g.state.units.filter(u=>u.team===0&&u.hp>0);
+  const preferred=query.learnerIds.flatMap(id=>{const u=owned.find(u=>u.id===id);return u?[u]:[];});
+  const nearby=teacher?owned.filter(u=>Math.hypot(u.x-teacher.x,u.z-teacher.z)<=TRADED_TEACHING_RULES.contactMeters).sort((a,b)=>Math.hypot(a.x-teacher.x,a.z-teacher.z)-Math.hypot(b.x-teacher.x,b.z-teacher.z)||a.id-b.id):[];
+  const candidates=[...new Map([...preferred,...nearby].map(u=>[u.id,u])).values()];
+  const carriers=candidates.filter(u=>teacher&&Math.hypot(u.x-teacher.x,u.z-teacher.z)<=TRADED_TEACHING_RULES.contactMeters&&u.carry>=1&&u.carryType&&['food','wood','stone','copper','iron'].includes(u.carryType));
+  const learner=carriers.find(u=>u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u)&&!u.boat&&!u.emergency&&!u.recalled&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order));
+  return{kind:query.kind,teacherId:query.teacherId,offers:teachingOffers(g,query.teacherId),learner:learner?{id:learner.id,good:learner.carryType!}:null,issue:learner?null:!carriers.length?'Bring your adult carrying payment within 26 metres of this artisan':'Nearby payment carriers must finish their current duty before learning'};
+ }
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){

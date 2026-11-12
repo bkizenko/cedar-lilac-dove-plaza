@@ -1,3 +1,4 @@
+import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
@@ -1823,6 +1824,7 @@ export class Game {
     delete u.huntTrail;
     pausePracticalHelper(this,u);
     if(u.boat){const hull=this.state.boats?.find(b=>b.id===u.boat!.id&&b.captain===u.id);if(hull)delete hull.exploration;}
+    if(u.tradedTeaching)cancelTradedTeaching(this,u.id);
     pauseProductionLesson(this,u);
     pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
@@ -5769,6 +5771,7 @@ export class Game {
         tickProduction(this,sdt);
         tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
+        tickTradedTeaching(this);
         tickProductionLessons(this);
         tickPracticalHelpers(this);
         tickVillageDefense(this);
@@ -5821,6 +5824,7 @@ export class Game {
             if(fibreAI(this,u,sdt))continue;
             if(clayAI(this,u,sdt))continue;
             if(practicalHelperAI(this,u,sdt))continue;
+            if(tradedTeachingAI(this,u,sdt))continue;
             if(productionApprenticeAI(this,u,sdt))continue;
             if(garmentRepairAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
