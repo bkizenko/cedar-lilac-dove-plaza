@@ -7,6 +7,8 @@ import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
 import {turnableBuilding} from "./footprints";
+import {planFieldArea,placeFieldArea,type FieldAreaPlan} from './fieldArea';
+import {fertilityPreview} from './fertilityPreview';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -262,6 +264,9 @@ export class Engine {
   gateFacing:GateFacing="north";
   /** GW-08 / T8 (Grok): quarter-turn for the current placement; preview and commit both read it. */
   quarterTurn=false;
+  /** GW-02 / T9 (Grok): a farm drag wider than one field becomes several fields with headlands. */
+  fieldArea:FieldAreaPlan|null=null;
+  private fertilityKey='';
   /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
   rotatePlacement(){const t=this.game.state.placing;if(!t||!turnableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.quarterTurn=!this.quarterTurn;this.updateGhost(true);this.pushHud();return true;}
   canRotatePlacement(){const t=this.game.state.placing;return !!t&&t!=='gate'&&turnableBuilding(t);}
@@ -681,6 +686,12 @@ export class Engine {
         placeConstructionLine(this.game,this.game.state.placing,this.plotStart,g);
         this.pushHud();return;
       }
+      if(this.game.state.placing==='farm'&&this.fieldArea&&this.plotStart){
+        const plan=planFieldArea(this.game,this.plotStart,g,0),placed=placeFieldArea(this.game,plan,0);
+        this.fieldArea=null;this.view.setLinePreview([]);
+        this.game.banner(placed.length?`${placed.length} field${placed.length>1?'s':''} laid out${placed.length<plan.valid?' · ran short of seeds':''}`:'No field could be laid out there',3);
+        this.updateGhost();this.pushHud();return;
+      }
       if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
       else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn());
       this.updateGhost();
@@ -778,7 +789,21 @@ export class Engine {
     if(this.plotStart&&scalablePlot(type)&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)){
       const plot=dragPlot(type,this.plotStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
     }
-    if(scalablePlot(type)){
+    this.fieldArea=null;
+    if(type==='farm'&&this.plotStart&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)&&(Math.abs(g.x-this.plotStart.x)>BUILDINGS.farm.w*3||Math.abs(g.z-this.plotStart.z)>BUILDINGS.farm.d*3)){
+      const plan=planFieldArea(this.game,this.plotStart,g,0);
+      if(plan.tiles.length>1){
+        this.fieldArea=plan;this.view.setLinePreview(plan.tiles.map(t=>({x:t.x,z:t.z,y:this.game.height(t.x,t.z),ok:!t.issue})));
+        const fert=fertilityPreview(this.game,{x:(this.plotStart.x+g.x)/2,z:(this.plotStart.z+g.z)/2,w:Math.abs(g.x-this.plotStart.x),d:Math.abs(g.z-this.plotStart.z)});
+        const key=`area${plan.valid}/${plan.tiles.length}/${plan.seeds}`;
+        if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds · headlands between${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?' · red plots blocked':''}`,4);}
+      }
+    }
+    if(type==='farm'&&!this.fieldArea){
+      const fert=fertilityPreview(this.game,{x,z,w:this.plotSize?.w,d:this.plotSize?.d}),key=fert.summary?fertilityText(fert):'';
+      if(key&&key!==this.fertilityKey&&!this.plotStart){this.fertilityKey=key;this.game.banner(`Field · ${key}`,2);}
+    }
+    if(scalablePlot(type)&&!this.fieldArea){
       const key=type+JSON.stringify(this.plotSize);
       if(key!==this.plotPreviewKey){this.plotPreviewKey=key;const cost=buildingCost(type,this.game,0,this.plotSize);this.game.banner(type==="farm"?`Field · ${cost.seeds} seeds · drag to size`:`${type==='pen'?'Pen':'Store'} · ${cost.wood} logs · drag to size`,4);}
     }
@@ -1224,3 +1249,6 @@ declare global {
     };
   }
 }
+
+/** T9 (Grok): fertility words for the field-placement banner, from fertilityPreview (fieldTerrain when fully explored). */
+function fertilityText(f:ReturnType<typeof fertilityPreview>){const s=f.summary;if(!s)return '';const soil=s.soil>=.7?'rich soil':s.soil>=.45?'fair soil':'poor soil';return `${soil} · grain ×${s.grainYieldFactor.toFixed(2)}${f.state==='partial'?' (partly explored)':''}`;}

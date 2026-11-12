@@ -127,6 +127,7 @@ import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {tickWaterEngineering} from "./waterEngineering";
+import {millSummary} from "./millPower";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
@@ -6086,6 +6087,7 @@ export class Game {
       if(b.type==="bridge"&&b.bridge)info+=` · ${Math.hypot(b.bridge.bx-b.bridge.ax,b.bridge.bz-b.bridge.az).toFixed(1)} m crossing · ${this.finished(b)?"open to people and cargo":"builders work from either reachable bank"}`;
       if(b.type==="quarry"&&this.finished(b))info+=" · "+quarryReport(this,b);
       if(b.type==="cornerstone"&&this.finished(b)&&b.team===0)info+=" · "+frontierReport(this,b);
+      if((b.type==="watermill"||b.type==="windmill")&&this.finished(b))info+=" · "+millSummary(this,b); // Grok T4: live mill power
       if (b.build < 1)
         info = b.plannedCost ? "Plan · "+planStatus(this,b) : "Raising " + Math.floor(b.build * 100) + "% — gatherers must work the plot";
       if (b.queue.length) {
