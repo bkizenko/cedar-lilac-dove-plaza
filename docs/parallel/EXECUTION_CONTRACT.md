@@ -1,5 +1,15 @@
 # Three-provider execution contract — 11 November 2026
 
+## Shared write permission — latest user instruction
+
+Claude, Grok and Codex may edit **any repository source file**, including `sim.ts`, `types.ts`, `constants.ts`, `engine.ts`, persistence/save files, `world.ts`, shared UI, build scripts and cross-domain hooks. No file is Codex-only. No Codex approval or one-line-hook request is required before implementing a complete feature on an agent branch.
+
+Grok leads execution and sequencing. Claude resolves merge conflicts and continues complex visual and nonvisual systems, diplomacy, leaders and succession. Exact file claims are temporary collision warnings, not permission gates: announce the files, coordinate an existing active edit directly, and proceed. Do not overwrite another agent's uncommitted work.
+
+Any provider may commit, push, review and normally merge ready whole branches under Grok's sequencing. No rebasing/force-pushing shared work. Whoever publishes must run the relevant checks, preserve villages/rollback and distinguish source from live gameplay. Existing save/conservation rules and the fixed98-gate checklist remain. Current Codex priority is wiring waiting features and shipping the clean integration; expanding the experimental Worker is deferred.
+
+
+
 ## Leadership change — latest user instruction
 
 Grok is the execution project manager. Claude leads high-level design and systems thinking. Codex implements, debugs, tests and provides technical integration/release support; it does not set programme priorities over Grok.
@@ -10,13 +20,9 @@ This supersedes earlier wording assigning overall execution leadership to Codex 
 
 This is the governing coordination revision. Gemini is not participating. Preserve the whole original plan and later backlog. Codex integrates; Claude and Grok are trusted independent owners, not limited assistants. Persistent domains reduce context switching. Small shared changes are coordinated, not prohibited.
 
-## Current execution order — latest explicit user instruction
+## Current execution order — shipping override
 
-1. Measured simulation speed on an actual native100-resident Low-profile run: target p95<33ms; cut demonstrated hot paths and implement an authoritative Web Worker simulation with real measurements.
-2. Normal whole-branch merges, behind game options: agents/claude-societies at least55fc655, agents/claude-experience at least9992fe9, and agents/grok-world. Wire the board hooks. No partial branch landing, rebasing or force-pushing shared work.
-3. Then knowledge/provenance redesign, livestock/horses/cheese, crafting and saves. Preserve already qualified pending work; it is not a new published release.
-
-[COMPLETION_PLAN.md](COMPLETION_PLAN.md) is the supplied plan from Claude coordination commit e8a48af. Codex owns canonical backlog reconciliation and native/built evidence before gate credit. This order overrides earlier queue wording below; all original scope remains.
+The latest user instruction prioritizes merging the clean integration branch and turning waiting features on in the game. Codex focuses on ready World/cross-domain hooks (water works, flow fields, tides). Claude continues complex visual and nonvisual systems, diplomacy, leaders and succession. The earlier Worker-first sequence is superseded; the experimental Worker remains disabled until ready. Normal whole-branch merges, options, relevant checks and native/built evidence remain required. All original scope and the98-gate denominator remain.
 
 ## Persistent domain ownership
 
@@ -32,9 +38,9 @@ Claude receives the aesthetic and open-ended systems work formerly assigned to G
 
 ## File boundaries and shared integration seams
 
-- Codex: food/labor/production/crafting/husbandry/discovery/prestige modules, cargo ownership, haulage/boat physical primitives, persistence/release tooling. Integration owner for src/game/sim.ts, engine.ts, types.ts, constants.ts, persistence.ts and package/build scripts.
+- Codex: food/labor/production/crafting/husbandry/discovery/prestige modules, cargo ownership, haulage/boat physical primitives, persistence/release tooling. These integration seams are shared-write; every provider may implement needed hooks directly after a brief collision check.
 - Claude societies: rival* strategy/operations, trade* and caravans, diplomacy/relations, raid/conflict/warfare/captivity/peace/defense and siege missions. Read Codex stock/crew APIs; request actual operations rather than directly granting cargo or commandeering workers.
-- Claude experience: src/scene building/unit/architecture/material/animation modules, art assets, shared UI components/theme, HUD layout and audio. Integration owner for src/scene/world.ts and shared HUD composition. Codex's culling/metrics infrastructure edits coordinate with Claude before modifying shared renderer entry points.
+- Claude experience: src/scene building/unit/architecture/material/animation modules, art assets, shared UI components/theme, HUD layout and audio. Claude leads design for src/scene/world.ts and HUD composition; these are shared-write seams, with direct collision coordination.
 - Grok: worldgen/geography/landforms/regions, hydrology/ecology, navigation/local routing, plots/field geometry/placement, territory/frontiers, earthworks/bridges/waterworks. Construction recipe/payment remains Codex; terrain/admissibility/work positions are Grok; building appearance is Claude.
 - Existing direct overlaps (e.g. bridge work, river rendering, scene grounding, armor/equipment rendering) require a task claim naming exact files before edits. Existing pending sheep and sailing patches are Codex-owned exceptions until merged. Do not overwrite them.
 - Do not assume commandGateway.ts or simulationEvents.ts are complete generic buses: they currently cover worker eligibility and food/cargo accounting respectively. Extract small seams when needed; no prerequisite framework rewrite.
@@ -58,9 +64,9 @@ Claude: start with two persistent workers, Societies and Experience, plus coordi
 1. Start each independent batch from latest origin/main in its own checkout and short-lived branch. Long-lived agents/* branches are landing pointers, not months-long divergent development lines.
 2. Claim exact files and contracts in a task note; split by one independently verifiable behavior. Merge backward-compatible shared contracts before consumers. Avoid dependent PR stacks where a small common seam suffices.
 3. Commit and push whenever a coherent recoverable step is ready; aim for a checkpoint every30–60 minutes during active implementation. This is a checkpoint target, not permission to fabricate empty commits or merge broken code. Longer work gets a pushed draft branch and explicit remaining work.
-4. Open/update a small PR with the standard handoff template. Codex reviews and merges ready batches serially as they arrive; don't wait for the entire provider domain to finish. Rebase/update before final checks if main changed relevant contracts. No force-push over another worker's commits.
+4. Open/update a small PR with the standard handoff template. Any provider may merge ready whole branches under Grok's sequencing; Claude resolves conflicts. Do not wait for Codex or the entire domain. Update through normal merges before final checks if relevant contracts changed. No force-push over another worker's commits.
 5. Focused domain checks first, then affected inventory/save/conservation regressions. Reuse one frozen integrated build for publication; native UI checks target changed boundaries rather than repeating long campaigns. Component checks alone do not establish whole-game acceptance.
-6. After merge, start the next batch from new main and update the landing pointer without overwriting in-flight commits. External owners do not deploy to8086/8101 or restore/delete villages. Codex publishes verified gameplay batches with rollback and reports merged versus actually live separately.
+6. After merge, start the next batch from new main and update the landing pointer without overwriting in-flight commits. Production publication follows Grok's assignment, one publisher at a time. Preserve villages/rollback and distinguish merged from live. Restoring/deleting villages still needs user authorization.
 7. Every merge records base/head, source versus controlled/native test assumptions, exact results, migration impact, unresolved bugs and rollback. Keep current batch percentages separate from unchanged34/98 recorded overall until matching published evidence changes it.
 
 Git transport works, but gh is currently unauthenticated. Direct authenticated PR creation/merge through gh is not enabled here; use GitHub PRs from the connected provider/UI or pass branch+commit to Codex for serial Git integration. This is not a reason to stop branch work or pushes. No branch protection/CI settings were silently changed.
