@@ -1,7 +1,8 @@
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {SocietyFlag} from './SocietyFlag';
 import {communityResidency} from '@/game/communities';
-import {civicPrestige} from '@/game/civicPrestige';
+import {PrestigeReadout} from './PrestigeReadout';
+import type {HudSnapshot} from '@/game/types';
 import {SeasonLedger} from './SeasonReport';
 import {readyFoodStock} from './FoodStoreReadout';
 import {knownDiplomaticRelation} from '@/game/diplomaticKnowledge';
@@ -33,7 +34,7 @@ import {
   foodDemand,
   isDependent,
 } from "@/game/settlement";
-export function SettlementLedger({ engine }: { engine: Engine | null }) {
+export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:Pick<HudSnapshot,'prestigeBreakdown'|'prestigeRivals'> }) {
   const ref = useRef<HTMLDialogElement>(null),
     open = !!engine?.keyboard.ledger;
   useEffect(() => {
@@ -103,11 +104,7 @@ export function SettlementLedger({ engine }: { engine: Engine | null }) {
           </li>)}</ul>
           {residence.unassigned>0&&<p>{residence.unassigned} without a completed hall assigned</p>}
         </section>}
-        {open&&<section>
-          <h3>Prestige</h3>
-          <p>{g.prestige()} settlement prestige · {civicPrestige(g).total} from landmarks</p>
-          <ul>{civicPrestige(g).landmarks.map(row=><li key={row.type}>{BUILDINGS[row.type].name} × {row.count} · {row.points.toFixed(1)}</li>)}</ul>
-        </section>}
+        {open&&<PrestigeReadout view={hud?.prestigeBreakdown} rivals={hud?.prestigeRivals}/>}
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">

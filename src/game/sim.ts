@@ -1,3 +1,4 @@
+import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
@@ -202,8 +203,8 @@ const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
 // made usable fords disappear from the work graph while people could cross them.
 const WALK_CLEARANCE = 0.12;
-const YEAR_DAYS = 32;
-const DAY_RATE = (86400 * YEAR_DAYS) / 1800;
+const YEAR_DAYS = SIM_CALENDAR_RULES.daysPerYear;
+const DAY_RATE = (86400 * YEAR_DAYS) / SIM_CALENDAR_RULES.yearSeconds;
 
 export class Game {
   testMode = false;
@@ -6154,6 +6155,7 @@ export class Game {
       hint: type==="farm"?cultivationIssue(this)||BUILDINGS[type].hint:BUILDINGS[type].hint,
     }));
 
+    const prestigeView=this.prestigeBreakdown();
     return {
       food: Math.floor(t.food),
       foodLots: foodInventory(t),
@@ -6320,8 +6322,8 @@ export class Game {
         bonus: c.hint,
         held: this.clusterHeld(c.id, 0),
       })),
-      prestige: this.prestige(),
-      prestigeBreakdown: this.prestigeBreakdown(),
+      prestige: Math.round(prestigeView.total??0),
+      prestigeBreakdown: prestigeView,
       prestigeRivals: this.state.tribes.filter(tr=>tr.id!==0&&tr.id!==3).map(tr=>this.prestigeBreakdown(0,tr.id)),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),

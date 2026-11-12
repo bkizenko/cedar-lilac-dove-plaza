@@ -1,3 +1,4 @@
+import {simulationDaySeconds} from './calendarPacing';
 import type {Game} from './sim';
 import {CIVIC_PRESTIGE_RULES,civicPrestige} from './civicPrestige';
 import {LAND_VALUE_RULES} from './landValue';
@@ -7,11 +8,10 @@ import {foodDemand} from './settlement';
 import {informationOwner} from './informationCustody';
 import {ownPrestigeView,observedPrestigeView,usefulTradeCount,prestigeCellInfrastructure,type PrestigeFacts,type PrestigeView,type PrestigeObservation} from './prestigeScore';
 
-/** Score pacing is calendar days (1800-second game year /365), not the
- * deliberately slowed visual daylight clock. These are gameplay coefficients. */
-export const PRESTIGE_GAME_RULES={version:1,calendarDaySeconds:1800/365,territoryReviewSeconds:15,cellsPerTick:256,maximumUsefulGrade:.6} as const;
+/** Food reserves use the actual simulation day counter, not visual daylight. */
+export const PRESTIGE_GAME_RULES={version:1,calendarDaySeconds:simulationDaySeconds,territoryReviewSeconds:15,cellsPerTick:256,maximumUsefulGrade:.6} as const;
 export type PrestigeTerritorySnapshot={measuredAt:number;usableArea:number;resourcesAndChokepoints:number};
-export type GamePrestigeView=PrestigeView&{territoryMeasuredAt:number|null;territoryUpdating:boolean};
+export type GamePrestigeView=PrestigeView&{territoryMeasuredAt:number|null;territoryUpdating:boolean;communityName?:string};
 type Job={territory:Uint8Array;n:number;cell:number;next:number;started:number;area:number;resources:number;extra:Map<number,number>};
 type Cache={state:Game['state'];world:Game['world'];nextReview:number;land?:PrestigeTerritorySnapshot;job?:Job};
 const caches=new WeakMap<Game,Cache>();
@@ -45,7 +45,7 @@ export function tickPrestigeEvidence(g:Game){
 }
 export function collectOwnPrestige(g:Game):PrestigeFacts{
  const t=g.tribe(0),c=caches.get(g),land=c?.state===g.state&&c.world===g.world?c.land:undefined;
- let healthyPopulation=0;for(const u of g.state.units)if(u.team===0&&u.hp>0&&!u.visit&&!u.prisoner&&(u.sickUntil??0)<=g.state.time)healthyPopulation+=clamp(u.hp/Math.max(1,u.maxHp));
+ let healthyPopulation=0;for(const u of g.state.units)if(u.team===0&&u.hp>0&&!u.visit&&(!u.prisoner||u.prisoner.phase==='released')&&(u.sickUntil??0)<=g.state.time)healthyPopulation+=clamp(u.hp/Math.max(1,u.maxHp));
  const demonstratedPractices=Object.entries(t.productionPractice||{}).filter(([,p])=>p&&p.batches>0&&p.usefulOutputs>0).map(([id])=>id.replace(/(Double|Bulk)$/,''));
  const boat=t.boatPractice;
  if(boat&&boat.deliveredGoods>0&&boat.lastDeliveryAt!==undefined&&boat.lastDeliveryAt<=g.state.time){
@@ -68,7 +68,7 @@ function rivalObservation(g:Game,viewer:number,subject:number):PrestigeObservati
  return[{observer:viewer,subject,observedAt:Math.min(...ownedReports.map(p=>p.observedAt)),components}];
 }
 export function gamePrestigeView(g:Game,viewer=0,subject=0):GamePrestigeView{
- if(viewer!==0||subject!==0)return{...observedPrestigeView(viewer,subject,g.state.time,rivalObservation(g,viewer,subject)),territoryMeasuredAt:null,territoryUpdating:false};
+ if(viewer!==0||subject!==0){const view=observedPrestigeView(viewer,subject,g.state.time,rivalObservation(g,viewer,subject));return{...view,...(view.knowledge==='observed'?{communityName:g.tribe(subject)?.name}:{}),territoryMeasuredAt:null,territoryUpdating:false};}
  const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world;
- return{...ownPrestigeView(0,collectOwnPrestige(g)),territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job:true};
+ return{...ownPrestigeView(0,collectOwnPrestige(g)),communityName:g.tribe(0).name,territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job:true};
 }

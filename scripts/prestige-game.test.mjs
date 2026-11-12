@@ -25,7 +25,10 @@ test('score reads do not paint territory, refresh memories or mutate state; boun
  const loaded=decodeGame(encodeGame(g));assert.equal(loaded.prestigeBreakdown().territoryMeasuredAt,null,'cache is rebuilt, never fabricated in old save payload');
 });
 test('actual retained landmark report exposes a dated partial rival component while secret stocks and unseen buildings never change it',()=>{
- const g=fixture();g.state.time=100;const rival=g.tribe(1),b=g.state.buildings.find(b=>b.team===1&&b.type==='townhall');assert.ok(b);
+ const g=fixture();g.state.time=100;const rival=g.tribe(1);
+ // An archived report need not have a matching live structure: its witness
+ // observed this historical site, not an omniscient current building lookup.
+ const b={id:g.id(),x:20,y:2,z:20,w:6,d:6};
  g.state.structureReports=[{version:1,observer:0,witnessId:g.state.units.find(u=>u.team===0).id,observedAt:20,receivedAt:25,active:true,site:{id:b.id,type:'temple',team:1,x:b.x,y:b.y,z:b.z,w:b.w,d:b.d,hp:100,maxHp:200},defenders:0,defensePower:0}];
  const state=JSON.stringify(g.state),before=gamePrestigeView(g,0,1);assert.equal(before.knowledge,'observed');assert.equal(before.observedAt,20);assert.equal(before.total,null);assert.equal(before.components.find(r=>r.component==='foodSecurity').points,null);assert.ok(before.knownSubtotal>0);assert.equal(JSON.stringify(g.state),state);
  rival.food=1e9;rival.wood=1e9;rival.productionPractice={};g.state.buildings.push(g.makeBld('temple',b.x+20,b.z+20,1));assert.deepEqual(gamePrestigeView(g,0,1),before,'private authority cannot update a dated report');
@@ -44,4 +47,8 @@ test('real boat-practice delivery evidence earns distinct methods while built hu
  assert.deepEqual(collectOwnPrestige(g).demonstratedPractices,['water-cargo-delivery','hull:scoutCanoe']);
  p.sailing.deliveredGoods=8;p.sailing.demonstratedAt=95;assert.ok(collectOwnPrestige(g).demonstratedPractices.includes('sailed-cargo-delivery'));
  p.sailing.demonstratedAt=101;assert.ok(!collectOwnPrestige(g).demonstratedPractices.includes('sailed-cargo-delivery'));p.lastDeliveryAt=101;assert.ok(!collectOwnPrestige(g).demonstratedPractices.includes('water-cargo-delivery'));
+});
+
+test('food security days match the actual simulation clock rather than a second invented calendar',()=>{
+ const g=fixture(),day=PRESTIGE_GAME_RULES.calendarDaySeconds;g.state.time=0;const start=g.clockState().day;g.state.time=day;assert.equal(g.clockState().day,start+1);g.state.time=day*32;assert.equal(g.clockState().day,start+32);assert.equal(day,56.25);
 });

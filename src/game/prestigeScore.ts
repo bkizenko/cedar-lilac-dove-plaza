@@ -6,7 +6,7 @@ export const PRESTIGE_SCORE_RULES={version:1,components:{
  usableArea:{cap:100,half:10000,unit:'dry useful square metres'},
  resourcesAndChokepoints:{cap:100,half:30,unit:'cached land-value points'},
  healthyPopulation:{cap:200,half:50,unit:'healthy resident equivalents'},
- foodSecurity:{cap:120,half:90,unit:'days of actual edible reserve'},
+ foodSecurity:{cap:120,half:8,unit:'simulation days of actual edible reserve'},
  demonstratedPractices:{cap:140,half:12,unit:'distinct demonstrated methods'},
  usefulTrade:{cap:100,half:10,unit:'distinct paid and delivered offers'},
  defendedWarAims:{cap:120,half:3,unit:'documented defended aims'},
@@ -52,7 +52,7 @@ export function prestigeCellInfrastructure(trailWear:number,crossings:number,tra
 }
 
 export type PrestigeObservation={observer:number;subject:number;observedAt:number;components:Partial<Record<PrestigeComponent,number>>};
-export type PrestigeView={version:1;subject:number;knowledge:'own'|'observed'|'unknown';observedAt:number|null;total:number|null;knownSubtotal:number;components:{component:PrestigeComponent;points:number|null;available:boolean}[]};
+export type PrestigeView={version:1;subject:number;knowledge:'own'|'observed'|'unknown';observedAt:number|null;total:number|null;knownSubtotal:number;components:{component:PrestigeComponent;points:number|null;available:boolean;value?:number;cap?:number}[]};
 /** Rival view never accepts full authority facts. An explicit dated observation
  * is the entire permitted input; partial components cannot manufacture a total. */
 export function observedPrestigeView(viewer:number,subject:number,now:number,observations:readonly PrestigeObservation[]):PrestigeView{
@@ -60,4 +60,4 @@ export function observedPrestigeView(viewer:number,subject:number,now:number,obs
  const components=PRESTIGE_COMPONENTS.map(component=>{const value=observation?.components[component],available=typeof value==='number'&&Number.isFinite(value)&&value>=0,rule=PRESTIGE_SCORE_RULES.components[component];return{component,points:available?prestigeCurve(value,rule.cap,rule.half):null,available};});
  return{version:1,subject,knowledge:observation?'observed':'unknown',observedAt:observation?.observedAt??null,total:null,knownSubtotal:components.reduce((n,row)=>n+(row.points??0),0),components};
 }
-export function ownPrestigeView(subject:number,facts:PrestigeFacts):PrestigeView{const score=scorePrestige(facts);return{version:1,subject,knowledge:'own',observedAt:null,total:score.total,knownSubtotal:score.total,components:score.components.map(({component,points,available})=>({component,points,available}))};}
+export function ownPrestigeView(subject:number,facts:PrestigeFacts):PrestigeView{const score=scorePrestige(facts);return{version:1,subject,knowledge:'own',observedAt:null,total:score.total,knownSubtotal:score.total,components:score.components.map(({component,points,available,value,cap})=>({component,points,available,value,cap}))};}

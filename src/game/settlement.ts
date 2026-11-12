@@ -1,3 +1,4 @@
+import {SIM_CALENDAR_RULES} from './calendarPacing';
 import{hasConstructionWork}from'./constructionTargets';
 import{housingFundingIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
 import{rawCerealField,collectCerealSheaves,CEREAL_RULES}from'./cerealRules';
@@ -30,7 +31,7 @@ import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, DOCK_R, GATHER_WORK_RATE } from "./constants";
 
-export const YEAR_SECONDS = 1800;
+export const YEAR_SECONDS = SIM_CALENDAR_RULES.yearSeconds;
 export const FOOD_PER_PERSON_SECOND = 0.036;
 export function calendar(g: Game) {
   const year = Math.floor(g.state.time / YEAR_SECONDS);
