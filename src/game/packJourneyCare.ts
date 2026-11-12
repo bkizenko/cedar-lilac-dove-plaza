@@ -6,7 +6,7 @@ import {PACK_ANIMAL_RULES} from './packAnimalState';
 import {CARRIED_LOAD_RULES} from './carriedLoad';
 import {FOOD_PER_PERSON_SECOND,foodDemand} from './settlement';
 import {predisposition} from './people';
-import {foodInventory,readyFoodStock,FOOD_NOURISHMENT,takeFoodLot,receiveFood} from './pantry';
+import {foodInventory,readyFoodStock,FOOD_NOURISHMENT,takeFoodLot} from './pantry';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {dropFoodUnits} from './stolenCargo';
 
@@ -80,7 +80,8 @@ export function packJourneyReturnBudgetLow(g:Game,u:Unit,secondsHome:number){
 
 export function returnPackJourneyCare(g:Game,u:Unit){
  const p=u.packJourneySupplies;if(!p)return true;if(u.hp<=0||u.prisoner||!cache(g,u)||p.waterLiters>0&&!g.tribe(u.team).survival)return false;
- for(const kind of PACK_JOURNEY_FEED_KINDS)if((p.feed[kind]||0)>0)receiveFood(g,u.team,p.feed[kind]!,kind);
+ const t=g.tribe(u.team),lots=foodInventory(t);let returned=0;
+ for(const kind of PACK_JOURNEY_FEED_KINDS){const n=p.feed[kind]||0;lots[kind]+=n;returned+=n;}t.food+=returned;t.foodLots=lots;
  const s=g.tribe(u.team).survival;if(s)s.waterLiters+=p.waterLiters;
  delete u.packJourneySupplies;return true;
 }
