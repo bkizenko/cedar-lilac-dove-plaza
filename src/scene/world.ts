@@ -31,6 +31,10 @@ import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
+import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
+import {CARVED_TYPES} from './buildingStyleMap';
+import {fabricContext} from '@/game/buildingFabric';
+import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
@@ -137,6 +141,8 @@ export const BLD_TYPES: BldType[] = [
   "canal",
 ];
 
+/** Types whose shipped look is terrain-laid or modular; Option H never replaces them. */
+const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','gate','palisade','stonewall','trench','moat','dock','warehouse','bridge','aqueduct','lumber','quarry','cornerstone','cairn','grove']);
 const _m = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -210,6 +216,14 @@ export class WorldView {
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
   private towerPlatforms:TowerPlatformLayer|null=null;
+  /** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
+   * finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
+   * buildings always keep the current renderer so footprints, collision and terrain stay exact. */
+  private renderStyle:'current'|'carved'='current';
+  private carvedLayer:CarvedBuildingLayer|null=null;
+  private carvedOwners=new Map<THREE.Object3D,import("@/game/types").Building[]>();
+  setRenderStyle(style:'current'|'carved'){this.renderStyle=style==='carved'?'carved':'current';}
+  getRenderStyle(){return this.renderStyle;}
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
@@ -340,6 +354,7 @@ export class WorldView {
     this.scene.fog = new THREE.FogExp2("#d8c4a0", 0.0034);
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 860);
+    try{if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderStyle')==='carved')this.renderStyle='carved';}catch{/* default stays 'current' */}
     this.mats = makeMaterials();
 
     this.hemi = new THREE.HemisphereLight("#dcebf8", "#5a6651", 0.72);
@@ -1142,6 +1157,7 @@ export class WorldView {
         }
     }
     for(const [mesh,owners]of this.towerPlatforms?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of this.carvedOwners){if(mesh instanceof THREE.InstancedMesh&&mesh.count>0){mesh.computeBoundingSphere();sources.set(mesh,owners);}}
     if(this.domesticGoats){
       this.domesticGoats.computeBoundingSphere();
       sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='goat').slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
@@ -1640,6 +1656,7 @@ export class WorldView {
     if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
     this.towerPlatforms.sync(game);
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
+    const carvedList:(CarvedInstance&{b:import("@/game/types").Building})[]=[];
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
     for (const b of game.state.buildings) if(b.hp>0)grouped.get(b.type)?.push(b);
@@ -1657,6 +1674,12 @@ export class WorldView {
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
+        if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
+          const fab=fabricContext(b);
+          carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
+            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,yaw:buildingQuarterTurns(b)*Math.PI/2,progress:ys,b});
+          continue;
+        }
         const scalable=type==="farm"||modular;
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
           const mesh=meshes[part];if(!mesh||!mesh.geometry.getAttribute('position')?.count||counts[part]>=instCap(mesh))return;
@@ -1699,12 +1722,24 @@ export class WorldView {
       }
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art)art.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
+    this.syncCarvedBuildings(carvedList);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.contourFields?.sync(game,this.camera.position);
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
     this.foundations?.sync(game);
+  }
+
+  private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
+    if(!list.length&&!this.carvedLayer)return;
+    const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
+    for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
+    layer.sync(list,this.camera.position);
+    for(const [mesh,owners] of layer.sources()){
+      const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
+      this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
+    }
   }
 
   private syncEraDetails(game:Game){
@@ -1715,7 +1750,7 @@ export class WorldView {
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
         ['warehouse','farm','pen','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
-      if(!['forge','stables','keep'].includes(b.type))continue;
+      if(!['forge','stables','keep'].includes(b.type)||this.renderStyle==='carved'&&CARVED_TYPES.includes(b.type)&&!CARVED_KEEP_CURRENT.has(b.type))continue;
       const identity=this.villageStyle(game,b.team,b),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
@@ -2783,6 +2818,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
+    this.carvedLayer?.dispose();this.carvedLayer=null;this.carvedOwners.clear();
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();

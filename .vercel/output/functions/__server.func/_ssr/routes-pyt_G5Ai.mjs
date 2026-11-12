@@ -2,7 +2,7 @@ import { i as __toESM } from "../_runtime.mjs";
 import { I as require_react_dom, L as require_jsx_runtime, R as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { Ct as zlibSync, St as Unzlib } from "../_libs/three.mjs";
 import { $ as BookOpen, A as Landmark, B as Droplets, C as Pickaxe, D as Mountain, E as Package, F as FlaskConical, G as Clock3, H as Compass, I as Flame, J as ChevronUp, K as ClipboardList, L as Fish, M as Hand, N as Hammer, O as Leaf, P as GraduationCap, Q as Castle, R as FastForward, S as Play, T as Pause, U as Coins, V as CookingPot, W as Clock, X as ChevronLeft, Y as ChevronRight, Z as ChevronDown, _ as Ship, a as VolumeX, b as RotateCcw, d as Sword, et as Axe, f as Sun, g as Shield, h as Shirt, i as Warehouse, j as House, k as Layers, l as TreePine, m as SkipForward, n as Wind, o as Volume2, p as Store, q as Church, r as Wheat, s as Users, t as X, u as Swords, v as Settings, w as PawPrint, x as Recycle, y as Scissors, z as Eye } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BkKOQREQ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-pyt_G5Ai.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_react_dom = require_react_dom();
@@ -141,6 +141,36 @@ function parseStoredSave(stored) {
 	const parsed = JSON.parse(stored);
 	return isStoredSaveEnvelope(parsed) ? JSON.parse(inflateEnvelope(parsed)) : parsed;
 }
+var SMALL_HERD_RULES = Object.freeze({
+	places: 1,
+	maturity: 300,
+	gestation: 240,
+	tamingFood: 6,
+	tamingSeconds: 60,
+	careMultiplier: 1,
+	radius: .35,
+	speed: 2.8,
+	packMultiplier: 2,
+	harnessSeconds: 30,
+	harnessWood: 2
+});
+var HORSE_HERD_RULES = Object.freeze({
+	places: 3,
+	maturity: 600,
+	gestation: 600,
+	tamingFood: 12,
+	tamingSeconds: 120,
+	careMultiplier: 3,
+	radius: .55,
+	speed: 3.4,
+	packMultiplier: 3.5,
+	harnessSeconds: 60,
+	harnessWood: 6
+});
+/** Sheep and goats retain their existing coefficients; horses need more room and care. */
+function herdRules(species) {
+	return species === "horse" ? HORSE_HERD_RULES : SMALL_HERD_RULES;
+}
 var PACK_ANIMAL_RULES = {
 	hungerPerSecond: .055,
 	feedPerSecond: .012,
@@ -158,7 +188,7 @@ function packAnimalFrom(a) {
 		hp: a.hp,
 		maxHp: a.maxHp,
 		scale: a.scale,
-		species: "goat",
+		species: a.species === "horse" ? "horse" : "goat",
 		...a.sex !== void 0 ? { sex: a.sex } : {},
 		...a.born !== void 0 ? { born: a.born } : {},
 		...a.tamedAt !== void 0 ? { tamedAt: a.tamedAt } : {},
@@ -175,14 +205,14 @@ function packCapacityMultiplier(u) {
 	const hunger = Math.max(0, Math.min(1, ((a.hunger ?? 0) - PACK_ANIMAL_RULES.hungerCapacityStarts) / (100 - PACK_ANIMAL_RULES.hungerCapacityStarts)));
 	const thirst = Math.max(0, Math.min(1, ((a.thirstSeconds ?? 0) - PACK_ANIMAL_RULES.thirstGraceSeconds) / PACK_ANIMAL_RULES.thirstCapacityRangeSeconds));
 	const condition = Math.max(0, Math.min(1, a.hp / a.maxHp));
-	return PACK_ANIMAL_RULES.minimumCapacityMultiplier + (2 - PACK_ANIMAL_RULES.minimumCapacityMultiplier) * Math.min(condition, 1 - hunger, 1 - thirst);
+	return PACK_ANIMAL_RULES.minimumCapacityMultiplier + (herdRules(a.species ?? "goat").packMultiplier - PACK_ANIMAL_RULES.minimumCapacityMultiplier) * Math.min(condition, 1 - hunger, 1 - thirst);
 }
 function validPackAnimal(a) {
 	if (!a || typeof a !== "object" || Array.isArray(a)) return false;
 	const p = a;
 	const finite = (x) => typeof x === "number" && Number.isFinite(x);
 	if (!Number.isSafeInteger(p.id) || p.id < 1 || !finite(p.hp) || !finite(p.maxHp) || p.hp <= 0 || p.hp > p.maxHp || p.maxHp > 1e3 || !finite(p.scale) || p.scale < .1 || p.scale > 5) return false;
-	if (p.species !== void 0 && p.species !== "goat" || p.sex !== void 0 && !["female", "male"].includes(p.sex)) return false;
+	if (p.species !== void 0 && !["goat", "horse"].includes(p.species) || p.sex !== void 0 && !["female", "male"].includes(p.sex)) return false;
 	for (const key of ["born", "tamedAt"]) if (p[key] !== void 0 && !finite(p[key])) return false;
 	for (const key of [
 		"hunger",
@@ -860,13 +890,13 @@ var BUILDINGS = {
 		name: "Stables",
 		w: 8.4,
 		d: 8,
-		food: 40,
-		wood: 100,
-		stone: 40,
+		food: 0,
+		wood: 40,
+		stone: 12,
 		pop: 0,
 		hp: 400,
-		age: 4,
-		hint: "Train cavalry."
+		age: 1,
+		hint: "Train an adult pasture horse to carry packs. Six logs and a minute of handling at the stable entrance; cavalry still needs its later equipment."
 	},
 	university: {
 		name: "Academy",
@@ -14793,7 +14823,7 @@ function usesTransport(u) {
 }
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
 function loadCapacityMultiplier(u, kind, maximum = false) {
-	return basketCapacityMultiplier(u, kind) * (u.boat?.phase === "aboard" ? 5 : usesTransport(u) && u.haulage ? u.haulage === "pack" ? maximum ? HAULAGE.pack.capacity : packCapacityMultiplier(u) : HAULAGE[u.haulage].capacity : 1);
+	return basketCapacityMultiplier(u, kind) * (u.boat?.phase === "aboard" ? 5 : usesTransport(u) && u.haulage ? u.haulage === "pack" ? maximum ? herdRules(u.packAnimal?.species ?? "goat").packMultiplier : packCapacityMultiplier(u) : HAULAGE[u.haulage].capacity : 1);
 }
 /** maximum is for validating already held loads, never for assigning new cargo. */
 function carryingCapacity(u, kind, maximum = false) {
@@ -15850,6 +15880,8 @@ function validArmorState(s) {
 	for (const u of s.units) if (u.armorCargoId !== void 0 && (!id(u.armorCargoId) || !v.assets.some((a) => a.id === u.armorCargoId && a.team === u.team && a.holder.kind === "carried" && a.holder.id === u.id))) return false;
 	return true;
 }
+/** Goat-equivalent care demand; capacity and actor counts stay separate. */
+var penCareDemand = (animals) => animals.reduce((n, a) => n + herdRules(a.species).careMultiplier, 0);
 var PEN_RULES = {
 	baseAreaSquareMeters: 100,
 	maximumCachedSurveys: 256,
@@ -15915,10 +15947,10 @@ function penWaterState(b) {
 function herdWaterDemand(g, team) {
 	if (g.state.survivalVersion !== 1 || !g.state.livestock?.length) return 0;
 	const pens = new Set(g.state.buildings.filter((b) => b.team === team && b.type === "pen" && g.finished(b)).map((b) => b.id));
-	return g.state.livestock.filter((a) => a.team === team && a.hp > 0 && a.ledBy === void 0 && pens.has(a.pen)).length * PEN_WATER_RULES.litersPerAnimalSecond;
+	return penCareDemand(g.state.livestock.filter((a) => a.team === team && a.hp > 0 && a.ledBy === void 0 && pens.has(a.pen))) * PEN_WATER_RULES.litersPerAnimalSecond;
 }
 function penWaterReport(g, b) {
-	const herd = (g.state.livestock ?? []).filter((a) => a.pen === b.id && a.hp > 0 && a.ledBy === void 0), demand = herd.length * PEN_WATER_RULES.litersPerAnimalSecond, liters = b.penWater?.liters ?? 0;
+	const herd = (g.state.livestock ?? []).filter((a) => a.pen === b.id && a.hp > 0 && a.ledBy === void 0), demand = penCareDemand(herd) * PEN_WATER_RULES.litersPerAnimalSecond, liters = b.penWater?.liters ?? 0;
 	return {
 		enabled: g.state.survivalVersion === 1,
 		liters,
@@ -16006,7 +16038,7 @@ function reconcilePenWater(g) {
 }
 function drinkPenWater(g, b, a, dt) {
 	if (g.state.survivalVersion !== 1) return true;
-	const p = penWaterState(b), need = PEN_WATER_RULES.litersPerAnimalSecond * dt, used = a.ledBy === void 0 && insidePen(b, a.x, a.z) ? Math.min(need, p.liters) : 0;
+	const p = penWaterState(b), need = PEN_WATER_RULES.litersPerAnimalSecond * herdRules(a.species).careMultiplier * dt, used = a.ledBy === void 0 && insidePen(b, a.x, a.z) ? Math.min(need, p.liters) : 0;
 	p.liters -= used;
 	p.consumedLiters += used;
 	metric(g, b.team, "waterHerdConsumedLiters", used);
@@ -23445,7 +23477,7 @@ function fireDemand(g, team, ambient) {
 }
 function survivalStatus(g, team = 0) {
 	const t = g.tribe(team), stock = t?.survival, enabled = g.state.survivalVersion === 1 && !!stock, people = residents(g, team), home = g.campOf(team), homeTemp = localAirTemperature(g, home.x, home.z), temp = Math.round(homeTemp);
-	const demand = people.filter((u) => !scoutIndependentNeeds(u) && !prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(g, u) && !coastalIndependentNeeds(g, u) && !campMoveIndependentNeeds(g, u)).length * SURVIVAL_RULES.waterLitersPerPersonSecond + herdWaterDemand(g, team) + g.state.units.filter((u) => u.team === team && u.hp > 0 && u.haulage === "pack" && u.packAnimal && u.packAnimal.hp > 0).length * PACK_ANIMAL_RULES.waterPerSecond, fuelDemand = fireDemand(g, team, ambientTemperature(g));
+	const demand = people.filter((u) => !scoutIndependentNeeds(u) && !prisonerIndependentNeeds(u) && !societyMissionIndependentNeeds(g, u) && !coastalIndependentNeeds(g, u) && !campMoveIndependentNeeds(g, u)).length * SURVIVAL_RULES.waterLitersPerPersonSecond + herdWaterDemand(g, team) + g.state.units.filter((u) => u.team === team && u.hp > 0 && u.haulage === "pack" && u.packAnimal && u.packAnimal.hp > 0).reduce((n, u) => n + herdRules(u.packAnimal?.species ?? "goat").careMultiplier, 0) * PACK_ANIMAL_RULES.waterPerSecond, fuelDemand = fireDemand(g, team, ambientTemperature(g));
 	const water = stock?.waterLiters ?? 0, fuel = t?.wood ?? 0, waterSeconds = demand ? water / demand : Infinity, fuelSeconds = fuelDemand ? fuel / fuelDemand : Infinity;
 	const coldResidents = people.filter((u) => (u.coldSeconds ?? 0) > 0).length, waterWorkers = people.filter((u) => u.waterWork && !u.waterWork.paused).length;
 	const warnings = [];
@@ -24059,7 +24091,7 @@ function releasePackAnimal(g, u) {
 	g.state.wildlife.push({
 		...animal,
 		id: animal.id,
-		species: "goat",
+		species: animal.species ?? "goat",
 		x: u.x,
 		y: g.height(u.x, u.z),
 		z: u.z,
@@ -24092,7 +24124,7 @@ function tickPackAnimals(g, dt) {
 		if (Math.hypot(u.x - drop.x, u.z - drop.z) > reach) continue;
 		const approach = supplyApproach(g, u, drop);
 		if (!approach || !supplyReached(g, u, drop, approach)) continue;
-		const lots = foodInventory(g.tribe(u.team)), need = PACK_ANIMAL_RULES.feedPerSecond * dt;
+		const lots = foodInventory(g.tribe(u.team)), need = PACK_ANIMAL_RULES.feedPerSecond * dt * herdRules(a.species ?? "goat").careMultiplier;
 		let fed = 0;
 		if (a.hunger > 0) for (const kind of [
 			"grain",
@@ -24111,7 +24143,7 @@ function tickPackAnimals(g, dt) {
 		if (fed > 0) a.hunger = Math.max(0, a.hunger - (PACK_ANIMAL_RULES.hungerPerSecond + .3) * dt * Math.min(1, fed / need));
 		const stock = g.tribe(u.team).survival;
 		if (g.state.survivalVersion === 1 && stock) {
-			const demand = PACK_ANIMAL_RULES.waterPerSecond * dt, n = Math.min(stock.waterLiters, demand);
+			const demand = PACK_ANIMAL_RULES.waterPerSecond * dt * herdRules(a.species ?? "goat").careMultiplier, n = Math.min(stock.waterLiters, demand);
 			stock.waterLiters -= n;
 			stock.waterConsumedLiters += n;
 			a.waterConsumedLiters = (a.waterConsumedLiters ?? 0) + n;
@@ -28396,7 +28428,7 @@ function annexSociety(g, fromTeam) {
 	g.banner(`Annexation agreed with ${g.tribe(fromTeam).name}. People, structures and paid work joined intact.`, 7);
 	return true;
 }
-var R$8 = {
+var DOMINATION_RULES = {
 	version: 1,
 	communityRadiusMeters: 40,
 	autonomyRadiusMeters: 120,
@@ -28431,6 +28463,7 @@ var R$8 = {
 	maximum: 128,
 	maximumGarrison: 64
 };
+var R$8 = DOMINATION_RULES;
 var st$4 = (g) => g.state;
 var dist$6 = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 var free$7 = (u) => u.hp > 0 && !u.prisoner && !u.boat;
@@ -30359,7 +30392,7 @@ function tickConflictStandDown(g) {
 		}
 	}
 }
-var R$2 = {
+var CAPITULATION_RULES = {
 	version: 1,
 	communityRadiusMeters: 55,
 	reliefRadiusMeters: 150,
@@ -30389,6 +30422,7 @@ var R$2 = {
 	maximumFronts: 256,
 	maximumIds: 256
 };
+var R$2 = CAPITULATION_RULES;
 var OPEN = ["pressed", "capitulated"];
 var st = (g) => g.state;
 var root$2 = (g) => st(g).capitulation ??= st(g).capitulation = {
@@ -30500,9 +30534,10 @@ function openFront(g, hall, attacker) {
 	s.fronts.push(f);
 	return f;
 }
-/** NPC communities only: the player decides its own surrender. Raiders (team 3) are not a society that capitulates. */
+/** Player halls record defensive objectives only; surrender stays the player’s decision.
+* NPC communities can yield. Raider camps never yield as a society. */
 function defendableHalls(g) {
-	return g.state.buildings.filter((b) => b.type === "townhall" && b.hp > 0 && g.finished(b) && isRivalTeam(b.team) && g.tribe(b.team)?.alive);
+	return g.state.buildings.filter((b) => b.type === "townhall" && b.hp > 0 && g.finished(b) && (b.team === 0 || isRivalTeam(b.team)) && g.tribe(b.team)?.alive);
 }
 /** Call at most about once per simulated second; each front integrates its own elapsed time. */
 function tickCapitulation(g) {
@@ -30552,6 +30587,10 @@ function tickCapitulation(g) {
 		if (m.reliefPower < m.attackPower * R$2.reliefShare) f.unrelievedSeconds += dt;
 		else f.unrelievedSeconds = Math.max(0, f.unrelievedSeconds - dt);
 		f.score = frontScore(f);
+		if (f.defenderTeam === 0) {
+			f.reason = "The community is defending its hall";
+			continue;
+		}
 		if (f.phase === "capitulated") {
 			if (g.state.time >= (f.expiresAt ?? Infinity)) {
 				f.phase = "expired";
@@ -35716,6 +35755,7 @@ var CARCASS_MEAT = {
 	boar: 32,
 	goat: 16,
 	sheep: 16,
+	horse: 48,
 	bird: 0
 };
 /** Old dead wildlife has no carcass field: loading cannot recreate eaten meat. */
@@ -35744,7 +35784,7 @@ function updateCarcass(g, c) {
 	return c.carcass.meat > 0;
 }
 function wildlifeFleeSpeed(c) {
-	return (c.species === "deer" ? 4 : c.species === "boar" ? 2.8 : 2.5) * (.6 + .4 * Math.max(0, Math.min(1, c.hp / Math.max(1, c.maxHp))));
+	return (c.species === "horse" ? 4.6 : c.species === "deer" ? 4 : c.species === "boar" ? 2.8 : 2.5) * (.6 + .4 * Math.max(0, Math.min(1, c.hp / Math.max(1, c.maxHp))));
 }
 /** Owned bows shoot; spears/blades work at physical reach. Unarmed residents
 * use loose stones, following the existing game's non-inventoried ammunition rule. */
@@ -42714,13 +42754,14 @@ function penPastureState(b) {
 }
 function penPastureReport(g, b) {
 	const survey = surveyPenPasture(g, b), animals = (g.state.livestock || []).filter((a) => a.hp > 0 && a.ledBy === void 0 && a.pen === b.id), keepers = g.state.units.filter((u) => u.hp > 0 && u.husbandryWork?.pen === b.id && u.husbandryWork.action === "care" && !u.husbandryWork.paused), phase = calendar(g).phase;
-	const biomassCapacity = survey.productiveAreaSquareMeters * PEN_RULES.biomassFoodPerSquareMetre, regrowthPerSecond = biomassCapacity * PEN_RULES.springRegrowthPerSecond * PEN_RULES.seasonRegrowth[phase] * (g.state.weather === "drought" ? PEN_RULES.droughtRegrowthFactor : 1), demandPerSecond = animals.length * PEN_RULES.feedPerAnimalSecond;
+	const biomassCapacity = survey.productiveAreaSquareMeters * PEN_RULES.biomassFoodPerSquareMetre, regrowthPerSecond = biomassCapacity * PEN_RULES.springRegrowthPerSecond * PEN_RULES.seasonRegrowth[phase] * (g.state.weather === "drought" ? PEN_RULES.droughtRegrowthFactor : 1), careDemand = penCareDemand(animals), demandPerSecond = careDemand * PEN_RULES.feedPerAnimalSecond;
 	return {
 		...survey,
 		housingCapacity: penHousingCapacity(b),
 		animals: animals.length,
+		careDemand,
 		keepers: keepers.length,
-		keepersNeeded: Math.max(1, Math.ceil(animals.length / PEN_RULES.animalsPerKeeper)),
+		keepersNeeded: Math.max(1, Math.ceil(careDemand / PEN_RULES.animalsPerKeeper)),
 		biomassCapacity,
 		biomassFood: biomassCapacity * (b.pasture?.condition ?? 1),
 		regrowthPerSecond,
@@ -42740,7 +42781,11 @@ var HERD = {
 	lactation: 900
 };
 var penAnimals = (g, pen) => (g.state.livestock || []).filter((a) => a.pen === pen && a.hp > 0 && a.ledBy === void 0);
-var penPlacesOccupied = (g, pen, except) => (g.state.livestock || []).filter((a) => a.pen === pen && a.hp > 0 && a.id !== except).length;
+var penPlacesOccupied = (g, pen, except) => (g.state.livestock || []).filter((a) => a.pen === pen && a.hp > 0 && a.id !== except).reduce((n, a) => n + herdRules(a.species).places, 0);
+/** Paid inbound captures reserve eventual adult places, even while paused. */
+function penPlacesReserved(g, pen, exceptUnit) {
+	return g.state.units.filter((u) => u.hp > 0 && u.id !== exceptUnit && u.tamingWork?.pen === pen && !g.state.livestock?.some((a) => a.hp > 0 && a.id === u.tamingWork.animal)).reduce((n, u) => n + herdRules(g.state.wildlife.find((a) => a.id === u.tamingWork.animal)?.species).places, 0);
+}
 var penAt = (g, id, team = 0) => g.state.buildings.find((b) => b.id === id && b.team === team && b.type === "pen" && g.finished(b));
 function available$1(g, u, except, searchPen) {
 	const searching = searchPen !== void 0 && u.goatSearchPen === searchPen && u.order === "explore";
@@ -42773,9 +42818,8 @@ function beginHerdTaming(g, penId, unitId, species = "goat") {
 		paused.order = "hold";
 		return true;
 	}
-	const owned = new Set((g.state.livestock || []).filter((a) => a.hp > 0).map((a) => a.id));
-	const reserved = g.state.units.filter((u) => u.hp > 0 && u.tamingWork?.pen === penId && !owned.has(u.tamingWork.animal)).length;
-	if (penPlacesOccupied(g, penId) + reserved >= surveyPenPasture(g, pen).eligibleCapacity) {
+	const reserved = penPlacesReserved(g, penId);
+	if (penPlacesOccupied(g, penId) + reserved + herdRules(species).places > surveyPenPasture(g, pen).eligibleCapacity) {
 		g.banner("This enclosure has no unreserved usable places — enlarge it or restore dry pasture", 4);
 		return false;
 	}
@@ -42789,14 +42833,15 @@ function beginHerdTaming(g, penId, unitId, species = "goat") {
 		if (u.tamingWork) continue;
 		const animal = g.state.wildlife.filter((a) => a.hp > 0 && a.species === species && g.visibleAt(a.x, a.z) && Math.hypot(a.x - pen.x, a.z - pen.z) < HERD.searchRadiusMeters && !g.state.units.some((p) => p.hp > 0 && p.tamingWork?.animal === a.id) && g.workBoard.connected(g, u.x, u.z, a.x, a.z) && g.workBoard.connected(g, a.x, a.z, pen.x, pen.z)).sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
 		if (!animal) continue;
+		const rules = herdRules(species);
 		const searchPack = u.goatSearchPen === penId && u.expedition ? u.expedition : void 0;
-		if ((searchPack ? searchPack.food : g.tribe(0).food) < HERD.tamingFood) {
-			g.banner("Bring six food for taming", 4);
+		if ((searchPack ? searchPack.food : g.tribe(0).food) < rules.tamingFood) {
+			g.banner(`Bring ${rules.tamingFood} food for taming`, 4);
 			return false;
 		}
 		g.interruptMission(u);
-		if (searchPack) searchPack.food -= HERD.tamingFood;
-		else g.tribe(0).food -= HERD.tamingFood;
+		if (searchPack) searchPack.food -= rules.tamingFood;
+		else g.tribe(0).food -= rules.tamingFood;
 		u.tamingWork = {
 			animal: animal.id,
 			pen: penId,
@@ -42812,10 +42857,10 @@ function beginHerdTaming(g, penId, unitId, species = "goat") {
 	g.banner(`Find a living wild ${species} and a free adult with a clear route to this pen`, 5);
 	return false;
 }
-function assignHusbandry(g, penId, action = "care") {
+function assignHusbandry(g, penId, action = "care", species) {
 	const pen = penAt(g, penId);
 	if (!pen) return false;
-	const paused = g.state.units.find((u) => u.husbandryWork?.pen === penId && u.husbandryWork.action === action && u.husbandryWork.paused && available$1(g, u, "husbandryWork"));
+	const paused = g.state.units.find((u) => u.husbandryWork?.pen === penId && u.husbandryWork.action === action && (!species || g.state.livestock?.some((a) => a.id === u.husbandryWork.animal && a.species === species)) && u.husbandryWork.paused && available$1(g, u, "husbandryWork"));
 	if (paused) {
 		paused.husbandryWork.paused = false;
 		paused.order = "hold";
@@ -42828,9 +42873,14 @@ function assignHusbandry(g, penId, action = "care") {
 			return false;
 		}
 	}
-	const animal = action === "care" ? void 0 : penAnimals(g, penId).filter((a) => (action !== "pack" || a.species === "goat") && (action !== "shear" || a.species === "sheep" && (a.fleece?.units || 0) >= 1) && insidePen(pen, a.x, a.z) && g.state.time - a.born >= HERD.maturity && !g.state.units.some((u) => u.hp > 0 && u.husbandryWork?.animal === a.id)).sort((a, b) => Number(a.sex === "female") - Number(b.sex === "female"))[0];
+	const animal = action === "care" ? void 0 : penAnimals(g, penId).filter((a) => (action !== "pack" || ["goat", "horse"].includes(a.species) && (!species || a.species === species)) && (action !== "shear" || a.species === "sheep" && (a.fleece?.units || 0) >= 1) && insidePen(pen, a.x, a.z) && g.state.time - a.born >= herdRules(a.species).maturity && !g.state.units.some((u) => u.hp > 0 && u.husbandryWork?.animal === a.id)).sort((a, b) => Number(a.sex === "female") - Number(b.sex === "female"))[0];
 	if (action !== "care" && !animal) {
 		g.banner(action === "shear" ? "No unreserved adult sheep with fleece in this pen" : "No unreserved eligible adult in this pen", 4);
+		return false;
+	}
+	const stable = animal?.species === "horse" && action === "pack" ? g.state.buildings.filter((b) => b.team === pen.team && b.type === "stables" && g.finished(b) && g.workBoard.connected(g, pen.x, pen.z, b.x, b.z)).sort((a, b) => Math.hypot(a.x - pen.x, a.z - pen.z) - Math.hypot(b.x - pen.x, b.z - pen.z))[0] : void 0;
+	if (animal?.species === "horse" && action === "pack" && !stable) {
+		g.banner("Build a reachable stable to train this horse", 4);
 		return false;
 	}
 	const u = [...g.state.units].sort((a, b) => Number(b.selected) - Number(a.selected)).find((u) => available$1(g, u, "husbandryWork") && (!u.husbandryWork || u.husbandryWork.paused && !(u.husbandryWork.waterLiters ?? 0)) && (!["slaughter", "shear"].includes(action) || !Object.values(u.itemCargo || {}).some((n) => n > 0)) && g.workBoard.connected(g, u.x, u.z, pen.x, pen.z));
@@ -42844,7 +42894,8 @@ function assignHusbandry(g, penId, action = "care") {
 		action,
 		animal: animal?.id,
 		phase: "pen",
-		progress: 0
+		progress: 0,
+		...stable ? { stable: stable.id } : {}
 	};
 	u.order = "hold";
 	u.node = null;
@@ -42876,8 +42927,8 @@ function animalStep(g, a, handler, x, z, dt) {
 		vx: a.vx,
 		vz: a.vz,
 		facing: a.facing,
-		r: .35,
-		speed: 2.8,
+		r: herdRules(a.species).radius,
+		speed: herdRules(a.species).speed,
 		tx: x,
 		tz: z,
 		hp: a.hp,
@@ -42950,10 +43001,14 @@ function husbandryAI(g, u, dt) {
 			return true;
 		}
 		if (!a) {
-			const wild = g.state.wildlife.find((a) => a.id === tame.animal && a.hp > 0 && ["goat", "sheep"].includes(a.species));
+			const wild = g.state.wildlife.find((a) => a.id === tame.animal && a.hp > 0 && [
+				"goat",
+				"sheep",
+				"horse"
+			].includes(a.species));
 			if (!wild) {
 				finish(g, u);
-				u.workReason = "The goat is gone";
+				u.workReason = "The animal is gone";
 				return true;
 			}
 			u.workReason = `Approaching a ${wild.species} with feed`;
@@ -42963,11 +43018,12 @@ function husbandryAI(g, u, dt) {
 				g.steer(u, dt);
 				return true;
 			}
+			const rules = herdRules(wild.species);
 			wild.vx = wild.vz = 0;
-			tame.progress = Math.min(HERD.tamingSeconds, tame.progress + dt);
-			u.workReason = `Taming a herd ${wild.species} · ${Math.floor(tame.progress / HERD.tamingSeconds * 100)}%`;
-			if (tame.progress < HERD.tamingSeconds) return true;
-			if (penPlacesOccupied(g, pen.id) >= surveyPenPasture(g, pen).eligibleCapacity) {
+			tame.progress = Math.min(rules.tamingSeconds, tame.progress + dt);
+			u.workReason = `Taming a herd ${wild.species} · ${Math.floor(tame.progress / rules.tamingSeconds * 100)}%`;
+			if (tame.progress < rules.tamingSeconds) return true;
+			if (penPlacesOccupied(g, pen.id) + penPlacesReserved(g, pen.id, u.id) + rules.places > surveyPenPasture(g, pen).eligibleCapacity) {
 				tame.paused = true;
 				u.order = "idle";
 				u.workReason = "Pen full — taming paused";
@@ -42975,10 +43031,11 @@ function husbandryAI(g, u, dt) {
 			}
 			a = {
 				...wild,
+				adultScale: wild.scale,
 				team: u.team,
 				pen: pen.id,
 				sex: wild.id % 2 ? "female" : "male",
-				born: g.state.time - HERD.maturity,
+				born: g.state.time - rules.maturity,
 				tamedAt: g.state.time,
 				hunger: 5,
 				milk: 0,
@@ -43019,7 +43076,7 @@ function husbandryAI(g, u, dt) {
 				};
 				u.order = "hold";
 			}
-			g.banner(a.species === "sheep" ? "Sheep brought home. Keep it fed, watered and tended to grow fleece." : "Goat brought home. A fed breeding pair can raise kids; mothers provide milk.", 5);
+			g.banner(a.species === "horse" ? "Horse brought home. Keep pasture, feed and water available; train packs at a stable." : a.species === "sheep" ? "Sheep brought home. Keep it fed, watered and tended to grow fleece." : "Goat brought home. A fed breeding pair can raise kids; mothers provide milk.", 5);
 		}
 		return true;
 	}
@@ -43031,7 +43088,7 @@ function husbandryAI(g, u, dt) {
 		return true;
 	}
 	const pasture = penPastureState(pen);
-	const stray = w.action === "care" && penAnimals(g, pen.id).find((a) => !insidePen(pen, a.x, a.z) && !g.state.units.some((p) => p.hp > 0 && p.tamingWork?.animal === a.id && !p.tamingWork.paused));
+	const stray = w.action === "care" && penAnimals(g, pen.id).find((a) => !insidePen(pen, a.x, a.z) && !g.state.units.some((p) => p.hp > 0 && (p.tamingWork?.animal === a.id && !p.tamingWork.paused || p.husbandryWork?.animal === a.id && !p.husbandryWork.paused)));
 	if (stray && u.carry === 0) {
 		u.tamingWork = {
 			animal: stray.id,
@@ -43057,7 +43114,7 @@ function husbandryAI(g, u, dt) {
 				return true;
 			}
 		} else {
-			const demand = penAnimals(g, pen.id).length * PEN_RULES.feedPerAnimalSecond;
+			const demand = penCareDemand(penAnimals(g, pen.id)) * PEN_RULES.feedPerAnimalSecond;
 			const feed = takeFeed(g, Math.min(Math.max(8, Math.ceil(demand * 90)), carryingCapacity(u, "food")));
 			if (!feed) {
 				u.workReason = "Herd feed needs grain, roots, berries or provisions";
@@ -43071,6 +43128,57 @@ function husbandryAI(g, u, dt) {
 		return true;
 	}
 	u.workReason = w.action === "care" ? "Tending the herd" : w.action === "pack" ? "Fitting a pack harness" : w.action === "shear" ? "Clipping sheep fleece" : "Preparing an animal for meat";
+	if (w.action === "pack" && w.stable !== void 0) {
+		const a = g.state.livestock?.find((a) => a.id === w.animal && a.hp > 0 && a.pen === pen.id && a.team === u.team && a.ledBy === void 0), stable = g.state.buildings.find((b) => b.id === w.stable && b.team === u.team && b.type === "stables" && b.hp > 0);
+		if (!a || a.species !== "horse" || !stable) {
+			finish(g, u);
+			u.workReason = "Horse training lost its horse or stable";
+			return true;
+		}
+		if (!g.finished(stable)) {
+			w.paused = true;
+			u.order = "idle";
+			u.workReason = "Finish the stable before resuming horse training";
+			return true;
+		}
+		if (Math.hypot(a.x - u.x, a.z - u.z) > 3) {
+			animalStep(g, a, u, u.x, u.z, dt);
+			u.tx = a.x;
+			u.tz = a.z;
+			g.steer(u, dt);
+			u.workReason = "Collecting the pasture horse";
+			return true;
+		}
+		const spot = g.interactionSpot(u, stable);
+		if (!spot) {
+			u.workReason = "Horse training needs a clear stable entrance";
+			return true;
+		}
+		u.tx = spot.x;
+		u.tz = spot.z;
+		if (!g.buildingWorkReached(u, stable)) {
+			g.steer(u, dt);
+			animalStep(g, a, u, u.x, u.z, dt);
+			u.workReason = "Leading the horse to the stable";
+			return true;
+		}
+		animalStep(g, a, u, u.x, u.z, dt);
+		w.progress = Math.min(herdRules(a.species).harnessSeconds, w.progress + dt);
+		u.workReason = `Training a pack horse · ${Math.floor(w.progress / herdRules(a.species).harnessSeconds * 100)}%`;
+		if (w.progress < herdRules(a.species).harnessSeconds) return true;
+		if (g.tribe(u.team).wood < herdRules(a.species).harnessWood) {
+			u.workReason = "Horse harness needs six logs";
+			return true;
+		}
+		g.tribe(u.team).wood -= herdRules(a.species).harnessWood;
+		u.packAnimal = packAnimalFrom(a);
+		u.haulage = "pack";
+		g.state.livestock = g.state.livestock.filter((c) => c.id !== a.id);
+		finish(g, u);
+		u.order = "return";
+		g.banner("Pack horse trained at the stable", 4);
+		return true;
+	}
 	if (!atBuilding(g, u, pen, dt)) return true;
 	if (w.phase === "feed") {
 		if (u.carryType === "food" && u.carry > 0) {
@@ -43143,7 +43251,7 @@ function husbandryAI(g, u, dt) {
 		} else {
 			a.hp = 0;
 			a.carcass = {
-				meat: 16,
+				meat: CARCASS_MEAT[a.species],
 				diedAt: g.state.time,
 				...animalProcessingEnabled(g, u.team) ? {
 					hides: 1,
@@ -43169,7 +43277,7 @@ function husbandryAI(g, u, dt) {
 	}
 	pasture.care = Math.min(1, pasture.care + dt * .012);
 	w.progress += dt;
-	if ((calendar(g).phase === 3 || pasture.condition < .2) && pasture.feed < Math.max(1, penAnimals(g, pen.id).length * PEN_RULES.feedPerAnimalSecond * 60) && penAnimals(g, pen.id).length) {
+	if ((calendar(g).phase === 3 || pasture.condition < .2) && pasture.feed < Math.max(1, penCareDemand(penAnimals(g, pen.id)) * PEN_RULES.feedPerAnimalSecond * 60) && penAnimals(g, pen.id).length) {
 		w.phase = "fetch";
 		return true;
 	}
@@ -43224,25 +43332,25 @@ function tickHusbandry(g, dt) {
 		if (a.hp <= 0) {
 			delete a.ledBy;
 			a.carcass = {
-				meat: 8,
+				meat: CARCASS_MEAT[a.species] / 2,
 				diedAt: g.state.time
 			};
 		}
 	}
 	const activePens = new Set(livestock.filter((a) => a.hp > 0).map((a) => a.pen));
 	if (!livestock.length && !g.state.buildings.some((b) => b.type === "pen" && b.pasture && (b.pasture.condition < 1 || b.pasture.care > 0))) return;
-	const handlers = new Set(g.state.units.filter((u) => u.hp > 0 && u.tamingWork && !u.tamingWork.paused).map((u) => u.tamingWork.animal));
+	const handlers = new Set(g.state.units.filter((u) => u.hp > 0).flatMap((u) => [...u.tamingWork && !u.tamingWork.paused ? [u.tamingWork.animal] : [], ...u.husbandryWork?.animal !== void 0 && !u.husbandryWork.paused ? [u.husbandryWork.animal] : []]));
 	const owned = new Set(livestock.filter((a) => a.hp > 0).map((a) => a.id)), incoming = /* @__PURE__ */ new Map();
-	for (const u of g.state.units) if (u.hp > 0 && u.tamingWork?.pen !== void 0 && !owned.has(u.tamingWork.animal)) incoming.set(u.tamingWork.pen, (incoming.get(u.tamingWork.pen) || 0) + 1);
+	for (const u of g.state.units) if (u.hp > 0 && u.tamingWork?.pen !== void 0 && !owned.has(u.tamingWork.animal)) incoming.set(u.tamingWork.pen, (incoming.get(u.tamingWork.pen) || 0) + herdRules(g.state.wildlife.find((a) => a.id === u.tamingWork.animal)?.species).places);
 	for (const pen of g.state.buildings.filter((b) => b.type === "pen" && g.finished(b) && (activePens.has(b.id) || b.pasture && (b.pasture.condition < 1 || b.pasture.care > 0)))) {
 		const herd = penAnimals(g, pen.id), p = penPastureState(pen), reserved = incoming.get(pen.id) || 0;
 		let occupied = penPlacesOccupied(g, pen.id);
-		p.care = Math.max(0, p.care - dt * PEN_RULES.careDecayPerAnimalSecond * Math.max(1, herd.length));
+		p.care = Math.max(0, p.care - dt * PEN_RULES.careDecayPerAnimalSecond * Math.max(1, penCareDemand(herd)));
 		if (!herd.length && p.condition >= 1) continue;
 		const r = penPastureReport(g, pen);
 		let biomass = Math.min(r.biomassCapacity, p.condition * r.biomassCapacity + r.regrowthPerSecond * dt);
 		for (const a of herd) {
-			const arrived = insidePen(pen, a.x, a.z), need = PEN_RULES.feedPerAnimalSecond * dt;
+			const arrived = insidePen(pen, a.x, a.z), need = PEN_RULES.feedPerAnimalSecond * dt * herdRules(a.species).careMultiplier;
 			const grazed = arrived && !r.winter ? Math.min(need, biomass) : 0;
 			biomass -= grazed;
 			p.grazedFood += grazed;
@@ -43254,13 +43362,13 @@ function tickHusbandry(g, dt) {
 			a.hunger = Math.max(0, Math.min(100, a.hunger + dt * (fed ? -.3 : .055 * (1 - fedFraction))));
 			if (a.hunger > 80) a.hp = Math.max(0, a.hp - dt * .08);
 			else if (fed && hydrated && p.care > .2) a.hp = Math.min(a.maxHp, a.hp + dt * .015);
-			const adult = g.state.time - a.born >= HERD.maturity;
+			const adult = g.state.time - a.born >= herdRules(a.species).maturity;
 			if (a.hp <= 0) {
 				a.carcass = {
-					meat: 8,
+					meat: CARCASS_MEAT[a.species] / 2,
 					diedAt: g.state.time
 				};
-				occupied--;
+				occupied -= herdRules(a.species).places;
 				continue;
 			}
 			if (!handlers.has(a.id) && arrived) {
@@ -43278,8 +43386,8 @@ function tickHusbandry(g, dt) {
 			}
 			growFleece(a, dt, arrived && adult && fed && hydrated && p.care > .2 && a.hunger < 30);
 			if (arrived && a.sex === "female" && adult && a.hunger < 30 && fed && hydrated && p.care > .2) {
-				if (herd.some((m) => m.species === a.species && m.sex === "male" && insidePen(pen, m.x, m.z) && g.state.time - m.born >= HERD.maturity) && occupied + reserved < r.eligibleCapacity) a.pregnancy = Math.min(HERD.gestation, a.pregnancy + dt);
-				if (a.pregnancy >= HERD.gestation && occupied + reserved < r.eligibleCapacity && livestock.length < PEN_RULES.maximumAnimalsTotal) {
+				if (herd.some((m) => m.species === a.species && m.sex === "male" && insidePen(pen, m.x, m.z) && g.state.time - m.born >= herdRules(m.species).maturity) && occupied + reserved + herdRules(a.species).places <= r.eligibleCapacity) a.pregnancy = Math.min(herdRules(a.species).gestation, a.pregnancy + dt);
+				if (a.pregnancy >= herdRules(a.species).gestation && occupied + reserved + herdRules(a.species).places <= r.eligibleCapacity && livestock.length < PEN_RULES.maximumAnimalsTotal) {
 					a.pregnancy = 0;
 					a.lactatingUntil = g.state.time + HERD.lactation;
 					const id = g.id();
@@ -43295,15 +43403,16 @@ function tickHusbandry(g, dt) {
 						hp: a.maxHp,
 						hunger: 5,
 						thirstSeconds: 0,
-						scale: .6,
+						adultScale: a.adultScale ?? 1,
+						scale: (a.adultScale ?? 1) * .6,
 						...a.species === "sheep" ? { fleece: newFleece() } : {}
 					});
-					occupied++;
-					if (a.team === 0) g.banner("A kid was born in the animal pen", 4);
+					occupied += herdRules(a.species).places;
+					if (a.team === 0) g.banner(a.species === "horse" ? "A foal was born" : a.species === "sheep" ? "A lamb was born" : "A kid was born", 4);
 				}
 				if (a.species === "goat" && (a.lactatingUntil || 0) > g.state.time) a.milk = Math.min(6, a.milk + dt * .025);
 			}
-			a.scale = .6 + .4 * Math.min(1, (g.state.time - a.born) / HERD.maturity);
+			a.scale = (a.adultScale ?? 1) * (.6 + .4 * Math.min(1, (g.state.time - a.born) / herdRules(a.species).maturity));
 		}
 		p.condition = r.biomassCapacity ? Math.max(0, Math.min(1, biomass / r.biomassCapacity)) : 0;
 	}
@@ -43500,7 +43609,7 @@ function cancelGoatSearch(g, penId) {
 function tickGoatSearchOrder(g, pen) {
 	const q = pen.goatSearch;
 	if (!q || q.state === "complete" || q.state === "exhausted") return;
-	const handler = g.state.units.find((u) => u.hp > 0 && u.tamingWork?.pen === pen.id);
+	const handler = g.state.units.find((u) => u.hp > 0 && u.tamingWork?.pen === pen.id && (g.state.wildlife.find((a) => a.id === u.tamingWork.animal)?.species ?? g.state.livestock?.find((a) => a.id === u.tamingWork.animal)?.species) === "goat");
 	if (handler) {
 		q.state = "capturing";
 		q.animal = handler.tamingWork.animal;
@@ -43529,7 +43638,7 @@ function tickGoatSearchOrder(g, pen) {
 	q.nextAttemptAt = g.state.time + GOAT_QUEUE_RULES.retrySeconds;
 	q.state = "waiting";
 	delete q.reason;
-	const reserved = g.state.units.filter((u) => u.hp > 0 && u.tamingWork?.pen === pen.id).length;
+	const reserved = penPlacesReserved(g, pen.id);
 	if (penPlacesOccupied(g, pen.id) + reserved >= surveyPenPasture(g, pen).eligibleCapacity) {
 		q.reason = "space";
 		return;
@@ -44332,6 +44441,55 @@ function releaseTradeReservation(g, u) {
 function reconcileTradeReservations(g) {
 	for (const u of g.state.units) if (u.tradeReservation && (u.hp <= 0 || !hasTradeReservation(u) || !u.trade || u.carryType !== u.trade.give || u.carry !== u.trade.giveAmt)) releaseTradeReservation(g, u);
 }
+/** Finite initial fauna; never a wildlife replenishment or save migration. */
+var HORSE_RULES = {
+	version: 1,
+	maximumWild: 12,
+	perCamp: 3,
+	spawnAttempts: 192
+};
+/** Fresh-reset hook only. An independent stream leaves original terrain and fauna
+* generation unchanged; restore replaces this initial wildlife with saved actors. */
+function initializeHorses(g) {
+	if (g.state.horseVersion === 1) return;
+	g.state.horseVersion = 1;
+	let seed = (g.state.seed ^ 1832557335) >>> 0;
+	const random = () => (seed = Math.imul(seed, 1664525) + 1013904223 >>> 0) / 4294967296;
+	let total = g.state.wildlife.filter((a) => a.species === "horse").length;
+	for (const camp of g.world.camps.filter((c) => c.team !== 3)) for (let attempt = 0, placed = 0; attempt < HORSE_RULES.spawnAttempts && placed < HORSE_RULES.perCamp && total < HORSE_RULES.maximumWild; attempt++) {
+		const angle = random() * Math.PI * 2, d = 35 + random() * 90, x = camp.x + Math.sin(angle) * d, z = camp.z + Math.cos(angle) * d, y = g.height(x, z);
+		if (![
+			x,
+			y,
+			z
+		].every(Number.isFinite) || Math.abs(x) > g.world.size / 2 - 8 || Math.abs(z) > g.world.size / 2 - 8 || y <= g.waterAt(x, z) + .4 || !g.walkable(x, z)) continue;
+		if (habitatKindAt(g, x, z) === "forest") continue;
+		const climate = climateAt(g, x, z);
+		if (!Number.isFinite(climate.temperature) || !Number.isFinite(climate.humidity) || climate.temperature < -20 || climate.temperature > 36 || climate.humidity < .22) continue;
+		if (g.state.wildlife.some((a) => Math.hypot(a.x - x, a.z - z) < 3) || !g.workBoard.connected(g, camp.x, camp.z, x, z)) continue;
+		g.state.wildlife.push({
+			id: g.id(),
+			species: "horse",
+			x,
+			y,
+			z,
+			facing: random() * Math.PI * 2,
+			vx: 0,
+			vz: 0,
+			wanderT: random() * 4,
+			hp: 4,
+			maxHp: 4,
+			fly: 0,
+			scale: 1.1 + random() * .15,
+			grazing: {
+				x,
+				z
+			}
+		});
+		placed++;
+		total++;
+	}
+}
 /** The actual occupied rectangle, including a paid/queued extension. Nearby
 * woodland remains woodland; a construction yard is not a forest-clear radius. */
 function treeInsideBuilding(n, b) {
@@ -44422,6 +44580,69 @@ function combatMusicMood(g) {
 		if (!actor.demobilizing && !actor.recalled) offensive = true;
 	}
 	return offensive ? "pillage" : "peace";
+}
+var WAR_PRESTIGE_RULES = {
+	version: 1,
+	heldAim: 1,
+	weights: {
+		raze: .5,
+		loot: .5,
+		captives: .6,
+		tribute: .8,
+		autonomy: .8,
+		puppet: 1,
+		occupy: 1,
+		annex: 1.2
+	}
+};
+var arrangementKey = (hall, attacker, defender, terms, at) => `${hall}:${attacker}:${defender}:${terms}:${at}`;
+/** Authoritative own-party settled outcomes only. Rival display must use separate
+* returned witness receipts; looking at a hall does not reveal its war history.
+* The retained bounded front ledger is recomputed, never incremented on reads. */
+function settledWarPrestige(state, team = 0) {
+	const result = {
+		value: 0,
+		achieved: 0,
+		held: 0,
+		frontIds: []
+	};
+	if (!Number.isSafeInteger(team) || team < 0 || !Number.isFinite(state.time) || !state.capitulation) return result;
+	const fronts = state.capitulation.fronts;
+	if (!fronts.length) return result;
+	const settled = fronts.slice(0, CAPITULATION_RULES.maximumFronts).filter((f) => (f.attackerTeam === team || f.defenderTeam === team) && f.attackerTeam !== 3 && f.defenderTeam !== 3 && Number.isSafeInteger(f.id) && f.id > 0 && f.attackerTeam !== f.defenderTeam && Number.isFinite(f.openedAt) && f.openedAt >= 0 && f.resolvedAt !== void 0 && Number.isFinite(f.resolvedAt) && f.resolvedAt >= f.openedAt && f.resolvedAt <= state.time && (f.phase === "accepted" || f.phase === "relieved"));
+	if (!settled.length) return result;
+	const halls = new Map(state.buildings.map((b) => [b.id, b])), arrangements = /* @__PURE__ */ new Map();
+	for (const d of (state.dominations?.list || []).slice(0, DOMINATION_RULES.maximum)) {
+		if (d.origin !== "capitulation") continue;
+		const key = arrangementKey(d.hallId, d.overlord, d.subject, d.terms, d.createdAt), list = arrangements.get(key) || [];
+		list.push(d);
+		arrangements.set(key, list);
+	}
+	const seen = /* @__PURE__ */ new Set();
+	for (const f of settled) {
+		if (seen.has(f.id)) continue;
+		seen.add(f.id);
+		const hall = halls.get(f.hallId);
+		if (f.phase === "relieved") {
+			if (f.defenderTeam !== team || !hall || hall.hp <= 0 || hall.team !== f.defenderTeam) continue;
+			result.held += WAR_PRESTIGE_RULES.heldAim;
+			result.frontIds.push(f.id);
+			continue;
+		}
+		if (f.attackerTeam !== team || !f.outcome || !Object.hasOwn(WAR_PRESTIGE_RULES.weights, f.outcome)) continue;
+		if ([
+			"tribute",
+			"puppet",
+			"autonomy"
+		].includes(f.outcome)) {
+			const matches = arrangements.get(arrangementKey(f.hallId, f.attackerTeam, f.defenderTeam, f.outcome, f.resolvedAt));
+			if (matches?.length !== 1 || matches[0].phase !== "active" || !hall || hall.hp <= 0 || hall.team !== f.defenderTeam) continue;
+		}
+		result.achieved += WAR_PRESTIGE_RULES.weights[f.outcome];
+		result.frontIds.push(f.id);
+	}
+	result.value = result.achieved + result.held;
+	return result;
 }
 var CIVIC_PRESTIGE_RULES = {
 	duplicateMultiplier: .55,
@@ -45318,7 +45539,7 @@ var PRESTIGE_SCORE_RULES = {
 		defendedWarAims: {
 			cap: 120,
 			half: 3,
-			unit: "documented defended aims"
+			unit: "weighted settled war aims"
 		},
 		civicWorks: {
 			cap: 120,
@@ -45584,6 +45805,7 @@ function collectOwnPrestige(g) {
 		foodSecurity: reserve / PRESTIGE_GAME_RULES.calendarDaySeconds,
 		demonstratedPractices,
 		usefulTrade: usefulTradeCount(g.state.tradeNeeds?.receipts || [], 0, g.state.tradeNeeds?.offers || []),
+		defendedWarAims: settledWarPrestige(g.state, 0).value,
 		civicWorks: civicPrestige(g, 0).total
 	};
 }
@@ -50201,6 +50423,7 @@ var Game = class {
 		initializeDifficultyOpening(this);
 		if (worldgenVersion >= 14) initializeWildPlants(this);
 		initializeSheep(this);
+		initializeHorses(this);
 		this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
 	}
 	/** Relocate the unbuilt camp to the best nearby scenic town-hall site (GW-15). */
@@ -52177,7 +52400,7 @@ var Game = class {
 				c.wanderT = 2.5 + Math.random() * 5;
 				let a = Math.random() * Math.PI * 2;
 				if (Math.hypot(c.x - c.grazing.x, c.z - c.grazing.z) > 32) a = Math.atan2(c.grazing.x - c.x, c.grazing.z - c.z);
-				const spd = c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
+				const spd = c.species === "horse" ? 3.6 : c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
 				c.vx = Math.sin(a) * spd;
 				c.vz = Math.cos(a) * spd;
 				c.facing = a;
@@ -56119,6 +56342,7 @@ function validateGamePayload(raw) {
 	if (!validCanalWorks(s, HALF * 2)) fail();
 	for (const cut of s.excavations || []) if (cut.id >= s.nextId || !s.tribes[cut.team] || s.units.some((u) => u.id === cut.id) || s.buildings.some((b) => b.id === cut.buildingId && (b.type !== "trench" || b.x !== cut.x || b.z !== cut.z || b.w !== cut.w || b.d !== cut.d))) fail();
 	if (s.sheepVersion !== void 0 && s.sheepVersion !== 1) fail();
+	if (s.horseVersion !== void 0 && s.horseVersion !== 1) fail();
 	if (s.autoWorkEnabled !== void 0 && typeof s.autoWorkEnabled !== "boolean") fail();
 	if (!validHousingState(s) || !validSitePreparationState(s)) fail();
 	if (!validBuildingMaintenance(s) || !validTowerPlatformState(s) || !validCoastalTradeState(s)) fail();
@@ -56547,7 +56771,7 @@ function validateGamePayload(raw) {
 		}
 		if (u.husbandryWork !== void 0) {
 			const w = u.husbandryWork;
-			if (!obj(w) || !Number.isSafeInteger(w.pen) || w.pen < 1 || !num(w.progress) || w.progress < 0 || w.progress > 1e8 || ![
+			if (!obj(w) || w.stable !== void 0 && (!Number.isSafeInteger(w.stable) || w.stable < 1 || w.stable >= s.nextId || w.action !== "pack" || s.buildings.some((b) => b.id === w.stable && b.type !== "stables")) || !Number.isSafeInteger(w.pen) || w.pen < 1 || !num(w.progress) || w.progress < 0 || w.progress > 1e8 || ![
 				"care",
 				"slaughter",
 				"pack",
@@ -56565,7 +56789,7 @@ function validateGamePayload(raw) {
 		if (u.tamingWork !== void 0) {
 			const w = u.tamingWork;
 			if (w?.penGateReached !== void 0 && (w.pen === void 0 || typeof w.penGateReached !== "boolean")) fail();
-			if (!obj(w) || w.pen !== void 0 && (!Number.isSafeInteger(w.pen) || w.pen < 1) || !Number.isSafeInteger(w.animal) || w.animal < 1 || !num(w.progress) || w.progress < 0 || w.progress > 60 || w.paused !== void 0 && typeof w.paused !== "boolean" || u.haulage !== void 0) fail();
+			if (!obj(w) || w.pen !== void 0 && (!Number.isSafeInteger(w.pen) || w.pen < 1) || !Number.isSafeInteger(w.animal) || w.animal < 1 || !num(w.progress) || w.progress < 0 || w.progress > (w.pen !== void 0 ? herdRules(s.wildlife.find((a) => a.id === w.animal)?.species ?? s.livestock?.find((a) => a.id === w.animal)?.species ?? "horse").tamingSeconds : 60) || w.paused !== void 0 && typeof w.paused !== "boolean" || u.haulage !== void 0) fail();
 		}
 		if (u.caravanRoute !== void 0 && (!Number.isSafeInteger(u.caravanRoute) || !s.routes.some((r) => r.id === u.caravanRoute && r.caravan))) fail();
 		if (u.boat !== void 0) {
@@ -56878,12 +57102,17 @@ function validateGamePayload(raw) {
 				"pregnancy"
 			]);
 			const pen = s.buildings.find((b) => b.id === a.pen && b.type === "pen" && b.team === a.team);
+			if (a.adultScale !== void 0 && (!num(a.adultScale) || a.adultScale < .3 || a.adultScale > 3)) fail();
 			const led = a.ledBy !== void 0;
 			if (led && (!Number.isSafeInteger(a.ledBy) || a.hp <= 0 || !s.units.some((u) => u.id === a.ledBy && u.hp > 0 && !u.prisoner) || s.units.some((u) => u.hp > 0 && (u.tamingWork?.animal === a.id || u.husbandryWork?.animal === a.id)))) fail();
-			if (!s.tribes.some((t) => t.id === a.team) || !Number.isSafeInteger(a.pen) || a.pen <= 0 || !pen && !led || !["goat", "sheep"].includes(a.species) || !validFleece(a, s.time) || a.species === "sheep" && s.sheepVersion !== 1 || !["female", "male"].includes(a.sex) || a.born < -300 || a.born > s.time || a.tamedAt < 0 || a.tamedAt > s.time || a.hp < 0 || a.hp > a.maxHp || a.maxHp <= 0 || a.maxHp > 1e3 || a.scale < .3 || a.scale > 3 || a.hunger < 0 || a.hunger > 100 || a.milk < 0 || a.milk > 6 || a.pregnancy < 0 || a.pregnancy > 240 || !carcassStateValid(a.carcass, a.species, a.hp, s.time)) fail();
+			if (!s.tribes.some((t) => t.id === a.team) || !Number.isSafeInteger(a.pen) || a.pen <= 0 || !pen && !led || ![
+				"goat",
+				"sheep",
+				"horse"
+			].includes(a.species) || !validFleece(a, s.time) || a.species === "sheep" && s.sheepVersion !== 1 || !["female", "male"].includes(a.sex) || a.born < -herdRules(a.species).maturity || a.born > s.time || a.tamedAt < 0 || a.tamedAt > s.time || a.hp < 0 || a.hp > a.maxHp || a.maxHp <= 0 || a.maxHp > 1e3 || a.scale < .3 || a.scale > 3 || a.hunger < 0 || a.hunger > 100 || a.milk < 0 || a.milk > 6 || a.pregnancy < 0 || a.pregnancy > herdRules(a.species).gestation || !carcassStateValid(a.carcass, a.species, a.hp, s.time)) fail();
 			if (a.lactatingUntil !== void 0 && (!num(a.lactatingUntil) || a.lactatingUntil < 0 || a.lactatingUntil > s.time + 901)) fail();
 			if (a.hp > 0 && pen) {
-				perPen.set(a.pen, (perPen.get(a.pen) || 0) + 1);
+				perPen.set(a.pen, (perPen.get(a.pen) || 0) + herdRules(a.species).places);
 				if ((perPen.get(a.pen) || 0) > penHousingCapacity(pen)) fail();
 			}
 		}
@@ -56915,6 +57144,7 @@ function validateGamePayload(raw) {
 			"boar",
 			"goat",
 			"sheep",
+			"horse",
 			"bird"
 		].includes(c.species) || !validFleece(c, s.time) || c.species === "sheep" && s.sheepVersion !== 1 || !carcassStateValid(c.carcass, c.species, c.hp, s.time)) fail();
 	}
@@ -56937,7 +57167,7 @@ function validateGamePayload(raw) {
 	for (const u of s.units) {
 		if (u.husbandryWork?.animal !== void 0) {
 			const w = u.husbandryWork, a = s.livestock?.find((a) => a.id === w.animal);
-			if (a && (w.action === "pack" && a.species !== "goat" || w.action === "shear" && a.species !== "sheep")) fail();
+			if (a && (w.action === "pack" && (!["goat", "horse"].includes(a.species) || a.species === "horse" && w.stable === void 0 || a.species !== "horse" && w.stable !== void 0) || w.action === "shear" && a.species !== "sheep")) fail();
 		}
 		for (const w of [u.husbandryWork, u.tamingWork?.pen !== void 0 ? u.tamingWork : void 0]) if (w && !s.buildings.some((b) => b.id === w.pen && b.type === "pen" && b.team === u.team) && !(w === u.husbandryWork && w.phase === "waterReturn" && (w.waterLiters ?? 0) > 0 && w.releaseAfterWater === true)) fail();
 	}
@@ -59312,7 +59542,7 @@ var labels$2 = {
 	foodSecurity: "Food security",
 	demonstratedPractices: "Practiced skills",
 	usefulTrade: "Recent trade",
-	defendedWarAims: "Defended aims",
+	defendedWarAims: "War aims",
 	civicWorks: "Civic works"
 };
 /** Presentation only: every number comes from the authorized HUD snapshot. */
@@ -59341,7 +59571,7 @@ function PrestigeReadout({ view, rivals = [] }) {
 				className: "space-y-1",
 				children: view.components.map((row) => {
 					const rule = PRESTIGE_SCORE_RULES.components[row.component], points = row.points ?? 0;
-					const detail = !row.available ? row.component === "defendedWarAims" ? "No verified defended objective recorded" : "Measurement pending" : `${row.value === void 0 ? "" : `${row.value.toLocaleString(void 0, { maximumFractionDigits: 1 })} ${rule.unit} · `}${points.toFixed(1)} / ${rule.cap} points. Diminishing returns.`;
+					const detail = !row.available ? row.component === "defendedWarAims" ? "No verified objective outcome recorded" : "Measurement pending" : `${row.value === void 0 ? "" : `${row.value.toLocaleString(void 0, { maximumFractionDigits: 1 })} ${rule.unit} · `}${points.toFixed(1)} / ${rule.cap} points. Diminishing returns.`;
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						title: detail,
 						className: "grid grid-cols-[minmax(0,1fr)_5rem_2rem] items-center gap-2 text-xs",
@@ -61741,7 +61971,7 @@ function ResidentInventory({ residents, game }) {
 			if (resident.farmTool) equipped.push(resident.farmTool.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase());
 			if (resident.basket) equipped.push("Woven basket");
 			if (resident.waterVessel) equipped.push("Water vessel");
-			if (resident.haulage) equipped.push(resident.haulage === "pack" ? resident.packAnimal ? `Pack goat · capacity ×${packCapacityMultiplier(resident).toFixed(2)}` : "Pack harness · no animal" : resident.haulage);
+			if (resident.haulage) equipped.push(resident.haulage === "pack" ? resident.packAnimal ? `Pack ${resident.packAnimal.species ?? "goat"} · capacity ×${packCapacityMultiplier(resident).toFixed(2)}` : "Pack harness · no animal" : resident.haulage);
 			const armor = game && wornArmor(game, resident);
 			if (armor) equipped.push(`Padded armor (${Math.round(armor.condition * 100)}%)`);
 			if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
@@ -61753,7 +61983,8 @@ function ResidentInventory({ residents, game }) {
 				resident.packAnimal && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					title: `Feed consumed ${amount$1(resident.packAnimal.foodConsumed ?? 0)} · Water drunk ${amount$1(resident.packAnimal.waterConsumedLiters ?? 0)} L. Feed and water are available at a reached village cache.`,
 					children: [
-						"Goat · Health ",
+						resident.packAnimal.species === "horse" ? "Horse" : "Goat",
+						" · Health ",
 						Math.round(resident.packAnimal.hp / resident.packAnimal.maxHp * 100),
 						"% · Hunger ",
 						Math.round(resident.packAnimal.hunger ?? 0),
@@ -62232,9 +62463,9 @@ function measureVillageWorkload(g, team = 0, options = {}) {
 			});
 		}
 		if (b.type === "pen") {
-			const herd = (g.state.livestock ?? []).filter((a) => a.pen === b.id && a.hp > 0), keepers = eligible.filter((u) => u.husbandryWork?.pen === b.id && u.husbandryWork.action === "care" && !u.husbandryWork.paused && !u.husbandryWork.releaseAfterWater);
+			const herd = (g.state.livestock ?? []).filter((a) => a.pen === b.id && a.hp > 0 && a.ledBy === void 0), keepers = eligible.filter((u) => u.husbandryWork?.pen === b.id && u.husbandryWork.action === "care" && !u.husbandryWork.paused && !u.husbandryWork.releaseAfterWater);
 			if (herd.length) {
-				const pasture = penPastureReport(g, b), care = Math.max(0, .8 - (b.pasture?.care || 0) + H * PEN_RULES.careDecayPerAnimalSecond * herd.length) / r.careGainPerWorkSecond, grass = pasture.winter ? 0 : pasture.biomassFood + pasture.regrowthPerSecond * H, feed = Math.max(0, pasture.demandPerSecond * H - grass - (b.pasture?.feed || 0)), person = keepers[0] ?? ratePeople[0], load = Math.min(carry("food", person), Math.max(8, Math.ceil(pasture.demandPerSecond * 90))), haul = Math.ceil(feed / Math.max(1, load)) * trip(b.x, b.z, person) * 2, water = penWaterReport(g, b), waterNeed = water.enabled ? Math.max(0, water.demand * H - water.liters - water.inTransit) : 0, waterHaul = Math.ceil(waterNeed / PEN_WATER_RULES.loadLiters) * trip(b.x, b.z, person) * 2;
+				const pasture = penPastureReport(g, b), care = Math.max(0, .8 - (b.pasture?.care || 0) + H * PEN_RULES.careDecayPerAnimalSecond * pasture.careDemand) / r.careGainPerWorkSecond, grass = pasture.winter ? 0 : pasture.biomassFood + pasture.regrowthPerSecond * H, feed = Math.max(0, pasture.demandPerSecond * H - grass - (b.pasture?.feed || 0)), person = keepers[0] ?? ratePeople[0], load = Math.min(carry("food", person), Math.max(8, Math.ceil(pasture.demandPerSecond * 90))), haul = Math.ceil(feed / Math.max(1, load)) * trip(b.x, b.z, person) * 2, water = penWaterReport(g, b), waterNeed = water.enabled ? Math.max(0, water.demand * H - water.liters - water.inTransit) : 0, waterHaul = Math.ceil(waterNeed / PEN_WATER_RULES.loadLiters) * trip(b.x, b.z, person) * 2;
 				add({
 					id: `herd:${b.id}`,
 					label: keepers.length ? "Assigned herd keepers" : "Maintain herd care, feed and drinking water",
@@ -69718,10 +69949,10 @@ function PaidProjects({ engine, workplaceId }) {
 }
 function HusbandryControls({ engine, pen }) {
 	const g = engine.game, animals = penAnimals(g, pen), b = g.state.buildings.find((b) => b.id === pen);
-	const away = Math.max(0, penPlacesOccupied(g, pen) - animals.length);
+	const away = (g.state.livestock ?? []).filter((a) => a.pen === pen && a.hp > 0 && a.ledBy !== void 0).length;
 	const water = b ? penWaterReport(g, b) : null;
 	const report = b ? penPastureReport(g, b) : null, capacity = report?.eligibleCapacity ?? 0;
-	const female = animals.filter((a) => a.sex === "female").length, kids = animals.filter((a) => g.state.time - a.born < HERD.maturity).length;
+	const female = animals.filter((a) => a.sex === "female").length, kids = animals.filter((a) => g.state.time - a.born < herdRules(a.species).maturity).length;
 	const keeper = g.state.units.find((u) => u.hp > 0 && u.husbandryWork?.pen === pen && u.husbandryWork.action === "care" && !u.husbandryWork.paused);
 	const pausedShearer = g.state.units.find((u) => u.hp > 0 && u.husbandryWork?.pen === pen && u.husbandryWork.action === "shear" && u.husbandryWork.paused);
 	const pausedKeeper = g.state.units.find((u) => u.hp > 0 && u.husbandryWork?.pen === pen && u.husbandryWork.action === "care" && u.husbandryWork.paused);
@@ -69730,7 +69961,10 @@ function HusbandryControls({ engine, pen }) {
 	const known = b ? visibleGoatsForPen(g, b).length : 0;
 	const owned = new Set(animals.map((a) => a.id));
 	const taming = g.state.units.filter((u) => u.hp > 0 && u.tamingWork?.pen === pen && !owned.has(u.tamingWork.animal)).length;
-	const paused = g.state.units.some((u) => u.hp > 0 && u.tamingWork?.pen === pen && u.tamingWork.paused);
+	const speciesOf = (id) => g.state.wildlife.find((a) => a.id === id)?.species ?? g.state.livestock?.find((a) => a.id === id)?.species;
+	const pausedSpecies = (species) => g.state.units.some((u) => u.hp > 0 && u.tamingWork?.pen === pen && u.tamingWork.paused && speciesOf(u.tamingWork.animal) === species);
+	const paused = pausedSpecies("goat"), pausedSheep = pausedSpecies("sheep"), pausedHorse = pausedSpecies("horse");
+	const reserved = penPlacesReserved(g, pen);
 	const run = (fn) => {
 		fn();
 		engine.pushHud();
@@ -69742,13 +69976,17 @@ function HusbandryControls({ engine, pen }) {
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
 					animals.length,
+					" animals · ",
+					penPlacesOccupied(g, pen),
 					"/",
 					capacity,
-					" animals · ",
+					" pasture places · ",
 					animals.filter((a) => a.species === "goat").length,
 					" goats · ",
 					animals.filter((a) => a.species === "sheep").length,
-					" sheep",
+					" sheep · ",
+					animals.filter((a) => a.species === "horse").length,
+					" horses",
 					taming ? ` · ${taming} coming home` : "",
 					away ? ` · ${away} away (places reserved)` : ""
 				] }),
@@ -69758,7 +69996,7 @@ function HusbandryControls({ engine, pen }) {
 					animals.length - female,
 					" male · ",
 					kids,
-					" kids"
+					" young"
 				] }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
 					"Usable pasture ",
@@ -69815,19 +70053,25 @@ function HusbandryControls({ engine, pen }) {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							disabled: !paused && animals.length + taming >= capacity,
+							disabled: !paused && penPlacesOccupied(g, pen) + reserved >= capacity,
 							onClick: () => run(() => beginHerdTaming(g, pen)),
 							children: [paused ? "Resume capture" : "Capture goat", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: paused ? "Paid progress preserved" : `${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel` })]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							disabled: !paused && animals.length + taming >= capacity,
+							disabled: !pausedSheep && penPlacesOccupied(g, pen) + reserved >= capacity,
 							onClick: () => run(() => beginHerdTaming(g, pen, void 0, "sheep")),
-							children: ["Capture sheep", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "6 food · approach a discovered wild sheep" })]
+							children: [pausedSheep ? "Resume sheep capture" : "Capture sheep", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "6 food · approach a discovered wild sheep" })]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							disabled: !pausedShearer && !animals.some((a) => a.species === "sheep" && (a.fleece?.units || 0) >= 1 && g.state.time - a.born >= HERD.maturity),
+							disabled: !pausedHorse && penPlacesOccupied(g, pen) + reserved + 3 > capacity,
+							onClick: () => run(() => beginHerdTaming(g, pen, void 0, "horse")),
+							children: [pausedHorse ? "Resume horse capture" : "Capture horse", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "12 food · 120s · discovered wild horse · 3 pasture places" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							disabled: !pausedShearer && !animals.some((a) => a.species === "sheep" && (a.fleece?.units || 0) >= 1 && g.state.time - a.born >= herdRules(a.species).maturity),
 							onClick: () => run(() => assignHusbandry(g, pen, "shear")),
 							children: [pausedShearer ? "Resume fleece delivery" : "Clip sheep fleece", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Raw fleece must be carried, washed, spun or felted, then sewn." })]
 						}),
@@ -69839,13 +70083,19 @@ function HusbandryControls({ engine, pen }) {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							disabled: !animals.some((a) => a.species === "goat" && g.state.time - a.born >= HERD.maturity),
-							onClick: () => run(() => assignHusbandry(g, pen, "pack")),
+							disabled: !animals.some((a) => a.species === "goat" && g.state.time - a.born >= herdRules(a.species).maturity),
+							onClick: () => run(() => assignHusbandry(g, pen, "pack", "goat")),
 							children: ["Fit pack harness", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "2 logs · uses one adult goat" })]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							disabled: !animals.some((a) => g.state.time - a.born >= HERD.maturity),
+							disabled: !animals.some((a) => a.species === "horse" && g.state.time - a.born >= herdRules(a.species).maturity),
+							onClick: () => run(() => assignHusbandry(g, pen, "pack", "horse")),
+							children: ["Train pack horse", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Reachable stable · 6 logs · 60s · uses one adult horse" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							disabled: !animals.some((a) => g.state.time - a.born >= herdRules(a.species).maturity),
 							onClick: () => run(() => assignHusbandry(g, pen, "slaughter")),
 							children: ["Slaughter one", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: animalProcessingEnabled(g, 0) ? "Meat, one hide and two bones carried to stores" : "Meat carried to stores" })]
 						}),
@@ -69872,7 +70122,7 @@ function HusbandryControls({ engine, pen }) {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 						className: "boat-passengers",
 						children: animals.map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
-							a.species === "sheep" ? g.state.time - a.born < HERD.maturity ? "Lamb" : a.sex === "female" ? "Ewe" : "Ram" : g.state.time - a.born < HERD.maturity ? "Kid" : a.sex === "female" ? "Doe" : "Buck",
+							a.species === "horse" ? g.state.time - a.born < herdRules(a.species).maturity ? "Foal" : a.sex === "female" ? "Mare" : "Stallion" : a.species === "sheep" ? g.state.time - a.born < herdRules(a.species).maturity ? "Lamb" : a.sex === "female" ? "Ewe" : "Ram" : g.state.time - a.born < herdRules(a.species).maturity ? "Kid" : a.sex === "female" ? "Doe" : "Buck",
 							a.species === "sheep" && ` · Fleece ${(a.fleece?.units || 0).toFixed(1)} / 4`,
 							" · Hunger ",
 							Math.round(a.hunger),
@@ -69881,7 +70131,7 @@ function HusbandryControls({ engine, pen }) {
 							" · Health ",
 							Math.round(a.hp / a.maxHp * 100),
 							"%",
-							a.pregnancy ? ` · Gestation ${Math.floor(a.pregnancy / HERD.gestation * 100)}%` : ""
+							a.pregnancy ? ` · Gestation ${Math.floor(a.pregnancy / herdRules(a.species).gestation * 100)}%` : ""
 						] }, a.id))
 					})
 				] })
@@ -73314,7 +73564,7 @@ function GameApp() {
 		let dragTimer = null;
 		const bootEngine = async () => {
 			try {
-				const { Engine } = await import("./engine-DAaDfvWn.mjs");
+				const { Engine } = await import("./engine-BH3OOD7T.mjs");
 				if (cancelled || !canvasRef.current) return;
 				engine = new Engine(canvasRef.current, (snap) => {
 					if (!cancelled) setHud(snap);

@@ -1,6 +1,6 @@
 import { $ as Points, A as Frustum, B as Matrix4, C as DodecahedronGeometry, D as Float32BufferAttribute, E as ExtrudeGeometry, F as InstancedMesh, G as MeshStandardMaterial, H as MeshBasicMaterial, I as LatheGeometry, J as Path, K as NearestFilter, L as LinearFilter, M as HemisphereLight, N as IcosahedronGeometry, O as FloatType, P as InstancedBufferAttribute, Q as PointLight, R as LinearMipmapLinearFilter, S as DirectionalLight, T as Euler, U as MeshDepthMaterial, V as Mesh, W as MeshLambertMaterial, X as Plane, Y as PerspectiveCamera, Z as PlaneGeometry, _ as CircleGeometry, _t as TorusGeometry, a as EffectComposer, at as Ray, b as CylinderGeometry, bt as Vector3, c as UniformsLib, ct as RepeatWrapping, d as Box3, dt as Scene, et as PointsMaterial, f as BoxGeometry, ft as ShaderMaterial, g as CapsuleGeometry, gt as SphereGeometry, h as CanvasTexture, ht as Sphere, i as RenderPass, it as RGBFormat, j as Group, k as FogExp2, l as WebGLRenderer, lt as RingGeometry, m as BufferGeometry, mt as ShapeGeometry, n as FilmPass, nt as RGBADepthPacking, o as ShaderPass, ot as Raycaster, p as BufferAttribute, pt as Shape, q as Object3D, r as UnrealBloomPass, rt as RGBAFormat, s as mergeGeometries, st as RedFormat, t as OutputPass, tt as Quaternion, u as AmbientLight, ut as SRGBColorSpace, v as Color, vt as UniformsUtils, w as DynamicDrawUsage, x as DataTexture, xt as Vector4, y as ConeGeometry, yt as Vector2, z as MathUtils } from "../_libs/three.mjs";
-import { $ as resumeConstructionQueue, $n as BUILD_ORDER, $t as armorEquipIssue, A as armorAffiliationColor, An as ERA_UPGRADE_RULES, At as describe, B as resumeProduction, Bn as sampleWorldHeight, Bt as placeFacingGate, C as Game, Cn as dragPlot, Ct as rulersOf, D as placeConstructionLine, Dn as plotDragIntent, Dt as score, E as linearStructure, En as maximumPlotAxisMultiple, Et as appetite, F as equipClothing, Fn as supportsEraUpgrade, Ft as hash32, G as beginHomeUse, Gn as BANK_TERRAIN_RULES, Gt as survivalFireActive, H as unloadProductionProject, Hn as ecologicalConditionsAt, Ht as snapGate, I as pauseProductionProject, In as EXCAVATION_RULES, It as makeRng, J as setHousingPaused, Jn as seaSurfaceY, Jt as equipWaterVessel, K as beginHousingUpgrade, Kn as bankTileAt, Kt as beginClayGather, L as productionIssue, Ln as excavationHeightAt, Lt as normal, M as PRODUCTION_RECIPES, Mn as eraUpgradeIssue, Mt as BAND_LABELS, N as beginProduction, Nn as fabricContext, Nt as bandOf, O as surveyFieldTopography, On as scalablePlot, Ot as heir, P as discardDairyProject, Pn as planEraChange, Pt as clamp$1, Q as queueConstruction, Qn as BUILDINGS, Qt as societyRelation, R as productionWorkSeconds, Rn as excavationTerrain, Rt as gateFacing, S as validateGameSave, Sn as plotModules, St as implications, T as joinedConstructionLine, Tn as fieldSeedIssue, Tt as STREAMS, U as carcassAvailable, Un as provinceAt, Ut as suggestGateSnap, V as swapClothing, Vn as PROVINCE_KINDS, Vt as rotateGateFacing, W as beginEraUpgrade, Wn as fbm, Wt as hearthHeating, X as editConstructionQueue, Xn as prepareOwnedWaterWorld, Xt as setPresentationSurvivalView, Y as setSitePreparationPaused, Yn as waterSurfaceAt, Yt as surveyClay, Z as pauseConstructionQueue, Zn as riverSurfaceData, Zt as SIEGE_RAM_RULES, _ as matchingSaveSlots, _n as GROUNDING_RULES, _t as livingPeople, a as RuntimeProfile, an as boatClass, ar as serializeStoredSave, at as equipBasket, b as decodeGame, bn as groundEntryFor, bt as tiesBetween, c as surveyReachFish, cn as wildPlantVisual, ct as surveyFibre, d as craftSiteReport, dn as planBridge, dt as refuseCapitulation, en as equipArmor, er as MAP, et as setConstructionPriority, f as commitPreparedAutosave, fn as TOWER_PLATFORM_RULES, ft as cultivationIssue, g as loadRaw, gn as terrainLaidWorkplace, gt as fosterHouses, h as invalidateAutosaveWrites, hn as foundationProfile, ht as expansionOf, i as RUNTIME_PROFILE_RULES, in as GARMENT_KINDS, ir as parseStoredSave, it as beginFibreGather, j as societyIdentity, jn as eraUpgradeBenefits, jt as dominantTraits, k as projectedTreeInBox, kn as compactGrainWorkplace, kt as yearlyDeathChance, l as waterReachAt, ln as wildPlantsEnabled, lt as acceptCapitulation, m as hasSave, mn as towerBuildConfiguration, mt as exchangeHostages, n as AcousticScore, nn as wornArmor, nr as TEAM_STYLE, nt as orderConstruction, o as beginRendererFrame, on as WILD_PLANT_SPECIES, ot as fibreGatherIssue, p as currentSaveGeneration, pn as normalizeTowerPlatform, pt as ensureRulers, q as housingAdoptionIssue, qn as lakeContains, qt as clayIssue, r as peacefulMusic, rn as carryingCapacity, rr as SAVE_CODEC_RULES, rt as planStatus, s as rendererFrameMetrics, sn as soilQuality, st as returnFibreLoad, tn as unequipArmor, tr as SAVE_KEY, tt as buildingCost, u as controlCraftSiteJob, un as bridgeHeight, ut as capitulationOffers, v as readSaveSlots, vn as buildingGroundContacts, vt as marryHouses, w as buildingQuarterTurns, wn as expandedGrainWorkplace, wt as familyFeatures, x as encodeGame, xn as registerGroundContacts, xt as bondLabel, y as saveGame, yn as groundContactVersion, yt as rulersEnabled, z as queueDairyVesselCleaning, zn as isFertile, zt as gateOrientation } from "./routes-BkKOQREQ.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/engine-DAaDfvWn.js
+import { $ as resumeConstructionQueue, $n as BUILD_ORDER, $t as armorEquipIssue, A as armorAffiliationColor, An as ERA_UPGRADE_RULES, At as describe, B as resumeProduction, Bn as sampleWorldHeight, Bt as placeFacingGate, C as Game, Cn as dragPlot, Ct as rulersOf, D as placeConstructionLine, Dn as plotDragIntent, Dt as score, E as linearStructure, En as maximumPlotAxisMultiple, Et as appetite, F as equipClothing, Fn as supportsEraUpgrade, Ft as hash32, G as beginHomeUse, Gn as BANK_TERRAIN_RULES, Gt as survivalFireActive, H as unloadProductionProject, Hn as ecologicalConditionsAt, Ht as snapGate, I as pauseProductionProject, In as EXCAVATION_RULES, It as makeRng, J as setHousingPaused, Jn as seaSurfaceY, Jt as equipWaterVessel, K as beginHousingUpgrade, Kn as bankTileAt, Kt as beginClayGather, L as productionIssue, Ln as excavationHeightAt, Lt as normal, M as PRODUCTION_RECIPES, Mn as eraUpgradeIssue, Mt as BAND_LABELS, N as beginProduction, Nn as fabricContext, Nt as bandOf, O as surveyFieldTopography, On as scalablePlot, Ot as heir, P as discardDairyProject, Pn as planEraChange, Pt as clamp$1, Q as queueConstruction, Qn as BUILDINGS, Qt as societyRelation, R as productionWorkSeconds, Rn as excavationTerrain, Rt as gateFacing, S as validateGameSave, Sn as plotModules, St as implications, T as joinedConstructionLine, Tn as fieldSeedIssue, Tt as STREAMS, U as carcassAvailable, Un as provinceAt, Ut as suggestGateSnap, V as swapClothing, Vn as PROVINCE_KINDS, Vt as rotateGateFacing, W as beginEraUpgrade, Wn as fbm, Wt as hearthHeating, X as editConstructionQueue, Xn as prepareOwnedWaterWorld, Xt as setPresentationSurvivalView, Y as setSitePreparationPaused, Yn as waterSurfaceAt, Yt as surveyClay, Z as pauseConstructionQueue, Zn as riverSurfaceData, Zt as SIEGE_RAM_RULES, _ as matchingSaveSlots, _n as GROUNDING_RULES, _t as livingPeople, a as RuntimeProfile, an as boatClass, ar as serializeStoredSave, at as equipBasket, b as decodeGame, bn as groundEntryFor, bt as tiesBetween, c as surveyReachFish, cn as wildPlantVisual, ct as surveyFibre, d as craftSiteReport, dn as planBridge, dt as refuseCapitulation, en as equipArmor, er as MAP, et as setConstructionPriority, f as commitPreparedAutosave, fn as TOWER_PLATFORM_RULES, ft as cultivationIssue, g as loadRaw, gn as terrainLaidWorkplace, gt as fosterHouses, h as invalidateAutosaveWrites, hn as foundationProfile, ht as expansionOf, i as RUNTIME_PROFILE_RULES, in as GARMENT_KINDS, ir as parseStoredSave, it as beginFibreGather, j as societyIdentity, jn as eraUpgradeBenefits, jt as dominantTraits, k as projectedTreeInBox, kn as compactGrainWorkplace, kt as yearlyDeathChance, l as waterReachAt, ln as wildPlantsEnabled, lt as acceptCapitulation, m as hasSave, mn as towerBuildConfiguration, mt as exchangeHostages, n as AcousticScore, nn as wornArmor, nr as TEAM_STYLE, nt as orderConstruction, o as beginRendererFrame, on as WILD_PLANT_SPECIES, ot as fibreGatherIssue, p as currentSaveGeneration, pn as normalizeTowerPlatform, pt as ensureRulers, q as housingAdoptionIssue, qn as lakeContains, qt as clayIssue, r as peacefulMusic, rn as carryingCapacity, rr as SAVE_CODEC_RULES, rt as planStatus, s as rendererFrameMetrics, sn as soilQuality, st as returnFibreLoad, tn as unequipArmor, tr as SAVE_KEY, tt as buildingCost, u as controlCraftSiteJob, un as bridgeHeight, ut as capitulationOffers, v as readSaveSlots, vn as buildingGroundContacts, vt as marryHouses, w as buildingQuarterTurns, wn as expandedGrainWorkplace, wt as familyFeatures, x as encodeGame, xn as registerGroundContacts, xt as bondLabel, y as saveGame, yn as groundContactVersion, yt as rulersEnabled, z as queueDairyVesselCleaning, zn as isFertile, zt as gateOrientation } from "./routes-pyt_G5Ai.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/engine-BH3OOD7T.js
 function storedVillageCandidates(protectedOnly = false, storage = localStorage) {
 	const slots = readSaveSlots(storage), raw = protectedOnly ? [slots.protected] : [
 		slots.primary,
@@ -1978,7 +1978,7 @@ var FIBRE_WORKSHOP_ART = {
 	frameWidthMetres: 1.65,
 	benchHeightMetres: .78
 };
-function beam$4(a, b, width = .11, depth = width) {
+function beam$5(a, b, width = .11, depth = width) {
 	const d = b.clone().sub(a), g = new BoxGeometry(width, d.length(), depth);
 	g.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), d.normalize()));
 	g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
@@ -2003,17 +2003,17 @@ function merge$7(parts) {
 * frames deliberately contain no free fibre, cordage or finished baskets. */
 function fibreWorkshopGeo() {
 	const v = (x, y, z) => new Vector3(x, y, z), timber = [];
-	for (const x of [-1.5, .15]) timber.push(beam$4(v(x, 0, .9), v(x, 2.1, .38), .14), beam$4(v(x, 0, -.5), v(x, 1.65, .48), .11));
-	timber.push(beam$4(v(-1.57, 1.95, .44), v(.23, 1.95, .44), .16), beam$4(v(-1.57, .45, .8), v(.23, .45, .8), .12));
+	for (const x of [-1.5, .15]) timber.push(beam$5(v(x, 0, .9), v(x, 2.1, .38), .14), beam$5(v(x, 0, -.5), v(x, 1.65, .48), .11));
+	timber.push(beam$5(v(-1.57, 1.95, .44), v(.23, 1.95, .44), .16), beam$5(v(-1.57, .45, .8), v(.23, .45, .8), .12));
 	for (let i = 0; i < 8; i++) timber.push(box$8(.055, .13, .055, -1.4 + i * .2, 1.98, .44));
-	for (const x of [.55, 1.45]) for (const z of [-.65, .5]) timber.push(beam$4(v(x, 0, z), v(x, FIBRE_WORKSHOP_ART.benchHeightMetres, z), .12));
+	for (const x of [.55, 1.45]) for (const z of [-.65, .5]) timber.push(beam$5(v(x, 0, z), v(x, FIBRE_WORKSHOP_ART.benchHeightMetres, z), .12));
 	timber.push(box$8(1.1, .12, 1.45, 1, .78, -.05), box$8(.085, .25, .085, .72, .9, -.42), box$8(.085, .25, .085, 1.25, .9, .35), box$8(2.8, .1, .35, 0, .28, -1.28));
-	for (const x of [-1.65, 1.65]) timber.push(beam$4(v(x, 0, -1.48), v(x, 2.35, -1.48), .13));
-	timber.push(beam$4(v(-1.72, 2.26, -1.48), v(1.72, 2.26, -1.48), .13));
+	for (const x of [-1.65, 1.65]) timber.push(beam$5(v(x, 0, -1.48), v(x, 2.35, -1.48), .13));
+	timber.push(beam$5(v(-1.72, 2.26, -1.48), v(1.72, 2.26, -1.48), .13));
 	const shade = [];
 	for (let i = 0; i < 9; i++) {
 		const x = -1.6 + i * .4;
-		shade.push(beam$4(v(x, 2.4, -1.65), v(x, 2.12, -.7), .16, .065));
+		shade.push(beam$5(v(x, 2.4, -1.65), v(x, 2.12, -.7), .16, .065));
 	}
 	const stones = [new IcosahedronGeometry(.19, 0).scale(1, .6, .8).translate(-.95, .12, .85), new IcosahedronGeometry(.17, 0).scale(1, .65, .85).translate(-.5, .11, .85)];
 	return {
@@ -3376,7 +3376,7 @@ var HULL_ART = {
 	maximumWidth: 2.8,
 	maximumLength: 6
 };
-function beam$3(w, h, d, x, y, z, ry = 0) {
+function beam$4(w, h, d, x, y, z, ry = 0) {
 	const g = new BoxGeometry(w, h, d);
 	g.rotateY(ry);
 	g.translate(x, y, z);
@@ -3408,32 +3408,32 @@ function hullClassGeometry(kind) {
 		parts.push(taperedHull(1.25, 4.8, .18));
 		for (const side of [-1, 1]) for (let i = 0; i < 12; i++) {
 			const z = -2.18 + i * .396, x = side * (.32 + .25 * Math.sin((i + .5) / 12 * Math.PI));
-			parts.push(beam$3(.1, .34, .45, x, .25, z));
+			parts.push(beam$4(.1, .34, .45, x, .25, z));
 		}
 		for (const z of [
 			-1.2,
 			.2,
 			1.2
-		]) parts.push(beam$3(1.22, .11, .27, 0, .44, z));
+		]) parts.push(beam$4(1.22, .11, .27, 0, .44, z));
 		parts.push(taperedHull(.25, 3.7, .15).translate(1.18, -.07, 0));
 		for (const z of [-1.1, 1.1]) {
-			parts.push(beam$3(2, .12, .12, .37, .48, z));
-			for (const x of [.5, 1.18]) parts.push(beam$3(.16, .15, .22, x, .5, z, .25));
+			parts.push(beam$4(2, .12, .12, .37, .48, z));
+			for (const x of [.5, 1.18]) parts.push(beam$4(.16, .15, .22, x, .5, z, .25));
 		}
 	} else {
 		parts.push(taperedHull(2.65, 5.8, .25));
 		for (const side of [-1, 1]) for (let i = 0; i < 12; i++) {
 			const z = -2.55 + i * .46, x = side * (.7 + .52 * Math.sin((i + .5) / 12 * Math.PI));
-			parts.push(beam$3(.14, .68, .51, x, .43, z));
+			parts.push(beam$4(.14, .68, .51, x, .43, z));
 		}
 		for (const z of [
 			-1.8,
 			-.6,
 			.6,
 			1.8
-		]) parts.push(beam$3(2.28, .17, .3, 0, .7, z));
-		for (const z of [-1.15, 1.15]) for (const side of [-1, 1]) parts.push(beam$3(.12, .13, 1.65, side * .61, .31, z, side * .62));
-		for (const z of [-2.5, 2.5]) parts.push(beam$3(1.25, .9, .2, 0, .51, z));
+		]) parts.push(beam$4(2.28, .17, .3, 0, .7, z));
+		for (const z of [-1.15, 1.15]) for (const side of [-1, 1]) parts.push(beam$4(.12, .13, 1.65, side * .61, .31, z, side * .62));
+		for (const z of [-2.5, 2.5]) parts.push(beam$4(1.25, .9, .2, 0, .51, z));
 	}
 	const combined = mergeGeometries(parts.map((p) => p.index ? p.toNonIndexed() : p));
 	for (const p of parts) p.dispose();
@@ -4450,7 +4450,7 @@ function shell(rt, rb, h, y, color, backOnly = false) {
 	g.translate(0, y + h / 2, 0);
 	return paint$1(g, color);
 }
-function ring(radius, tube, y, color) {
+function ring$1(radius, tube, y, color) {
 	const g = new TorusGeometry(radius, tube, 3, 12);
 	g.rotateX(Math.PI / 2);
 	g.scale(1.08, 1, .9);
@@ -4473,7 +4473,7 @@ function wornGarmentGeometry(kind) {
 	if (kind === "lightClothes") {
 		const parts = [
 			shell(.19, .255, .52, .3, "#d6c4a0"),
-			ring(.185, .012, .82, "#ebddbd"),
+			ring$1(.185, .012, .82, "#ebddbd"),
 			shell(.22, .22, .035, .48, "#79664b")
 		];
 		for (const x of [-.24, .24]) parts.push(box$6(.16, .14, .23, x - .08, .7, -.11, "#c4b28f"));
@@ -4487,7 +4487,7 @@ function wornGarmentGeometry(kind) {
 	if (kind === "woolCoat") {
 		const parts = [
 			shell(.221, .255, .59, .26, "#a9a28d"),
-			ring(.2, .024, .85, "#c9c2a8"),
+			ring$1(.2, .024, .85, "#c9c2a8"),
 			shell(.256, .256, .045, .28, "#7c7764"),
 			box$6(.025, .43, .025, 0, .29, .238, "#646353")
 		];
@@ -4502,7 +4502,7 @@ function wornGarmentGeometry(kind) {
 	if (kind === "hideCoat") {
 		const parts = [
 			shell(.223, .26, .64, .24, "#654735"),
-			ring(.199, .032, .849, "#e1c697"),
+			ring$1(.199, .032, .849, "#e1c697"),
 			shell(.253, .253, .06, .25, "#d1b28a"),
 			shell(.236, .236, .044, .48, "#35271f"),
 			box$6(.028, .51, .018, -.014, .29, .231, "#ddbb8c")
@@ -4521,7 +4521,7 @@ function wornGarmentGeometry(kind) {
 		parts.push(paint$1(leg, skin ? "#806a4c" : "#523a2d"));
 	}
 	if (skin) {
-		parts.push(shell(.215, .27, .48, .31, "#c2a675", true), ring(.185, .028, .865, "#ddc99c"));
+		parts.push(shell(.215, .27, .48, .31, "#c2a675", true), ring$1(.185, .028, .865, "#ddc99c"));
 		for (let i = 0; i < 10; i++) {
 			const a = i * Math.PI / 5, g = new ConeGeometry(.038, .085, 3);
 			g.rotateZ(Math.PI);
@@ -4529,7 +4529,7 @@ function wornGarmentGeometry(kind) {
 			parts.push(paint$1(g, "#c6ac7a"));
 		}
 	} else {
-		parts.push(ring(.19, .013, .845, "#aa835b"), shell(.211, .211, .045, .48, "#342b24"), box$6(.012, .43, .015, 0, .36, .184, "#c4a77b"));
+		parts.push(ring$1(.19, .013, .845, "#aa835b"), shell(.211, .211, .045, .48, "#342b24"), box$6(.012, .43, .015, 0, .36, .184, "#c4a77b"));
 		for (const y of [
 			.57,
 			.63,
@@ -6380,7 +6380,7 @@ function box$5(w, h, d, x = 0, y = 0, z = 0) {
 	g.translate(x, y + h / 2, z);
 	return g;
 }
-function beam$2(a, b, width = .12) {
+function beam$3(a, b, width = .12) {
 	const delta = b.clone().sub(a), g = new BoxGeometry(width, delta.length(), width);
 	g.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), delta.normalize()));
 	g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
@@ -6413,7 +6413,7 @@ function towerPlatformGeos(input) {
 		const levels = Math.ceil(h / 2.5);
 		for (let level = 0; level < levels; level++) {
 			const y = .12 + level * h / levels, top = (level + 1) * h / levels - .12;
-			for (const side of [-1, 1]) timber.push(beam$2(new Vector3(-1.65, y, side * 1.65), new Vector3(1.65, top, side * 1.65)), beam$2(new Vector3(side * 1.65, y, -1.65), new Vector3(side * 1.65, top, 1.65)));
+			for (const side of [-1, 1]) timber.push(beam$3(new Vector3(-1.65, y, side * 1.65), new Vector3(1.65, top, side * 1.65)), beam$3(new Vector3(side * 1.65, y, -1.65), new Vector3(side * 1.65, top, 1.65)));
 		}
 		for (const x of [-1.8, 1.8]) for (const z of [-1.8, 1.8]) timber.push(box$5(.15, 1.08, .15, x, h, z));
 		for (const y of [h + .5, h + 1]) timber.push(box$5(3.7, .12, .12, 0, y, -1.8), box$5(.12, .12, 3.7, -1.8, y, 0), box$5(.12, .12, 3.7, 1.8, y, 0), box$5(1.35, .12, .12, -1.15, y, 1.8), box$5(1.35, .12, .12, 1.15, y, 1.8));
@@ -6541,6 +6541,6519 @@ var TowerPlatformLayer = class {
 		}
 		this.buckets.clear();
 		this.picking.clear();
+	}
+};
+var LOD_DISTANCES_METRES = [
+	30,
+	70,
+	120
+];
+/** Deterministic small PRNG (mulberry32); same seed gives the same building. */
+function seededRandom(seed) {
+	let a = seed >>> 0;
+	return () => {
+		a = a + 1831565813 >>> 0;
+		let t = a;
+		t = Math.imul(t ^ t >>> 15, t | 1);
+		t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+		return ((t ^ t >>> 14) >>> 0) / 4294967296;
+	};
+}
+function hashSeed(...values) {
+	let h = 2166136261;
+	for (const v of values) {
+		const s = String(v);
+		for (let i = 0; i < s.length; i++) {
+			h ^= s.charCodeAt(i);
+			h = Math.imul(h, 16777619);
+		}
+		h ^= 44;
+		h = Math.imul(h, 16777619);
+	}
+	return h >>> 0;
+}
+var range = (r, lo, hi) => lo + (hi - lo) * r();
+var pick = (r, items) => items[Math.min(items.length - 1, Math.floor(r() * items.length))];
+var chance = (r, p) => r() < p;
+function part(shape, mat, size, pos, lod = 2, rot, sides) {
+	return rot ? {
+		shape,
+		mat,
+		size,
+		pos,
+		lod,
+		rot,
+		...sides ? { sides } : {}
+	} : {
+		shape,
+		mat,
+		size,
+		pos,
+		lod,
+		...sides ? { sides } : {}
+	};
+}
+/** A straight post/beam between two points, as a thin box. */
+function beam$2(mat, a, b, thick = .14, lod = 1) {
+	const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len = Math.hypot(dx, dy, dz), yaw = Math.atan2(dx, dz), pitch = Math.atan2(Math.hypot(dx, dz), dy);
+	return {
+		shape: "box",
+		mat,
+		size: [
+			thick,
+			len,
+			thick
+		],
+		pos: [
+			a[0],
+			a[1] + thick / 2 * Math.abs(Math.sin(pitch)),
+			a[2]
+		],
+		rot: [
+			pitch,
+			yaw,
+			0
+		],
+		lod,
+		ends: [a, b]
+	};
+}
+/** Rotation order Y·X·Z applied about the part's base centre (three.js
+* Euler order 'YXZ'). Exported so the mesh builder and adapter agree. */
+function rotatePoint(v, rot) {
+	return rotate(v, rot);
+}
+function rotate(v, rot) {
+	const [rx, ry, rz] = rot;
+	let [x, y, z] = v;
+	let c = Math.cos(rz), s = Math.sin(rz);
+	[x, y] = [x * c - y * s, x * s + y * c];
+	c = Math.cos(rx);
+	s = Math.sin(rx);
+	[y, z] = [y * c - z * s, y * s + z * c];
+	c = Math.cos(ry);
+	s = Math.sin(ry);
+	[x, z] = [x * c + z * s, -x * s + z * c];
+	return [
+		x,
+		y,
+		z
+	];
+}
+function partCorners(p) {
+	const [w, h, d] = p.size, round = p.shape === "cylinder" || p.shape === "cone", hw = (round ? Math.max(w, d) : w) / 2, hd = (round ? Math.max(w, d) : d) / 2;
+	const out = [];
+	for (const x of [-hw, hw]) for (const y of [0, h]) for (const z of [-hd, hd]) {
+		const r = p.rot ? rotate([
+			x,
+			y,
+			z
+		], p.rot) : [
+			x,
+			y,
+			z
+		];
+		out.push([
+			r[0] + p.pos[0],
+			r[1] + p.pos[1],
+			r[2] + p.pos[2]
+		]);
+	}
+	return out;
+}
+function partBounds(p) {
+	const b = {
+		minX: Infinity,
+		maxX: -Infinity,
+		minY: Infinity,
+		maxY: -Infinity,
+		minZ: Infinity,
+		maxZ: -Infinity
+	};
+	for (const [x, y, z] of partCorners(p)) {
+		b.minX = Math.min(b.minX, x);
+		b.maxX = Math.max(b.maxX, x);
+		b.minY = Math.min(b.minY, y);
+		b.maxY = Math.max(b.maxY, y);
+		b.minZ = Math.min(b.minZ, z);
+		b.maxZ = Math.max(b.maxZ, z);
+	}
+	return b;
+}
+function specBounds(spec) {
+	const b = {
+		minX: Infinity,
+		maxX: -Infinity,
+		minY: Infinity,
+		maxY: -Infinity,
+		minZ: Infinity,
+		maxZ: -Infinity
+	};
+	for (const p of spec.parts) {
+		const q = partBounds(p);
+		b.minX = Math.min(b.minX, q.minX);
+		b.maxX = Math.max(b.maxX, q.maxX);
+		b.minY = Math.min(b.minY, q.minY);
+		b.maxY = Math.max(b.maxY, q.maxY);
+		b.minZ = Math.min(b.minZ, q.minZ);
+		b.maxZ = Math.max(b.maxZ, q.maxZ);
+	}
+	return b;
+}
+/** Parts present at an LOD tier (0 near, 1 mid, 2 far). */
+function partsAtLod(spec, tier) {
+	return spec.parts.filter((p) => p.lod >= tier && (p.onlyFrom ?? 0) <= tier);
+}
+/** Mark a part as a far-LOD impostor. */
+function far(p) {
+	return {
+		...p,
+		lod: 2,
+		onlyFrom: 2
+	};
+}
+function lodForDistance(metres) {
+	return metres < LOD_DISTANCES_METRES[0] ? 0 : metres < LOD_DISTANCES_METRES[1] ? 1 : 2;
+}
+function renderTierForDistance(metres) {
+	return metres >= LOD_DISTANCES_METRES[2] ? 3 : lodForDistance(metres);
+}
+/** Uniformly shrink X/Z (never Y) so every part stays inside footprint minus
+* margin. Generators already aim inside; this is a final guarantee so no
+* base, eave or wheel ever exceeds the navigation rectangle. */
+function fitToFootprint(spec, margin = .1, marginZ = margin) {
+	const b = specBounds(spec), hw = spec.footprint.w / 2 - margin, hd = spec.footprint.d / 2 - marginZ;
+	const s = Math.min(1, hw / Math.max(1e-6, Math.abs(b.minX), Math.abs(b.maxX)), hd / Math.max(1e-6, Math.abs(b.minZ), Math.abs(b.maxZ)));
+	if (s >= 1) return spec;
+	const parts = spec.parts.map((p) => {
+		if (p.ends) {
+			const [a, b] = p.ends;
+			return {
+				...beam$2(p.mat, [
+					a[0] * s,
+					a[1],
+					a[2] * s
+				], [
+					b[0] * s,
+					b[1],
+					b[2] * s
+				], p.size[0], p.lod),
+				...p.onlyFrom !== void 0 ? { onlyFrom: p.onlyFrom } : {}
+			};
+		}
+		const tilted = p.rot && (Math.abs(p.rot[0]) > 1e-6 || Math.abs(p.rot[2]) > 1e-6);
+		const size = tilted ? [
+			p.size[0] * s,
+			p.size[1] * s,
+			p.size[2] * s
+		] : [
+			p.size[0] * s,
+			p.size[1],
+			p.size[2] * s
+		];
+		const pos = [
+			p.pos[0] * s,
+			tilted ? p.pos[1] : p.pos[1],
+			p.pos[2] * s
+		];
+		return {
+			...p,
+			size,
+			pos,
+			...p.inset !== void 0 ? { inset: p.inset * s } : {}
+		};
+	});
+	const entry = spec.entry ? {
+		x: spec.entry.x * s,
+		z: spec.entry.z * s,
+		width: spec.entry.width * s
+	} : void 0;
+	return {
+		...spec,
+		parts,
+		...entry ? { entry } : {}
+	};
+}
+/** A part is supported when it rests on the ground or touches another part.
+* Returns indices of unsupported (floating) parts; used by tests. */
+function floatingParts(spec, tolerance = .06) {
+	const bounds = spec.parts.map(partBounds), out = [];
+	const touches = (a, b) => a.minX <= b.maxX + tolerance && a.maxX >= b.minX - tolerance && a.minY <= b.maxY + tolerance && a.maxY >= b.minY - tolerance && a.minZ <= b.maxZ + tolerance && a.maxZ >= b.minZ - tolerance;
+	const grounded = /* @__PURE__ */ new Set();
+	bounds.forEach((b, i) => {
+		if (b.minY <= tolerance) grounded.add(i);
+	});
+	let grew = true;
+	while (grew) {
+		grew = false;
+		for (let i = 0; i < bounds.length; i++) {
+			if (grounded.has(i)) continue;
+			for (const j of grounded) if (touches(bounds[i], bounds[j])) {
+				grounded.add(i);
+				grew = true;
+				break;
+			}
+		}
+	}
+	for (let i = 0; i < bounds.length; i++) if (!grounded.has(i)) out.push(i);
+	return out;
+}
+/** Triangles for one part at its declared segment count. carvedMesh.ts emits
+* exactly this many (tested), so budgets are counts, not guesses. */
+var SPHERE_SEGMENTS = {
+	lon: 8,
+	lat: 6
+};
+function partTriangles(p) {
+	const n = p.sides ?? 8;
+	switch (p.shape) {
+		case "box": return 12;
+		case "prism": return 8;
+		case "wedge": return 8;
+		case "hip": return 8;
+		case "pyramid": return 6;
+		case "cone": return n * 2;
+		case "cylinder": return n * 4;
+		case "sphere": return SPHERE_SEGMENTS.lon * 2 + SPHERE_SEGMENTS.lon * (SPHERE_SEGMENTS.lat - 2) * 2;
+	}
+}
+/** Shared helpers and types for the Option H procedural building families
+* (split out so core and extra family files can share them without a cycle). */
+/** Roof pitch in radians: snow sheds off steep thatch, arid roofs are low. */
+function roofPitch(ctx, r) {
+	const [lo, hi] = {
+		cold: [46, 56],
+		wet: [40, 50],
+		temperate: [32, 45],
+		arid: [14, 24]
+	}[ctx.climate];
+	const thatchBonus = roofMaterial(ctx) === "thatch" ? 4 : 0, bias = ctx.tradition?.pitchBiasDeg ?? 0;
+	return Math.max(10, range(r, lo, hi) + thatchBonus + bias) * Math.PI / 180;
+}
+function roofMaterial(ctx) {
+	if (ctx.era <= 1 || ctx.material === "wattle") return "thatch";
+	if (ctx.climate === "arid" || ctx.material === "mudbrick" || ctx.era >= 3 && ctx.wealth > .55 && ctx.material === "stone") return "tile";
+	return ctx.era >= 2 ? "shingle" : "thatch";
+}
+function wallMaterial(ctx) {
+	return ctx.material === "stone" ? "stone" : ctx.material === "mudbrick" ? "plaster" : ctx.material === "wattle" ? "plaster" : "woodMid";
+}
+/** Storeys are limited by material: wattle 1, timber 2, stone 2 (3 in late eras). */
+function maxStoreys(material, era) {
+	return material === "wattle" ? 1 : material === "mudbrick" ? 2 : material === "timber" ? 2 : era >= 5 ? 3 : 2;
+}
+/** Gable roof prism plus a carved ridge and dark edge boards. axis = ridge direction. */
+function gableRoof(parts, ctx, span, length, eave, pitch, cx, cz, axis, overhang = .22, mat) {
+	const rise = Math.max(.25, span / 2 * Math.tan(pitch)), m = mat ?? roofMaterial(ctx), rot = axis === "x" ? [
+		0,
+		Math.PI / 2,
+		0
+	] : void 0;
+	parts.push(part("prism", m, [
+		span + 2 * overhang,
+		rise,
+		length + 2 * overhang
+	], [
+		cx,
+		eave,
+		cz
+	], 2, rot));
+	roofCourses(parts, span / 2 + overhang, rise, length + 2 * overhang - .08, eave, cx, cz, axis, m === "thatch" ? 2 : 3);
+	const half = (length + 2 * overhang) / 2;
+	parts.push(axis === "x" ? part("box", "woodEdge", [
+		length + 2 * overhang,
+		.12,
+		.14
+	], [
+		cx,
+		eave + rise - .04,
+		cz
+	], 1) : part("box", "woodEdge", [
+		.14,
+		.12,
+		length + 2 * overhang
+	], [
+		cx,
+		eave + rise - .04,
+		cz
+	], 1));
+	for (const s of [-1, 1]) {
+		const ex = axis === "x" ? cx + s * half : cx, ez = axis === "z" ? cz + s * half : cz;
+		parts.push(part("box", "woodEdge", axis === "x" ? [
+			.08,
+			.1,
+			span + 2 * overhang
+		] : [
+			span + 2 * overhang,
+			.1,
+			.08
+		], [
+			ex,
+			eave - .05,
+			ez
+		], 0));
+	}
+	return rise;
+}
+/** Carved shingle/thatch course lines laid on both roof slopes (near LOD
+* only): the board's roofs read as stacked boards, not flat planes. */
+function roofCourses(parts, halfSpan, rise, length, eave, cx, cz, axis, perSide) {
+	const a = Math.atan2(rise, halfSpan);
+	for (const side of [-1, 1]) for (let i = 0; i < perSide; i++) {
+		const t = .22 + i * (.62 / Math.max(1, perSide - 1)), lx = side * halfSpan * (1 - t), y = eave + rise * t, theta = side < 0 ? a : -a;
+		const pos = axis === "z" ? [
+			cx + lx,
+			y,
+			cz
+		] : [
+			cx,
+			y,
+			cz - lx
+		];
+		parts.push(part("box", "woodDark", [
+			.12,
+			.035,
+			length
+		], pos, 0, axis === "z" ? [
+			0,
+			0,
+			theta
+		] : [
+			0,
+			Math.PI / 2,
+			theta
+		]));
+	}
+}
+function door(parts, x, z, w = .85, h = 1.55, face = "+z") {
+	const t = .07, along = face === "+z" || face === "-z";
+	parts.push(part("box", "woodEdge", along ? [
+		w,
+		h,
+		t
+	] : [
+		t,
+		h,
+		w
+	], [
+		x,
+		0,
+		z
+	], 1));
+}
+function windowAt(parts, x, y, z, face) {
+	parts.push(part("box", "recess", face === "z" ? [
+		.45,
+		.42,
+		.06
+	] : [
+		.06,
+		.42,
+		.45
+	], [
+		x,
+		y,
+		z
+	], 0));
+}
+/** Option H carved families for the building types the first batch left on the
+* classic renderer: farm (field plot), pen, dock (pier), bridge, keep, stables,
+* academy (college/stoa), quarry, cairn, sacred grove, frontier outpost,
+* threshing floor and the 4 m earthwork cells (stone wall, trench, moat).
+* Same rules as buildingFamilies.ts: pure parts, metres, entrance +Z, nothing
+* larger than the footprint (the field, pen and quarry ARE their footprint, so
+* they use many thin functional pieces, never one slab), real-world reference
+* for each, structural variation from era/material/climate/wealth/tradition. */
+var B = (mat, size, pos, lod = 1, rot) => part("box", mat, size, pos, lod, rot);
+/** Arms of a 4 m cell element. 'corner' joins +X and +Z neighbours (the adapter
+* yaws it for other corners); every arm runs to the cell edge. */
+function arms(axis, w, d, t) {
+	if (axis === "corner") return [{
+		along: "x",
+		cx: (w / 2 - t / 2) / 2,
+		cz: 0,
+		len: w / 2 + t / 2
+	}, {
+		along: "z",
+		cx: 0,
+		cz: (d / 2 - t / 2) / 2,
+		len: d / 2 + t / 2
+	}];
+	return axis === "x" ? [{
+		along: "x",
+		cx: 0,
+		cz: 0,
+		len: w
+	}] : [{
+		along: "z",
+		cx: 0,
+		cz: 0,
+		len: d
+	}];
+}
+/** Box along an arm: `off` along the run, `lat` across it. */
+var armBox = (a, mat, len, h, th, off, lat, y, lod = 1) => B(mat, a.along === "x" ? [
+	len,
+	h,
+	th
+] : [
+	th,
+	h,
+	len
+], [
+	a.cx + (a.along === "x" ? off : lat),
+	y,
+	a.cz + (a.along === "z" ? off : lat)
+], lod);
+/** Farm: ridge-and-furrow strips (Laxton/Midland open fields) with crop rows on
+* the ridges, hurdle or dry-stone edging, a headland and field gate; hill
+* fields add a clearance wall, arid fields an irrigation channel. */
+var fieldPlot = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, PW = w / 2 * .92, PD = d / 2 * .92, head = range(r, 1.2, 1.7), dry = ctx.climate === "arid", stoneEdge = ctx.era >= 2 && (ctx.climate === "cold" || ctx.material === "stone");
+	const chan = dry ? .7 : 0, x0 = -PW + .35 + chan, x1 = PW - .35, rows = Math.max(4, Math.round((x1 - x0) / range(r, .95, 1.3))), rw = (x1 - x0) / rows, z0 = -PD + .3, L = PD - head - z0, zc = (z0 + PD - head) / 2;
+	const ridgeH = range(r, .2, .3);
+	for (let i = 0; i < rows; i++) {
+		const x = x0 + (i + .5) * rw;
+		parts.push(B("woodDark", [
+			rw * .66,
+			ridgeH,
+			L
+		], [
+			x,
+			0,
+			zc
+		], 1));
+		const grain = i % 3 !== 1;
+		if (ctx.era >= 0) parts.push(B(grain ? "foliage" : "foliageDark", [
+			rw * (grain ? .4 : .3),
+			grain ? .2 : .34,
+			L * .94
+		], [
+			x,
+			ridgeH,
+			zc
+		], 1));
+	}
+	parts.push(far(B("woodDark", [
+		x1 - x0,
+		ridgeH + .1,
+		L
+	], [
+		(x0 + x1) / 2,
+		0,
+		zc
+	], 2)));
+	const spacing = 1.5, edgeH = stoneEdge ? .75 : .85;
+	const run = (ax, fixed, a0, a1) => {
+		const len = a1 - a0, c = (a0 + a1) / 2;
+		if (len < .3) return;
+		if (stoneEdge) {
+			parts.push(B("stone", ax === "x" ? [
+				len,
+				edgeH,
+				.38
+			] : [
+				.38,
+				edgeH,
+				len
+			], ax === "x" ? [
+				c,
+				0,
+				fixed
+			] : [
+				fixed,
+				0,
+				c
+			], 2), B("stoneDark", ax === "x" ? [
+				len,
+				.1,
+				.46
+			] : [
+				.46,
+				.1,
+				len
+			], ax === "x" ? [
+				c,
+				edgeH,
+				fixed
+			] : [
+				fixed,
+				edgeH,
+				c
+			], 1));
+			return;
+		}
+		const n = Math.max(1, Math.round(len / spacing));
+		for (let i = 0; i <= n; i++) {
+			const t = a0 + i * len / n;
+			parts.push(part("cylinder", "woodDark", [
+				.13,
+				edgeH + .2,
+				.11
+			], ax === "x" ? [
+				t,
+				0,
+				fixed
+			] : [
+				fixed,
+				0,
+				t
+			], 1, void 0, 5));
+		}
+		for (const y of [.35, .7]) parts.push(B("woodMid", ax === "x" ? [
+			len,
+			.08,
+			.08
+		] : [
+			.08,
+			.08,
+			len
+		], ax === "x" ? [
+			c,
+			y,
+			fixed
+		] : [
+			fixed,
+			y,
+			c
+		], 2));
+		parts.push(B("woodLight", ax === "x" ? [
+			len,
+			.4,
+			.04
+		] : [
+			.04,
+			.4,
+			len
+		], ax === "x" ? [
+			c,
+			.2,
+			fixed
+		] : [
+			fixed,
+			.2,
+			c
+		], 0));
+	};
+	const gate = .85;
+	run("x", -PD, -PW, PW);
+	run("z", -PW, -PD, PD);
+	run("z", PW, -PD, PD);
+	run("x", PD, -PW, -.85);
+	run("x", PD, gate, PW);
+	parts.push(B("woodEdge", [
+		gate * 2 - .1,
+		.7,
+		.06
+	], [
+		0,
+		.1,
+		PD
+	], 0));
+	if (dry) {
+		const cx = -PW + .45;
+		parts.push(B("stoneDark", [
+			.14,
+			.22,
+			L
+		], [
+			cx - .3,
+			0,
+			zc
+		], 1), B("stoneDark", [
+			.14,
+			.22,
+			L
+		], [
+			cx + .3,
+			0,
+			zc
+		], 1), B("water", [
+			.46,
+			.1,
+			L
+		], [
+			cx,
+			0,
+			zc
+		], 0));
+	}
+	if (ctx.wealth > .4 && ctx.era >= 1) {
+		const sx = -PW + .95, sz = PD - .75;
+		parts.push(B(wallMaterial(ctx), [
+			1.3,
+			1.15,
+			1
+		], [
+			sx,
+			0,
+			sz
+		], 2), part("wedge", roofMaterial(ctx), [
+			1.5,
+			.5,
+			1.2
+		], [
+			sx,
+			1.15,
+			sz
+		], 1, [
+			0,
+			Math.PI,
+			0
+		]), B("woodEdge", [
+			.45,
+			.85,
+			.06
+		], [
+			sx + .2,
+			0,
+			sz + .52
+		], 0));
+	}
+	if (ctx.era >= 1 && chance(r, .7)) {
+		const sx = range(r, -PW * .4, PW * .4), sz = zc;
+		parts.push(beam$2("woodDark", [
+			sx,
+			0,
+			sz
+		], [
+			sx,
+			1.5,
+			sz
+		], .07, 0), B("woodDark", [
+			.9,
+			.06,
+			.06
+		], [
+			sx,
+			1.2,
+			sz
+		], 0), B("cloth", [
+			.5,
+			.5,
+			.05
+		], [
+			sx,
+			.65,
+			sz
+		], 0));
+	}
+	if (ctx.era >= 1 && chance(r, .4)) parts.push(part("cone", "stoneDark", [
+		.8,
+		.5,
+		.8
+	], [
+		PW - .8,
+		0,
+		-PD + .7
+	], 1, void 0, 6));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: PD,
+			width: gate * 2
+		}
+	};
+};
+/** Animal pen: wattle-hurdle fold (Butser/Iron Age) or dry-stone sheepfold,
+* a gate in the front side, a lean-to shelter on the back wall and a trough.
+* Adapts to any dragged size; post spacing widens on big pens. */
+var pen = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, PW = w / 2 - .3, PD = d / 2 - .3, stone = ctx.climate === "cold" || ctx.material === "stone" && ctx.era >= 2, gate = Math.min(1.9, PW * .6), H = stone ? .95 : range(r, 1.05, 1.3);
+	const run = (ax, fixed, a0, a1) => {
+		const len = a1 - a0, c = (a0 + a1) / 2;
+		if (len < .3) return;
+		const at = (t) => ax === "x" ? [
+			t,
+			0,
+			fixed
+		] : [
+			fixed,
+			0,
+			t
+		];
+		if (stone) {
+			parts.push(B("stone", ax === "x" ? [
+				len,
+				H,
+				.45
+			] : [
+				.45,
+				H,
+				len
+			], at(c), 2), B("stoneDark", ax === "x" ? [
+				len,
+				.12,
+				.56
+			] : [
+				.56,
+				.12,
+				len
+			], [
+				at(c)[0],
+				H,
+				at(c)[2]
+			], 1));
+			return;
+		}
+		const n = Math.max(1, Math.min(12, Math.round(len / range(r, 1.4, 1.8))));
+		for (let i = 0; i <= n; i++) {
+			const t = a0 + i * len / n;
+			parts.push(part("cylinder", "woodDark", [
+				.15,
+				H + .15,
+				.12
+			], at(t), 1, void 0, 6));
+		}
+		for (const y of [.4, H * .8]) parts.push(B("woodMid", ax === "x" ? [
+			len,
+			.09,
+			.09
+		] : [
+			.09,
+			.09,
+			len
+		], [
+			at(c)[0],
+			y,
+			at(c)[2]
+		], 2));
+		parts.push(B("woodLight", ax === "x" ? [
+			len,
+			H * .55,
+			.05
+		] : [
+			.05,
+			H * .55,
+			len
+		], [
+			at(c)[0],
+			.15,
+			at(c)[2]
+		], 0));
+	};
+	run("x", -PD, -PW, PW);
+	run("z", -PW, -PD, PD);
+	run("z", PW, -PD, PD);
+	run("x", PD, -PW, -gate / 2);
+	run("x", PD, gate / 2, PW);
+	parts.push(B("woodEdge", [
+		gate * .55,
+		H * .85,
+		.07
+	], [
+		gate / 2 + .3,
+		0,
+		PD - .4
+	], 0, [
+		0,
+		.7,
+		0
+	]));
+	for (const s of [-1, 1]) parts.push(part("cylinder", "woodEdge", [
+		.2,
+		H + .45,
+		.18
+	], [
+		s * gate / 2,
+		0,
+		PD
+	], 1, void 0, 6));
+	const sw = Math.min(3.2, PW * .9), sd = Math.min(1.9, PD * .8), sx = pick(r, [-1, 1]) * (PW - sw / 2 - .2), sz = -PD + sd / 2 + .25;
+	for (const px of [-1, 1]) parts.push(beam$2("woodDark", [
+		sx + px * (sw / 2 - .12),
+		0,
+		sz - sd / 2 + .1
+	], [
+		sx + px * (sw / 2 - .12),
+		1.9,
+		sz - sd / 2 + .1
+	], .14, 1), beam$2("woodDark", [
+		sx + px * (sw / 2 - .12),
+		0,
+		sz + sd / 2 - .1
+	], [
+		sx + px * (sw / 2 - .12),
+		1.35,
+		sz + sd / 2 - .1
+	], .14, 1));
+	parts.push(part("wedge", stone || ctx.era >= 2 ? roofMaterial(ctx) : "thatch", [
+		sw + .3,
+		.58,
+		sd + .3
+	], [
+		sx,
+		1.35,
+		sz
+	], 2));
+	const tx = -Math.sign(sx || 1) * (PW * .35);
+	parts.push(B("woodDark", [
+		1.5,
+		.34,
+		.42
+	], [
+		tx,
+		0,
+		0
+	], 1), B("water", [
+		1.36,
+		.04,
+		.3
+	], [
+		tx,
+		.32,
+		0
+	], 0));
+	if (ctx.wealth > .5) parts.push(B("woodMid", [
+		sw * .7,
+		.4,
+		.3
+	], [
+		sx,
+		0,
+		sz + sd / 2 - .5
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: PD,
+			width: gate
+		}
+	};
+};
+/** Fishing dock: timber pier on pile bents with deck planks and a T-head,
+* bollards, a shore ladder/steps, a fisher's hut and a net-drying rack. Built
+* facing the water at +Z (generateFamily yaws it to the real water side). */
+var pier = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, Ld = d * range(r, .6, .72), zEnd = d / 2 - .1, z0 = zEnd - Ld, dw = range(r, 1.7, 2.2), xo = range(r, -w * .12, w * .12), deckY = .5;
+	parts.push(B("woodMid", [
+		dw,
+		.12,
+		Ld
+	], [
+		xo,
+		deckY,
+		z0 + Ld / 2
+	], 2));
+	const bents = Math.max(3, Math.round(Ld / 1.6));
+	for (let i = 0; i < bents; i++) {
+		const z = z0 + .3 + i * (Ld - .6) / (bents - 1);
+		for (const s of [-1, 1]) parts.push(part("cylinder", "woodDark", [
+			.26,
+			deckY,
+			.22
+		], [
+			xo + s * (dw / 2 - .12),
+			0,
+			z
+		], 1, void 0, 6));
+		parts.push(B("woodEdge", [
+			dw,
+			.1,
+			.16
+		], [
+			xo,
+			.4,
+			z
+		], 1));
+	}
+	for (const s of [-1, 1]) parts.push(B("woodDark", [
+		.14,
+		.2,
+		Ld
+	], [
+		xo + s * (dw / 2 - .12),
+		.3,
+		z0 + Ld / 2
+	], 1));
+	for (let i = 0; i < Math.round(Ld / .4); i++) parts.push(B("woodLight", [
+		dw + .06,
+		.03,
+		.3
+	], [
+		xo,
+		.62,
+		z0 + .2 + i * (Ld - .4) / Math.round(Ld / .4)
+	], 0));
+	const th = Math.min(w * .5, dw + range(r, 1.4, 2.4)), tz = zEnd - .5;
+	parts.push(B("woodMid", [
+		th,
+		.12,
+		1
+	], [
+		xo,
+		deckY,
+		tz
+	], 2));
+	for (const s of [-1, 1]) for (const z of [tz - .4, tz + .4]) parts.push(part("cylinder", "woodDark", [
+		.26,
+		deckY,
+		.22
+	], [
+		xo + s * (th / 2 - .14),
+		0,
+		z
+	], 1, void 0, 6));
+	for (const s of [-1, 1]) parts.push(part("cylinder", "woodEdge", [
+		.24,
+		.5,
+		.2
+	], [
+		xo + s * (th / 2 - .2),
+		.62,
+		tz
+	], 1, void 0, 6));
+	parts.push(beam$2("woodLight", [
+		xo + dw / 2 - .2,
+		0,
+		tz + .45
+	], [
+		xo + dw / 2 - .2,
+		deckY,
+		tz + .45
+	], .07, 0));
+	parts.push(B("stoneDark", [
+		dw * .9,
+		.28,
+		.45
+	], [
+		xo,
+		0,
+		z0 - .7
+	], 1), B("stone", [
+		dw * .9,
+		.5,
+		.45
+	], [
+		xo,
+		0,
+		z0 - .25
+	], 1));
+	if (ctx.era >= 1) {
+		const hx = -w / 2 + 1.15, hz = -d / 2 + 1, hw = 1.6, hd = 1.3, h = 1.5;
+		parts.push(B(wallMaterial(ctx), [
+			hw,
+			h,
+			hd
+		], [
+			hx,
+			0,
+			hz
+		], 2));
+		gableRoof(parts, ctx, hd, hw, h, roofPitch(ctx, r), hx, hz, "x", .12);
+		door(parts, hx, hz + hd / 2 + .03, .7, 1.25);
+	}
+	const rx = w / 2 - 1.3, rz = -d / 2 + 1.2;
+	for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+		rx + s * .8,
+		0,
+		rz
+	], [
+		rx + s * .8,
+		1.5,
+		rz
+	], .09, 1));
+	parts.push(B("woodMid", [
+		1.7,
+		.07,
+		.07
+	], [
+		rx,
+		1.4,
+		rz
+	], 1), B("cloth", [
+		1.4,
+		.8,
+		.04
+	], [
+		rx,
+		.65,
+		rz
+	], 0));
+	if (ctx.era >= 3 && ctx.wealth > .45) parts.push(beam$2("woodDark", [
+		xo - dw / 2 + .1,
+		deckY,
+		tz - .3
+	], [
+		xo - dw / 2 + .1,
+		2.4,
+		tz - .3
+	], .16, 1), beam$2("woodDark", [
+		xo - dw / 2 + .1,
+		2.3,
+		tz - .3
+	], [
+		xo + dw / 2 + .3,
+		2.3,
+		tz - .3
+	], .1, 1), beam$2("iron", [
+		xo + dw / 2 + .2,
+		2.3,
+		tz - .3
+	], [
+		xo + dw / 2 + .2,
+		1.5,
+		tz - .3
+	], .03, 0));
+	return {
+		parts,
+		entry: {
+			x: xo,
+			z: z0 - .9,
+			width: dw
+		}
+	};
+};
+/** Bridge: spans along Z (generateFamily turns it when the footprint is wider
+* than deep). Early/forest: log-stringer trestle with plank deck and rails;
+* stone/hill: Dartmoor-style clapper bridge (slabs on piers) with parapets.
+* Piers/piles stand on y=0 (bank level); the renderer extends them to the bed. */
+var bridge = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, Bw = Math.min(w * .62, range(r, 2.4, 3.2)), stone = (ctx.material === "stone" || ctx.climate === "cold") && ctx.era >= 2, H = stone ? range(r, 1.1, 1.4) : range(r, .8, 1.1), Lc = d, ramp = 1.2, n = 3;
+	const dz0 = -Lc / 2 + ramp, dz1 = Lc / 2 - ramp, Ld = dz1 - dz0;
+	const topH = stone ? H - .3 : H - .14;
+	for (const s of [-1, 1]) for (let i = 0; i < n; i++) parts.push(B(stone ? "stone" : "woodDark", [
+		Bw * .9,
+		topH * (i + 1) / n,
+		ramp / n
+	], [
+		0,
+		0,
+		s * (Lc / 2 - (i + .5) * ramp / n)
+	], 1));
+	if (stone) {
+		const spans = Math.max(1, Math.round(Ld / range(r, 3.2, 4.2))), sl = Ld / spans;
+		for (let i = 0; i <= spans; i++) {
+			const z = dz0 + i * sl;
+			parts.push(B("stoneDark", [
+				Bw * .95,
+				H - .3,
+				.7
+			], [
+				0,
+				0,
+				Math.min(dz1 - .35, Math.max(dz0 + .35, z))
+			], 2));
+		}
+		for (let i = 0; i < spans; i++) {
+			const z = dz0 + (i + .5) * sl;
+			parts.push(B("stone", [
+				Bw,
+				.3,
+				sl + .04
+			], [
+				0,
+				H - .3,
+				z
+			], 2));
+			parts.push(B("stoneDark", [
+				Bw + .04,
+				.04,
+				.06
+			], [
+				0,
+				H - .3,
+				z - sl / 2
+			], 0));
+		}
+		for (const s of [-1, 1]) parts.push(B("stone", [
+			.28,
+			.62,
+			Ld
+		], [
+			s * (Bw / 2 - .14),
+			H,
+			(dz0 + dz1) / 2
+		], 1), B("stoneDark", [
+			.38,
+			.1,
+			Ld
+		], [
+			s * (Bw / 2 - .14),
+			H + .62,
+			(dz0 + dz1) / 2
+		], 0));
+		if (ctx.wealth > .5) for (const s of [-1, 1]) parts.push(part("pyramid", "stoneDark", [
+			.5,
+			.45,
+			.5
+		], [
+			s * (Bw / 2 - .14),
+			H + .62,
+			dz1 - .1
+		], 0));
+	} else {
+		const bents = Math.max(2, Math.round(Ld / range(r, 2.6, 3.4)) + 1);
+		for (let i = 0; i < bents; i++) {
+			const z = dz0 + .3 + i * (Ld - .6) / (bents - 1);
+			for (const s of [-1, 1]) parts.push(part("cylinder", "woodDark", [
+				.32,
+				H - .5,
+				.28
+			], [
+				s * (Bw / 2 - .3),
+				0,
+				z
+			], 1, void 0, 6));
+			parts.push(B("woodEdge", [
+				Bw,
+				.15,
+				.3
+			], [
+				0,
+				H - .5,
+				z
+			], 1));
+		}
+		for (const x of [
+			-Bw / 2 + .3,
+			0,
+			Bw / 2 - .3
+		]) parts.push(B("woodDark", [
+			.22,
+			.21,
+			Ld
+		], [
+			x,
+			H - .35,
+			(dz0 + dz1) / 2
+		], 1));
+		parts.push(B("woodMid", [
+			Bw,
+			.14,
+			Ld
+		], [
+			0,
+			H - .14,
+			(dz0 + dz1) / 2
+		], 2));
+		for (let i = 0; i < Math.round(Ld / .45); i++) parts.push(B("woodLight", [
+			Bw + .04,
+			.03,
+			.36
+		], [
+			0,
+			H,
+			dz0 + .22 + i * (Ld - .44) / Math.round(Ld / .45)
+		], 0));
+		if (ctx.era >= 1 || ctx.wealth > .3) {
+			const posts = Math.max(2, Math.round(Ld / 1.5) + 1);
+			for (const s of [-1, 1]) {
+				for (let i = 0; i < posts; i++) parts.push(part("cylinder", "woodDark", [
+					.13,
+					1,
+					.11
+				], [
+					s * (Bw / 2 - .1),
+					H,
+					dz0 + .1 + i * (Ld - .2) / (posts - 1)
+				], 1, void 0, 5));
+				parts.push(B("woodMid", [
+					.09,
+					.09,
+					Ld
+				], [
+					s * (Bw / 2 - .1),
+					H + .9,
+					(dz0 + dz1) / 2
+				], 1), B("woodMid", [
+					.07,
+					.07,
+					Ld
+				], [
+					s * (Bw / 2 - .1),
+					H + .5,
+					(dz0 + dz1) / 2
+				], 0));
+			}
+		}
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: Lc / 2,
+			width: Bw
+		}
+	};
+};
+/** Keep: Norman rectangular donjon (Hedingham/Rochester: plinth, corner
+* turrets, arrow slits, crenellated parapet, first-floor door by an external
+* stair), a round shell keep in cold uplands (Restormel) or, in early/timber
+* settlements, a jettied timber tower. */
+var keep = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, timber = ctx.material === "timber" || ctx.material === "wattle" || ctx.era < 2, round = !timber && ctx.climate === "cold" && chance(r, .6);
+	const K = w * range(r, .7, .76), Kd = d * range(r, .66, .72), cz = -.55, h = timber ? range(r, 5, 6.2) : range(r, 6.8, 8.6) * (ctx.era >= 3 ? 1.1 : 1), doorY = range(r, 2.8, 3.4), front = cz + Kd / 2;
+	const wm = timber ? "woodMid" : "stone";
+	if (round) {
+		const R = Math.min(K, Kd);
+		parts.push(part("cylinder", "stoneDark", [
+			R + .5,
+			.7,
+			R + .5
+		], [
+			0,
+			0,
+			cz
+		], 1, void 0, 14), part("cylinder", "stone", [
+			R,
+			h,
+			R * .98
+		], [
+			0,
+			0,
+			cz
+		], 2, void 0, 14));
+		for (let i = 0; i < 14; i++) {
+			const a = i / 14 * Math.PI * 2;
+			parts.push(B("stoneDark", [
+				.6,
+				.5,
+				.36
+			], [
+				Math.sin(a) * (R / 2 - .12),
+				h + .18,
+				cz + Math.cos(a) * (R / 2 - .12)
+			], 1, [
+				0,
+				a,
+				0
+			]));
+		}
+		parts.push(part("cylinder", "stoneDark", [
+			R + .3,
+			.2,
+			R + .3
+		], [
+			0,
+			h,
+			cz
+		], 1, void 0, 14));
+		const fz = cz + R / 2;
+		for (let i = 0; i < 7; i++) parts.push(B("stone", [
+			.55,
+			doorY * (i + 1) / 7,
+			.9
+		], [
+			-R * .22 + i * .55,
+			0,
+			fz + .35
+		], 1));
+		parts.push(B("woodEdge", [
+			.8,
+			1.5,
+			.08
+		], [
+			-R * .22 + 3.85 + .2,
+			doorY,
+			fz + .05
+		], 0));
+		for (const a of [
+			.5,
+			2.1,
+			3.6,
+			5.2
+		]) parts.push(B("recess", [
+			.12,
+			.7,
+			.12
+		], [
+			Math.sin(a) * R / 2,
+			h * .55,
+			cz + Math.cos(a) * R / 2
+		], 0, [
+			0,
+			a,
+			0
+		]));
+		parts.push(part("cone", roofMaterial(ctx), [
+			R * .7,
+			1.5,
+			R * .7
+		], [
+			0,
+			h + .2,
+			cz
+		], 1, void 0, 12));
+		return {
+			parts,
+			entry: {
+				x: -R * .22,
+				z: fz + .8,
+				width: .9
+			}
+		};
+	}
+	if (timber) {
+		parts.push(B("stoneDark", [
+			K + .2,
+			.5,
+			Kd + .2
+		], [
+			0,
+			0,
+			cz
+		], 1), B(wm, [
+			K,
+			h,
+			Kd
+		], [
+			0,
+			.5,
+			cz
+		], 2), B("woodDark", [
+			K + .3,
+			.25,
+			Kd + .3
+		], [
+			0,
+			h + .5,
+			cz
+		], 1), B("woodMid", [
+			K + .55,
+			1.9,
+			Kd + .55
+		], [
+			0,
+			h + .75,
+			cz
+		], 2));
+		parts.push(part("pyramid", roofMaterial(ctx), [
+			K + .9,
+			range(r, 1.8, 2.6),
+			Kd + .9
+		], [
+			0,
+			h + 2.65,
+			cz
+		], 2));
+		for (let i = 0; i < 4; i++) {
+			const x = -K / 2 + (i + .5) * K / 4;
+			windowAt(parts, x, h + 1.3, cz + Kd / 2 + .3, "z");
+			parts.push(beam$2("woodDark", [
+				x - K / 8,
+				h + .75,
+				cz + Kd / 2 + .3
+			], [
+				x - K / 8,
+				h + 2.65,
+				cz + Kd / 2 + .3
+			], .1, 0));
+		}
+		for (let i = 0; i < 8; i++) parts.push(B("woodDark", [
+			.14,
+			h,
+			.08
+		], [
+			-K / 2 + i * K / 7,
+			.5,
+			front + .02
+		], 0));
+		const st = 7, sx0 = -K / 2 + 1.6;
+		for (let i = 0; i < st; i++) parts.push(B("woodDark", [
+			.6,
+			doorY * (i + 1) / st,
+			.9
+		], [
+			sx0 + i * .6,
+			.5,
+			front + .5
+		], 1));
+		parts.push(B("woodEdge", [
+			.9,
+			1.6,
+			.08
+		], [
+			sx0 + st * .6 + .3,
+			.5 + doorY,
+			front + .05
+		], 0));
+		return {
+			parts,
+			entry: {
+				x: sx0 + 1.5,
+				z: front + 1,
+				width: .9
+			}
+		};
+	}
+	parts.push(B("stoneDark", [
+		K + .3,
+		.6,
+		Kd + .3
+	], [
+		0,
+		0,
+		cz
+	], 1), B(wm, [
+		K,
+		h,
+		Kd
+	], [
+		0,
+		.6,
+		cz
+	], 2));
+	for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+		parts.push(B("stone", [
+			1.1,
+			h + .9,
+			1.1
+		], [
+			sx * (K / 2 - .15),
+			.6,
+			cz + sz * (Kd / 2 - .15)
+		], 2));
+		if (ctx.era >= 3) parts.push(part("pyramid", roofMaterial(ctx), [
+			1.3,
+			1.1,
+			1.3
+		], [
+			sx * (K / 2 - .15),
+			h + 1.5,
+			cz + sz * (Kd / 2 - .15)
+		], 1));
+	}
+	const ph = h + .6;
+	parts.push(B("stoneDark", [
+		K + .2,
+		.3,
+		Kd + .2
+	], [
+		0,
+		ph,
+		cz
+	], 1));
+	for (const [len, ax, pos] of [
+		[
+			K,
+			"x",
+			front
+		],
+		[
+			K,
+			"x",
+			cz - Kd / 2
+		],
+		[
+			Kd,
+			"z",
+			K / 2
+		],
+		[
+			Kd,
+			"z",
+			-K / 2
+		]
+	]) {
+		const n = Math.floor(len / .95);
+		for (let i = 0; i < n; i++) {
+			const t = -len / 2 + (i + .5) * len / n;
+			parts.push(B("stoneDark", ax === "x" ? [
+				.5,
+				.5,
+				.34
+			] : [
+				.34,
+				.5,
+				.5
+			], ax === "x" ? [
+				t,
+				ph + .3,
+				pos
+			] : [
+				pos,
+				ph + .3,
+				cz + t
+			], 0));
+		}
+	}
+	if (ctx.era >= 3) parts.push({
+		...part("hip", roofMaterial(ctx), [
+			K - 1.2,
+			1.4,
+			Kd - 1.2
+		], [
+			0,
+			ph + .3,
+			cz
+		], 1),
+		inset: .7
+	});
+	for (let i = 0; i < 3; i++) {
+		const x = -K / 2 + 1.4 * i + 1.2;
+		parts.push(B("recess", [
+			.12,
+			.7,
+			.06
+		], [
+			x + .4,
+			h * .55,
+			cz - Kd / 2 - .04
+		], 0), B("recess", [
+			.12,
+			.7,
+			.06
+		], [
+			-x - .4,
+			h * .55,
+			front + .04
+		], 0));
+	}
+	const st = 7, sx0 = -K / 2 + 1.6;
+	for (let i = 0; i < st; i++) parts.push(B("stone", [
+		.6,
+		doorY * (i + 1) / st,
+		.9
+	], [
+		sx0 + i * .6,
+		.6,
+		front + .5
+	], 1));
+	parts.push(B("woodEdge", [
+		.9,
+		1.6,
+		.08
+	], [
+		sx0 + st * .6 + .3,
+		.6 + doorY,
+		front + .05
+	], 0));
+	if (ctx.wealth > .6) parts.push(beam$2("woodDark", [
+		K / 2 - .5,
+		ph + .3,
+		cz
+	], [
+		K / 2 - .5,
+		ph + 3,
+		cz
+	], .1, 1), B("cloth", [
+		.9,
+		.55,
+		.04
+	], [
+		K / 2 - .05,
+		ph + 2.3,
+		cz
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: sx0 + 1.5,
+			z: front + 1,
+			width: .9
+		}
+	};
+};
+/** Stables: long gabled horse range (medieval stable blocks): Dutch half-doors,
+* hay hatch, hitching rail, water trough and mounting block in the yard. */
+var stables = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, W = w * range(r, .84, .9), D = d * range(r, .5, .58), cz = -d / 2 + D / 2 + .25, wh = range(r, 2.2, 2.7), front = cz + D / 2, wm = wallMaterial(ctx), stalls = Math.max(3, Math.min(5, Math.round(W / 2.1)));
+	if (ctx.material === "stone" || ctx.era >= 2) parts.push(B("stoneDark", [
+		W + .1,
+		.3,
+		D + .1
+	], [
+		0,
+		0,
+		cz
+	], 1));
+	parts.push(B(wm, [
+		W,
+		wh,
+		D
+	], [
+		0,
+		0,
+		cz
+	], 2));
+	const rise = gableRoof(parts, ctx, D, W, wh, roofPitch(ctx, r), 0, cz, "x", range(r, .25, .4));
+	const bw = W / stalls;
+	for (let i = 0; i < stalls; i++) {
+		const x = -W / 2 + (i + .5) * bw;
+		parts.push(B("woodEdge", [
+			bw * .5,
+			1.15,
+			.08
+		], [
+			x,
+			0,
+			front + .03
+		], 1), B("recess", [
+			bw * .42,
+			.65,
+			.06
+		], [
+			x,
+			1.2,
+			front + .04
+		], 0), B("woodDark", [
+			.1,
+			wh,
+			.1
+		], [
+			x - bw / 2,
+			0,
+			front + .04
+		], 1));
+	}
+	parts.push(B("woodDark", [
+		.1,
+		wh,
+		.1
+	], [
+		W / 2,
+		0,
+		front + .04
+	], 1));
+	if (ctx.wealth > .35 || ctx.era >= 2) {
+		parts.push(B("recess", [
+			.9,
+			.8,
+			.06
+		], [
+			(chance(r, .5) ? -1 : 1) * W * .28,
+			wh - .9,
+			front + .04
+		], 0));
+		parts.push(beam$2("woodDark", [
+			W * .28,
+			wh + rise * .6,
+			front + .2
+		], [
+			W * .28,
+			wh + rise * .6,
+			front + .9
+		], .08, 0));
+	}
+	const yz = front + 1.3;
+	for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+		s * W * .3,
+		0,
+		yz
+	], [
+		s * W * .3,
+		1.1,
+		yz
+	], .12, 1));
+	parts.push(B("woodMid", [
+		W * .6 + .12,
+		.1,
+		.1
+	], [
+		0,
+		1,
+		yz
+	], 1));
+	const tx = -W * .36;
+	parts.push(B("woodDark", [
+		1.6,
+		.38,
+		.46
+	], [
+		tx,
+		0,
+		yz + .65
+	], 1), B("water", [
+		1.46,
+		.04,
+		.34
+	], [
+		tx,
+		.36,
+		yz + .65
+	], 0));
+	parts.push(B("stone", [
+		.7,
+		.4,
+		.5
+	], [
+		W * .34,
+		0,
+		yz + .65
+	], 0), B("stone", [
+		.5,
+		.2,
+		.4
+	], [
+		W * .34,
+		.4,
+		yz + .65
+	], 0));
+	if (ctx.era >= 3 && ctx.wealth > .55) parts.push(B("woodMid", [
+		.7,
+		.55,
+		.7
+	], [
+		0,
+		wh + rise * .7,
+		cz
+	], 1), part("pyramid", roofMaterial(ctx), [
+		.95,
+		.6,
+		.95
+	], [
+		0,
+		wh + rise * .7 + .55,
+		cz
+	], 1));
+	door(parts, -W / 2 + .05, cz, .9, 1.8, "-x");
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: yz + 1.3,
+			width: W * .5
+		}
+	};
+};
+/** Academy: early eras raise a Greek stoa/lyceum colonnade with a back wall;
+* later eras a collegiate hall range with a gate tower and a cloister walk
+* (Merton/Oxford), both opening on a court at +Z. */
+var college = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, W = w * range(r, .82, .9);
+	if (ctx.era < 3) {
+		const D = d * range(r, .3, .38), cz = -d / 2 + D / 2 + .35, wh = range(r, 3, 3.5), cols = Math.max(5, Math.round(W / 1.5)), front = cz + D / 2;
+		parts.push(B("stoneDark", [
+			W,
+			.22,
+			D
+		], [
+			0,
+			0,
+			cz
+		], 1), B("plaster", [
+			W,
+			wh,
+			.4
+		], [
+			0,
+			.22,
+			cz - D / 2 + .2
+		], 2));
+		for (const s of [-1, 1]) parts.push(B("plaster", [
+			.4,
+			wh,
+			D
+		], [
+			s * (W / 2 - .2),
+			.22,
+			cz
+		], 2));
+		for (let i = 0; i < cols; i++) parts.push(part("cylinder", "stone", [
+			.5,
+			wh - .1,
+			.42
+		], [
+			-W / 2 + .6 + i * (W - 1.2) / (cols - 1),
+			.22,
+			front - .3
+		], 2, void 0, 10));
+		parts.push(B("stone", [
+			W,
+			.34,
+			.6
+		], [
+			0,
+			.22 + wh - .1,
+			front - .3
+		], 2), part("prism", roofMaterial(ctx), [
+			D + .5,
+			Math.min(1.4, D * .3),
+			W + .5
+		], [
+			0,
+			.22 + wh + .24,
+			cz
+		], 2, [
+			0,
+			Math.PI / 2,
+			0
+		]));
+		for (let i = 0; i < 4; i++) parts.push(B("stoneDark", [
+			.7,
+			.4,
+			.35
+		], [
+			-W * .3 + i * W * .2,
+			0,
+			front + .55
+		], 0));
+		parts.push(part("cylinder", "stone", [
+			.9,
+			.6,
+			.9
+		], [
+			0,
+			0,
+			d / 2 - 1.2
+		], 1, void 0, 10), part("cylinder", "water", [
+			.7,
+			.04,
+			.7
+		], [
+			0,
+			.58,
+			d / 2 - 1.2
+		], 0, void 0, 10));
+		return {
+			parts,
+			entry: {
+				x: 0,
+				z: front + .5,
+				width: W * .6
+			}
+		};
+	}
+	const D = d * range(r, .4, .46), cz = -d / 2 + D / 2 + .3, wh = range(r, 4, 4.8), front = cz + D / 2, wm = ctx.material === "stone" ? "stone" : "plaster";
+	parts.push(B("stoneDark", [
+		W + .2,
+		.4,
+		D + .2
+	], [
+		0,
+		0,
+		cz
+	], 1), B(wm, [
+		W,
+		wh,
+		D
+	], [
+		0,
+		.4,
+		cz
+	], 2));
+	gableRoof(parts, ctx, D, W, wh + .4, roofPitch(ctx, r), 0, cz, "x", .3);
+	const bays = Math.max(4, Math.round(W / 1.7));
+	for (let i = 0; i < bays; i++) {
+		const x = -W / 2 + (i + .5) * W / bays;
+		if (Math.abs(x) < 1.4) continue;
+		parts.push(B("recess", [
+			.5,
+			1.3,
+			.06
+		], [
+			x,
+			1.6,
+			front + .04
+		], 0), B("recess", [
+			.5,
+			1.3,
+			.06
+		], [
+			x,
+			wh - 1.6,
+			front + .04
+		], 0));
+		if (i % 2) parts.push(B("stoneDark", [
+			.14,
+			wh,
+			.1
+		], [
+			x + W / bays / 2,
+			.4,
+			front + .05
+		], 0));
+	}
+	const tw = range(r, 2.1, 2.6), th = wh + range(r, 1.8, 2.8), tz = front + .55 - .1;
+	parts.push(B("stone", [
+		tw,
+		th,
+		1.6
+	], [
+		0,
+		.4,
+		tz
+	], 2), B("woodEdge", [
+		1.1,
+		2.1,
+		.1
+	], [
+		0,
+		.4,
+		tz + .82
+	], 1), part("pyramid", roofMaterial(ctx), [
+		tw + .3,
+		1.7,
+		1.9
+	], [
+		0,
+		.4 + th,
+		tz
+	], 2));
+	parts.push(part("sphere", "iron", [
+		.5,
+		.55,
+		.5
+	], [
+		0,
+		.4 + th - 1.3,
+		tz + .78
+	], 0));
+	const cols = Math.max(2, Math.floor((W / 2 - 1.7) / 1.3));
+	for (const s of [-1, 1]) for (let i = 0; i <= cols; i++) parts.push(part("cylinder", "stone", [
+		.34,
+		2.3,
+		.3
+	], [
+		s * (2.2 + i * 1.3),
+		.2,
+		front + 1.45
+	], 1, void 0, 8));
+	for (const s of [-1, 1]) {
+		const L = cols * 1.3 + .5 + .35, xc = s * (2.2 + cols * 1.3 / 2);
+		parts.push(B("stoneDark", [
+			L,
+			.2,
+			.4
+		], [
+			xc,
+			2.5,
+			front + 1.45
+		], 1), part("wedge", roofMaterial(ctx), [
+			L,
+			.7,
+			1.7
+		], [
+			xc,
+			2.7,
+			front + .75
+		], 2, [
+			0,
+			0,
+			0
+		]));
+	}
+	parts.push(part("cylinder", "stone", [
+		1,
+		.7,
+		1
+	], [
+		0,
+		0,
+		d / 2 - 1.1
+	], 1, void 0, 10), part("cylinder", "water", [
+		.8,
+		.04,
+		.8
+	], [
+		0,
+		.68,
+		d / 2 - 1.1
+	], 0, void 0, 10));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: tz + .9,
+			width: 1.1
+		}
+	};
+};
+/** Quarry: stepped benches cut into a rock face, blocks still bonded at the
+* joints (no loose stockpile), a wedge-and-sledge ramp and, from the early
+* historic era, a treadwheel crane (Roman/medieval quarries). */
+var quarry$1 = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, steps = pick(r, [3, 4]), stepD = range(r, .75, .95), stepH = range(r, .55, .75);
+	for (let i = 0; i < steps; i++) {
+		const bw = w * (.92 - i * .06), z = -d / 2 + stepD * (i + .5) + .1, h = stepH * (steps - i);
+		parts.push(B(i % 2 ? "stoneDark" : "stone", [
+			bw,
+			h,
+			stepD
+		], [
+			0,
+			0,
+			z
+		], 2));
+		const blocks = Math.max(2, Math.round(bw / 1.25));
+		for (let b = 1; b < blocks; b++) parts.push(B("recess", [
+			.05,
+			h * .9,
+			.05
+		], [
+			-bw / 2 + b * bw / blocks,
+			h * .05,
+			z + stepD / 2
+		], 0));
+		parts.push(B("stoneDark", [
+			bw,
+			.06,
+			.08
+		], [
+			0,
+			h,
+			z + stepD / 2
+		], 0));
+	}
+	const frontZ = -d / 2 + stepD * steps + .1;
+	range(r, .5, .9);
+	for (let i = 0; i < 6; i++) {
+		const s = range(r, .4, .7);
+		parts.push(B("stoneDark", [
+			s,
+			s * .7,
+			s
+		], [
+			-w / 2 + .8 + i * (w - 1.6) / 5,
+			0,
+			frontZ + .2 + range(r, 0, .4)
+		], 0, [
+			0,
+			range(r, 0, 1.5),
+			0
+		]));
+	}
+	parts.push(part("wedge", "woodMid", [
+		1.5,
+		.5,
+		2.2
+	], [
+		w / 2 - 1.2,
+		0,
+		frontZ + .3
+	], 1, [
+		0,
+		Math.PI,
+		0
+	]));
+	if (ctx.era >= 1) {
+		const cx = -w / 2 + 1.1, cz2 = frontZ + .1;
+		for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+			cx + s * .55,
+			0,
+			cz2 + .2
+		], [
+			cx,
+			2.6,
+			cz2
+		], .14, 1));
+		parts.push(B("woodDark", [
+			1.5,
+			.14,
+			.14
+		], [
+			cx,
+			2.6,
+			cz2
+		], 1), part("cylinder", "woodMid", [
+			1.4,
+			.3,
+			1.4
+		], [
+			cx,
+			.7,
+			cz2 + .02
+		], 1, [
+			0,
+			0,
+			Math.PI / 2
+		], 10));
+		parts.push(beam$2("woodLight", [
+			cx,
+			2.6,
+			cz2
+		], [
+			cx + 1.4,
+			2,
+			cz2 + .5
+		], .08, 0));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: Math.min(d / 2 - .2, frontZ + 1),
+			width: 2
+		}
+	};
+};
+/** Cairn: kerbed dry-stone mound with a passage and lintel (Maeshowe/Clava
+* chambered cairns) and a capstone; later eras raise a memorial cross. */
+var cairn = (ctx, r) => {
+	const parts = [], R = Math.min(ctx.footprint.w, ctx.footprint.d) / 2 * range(r, .78, .88), layers = pick(r, [
+		3,
+		4,
+		5
+	]), lh = range(r, .38, .5);
+	for (let i = 0; i < layers; i++) {
+		const k = 1 - i * (.7 / layers), dd = 2 * R * k;
+		parts.push(part("cylinder", i % 2 ? "stoneDark" : "stone", [
+			dd,
+			lh,
+			dd * .96
+		], [
+			0,
+			i * lh,
+			0
+		], 2, void 0, 12));
+	}
+	const top = layers * lh, kerb = Math.round(2 * Math.PI * R / .75);
+	for (let i = 0; i < kerb; i++) {
+		const a = i / kerb * Math.PI * 2;
+		if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < .32) continue;
+		parts.push(B("stoneDark", [
+			.55,
+			.45,
+			.35
+		], [
+			Math.cos(a) * (R - .15),
+			0,
+			Math.sin(a) * (R - .15)
+		], 0, [
+			0,
+			-a - Math.PI / 2,
+			0
+		]));
+	}
+	parts.push(part("cone", "stone", [
+		R * .5,
+		.5,
+		R * .5
+	], [
+		0,
+		top,
+		0
+	], 1, void 0, 8));
+	if (ctx.era <= 2) parts.push(B("stoneDark", [
+		.35,
+		.9,
+		.45
+	], [
+		-.5,
+		0,
+		R - .3
+	], 1), B("stoneDark", [
+		.35,
+		.9,
+		.45
+	], [
+		.5,
+		0,
+		R - .3
+	], 1), B("stone", [
+		1.5,
+		.3,
+		.6
+	], [
+		0,
+		.9,
+		R - .3
+	], 1), B("recess", [
+		.65,
+		.8,
+		.1
+	], [
+		0,
+		0,
+		R - .05
+	], 0));
+	const cap = chance(r, .55) || ctx.era < 3;
+	if (ctx.era >= 3) parts.push(B("stone", [
+		.28,
+		1.5,
+		.28
+	], [
+		0,
+		top + .4,
+		0
+	], 1), B("stone", [
+		.85,
+		.26,
+		.26
+	], [
+		0,
+		top + 1.1,
+		0
+	], 1));
+	else if (cap) parts.push(B("stone", [
+		.55,
+		range(r, .9, 1.4),
+		.35
+	], [
+		0,
+		top + .45,
+		0
+	], 1, [
+		0,
+		range(r, 0, 1),
+		0
+	]));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: R,
+			width: .9
+		}
+	};
+};
+/** Sacred grove: a ring of old trees (broadleaf, conifer or olive by climate)
+* round a plain altar stone, carved boundary posts with cloth ribbons at the
+* entrance (Celtic nemeton / Germanic holy grove). Lollipop canopies. */
+var grove = (ctx, r) => {
+	const parts = [], half = Math.min(ctx.footprint.w, ctx.footprint.d) / 2, n = pick(r, [
+		5,
+		6,
+		7
+	]), cr = range(r, .75, .9), ring = half - cr - .3, kind = ctx.climate === "cold" ? "conifer" : ctx.climate === "arid" ? "olive" : "broadleaf";
+	for (let i = 0; i < n; i++) {
+		const a = Math.PI / 2 + (i + .5) / n * Math.PI * 2 + range(r, -.12, .12);
+		if (Math.sin(a) > .75 && Math.abs(Math.cos(a)) < .55) continue;
+		const x = Math.cos(a) * ring, z = Math.sin(a) * ring, th = range(r, 1.3, 2), rad = cr * range(r, .8, 1);
+		if (kind === "conifer") parts.push(part("cylinder", "trunk", [
+			.3,
+			th * .5,
+			.22
+		], [
+			x,
+			0,
+			z
+		], 2, void 0, 6), part("cone", "foliageDark", [
+			rad * 2,
+			th,
+			rad * 2
+		], [
+			x,
+			th * .35,
+			z
+		], 2, void 0, 8), part("cone", "foliage", [
+			rad * 1.4,
+			th * .7,
+			rad * 1.4
+		], [
+			x,
+			th * .9,
+			z
+		], 1, void 0, 8));
+		else {
+			const t = kind === "olive" ? th * .6 : th;
+			parts.push(part("cylinder", "trunk", [
+				.36,
+				t,
+				.26
+			], [
+				x,
+				0,
+				z
+			], 2, void 0, 6), part("sphere", i % 2 ? "foliageDark" : "foliage", [
+				rad * 2,
+				rad * 1.5,
+				rad * 2
+			], [
+				x,
+				t - .2,
+				z
+			], 2));
+		}
+	}
+	parts.push(B("stone", [
+		1,
+		.55,
+		.65
+	], [
+		0,
+		0,
+		0
+	], 2), B("stoneDark", [
+		1.2,
+		.14,
+		.8
+	], [
+		0,
+		.55,
+		0
+	], 1), part("cylinder", "iron", [
+		.4,
+		.1,
+		.4
+	], [
+		0,
+		.69,
+		0
+	], 0, void 0, 6));
+	for (const s of [-1, 1]) {
+		const x = s * .95, z = half - .35;
+		parts.push(part("cylinder", "woodDark", [
+			.26,
+			1.9,
+			.22
+		], [
+			x,
+			0,
+			z
+		], 1, void 0, 6), part("sphere", "woodLight", [
+			.34,
+			.34,
+			.3
+		], [
+			x,
+			1.9,
+			z
+		], 0), B("cloth", [
+			.06,
+			.6,
+			.28
+		], [
+			x + s * .12,
+			1.15,
+			z
+		], 0));
+	}
+	const stones = Math.round(2 * Math.PI * (ring - cr * .6) / 1.1);
+	for (let i = 0; i < stones; i++) {
+		const a = i / stones * Math.PI * 2;
+		if (Math.sin(a) > .7) continue;
+		parts.push(B("stoneDark", [
+			.3,
+			.3,
+			.3
+		], [
+			Math.cos(a) * (ring - cr - .1),
+			0,
+			Math.sin(a) * (ring - cr - .1)
+		], 0, [
+			0,
+			a,
+			0
+		]));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: half - .3,
+			width: 1.7
+		}
+	};
+};
+/** Frontier outpost: a marker mast with banner on a stacked-stone base ring and
+* an iron beacon basket (Roman limes signal posts, Hadrian's Wall turrets). */
+var outpost = (ctx, r) => {
+	const parts = [], R = Math.min(ctx.footprint.w, ctx.footprint.d) / 2 * range(r, .62, .74), mast = range(r, 4.2, 5.4);
+	parts.push(part("cylinder", "stoneDark", [
+		2 * R,
+		.4,
+		2 * R * .96
+	], [
+		0,
+		0,
+		0
+	], 2, void 0, 10), part("cylinder", "stone", [
+		2 * R * .72,
+		.4,
+		2 * R * .7
+	], [
+		0,
+		.4,
+		0
+	], 2, void 0, 10));
+	parts.push(part("cylinder", "woodDark", [
+		.3,
+		mast,
+		.24
+	], [
+		0,
+		.8,
+		0
+	], 2, void 0, 6));
+	for (const s of [-1, 1]) parts.push(beam$2("woodMid", [
+		s * R * .8,
+		.4,
+		0
+	], [
+		s * .1,
+		2.2,
+		0
+	], .12, 1), beam$2("woodMid", [
+		0,
+		.4,
+		s * R * .8
+	], [
+		0,
+		2.2,
+		s * .1
+	], .12, 1));
+	parts.push(B("woodMid", [
+		1.5,
+		.12,
+		.12
+	], [
+		0,
+		.8 + mast - .9,
+		0
+	], 1), B(ctx.wealth > .5 ? "cloth" : "thatch", [
+		1.1,
+		.8,
+		.05
+	], [
+		0,
+		.8 + mast - 1.7,
+		.1
+	], 1));
+	parts.push(part("cone", "iron", [
+		.8,
+		.45,
+		.8
+	], [
+		0,
+		.8 + mast,
+		0
+	], 1, void 0, 8), part("cylinder", "iron", [
+		.7,
+		.15,
+		.7
+	], [
+		0,
+		.8 + mast,
+		0
+	], 0, void 0, 8));
+	if (ctx.era >= 1) for (let i = 0; i < 4; i++) {
+		const a = i / 4 * Math.PI * 2 + .4;
+		parts.push(beam$2("woodLight", [
+			Math.cos(a) * R * .95,
+			.4,
+			Math.sin(a) * R * .95
+		], [
+			Math.cos(a) * R * .95,
+			1.5,
+			Math.sin(a) * R * .95
+		], .1, 0));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: R,
+			width: 1
+		}
+	};
+};
+/** Threshing floor: a ring-kerbed circle of beaten earth with a central post for
+* the oxen, a threshing sledge at rest, a winnowing tripod with fan screen and
+* a wattle windbreak (Mediterranean and Anatolian threshing floors). */
+var threshing = (ctx, r) => {
+	const parts = [], R = Math.min(ctx.footprint.w, ctx.footprint.d) / 2 * range(r, .8, .9), n = Math.round(2 * Math.PI * R / .7);
+	parts.push(part("cylinder", "woodInlay", [
+		2 * R - .3,
+		.05,
+		2 * R - .3
+	], [
+		0,
+		0,
+		0
+	], 2, void 0, 16));
+	for (let i = 0; i < n; i++) {
+		const a = i / n * Math.PI * 2;
+		parts.push(B("stoneDark", [
+			.5,
+			.2,
+			.3
+		], [
+			Math.cos(a) * (R - .15),
+			0,
+			Math.sin(a) * (R - .15)
+		], 1, [
+			0,
+			-a - Math.PI / 2,
+			0
+		]));
+	}
+	parts.push(part("cylinder", "woodDark", [
+		.25,
+		1.5,
+		.2
+	], [
+		0,
+		0,
+		0
+	], 1, void 0, 6), part("cylinder", "woodDark", [
+		.5,
+		.12,
+		.4
+	], [
+		0,
+		0,
+		0
+	], 0, void 0, 6));
+	const sa = range(r, 0, 6.28), sx = Math.cos(sa) * R * .55, sz = Math.sin(sa) * R * .55;
+	parts.push(B("woodMid", [
+		1.2,
+		.12,
+		.8
+	], [
+		sx,
+		.05,
+		sz
+	], 1, [
+		0,
+		sa,
+		0
+	]), B("woodDark", [
+		.9,
+		.1,
+		.1
+	], [
+		sx,
+		.17,
+		sz
+	], 0, [
+		0,
+		sa,
+		0
+	]), B("iron", [
+		.9,
+		.04,
+		.06
+	], [
+		sx,
+		.02,
+		sz
+	], 0, [
+		0,
+		sa,
+		0
+	]));
+	const wa = sa + Math.PI * range(r, .7, 1.3), wx = Math.cos(wa) * R * .6, wz = Math.sin(wa) * R * .6;
+	for (const s of [-1, 1]) parts.push(beam$2("woodLight", [
+		wx + s * .4,
+		0,
+		wz
+	], [
+		wx,
+		1.7,
+		wz
+	], .08, 1));
+	parts.push(beam$2("woodLight", [
+		wx,
+		0,
+		wz + .4
+	], [
+		wx,
+		1.7,
+		wz
+	], .08, 1), B("thatch", [
+		.7,
+		.06,
+		.5
+	], [
+		wx,
+		1.6,
+		wz
+	], 0));
+	const ang = range(r, 0, 6.28), wl = Math.round(R * 1.6 / .45);
+	for (let i = 0; i < wl; i++) {
+		const a = ang + (i / wl - .5) * 1.5, x = Math.cos(a) * (R + .15), z = Math.sin(a) * (R + .15);
+		if (Math.hypot(x, z) > Math.min(ctx.footprint.w, ctx.footprint.d) / 2 - .1) continue;
+		parts.push(part("cylinder", "woodLight", [
+			.1,
+			1.2,
+			.1
+		], [
+			x,
+			0,
+			z
+		], 0, void 0, 5));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: R,
+			width: 2
+		}
+	};
+};
+/** Stone wall cell: battered footing, coursed body with course lines, coping
+* and (from the classical era) crenellation; corner cells take a pier. */
+var stoneWall = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, axis = ctx.wallAxis ?? "x", t = range(r, .8, 1.05), h = range(r, 2.4, 3.1) * (ctx.era >= 3 ? 1.12 : 1), wm = ctx.material === "mudbrick" ? "plaster" : "stone", merlon = ctx.era >= 2 && chance(r, .4 + ctx.wealth * .5), courses = pick(r, [
+		4,
+		5,
+		6
+	]);
+	for (const a of arms(axis, w, d, t)) {
+		parts.push(armBox(a, "stoneDark", a.len, .35, t + .2, 0, 0, 0, 1), armBox(a, wm, a.len, h - .35, t, 0, 0, .35, 2));
+		for (let i = 1; i < courses; i++) parts.push(armBox(a, "stoneDark", a.len, .04, t + .03, 0, 0, .35 + (h - .35) * i / courses, 0));
+		parts.push(armBox(a, "stoneDark", a.len, .18, t + .16, 0, 0, h, 1));
+		if (merlon) {
+			const n = Math.max(2, Math.floor(a.len / .95));
+			for (let i = 0; i < n; i++) {
+				const off = -a.len / 2 + (i + .5) * a.len / n;
+				parts.push(armBox(a, "stoneDark", .5, .5, t * .7, off, 0, h + .18, 1));
+			}
+		}
+	}
+	if (axis === "corner") {
+		parts.push(B("stone", [
+			t + .5,
+			h + .3,
+			t + .5
+		], [
+			0,
+			0,
+			0
+		], 2));
+		parts.push(part("pyramid", roofMaterial(ctx), [
+			t + .75,
+			.9,
+			t + .75
+		], [
+			0,
+			h + .3,
+			0
+		], 1));
+	}
+	return { parts };
+};
+/** Trench: spoil banks either side of a duckboarded cut with plank revetment
+* and sharpened stakes on the outer lip (field fortification ditches). */
+var trench = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, axis = ctx.wallAxis ?? "x", ww = range(r, 1.4, 1.7), bw = range(r, .95, 1.1), bh = range(r, .55, .8), t = ww + 2 * bw;
+	for (const a of arms(axis, w, d, t)) {
+		const rot = a.along === "x" ? [
+			0,
+			Math.PI / 2,
+			0
+		] : void 0;
+		for (const s of [-1, 1]) {
+			const lat = s * (ww / 2 + bw / 2);
+			parts.push(part("prism", "woodDark", [
+				bw * 2 * .5 + 0,
+				bh,
+				a.len
+			], [
+				a.cx + (a.along === "z" ? lat : 0),
+				0,
+				a.cz + (a.along === "x" ? lat : 0)
+			], 2, rot));
+			{
+				const ins = s * (ww / 2 - .03);
+				parts.push(armBox(a, "woodLight", a.len, .5, .06, 0, ins, 0, 0));
+			}
+			if (ctx.era >= 1 && ctx.wealth > .2) {
+				const n = Math.max(2, Math.floor(a.len / .7));
+				for (let i = 0; i < n; i++) parts.push(part("cone", "woodLight", [
+					.12,
+					.5,
+					.12
+				], a.along === "x" ? [
+					a.cx - a.len / 2 + (i + .5) * a.len / n,
+					bh * .5,
+					a.cz + s * (ww / 2 + bw * .8)
+				] : [
+					a.cx + s * (ww / 2 + bw * .8),
+					bh * .5,
+					a.cz - a.len / 2 + (i + .5) * a.len / n
+				], 0, void 0, 4));
+			}
+		}
+		parts.push(armBox(a, "woodMid", a.len, .06, ww * .5, 0, 0, 0, 1), far(armBox(a, "woodDark", a.len, bh * .9, t * .8, 0, 0, 0, 2)));
+	}
+	return { parts };
+};
+/** Moat: water-filled cut between stone kerbs and grassy banks (Bodiam, moated
+* manors); a dry approach is left by the player, not drawn here. */
+var moat = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, axis = ctx.wallAxis ?? "x", ww = range(r, 1.3, 1.6), bw = range(r, .6, .75), t = ww + 2 * bw + .3;
+	for (const a of arms(axis, w, d, t)) {
+		const rot = a.along === "x" ? [
+			0,
+			Math.PI / 2,
+			0
+		] : void 0;
+		parts.push(armBox(a, "water", a.len, .14, ww, 0, 0, 0, 2));
+		for (const s of [-1, 1]) {
+			parts.push(armBox(a, ctx.era >= 3 ? "stone" : "stoneDark", a.len, .42, .3, 0, s * (ww / 2 + .15), 0, 1), part("prism", "foliageDark", [
+				bw,
+				.4,
+				a.len
+			], [
+				a.cx + (a.along === "z" ? s * (ww / 2 + .3 + bw / 2) : 0),
+				0,
+				a.cz + (a.along === "x" ? s * (ww / 2 + .3 + bw / 2) : 0)
+			], 1, rot));
+			if (ctx.era >= 3 && ctx.wealth > .4) parts.push(armBox(a, "stone", a.len, .04, .36, 0, s * (ww / 2 + .15), .42, 0));
+			const n = Math.floor(a.len / 1.1);
+			for (let i = 0; i < n; i++) if (chance(r, .4)) parts.push(part("cone", "foliage", [
+				.14,
+				.5,
+				.14
+			], a.along === "x" ? [
+				a.cx - a.len / 2 + (i + .5) * a.len / n,
+				.12,
+				a.cz + s * (ww / 2 - .1)
+			] : [
+				a.cx + s * (ww / 2 - .1),
+				.12,
+				a.cz - a.len / 2 + (i + .5) * a.len / n
+			], 0, void 0, 4));
+		}
+	}
+	return { parts };
+};
+/** Hand-dug village well (Near Eastern and European wellheads): stone kerb,
+* still water, two posts and a windlass bar, optional bucket. */
+var well = (ctx, r) => {
+	const parts = [], R = Math.min(ctx.footprint.w, ctx.footprint.d) / 2 * range(r, .28, .36);
+	parts.push(part("cylinder", "stoneDark", [
+		2 * R,
+		.45,
+		2 * R
+	], [
+		0,
+		0,
+		0
+	], 2, void 0, 10));
+	parts.push(part("cylinder", "stone", [
+		2 * R * .82,
+		.18,
+		2 * R * .82
+	], [
+		0,
+		.45,
+		0
+	], 1, void 0, 10));
+	parts.push(part("cylinder", "water", [
+		2 * R * .7,
+		.08,
+		2 * R * .7
+	], [
+		0,
+		.08,
+		0
+	], 2, void 0, 10));
+	const postH = range(r, 1.15, 1.45);
+	for (const s of [-1, 1]) parts.push(part("box", "woodDark", [
+		.08,
+		postH,
+		.08
+	], [
+		s * R * .85,
+		.45,
+		0
+	], 1));
+	parts.push(part("box", "woodMid", [
+		R * 2 + .2,
+		.08,
+		.08
+	], [
+		0,
+		.45 + postH,
+		0
+	], 1));
+	if (chance(r, .7)) parts.push(part("cylinder", "woodEdge", [
+		.16,
+		.2,
+		.16
+	], [
+		0,
+		.2,
+		0
+	], 0, void 0, 6));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: R + .2,
+			width: .6
+		}
+	};
+};
+/** Stone catchment cistern (Nabataean rock cisterns, Mediterranean farm tanks):
+* four low walls, an open water sheet, corner posts and caps sitting on the rim. */
+var cistern = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, W = w * range(r, .82, .9), D = d * range(r, .82, .9), wall = .35, h = range(r, .55, .85);
+	const walls = [
+		[
+			0,
+			-(D - wall) / 2,
+			W,
+			wall
+		],
+		[
+			0,
+			(D - wall) / 2,
+			W,
+			wall
+		],
+		[
+			-(W - wall) / 2,
+			0,
+			wall,
+			D - 2 * wall
+		],
+		[
+			(W - wall) / 2,
+			0,
+			wall,
+			D - 2 * wall
+		]
+	];
+	for (const [sx, sz, lw, ld] of walls) parts.push(part("box", "stone", [
+		lw,
+		h,
+		ld
+	], [
+		sx,
+		0,
+		sz
+	], 2));
+	parts.push(part("box", "water", [
+		W - 2 * wall - .1,
+		.1,
+		D - 2 * wall - .1
+	], [
+		0,
+		.12,
+		0
+	], 2));
+	for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(part("box", "stoneDark", [
+		.22,
+		h + .35,
+		.22
+	], [
+		sx * (W / 2 - .1),
+		0,
+		sz * (D / 2 - .1)
+	], 2));
+	for (const [sx, sz, lw, ld] of walls) parts.push(part("box", "stone", [
+		lw + .04,
+		.1,
+		ld + .04
+	], [
+		sx,
+		h - .02,
+		sz
+	], 1));
+	if (ctx.era >= 1) parts.push(part("box", "woodMid", [
+		.35,
+		.45,
+		.12
+	], [
+		0,
+		0,
+		D / 2 - wall / 2
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: D / 2,
+			width: .8
+		}
+	};
+};
+/** Post mill (medieval European windmills): trestle, buck, thatched cap and
+* four cloth-backed sails that stay above ground and inside the plot. */
+var windmill = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, bw = Math.min(w, d) * range(r, .42, .5), legH = range(r, .7, .95), bh = range(r, 1.8, 2.3);
+	for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(beam$2("woodDark", [
+		sx * bw * .4,
+		0,
+		sz * bw * .35
+	], [
+		0,
+		legH,
+		0
+	], .12, 2));
+	parts.push(part("box", "woodMid", [
+		bw,
+		bh,
+		bw * .9
+	], [
+		0,
+		legH,
+		0
+	], 2));
+	parts.push(part("prism", "thatch", [
+		bw + .3,
+		bw * .5,
+		bw + .25
+	], [
+		0,
+		legH + bh,
+		0
+	], 2, [
+		0,
+		Math.PI / 2,
+		0
+	]));
+	const hubY = legH + bh * .65, hubZ = Math.min(d / 2 - .2, bw * .45), Ls = Math.min(hubY - .25, Math.min(w, d) / 2 - .3);
+	parts.push(part("cylinder", "woodEdge", [
+		.22,
+		.3,
+		.22
+	], [
+		0,
+		hubY,
+		hubZ
+	], 2, void 0, 6));
+	for (let i = 0; i < 4; i++) {
+		const a = i * Math.PI / 2 + Math.PI / 8;
+		let ex = Math.sin(a) * Ls, ey = Math.cos(a) * Ls;
+		if (hubY + ey < .1) {
+			const s = (.1 - hubY) / ey;
+			ex *= s;
+			ey *= s;
+		}
+		if (Math.abs(ex) > w / 2 - .2) {
+			const s = (w / 2 - .2) / Math.abs(ex);
+			ex *= s;
+			ey *= s;
+		}
+		parts.push(beam$2("woodDark", [
+			0,
+			hubY,
+			hubZ
+		], [
+			ex,
+			hubY + ey,
+			hubZ
+		], .08, 1));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: bw * .45,
+			width: .7
+		}
+	};
+};
+/** Undershot mill house with the wheel kept inside the plot on the +X bank
+* (Roman/medieval mills). A dedicated family so the live watermill footprint
+* is not forced through the larger review watermill kit. */
+var millHouse = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, L = w * range(r, .46, .56), D = d * range(r, .52, .64), h = range(r, 1.7, 2.2), cx = -w / 2 + L / 2 + .18;
+	parts.push(part("box", "woodMid", [
+		L,
+		h,
+		D
+	], [
+		cx,
+		0,
+		0
+	], 2));
+	parts.push(part("prism", "thatch", [
+		L + .25,
+		L * .32,
+		D + .2
+	], [
+		cx,
+		h,
+		0
+	], 2, [
+		0,
+		Math.PI / 2,
+		0
+	]));
+	parts.push(part("box", "woodDark", [
+		.7,
+		1.4,
+		.12
+	], [
+		cx + L / 2 + .02,
+		0,
+		0
+	], 1));
+	const wr = Math.min(h * .42, w / 2 - cx - L / 2 - .2, d / 2 - .25), wx = cx + L / 2 + wr * .55;
+	parts.push(part("cylinder", "woodDark", [
+		wr * 2,
+		.18,
+		wr * 2
+	], [
+		wx,
+		wr + .08,
+		0
+	], 2, [
+		0,
+		0,
+		Math.PI / 2
+	], 10));
+	for (const s of [-1, 1]) parts.push(part("box", "woodEdge", [
+		.1,
+		h * .75,
+		.1
+	], [
+		wx - wr * .15,
+		0,
+		s * wr * .55
+	], 1));
+	return {
+		parts,
+		entry: {
+			x: cx,
+			z: D / 2,
+			width: .8
+		}
+	};
+};
+/** Short arcade bay (Roman/medieval aqueducts, e.g. Pont du Gard / Segovia):
+* two piers, a channel bed, a water sheet and parapets. */
+var aqueduct = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, pierW = range(r, .55, .75), h = range(r, 1.8, 2.4), chan = range(r, .7, .95);
+	for (const s of [-1, 1]) parts.push(part("box", "stone", [
+		pierW,
+		h,
+		Math.min(d * .55, 1.1)
+	], [
+		s * (w / 2 - pierW / 2 - .15),
+		0,
+		0
+	], 2));
+	parts.push(part("box", "stone", [
+		w * .88,
+		.28,
+		chan + .2
+	], [
+		0,
+		h,
+		0
+	], 2));
+	parts.push(part("box", "water", [
+		w * .76,
+		.08,
+		chan
+	], [
+		0,
+		h + .28,
+		0
+	], 2));
+	for (const s of [-1, 1]) parts.push(part("box", "stoneDark", [
+		w * .88,
+		.22,
+		.12
+	], [
+		0,
+		h + .28,
+		s * (chan / 2 + .1)
+	], 1));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: d / 2,
+			width: .8
+		}
+	};
+};
+/** A 4 m canal cut with a water sheet, stone kerbs and grassy banks, as in
+* small irrigation and navigation cuts. */
+var canal = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, ww = Math.min(w * .55, range(r, 1.4, 1.9)), bank = range(r, .4, .6);
+	parts.push(part("box", "water", [
+		ww,
+		.12,
+		d * .9
+	], [
+		0,
+		0,
+		0
+	], 2));
+	for (const s of [-1, 1]) {
+		parts.push(part("box", "stoneDark", [
+			.22,
+			.4,
+			d * .9
+		], [
+			s * (ww / 2 + .11),
+			0,
+			0
+		], 1));
+		parts.push(part("prism", "foliageDark", [
+			bank,
+			.35,
+			d * .9
+		], [
+			s * (ww / 2 + .22 + bank / 2),
+			0,
+			0
+		], 1));
+	}
+	if (ctx.era >= 2) for (const s of [-1, 1]) parts.push(part("box", "woodMid", [
+		.08,
+		.7,
+		.08
+	], [
+		s * (ww / 2 + bank * .3),
+		.4,
+		d * .3
+	], 0));
+	return { parts };
+};
+var EXTRA_FAMILIES = {
+	fieldPlot: {
+		reference: "Midland open-field ridge-and-furrow strips (Laxton) with headland, hurdle or clearance-stone edging, scarecrow and tool shed; irrigated plots in arid lands",
+		generate: fieldPlot
+	},
+	pen: {
+		reference: "Wattle-hurdle folds (Butser) and dry-stone sheepfolds: gate, lean-to shelter on the back wall, trough",
+		generate: pen
+	},
+	pier: {
+		reference: "Timber fishing jetty on pile bents (Baltic and North Sea harbours): deck on stringers, T-head, bollards, net-drying rack, shore hut",
+		generate: pier
+	},
+	bridge: {
+		reference: "Timber trestle footbridge on pile bents with rails, and Dartmoor clapper bridges (slabs on stone piers)",
+		generate: bridge
+	},
+	keep: {
+		reference: "Norman rectangular keeps (Hedingham, Rochester) with forebuilding stair and corner turrets; shell keeps (Restormel); early jettied timber towers",
+		generate: keep
+	},
+	stables: {
+		reference: "Medieval stable ranges with Dutch half-doors, hay hatch, hitching rail and trough in the yard",
+		generate: stables
+	},
+	college: {
+		reference: "Greek stoa/lyceum colonnades (Athens) in early eras; Oxford-style college hall with gate tower and cloister walk later",
+		generate: college
+	},
+	quarry: {
+		reference: "Roman and medieval stepped quarry benches with uncut block joints and a treadwheel crane (Roman Carrara/Mons Claudianus)",
+		generate: quarry$1
+	},
+	cairn: {
+		reference: "Kerbed chambered cairns (Maeshowe, Clava) with lintelled passage; later memorial cairns with crosses",
+		generate: cairn
+	},
+	grove: {
+		reference: "Celtic nemeton and Germanic holy groves: ring of old trees, altar stone, carved entrance posts",
+		generate: grove
+	},
+	outpost: {
+		reference: "Roman limes signal posts and frontier turrets: banner mast, stacked-stone base, beacon basket",
+		generate: outpost
+	},
+	threshing: {
+		reference: "Mediterranean and Anatolian circular threshing floors (aloni) with kerb, central post, threshing sledge and winnowing fan",
+		generate: threshing
+	},
+	stoneWall: {
+		reference: "Coursed curtain walls (Roman and medieval town walls): batter, courses, coping, crenellation",
+		generate: stoneWall
+	},
+	trench: {
+		reference: "Field-fortification ditches with spoil banks, plank revetment and sharpened stakes",
+		generate: trench
+	},
+	moat: {
+		reference: "Stone-kerbed water-filled moats (Bodiam, moated manors) with grassed banks",
+		generate: moat
+	},
+	well: {
+		reference: "Hand-dug village wellheads with a stone kerb, still water, windlass posts and a bucket (Near Eastern and European farm wells)",
+		generate: well
+	},
+	cistern: {
+		reference: "Open stone catchment cisterns (Nabataean rock tanks, Mediterranean farm cisterns) with rim walls, water and cover beams",
+		generate: cistern
+	},
+	millHouse: {
+		reference: "Undershot mill houses (Barbegal, Domesday-era mills) with the wheel on the stream side, kept inside the paid footprint",
+		generate: millHouse
+	},
+	windmill: {
+		reference: "Post mills (medieval European windmills) with a trestle, buck, thatched cap and four cloth-backed sails",
+		generate: windmill
+	},
+	aqueduct: {
+		reference: "A single arcade bay of a Roman or medieval aqueduct (Pont du Gard, Segovia) with piers, channel and parapets",
+		generate: aqueduct
+	},
+	canal: {
+		reference: "A short irrigation or navigation canal cut with a water sheet, stone kerbs and grassy banks",
+		generate: canal
+	}
+};
+/** Procedural building families for the Option H carved style. Pure
+* TypeScript: each family turns a seeded context into structural parts
+* (buildingParts.ts). Every family has a real-world functional reference and
+* silhouette; variation is structural (bays, roof pitch, storeys, additions,
+* door position, chimneys, wheel side) driven by era, material, climate and
+* wealth, not a recolour of one hut. Bases never exceed the footprint:
+* fitToFootprint is the final guarantee, generators aim at ~85-92% of it. */
+/** Prehistoric/Iron Age roundhouse (e.g. Butser/Castell Henllys reconstructions):
+* wattle-and-daub drum, steep conical thatch, porch, sometimes a store lean-to. */
+var roundhouse = (ctx, r) => {
+	const parts = [], R = Math.min(ctx.footprint.w, ctx.footprint.d) / 2 * range(r, .6, .74), wallH = range(r, 1.2, 1.75), ov = range(r, .18, .32);
+	const pitch = roofPitch(ctx, r), roofH = (R + ov) * Math.tan(pitch);
+	parts.push(part("cylinder", ctx.material === "wattle" ? "plaster" : wallMaterial(ctx), [
+		2 * R,
+		wallH,
+		2 * R * .98
+	], [
+		0,
+		0,
+		0
+	], 2, void 0, 12));
+	parts.push(part("cone", "thatch", [
+		2 * (R + ov),
+		roofH,
+		2 * (R + ov)
+	], [
+		0,
+		wallH - .12,
+		0
+	], 2, void 0, 12));
+	for (const y of [.35, .8]) parts.push(part("cylinder", "woodDark", [
+		2 * R + .03,
+		.07,
+		2 * R + .03
+	], [
+		0,
+		y,
+		0
+	], 0, void 0, 12));
+	if (chance(r, .55 + ctx.wealth * .3 + (ctx.tradition?.porchBias ?? 0))) {
+		const pw = range(r, .9, 1.2), pd = range(r, .55, .8), z0 = R - .1;
+		for (const sx of [-1, 1]) parts.push(beam$2("woodDark", [
+			sx * pw / 2,
+			0,
+			z0 + pd
+		], [
+			sx * pw / 2,
+			wallH * .95,
+			z0 + pd
+		], .12, 1));
+		parts.push(part("prism", "thatch", [
+			pw + .4,
+			.45,
+			pd + .25
+		], [
+			0,
+			wallH * .92,
+			z0 + pd / 2
+		], 1));
+	}
+	door(parts, 0, R - .02, .8, Math.min(1.5, wallH * .92));
+	if (chance(r, .35 + ctx.wealth * .2 + (ctx.tradition?.annexBias ?? 0))) {
+		const lx = -R * .9, lw = range(r, .7, 1), ld = range(r, 1.2, 1.8);
+		parts.push(part("box", "woodMid", [
+			lw,
+			wallH * .7,
+			ld
+		], [
+			lx - lw / 2 + .2,
+			0,
+			-R * .2
+		], 2), part("wedge", "thatch", [
+			ld + .2,
+			.5,
+			lw + .25
+		], [
+			lx - lw / 2 + .2,
+			wallH * .7,
+			-R * .2
+		], 1, [
+			0,
+			-Math.PI / 2,
+			0
+		]));
+	}
+	if (chance(r, .5)) parts.push(part("cone", "thatch", [
+		.5,
+		.35,
+		.5
+	], [
+		0,
+		wallH - .12 + roofH * .84,
+		0
+	], 0, void 0, 6));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: R,
+			width: .8
+		}
+	};
+};
+/** Gabled cottage / timber-framed house (English cruck and box-frame cottages,
+* Germanic Fachwerk): bays, side door, chimney, optional lean-to and upper floor. */
+var cottage = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, large = ctx.scale === "large";
+	const prop = ctx.tradition?.proportion ?? 1, L = Math.min(w * .84, w * range(r, large ? .66 : .58, large ? .8 : .72) * prop), D = Math.min(d * .7, d * range(r, .46, .6) / prop), bays = Math.max(2, Math.min(4, Math.round(L / range(r, 1.5, 2.1))));
+	const storeys = Math.min(maxStoreys(ctx.material, ctx.era), ctx.era >= 3 && ctx.wealth > .62 ? 2 : 1), wallH = range(r, 1.75, 2.25), eave = wallH * storeys;
+	const wm = wallMaterial(ctx), cz = range(r, -.3, .05) * d * .2, pitch = roofPitch(ctx, r);
+	if (ctx.material === "stone" || ctx.era >= 2) parts.push(part("box", "stoneDark", [
+		L + .12,
+		.25,
+		D + .12
+	], [
+		0,
+		0,
+		cz
+	], 1));
+	parts.push(part("box", wm, [
+		L,
+		eave,
+		D
+	], [
+		0,
+		0,
+		cz
+	], 2));
+	if (storeys > 1 && ctx.material === "timber") parts.push(part("box", "woodDark", [
+		L + .1,
+		.14,
+		D + .1
+	], [
+		0,
+		wallH,
+		cz
+	], 1));
+	const bayW = L / bays;
+	for (let i = 0; i <= bays; i++) {
+		const x = -L / 2 + i * bayW;
+		for (const s of [-1, 1]) parts.push(part("box", ctx.material === "stone" ? "stoneDark" : "woodDark", [
+			.13,
+			eave,
+			.06
+		], [
+			x,
+			0,
+			cz + s * (D / 2 + .02)
+		], ctx.material === "stone" && i > 0 && i < bays ? 0 : 1));
+	}
+	const doorBay = Math.floor(r() * bays), doorX = -L / 2 + (doorBay + .5) * bayW;
+	door(parts, doorX, cz + D / 2 + .03);
+	for (let i = 0; i < bays; i++) {
+		if (i === doorBay) continue;
+		windowAt(parts, -L / 2 + (i + .5) * bayW, 1, cz + D / 2 + .04, "z");
+		if (storeys > 1) windowAt(parts, -L / 2 + (i + .5) * bayW, wallH + .9, cz + D / 2 + .04, "z");
+	}
+	for (let i = 0; i < bays; i++) if (chance(r, .5)) windowAt(parts, -L / 2 + (i + .5) * bayW, 1, cz - D / 2 - .04, "z");
+	const rise = gableRoof(parts, ctx, D, L, eave, pitch, 0, cz, "x", range(r, .16, .3));
+	if (ctx.era >= 1 && ctx.climate !== "arid" || chance(r, .3)) {
+		const end = pick(r, [-1, 1]), onRidge = chance(r, .35), cw = range(r, .45, .65);
+		const cx = onRidge ? range(r, -L / 4, L / 4) : end * (L / 2 - cw / 2 - .05);
+		parts.push(part("box", ctx.era >= 1 ? "stone" : "plaster", [
+			cw,
+			eave + rise + .55,
+			cw
+		], [
+			cx,
+			0,
+			cz
+		], 2));
+	}
+	if (chance(r, .25 + ctx.wealth * .45 + (ctx.tradition?.annexBias ?? 0))) {
+		const side = pick(r, [-1, 1]), room = w / 2 - L / 2 - .15;
+		if (room > .6) {
+			const lw = Math.min(room, range(r, .9, 1.5)), ld = D * range(r, .55, .85), lx = side * (L / 2 + lw / 2);
+			parts.push(part("box", wm, [
+				lw,
+				wallH * .72,
+				ld
+			], [
+				lx,
+				0,
+				cz - (D - ld) / 2
+			], 2), part("wedge", roofMaterial(ctx), [
+				ld + .2,
+				.55,
+				lw + .15
+			], [
+				lx,
+				wallH * .72,
+				cz - (D - ld) / 2
+			], 1, [
+				0,
+				side > 0 ? Math.PI / 2 : -Math.PI / 2,
+				0
+			]));
+		} else {
+			const ld = Math.min(d / 2 + cz - D / 2 - .15, range(r, .8, 1.2)), back = cz - D / 2 - ld / 2;
+			if (ld > .5) parts.push(part("box", wm, [
+				L * .55,
+				wallH * .7,
+				ld
+			], [
+				0,
+				0,
+				back
+			], 2), part("wedge", roofMaterial(ctx), [
+				L * .55 + .2,
+				.5,
+				ld + .15
+			], [
+				0,
+				wallH * .7,
+				back
+			], 1, [
+				0,
+				Math.PI,
+				0
+			]));
+		}
+	}
+	if (chance(r, .4)) parts.push(part("box", "woodMid", [
+		.9,
+		.45,
+		.5
+	], [
+		doorX + (doorX > 0 ? -1 : 1) * .9,
+		0,
+		cz + D / 2 + .35
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: doorX,
+			z: cz + D / 2,
+			width: .85
+		}
+	};
+};
+/** Norse/Saxon longhouse and early halls (Lofotr, West Stow): long low walls,
+* steep roof nearly to the ground with hipped ends, side doors. */
+var longhouse = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, large = ctx.scale === "large", L = w * range(r, .78, .88), D = d * range(r, large ? .5 : .42, large ? .62 : .52);
+	const wallH = range(r, 1.1, 1.6) * (large ? 1.25 : 1), pitch = roofPitch(ctx, r) + .06, hip = range(r, .6, 1.1), wm = ctx.material === "stone" ? "stone" : "woodMid";
+	parts.push(part("box", wm, [
+		L,
+		wallH,
+		D
+	], [
+		0,
+		0,
+		0
+	], 2), part("box", wm, [
+		L * .62,
+		wallH,
+		D + .24
+	], [
+		0,
+		0,
+		0
+	], 1));
+	const rise = D / 2 * Math.tan(pitch), ridge = L - 2 * hip;
+	parts.push({
+		...part("hip", roofMaterial(ctx), [
+			D + .6,
+			rise,
+			L + .6
+		], [
+			0,
+			wallH,
+			0
+		], 2, [
+			0,
+			Math.PI / 2,
+			0
+		]),
+		inset: hip + .3
+	});
+	parts.push(part("box", "woodEdge", [
+		ridge,
+		.14,
+		.16
+	], [
+		0,
+		wallH + rise - .05,
+		0
+	], 1));
+	const doors = large ? 2 : pick(r, [1, 2]);
+	const dx = doors === 1 ? range(r, -L / 4, L / 4) : L * .28;
+	for (let i = 0; i < doors; i++) {
+		const x = doors === 1 ? dx : i ? dx : -dx;
+		door(parts, x, D / 2 + .15, .9, Math.min(1.5, wallH));
+		parts.push(part("prism", roofMaterial(ctx), [
+			1.2,
+			.4,
+			.7
+		], [
+			x,
+			wallH * .9,
+			D / 2 + .15
+		], 1));
+	}
+	if (large) {
+		const pz = D / 2 + .3, pd = Math.min(d / 2 - pz - .2, range(r, 1, 1.6));
+		if (pd > .5) {
+			const posts = pick(r, [
+				3,
+				4,
+				5,
+				6
+			]);
+			for (let i = 0; i < posts; i++) {
+				const x = -L * .38 + i * L * .76 / (posts - 1);
+				parts.push(beam$2("woodDark", [
+					x,
+					0,
+					pz + pd
+				], [
+					x,
+					wallH * .95,
+					pz + pd
+				], .16, 1));
+			}
+			parts.push(part("wedge", roofMaterial(ctx), [
+				L * .8,
+				.45,
+				pd + .1
+			], [
+				0,
+				wallH * .95,
+				pz + pd / 2
+			], 1));
+		}
+		for (const s of [-1, 1]) parts.push(beam$2("woodEdge", [
+			s * (ridge / 2),
+			wallH + rise - .1,
+			-.25
+		], [
+			s * (ridge / 2),
+			wallH + rise + .55,
+			.25
+		], .09, 0), beam$2("woodEdge", [
+			s * (ridge / 2),
+			wallH + rise - .1,
+			.25
+		], [
+			s * (ridge / 2),
+			wallH + rise + .55,
+			-.25
+		], .09, 0));
+	}
+	for (let i = 0, n = pick(r, [1, 2]); i < n; i++) parts.push(part("box", "woodEdge", [
+		.5,
+		.25,
+		.5
+	], [
+		n === 1 ? range(r, -L / 5, L / 5) : (i ? 1 : -1) * L * .2,
+		wallH + rise - .15,
+		0
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: doors === 1 ? dx : -dx,
+			z: D / 2,
+			width: .9
+		}
+	};
+};
+/** Staddle-stone granary (English staddle barns, Iberian hórreo): body raised
+* on mushroom stones against damp and rodents, ladder, thatch or shingle. */
+var granary = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, round = ctx.era <= 1 && chance(r, .4), nx = pick(r, [2, 3]), nz = pick(r, [2, 3]);
+	const BW = w * range(r, .5, .66), BD = d * range(r, .46, .62), lift = range(r, .55, .75), bodyH = range(r, 1.3, 1.9);
+	for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+		const x = -BW / 2 + .2 + i * (BW - .4) / (nx - 1), z = -BD / 2 + .2 + j * (BD - .4) / (nz - 1);
+		parts.push(part("cylinder", "stone", [
+			.42,
+			lift - .1,
+			.2
+		], [
+			x,
+			0,
+			z
+		], 2, void 0, 6), part("cylinder", "stone", [
+			.58,
+			.1,
+			.58
+		], [
+			x,
+			lift - .1,
+			z
+		], 1, void 0, 8));
+	}
+	parts.push(part("box", "woodDark", [
+		BW + .15,
+		.14,
+		BD + .15
+	], [
+		0,
+		lift,
+		0
+	], 2));
+	const top = lift + .14;
+	if (round) {
+		const R = Math.min(BW, BD) / 2;
+		parts.push(part("cylinder", "woodMid", [
+			2 * R,
+			bodyH,
+			2 * R
+		], [
+			0,
+			top,
+			0
+		], 2, void 0, 10), part("cone", "thatch", [
+			2 * R + .5,
+			R * 1.2,
+			2 * R + .5
+		], [
+			0,
+			top + bodyH - .05,
+			0
+		], 2, void 0, 10));
+	} else {
+		parts.push(part("box", "woodMid", [
+			BW,
+			bodyH,
+			BD
+		], [
+			0,
+			top,
+			0
+		], 2));
+		for (let i = 1; i < 6; i++) parts.push(part("box", "woodDark", [
+			.05,
+			bodyH,
+			.04
+		], [
+			-BW / 2 + i * BW / 6,
+			top,
+			BD / 2 + .02
+		], 0));
+		gableRoof(parts, ctx, BD, BW, top + bodyH, roofPitch(ctx, r), 0, 0, "x", .2);
+	}
+	const lz = BD / 2 + .55;
+	parts.push(beam$2("woodDark", [
+		-.25,
+		0,
+		lz
+	], [
+		-.25,
+		top + .9,
+		BD / 2 + .05
+	], .07, 0), beam$2("woodDark", [
+		.25,
+		0,
+		lz
+	], [
+		.25,
+		top + .9,
+		BD / 2 + .05
+	], .07, 0));
+	door(parts, 0, BD / 2 + .02, .6, .9);
+	parts[parts.length - 1] = {
+		...parts[parts.length - 1],
+		pos: [
+			0,
+			top,
+			BD / 2 + .02
+		]
+	};
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: BD / 2 + .5,
+			width: .6
+		}
+	};
+};
+/** Later storehouse (medieval tithe barn/warehouse): masonry ground floor,
+* timber upper, wide cart door and hoist beam. */
+var storehouse = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, L = w * range(r, .7, .84), D = d * range(r, .55, .7), h1 = range(r, 2, 2.6), h2 = chance(r, .5 + ctx.wealth * .3) ? range(r, 1.4, 1.9) : 0;
+	parts.push(part("box", "stone", [
+		L,
+		h1,
+		D
+	], [
+		0,
+		0,
+		0
+	], 2));
+	if (h2) parts.push(part("box", "woodMid", [
+		L,
+		h2,
+		D
+	], [
+		0,
+		h1,
+		0
+	], 2), part("box", "woodDark", [
+		L + .1,
+		.14,
+		D + .1
+	], [
+		0,
+		h1,
+		0
+	], 1));
+	const eave = h1 + h2;
+	gableRoof(parts, ctx, L, D, eave, roofPitch(ctx, r), 0, 0, "z", .22);
+	const dw = range(r, 1.6, 2.2);
+	door(parts, 0, D / 2 + .03, dw, Math.min(2.1, h1 - .15));
+	if (h2) parts.push(part("box", "woodEdge", [
+		.8,
+		.9,
+		.06
+	], [
+		0,
+		h1 + .3,
+		D / 2 + .03
+	], 0), beam$2("woodDark", [
+		0,
+		eave - .05,
+		D / 2 - .3
+	], [
+		0,
+		eave - .05,
+		D / 2 + .45
+	], .14, 0));
+	for (const x of [-L / 2, L / 2]) for (const z of [-D / 2, D / 2]) parts.push(part("box", "stoneDark", [
+		.3,
+		h1,
+		.3
+	], [
+		x * (1 - .3 / L),
+		0,
+		z * (1 - .3 / D)
+	], 0));
+	if (h2) for (let i = 0, n = pick(r, [
+		1,
+		2,
+		3
+	]); i < n; i++) windowAt(parts, -L / 2 + (i + .5) * L / n, h1 + h2 * .5, -D / 2 - .03, "z");
+	const room = w / 2 - L / 2 - .15;
+	if (room > .5 && chance(r, .6)) {
+		const side = pick(r, [-1, 1]), sw = Math.min(room, 1.1), sx = side * (L / 2 + sw / 2);
+		for (const z of [-D / 2 + .2, D / 2 - .2]) parts.push(beam$2("woodDark", [
+			sx + side * (sw / 2 - .08),
+			0,
+			z
+		], [
+			sx + side * (sw / 2 - .08),
+			h1 * .65,
+			z
+		], .1, 1));
+		parts.push(part("wedge", roofMaterial(ctx), [
+			D,
+			.45,
+			sw + .1
+		], [
+			sx,
+			h1 * .65,
+			0
+		], 2, [
+			0,
+			side > 0 ? Math.PI / 2 : -Math.PI / 2,
+			0
+		]));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: D / 2,
+			width: dw
+		}
+	};
+};
+/** Vertical undershot watermill (Roman/medieval mills, e.g. Barbegal/Domesday
+* mills): mill house with the wheel on the water side and a feed flume. Built
+* with the wheel on +X, then rotated to ctx.waterSide by the caller. */
+var watermill = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, wheelD = Math.min(d * .72, range(r, 1.5, 2)), wheelT = range(r, .2, .3);
+	const HW = w - wheelT - .55, HD = d * range(r, .6, .75), hx = -(w / 2) + HW / 2 + .05, lower = range(r, .8, 1.1), upper = range(r, .9, 1.3);
+	parts.push(part("box", "stone", [
+		HW,
+		lower,
+		HD
+	], [
+		hx,
+		0,
+		0
+	], 2), part("box", ctx.material === "stone" ? "stone" : "woodMid", [
+		HW,
+		upper,
+		HD
+	], [
+		hx,
+		lower,
+		0
+	], 2));
+	gableRoof(parts, ctx, HD, HW, lower + upper, roofPitch(ctx, r), hx, 0, "x", .14);
+	const wx = hx + HW / 2 + wheelT / 2 + .1;
+	parts.push(part("cylinder", "woodDark", [
+		wheelD,
+		wheelT,
+		wheelD
+	], [
+		wx - wheelT / 2,
+		wheelD / 2,
+		0
+	], 2, [
+		0,
+		0,
+		-Math.PI / 2
+	], 12));
+	parts.push(part("cylinder", "woodEdge", [
+		.22,
+		HW * .35 + wheelT,
+		.22
+	], [
+		hx + HW / 2 - .2,
+		wheelD / 2,
+		0
+	], 1, [
+		0,
+		0,
+		-Math.PI / 2
+	], 6));
+	const paddles = pick(r, [
+		8,
+		10,
+		12
+	]);
+	for (let i = 0; i < paddles; i++) {
+		const a = i / paddles * Math.PI * 2, py = wheelD / 2 + Math.sin(a) * (wheelD / 2 - .05), pz = Math.cos(a) * (wheelD / 2 - .05);
+		if (py - .32 < 0) continue;
+		parts.push(part("box", "woodMid", [
+			wheelT + .06,
+			.24,
+			.05
+		], [
+			wx,
+			py - .12,
+			pz
+		], 1, [
+			a,
+			0,
+			0
+		]));
+	}
+	const fl = d / 2 - .1;
+	parts.push(part("box", "woodMid", [
+		wheelT + .2,
+		.18,
+		fl
+	], [
+		wx,
+		wheelD * .55,
+		-fl / 2
+	], 1), part("box", "water", [
+		wheelT + .05,
+		.05,
+		fl
+	], [
+		wx,
+		wheelD * .55 + .13,
+		-fl / 2
+	], 0));
+	parts.push(beam$2("woodDark", [
+		wx,
+		0,
+		-fl + .15
+	], [
+		wx,
+		wheelD * .55,
+		-fl + .15
+	], .12, 1));
+	door(parts, hx - HW * .2, HD / 2 + .03, .75, Math.min(1.5, lower + upper - .2));
+	return {
+		parts,
+		entry: {
+			x: hx - HW * .2,
+			z: HD / 2,
+			width: .75
+		}
+	};
+};
+/** Quern shelter (saddle/rotary quern under a lean-to) when no water is beside the site. */
+var quernShelter = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, W = w * range(r, .66, .8), D = d * range(r, .5, .66), h = range(r, 1.7, 2.1);
+	for (const x of [-W / 2 + .1, W / 2 - .1]) for (const z of [-D / 2 + .1, D / 2 - .1]) parts.push(beam$2("woodDark", [
+		x,
+		0,
+		z
+	], [
+		x,
+		z < 0 ? h : h - .5,
+		z
+	], .12, 2));
+	parts.push(part("wedge", roofMaterial(ctx), [
+		W + .25,
+		.55,
+		D + .25
+	], [
+		0,
+		h - .55,
+		0
+	], 2));
+	parts.push(part("box", "stoneDark", [
+		.8,
+		.4,
+		.8
+	], [
+		0,
+		0,
+		0
+	], 2), part("cylinder", "stone", [
+		.7,
+		.16,
+		.7
+	], [
+		0,
+		.4,
+		0
+	], 1, void 0, 10), part("cylinder", "stone", [
+		.66,
+		.14,
+		.66
+	], [
+		0,
+		.56,
+		0
+	], 1, void 0, 10), beam$2("woodEdge", [
+		.22,
+		.7,
+		0
+	], [
+		.22,
+		1.05,
+		0
+	], .05, 0));
+	return { parts };
+};
+/** Open-bay craft shelter (medieval workshop fronts, Roman tabernae): back wall,
+* open front, awning, with a trade-specific fixture that shows its function. */
+var workshop$1 = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, trade = ctx.trade ?? "bench", W = w * range(r, .7, .84), D = d * range(r, .55, .68), h = range(r, 2.1, 2.6);
+	const closed = trade === "smoke", wm = trade === "forge" || trade === "oven" || ctx.material === "stone" ? "stone" : wallMaterial(ctx), z0 = -d / 2 + D / 2 + .15;
+	parts.push(part("box", wm, [
+		W,
+		h,
+		.2
+	], [
+		0,
+		0,
+		z0 - D / 2 + .1
+	], 2));
+	for (const s of [-1, 1]) parts.push(part("box", wm, [
+		.18,
+		closed ? h : h * .55,
+		D * (closed ? 1 : .55)
+	], [
+		s * (W / 2 - .09),
+		0,
+		z0 - D * (closed ? 0 : .225)
+	], 2));
+	if (closed) parts.push(part("box", wm, [
+		W,
+		h,
+		.2
+	], [
+		0,
+		0,
+		z0 + D / 2 - .1
+	], 2));
+	for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+		s * (W / 2 - .1),
+		0,
+		z0 + D / 2 - .08
+	], [
+		s * (W / 2 - .1),
+		h,
+		z0 + D / 2 - .08
+	], .15, closed ? 0 : 2));
+	if (!closed && W > 3.2) parts.push(beam$2("woodDark", [
+		0,
+		0,
+		z0 + D / 2 - .08
+	], [
+		0,
+		h,
+		z0 + D / 2 - .08
+	], .13, 1));
+	const pitch = roofPitch(ctx, r);
+	if (chance(r, .5) || closed) gableRoof(parts, ctx, D, W, h, pitch, 0, z0, "x", .2);
+	else parts.push(part("wedge", roofMaterial(ctx), [
+		W + .35,
+		Math.max(.5, D * Math.tan(pitch) * .45),
+		D + .35
+	], [
+		0,
+		h,
+		z0
+	], 2));
+	const apron = Math.min(d / 2 - (z0 + D / 2) - .12, range(r, .8, 1.3));
+	if (apron > .4 && !closed) {
+		parts.push(part("wedge", chance(r, .5) ? "cloth" : "woodLight", [
+			W * .8,
+			.35,
+			apron
+		], [
+			0,
+			h - .45,
+			z0 + D / 2 + apron / 2
+		], 1));
+		for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+			s * W * .38,
+			0,
+			z0 + D / 2 + apron - .08
+		], [
+			s * W * .38,
+			h - .45,
+			z0 + D / 2 + apron - .08
+		], .08, 0));
+	}
+	const fz = z0 - D * .1;
+	switch (trade) {
+		case "forge":
+			parts.push(part("box", "stoneDark", [
+				1.1,
+				.8,
+				.9
+			], [
+				-W * .22,
+				0,
+				fz
+			], 2), part("box", "stone", [
+				.6,
+				h + 1.4,
+				.6
+			], [
+				-W * .22,
+				0,
+				z0 - D / 2 + .4
+			], 2), part("box", "fire", [
+				.5,
+				.12,
+				.4
+			], [
+				-W * .22,
+				.8,
+				fz
+			], 0), part("box", "iron", [
+				.45,
+				.3,
+				.22
+			], [
+				W * .2,
+				.55,
+				fz + .3
+			], 0), part("cylinder", "woodDark", [
+				.45,
+				.55,
+				.45
+			], [
+				W * .2,
+				0,
+				fz + .3
+			], 0, void 0, 8), part("box", "woodEdge", [
+				.6,
+				.3,
+				.4
+			], [
+				-W * .22 - .75,
+				.4,
+				fz
+			], 0));
+			break;
+		case "kiln": {
+			const kx = W * .18;
+			parts.push(part("cylinder", "plaster", [
+				1.5,
+				1,
+				1.5
+			], [
+				kx,
+				0,
+				fz
+			], 2, void 0, 10), part("sphere", "plaster", [
+				1.5,
+				.9,
+				1.5
+			], [
+				kx,
+				.85,
+				fz
+			], 2), part("box", "woodEdge", [
+				.45,
+				.4,
+				.06
+			], [
+				kx,
+				0,
+				fz + .74
+			], 1), part("box", "fire", [
+				.3,
+				.15,
+				.05
+			], [
+				kx,
+				.05,
+				fz + .77
+			], 0));
+			break;
+		}
+		case "pottery":
+			parts.push(part("cylinder", "woodDark", [
+				.55,
+				.5,
+				.55
+			], [
+				-W * .2,
+				0,
+				fz
+			], 1, void 0, 10), part("cylinder", "woodMid", [
+				.6,
+				.06,
+				.6
+			], [
+				-W * .2,
+				.5,
+				fz
+			], 0, void 0, 10), part("box", "woodMid", [
+				1.4,
+				.08,
+				.45
+			], [
+				W * .2,
+				.8,
+				z0 - D / 2 + .4
+			], 1), beam$2("woodDark", [
+				W * .2 - .6,
+				0,
+				z0 - D / 2 + .4
+			], [
+				W * .2 - .6,
+				.8,
+				z0 - D / 2 + .4
+			], .06, 0), beam$2("woodDark", [
+				W * .2 + .6,
+				0,
+				z0 - D / 2 + .4
+			], [
+				W * .2 + .6,
+				.8,
+				z0 - D / 2 + .4
+			], .06, 0));
+			break;
+		case "loom": {
+			const lx = range(r, -W * .2, W * .2);
+			parts.push(beam$2("woodDark", [
+				lx - .6,
+				0,
+				fz
+			], [
+				lx - .6,
+				1.8,
+				fz - .25
+			], .09, 1), beam$2("woodDark", [
+				lx + .6,
+				0,
+				fz
+			], [
+				lx + .6,
+				1.8,
+				fz - .25
+			], .09, 1), part("box", "woodDark", [
+				1.35,
+				.08,
+				.08
+			], [
+				lx,
+				1.75,
+				fz - .24
+			], 1), part("box", "cloth", [
+				1.1,
+				1.2,
+				.03
+			], [
+				lx,
+				.45,
+				fz - .12
+			], 0, [
+				-.14,
+				0,
+				0
+			]));
+			break;
+		}
+		case "rack":
+			for (let i = 0; i < pick(r, [2, 3]); i++) {
+				const x = -W * .3 + i * W * .3;
+				parts.push(beam$2("woodDark", [
+					x - .5,
+					0,
+					fz
+				], [
+					x - .5,
+					1.6,
+					fz
+				], .07, 1), beam$2("woodDark", [
+					x + .5,
+					0,
+					fz
+				], [
+					x + .5,
+					1.6,
+					fz
+				], .07, 1), part("box", "woodDark", [
+					1.1,
+					.07,
+					.07
+				], [
+					x,
+					1.55,
+					fz
+				], 1), part("box", "cloth", [
+					.8,
+					.9,
+					.03
+				], [
+					x,
+					.62,
+					fz
+				], 0));
+			}
+			break;
+		case "saw":
+			parts.push(beam$2("woodDark", [
+				-.5,
+				0,
+				fz - .3
+			], [
+				-.5,
+				.85,
+				fz
+			], .09, 1), beam$2("woodDark", [
+				-.5,
+				0,
+				fz + .3
+			], [
+				-.5,
+				.85,
+				fz
+			], .09, 1), beam$2("woodDark", [
+				.5,
+				0,
+				fz - .3
+			], [
+				.5,
+				.85,
+				fz
+			], .09, 1), beam$2("woodDark", [
+				.5,
+				0,
+				fz + .3
+			], [
+				.5,
+				.85,
+				fz
+			], .09, 1), part("box", "woodDark", [
+				1.2,
+				.1,
+				.1
+			], [
+				0,
+				.8,
+				fz
+			], 1), part("cylinder", "woodEdge", [
+				.6,
+				.5,
+				.6
+			], [
+				W * .3,
+				0,
+				fz + .4
+			], 0, void 0, 8));
+			break;
+		case "smoke":
+			parts.push(part("box", "woodEdge", [
+				.5,
+				.35,
+				.5
+			], [
+				0,
+				h + D / 2 * Math.tan(pitch) - .05,
+				z0
+			], 1), part("box", "woodEdge", [
+				.8,
+				1.6,
+				.06
+			], [
+				0,
+				0,
+				z0 + D / 2 + .02
+			], 1));
+			break;
+		case "oven":
+			parts.push(part("box", "stoneDark", [
+				1.6,
+				.6,
+				1.4
+			], [
+				0,
+				0,
+				fz
+			], 2), part("sphere", "plaster", [
+				1.4,
+				.9,
+				1.2
+			], [
+				0,
+				.6,
+				fz
+			], 2), part("box", "woodEdge", [
+				.45,
+				.35,
+				.06
+			], [
+				0,
+				.62,
+				fz + .6
+			], 1));
+			break;
+		default:
+			parts.push(part("box", "woodMid", [
+				1.5,
+				.1,
+				.6
+			], [
+				-W * .2,
+				.8,
+				fz
+			], 1), part("box", "woodMid", [
+				1.2,
+				.1,
+				.6
+			], [
+				W * .22,
+				.8,
+				fz
+			], 1));
+			for (const x of [
+				-W * .2 - .6,
+				-W * .2 + .6,
+				W * .22 - .45,
+				W * .22 + .45
+			]) parts.push(beam$2("woodDark", [
+				x,
+				0,
+				fz
+			], [
+				x,
+				.8,
+				fz
+			], .07, 0));
+			parts.push(part("cylinder", "woodEdge", [
+				.5,
+				.55,
+				.5
+			], [
+				0,
+				0,
+				z0 + D / 2 + .3
+			], 0, void 0, 8));
+	}
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: z0 + D / 2,
+			width: W * .6
+		}
+	};
+};
+/** Timber palisade (Iron Age/Slavic gorod stockades): staggered sharpened stakes
+* with a rail, along the wall axis; corners form a ring. */
+var palisade = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, axis = ctx.wallAxis ?? "x", h = range(r, 2.4, 3.1);
+	const stake = (x, z) => {
+		const sh = h * range(r, .9, 1.08), rad = range(r, .24, .32);
+		parts.push(part("cylinder", "woodMid", [
+			rad,
+			sh,
+			rad * .9
+		], [
+			x,
+			0,
+			z
+		], 1, void 0, 6), part("cone", "woodLight", [
+			rad * .9,
+			.4,
+			rad * .9
+		], [
+			x,
+			sh,
+			z
+		], 0, void 0, 6));
+	};
+	if (axis === "corner") {
+		for (let i = 0; i < 10; i++) {
+			const a = i / 10 * Math.PI * 2;
+			stake(Math.cos(a) * (w / 2 - .4), Math.sin(a) * (d / 2 - .4));
+		}
+		parts.push(far(part("cylinder", "woodMid", [
+			w - .6,
+			h,
+			d - .6
+		], [
+			0,
+			0,
+			0
+		], 2, void 0, 8)));
+		return { parts };
+	}
+	const len = axis === "x" ? w : d, n = Math.round(len / .36);
+	for (let i = 0; i < n; i++) {
+		const t = -len / 2 + .18 + i * (len - .36) / (n - 1), off = i % 2 ? .08 : -.08;
+		axis === "x" ? stake(t, off) : stake(off, t);
+	}
+	for (const y of [.9, h * .72]) parts.push(part("box", "woodDark", axis === "x" ? [
+		len - .2,
+		.12,
+		.12
+	] : [
+		.12,
+		.12,
+		len - .2
+	], axis === "x" ? [
+		0,
+		y,
+		-.25
+	] : [
+		-.25,
+		y,
+		0
+	], 1));
+	parts.push(far(part("box", "woodMid", axis === "x" ? [
+		len - .2,
+		h,
+		.3
+	] : [
+		.3,
+		h,
+		len - .2
+	], [
+		0,
+		0,
+		0
+	], 2)));
+	parts.push(part("box", "woodDark", axis === "x" ? [
+		len - .1,
+		.3,
+		1.2
+	] : [
+		1.2,
+		.3,
+		len - .1
+	], [
+		0,
+		0,
+		0
+	], 0));
+	return { parts };
+};
+/** Timber gatehouse: two stout posts or towers, a lintel walkway, plank leaves. */
+var gate = (ctx, r) => {
+	const parts = [], { w } = ctx.footprint, towers = ctx.era >= 1 && chance(r, .5 + ctx.wealth * .3), h = range(r, 3, 3.6), open = range(r, 1.8, 2.2);
+	for (const s of [-1, 1]) {
+		const x = s * (open / 2 + .35);
+		if (towers) parts.push(part("box", "woodMid", [
+			.75,
+			h + 1.2,
+			.9
+		], [
+			x,
+			0,
+			0
+		], 2), part("pyramid", roofMaterial(ctx), [
+			1.05,
+			.9,
+			1.2
+		], [
+			x,
+			h + 1.2,
+			0
+		], 2));
+		else parts.push(part("cylinder", "woodDark", [
+			.5,
+			h + .3,
+			.45
+		], [
+			x,
+			0,
+			0
+		], 2, void 0, 8));
+		const stub = w / 2 - (open / 2 + .75);
+		if (stub > .2) parts.push(part("box", "woodMid", [
+			stub,
+			h * .85,
+			.3
+		], [
+			s * (open / 2 + .75 + stub / 2),
+			0,
+			0
+		], 2));
+	}
+	parts.push(part("box", "woodDark", [
+		open + 1.1,
+		.3,
+		.9
+	], [
+		0,
+		h - .3,
+		0
+	], 2), part("box", "woodMid", [
+		open + 1.3,
+		.6,
+		.12
+	], [
+		0,
+		h,
+		.42
+	], 1));
+	for (const s of [-1, 1]) parts.push(part("box", "woodMid", [
+		open / 2 - .05,
+		h - .5,
+		.1
+	], [
+		s * open / 4,
+		0,
+		-.1
+	], 1));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: .5,
+			width: open
+		}
+	};
+};
+/** Watch/bell tower: splayed four-post timber tower with platform and pyramid
+* cap (early), or tapering masonry tower with crenels (stone, era 2+). */
+var tower = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, base = Math.min(w, d) * range(r, .62, .78), h = range(r, 5.5, 8);
+	if (ctx.material === "stone" && ctx.era >= 2) {
+		const top = base * range(r, .78, .9);
+		parts.push(part("box", "stone", [
+			base,
+			h * .5,
+			base
+		], [
+			0,
+			0,
+			0
+		], 2), part("box", "stone", [
+			top,
+			h * .5,
+			top
+		], [
+			0,
+			h * .5,
+			0
+		], 2));
+		const crenel = chance(r, .5), cap = top * (crenel ? range(r, .35, .55) : range(r, .8, 1.25));
+		if (crenel) for (let i = 0; i < 4; i++) for (const s of [-1, 1]) parts.push(part("box", "stone", i < 2 ? [
+			.4,
+			.45,
+			.3
+		] : [
+			.3,
+			.45,
+			.4
+		], i < 2 ? [
+			s * top * .3,
+			h,
+			(i ? 1 : -1) * (top / 2 - .15)
+		] : [
+			(i === 2 ? 1 : -1) * (top / 2 - .15),
+			h,
+			s * top * .3
+		], 0));
+		parts.push(part("pyramid", roofMaterial(ctx), crenel ? [
+			top * .45,
+			cap,
+			top * .45
+		] : [
+			top * 1.08,
+			cap,
+			top * 1.08
+		], [
+			0,
+			h,
+			0
+		], 2));
+		windowAt(parts, 0, h * .35, base / 2 + .02, "z");
+		windowAt(parts, 0, h * .75, top / 2 + .02, "z");
+		door(parts, 0, base / 2 + .03, .8, 1.7);
+		return {
+			parts,
+			entry: {
+				x: 0,
+				z: base / 2,
+				width: .8
+			}
+		};
+	}
+	const top = base * range(r, .55, .7), plat = h * range(r, .72, .8);
+	for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(beam$2("woodDark", [
+		sx * base / 2,
+		0,
+		sz * base / 2
+	], [
+		sx * top / 2,
+		plat,
+		sz * top / 2
+	], .18, 2));
+	for (const y of [plat * .33, plat * .66]) {
+		const k = y / plat, half = base / 2 + (top / 2 - base / 2) * k;
+		parts.push(part("box", "woodMid", [
+			2 * half,
+			.1,
+			.1
+		], [
+			0,
+			y,
+			half
+		], 1), part("box", "woodMid", [
+			2 * half,
+			.1,
+			.1
+		], [
+			0,
+			y,
+			-half
+		], 1), part("box", "woodMid", [
+			.1,
+			.1,
+			2 * half
+		], [
+			half,
+			y,
+			0
+		], 1), part("box", "woodMid", [
+			.1,
+			.1,
+			2 * half
+		], [
+			-half,
+			y,
+			0
+		], 1));
+	}
+	parts.push(part("box", "woodMid", [
+		top + .5,
+		.18,
+		top + .5
+	], [
+		0,
+		plat,
+		0
+	], 2));
+	for (const s of [-1, 1]) parts.push(part("box", "woodLight", [
+		top + .5,
+		.55,
+		.06
+	], [
+		0,
+		plat + .18,
+		s * (top / 2 + .22)
+	], 0), part("box", "woodLight", [
+		.06,
+		.55,
+		top + .5
+	], [
+		s * (top / 2 + .22),
+		plat + .18,
+		0
+	], 0));
+	const capH = h - plat;
+	for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(beam$2("woodDark", [
+		sx * top / 2,
+		plat + .18,
+		sz * top / 2
+	], [
+		sx * top / 2,
+		plat + capH * .55,
+		sz * top / 2
+	], .1, 1));
+	parts.push(part("pyramid", roofMaterial(ctx), [
+		top + .7,
+		capH * .7,
+		top + .7
+	], [
+		0,
+		plat + capH * .55,
+		0
+	], 2));
+	if (chance(r, .4)) parts.push(part("sphere", "iron", [
+		.35,
+		.4,
+		.35
+	], [
+		0,
+		plat + capH * .55 - .45,
+		0
+	], 0));
+	parts.push(beam$2("woodLight", [
+		.2,
+		0,
+		base / 2 - .05
+	], [
+		.2,
+		plat,
+		top / 2
+	], .07, 0), beam$2("woodLight", [
+		-.2,
+		0,
+		base / 2 - .05
+	], [
+		-.2,
+		plat,
+		top / 2
+	], .07, 0));
+	return { parts };
+};
+/** Bell-tower church / temple: nave, square bell tower with pyramid spire,
+* optional apse (Romanesque parish churches); early eras get a timber shrine
+* hall with a bell frame. */
+var church = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, stone = ctx.era >= 2;
+	const NW = w * range(r, .4, .5), towerW = Math.min(w * .3, range(r, 1.7, 2.3)), apse = stone && chance(r, .6), apseD = apse ? NW * .5 : 0;
+	const ND = d * range(r, .6, .72) - apseD, towerSide = pick(r, ["front", "corner"]), wallH = range(r, 2.6, 3.4), pitch = roofPitch(ctx, r) + .05;
+	const wm = stone ? ctx.material === "timber" ? "plaster" : "stone" : "woodMid";
+	const towerFront = towerSide === "front", frontZ = d / 2 - .15 - (towerFront ? towerW : 0), nz = frontZ - ND / 2;
+	parts.push(part("box", wm, [
+		NW,
+		wallH,
+		ND
+	], [
+		0,
+		0,
+		nz
+	], 2));
+	gableRoof(parts, ctx, NW, ND, wallH, pitch, 0, nz, "z", .2, stone ? roofMaterial(ctx) : "thatch");
+	if (apse) parts.push(part("cylinder", wm, [
+		NW * .9,
+		wallH * .85,
+		NW * .9
+	], [
+		0,
+		0,
+		nz - ND / 2
+	], 2, void 0, 10), part("cone", roofMaterial(ctx), [
+		NW,
+		NW * .35,
+		NW
+	], [
+		0,
+		wallH * .85,
+		nz - ND / 2
+	], 1, void 0, 10));
+	for (let i = 0; i < pick(r, [3, 4]); i++) {
+		const z = nz - ND / 2 + (i + .5) * ND / 4;
+		windowAt(parts, NW / 2 + .03, wallH * .6, z, "x");
+		windowAt(parts, -NW / 2 - .03, wallH * .6, z, "x");
+		if (stone) for (const s of [-1, 1]) parts.push(part("box", wm, [
+			.3,
+			wallH * .7,
+			.4
+		], [
+			s * (NW / 2 + .15),
+			0,
+			z + ND / 8
+		], 0));
+	}
+	if (stone) {
+		const th = wallH + range(r, 2.8, 4.2), tx = towerFront ? 0 : NW / 2 + towerW / 2 - .05, tz = towerFront ? frontZ + towerW / 2 : frontZ - towerW / 2;
+		parts.push(part("box", wm, [
+			towerW,
+			th,
+			towerW
+		], [
+			tx,
+			0,
+			tz
+		], 2));
+		for (const [fx, fz] of [
+			[0, 1],
+			[0, -1],
+			[1, 0],
+			[-1, 0]
+		]) parts.push(part("box", "woodEdge", fx ? [
+			.06,
+			.7,
+			.45
+		] : [
+			.45,
+			.7,
+			.06
+		], [
+			tx + fx * (towerW / 2 + .02),
+			th - 1.1,
+			tz + fz * (towerW / 2 + .02)
+		], 0));
+		parts.push(part("pyramid", roofMaterial(ctx), [
+			towerW * 1.1,
+			range(r, 1.6, 2.6),
+			towerW * 1.1
+		], [
+			tx,
+			th,
+			tz
+		], 2));
+		door(parts, towerFront ? 0 : 0, towerFront ? tz + towerW / 2 + .03 : frontZ + .03, 1, 2);
+		return {
+			parts,
+			entry: {
+				x: 0,
+				z: towerFront ? tz + towerW / 2 : frontZ,
+				width: 1
+			}
+		};
+	}
+	const pz = frontZ, pd = Math.min(1.2, d / 2 - pz - .1);
+	for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+		s * NW * .35,
+		0,
+		pz + pd - .1
+	], [
+		s * NW * .35,
+		wallH * .9,
+		pz + pd - .1
+	], .16, 1));
+	parts.push(part("prism", "thatch", [
+		NW * .85,
+		.8,
+		pd + .1
+	], [
+		0,
+		wallH * .9,
+		pz + pd / 2 - .05
+	], 1));
+	door(parts, 0, frontZ + .03, 1, 1.9);
+	const bx = NW / 2 + (w / 2 - NW / 2) / 2;
+	if (w / 2 - NW / 2 > 1) parts.push(beam$2("woodDark", [
+		bx,
+		0,
+		-.5
+	], [
+		bx,
+		3.6,
+		-.5
+	], .16, 2), beam$2("woodDark", [
+		bx,
+		0,
+		.5
+	], [
+		bx,
+		3.6,
+		.5
+	], .16, 2), part("box", "woodDark", [
+		.2,
+		.2,
+		1.25
+	], [
+		bx,
+		3.5,
+		0
+	], 1), part("sphere", "iron", [
+		.45,
+		.5,
+		.45
+	], [
+		bx,
+		3.05,
+		0
+	], 0));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: frontZ,
+			width: 1
+		}
+	};
+};
+/** Market square stalls (medieval market booths, agora stoa stalls): empty
+* counters under awnings around an open centre; a well or market cross. No
+* decorative free goods. */
+var marketStalls = (ctx, r) => {
+	const parts = [], { w, d } = ctx.footprint, count = pick(r, [
+		3,
+		4,
+		5,
+		6
+	]), sw = range(r, 1.4, 1.8), sd = range(r, .9, 1.2), h = range(r, 1.9, 2.2);
+	const slots = [
+		[
+			0,
+			-d / 2 + sd / 2 + .2,
+			0
+		],
+		[
+			-w / 2 + sd / 2 + .2,
+			0,
+			Math.PI / 2
+		],
+		[
+			w / 2 - sd / 2 - .2,
+			0,
+			-Math.PI / 2
+		],
+		[
+			-w * .26,
+			-d / 2 + sd / 2 + .2,
+			0
+		],
+		[
+			w * .26,
+			-d / 2 + sd / 2 + .2,
+			0
+		],
+		[
+			-w / 2 + sd / 2 + .2,
+			d * .28,
+			Math.PI / 2
+		]
+	];
+	for (let i = 0; i < count; i++) {
+		const [x, z, yaw] = slots[i], c = Math.cos(yaw), s = Math.sin(yaw), at = (lx, lz) => [
+			x + lx * c + lz * s,
+			0,
+			z - lx * s + lz * c
+		];
+		for (const lx of [-sw / 2 + .06, sw / 2 - .06]) for (const lz of [-sd / 2 + .06, sd / 2 - .06]) {
+			const p = at(lx, lz);
+			parts.push(beam$2("woodDark", p, [
+				p[0],
+				lz < 0 ? h + .25 : h,
+				p[2]
+			], .08, 1));
+		}
+		parts.push(part("box", "woodMid", [
+			sw,
+			.8,
+			.35
+		], at(0, sd / 2 - .2), 2, [
+			0,
+			yaw,
+			0
+		]));
+		const p = at(0, 0);
+		parts.push(part("wedge", i % 2 ? "cloth" : "woodLight", [
+			sw + .2,
+			.35,
+			sd + .2
+		], [
+			p[0],
+			h - .05,
+			p[2]
+		], 2, [
+			0,
+			yaw,
+			0
+		]));
+	}
+	if (chance(r, .55)) parts.push(part("cylinder", "stone", [
+		1,
+		.7,
+		1
+	], [
+		0,
+		0,
+		d * .12
+	], 2, void 0, 10), part("cylinder", "water", [
+		.75,
+		.05,
+		.75
+	], [
+		0,
+		.66,
+		d * .12
+	], 0, void 0, 10), beam$2("woodDark", [
+		-.45,
+		.7,
+		d * .12
+	], [
+		-.45,
+		1.8,
+		d * .12
+	], .08, 1), beam$2("woodDark", [
+		.45,
+		.7,
+		d * .12
+	], [
+		.45,
+		1.8,
+		d * .12
+	], .08, 1), part("box", "woodDark", [
+		1.05,
+		.1,
+		.1
+	], [
+		0,
+		1.75,
+		d * .12
+	], 1));
+	else parts.push(part("box", "stone", [
+		.7,
+		.5,
+		.7
+	], [
+		0,
+		0,
+		d * .12
+	], 2), part("box", "stone", [
+		.22,
+		1.8,
+		.22
+	], [
+		0,
+		.5,
+		d * .12
+	], 2), part("box", "stone", [
+		.7,
+		.18,
+		.18
+	], [
+		0,
+		1.9,
+		d * .12
+	], 1));
+	return {
+		parts,
+		entry: {
+			x: 0,
+			z: d / 2,
+			width: w * .5
+		}
+	};
+};
+/** Cooking hearth: a ring of stones and a fire, maybe a spit. Small by design:
+* nothing like a building base, it occupies ~1.6 m of a 3 m footprint. */
+var hearth = (ctx, r) => {
+	const parts = [], n = 7 + Math.floor(r() * 5), R = range(r, .5, .66);
+	for (let i = 0; i < n; i++) {
+		const a = i / n * Math.PI * 2 + range(r, -.12, .12), s = range(r, .22, .32);
+		parts.push(part("box", i % 3 ? "stone" : "stoneDark", [
+			s,
+			range(r, .14, .24),
+			s * range(r, .8, 1.2)
+		], [
+			Math.cos(a) * R,
+			0,
+			Math.sin(a) * R
+		], 2, [
+			0,
+			a,
+			0
+		]));
+	}
+	parts.push(part("cone", "fire", [
+		.55,
+		range(r, .45, .7),
+		.55
+	], [
+		0,
+		.05,
+		0
+	], 2, void 0, 6));
+	for (const a of [.4, 2]) parts.push(part("cylinder", "woodEdge", [
+		.12,
+		.8,
+		.12
+	], [
+		-.4 * Math.sin(a),
+		.07,
+		-.4 * Math.cos(a)
+	], 1, [
+		Math.PI / 2,
+		a,
+		0
+	], 5));
+	if (chance(r, .5)) {
+		for (const s of [-1, 1]) parts.push(beam$2("woodDark", [
+			s * (R + .25),
+			0,
+			0
+		], [
+			s * (R + .25),
+			.95,
+			0
+		], .07, 0));
+		parts.push(part("box", "woodDark", [
+			2 * R + .6,
+			.06,
+			.06
+		], [
+			0,
+			.92,
+			0
+		], 0));
+	}
+	if (chance(r, .5)) parts.push(part("cylinder", "trunk", [
+		.32,
+		1.1,
+		.32
+	], [
+		0,
+		.16,
+		R + .45
+	], 0, [
+		0,
+		0,
+		Math.PI / 2
+	], 6));
+	return { parts };
+};
+var BUILDING_FAMILIES = {
+	roundhouse: {
+		reference: "Iron Age roundhouse reconstructions (Butser Ancient Farm, Castell Henllys): wattle-and-daub drum, conical thatch, porch",
+		generate: roundhouse
+	},
+	cottage: {
+		reference: "English cruck/box-frame cottages and Germanic Fachwerk houses: bays, side door, chimney, lean-to outshot",
+		generate: cottage
+	},
+	longhouse: {
+		reference: "Norse/Saxon longhouses and halls (Lofotr, West Stow): bowed low walls, steep hipped roof, side doors",
+		generate: longhouse
+	},
+	granary: {
+		reference: "English staddle-stone granaries and Iberian horreos: body raised on mushroom stones, ladder",
+		generate: granary
+	},
+	storehouse: {
+		reference: "Medieval tithe barns and town warehouses: masonry ground floor, timber loft, cart door and hoist beam",
+		generate: storehouse
+	},
+	watermill: {
+		reference: "Undershot vertical watermills (Roman Barbegal, Domesday-era mills): mill house, wheel on the water side, flume",
+		generate: watermill
+	},
+	quernShelter: {
+		reference: "Rotary quern under a lean-to (Iron Age/Roman domestic milling)",
+		generate: quernShelter
+	},
+	workshop: {
+		reference: "Medieval open-front workshops and Roman tabernae: back wall, open bay, awning, trade fixture (forge, kiln, loom, racks)",
+		generate: workshop$1
+	},
+	palisade: {
+		reference: "Iron Age and Slavic gorod stockades: staggered sharpened stakes, rails, earth bank",
+		generate: palisade
+	},
+	gate: {
+		reference: "Timber stockade gatehouses (Trelleborg, motte-and-bailey gates): posts or towers, walkway lintel, plank leaves",
+		generate: gate
+	},
+	tower: {
+		reference: "Timber watchtowers (Roman limes towers) and masonry keeps/bell towers",
+		generate: tower
+	},
+	church: {
+		reference: "Romanesque parish churches with west bell towers and apses; early timber shrine halls with bell frames",
+		generate: church
+	},
+	marketStalls: {
+		reference: "Medieval market-square booths and agora stalls around a well or market cross",
+		generate: marketStalls
+	},
+	hearth: {
+		reference: "Open cooking hearth: stone ring, fire, spit",
+		generate: hearth
+	},
+	...EXTRA_FAMILIES
+};
+/** Rotate every part of a spec about Y by quarter turns (used for waterSide).
+* Beam endpoints are rotated too, so a later fitToFootprint rebuilds them in place. */
+function rotateParts(parts, quarterTurns) {
+	const q = (quarterTurns % 4 + 4) % 4;
+	if (!q) return parts;
+	const a = q * Math.PI / 2, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a));
+	const rp = (v) => [
+		v[0] * c + v[2] * s,
+		v[1],
+		-v[0] * s + v[2] * c
+	];
+	return parts.map((p) => {
+		const rot = p.rot ?? [
+			0,
+			0,
+			0
+		];
+		return {
+			...p,
+			pos: rp(p.pos),
+			rot: [
+				rot[0],
+				rot[1] + a,
+				rot[2]
+			],
+			...p.ends ? { ends: [rp(p.ends[0]), rp(p.ends[1])] } : {}
+		};
+	});
+}
+var waterTurns = {
+	"+x": 0,
+	"-z": 1,
+	"-x": 2,
+	"+z": 3
+};
+/** Piers are authored facing +Z water; quarter turns that bring +Z onto the real side. */
+var pierTurns = {
+	"+z": 0,
+	"+x": 1,
+	"-z": 2,
+	"-x": 3
+};
+/** Coarser LOD tiers drop supports (e.g. staddle stones) but keep what they carried.
+* For each tier, any part left floating gets a stout far-tier pier from the ground
+* to its underside, so every retained LOD is a supported silhouette. */
+function ensureTierSupport(parts, footprint) {
+	let out = parts;
+	for (const tier of [1, 2]) for (let guard = 0; guard < 8; guard++) {
+		const sub = partsAtLod({
+			family: "",
+			variantKey: "",
+			footprint,
+			parts: out,
+			notes: { reference: "" }
+		}, tier), fl = floatingParts({
+			family: "",
+			variantKey: "",
+			footprint,
+			parts: sub,
+			notes: { reference: "" }
+		});
+		if (!fl.length) break;
+		let low = sub[fl[0]], lowY = Infinity;
+		for (const i of fl) {
+			const b = partBounds(sub[i]);
+			if (b.minY < lowY) {
+				lowY = b.minY;
+				low = sub[i];
+			}
+		}
+		const b = partBounds(low), sx = (b.maxX - b.minX) * .7, sz = (b.maxZ - b.minZ) * .7;
+		out = [...out, {
+			...part("box", "stoneDark", [
+				sx,
+				lowY,
+				sz
+			], [
+				(b.minX + b.maxX) / 2,
+				0,
+				(b.minZ + b.maxZ) / 2
+			], 2),
+			onlyFrom: tier
+		}];
+	}
+	return out;
+}
+function generateFamily(family, ctx, variantKey) {
+	const def = BUILDING_FAMILIES[family], r = seededRandom(ctx.seed);
+	let q = 0, gctx = ctx;
+	if (family === "watermill" && ctx.waterSide) q = waterTurns[ctx.waterSide];
+	if (family === "pier") q = pierTurns[ctx.waterSide ?? "+z"];
+	if (family === "bridge" && ctx.footprint.w > ctx.footprint.d) q = 1;
+	if ((family === "pier" || family === "bridge") && q % 2) gctx = {
+		...ctx,
+		footprint: {
+			w: ctx.footprint.d,
+			d: ctx.footprint.w
+		}
+	};
+	const out = def.generate(gctx, r);
+	let parts = ctx.lit === false ? out.parts.filter((p) => p.mat !== "fire") : out.parts, entry = out.entry;
+	if (q) {
+		parts = rotateParts(parts, q);
+		if (entry) {
+			const a = q * Math.PI / 2, c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a));
+			entry = {
+				x: entry.x * c + entry.z * s,
+				z: -entry.x * s + entry.z * c,
+				width: entry.width
+			};
+		}
+	}
+	const margin = family === "palisade" || family === "gate" || family === "stoneWall" || family === "trench" || family === "moat" || family === "bridge" ? .02 : .1;
+	const fit = fitToFootprint({
+		family,
+		variantKey,
+		footprint: { ...ctx.footprint },
+		parts,
+		...entry ? { entry } : {},
+		notes: { reference: def.reference }
+	}, margin);
+	return {
+		...fit,
+		parts: ensureTierSupport(fit.parts, fit.footprint)
+	};
+}
+/** Maps stable building type IDs (src/game/types.ts BldType, footprints from
+* src/game/constants.ts BUILDINGS) onto Option H families, and derives the
+* seeded context. Pure: the same building ID always yields the same family,
+* variant and geometry; footprints are read, never changed.
+*
+* Geometry is shared per variant (family x era bucket x material x climate x
+* variant index) so instancing stays possible: a village of 60 houses draws a
+* handful of distinct cottages, not 60 unique meshes. */
+/** Variants per family: distinct geometries kept resident per era/material bucket. */
+var VARIANTS_PER_FAMILY = {
+	roundhouse: 4,
+	cottage: 5,
+	longhouse: 3,
+	granary: 4,
+	storehouse: 3,
+	watermill: 3,
+	quernShelter: 2,
+	workshop: 3,
+	palisade: 3,
+	gate: 2,
+	tower: 3,
+	church: 3,
+	marketStalls: 3,
+	hearth: 3,
+	fieldPlot: 4,
+	pen: 3,
+	pier: 3,
+	bridge: 3,
+	keep: 3,
+	stables: 3,
+	college: 3,
+	quarry: 3,
+	cairn: 3,
+	grove: 4,
+	outpost: 3,
+	threshing: 3,
+	stoneWall: 3,
+	trench: 3,
+	moat: 3,
+	well: 3,
+	cistern: 3,
+	millHouse: 3,
+	windmill: 3,
+	aqueduct: 3,
+	canal: 3
+};
+/** Stable building type -> family. Every BldType is mapped (batch 2 added farm,
+* pen, dock, bridge, keep, stables, university, quarry, cairn, grove,
+* cornerstone, threshing floor, stone wall, trench, moat); an unknown future
+* type still returns null and keeps the classic renderer. */
+function familyForType(type, era, climate, waterSide) {
+	switch (type) {
+		case "hut": return era <= 1 ? { family: "roundhouse" } : {
+			family: "cottage",
+			scale: "small"
+		};
+		case "house": return climate === "cold" || climate === "wet" ? era <= 2 ? { family: "longhouse" } : {
+			family: "cottage",
+			scale: "large"
+		} : {
+			family: "cottage",
+			scale: "large"
+		};
+		case "townhall": return {
+			family: "longhouse",
+			scale: "large"
+		};
+		case "barracks": return { family: "longhouse" };
+		case "warehouse": return era <= 2 ? { family: "granary" } : { family: "storehouse" };
+		case "grindingStone": return waterSide ? { family: "watermill" } : { family: "quernShelter" };
+		case "workshop": return {
+			family: "workshop",
+			trade: "bench"
+		};
+		case "forge": return {
+			family: "workshop",
+			trade: "forge"
+		};
+		case "kiln": return {
+			family: "workshop",
+			trade: "kiln"
+		};
+		case "potter": return {
+			family: "workshop",
+			trade: "pottery"
+		};
+		case "fibreWorkshop": return {
+			family: "workshop",
+			trade: "loom"
+		};
+		case "tailor": return {
+			family: "workshop",
+			trade: "bench"
+		};
+		case "tanner":
+		case "butcher":
+		case "dryrack": return {
+			family: "workshop",
+			trade: "rack"
+		};
+		case "lumber": return {
+			family: "workshop",
+			trade: "saw"
+		};
+		case "smokehouse": return {
+			family: "workshop",
+			trade: "smoke"
+		};
+		case "oven": return {
+			family: "workshop",
+			trade: "oven"
+		};
+		case "palisade": return { family: "palisade" };
+		case "gate": return { family: "gate" };
+		case "watchtower": return { family: "tower" };
+		case "temple": return { family: "church" };
+		case "market": return { family: "marketStalls" };
+		case "hearth": return { family: "hearth" };
+		case "farm": return { family: "fieldPlot" };
+		case "pen": return { family: "pen" };
+		case "dock": return { family: "pier" };
+		case "bridge": return { family: "bridge" };
+		case "keep": return { family: "keep" };
+		case "stables": return { family: "stables" };
+		case "university": return { family: "college" };
+		case "quarry": return { family: "quarry" };
+		case "cairn": return { family: "cairn" };
+		case "grove": return { family: "grove" };
+		case "cornerstone": return { family: "outpost" };
+		case "threshingFloor": return { family: "threshing" };
+		case "stonewall": return { family: "stoneWall" };
+		case "trench": return { family: "trench" };
+		case "moat": return { family: "moat" };
+		case "well": return { family: "well" };
+		case "cistern": return { family: "cistern" };
+		case "watermill": return { family: "millHouse" };
+		case "windmill": return { family: "windmill" };
+		case "aqueduct": return { family: "aqueduct" };
+		case "canal": return { family: "canal" };
+		default: return null;
+	}
+}
+var CARVED_TYPES = [
+	"hut",
+	"house",
+	"townhall",
+	"barracks",
+	"warehouse",
+	"grindingStone",
+	"workshop",
+	"forge",
+	"kiln",
+	"potter",
+	"fibreWorkshop",
+	"tailor",
+	"tanner",
+	"butcher",
+	"dryrack",
+	"lumber",
+	"smokehouse",
+	"oven",
+	"palisade",
+	"gate",
+	"watchtower",
+	"temple",
+	"market",
+	"hearth",
+	"farm",
+	"pen",
+	"dock",
+	"bridge",
+	"keep",
+	"stables",
+	"university",
+	"quarry",
+	"cairn",
+	"grove",
+	"cornerstone",
+	"threshingFloor",
+	"stonewall",
+	"trench",
+	"moat",
+	"well",
+	"cistern",
+	"watermill",
+	"windmill",
+	"aqueduct",
+	"canal"
+];
+function climateFor(habitat = "plains") {
+	return habitat === "hills" || habitat === "tundra" ? "cold" : habitat === "forest" || habitat === "wetland" ? "wet" : habitat === "desert" ? "arid" : "temperate";
+}
+/** Local construction material by era and habitat (wood-rich forest keeps
+* timber longer; hills move to stone early; deserts build mudbrick). */
+function materialFor(era, habitat = "plains") {
+	if (habitat === "desert") return era <= 0 ? "wattle" : "mudbrick";
+	if (era <= 0) return "wattle";
+	if (habitat === "hills") return era >= 2 ? "stone" : "timber";
+	if (habitat === "forest" || habitat === "wetland") return era >= 4 ? "stone" : "timber";
+	return era >= 3 ? "stone" : "timber";
+}
+/** Era buckets that change structure (0 early, 1 established, 2 classical, 3 late, 5 imperial). */
+function eraBucket(era) {
+	const e = Math.max(0, Math.min(5, Math.floor(era)));
+	return e >= 5 ? 5 : e >= 3 ? 3 : e;
+}
+/** Settlement building tradition derived from a stable seed (G3). */
+function traditionFor(worldSeed, settlementSeed) {
+	if (settlementSeed === void 0) return {
+		pitchBiasDeg: 0,
+		annexBias: 0,
+		proportion: 1,
+		porchBias: 0
+	};
+	const h = hashSeed(worldSeed, "tradition", settlementSeed), f = (k) => (h >>> k * 8 & 255) / 255;
+	return {
+		pitchBiasDeg: Math.round((f(0) - .5) * 10),
+		annexBias: Math.round((f(1) - .5) * 40) / 100,
+		proportion: Math.round((.9 + f(2) * .2) * 100) / 100,
+		porchBias: Math.round((f(3) - .5) * 40) / 100
+	};
+}
+function prosperityTier(p) {
+	return p === void 0 ? -1 : p < .34 ? 0 : p < .67 ? 1 : 2;
+}
+function variantIndexFor(worldSeed, id, count) {
+	return hashSeed(worldSeed, "variant", id) % count;
+}
+/** Resolve a building to its shared variant key and generation context. */
+function carvedVariantFor(input) {
+	const era = eraBucket(input.era), habitat = input.habitat ?? "plains", climate = climateFor(habitat), map = familyForType(input.type, era, climate, input.reviewWatermill ? input.waterSide : void 0);
+	if (!map) return null;
+	const material = materialFor(era, habitat), count = VARIANTS_PER_FAMILY[map.family], index = variantIndexFor(input.worldSeed, input.id, count);
+	const spread = count > 1 ? index / (count - 1) : .5, tier = prosperityTier(input.prosperity);
+	const wealth = tier < 0 ? spread : Math.min(1, tier * .4 + spread * .2);
+	const tradition = traditionFor(input.worldSeed, input.settlementSeed);
+	const fw = Math.round(input.footprint.w * 100) / 100, fd = Math.round(input.footprint.d * 100) / 100;
+	const key = [
+		input.type,
+		map.family,
+		map.trade ?? "",
+		map.scale ?? "",
+		era,
+		material,
+		climate,
+		index,
+		input.reviewWatermill || input.type !== "grindingStone" ? input.waterSide ?? "" : "",
+		input.wallAxis ?? "",
+		input.lit === false ? "cold" : "lit",
+		fw,
+		fd,
+		input.settlementSeed ?? "",
+		tier
+	].join("|");
+	const ctx = {
+		seed: hashSeed(input.worldSeed, key),
+		era,
+		material,
+		climate,
+		wealth,
+		tradition,
+		footprint: {
+			w: fw,
+			d: fd
+		},
+		...map.trade ? { trade: map.trade } : {},
+		...map.scale ? { scale: map.scale } : {},
+		...input.waterSide && (input.reviewWatermill || input.type !== "grindingStone") ? { waterSide: input.waterSide } : {},
+		...input.wallAxis ? { wallAxis: input.wallAxis } : {},
+		...input.lit === false ? { lit: false } : {}
+	};
+	return {
+		key,
+		family: map.family,
+		ctx
+	};
+}
+var CARVED_MATERIALS = {
+	woodLight: {
+		hex: "#dfa56b",
+		roughness: .84,
+		grain: 1
+	},
+	woodMid: {
+		hex: "#c8884d",
+		roughness: .86,
+		grain: 1
+	},
+	woodDark: {
+		hex: "#9c6433",
+		roughness: .88,
+		grain: 1
+	},
+	woodEdge: {
+		hex: "#6a4219",
+		roughness: .9,
+		grain: .7
+	},
+	woodInlay: {
+		hex: "#e9c592",
+		roughness: .82,
+		grain: .6
+	},
+	recess: {
+		hex: "#4a2e12",
+		roughness: .95,
+		grain: 0
+	},
+	thatch: {
+		hex: "#cf9553",
+		roughness: .92,
+		grain: .8
+	},
+	shingle: {
+		hex: "#b97a40",
+		roughness: .88,
+		grain: 1
+	},
+	tile: {
+		hex: "#c0723c",
+		roughness: .86,
+		grain: .8
+	},
+	stone: {
+		hex: "#dcb688",
+		roughness: .92,
+		grain: .5
+	},
+	stoneDark: {
+		hex: "#a97b4e",
+		roughness: .93,
+		grain: .5
+	},
+	plaster: {
+		hex: "#e6b77e",
+		roughness: .92,
+		grain: .4
+	},
+	foliage: {
+		hex: "#9d9a58",
+		roughness: .9,
+		grain: 0
+	},
+	foliageDark: {
+		hex: "#78773f",
+		roughness: .92,
+		grain: 0
+	},
+	trunk: {
+		hex: "#8a5a2c",
+		roughness: .9,
+		grain: 1
+	},
+	water: {
+		hex: "#7a8f99",
+		roughness: .35,
+		grain: 0
+	},
+	fire: {
+		hex: "#f0a03a",
+		roughness: .6,
+		grain: 0
+	},
+	cloth: {
+		hex: "#ecd2a4",
+		roughness: .9,
+		grain: 0
+	},
+	iron: {
+		hex: "#5a4c40",
+		roughness: .6,
+		grain: 0
+	}
+};
+Object.keys(CARVED_MATERIALS);
+/** Wood-grain texture parameters shared by every carved surface (one texture,
+* metric UVs, so grain density reads the same on a post and a hillside). */
+var CARVED_GRAIN = {
+	textureSize: 256,
+	tileMetres: 1.8,
+	lineCount: 90,
+	darkest: .74,
+	mean: .93
+};
+function hexToRgb(hex) {
+	const n = parseInt(hex.slice(1), 16);
+	return [
+		(n >> 16 & 255) / 255,
+		(n >> 8 & 255) / 255,
+		(n & 255) / 255
+	];
+}
+/** Deterministic greyscale wood-grain pixels (RGBA, near-white with darker
+* warped growth lines) for the shared carved material map. It multiplies the
+* vertex colour, so its mean stays close to 1 and only lines darken. */
+function woodGrainPixels(size = CARVED_GRAIN.textureSize, seed = 7) {
+	const out = new Uint8Array(size * size * 4), lines = [];
+	let s = seed >>> 0;
+	const rnd = () => {
+		s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+		return s / 4294967296;
+	};
+	for (let i = 0; i < CARVED_GRAIN.lineCount; i++) lines.push(rnd());
+	const strengths = lines.map(() => .35 + rnd() * .65);
+	for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+		const u = x / size, v = y / size, warp = .012 * Math.sin(u * Math.PI * 2 * 2 + v * 9) + .006 * Math.sin(u * Math.PI * 2 * 5 + 1.3);
+		let shade = 1;
+		for (let i = 0; i < lines.length; i++) {
+			let dv = Math.abs(v + warp - lines[i]);
+			dv = Math.min(dv, 1 - dv);
+			const w = .0035 + strengths[i] * .004;
+			if (dv < w) shade = Math.min(shade, 1 - (1 - CARVED_GRAIN.darkest) * strengths[i] * (1 - dv / w));
+		}
+		shade *= .97 + .03 * Math.sin(v * Math.PI * 2 * 3 + u * 2);
+		const c = Math.max(0, Math.min(255, Math.round(shade * 255))), o = (y * size + x) * 4;
+		out[o] = c;
+		out[o + 1] = c;
+		out[o + 2] = c;
+		out[o + 3] = 255;
+	}
+	return out;
+}
+/** Pure triangle-soup builder for Option H carved buildings. No three.js
+* import: emits Float32Arrays (positions, flat normals, metric grain UVs,
+* vertex colours, per-vertex grain strength) that the thin adapter in
+* carvedBuildingLayer.ts wraps in one BufferGeometry per variant and LOD.
+* One shared vertex-coloured material draws every carved building, so draw
+* calls scale with distinct (variant, LOD) buckets, not with building count.
+*
+* Every part shape here is convex, so winding is fixed automatically by
+* orienting each triangle away from the part centroid. Triangle counts equal
+* partTriangles() exactly (tested). */
+var quad = (out, a, b, c, d) => {
+	out.push([
+		a,
+		b,
+		c
+	], [
+		a,
+		c,
+		d
+	]);
+};
+var ring = (n, rx, rz, y) => Array.from({ length: n }, (_, i) => {
+	const t = i / n * Math.PI * 2;
+	return [
+		Math.cos(t) * rx,
+		y,
+		Math.sin(t) * rz
+	];
+});
+/** Local-frame triangles (base centre at origin, Y up, already scaled). */
+function shapeTriangles(p) {
+	const [w, h, d] = p.size, hw = w / 2, hd = d / 2, n = Math.max(3, p.sides ?? 8), out = [];
+	switch (p.shape) {
+		case "box": {
+			const c = (x, y, z) => [
+				x * hw,
+				y * h,
+				z * hd
+			];
+			quad(out, c(-1, 0, -1), c(1, 0, -1), c(1, 0, 1), c(-1, 0, 1));
+			quad(out, c(-1, 1, -1), c(1, 1, -1), c(1, 1, 1), c(-1, 1, 1));
+			quad(out, c(-1, 0, -1), c(1, 0, -1), c(1, 1, -1), c(-1, 1, -1));
+			quad(out, c(-1, 0, 1), c(1, 0, 1), c(1, 1, 1), c(-1, 1, 1));
+			quad(out, c(-1, 0, -1), c(-1, 0, 1), c(-1, 1, 1), c(-1, 1, -1));
+			quad(out, c(1, 0, -1), c(1, 0, 1), c(1, 1, 1), c(1, 1, -1));
+			break;
+		}
+		case "cylinder": {
+			const b = ring(n, w / 2, w / 2, 0), t = ring(n, d / 2, d / 2, h);
+			for (let i = 0; i < n; i++) {
+				const j = (i + 1) % n;
+				quad(out, b[i], b[j], t[j], t[i]);
+				out.push([
+					[
+						0,
+						0,
+						0
+					],
+					b[i],
+					b[j]
+				], [
+					[
+						0,
+						h,
+						0
+					],
+					t[i],
+					t[j]
+				]);
+			}
+			break;
+		}
+		case "cone": {
+			const b = ring(n, w / 2, d / 2, 0);
+			for (let i = 0; i < n; i++) {
+				const j = (i + 1) % n;
+				out.push([
+					[
+						0,
+						h,
+						0
+					],
+					b[i],
+					b[j]
+				], [
+					[
+						0,
+						0,
+						0
+					],
+					b[i],
+					b[j]
+				]);
+			}
+			break;
+		}
+		case "prism": {
+			const L = [
+				-hw,
+				0,
+				-hd
+			], R = [
+				hw,
+				0,
+				-hd
+			], T = [
+				0,
+				h,
+				-hd
+			], L2 = [
+				-hw,
+				0,
+				hd
+			], R2 = [
+				hw,
+				0,
+				hd
+			], T2 = [
+				0,
+				h,
+				hd
+			];
+			quad(out, L, T, T2, L2);
+			quad(out, R, T, T2, R2);
+			out.push([
+				L,
+				R,
+				T
+			], [
+				L2,
+				R2,
+				T2
+			]);
+			quad(out, L, R, R2, L2);
+			break;
+		}
+		case "wedge": {
+			const A = [
+				-hw,
+				0,
+				-hd
+			], B = [
+				hw,
+				0,
+				-hd
+			], C = [
+				hw,
+				0,
+				hd
+			], D = [
+				-hw,
+				0,
+				hd
+			], E = [
+				-hw,
+				h,
+				-hd
+			], F = [
+				hw,
+				h,
+				-hd
+			];
+			quad(out, A, B, C, D);
+			quad(out, A, B, F, E);
+			quad(out, E, F, C, D);
+			out.push([
+				A,
+				E,
+				D
+			], [
+				B,
+				F,
+				C
+			]);
+			break;
+		}
+		case "hip": {
+			const i = Math.min(Math.max(0, p.inset ?? 0), hd), A = [
+				-hw,
+				0,
+				-hd
+			], B = [
+				hw,
+				0,
+				-hd
+			], C = [
+				hw,
+				0,
+				hd
+			], D = [
+				-hw,
+				0,
+				hd
+			], R0 = [
+				0,
+				h,
+				-hd + i
+			], R1 = [
+				0,
+				h,
+				hd - i
+			];
+			quad(out, A, B, C, D);
+			quad(out, B, C, R1, R0);
+			quad(out, A, D, R1, R0);
+			out.push([
+				A,
+				B,
+				R0
+			], [
+				D,
+				C,
+				R1
+			]);
+			break;
+		}
+		case "pyramid": {
+			const A = [
+				-hw,
+				0,
+				-hd
+			], B = [
+				hw,
+				0,
+				-hd
+			], C = [
+				hw,
+				0,
+				hd
+			], D = [
+				-hw,
+				0,
+				hd
+			], T = [
+				0,
+				h,
+				0
+			];
+			out.push([
+				A,
+				B,
+				T
+			], [
+				B,
+				C,
+				T
+			], [
+				C,
+				D,
+				T
+			], [
+				D,
+				A,
+				T
+			]);
+			quad(out, A, B, C, D);
+			break;
+		}
+		case "sphere": {
+			const { lon, lat } = SPHERE_SEGMENTS, ry = h / 2, pt = (i, j) => {
+				const th = j / lat * Math.PI, ph = i / lon * Math.PI * 2;
+				return [
+					Math.sin(th) * Math.cos(ph) * hw,
+					ry - Math.cos(th) * ry,
+					Math.sin(th) * Math.sin(ph) * hd
+				];
+			};
+			for (let i = 0; i < lon; i++) {
+				const k = (i + 1) % lon;
+				out.push([
+					pt(0, 0),
+					pt(i, 1),
+					pt(k, 1)
+				], [
+					pt(0, lat),
+					pt(i, lat - 1),
+					pt(k, lat - 1)
+				]);
+				for (let j = 1; j < lat - 1; j++) quad(out, pt(i, j), pt(k, j), pt(k, j + 1), pt(i, j + 1));
+			}
+			break;
+		}
+	}
+	return out;
+}
+function centroidOf(p) {
+	const [, h] = p.size;
+	switch (p.shape) {
+		case "cone":
+		case "pyramid": return [
+			0,
+			h / 4,
+			0
+		];
+		case "prism":
+		case "hip": return [
+			0,
+			h / 3,
+			0
+		];
+		case "wedge": return [
+			0,
+			h / 3,
+			-p.size[2] / 6
+		];
+		default: return [
+			0,
+			h / 2,
+			0
+		];
+	}
+}
+var sub = (a, b) => [
+	a[0] - b[0],
+	a[1] - b[1],
+	a[2] - b[2]
+];
+var cross = (a, b) => [
+	a[1] * b[2] - a[2] * b[1],
+	a[2] * b[0] - a[0] * b[2],
+	a[0] * b[1] - a[1] * b[0]
+];
+var dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+var NO_AO = /* @__PURE__ */ new Set([
+	"fire",
+	"water",
+	"cloth"
+]);
+var rgbCache = /* @__PURE__ */ new Map();
+var swatchRgb = (m) => {
+	let c = rgbCache.get(m);
+	if (!c) {
+		c = hexToRgb(CARVED_MATERIALS[m].hex);
+		rgbCache.set(m, c);
+	}
+	return c;
+};
+/** Build the merged carved mesh for one building spec at one LOD tier. */
+function buildCarvedMesh(spec, tier) {
+	const parts = partsAtLod(spec, tier), triangles = parts.reduce((s, p) => s + partTriangles(p), 0), vc = triangles * 3;
+	const positions = new Float32Array(vc * 3), normals = new Float32Array(vc * 3), uvs = new Float32Array(vc * 2), colors = new Float32Array(vc * 3), grain = new Float32Array(vc);
+	const bounds = {
+		minX: Infinity,
+		maxX: -Infinity,
+		minY: Infinity,
+		maxY: -Infinity,
+		minZ: Infinity,
+		maxZ: -Infinity
+	};
+	const r = seededRandom(hashSeed(spec.variantKey, tier));
+	let v = 0;
+	for (const p of parts) {
+		const tris = shapeTriangles(p), c = centroidOf(p), [w, h, d] = p.size, base = swatchRgb(p.mat), tone = 1 + (r() - .5) * .08, offU = r(), offV = r(), gs = CARVED_MATERIALS[p.mat].grain;
+		for (const tri of tris) {
+			let [a, b, e] = tri;
+			let nrm = cross(sub(b, a), sub(e, a));
+			const mid = [
+				(a[0] + b[0] + e[0]) / 3,
+				(a[1] + b[1] + e[1]) / 3,
+				(a[2] + b[2] + e[2]) / 3
+			];
+			if (dot(nrm, sub(mid, c)) < 0) {
+				[b, e] = [e, b];
+				nrm = [
+					-nrm[0],
+					-nrm[1],
+					-nrm[2]
+				];
+			}
+			const len = Math.hypot(nrm[0], nrm[1], nrm[2]) || 1, ln = [
+				nrm[0] / len,
+				nrm[1] / len,
+				nrm[2] / len
+			];
+			const ax = Math.abs(ln[0]), ay = Math.abs(ln[1]), az = Math.abs(ln[2]);
+			const wn = p.rot ? rotatePoint(ln, p.rot) : ln;
+			for (const q of [
+				a,
+				b,
+				e
+			]) {
+				let u, vv;
+				if (ay >= ax && ay >= az) [u, vv] = w >= d ? [q[0], q[2]] : [q[2], q[0]];
+				else if (ax >= az) [u, vv] = d >= h ? [q[2], q[1]] : [q[1], q[2]];
+				else [u, vv] = w >= h ? [q[0], q[1]] : [q[1], q[0]];
+				const wp = p.rot ? rotatePoint(q, p.rot) : q, x = wp[0] + p.pos[0], y = wp[1] + p.pos[1], z = wp[2] + p.pos[2];
+				positions[v * 3] = x;
+				positions[v * 3 + 1] = y;
+				positions[v * 3 + 2] = z;
+				normals[v * 3] = wn[0];
+				normals[v * 3 + 1] = wn[1];
+				normals[v * 3 + 2] = wn[2];
+				uvs[v * 2] = u / CARVED_GRAIN.tileMetres + offU;
+				uvs[v * 2 + 1] = vv / CARVED_GRAIN.tileMetres + offV;
+				const ao = NO_AO.has(p.mat) ? 1 : .8 + .2 * Math.min(1, Math.max(0, y / 1.1));
+				colors[v * 3] = Math.min(1, base[0] * tone * ao);
+				colors[v * 3 + 1] = Math.min(1, base[1] * tone * ao);
+				colors[v * 3 + 2] = Math.min(1, base[2] * tone * ao);
+				grain[v] = gs;
+				bounds.minX = Math.min(bounds.minX, x);
+				bounds.maxX = Math.max(bounds.maxX, x);
+				bounds.minY = Math.min(bounds.minY, y);
+				bounds.maxY = Math.max(bounds.maxY, y);
+				bounds.minZ = Math.min(bounds.minZ, z);
+				bounds.maxZ = Math.max(bounds.maxZ, z);
+				v++;
+			}
+		}
+	}
+	return {
+		positions,
+		normals,
+		uvs,
+		colors,
+		grain,
+		triangles,
+		bounds
+	};
+}
+function impostorCard(spec) {
+	let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = 0, eave = 0;
+	const area = /* @__PURE__ */ new Map();
+	let roof = "thatch";
+	let roofArea = -1;
+	for (const p of partsAtLod(spec, 2)) {
+		const [w, h, d] = p.size, ext = Math.max(w, d) / 2;
+		minX = Math.min(minX, p.pos[0] - ext);
+		maxX = Math.max(maxX, p.pos[0] + ext);
+		minZ = Math.min(minZ, p.pos[2] - ext);
+		maxZ = Math.max(maxZ, p.pos[2] + ext);
+		maxY = Math.max(maxY, p.pos[1] + h);
+		if (p.shape === "prism" || p.shape === "hip" || p.shape === "cone" || p.shape === "pyramid" || p.shape === "wedge") {
+			if (w * d > roofArea) {
+				roofArea = w * d;
+				roof = p.mat;
+			}
+			eave = Math.max(eave, p.pos[1]);
+		} else area.set(p.mat, (area.get(p.mat) ?? 0) + w * h);
+	}
+	let wall = "woodMid", best = -1;
+	for (const [m, a] of area) if (a > best) {
+		best = a;
+		wall = m;
+	}
+	const fw = spec.footprint.w, fd = spec.footprint.d;
+	return {
+		width: Math.min(fw, Math.max(.5, maxX - minX)),
+		depth: Math.min(fd, Math.max(.5, maxZ - minZ)),
+		eave: eave || maxY * .6,
+		height: maxY,
+		wall,
+		roof
+	};
+}
+/** THIN three.js adapter for Option H carved buildings — UNEXECUTED.
+* node_modules/three were unavailable in the authoring environment, so this
+* file has only been type-read against the three r185 API from memory; it has
+* never been run, rendered or profiled. All structure, triangle and colour
+* logic lives in the pure, tested modules (buildingFamilies, carvedMesh,
+* carvedPalette); this file only wraps their arrays.
+*
+* Plan (mirrors TowerPlatformLayer/instanceCapacity patterns):
+*  - ONE shared MeshStandardMaterial (vertex colours + one 256² grain map,
+*    grain strength per vertex) for every carved building.
+*  - One InstancedMesh per resident (variant key x LOD tier); buildings using
+*    the same variant share geometry. Beyond the far LOD, one instanced
+*    crossed-quad impostor card draw serves every distant building.
+*  - Nothing is created unless the caller selects the 'optionH' render style (src/game/graphics.ts);
+*    the classic renderer remains the default and the fallback. */
+var CARVED_LAYER_RULES = Object.freeze({
+	maximumBuckets: 192,
+	initialInstances: 16,
+	cardInitialInstances: 256
+});
+var srgbToLinear = (c) => c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4);
+/** Wrap pure mesh arrays. Vertex colours are authored in sRGB and converted
+* to linear here because three treats colour attributes as linear. */
+function carvedGeometry(data) {
+	const g = new BufferGeometry(), lin = new Float32Array(data.colors.length);
+	for (let i = 0; i < lin.length; i++) lin[i] = srgbToLinear(data.colors[i]);
+	g.setAttribute("position", new BufferAttribute(data.positions, 3));
+	g.setAttribute("normal", new BufferAttribute(data.normals, 3));
+	g.setAttribute("uv", new BufferAttribute(data.uvs, 2));
+	g.setAttribute("color", new BufferAttribute(lin, 3));
+	g.setAttribute("grain", new BufferAttribute(data.grain, 1));
+	g.computeBoundingSphere();
+	g.computeBoundingBox();
+	return g;
+}
+var sharedGrain = null;
+function carvedGrainTexture() {
+	if (sharedGrain) return sharedGrain;
+	const size = CARVED_GRAIN.textureSize, t = new DataTexture(woodGrainPixels(size), size, size, RGBAFormat);
+	t.wrapS = t.wrapT = RepeatWrapping;
+	t.colorSpace = "";
+	t.magFilter = LinearFilter;
+	t.minFilter = LinearMipmapLinearFilter;
+	t.generateMipmaps = true;
+	t.anisotropy = 4;
+	t.needsUpdate = true;
+	sharedGrain = t;
+	return t;
+}
+/** The single shared carved material: vertex colour x grain map, where the
+* per-vertex `grain` attribute (palette grain strength) blends the map in. */
+function createCarvedMaterial() {
+	const m = new MeshStandardMaterial({
+		vertexColors: true,
+		map: carvedGrainTexture(),
+		roughness: .86,
+		metalness: 0,
+		flatShading: true
+	});
+	m.name = "carved-h-shared";
+	m.onBeforeCompile = (shader) => {
+		shader.vertexShader = shader.vertexShader.replace("#include <common>", "#include <common>\nattribute float grain;\nvarying float vGrain;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvGrain=grain;");
+		shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vGrain;").replace("#include <map_fragment>", "#ifdef USE_MAP\n vec4 sampledDiffuseColor=texture2D(map,vMapUv);\n diffuseColor.rgb*=mix(vec3(1.0),sampledDiffuseColor.rgb,vGrain);\n#endif");
+	};
+	m.customProgramCacheKey = () => "carved-h-grain-v1";
+	return m;
+}
+/** Unit crossed-quad impostor (two vertical 1x1 planes through the origin,
+* base at y=0), slightly darker at the top so roofs read against walls. */
+function impostorGeometry() {
+	const p = [], c = [], n = [];
+	const quad = (ax, az, nx, nz) => {
+		const v = [
+			[
+				-ax,
+				0,
+				-az
+			],
+			[
+				ax,
+				0,
+				az
+			],
+			[
+				ax,
+				1,
+				az
+			],
+			[
+				-ax,
+				0,
+				-az
+			],
+			[
+				ax,
+				1,
+				az
+			],
+			[
+				-ax,
+				1,
+				-az
+			]
+		];
+		for (const q of v) {
+			p.push(q[0] * .5, q[1], q[2] * .5);
+			const s = q[1] > 0 ? .78 : 1;
+			c.push(s, s, s);
+			n.push(nx, 0, nz);
+		}
+	};
+	quad(1, 0, 0, 1);
+	quad(0, 1, 1, 0);
+	const g = new BufferGeometry();
+	g.setAttribute("position", new Float32BufferAttribute(p, 3));
+	g.setAttribute("normal", new Float32BufferAttribute(n, 3));
+	g.setAttribute("color", new Float32BufferAttribute(c, 3));
+	return g;
+}
+var CarvedBuildingLayer = class {
+	scene;
+	material = createCarvedMaterial();
+	cardMaterial = new MeshStandardMaterial({
+		vertexColors: true,
+		roughness: .9,
+		metalness: 0,
+		side: 2
+	});
+	specs = /* @__PURE__ */ new Map();
+	buckets = /* @__PURE__ */ new Map();
+	keys = /* @__PURE__ */ new Map();
+	frame = 0;
+	card;
+	m = new Matrix4();
+	q = new Quaternion();
+	p = new Vector3();
+	s = new Vector3();
+	up = new Vector3(0, 1, 0);
+	c = new Color();
+	constructor(scene) {
+		this.scene = scene;
+		const mesh = new InstancedMesh(impostorGeometry(), this.cardMaterial, CARVED_LAYER_RULES.cardInitialInstances);
+		mesh.name = "carved-h-impostors";
+		mesh.count = 0;
+		mesh.frustumCulled = false;
+		mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+		mesh.instanceColor = new InstancedBufferAttribute(new Float32Array(CARVED_LAYER_RULES.cardInitialInstances * 3), 3);
+		scene.add(mesh);
+		this.card = {
+			mesh,
+			count: 0,
+			owners: []
+		};
+	}
+	/** Stable variant key for an instance, cached per generator-relevant input. */
+	keyFor(b) {
+		const k = `${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat ?? ""}:${b.footprint.w}x${b.footprint.d}:${b.waterSide ?? ""}:${b.wallAxis ?? ""}:${b.settlementSeed ?? ""}:${prosperityTier(b.prosperity)}:${b.reviewWatermill ? "mill" : ""}:${b.lit === false ? "cold" : "lit"}`;
+		if (!this.keys.has(k)) {
+			const v = carvedVariantFor(b);
+			this.keys.set(k, v ? v.key : null);
+			if (v && !this.specs.has(v.key)) this.specs.set(v.key, generateFamily(v.family, v.ctx, v.key));
+		}
+		return this.keys.get(k) ?? null;
+	}
+	bucket(variantKey, tier) {
+		const key = variantKey + "#" + tier, old = this.buckets.get(key);
+		if (old) {
+			old.used = this.frame;
+			return old;
+		}
+		if (this.buckets.size >= CARVED_LAYER_RULES.maximumBuckets && !this.evictOne()) return null;
+		const spec = this.specs.get(variantKey);
+		if (!spec) return null;
+		const mesh = new InstancedMesh(carvedGeometry(buildCarvedMesh(spec, tier)), this.material, CARVED_LAYER_RULES.initialInstances);
+		mesh.name = `carved-h-${key}`;
+		mesh.count = 0;
+		mesh.castShadow = tier < 2;
+		mesh.receiveShadow = true;
+		mesh.frustumCulled = false;
+		mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+		this.scene.add(mesh);
+		const b = {
+			mesh,
+			count: 0,
+			owners: [],
+			used: this.frame
+		};
+		this.buckets.set(key, b);
+		return b;
+	}
+	/** C13/WQ-12: free the least-recently-used bucket that this sync has not touched, so near buildings
+	* are not stuck as impostors once a long session has visited many variants. */
+	evictOne() {
+		let k = null, age = Infinity;
+		for (const [key, b] of this.buckets) if (b.used < this.frame && b.used < age) {
+			age = b.used;
+			k = key;
+		}
+		if (k === null) return false;
+		const b = this.buckets.get(k);
+		b.mesh.parent?.remove(b.mesh);
+		b.mesh.geometry.dispose();
+		b.mesh.dispose();
+		this.buckets.delete(k);
+		return true;
+	}
+	/** Rebuild instance lists. Codex's culling hook should pre-filter
+	* `instances` to the camera frustum; this layer only picks LOD by distance. */
+	sync(instances, camera, tierFor = renderTierForDistance) {
+		this.frame++;
+		for (const b of this.buckets.values()) {
+			b.count = 0;
+			b.owners.length = 0;
+		}
+		this.card.count = 0;
+		this.card.owners.length = 0;
+		for (const inst of instances) {
+			const key = this.keyFor(inst);
+			if (!key) continue;
+			const tier = tierFor(Math.hypot(inst.x - camera.x, inst.z - camera.z));
+			const grow = Math.max(.15, Math.min(1, inst.progress ?? 1));
+			if (tier < 3) {
+				const b = this.bucket(key, tier);
+				if (b) {
+					if (b.count >= b.mesh.instanceMatrix.count) b.mesh = ensureInstanceCapacity(this.scene, b.mesh, b.count + 1);
+					this.q.setFromAxisAngle(this.up, inst.yaw);
+					this.p.set(inst.x, inst.y, inst.z);
+					this.s.set(1, grow, 1);
+					this.m.compose(this.p, this.q, this.s);
+					b.mesh.setMatrixAt(b.count++, this.m);
+					b.owners.push(inst);
+					continue;
+				}
+			}
+			const spec = this.specs.get(key);
+			if (!spec) continue;
+			const card = impostorCard(spec);
+			if (this.card.count >= this.card.mesh.instanceMatrix.count) this.card.mesh = ensureInstanceCapacity(this.scene, this.card.mesh, this.card.count + 1);
+			this.q.setFromAxisAngle(this.up, inst.yaw);
+			this.p.set(inst.x, inst.y, inst.z);
+			this.s.set(card.width, card.height * grow, card.depth);
+			this.m.compose(this.p, this.q, this.s);
+			this.c.set(CARVED_MATERIALS[card.wall].hex);
+			this.card.mesh.setMatrixAt(this.card.count, this.m);
+			this.card.mesh.setColorAt(this.card.count, this.c);
+			this.card.count++;
+			this.card.owners.push(inst);
+		}
+		for (const b of this.buckets.values()) {
+			b.mesh.count = b.count;
+			b.mesh.visible = b.count > 0;
+			b.mesh.instanceMatrix.needsUpdate = true;
+		}
+		const cm = this.card.mesh;
+		cm.count = this.card.count;
+		cm.visible = this.card.count > 0;
+		cm.instanceMatrix.needsUpdate = true;
+		if (cm.instanceColor) cm.instanceColor.needsUpdate = true;
+	}
+	/** For picking: mesh -> owning instances in draw order. */
+	sources() {
+		const out = /* @__PURE__ */ new Map();
+		for (const b of this.buckets.values()) out.set(b.mesh, b.owners);
+		out.set(this.card.mesh, this.card.owners);
+		return out;
+	}
+	stats() {
+		let tris = 0;
+		for (const b of this.buckets.values()) tris += b.count * ((b.mesh.geometry.getAttribute("position")?.count ?? 0) / 3);
+		return {
+			buckets: this.buckets.size,
+			drawCalls: [...this.buckets.values()].filter((b) => b.count > 0).length + (this.card.count ? 1 : 0),
+			triangles: tris + this.card.count * 4
+		};
+	}
+	dispose() {
+		for (const b of this.buckets.values()) {
+			b.mesh.parent?.remove(b.mesh);
+			b.mesh.geometry.dispose();
+			b.mesh.dispose();
+		}
+		this.buckets.clear();
+		this.card.mesh.parent?.remove(this.card.mesh);
+		this.card.mesh.geometry.dispose();
+		this.card.mesh.dispose();
+		this.material.dispose();
+		this.cardMaterial.dispose();
+		this.specs.clear();
+		this.keys.clear();
 	}
 };
 var CROP_ART_RULES = {
@@ -9351,6 +15864,63 @@ function goatGeo() {
 		cyl(.045, .05, .42, .18, 0, -.1, 4)
 	]);
 }
+/** Shared stock-style horse silhouette; wild herds face +X like other fauna.
+* Pack horses face +Z towards their handler and carry actual panniers. */
+function horseGeo(pack = false) {
+	const parts = [];
+	const add = (geo, color) => {
+		const c = new Color(color), n = geo.getAttribute("position").count;
+		const colors = new Float32Array(n * 3);
+		for (let i = 0; i < n; i++) c.toArray(colors, i * 3);
+		geo.setAttribute("color", new BufferAttribute(colors, 3));
+		parts.push(geo);
+	};
+	const coat = "#966448", dark = "#342a25", hoof = "#292825";
+	const body = new CapsuleGeometry(.31, .82, 3, 7);
+	body.rotateZ(Math.PI / 2);
+	body.scale(1, 1.08, .86);
+	body.translate(0, 1.05, 0);
+	add(body, coat);
+	const neck = new CylinderGeometry(.15, .24, .65, 6);
+	neck.rotateZ(-.42);
+	neck.translate(.46, 1.43, 0);
+	add(neck, coat);
+	const head = new CapsuleGeometry(.14, .3, 2, 6);
+	head.rotateZ(-1.05);
+	head.translate(.76, 1.73, 0);
+	add(head, coat);
+	const muzzle = new SphereGeometry(.15, 6, 4);
+	muzzle.scale(1.15, .78, .95);
+	muzzle.translate(.96, 1.65, 0);
+	add(muzzle, dark);
+	for (const side of [-1, 1]) {
+		add(cone(.065, .22, .63, 1.83, side * .11, 4), coat);
+		for (const x of [-.43, .42]) {
+			add(cyl(.065, .05, .88, x, .1, side * .2, 5), coat);
+			add(box(.13, .12, .14, x, 0, side * .2), hoof);
+		}
+		const eye = new SphereGeometry(.027, 4, 3);
+		eye.translate(.79, 1.8, side * .135);
+		add(eye, hoof);
+	}
+	const mane = new BoxGeometry(.11, .67, .12);
+	mane.rotateZ(-.42);
+	mane.translate(.27, 1.44, 0);
+	add(mane, dark);
+	const tail = new CylinderGeometry(.07, .1, .73, 5);
+	tail.rotateZ(-.25);
+	tail.translate(-.7, .78, 0);
+	add(tail, dark);
+	if (pack) {
+		for (const side of [-1, 1]) add(box(.62, .42, .23, -.04, .94, side * .38), "#746244");
+		add(box(.46, .07, .68, -.04, 1.34, 0), "#44382c");
+	}
+	const geo = merge(parts);
+	if (pack) geo.rotateY(-Math.PI / 2);
+	geo.computeBoundingBox();
+	geo.computeBoundingSphere();
+	return geo;
+}
 function deerGeo() {
 	const body = new CapsuleGeometry(.2, .72, 3, 6);
 	body.rotateZ(Math.PI / 2);
@@ -9551,6 +16121,25 @@ var BLD_TYPES = [
 	"aqueduct",
 	"canal"
 ];
+/** Types whose shipped look is terrain-laid or modular; Option H never replaces them. */
+var CARVED_KEEP_CURRENT = /* @__PURE__ */ new Set([
+	"farm",
+	"pen",
+	"gate",
+	"palisade",
+	"stonewall",
+	"trench",
+	"moat",
+	"dock",
+	"warehouse",
+	"bridge",
+	"aqueduct",
+	"lumber",
+	"quarry",
+	"cornerstone",
+	"cairn",
+	"grove"
+]);
 var _m = new Matrix4();
 var _p = new Vector3();
 var _q = new Quaternion();
@@ -9631,6 +16220,18 @@ var WorldView = class {
 	grass = null;
 	bldMeshes = /* @__PURE__ */ new Map();
 	towerPlatforms = null;
+	/** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
+	* finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
+	* buildings always keep the current renderer so footprints, collision and terrain stay exact. */
+	renderStyle = "current";
+	carvedLayer = null;
+	carvedOwners = /* @__PURE__ */ new Map();
+	setRenderStyle(style) {
+		this.renderStyle = style === "carved" ? "carved" : "current";
+	}
+	getRenderStyle() {
+		return this.renderStyle;
+	}
 	contourFields = null;
 	wildPlantLayer = null;
 	landContinuation = null;
@@ -9642,6 +16243,9 @@ var WorldView = class {
 	buildingInstances = /* @__PURE__ */ new Map();
 	cargoMeshes = /* @__PURE__ */ new Map();
 	haulageMeshes = /* @__PURE__ */ new Map();
+	packHorses = null;
+	packHorseOwners = [];
+	domesticHorseOwners = [];
 	canoePaddles = null;
 	riverboats = null;
 	hullFleet = null;
@@ -9684,6 +16288,8 @@ var WorldView = class {
 	deer = null;
 	boars = null;
 	wildGoats = null;
+	wildHorses = null;
+	domesticHorses = null;
 	wildSheep = null;
 	domesticSheep = null;
 	domesticGoats = null;
@@ -9751,6 +16357,9 @@ var WorldView = class {
 		this.scene.background = new Color("#d8c4a0");
 		this.scene.fog = new FogExp2("#d8c4a0", .0034);
 		this.camera = new PerspectiveCamera(38, 1, .5, 860);
+		try {
+			if (typeof location !== "undefined" && new URLSearchParams(location.search).get("renderStyle") === "carved") this.renderStyle = "carved";
+		} catch {}
 		this.mats = makeMaterials();
 		this.hemi = new HemisphereLight("#dcebf8", "#5a6651", .72);
 		this.scene.add(this.hemi);
@@ -10545,6 +17154,13 @@ var WorldView = class {
 		});
 		this.wildSheep = mkHerd(sheepGeo(), sheepMat, 32);
 		this.domesticSheep = mkHerd(sheepGeo(), sheepMat, 96);
+		const horseMat = new MeshLambertMaterial({
+			color: 16777215,
+			vertexColors: true
+		});
+		this.wildHorses = mkHerd(horseGeo(), horseMat, 32);
+		this.domesticHorses = mkHerd(horseGeo(), horseMat, 32);
+		this.packHorses = mkHerd(horseGeo(true), horseMat, 32);
 		this.birds = mkHerd(birdGeo(), birdMat, 16);
 	}
 	updateCamera(dt) {
@@ -10607,6 +17223,10 @@ var WorldView = class {
 			mesh.computeBoundingSphere();
 			sources.set(mesh, owners);
 		}
+		for (const [mesh, owners] of this.carvedOwners) if (mesh instanceof InstancedMesh && mesh.count > 0) {
+			mesh.computeBoundingSphere();
+			sources.set(mesh, owners);
+		}
 		if (this.domesticGoats) {
 			this.domesticGoats.computeBoundingSphere();
 			sources.set(this.domesticGoats, (game.state.livestock || []).filter((a) => a.hp > 0 && a.species === "goat").slice(0, instCap(this.domesticGoats)).map((a) => game.state.buildings.find((b) => b.id === a.pen)));
@@ -10614,6 +17234,14 @@ var WorldView = class {
 		if (this.domesticSheep) {
 			this.domesticSheep.computeBoundingSphere();
 			sources.set(this.domesticSheep, (game.state.livestock || []).filter((a) => a.hp > 0 && a.species === "sheep").slice(0, instCap(this.domesticSheep)).map((a) => game.state.buildings.find((b) => b.id === a.pen)));
+		}
+		if (this.domesticHorses) {
+			this.domesticHorses.computeBoundingSphere();
+			sources.set(this.domesticHorses, this.domesticHorseOwners);
+		}
+		if (this.packHorses) {
+			this.packHorses.computeBoundingSphere();
+			sources.set(this.packHorses, this.packHorseOwners);
 		}
 		for (const [type, mesh] of this.unitMeshes) {
 			mesh.computeBoundingSphere();
@@ -10904,7 +17532,26 @@ var WorldView = class {
 		stamp("boars", "boar");
 		stamp("wildGoats", "goat");
 		stamp("wildSheep", "sheep");
+		stamp("wildHorses", "horse");
 		stamp("birds", "bird");
+		this.domesticHorseOwners = [];
+		if (this.domesticHorses) {
+			const animals = (game.state.livestock || []).filter((a) => a.hp > 0 && a.species === "horse" && (a.team === 0 || game.visibleAt(a.x, a.z)));
+			const mesh = ensureInstanceCapacity(this.scene, this.domesticHorses, animals.length);
+			this.domesticHorses = mesh;
+			for (let i = 0; i < animals.length; i++) {
+				const a = animals[i];
+				_p.set(a.x, a.y, a.z);
+				_e.set(0, a.facing, 0);
+				_q.setFromEuler(_e);
+				_s.setScalar(a.scale);
+				_m.compose(_p, _q, _s);
+				mesh.setMatrixAt(i, _m);
+				this.domesticHorseOwners.push(game.state.buildings.find((b) => b.id === a.pen));
+			}
+			mesh.count = animals.length;
+			mesh.instanceMatrix.needsUpdate = true;
+		}
 		for (const [mesh, species] of [[this.domesticGoats, "goat"], [this.domesticSheep, "sheep"]]) if (mesh) {
 			const animals = (game.state.livestock || []).filter((a) => a.hp > 0 && a.species === species).slice(0, instCap(mesh));
 			for (let i = 0; i < animals.length; i++) {
@@ -11111,6 +17758,7 @@ var WorldView = class {
 		if (!this.towerPlatforms) this.towerPlatforms = new TowerPlatformLayer(this.scene, this.mats);
 		this.towerPlatforms.sync(game);
 		this.styleHalls = game.state.buildings.filter((b) => b.type === "townhall" && game.finished(b));
+		const carvedList = [];
 		const grouped = /* @__PURE__ */ new Map();
 		for (const type of BLD_TYPES) grouped.set(type, []);
 		for (const b of game.state.buildings) if (b.hp > 0) grouped.get(b.type)?.push(b);
@@ -11148,6 +17796,28 @@ var WorldView = class {
 					"moat"
 				].includes(type);
 				const modular = type === "warehouse" || expandedGrainWorkplace(b);
+				if (this.renderStyle === "carved" && !modular && !b.bridge && !fort && CARVED_TYPES.includes(type) && !CARVED_KEEP_CURRENT.has(type)) {
+					const fab = fabricContext(b);
+					carvedList.push({
+						worldSeed: game.state.seed,
+						type,
+						id: b.id,
+						era: fab?.built.era ?? (game.tribe(b.team)?.age || 0),
+						footprint: {
+							w: b.w,
+							d: b.d
+						},
+						settlementSeed: b.team,
+						lit: type === "hearth" ? hearthHeating(game, b.id) : void 0,
+						x: b.x,
+						y: foundationProfile(game, b).level,
+						z: b.z,
+						yaw: buildingQuarterTurns(b) * Math.PI / 2,
+						progress: ys,
+						b
+					});
+					continue;
+				}
 				const scalable = type === "farm" || modular;
 				const write = (part, x, z, sx, sz) => {
 					const mesh = meshes[part];
@@ -11226,6 +17896,7 @@ var WorldView = class {
 				if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 			}
 		}
+		this.syncCarvedBuildings(carvedList);
 		this.penFences?.sync(game, this.camera.position, this.shadowsEnabled && this.quality !== "low");
 		this.fibreWork?.sync(game, this.camera.position, this.shadowsEnabled && this.quality !== "low");
 		this.contourFields?.sync(game, this.camera.position);
@@ -11233,6 +17904,18 @@ var WorldView = class {
 		if (contourRows) contourRows.needsUpdate = true;
 		this.syncEraDetails(game);
 		this.foundations?.sync(game);
+	}
+	syncCarvedBuildings(list) {
+		if (!list.length && !this.carvedLayer) return;
+		const layer = this.carvedLayer || (this.carvedLayer = new CarvedBuildingLayer(this.scene));
+		for (const mesh of this.carvedOwners.keys()) this.buildingInstances.delete(mesh);
+		this.carvedOwners.clear();
+		layer.sync(list, this.camera.position);
+		for (const [mesh, owners] of layer.sources()) {
+			const buildings = owners.map((o) => o.b);
+			this.carvedOwners.set(mesh, buildings);
+			this.buildingInstances.set(mesh, buildings);
+		}
 	}
 	syncEraDetails(game) {
 		const mesh = this.eraDetails;
@@ -11264,7 +17947,7 @@ var WorldView = class {
 				"forge",
 				"stables",
 				"keep"
-			].includes(b.type)) continue;
+			].includes(b.type) || this.renderStyle === "carved" && CARVED_TYPES.includes(b.type) && !CARVED_KEEP_CURRENT.has(b.type)) continue;
 			const identity = this.villageStyle(game, b.team, b), era = identity.era;
 			if (era === 0) continue;
 			const st = TEAM_STYLE[b.team] || TEAM_STYLE[0], yaw = st.yaw, co = Math.cos(yaw), si = Math.sin(yaw);
@@ -11315,6 +17998,8 @@ var WorldView = class {
 			pack: 0
 		};
 		let paddles = 0;
+		let horses = 0;
+		this.packHorseOwners = [];
 		const visible = game.state.units.filter((u) => u.hp > 0 && !u.shelterId && (u.team === 0 || game.visibleAt(u.x, u.z)));
 		const neededCargo = {
 			food: 0,
@@ -11330,20 +18015,22 @@ var WorldView = class {
 		};
 		for (const u of visible) {
 			const kind = u.boat || u.haulage === "pack" && (!u.packAnimal || u.packAnimal.hp <= 0) ? void 0 : u.haulage === "canoe" ? "canoe" : u.type === "worker" && !u.militia || u.caravanArmed ? u.haulage : void 0;
-			if (kind) neededVehicles[kind]++;
+			if (kind && !(kind === "pack" && u.packAnimal?.species === "horse")) neededVehicles[kind]++;
 			const cargo = u.plantingWork ? "food" : u.carryType;
 			if (cargo && (u.plantingWork || u.carry > 0)) neededCargo[cargo]++;
 		}
 		for (const b of game.state.buildings || []) if (b.hp <= 0 && b.raidLoot && game.visibleAt(b.x, b.z)) {
 			for (const kind of Object.keys(CARGO_COLORS)) if ((b.raidLoot[kind] || 0) > 0) neededCargo[kind]++;
 		}
+		if (this.packHorses) this.packHorses = ensureInstanceCapacity(this.scene, this.packHorses, visible.filter((u) => !u.boat && u.haulage === "pack" && u.packAnimal?.species === "horse" && u.packAnimal.hp > 0 && (u.type === "worker" && !u.militia || u.caravanArmed)).length);
 		for (const [kind, mesh] of this.cargoMeshes) this.cargoMeshes.set(kind, ensureInstanceCapacity(this.scene, mesh, neededCargo[kind]));
 		for (const [kind, mesh] of this.haulageMeshes) this.haulageMeshes.set(kind, ensureInstanceCapacity(this.scene, mesh, neededVehicles[kind]));
 		if (this.canoePaddles) this.canoePaddles = ensureInstanceCapacity(this.scene, this.canoePaddles, neededVehicles.canoe);
 		for (const u of visible) {
 			const kind = u.boat || u.haulage === "pack" && (!u.packAnimal || u.packAnimal.hp <= 0) ? void 0 : u.haulage === "canoe" ? "canoe" : u.type === "worker" && !u.militia || u.caravanArmed ? u.haulage : void 0;
-			const vehicle = kind && this.haulageMeshes.get(kind);
-			const index = kind ? vehicles[kind] : 0;
+			const horse = kind === "pack" && u.packAnimal?.species === "horse";
+			const vehicle = horse ? this.packHorses : kind && this.haulageMeshes.get(kind);
+			const index = horse ? horses : kind ? vehicles[kind] : 0;
 			const mounted = !!vehicle && index < instCap(vehicle);
 			if (mounted) {
 				const dx = Math.sin(u.facing), dz = Math.cos(u.facing), offset = kind === "canoe" ? 0 : 2.1, x = u.x - dx * offset, z = u.z - dz * offset;
@@ -11362,7 +18049,10 @@ var WorldView = class {
 				_s.set(1, 1, 1);
 				_haulMatrix.compose(_p, _q, _s);
 				vehicle.setMatrixAt(index, _haulMatrix);
-				vehicles[kind]++;
+				if (horse) {
+					horses++;
+					this.packHorseOwners.push(u);
+				} else vehicles[kind]++;
 				if (kind === "canoe" && this.canoePaddles && paddles < instCap(this.canoePaddles)) {
 					const stroke = afloat && Math.hypot(u.vx, u.vz) > .1 ? Math.sin(game.state.time * 4 + u.id * .7) : 0;
 					_p.set(.72, afloat ? .85 : .5, 0);
@@ -11380,7 +18070,7 @@ var WorldView = class {
 			if (!mesh || i >= instCap(mesh)) continue;
 			if (mounted && !u.plantingWork) {
 				const height = .35 + Math.min(1, carried / carryingCapacity(u, carryType)) * .55;
-				_p.set(0, (kind === "cart" ? .7 : kind === "pack" ? 1.05 : .34) + height * .5, kind === "canoe" ? -.85 : 0).applyMatrix4(_haulMatrix);
+				_p.set(0, (kind === "cart" ? .7 : kind === "pack" ? horse ? 1.4 : 1.05 : .34) + height * .5, kind === "canoe" ? -.85 : 0).applyMatrix4(_haulMatrix);
 				_s.set(1.25, height / .55, 1.65);
 				_m.compose(_p, _q, _s);
 			} else {
@@ -11419,6 +18109,10 @@ var WorldView = class {
 			mesh.count = counts[kind];
 			mesh.instanceMatrix.needsUpdate = true;
 			if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+		}
+		if (this.packHorses) {
+			this.packHorses.count = horses;
+			this.packHorses.instanceMatrix.needsUpdate = true;
 		}
 		if (this.canoePaddles) {
 			this.canoePaddles.count = paddles;
@@ -12350,6 +19044,16 @@ var WorldView = class {
 		this.biomeScene?.dispose();
 		this.biomeScene = null;
 		this.wildlifeOwners.clear();
+		this.packHorseOwners = [];
+		this.domesticHorseOwners = [];
+		if (!this.lost) {
+			for (const mesh of [
+				this.wildHorses,
+				this.domesticHorses,
+				this.packHorses
+			]) mesh?.dispose();
+			if (this.wildHorses) this.wildHorses.material.dispose();
+		}
 		if (this.wildSheep && !this.lost) this.wildSheep.material.dispose();
 		this.terrainSurface?.dispose();
 		this.terrainSurface = null;
@@ -12398,6 +19102,9 @@ var WorldView = class {
 		}
 		this.wildSheep = null;
 		this.domesticSheep = null;
+		this.wildHorses = null;
+		this.domesticHorses = null;
+		this.packHorses = null;
 		if (this.linePreview) {
 			this.linePreview.material.dispose();
 			this.linePreview = null;
@@ -12421,6 +19128,9 @@ var WorldView = class {
 			meshes.timber.material.dispose();
 			meshes.roof.material.dispose();
 		}
+		this.carvedLayer?.dispose();
+		this.carvedLayer = null;
+		this.carvedOwners.clear();
 		this.bldMeshes.clear();
 		this.buildingInstances.clear();
 		this.unitMeshes.clear();
