@@ -293,7 +293,7 @@ Fetched all remotes; merged `origin/main` normally (no rebase/force).
 
 Approved by Boris at 20:10 ET.
 
-**(a) Integration lands tonight via a normal-merge PR.** The clean `integration/2026-11-11` branch goes to `main` through a normal-merge pull request, not a direct push to main. Codex reviews before anything lands. The PR will be opened after the post-merge focused tests finish; the URL will be appended here. Main stays untouched until that review and merge.
+**(a) Integration lands tonight via a normal-merge PR.** The clean `integration/2026-11-11` branch goes to `main` through a normal-merge pull request, not a direct push to main. PR opened (not merged): https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1 — `integration/2026-11-11` **cbffbc8** (World head **c0b54fa**) → `main`. Codex reviews before anything lands. Main stays untouched until that review and merge.
 
 **(b) Codex works only on the wiring queue until it is empty.** No new side branches until these are wired and turned on in the built game (or explicitly rejected with evidence).
 
@@ -328,3 +328,26 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 **Rule violations:** none (no force-push, no pushed PNGs).
 **Requests:** WQ-1 through WQ-14 are new tonight; nothing is stale yet. C2/C6/C9/C11/C14/C15 are still pending with Codex.
 **World lane:** next batch in progress locally (channel smoothness, trail ribbons; not pushed yet).
+
+## Integration results and PR — 2026-11-11, 20:19 ET
+
+PR (open, not merged): https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1
+Title: Integration 2026-11-11: World W1-W7, Societies, Experience, Codex clean branches.
+Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0abf2b18`). Base: `main` (still 1085ad7 at assembly time; main has since moved to **9bd490b**, docs/policy only, not merged into this integration branch).
+
+**World head in the PR is `agents/grok-world` c0b54fa** (final W7, includes main 1085ad7). Merged cleanly into the integration branch after the earlier e10f706 merge.
+
+**In the branch:** World c0b54fa; Societies e69b8f8; Experience 9992fe9; Worker 0cf5c18 (later Worker tips not included); fixed-camera b86507f; held-source b774971; food-custody 26fe69b; main 1085ad7.
+
+**Left for Claude:** curd be54590 was **not** merged (conflicts in `src/ui/CraftSiteQueue.tsx` and `src/ui/ProductionControls.tsx`; merge aborted, no resolution). `integration/claude-resolve-2026-11-11` already exists but is based on the earlier integration tip **58e57f6**, not cbffbc8 — it needs a normal merge of `integration/2026-11-11` to pick up Worker, fixed-camera, held-source, food-custody, and World c0b54fa.
+
+**Review flag:** Codex's fixed-camera branch **b86507f edits `src/scene/world.ts` (13 lines of camera collision)** and needs Claude's review before merge. Experience owns `world.ts`.
+
+**Tests (after c0b54fa merge):**
+- Round 1 at 58e57f6: no merge-induced failures (645 pass / 26 fail / 2 skipped; the 26 match main's pre-existing game.test + scalable-plots + storage-engine-guards).
+- Round 2 focused (pre-c0b54fa, 657 tests): 653 pass, 2 fail, 2 skipped — canal-breach + pre-existing storage-engine-guards.
+- New World tests on integration cbffbc8 (channel-smoothness, river-currents, scenic-beauty, trail-ribbons): 6/6 pass.
+- `scripts/canal-breach.test.mjs` isolated on World c0b54fa alone: 3/3 pass. Isolated on integration cbffbc8: 2/3 fail. Assertion `the breach is applied together`: actual 8, expected 9 (`w.breach.length`). **Merge-induced** (same canal sources as World; fails on the integrated tree even in isolation). Not fixed here.
+
+**tsc** on cbffbc8: 10 pre-existing errors (8 Experience + 2 packedFoodCustody). None introduced by the merges.
+
