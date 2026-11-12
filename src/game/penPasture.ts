@@ -2,7 +2,7 @@ import type {Game} from './sim';
 import type {Building} from './types';
 import {soilQuality,climateAt} from './ecology';
 import {calendar} from './settlement';
-import {PEN_RULES,penInterior,penHousingCapacity,penFeedCapacity} from './penGeometry';
+import {PEN_RULES,penInterior,penHousingCapacity,penFeedCapacity,penCareDemand} from './penGeometry';
 type Survey={usableAreaSquareMeters:number;interiorAreaSquareMeters:number;meanSoil:number;meanMoisture:number;productiveAreaSquareMeters:number;eligibleCapacity:number};
 const surveys=new WeakMap<Game,{world:Game['world'];state:Game['state'];revision:number;water:number;pens:Map<number,{key:string;survey:Survey}>}>();
 /** Physical area is sampled once per changed enclosure/terrain revision. Weather
@@ -17,6 +17,6 @@ export function surveyPenPasture(g:Game,b:Building):Survey{
 }
 export function penPastureState(b:Building){const p=b.pasture??={condition:1,feed:0,care:0};p.initialFeed??=p.feed;p.feedDelivered??=0;p.feedConsumed??=0;p.grazedFood??=0;return p;}
 export function penPastureReport(g:Game,b:Building){const survey=surveyPenPasture(g,b),animals=(g.state.livestock||[]).filter(a=>a.hp>0&&a.ledBy===undefined&&a.pen===b.id),keepers=g.state.units.filter(u=>u.hp>0&&u.husbandryWork?.pen===b.id&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused),phase=calendar(g).phase;
- const biomassCapacity=survey.productiveAreaSquareMeters*PEN_RULES.biomassFoodPerSquareMetre,regrowthPerSecond=biomassCapacity*PEN_RULES.springRegrowthPerSecond*PEN_RULES.seasonRegrowth[phase]*(g.state.weather==='drought'?PEN_RULES.droughtRegrowthFactor:1),demandPerSecond=animals.length*PEN_RULES.feedPerAnimalSecond;
- return{...survey,housingCapacity:penHousingCapacity(b),animals:animals.length,keepers:keepers.length,keepersNeeded:Math.max(1,Math.ceil(animals.length/PEN_RULES.animalsPerKeeper)),biomassCapacity,biomassFood:biomassCapacity*(b.pasture?.condition??1),regrowthPerSecond,demandPerSecond,feedCapacity:penFeedCapacity(b),storedFeedSeconds:demandPerSecond?(b.pasture?.feed||0)/demandPerSecond:Infinity,winter:phase===3};
+ const biomassCapacity=survey.productiveAreaSquareMeters*PEN_RULES.biomassFoodPerSquareMetre,regrowthPerSecond=biomassCapacity*PEN_RULES.springRegrowthPerSecond*PEN_RULES.seasonRegrowth[phase]*(g.state.weather==='drought'?PEN_RULES.droughtRegrowthFactor:1),careDemand=penCareDemand(animals),demandPerSecond=careDemand*PEN_RULES.feedPerAnimalSecond;
+ return{...survey,housingCapacity:penHousingCapacity(b),animals:animals.length,careDemand,keepers:keepers.length,keepersNeeded:Math.max(1,Math.ceil(careDemand/PEN_RULES.animalsPerKeeper)),biomassCapacity,biomassFood:biomassCapacity*(b.pasture?.condition??1),regrowthPerSecond,demandPerSecond,feedCapacity:penFeedCapacity(b),storedFeedSeconds:demandPerSecond?(b.pasture?.feed||0)/demandPerSecond:Infinity,winter:phase===3};
 }

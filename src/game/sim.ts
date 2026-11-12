@@ -5,6 +5,7 @@ import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
 import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
 import {recoverySurfaceHeight,steerHullRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {initializeSheep} from './sheep';
+import {initializeHorses} from './horses';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
@@ -687,6 +688,7 @@ export class Game {
     initializeDifficultyOpening(this);
     if(worldgenVersion>=14)initializeWildPlants(this);
     initializeSheep(this);
+    initializeHorses(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
@@ -2493,7 +2495,7 @@ export class Game {
         // forever. Nearby people still make them flee; no positions are snapped.
         if(Math.hypot(c.x-c.grazing.x,c.z-c.grazing.z)>32)
           a=Math.atan2(c.grazing.x-c.x,c.grazing.z-c.z);
-        const spd = c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
+        const spd = c.species === "horse" ? 3.6 : c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
         c.vx = Math.sin(a) * spd;
         c.vz = Math.cos(a) * spd;
         c.facing = a;
@@ -2501,7 +2503,7 @@ export class Game {
       c.vx *= 1 - dt * 0.6;
       c.vz *= 1 - dt * 0.6;
       // Fear accelerates an animal, but must not accumulate unbounded speed.
-      // Primitive hunters can approach within spear reach; deer remain fastest.
+      // Primitive hunters can approach within spear reach; horses flee fastest.
       const fleeSpeed = wildlifeFleeSpeed(c);
       const velocity = Math.hypot(c.vx,c.vz);
       if (velocity > fleeSpeed) {c.vx *= fleeSpeed/velocity;c.vz *= fleeSpeed/velocity;}

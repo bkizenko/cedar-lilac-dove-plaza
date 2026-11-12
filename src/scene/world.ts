@@ -72,6 +72,7 @@ import {
   firepitGeo,
   flameGeo,
   goatGeo,
+  horseGeo,
   sheepGeo,
   deerGeo,
   boarGeo,
@@ -210,6 +211,9 @@ export class WorldView {
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
+  private packHorses: THREE.InstancedMesh | null = null;
+  private packHorseOwners: import("@/game/types").Unit[] = [];
+  private domesticHorseOwners: import("@/game/types").Building[] = [];
   canoePaddles: THREE.InstancedMesh | null = null;
   riverboats: THREE.InstancedMesh | null = null;
   hullFleet:HullFleet|null=null;
@@ -252,6 +256,8 @@ export class WorldView {
   deer: THREE.InstancedMesh | null = null;
   boars: THREE.InstancedMesh | null = null;
   wildGoats: THREE.InstancedMesh | null = null;
+  wildHorses: THREE.InstancedMesh | null = null;
+  domesticHorses: THREE.InstancedMesh | null = null;
   wildSheep: THREE.InstancedMesh | null = null;
   domesticSheep: THREE.InstancedMesh | null = null;
   domesticGoats: THREE.InstancedMesh | null = null;
@@ -1038,6 +1044,10 @@ export class WorldView {
     this.domesticGoats = mkHerd(goatGeo(), this.mats.hide, 96);
     const sheepMat=new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true});
     this.wildSheep=mkHerd(sheepGeo(),sheepMat,32);this.domesticSheep=mkHerd(sheepGeo(),sheepMat,96);
+    const horseMat = new THREE.MeshLambertMaterial({color:0xffffff, vertexColors:true});
+    this.wildHorses = mkHerd(horseGeo(), horseMat, 32);
+    this.domesticHorses = mkHerd(horseGeo(), horseMat, 32);
+    this.packHorses = mkHerd(horseGeo(true), horseMat, 32);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
   }
 
@@ -1098,6 +1108,8 @@ export class WorldView {
       sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='goat').slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
     }
     if(this.domesticSheep){this.domesticSheep.computeBoundingSphere();sources.set(this.domesticSheep,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='sheep').slice(0,instCap(this.domesticSheep)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));}
+    if(this.domesticHorses){this.domesticHorses.computeBoundingSphere();sources.set(this.domesticHorses,this.domesticHorseOwners);}
+    if(this.packHorses){this.packHorses.computeBoundingSphere();sources.set(this.packHorses,this.packHorseOwners);}
     for (const [type, mesh] of this.unitMeshes) {
       mesh.computeBoundingSphere();
       sources.set(
@@ -1386,7 +1398,7 @@ export class WorldView {
 
   private syncWildlife(game: Game) {
     this.wildlifeOwners.clear();
-    const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'birds', species: string) => {
+    const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'wildHorses'|'birds', species: string) => {
       const old=this[key];if(!old)return;
       const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
       const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
@@ -1398,7 +1410,18 @@ export class WorldView {
       mesh.count=list.length;mesh.instanceMatrix.needsUpdate=true;
       this.wildlifeOwners.set(mesh,list);
     };
-    stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('wildSheep','sheep');stamp('birds','bird');
+    stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('wildSheep','sheep');stamp('wildHorses','horse');stamp('birds','bird');
+    this.domesticHorseOwners = [];
+    if(this.domesticHorses){
+      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='horse'&&(a.team===0||game.visibleAt(a.x,a.z)));
+      const mesh=ensureInstanceCapacity(this.scene,this.domesticHorses,animals.length);this.domesticHorses=mesh;
+      for(let i=0;i<animals.length;i++){
+        const a=animals[i];
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        this.domesticHorseOwners.push(game.state.buildings.find(b=>b.id===a.pen)!);
+      }
+      mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
+    }
     for(const [mesh,species]of [[this.domesticGoats,'goat'],[this.domesticSheep,'sheep']] as const){
     if(mesh){
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species===species).slice(0,instCap(mesh));
@@ -1682,17 +1705,20 @@ export class WorldView {
     this.housingPackets?.sync(game);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
+    let horses=0;this.packHorseOwners=[];
     const visible=game.state.units.filter(u=>u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z)));
     const neededCargo:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0},neededVehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};
-    for(const u of visible){const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;if(kind)neededVehicles[kind]++;const cargo=u.plantingWork?'food':u.carryType;if(cargo&&(u.plantingWork||u.carry>0))neededCargo[cargo]++;}
+    for(const u of visible){const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;if(kind&&!(kind==='pack'&&u.packAnimal?.species==='horse'))neededVehicles[kind]++;const cargo=u.plantingWork?'food':u.carryType;if(cargo&&(u.plantingWork||u.carry>0))neededCargo[cargo]++;}
     for(const b of game.state.buildings||[])if(b.hp<=0&&b.raidLoot&&game.visibleAt(b.x,b.z))for(const kind of Object.keys(CARGO_COLORS)as ResKind[])if((b.raidLoot[kind]||0)>0)neededCargo[kind]++;
+    if(this.packHorses)this.packHorses=ensureInstanceCapacity(this.scene,this.packHorses,visible.filter(u=>!u.boat&&u.haulage==='pack'&&u.packAnimal?.species==='horse'&&u.packAnimal.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
     for(const [kind,mesh]of this.cargoMeshes)this.cargoMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededCargo[kind]));
     for(const [kind,mesh]of this.haulageMeshes)this.haulageMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededVehicles[kind]));
     if(this.canoePaddles)this.canoePaddles=ensureInstanceCapacity(this.scene,this.canoePaddles,neededVehicles.canoe);
     for (const u of visible) {
       const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
-      const vehicle=kind&&this.haulageMeshes.get(kind);
-      const index=kind?vehicles[kind]:0;
+      const horse=kind==='pack'&&u.packAnimal?.species==='horse';
+      const vehicle=horse?this.packHorses:kind&&this.haulageMeshes.get(kind);
+      const index=horse?horses:kind?vehicles[kind]:0;
       const mounted=!!vehicle&&index<instCap(vehicle);
       if(mounted){
         const dx=Math.sin(u.facing),dz=Math.cos(u.facing),offset=kind==='canoe'?0:2.1,x=u.x-dx*offset,z=u.z-dz*offset;
@@ -1709,7 +1735,7 @@ export class WorldView {
         }
         _q.setFromEuler(_haulEuler);_s.set(1,1,1);_haulMatrix.compose(_p,_q,_s);
         vehicle!.setMatrixAt(index,_haulMatrix);
-        vehicles[kind!]++;
+        if(horse){horses++;this.packHorseOwners.push(u);}else vehicles[kind!]++;
         if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
           const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
           const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
@@ -1726,7 +1752,7 @@ export class WorldView {
       if(!mesh||i>=instCap(mesh))continue;
       if(mounted&&!u.plantingWork){
         const fullness=Math.min(1,carried/carryingCapacity(u,carryType)),height=.35+fullness*.55;
-        _p.set(0,(kind==='cart'?.7:kind==='pack'?1.05:.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
+        _p.set(0,(kind==='cart'?.7:kind==='pack'?(horse?1.40:1.05):.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
@@ -1749,6 +1775,7 @@ export class WorldView {
       }
     }
     for(const [kind,mesh] of this.cargoMeshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
+    if(this.packHorses){this.packHorses.count=horses;this.packHorses.instanceMatrix.needsUpdate=true;}
     if(this.canoePaddles){this.canoePaddles.count=paddles;this.canoePaddles.instanceMatrix.needsUpdate=true;}
     for(const [kind,vehicle] of this.haulageMeshes){vehicle.count=vehicles[kind];vehicle.instanceMatrix.needsUpdate=true;}
   }
@@ -2649,7 +2676,8 @@ export class WorldView {
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
     this.contourFields?.dispose();this.contourFields=null;
     this.biomeScene?.dispose();this.biomeScene=null;
-    this.wildlifeOwners.clear();
+    this.wildlifeOwners.clear();this.packHorseOwners=[];this.domesticHorseOwners=[];
+    if(!this.lost){for(const mesh of [this.wildHorses,this.domesticHorses,this.packHorses])mesh?.dispose();if(this.wildHorses)(this.wildHorses.material as THREE.Material).dispose();}
     if(this.wildSheep&&!this.lost)(this.wildSheep.material as THREE.Material).dispose();
     this.terrainSurface?.dispose();this.terrainSurface=null;this.localWater=null;
     for(const material of this.waterMaterials)material.dispose();this.waterMaterials=[];
@@ -2701,6 +2729,7 @@ export class WorldView {
       });
     }
     this.wildSheep=null;this.domesticSheep=null;
+    this.wildHorses=null;this.domesticHorses=null;this.packHorses=null;
     if(this.linePreview){(this.linePreview.material as THREE.Material).dispose();this.linePreview=null;}
     if(this.eraDetails){(this.eraDetails.material as THREE.Material).dispose();this.eraDetails=null;}
     this.villageStyles.clear();
