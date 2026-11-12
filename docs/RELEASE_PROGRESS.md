@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 0eb4b35d30452d26b0c9fdf85f9216574d46838b published as 2026-11-12T20-05-20-589Z-0eb4b35 on8086/8101.70/70 scoped checks (65native/shared+5built), compiler/buildPASS: paid physical cordage records, same-asset return/study/replication, foreign-community paid-study retention, actual original learner Resume, rendered walking recovery/carried inventory and strict saves. Commander replacement capacity/news and test corrections included. Original53 unchanged. Frozen acceptance37/98 unchanged; broader/captured records, campaign and100-person performance remain open; newer canonical art/wild-craft/UI excluded from frozenartifact. Partial/unverified gates earn zero.
+Verified baseline: 2128ed737f8bdfa3ed5d8ae73427b59f5467a012 published as 2026-11-12T20-25-07-528Z-2128ed7 on8086/8101.35/35 scoped checks (28native/shared+7built), compiler/buildPASS: peoplev2 and painterly surface geology, unused character geometry eviction, excavation attribute continuity, single selection card and working civilian/military commander paths with real paid appointment/promotion/save restoration. Final compact controls meet intended size floor. Original53 unchanged. Frozen37/98 unchanged; campaign/performance/full visual fidelity remain open. WildCraft activation OFF pending independent safety qualification. Partial/unverified gates earn zero.
 
 ## Milestone counts
 
