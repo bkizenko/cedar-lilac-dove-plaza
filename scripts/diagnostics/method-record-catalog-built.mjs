@@ -12,7 +12,7 @@ try{
  const load=async input=>{const s=JSON.parse(input.bytes);s.state.paused=true;const r=await page.evaluate(async s=>window.__engine.importVillage(new File([JSON.stringify(s)],'private-village.json',{type:'application/json'})),s);assert.equal(r.applied,true,r.message);return s;};
  const state=()=>page.evaluate(()=>JSON.parse(JSON.stringify({...window.__engine.game.state,banner:'',bannerT:0,particles:[],floaters:[],selBld:null,placing:null,pendingAge:false},(k,v)=>k==='selected'?false:['target','node'].includes(k)&&v&&typeof v==='object'&&'kind'in v&&'id'in v?{id:v.id,kind:v.kind}:v)));
  const durable=async()=>{const r=await page.evaluate(()=>window.__engine.saveNow());assert.equal(r.saved,true,r.message);const before=await state();await page.evaluate(()=>window.__engine.resumeSaved());assert.deepEqual(await state(),before);};
- const knowledge=async text=>{await page.getByRole('button',{name:'Knowledge',exact:true}).click();await page.getByRole('searchbox',{name:'Find a skill',exact:true}).fill(text);};
+ const knowledge=async text=>{await page.getByRole('button',{name:'Ages',exact:true}).click();await page.getByRole('searchbox',{name:'Find a skill',exact:true}).fill(text);};
  const close=async()=>page.getByRole('dialog').last().getByRole('button',{name:'Close',exact:true}).click();
  const cardFor=r=>page.getByRole('article',{name:`Pottery firing method record · ${r.source.makerName}`,exact:true});
  const details=async card=>{const b=card.getByRole('button',{name:/^Details:/});if(await b.getAttribute('aria-expanded')!=='true')await b.click();};
