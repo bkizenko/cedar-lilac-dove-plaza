@@ -83,6 +83,24 @@
       "externalIntegration": "WHOLE normal3branch merges behindoptions remain phase2 afterphase1",
       "fixedGateCreditDelta": 0,
       "evidence": "docs/metrics/sim-speed-native100-performance-release-2026-11-11.json"
+    },
+    "latest_integration_handoff": {
+      "at": "2026-11-12T00:55:57.075993+00:00",
+      "execution_lead": "Grok",
+      "conflict_resolution_owner": "Claude",
+      "worker_source_head": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "review_branches_pushed": 5,
+      "whole_branch_pair_checks": 26,
+      "textually_clean": 25,
+      "conflict_files": [
+        "src/ui/CraftSiteQueue.tsx",
+        "src/ui/ProductionControls.tsx"
+      ],
+      "worker_native100_p95_ms": 67.74387500000012,
+      "worker_target_met": false,
+      "worker_active_by_default": false,
+      "gate_credit_added": 0,
+      "details": "docs/parallel/GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md"
     }
   },
   "counts": {
