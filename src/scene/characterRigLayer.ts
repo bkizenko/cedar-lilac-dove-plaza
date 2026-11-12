@@ -71,13 +71,13 @@ export class CharacterRigLayer{
   v.mesh.instanceMatrix.array.set(m as number[],v.count*16);const ic=v.mesh.instanceColor!.array as Float32Array;ic[v.count*3]=c.r;ic[v.count*3+1]=c.g;ic[v.count*3+2]=c.b;v.count++;
  }
  /** Draw one person (or a corpse when `pose` is given). `scale` is the legacy body scale so the rig matches the old size. Returns false if not drawn. */
- write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;clipForItems?:boolean}){
+ write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;/** held items to show with a review pose (render sheets) */items?:{itemR?:ItemId;itemL?:ItemId}}){
   const w=this.world;if(this.disposed||!w)return false;
   const cls=override?.cls??bodyClassFor(u,w.time),outfit=override?.outfit??this.outfitFor(u,cls,w);
   const dx=u.x-this.camera.x,dz=u.z-this.camera.z,dy=u.y-this.camera.y,raw=tierForDistance(Math.hypot(dx,dy,dz)),tier=(override&&raw>1?1:raw) as LodTier;
   if(!override)this.stats.tiers[tier]++;
   let pose:Pose,itemR=outfit.itemR,itemL=outfit.itemL;
-  if(override){pose=override.pose;}
+  if(override){pose=override.pose;if(override.items){itemR=override.items.itemR;itemL=override.items.itemL;}}
   else{
    this.deaths.see(u,w.time,scale[0],outfit.key,cls,{outfit,scale:[scale[0],scale[1],scale[2]]});
    if(tier<2){

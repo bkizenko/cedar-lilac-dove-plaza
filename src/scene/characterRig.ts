@@ -54,8 +54,8 @@ export function composeEuler(o:Mat,t:readonly number[],r:readonly number[],s:rea
  // R = Ry * Rx * Rz (three 'YXZ'), then scale columns, then translate.
  const [x,y,z]=r,a=Math.cos(x),b=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z),sx=typeof s==='number'?s:s[0],sy=typeof s==='number'?s:s[1],sz=typeof s==='number'?s:s[2];
  const ce=c*e,cf=c*f,de=d*e,df=d*f;
- o[0]=(ce+df*b)*sx;o[1]=a*f*sx;o[2]=(de*b-cf)*sx;o[3]=0;
- o[4]=(cf*b-de)*sy;o[5]=a*e*sy;o[6]=(df+ce*b)*sy;o[7]=0;
+ o[0]=(ce+df*b)*sx;o[1]=a*f*sx;o[2]=(cf*b-de)*sx;o[3]=0;
+ o[4]=(de*b-cf)*sy;o[5]=a*e*sy;o[6]=(df+ce*b)*sy;o[7]=0;
  o[8]=a*d*sz;o[9]=-b*sz;o[10]=a*c*sz;o[11]=0;
  o[12]=t[0];o[13]=t[1];o[14]=t[2];o[15]=1;return o;
 }

@@ -47,3 +47,10 @@ test('rig layer: a death leaves a lying body for a bounded time, then it is gone
  w.time=100;layer.beginFrame(w,cam(),'high',true);layer.writeCorpses(()=>0,()=>true);layer.endFrame();assert.equal(layer.stats.corpses,0,'bodies sink away and are removed');
  layer.dispose();
 });
+test('rig maths agrees with three.js: composeEuler is exactly Euler YXZ + scale + translate',{skip},async()=>{
+ const {composeEuler}=await import('../src/scene/characterRig.ts');let worst=0,seed=1;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+ for(let i=0;i<300;i++){const r=[rnd()*6-3,rnd()*6-3,rnd()*6-3],t=[rnd(),rnd(),rnd()],s=[1+rnd(),1+rnd(),1+rnd()];
+  const m=new THREE.Matrix4().compose(new THREE.Vector3(...t),new THREE.Quaternion().setFromEuler(new THREE.Euler(r[0],r[1],r[2],'YXZ')),new THREE.Vector3(...s)),o=composeEuler(new Array(16).fill(0),t,r,s);
+  for(let k=0;k<16;k++)worst=Math.max(worst,Math.abs(o[k]-m.elements[k]));}
+ assert.ok(worst<1e-9,'max difference '+worst);
+});
