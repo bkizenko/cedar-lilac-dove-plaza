@@ -66,7 +66,7 @@ export class PeopleAdapter{
  }
  end(game:Game){
   if(!this.active)return;
-  try{this.layer!.writeCorpses((x,z)=>game.height(x,z),(x,z)=>game.visibleAt(x,z));this.layer!.endFrame();}catch(e){this.fail(e);}
+  try{this.layer!.writeCorpses((x,z)=>game.height(x,z),(x,z)=>game.visibleAt(x,z));this.layer!.endFrame();if(this.layer!.stats.fallbacks>0)this.fail(new Error('Character geometry budget reached; retaining visible legacy people'));}catch(e){this.fail(e);}
  }
  dispose(){this.layer?.dispose();this.layer=null;}
 }
