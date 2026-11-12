@@ -1,3 +1,4 @@
+import {reconcileMethodRecords} from './methodRecords';
 import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
@@ -6011,6 +6012,7 @@ export class Game {
         reconcileSiegeRams(this);
         tickStolenCargo(this,0);
         reconcileFarmToolCargo(this);
+        reconcileMethodRecords(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         tickRaidDefense(this);
