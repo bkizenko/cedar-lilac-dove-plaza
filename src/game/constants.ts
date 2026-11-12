@@ -288,6 +288,12 @@ export const BUILDINGS: Record<
     age: 0,
     hint: "A sacred gathering place that strengthens local influence.",
   },
+  well: {name:"Well",w:3,d:3,food:0,wood:8,stone:6,pop:0,hp:180,age:0,hint:"A hand-dug well to the fresh water table. Labour follows the measured bore; sites too near the sea or deeper than 12 m are refused."},
+  cistern: {name:"Cistern",w:5,d:5,food:0,wood:6,stone:24,pop:0,hp:220,age:0,hint:"A stone catchment tank. Capacity follows the upslope runoff that actually drains to the site."},
+  watermill: {name:"Watermill",w:6.2,d:5.8,food:0,wood:40,stone:16,pop:0,hp:280,age:0,hint:"A mill house on a dry bank with the wheel in the current. Power is the live river flow at the wheel, not a fixed rating."},
+  windmill: {name:"Windmill",w:5.2,d:5.2,food:0,wood:36,stone:8,pop:0,hp:260,age:0,hint:"A mill on an exposed rise with a clear horizon all round. Clear trees around the sails."},
+  aqueduct: {name:"Aqueduct",w:4,d:4,food:0,wood:12,stone:48,pop:0,hp:360,age:0,hint:"A gravity channel from fresh water to a lower delivery point. Cuts and arcade height follow the real ground; labour includes the measured cut."},
+  canal: {name:"Canal",w:4,d:4,food:0,wood:8,stone:4,pop:0,hp:240,age:0,hint:"A channel joining two waters. Commission a line; point placement is refused. Labour follows the measured dig."},
 };
 
 export const UNITS: Record<
@@ -467,6 +473,7 @@ export const BUILD_ORDER: BldType[] = [
   "university",
   "hearth", "threshingFloor", "grindingStone", "oven", "smokehouse","butcher","dryrack","tanner","tailor","potter","kiln","fibreWorkshop",
   "cairn","grove",
+  "well","cistern","watermill","windmill","aqueduct","canal",
 ];
 
 export const TEAM_COLORS = ["#c4a060", "#c4452a", "#3d7a62", "#4a2428", "#426f9a", "#8c58a3"];
@@ -574,6 +581,12 @@ export const BUILD_TIME: Record<BldType, number> = {
   university: 32,
   cairn: 18,
   grove: 16,
+  well: 8,
+  cistern: 24,
+  watermill: 40,
+  windmill: 36,
+  aqueduct: 48,
+  canal: 24,
 };
 
 export const FOW = 192;

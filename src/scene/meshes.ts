@@ -302,6 +302,12 @@ export function buildingGeos(): Record<BldType, BldGeo> {
       ]),
       roof: merge([cone(2.2, 1.6, 0, 1.4, 0, 7)]),
     },
+    well: {timber:merge([cyl(.55,.7,.35,0,0,0,8),cyl(.18,.22,1.1,0,.35,0,6),box(.7,.08,.12,0,1.2,0)]),roof:merge([box(.08,.7,.08,-.35,1.15,0),box(.08,.7,.08,.35,1.15,0),box(.9,.08,.08,0,1.85,0)])},
+    cistern: {timber:merge([box(4.2,.35,4.2,0,0,0),box(3.6,.08,3.6,0,.35,0)]),roof:merge([box(.2,1.1,.2,-1.8,.35,-1.8),box(.2,1.1,.2,1.8,.35,-1.8),box(.2,1.1,.2,-1.8,.35,1.8),box(.2,1.1,.2,1.8,.35,1.8)]),extra:merge([box(3.8,.2,3.8,0,.08,0)]),extraMat:'stone'},
+    watermill: {timber:merge([box(4.2,2.2,3.6,0,0,0),cyl(.16,.16,2.4,2.4,.4,0,8),box(.12,2.0,.12,2.4,.5,.9),box(.12,2.0,.12,2.4,.5,-.9)]),roof:merge([box(5,.22,4.2,0,2.2,0,.2)])},
+    windmill: {timber:merge([cyl(1.1,1.4,3.6,0,0,0,8),box(.18,3.2,.12,0,3.2,0),box(3.2,.12,.18,0,4.4,0)]),roof:merge([cone(1.6,1.4,0,3.6,0,8)])},
+    aqueduct: {timber:merge([box(3.6,.35,1.2,0,2.4,0),box(.7,2.4,.7,-1.4,0,0),box(.7,2.4,.7,1.4,0,0)]),roof:merge([box(4,.2,1.4,0,2.75,0)]),extra:merge([box(3.2,.25,1,0,2.2,0)]),extraMat:'stone'},
+    canal: {timber:merge([box(4,.08,4,0,.02,0),box(.12,.45,4,-1.9,0,0),box(.12,.45,4,1.9,0,0)]),roof:merge([box(.08,.08,3.6,-1.9,.4,0),box(.08,.08,3.6,1.9,.4,0)])},
   };
   const civilian={...civilianBuildingGeos(),...classicalBuildingGeos()};for(const [role,kit]of Object.entries(civilian)){const old=result[role as keyof typeof civilian];for(const g of[old.timber,old.roof,old.extra])g?.dispose();result[role as keyof typeof civilian]=kit;}
   for(const[type,kit]of Object.entries(result))registerGroundContacts(type as BldType,[kit.timber,kit.extra],kit.entry);
