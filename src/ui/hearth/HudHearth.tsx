@@ -19,6 +19,7 @@ import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,Not
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
 import './glance.css';
+import './wildPanel.css';
 
 /** The Hearth interface: calm parchment-and-wood chrome, big icons and numbers, a contextual command card and a small number of full screens. */
 export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
@@ -78,6 +79,6 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
     <button type="button" className="hw-card hw-pick t-bad" onClick={()=>engine?.pickAge('army')}><h3>{hud.pendingAge.army.name}</h3><p>{hud.pendingAge.army.hint}</p></button></div>
     <button type="button" className="hw-btn-wide" onClick={()=>engine?.cancelAge()}>Wait</button></div></div></div>}
   {hud.ended&&<div className="hw-scrim"><div className="hw-screen hw-choice" role="dialog" aria-modal="true" aria-label={hud.ended==='win'?'Victory':'Defeat'}>
-   <header className="hw-screen-head"><h1>{hud.ended==='win'?'Victory':'Defeat'}</h1></header><div className="hw-screen-body"><p className="hw-quote">{hud.endReason}</p><button type="button" className="hw-primary" onClick={()=>void lifecycle.run(()=>engine!.restart())}>Begin again</button></div></div></div>}
+   <header className="hw-screen-head"><h1>{hud.ended==='win'?'Victory':'Defeat'}</h1></header><div className="hw-screen-body"><p className="hw-quote">{hud.endReason}</p><button type="button" className="hw-primary" onClick={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}>Begin again</button></div></div></div>}
  </div>;
 }
