@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Full-HUD screenshot: bundles the real HudHearth (or the archived Hud with --ui=classic) over a terrain still and renders it in headless Chromium.
-//   node tools/render-preview/ui-hud-shot.mjs <none|worker|crowd|building|army|placing|alerts> <out.png> [--w=1440] [--h=900] [--dpr=1] [--ui=hearth|classic] [--click='aria-label text'] [--theme=field]
+//   node tools/render-preview/ui-hud-shot.mjs <none|worker|crowd|building|army|placing|alerts|raid|glance> <out.png> [--w=1440] [--h=900] [--dpr=1] [--clip=x,y,w,h] [--ui=hearth|classic] [--click='aria-label text'] [--theme=field]
 // Same dependency notes as ui-council-shot.mjs (lucide-react is shimmed from react-icons).
 // Needs react, react-dom, lucide-react (or the react-icons stub) in ./node_modules.
 import {createRequire} from 'node:module';
@@ -22,11 +22,11 @@ const shim=path.join(root,'.hw-lucide-shim.mjs');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hw-ui-')),bundle=path.join(tmp,'ui.js');
 execFileSync(esbuild,['tools/render-preview/ui-hud-entry.tsx','--bundle','--format=esm','--outfile='+bundle,'--alias:@=./src','--loader:.css=empty','--jsx=automatic','--define:process.env.NODE_ENV="production"','--alias:three/addons/utils/BufferGeometryUtils.js=./tools/render-preview/shims/BufferGeometryUtils.js',...['EffectComposer','RenderPass','UnrealBloomPass','ShaderPass','FilmPass','OutputPass'].map(n=>`--alias:three/addons/postprocessing/${n}.js=./tools/render-preview/shims/postprocessing.js`),'--alias:node:zlib=./tools/render-preview/shims/empty.js','--alias:three/examples/jsm/libs/fflate.module.js=./tools/render-preview/shims/fflate.js','--alias:lucide-react='+shim,'--log-level=error'],{cwd:root,stdio:'inherit'});
 fs.rmSync(shim,{force:true});
-const css=fs.readFileSync(path.join(root,'src/ui/hearth/hearth.css'),'utf8'),code=fs.readFileSync(bundle,'utf8');
+const css=['hearth.css','glance.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
 const bgFile=path.join(root,'docs/renders/map/3-wide.jpg');let bg=null;
 // The map renders are before|after composites: keep the right-hand (painterly default) half as the terrain backdrop.
 try{const sharp=createRequire('/home/claude/.npm-global/lib/node_modules/x.js')('sharp');bg=await sharp(bgFile).extract({left:800,top:36,width:800,height:414}).jpeg({quality:90}).toBuffer();}catch{}
-const html=`<!doctype html><meta charset=utf-8><style>html,body{margin:0;height:100%;overflow:hidden;background:#6b7f4d url(/bg.jpg) center/cover;color:#f8efd9;font-family:system-ui,sans-serif}#root{position:fixed;inset:0}${css}</style><div id=root></div><script type=module src=/ui.js></script>`;
+const html=`<!doctype html><meta charset=utf-8><style>html,body{margin:0;height:100%;overflow:hidden;background:#6b7f4d url(/bg.jpg) center/cover;color:#f8efd9;font-family:system-ui,sans-serif}#root{position:fixed;inset:0}.world-minimap{position:relative;width:100%}.world-minimap canvas{width:100%;height:auto;display:block}.world-minimap-north{position:absolute}${css}</style><div id=root></div><script type=module src=/ui.js></script>`;
 const server=http.createServer((q,r)=>{if(q.url==='/ui.js'){r.writeHead(200,{'content-type':'text/javascript'});r.end(code);}else if(q.url==='/bg.jpg'&&bg){r.writeHead(200,{'content-type':'image/jpeg'});r.end(bg);}else{r.writeHead(200,{'content-type':'text/html'});r.end(html);}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let pw;for(const b of [root,'/home/claude/.npm-global/lib/node_modules']){try{pw=createRequire(path.join(b,'x.js'))('playwright');break;}catch{}}
@@ -41,7 +41,7 @@ if(flags.theme)await page.evaluate(t=>{document.documentElement.dataset.hwUi=t;}
 else if(flags.ui==='classic')await page.evaluate(()=>{document.documentElement.dataset.hwUi='field';});
 const info=await page.evaluate(o=>window.hwMount(o),{scenario:screen,ui:flags.ui,years:+(flags.years||6)});
 if(flags.click)for(const c of String(flags.click).split('|')){{const l=page.locator('[aria-label="'+c+'"]');await (await l.count()?l.first():page.getByText(c,{exact:true}).first()).click();}await page.waitForTimeout(400);}
-await page.screenshot({path:out});
+{const clip=flags.clip?Object.fromEntries(String(flags.clip).split(',').map((v,i)=>[['x','y','width','height'][i],+v])):undefined;await page.screenshot({path:out,clip});}
 if(flags.measure){const rows=await page.evaluate(()=>{const out=[];document.querySelectorAll('.hw button,.hw [role=button],.hw-chip,.hw-stat,.hw svg').forEach(e=>{const r=e.getBoundingClientRect();if(r.width&&r.height)out.push([e.tagName.toLowerCase()+'.'+((e.className&&e.className.baseVal)??e.className??'').toString().split(' ')[0],Math.round(r.width),Math.round(r.height),e.tagName!=='svg'?parseFloat(getComputedStyle(e).fontSize):0]);});return out;});fs.writeFileSync(String(flags.measure),JSON.stringify(rows));}
 console.log(JSON.stringify(info));
 await browser.close();server.close();fs.rmSync(tmp,{recursive:true,force:true});

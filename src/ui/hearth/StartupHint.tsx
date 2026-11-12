@@ -4,12 +4,12 @@ import {X} from 'lucide-react';
 export const STARTUP_HINT_KEY='hearthwild.ui.hintGraphics';
 const seen=():boolean=>{try{return globalThis.localStorage?.getItem(STARTUP_HINT_KEY)==='1';}catch{return true;}};
 const remember=()=>{try{globalThis.localStorage?.setItem(STARTUP_HINT_KEY,'1');}catch{/* hint only */}};
-export function StartupHint({onOpenMenu}:{onOpenMenu:()=>void}){
+export function StartupHint({onOpenMenu,onOpenHelp}:{onOpenMenu:()=>void;onOpenHelp?:()=>void}){
  const [show,setShow]=useState(()=>!seen());
  if(!show)return null;
  const dismiss=()=>{remember();setShow(false);};
  return <div className="hw-hint" role="note" aria-label="Display options hint">
-  <span>Interface style and graphics: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenMenu();}}>Menu</button></span>
+  <span>Interface style and graphics: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenMenu();}}>Menu</button>{onOpenHelp&&<> · Keys: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenHelp();}}>Help</button></>}</span>
   <button type="button" className="hw-hint-x" aria-label="Dismiss hint" onClick={dismiss}><X size={22}/></button>
  </div>;
 }
