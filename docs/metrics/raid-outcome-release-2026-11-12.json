@@ -1,0 +1,66 @@
+{
+  "release": "2026-11-12T14-53-46-940Z-95978dd",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T14-53-46-940Z-95978dd",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T14-47-48-619Z-2424c08",
+  "commit": "95978dd48cfac8667b738d3e93b4a3a277e6b6f1",
+  "retained": {
+    "linked": 1337,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 13,
+    "total": 13,
+    "nativeAndShared": 12,
+    "nativeScope": "5 physical raid objective cases +7 existing formal prestige cases; merged source",
+    "built": {
+      "scope": "Actual native raid recovery receipt -> built existing War aims meter -> durable save/reload. No simulation steps, visibility edits, goods grants, original village or private rival totals.",
+      "passed": 1,
+      "total": 1,
+      "before": {
+        "value": 0.5,
+        "points": 17.142857142857142,
+        "receiptCount": 2,
+        "people": 22,
+        "privateRivalValuesHidden": true
+      },
+      "meter": {
+        "value": 17.142857142857142,
+        "title": "0.5 weighted settled war aims \u00b7 17.1 / 120 points. Diminishing returns."
+      },
+      "after": {
+        "value": 0.5,
+        "points": 17.142857142857142,
+        "receiptCount": 2,
+        "people": 22,
+        "privateRivalValuesHidden": true
+      },
+      "inputUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "working": [
+    "Actual theft reaching camp and captive delivery count as escaped objectives, not wins",
+    "Loot must physically return to original-owner cache; captives must physically return home before defense credit",
+    "Multi-person raids share objective identity while retaining distinct paid trip ownership",
+    "Existing authorized prestige breakdown restored under Hearth Village/Camp; rival private totals stay hidden"
+  ],
+  "limits": [
+    "Destruction-specific native scenario not executed; source hook prevents held credit",
+    "Consumed or missing cargo provenance remains uncredited pending evidence",
+    "Bounded128-band ledger saturates rather than evicting identities",
+    "No full campaign or full M4/M5 gate claim"
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}

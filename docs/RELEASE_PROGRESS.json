@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "2424c08b917f1e28dec6d835e80a43d7f94d669f published as 2026-11-12T14-47-48-619Z-2424c08 on8086/8101.27/27 scoped food search/floor-route checks, inherited37/98 unchanged. Later main source pending; Worker parked.",
+  "verifiedPublishedCodeBaseline": "95978dd48cfac8667b738d3e93b4a3a277e6b6f1 published as 2026-11-12T14-53-46-940Z-95978dd on8086/8101.13/13 scoped actual raid outcome and Camp prestige checks; includes food2424c08; inherited37/98 unchanged. Later main source pending; Worker parked.",
   "planningHeadAtAudit": "ba2f2e2",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
