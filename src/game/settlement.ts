@@ -361,6 +361,8 @@ export class WorkBoard {
     }
   }
   assign(g: Game, u: Unit) {
+    // The cargo-return branch must not replace a committed animal's pen journey.
+    if(u.packPastureOrder&&u.packPastureOrder.phase!=='queued')return;
     if(u.housingWorkId!==undefined||u.housingUse&&!u.housingUse.paused)return;
     if(u.coastalCommissionId||u.coastalVoyageId||u.productionProjectId||u.campMoveId||u.contactDemand||u.contactAttackTargetId!==undefined||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.escortId!==undefined||u.conflictIntent==='occupy'||u.conflictIntent==='capture')return;
     if(Object.values(u.itemCargo||{}).some(n=>(n||0)>0)){u.order='return';u.node=null;u.workReason='Delivering carried materials before another assignment';return;}

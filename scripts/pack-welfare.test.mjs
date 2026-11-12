@@ -46,7 +46,7 @@ test('paid taming preserves the original goat metadata through strict reload and
  for(let i=0;i<700&&u.tamingWork;i++){g.navBudget=40;g.state.time+=.1;packTamingAI(g,u,.1);}
  assert.equal(u.haulage,'pack');assert.equal(g.state.wildlife.some(c=>c.id===a.id),false);for(const key of ['id','hp','maxHp','scale','sex','born','tamedAt','hunger','thirstSeconds'])assert.equal(u.packAnimal[key],a[key],key);
  assert.deepEqual({food:g.tribe(0).food,wood:g.tribe(0).wood},paid);const id=u.id,animalId=a.id;g=decodeGame(encodeGame(g));u=g.state.units.find(p=>p.id===id);assert.ok(u);assert.equal(u.packAnimal.id,animalId);
- u.hp=0;const pack={...u.packAnimal};releasePackAnimal(g,u);releasePackAnimal(g,u);const released=g.state.wildlife.filter(c=>c.id===animalId);assert.equal(released.length,1);assert.equal(released[0].hp,pack.hp);assert.equal(released[0].scale,pack.scale);assert.equal(released[0].x,u.x);assert.equal(released[0].z,u.z);assert.equal(u.packAnimal,undefined);assert.equal(u.haulage,undefined);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ u.hp=0;const pack={...u.packAnimal};releasePackAnimal(g,u);releasePackAnimal(g,u);const released=g.state.wildlife.filter(c=>c.id===animalId);assert.equal(released.length,1);assert.equal(released[0].hp,pack.hp);assert.equal(released[0].scale,pack.scale);near(released[0].x,u.x-Math.sin(u.facing)*2.1);near(released[0].z,u.z-Math.cos(u.facing)*2.1);assert.equal(u.packAnimal,undefined);assert.equal(u.haulage,undefined);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 
 test('missing or dead pack records grant no carrying bonus and cannot fabricate a replacement animal',()=>{

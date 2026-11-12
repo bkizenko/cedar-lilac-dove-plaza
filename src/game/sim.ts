@@ -73,6 +73,7 @@ import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import{reconcilePenWater}from'./penWater';
 import {beginHerdTaming,HERD,husbandryAI,tickHusbandry} from './husbandry';
+import {cancelPackPasture,packPastureAI} from './packPasture';
 import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanRoutes';
 import {hasTaskCommitment} from './workCommitments';
 import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
@@ -1810,6 +1811,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    cancelPackPasture(this,u);
     interruptSiegeRam(this,u);
     if(u.sitePreparationId!==undefined)releaseSitePreparationWorker(this,u);
     u.foodRole=undefined;
@@ -4438,6 +4440,7 @@ export class Game {
     if(copperStudyAI(this,u,dt))return;
     if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
+    if(packPastureAI(this,u,dt))return;
     if(husbandryAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;
     if(haulageWorkAI(this,u,dt))return;
@@ -5795,6 +5798,7 @@ export class Game {
         phases?.mark('people');
         beginPrisonerGuardQueries(this);beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
+          if(u.packPastureOrder)packPastureAI(this,u,0);
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
           u.vx = 0;

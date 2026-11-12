@@ -147,7 +147,8 @@ test('hunters respect their own taming reservation while other tribes remain abl
 test('a tamed goat retains its original identity and condition through saves and release',()=>{
  const {g,u}=fixture(),c=goat(g);c.hp=17;c.scale=1.3;
  assert.equal(beginPackTaming(g,g.state.buildings[0].id),true);work(g,u,100,packTamingAI);
- assert.deepEqual(u.packAnimal,{id:c.id,hp:17,maxHp:30,scale:1.3,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0});
+ const {packHarness,...animal}=u.packAnimal;assert.deepEqual(animal,{id:c.id,hp:17,maxHp:30,scale:1.3,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0});
+ assert.equal(packHarness.version,1);assert.equal(packHarness.wood,2);assert.equal(packHarness.workSeconds,60);assert.ok(packHarness.preparedAt>=0&&packHarness.preparedAt<=g.state.time);
  const copy=decodeGame(encodeGame(g)),handler=copy.state.units.find(p=>p.id===u.id);handler.hp=0;
  releasePackAnimal(copy,handler);const freed=copy.state.wildlife.find(p=>p.id===c.id);
  assert.ok(freed);assert.equal(freed.hp,17);assert.equal(freed.maxHp,30);assert.equal(freed.scale,1.3);
