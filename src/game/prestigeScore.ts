@@ -6,13 +6,13 @@ export const PRESTIGE_SCORE_RULES={version:1,components:{
  usableArea:{cap:100,half:10000,unit:'dry useful square metres'},
  resourcesAndChokepoints:{cap:100,half:30,unit:'cached land-value points'},
  healthyPopulation:{cap:200,half:50,unit:'healthy resident equivalents'},
- foodSecurity:{cap:120,half:2,unit:'days of actual edible reserve'},
+ foodSecurity:{cap:120,half:90,unit:'days of actual edible reserve'},
  demonstratedPractices:{cap:140,half:12,unit:'distinct demonstrated methods'},
  usefulTrade:{cap:100,half:10,unit:'distinct paid and delivered offers'},
  defendedWarAims:{cap:120,half:3,unit:'documented defended aims'},
  civicWorks:{cap:120,half:50,unit:'condition-weighted civic points'},
 }} as const;
-export type PrestigeFacts={usableArea:number;resourcesAndChokepoints:number;healthyPopulation:number;foodSecurity:number;demonstratedPractices:readonly string[];usefulTrade:number;defendedWarAims?:number;civicWorks:number};
+export type PrestigeFacts={usableArea?:number;resourcesAndChokepoints?:number;healthyPopulation:number;foodSecurity:number;demonstratedPractices:readonly string[];usefulTrade:number;defendedWarAims?:number;civicWorks:number};
 export type PrestigeScoreRow={component:PrestigeComponent;value:number;points:number;cap:number;available:boolean};
 export type PrestigeScore={version:1;total:number;components:PrestigeScoreRow[]};
 const finite=(n:number)=>Number.isFinite(n)&&n>0?Math.min(n,1e15):0;
@@ -20,7 +20,7 @@ const finite=(n:number)=>Number.isFinite(n)&&n>0?Math.min(n,1e15):0;
 export function prestigeCurve(value:number,cap:number,half:number){const x=finite(value);return x&&Number.isFinite(cap)&&cap>0&&Number.isFinite(half)&&half>0?cap/(1+half/x):0;}
 export function scorePrestige(facts:PrestigeFacts):PrestigeScore{
  const components=PRESTIGE_COMPONENTS.map(component=>{
-  const rule=PRESTIGE_SCORE_RULES.components[component],available=component!=='defendedWarAims'||facts.defendedWarAims!==undefined;
+  const rule=PRESTIGE_SCORE_RULES.components[component],available=facts[component]!==undefined;
   const value=component==='demonstratedPractices'?new Set(facts.demonstratedPractices.filter(id=>typeof id==='string'&&id.trim().length>0)).size:finite(facts[component]??0);
   return{component,value,points:available?prestigeCurve(value,rule.cap,rule.half):0,cap:rule.cap,available};
  });

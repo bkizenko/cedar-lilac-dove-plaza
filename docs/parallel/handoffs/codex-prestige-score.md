@@ -1,0 +1,9 @@
+# T6 prestige handoff
+
+Source prepared on `work/codex-prestige-score-2026-11-11`; qualification pending. Runtime scoring changes require focused checks/typecheck and a frozen built UI check before live credit.
+
+Claude compact consumer contract: `HudSnapshot.prestigeBreakdown?: GamePrestigeView` contains version1, own `total`, eight `{component,points,available}` rows, `territoryMeasuredAt`, `territoryUpdating`. Existing `hud.prestige` is its rounded numeric total. Show unavailable defended aims as unavailable/zero; land starts unavailable until bounded simulation work completes. `prestigeRivals?: GamePrestigeView[]` exposes only dated retained authorized landmark observations; total is always null, absent private components have null points. Label these as partial observations with their date. Do not sum an observed partial view into a foreign total or query hidden Game stocks. No visual/layout changes in this source batch.
+
+Own evidence uses body health, actual ready nourishment/demand, successful useful production demonstrations (batch size variants deduplicated), distinct paid-and-delivered receipt offers, and condition-weighted civic landmarks. No age/alliance/region flags, inventory samples, raw grain/fish, spoiled inventory or killed-unit proxy. Food days follow the existing1800-second/365-day calendar, not the slowed daylight presentation. Defended war aims have no evidence ledger and remain explicitly unavailable. Receipt history is bounded by the existing native ledger; no invented permanent trade history.
+
+Land evidence copies already painted ownership and processes256cells per simulation step, then refreshes after15simulation seconds. Dry/useful-grade rules and existing land-value coefficients are gameplay weights. No influence query/repaint, `claimSummary`, `knownStructures`, observation refresh or terrain write occurs in score/HUD reads. No score cache is saved or backfilled into older saves.

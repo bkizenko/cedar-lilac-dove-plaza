@@ -8,7 +8,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {civicPrestige} from './civicPrestige';
+import {gamePrestigeView,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -5665,13 +5665,8 @@ export class Game {
     return cap;
   }
 
-  prestige() {
-    const t = this.tribe(0);
-    const owned = this.state.regions.filter((r) => r.owner === 0).length;
-    const monuments = civicPrestige(this).total;
-    const allies = this.state.tribes.filter((tr) => tr.id !== 0 && tr.alive && tr.ally).length;
-    return Math.round(this.popNow(0) * 2 + owned * 14 + t.age * 22 + monuments + allies * 12);
-  }
+  prestigeBreakdown(viewer=0,subject=0){return gamePrestigeView(this,viewer,subject);}
+  prestige() {return Math.round(this.prestigeBreakdown().total??0);}
 
   bankTrade(give: ResKind, get: ResKind) {
     const partner = this.pickTradeRival();
@@ -5858,6 +5853,7 @@ export class Game {
         tickCaptivity(this,sdt);
         phases?.mark('observation');
         this.updateVision(sdt);
+        tickPrestigeEvidence(this);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
@@ -6318,6 +6314,8 @@ export class Game {
         held: this.clusterHeld(c.id, 0),
       })),
       prestige: this.prestige(),
+      prestigeBreakdown: this.prestigeBreakdown(),
+      prestigeRivals: this.state.tribes.filter(tr=>tr.id!==0&&tr.id!==3).map(tr=>this.prestigeBreakdown(0,tr.id)),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),
