@@ -14,6 +14,7 @@
  *  - Nothing is created unless the caller selects the 'optionH' render style (src/game/graphics.ts);
  *    the classic renderer remains the default and the fallback. */
 import * as THREE from 'three';
+import {carvedSnowUniform,patchSnowShader} from './roofSnow';
 import {partsAtLod,renderTierForDistance,type BuildingSpec,type LodTier,type PartAnim,type RenderTier} from './buildingParts';
 import {getBuildingGrammar} from './buildingFamilies';
 import {carvedVariantFor,prosperityTier,skinKeyPart,variantSpec,type CarvedBuildingInput} from './buildingStyleMap';
@@ -61,8 +62,9 @@ export function createCarvedMaterial():THREE.MeshStandardMaterial{
  m.onBeforeCompile=shader=>{
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float grain;\nvarying float vGrain;').replace('#include <begin_vertex>','#include <begin_vertex>\nvGrain=grain;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrain;').replace('#include <map_fragment>','#ifdef USE_MAP\n vec4 sampledDiffuseColor=texture2D(map,vMapUv);\n diffuseColor.rgb*=mix(vec3(1.0),sampledDiffuseColor.rgb,vGrain);\n#endif');
+  patchSnowShader(shader);
  };
- m.customProgramCacheKey=()=>'carved-h-grain-v1';
+ m.customProgramCacheKey=()=>'carved-h-grain-snow-v2';
  return m;
 }
 
@@ -78,6 +80,7 @@ export function impostorGeometry():THREE.BufferGeometry{
 /** One turning assembly (water wheel, sail cross) of a variant: its own instanced mesh built about its pivot, driven per frame. */
 type Rotor={mesh:THREE.InstancedMesh;anim:PartAnim;bases:Float32Array;axis:THREE.Vector3;pivot:THREE.Vector3};
 type Bucket={mesh:THREE.InstancedMesh;count:number;owners:CarvedInstance[];used:number;rotors:Rotor[]};
+const SNOW_CARD=new THREE.Color(.94,.96,.99);
 export class CarvedBuildingLayer{
  private scene:THREE.Scene;
  private material=createCarvedMaterial();
@@ -96,6 +99,9 @@ export class CarvedBuildingLayer{
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(CARVED_LAYER_RULES.cardInitialInstances*3),3);
   scene.add(mesh);this.card={mesh,count:0,owners:[]};
  }
+ /** Season snow cover 0..1 (game.seasonMix().snow): whitens upward faces of drawn buildings and tints far impostor cards. */
+ setSnow(snow:number){const v=Math.max(0,Math.min(1,snow));carvedSnowUniform.value=v<.02?0:v;this.snow=carvedSnowUniform.value;}
+ private snow=0;
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
   const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
@@ -136,7 +142,7 @@ export class CarvedBuildingLayer{
    const spec=this.specs.get(key);if(!spec)continue;const card=impostorCard(spec);
    if(this.card.count>=this.card.mesh.instanceMatrix.count)this.card.mesh=ensureInstanceCapacity(this.scene,this.card.mesh,this.card.count+1);
    this.q.setFromAxisAngle(this.up,inst.yaw);this.p.set(inst.x,inst.y,inst.z);this.s.set(card.width,card.height*grow,card.depth);this.m.compose(this.p,this.q,this.s);
-   this.c.set(specSwatch(spec.materials,card.wall).hex);this.card.mesh.setMatrixAt(this.card.count,this.m);this.card.mesh.setColorAt(this.card.count,this.c);this.card.count++;this.card.owners.push(inst);
+   this.c.set(specSwatch(spec.materials,card.wall).hex);if(this.snow>0)this.c.lerp(SNOW_CARD,this.snow*.35);this.card.mesh.setMatrixAt(this.card.count,this.m);this.card.mesh.setColorAt(this.card.count,this.c);this.card.count++;this.card.owners.push(inst);
   }
   for(const b of this.buckets.values()){b.mesh.count=b.count;b.mesh.visible=b.count>0;b.mesh.instanceMatrix.needsUpdate=true;for(const ro of b.rotors){ro.mesh.count=b.count;ro.mesh.visible=b.count>0;}}
   this.animate(0);
