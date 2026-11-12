@@ -314,7 +314,8 @@ export function carryingCapacity(u: HaulageUnit, kind: ResKind, maximum=false) {
 export function loadedHaulSpeed(u: HaulageUnit) {
   const capacity=loadCapacityMultiplier(u,u.carryType||'wood');
   const fraction=carriedLoadFraction(u,capacity);
-  return burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?HAULAGE[u.haulage].loadedSpeed:1);
+  const animalPace=u.boat?.phase!=='aboard'&&usesTransport(u)&&u.haulage==='pack'&&u.packAnimal?.species==='cattle'&&u.packAnimal.hp>0?Math.min(1,herdRules('cattle').speed/Math.max(.1,u.speed||2.7)):1;
+  return animalPace*burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?HAULAGE[u.haulage].loadedSpeed:1);
 }
 
 /** Call exactly once on an actual store delivery, immediately before clearing cargo. */
