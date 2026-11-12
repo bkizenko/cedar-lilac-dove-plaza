@@ -1,6 +1,6 @@
 import { $ as Points, A as Frustum, B as Matrix4, C as DodecahedronGeometry, D as Float32BufferAttribute, E as ExtrudeGeometry, F as InstancedMesh, G as MeshStandardMaterial, H as MeshBasicMaterial, I as LatheGeometry, J as Path, K as NearestFilter, L as LinearFilter, M as HemisphereLight, N as IcosahedronGeometry, O as FloatType, P as InstancedBufferAttribute, Q as PointLight, R as LinearMipmapLinearFilter, S as DirectionalLight, T as Euler, U as MeshDepthMaterial, V as Mesh, W as MeshLambertMaterial, X as Plane, Y as PerspectiveCamera, Z as PlaneGeometry, _ as CircleGeometry, _t as TorusGeometry, a as EffectComposer, at as Ray, b as CylinderGeometry, bt as Vector3, c as UniformsLib, ct as RepeatWrapping, d as Box3, dt as Scene, et as PointsMaterial, f as BoxGeometry, ft as ShaderMaterial, g as CapsuleGeometry, gt as SphereGeometry, h as CanvasTexture, ht as Sphere, i as RenderPass, it as RGBFormat, j as Group, k as FogExp2, l as WebGLRenderer, lt as RingGeometry, m as BufferGeometry, mt as ShapeGeometry, n as FilmPass, nt as RGBADepthPacking, o as ShaderPass, ot as Raycaster, p as BufferAttribute, pt as Shape, q as Object3D, r as UnrealBloomPass, rt as RGBAFormat, s as mergeGeometries, st as RedFormat, t as OutputPass, tt as Quaternion, u as AmbientLight, ut as SRGBColorSpace, v as Color, vt as UniformsUtils, w as DynamicDrawUsage, x as DataTexture, xt as Vector4, y as ConeGeometry, yt as Vector2, z as MathUtils } from "../_libs/three.mjs";
-import { $ as resumeConstructionQueue, $n as BUILD_ORDER, $t as armorEquipIssue, A as armorAffiliationColor, An as ERA_UPGRADE_RULES, At as describe, B as resumeProduction, Bn as sampleWorldHeight, Bt as placeFacingGate, C as Game, Cn as dragPlot, Ct as rulersOf, D as placeConstructionLine, Dn as plotDragIntent, Dt as score, E as linearStructure, En as maximumPlotAxisMultiple, Et as appetite, F as equipClothing, Fn as supportsEraUpgrade, Ft as hash32, G as beginHomeUse, Gn as BANK_TERRAIN_RULES, Gt as survivalFireActive, H as unloadProductionProject, Hn as ecologicalConditionsAt, Ht as snapGate, I as pauseProductionProject, In as EXCAVATION_RULES, It as makeRng, J as setHousingPaused, Jn as seaSurfaceY, Jt as equipWaterVessel, K as beginHousingUpgrade, Kn as bankTileAt, Kt as beginClayGather, L as productionIssue, Ln as excavationHeightAt, Lt as normal, M as PRODUCTION_RECIPES, Mn as eraUpgradeIssue, Mt as BAND_LABELS, N as beginProduction, Nn as fabricContext, Nt as bandOf, O as surveyFieldTopography, On as scalablePlot, Ot as heir, P as discardDairyProject, Pn as planEraChange, Pt as clamp$1, Q as queueConstruction, Qn as BUILDINGS, Qt as societyRelation, R as productionWorkSeconds, Rn as excavationTerrain, Rt as gateFacing, S as validateGameSave, Sn as plotModules, St as implications, T as joinedConstructionLine, Tn as fieldSeedIssue, Tt as STREAMS, U as carcassAvailable, Un as provinceAt, Ut as suggestGateSnap, V as swapClothing, Vn as PROVINCE_KINDS, Vt as rotateGateFacing, W as beginEraUpgrade, Wn as fbm, Wt as hearthHeating, X as editConstructionQueue, Xn as prepareOwnedWaterWorld, Xt as setPresentationSurvivalView, Y as setSitePreparationPaused, Yn as waterSurfaceAt, Yt as surveyClay, Z as pauseConstructionQueue, Zn as riverSurfaceData, Zt as SIEGE_RAM_RULES, _ as matchingSaveSlots, _n as GROUNDING_RULES, _t as livingPeople, a as RuntimeProfile, an as boatClass, ar as serializeStoredSave, at as equipBasket, b as decodeGame, bn as groundEntryFor, bt as tiesBetween, c as surveyReachFish, cn as wildPlantVisual, ct as surveyFibre, d as craftSiteReport, dn as planBridge, dt as refuseCapitulation, en as equipArmor, er as MAP, et as setConstructionPriority, f as commitPreparedAutosave, fn as TOWER_PLATFORM_RULES, ft as cultivationIssue, g as loadRaw, gn as terrainLaidWorkplace, gt as fosterHouses, h as invalidateAutosaveWrites, hn as foundationProfile, ht as expansionOf, i as RUNTIME_PROFILE_RULES, in as GARMENT_KINDS, ir as parseStoredSave, it as beginFibreGather, j as societyIdentity, jn as eraUpgradeBenefits, jt as dominantTraits, k as projectedTreeInBox, kn as compactGrainWorkplace, kt as yearlyDeathChance, l as waterReachAt, ln as wildPlantsEnabled, lt as acceptCapitulation, m as hasSave, mn as towerBuildConfiguration, mt as exchangeHostages, n as AcousticScore, nn as wornArmor, nr as TEAM_STYLE, nt as orderConstruction, o as beginRendererFrame, on as WILD_PLANT_SPECIES, ot as fibreGatherIssue, p as currentSaveGeneration, pn as normalizeTowerPlatform, pt as ensureRulers, q as housingAdoptionIssue, qn as lakeContains, qt as clayIssue, r as peacefulMusic, rn as carryingCapacity, rr as SAVE_CODEC_RULES, rt as planStatus, s as rendererFrameMetrics, sn as soilQuality, st as returnFibreLoad, tn as unequipArmor, tr as SAVE_KEY, tt as buildingCost, u as controlCraftSiteJob, un as bridgeHeight, ut as capitulationOffers, v as readSaveSlots, vn as buildingGroundContacts, vt as marryHouses, w as buildingQuarterTurns, wn as expandedGrainWorkplace, wt as familyFeatures, x as encodeGame, xn as registerGroundContacts, xt as bondLabel, y as saveGame, yn as groundContactVersion, yt as rulersEnabled, z as queueDairyVesselCleaning, zn as isFertile, zt as gateOrientation } from "./routes-pyt_G5Ai.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/engine-BH3OOD7T.js
+import { $ as returnFibreLoad, $n as provinceAt, $t as hash32, A as armorAffiliationColor, An as eraUpgradeBenefits, At as ensureRulers, B as setHousingPaused, Bn as wildPlantVisual, Bt as implications, C as Game, Cn as expandedGrainWorkplace, Ct as SIEGE_RAM_RULES, D as placeConstructionLine, Dn as scalablePlot, Dt as equipWaterVessel, E as linearStructure, En as plotDragIntent, Et as clayIssue, F as farmToolRate, Fn as EXCAVATION_RULES, Ft as marryHouses, G as resumeConstructionQueue, Gn as BUILD_ORDER, Gt as score, H as editConstructionQueue, Hn as isFertile, Ht as familyFeatures, I as beginEraUpgrade, In as excavationHeightAt, It as rulersEnabled, J as orderConstruction, Jn as TEAM_STYLE, Jt as describe, K as setConstructionPriority, Kn as MAP, Kt as heir, L as beginHomeUse, Ln as excavationTerrain, Lt as tiesBetween, M as calendar, Mn as fabricContext, Mt as expansionOf, N as carcassAvailable, Nn as planEraChange, Nt as fosterHouses, O as surveyFieldTopography, On as compactGrainWorkplace, Ot as surveyClay, P as draftTractionReady, Pn as supportsEraUpgrade, Pt as livingPeople, Q as fibreGatherIssue, Qn as ecologicalConditionsAt, Qt as clamp$1, R as beginHousingUpgrade, Rn as WILD_PLANT_SPECIES, Rt as societyRelation, S as validateGameSave, Sn as dragPlot, St as refuseCapitulation, T as joinedConstructionLine, Tn as maximumPlotAxisMultiple, Tt as beginClayGather, U as pauseConstructionQueue, Un as sampleWorldHeight, Ut as STREAMS, V as setSitePreparationPaused, Vn as wildPlantsEnabled, Vt as rulersOf, W as queueConstruction, Wn as BUILDINGS, Wt as appetite, X as beginFibreGather, Xn as bankTileAt, Xt as BAND_LABELS, Y as planStatus, Yn as BANK_TERRAIN_RULES, Yt as dominantTraits, Z as equipBasket, Zn as PROVINCE_KINDS, Zt as bandOf, _ as matchingSaveSlots, _n as buildingGroundContacts, _t as suggestGateSnap, a as RuntimeProfile, an as wornArmor, ar as fbm, at as pauseProductionProject, b as decodeGame, bn as registerGroundContacts, bt as acceptCapitulation, c as surveyReachFish, cn as boatClass, cr as serializeStoredSave, ct as queueDairyVesselCleaning, d as craftSiteReport, dn as TOWER_PLATFORM_RULES, dt as unloadProductionProject, en as makeRng, er as lakeContains, et as surveyFibre, f as commitPreparedAutosave, fn as normalizeTowerPlatform, ft as gateFacing, g as loadRaw, gn as GROUNDING_RULES, gt as snapGate, h as invalidateAutosaveWrites, hn as terrainLaidWorkplace, ht as rotateGateFacing, i as RUNTIME_PROFILE_RULES, in as unequipArmor, ir as riverSurfaceData, it as equipClothing, j as societyIdentity, jn as eraUpgradeIssue, jt as exchangeHostages, k as projectedTreeInBox, kn as ERA_UPGRADE_RULES, kt as setPresentationSurvivalView, l as waterReachAt, ln as bridgeHeight, lt as resumeProduction, m as hasSave, mn as foundationProfile, mt as placeFacingGate, n as AcousticScore, nn as armorEquipIssue, nr as waterSurfaceAt, nt as beginProduction, o as beginRendererFrame, on as carryingCapacity, or as SAVE_CODEC_RULES, ot as productionIssue, p as currentSaveGeneration, pn as towerBuildConfiguration, pt as gateOrientation, q as buildingCost, qn as SAVE_KEY, qt as yearlyDeathChance, r as peacefulMusic, rn as equipArmor, rr as prepareOwnedWaterWorld, rt as discardDairyProject, s as rendererFrameMetrics, sn as GARMENT_KINDS, sr as parseStoredSave, st as productionWorkSeconds, tn as normal, tr as seaSurfaceY, tt as PRODUCTION_RECIPES, u as controlCraftSiteJob, un as planBridge, ut as swapClothing, v as readSaveSlots, vn as groundContactVersion, vt as hearthHeating, w as buildingQuarterTurns, wn as fieldSeedIssue, wt as cultivationIssue, x as encodeGame, xn as plotModules, xt as capitulationOffers, y as saveGame, yn as groundEntryFor, yt as survivalFireActive, z as housingAdoptionIssue, zn as soilQuality, zt as bondLabel } from "./routes-6nF3XLZQ.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/engine-BdjqPeFI.js
 function storedVillageCandidates(protectedOnly = false, storage = localStorage) {
 	const slots = readSaveSlots(storage), raw = protectedOnly ? [slots.protected] : [
 		slots.primary,
@@ -2073,6 +2073,27 @@ function loadGraphicsQuality() {
 function rememberGraphicsQuality(q) {
 	try {
 		localStorage.setItem(GRAPHICS_PREFERENCE_KEY, q);
+	} catch {}
+}
+/** Independent browser preference; never stored in or migrated through village saves.
+* The scene consumes this when it builds. Persisting a choice does not switch a
+* running renderer or imply the optional style's adapter is available. */
+var RENDER_STYLE_PREFERENCE_KEY = "hearthwild:render-style";
+function isRenderStyle(value) {
+	return value === "current" || value === "optionH";
+}
+function loadRenderStyle() {
+	try {
+		const style = localStorage.getItem(RENDER_STYLE_PREFERENCE_KEY);
+		return isRenderStyle(style) ? style : GRAPHICS_RULES.defaultRenderStyle;
+	} catch {
+		return GRAPHICS_RULES.defaultRenderStyle;
+	}
+}
+function rememberRenderStyle(style) {
+	if (!isRenderStyle(style)) return;
+	try {
+		localStorage.setItem(RENDER_STYLE_PREFERENCE_KEY, style);
 	} catch {}
 }
 function graphicsPixelRatio(quality, width, height, deviceRatio = 1) {
@@ -12264,6 +12285,23 @@ var CARVED_MATERIALS = {
 	}
 };
 Object.keys(CARVED_MATERIALS);
+/** Light rig for the H style. Warm sky/sun with one faint cool bounce so the
+* water and shadow side keep separation; soft (no hard noon contrast). The
+* classic renderer's rig is untouched unless the H style is selected. */
+var CARVED_LIGHT_RIG = {
+	toneMapping: "neutral",
+	exposure: 1,
+	hemiSky: "#ffe8c8",
+	hemiGround: "#94643a",
+	hemiIntensity: 1.05,
+	sun: "#fff0d8",
+	sunIntensity: 1.9,
+	bounce: "#c9dbe6",
+	bounceIntensity: .22,
+	fog: "#e2b884",
+	fogNearMetres: 120,
+	fogFarMetres: 420
+};
 /** Wood-grain texture parameters shared by every carved surface (one texture,
 * metric UVs, so grain density reads the same on a post and a hillside). */
 var CARVED_GRAIN = {
@@ -12310,6 +12348,27 @@ function woodGrainPixels(size = CARVED_GRAIN.textureSize, seed = 7) {
 		out[o + 3] = 255;
 	}
 	return out;
+}
+/** G2 golden-hour-dominant daytime grade for the H style. `t` is the fraction
+* of the visible daylight period (0 sunrise, .5 noon, 1 sunset). Warmth stays
+* high for most of the day and only dips gently around noon, so the world
+* reads like the board's late-afternoon light rather than flat white noon.
+* Returns colours to lerp the H rig towards; it never touches the classic rig
+* and does not change the simulation clock or daylight duration. */
+function carvedDaylightGrade(t, conditions = {}) {
+	const x = Math.max(0, Math.min(1, t)), noon = Math.exp(-Math.pow((x - .5) / .16, 2));
+	const storm = Math.max(0, Math.min(1, conditions.storm ?? 0)), warmth = (1 - .38 * noon) * (conditions.winter ? .45 : 1) * (1 - .75 * storm), edge = Math.min(1, Math.min(x, 1 - x) / .08);
+	const lerp = (a, b, k) => {
+		const A = hexToRgb(a), B = hexToRgb(b);
+		return "#" + A.map((v, i) => Math.round((v + (B[i] - v) * k) * 255).toString(16).padStart(2, "0")).join("");
+	};
+	return {
+		warmth,
+		sun: lerp("#fff6ea", "#ffd49a", warmth),
+		hemiSky: lerp("#fff3e2", "#ffdcae", warmth),
+		sunIntensity: CARVED_LIGHT_RIG.sunIntensity * (.55 + .45 * edge) * (.9 + .1 * noon) * (1 - .6 * storm),
+		hemiIntensity: CARVED_LIGHT_RIG.hemiIntensity * (.75 + .25 * edge)
+	};
 }
 /** Pure triangle-soup builder for Option H carved buildings. No three.js
 * import: emits Float32Arrays (positions, flat normals, metric grain UVs,
@@ -13056,6 +13115,31 @@ var CarvedBuildingLayer = class {
 		this.keys.clear();
 	}
 };
+GRAPHICS_RULES.defaultRenderStyle;
+/** Query aliases accepted for review links. */
+function parseRenderStyle(value) {
+	const v = (value ?? "").trim();
+	if (isRenderStyle(v)) return v;
+	const l = v.toLowerCase();
+	if (l === "h" || l === "carved" || l === "option-h" || l === "optionh") return "optionH";
+	if (l === "current" || l === "classic" || l === "default") return "current";
+	return null;
+}
+function currentRenderStyle() {
+	let search = "";
+	try {
+		search = typeof location === "undefined" ? "" : location.search;
+	} catch {
+		search = "";
+	}
+	return parseRenderStyle((() => {
+		try {
+			return new URLSearchParams(search).get("render");
+		} catch {
+			return null;
+		}
+	})()) ?? loadRenderStyle();
+}
 var CROP_ART_RULES = {
 	maxPlantInstances: 8192,
 	maximumPlantsPerField: 512,
@@ -15757,6 +15841,29 @@ function haulageGeo(kind) {
 	}
 	return merge(parts);
 }
+/** One shared wooden ard draw, in the pack horse's local frame (+Z forward).
+* The share and handles trail behind its hind legs; traces run along its sides. */
+function woodenArdGeo() {
+	const parts = [
+		box(.1, .13, 1.45, 0, .34, -1.4),
+		box(.15, .34, .24, 0, .05, -1.91),
+		box(.24, .07, .48, 0, .02, -2.04),
+		box(1.02, .1, .13, 0, 1.06, .19)
+	];
+	for (const side of [-1, 1]) {
+		parts.push(box(.045, .045, 1.68, side * .43, .75, -.61));
+		const handle = new BoxGeometry(.07, .8, .07);
+		handle.rotateX(-.58);
+		handle.translate(side * .21, .68, -2.08);
+		parts.push(handle);
+		parts.push(box(.3, .06, .1, side * .21, .98, -2.31));
+	}
+	parts.push(box(.88, .1, .12, 0, .36, -1.39));
+	const geo = merge(parts);
+	geo.computeBoundingBox();
+	geo.computeBoundingSphere();
+	return geo;
+}
 /** Fits the worker's existing wooden handle, avoiding a second overlapping tool. */
 function farmToolHeadGeo() {
 	const blade = box(.15, .09, .38, .49, 1.04, .34);
@@ -15914,6 +16021,68 @@ function horseGeo(pack = false) {
 	if (pack) {
 		for (const side of [-1, 1]) add(box(.62, .42, .23, -.04, .94, side * .38), "#746244");
 		add(box(.46, .07, .68, -.04, 1.34, 0), "#44382c");
+	}
+	const geo = merge(parts);
+	if (pack) geo.rotateY(-Math.PI / 2);
+	geo.computeBoundingBox();
+	geo.computeBoundingSphere();
+	return geo;
+}
+/** Sturdy horned cattle, distinct from long-necked horses. One merged draw.
+* Fauna faces +X; working cattle faces +Z towards the actual handler. */
+function cattleGeo(pack = false) {
+	const parts = [];
+	const add = (geo, color) => {
+		const c = new Color(color), colors = new Float32Array(geo.getAttribute("position").count * 3);
+		for (let i = 0; i < colors.length; i += 3) c.toArray(colors, i);
+		geo.setAttribute("color", new BufferAttribute(colors, 3));
+		parts.push(geo);
+	};
+	const coat = "#78604a", dark = "#40372e", horn = "#c6b9a0";
+	const body = new CapsuleGeometry(.39, .8, 3, 7);
+	body.rotateZ(Math.PI / 2);
+	body.scale(1, 1.03, .92);
+	body.translate(0, .99, 0);
+	add(body, coat);
+	add(box(.37, .44, .48, .43, .78, 0), coat);
+	const head = new SphereGeometry(.25, 7, 5);
+	head.scale(1.15, 1.17, .82);
+	head.translate(.73, 1.05, 0);
+	add(head, coat);
+	const muzzle = new SphereGeometry(.21, 6, 4);
+	muzzle.scale(1.05, .7, 1.06);
+	muzzle.translate(.93, .93, 0);
+	add(muzzle, dark);
+	for (const side of [-1, 1]) {
+		for (const x of [-.46, .45]) {
+			add(cyl(.085, .07, .72, x, .1, side * .24, 5), coat);
+			add(box(.17, .13, .18, x, 0, side * .24), dark);
+		}
+		const ear = new SphereGeometry(.13, 5, 3);
+		ear.scale(.75, .45, 1);
+		ear.translate(.65, 1.22, side * .28);
+		add(ear, coat);
+		const cattleHorn = new ConeGeometry(.055, .31, 5);
+		cattleHorn.rotateX(side * .75);
+		cattleHorn.translate(.65, 1.42, side * .27);
+		add(cattleHorn, horn);
+		const eye = new SphereGeometry(.028, 4, 3);
+		eye.translate(.84, 1.16, side * .19);
+		add(eye, dark);
+	}
+	const udder = new SphereGeometry(.15, 6, 4);
+	udder.scale(1.15, .75, 1);
+	udder.translate(-.34, .57, 0);
+	add(udder, "#a18b78");
+	for (const side of [-1, 1]) add(cyl(.022, .024, .09, -.34, .4, side * .07, 4), "#a18b78");
+	add(cyl(.035, .035, .71, -.76, .25, 0, 5), coat);
+	const tuft = new SphereGeometry(.085, 5, 3);
+	tuft.scale(.75, 1.6, .75);
+	tuft.translate(-.76, .25, 0);
+	add(tuft, dark);
+	if (pack) {
+		for (const side of [-1, 1]) add(box(.64, .4, .23, -.04, .99, side * .43), "#6e6045");
+		add(box(.48, .07, .78, -.04, 1.39, 0), dark);
 	}
 	const geo = merge(parts);
 	if (pack) geo.rotateY(-Math.PI / 2);
@@ -16223,7 +16392,7 @@ var WorldView = class {
 	/** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
 	* finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
 	* buildings always keep the current renderer so footprints, collision and terrain stay exact. */
-	renderStyle = "current";
+	renderStyle = currentRenderStyle() === "optionH" ? "carved" : "current";
 	carvedLayer = null;
 	carvedOwners = /* @__PURE__ */ new Map();
 	setRenderStyle(style) {
@@ -16244,6 +16413,11 @@ var WorldView = class {
 	cargoMeshes = /* @__PURE__ */ new Map();
 	haulageMeshes = /* @__PURE__ */ new Map();
 	packHorses = null;
+	packCattle = null;
+	packCattleOwners = [];
+	domesticCattleOwners = [];
+	woodenArds = null;
+	woodenArdOwners = [];
 	packHorseOwners = [];
 	domesticHorseOwners = [];
 	canoePaddles = null;
@@ -16289,6 +16463,8 @@ var WorldView = class {
 	boars = null;
 	wildGoats = null;
 	wildHorses = null;
+	wildCattle = null;
+	domesticCattle = null;
 	domesticHorses = null;
 	wildSheep = null;
 	domesticSheep = null;
@@ -17101,6 +17277,13 @@ var WorldView = class {
 		this.farmToolMesh.count = 0;
 		this.farmToolMesh.frustumCulled = false;
 		this.scene.add(this.farmToolMesh);
+		this.woodenArds = new InstancedMesh(woodenArdGeo(), this.mats.timber, 32);
+		this.woodenArds.instanceMatrix.setUsage(DynamicDrawUsage);
+		this.woodenArds.count = 0;
+		this.woodenArds.frustumCulled = false;
+		this.woodenArds.castShadow = this.quality !== "low";
+		this.woodenArds.receiveShadow = true;
+		this.scene.add(this.woodenArds);
 	}
 	buildHearths(game) {
 		const halls = game.state.buildings.filter((b) => b.type === "townhall" && b.hp > 0);
@@ -17161,6 +17344,13 @@ var WorldView = class {
 		this.wildHorses = mkHerd(horseGeo(), horseMat, 32);
 		this.domesticHorses = mkHerd(horseGeo(), horseMat, 32);
 		this.packHorses = mkHerd(horseGeo(true), horseMat, 32);
+		const cattleMat = new MeshLambertMaterial({
+			color: 16777215,
+			vertexColors: true
+		});
+		this.wildCattle = mkHerd(cattleGeo(), cattleMat, 24);
+		this.domesticCattle = mkHerd(cattleGeo(), cattleMat, 24);
+		this.packCattle = mkHerd(cattleGeo(true), cattleMat, 24);
 		this.birds = mkHerd(birdGeo(), birdMat, 16);
 	}
 	updateCamera(dt) {
@@ -17242,6 +17432,18 @@ var WorldView = class {
 		if (this.packHorses) {
 			this.packHorses.computeBoundingSphere();
 			sources.set(this.packHorses, this.packHorseOwners);
+		}
+		if (this.domesticCattle) {
+			this.domesticCattle.computeBoundingSphere();
+			sources.set(this.domesticCattle, this.domesticCattleOwners);
+		}
+		if (this.packCattle) {
+			this.packCattle.computeBoundingSphere();
+			sources.set(this.packCattle, this.packCattleOwners);
+		}
+		if (this.woodenArds) {
+			this.woodenArds.computeBoundingSphere();
+			sources.set(this.woodenArds, this.woodenArdOwners);
 		}
 		for (const [type, mesh] of this.unitMeshes) {
 			mesh.computeBoundingSphere();
@@ -17439,7 +17641,8 @@ var WorldView = class {
 		const hour = game.dayPhase() * 24;
 		const { sunrise: rise, sunset: set } = game.daylight();
 		const t = (hour - rise) / (set - rise);
-		const elev = Math.sin(Math.max(0, Math.min(1, t)) * Math.PI);
+		const day = Math.max(0, Math.min(1, t));
+		const elev = Math.sin(day * Math.PI);
 		const dawn = Math.max(0, 1 - Math.abs(hour - (rise + .35)) * .55);
 		const dusk = Math.max(0, 1 - Math.abs(hour - (set - .35)) * .5);
 		const night = game.isNight();
@@ -17466,12 +17669,25 @@ var WorldView = class {
 		const hemiI = night ? .7 : (.52 + elev * .32) * (wx === "storm" ? .75 : 1) * (1 - sn.winter * .08);
 		const sunCol = new Color(sn.snow > .55 || wx === "frost" ? "#e8eef8" : wx === "storm" || wx === "flood" ? "#9aa8bc" : wx === "drought" || sn.autumn > .5 ? "#f0d8a8" : dawn > .2 || dusk > .25 || wx === "golden" || sn.autumn > .25 ? "#ffd0a1" : night ? "#c8d4ee" : "#fff4d2");
 		sunCol.lerp(_c.set("#ffe0aa"), art.warmth * .75);
+		let hGrade = null;
+		if (this.renderStyle === "carved" && !night) {
+			const gr = hGrade = carvedDaylightGrade(day, {
+				winter: sn.snow > .4 || wx === "frost",
+				storm: wx === "storm" ? 1 : wet ? .5 : 0
+			});
+			sunCol.lerp(_c.set(gr.sun), .55);
+		}
 		this.hemi.color.set(night ? "#c4d0e8" : sn.snow > .4 || wx === "frost" ? "#d8e4f0" : sn.autumn > .4 ? "#f0d4b0" : "#dcebf8");
 		const fog = new Color().setStyle(night ? "#6a7890" : sn.snow > .5 ? "#c8d4e0" : wx === "storm" ? "#6a7380" : wx === "flood" ? "#5e7a78" : wx === "drought" ? "#c4b090" : wx === "rain" ? "#8aa0a8" : wx === "mist" ? "#c8c4b4" : wx === "frost" ? "#d4dce8" : sn.autumn > .45 ? "#c4a878" : dawn > .25 ? "#e4c8a0" : dusk > .3 || wx === "golden" ? "#e0b888" : sn.spring > .4 ? "#d8e7e6" : "#dce7ed");
 		fog.lerp(_c.set("#ead9bb"), art.warmth * .16);
-		if (!night && !wet && wx !== "mist" && wx !== "drought") {
+		const clearDay = !night && !wet && wx !== "mist" && wx !== "drought";
+		if (clearDay) {
 			fog.lerp(_c.set(ATMOSPHERE_RULES.coolDistance), ATMOSPHERE_RULES.distanceMix);
 			this.hemi.color.lerp(_c.set(ATMOSPHERE_RULES.coolSky), ATMOSPHERE_RULES.skyMix);
+		}
+		if (hGrade && clearDay) {
+			this.hemi.color.lerp(_c.set(hGrade.hemiSky), .3 * hGrade.warmth);
+			fog.lerp(_c.set(hGrade.sun), .12 * hGrade.warmth);
 		}
 		this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
 		const dens = atmosphericDensity(wx, night, sn.snow);
@@ -17533,6 +17749,7 @@ var WorldView = class {
 		stamp("wildGoats", "goat");
 		stamp("wildSheep", "sheep");
 		stamp("wildHorses", "horse");
+		stamp("wildCattle", "cattle");
 		stamp("birds", "bird");
 		this.domesticHorseOwners = [];
 		if (this.domesticHorses) {
@@ -17548,6 +17765,24 @@ var WorldView = class {
 				_m.compose(_p, _q, _s);
 				mesh.setMatrixAt(i, _m);
 				this.domesticHorseOwners.push(game.state.buildings.find((b) => b.id === a.pen));
+			}
+			mesh.count = animals.length;
+			mesh.instanceMatrix.needsUpdate = true;
+		}
+		this.domesticCattleOwners = [];
+		if (this.domesticCattle) {
+			const animals = (game.state.livestock || []).filter((a) => a.hp > 0 && a.species === "cattle" && (a.team === 0 || game.visibleAt(a.x, a.z)));
+			const mesh = ensureInstanceCapacity(this.scene, this.domesticCattle, animals.length);
+			this.domesticCattle = mesh;
+			for (let i = 0; i < animals.length; i++) {
+				const a = animals[i];
+				_p.set(a.x, a.y, a.z);
+				_e.set(0, a.facing, 0);
+				_q.setFromEuler(_e);
+				_s.setScalar(a.scale);
+				_m.compose(_p, _q, _s);
+				mesh.setMatrixAt(i, _m);
+				this.domesticCattleOwners.push(game.state.buildings.find((b) => b.id === a.pen));
 			}
 			mesh.count = animals.length;
 			mesh.instanceMatrix.needsUpdate = true;
@@ -17998,8 +18233,12 @@ var WorldView = class {
 			pack: 0
 		};
 		let paddles = 0;
-		let horses = 0;
+		let horses = 0, cattle = 0, ards = 0;
 		this.packHorseOwners = [];
+		this.packCattleOwners = [];
+		this.woodenArdOwners = [];
+		const spring = calendar(game).phase === 0;
+		const ploughing = (u) => spring && u.farmTool === "woodenArd" && farmToolRate(u, 0) > 1 && u.order === "gather" && u.node && "type" in u.node && u.node.type === "farm" && draftTractionReady(u);
 		const visible = game.state.units.filter((u) => u.hp > 0 && !u.shelterId && (u.team === 0 || game.visibleAt(u.x, u.z)));
 		const neededCargo = {
 			food: 0,
@@ -18015,7 +18254,7 @@ var WorldView = class {
 		};
 		for (const u of visible) {
 			const kind = u.boat || u.haulage === "pack" && (!u.packAnimal || u.packAnimal.hp <= 0) ? void 0 : u.haulage === "canoe" ? "canoe" : u.type === "worker" && !u.militia || u.caravanArmed ? u.haulage : void 0;
-			if (kind && !(kind === "pack" && u.packAnimal?.species === "horse")) neededVehicles[kind]++;
+			if (kind && !(kind === "pack" && (u.packAnimal?.species === "horse" || u.packAnimal?.species === "cattle"))) neededVehicles[kind]++;
 			const cargo = u.plantingWork ? "food" : u.carryType;
 			if (cargo && (u.plantingWork || u.carry > 0)) neededCargo[cargo]++;
 		}
@@ -18023,14 +18262,17 @@ var WorldView = class {
 			for (const kind of Object.keys(CARGO_COLORS)) if ((b.raidLoot[kind] || 0) > 0) neededCargo[kind]++;
 		}
 		if (this.packHorses) this.packHorses = ensureInstanceCapacity(this.scene, this.packHorses, visible.filter((u) => !u.boat && u.haulage === "pack" && u.packAnimal?.species === "horse" && u.packAnimal.hp > 0 && (u.type === "worker" && !u.militia || u.caravanArmed)).length);
+		if (this.packCattle) this.packCattle = ensureInstanceCapacity(this.scene, this.packCattle, visible.filter((u) => !u.boat && u.haulage === "pack" && u.packAnimal?.species === "cattle" && u.packAnimal.hp > 0 && (u.type === "worker" && !u.militia || u.caravanArmed)).length);
+		if (this.woodenArds) this.woodenArds = ensureInstanceCapacity(this.scene, this.woodenArds, visible.filter((u) => !u.boat && ploughing(u)).length);
 		for (const [kind, mesh] of this.cargoMeshes) this.cargoMeshes.set(kind, ensureInstanceCapacity(this.scene, mesh, neededCargo[kind]));
 		for (const [kind, mesh] of this.haulageMeshes) this.haulageMeshes.set(kind, ensureInstanceCapacity(this.scene, mesh, neededVehicles[kind]));
 		if (this.canoePaddles) this.canoePaddles = ensureInstanceCapacity(this.scene, this.canoePaddles, neededVehicles.canoe);
 		for (const u of visible) {
 			const kind = u.boat || u.haulage === "pack" && (!u.packAnimal || u.packAnimal.hp <= 0) ? void 0 : u.haulage === "canoe" ? "canoe" : u.type === "worker" && !u.militia || u.caravanArmed ? u.haulage : void 0;
 			const horse = kind === "pack" && u.packAnimal?.species === "horse";
-			const vehicle = horse ? this.packHorses : kind && this.haulageMeshes.get(kind);
-			const index = horse ? horses : kind ? vehicles[kind] : 0;
+			const bovine = kind === "pack" && u.packAnimal?.species === "cattle";
+			const vehicle = horse ? this.packHorses : bovine ? this.packCattle : kind && this.haulageMeshes.get(kind);
+			const index = horse ? horses : bovine ? cattle : kind ? vehicles[kind] : 0;
 			const mounted = !!vehicle && index < instCap(vehicle);
 			if (mounted) {
 				const dx = Math.sin(u.facing), dz = Math.cos(u.facing), offset = kind === "canoe" ? 0 : 2.1, x = u.x - dx * offset, z = u.z - dz * offset;
@@ -18049,9 +18291,18 @@ var WorldView = class {
 				_s.set(1, 1, 1);
 				_haulMatrix.compose(_p, _q, _s);
 				vehicle.setMatrixAt(index, _haulMatrix);
-				if (horse) {
-					horses++;
-					this.packHorseOwners.push(u);
+				if (horse || bovine) {
+					if (horse) {
+						horses++;
+						this.packHorseOwners.push(u);
+					} else {
+						cattle++;
+						this.packCattleOwners.push(u);
+					}
+					if (this.woodenArds && ploughing(u)) {
+						this.woodenArds.setMatrixAt(ards++, _haulMatrix);
+						this.woodenArdOwners.push(u);
+					}
 				} else vehicles[kind]++;
 				if (kind === "canoe" && this.canoePaddles && paddles < instCap(this.canoePaddles)) {
 					const stroke = afloat && Math.hypot(u.vx, u.vz) > .1 ? Math.sin(game.state.time * 4 + u.id * .7) : 0;
@@ -18070,7 +18321,7 @@ var WorldView = class {
 			if (!mesh || i >= instCap(mesh)) continue;
 			if (mounted && !u.plantingWork) {
 				const height = .35 + Math.min(1, carried / carryingCapacity(u, carryType)) * .55;
-				_p.set(0, (kind === "cart" ? .7 : kind === "pack" ? horse ? 1.4 : 1.05 : .34) + height * .5, kind === "canoe" ? -.85 : 0).applyMatrix4(_haulMatrix);
+				_p.set(0, (kind === "cart" ? .7 : kind === "pack" ? horse ? 1.4 : bovine ? 1.46 : 1.05 : .34) + height * .5, kind === "canoe" ? -.85 : 0).applyMatrix4(_haulMatrix);
 				_s.set(1.25, height / .55, 1.65);
 				_m.compose(_p, _q, _s);
 			} else {
@@ -18109,6 +18360,14 @@ var WorldView = class {
 			mesh.count = counts[kind];
 			mesh.instanceMatrix.needsUpdate = true;
 			if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+		}
+		if (this.woodenArds) {
+			this.woodenArds.count = ards;
+			this.woodenArds.instanceMatrix.needsUpdate = true;
+		}
+		if (this.packCattle) {
+			this.packCattle.count = cattle;
+			this.packCattle.instanceMatrix.needsUpdate = true;
 		}
 		if (this.packHorses) {
 			this.packHorses.count = horses;
@@ -18160,7 +18419,7 @@ var WorldView = class {
 		let feedback = 0, toolCount = 0;
 		for (const u of game.state.units) if (u.hp > 0 && !u.shelterId && (u.team === 0 || game.visibleAt(u.x, u.z))) {
 			if (unitFeedbackVisible(u, this.hoveredUnitId, this.unitRingsEnabled)) feedback++;
-			if (u.type === "worker" && !u.militia && u.farmTool) toolCount++;
+			if (u.type === "worker" && !u.militia && u.farmTool && u.farmTool !== "woodenArd") toolCount++;
 		}
 		const selectedBoat = game.state.boats?.find((b) => b.id === game.selectedBoat && b.hp > 0 && b.team === 0);
 		this.rings = ensureInstanceCapacity(this.scene, this.rings, feedback + (game.state.selBld && game.state.selBld.hp > 0 ? 1 : 0) + (selectedBoat ? 1 : 0));
@@ -18206,7 +18465,7 @@ var WorldView = class {
 				this.waterVessels?.write(game, u, _m);
 				this.baskets?.write(game, u, _m);
 				const tool = u.farmTool;
-				if (tool && u.type === "worker" && !u.militia && this.farmToolMesh && tools < instCap(this.farmToolMesh)) {
+				if (tool && tool !== "woodenArd" && u.type === "worker" && !u.militia && this.farmToolMesh && tools < instCap(this.farmToolMesh)) {
 					this.farmToolMesh.setMatrixAt(tools, _m);
 					_c.set(FARM_TOOL_COLORS[tool]);
 					this.farmToolMesh.setColorAt(tools, _c);
@@ -19046,6 +19305,10 @@ var WorldView = class {
 		this.wildlifeOwners.clear();
 		this.packHorseOwners = [];
 		this.domesticHorseOwners = [];
+		this.packCattleOwners = [];
+		this.domesticCattleOwners = [];
+		this.woodenArdOwners = [];
+		if (!this.lost) this.woodenArds?.dispose();
 		if (!this.lost) {
 			for (const mesh of [
 				this.wildHorses,
@@ -19053,6 +19316,14 @@ var WorldView = class {
 				this.packHorses
 			]) mesh?.dispose();
 			if (this.wildHorses) this.wildHorses.material.dispose();
+		}
+		if (!this.lost) {
+			for (const mesh of [
+				this.wildCattle,
+				this.domesticCattle,
+				this.packCattle
+			]) mesh?.dispose();
+			if (this.wildCattle) this.wildCattle.material.dispose();
 		}
 		if (this.wildSheep && !this.lost) this.wildSheep.material.dispose();
 		this.terrainSurface?.dispose();
@@ -19105,6 +19376,10 @@ var WorldView = class {
 		this.wildHorses = null;
 		this.domesticHorses = null;
 		this.packHorses = null;
+		this.woodenArds = null;
+		this.wildCattle = null;
+		this.domesticCattle = null;
+		this.packCattle = null;
 		if (this.linePreview) {
 			this.linePreview.material.dispose();
 			this.linePreview = null;
@@ -20691,6 +20966,11 @@ var Engine = class {
 	toggleMute() {
 		this.game.muted = !this.game.muted;
 		this.audio.setMuted(this.game.muted);
+	}
+	setRenderStyle(style) {
+		if (style !== "current" && style !== "optionH") return;
+		this.view.setRenderStyle(style === "optionH" ? "carved" : "current");
+		rememberRenderStyle(style);
 	}
 	setQuality(q) {
 		if (this.workerHost) this.workerHost.projection.setDisplaySettings(q, this.fps);
