@@ -29,11 +29,13 @@ import {ensureInstanceCapacity} from './instanceCapacity';
 import {ExcavationLayer} from './excavationLayer';
 import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
-import {wildPlantsEnabled} from '../game/ecology';
+import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade} from './carvedPalette';
+import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
+import {provinceAt} from '../game/ecologicalProvinces';
 import {CARVED_TYPES} from './buildingStyleMap';
 import {fabricContext} from '@/game/buildingFabric';
 import {hearthHeating} from '@/game/survivalNeeds';
@@ -1832,7 +1834,7 @@ export class WorldView {
           const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
           const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
           carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+            settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
             ...(skin?{skin,...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
           continue;
         }
