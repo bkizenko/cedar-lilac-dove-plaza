@@ -1,3 +1,4 @@
+import {annotateKnowledge,type KnowledgeState,type KnowledgeProvenance} from './knowledgeEvidence';
 import {housingKnowledgeTopic,runHousingKnowledgeAction} from './housingKnowledge';
 import{inheritedKnowledgeProofs,inheritedHaulageEvidence}from'./inheritedKnowledge';
 import{boatKnowledgeTopics,runBoatKnowledgeAction}from'./boatKnowledge';
@@ -18,7 +19,7 @@ import {supplyAccounting} from './simulationEvents';
 export const KNOWLEDGE_RULES={version:1,cropSampleUnits:4,cropTrialFoodReserveSeconds:60,lowFoodReserveSeconds:600} as const;
 export type KnowledgeStage='need'|'observation'|'experiment'|'proven'|'adoption';
 export type KnowledgeAction={id:string;label:string;blockedReason:string|null};
-export type KnowledgeTopic={id:string;title:string;need:string;stage:KnowledgeStage;observation:string;experiment:string;result:string;adoption:string;progress?:{completed:number;required:number;unit:string};metrics:Record<string,number>;actions:KnowledgeAction[];limitation?:string};
+export type KnowledgeTopic={id:string;title:string;need:string;stage:KnowledgeStage;knowledgeState?:KnowledgeState;provenance?:KnowledgeProvenance[];observation:string;experiment:string;result:string;adoption:string;progress?:{completed:number;required:number;unit:string};metrics:Record<string,number>;actions:KnowledgeAction[];limitation?:string};
 export type KnowledgeActionResult={accepted:boolean;reason:string;placement?:BldType};
 type PracticalProposal={reason:string|null;u?:Unit;site?:Building;resume?:boolean};
 /** Reports reflect only real saved evidence/current work. Reading grants nothing. */
@@ -96,7 +97,7 @@ export function knowledgeReport(g:Game):{topics:KnowledgeTopic[];foodReserveSeco
  topics.push(housingKnowledgeTopic(g));
  topics.push(...boatKnowledgeTopics(g),...fibreKnowledgeTopics(g),...productionKnowledgeTopics(g));
  if(g.state.ended)for(const topic of topics)for(const a of topic.actions)a.blockedReason='The chapter has ended';
- return {topics,foodReserveSeconds:reserve,limitations:['No generic science queue or research-point spending.','Working makers can teach exact demonstrated production methods; wider exchange and institutions remain future work.']};
+ return {topics:annotateKnowledge(g,topics),foodReserveSeconds:reserve,limitations:['No generic science queue or research-point spending.','Working makers can teach exact demonstrated production methods; wider exchange and institutions remain future work.']};
 }
 export function runKnowledgeAction(g:Game,id:string):KnowledgeActionResult{
  if(g.state.ended)return {accepted:false,reason:'The chapter has ended'};
