@@ -365,3 +365,9 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Grok `f57e5bc`: `src/game/sim.ts`, `src/game/persistence.ts`, `src/scene/world.ts` — flow fields on for new games only (loaded saves stay on historic A*); sea mesh y = `waterY + (seaTideY ?? 0)`.
 
 - Grok `1a2ed5d`: `src/game/sim.ts` — `scenicStartReport` chooses the new-game town-hall camp (enterIsland / enterAsBand); riverboats apply `driftAt` in `syncRiverboats`.
+
+- Grok `6b63db5`: `src/game/influenceField.ts`, `src/game/sim.ts` — `geographicInfluenceAt` returns 0 (not NaN) when the field is unready; `flushGeographicInfluence` for tests/sync readers (vision paint stays sliced); `tickInfluence` cools grievances while fields compute so tension does not freeze.
+
+- Grok `b89a5bb`: `src/scene/world.ts`, `src/scene/buildingStyleMap.ts`, `src/scene/buildingHelpers.ts`, `src/scene/buildingFamiliesExtra.ts` — water-works types (well, cistern, watermill, windmill, aqueduct, canal) added to `BLD_TYPES` / `CARVED_TYPES` with footprint-true families (live watermill uses `millHouse`).
+
+- Grok `c4a2fa1`: `scripts/boat-selection.test.mjs`, `scripts/carrier-recovery.test.mjs` — grain-station preview observes `placementIssue`; farm slope test fills vision so site survey can run. Integration merged at `b1a7e5d`.
