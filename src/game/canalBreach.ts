@@ -44,15 +44,20 @@ export function withBreachPermit<T>(g:Game,team:number,s:CanalStage,fn:()=>T):T{
 /** Consulted by trench placement before refusing a footprint at the water's edge:
  * true only inside `withBreachPermit` for that exact stage (a ready breach dig). */
 export function breachPlacementPermit(g:Game,x:number,z:number,team:number){return !!transient&&transient.g===g&&transient.team===team&&same(transient,{x,z});}
-/** Consulted by `excavationIssue` before refusing a dig that would reach water. */
+/** Consulted by `excavationIssue` before refusing a dig that would reach water.
+ * True only inside `withBreachPermit` for that exact stage. The sim's ordinary
+ * `commitExcavation` (one trench at a time as a worker finishes) must not open
+ * the water; `continueCanalWorks` wraps the all-or-nothing apply in this permit. */
 export function canalBreachPermit(g:Game,b:B,depth:number):boolean{
- if(transient&&transient.g===g&&transient.team===b.team&&same(transient,b)&&transient.depth===depth)return true;
- const mark=b.canalWork;if(!mark||mark.role!=='breach')return false;
- const w=canalWorks(g).find(c=>c.id===mark.id&&c.team===b.team);if(!w)return false;
- const i=w.breach.findIndex(k=>same(k,b));if(i<0||w.breach[i].depth!==depth)return false;
- // the breach: only once every canal dig's labour is done, applied in stage order
- const p=canalPhase(g,w);if(!p.breachLabourDone)return false;const cut=dug(g);
- return w.breach.slice(0,i).every(s=>canalStageDug(g,w,s,cut));
+ return !!transient&&transient.g===g&&transient.team===b.team&&same(transient,b)&&transient.depth===depth;
+}
+/** Ordinary `commitExcavation` (one trench at a time) must not apply a canal
+ * breach dig. Some breach stages can pass the water-clearance check on their
+ * own; they still wait for `continueCanalWorks` so the water comes in once. */
+export function canalBreachCommitAllowed(g:Game,b:{team:number;x:number;z:number;canalWork?:{role?:string};excavationDepth?:number}){
+ if(!b.canalWork||b.canalWork.role!=='breach')return true;
+ const depth=b.excavationDepth;if(depth===undefined)return false;
+ return !!transient&&transient.g===g&&transient.team===b.team&&same(transient,b)&&transient.depth===depth;
 }
 /** Save validator for `state.canalWorks` and building `canalWork` marks (for Codex's persistence). */
 export function validCanalWorks(state:{canalWorks?:unknown;buildings:unknown[]},size:number){

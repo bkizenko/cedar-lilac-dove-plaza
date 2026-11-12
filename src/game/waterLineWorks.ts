@@ -175,8 +175,16 @@ export function continueCanalWorks(g:Game,canalId:number){
  if(p.phase==='complete')return[];
  const ids=layBatch(g,w.team,all,w.breach,s=>breachStageReady(g,w,s)?breachIssue(g,s,w.team):'not ready',s=>withBreachPermit(g,w.team,s,()=>g.placeBuilding('trench',s.x,s.z,w.team)),mark('breach'),true);
  // a fully laboured dig waits at build 1−1e−6 (the sim's "paid, ground not yet changed"); its labour is complete
- if(canalPhase(g,w).breachLabourDone)for(const s of w.breach){const b=digAt(g,w.team,s);if(!b)break;if(excavationCuts(g).some(c=>c.buildingId===b.id))continue;const before=b.build;b.build=1;if(!commitExcavation(g,b)){b.build=before;break;}}
+ if(canalPhase(g,w).breachLabourDone)applyBreachTogether(g,w);
  return ids;}
+/** Apply every laboured breach dig together, or apply none. The sim cannot open
+ * the water on its own: `canalBreachPermit` is only true inside this wrap. */
+function applyBreachTogether(g:Game,w:CanalWork){
+ const pending:Dig[]=[];for(const s of w.breach){const b=digAt(g,w.team,s);if(!b)return;if(excavationCuts(g).some(c=>c.buildingId===b.id))continue;if(withBreachPermit(g,w.team,s,()=>excavationIssue(g,b,s.depth)))return;pending.push(b);}
+ if(!pending.length)return;const records=g.state as Game['state']&{excavations?:{buildingId:number}[]};const beforeCuts=records.excavations?.slice()??[];const builds=pending.map(b=>b.build);
+ for(let i=0;i<pending.length;i++){const b=pending[i],s=w.breach.find(k=>Math.abs(k.x-b.x)<.01&&Math.abs(k.z-b.z)<.01)!;b.build=1;if(withBreachPermit(g,w.team,s,()=>commitExcavation(g,b)))continue;
+  for(let j=0;j<pending.length;j++)pending[j].build=builds[j];if(beforeCuts.length)records.excavations=beforeCuts;else delete records.excavations;g.state.walkDirty=true;g.workBoard.reset();return;}
+}
 export function canalWorksProgress(g:Game,canalId:number){
  const w=canalWorks(g).find(c=>c.id===canalId);if(!w)return null;const cut=new Set(excavationCuts(g).map(c=>c.buildingId)),all=[...w.channel,...w.breach],digs=all.map(s=>digAt(g,w.team,s)).filter(Boolean) as Dig[];
  let paid=0,need=0;for(const b of digs){const x=b.excavationWorkSeconds??EXCAVATION_RULES.minimumWorkSeconds;need+=x;paid+=Math.min(1,b.build)*x;}
