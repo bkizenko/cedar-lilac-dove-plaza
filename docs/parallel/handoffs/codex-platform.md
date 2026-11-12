@@ -141,3 +141,9 @@ Explicit branch fetch corrected remote config which only fetched main; current h
 Native100 baseline: mean30.84ms,p9545.30ms (target33missed),180unprofiled actualsteps+20warm. Scenario is a declared100resident scale clone of real71resident village,29adults authored before timing on connected native positions; original file/terrain unchanged, all348livingunits and404livingstructures retained. Parallel phase-profile pass has exact state/RNG parity and identifies people23.19msmean as dominant. No render/FPS/earnedcampaign claim. Evidence: docs/metrics/sim-speed-native100-baseline-2026-11-11.json. Existing100/60authoredfixture was rejected because not every building entrance remains reachable under current code; its failure retained locally rather than waiving the guard.
 
 Seven original CHAT proposals accepted/reconciled in FULL_GAME_BACKLOG.json; laterG14/G15/G16rows retained. Every row has acceptance criteria; G9/G10recordonlyscopedlivepartial evidence. All gate credits stay unchanged34/98.
+
+## Performance publication — 2026-11-12T00:05:18.805235+00:00
+
+Live/pushed code d86d7da, release 2026-11-12T00-03-38-084Z-d86d7da both8086/8101.37/37scope (35focused+1native100matched+1built100), typecheck/build; exact1035buildinputs.15.41%mean lowerCPU with fullstate/RNGparity; Nodep9534.93/33.92stillabove33. BuiltLow24s100residents:M1Metal/headless rollingp9520.2–23.5ms (final21.9);not universalFPS/completeWorker. Metrics docs/metrics/sim-speed-native100-performance-release-2026-11-11.json. Originalsave/art/rollback retained.
+
+WorkerCORE branch work/sim-worker-2026-11-11 d13dd23:7/7actualWorker/native+typecheck. Host/readonlyprojection/31typedcommands,3UIpanels,10newtests sourceprepared; not qualified or activated. Merge currentmain normally into workerbranch toretainperf; do not rebase/forcepush. Canonicalfixedcount34/98unchanged. Externalwholebranch merges remain phase2, not replaced by partial source integration.
