@@ -363,28 +363,24 @@ test('AUD-SOC-SUCCESSION-WAR: a ruler dying mid-front or mid-exchange changes th
  void f;
 });
 
-test('neighbourNews: rival commander loss is reported only when the player saw it or took them, and replacement follows the seen fall',async()=>{
+test('neighbourNews: only witnessed losses and observed reciprocal replacements are reported',async()=>{
+ // Authored loss/lineage read-model fixture, not an earned battle or campaign.
  const {neighbourNews}=await import('../src/game/rulersRuntime.ts');
  const {enableCommanders,appointCommander,tickCommanders}=await import('../src/game/commanders.ts');
  const {encodeGame,decodeGame}=await import('../src/game/persistence.ts');
  const g=fixture();g.state.paused=false;enableCommanders(g,false);
- const mk=(team,x)=>{const u=g.state.units.find(p=>p.team===team&&p.hp>0&&p.type!=='worker'&&!g.state.units.some(q=>0))||g.state.units.find(p=>p.team===team&&p.hp>0);u.x=x;u.z=900;return u;};
- const far=mk(1,-900),near=mk(2,900);
- const a=appointCommander(g,far.id,'army',{team:1,free:true}),b=appointCommander(g,near.id,'army',{team:2,free:true});
- assert.ok(a.accepted&&b.accepted,a.reason+b.reason);
- const home=g.state.units.find(u=>u.team===0&&u.hp>0);home.x=900;home.z=900;
- for(const u of g.state.units)if(u.team===0&&u.id!==home.id){u.x=0;u.z=-900;}
- for(const bd of g.state.buildings)if(bd.team===0){bd.x=0;bd.z=-950;}
- g.state.time=50;tickCommanders(g,1.01);
- g.state.time=60;far.hp=0;near.hp=0;tickCommanders(g,1.01);
- const news=neighbourNews(g);
- assert.equal(news.filter(n=>n.kind==='commander-fell').length,1,'only the death the player could see');
- assert.equal(news[0].a,2);
- const r=g.state.commanders.roster;assert.equal(r.find(c=>c.team===1).seenByPlayer,false);
- g.state.time=70;const alt=g.state.units.find(u=>u.team===2&&u.hp>0&&u.id!==near.id);
- if(alt){alt.x=900;alt.z=900;const rep=appointCommander(g,alt.id,'army',{team:2,free:true});assert.ok(rep.accepted);}
- const rt=decodeGame(encodeGame(g));assert.deepEqual(neighbourNews(rt),neighbourNews(g),'round-trips');
- const old=fixture();assert.deepEqual(neighbourNews(old).filter(n=>n.kind.startsWith('commander')),[],'old saves with no commanders add nothing');
+ const mk=(team,x)=>{const u=g.state.units.find(p=>p.team===team&&p.hp>0&&p.type!=='worker')||g.state.units.find(p=>p.team===team&&p.hp>0);Object.assign(u,{x,z:0,y:g.height(x,0)});return u;};
+ const far=mk(1,-180),near=mk(2,180),a=appointCommander(g,far.id,'army',{team:1,free:true}),b=appointCommander(g,near.id,'army',{team:2,free:true});assert.ok(a.accepted&&b.accepted,a.reason+b.reason);
+ const home=g.state.units.find(u=>u.team===0&&u.hp>0);Object.assign(home,{x:180,z:0,y:g.height(180,0)});
+ for(const u of g.state.units)if(u.team===0&&u.id!==home.id){u.x=0;u.z=-180;}
+ for(const bd of g.state.buildings)if(bd.team===0){bd.x=0;bd.z=-200;}
+ g.state.time=50;tickCommanders(g,1.01);g.state.time=60;far.hp=0;near.hp=0;tickCommanders(g,1.01);g.updateVision(0);
+ assert.equal(neighbourNews(g).filter(n=>n.kind==='commander-fell').length,1);const roster=g.state.commanders.roster;assert.equal(roster.find(c=>c.id===a.commanderId).seenByPlayer,false);assert.equal(roster.find(c=>c.id===b.commanderId).seenByPlayer,true);
+ g.state.time=70;const alt=g.state.units.find(u=>u.team===2&&u.hp>0&&u.id!==near.id);assert.ok(alt,'test must actually exercise a replacement');Object.assign(alt,{x:-180,z:0,y:g.height(-180,0)});const rep=appointCommander(g,alt.id,'army',{team:2,free:true,replaces:b.commanderId});assert.ok(rep.accepted,rep.reason);const successor=roster.find(c=>c.id===rep.commanderId),old=roster.find(c=>c.id===b.commanderId);assert.equal(successor.replaces,old.id);assert.equal(old.replacedBy,successor.id);assert.equal(successor.seenByPlayer,undefined,'fresh appointment has never suffered a witnessed loss');g.updateVision(0);assert.equal(g.visibleAt(alt.x,alt.z),false);assert.equal(neighbourNews(g).some(n=>n.kind==='commander-replaced'),false,'known death cannot reveal a hidden private appointment');
+ Object.assign(alt,{x:home.x,z:home.z,y:home.y});g.updateVision(0);assert.equal(g.visibleAt(alt.x,alt.z),true);const before=JSON.stringify(encodeGame(g)),news=neighbourNews(g),replacement=news.filter(n=>n.kind==='commander-replaced');assert.equal(replacement.length,1);assert.match(replacement[0].text,new RegExp(successor.name));assert.match(replacement[0].text,new RegExp(old.name));assert.equal(replacement[0].time,70);assert.equal(JSON.stringify(encodeGame(g)),before,'news read never creates an observation receipt');assert.equal(neighbourNews(g,71).some(n=>n.kind==='commander-replaced'),false);
+ delete old.replacedBy;assert.equal(neighbourNews(g).some(n=>n.kind==='commander-replaced'),false,'unrelated appointment cannot masquerade as a reciprocal replacement');old.replacedBy=successor.id;
+ const unknown=g.state.units.find(u=>u.team===1&&u.hp>0&&u.id!==far.id);assert.ok(unknown);Object.assign(unknown,{x:home.x,z:home.z,y:home.y});const hiddenRep=appointCommander(g,unknown.id,'army',{team:1,free:true,replaces:a.commanderId});assert.ok(hiddenRep.accepted,hiddenRep.reason);g.updateVision(0);assert.equal(neighbourNews(g).filter(n=>n.kind==='commander-replaced').length,1,'seeing a new commander cannot reveal an unknown predecessor loss');
+ const rt=decodeGame(encodeGame(g));assert.deepEqual(neighbourNews(rt),neighbourNews(g));const oldSave=fixture();assert.deepEqual(neighbourNews(oldSave).filter(n=>n.kind.startsWith('commander')),[]);
 });
 
 test('AUD-SOC-DIPLO-FLAVOUR: voice differs by ruler traits, is deterministic and goods-free; old callers without traits get the plain voice',async()=>{
