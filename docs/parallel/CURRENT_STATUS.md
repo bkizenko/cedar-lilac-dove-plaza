@@ -2,12 +2,12 @@
 
 > Leadership: Grok is execution PM; Claude leads high-level design; Codex implements/debugs and supports integration. Latest user instruction supersedes older leadership wording; exact file claims remain until Grok reassigns.
 
-Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
+Updated 2026-11-12T04:15:34.962568+00:00. Read this before historical handoffs.
 
-- Latest LIVE release: **5ba10a1**, **2026-11-12T03-36-53-531Z-5ba10a1** verified on8086/8101. Paid rebuild/extension owner commands and compact selected-building controls; exact cache/body/site materials, shifted full-wing reservations, bounded repairable durability without healing, strict saved receipts. Capture/release clears unpaid old construction intent while retaining physical paid materials; a replacement may resume normally.
-- Batch **27/27 scoped checks (100percent)** across focused runs:17era/capture/owner-adapter/basic-housing cases,1native paid-rebuild case,7hull-recovery regressions,2actualbuilt native53 import/render/save plus Extend-click/queued-progress/strict-reload checks. tsc/buildPASS. Native rebuild56.2simseconds,41.82m physical travel,24logs+8stone,carrying reload,180HPunchanged/207maxHP,terrain/radii unchanged. No campaign/gate claim; frozen34/98(34.69percent).
-- Includes previous687e82a physical hull-loss swim/wade→shore→actual cache and C11 dimensions/preset primitives. Offshore captive rescue and Experience preset/mesh consumers remain open; fixed-era appearance rendering is Claude's consumer. Prior releases/villages retained.
-- WQ14 custody backends remain live; gear/animal trade consumer remains open/off. T6 prestige source checkpoint286be39 is prepared, UNQUALIFIED/not live. Worker parked. Grok PM/World; Claude architect/UI/visuals/diplomacy; Codex platform/economy/saves/integration/knowledge. All providers may edit any file under collision coordination.
+- Latest LIVE: **41f5870**, **2026-11-12T04-13-03-230Z-41f5870**, verified8086/8101. Compact Prestige ledger: capped explored land/quality, healthy residents, ready-food days, demonstrated practices, recent outbound trade returns, maintained civic works; known identities separate from private unknown totals, dated rival observations. Land stays unmeasured until World ownership paint is ready. Defended aims remain unavailable pending verified outcomes.
+- Batch **30/30 functional checks (100percent)** across focused/native/built scopes; tsc/buildPASS. Actual ledger shows8meters and nonzero land evidence; actual curd flow conserves food and returns the same2pots/1cloth through drainage/sanitation/reloads. No campaign/gate credit; frozen34/98(34.69percent).
+- Native100 single paired CPU comparison: p9548.87→42.10ms, means32.85→30.59ms; full saved-state/RNG parity,100player/348total units,404living structures, unchanged terrain. **Still misses33ms**, no hardware FPS/statistical speedup claim. Evidence: docs/metrics/prestige-curd-release-2026-11-12.json.
+- Previous paid upgrades/capture fixes5ba10a1 and hull recovery687e82a remain live. Offshore captive rescue, Experience fixed-era/preset consumers, gear/animal trade consumer and full current integration PR remain open. Worker parked. Next Codex: goat reserved-home-place search consistency5ac285f and whole-community construction-intent save5cf1a5c source checkpoints UNQUALIFIED/not live. Grok PM/World; Claude architect/UI/visuals/diplomacy; Codex platform/economy/saves/integration/knowledge.
 
 ## Historical pre-integration evidence (superseded where AUTOPILOT differs)
 

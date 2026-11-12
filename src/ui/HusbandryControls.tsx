@@ -2,11 +2,12 @@ import{penWaterReport,releaseHusbandryKeeper}from'../game/penWater';
 import {searchForWildGoats, visibleGoatsForPen, cancelGoatSearch, goatSearchOrderLabel} from '../game/animalOrders';
 import {penPastureReport} from '../game/penPasture';
 import type {Engine} from '../game/engine';
-import {assignHusbandry,beginHerdTaming,HERD,penAnimals} from '../game/husbandry';
+import {assignHusbandry,beginHerdTaming,HERD,penAnimals,penPlacesOccupied} from '../game/husbandry';
 import {calendar} from '../game/settlement';
 import {animalProcessingEnabled} from '../game/production';
 export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const g=engine.game,animals=penAnimals(g,pen),b=g.state.buildings.find(b=>b.id===pen);
+ const away=Math.max(0,penPlacesOccupied(g,pen)-animals.length);
  const water=b?penWaterReport(g,b):null;
  const report=b?penPastureReport(g,b):null,capacity=report?.eligibleCapacity??0;
  const female=animals.filter(a=>a.sex==='female').length,kids=animals.filter(a=>g.state.time-a.born<HERD.maturity).length;
@@ -21,7 +22,7 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const paused=g.state.units.some(u=>u.hp>0&&u.tamingWork?.pen===pen&&u.tamingWork.paused);
  const run=(fn:()=>unknown)=>{fn();engine.pushHud();};
  return <div className="craft-group"><div className="craft-options">
-  <strong>{animals.length}/{capacity} animals · {animals.filter(a=>a.species==='goat').length} goats · {animals.filter(a=>a.species==='sheep').length} sheep{taming?` · ${taming} coming home`:''}</strong>
+  <strong>{animals.length}/{capacity} animals · {animals.filter(a=>a.species==='goat').length} goats · {animals.filter(a=>a.species==='sheep').length} sheep{taming?` · ${taming} coming home`:''}{away?` · ${away} away (places reserved)`:''}</strong>
   <p>{female} female · {animals.length-female} male · {kids} kids</p>
   <p>Usable pasture {Math.round(report?.usableAreaSquareMeters||0)} m² · Grass {Math.round((b?.pasture?.condition??1)*100)}%</p>
   <p>Stored plant feed {(b?.pasture?.feed||0).toFixed(1)} / {Math.round(report?.feedCapacity||0)} · {report?.storedFeedSeconds===Infinity?'no demand':`${Math.floor((report?.storedFeedSeconds||0)/60)} min at current herd size`}</p>

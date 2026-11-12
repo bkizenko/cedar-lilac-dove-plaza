@@ -95,7 +95,7 @@ L3. Isolated engine evaluation (INC-ENGINE-EVAL). No wholesale migration.
 L4. 1700s / firearms / mounted armies / chariots — retained, not first-release critical path (GOV-ENGINE-LATER-AGES).
 L5. GOLD-SILVER-EXCHANGE (later monetary media). Optional AGENTS.md trim.
 
-DONE — do not re-queue: padded armor 9c81021; sheep/wool/sail 5f1b5e9; dairy vessel recovery + NPC sea integration f09578d; G10 fog persist 39115987; renderStyle 860863a; instance LOD d4d3cba; quiet NPC toggleSail 1a6e71e; perf scan batch d86d7da; verified gates M0-01..06,11,12; M1-01..04,06..13,15,17..20; M2-04; M3-01,10,11; M4-01,02; M5-02,03,07. CHAT-G9 lab flow is live-partial — only remaining lab actions, not a rewrite.
+DONE — do not re-queue: cultured-curd scoped flow41f5870 (native/built vessel conservation; full integration PR remains open); padded armor 9c81021; sheep/wool/sail 5f1b5e9; dairy vessel recovery + NPC sea integration f09578d; G10 fog persist 39115987; renderStyle 860863a; instance LOD d4d3cba; quiet NPC toggleSail 1a6e71e; perf scan batch d86d7da; verified gates M0-01..06,11,12; M1-01..04,06..13,15,17..20; M2-04; M3-01,10,11; M4-01,02; M5-02,03,07. CHAT-G9 lab flow is live-partial — only remaining lab actions, not a rewrite.
 ```
 
 ---
@@ -426,7 +426,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-36 | catalogue | Seasonal wild foods, fishing and traps. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
 | CAT-37 | catalogue | Animal capture/taming and species-specific domestic uses. | Codex | Codex W1 | source-pushed-not-live | sheep capture live 5f1b5e9; old-map import and other species remain |
 | CAT-38 | catalogue | Pens, fodder, pasture, veterinary care and breeding. | Codex | Codex W1 | source-pushed-not-live | sheep breeding/feed live; veterinary/seasonal grazing remain |
-| CAT-39 | catalogue | Milk, meat, wool, transport and animal traction where species permit. | Codex | Codex T7 | source-pushed-not-live | wool live; dairy vessel live f09578d; cheese/curd pending Claude T1 then Codex T7; meat/traction remain W1 |
+| CAT-39 | catalogue | Milk, meat, wool, transport and animal traction where species permit. | Codex | Codex T7 | source-pushed-not-live | wool/dairy vessel live; cultured curd confirmed41f5870 with7native/focused+1built flow, same2pots/cloth return; meat/transport/traction remain W1 |
 | CAT-4 | catalogue | Local shortages that encourage exploration, exchange or migration. | Grok | Grok W7 | not started | local shortages encouraging migration |
 | CAT-40 | catalogue | **Accepted extension:** selective breeding, pack dogs and working horses. | Codex | Codex W1 | not started | selective breeding, pack dogs, horses; chariots later L4 |
 | CAT-41 | catalogue | Land clearing and viable low-timber fields. | Grok | Grok W9 | not started | land clearing / site prep |
@@ -662,7 +662,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CHAT-G6-CULTURAL-NAMES | chat |  | Claude | Claude W2 | source-pushed-not-live | source-pushed 103f41f / e69b8f8 |
 | CHAT-G7-FOOD-TASTE | chat | Document tunable taste/enjoyment units and test morale/benefit versus preparation labor; treat supplied ranking as tentative, no new unsa… | Codex | Codex W3 | not started | accepted-pending |
 | CHAT-G9-LAB-FLOW | chat | Track these three separate UI actions and acceptance; native lab scenario only, no private village overwrite. | Codex | — (done) | done/live | live-partial: lab enter/restart/save exists at 39115987; only remaining actions on audit |
-| BOARD-G1 | board-gap | Era score and victory conditions that give AI societies something to strive for | Codex | Codex T6 | not started | era score / victory; Codex drives formula; Claude hooks AI goals in W2 |
+| BOARD-G1 | board-gap | Era score and victory conditions that give AI societies something to strive for | Codex | Codex T6 | live-partial | 41f5870 measurable prestige formula and compact ledger live; AI goals/victory and verified defended outcomes remain Claude W2 integration |
 | BOARD-G10 | board-gap | Map auto-explored without the player sending anyone | Grok | Grok W13 | source-pushed-not-live | same as CHAT-G10 |
 | BOARD-G11 | board-gap | Village personalities with different incentives | Claude | Claude W2 | source-pushed-not-live | village personalities source-pushed |
 | BOARD-G12 | board-gap | Fun-loop measure: threat, decision and payoff in a short session | Claude | Claude L2 | gated on Boris | fun-loop metric; default no until the decision card says yes |
@@ -785,7 +785,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-PERSONAL-ABILITIES | incentive | Compact resident stats, practice, teaching, bounded specialization | Codex | Codex W9 | not started |  |
 | INC-QUARRY | incentive | Lower quarry startup cost; show reachable deposit area/capacity | Codex | Codex W9 | not started |  |
 | INC-RAIDER-INCENTIVES | incentive | Wealth tempts; defense deters; raiders have camps and can settle | Claude | Claude W2 | source-pushed-not-live |  |
-| INC-SCORE | incentive | Versioned prestige/score components with caps; no infinite flags | Codex | Codex T6 | not started |  |
+| INC-SCORE | incentive | Versioned prestige/score components with caps; no infinite flags | Codex | Codex T6 | live-partial | 41f5870 ledger/owner evidence and capped weights live;20 focused cases+actual built ledger pass; defended-war outcome source and other trade histories remain open |
 | INC-SIEGE | incentive | Siege deployment, crew, ammunition, no remote damage | Claude | Claude W2 | source-pushed-not-live | staffed ram source-pushed |
 | INC-SITE-PREP | incentive | Placement queues tree/stone clearing; paid materials; no trapped workers | Grok | Grok W9 | not started |  |
 | INC-TOWERS | incentive | Paid material-dependent tower height; unfinished towers do not shoot | Claude | Claude N3 | not started |  |
