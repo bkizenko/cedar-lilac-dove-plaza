@@ -1,3 +1,4 @@
+import {reconcileMethodRecords} from './methodRecords';
 import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
@@ -129,6 +130,7 @@ import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction,assignPlacedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
+import {wildCraftAI,tickWildCraft} from './wildCraft';
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
@@ -4542,6 +4544,7 @@ export class Game {
       u.stuckT = 0;
       u.workReason = "Route blocked; finding another task";
     }
+    if (u.wildWorkId!==undefined&&wildCraftAI(this,u,dt))return;
     if (u.order === "idle") {
       this.workBoard.assign(this, u);
       return;
@@ -5829,6 +5832,7 @@ export class Game {
         tickArmorRepairs(this);
         tickGarmentRepairs(this);
         tickProduction(this,sdt);
+        tickWildCraft(this,sdt);
         tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
         tickTradedTeaching(this);
@@ -6011,6 +6015,7 @@ export class Game {
         reconcileSiegeRams(this);
         tickStolenCargo(this,0);
         reconcileFarmToolCargo(this);
+        reconcileMethodRecords(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         tickRaidDefense(this);

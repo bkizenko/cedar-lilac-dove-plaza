@@ -116,7 +116,7 @@ export class BiomeVegetation {
  }
  dispose(){for(const batch of this.batches.values())for(const part of ['trunk','canopy'] as const){const mesh=batch[part];this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}for(const mesh of this.far){this.scene.remove(mesh);mesh.geometry.dispose();mesh.dispose();}this.scene.remove(this.farTrunk);this.farTrunk.geometry.dispose();this.farTrunk.dispose();this.bark.dispose();this.leaves.dispose();this.farMaterial.dispose();if(this.shadows){this.scene.remove(this.shadows);this.shadows.geometry.dispose();this.shadows.dispose();this.shadowMat?.map?.dispose();this.shadowMat?.alphaMap?.dispose();this.shadowMat?.dispose();}this.cache.clear();}
 }
-export type DressingPoint={x:number;y:number;z:number;kind:DressingForm|PainterDressing;scale?:number;/** painterly: 0 wet/lush .. 1 dry/straw */tone?:number;/** painterly: stable 0..1 hue pick (flower colour, tuft variety) */hue?:number};
+export type DressingPoint={x:number;y:number;z:number;kind:DressingForm|PainterDressing;scale?:number;/** painterly: 0 wet/lush .. 1 dry/straw */tone?:number;/** painterly: stable 0..1 hue pick (flower colour, tuft variety) */hue?:number;/** painterly: rock colour multiplier from the local geology (rocks, pebbles) */rockTint?:readonly [number,number,number];/** scree boulder: allowed on steep ground (the caller already checked water and buildings) */steep?:boolean};
 const DRESSING_BLOOMS=['#f4d54a','#f7f3e8','#b98ad8','#e98a6a','#f1a7c4'];
 /** Tiny nonblocking dressing: no ResourceNode, navigation obstacle, free product
  * or clickable harvest target. Caller supplies actual dry-ground eligibility.
@@ -135,7 +135,7 @@ export class BiomeDressing {
  setTime(t:number){if(this.sway)this.sway.uTime.value=t;}
  private tone(point:DressingPoint,context:Partial<Pick<VegetationContext,'winter'|'autumn'|'snow'>>|undefined,kind:string){
   const c=this.color,dry=point.tone??.3,hue=point.hue??.5;
-  if(kind==='rocks'||kind==='pebbles'||kind==='log'){c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
+  if(kind==='rocks'||kind==='pebbles'||kind==='log'){const t=point.rockTint&&kind!=='log'?point.rockTint:null,v=.9+hue*.2;if(t)c.setRGB(t[0]*v,t[1]*v,t[2]*v);else c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
   c.setRGB(.9+hue*.2,.95+(1-hue)*.08,.8+hue*.15);c.lerp(new THREE.Color(1.15,.95,.62),Math.min(1,dry*.8));
   const winter=context?.winter??0,autumn=context?.autumn??0,snow=context?.snow??0;
   if(autumn>.05)c.lerp(new THREE.Color(1.1,.86,.5),Math.min(.7,autumn*.6));
@@ -146,13 +146,13 @@ export class BiomeDressing {
  sync(points:readonly DressingPoint[],context:Pick<VegetationContext,'quality'|'camera'|'known'>&Partial<Pick<VegetationContext,'winter'|'autumn'|'snow'>>,isDry:(x:number,z:number)=>boolean){
   const cap=BIOME_VEGETATION_RULES.dressingMaxInstances[context.quality],counts=new Map<string,number>();let total=0;
   const painterly=this.style==='painterly',off=(context.winter??0)>.5||(context.snow??0)>.3;
-  for(const point of points){if(total>=cap)break;if(!context.known(point.x,point.z)||!isDry(point.x,point.z)||Math.hypot(point.x-context.camera.x,point.z-context.camera.z)>BIOME_VEGETATION_RULES.dressingDistanceMetres)continue;
+  for(const point of points){if(total>=cap)break;if(!context.known(point.x,point.z)||!point.steep&&!isDry(point.x,point.z)||Math.hypot(point.x-context.camera.x,point.z-context.camera.z)>BIOME_VEGETATION_RULES.dressingDistanceMetres)continue;
    const rock=point.kind==='rocks'||point.kind==='log'||point.kind==='pebbles',fade=Math.max(0,Math.min(1,(BIOME_VEGETATION_RULES.dressingDistanceMetres-Math.hypot(point.x-context.camera.x,point.z-context.camera.z))/18));
    const kinds=painterly&&point.kind==='flowers'?['flowers','bloom']:[point.kind as string];
    for(const kind of kinds){const mesh=this.batches.get(kind);if(!mesh)continue;
     const index=counts.get(kind)??0;if(index>=BIOME_VEGETATION_RULES.dressingMaxInstances.high)continue;
     const bloomHidden=kind==='bloom'&&(off||(context.autumn??0)>.55);
-    const base=Math.max(.1,Math.min(1.3,point.scale??1))*(painterly&&!rock?.55+.45*fade:1);
+    const base=Math.max(.1,Math.min(point.kind==='rocks'?2.6:1.3,point.scale??1))*(painterly&&!rock?.55+.45*fade:1);
     this.pos.set(point.x,point.y,point.z);this.scale.setScalar(bloomHidden?.0001:base*(painterly?(point.kind==='rocks'?.9:point.kind==='grass'||point.kind==='tallgrass'||kind==='bloom'||point.kind==='flowers'?1.3:1):1));
     if(painterly){this.euler.set(0,((point.hue??.5)*97.3)%1*Math.PI*2,0);this.rotation.setFromEuler(this.euler);}
     this.matrix.compose(this.pos,this.rotation,this.scale);mesh.setMatrixAt(index,this.matrix);

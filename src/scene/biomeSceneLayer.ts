@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {provinceAt,ecologicalConditionsAt,PROVINCE_KINDS,type EcologicalProvinceGrid,type ProvinceKind} from '../game/ecologicalProvinces';
 import {BiomeVegetation,BiomeDressing,type ResourceTree,type DressingPoint,type VegetationContext,type VegetationStyle} from './biomeVegetation';
 import type {DressingForm} from './vegetationKit';
+import {peekGeology} from './painterGeology';
 /** Read-only adapter contract. Integrator can pass Game directly after the
  * versioned ecology grid is attached to its generated world. */
 export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number}[]};
@@ -44,6 +45,12 @@ export function biomeSurfaceAttributes(grid:EcologicalProvinceGrid,positions:THR
  return {cover,material,tint};
 }
 function hash(x:number,z:number,seed:number,salt=0){let n=Math.imul(x|0,73856093)^Math.imul(z|0,19349663)^seed^salt;n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967296;}
+/** Boulders may rest on steep scree, but never in water or inside a building footprint. */
+function screeGroundAllowed(game:BiomeSceneGame,x:number,z:number){
+ const rules=BIOME_SCENE_RULES;
+ if(Math.abs(x)>game.world.size*.49||Math.abs(z)>game.world.size*.49||game.height(x,z)<game.waterAt(x,z)+rules.dryClearanceMetres)return false;
+ return !game.state.buildings.some(b=>b.hp>0&&Math.abs(x-b.x)<b.w*.5+rules.buildingMarginMetres&&Math.abs(z-b.z)<b.d*.5+rules.buildingMarginMetres);
+}
 export function dressingGroundAllowed(game:BiomeSceneGame,x:number,z:number){
  const rules=BIOME_SCENE_RULES,h=game.height(x,z);
  if(Math.abs(x)>game.world.size*.49||Math.abs(z)>game.world.size*.49||h<game.waterAt(x,z)+rules.dryClearanceMetres)return false;
@@ -81,7 +88,13 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
  const rules=BIOME_SCENE_RULES,cell=rules.painterCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
  for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
   const ix=cx+dx,iz=cz+dz,x=(ix+.12+hash(ix,iz,game.state.seed,7)*.76)*cell,z=(iz+.12+hash(ix,iz,game.state.seed,61)*.76)*cell,d=Math.hypot(x-camera.x,z-camera.z);
-  if(d>rules.dressingRadiusMetres||!game.exploredAt(x,z)||!dressingGroundAllowed(game,x,z))continue;
+  if(d>rules.dressingRadiusMetres||!game.exploredAt(x,z))continue;
+  // geology: boulders and rubble lie where scree aprons run out below cliffs (even on grades too steep for grass dressing), in the local rock's colour
+  const geo=peekGeology(game.world as never),gq=geo?geo.rockAt(x,z):null,allowed=dressingGroundAllowed(game,x,z);
+  if(gq&&gq.scree>.3&&hash(ix,iz,game.state.seed,521)<gq.scree*.62&&screeGroundAllowed(game,x,z)){
+   points.push({x,y:game.height(x,z)-.06,z,kind:'rocks',scale:.9+hash(ix,iz,game.state.seed,533)*1.5*(.5+gq.scree*.6),tone:.3,hue:hash(ix,iz,game.state.seed,541),rockTint:gq.tint,steep:true});continue;
+  }
+  if(!allowed)continue;
   const profile=provinceAt(grid,x,z),art=BIOME_SURFACE_PROFILES[profile.kind],cond=ecologicalConditionsAt(grid,x,z);
   // density falls with distance so the far ring thins out instead of ending on a hard line
   const density=Math.min(1,art.dressingDensity*1.1)*(1-.55*Math.pow(d/rules.dressingRadiusMetres,2));
@@ -89,7 +102,8 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
   let bank=false;
   if(cond.moisture>.45)for(const [ax,az] of [[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,-.7]]){const px=x+ax*rules.bankSearchMetres*.6,pz=z+az*rules.bankSearchMetres*.6;if(game.height(px,pz)<game.waterAt(px,pz)+.12){bank=true;break;}}
   const patch=hash(Math.floor(x/11),Math.floor(z/11),game.state.seed,977);
-  points.push({x,y:game.height(x,z),z,kind:painterForm(profile.kind,hash(ix,iz,game.state.seed,157),bank,cond.moisture),scale:.72+hash(ix,iz,game.state.seed,211)*.5,tone:Math.pow(Math.max(0,Math.min(1,.95-cond.moisture*1.5+(hash(ix,iz,game.state.seed,331)-.5)*.3)),1.4),hue:patch*.82+hash(ix,iz,game.state.seed,401)*.18});
+  const form=painterForm(profile.kind,hash(ix,iz,game.state.seed,157),bank,cond.moisture);
+  points.push({x,y:game.height(x,z),z,kind:form,rockTint:gq&&(form==='rocks'||form==='pebbles')?gq.tint:undefined,scale:.72+hash(ix,iz,game.state.seed,211)*.5,tone:Math.pow(Math.max(0,Math.min(1,.95-cond.moisture*1.5+(hash(ix,iz,game.state.seed,331)-.5)*.3)),1.4),hue:patch*.82+hash(ix,iz,game.state.seed,401)*.18});
  }
  return points.sort((a,b)=>Math.hypot(a.x-camera.x,a.z-camera.z)-Math.hypot(b.x-camera.x,b.z-camera.z)).slice(0,rules.painterMaxCandidates);
 }

@@ -63,6 +63,9 @@ import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
 import {TerrainLightmap} from './terrainLight';
 import {PainterGround,blurGrid,smoothTileNormals,smoothGridNormals} from './painterGround';
+import {geologyFor,dropGeology,type SurfaceGeology} from './painterGeology';
+import {installPainterFog} from './painterFog';
+import {ContactShadowMap} from './painterContact';
 import {trailStampTexture,painterNodeRock} from './painterTrees';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {seaSurfaceY} from '../game/localWater';
@@ -383,6 +386,8 @@ export class WorldView {
   private localWater: THREE.Group | null = null;
   private terrainSurface: TerrainSurface | null = null;
   private painterGround: PainterGround | null = null;
+  private surfaceGeology: SurfaceGeology | null = null;
+  private contactMap: ContactShadowMap | null = null;private contactAt = 0;
   private waterMaterials: THREE.Material[] = [];
   private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
@@ -424,6 +429,7 @@ export class WorldView {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#d8c4a0");
+    installPainterFog();
     this.scene.fog = new THREE.FogExp2("#d8c4a0", 0.0034);
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 860);
@@ -710,7 +716,7 @@ export class WorldView {
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
-    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(this.mapStyle==='painterly')smoothTileNormals(geometry,game.world.bankTerrain!.subdivisions);if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
+    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(this.mapStyle==='painterly')smoothTileNormals(geometry,game.world.bankTerrain!.subdivisions,7);if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}if(this.mapStyle==='painterly'&&this.surfaceGeology){const g=this.surfaceGeology.attributes(geometry.getAttribute('position') as THREE.BufferAttribute,undefined,(x,z)=>game.waterAt(x,z));geometry.setAttribute('geoRock',new THREE.BufferAttribute(g.rock,4));geometry.setAttribute('geoState',new THREE.BufferAttribute(g.state,4));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
     if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface,this.mapStyle==='painterly'?'painterly':'classic');
     this.buildNature(game);
@@ -812,7 +818,16 @@ export class WorldView {
       geo.setAttribute('biomeTint',new THREE.BufferAttribute(attributes.tint,3));
     }
     const painterly=this.mapStyle==='painterly';
-    this.painterGround=null;
+    this.painterGround=null;this.surfaceGeology=null;
+    if(painterly){
+      this.contactMap?.dispose();this.contactMap=new ContactShadowMap(game.world.size);this.terrainSurface.painter.pContactMap.value=this.contactMap.texture;this.contactAt=0;
+      dropGeology(game.world);
+      this.surfaceGeology=geologyFor(game.world as never,game.state.seed,{height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z)});
+      const g=this.surfaceGeology.attributes(pos as THREE.BufferAttribute,undefined,(x,z)=>game.waterAt(x,z));
+      geo.setAttribute('geoRock',new THREE.BufferAttribute(g.rock,4));geo.setAttribute('geoState',new THREE.BufferAttribute(g.state,4));
+      const wind=(game.world as {mapgen?:{wind?:{x:number;z:number}}}).mapgen?.wind,wl=Math.hypot(wind?.x??0,wind?.z??0);
+      if(wind&&wl>1e-4)this.terrainSurface.painter.pWind.value.set(wind.x/wl,wind.z/wl);
+    }
     if(painterly){
       this.terrainSurface.lightmap=new TerrainLightmap({size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z)});
       this.painterGround=new PainterGround(game as never,pos as THREE.BufferAttribute,landscape,biome,region);
@@ -1575,7 +1590,7 @@ export class WorldView {
     this.bounce.intensity = night ? 0.22 : 0.12 + elev * 0.12;
     (this.scene.fog as THREE.FogExp2).color.copy(this.litFog);
     this.scene.background = this.litFog;
-    (this.scene.fog as THREE.FogExp2).density = this.litFogD;
+    (this.scene.fog as THREE.FogExp2).density = painter?-this.litFogD:this.litFogD; // negative density opts into the painterly aerial haze (painterFog.ts)
     this.renderer.toneMappingExposure = painter?painter.exposure:
       (night ? 1.08 : 1.02 + elev * 0.20 + dawn * 0.08 + sn.winter * 0.06) *
       (wx === "storm" || wx === "flood" ? 0.88 : 1);
@@ -1917,6 +1932,7 @@ export class WorldView {
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
     this.foundations?.sync(game);
+    if(this.contactMap&&performance.now()-this.contactAt>350){this.contactAt=performance.now();this.contactMap.update(game.state.buildings.filter(b=>b.team===0||game.exploredAt(b.x,b.z)));}
   }
 
   private millYaw=new Map<string,number>();
@@ -2874,7 +2890,7 @@ export class WorldView {
       }
     }
     }
-    colAttr.needsUpdate = true;if(this.terrainSurface?.bankColors)this.terrainSurface.bankColors.needsUpdate=true;
+    colAttr.needsUpdate = true;if(this.terrainSurface?.bankColors)this.terrainSurface.bankColors.needsUpdate=true;if(this.painterGround)this.bankLayer?.repaint();
 
     if (!this.biomeScene&&this.treesLeaf?.instanceColor) {
       const nTree = this.treesLeaf.count;
@@ -2983,7 +2999,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
-    this.foundations?.dispose();this.foundations=null;
+    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;

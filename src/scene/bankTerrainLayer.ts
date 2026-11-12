@@ -13,10 +13,12 @@ export class BankTerrainLayer {
     private cuts: unknown;
     private count = -1;
     private active: Uint8Array;
+    private sampleColor: (x: number, z: number, out: number[]) => void = () => { };
     constructor(terrain: THREE.Mesh, g: Game, decorate?: (geometry: THREE.BufferGeometry) => void) {
         this.data = g.world.bankTerrain!;
         const data = this.data, n = data.subdivisions, positions: number[] = [], normals: number[] = [], colors: number[] = [], rock: number[] = [], sand: number[] = [], indices: number[] = [], source = terrain.geometry, coarsePos = source.getAttribute('position'), color = source.getAttribute('color'), rockSource = source.getAttribute('surfaceRock'), sandSource = source.getAttribute('surfaceSand');
         const sampleAttribute = (attr: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, x: number, z: number, channel: number) => { const segs = g.world.segs, px = Math.max(0, Math.min(segs, (x / g.world.size + .5) * segs)), pz = Math.max(0, Math.min(segs, (z / g.world.size + .5) * segs)), ix = Math.min(segs - 1, Math.floor(px)), iz = Math.min(segs - 1, Math.floor(pz)), fx = px - ix, fz = pz - iz, id = iz * (segs + 1) + ix, get = (i: number) => channel === 0 ? attr.getX(i) : channel === 1 ? attr.getY(i) : attr.getZ(i), a = get(id), b = get(id + 1), c = get(id + segs + 1), d = get(id + segs + 2); return fx + fz <= 1 ? a + (b - a) * fx + (c - a) * fz : d + (c - d) * (1 - fx) + (b - d) * (1 - fz); };
+        this.sampleColor = (x: number, z: number, out: number[]) => { out[0] = sampleAttribute(color, x, z, 0); out[1] = sampleAttribute(color, x, z, 1); out[2] = sampleAttribute(color, x, z, 2); };
         const height = (x: number, z: number) => sampleWorldHeight(g.world, x, z), normal = new THREE.Vector3();
         for (const tile of data.tiles) {
             const offset = positions.length / 3;
@@ -94,5 +96,8 @@ export class BankTerrainLayer {
         if (keep)
             kept.push(a, b, c);
     } this.mesh.geometry.setIndex(kept); }
+    /** Painterly look: the shader no longer reads the baked colour texture on fine tiles, so re-sample the coarse painted colours (season, snow,
+     * biome) into the tile vertices whenever the coarse terrain is repainted. Render-only. */
+    repaint() { const geometry = this.mesh.geometry, p = geometry.getAttribute('position'), c = geometry.getAttribute('color') as THREE.BufferAttribute, out = [0, 0, 0]; for (let i = 0; i < p.count; i++) { this.sampleColor(p.getX(i), p.getZ(i), out); c.setXYZ(i, out[0], out[1], out[2]); } c.needsUpdate = true; }
     dispose() { this.mesh.geometry.dispose(); }
 }

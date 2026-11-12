@@ -1,0 +1,706 @@
+{
+ "civ:sandrill": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 25,
+   "draws": 25,
+   "triangles": 6652,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.046,
+   "wallMs": 165
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 124,
+   "draws": 122,
+   "triangles": 46580,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 11.391,
+   "wallMs": 226
+  }
+ },
+ "civ:nilemark": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 24,
+   "draws": 24,
+   "triangles": 5012,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.008,
+   "wallMs": 137
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 91,
+   "draws": 89,
+   "triangles": 38738,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 8.655,
+   "wallMs": 170
+  }
+ },
+ "civ:tigrane": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 30,
+   "draws": 30,
+   "triangles": 5340,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 1.969,
+   "wallMs": 127
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 117,
+   "draws": 115,
+   "triangles": 37638,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 12.927,
+   "wallMs": 237
+  }
+ },
+ "civ:hanrei": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 25,
+   "draws": 25,
+   "triangles": 6296,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.554,
+   "wallMs": 108
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 113,
+   "draws": 110,
+   "triangles": 44024,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 21.545,
+   "wallMs": 431
+  }
+ },
+ "civ:vedara": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 26,
+   "draws": 26,
+   "triangles": 4716,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.362,
+   "wallMs": 114
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 103,
+   "draws": 102,
+   "triangles": 37094,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 12.782,
+   "wallMs": 453
+  }
+ },
+ "civ:aureline": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 30,
+   "draws": 30,
+   "triangles": 5540,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.492,
+   "wallMs": 125
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 97,
+   "draws": 95,
+   "triangles": 37866,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 14.427,
+   "wallMs": 303
+  }
+ },
+ "civ:sahelan": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 28,
+   "draws": 28,
+   "triangles": 5676,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.331,
+   "wallMs": 123
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 111,
+   "draws": 110,
+   "triangles": 39964,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 16.636,
+   "wallMs": 336
+  }
+ },
+ "civ:quillan": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 27,
+   "draws": 27,
+   "triangles": 6132,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 2.915,
+   "wallMs": 109
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 109,
+   "draws": 107,
+   "triangles": 42852,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 15.091,
+   "wallMs": 288
+  }
+ },
+ "civ:kaaltun": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 27,
+   "draws": 27,
+   "triangles": 6696,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 4.023,
+   "wallMs": 126
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 101,
+   "draws": 99,
+   "triangles": 45184,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 12.745,
+   "wallMs": 250
+  }
+ },
+ "civ:mekhari": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 33,
+   "draws": 33,
+   "triangles": 5156,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 8.562,
+   "wallMs": 289
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 109,
+   "draws": 106,
+   "triangles": 37342,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 41.273,
+   "wallMs": 692
+  }
+ },
+ "civ:brythen": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 32,
+   "draws": 32,
+   "triangles": 5676,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.377,
+   "wallMs": 109
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 119,
+   "draws": 117,
+   "triangles": 38734,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 11.273,
+   "wallMs": 234
+  }
+ },
+ "civ:rusvolt": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 28,
+   "draws": 28,
+   "triangles": 5792,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 4.762,
+   "wallMs": 141
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 108,
+   "draws": 105,
+   "triangles": 41208,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 13.973,
+   "wallMs": 300
+  }
+ },
+ "civ:steppan": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 26,
+   "draws": 26,
+   "triangles": 6228,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 5.192,
+   "wallMs": 331
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 126,
+   "draws": 123,
+   "triangles": 43412,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 14.255,
+   "wallMs": 242
+  }
+ },
+ "civ:skoldar": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 30,
+   "draws": 30,
+   "triangles": 4876,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 6.438,
+   "wallMs": 286
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 135,
+   "draws": 130,
+   "triangles": 37366,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 21.673,
+   "wallMs": 386
+  }
+ },
+ "ember-basalt": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 31,
+   "draws": 31,
+   "triangles": 5564,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.115,
+   "wallMs": 327
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 112,
+   "draws": 110,
+   "triangles": 39016,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 19.845,
+   "wallMs": 455
+  }
+ },
+ "frost-slate": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 30,
+   "draws": 30,
+   "triangles": 5564,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 9.223,
+   "wallMs": 450
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 111,
+   "draws": 107,
+   "triangles": 38014,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 43.227,
+   "wallMs": 666
+  }
+ },
+ "verdant-thatch": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 30,
+   "draws": 30,
+   "triangles": 5778,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.292,
+   "wallMs": 117
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 107,
+   "draws": 105,
+   "triangles": 45112,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 22.191,
+   "wallMs": 363
+  }
+ },
+ "cobalt-dome": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 35,
+   "draws": 35,
+   "triangles": 5564,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 2.908,
+   "wallMs": 116
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 128,
+   "draws": 125,
+   "triangles": 40658,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 18.809,
+   "wallMs": 410
+  }
+ },
+ "jade-tile": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 25,
+   "draws": 25,
+   "triangles": 5468,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.915,
+   "wallMs": 130
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 96,
+   "draws": 94,
+   "triangles": 37980,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 13.055,
+   "wallMs": 510
+  }
+ },
+ "ochre-felt": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 29,
+   "draws": 29,
+   "triangles": 6532,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.331,
+   "wallMs": 113
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 132,
+   "draws": 129,
+   "triangles": 45476,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 18.236,
+   "wallMs": 320
+  }
+ },
+ "turquoise-brick": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 31,
+   "draws": 31,
+   "triangles": 5324,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 3.015,
+   "wallMs": 279
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 105,
+   "draws": 103,
+   "triangles": 37690,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 47.382,
+   "wallMs": 789
+  }
+ },
+ "saffron-lime": {
+  "close": {
+   "people": 5,
+   "corpses": 0,
+   "variants": 24,
+   "draws": 24,
+   "triangles": 4776,
+   "tiers": [
+    5,
+    0,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 2.215,
+   "wallMs": 102
+  },
+  "rts": {
+   "people": 40,
+   "corpses": 0,
+   "variants": 99,
+   "draws": 96,
+   "triangles": 37110,
+   "tiers": [
+    24,
+    16,
+    0
+   ],
+   "fallbacks": 0,
+   "cpuMsPerFrame": 21.355,
+   "wallMs": 349
+  }
+ }
+}

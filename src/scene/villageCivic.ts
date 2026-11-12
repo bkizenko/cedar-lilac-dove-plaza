@@ -24,7 +24,7 @@ export const tower:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,lit=ctx.lit!==false,s=Math.min(w,d)/4.6;
   if(stoneAge(ctx)){
     const B=3.5*s,T=2.9*s,H=range(r,5.2,5.9)*Math.min(1.1,s+.1);
-    box(parts,'stoneDark',[B+.5,.3,B+.5],[0,0,0],1);
+    box(parts,'stoneDark',[B+.08,.2,B+.08],[0,0,0],1);
     stoneWall(parts,{x:0,z:0,w:B,d:B,y0:.3,h:1.0,mat:'stoneDark',course:.35});
     stoneWall(parts,{x:0,z:0,w:T+.3,d:T+.3,y0:1.3,h:H-1.3,course:.38});
     quoins(parts,0,0,T+.3,T+.3,1.3,H-1.3,'stoneDark',5);
@@ -69,7 +69,7 @@ export const church:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w/8.4,d/8),arid=ctx.climate==='arid'||ctx.material==='mudbrick',stone=ctx.material==='stone'||ctx.era>=3,rm=roofFor(ctx);
   if(arid){
     const S=5.0*k,H=3.0*k;
-    box(parts,'stoneDark',[S+.5,.3,S+.5],[0,0,-.4],1);
+    box(parts,'stoneDark',[S+.08,.2,S+.08],[0,0,-.4],1);
     box(parts,'plaster',[S,H,S],[0,.3,-.4],2);
     for(const f of[-1,1]){box(parts,'recess',[.8,1.2,.08],[f*1.3*k,1.2,-.4+S/2+.02],0);box(parts,'recess',[.08,1.2,.8],[f*(S/2+.02),1.2,-.4],0);}
     box(parts,'stone',[S+.2,.2,S+.2],[0,H+.3,-.4],1);
@@ -84,7 +84,7 @@ export const church:Generator=(ctx,r)=>{
   }
   const L=(stone?4.5:5.6)*k,Wd=(stone?3.4:3.4)*k,wh=(stone?2.9:2.3)*k,cz=stone?-.55*k:-.2;
   if(stone){
-    box(parts,'stoneDark',[Wd+.4,.3,L+.4],[0,0,cz],1);
+    box(parts,'stoneDark',[Wd+.08,.2,L+.08],[0,0,cz],1);
     stoneWall(parts,{x:0,z:cz,w:Wd,d:L,y0:.3,h:wh,course:.36,faces:['+x','-x']});
     // buttresses and lancets
     for(let i=0;i<4;i++){const z=cz-L/2+.9+i*(L-1.8)/3;for(const sx of[-1,1]){box(parts,'stoneDark',[.35,wh*.8,.45],[sx*(Wd/2+.12),.3,z],1);box(parts,'recess',[.07,1.4*k,.34],[sx*(Wd/2+.02),1.0*k,z+(L-1.8)/6],0);}}
@@ -107,7 +107,7 @@ export const church:Generator=(ctx,r)=>{
     box(parts,'iron',[.07,.55,.07],[0,.3+wh+rise,cz-L/2+.2],0);box(parts,'iron',[.4,.07,.07],[0,.3+wh+rise+.3,cz-L/2+.2],0);
   }else{
     // timber hall sanctuary with stepped (stave-style) roofs
-    box(parts,'stoneDark',[Wd+.5,.3,L*.85+.5],[0,0,cz],1);
+    box(parts,'stoneDark',[Wd+.08,.2,L*.85+.08],[0,0,cz],1);
     box(parts,'woodMid',[Wd,wh,L*.85],[0,.3,cz],2);
     for(let i=0;i<8;i++)for(const sx of[-1,1])box(parts,'woodDark',[.16,wh,.2],[sx*(Wd/2+.02),.3,cz-L*.85/2+.3+i*(L*.85-.6)/7],0);
     const pitch=Math.max(.7,roofPitch(ctx,r));
@@ -184,7 +184,7 @@ export const keep:Generator=(ctx,r)=>{
 export const college:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w/10,d/8.6),stone=stoneAge(ctx)||ctx.wealth>.6,rm=roofFor(ctx);
   const W=8.6*k,D=5.0*k,cz=-1.4*k,wh=(stone?3.2:2.5)*k,wm:M=stone?'plaster':'woodMid';
-  box(parts,'stoneDark',[W+.5,.3,D+.5],[0,0,cz],1);
+  box(parts,'stoneDark',[W+.08,.2,D+.08],[0,0,cz],1);
   box(parts,wm,[W,wh,D],[0,.3,cz],2);
   quoins(parts,0,cz,W,D,.3,wh,stone?'stone':'woodDark',4);
   // tall windows with sills

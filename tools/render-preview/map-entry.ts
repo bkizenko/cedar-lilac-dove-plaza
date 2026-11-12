@@ -4,7 +4,7 @@ import {Game} from '@/game/sim';
 import {WorldView} from '@/scene/world';
 import {wearTrail} from '@/game/trails';
 type Spec={seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
- prep?:{farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ prep?:{buildings?:{type:string;x:number;z:number}[];farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  fov?:number;lookY?:number;mapStyle?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
 const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
@@ -26,6 +26,13 @@ w.renderMap=async(S:Spec)=>{
   if(S.quality)view.applyQuality(S.quality);
   if(S.prep){
    const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   for(const pb of S.prep.buildings??[]){
+    const before=game.state.buildings.length;
+    const ok=game.placeBuilding(pb.type as never,pb.x,pb.z);
+    const b=game.state.buildings.slice(before)[0] as unknown as {build:number;hp:number;plannedCost?:unknown}|undefined;
+    if(!ok||!b){console.warn('building placement failed',pb.type,pb.x,pb.z,game.state.banner);continue;}
+    b.build=1;delete b.plannedCost;
+   }
    for(const f of S.prep.farms??[]){
     const before=game.state.buildings.length;
     const ok=game.placeBuilding('farm',f.x,f.z);

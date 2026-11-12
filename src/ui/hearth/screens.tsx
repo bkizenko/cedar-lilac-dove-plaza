@@ -10,7 +10,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CivicPanel} from './civicPanel';
-import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
+import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,NeighbourNewsFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -128,7 +128,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
   </div>}
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
   {tab==='society'&&civic&&<CivicPanel civic={civic}/>}
-  {tab==='chronicle'&&<FameFeed log={c.log}/>}
+  {tab==='chronicle'&&<><FameFeed log={c.log}/><NeighbourNewsFeed news={c.news??[]} nameOf={t=>c.neighbours.find(n=>n.team===t)?.name??'A neighbour'}/></>}
   {tab==='terms'&&<><HearthCapitulationTerms engine={engine}/><HearthCaptiveCard engine={engine}/></>}
  </Screen>;
 }

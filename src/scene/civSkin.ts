@@ -17,6 +17,7 @@ import {BANNER_STYLE,type BannerStyle,type CivRole} from './civBuildings';
 import type {CivSeed,Material} from '../game/civGenerator';
 import {SKIN_SPECS,AFFINITY,MATERIAL_SWATCH,MATERIAL_ROOF,EXTRA_EMBLEMS,CIV_FORMS,HALL_OF_ROOF,WALL_OF_COURSE} from './civSkinData';
 import {NEUTRAL_FORMS,type SkinForms} from './buildingHelpers';
+import type {LookOverride} from './peopleLook';
 
 export const SKIN_VERSION=1;
 export type SkinMode='preset'|'remix'|'free'|'neutral';
@@ -32,12 +33,13 @@ export type CivSkin={v:1;id:string;name:string;mode:SkinMode;
  /** wonder piece style: which civ's signature landmark stands in the wonder, painted with the palette */wonder:{signature:CivId};
  garb:SkinGarb;silhouette:string;hueShift:number;
  /** cultural forms (wall style, gate shape, hall roof); absent = derived from the grammar, roof and wall course by formsOf */forms?:SkinForms;
+ /** people-look overrides over the base civ's PeopleLook (frame, hair, headwear, fibre, marks...); absent = the base civ's people, see peopleLook.lookForSkin */look?:LookOverride;
  /** generator provenance (civ id and society slot), absent for registry skins */origin?:{civ:string;slot:number}};
 
 /** Compact data object for one registry skin: every omitted field inherits from `base` (a civ bible id). One of these per skin is ALL it takes to add one. */
 export type SkinSpec={id:string;name:string;base:CivId;
  /** partial palette over the base civ's swatches: a hex string keeps the base roughness/course, or a full swatch */palette?:Partial<Record<keyof CivMaterials,string|Swatch>>;
- roof?:RoofForm;granary?:Granary;banner?:BannerStyle;emblem?:string;forms?:Partial<SkinForms>;dress?:Partial<Pick<CivDress,'cut'|'headwear'|'body'|'trim'|'motif'>>;approved?:boolean;note?:string};
+ roof?:RoofForm;granary?:Granary;banner?:BannerStyle;emblem?:string;forms?:Partial<SkinForms>;/** people-look overrides (see CivSkin.look) */look?:LookOverride;dress?:Partial<Pick<CivDress,'cut'|'headwear'|'body'|'trim'|'motif'>>;approved?:boolean;note?:string};
 
 /** Garb material class per civ (people's culture grammar input). */
 export const GARB_MATERIAL:Record<CivId,GarbMaterial>={sandrill:'stone',nilemark:'mudbrick',tigrane:'mudbrick',hanrei:'timber',vedara:'stone',aureline:'stone',sahelan:'mudbrick',quillan:'stone',kaaltun:'stone',mekhari:'wattle',brythen:'wattle',rusvolt:'timber',steppan:'wattle',skoldar:'timber'};
@@ -84,7 +86,7 @@ export function skinFromSpec(spec:SkinSpec):CivSkin{
  for(const [k,v] of Object.entries(spec.palette??{}) as [keyof CivMaterials,string|Swatch][])pal[k]=typeof v==='string'?sw(v,pal[k]):v;
  const d=spec.dress??{};
  return {...base,id:spec.id,name:spec.name,mode:'preset',palette:pal,roof:spec.roof??base.roof,granary:spec.granary??base.granary,banner:{style:spec.banner??base.banner.style,emblem:spec.emblem??base.banner.emblem},
-  garb:{...base.garb,...d},forms:{...(spec.roof&&spec.roof!==base.roof?{...base.forms!,hall:HALL_OF_ROOF[spec.roof]}:base.forms!),...(spec.forms??{})}};
+  garb:{...base.garb,...d},...(spec.look?{look:spec.look}:{}),forms:{...(spec.roof&&spec.roof!==base.roof?{...base.forms!,hall:HALL_OF_ROOF[spec.roof]}:base.forms!),...(spec.forms??{})}};
 }
 export function registerSkin(skin:CivSkin|SkinSpec,approved=false):CivSkin{
  const s=(skin as SkinSpec).base!==undefined?skinFromSpec(skin as SkinSpec):skin as CivSkin;
