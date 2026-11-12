@@ -18,16 +18,16 @@ export function validMethodRecordAcquisitions(state:GameState,record:MethodRecor
  if(!Array.isArray(record.acquisitions)||record.acquisitions.length>R.maximumAcquisitions)return false;
  const team=(v:unknown)=>Number.isSafeInteger(v)&&state.tribes.some(t=>t.id===v),id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0&&Number(v)<state.nextId;
  const time=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=record.authoredAt&&v<=state.time;
- let previous=record.authoredAt;
+ let previous=record.authoredAt,previousReturn:number|undefined,previousTeam:number|undefined;
  for(const receipt of record.acquisitions){
-  if(!receipt||!['captured','recovered','inherited'].includes(receipt.kind)||!team(receipt.fromTeam)||!team(receipt.toTeam)||receipt.fromTeam===receipt.toTeam||!time(receipt.at)||receipt.at<previous||receipt.by!==undefined&&!id(receipt.by))return false;
+  if(!receipt||!['captured','recovered','inherited'].includes(receipt.kind)||!team(receipt.fromTeam)||!team(receipt.toTeam)||receipt.fromTeam===receipt.toTeam||!time(receipt.at)||receipt.at<previous||previousReturn!==undefined&&receipt.at<previousReturn||previousTeam!==undefined&&receipt.fromTeam!==previousTeam||receipt.by!==undefined&&!id(receipt.by))return false;
   if(receipt.returnedAt!==undefined&&(!time(receipt.returnedAt)||receipt.returnedAt<receipt.at))return false;
   if(receipt.handoverId!==undefined){
    if(receipt.kind!=='inherited'||!id(receipt.handoverId))return false;
    const history=state.communityHandovers||[],handover=history.find(h=>h.id===receipt.handoverId);
    if(handover?(handover.fromTeam!==receipt.fromTeam||handover.toTeam!==receipt.toTeam||handover.timeSeconds!==receipt.at):(!history.length||receipt.at>=history[0].timeSeconds))return false;
   }
-  previous=receipt.at;
+  previous=receipt.at;previousReturn=receipt.returnedAt;previousTeam=receipt.toTeam;
  }
- return true;
+ return previousTeam===undefined||previousTeam===record.team;
 }
