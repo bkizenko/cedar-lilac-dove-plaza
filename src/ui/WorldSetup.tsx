@@ -3,8 +3,9 @@ import { DIFFICULTIES, difficultyEffects, type Difficulty } from "../game/diffic
 import { useState } from "react";
 import type { Engine } from "../game/engine";
 import type { WorldRequest, WorldOptions } from "../game/worldOptions";
+import { PRESETS, type MapPreset } from "../game/mapgen/presets";
 export function WorldSetup({ engine }: { engine: Engine }) {
-  const [layout, setLayout] = useState<WorldRequest["layout"]>("random");
+  const [mapType, setMapType] = useState<MapPreset | "random">("random");
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
   const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
@@ -35,15 +36,18 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         <p className="text-xs">{difficultyEffects(preset)}</p>
       </details>
       <label>
-        Landmasses
+        Map type
         <select
-          value={layout}
-          onChange={(e) => setLayout(e.target.value as WorldRequest["layout"])}
+          aria-label="Map type"
+          value={mapType}
+          onChange={(e) => setMapType(e.target.value as MapPreset | "random")}
         >
           <option value="random">Surprise me</option>
-          <option value="pangaea">Pangaea</option>
-          <option value="continents">Continents</option>
-          <option value="archipelago">Archipelago</option>
+          {Object.values(PRESETS).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <label>
@@ -66,14 +70,14 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         disabled={busy}
         onClick={() => void lifecycle.run(async()=>{
           await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          return await engine.configureNewWorld({layout,size,difficulty:preset},previewRiverbanks);
+          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset},previewRiverbanks);
         })}
       >
         {busy ? "Generating…" : "New world"}
       </button>
       {lifecycle.error&&<p role="status" className="text-xs">{lifecycle.error}</p>}
       <span>
-        {engine.game.world.options?.layout ?? "Classic island"} ·{" "}
+        {engine.game.world.mapgen?.name ?? engine.game.world.options?.layout ?? "Classic island"} ·{" "}
         {Math.round(engine.game.world.size)} m across
       </span>
     </div>

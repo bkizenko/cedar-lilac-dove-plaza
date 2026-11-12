@@ -20,6 +20,7 @@ import {dryTreeRoot,dryTreeRootLocal} from './hydrology';
 import {geography,type LandFeature} from './geography';
 import {landforms} from './landforms';
 import type {WorldRequest,WorldOptions} from './worldOptions';
+import {generateMapWorld} from './mapgen/index';
 import {rivalCountForArea} from "./factions";
 import { MAP, WATER_Y } from "./constants";
 import { fbm, mulberry32 } from "./rng";
@@ -48,6 +49,8 @@ export type WorldData = {
   waterHeights?:Float32Array;
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;
+  /** Map generation v2 (worldgenVersion 20) summary: preset, climate, start report. */
+  mapgen?: {version:number;preset:string;name:string;landFraction:number;rivers:number;lakes:number;starts:unknown[];fairness:{spread:number;minimum:number};wind:{x:number;z:number};seaTemperatureC:number};
   features?: LandFeature[];
   segs: number;
   heights: Float32Array;
@@ -136,6 +139,7 @@ function node(
  * geography or an unsafe camp just to make a seed succeed. Old versions keep
  * their byte-for-byte generation path. */
 export function generateWorld(seed:number,version=1,request:WorldRequest={}):WorldData{
+ if(version>=20)return prepareOwnedWaterWorld(generateMapWorld(seed,request),true);
  if(version<15)return generateWorldCandidate(seed,version,request);
  const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
  for(let attempt=0;attempt<16;attempt++){
