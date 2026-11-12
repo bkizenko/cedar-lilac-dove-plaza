@@ -27,6 +27,25 @@ async function run(){
  stage='actual checkpoint and strict restore';
  report.save=await page.evaluate(()=>window.__engine.saveNow());assert.equal(report.save.saved,true,report.save.message);
  report.restore=await page.evaluate(async()=>{const e=window.__engine,old=e.game,a=window.__autopilotOpening;await e.resumeSaved();const g=e.game;return{replaced:g!==old,paused:g.state.paused,time:g.state.time,residents:g.state.units.filter(u=>u.team===0&&u.hp>0).length,workplacePresent:g.state.buildings.some(b=>b.id===a.id&&b.type===a.type),errors:[...g.simulationErrors]};});assert.equal(report.restore.replaced,true);assert.equal(report.restore.paused,true);assert.equal(report.restore.time,opening.time);assert.equal(report.restore.residents,opening.residents);assert.equal(report.restore.workplacePresent,true);assert.deepEqual(report.restore.errors,[]);assert.deepEqual(errors,[]);report.passed=1;report.total=1;
+ if(process.env.PRESTIGE==='1'){
+  stage='native prestige evidence and actual ledger breakdown';
+  // Advance only this disposable village through ordinary Game.step. No food,
+  // territory, terrain, reports or score facts are fabricated after import.
+  let measured=false;
+  for(let batch=0;batch<24&&!measured;batch++){
+   const status=await page.evaluate(()=>{const e=window.__engine,g=e.game;g.state.paused=false;let steps=0;for(;steps<16;steps++){if(g.state.encounter)break;g.step(1/30);if(g.state.paused||g.state.ended)break;}g.state.paused=true;e.pushHud();return{measured:g.prestigeBreakdown().territoryMeasuredAt!==null,encounter:!!g.state.encounter,ended:g.state.ended,errors:[...g.simulationErrors]};});
+   assert.equal(status.ended,null);assert.deepEqual(status.errors,[]);measured=status.measured;
+   if(status.encounter){await page.getByRole('dialog').filter({has:page.getByRole('button',{name:'End conversation',exact:true})}).getByRole('button',{name:'End conversation',exact:true}).click();}
+  }
+  // The World influence painter may still be warming; incomplete evidence
+  // must stay unavailable, never become a measured zero.
+  if(!measured){await page.evaluate(()=>{const g=window.__engine.game;g.state.speed=1;g.state.paused=false;});await page.waitForTimeout(5000);await page.evaluate(()=>{window.__engine.game.state.paused=true;window.__engine.pushHud();});}
+  await page.getByRole('button',{name:'Village',exact:true}).click();
+  const prestige=page.getByRole('region',{name:'Prestige breakdown',exact:true});await prestige.waitFor();
+  assert.equal(await prestige.getByRole('meter').count(),8);
+  report.prestige=await page.evaluate(()=>{const e=window.__engine,g=e.game,v=g.prestigeBreakdown(),region=document.querySelector('[aria-label="Prestige breakdown"]');return{total:v.total,componentCount:v.components.length,sum:v.components.reduce((n,c)=>n+(c.points??0),0),measuredAt:v.territoryMeasuredAt,landAvailable:v.components.find(c=>c.component==='usableArea').available,warEvidenceAvailable:v.components.find(c=>c.component==='defendedWarAims').available,unknownNames:g.snapshot().prestigeRivals.filter(v=>v.knowledge==='unknown'&&!v.identityKnown).map(v=>g.tribe(v.subject).name),text:region.textContent,paused:g.state.paused,errors:[...g.simulationErrors]};});
+  const r=report.prestige;assert.equal(r.componentCount,8);assert.ok(Number.isFinite(r.total));assert.ok(Math.abs(r.sum-r.total)<1e-8);if(r.measuredAt===null){assert.equal(r.landAvailable,false);assert.match(r.text,/Land survey updating/);}else assert.ok(r.landAvailable);assert.equal(r.warEvidenceAvailable,false);assert.ok(r.paused);assert.deepEqual(r.errors,[]);for(const name of r.unknownNames)assert.ok(!r.text.includes(name),'unknown community names stay hidden');assert.deepEqual(errors,[]);report.passed=report.total=2;
+ }
  if(process.env.ERA_UPGRADE==='1'){
   stage='actual selected-building extension controls';
   const candidate=await page.evaluate(async()=>{
