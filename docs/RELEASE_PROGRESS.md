@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: d7ddb834e445c1c0be1734c8ea28cf2f2bd1e377 published as 2026-11-12T15-36-29-657Z-d7ddb83 on8086/8101.53/53 scoped freshV21/publishedV20-compat/village-art checks; includes all prior food/raid/tool/civic batches; inherited37/98 unchanged. Fullcampaign and100-resident p95/FPS open; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: 01603e23b53e50140f28cd0c06e4084af94fedaf published as 2026-11-12T16-28-12-475Z-01603e2 on8086/8101.52/52 scoped finite-copper-chain/burden/recovery/save/tree checks; includes all earlier qualified releases.37/98 unchanged; no fullW4/campaign/NPC metallurgy or100-visible-resident FPS credit; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 

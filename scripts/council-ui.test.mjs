@@ -59,3 +59,12 @@ test('hearth capitulation terms group outcomes by severity, show will and clock,
  for(const t of TERMS)assert.ok(html.includes(t.label),t.label);assert.equal((html.match(/class="hw-term"/g)||[]).length,TERMS.length);
  assert.equal(renderToStaticMarkup(h(TermsOffers,{offers:[],send(){},feedback:[]})),'');
 });
+test('hearth captive card shows resistance and guard state, offers typed commands, and is empty-safe',async()=>{
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');const {isEngineDispatchCommand}=await import('../src/game/engineDispatch.ts');const {isEngineReadQuery}=await import('../src/game/engineReadModels.ts');
+ const cs=[{id:9,name:'Tamsin',fromTeam:2,fromName:'Ridge Clan',resistance:72,guarded:false,canEscort:true},{id:10,name:'Oren',fromTeam:2,fromName:'Ridge Clan',resistance:10,guarded:true,canEscort:false}];
+ const html=renderToStaticMarkup(h(CaptiveList,{captives:cs,send(){},feedback:[]}));
+ assert.match(html,/Held captive/);assert.match(html,/Resistance 72 percent/);assert.match(html,/Unguarded/);assert.match(html,/Guarded/);assert.equal((html.match(/Escort/g)||[]).length,1);assert.equal((html.match(/Free everyone from Ridge Clan/g)||[]).length,1);
+ assert.equal(renderToStaticMarkup(h(CaptiveList,{captives:[],send(){},feedback:[]})),'');
+ assert.ok(isEngineReadQuery({kind:'captives'}));assert.equal(isEngineReadQuery({kind:'captives',x:1}),false);
+ assert.ok(isEngineDispatchCommand({kind:'free-captives',team:2}));assert.ok(isEngineDispatchCommand({kind:'repatriate-captive',unitId:9}));assert.ok(isEngineDispatchCommand({kind:'escort-captive',unitId:9}));assert.equal(isEngineDispatchCommand({kind:'free-captives',team:'x'}),false);
+});

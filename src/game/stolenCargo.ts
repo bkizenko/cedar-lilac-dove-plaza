@@ -28,7 +28,7 @@ export const STOLEN_CARGO_REASONS=['parcel-cap','mark-cap','no-owner-adult','too
  'pursuit-time','pursuit-distance','pursuit-hurt','pursuit-ended','claimant-lost'] as const;
 export type StolenCargoReason=typeof STOLEN_CARGO_REASONS[number];
 /** Bulk trade goods carried in a trade carrier's itemCargo also become parcels on that carrier's death. */
-export const PARCEL_ITEMS:ItemKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
+export const PARCEL_ITEMS:ItemKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','copperOre','copperMetal'];
 export type ParcelKind=ResKind|ItemKind;
 const isItem=(k:ParcelKind):k is ItemKind=>(PARCEL_ITEMS as string[]).includes(k);
 const heldItems=(u:Unit)=>PARCEL_ITEMS.filter(k=>(u.itemCargo?.[k]||0)>0);
@@ -84,9 +84,9 @@ function dropFrom(g:Game,u:Unit){
  s.parcels.push({id:g.id(),kind,amount,...(food?{food}:{}),...(raidBandId===undefined?{}:{raidBandId}),x:u.x,z:u.z,originalOwnerTeam:owner,fromTeam:u.team,droppedAt:g.state.time});
 }
 
-/** A dead trade carrier's bulk goods leave real item parcels (same cap/merge rules as resources). */
+/** Dead trade cargo and ordinary mined ore leave actual finite item parcels. */
 export function dropTradeCargoItems(g:Game,u:Unit){
- if(u.hp>0||u.tradeNeedsId===undefined&&!u.tradeCargoPending)return;// other itemCargo (fibre, sheaves…) keeps its owner's existing loss accounting
+ if(u.hp>0||u.tradeNeedsId===undefined&&!u.tradeCargoPending&&!(u.itemCargo?.copperOre||u.itemCargo?.copperMetal))return;// other itemCargo (fibre, sheaves…) keeps its owner's existing loss accounting
  const s=root(g),owner=cargoOwner(g,u);
  for(const kind of heldItems(u)){const amount=u.itemCargo![kind]!;
   const near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind===kind&&p.originalOwnerTeam===owner&&distance(p,u)<=R.mergeMeters);
@@ -200,7 +200,7 @@ function pickUp(g:Game,u:Unit,trip:CargoTrip){
 }
 function deposit(g:Game,u:Unit,trip:CargoTrip){
  const s=root(g),item=heldItems(u)[0];
- if(item&&!(u.carry>0)){const amount=u.itemCargo![item]!;const t=g.tribe(u.team),items=t.items??={};items[item]=(items[item]||0)+amount;delete u.itemCargo![item];if(!Object.values(u.itemCargo||{}).some(n=>(n||0)>0))u.itemCargo=undefined;s.ledger.deposited+=amount;if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;s.marks=s.marks.filter(m=>m.unitId!==u.id);endTrip(g,trip);return;}
+ if(item&&!(u.carry>0)){const amount=u.itemCargo![item]!;const t=g.tribe(u.team),items=t.items??={};if(item==='copperMetal')t.copper+=amount;else items[item]=(items[item]||0)+amount;delete u.itemCargo![item];if(!Object.values(u.itemCargo||{}).some(n=>(n||0)>0))u.itemCargo=undefined;s.ledger.deposited+=amount;if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;s.marks=s.marks.filter(m=>m.unitId!==u.id);endTrip(g,trip);return;}
  const kind=u.carryType,amount=u.carry;if(!kind||!(amount>0)){endTrip(g,trip);return;}
  recordSimulationEvent(g,'cargo_delivered',u.team,kind,amount,u.id);
  const provenance=markOf(g,u.id);noteRaidDefenseRecovery(g,provenance?.raidBandId,trip.owner,u.team,amount);
@@ -255,7 +255,7 @@ export function stolenCargoAI(g:Game,u:Unit,dt:number){
 // ---- World tick: sweep deaths, prune, and dispatch. Runs inside tickCoastalTrade (both call sites).
 export function tickStolenCargo(g:Game,dt:number){
  const s=g.state.droppedCargo;
- if(!s&&!g.state.units.some(u=>u.hp<=0&&(u.carry>0&&u.carryType||(u.tradeNeedsId!==undefined||u.tradeCargoPending)&&heldItems(u).length)))return;
+ if(!s&&!g.state.units.some(u=>u.hp<=0&&(u.carry>0&&u.carryType||(u.tradeNeedsId!==undefined||u.tradeCargoPending||u.itemCargo?.copperOre||u.itemCargo?.copperMetal)&&heldItems(u).length)))return;
  for(const u of g.state.units){
   if(u.hp>0||!holds(u))continue;
   dropTradeCargoItems(g,u);

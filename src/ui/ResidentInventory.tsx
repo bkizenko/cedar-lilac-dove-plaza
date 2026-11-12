@@ -57,7 +57,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
           <summary>Aptitudes & practice</summary>
           <div>Strength {Math.round(traits.strength * 100)}% · Speed {Math.round(traits.speed * 100)}% · Combat {Math.round(traits.fighting * 100)}% · Trade {Math.round(traits.trading * 100)}%</div>
           <div>{amount(craftSeconds / 60)} min hands-on crafting · +{Math.round(Math.min(0.3, craftSeconds / 1200) * 100)}% work rate</div>
-          {resident.craftingPractice?.toolmaking&&<div>Toolmaking · {amount(resident.craftingPractice.toolmaking.workSeconds/60)} min · {resident.craftingPractice.toolmaking.completedTools} tools · {resident.craftingPractice.toolmaking.completedRepairs} repairs · +{Math.round((toolmakingPracticeRate(resident)-1)*100)}% work rate</div>}
+          {resident.craftingPractice?.toolmaking&&<div>Toolmaking · {amount(resident.craftingPractice.toolmaking.workSeconds/60)} min · {resident.craftingPractice.toolmaking.completedTools} tools · {resident.craftingPractice.toolmaking.completedRepairs} repairs · +{amount((toolmakingPracticeRate(resident)-1)*100)}% work rate</div>}
           {skills.map(([method, skill]) => <div key={method}>
             {PRODUCTION_RECIPES[method as keyof typeof PRODUCTION_RECIPES].name} · {skill.successfulBatches} made · {skill.taughtBatches} learned · +{Math.round((productionPracticeRate(resident, method) - 1) * 100)}% work rate
           </div>)}

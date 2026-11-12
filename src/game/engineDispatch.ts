@@ -1,3 +1,6 @@
+import {freePeople} from './peace';
+import {repatriateCaptive} from './captivity';
+import {sendCaptiveEscort} from './caravans';
 import {armorRepairIssue,beginArmorRepair,pauseArmorRepair,resumeArmorRepair,cancelArmorRepair} from './armorRepair';
 import {beginCopperStudy,copperStudyIssue} from './materialStudy';
 import {beginTradedTeaching,cancelTradedTeaching,TRADED_TEACHING_RULES} from './tradedTeaching';
@@ -20,6 +23,10 @@ import {acceptCapitulation,refuseCapitulation,type CapitulationOutcome} from './
 import {marryHouses,fosterHouses,exchangeHostages} from './rulersRuntime';
 import {setPreferredFormation} from './combatDoctrine';
 import {validFormationKind,type FormationKind} from './formations';
+import {beginPortWork,resumePortWork,resupplyVessel} from './navalPorts';
+import {commissionVessel,beginBoarding,boardNearest} from './navalFleet';
+import {PORT_WORK_IDS,DESIGN_IDS,type PortWork} from './navalClasses';
+import {appointCommander,assignToCommander,releaseFromCommander,promoteCommander,commandersOf} from './commanders';
 import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
@@ -53,6 +60,9 @@ export type EngineDispatchCommand=
  |{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
  |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
+ |{kind:'commander-order';action:'appoint'|'replace'|'assign'|'release'|'promote';unitId?:number;commanderId?:number;commandKind?:'army'|'fleet';ids?:number[];promotionId?:string;replacesId?:number}
+ |{kind:'naval-order';action:'port-work'|'resume-port-work'|'commission'|'board'|'resupply';dockId?:number;work?:PortWork;design?:string;builderId?:number;projectId?:number;boatId?:number;targetBoatId?:number;food?:number;missileLoads?:number}
+ |{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number}
  |{kind:'boat-stop';boatId:number}
  |{kind:'construction-priority';buildingId:number;priority:0|1|2}
  |{kind:'site-preparation-pause';buildingId:number;paused:boolean}
@@ -148,6 +158,9 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
     return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
    }
+   case 'free-captives':{if(!g.state.units.some(u=>u.team===0&&u.hp>0&&u.enslavedFrom===command.team))return no('No captives from that society');freePeople(g,command.team);return{accepted:true,reason:'The captives are free'};}
+   case 'repatriate-captive':return repatriateCaptive(g,command.unitId)?{accepted:true,reason:'Sent home'}:no('That captive cannot be sent home now');
+   case 'escort-captive':return sendCaptiveEscort(g,command.unitId)?{accepted:true,reason:'A guard will escort them'}:no('No spare guard to escort');
    case 'set-formation':return setPreferredFormation(g,command.formation)?{accepted:true,reason:'Groups of four or more will form up this way when ordered to move'}:no('Combat doctrine is not enabled for this save');
    case 'guard-duty':{
     const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');
@@ -156,6 +169,22 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    case 'release-guard':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0);if(!u)return no('Original owned person unavailable');return releaseGuardDuty(g,u.id)?{accepted:true,reason:'Back to ordinary work'}:no('That person is not on duty');}
    case 'accept-capitulation':return acceptCapitulation(g,command.frontId,command.outcome,0);
    case 'refuse-capitulation':{const ok=refuseCapitulation(g,command.frontId,0);return ok?{accepted:true,reason:'Terms refused; they will resist harder'}:no('No offer to refuse here');}
+   case 'commander-order':{
+    const c=command;
+    if(c.action==='appoint'||c.action==='replace'){if(c.unitId===undefined||!c.commandKind||c.action==='replace'&&c.replacesId===undefined)return no('Appoint needs a person and a command kind');return appointCommander(g,c.unitId,c.commandKind,{team:0,replaces:c.action==='replace'?c.replacesId:undefined});}
+    const mine=c.commanderId!==undefined?commandersOf(g,0).find(x=>x.id===c.commanderId):undefined;if(!mine)return no('Not one of your commanders');
+    if(c.action==='assign')return assignToCommander(g,mine.id,c.ids??[]);
+    if(c.action==='release')return releaseFromCommander(g,mine.id,c.ids??[]);
+    return c.promotionId?promoteCommander(g,mine.id,c.promotionId):no('Choose a promotion');
+   }
+   case 'naval-order':{
+    const c=command;
+    if(c.action==='port-work')return c.dockId!==undefined&&c.work&&c.builderId!==undefined?beginPortWork(g,c.dockId,c.work,c.builderId,0):no('Port work needs a dock, a work and a builder');
+    if(c.action==='resume-port-work')return c.projectId!==undefined&&c.builderId!==undefined?resumePortWork(g,c.projectId,c.builderId):no('Choose the paused work and a new builder');
+    if(c.action==='commission')return c.dockId!==undefined&&c.design&&c.builderId!==undefined?commissionVessel(g,c.dockId,c.design,c.builderId,0):no('A hull needs a dock, a design and a shipwright');
+    if(c.action==='board')return c.boatId===undefined?no('Choose your hull'):c.targetBoatId!==undefined?beginBoarding(g,c.boatId,c.targetBoatId,0):boardNearest(g,c.boatId,0);
+    return c.boatId!==undefined?resupplyVessel(g,c.boatId,{food:c.food,missileLoads:c.missileLoads},0):no('Choose the hull to resupply');
+   }
    case 'boat-stop':{
     const boat=g.state.boats?.find(b=>b.id===command.boatId&&b.team===0&&b.hp>0);if(!boat)return no('Original owned boat unavailable');
     const captain=g.state.units.find(u=>u.id===boat.captain&&u.hp>0&&u.team===boat.team&&u.boat?.id===boat.id&&u.boat.phase==='aboard');if(!captain)return no('Original aboard captain unavailable');
@@ -204,7 +233,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
   'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
-  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
+  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','commission','board','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},
   'construction-queue-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='up'||v==='down'||v==='remove',siteId:optionalId},

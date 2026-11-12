@@ -14,6 +14,7 @@ import type {Unit,Building} from './types';
 import {HAULAGE,beginHaulageWork,resumeHaulageProject} from './haulage';
 import {waterNavigation} from './waterTravel';
 import {driftAt} from './riverCurrents';
+import {navalSpeedFactor} from './navalFleet';
 export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;hullClass?:NewBoatClass;exploration?:BoatExploration;sailRig?:import('./sailingRules').SailRig};
 export const BOAT_COST={wood:BOAT_CLASSES.riverboat.wood,stone:BOAT_CLASSES.riverboat.stone,seconds:BOAT_CLASSES.riverboat.seconds,seats:BOAT_CLASSES.riverboat.seats};
 // Gameplay tuning for more thrust with diminishing gains as resistance rises.
@@ -33,7 +34,7 @@ export function riverboatLoadSpeed(g: Game, id: number) {
     (1-BOAT_PRACTICE_RULES.minimumConditionSpeed)*Math.min(1,boat.hp/hull.maxHp))
   : 1;
  const force=sailForce(g,boat,g.state.units.find(u=>u.id===boat.captain)?.facing??boat.facing);
- return vesselLoad(boat,crew).pace * Math.max(rowing*SAILING_RULES.minimumRaisedRowingFraction,rowing+force.bonus-force.drag) * hullPace;
+ return vesselLoad(boat,crew).pace * Math.max(rowing*SAILING_RULES.minimumRaisedRowingFraction,rowing+force.bonus-force.drag) * hullPace * navalSpeedFactor(g,boat);
 }
 const crewCache=new WeakMap<Game,{time:number;units:Unit[];count:number;boats:Map<number,Unit[]>}>();
 export function boatCrew(g:Game,id:number){
