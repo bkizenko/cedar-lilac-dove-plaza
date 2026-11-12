@@ -266,7 +266,7 @@ function aeolian(ctx: Ctx) {
   for (let i = 0; i < total; i++) {
     if (sea[i] || dry[i] < 0.38 || ctx.slope[i] > 0.1 || signed[i] < 22) continue;
     const x = cellX(st, i), z = cellZ(st, i), rk = rockAt(st, i, h[i]);
-    if (!sandy(rk) || rk === 6) continue;
+    if (!sandy(rk)) continue;
     const field = st.noise.fbm(x * 0.0065 + 31, z * 0.0065, 3), patch = smoothstep(0.02, 0.2, field) * smoothstep(0.38, 0.62, dry[i]);
     if (patch <= 0.02) continue;
     const along = x * wx + z * wz, across = -x * wz + z * wx, linear = st.noise.fbm(x * 0.004 + 77, z * 0.004, 2) > 0.12;
