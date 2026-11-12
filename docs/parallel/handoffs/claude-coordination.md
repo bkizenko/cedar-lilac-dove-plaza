@@ -664,3 +664,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 08:42 ET Claude(PM): landed de8a517 (7 commits: integration b0acd5d Hearth council cards + audio dab2096 on main) / focused sweep 105 pass 0 fail 3 skip / blocked: none
 08:38 ET Claude: shipped procedural adaptive score + natural SFX\/environment mix (ASTRA-03\/22): pure state->mix in src/scene/audioMix.ts, thin WebAudio wiring, Menu volume sliders+mute, 12 deterministic tests, tsc diff nil / now on: nothing queued / blocked: none; leftover: no ear-test in a real browser, unit-level positions for animal calls
+
+- Codex final built review: new Hearth trade-notification Accept label inherited dark ink because `.hw button` outranked `.hw-note-act`; narrowing selector to `.hw .hw-note-act` restores existing intended light-text token. No art redesign. Native35+society51+view11 PASS; actual built3terms and paid20logs readout passed; final return/diagnostic/save checks following rebuild. UI fixture explicitly authors hall visibility; movement/cargo qualification is ordinary native simulation. Existing bedding/M0 agent branches fully landed, no extra parked work.
