@@ -1,3 +1,4 @@
+import {packCapacityMultiplier} from './packAnimalState';
 import {SAILING_RULES,type SailRigOrder} from './sailingRules';
 import {validSailRigOrder,sailRigPhysicalIssue,finishSailRig} from './boatSailing';
 import{inheritedHaulageEvidence}from'./inheritedKnowledge';
@@ -303,9 +304,10 @@ function usesTransport(u: HaulageUnit) {
 }
 
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
-function loadCapacityMultiplier(u:HaulageUnit,kind:ResKind){return basketCapacityMultiplier(u,kind)*(u.boat?.phase==='aboard'?5:usesTransport(u)&&u.haulage?HAULAGE[u.haulage].capacity:1);}
-export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
-  return GATHER[kind].carry*Math.max(0,loadCapacityMultiplier(u,kind)-equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits);
+function loadCapacityMultiplier(u:HaulageUnit,kind:ResKind,maximum=false){return basketCapacityMultiplier(u,kind)*(u.boat?.phase==='aboard'?5:usesTransport(u)&&u.haulage?(u.haulage==='pack'?(maximum?HAULAGE.pack.capacity:packCapacityMultiplier(u)):HAULAGE[u.haulage].capacity):1);}
+/** maximum is for validating already held loads, never for assigning new cargo. */
+export function carryingCapacity(u: HaulageUnit, kind: ResKind, maximum=false) {
+  return GATHER[kind].carry*Math.max(0,loadCapacityMultiplier(u,kind,maximum)-equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits);
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {

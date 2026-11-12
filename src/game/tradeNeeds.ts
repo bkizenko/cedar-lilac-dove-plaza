@@ -1,3 +1,4 @@
+import {packCapacityMultiplier} from './packAnimalState';
 import type {Game} from './sim';
 import type {GameState,Livestock,ResKind,Unit} from './types';
 import {knownSettlementSite,localSettlementHall} from './barter';
@@ -116,7 +117,7 @@ export function escortsForRisk(risk:number){return risk<.4?0:risk<.6?1:risk<.8?2
 
 // ---- Proposal.
 const free=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>=u.maxHp*.6&&!u.prisoner&&!isDependent(g,u)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&u.tradeNeedsId===undefined&&['idle','gather','hold'].includes(u.order);
-function capacity(u:Unit,k:GoodKind){const good=TRADE_GOODS[k];return good.cat==='resource'?Math.floor(carryingCapacity(u,k as ResKind)):good.perCarrier*(u.haulage==='pack'?2:1);}
+function capacity(u:Unit,k:GoodKind){const good=TRADE_GOODS[k];return good.cat==='resource'?Math.floor(carryingCapacity(u,k as ResKind)):Math.floor(good.perCarrier*(u.haulage==='pack'?packCapacityMultiplier(u):1));}
 function cooling(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get&&c.until>g.state.time);}
 function declineRow(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get);}
 export type TradeProposal={ok:true;offer:TradeOffer}|{ok:false;reason:string};
@@ -187,7 +188,7 @@ type CommitPlan={blocker:string}|CommitReady;
 function commitPlan(g:Game,o:TradeOffer):CommitPlan{
  if(o.from!==0&&tradeStock(g,o.from,o.give.kind)-tradeReserve(g,o.from,o.give.kind)<o.give.amount&&o.give.kind!=='food')return{blocker:'proposer-short'};if(tradeStock(g,o.from,o.give.kind)<o.give.amount)return{blocker:'proposer-short'};
  if(tradeStock(g,o.to,o.get.kind)<o.get.amount)return{blocker:'partner-short'};
- const home=g.campOf(o.from),pool=g.state.units.filter(u=>u.type==='worker'&&free(g,u,o.from)&&!u.militia&&supplyDrops(g,o.from).length>0).sort((a,b)=>Number(b.haulage==='pack')-Number(a.haulage==='pack')||dist(a,home)-dist(b,home)||a.id-b.id);
+ const home=g.campOf(o.from),pool=g.state.units.filter(u=>u.type==='worker'&&free(g,u,o.from)&&!u.militia&&supplyDrops(g,o.from).length>0).sort((a,b)=>(b.haulage==='pack'?packCapacityMultiplier(b):1)-(a.haulage==='pack'?packCapacityMultiplier(a):1)||dist(a,home)-dist(b,home)||a.id-b.id);
  if(!pool.length)return{blocker:'no-carriers'};
  const carriers:Unit[]=[];let capGive=0,capGet=0;for(const u of pool){if(capGive>=o.give.amount&&capGet>=o.get.amount||carriers.length>=TRADE_NEEDS_RULES.maximumCarriers)break;carriers.push(u);capGive+=capacity(u,o.give.kind);capGet+=capacity(u,o.get.kind);}
  if(capGive<o.give.amount||capGet<o.get.amount)return{blocker:'too-heavy'};

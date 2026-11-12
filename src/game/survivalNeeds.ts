@@ -1,3 +1,4 @@
+import {PACK_ANIMAL_RULES} from './packAnimalState';
 import {presentationHearthHeating,presentationSurvivalFireActive} from './presentationSurvivalView';
 import{HOUSING_RULES}from'./housingRules';
 import{tickGarmentHeat}from'./textiles';
@@ -108,7 +109,7 @@ function fireDemand(g:Game,team:number,ambient:number){
 }
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),home=g.campOf(team),homeTemp=localAirTemperature(g,home.x,home.z),temp=Math.round(homeTemp);
- const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team),fuelDemand=fireDemand(g,team,ambientTemperature(g));
+ const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team)+g.state.units.filter(u=>u.team===team&&u.hp>0&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0).length*PACK_ANIMAL_RULES.waterPerSecond,fuelDemand=fireDemand(g,team,ambientTemperature(g));
  const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];

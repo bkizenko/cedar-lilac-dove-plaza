@@ -9122,6 +9122,24 @@
       "liveCommit": "41f5870657edfda2a584d23c787593c183facaa6",
       "evidence": "docs/metrics/prestige-curd-release-2026-11-12.json",
       "scope": "Versioned capped evidence score and compact readonly ledger; explored useful land/quality, health, ready food, actual practices, outbound trade returns, maintained civic works; dated partial rivals with identity separate from private totals. Defended-war outcomes and broader trade histories remain open; no gate credit."
+    },
+    {
+      "id": "CODEX-GOAT-RESERVED-PLACES",
+      "owner": "Codex Economy",
+      "state": "live",
+      "sourceCommit": "5ac285f",
+      "liveCommit": "1422a7898a868cb23093bc7c665aa0426db568fb",
+      "evidence": "docs/metrics/goat-handover-release-2026-11-12.json",
+      "scope": "Consistent reservation of original pen places while escorted; no-spend queued wait and concise away/reserved count. Native existing generated goat find/capture/escort/pen succeeds across strict reload; broader species/transport remain open."
+    },
+    {
+      "id": "CODEX-HANDOVER-CONSTRUCTION-INTENT",
+      "owner": "Codex Platform",
+      "state": "live",
+      "sourceCommit": "5cf1a5c",
+      "liveCommit": "1422a7898a868cb23093bc7c665aa0426db568fb",
+      "evidence": "docs/metrics/goat-handover-release-2026-11-12.json",
+      "scope": "Only unpaid former-player construction queue cleared after actual whole-community paid custody settlement. Paid inputs/progress/actors and third-party prisoner guard retained, strict save/reload validated. No diplomatic UI acceptance claim."
     }
   ],
   "status_update_policy": {

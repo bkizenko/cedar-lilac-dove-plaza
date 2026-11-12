@@ -247,7 +247,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
   farmToolWork?: FarmToolWork;
-  packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
+  packAnimal?: import('./packAnimalState').PackAnimal;
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
