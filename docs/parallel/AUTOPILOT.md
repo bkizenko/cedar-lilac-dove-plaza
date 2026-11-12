@@ -888,3 +888,9 @@ Other-lane failures below are player-facing or suite-blocking; owners should tak
 
 ## Hourly status rule — 2026-11-11 21:56 ET (Boris)
 Every agent (Codex, Claude, Grok) posts one status line at least hourly on docs/parallel/handoffs/claude-coordination.md: `HH:MM ET <agent>: shipped <what> (SHA) / now on <item> / blocked: <none|what>`. Grok rolls these into an hourly update for Boris. An agent that misses two hourly lines in a row is treated as stalled and its next items get reassigned.
+
+## Save-compatibility relaxed — 2026-11-11 22:09 ET (Boris)
+Boris has no past villages he cares about. Old-save compatibility is no longer a guardrail: agents may change save formats freely, with no migrations, historic-mode switches, or "old saves load unchanged" tests required. New games must still save and load correctly, and the live deployment must keep running. Features previously hidden behind switches only to protect old saves can be turned on by default once tested.
+
+## Claude status — 22:09 ET
+Claude is active: marriage alliances (marryHouses) and expansion drivers (expansionDrivers.ts: push/pull/enablers/brakes feeding NPC settle/migrate/conquer/trade/explore modes with plain-language reasons) are pushed to integration (72cf269). Next: UI panels (council dossier, handover card, factions strip, diplomacy sheet, expansion "why"), then a player marriage button. Codex: run the full suite natively on the merged integration tree (Claude's sandbox lacks node_modules). The reassignment of Claude's river/trail drawing is cancelled.
