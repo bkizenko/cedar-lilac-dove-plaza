@@ -7,6 +7,7 @@ import {validatePolity} from './polityModel';
 import {validateRuler} from './rulerGenome';
 import {rollGreatPerson} from './greatPersons';
 import type {Tier} from './fame';
+import {familyFeatures} from './familyScale';
 
 export type SocietyRulers={civ:CivSeed;dynasty:Dynasty;ledger:Ledger;greatEmerged:number};
 export type RulersState={version:1;seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>};
@@ -17,12 +18,13 @@ export function initRulers(gameSeed:number,ids:string[]):RulersState{
  return {version:1,seed:gameSeed,year:0,societies,notices:{}};
 }
 /** Advance one compressed year for every society. Pure: returns a new state. */
-export function stepRulersYear(s:RulersState,crisisOf:(id:string)=>number=()=>.3):RulersState{
+/** popOf: living people per society (default 120 = full dynasty mechanics, so tests/headless runs keep prior behaviour). */
+export function stepRulersYear(s:RulersState,crisisOf:(id:string)=>number=()=>.3,popOf:(id:string)=>number=()=>120):RulersState{
  const year=s.year+1,societies:Record<string,SocietyRulers>={};
  for(const [id,sr] of Object.entries(s.societies)){
-  const p=sr.civ.polity,before=sr.dynasty.generation;
-  let dyn=stepYear(sr.dynasty,s.seed,p.tier,p.succession,year),great=sr.greatEmerged;
-  if(dyn.generation>before){
+  const p=sr.civ.polity,before=sr.dynasty.generation,ff=familyFeatures(p.tier,popOf(id));
+  let dyn=stepYear(sr.dynasty,s.seed,ff.heirs?p.tier:'band',p.succession,year),great=sr.greatEmerged;
+  if(dyn.generation>before&&ff.greatPersons){
    const g=rollGreatPerson(s.seed+year,dyn.generation,crisisOf(id),sr.civ.ecology.surplus,p.institutionalization);
    if(g){great++;const cur=dyn.people[dyn.rulerId];if(cur)dyn={...dyn,people:{...dyn.people,[cur.id]:{...cur,ruler:{...g.ruler,id:cur.id},name:g.ruler.name}}};}
   }

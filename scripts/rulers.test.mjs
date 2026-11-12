@@ -165,3 +165,22 @@ test('bridge maps known actions/events, ignores unknown, dossier is plain langua
  const r=generateRuler(12);
  assert.notEqual(opener(r,{...noTies(),bond:40}),opener(r,{...noTies(),grievance:60}));
 });
+
+import {familyStage,familyWeight,familyFeatures,kinshipEffectScale} from '../src/game/familyScale.ts';
+test('family importance scales with population; every society still has a ruling house',()=>{
+ assert.equal(familyStage(10),'household');assert.equal(familyStage(20),'kingroup');assert.equal(familyStage(60),'house');assert.equal(familyStage(200),'dynasty');
+ let prev=-1;for(const n of [1,5,10,20,40,80,160,400]){const w=familyWeight(n);assert.ok(w>=prev&&w>=0&&w<=1);prev=w;}
+ const small=familyFeatures('chiefdom',10),mid=familyFeatures('chiefdom',60),big=familyFeatures('state',300);
+ assert.equal(small.heirs,false);assert.equal(small.showSuccessionUI,false);assert.equal(small.showDossier,true);
+ assert.equal(mid.heirs,true);assert.equal(mid.claims,false);assert.equal(big.claims,true);assert.equal(big.greatPersons,true);
+ assert.equal(familyFeatures('state',10).claims,false,'a tiny state still does not need claims');
+ assert.ok(kinshipEffectScale(10)<kinshipEffectScale(300));
+});
+
+test('tiny societies run no births or great persons; large ones do',()=>{
+ let a=initRulers(77,['x']),b=initRulers(77,['x']);
+ for(let i=0;i<120;i++){a=stepRulersYear(a,()=>.5,()=>8);b=stepRulersYear(b,()=>.5,()=>400);}
+ const born=s=>Object.values(s.societies.x.dynasty.log).filter(l=>l.includes('born')).length;
+ assert.equal(born(a),0);assert.ok(born(b)>0);assert.equal(a.societies.x.greatEmerged,0);
+ assert.ok(a.societies.x.dynasty.people[a.societies.x.dynasty.rulerId].alive,'a ruler always exists');
+});
