@@ -6,6 +6,7 @@ import {foodDemand} from '../src/game/settlement.ts';
 import {rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,rivalMaterialPriority,rivalKnows,rivalWorkRange,developRivalResources,developRivalEquipment} from '../src/game/rivalDevelopment.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {scoutKnowledge} from '../src/game/scouting.ts';
+import {treeInsideBuilding} from '../src/game/rivalConstruction.ts';
 
 function fixture(){
  const g=new Game();g.reset(123456,2);g.enterIsland();g.world.heights.fill(4);
@@ -145,8 +146,10 @@ test('remote resources remain unknown until a resident observes them',()=>{
  assert.equal(g.tribe(1).wood,before-16);assert.equal(camp.build,0,'paid plans require construction');
  assert.equal(rivalWorkRange(g,1,115,40,'wood'),true,'known woods allow hand cutting before the optional camp is complete');
  const builder=g.state.units.find(u=>u.node===camp);assert.ok(builder);
- for(let i=0;i<1000&&camp.build<1;i++){g.state.time+=.1;g.navBudget=4;g.workerAI(builder,.1);}
- assert.equal(camp.build,1,'a real resident walks to and builds the camp');
+ // A forest plot now includes ordinary cutting and physical unloading trips.
+ for(let i=0;i<10000&&camp.build<1;i++){g.state.time+=.1;g.navBudget=4;g.workerAI(builder,.1);}
+ assert.equal(camp.build,1,'a real resident clears trees, unloads and returns to build the camp');
+ assert.ok(g.state.trees.every(n=>n.amount===0||!treeInsideBuilding(n,camp)),'no roof may complete over standing footprint timber');
  assert.equal(rivalWorkRange(g,1,115,40,'wood'),true);
  assert.equal(rivalWorkRange(g,1,115,40,'food'),false);
  const saved=decodeGame(encodeGame(g));assert.equal(saved.state.buildings.find(b=>b.id===camp.id).build,1);

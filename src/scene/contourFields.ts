@@ -10,22 +10,26 @@ type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:Rend
 export function fieldCropKind(field:RenderField):FieldCrop{return field.crop?.kind??field.cropType??'grain';}
 export function fieldCropGrowth(field:RenderField){const c=field.crop;return c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);}
 /** Rows use the measured contour tangent. Only interior plant roots rotate;
- * rectangle/boundary stakes and the heightfield never rotate or flatten. */
+ * rectangle boundary and the heightfield never rotate or flatten. */
 export function contourPlantSites(plot:{x:number;z:number;w:number;d:number},angle:number,kind:FieldCrop){
  const {rowMetres,plantMetres}=CROP_ART_RULES.rows[kind],margin=CROP_ART_RULES.edgeMarginMetres,halfW=Math.max(0,plot.w/2-margin),halfD=Math.max(0,plot.d/2-margin),ux=Math.cos(angle),uz=Math.sin(angle),nx=-uz,nz=ux;
+ // Thin both axes, then sample the complete rectangle. Never stop at the first
+ // 512 plants: that erased the far half of large fields.
+ const density=Math.max(1,Math.sqrt(4*halfW*halfD/(rowMetres*plantMetres*CROP_ART_RULES.maximumPlantsPerField)));
+ const rowSpacing=rowMetres*density,plantSpacing=plantMetres*density;
  const across=Math.abs(nx)*halfW+Math.abs(nz)*halfD,points:{x:number;z:number}[]=[];
- for(let row=Math.ceil(-across/rowMetres);row<=Math.floor(across/rowMetres);row++){
-  const v=row*rowMetres;let lo=-Infinity,hi=Infinity;
+ for(let row=Math.ceil(-across/rowSpacing);row<=Math.floor(across/rowSpacing);row++){
+  const v=row*rowSpacing;let lo=-Infinity,hi=Infinity;
   for(const [axis,normal,bound]of [[ux,nx,halfW],[uz,nz,halfD]]){
    if(Math.abs(axis)<1e-8){if(Math.abs(normal*v)>bound){lo=1;hi=0;break;}continue;}
    const a=(-bound-normal*v)/axis,b=(bound-normal*v)/axis;lo=Math.max(lo,Math.min(a,b));hi=Math.min(hi,Math.max(a,b));
   }
-  for(let col=Math.ceil(lo/plantMetres);col<=Math.floor(hi/plantMetres);col++){
-   if(points.length>=CROP_ART_RULES.maximumPlantsPerField)return points;const u=col*plantMetres;
+  for(let col=Math.ceil(lo/plantSpacing);col<=Math.floor(hi/plantSpacing);col++){
+   const u=col*plantSpacing;
    points.push({x:plot.x+ux*u+nx*v,z:plot.z+uz*u+nz*v});
   }
  }
- return points;
+ return points.length<=CROP_ART_RULES.maximumPlantsPerField?points:Array.from({length:CROP_ART_RULES.maximumPlantsPerField},(_,i)=>points[Math.floor((i+.5)*points.length/CROP_ART_RULES.maximumPlantsPerField)]);
 }
 function colored(g:THREE.BufferGeometry,color:string){const c=new THREE.Color(color),data=new Float32Array(g.attributes.position.count*3);for(let i=0;i<data.length;i+=3)data.set([c.r,c.g,c.b],i);g.setAttribute('color',new THREE.BufferAttribute(data,3));return g;}
 function stem(x:number,y:number,z:number,r:number,height:number,color:string){const g=new THREE.CylinderGeometry(r,r*.9,height,4);g.translate(x,y+height*.5,z);return colored(g,color);}

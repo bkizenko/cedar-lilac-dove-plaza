@@ -1,0 +1,108 @@
+{
+  "baseline": "3c69426",
+  "scope": "Resource-obstruction spatial index only; original full-clearing WorkBoard reset preserved. Node timing, not browser frame-rate qualification.",
+  "queryMicrocomparison": {
+    "scope": "Exact saved-village resource-obstruction query microcomparison; not complete Game.step or browser FPS",
+    "baseline": "3c69426",
+    "solidCount": 237,
+    "resourceCount": 3949,
+    "blockedCount": 65,
+    "rounds": 4,
+    "oldMs": [
+      36.07166700000016,
+      54.54691699999967,
+      33.30879200000072,
+      26.308208000000377
+    ],
+    "candidateMs": [
+      4.423584000000119,
+      2.670916000000034,
+      1.1464169999999285,
+      1.1154579999993075
+    ],
+    "medianBeforeMs": 36.07166700000016,
+    "medianAfterMs": 2.670916000000034,
+    "fullMaskEqual": true,
+    "sinkEqual": true,
+    "oldWorstCaseCandidates": 935913,
+    "indexCandidates": 11864,
+    "bucketReferences": 2437,
+    "fullStateUnchanged": true,
+    "sourceUnchanged": true
+  },
+  "fullStepReplay": {
+    "before": {
+      "baseline": "3c69426",
+      "primingSlices": 284,
+      "scope": "Spatial index only vs3c69426. BOTH water modes and geographic fields preprimed before initialhash;20warm+120ordinary1/30s steps. Only sparse reset/refresh timers, no hot per-node wrappers/profiler. Not browser FPS qualification.",
+      "steps": {
+        "count": 120,
+        "meanMs": 88.56961911666652,
+        "p50Ms": 79.88700000000063,
+        "p95Ms": 133.7547080000004,
+        "maxMs": 300.63870900000074
+      },
+      "metrics": {
+        "resetCalls": 5,
+        "resetGeometryClears": 5,
+        "refreshCalls": 197,
+        "refreshGeometryRebuilds": 5,
+        "totalRefreshMs": 297.9468709999801,
+        "maxRefreshMs": 68.87804200000028,
+        "postResetRefreshMilliseconds": [
+          68.87804200000028,
+          47.8662089999998,
+          54.80729100000099,
+          44.42124999999942,
+          38.74591700000019
+        ]
+      },
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "finalEncodedHash": "85a13882672c2f1b0834ea5c25761b2310a635cb3117e95b3a4d4ae7036b4e80",
+      "randomCalls": 3167,
+      "sourceUnchanged": true,
+      "errors": []
+    },
+    "after": {
+      "baseline": "3c69426",
+      "primingSlices": 270,
+      "scope": "Spatial index only vs3c69426. BOTH water modes and geographic fields preprimed before initialhash;20warm+120ordinary1/30s steps. Only sparse reset/refresh timers, no hot per-node wrappers/profiler. Not browser FPS qualification.",
+      "steps": {
+        "count": 120,
+        "meanMs": 117.13509997499997,
+        "p50Ms": 97.20349999999962,
+        "p95Ms": 210.66829099999813,
+        "maxMs": 652.8820420000011
+      },
+      "metrics": {
+        "resetCalls": 5,
+        "resetGeometryClears": 5,
+        "refreshCalls": 197,
+        "refreshGeometryRebuilds": 5,
+        "totalRefreshMs": 192.47879099999136,
+        "maxRefreshMs": 46.34441700000025,
+        "postResetRefreshMilliseconds": [
+          46.34441700000025,
+          32.34416599999895,
+          27.112624999999753,
+          31.411041999999725,
+          17.447291999997105
+        ]
+      },
+      "initialHash": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+      "finalEncodedHash": "85a13882672c2f1b0834ea5c25761b2310a635cb3117e95b3a4d4ae7036b4e80",
+      "randomCalls": 3167,
+      "sourceUnchanged": true,
+      "errors": []
+    },
+    "sameInitialHash": true,
+    "sameFinalHash": true,
+    "sameRandomCalls": true
+  },
+  "qualification": {
+    "behavioralReplayEquivalent": true,
+    "wholeStepPerformanceImproved": false,
+    "retentionOptimizationIncluded": false,
+    "privateSavePublished": false
+  }
+}

@@ -193,7 +193,7 @@ Review visual choices independently:
 
 ## 14. User art preferences and preserved baseline, November 10
 
-The user favors H (tactile timber/handmade model) and E (romantic landscape with a disappearing HUD), with a Renaissance-like atmosphere. Handmade Model and Winter Realism are also liked. Treat these as favored directions for the next measured prototype. Earlier A/B/C interfaces, all flags, tribal variations, armor concepts and wonder examples remain available for review. Verify the letter against its original sheet before discarding any alternatives.
+The user favors H (carved wooden tabletop world) and E (the exact original top-centre E panel), with a Renaissance-like atmosphere. Handmade Model and Winter Realism are also liked. Treat these as favored directions for the next measured prototype. Earlier A/B/C interfaces, all flags, tribal variations, armor concepts and wonder examples remain available for review. Verify the letter against its original sheet before discarding any alternatives.
 
 All ten PNG concept sheets were archived with SHA-256 hashes in /Users/boriskizenko/Documents/Hearthwild Art Archive/concept-manifest.json. Originals remain in the generated-image directory. The existing graphics source is pinned by Git tag art-baseline-2026-11-10-ebdb6e2. The corresponding playable snapshot is .play/releases/2026-11-11T02-11-37-ebdb6e2. The archive is outside the game bundle to avoid adding concept sheets to the downloaded game. The user explicitly requested preserving these references.
 
@@ -211,10 +211,18 @@ Prototype assets should share one palette/material atlas per family and mesh par
 
 ### Full H target and current-village comparison
 
-The user explicitly requests the full H visual direction, with E retained for comparison. Do not reinterpret the preference as merely a palette change to the existing primitive meshes. The archived `concept-sheets-2026-11-10/village-H-E-comparison.png` uses the user's current village as the layout reference. It is an image-generation concept, not a playable capture or proof that this fidelity runs on the M1. Preserve village layout, terrain attachment, varied vernacular building silhouettes, readable work actions and restrained UI when translating H into real assets. Small hearths and ordinary workplaces must not acquire broad raised rectangular platforms.
+The user explicitly requests the full original H carved-wood world direction, with E retained for comparison. Do not reinterpret the preference as merely a palette change to the existing primitive meshes. The archived `concept-sheets-2026-11-10/village-H-E-comparison.png` uses the user's current village as the layout reference. It is an image-generation concept, not a playable capture or proof that this fidelity runs on the M1. Preserve village layout, terrain attachment, varied vernacular building silhouettes, readable work actions and restrained UI when translating H into real assets. Small hearths and ordinary workplaces must not acquire broad raised rectangular platforms.
 
 ### Grain preservation is not a monotonically improving processing ladder
 
 Harvest, threshing, winnowing, milling and baking are separate physical jobs. Drying and cleaning help safe grain storage, but milling exposes more surface and flour generally stores less well than intact dry grain. Store cleaned dry grain for reserves, mill smaller batches to replenish meals, and show the actual bottleneck rather than imply all intermediate material is ready food. Bread is another distinct perishable food. Existing game timers are adjustable game-time values, not a claim of historical shelf-life duration.
 
 Sources: [FAO post-harvest management](https://www.fao.org/4/i0959e/i0959e00.pdf), [FAO whole grain and daily milling](https://www.fao.org/4/w0078e/w0078e07.htm). Keep dry protection, moisture exposure and capacity overflow measurable; a large unprocessed harvest must not deadlock the same processing needed to free capacity.
+
+### Original H/E reference correction
+
+The exact D–I sheet is archived as `concept-sheets-2026-11-10/exec-f8893bda-4867-47a5-8334-5e27a5ee4ed2.png`. H is the bottom-centre carved wooden model world: visible wood grain across architecture and terrain, carved/laminated contour hills, stylized rounded trees, limited foliage green, blue water and minimal white controls. E is the exact top-centre E panel; retain the image rather than substituting a generic style label. The subsequent H/E current-village comparison instead showed a detailed rustic realistic village for H; that is not a faithful reproduction of original H. Preserve the image for historical reference but do not use it to redefine the chosen direction. Original A–C interface options are on `exec-e148c534-997e-4492-a47c-b76f4469d40c.png`. The archive index now puts the original sheets first.
+
+### Approved civic and wonder concepts
+
+The user explicitly approved all six examples on `exec-2b5148d9-1945-4330-9add-1f9e9a629b7a.png`: Ring Observatory, Crescent Harbor, Cascade Garden, Canyon Cistern, Assembly Court and Mill Market. Preserve this sheet and the existing three GLB prototypes in the external art archive. Extend these as functional 3D families, with local materials, real site/water requirements, differentiated purposes and seed-driven variation. The concept approval does not imply six integrated in-game buildings already exist.

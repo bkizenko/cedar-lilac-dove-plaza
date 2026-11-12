@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {calendar,farmAvailable,farmWork} from './settlement';
-import {plotArea} from './plots';
+import {plotArea,fieldCrewSlots} from './plots';
 type Station={lane:number;point:number;worked:number;key:string;x:number;z:number};
 const crews=new WeakMap<Building,Map<Unit,Station>>();
 function point(b:Building,lane:number,index:number,slots:number){
@@ -20,7 +20,7 @@ export function fieldWorkStep(g:Game,u:Unit,b:Building,dt:number){
  if(!g.finished(b)||!farmAvailable(g,b)){u.node=null;u.order=u.carry>0?'return':'idle';return;}
  let crew=crews.get(b);if(!crew){crew=new Map();crews.set(b,crew);}
  for(const person of crew.keys())if(person.hp<=0||person.node!==b||person.order!=='gather')crew.delete(person);
- const cal=calendar(g),key=`${cal.year}:${cal.phase}:${b.w}:${b.d}`,slots=Math.min(12,Math.ceil(3*plotArea(b)));
+ const cal=calendar(g),key=`${cal.year}:${cal.phase}:${b.w}:${b.d}`,slots=fieldCrewSlots(b);
  let station=crew.get(u);
  if(!station||station.key!==key){
    const used=new Set([...crew.entries()].filter(([p,s])=>p!==u&&s.key===key).map(([,s])=>s.lane));
@@ -43,7 +43,7 @@ export function fieldWorkStep(g:Game,u:Unit,b:Building,dt:number){
 }
 export function staffField(g:Game,b:Building){
  if(b.team!==0||b.type!=='farm'||!g.finished(b)||!farmAvailable(g,b)){g.banner('No field work this season',3);return 0;}
- const slots=Math.min(12,Math.ceil(3*plotArea(b)));
+ const slots=fieldCrewSlots(b);
  const existing=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length;
  const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.foundingJourney&&u.node!==b&&['idle','hold','gather'].includes(u.order))
    .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));

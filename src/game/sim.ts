@@ -3,6 +3,8 @@ import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultipli
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
+import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
+import {combatMusicMood} from './combatMusic';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
@@ -72,7 +74,7 @@ import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
-import {plotArea,scalablePlot,validPlot,type PlotSize} from './plots';
+import {plotArea,scalablePlot,validPlot,fieldCrewSlots,fieldSeedIssue,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
@@ -1298,13 +1300,7 @@ export class Game {
   }
 
   musicMood(): "peace" | "raid" | "pillage" {
-    const home=this.campOf(0);
-    const nearbyFight=(u:Unit)=>u.order==='attack'&&u.target&&u.target.hp>0&&Math.hypot(u.x-u.target.x,u.z-u.target.z)<24;
-    // Defense wins when both sides are fighting at home. Hunting and stale
-    // raid markers cannot keep the soundtrack in an offensive battle state.
-    if(this.state.units.some(u=>u.hp>0&&!u.shelterId&&this.isFoe(0,u.team)&&this.visibleAt(u.x,u.z)&&u.envoy?.kind!=='peace'&&(Math.hypot(u.x-home.x,u.z-home.z)<40||nearbyFight(u)&&u.target?.team===0)))return 'raid';
-    if(this.state.units.some(u=>u.team===0&&u.hp>0&&!u.demobilizing&&!u.recalled&&!u.huntOnly&&(nearbyFight(u)||u.order==='attackmove'&&u.pillage>=0&&!!u.attackDestination)))return 'pillage';
-    return 'peace';
+    return combatMusicMood(this);
   }
 
   craftFarmTool(kind: FarmToolKind, workplaceId?:number) {
@@ -1419,7 +1415,7 @@ export class Game {
     const crossing=type==="bridge"?(span??planBridge(this,x,z)):undefined;
     const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
     const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
-    if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(`Need ${Math.max(0,(cost.seeds||0)-(tribe.seeds||0))} more seeds to mark this field`,4);return false;}
+    if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(fieldSeedIssue(tribe.seeds||0,cost.seeds||0)!,4);return false;}
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
     const spot = this.placementValid(type, x, z, team,size,span)
       ? { x, z }
@@ -1516,6 +1512,7 @@ export class Game {
       u.node = null;
       return;
     }
+    if(rivalSiteClearance(this,u,b))return;
     if(!reserveConstructionWorker(this,u,b,"traveling"))return;
     u.node = b;
     if (!this.buildingWorkReached(u,b)) {
@@ -2772,7 +2769,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?Math.min(12,Math.ceil(3*plotArea(node))):2;
+    const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?fieldCrewSlots(node):2;
     let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
     this.workBoard.reset();
     for (const u of workers) {
@@ -3426,6 +3423,7 @@ export class Game {
           if (n.amount === 0) n.regenT = 100;
         }
         if (n.amount > 0) continue;
+        if(buildingBlocksTreeRegrowth(this,n))continue;
         if (n.kind === "stone" || n.kind === "copper" || n.kind === "iron") continue;
         // Exhausted wild food does not regrow through winter.
         if (n.kind === "forage" && calendar(this).phase === 3) continue;

@@ -1,0 +1,125 @@
+{
+  "gate": "M2-07",
+  "testedCodeCommit": "188df58",
+  "positiveAutomatedScenarios": {
+    "passed": 2,
+    "total": 2
+  },
+  "positive": {
+    "scope": "Controlled quiet two-NPC and player delegation routes; player local observations intentionally live, NPC private market report delivered home",
+    "results": [
+      {
+        "case": "npc-carried-report",
+        "carrier": 497,
+        "meeting": {
+          "x": 83.62622514898949,
+          "z": 5.4002827970038165,
+          "time": 32.40000000000019
+        },
+        "arrival": {
+          "x": 6.455545506552978,
+          "z": 5.35071017630422,
+          "time": 68.00000000000041
+        },
+        "goods": [
+          {
+            "kind": "food",
+            "need": "glut",
+            "canOffer": true
+          },
+          {
+            "kind": "wood",
+            "need": "balanced",
+            "canOffer": true
+          },
+          {
+            "kind": "stone",
+            "need": "needs",
+            "canOffer": false
+          },
+          {
+            "kind": "copper",
+            "need": "unavailable",
+            "canOffer": false
+          },
+          {
+            "kind": "iron",
+            "need": "unavailable",
+            "canOffer": false
+          }
+        ],
+        "unseenChanges": {
+          "wood": 0,
+          "stone": 900,
+          "newUnseenHut": 511
+        },
+        "savedInTransit": true,
+        "cargoDelivered": {
+          "kind": "wood",
+          "amount": 71
+        }
+      },
+      {
+        "case": "player-witnessed-live-meeting",
+        "carrier": 493,
+        "observationTime": 40.0000000000003,
+        "unseenLaterStock": {
+          "wood": 0,
+          "stone": 999
+        },
+        "observation": {
+          "populationLow": 2,
+          "populationHigh": 10,
+          "buildings": 1,
+          "stocks": {
+            "food": "plentiful",
+            "wood": "plentiful",
+            "stone": "plentiful"
+          }
+        },
+        "datedOffers": 6,
+        "savedOnReturn": true
+      }
+    ]
+  },
+  "negativeDiagnostic": {
+    "scope": "Diagnostic: NPC previously mapped empty terrain. Player then physically pays/builds an outpost there; no current NPC observer ever approaches, no message/returned report. Control has no outpost.",
+    "output": [
+      {
+        "construct": false,
+        "actualWitnessEverPresent": false,
+        "priorTerrainMapped": true,
+        "before": {
+          "trust": 0.5,
+          "tension": 0
+        },
+        "after": {
+          "trust": 0.5,
+          "tension": 0
+        },
+        "paidLogs": 0,
+        "walked": 0,
+        "errors": []
+      },
+      {
+        "construct": true,
+        "actualWitnessEverPresent": false,
+        "priorTerrainMapped": true,
+        "before": {
+          "trust": 0.5,
+          "tension": 0
+        },
+        "after": {
+          "trust": 0.43812409442250416,
+          "tension": 0.9995281089161409
+        },
+        "paidLogs": 70,
+        "completedAt": 31.400000000000176,
+        "walked": 106.68024514284276,
+        "errors": []
+      }
+    ],
+    "unwitnessedKnowledgeLeak": true
+  },
+  "fullGateVerdict": "Not qualified: unwitnessed frontier construction creates NPC diplomatic pressure via old terrain knowledge. Player live witnessed observations are valid and deliberately not treated as a defect."
+}

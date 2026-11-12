@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {fieldWorkStep,staffField} from '../src/game/fieldWork.ts';
-import {BUILDINGS} from '../src/game/constants.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';
+import {BUILDINGS} from '../src/game/constants.ts';import {CEREAL_RULES} from '../src/game/cerealRules.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function setup(scale=1){const g=new Game();g.reset(345,2);g.enterIsland();g.world.heights.fill(4);g.vision.fill(2);g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,40,0)];for(const k of ['trees','stones','forage','fish','wildlife'])g.state[k]=[];g.state.weather='clear';g.state.time=0;const b=g.makeBld('farm',30,40,0);b.w*=scale;g.state.buildings.push(b);g.rebuildWalk();return {g,b};}
 function worker(g,b,x=20,z=40){const u=g.spawnUnit('worker',x,z,0);u.node=b;u.order='gather';u.job='food';return u;}
 test('workers reach distinct rows before producing crops and move between work stations',()=>{
@@ -12,10 +12,10 @@ test('workers reach distinct rows before producing crops and move between work s
  assert.ok([...positions.values()].some(ps=>Math.max(...ps.map(p=>p[1]))-Math.min(...ps.map(p=>p[1]))>1),'workers traverse the rows');
 });
 test('harvest stays finite, requires reaching a row, and is carried home',()=>{
- const {g,b}=setup();g.state.time=900;b.crop={year:0,planted:1,tended:1,remaining:12,ripened:true,kind:'grain'};const u=worker(g,b),food=g.tribe(0).food;
+ const {g,b}=setup();g.state.time=900;b.crop={year:0,planted:1,tended:1,remaining:12,ripened:true,kind:'grain'};const u=worker(g,b),food=g.tribe(0).food,sheaves=g.tribe(0).items?.grainSheaves||0;
  fieldWorkStep(g,u,b,.1);assert.equal(u.carry,0);
- for(let i=0;i<2400&&(b.crop.remaining>0||u.carry>0);i++){g.state.time+=.1;g.navBudget=20;g.workerAI(u,.1);if(u.order==='idle'&&b.crop.remaining>0){u.order='gather';u.node=b;}}
- assert.equal(b.crop.remaining,0);assert.equal(u.carry,0);assert.equal(g.tribe(0).food,food+12);
+ for(let i=0;i<2400&&(b.crop.remaining>0||u.carry>0||(u.itemCargo?.grainSheaves||0)>0);i++){g.state.time+=.1;g.navBudget=20;g.workerAI(u,.1);if(u.order==='idle'&&b.crop.remaining>0){u.order='gather';u.node=b;}}
+ assert.equal(b.crop.remaining,0);assert.equal(u.carry,0);assert.equal(g.tribe(0).food,food,'unthreshed harvest is not ready food');assert.equal(u.itemCargo?.grainSheaves||0,0);assert.equal(g.tribe(0).items?.grainSheaves,sheaves+12*CEREAL_RULES.sheavesPerPotentialGrain);assert.equal(g.state.cerealProcessing.deliveredSheaves,12*CEREAL_RULES.sheavesPerPotentialGrain);
 });
 test('blocked rows release workers and save/load never resets crop progress',()=>{
  const {g,b}=setup(),u=worker(g,b);b.crop={year:0,planted:.4,tended:.2,remaining:0,ripened:false};
