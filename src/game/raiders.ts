@@ -5,6 +5,7 @@ import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
 import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
 import {difficulty} from './difficulty';
+import {noteRaidCarried} from './raidReports';
 import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
 import { foodDemand, isDependent } from "./settlement";
@@ -337,7 +338,7 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
   if(ruin){
    if(g.attackDistance(u,ruin)>u.r+1.8){u.tx=ruin.x;u.tz=ruin.z;g.steer(u,dt);return true;}
    const kind=(['food','wood','stone','copper','iron'] as const).find(k=>(ruin.raidLoot![k]||0)>0)!;
-   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;raid.phase='retreat';return true;
+   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;noteRaidCarried(g,u,ruin.team,kind,amount);raid.phase='retreat';return true;
   }
  }
  if(g.state.time>=raid.thinkAt){

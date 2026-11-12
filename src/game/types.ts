@@ -519,6 +519,11 @@ export type GameState = {
   canalWorks?:import('./canalBreach').CanalWork[];
   aqueductWorks?: import('./waterLineWorks').AqueductWorksPlan[];
   societyRelations?:import('./societyRelations').SocietyRelation[];
+  combatDoctrine?:import('./combatDoctrine').CombatDoctrine;
+  formations?:import('./combatDoctrine').FormationGroup[];
+  guardDuties?:import('./guardDuty').GuardDuty[];
+  raidReports?:import('./raidReports').RaidReports;
+  transit?:import('./transit').TransitState;
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
   coastalTradeReviewAt?:number;
