@@ -193,7 +193,11 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
   if(!home||!spot){u.order='hold';u.workReason='Released — no reachable home cache for return';return true;}
   if(supplyReached(g,u,home,spot)){
    if(p.food>0)receiveFood(g,homeTeam,p.food);const stock=g.tribe(homeTeam).survival;if(stock)stock.waterLiters+=p.waterLiters;
-   p.food=0;p.waterLiters=0;u.prisoner=undefined;u.recalled=undefined;finishRepatriation(g,u);if(u.repatriating){const origin=g.tribe(u.team);origin.trust=Math.min(1,(origin.trust||0)+.15);u.repatriating=undefined;}u.order='idle';u.workReason='Released person arrived home with remaining provisions';g.workBoard.reset();return true;
+   p.food=0;p.waterLiters=0;u.prisoner=undefined;finishRepatriation(g,u);if(u.repatriating){const origin=g.tribe(u.team);origin.trust=Math.min(1,(origin.trust||0)+.15);u.repatriating=undefined;}
+   // We are physically at an owned cache. Finish the ordinary recalled-cargo
+   // handoff now, before a new emergency can shelter this person with a load.
+   // Zero dt performs no extra travel/work; normal capacity/custody checks stay.
+   u.recalled=true;u.stationOnArrival=false;u.order='return';g.workerAI(u,0);g.workBoard.reset();return true;
   }
   u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Released — walking home with carried provisions';return true;
  }

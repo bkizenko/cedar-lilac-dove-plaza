@@ -12,8 +12,9 @@ export const DEFAULT_RENDER_STYLE:RenderStyle=GRAPHICS_RULES.defaultRenderStyle;
 export function parseRenderStyle(value:string|null|undefined):RenderStyle|null{
  const v=(value??'').trim();if(isRenderStyle(v))return v;
  const l=v.toLowerCase();
- if(l==='h'||l==='carved'||l==='option-h'||l==='optionh')return 'optionH';
- if(l==='current'||l==='classic'||l==='default')return 'current';
+ if(l==='village'||l==='new'||l==='default')return 'village';
+ if(l==='h'||l==='carved'||l==='option-h'||l==='optionh'||l==='honey')return 'optionH';
+ if(l==='current'||l==='classic'||l==='original'||l==='legacy')return 'current';
  return null;
 }
 /** Query override wins over the stored preference; otherwise the default. */
@@ -27,4 +28,4 @@ export function currentRenderStyle():RenderStyle{
  const q=parseRenderStyle((()=>{try{return new URLSearchParams(search).get('render');}catch{return null;}})());
  return q??loadStoredRenderStyle();
 }
-export const isCarvedStyle=(s:RenderStyle)=>s==='optionH';
+export const isCarvedStyle=(s:RenderStyle)=>s!=='current';

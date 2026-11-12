@@ -1059,8 +1059,8 @@ export class Engine {
   }
 
   setRenderStyle(style:RenderStyle) {
-    if(style!=='current'&&style!=='optionH')return;
-    this.view.setRenderStyle(style==='optionH'?'carved':'current');
+    if(style!=='current'&&style!=='optionH'&&style!=='village')return;
+    this.view.setStyle(style);
     rememberRenderStyle(style);
   }
 

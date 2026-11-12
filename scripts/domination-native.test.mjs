@@ -2,9 +2,9 @@ import {writeFileSync} from 'node:fs';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {nativeDairyVillage} from './helpers/native-dairy-village.mjs';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-import {secureVillage,captureTarget,dominateOccupiedVillage,occupationStatus,withdrawOccupation} from '../src/game/conflictIntent.ts';
+import {secureVillage,dominateOccupiedVillage,occupationStatus,withdrawOccupation} from '../src/game/conflictIntent.ts';
 import {dominations,dominationStatus,releaseDomination,DOMINATION_RULES} from '../src/game/domination.ts';
-import {releasePrisoner} from '../src/game/captivity.ts';
+import {acceptPrisonerSurrender,releasePrisoner} from '../src/game/captivity.ts';
 import {PRODUCTION_RECIPES} from '../src/game/production.ts';
 import {droppedParcels} from '../src/game/stolenCargo.ts';
 function fixture(){const base=nativeDairyVillage(),g=decodeGame(structuredClone(base.save)),home=g.campOf(0);
@@ -64,7 +64,7 @@ test('native custody release returns the same living person and finite possessio
  // A finite visiting party already present in this authored encounter. No actor
  // is repositioned after orders begin; all escort and release travel is native.
  const captors=[];for(let i=0;i<2;i++){const p=g.nearestWalk(person,person.x+(i?2:-2),person.z);assert.ok(p);const u=g.spawnUnit('spearman',p.x,p.z,0);u.selected=true;captors.push(u.id);}
- g.tribe(1).wood-=3;person.carry=3;person.carryType='wood';const id=person.id,total=balance(g),r=captureTarget(g,id);assert.equal(r.accepted,true,r.reason);
+ g.tribe(1).wood-=3;person.carry=3;person.carryType='wood';const id=person.id,total=balance(g),r=acceptPrisonerSurrender(g,person,0);assert.equal(r.accepted,true,r.reason);
  drive(g,120,()=>g.state.units.find(u=>u.id===id)?.prisoner?.phase==='custody');person=g.state.units.find(u=>u.id===id);assert.equal(person.carry,3);assert.equal(person.team,0);assert.ok(person.hp>0);const guardId=person.prisoner.guardId,depart={x:person.x,z:person.z};assert.ok(guardId);
  assert.equal(releasePrisoner(g,id),true);assert.equal(person.prisoner.phase,'released');assert.equal(person.team,1);assert.equal(person.homeHall,f.hall);assert.equal(person.carry,3);assert.notEqual(g.state.units.find(u=>u.id===guardId).escortId,id);
  g=reload(g);assert.equal(g.state.units.find(u=>u.id===id).carry,3);assert.equal(g.state.units.find(u=>u.id===id).prisoner.phase,'released');
