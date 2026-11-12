@@ -3,7 +3,7 @@ import type { Building, Unit } from './types';
 import { hasTaskCommitment } from './workCommitments';
 import { isDependent } from './settlement';
 import { orderExploration } from './explorationOrders';
-import { beginHerdTaming, HERD, penAnimals } from './husbandry';
+import { beginHerdTaming, HERD, penPlacesOccupied } from './husbandry';
 import {surveyPenPasture} from './penPasture';
 import {insidePen} from './penGeometry';
 import {FOW} from './constants';
@@ -137,7 +137,7 @@ function tickGoatSearchOrder(g:Game,pen:Building){
  if(g.state.time<q.nextAttemptAt)return;
  q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;q.state='waiting';delete q.reason;
  const reserved=g.state.units.filter(u=>u.hp>0&&u.tamingWork?.pen===pen.id).length;
- if(penAnimals(g,pen.id).length+reserved>=surveyPenPasture(g,pen).eligibleCapacity){q.reason='space';return;}
+ if(penPlacesOccupied(g,pen.id)+reserved>=surveyPenPasture(g,pen).eligibleCapacity){q.reason='space';return;}
  if(g.tribe(0).food<HERD.tamingFood){q.reason='food';return;}
  const result=attemptGoatSearch(g,pen.id,true);
  if(result.accepted){const actor=g.state.units.find(u=>u.hp>0&&u.tamingWork?.pen===pen.id);if(actor){q.state='capturing';q.animal=actor.tamingWork!.animal;}else q.state='searching';}
