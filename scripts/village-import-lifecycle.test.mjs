@@ -247,16 +247,18 @@ test("read/parse/validator failures keep actual active village and publish their
     assert.equal(writes.length, 0);
   }));
 
-test("a renderer failure after actual Game replacement cannot falsely report that no village was applied", () =>
+test("renderer preparation failure preserves the original village and never claims the import applied", () =>
   storage(async ({ values }) => {
     const e = fixture();
     e.view.rebuild = () => {
       throw new Error("Renderer unavailable");
     };
+    const originalOwner=e.game;
     const result = await e.importVillage({ text: async () => JSON.stringify(incoming) });
-    assert.equal(result.applied, true);
+    assert.equal(result.applied, false);
     assert.equal(result.saved, false);
-    assert.match(result.message, /Village loaded.*Renderer unavailable/);
-    assert.equal(e.game.state.seed, 23);
+    assert.match(result.message, /Renderer unavailable/);
+    assert.equal(e.game, originalOwner, 'renderer preparation must not replace the authoritative village');
+    assert.equal(e.game.state.seed, 17);
     assert.equal(parseStoredSave(values.get(SAVE_KEY)).state.seed, 17);
   }));
