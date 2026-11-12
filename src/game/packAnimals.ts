@@ -1,5 +1,5 @@
 import {herdRules} from './animalSpecies';
-import {packAnimalFrom,PACK_ANIMAL_RULES} from './packAnimalState';
+import {packAnimalFrom,PACK_ANIMAL_RULES,packAnimalPosition} from './packAnimalState';
 import {foodInventory,takeFoodLot} from './pantry';
 import {supplyApproach,supplyReached} from './campAnchor';
 import type {Game} from './sim';
@@ -41,7 +41,7 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
  if(work.progress>=PACK_TAMING_SECONDS){
   // Transfer this existing animal out of the wild population, without a carcass or respawn slot.
   g.state.wildlife=g.state.wildlife.filter(c=>c.id!==animal.id);
-  u.packAnimal=packAnimalFrom(animal);
+  u.packAnimal={...packAnimalFrom(animal),packHarness:{version:1,preparedAt:g.state.time,wood:2,workSeconds:PACK_TAMING_SECONDS}};
   u.haulage='pack';u.tamingWork=undefined;u.order='return';u.workReason='Pack goat ready — carrying capacity doubled';
   g.workBoard.reset();if(u.team===0)g.banner('Pack goat tamed. Its handler carries twice as much without a sled’s hauling penalty.',5);
  }
@@ -54,7 +54,8 @@ export function releasePackAnimal(g:Game,u:Unit){
  if(u.hp>0||u.haulage!=='pack')return;
  const animal=u.packAnimal;u.packAnimal=undefined;u.haulage=undefined;
  if(!animal||animal.hp<=0||g.state.wildlife.some(c=>c.id===animal.id)||g.state.livestock?.some(c=>c.id===animal.id))return;
- g.state.wildlife.push({...animal,id:animal.id,species:animal.species??'goat',x:u.x,y:g.height(u.x,u.z),z:u.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:animal.hp,maxHp:animal.maxHp,fly:0,scale:animal.scale,grazing:{x:u.x,z:u.z}});
+ const position=packAnimalPosition(u);
+ g.state.wildlife.push({...animal,id:animal.id,species:animal.species??'goat',x:position.x,y:g.height(position.x,position.z),z:position.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:animal.hp,maxHp:animal.maxHp,fly:0,scale:animal.scale,grazing:{x:u.x,z:u.z}});
 }
 
 /** Care is local to a real cache entrance. Remote stores cannot feed an expedition. */

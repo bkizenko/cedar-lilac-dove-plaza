@@ -138,6 +138,8 @@ export type Critter = {
 };
 
 export type Livestock = Critter & {
+  packHarness?:import('./packAnimalState').PackHarness;
+  foodConsumed?:number;waterConsumedLiters?:number;
   adultScale?:number;
   team: number; pen: number; sex: 'female' | 'male';
   /** Exclusive live escort custody; ownership changes only on physical pen delivery. */
@@ -251,6 +253,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   draftPracticeSeconds?:number;
   farmToolWork?: FarmToolWork;
   packAnimal?: import('./packAnimalState').PackAnimal;
+  packPastureOrder?:{version:1;pen:number;animal:number;requestedAt:number;phase:'queued'|'unloading'|'returning';reason?:string};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
