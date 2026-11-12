@@ -58,3 +58,13 @@ test('stored, transit and already paid ore/metal meet demand once and suppress r
  const s=copperIndustrySupply(g,team);assert.deepEqual(s,{oreAtCache:8,oreInTransit:4,legacyMetalInTransit:3,paidMetal:4,ore:12,usable:4,effectiveMetal:15});assert.equal(rivalMaterialPriority(g,u,'copper',{wood:0,stone:0,copper:15,iron:0}),0);assert.equal(rivalMaterialPriority(g,u,'copper',{wood:0,stone:0,copper:14,iron:0}),0);
  assert.ok(RIVAL_COPPER_CHAIN_RULES.reviewSeconds>0);assert.equal(rivalCopperChainStatus(g,team),null);
 });
+
+test('ordinary rival planner completes the finite copper chain without an external industry driver',()=>{
+ let g=decodeGame(opening);g.tribe(team).thinkT=0;let reloaded=false,steps=0;const end=g.state.time+2400;
+ while(!g.tribe(team).copperExperiment&&g.state.time<end&&steps++<100000){g.state.paused=false;g.step(.2);assert.deepEqual(g.simulationErrors,[]);assert.ok(!g.state.ended,g.state.endReason);
+  const paid=(g.state.production?.projects||[]).find(p=>p.team===team&&['makeCharcoal','smeltCopper'].includes(p.recipe)&&['carrying','working','returning'].includes(p.phase));
+  if(!reloaded&&paid){const saved=structuredClone(encodeGame(g));validateGameSave(saved);if(process.env.NPC_COPPER_AUTONOMY_MID_SAVE){assert.ok(isAbsolute(process.env.NPC_COPPER_AUTONOMY_MID_SAVE));writeFileSync(process.env.NPC_COPPER_AUTONOMY_MID_SAVE,JSON.stringify(saved));}g=decodeGame(saved);reloaded=true;}
+ }
+ const t=g.tribe(team);assert.equal(t.copperExperiment,true,JSON.stringify({time:g.state.time,status:rivalCopperChainStatus(g,team),stock:{wood:t.wood,copper:t.copper,items:t.items,food:t.food},workers:g.state.units.filter(u=>u.team===team).map(u=>({id:u.id,order:u.order,job:u.job,lock:u.jobLock,reason:u.workReason,node:u.node?.id,build:u.buildOrder,study:u.copperStudy})),projects:g.state.production?.projects}));assert.equal(reloaded,true);assert.equal(t.productionPractice.makeCharcoal.batches,2);assert.equal(t.productionPractice.smeltCopper.batches,2);assert.ok(g.state.units.some(u=>u.team===team&&u.farmTool==='copperTools'));const final=encodeGame(g);validateGameSave(final);assert.doesNotThrow(()=>decodeGame(final));
+ if(process.env.NPC_COPPER_AUTONOMY_SAVE){assert.ok(isAbsolute(process.env.NPC_COPPER_AUTONOMY_SAVE));writeFileSync(process.env.NPC_COPPER_AUTONOMY_SAVE,JSON.stringify(final));}
+});

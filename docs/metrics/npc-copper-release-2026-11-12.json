@@ -1,0 +1,98 @@
+{
+  "release": "2026-11-12T17-21-22-575Z-dc2d7a9",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T17-21-22-575Z-dc2d7a9",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T17-06-38-450Z-b03d0c1",
+  "commit": "dc2d7a91cd15a81b81126e48853d40cd09ef5370",
+  "retained": {
+    "linked": 1370,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 16,
+    "total": 16,
+    "percent": 100,
+    "native": {
+      "passed": 13,
+      "total": 13,
+      "details": "4 unique NPC chain cases, including ordinary Game.step/rivalTick autonomy and strict midpaid reload; 9 existing material-study regression cases. Autonomy export rerun not counted twice."
+    },
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Compiled ordinary NPC planner from genuinely earned paid inputs through physical smelting and owned copper tool, durable reload, and original village compatibility. Authored established infrastructure/survey, not autonomous settlement development or a campaign.",
+      "autonomy": {
+        "time": 853.200000000057,
+        "done": true,
+        "ended": null,
+        "errors": [],
+        "tool": [
+          {
+            "id": 6228,
+            "condition": 1
+          }
+        ],
+        "practice": {
+          "makeCharcoal": {
+            "batches": 2,
+            "failedBatches": 0,
+            "usefulOutputs": 4,
+            "firstAt": 279.7999999999927,
+            "lastAt": 652.4000000000113,
+            "makers": [
+              6228
+            ],
+            "lastSuccessfulAt": 652.4000000000113
+          },
+          "smeltCopper": {
+            "batches": 2,
+            "failedBatches": 0,
+            "usefulOutputs": 8,
+            "firstAt": 369.79999999998756,
+            "lastAt": 734.0000000000299,
+            "makers": [
+              6228
+            ],
+            "lastSuccessfulAt": 734.0000000000299
+          }
+        },
+        "consumed": {
+          "copperOre": 16,
+          "charcoal": 4
+        },
+        "produced": {
+          "charcoal": 4,
+          "copperMetal": 8
+        },
+        "copper": 0,
+        "ore": 503,
+        "trees": 259085
+      },
+      "legacy": {
+        "population": 53,
+        "copper": 123,
+        "originalUnchanged": true
+      },
+      "inputUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "limits": [
+    "Authored established native infrastructure, surveyed known inputs and finite provisions; not autonomous settlement construction/exploration or a campaign.",
+    "Tin, bronze, iron and the remaining W4 systems stay open.",
+    "New canonical naval/commanders/influence/geology source is outside this frozen artifact.",
+    "Two inherited visitor fixture failures remain open from preceding captive qualification; not rerun or credited here."
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}
