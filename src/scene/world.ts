@@ -1542,7 +1542,6 @@ export class WorldView {
     // Option H only: warm the skylight and distance haze a little toward the golden grade (scaled by its own warmth, so winter/storm stay cool).
     if(hGrade&&clearDay){this.hemi.color.lerp(_c.set(hGrade.hemiSky),.3*hGrade.warmth);fog.lerp(_c.set(hGrade.sun),.12*hGrade.warmth);}
     // Option H only: soften the sun/skylight at the day's edges (long low light) and lift it near noon, a partial (35%) blend of the H grade shape onto the current intensity so weather dimming stays in charge.
-    if(this.styleId==='optionH'&&hGrade&&clearDay){sunI*=1+.35*(hGrade.sunIntensity/CARVED_LIGHT_RIG.sunIntensity-1);hemiI*=1+.35*(hGrade.hemiIntensity/CARVED_LIGHT_RIG.hemiIntensity-1);}
     this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
     let dens=atmosphericDensity(wx,night,sn.snow);
     const painter=this.mapStyle==='painterly'?painterAtmosphere({elev,dawn,dusk,night,weather:wx,winter:sn.winter,autumn:sn.autumn,spring:sn.spring,snow:sn.snow,day}):null;
@@ -1551,6 +1550,8 @@ export class WorldView {
       sunCol.set(painter.sun);fog.set(painter.fog);
       this.hemi.color.set(painter.hemiSky);this.hemi.groundColor.set(painter.hemiGround);
     }
+    // Apply after the map palette chooses its base intensities.
+    if(this.styleId==='optionH'&&hGrade&&clearDay){sunI*=1+.35*(hGrade.sunIntensity/CARVED_LIGHT_RIG.sunIntensity-1);hemiI*=1+.35*(hGrade.hemiIntensity/CARVED_LIGHT_RIG.hemiIntensity-1);}
     const k = dt > 0.4 ? 1 : 1 - Math.exp(-dt * 0.38);
     this.litSun += (sunI - this.litSun) * k;
     this.litHemi += (hemiI - this.litHemi) * k;

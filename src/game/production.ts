@@ -135,7 +135,7 @@ function free(g:Game,u:Unit,project?:number){return u.hp>0&&u.type==='worker'&&!
 function actor(g:Game,b:Building,project?:ProductionProject,unitId?:number,deliveredHere=false,reachable?:(u:Unit)=>boolean){return g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.team===b.team&&free(g,u,project?.id)&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||(deliveredHere?g.buildingWorkReached(u,b):atCache(g,u)))&&(!reachable||reachable(u))&&!!g.interactionSpot(u,b));}
 const live=(p:ProductionProject)=>!['complete','lost'].includes(p.phase);
 export function productionSlots(b:Pick<Building,'type'|'w'|'d'>){
- const base=['threshingFloor','fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone','watermill','windmill'].includes(b.type)?1:0;
+ const base=['threshingFloor','fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone','watermill','windmill','forge'].includes(b.type)?1:0;
  return compactGrainWorkplace(b.type)?base+plotArea(b)-1:base;
 }
 export function cerealReservedMaterials(g:Game,team:number,exceptProject?:number){if(!g.state.cerealProcessing)return 0;let total=0;for(const p of g.state.production?.projects||[]){if(p.team!==team||p.id===exceptProject||!live(p)||!isCerealRecipe(p.recipe))continue;const r=PRODUCTION_RECIPES[p.recipe],phase=p.phase==='paused'?p.resumePhase:p.phase,parked=['stored','collecting'].includes(phase)?paidInputStorageUnits(p):0;total+=Math.max(0,packedItemStorageUnits(r.outputs)-parked);}return total;}

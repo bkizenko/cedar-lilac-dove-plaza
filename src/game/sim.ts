@@ -1,4 +1,5 @@
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
+import {draftCartAI,cancelDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
@@ -1845,6 +1846,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    cancelDraftCartOrder(this,u);
     pauseNavalWork(this,u);
     cancelPackPasture(this,u);
     interruptSiegeRam(this,u);
@@ -4332,6 +4334,7 @@ export class Game {
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
     if(this.height(nx,nz)>this.waterAt(nx,nz)+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    recordDraftCartStep(this,u,nx,nz);
     if(u.haulage==="canoe")recordWaterStep(this,u,nx,nz);
     u.x = nx;
     u.z = nz;
@@ -4490,6 +4493,7 @@ export class Game {
     if(copperStudyAI(this,u,dt))return;
     if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
+    if(draftCartAI(this,u,dt))return;
     if(packPastureAI(this,u,dt))return;
     if(husbandryAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;
@@ -5860,6 +5864,7 @@ export class Game {
         phases?.mark('people');
         beginPrisonerGuardQueries(this);beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
+          if(u.draftCartOrder||u.draftCartPartner)draftCartAI(this,u,0);
           if(u.packPastureOrder)packPastureAI(this,u,0);
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
@@ -5987,7 +5992,7 @@ export class Game {
         phases?.mark('reconciliation');
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releaseDraftCart(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);

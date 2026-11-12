@@ -157,7 +157,7 @@ export const DRAFT_TRACTION_RULES={practiceSeconds:120,startingMultiplier:1.4,ma
 /** Physical actor/horse eligibility, shared by crafting and actual traction work.
  * Tool ownership, condition and cultivation phase are checked by farmToolRate. */
 export function draftTractionReady(u:Unit):boolean{
- return u.type==='worker'&&u.hp>0&&!u.militia&&u.haulage==='pack'&&isDraftSpecies(u.packAnimal?.species)&&!!u.packAnimal&&u.packAnimal.hp>0&&
+ return u.type==='worker'&&u.hp>0&&!u.militia&&!u.draftCart&&u.haulage==='pack'&&isDraftSpecies(u.packAnimal?.species)&&!!u.packAnimal&&u.packAnimal.hp>0&&
   !u.boat&&!u.prisoner&&!u.emergency&&!u.shelterId&&!u.resting;
 }
 

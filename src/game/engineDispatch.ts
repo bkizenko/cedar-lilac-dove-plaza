@@ -1,3 +1,4 @@
+import {beginDraftCartOrder,recoverDraftCart,setDraftCartPaused,cancelDraftCartOrder} from './draftCart';
 import {freePeople} from './peace';
 import {repatriateCaptive,releasePrisoner,assignPrisonerGuard} from './captivity';
 import {sendCaptiveEscort} from './caravans';
@@ -30,6 +31,10 @@ import {appointCommander,assignToCommander,releaseFromCommander,promoteCommander
 import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
+ |{kind:'draft-cart';unitId:number;mode:'hitch'|'detach'}
+ |{kind:'recover-draft-cart';unitId:number;cartId:number}
+ |{kind:'pause-draft-cart';unitId:number;paused:boolean}
+ |{kind:'cancel-draft-cart';unitId:number}
  |{kind:'begin-era-upgrade';buildingId:number;mode:'rebuild'}
  |{kind:'begin-era-upgrade';buildingId:number;mode:'extend';side:ExtensionSide}
  |{kind:'era-upgrade-pause';buildingId:number;paused:boolean}
@@ -82,6 +87,10 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'draft-cart':return beginDraftCartOrder(g,command.unitId,command.mode);
+   case 'recover-draft-cart':return recoverDraftCart(g,command.unitId,command.cartId);
+   case 'pause-draft-cart':{const accepted=setDraftCartPaused(g,command.unitId,command.paused);return{accepted,reason:accepted?'Original fitting progress and goods retained':'No owned cart fitting'};}
+   case 'cancel-draft-cart':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0),accepted=!!u&&cancelDraftCartOrder(g,u);return{accepted,reason:accepted?'Cart remains with its actual owner; spent fitting inputs are not refunded':'No owned cart fitting'};}
    case 'begin-copper-study':{const issue=copperStudyIssue(g,command.workplaceId,0,command.fuel);if(issue)return no(issue);const accepted=beginCopperStudy(g,command.workplaceId,0,command.fuel);return{accepted,reason:accepted?'Copper trial assigned; materials load at storage, original payment retained on resume':copperStudyIssue(g,command.workplaceId,0,command.fuel)||'Copper trial unavailable'};}
    case 'begin-traded-teaching':{
     if(!g.state.units.some(u=>u.id===command.learnerId&&u.team===0&&u.hp>0))return no('Original owned learner unavailable');
@@ -222,6 +231,10 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'cancel-interaction':{},'hold-selected':{unitIds:v=>Array.isArray(v)&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length},
   pause:{paused:bool},speed:{speed:v=>v===1||v===2||v===4,resume:v=>v===undefined||bool(v)},
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
+  'draft-cart':{unitId:id,mode:v=>v==='hitch'||v==='detach'},
+  'recover-draft-cart':{unitId:id,cartId:id},
+  'pause-draft-cart':{unitId:id,paused:bool},
+  'cancel-draft-cart':{unitId:id},
   'begin-copper-study':{workplaceId:id,fuel:v=>v==='logs'||v==='charcoal'},
   'begin-traded-teaching':{learnerId:id,teacherId:id,siteId:id,methodId:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),good:v=>['food','wood','stone','copper','iron'].includes(v as string),qty:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=TRADED_TEACHING_RULES.maximumPayment},
   'cancel-traded-teaching':{learnerId:id},

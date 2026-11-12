@@ -1,0 +1,77 @@
+import type {Game} from './sim';
+import type {GameState,Unit,Building} from './types';
+import {isDraftSpecies,herdRules} from './animalSpecies';
+import {packCapacityMultiplier} from './packAnimalState';
+import {hasTaskCommitment} from './workCommitments';
+import {isDependent} from './settlement';
+import {workRuntime} from './workRuntime';
+/** Adjustable game units, not historical cart weights or measured draft power. */
+export const DRAFT_CART_RULES={version:1,wood:4,cordage:2,fittingSeconds:30,detachSeconds:10,transferMetres:2.4,contactMetres:36,maximumAssets:512,capacity:6,minimumCapacity:1.25,loadedSpeed:.9}as const;
+/** Identifies one existing handcart at first hitch; never creates another cart. */
+export type CartIdentity={version:1;id:number;identifiedAt:number;originalHolderId:number;originalTeam:number};
+export type LooseDraftCart={cart:CartIdentity;team:number;x:number;z:number;droppedAt:number};
+export type DraftCartOrder={version:1;mode:'hitch'|'detach'|'recover';started:number;partnerId?:number;workplace?:number;meeting?:{x:number;z:number};cartId:number;progress:number;paidAt?:number;wood:number;cordage:number;paused?:boolean;reason?:string};
+export type DraftCartLedger={version:1;woodUsed:number;cordageUsed:number;fittingWorkSeconds:number;hitches:number;detachments:number;recoveries:number;goodsDelivered:number;loadedMetres:number};
+const R=DRAFT_CART_RULES,key=(u:Unit)=>`draft-cart:${u.id}`;
+const loaded=(u:Unit)=>u.carry>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0);
+const adult=(g:Game,u:Unit)=>u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u);
+const free=(g:Game,u:Unit)=>adult(g,u)&&!loaded(u)&&!hasTaskCommitment(u)&&!u.draftCartPartner&&!u.packPastureOrder&&!u.buildOrder&&!u.emergency&&!u.recalled&&!u.resting&&!u.shelterId&&!u.trade&&u.drill==null&&['idle','hold','gather'].includes(u.order);
+function touch(g:Game,u:Unit,p:{x:number;z:number}){const d=Math.hypot(u.x-p.x,u.z-p.z);if(d>R.transferMetres)return false;const n=Math.max(1,Math.ceil(d/.4));let body=u;for(let i=1;i<=n;i++){const x=u.x+(p.x-u.x)*i/n,z=u.z+(p.z-u.z)*i/n;if(!g.canStep(body,x,z))return false;body={...u,x,z,y:g.travelHeight(x,z)};}return true;}
+const trained=(u:Unit)=>u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0&&isDraftSpecies(u.packAnimal.species);
+function ledger(g:Game){return g.state.draftCartLedger??={version:1,woodUsed:0,cordageUsed:0,fittingWorkSeconds:0,hitches:0,detachments:0,recoveries:0,goodsDelivered:0,loadedMetres:0};}
+function assetCount(g:Game){return(g.state.looseDraftCarts?.length||0)+g.state.units.reduce((n,u)=>n+Number(!!u.draftCart)+Number(!!u.cartIdentity),0);}
+export function looseDraftCartOwner(s:GameState,p:LooseDraftCart){let owner=p.team;for(const h of s.communityHandovers||[])if(h.scope==='society'&&h.timeSeconds>=p.droppedAt&&h.fromTeam===owner)owner=h.toTeam;return owner;}
+function own(g:Game,u:Unit){const w=u.draftCartOrder!;const ids=[u.id,...(w.partnerId===undefined?[]:[w.partnerId])],jobs=workRuntime(g),id=key(u);if(ids.every(actor=>jobs.activeJob(actor)?.id===id))return true;if(ids.some(actor=>jobs.activeJob(actor)&&jobs.activeJob(actor)!.id!==id))return false;const old=jobs.job(id);if(old&&['completed','canceled'].includes(old.phase))jobs.forget(id);if(!jobs.job(id))jobs.propose({id,kind:'draft-cart',owner:u.team,actors:ids,target:w.workplace??w.cartId});return jobs.job(id)?.phase==='suspended'?jobs.resume(id,ids):!!jobs.reserve(id);}
+export function cancelDraftCartOrder(g:Game,u:Unit){const owner=u.draftCartOrder?u:g.state.units.find(p=>p.id===u.draftCartPartner);if(!owner?.draftCartOrder)return false;const w=owner.draftCartOrder,other=g.state.units.find(p=>p.id===w.partnerId),jobs=workRuntime(g);jobs.finish(key(owner),true);jobs.forget(key(owner));delete owner.draftCartOrder;if(other?.draftCartPartner===owner.id){delete other.draftCartPartner;if(other.order==='hold')other.order='idle';}if(owner.order==='hold')owner.order='idle';g.workBoard.reset();return true;}
+function siteChoices(g:Game,u:Unit,v:Unit){return g.state.buildings.filter(b=>b.team===u.team&&b.type==='workshop'&&g.finished(b)&&g.interactionSpot(u,b)&&g.interactionSpot(v,b)).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));}
+function proposal(g:Game,unitId:number,mode:'hitch'|'detach'){
+ const u=g.state.units.find(u=>u.id===unitId&&u.team===0);if(!u||!free(g,u)||!trained(u))return{issue:'Choose a free adult with their trained horse or cattle and empty cargo'};
+ if(mode==='hitch'&&u.draftCart||mode==='detach'&&!u.draftCart)return{issue:mode==='hitch'?'This animal already has a cart':'No cart is hitched'};
+ const people=g.state.units.filter(v=>v!==u&&v.team===u.team&&free(g,v)&&Math.hypot(v.x-u.x,v.z-u.z)<=R.contactMetres&&(mode==='hitch'?v.haulage==='cart':!v.haulage&&!v.cartIdentity&&!v.draftCart));
+ for(const v of people){const b=siteChoices(g,u,v)[0];if(!b)continue;const meeting=g.interactionSpot(u,b);if(!meeting||!g.workBoard.connected(g,v.x,v.z,meeting.x,meeting.z)||!g.canStep(v,meeting.x,meeting.z))continue;if(mode==='hitch'&&!v.cartIdentity&&assetCount(g)>=R.maximumAssets)return{issue:'Recover existing cart equipment before fitting another cart'};if(mode==='hitch'&&(g.tribe(u.team).wood<R.wood||(g.tribe(u.team).items?.cordage||0)<R.cordage))return{issue:`Fitting needs ${R.wood} logs and ${R.cordage} cordage at the workshop`};return{u,v,b,meeting,issue:null};}
+ return{issue:mode==='hitch'?'Bring a free same-village handcart owner nearby, with a route to a crafting shelter':'Bring a free empty-handed resident nearby to take the same cart at a crafting shelter'};
+}
+export function draftCartChoices(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId&&u.team===0);const nearby=u?(g.state.looseDraftCarts||[]).filter(p=>looseDraftCartOwner(g.state,p)===u.team&&g.visibleAt(p.x,p.z)&&Math.hypot(p.x-u.x,p.z-u.z)<=R.contactMetres).map(p=>({id:p.cart.id,issue:!free(g,u)||u.haulage?'Choose an available resident without transport':!g.workBoard.connected(g,u.x,u.z,p.x,p.z)?'No dry route to this cart':null})):[];return{hitch:proposal(g,unitId,'hitch').issue,detach:proposal(g,unitId,'detach').issue,loose:nearby,work:u?.draftCartOrder};}
+export function beginDraftCartOrder(g:Game,unitId:number,mode:'hitch'|'detach'){
+ const p=proposal(g,unitId,mode);if(p.issue||!p.u||!p.v||!p.b)return{accepted:false,reason:p.issue||'Cart fitting unavailable'};const{u,v,b,meeting}=p;g.interruptMission(u);g.interruptMission(v);
+ if(mode==='hitch'&&!v.cartIdentity)v.cartIdentity={version:1,id:g.id(),identifiedAt:g.state.time,originalHolderId:v.id,originalTeam:v.team};
+ u.draftCartOrder={version:1,mode,started:g.state.time,partnerId:v.id,workplace:b.id,meeting,cartId:(mode==='hitch'?v.cartIdentity:u.draftCart)!.id,progress:0,wood:0,cordage:0};v.draftCartPartner=u.id;
+ if(!own(g,u)){delete u.draftCartOrder;delete v.draftCartPartner;return{accepted:false,reason:'These people already own reserved work'};}u.order=v.order='hold';u.node=v.node=null;g.invalidateRoute(u);g.invalidateRoute(v);g.workBoard.reset();return{accepted:true,reason:'Both people must meet physically at the shelter; the existing cart remains with its owner until fitting completes'};
+}
+export function recoverDraftCart(g:Game,unitId:number,cartId:number){const u=g.state.units.find(u=>u.id===unitId&&u.team===0),p=g.state.looseDraftCarts?.find(p=>p.cart.id===cartId);if(!u||!p||looseDraftCartOwner(g.state,p)!==u.team||!g.visibleAt(p.x,p.z)||!free(g,u)||u.haulage||!g.workBoard.connected(g,u.x,u.z,p.x,p.z))return{accepted:false,reason:'Need a free same-owner resident with a dry route to the visible cart'};g.interruptMission(u);u.draftCartOrder={version:1,mode:'recover',started:g.state.time,cartId,progress:0,wood:0,cordage:0};if(!own(g,u)){delete u.draftCartOrder;return{accepted:false,reason:'Resident already reserved'};}u.order='hold';return{accepted:true,reason:'Walking to recover the same physical cart'};}
+function moveToSite(g:Game,u:Unit,b:Building,dt:number,p:{x:number;z:number}|undefined){if(!p||!g.canStep(u,p.x,p.z))return false;u.order='hold';u.tx=p.x;u.tz=p.z;if(Math.hypot(u.x-p.x,u.z-p.z)>.65)g.steer(u,dt);return true;}
+export function draftCartAI(g:Game,actor:Unit,dt:number){const u=actor.draftCartOrder?actor:g.state.units.find(u=>u.id===actor.draftCartPartner),w=u?.draftCartOrder;if(!u||!w)return false;
+ const v=g.state.units.find(v=>v.id===w.partnerId),b=g.state.buildings.find(b=>b.id===w.workplace&&b.team===u.team&&b.type==='workshop'&&g.finished(b));
+ const valid=adult(g,u)&&(w.mode==='recover'||trained(u)&&v&&adult(g,v)&&v.team===u.team&&v.draftCartPartner===u.id&&b&&(w.mode==='hitch'?v.haulage==='cart'&&v.cartIdentity?.id===w.cartId:!v.haulage&&u.draftCart?.id===w.cartId));
+ if(!valid){cancelDraftCartOrder(g,u);return false;}if(!(dt>0))return false;if(w.paused||u.emergency||u.resting||u.shelterId||v&&(v.emergency||v.resting||v.shelterId)){actor.workReason='Cart fitting waits for its original people';return true;}if(!own(g,u)){actor.workReason='Cart fitting waits for shared worker reservations';return true;}
+ if(w.mode==='recover'){const p=g.state.looseDraftCarts?.find(p=>p.cart.id===w.cartId);if(!p||looseDraftCartOwner(g.state,p)!==u.team||u.haulage){cancelDraftCartOrder(g,u);return false;}u.tx=p.x;u.tz=p.z;u.workReason='Recovering the same dropped cart';if(Math.hypot(u.x-p.x,u.z-p.z)>R.transferMetres){g.steer(u,dt);return true;}if(!touch(g,u,p))return true;u.haulage='cart';u.cartIdentity=p.cart;g.state.looseDraftCarts=g.state.looseDraftCarts!.filter(c=>c!==p);ledger(g).recoveries++;cancelDraftCartOrder(g,u);return true;}
+ if(!moveToSite(g,actor,b!,dt,w.meeting)){actor.workReason='No clear approach to the original fitting shelter';return true;}
+ actor.workReason=w.mode==='hitch'?'Meeting to fit the existing cart':'Meeting to return the same cart';if(actor!==u)return true;
+ if(!g.buildingWorkReached(u,b!)||!g.buildingWorkReached(v!,b!)||!touch(g,u,v!))return true;
+ if(w.mode==='hitch'&&w.paidAt===undefined){const t=g.tribe(u.team);if(t.wood<R.wood||(t.items?.cordage||0)<R.cordage){w.reason='Waiting for finite fitting timber and cordage';u.workReason=w.reason;return true;}t.wood-=R.wood;t.items!.cordage!-=R.cordage;w.wood=R.wood;w.cordage=R.cordage;w.paidAt=g.state.time;ledger(g).woodUsed+=R.wood;ledger(g).cordageUsed+=R.cordage;}
+ const required=w.mode==='hitch'?R.fittingSeconds:R.detachSeconds,work=Math.min(dt,required-w.progress);w.progress+=work;ledger(g).fittingWorkSeconds+=work;u.workReason=`${w.mode==='hitch'?'Fitting':'Unhitching'} cart · ${Math.floor(w.progress/required*100)}%`;if(w.progress+1e-8<required)return true;
+ if(w.mode==='hitch'){u.draftCart=v!.cartIdentity;delete v!.cartIdentity;delete v!.haulage;ledger(g).hitches++;}else{v!.cartIdentity=u.draftCart;v!.haulage='cart';delete u.draftCart;ledger(g).detachments++;}cancelDraftCartOrder(g,u);return true;
+}
+export function setDraftCartPaused(g:Game,unitId:number,paused:boolean){const u=g.state.units.find(u=>u.id===unitId&&u.team===0);if(!u?.draftCartOrder)return false;u.draftCartOrder.paused=paused;return true;}
+/** Called before normal corpse removal; the cart no longer depends on its body. */
+export function releaseDraftCart(g:Game,u:Unit){if(u.hp>0)return;cancelDraftCartOrder(g,u);const cart=u.draftCart??u.cartIdentity;if(!cart)return;(g.state.looseDraftCarts??=[]).push({cart,team:u.team,x:u.x,z:u.z,droppedAt:g.state.time});delete u.draftCart;delete u.cartIdentity;if(u.haulage==='cart')delete u.haulage;}
+export function draftCartCapacity(u:Unit,maximum=false){if(!u.draftCart)return undefined;if(maximum)return R.capacity;if(!trained(u))return R.minimumCapacity;const rules=herdRules(u.packAnimal!.species),welfare=Math.max(0,Math.min(1,(packCapacityMultiplier(u)-1.25)/(rules.packMultiplier-1.25)));return R.minimumCapacity+(R.capacity-R.minimumCapacity)*welfare;}
+export function recordDraftCartDelivery(g:Game,u:Unit){if(u.draftCart&&u.carry>0)ledger(g).goodsDelivered+=u.carry;}
+export function recordDraftCartStep(g:Game,u:Unit,x:number,z:number){if(u.draftCart&&loaded(u))ledger(g).loadedMetres+=Math.hypot(x-u.x,z-u.z);}
+export function validDraftCarts(s:GameState){
+ const num=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0&&Number(n)<s.nextId,ids=new Set<number>();let total=0;
+ const asset=(a:CartIdentity)=>{if(!a||a.version!==1||!id(a.id)||ids.has(a.id)||!num(a.identifiedAt,s.time)||!id(a.originalHolderId)||!s.tribes.some(t=>t.id===a.originalTeam)||s.units.some(u=>u.id===a.id)||s.buildings.some(b=>b.id===a.id)||s.wildlife.some(u=>u.id===a.id)||s.livestock?.some(u=>u.id===a.id))return false;ids.add(a.id);return ++total<=R.maximumAssets;};
+ if(s.looseDraftCarts!==undefined&&(!Array.isArray(s.looseDraftCarts)||s.looseDraftCarts.length>R.maximumAssets))return false;
+ for(const p of s.looseDraftCarts||[])if(!p||!asset(p.cart)||!s.tribes.some(t=>t.id===p.team)||!num(p.droppedAt,s.time)||!Number.isFinite(p.x)||!Number.isFinite(p.z))return false;
+ const partners=new Set<number>();for(const u of s.units){if(u.cartIdentity&&(!asset(u.cartIdentity)||u.haulage!=='cart'||u.draftCart))return false;if(u.draftCart&&(!asset(u.draftCart)||u.haulage!=='pack'||!u.packAnimal||!isDraftSpecies(u.packAnimal.species)))return false;
+  const w=u.draftCartOrder;if(w){if(w.version!==1||!['hitch','detach','recover'].includes(w.mode)||!id(w.cartId)||!num(w.started,s.time)||!num(w.progress,w.mode==='hitch'?R.fittingSeconds:w.mode==='detach'?R.detachSeconds:0)||w.paused!==undefined&&typeof w.paused!=='boolean'||w.reason!==undefined&&(typeof w.reason!=='string'||w.reason.length>400))return false;
+   if(w.mode==='recover'){if(w.partnerId!==undefined||w.workplace!==undefined||w.meeting!==undefined||w.paidAt!==undefined||w.wood!==0||w.cordage!==0||u.haulage||!s.looseDraftCarts?.some(p=>p.cart.id===w.cartId&&looseDraftCartOwner(s,p)===u.team))return false;}
+   else{const v=s.units.find(v=>v.id===w.partnerId),b=s.buildings.find(b=>b.id===w.workplace);if(!w.meeting||!Number.isFinite(w.meeting.x)||!Number.isFinite(w.meeting.z)||!v||v.team!==u.team||partners.has(v.id)||v.draftCartPartner!==u.id||!b||b.team!==u.team||b.type!=='workshop'||!trained(u)||w.mode==='hitch'&&(v.haulage!=='cart'||v.cartIdentity?.id!==w.cartId)||w.mode==='detach'&&(v.haulage!==undefined||u.draftCart?.id!==w.cartId))return false;partners.add(v.id);
+    if(w.mode==='hitch'?(w.paidAt===undefined?w.wood!==0||w.cordage!==0||w.progress!==0:!num(w.paidAt,s.time)||w.wood!==R.wood||w.cordage!==R.cordage):w.paidAt!==undefined||w.wood!==0||w.cordage!==0)return false;
+   }
+  }
+ }
+ for(const u of s.units)if(u.draftCartPartner!==undefined&&!s.units.some(p=>p.id===u.draftCartPartner&&p.draftCartOrder?.partnerId===u.id))return false;
+ const m=s.draftCartLedger;if(m&&(!m||m.version!==1||Object.entries(m).some(([k,n])=>k!=='version'&&!num(n))||!['woodUsed','cordageUsed','fittingWorkSeconds','hitches','detachments','recoveries','goodsDelivered','loadedMetres'].every(k=>num(m[k as keyof DraftCartLedger]))))return false;
+ return true;
+}

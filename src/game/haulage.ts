@@ -1,3 +1,4 @@
+import {draftCartCapacity,recordDraftCartDelivery,DRAFT_CART_RULES} from './draftCart';
 import {herdRules} from './animalSpecies';
 import {packCapacityMultiplier} from './packAnimalState';
 import {SAILING_RULES,type SailRigOrder} from './sailingRules';
@@ -305,7 +306,7 @@ function usesTransport(u: HaulageUnit) {
 }
 
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
-function loadCapacityMultiplier(u:HaulageUnit,kind:ResKind,maximum=false){return basketCapacityMultiplier(u,kind)*(u.boat?.phase==='aboard'?5:usesTransport(u)&&u.haulage?(u.haulage==='pack'?(maximum?herdRules(u.packAnimal?.species??'goat').packMultiplier:packCapacityMultiplier(u)):HAULAGE[u.haulage].capacity):1);}
+function loadCapacityMultiplier(u:HaulageUnit,kind:ResKind,maximum=false){return basketCapacityMultiplier(u,kind)*(u.boat?.phase==='aboard'?5:usesTransport(u)&&u.haulage?(u.haulage==='pack'?(draftCartCapacity(u,maximum)??(maximum?herdRules(u.packAnimal?.species??'goat').packMultiplier:packCapacityMultiplier(u))):HAULAGE[u.haulage].capacity):1);}
 /** maximum is for validating already held loads, never for assigning new cargo. */
 export function carryingCapacity(u: HaulageUnit, kind: ResKind, maximum=false) {
   return GATHER[kind].carry*Math.max(0,loadCapacityMultiplier(u,kind,maximum)-equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits);
@@ -314,13 +315,14 @@ export function carryingCapacity(u: HaulageUnit, kind: ResKind, maximum=false) {
 export function loadedHaulSpeed(u: HaulageUnit) {
   const capacity=loadCapacityMultiplier(u,u.carryType||'wood');
   const fraction=carriedLoadFraction(u,capacity);
-  const animalPace=u.boat?.phase!=='aboard'&&usesTransport(u)&&u.haulage==='pack'&&u.packAnimal?.species==='cattle'&&u.packAnimal.hp>0?Math.min(1,herdRules('cattle').speed/Math.max(.1,u.speed||2.7)):1;
-  return animalPace*burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?HAULAGE[u.haulage].loadedSpeed:1);
+  const animalPace=u.boat?.phase!=='aboard'&&usesTransport(u)&&u.haulage==='pack'&&(u.packAnimal?.species==='cattle'||u.draftCart)&&u.packAnimal&&u.packAnimal.hp>0?Math.min(1,herdRules(u.packAnimal?.species).speed/Math.max(.1,u.speed||2.7)):1;
+  return animalPace*burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?(u.draftCart?.version===1?DRAFT_CART_RULES.loadedSpeed:HAULAGE[u.haulage].loadedSpeed):1);
 }
 
 /** Call exactly once on an actual store delivery, immediately before clearing cargo. */
 export function recordHaulDelivery(g: Game, u: HaulageUnit) {
   recordWaterCargoDelivery(g,u);
+  recordDraftCartDelivery(g,u);
   if(u.carryType==='food'&&u.carry>0)recordBasketDelivery(g,u,'food',u.carry);
   if (u.haulage !== 'sled' || !usesTransport(u) || !u.carryType || u.carry <= 0) return;
   const t = g.tribe(u.team) as HaulageTribe, previous = t.haulagePractice || 0;
@@ -369,7 +371,7 @@ export function shareLocalTransport(g:Game){
   if(!depot)continue;
   const receiver=recipients.find(u=>!u.haulage&&u.team===donor.team&&Math.hypot(u.x-donor.x,u.z-donor.z)<=2.4&&g.canStep(donor,u.x,u.z));
   if(!receiver)continue;
-  receiver.haulage=donor.haulage;donor.haulage=undefined;shared++;
+  receiver.haulage=donor.haulage;if(donor.cartIdentity){receiver.cartIdentity=donor.cartIdentity;delete donor.cartIdentity;}donor.haulage=undefined;shared++;
   donor.workReason='Shared transport with a nearby carrier';
   receiver.workReason=`Borrowed ${HAULAGE[receiver.haulage!].name.toLowerCase()} for this journey`;
  }
