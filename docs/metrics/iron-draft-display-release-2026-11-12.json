@@ -1,0 +1,53 @@
+{
+  "release": "2026-11-12T18-58-54-747Z-8ae8cd7",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T18-58-54-747Z-8ae8cd7",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T17-44-30-211Z-0d4f855",
+  "commit": "8ae8cd7c6d85b31445c573bb89708e8f57d7e0f6",
+  "retained": {
+    "linked": 1381,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 69,
+    "total": 69,
+    "nativeAndShared": 63,
+    "built": 6,
+    "groups": {
+      "ironNativeAndRegressions": 34,
+      "draftCartNative": 4,
+      "draftCartRendering": 5,
+      "displayPreferencesCouncil": 20
+    },
+    "notes": [
+      "Unique cases only; paid interruption rerun and final cart capacity readout overlap existing cases, not extra credit.",
+      "Actual owner UI Resume preserves paid fitting and same cart/horse; actual mesh/inventory/save restored.",
+      "Earned iron chain, tool wear and repair; actual Knowledge demonstrated provenance and forge recipes.",
+      "First hint click interception fixed; display controls and actual Three lighting tested."
+    ]
+  },
+  "compiler": "PASS",
+  "productionBuild": "PASS",
+  "frozenAcceptance": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "original53SaveSHA256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "remaining": [
+    "Commander/naval owner controls pending separately",
+    "NPC iron/tin/bronze/steel remain open",
+    "No campaign or 100-resident performance credit"
+  ],
+  "evidenceLogs": [
+    "/tmp/hearthwild-iron-native.log",
+    "/tmp/hearthwild-iron-cart-mechanics-built.log",
+    "/tmp/hearthwild-draft-capacity-built.log",
+    "/tmp/hearthwild-iron-cart-display-types.log",
+    "/tmp/hearthwild-iron-cart-display-build.log"
+  ]
+}

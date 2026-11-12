@@ -87,7 +87,7 @@ const levelFor=(xp:number)=>{let l=1;for(let i=1;i<R.levelXp.length;i++)if(xp>=R
 
 const unitById=(g:Game,id:number)=>g.state.units.find(u=>u.id===id);
 const own=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>0&&!isDependent(g,u)&&(!u.prisoner||u.prisoner.phase==='released')&&!u.emergency&&!u.recalled;
-function commandSlots(g:Game,team:number){
+export function commandSlots(g:Game,team:number){
  const posts=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&g.finished(b)&&(b.type==='barracks'||b.type==='keep')).length;
  return Math.min(R.maximumPerTeam,1+posts);
 }
@@ -102,61 +102,59 @@ function pickTraits(g:Game,unitId:number,kind:CommanderKind,team:number){
 export type CommanderOutcome={accepted:boolean;reason:string;commanderId?:number};
 const no=(reason:string):CommanderOutcome=>({accepted:false,reason});
 /** Appoint a named commander from a real person. Costs a finite standard of timber; the person stays a physical unit. */
-export function appointCommander(g:Game,unitId:number,kind:CommanderKind,opts:{team?:number;replaces?:number;free?:boolean}={}):CommanderOutcome{
- const u=unitById(g,unitId);if(!u)return no('That person is not here');
- const team=opts.team??u.team,s=enableCommanders(g,st(g).commanders?.rivals??true);
- if(u.team!==team)return no('Only your own people can be appointed');
- if(!own(g,u,team)||u.prisoner)return no('Only a healthy, free adult can be given command');
- if(hasTaskCommitment(u,kind==='fleet'?'boat':undefined))return no('Finish or release their paid work before giving them command');
- if(s.roster.some(c=>c.unitId===u.id&&isLive(c)))return no('Already a commander');
- if(kind==='fleet'&&!(u.boat?.phase==='aboard'))return no('A fleet commander must be aboard one of the hulls');
- const live=activeCommandersOf(g,team),replacing=opts.replaces!==undefined?s.roster.find(c=>c.id===opts.replaces&&c.team===team&&c.replacedBy===undefined):undefined;
- if(opts.replaces!==undefined&&(!replacing||replacing.status==='serving'||replacing.status==='retired'))return no('Only a fallen or captured commander can be replaced');
- if(live.length-(replacing&&isLive(replacing)?1:0)>=commandSlots(g,team))return no(`This society can field ${commandSlots(g,team)} commander${commandSlots(g,team)===1?'':'s'}; build barracks or a keep for more`);
- if(s.roster.length>=R.maximumRoster){const old=s.roster.findIndex(c=>!isLive(c));if(old<0)return no('Too many standing commanders');s.roster.splice(old,1);}
- const t=g.tribe(team);
- if(!opts.free){if(t.wood<R.standardWood)return no(`A commander's standard needs ${R.standardWood} timber`);t.wood-=R.standardWood;}
+export type CommanderAppointmentOptions={team?:number;replaces?:number;free?:boolean};
+/** Exact pure admission shared by owner controls and the authoritative command. */
+export function commanderAppointmentIssue(g:Game,unitId:number,kind:CommanderKind,opts:CommanderAppointmentOptions={}):string|null{
+ const u=unitById(g,unitId);if(!u)return 'That person is not here';const team=opts.team??u.team,s=st(g).commanders,roster=s?.roster??[];
+ if(u.team!==team)return 'Only your own people can be appointed';
+ if(!own(g,u,team)||u.prisoner)return 'Only a healthy, free adult can be given command';
+ if(hasTaskCommitment(u,kind==='fleet'?'boat':undefined))return 'Finish or release their paid work before giving them command';
+ if(roster.some(c=>c.unitId===u.id&&isLive(c)))return 'Already a commander';
+ const live=activeCommandersOf(g,team),replacing=opts.replaces!==undefined?roster.find(c=>c.id===opts.replaces&&c.team===team&&c.replacedBy===undefined):undefined;
+ if(opts.replaces!==undefined&&(!replacing||replacing.status==='serving'||replacing.status==='retired'))return 'Only a fallen or captured commander can be replaced';
+ if(replacing&&replacing.kind!==kind)return 'Replace a field commander with field command, or a fleet commander with fleet command';
+ if(kind==='fleet'&&u.boat?.phase!=='aboard')return 'A fleet commander must be aboard one of the hulls';
+ const slots=commandSlots(g,team);if(live.length-(replacing&&isLive(replacing)?1:0)>=slots)return `This society can field ${slots} commander${slots===1?'':'s'}; build barracks or a keep for more`;
+ if(roster.length>=R.maximumRoster&&!roster.some(c=>!isLive(c)))return 'Too many standing commanders';
+ if(!opts.free&&g.tribe(team).wood<R.standardWood)return `A commander's standard needs ${R.standardWood} timber`;
+ return null;
+}
+export function appointCommander(g:Game,unitId:number,kind:CommanderKind,opts:CommanderAppointmentOptions={}):CommanderOutcome{
+ const issue=commanderAppointmentIssue(g,unitId,kind,opts);if(issue)return no(issue);
+ const u=unitById(g,unitId)!,team=opts.team??u.team,s=enableCommanders(g,st(g).commanders?.rivals??true),replacing=opts.replaces!==undefined?s.roster.find(c=>c.id===opts.replaces&&c.team===team&&c.replacedBy===undefined):undefined;
+ if(s.roster.length>=R.maximumRoster){const old=s.roster.findIndex(c=>!isLive(c));s.roster.splice(old,1);}
+ if(!opts.free)g.tribe(team).wood-=R.standardWood;
  const c:Commander={id:g.id(),team,unitId:u.id,name:u.name||`Commander ${u.id}`,kind,traits:pickTraits(g,u.id,kind,team),promotions:[],xp:0,level:1,promotionPoints:0,status:'serving',memberIds:[],boatIds:[],appointedAt:g.state.time,lastSeen:{x:u.x,z:u.z},xpMark:u.combatXP||0};
- if(replacing){c.replaces=replacing.id;replacing.replacedBy=c.id;c.memberIds=replacing.memberIds.filter(id=>id!==u.id);c.boatIds=[...replacing.boatIds];replacing.memberIds=[];replacing.boatIds=[];if(isLive(replacing))replacing.status='retired';}
+ if(replacing){c.replaces=replacing.id;replacing.replacedBy=c.id;c.memberIds=replacing.memberIds.filter(id=>id!==u.id);c.boatIds=[...replacing.boatIds];c.xpMark+=c.memberIds.reduce((n,id)=>n+(unitById(g,id)?.combatXP||0),0);replacing.memberIds=[];replacing.boatIds=[];if(isLive(replacing))replacing.status='retired';}
  s.roster.push(c);bump(g);
  return {accepted:true,reason:`${c.name} now leads as a ${kind==='fleet'?'fleet':'field'} commander (${c.traits.map(id=>traitDef(id)?.name).join(', ')})`,commanderId:c.id};
 }
 /** Assign real people (army) or hulls (fleet) to a commander, up to capacity. Everyone is in at most one command. */
-export function assignToCommander(g:Game,commanderId:number,ids:readonly number[]):CommanderOutcome{
- const s=st(g).commanders,c=s?.roster.find(c=>c.id===commanderId);
- if(!c||c.status!=='serving')return no('Commander is not serving');
- const cap=commanderCapacity(c),list=c.kind==='fleet'?c.boatIds:c.memberIds;let added=0;
- for(const id of ids){
-  if(list.includes(id))continue;
-  if(list.length>=cap)break;
-  if(c.kind==='fleet'){
-   const b=(g.state.boats??[]).find(b=>b.id===id&&b.team===c.team&&b.hp>0);if(!b)continue;
-   if(s!.roster.some(o=>o.kind==='fleet'&&isLive(o)&&o.boatIds.includes(id)))continue;
-   list.push(id);added++;
-  }else{
-   const u=unitById(g,id);if(!u||u.id===c.unitId||!own(g,u,c.team)||u.prisoner||u.boat?.phase==='aboard')continue;
-   if(s!.roster.some(o=>o.kind==='army'&&isLive(o)&&o.memberIds.includes(id)||o.unitId===id&&isLive(o)))continue;
-   list.push(id);added++;
-  }
+export function commanderAssignment(g:Game,commanderId:number,ids:readonly number[]){
+ const s=st(g).commanders,c=s?.roster.find(c=>c.id===commanderId);if(!c||c.status!=='serving')return{ids:[]as number[],issue:'Commander is not serving'};
+ const cap=commanderCapacity(c),list=c.kind==='fleet'?c.boatIds:c.memberIds,accepted:number[]=[];
+ for(const id of ids){if(list.includes(id)||accepted.includes(id))continue;if(list.length+accepted.length>=cap)break;
+  if(c.kind==='fleet'){const b=(g.state.boats??[]).find(b=>b.id===id&&b.team===c.team&&b.hp>0);if(!b||s!.roster.some(o=>o.kind==='fleet'&&isLive(o)&&o.boatIds.includes(id)))continue;}
+  else{const u=unitById(g,id);if(!u||u.id===c.unitId||!own(g,u,c.team)||u.prisoner||u.boat?.phase==='aboard'||s!.roster.some(o=>o.kind==='army'&&isLive(o)&&o.memberIds.includes(id)||o.unitId===id&&isLive(o)))continue;}
+  accepted.push(id);
  }
- bump(g);
- return added?{accepted:true,reason:`${added} added to ${c.name}'s command (${list.length}/${cap})`,commanderId:c.id}:no(list.length>=cap?`${c.name} cannot lead more than ${cap}`:'Nobody eligible to add');
+ return{ids:accepted,issue:accepted.length?null:list.length>=cap?`${c.name} cannot lead more than ${cap}`:'Nobody eligible to add'};
+}
+export function assignToCommander(g:Game,commanderId:number,ids:readonly number[]):CommanderOutcome{
+ const proposal=commanderAssignment(g,commanderId,ids);if(proposal.issue)return no(proposal.issue);const c=st(g).commanders!.roster.find(c=>c.id===commanderId)!,list=c.kind==='fleet'?c.boatIds:c.memberIds;list.push(...proposal.ids);if(c.kind==='army')c.xpMark+=proposal.ids.reduce((n,id)=>n+(unitById(g,id)?.combatXP||0),0);bump(g);return{accepted:true,reason:`${proposal.ids.length} added to ${c.name}'s command (${list.length}/${commanderCapacity(c)})`,commanderId:c.id};
 }
 export function releaseFromCommander(g:Game,commanderId:number,ids:readonly number[]):CommanderOutcome{
  const c=st(g).commanders?.roster.find(c=>c.id===commanderId);if(!c)return no('No such commander');
  const drop=new Set(ids);const before=c.memberIds.length+c.boatIds.length;
- c.memberIds=c.memberIds.filter(id=>!drop.has(id));c.boatIds=c.boatIds.filter(id=>!drop.has(id));bump(g);
+ if(c.kind==='army')c.xpMark=Math.max(0,c.xpMark-c.memberIds.filter(id=>drop.has(id)).reduce((n,id)=>n+(unitById(g,id)?.combatXP||0),0));c.memberIds=c.memberIds.filter(id=>!drop.has(id));c.boatIds=c.boatIds.filter(id=>!drop.has(id));bump(g);
  return before!==c.memberIds.length+c.boatIds.length?{accepted:true,reason:'Released from command',commanderId}:no('None of them were in that command');
 }
 export function availablePromotions(c:Commander):PromotionDef[]{
  return COMMANDER_PROMOTIONS.filter(p=>p.kinds.includes(c.kind)&&!c.promotions.includes(p.id)&&c.level>=p.minLevel&&(!p.requires||c.promotions.includes(p.requires)));
 }
+export function commanderPromotionIssue(g:Game,commanderId:number,promotionId:string){const c=st(g).commanders?.roster.find(c=>c.id===commanderId),p=promotionDef(promotionId);if(!c||!isLive(c))return 'No such commander';if(!p)return 'Unknown promotion';if(c.promotionPoints<1)return 'No promotion earned yet';if(!availablePromotions(c).some(a=>a.id===p.id))return 'That promotion is not available at this rank';return null;}
 export function promoteCommander(g:Game,commanderId:number,promotionId:string):CommanderOutcome{
- const c=st(g).commanders?.roster.find(c=>c.id===commanderId),p=promotionDef(promotionId);
- if(!c||!isLive(c))return no('No such commander');if(!p)return no('Unknown promotion');
- if(c.promotionPoints<1)return no('No promotion earned yet');
- if(!availablePromotions(c).some(a=>a.id===p.id))return no('That promotion is not available at this rank');
- c.promotions.push(p.id);c.promotionPoints--;bump(g);return {accepted:true,reason:`${c.name}: ${p.name}`,commanderId:c.id};
+ const issue=commanderPromotionIssue(g,commanderId,promotionId);if(issue)return no(issue);const c=st(g).commanders!.roster.find(c=>c.id===commanderId)!,p=promotionDef(promotionId)!;c.promotions.push(p.id);c.promotionPoints--;bump(g);return{accepted:true,reason:`${c.name}: ${p.name}`,commanderId:c.id};
 }
 /** Award experience from outside the combat tick, e.g. a ramming or a repelled blockade. */
 export function awardCommanderXp(g:Game,commanderId:number,amount:number){
