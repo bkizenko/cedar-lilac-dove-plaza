@@ -307,6 +307,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  fabric?:import('./buildingFabric').BuildingFabric;
   sitePreparation?:import('./sitePreparation').SitePreparation;
   renovation?:import('./housingTypes').HousingRenovation;
   housingReceipt?:import('./housingTypes').HousingReceipt;
