@@ -9342,6 +9342,15 @@
       "liveCommit": "c1d0e59a537071cd1e6cd66dfe63bce2bf4dc5ec",
       "evidence": "docs/metrics/method-catalog-release-2026-11-12.json",
       "scope": "Ten production-method catalog; real qualification/record custody/paid study and useful-output mastery. Pottery earned journey includes real failure without mastery and paid retry.18/18scoped; old53/cordage preserved; broader knowledge gate remains open."
+    },
+    {
+      "id": "CODEX-PHYSICAL-FOREIGN-RECORDS",
+      "owner": "Codex W2",
+      "state": "live-partial",
+      "sourceCommit": "18d9fc9f9f72e6a689f0f8dace49b53f17ce39c1",
+      "liveCommit": "18d9fc9f9f72e6a689f0f8dace49b53f17ce39c1",
+      "evidence": "docs/metrics/foreign-record-release-2026-11-12.json",
+      "scope": "Actual paid rival record production; same physical foreign-ground record recovered, returned, paid study/useful replication.19/19 scoped; guarded hostile-cache battle remains pending, frozen37/98 unchanged."
     }
   ],
   "status_update_policy": {

@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: c1d0e59a537071cd1e6cd66dfe63bce2bf4dc5ec published as 2026-11-12T22-22-00-935Z-c1d0e59 on8086/8101.18/18 unique scoped checks (16native/shared+2actualbuilt), compiler/buildPASS: ten practical production methods share genuine qualification→physical record→paid study→exact paid replication; typed prerequisites stay intact. Actual pottery failed firing grants no mastery, separately paid useful retry earns1own+1learned receipt. Precise personal delivery timestamps, per-method queue/inventory, all owned record access; old53 and cordage compatibility unchanged. Old assets5/5 separately rechecked.37/98 frozen; broader captured/traded artifacts/institutions/all-method journeys/campaign/performance remain open. Partial/unverified gates earn zero.
+Verified baseline: 18d9fc9f9f72e6a689f0f8dace49b53f17ce39c1 published as 2026-11-12T23-35-40-519Z-18d9fc9 on8086/8101.19/19 unique scoped checks (17native/shared+2actualbuilt), compiler/buildPASS: qualified NPC artisan pays real clay/fuel/labor for a physical record; original civilian recovers the same dropped foreign record, returns it home, pays for study and useful replication. Actual canvas pickup/inventory/provenance/durable restore and untouched original53 PASS. Paid founding workers protected; real alarms release stale pickup reservations. Guarded-cache battle remains pending; one explicitly bounded visible settlement timestamp refresh, no foreign full-read-purity claim. Old assets5/5 separate;37/98 frozen, no new gate credit.
 
 ## Milestone counts
 
