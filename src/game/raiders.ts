@@ -336,9 +336,10 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
  if(raid.plan?.intent!=='annihilation'&&!defenders.some(v=>Math.hypot(v.x-u.x,v.z-u.z)<7)){
   const ruin=g.state.buildings.find(b=>b.hp<=0&&b.lootTeam===3&&b.raidLoot&&Object.values(b.raidLoot).some(v=>(v||0)>0)&&Math.hypot(b.x-u.x,b.z-u.z)<12);
   if(ruin){
+   if(!stolenMarkRoom(g,u)){u.workReason="Waiting for stolen cargo provenance capacity";return true;}
    if(g.attackDistance(u,ruin)>u.r+1.8){u.tx=ruin.x;u.tz=ruin.z;g.steer(u,dt);return true;}
    const kind=(['food','wood','stone','copper','iron'] as const).find(k=>(ruin.raidLoot![k]||0)>0)!;
-   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;noteRaidCarried(g,u,ruin.team,kind,amount);raid.phase='retreat';return true;
+   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;markStolenLoad(g,u,ruin.team,raid.plan?.bandId);noteRaidCarried(g,u,ruin.team,kind,amount);raid.phase='retreat';return true;
   }
  }
  if(g.state.time>=raid.thinkAt){
