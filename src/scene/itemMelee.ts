@@ -73,12 +73,12 @@ export function spearFamily(c:Ctx,kind:'spear'|'javelin'|'pike'){
 
 // ---------------------------------------------------------------------------------------------------------------- hafted head helpers
 /** a wedge/axe head extending along +Z from the haft, edge at the far end; heights and thicknesses taper to the edge */
-function wedge(c:Ctx,y:number,z0:number,z1:number,o:{w0:number;w1:number;h0:number;h1:number;drop?:number;paint:Paint;shape?:'oct'|'rect'}){
+export function wedge(c:Ctx,y:number,z0:number,z1:number,o:{w0:number;w1:number;h0:number;h1:number;drop?:number;paint:Paint;shape?:'oct'|'rect'}){
  const n=c.b.pick(12,8,4),corner=(t:number)=>t<.84?1:Math.sqrt(Math.max(.05,1-Math.pow((t-.84)/.16,2)*.8)),secs=Array.from({length:n+1},(_,i)=>{const t=i/n,h=(o.h0+(o.h1-o.h0)*Math.pow(t,.8))*corner(t);return {c:[0,y-(o.drop??0)*t*t,z0+(z1-z0)*t] as V3,w:Math.max(.0016,o.w0+(o.w1-o.w0)*Math.pow(t,.9)),h};});
  c.b.loft(secs,'z',edgeGlint(o.paint,.82),{shape:o.shape??'oct'});
 }
 /** a hafted tool's handle with a butt swell; returns top y */
-function haft(c:Ctx,y0:number,y1:number,r:number,o:{knob?:boolean;crook?:number}={}){
+export function haft(c:Ctx,y0:number,y1:number,r:number,o:{knob?:boolean;crook?:number}={}){
  const L=y1-y0,P=decorPaint(c,c.wood2(L),L,.35,.85),n=c.b.pick(10,6,4),zOf=(t:number)=>(o.crook??0)*Math.pow(Math.max(0,t-.8)/.2,2);
  const path=Array.from({length:n+1},(_,i)=>{const t=i/n;return [Math.sin(t*3)*.004*(1+c.wear*2),y0+L*t,zOf(t)] as V3;});
  c.b.tube(path,t=>r*(1.25-.35*Math.sin(Math.min(1,t*1.3)*Math.PI*.6))*(t>.9?1.1:1),c.sd(8),P,{caps:true});

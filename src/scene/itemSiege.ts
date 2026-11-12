@@ -241,9 +241,9 @@ export function siegeTower(c:Ctx){
  for(const sx of [-1,1])for(const sz of [-1,1])timber(c,[sx*hw*.82,Ht,sz*hd*.82],[sx*hw*.82,Ht+.9,sz*hd*.82],.2,.2,P(1));
  for(const sz of [-1,1])timber(c,[-hw*.82,Ht+.9,sz*hd*.82],[hw*.82,Ht+.9,sz*hd*.82],.18,.14,P(3));
  for(const sx of [-1,1])timber(c,[sx*hw*.82,Ht+.9,-hd*.82],[sx*hw*.82,Ht+.9,hd*.82],.18,.14,P(3));
- const brLen=3.0,brAng=c.broken?.2:1.0;
+ const brLen=3.0,brAng=c.broken?.55:-1.3;
  b.push([0,Ht+.2,hd*.82],[brAng,0,0]);for(let i=0;i<6;i++)timber(c,[-hw*.7+i*(hw*1.4/5),0,0],[-hw*.7+i*(hw*1.4/5),0,brLen],.26,.07,P(3));b.pop();
- if(c.lod<2)for(const s of [-1,1])b.tube([[s*hw*.7,Ht+.9,hd*.82],[s*hw*.7,Ht+1.6,hd*.82+.6],[s*hw*.7,Ht+.2+Math.sin(brAng)*brLen*.9,hd*.82+Math.cos(brAng)*brLen*.9]],()=>.016,4,c.paint('cord',{len:4,tint:c.st.cordColour,tintAmount:.2}),{caps:true});
+ if(c.lod<2)for(const s of [-1,1])b.tube([[s*hw*.7,Ht+.9,hd*.82],[s*hw*.7,Ht+1.6,hd*.82+.6],[s*hw*.7,Ht+.2-Math.sin(brAng)*brLen*.9,hd*.82+Math.cos(brAng)*brLen*.9]],()=>.016,4,c.paint('cord',{len:4,tint:c.st.cordColour,tintAmount:.2}),{caps:true});
  timber(c,[0,Ht+.9,0],[0,Ht+2.9,0],.1,.1,P(2));
  b.loft([{c:[.04,Ht+2.85,0],w:.02,h:.02},{c:[.7,Ht+2.65,0],w:.02,h:.55},{c:[1.3,Ht+2.45,0],w:.02,h:.35}],'x',c.paint('linen',{len:1.3,tint:c.st.field,tintAmount:.8}),{shape:'rect'});
  // interior ladder visible from the back, pushing beams
