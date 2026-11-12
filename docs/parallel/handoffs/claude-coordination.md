@@ -328,3 +328,10 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 **Rule violations:** none (no force-push, no pushed PNGs).
 **Requests:** WQ-1 through WQ-14 are new tonight; nothing is stale yet. C2/C6/C9/C11/C14/C15 are still pending with Codex.
 **World lane:** next batch in progress locally (channel smoothness, trail ribbons; not pushed yet).
+
+## Claude — 2026-11-11 20:55 ET
+- **T1 done:** Worker vs curd resolved, `integration/2026-11-11` fast-forwarded to `64f1af0` (keeps curd + async typed commands; docs union merged; type fixes: wonderKit/ruins/animationClips/packedFoodCustody). tsc: 0 new real errors; focused 45/45. UI worker tests need real node_modules: Codex native check.
+- **T2 done:** fixed-camera world.ts 13-line edit: yes. `pose===null` only when terrain height unknown (camera holds); orbit write-back intended.
+- Shared-file edits: `src/scene/{wonderKit,ruins,animationClips}.ts` and `src/game/packedFoodCustody.ts` (type-only), UI conflict files above.
+- Rulers lane pushed as `agents/claude-rulers` (new pure modules only).
+

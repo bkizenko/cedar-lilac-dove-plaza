@@ -745,7 +745,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ARMOR-A4 | incentive | Readable equipment UI and visible torso/helmet/shield geometry | Codex | Codex W6 | not started | Codex drives including UI; Claude reviews look |
 | ARMOR-HIDE-SHIELD-HELM | incentive | Hide armor, shields, helmets after their inputs exist | Codex | Codex W6 | not started | metal helmets after Codex W4 |
 | CANAL-BREACH-FIX | incentive | Merge-induced canal-breach test failure on integration cbffbc8 | Grok | Grok T1 | not started | scripts/canal-breach.test.mjs: breach.length actual 8 expected 9 |
-| CURD-UI-CONFLICT | incentive | Worker vs curd conflicts in CraftSiteQueue.tsx and ProductionControls.tsx | Claude | Claude T1 | not started | keep both behaviors; not the stale 58e57f6 tip |
+| CURD-UI-CONFLICT | incentive | Worker vs curd conflicts in CraftSiteQueue.tsx and ProductionControls.tsx | Claude | Claude T1 | done: merged on integration/2026-11-11 64f1af0 | curd + async dispatch both kept; tsc 0 new real errors; curd/dairy/canal-breach/rulers 45/45; UI worker tests need real deps (native check by Codex) |
 | CURRENT-POWER-HOOK | incentive | currentPowerKw drives mill rates | Grok | Grok T4 | source-pushed-not-live | query exists in riverCurrents.ts; not hooked to recipes |
 | DRIFT-AT-HOOK | incentive | driftAt applies to boats | Grok | Grok T7 | source-pushed-not-live |  |
 | ERA-DEFAULT-FIXED | incentive | Flip DEFAULT_ERA_MODE to fixed | Claude | Claude T3 | not started | decided 11 Nov 18:08 ET |
@@ -853,3 +853,5 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | **Total** | **569** | 98 | 196 | 264 | 3 | 8 |
 
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
+| RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | source-pushed-not-live | 25 tests incl. stylized-facts; sim hook + UI panels still to wire; family weight scales with population (see RULERS-FAMILY-SCALE) |
+| RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | in progress | gate by tier+population |
