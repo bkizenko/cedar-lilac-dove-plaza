@@ -535,3 +535,9 @@ canvas:focus-visible {
 .village-history li span {
   color: var(--color-parchment-dim);
 }
+.encounter-talk{display:flex;gap:1rem;align-items:flex-start;}
+.encounter-talk>section{flex:1;min-width:0;}
+.encounter-portrait{flex:none;width:9.5rem;}
+.encounter-portrait svg{width:100%;height:auto;border-radius:.4rem;}
+.encounter-portrait figcaption{font-size:.75rem;line-height:1.3;color:var(--color-parchment);margin-top:.3rem;}
+@media (max-width:30rem){.encounter-talk{flex-direction:column;}.encounter-portrait{width:7rem;}}

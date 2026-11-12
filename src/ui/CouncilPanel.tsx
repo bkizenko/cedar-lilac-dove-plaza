@@ -3,6 +3,7 @@ import type {Engine} from '../game/engine';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {CouncilPanelClassic} from './council/CouncilPanelClassic';
 import {HandoverCard,FameFeed,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
+import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
 const QUERY={kind:'rulers-council'} as const;
 const MODE_LABEL:Record<string,string>={stay:'Content to stay',settle:'Looking to settle new ground',migrate:'Pressed to move on',conquer:'Eyeing a neighbour',trade:'Seeking trade',explore:'Itching to explore',mission:'Wanting to spread the faith'};
@@ -31,12 +32,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
   <FameFeed log={c.log}/>
   {c.expansion&&<Card label="Expansion" title={MODE_LABEL[c.expansion.mode]??c.expansion.mode}>
    {c.expansion.why.length>0?<p className="text-parchment-dim">Because {c.expansion.why.join('; ')}.</p>:<p className="text-parchment-dim">Nothing presses the people to leave.</p>}</Card>}
-  {c.neighbours.length>0&&<Card label="Neighbours" title="Neighbouring houses">
-   <ul>{c.neighbours.map(n=><li key={n.team} className="border-b border-parchment/10 py-1 last:border-0"><div className="flex items-center justify-between gap-2"><span>{n.name}: <b>{n.bond}</b> <span className="text-parchment-dim">trust {n.trust}</span></span>
-    {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team)}>Arrange a marriage</button>}
-    {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team,'foster-houses')}>Foster children</button>}</div>
-    {n.means.length>0&&<p className="text-parchment-dim">{n.means.join('; ')}</p>}</li>)}</ul>
-   {feedback&&<p role="status">{feedback}</p>}</Card>}
+  <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)} feedback={feedback}/>
  </section>;
 }
 function LayoutToggle({layout,set}:{layout:'current'|'classic';set:(l:'current'|'classic')=>void}){

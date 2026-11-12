@@ -1,3 +1,4 @@
+import {societyIdentity} from './societyIdentity';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
 import type {Game} from './sim';
 import {rulersOf} from './rulersState';
@@ -20,7 +21,7 @@ export type CouncilModel={
  factions:{kind:FactionKind;power:number;loyalty:number;demand:string}[];coalitionLoss:number;
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[]}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity}[];
  log:string[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[]};
 };
@@ -34,7 +35,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const exp=expansionOf(g,team);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });
