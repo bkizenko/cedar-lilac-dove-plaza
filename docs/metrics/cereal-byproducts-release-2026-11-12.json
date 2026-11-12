@@ -1,0 +1,36 @@
+{
+  "commit": "b0fdedd0a0aecae1f15520d1a5622c3dbcc5d2ea",
+  "source": "aa62903",
+  "release": "2026-11-12T12-06-03-954Z-b0fdedd",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 25,
+    "total": 25,
+    "nativeAndShared": 23,
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Built native generated-goat bedding/fuel readouts, real stock/ledger durable restore, original53 village compatibility. Not blanket fodder/compost/campaign/FPS acceptance.",
+      "originalPopulation": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "fullReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "unchanged": true
+  },
+  "remaining": [
+    "recipe fuel classes",
+    "fodder and compost",
+    "stockpile priorities",
+    "building mixes and disposal"
+  ],
+  "reference": "https://www.fao.org/4/q1085e/q1085e04.htm"
+}
