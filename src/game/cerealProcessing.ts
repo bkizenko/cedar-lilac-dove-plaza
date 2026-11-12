@@ -1,3 +1,4 @@
+import {productionFuelAvailable} from './mealFuel';
 import {millIssue} from './millPower';
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
@@ -115,7 +116,7 @@ export function harvestBacklogAlert(g:Game){
  if(bake||grind){
   const meal=grind&&hearth?PRODUCTION_RECIPES.cookPorridge:PRODUCTION_RECIPES.bakeBreadOven;
   if((t.survival?.waterLiters??0)<meal.water)return alert('collect drinking water for grain meals');
-  if(t.wood<meal.wood)return alert('gather firewood for grain meals');
+  if(!productionFuelAvailable(g,0,'cookPorridge',meal.wood))return alert('gather firewood or use delivered cereal residues for meals');
  }
  return alert('keep a worker and a clear route available');
 }
@@ -159,7 +160,7 @@ function urgentReadyMealInputs(g:Game){
  if(reserveSeconds(g,0)>=CEREAL_RULES.foodTargetSeconds)return false;
  const t=g.tribe(0),food=foodInventory(t);
  return (['cookFish','cookMeat','cookPorridge',...breadRecipes,'smokeFish','smokeMeat']as ProductionRecipe[]).some(recipe=>{
-  const r=PRODUCTION_RECIPES[recipe];return t.wood>=r.wood&&(t.survival?.waterLiters??0)>=r.water&&food.grain>=r.grain&&
+  const r=PRODUCTION_RECIPES[recipe];return productionFuelAvailable(g,0,recipe,r.wood)&&(t.survival?.waterLiters??0)>=r.water&&food.grain>=r.grain&&
    Object.entries(r.foodInputs).every(([kind,n])=>(food[kind as keyof typeof food]||0)>=(n||0))&&Object.entries(r.inputs).every(([kind,n])=>((t.items as Record<string,number>|undefined)?.[kind]||0)>=(n||0))&&
    g.state.buildings.some(b=>b.team===0&&g.finished(b)&&!b.plannedCost&&b.type===r.workplace&&!grainBatchIssue(g,0,recipe,b));
  });
@@ -238,7 +239,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  const sites = g.state.buildings.filter(b => b.team === 0 && b.hp > 0 && !b.plannedCost && g.finished(b));
  const canPay = (recipe: ProductionRecipe) => {
   const spec = PRODUCTION_RECIPES[recipe];
-  return !grainBatchIssue(g,0,recipe) && tribe.wood >= spec.wood && (tribe.survival?.waterLiters ?? 0) >= spec.water;
+  return !grainBatchIssue(g,0,recipe) && productionFuelAvailable(g,0,recipe,spec.wood) && (tribe.survival?.waterLiters ?? 0) >= spec.water;
  };
  const urgent = reserveSeconds(g, 0) < CEREAL_RULES.foodTargetSeconds;
  const quickMeals=urgent&&urgentReadyMealInputs(g);

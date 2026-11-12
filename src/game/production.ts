@@ -1,3 +1,5 @@
+import {acceptsMealResidues,productionFuelAvailable,productionFuelLabel} from './mealFuel';
+import {burnResidueFuel} from './residueFuel';
 import {recordPenBeddingCargoReturn} from './penBedding';
 import {packedItemStorageUnits,packedItemLiters,packedFoodLiters,itemPackedLiters,seedReserveLiters,INVENTORY_VOLUME_RULES} from './inventoryVolume';
 import {emitProductionDelivery} from './productionDelivery';
@@ -218,7 +220,7 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,
  for(const[k,n]of Object.entries(r.foodInputs))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} actual ${k} delivered to the food cache`;
  if(r.inputs.greenMalt&&(t.itemFreshness?.greenMalt!==undefined&&g.state.time-t.itemFreshness.greenMalt>=BREWING_RULES.maltLifetimeSeconds))return 'The sprouted malt has spoiled; prepare a fresh grain batch';
  if(r.grain&&foodInventory(t).grain+1e-9<r.grain)return (stock.grainSheaves||0)>0||(stock.roughGrain||0)>0?`Need ${r.grain} clean grain: thresh the sheaves, then winnow out the chaff before grinding`:`Need ${r.grain} actual grain delivered to the food cache`;
- if(t.wood<r.wood)return `Need ${r.wood} delivered log for this batch`;
+ if(!productionFuelAvailable(g,b.team,recipe,r.wood))return `Need ${productionFuelLabel(recipe,r.wood,true)} delivered for this batch`;
  if((t.survival?.waterLiters||0)<r.water)return `Need ${r.water} litres of collected water`;
  const used=storedItemUnits(g,b.team)+cachedProductionUnits(g,b.team)+cerealReservedMaterials(g,b.team);
  if(!isCerealRecipe(recipe)&&!canLeaveFlourOutside(g,b.team,recipe)&&used-packedItemStorageUnits(r.inputs)+recipeOutputStorageUnits(r)>Math.max(itemCapacity(g,b.team),isCerealRecipe(recipe)||!sum(r.outputs)||nonExpandingItemBatch(recipe)?used:0)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits)return 'Material storage is full; use or make room for the finished goods';
@@ -238,7 +240,7 @@ export function beginProduction(g:Game,recipe:ProductionRecipe,workplace:number,
  for(const[k,n]of Object.entries(r.foodInputs)){if(!takeFoodLot(g,b.team,k as FoodKind,n!)){releaseProductionOwnership(g,{...p,phase:'lost'});return false;}s.metrics.foodInputsUsed??={};s.metrics.foodInputsUsed[k as FoodKind]=(s.metrics.foodInputsUsed[k as FoodKind]||0)+n!;}
  if(r.grain&&!takeFoodLot(g,b.team,'grain',r.grain)){releaseProductionOwnership(g,{...p,phase:'lost'});return false;}
  if(isCerealRecipe(recipe))cerealLedger(g);
- s.metrics.grainUsed=(s.metrics.grainUsed||0)+r.grain;for(const[k,n]of Object.entries(r.inputs)){stock[k as ItemKind]=(stock[k as ItemKind]||0)-n;add(s.metrics.consumed,k as ItemKind,n);}t.wood-=r.wood;if(t.survival)t.survival.waterLiters-=r.water;s.metrics.logsUsed+=r.wood;s.metrics.waterUsedLiters+=r.water;
+ s.metrics.grainUsed=(s.metrics.grainUsed||0)+r.grain;for(const[k,n]of Object.entries(r.inputs)){stock[k as ItemKind]=(stock[k as ItemKind]||0)-n;add(s.metrics.consumed,k as ItemKind,n);}const chaffBefore=stock.chaff||0,strawBefore=stock.straw||0,residueHeat=acceptsMealResidues(recipe)?burnResidueFuel(g,b.team,r.wood):0,logs=Math.max(0,r.wood-residueHeat);t.wood=Math.max(0,t.wood-logs);if(chaffBefore>(stock.chaff||0))add(s.metrics.consumed,'chaff',chaffBefore-(stock.chaff||0));if(strawBefore>(stock.straw||0))add(s.metrics.consumed,'straw',strawBefore-(stock.straw||0));if(t.survival)t.survival.waterLiters-=r.water;s.metrics.logsUsed+=logs;s.metrics.waterUsedLiters+=r.water;
  if(r.preservation==='charcoal'){p.charcoal=newCharcoalBatch();bindCharcoalLoad(u,p);}
  if(r.preservation==='brewing'){const stage=recipe==='sproutGrain'?'malt':recipe==='brewSmallBeer'?'smallBeer':'beer',origin=t.potteryOrigins?.find(o=>o.count>0);p.brewing=newBrewBatch(stage,origin?{...origin.origin}:undefined);if(origin)origin.count--;if(r.inputs.greenMalt)p.brewing.inputAgeSeconds=Math.max(0,g.state.time-(t.itemFreshness?.greenMalt??g.state.time));}
  if(r.preservation==='curds'){const origins=[];for(let i=0;i<CURD_RULES.vessels;i++){const origin=t.potteryOrigins?.find(o=>o.count>0);origins.push(origin?{...origin.origin}:null);if(origin)origin.count--;}p.curds=newCurdBatch(origins);}if(r.preservation==='dairy'){p.dairy=newDairyBatch();const origin=t.potteryOrigins?.find(o=>o.count>0);if(origin){origin.count--;p.dairy.vesselOrigin={...origin.origin};}}if(r.outputs.basket)p.basketOrigin=basketOrigin(g,b.team,b.id);if(dryingRecipe(r))p.drying=emptyDryingExposure();if(r.outputs.pottery)p.pottery={version:1,origin:potteryOrigin(g,b.team,b.id),broken:(p.id+g.state.seed)%16===0?4:r.workplace==='hearth'?1:(p.id+g.state.seed)%4===0?1:0};
