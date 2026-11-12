@@ -415,6 +415,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  foodExperience?:import("./foodExperience").FoodExperience;
   identity?:import('./societyIdentity').SocietyIdentity;
   inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];
   animalProcessingVersion?:1;

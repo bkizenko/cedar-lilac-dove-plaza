@@ -1,3 +1,4 @@
+import {FOOD_TASTE,RAW_ITEM_TASTE,recordFoodExperience} from './foodExperience';
 import {CURD_RULES} from './curds';
 import {DAIRY_RULES} from './dairy';
 import{FOOD_KINDS}from'./foodKinds';
@@ -101,12 +102,14 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
   const left=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);
   const nourishment=nourishmentOf(lots,normalKinds);
   const required=demand*dt,share=Math.max(0,1-required/Math.max(.0001,nourishment));
-  for(const k of normalKinds)lots[k]*=share;
+  let eatenNourishment=0,hedons=0,rawUnits=0;
+  for(const k of normalKinds){const eaten=lots[k]*(1-share),nutrition=eaten*(FOOD_NOURISHMENT[k]??1);eatenNourishment+=nutrition;hedons+=nutrition*FOOD_TASTE[k];if(k==='grain'||k==='fish')rawUnits+=eaten;lots[k]*=share;}
   let deficit=Math.max(0,required-nourishment),risky=0,emergencyUnits=0;
-  const consumeEmergency=(available:number,nutrition:number,unsafe=false)=>{
+  const consumeEmergency=(available:number,nutrition:number,unsafe=false,taste=0)=>{
     const eaten=Math.min(available,deficit/nutrition);
     deficit=Math.max(0,deficit-eaten*nutrition);
     if(unsafe)risky+=eaten;
+    eatenNourishment+=eaten*nutrition;rawUnits+=eaten;hedons+=eaten*nutrition*taste;
     return eaten;
   };
   if(rawRules&&deficit>0){
@@ -123,8 +126,8 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
     }
     // If alternative rations cannot cover the need, the buffer is edible too.
     lots.grain-=consumeEmergency(lots.grain,EMERGENCY_RATIONS.nourishment);
-    lots.fish-=consumeEmergency(lots.fish,EMERGENCY_RATIONS.nourishment,true);
-    if(t.items?.rawMeat){const eaten=consumeEmergency(t.items.rawMeat,EMERGENCY_RATIONS.nourishment,true);t.items.rawMeat-=eaten;emergencyUnits+=eaten;}
+    lots.fish-=consumeEmergency(lots.fish,EMERGENCY_RATIONS.nourishment,true,FOOD_TASTE.fish);
+    if(t.items?.rawMeat){const eaten=consumeEmergency(t.items.rawMeat,EMERGENCY_RATIONS.nourishment,true,RAW_ITEM_TASTE.rawMeat);t.items.rawMeat-=eaten;emergencyUnits+=eaten;}
   }
   if(risky>0&&Math.random()<1-Math.exp(-risky*EMERGENCY_RATIONS.illnessPerRawUnit)){
     const resident=g.state.units.find(u=>u.team===team&&u.hp>0&&!u.sickUntil&&!u.expedition&&!u.prisoner&&!u.visit);
@@ -135,6 +138,7 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
     }
   }
   t.food=FOOD_KINDS.reduce((n,k)=>n+lots[k],0);t.foodLots=lots;
+  recordFoodExperience(t,g.state.time,dt,required,eatenNourishment,hedons,rawUnits);
   recordSimulationEvent(g,'food_spoiled',team,'food',Math.max(0,before-left));
   recordSimulationEvent(g,'food_consumed',team,'food',Math.max(0,left-t.food)+emergencyUnits);
   return required>0?Math.min(1,deficit/required):0;
