@@ -2399,8 +2399,13 @@ export class Game {
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
       if(!geographicInfluenceReady(this,0)||!geographicInfluenceReady(this,tr.id)){
-        // Fields still computing must not invent overlap anger, and must not freeze existing tension.
-        tr.tension=Math.max(0,Math.min(1,tr.tension+difficultyGrievance(this,grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,0,0))));
+        // Fields still computing must not invent overlap anger. Natural cooling
+        // continues only when the tribe has no witnessed claim; a known old claim
+        // remains a grievance until an observer revises it.
+        const known=this.state.observedClaims?.some(m=>m.observer===tr.id&&m.active);
+        if(!known){
+          tr.tension=Math.max(0,Math.min(1,tr.tension+difficultyGrievance(this,grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,0,0))));
+        }
         continue;
       }
       if (!tr.hostile && (tr.peaceTerm==='puppet' || (tr.recoveryUntil||0)>this.state.time)) continue;
