@@ -487,7 +487,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-91 | catalogue | Trails develop through repeated passage; unused paths fade. | Grok | — (done) | done/live | historical source-struck: trails from repeated passage; GW-12 display still Claude T4 |
 | CAT-92 | catalogue | Later engineered roads with real labor/material/upkeep costs. | Grok | Grok W2 | not started |  |
 | CAT-93 | catalogue | River boats, launch sites, ports and land/water transfer. | Codex | Codex N5 | source-pushed-not-live | sail rig live 5f1b5e9; broader ports/hull classes remain |
-| CAT-94 | catalogue | Pack animals, sledges/carts and capacity/speed tradeoffs. | Codex | Codex W1 | not started | pack animals / sledges / carts |
+| CAT-94 | catalogue | Pack animals, sledges/carts and capacity/speed tradeoffs. | Codex | Codex W1 | live-partial | 233d95a: actual goat condition/care controls new-load capacity, local finite feed/water, conserved held loads/release; horses/traction remain W1; 45/45 scoped checks, docs/metrics/pack-animal-care-release-2026-11-12.json |
 | CAT-95 | catalogue | Local stores, carriers, hauling priorities and route reliability. | Codex | Codex W9 | not started | local stores / hauling priorities |
 | CAT-96 | catalogue | Bridges/fords/choke points as strategic constraints. | Grok | Grok W2 | not started |  |
 | CAT-97 | catalogue | Expedition escorts and raider ambush risk. | Claude | Claude W2 | not started | expedition escorts / ambush |

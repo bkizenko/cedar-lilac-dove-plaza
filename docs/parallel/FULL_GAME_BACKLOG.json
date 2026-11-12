@@ -9140,6 +9140,15 @@
       "liveCommit": "1422a7898a868cb23093bc7c665aa0426db568fb",
       "evidence": "docs/metrics/goat-handover-release-2026-11-12.json",
       "scope": "Only unpaid former-player construction queue cleared after actual whole-community paid custody settlement. Paid inputs/progress/actors and third-party prisoner guard retained, strict save/reload validated. No diplomatic UI acceptance claim."
+    },
+    {
+      "id": "CODEX-PACK-ANIMAL-CARE",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "0a61cdd",
+      "liveCommit": "233d95a4d6cbd82312ce432e28b6443bd9134c97",
+      "evidence": "docs/metrics/pack-animal-care-release-2026-11-12.json",
+      "scope": "Actual pack goat identity/condition, local finite feed/water, capacity and cargo/save conservation; existing pack goats only. Horses/stables/traction remain open."
     }
   ],
   "status_update_policy": {
