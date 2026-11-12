@@ -29,13 +29,28 @@ export function scorePrestige(facts:PrestigeFacts):PrestigeScore{
 /** A completed trade is one offer, not a payment flag plus another delivery point.
  * Receipts are already physical native events; offers lost/refunded only do not count.
  * Caller supplies the society's authorized receipt history, never hidden rival stocks. */
-export function usefulTradeCount(receipts:readonly {id:number;offerId:number;stage:string;team:number;amount:number}[],team:number){
- const seen=new Set<number>(),paid=new Set<number>(),delivered=new Set<number>();
- for(const r of receipts){if(seen.has(r.id)||!Number.isSafeInteger(r.id)||r.id<1||!Number.isSafeInteger(r.offerId)||r.offerId<1||!Number.isFinite(r.amount)||r.amount<=0)continue;seen.add(r.id);
-  if(r.stage==='paid')paid.add(r.offerId);if(r.stage==='delivered'&&r.team===team)delivered.add(r.offerId);
+export type PrestigeTradeOffer={id:number;from:number;to:number;get:{kind:string};needAmount?:number};
+export type PrestigeTradeReceipt={id:number;offerId:number;stage:string;team:number;amount:number;kind?:string;fairAmount?:number};
+export function usefulTradeCount(receipts:readonly PrestigeTradeReceipt[],team:number,offers:readonly PrestigeTradeOffer[]=[]){
+ const seen=new Set<number>(),paid=new Set<number>(),delivered=new Set<number>(),byOffer=new Map(offers.map(o=>[o.id,o]));
+ for(const r of receipts){
+  if(seen.has(r.id)||!Number.isSafeInteger(r.id)||r.id<1||!Number.isSafeInteger(r.offerId)||r.offerId<1||!Number.isFinite(r.amount)||r.amount<=0)continue;seen.add(r.id);
+  const offer=byOffer.get(r.offerId);
+  // An available native needs quote is evidence, not an extra score source.
+  // Never ignore an explicit zero/invalid need or credit the wrong return good.
+  if(offer&&(offer.from!==team||offer.needAmount!==undefined&&(!Number.isFinite(offer.needAmount)||offer.needAmount<=0)))continue;
+  if(r.stage==='paid'&&r.team!==team&&(!offer||r.team===offer.to))paid.add(r.offerId);
+  if(r.stage==='delivered'&&r.team===team&&(!offer||r.kind===offer.get.kind)&&
+    (r.fairAmount===undefined||Number.isFinite(r.fairAmount)&&r.fairAmount>0))delivered.add(r.offerId);
  }
  return[...delivered].filter(id=>paid.has(id)).length;
 }
+/** One cell can contain many physical spans/path samples, but infrastructure
+ * prestige values connectivity here once. Resource mass has its separate cap. */
+export function prestigeCellInfrastructure(trailWear:number,crossings:number,trailValue:number,crossingValue:number){
+ return Math.min(1,finite(trailWear))*finite(trailValue)+Math.min(1,finite(crossings))*finite(crossingValue);
+}
+
 export type PrestigeObservation={observer:number;subject:number;observedAt:number;components:Partial<Record<PrestigeComponent,number>>};
 export type PrestigeView={version:1;subject:number;knowledge:'own'|'observed'|'unknown';observedAt:number|null;total:number|null;knownSubtotal:number;components:{component:PrestigeComponent;points:number|null;available:boolean}[]};
 /** Rival view never accepts full authority facts. An explicit dated observation

@@ -35,3 +35,13 @@ test('own useful trade requires both paid and delivered native receipts and neve
  const g=fixture();g.state.tradeNeeds={version:1,teams:[],offers:[],cooldowns:[],receipts:[{id:1,offerId:2,time:0,stage:'loaded',team:0,kind:'wood',amount:10},{id:3,offerId:2,time:0,stage:'paid',team:1,kind:'wood',amount:10}]};assert.equal(collectOwnPrestige(g).usefulTrade,0);
  g.state.tradeNeeds.receipts.push({id:4,offerId:2,time:0,stage:'delivered',team:0,kind:'food',amount:10});assert.equal(collectOwnPrestige(g).usefulTrade,1);g.state.tradeNeeds.receipts.push({id:5,offerId:2,time:0,stage:'delivered',team:0,kind:'food',amount:10});assert.equal(collectOwnPrestige(g).usefulTrade,1);
 });
+
+test('real boat-practice delivery evidence earns distinct methods while built hulls and stationary sailing fittings do not',()=>{
+ const g=fixture(),t=g.tribe(0);g.state.time=100;
+ t.boatPractice={version:1,waterMeters:100,loadedMeters:100,deliveredGoods:0,built:{scoutCanoe:1,freightPunt:1},proven:{},firstObservedAt:0,sailing:{version:1,fitted:1,sailMeters:200,deliveredGoods:0}};
+ assert.deepEqual(collectOwnPrestige(g).demonstratedPractices,[]);
+ const p=t.boatPractice;p.deliveredGoods=8;p.lastDeliveryAt=90;p.proven.scoutCanoe=true;p.demonstratedAt={scoutCanoe:90};
+ assert.deepEqual(collectOwnPrestige(g).demonstratedPractices,['water-cargo-delivery','hull:scoutCanoe']);
+ p.sailing.deliveredGoods=8;p.sailing.demonstratedAt=95;assert.ok(collectOwnPrestige(g).demonstratedPractices.includes('sailed-cargo-delivery'));
+ p.sailing.demonstratedAt=101;assert.ok(!collectOwnPrestige(g).demonstratedPractices.includes('sailed-cargo-delivery'));p.lastDeliveryAt=101;assert.ok(!collectOwnPrestige(g).demonstratedPractices.includes('water-cargo-delivery'));
+});

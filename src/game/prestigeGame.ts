@@ -5,7 +5,7 @@ import {soilQuality,riverDistance} from './ecology';
 import {readyFoodStock} from './pantry';
 import {foodDemand} from './settlement';
 import {informationOwner} from './informationCustody';
-import {ownPrestigeView,observedPrestigeView,usefulTradeCount,type PrestigeFacts,type PrestigeView,type PrestigeObservation} from './prestigeScore';
+import {ownPrestigeView,observedPrestigeView,usefulTradeCount,prestigeCellInfrastructure,type PrestigeFacts,type PrestigeView,type PrestigeObservation} from './prestigeScore';
 
 /** Score pacing is calendar days (1800-second game year /365), not the
  * deliberately slowed visual daylight clock. These are gameplay coefficients. */
@@ -17,12 +17,13 @@ type Cache={state:Game['state'];world:Game['world'];nextReview:number;land?:Pres
 const caches=new WeakMap<Game,Cache>();
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 function beginLand(g:Game):Job{
- const territory=g.territory.slice(),n=Math.round(Math.sqrt(territory.length)),cell=g.world.size/n,half=g.world.size/2,extra=new Map<number,number>(),resources=new Map<number,number>();
+ const territory=g.territory.slice(),n=Math.round(Math.sqrt(territory.length)),cell=g.world.size/n,half=g.world.size/2,extra=new Map<number,number>(),resources=new Map<number,number>(),trails=new Map<number,number>(),crossings=new Map<number,number>();
  const index=(x:number,z:number)=>{const ix=Math.floor((x+half)/cell),iz=Math.floor((z+half)/cell);return ix<0||iz<0||ix>=n||iz>=n?-1:iz*n+ix;};
  for(const [kind,weight]of Object.entries(LAND_VALUE_RULES.resource))for(const p of (g.state as unknown as Record<string,{x:number;z:number;amount:number;maxAmt?:number}[]>)[kind]||[]){const i=index(p.x,p.z);if(i<0||territory[i]!==0||!(p.amount>0))continue;resources.set(i,(resources.get(i)||0)+weight*clamp(p.amount/Math.max(1,p.maxAmt??p.amount)));}
  for(const [i,value]of resources)extra.set(i,Math.min(LAND_VALUE_RULES.resourceCap,value));
- for(const t of g.state.trails||[]){if(t.x===undefined||t.z===undefined)continue;const i=index(t.x,t.z);if(i>=0&&territory[i]===0)extra.set(i,(extra.get(i)||0)+LAND_VALUE_RULES.trailWear*clamp(t.wear));}
- for(const b of g.state.buildings)if((b.type==='bridge'||b.type==='dock')&&b.hp>0&&g.finished(b)){const i=index(b.x,b.z);if(i>=0&&territory[i]===0)extra.set(i,(extra.get(i)||0)+LAND_VALUE_RULES.crossing);}
+ for(const t of g.state.trails||[]){if(t.x===undefined||t.z===undefined)continue;const i=index(t.x,t.z);if(i>=0&&territory[i]===0)trails.set(i,(trails.get(i)||0)+clamp(t.wear));}
+ for(const b of g.state.buildings)if((b.type==='bridge'||b.type==='dock')&&b.hp>0&&g.finished(b)){const i=index(b.x,b.z);if(i>=0&&territory[i]===0)crossings.set(i,(crossings.get(i)||0)+1);}
+ for(const i of new Set([...trails.keys(),...crossings.keys()]))extra.set(i,(extra.get(i)||0)+prestigeCellInfrastructure(trails.get(i)||0,crossings.get(i)||0,LAND_VALUE_RULES.trailWear,LAND_VALUE_RULES.crossing));
  return{territory,n,cell,next:0,started:g.state.time,area:0,resources:0,extra};
 }
 /** Simulation cadence only. Consumes already-painted ownership, never causes a
@@ -46,8 +47,14 @@ export function collectOwnPrestige(g:Game):PrestigeFacts{
  const t=g.tribe(0),c=caches.get(g),land=c?.state===g.state&&c.world===g.world?c.land:undefined;
  let healthyPopulation=0;for(const u of g.state.units)if(u.team===0&&u.hp>0&&!u.visit&&!u.prisoner&&(u.sickUntil??0)<=g.state.time)healthyPopulation+=clamp(u.hp/Math.max(1,u.maxHp));
  const demonstratedPractices=Object.entries(t.productionPractice||{}).filter(([,p])=>p&&p.batches>0&&p.usefulOutputs>0).map(([id])=>id.replace(/(Double|Bulk)$/,''));
+ const boat=t.boatPractice;
+ if(boat&&boat.deliveredGoods>0&&boat.lastDeliveryAt!==undefined&&boat.lastDeliveryAt<=g.state.time){
+  demonstratedPractices.push('water-cargo-delivery');
+  for(const kind of ['scoutCanoe','freightPunt']as const){const at=boat.demonstratedAt?.[kind]??boat.lastDeliveryAt;if(boat.proven[kind]&&at>=0&&at<=g.state.time)demonstratedPractices.push(`hull:${kind}`);}
+ }
+ const sailed=boat?.sailing;if(sailed&&sailed.deliveredGoods>0&&sailed.demonstratedAt!==undefined&&sailed.demonstratedAt>=0&&sailed.demonstratedAt<=g.state.time)demonstratedPractices.push('sailed-cargo-delivery');
  const demand=foodDemand(g,0),reserve=demand>0?readyFoodStock(t).nourishment/demand:0;
- return{usableArea:land?.usableArea,resourcesAndChokepoints:land?.resourcesAndChokepoints,healthyPopulation,foodSecurity:reserve/PRESTIGE_GAME_RULES.calendarDaySeconds,demonstratedPractices,usefulTrade:usefulTradeCount(g.state.tradeNeeds?.receipts||[],0),civicWorks:civicPrestige(g,0).total};
+ return{usableArea:land?.usableArea,resourcesAndChokepoints:land?.resourcesAndChokepoints,healthyPopulation,foodSecurity:reserve/PRESTIGE_GAME_RULES.calendarDaySeconds,demonstratedPractices,usefulTrade:usefulTradeCount(g.state.tradeNeeds?.receipts||[],0,g.state.tradeNeeds?.offers||[]),civicWorks:civicPrestige(g,0).total};
 }
 /** Public retained reports only; no live foreign entity/stock lookup. Report
  * custody honors actual community handover without silently revealing originals. */
