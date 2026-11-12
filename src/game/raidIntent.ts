@@ -1,4 +1,4 @@
-import {witnessRaidDefense,noteRaidDefenseAttempt} from './warPrestige';
+import {witnessRaidDefense,noteRaidDefenseAttempt,noteRaidDefenseCapture} from './warPrestige';
 import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
 import type { Game } from "./sim";
 import type { Unit, Building, GameState, FoodKind } from "./types";
@@ -384,6 +384,7 @@ export function limitedRaidAI(g: Game, u: Unit, dt: number) {
         noteRaidDefenseAttempt(g,u,victim.team);
         const result = acceptPrisonerSurrender(g, victim, u.team);
         if (result.accepted) {
+          noteRaidDefenseCapture(g,u,victim);
           if (u.carryType === "food") provisionPrisoner(g, victim.id, u.id);
           if (victim.carryType === "food") provisionPrisoner(g, victim.id, victim.id);
           p.metrics.captives++;

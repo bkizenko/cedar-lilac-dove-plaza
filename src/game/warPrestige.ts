@@ -52,20 +52,21 @@ export function settledWarPrestige(state:WarState,team=0):SettledWarPrestige{
  * than allowing old histories to farm credit after eviction. No foreign totals. */
 export const RAID_DEFENSE_RULES={version:1,maximumBands:128,maximumActors:36,heldWeight:.5,maximumCredit:4} as const;
 export type RaidDefenseTerminal={actorId:number;outcome:'returned'|'lost';cargo:number;captives:number};
-export type RaidDefenseBand={bandId:number;startedAt:number;witnessAt:number;intent:RaidIntent;expectedActors:number;actorIds:number[];terminals:RaidDefenseTerminal[];taken:number;recovered:number;escaped:number;buildingsLost:number;captivesLost:number;settledAt?:number;attempted:boolean;resisted:boolean;outcome?:'held'|'escaped'|'damaged'|'withdrawn'};
+export type RaidDefenseBand={bandId:number;startedAt:number;witnessAt:number;intent:RaidIntent;expectedActors:number;actorIds:number[];terminals:RaidDefenseTerminal[];capturedResidentIds:number[];returnedResidentIds:number[];taken:number;recovered:number;escaped:number;buildingsLost:number;captivesLost:number;settledAt?:number;attempted:boolean;resisted:boolean;outcome?:'held'|'escaped'|'damaged'|'withdrawn'};
 export type RaidDefenseState={version:1;bands:RaidDefenseBand[]};
 /** Witness the actual body only at a player objective it has locally observed.
  * A remote death, scout, private rival raid or formal hall retreat is no proof. */
 export function witnessRaidDefense(g:Game,u:Unit){
  const p=u.seaRaid?.plan;if(u.team!==3||!p||p.intent==='scout'||!g.visibleAt(u.x,u.z))return;
- if(!p.seenSites.some(id=>g.state.buildings.some(b=>b.id===id&&b.team===0)))return;
- const s=g.state.raidDefense??={version:1,bands:[]};let b=s.bands.find(b=>b.bandId===p.bandId);
- if(!b){if(s.bands.length>=RAID_DEFENSE_RULES.maximumBands)return;b={bandId:p.bandId,startedAt:p.selectedAt,witnessAt:g.state.time,intent:p.intent,expectedActors:p.initialBand,actorIds:[],terminals:[],taken:0,recovered:0,escaped:0,buildingsLost:0,captivesLost:0,attempted:false,resisted:false};s.bands.push(b);}
+ let b=g.state.raidDefense?.bands.find(b=>b.bandId===p.bandId);
+ if(!b&&!g.state.buildings.some(site=>site.team===0&&p.seenSites.includes(site.id)))return;
+ const s=g.state.raidDefense??={version:1,bands:[]};
+ if(!b){if(s.bands.length>=RAID_DEFENSE_RULES.maximumBands)return;b={bandId:p.bandId,startedAt:p.selectedAt,witnessAt:g.state.time,intent:p.intent,expectedActors:p.initialBand,actorIds:[],terminals:[],capturedResidentIds:[],returnedResidentIds:[],taken:0,recovered:0,escaped:0,buildingsLost:0,captivesLost:0,attempted:false,resisted:false};s.bands.push(b);}
  if(!b.actorIds.includes(u.id)&&b.actorIds.length<RAID_DEFENSE_RULES.maximumActors)b.actorIds.push(u.id);
 }
 /** Evidence comes from real damage application, not kills/withdrawal totals. */
-export function noteRaidDefenseDamage(g:Game,source:Unit|undefined,target:Unit|import('./types').Building,died:boolean){
- if(source?.team===3&&target.kind==='building'&&target.team===0){
+export function noteRaidDefenseDamage(g:Game,source:Unit|import('./types').Building|undefined,target:Unit|import('./types').Building,died:boolean){
+ if(source?.team===3&&source.kind==='unit'&&target.kind==='building'&&target.team===0){
   witnessRaidDefense(g,source);const b=g.state.raidDefense?.bands.find(b=>b.bandId===source.seaRaid?.plan?.bandId);
   if(b&&b.settledAt===undefined){b.attempted=true;if(died)b.buildingsLost++;}
  }else if(source?.team===0&&target.kind==='unit'&&target.team===3){
@@ -76,34 +77,51 @@ export function noteRaidDefenseDamage(g:Game,source:Unit|undefined,target:Unit|i
 export function noteRaidDefenseAttempt(g:Game,u:Unit,defender:number){
  if(defender!==0)return;witnessRaidDefense(g,u);const b=g.state.raidDefense?.bands.find(b=>b.bandId===u.seaRaid?.plan?.bandId);if(b&&b.settledAt===undefined)b.attempted=true;
 }
+/** Only actual successful surrender can put an original resident on this list. */
+export function noteRaidDefenseCapture(g:Game,guard:Unit,resident:Unit){
+ if(resident.prisoner?.originTeam!==0||resident.prisoner.captorTeam!==3)return;
+ witnessRaidDefense(g,guard);const b=g.state.raidDefense?.bands.find(b=>b.bandId===guard.seaRaid?.plan?.bandId);
+ if(b&&b.settledAt===undefined&&!b.capturedResidentIds.includes(resident.id)&&b.capturedResidentIds.length<b.expectedActors)b.capturedResidentIds.push(resident.id);
+}
+/** Existing release executor calls only after the same body reaches its own
+ * physical cache. A released order/unguarded prisoner alone is not recovery. */
+export function noteRaidDefenseResidentHome(g:Game,resident:Unit,homeTeam:number){
+ if(homeTeam!==0||resident.prisoner?.originTeam!==0)return;
+ for(const b of g.state.raidDefense?.bands||[])if(b.settledAt===undefined&&b.capturedResidentIds.includes(resident.id)&&!b.returnedResidentIds.includes(resident.id))b.returnedResidentIds.push(resident.id);
+}
 export function noteRaidDefenseRecovery(g:Game,bandId:number|undefined,owner:number,receiver:number,amount:number){
  if(bandId===undefined||owner!==0||receiver!==0||!(amount>0))return;
  const b=g.state.raidDefense?.bands.find(b=>b.bandId===bandId);if(b&&b.settledAt===undefined)b.recovered+=amount;
 }
 /** Called after actual return/death histories and real parcel deliveries. A
  * stranded body remains an unsettled objective, regardless of quiet timers. */
+const defenseClocks=new WeakMap<Game,{state:GameState;next:number}>();
 export function tickRaidDefense(g:Game){
- const bands=g.state.raidDefense?.bands;if(!bands?.length)return;
+ const bands=g.state.raidDefense?.bands;if(!bands?.some(b=>b.settledAt===undefined))return;
+ const clock=defenseClocks.get(g);if(clock?.state===g.state&&g.state.time<clock.next)return;
+ defenseClocks.set(g,{state:g.state,next:g.state.time+1});
+ const terminalByBand=new Map<number,Map<number,RaidIntentHistory>>(),liveBands=new Set<number>(),heldResidents=new Set<number>();
+ for(const h of g.state.raidIntentHistory||[]){if(h.outcome==='stranded')continue;let list=terminalByBand.get(h.plan.bandId);if(!list){list=new Map();terminalByBand.set(h.plan.bandId,list);}list.set(h.actorId,h);}
+ for(const u of g.state.units){if(u.hp<=0)continue;if(u.seaRaid?.plan)liveBands.add(u.seaRaid.plan.bandId);if(u.prisoner?.originTeam===0&&u.prisoner.captorTeam===3&&u.prisoner.phase!=='released')heldResidents.add(u.id);}
  for(const b of bands){
   if(b.settledAt!==undefined)continue;
-  const histories=new Map<number,RaidIntentHistory>();
-  for(const h of g.state.raidIntentHistory||[])if(h.plan.bandId===b.bandId&&h.outcome!=='stranded')histories.set(h.actorId,h);
+  const histories=terminalByBand.get(b.bandId);if(!histories)continue;
   // Include every original member, including one which was out of sight.
   for(const h of histories.values())if(!b.actorIds.includes(h.actorId)&&b.actorIds.length<RAID_DEFENSE_RULES.maximumActors)b.actorIds.push(h.actorId);
-  if(b.actorIds.length!==b.expectedActors||b.actorIds.some(id=>!histories.has(id))||g.state.units.some(u=>u.hp>0&&u.seaRaid?.plan?.bandId===b.bandId))continue;
+  if(b.actorIds.length!==b.expectedActors||b.actorIds.some(id=>!histories.has(id))||liveBands.has(b.bandId))continue;
   const hs=[...histories.values()];if(hs.length!==b.expectedActors)continue;
   b.taken=hs.reduce((n,h)=>n+h.plan.metrics.lootTaken,0);
   b.terminals=hs.map(h=>({actorId:h.actorId,outcome:h.outcome as 'returned'|'lost',cargo:h.cargo,captives:h.deliveredCaptives||0}));
   b.escaped=hs.reduce((n,h)=>n+(h.outcome==='returned'?Math.min(h.cargo,h.plan.metrics.lootTaken):0),0);
   // A capture is not foiled while its original resident remains in captivity,
   // even if the original guard died before reaching camp.
-  const captiveStillHeld=g.state.units.some(u=>u.hp>0&&u.prisoner?.originTeam===0&&u.prisoner.captorTeam===3&&u.prisoner.guardId!==undefined&&b.actorIds.includes(u.prisoner.guardId));
+  const captiveStillHeld=b.capturedResidentIds.some(id=>heldResidents.has(id));
   b.captivesLost=Number(captiveStillHeld||b.terminals.some(t=>t.captives>0));
-  const captiveTaken=hs.some(h=>h.plan.metrics.captives>0);
-  if(captiveStillHeld||b.terminals.some(t=>t.captives>0)||b.escaped>0){b.outcome='escaped';}
+  const captivesTaken=hs.reduce((n,h)=>n+h.plan.metrics.captives,0),captivesRecovered=captivesTaken>0&&b.capturedResidentIds.length===captivesTaken&&b.returnedResidentIds.length===captivesTaken;
+  if(b.terminals.some(t=>t.captives>0)||b.escaped>0){b.outcome='escaped';}
   else if(b.buildingsLost>0)b.outcome='damaged';
-  else if(captiveTaken||b.recovered+1e-6<b.taken)continue; // released captives need a separate witnessed return receipt
-  else b.outcome=b.taken>0||b.attempted&&b.resisted?'held':'withdrawn';
+  else if(captiveStillHeld||captivesTaken>0&&!captivesRecovered||b.recovered+1e-6<b.taken)continue; // released captives need a separate witnessed return receipt
+  else b.outcome=b.taken>0||captivesRecovered||b.attempted&&b.resisted?'held':'withdrawn';
   b.settledAt=g.state.time;
  }
 }
@@ -119,10 +137,10 @@ export function validRaidDefense(s:GameState){
  const exact=(o:object,ks:string[])=>!!o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).every(k=>ks.includes(k));
  if(!exact(v,['version','bands'])||v.version!==1||!Array.isArray(v.bands)||v.bands.length>RAID_DEFENSE_RULES.maximumBands)return false;
  const seen=new Set<number>();for(const b of v.bands){
-  if(!exact(b,['bandId','startedAt','witnessAt','intent','expectedActors','actorIds','terminals','taken','recovered','escaped','buildingsLost','captivesLost','settledAt','attempted','resisted','outcome'])||!id(b.bandId)||seen.has(b.bandId)||!fin(b.startedAt,s.time)||!fin(b.witnessAt,s.time)||b.witnessAt<b.startedAt||!['loot','capture','destructive','annihilation'].includes(b.intent)||typeof b.attempted!=='boolean'||typeof b.resisted!=='boolean'||!Number.isInteger(b.expectedActors)||b.expectedActors<1||b.expectedActors>RAID_DEFENSE_RULES.maximumActors||!Array.isArray(b.actorIds)||b.actorIds.length>b.expectedActors||new Set(b.actorIds).size!==b.actorIds.length||!b.actorIds.every(id)||!Array.isArray(b.terminals)||b.terminals.length>b.expectedActors||![b.taken,b.recovered,b.escaped,b.buildingsLost,b.captivesLost].every(n=>fin(n))||!Number.isInteger(b.buildingsLost)||!Number.isInteger(b.captivesLost)||b.captivesLost>b.expectedActors||b.escaped>b.taken+1e-6)return false;
+  if(!exact(b,['bandId','startedAt','witnessAt','intent','expectedActors','actorIds','terminals','capturedResidentIds','returnedResidentIds','taken','recovered','escaped','buildingsLost','captivesLost','settledAt','attempted','resisted','outcome'])||!id(b.bandId)||seen.has(b.bandId)||!fin(b.startedAt,s.time)||!fin(b.witnessAt,s.time)||b.witnessAt<b.startedAt||!['loot','capture','destructive','annihilation'].includes(b.intent)||typeof b.attempted!=='boolean'||typeof b.resisted!=='boolean'||!Number.isInteger(b.expectedActors)||b.expectedActors<1||b.expectedActors>RAID_DEFENSE_RULES.maximumActors||!Array.isArray(b.actorIds)||b.actorIds.length>b.expectedActors||new Set(b.actorIds).size!==b.actorIds.length||!b.actorIds.every(id)||!Array.isArray(b.terminals)||b.terminals.length>b.expectedActors||![b.capturedResidentIds,b.returnedResidentIds].every(list=>Array.isArray(list)&&list.length<=b.expectedActors&&new Set(list).size===list.length&&list.every(id))||!b.returnedResidentIds.every(id=>b.capturedResidentIds.includes(id))||![b.taken,b.recovered,b.escaped,b.buildingsLost,b.captivesLost].every(n=>fin(n))||!Number.isInteger(b.buildingsLost)||!Number.isInteger(b.captivesLost)||b.captivesLost>b.expectedActors||b.escaped>b.taken+1e-6)return false;
   seen.add(b.bandId);const ts=new Set<number>();for(const t of b.terminals){if(!exact(t,['actorId','outcome','cargo','captives'])||!b.actorIds.includes(t.actorId)||ts.has(t.actorId)||!['returned','lost'].includes(t.outcome)||!fin(t.cargo,24)||!Number.isInteger(t.captives)||t.captives<0||t.captives>1||t.outcome==='lost'&&t.captives>0)return false;ts.add(t.actorId);}
   if((b.outcome===undefined)!==(b.settledAt===undefined))return false;
-  if(b.settledAt!==undefined&&(!fin(b.settledAt,s.time)||b.settledAt<b.witnessAt||b.terminals.length!==b.expectedActors||!['held','escaped','damaged','withdrawn'].includes(b.outcome!)||b.outcome==='held'&&(!(b.taken>0||b.attempted&&b.resisted)||b.escaped>0||b.buildingsLost>0||b.captivesLost>0||b.recovered+1e-6<b.taken||b.terminals.some(t=>t.captives>0))||b.outcome==='damaged'&&b.buildingsLost===0||b.outcome==='escaped'&&b.escaped===0&&b.captivesLost===0))return false;
+  if(b.settledAt!==undefined&&(!fin(b.settledAt,s.time)||b.settledAt<b.witnessAt||b.terminals.length!==b.expectedActors||!['held','escaped','damaged','withdrawn'].includes(b.outcome!)||b.outcome==='held'&&(!(b.taken>0||b.returnedResidentIds.length>0||b.attempted&&b.resisted)||b.escaped>0||b.buildingsLost>0||b.captivesLost>0||b.recovered+1e-6<b.taken||b.terminals.some(t=>t.captives>0))||b.outcome==='damaged'&&b.buildingsLost===0||b.outcome==='escaped'&&b.escaped===0&&b.captivesLost===0))return false;
  }
  return true;
 }

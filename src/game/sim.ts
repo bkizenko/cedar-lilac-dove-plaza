@@ -4860,7 +4860,7 @@ export class Game {
     else if(attackerTeam!==3&&target.team!==3)declareSocietyHostility(this,attackerTeam,target.team);
     target.hp -= dmg;
     noteRaidCombat(this,attackerTeam,target,source,target.hp<=0);
-    noteRaidDefenseDamage(this,source,target,target.hp<=0);
+    noteRaidDefenseDamage(this,evidenceSource,target,target.hp<=0);
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
     if (attackerTeam === 0 && target.team !== 0 && target.team !== 3)
