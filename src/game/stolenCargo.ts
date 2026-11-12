@@ -275,7 +275,7 @@ export function tickStolenCargo(g:Game,dt:number){
  const s=g.state.droppedCargo;
  if(!s&&!g.state.units.some(u=>u.hp<=0&&((u.expedition?.food??0)>0||Object.values(u.packJourneySupplies?.feed??{}).some(n=>(n??0)>0)||u.carry>0&&u.carryType||(u.tradeNeedsId!==undefined||u.tradeCargoPending||u.itemCargo?.copperOre||u.itemCargo?.copperMetal||u.itemCargo?.ironOre||u.itemCargo?.ironBloom||u.itemCargo?.ironMetal)&&heldItems(u).length)))return;
  for(const u of g.state.units){
-  if(u.hp>0||!holds(u))continue;
+  if(u.hp>0||!holds(u)&&!(u.expedition?.food))continue;
   dropTradeCargoItems(g,u);
   const trip=tripOf(g,u.id);dropExpeditionFood(g,u);dropFrom(g,u);
   if(trip)endTrip(g,trip,'claimant-lost');
