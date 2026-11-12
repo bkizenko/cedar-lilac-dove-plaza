@@ -9258,6 +9258,15 @@
       "liveCommit": "290b188067be2f2bc5e1d8853a36a57a6404ae9c",
       "evidence": "docs/metrics/garment-weather-repair-release-2026-11-12.json",
       "scope": "Persistent actual wet clothing, physical roofs/paid-fire drying and tunable warmth; original owned garment escrow with paid patches/cordage, owner travel/base work, shared sewing slot and compact controls; strict saves/custody, no duplicate/refund. Dyes and broader textile service remain open."
+    },
+    {
+      "id": "CODEX-TRADED-TEACHING",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "772ef3e",
+      "liveCommit": "bb5947a5c1845e5a23ca2eea92f3d01e3ec718cd",
+      "evidence": "docs/metrics/traded-teaching-release-2026-11-12.json",
+      "scope": "Physical carried consideration -> qualified actual paid foreign batch -> real observation/useful delivery -> dry-ground report home. Compact authoritative controls, saved owner/observer custody, historical provenance. General holders, boat visiting learners, pricing and full knowledge gate remain open."
     }
   ],
   "status_update_policy": {
