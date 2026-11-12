@@ -157,7 +157,7 @@ try {
     p = home().renovation;
   assert.ok(walk > 0);
   assert.equal(g.tribe(0).stone, initial.stone - 8);
-  assert.equal(g.tribe(0).items.plantFibre, 6);
+  assert.equal(g.tribe(0).items.plantFibre, 12);
   assert.ok(
     Math.abs(
       g.tribe(0).wood + (g.tribe(0).survival.fuelBurnedWood - initial.fuel) - (initial.wood - 24),
@@ -199,7 +199,7 @@ try {
   assert.equal(built.housingReceipt.mode, "new");
   assert.equal(built.housingReceipt.workSeconds, 48);
   assert.equal(g.tribe(0).stone, initial.stone - 16);
-  assert.equal(g.tribe(0).items.plantFibre, 0);
+  assert.equal(g.tribe(0).items.plantFibre, 12);
   assert.ok(
     Math.abs(
       g.tribe(0).wood + (g.tribe(0).survival.fuelBurnedWood - initial.fuel) - (initial.wood - 48),

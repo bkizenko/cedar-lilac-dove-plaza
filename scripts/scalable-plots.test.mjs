@@ -22,15 +22,15 @@ test('larger fields on uniform terrain require proportional seeds and work for p
  g.state.time=0;const u=g.spawnUnit('worker',30,40,0);farmWork(g,u,small,1);farmWork(g,u,large,1);
  assert.equal(large.crop.planted,small.crop.planted/2);
 });
-test('plans preserve their area seed bill and cannot buy a large field for four seeds',()=>{
+test('fields require their full area seed bill before marking, without unpaid construction plans',()=>{
  const g=fixture(),d=BUILDINGS.farm;g.tribe(0).seeds=0;
- assert.equal(g.placeBuilding('farm',30,40,0,{w:d.w*2,d:d.d}),true);const b=g.state.buildings.at(-1);
- assert.equal(b.plannedCost.seeds,8);g.tribe(0).seeds=4;fundConstructionPlans(g);assert.equal(b.plannedCost.seeds,8);assert.equal(g.tribe(0).seeds,4);
+ const count=g.state.buildings.length;assert.equal(g.placeBuilding('farm',30,40,0,{w:d.w*2,d:d.d}),false);assert.equal(g.state.buildings.length,count);
+ g.tribe(0).seeds=4;assert.equal(g.placeBuilding('farm',30,40,0,{w:d.w*2,d:d.d}),false);assert.equal(g.tribe(0).seeds,4);assert.equal(g.state.buildings.length,count);
 });
 test('plots reject covered resources, oversized imports and partially submerged footprints',()=>{
  const g=fixture(),d=BUILDINGS.farm,size={w:d.w*3,d:d.d*2};
  g.state.trees=[{id:999,kind:'tree',x:40,z:45,amount:10}];assert.equal(g.placeBuilding('farm',30,40,0,size),false);g.state.trees=[];
- assert.equal(g.placeBuilding('farm',30,40,0,{w:100,d:100}),false);
+ assert.equal(g.placeBuilding('farm',30,40,0,{w:200,d:200}),false);
  const h=g.height.bind(g);g.height=(x,z)=>x>38?0:h(x,z);assert.equal(g.placeBuilding('farm',30,40,0,size),false);
- const plot=dragPlot('farm',{x:0,z:0},{x:100,z:-100});assert.equal(plotArea({type:'farm',...plot}),9);
+ const plot=dragPlot('farm',{x:0,z:0},{x:200,z:-200});assert.equal(plotArea({type:'farm',...plot}),256);
 });

@@ -154,7 +154,7 @@ test("pause carrying physically drops one packet, forecast excludes paused work,
   assert.equal(setHousingPaused(g, b.id, false), true);
   drive(g, () => b.type === "house");
   assert.equal(b.hp, 140);
-  assert.equal(g.tribe(0).items.plantFibre, 0);
+  assert.equal(g.tribe(0).items.plantFibre, 6);
 });
 test("strict validator rejects forged duplicate packet view or created material units", () => {
   const g = loaded(),

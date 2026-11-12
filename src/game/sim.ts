@@ -3,6 +3,8 @@ import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultipli
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
 import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from './armor';
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
+import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
+import {combatMusicMood} from './combatMusic';
 import {civicPrestige} from './civicPrestige';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
@@ -72,11 +74,12 @@ import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
-import {plotArea,scalablePlot,validPlot,type PlotSize} from './plots';
+import {plotArea,scalablePlot,validPlot,fieldCrewSlots,fieldSeedIssue,type PlotSize} from './plots';
 import {ancientSiteYield} from './discovery';
 import {developRivalPlots,developRivalForestry} from './rivalDevelopment';
 import {localEscapeStep} from './localEscape';
 import {localCorridor,LOCAL_CORRIDOR_RULES} from './localCorridor';
+import {clearRouteProgress,preciseSegmentClear,routeStallSeconds,ROUTE_PROGRESS_RULES} from './routeProgress';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
 import {packTamingAI,releasePackAnimal} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
@@ -105,6 +108,13 @@ import {mulberry32} from "./rng";
 import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
+import {unitSightRadius,buildingSightRadius} from "./sightRadii";
+import {turnableBuilding,turnedFootprint} from "./footprints";
+import {flowPath} from "./flowFields";
+import {advanceTide} from "./tides";
+import {breachPlacementPermit} from "./canalBreach";
+import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
+import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -238,6 +248,8 @@ export class Game {
       failed: boolean;
       precise?: boolean;
       retry: number;
+      stalled?: boolean;
+      nearest?: boolean;
     }
   >();
   seaT = 180;
@@ -1127,18 +1139,20 @@ export class Game {
     return b;
   }
 
-  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan): string | null {
+  placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan,quarterTurn=false): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
     const issue = this.settlementIssue(type, x, z, _team);
     if (issue) return issue;
     if(size&&!validPlot(type,size))return "Invalid plot size";
-    const d = size??BUILDINGS[type];
+    if(quarterTurn&&(size||!turnableBuilding(type)))return "That building can't be turned"; // GW-08 (Grok): quarter turn = swapped footprint
+    const d = size??(quarterTurn?turnedFootprint(type):BUILDINGS[type]);
     const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
     if(prep?.issue)return prep.issue;
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
     const excavation=type==='trench'?excavationIssue(this,{id:ignoreId??-1,team:_team,x,z,w:d.w,d:d.d}):excavationConstructionIssue(this,type,x,z,d.w,d.d);
     if(excavation)return excavation;
+    if(type==='canal')return waterWorksPlacementIssue(this,type,x,z,_team);
     if(type==="bridge"){
       const span=drawnSpan??planBridge(this,x,z);
       if(drawnSpan&&!validBridgeSpan(this,drawnSpan))return "Drag between clear, gentle banks across shallow water (5–28 m)";
@@ -1150,7 +1164,7 @@ export class Game {
     if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
-    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size)) return "Can't raise that in the water";
+    if (type !== "dock" && type !== "aqueduct" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts). Aqueducts may finish on low delivery ground; the route query refuses a submerged target.
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
@@ -1222,11 +1236,12 @@ export class Game {
       }
       if (!shore) return "Put the dock on the white posts by the water";
     }
+    if(isWaterWorksType(type))return waterWorksPlacementIssue(this,type,x,z,_team);
     return null;
   }
 
-  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
-    return this.placementIssue(type, x, z, team,size,undefined,span) === null;
+  placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
+    return this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn) === null;
   }
 
   recycleSelected() {
@@ -1298,13 +1313,7 @@ export class Game {
   }
 
   musicMood(): "peace" | "raid" | "pillage" {
-    const home=this.campOf(0);
-    const nearbyFight=(u:Unit)=>u.order==='attack'&&u.target&&u.target.hp>0&&Math.hypot(u.x-u.target.x,u.z-u.target.z)<24;
-    // Defense wins when both sides are fighting at home. Hunting and stale
-    // raid markers cannot keep the soundtrack in an offensive battle state.
-    if(this.state.units.some(u=>u.hp>0&&!u.shelterId&&this.isFoe(0,u.team)&&this.visibleAt(u.x,u.z)&&u.envoy?.kind!=='peace'&&(Math.hypot(u.x-home.x,u.z-home.z)<40||nearbyFight(u)&&u.target?.team===0)))return 'raid';
-    if(this.state.units.some(u=>u.team===0&&u.hp>0&&!u.demobilizing&&!u.recalled&&!u.huntOnly&&(nearbyFight(u)||u.order==='attackmove'&&u.pillage>=0&&!!u.attackDestination)))return 'pillage';
-    return 'peace';
+    return combatMusicMood(this);
   }
 
   craftFarmTool(kind: FarmToolKind, workplaceId?:number) {
@@ -1382,7 +1391,7 @@ export class Game {
     return null;
   }
 
-  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan) {
+  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
     if (this.state.ended || (size&&(!scalablePlot(type)||!validPlot(type,size)))) return false;
     if(type==="house")return planAdvancedHome(this,x,z,team);
     const d = BUILDINGS[type];
@@ -1419,14 +1428,14 @@ export class Game {
     const crossing=type==="bridge"?(span??planBridge(this,x,z)):undefined;
     const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
     const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
-    if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(`Need ${Math.max(0,(cost.seeds||0)-(tribe.seeds||0))} more seeds to mark this field`,4);return false;}
+    if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(fieldSeedIssue(tribe.seeds||0,cost.seeds||0)!,4);return false;}
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
-    const spot = this.placementValid(type, x, z, team,size,span)
+    const spot = this.placementValid(type, x, z, team,size,span,quarterTurn)
       ? { x, z }
-      : team===0||size||span||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
+      : team===0||size||span||quarterTurn||type==="bridge"||type==="quarry"?null:this.findPlaceSpot(type, x, z, team);
     if (!spot) {
       if (team === 0) {
-        this.banner(this.placementIssue(type, x, z, team,size,undefined,span) || "Can't build there", 1.8);
+        this.banner(this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn) || "Can't build there", 1.8);
         this.onSfx("invalid");
       }
       return false;
@@ -1435,6 +1444,7 @@ export class Game {
     configureTowerPlatform(this,b);
     configureExcavation(this,b);
     if(size){b.w=size.w;b.d=size.d;}
+    if(quarterTurn){const t=turnedFootprint(type);b.w=t.w;b.d=t.d;}
     if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
     if(planned)b.plannedCost=cost;
     if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || type === "townhall")) {
@@ -1463,6 +1473,15 @@ export class Game {
     }
     return true;
   }
+
+  /** Preview and commit share `planAqueductWorks` / `executeAqueductWorks` (same checks). */
+  commissionAqueduct(source:{x:number;z:number},target:{x:number;z:number},team=0){
+    const plan=planAqueductWorks(this,source,target,team);if(plan.issues.length){if(team===0)this.banner(plan.issues[0],3);return{ok:false as const,reason:plan.issues[0],buildingIds:[] as number[]};}
+    const r=executeAqueductWorks(this,plan);if(!r.ok&&team===0)this.banner(r.reason??'A dig could not be laid out',3);return r;}
+  /** Preview and commit share `planCanalWorks` / `executeCanalWorks` (same checks). */
+  commissionCanal(a:{x:number;z:number},b:{x:number;z:number},team=0,line?:{x:number;z:number}[]){
+    const plan=planCanalWorks(this,a,b,team,line);if(plan.issues.length){if(team===0)this.banner(plan.issues[0],3);return{ok:false as const,reason:plan.issues[0],buildingIds:[] as number[],canalId:undefined};}
+    const r=executeCanalWorks(this,plan);if(!r.ok&&team===0)this.banner(r.reason??'A dig could not be laid out',3);return r;}
 
   orderConstruction(b:Building){return orderConstruction(this,b);}
   queueConstruction(b:Building){const result=queueConstruction(this,b);this.banner(result.reason,3);return result.accepted;}
@@ -1516,6 +1535,7 @@ export class Game {
       u.node = null;
       return;
     }
+    if(rivalSiteClearance(this,u,b))return;
     if(!reserveConstructionWorker(this,u,b,"traveling"))return;
     u.node = b;
     if (!this.buildingWorkReached(u,b)) {
@@ -1531,7 +1551,7 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = b.type==='trench'?excavationWorkNeed(this,b):towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
+    const need = b.type==='trench'?excavationWorkNeed(this,b):waterWorksLabour(this,b)??towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
@@ -2772,7 +2792,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
-    const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?Math.min(12,Math.ceil(3*plotArea(node))):2;
+    const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?fieldCrewSlots(node):2;
     let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
     this.workBoard.reset();
     for (const u of workers) {
@@ -3104,6 +3124,7 @@ export class Game {
 
   tickEvents(dt: number) {
     this.tickWeather(dt);
+    advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
     if (this.state.event === "herd") this.state.event = "none";
     this.state.eventT = 120;
     this.tickCalamity(dt);
@@ -3426,6 +3447,7 @@ export class Game {
           if (n.amount === 0) n.regenT = 100;
         }
         if (n.amount > 0) continue;
+        if(buildingBlocksTreeRegrowth(this,n))continue;
         if (n.kind === "stone" || n.kind === "copper" || n.kind === "iron") continue;
         // Exhausted wild food does not regrow through winter.
         if (n.kind === "forage" && calendar(this).phase === 3) continue;
@@ -3601,16 +3623,11 @@ export class Game {
     for (let i = 0; i < vis.length; i++) if (vis[i] === 2) vis[i] = 1;
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
-      this.stampVision(
-        u.x,
-        u.z,
-        u.type === "archer" || u.type === "ranger" ? 16 : u.type === "worker" ? 11 : 13,
-        2,
-      );
+      this.stampVision(u.x, u.z, unitSightRadius(u), 2);
     }
     for (const b of this.state.buildings) {
       if (b.team !== 0 || b.hp <= 0 || b.plannedCost) continue;
-      this.stampVision(b.x, b.z, b.type === "watchtower" ? (this.state.agePicks[2] === "army" ? 30 : 22) : b.type === "townhall" ? 18 : b.type === "dock" && this.finished(b) ? DOCK_R+4 : FORTIFICATIONS.includes(b.type)?5:12, 2);
+      this.stampVision(b.x, b.z, buildingSightRadius(b, this.finished(b), this.state.agePicks[2] === "army"), 2);
     }
     for (let i = 0; i < vis.length; i++) {
       if (vis[i] === 2) age[i] = 0;
@@ -4009,8 +4026,24 @@ export class Game {
     if (this.state.walkDirty) this.rebuildWalk();
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
+    let tx = u.tx,
+      tz = u.tz;
+    for (const b of this.state.buildings) {
+      if (
+        Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
+        Math.abs(tz - b.z) > b.d * 0.4 + u.r ||
+        !this.solidBuilding(b)
+      )
+        continue;
+      const spot=this.interactionSpot(u,b);
+      if(spot){tx=spot.x;tz=spot.z;}
+
+    }
+    // A retained route whose every segment was validated for this body may
+    // cross coarse-blocked cells. Do not let coarse-cell recovery pull the
+    // actor back out of a real passage it is already following.
     const retained=this.paths.get(u.id);
-    const retainedPrecise=retained?.precise&&!retained.failed&&retained.revision===this.navRevision&&Math.hypot(retained.tx-u.tx,retained.tz-u.tz)<=2;
+    const retainedPrecise=retained?.precise&&!retained.failed&&retained.revision===this.navRevision&&Math.hypot(retained.tx-tx,retained.tz-tz)<=2;
     if(u.haulage!=="canoe"&&!retainedPrecise&&!this.walkable(u.x,u.z)){
       let escape:{x:number;z:number}|null=null;
       search:for(const radius of [1,2,3,4,6,8])for(let i=0;i<24;i++){
@@ -4031,25 +4064,17 @@ export class Game {
         const dx=escape.x-u.x,dz=escape.z-u.z,distance=Math.hypot(dx,dz);
         const step=Math.min(distance,this.travelSpeed(u)*dt);
         const nx=u.x+dx/distance*step,nz=u.z+dz/distance*step;
-        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.travelHeight(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;u.stuckT=0;this.paths.delete(u.id);return false;}
+        if(this.canStep(u,nx,nz)){u.vx=(nx-u.x)/dt;u.vz=(nz-u.z)/dt;u.x=nx;u.z=nz;u.y=this.travelHeight(nx,nz);u.facing=Math.atan2(dx,dz);u.stride+=step*3.6;
+          // Replan from the recovered position, but keep a stalled route's
+          // escalation so recovery and the same straight line cannot loop.
+          if(retained){retained.failed=true;retained.retry=Math.min(retained.retry,this.state.time);}
+          if(!retained?.stalled)u.stuckT=0;return false;}
       }
-    }
-    let tx = u.tx,
-      tz = u.tz;
-    for (const b of this.state.buildings) {
-      if (
-        Math.abs(tx - b.x) > b.w * 0.4 + u.r ||
-        Math.abs(tz - b.z) > b.d * 0.4 + u.r ||
-        !this.solidBuilding(b)
-      )
-        continue;
-      const spot=this.interactionSpot(u,b);
-      if(spot){tx=spot.x;tz=spot.z;}
-
     }
     const distance = Math.hypot(tx - u.x, tz - u.z);
     if (distance < 0.5) {
       this.paths.delete(u.id);
+      clearRouteProgress(u);
       u.stuckT = 0;
       return true;
     }
@@ -4062,15 +4087,25 @@ export class Game {
     ) {
       if (this.navBudget <= 0) return false;
       this.navBudget--;
-      let direct = true;
-      const samples = Math.ceil(distance);
-      for (let i = 1; i <= samples; i++)
-        if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
-          direct = false;
-          break;
-        }
+      // A stalled route to the same destination escalates: never retry the
+      // same straight line, and prefer the fine body-sized corridor search.
+      const escalate=!!route?.stalled&&Math.hypot(route.tx-tx,route.tz-tz)<=2;
+      const fineGround=u.haulage!=="canoe"&&!u.boat;
+      let direct = !escalate, precise=false;
+      // Short straight moves that pass the same chained fine-spacing body test
+      // as movement are precise, so they can be followed through coarse-blocked
+      // cells. Otherwise keep the established one-metre straight-line check.
+      if(direct&&fineGround&&distance<=ROUTE_PROGRESS_RULES.preciseDirectMetres)precise=preciseSegmentClear(this,u,tx,tz);
+      if(direct&&!precise){
+        const samples = Math.ceil(distance);
+        for (let i = 1; i <= samples; i++)
+          if (!this.canStep(u, u.x + ((tx - u.x) * i) / samples, u.z + ((tz - u.z) * i) / samples)) {
+            direct = false;
+            break;
+          }
+      }
       let points = [{ x: tx, z: tz }],
-        failed = false,precise=false;
+        failed = false, nearestEnd = false;
       if (!direct) {
         const grid=u.haulage==="canoe"?waterNavigation(this,u.boat?.phase==='aboard').grid:this.walk;
         const cell = this.world.size / WALK;
@@ -4094,12 +4129,13 @@ export class Game {
               }
             }
         }
-        let path = findPath(grid, WALK, index(u.x, u.z), end);
+        // Claude request 3 (Grok): busy goals share one flow field when switched on (setFlowFieldsEnabled); equal-cost paths, null falls back to A*.
+        let path = flowPath(this, grid, WALK, index(u.x, u.z), end, this.navRevision) ?? findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
         // Coarse cells can close a real body-sized passage in a dense camp.
         // Spend shared navigation budget once; ordinary route following still
         // collision-checks every actual movement with this actor's radius.
         let corridor:{x:number;z:number}[]|null=null;
-        if((!path||end!==goal)&&u.haulage!=="canoe"&&!u.boat&&distance<=LOCAL_CORRIDOR_RULES.maximumDestinationMetres){
+        if((!path||end!==goal||escalate)&&u.haulage!=="canoe"&&!u.boat&&distance<=LOCAL_CORRIDOR_RULES.maximumDestinationMetres){
           if(this.navBudget<=0)return false;
           this.navBudget--;corridor=localCorridor(this,u,tx,tz);
         }
@@ -4124,7 +4160,10 @@ export class Game {
         }
         // A direct ground move remains a valid order when the requested point
         // is across a barrier. Complete it at the closest connected ground.
-        if (!path && !corridor && u.team === 0 && u.order === "move" && u.stationOnArrival &&
+        // Attack-moves get the same rule: an order into unseen or unreachable
+        // ground must still go as close as it can, or standing still hints at
+        // hidden water (GW-07).
+        if (!path && !corridor && u.team === 0 && (u.order === "move" && u.stationOnArrival || u.order === "attackmove" && !!u.attackDestination) &&
             u.haulage !== "canoe" && !u.boat && !u.recalled && !u.expedition && !u.scout) {
           const fallback = this.workBoard.closestReachableCell(this,u.x,u.z,tx,tz);
           if (fallback >= 0 && fallback !== end) {
@@ -4132,11 +4171,13 @@ export class Game {
             this.navBudget--;
             end = fallback;
             path = findPath(grid,WALK,index(u.x,u.z),end,96000);
+            if (path) nearest = true;
           }
         }
         if (corridor) {
           points=corridor;precise=true;
         } else if (path) {
+          nearestEnd = nearest;
           points = path.map((n) => ({
             x: -(this.world.size/2) + ((n % WALK) + 0.5) * cell,
             z: -(this.world.size/2) + (Math.floor(n / WALK) + 0.5) * cell,
@@ -4149,7 +4190,7 @@ export class Game {
           failed = true;
         }
       }
-      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3 };
+      route = { tx, tz, revision: this.navRevision, points, failed, precise, retry: this.state.time + 3, stalled: false, nearest: nearestEnd };
       this.paths.set(u.id, route);
     }
     while (
@@ -4165,7 +4206,7 @@ export class Game {
     const dx = point.x - u.x,
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
-    if (d < (route.precise ? .12 : .5) && route.points.length===1) {this.paths.delete(u.id);u.stuckT=0;return true;}
+    if (route.points.length===1 && (d < (route.precise ? .12 : .5) || route.nearest && d < ROUTE_PROGRESS_RULES.nearestArrivalMetres)) {this.paths.delete(u.id);clearRouteProgress(u);u.stuckT=0;return true;}
     const step = Math.min(this.travelSpeed(u)*dt, d);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
@@ -4186,6 +4227,7 @@ export class Game {
         u.stuckT += dt;
         if (u.stuckT > 1) {
           route.failed = true;
+          route.stalled = true;
           route.retry = this.state.time + 1;
         }
         return false;
@@ -4200,7 +4242,16 @@ export class Game {
     u.y = canoeHeight(this,u,nx,nz);
     u.facing = Math.atan2(dx, dz);
     u.stride += step * 3.6;
-    u.stuckT = 0;
+    // Moving is not the same as progressing. Oscillation or wall sliding that
+    // never closes on the waypoint becomes a stall: replan with escalation and
+    // let job-level stuck handling see the real time without progress.
+    const stall=routeStallSeconds(u,route,this.state.time);
+    if(stall>=ROUTE_PROGRESS_RULES.stallSeconds){
+      u.stuckT=Math.max(u.stuckT,stall);
+      // First stall replans at once; repeated stalls back off up to 3 s so
+      // an unrecoverable route cannot spend shared navigation budget per frame.
+      if(!route.stalled){route.stalled=true;route.failed=true;route.retry=this.state.time+Math.min(3,stall-ROUTE_PROGRESS_RULES.stallSeconds);}
+    } else u.stuckT = 0;
     return false;
   }
 

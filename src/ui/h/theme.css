@@ -1,0 +1,62 @@
+/* Option H compact UI tokens. Scoped to [data-hw-theme="h"] so the current
+ * HUD is unchanged unless a container opts in. Flat carved-wood surfaces,
+ * minimal white outline controls (board H), no gloss, gradients, blur,
+ * badges or decorative currency counters. Desktop only. */
+[data-hw-theme="h"] {
+  --h-wood: #c8884d;
+  --h-wood-light: #dfa56b;
+  --h-wood-dark: #9c6433;
+  --h-edge: #6a4219;
+  --h-inlay: #e9c592;
+  --h-recess: #4a2e12;
+  --h-water: #7a8f99;
+  --h-sage: #9d9a58;
+  --h-control: #fffaf2;          /* minimal white controls */
+  --h-control-line: rgba(255, 250, 242, 0.92);
+  --h-text: #2e1c0b;
+  --h-text-on-wood: #fffaf2;
+  --h-text-muted: #6a4219;
+  --h-panel: rgba(74, 46, 18, 0.78); /* solid-ish recess, no backdrop blur */
+  --h-ok: #6f7f3c;
+  --h-blocked: #8a3a24;
+  --h-radius: 3px;
+  --h-gap: 4px;
+  --h-chip-h: 22px;
+  --h-font: var(--font-sans, "Outfit", system-ui, sans-serif);
+  --h-font-size: 12px;
+  --h-line: 1px;
+}
+[data-hw-theme="h"] .h-chip {
+  display: inline-flex; align-items: center; gap: var(--h-gap);
+  height: var(--h-chip-h); padding: 0 6px; border-radius: var(--h-radius);
+  border: var(--h-line) solid var(--h-control-line); color: var(--h-text-on-wood);
+  background: var(--h-panel); font: 500 var(--h-font-size)/1 var(--h-font);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+[data-hw-theme="h"] .h-chip[data-state="short"] { border-color: var(--h-blocked); }
+[data-hw-theme="h"] .h-chip svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.4; }
+[data-hw-theme="h"] .h-chip .h-cap { opacity: .72; }
+[data-hw-theme="h"] .h-queue {
+  display: grid; gap: 3px; min-width: 150px; padding: 6px 8px;
+  border: var(--h-line) solid var(--h-control-line); border-radius: var(--h-radius);
+  background: var(--h-panel); color: var(--h-text-on-wood); font: var(--h-font-size)/1.25 var(--h-font);
+}
+[data-hw-theme="h"] .h-queue-row { display: flex; justify-content: space-between; gap: 8px; }
+[data-hw-theme="h"] .h-bar { height: 4px; background: rgba(255, 250, 242, .22); border-radius: 2px; overflow: hidden; }
+[data-hw-theme="h"] .h-bar > span { display: block; height: 100%; background: var(--h-control); }
+[data-hw-theme="h"] .h-queue-row[data-paused="true"] { opacity: .6; }
+[data-hw-theme="h"] .h-tip {
+  display: grid; gap: 4px; max-width: 260px; padding: 7px 9px;
+  background: var(--h-inlay); color: var(--h-text); border: var(--h-line) solid var(--h-edge);
+  border-radius: var(--h-radius); font: var(--h-font-size)/1.35 var(--h-font);
+}
+[data-hw-theme="h"] .h-tip strong { font-weight: 600; }
+[data-hw-theme="h"] .h-tip .h-cost { display: flex; flex-wrap: wrap; gap: 6px; font-variant-numeric: tabular-nums; }
+[data-hw-theme="h"] .h-tip .h-cost [data-short="true"] { color: var(--h-blocked); font-weight: 600; }
+[data-hw-theme="h"] .h-tip .h-blocker { color: var(--h-blocked); }
+[data-hw-theme="h"] .h-tip .h-remedy { color: var(--h-text-muted); }
+[data-hw-theme="h"] .h-icon-btn {
+  width: 28px; height: 28px; display: inline-grid; place-items: center; background: transparent;
+  border: var(--h-line) solid var(--h-control-line); border-radius: var(--h-radius); color: var(--h-control); cursor: pointer;
+}
+[data-hw-theme="h"] .h-icon-btn:focus-visible { outline: 2px solid var(--h-control); outline-offset: 1px; }

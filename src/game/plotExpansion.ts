@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {BUILDINGS,BUILD_TIME} from './constants';
-import {expandablePlot,expansionCost,plotArea,validPlot} from './plots';
+import {expandablePlot,expansionCost,plotArea,validPlot,maximumPlotAxisMultiple} from './plots';
 import {compactGrainWorkplace} from './cerealRules';
 import {DOUBLE_GRAIN_BATCH_RULES} from './production';
 
@@ -29,7 +29,7 @@ export function planExpansion(g:Game,b:Building,axis:'w'|'d',team=0){
  if(g.state.ended||b.team!==team||!g.finished(b)||!expandablePlot(b.type)||b.expansion)return false;
  const practiceIssue=grainExpansionPracticeIssue(g,b);
  if(practiceIssue){if(team===0)g.banner(practiceIssue,4);return false;}
- const size={w:b.w,d:b.d};size[axis]=Math.min(BUILDINGS[b.type][axis]*3,size[axis]+BUILDINGS[b.type][axis]);
+ const size={w:b.w,d:b.d};size[axis]=Math.min(BUILDINGS[b.type][axis]*maximumPlotAxisMultiple(b.type),size[axis]+BUILDINGS[b.type][axis]);
  if(size[axis]<=b[axis]+1e-6||!validPlot(b.type,size))return false;
  const issue=g.placementIssue(b.type,b.x,b.z,b.team,size,b.id);if(issue){if(team===0)g.banner(issue,4);return false;}
  if(b.type==='farm'){
