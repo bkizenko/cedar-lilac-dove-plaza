@@ -1,6 +1,86 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W6 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W7 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+
+## Batch W7 — ready (aqueduct/canal dig jobs, approved canal breach, river currents, scenic starts, smooth rivers and trails)
+
+Shored cuts were left out (not approved). The trench bank rule (`maximumNaturalGrade` 0.24) is unchanged. Latest main `1085ad7` (docs: pending-branch handoff) was merged normally; the merge is clean.
+
+- **Base:** latest main `1085ad7`, already merged (`10d141f`).
+- **Commits (each small and self-contained):**
+  - `d99698e`: commission aqueduct and canal lines as ordinary digs; approved canal breach (11 Nov 19:16 ET).
+  - `e10f706`: native aqueduct commission test; canals the game cannot fill are refused.
+  - `7e74ddf` / `a9fbbfd`: GW-06 river currents (test tightened to a pooled downstream share and a real dry-land check).
+  - `59f0e24`: GW-15 measured scenic beauty and a start report with the best valid town-hall site nearby.
+  - `ee34c8c`: GW-12 opt-in smooth river-bank and trail-ribbon display data.
+  - The handoff commit (this section).
+
+### Merge map for Codex
+These groups add only new world-lane modules and tests (no `types.ts`, `persistence.ts`, `save.ts` or `src/scene/world.ts` edits). They can land on their own, or with a normal merge of this branch (it already contains main).
+
+| Group | Commits (in order) | Depends on | Notes |
+|---|---|---|---|
+| River currents | `7e74ddf` → `a9fbbfd` | nothing | Pure query. Codex hooks: `currentPowerKw`, `driftAt`. |
+| Scenic beauty / starts | `59f0e24` | nothing | Pure query. Codex hook: `scenicStartReport` for opening-site pick. |
+| Smooth rivers and trails (GW-12) | `ee34c8c` | nothing | Pure display queries. Claude opts in by drawing `smoothRivers` / `trailRibbons`. |
+| Aqueduct / canal commission + breach | `c7c9039` → `3ff32bf` → `d99698e` → `e10f706` | W5 site rules and W6 routing | Touches `excavation.ts` (world-lane) and one `sim.ts` dry-foundation line (listed below). Take by merging the branch, or reapply those hunks by hand. |
+
+Docs-only handoff commits carry no code. The earlier W6 merge map still stands for pre-W7 work.
+
+### Save impact (exact)
+- **Currents, scenic beauty, GW-12 display:** no save state. They are pure queries. Unflagged generation and trail wear records are unchanged (GW-12 tests assert `world.heights` is byte-identical and `pathPace` is unchanged after building ribbons).
+- **Aqueduct and canal digs** use the existing trench buildings and excavation records (same validators as wonder earthworks).
+- **New optional save field for canals:** `state.canalWorks` (and a `canalWork` mark on the breach/channel trench buildings). Absent in old saves. `validCanalWorks(state, size)` is ready for Codex's persistence validator. Round-trip is tested on a finished native canal.
+- No new `worldOptions` keys. Existing validator asks (`tideVersion` 1|2, `landformLabelVersion` 2, `riverProfileVersion` 2) are unchanged.
+
+### Shared-file edits this batch
+- **`sim.ts` (one wiring line, flagged for Codex):** `placementIssue`'s dry-foundation check also allows a trench when `breachPlacementPermit` is true — only inside the commissioner's scoped `withBreachPermit` for a ready canal-breach stage (`canalBreach.ts`). All other wet placements are still refused.
+- **`excavation.ts` (world-lane):** `excavationIssue` uses the same permit before refusing a dig that would reach water; `excavationVolume` / `excavationWorkNeed` accept already-paid but not-yet-applied predecessor cuts so a canal's breach digs charge shared soil once.
+- No edits to `types.ts`, `persistence.ts`, `save.ts` or `src/scene/world.ts`.
+
+### What landed (native evidence for each)
+1. **Aqueduct and canal lines as ordinary digs (`waterLineWorks.ts`, `d99698e` / `e10f706`).**
+   - Preview (`planAqueductWorks` / `planCanalWorks`) and commission (`executeAqueductWorks` / `executeCanalWorks`) share one plan; commission is all-or-nothing and refuses if the fresh plan differs from the preview (a tree on a bank refuses the whole job; tested).
+   - Digs are ordinary 4 m trenches, batched so overlapping banks wait, union volume charged once (`excavationWorkNeed`, 6 s/m³).
+   - Aqueduct, native archipelago 2 (182.7 m line): 3 digs laid out, 4 held 1 m short of the source (no aqueduct breach rule), 19.9 m³ dug, 120 work-seconds paid, arcade 97.9 m reported as masonry (not dug). Workers lowered each centre by its planned depth. The cut survives save and reload. Intake water is untouched.
+   - Canals the game cannot fill, or waters already joined by water, are refused and never laid out.
+2. **Canal breach, approved 11 Nov 19:16 ET (`canalBreach.ts`).**
+   - Only at the end of an otherwise finished channel. Below-water digs are laboured dry; nothing else may breach water (ordinary digs, forged marks, early mouths and other teams are refused; tested).
+   - The breach is applied together once every breach dig's labour is done. In the game's water model, ground dug below the surface field is wet, so the plan proves the finished channel will be wet end to end before anything is laid out.
+   - Native, archipelago 13 (1560 m), a real 29 m land strip between two sea-level waters: 9 breach digs (7 mouths), 345 m³, 2,085 work-seconds. After the simultaneous breach, every former land sample on the centreline is at least 0.39 m under water. Save validator accepts the record; height matches after reload.
+3. **River currents, GW-06 (`riverCurrents.ts`, `7e74ddf` / `a9fbbfd`).**
+   - Downstream along the channel. Speed is Manning's formula on the real water surface and depth, `v = R^(2/3) · S^(1/2) / n` (n = 0.045), waterfall drops excluded, slack water at the banks, lakes and dry land still. Hooks: `currentPowerKw` for undershot wheels (½ρAv³η) and `driftAt` for boats.
+   - Native, three worlds (pangaea 4, archipelago 2, continents 7): currents run downhill on ≥85% of sloped samples (pooled), speed follows the measured slope (Spearman ≥ 0.85), lakes and dry land have no current, faster water yields more undershot power than slower water on the same map.
+4. **Scenic beauty and starts, GW-15 (`scenicBeauty.ts`, `59f0e24`).**
+   - A 24-ray terrain viewshed (eye 1.7 m, range 360 m): mountain walls, summit, water, ridge layers, overlook, openness. The score is map-relative (each component ranked against that map's dry land).
+   - Native, three worlds: the top decile sees more water and higher walls than the bottom decile. Start percentiles: 25.6, 68.2, 75.4. Every start has a valid, gentle town-hall site within 160 m at the 60th percentile or better (dryFoundation checked). Deterministic and terrain-only.
+5. **Smooth rivers and trails, GW-12 (`channelSmoothness.ts`, `trailRibbons.ts`, `ee34c8c`).** Opt-in at the renderer: Claude draws these polylines; physics, wet/dry, pathing and trail wear are unchanged until then (and stay unchanged after — this is display data).
+   - Rivers: banks are traced on the real waterline, Chaikin-smoothed, and clamped so no display point wanders more than 0.75 m from the physical edge. Historic terrain is byte-identical.
+   - Native width-jumps (≥ 2 m) and bank jitter, raw → smoothed display:
+
+     | World | Width jumps | Mean bank jitter (m) | Max bank deviation (m) |
+     |---|---|---|---|
+     | Pangaea 4 (v18) | 63 → 0 | 0.074 → 0.004 | 0.433 |
+     | Archipelago 2 (v18) | 23 → 0 | 0.070 → 0.004 | 0.306 |
+     | Continents 7 (v19) | 7 → 0 | 0.048 → 0.003 | 0.282 |
+
+     Display centres stay wet (≥ 85% of stations; usually all). A synthetic 4 m grid staircase is measured as blocky and comes out smoother, still on the physical waterline.
+   - Trails: adjacent worn cells are chained by position and heading into one ribbon, Chaikin-smoothed, with display wear scaled to 0.45× and width capped at 1.15 m (the current instanced ellipse is ~2.6 m wide). `pathPace` is unchanged. A 23-cell staircase walk becomes one 64.9 m ribbon of width 1.15 m that stays on the worn cells; axis-aligned corner share drops (0.136 → 0).
+
+### Wiring requests
+- **Codex:** `validCanalWorks` in persistence; a UI/job to commit `planAqueductWorks` / `planCanalWorks` (preview and commit must use the same plan); `currentPowerKw` as the undershot mill rate hook; `driftAt` on boats; `scenicStartReport` as an input to opening-site pick; existing validators (`tideVersion` 1|2, `landformLabelVersion` 2, `riverProfileVersion` 2); well / mill / cistern building hooks from W5–W6 (still open).
+- **Claude Experience:** draw `smoothRivers(g)` (centre + left/right banks, or feed the clamped polylines to `riverSurfaceData`) instead of the raw centreline; draw `trailRibbons(g)` instead of one instanced ellipse per 4 m cell in `world.ts`. Current arrows from `riverCurrentProfile`. Scenic overlay from `scenicSurvey` if wanted.
+- **Still not approved:** shored cuts. Dominated-territory wiring still waits on the Societies merge.
+
+### Checks (W7)
+- Focused W7 tests (6 files, 12 tests: water-line-works, canal-breach, river-currents, scenic-beauty, channel-smoothness, trail-ribbons): **12/12 pass**.
+- `tsc --noEmit` clean. Eslint clean on all new and touched W7 files (`waterLineWorks.ts`, `canalBreach.ts`, `excavation.ts`, `riverCurrents.ts`, `scenicBeauty.ts`, `channelSmoothness.ts`, `trailRibbons.ts`, and their tests).
+
+### Next (W8 proposal)
+- Shored cuts only if Boris approves.
+- Dominated-territory wiring after the Societies merge.
+- Extension shapes beyond rectangles (L-wings) if eraMode wants them.
+- Follow up once Claude wires the GW-12 polylines (visual check, no physics change).
 
 ## Batch W6 — ready (sea-only tides, routed aqueducts/canals, extension footprint checks, water-works hooks, merge map)
 
@@ -498,22 +578,22 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 | GW-03 | **Stable camera over mountains and while zooming** (no angle change on zoom, no terrain jitter). Not in the backlog at all. | "camera is unstable when going over the mtns" — scenic#649; "why does the camerwa angle change when you zoom in and out?" — scenic#745 | W2 measured; flat-ground zoom already fixed on main (`3ec1beb`); mountain lift = dolly-before-lift proposal on the board (contract decision) |
 | GW-04 | **River fish/clay are finite per clickable rectangular reach section**, with visible remaining quantity, depletion/refill rates and uneven richness. No point-circle superabundance. | "river should be clickable in sections … resource depletion rates that you can see" — scenic#458; "selection for river shouldnt be these little circles but big rectangular sections" — scenic#696; "50 rivers worth of fish in one river" — scenic#712 | W3 sections/rates delivered `cfcf3a8`; stock cap = Codex balance call; rectangle drawing = Claude |
 | GW-05 | **Wells as a building**; water collection automatic from wells and freshwater. | "well should be a bbuilding" — scenic#696; "water should be one of those things people auto gather" — scenic#696 | W5 |
-| GW-06 | **River currents and elevation drive watermills and windmills**, plus Roman-scale works (aqueducts, cisterns, canals). Backlog has no watermill/cistern entry. | "windmills and watermills should definitely be a thing, but will need currents in rivers from that and elevation … build some crazy stuff like the romans did" — scenic#448; "ability to dig canals" — scenic#777 | W5 |
+| GW-06 | **River currents and elevation drive watermills and windmills**, plus Roman-scale works (aqueducts, cisterns, canals). Backlog has no watermill/cistern entry. | "windmills and watermills should definitely be a thing, but will need currents in rivers from that and elevation … build some crazy stuff like the romans did" — scenic#448; "ability to dig canals" — scenic#777 | W5 site rules delivered `c7c9039`; currents and Roman-work jobs in W7 (`7e74ddf`, `d99698e`); mill/boat/UI hooks remain Codex |
 | GW-07 | **Moves to unseen ground still go, or go as close as possible**, without revealing water or hinting at hidden terrain. | "if i tell people to go to an areas thats not in line of sight thehy sjould still go or go as close as tehy can b otherwise its hinting" — scenic#458 | W2 delivered `403f506` |
 | GW-08 | **Buildings fit tighter gaps and can rotate** during construction (rotated footprints in placement and collision). | "all buildings shoudl fit in to tighter gaps … be able to rotate buldings" — scenic#458 | W3 (footprint/collision; mesh rotation is Claude) |
 | GW-09 | **Territory borders behave at rivers**; claims are contested by planted flags/forts; valuable land (resources, soil, routes) scores more. Score/prestige formula is Codex. | "borders get weird at rivers" — scenic#444; "plant a flag, but if someone else wants it they plant a flag, its contested" — scenic#786 | W4 (physical claim/border field); score formula → Codex |
 | GW-10 | **Fertility visible and water-proximate**: river margins best for farming; placement highlight greener on more fertile soil. | "rivers should be best place to plant food. … the more fertile a land is the more green it should be" — scenic#440; "fields closer to water are higher yield?" — scenic#432 | W2 delivered data `b789597`; Claude highlight styling, Codex engine wiring |
 | GW-11 | **Landforms distributed, never clustered; no two islands or maps identical**; no bias toward gentle land (some maps hilly, some mountainous, some flat). | "all the topographical features are in one area" — scenic#362; "no two islands or maps shoudl ever be exactly the same" — scenic#199; "right now the bias is on ordinary gentle land" — scenic#372 | W3 (verify and measure; partly delivered earlier) |
-| GW-12 | **Smooth, non-blocky rivers and smoother, less pronounced trails.** | "shuoldn't have blocky rivers like this. should be smooth" — scenic#368; "trails should be smoother, less blocky, and less pronounced" — keyboard#187 | W3 data; Claude renders |
+| GW-12 | **Smooth, non-blocky rivers and smoother, less pronounced trails.** | "shuoldn't have blocky rivers like this. should be smooth" — scenic#368; "trails should be smoother, less blocky, and less pronounced" — keyboard#187 | W4 profile v2 `e158781`; W7 display polylines `ee34c8c` (`smoothRivers`, `trailRibbons`); Claude still wires the renderer |
 | GW-13 | **Mountains are hikeable**; residents can be assigned to a mountain to prospect. | "almost all are hikable and climabel … assign people to mountains and have them just go and start looking for minerals" — keyboard#903 | W4 (routes/admissibility; mining economy is Codex) |
 | GW-14 | **Multiple towns per large island**; settlement planning supports more than one settlement per landmass. | "possible to have multiple townds per island depending on size" — scenic#65 | W4 |
 | G10 (board) | **Fog provenance:** the map auto-explored without anyone being sent. Fog may only clear from actual observers or valid returned reports. Accepted as W; reproduce first (COMPLETION_LOG `CHAT-G10-FOG-PROVENANCE`). | "it autoexplored a lot fior nme idk y" — scenic#482 | W2 delivered `b67ad02` (Test Lab reveal was permanent; now an overlay) |
 | G14 (board) | **Deep-water port and draft admission** for larger hulls; W supplies water-depth/site admission, Codex the hulls (COMPLETION_LOG `CHAT-G14-DEEPWATER-PORTS`). | keyboard#841 "deep water ports" | W3 |
-| GW-15 | **Scenic beauty is measured, with above-average player starts** (Bierstadt/Cole sublime vistas). | "even how beautiful a place is is measurable" — scenic#2; "albert bierstadt and thomas cole style" — scenic#9 | W3 (metric audit) |
+| GW-15 | **Scenic beauty is measured, with above-average player starts** (Bierstadt/Cole sublime vistas). | "even how beautiful a place is is measurable" — scenic#2; "albert bierstadt and thomas cole style" — scenic#9 | W7 delivered `59f0e24`; Codex opening-site hook `scenicStartReport` |
 
 ### Board items for other owners (not implemented by Grok)
 
-- **Claude Experience:** buildings themselves slope with terrain, with no oversized platforms; use `sampleSite` (scenic#440, #582, #432). Smooth river and trail rendering from W data (scenic#368).
+- **Claude Experience:** buildings themselves slope with terrain, with no oversized platforms; use `sampleSite` (scenic#440, #582, #432). Smooth river and trail rendering from W data (scenic#368): use `smoothRivers` / `trailRibbons` (W7 `ee34c8c`).
 - **Claude Societies:** raiders retreat to a real camp or off-map instead of idling at the shore (scenic#693, #690). NPC villages clear forest for building (scenic#649).
 - **Codex:** score/prestige value of claimed land (scenic#786); the clay → mud-brick chain (scenic#767; W supplies finite reach clay in GW-04).
 
@@ -526,11 +606,14 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 - 11 Nov, W3: merged main `9faabf9` and then `f09578d` (clean). Re-read the board on main and on `agents/claude-coordination` (PM check-ins through 17:02 ET): no new asks to Grok. The camera proposal has no Claude reply yet. The G16 deep-water extent ask is still open (W4). No file overlap with the Claude branches (PM-verified).
 - File claims are disjoint from Claude's (`seaExploration.ts`, `coastal*`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`, `src/scene/building*`, `carved*`) and from Codex's platform files. The only shared hunk is `Game.steer()` in `sim.ts`.
 
+- 11 Nov, W7: merged main `1085ad7` (docs-only pending-branch handoff; clean). Canal breach had been approved 11 Nov 19:16 ET; shored cuts still are not. GW-12 implemented as renderer-opt-in display data so historic wet/dry, pathing and trail pace stay identical. Read `GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md`: the remaining Worker vs curd UI conflicts are Claude's; no new shared-file overlap for this batch beyond the listed `sim.ts` permit line.
+
 ## Next batch order
 
 - **W2:** done (above). Follow-ups awaiting other owners: engine wiring of `planFieldArea`/`fertilityPreview` (Codex/Claude); camera dolly-before-lift decision (Boris/Claude); `observedVision()` in Test Lab saves (Codex).
 - **W3:** done (above). Follow-ups awaiting other owners: the `quarterTurn` control and mesh yaw; a decision on a section stock cap; `observedVision()` in saves.
 - **W4:** done (above). Awaiting other owners: `riverProfileVersion` in new-world requests plus a validator; enabling flow fields; a ruling on the W1/W2 steer switch; Societies adopting `deepWaterAt` / `pickDeepWaterPoint` and `dominationSpheres`; Claude adopting `wonderSiteRules` / `wonderTerrainCut`.
 - **W5:** done (above). Awaiting other owners: validators for `tideVersion` and `landformLabelVersion`; a shored-cut rule decision; building-type hooks for water works; enabling flow fields.
-- **W6:** done (above). Awaiting other owners: sea-mesh wiring for tide v2; validators (`tideVersion` 1|2); the water-works building hooks; a canal breach rule decision; adopting `extensionTerrainCheck` in eraMode upgrades. The merge map above says which commits can land alone.
-- **W7:** shored cuts (after Boris decides), linear-earthwork jobs for aqueducts/canals, dominated-territory wiring after the Societies merge.
+- **W6:** done (above). Awaiting other owners: sea-mesh wiring for tide v2; validators (`tideVersion` 1|2); the water-works building hooks; adopting `extensionTerrainCheck` in eraMode upgrades. Canal breach was approved 11 Nov 19:16 ET and landed in W7. The W6 merge map still says which earlier commits can land alone.
+- **W7:** done (above). Awaiting other owners: Claude to draw `smoothRivers` / `trailRibbons`; Codex canal/aqueduct commission UI plus `validCanalWorks`; `currentPowerKw` / `driftAt` / `scenicStartReport` hooks; existing option validators. Shored cuts still await Boris. Dominated-territory wiring still waits on the Societies merge.
+- **W8:** shored cuts only if approved; dominated-territory wiring after Societies; L-wings if eraMode wants them; visual check after Claude wires GW-12.
