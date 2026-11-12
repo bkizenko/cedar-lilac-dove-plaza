@@ -21,3 +21,8 @@ test('fighting group chips say steady, wavering or breaking in words',async()=>{
  const html=renderToStaticMarkup(h(GroupChips,{groups:[{id:1,kind:'line',members:6,cohesion:90,morale:80,casualties:0,commander:true},{id:2,kind:'wedge',members:4,cohesion:30,morale:60,casualties:2,commander:false}]}));
  assert.match(html,/line group of 6, steady cohesion, steady morale/);assert.match(html,/wedge group of 4, breaking cohesion, wavering morale/);assert.equal(renderToStaticMarkup(h(GroupChips,{groups:[]})),'');
 });
+
+test('paid paused row renders an actual Resume action only when a controller is supplied',()=>{
+ const rows=[{icon:'x',kind:'work',text:'paused 5%',why:'Twist sinew',section:'working',urgent:false,projectId:3,paused:true}];
+ assert.match(renderToStaticMarkup(h(WildCraftSheet,{rows,onControl:()=>{}})),/Resume paid work/);assert.doesNotMatch(renderToStaticMarkup(h(WildCraftSheet,{rows})),/Resume paid work/);
+});

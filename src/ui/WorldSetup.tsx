@@ -12,6 +12,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
   const [skin, setSkin] = useState<SkinRequest>({ mode: "random" });
   const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
+  const [wildCraft,setWildCraft] = useState(false);
   const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
     <div className="world-setup">
@@ -65,6 +66,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         </select>
       </label>
       <SkinPicker value={skin} onChange={setSkin} />
+      <label><input type="checkbox" checked={wildCraft} onChange={e=>setWildCraft(e.target.checked)}/> Detailed hunting and hide work · experimental</label>
       {engine.game.testMode&&<label>
         <input type="checkbox" checked={previewRiverbanks} onChange={e=>setPreviewRiverbanks(e.target.checked)}/>
         Experimental riverbanks
@@ -74,7 +76,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         disabled={busy}
         onClick={() => void lifecycle.run(async()=>{
           await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin},previewRiverbanks);
+          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin},previewRiverbanks,wildCraft);
         })}
       >
         {busy ? "Generating…" : "New world"}
