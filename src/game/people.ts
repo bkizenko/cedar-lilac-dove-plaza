@@ -1,4 +1,5 @@
 import type { Unit } from "./types";
+import {cultureGivenName} from "./cultureNaming";
 const cache = new WeakMap<Unit, ReturnType<typeof calculate>>();
 export function predisposition(u:Unit) {
   let value=cache.get(u);if(!value){value=calculate(u);cache.set(u,value);}return value;
@@ -22,10 +23,9 @@ export function personName(u:Unit) {
   return given[u.id%given.length];
 }
 
+/** Given names now come from the per-society culture phonologies (cultureNaming.ts); no surnames. */
 export function citizenName(seed:number,id:number,team:number) {
-  const names=["Aren","Bela","Cora","Dara","Eren","Fara","Galen","Hana","Iven","Jora","Kelan","Lina","Maren","Nara","Orin","Pera","Rian","Sela","Taren","Vela","Asha","Bran","Ceri","Dain","Eira","Fenn","Gara","Halen","Ina","Jalen","Kira","Luan","Mira","Neri","Ona","Pavo","Runa","Soren","Tala","Una","Varo","Wren","Yara","Zora","Aven","Bryn","Dema","Enna","Freya","Ilan","Lero","Mavi","Niko","Oren","Rala","Suri","Toma","Vina","Aila","Eska","Kato","Nela","Rami","Sana"];
-  let h=Math.imul(seed^(team*7919),0x45d9f3b);h=Math.imul(h^(h>>>16),0x45d9f3b);
-  return names[((h>>>0)+id*17)%names.length];
+  return cultureGivenName(seed,id,team);
 }
 
 /** Invented phonologies, rather than modern English place names or surnames. */
