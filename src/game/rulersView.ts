@@ -24,12 +24,19 @@ export type CouncilModel={
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
  parties?:PartyLine[];
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;wards?:WardLine[];casus?:CasusLine[]}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;court?:RivalCourt;wards?:WardLine[];casus?:CasusLine[]}[];
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
+/** What a known neighbour's court shows the outside world: who rules, who would follow, who stands in as regent. Read-only; unknown societies get none. */
+export type RivalCourt={ruler:string;rulerAge:number;house:string;law:string;heir?:{name:string;age:number;adult:boolean;legit:boolean};regent?:string;extinct:boolean;lastEvent?:string};
+export function rivalCourt(r:NonNullable<ReturnType<typeof rulersOf>>,other:number):RivalCourt|undefined{
+ const o=r.societies[String(other)];if(!o)return undefined;const d=o.dynasty,head=d.people[d.rulerId];if(!head)return undefined;
+ const hp=heir(d,o.civ.polity.succession,makeRng(hash32('court-preview',d.generation,d.rulerId)));
+ return {ruler:head.name,rulerAge:head.age,house:d.house,law:o.civ.polity.succession,heir:hp?{name:hp.name,age:hp.age,adult:hp.age>=16,legit:hp.legit}:undefined,regent:d.regent?d.people[d.regent]?.name:undefined,extinct:!hp&&!d.regent,lastEvent:d.log.length?d.log[d.log.length-1]:undefined};
+}
 /** A standing grievance between two houses, in plain words: who holds it, the cause, how strong, when it lapses and what citing it costs the holder. */
 export type CasusLine={byUs:boolean;kind:string;strength:number;endsIn:number;cost:number;reason:string};
 const CB_WORDS:Record<string,string>={claim:'a claim on their lands',tribute:'unpaid tribute',holy:'a sacred grievance',reconquest:'lands once held',defence:'a wrong done in defence',raid:'raids and cattle-lifting',succession:'a disputed succession',liberation:'kin held under their rule'};
@@ -56,7 +63,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const exp=expansionOf(g,team);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),wards:wardLines(r,team,i),casus:casusLines(r,team,i),
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });
