@@ -1,3 +1,4 @@
+import {returnPenBeddingLoad} from './penBedding';
 import type {Game} from './sim';
 import type {Building,GameState,Livestock,Unit} from './types';
 import {penHousingCapacity,insidePen,penCareDemand} from './penGeometry';
@@ -50,7 +51,7 @@ export function penWaterWorkAI(g:Game,u:Unit,dt:number){const w=u.husbandryWork;
 /** An accepted intact surrender keeps the same water parcel with its resident.
  * Violent capture still uses the loss path in reconcilePenWater. */
 export function adoptHerdWaterLoad(g:Game,u:Unit){const w=u.husbandryWork,origin=w?.waterTeam;if(!w||origin===undefined||origin===u.team||!(w.waterLiters!>0))return;metric(g,origin,'waterHerdTransferredOutLiters',w.waterLiters!);metric(g,u.team,'waterHerdTransferredInLiters',w.waterLiters!);w.waterTeam=u.team;context(g).loads.set(u,{work:w,team:u.team});}
-export function releaseHusbandryKeeper(g:Game,u:Unit){g.interruptMission(u);const w=u.husbandryWork;if(w&&(w.waterLiters??0)>0){w.phase='waterReturn';w.releaseAfterWater=true;w.paused=false;u.order='hold';u.node=null;u.workReason='Returning the real herd water load before leaving care';}else{u.husbandryWork=undefined;u.order=u.carry>0?'return':'idle';}g.workBoard.reset();}
+export function releaseHusbandryKeeper(g:Game,u:Unit){g.interruptMission(u);if(returnPenBeddingLoad(g,u)){g.workBoard.reset();return;}const w=u.husbandryWork;if(w&&(w.waterLiters??0)>0){w.phase='waterReturn';w.releaseAfterWater=true;w.paused=false;u.order='hold';u.node=null;u.workReason='Returning the real herd water load before leaving care';}else{u.husbandryWork=undefined;u.order=u.carry>0?'return':'idle';}g.workBoard.reset();}
 export function validPenWaterState(s:GameState){const finite=(n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=1e12;const totals=new Map<number,number>();
  for(const b of s.buildings)if(b.penWater!==undefined){const p=b.penWater;if(b.type!=='pen'||!p||typeof p!=='object'||!Number.isSafeInteger(p.ownerTeam)||p.ownerTeam<0||p.ownerTeam>=s.tribes.length||p.liters>0&&p.ownerTeam!==b.team||p.initialLiters!==0||!['liters','deliveredLiters','consumedLiters','lostLiters'].every(k=>finite(p[k as keyof PenWater]))||p.liters>penWaterCapacity(b)+1e-7||Math.abs(p.deliveredLiters-p.consumedLiters-p.lostLiters-p.liters)>1e-7*Math.max(1,p.deliveredLiters))return false;totals.set(b.team,(totals.get(b.team)??0)+p.liters);}
  for(const a of s.livestock??[])if(a.thirstSeconds!==undefined&&!finite(a.thirstSeconds))return false;

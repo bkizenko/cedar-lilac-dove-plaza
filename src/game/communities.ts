@@ -188,6 +188,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
     return true;
   }
   if (u.stuckT > 16) {
+    if (mission.leader) lifeEvent(g, u.team, g.tribe(u.team).name + "'s founding party turned back, unable to find a way through" + (u.carry > 0 ? "; the timber comes home" : ""), u.x, u.z);
     u.foundingJourney = undefined;
     u.order = u.carry > 0 ? "return" : "idle";
     return true;

@@ -1,3 +1,4 @@
+import {penBeddingReport} from '../game/penBedding';
 import {herdRules} from '../game/animalSpecies';
 import {insidePen} from '../game/penGeometry';
 import {personName} from '../game/people';
@@ -13,7 +14,7 @@ import {animalProcessingEnabled} from '../game/production';
 export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const g=engine.game,animals=penAnimals(g,pen),b=g.state.buildings.find(b=>b.id===pen);
  const away=(g.state.livestock??[]).filter(a=>a.pen===pen&&a.hp>0&&a.ledBy!==undefined).length;
- const water=b?penWaterReport(g,b):null;
+ const water=b?penWaterReport(g,b):null,bedding=b?penBeddingReport(g,b):null;
  const report=b?penPastureReport(g,b):null,capacity=report?.eligibleCapacity??0;
  const female=animals.filter(a=>a.sex==='female').length,kids=animals.filter(a=>g.state.time-a.born<herdRules(a.species).maturity).length;
  const keeper=g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);
@@ -44,6 +45,7 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
   <p>Usable pasture {Math.round(report?.usableAreaSquareMeters||0)} m² · Grass {Math.round((b?.pasture?.condition??1)*100)}%</p>
   <p>Stored plant feed {(b?.pasture?.feed||0).toFixed(1)} / {Math.round(report?.feedCapacity||0)} · {report?.storedFeedSeconds===Infinity?'no demand':`${Math.floor((report?.storedFeedSeconds||0)/60)} min at current herd size`}</p>
   {water?.enabled&&<p>Drinking water {water.liters.toFixed(1)} / {water.capacity} L · {(water.demand*60).toFixed(1)} L/min{water.inTransit>0?` · ${water.inTransit.toFixed(1)} L carried`:""}{water.thirsty?` · ${water.thirsty} thirsty`:""}</p>}
+  {bedding&&<p title={bedding.inTransit>0?`${bedding.inTransit.toFixed(1)} straw carried for bedding`:undefined}>Bedding {bedding.units.toFixed(1)} / {Number(bedding.capacity.toFixed(1))} straw</p>}
   <p>Feed need {((report?.demandPerSecond||0)*60).toFixed(1)} / min · Pasture growth {((report?.regrowthPerSecond||0)*60).toFixed(1)} / min</p>
   {report&&capacity<report.housingCapacity&&<p>Wet or steep ground limits new animals. Existing animals stay in your herd.</p>}
   <p>{report?.keepers?`${report.keepers}/${report.keepersNeeded} keepers assigned`:'No keeper assigned'}{calendar(g).phase===3?' · Winter needs stored plant food':''}</p>

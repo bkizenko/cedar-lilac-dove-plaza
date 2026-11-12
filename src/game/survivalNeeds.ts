@@ -1,3 +1,4 @@
+import {residueFuelAvailable,burnResidueFuel,validResidueFuel,type ResidueFuelLedger} from './residueFuel';
 import {herdRules} from './animalSpecies';
 import {PACK_ANIMAL_RULES} from './packAnimalState';
 import {presentationHearthHeating,presentationSurvivalFireActive} from './presentationSurvivalView';
@@ -23,7 +24,7 @@ export const SURVIVAL_RULES={version:1,waterLitersPerPersonSecond:.008,startingW
  coldThresholdCelsius:6,fireWarmthCelsius:9,shelterWarmthCelsius:5,fireRadiusMeters:48,hearthSearchMeters:240,maximumHearthCandidates:4,
  woodPerPersonColdSecond:.003,coldGraceSeconds:180,coldFatalExposureSeconds:2400,
  recoverySecondsPerSecond:3} as const;
-export type SurvivalStock={waterHerdTransferredInLiters?:number;waterHerdTransferredOutLiters?:number;waterHerdWithdrawnLiters?:number;waterHerdReturnedLiters?:number;waterHerdConsumedLiters?:number;waterHerdLostLiters?:number;waterLiters:number;waterConsumedLiters:number;waterDeliveredLiters:number;waterLostLiters:number;fuelBurnedWood:number;waterShortageSeconds:number;coldExposurePersonSeconds:number};
+export type SurvivalStock={residueFuel?:ResidueFuelLedger;waterHerdTransferredInLiters?:number;waterHerdTransferredOutLiters?:number;waterHerdWithdrawnLiters?:number;waterHerdReturnedLiters?:number;waterHerdConsumedLiters?:number;waterHerdLostLiters?:number;waterLiters:number;waterConsumedLiters:number;waterDeliveredLiters:number;waterLostLiters:number;fuelBurnedWood:number;waterShortageSeconds:number;coldExposurePersonSeconds:number};
 export type WaterWork={sourceX:number;sourceZ:number;bankX:number;bankZ:number;phase:'outbound'|'collecting'|'returning';progressSeconds:number;liters:number;paused?:boolean};
 const emptyStock=(waterLiters=0):SurvivalStock=>({waterLiters,waterConsumedLiters:0,waterDeliveredLiters:0,waterLostLiters:0,fuelBurnedWood:0,waterShortageSeconds:0,coldExposurePersonSeconds:0});
 const residents=(g:Game,team:number)=>g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit);
@@ -119,15 +120,15 @@ function fireDemand(g:Game,team:number,ambient:number){
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),home=g.campOf(team),homeTemp=localAirTemperature(g,home.x,home.z),temp=Math.round(homeTemp);
  const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team)+g.state.units.filter(u=>u.team===team&&u.hp>0&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0).reduce((n,u)=>n+herdRules(u.packAnimal?.species??'goat').careMultiplier,0)*PACK_ANIMAL_RULES.waterPerSecond,fuelDemand=fireDemand(g,team,ambientTemperature(g));
- const water=stock?.waterLiters??0,fuel=t?.wood??0,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuel/fuelDemand:Infinity;
+ const residueFuel=residueFuelAvailable(g,team),water=stock?.waterLiters??0,fuel=t?.wood??0,fuelAvailableWoodEquivalent=fuel+residueFuel.availableWoodEquivalent,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuelAvailableWoodEquivalent/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];
  if(enabled){
   if(waterSeconds<SURVIVAL_RULES.waterWarningSeconds)warnings.push(water<=0?'Drinking water empty — send a water carrier':'Drinking water low — collect from freshwater');
-  if(fuelDemand>0&&fuelSeconds<180)warnings.push(fuel<=0?'No firewood — gather timber before exposure worsens':'Firewood low — gather timber for warmth');
+  if(fuelDemand>0&&fuelSeconds<180)warnings.push(residueFuel.availableWoodEquivalent>0?'Heating fuel low — gather timber':fuel<=0?'No firewood — gather timber before exposure worsens':'Firewood low — gather timber for warmth');
   if(coldResidents)warnings.push(`${coldResidents} residents recovering from cold exposure — shelter and firewood help`);
  }
- return {enabled,water,waterSeconds,fuel,fuelSeconds,coldResidents,warnings,waterWorkers,
+ return {enabled,water,waterSeconds,fuel,fuelSeconds,residueFuel,fuelAvailableWoodEquivalent,coldResidents,warnings,waterWorkers,
   fuelWorkers:people.filter(u=>u.order==='gather'&&u.job==='wood').length,temp,waterDemandLitersPerSecond:demand,
   fuelDemandWoodPerSecond:fuelDemand,sheltered:people.filter(u=>sheltered(g,u)).length,metrics:stock};
 }
@@ -210,7 +211,7 @@ export function validSurvivalState(state:GameState):boolean{
  if(state.survivalVersion!==undefined&&state.survivalVersion!==1)return false;
  const finite=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
  for(const tr of state.tribes){
-  if(tr.survival!==undefined){if(!tr.survival||typeof tr.survival!=='object')return false;
+  if(tr.survival!==undefined){if(!tr.survival||typeof tr.survival!=='object'||tr.survival.residueFuel!==undefined&&!validResidueFuel(tr.survival.residueFuel))return false;
    for(const key of ['waterLiters','waterConsumedLiters','waterDeliveredLiters','waterLostLiters','fuelBurnedWood','waterShortageSeconds','coldExposurePersonSeconds'] as const)if(!finite(tr.survival[key]))return false;}
   if(state.survivalVersion===1&&!tr.survival)return false;
  }
@@ -280,8 +281,8 @@ export function tickSurvival(g:Game,dt:number){
   const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
   stock.waterLiters=Math.max(0,stock.waterLiters-used);stock.waterConsumedLiters+=used;stock.waterShortageSeconds+=dt*shortfall;
   const home=g.campOf(tr.id),homeTemp=localAirTemperature(g,home.x,home.z,temp);
-  const fuelNeeded=fireDemand(g,tr.id,temp)*dt,fuel=Math.min(tr.wood,fuelNeeded),fireFraction=fuelNeeded?fuel/fuelNeeded:0;
-  if(fuel>0)activeFires.add(tr.id);
+  const fuelNeeded=fireDemand(g,tr.id,temp)*dt,residueHeat=burnResidueFuel(g,tr.id,fuelNeeded),fuel=Math.min(tr.wood,Math.max(0,fuelNeeded-residueHeat)),fireFraction=fuelNeeded?Math.min(1,(fuel+residueHeat)/fuelNeeded):0;
+  if(fuel+residueHeat>0)activeFires.add(tr.id);
   const fires=hearths.filter(b=>b.team===tr.id&&(fireFraction>0||cooking.has(b.id)));
   for(const hearth of fires)litHearths.add(hearth.id);
   if(review&&fires.length)sendColdResidentsToFire(g,people,fires);
