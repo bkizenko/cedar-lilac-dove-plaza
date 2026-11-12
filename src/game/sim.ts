@@ -5886,7 +5886,10 @@ export class Game {
             if(prisonerAI(this,u,sdt))continue;
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
-            if (emergencyResponse(this, u, sdt)) continue;
+            if (emergencyResponse(this, u, sdt)) {
+              cancelMethodRecordPickup(this,u,'Record pickup stopped — this resident is answering a local alarm');
+              continue;
+            }
             if(methodRecordPickupAI(this,u,sdt))continue;
             if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
