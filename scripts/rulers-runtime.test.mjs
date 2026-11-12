@@ -155,3 +155,14 @@ test('lane A: journeyPermit steers explore/trade/raid parties from the drivers; 
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
  for(const k of ['explore','trade','raid'])assert.equal(R.journeyPermit(old,1,k,2),null,'old saves: null permit');
 });
+
+test('AUD-SOC-SAVE-ROUNDTRIP: wards validate, malformed wards are rejected, and an old save without wards/claims still loads',async()=>{
+ const {validRulersState,initRulers}=await import('../src/game/rulersState.ts');
+ const s=initRulers(42,['a','b']);
+ assert.ok(validRulersState(s),'old save: no wards, no claims');
+ const ok={...s,wards:[{kind:'foster',person:'a-kid',from:'a',to:'b',since:3}]};
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(ok))),'ward survives JSON round-trip');
+ for(const bad of [{kind:'tribute',person:'x',from:'a',to:'b',since:1},{kind:'foster',person:1,from:'a',to:'b',since:1},{kind:'hostage',person:'x',from:'a',to:'b',since:NaN},null])
+  assert.equal(validRulersState({...s,wards:[bad]}),false,'malformed ward rejected');
+ assert.equal(validRulersState({...s,wards:'x'}),false);
+});

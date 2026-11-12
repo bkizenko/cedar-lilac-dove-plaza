@@ -42,6 +42,7 @@ export function validRulersState(x:unknown):x is RulersState{
   if(validateDynasty(sr.dynasty).length&&sr.dynasty.people[sr.dynasty.rulerId]?.alive)return false;
  }
  if(s.claims!==undefined&&(!Array.isArray(s.claims)||s.claims.some(c=>!c||typeof c.holder!=='string'||typeof c.target!=='string'||!Number.isFinite(c.strength)||!Number.isFinite(c.expiresTick))))return false;
+ if(s.wards!==undefined&&(!Array.isArray(s.wards)||s.wards.some(w=>!w||(w.kind!=='foster'&&w.kind!=='hostage')||typeof w.person!=='string'||typeof w.from!=='string'||typeof w.to!=='string'||!Number.isFinite(w.since))))return false;
  return true;
 }
 /** Old saves: absent field => feature off, nothing breaks. */
