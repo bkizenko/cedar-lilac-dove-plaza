@@ -1,3 +1,4 @@
+import {Wheat,Package} from 'lucide-react';
 import {FOOD_KINDS,FOOD_NAMES} from '@/game/pantry';
 import type {ItemStock} from '@/game/production';
 import type {HudSnapshot} from '@/game/types';
@@ -28,14 +29,12 @@ export function FoodStoreReadout({stock,items,experience}:{stock:FoodStock;items
   ...fieldStock.map(([kind,name])=>({name,amount:items?.[kind]??0})),
  ].filter(row=>row.amount>=1);
  return <>
-  <strong>Food in stores</strong>
-  <p className="mt-1 tabular-nums">{Math.floor(readyFoodStock(stock))} ready to eat · {Math.floor(stored)} pantry stock</p>
-  {experience?.tasted&&<p title="Enjoyment of meals actually eaten, separate from nutrition. Food mood has a small, bounded effect on village appeal." aria-label="Meal enjoyment">Meals {experience.taste.toFixed(1)}/10 · Food mood {experience.mood>=0?'+':''}{Math.round(experience.mood*100)}%</p>}
+  <p className="mt-1 flex items-center gap-3 tabular-nums" title="Ready to eat · all pantry stock"><span className="inline-flex items-center gap-1"><Wheat className="size-4" aria-label="Ready to eat"/>{Math.floor(readyFoodStock(stock))} ready</span><span className="inline-flex items-center gap-1"><Package className="size-4" aria-label="Pantry"/>{Math.floor(stored)} stored</span></p>
+  {experience?.tasted&&<p title="Enjoyment of meals eaten. Food mood slightly raises village appeal." aria-label="Meal enjoyment">Taste {experience.taste.toFixed(1)}/10 · Mood {experience.mood>=0?'+':''}{Math.round(experience.mood*100)}%</p>}
   {ready.length>0&&<dl aria-label="Ready to eat">{ready.map(({name,amount})=><div key={name}><dt>{name}</dt><dd>{Math.floor(amount)}</dd></div>)}</dl>}
   {processing.length>0&&<>
-   <strong className="mt-2 block">For processing</strong>
+   <strong className="mt-2 block" title="Villagers turn to raw rations when ready food runs out. Raw meat and fish can cause illness.">To process</strong>
    <dl aria-label="Food for processing">{processing.map(({name,amount})=><div key={name}><dt>{name}</dt><dd>{Math.floor(amount)}</dd></div>)}</dl>
-   <p className="text-parchment-dim">Villagers turn to raw rations when ready food runs out. Raw meat and fish can cause illness.</p>
   </>}
  </>;
 }

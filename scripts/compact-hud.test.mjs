@@ -16,7 +16,7 @@ test('food HUD shows ready stock while keeping raw pantry and workshop supplies 
  const main=renderToStaticMarkup(React.createElement(Hud,{hud,engine}));
  assert.match(main,/<span>Food<\/span><strong>7<\/strong>/);
  const stores=renderToStaticMarkup(React.createElement(FoodStoreReadout,{stock:hud,items:g.tribe(0).items}));
- assert.match(stores,/7 ready to eat · 32 pantry stock/);
+ assert.match(stores,/7 ready<\/span>[\s\S]*32 stored/);
  assert.match(stores,/<dt>fresh fish<\/dt><dd>12<\/dd>/);
  assert.match(stores,/<dt>Raw meat<\/dt><dd>5<\/dd>/);
  assert.match(stores,/<dt>Cereal sheaves<\/dt><dd>8<\/dd>/);
