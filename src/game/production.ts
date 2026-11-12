@@ -1,4 +1,5 @@
-import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
+import {IRON_METALLURGY_RULES as IRON} from './ironRules';
+import {ironOreEnabled} from './ironMetallurgy';
 import {COPPER_METALLURGY_RULES,copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore}from'./commandExecution';
 import {acceptsMealResidues,productionFuelAvailable,productionFuelLabel} from './mealFuel';

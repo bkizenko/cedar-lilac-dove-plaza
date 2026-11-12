@@ -1,4 +1,4 @@
-import {IRON_METALLURGY_RULES as IRON} from './ironMetallurgy';
+import {IRON_METALLURGY_RULES as IRON} from './ironRules';
 import {COPPER_METALLURGY_RULES} from './copperMetallurgy';
 import type {ItemKind,ItemStock} from './production';
 import type {FoodKind} from './types';
