@@ -84,6 +84,9 @@ test('capturing a paid carrier cannot transfer remote inputs or complete the ori
  guard.order='hold';g.invalidateRoute(guard);
  assert.ok(observed>0,'the real first-contact modal was answered through its observe API');
  const packet=structuredClone(u.housingCargo.materials),max=b.maxHp,position={x:u.x,z:u.z};
- const capture=acceptPrisonerSurrender(g,u,1);assert.equal(capture.accepted,true,capture.reason);assert.equal(u.team,1);assert.equal(u.constructionQueue,undefined);g.step(.1);assert.equal(b.renovation.actorId,null);assert.equal(b.renovation.packetTeam,0);assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.kind,'ground');
+ const capture=acceptPrisonerSurrender(g,u,1);assert.equal(capture.accepted,true,capture.reason);assert.equal(u.team,1);assert.equal(u.constructionQueue,undefined);assert.equal(b.renovation.actorId,null);assert.equal(b.renovation.packetTeam,0);assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.kind,'ground');
  assert.equal(b.renovation.parcel.x,position.x);assert.equal(b.renovation.parcel.z,position.z);assert.equal(u.housingCargo,undefined);assert.equal(b.maxHp,max);assert.equal(b.fabric.upgrades.length,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ // A legitimate replacement may claim the project on the next frame. Custody
+ // must remain with the original owner, never with the captured builder.
+ g.step(.1);assert.notEqual(b.renovation.actorId,u.id);assert.equal(b.renovation.paidBy,0);assert.equal(b.maxHp,max);assert.equal(b.fabric.upgrades.length,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
