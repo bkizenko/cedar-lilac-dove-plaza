@@ -113,7 +113,7 @@ export function headwearParts(c:KitCtx,kind:HeadKind){
   case 'kerchief':h.push(crown(.285,1.08,.06,cl,1),Q(cl,'box',[.2*hs,.1,.06],[0,.94,-.145*hs],1),Q(ac,'box',[.04,.07,.03],[.12*hs,1.08,.1],0,[0,0,.5]));break;
   case 'veilwrap':h.push(crown(.31,1.03,.13,cl),crown(.29,1.15,.07,cl2,2),Q(cl,'box',[.26*hs,.36,.06],[0,.62,-.14*hs],2),Q(cl2,'box',[.2,.1,.05],[0,.9,.12*hs],0),Q(tr,'cylinder',[.31*hs,.02,.31*hs],[0,1.1,-.01],0,undefined,8));break;
  }
- return kind==='turban'||kind==='veilwrap'||kind==='headcloth'||kind==='feltcap'||kind==='furcap'||kind==='flapcap'||kind==='cone'||kind==='hood';
+ const k:HeadKind=kind as HeadKind;return k==='turban'||k==='veilwrap'||k==='headcloth'||k==='feltcap'||k==='furcap'||k==='flapcap'||k==='cone'||k==='hood';
 }
 
 // ---------------------------------------------------------------- footwear
