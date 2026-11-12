@@ -319,3 +319,19 @@
 .hw-dock>.game-tooltip-anchor{display:flex}
 @media (max-width:760px){.hw-dock>.game-tooltip-anchor{flex:1;min-width:0}.hw-dock .hw-dock-btn{width:100%}}
 @media (max-width:760px){.hw-screen-tabs button,.hw-screen .hw-tabs button{padding:0 10px;gap:6px;font-size:var(--hw-fs)}}
+
+/* Lane B: handover card, fame feed, ruler portrait */
+.hw-portrait{flex:none;width:112px}
+.hw-portrait figure{margin:0;max-width:112px}
+.hw-portrait svg{width:112px;height:112px;border-radius:var(--hw-r-m);border:2px solid rgba(227,173,79,.6);display:block}
+.hw-portrait figcaption{display:none}
+.hw-handover.is-watch{border-color:rgba(242,199,107,.55);background:rgba(242,199,107,.07)}
+.hw-heir{display:flex;gap:var(--hw-s3);align-items:center}
+.hw-pressure{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hw-pressure .hw-meter{flex:1 1 120px}
+.hw-why{flex-basis:100%;display:grid;gap:2px;color:var(--hw-dim);font-size:var(--hw-fs-s);padding-left:var(--hw-s4);list-style:disc}
+.hw-fame{display:grid;gap:var(--hw-s2)}
+.hw-fame li{display:flex;gap:var(--hw-s3);align-items:flex-start;padding:var(--hw-s3) var(--hw-s4);border-left:4px solid var(--hw-line-strong);background:rgba(255,236,190,.05);border-radius:0 var(--hw-r-s) var(--hw-r-s) 0;font-size:var(--hw-fs);line-height:1.35}
+.hw-fame li.is-new{border-left-color:var(--hw-gold);background:rgba(227,173,79,.13);font-size:var(--hw-fs-l);font-weight:650}
+.hw-fame li.is-new svg{color:var(--hw-gold-2);flex:none;margin-top:2px}
+.hw-fame li.is-old{opacity:.65;font-size:var(--hw-fs-s)}

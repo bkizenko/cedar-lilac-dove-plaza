@@ -10,6 +10,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CapitulationTerms} from '../council/CapitulationTerms';
+import {HandoverCard,RulerPortrait,FameFeed} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -96,17 +97,13 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
  const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
  return <Screen title={c.house?`House ${c.house.name}`:'Council'} icon={<Crown size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   {tab==='ruler'&&<div className="hw-grid-2">
-   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><span className="hw-medal hw-medal-l"><Crown size={40}/></span><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${nice(c.polity.form)}`:''}</p></div></div>
+   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><RulerPortrait engine={engine} name={c.ruler.name} fallback={<span className="hw-medal hw-medal-l"><Crown size={40}/></span>}/><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${nice(c.polity.form)}`:''}</p></div></div>
     <p className="hw-quote">{c.ruler.headline}{c.ruler.contradiction?`. ${c.ruler.contradiction}`:''}</p>
     {c.ruler.wants.length>0&&<div className="hw-chips"><span className="hw-row-label"><Target size={18}/>Wants</span>{c.ruler.wants.map(w=><span key={w} className="hw-chip">{w}</span>)}</div>}
     <div className="hw-chips"><span className="hw-row-label"><TriangleAlert size={18}/>Fears</span><span className="hw-chip t-warn">{c.ruler.fears}</span></div>
     <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{k} · {v}</span>)}</div>
    </section>}
-   {c.handover&&<section className="hw-card"><div className="hw-card-head"><h3>Successor</h3><GameTooltip title="Yearly risk the seat passes"><span className={cx('hw-chip',(c.handover.yearlyRisk>=10||c.handover.rulerAge>=55)&&'t-warn')}><Skull size={18}/>{c.handover.yearlyRisk}%/y</span></GameTooltip></div>
-    {c.handover.extinct?<p className="t-bad hw-sub">No living kin</p>:c.handover.heir?<><h4>{c.handover.heir.name}</h4><p className="hw-sub">{c.handover.heir.role}, {c.handover.heir.age}. {c.handover.heir.headline}</p><div className="hw-chips"><span className={cx('hw-chip',c.handover.heir.adult?'t-good':'t-warn')}>{c.handover.heir.adult?'Of age':'Too young'}</span>{!c.handover.heir.legit&&<span className="hw-chip t-warn">Contested {c.handover.heir.claim}</span>}</div></>:<p className="hw-sub">Regent{c.handover.regent?`: ${c.handover.regent}`:''}</p>}
-    <p className="hw-sub">{lawLabel(c.handover.law)}</p>
-    {c.handover.others.length>0&&<div className="hw-chips">{c.handover.others.map(o=><span key={o.name} className="hw-chip hw-chip-soft">{o.name} · {o.age}</span>)}</div>}
-   </section>}
+   {c.handover&&<HandoverCard h={c.handover}/>}
    {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
   </div>}
   {tab==='realm'&&<div className="hw-grid-2">
@@ -117,7 +114,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
   </div>}
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
-  {tab==='chronicle'&&<ol className="hw-chron">{[...c.log].reverse().map((l,i)=><li key={i}>{l.replace(/^\d+:\s*/,'')}</li>)}</ol>}
+  {tab==='chronicle'&&<FameFeed log={c.log}/>}
   {tab==='terms'&&<CapitulationTerms engine={engine}/>}
  </Screen>;
 }
