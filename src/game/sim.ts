@@ -1,4 +1,5 @@
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
@@ -11,7 +12,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {civicPrestige} from './civicPrestige';
+import {gamePrestigeView,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -204,8 +205,8 @@ const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
 // made usable fords disappear from the work graph while people could cross them.
 const WALK_CLEARANCE = 0.12;
-const YEAR_DAYS = 32;
-const DAY_RATE = (86400 * YEAR_DAYS) / 1800;
+const YEAR_DAYS = SIM_CALENDAR_RULES.daysPerYear;
+const DAY_RATE = (86400 * YEAR_DAYS) / SIM_CALENDAR_RULES.yearSeconds;
 
 export class Game {
   testMode = false;
@@ -5702,13 +5703,8 @@ export class Game {
     return cap;
   }
 
-  prestige() {
-    const t = this.tribe(0);
-    const owned = this.state.regions.filter((r) => r.owner === 0).length;
-    const monuments = civicPrestige(this).total;
-    const allies = this.state.tribes.filter((tr) => tr.id !== 0 && tr.alive && tr.ally).length;
-    return Math.round(this.popNow(0) * 2 + owned * 14 + t.age * 22 + monuments + allies * 12);
-  }
+  prestigeBreakdown(viewer=0,subject=0){return gamePrestigeView(this,viewer,subject);}
+  prestige() {return Math.round(this.prestigeBreakdown().total??0);}
 
   bankTrade(give: ResKind, get: ResKind) {
     const partner = this.pickTradeRival();
@@ -5897,6 +5893,7 @@ export class Game {
         tickCaptivity(this,sdt);
         phases?.mark('observation');
         this.updateVision(sdt);
+        tickPrestigeEvidence(this);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
@@ -6190,6 +6187,7 @@ export class Game {
       hint: type==="farm"?cultivationIssue(this)||BUILDINGS[type].hint:BUILDINGS[type].hint,
     }));
 
+    const prestigeView=this.prestigeBreakdown();
     return {
       food: Math.floor(t.food),
       foodLots: foodInventory(t),
@@ -6356,7 +6354,9 @@ export class Game {
         bonus: c.hint,
         held: this.clusterHeld(c.id, 0),
       })),
-      prestige: this.prestige(),
+      prestige: Math.round(prestigeView.total??0),
+      prestigeBreakdown: prestigeView,
+      prestigeRivals: this.state.tribes.filter(tr=>tr.id!==0&&tr.id!==3).map(tr=>this.prestigeBreakdown(0,tr.id)),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),

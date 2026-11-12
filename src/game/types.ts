@@ -744,6 +744,8 @@ export type HudSnapshot = {
   richRes: ResKind;
   clusters: { name: string; bonus: string; held: boolean }[];
   prestige: number;
+  prestigeBreakdown?:import('./prestigeGame').GamePrestigeView;
+  prestigeRivals?:import('./prestigeGame').GamePrestigeView[];
   stockCap: number;
   port: boolean;
   night: boolean;

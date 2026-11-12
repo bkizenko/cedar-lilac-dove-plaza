@@ -158,7 +158,7 @@ export function GameApp() {
       )}
       <Hud hud={hud} engine={engineRef.current} />
       <PlayTools engine={engineRef.current} />
-      <SettlementLedger engine={engineRef.current} />
+      <SettlementLedger engine={engineRef.current} hud={hud} />
       <EncounterDialog engine={engineRef.current} />
       {SHOW_WELCOME && hud.awaitingStart && hud.started && !fail ? (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink/55 backdrop-blur-[2px]">
