@@ -139,6 +139,8 @@ export type Critter = {
 
 export type Livestock = Critter & {
   team: number; pen: number; sex: 'female' | 'male';
+  /** Exclusive live escort custody; ownership changes only on physical pen delivery. */
+  ledBy?:number;
   born: number; tamedAt: number; hunger: number; milk: number;
   thirstSeconds?:number; pregnancy: number; lactatingUntil?: number; stuckT?: number;
 };
