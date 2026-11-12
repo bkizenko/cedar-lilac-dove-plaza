@@ -177,6 +177,176 @@ function addons(g:G,r:Rng){const {w,d}=g;
  if(chance(r,.4)){g.B('wall2',[range(r,1.8,2.8),.2,.6],[0,0,d/2-.4],1);g.B('wall2',[range(r,1.2,1.8),.4,.5],[0,.2,d/2-.9],1);}
  if(chance(r,.3))for(let i=0;i<pick(r,[2,3]);i++)g.Cy('accent',.4,.5,[-w*.3+i*.5,0,d/2-.5],0,8);
 }
+
+// ---------------------------------------------------------------- original grammars (Experience lane): not copies of any real tradition
+const P=(g:G,shape:Part['shape'],s:Slot,size:V,pos:V,rot?:V,sides?:number,lod:LodTier=2)=>void g.parts.push(part(shape,matId(g.civ,s) as Part['mat'],size,pos,lod,rot,sides));
+const yawOf=(x:number,z:number)=>Math.atan2(x,z);
+/** Aureline: salt-white crescent terraces under teal shell vaults; the civic hall is an open ring of alternating pillars round a teal pool, a sail-tower at its heart. */
+HOUSE.aureline=g=>{const {w,d,r}=g,n=5,R=w*.7,span=1.45,h=range(r,1.7,2.1),ch=2*R*Math.sin(span/(2*(n-1)))*1.06+.15;
+ g.B('wall2',[w*.95,.3,d*.8],[0,0,d*.12],2);
+ for(let i=0;i<n;i++){const a=(i/(n-1)-.5)*span,cx=Math.sin(a)*R,cz=-Math.cos(a)*R+R*.72,hh=h+(i%2?.4:0),nx=-Math.sin(a),nz=Math.cos(a);
+  P(g,'box','wall',[ch,hh,2.3],[cx,.3,cz],[0,-a,0]);P(g,'sphere','roof',[ch*1.04,1.25,2.6],[cx,.3+hh-.45,cz],[0,-a,0]);
+  P(g,'box','trim',[ch*.96,.1,2.35],[cx,.3+hh*.55,cz],[0,-a,0],undefined,0);
+  P(g,'box','accent',[.8,1.35,.1],[cx+nx*1.17,.3,cz+nz*1.17],[0,-a,0],undefined,0);P(g,'sphere','accent',[.8,.7,.1],[cx+nx*1.17,.3+1.3,cz+nz*1.17],[0,-a,0],undefined,0);
+  if(i%2===0)P(g,'box','trim',[.5,.5,.1],[cx+nx*1.17+.9,.3+hh*.55,cz+nz*1.17],[0,-a,0],undefined,0);}
+ g.B('wall2',[1.8,.3,.9],[g.off*.3,.3,R*.72-R+.2+2.1],1);P(g,'wedge','wall2',[.5,hh0(h)+1.6,1.4],[w*.46,.3,-d*.25],[0,Math.PI,0],undefined,1);
+ return {entry:{x:g.off*.3,z:R*.72-R+2.4,width:1.2}};};
+const hh0=(h:number)=>h+.4;
+CIVIC.aureline=g=>{const {w,d,r}=g,R=Math.min(w,d)*.48,n=14,gate=.34;
+ P(g,'cylinder','wall2',[R*2.2,.35,R*2.2],[0,0,0],undefined,28);P(g,'cylinder','roof',[R*1.4,.1,R*1.4],[0,.35,0],undefined,28,1);P(g,'cylinder','trim',[R*1.5,.12,R*1.5],[0,.33,0],undefined,28,1);
+ for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=Math.sin(a),z=Math.cos(a);if(Math.abs(Math.atan2(x,z))<gate)continue;const ph=i%2?4.4:3.4;
+  P(g,'box','wall',[.8,ph,1.0],[x*R,.35,z*R],[0,a,0]);P(g,'sphere','trim',[.7,.55,.9],[x*R,.35+ph,z*R],[0,a,0],undefined,1);
+  const b=a+Math.PI/n,len=2*R*Math.sin(Math.PI/n)*1.02;P(g,'box','wall2',[len,.35,.9],[Math.sin(b)*R,.35+3.2,Math.cos(b)*R],[0,b,0]);if(i%2)P(g,'box','roof',[len*.9,.9,.12],[Math.sin(b)*R,.35+1.2,Math.cos(b)*R],[0,b,0],undefined,1);}
+ P(g,'box','wall',[1.5,2.6,1.5],[0,.35,0]);P(g,'pyramid','wall2',[1.5,6.2,1.5],[0,2.95,0]);P(g,'sphere','accent',[.7,.7,.7],[0,9.1,0],undefined,undefined,1);
+ P(g,'box','cloth',[.05,3,2.4],[0,5.4,0],[0,.5,0],undefined,1);for(let i=0;i<4;i++)g.B('wall2',[1.8,.2,.8],[0,.35+i*.0,R*.55+i*.55-.1],1);
+ g.banner(R*.9,R*1.0,4.6);return {entry:{x:0,z:R,width:1.8}};};
+/** Hanrei: grounded lattice houses under three folded slate roofs; the civic hall is a peacock fan of radiating gabled wings behind a gate hall. */
+HOUSE.hanrei=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.7,h=range(r,2.3,2.7),y=.35+h;
+ g.B('wall2',[W+.7,.35,D+.7],[0,0,0],2);g.B('wall',[W*.88,h,D*.8],[0,.35,0],2);
+ for(let i=0;i<=5;i++){g.B('wall2',[.07,h*.88,.05],[-W*.4+i*W*.16,.4,D*.4+.03],0);g.B('wall2',[.05,h*.88,.07],[W*.44+.03,.4,-D*.35+i*D*.14],0);}
+ for(const k of[.33,.66])g.B('wall2',[W*.82,.07,.05],[0,.35+h*k,D*.4+.03],0);
+ P(g,'hip','roof',[W*1.4,.95,D*1.4],[0,y-.7,0],undefined,undefined,undefined,2);
+ const ra=range(r,1.9,2.2),rb=range(r,1.4,1.7);
+ P(g,'prism','roof',[W*1.22,ra,D*.8],[-W*.04,y,-D*.14]);P(g,'prism','roof',[D*.9,rb,W*.72],[W*.2,y-.05,D*.12],[0,Math.PI/2,0]);P(g,'prism','roof',[W*.8,ra*.55,D*.5],[-W*.26,y-.05,D*.22]);
+ for(const [x,z,yy] of[[-W*.04,-D*.54,ra],[-W*.04,D*.4,ra],[W*.2+W*.36,D*.12,rb]] as [number,number,number][])P(g,'cone','accent',[.3,.7,.3],[x,y+yy-.1,z],undefined,6,1);
+ g.B('accent',[1,1.7,.08],[g.off*.3,.35,D*.4+.05],0);g.B('wall2',[1.6,.18,.9],[g.off*.3,.35,D*.5+.5],1);g.B('wall2',[1.8,.18,.6],[g.off*.3,0,D*.5+.9],1);
+ for(const s of[-1,1]){g.post('accent',s*W*.5,D*.5+.1,y-.3,.1,1);P(g,'sphere','accent',[.4,.5,.4],[s*W*.5,y-1.2,D*.5+.1],undefined,undefined,1);}
+ return {entry:{x:g.off*.3,z:D*.5+1,width:1.2}};};
+CIVIC.hanrei=g=>{const {w,d,r}=g,n=7,hz=d*.18,R=d*.62;
+ g.B('accent',[w*.96,.4,d*.96],[0,0,0],2);
+ for(let i=0;i<n;i++){const t=i/(n-1)*2-1,a=1-Math.abs(t),th=t*1.2,dx=Math.sin(th),dz=-Math.cos(th),L=R*(.85+.4*a),wh=1.3+a*1.3,rise=1.1+a*1.7,cx=dx*(L/2+1),cz=hz+dz*(L/2+1),yw=yawOf(dx,dz);
+  P(g,'box','wall',[1.5,wh,L*.94],[cx,.4,cz],[0,yw,0]);P(g,'prism','roof',[2.0,rise,L*1.04],[cx,.4+wh,cz],[0,yw,0]);P(g,'cone','accent',[.3,.7,.3],[cx+dx*L*.5,.4+wh+rise*.9,cz+dz*L*.5],undefined,6,1);}
+ P(g,'cylinder','wall',[R*.72,4,R*.66],[0,.4,hz+.4],undefined,8);P(g,'cone','roof',[R*.95,2.2,R*.95],[0,4.4,hz+.4],undefined,8);P(g,'sphere','accent',[.5,.7,.5],[0,6.5,hz+.4]);
+ for(const s of[-1,1]){g.post('wall2',s*2,hz+R*.5,3.4,.18,2);P(g,'sphere','accent',[.6,.8,.6],[s*2,3.2,hz+R*.5],undefined,undefined,1);}
+ g.door(0,hz+R*.35,1.3,2.2);g.banner(w*.4,d*.38,4.2);return {entry:{x:0,z:hz+R*.55,width:1.4}};};
+/** Steppan: oval felt halls. A timber footing, low felt wall and a flattened felt dome with lashing bands, smoke cap and a cloth-awning porch; the civic hall pairs three domes under one timber porch. */
+const feltHall=(g:G,W:number,D:number,h:number,dome:number)=>{
+ g.B('wall2',[W+.3,.22,D+.3],[0,0,0],2);g.B('wall',[W,h,D],[0,.22,0],2);
+ P(g,'sphere','roof',[W*1.2,dome,D*1.2],[0,.22+h-.3,0]);
+ g.B('trim',[W+.06,.16,D+.06],[0,.22+h*.62,0],1);g.B('trim',[W+.06,.1,D+.06],[0,.22+h*.2,0],0);
+ for(let i=-1;i<=1;i++)P(g,'box','wall2',[.1,dome*.5,.06],[i*W*.28,.22+h+.05,D*.5+.04],[0,0,i*.35],undefined,0);
+ P(g,'box','wall2',[.7,.3,.7],[0,.22+h-.3+dome*.88,0],undefined,undefined,1);P(g,'cone','roof',[.9,.4,.9],[0,.22+h-.3+dome*.88+.3,0],undefined,8,1);};
+HOUSE.steppan=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,1.2,1.45),y=.22;
+ feltHall(g,W,D,h,range(r,1.5,1.9));
+ g.B('accent',[.9,1.15,.08],[g.off*.3,y,D*.5+.02],0);g.B('wall2',[1.15,.12,.1],[g.off*.3,y+1.15,D*.5+.04],0);
+ for(const s of[-1,1])g.post('wall2',g.off*.3+s*.85,D*.5+1.1,1.9,.1,1);P(g,'wedge','cloth',[2.2,.55,1.3],[g.off*.3,1.9,D*.5+.5],undefined,undefined,1);
+ for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.7;g.post('wall2',Math.sin(a)*W*.78,Math.cos(a)*D*.78,.9,.07,0);}
+ return {entry:{x:g.off*.3,z:D*.5+1.1,width:1}};};
+CIVIC.steppan=g=>{const {w,d,r}=g,W=w*.5,D=d*.6;
+ g.B('wall2',[w*.95,.35,d*.92],[0,0,0],2);
+ for(const s of[-1,1]){const k=.62;g.B('wall2',[W*k+.3,.2,D*k+.3],[s*W*.95,.35,-d*.02],1);g.B('wall',[W*k,1.0,D*k],[s*W*.95,.55,-d*.02],2);P(g,'sphere','roof',[W*k*1.2,1.5,D*k*1.2],[s*W*.95,.55+.75,-d*.02]);g.B('trim',[W*k+.05,.12,D*k+.05],[s*W*.95,.55+.6,-d*.02],1);}
+ g.B('wall',[W,2.0,D],[0,.35,-d*.02],2);P(g,'sphere','roof',[W*1.2,3.0,D*1.2],[0,.35+1.7,-d*.02]);g.B('trim',[W+.06,.18,D+.06],[0,.35+1.3,-d*.02],1);g.B('trim',[W+.06,.12,D+.06],[0,.35+.4,-d*.02],0);
+ P(g,'box','wall2',[.8,.4,.8],[0,.35+4.25,-d*.02],undefined,undefined,1);P(g,'cone','accent',[1,.5,1],[0,.35+4.6,-d*.02],undefined,8,1);
+ for(let i=0;i<4;i++)g.post('wall2',-w*.32+i*w*.213,d*.36,3.2,.2,2);g.B('wall2',[w*.72,.25,.35],[0,3.2,d*.36],1);P(g,'wedge','cloth',[w*.72,.9,1.6],[0,3.15,d*.34],[0,0,0],undefined,1);
+ g.B('accent',[1.3,1.9,.08],[0,.35,D*.5-d*.02+.02],0);for(let i=0;i<3;i++)g.B('wall2',[2.4,.18,.6],[0,.35+i*.0,d*.4+.3+i*.5-.5],1);
+ for(const s of[-1,1]){g.post('trim',s*w*.42,d*.4,5,.1,1);P(g,'box','cloth',[.04,1.2,.7],[s*w*.42+.38,4.2,d*.4],undefined,undefined,1);}
+ g.B('wall2',[w*.5,.5,.1],[0,0,d*.45],1);return {entry:{x:0,z:d*.42,width:1.6}};};
+/** Sandrill: strata stacks. Offset sandstone slabs with deep overhangs and wind-fins; the civic hall is a split monolith with a sun-slot and cantilever fins. */
+HOUSE.sandrill=g=>{const {w,d,r}=g;
+ for(let i=0;i<3;i++){const s=1-.24*i,ox=(r()-.5)*.9,oz=(r()-.5)*.6;P(g,'box',i%2?'wall2':'wall',[w*.82*s,1.4,d*.7*s],[ox,i*1.5,oz],[0,(r()-.5)*.35,0]);P(g,'box','trim',[w*.82*s+.5,.16,d*.7*s+.5],[ox,i*1.5+1.4,oz],[0,(r()-.5)*.2,0],undefined,1);}
+ g.B('accent',[.95,1.5,.12],[g.off*.4,0,d*.35+.04],0);P(g,'box','accent',[1.3,.2,.5],[g.off*.4,1.55,d*.35+.1],undefined,undefined,1);
+ for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,3.4,4),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
+ for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
+CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
+ for(const s of[-1,1])P(g,'box','wall',[w*.34,s<0?7:5.9,d*.7],[s*(w*.17+gap/2),0,-d*.05]);
+ P(g,'box','wall2',[gap+.4,1.4,d*.7],[0,0,-d*.05]);P(g,'cylinder','accent',[1.5,.18,1.5],[0,4.2,-d*.05],[Math.PI/2,0,0],14);
+ for(let i=0;i<5;i++)P(g,'box',i%2?'wall2':'wall',[w*(.9-i*.1),.35,1.4+i*.1],[(i%2?1:-1)*i*.3,5.9+i*.4+(i<1?1.1:0),-d*.05+((i%3)-1)*.5],[0,(i-2)*.22,0],undefined,1);
+ for(let i=0;i<9;i++)g.B('trim',[2.2,.3,.6],[-w*.36-.6,i*.65,d*.34-i*.0-i*.55*(d/9/.55)*.5],1);
+ P(g,'box','trim',[w*.9,.4,.8],[0,0,d*.32],undefined,undefined,1);g.B('accent',[1,2,.1],[-gap/2-w*.17,0,d*.3+.03],0);g.banner(w*.4,d*.34,6.4);return {entry:{x:-w*.2,z:d*.34,width:1.3}};};
+/** Kaaltun: plaster-platform houses under palm-thatch gables with carved lintels; the civic hall is a terraced plaster platform carrying a thatched hall, flanked by stelae. */
+HOUSE.kaaltun=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,ph=range(r,.8,1.1),h=range(r,1.9,2.3);
+ g.B('wall',[W,ph,D],[0,0,0],2);g.B('wall2',[W+.2,.14,D+.2],[0,ph,0],1);g.B('wall2',[W+.2,.14,D+.2],[0,0,0],0);
+ for(let i=0;i<3;i++)g.B('wall',[2.0-i*.0,.28,.5],[g.off*.3,i*.28*(ph/.85),D*.5+.25+(2-i)*.45],1);
+ g.B('wall',[W*.86,h,D*.78],[0,ph,0],2);for(const s of[-1,1])g.post('wall2',s*W*.43,D*.39,h+ph,.2,1);
+ g.B('wall2',[W*.88,.28,.2],[0,ph+h-.28,D*.39+.05],1);g.B('accent',[.9,1.55,.08],[g.off*.3,ph,D*.39+.03],0);
+ P(g,'prism','roof',[W*1.2,range(r,1.7,2.1),D*1.12],[0,ph+h,0]);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,D*.56],undefined,6,1);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,-D*.56],undefined,6,1);
+ return {entry:{x:g.off*.3,z:D*.5+1,width:1.2}};};
+CIVIC.kaaltun=g=>{const {w,d,r}=g;let y=0;
+ for(let i=0;i<3;i++){const k=1-i*.2;g.B(i%2?'wall':'wall2',[w*.92*k,1.0,d*.88*k],[0,y,-d*.02*i],2);g.B('trim',[w*.92*k+.12,.12,d*.88*k+.12],[0,y+1.0,-d*.02*i],1);y+=1.12;}
+ for(let i=0;i<8;i++)g.B('wall',[w*.26,.25,.5],[0,i*.4*(3.3/3.2),d*.44+.2+(8-i)*.35-.35],1);
+ const W=w*.44,D=d*.4,h=2.2,zc=-d*.06;for(const sx of[-1,1])for(const sz of[-1,1])g.post('wall2',sx*W*.46,zc+sz*D*.46,y+h,.22,2);
+ g.B('wall',[W*.9,h,D*.84],[0,y,zc],2);g.B('accent',[1.1,1.7,.08],[0,y,zc+D*.42+.02],0);g.B('wall2',[W,.3,D*.96],[0,y+h-.3,zc],1);
+ P(g,'prism','roof',[W*1.3,2.5,D*1.3],[0,y+h,zc]);P(g,'cone','accent',[.35,.8,.35],[0,y+h+2.4,zc+D*.65],undefined,6,1);P(g,'cone','accent',[.35,.8,.35],[0,y+h+2.4,zc-D*.65],undefined,6,1);
+ for(const s of[-1,1]){g.B('wall2',[.5,4.2,.45],[s*w*.43,0,d*.3],2);g.B('accent',[.7,.5,.5],[s*w*.43,4.2,d*.3],1);g.B('cloth',[.04,1.4,.7],[s*w*.43+.4*s,3.1,d*.3],1);}
+ g.banner(w*.1,d*.42,2.4);return {entry:{x:0,z:d*.47,width:2}};};
+/** Mekhari: stilt-house river folk. Woven houses on posts with a plank deck, ladder and upturned saddle roofs; the civic hall is a long stilt longhouse with tall upswept gable ends and a gangway. */
+const saddle=(g:G,W:number,D:number,y:number,rise:number,up:number)=>{P(g,'prism','roof',[W*1.12,rise,D*1.1],[0,y,0]);for(const s of[-1,1]){P(g,'cone','accent',[.26,.7+up*.6,.26],[0,y+rise*.5,s*(D*.55+.1)],[s*.5,0,0],6,1);}};
+HOUSE.mekhari=g=>{const {w,d,r}=g,W=w*.76*jit(r,.05),D=d*.68,st=range(r,1.5,1.9),y=st+.2,h=range(r,1.9,2.2);
+ for(let i=0;i<3;i++)for(const sz of[-1,1])g.post('trim',-W*.46+i*W*.46,sz*D*.46,st,.18,2);
+ g.B('wall2',[W+.4,.2,D+.8],[0,st,.1],2);g.B('wall',[W*.86,h,D*.74],[0,y,-D*.04],2);
+ for(let i=1;i<5;i++)g.B('wall2',[.05,h*.9,.05],[-W*.43+i*W*.172,y+.05,D*.33+.02],0);g.B('wall2',[W*.86,.06,.05],[0,y+h*.5,D*.33+.02],0);
+ g.B('accent',[.85,1.5,.08],[g.off*.3,y,D*.33+.03],0);for(const s of[-1,1])g.B('accent',[.55,.6,.06],[s*W*.3,y+1.0,D*.33+.03],0);
+ saddle(g,W,D,y+h,range(r,1.4,1.7),range(r,.5,.8));
+ g.B('wall2',[W+.4,.7,.07],[0,y,D*.5+.5],1);for(const s of[-1,1])g.post('trim',s*(W*.5+.1),D*.5+.5,y+.9,.08,1);
+ P(g,'box','trim',[.5,st+.7,.08],[g.off*.3+W*.28,0,D*.5+.9],[-.5,0,0],undefined,1);P(g,'sphere','wall2',[2.6,.5,.85],[-W*.8,0,D*.5+1.3],[0,.3,0],undefined,0);
+ return {entry:{x:g.off*.3,z:D*.5+1,width:1}};};
+CIVIC.mekhari=g=>{const {w,d,r}=g,W=w*.86,D=d*.44,st=2.1,y=st+.25,h=2.5;
+ for(let i=0;i<5;i++)for(const sz of[-1,1])g.post('trim',-W*.46+i*W*.23,sz*D*.46,st,.24,2);
+ g.B('wall2',[W+.6,.25,D+1.2],[0,st,.2],2);g.B('wall',[W*.92,h,D*.84],[0,y,-D*.04],2);
+ for(let i=1;i<9;i++)g.B('wall2',[.06,h*.88,.06],[-W*.46+i*W*.092,y+.05,D*.38+.03],0);g.B('wall2',[W*.92,.08,.06],[0,y+h*.55,D*.38+.03],0);
+ g.B('accent',[1.3,1.9,.1],[0,y,D*.38+.04],0);saddle(g,W,D*1.15,y+h,2.3,1.3);
+ g.B('wall2',[W+.6,.8,.08],[0,y,D*.5+.8],1);for(let i=0;i<=4;i++)g.post('trim',-W*.5+i*W*.25,D*.5+.8,y+.9,.09,1);
+ for(let i=0;i<9;i++)g.B('wall2',[1.6,.14,.6],[W*.16,i*.0+i*st/9*.9,D*.5+1.1+(9-i)*.58],1);
+ g.banner(-W*.42,D*.5+.8,y+3.6);return {entry:{x:0,z:D*.5+2,width:1.6}};};
+/** Skoldar: turf longhouses. A fieldstone footing, low timber wall and a turf-sod roof with crossed gable timbers and a smoke vent; the civic hall adds prow-tipped gable posts and a shield-hung porch. */
+HOUSE.skoldar=g=>{const {w,d,r}=g,W=w*.84*jit(r,.05),D=d*.7,fh=.55,h=range(r,.9,1.2),rise=range(r,1.7,2.0);
+ g.B('wall2',[W+.3,fh,D+.3],[0,0,0],2);g.B('wall2',[W*.96,h,D*.94],[0,fh,0],2);
+ P(g,'prism','roof',[W*1.1,rise,D*1.12],[0,fh+h,0]);
+ for(const s of[-1,1])P(g,'box','wall2',[.14,range(r,1.7,2.0),.14],[0,fh+h+rise*.52,D*.56],[s*.9,0,0],undefined,1);
+ g.B('wall2',[.5,.5,.5],[W*.2,fh+h+rise*.8,0],1);P(g,'prism','wall2',[.7,.3,.7],[W*.2,fh+h+rise*.8+.5,0],undefined,undefined,1);
+ g.B('accent',[.9,1.45,.1],[g.off*.3,fh,D*.47+.04],0);g.B('trim',[1.2,.12,.12],[g.off*.3,fh+1.45,D*.47+.05],0);for(const s of[-1,1])g.B('trim',[.12,1.5,.12],[g.off*.3+s*.55,fh,D*.47+.05],0);
+ for(let i=0;i<4;i++)g.B('wall2',[.1,h*.8,.1],[-W*.4+i*W*.27,fh,D*.47+.03],0);return {entry:{x:g.off*.3,z:D*.5+.3,width:1}};};
+CIVIC.skoldar=g=>{const {w,d,r}=g,W=w*.88,D=d*.6,fh=.7,h=1.5,rise=2.6;
+ g.B('wall2',[W+.5,fh,D+.5],[0,0,0],2);g.B('wall2',[W,h,D],[0,fh,0],2);
+ P(g,'prism','roof',[W*1.12,rise,D*1.14],[0,fh+h,0]);
+ for(const s of[-1,1]){const z=s*D*.58;P(g,'box','wall2',[.22,rise+1.5,.22],[0,fh+h-.1,z],[s*.75,0,0],undefined,1);P(g,'sphere','accent',[.5,.55,.5],[0,fh+h+rise*.9+.8,z+s*.7],undefined,undefined,1);}
+ for(let i=0;i<6;i++){g.B('wall2',[.1,h,.1],[-W*.45+i*W*.18,fh,D*.5+.03],0);P(g,'cylinder',i%2?'accent':'cloth',[.6,.08,.6],[-W*.4+i*W*.16,fh+h*.55,D*.5+.12],[Math.PI/2,0,0],undefined,10);}
+ g.B('accent',[1.3,2,.1],[0,fh,D*.5+.04],0);for(let i=0;i<3;i++)g.B('wall2',[2.6,.2,.6],[0,i*.0,D*.5+.3+(2-i)*.5-.2],1);
+ g.B('wall2',[.7,.7,.7],[W*.2,fh+h+rise*.85,0],1);P(g,'prism','wall2',[.9,.4,.9],[W*.2,fh+h+rise*.85+.7,0],undefined,undefined,1);g.banner(W*.42,D*.62,5);return {entry:{x:0,z:D*.55,width:1.5}};};
+/** Nilemark: whitewashed mudbrick blocks with parapets, roof stairs and palm pergolas; the civic hall is a gate of two battered towers before a columned court. */
+HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
+ g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);g.B('wall',[W,h,D],[0,.3,0],2);
+ for(const [x,z,sx,sz] of[[0,D/2-.12,W+.1,.25],[0,-D/2+.12,W+.1,.25],[W/2-.12,0,.25,D],[-W/2+.12,0,.25,D]] as number[][])g.B('wall',[sx,.4,sz],[x,.3+h,z],1);
+ P(g,'wedge','wall',[1.0,h*.95,2.4],[W*.5+.55,.3,-D*.1],[0,Math.PI/2,0],undefined,1);
+ for(const sx of[-1,1])for(const sz of[-1,1])g.post('wall2',sx*W*.28,sz*D*.25,h+1.9,.12,1);g.B('roof',[W*.7,.12,D*.62],[0,.3+h+1.85,0],1);
+ g.B('trim',[1.15,.14,.14],[g.off*.3,.3+1.75,D*.5+.04],0);for(const s of[-1,1])g.B('trim',[.14,1.8,.14],[g.off*.3+s*.53,.3,D*.5+.04],0);g.B('accent',[.92,1.65,.08],[g.off*.3,.3,D*.5+.03],0);
+ for(let i=0;i<3;i++)g.B('accent',[.3,.34,.06],[-W*.3+i*W*.3,.3+h*.72,D*.5+.03],0);for(const s of[-1,1])g.Cy('wall2',.5,.7,[g.off*.3+s*1.2,.3,D*.5+.4],0,8,.35);
+ return {entry:{x:g.off*.3,z:D*.5+.5,width:1}};};
+CIVIC.nilemark=g=>{const {w,d,r}=g,tw=w*.26,td=d*.34,zf=d*.28;
+ g.B('wall2',[w*.96,.35,d*.96],[0,0,0],2);
+ for(const s of[-1,1]){const x=s*w*.3;g.B('wall',[tw,3.8,td],[x,.35,zf],2);g.B('wall',[tw*.9,2.4,td*.9],[x,4.15,zf],2);g.B('trim',[tw*.95,.25,td*.95],[x,6.55,zf],1);g.B('wall2',[tw*.7,.5,.2],[x,6.8,zf+td*.45],0);g.post('trim',x,zf+td*.5,9.2,.1,1);P(g,'box','cloth',[.04,1.2,.8],[x+.42,8.1,zf+td*.5],undefined,undefined,1);}
+ g.B('wall',[w*.34,2.9,td*.8],[0,.35,zf],2);g.B('trim',[w*.34,.22,td*.8],[0,3.25,zf],1);g.B('accent',[1.5,2.3,.1],[0,.35,zf+td*.4+.03],0);g.B('trim',[2,.2,.14],[0,2.7,zf+td*.4+.05],0);
+ for(let i=0;i<6;i++)for(const s of[-1,1]){const x=s*(w*.12+(i%3)*w*.14),z=-d*.1-Math.floor(i/3)*d*.18;if(i<3||true){g.Cy('wall2',.62,2.8,[x,.35,z],2,10,.52);g.Cy('trim',.82,.22,[x,3.15,z],1,10);}}
+ g.B('wall',[w*.78,.3,d*.4],[0,3.37,-d*.14],1);g.B('wall',[w*.7,2.9,.3],[0,.35,-d*.34],2);for(let i=0;i<3;i++)g.B('wall2',[1.6,.2,.6],[0,i*.0,zf+td*.5+.3+(2-i)*.4],1);
+ return {entry:{x:0,z:zf+td*.5+1,width:1.6}};};
+/** Tigrane: baked-brick courtyard houses with vaulted rooms and pilasters; the civic hall is a three-tier brick terrace with a pilastered face, grand ramp and a vaulted shrine under a glazed band. */
+HOUSE.tigrane=g=>{const {w,d,r}=g,W=w*.88,D=d*.86,h=range(r,2.7,3.2),t=.42,rd=D*.46;
+ g.B('wall',[W,h,rd],[0,0,-D/2+rd/2],2);P(g,'sphere','wall2',[W*.96,1.9,rd*1.05],[0,h-.5,-D/2+rd/2]);
+ for(const s of[-1,1])g.B('wall',[t,h*.62,D-rd],[s*(W/2-t/2),0,D/2-(D-rd)/2],2);g.B('wall',[W*.34,h*.62,t],[-W*.33,0,D/2-t/2],2);g.B('wall',[W*.34,h*.62,t],[W*.33,0,D/2-t/2],2);
+ for(let i=0;i<5;i++)g.B('wall2',[.26,h,.22],[-W*.4+i*W*.2,0,-D/2+rd+.1],1);
+ g.B('trim',[W,.18,rd+.1],[0,h*.55,-D/2+rd/2],1);g.B('accent',[1.0,1.7,.1],[0,0,-D/2+rd+.04],0);g.B('wall2',[1.6,.3,.9],[0,0,0],0);
+ g.B('wall2',[W*.5,.14,.14],[0,h*.62,D/2-t/2],1);return {entry:{x:0,z:D/2,width:W*.3}};};
+CIVIC.tigrane=g=>{const {w,d,r}=g;let y=0;
+ for(let i=0;i<3;i++){const k=1-i*.22;g.B(i%2?'wall2':'wall',[w*.94*k,1.5,d*.9*k],[0,y,-d*.04*i],2);g.B('trim',[w*.94*k+.1,.16,d*.9*k+.1],[0,y+1.5,-d*.04*i],1);
+  if(i<2)for(let j=0;j<7;j++)g.B('wall2',[.34,1.5,.3],[-w*.94*k*.45+j*w*.94*k*.15,y,d*.9*k*.5-d*.04*i],1);y+=1.66;}
+ for(let i=0;i<10;i++)g.B('wall',[w*.22,.3,.55],[0,i*.5*(3.1/4.9)*1.0,d*.44+.1+(10-i)*.34],1);
+ const W=w*.4,D=d*.4,h=2.4,zc=-d*.1;g.B('wall',[W,h,D],[0,y,zc],2);P(g,'sphere','wall2',[W*.98,1.9,D*1.02],[0,y+h-.5,zc]);g.B('trim',[W+.06,.28,D+.06],[0,y+h*.55,zc],1);g.B('accent',[1.3,1.9,.1],[0,y,zc+D*.5+.03],0);
+ for(const s of[-1,1]){g.B('wall',[1.1,4,1.1],[s*w*.44,0,d*.36],2);g.B('trim',[1.3,.25,1.3],[s*w*.44,4,d*.36],1);g.banner(s*w*.44,d*.36,6);}
+ return {entry:{x:0,z:d*.46,width:1.8}};};
+/** Rusvolt: crossed-gable log halls with carved vermilion ridge-tips; the civic hall is a spruce-tier tent: stacked log tiers, each turned 45 degrees under a steep pyramid cap, ringed by horn spikes. */
+HOUSE.rusvolt=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.7,h=range(r,2.1,2.6),rise=range(r,1.9,2.4);
+ g.B('wall',[W,h,D],[0,0,0],2);for(const x of[-1,1])for(const z of[-1,1])g.B('wall2',[.34,h+.15,.34],[x*W*.5,0,z*D*.5],1);
+ for(let i=1;i<4;i++)g.B('wall2',[W+.1,.07,D+.1],[0,i*h/4,0],0);
+ P(g,'prism','roof',[W*1.12,rise,D*1.1],[0,h,0]);P(g,'prism','roof',[D*1.12,rise*.88,W*1.1],[0,h,0],[0,Math.PI/2,0]);
+ for(const s of[-1,1]){P(g,'cone','accent',[.34,.8,.34],[0,h+rise-.1,s*D*.56],undefined,6,1);P(g,'cone','accent',[.34,.8,.34],[s*W*.56,h+rise*.88-.1,0],undefined,6,1);}
+ g.B('accent',[.9,1.7,.08],[g.off*.3,0,D*.5+.02],0);g.post('wall2',-.9,D*.5+.7,h,.16,1);g.post('wall2',.9,D*.5+.7,h,.16,1);P(g,'wedge','roof',[2.2,.7,1.4],[0,h,D*.5+.4],undefined,undefined,1);
+ return {entry:{x:g.off*.3,z:D*.5+.8,width:1}};};
+CIVIC.rusvolt=g=>{const {w,d,r}=g,b=Math.min(w,d)*.82;
+ g.B('wall',[b,2.3,b],[0,0,0],2);for(const x of[-1,1])for(const z of[-1,1])P(g,'cone','accent',[.5,2.2,.5],[x*b*.52,0,z*b*.52],[x*.35,0,-z*.35],6,1);
+ let y=2.3;for(let i=0;i<4;i++){const s=b*.8*(.8**i),rot:V=[0,i%2?Math.PI/4:0,0];g.parts.push(part('box',matId(g.civ,'wall2') as Part['mat'],[s,1.3,s],[0,y,0],2,rot));g.B('wall',[s*1.04,.1,s*1.04],[0,y+.5,0],0,rot);
+  P(g,'pyramid','roof',[s*1.38,1.9,s*1.38],[0,y+1.3,0],rot);y+=1.3+.95;}
+ P(g,'cone','accent',[.5,2.2,.5],[0,y,0],undefined,6);P(g,'sphere','trim',[.5,.5,.5],[0,y+2.1,0],undefined,undefined,1);
+ g.door(0,b*.5+.02,1.3,2);g.banner(b*.55,b*.55,4.2);return {entry:{x:0,z:b*.5,width:1.4}};};
 export const ROLE_LIST:CivRole[]=['house','civic','granary','market'];
 /** Seeded individual imperfection: wall lean, uneven heights, size jitter, rubble and patches by wear. */
 function imperfect(g:G,parts:Part[],wear:number,r:Rng){
