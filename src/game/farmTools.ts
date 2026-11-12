@@ -1,3 +1,4 @@
+import {herdRules,isDraftSpecies} from './animalSpecies';
 import {packCapacityMultiplier} from './packAnimalState';
 import{claimFarmToolOwnership,releaseFarmToolOwnership}from'./farmToolOwnership';
 import{releaseTreeWorker}from'./workAllocation';
@@ -66,7 +67,7 @@ export function farmToolRequirement(g: Game, kind: FarmToolKind, team = 0): stri
   const spec = FARM_TOOLS[kind], t = g.tribe(team);
   if (t.age < spec.age && !(kind==='copperTools'&&t.copperExperiment)) return kind === 'ironTools' ? 'Iron farming tools need the Iron Age and four iron' : 'Copper farming tools need the Bronze Age and four copper';
   if (!workplaces(g, team, kind).length) return kind==='woodenArd'?'Finish a crafting shelter to make a wooden ard':kind === 'stoneHoe' ? 'Make stone hoes at a completed hearth, town hall or crafting shelter' : 'Finish a forge to shape metal farming tools';
-  if(kind==='woodenArd'&&!g.state.units.some(u=>u.team===team&&draftTractionReady(u)))return 'Train a real pack horse at a stable, then choose its adult handler to make an ard';
+  if(kind==='woodenArd'&&!g.state.units.some(u=>u.team===team&&draftTractionReady(u)))return 'Train a real draft animal at a stable, then choose its adult handler to make an ard';
   return null;
 }
 
@@ -87,7 +88,7 @@ export function beginFarmToolWork(g: Game, kind: FarmToolKind, team = 0, workpla
     (unitId === undefined || p.id === unitId) && (kind!=='woodenArd'||draftTractionReady(p)) && available(g, p) && !p.farmToolWork && improvement(p, kind))
     .sort((a, b) => Number(b.selected) - Number(a.selected) || Number(isFarmer(b)) - Number(isFarmer(a)))
     .find(p => reachableWorkplace(g, p, sites));
-  if (!u) return reject(kind==='woodenArd'?'Choose a free adult handler with their living trained pack horse, empty hands and a route to the crafting shelter':'Need an available adult with empty hands who can benefit from these tools and reach the workplace');
+  if (!u) return reject(kind==='woodenArd'?'Choose a free adult handler with their living trained draft animal, empty hands and a route to the crafting shelter':'Need an available adult with empty hands who can benefit from these tools and reach the workplace');
   if (t.wood < spec.wood || t.stone < spec.stone || t.copper < spec.copper || t.iron < spec.iron)
     return reject(`Need ${spec.wood} logs${spec.stone ? ` and ${spec.stone} stone` : ''}${spec.copper ? ` and ${spec.copper} copper` : ''}${spec.iron ? ` and ${spec.iron} iron` : ''}`);
   const b = reachableWorkplace(g, u, sites)!;
@@ -145,7 +146,7 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
   u.workReason = `${job.mode==='repair'?'Repairing':'Making'} ${FARM_TOOLS[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {
     u.farmTool = job.kind;u.farmToolCondition=1;releaseFarmToolOwnership(g,u,true); u.farmToolWork = undefined; u.order = 'idle';
-    u.workReason = job.kind==='woodenArd'?'Wooden ard ready — spring preparation with a trained horse; hand tending and harvest':`${FARM_TOOLS[job.kind].name} ready — faster sowing, tending and harvest work`;
+    u.workReason = job.kind==='woodenArd'?'Wooden ard ready — spring preparation with a trained draft animal; hand tending and harvest':`${FARM_TOOLS[job.kind].name} ready — faster sowing, tending and harvest work`;
     g.workBoard.reset();
     if (u.team === 0) { g.banner(u.workReason, 4); g.onSfx('place'); }
   }
@@ -156,7 +157,7 @@ export const DRAFT_TRACTION_RULES={practiceSeconds:120,startingMultiplier:1.4,ma
 /** Physical actor/horse eligibility, shared by crafting and actual traction work.
  * Tool ownership, condition and cultivation phase are checked by farmToolRate. */
 export function draftTractionReady(u:Unit):boolean{
- return u.type==='worker'&&u.hp>0&&!u.militia&&u.haulage==='pack'&&u.packAnimal?.species==='horse'&&u.packAnimal.hp>0&&
+ return u.type==='worker'&&u.hp>0&&!u.militia&&u.haulage==='pack'&&isDraftSpecies(u.packAnimal?.species)&&!!u.packAnimal&&u.packAnimal.hp>0&&
   !u.boat&&!u.prisoner&&!u.emergency&&!u.shelterId&&!u.resting;
 }
 
@@ -167,7 +168,7 @@ export function farmToolRate(u: FarmToolUnit, phase: number) {
    if(phase!==0||!draftTractionReady(u))return 1;
    const practice=Number.isFinite(u.draftPracticeSeconds)?Math.max(0,Math.min(1,(u.draftPracticeSeconds??0)/DRAFT_TRACTION_RULES.practiceSeconds)):0;
    const full=DRAFT_TRACTION_RULES.startingMultiplier+(DRAFT_TRACTION_RULES.maximumMultiplier-DRAFT_TRACTION_RULES.startingMultiplier)*practice;
-   const welfare=Math.max(0,Math.min(1,(packCapacityMultiplier(u)-1.25)/(3.5-1.25)));
+   const welfare=Math.max(0,Math.min(1,(packCapacityMultiplier(u)-1.25)/(herdRules(u.packAnimal?.species).packMultiplier-1.25)));
    return 1+(full-1)*farmToolCondition(u)*welfare;
   }
   const full=phase === 0 || phase === 1 ? FARM_TOOLS[u.farmTool].cultivation : phase === 2 ? FARM_TOOLS[u.farmTool].harvest : 1;return 1+(full-1)*farmToolCondition(u);

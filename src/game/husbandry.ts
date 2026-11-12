@@ -1,4 +1,4 @@
-import {herdRules} from './animalSpecies';
+import {herdRules,isDraftSpecies} from './animalSpecies';
 import {packAnimalFrom} from './packAnimalState';
 import {SHEEP_RULES,growFleece,newFleece} from './sheep';
 import{penWaterWorkAI,penNeedsWater,reconcilePenWater,drinkPenWater,releaseHusbandryKeeper,PEN_WATER_RULES}from'./penWater';
@@ -41,7 +41,7 @@ function available(g:Game,u:Unit,except?:'husbandryWork'|'tamingWork',searchPen?
   (except!=='tamingWork'||!Object.values(u.itemCargo||{}).some(n=>n>0)&&(!u.jobLock||u.foodRole===true))&&!hasTaskCommitment(u,except)&&(searching||['idle','hold','gather','return'].includes(u.order));
 }
 function keeper(g:Game,pen:number){return g.state.units.find(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='care'&&!u.husbandryWork.paused);}
-export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat'|'sheep'|'horse'='goat') {
+export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat'|'sheep'|'horse'|'cattle'='goat') {
  const pen=penAt(g,penId);if(!pen)return false;
  const speciesOf=(id:number)=>g.state.wildlife.find(a=>a.id===id)?.species||g.state.livestock?.find(a=>a.id===id)?.species;
  const paused=g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.tamingWork?.pen===penId&&speciesOf(u.tamingWork.animal)===species&&u.tamingWork.paused&&available(g,u,'tamingWork'));
@@ -68,15 +68,15 @@ export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat
  }
  g.banner(`Find a living wild ${species} and a free adult with a clear route to this pen`,5);return false;
 }
-export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'pack'|'shear'='care',species?:'goat'|'horse') {
+export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'pack'|'shear'='care',species?:'goat'|'horse'|'cattle') {
  const pen=penAt(g,penId);if(!pen)return false;
  const paused=g.state.units.find(u=>u.husbandryWork?.pen===penId&&u.husbandryWork.action===action&&(!species||g.state.livestock?.some(a=>a.id===u.husbandryWork!.animal&&a.species===species))&&u.husbandryWork.paused&&available(g,u,'husbandryWork'));if(paused){paused.husbandryWork!.paused=false;paused.order='hold';return true;}
  if(action==='care'){const r=penPastureReport(g,pen);if(r.keepers>=r.keepersNeeded){g.banner('This herd already has enough keepers assigned',3);return false;}}
- const animal=action==='care'?undefined:penAnimals(g,penId).filter(a=>(action!=='pack'||['goat','horse'].includes(a.species)&&(!species||a.species===species))&&(action!=='shear'||a.species==='sheep'&&(a.fleece?.units||0)>=1)&&insidePen(pen,a.x,a.z)&&g.state.time-a.born>=herdRules(a.species).maturity&&
+ const animal=action==='care'?undefined:penAnimals(g,penId).filter(a=>(action!=='pack'||['goat','horse','cattle'].includes(a.species)&&(!species||a.species===species))&&(action!=='shear'||a.species==='sheep'&&(a.fleece?.units||0)>=1)&&insidePen(pen,a.x,a.z)&&g.state.time-a.born>=herdRules(a.species).maturity&&
   !g.state.units.some(u=>u.hp>0&&u.husbandryWork?.animal===a.id)).sort((a,b)=>Number(a.sex==='female')-Number(b.sex==='female'))[0];
  if(action!=='care'&&!animal){g.banner(action==='shear'?'No unreserved adult sheep with fleece in this pen':'No unreserved eligible adult in this pen',4);return false;}
- const stable=animal?.species==='horse'&&action==='pack'?g.state.buildings.filter(b=>b.team===pen.team&&b.type==='stables'&&g.finished(b)&&g.workBoard.connected(g,pen.x,pen.z,b.x,b.z)).sort((a,b)=>Math.hypot(a.x-pen.x,a.z-pen.z)-Math.hypot(b.x-pen.x,b.z-pen.z))[0]:undefined;
- if(animal?.species==='horse'&&action==='pack'&&!stable){g.banner('Build a reachable stable to train this horse',4);return false;}
+ const stable=isDraftSpecies(animal?.species)&&action==='pack'?g.state.buildings.filter(b=>b.team===pen.team&&b.type==='stables'&&g.finished(b)&&g.workBoard.connected(g,pen.x,pen.z,b.x,b.z)).sort((a,b)=>Math.hypot(a.x-pen.x,a.z-pen.z)-Math.hypot(b.x-pen.x,b.z-pen.z))[0]:undefined;
+ if(isDraftSpecies(animal?.species)&&action==='pack'&&!stable){g.banner('Build a reachable stable to train this draft animal',4);return false;}
  const u=[...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected)).find(u=>available(g,u,'husbandryWork')&&
   (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0))&&
   (!['slaughter','shear'].includes(action)||!Object.values(u.itemCargo||{}).some(n=>n>0))&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
@@ -109,7 +109,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   let a=g.state.livestock?.find(a=>a.id===tame.animal&&a.hp>0);
   if(a?.ledBy!==undefined){finish(g,u);return true;}
   if(!a){
-   const wild=g.state.wildlife.find(a=>a.id===tame.animal&&a.hp>0&&['goat','sheep','horse'].includes(a.species));
+   const wild=g.state.wildlife.find(a=>a.id===tame.animal&&a.hp>0&&['goat','sheep','horse','cattle'].includes(a.species));
    if(!wild){finish(g,u);u.workReason='The animal is gone';return true;}
    u.workReason=`Approaching a ${wild.species} with feed`;
    if(Math.hypot(u.x-wild.x,u.z-wild.z)>2.4){u.tx=wild.x;u.tz=wild.z;g.steer(u,dt);return true;}
@@ -133,7 +133,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   u.tx=target.x;u.tz=target.z;g.steer(u,dt);animalStep(g,a,u,u.x,u.z,dt);
   if(insidePen(pen,a.x,a.z,.25)){
    finish(g,u);if(!u.expedition&&!keeper(g,pen.id)){u.husbandryWork={pen:pen.id,action:'care',phase:'pen',progress:0};u.order='hold';}
-   g.banner(a.species==='horse'?'Horse brought home. Keep pasture, feed and water available; train packs at a stable.':a.species==='sheep'?'Sheep brought home. Keep it fed, watered and tended to grow fleece.':'Goat brought home. A fed breeding pair can raise kids; mothers provide milk.',5);
+   g.banner(a.species==='cattle'?'Cattle brought home. Mothers need birth, feed, water and keeper care for milk; train draft work at a stable.':a.species==='horse'?'Horse brought home. Keep pasture, feed and water available; train packs at a stable.':a.species==='sheep'?'Sheep brought home. Keep it fed, watered and tended to grow fleece.':'Goat brought home. A fed breeding pair can raise kids; mothers provide milk.',5);
   }
   return true;
  }
@@ -162,15 +162,15 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
  u.workReason=w.action==='care'?'Tending the herd':w.action==='pack'?'Fitting a pack harness':w.action==='shear'?'Clipping sheep fleece':'Preparing an animal for meat';
  if(w.action==='pack'&&w.stable!==undefined){
   const a=g.state.livestock?.find(a=>a.id===w.animal&&a.hp>0&&a.pen===pen.id&&a.team===u.team&&a.ledBy===undefined),stable=g.state.buildings.find(b=>b.id===w.stable&&b.team===u.team&&b.type==='stables'&&b.hp>0);
-  if(!a||a.species!=='horse'||!stable){finish(g,u);u.workReason='Horse training lost its horse or stable';return true;}
-  if(!g.finished(stable)){w.paused=true;u.order='idle';u.workReason='Finish the stable before resuming horse training';return true;}
-  if(Math.hypot(a.x-u.x,a.z-u.z)>3){animalStep(g,a,u,u.x,u.z,dt);u.tx=a.x;u.tz=a.z;g.steer(u,dt);u.workReason='Collecting the pasture horse';return true;}
-  const spot=g.interactionSpot(u,stable);if(!spot){u.workReason='Horse training needs a clear stable entrance';return true;}u.tx=spot.x;u.tz=spot.z;
-  if(!g.buildingWorkReached(u,stable)){g.steer(u,dt);animalStep(g,a,u,u.x,u.z,dt);u.workReason='Leading the horse to the stable';return true;}
-  animalStep(g,a,u,u.x,u.z,dt);w.progress=Math.min(herdRules(a.species).harnessSeconds,w.progress+dt);u.workReason=`Training a pack horse · ${Math.floor(w.progress/herdRules(a.species).harnessSeconds*100)}%`;
+  if(!a||!isDraftSpecies(a.species)||!stable){finish(g,u);u.workReason='Draft training lost its animal or stable';return true;}
+  if(!g.finished(stable)){w.paused=true;u.order='idle';u.workReason='Finish the stable before resuming draft training';return true;}
+  if(Math.hypot(a.x-u.x,a.z-u.z)>3){animalStep(g,a,u,u.x,u.z,dt);u.tx=a.x;u.tz=a.z;g.steer(u,dt);u.workReason='Collecting the pasture animal';return true;}
+  const spot=g.interactionSpot(u,stable);if(!spot){u.workReason='Draft training needs a clear stable entrance';return true;}u.tx=spot.x;u.tz=spot.z;
+  if(!g.buildingWorkReached(u,stable)){g.steer(u,dt);animalStep(g,a,u,u.x,u.z,dt);u.workReason='Leading the draft animal to the stable';return true;}
+  animalStep(g,a,u,u.x,u.z,dt);w.progress=Math.min(herdRules(a.species).harnessSeconds,w.progress+dt);u.workReason=`Training ${a.species} for work · ${Math.floor(w.progress/herdRules(a.species).harnessSeconds*100)}%`;
   if(w.progress<herdRules(a.species).harnessSeconds)return true;
-  if(g.tribe(u.team).wood<herdRules(a.species).harnessWood){u.workReason='Horse harness needs six logs';return true;}
-  g.tribe(u.team).wood-=herdRules(a.species).harnessWood;u.packAnimal=packAnimalFrom(a);u.haulage='pack';g.state.livestock=g.state.livestock!.filter(c=>c.id!==a.id);finish(g,u);u.order='return';g.banner('Pack horse trained at the stable',4);return true;
+  if(g.tribe(u.team).wood<herdRules(a.species).harnessWood){u.workReason=`Harness needs ${herdRules(a.species).harnessWood} logs`;return true;}
+  g.tribe(u.team).wood-=herdRules(a.species).harnessWood;u.packAnimal=packAnimalFrom(a);u.haulage='pack';g.state.livestock=g.state.livestock!.filter(c=>c.id!==a.id);finish(g,u);u.order='return';g.banner(`${a.species==='cattle'?'Draft cattle':'Pack horse'} trained at the stable`,4);return true;
  }
  if(!atBuilding(g,u,pen,dt))return true;
  if(w.phase==='feed'){
@@ -209,9 +209,9 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   w.progress=0;
   const carcass=g.state.livestock?.find(a=>a.pen===pen.id&&carcassAvailable(g,a));
   if(carcass?.carcass){const n=Math.min(carryingCapacity(u,'food'),carcass.carcass.meat);carcass.carcass.meat-=n;u.carry=n;u.carryType='food';u.carryFood='meat';w.phase='deliver';return true;}
-  const animals=penAnimals(g,pen.id);let milk=0,room=carryingCapacity(u,'food');
+  const animals=penAnimals(g,pen.id).filter(a=>insidePen(pen,a.x,a.z));let milk=0,room=carryingCapacity(u,'food');
   if(animals.reduce((n,a)=>n+a.milk,0)<1)return true;
-  for(const a of animals){const n=a.species==='goat'?Math.min(a.milk,room-milk):0;milk+=n;a.milk-=n;}
+  for(const a of animals){const n=herdRules(a.species).milkPerSecond>0?Math.min(a.milk,room-milk):0;milk+=n;a.milk-=n;}
   if(milk>=1){u.carry=milk;u.carryType='food';u.carryFood='milk';w.phase='deliver';}
  }
  return true;
@@ -266,9 +266,9 @@ export function tickHusbandry(g:Game,dt:number) {
     if(a.pregnancy>=herdRules(a.species).gestation&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity&&livestock.length<PEN_RULES.maximumAnimalsTotal){
      a.pregnancy=0;a.lactatingUntil=g.state.time+HERD.lactation;
      const id=g.id();livestock.push({...a,id,sex:id%2?'female':'male',born:g.state.time,tamedAt:g.state.time,milk:0,pregnancy:0,lactatingUntil:0,hp:a.maxHp,hunger:5,thirstSeconds:0,adultScale:a.adultScale??1,scale:(a.adultScale??1)*.6,...(a.species==='sheep'?{fleece:newFleece()}: {})});occupied+=herdRules(a.species).places;
-     if(a.team===0)g.banner(a.species==='horse'?'A foal was born':a.species==='sheep'?'A lamb was born':'A kid was born',4);
+     if(a.team===0)g.banner(a.species==='cattle'?'A calf was born':a.species==='horse'?'A foal was born':a.species==='sheep'?'A lamb was born':'A kid was born',4);
     }
-    if(a.species==='goat'&&(a.lactatingUntil||0)>g.state.time)a.milk=Math.min(6,a.milk+dt*.025);
+    if(herdRules(a.species).milkPerSecond>0&&(a.lactatingUntil||0)>g.state.time)a.milk=Math.min(herdRules(a.species).milkCapacity,a.milk+dt*herdRules(a.species).milkPerSecond);
    }
    a.scale=(a.adultScale??1)*(.6+.4*Math.min(1,(g.state.time-a.born)/herdRules(a.species).maturity));
   }
