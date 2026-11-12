@@ -1,4 +1,4 @@
-import {recordTradedTeachingDelivery} from './tradedTeaching';
+import {recordTradedTeachingDelivery,tradedMethodSourcesForPerson,retainTradedMethodSources,type TradedMethodSource} from './tradedTeaching';
 import type {Game} from './sim';
 import {capturedMethodSourcesForPerson,type CapturedMethodSource} from './capturedKnowledge';
 import{handedOver}from'./communityHandoverValidation';
@@ -9,7 +9,7 @@ import {isDependent} from './settlement';
 import {workRuntime} from './workRuntime';
 
 export const PRODUCTION_PRACTICE_RULES={mentorSuccessfulBatches:3,ownRatePerBatch:.025,taughtRatePerBatch:.0125,maximumRateBonus:.2,minimumContributionFraction:.25,observationFraction:.5,maximumObservationSeconds:30,maximumContributors:32} as const;
-export type ProductionSkill={successfulBatches:number;taughtBatches:number;observedSeconds:number;lastTaughtAt?:number;lastTeacherId?:number;methodSources?:CapturedMethodSource[]};
+export type ProductionSkill={successfulBatches:number;taughtBatches:number;observedSeconds:number;lastTaughtAt?:number;lastTeacherId?:number;methodSources?:CapturedMethodSource[];tradedSources?:TradedMethodSource[]};
 export type ProductionDemonstration={batches:number;failedBatches:number;usefulOutputs:number;firstAt:number;lastAt:number;lastSuccessfulAt?:number;lastFailedAt?:number;makers:number[]};
 export type ProductionApprentice={version:1;projectId:number;teacherId:number;workplace:number;recipe:ProductionRecipe;phase:'traveling'|'watching'|'waiting'|'paused';observedSeconds:number;lastProgress:number;started:number};
 const validRecipe=(r:string):r is ProductionRecipe=>Object.hasOwn(PRODUCTION_RECIPES,r);
@@ -47,7 +47,7 @@ export function recordProductionPractice(g:Game,project:ProductionProject,_carri
  for(const maker of makers){if(!history.makers.includes(maker.id)&&history.makers.length<16)history.makers.push(maker.id);const u=g.state.units.find(u=>u.id===maker.id&&u.team===p.team&&freeWorker(g,u));if(!u||!useful)continue;u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.successfulBatches++;}
  recordTradedTeachingDelivery(g,p,useful,makers.map(m=>m.id));
  for(const u of g.state.units){const w=u.productionApprentice;if(!w||w.projectId!==p.id)continue;const teacher=g.state.units.find(person=>person.id===w.teacherId&&person.team===p.team&&freeWorker(g,person)),qualified=useful>0&&freeWorker(g,u)&&u.team===p.team&&!!teacher&&w.phase!=='paused'&&makers.some(m=>m.id===w.teacherId)&&w.observedSeconds+1e-8>=observationRequired(p.recipe);
-  if(qualified){u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.taughtBatches++;skill.observedSeconds+=w.observedSeconds;skill.lastTaughtAt=g.state.time;skill.lastTeacherId=w.teacherId;retainMethodSources(skill,capturedMethodSourcesForPerson(g.state,teacher!,p.recipe).filter(source=>source.learnedAt<=w.started),g.state.time);}
+  if(qualified){u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.taughtBatches++;skill.observedSeconds+=w.observedSeconds;skill.lastTaughtAt=g.state.time;skill.lastTeacherId=w.teacherId;retainMethodSources(skill,capturedMethodSourcesForPerson(g.state,teacher!,p.recipe).filter(source=>source.learnedAt<=w.started),g.state.time);retainTradedMethodSources(skill,tradedMethodSourcesForPerson(g.state,teacher!,p.recipe).filter(source=>source.learnedAt<=w.started),g.state.time,w.teacherId,p.id);}
   finishLesson(g,u,qualified?`Learned ${r.name.toLowerCase()} from actual observed work and delivered output`:'The batch did not complete a demonstrated lesson',qualified);
  }
 }
