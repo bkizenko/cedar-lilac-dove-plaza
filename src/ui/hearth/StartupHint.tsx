@@ -9,7 +9,7 @@ export function StartupHint({onOpenMenu}:{onOpenMenu:()=>void}){
  if(!show)return null;
  const dismiss=()=>{remember();setShow(false);};
  return <div className="hw-hint" role="note" aria-label="Display options hint">
-  <span>Looks and feel are yours to change: interface style, map style and world graphics live in <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenMenu();}}>Menu</button>. The old look stays available.</span>
-  <button type="button" className="hw-hint-x" aria-label="Dismiss hint" onClick={dismiss}><X size={16}/></button>
+  <span>Interface style and graphics: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenMenu();}}>Menu</button></span>
+  <button type="button" className="hw-hint-x" aria-label="Dismiss hint" onClick={dismiss}><X size={22}/></button>
  </div>;
 }

@@ -1,0 +1,41 @@
+<!-- size 1440x520 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Top bar: icon first</title><link rel="stylesheet" href="mock.css">
+<style>
+body{height:520px;background:#5f7a43 url(terrain-close.jpg) center/cover}
+.strip{position:absolute;left:0;right:0;height:96px}
+.cap{position:absolute;left:14px;font:700 15px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 11px;border-radius:8px}
+.old{top:30px;height:78px;overflow:hidden}.old img{width:1440px;display:block;margin-top:-4px}
+.res{position:absolute;left:14px;top:176px;display:flex;gap:6px;padding:6px;align-items:stretch}
+.cell{display:grid;grid-template-columns:auto auto;grid-template-rows:auto 8px;column-gap:10px;row-gap:5px;align-items:center;padding:8px 14px 8px 10px;border-radius:12px;min-width:118px;position:relative}
+.cell svg{width:42px;height:42px;grid-row:1/3}
+.cell b{font-size:32px;line-height:1;font-weight:750;font-variant-numeric:tabular-nums}
+.cell .m{grid-column:2;height:7px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden}.cell .m i{display:block;height:100%;border-radius:4px}
+.cell.hot{background:rgba(244,162,135,.14);outline:2px solid rgba(244,162,135,.6)}
+.trend{font-size:15px;font-weight:700;margin-left:4px;vertical-align:middle}
+.flag{display:flex;align-items:center;gap:10px;padding:0 16px;height:78px;font-size:22px;font-weight:700;position:absolute;left:14px;top:176px}
+.time{position:absolute;right:14px;top:176px;display:flex;align-items:center;gap:14px;padding:10px 14px}
+.time .dial{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) 0 38%,rgba(0,0,0,.4) 0);position:relative}
+.time .dial span{width:52px;height:52px;border-radius:50%;background:var(--wood-800);display:grid;place-items:center;color:var(--gold-2)}
+.time .t{font-size:32px;font-weight:750;line-height:1}.time .s{font-size:16px;color:var(--dim)}
+.sp{display:flex;gap:6px}
+.tipbox{position:absolute;left:132px;top:290px}
+.tipbox:before{content:"";position:absolute;left:36px;top:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--parch)}
+.legend{position:absolute;left:14px;bottom:14px;right:14px;display:flex;gap:30px;font-size:17px}
+.legend b{color:var(--gold-2)}
+</style></head><body>
+<div class="cap" style="top:8px">TODAY (Hearth top bar, before)</div>
+<div class="strip old"><img src="../before/worker.jpg" alt=""></div>
+<div class="cap" style="top:150px;left:14px">PROPOSED: icon first, bigger glyphs, a meter under every number, no words</div>
+<div class="panel flag" style="left:14px"><span class="medal" style="width:52px;height:52px">{{Flag:30}}</span></div>
+<div class="panel res" style="left:110px">
+ <div class="cell">{{Wheat:42}}<b style="color:#f1cf6e">276<span class="trend good">▲</span></b><span class="m"><i style="width:72%;background:#f1cf6e"></i></span></div>
+ <div class="cell">{{TreePine:42}}<b style="color:#d0a36c">100</b><span class="m"><i style="width:40%;background:#d0a36c"></i></span></div>
+ <div class="cell">{{Mountain:42}}<b style="color:#cfcabd">40</b><span class="m"><i style="width:20%;background:#cfcabd"></i></span></div>
+ <div class="cell hot">{{Droplets:42}}<b style="color:var(--bad)">4<span class="trend bad">▼</span></b><span class="m"><i style="width:8%;background:var(--bad)"></i></span></div>
+ <div class="cell">{{Users:42}}<b>5<span style="font-size:22px;color:var(--dim)">/6</span></b><span class="m"><i style="width:83%;background:var(--text)"></i></span></div>
+</div>
+<div class="panel time"><div class="dial"><span>{{Sun:30}}</span></div><div><div class="t">06:42</div><div class="s">Spring · Y1</div></div>
+ <div class="sp"><span class="btn">{{Pause:28}}</span><span class="btn on">{{Play:28}}</span><span class="btn">{{FastForward:28}}</span><span class="btn">{{Menu:28}}</span></div></div>
+<div class="tip tipbox"><b>Water 4 L</b>Lasts about 1 day. Build a well or dig near the river.</div>
+<div class="legend"><span><b>Glyph 42 px</b> (was 28), number 32 px (was 22)</span><span><b>Meter</b> = days of supply; red when under 3 days</span><span><b>Words</b> only in the hover tooltip</span></div>
+</body></html>

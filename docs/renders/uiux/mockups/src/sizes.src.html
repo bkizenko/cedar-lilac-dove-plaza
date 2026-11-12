@@ -1,0 +1,36 @@
+<!-- size 1440x830 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Size floor</title><link rel="stylesheet" href="mock.css">
+<style>
+body{height:830px;background:#2a2118;padding:28px 32px}
+h1{margin:0 0 6px;font-size:34px}
+.sub{color:var(--dim);margin-bottom:22px;font-size:19px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.box{padding:18px;display:grid;gap:14px}
+.box h3{margin:0;font-size:22px;color:var(--gold-2)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cmp>div{background:rgba(0,0,0,.28);border-radius:12px;padding:14px;display:grid;gap:10px;align-content:start}
+.cmp small{font:700 14px/1 system-ui;color:var(--dim);letter-spacing:.06em}
+.old *{font-size:inherit}
+.ex{display:flex;align-items:center;gap:10px}
+.frame{outline:2px dashed rgba(244,162,135,.9);outline-offset:3px;border-radius:6px}
+.frame.ok{outline-color:rgba(180,217,140,.9)}
+table{border-collapse:collapse;width:100%;font-size:19px}
+td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{color:var(--dim);font-size:16px}
+td b{color:var(--gold-2)}
+.tapold{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center}.tapold svg{width:18px;height:18px}
+</style></head><body>
+<h1>The size floor</h1><div class="sub">One rule, one place: three tokens. Nothing in Hearth may be smaller than this, and CI can check it.</div>
+<div class="g">
+ <div class="panel box"><h3>Text</h3>
+  <div class="cmp"><div class="old"><small>BELOW THE FLOOR</small><span style="font-size:12px">Gather berries and fish (12 px)</span><span style="font-size:13px">Condition 100% · Stone (13 px)</span><span class="frame" style="font-size:14px;width:max-content">Spring · Y1 · 12°C (14 px)</span></div>
+  <div><small>FLOOR 16 PX</small><span style="font-size:16px">Gather berries and fish (16 px)</span><span style="font-size:18px">Body and chips (18 px)</span><span class="frame ok" style="font-size:20px;width:max-content;font-weight:700">Headings and names (20 px+)</span></div></div></div>
+ <div class="panel box"><h3>Icons and tap targets</h3>
+  <div class="cmp"><div><small>BELOW THE FLOOR</small><div class="ex"><span class="tapold frame">{{Info:18}}</span><span class="dim" style="font-size:15px">18 px icon in 32 px box</span></div><div class="ex"><span class="chip" style="min-height:32px;font-size:14px;padding:2px 10px">{{Heart:18}}100%</span></div></div>
+  <div><small>FLOOR 24 PX ICON, 48 PX TAP</small><div class="ex"><span class="btn frame ok" style="width:48px;height:48px">{{Info:30}}</span><span class="dim" style="font-size:16px">30 px in 48 px</span></div><div class="ex"><span class="chip">{{Heart:24}}100%</span></div></div></div></div>
+ <div class="panel box" style="grid-column:1/3"><h3>Tokens (shipped in hearth.css)</h3>
+  <table><tr><th>Token</th><th>Was</th><th>Now</th><th>Rule</th></tr>
+  <tr><td><b>--hw-fs-s</b> (smallest text)</td><td>14 px</td><td>16 px</td><td>No text under 16 px, including legacy sub-panels (floor applied to .hw-legacy)</td></tr>
+  <tr><td><b>--hw-ico-s / --hw-ico / --hw-ico-l</b></td><td>16 to 28 px</td><td>24 / 30 / 38 px</td><td>Chips 24, buttons 30, dock and tiles 38, top bar 34</td></tr>
+  <tr><td><b>--hw-hit</b></td><td>48 px (many 44)</td><td>52 px</td><td>Every control 48 px minimum; 44 px only in the dense phone speed row</td></tr>
+  <tr><td><b>Words</b></td><td>whole sentences</td><td>one word or a number</td><td>Anything longer lives in the hover or long-press tooltip</td></tr></table></div>
+</div></body></html>

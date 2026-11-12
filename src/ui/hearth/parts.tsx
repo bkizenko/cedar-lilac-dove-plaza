@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
+import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {BUILDINGS} from '@/game/constants';
@@ -19,18 +19,11 @@ import {SeasonReport} from '../SeasonReport';
 import {housingAdoptionIssue,HOUSING_RULES} from '../../game/housing';
 import {buildingHelp} from '../buildingHelp';
 import {shortName,SelectionDetails,resWord} from '../Hud';
+import {CommanderStrip,BoatStrip} from './commandPanels';
 import {RES_ICON,RES_NAME,bldIcon,PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,FORMATION_ICON,ago,freshness} from './icons';
 
-export const cx=(...a:(string|false|null|undefined)[])=>a.filter(Boolean).join(' ');
-
-/** Round or square icon button, 44px minimum hit area; label is always available to assistive tech and hover. */
-export function IconBtn({label,tip,onClick,active,children,className,disabled,small}:{label:string;tip?:string;onClick:()=>void;active?:boolean;children:ReactNode;className?:string;disabled?:boolean;small?:boolean}){
- return <GameTooltip title={label} description={tip}><button type="button" className={cx('hw-btn',small&&'hw-btn-s',active&&'is-on',className)} aria-label={label} aria-pressed={active===undefined?undefined:active} disabled={disabled} onClick={onClick}>{children}</button></GameTooltip>;
-}
-/** Icon + number pill. */
-export function Stat({icon,value,label,tone,className}:{icon:ReactNode;value:ReactNode;label:string;tone?:'bad'|'good'|'warn';className?:string}){
- return <GameTooltip title={label}><span className={cx('hw-stat',tone&&'t-'+tone,className)} role="img" aria-label={`${label} ${typeof value==='string'||typeof value==='number'?value:''}`}>{icon}<b>{value}</b></span></GameTooltip>;
-}
+import {cx,IconBtn,Stat} from './kit';
+export {cx,IconBtn,Stat};
 
 /* ---------- top bar ---------- */
 export function ResourceBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|null;onOpen:(s:'council'|'stores')=>void}){
@@ -166,60 +159,75 @@ function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
    <IconBtn label={hud.raidName?`Raid ${hud.raidName}`:'Raid a camp'} tip="Move or stop to withdraw" onClick={()=>engine.raidRival()}><Swords size={26}/></IconBtn>
    <IconBtn label="Halt" onClick={()=>engine.halt()}><Hand size={26}/></IconBtn>
    <IconBtn label="Arm adults" tip={`${hud.spears+hud.bows+hud.blades} weapons ready`} onClick={()=>engine.callToArms()}><Sword size={26}/></IconBtn></div>
-  {c?.enabled&&c.flags.formations&&<div className="hw-row" role="group" aria-label="Formation"><span className="hw-row-label">Formation</span>
+  <div className="hw-row">
+  {c?.enabled&&c.flags.formations&&<div className="hw-row" role="group" aria-label="Formation">
    {c.formations.map(f=>{const I=FORMATION_ICON[f.kind];return <IconBtn key={f.kind} label={f.name} tip={`hit ×${f.offense.toFixed(2)} · pace ×${f.pace.toFixed(2)} · melee taken ×${f.melee.toFixed(2)} · arrows taken ×${f.ranged.toFixed(2)}`} active={c.preferred===f.kind} onClick={()=>send({kind:'set-formation',formation:f.kind})}>{I({size:24})}</IconBtn>;})}</div>}
-  {c?.enabled&&c.flags.guardDuty&&units.length>0&&<div className="hw-row" role="group" aria-label="Guard duty"><span className="hw-row-label">Guard</span>
+  {c?.enabled&&c.flags.formations&&c.flags.guardDuty&&units.length>0&&<span className="hw-sep" aria-hidden="true"/>}
+  {c?.enabled&&c.flags.guardDuty&&units.length>0&&<div className="hw-row" role="group" aria-label="Guard duty">
    <IconBtn label="Stand watch here" tip="Armed adults hold this spot" active={units.every(u=>duty(u.id)==='post')} onClick={()=>units.forEach(u=>send({kind:'guard-duty',unitId:u.id,duty:'post'}))}><Shield size={24}/></IconBtn>
    <IconBtn label="Patrol here" tip="Walk a loop around this spot" active={units.every(u=>duty(u.id)==='patrol')} onClick={()=>units.forEach(u=>send({kind:'guard-duty',unitId:u.id,duty:'patrol'}))}><Footprints size={24}/></IconBtn>
    <IconBtn label="Stand down" tip="Back to ordinary work" disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
    {units.some(u=>duty(u.id)==='escort')&&<span className="hw-chip">Escort</span>}</div>}
+  </div>
  </div>;
 }
+/** One selection card for every kind (person, crowd, building, tree/fish, boat): medal + name + hp bar, up to four icon stats,
+ * context rows (work, military, command, hull), one action row. Details are one tap away; the legacy sheet is behind the last button. */
+const JOB_ICON:Record<string,ReactNode>={food:<Wheat size={22}/>,wood:<RES_ICON.wood size={22}/>,stone:<RES_ICON.stone size={22}/>,copper:<RES_ICON.copper size={22}/>,iron:<RES_ICON.iron size={22}/>,hunt:<Footprints size={22}/>,drill:<Sword size={22}/>,hold:<Hand size={22}/>};
+export function selectionStats(sel:HudSnapshot['selection'],hud:HudSnapshot,count=0){
+ const out:{k:string;icon:ReactNode;value:ReactNode;label:string;tone?:'bad'|'good'|'warn'}[]=[];
+ if(sel.kind==='units')out.push({k:'n',icon:<Users size={22}/>,value:count||'',label:'People selected'});
+ if(hud.workerSelected&&hud.job&&JOB_ICON[hud.job])out.push({k:'job',icon:JOB_ICON[hud.job],value:'',label:`Job: ${hud.job==='hold'?'resting':hud.job}`});
+ if(sel.carry)out.push({k:'carry',icon:<Package size={22}/>,value:sel.carry.replace(/^Carrying\s*/i,''),label:sel.carry});
+ if(sel.queue)out.push({k:'queue',icon:<ClipboardList size={22}/>,value:sel.queue,label:sel.queue});
+ return out.slice(0,4);
+}
 export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engine|null;onOffer:(t:number)=>void}){
- const sel=hud.selection,[more,setMore]=useState(false),[info,setInfo]=useState(false);
- useEffect(()=>{setMore(false);setInfo(false);},[sel.kind,sel.name,sel.buildingId]);
+ const sel=hud.selection,[more,setMore]=useState(false),[info,setInfo]=useState(false),[tab,setTab]=useState('');
+ useEffect(()=>{setMore(false);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
  if(sel.kind==='none')return null;
  const hp=sel.maxHp>0?Math.round(100*sel.hp/sel.maxHp):0;
  const person=sel.kind==='unit'||sel.kind==='units';
- const icon=sel.kind==='building'?bldIcon(sel.type,36):sel.kind==='resource'?(sel.type==='tree'?<RES_ICON.wood size={36}/>:sel.type==='fish'?bldIcon('dock',36):<RES_ICON.stone size={36}/>):sel.kind==='boat'?bldIcon('dock',36):<Users size={36}/>;
+ const icon=sel.kind==='building'?bldIcon(sel.type,40):sel.kind==='resource'?(sel.type==='tree'?<RES_ICON.wood size={40}/>:sel.type==='fish'?bldIcon('dock',40):<RES_ICON.stone size={40}/>):sel.kind==='boat'?bldIcon('dock',40):<Users size={40}/>;
  const own=sel.team===0;
  const showJobs=person&&hud.workerSelected>0;
- return <section className={cx('hw-sel',more&&'is-open')} aria-label={`Selected: ${sel.name}`}>
+ const hpLabel=sel.kind==='resource'&&sel.type==='fish'?`${sel.hp}/${sel.maxHp}`:`${hp}%`;
+ const stats=selectionStats(sel,hud,engine?.game.selectedUnits().length??0);
+ const mil=person&&(hud.militarySelected>0||hud.militiaSelected>0),cmdOk=own&&(mil||sel.kind==='boat');
+ const tabs=[showJobs&&{id:'work',label:'Work',icon:<Hammer size={26}/>},mil&&{id:'fight',label:'Fight',icon:<Swords size={26}/>},cmdOk&&{id:'command',label:sel.kind==='boat'?'Hull':'Command',icon:sel.kind==='boat'?<Anchor size={26}/>:<Flag size={26}/>}].filter(Boolean) as {id:string;label:string;icon:ReactNode}[];
+ const ctx=tabs.find(t=>t.id===tab)?.id??(mil?'fight':tabs[0]?.id);
+ return <section className={cx('hw-sel',more&&'is-open')} data-kind={sel.kind} aria-label={`Selected: ${sel.name}`}>
   <header className="hw-sel-head">
    <span className="hw-medal">{icon}</span>
    <div className="hw-sel-title"><h2>{sel.name}</h2>
-    <div className="hw-sel-meta">
-     <span className={cx('hw-chip',hp<35&&'t-bad')} title="Condition"><Heart size={18}/>{sel.kind==='resource'&&sel.type==='fish'?`${sel.hp}/${sel.maxHp}`:`${hp}%`}</span>
-     {sel.carry&&<span className="hw-chip"><Package size={18}/>{sel.carry.replace(/^Carrying\s*/i,'')}</span>}
-     {sel.queue&&<span className="hw-chip" title="Queue"><ClipboardList size={18}/>{sel.queue}</span>}
-     {!!hud.workerSelected&&hud.job&&<span className="hw-chip">{hud.job}</span>}
-    </div>
-   </div>
-   <IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={22}/></IconBtn>
-   <IconBtn label="Deselect" tip="Esc" onClick={()=>engine?.clearSelection()} small><X size={22}/></IconBtn>
+    <div className={cx('hw-bar',hp<35&&'is-low')} role="progressbar" aria-label={`Condition ${hpLabel}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={100} title={`Condition ${hpLabel}`}><i style={{width:`${hp}%`}} className={hp<35?'t-bad':''}/></div></div>
+   <IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={24}/></IconBtn>
+   <IconBtn label="Deselect" tip="Esc" onClick={()=>engine?.clearSelection()} small><X size={24}/></IconBtn>
   </header>
-  <div className="hw-bar" role="progressbar" aria-label="Condition" aria-valuenow={hp} aria-valuemin={0} aria-valuemax={100}><i style={{width:`${hp}%`}} className={hp<35?'t-bad':''}/></div>
+  {stats.length>0&&<div className="hw-sel-meta">{stats.map(s=><Stat key={s.k} icon={s.icon} value={s.value} label={s.label} tone={s.tone} className="hw-chip"/>)}</div>}
   {info&&<p className="hw-info">{sel.info}</p>}
-  {showJobs&&<div className="hw-jobs" role="group" aria-label="Assign work">{JOBS.filter(j=>!j.need||j.need(hud)).map(j=><GameTooltip key={j.id} title={j.label} description={JOB_TIP[j.id]}><button type="button" className={cx('hw-job',hud.job===j.id&&'is-on')} aria-pressed={hud.job===j.id} aria-label={j.label} onClick={()=>engine?.assignJob(j.id as never)}>{j.icon}<span>{j.label}</span></button></GameTooltip>)}</div>}
-  {engine&&person&&(hud.militarySelected>0||hud.militiaSelected>0)&&<MilitaryPanel hud={hud} engine={engine}/>}
+  {tabs.length>1&&<div className="hw-ctx" role="tablist" aria-label="Orders">{tabs.map(t=><GameTooltip key={t.id} title={t.label}><button type="button" role="tab" aria-selected={ctx===t.id} aria-label={t.label} className={cx('hw-ctx-tab',ctx===t.id&&'is-on')} onClick={()=>setTab(t.id)}>{t.icon}<span>{t.label}</span></button></GameTooltip>)}</div>}
+  {ctx==='work'&&showJobs&&<div className="hw-jobs" role="group" aria-label="Assign work">{JOBS.filter(j=>!j.need||j.need(hud)).map(j=><GameTooltip key={j.id} title={j.label} description={JOB_TIP[j.id]}><button type="button" className={cx('hw-job',hud.job===j.id&&'is-on')} aria-pressed={hud.job===j.id} aria-label={j.label} onClick={()=>engine?.assignJob(j.id as never)}>{j.icon}<span>{j.label}</span></button></GameTooltip>)}</div>}
+  {ctx==='fight'&&engine&&mil&&<MilitaryPanel hud={hud} engine={engine}/>}
+  {ctx==='command'&&engine&&cmdOk&&<>{sel.kind==='boat'&&<BoatStrip engine={engine}/>}<CommanderStrip engine={engine}/></>}
   <div className="hw-actions">
-   {sel.kind==='building'&&own&&!sel.completed&&engine?.game.state.selBld&&<button type="button" className="hw-primary" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}><Hammer size={22}/>Build now</button>}
-   {sel.kind==='resource'&&sel.type==='tree'&&engine&&<button type="button" className="hw-primary" onClick={()=>{const t=engine.game.selectedResource;if(t?.kind==='tree'){engine.game.markChop([t.id],false);engine.pushHud();}}}><Axe size={22}/>Fell tree</button>}
-   {hud.idleWorkers>0&&sel.kind!=='boat'&&<button type="button" className="hw-btn-wide" onClick={()=>engine?.focusIdle()}><Users size={22}/>{hud.idleWorkers} idle</button>}
-   {sel.canRecycle&&<button type="button" className="hw-btn-wide" onClick={()=>engine?.recycle()}><Recycle size={22}/>{sel.planned?'Cancel plan':'Recycle'}</button>}
-   {person&&<><IconBtn label="Previous person" tip="Shift+," onClick={()=>engine?.cycleVillager(-1)}><ChevronLeft size={24}/></IconBtn><IconBtn label="Next person" tip="," onClick={()=>engine?.cycleVillager(1)}><ChevronRight size={24}/></IconBtn></>}
-   <button type="button" className="hw-btn-wide hw-more" aria-expanded={more} onClick={()=>setMore(v=>!v)}><ClipboardList size={22}/>{more?'Less':'More orders'}</button>
+   {sel.kind==='building'&&own&&!sel.completed&&engine?.game.state.selBld&&<button type="button" className="hw-primary" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}><Hammer size={26}/>Build</button>}
+   {sel.kind==='resource'&&sel.type==='tree'&&engine&&<button type="button" className="hw-primary" onClick={()=>{const t=engine.game.selectedResource;if(t?.kind==='tree'){engine.game.markChop([t.id],false);engine.pushHud();}}}><Axe size={26}/>Fell</button>}
+   {hud.idleWorkers>0&&sel.kind!=='boat'&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-btn-wide" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={26}/>{hud.idleWorkers}</button></GameTooltip>}
+   {sel.canRecycle&&<IconBtn label={sel.planned?'Cancel plan':'Recycle'} onClick={()=>engine?.recycle()}><Recycle size={26}/></IconBtn>}
+   {person&&<><IconBtn label="Previous person" tip="Shift+," onClick={()=>engine?.cycleVillager(-1)}><ChevronLeft size={26}/></IconBtn><IconBtn label="Next person" tip="," onClick={()=>engine?.cycleVillager(1)}><ChevronRight size={26}/></IconBtn></>}
+   <span className="hw-more"><IconBtn label={more?'Fewer orders':'More orders'} tip="Contact, equipment, storage and everything else" active={more} onClick={()=>setMore(v=>!v)}><ClipboardList size={26}/></IconBtn></span>
   </div>
-  {more&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs/></div>}
+  {more&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs hideCommand/></div>}
  </section>;
 }
 
 /* ---------- notifications ---------- */
-export type Note={id:string;icon:ReactNode;title:string;chips?:ReactNode;action?:{label:string;onClick:()=>void};dismiss?:()=>void;tone?:'bad'|'warn'|'good'|'info'};
+export type Note={id:string;icon:ReactNode;title:string;label?:string;chips?:ReactNode;action?:{label:string;onClick:()=>void};dismiss?:()=>void;tone?:'bad'|'warn'|'good'|'info'};
 export function NoteCard({n}:{n:Note}){
- return <article className={cx('hw-note',n.tone&&'n-'+n.tone)} role="status">
+ return <article className={cx('hw-note',n.tone&&'n-'+n.tone)} role="status" aria-label={n.title||n.label}>
   <span className="hw-medal hw-medal-s">{n.icon}</span>
-  <div className="hw-note-main"><b>{n.title}</b>{n.chips&&<div className="hw-note-chips">{n.chips}</div>}</div>
+  <div className="hw-note-main">{n.title&&<b>{n.title}</b>}{n.chips&&<div className="hw-note-chips">{n.chips}</div>}</div>
   {n.action&&<button type="button" className="hw-note-act" onClick={n.action.onClick}>{n.action.label}</button>}
   {n.dismiss&&<button type="button" className="hw-note-x" aria-label="Dismiss" onClick={n.dismiss}><X size={20}/></button>}
  </article>;
@@ -256,18 +264,18 @@ function RaidNote({engine}:{engine:Engine}){
   {r.burned>0&&<span className="hw-chip t-bad" title="Buildings burned"><Flame size={18}/>{r.burned}</span>}
   <span className="hw-chip" title={lootText||'Nothing carried off'}><Package size={18}/>{total}</span></>}}/>;
 }
-/** Shorten the longest engine banners for display only. */
-const terse=(s:string)=>s.replace(/^C selects a gatherer.*$/,'C worker · ] find · R order');
+/** Keyboard-tip banners are teaching text, not events: they live in tooltips and the Menu, never in the notification stack. */
+const isKeyTip=(s:string)=>/^(C selects|Press [A-Z\]\[,]|Tip:)/.test(s)||/ · \] finds? /.test(s);
 export function NotesStack({hud,engine,onOpen,hidden}:{hud:HudSnapshot;engine:Engine|null;onOpen:(k:DockKey)=>void;hidden:boolean}){
  const alerts=useAlerts(engine);
  const notes:Note[]=[];
- if(alerts.length)notes.push({id:'alerts',tone:'bad',icon:<TriangleAlert size={24}/>,title:'Needs attention',chips:alerts.map(a=><GameTooltip key={a.k} title={a.tip}><span className="hw-chip t-bad" tabIndex={0} aria-label={a.tip}>{a.icon}{a.n}</span></GameTooltip>)});
+ if(alerts.length)notes.push({id:'alerts',tone:'bad',icon:<TriangleAlert size={28}/>,title:'',label:'Needs attention',chips:alerts.map(a=><GameTooltip key={a.k} title={a.tip}><span className="hw-chip t-bad" tabIndex={0} aria-label={a.tip}>{a.icon}{a.n}</span></GameTooltip>)});
  if(hud.idleWorkers>0&&hud.selection.kind==='none')notes.push({id:'idle',icon:<Users size={24}/>,title:`${hud.idleWorkers} idle`,action:{label:'Find',onClick:()=>engine?.focusIdle()}});
  if(hud.canAge&&hud.nextAge)notes.push({id:'age',tone:'good',icon:<BookOpen size={24}/>,title:`${hud.nextAge} ready`,action:{label:'Open',onClick:()=>onOpen('ages')}});
  if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give==='wood'?'wood':o.give==='food'?'food':o.give==='stone'?'stone':o.give],T=RES_ICON[o.get==='wood'?'wood':o.get==='food'?'food':o.get==='stone'?'stone':o.get];
   notes.push({id:'route',icon:<Package size={24}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt} ${resWord(o.give)}`}><G size={18}/>{o.giveAmt}</span><ChevronRight size={18}/><span className="hw-chip" title={`Get ${o.getAmt} ${resWord(o.get)}`}><T size={18}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
  if(hud.threat>=.5)notes.push({id:'threat',tone:'bad',icon:<Shield size={24}/>,title:'Raiders near',action:{label:'Horn',onClick:()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}});
- if(hud.banner&&!hud.placing)notes.push({id:'banner',icon:<Bell size={24}/>,title:terse(hud.banner)});
+ if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))notes.push({id:'banner',icon:<Bell size={24}/>,title:hud.banner});
  return <aside className={cx('hw-notes',hidden&&'is-hidden')} aria-label="Notifications">
   {notes.map(n=><NoteCard key={n.id} n={n}/>)}
   {engine&&<RaidNote engine={engine}/>}

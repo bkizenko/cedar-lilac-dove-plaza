@@ -85,7 +85,7 @@
 .hw-dock-btn.is-on{background:linear-gradient(180deg,var(--hw-gold-2),var(--hw-gold));color:var(--hw-gold-ink)}
 .hw-dock-btn.is-on svg{color:var(--hw-gold-ink)}
 .hw-dock-map{display:none}
-.hw-badge{position:absolute;top:4px;right:10px;min-width:20px;height:20px;border-radius:10px;background:var(--hw-bad);color:var(--hw-gold-ink);font:800 13px/20px var(--font-sans);text-align:center;font-style:normal;padding:0 5px}
+.hw-badge{position:absolute;top:4px;right:10px;min-width:20px;height:20px;border-radius:10px;background:var(--hw-bad);color:var(--hw-gold-ink);font:800 16px/20px var(--font-sans);text-align:center;font-style:normal;padding:0 5px}
 
 /* build tray */
 .hw-tray{border-radius:var(--hw-r-l);padding:var(--hw-s2) var(--hw-s3) var(--hw-s3);animation:hw-in .25s var(--hw-ease)}
@@ -127,7 +127,7 @@
 .hw-bar i{display:block;height:100%;background:linear-gradient(90deg,#8fbf68,var(--hw-good));border-radius:6px;transition:width .4s var(--hw-ease)}
 .hw-bar i.t-bad{background:linear-gradient(90deg,#d9684a,var(--hw-bad))}
 .hw-info{font-size:var(--hw-fs-s);color:var(--hw-dim);line-height:1.45}
-.hw-jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+.hw-jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
 .hw-job{display:grid;justify-items:center;gap:2px;padding:8px 2px 6px;min-height:68px;border-radius:var(--hw-r-s);border:1px solid var(--hw-line);background:rgba(255,236,190,.06);cursor:pointer}
 .hw-job span{font-size:var(--hw-fs-s);font-weight:650}
 .hw-job:hover{background:rgba(255,236,190,.15)}
@@ -139,7 +139,7 @@
 .hw-row-label{display:inline-flex;align-items:center;gap:6px;color:var(--hw-dim);font-weight:650;font-size:var(--hw-fs-s);min-width:70px}
 .hw-chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:2px 10px;border-radius:999px;background:rgba(255,236,190,.1);border:1px solid var(--hw-line);font-size:var(--hw-fs-s);font-weight:650;font-variant-numeric:tabular-nums;line-height:1.1}
 .hw-chip em{font-style:normal;color:var(--hw-dim)}
-.hw-chip small{display:inline-flex;align-items:center;gap:3px;font-size:13px;color:var(--hw-dim)}
+.hw-chip small{display:inline-flex;align-items:center;gap:3px;font-size:16px;color:var(--hw-dim)}
 .hw-chip-soft{background:rgba(255,236,190,.05);font-weight:550}
 .hw-chip.f-fresh{border-color:rgba(180,217,140,.6)}.hw-chip.f-aging{border-color:rgba(242,199,107,.6)}.hw-chip.f-stale{border-color:var(--hw-line);color:var(--hw-dim)}
 .hw-chip.t-bad{border-color:rgba(244,162,135,.55)}.hw-chip.t-good{border-color:rgba(180,217,140,.55)}.hw-chip.t-warn{border-color:rgba(242,199,107,.55)}
@@ -169,7 +169,7 @@
 .hw-map-frame{border-radius:var(--hw-r-m);overflow:hidden;border:2px solid rgba(227,173,79,.6);box-shadow:inset 0 0 0 2px rgba(0,0,0,.4);line-height:0}
 .hw-map .world-minimap{width:100%;max-width:none;margin:0;aspect-ratio:1}
 .hw-map .world-minimap canvas{border:0;border-radius:0;touch-action:none}
-.hw-map .world-minimap-north{font-size:15px;font-weight:700;right:10px;top:8px}
+.hw-map .world-minimap-north{font-size:16px;font-weight:700;right:10px;top:8px}
 .hw-map-neigh{display:grid;gap:2px;padding:0;background:transparent;border:0;text-align:left;cursor:pointer}
 .hw-neigh{display:flex;align-items:center;gap:var(--hw-s2);min-height:36px;padding:0 6px;border-radius:var(--hw-r-s)}
 .hw-neigh:hover{background:rgba(255,236,190,.1)}
@@ -297,7 +297,7 @@
  .hw-bottom{left:8px;right:8px;bottom:8px;grid-template-columns:minmax(0,1fr);grid-template-areas:"tray" "sel" "dock";gap:6px}
  .hw-bottom>.hw-tray,.hw-bottom>.hw-place{width:100%}
  .hw-dock{justify-self:stretch;width:100%;gap:2px;padding:4px}
- .hw-dock-btn{flex:1;min-width:0;width:auto;height:64px}.hw-dock-btn span{font-size:13px}
+ .hw-dock-btn{flex:1;min-width:0;width:auto;height:64px}.hw-dock-btn span{font-size:16px}
  .hw-dock-map{display:grid}
  .hw-sel{max-height:44dvh;padding:8px}.hw-medal{width:48px;height:48px}
  .hw-tile{width:92px;min-height:118px}
@@ -385,4 +385,94 @@
 .hw-save-slots{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .hw-save-slots li{display:grid;grid-template-columns:84px 92px 1fr auto;gap:6px 12px;align-items:baseline;padding:6px 10px;border-radius:8px;background:rgba(255,236,190,.06);border:1px solid var(--hw-line);font-size:var(--hw-fs-s);font-variant-numeric:tabular-nums}
 .hw-save-slots li b{min-width:76px}.hw-save-slots li span{color:var(--hw-dim)}
-.hw-save-empty,.hw-save-note{margin:0;font-size:13px;color:var(--hw-dim)}
+.hw-save-empty,.hw-save-note{margin:0;font-size:16px;color:var(--hw-dim)}
+
+/* ===== Legibility floor, tactile surfaces, command strips (docs/UIUX_PROPOSAL.md changes 1, 2, 3, 5, 6) =====
+   Floor: text never below 16px, icons never below 24px, hit targets 48px. Everything above reads these tokens, so this block is the
+   only place the scale lives. The archived interface (field/classic) is unaffected: this file is scoped to :root:not([data-hw-ui]). */
+:root:not([data-hw-ui]){
+ --hw-fs-s:16px; --hw-fs:18px; --hw-fs-m:20px; --hw-fs-l:26px; --hw-fs-xl:34px;
+ --hw-hit:52px;
+ --hw-ico:30px; --hw-ico-l:38px; --hw-ico-s:24px;
+ /* Tactile, not glossy: a faint horizontal wood grain on a flat colour, a hard bottom edge instead of a soft top highlight. */
+ --hw-grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .55' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .86  0 0 0 0 .62  0 0 0 .07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+ --hw-panel:var(--hw-grain),var(--hw-wood-800);
+ --hw-shadow:0 3px 0 rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.32);
+}
+.hw svg{min-width:20px;min-height:20px}
+.hw .hw-res-cell svg,.hw .hw-time-icon svg{width:34px;height:34px}
+.hw .hw-btn svg,.hw .hw-btn-wide svg,.hw .hw-primary svg{width:var(--hw-ico);height:var(--hw-ico)}
+.hw .hw-btn-s svg{width:var(--hw-ico-s);height:var(--hw-ico-s)}
+.hw .hw-dock-btn svg{width:var(--hw-ico-l);height:var(--hw-ico-l)}
+.hw .hw-tile-icon svg,.hw .hw-medal svg{width:var(--hw-ico-l);height:var(--hw-ico-l)}
+.hw .hw-medal-s svg{width:30px;height:30px}
+.hw .hw-job svg{width:34px;height:34px}
+.hw .hw-chip svg,.hw .hw-stat svg,.hw .hw-cost svg,.hw .hw-tabs svg{width:var(--hw-ico-s);height:var(--hw-ico-s)}
+.hw .hw-era svg{width:var(--hw-ico-s);height:var(--hw-ico-s)}
+.hw-dock-btn{width:96px;height:84px}
+.hw-job{min-height:78px}
+.hw-chip{min-height:40px;padding:4px 12px}
+.hw-chip small{font-size:var(--hw-fs-s)}
+.hw-flag svg{width:44px;height:32px}
+.hw-badge{min-width:24px;height:24px;font-size:var(--hw-fs-s);line-height:24px}
+/* flat gold, hard edge (no gradient sheen) */
+.hw-btn.is-on,.hw-primary,.hw-dock-btn.is-on,.hw-job.is-on{background:var(--hw-gold);border-color:var(--hw-gold-2);box-shadow:0 3px 0 #8a5c1f}
+.hw-bar{height:12px}
+.hw-bar i{background:var(--hw-good)}.hw-bar i.t-bad{background:var(--hw-bad)}
+/* legacy sub-panels (Tailwind utility sheets inside .hw-legacy / the legacy toast) get the same floor */
+.hw-legacy .text-xs,.hw-legacy .text-sm,.hw-legacy [class*="text-[1"],.hw-legacy small,.hw-legacy label,.hw-legacy summary,.hw-legacy li,.hw-legacy p,.hw-legacy td,.hw-legacy th{font-size:var(--hw-fs-s)!important;line-height:1.4}
+.hw-legacy button,.hw-legacy select,.hw-legacy summary,.hw-legacy input{min-height:var(--hw-hit);font-size:var(--hw-fs-s)!important}
+.hw-legacy button svg,.hw-legacy summary svg{min-width:20px;min-height:20px}
+/* icon button count badge */
+.hw-btn{position:relative}
+.hw-btn-badge{position:absolute;right:-6px;top:-6px;min-width:24px;height:24px;padding:0 5px;border-radius:12px;background:var(--hw-wood-950);border:1px solid var(--hw-line-strong);color:var(--hw-gold-2);font:750 16px/22px var(--font-sans);font-style:normal;text-align:center;pointer-events:none}
+.hw-btn.is-on .hw-btn-badge{background:var(--hw-gold-ink);color:var(--hw-gold-2)}
+/* selection card: one header, one stat row, one action row */
+.hw-sel-title{gap:8px}
+.hw-sel-meta{display:flex;flex-wrap:wrap;gap:6px}
+.hw-sel-meta .hw-chip b{max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hw-actions{gap:8px}
+.hw-actions .hw-btn-wide{padding:0 var(--hw-s3)}
+/* command strips (commander, hull) */
+.hw-cmd{display:grid;gap:8px;padding-top:8px;border-top:1px solid var(--hw-line)}
+.hw-cmd-head{flex-wrap:nowrap;gap:8px}
+.hw-cmd-head .hw-stat.hw-chip{flex:none}
+.hw-cmd-main{flex:1;min-width:0;display:grid;gap:6px}
+.hw-cmd-main b{font-size:var(--hw-fs-m);line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hw-bar-xp{display:block;height:8px;border-radius:5px;background:rgba(0,0,0,.4);overflow:hidden}
+.hw-bar-xp i{display:block;height:100%;background:var(--hw-gold);border-radius:5px}
+.hw-medal .hw-rank,.hw-medal-s .hw-rank{position:absolute;right:-4px;bottom:-4px;min-width:22px;height:22px;border-radius:11px;background:var(--hw-gold);color:var(--hw-gold-ink);font:800 16px/22px var(--font-sans);font-style:normal;text-align:center}
+.hw-medal-s{position:relative}
+.hw-feedback{color:var(--hw-dim);font-size:var(--hw-fs-s);line-height:1.35}
+/* notifications: icon-first, three lines at most, full text in the tooltip */
+.hw-note-main b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hw-note .hw-chip{min-height:40px;font-size:var(--hw-fs)}
+.hw-note .hw-chip svg{width:26px;height:26px}
+.hw-hint{font-size:var(--hw-fs-s)}
+@media (max-width:760px){
+ .hw .hw-res-cell svg{width:28px;height:28px}
+ .hw .hw-dock-btn svg{width:34px;height:34px}
+ .hw-dock-btn{height:64px}.hw-dock-btn span{display:none}
+ .hw-chip{min-height:40px}
+ .hw-speed .hw-btn{width:44px;height:44px}.hw-rail .hw-btn{width:48px;height:48px}
+}
+/* context tabs inside the selection card: only shown when more than one context applies (work / fight / command) */
+.hw-ctx{display:flex;gap:6px}
+.hw-ctx .game-tooltip-anchor{display:flex;flex:1}
+.hw-ctx-tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--hw-hit);border-radius:var(--hw-r-s);border:1px solid var(--hw-line);background:rgba(255,236,190,.06);color:var(--hw-dim);font-weight:650;font-size:var(--hw-fs-s);cursor:pointer}
+.hw-ctx-tab svg{width:var(--hw-ico-s);height:var(--hw-ico-s)}
+.hw-ctx-tab.is-on{background:rgba(227,173,79,.18);border-color:var(--hw-gold);color:var(--hw-gold-2)}
+.hw-sep{width:2px;align-self:stretch;margin:6px 2px;background:var(--hw-line);border-radius:1px}
+.hw-mil .hw-row{flex-wrap:nowrap}
+.hw-bottom{grid-template-columns:minmax(0,480px) minmax(0,1fr) 300px}
+.hw-sel{max-height:min(66dvh,620px)}
+.hw-cmd-head{align-items:center}
+@media (max-width:1100px){.hw-bottom{grid-template-columns:minmax(0,420px) minmax(0,1fr)}}
+@media (max-width:760px){.hw-bottom{grid-template-columns:minmax(0,1fr)}.hw-sel{max-height:46dvh}.hw-ctx-tab span{display:none}.hw-mil .hw-row{flex-wrap:wrap}}
+.hw-cmd .hw-medal-s{background:radial-gradient(circle at 35% 30%,#5e4932,#2a2016);border-color:rgba(227,173,79,.6);color:var(--hw-gold-2)}
+/* build tray: tiles wrap into rows instead of scrolling sideways, so every cost stays visible */
+.hw-tiles{flex-wrap:wrap;overflow-x:visible;overflow-y:auto;max-height:min(44dvh,400px);justify-content:flex-start}
+.hw-tile{width:108px}
+.hw-btn-badge{min-width:26px;height:26px;line-height:24px;border-radius:13px}
+.hw-medal .hw-rank,.hw-medal-s .hw-rank{min-width:24px;height:24px;line-height:24px}
+@media (max-width:760px){.hw-tile{width:92px}.hw-tiles{max-height:34dvh}}

@@ -1,0 +1,61 @@
+<!-- size 1440x940 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Command panels</title><link rel="stylesheet" href="mock.css">
+<style>
+body{height:940px;background:#5f7a43 url(terrain-close.jpg) center/cover}
+.g{position:absolute;left:14px;right:14px;top:14px;bottom:14px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:14px;align-content:start}
+.p{padding:14px;display:grid;gap:12px;align-content:start}
+.hd{display:flex;align-items:center;gap:12px}.hd h2{flex:1}
+.src{font:600 15px/1.3 system-ui;color:var(--dim);border-top:1px solid var(--line);padding-top:8px}
+.src b{color:var(--gold-2)}.src u{text-decoration:none;color:var(--warn)}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.act{display:flex;gap:10px;align-items:center}
+.hull{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:12px;align-items:center;padding:8px;border-radius:12px;background:rgba(255,236,190,.05);border:1px solid var(--line)}
+.hull.on{border-color:var(--gold);background:rgba(227,173,79,.12)}
+.hull b{font-size:20px}
+.mini{width:60px;height:12px}
+.aura{width:130px;height:130px;border-radius:50%;border:3px dashed rgba(246,213,140,.7);background:radial-gradient(circle,rgba(246,213,140,.28),transparent 70%);position:relative;flex:none}
+.aura i{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--parch);box-shadow:0 0 0 2px #2a2016}
+.aura i.out{background:var(--bad)}
+.aura .c{left:59px;top:59px;width:18px;height:18px;background:var(--gold);margin:-3px}
+.loadout{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lo{display:grid;justify-items:center;gap:6px;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:rgba(255,236,190,.06);font-weight:650;font-size:16px}
+.lo.on{background:var(--gold);color:var(--ink);border-color:var(--gold-2);box-shadow:0 3px 0 #8a5c1f}
+.lo svg{width:38px;height:38px}
+.lo small{font-size:14px;opacity:.85}
+.civ{display:grid;gap:10px}
+.civr{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.civr .bar{height:14px}
+.prop{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;background:var(--parch);color:var(--ink);padding:10px 12px;border-radius:14px;border-left:8px solid var(--gold);font-weight:750;font-size:19px}
+.prop .btn{background:var(--wood-800);color:var(--text);width:52px;height:52px}
+.prop .btn.no{background:transparent;color:var(--ink);border:2px solid rgba(43,32,22,.5)}
+</style></head><body>
+<div class="g">
+
+<section class="panel p"><div class="hd"><span class="medal">{{Flag:38}}<i class="badge" style="right:-4px;top:auto;bottom:-4px;background:var(--gold);color:var(--ink)">2</i></span><h2>Veirailia<br><span class="dim" style="font-size:18px;font-weight:600">Field commander</span></h2><div class="aura"><i class="c"></i><i style="left:28px;top:38px"></i><i style="left:86px;top:30px"></i><i style="left:40px;top:92px"></i><i style="left:98px;top:80px"></i><i class="out" style="left:120px;top:10px;"></i></div></div>
+ <div class="bar" style="height:10px"><i style="width:46%;background:var(--gold)"></i></div>
+ <div class="stats"><span class="chip">{{Users:24}}5/6</span><span class="chip">{{Crown:24}}1/1</span><span class="chip">{{Sparkles:24}}Steady · Bold</span><span class="chip warn">{{Compass:24}}4 in aura</span></div>
+ <div class="act"><span class="btn">{{UserPlus:30}}<i class="badge">3</i></span><span class="btn">{{UserMinus:30}}</span><span class="btn on">{{ChevronsUp:30}}<i class="badge">1</i></span><span class="btn">{{Replace:30}}</span></div>
+ <div class="src"><b>Commander card</b> (shipped in this branch, Command tab). Reads <b>commander-controls</b>, sends <b>commander-order</b>. Aura ring is new: radius and in/out members are already in the model.</div></section>
+
+<section class="panel p"><div class="hd"><span class="medal">{{Anchor:38}}</span><h2>Fleet</h2><span class="chip">{{Ship:24}}3</span><span class="chip">{{Crown:24}}1/2</span></div>
+ <div class="hull on"><span class="medal" style="width:48px;height:48px">{{Ship:28}}</span><b>Gull</b><span class="chip">{{Users:24}}4/6</span><span class="chip">{{Wheat:24}}14/36</span><span class="chip good">{{Anchor:24}}Moored</span></div>
+ <div class="hull"><span class="medal" style="width:48px;height:48px">{{Ship:28}}</span><b>Heron</b><span class="chip">{{Users:24}}6/6</span><span class="chip warn">{{Wheat:24}}5/36</span><span class="chip">{{Compass:24}}At sea</span></div>
+ <div class="hull"><span class="medal" style="width:48px;height:48px">{{Ship:28}}</span><b>Wren</b><span class="chip">{{Users:24}}2/4</span><span class="chip">{{Wheat:24}}20/24</span><span class="chip bad">{{Hammer:24}}Hull 40%</span></div>
+ <div class="act"><span class="btn">{{Wheat:30}}</span><span class="btn">{{Swords:30}}</span><span class="btn">{{Hammer:30}}</span><span class="btn">{{Hand:30}}</span></div>
+ <div class="src"><b>Fleet strip</b>. Hull card with Stop / Resupply / Board shipped in this branch; port work and commissioning ride Codex's <b>NavalControls</b> read model. Sends <b>naval-order</b>, <b>boat-stop</b>.</div></section>
+
+<section class="panel p"><div class="hd"><span class="medal">{{Sword:38}}</span><h2>Loadout</h2><span class="chip good">{{Swords:24}}×1.15</span></div>
+ <div class="loadout"><div class="lo on">{{Spline:38}}Spear<small>9 ready</small></div><div class="lo">{{Target:38}}Bow<small>4 ready</small></div><div class="lo">{{Sword:38}}Blade<small>2 ready</small></div><div class="lo">{{Hammer:38}}Maul<small>0</small></div></div>
+ <div class="loadout"><div class="lo on">{{Shirt:38}}Hide<small>6</small></div><div class="lo">{{Shield:38}}Shield<small>3</small></div><div class="lo">{{HardHat:38}}Helm<small>1</small></div><div class="lo" style="opacity:.45">{{Lock:38}}Bronze<small>Age</small></div></div>
+ <div class="src"><b>Weapon and armour loadout</b>. Armour (<b>armor-choice</b>, <b>equip-armor</b>) and <b>combat-doctrine</b> exist. <u>Weapon families are not in this source yet (WQ-14 branch unmerged)</u>: the panel waits on it. Icons first; numbers only for what is in stores.</div></section>
+
+<section class="panel p"><div class="hd"><span class="medal">{{Crown:38}}</span><h2>Council</h2><span class="chip">{{Users:24}}Consent</span></div>
+ <div class="civ">
+  <div class="civr">{{Landmark:30}}<div class="bar"><i style="width:68%"></i></div><b>68</b></div>
+  <div class="civr">{{Flame:30}}<div class="bar low"><i style="width:24%"></i></div><b style="color:var(--bad)">24</b></div>
+  <div class="civr">{{Coins:30}}<div class="bar"><i style="width:55%;background:var(--gold)"></i></div><b>−3 / yr</b></div>
+ </div>
+ <div class="prop"><span class="medal" style="width:48px;height:48px;background:var(--wood-800)">{{Hammer:28}}</span>Raise a granary<span class="btn">{{Check:30}}</span><span class="btn no">{{X:30}}</span></div>
+ <div class="src"><b>Society tab</b> is read-only today (M4-08, M4-09). Reads <b>society-civic</b>. Accept / refuse needs a new typed command; the read model already lists the open proposal, consent and upkeep.</div></section>
+
+</div></body></html>
