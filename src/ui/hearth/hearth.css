@@ -37,7 +37,7 @@
 .hw-btn:active:not(:disabled){transform:translateY(1px)}
 .hw-btn:disabled{opacity:.45;cursor:default}
 .hw-btn.is-on{background:linear-gradient(180deg,var(--hw-gold-2),var(--hw-gold));color:var(--hw-gold-ink);border-color:var(--hw-gold-2)}
-.hw-btn-s{width:44px;height:44px;border-radius:var(--hw-r-s)}
+.hw-btn-s{width:var(--hw-hit);height:var(--hw-hit);border-radius:var(--hw-r-s)}
 .hw-x4{font-weight:800;font-size:var(--hw-fs-m)}
 .hw-btn-wide,.hw-primary{display:inline-flex;align-items:center;justify-content:center;gap:var(--hw-s2);min-height:var(--hw-hit);padding:0 var(--hw-s4);border-radius:var(--hw-r-m);border:1px solid var(--hw-line);background:rgba(255,236,190,.07);font-weight:650;font-size:var(--hw-fs);cursor:pointer;transition:background-color .15s,transform .15s var(--hw-ease)}
 .hw-btn-wide:hover:not(:disabled){background:rgba(255,236,190,.16)}

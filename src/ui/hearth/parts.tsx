@@ -218,7 +218,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
    {person&&<><IconBtn label="Previous person" tip="Shift+," onClick={()=>engine?.cycleVillager(-1)}><ChevronLeft size={26}/></IconBtn><IconBtn label="Next person" tip="," onClick={()=>engine?.cycleVillager(1)}><ChevronRight size={26}/></IconBtn></>}
    <span className="hw-more"><IconBtn label={more?'Fewer orders':'More orders'} tip="Contact, equipment, storage and everything else" active={more} onClick={()=>setMore(v=>!v)}><ClipboardList size={26}/></IconBtn></span>
   </div>
-  {more&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs hideCommand/></div>}
+  {more&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs hideCommand={cmdOk}/></div>}
  </section>;
 }
 
