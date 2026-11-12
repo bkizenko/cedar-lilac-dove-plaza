@@ -1034,6 +1034,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 12:00 | Claude | 44 (since 11:00 ET, integration) | 9 via PM landing 12:15 (captive card, neighbourNews, lane D merge fixes, loader alias) | 2-3 (captive card UI, terrain-aware influence/commanders/ports data, geology layer) | active; no board lines missed |
 | 11-12 12:00 | Grok | 0 | 0 | 0 | out; World rows stay with Claude queue |
 | 11-12 12:00 | Total | ~72 | integration 0 ahead of main after landing | ~5 | sweep 127/127, tsc diff nil; work/shipping-waiting-hooks-2026-11-11 still conflicts (engine/sim/types/persistence/Hud), not landed; open rows ~2 not-started by grep, ~162 done-marked |
+| 11-12 13:00 | Codex | 41 (since 12:00 ET, all branches) | 18 (naval conservation, traded successor, geology restore) | 3 (iron solid-bloom chain + native qualification; draft-cart hitching/recovery; NPC copper chain evidence) | active, on target; iron-chain and draft-cart landed 13:2x |
+| 11-12 13:00 | Claude | 33 (since 12:00 ET, all branches) | PM landing (lane B first-run hint, Option H blend, iron import-cycle fix) | 2 (first-run display hint; iron/inventoryVolume cycle fix) | shipping; two Claude lanes fixed the same TDZ cycle concurrently (merged, no loss) |
+| 11-12 13:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue; no board lines to miss |
+| 11-12 13:00 | Total | ~74 | integration 0 ahead of main after landing | ~5 | sweep 121/121 + council-ui/render-style 14/14, tsc diff nil (4 sandbox ImportMeta only); rows ~735 total, ~206 done/live, ~268 not-started; work/shipping-waiting-hooks-2026-11-11 still conflicting, unlanded |
 
 | 11-12 11:00 | Codex | 28 (since 10:00 ET, all branches) | 28 | 3 (casus-belli known-pair grievance readout + strict saved-claim admission; V20 published-generator compat; toolmaking/breakaway safety live) | on target; QA-037 toolmaking follow-ups next |
 | 11-12 11:00 | Claude | 31 (since 10:00 ET, all branches) | 25 | 2 (casus belli in Hearth neighbour cards + Diplomacy sheet; conifer drooping-skirt boughs) | shipping and landing; lane D audit rows added |
