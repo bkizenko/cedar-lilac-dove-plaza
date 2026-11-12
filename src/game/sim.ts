@@ -1,3 +1,4 @@
+import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
@@ -1826,6 +1827,7 @@ export class Game {
     pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
+    pauseGarmentRepair(this,u);
     pauseProduction(this,u);
     pauseFibreWork(this,u);
     if(u.clayWork)u.clayWork.paused=true;
@@ -5763,6 +5765,7 @@ export class Game {
         phases?.mark('production');
         tickFibre(this);
         tickClay(this);
+        tickGarmentRepairs(this);
         tickProduction(this,sdt);
         tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
@@ -5819,6 +5822,7 @@ export class Game {
             if(clayAI(this,u,sdt))continue;
             if(practicalHelperAI(this,u,sdt))continue;
             if(productionApprenticeAI(this,u,sdt))continue;
+            if(garmentRepairAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
             if(societyMissionAI(this,u,sdt))continue;
@@ -5919,6 +5923,7 @@ export class Game {
         reconcileFibreDeaths(this);
         tickTradeIntel(this);
         tickPracticalHelpers(this);
+        tickGarmentRepairs(this);
         tickProduction(this,0);
         tickBuildingMaintenance(this,0);
         tickCampRelocation(this,0);

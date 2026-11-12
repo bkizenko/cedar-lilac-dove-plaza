@@ -1,3 +1,4 @@
+import {garmentRepairIssue} from './garmentRepair';
 import {fabricContext,eraUpgradeBenefits,eraUpgradeIssue,planEraChange,supportsEraUpgrade,ERA_UPGRADE_RULES,type FabricRect,type EraUpgradeMode} from './buildingFabric';
 import type {ExtensionSide} from './extensionFootprints';
 import type {HousingMaterials} from './housingTypes';
@@ -17,6 +18,7 @@ export type EngineReadQuery=
  |{kind:'recipe-issues';workplaceId:number}
  |{kind:'fibre-issues';unitId:number;patchIds:number[]}
  |{kind:'clay-issues';unitId:number;depositIds:number[]}
+ |{kind:'garment-repair-issues';unitId:number;workplaceId?:number}
  |{kind:'armor-choice';unitId:number}
  |{kind:'rulers-council'}
  |{kind:'capitulation-offers'};
@@ -27,6 +29,7 @@ export type EngineReadModel=
  |{kind:'recipe-issues';workplaceId:number;issues:{recipe:ProductionRecipe;issue:string|null}[]}
  |{kind:'fibre-issues';unitId:number;issues:{patchId:number;issue:string|null}[]}
  |{kind:'clay-issues';unitId:number;issues:{depositId:number;issue:string|null}[]}
+ |{kind:'garment-repair-issues';unitId:number;worn:string|null;spare:string|null}
  |{kind:'armor-choice';unitId:number;wornArmorId?:number;availableArmorId?:number;issue:string|null}
  |{kind:'rulers-council';council:import('./rulersView').CouncilModel}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]};
@@ -40,6 +43,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
  if(q.kind==='construction-status')return Object.keys(q).every(k=>['kind','buildingIds'].includes(k))&&list(q.buildingIds);
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
+ if(q.kind==='garment-repair-issues')return Object.keys(q).every(k=>['kind','unitId','workplaceId'].includes(k))&&id(q.unitId)&&(q.workplaceId===undefined||id(q.workplaceId));
  if(q.kind==='armor-choice')return Object.keys(q).every(k=>['kind','unitId'].includes(k))&&id(q.unitId);
  if(q.kind==='fibre-issues')return Object.keys(q).every(k=>['kind','unitId','patchIds'].includes(k))&&id(q.unitId)&&list(q.patchIds);
  if(q.kind==='clay-issues')return Object.keys(q).every(k=>['kind','unitId','depositIds'].includes(k))&&id(q.unitId)&&list(q.depositIds);
@@ -76,6 +80,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
   const known=new Set(g.state.clay?.deposits.filter(d=>d.surveyedBy.includes(0)).map(d=>d.id));
   return{kind:query.kind,unitId:u.id,issues:query.depositIds.filter(id=>known.has(id)).map(depositId=>({depositId,issue:clayIssue(g,u.id,depositId)}))};
  }
+ if(query.kind==='garment-repair-issues')return{kind:query.kind,unitId:u.id,worn:garmentRepairIssue(g,u.id,'worn',query.workplaceId),spare:garmentRepairIssue(g,u.id,'spare',query.workplaceId)};
  const worn=wornArmor(g,u);
  const candidates=(g.state.armor?.assets||[]).filter(a=>a.holder.kind!=='unit'&&(a.holder.kind==='ground'?g.visibleAt(a.holder.x,a.holder.z):a.team===u.team)&&Math.hypot(a.holder.x-u.x,a.holder.z-u.z)<=24);
  // Compute each native issue once, preserving the existing UI sort order and tie behavior.
