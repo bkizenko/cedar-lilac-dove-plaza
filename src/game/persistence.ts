@@ -127,6 +127,10 @@ export function gameSnapshot(g:Game){
     tradeTeam: g.tradeTeam,
   };
 }
+/** Plain-language reason for a rulers/wards rejection (AUD-UI-SAVE-LOAD-NOTICE); same not-changed guarantee as fail(). */
+function failRulers(): never {
+  throw new Error("This save's rulers, houses or wards record is damaged or from a newer version. The current village was not changed.");
+}
 function fail(): never {
   throw new Error("Save is damaged or incompatible. The current village was not changed.");
 }
@@ -156,8 +160,8 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
-  if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1)fail();
-  if(s.rulers!==undefined&&!validRulersState(s.rulers))fail();
+  if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1)failRulers();
+  if(s.rulers!==undefined&&!validRulersState(s.rulers))failRulers();
   if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
   if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
