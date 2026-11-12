@@ -109,7 +109,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
   // A visible attack on a nearby workplace raises the village alarm as well as
   // personal danger. Already armed civilians must answer it even while holding.
   let defendedSites:Building[]|null=null;
-  const nearby=defenseNeighbors(g,u),assigned=u.emergency&&u.target?.kind==='unit'?u.target:null;
+  const nearby=defenseNeighbors(g,u,u.team),assigned=u.emergency&&u.target?.kind==='unit'?u.target:null;
   const candidates=assigned&&!nearby.includes(assigned)?[...nearby,assigned]:nearby;
   const foes = candidates.filter(e=>{
     // isFoe(a, a) is always false; own residents need no distance calculation.
