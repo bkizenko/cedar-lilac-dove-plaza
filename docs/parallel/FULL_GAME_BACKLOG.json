@@ -9030,7 +9030,7 @@
       "sourceCommit": "db3dfbaee3d94893f242fd8abb34b9ce420e4146",
       "liveCommit": "f09578da5ba49396edc3a580ca55cbb05c5c476e",
       "evidence": "docs/metrics/npc-sea-vessel-recovery-release-2026-11-11.json",
-      "scope": "Finite paid milk fermentation and same-vessel physical return; dirty/spoiled/discarded vessel now supports paid real-water cleaning, interrupted pickup and vessel-only return with origin retained; cheese/curd and broad demand remain open"
+      "scope": "Finite paid milk fermentation and same-vessel recovery live f09578d; cultured-curd flow qualified41f5870 with exact vessel/cloth return. Broad demand, meat/transport/traction acceptance remain open."
     },
     {
       "id": "CODEX-PLATFORM-CONTRACTS",
@@ -9108,15 +9108,24 @@
     {
       "id": "CODEX-CULTURED-CURD",
       "owner": "Codex Economy",
-      "state": "candidate-tested-partial",
-      "sourceCommit": null,
-      "liveCommit": null,
-      "evidence": ".play/cultured-curd-focused.log; coordinator-confirmed7/7+typecheck",
-      "scope": "Focused7/7 and typecheck passed; broad regression/build/UI/publication remain pending; not part of live138batch or gate credit"
+      "state": "live",
+      "sourceCommit": "be545903543718845548ef0705339a666d4ce22c",
+      "liveCommit": "41f5870657edfda2a584d23c787593c183facaa6",
+      "evidence": "docs/metrics/prestige-curd-release-2026-11-12.json",
+      "scope": "Already merged cultured-curd code now qualified:7 focused/native cases and actual built recipe click, drainage, sanitation, strict reload and physical return of same2pots/1cloth. No duplicate food/tools, no terrain edits; no frozen-gate credit."
+    },
+    {
+      "id": "CODEX-PRESTIGE-V1",
+      "owner": "Codex Economy",
+      "state": "live-partial",
+      "sourceCommit": "eb202ba",
+      "liveCommit": "41f5870657edfda2a584d23c787593c183facaa6",
+      "evidence": "docs/metrics/prestige-curd-release-2026-11-12.json",
+      "scope": "Versioned capped evidence score and compact readonly ledger; explored useful land/quality, health, ready food, actual practices, outbound trade returns, maintained civic works; dated partial rivals with identity separate from private totals. Defended-war outcomes and broader trade histories remain open; no gate credit."
     }
   ],
   "status_update_policy": {
-    "writer": "Codex coordinator for canonicalbacklog; laneowners for theirhandoffs",
+    "writer": "Codex maintains canonical backlog; any provider may update verified evidence under Grok sequencing; lane owners maintain handoffs",
     "states": [
       "assigned",
       "in-progress",

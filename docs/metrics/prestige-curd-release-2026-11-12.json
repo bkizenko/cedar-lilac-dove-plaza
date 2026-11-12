@@ -1,0 +1,49 @@
+{
+  "release": "2026-11-12T04-13-03-230Z-41f5870",
+  "liveCommit": "41f5870657edfda2a584d23c787593c183facaa6",
+  "builtFrom": "eb202ba",
+  "functionalChecks": {
+    "passed": 30,
+    "total": 30,
+    "scope": "20 prestige rule/native-Game/readonly-UI/budget cases;7 curd conservation/native cases;2 built saved-village+prestige-ledger cases;1 built curd flow"
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "builtPrestige": {
+    "originalResidents": 53,
+    "landEvidenceAvailable": true,
+    "unknownNamesAndTotalsHidden": true,
+    "knownContactIdentitySeparatedFromPrivateMetrics": true,
+    "errors": 0
+  },
+  "builtCurd": {
+    "passed": true,
+    "scope": "finite authored native opening, real controls, preparation/drainage/sanitation, strict reload, physical return; no earned livestock/pottery campaign claim",
+    "returnedPots": 2,
+    "returnedCloth": 1,
+    "duplicates": 0,
+    "terrainUnchanged": true,
+    "candidateBuiltFrom": "7a8ee4b",
+    "publishedCurdProductionAndQueueSourcesIdentical": true
+  },
+  "native100Comparison": {
+    "scope": "single paired Node simulation CPU comparison;180 measured steps/run;100 residents,348 total living units,404 living buildings; no hardware FPS or statistical speedup claim",
+    "baselineP95Ms": 48.865999999999985,
+    "candidateP95Ms": 42.1010839999999,
+    "baselineMeanMs": 32.84823511666664,
+    "candidateMeanMs": 30.593953033333385,
+    "fullStateAndRandomSequenceParity": true,
+    "targetP95Ms": 33,
+    "targetMet": false
+  },
+  "openItems": [
+    "Defended-war-aim component unavailable until verified battle outcome evidence exists",
+    "Trade score currently uses retained paid+delivered outbound offer receipts; other route histories remain part of trade integration",
+    "Full current integration PR and broader campaign/performance acceptance remain open"
+  ],
+  "frozenGates": {
+    "passed": 34,
+    "total": 98,
+    "added": 0
+  }
+}
