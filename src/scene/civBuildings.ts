@@ -245,7 +245,11 @@ CIVIC.steppan=g=>{const {w,d,r}=g,W=w*.5,D=d*.6;
  g.B('wall2',[w*.5,.5,.1],[0,0,d*.45],1);return {entry:{x:0,z:d*.42,width:1.6}};};
 /** Sandrill: strata stacks. Offset sandstone slabs with deep overhangs and wind-fins; the civic hall is a split monolith with a sun-slot and cantilever fins. */
 HOUSE.sandrill=g=>{const {w,d,r}=g;
- for(let i=0;i<3;i++){const s=1-.24*i,ox=(r()-.5)*.9,oz=(r()-.5)*.6;P(g,'box',i%2?'wall2':'wall',[w*.82*s,1.4,d*.7*s],[ox,i*1.5,oz],[0,(r()-.5)*.35,0]);P(g,'box','trim',[w*.82*s+.5,.16,d*.7*s+.5],[ox,i*1.5+1.4,oz],[0,(r()-.5)*.2,0],undefined,1);}
+ for(let i=0;i<3;i++){const s=1-.24*i,ox=(r()-.5)*.9,oz=(r()-.5)*.6,sw=w*.82*s,sd=d*.7*s;
+  // wind-worn strata: a 10-sided drum (rounded corners) under each ledge, a talus skirt at the foot and a domed cap, so the stack reads as eroded stone not stacked crates
+  P(g,'cylinder',i%2?'wall2':'wall',[sw*1.08,1.4,sd*1.08],[ox,i*1.5,oz],[0,(r()-.5)*.35,0],10);P(g,'cylinder','trim',[sw*1.08+.5,.16,sd*1.08+.5],[ox,i*1.5+1.4,oz],[0,(r()-.5)*.2,0],10,1);
+  if(i===0)P(g,'hip','wall2',[sw*1.3,.55,sd*1.3],[ox,0,oz],undefined,undefined,1);
+  if(i===2)P(g,'sphere','wall',[sw*.9,.7,sd*.9],[ox,i*1.5+1.5,oz],undefined,undefined,1);}
  g.B('accent',[.95,1.5,.12],[g.off*.4,0,d*.35+.04],0);P(g,'box','accent',[1.3,.2,.5],[g.off*.4,1.55,d*.35+.1],undefined,undefined,1);
  for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,4.1,4.7),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
  for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
