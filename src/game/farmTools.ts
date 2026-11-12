@@ -35,7 +35,7 @@ function civilian(g: Game, u: FarmToolUnit) {
 }
 
 function available(g: Game, u: FarmToolUnit) {
-  return civilian(g, u) && u.carry === 0 && !hasTaskCommitment(u,'farmToolWork') &&
+  return civilian(g, u) && u.farmToolCargoId===undefined && u.carry === 0 && !hasTaskCommitment(u,'farmToolWork') &&
     u.drill === undefined && !u.expedition && !u.envoy && !u.scout && !u.visit &&
     !u.emergency && !u.foundingJourney && !u.recalled && u.buildOrder===undefined&&!u.resting&&!u.shelterId&& ['idle', 'gather', 'hold'].includes(u.order);
 }
