@@ -169,6 +169,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   sitePreparationId?:number;
   productionProjectId?:number;
   wildWorkId?:number;
+  wildWorkPaused?:true;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   tradedTeaching?:import('./tradedTeaching').TradedTeachingOrder;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
