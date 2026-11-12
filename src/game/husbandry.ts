@@ -1,3 +1,4 @@
+import{penBeddingWorkAI,penNeedsBedding,usePenBedding,reconcilePenBedding,returnPenBeddingLoad}from'./penBedding';
 import {herdRules,isDraftSpecies} from './animalSpecies';
 import {packAnimalFrom,PACK_HARNESS_RULES} from './packAnimalState';
 import {SHEEP_RULES,growFleece,newFleece} from './sheep';
@@ -78,7 +79,7 @@ export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'p
  const stable=isDraftSpecies(animal?.species)&&!animal?.packHarness&&action==='pack'?g.state.buildings.filter(b=>b.team===pen.team&&b.type==='stables'&&g.finished(b)&&g.workBoard.connected(g,pen.x,pen.z,b.x,b.z)).sort((a,b)=>Math.hypot(a.x-pen.x,a.z-pen.z)-Math.hypot(b.x-pen.x,b.z-pen.z))[0]:undefined;
  if(isDraftSpecies(animal?.species)&&!animal?.packHarness&&action==='pack'&&!stable){g.banner('Build a reachable stable to train this draft animal',4);return false;}
  const u=[...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected)).find(u=>available(g,u,'husbandryWork')&&
-  (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0))&&
+  (!u.husbandryWork||u.husbandryWork.paused&&!(u.husbandryWork.waterLiters??0)&&!(u.husbandryWork.beddingUnits??0))&&
   (!['slaughter','shear'].includes(action)||!Object.values(u.itemCargo||{}).some(n=>n>0))&&g.workBoard.connected(g,u.x,u.z,pen.x,pen.z));
  if(!u){g.banner('Choose a free empty-handed adult for this pen',4);return false;}
  g.interruptMission(u);u.husbandryWork={pen:penId,action,animal:animal?.id,phase:'pen',progress:0,...(stable?{stable:stable.id}:{})};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();return true;
@@ -93,7 +94,7 @@ function animalStep(g:Game,a:Livestock,handler:Unit,x:number,z:number,dt:number)
  g.steer(actor,dt);
  a.x=actor.x;a.y=actor.y;a.z=actor.z;a.vx=actor.vx;a.vz=actor.vz;a.facing=actor.facing;a.stuckT=actor.stuckT;
 }
-function finish(g:Game,u:Unit) {if((u.husbandryWork?.waterLiters??0)>0){releaseHusbandryKeeper(g,u);return;}u.tamingWork=undefined;u.husbandryWork=undefined;u.order=u.expedition?'return':'idle';if(u.expedition){u.recalled=true;u.stationOnArrival=false;}u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
+function finish(g:Game,u:Unit) {if(returnPenBeddingLoad(g,u))return;if((u.husbandryWork?.waterLiters??0)>0){releaseHusbandryKeeper(g,u);return;}u.tamingWork=undefined;u.husbandryWork=undefined;u.order=u.expedition?'return':'idle';if(u.expedition){u.recalled=true;u.stationOnArrival=false;}u.node=null;g.invalidateRoute(u);g.workBoard.reset();}
 function takeFeed(g:Game,limit:number) {
  const t=g.tribe(0),lots=foodInventory(t);
  // A load keeps its actual plant-food identity. Overflow can return to stores
@@ -102,6 +103,7 @@ function takeFeed(g:Game,limit:number) {
  return null;
 }
 export function husbandryAI(g:Game,u:Unit,dt:number) {
+ if(penBeddingWorkAI(g,u,dt))return true;
  if(penWaterWorkAI(g,u,dt))return true;
  const tame=u.tamingWork;
  if(tame?.pen!==undefined&&!tame.paused&&u.order==='hold'&&!u.emergency){
@@ -210,6 +212,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   const carcass=g.state.livestock?.find(a=>a.pen===pen.id&&carcassAvailable(g,a));
   if(carcass?.carcass){const n=Math.min(carryingCapacity(u,'food'),carcass.carcass.meat);carcass.carcass.meat-=n;u.carry=n;u.carryType='food';u.carryFood='meat';w.phase='deliver';return true;}
   const animals=penAnimals(g,pen.id).filter(a=>insidePen(pen,a.x,a.z));let milk=0,room=carryingCapacity(u,'food');
+  if(penNeedsBedding(g,pen)&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)){w.phase='beddingFetch';w.progress=0;return true;}
   if(animals.reduce((n,a)=>n+a.milk,0)<1)return true;
   for(const a of animals){const n=herdRules(a.species).milkPerSecond>0?Math.min(a.milk,room-milk):0;milk+=n;a.milk-=n;}
   if(milk>=1){u.carry=milk;u.carryType='food';u.carryFood='milk';w.phase='deliver';}
@@ -217,6 +220,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
  return true;
 }
 export function tickHusbandry(g:Game,dt:number) {
+ reconcilePenBedding(g);
  reconcilePenWater(g);
  if(dt<=0)return;
  const livestock=g.state.livestock??[];
@@ -236,7 +240,7 @@ export function tickHusbandry(g:Game,dt:number) {
  const handlers=new Set(g.state.units.filter(u=>u.hp>0).flatMap(u=>[...u.tamingWork&&!u.tamingWork.paused?[u.tamingWork.animal]:[],...u.husbandryWork?.animal!==undefined&&!u.husbandryWork.paused?[u.husbandryWork.animal]:[]]));
  for(const pen of g.state.buildings.filter(b=>b.type==='pen'&&g.finished(b)&&(activePens.has(b.id)||b.pasture&&(b.pasture.condition<1||b.pasture.care>0)))){
   const herd=penAnimals(g,pen.id),p=penPastureState(pen),reserved=penPlacesReserved(g,pen.id);let occupied=penPlacesOccupied(g,pen.id);
-  p.care=Math.max(0,p.care-dt*PEN_RULES.careDecayPerAnimalSecond*Math.max(1,penCareDemand(herd)));
+  p.care=Math.max(0,p.care-dt*PEN_RULES.careDecayPerAnimalSecond*Math.max(1,penCareDemand(herd))*usePenBedding(g,pen,dt));
   if(!herd.length&&p.condition>=1)continue;
   const r=penPastureReport(g,pen);
   // A finite edible biomass pool, regenerated from usable land and climate.
