@@ -250,6 +250,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
+  methodRecordCargoId?:number;
   farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
@@ -543,6 +544,7 @@ export type GameState = {
   coastalTradeReviewAt?:number;
   coastalCommissions?:import('./coastalCommission').CoastalCommission[];
   seaExploration?:import('./seaExploration').SeaExplorationState;
+  methodRecords?:import('./methodRecords').MethodRecordsState;
   farmToolCargo?:import('./farmToolCargo').FarmToolCargoState;
   droppedCargo?:import('./stolenCargo').DroppedCargoState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
