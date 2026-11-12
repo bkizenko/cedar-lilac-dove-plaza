@@ -3117,7 +3117,13 @@
       "active_provider_owners": [
         "C",
         "A"
-      ]
+      ],
+      "implementation_status": "live-partial",
+      "implementation_evidence": {
+        "commit": "0eb4b35",
+        "path": "docs/metrics/method-record-release-2026-11-12.json",
+        "scope": "Published0eb4b35: native5 + built5 cover paid cordage records, same-asset physical return/recovery, original-reader study/replication, lawful foreign-community retained paid work, carried inventory and walking pickup. Broader/captured ancient artifacts and method coverage remain open; no full-gate credit."
+      }
     },
     {
       "id": 74,
@@ -8300,7 +8306,7 @@
         "status": "pending",
         "credit": 0,
         "evidence": [],
-        "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+        "remainingNotes": "Published0eb4b35: native5 + built5 cover paid cordage records, same-asset physical return/recovery, original-reader study/replication, lawful foreign-community retained paid work, carried inventory and walking pickup. Broader/captured ancient artifacts and method coverage remain open; no full-gate credit."
       },
       {
         "id": "M4-04",

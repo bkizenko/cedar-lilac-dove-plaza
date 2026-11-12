@@ -7,7 +7,9 @@ Updated 2026-11-12T14:12:51.582884+00:00
 
 **Verified acceptance:** 37/98 (37.76%), unchanged hearthwild-first-release-gates-v1. M0-10, M3-12 and M3-13 now have native, built and matching published evidence. This is acceptance coverage, not effort or a claim of full-game completion. Other partial work remains uncredited.
 
-- Latest verified LIVE: **dfbc553**, **2026-11-12T19-24-19-343Z-dfbc553**,8086/8101: Port & fleet owner controls, real paid hull resume/launch/supply/save, Claude roof snow on Village/H with Classic unchanged. **24/24 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Campaign/performance and later method records remain open. docs/metrics/naval-snow-release-2026-11-12.json.
+- Latest verified LIVE: **0eb4b35**, **2026-11-12T20-05-20-589Z-0eb4b35**,8086/8101: paid cordage method records, original-person study/replication, physical return/handover/recovery and carried inventory; commander replacement cap + neighbour agreement feed included. **70/70 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Broader/captured records, campaign/performance remain open. Newer canonical visual/wild-craft/UI source excluded. docs/metrics/method-record-release-2026-11-12.json.
+
+- Previous verified LIVE: **dfbc553**, **2026-11-12T19-24-19-343Z-dfbc553**,8086/8101: Port & fleet owner controls, real paid hull resume/launch/supply/save, Claude roof snow on Village/H with Classic unchanged. **24/24 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Campaign/performance and later method records remain open. docs/metrics/naval-snow-release-2026-11-12.json.
 
 - Previous verified LIVE: **b45407b**, **2026-11-12T19-04-31-509Z-b45407b**,8086/8101: owner Commander controls, explicit paid adoption on old saves, real membership and earned promotion; prior iron/cart/display included. **21/21 scoped**, compiler/buildPASS; original53 unchanged, frozen37/98. Naval controls in progress, no campaign/performance credit. docs/metrics/commander-controls-release-2026-11-12.json.
 
