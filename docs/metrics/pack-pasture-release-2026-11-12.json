@@ -1,0 +1,113 @@
+{
+  "sourceCommit": "58bc670ee06ca39b7fc17854e98e288154ccd75a",
+  "liveCommit": "da3f0ed972835df19205fe410d236c81035dd50e",
+  "release": "2026-11-12T07-03-42-181Z-da3f0ed",
+  "scope": "Actual queued working-animal return, ordinary cargo delivered at a real cache, physical same-ID pasture arrival, conserved biology/care/harness, weighted pasture reservations, actual ten-second retained-harness fitting without duplicate materials; precise parent workload and safe cancellation.",
+  "batch": {
+    "passed": 45,
+    "total": 45,
+    "distinctFocused": 42,
+    "builtPasture": 2,
+    "builtExistingVillage": 1
+  },
+  "focusedEvidence": {
+    "pasture": 8,
+    "cattleHusbandry": 7,
+    "packWelfare": 5,
+    "waterPack": 16,
+    "villageWorkload": 6
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "built": {
+    "scope": "Two desktop built checks on source-earned native pasture/refit fixtures: actual retained-harness pen UI and same-ID pasture persistence; actual return-queue/cancel controls and strict owned-animal/harness/biological metadata persistence. Only disposable copies are paused. No additional return journey/refit completion, campaign, performance, historical balance or screenshot claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "animalId": 6359,
+    "handlerId": 6224,
+    "pasturePen": {
+      "hit": 6363,
+      "selected": 6363,
+      "nativeInput": true
+    },
+    "pasture": {
+      "id": 6359,
+      "harness": {
+        "version": 1,
+        "preparedAt": 0,
+        "wood": 8,
+        "workSeconds": 90
+      },
+      "strictMetadataPreserved": true,
+      "visibleExistingHarnessFit": true
+    },
+    "refitPen": {
+      "hit": 6363,
+      "selected": 6363,
+      "nativeInput": true
+    },
+    "refit": {
+      "id": 6359,
+      "handler": 6224,
+      "harness": {
+        "version": 1,
+        "preparedAt": 0,
+        "wood": 8,
+        "workSeconds": 90
+      },
+      "queuedAndCanceledThroughUI": true,
+      "strictMetadataAndPracticePreserved": true,
+      "actualCapacity": 3
+    },
+    "originalsUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "scope": "Frozen-app import/render/Menu/existing workplace queue and actual owner recipe query/strict saved restore. Fresh private Chrome context, paused native fixture; no production actions, simulation steps, screenshots, performance or campaign claim.",
+    "originalChecksum": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "opening": {
+      "id": 12462,
+      "type": "smokehouse",
+      "time": 11394.073333341026,
+      "residents": 53
+    },
+    "query": {
+      "recipeRows": 2,
+      "epoch": 3,
+      "stateRevision": 0,
+      "requestId": 3
+    },
+    "render": {
+      "canvas": true,
+      "drawCalls": 98,
+      "simulationErrors": [],
+      "paused": true,
+      "time": 11394.073333341026,
+      "quality": "low"
+    },
+    "save": {
+      "saved": true,
+      "message": "Village saved"
+    },
+    "restore": {
+      "replaced": true,
+      "paused": true,
+      "time": 11394.073333341026,
+      "residents": 53,
+      "workplacePresent": true,
+      "errors": []
+    },
+    "passed": 1,
+    "total": 1,
+    "errors": [],
+    "elapsedMilliseconds": 37985
+  },
+  "frozenFirstRelease": {
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "changed": false
+  },
+  "remaining": "Broader husbandry, riding, draft carts and full first-release acceptance remain open; no campaign/performance target credit."
+}

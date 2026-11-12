@@ -9204,6 +9204,15 @@
       "liveCommit": "0106f88dac20d8e76c71ac2a37ad3939e70dedad",
       "evidence": "docs/metrics/cattle-husbandry-release-2026-11-12.json",
       "scope": "Finite fresh-map cattle;150s paid capture and physical pen/stable journeys; actual same-ID trained working cattle, species care/breeding/milk, local keeper withdrawal and dairy delivery; real ard labor consumer; retained biological metadata and strict saved identity. Other species and advanced husbandry remain open."
+    },
+    {
+      "id": "CODEX-WORKING-HERD-RETURN",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "58bc670",
+      "liveCommit": "da3f0ed972835df19205fe410d236c81035dd50e",
+      "evidence": "docs/metrics/pack-pasture-release-2026-11-12.json",
+      "scope": "Actual queued working-animal return, ordinary cargo delivered at a real cache, physical same-ID pasture arrival, conserved biology/care/harness, weighted pasture reservations, actual ten-second retained-harness fitting without duplicate materials; precise parent workload and safe cancellation."
     }
   ],
   "status_update_policy": {
