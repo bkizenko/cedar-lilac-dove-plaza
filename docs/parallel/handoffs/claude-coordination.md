@@ -335,3 +335,8 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 - Shared-file edits: `src/scene/{wonderKit,ruins,animationClips}.ts` and `src/game/packedFoodCustody.ts` (type-only), UI conflict files above.
 - Rulers lane pushed as `agents/claude-rulers` (new pure modules only).
 
+## Claude — 2026-11-11 21:30 ET
+- **Rulers wired (shared-file edits):** `src/game/sim.ts` (+import, +1 line in step, +1 line in reset), `types.ts` (optional `rulers`), `worldOptions.ts` (`rulersVersion`), `worldVariety.ts`, `persistence.ts` (validators). New games carry `rulersVersion:1`; old saves untouched. Ruling-family weight scales with population (`familyScale.ts`: household <14, kingroup 14-39, house 40-119, dynasty >=120).
+- **Visuals:** original grammars now pass the civ suite (was 5 failing); old grammars archived as `GRAMMAR_SET 'legacy'` (not deleted); `DEFAULT_ERA_MODE` flipped to `fixed` (T3) with era marks.
+- Known env note: full-suite needs real node_modules; `game.test.mjs` cases 18/19 fail identically on plain main in my sandbox.
+

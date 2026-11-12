@@ -1,3 +1,4 @@
+import {advanceRulers} from './rulersRuntime';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -387,7 +388,7 @@ export class Game {
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
     this.state.autoWorkEnabled=worldgenVersion>=CAMP_RULES.unbuiltGeneration?false:true;
-    if(this.world.options)this.state.worldOptions=this.world.options;
+    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:1}; // new games carry the rulers lane
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
@@ -5732,6 +5733,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        advanceRulers(this); // Claude rulers lane: no-op unless worldOptions.rulersVersion===1
         reconcileSiegeRams(this);
         updateSeasonReports(this);
         phases?.mark('production');

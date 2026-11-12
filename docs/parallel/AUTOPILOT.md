@@ -853,5 +853,5 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | **Total** | **569** | 98 | 196 | 264 | 3 | 8 |
 
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
-| RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | source-pushed-not-live | 25 tests incl. stylized-facts; sim hook + UI panels still to wire; family weight scales with population (see RULERS-FAMILY-SCALE) |
-| RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | in progress | gate by tier+population |
+| RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | wired behind worldOptions.rulersVersion | Game.step advanceRulers; new games carry rulersVersion:1; persistence validates; UI panels still to do |
+| RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | done (source+wired) | familyScale.ts gates heirs/claims/great persons by population; rulers-runtime tests 3/3 |
