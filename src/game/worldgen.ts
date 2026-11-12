@@ -13,6 +13,7 @@ import {buildEcologicalProvinces,provinceAt,EcologyCoverageError,type Ecological
 import {repairRiparianTerrain} from './riparianRepair';
 import {populateEcologicalResources} from './ecologicalResources';
 import {lakeContains,localWaterAt,waterSurfaceAt,type LocalWaterBody,type Waterfall} from './localWater';
+import {settleRiverInflows} from './riverProfiles';
 export {waterSurfaceAt} from './localWater';
 import {scenicBeautyAt,scenerySummary,SCENERY_RULES} from './scenery';
 import {dryTreeRoot,dryTreeRootLocal} from './hydrology';
@@ -42,6 +43,8 @@ export type WorldData = {
   waterBodies?:LocalWaterBody[];
   localWaterVersion?:17;
   waterfalls?:Waterfall[];
+  /** Runtime-only sea tide offset (tides v2); never saved, recomputed from game time. */
+  seaTideY?:number;
   waterHeights?:Float32Array;
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;
@@ -246,7 +249,9 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
   const waterY = WATER_Y;
   const geo=version>=18&&varied?distributedGeography(seed,MAP,varied as ReturnType<typeof diverseLandforms>,reliefSeed):version>=15&&varied?diverseGeography(seed,MAP,varied as ReturnType<typeof diverseLandforms>):varied?variedGeography(seed,MAP,varied):multi?multipleGeography(seed,MAP,multi):land?geography(seed,MAP,land.distance,version>=8,version>=10,version>=11):null;
   if(geo){rivers.length=0;rivers.push(...geo.rivers);}
-  const localBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
+  const historicBodies:LocalWaterBody[]=geo&&'waterBodies' in geo?geo.waterBodies as LocalWaterBody[]:[];
+  // GW-12 (Grok): opt-in river profile v2, saved in worldOptions; absent flag keeps historic worlds byte-identical.
+  const localBodies:LocalWaterBody[]=land&&'options' in land&&(land.options as WorldOptions).riverProfileVersion===2?settleRiverInflows(historicBodies).bodies:historicBodies;
   const waterHeights=version>=11?new Float32Array(n*n):undefined;
   // Preserve the historical rounded raster exactly, using the segment index.
   // V17's separate published triangle index below remains authoritative.

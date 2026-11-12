@@ -3,6 +3,7 @@ import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender
 import {explicitArmedOrder,hasLocalLootPursuer} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
+import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
 import {difficulty} from './difficulty';
 import type { Game } from "./sim";
 import type { Unit, Building, ResourceNode } from "./types";
@@ -235,11 +236,13 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
       u.tx = victim.x; u.tz = victim.z; u.order = "move"; u.node = null;
       u.workReason = "Intercepting an unguarded carrier";
       if (Math.hypot(u.x - victim.x, u.z - victim.z) > 2) g.steer(u, dt);
+      else if (!stolenMarkRoom(g, u)) { u.order = "hold"; u.workReason = "Cannot keep track of another stolen load"; }
       else {
         const stolen = Math.min(4, victim.carry);
         victim.carry -= stolen;
         u.carry = stolen; u.carryType = victim.carryType; u.carryFood = victim.carryFood;
         if (victim.carry === 0) { victim.carryType = null; victim.carryFood = undefined; }
+        markStolenLoad(g, u, victim.team);
         if (victim.team === 0) g.banner(`A raider stole ${stolen} goods from a carrier — escort the route or clear the camp`, 5);
       }
       return true;
@@ -250,9 +253,9 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
       u.tx = store.x; u.tz = store.z; u.order = "move"; u.node = null;
       if (!g.buildingWorkReached(u, store)) g.steer(u, dt);
       else {
-        const stolen=Math.min(4,Math.max(0,g.tribe(store.team).food));
+        const stolen=stolenMarkRoom(g,u)?Math.min(4,Math.max(0,g.tribe(store.team).food)):0;
         if(!stolen){u.blockedTask=store.id;u.retryWorkAt=g.state.time+90;u.order="hold";u.workReason="The store is empty — looking elsewhere";return true;}
-        g.tribe(store.team).food -= stolen; u.carry = stolen; u.carryType = "food"; u.carryFood = "provisions";
+        g.tribe(store.team).food -= stolen; u.carry = stolen; u.carryType = "food"; u.carryFood = "provisions"; markStolenLoad(g, u, store.team);
         if (store.team === 0) g.banner("Raiders stole food from a storehouse — defend it or clear their camp", 5);
       }
       return true;

@@ -1,3 +1,5 @@
+import {useLifecycleAction} from './useLifecycleAction';
+import {VillageSaveButton} from './VillageSaveButton';
 import {SiegeRamControls} from './SiegeRamControls';
 import {SocietyFlag} from './SocietyFlag';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
@@ -145,6 +147,7 @@ function resWord(k: ResKind) {
 }
 
 export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }) {
+  const lifecycle=useLifecycleAction(engine);
   const compact = () => false;
   const [interfaceHidden,setInterfaceHidden]=useState(false);
   const [selMin, setSelMin] = useState(true);
@@ -246,7 +249,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
-          <button className="px-2 py-2" onClick={()=>{if(engine?.startTestSession())setTestOpen(true);}}>Test lab</button>
+          <button className="px-2 py-2" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),opened=>{if(opened)setTestOpen(true);})}>Test lab</button>
           <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"
@@ -278,18 +281,17 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <button className="px-2 py-2" onClick={() => engine?.focusHome()}>
             Focus village · F
           </button>
-          <button className="px-2 py-2" onClick={() => engine?.saveNow()}>
-            {engine?.game.testMode ? "Save test run" : "Save"}
-          </button>
+          <VillageSaveButton engine={engine}/>
           <VillageFileTransfer engine={engine}/>
+          {lifecycle.error&&<p role="status" className="text-xs">{lifecycle.error}</p>}
           {engine&&<details className="hud-world-setup"><summary className="px-2 py-2 cursor-pointer">New world</summary><WorldSetup engine={engine}/></details>}
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn · arm the village</button>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>
           <button className="px-2 py-2" title="Plan a bridge on explored banks for recalled or loaded residents cut off by water. Requires materials and builders." onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}}>Plan return crossing</button>
-          <button className="px-2 py-2" onClick={() => engine?.resumeSaved()}>
+          <button className="px-2 py-2" disabled={!engine||lifecycle.busy} onClick={() => void lifecycle.run(()=>engine!.resumeSaved())}>
             Load
           </button>
-          <button className="px-2 py-2" disabled={engine?.game.testMode} title="Restore the last protected village; save the current run first." onClick={() => engine?.resumeSaved(true)}>
+          <button className="px-2 py-2" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={() => void lifecycle.run(()=>engine!.resumeSaved(true))}>
             Restore checkpoint
           </button>
           </div>}
@@ -363,7 +365,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   {hud.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
                 </IconBtn>
                 <IconBtn title="Skip music" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}><SkipForward className="size-3.5"/></IconBtn>
-                <IconBtn title="Restart" onClick={() => engine?.restart()}>
+                <IconBtn title="Restart" onClick={() => void lifecycle.run(()=>engine!.restart())}>
                   <RotateCcw className="size-3.5" />
                 </IconBtn>
               </div>
@@ -1010,7 +1012,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <p className="text-parchment max-w-md text-center px-6">{hud.endReason}</p>
           <button
             type="button"
-            onClick={() => engine?.restart()}
+            onClick={() => void lifecycle.run(()=>engine!.restart())}
             className="rounded-lg border border-bronze/40 bg-ink-soft px-5 py-2 text-sm text-bronze-bright hover:bg-ink"
           >
             Begin again

@@ -1,3 +1,4 @@
+import {useLifecycleAction} from './useLifecycleAction';
 import {WorldSetup} from './WorldSetup';
 // Retain the welcome layout for later; iteration opens straight onto the map.
 const SHOW_WELCOME=false;
@@ -86,6 +87,7 @@ export function GameApp() {
   const [fail, setFail] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ sx: number; sy: number; x: number; y: number } | null>(null);
   const [boot, setBoot] = useState(0);
+  const lifecycle=useLifecycleAction(engineRef.current);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,12 +186,12 @@ export function GameApp() {
             <button
               type="button"
               className="mt-3 rounded-lg border border-bronze px-6 py-2 text-parchment"
-              onClick={() => engineRef.current?.resumeSaved()}
+              disabled={lifecycle.busy} onClick={() => void lifecycle.run(()=>engineRef.current!.resumeSaved())}
             >
               Resume saved village
             </button>
           )}
-          {hud.banner && <p role="status">{hud.banner}</p>}
+          {(lifecycle.error||hud.banner) && <p role="status">{lifecycle.error||hud.banner}</p>}
           <p className="mt-4 text-[11px] text-parchment-dim">
             Press Enter to begin · H for keyboard controls
           </p>

@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import type {Building} from './types';
 import {sampleWorldHeight} from './worldgen';
+import {canalBreachPermit,breachPredecessorCuts,canalBreachCommitAllowed} from './canalBreach';
 export const EXCAVATION_RULES={version:1,depths:[.5,1,1.5,2] as readonly number[],defaultDepth:1,maximumBankGrade:.30,subdivisions:16,coarseCellsPerTile:2,maximumTiles:512,maximumCuts:512,workSecondsPerCubicMeter:6,minimumWorkSeconds:18,waterClearanceMeters:.35,maximumNaturalGrade:.24} as const;
 export type TerrainCut={version:1;id:number;buildingId:number;team:number;x:number;z:number;w:number;d:number;depth:number;volumeCubicMeters:number;workSeconds:number;legacyPaid?:boolean};
 type ExcavationState={excavations?:TerrainCut[];excavationDepth?:number};
@@ -41,9 +42,11 @@ export function excavationHeightAt(g:Game,x:number,z:number,baseHeight:number){
  return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);
 }
 function proposal(g:Game,b:Pick<Building,'id'|'team'|'x'|'z'|'w'|'d'>,depth=(b as ExcavationBuilding).excavationDepth??(b.team===0?excavationDepth(g):EXCAVATION_RULES.defaultDepth)):TerrainCut{return{version:1,id:b.id,buildingId:b.id,team:b.team,x:b.x,z:b.z,w:b.w,d:b.d,depth,volumeCubicMeters:0,workSeconds:0};}
-export function excavationVolume(g:Game,cut:TerrainCut){
+/** `extra`: cuts already paid for but not yet applied (a canal's earlier breach digs,
+ * committed together at the breach), so shared soil is charged once (Grok W7). */
+export function excavationVolume(g:Game,cut:TerrainCut,extra:Pick<TerrainCut,'x'|'z'|'w'|'d'|'depth'>[]=[]){
  const bounds=cutBounds(cut),step=.5,fine=g.world.size/g.world.segs*EXCAVATION_RULES.coarseCellsPerTile/EXCAVATION_RULES.subdivisions,half=g.world.size/2;let volume=0;
- const additional=(x:number,z:number)=>{const h=raw(g,x,z),existing=h-excavationHeightAt(g,x,z,h),difference=cutAmount(cut,x,z)-existing;return difference>1e-5?difference:0;};
+ const additional=(x:number,z:number)=>{const h=raw(g,x,z);let existing=h-excavationHeightAt(g,x,z,h);for(const e of extra)existing=Math.max(existing,cutAmount(e,x,z));const difference=cutAmount(cut,x,z)-existing;return difference>1e-5?difference:0;};
  for(let x=bounds.x0+step/2;x<bounds.x1;x+=step)for(let z=bounds.z0+step/2;z<bounds.z1;z+=step){
   const gx=(x+half)/fine,gz=(z+half)/fine,ix=Math.floor(gx),iz=Math.floor(gz),fx=gx-ix,fz=gz-iz,x0=ix*fine-half,z0=iz*fine-half;
   const a=additional(x0,z0),b=additional(x0+fine,z0),c=additional(x0,z0+fine),d=additional(x0+fine,z0+fine),lowering=fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);
@@ -51,13 +54,13 @@ export function excavationVolume(g:Game,cut:TerrainCut){
  }
  return volume;
 }
-export function configureExcavation(g:Game,building:Building){if(building.type!=='trench')return;const b=building as ExcavationBuilding,legacyCredit=b.excavationWorkSeconds===undefined&&b.build>0&&b.build<1?b.build*18:0;if(b.excavationDepth===undefined)b.excavationDepth=b.team===0?excavationDepth(g):EXCAVATION_RULES.defaultDepth;if(b.excavationVolume===undefined)b.excavationVolume=excavationVolume(g,proposal(g,b));if(b.excavationWorkSeconds===undefined)b.excavationWorkSeconds=Math.max(EXCAVATION_RULES.minimumWorkSeconds,b.excavationVolume*EXCAVATION_RULES.workSecondsPerCubicMeter);if(legacyCredit>0)b.build=Math.min(b.build,legacyCredit/b.excavationWorkSeconds);}
+export function configureExcavation(g:Game,building:Building){if(building.type!=='trench')return;const b=building as ExcavationBuilding,legacyCredit=b.excavationWorkSeconds===undefined&&b.build>0&&b.build<1?b.build*18:0;if(b.excavationDepth===undefined)b.excavationDepth=b.team===0?excavationDepth(g):EXCAVATION_RULES.defaultDepth;if(b.excavationVolume===undefined)b.excavationVolume=excavationVolume(g,proposal(g,b),breachPredecessorCuts(g,b));if(b.excavationWorkSeconds===undefined)b.excavationWorkSeconds=Math.max(EXCAVATION_RULES.minimumWorkSeconds,b.excavationVolume*EXCAVATION_RULES.workSecondsPerCubicMeter);if(legacyCredit>0)b.build=Math.min(b.build,legacyCredit/b.excavationWorkSeconds);}
 const workRevisions=new WeakMap<Building,{world:Game['world'];records:TerrainCut[]|undefined;count:number}>();
 /** Neighboring completed cuts reduce remaining soil, preserving already performed labor. */
 export function excavationWorkNeed(g:Game,building:Building){
  configureExcavation(g,building);const b=building as ExcavationBuilding,records=state(g).excavations,count=records?.length||0,old=workRevisions.get(b);
  if(b.build<1&&(!old||old.world!==g.world||old.records!==records||old.count!==count)){
-  const paid=b.build*(b.excavationWorkSeconds??18),volume=excavationVolume(g,proposal(g,b)),need=Math.max(EXCAVATION_RULES.minimumWorkSeconds,volume*EXCAVATION_RULES.workSecondsPerCubicMeter);
+  const paid=b.build*(b.excavationWorkSeconds??18),volume=excavationVolume(g,proposal(g,b),breachPredecessorCuts(g,b)),need=Math.max(EXCAVATION_RULES.minimumWorkSeconds,volume*EXCAVATION_RULES.workSecondsPerCubicMeter);
   b.excavationVolume=volume;b.excavationWorkSeconds=Math.max(need,paid);b.build=Math.min(1,paid/b.excavationWorkSeconds);workRevisions.set(b,{world:g.world,records,count});
  }
  return b.excavationWorkSeconds??EXCAVATION_RULES.minimumWorkSeconds;
@@ -69,14 +72,16 @@ export function excavationIssue(g:Game,b:Pick<Building,'id'|'team'|'x'|'z'|'w'|'
  if(excavationCuts(g).length>=EXCAVATION_RULES.maximumCuts||derived.tiles.size+added>EXCAVATION_RULES.maximumTiles)return'Too many separate excavations — extend existing trenches';
  for(const other of g.state.buildings)if(other.id!==b.id&&other.hp>0&&other.type!=='trench'&&other.type!=='moat'&&Math.max(bounds.x0,other.x-other.w/2)<Math.min(bounds.x1,other.x+other.w/2)&&Math.max(bounds.z0,other.z-other.d/2)<Math.min(bounds.z1,other.z+other.d/2))return'Trench banks need clear ground away from structures and fields';
  for(const list of [g.state.trees,g.state.forage,g.state.stones,g.state.copper,g.state.iron])for(const node of list)if(node.amount>0&&cutAmount(cut,node.x,node.z)>.03)return'Clear or gather the resources on the trench banks first';
+ let breach:boolean|undefined;
  for(let z=bounds.z0;z<=bounds.z1;z+=1)for(let x=bounds.x0;x<=bounds.x1;x+=1){const amount=cutAmount(cut,x,z);if(amount<.01)continue;const h=raw(g,x,z),grade=Math.hypot(raw(g,x+1,z)-raw(g,x-1,z),raw(g,x,z+1)-raw(g,x,z-1))/2;
-  if(h-amount<Math.max(g.waterAt(x,z),g.waterAt(x,z)-g.world.waterY+g.world.baseWaterY+.55)+EXCAVATION_RULES.waterClearanceMeters)return'This depth would reach water — choose shallower or higher ground';
+  if(h-amount<Math.max(g.waterAt(x,z),g.waterAt(x,z)-g.world.waterY+g.world.baseWaterY+.55)+EXCAVATION_RULES.waterClearanceMeters&&!(breach??=canalBreachPermit(g,b,cut.depth)))return'This depth would reach water — choose shallower or higher ground'; // Grok W7: only a ready canal breach stage is exempt (canalBreach.ts)
   if(grade>EXCAVATION_RULES.maximumNaturalGrade)return'Trench banks need gentler natural ground';
  }
  return null;
 }
 export function commitExcavation(g:Game,b:Building){
  if(b.type!=='trench'||b.build<1||b.hp<=0||b.plannedCost)return false;if(excavationCuts(g).some(c=>c.buildingId===b.id))return true;
+ if(!canalBreachCommitAllowed(g,b))return false;
  configureExcavation(g,b);if(excavationIssue(g,b))return false;const cut=proposal(g,b);cut.volumeCubicMeters=excavationVolume(g,cut);cut.workSeconds=excavationWorkNeed(g,b);(state(g).excavations??=[]).push(cut);
  for(const u of g.state.units)if(u.hp>0&&cutAmount(cut,u.x,u.z)>.001)u.y=excavationHeightAt(g,u.x,u.z,raw(g,u.x,u.z));
  for(const list of [g.state.trees,g.state.forage,g.state.stones,g.state.copper,g.state.iron])for(const node of list)if(cutAmount(cut,node.x,node.z)>.001)node.y=excavationHeightAt(g,node.x,node.z,raw(g,node.x,node.z));

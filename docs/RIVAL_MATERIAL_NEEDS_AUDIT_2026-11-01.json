@@ -1,0 +1,154 @@
+{
+  "scope": "Read-only own-needs audit of exact natural returned5692.98checkpoint underpublished71992d9; no simulation steps, grants, retrospective market knowledge or stock deletion",
+  "source": "71992d9e7639bc912613a3aa946dbebfc88ccd91",
+  "checkpointSha256": "2c8e48786810f6c4a460bb4bc471be6c3e46cf577a90810ca4aa64fa045ef994",
+  "time": 5692.979999999419,
+  "encodedStateUnchanged": true,
+  "inputFileUnchanged": true,
+  "gatherWorkRate": 4,
+  "teams": [
+    {
+      "team": 1,
+      "age": 1,
+      "pop": 53,
+      "ownStocks": {
+        "food": 4206.794296416664,
+        "wood": 12939.621819999642,
+        "stone": 872,
+        "copper": 80,
+        "iron": 0
+      },
+      "actualOwnReserves": {
+        "wood": 120,
+        "stone": 60,
+        "copper": 20,
+        "iron": 0,
+        "food": 1744.1082477720965
+      },
+      "automaticMaterialTargets": {
+        "wood": 240,
+        "stone": 88,
+        "copper": 40,
+        "iron": 0
+      },
+      "ownNeedShortfalls": {
+        "wood": 0,
+        "stone": 0,
+        "copper": 0,
+        "iron": 0,
+        "food": 0
+      },
+      "currentJobs": {
+        "wood": {
+          "gatherers": 23,
+          "automatic": 23,
+          "directLocked": 0,
+          "actualCarried": 229
+        },
+        "stone": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "copper": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "iron": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "food": {
+          "gatherers": 16,
+          "automatic": 16,
+          "directLocked": 0,
+          "actualCarried": 58.26212912373291
+        }
+      },
+      "physicalTimberDeliveredSinceCampaignStart": 16170,
+      "knownReturnedMarketReports": 0
+    },
+    {
+      "team": 2,
+      "age": 0,
+      "pop": 46,
+      "ownStocks": {
+        "food": 3517.8060501332006,
+        "wood": 14205.200580000119,
+        "stone": 184,
+        "copper": 27,
+        "iron": 0
+      },
+      "actualOwnReserves": {
+        "wood": 80,
+        "stone": 32,
+        "copper": 0,
+        "iron": 0,
+        "food": 1438.8306026678404
+      },
+      "automaticMaterialTargets": {
+        "wood": 120,
+        "stone": 56,
+        "copper": 0,
+        "iron": 0
+      },
+      "ownNeedShortfalls": {
+        "wood": 0,
+        "stone": 0,
+        "copper": 0,
+        "iron": 0,
+        "food": 0
+      },
+      "currentJobs": {
+        "wood": {
+          "gatherers": 13,
+          "automatic": 13,
+          "directLocked": 0,
+          "actualCarried": 237
+        },
+        "stone": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "copper": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "iron": {
+          "gatherers": 0,
+          "automatic": 0,
+          "directLocked": 0,
+          "actualCarried": 0
+        },
+        "food": {
+          "gatherers": 23,
+          "automatic": 23,
+          "directLocked": 0,
+          "actualCarried": 92.0041960590122
+        }
+      },
+      "physicalTimberDeliveredSinceCampaignStart": 17214,
+      "knownReturnedMarketReports": 0
+    }
+  ],
+  "resourceRules": {
+    "timber": "Finite standing amount per harvest, natural stump renewal1200s; paid planting120s",
+    "stoneAndOre": "Nonrenewing deposits/seams",
+    "lumberIncome": "No passive treasury yield; once-only spent-camp reclamation refunds75%originaltimbercost"
+  },
+  "diagnosis": "Old optional tree task priority retained a positive floor plus lumber bonus after all actual needs were satisfied; persistent wood gatherers were only released if another shortage/emergency existed. New finite own-plan/fuel/export targets reject unneeded automatic assignments and gradually return/release surplus workers without deleting their stock or real cargo.",
+  "scopeLimits": [
+    "This audit performs no simulation steps and does not claim the23/13 legacy cutters have already been reassigned",
+    "Actual bounded release, retained partial-cargo delivery, no extra cutting/stock deletion and save validity passed in the six published material-needs checks",
+    "A wealthy restored society with no actual shortfall is not forced to make a profitable trade; future natural frequency remains separate from the controlled M2 qualification"
+  ]
+}

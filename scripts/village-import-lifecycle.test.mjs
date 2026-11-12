@@ -97,7 +97,7 @@ test("delayed file cannot overwrite an actual Engine restart or write its old pa
       d = deferred(),
       oldState = e.game.state,
       pending = e.importVillage(d.file);
-    e.restart({ layout: "pangaea", size: 1040 });
+    await e.restart({ layout: "pangaea", size: 1040 });
     assert.notEqual(e.game.state, oldState);
     const now = e.game.state,
       shown = e.shown.length,
@@ -172,7 +172,7 @@ test("actual disposal retains its checkpoint but delayed import never writes/res
     globalThis.window = { removeEventListener() {} };
     globalThis.document = { removeEventListener() {} };
     try {
-      e.dispose();
+      await e.dispose();
       const count = writes.length,
         g = e.game;
       assert.equal(e.disposed, true);

@@ -20,7 +20,7 @@ test('raids require discovered targets and use local defense rather than distant
 });
 test('a real raid leaves armed guards and workers; neutral relations change only on arrival',()=>{
  const g=fixture();discover(g);const pop=g.state.units.length,food=g.tribe(1).food;
- assert.equal(rivalOperationIntent(g,1,1000),'raid');assert.equal(dispatchRivalOperation(g,1,1000),true);
+ assert.equal(rivalOperationIntent(g,1,1000),'raid');g.vision.fill(2);const dispatchBanner=g.state.banner;assert.equal(dispatchRivalOperation(g,1,1000),true);assert.equal(g.state.banner,dispatchBanner,'Visible outbound movement is not an attack notification');
  const sent=g.state.units.filter(u=>u.pillage===0);assert.ok(sent.length>=2);assert.ok(g.state.units.some(u=>u.militia&&u.pillage!==0));assert.ok(g.state.units.some(u=>!u.militia&&u.order!=='attackmove'));
  assert.equal(g.tribe(1).hostile,false);assert.equal(g.state.units.length,pop);assert.equal(g.tribe(1).food,food);
  const u=sent[0],target=g.state.rivalMissions.find(m=>m.id===u.societyMissionId).targetSite,start=Math.hypot(u.x-target.x,u.z-target.z);g.vision.fill(0);

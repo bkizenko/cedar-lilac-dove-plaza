@@ -65,12 +65,11 @@ test("ordinary bounded NPC review plans real housing only from crowding and actu
   tickHousing(g, 0);
   assert.equal(
     g.state.buildings.some((b) => b.team === team && b.renovation),
-    false,
+    true,
   );
   assert.equal(preferredRivalHome(g, team), "hut");
-  // Different declared INITIAL fixture, not a midrun grant: same native map,
-  // crowding, genuinely stored endowment6fibre. No Game.step has occurred.
-  const candidate=decodeGame(initialPayload),ct=candidate.tribe(team);ct.items.plantFibre=6;
+  // Restored initial state has the same finite wood/stone and no plant fibre.
+  const candidate=decodeGame(initialPayload),ct=candidate.tribe(team);
   tickHousing(candidate,0);
   const b = candidate.state.buildings.find((b) => b.team === team && b.renovation);
   assert.ok(b, "native planner reserves actual existing hut, not an invented free house");
@@ -78,7 +77,7 @@ test("ordinary bounded NPC review plans real housing only from crowding and actu
   assert.equal(b.build, 1);
   assert.equal(b.renovation.paid, false);
   assert.equal(g.popCap(team), before);
-  assert.equal(ct.items.plantFibre, 6);
+  assert.equal(ct.items.plantFibre, 0);
   assert.equal(
     g.state.units.some((u) => u.team === team && u.housingSkill),
     false,

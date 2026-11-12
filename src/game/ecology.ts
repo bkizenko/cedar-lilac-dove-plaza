@@ -1,5 +1,6 @@
 import {difficultyTemperature} from './difficulty';
 import {provinceAt,ecologicalConditionsAt} from './ecologicalProvinces';
+import {landformLabelsEnabled,landformHabitatAt} from './landformLabels';
 import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
 export const HABITATS = {
@@ -20,7 +21,7 @@ export function habitatAt(g: Game, x: number, z: number) {
 /** Compatibility family supports old discovery/cultivation rules without
  * comparing dynamic ecological profiles to three legacy singleton objects. */
 export function habitatKindAt(g:Game,x:number,z:number):'plains'|'forest'|'hills'{
- if(g.world.ecology)return provinceAt(g.world.ecology,x,z).baseHabitat;
+ if(g.world.ecology)return landformLabelsEnabled(g.world)?landformHabitatAt(g.world,x,z):provinceAt(g.world.ecology,x,z).baseHabitat; // Grok W5 opt-in relief labels
  const habitat=habitatAt(g,x,z);return habitat===HABITATS.forest?'forest':habitat===HABITATS.hills?'hills':'plains';
 }
 

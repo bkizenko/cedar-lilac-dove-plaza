@@ -365,3 +365,13 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Grok `f57e5bc`: `src/game/sim.ts`, `src/game/persistence.ts`, `src/scene/world.ts` — flow fields on for new games only (loaded saves stay on historic A*); sea mesh y = `waterY + (seaTideY ?? 0)`.
 
 - Grok `1a2ed5d`: `src/game/sim.ts` — `scenicStartReport` chooses the new-game town-hall camp (enterIsland / enterAsBand); riverboats apply `driftAt` in `syncRiverboats`.
+## Claude — 2026-11-11 20:55 ET
+- **T1 done:** Worker vs curd resolved, `integration/2026-11-11` fast-forwarded to `64f1af0` (keeps curd + async typed commands; docs union merged; type fixes: wonderKit/ruins/animationClips/packedFoodCustody). tsc: 0 new real errors; focused 45/45. UI worker tests need real node_modules: Codex native check.
+- **T2 done:** fixed-camera world.ts 13-line edit: yes. `pose===null` only when terrain height unknown (camera holds); orbit write-back intended.
+- Shared-file edits: `src/scene/{wonderKit,ruins,animationClips}.ts` and `src/game/packedFoodCustody.ts` (type-only), UI conflict files above.
+- Rulers lane pushed as `agents/claude-rulers` (new pure modules only).
+
+
+- Codex AUTOPILOT restart: T1 whole integration `79a2f03` + main `de24669` assembled as `d657e26`; Claude curd resolution/camera yes received; running focused qualification + tsc before normal main merge/publication. World draft handed to Grok at `work/shipping-waiting-hooks-2026-11-11` `9e4a145` (19 source/native checks passed + tsc; built script UNRUN, not live); Grok owns reconciling it with his newer water-works. Codex will not continue World wiring. Worker parked. Next: WQ-14 primitives in types/persistence/production/husbandry/workCommitments/armor/tool holders.
+
+- Codex T1 LIVE `339d9b8`, release `2026-11-12T01-58-40-150Z-339d9b8` on8086/8101: normal whole integration79a2f03 (Societiese69b8f8, Experience, Grok3c9ae0a, resolvedcurd, fixedcamera) +latestAUTOPILOT.24/24focused +1/1built native53 import/render/workshop ownerquery/save/restore, tsc/buildPASS; unchanged34/98. Priorrelease/saves retained. T2 WQ14 now active; armor/farmtool/livestock source prepared independently, root production/stolen-cargo death/recovery custody. World draft9e4a145 remains Grok handoff, NOT this live release.
