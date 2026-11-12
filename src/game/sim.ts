@@ -7,6 +7,7 @@ import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './traded
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {buildSkins} from './skinState';
 import {reviewSociety} from './societyRuntime';
 import {noteArrivals} from './societyCivicRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
@@ -536,6 +537,7 @@ export class Game {
       fallenT: 0,
       };
     });
+    this.state.skins=buildSkins(s,this.state.tribes.length,request.skin); // every society's own look, fixed for the game (skinState.ts)
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3) continue;
       const pool = CITY_LEADERS[tr.spec] || CITY_LEADERS.wood;

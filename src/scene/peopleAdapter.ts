@@ -6,7 +6,7 @@
  * throws while drawing, the adapter switches itself to legacy for the rest of the session rather than leave people invisible.
  *
  * Gear shown is the gear a unit really owns: Unit.garment, the armor asset it holds (wornArmor); helmets and shields are drawn
- * only if a future simulation owns them (RigGear). Which civ dresses a team is `civForTeam` until tribes carry a civ. */
+ * only if a future simulation owns them (RigGear). A team dresses in its society's CivSkin (state.skins); `civForTeam` remains the fallback for games without skins. */
 import type * as THREE from 'three';
 import {wornArmor} from '../game/armor';
 import {armorAffiliationColor} from '../game/societyIdentity';
@@ -18,7 +18,8 @@ import type {Unit} from '../game/types';
 import {hashSeed} from './buildingParts';
 import {SEASONS} from './cultureGrammar';
 import {CIV_IDS,type CivId} from './civStyles';
-import {cultureForCiv} from './civPeople';
+import {cultureForCiv,cultureForSkin} from './civPeople';
+import {skinOfTeam} from '../game/skinState';
 import {CharacterRigLayer,type PeopleSet,type PeopleWorld} from './characterRigLayer';
 import type {ProjectLike,UnitLike} from './characterAnim';
 import type {RigGear} from './characterRig';
@@ -37,7 +38,10 @@ export class PeopleAdapter{
  get active(){return this.set==='rig'&&!!this.layer&&!this.failed;}
  private fail(e:unknown){this.failed=true;this.set='legacy';this.layer?.dispose();this.layer=null;if(this.errors++===0)console.error('people rig disabled, legacy people restored:',e);}
  private culture(game:Game,team:number){
-  const civ=civForTeam(game.state.seed,team),key=civ+'#'+game.state.seed;let c=this.cultures.get(key);if(!c){c=cultureForCiv(civ,game.state.seed%997+1);this.cultures.set(key,c);}return c;
+  // a society dresses in its own CivSkin; a game without skins (or the neutral skin) keeps the old per-team civ
+  const skin=skinOfTeam(game.state,team),seed=game.state.seed%997+1;
+  const key=skin?skin.id+'~'+skin.garb.body+skin.garb.trim+'#'+game.state.seed:civForTeam(game.state.seed,team)+'#'+game.state.seed;let c=this.cultures.get(key);
+  if(!c){c=skin?cultureForSkin(skin,seed):cultureForCiv(civForTeam(game.state.seed,team),seed);this.cultures.set(key,c);}return c;
  }
  private build(game:Game):PeopleWorld{
   const g=game;

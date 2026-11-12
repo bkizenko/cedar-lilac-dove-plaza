@@ -9,9 +9,8 @@ import {foodExperienceReport} from '@/game/foodExperience';
 import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
-import {CapitulationTerms} from '../council/CapitulationTerms';
 import {CivicPanel} from './civicPanel';
-import {HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
+import {HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -96,7 +95,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
  const [tab,setTab]=useState(initial||'ruler');
  const terms=useOwnerReadModels(engine,[{kind:'capitulation-offers'}])({kind:'capitulation-offers'}).model?.offers??[];
  if(!c)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">Reading the council…</p></Screen>;
- if(!c.enabled)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><CapitulationTerms engine={engine}/><p className="hw-empty">No ruling house yet.</p></Screen>;
+ if(!c.enabled)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><HearthCapitulationTerms engine={engine}/><p className="hw-empty">No ruling house yet.</p></Screen>;
  const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},...(civic?.enabled?[{id:'society',label:'Society',icon:<Landmark size={20}/>,badge:civic.warnings.length||undefined}]:[]),{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
  return <Screen title={c.house?`House ${c.house.name}`:'Council'} icon={<Crown size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   {tab==='ruler'&&<div className="hw-grid-2">
@@ -119,7 +118,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
   {tab==='society'&&civic&&<CivicPanel civic={civic}/>}
   {tab==='chronicle'&&<FameFeed log={c.log}/>}
-  {tab==='terms'&&<CapitulationTerms engine={engine}/>}
+  {tab==='terms'&&<HearthCapitulationTerms engine={engine}/>}
  </Screen>;
 }
 

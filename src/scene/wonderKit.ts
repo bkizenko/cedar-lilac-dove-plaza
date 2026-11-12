@@ -5,7 +5,7 @@
 import {hashSeed,part,partBounds,partsAtLod,partTriangles,floatingParts,seededRandom,chance,pick,range,type Part,type Rng,type LodTier,type BuildingSpec} from './buildingParts';
 import {rotateParts} from './buildingFamilies';
 import {ensureTiers,ensureCore,ensureNearSupport} from './buildingFamiliesCivic';
-import {CIVS,CIV_IDS,matId,materialTable,type CivId,type CivMaterials,type Swatch} from './civStyles';
+import {CIVS,CIV_IDS,matId,materialTable,paletteTable,type CivId,type CivMaterials,type Swatch} from './civStyles';
 import {groundSite,plinthSpec,type SiteSampleLike} from './siteGrounding';
 export type WonderFunction='observatory'|'terraceGarden'|'harbor'|'millMarket'|'cistern'|'assembly';
 export const WONDER_FUNCTIONS:WonderFunction[]=['observatory','terraceGarden','harbor','millMarket','cistern','assembly'];
@@ -16,14 +16,14 @@ export const CORE_OF:Record<WonderFunction,CoreId>={observatory:'sightRing',terr
 export type Size='S'|'M'|'L'|'XL';const K:Record<Size,number>={S:.6,M:1,L:1.6,XL:2.4};
 export const SHARED_MATERIALS:Record<string,Swatch>={'shared.water':{hex:'#5d8fa8',roughness:.2},'shared.fire':{hex:'#f0a03a',roughness:.6},'shared.foliage':{hex:'#5a7d3a',roughness:.95}};
 export type Axis='processional'|'cross'|'radial'|'linear'|'spiral';
-export type WonderOptions={footprint?:{w:number;d:number};wealth?:number;era?:number;wear?:number;/** pin choices; unpinned ones come from the seed */crown?:KitId;axis?:Axis;enclosure?:'wall'|'colonnade'|'none';water?:boolean;density?:number};
+export type WonderOptions={footprint?:{w:number;d:number};wealth?:number;era?:number;wear?:number;/** pin choices; unpinned ones come from the seed */crown?:KitId;axis?:Axis;enclosure?:'wall'|'colonnade'|'none';water?:boolean;density?:number;/** a CivSkin's wonder look: another civ's signature landmark and the society's own palette (absent = the civ bible, as approved) */signature?:CivId;palette?:CivMaterials};
 export type WonderPreset={v:1;seed:number;civ:CivId;family:WonderFunction;options:WonderOptions};
 type V3=[number,number,number];
 /** Piece generators work in a canonical frame at scale k; every dimension is multiplied once, so (kit,variant,size,civ) fully determines the mesh. */
-type Gen=(c:C)=>void;type C={civ:CivId;v:number;k:number;parts:Part[];m:(s:keyof CivMaterials|'water'|'fire'|'foliage')=>Part['mat'];
+type Gen=(c:C)=>void;type C={civ:CivId;/** whose signature landmark this piece draws (a CivSkin may pick another civ's) */sig:CivId;v:number;k:number;parts:Part[];m:(s:keyof CivMaterials|'water'|'fire'|'foliage')=>Part['mat'];
  b:(s:keyof CivMaterials|'water'|'fire'|'foliage',sz:V3,p:V3,lod?:LodTier,rot?:V3)=>void;cy:(s:keyof CivMaterials|'water'|'fire'|'foliage',d:number,h:number,p:V3,lod?:LodTier,sides?:number,top?:number)=>void;x:(shape:Part['shape'],s:keyof CivMaterials|'water'|'fire'|'foliage',sz:V3,p:V3,lod?:LodTier,rot?:V3,sides?:number)=>void};
-const mkC=(civ:CivId,v:number,size:Size):C=>{const k=K[size],parts:Part[]=[],m=(s:string)=>(s==='water'||s==='fire'||s==='foliage'?`shared.${s}`:matId(civ,s as keyof CivMaterials)) as Part['mat'],sc=(a:V3):V3=>[a[0]*k,a[1]*k,a[2]*k];
- return {civ,v,k,parts,m,b:(s,sz,p,lod=1,rot)=>void parts.push(part('box',m(s),sc(sz),sc(p),lod,rot)),cy:(s,d,h,p,lod=1,sides=12,top)=>void parts.push(part('cylinder',m(s),[d*k,h*k,(top??d)*k],sc(p),lod,undefined,sides)),x:(shape,s,sz,p,lod=1,rot,sides)=>void parts.push(part(shape,m(s),sc(sz),sc(p),lod,rot,sides))};};
+const mkC=(civ:CivId,v:number,size:Size,sig:CivId=civ):C=>{const k=K[size],parts:Part[]=[],m=(s:string)=>(s==='water'||s==='fire'||s==='foliage'?`shared.${s}`:matId(civ,s as keyof CivMaterials)) as Part['mat'],sc=(a:V3):V3=>[a[0]*k,a[1]*k,a[2]*k];
+ return {civ,sig,v,k,parts,m,b:(s,sz,p,lod=1,rot)=>void parts.push(part('box',m(s),sc(sz),sc(p),lod,rot)),cy:(s,d,h,p,lod=1,sides=12,top)=>void parts.push(part('cylinder',m(s),[d*k,h*k,(top??d)*k],sc(p),lod,undefined,sides)),x:(shape,s,sz,p,lod=1,rot,sides)=>void parts.push(part(shape,m(s),sc(sz),sc(p),lod,rot,sides))};};
 const PIECES:Record<KitId,{variants:number;radius:number;gen:Gen}>={
  baseTerrace:{variants:3,radius:5,gen:c=>{const n=2+c.v%2;let w=9,y=0;for(let i=0;i<n;i++){if(c.v===1)c.cy(i%2?'wall2':'wall',w,.5,[0,y,0],2,16);else c.b(i%2?'wall2':'wall',[w,.5,w*.9],[0,y,0],2);y+=.5;w*=.76;}if(c.v!==1)c.x('wedge','wall2',[2.4,n*.5,1.4],[0,0,4.5*.9+.7],1,[0,0,0]);}},
  plinth:{variants:3,radius:4.5,gen:c=>{c.b('wall',[9,.6,7],[0,0,0],2);c.b('wall2',[8,.25,6],[0,.6,0],2);if(c.v>0)for(const sx of[-1,1])for(const sz of[-1,1])c.b('trim',[.5,.9,.5],[sx*4,.85,sz*3],1);if(c.v===2)c.x('wedge','wall2',[3,.85,1.2],[0,0,4.1],1);}},
@@ -42,7 +42,7 @@ const PIECES:Record<KitId,{variants:number;radius:number;gen:Gen}>={
  brazier:{variants:3,radius:.9,gen:c=>{if(c.v===0){for(let i=0;i<3;i++){const a=i*2.1;c.cy('wall2',.15,1.3,[Math.cos(a)*.4,0,Math.sin(a)*.4],1,5);}c.cy('trim',1,.35,[0,1.3,0],1,8);}else if(c.v===1){c.cy('wall',.8,1.2,[0,0,0],1,8,.5);c.cy('trim',1.1,.3,[0,1.2,0],1,8);}else{c.b('wall2',[.9,.9,.9],[0,0,0],1);c.cy('trim',.9,.3,[0,.9,0],1,6);}c.x('cone','fire',[.6,.7,.6],[0,v1(c),0],0,undefined,5);}},
  relief:{variants:3,radius:2.6,gen:c=>{c.b('wall',[5,3.4,.5],[0,0,0],2);for(let i=0;i<(2+c.v);i++)c.b('wall2',[1,2.4-i*.4,.12],[-1.6+i*(3.2/(1+c.v)),.5,.31],0);c.b('cloth',[1.4,1.9,.05],[0,.7,.34],1);}},
  waterFeature:{variants:3,radius:3.2,gen:c=>{if(c.v===0){c.cy('wall',6,.6,[0,0,0],2,16);c.cy('water',5.2,.1,[0,.5,0],1,16);c.x('cone','water',[.5,1.6,.5],[0,.6,0],0,undefined,6);}else if(c.v===1){c.b('wall',[2.4,.5,8],[0,0,0],2);c.b('water',[1.6,.08,7.6],[0,.45,0],1);}else{for(let i=0;i<3;i++){c.b('wall',[4-i*1,.5,3],[0,i*.5,-i*.0],2);c.b('water',[3-i*.8,.06,2.6],[0,i*.5+.45,0],1);}}}},
- signature:{variants:3,radius:2.2,gen:c=>{SIGNATURE[c.civ](c);if(c.v===1)c.b('wall2',[3.2,.2,3.2],[0,0,0],0);else if(c.v===2)for(const s of[-1,1])c.cy('trim',.14,.9,[s*1.5,0,s*1.5],0,5);}},
+ signature:{variants:3,radius:2.2,gen:c=>{SIGNATURE[c.sig](c);if(c.v===1)c.b('wall2',[3.2,.2,3.2],[0,0,0],0);else if(c.v===2)for(const s of[-1,1])c.cy('trim',.14,.9,[s*1.5,0,s*1.5],0,5);}},
  bannerPair:{variants:3,radius:1.4,gen:c=>{for(const s of[-1,1]){c.cy('trim',.14,6,[s*1.1,0,0],1,5);c.b('cloth',[.9,1.6,.04],[s*1.1+.5,3.8,0],1);if(c.v>0)c.x('cone','accent',[.3,.4,.3],[s*1.1,6,0],0,undefined,5);}}},
 };
 
@@ -78,7 +78,7 @@ export type WonderKitPlan={v:1;preset:WonderPreset;civ:CivId;family:WonderFuncti
  identity:{function:WonderFunction;core:CoreId;satisfied:boolean;sightAzimuth?:number;basin?:{cx:number;cz:number;r:number};bema?:{x:number;z:number}};axis:Axis;silhouette:string;grounding:{needsPlinth:boolean;floorY:number};spec:BuildingSpec;
  triangles:[number,number,number]};
 const meshCache=new Map<string,Part[]>();
-export function pieceParts(id:KitId|CoreId,variant:number,size:Size,civ:CivId):Part[]{const key=`${id}.${variant}.${size}.${civ}`;let p=meshCache.get(key);if(!p){const def=(PIECES as any)[id]??(CORES as any)[id],c=mkC(civ,variant,size);def.gen(c);p=c.parts;meshCache.set(key,p);}return p;}
+export function pieceParts(id:KitId|CoreId,variant:number,size:Size,civ:CivId,sig:CivId=civ):Part[]{const key=`${id}.${variant}.${size}.${civ}${sig!==civ?'>'+sig:''}`;let p=meshCache.get(key);if(!p){const def=(PIECES as any)[id]??(CORES as any)[id],c=mkC(civ,variant,size,sig);def.gen(c);p=c.parts;meshCache.set(key,p);}return p;}
 const radiusOf=(id:KitId|CoreId,size:Size)=>((PIECES as any)[id]??(CORES as any)[id]).radius*K[size];
 /** Civ bias (not a rule): the seed picks 3 from a bias pool of 5 and still allows 1 wildcard. */
 const CROWN_BIAS:Record<CivId,KitId[]>={sandrill:['arch','statue','spire','relief','dome'],nilemark:['pylonPair','spire','statue','colonnade','relief'],tigrane:['zigguratTiers','dome','arch','spire','statue'],hanrei:['pagodaTiers','gate','spire','dome','statue'],vedara:['spire','dome','colonnade','statue','zigguratTiers'],aureline:['tholos','colonnade','dome','statue','arch'],sahelan:['spire','relief','arch','zigguratTiers','statue'],quillan:['zigguratTiers','relief','gate','statue','spire'],kaaltun:['zigguratTiers','spire','statue','relief','pagodaTiers'],mekhari:['pagodaTiers','gate','spire','statue','colonnade'],brythen:['tholos','statue','spire','gate','wall'],rusvolt:['dome','spire','pagodaTiers','gate','statue'],steppan:['dome','bannerPair' as KitId,'statue','arch','spire'],skoldar:['gate','statue','spire','relief','pagodaTiers']};
@@ -87,11 +87,11 @@ const BASES:KitId[]=['baseTerrace','plinth','causeway'];
 export const AXES:Axis[]=['processional','cross','radial','linear','spiral'];
 const sizeFor=(avail:number,rad:number,max:Size='XL'):Size=>{const order:Size[]=['XL','L','M','S'];for(const s of order.slice(order.indexOf(max)))if(rad*K[s]<=avail)return s;return 'S';};
 export function generateWonderKit(preset:WonderPreset,site?:SiteSampleLike):WonderKitPlan{
- const {seed,civ,family}=preset,o=preset.options,fp=o.footprint??{w:36,d:36},r=seededRandom(hashSeed(seed,civ,family,'kit')),hw=fp.w/2*.92,hd=fp.d/2*.92,core=CORE_OF[family];
+ const {seed,civ,family}=preset,o=preset.options,sig=o.signature??civ,fp=o.footprint??{w:36,d:36},r=seededRandom(hashSeed(seed,civ,family,'kit')),hw=fp.w/2*.92,hd=fp.d/2*.92,core=CORE_OF[family];
  const slope=site?site.meanGrade:0,axis=o.axis??(site&&slope>.18?'linear':pick(r,AXES)),pieces:PlacedPiece[]=[];
  const placeOk=(x:number,z:number,rad:number)=>Math.abs(x)+rad<=hw+.01&&Math.abs(z)+rad<=hd+.01&&pieces.every(p=>p.role==='base'||Math.hypot(p.x-x,p.z-z)>=p.radius+rad-.4);
  const put=(kit:KitId|CoreId,role:PlacedPiece['role'],x:number,z:number,maxSize:Size,variant:number,quarter=0,must=false)=>{let size=maxSize;for(const s of(['XL','L','M','S'] as Size[]).slice((['XL','L','M','S'] as Size[]).indexOf(maxSize))){size=s;if(placeOk(x,z,radiusOf(kit,s))||role==='base')break;}
-  const rad=radiusOf(kit,size);if(!must&&role!=='base'&&!placeOk(x,z,rad))return false;pieces.push({kit,variant,size,x,z,quarter,meshKey:`${kit}.${variant}.${size}.${civ}`,radius:rad,role});return true;};
+  const rad=radiusOf(kit,size);if(!must&&role!=='base'&&!placeOk(x,z,rad))return false;pieces.push({kit,variant,size,x,z,quarter,meshKey:`${kit}.${variant}.${size}.${civ}${kit==='signature'&&sig!==civ?'>'+sig:''}`,radius:rad,role});return true;};
  // base: biggest that fits, steered by the site (steep or wet ground gets a causeway or plinth)
  const baseKit=o.axis==='linear'||(site&&site.wetFraction>.05)?'causeway':pick(r,BASES);put(baseKit,'base',0,0,sizeFor(Math.min(hw,hd),PIECES[baseKit].radius),Math.floor(r()*3),site&&Math.abs(Math.cos(site.downhillRadians))>.7?1:0);
  // function core at the centre (or offset for a linear layout), as large as the footprint allows
@@ -117,7 +117,7 @@ export function generateWonderKit(preset:WonderPreset,site?:SiteSampleLike):Wond
  // flatten to world parts: canonical mesh, quarter turn, translate; floor lifted to the site's floor
  // LOD by role: base, core and crown carry the far silhouette; flanks, enclosure and water stop at mid; relief and banners are near-only.
  const CAP:Record<PlacedPiece['role'],LodTier>={base:2,core:2,crown:2,flank:1,enclosure:1,water:1,relief:0,banner:0};
- const build=(p:PlacedPiece)=>{p.meshKey=`${p.kit}.${p.variant}.${p.size}.${civ}.l${CAP[p.role]}`;p.radius=radiusOf(p.kit,p.size);return rotateParts(pieceParts(p.kit,p.variant,p.size,civ),p.quarter).map(q=>({...q,lod:Math.min(q.lod,CAP[p.role]) as LodTier,pos:[q.pos[0]+p.x,q.pos[1],q.pos[2]+p.z] as V3}));};
+ const build=(p:PlacedPiece)=>{p.meshKey=`${p.kit}.${p.variant}.${p.size}.${civ}${p.kit==='signature'&&sig!==civ?'>'+sig:''}.l${CAP[p.role]}`;p.radius=radiusOf(p.kit,p.size);return rotateParts(pieceParts(p.kit,p.variant,p.size,civ,p.kit==='signature'?sig:civ),p.quarter).map(q=>({...q,lod:Math.min(q.lod,CAP[p.role]) as LodTier,pos:[q.pos[0]+p.x,q.pos[1],q.pos[2]+p.z] as V3}));};
  const over=(ps:Part[])=>{let m=0;for(const q of ps){const b=partBounds(q);m=Math.max(m,b.maxX-fp.w/2,-fp.w/2-b.minX,b.maxZ-fp.d/2,-fp.d/2-b.minZ);}return m;};
  let built=pieces.map(build);
  for(let guard=0;guard<60;guard++){let worst=-1,wv=1e-6;built.forEach((ps,i)=>{const v=over(ps);if(v>wv){wv=v;worst=i;}});if(worst<0)break;const pc=pieces[worst],order:Size[]=['XL','L','M','S'],ix=order.indexOf(pc.size);
@@ -126,11 +126,11 @@ export function generateWonderKit(preset:WonderPreset,site?:SiteSampleLike):Wond
  if(site&&g?.needsPlinth)parts.push(...plinthSpec(site,fp,g).parts);
  const meshKeys=[...new Set(pieces.map(p=>p.meshKey))];
  const spec0:BuildingSpec={family:`wonder.${family}`,variantKey:String(seed),footprint:{...fp},parts,notes:{reference:`${CIVS[civ].name} ${family}, kit assembly`}};
- const tbl={...materialTable(civ),...SHARED_MATERIALS},grounded=ensureTiers(ensureNearSupport(ensureCore(parts),fp),fp).map(q=>tbl[q.mat]?q:{...q,mat:matId(civ,'wall2') as Part['mat']}),spec:BuildingSpec={...spec0,parts:grounded};
+ const tbl={...(o.palette?paletteTable(civ,o.palette):materialTable(civ)),...SHARED_MATERIALS},grounded=ensureTiers(ensureNearSupport(ensureCore(parts),fp),fp).map(q=>tbl[q.mat]?q:{...q,mat:matId(civ,'wall2') as Part['mat']}),spec:BuildingSpec={...spec0,parts:grounded,...(o.palette?{materials:tbl}:{})};
  const sampleCols=14,prof:number[]=[];for(let i=0;i<sampleCols;i++){const x0=-fp.w/2+i*fp.w/sampleCols,x1=x0+fp.w/sampleCols;let m=0;for(const p of grounded){const b=partBounds(p);if(b.maxX>=x0&&b.minX<=x1&&p.lod===2)m=Math.max(m,b.maxY);}prof.push(Math.round(m));}
  const tr=([0,1,2] as LodTier[]).map(t=>partsAtLod(spec,t).reduce((n,p)=>n+partTriangles(p),0)) as [number,number,number];
  const identity:WonderKitPlan['identity']={function:family,core,satisfied:pieces.some(p=>p.kit===core&&p.role==='core'),...(family==='observatory'?{sightAzimuth:Math.PI/2}:{}),...(family==='harbor'?{basin:{cx:cx,cz:axis==='processional'?hd*.12:0,r:coreSize==='XL'?4.5*2.4*.9:4.5*K[coreSize]*.9}}:{}),...(family==='assembly'?{bema:{x:cx,z:axis==='processional'?hd*.12:0}}:{})};
- return {v:1,preset,civ,family,footprint:{...fp},parts:grounded,pieces,meshKeys,instances:pieces.length,materials:{...materialTable(civ),...SHARED_MATERIALS},identity,axis,silhouette:prof.join('.')+'|'+pieces.filter(p=>p.role!=='banner').map(p=>p.kit+p.size+p.variant).join(','),grounding:{needsPlinth:!!g?.needsPlinth,floorY:g?.floorY??0},spec,triangles:tr};
+ return {v:1,preset,civ,family,footprint:{...fp},parts:grounded,pieces,meshKeys,instances:pieces.length,materials:tbl,identity,axis,silhouette:prof.join('.')+'|'+pieces.filter(p=>p.role!=='banner').map(p=>p.kit+p.size+p.variant).join(','),grounding:{needsPlinth:!!g?.needsPlinth,floorY:g?.floorY??0},spec,triangles:tr};
 }
 // ---- presets: small JSON, validated on the way in
 export const serializePreset=(p:WonderPreset)=>JSON.stringify({v:1,s:p.seed,c:p.civ,f:p.family,o:p.options});

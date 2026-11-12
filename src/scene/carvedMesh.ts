@@ -9,7 +9,7 @@
  * orienting each triangle away from the part centroid. Triangle counts equal
  * partTriangles() exactly (tested). */
 import {hashSeed,partsAtLod,partTriangles,rotatePoint,seededRandom,SPHERE_SEGMENTS,type BuildingSpec,type LodTier,type Part} from './buildingParts';
-import {CARVED_GRAIN,carvedSwatch,getCarvedPalette,hexToRgb,type CarvedMaterialId} from './carvedPalette';
+import {CARVED_GRAIN,carvedSwatch,getCarvedPalette,hexToRgb,specSwatch,type CarvedMaterialId} from './carvedPalette';
 
 type V3=[number,number,number];
 export type CarvedMeshData={positions:Float32Array;normals:Float32Array;uvs:Float32Array;colors:Float32Array;grain:Float32Array;triangles:number;
@@ -60,9 +60,10 @@ const sub=(a:V3,b:V3):V3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
 const cross=(a:V3,b:V3):V3=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a:V3,b:V3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 
-const NO_AO:ReadonlySet<CarvedMaterialId>=new Set(['fire','water','cloth']);
+const NO_AO:ReadonlySet<string>=new Set(['fire','water','cloth']);
 const rgbCache=new Map<string,V3>();
 const swatchRgb=(m:CarvedMaterialId)=>{const k=getCarvedPalette()+m;let c=rgbCache.get(k);if(!c){c=hexToRgb(carvedSwatch(m).hex);rgbCache.set(k,c);}return c;};
+const hexRgb=(hex:string)=>{let c=rgbCache.get(hex);if(!c){c=hexToRgb(hex);rgbCache.set(hex,c);}return c;};
 
 /** Build the merged carved mesh for one building spec at one LOD tier. */
 export type MeshSelect={select?:(p:Part)=>boolean;origin?:readonly [number,number,number]};
@@ -74,7 +75,7 @@ export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier,opt:MeshSelect={}
  const bounds={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity,minZ:Infinity,maxZ:-Infinity};
  const r=seededRandom(hashSeed(spec.variantKey,tier));let v=0;
  for(const p of parts){
-  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,base=swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=carvedSwatch(p.mat).grain;
+  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,own=spec.materials?.[p.mat],base=own?hexRgb(own.hex):swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=own?specSwatch(spec.materials,p.mat).grain:carvedSwatch(p.mat).grain;
   for(const tri of tris){
    let [a,b,e]=tri;let nrm=cross(sub(b,a),sub(e,a));
    const mid:V3=[(a[0]+b[0]+e[0])/3,(a[1]+b[1]+e[1])/3,(a[2]+b[2]+e[2])/3];
@@ -93,7 +94,7 @@ export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier,opt:MeshSelect={}
     normals[v*3]=wn[0];normals[v*3+1]=wn[1];normals[v*3+2]=wn[2];
     uvs[v*2]=u/CARVED_GRAIN.tileMetres+offU;uvs[v*2+1]=vv/CARVED_GRAIN.tileMetres+offV;
     // Soft baked contact darkening near the ground (no extra pass, no texture).
-    const ao=NO_AO.has(p.mat)?1:.8+.2*Math.min(1,Math.max(0,y/1.1));
+    const ao=NO_AO.has(p.mat)||p.mat.startsWith('shared.')?1:.8+.2*Math.min(1,Math.max(0,y/1.1));
     colors[v*3]=Math.min(1,base[0]*tone*ao);colors[v*3+1]=Math.min(1,base[1]*tone*ao);colors[v*3+2]=Math.min(1,base[2]*tone*ao);
     grain[v]=gs;
     bounds.minX=Math.min(bounds.minX,x);bounds.maxX=Math.max(bounds.maxX,x);bounds.minY=Math.min(bounds.minY,y);bounds.maxY=Math.max(bounds.maxY,y);bounds.minZ=Math.min(bounds.minZ,z);bounds.maxZ=Math.max(bounds.maxZ,z);

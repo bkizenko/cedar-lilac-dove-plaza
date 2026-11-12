@@ -572,6 +572,10 @@ export type GameState = {
   worldOptions?: import("./worldOptions").WorldOptions;
   /** Rulers lane (Claude): optional; absent in old saves. See rulersRuntime.ts. */
   rulers?: import("./rulersState").RulersState;
+  /** Per-game society skins (src/game/skinState.ts): one CivSkin per team, fixed for the game. Absent in old saves; ensureSkins derives it. */
+  skins?: import("./skinState").SkinsState;
+  /** Wonders standing or rising (src/game/wonderRecords.ts); drawn through the owner's CivSkin. Absent in old saves. */
+  wonders?: import("./wonderRecords").WonderRecord[];
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];

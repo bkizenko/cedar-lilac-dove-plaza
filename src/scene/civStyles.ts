@@ -65,6 +65,10 @@ export const CIVS:Record<CivId,CivStyle>={
   materials:{wall:S('#788288',1,'turf'),wall2:S('#a99b78',.9,'log'),roof:S('#7d8654',1,'turf'),trim:S('#a4865a',.8,'turf'),accent:S('#8a4b3a',.65),cloth:S('#4a5f78',.9,'cloth'),ground:S('#7a8a68',1)},
   emblem:E('prowHead',[poly(.2,.8,.2,.5,.35,.3,.5,.2,.62,.28,.6,.4,.75,.45,.8,.6,.7,.8),wave(.9,.03,3)],'trim'),dress:{cut:'cape',headwear:'hood',body:'#3a5a7a',trim:'#b98a4a',motif:'knot'}},
 };
+/** A CivSkin's overrides for one civ grammar (civSkin.ts): the grammar's massing stays, the swatches, roof form, granary and banner shape come from the skin. Every field optional; absent = the civ's own bible entry (the approved look). */
+export type CivLook={palette?:CivMaterials;roof?:RoofForm;granary?:CivStyle['granary'];banner?:'flag'|'swallow'|'hanging'|'streamers'|'pennant'|'twin'};
+/** Spec material table for a grammar `civ` painted with `palette` (keys `${civ}.${slot}`, the ids the grammar's parts use). */
+export function paletteTable(civ:CivId,palette:CivMaterials):Record<string,Swatch>{return Object.fromEntries((Object.keys(palette) as (keyof CivMaterials)[]).map(k=>[matId(civ,k),palette[k]]));}
 export const CIV_IDS=Object.keys(CIVS) as CivId[];
 /** Slot names a civ part may use as `mat`: `${civ}.${slot}`. */
 export const matId=(civ:CivId,slot:keyof CivMaterials)=>`${civ}.${slot}`;
