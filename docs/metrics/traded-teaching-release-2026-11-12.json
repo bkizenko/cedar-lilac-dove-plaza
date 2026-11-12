@@ -1,0 +1,56 @@
+{
+  "at": "2026-11-12T09:57:50.124731+00:00",
+  "release": "2026-11-12T09-56-19-892Z-bb5947a",
+  "commit": "bb5947a5c1845e5a23ca2eea92f3d01e3ec718cd",
+  "sourceCommit": "772ef3e",
+  "ports": [
+    8086,
+    8101
+  ],
+  "executedBatch": {
+    "passed": 31,
+    "total": 31,
+    "nativeAndShared": {
+      "passed": 29,
+      "total": 29,
+      "newTeaching": 5,
+      "compatibility": 24
+    },
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "actual built Contact Trade paid-learning command/cancel and durable restore; unchanged original 53-person village import/save/restore. No full knowledge gate, campaign or hardware FPS claim.",
+      "originalPopulation": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "fullChecklist": {
+    "id": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69387755102041,
+    "newGateCredit": 0
+  },
+  "working": [
+    "Only real nearby qualified artisans currently demonstrating the exact method expose an offer; no private recipe scan",
+    "Agreement leaves actual learner-carried consideration untouched; arrival at the real foreign workshop transfers it once to the teacher society, preserving food kind",
+    "Shared actor and observer reservations; actual teacher-owned paid work and useful output delivery qualify a lesson; no labor or output is transferred",
+    "Community evidence and personal taught credit only after a physical dry-ground home-cache return; observed evidence retained in the bounded offer ledger",
+    "Death/capture before reporting loses the community report; refusal/lapse/hostility/cancellation retain undelivered cargo and never refund delivered goods",
+    "In-flight strict saves, historical delivery receipt survives finished-project pruning, legacy saves gain no skill",
+    "Compact Contact Trade controls choose/disclose the nearby actual payer even when selecting only the foreign artisan; owned learner controls remain accessible; workload/activity show the actual duty"
+  ],
+  "limitations": [
+    "First channel uses carried food/wood/stone/copper/iron consideration and land-based learners; boat visiting learners and general warehouse/household holder adapters remain open",
+    "Current compact teaching quote is one carried unit; broad needs-based teaching prices and diplomacy flavour remain open",
+    "Full knowledge/successor/artifact/record propagation gate not claimed",
+    "No campaign, universal FPS or full-game completion claim"
+  ],
+  "validationNotes": [
+    "First browser attempt omitted opening the folded Contact & orders disclosure; test-only selector correction, no runtime change",
+    "Original private 53-person village hash unchanged; no screenshot or preview retained; native contact export deleted after publication"
+  ]
+}

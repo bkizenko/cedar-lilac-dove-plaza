@@ -56,3 +56,8 @@ Release 2026-11-12T00-03-38-084Z-d86d7da verified both8086/8101 health+HTML200.3
 ## 2026-11-12T00:55:57.075993+00:00 — source pushed / Claude conflict handoff
 
 Pushed5pendingCodexsourcebranches; qualifiedscopedWorker/save/UI/keyboardevidence preserved, no broadcompletionclaim.26whole-branch merge-tree pairs:25textuallyclean; Worker/curd conflicts2UI files assignedClaude by user. Grok executionlead. Actualnative100Worker p9567.74ms misses33ms, defaultoff. No livechange/gatecredit;34/98unchanged. See GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md.
+
+
+## 2026-11-12T09:57:50.124731+00:00 — paid foreign teaching published
+
+LIVEbb5947a / 2026-11-12T09-56-19-892Z-bb5947a, verified8086/8101.31/31scoped (5newnative teaching+24shared+2actualbuilt including original53person restore),tsc/buildPASS. Learner carries payment, observes exact qualified foreign paid work/useful output and physically reports home before traded knowledge. Shared reservations/save receipts survive old batch pruning; compact command/readmodel/contact controls; no free goods/skill, source team/work/output preserved. Full34/98unchanged; general holders/boat learning/pricing/full W2 remain open. Evidence docs/metrics/traded-teaching-release-2026-11-12.json.
