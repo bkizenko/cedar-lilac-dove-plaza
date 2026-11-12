@@ -1,0 +1,113 @@
+{
+  "sourceCommit": "8097842329f10cf46090ebca596f719f2d2238f4",
+  "liveCommit": "455cd372348335345d7737e623e6465b1d2c459e",
+  "release": "2026-11-12T05-56-35-758Z-455cd37",
+  "scope": "Fresh finite native horses; paid capture, physical pen/stable leading, actual same-ID pack conversion; weighted finite pasture/feed/water/keeper demand; strict custody/scale/birth/save handling. No terrain/nav changes.",
+  "batch": {
+    "passed": 25,
+    "total": 25,
+    "focusedRegression": 19,
+    "nativeHorseAndInvariants": 3,
+    "builtHorse": 2,
+    "builtExistingVillage": 1
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "nativeEvidence": "Seed42 V18 unchanged heights/rivers/features; 120s capture +12food, actual pen and stable journeys,60s stable training +6logs; healthy capacity3.5 with condition reductions. Full adult places reserved; no horse on old-save load.",
+  "builtHorse": {
+    "scope": "Two built checks: visible native-horse inventory and actual scene custody/meshes; pen controls, solid stable and strict save/reload. No fixture animal creation, relocation, stat alteration, screenshots, campaign or performance claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "horseId": 6354,
+    "handlerId": 6223,
+    "originalHash": "cdeb74773e9f87c8756a7a3efa9c46263bdc46e4a56775df92bac9a994b67aa4",
+    "scene": {
+      "pack": 1,
+      "expectedPack": 1,
+      "position": [
+        164.1967315673828,
+        2.9491493701934814,
+        -206.0896759033203
+      ],
+      "expected": [
+        164.19672551634585,
+        -206.0896735115962
+      ],
+      "vertices": 1386,
+      "bounds": {
+        "min": [
+          -0.4950000047683716,
+          1.3411045607369942e-09,
+          -0.8824514746665955
+        ],
+        "max": [
+          0.4950000047683716,
+          2.049999952316284,
+          1.1325000524520874
+        ]
+      },
+      "wild": 0,
+      "wildOwned": 0,
+      "validWild": true,
+      "domestic": 0,
+      "expectedDomestic": 0,
+      "uniqueCustody": true,
+      "drawCalls": 52,
+      "errors": []
+    },
+    "stable": [
+      {
+        "role": "timber",
+        "count": 1,
+        "owner": true,
+        "vertices": 108,
+        "span": [
+          7,
+          2.200000071525574,
+          6.400000095367432
+        ],
+        "inScene": true
+      },
+      {
+        "role": "roof",
+        "count": 1,
+        "owner": true,
+        "vertices": 72,
+        "span": [
+          8.975600242614746,
+          0.2200000286102295,
+          7.274343490600586
+        ],
+        "inScene": true
+      }
+    ],
+    "saved": {
+      "identical": true,
+      "id": 6354,
+      "species": "horse",
+      "haulage": "pack",
+      "duplicates": 0,
+      "errors": []
+    },
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "passed": 1,
+    "total": 1,
+    "sourceFileUnchanged": true
+  },
+  "frozenGates": {
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041,
+    "newCredit": 0
+  },
+  "remaining": [
+    "Riding/cavalry identity backing, traction, horses as trade assets and broader species",
+    "Selective breeding, pack dogs, veterinary and seasonal grazing systems",
+    "Existing saved worlds retain exact wildlife; horses generated only on fresh maps",
+    "Stock-style horse mesh is not the approved full visual overhaul"
+  ]
+}
