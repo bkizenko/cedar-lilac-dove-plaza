@@ -8,7 +8,15 @@ import{calendar,farmAvailable,isDependent,reserveSeconds,foodDemand}from'./settl
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
 import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildingCost}from'./construction';
 const reviews=new WeakMap<Game,{state:Game['state'];teams:Map<number,number>}>();
-function free(g:Game,u:Unit,projectId?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&(!u.jobLock||u.foodRole===true&&!u.huntOnly||projectId!==undefined&&u.productionProjectId===projectId)&&!u.buildOrder&&!u.recalled&&!u.emergency&&!u.resting&&!u.shelterId&&!u.expedition&&!u.envoy&&!u.visit&&!u.scout&&!u.foundingJourney&&!u.tributeJourney&&!u.trade&&u.drill==null&&!hasTaskCommitment(u,projectId!==undefined&&u.productionProjectId===projectId?'productionProjectId':undefined)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&['idle','hold','gather'].includes(u.order);}
+/** Resource-search orders belong to the food scheduler, unlike a player's
+ * Explore, a goat search or an expedition. Existing task/lock checks still apply. */
+const automaticFoodSearch=(u:Unit)=>u.order==='explore'&&u.searchJob==='food'&&u.goatSearchPen===undefined&&!u.huntOnly;
+function nearestPickupFirst(workers:Unit[],drops:ReturnType<typeof supplyDrops>){
+ const distance=(u:Unit)=>drops.reduce((best,d)=>Math.min(best,Math.hypot(d.x-u.x,d.z-u.z)),Infinity);
+ return workers.slice().sort((a,b)=>distance(a)-distance(b));
+}
+
+function free(g:Game,u:Unit,projectId?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&(!u.jobLock||u.foodRole===true&&!u.huntOnly||projectId!==undefined&&u.productionProjectId===projectId)&&!u.buildOrder&&!u.recalled&&!u.emergency&&!u.resting&&!u.shelterId&&!u.expedition&&!u.envoy&&!u.visit&&!u.scout&&!u.foundingJourney&&!u.tributeJourney&&!u.trade&&u.drill==null&&!hasTaskCommitment(u,projectId!==undefined&&u.productionProjectId===projectId?'productionProjectId':undefined)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&(['idle','hold','gather'].includes(u.order)||automaticFoodSearch(u));}
 const atCache=(g:Game,u:Unit)=>supplyDrops(g,u.team).some(d=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);});
 const cerealPickupReason='Returning to load the actual unprocessed cereal batch';
 const mealPickupReason='Returning to collect food processing inputs';
@@ -71,7 +79,7 @@ export function reviewCerealProcessing(g:Game,team:number,eventActorId?:number,f
  }
  if(eventActorId!==undefined||activePickup(g,team,cerealPickupReason))return false;
  const drops=supplyDrops(g,team);
- const carrier=workers.find(u=>(u.order!=='gather'||u.foodRole===true||(team===0&&g.state.laborPolicy==='food'||urgent)&&u.job!=='food'||team===0&&(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u))&&!atCache(g,u)&&
+ const carrier=nearestPickupFirst(workers,drops).find(u=>(u.order!=='gather'||u.foodRole===true||(team===0&&g.state.laborPolicy==='food'||urgent)&&u.job!=='food'||team===0&&(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u))&&(!atCache(g,u)||automaticFoodSearch(u))&&
   drops.some(d=>supplyApproach(g,u,d))&&eligible.some(b=>g.interactionSpot(u,b)));
  return !!carrier&&sendForInputs(g,carrier,cerealPickupReason);
 }
@@ -296,7 +304,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
  // can stall independently and may be on another landmass.
  if (eventActorId !== undefined || activePickup(g,0,mealPickupReason)) return false;
  const drops = supplyDrops(g,0);
- const carrier = workers.find(u => (u.order !== 'gather' || u.foodRole===true || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food'||urgent&&rawFoodGatherer(u)||(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u)) && !atCache(g, u) &&
+ const carrier = nearestPickupFirst(workers,drops).find(u => (u.order !== 'gather' || u.foodRole===true || (g.state.laborPolicy === 'food' || urgent) && u.job !== 'food'||urgent&&rawFoodGatherer(u)||(g.state.laborPolicy==='food'||urgent)&&forageFoodGatherer(u)) && (!atCache(g, u)||automaticFoodSearch(u)) &&
   drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
  return !!carrier && sendForInputs(g,carrier,mealPickupReason);
