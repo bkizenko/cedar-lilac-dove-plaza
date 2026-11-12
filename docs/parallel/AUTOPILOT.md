@@ -1070,6 +1070,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 17:00 | Claude | ~8 (since 16:00 ET) | landed (lane A/B diplomatic voice, lane C near-LOD hands, lane D merges) | 2 (rival ruler diplomatic voice in Hearth/Diplomacy; near-LOD rounded hands + shoulder yoke) | active; lanes posted <1h |
 | 11-12 17:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
 | 11-12 17:00 | Total | ~28 | integration lag 0; 1 Codex commit landed 17:1x | ~5 | focused sweep 123 tests, 119 pass, 1 fail (method-record-visibility needs typescript/three, sandbox-only), 3 skip; tsc diff nil; rows ~4 not-started by grep; remaining unmerged branches are old held/stale (shipping-waiting-hooks still conflicting) |
+| 11-12 18:00 | Codex | 31 (since 17:00 ET, W2 branches) | 3 landed | 1 (foreign physical record custody/pickup + founding-crew cargo guard) | steady; rival-record-producer branch (3 commits) left unlanded: 2 native tests fail (rival-method-records-native 52/53) |
+| 11-12 18:00 | Claude | ~22 (lane C forge etc.) | 2 landed (lit forge stage, lane C status) | 1 (lit forge stage in Village grammar) | on vegetation seasonal fields; no stall |
+| 11-12 18:00 | Grok | 0 | 0 | 0 | out; World rows still with Claude/PM queue |
+| 11-12 18:00 | Total | ~53 | integration synced to main | ~2 | focused sweep 118 tests/115 pass/0 fail; tsc diff nil; foreign-record-controls test sandbox-only (three missing); open rows ~259 not-started, ~141 done/live |
 
 ## Process improvements
 

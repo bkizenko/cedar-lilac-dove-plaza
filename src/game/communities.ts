@@ -6,6 +6,7 @@ import { receiveFood, takeFoodLot } from "./pantry";
 import { soilQuality } from "./ecology";
 import { expansionParty } from './rulersRuntime';
 import { noteSettlement } from './societyRuntime';
+import { hasTaskCommitment } from './workCommitments';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
   const history = (g.state.lifeHistory ??= []);
   history.push({ team, text, time: g.state.time });
@@ -142,6 +143,8 @@ export function tickCommunities(g: Game, dt: number) {
       .filter(
         (u) =>
           u.carry === 0 &&
+          !hasTaskCommitment(u) &&
+          !Object.values(u.itemCargo || {}).some(n => (n || 0) > 0) &&
           !u.visit &&
           !u.scout &&
           !u.envoy &&
