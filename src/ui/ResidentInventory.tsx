@@ -41,6 +41,8 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       if (resident.farmTool) {
         equipped.push(resident.farmTool==='woodenArd'?`Wooden ard · ${Math.round(resident.draftPracticeSeconds??0)}s draft practice`:resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
       }
+      if(resident.draftCart)equipped.push(`Animal-drawn cart #${resident.draftCart.id}`);
+      if(resident.cartIdentity)equipped.push(`Handcart #${resident.cartIdentity.id}`);
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
       if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`Pack ${resident.packAnimal.species??'goat'} · capacity ×${packCapacityMultiplier(resident).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);

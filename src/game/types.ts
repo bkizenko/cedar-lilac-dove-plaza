@@ -257,6 +257,10 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   draftPracticeSeconds?:number;
   farmToolWork?: FarmToolWork;
   packAnimal?: import('./packAnimalState').PackAnimal;
+  draftCart?:import('./draftCart').CartIdentity;
+  cartIdentity?:import('./draftCart').CartIdentity;
+  draftCartOrder?:import('./draftCart').DraftCartOrder;
+  draftCartPartner?:number;
   packPastureOrder?:{version:1;pen:number;animal:number;requestedAt:number;phase:'queued'|'unloading'|'returning';reason?:string};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn"|"beddingFetch"|"beddingDeliver"|"beddingLay"|"beddingReturn";beddingUnits?:number;beddingProgress?:number;releaseAfterBedding?:true;waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
@@ -497,6 +501,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  looseDraftCarts?:import('./draftCart').LooseDraftCart[];
+  draftCartLedger?:import('./draftCart').DraftCartLedger;
   penBedding?:import('./penBedding').PenBeddingLedger;
   copperTrials?:import('./materialStudy').CopperTrials;
   teachingOffers?:import('./tradedTeaching').TeachingOffer[];

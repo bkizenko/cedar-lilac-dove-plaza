@@ -1,3 +1,4 @@
+import {draftCartChoices} from './draftCart';
 import {personName} from './people';
 import {captiveGuardCoverage,presentPrisonerGuard,PRISONER_RULES} from './captivity';
 import {armorRepairIssue} from './armorRepair';
@@ -24,6 +25,7 @@ import {capitulationOffers} from './capitulation';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
+ |{kind:'draft-cart-choices';unitId:number}
  |{kind:'traded-teaching-offers';teacherId:number;learnerIds:number[]}
  |{kind:'copper-study-issues';workplaceId:number}
  |{kind:'building-fabric';buildingId:number}
@@ -43,6 +45,7 @@ export type EngineReadQuery=
  |{kind:'captives'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
+ |({kind:'draft-cart-choices';unitId:number}&ReturnType<typeof draftCartChoices>)
  |{kind:'traded-teaching-offers';teacherId:number;offers:ReturnType<typeof teachingOffers>;learner:{id:number;good:ResKind}|null;issue:string|null}
  |{kind:'copper-study-issues';workplaceId:number;logs:string|null;charcoal:string|null}
  |{kind:'building-fabric';buildingId:number;context:ReturnType<typeof fabricContext>;benefits:ReturnType<typeof eraUpgradeBenefits>;work?:{mode:EraUpgradeMode;phase:string;progress:number;duration:number;paid:boolean;paused:boolean;blockedReason?:string};choices:FabricUpgradeChoice[]}
@@ -75,6 +78,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='garment-repair-issues')return Object.keys(q).every(k=>['kind','unitId','workplaceId'].includes(k))&&id(q.unitId)&&(q.workplaceId===undefined||id(q.workplaceId));
  if(q.kind==='armor-repair-issue')return Object.keys(q).every(k=>['kind','unitId','workplaceId'].includes(k))&&id(q.unitId)&&(q.workplaceId===undefined||id(q.workplaceId));
+ if(q.kind==='draft-cart-choices')return Object.keys(q).every(k=>['kind','unitId'].includes(k))&&id(q.unitId);
  if(q.kind==='armor-choice')return Object.keys(q).every(k=>['kind','unitId'].includes(k))&&id(q.unitId);
  if(q.kind==='fibre-issues')return Object.keys(q).every(k=>['kind','unitId','patchIds'].includes(k))&&id(q.unitId)&&list(q.patchIds);
  if(q.kind==='clay-issues')return Object.keys(q).every(k=>['kind','unitId','depositIds'].includes(k))&&id(q.unitId)&&list(q.depositIds);
@@ -126,6 +130,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
   const known=new Set(g.state.clay?.deposits.filter(d=>d.surveyedBy.includes(0)).map(d=>d.id));
   return{kind:query.kind,unitId:u.id,issues:query.depositIds.filter(id=>known.has(id)).map(depositId=>({depositId,issue:clayIssue(g,u.id,depositId)}))};
  }
+ if(query.kind==='draft-cart-choices')return{kind:query.kind,unitId:u.id,...draftCartChoices(g,u.id)};
  if(query.kind==='armor-repair-issue')return{kind:query.kind,unitId:u.id,issue:armorRepairIssue(g,u.id,query.workplaceId)};
  if(query.kind==='garment-repair-issues')return{kind:query.kind,unitId:u.id,worn:garmentRepairIssue(g,u.id,'worn',query.workplaceId),spare:garmentRepairIssue(g,u.id,'spare',query.workplaceId)};
  const worn=wornArmor(g,u);

@@ -1,3 +1,4 @@
+import {DraftCartControls} from './DraftCartControls';
 import {productionFuelLabel} from '../game/mealFuel';
 import {ARMOR_REPAIR_RULES} from '../game/armorRepair';
 import {ArmorControls} from './ArmorControls';
@@ -25,7 +26,7 @@ export function ProductionControls({engine}:{engine:Engine}){
   try{const result=await engine.dispatch(command,selection);if(!current()||result.epoch!==engine.dispatchEpoch)return;setFeedback(result.reason);setRevision(n=>n+1);engine.pushHud();engine.canvas?.focus();}
   catch(error){if(current())setFeedback(error instanceof Error?error.message:'The production request could not be completed');}
  },button='min-h-11 rounded-md border border-bronze/40 px-3 py-2 text-left text-sm disabled:opacity-50';
- return<section className="mt-3 space-y-2" aria-label="Physical production">{!!people.length&&<><ArmorControls engine={engine} people={people} run={run}/><ArmorRepairPersonControls engine={engine} people={people} run={run} button={button}/></>}{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
+ return<section className="mt-3 space-y-2" aria-label="Physical production">{!!people.length&&<><ArmorControls engine={engine} people={people} run={run}/><DraftCartControls engine={engine} people={people} run={run}/><ArmorRepairPersonControls engine={engine} people={people} run={run} button={button}/></>}{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
  <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-medium">Make a batch</h3><GameTooltip title="Physical processing" description="An adult loads real inputs, works, and carries the batch home. Inputs are paid once; passive batches need later pickup."><span tabIndex={0} className="text-xs text-parchment-dim">{recipes.length} recipes</span></GameTooltip></div>
  <div className="grid grid-cols-2 gap-2" aria-label="Workplace recipes">{recipes.map(r=>{
  const brewingStage=r.id==='sproutGrain'?'malt':r.id==='brewSmallBeer'?'smallBeer':r.id==='brewBeer'?'beer':null,brewing=brewingStage?BREWING_RULES.stages[brewingStage]:null,firing=!!r.outputs.pottery&&r.preservation!=='brewing';
