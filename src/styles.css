@@ -558,3 +558,17 @@ canvas:focus-visible {
 .captive-list { display:grid; gap:.35rem; margin:.5rem 0; padding:0; list-style:none; }
 .captive-list>li { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; padding:.35rem .5rem; border-radius:.4rem; background:var(--color-ink); border-left:3px solid var(--color-bronze); }
 .captive-list>li button { margin-left:auto; font-size:11px; padding:.15rem .5rem; border:1px solid var(--color-bronze); border-radius:.35rem; }
+
+/* Lane B HUD hierarchy pass (Field palette only; Classic keeps the original rules above).
+   Readability: no label under 11px, tabular figures, clear primary/secondary tiers, visible focus, 44px touch targets on coarse pointers. */
+:root:not([data-hw-ui="classic"]) .resource-strip { gap:1rem; border-left:3px solid var(--color-bronze); }
+:root:not([data-hw-ui="classic"]) .resource-cell span { font-size:11px; letter-spacing:.05em; opacity:.85; }
+:root:not([data-hw-ui="classic"]) .resource-cell strong { font-size:18px; font-weight:600; color:var(--color-parchment); }
+:root:not([data-hw-ui="classic"]) .objective-strip { border-left:3px solid var(--color-bronze-bright); font-size:13px; line-height:1.35; }
+:root:not([data-hw-ui="classic"]) .quick-actions button { font-size:13px; border-color:color-mix(in srgb,var(--color-parchment) 35%,transparent); transition:background-color .12s,color .12s,transform .12s; }
+:root:not([data-hw-ui="classic"]) .quick-actions button:active { transform:translateY(1px); }
+:root:not([data-hw-ui="classic"]) .build-tabs button { font-size:13px; color:var(--color-parchment-dim); }
+:root:not([data-hw-ui="classic"]) .build-tabs button[aria-selected=true] { color:var(--color-ink); font-weight:600; }
+:root:not([data-hw-ui="classic"]) .hud-panel h2, :root:not([data-hw-ui="classic"]) .hud-panel h3 { color:var(--color-bronze-bright); letter-spacing:.02em; }
+:root:not([data-hw-ui="classic"]) .hud-panel button:focus-visible, :root:not([data-hw-ui="classic"]) .hud-panel [role="button"]:focus-visible { outline:2px solid var(--color-bronze-bright); outline-offset:2px; }
+@media (pointer:coarse) { :root:not([data-hw-ui="classic"]) .quick-actions button, :root:not([data-hw-ui="classic"]) .build-tabs button { min-height:44px; } }
