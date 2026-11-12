@@ -128,3 +128,24 @@ export function lookAtCamera(eye:{x:number;y:number;z:number},target:{x:number;y
  const proj=[f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0];
  return {matrixWorldInverse:{elements:view},projectionMatrix:{elements:proj}};
 }
+
+/** Screen-space chip placement only: rings/physical alert points never move.
+ * At most five chips and a small measured HUD rectangle set call this helper. */
+export type PinRect={x:number;y:number;width:number;height:number};
+export const PIN_LAYOUT_RULES={margin:8,gap:8,maximumCandidates:96,maximumBlockers:20,measureMilliseconds:250} as const;
+const pinIntersects=(a:PinRect,b:PinRect)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;
+export function avoidPinControls(desired:PinRect,width:number,height:number,controls:readonly PinRect[]):PinRect|null{
+ const R=PIN_LAYOUT_RULES,blockers=controls.slice(0,R.maximumBlockers),clamp=(r:PinRect):PinRect=>({...r,x:Math.max(R.margin,Math.min(width-r.width-R.margin,r.x)),y:Math.max(R.margin,Math.min(height-r.height-R.margin,r.y))});
+ if(desired.width>width-R.margin*2||desired.height>height-R.margin*2)return null;
+ const start=clamp(desired),queue=[start],seen=new Set<string>();let best:PinRect|null=null,bestDistance=Infinity;
+ for(let i=0;i<queue.length&&i<R.maximumCandidates;i++){
+  const r=queue[i],key=`${r.x.toFixed(1)}:${r.y.toFixed(1)}`;if(seen.has(key))continue;seen.add(key);
+  const collision=blockers.find(b=>pinIntersects(r,b));
+  if(!collision){const distance=(r.x-desired.x)**2+(r.y-desired.y)**2;if(distance<bestDistance){best=r;bestDistance=distance;}if(distance===0)return r;continue;}
+  if(queue.length>=R.maximumCandidates)continue;
+  const b=collision;for(const p of[{...r,x:b.x-r.width-R.gap},{...r,x:b.x+b.width+R.gap},{...r,y:b.y-r.height-R.gap},{...r,y:b.y+b.height+R.gap}]){if(queue.length>=R.maximumCandidates)break;queue.push(clamp(p));}
+ }
+ // An occupied viewport has no safe chip position. The caller hides this chip
+ // without moving its physical ring/target or covering another control.
+ return best;
+}
