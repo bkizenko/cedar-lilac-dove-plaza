@@ -9,7 +9,7 @@ import {ERA_UPGRADE_RULES,fabricContext,eraUpgradeIssue,reservedBuildingFootprin
 function fixture(){
  const g=new Game();g.reset(345,14);g.enterIsland();g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.waterBodies=[];g.world.waterfalls=[];g.world.waterHeights=undefined;g.world.ecology=undefined;
  for(const k of ['units','buildings','trees','stones','forage','copper','iron','fish','wildlife'])g.state[k]=[];
- g.state.campSites=[];g.state.autoWorkEnabled=false;g.state.nightWork=true;g.state.conflict='quiet';g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=10000;g.state.birthT=10000;g.calamityT=10000;
+ g.state.campSites=[];g.state.autoWorkEnabled=false;g.state.nightWork=true;g.state.conflict='quiet';g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=1000;g.state.birthT=10000;g.calamityT=10000;
  for(const t of g.state.tribes)t.thinkT=10000;
  Object.assign(g.tribe(0),{wood:240,stone:100,food:1000,foodLots:{provisions:1000},items:{}});g.tribe(0).survival.waterLiters=1000;
  const hall=g.makeBld('townhall',0,40,0),b=g.makeBld('hearth',20,40,0);g.state.buildings.push(hall,b);
@@ -26,7 +26,7 @@ test('paid rebuild uses physical cache packets and labour, grants repairable dur
 });
 test('shifted wing reserves full ground and physically completes before durability benefits',()=>{
  const{g,b}=fixture(),origin={x:b.x,z:b.z,w:b.w,d:b.d},hp=b.hp,max=b.maxHp,revision=g.navigationRevision();
- assert.equal(beginEraUpgrade(g,b.id,'extend','north').accepted,true);const target=structuredClone(b.renovation.eraChange.target);assert.deepEqual(target,{x:20,z:38,w:4,d:8});assert.deepEqual(reservedBuildingFootprint(b),target);
+ assert.equal(beginEraUpgrade(g,b.id,'extend','north').accepted,true);const target=structuredClone(b.renovation.eraChange.target);assert.deepEqual(target,{x:origin.x,z:origin.z-origin.d/2,w:origin.w,d:origin.d*2});assert.deepEqual(reservedBuildingFootprint(b),target);
  assert.match(g.placementIssue('hearth',20,34,0),/reserves.*footprint/);assert.deepEqual({x:b.x,z:b.z,w:b.w,d:b.d},origin);assert.equal(b.maxHp,max);
  drive(g,300,()=>!b.renovation);assert.deepEqual({x:b.x,z:b.z,w:b.w,d:b.d},target);assert.equal(b.hp,hp);assert.equal(b.maxHp,max*1.15);assert.ok(g.navigationRevision()>revision);assert.deepEqual(fabricContext(b).extensions,[{era:0}]);
  assert.equal(validFabricState(g.state),true);
