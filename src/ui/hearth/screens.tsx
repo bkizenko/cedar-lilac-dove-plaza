@@ -68,6 +68,7 @@ function StageMeter({stage,label}:{stage:string;label:string}){
  const i=STAGES.indexOf(stage as never);
  return <GameTooltip title={`${label}: ${STAGE_NAME[stage]}`}><span className={cx('hw-stages','s-'+stage)} role="img" aria-label={`${label}: ${STAGE_NAME[stage]}`}>{STAGES.map((s,k)=><i key={s} className={k<=i?'on':''}/>)}</span></GameTooltip>;
 }
+const CASUS_NAME:Record<string,string>={claim:'a land claim',tribute:'unpaid tribute',holy:'a sacred grievance',reconquest:'lost lands',defence:'a defence wrong',raid:'raid grudge',succession:'a disputed succession',liberation:'kin held captive'};
 function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages')=>void}){
  const mood=n.hostile?['At odds','bad']:n.atPeace?['At peace','good']:n.trust>=60?['Friendly','good']:n.trust>=25?['Cordial','']:['Reserved',''];
  const PI=soc?.plan?PLAN_ICON[soc.plan.kind]:null,PO=soc?.posture?POSTURE_ICON[soc.posture.kind]:null;
@@ -86,6 +87,7 @@ function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:
   {route&&route.mode!=='open'&&<div className="hw-chips"><GameTooltip title={`Route: ${route.reason}`}><span className={cx('hw-chip',route.mode==='blocked'&&'t-bad',route.abandoned&&'t-bad')} tabIndex={0} aria-label={`Route ${route.mode}. ${route.reason}`}>{ROUTE_ICON({size:20})}{route.mode==='agreement'?'Passage agreed':route.mode==='escort'?`Escort ×${route.guards||2}`:'Blocked'}{route.expiresIn!==undefined&&<small><Clock size={14}/>{ago(route.expiresIn)}</small>}</span></GameTooltip></div>}
   {n.means.length>0&&<ul className="hw-chips">{n.means.map((x:string)=><li key={x} className="hw-chip hw-chip-soft">{x}</li>)}</ul>}
   {!!n.wards?.length&&<ul className="hw-chips">{n.wards.map((w:any)=><li key={w.name+w.sinceYear} className="hw-chip hw-chip-soft" title={w.effect}><Heart size={16}/>{w.name} · {w.kind==='foster'?'fostered':'hostage'} · {w.endsIn?`${w.endsIn}y`:'<1y'}</li>)}</ul>}
+  {!!n.casus?.length&&<ul className="hw-chips" aria-label={`Grievances between us and ${n.name}`}>{n.casus.map((k:any,i:number)=><li key={k.kind+i} className={cx('hw-chip',k.byUs?'hw-chip-soft':'t-bad')} title={k.reason}><Swords size={16}/>{k.byUs?'We hold':'They hold'} {CASUS_NAME[k.kind]??k.kind} · {k.endsIn?`${k.endsIn}y`:'<1y'}</li>)}</ul>}
   {n.canMarry&&<div className="hw-row">{([['marry-houses','Marry',<Heart size={22} key="m"/>],['foster-houses','Foster',<Users size={22} key="f"/>],['exchange-hostages','Hostages',<Shield size={22} key="h"/>]] as const).map(([k,l,i])=><button key={k} type="button" className="hw-btn-wide" onClick={()=>send(n.team,k)}>{i}{l}</button>)}</div>}
  </li>;
 }
