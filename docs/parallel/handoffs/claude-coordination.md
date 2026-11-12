@@ -570,3 +570,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 - 2026-11-12 05:18 ET (Grok World): LIVE ecbdeb1 canal/aqueduct build tool — HUD 'Water engineering' panel, click source then destination, preview = commit, laid out as ordinary paid digs; staged works saved (aqueductWorks validator). Shared files: engine.ts, sim.ts (tickEvents), persistence.ts, types.ts, Hud.tsx.
 - 05:14 ET Claude: shipped lane A per-era machinery gating (ERA_REACH: bands small/slow parties and no organised explore/trade speed-up, chiefdom modest, state full; behind rulersVersion) (7b5d5bc, on integration/2026-11-11) / now on UI hook for claims/unrest + diplomatic flavour / blocked: none. rulers 41/41, tsc diff 0 new vs baseline
+
+- 2026-11-12 05:20 ET (Grok World): LIVE 56cd841 R-key / Rotate ↻ button turns non-square buildings (barracks etc.) a quarter turn while placing; ghost and commit share the turn. Shared files: engine.ts, world.ts (setGhost quarterTurn arg), Hud.tsx.

@@ -122,7 +122,7 @@ T4. Draw Grok's smoothRivers(g) and trailRibbons(g) in world.ts (GW-12, QA-013).
 T5. WQ-9 / IFACE-G8 / GW-04 visual: mesh yaw = buildingQuarterTurns(b)*π/2; draw river section.corners and show fishRecoveryPerMinute (QA-048 panel with Grok data).
 T6. WQ-13 / E1 / G4: capitulation terms picker, domination status, captive panel, trade dialog (proposePlayerTrade / tradeAnswerBlocker / observedPartnerStock), dropped-parcel visual, LeaderPortrait beside LeaderConversation with actual relations and observed goods only.
 T7. WQ-12 / C13: CarvedBuildingLayer lifetime bucket eviction so near buildings are not stuck as impostors.
-T8. WQ-11 / C10 Option H adapter in world.ts: call site, light-rig swap/restore, H-only golden-hour daylight lerp (CHAT-G2); default renderStyle stays 'current'. Wire C12 lit from survivalNeeds.hearthHeating. Fix Experience tsc errors on the integration branch.
+T8. WQ-11 / C10 Option H adapter in world.ts: call site, light-rig swap/restore, H-only golden-hour daylight lerp (CHAT-G2); default renderStyle stays 'current'. Wire C12 lit from survivalNeeds.hearthHeating. Fix Experience tsc errors on the integration branch. **DONE 56cd841 (11-12 05:20 ET)**
 T9. Architect: publish any missing contracts Codex/Grok need tonight (eraMode benefits shape, trade-holder fields, water-works admission UI). Do not block them — they wire end to end.
 
 THIS WEEK
@@ -691,7 +691,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WQ-5 | wiring-queue | Flow fields: enable existing per-game switch for new games | Grok | Grok T5 | source-pushed-not-live | flowFields.ts source-pushed, switch default off; turn ON for new games |
 | WQ-6 | wiring-queue | Sea mesh raised by runtime world.seaTideY (rivers/lakes stay) | Grok | Grok T6 | source-pushed-not-live | seaTideY runtime exists; sea mesh not raised — Grok wires world.ts |
 | WQ-7 | wiring-queue | eraMode rebuild/extend gameplay benefits + save field/validator | Codex | Codex T5 | done/live | 5ba10a1 on8086/8101: paid cache/body/site work, bounded repairable durability without healing, shifted extension reservations, strict saves, owner commands and compact controls; native56.2s carrying-reload/work and actualbuilt Extend/save passed. Experience fixed-era visual consumer remains Claude T3 |
-| WQ-8 | wiring-queue | Placement rotate: R-key/ghost passes quarterTurn to preview and commit | Grok | Grok T8 | source-pushed-not-live | quarter-turn footprints 346faad; R-key control not wired |
+| WQ-8 | wiring-queue | Placement rotate: R-key/ghost passes quarterTurn to preview and commit | Grok | Grok T8 | done/live | 56cd841 R-key + Rotate button; preview (placementIssue+ghost yaw) and commit share quarterTurn; placement-rotate-control 3/3, quarter-turn-footprints 3/3 |
 | WQ-9 | wiring-queue | Mesh yaw = buildingQuarterTurns * π/2; draw river section.corners and fishRecoveryPerMinute | Claude | Claude T5 | source-pushed-not-live | mesh yaw + river section draw + fish remaining |
 | GW-01 | grok-world | Tight-space stuck/loop navigation | Grok | Grok T1 | source-pushed-not-live | tight-space nav 2a9fa79 / 5f2b1b2 on agents/grok-world; land with T1 |
 | GW-02 | grok-world | Whole drawn area plants as one field; fields roll over hills | Grok | Grok T9 | source-pushed-not-live | planFieldArea b789597; engine/UI wiring tonight |
@@ -700,7 +700,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | GW-05 | grok-world | Wells as a building; automatic water collection from wells and freshwater | Grok | Grok T4 | source-pushed-not-live | well site rules source-pushed; building not live |
 | GW-06 | grok-world | River currents drive mills; aqueducts, cisterns, canals as real works | Grok | Grok T4 | source-pushed-not-live | currents 7e74ddf, canal/aqueduct jobs d99698e; mill/boat/UI hooks tonight (currentPowerKw, commission UI) |
 | GW-07 | grok-world | Moves to unseen ground go, or go as close as possible, without hinting | Grok | Grok T1 | source-pushed-not-live | unseen moves 403f506; land with T1 |
-| GW-08 | grok-world | Buildings fit tighter gaps and can rotate during construction | Grok | Grok T8 | source-pushed-not-live | footprints 346faad; R-key not wired; mesh yaw is Claude T5 |
+| GW-08 | grok-world | Buildings fit tighter gaps and can rotate during construction | Grok | Grok T8 | done/live | footprints 346faad + control 56cd841 (R-key/Rotate button live); mesh yaw live via buildingQuarterTurns |
 | GW-09 | grok-world | Territory borders at rivers; contested flag claims; valuable land scores more | Grok | Grok W1 | source-pushed-not-live | landValue 10d6d81; domination hook W1; score formula is Codex T6 |
 | GW-10 | grok-world | Fertility visible and water-proximate in placement | Grok | Grok T9 | source-pushed-not-live | fertilityPreview b789597; wire in placement UI |
 | GW-11 | grok-world | Landforms distributed, never clustered; no gentle-land bias | Grok | Grok W11 | source-pushed-not-live | measured; landformLabelVersion 2 source-pushed; turn on with T2 and finish distribution defects |
