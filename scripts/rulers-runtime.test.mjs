@@ -52,3 +52,20 @@ test('expansion drivers: layered push/pull/enable/brake, bounded, readable, and 
  const d=expansionOf(g,1);assert.ok(d&&d.drive>=.25,'live game produces an assessment');assert.equal(expansionDrive(g,1),d.drive);
  const old=new Game();old.reset(5,10,{rulersVersion:0});old.enterIsland();assert.equal(expansionDrive(old,1),1,'rulers off: unchanged behaviour');
 });
+
+test('council read model and marry command: JSON-safe, gated, and the UI action changes real ties',async()=>{
+ const {applyEngineReadQuery,isEngineReadQuery}=await import('../src/game/engineReadModels.ts');
+ const {applyEngineCommand,isEngineDispatchCommand}=await import('../src/game/engineDispatch.ts');
+ const {tiesBetween}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();
+ assert.ok(isEngineReadQuery({kind:'rulers-council'}));assert.ok(!isEngineReadQuery({kind:'rulers-council',x:1}));
+ const m=applyEngineReadQuery(g,{kind:'rulers-council'});const c=JSON.parse(JSON.stringify(m)).council;
+ assert.ok(c.enabled&&c.ruler.name&&c.house.family.length>=1&&Array.isArray(c.neighbours));
+ const old=new Game();old.reset(5,10,{rulersVersion:0});old.enterIsland();assert.equal(applyEngineReadQuery(old,{kind:'rulers-council'}).council.enabled,false);
+ assert.ok(isEngineDispatchCommand({kind:'marry-houses',team:1}));assert.ok(!isEngineDispatchCommand({kind:'marry-houses',team:1,x:2}));
+ assert.equal(applyEngineCommand(g,{kind:'marry-houses',team:1}).accepted,false,'small houses cannot');
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<20;i++)g.state.units.push({...u,id:g.state.units.length+7000+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);d.people[t+'-cadet']={...k,id:t+'-cadet',name:'Cadet'+t,age:20,spouse:undefined,parent:undefined,ruler:undefined};}
+ const b0=tiesBetween(g,0,1).bond,r=applyEngineCommand(g,{kind:'marry-houses',team:1});
+ assert.equal(r.accepted,true,r.reason);assert.ok(tiesBetween(g,0,1).bond>b0);
+});

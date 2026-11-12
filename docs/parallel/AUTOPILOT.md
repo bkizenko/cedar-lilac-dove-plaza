@@ -864,3 +864,4 @@ Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus th
 - **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
 | RULERS-MARRIAGE | Claude | done | marryHouses applies signed kinship ties to society relations, population-gated | tests in rulers-runtime |
 | EXPANSION-DRIVERS | Claude | done | push/pull/enable/brake model (crowding, hunger, climate memory, cadet kin, open land, weak/rich neighbours, boats, faith, ruler drive, cohesion) drives NPC settlement odds behind rulersVersion; expansionOf() gives stated reasons for UI | tests in rulers-runtime |
+| RULERS-UI-COUNCIL | Claude | done | Council and house panel (ruler, family, factions, expansion why, renown, neighbours) via read model 'rulers-council'; 'marry-houses' command validated and gated by house size | tests in rulers-runtime; mounted in Hud tech panel |

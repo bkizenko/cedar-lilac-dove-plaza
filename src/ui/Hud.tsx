@@ -33,6 +33,7 @@ import {DIFFICULTIES,difficultyEffects} from '../game/difficulty';
 import {FarmingProgress} from './FarmingProgress';
 import {ConflictControls} from './ConflictControls';
 import {KnowledgePanel} from './KnowledgePanel';
+import {CouncilPanel} from './CouncilPanel';
 import {PaidProjects} from './PaidProjects';
 import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
@@ -964,6 +965,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             </div>
             <GameDisclosure label="Next age requirements"><AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/></GameDisclosure>
             {engine&&<KnowledgePanel engine={engine} expanded onChooseSite={()=>setTechOpen(false)}/>}
+            {engine&&<GameDisclosure label="Council and house"><CouncilPanel engine={engine}/></GameDisclosure>}
             <GameDisclosure label="Buildings by age"><div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AGES.map((name, age) => (
                 <div
