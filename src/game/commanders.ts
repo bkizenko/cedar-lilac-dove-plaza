@@ -125,7 +125,7 @@ export function appointCommander(g:Game,unitId:number,kind:CommanderKind,opts:Co
  if(s.roster.length>=R.maximumRoster){const old=s.roster.findIndex(c=>!isLive(c));s.roster.splice(old,1);}
  if(!opts.free)g.tribe(team).wood-=R.standardWood;
  const c:Commander={id:g.id(),team,unitId:u.id,name:u.name||`Commander ${u.id}`,kind,traits:pickTraits(g,u.id,kind,team),promotions:[],xp:0,level:1,promotionPoints:0,status:'serving',memberIds:[],boatIds:[],appointedAt:g.state.time,lastSeen:{x:u.x,z:u.z},xpMark:u.combatXP||0};
- if(replacing){c.replaces=replacing.id;replacing.replacedBy=c.id;c.memberIds=replacing.memberIds.filter(id=>id!==u.id);c.boatIds=[...replacing.boatIds];c.xpMark+=c.memberIds.reduce((n,id)=>n+(unitById(g,id)?.combatXP||0),0);replacing.memberIds=[];replacing.boatIds=[];if(isLive(replacing))replacing.status='retired';}
+ if(replacing){c.replaces=replacing.id;replacing.replacedBy=c.id;c.memberIds=replacing.memberIds.filter(id=>id!==u.id);c.boatIds=[...replacing.boatIds];{const cap=commanderCapacity(c);c.memberIds.splice(cap);c.boatIds.splice(cap);}c.xpMark+=c.memberIds.reduce((n,id)=>n+(unitById(g,id)?.combatXP||0),0);replacing.memberIds=[];replacing.boatIds=[];if(isLive(replacing))replacing.status='retired';}
  s.roster.push(c);bump(g);
  return {accepted:true,reason:`${c.name} now leads as a ${kind==='fleet'?'fleet':'field'} commander (${c.traits.map(id=>traitDef(id)?.name).join(', ')})`,commanderId:c.id};
 }
