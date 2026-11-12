@@ -278,3 +278,13 @@ Done by societies: bulk goods + crafted items (cordage, baskets, pottery, cloth,
 
 ## PM check-in (main 8f8e692)
 Branches: grok-world 2d05b7d, claude-societies e69b8f8, claude-experience 9992fe9 (all pushed). Claude branches lack the latest main (8f8e692); merge at next worker run. Claude workers idle; waiting on Codex primitives (6 requests above) and on desktop link for real renders. Grok is PM from here.
+
+## PM check-in — 2026-11-11, 19:10 ET (main `02fe3c2`)
+
+Fetched all remotes; merged `origin/main` normally (no rebase/force).
+
+**Changed since 18:15:** main gained Codex/Boris commits (perf population scans `d86d7da`, authoritative simulation Worker core `d13dd23`, worker host + typed production controls `02fe3c2`). New branch `work/sim-worker-2026-11-11` (Codex/Boris, engine/worker files, no single-owner shared files). `agents/grok-world` now `3541a67`: W5 ready (`b910e04`: flow-field, hills/plains `landformLabelVersion 2`, tides, water works, wonder earthworks) and W6 in progress and pushed (sea-only tides v2, aqueduct/canal routing, eraMode extension footprint checks).
+**Overlaps:** none new between grok-world, claude-societies and the worker branch (no shared files). Only non-owner shared-file edit remains `sim.ts` (World, listed on board); `types.ts` (Societies, listed).
+**Rule violations:** none seen (no rebase/force-push, no pushed PNGs).
+**Requests:** no changes; G6 tides now delivered in source (W5/W6); still pending with Codex: C2, C6, C9, C10, C11, C13, C14, C15, G7, G9, LAND merge, and the six societies primitives. Claude branches still lack latest main.
+**World lane:** W6 in progress (water routing/extension footprints); next after W6 per `grok-world.md`.
