@@ -4,6 +4,6 @@ class Stub{constructor(){this.enabled=false;this.uniforms={};this.renderTarget1=
 export class EffectComposer extends Stub{}
 export class RenderPass extends Stub{}
 export class UnrealBloomPass extends Stub{}
-export class ShaderPass extends Stub{}
+export class ShaderPass extends Stub{constructor(shader){super();this.uniforms=(shader&&shader.uniforms)||{};}}
 export class FilmPass extends Stub{}
 export class OutputPass extends Stub{}
