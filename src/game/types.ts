@@ -166,6 +166,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   productionProjectId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
+  armorCargoId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
   garment?:import('./textiles').Garment;
