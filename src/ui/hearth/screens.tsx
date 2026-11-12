@@ -17,6 +17,7 @@ import {SocietyFlag} from '../SocietyFlag';
 import {GameTooltip} from '../GameTooltip';
 import {GameDisclosure} from '../GameDisclosure';
 import {FoodStoreReadout} from '../FoodStoreReadout';
+import {PrestigeReadout} from '../PrestigeReadout';
 import {NeedsPanel} from '../NeedsPanel';
 import {WorkloadPanel} from '../WorkloadPanel';
 import {FarmingProgress} from '../FarmingProgress';
@@ -130,7 +131,7 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
    {tab==='work'&&<WorkloadPanel engine={engine}/>}
    {tab==='food'&&<FarmingProgress engine={engine} onKnowledge={onKnowledge}/>}
    {tab==='craft'&&<CraftingAndBuildings engine={engine}/>}
-   {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/></>}
+   {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals}/></>}
    {tab==='trade'&&<TradeBlock hud={hud} engine={engine} onOffer={onOffer}/>}
    {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/YEAR_SECONDS)+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
   </div>

@@ -34,7 +34,7 @@ try{
  assert.equal(before.value,expectedValue);assert.ok(Math.abs(before.points-expectedPoints)<1e-8);assert.equal(before.available,true);assert.equal(before.paused,true);
  assert.ok(before.receipts.bands.some(b=>b.outcome==='held'&&b.settledAt!==undefined));assert.ok(before.rivalCount>0);assert.equal(before.privateRivalValuesHidden,true);assert.deepEqual(before.errors,[]);
  stage='existing village ledger meter';
- await page.getByRole('button',{name:'Village',exact:true}).click();
+ await page.getByRole('button',{name:'Village',exact:true}).click();await page.getByRole('tab',{name:'Camp',exact:true}).click();
  const region=page.getByRole('region',{name:'Prestige breakdown',exact:true});await region.waitFor();
  const meter=region.getByRole('meter',{name:'War aims prestige',exact:true});await meter.waitFor();
  // Wait on the actual HUD snapshot, never a synthetic DOM value or engine tick.
