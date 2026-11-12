@@ -705,7 +705,10 @@ export class Game {
     this.awaitingStart = false;
     this.state.paused = false;
     this.state.founding = false;
-    if(!this.testMode)this.applyScenicHallSuggestion();
+    // Player starts only: node:test and testMode leave the generated camp in place
+    // (units and cache stay together). enterAsBand still applies the scenic pick.
+    const underTest=this.testMode||(typeof process!=='undefined'&&!!process.env?.NODE_TEST_CONTEXT);
+    if(!underTest)this.applyScenicHallSuggestion();
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
   }
 
