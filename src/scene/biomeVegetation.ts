@@ -24,6 +24,7 @@ export type VegetationStyle='classic'|'painterly';
 type AnyForm=TreeForm|'birch'|'cypress';
 const TREE_SHADOW_RADIUS:Record<AnyForm,number>={broadleaf:2.5,conifer:1.8,willow:2.6,acacia:2.7,palm:1.7,stunted:1.3,scrub:1.1,birch:1.7,cypress:1.1};
 type TreeBatch={trunk:THREE.InstancedMesh;canopy:THREE.InstancedMesh;capacity:number;crownCenter:THREE.Vector3;crownHalf:THREE.Vector3;ids:Record<Part,number[]>};
+const AUTUMN_LEAVES=['#d9962f','#c9702a','#b84a2a','#e2bb3c','#9aa83c','#cf8a30'].map(h=>new THREE.Color(h));
 const painterLeafColors:Record<AnyForm,string>={broadleaf:'#6f9c3f',conifer:'#3f6e4c',willow:'#7ba046',acacia:'#8a9446',palm:'#5e9440',stunted:'#587a60',scrub:'#8c8a4c',birch:'#86ac3d',cypress:'#4b6e48'};
 const leafColors:Record<TreeForm,string>={broadleaf:'#668947',conifer:'#375f49',willow:'#718b4c',acacia:'#738052',palm:'#577747',stunted:'#536d61',scrub:'#838065'};
 /** Renderer adapter only. Every tree instance comes from an existing resource
@@ -87,7 +88,7 @@ export class BiomeVegetation {
    const deciduous=form==='broadleaf'||form==='willow'||form==='birch',bare=deciduous&&context.winter>.8&&context.snow<.4;
    this.color.set(this.style==='painterly'?painterLeafColors[form]:leafColors[form as TreeForm]);
    if(this.style==='painterly')this.tint(this.color,node.id,form);
-   if(deciduous&&context.autumn>.1)this.color.lerp(this.autumnColors[form==='birch'?'willow':form as 'broadleaf'|'willow'],Math.min(.8,context.autumn)*(this.style==='painterly'?.5+.5*stableUnit(node.id+91,this.seed):1));
+   if(deciduous&&context.autumn>.1){if(this.style==='painterly')this.color.lerp(AUTUMN_LEAVES[Math.floor(stableUnit(node.id+91,this.seed)*AUTUMN_LEAVES.length*.999)],Math.min(.94,context.autumn*(.75+.25*stableUnit(node.id+7,this.seed))));else this.color.lerp(this.autumnColors[form==='birch'?'willow':form as 'broadleaf'|'willow'],Math.min(.8,context.autumn));}
    if(context.snow>.2)this.color.lerp(this.snowColor,context.snow*.8);
    this.color.multiplyScalar(this.style==='painterly'?.86+stableUnit(node.id+17,this.seed)*.26:.90+stableUnit(node.id+17,this.seed)*.16);
    if(context.marked?.(node.id))this.color.set('#c58e43');

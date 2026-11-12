@@ -14,15 +14,18 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
     vec3 pN=normalize(vSurfaceNormal);
     float pSlope=1.-pN.y;
     vec2 pW=vSurfaceWorld.xz;
+    // on steep faces the xz projection stretches every noise along the contour (hatching); project onto the face instead
+    vec2 pTan=normalize(vec2(-pN.z,pN.x)+1e-4);
+    vec2 pWu=mix(pW,vec2(dot(pW,pTan),vSurfaceWorld.y),smoothstep(.12,.34,pSlope));
     float pDist=length(vViewPosition);
     float pNear=1.-smoothstep(14.,85.,pDist);
     float pMid=1.-smoothstep(70.,360.,pDist);
     vec4 pLm=texture2D(terrainLight,pW/${size.toFixed(1)}+.5);
     float pSand=clamp(vSurfaceSand,0.,1.)*(1.-surfaceSnow*.9);
     float pNA=pFbm(pW/58.+vec2(3.1,7.7));
-    float pNB=pFbm(pW/15.+vec2(9.2,1.3));
-    float pNC=mix(.5,pNoise(pW/3.2+vec2(5.,2.)),1.-smoothstep(25.,90.,pDist));
-    float pND=mix(.5,pNoise(pW*vec2(4.6,12.)+vec2(1.,8.)),1.-smoothstep(5.,26.,pDist));
+    float pNB=pFbm(pWu/15.+vec2(9.2,1.3));
+    float pNC=mix(.5,pNoise(pWu/3.2+vec2(5.,2.)),1.-smoothstep(25.,90.,pDist));
+    float pND=mix(.5,pNoise(pWu*vec2(4.6,12.)+vec2(1.,8.)),1.-smoothstep(5.,26.,pDist));
     float pRockRaw=clamp(vSurfaceRock,0.,1.)*(1.-pSand);
     float pRock=smoothstep(.26,.6,pRockRaw+(pNB-.5)*.36+(pNC-.5)*.2*pNear);
     float pSnow=clamp(surfaceSnow,0.,1.);
@@ -45,10 +48,10 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
     if(pFh>.935&&pNear>.01){vec2 pFp=fract(pW/.62)-.5-(vec2(pHash(pFc+3.1),pHash(pFc+7.7))-.5)*.5;float pFm=smoothstep(.15,.04,length(pFp))*pNear*pGrass*smoothstep(.45,.95,pOrganic);
      vec3 pFcol=pFh>.985?vec3(.95,.93,.86):pFh>.96?vec3(.93,.76,.18):pFh>.948?vec3(.6,.36,.7):vec3(.82,.3,.24);pBase=mix(pBase,pFcol,pFm*.85);}`:''}
     // 4. rock: strata bands, fracture darkening, warm/cool lichen
-    vec2 pTan=normalize(vec2(-pN.z,pN.x)+1e-4);
     vec2 pWall=mix(pW*vec2(1.,.6),vec2(dot(pW,pTan),vSurfaceWorld.y),smoothstep(.12,.34,pSlope));
-    float pStrata=mix(.5,sin(vSurfaceWorld.y*2.9+pNoise(pWall/6.)*2.5)*.5+.5,1.-smoothstep(30.,140.,pDist));
-    float pCrack=(1.-smoothstep(0.,.14,abs(pNoise(pWall*vec2(.55,.28)+3.)-.5)))*(1.-smoothstep(30.,140.,pDist));
+    float pSteepFade=1.-smoothstep(.45,.8,pSlope);
+    float pStrata=mix(.5,sin(vSurfaceWorld.y*2.9+pNoise(pWall/6.)*2.5)*.5+.5,(1.-smoothstep(30.,140.,pDist))*pSteepFade);
+    float pCrack=(1.-smoothstep(0.,.14,abs(pNoise(pWall*vec2(.55,.28)+3.)-.5)))*(1.-smoothstep(30.,140.,pDist))*pSteepFade;
     vec3 pRockCol=pBase*(.9+pStrata*.2)*(1.-pCrack*.12*pMid);
     pRockCol=mix(pRockCol,pRockCol*vec3(1.08,.98,.86),smoothstep(.55,.8,pNB));
     pBase=mix(pBase,pRockCol,pRock);
@@ -67,25 +70,25 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
     pBase=mix(pBase,pBase*(.93+pNC*.1),pSnow);
     diffuseColor.rgb=${dbg==='vc'?'diffuseColor.rgb':dbg==='nrm'?'pN*.5+.5':dbg==='bank'?'vec3(0.,vSurfaceRock,vSurfaceSand)':'pBase'};
     float pCloudShade=pCloud.x*smoothstep(.46,.64,pFbm((pW+vec2(pCloud.y*2.4,pCloud.y*1.1))/200.))*(1.-smoothstep(520.,1600.,pDist));
-    float pAO=mix(1.,pLm.r,.95);
-    float pSun=mix(1.,pLm.g,.95);
+    float pAO=mix(1.,pLm.r,.72);
+    float pSun=mix(1.,pLm.g,.9);
 `;}
 export const painterLight=`
     #include <aomap_fragment>
     reflectedLight.directDiffuse*=pSun*(1.-pCloudShade)*mix(1.,pAO,.45);
-    reflectedLight.directSpecular*=pSun*(1.-pCloudShade);
+    reflectedLight.directSpecular*=pSun*(1.-pCloudShade)*(1.-pWet*.5);
     reflectedLight.indirectDiffuse*=pAO*(.92+(pLm.a-.5)*.3);
     // cool skylight fills the places the sun does not reach
-    reflectedLight.indirectDiffuse+=diffuseColor.rgb*(1.-pSun*(1.-pCloudShade*.6))*vec3(.018,.03,.05);
+    reflectedLight.indirectDiffuse+=diffuseColor.rgb*(1.-pSun*(1.-pCloudShade*.6))*vec3(.07,.1,.15);
 `;
 export const painterRoughness=`
     #include <roughnessmap_fragment>
-    roughnessFactor=clamp(mix(.97,.82,pRock)-pWet*.5+(pND-.5)*.06,.34,1.);
+    roughnessFactor=clamp(mix(.97,.82,pRock)-pWet*.26+(pND-.5)*.06,.62,1.);
     roughnessFactor=mix(roughnessFactor,.6,pSnow*.6);
 `;
 export const painterNormal=(rockStrength:number,grassStrength:number)=>`
     #include <normal_fragment_maps>
     float pBumpFar=1.-smoothstep(60.,220.,pDist);
-    float pBump=((pNC-.5)*.5+(pND-.5)*.35+(pNB-.5)*.2)*pNear*pGrass+(pStrata*.4+(pNB-.5)*.8-pCrack*.9)*pRock*pMid+(pRip-.5)*.35*pSand*pNear;
-    normal=surfacePerturb(-vViewPosition,normal,pBump*mix(${grassStrength.toFixed(3)},${rockStrength.toFixed(3)},pRock)*(1.-pSnow*.5));
+    float pBump=((pNC-.5)*.5+(pND-.5)*.35+(pNB-.5)*.2)*pNear*pGrass+(pStrata*.14+(pNB-.5)*.5-pCrack*.4)*pRock*pMid+(pRip-.5)*.35*pSand*pNear;
+    normal=surfacePerturb(-vViewPosition,normal,pBump*(1.-smoothstep(.4,.7,pSlope))*mix(${grassStrength.toFixed(3)},${rockStrength.toFixed(3)},pRock)*(1.-pSnow*.5));
 `;

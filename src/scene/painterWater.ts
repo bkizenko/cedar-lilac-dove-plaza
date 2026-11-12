@@ -68,7 +68,7 @@ export function painterWaterFragment(surface:TerrainSurface,falling:boolean,kind
    float lace=smoothstep(${kind==='river'?'.5,.8':'.42,.72'},wFbm(p*${kind==='river'?'2.2':'3.1'}+vec2(T*.2,0.)));
    float foam=clamp(shore*(.3+.7*lace)*${kind==='river'?'.55':'1.'}+breaker*lace*.6,0.,1.)*(1.-smoothstep(.0,.04,depth)*.0);
    float edgeLine=smoothstep(.0,.07,depth)*(1.-smoothstep(.07,.2,depth));
-   foam=max(foam,edgeLine*lace*.9);
+   foam=max(foam,edgeLine*lace*.55);
    ${kind==='river'?'foam=max(foam,smoothstep(.7,.92,streak)*.1*(1.-smoothstep(.8,2.,depth)));':''}
    float fallAlpha=1.;
    ${falling?`vec2 fl=vec2(vWaterUv.x*7.,vWaterUv.y*9.+uTime*1.9);

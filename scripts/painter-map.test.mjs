@@ -4,6 +4,8 @@ import {DEFAULT_MAP_STYLE,MAP_STYLES,parseMapStyle,resolveMapStyle,MAP_STYLE_LAB
 import {painterAtmosphere} from '../src/scene/painterAtmosphere.ts';
 import {horizonVisibility,TerrainLightmap} from '../src/scene/terrainLight.ts';
 import {painterTreeKit,PAINTER_FORMS,painterDressing,painterRock,rngFrom} from '../src/scene/painterTrees.ts';
+import {painterCropColor,painterCropScale,painterCropGeometry} from '../src/scene/painterCrops.ts';
+import {smoothGridNormals} from '../src/scene/painterGround.ts';
 import {VEGETATION_KIT_RULES} from '../src/scene/vegetationKit.ts';
 
 test('map style: painterly is the labelled default, classic stays selectable and archived', () => {
@@ -77,4 +79,20 @@ test('painterly dressing geometry stays nonblocking-small and deterministic', ()
  const a = painterRock(7, true), b = painterRock(7, true);
  assert.deepEqual([...a.attributes.position.array], [...b.attributes.position.array]);
  assert.equal(rngFrom(5)(), rngFrom(5)());
+});
+
+test('painterly crops: growth stages read apart and scale monotonically', () => {
+ const sprout = painterCropColor('grain', {planted:0, tended:0, ripened:false, remaining:5}, .1, .5), ripe = painterCropColor('grain', {planted:1, tended:1, ripened:true, remaining:5}, 1, .5);
+ assert.notDeepEqual([sprout.r, sprout.g, sprout.b], [ripe.r, ripe.g, ripe.b]);
+ assert.ok(ripe.r > ripe.b, 'ripe grain is golden, not blue');
+ let last = 0;for (const g of [0, .2, .5, 1]) {const v = painterCropScale(g).y;assert.ok(v >= last && v <= 1);last = v;}
+ for (const k of ['grain', 'pulses', 'tubers']) {const g = painterCropGeometry(k);assert.ok(g.attributes.position.count > 0);g.dispose();}
+});
+
+test('painterly terrain normals: grid smoothing keeps unit length and calms a jagged cliff', () => {
+ const segs = 8, w = segs + 1, g = new THREE.BufferGeometry(), a = new Float32Array(w * w * 3);
+ for (let i = 0; i < w * w; i++) {const t = i % 2 ? .9 : -.9, l = Math.hypot(t, 1);a[i * 3] = t / l;a[i * 3 + 1] = 1 / l;}
+ g.setAttribute('normal', new THREE.BufferAttribute(a, 3));smoothGridNormals(g, segs, 2);
+ let spread = 0;for (let i = 0; i < w * w; i++) {assert.ok(Math.abs(Math.hypot(a[i * 3], a[i * 3 + 1], a[i * 3 + 2]) - 1) < 1e-4);spread = Math.max(spread, Math.abs(a[i * 3]));}
+ assert.ok(spread < .5, 'alternating normals are averaged away');
 });

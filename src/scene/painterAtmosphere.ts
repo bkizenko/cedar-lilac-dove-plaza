@@ -16,7 +16,7 @@ export function painterAtmosphere(i:AtmosphereInput):AtmospherePalette{
  // Low sun (dawn, dusk, late afternoon): amber horizon, violet-blue zenith.
  const warm=Math.max(i.dawn*.9,i.dusk*1,low*.75,goldenWeather);
  zen=mixHex(zen,'#4a5f9e',warm*.6);mid=mixHex(mid,'#c9a6a0',warm*.55);hor=mixHex(hor,'#f6b077',warm*.9);fog=mixHex(fog,'#e7bd93',warm*.75);
- sun=mixHex(sun,'#ff9a4e',Math.max(low*.85,Math.max(i.dawn,i.dusk)*.8));hemiSky=mixHex(hemiSky,'#9fb4de',warm*.4);hemiGround=mixHex(hemiGround,'#9a6f4a',warm*.5);
+ sun=mixHex(sun,'#ff9a4e',Math.max(low*.85,Math.max(i.dawn,i.dusk)*.8));hemiSky=mixHex(hemiSky,'#9fb4de',warm*.4);hemiGround=mixHex(hemiGround,'#b8844f',warm*.6);hemiSky=mixHex(hemiSky,'#e8b898',warm*.25);
  // Seasons.
  if(i.autumn>.15){hor=mixHex(hor,'#eed2a4',i.autumn*.4);fog=mixHex(fog,'#dcc29a',i.autumn*.4);sun=mixHex(sun,'#ffd49a',i.autumn*.4);hemiGround=mixHex(hemiGround,'#9a7240',i.autumn*.4);}
  if(i.spring>.15){zen=mixHex(zen,'#4b86c8',i.spring*.3);fog=mixHex(fog,'#d2e4e2',i.spring*.3);}
@@ -28,11 +28,11 @@ export function painterAtmosphere(i:AtmosphereInput):AtmospherePalette{
  // Night: deep blue, moonlit.
  if(i.night){zen='#0b1430';mid='#182444';hor='#2c3b5e';gnd='#1a2236';fog='#273450';sun='#aebde6';hemiSky='#6a7db0';hemiGround='#2a3348';}
  gnd=mixHex(gnd,fog,.5);
- const sunIntensity=i.night?.7:(1.3+e*1.75+(i.dawn+i.dusk)*.25)*(1-overcast*.62)*(wx==='drought'?1.06:1)*(1-Math.max(i.winter,i.snow)*.1);
- const hemiIntensity=i.night?.8:(.78+e*.3)*(1+overcast*.35);
+ const sunIntensity=i.night?.7:(1.75+e*1.1+(i.dawn+i.dusk)*.45)*(1-overcast*.62)*(wx==='drought'?1.06:1)*(1-Math.max(i.winter,i.snow)*.1);
+ const hemiIntensity=i.night?.8:(.9+e*.22+low*.5)*(1+overcast*.35);
  const fillIntensity=i.night?.35:.12+overcast*.18;
  const fogDensity=i.night?.0026:wx==='storm'?.0042:wx==='rain'||wx==='flood'?.0034:wx==='mist'?.0052:wx==='drought'?.0024:wx==='frost'?.0026:Math.max(.0013,.0015+i.snow*.001+warm*.0003);
- const exposure=(i.night?1.1:1.04+e*.08+warm*.06+i.winter*.05)*(wx==='storm'||wx==='flood'?.9:1);
+ const exposure=(i.night?1.1:1.04+e*.06+warm*.2+i.winter*.08)*(wx==='storm'||wx==='flood'?.9:1);
  return {sun,sunIntensity,hemiSky,hemiGround,hemiIntensity,fillIntensity,fog,fogDensity,skyZenith:zen,skyMid:mid,skyHorizon:hor,skyGround:gnd,exposure,
   cloudCover:i.night?.35:wx==='storm'?1:wx==='rain'||wx==='flood'?.92:wx==='mist'?.7:wx==='frost'?.3:wx==='drought'?.12:.42+i.spring*.06,
   cloudShadow:i.night?0:(1-overcast*.55)*(wx==='drought'?.4:1)*.2,

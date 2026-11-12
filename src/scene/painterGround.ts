@@ -19,7 +19,8 @@ export const PAINTER_PALETTE:Record<ProvinceKind,Palette>={
 const lin=(h:string):[number,number,number]=>{const c=new THREE.Color(h);return [c.r,c.g,c.b];};
 type LinPalette={grass:[number,number,number][];dry:[number,number,number];litter:[number,number,number];sand:[number,number,number];rock:[number,number,number];rockWarm:[number,number,number]};
 const LIN:Record<string,LinPalette>={};
-for(const k of PROVINCE_KINDS){const p=PAINTER_PALETTE[k];LIN[k]={grass:p.grass.map(lin),dry:lin(p.dry),litter:lin(p.litter),sand:lin(p.sand),rock:lin(p.rock),rockWarm:lin(p.rockWarm)};}
+for(const k of PROVINCE_KINDS){const p=PAINTER_PALETTE[k];LIN[k]={grass:p.grass.map(lin),dry:lin(p.dry),litter:lin(p.litter),sand:lin(p.sand).map(v=>v*(k==='arid'?1.0:k==='dry-scrub'?.86:.72)) as [number,number,number],rock:lin(p.rock).map(v=>v*.75) as [number,number,number],rockWarm:lin(p.rockWarm).map(v=>v*.66) as [number,number,number]};}
+const AUTUMN_GOLD=lin('#c9983c'),AUTUMN_RUST=lin('#a65a2c'),AUTUMN_OLIVE=lin('#8c9a44');
 const FLOWER_YELLOW=lin('#dcc548'),FLOWER_WHITE=lin('#e6dccb'),FLOWER_VIOLET=lin('#9d7fbd');
 const SNOW=lin('#eef3f8'),SNOW_SHADE=lin('#cfdcec'),PATH=lin('#a68558'),MUD=lin('#5d4c37');
 const mix3=(a:readonly number[],b:readonly number[],t:number,o:number[])=>{o[0]=a[0]+(b[0]-a[0])*t;o[1]=a[1]+(b[1]-a[1])*t;o[2]=a[2]+(b[2]-a[2])*t;return o;};
@@ -38,6 +39,30 @@ export function blurGrid(a:Float32Array,passes:number){
   const t=src;src=dst;dst=t;
  }
  if(src!==a)a.set(src);
+}
+/** The sparse bank-tile mesh derives vertex normals from a height function that is stepped on terraces and cliffs, which hatches steep
+ * faces with contour-line noise once the surface shader reads the slope. Smooth them inside each (n+1)x(n+1) tile; tile borders keep
+ * their values so seams with the coarse terrain do not open. Render-only: positions are untouched. */
+export function smoothTileNormals(g:THREE.BufferGeometry,n:number,passes=3){
+ const nrm=g.getAttribute('normal') as THREE.BufferAttribute|undefined;if(!nrm||n<3)return;
+ const w=n+1,per=w*w,tiles=Math.floor(nrm.count/per),a=nrm.array as Float32Array,tmp=new Float32Array(per*3);
+ for(let t=0;t<tiles;t++){const o=t*per*3;
+  for(let p=0;p<passes;p++){tmp.set(a.subarray(o,o+per*3));
+   for(let iz=1;iz<n;iz++)for(let ix=1;ix<n;ix++){let x=0,y=0,z=0;
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const k=((iz+dz)*w+ix+dx)*3;x+=tmp[k];y+=tmp[k+1];z+=tmp[k+2];}
+    const l=Math.hypot(x,y,z)||1,k=o+(iz*w+ix)*3;a[k]=x/l;a[k+1]=y/l;a[k+2]=z/l;}}
+ }
+ nrm.needsUpdate=true;
+}
+/** Row-major (segs+1)^2 grid normals: blur and renormalise so steep, terraced faces shade as one surface instead of per-cell noise. */
+export function smoothGridNormals(g:THREE.BufferGeometry,segs:number,passes=2){
+ const nrm=g.getAttribute('normal') as THREE.BufferAttribute,w=segs+1;if(!nrm||nrm.count!==w*w)return;
+ const a=nrm.array as Float32Array,tmp=new Float32Array(a.length);
+ for(let p=0;p<passes;p++){tmp.set(a);
+  for(let iz=0;iz<w;iz++)for(let ix=0;ix<w;ix++){let x=0,y=0,z=0;
+   for(let dz=-1;dz<=1;dz++){const jz=Math.min(w-1,Math.max(0,iz+dz));for(let dx=-1;dx<=1;dx++){const jx=Math.min(w-1,Math.max(0,ix+dx)),k=(jz*w+jx)*3;x+=tmp[k];y+=tmp[k+1];z+=tmp[k+2];}}
+   const l=Math.hypot(x,y,z)||1,k=(iz*w+ix)*3;a[k]=x/l;a[k+1]=y/l;a[k+2]=z/l;}}
+ nrm.needsUpdate=true;
 }
 export class PainterGround{
  private n:number;private x:Float32Array;private z:Float32Array;private h:Float32Array;private grade:Float32Array;private exposure:Float32Array;private warm:Float32Array;private legacy:Uint8Array;private region:Uint8Array;
@@ -72,6 +97,10 @@ export class PainterGround{
     const dryT=clamp01((.55-m)*1.1+(patch-.5)*1.1+sn.autumn*.1);mix3(grass,P.dry,dryT*.75,tmp);
     const lushT=smooth(.6,.8,patch)*(1-dryT);tmp[0]=tmp[0]*(1-lushT*.14);tmp[1]=tmp[1]*(1-lushT*.04);tmp[2]=tmp[2]*(1-lushT*.1);
     mix3(tmp,P.litter,smooth(.62,.85,fine*.5+patch*.5)*(kind==='conifer-forest'||kind==='mixed-woodland'?.55:.2),tmp);
+    if(sn.autumn>.05){ // autumn is patchwork: olive greens, gold and rust drifts that follow broad noise, not one flat mustard
+     const a=sn.autumn,goldT=smooth(.38,.62,this.hue[i])*a*.55,rustT=smooth(.62,.82,patch*.6+this.bloom[i]*.4)*a*.5,oliveT=(1-smooth(.3,.5,this.hue[i]))*a*.35;
+     mix3(tmp,AUTUMN_OLIVE,oliveT,tmp);mix3(tmp,AUTUMN_GOLD,goldT,tmp);mix3(tmp,AUTUMN_RUST,rustT,tmp);
+    }
     if(kind==='meadow'||kind==='warm-coast'||kind==='alpine'||kind==='wetland'){
      const fl=smooth(.6,.72,this.bloom[i])*(sn.spring+sn.summer*.75)*(1-dryT*.6);
      if(fl>.01)mix3(tmp,this.hue[i]>.55?FLOWER_YELLOW:this.hue[i]>.38?FLOWER_WHITE:FLOWER_VIOLET,fl*.34,tmp);

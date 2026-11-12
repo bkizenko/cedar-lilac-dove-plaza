@@ -49,7 +49,8 @@ import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
 import {TerrainLightmap} from './terrainLight';
-import {PainterGround,blurGrid} from './painterGround';
+import {PainterGround,blurGrid,smoothTileNormals,smoothGridNormals} from './painterGround';
+import {trailStampTexture,painterNodeRock} from './painterTrees';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
@@ -160,6 +161,7 @@ const _q = new THREE.Quaternion();
 const _s = new THREE.Vector3();
 const _e = new THREE.Euler();
 const _c = new THREE.Color();
+const _trailColor = new THREE.Color(), _trailColorB = new THREE.Color(), _trailColorC = new THREE.Color();
 const _ray = new THREE.Raycaster();
 const _ndc = new THREE.Vector2();
 const _ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -281,6 +283,7 @@ export class WorldView {
   private housingPackets:HousingPacketLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
+  private trailHalo: THREE.InstancedMesh | null = null;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
   rings!: THREE.InstancedMesh;
@@ -539,6 +542,13 @@ export class WorldView {
 
     this.trailMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),new THREE.MeshStandardMaterial({color:"#756d52",alphaMap:this.trailAlpha(),transparent:true,opacity:0.12,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
     this.trailMesh.count=0;this.trailMesh.frustumCulled=false;this.trailMesh.raycast=()=>{};this.scene.add(this.trailMesh);
+    if(this.mapStyle==='painterly'){
+     // Worn-earth ribbons read clearly: a packed-earth core over a flattened-grass halo, both soft at the rim. Colour follows wear.
+     const stamp=trailStampTexture(),core=this.trailMesh.material as THREE.MeshStandardMaterial;core.alphaMap?.dispose();core.alphaMap=stamp;core.color.set('#ffffff');core.opacity=.78;core.polygonOffset=true;core.polygonOffsetFactor=-3;core.polygonOffsetUnits=-3;core.needsUpdate=true;
+     this.trailMesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(4096*3).fill(1),3);
+     const haloMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',alphaMap:stamp,transparent:true,opacity:.42,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+     this.trailHalo=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),haloMaterial,4096);this.trailHalo.count=0;this.trailHalo.frustumCulled=false;this.trailHalo.raycast=()=>{};this.trailHalo.renderOrder=-1;this.trailHalo.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(4096*3).fill(1),3);this.scene.add(this.trailHalo);
+    }
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
       new THREE.MeshBasicMaterial({
@@ -660,9 +670,9 @@ export class WorldView {
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
-    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
+    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(this.mapStyle==='painterly')smoothTileNormals(geometry,game.world.bankTerrain!.subdivisions);if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
-    if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
+    if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface,this.mapStyle==='painterly'?'painterly':'classic');
     this.buildNature(game);
     if(game.state&&wildPlantsEnabled(game)){this.wildPlantLayer=new WildPlantLayer(this.scene,game);if(this.bushes)this.bushes.count=0;}
     this.buildBuildings();
@@ -769,6 +779,7 @@ export class WorldView {
     }
     this.terrainSurface.bind(this.mats.ground,!!ecology,painterly);
     geo.computeVertexNormals();
+    if(painterly)smoothGridNormals(geo,game.world.segs,2);
     geo.computeBoundingBox();
     geo.computeBoundingSphere();
     this.terrain = new THREE.Mesh(geo, this.mats.ground);
@@ -862,7 +873,8 @@ export class WorldView {
     }
 
     const nRock = game.state.stones.length;
-    this.rocks = new THREE.InstancedMesh(rockGeo(), this.mats.rock, Math.max(nRock, 1));
+    const painterRocks=this.mapStyle==='painterly',painterRockMat=painterRocks?new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.96,metalness:0}):null;
+    this.rocks = new THREE.InstancedMesh(painterRocks?painterNodeRock('stone'):rockGeo(), painterRockMat??this.mats.rock, Math.max(nRock, 1));
     this.rocks.castShadow = true;
     this.rocks.receiveShadow = true;
     game.state.stones.forEach((s, i) => {
@@ -882,7 +894,8 @@ export class WorldView {
     cuMat.color.set("#b87333");
     cuMat.emissive.set("#6a3a10");
     cuMat.emissiveIntensity = 0.22;
-    this.copper = new THREE.InstancedMesh(rockGeo(), cuMat, Math.max(nCu, 1));
+    if(painterRocks){cuMat.color.set('#ffffff');cuMat.vertexColors=true;cuMat.emissiveIntensity=.1;}
+    this.copper = new THREE.InstancedMesh(painterRocks?painterNodeRock('copper',3):rockGeo(), cuMat, Math.max(nCu, 1));
     this.copper.castShadow = true;
     game.state.copper.forEach((s, i) => {
       _p.set(s.x, s.y, s.z);
@@ -900,7 +913,8 @@ export class WorldView {
     feMat.color.set("#4a4a52");
     feMat.metalness = 0.55;
     feMat.roughness = 0.4;
-    this.iron = new THREE.InstancedMesh(rockGeo(), feMat, Math.max(nFe, 1));
+    if(painterRocks){feMat.color.set('#ffffff');feMat.vertexColors=true;feMat.metalness=.25;feMat.roughness=.62;}
+    this.iron = new THREE.InstancedMesh(painterRocks?painterNodeRock('iron',5):rockGeo(), feMat, Math.max(nFe, 1));
     this.iron.castShadow = true;
     game.state.iron.forEach((s, i) => {
       _p.set(s.x, s.y, s.z);
@@ -1002,7 +1016,7 @@ export class WorldView {
       if(type==='farm'){timberMaterial.map=null;timberMaterial.bumpMap=null;timberMaterial.roughnessMap=null;}
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       if(type === "farm") timberMaterial.vertexColors = true;
-      if(type === "farm" || type === "pen" || terrainLaidWorkplace(type)) this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
+      if(type === "farm" || type === "pen" || terrainLaidWorkplace(type)) this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields,painterly:type==='farm'&&this.mapStyle==='painterly'});
       if(type==='farm'&&this.contourFields){
         g.timber.setAttribute('fieldRows',new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
         const positions=g.timber.attributes.position,colors=g.timber.attributes.color,soilColor=new THREE.Color('#795632');
@@ -1609,12 +1623,17 @@ export class WorldView {
       for(let k=1;k<pts.length&&i<CAP;k++){
         const a=pts[k-1],b=pts[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-3)continue;
         const x=(a.x+b.x)/2,z=(a.z+b.z)/2;if(!game.exploredAt(x,z))continue;
-        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45));
+        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45))*(this.trailHalo?2.7:1);
         _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-Math.atan2(dx,dz));_q.setFromEuler(_e);
-        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);
+        if(this.trailHalo){const wear=Math.min(1,(a.displayWear+b.displayWear)/2/.45),core=_trailColor.set('#7d5f3c').lerp(_trailColorB.set('#b79a6c'),Math.max(0,1-wear*1.1)*.7);this.trailMesh.setColorAt(i,core);
+         _s.set(w*(.8+.6*wear)+.9,len*1.3+.5,1);_m.compose(_p,_q,_s);this.trailHalo.setMatrixAt(i,_m);this.trailHalo.setColorAt(i,_trailColorC.set('#9b9a52').lerp(_trailColorB.set('#a8955c'),wear*.6));
+         _s.set(w*.92,len*1.3,1);_m.compose(_p,_q,_s);}
+        this.trailMesh.setMatrixAt(i++,_m);
       }
     }
-    this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
+    this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;if(this.trailMesh.instanceColor)this.trailMesh.instanceColor.needsUpdate=true;
+    if(this.trailHalo){this.trailHalo.count=i;this.trailHalo.instanceMatrix.needsUpdate=true;if(this.trailHalo.instanceColor)this.trailHalo.instanceColor.needsUpdate=true;}
   }
 
   private syncNature(game: Game) {

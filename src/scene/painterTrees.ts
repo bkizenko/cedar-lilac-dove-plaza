@@ -79,7 +79,7 @@ const BARK=lin('#7c6246'),BARK_DARK=lin('#52402e'),BARK_LIGHT=lin('#8a6b4c'),BIR
 const barkColor=(t:number):V3=>mix(mix(BARK_DARK,BARK,clamp(t*5)),BARK_LIGHT,clamp((t-.5)*1.6)*.55);
 function trunkPath(h:number,lean:V3,rnd:()=>number,steps=7):V3[]{const pts:V3[]=[];const wx=rnd()*6.28;for(let i=0;i<steps;i++){const t=i/(steps-1);pts.push([lean[0]*t*t+Math.sin(t*3+wx)*.07*h/6,h*t,lean[2]*t*t+Math.cos(t*2.6+wx)*.06*h/6]);}return pts;}
 function trunkRadii(base:number,top:number,steps=7){return Array.from({length:steps},(_,i)=>{const t=i/(steps-1);return base*(1+(1-Math.min(1,t*6))*.7)*(1-t)+top*t;});}
-function limb(a:V3,b:V3,r0:number,r1:number,seed:number,color:(t:number)=>V3=barkColor){
+export function limb(a:V3,b:V3,r0:number,r1:number,seed:number,color:(t:number)=>V3=barkColor){
  const mid:V3=[(a[0]+b[0])/2+(Math.sin(seed)*.12),(a[1]+b[1])/2+.15,(a[2]+b[2])/2+Math.cos(seed*1.3)*.12];return tube([a,mid,b],[r0,(r0+r1)/2,r1],5,color,seed);
 }
 function skirt(y:number,r:number,h:number,seed:number,tint:Tint,droop=.2,k=10){
@@ -101,7 +101,7 @@ function strand(x:number,y:number,z:number,len:number,w:number,seed:number,tint:
  for(let i=0;i<segs;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();return g;
 }
-function frond(base:V3,angle:number,len:number,arch:number,droop:number,w:number,tint:Tint,segs=6){
+export function frond(base:V3,angle:number,len:number,arch:number,droop:number,w:number,tint:Tint,segs=6){
  const pos:number[]=[],col:number[]=[],idx:number[]=[],dx=Math.cos(angle),dz=Math.sin(angle),nx=-dz,nz=dx;
  for(let i=0;i<=segs;i++){const s=i/segs,x=base[0]+dx*len*s,z=base[2]+dz*len*s,y=base[1]+arch*Math.sin(s*Math.PI*.6)*len*.35-droop*s*s*len*.55,ww=w*Math.pow(1-s,.6)*(.4+.6*Math.sin(Math.min(1,s*2.2)*Math.PI*.5)),fold=ww*.28;
   pos.push(x-nx*ww,y-fold,z-nz*ww,x,y+fold*.4,z,x+nx*ww,y-fold,z+nz*ww);
@@ -171,7 +171,7 @@ export function contactShadowGeometry(){const g=new THREE.CircleGeometry(1,20);g
 
 // ---- undergrowth ------------------------------------------------------------------------------------------------
 export type PainterDressing='grass'|'tallgrass'|'flowers'|'bloom'|'reeds'|'scrub'|'pebbles'|'fern'|'shrub'|'rocks'|'log';
-function blade(x:number,z:number,h:number,w:number,lean:number,angle:number,base:V3,tip:V3,bend=.5){
+export function blade(x:number,z:number,h:number,w:number,lean:number,angle:number,base:V3,tip:V3,bend=.5){
  const dx=Math.cos(angle),dz=Math.sin(angle),nx=-dz,nz=dx,pos:number[]=[],col:number[]=[];
  const pts=[[0,0],[.5,.55],[1,1]];
  // three-row blade strip: wide base, curved tip
@@ -264,4 +264,35 @@ export function radialShadowTexture(){
  const n=32,data=new Uint8Array(n*n*4);
  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const d=Math.hypot((x+.5)/n*2-1,(y+.5)/n*2-1),a=Math.pow(clamp(1-d),1.6)*255;data.set([a,a,a,255],(y*n+x)*4);}
  const t=new THREE.DataTexture(data,n,n,THREE.RGBAFormat);t.colorSpace=THREE.NoColorSpace;t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t;
+}
+/** Soft-edged path stamp: a worn core that breaks up into grass at the rim (value noise keeps the edge from reading as a smooth ellipse). */
+export function trailStampTexture(){
+ const n=64,data=new Uint8Array(n*n*4),h=(x:number,y:number)=>{const v=Math.sin(x*127.1+y*311.7)*43758.5453;return v-Math.floor(v);};
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){const u=(x+.5)/n*2-1,v=(y+.5)/n*2-1,d=Math.hypot(u,v),rough=(h(Math.floor(x/8),Math.floor(y/8))-.5)*.16,a=clamp(1-(d+rough-.3)/.62)*255;data.set([a,a,a,255],(y*n+x)*4);}
+ const t=new THREE.DataTexture(data,n,n,THREE.RGBAFormat);t.colorSpace=THREE.NoColorSpace;t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t;
+}
+
+/** Resource-node rock: same footprint and height as the classic dodecahedron (picking and clearance unchanged), but faceted with a baked
+ * mossy crown, strata, dark foot, and ore veins for copper (oxidised green and orange) and iron (rust bands). Flat shading on purpose. */
+export function painterNodeRock(kind:'stone'|'copper'|'iron',seed=7){
+ const rnd=rngFrom(seed*17+kind.length),raw=new THREE.IcosahedronGeometry(1,1),pos=raw.attributes.position,ph=[rnd()*6.28,rnd()*6.28,rnd()*6.28],col=new Float32Array(pos.count*3);
+ const base:V3=kind==='stone'?[.34,.32,.29]:kind==='copper'?[.24,.21,.18]:[.17,.16,.16];
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),l=Math.hypot(x,y,z),ux=x/l,uy=y/l,uz=z/l;
+  const d=1+.17*Math.sin(ux*3.3+ph[0])*Math.cos(uz*2.9+ph[1])+.12*Math.sin(uy*5+ph[2]+ux*4);
+  const px=ux*d*.84,py=Math.max(-.18,uy*d*.5)+.28,pz=uz*d*.7;pos.setXYZ(i,px,py,pz);
+ }
+ for(let f=0;f<pos.count;f+=3){ // one tone per facet so the rock reads painted and faceted, not smoothly noisy
+  const cy=(pos.getY(f)+pos.getY(f+1)+pos.getY(f+2))/3,cx=(pos.getX(f)+pos.getX(f+1)+pos.getX(f+2))/3,cz=(pos.getZ(f)+pos.getZ(f+1)+pos.getZ(f+2))/3;
+  const top=clamp((cy-.1)/.55),foot=clamp((.12-cy)/.3),facet=.92+rnd()*.16;
+  let c=mix(base,[base[0]*1.3,base[1]*1.28,base[2]*1.22],top);
+  if(kind==='stone')c=mix(c,[.17,.25,.09],clamp(top-.55)*1.6*.6);
+  else if(kind==='copper'){const vein=Math.sin(cx*9+cy*5+cz*7+seed)>.55?1:0;c=mix(c,[.42,.18,.07],vein*.75);const patina=Math.sin(cx*6-cz*8+seed*2)>.7?1:0;c=mix(c,[.14,.3,.24],patina*.5);}
+  else{const band=Math.sin(cy*14+cx*3)>.35?1:0;c=mix(c,[.3,.12,.07],band*.7);}
+  c=mix(c,[base[0]*.4,base[1]*.4,base[2]*.4],foot*.8);
+  for(let k=0;k<3;k++){col[(f+k)*3]=c[0]*facet;col[(f+k)*3+1]=c[1]*facet;col[(f+k)*3+2]=c[2]*facet;}
+ }
+ raw.deleteAttribute('uv');raw.deleteAttribute('normal');raw.setAttribute('color',new THREE.BufferAttribute(col,3));raw.computeVertexNormals();
+ raw.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(pos.count*2),2));
+ return raw;
 }

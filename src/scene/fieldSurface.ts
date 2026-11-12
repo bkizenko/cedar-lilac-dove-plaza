@@ -25,8 +25,8 @@ export class FieldSurface {
     this.bind(this.depth);
   }
 
-  bind(material: THREE.Material,options:{furrows?:boolean}={}) {
-    material.customProgramCacheKey = () => (options.furrows?'hearth-contour-field-v3-cuts':'hearth-field-surface-v2-cuts')+(this.banks?`-banks-v19-${this.size}-${this.banks.gridSubdivisions}`:'');
+  bind(material: THREE.Material,options:{furrows?:boolean;painterly?:boolean}={}) {
+    material.customProgramCacheKey = () => (options.furrows?(options.painterly?'hearth-contour-field-painter-v1-cuts':'hearth-contour-field-v3-cuts'):'hearth-field-surface-v2-cuts')+(this.banks?`-banks-v19-${this.size}-${this.banks.gridSubdivisions}`:'');
     material.onBeforeCompile = shader => {
       this.excavations.bind(shader);this.banks?.bind(shader);
       shader.uniforms.fieldHeights = {value: this.texture};
@@ -65,8 +65,21 @@ export class FieldSurface {
         shader.fragmentShader='varying vec4 vFieldRows;varying vec2 vFieldWorldXZ;\n'+shader.fragmentShader;
         shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
           float fieldAcross=dot(vFieldWorldXZ,vFieldRows.xy)+vFieldRows.z;
-          float fieldBand=.5+.5*cos(fieldAcross/max(.3,vFieldRows.w)*6.28318530718);
-          diffuseColor.rgb*=.86+.20*fieldBand;
+          ${options.painterly?`// Tilled earth: rounded ridges and shaded furrows, damp-dark troughs, per-plot clods and a breathing wash of colour.
+          float fPhase=fieldAcross/max(.3,vFieldRows.w);
+          float fBand=.5+.5*cos(fPhase*6.28318530718);
+          float fFar=1.-smoothstep(45.,150.,length(vViewPosition));
+          float fRidge=mix(.55,smoothstep(.12,.92,fBand),fFar);
+          vec2 fCell=floor(vFieldWorldXZ*vec2(2.3,2.3));
+          float fClod=fract(sin(dot(fCell,vec2(127.1,311.7)))*43758.5453);
+          float fWash=.5+.5*sin(vFieldWorldXZ.x*.21+sin(vFieldWorldXZ.y*.17)*1.7);
+          vec3 fSoil=mix(vec3(.56,.46,.38),vec3(1.16,1.04,.9),fRidge);
+          fSoil*=.9+.16*mix(.5,fClod,fFar)+.08*fWash;
+          diffuseColor.rgb*=fSoil;`:`float fieldBand=.5+.5*cos(fieldAcross/max(.3,vFieldRows.w)*6.28318530718);
+          diffuseColor.rgb*=.86+.20*fieldBand;`}
+        `);
+        if(options.painterly)shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+          {float fP=(fieldAcross/max(.3,vFieldRows.w))*6.28318530718;vec3 fAcross=normalize((viewMatrix*vec4(vFieldRows.x,0.,vFieldRows.y,0.)).xyz);normal=normalize(normal+fAcross*(-sin(fP))*.42*(1.-smoothstep(45.,150.,length(vViewPosition))));}
         `);
       }
     };
