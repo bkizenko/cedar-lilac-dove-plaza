@@ -34,7 +34,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -196,6 +196,21 @@ export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{c
  st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
  return {cost:cbLegitimacyCost(kind)};
 }
+/** War-weariness: a society that stays at war grows tired (+9 a dynastic year per hostile neighbour) and recovers at peace (-6 a year).
+ * Stored per society in rulers.weary (0..100, optional so old saves load). It feeds unrestOf and, through warPeaceBonus, the pace at which
+ * a tired rival sues for peace; a long unwinnable war therefore ends or topples the house, never runs forever. */
+export function tireOfWar(g:Game){
+ const r=rulersOf(st(g));if(!r)return;const weary={...(r.weary??{})};
+ for(const id of Object.keys(r.societies)){
+  const t=Number(id);if(!Number.isInteger(t)||t===3||!g.tribe(t))continue;
+  const wars=g.state.tribes.filter((_,i)=>i!==t&&i!==3&&!!g.tribe(i)&&societyRelation(g,t,i).hostile).length;
+  const w=weary[id]??0;weary[id]=Math.max(0,Math.min(100,w+(wars?9*wars:-6)));
+ }
+ st(g).rulers={...r,weary};
+}
+export const wearinessOf=(g:Game,team:number):number=>rulersOf(st(g))?.weary?.[String(team)]??0;
+/** Extra pressure (0..1.5) added to peacePressure: nothing under 40 weariness, full at 100. 0 when rulers are off. */
+export const warPeaceBonus=(g:Game,team:number):number=>Math.max(0,wearinessOf(g,team)-40)/60*1.5;
 /** Measured unrest 0..100 with its stage for one society. Inputs come from the live game: war with neighbours, claims pressing on it,
  * hunger, and the ruling house's legitimacy. Null when rulers are off. */
 export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why:string[]}|null{
@@ -204,8 +219,8 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
  const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.min(100,30+100*Math.max(0,...lg)); // source weights sum to ~1; the strongest pillar carries the house
- const v=unrest({legitimacy:legit,warWeariness:Math.min(100,wars*35+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:0,rulerPopularity:60},me.civ.polity);
- const why:string[]=[];if(wars)why.push('at war');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
+ const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:0,rulerPopularity:60},me.civ.polity);
+ const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
 

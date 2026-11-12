@@ -4,6 +4,7 @@ import type {Game} from './sim';
 import type {PeaceTerm, Unit} from './types';
 import {knownSettlement} from './barter';
 import {isDependent} from './settlement';
+import {warPeaceBonus} from './rulersRuntime';
 import {localPeacePressure} from './localPeacePressure';
 
 export const PEACE_TERMS: Record<PeaceTerm,string> = {whitePeace:'White peace',tribute:'Tribute',forcedLabor:'Slavery',puppet:'Puppet state',annexation:'Annexation'};
@@ -53,7 +54,7 @@ export function tickPeace(g:Game){
    if(t.peaceTerm==='puppet')t.peaceTerm=undefined;
    if(t.peaceOffer&&t.peaceOffer.expires<=g.state.time)t.peaceOffer=undefined;
    if(!t.peaceOffer&&(t.nextPeaceOffer||0)<=g.state.time){
-    const pressure=peacePressure(g,t.id);
+    const pressure=peacePressure(g,t.id)+warPeaceBonus(g,t.id);
     if(pressure>=1.25){
      const term:PeaceTerm=pressure>=2?'tribute':'whitePeace';
      queueDiplomaticMessage(g,t.id,'peaceOffer',term);t.nextPeaceOffer=g.state.time+480;
