@@ -16,7 +16,7 @@ test('real surrender clears former player construction intent and strict save wo
  const{g,u,guard,site}=fixture(),hp=u.hp,stocks=g.state.tribes.map(t=>({food:t.food,wood:t.wood,stone:t.stone}));assert.ok(u.constructionQueue.sites.includes(site.id));
  const accepted=acceptPrisonerSurrender(g,u,1);assert.equal(accepted.accepted,true,accepted.reason);assert.equal(u.team,1);assert.equal(u.prisoner.guardId,guard.id);assert.equal(u.constructionQueue,undefined);assert.equal(u.buildOrder,undefined);assert.equal(u.hp,hp);
  assert.deepEqual(g.state.tribes.map(t=>({food:t.food,wood:t.wood,stone:t.stone})),stocks);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
- assert.equal(releasePrisoner(g,u.id),true);assert.equal(u.team,0);assert.equal(u.constructionQueue,undefined);assert.equal(u.hp,hp);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ assert.equal(releasePrisoner(g,u.id),true);assert.equal(u.team,0);assert.equal(u.repatriating,undefined);assert.equal(u.recalled,true);assert.equal(u.prisoner.phase,'released');assert.equal(u.constructionQueue,undefined);assert.equal(u.hp,hp);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 test('rejected distant surrender retains the exact owner construction intent and physical goods',()=>{
  const{g,u}=fixture(40),queue=structuredClone(u.constructionQueue),before=JSON.stringify(g.state.tribes);
