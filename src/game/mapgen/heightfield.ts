@@ -73,23 +73,34 @@ export class HeightField {
     const half = this.size / 2;
     const list = this.grid.get(clamp(Math.floor((z + half) / CELL), 0, this.gw - 1) * this.gw + clamp(Math.floor((x + half) / CELL), 0, this.gw - 1));
     if (list && h > -0.5) {
-      let best = Infinity, bs: Seg | undefined, bt = 0;
+      // Every nearby segment offers a continuous valley profile (bed inside the channel, soft bank
+      // outside); the offers are blended by proximity so there are no Voronoi seams or terraces.
+      let emin = Infinity;
+      const offers: { e: number; k: number; delta: number }[] = [];
       for (const s of list) {
         const dx = s.bx - s.ax, dz = s.bz - s.az, tt = clamp(((x - s.ax) * dx + (z - s.az) * dz) / (dx * dx + dz * dz || 1));
-        const d = Math.hypot(x - s.ax - dx * tt, z - s.az - dz * tt), w = s.aw + (s.bw - s.aw) * tt, e = d - w * 0.5;
-        if (e < best) { best = e; bs = s; bt = tt; }
-      }
-      if (bs) {
-        const s = bs, y = s.ay + (s.by - s.ay) * bt, w = s.aw + (s.bw - s.aw) * bt, fp = s.afp + (s.bfp - s.afp) * bt, e = best;
+        const d = Math.hypot(x - s.ax - dx * tt, z - s.az - dz * tt), w = s.aw + (s.bw - s.aw) * tt, e = d - w * 0.5, fp = s.afp + (s.bfp - s.afp) * tt;
+        const reach = fp * 2.1 + 20;
+        if (e >= reach) continue;
+        const y = s.ay + (s.by - s.ay) * tt;
+        let target: number;
         if (e <= 0) {
-          const q = clamp(1 + e / (w * 0.5)), depth = s.ford ? 0.22 : clamp(0.45 + 0.06 * w, 0.8, 1.7) * q * q * 0.8 + 0.34;
-          h = Math.min(h, y - depth);
-        } else if (e < fp * 2.1 + 20) {
-          const target = y + 0.42 + 0.032 * e * (1 + e / (fp * 1.2)), k = 1 - smoothstep(fp, fp * 2.1 + 20, e);
-          const delta = target - h;
-          h += (delta > 0 ? Math.min(delta, 1.2) : delta) * k;
-          // never leave dry ground below the wet surface next to the bank
-          if (e < 3) h = Math.max(h, y + 0.2 * smoothstep(3, 0, e) * 0 + 0.3 * (1 - e / 3) + 0.12 * e / 3 - 0.2 + 0.2);
+          const q = clamp(-e / (w * 0.5)), depthMax = s.ford ? 0.22 : clamp(0.45 + 0.06 * w, 0.8, 1.7);
+          target = y - depthMax * (1 - (1 - q) * (1 - q));
+        } else target = y + 0.42 * smoothstep(0, 3, e) + 0.032 * e * (1 + e / (fp * 1.2));
+        const k = 1 - smoothstep(fp, reach, e);
+        offers.push({ e, k, delta: target - h });
+        if (e < emin) emin = e;
+      }
+      if (offers.length) {
+        let wsum = 0, dsum = 0, keep = 1;
+        for (const o of offers) {
+          const near = Math.max(0, o.e - emin) / 3, wt = o.k / (1 + near * near * near * near);
+          wsum += wt; dsum += wt * o.delta; keep *= 1 - o.k;
+        }
+        if (wsum > 1e-6) {
+          const raw = dsum / wsum, capUp = 1.2 + 40 * (1 - smoothstep(0, 4, emin));
+          h += Math.min(raw, capUp) * (1 - keep);
         }
       }
     }

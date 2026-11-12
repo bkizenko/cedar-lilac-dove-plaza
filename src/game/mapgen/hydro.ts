@@ -210,7 +210,7 @@ export function buildHydrology(seed: number, t: Terrain, c: Climate, preset: Pre
       while (seg < arc.length - 1 && arc[seg] < target) seg++;
       const a = smoothed[seg - 1], b = smoothed[seg], span = arc[seg] - arc[seg - 1] || 1, f = clamp((target - arc[seg - 1]) / span);
       const y = yRaw[seg - 1] + (yRaw[seg] - yRaw[seg - 1]) * f, fl = flowRaw[seg - 1] + (flowRaw[seg] - flowRaw[seg - 1]) * f;
-      pts.push({ x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, y, w: wMin + (wMax - wMin) * Math.pow(clamp(fl / accMax), 0.42), fp: 0 });
+      pts.push({ x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, y, w: (wMin + (wMax - wMin) * Math.pow(clamp(fl / accMax), 0.42)) * (raw.source === 'spring' ? 0.42 + 0.58 * smoothstep(0, 70, target) : 1), fp: 0 });
     }
     // moving-average the surface so it is smooth, then force a monotone descent
     const ys = pts.map(p => p.y), smooth = ys.map((_, i) => {
