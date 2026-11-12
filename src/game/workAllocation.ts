@@ -1,4 +1,5 @@
 import type {Game} from './sim';
+import {onGuardDuty} from './guardDuty';
 import type {Unit, ResourceNode} from './types';
 import type {JobCoordinator} from './jobCoordinator';
 import {workRuntime} from './workRuntime';
@@ -31,7 +32,7 @@ function claimTree(g:Game,c:TreeOwnership,node:ResourceNode,worker:Unit){
 export function workAllocationDiagnostics(g:Game){const c=context(g);return {domain:'shared migrated work',activeTreeJobs:c.claims.size,activeJobs:c.claims.size,...c.jobs.metrics,reservations:{...c.jobs.reservations.metrics}};}
 export function treeHasRoom(g:Game,node:ResourceNode,worker:Unit){
  // Candidate scanning must never reserve a worker or a tree slot.
- return g.state.units.filter(u=>u!==worker&&u.hp>0&&!u.emergency&&u.order==='gather'&&u.node===node).length<WORK_ALLOCATION_RULES.treeSlots;
+ return g.state.units.filter(u=>u!==worker&&u.hp>0&&!u.emergency&&u.order==='gather'&&u.node===node&&!onGuardDuty(g,u)).length<WORK_ALLOCATION_RULES.treeSlots;
 }
 /** Direct overrides can release migrated ownership immediately. */
 export function releaseTreeWorker(g:Game,worker:Unit){release(context(g),worker.id);}
@@ -50,7 +51,7 @@ export function reconcileTreeWorkers(g:Game){
  c.nextAudit=g.state.time+WORK_ALLOCATION_RULES.auditIntervalSeconds;prune(g,c);
  const groups=new Map<ResourceNode,Unit[]>();
  for(const u of g.state.units){
-  if(u.hp<=0||u.emergency||u.order!=='gather'||!u.node||!('kind' in u.node)||u.node.kind!=='tree')continue;
+  if(u.hp<=0||u.emergency||u.order!=='gather'||!u.node||!('kind' in u.node)||u.node.kind!=='tree'||onGuardDuty(g,u))continue;
   const node=u.node as ResourceNode,list=groups.get(node)||[];list.push(u);groups.set(node,list);
  }
  let changed=false;

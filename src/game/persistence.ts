@@ -44,6 +44,10 @@ import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavatio
 import {validWaterEngineering} from './waterEngineering';
 import {validCoastalTradeState,migrateCoastalSettlementEndpoints} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
+import {validCombatDoctrine} from './combatDoctrine';
+import {validGuardDuties} from './guardDuty';
+import {validRaidReports} from './raidReports';
+import {validTransit} from './transit';
 import {validRulersState} from './rulersState';
 import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
@@ -184,7 +188,7 @@ function validateGamePayload(raw: unknown) {
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
-  if(!validSocietyIdentities(s))fail();
+  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];

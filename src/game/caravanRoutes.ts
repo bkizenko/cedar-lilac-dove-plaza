@@ -5,6 +5,7 @@ import {carryingCapacity} from './haulage';
 import {equipCaravan,sendTradeEscort} from './caravans';
 import {foodDemand,isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
+import {transitDeparture} from './transit';
 const GOODS=['food','wood','stone','copper','iron'];
 export function planCaravan(g:Game,team:number,give:ResKind,get:ResKind,budget:number,minimum:number,size=1,guards=0,transport:'any'|'pack'|'cart'='any'){
  const t=g.tribe(team);
@@ -21,6 +22,8 @@ function guardsReady(g:Game){return g.state.units.filter(u=>u.team===0&&u.hp>0&&
 function departure(g:Game,r:TradeRoute){
  const c=r.caravan!,t=g.tribe(r.team);
  if(!t?.alive||t.hostile){r.status='Paused by conflict';return;}
+ const transit=transitDeparture(g,r.team,c.guards);
+ if(!transit.go){r.status=transit.reason;return;}
  const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&(u.type==='worker'||u.caravanArmed)&&!isDependent(g,u));
  const away=adults.filter(u=>u.boat||u.envoy||u.expedition||u.scout||u.visit||u.foundingJourney||u.tradeTeam>0||u.caravanRoute).length;
  if(adults.length-away-c.size<3||away+c.size>Math.max(1,Math.floor(adults.length/4))){r.status='Need spare adults; three workers stay home';return;}
