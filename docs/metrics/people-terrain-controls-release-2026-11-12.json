@@ -1,0 +1,168 @@
+{
+  "release": "2026-11-12T20-25-07-528Z-2128ed7",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-25-07-528Z-2128ed7",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-05-20-589Z-0eb4b35",
+  "commit": "2128ed737f8bdfa3ed5d8ae73427b59f5467a012",
+  "retained": {
+    "linked": 1403,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 35,
+    "total": 35,
+    "nativeAndShared": 28,
+    "built": 7,
+    "groups": {
+      "hearthFloorCommanderCouncil": 22,
+      "peopleTerrainLifecycle": 6
+    },
+    "commanderInterfaceBuilt": {
+      "passed": 5,
+      "total": 5,
+      "scope": "Actual earned native commander readout; real release/reassign and durable save; original53 pure reads and paid first appointment only if actually eligible. No invented XP/goods, campaign, performance or full-gate credit.",
+      "earned": {
+        "commanderId": 6364,
+        "personId": 6223,
+        "xp": 43.20000000000001,
+        "rank": 2,
+        "promotions": [
+          "drill"
+        ]
+      },
+      "membership": {
+        "releasedAndReassigned": 6224,
+        "xpUnchanged": true,
+        "durable": true
+      },
+      "promotion": {
+        "commanderId": 6364,
+        "xp": 43.20000000000001,
+        "realEarnedPointSpent": true
+      },
+      "hearth": {
+        "realMilitaryTab": true,
+        "singleSelectionCard": true,
+        "dimensions": {
+          "font": 26,
+          "hit": 52,
+          "icon": 24,
+          "inside": true
+        }
+      },
+      "legacy": {
+        "population": 53,
+        "pureRead": true,
+        "paidAppointment": 12479,
+        "woodDebit": 6
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    },
+    "peopleTerrainBuilt": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Actual old53 rigv2/painterly linked shaders, geometry/draw/memory/picking/read purity, strict durable restore and Classic+legacy switch. Private ~6Hz presentation only; no100-person FPS or campaign/visual-design acceptance.",
+      "rigPainterly": {
+        "style": "painterly",
+        "rigActive": true,
+        "rigV1": false,
+        "stats": {
+          "people": 52,
+          "corpses": 0,
+          "variants": 66,
+          "draws": 62,
+          "triangles": 33320,
+          "tiers": [
+            20,
+            29,
+            3
+          ],
+          "fallbacks": 0
+        },
+        "looks": [
+          "civ:steppan"
+        ],
+        "rigMeshes": 62,
+        "geometryBytes": 34029364,
+        "metrics": {
+          "calls": 152,
+          "triangles": 1253530,
+          "lines": 0,
+          "points": 24,
+          "geometries": 359,
+          "textures": 26,
+          "programs": 45
+        },
+        "memory": {
+          "geometries": 359,
+          "textures": 26
+        },
+        "allLinked": true,
+        "geoPrograms": 1,
+        "geoAttributes": {
+          "rock": 148225,
+          "state": 148225
+        },
+        "lost": false,
+        "errors": [],
+        "picked": 12287,
+        "strictDurable": true
+      },
+      "classicLegacy": {
+        "style": "classic",
+        "rigActive": false,
+        "rigV1": false,
+        "looks": [],
+        "rigMeshes": 0,
+        "geometryBytes": 28044596,
+        "metrics": {
+          "calls": 91,
+          "triangles": 944586,
+          "lines": 0,
+          "points": 24,
+          "geometries": 278,
+          "textures": 24,
+          "programs": 35
+        },
+        "memory": {
+          "geometries": 278,
+          "textures": 24
+        },
+        "allLinked": true,
+        "geoPrograms": 0,
+        "geoAttributes": {
+          "rock": 0,
+          "state": 0
+        },
+        "lost": false,
+        "errors": [],
+        "picked": 12287,
+        "strictDurable": true
+      },
+      "originalUnchanged": true,
+      "errors": [],
+      "shaderErrors": []
+    }
+  },
+  "compiler": "PASS after whole f9 inclusion in c803 graphics branch; final product change CSS only",
+  "build": "npm run build PASS at exact published2128ed7",
+  "graphicsSourceEvidence": "Built graphics2 tested e32707d; src/scene identical in final2128ed7. Only final product change compact button CSS floor, actual interface5 rerun on final artifact. Corrected floor3 replaces prior same3, not added to total.",
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "delta": 0
+  },
+  "limitations": [
+    "No100-person FPS/p95 or campaign acceptance from private functional rendering.",
+    "Opt-in wildCraft source is OFF by default and no UI activation included; strict custody/interruption work is separate and unqualified.",
+    "No claim all new art matches approved concept fidelity or every distance/season."
+  ],
+  "savedVillageSha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6"
+}

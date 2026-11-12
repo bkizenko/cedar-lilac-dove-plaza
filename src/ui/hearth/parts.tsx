@@ -23,31 +23,17 @@ import {CommanderStrip,BoatStrip} from './commandPanels';
 import {RES_ICON,RES_NAME,bldIcon,PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,FORMATION_ICON,ago,freshness} from './icons';
 
 import {cx,IconBtn,Stat} from './kit';
+import {SupplyBar,PriorityStack,useGlanceAlerts,OverlayCanvas,OverlayToggles} from './glance';
+import type {Alert} from './glanceModel';
 export {cx,IconBtn,Stat};
 
 /* ---------- top bar ---------- */
-export function ResourceBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|null;onOpen:(s:'council'|'stores')=>void}){
- const water=Math.floor(engine?.game.tribe(0).survival?.waterLiters||0);
- const food=Math.floor(readyFoodStock(hud));
- const rows:{k:keyof typeof RES_ICON;v:string|number;tip:string;bad?:boolean}[]=[
-  {k:'food',v:food,tip:'Food ready to eat. Raw supplies are in Village, Stores.',bad:food<20},
-  {k:'wood',v:hud.wood,tip:'Logs in stores.'},
-  {k:'stone',v:hud.stone,tip:'Stone in stores.'},
-  {k:'water',v:`${water}`,tip:`${water} litres of collected water.`,bad:water<10},
-  {k:'people',v:`${hud.pop}/${hud.popCap}`,tip:`${hud.pop} people, housing for ${hud.popCap}.`},
-  ...(hud.age>=1||hud.copper>0?[{k:'copper' as const,v:hud.copper,tip:'Copper in stores.'}]:[]),
-  ...(hud.age>=2||hud.iron>0?[{k:'iron' as const,v:hud.iron,tip:'Iron in stores.'}]:[]),
- ];
- return <div className="hw-top-left">
-  {engine&&<button type="button" className="hw-flag" aria-label={`Council of ${engine.game.tribe(0).name}`} onClick={()=>onOpen('council')}><SocietyFlag game={engine.game} team={0}/><span>{engine.game.tribe(0).name}</span></button>}
-  <ul className="hw-res" aria-label="Village stores">{rows.map(r=>{const I=RES_ICON[r.k];return <li key={r.k}><GameTooltip title={RES_NAME[r.k]} description={r.tip}><button type="button" className={cx('hw-res-cell',r.bad&&'t-bad')} aria-label={`${RES_NAME[r.k]} ${r.v}`} onClick={()=>onOpen('stores')}><I size={28}/><b>{r.v}</b></button></GameTooltip></li>;})}</ul>
- </div>;
-}
+export function ResourceBar(props:{hud:HudSnapshot;engine:Engine|null;onOpen:(s:'council'|'stores')=>void}){return <SupplyBar {...props}/>;}
 export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engine|null;onAges:()=>void;onMenu:()=>void}){
  const bits=hud.weather.split(' · '),temp=bits[1]||'',speed=hud.speed>=3?4:hud.speed===2?2:1;
  return <div className="hw-top-right">
   <div className="hw-time" role="group" aria-label="Time">
-   <span className="hw-time-icon">{hud.night?<Moon size={28}/>:<Sun size={28}/>}</span>
+   <span className="hw-time-icon">{hud.night?<Moon size={28}/>:<Sun size={28}/>}{hud.paused&&<Pause size={24} className="hw-time-pause"/>}</span>
    <div className="hw-time-text"><b>{hud.clock}</b><span>{hud.season} · Y{Math.floor(hud.time/YEAR_SECONDS)+1}{temp?` · ${temp}`:''}</span></div>
    <GameTooltip title={hud.ages[hud.age]+' Age'} description={hud.canAge&&hud.nextAge?`Ready for ${hud.nextAge}`:undefined}><button type="button" className={cx('hw-era',hud.canAge&&'is-ready')} aria-label={`${hud.ages[hud.age]} Age. Open ages`} onClick={onAges}><BookOpen size={20}/><span>{hud.ages[hud.age]}</span></button></GameTooltip>
   </div>
@@ -101,7 +87,7 @@ export function CostChips({cost,have,extra}:{cost:Record<string,number|undefined
 export function BuildTray({hud,engine,tab,setTab,onPick}:{hud:HudSnapshot;engine:Engine|null;tab:string;setTab:(t:string)=>void;onPick:()=>void}){
  const have={seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron};
  return <section className="hw-tray" aria-label="Build">
-  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}</div>
+  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}</div>
   <div className="hw-tiles">
    {hud.buildOptions.filter(b=>catOf(b.type)===tab).map(b=>{
     const home=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;
@@ -272,23 +258,12 @@ function RaidNote({engine}:{engine:Engine}){
   {r.burned>0&&<span className="hw-chip t-bad" title="Buildings burned"><Flame size={18}/>{r.burned}</span>}
   <span className="hw-chip" title={lootText||'Nothing carried off'}><Package size={18}/>{total}</span></>}}/>;
 }
-/** Keyboard-tip banners are teaching text, not events: they live in tooltips and the Menu, never in the notification stack. */
-const isKeyTip=(s:string)=>/^(C selects|Press [A-Z\]\[,]|Tip:)/.test(s)||/ · \] finds? /.test(s);
-export function NotesStack({hud,engine,onOpen,hidden}:{hud:HudSnapshot;engine:Engine|null;onOpen:(k:DockKey)=>void;hidden:boolean}){
- const alerts=useAlerts(engine);
- const notes:Note[]=[];
- if(alerts.length)notes.push({id:'alerts',tone:'bad',icon:<TriangleAlert size={28}/>,title:'',label:'Needs attention',chips:alerts.map(a=><GameTooltip key={a.k} title={a.tip}><span className="hw-chip t-bad" tabIndex={0} aria-label={a.tip}>{a.icon}{a.n}</span></GameTooltip>)});
- if(hud.idleWorkers>0&&hud.selection.kind==='none')notes.push({id:'idle',icon:<Users size={24}/>,title:`${hud.idleWorkers} idle`,action:{label:'Find',onClick:()=>engine?.focusIdle()}});
- if(hud.canAge&&hud.nextAge)notes.push({id:'age',tone:'good',icon:<BookOpen size={24}/>,title:`${hud.nextAge} ready`,action:{label:'Open',onClick:()=>onOpen('ages')}});
- if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give==='wood'?'wood':o.give==='food'?'food':o.give==='stone'?'stone':o.give],T=RES_ICON[o.get==='wood'?'wood':o.get==='food'?'food':o.get==='stone'?'stone':o.get];
-  notes.push({id:'route',icon:<Package size={24}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt} ${resWord(o.give)}`}><G size={18}/>{o.giveAmt}</span><ChevronRight size={18}/><span className="hw-chip" title={`Get ${o.getAmt} ${resWord(o.get)}`}><T size={18}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
- if(hud.threat>=.5)notes.push({id:'threat',tone:'bad',icon:<Shield size={24}/>,title:'Raiders near',action:{label:'Horn',onClick:()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}});
- if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))notes.push({id:'banner',icon:<Bell size={24}/>,title:hud.banner});
- return <aside className={cx('hw-notes',hidden&&'is-hidden')} aria-label="Notifications">
-  {notes.map(n=><NoteCard key={n.id} n={n}/>)}
+/** Priority stack (glance.tsx): one sticky critical card, icon-chip warnings, timed info. The raid result and ruler toasts ride along. */
+export function NotesStack({hud,engine,onOpen,hidden,alerts}:{hud:HudSnapshot;engine:Engine|null;onOpen:(k:DockKey)=>void;hidden:boolean;alerts?:readonly Alert[]}){
+ const own=useGlanceAlerts(alerts?null:engine);
+ return <PriorityStack hud={hud} engine={engine} alerts={alerts??own} onOpen={onOpen} hidden={hidden} extra={<>
   {engine&&<RaidNote engine={engine}/>}
-  {engine&&<div className="hw-legacy-note"><RulerEventToast engine={engine}/><WorkDeliveryCue engine={engine}/><SeasonReport game={engine.game} hidden={!!hud.placing}/></div>}
- </aside>;
+  {engine&&<div className="hw-legacy-note"><RulerEventToast engine={engine}/><WorkDeliveryCue engine={engine}/><SeasonReport game={engine.game} hidden={!!hud.placing}/></div>}</>}/>;
 }
 
 /* ---------- minimap + neighbours ---------- */
@@ -297,7 +272,8 @@ export function MinimapCard({hud,engine,onNeighbours,phone,onClose}:{hud:HudSnap
  const known=hud.tribes.filter(t=>t.id!==0&&hud.camps?.some(c=>c.team===t.id&&c.known));
  return <section className={cx('hw-map',phone&&'is-phone')} aria-label="Map">
   {phone&&<IconBtn label="Close map" onClick={onClose!} small className="hw-map-x"><X size={22}/></IconBtn>}
-  <div className="hw-map-frame"><WorldMinimap hud={hud} engine={engine}/></div>
+  <div className="hw-map-frame"><WorldMinimap hud={hud} engine={engine}/><OverlayCanvas hud={hud} engine={engine}/></div>
+  <OverlayToggles engine={engine}/>
   {known.length>0&&<button type="button" className="hw-map-neigh" aria-label="Neighbours" onClick={onNeighbours}>{known.map(t=>{const w=!t.alive?'Fallen':t.hostile?'War':t.ally?'Pact':(t.tension||0)>.52?'Tense':'Peace';return <span key={t.id} className="hw-neigh" title={`${t.name}: ${w}`}><i style={{background:t.alive?t.color:'#6b6256'}}/><b>{t.name}</b><em className={cx(t.hostile&&'t-bad',t.ally&&'t-good')}>{w}</em></span>;})}</button>}
  </section>;
 }

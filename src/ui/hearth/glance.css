@@ -1,0 +1,106 @@
+/* Hearth glanceable-state layer (docs/UIUX_PROPOSAL.md phases 2 and 3): supply meters, priority stack, world pins, map overlays, Help.
+   Separate from hearth.css so parallel panels do not collide. Same size floor: text 16px+, control icons 24px+, hit targets 48px. */
+
+/* ---------- top bar: supply meters ---------- */
+.hw-supply-cell{position:relative;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;height:64px;padding:0 var(--hw-s3)}
+.hw-supply-row{display:flex;align-items:center;gap:var(--hw-s2)}
+.hw-supply-row b{font-size:var(--hw-fs-l)}
+.hw-trend{display:inline-grid;place-items:center;flex:none;line-height:0;color:var(--hw-dim)}
+.hw .hw-supply-cell .hw-trend svg{width:24px;height:24px;stroke-width:3}
+.hw-trend.tr-up{color:var(--hw-good)}.hw-trend.tr-down{color:var(--hw-warn)}.hw-trend.tr-flat{opacity:.7}
+.hw-meter-s{display:block;height:8px;border-radius:4px;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 1px rgba(255,236,190,.14);overflow:hidden}
+.hw-meter-s i{display:block;height:100%;border-radius:4px;background:var(--hw-good)}
+.hw-meter-s.is-none{background:transparent;box-shadow:none}
+.hw-supply-cell.s-low .hw-meter-s i,.hw-supply-cell.is-warn .hw-meter-s i{background:var(--hw-warn)}
+.hw-supply-cell.s-critical .hw-meter-s i{background:var(--hw-bad)}
+.hw-supply-cell.s-critical b{color:var(--hw-bad)}
+.hw-supply-cell.s-critical .hw-meter-s{box-shadow:inset 0 0 0 1px rgba(244,162,135,.6)}
+
+/* ---------- priority stack ---------- */
+.hw-prio{width:min(380px,calc(100vw - 24px));max-height:calc(100dvh - 176px - 330px);align-content:start}
+.hw-note.hw-crit{background:#f7dccd;border-left:10px solid #c8563a;border-color:#c8563a;box-shadow:0 2px 0 rgba(0,0,0,.35),0 10px 26px rgba(0,0,0,.45)}
+.hw-note.hw-crit .hw-medal{background:#c8563a;color:#fff7ea;border-color:#8c3a24}
+.hw-note.hw-crit .hw-note-main b{font-size:var(--hw-fs-m);white-space:nowrap;-webkit-line-clamp:1}
+.hw-note.hw-crit .hw-chip{background:#c8563a;color:#fff7ea;border-color:#8c3a24;font-weight:800;font-size:var(--hw-fs-m)}
+@media (prefers-reduced-motion:no-preference){.hw-note.hw-crit .hw-medal{animation:hw-pulse 1.6s ease-in-out infinite}}
+@keyframes hw-pulse{50%{transform:scale(1.08)}}
+.hw-chiprow{justify-self:end;max-width:100%;pointer-events:auto;display:flex;flex-wrap:wrap;gap:var(--hw-s2);padding:var(--hw-s2);border-radius:var(--hw-r-m);background:var(--hw-panel);border:1px solid var(--hw-line);box-shadow:var(--hw-shadow)}
+.hw-chip-btn{min-height:var(--hw-hit);min-width:var(--hw-hit);justify-content:center;cursor:pointer;color:var(--hw-text);font-weight:750}
+.hw-chip-btn:hover{background:rgba(255,236,190,.18)}
+.hw-chip-btn.t-bad{color:var(--hw-bad)}.hw-chip-btn.t-warn{color:var(--hw-warn)}
+.hw-info{transition:opacity 1s linear}
+.hw-info.is-fading{opacity:0}
+
+/* ---------- world pins and edge arrows ---------- */
+.hw-pins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hw-pin{position:absolute;left:0;top:0;width:0;height:0;padding:0;border:0;background:none;pointer-events:none;will-change:transform}
+.hw-pin-ring{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%;border:3px dashed var(--hw-warn);background:rgba(242,199,107,.12);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+.hw-pin.is-crit .hw-pin-ring{border-color:var(--hw-bad);background:rgba(244,162,135,.14)}
+.hw-pin-chip{position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 38px - var(--lift,0px)));display:inline-flex;align-items:center;gap:6px;min-height:var(--hw-hit);padding:0 12px;border-radius:999px;pointer-events:auto;cursor:pointer;background:var(--hw-wood-800);color:var(--hw-text);border:3px solid var(--hw-warn);box-shadow:0 2px 0 rgba(0,0,0,.4),0 8px 18px rgba(0,0,0,.45);font-size:var(--hw-fs-m);font-weight:800;white-space:nowrap}
+.hw-pin.is-crit .hw-pin-chip{border-color:var(--hw-bad)}
+.hw-pin-chip svg{width:26px;height:26px}
+.hw-pin:focus-visible .hw-pin-chip{outline:3px solid var(--hw-gold-2);outline-offset:2px}
+.hw-pin-arrow{display:none;position:absolute;left:-13px;top:-13px;width:26px;height:26px;line-height:0;color:var(--hw-text);filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
+.hw-pin.is-crit .hw-pin-arrow{color:var(--hw-bad)}.hw-pin:not(.is-crit) .hw-pin-arrow{color:var(--hw-warn)}
+.hw-pin-arrow svg{width:26px;height:26px;stroke-width:3.5}
+.hw-pin.is-edge .hw-pin-ring{display:none}
+.hw-pin.is-edge .hw-pin-chip{transform:translate(-50%,-50%)}
+.hw-pin.is-edge .hw-pin-arrow{display:block}
+
+/* ---------- minimap layers ---------- */
+.hw-map-frame{position:relative}
+.hw-map-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
+.hw-overlays{display:flex;gap:var(--hw-s2);justify-content:space-between}
+.hw-overlays .hw-btn{width:var(--hw-hit);height:var(--hw-hit);flex:1 1 var(--hw-hit);max-width:68px}
+.hw-overlays .hw-btn.is-on,.hw-overlays .hw-btn.is-on:hover:not(:disabled){background:var(--hw-gold);color:var(--hw-gold-ink);border-color:var(--hw-gold-2)}
+.hw-overlays .hw-btn svg{width:26px;height:26px}
+
+/* Full screens: a tall body must scroll, never squash the header and tab row (seen on the Help tab). */
+.hw-screen .hw-screen-head,.hw-screen .hw-screen-tabs{flex:none}
+.hw-screen .hw-screen-body{min-height:0}
+
+/* ---------- Help ---------- */
+.hw-help{display:grid;gap:var(--hw-s4)}
+.hw-help-note{display:flex;align-items:center;gap:var(--hw-s3);font-size:var(--hw-fs-m);color:var(--hw-dim)}
+.hw-help-card h3{display:flex;align-items:center;gap:var(--hw-s3);font-size:var(--hw-fs-l);margin-bottom:var(--hw-s3)}
+.hw-help-card dl{display:grid;gap:var(--hw-s2);margin:0}
+.hw-help-card dl>div{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:var(--hw-s3);align-items:center}
+.hw-help-card dt{display:flex;flex-wrap:wrap;gap:6px}
+.hw-help-card dd{margin:0;font-size:var(--hw-fs)}
+.hw-help kbd{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:36px;padding:0 10px;border-radius:8px;background:var(--hw-parch);color:var(--hw-ink);border:1px solid rgba(43,32,22,.4);border-bottom-width:3px;font:750 var(--hw-fs)/1 var(--font-sans)}
+
+/* ---------- paused cue ---------- */
+.hw-time-icon{position:relative}
+.hw-time-pause{display:none}
+.hw .hw-time-icon .hw-time-pause{width:24px;height:24px}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+ .hw-supply-cell{height:60px;padding:0 4px;gap:2px}
+ .hw-supply-row{gap:3px}
+ .hw .hw-supply-cell .hw-supply-row>svg{width:26px;height:26px}
+ .hw-supply-row b{font-size:var(--hw-fs-m)}
+ .hw-supply-cell .hw-trend{position:absolute;right:2px;bottom:3px}
+ .hw-supply-cell.has-trend .hw-meter-s{margin-right:28px}
+ .hw .hw-supply-cell .hw-trend svg{width:24px;height:24px}
+ .hw-res li{flex:1 0 auto}
+ .hw-supply-cell{width:100%}
+ .hw-prio{left:64px;right:8px;width:auto}
+ .hw-note.hw-crit .hw-note-main b{white-space:normal;-webkit-line-clamp:2}
+ .hw-help-card dl>div{grid-template-columns:max-content 1fr;gap:var(--hw-s2)}
+ .hw-help-card dt{min-width:0}
+ .hw-overlays .hw-btn{max-width:none}
+
+ /* Build tray: four tiles to a row, snap to whole rows so nothing is cut in half, and every category tab stays reachable. */
+ .hw-tray .hw-tabs{overflow:visible}
+ .hw-tray .hw-tabs button{flex:0 0 auto;padding:0 12px;justify-content:center}
+ .hw-tray .hw-tabs button:not([aria-selected=true]) span{display:none}
+ .hw-tray .hw-tabs button[aria-selected=true]{flex:1 1 auto}
+ .hw-tiles>.game-tooltip-anchor{width:calc((100% - 24px)/4);min-width:76px;scroll-snap-align:start}
+ .hw-tiles .hw-tile{width:100%;padding:var(--hw-s2) 4px}
+ .hw-tiles{gap:var(--hw-s2) 8px;max-height:46dvh;scroll-snap-type:y proximity;scroll-padding-top:4px;padding-bottom:var(--hw-s3)}
+ .hw .hw-tile-icon{width:48px;height:48px}.hw .hw-tile-icon svg{width:30px;height:30px}
+ /* The pause button is already gold; the pill used to sit on the speed row. A small badge on the clock says it instead. */
+ .hw-paused{display:none}
+ .hw-time-pause{display:block;position:absolute;right:-6px;bottom:-6px;padding:2px;border-radius:50%;background:var(--hw-gold);color:var(--hw-gold-ink)}
+}

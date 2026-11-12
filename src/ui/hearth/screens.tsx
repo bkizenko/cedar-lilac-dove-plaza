@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
-import {X,Crown,Users,Heart,Handshake,Shield,BookOpen,Settings,Swords,Route,Skull,TriangleAlert,Target,Clock,Eye,Home,Scroll,Scale,Hammer,Wheat,Package,Landmark,Check} from 'lucide-react';
+import {X,Crown,Users,Heart,Handshake,Shield,BookOpen,Settings,Swords,Route,Skull,TriangleAlert,Target,Clock,Eye,Home,Scroll,Scale,Hammer,Wheat,Package,Landmark,Check,CircleHelp} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {AGES,BUILDINGS,BUILD_ORDER} from '@/game/constants';
@@ -36,6 +36,7 @@ import {WorldSetup} from '../WorldSetup';
 import {UiThemeToggle} from '../uiTheme';
 import {TradeBlock} from '../Hud';
 import {IconBtn,cx} from './parts';
+import {HelpBody} from './help';
 import {loadMapStyle,rememberMapStyle,MAP_STYLE_KEY,type MapStyle} from '@/scene/mapStyle';
 import {PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,AGREEMENT_ICON,AGREEMENT_NAME,ROUTE_ICON,ago,freshness} from './icons';
 
@@ -184,7 +185,7 @@ function MapStyleToggle({engine}:{engine:Engine|null}){
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
- const tabs=[{id:'play',label:'Game',icon:<Settings size={20}/>},{id:'world',label:'World',icon:<Route size={20}/>},{id:'tools',label:'Tools',icon:<Hammer size={20}/>}];
+ const tabs=[{id:'play',label:'Game',icon:<Settings size={20}/>},{id:'world',label:'World',icon:<Route size={20}/>},{id:'tools',label:'Tools',icon:<Hammer size={20}/>},{id:'help',label:'Help',icon:<CircleHelp size={20}/>}];
  return <Screen title="Menu" icon={<Settings size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab}>
   {tab==='play'&&<div className="hw-stack">
    <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
@@ -198,6 +199,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
     <AudioSliders engine={engine}/></div>
     <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}>Skip music</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
   </div>}
+  {tab==='help'&&<HelpBody/>}
   {tab==='world'&&<div className="hw-stack">
    <section className="hw-card"><h3>This world</h3><div className="hw-chips"><span className="hw-chip">Seed {engine?.game.state.seed}</span><span className="hw-chip">Gen {engine?.game.state.worldgenVersion??1}</span><GameTooltip title={DIFFICULTIES[d].name} description={`${DIFFICULTIES[d].description} ${difficultyEffects(d)}`}><span className="hw-chip" tabIndex={0}>{DIFFICULTIES[d].name}</span></GameTooltip></div>{engine&&<div className="hw-legacy"><PerformanceReadout engine={engine}/></div>}</section>
    {engine&&<section className="hw-card"><h3>New world</h3><div className="hw-legacy"><WorldSetup engine={engine}/></div></section>}
