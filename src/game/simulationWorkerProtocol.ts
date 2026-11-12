@@ -1,3 +1,4 @@
+import type {EngineReadQuery,EngineReadModel} from './engineReadModels';
 import type {SimulationPresentation} from './simulationRenderProjection';
 import type {EngineDispatchCommand,EngineSelection} from './engineDispatch';
 import {FRAME_SIMULATION_RULES} from './frameSimulation';
@@ -10,6 +11,7 @@ type Request={epoch:number;requestId:number};
 export type SimulationWorkerRequest=Request&(
  |{type:'initialize';protocolVersion:1;snapshot:unknown;rngMode:'legacy-worker-random'}
  |{type:'command';sequence:number;command:SimulationCommand;selection?:EngineSelection}
+ |{type:'read-model';query:EngineReadQuery}
  |{type:'presentation';afterSequence:number;includeWorld:boolean;selection?:EngineSelection}
  |{type:'advance';afterSequence:number;ticks:number;selection?:EngineSelection}
  |{type:'checkpoint';afterSequence:number}
@@ -25,7 +27,8 @@ export type SimulationWorkerResponse=Response&(
  |{type:'command-result';clock:SimulationClock;outcome:SimulationCommandOutcome}
  |{type:'advanced';clock:SimulationClock;ticks:number;cpuMilliseconds:number;frame?:SimulationPoseFrame;poseFramesInFlight:number;droppedPoseFrames:number;simulationErrors:{scope:string;message:string;count:number}[]}
  |{type:'checkpoint';clock:SimulationClock;serialized:string;rng:typeof LEGACY_WORKER_RNG}
- |{type:'presentation';clock:SimulationClock;presentation:SimulationPresentation;captureMilliseconds:number}
+ |{type:'presentation';clock:SimulationClock;presentation:SimulationPresentation;captureMilliseconds:number;previousDispatch?:{stateRevision:number;cpuMilliseconds:number}}
+ |{type:'read-model-result';clock:SimulationClock;model:EngineReadModel;navigationRevision:number;cpuMilliseconds:number}
  |{type:'inspection';clock:SimulationClock;data:unknown}
  |{type:'recycled';frameId:number}
  |{type:'error';code:string;message:string;appliedSequence:number});

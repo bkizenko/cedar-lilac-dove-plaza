@@ -1,3 +1,4 @@
+import type {EngineReadQuery} from './engineReadModels';
 import type {EngineSelection} from './engineDispatch';
 import {SIMULATION_WORKER_RULES,type SimulationCommand,type SimulationPoseFrame,type SimulationWorkerRequest,type SimulationWorkerResponse} from './simulationWorkerProtocol';
 
@@ -38,6 +39,7 @@ export class SimulationWorkerClient {
   const token={};this.advanceToken=token;
   return this.send({type:'advance',ticks,afterSequence,selection},'advanced').finally(()=>{if(this.advanceToken===token)this.advanceToken=null;});
  }
+ readModel(query:EngineReadQuery){return this.send({type:'read-model',query},'read-model-result');}
  presentation(includeWorld=false,selection?:EngineSelection){return this.send({type:'presentation',afterSequence:this.sequence,includeWorld,selection},'presentation');}
  checkpoint(afterSequence=this.sequence){return this.send({type:'checkpoint',afterSequence},'checkpoint');}
  inspect(query:Extract<SimulationWorkerRequest,{type:'inspect'}>['query']){return this.send({type:'inspect',query},'inspection');}

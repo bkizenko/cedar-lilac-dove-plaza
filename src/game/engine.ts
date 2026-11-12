@@ -1,3 +1,4 @@
+import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {surveyReachFish,waterReachAt} from './waterReach';
@@ -52,6 +53,29 @@ export class Engine {
   }
   get sessionEpoch(){return this.dispatchEpoch;}
   get commandReady(){return !this.disposed&&!this.workerBridgeTransition&&(!this.workerHost||this.workerHost.ready);}
+  private readModelRequest=0;
+  private readModelCache=new Map<string,{epoch:number;at:number;completed:boolean;promise:Promise<EngineReadReply>}>();
+  private readModelMeasurements:{kind:EngineReadQuery['kind'];cpuMilliseconds:number}[]=[];
+  /** Bounded asynchronous owner reads. Cached results are advisory; commands revalidate. */
+  readModel<Q extends EngineReadQuery>(query:Q):Promise<EngineReadReplyFor<Q>>{
+    if(!isEngineReadQuery(query))return Promise.reject(new Error('Unsupported or malformed owner read query'));
+    if(!this.commandReady)return Promise.reject(new Error('No authoritative session is ready'));
+    const captured=structuredClone(query);
+    const epoch=this.dispatchEpoch,key=JSON.stringify(captured),cached=this.readModelCache.get(key),now=performance.now();
+    if(cached&&cached.epoch===epoch&&(!cached.completed||now-cached.at<ENGINE_READ_MODEL_RULES.cacheMilliseconds))return cached.promise as Promise<EngineReadReplyFor<Q>>;
+    const requestId=++this.readModelRequest;
+    const entry={epoch,at:now,completed:false,promise:null as unknown as Promise<EngineReadReply>};
+    const task=async():Promise<EngineReadReply>=>{
+      if(this.workerHost){const result=await this.workerHost.readModel(captured);return{...result,epoch};}
+      const start=performance.now(),model=applyEngineReadQuery(this.game,captured),cpuMilliseconds=Math.max(0,performance.now()-start);
+      return{model,epoch,requestId,stateRevision:this.dispatchRevision,navigationRevision:this.game.navigationRevision(),cpuMilliseconds};
+    };
+    entry.promise=task().then(result=>{this.readModelMeasurements.push({kind:query.kind,cpuMilliseconds:result.cpuMilliseconds});if(this.readModelMeasurements.length>ENGINE_READ_MODEL_RULES.maximumMeasurements)this.readModelMeasurements.shift();return result;}).finally(()=>{entry.completed=true;entry.at=performance.now();});
+    this.readModelCache.delete(key);this.readModelCache.set(key,entry);
+    while(this.readModelCache.size>ENGINE_READ_MODEL_RULES.maximumCacheEntries)this.readModelCache.delete(this.readModelCache.keys().next().value!);
+    return entry.promise as Promise<EngineReadReplyFor<Q>>;
+  }
+  ownerReadModelReport(){return{cacheEntries:this.readModelCache.size,measurements:this.readModelMeasurements.map(m=>({...m}))};}
   private dispatchSequence=0;
   private dispatchRevision=0;
   /** Captures IDs at the click; native handlers revalidate original entities. */
@@ -59,9 +83,10 @@ export class Engine {
     const captured=selection??{selectedUnitIds:this.game.selectedUnits().map(u=>u.id),selectedBuildingId:this.game.state.selBld?.id,selectedBoatId:this.game.selectedBoat??undefined};
     const epoch=this.dispatchEpoch;
     if(!this.commandReady)throw new Error('No authoritative session is ready');
-    if(this.workerHost){const result=await this.workerHost.dispatch(command,captured);return{...result,epoch};}
+    if(this.workerHost){const result=await this.workerHost.dispatch(command,captured);this.readModelCache.clear();return{...result,epoch};}
     const sequence=++this.dispatchSequence;
     const outcome=applyEngineCommand(this.game,command,captured);
+    this.readModelCache.clear();
     const result={...outcome,sequence,stateRevision:++this.dispatchRevision,epoch};
     this.pushHud();return result;
   }
@@ -932,6 +957,7 @@ export class Engine {
     if (this.disposed) return;
     try {
       const frameGap=this.profile.frame(t);
+      const workerWallDt=Number.isFinite(t)&&Number.isFinite(this.last)&&this.last>0?Math.max(0,(t-this.last)/1000):0;
       const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
@@ -961,7 +987,7 @@ export class Engine {
         return;
       }
 
-      if(this.workerHost){if(!document.hidden)this.workerHost.advanceWallTime(dt);}
+      if(this.workerHost){if(!document.hidden)this.workerHost.advanceWallTime(workerWallDt);}
       else if(this.workerBridgeTransition){/* Sole authority is transferring; main never steps. */}
       else if (document.hidden) {
         this.simAccumulator = 0;

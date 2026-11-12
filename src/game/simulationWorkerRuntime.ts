@@ -1,3 +1,4 @@
+import {applyEngineReadQuery,isEngineReadQuery} from './engineReadModels';
 import {captureSimulationPresentation} from './simulationRenderProjection';
 import {decodeGame,encodeGame,validateGameSave} from './persistence';
 import {serializeStoredSave} from './storageCodec';
@@ -14,10 +15,11 @@ export class SimulationWorkerRuntime {
  private epoch=0;private lastRequestId=0;private sequence=0;private tick=0;private revision=0;
  private commandOutcomes=new Map<number,{fingerprint:string;outcome:SimulationCommandOutcome}>();
  private slots:Slot[]=[];private nextFrameId=0;private droppedFrames=0;
+ private previousPresentationDispatch:{stateRevision:number;cpuMilliseconds:number}|undefined;
  private port:SimulationWorkerPort;private now:()=>number;
  constructor(port:SimulationWorkerPort,now=()=>performance.now()){this.port=port;this.now=now;}
  private clock():SimulationClock{const g=this.game!;return{tick:this.tick,time:g.state.time,paused:g.state.paused,speed:g.state.speed,stateRevision:this.revision,appliedSequence:this.sequence};}
- private send(message:SimulationWorkerResponse,transfer:Transferable[]=[]){this.port.postMessage(message,transfer);}
+ private send(message:SimulationWorkerResponse,transfer:Transferable[]=[]){const start=this.now();this.port.postMessage(message,transfer);if(message.type==='presentation')this.previousPresentationDispatch={stateRevision:message.clock.stateRevision,cpuMilliseconds:Math.max(0,this.now()-start)};}
  private error(epoch:number,requestId:number,code:string,message:string){this.send({type:'error',epoch,requestId,code,message,appliedSequence:this.sequence});}
  receive(input:unknown){
   if(!object(input)||!integer(input.epoch)||!integer(input.requestId))return;
@@ -28,7 +30,7 @@ export class SimulationWorkerRuntime {
    if(input.rngMode!=='legacy-worker-random'){this.error(epoch,requestId,'rng-policy','Legacy RNG limitation must be explicitly acknowledged');return;}
    try{const game=decodeGame(input.snapshot);
     if(!integer(game.state.nextId)||[...game.state.units,...game.state.buildings,...(game.state.production?.projects||[])].some(e=>!integer(e.id)))throw new Error('Worker core requires positive safe-integer entity identities');
-    this.game=game;this.epoch=epoch;this.lastRequestId=requestId;this.sequence=0;this.tick=0;this.revision=0;this.commandOutcomes.clear();this.slots=[];this.nextFrameId=0;this.droppedFrames=0;
+    this.game=game;this.epoch=epoch;this.lastRequestId=requestId;this.sequence=0;this.tick=0;this.revision=0;this.commandOutcomes.clear();this.slots=[];this.nextFrameId=0;this.droppedFrames=0;this.previousPresentationDispatch=undefined;
     this.send({type:'ready',protocolVersion:1,epoch,requestId,clock:this.clock(),rng:LEGACY_WORKER_RNG});
    }catch(error){this.error(epoch,requestId,'invalid-save',error instanceof Error?error.message:'Invalid saved village');}
    return;
@@ -41,13 +43,17 @@ export class SimulationWorkerRuntime {
    if(message.type==='command'){this.command(message);return;}
    if(message.type==='recycle'){this.recycle(message);return;}
    if(message.type==='inspect'){this.inspect(message);return;}
+   if(message.type==='read-model'){
+    if(!isEngineReadQuery(message.query)){this.error(epoch,requestId,'read-query','Unsupported or malformed owner read query');return;}
+    const start=this.now();try{const model=applyEngineReadQuery(this.game,message.query);this.send({type:'read-model-result',epoch,requestId,clock:this.clock(),model,navigationRevision:this.game.navigationRevision(),cpuMilliseconds:Math.max(0,this.now()-start)});}catch(error){this.error(epoch,requestId,'read-query',error instanceof Error?error.message:'Owner read query unavailable');}return;
+   }
    if(message.type!=='advance'&&message.type!=='checkpoint'&&message.type!=='presentation'){this.error(epoch,requestId,'unsupported-request','This request is not implemented');return;}
    if(!Number.isSafeInteger(message.afterSequence)||message.afterSequence!==this.sequence){this.error(epoch,requestId,'sequence-barrier','Request does not match the latest applied command');return;}
    if(message.type==='presentation'){
     if(typeof message.includeWorld!=='boolean'||message.selection!==undefined&&!isEngineSelection(message.selection)){this.error(epoch,requestId,'presentation-payload','Invalid presentation request');return;}
     if(message.selection)applyEngineSelection(this.game,message.selection);
     const start=this.now(),presentation=captureSimulationPresentation(this.game,message.includeWorld);
-    this.send({type:'presentation',epoch,requestId,clock:this.clock(),presentation,captureMilliseconds:Math.max(0,this.now()-start)});return;
+    this.send({type:'presentation',epoch,requestId,clock:this.clock(),presentation,captureMilliseconds:Math.max(0,this.now()-start),previousDispatch:this.previousPresentationDispatch});return;
    }
    if(message.type==='checkpoint'){
     const snapshot=encodeGame(this.game);validateGameSave(snapshot);

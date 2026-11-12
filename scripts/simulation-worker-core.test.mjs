@@ -186,3 +186,26 @@ test('actual Worker selected sled donor stays owned; unselected positive control
   }finally{client.dispose();}
  }
 });
+
+test('actual Worker computes bounded native availability read models; stale advice cannot spend physical inputs',async()=>{
+ const f=fixture(),{client}=connection(),mainRoute=Game.prototype.interactionSpot;
+ Game.prototype.interactionSpot=()=>{throw Error('Display thread must not run owner availability routing');};
+ try{
+  await client.initialize(f.save);const before=await checkpoint(client),timings=[];
+  const recipes=await client.readModel({kind:'recipe-issues',workplaceId:f.hearth});
+  assert.equal(recipes.model.kind,'recipe-issues');assert.equal(recipes.model.issues.find(r=>r.recipe==='fermentMilk').issue,null);
+  const unknown=Number.MAX_SAFE_INTEGER;
+  const fibre=await client.readModel({kind:'fibre-issues',unitId:f.worker,patchIds:[unknown]});assert.deepEqual(fibre.model.issues,[],'unwitnessed source is omitted, never reported as allowed');
+  const clay=await client.readModel({kind:'clay-issues',unitId:f.worker,depositIds:[unknown]});assert.deepEqual(clay.model.issues,[]);
+  const armor=await client.readModel({kind:'armor-choice',unitId:f.worker});assert.equal(armor.model.availableArmorId,undefined);assert.ok(armor.model.issue);
+  for(const result of [recipes,fibre,clay,armor]){assert.ok(Number.isFinite(result.cpuMilliseconds)&&result.cpuMilliseconds>=0);assert.ok(Number.isSafeInteger(result.navigationRevision));timings.push({kind:result.model.kind,cpuMilliseconds:result.cpuMilliseconds});}
+  const after=await checkpoint(client);assert.deepEqual(after.state.tribes,before.state.tribes,'read models neither debit nor invent physical food/materials');assert.equal(after.state.time,before.state.time);
+  await assert.rejects(client.readModel({kind:'fibre-issues',unitId:f.worker,patchIds:Array.from({length:129},(_,i)=>i+1)}),errors('read-query'));
+  const first=await client.command({kind:'begin-production',recipe:'fermentMilk',workplaceId:f.hearth});assert.equal(first.outcome.accepted,true);
+  assert.equal(recipes.model.issues.find(r=>r.recipe==='fermentMilk').issue,null,'old advice remains an old observation');
+  const second=await client.command({kind:'begin-production',recipe:'fermentMilk',workplaceId:f.hearth});assert.equal(second.outcome.accepted,false,'admission revalidates paid stock/occupied slots instead of trusting aged advice');
+  const saved=await checkpoint(client);assert.equal(saved.state.production.projects.length,1);assert.equal(saved.state.tribes[0].items.pottery,0);assert.equal(saved.state.tribes[0].wood,99);
+  const initial=await client.presentation(true),refresh=await client.presentation(false);assert.ok(refresh.previousDispatch);assert.ok(refresh.previousDispatch.cpuMilliseconds>=0);assert.ok(initial.captureMilliseconds>=0);
+  console.log(JSON.stringify({scope:'actual moduleWorker owner-read telemetry; single authored native fixture, not a100resident performance benchmark',queries:timings,bootstrapPresentationCaptureMilliseconds:initial.captureMilliseconds,bootstrapPresentationPostMessageMilliseconds:refresh.previousDispatch.cpuMilliseconds}));
+ }finally{Game.prototype.interactionSpot=mainRoute;client.dispose();}
+});
