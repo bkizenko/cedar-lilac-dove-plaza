@@ -1,5 +1,6 @@
 import type {Game} from './sim';
-import type {Unit,Boat} from './types';
+import type {Unit} from './types';
+import type {Riverboat as Boat} from './boats';
 import {hash32,makeRng} from './rulerCore';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
