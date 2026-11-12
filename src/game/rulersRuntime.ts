@@ -3,20 +3,22 @@
 import type {Game} from './sim';
 import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
-import {marry} from './dynasty';
+import {marry,heir} from './dynasty';
+import {hash32,makeRng} from './rulerCore';
 import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
 import {expansionPressure} from './polityModel';
 import {drive as personalDrive} from './rulerGenome';
 import {reserveSeconds} from './settlement';
 import {effects,apply,noTies,type Ties,type Effect} from './ties';
 import {nudgeSocietyRelation,societyRelation} from './societyRelations';
+import {settleGate,raidGate,growthBias,tradeCadenceBias,breakawayLoss,noteRaid,noteMarriage,noteSettlement,yearlySocieties,decisionsEnabled} from './societyRuntime';
 import {liveClaims,cbLegitimacyCost,unrest,stageOf,type Claim,type CasusBelli,type Stage as UnrestStage} from './unrest';
 
 /** Compressed clock: one dynastic year per this many sim seconds (an 80-year life is about two hours of play). */
 export const RULERS_YEAR_SECONDS=90;
-type S={rulers?:RulersState;worldOptions?:{rulersVersion?:1};time:number;seed:number;tribes:unknown[];units:{team:number;hp:number}[]};
+type S={rulers?:RulersState;worldOptions?:{rulersVersion?:1|2};time:number;seed:number;tribes:unknown[];units:{team:number;hp:number}[]};
 const st=(g:Game)=>g.state as unknown as S;
-export const rulersEnabled=(g:Game)=>st(g).worldOptions?.rulersVersion===1;
+export const rulersEnabled=(g:Game)=>{const v=st(g).worldOptions?.rulersVersion;return v===1||v===2;};
 export function livingPeople(g:Game,team:number){let n=0;for(const u of st(g).units)if(u.team===team&&u.hp>0)n++;return n;}
 export function ensureRulers(g:Game):RulersState|null{
  if(!rulersEnabled(g))return null;const s=st(g);
@@ -34,7 +36,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);domesticPressure(g);if(decisionsEnabled(g))yearlySocieties(g);}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -63,6 +65,7 @@ export function marryHouses(g:Game,a:number,b:number):{why:string[];bond:number}
  st(g).rulers={...r,societies:{...r.societies,[String(a)]:{...sa,dynasty:wed[0]},[String(b)]:{...sb,dynasty:wed[1]}},ties:{...(r.ties??{}),[key]:next}};
  const sum=(l:keyof Ties)=>scaled.filter(e=>e.ledger===l).reduce((t,e)=>t+e.delta,0)/100;
  for(const [f,t] of [[a,b],[b,a]]){nudgeSocietyRelation(g,f,t,{trust:sum('trust'),grievance:sum('grievance')});}
+ noteMarriage(g,a,b); // society decision layer: records the agreement and its signers (no-op when off)
  return {why:es.map(e=>e.why),bond:next.bond};
 }
 
@@ -98,7 +101,7 @@ export function expansionOf(g:Game,team:number):Drivers|null{
  const i=expansionInputs(g,team);if(!i)return null;const d=assess(i);m.set(team,{t,d});return d;
 }
 /** Multiplier for the rival expansion roll. 1 when rulers are off, so old saves behave exactly as before. */
-export const expansionDrive=(g:Game,team:number)=>expansionOf(g,team)?.drive??1;
+export const expansionDrive=(g:Game,team:number)=>(expansionOf(g,team)?.drive??1)*(rulersEnabled(g)?growthBias(g,team):1);
 
 const WARD_ID=(w:Ward)=>w.from+':'+w.person;
 /** Kin currently held by another house (fosterlings, hostages). They stay in their own dynasty record; the ward list says where they live. */
@@ -167,12 +170,14 @@ export const ERA_REACH:Record<'band'|'chiefdom'|'state',{crew:number;slow:number
  state:{crew:4,slow:1,organised:true,note:''},
 };
 export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;why:string[]};
-export function expansionParty(g:Game,team:number):PartyPlan|null{
+export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
  const sends=d.mode==='settle'||d.mode==='migrate',tier=st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band',gate=ERA_REACH[tier];
  const crew=Math.max(2,Math.min(gate.crew,2+Math.round((d.drive-.8)*2))),cooldown=Math.round(Math.max(900,Math.min(3600,gate.slow*1800/Math.max(.5,d.drive))));
- return {allow:sends,mode:d.mode,crew,cooldown,
-  minReserve:d.mode==='migrate'?300:600,why:sends?[...d.why,...(gate.crew<4?[gate.note]:[])]:['the society stays at home',...d.why]};
+ const council=raw?null:settleGate(g,team); // society decision layer: a founding party leaves only under a settle plan
+ const allow=sends&&(council?council.allow:true);
+ return {allow,mode:d.mode,crew,cooldown,
+  minReserve:d.mode==='migrate'?300:600,why:allow?[...d.why,...(gate.crew<4?[gate.note]:[])]:sends&&council?[council.why,...d.why]:['the society stays at home',...d.why]};
 }
 
 /** Read model of NPC founding parties on the road: the real units, where they are, what they carry. Pure read; nothing is created or moved here. */
@@ -242,7 +247,7 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
  const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.min(100,30+100*Math.max(0,...lg)); // source weights sum to ~1; the strongest pillar carries the house
- const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:0,rulerPopularity:60},me.civ.polity);
+ const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
  const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
@@ -259,7 +264,9 @@ export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',t
  const d=expansionOf(g,team);if(!d)return null;
  const org=ERA_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].organised; // bands have no standing provisioning or market habit to speed up
  if(kind==='explore')return {allow:true,reserve:d.mode==='explore'&&org?300:450,why:d.mode==='explore'&&org?d.why:[]};
- if(kind==='trade')return {allow:true,cadence:d.mode==='trade'&&org?60:120,why:d.mode==='trade'&&org?d.why:[]};
+ if(kind==='trade')return {allow:true,cadence:Math.round((d.mode==='trade'&&org?60:120)*tradeCadenceBias(g,team)),why:d.mode==='trade'&&org?d.why:[]};
+ const council=raidGate(g,team); // society decision layer: a strike leaves only under a raid plan, against the planned target
+ if(council&&(!council.allow||(target!==undefined&&council.target!==target)))return {allow:false,why:[council.allow?'the council named another target':council.why]};
  const r=ensureRulers(g),me=r?.societies[String(team)];if(!r||!me||target===undefined||g.isFoe(team,target))return {allow:true,why:['already at war']};
  if(me.civ.polity.tier!=='state')return {allow:true,why:[]};
  if(d.mode!=='conquer')return {allow:false,why:['a state needs cause and appetite to strike a peaceful neighbour']};
@@ -271,5 +278,32 @@ export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',t
 }
 /** Called when a permitted raid actually leaves: a state's strike spends its claim and pays the legitimacy cost as grievance at home. */
 export function spendRaidClaim(g:Game,team:number,target:number){
+ noteRaid(g,team,target);
  const c=citeClaim(g,team,target,'raid');if(c)nudgeSocietyRelation(g,target,team,{trust:0,grievance:.01*c.cost});return c;
+}
+
+/** Domestic-pressure executor. Unrest has teeth: a house that sits at 'uprising' or 'civilWar' for UPRISING_YEARS dynastic years in a row is
+ * overthrown. The ruler is set aside through the same heir() law succession uses (never killed, never teleported: they stay in the house as
+ * kin), the new ruler is flagged illegitimate and the log says why. 'plots' and below only warn (log once on entry). The counter resets
+ * after a fall or when pressure drops below 'uprising'. Stored in rulers.unrestYears (optional, so old saves load). Off when rulers are off. */
+export const UPRISING_YEARS=3;
+export function domesticPressure(g:Game):string[]{
+ const r=rulersOf(st(g));if(!r)return [];
+ const years={...(r.unrestYears??{})},societies={...r.societies},falls:string[]=[];
+ for(const id of Object.keys(societies)){
+  const t=Number(id);if(!Number.isInteger(t)||t===3||!g.tribe(t))continue;
+  const u=unrestOf(g,t);if(!u)continue;
+  const hot=u.stage==='uprising'||u.stage==='civilWar';
+  const n=hot?(years[id]??0)+1:0;years[id]=n;
+  if(n<UPRISING_YEARS)continue;
+  const sr=societies[id],d=sr.dynasty,old=d.people[d.rulerId];
+  const next=old&&heir(d,sr.civ.polity.succession,makeRng(hash32('overthrow',r.seed,r.year,id)));
+  if(!old||!next)continue; // no one to raise: the house limps on and the pressure stays
+  const note=`${r.year}: ${old.name} is overthrown after ${n} years of ${u.stage==='civilWar'?'civil war':'uprising'} (${u.why.join(', ')||'unrest'}); ${next.name} takes the seat`;
+  societies[id]={...sr,dynasty:{...d,rulerId:next.id,regent:undefined,generation:d.generation+1,log:[...d.log,note].slice(-40),
+   people:{...d.people,[next.id]:{...next,legit:false,claimStrength:Math.min(next.claimStrength,40)}}}};
+  years[id]=0;falls.push(note);
+ }
+ st(g).rulers={...r,societies,unrestYears:years};
+ return falls;
 }

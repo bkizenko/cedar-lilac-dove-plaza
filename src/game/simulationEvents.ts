@@ -1,3 +1,4 @@
+import{commandCargoDelivered}from'./commandExecution';
 import type {Game} from './sim';
 export const SIMULATION_EVENT_RULES={version:1,recentLimit:256,maxTeams:32,continuousBucketSeconds:1} as const;
 export const EVENT_KINDS=['food_received','ready_food_received','ready_nourishment_received','ready_food_produced','ready_nourishment_produced','food_consumed','food_spoiled','cargo_delivered'] as const;
@@ -9,6 +10,7 @@ export type SimulationEventLog={version:1;nextSequence:number;recent:SimulationE
 const continuous=new WeakMap<SimulationEventLog,Map<string,SimulationEvent>>();
 export function recordSimulationEvent(g:Game,kind:SimulationEventKind,team:number,resource:SimulationEvent['resource'],amount:number,actorId?:number){
  if(!Number.isFinite(amount)||amount<=0||!Number.isInteger(team)||team<0||team>=SIMULATION_EVENT_RULES.maxTeams)return;
+ if(kind==='cargo_delivered'&&actorId!==undefined)commandCargoDelivered(g,actorId,amount);
  const log=g.state.simulationEvents??={version:1,nextSequence:1,recent:[],totals:{}};
  const key=`${kind}:${team}:${resource}`;
  log.totals[key]=(log.totals[key]||0)+amount;

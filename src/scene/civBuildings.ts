@@ -269,7 +269,7 @@ HOUSE.sandrill=g=>{const {w,d,r}=g;
   if(i===0)P(g,'hip','wall2',[sw*1.3,.55,sd*1.3],[ox,0,oz],undefined,undefined,1);
   if(i===2)P(g,'sphere','wall',[sw*.9,.7,sd*.9],[ox,i*1.5+1.5,oz],undefined,undefined,1);}
  g.B('accent',[.95,1.5,.12],[g.off*.4,0,d*.35+.04],0);P(g,'box','accent',[1.3,.2,.5],[g.off*.4,1.55,d*.35+.1],undefined,undefined,1);
- for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,4.1,4.7),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
+ for(const s of[-1,1]){const fh=range(r,4,4.4);P(g,'wedge','roof',[.7,fh,1.6],[s*w*.2,2.4,-d*.05],[0,Math.PI/2*s,0],undefined,1);P(g,'hip','wall2',[1.5,.5,1.5],[s*w*.2,2.1,-d*.05],undefined,undefined,1);}
  for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
 CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
  // split monolith as two wind-worn 10-sided drums (not crates) with a talus skirt each; the slot between them still catches the sun

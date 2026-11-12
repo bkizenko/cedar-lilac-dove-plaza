@@ -5,6 +5,7 @@ import type {Game} from './sim';
 import type {Unit,ResKind} from './types';
 import {isDependent} from './settlement';
 import {predisposition} from './people';
+import {noteRaidCarried} from './raidReports';
 export const WEAPONS={
   spear:{name:'Stone spear',wood:2,stone:1,copper:0,iron:0,age:0,seconds:24},
   bow:{name:'Hunting bow',wood:3,stone:1,copper:0,iron:0,age:0,seconds:36},
@@ -83,6 +84,7 @@ export function raidLootAI(g:Game,u:Unit,dt:number){
   if(!kind)return false;
   const count=Math.min(12,ruin.raidLoot![kind]!);ruin.raidLoot![kind]!-=count;
   u.carry=count;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;
+  noteRaidCarried(g,u,ruin.team,kind,count);
   u.order='return';u.pillage=-1;u.target=null;u.attackDestination=null;u.node=null;
   u.workReason='Carrying pillaged supplies home';
   if(u.team===0)g.banner(`Raider carrying ${count} ${kind} home — stores increase on delivery`,3);

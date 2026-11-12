@@ -561,34 +561,34 @@ canvas:focus-visible {
 
 /* Lane B HUD hierarchy pass (Field palette only; Classic keeps the original rules above).
    Readability: no label under 11px, tabular figures, clear primary/secondary tiers, visible focus, 44px touch targets on coarse pointers. */
-:root:not([data-hw-ui="classic"]) .resource-strip { gap:1rem; border-left:3px solid var(--color-bronze); }
-:root:not([data-hw-ui="classic"]) .resource-cell span { font-size:11px; letter-spacing:.05em; opacity:.85; }
-:root:not([data-hw-ui="classic"]) .resource-cell strong { font-size:18px; font-weight:600; color:var(--color-parchment); }
-:root:not([data-hw-ui="classic"]) .objective-strip { border-left:3px solid var(--color-bronze-bright); font-size:13px; line-height:1.35; }
-:root:not([data-hw-ui="classic"]) .quick-actions button { font-size:13px; border-color:color-mix(in srgb,var(--color-parchment) 35%,transparent); transition:background-color .12s,color .12s,transform .12s; }
-:root:not([data-hw-ui="classic"]) .quick-actions button:active { transform:translateY(1px); }
-:root:not([data-hw-ui="classic"]) .build-tabs button { font-size:13px; color:var(--color-parchment-dim); }
-:root:not([data-hw-ui="classic"]) .build-tabs button[aria-selected=true] { color:var(--color-ink); font-weight:600; }
-:root:not([data-hw-ui="classic"]) .hud-panel h2, :root:not([data-hw-ui="classic"]) .hud-panel h3 { color:var(--color-bronze-bright); letter-spacing:.02em; }
-:root:not([data-hw-ui="classic"]) .hud-panel button:focus-visible, :root:not([data-hw-ui="classic"]) .hud-panel [role="button"]:focus-visible { outline:2px solid var(--color-bronze-bright); outline-offset:2px; }
-@media (pointer:coarse) { :root:not([data-hw-ui="classic"]) .quick-actions button, :root:not([data-hw-ui="classic"]) .build-tabs button { min-height:44px; } }
+:root[data-hw-ui="field"] .resource-strip { gap:1rem; border-left:3px solid var(--color-bronze); }
+:root[data-hw-ui="field"] .resource-cell span { font-size:11px; letter-spacing:.05em; opacity:.85; }
+:root[data-hw-ui="field"] .resource-cell strong { font-size:18px; font-weight:600; color:var(--color-parchment); }
+:root[data-hw-ui="field"] .objective-strip { border-left:3px solid var(--color-bronze-bright); font-size:13px; line-height:1.35; }
+:root[data-hw-ui="field"] .quick-actions button { font-size:13px; border-color:color-mix(in srgb,var(--color-parchment) 35%,transparent); transition:background-color .12s,color .12s,transform .12s; }
+:root[data-hw-ui="field"] .quick-actions button:active { transform:translateY(1px); }
+:root[data-hw-ui="field"] .build-tabs button { font-size:13px; color:var(--color-parchment-dim); }
+:root[data-hw-ui="field"] .build-tabs button[aria-selected=true] { color:var(--color-ink); font-weight:600; }
+:root[data-hw-ui="field"] .hud-panel h2, :root[data-hw-ui="field"] .hud-panel h3 { color:var(--color-bronze-bright); letter-spacing:.02em; }
+:root[data-hw-ui="field"] .hud-panel button:focus-visible, :root[data-hw-ui="field"] .hud-panel [role="button"]:focus-visible { outline:2px solid var(--color-bronze-bright); outline-offset:2px; }
+@media (pointer:coarse) { :root[data-hw-ui="field"] .quick-actions button, :root[data-hw-ui="field"] .build-tabs button { min-height:44px; } }
 
 /* Field palette, panel pass 2 (lane B): card hierarchy, disabled contrast, scroll affordance, tactile controls. Classic untouched. */
-:root:not([data-hw-ui="classic"]) .craft-group,
-:root:not([data-hw-ui="classic"]) .boat-card,
-:root:not([data-hw-ui="classic"]) .age-readiness-grid>div { background:color-mix(in srgb,var(--color-ink-soft) 70%,transparent); border-color:color-mix(in srgb,var(--color-parchment) 18%,transparent); }
-:root:not([data-hw-ui="classic"]) .craft-group[open]>summary { color:var(--color-bronze-bright); border-bottom:1px solid color-mix(in srgb,var(--color-parchment) 14%,transparent); }
-:root:not([data-hw-ui="classic"]) .hud-panel button:disabled,
-:root:not([data-hw-ui="classic"]) .encounter-dialog button:disabled { opacity:.55; filter:saturate(.6); }
-:root:not([data-hw-ui="classic"]) .hud-panel button:not(:disabled):hover { border-color:var(--color-bronze-bright); }
-:root:not([data-hw-ui="classic"]) .hud-panel button:not(:disabled):active { transform:translateY(1px); }
-:root:not([data-hw-ui="classic"]) .hud-panel button,
-:root:not([data-hw-ui="classic"]) .encounter-dialog button { transition:background-color .12s,border-color .12s,color .12s; }
-:root:not([data-hw-ui="classic"]) .selection-info,
-:root:not([data-hw-ui="classic"]) .craft-options span,
-:root:not([data-hw-ui="classic"]) .boat-status span { color:color-mix(in srgb,var(--color-parchment) 82%,var(--color-ink)); }
-:root:not([data-hw-ui="classic"]) .hud-panel progress { height:8px; accent-color:var(--color-ok); border-radius:4px; }
-:root:not([data-hw-ui="classic"]) .hud-panel { scrollbar-width:thin; scrollbar-color:color-mix(in srgb,var(--color-bronze) 60%,transparent) transparent; }
-:root:not([data-hw-ui="classic"]) .craft-group>summary:hover,
-:root:not([data-hw-ui="classic"]) .neighbor-details>summary:hover { background:color-mix(in srgb,var(--color-parchment) 8%,transparent); }
-@media (prefers-reduced-motion: reduce) { :root:not([data-hw-ui="classic"]) .hud-panel button,:root:not([data-hw-ui="classic"]) .encounter-dialog button { transition:none; transform:none!important; } }
+:root[data-hw-ui="field"] .craft-group,
+:root[data-hw-ui="field"] .boat-card,
+:root[data-hw-ui="field"] .age-readiness-grid>div { background:color-mix(in srgb,var(--color-ink-soft) 70%,transparent); border-color:color-mix(in srgb,var(--color-parchment) 18%,transparent); }
+:root[data-hw-ui="field"] .craft-group[open]>summary { color:var(--color-bronze-bright); border-bottom:1px solid color-mix(in srgb,var(--color-parchment) 14%,transparent); }
+:root[data-hw-ui="field"] .hud-panel button:disabled,
+:root[data-hw-ui="field"] .encounter-dialog button:disabled { opacity:.55; filter:saturate(.6); }
+:root[data-hw-ui="field"] .hud-panel button:not(:disabled):hover { border-color:var(--color-bronze-bright); }
+:root[data-hw-ui="field"] .hud-panel button:not(:disabled):active { transform:translateY(1px); }
+:root[data-hw-ui="field"] .hud-panel button,
+:root[data-hw-ui="field"] .encounter-dialog button { transition:background-color .12s,border-color .12s,color .12s; }
+:root[data-hw-ui="field"] .selection-info,
+:root[data-hw-ui="field"] .craft-options span,
+:root[data-hw-ui="field"] .boat-status span { color:color-mix(in srgb,var(--color-parchment) 82%,var(--color-ink)); }
+:root[data-hw-ui="field"] .hud-panel progress { height:8px; accent-color:var(--color-ok); border-radius:4px; }
+:root[data-hw-ui="field"] .hud-panel { scrollbar-width:thin; scrollbar-color:color-mix(in srgb,var(--color-bronze) 60%,transparent) transparent; }
+:root[data-hw-ui="field"] .craft-group>summary:hover,
+:root[data-hw-ui="field"] .neighbor-details>summary:hover { background:color-mix(in srgb,var(--color-parchment) 8%,transparent); }
+@media (prefers-reduced-motion: reduce) { :root[data-hw-ui="field"] .hud-panel button,:root[data-hw-ui="field"] .encounter-dialog button { transition:none; transform:none!important; } }

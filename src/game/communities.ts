@@ -4,6 +4,7 @@ import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
 import { soilQuality } from "./ecology";
 import { expansionParty } from './rulersRuntime';
+import { noteSettlement } from './societyRuntime';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
   const history = (g.state.lifeHistory ??= []);
   history.push({ team, text, time: g.state.time });
@@ -153,6 +154,7 @@ export function tickCommunities(g: Game, dt: number) {
     if (!site) continue;
     t.wood -= timber;
     t.lastSettlement = g.state.time;
+    if (expansion) noteSettlement(g, t.id);
     for (let i = 0; i < crew.length; i++) {
       const u = crew[i];
       u.foundingJourney = { ...site, leader: i === 0, timber };
