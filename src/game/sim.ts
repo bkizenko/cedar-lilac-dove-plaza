@@ -110,6 +110,7 @@ import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
 import {flowPath} from "./flowFields";
 import {advanceTide} from "./tides";
+import {breachPlacementPermit} from "./canalBreach";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -1158,7 +1159,7 @@ export class Game {
     if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
-    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))) return "Can't raise that in the water";
+    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts)
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
