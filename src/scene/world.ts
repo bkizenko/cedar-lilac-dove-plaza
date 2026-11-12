@@ -125,6 +125,12 @@ export const BLD_TYPES: BldType[] = [
   "university",
   "cairn",
   "grove",
+  "well",
+  "cistern",
+  "watermill",
+  "windmill",
+  "aqueduct",
+  "canal",
 ];
 
 const _m = new THREE.Matrix4();
