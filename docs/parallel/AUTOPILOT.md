@@ -359,8 +359,8 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ASTRA-09 | astra | Spatial query budget | Codex | Codex N4 | not started | p95 <8ms target is historical; current speed work is M5-06 / Worker parked |
 | ASTRA-10 | astra | Construction and repair refinement | Codex | — (done) | done/live | construction reservation / cancel / repair paths are in the live game (M0 construction gates verified); patch on audit |
 | ASTRA-11 | astra | Survival economy and priorities | Codex | Codex N4 | source-pushed-not-live | survival loop partly live (M1 verified); remaining winter-warning/priority leftovers |
-| ASTRA-12 | astra | Death and job animation | Claude | Claude N2 | not started |  |
-| ASTRA-13 | astra | Shared character rig | Claude | Claude N2 | not started |  |
+| ASTRA-12 | astra | Death and job animation | Claude | Claude N2 | shipped 0a3d49a/d2b672c: job/fight clips from real order/state, 4 death falls; tests + sheets; particles not rendered |  |
+| ASTRA-13 | astra | Shared character rig | Claude | Claude N2 | shipped 0a3d49a/d2b672c: 7-bone rig, per-civ garb/insignia, LOD+budget test, legacy set switchable (?people=legacy) |  |
 | ASTRA-14 | astra | Defenses and gate navigation | Grok | Grok W12 | source-pushed-not-live | palisades/gates historically implemented (CAT-65 struck); open-gate / closed-gate routing still to prove |
 | ASTRA-15 | astra | Soft counters and formations | Claude | Claude N3 | not started |  |
 | ASTRA-16 | astra | Strategic tribe director | Claude | Claude N4 | source-pushed-not-live | rival director exists in part; 30-minute seeded defend/recover/raid without cheats still open |
