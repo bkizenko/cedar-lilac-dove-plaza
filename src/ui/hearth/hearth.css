@@ -369,3 +369,9 @@
 .hw-term-tier.tier-ruinous{padding:var(--hw-s3);border-radius:var(--hw-r-m);background:rgba(217,104,74,.08);border:1px dashed rgba(244,162,135,.45)}
 .hw-term-tier.tier-ruinous h4{color:var(--hw-bad)}
 .hw-term-tier.tier-ruinous .hw-term{border-left:4px solid var(--hw-bad)}
+
+/* Captive card: resistance meter per person, guard state, plain actions. */
+.hw-captive-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--hw-s2)}
+.hw-captive-list>li{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;align-items:center;gap:var(--hw-s2) var(--hw-s3);padding:var(--hw-s2) var(--hw-s3);border-radius:var(--hw-r-s);background:rgba(0,0,0,.22);border-left:4px solid var(--hw-bad)}
+.hw-captive-name{display:grid;min-width:0}.hw-captive-name b{font-size:var(--hw-fs-m)}
+.hw-captive-acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--hw-s2)}

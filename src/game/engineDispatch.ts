@@ -1,3 +1,6 @@
+import {freePeople} from './peace';
+import {repatriateCaptive} from './captivity';
+import {sendCaptiveEscort} from './caravans';
 import {armorRepairIssue,beginArmorRepair,pauseArmorRepair,resumeArmorRepair,cancelArmorRepair} from './armorRepair';
 import {beginCopperStudy,copperStudyIssue} from './materialStudy';
 import {beginTradedTeaching,cancelTradedTeaching,TRADED_TEACHING_RULES} from './tradedTeaching';
@@ -53,6 +56,7 @@ export type EngineDispatchCommand=
  |{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
  |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
+ |{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number}
  |{kind:'boat-stop';boatId:number}
  |{kind:'construction-priority';buildingId:number;priority:0|1|2}
  |{kind:'site-preparation-pause';buildingId:number;paused:boolean}
@@ -148,6 +152,9 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
     return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
    }
+   case 'free-captives':{if(!g.state.units.some(u=>u.team===0&&u.hp>0&&u.enslavedFrom===command.team))return no('No captives from that society');freePeople(g,command.team);return{accepted:true,reason:'The captives are free'};}
+   case 'repatriate-captive':return repatriateCaptive(g,command.unitId)?{accepted:true,reason:'Sent home'}:no('That captive cannot be sent home now');
+   case 'escort-captive':return sendCaptiveEscort(g,command.unitId)?{accepted:true,reason:'A guard will escort them'}:no('No spare guard to escort');
    case 'set-formation':return setPreferredFormation(g,command.formation)?{accepted:true,reason:'Groups of four or more will form up this way when ordered to move'}:no('Combat doctrine is not enabled for this save');
    case 'guard-duty':{
     const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');
@@ -204,7 +211,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
   'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
-  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
+  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},
   'construction-queue-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='up'||v==='down'||v==='remove',siteId:optionalId},
