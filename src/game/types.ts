@@ -173,6 +173,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   armorCargoId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
+  garmentRepair?:import('./garmentRepair').GarmentRepair;
   garment?:import('./textiles').Garment;
   spareGarment?:import('./textiles').Garment;
   exploreAfterDelivery?:true;
@@ -489,6 +490,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  garmentMaintenance?:import('./garmentRepair').GarmentMaintenance;
   captiveDealings?:import('./captiveDealings').CaptiveDealingsState;
   droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
   armor?:import('./armor').ArmorState;

@@ -28,10 +28,11 @@ export function workerActivity(state:GameState,u:Unit) {
  if(!p&&u.waterWork){stage=u.waterWork.paused?'Water collection paused':u.waterWork.phase==='collecting'?'Collecting water':u.waterWork.phase==='outbound'?'Walking to water':'Delivering water';source=`Water source · ${point({x:u.waterWork.sourceX,z:u.waterWork.sourceZ})}`;}
  if(p&&b&&['carrying','working','ready','curing'].includes(p.phase))destination=`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`;
  if(['move','explore','return','attackmove'].includes(u.order)||p&&['collecting','returning','unloading'].includes(p.phase))destination=`Current waypoint · ${point({x:u.tx,z:u.tz})}`;
+ if(u.garmentRepair){const w=u.garmentRepair,b=state.buildings.find(b=>b.id===w.workplaceId);stage=w.phase==='paused'?'Garment repair paused':w.phase==='working'?'Repairing original garment':'Carrying garment to tailor';destination=b?`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`:undefined;}
  const warmth=fireWarmingVisit(state,u);
  if(warmth){stage=warmth.atFire?'Warming at fire':'Walking to warmth';destination=`Lit hearth #${warmth.fireId} · ${point(warmth)}`;}
  const blocked=p?.blockedReason||(u.stuckT>3?`Movement blocked · ${Math.floor(u.stuckT)}s`:undefined);
- let batchCargo:string[]=[];
+ let batchCargo:string[]=u.garmentRepair?[`Original ${ITEM_NAMES[u.garmentRepair.garment.item]}`,...bundle(u.garmentRepair.paid)]:[];
  if(p&&recipe){
   if(p.phase==='carrying'||p.phase==='unloading'||p.phase==='paused'&&['carrying','unloading'].includes(p.resumePhase))batchCargo=[...bundle(recipe.inputs),...Object.entries(recipe.foodInputs||{}).map(([k,n])=>`${quantity(n!)} ${k}`),...(recipe.grain?[`${recipe.grain} clean grain`]:[]),...(recipe.wood?[`${recipe.wood} logs`]:[]),...(recipe.water?[`${recipe.water} L water`]:[])];
   if(p.phase==='returning')batchCargo=[...bundle(productionOutputs(p)),...Object.entries(productionFoodOutputs(p)).filter(([,n])=>(n||0)>0).map(([kind,n])=>`${quantity(n!)} ${kind}`)];

@@ -2,7 +2,7 @@ import {herdRules} from './animalSpecies';
 import {PACK_ANIMAL_RULES} from './packAnimalState';
 import {presentationHearthHeating,presentationSurvivalFireActive} from './presentationSurvivalView';
 import{HOUSING_RULES}from'./housingRules';
-import{tickGarmentHeat}from'./textiles';
+import{tickGarmentHeat,tickGarmentWetness,GARMENT_WEATHER_RULES}from'./textiles';
 import{ecologicalTemperatureOffsetAt}from'./ecologicalProvinces';
 import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
@@ -100,6 +100,14 @@ export function localAirTemperature(g:Game,x:number,z:number,ambient=ambientTemp
 function sheltered(g:Game,u:Unit){
  const requested=u.housingUse?.buildingId??u.shelterId;let best:import('./types').Building|undefined,distance=Infinity;
  for(const b of g.state.buildings){if(b.team!==u.team||!['hut','house','townhall','keep'].includes(b.type)||!g.finished(b))continue;const d=Math.hypot(u.x-b.x,u.z-b.z);if(u.shelterId!==b.id&&d>=Math.max(b.w,b.d)*.5+4)continue;if(b.id===requested)return b;if(d<distance){best=b;distance=d;}}return best;
+}
+
+/** Roof cover requires the actual body inside a completed housing footprint.
+ * The broader warmth/search radius is not rain protection. */
+export function garmentRoofCovered(g:Game,u:Unit){
+ const margin=GARMENT_WEATHER_RULES.roofInsetMetres+Math.max(0,u.r||0);
+ return g.state.buildings.some(b=>b.hp>0&&['hut','house','townhall','keep'].includes(b.type)&&g.finished(b)&&
+  Math.abs(u.x-b.x)<=Math.max(0,b.w/2-margin)&&Math.abs(u.z-b.z)<=Math.max(0,b.d/2-margin));
 }
 
 function shelterWarmth(g:Game,u:Unit){const b=sheltered(g,u);return b?SURVIVAL_RULES.shelterWarmthCelsius+(b.type==='house'?HOUSING_RULES.shelterWarmthCelsius:0):0;}
@@ -287,6 +295,11 @@ export function tickSurvival(g:Game,dt:number){
    let fire=Math.hypot(u.x-home.x,u.z-home.z)<=rules.fireRadiusMeters?fireFraction:0;
    for(const hearth of fires)if(Math.hypot(u.x-hearth.x,u.z-hearth.z)<=8)fire=Math.max(fire,cooking.has(hearth.id)?1:fireFraction);
    const localTemp=localAirTemperature(g,u.x,u.z,temp);
+   if(u.garment||u.spareGarment||u.garmentRepair){
+    const weather={raining:['rain','storm','flood'].includes(g.state.weather),immersed:u.boat?.phase!=='aboard'&&g.waterAt(u.x,u.z)>u.y+GARMENT_WEATHER_RULES.immersionDepthMetres,covered:garmentRoofCovered(g,u),fireFraction:fire};
+    tickGarmentWetness(u,dt,weather);
+    if(u.garmentRepair)tickGarmentWetness({hp:u.hp,spareGarment:u.garmentRepair.garment},dt,weather);
+   }
    if(u.garment)tickGarmentHeat(u,localTemp,dt);
    const effective=localTemp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+shelterWarmth(g,u);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;

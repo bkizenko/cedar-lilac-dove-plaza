@@ -1,3 +1,4 @@
+import {beginGarmentRepair,garmentRepairIssue,pauseGarmentRepair,resumeGarmentRepair,cancelGarmentRepair,type GarmentSlot} from './garmentRepair';
 import {beginEraUpgrade,setHousingPaused} from './housing';
 import type {ExtensionSide} from './extensionFootprints';
 import {equipArmor,unequipArmor} from './armor';
@@ -31,6 +32,8 @@ export type EngineDispatchCommand=
  |{kind:'swap-clothing';unitId:number}
  |{kind:'gather-fibre';unitId:number;patchId:number}|{kind:'gather-clay';unitId:number;depositId:number}
  |{kind:'equip-armor';unitId:number;armorId:number}|{kind:'unequip-armor';unitId:number}
+ |{kind:'garment-repair';unitId:number;slot:GarmentSlot;workplaceId?:number}
+ |{kind:'garment-repair-control';unitId:number;action:'pause'|'resume'|'cancel'}
  |{kind:'equip-clothing';unitId:number;item:GarmentKind}
  |{kind:'set-auto-work';enabled:boolean}|{kind:'defense-horn'}|{kind:'recall'}
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
@@ -92,6 +95,8 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     if(command.kind==='resume-production'&&command.unitId!==undefined&&(!integer(command.unitId)||!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0)))return no('The original owned person is unavailable');
     const accepted=command.kind==='pause-production'?pauseProductionProject(g,command.projectId):resumeProduction(g,command.projectId,command.unitId);return{accepted,reason:accepted?'Original paid project updated':'Original paid project cannot make that transition'};
    }
+   case 'garment-repair':{const issue=garmentRepairIssue(g,command.unitId,command.slot,command.workplaceId);if(issue)return no(issue);const accepted=beginGarmentRepair(g,command.unitId,command.slot,command.workplaceId);return{accepted,reason:accepted?'Repair paid; original garment carried to sewing shelter':g.state.banner||'Repair unavailable'};}
+   case 'garment-repair-control':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0);if(!u)return no('Original owned person unavailable');const accepted=command.action==='pause'?pauseGarmentRepair(g,u):command.action==='resume'?resumeGarmentRepair(g,u.id):cancelGarmentRepair(g,u.id);return{accepted,reason:accepted?'Original garment repair updated':'Repair waits for an available owner and sewing shelter'};}
    case 'equip-armor':return equipArmor(g,command.unitId,command.armorId);
    case 'unequip-armor':return unequipArmor(g,command.unitId);
    case 'survey-fibre':case 'return-fibre':case 'equip-basket':case 'survey-clay':case 'equip-water-vessel':case 'swap-clothing':case 'gather-fibre':case 'gather-clay':case 'equip-clothing':{
@@ -159,6 +164,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
   'begin-production':{recipe:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),workplaceId:id,unitId:optionalId},
   'pause-production':{projectId:id},'resume-production':{projectId:id,unitId:optionalId},
+  'garment-repair':{unitId:id,slot:v=>v==='worn'||v==='spare',workplaceId:optionalId},'garment-repair-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='cancel'},
   'equip-armor':{unitId:id,armorId:id},'unequip-armor':{unitId:id},
   'survey-fibre':{unitId:id},'return-fibre':{unitId:id},'equip-basket':{unitId:id},'survey-clay':{unitId:id},'equip-water-vessel':{unitId:id},'swap-clothing':{unitId:id},'gather-fibre':{unitId:id,patchId:id},'gather-clay':{unitId:id,depositId:id},'equip-clothing':{unitId:id,item:v=>GARMENT_KINDS.includes(v as GarmentKind)},
   'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},

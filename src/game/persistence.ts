@@ -1,3 +1,4 @@
+import {validGarmentRepairs} from './garmentRepair';
 import {validFoodExperience} from './foodExperience';
 import {validPackPastureOrders} from './packPasture';
 import {herdRules,isDraftSpecies} from './animalSpecies';
@@ -165,7 +166,7 @@ function validateGamePayload(raw: unknown) {
   if(!validPackPastureOrders(s))fail();
   if(s.cattleVersion!==undefined&&s.cattleVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
-  if(!validHousingState(s)||!validSitePreparationState(s))fail();
+  if(!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
   if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
