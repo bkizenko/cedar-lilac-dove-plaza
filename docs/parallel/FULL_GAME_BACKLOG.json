@@ -9240,6 +9240,15 @@
       "liveCommit": "ab3280648b53ba43e96e3053af4f6ead464b7b53",
       "evidence": "docs/metrics/food-enjoyment-release-2026-11-12.json",
       "scope": "Meals actually eaten earn separate hedons and bounded food mood; compact Stores readout, strict old/new saves. No calorie, production recipe, dispatch or disease changes. Brewing/full morale remain open."
+    },
+    {
+      "id": "CODEX-GRAIN-BREWING",
+      "owner": "Codex Platform",
+      "state": "live",
+      "sourceCommit": "c17e722",
+      "liveCommit": "c60c1281445f4abca3e65405b76db6fe53fc0229",
+      "evidence": "docs/metrics/brewing-release-2026-11-12.json",
+      "scope": "Primitive hearth malting and two real beer chains, actual paid inputs and same held vessel; finite climate-dependent passive work, spoilage, cleaning and physical delivery. Exact knowledge history, compact queues, old saves preserved. Dedicated breweries/fruit drinks/filled container service remain catalogue work."
     }
   ],
   "status_update_policy": {
