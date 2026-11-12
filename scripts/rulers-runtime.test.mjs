@@ -386,3 +386,14 @@ test('neighbourNews: rival commander loss is reported only when the player saw i
  const rt=decodeGame(encodeGame(g));assert.deepEqual(neighbourNews(rt),neighbourNews(g),'round-trips');
  const old=fixture();assert.deepEqual(neighbourNews(old).filter(n=>n.kind.startsWith('commander')),[],'old saves with no commanders add nothing');
 });
+
+test('AUD-SOC-DIPLO-FLAVOUR: voice differs by ruler traits, is deterministic and goods-free; old callers without traits get the plain voice',async()=>{
+ const {diplomaticVoice}=await import('../src/game/diplomaticVoice.ts');
+ const base=Object.fromEntries(['ambition','piety','innovation','tradition','boldness','prudence','cruelty','mercy','generosity','paranoia','charisma','pride','honor'].map(k=>[k,50]));
+ const warm=diplomaticVoice({...base,generosity:80},'Ash'),guarded=diplomaticVoice({...base,paranoia:80,generosity:30},'Ash'),proud=diplomaticVoice({...base,pride:80},'Ash'),stern=diplomaticVoice({...base,cruelty:80},'Ash');
+ assert.deepEqual([warm.manner,guarded.manner,proud.manner,stern.manner],['warm','guarded','proud','stern']);
+ assert.equal(new Set([warm,guarded,proud,stern].map(v=>v.greeting)).size,4);
+ assert.deepEqual(diplomaticVoice({...base,generosity:80},'Ash'),warm);
+ assert.equal(diplomaticVoice(undefined,'Ash').manner,'plain');
+ assert.ok(Object.keys(warm).sort().join()==='gift,greeting,manner,refusal');
+});
