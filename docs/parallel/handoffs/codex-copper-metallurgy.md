@@ -25,3 +25,11 @@ Root review fixture: /tmp/hearthwild-copper-metallurgy-earned.json, actor6224,2s
 ## Remaining
 
 Tin/bronze/iron refining, material-specific weapon ownership/durability, full NPC adoption, furnace/casting detail and larger smelting throughput remain W4. Root owns whole-branch merge, related regressions and one built earned-state UI/save qualification.
+
+## Narrow burden and ore-death follow-up
+
+The original smelt project now supplies its carrying/unloading input burden and returning metal burden through a WeakMap view; no second itemCargo is created. Paused work reads resumePhase. Successful ownership admission alone binds; an actual saved project is preferred over a tentative unload clone. Strict restore rebinds immediately without stock/reservation mutation. Field/finished/stored/lost work and former actors have no packet burden. Boat load already consumes the same body-load query.
+
+Ordinary mined itemCargo copperOre can fall as the exact actual death-site parcel, retaining original owner/cap/strict provenance and physical pickup/cache delivery. Optional actual itemCargo copperMetal deposits once to usableCu. No trade selection/pricing added. Internal paid-production packet death still follows existing paid-batch loss accounting; this does not invent recoverable items for a destroyed smelt project.
+
+Final focused whole run49115 passed5/5 in44769.7255ms (same original3 plus2new tests; no duplicate credit). It refreshed /tmp/hearthwild-copper-metallurgy-earned.json under burden mechanics. A later source-review correction binds only the canonical state project when a tentative proposal exists; affected phase test43565 passed1/1 in6214.36675ms, not a sixth unique test. Includes rejected claim burden0 and original stored/cleared parcel burden0. Native ore-death case uses a structured clone of the actual first-extracted body snapshot, preserves terrain, strictly reloads the real parcel and returns the exact ore once; ore never becomes usable copper. Initial failed assertions uncovered immediate reload binding and an aliased harness snapshot, both corrected. Compiler result handed to root separately. No child build/browser/publish claim.
