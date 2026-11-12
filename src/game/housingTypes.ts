@@ -2,7 +2,8 @@ export type HousingMaterials = { wood: number; stone: number; plantFibre: number
 export type HousingPoint = { x: number; z: number };
 export type HousingRenovation = {
   version: 1;
-  mode: "upgrade" | "new";
+  mode: "upgrade" | "new" | "rebuild" | "extend";
+  eraChange?:import('./buildingFabric').EraChange;
   actorId: number | null;
   phase: "planned" | "fetching" | "carrying" | "working" | "paused";
   progress: number;

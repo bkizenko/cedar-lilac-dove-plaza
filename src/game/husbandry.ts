@@ -1,3 +1,4 @@
+import {packAnimalFrom} from './packAnimalState';
 import {SHEEP_RULES,growFleece,newFleece} from './sheep';
 import{penWaterWorkAI,penNeedsWater,reconcilePenWater,drinkPenWater,releaseHusbandryKeeper,PEN_WATER_RULES}from'./penWater';
 import {PEN_RULES,insidePen,penFeedCapacity,penHousingCapacity} from './penGeometry';
@@ -14,7 +15,7 @@ import {animalProcessingEnabled,deliverProductionCargo,harvestAnimalMaterials} f
 export const HERD={capacity:8,tamingFood:6,tamingSeconds:60,searchRadiusMeters:220,maturity:300,gestation:240,lactation:900};
 export const penAnimals=(g:Game,pen:number)=> (g.state.livestock||[]).filter(a=>a.pen===pen&&a.hp>0&&a.ledBy===undefined);
 // The home place stays reserved during escort, so a failed journey can return.
-const penPlacesOccupied=(g:Game,pen:number,except?:number)=>(g.state.livestock||[]).filter(a=>a.pen===pen&&a.hp>0&&a.id!==except).length;
+export const penPlacesOccupied=(g:Game,pen:number,except?:number)=>(g.state.livestock||[]).filter(a=>a.pen===pen&&a.hp>0&&a.id!==except).length;
 const penAt=(g:Game,id:number,team=0)=>g.state.buildings.find(b=>b.id===id&&b.team===team&&b.type==='pen'&&g.finished(b));
 /** Custody reserves the original live entity, never an escrow copy. */
 export function beginLivestockEscort(g:Game,animalId:number,leaderId:number){
@@ -168,7 +169,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   if(w.action==='pack'){
    if(a.species!=='goat'){finish(g,u);return true;}
    if(g.tribe(u.team).wood<2){u.workReason='Harness needs two logs';return true;}
-   g.tribe(u.team).wood-=2;u.packAnimal={id:a.id,hp:a.hp,maxHp:a.maxHp,scale:a.scale};u.haulage='pack';
+   g.tribe(u.team).wood-=2;u.packAnimal=packAnimalFrom(a);u.haulage='pack';
    g.state.livestock=g.state.livestock!.filter(c=>c.id!==a.id);finish(g,u);u.order='return';g.banner('A herd goat is now carrying packs for its handler',4);
   }else{
    a.hp=0;

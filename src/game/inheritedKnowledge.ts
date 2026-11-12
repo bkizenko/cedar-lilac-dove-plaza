@@ -38,7 +38,7 @@ export function inheritedKnowledgeProofs(s:GameState,team:number){
  return[...proofs.values()].sort((a,b)=>a.sourceTeam-b.sourceTeam);
 }
 export function inheritedRecipeSources(s:GameState,team:number,recipe:string){return inheritedKnowledgeProofs(s,team).filter(p=>p.recipes.includes(recipe as ProductionRecipe));}
-export function hasDeliveredMethod(g:Game,team:number,recipe:ProductionRecipe){return(g.tribe(team).productionPractice?.[recipe]?.batches||0)>0||inheritedRecipeSources(g.state,team,recipe).length>0;}
+export function hasDeliveredMethod(g:Game,team:number,recipe:ProductionRecipe){return(g.tribe(team).productionPractice?.[recipe]?.batches||0)>0||inheritedRecipeSources(g.state,team,recipe).length>0||g.state.units.some(u=>u.team===team&&u.hp>0&&!u.prisoner&&u.enslavedFrom===undefined&&((u.productionSkills?.[recipe]?.successfulBatches||0)>0||(u.productionSkills?.[recipe]?.taughtBatches||0)>0));}
 export function inheritedBoatProof(s:GameState,team:number):BoatProof{
  const result:BoatProof={waterMeters:0,loadedMeters:0,deliveredGoods:0,built:{},proven:{}};
  for(const p of inheritedKnowledgeProofs(s,team)){if(!p.boat)continue;for(const key of['waterMeters','loadedMeters','deliveredGoods']as const)result[key]=Math.max(result[key],p.boat[key]);for(const k of hulls){result.built[k]=Math.max(result.built[k]||0,p.boat.built[k]||0);if(p.boat.proven[k])result.proven[k]=true;}}

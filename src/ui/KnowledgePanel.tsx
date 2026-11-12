@@ -1,3 +1,4 @@
+import {knowledgeDateLabel,KNOWLEDGE_STATE_LABELS,KNOWLEDGE_SOURCE_LABELS} from '../game/knowledgeEvidence';
 import {useMemo,useState} from 'react';
 import {BookOpen,ChevronDown,ChevronRight,FlaskConical,Wheat,Hammer,Ship,House,Leaf,Shield} from 'lucide-react';
 import type {Engine} from '../game/engine';
@@ -19,13 +20,13 @@ export function KnowledgeTopicRow({topic,onAction}:{topic:KnowledgeTopic;onActio
   <div className="flex items-center gap-2">
    <Icon size={18} className="shrink-0 text-bronze" aria-hidden="true"/>
    <div className="min-w-0 flex-1"><h4 className="text-sm font-medium">{topic.title}</h4>
-    <div className="mt-0.5 flex items-center gap-2 text-xs text-parchment-dim"><span>{STAGE_LABELS[topic.stage]}</span>{progress&&<><progress className="h-1.5 w-24" aria-label={`${topic.title} — ${progress.unit}`} max={progress.required} value={Math.min(progress.required,Math.max(0,progress.completed))}/><span>{Math.round(Math.min(100,Math.max(0,progress.completed/Math.max(1,progress.required)*100)))}%</span></>}</div>
+    <div className="mt-0.5 flex items-center gap-2 text-xs text-parchment-dim"><span>{topic.knowledgeState?KNOWLEDGE_STATE_LABELS[topic.knowledgeState]:STAGE_LABELS[topic.stage]}</span>{topic.provenance?.length? <span className="truncate" title={[...new Set(topic.provenance.map(p=>KNOWLEDGE_SOURCE_LABELS[p.kind]))].join(' · ')}>{[...new Set(topic.provenance.map(p=>KNOWLEDGE_SOURCE_LABELS[p.kind]))].slice(0,2).join(' · ')}</span>:null}{progress&&<><progress className="h-1.5 w-24" aria-label={`${topic.title} — ${progress.unit}`} max={progress.required} value={Math.min(progress.required,Math.max(0,progress.completed))}/><span>{Math.round(Math.min(100,Math.max(0,progress.completed/Math.max(1,progress.required)*100)))}%</span></>}</div>
    </div>
    {primary&&button(primary)}
    <button type="button" className="rounded p-1 text-parchment-dim" aria-label={`Details: ${topic.title}`} aria-expanded={details} onClick={()=>setDetails(value=>!value)}>{details?<ChevronDown size={16}/>:<ChevronRight size={16}/>}</button>
   </div>
   {details&&<div className="mt-2 space-y-2 border-l border-parchment/15 pl-3 text-xs text-parchment-dim">
-   <p>{topic.need}</p><dl className="space-y-1">{[['Evidence',topic.observation],['Practice',topic.experiment],['Results',topic.result],['Use',topic.adoption]].map(([label,value])=><div key={label}><dt className="font-medium text-parchment">{label}</dt><dd>{value}</dd></div>)}</dl>
+   <p>{topic.need}</p>{!!topic.provenance?.length&&<ul aria-label="Learning sources" className="space-y-1">{topic.provenance.map((source,index)=><li key={`${source.kind}:${source.method||''}:${source.sourceTeam??''}:${index}`}><span className="text-parchment">{KNOWLEDGE_SOURCE_LABELS[source.kind]}</span> · {source.summary}{source.at!==undefined?` · ${knowledgeDateLabel(source.at)}`:''}</li>)}</ul>}<dl className="space-y-1">{[['Evidence',topic.observation],['Practice',topic.experiment],['Results',topic.result],['Use',topic.adoption]].map(([label,value])=><div key={label}><dt className="font-medium text-parchment">{label}</dt><dd>{value}</dd></div>)}</dl>
    {progress&&<p>{progress.completed.toFixed(1)} / {progress.required} {progress.unit}</p>}
    {primary?.blockedReason&&<p>{primary.blockedReason}</p>}
    {topic.actions.some(action=>action.id!==primary?.id)&&<div className="flex flex-wrap gap-2">{topic.actions.filter(action=>action.id!==primary?.id).map(button)}</div>}

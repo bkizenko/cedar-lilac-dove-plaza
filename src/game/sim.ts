@@ -1,6 +1,9 @@
+import {SIM_CALENDAR_RULES} from './calendarPacing';
+import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
 import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
+import {recoverySurfaceHeight,steerHullRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -8,7 +11,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {civicPrestige} from './civicPrestige';
+import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -62,7 +65,7 @@ import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {prepareRivalDefense} from './rivalOperations';
-import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady} from './influenceField';
+import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady,geographicInfluenceDiagnostics} from './influenceField';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import{reconcilePenWater}from'./penWater';
@@ -84,7 +87,7 @@ import {localEscapeStep} from './localEscape';
 import {localCorridor,LOCAL_CORRIDOR_RULES} from './localCorridor';
 import {clearRouteProgress,preciseSegmentClear,routeStallSeconds,ROUTE_PROGRESS_RULES} from './routeProgress';
 import {tickCaptivity,tryCivilianSurrender,finishRepatriation} from './captivity';
-import {packTamingAI,releasePackAnimal} from "./packAnimals";
+import {packTamingAI,releasePackAnimal,tickPackAnimals} from "./packAnimals";
 import {canoeHeight,waterNavigation,connectedForUnit} from "./waterTravel";
 import {recoverCaravanEquipment,escortAI,waitForTradeEscort} from "./caravans";
 import {frontierStatus,frontierReport,tickFrontiers} from "./frontiers";
@@ -200,8 +203,8 @@ const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
 // made usable fords disappear from the work graph while people could cross them.
 const WALK_CLEARANCE = 0.12;
-const YEAR_DAYS = 32;
-const DAY_RATE = (86400 * YEAR_DAYS) / 1800;
+const YEAR_DAYS = SIM_CALENDAR_RULES.daysPerYear;
+const DAY_RATE = (86400 * YEAR_DAYS) / SIM_CALENDAR_RULES.yearSeconds;
 
 export class Game {
   testMode = false;
@@ -746,6 +749,7 @@ export class Game {
       d: bridge?Math.abs(bridge.bz-bridge.az)+5.2:d.d,
       hp,
       maxHp: hp,
+      ...(supportsEraUpgrade(type)?{fabric:newBuildingFabric(this.state.tribes[team]?.age??this.state.age,hp)}:{}),
       selected: false,
       queue: [],
       rally: null,
@@ -1038,9 +1042,9 @@ export class Game {
 
   canStep(u: Unit, x: number, z: number) {
     if (!this.withinWorld(x, z, 1)) return false;
-    const h = canoeHeight(this,u,x,z);
+    const h = u.hullRecovery?recoverySurfaceHeight(this,x,z):canoeHeight(this,u,x,z);
     if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.waterAt(x,z)+.3)return false;
-    if ((u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
+    if ((!u.hullRecovery&&u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of nearbyStepBuildings(this,x,z,u.r,this.navRevision)) {
       const w = b.w * 0.4 + u.r,
         d = b.d * 0.4 + u.r;
@@ -1150,6 +1154,7 @@ export class Game {
     if(size&&!validPlot(type,size))return "Invalid plot size";
     if(quarterTurn&&(size||!turnableBuilding(type)))return "That building can't be turned"; // GW-08 (Grok): quarter turn = swapped footprint
     const d = size??(quarterTurn?turnedFootprint(type):BUILDINGS[type]);
+    if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&b.renovation?.mode==='extend'&&rectanglesOverlap({x,z,w:d.w,d:d.d},reservedBuildingFootprint(b),.5)))return 'A paid building wing reserves that full footprint';
     const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
     if(prep?.issue)return prep.issue;
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
@@ -4027,6 +4032,7 @@ export class Game {
 
   steer(u: Unit, dt: number) {
     if (this.state.walkDirty) this.rebuildWalk();
+    if(u.hullRecovery)return steerHullRecovery(this,u,dt);
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
     let tx = u.tx,
@@ -4343,6 +4349,7 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift"|"compact",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
+    if(hullLossRecoveryAI(this,u,dt))return;
     if(prisonerAI(this,u,dt))return;
     if(societyMissionAI(this,u,dt))return;
     if(riverboatAI(this,u,dt))return;
@@ -5665,13 +5672,8 @@ export class Game {
     return cap;
   }
 
-  prestige() {
-    const t = this.tribe(0);
-    const owned = this.state.regions.filter((r) => r.owner === 0).length;
-    const monuments = civicPrestige(this).total;
-    const allies = this.state.tribes.filter((tr) => tr.id !== 0 && tr.alive && tr.ally).length;
-    return Math.round(this.popNow(0) * 2 + owned * 14 + t.age * 22 + monuments + allies * 12);
-  }
+  prestigeBreakdown(viewer=0,subject=0){return gamePrestigeView(this,viewer,subject);}
+  prestige() {return Math.round(this.prestigeBreakdown().total??0);}
 
   bankTrade(give: ResKind, get: ResKind) {
     const partner = this.pickTradeRival();
@@ -5763,6 +5765,7 @@ export class Game {
           u.vz = 0;
           try {
             if(finishRaidEscortAtCamp(this,u))continue;
+            if(hullLossRecoveryAI(this,u,sdt))continue;
             if(prisonerAI(this,u,sdt))continue;
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
@@ -5831,6 +5834,7 @@ export class Game {
         this.updateProjectiles(sdt,true,huntingObstacles);
         tickHousing(this,sdt);
         tickHusbandry(this,sdt);
+        tickPackAnimals(this,sdt);
         tickGoatSearchOrders(this);
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
@@ -5858,6 +5862,7 @@ export class Game {
         tickCaptivity(this,sdt);
         phases?.mark('observation');
         this.updateVision(sdt);
+        tickPrestigeEvidence(this,geographicInfluenceDiagnostics(this,0).paintReady);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
@@ -6151,6 +6156,7 @@ export class Game {
       hint: type==="farm"?cultivationIssue(this)||BUILDINGS[type].hint:BUILDINGS[type].hint,
     }));
 
+    const prestigeView=this.prestigeBreakdown();
     return {
       food: Math.floor(t.food),
       foodLots: foodInventory(t),
@@ -6317,7 +6323,9 @@ export class Game {
         bonus: c.hint,
         held: this.clusterHeld(c.id, 0),
       })),
-      prestige: this.prestige(),
+      prestige: Math.round(prestigeView.total??0),
+      prestigeBreakdown: prestigeView,
+      prestigeRivals: gamePrestigeRivals(this),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),

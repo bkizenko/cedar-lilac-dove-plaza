@@ -247,7 +247,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
   farmToolWork?: FarmToolWork;
-  packAnimal?: {id:number;hp:number;maxHp:number;scale:number};
+  packAnimal?: import('./packAnimalState').PackAnimal;
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
@@ -258,6 +258,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
   caravanRoute?:number;
+  hullRecovery?:import('./hullLossRecovery').HullLossRecovery;
   boat?: {id:number;phase:'boarding'|'aboard'|'landing';x?:number;z?:number};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
@@ -307,6 +308,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  fabric?:import('./buildingFabric').BuildingFabric;
   sitePreparation?:import('./sitePreparation').SitePreparation;
   renovation?:import('./housingTypes').HousingRenovation;
   housingReceipt?:import('./housingTypes').HousingReceipt;
@@ -428,7 +430,8 @@ export type Tribe = {
   cropSamples?: Partial<Record<CropKind,number>>;
   copperExperiment?: boolean;
   cultivated?: CropKind[];
-  cropTrial?: {kind:CropKind; progress:number; duration:number};
+  cultivationEvidence?: Partial<Record<CropKind,import("./cultivation").CultivationEvidence>>;
+  cropTrial?: {kind:CropKind; progress:number; duration:number;workActorIds?:number[]};
   wood: number;
   stone: number;
   copper: number;
@@ -740,6 +743,8 @@ export type HudSnapshot = {
   richRes: ResKind;
   clusters: { name: string; bonus: string; held: boolean }[];
   prestige: number;
+  prestigeBreakdown?:import('./prestigeGame').GamePrestigeView;
+  prestigeRivals?:import('./prestigeGame').GamePrestigeView[];
   stockCap: number;
   port: boolean;
   night: boolean;

@@ -1,9 +1,12 @@
 import type {Game} from './sim';
 import{inheritedBoatProof}from'./inheritedKnowledge';
+/** Advisory overall render envelopes in metres, including fixed outriggers.
+ * Conservative rounded bounds of current meshes, not hull-waterline dimensions.
+ * These fields do not change navigation clearance, seats, load, speed or cost. */
 export const BOAT_CLASSES={
- riverboat:{name:'River ferry',seats:5,maxHp:300,speed:1,wood:40,stone:4,cordage:0,seconds:150,waterMeters:0,deliveredGoods:0,loadedMeters:0,wearPerMeter:0},
- scoutCanoe:{name:'Lashed scout canoe',seats:2,maxHp:180,speed:1.18,wood:24,stone:2,cordage:4,seconds:100,waterMeters:80,deliveredGoods:8,loadedMeters:0,wearPerMeter:.008},
- freightPunt:{name:'Braced freight punt',seats:8,maxHp:420,speed:.82,wood:64,stone:6,cordage:8,seconds:240,waterMeters:0,deliveredGoods:40,loadedMeters:300,wearPerMeter:.004},
+ riverboat:{name:'River ferry',length:6.6,beam:2.7,seats:5,maxHp:300,speed:1,wood:40,stone:4,cordage:0,seconds:150,waterMeters:0,deliveredGoods:0,loadedMeters:0,wearPerMeter:0},
+ scoutCanoe:{name:'Lashed scout canoe',length:4.9,beam:2.1,seats:2,maxHp:180,speed:1.18,wood:24,stone:2,cordage:4,seconds:100,waterMeters:80,deliveredGoods:8,loadedMeters:0,wearPerMeter:.008},
+ freightPunt:{name:'Braced freight punt',length:5.9,beam:2.8,seats:8,maxHp:420,speed:.82,wood:64,stone:6,cordage:8,seconds:240,waterMeters:0,deliveredGoods:40,loadedMeters:300,wearPerMeter:.004},
 }as const;
 export type BoatClass=keyof typeof BOAT_CLASSES;
 export type NewBoatClass=Exclude<BoatClass,'riverboat'>;

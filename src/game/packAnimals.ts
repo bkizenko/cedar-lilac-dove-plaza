@@ -1,3 +1,6 @@
+import {packAnimalFrom,PACK_ANIMAL_RULES} from './packAnimalState';
+import {foodInventory,takeFoodLot} from './pantry';
+import {supplyApproach,supplyReached} from './campAnchor';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
@@ -37,7 +40,7 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
  if(work.progress>=PACK_TAMING_SECONDS){
   // Transfer this existing animal out of the wild population, without a carcass or respawn slot.
   g.state.wildlife=g.state.wildlife.filter(c=>c.id!==animal.id);
-  u.packAnimal={id:animal.id,hp:animal.hp,maxHp:animal.maxHp,scale:animal.scale};
+  u.packAnimal=packAnimalFrom(animal);
   u.haulage='pack';u.tamingWork=undefined;u.order='return';u.workReason='Pack goat ready — carrying capacity doubled';
   g.workBoard.reset();if(u.team===0)g.banner('Pack goat tamed. Its handler carries twice as much without a sled’s hauling penalty.',5);
  }
@@ -49,6 +52,32 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
 export function releasePackAnimal(g:Game,u:Unit){
  if(u.hp>0||u.haulage!=='pack')return;
  const animal=u.packAnimal;u.packAnimal=undefined;u.haulage=undefined;
- if(animal&&g.state.wildlife.some(c=>c.id===animal.id))return;
- g.state.wildlife.push({id:animal?.id??g.id(),species:'goat',x:u.x,y:g.height(u.x,u.z),z:u.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:animal?.hp??24,maxHp:animal?.maxHp??24,fly:0,scale:animal?.scale??1,grazing:{x:u.x,z:u.z}});
+ if(!animal||animal.hp<=0||g.state.wildlife.some(c=>c.id===animal.id)||g.state.livestock?.some(c=>c.id===animal.id))return;
+ g.state.wildlife.push({...animal,id:animal.id,species:'goat',x:u.x,y:g.height(u.x,u.z),z:u.z,facing:u.facing,vx:0,vz:0,wanderT:0,hp:animal.hp,maxHp:animal.maxHp,fly:0,scale:animal.scale,grazing:{x:u.x,z:u.z}});
+}
+
+/** Care is local to a real cache entrance. Remote stores cannot feed an expedition. */
+export function tickPackAnimals(g:Game,dt:number){
+ if(!(dt>0)||!Number.isFinite(dt))return;
+ for(const u of g.state.units){
+  const a=u.packAnimal;if(u.hp<=0||u.haulage!=='pack'||!a||a.hp<=0)continue;
+  a.hunger=Math.min(100,(a.hunger??0)+PACK_ANIMAL_RULES.hungerPerSecond*dt);
+  if(g.state.survivalVersion===1)a.thirstSeconds=(a.thirstSeconds??0)+dt;
+  // Aboard hulls, prisoners and travelling bodies cannot draw remote communal supplies.
+  if(u.boat||u.prisoner)continue;
+  const drop=g.nearestDrop(u.x,u.z,u.team);if(!drop)continue;
+  const reach=drop.kind==='camp'?drop.radius+1:Math.hypot(drop.w,drop.d)/2+4;
+  if(Math.hypot(u.x-drop.x,u.z-drop.z)>reach)continue;
+  const approach=supplyApproach(g,u,drop);if(!approach||!supplyReached(g,u,drop,approach))continue;
+  const lots=foodInventory(g.tribe(u.team)),need=PACK_ANIMAL_RULES.feedPerSecond*dt;let fed=0;
+  if(a.hunger>0)for(const kind of ['grain','pulses','tubers','berries','provisions'] as const){
+   const n=Math.min(lots[kind],need-fed);if(n>0&&takeFoodLot(g,u.team,kind,n)){fed+=n;a.foodConsumed=(a.foodConsumed??0)+n;}if(fed>=need-1e-10)break;
+  }
+  if(fed>0)a.hunger=Math.max(0,a.hunger-(PACK_ANIMAL_RULES.hungerPerSecond+.3)*dt*Math.min(1,fed/need));
+  const stock=g.tribe(u.team).survival;
+  if(g.state.survivalVersion===1&&stock){const demand=PACK_ANIMAL_RULES.waterPerSecond*dt,n=Math.min(stock.waterLiters,demand);
+   stock.waterLiters-=n;stock.waterConsumedLiters+=n;a.waterConsumedLiters=(a.waterConsumedLiters??0)+n;
+   a.thirstSeconds=Math.max(0,(a.thirstSeconds??0)-2*dt*n/demand);
+  }
+ }
 }

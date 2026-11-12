@@ -1,3 +1,4 @@
+import {beginHullLossRecovery} from './hullLossRecovery';
 import {sailRigProject} from './boatSailing';
 import {SEA_EXPLORATION_ACTIVE_HULL_PHASES,seaExplorationOwnsBoat} from './seaExplorationReservations';
 export {seaExplorationOwnsBoat} from './seaExplorationReservations';
@@ -259,7 +260,7 @@ export function seaExplorationAI(g:Game,u:Unit,dt:number){
   const b=g.state.boats?.find(b=>b.id===v.boatId&&b.hp>0);if(!b)return true;u.order='hold';u.workReason='Sea exploration: carrying provisions to the boat';
   if(distance(u,b)>R.boardingMeters){u.tx=v.homeLand!.x;u.tz=v.homeLand!.z;g.steer(u,dt);return true;}
   if(!boardRiverboat(g,b.id,[u],v.team,true))v.reason='Waiting for a clear boarding approach';return true;}
- if(v.phase==='unloading'||v.phase==='landing'){if(v.phase==='landing')return true;if(!g.walkable(u.x,u.z)||g.height(u.x,u.z)<=g.waterAt(u.x,u.z)+.3){const shore=dryLanding(g,u,v.team);if(!shore||g.state.time-(v.landingAt??g.state.time)>R.landingSeconds){v.reason='A survivor could not reach a connected shore; released with the pack, report unconfirmed';release(g,v,c,true);return true;}u.order='hold';u.tx=shore.x;u.tz=shore.z;u.workReason='Sea exploration: wading ashore after losing the hull';g.steer(u,dt);return true;}
+ if(v.phase==='unloading'||v.phase==='landing'){if(v.phase==='landing')return true;if(!g.walkable(u.x,u.z)||g.height(u.x,u.z)<=g.waterAt(u.x,u.z)+.3){if(v.boatId!==undefined)beginHullLossRecovery(g,u,v.boatId);u.order='hold';u.workReason='Sea exploration: physically recovering to shore with the original pack and report';g.steer(u,dt);return true;}
   const home=nearestCache(g,u);if(!home){release(g,v,c,true);return true;}u.order='hold';u.tx=home.p.x;u.tz=home.p.z;u.workReason='Sea exploration: bringing the report and leftover provisions home';if(!supplyReached(g,u,home.d,home.p)){g.steer(u,dt);return true;}
   commitReport(g,v);const pack=u.scoutProvisions;if(pack&&returnScoutPackAtCache(g,u)){v.metrics.foodUsed+=pack.foodUsed;v.metrics.waterUsed+=pack.waterUsed;v.metrics.foodReturned+=pack.food;v.metrics.waterReturned+=pack.water;}else if(u.scoutProvisions)handOverPack(v,u);
   c.seaExplorationId=undefined;v.home.push(u.id);u.order='idle';u.node=null;u.workReason='Home from sea exploration';if(!activeCrew(v).length)finish(g,v);return true;}

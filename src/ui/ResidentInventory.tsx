@@ -1,3 +1,4 @@
+import {packCapacityMultiplier} from '../game/packAnimalState';
 import {siegeRamCarriedMaterials} from '../game/siegeRam';
 import {wornArmor} from '../game/armor';
 import type { Unit } from '../game/types';
@@ -41,7 +42,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       }
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
-      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? 'Pack goat' : resident.haulage);
+      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`Pack goat · capacity ×${packCapacityMultiplier(resident).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);
       const armor=game&&wornArmor(game,resident);if(armor)equipped.push(`Padded armor (${Math.round(armor.condition*100)}%)`);
       if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
       if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
@@ -49,6 +50,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         <strong>{personName(resident)}</strong>
         <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
         {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
+        {resident.packAnimal&&<div title={`Feed consumed ${amount(resident.packAnimal.foodConsumed??0)} · Water drunk ${amount(resident.packAnimal.waterConsumedLiters??0)} L. Feed and water are available at a reached village cache.`}>Goat · Health {Math.round(resident.packAnimal.hp/resident.packAnimal.maxHp*100)}% · Hunger {Math.round(resident.packAnimal.hunger??0)}%{game?.state.survivalVersion===1?` · Thirst ${Math.round(resident.packAnimal.thirstSeconds??0)}s`:''}</div>}
         {game?<WorkerActivity state={game.state} resident={resident}/>:resident.workReason&&<div>{resident.workReason}</div>}
         <details>
           <summary>Aptitudes & practice</summary>

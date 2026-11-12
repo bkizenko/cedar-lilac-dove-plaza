@@ -1,6 +1,8 @@
+import {validPackAnimal} from './packAnimalState';
 import {validWeaponCargoState,reconcileWeaponCargo} from './weaponCargo';
 import {restoreCargoRecoveryCommitments} from './stolenCargo';
 import {validFarmToolCargo,reconcileFarmToolCargo} from './farmToolCargo';
+import {validHullLossRecovery} from './hullLossRecovery';
 import {validSailingState,reconcileSailRigProjects} from './boatSailing';
 import {validFleece} from './sheep';
 import {validSiegeRamState,reconcileSiegeRams} from './siegeRam';
@@ -65,7 +67,7 @@ import { DISCOVERIES, TRADITIONS, TRADITION_COST } from "./discovery";
 import { Game } from "./sim";
 import { prehistoricName } from "./people";
 import { FOOD_KINDS } from "./pantry";
-import {CROPS,CROP_TRIAL_RULES,initializeCultivation} from "./cultivation";
+import {CROPS,CROP_TRIAL_RULES,initializeCultivation,validCultivationEvidence} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 type Entity = Unit | Building | ResourceNode | Critter;
@@ -155,13 +157,13 @@ function validateGamePayload(raw: unknown) {
   if(!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s))fail();
-  if(!validCampMoveState(s))fail();
+  if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s))fail();
-  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s))fail();
+  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
   if(!validSocietyIdentities(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
@@ -431,7 +433,7 @@ function validateGamePayload(raw: unknown) {
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
     if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();
-    if(u.packAnimal!==undefined){const a=u.packAnimal;if(!obj(a)||u.haulage!=="pack"||!Number.isSafeInteger(a.id)||a.id<1||!num(a.hp)||!num(a.maxHp)||a.hp<=0||a.maxHp<=0||a.hp>a.maxHp||a.maxHp>1000||!num(a.scale)||a.scale<.1||a.scale>5)fail();}
+    if(u.packAnimal!==undefined){const a=u.packAnimal;if(u.haulage!=="pack"||!validPackAnimal(a)||a.id>=s.nextId||a.id===u.id||s.wildlife.some((c:any)=>c.id===a.id)||s.livestock?.some((c:any)=>c.id===a.id)||s.units.some((p:any)=>p!==u&&(p.id===a.id||p.packAnimal?.id===a.id))||s.buildings.some((b:any)=>b.id===a.id))fail();}
     if(u.copperStudy!==undefined){const p=u.copperStudy;if(!obj(p)||!Number.isSafeInteger(p.workplace)||p.workplace<1||!num(p.progress)||p.progress<0||p.progress>90||(p.paused!==undefined&&typeof p.paused!=="boolean"))fail();}
     if(u.plantingWork!==undefined){const p=u.plantingWork;if(!obj(p)||!Number.isSafeInteger(p.treeId)||p.treeId<1||!num(p.progress)||p.progress<0||p.progress>12)fail();}
     if(u.weaponWork!==undefined){const w=u.weaponWork;if(!obj(w)||!["spear","bow","blade"].includes(w.kind)||!num(w.progress)||!num(w.duration)||w.duration<1||w.duration>180||w.progress<0||w.progress>w.duration||!Number.isSafeInteger(w.workplace)||w.workplace<1||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}

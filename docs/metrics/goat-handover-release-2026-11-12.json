@@ -1,0 +1,22 @@
+{
+  "commit": "1422a7898a868cb23093bc7c665aa0426db568fb",
+  "builtFrom": "7a051f7",
+  "release": "2026-11-12T04-25-18-989Z-1422a78",
+  "checks": {
+    "passed": 4,
+    "total": 4,
+    "scope": "Reserved-home-place no-spend queue case; native generated-goat find/capture/physical-escort/pen with strict paid-progress reload and unchanged terrain; actual community handover preserving paid batch/third-party custody through strict save; built native53 import/render/owner query/save/restore"
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "nativeScope": "Finite pen and meal reserve authored before clock on unchanged seed42V18 terrain. Original generated person and goat retained; no terrain/steer/position overrides, no invented animal after clock. Controlled full-herd and handover cases are separate from native evidence.",
+  "fullGoalLimits": [
+    "Broader species/horses/traction and animal/culture interfaces remain open",
+    "Full integration PR and33ms native100 target remain open"
+  ],
+  "gates": {
+    "passed": 34,
+    "total": 98,
+    "added": 0
+  }
+}
