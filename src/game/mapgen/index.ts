@@ -19,6 +19,10 @@ import { buildBiomes } from './biomes';
 import { placeWorld } from './placement';
 import { checkFords, type FordReport } from './fords';
 import { planWildlife, assignHabitatAnchors } from './wildlife';
+import { buildGeologyGrid } from './geology/read';
+import { LANDFORMS } from './geology/rocks';
+import { surfaceProcesses, finalFeatures } from './geology/surface';
+import { shapeRivers, fluvialRaster } from './geology/fluvial';
 export const MAPGEN_VERSION = 1;
 /** Same diagonal split as the published terrain mesh (a copy of worldgen's sampler, to avoid an import cycle). */
 function sampleTriangleHeight(heights: Float32Array, x: number, z: number, size: number) {
@@ -73,9 +77,11 @@ export function generateMapWorld(seed: number, request: WorldRequest = {}): Worl
 }
 function buildOnce(seed: number, requestedSeed: number, size: number, segs: number, n: number, half: number, spec: typeof PRESETS[MapPreset], random: boolean, request: WorldRequest): WorldData {
   const rand = mulberry32(seed ^ 0x20a1c4e5);
-  const terrain = buildTerrain(seed, size, WORKING_CELLS + 1, spec, rand);
+  const geology = request.geologyVersion === 1;
+  const terrain = buildTerrain(seed, size, WORKING_CELLS + 1, spec, rand, { geology });
   if (terrain.landFraction < spec.land[0] * 0.55) throw new Error(`V20 land fraction ${terrain.landFraction.toFixed(3)} too small for ${spec.id}`);
   const climate = buildClimate(seed, terrain, spec, rand);
+  if (terrain.geo) surfaceProcesses(terrain, climate);
   const hydro = buildHydrology(seed, terrain, climate, spec, rand);
   // lakes come from the base relief only, so they can be traced before the river set is final
   const probe = new HeightField(terrain, { ...hydro, chains: [] }, seed);
@@ -87,6 +93,7 @@ function buildOnce(seed: number, requestedSeed: number, size: number, segs: numb
     if (!leaves.length) break;
     hydro.chains.splice(hydro.chains.indexOf(leaves[0]), 1);
   }
+  if (terrain.geo) { hydro.fluvial = shapeRivers(terrain.geo, hydro, climate.seaTemp); probe.lakes.push(...hydro.fluvial.oxbows); }
   let hf = new HeightField(terrain, hydro, seed);
   hf.lakes = probe.lakes;
   // a ford that is not truly wadable (shallow, gentle, with walkable banks) is turned back into a normal channel
@@ -109,11 +116,26 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
   bodies.push(...rivers);
   if (bodies.length > 120) throw new Error('V20 too many water bodies');
   const waterHeights = new Float32Array(n * n);
-  const index = buildLocalWaterIndex(bodies, size, []);
+  const falls = hydro.fluvial?.falls ?? [];
+  const index = buildLocalWaterIndex(bodies, size, falls);
   const level = (x: number, z: number) => Math.max(waterY, indexedWaterAt(index, x, z, lakeContains) ?? waterY);
   for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) waterHeights[iz * n + ix] = level((ix / segs) * size - half, (iz / segs) * size - half);
-  const bankTerrain = buildBankTerrain({ size, segs, heights, waterY, waterBodies: bodies, waterfalls: [] }, (x, z) => sampleTriangleHeight(heights, x, z, size), (x, z) => Math.min(144, hf.at(x, z)));
+  if (terrain.geo) {
+    const wetNear = (x: number, z: number) => { for (let k = 0; k < 9; k++) { const a = k * Math.PI / 4, xx = x + (k ? Math.cos(a) * 16 : 0), zz = z + (k ? Math.sin(a) * 16 : 0); if (sampleTriangleHeight(heights, xx, zz, size) < level(xx, zz) + 2.2) return false; } return true; };
+    finalFeatures(terrain.geo, (ix, iz) => heights[iz * n + ix], (ix, iz, v) => { heights[iz * n + ix] = v; }, n, size, wetNear, waterY);
+  }
+  const bankTerrain = buildBankTerrain({ size, segs, heights, waterY, waterBodies: bodies, waterfalls: falls }, (x, z) => sampleTriangleHeight(heights, x, z, size), (x, z) => Math.min(144, hf.at(x, z)));
   const sample = (x: number, z: number) => bankHeightAt(bankTerrain, x, z, size, sampleTriangleHeight(heights, x, z, size));
+  // ---- geology read: rock, strata, soil and landform tag per cell, from the final heights ------------------------------
+  const fluv = terrain.geo && hydro.fluvial ? fluvialRaster(terrain.geo, hydro, hydro.fluvial, n, size) : undefined;
+  const geology = terrain.geo ? buildGeologyGrid({
+    st: terrain.geo, heights, n, size, waterY, wet: (x, z) => sample(x, z) < level(x, z) + 0.15,
+    ...(fluv ? { fluvialTag: (_x: number, _z: number, ix: number, iz: number) => { const t = fluv.tags[iz * n + ix]; return t ? LANDFORMS[t].name : ''; }, fluvialSoil: (x: number, z: number) => fluv.alluvium[Math.round((z / size + 0.5) * (n - 1)) * n + Math.round((x / size + 0.5) * (n - 1))] } : {}),
+  }) : undefined;
+  if (geology) {
+    geology.lakes = hf.lakes.map(l => { const hl = hydro.lakes.find(k => k.id === l.id), o = terrain.geo!.lakeOrigins.filter(q => Math.hypot(q.x - l.x, q.z - l.z) < q.radius + 70 + Math.max(l.rx, l.rz)).sort((a, b) => Math.hypot(a.x - l.x, a.z - l.z) - Math.hypot(b.x - l.x, b.z - l.z))[0];
+      return { id: l.id, origin: l.id.startsWith('oxbow') ? 'oxbow-cutoff' : o?.origin ?? (hl?.kind === 'tarn' ? 'glacial-scour' : hl?.kind === 'basin' ? 'closed-basin' : 'river-valley'), x: l.x, z: l.z, areaM2: Math.round(Math.PI * l.rx * l.rz) }; });
+  }
   // ---- biomes ---------------------------------------------------------------------------------------------
   const ecology = buildBiomes({ seed, size, terrain, climate, hydro, lakes: hf.lakes, height: sample, water: level, waterY });
   // ---- features for the renderer and old survey code -------------------------------------------------------
@@ -144,6 +166,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
     openingSiteVersion: 2,
     preset: spec.id,
     mapgenVersion: MAPGEN_VERSION,
+    ...(geology ? { geologyVersion: 1 as const } : {}),
     ...(request.riverProfileVersion === 2 ? { riverProfileVersion: 2 as const } : {}),
     ...(request.tideVersion === 1 || request.tideVersion === 2 ? { tideVersion: request.tideVersion } : {}),
     ...(request.landformLabelVersion === 2 ? { landformLabelVersion: 2 as const } : {}),
@@ -156,7 +179,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
     localWaterVersion: 17,
     waterHeights,
     waterBodies: bodies,
-    waterfalls: [],
+    waterfalls: falls,
     size,
     options,
     features,
@@ -192,6 +215,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
       fairness: placed.fairness,
       wind: climate.wind,
       seaTemperatureC: climate.seaTemp,
+      ...(geology ? { geology } : {}),
     },
   } as WorldData;
   void requestedSeed;

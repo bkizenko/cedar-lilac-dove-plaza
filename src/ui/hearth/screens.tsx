@@ -10,7 +10,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CivicPanel} from './civicPanel';
-import {HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
+import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,NeighbourNewsFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -28,6 +28,7 @@ import {KnowledgePanel} from '../KnowledgePanel';
 import {AgeReadiness} from '../AgeReadiness';
 import {PerformanceReadout} from '../PerformanceReadout';
 import {VillageSaveButton} from '../VillageSaveButton';
+import {SaveStatus} from './SaveStatus';
 import {VillageFileTransfer} from '../VillageFileTransfer';
 import {WaterEngineeringControls} from '../WaterEngineeringControls';
 import {WorldSetup} from '../WorldSetup';
@@ -91,15 +92,22 @@ function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:
   {n.canMarry&&<div className="hw-row">{([['marry-houses','Marry',<Heart size={22} key="m"/>],['foster-houses','Foster',<Users size={22} key="f"/>],['exchange-hostages','Hostages',<Shield size={22} key="h"/>]] as const).map(([k,l,i])=><button key={k} type="button" className="hw-btn-wide" onClick={()=>send(n.team,k)}>{i}{l}</button>)}</div>}
  </li>;
 }
+/** Captives remain reachable even when nobody has offered capitulation terms. */
+export function councilTermsTab(offers:number,captives:number){
+ const count=offers+captives;return count?{id:'terms',label:offers?'Terms':'Captives',icon:<Swords size={20}/>,badge:count}:null;
+}
+export function CouncilWithoutHouse({onClose,terms,captives}:{onClose:()=>void;terms:ReactNode;captives:ReactNode}){
+ return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">No ruling house yet.</p>{terms}{captives}</Screen>;
+}
 export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()=>void;initial?:string}){
- const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const;
- const read=useOwnerReadModels(engine,[QC,QS,QB,QV]),c=read(QC).model?.council,s=read(QS).model?.societies,b=read(QB).model?.combat,civic=read(QV).model?.civic;
+ const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const,QO={kind:'capitulation-offers'} as const,QP={kind:'captives'} as const;
+ const read=useOwnerReadModels(engine,[QC,QS,QB,QV,QO,QP]),c=read(QC).model?.council,s=read(QS).model?.societies,b=read(QB).model?.combat,civic=read(QV).model?.civic;
  const fb=useActionFeedback(engine);
  const [tab,setTab]=useState(initial||'ruler');
- const terms=useOwnerReadModels(engine,[{kind:'capitulation-offers'}])({kind:'capitulation-offers'}).model?.offers??[];
+ const terms=read(QO).model?.offers??[],captives=read(QP).model?.captives??[],termsTab=councilTermsTab(terms.length,captives.length);
  if(!c)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">Reading the council…</p></Screen>;
- if(!c.enabled)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><HearthCapitulationTerms engine={engine}/><p className="hw-empty">No ruling house yet.</p></Screen>;
- const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},...(civic?.enabled?[{id:'society',label:'Society',icon:<Landmark size={20}/>,badge:civic.warnings.length||undefined}]:[]),{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
+ if(!c.enabled)return <CouncilWithoutHouse onClose={onClose} terms={<HearthCapitulationTerms engine={engine}/>} captives={<HearthCaptiveCard engine={engine}/>}/>;
+ const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},...(civic?.enabled?[{id:'society',label:'Society',icon:<Landmark size={20}/>,badge:civic.warnings.length||undefined}]:[]),{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(termsTab?[termsTab]:[])];
  return <Screen title={c.house?`House ${c.house.name}`:'Council'} icon={<Crown size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   {tab==='ruler'&&<div className="hw-grid-2">
    {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><RulerPortrait engine={engine} name={c.ruler.name} fallback={<span className="hw-medal hw-medal-l"><Crown size={40}/></span>}/><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${FORM_NAME[c.polity.form]??nice(c.polity.form)}`:''}</p></div></div>
@@ -120,8 +128,8 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
   </div>}
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
   {tab==='society'&&civic&&<CivicPanel civic={civic}/>}
-  {tab==='chronicle'&&<FameFeed log={c.log}/>}
-  {tab==='terms'&&<HearthCapitulationTerms engine={engine}/>}
+  {tab==='chronicle'&&<><FameFeed log={c.log}/><NeighbourNewsFeed news={c.news??[]} nameOf={t=>c.neighbours.find(n=>n.team===t)?.name??'A neighbour'}/></>}
+  {tab==='terms'&&<><HearthCapitulationTerms engine={engine}/><HearthCaptiveCard engine={engine}/></>}
  </Screen>;
 }
 
@@ -179,7 +187,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
  return <Screen title="Menu" icon={<Settings size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab}>
   {tab==='play'&&<div className="hw-stack">
    <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
-   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}</section>
+   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/></section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <label>Graphics<select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
     <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>

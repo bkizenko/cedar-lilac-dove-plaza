@@ -1,5 +1,5 @@
 import {registerHooks} from 'node:module';import {readFileSync} from 'node:fs';import tsxCompiler from 'typescript';
-registerHooks({resolve(specifier,context,next){try{return next(specifier,context);}catch(error){if(specifier.startsWith('.')&&!/\.[a-z]+$/.test(specifier))return next(specifier+'.tsx',context);throw error;}},load(url,context,next){if(url.endsWith('.css'))return{format:'module',shortCircuit:true,source:''};if(url.endsWith('.tsx'))return{format:'module',shortCircuit:true,source:tsxCompiler.transpileModule(readFileSync(new URL(url),'utf8'),{compilerOptions:{target:tsxCompiler.ScriptTarget.ES2022,module:tsxCompiler.ModuleKind.ESNext,jsx:tsxCompiler.JsxEmit.ReactJSX}}).outputText};return next(url,context);}});
+registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/')){const url=new URL('../src/'+specifier.slice(2),import.meta.url).href;let last;for(const ext of ['', '.ts', '.tsx']){try{return next(url+ext,context);}catch(e){last=e;}}throw last;}try{return next(specifier,context);}catch(error){if(specifier.startsWith('.')&&!/\.[a-z]+$/.test(specifier)){try{return next(specifier+'.tsx',context);}catch{return next(specifier+'.ts',context);}}throw error;}},load(url,context,next){if(url.endsWith('.css'))return{format:'module',shortCircuit:true,source:''};if(url.endsWith('.tsx'))return{format:'module',shortCircuit:true,source:tsxCompiler.transpileModule(readFileSync(new URL(url),'utf8'),{compilerOptions:{target:tsxCompiler.ScriptTarget.ES2022,module:tsxCompiler.ModuleKind.ESNext,jsx:tsxCompiler.JsxEmit.ReactJSX}}).outputText};return next(url,context);}});
 import test from 'node:test';import assert from 'node:assert/strict';import {createElement as h} from 'react';import {renderToStaticMarkup} from 'react-dom/server';
 const {DiplomacySheet}=await import('../src/ui/council/DiplomacySheet.tsx');const {HandoverCard,FactionsStrip,GloryBars,FameFeed}=await import('../src/ui/council/CouncilParts.tsx');const {LeaderPortrait}=await import('../src/ui/h/LeaderPortrait.tsx');
 const id={version:1,symbol:'sun',pattern:'band',primary:'#315847',secondary:'#733d35',emblem:'#f6e5ba'};
@@ -58,4 +58,33 @@ test('hearth capitulation terms group outcomes by severity, show will and clock,
  assert.match(html,/Ridge Clan offers terms/);assert.match(html,/82%/);assert.match(html,/8s/);assert.match(html,/tier-ruinous/);assert.match(html,/1 building lost/);assert.match(html,/Refuse and press the attack/);
  for(const t of TERMS)assert.ok(html.includes(t.label),t.label);assert.equal((html.match(/class="hw-term"/g)||[]).length,TERMS.length);
  assert.equal(renderToStaticMarkup(h(TermsOffers,{offers:[],send(){},feedback:[]})),'');
+});
+test('hearth captive card shows resistance and guard state, offers typed commands, and is empty-safe',async()=>{
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');const {isEngineDispatchCommand}=await import('../src/game/engineDispatch.ts');const {isEngineReadQuery}=await import('../src/game/engineReadModels.ts');
+ const cs=[{id:9,name:'Tamsin',fromTeam:2,fromName:'Ridge Clan',resistance:72,guarded:false,canEscort:true},{id:10,name:'Oren',fromTeam:2,fromName:'Ridge Clan',resistance:10,guarded:true,canEscort:false}];
+ const html=renderToStaticMarkup(h(CaptiveList,{captives:cs,send(){},feedback:[]}));
+ assert.match(html,/Held captive/);assert.match(html,/Resistance 72 percent/);assert.match(html,/Unguarded/);assert.match(html,/Guarded/);assert.equal((html.match(/Escort/g)||[]).length,1);assert.equal((html.match(/Free everyone from Ridge Clan/g)||[]).length,1);
+ assert.equal(renderToStaticMarkup(h(CaptiveList,{captives:[],send(){},feedback:[]})),'');assert.match(renderToStaticMarkup(h(CaptiveList,{captives:[],send(){},feedback:[{id:1,ok:true,text:'Released; walking home with belongings'}]})),/Released; walking home with belongings/);
+ assert.ok(isEngineReadQuery({kind:'captives'}));assert.equal(isEngineReadQuery({kind:'captives',x:1}),false);
+ assert.ok(isEngineDispatchCommand({kind:'free-captives',team:2}));assert.ok(isEngineDispatchCommand({kind:'repatriate-captive',unitId:9}));assert.ok(isEngineDispatchCommand({kind:'escort-captive',unitId:9}));assert.equal(isEngineDispatchCommand({kind:'free-captives',team:'x'}),false);
+});
+
+test('hearth captive card distinguishes physical custody needs and guard replacement from legacy escort',async()=>{
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');
+ const people=[{id:11,name:'Ada',fromTeam:2,fromName:'Ridge Clan',resistance:60,guarded:false,canEscort:true,custody:'escorting',food:2,waterLiters:1.5},{id:12,name:'Bren',fromTeam:2,fromName:'Ridge Clan',resistance:0,guarded:true,canEscort:true,custody:'custody',food:1,waterLiters:.5},{id:13,name:'Legacy',fromTeam:2,fromName:'Ridge Clan',resistance:72,guarded:false,canEscort:true}];
+ const html=renderToStaticMarkup(h(CaptiveList,{captives:people,send(){},feedback:[]}));
+ assert.match(html,/Escape risk 60 percent/);assert.match(html,/Escape risk 0 percent/);assert.match(html,/Resistance 72 percent/);assert.match(html,/Under escort/);assert.match(html,/In custody/);assert.match(html,/Food 2/);assert.match(html,/Water 1.5 L/);assert.match(html,/Water 0.5 L/);assert.match(html,/Assign guard/);assert.match(html,/Replace guard/);assert.equal((html.match(/Release to walk home/g)||[]).length,2);assert.match(html,/>Escort<\/button>/);assert.match(html,/Send home/);assert.doesNotMatch(html,/forced work|forced labor/);assert.equal((html.match(/Free everyone from Ridge Clan/g)||[]).length,1);
+});
+test('captives navigation exists without offers and the no-house fallback still shows real custody controls',async()=>{
+ const {councilTermsTab,CouncilWithoutHouse,Screen}=await import('../src/ui/hearth/screens.tsx');
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');
+ const captive={id:11,name:'Ada',fromTeam:2,fromName:'Ridge Clan',resistance:0,guarded:false,canEscort:true,custody:'custody',food:0,waterLiters:0};
+ const only=councilTermsTab(0,1),both=councilTermsTab(2,1);assert.equal(only.label,'Captives');assert.equal(only.badge,1);assert.equal(both.label,'Terms');assert.equal(both.badge,3);assert.equal(councilTermsTab(0,0),null);
+ const nav=renderToStaticMarkup(h(Screen,{title:'Council',onClose(){},tabs:[only],tab:'terms',setTab(){}},h(CaptiveList,{captives:[captive],send(){},feedback:[]})));assert.match(nav,/role="tab"/);assert.match(nav,/>Captives<\/span>/);
+ const fallback=renderToStaticMarkup(h(CouncilWithoutHouse,{onClose(){},terms:null,captives:h(CaptiveList,{captives:[captive],send(){},feedback:[]})}));assert.match(fallback,/No ruling house yet/);assert.match(fallback,/Held captive/);assert.match(fallback,/Assign guard/);assert.match(fallback,/Release to walk home/);assert.match(fallback,/Food 0/);assert.match(fallback,/Water 0 L/);
+});
+test('neighbour news feed renders only supplied agreements, newest first, and nothing when empty',async()=>{
+ const {NeighbourNews}=await import('../src/ui/council/CouncilParts.tsx');const {NeighbourNewsFeed}=await import('../src/ui/hearth/councilCards.tsx');
+ const news=[{time:9,kind:'marriage',with:1,text:'12: A marriage joins the houses'},{time:3,kind:'truce',with:2,text:'4: A truce is sworn'}],nameOf=t=>t===1?'Marsh Folk':'Ridge Clan';
+ for(const C of [NeighbourNews,NeighbourNewsFeed]){const html=renderToStaticMarkup(h(C,{news,nameOf}));assert.match(html,/Neighbour news/);assert.ok(html.indexOf('Marsh Folk')<html.indexOf('Ridge Clan'));assert.doesNotMatch(html,/12:|4:/);assert.equal(renderToStaticMarkup(h(C,{news:[],nameOf})),'');}
 });

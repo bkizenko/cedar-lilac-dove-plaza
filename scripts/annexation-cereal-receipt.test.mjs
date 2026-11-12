@@ -20,7 +20,7 @@ function setup(bound){
 }
 test('native paid winnowing after annexation credits all grain/chaff/seed fractions once above the old100k target',()=>{
  const{g,p,hash}=setup(false);drive(g,90,()=>p.phase==='complete');const spec=PRODUCTION_RECIPES.winnowCerealHand;
- assert.ok(Math.abs(g.tribe(0).seeds-(180000+.32))<1e-9);assert.equal(g.state.cerealProcessing.seedsAllocated,.32);assert.equal(g.state.cerealProcessing.cleanedGrain,4);assert.equal(g.state.cerealProcessing.seedsLost,0);assert.equal(g.tribe(0).items.chaff,2);assert.equal(g.state.production.metrics.consumed.roughGrain,6);assert.equal(g.state.production.metrics.edibleFoodProduced,spec.food);
+ assert.ok(Math.abs(g.tribe(0).seeds-(180000+.32))<1e-9);assert.equal(g.state.cerealProcessing.seedsAllocated,.32);assert.equal(g.state.cerealProcessing.cleanedGrain,4);assert.equal(g.state.cerealProcessing.seedsLost,0);assert.equal(g.state.production.metrics.produced.chaff,2);assert.ok(Math.abs(g.tribe(0).items.chaff+(g.tribe(0).survival.residueFuel?.chaffBurned||0)-2)<1e-9,'all received chaff remains stored or was actually burned for household heat');assert.equal(g.state.production.metrics.consumed.roughGrain,6);assert.equal(g.state.production.metrics.edibleFoodProduced,spec.food);
  const ledger=copy(g.state.cerealProcessing),produced=copy(g.state.production.metrics.produced);for(let i=0;i<5;i++)step(g);assert.deepEqual(g.state.cerealProcessing,ledger);assert.deepEqual(g.state.production.metrics.produced,produced);assert.equal(terrain(g),hash);validateGameSave(gameSnapshot(g));
 });
 test('strict seed bound holds same actual finished paid winnowing outputs through paused save with no partial credits',()=>{

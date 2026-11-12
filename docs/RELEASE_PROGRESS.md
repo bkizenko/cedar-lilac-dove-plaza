@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: d7ddb834e445c1c0be1734c8ea28cf2f2bd1e377 published as 2026-11-12T15-36-29-657Z-d7ddb83 on8086/8101.53/53 scoped freshV21/publishedV20-compat/village-art checks; includes all prior food/raid/tool/civic batches; inherited37/98 unchanged. Fullcampaign and100-resident p95/FPS open; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: dfbc553efc12f2e3a17dc2745a49b8b48cb8c7bd published as 2026-11-12T19-24-19-343Z-dfbc553 on8086/8101.24/24 scoped checks (19native/shared+5built), compiler/buildPASS: actual contextual port/fleet owner controls, same paid hull resume→physical launch,30rations/24missiles loaded for real4logs, strict durable restore, original53 pure read; real linked snow shaders for Village/H with Classic clear. Earlier iron/draft/commander retained; original53 unchanged. Frozen acceptance37/98 unchanged; campaign/performance and method records remain open. Partial/unverified gates earn zero.
 
 ## Milestone counts
 

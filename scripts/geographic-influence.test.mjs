@@ -8,7 +8,7 @@ function settle(g,paint=false){for(let i=0;i<20000;i++){advanceGeographicInfluen
 function influence(g,x,z,team){settle(g);return g.influenceAt(x,z,team);}
 function diagnostics(g){settle(g);return rawDiagnostics(g);}
 function paintGeographicTerritory(g){queuePaint(g);settle(g,true);}
-function fixture(height=()=>1.5){const g=new Game();g.reset(42,10,{size:1040,layout:'continents'});g.enterIsland();g.state.units=[];g.state.buildings=[];g.state.boats=[];g.state.trails=[];g.world.waterY=0;g.world.baseWaterY=0;g.world.waterfalls=[];g.height=height;g.rebuildWalk();return g;}
+function fixture(height=()=>1.5){const g=new Game();g.reset(42,10,{size:1040,layout:'continents'});delete g.state.terrainInfluence;g.enterIsland();g.state.units=[];g.state.buildings=[];g.state.boats=[];g.state.trails=[];g.world.waterY=0;g.world.baseWaterY=0;g.world.waterfalls=[];g.height=height;g.rebuildWalk();return g;}
 function add(g,type,x,z,team=0){const b=g.makeBld(type,x,z,team);b.build=1;g.state.buildings.push(b);g.rebuildWalk();return b;}
 test('the whole historical ring remains full-strength; the continuous fade is outside it',()=>{
  const g=fixture(),hall=add(g,'townhall',-30,0),radius=influenceRadius('townhall')*INFLUENCE_RULES.radiusScale;

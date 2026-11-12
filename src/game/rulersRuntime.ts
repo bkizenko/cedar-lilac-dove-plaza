@@ -37,7 +37,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -170,14 +170,15 @@ export const ERA_REACH:Record<'band'|'chiefdom'|'state',{crew:number;slow:number
  chiefdom:{crew:3,slow:1.15,organised:true,note:'a chiefdom can spare a modest party'},
  state:{crew:4,slow:1,organised:true,note:''},
 };
-export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;why:string[]};
+export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;rations:number;why:string[]};
 export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
  const sends=d.mode==='settle'||d.mode==='migrate',tier=st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band',gate=ERA_REACH[tier];
  const crew=Math.max(2,Math.min(gate.crew,2+Math.round((d.drive-.8)*2))),cooldown=Math.round(Math.max(900,Math.min(3600,gate.slow*1800/Math.max(.5,d.drive))));
  const council=raw?null:settleGate(g,team); // society decision layer: a founding party leaves only under a settle plan
  const allow=sends&&(council?council.allow:true);
- return {allow,mode:d.mode,crew,cooldown,
+ // Standing provisioning exists only where the polity is organised: the leader carries 3 provisions per head, taken from the home pantry, never conjured.
+ return {allow,mode:d.mode,crew,cooldown,rations:gate.organised?crew*3:0,
   minReserve:d.mode==='migrate'?300:600,why:allow?[...d.why,...(gate.crew<4?[gate.note]:[])]:sends&&council?[council.why,...d.why]:['the society stays at home',...d.why]};
 }
 
@@ -186,11 +187,11 @@ export type PartyLine={team:number;name:string;crew:number;x:number;z:number;des
 export function expansionParties(g:Game,team?:number):PartyLine[]{
  if(!rulersEnabled(g))return [];
  const out=new Map<string,PartyLine>();
- const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number}}[];
+ const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number;rations?:number}}[];
  for(const u of units){const j=u.foundingJourney;if(!j||u.hp<=0||(team!==undefined&&u.team!==team))continue;
   const key=u.team+':'+j.x+':'+j.z,cur=out.get(key),d=Math.round(Math.hypot(u.x-j.x,u.z-j.z));
   const line=cur??{team:u.team,name:g.tribe(u.team).name,crew:0,x:u.x,z:u.z,destX:j.x,destZ:j.z,distance:d,carrying:'',status:'on the road'};
-  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;line.carrying=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing';}
+  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;const goods=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing',ra=j.rations?`${Math.round(j.rations)} provisions`:'';line.carrying=ra?(u.carry>0?goods+' and '+ra:ra):goods;}
   if(u.stuckT>8)line.status='struggling to find a way through';
   out.set(key,line);}
  return [...out.values()];
@@ -223,7 +224,17 @@ export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{c
  const r=ensureRulers(g);if(!r?.claims)return null;
  const i=r.claims.findIndex(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind&&c.expiresTick>r.year);if(i<0)return null;
  st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
- return {cost:cbLegitimacyCost(kind)};
+ const cost=cbLegitimacyCost(kind),cur=st(g).rulers!,debt={...(cur.cbDebt??{})};
+ if(cost>0)debt[String(holder)]=Math.min(100,(debt[String(holder)]??0)+cost*2); // using a cause spends the house's standing: it feels the strain as unrest until it fades
+ st(g).rulers={...cur,cbDebt:debt};
+ return {cost};
+}
+export const cbDebtOf=(g:Game,team:number):number=>rulersOf(st(g))?.cbDebt?.[String(team)]??0;
+/** Yearly: casus-belli strain fades (-4 a year, never below 0). */
+export function fadeCbDebt(g:Game){
+ const r=rulersOf(st(g));if(!r?.cbDebt)return;
+ const next:Record<string,number>={};for(const [k,v] of Object.entries(r.cbDebt)){const n=Math.max(0,v-4);if(n>0)next[k]=n;}
+ st(g).rulers={...r,cbDebt:next};
 }
 /** War-weariness: a society that stays at war grows tired (+9 a dynastic year per hostile neighbour) and recovers at peace (-6 a year).
  * Stored per society in rulers.weary (0..100, optional so old saves load). It feeds unrestOf and, through warPeaceBonus, the pace at which
@@ -247,9 +258,9 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const others=g.state.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
- const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.min(100,30+100*Math.max(0,...lg)); // source weights sum to ~1; the strongest pillar carries the house
+ const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg))-cbDebtOf(g,team)); // source weights sum to ~1; the strongest pillar carries the house
  const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
- const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
+ const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(cbDebtOf(g,team)>0)why.push('the house spent its standing on a cause');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
 
@@ -307,4 +318,16 @@ export function domesticPressure(g:Game):string[]{
  }
  st(g).rulers={...r,societies,unrestYears:years};
  return falls;
+}
+
+/** Feed lines for the player: agreements between societies (marriages, pacts, truces, fosterage) and hostage/foster wards that the player can
+ * legitimately know of: the player is a party. Meeting both parties does not reveal their private pact. Future third-party reports require an actual information receipt. Read-only; invents nothing, and old saves (no decision
+ * state or rulers) give []. Newest first. `sinceTime` filters by sim time of the agreement. */
+export type NeighbourNews={time:number;kind:string;a:number;b:number;text:string};
+export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
+ const d=(st(g).rulers as unknown as {decisions?:{agreements?:{kind:string;a:number;b:number;since:number;note:string}[]}}|undefined)?.decisions;
+ const out:NeighbourNews[]=[];
+ const sees=(a:number,b:number)=>a===0||b===0;
+ for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
+ return out.sort((x,y)=>y.time-x.time).slice(0,Math.max(0,limit));
 }

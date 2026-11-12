@@ -1,3 +1,4 @@
+import {DraftCartLayer,DRAFT_CART_RENDER} from './draftCartLayer';
 import {SiegeRamLayer} from './siegeRams';
 import {SailRigs} from './sailRigs';
 import {InstanceCameraCull} from './instanceCameraCull';
@@ -9,6 +10,7 @@ import {fishMarkerHeight} from './resourceSurface';
 import {BankTerrainLayer} from './bankTerrainLayer';
 import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
 import{HullFleet}from'./hullFleet';
+import {bindSnowCap,carvedSnowUniform} from './roofSnow';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
 import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
 import type {CameraGround} from './cameraClearance';
@@ -33,7 +35,7 @@ import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
-import {carvedDaylightGrade} from './carvedPalette';
+import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
 import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
 import {provinceAt} from '../game/ecologicalProvinces';
 import {CARVED_TYPES} from './buildingStyleMap';
@@ -319,6 +321,7 @@ export class WorldView {
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
   private housingPackets:HousingPacketLayer|null=null;
+  private draftCarts:DraftCartLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailHalo: THREE.InstancedMesh | null = null;
@@ -394,6 +397,7 @@ export class WorldView {
   private grassRegion: Uint8Array | null = null;
   private seasonAcc = 0.4;
   private lastSnow = -1;
+  private carvedSnow = 0;
   private litSun = 1.2;
   private litHemi = 0.55;
   private litFogD = 0.003;
@@ -1087,6 +1091,7 @@ export class WorldView {
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       roof.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+      if(type!=='cornerstone'&&type!=='pen'&&!terrainLaidWorkplace(type))bindSnowCap(roof.material as THREE.Material);
       (roof.material as THREE.MeshStandardMaterial).vertexColors = false;
       (roof.material as THREE.MeshStandardMaterial).color.set("#ffffff");
       timber.castShadow = true;
@@ -1144,6 +1149,7 @@ export class WorldView {
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.count=0;mesh.frustumCulled=false;
       this.scene.add(mesh);this.cargoMeshes.set(kind,mesh);
     }
+    this.draftCarts=new DraftCartLayer(this.scene,this.mats.timber);
     for (const kind of ['sled', 'cart', 'canoe', 'pack'] as const) {
       const mesh = new THREE.InstancedMesh(haulageGeo(kind), kind==='pack'?this.mats.hide:this.mats.timber, 140);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1307,11 +1313,11 @@ export class WorldView {
         this.unitInstanceOwners.get(type)??[],
       );
     }
-    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.wornArmor?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of [...(this.penFences?.pickingSources()||[]),...(this.wornGarments?.sources()||[]),...(this.wornArmor?.sources()||[]),...(this.waterVessels?.sources()||[]),...(this.baskets?.sources()||[]),...(this.draftCarts?.sources()||[])]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
     for (const hit of _ray.intersectObjects([...sources.keys()], false)) {
       if (hit.instanceId === undefined) continue;
       const entity = sources.get(hit.object)?.[hit.instanceId];
-      if (entity && (entity.team === 0 || game.visibleAt(entity.x, entity.z))) return entity;
+      if (entity && entity.hp>0 && (entity.team === 0 || game.visibleAt(entity.x, entity.z))) return entity;
     }
     const ground = this.groundAt(cx, cy);
     if (ground) {
@@ -1321,6 +1327,10 @@ export class WorldView {
       if (farm) return farm;
     }
     return null;
+  }
+
+  pickDraftCart(cx:number,cy:number,game:Game){
+    const el=this.renderer.domElement;_ndc.set((cx/(el.clientWidth||1))*2-1,(-cy/(el.clientHeight||1))*2+1);_ray.setFromCamera(_ndc,this.camera);return this.draftCarts?.pickLoose(_ray,game)??null;
   }
 
   pickWildlife(cx:number,cy:number,game:Game){
@@ -1556,6 +1566,7 @@ export class WorldView {
     }
     // Option H only: warm the skylight and distance haze a little toward the golden grade (scaled by its own warmth, so winter/storm stay cool).
     if(hGrade&&clearDay){this.hemi.color.lerp(_c.set(hGrade.hemiSky),.3*hGrade.warmth);fog.lerp(_c.set(hGrade.sun),.12*hGrade.warmth);}
+    // Option H only: soften the sun/skylight at the day's edges (long low light) and lift it near noon, a partial (35%) blend of the H grade shape onto the current intensity so weather dimming stays in charge.
     this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
     let dens=atmosphericDensity(wx,night,sn.snow);
     const painter=this.mapStyle==='painterly'?painterAtmosphere({elev,dawn,dusk,night,weather:wx,winter:sn.winter,autumn:sn.autumn,spring:sn.spring,snow:sn.snow,day}):null;
@@ -1564,6 +1575,8 @@ export class WorldView {
       sunCol.set(painter.sun);fog.set(painter.fog);
       this.hemi.color.set(painter.hemiSky);this.hemi.groundColor.set(painter.hemiGround);
     }
+    // Apply after the map palette chooses its base intensities.
+    if(this.styleId==='optionH'&&hGrade&&clearDay){sunI*=1+.35*(hGrade.sunIntensity/CARVED_LIGHT_RIG.sunIntensity-1);hemiI*=1+.35*(hGrade.hemiIntensity/CARVED_LIGHT_RIG.hemiIntensity-1);}
     const k = dt > 0.4 ? 1 : 1 - Math.exp(-dt * 0.38);
     this.litSun += (sunI - this.litSun) * k;
     this.litHemi += (hemiI - this.litHemi) * k;
@@ -1951,6 +1964,7 @@ export class WorldView {
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
+    layer.setSnow(this.carvedSnow);
     layer.sync(list,this.camera.position);
     for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
@@ -1997,6 +2011,7 @@ export class WorldView {
 
   private syncCargo(game: Game) {
     this.housingPackets?.sync(game);
+    this.draftCarts?.sync(game,this.quality,this.shadowsEnabled);
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
     let horses=0,cattle=0,ards=0;this.packHorseOwners=[];this.packCattleOwners=[];this.woodenArdOwners=[];
@@ -2054,7 +2069,11 @@ export class WorldView {
       if(carried<=0||!carryType)continue;
       const mesh=this.cargoMeshes.get(carryType),i=counts[carryType];
       if(!mesh||i>=instCap(mesh))continue;
-      if(mounted&&!u.plantingWork){
+      const cartMatrix=this.draftCarts?.matrixFor(u);
+      if(cartMatrix&&!u.plantingWork){
+        const fullness=Math.min(1,carried/carryingCapacity(u,carryType)),height=.35+fullness*.55;
+        _p.set(0,DRAFT_CART_RENDER.deckHeight+height*.5,0).applyMatrix4(cartMatrix);_q.setFromRotationMatrix(cartMatrix);_s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
+      }else if(mounted&&!u.plantingWork){
         const fullness=Math.min(1,carried/carryingCapacity(u,carryType)),height=.35+fullness*.55;
         _p.set(0,(kind==='cart'?.7:kind==='pack'?(horse?1.40:bovine?1.46:1.05):.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
@@ -2763,6 +2782,7 @@ export class WorldView {
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
+    this.carvedSnow = this.styleId==='village'||this.renderStyle==='carved'?sn.snow:0;this.carvedLayer?.setSnow(this.carvedSnow);carvedSnowUniform.value=this.carvedSnow<.02?0:this.carvedSnow;
     if(this.terrainSurface){this.terrainSurface.snow.value=sn.snow;this.terrainSurface.heights.needsUpdate=true;}
     const geo = this.terrain.geometry as THREE.BufferGeometry;
     const colAttr = geo.getAttribute("color") as THREE.BufferAttribute | undefined;
@@ -2986,6 +3006,7 @@ export class WorldView {
     this.people?.dispose();this.people=null;
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
+    this.draftCarts?.dispose();this.draftCarts=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;

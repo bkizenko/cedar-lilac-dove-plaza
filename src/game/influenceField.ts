@@ -6,6 +6,7 @@ import {FORTIFICATIONS} from './fortifications';
 import {cooperativeInfluenceWater} from './influenceWater';
 import {trailCell} from './trails';
 import {isDependent} from './settlement';
+import {terrainInfluenceActive,terrainInfluenceAt,terrainInfluenceReady,paintTerrainInfluence,terrainInfluenceDiagnostics,terrainInfluenceSample} from './terrainInfluenceRuntime';
 
 /** Costs are equivalent metres of ordinary level walking, rather than a
  * Euclidean claim painted through cliffs or across disconnected water. */
@@ -209,13 +210,14 @@ function strengthAt(g:Game,c:Cache,f:Field,x:number,z:number):number{
  return Math.max(0,Math.min(1,strength));
 }
 function activeTeams(g:Game){return [...new Set(g.state.buildings.filter(b=>b.team!==3&&g.finished(b)&&!FORTIFICATIONS.includes(b.type)).map(b=>b.team))];}
-export function geographicInfluenceReady(g:Game,team?:number){const c=cacheFor(g),teams=team===undefined?activeTeams(g):[team];for(const team of teams)field(g,c,team);return teams.every(team=>c.fields.has(team));}
+export function geographicInfluenceReady(g:Game,team?:number){if(terrainInfluenceActive(g))return terrainInfluenceReady(g,team);const c=cacheFor(g),teams=team===undefined?activeTeams(g):[team];for(const team of teams)field(g,c,team);return teams.every(team=>c.fields.has(team));}
 export function geographicInfluenceAt(g:Game,x:number,z:number,team:number):number{
- if(!Number.isFinite(x)||!Number.isFinite(z)||team===3)return 0;const c=cacheFor(g),f=field(g,c,team);return f?strengthAt(g,c,f,x,z):0;
+ if(terrainInfluenceActive(g))return terrainInfluenceAt(g,x,z,team);if(!Number.isFinite(x)||!Number.isFinite(z)||team===3)return 0;const c=cacheFor(g),f=field(g,c,team);return f?strengthAt(g,c,f,x,z):0;
 }
 /** Run pending geographic-influence jobs to completion. For tests and rare
  * sync readers — not the per-frame vision paint (that stays time-sliced). */
 export function flushGeographicInfluence(g:Game){
+ if(terrainInfluenceActive(g)){paintTerrainInfluence(g);return;}
  let guard=0;
  while(guard++<250000){
   const c=cacheFor(g);
@@ -240,11 +242,13 @@ function* paintField(g:Game,c:Cache,teams:number[]):Generator<void>{
  g.territory.set(territory);g.territoryStrength.set(strength);c.paintedTerritory=g.territory;c.paintedStrength=g.territoryStrength;
 }
 export function paintGeographicTerritory(g:Game){
+ if(terrainInfluenceActive(g)){paintTerrainInfluence(g);return;}
  const c=cacheFor(g);if(c.paintedTerritory===g.territory&&c.paintedStrength===g.territoryStrength)return;
  const teams=activeTeams(g);for(const team of teams)field(g,c,team);c.paintTeams=teams;
 }
 /** One shared wall-time budget across simulation substeps, including paused steps. */
 export function advanceGeographicInfluence(g:Game,now=performance.now()){
+ if(terrainInfluenceActive(g)){paintTerrainInfluence(g);return;}
  const prior=slices.get(g);if(prior&&now>=prior.last&&now-prior.last<INFLUENCE_RULES.sliceIntervalMilliseconds)return;
  const start=performance.now(),slice=prior??{last:now,maximumMilliseconds:0,lastMilliseconds:0,count:0};slice.last=now;slices.set(g,slice);
  const c=cacheFor(g);for(const team of activeTeams(g))field(g,c,team);
@@ -259,10 +263,11 @@ export function advanceGeographicInfluence(g:Game,now=performance.now()){
  }while(performance.now()-start<INFLUENCE_RULES.sliceMilliseconds);
  const elapsed=performance.now()-start;slice.lastMilliseconds=elapsed;slice.maximumMilliseconds=Math.max(slice.maximumMilliseconds,elapsed);slice.count++;
 }
-export function geographicInfluenceDiagnostics(g:Game,team=0){const c=cacheFor(g),f=field(g,c,team);return{ready:!!f,pendingJobs:c.jobs.size,paintReady:c.paintedTerritory===g.territory&&c.paintedStrength===g.territoryStrength,slices:slices.get(g),units:'equivalent metres of level walking',builtAtSeconds:f?.builtAt??null,cacheBuild:c.builds,navigationRevision:c.revision,terrainRevision:c.terrainRevision,gridCellMeters:c.cell,visitedCells:f?.visited??0,eligiblePorts:f?.ports.length??0,availableVessels:f?.vessels??0,blocked:{...f?.blocked},sources:(f?.metrics??[]).map(s=>({...s})),rules:INFLUENCE_RULES};}
+export function geographicInfluenceDiagnostics(g:Game,team=0){if(terrainInfluenceActive(g))return terrainInfluenceDiagnostics(g,team);const c=cacheFor(g),f=field(g,c,team);return{ready:!!f,pendingJobs:c.jobs.size,paintReady:c.paintedTerritory===g.territory&&c.paintedStrength===g.territoryStrength,slices:slices.get(g),units:'equivalent metres of level walking',builtAtSeconds:f?.builtAt??null,cacheBuild:c.builds,navigationRevision:c.revision,terrainRevision:c.terrainRevision,gridCellMeters:c.cell,visitedCells:f?.visited??0,eligiblePorts:f?.ports.length??0,availableVessels:f?.vessels??0,blocked:{...f?.blocked},sources:(f?.metrics??[]).map(s=>({...s})),rules:INFLUENCE_RULES};}
 /** Route cost belongs to the reported navigation-cell centre; strength is the
  * smoothly sampled point value. Infinity is represented as null for JSON/UI. */
 export function geographicInfluenceSample(g:Game,x:number,z:number,team=0){
+ if(terrainInfluenceActive(g))return terrainInfluenceSample(g,x,z,team);
  const c=cacheFor(g),f=field(g,c,team);if(!f)return{strength:null,routeCostMeters:null,sampledAt:null,blockedReason:'field-recalculating'};const i=index(c,x,z),cost=i>=0?f.cost[i]:Infinity,strength=geographicInfluenceAt(g,x,z,team);
  const blockedReason=strength>0?null:!f.sources.length?'no-established-source':i<0?'outside-world':
   g.height(x,z)<g.waterAt(x,z)+.12&&!f.ports.length?'water-without-operating-port':

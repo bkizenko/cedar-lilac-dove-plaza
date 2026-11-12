@@ -12,6 +12,7 @@ import {TowerPlatformControls} from '../TowerPlatformControls';
 import {GateRotationControl} from '../GateRotationControl';
 import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
+import {StartupHint} from './StartupHint';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
@@ -34,6 +35,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const sel=hud.selection.kind!=='none';
  return <div className="hw" data-hw="hearth">
   <UiThemeBoot/>
+  {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false}/>

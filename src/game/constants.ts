@@ -188,7 +188,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 360,
     age: 1,
-    hint: "Copper becomes bronze blades. Iron becomes steel. Speeds metal work nearby.",
+    hint: "Shape paid metal tools. Adopt iron ore processing to reduce ore with charcoal to a solid bloom, then heat and consolidate it into usable iron. No automatic steel or alloy production.",
   },
   watchtower: {
     name: "Watchtower",

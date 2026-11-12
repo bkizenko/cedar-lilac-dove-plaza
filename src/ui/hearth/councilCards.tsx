@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {Crown,Skull,Users,Swords,TriangleAlert,Scroll,Hourglass} from 'lucide-react';
+import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass,Handshake} from 'lucide-react';
 import type {Engine} from '../../game/engine';
 import type {CouncilModel} from '../../game/rulersView';
 import {societyIdentity} from '../../game/societyIdentity';
@@ -55,6 +55,12 @@ export function FameFeed({log}:{log:string[]}){
  return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l}</span></li>)}</ol>;
 }
 
+/** Neighbour news: agreements the player is party to, in plain lines under the chronicle. Nothing the player could not know. */
+export function NeighbourNewsFeed({news,nameOf}:{news:{time:number;kind:string;with:number;text:string}[];nameOf:(team:number)=>string}){
+ if(!news.length)return null;
+ return <section className="hw-news" aria-label="Neighbour news"><h3 className="hw-row-label"><Handshake size={18}/>Neighbour news</h3><ul className="hw-fame">{news.map((n,i)=><li key={i} className={cx(i===0&&'is-new')}><span><b>{nameOf(n.with)}</b> · {n.text.replace(/^\d+:\s*/,'')}</span></li>)}</ul></section>;
+}
+
 const mood=(n:number)=>n<35?'bad':n>65?'good':'mid';
 const MOOD_COLOR={bad:'var(--hw-bad)',mid:'var(--hw-warn)',good:'var(--hw-good)'} as const;
 const FACTION_NAME:Record<string,string>={kin:'Kin',warriors:'War-leaders',priests:'Priests',elders:'Elders',merchants:'Merchants',landholders:'Landholders',commons:'Common folk',assembly:'Assembly'};
@@ -101,4 +107,28 @@ export function TermsOffers({offers,send,feedback}:{offers:Offer[];send:(c:{kind
     <ul>{t.ids.map(id=>{const term=TERMS.find(x=>x.id===id)!;return <li key={id}><button type="button" className="hw-term" onClick={()=>send({kind:'accept-capitulation',frontId:o.id,outcome:id})}><b>{term.label}</b><span>{term.note}</span></button></li>;})}</ul></div>)}
    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'refuse-capitulation',frontId:o.id})}><Swords size={18}/>Refuse and press the attack</button>
   </article>;})}<FeedbackList items={feedback}/></section>;
+}
+
+type Captive={id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number};
+/** Display owner-reported physical custody or legacy captivity. Actions stay
+ * typed owner commands; rendering never assigns guards, supplies or work. */
+export function HearthCaptiveCard({engine}:{engine:Engine}){
+ const Q={kind:'captives'} as const,read=useOwnerReadModels(engine,[Q]),list=read(Q).model?.captives??[],fb=useActionFeedback(engine);
+ return <CaptiveList captives={list} send={c=>void fb.send(c)} feedback={fb.items}/>;
+}
+export function CaptiveList({captives,send,feedback}:{captives:Captive[];send:(c:{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number})=>void;feedback:Parameters<typeof FeedbackList>[0]['items']}){
+ if(!captives.length)return feedback.length?<FeedbackList items={feedback}/>:null;
+ const teams=[...new Map(captives.map(c=>[c.fromTeam,c.fromName])).entries()];
+ return <section className="hw-card hw-captives" aria-label="Captives">
+  <div className="hw-card-head"><h3>Held captive</h3><span className="hw-chip hw-chip-soft"><Users size={16}/>{captives.length}</span></div>
+  <p className="hw-sub">{captives.some(c=>c.custody)?'People in custody need guards, food and water. Release sends them walking home.':'Unguarded people may escape. A guard can watch up to three.'}</p>
+  <ul className="hw-captive-list">{captives.map(c=>{const tone=c.resistance>=70?'bad':c.resistance>=40?'mid':'good',modern=c.custody!==undefined;return <li key={c.id}>
+   <div className="hw-captive-name"><b>{c.name}</b><span className="hw-sub">from {c.fromName}</span></div>
+   <span className={cx('hw-meter',tone)} role="img" aria-label={`${modern?'Escape risk':'Resistance'} ${c.resistance} percent`}><i style={{width:Math.min(100,c.resistance)+'%'}}/></span>
+   <span className={cx('hw-chip',c.guarded?'t-good':'t-warn')}><Shield size={16}/>{c.guarded?'Guarded':'Unguarded'}</span>
+   {modern&&<span className="hw-chip hw-chip-soft">{c.custody==='escorting'?'Under escort':'In custody'}{typeof c.food==='number'&&` · Food ${Number(c.food.toFixed(1))}`}{typeof c.waterLiters==='number'&&` · Water ${Number(c.waterLiters.toFixed(1))} L`}</span>}
+   <span className="hw-captive-acts">{c.canEscort&&<button type="button" className="hw-btn-wide" onClick={()=>send({kind:'escort-captive',unitId:c.id})}><Shield size={18}/>{modern?(c.guarded?'Replace guard':'Assign guard'):'Escort'}</button>}
+    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'repatriate-captive',unitId:c.id})}><Home size={18}/>{modern?'Release to walk home':'Send home'}</button></span></li>;})}</ul>
+  {teams.map(([t,n])=><button key={t} type="button" className="hw-btn-wide" onClick={()=>send({kind:'free-captives',team:t})}><Unlock size={18}/>Free everyone from {n}</button>)}
+  <FeedbackList items={feedback}/></section>;
 }

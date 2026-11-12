@@ -1,3 +1,7 @@
+import {reconcileMethodRecords} from './methodRecords';
+import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
+import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
+import {copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
 import {onGuardDuty,guardDutyAI,tickGuardDuties} from './guardDuty';
@@ -25,6 +29,10 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
+import {enableTerrainInfluence} from './terrainInfluenceRuntime';
+import {enableCommanders,tickCommanders} from './commanders';
+import {tickNaval,navalIndependentFood} from './navalFleet';
+import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -122,6 +130,7 @@ import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction,assignPlacedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
+import {wildCraftAI,tickWildCraft} from './wildCraft';
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
@@ -407,6 +416,8 @@ export class Game {
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);
+    enableTerrainInfluence(this);
+    enableCommanders(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
@@ -495,6 +506,7 @@ export class Game {
       return {
       id: i,
       animalProcessingVersion:1 as const,
+      ...(i===0?{copperMetallurgyVersion:1 as const}:{}),
       name: settlementName,
       short: rolled ? settlementName : TEAM_SHORT[i],
       color: rolled ? rolled[1] : TEAM_COLORS[i],
@@ -1836,6 +1848,8 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    interruptDraftCartOrder(this,u);
+    pauseNavalWork(this,u);
     cancelPackPasture(this,u);
     interruptSiegeRam(this,u);
     if(u.sitePreparationId!==undefined)releaseSitePreparationWorker(this,u);
@@ -1919,7 +1933,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    if(target.kind==='unit')target.contactSurrender=undefined;
+    if(target.kind==='unit'){target.contactSurrender=undefined;if(target.repatriating)target.repatriating=undefined;}
     for (const u of this.selectedUnits().filter(u=>!u.prisoner)) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits().filter(u=>!u.prisoner);
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
@@ -3646,7 +3660,7 @@ export class Game {
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
       // A game year is 1800 seconds: one calendar month is 150 seconds.
-      if(!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
+      if(!navalIndependentFood(this,u)&&!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const deficit = u.expedition ? Number(u.expedition.food < 0.01) : mealDeficits.get(tr.id)??0;
       const hungry = deficit > 0.001, previousHunger = u.hunger || 0;
       u.hunger = hungry ? Math.min(1200, previousHunger + dt * deficit) : Math.max(0, previousHunger - dt * 3);
@@ -4322,6 +4336,7 @@ export class Game {
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
     if(this.height(nx,nz)>this.waterAt(nx,nz)+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    recordDraftCartStep(this,u,nx,nz);
     if(u.haulage==="canoe")recordWaterStep(this,u,nx,nz);
     u.x = nx;
     u.z = nz;
@@ -4480,6 +4495,7 @@ export class Game {
     if(copperStudyAI(this,u,dt))return;
     if(plantingAI(this,u,dt))return;
     if(weaponWorkAI(this,u,dt))return;
+    if(draftCartAI(this,u,dt))return;
     if(packPastureAI(this,u,dt))return;
     if(husbandryAI(this,u,dt))return;
     if(packTamingAI(this,u,dt))return;
@@ -4528,6 +4544,7 @@ export class Game {
       u.stuckT = 0;
       u.workReason = "Route blocked; finding another task";
     }
+    if (u.wildWorkId!==undefined&&wildCraftAI(this,u,dt))return;
     if (u.order === "idle") {
       this.workBoard.assign(this, u);
       return;
@@ -4604,14 +4621,15 @@ export class Game {
           else if (roll > 0.93) gained = 2;
         }
         if("kind" in node&&node.kind==="fish")gained=Math.min(gained,Math.floor(node.amount));
-        if("kind" in node&&node.kind==="stone")gained=Math.min(gained,node.amount);
+        if("kind" in node&&(node.kind==="stone"||node.kind==="copper"&&copperOreEnabled(this,u.team)||node.kind==="iron"&&ironOreEnabled(this,u.team)))gained=Math.min(gained,node.amount);
+        if(t==="copper"&&copperOreEnabled(this,u.team))gained=Math.min(gained,Math.max(0,Math.min(40,carryingCapacity(u,"copper"))-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
+        if(t==="iron"&&ironOreEnabled(this,u.team))gained=Math.min(gained,Math.max(0,Math.min(IRON.oreCarryUnits,carryingCapacity(u,"iron"))-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
         const seasonalForage="kind" in node&&node.kind==="forage"&&wildPlantsEnabled(this);
         if(seasonalForage)gained=harvestWildPlant(this,node as ResourceNode,gained);
         if (gained <= 0) {
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "thin", "#b8a888");
         } else {
-          u.carry += gained;
-          u.carryType = t;
+          if(t==="copper"&&copperOreEnabled(this,u.team)){u.itemCargo??={};u.itemCargo.copperOre=(u.itemCargo.copperOre||0)+gained;}else if(t==="iron"&&ironOreEnabled(this,u.team)){u.itemCargo??={};u.itemCargo.ironOre=(u.itemCargo.ironOre||0)+gained;}else{u.carry += gained;u.carryType = t;}
           u.carryFood=t==="food"?("type" in node&&node.type==="dock"||"kind" in node&&node.kind==="fish"?"fish":"berries"):undefined;
           if("kind" in node&&node.kind==="forage"){
             if(node.cropCandidate)u.carryFood=node.cropCandidate;
@@ -4624,7 +4642,7 @@ export class Game {
           }
         }
         if ("amount" in node && !seasonalForage) {
-          if(node.kind==='fish')consumeFishStock(node,gained);else node.amount-=node.kind==='stone'?gained:1;
+          if(node.kind==='fish')consumeFishStock(node,gained);else node.amount-=node.kind==='stone'||node.kind==='copper'&&copperOreEnabled(this,u.team)||node.kind==='iron'&&ironOreEnabled(this,u.team)?gained:1;
           if(node.kind==="forage")applyForagePressure(node);
           if (node.amount <= 0) {
             node.amount = 0;
@@ -4644,7 +4662,7 @@ export class Game {
             );
           }
         }
-        if (u.carry >= carryingCapacity(u,t) || (t === "food" && u.carry >= 8 && reserveSeconds(this,u.team) < 90) || ("amount" in node && node.amount <= 0)) {
+        if (u.carry >= carryingCapacity(u,t) || (u.itemCargo?.copperOre||0)>0&&Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)>=Math.min(40,carryingCapacity(u,"copper")) || (u.itemCargo?.ironOre||0)>0&&Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)>=Math.min(IRON.oreCarryUnits,carryingCapacity(u,"iron")) || (t === "food" && u.carry >= 8 && reserveSeconds(this,u.team) < 90) || ("amount" in node && node.amount <= 0)) {
           const drop = this.nearestDrop(u.x, u.z, u.team);
           if (drop) {
             u.order = "return";
@@ -5814,6 +5832,7 @@ export class Game {
         tickArmorRepairs(this);
         tickGarmentRepairs(this);
         tickProduction(this,sdt);
+        tickWildCraft(this,sdt);
         tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
         tickTradedTeaching(this);
@@ -5849,6 +5868,7 @@ export class Game {
         phases?.mark('people');
         beginPrisonerGuardQueries(this);beginBuildingQueries(this);beginDefenseNeighbors(this);
         for (const u of this.state.units) {
+          if(u.draftCartOrder||u.draftCartPartner)draftCartAI(this,u,0);
           if(u.packPastureOrder)packPastureAI(this,u,0);
           if (u.hp <= 0) continue;
           u.shelterId=undefined;
@@ -5862,6 +5882,7 @@ export class Game {
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
             if(homeUseAI(this,u,sdt))continue;
             if(fireWarmingAI(this,u,sdt))continue;
@@ -5919,6 +5940,8 @@ export class Game {
         tickGuardDuties(this);
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
+        tickCommanders(this,sdt);
+        tickNaval(this,sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
         this.updateTowers(sdt);
@@ -5973,7 +5996,7 @@ export class Game {
         phases?.mark('reconciliation');
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releaseDraftCart(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);
@@ -5992,6 +6015,7 @@ export class Game {
         reconcileSiegeRams(this);
         tickStolenCargo(this,0);
         reconcileFarmToolCargo(this);
+        reconcileMethodRecords(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         tickRaidDefense(this);

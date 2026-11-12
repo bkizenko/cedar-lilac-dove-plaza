@@ -237,6 +237,33 @@ test('expansion parties: read model shows real founding units, supplies and posi
  delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
 });
 
+test('expansion party provisions: organised eras carry real pantry stores, returned on turn-back, never conjured; band carries none; save validator accepts them',async()=>{
+ const {expansionParty,expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const {foundingJourneyAI}=await import('../src/game/communities.ts');
+ const g=fixture();const t=g.tribe(1);
+ const plan=expansionParty(g,1,true);if(plan){assert.equal(plan.rations,['chiefdom','state'].includes(g.state.rulers.societies['1'].civ.polity.tier)?plan.crew*3:0);}
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0).slice(0,2);assert.ok(us.length>=2);
+ t.foodLots={...(t.foodLots||{}),provisions:30};t.food=Math.max(t.food,30);
+ const {takeFoodLot}=await import('../src/game/pantry.ts');
+ const food0=t.food;assert.ok(takeFoodLot(g,1,'provisions',6));assert.equal(t.food,food0-6,'leaving costs the pantry');
+ const dx=us[0].x+40,dz=us[0].z+10;us.forEach((u,i)=>{u.foundingJourney={x:dx,z:dz,leader:i===0,timber:20,...(i===0?{rations:6}:{})};});
+ us[0].carry=20;us[0].carryType='wood';
+ assert.match(expansionParties(g,1)[0].carrying,/20 wood and 6 provisions/);
+ us[0].stuckT=17;foundingJourneyAI(g,us[0],.1);
+ assert.equal(t.food,food0,'turned back: the same provisions come home, none gained or lost');assert.equal(us[0].foundingJourney,undefined);
+});
+
+test('party rations save round-trip: valid rations load, negative or absurd rations reject, absent field (old save) loads',async()=>{
+ const {encodeGame,validateGameSave}=await import('../src/game/persistence.ts');
+ const g=fixture();const u=g.state.units.find(x=>x.team===1&&x.hp>0);
+ u.foundingJourney={x:u.x+30,z:u.z,leader:true,timber:20};
+ const save=()=>JSON.parse(JSON.stringify(encodeGame(g)));
+ validateGameSave(save());
+ u.foundingJourney.rations=9;validateGameSave(save());
+ u.foundingJourney.rations=-1;assert.throws(()=>validateGameSave(save()));
+ u.foundingJourney.rations=1e6;assert.throws(()=>validateGameSave(save()));
+});
+
 test('lane A: domestic pressure executor overthrows a house after sustained uprising, through heir(); counter saved; old saves untouched',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
  const g=fixture();R.ensureRulers(g);const t=1,id='1';
@@ -280,4 +307,58 @@ test('casus belli is visible in the council neighbour view, both directions, and
  assert.ok(l.find(x=>x.byUs&&x.kind==='raid'&&x.endsIn===12&&x.cost===14&&/raids/.test(x.reason)));
  assert.ok(l.find(x=>!x.byUs&&x.kind==='tribute'&&x.endsIn===2&&/They hold/.test(x.reason)));
  assert.equal(casusLines({year:10},0,1).length,0);
+});
+
+test('neighbourNews: real agreements only, player-known, newest first, old saves empty',async()=>{
+ const {neighbourNews,marryHouses}=await import('../src/game/rulersRuntime.ts');
+ const {recordAgreement}=await import('../src/game/societyRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2;advanceRulers(g);
+ assert.deepEqual(neighbourNews(g),[],'nothing agreed, nothing reported');
+ g.state.time=100;recordAgreement(g,0,1,'pact','Hearth and Rivals swore a pact');
+ g.state.time=200;const ag=recordAgreement(g,1,2,'marriage','Rivals and Others wed their houses');
+ const news=neighbourNews(g);assert.ok(news.length>=1&&news[0].time>=news[news.length-1].time);
+ assert.ok(news.some(n=>n.a===0||n.b===0),'player is party to the pact');
+ assert.equal(neighbourNews(g,150).every(n=>n.time>=150),true);
+ assert.ok(ag,'real third-party pact exists in owner state');
+ const {societyRelation}=await import('../src/game/societyRelations.ts');societyRelation(g,0,1).known=true;societyRelation(g,0,2).known=true;
+ assert.equal(neighbourNews(g).some(n=>n.a===1&&n.b===2),false,'meeting both societies cannot reveal their private agreement');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
+});
+test('lane A: citing a casus belli strains the holder (unrest), fades yearly, round-trips; old saves without cbDebt load',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState,rulersOf}=await import('../src/game/rulersState.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
+ const r=rulersOf(g.state);assert.equal(r.cbDebt,undefined,'old shape: no debt field');assert.equal(R.cbDebtOf(g,2),0);
+ g.state.rulers={...r,claims:[{holder:'2',target:'1',kind:'raid',strength:60,expiresTick:r.year+20}]};
+ const u0=R.unrestOf(g,2).value;
+ const c=R.citeClaim(g,2,1,'raid');assert.ok(c&&c.cost>0);
+ assert.equal(R.cbDebtOf(g,2),Math.min(100,c.cost*2));
+ const u1=R.unrestOf(g,2);assert.ok(u1.value>=u0,'strain never lowers unrest');assert.ok(u1.why.includes('the house spent its standing on a cause'));
+ assert.equal(R.cbDebtOf(g,1),0,'the target pays nothing');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'debt round-trips');
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.cbDebt={2:500};assert.equal(validRulersState(bad),false);
+ const d0=R.cbDebtOf(g,2);R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),Math.max(0,d0-4));
+ for(let i=0;i<40;i++)R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),0);assert.ok(!('2' in g.state.rulers.cbDebt),'faded entries are dropped');
+});
+
+test('AUD-SOC-SUCCESSION-WAR: a ruler dying mid-front or mid-exchange changes the throne only; fronts, claims and wards are untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9700+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:5,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};
+  d.people[t+'-heir']={...k,id:t+'-heir',name:'Heir'+t,age:30,parent:d.rulerId,spouse:undefined,ruler:undefined,legit:true,claimStrength:90};}
+ const f=R.fosterHouses(g,0,1);
+ R.grantClaim(g,2,1,'claim',60,50);
+ const front={id:1,hallId:1,defenderTeam:1,attackerTeam:2,phase:'pressed',openedAt:1,lastMeasuredAt:1,residentIds:[],armedAtOpen:3,buildingIds:[],hallHpAtOpen:100,casualties:1,captured:0,lostArmed:0,buildingLoss:0,occupiedSeconds:0,starvingSeconds:0,unrelievedSeconds:0,absentSeconds:0,ratio:.3,score:.2,threshold:.5,refusals:1,yieldedIds:[],reason:'test'};
+ g.state.capitulation={version:1,fronts:[front]};
+ const frontBefore=JSON.stringify(g.state.capitulation),claimsBefore=JSON.stringify(R.claimsOf(g)),wardsBefore=JSON.stringify(R.wardsOf(g));
+ const d1=g.state.rulers.societies['1'].dynasty,old=d1.rulerId;d1.people[old].alive=false;
+ g.state.time=RULERS_YEAR_SECONDS*(g.state.rulers.year+1)+1;advanceRulers(g);
+ const after=g.state.rulers.societies['1'].dynasty;
+ assert.notEqual(after.rulerId,old,'the throne passes');assert.ok(after.people[after.rulerId].alive);
+ assert.equal(JSON.stringify(g.state.capitulation),frontBefore,'succession does not reset pressed/relieved front state');
+ assert.equal(JSON.stringify(R.claimsOf(g)),claimsBefore,'claims against the house outlive its ruler');
+ assert.equal(JSON.stringify(R.wardsOf(g)),wardsBefore,'wards stay where they are: no free release on a death');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'save round-trip after succession mid-war');
+ void f;
 });

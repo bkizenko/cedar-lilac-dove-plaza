@@ -3,6 +3,7 @@
 import { Noise, clamp, smoothstep, distanceTransform } from './noise';
 import { priorityFlood, accumulate, DX, DZ } from './flow';
 import type { PresetSpec } from './presets';
+import { planGeology, applyFaults, stratigraphicRelief, inselbergs, volcanoes, riftFeatures, erodibilityAt, type GeoState } from './geology/structure';
 export type Range = { spine: { x: number; z: number }[]; width: number; height: number; length: number };
 export type Terrain = {
   /** Vertices per side (cells + 1). */
@@ -20,6 +21,8 @@ export type Terrain = {
   /** Dominant tectonic axis (radians). */
   axis: number;
   landFraction: number;
+  /** Structural geology plan (rock provinces, strata, faults, volcanoes); only present when the geology layer is on. */
+  geo?: GeoState;
 };
 const idx = (n: number) => (x: number, z: number) => z * n + x;
 function quantile(values: Float32Array, q: number) {
@@ -141,7 +144,7 @@ export function components(mask: Uint8Array, n: number, want = 1) {
   }
   return { labels, areas };
 }
-export type TerrainOptions = { erosionIterations?: number };
+export type TerrainOptions = { erosionIterations?: number; geology?: boolean };
 export function buildTerrain(seed: number, size: number, n: number, preset: PresetSpec, rand: () => number, opts: TerrainOptions = {}): Terrain {
   const total = n * n, cell = size / (n - 1), at = idx(n);
   const warp = new Noise(seed ^ 0x51ed270b), detail = new Noise(seed ^ 0x2f6a2c37), hill = new Noise(seed ^ 0x7a3e9b15), ridge = new Noise(seed ^ 0x13198a2e);
@@ -298,11 +301,17 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
       h[i] = h[i] * (1 - z * 0.7) + terraced * z * 0.7;
     }
   }
+  // ---- 4b. geology: rock provinces, tilt, and faults are set before erosion so differential erosion can act on them ----
+  const geo = opts.geology ? planGeology(seed, size, n, cell, preset.geo, preset.id, sea, signed, ranges, uplift, axis, h) : undefined;
+  if (geo) applyFaults(geo, h, sea);
   // ---- 5. stream-power erosion ------------------------------------------------
   const iterations = opts.erosionIterations ?? 26, jitter = new Float32Array(total);
   for (let i = 0; i < total; i++) jitter[i] = 0.8 + 0.4 * rand();
   const K = 0.0021 * (cell / 6), m = 0.5, kd = 0.07, tmp = new Float32Array(total), area = cell * cell;
+  const eRock = geo ? new Float32Array(total) : undefined;
   for (let it = 0; it < iterations; it++) {
+    // hard rock resists the river (knickpoints, cliffs, mesas survive); soft shale and sediment are stripped
+    if (geo && eRock) for (let i = 0; i < total; i++) eRock[i] = sea[i] ? 1 : erodibilityAt(geo, i, h[i]);
     const flow = priorityFlood(h, n, sea, cell, 0.004, jitter);
     const A = accumulate(flow, area, total);
     const { order, rec, filled } = flow;
@@ -310,7 +319,7 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
       const i = order[t], r = rec[i];
       if (r < 0) continue;
       const dist = cell * (Math.abs((i % n) - (r % n)) + Math.abs(((i / n) | 0) - ((r / n) | 0)) === 2 ? Math.SQRT2 : 1);
-      const k = (K * Math.pow(A[i], m)) / dist;
+      const k = (K * (eRock ? eRock[i] : 1) * Math.pow(A[i], m)) / dist;
       const hr = sea[r] ? 0 : h[r];
       const next = (filled[i] + k * hr) / (1 + k);
       h[i] = Math.max(sea[r] ? 0.3 : hr + 0.002, next);
@@ -322,9 +331,16 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
         const i = at(x, z);
         if (sea[i]) continue;
         const avg = (tmp[i - 1] + tmp[i + 1] + tmp[i - n] + tmp[i + n]) * 0.25;
-        h[i] = Math.max(0.3, tmp[i] + (avg - tmp[i]) * kd);
+        h[i] = Math.max(0.3, tmp[i] + (avg - tmp[i]) * (eRock ? kd * Math.sqrt(eRock[i]) : kd));
       }
     }
+  }
+  // ---- 5b. geology after erosion: banded strata, domes, young volcanoes, rift lakes ---------------------------------------------
+  if (geo) {
+    stratigraphicRelief(geo, h, sea, signed);
+    inselbergs(geo, h, sea);
+    volcanoes(geo, h, sea, signed, uplift);
+    riftFeatures(geo, h, sea);
   }
   // ---- 6. sub-cell coastline: place the waterline from the continuous land potential, not the cell mask,
   // so shores are smooth curves at 1 m scale (bays and capes survive; staircase teeth do not)
@@ -339,6 +355,6 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
       h[i] = sea[i] ? Math.min(-0.04, v) : Math.max(0.04, v);
     }
   }
-  return { n, size, cell, h, sea, signed, ranges, uplift, axis, landFraction };
+  return { n, size, cell, h, sea, signed, ranges, uplift, axis, landFraction, geo };
 }
 export { DX, DZ };

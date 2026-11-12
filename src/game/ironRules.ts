@@ -1,0 +1,2 @@
+/** Leaf module (no imports) so low-level tables such as inventoryVolume/production can read the rules at module-eval time without an import cycle through ironMetallurgy -> rivalDevelopment. */
+export const IRON_METALLURGY_RULES={version:1,orePerBatch:8,smeltingCharcoalPerBatch:4,bloomPerBatch:4,smeltWorkSeconds:120,forgingCharcoalPerBatch:1,metalPerBatch:4,forgeWorkSeconds:60,orePackedLiters:4,bloomPackedLiters:2,metalPackedLiters:1,oreCarryUnits:40} as const;

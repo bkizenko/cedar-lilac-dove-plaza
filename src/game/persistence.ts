@@ -1,3 +1,6 @@
+import {validMethodRecords,reconcileMethodRecords} from './methodRecords';
+import {validDraftCarts} from './draftCart';
+import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';
@@ -51,12 +54,16 @@ import {validCombatDoctrine} from './combatDoctrine';
 import {validGuardDuties} from './guardDuty';
 import {validRaidReports} from './raidReports';
 import {validTransit} from './transit';
+import {validTerrainInfluence} from './terrainInfluenceRuntime';
+import {validCommanders} from './commanders';
+import {validNaval} from './navalPorts';
 import {validRulersState} from './rulersState';
 import {ensureSkins} from './skinState';
 import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
 import {validTowerPlatformState} from './towerPlatforms';
 import {validProductionState,PRODUCTION_RECIPES} from './production';
+import {validWildCraftState} from './wildCraft';
 import {discountQuarryPlans} from "./mining";
 import {validCampMoveState} from './nomadicCamp';
 import {validContactState} from './encounters';
@@ -97,6 +104,7 @@ export function encodeGame(g: Game) {
   tickArmorRepairs(g);
   reconcileArmorHolders(g);
   reconcileFarmToolCargo(g);
+  reconcileMethodRecords(g);
   reconcileWeaponCargo(g);
   reconcileSiegeRams(g);
   syncRiverboats(g);
@@ -170,6 +178,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19,20,21].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   if(s.worldOptions?.preset!==undefined&&(![20,21].includes(s.worldgenVersion)||!["archipelago","island","continents","pangaea","river-valley","highland","steppe","lakeland"].includes(s.worldOptions.preset)))fail();
   if(s.worldOptions?.mapgenVersion!==undefined&&(![20,21].includes(s.worldgenVersion)||s.worldOptions.mapgenVersion!==1))fail();
+  if(s.worldOptions?.geologyVersion!==undefined&&(s.worldgenVersion!==21||s.worldOptions.geologyVersion!==1))fail();
   if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
   if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1&&s.worldOptions.rulersVersion!==2)failRulers();
   if(s.rulers!==undefined&&!validRulersState(s.rulers))failRulers();
@@ -183,19 +192,20 @@ function validateGamePayload(raw: unknown) {
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
   if(!validPackPastureOrders(s))fail();
+  if(!validDraftCarts(s))fail();
   if(s.cattleVersion!==undefined&&s.cattleVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validCopperStudies(s)||!validTradedTeaching(s)||!validArmorRepairs(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
+  if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validWildCraftState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
   if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validRaidDefense(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
-  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
-  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s))fail();
+  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
+  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
@@ -319,6 +329,7 @@ function validateGamePayload(raw: unknown) {
     }
     if(t.seeds!==undefined&&(!num(t.seeds)||t.seeds<0||t.seeds>1e12))fail();
     if(t.cropSamples!==undefined)cropAmounts(t.cropSamples,1e12);
+    if(t.ironMetallurgyVersion!==undefined&&t.ironMetallurgyVersion!==1)fail();
     if(t.copperExperiment!==undefined&&typeof t.copperExperiment!=="boolean")fail();
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     const inheritedActors=new Set((t.inheritedCropTrials||[]).flatMap((q:any)=>q.actorIds||[]));
@@ -446,7 +457,7 @@ function validateGamePayload(raw: unknown) {
     for (const f of ["node", "target"]) if (u[f] !== null && typeof u[f] !== "string") fail();
     if(u.homeHall!==undefined&&(!Number.isSafeInteger(u.homeHall)||u.homeHall<1))fail();
     if(u.parents!==undefined&&(!Array.isArray(u.parents)||u.parents.length>2||new Set(u.parents).size!==u.parents.length||u.parents.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1||id===u.id)))fail();
-    if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean"||(m.timber!==undefined&&(!Number.isSafeInteger(m.timber)||m.timber<20||m.timber>100000)))fail();}
+    if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean"||(m.timber!==undefined&&(!Number.isSafeInteger(m.timber)||m.timber<20||m.timber>100000))||(m.rations!==undefined&&(!num(m.rations)||m.rations<0||m.rations>48)))fail();}
     if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
     if(u.resting!==undefined&&typeof u.resting!=="boolean")fail();
     if(u.huntTrail!==undefined){const h=u.huntTrail;if(!obj(h)||!Number.isSafeInteger(h.animal)||h.animal<1||h.animal>=s.nextId||![h.x,h.z,h.seenAt,h.expiresAt].every(num)||Math.abs(h.x)>HALF+40||Math.abs(h.z)>HALF+40||h.seenAt<0||h.seenAt>s.time||h.expiresAt<h.seenAt||h.expiresAt>h.seenAt+HUNTING_TRACKING_RULES.memorySeconds+.001||(h.searchStartedAt!==undefined&&(!num(h.searchStartedAt)||h.searchStartedAt<h.seenAt||h.searchStartedAt>s.time)))fail();}
@@ -782,5 +793,7 @@ export function decodeGame(raw:unknown):Game {
   discountQuarryPlans(g);
   setFlowFieldsEnabled(g,false);
   initializePenBeddingTracking(g);
+  for(const p of g.state.production?.projects||[])if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCopperSmeltLoad(u,p);}
+  for(const p of g.state.production?.projects||[])if((p.recipe==='smeltIron'||p.recipe==='consolidateIron')&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindIronSmeltLoad(u,p);}
   return g;
 }

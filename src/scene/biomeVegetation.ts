@@ -126,7 +126,7 @@ export class BiomeDressing {
  constructor(scene:THREE.Scene,style:VegetationStyle='classic'){this.scene=scene;this.style=style;
   if(style==='painterly'){
    this.sway=painterSway();const grass=makePainterGrass(this.sway),still=makePainterGrass(this.sway,false),prop=makePainterProp();this.materials.push(grass,still,prop);
-   const kinds:[string,THREE.BufferGeometry,THREE.Material][]=[['grass',painterDressing('grass'),grass],['tallgrass',painterDressing('tallgrass'),grass],['flowers',painterDressing('flowers'),grass],['bloom',painterDressing('bloom'),grass],['fern',painterDressing('fern'),grass],['reeds',painterDressing('reeds'),grass],['scrub',painterDressing('scrub'),still],['shrub',painterDressing('shrub'),still],['pebbles',painterDressing('pebbles'),prop],['rocks',painterDressing('rocks'),prop],['log',painterDressing('log'),prop]];
+   const kinds:[string,THREE.BufferGeometry,THREE.Material][]=[['grass',painterDressing('grass'),grass],['tallgrass',painterDressing('tallgrass'),grass],['flowers',painterDressing('flowers'),grass],['bloom',painterDressing('bloom'),grass],['fern',painterDressing('fern'),grass],['reeds',painterDressing('reeds'),grass],['scrub',painterDressing('scrub'),still],['shrub',painterDressing('shrub'),still],['pebbles',painterDressing('pebbles'),prop],['rocks',painterDressing('rocks'),prop],['log',painterDressing('log'),prop],['cattail',painterDressing('cattail'),grass],['agave',painterDressing('agave'),still],['drygrass',painterDressing('drygrass'),grass],['cushion',painterDressing('cushion'),still]];
    for(const [kind,geo,mat] of kinds)this.add(kind,geo,mat);return;
   }
   const colors:Record<DressingForm,string>={grass:'#7e8c58',flowers:'#c9b989',reeds:'#8d8a53',scrub:'#858367',pebbles:'#89877a'};

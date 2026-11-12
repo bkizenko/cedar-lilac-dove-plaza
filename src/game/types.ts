@@ -35,7 +35,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey" | "smallBeer" | "beer";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey" | "smallBeer" | "beer" | "driedBerries" | "jam" | "tallow";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
@@ -160,6 +160,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaExplorationId?:number;
   tradeNeedsId?:number;
   cargoRecoveryId?:number;
+  portWorkId?:number;
   tradeCargoPending?:true;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
@@ -167,6 +168,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   waterVessel?:import('./pottery').WaterVessel;
   sitePreparationId?:number;
   productionProjectId?:number;
+  wildWorkId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   tradedTeaching?:import('./tradedTeaching').TradedTeachingOrder;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
@@ -249,6 +251,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
+  methodRecordCargoId?:number;
   farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
@@ -256,6 +259,10 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   draftPracticeSeconds?:number;
   farmToolWork?: FarmToolWork;
   packAnimal?: import('./packAnimalState').PackAnimal;
+  draftCart?:import('./draftCart').CartIdentity;
+  cartIdentity?:import('./draftCart').CartIdentity;
+  draftCartOrder?:import('./draftCart').DraftCartOrder;
+  draftCartPartner?:number;
   packPastureOrder?:{version:1;pen:number;animal:number;requestedAt:number;phase:'queued'|'unloading'|'returning';reason?:string};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn"|"beddingFetch"|"beddingDeliver"|"beddingLay"|"beddingReturn";beddingUnits?:number;beddingProgress?:number;releaseAfterBedding?:true;waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
@@ -288,7 +295,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   procurement?: { minimum: number };
   homeHall?: number;
   parents?: number[];
-  foundingJourney?: {x:number;z:number;leader:boolean;timber?:number};
+  foundingJourney?: {x:number;z:number;leader:boolean;timber?:number;rations?:number};
   expedition?: {food:number;returning:boolean;forage:number};
   scout?: {legs:number;returning:boolean;preparing?:true};
   scoutProvisions?: import('./scoutProvisions').ScoutProvisions;
@@ -420,6 +427,8 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  copperMetallurgyVersion?:1;
+  ironMetallurgyVersion?:1;
   foodExperience?:import("./foodExperience").FoodExperience;
   identity?:import('./societyIdentity').SocietyIdentity;
   inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];
@@ -494,6 +503,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  looseDraftCarts?:import('./draftCart').LooseDraftCart[];
+  draftCartLedger?:import('./draftCart').DraftCartLedger;
   penBedding?:import('./penBedding').PenBeddingLedger;
   copperTrials?:import('./materialStudy').CopperTrials;
   teachingOffers?:import('./tradedTeaching').TeachingOffer[];
@@ -526,11 +537,15 @@ export type GameState = {
   guardDuties?:import('./guardDuty').GuardDuty[];
   raidReports?:import('./raidReports').RaidReports;
   transit?:import('./transit').TransitState;
+  terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;
+  commanders?:import('./commanders').CommandersState;
+  naval?:import('./navalPorts').NavalState;
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
   coastalTradeReviewAt?:number;
   coastalCommissions?:import('./coastalCommission').CoastalCommission[];
   seaExploration?:import('./seaExploration').SeaExplorationState;
+  methodRecords?:import('./methodRecords').MethodRecordsState;
   farmToolCargo?:import('./farmToolCargo').FarmToolCargoState;
   droppedCargo?:import('./stolenCargo').DroppedCargoState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
@@ -540,6 +555,7 @@ export type GameState = {
   clay?:import('./pottery').ClayState;
   cerealProcessing?:import('./cerealRules').CerealLedger;
   production?:import('./production').ProductionState;
+  wildCraft?:import('./wildCraft').WildCraftState;
   campSites?:{team:number;x:number;z:number}[];
   campMove?:import('./nomadicCamp').CampMove;
   autoWorkEnabled?:boolean;

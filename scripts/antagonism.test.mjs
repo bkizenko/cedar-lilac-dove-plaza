@@ -19,7 +19,7 @@ test('distant villages retain grievances, and unseen foreign homes do not create
  t.tension=0;g.tickInfluence(10);assert.equal(t.tension,0);
 });
 test('simulation influence has the same stable core and finite fading sphere as the territory map',()=>{
- const g=new Game();g.reset(345);g.state.buildings=[g.makeBld('townhall',0,0,0)];g.paintTerritory();
+ const g=new Game();g.reset(345);delete g.state.terrainInfluence;g.state.buildings=[g.makeBld('townhall',0,0,0)];g.paintTerritory();
  flushGeographicInfluence(g);
  const radius=influenceRadius('townhall')*INFLUENCE_RULES.radiusScale,fade=INFLUENCE_RULES.fadeMeters;
  assert.equal(g.influenceAt(0,0,0),1);assert.equal(g.influenceAt(radius*.7,0,0),1);

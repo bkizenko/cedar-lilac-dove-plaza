@@ -72,15 +72,15 @@ function dressingForm(kind:ProvinceKind,random:number,bank:boolean):DressingForm
  * instance cap always keeps what is around the camera. Same eligibility rules as the classic scatter (dry, gentle, outside buildings). */
 function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number):DressingPoint['kind']{
  const pick=(table:[DressingPoint['kind'],number][])=>{let t=0;for(const [,w] of table)t+=w;let v=r*t;for(const [k,w] of table){v-=w;if(v<0)return k;}return table[0][0];};
- if(bank&&(kind==='wetland'||moisture>.6))return pick([['reeds',5],['tallgrass',2],['grass',1]]);
+ if(bank&&(kind==='wetland'||moisture>.6))return pick([['cattail',3],['reeds',4],['tallgrass',2],['grass',1]]);
  switch(kind){
   case 'meadow':return pick([['grass',50],['tallgrass',14],['flowers',22],['shrub',3],['pebbles',3],['rocks',1.2]]);
   case 'mixed-woodland':return pick([['grass',36],['fern',22],['shrub',12],['tallgrass',8],['flowers',6],['log',2.4],['rocks',2.6],['pebbles',3]]);
   case 'conifer-forest':return pick([['fern',24],['grass',24],['shrub',7],['log',3.4],['rocks',5],['pebbles',4]]);
-  case 'alpine':return pick([['pebbles',32],['rocks',14],['grass',30],['tallgrass',8],['flowers',5]]);
-  case 'wetland':return pick([['tallgrass',32],['grass',28],['flowers',10],['reeds',12],['fern',6]]);
-  case 'dry-scrub':return pick([['scrub',30],['tallgrass',26],['pebbles',16],['rocks',7],['grass',14],['shrub',5]]);
-  case 'arid':return pick([['pebbles',38],['scrub',24],['rocks',14],['tallgrass',9]]);
+  case 'alpine':return pick([['pebbles',30],['rocks',14],['cushion',12],['grass',22],['tallgrass',6],['flowers',5]]);
+  case 'wetland':return pick([['tallgrass',26],['grass',22],['flowers',9],['reeds',10],['cattail',9],['fern',6]]);
+  case 'dry-scrub':return pick([['scrub',26],['drygrass',22],['tallgrass',10],['pebbles',16],['rocks',7],['agave',4],['grass',10],['shrub',5]]);
+  case 'arid':return pick([['pebbles',34],['scrub',20],['rocks',14],['agave',9],['drygrass',9]]);
   default:return pick([['grass',38],['shrub',16],['flowers',12],['fern',8],['tallgrass',12],['pebbles',5],['rocks',2]]);
  }
 }

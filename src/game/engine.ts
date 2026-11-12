@@ -1,3 +1,4 @@
+import {draftCartChoices} from './draftCart';
 import {ProductionDeliveryChannel,type ProductionDelivery} from './productionDelivery';
 import {storedVillageCandidates,chooseStoredVillage,type StoredVillageCandidate} from './simulationLifecycle';
 import {SimulationCheckpointSaver} from './simulationCheckpointSave';
@@ -375,7 +376,7 @@ export class Engine {
 
   async configureNewWorld(request:WorldRequest,previewRiverbanks=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart(request,previewRiverbanks&&this.game.testMode?19:21);
+    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
   }
 
   enterIsland() {
@@ -756,6 +757,12 @@ export class Engine {
       return;
     }
     if(this.game.selectedBoat!==null){this.game.issueMove(g.x,g.z);this.pushHud();return;}
+    const looseCart=this.view.pickDraftCart?.(cx,cy,this.game);
+    if(looseCart){
+      const selected=this.game.selectedUnits().filter(u=>u.team===0&&u.hp>0),actor=selected.find(u=>draftCartChoices(this.game,u.id).loose.some(c=>c.id===looseCart.cart.id&&!c.issue))??selected[0];
+      if(!actor){this.presentationNotice('Select a nearby resident to recover this cart',3);return;}
+      const original=this.game;void this.dispatch({kind:'recover-draft-cart',unitId:actor.id,cartId:looseCart.cart.id}).then(result=>{if(this.game===original)this.presentationNotice(result.reason,result.accepted?2:4);}).catch(error=>this.presentationNotice(error instanceof Error?error.message:String(error),4));return;
+    }
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else if(ent?.kind==="building"&&ent.team===0&&(!this.game.finished(ent)||ent.expansion)){if(queue)this.game.queueConstruction(ent);else this.game.orderConstruction(ent);}

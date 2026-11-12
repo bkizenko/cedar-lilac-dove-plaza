@@ -1,3 +1,4 @@
+import {draftCartCapacity} from '../game/draftCart';
 import {toolmakingPracticeRate} from "../game/crafting";
 import {packCapacityMultiplier} from '../game/packAnimalState';
 import {siegeRamCarriedMaterials} from '../game/siegeRam';
@@ -41,9 +42,11 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       if (resident.farmTool) {
         equipped.push(resident.farmTool==='woodenArd'?`Wooden ard · ${Math.round(resident.draftPracticeSeconds??0)}s draft practice`:resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
       }
+      if(resident.draftCart)equipped.push(`Animal-drawn cart #${resident.draftCart.id}`);
+      if(resident.cartIdentity)equipped.push(`Handcart #${resident.cartIdentity.id}`);
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
-      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`Pack ${resident.packAnimal.species??'goat'} · capacity ×${packCapacityMultiplier(resident).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);
+      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`${resident.draftCart?'Draft':'Pack'} ${resident.packAnimal.species??'goat'} · capacity ×${(draftCartCapacity(resident)??packCapacityMultiplier(resident)).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);
       const armor=game&&wornArmor(game,resident);if(armor)equipped.push(`Padded armor (${Math.round(armor.condition*100)}%)`);
       if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
       if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
@@ -57,7 +60,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
           <summary>Aptitudes & practice</summary>
           <div>Strength {Math.round(traits.strength * 100)}% · Speed {Math.round(traits.speed * 100)}% · Combat {Math.round(traits.fighting * 100)}% · Trade {Math.round(traits.trading * 100)}%</div>
           <div>{amount(craftSeconds / 60)} min hands-on crafting · +{Math.round(Math.min(0.3, craftSeconds / 1200) * 100)}% work rate</div>
-          {resident.craftingPractice?.toolmaking&&<div>Toolmaking · {amount(resident.craftingPractice.toolmaking.workSeconds/60)} min · {resident.craftingPractice.toolmaking.completedTools} tools · {resident.craftingPractice.toolmaking.completedRepairs} repairs · +{Math.round((toolmakingPracticeRate(resident)-1)*100)}% work rate</div>}
+          {resident.craftingPractice?.toolmaking&&<div>Toolmaking · {amount(resident.craftingPractice.toolmaking.workSeconds/60)} min · {resident.craftingPractice.toolmaking.completedTools} tools · {resident.craftingPractice.toolmaking.completedRepairs} repairs · +{amount((toolmakingPracticeRate(resident)-1)*100)}% work rate</div>}
           {skills.map(([method, skill]) => <div key={method}>
             {PRODUCTION_RECIPES[method as keyof typeof PRODUCTION_RECIPES].name} · {skill.successfulBatches} made · {skill.taughtBatches} learned · +{Math.round((productionPracticeRate(resident, method) - 1) * 100)}% work rate
           </div>)}

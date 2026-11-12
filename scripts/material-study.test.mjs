@@ -18,8 +18,8 @@ test('interrupted experiments preserve paid effort across saves and resume witho
  const raw=encodeGame(g);raw.state.units.find(u=>u.id===who).copperStudy.progress=99;assert.throws(()=>decodeGame(raw));
 });
 
-test('Stone Age residents can gather discovered copper and physically bring it home',()=>{
- const g=fixture();g.state.buildings.push(g.makeBld('townhall',-20,38,0));g.rebuildWalk();g.vision.fill(2);g.tribe(0).copper=0;
+test('legacy Stone Age residents can still gather discovered usable copper and physically bring it home',()=>{
+ const g=fixture();delete g.tribe(0).copperMetallurgyVersion;g.state.buildings.push(g.makeBld('townhall',-20,38,0));g.rebuildWalk();g.vision.fill(2);g.tribe(0).copper=0;
  const u=g.state.units[0];u.selected=true;const n={id:g.id(),kind:'copper',x:5,z:65,y:4,amount:20,maxAmt:20,regenT:0,scale:1,rich:1};g.state.copper=[n];
  g.issueGather(n);assert.equal(u.order,'gather');for(let i=0;i<2000&&g.tribe(0).copper===0;i++){g.state.time+=.1;g.navBudget=10;g.workerAI(u,.1);}
  assert.ok(g.tribe(0).copper>0);assert.ok(n.amount<20);assert.equal(g.tribe(0).age,0);

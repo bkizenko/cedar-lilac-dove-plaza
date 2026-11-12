@@ -35,7 +35,12 @@ test('native paid hull with actual afloat loaded crew and second paid hull trans
  assert.equal(boardRiverboat(g,boat.id,[captain,passenger],1),2);drive(g,100,()=>[captain,passenger].every(u=>u.boat?.phase==='aboard'),'actual two-body boarding');
  assert.equal(commandRiverboat(g,boat.id,target.x,target.z),true);drive(g,160,()=>Math.hypot(boat.x-dock.x,boat.z-dock.z)>45,'actual outbound loaded water leg');
  assert.ok(captain.waterCargoEvidence?.waterMeters>=20);
- assert.equal(beginRiverboat(g,dock.id,1,builder.id),true,g.state.banner);drive(g,100,()=>builder.haulageWork?.progress>2,'second paid hull bench progress');pauseHaulageWork(builder,g);
+ // Ordinary coastal/exploration commissioning may already have paid this
+ // same spare builder's second hull while the first crew sailed. Retain that
+ // actual project rather than requesting a duplicate or clearing its job.
+ if(!builder.haulageWork)assert.equal(beginRiverboat(g,dock.id,1,builder.id),true,g.state.banner);
+ assert.equal(builder.haulageWork.vessel,true);assert.equal(builder.haulageWork.workplace,dock.id);assert.equal(g.tribe(1).wood,initialWood-80);assert.equal(g.tribe(1).stone,initialStone-8);
+ drive(g,100,()=>builder.haulageWork?.progress>2,'second paid hull bench progress');pauseHaulageWork(builder,g);
  const project=g.state.haulageProjects.find(p=>p.team===1),projectId=project.id,progress=project.work.progress;
  const boatId=boat.id,crewIds=[captain.id,passenger.id],builderId=builder.id,dockId=dock.id,body=crewIds.map(id=>{const u=g.state.units.find(u=>u.id===id);return clone({id,boat:u.boat,x:u.x,y:u.y,z:u.z,carry:u.carry,carryType:u.carryType});});
  const evidenceBefore=clone(captain.waterCargoEvidence),hull=clone(boat),woods=g.tribe(0).wood+g.tribe(1).wood,stones=g.tribe(0).stone+g.tribe(1).stone,practice=clone(g.tribe(0).boatPractice||null);
