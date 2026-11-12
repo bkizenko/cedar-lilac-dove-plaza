@@ -737,7 +737,9 @@ export class Game {
     // Player starts only: node:test and testMode leave the generated camp in place
     // (units and cache stay together). enterAsBand still applies the scenic pick.
     const underTest=this.testMode||(typeof process!=='undefined'&&!!process.env?.NODE_TEST_CONTEXT);
-    if(!underTest)this.applyScenicHallSuggestion();
+    // V20 already ranks physical starts. Moving only the cache after spawning
+    // would focus the camera on unseen land and send the band away unasked.
+    if(!underTest&&(this.state.worldgenVersion??1)<20)this.applyScenicHallSuggestion();
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
   }
 
