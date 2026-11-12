@@ -50,7 +50,7 @@ export function settledWarPrestige(state:WarState,team=0):SettledWarPrestige{
 
 /** A bounded, non-evicting identity ledger. Saturation stops new receipts rather
  * than allowing old histories to farm credit after eviction. No foreign totals. */
-export const RAID_DEFENSE_RULES={version:1,maximumBands:128,maximumActors:36,heldWeight:.5,maximumCredit:4} as const;
+export const RAID_DEFENSE_RULES={version:1,maximumBands:128,maximumActors:36,reviewSeconds:1,heldWeight:.5,maximumCredit:4} as const;
 export type RaidDefenseTerminal={actorId:number;outcome:'returned'|'lost';cargo:number;captives:number};
 export type RaidDefenseBand={bandId:number;startedAt:number;witnessAt:number;intent:RaidIntent;expectedActors:number;actorIds:number[];terminals:RaidDefenseTerminal[];capturedResidentIds:number[];returnedResidentIds:number[];deliveredResidentIds:number[];taken:number;recovered:number;escaped:number;buildingsLost:number;captivesLost:number;settledAt?:number;attempted:boolean;resisted:boolean;outcome?:'held'|'escaped'|'damaged'|'withdrawn'};
 export type RaidDefenseState={version:1;bands:RaidDefenseBand[]};
@@ -58,29 +58,29 @@ export type RaidDefenseState={version:1;bands:RaidDefenseBand[]};
  * A remote death, scout, private rival raid or formal hall retreat is no proof. */
 export function witnessRaidDefense(g:Game,u:Unit){
  const p=u.seaRaid?.plan;if(u.team!==3||!p||p.intent==='scout'||!g.visibleAt(u.x,u.z))return;
- let b=g.state.raidDefense?.bands.find(b=>b.bandId===p.bandId);
+ const bandId=p.objectiveBandId??p.bandId;let b=g.state.raidDefense?.bands.find(b=>b.bandId===bandId);
  if(!b&&!g.state.buildings.some(site=>site.team===0&&p.seenSites.includes(site.id))&&!g.state.units.some(v=>p.seenResidents.includes(v.id)&&(v.team===0||v.prisoner?.originTeam===0)))return;
  const s=g.state.raidDefense??={version:1,bands:[]};
- if(!b){if(s.bands.length>=RAID_DEFENSE_RULES.maximumBands)return;b={bandId:p.bandId,startedAt:p.selectedAt,witnessAt:g.state.time,intent:p.intent,expectedActors:p.initialBand,actorIds:[],terminals:[],capturedResidentIds:[],returnedResidentIds:[],deliveredResidentIds:[],taken:0,recovered:0,escaped:0,buildingsLost:0,captivesLost:0,attempted:false,resisted:false};s.bands.push(b);}
+ if(!b){if(s.bands.length>=RAID_DEFENSE_RULES.maximumBands)return;b={bandId,startedAt:p.selectedAt,witnessAt:g.state.time,intent:p.intent,expectedActors:p.initialBand,actorIds:[],terminals:[],capturedResidentIds:[],returnedResidentIds:[],deliveredResidentIds:[],taken:0,recovered:0,escaped:0,buildingsLost:0,captivesLost:0,attempted:false,resisted:false};s.bands.push(b);}
  if(!b.actorIds.includes(u.id)&&b.actorIds.length<RAID_DEFENSE_RULES.maximumActors)b.actorIds.push(u.id);
 }
 /** Evidence comes from real damage application, not kills/withdrawal totals. */
 export function noteRaidDefenseDamage(g:Game,source:Unit|import('./types').Building|undefined,target:Unit|import('./types').Building,died:boolean){
  if(source?.team===3&&source.kind==='unit'&&target.kind==='building'&&target.team===0){
-  witnessRaidDefense(g,source);const b=g.state.raidDefense?.bands.find(b=>b.bandId===source.seaRaid?.plan?.bandId);
+  witnessRaidDefense(g,source);const b=g.state.raidDefense?.bands.find(b=>b.bandId===(source.seaRaid?.plan?.objectiveBandId??source.seaRaid?.plan?.bandId));
   if(b&&b.settledAt===undefined){b.attempted=true;if(died)b.buildingsLost++;}
  }else if(source?.team===0&&target.kind==='unit'&&target.team===3){
-  witnessRaidDefense(g,target);const b=g.state.raidDefense?.bands.find(b=>b.bandId===target.seaRaid?.plan?.bandId);
+  witnessRaidDefense(g,target);const b=g.state.raidDefense?.bands.find(b=>b.bandId===(target.seaRaid?.plan?.objectiveBandId??target.seaRaid?.plan?.bandId));
   if(b&&b.settledAt===undefined)b.resisted=true;
  }
 }
 export function noteRaidDefenseAttempt(g:Game,u:Unit,defender:number){
- if(defender!==0)return;witnessRaidDefense(g,u);const b=g.state.raidDefense?.bands.find(b=>b.bandId===u.seaRaid?.plan?.bandId);if(b&&b.settledAt===undefined)b.attempted=true;
+ if(defender!==0)return;witnessRaidDefense(g,u);const b=g.state.raidDefense?.bands.find(b=>b.bandId===(u.seaRaid?.plan?.objectiveBandId??u.seaRaid?.plan?.bandId));if(b&&b.settledAt===undefined)b.attempted=true;
 }
 /** Only actual successful surrender can put an original resident on this list. */
 export function noteRaidDefenseCapture(g:Game,guard:Unit,resident:Unit){
  if(resident.prisoner?.originTeam!==0||resident.prisoner.captorTeam!==3)return;
- witnessRaidDefense(g,guard);const b=g.state.raidDefense?.bands.find(b=>b.bandId===guard.seaRaid?.plan?.bandId);
+ witnessRaidDefense(g,guard);const b=g.state.raidDefense?.bands.find(b=>b.bandId===(guard.seaRaid?.plan?.objectiveBandId??guard.seaRaid?.plan?.bandId));
  if(b&&b.settledAt===undefined&&!b.capturedResidentIds.includes(resident.id)&&b.capturedResidentIds.length<b.expectedActors)b.capturedResidentIds.push(resident.id);
 }
 /** Custody is a physical completed arrival, even if the escort subsequently
@@ -105,10 +105,10 @@ const defenseClocks=new WeakMap<Game,{state:GameState;next:number}>();
 export function tickRaidDefense(g:Game){
  const bands=g.state.raidDefense?.bands;if(!bands?.some(b=>b.settledAt===undefined))return;
  const clock=defenseClocks.get(g);if(clock?.state===g.state&&g.state.time<clock.next)return;
- defenseClocks.set(g,{state:g.state,next:g.state.time+1});
+ defenseClocks.set(g,{state:g.state,next:g.state.time+RAID_DEFENSE_RULES.reviewSeconds});
  const terminalByBand=new Map<number,Map<number,RaidIntentHistory>>(),liveBands=new Set<number>(),heldResidents=new Set<number>();
- for(const h of g.state.raidIntentHistory||[]){if(h.outcome==='stranded')continue;let list=terminalByBand.get(h.plan.bandId);if(!list){list=new Map();terminalByBand.set(h.plan.bandId,list);}list.set(h.actorId,h);}
- for(const u of g.state.units){if(u.hp<=0)continue;if(u.seaRaid?.plan)liveBands.add(u.seaRaid.plan.bandId);if(u.prisoner?.originTeam===0&&u.prisoner.captorTeam===3&&u.prisoner.phase!=='released')heldResidents.add(u.id);}
+ for(const h of g.state.raidIntentHistory||[]){if(h.outcome==='stranded')continue;const bandId=h.plan.objectiveBandId??h.plan.bandId;let list=terminalByBand.get(bandId);if(!list){list=new Map();terminalByBand.set(bandId,list);}list.set(h.actorId,h);}
+ for(const u of g.state.units){if(u.hp<=0)continue;if(u.seaRaid?.plan)liveBands.add(u.seaRaid.plan.objectiveBandId??u.seaRaid.plan.bandId);if(u.prisoner?.originTeam===0&&u.prisoner.captorTeam===3&&u.prisoner.phase!=='released')heldResidents.add(u.id);}
  for(const b of bands){
   if(b.settledAt!==undefined)continue;
   const histories=terminalByBand.get(b.bandId);if(!histories)continue;

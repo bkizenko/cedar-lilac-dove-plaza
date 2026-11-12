@@ -120,3 +120,16 @@ test('native captive physically delivered to camp remains an escaped objective a
  band=g.state.raidDefense.bands.find(b=>b.bandId===c.bandId);assert.equal(person.team,0);assert.equal(band.outcome,'escaped');assert.equal(raidDefensePrestige(g.state).value,0);assert.equal(terrain(g),c.original);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
  const forged=encodeGame(g),falseReceipt=forged.state.raidDefense.bands.find(b=>b.bandId===c.bandId);falseReceipt.outcome='held';falseReceipt.captivesLost=0;assert.throws(()=>decodeGame(forged),'a save cannot erase actual delivered-captive evidence into victory');
 });
+
+test('native multi-actor paid dispatch settles one shared objective while keeping distinct conserved trip ownership across reload',()=>{
+ const c=existsSync(ESCAPE_CHECKPOINT)?JSON.parse(readFileSync(ESCAPE_CHECKPOINT,'utf8')):escapedScenario();let g=decodeGame(c.save);
+ const camp=g.state.buildings.find(b=>b.id===c.campId),observer=g.state.units.find(u=>u.id===c.observerId),front=g.interactionSpot(observer,camp);assert.ok(front);
+ // Finite larger-camp opening, before departure: two additional real guards.
+ // Stocks stay exactly those of the previously executed native checkpoint.
+ for(let i=0;i<2;i++){const u=g.spawnUnit('spearman',front.x,front.z,3);u.homeCamp=camp.id;u.order='hold';}
+ camp.campEconomy.lastDispatchAt=g.state.time-121;camp.campEconomy.knownSites[0].observedAt=g.state.time;g.state.conflict='balanced';assert.equal(dispatchExistingCampRaid(g),true);g.state.conflict='quiet';
+ const party=g.state.units.filter(u=>u.campTrip?.campId===camp.id),ids=party.map(u=>u.id);assert.ok(party.length>=2);const keys=party.map(u=>u.seaRaid.plan.bandId);assert.equal(new Set(keys).size,party.length,'paid actor ownership IDs are never merged');const cohort=party[0].seaRaid.plan.objectiveBandId;assert.ok(cohort);assert.ok(party.every(u=>u.seaRaid.plan.objectiveBandId===cohort));
+ const total=g.tribe(0).wood+g.tribe(3).wood;drive(g,150,()=>g.state.units.some(u=>ids.includes(u.id)&&u.carry>0));assert.equal(raidDefensePrestige(g.state).value,0);g=decodeGame(encodeGame(g));
+ drive(g,180,()=>g.state.raidDefense.bands.some(b=>b.bandId===cohort&&b.settledAt!==undefined));const receipt=g.state.raidDefense.bands.find(b=>b.bandId===cohort);assert.equal(receipt.expectedActors,party.length);assert.equal(receipt.terminals.length,party.length);assert.deepEqual([...receipt.actorIds].sort((a,b)=>a-b),[...ids].sort((a,b)=>a-b));assert.equal(receipt.outcome,'escaped');assert.equal(g.state.raidDefense.bands.filter(b=>b.bandId===cohort).length,1);assert.equal(g.tribe(0).wood+g.tribe(3).wood,total);assert.equal(raidDefensePrestige(g.state).value,0);assert.equal(terrain(g),c.original);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ const bad=encodeGame(g),history=bad.state.raidIntentHistory.find(h=>h.plan.objectiveBandId===cohort);history.plan.objectiveBandId=bad.state.nextId;assert.throws(()=>decodeGame(bad),'impossible cohort provenance cannot be loaded');
+});
