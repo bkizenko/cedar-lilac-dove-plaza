@@ -16,13 +16,29 @@ type G={civ:CivId;r:Rng;w:number;d:number;era:number;wealth:number;wear:number;p
  B:(s:Slot,size:V,pos:V,lod?:LodTier,rot?:V)=>void;Cy:(s:Slot,dia:number,h:number,pos:V,lod?:LodTier,sides?:number,top?:number)=>void;Pr:(shape:Part['shape'],s:Slot,size:V,pos:V,lod?:LodTier,rot?:V,sides?:number)=>void;
  post:(s:Slot,x:number,z:number,h:number,t?:number,lod?:LodTier)=>void;banner:(x:number,z:number,h:number)=>void;door:(x:number,z:number,wd?:number,h?:number)=>void;off:number};
 type Out={entry?:{x:number;z:number;width:number}};
+/** Per-civ banner shapes (original grammar): each society hangs its cloth its own way so villages read apart at a glance. 'flag' is the first-generation look and stays the legacy default. */
+export type BannerStyle='flag'|'swallow'|'hanging'|'streamers'|'pennant'|'twin';
+export const BANNER_STYLE:Record<CivId,BannerStyle>={sandrill:'hanging',nilemark:'streamers',tigrane:'swallow',hanrei:'twin',vedara:'streamers',aureline:'pennant',sahelan:'hanging',quillan:'swallow',kaaltun:'twin',mekhari:'streamers',brythen:'pennant',rusvolt:'flag',steppan:'swallow',skoldar:'pennant'};
+function bannerFor(parts:Part[],civ:CivId,m:(s:Slot)=>Part['mat'],x:number,z:number,h:number){
+ const st=BANNER_STYLE[civ],T=m('trim'),C=m('cloth'),A=m('accent'),top=h-.15;
+ /** pole + main cloth are mid-tier; tails, bars, trim bands and finial are near-only so the mid/far budgets hold */
+ parts.push(beam(T,[x,0,z],[x,h,z],.08,1),part('cone',A,[.14,.24,.14],[x,h,z],0,undefined,4));
+ switch(st){
+  case 'swallow':parts.push(part('box',C,[.78,.66,.03],[x+.42,top-.66,z],1),part('box',C,[.3,.42,.03],[x+.2,top-1.2,z],0),part('box',C,[.3,.42,.03],[x+.64,top-1.2,z],0));break;
+  case 'hanging':parts.push(part('box',C,[.58,1.35,.03],[x+.4,top-1.4,z],1),part('box',T,[.78,.07,.07],[x+.4,top,z],0),part('box',A,[.58,.1,.035],[x+.4,top-1.4,z],0),part('box',A,[.34,.1,.035],[x+.4,top-.8,z],0));break;
+  case 'streamers':parts.push(part('box',C,[.1,1.0,.03],[x+.14,top-.8,z],1));for(let i=1;i<4;i++)parts.push(part('box',C,[.1,.8+(i%2)*.45,.03],[x+.14+i*.16,top-.8-(i%2)*.2,z+((i%2)?.02:-.02)],0));parts.push(part('box',T,[.74,.05,.06],[x+.36,top,z],0));break;
+  case 'pennant':parts.push(part('box',C,[.95,.62,.03],[x+.5,top-.62,z],1),part('box',C,[.62,.22,.03],[x+.67,top-1.04,z],0),part('box',C,[.3,.14,.03],[x+.82,top-1.22,z],0));break;
+  case 'twin':parts.push(part('box',C,[.36,1.05,.03],[x+.25,top-.9,z],1),part('box',C,[.36,.8,.03],[x+.66,top-.8,z],0),part('box',A,[.36,.14,.035],[x+.25,top-.9,z],0),part('box',T,[.78,.05,.06],[x+.4,top,z],0));break;
+  default:parts.push(part('box',C,[.7,.95,.03],[x+.38,h-1.05,z],1));
+ }
+}
 const mk=(civ:CivId,ctx:CivContext,r:Rng):G=>{const parts:Part[]=[],m=(s:Slot)=>matId(civ,s) as Part['mat'];
  const g:G={civ,r,w:ctx.footprint.w,d:ctx.footprint.d,era:ctx.era,wealth:ctx.wealth,wear:ctx.wear,parts,off:range(r,-.35,.35),
   B:(s,size,pos,lod=1,rot)=>void parts.push(part('box',m(s),size,pos,lod,rot)),
   Cy:(s,dia,h,pos,lod=1,sides=10,top)=>void parts.push(part('cylinder',m(s),[dia,h,top??dia],pos,lod,undefined,sides)),
   Pr:(shape,s,size,pos,lod=1,rot,sides)=>void parts.push(part(shape,m(s),size,pos,lod,rot,sides)),
   post:(s,x,z,h,t=.16,lod=2)=>void parts.push(beam(m(s),[x,0,z],[x,h,z],t,lod)),
-  banner:(x,z,h)=>{parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
+  banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
   door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,h,.08],[x,0,z],0))};return g;};
 const jit=(r:Rng,a:number)=>1+(r()-.5)*2*a;
 /** Poorest local dwelling per civ (era 0-1). */
