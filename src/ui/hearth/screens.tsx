@@ -9,6 +9,7 @@ import {foodExperienceReport} from '@/game/foodExperience';
 import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
+import {CivicPanel} from './civicPanel';
 import {HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
@@ -32,6 +33,7 @@ import {WorldSetup} from '../WorldSetup';
 import {UiThemeToggle} from '../uiTheme';
 import {TradeBlock} from '../Hud';
 import {IconBtn,cx} from './parts';
+import {loadMapStyle,rememberMapStyle,MAP_STYLE_KEY,type MapStyle} from '@/scene/mapStyle';
 import {PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,AGREEMENT_ICON,AGREEMENT_NAME,ROUTE_ICON,ago,freshness} from './icons';
 
 /** Full-height screen: one title, tabs, one close. Esc closes; focus moves in and returns. */
@@ -59,6 +61,7 @@ function Fresh({seconds,label,icon}:{seconds:number|null;label:string;icon:React
  const f=freshness(seconds);
  return <GameTooltip title={label} description={seconds===null?'Never seen':`Last report ${ago(seconds)} ago`}><span className={cx('hw-chip','f-'+f)} tabIndex={0} aria-label={`${label}: ${seconds===null?'never':ago(seconds)+' ago'}`}>{icon}{ago(seconds)}</span></GameTooltip>;
 }
+const FORM_NAME:Record<string,string>={bigMan:'Big-man',chiefly:'Chiefdom',monarchy:'Monarchy',oligarchy:'Oligarchy',republic:'Republic',theocracy:'Theocracy'};
 const STAGE_NAME:Record<string,string>={loyal:'Loyal',restive:'Restive',autonomous:'Autonomous',breakaway:'Breakaway'};
 function StageMeter({stage,label}:{stage:string;label:string}){
  const i=STAGES.indexOf(stage as never);
@@ -86,21 +89,21 @@ function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:
  </li>;
 }
 export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()=>void;initial?:string}){
- const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const;
- const read=useOwnerReadModels(engine,[QC,QS,QB]),c=read(QC).model?.council,s=read(QS).model?.societies,b=read(QB).model?.combat;
+ const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const;
+ const read=useOwnerReadModels(engine,[QC,QS,QB,QV]),c=read(QC).model?.council,s=read(QS).model?.societies,b=read(QB).model?.combat,civic=read(QV).model?.civic;
  const fb=useActionFeedback(engine);
  const [tab,setTab]=useState(initial||'ruler');
  const terms=useOwnerReadModels(engine,[{kind:'capitulation-offers'}])({kind:'capitulation-offers'}).model?.offers??[];
  if(!c)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">Reading the council…</p></Screen>;
  if(!c.enabled)return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><HearthCapitulationTerms engine={engine}/><p className="hw-empty">No ruling house yet.</p></Screen>;
- const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
+ const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},...(civic?.enabled?[{id:'society',label:'Society',icon:<Landmark size={20}/>,badge:civic.warnings.length||undefined}]:[]),{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
  return <Screen title={c.house?`House ${c.house.name}`:'Council'} icon={<Crown size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   {tab==='ruler'&&<div className="hw-grid-2">
-   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><RulerPortrait engine={engine} name={c.ruler.name} fallback={<span className="hw-medal hw-medal-l"><Crown size={40}/></span>}/><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${nice(c.polity.form)}`:''}</p></div></div>
+   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><RulerPortrait engine={engine} name={c.ruler.name} fallback={<span className="hw-medal hw-medal-l"><Crown size={40}/></span>}/><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${FORM_NAME[c.polity.form]??nice(c.polity.form)}`:''}</p></div></div>
     <p className="hw-quote">{c.ruler.headline}{c.ruler.contradiction?`. ${c.ruler.contradiction}`:''}</p>
     {c.ruler.wants.length>0&&<div className="hw-chips"><span className="hw-row-label"><Target size={18}/>Wants</span>{c.ruler.wants.map(w=><span key={w} className="hw-chip">{w}</span>)}</div>}
     <div className="hw-chips"><span className="hw-row-label"><TriangleAlert size={18}/>Fears</span><span className="hw-chip t-warn">{c.ruler.fears}</span></div>
-    <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{k} · {v}</span>)}</div>
+    <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{nice(k)} {v}</span>)}</div>
    </section>}
    {c.handover&&<HandoverCard h={c.handover}/>}
    {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
@@ -108,11 +111,12 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
   {tab==='realm'&&<div className="hw-grid-2">
    {c.showFactions&&c.factions.length>0&&<FactionsCard factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
    <RenownCard glory={c.glory} score={c.gloryScore}/>
-   {c.expansion&&<section className="hw-card"><div className="hw-card-head"><h3>Expansion</h3><span className="hw-chip">{c.expansion.mode}</span></div>{c.expansion.why.length>0&&<ul className="hw-chips">{c.expansion.why.map(w=><li key={w} className="hw-chip hw-chip-soft">{w}</li>)}</ul>}</section>}
+   {c.expansion&&<section className="hw-card"><div className="hw-card-head"><h3>Expansion</h3><span className="hw-chip">{nice(c.expansion.mode)}</span></div>{c.expansion.why.length>0&&<ul className="hw-chips">{c.expansion.why.map(w=><li key={w} className="hw-chip hw-chip-soft">{w}</li>)}</ul>}</section>}
    {(s?.own.length||0)>0&&<section className="hw-card"><div className="hw-card-head"><h3>Our outlying halls</h3></div><ul className="hw-chips">{s!.own.map((o,i)=><li key={i} className="hw-chip"><StageMeter stage={o.stage} label="Outlying hall"/>{o.resolution?<em>{o.resolution}</em>:<small>{o.pressure}%</small>}</li>)}</ul></section>}
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
   </div>}
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
+  {tab==='society'&&civic&&<CivicPanel civic={civic}/>}
   {tab==='chronicle'&&<FameFeed log={c.log}/>}
   {tab==='terms'&&<HearthCapitulationTerms engine={engine}/>}
  </Screen>;
@@ -154,13 +158,24 @@ function AudioSliders({engine}:{engine:Engine|null}){
  const [,bump]=useState(0);const st=engine?.audio.settings;if(!engine||!st)return null;
  return <>{(['master','music','sfx','ambience'] as const).map(b=><label key={b}>{b==='sfx'?'Effects':b[0].toUpperCase()+b.slice(1)}<input type="range" min={0} max={100} value={Math.round(st[b]*100)} aria-label={b+' volume'} onChange={e=>{engine.audio.setVolume(b,+e.target.value/100);bump(n=>n+1);}}/></label>)}</>;
 }
+/** Map look switch. Terrain is built once, so the choice is remembered and applies after a reload. */
+function MapStyleToggle({engine}:{engine:Engine|null}){
+ const live:MapStyle=engine?.view.getMapStyle?.()??loadMapStyle();
+ const [pick,setPick]=useState<MapStyle>(()=>{try{return (localStorage.getItem(MAP_STYLE_KEY) as MapStyle|null)??live;}catch{return live;}});
+ const pending=pick!==live;
+ const go=(m:MapStyle)=>{rememberMapStyle(m);setPick(m);};
+ const reload=()=>{try{const u=new URL(location.href);u.searchParams.delete('map');location.replace(u.toString());}catch{location.reload();}};
+ return <div className="hw-row hw-map-style" role="group" aria-label="Map style"><span className="hw-row-label"><Route size={18}/>Map</span>
+  {([['painterly','Painterly'],['classic','Classic']] as const).map(([m,l])=><button key={m} type="button" className="hw-btn-wide" aria-pressed={pick===m} onClick={()=>go(m)}>{l}</button>)}
+  {pending&&<button type="button" className="hw-chip t-warn" onClick={reload} title="Save first. The map is rebuilt on reload."><TriangleAlert size={16}/>Reload to apply</button>}</div>;
+}
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
  const tabs=[{id:'play',label:'Game',icon:<Settings size={20}/>},{id:'world',label:'World',icon:<Route size={20}/>},{id:'tools',label:'Tools',icon:<Hammer size={20}/>}];
  return <Screen title="Menu" icon={<Settings size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab}>
   {tab==='play'&&<div className="hw-stack">
-   <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div></section>
+   <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
    <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}</section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <label>Graphics<select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>

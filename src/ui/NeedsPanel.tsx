@@ -28,7 +28,7 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
   if(fuelIssue){setFeedback(fuelIssue);return;}
   g.setLaborPriority('wood');
   const gathering=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.job==='wood'&&u.order==='gather').length;
-  const reason=`Timber focus set · ${gathering} gathering now. Other residents finish deliveries or committed work first.`;
+  const reason=`Timber focus · ${gathering} gathering`;
   setFeedback(reason);g.banner(reason,5);engine.pushHud();
  };
  const content=<div className="space-y-3 px-3 pb-3 text-xs text-parchment">
@@ -36,15 +36,12 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
    <div><dt className="text-parchment-dim">Drinking water</dt><dd className="font-medium">{Math.floor(status.water)} L · {reserveLabel(status.waterSeconds)}</dd><dd>{status.waterWorkers} collecting</dd></div>
    <div><dt className="text-parchment-dim">Fuel in stores</dt><dd className="font-medium">{fuelLabel} · {reserveLabel(status.fuelSeconds)}</dd><dd>{status.fuelWorkers} gathering timber</dd>{(hasResidue||residue.strawReserved>0)&&<dd className="text-parchment-dim">{quantity(residue.chaff)} chaff · {quantity(residue.straw)} straw · {quantity(residue.strawReserved)} straw reserved</dd>}</div>
   </dl>
-  <p>{status.coldResidents?`${status.coldResidents} residents affected by cold. Shelter and fuel help recovery.`:'No residents currently affected by cold.'}</p>
-  <p className="text-parchment-dim">{status.temp}°C · {status.sheltered} residents near shelter</p>
+  <p className="text-parchment-dim" title="Shelter and fuel help recovery">{status.temp}°C · {status.coldResidents?`${status.coldResidents} cold`:'warm'} · {status.sheltered} sheltered</p>
   {status.warnings.length>0&&<ul className="space-y-1 text-blood" aria-label="Survival warnings">{status.warnings.map(warning=><li key={warning}>{warning}</li>)}</ul>}
   <div className="grid grid-cols-2 gap-2">
    <div><button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze/40 bg-ink-soft px-2 py-2 disabled:opacity-50" disabled={!!waterIssue} title={waterIssue||'Send a resident to collect and carry water home'} onClick={collectWater}><Droplets className="size-4"/>Collect water</button>{waterIssue&&<p className="mt-1 text-parchment-dim">{waterIssue}</p>}</div>
-   <div><button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze/40 bg-ink-soft px-2 py-2 disabled:opacity-50" disabled={!!fuelIssue} title={fuelIssue||'Switch village focus to timber gathering'} onClick={gatherFuel}><Flame className="size-4"/>Gather fuel</button>{fuelIssue&&<p className="mt-1 text-parchment-dim">{fuelIssue}</p>}</div>
+   <div><button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze/40 bg-ink-soft px-2 py-2 disabled:opacity-50" disabled={!!fuelIssue} title={fuelIssue||'Timber focus may reduce food gathering'} onClick={gatherFuel}><Flame className="size-4"/>Gather fuel</button>{fuelIssue&&<p className="mt-1 text-parchment-dim">{fuelIssue}</p>}</div>
   </div>
-  <p className="text-parchment-dim">Water must reach home before it can be used. Household fires use chaff, surplus straw, then logs. Logs also serve building; timber focus may reduce food gathering.</p>
-  {g.state.paused&&<p className="text-parchment-dim">Resume play to let residents travel and work.</p>}
   {expanded&&status.metrics&&<details><summary className="cursor-pointer">Since settling</summary><p>Water delivered {status.metrics.waterDeliveredLiters.toFixed(1)} L · consumed {status.metrics.waterConsumedLiters.toFixed(1)} L · lost cargo {status.metrics.waterLostLiters.toFixed(1)} L. Wood burned {status.metrics.fuelBurnedWood.toFixed(1)} logs.</p>{status.metrics.residueFuel&&(status.metrics.residueFuel.chaffBurned>0||status.metrics.residueFuel.strawBurned>0)&&<p>Residues burned: {quantity(status.metrics.residueFuel.chaffBurned)} chaff · {quantity(status.metrics.residueFuel.strawBurned)} straw · {quantity(status.metrics.residueFuel.woodEquivalentDelivered)} logs equivalent of household heat.</p>}<p>Water shortage {Math.floor(status.metrics.waterShortageSeconds)}s · cold exposure {Math.floor(status.metrics.coldExposurePersonSeconds)} person-seconds.</p></details>}
   {feedback&&<p role="status" aria-live="polite">{feedback}</p>}
  </div>;
