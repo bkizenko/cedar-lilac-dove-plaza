@@ -38,7 +38,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');
       }
       if (resident.farmTool) {
-        equipped.push(resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
+        equipped.push(resident.farmTool==='woodenArd'?`Wooden ard · ${Math.round(resident.draftPracticeSeconds??0)}s draft practice`:resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
       }
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');

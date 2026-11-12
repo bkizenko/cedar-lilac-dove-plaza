@@ -1,3 +1,4 @@
+import {recordDraftTractionWork} from './draftTraction';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import{hasConstructionWork}from'./constructionTargets';
 import{housingFundingIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
@@ -17,7 +18,7 @@ import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRangeContext,rivalMaterialPriority,rivalMaterialTargets,type RivalMaterialKind,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
 import {huntable} from "./hunting";
-import {farmToolRate,wearFarmTool} from "./farmTools";
+import {farmToolRate,wearFarmTool,draftTractionReady} from "./farmTools";
 import {carryingCapacity} from "./haulage";
 import {beginExpedition} from "./journeys";
 import {bridgeApproach} from './transport';
@@ -122,7 +123,9 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
     p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
   const open = GATHER_WORK_RATE * (b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1)*farmToolRate(u,p);
   const toolSeconds=p===0?Math.min(dt,(1-c.planted)*180*plotArea(b)/open):p===1?Math.min(dt,(1-c.tended)*220*plotArea(b)/open):dt;
-  if(wearFarmTool(u,toolSeconds)&&u.team===0)g.banner('A farming tool broke — hand work continues; repair it at a toolmaking workplace',4);
+  recordDraftTractionWork(u,p,toolSeconds);
+  const usesTool=u.farmTool!=='woodenArd'||p===0&&draftTractionReady(u)&&farmToolRate(u,p)>1;
+  if(usesTool&&wearFarmTool(u,toolSeconds)&&u.team===0)g.banner('A farming tool broke — hand work continues; repair it at a toolmaking workplace',4);
   if (p === 0) c.planted = Math.min(1, c.planted + (dt / (180*plotArea(b))) * open);
   else if (p === 1) c.tended = Math.min(1, c.tended + (dt / (220*plotArea(b))) * open);
   else {

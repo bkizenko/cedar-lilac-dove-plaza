@@ -435,6 +435,7 @@ function validateGamePayload(raw: unknown) {
     if(!validHaulageUnit(u)||!validFarmToolUnit(u))fail();
     if(u.seaRaid!==undefined){const r=u.seaRaid;if(!obj(r)||u.team!==3||!["raid","retreat"].includes(r.phase))fail();numbers(r,["x","z","goalX","goalZ","thinkAt","departAt"]);if([r.x,r.z,r.goalX,r.goalZ].some(v=>Math.abs(v)>HALF)||r.thinkAt<0||r.departAt<0)fail();}
     if(u.craftingXP!==undefined&&(!num(u.craftingXP)||u.craftingXP<0||u.craftingXP>36000))fail();
+    if(u.draftPracticeSeconds!==undefined&&(!num(u.draftPracticeSeconds)||u.draftPracticeSeconds<0||u.draftPracticeSeconds>1e12))fail();
     if(u.packAnimal!==undefined){const a=u.packAnimal;if(u.haulage!=="pack"||!validPackAnimal(a)||a.id>=s.nextId||a.id===u.id||s.wildlife.some((c:any)=>c.id===a.id)||s.livestock?.some((c:any)=>c.id===a.id)||s.units.some((p:any)=>p!==u&&(p.id===a.id||p.packAnimal?.id===a.id))||s.buildings.some((b:any)=>b.id===a.id))fail();}
     if(u.copperStudy!==undefined){const p=u.copperStudy;if(!obj(p)||!Number.isSafeInteger(p.workplace)||p.workplace<1||!num(p.progress)||p.progress<0||p.progress>90||(p.paused!==undefined&&typeof p.paused!=="boolean"))fail();}
     if(u.plantingWork!==undefined){const p=u.plantingWork;if(!obj(p)||!Number.isSafeInteger(p.treeId)||p.treeId<1||!num(p.progress)||p.progress<0||p.progress>12)fail();}

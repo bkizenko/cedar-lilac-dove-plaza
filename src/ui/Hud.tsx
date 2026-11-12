@@ -611,7 +611,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>!!sel.type&&farmToolWorkplace(kind as keyof typeof FARM_TOOLS,sel.type,!!engine?.game.tribe(0).copperExperiment)).map(([kind,f])=>{
                   const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
                   return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
-                    <strong>{f.name}</strong><span>{f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · +{Math.round((f.harvest-1)*100)}% harvest</span>
+                    <strong>{f.name}</strong><span>{f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {kind==='woodenArd'?'Horse traction · spring only · replaces hand tool':`+${Math.round((f.harvest-1)*100)}% harvest`}</span>
                   </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
                 })}
                 {engine&&<FarmToolRepairControls engine={engine} workplaceId={sel.buildingId}/>}
