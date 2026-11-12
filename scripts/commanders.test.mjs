@@ -134,8 +134,12 @@ test('state validates, survives a JSON round trip and a full save round trip; ol
 test('rival societies appoint a commander from real soldiers, deterministically, and never for free soldiers they lack',()=>{
  const build=()=>{const {g,soldier}=world();const t=g.state.tribes[1];t.alive=true;const hall=g.makeBld('townhall',200,200,1);hall.build=1;g.state.buildings.push(hall);
   for(let i=0;i<6;i++){const u=soldier(i?'spearman':'warden',200+i,205,1);u.combatXP=i?0:20;}
-  enableCommanders(g,true);tick(g,70);return g;};
- const a=build(),b=build();
+  enableCommanders(g,true);return g;};
+ // Compare the same saved opening, including identities allocated during legacy setup.
+ // Two independent resets may consume ambient setup randomness before this fixture clears units.
+ const a=build(),b=decodeGame(encodeGame(a));
+ assert.equal(a.state.seed,b.state.seed);assert.deepEqual(a.state.units.map(u=>u.id),b.state.units.map(u=>u.id));
+ tick(a,70);tick(b,70);
  const ra=commandersState(a).roster.filter(c=>c.team===1),rb=commandersState(b).roster.filter(c=>c.team===1);
  assert.equal(ra.length,1);assert.equal(ra[0].memberIds.length,5);assert.deepEqual(ra.map(c=>[c.traits,c.memberIds.length]),rb.map(c=>[c.traits,c.memberIds.length]));
  const few=world();few.g.state.tribes[1].alive=true;few.soldier('warden',200,200,1);enableCommanders(few.g,true);tick(few.g,70);assert.equal(commandersState(few.g).roster.length,0);
@@ -145,7 +149,7 @@ test('replacement never exceeds the new commander capacity; overflow people stay
  const {g,soldier}=world();const lead=soldier('swordsman',50,50),second=soldier('warden',55,50);
  appointCommander(g,lead.id,'army');const c=commandersState(g).roster[0];
  const crew=[];for(let i=0;i<14;i++)crew.push(soldier('spearman',60+i,50));
- c.memberIds=crew.map(u=>u.id);c.level=9;c.status='captured';c.capturedBy=1;
+ c.memberIds=crew.map(u=>u.id);c.level=R.maximumLevel;c.xp=R.levelXp[R.maximumLevel-1];c.status='captured';c.capturedBy=1;
  const before=g.state.units.length;
  const r=appointCommander(g,second.id,'army',{replaces:c.id,free:true});
  assert.equal(r.accepted,true,r.reason);

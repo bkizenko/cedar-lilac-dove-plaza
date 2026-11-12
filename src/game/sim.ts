@@ -1,3 +1,4 @@
+import {cancelMethodRecordPickup,methodRecordPickupAI} from './methodRecordPickup';
 import {reconcileMethodRecords} from './methodRecords';
 import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
@@ -1848,6 +1849,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    cancelMethodRecordPickup(this,u);
     interruptDraftCartOrder(this,u);
     pauseNavalWork(this,u);
     cancelPackPasture(this,u);
@@ -5882,6 +5884,7 @@ export class Game {
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) continue;
+            if(methodRecordPickupAI(this,u,sdt))continue;
             if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
             if(homeUseAI(this,u,sdt))continue;
@@ -5996,7 +5999,7 @@ export class Game {
         phases?.mark('reconciliation');
         reconcileTradeReservations(this);
         reconcileHaulageProjects(this);
-        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);releaseDraftCart(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
+        for (const u of this.state.units) if (u.hp <= 0) {finishCampTrip(this,u);finishRaidPlan(this,u,'lost');recordPrisonerDeath(this,u);cancelMethodRecordPickup(this,u);releaseDraftCart(this,u);releasePackAnimal(this,u);this.paths.delete(u.id);}
         tickRivalActivity(this);
         tickCoastalTrade(this,0);
         tickScoutProvisions(this,0);

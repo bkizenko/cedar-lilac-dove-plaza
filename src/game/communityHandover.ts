@@ -1,3 +1,4 @@
+import {methodRecordLocalHandoverIssue,methodRecordPickupHandoverIssue,settleMethodRecordHandover} from './methodRecords';
 import {reconcileSailRigProjects} from './boatSailing';
 import {settleSiegeRamHandover,reconcileSiegeRams} from './siegeRam';
 import {reconcileSitePreparationWorkers} from './sitePreparation';
@@ -51,6 +52,8 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   const draft=Object.assign(Object.create(Object.getPrototypeOf(g)),g)as Game;draft.state=structuredClone(g.state);draft.workBoard=new WorkBoard();draft.onSfx=()=>{};
   const s=draft.state,source=draft.tribe(fromTeam),trialAnchor=anchor(cropTrialWorkplace(draft,fromTeam));
   const sites=s.buildings.filter(b=>b.team===fromTeam&&(!local||local.siteIds.includes(b.id))),siteIds=new Set(sites.map(b=>b.id)),people=s.units.filter(u=>u.team===fromTeam&&(!local||local.residentIds.includes(u.id))),personIds=new Set(people.map(u=>u.id));
+  const pickupIssue=methodRecordPickupHandoverIssue(s,personIds);if(pickupIssue)return{accepted:false,reason:pickupIssue};
+  if(local){const issue=methodRecordLocalHandoverIssue(s,fromTeam,siteIds,personIds);if(issue)return{accepted:false,reason:issue};}
   const r:CommunityHandover={version:1,id:s.nextId++,fromTeam,toTeam,timeSeconds:s.time,scope:local?'community':'society',cacheAnchor:local?undefined:trialAnchor,recipientCacheAnchor:anchor(cropTrialWorkplace(draft,toTeam)),hallIds:sites.filter(b=>b.type==='townhall').map(b=>b.id),siteIds:sites.map(b=>b.id),residentIds:people.map(u=>u.id),boatIds:(s.boats||[]).filter(b=>b.team===fromTeam&&(!local||local.boatIds.includes(b.id))).map(b=>b.id),productionIds:(s.production?.projects||[]).filter(p=>p.team===fromTeam&&live(p)&&(!local||productionChangesOwner(p,personIds,siteIds))).map(p=>p.id),haulageProjectIds:(s.haulageProjects||[]).filter(p=>p.team===fromTeam&&(!local||siteIds.has(p.work.workplace))).map(p=>p.id),livestockIds:(s.livestock||[]).filter(a=>a.team===fromTeam&&(!local||siteIds.has(a.pen))).map(a=>a.id),coastalVoyageIds:(s.coastalVoyages||[]).filter(v=>v.team===fromTeam&&live(v)&&(!local||personIds.has(v.actorId)&&local.boatIds.includes(v.boatId))).map(v=>v.id),societyMissionIds:(s.rivalMissions||[]).filter(m=>m.team===fromTeam&&live(m)&&(!local||m.actors.every(a=>personIds.has(a.id)))).map(m=>m.id),coastalCommissionIds:(s.coastalCommissions||[]).filter(c=>c.team===fromTeam&&(!local||c.dockId!==undefined&&siteIds.has(c.dockId))).map(c=>c.id)};
   r.knowledge=captureCommunityKnowledge(draft,r);if(r.knowledge.proofs.some(p=>p.copperPrototype))draft.tribe(toTeam).copperExperiment=true;draft.tribe(toTeam).cultivated=[...new Set([...(draft.tribe(toTeam).cultivated||[]),...r.knowledge.proofs.flatMap(p=>p.cultivated)])];s.communityHandovers??=[];s.communityHandovers.push(r);
   reconcilePenWater(draft);stopCommerce(draft,fromTeam,local?personIds:undefined);if(!local)transferStocks(draft,r);
@@ -85,6 +88,7 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   settleMaintenanceHandover(s,fromTeam,toTeam,!!local,siteIds,personIds);
   // Unpaid requests belong to their original owner and bench; cancellation moves no goods.
   if(s.cartUpgradeRequests)s.cartUpgradeRequests=s.cartUpgradeRequests.filter(r=>s.units.some(u=>u.id===r.ownerId&&u.team===r.team&&u.hp>0&&u.haulage==='sled'&&!u.haulageWork)&&s.buildings.some(b=>b.id===r.workplace&&b.team===r.team&&b.type==='workshop'&&b.hp>0&&b.build>=1));
+  settleMethodRecordHandover(s,r);
   settleArmorHandover(s,r);reconcileArmorHolders(draft);settleSiegeRamHandover(s,r);reconcileSiegeRams(draft);
   reconcileSitePreparationWorkers(draft);
   reconcileSailRigProjects(draft);
