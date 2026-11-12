@@ -1,3 +1,4 @@
+import{commandIssued,commandOwnerBefore,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
@@ -1882,6 +1883,7 @@ export class Game {
     }
     const slots = this.slotOffsets(units, x, z);
     units.forEach((u, i) => {
+      const priorOwner=commandOwnerBefore(this,u);
       this.interruptMission(u);
       const { ox, oz } = slots[i];
       u.tx = x + ox;
@@ -1893,6 +1895,7 @@ export class Game {
       u.attackDestination = attackMove ? { x: u.tx, z: u.tz } : null;
       u.target = null;
       u.node = null;
+      if(!attackMove)commandIssued(this,u,'move',undefined,priorOwner,{x:u.tx,z:u.tz});
     });
     this.onSfx("move");
   }
@@ -2761,6 +2764,7 @@ export class Game {
       this.onSfx("invalid");
       return;
     }
+    const priorOwners=new Map(units.map(u=>[u.id,commandOwnerBefore(this,u)]));
     this.workBoard.reset();
     const huntOnly = job === "hunt";
     const real: ResKind = huntOnly ? "food" : job;
@@ -2780,6 +2784,7 @@ export class Game {
 
     }
     for (const u of units) this.workBoard.assign(this, u);
+    for(const u of units)if(['gather','explore','return'].includes(u.order))commandIssued(this,u,'gather',u.node??undefined,priorOwners.get(u.id)??null);
     this.onSfx("move");
   }
 
@@ -2849,6 +2854,7 @@ export class Game {
     }
     const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?fieldCrewSlots(node):2;
     let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
+    const priorOwners=new Map(workers.map(u=>[u.id,commandOwnerBefore(this,u)]));
     this.workBoard.reset();
     for (const u of workers) {
       this.interruptMission(u);
@@ -2864,6 +2870,7 @@ export class Game {
     this.workBoard.reset();
     for (const u of workers) if (!u.node) this.workBoard.assign(this, u);
 
+    for(const u of workers)if(u.node)commandIssued(this,u,'gather',u.node,priorOwners.get(u.id)??null);
     this.onSfx("move");
   }
 
@@ -5818,6 +5825,7 @@ export class Game {
           u.shelterId=undefined;
           u.vx = 0;
           u.vz = 0;
+          beginCommandActor(this,u);
           try {
             if(finishRaidEscortAtCamp(this,u))continue;
             if(hullLossRecoveryAI(this,u,sdt))continue;
@@ -5867,6 +5875,7 @@ export class Game {
           } catch (error) {
             this.reportSimulationError(`unit ${u.id}`,error);
           } finally {
+            endCommandActor(this,u,sdt);
             updateDefenseNeighbors(this,u);
           }
         }
@@ -5951,6 +5960,7 @@ export class Game {
         reconcileFarmToolCargo(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
+        finishCommandFrame(this,sdt);
         this.checkVictory();
       } catch (err) {
         endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);
