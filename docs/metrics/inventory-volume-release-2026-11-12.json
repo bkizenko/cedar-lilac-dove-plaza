@@ -1,0 +1,32 @@
+{
+  "commit": "1342fa2ec15fe9b9697c3fa1909c20164329ff1d",
+  "source": "343f155",
+  "release": "2026-11-12T11-35-54-810Z-1342fa2",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 46,
+    "total": 46,
+    "uniqueNativeAndSharedTests": 45,
+    "builtUI": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built material-bin volume/count display and save reload after native paid clay unload/resume/production. Fixture has authored legal hearth, finite clay and completed legal storehouse; not an earned building, full container/transport or historical-volume claim.",
+      "errors": []
+    }
+  },
+  "typecheck": "pass",
+  "productionBuild": "pass",
+  "scope": "All current ItemKinds have one tunable packed-liter coefficient. Material bins, cached armor, seed reserve, paid parcels/retained tools, admission/output/delivery, actual outside exposure and existing inventory displays use the same volume calculation. Counts/yields/nutrition never rescaled. Physical clay unload/reload/resume and overfull sheaf compression executed on unchanged native terrain. Existing original village item/seed quantities conserved; original file hash unchanged.",
+  "units": "Packing estimates per game inventory unit, not historical measurements. Internal material-capacity unit =10liters; physical quantity counters remain counts. Seeds .001liters/unit and off compact HUD. Existing raw-resource yards, food stores, arsenal/tool cache budgets and transport mass remain separate, explicitly not claimed converted.",
+  "remaining": "Full W5 remains open: per-vessel identities/liters/tare/seals/contents and custody, arsenal/tool/raw-yard packing, transport mass, cereal byproduct outlets. No performance/campaign/historical yield claim.",
+  "firstReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69387755102041,
+    "unchanged": true
+  },
+  "originalVillageSha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6"
+}
