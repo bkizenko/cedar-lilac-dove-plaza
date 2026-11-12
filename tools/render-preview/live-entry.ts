@@ -1,6 +1,7 @@
 // Browser entry for tools/render-preview/live-shot.mjs: boots the real Game + WorldView on a canvas and renders staged shots.
 import {Game} from '@/game/sim';
 import {WorldView} from '@/scene/world';
+import {carvedSnowUniform} from '@/scene/roofSnow';
 import {BUILDINGS} from '@/game/constants';
 import {watermillSite,windmillSite} from '@/game/waterWorks';
 import {skinById} from '@/scene/civSkin';
@@ -97,7 +98,7 @@ w.hwShot=async(o:Opts)=>{
     return info;
   }
   for(let i=0;i<o.frames;i++){if(o.time!=null)g.state.time=o.time+i*.05;view.sync(g,.05);view.render();await new Promise(r=>setTimeout(r,16));}
-  {const L=(view as any).carvedLayer,rs=L?[...L.pickSources().keys()].filter((m:any)=>m.name.includes('~')):[];const mm=rs[0]?new (rs[0].matrix.constructor)():null;if(mm)rs[0].getMatrixAt(0,mm);info.rotors=rs.length;info.rotorM=mm?Array.from(mm.elements as number[]).slice(0,3).map(v=>+v.toFixed(3)):null;info.paused=g.state.paused;}
+  {const L=(view as any).carvedLayer,rs=L?[...L.pickSources().keys()].filter((m:any)=>m.name.includes('~')):[];const mm=rs[0]?new (rs[0].matrix.constructor)():null;if(mm)rs[0].getMatrixAt(0,mm);info.rotors=rs.length;info.rotorM=mm?Array.from(mm.elements as number[]).slice(0,3).map(v=>+v.toFixed(3)):null;info.paused=g.state.paused;info.snow=carvedSnowUniform.value;{const L2=(view as any).carvedLayer;info.mats=L2?[...new Set([...L2.pickSources().keys()].map((m:any)=>m.material.name+':'+(m.material.customProgramCacheKey?.()??'')+':'+m.count))]:null;}info.snowMix=g.seasonMix().snow;}
   info.wonders=(view as any).wonderLayer?.stats();info.style=view.getStyle();info.cam=[view.camera.position.x,view.camera.position.y,view.camera.position.z].map(v=>+v.toFixed(1));info.look=[view.look.x,view.look.y,view.look.z].map(v=>+v.toFixed(1));info.dist=view.dist;info.tris=view.renderer.info.render.triangles;info.calls=view.renderer.info.render.calls;
   void BUILDINGS;
   return info;

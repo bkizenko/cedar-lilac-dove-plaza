@@ -1043,6 +1043,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 11:00 | Claude | 31 (since 10:00 ET, all branches) | 25 | 2 (casus belli in Hearth neighbour cards + Diplomacy sheet; conifer drooping-skirt boughs) | shipping and landing; lane D audit rows added |
 | 11-12 11:00 | Grok | 0 | 0 | 0 | out (6th+ hour); World rows with Claude queue; no board lines to miss |
 | 11-12 11:00 | Total | 59 | integration lag 0 after 11:15 PM landing | ~5 | focused sweep 116/116 pass, 0 fail; tsc diff nil (2-line carvedTrees addition; tsc7 needs baseUrl-free config) |
+| 11-12 14:00 | Codex | 23 (since 13:07 ET, all branches) | 23 | 3 (iron chain→owned tools, draft-cart horse/cattle haul + recovery render, Commander owner controls — all live qualified 8ae8cd7/b45407b) | on target; naval owner controls in progress (claim 05ec89e) |
+| 11-12 14:00 | Claude | 26 (since 13:07 ET, all branches) | 26 via PM landing | 3 (expansion party provisions, Hearth save-trust readout, winter roof snow caps) | shipping and landing; throughput rows 12:00–13:00 skipped by PM, resumed here |
+| 11-12 14:00 | Grok | 0 | 0 | 0 | out (hours 10+); World rows with Claude/PM queue; no board lines to miss |
+| 11-12 14:00 | Total | 49 | integration lag 0 after 14:15 PM landing | ~6 | focused sweep 115 tests 0 fail (roof-snow needs `three` installed in sandbox); tsc diff nil vs main |
 
 ## Process improvements
 
