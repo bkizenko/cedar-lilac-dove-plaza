@@ -1,4 +1,4 @@
-import {IRON_METALLURGY_RULES as IRON} from './ironRules';
+import {IRON_METALLURGY_RULES as IRON} from './ironMetallurgyRules';
 import type {ProductionProject} from './production';
 import {CHARCOAL_RULES} from './charcoal';
 import {COPPER_METALLURGY_RULES} from './copperMetallurgy';

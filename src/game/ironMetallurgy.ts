@@ -1,12 +1,6 @@
 import type {Game} from './sim';
 import {rivalKnows} from './rivalDevelopment';
-/** Game units/time/packed volume are tuning values, not kilograms, furnace
- * temperatures or historical assays. A charcoal bloom is solid and requires
- * subsequent hot consolidation; this does not implement molten iron or steel.
- * Historic England, Archaeometallurgy: Guidelines for Best Practice, §3.2. */
-import {IRON_METALLURGY_RULES} from './ironRules';
-export {IRON_METALLURGY_RULES};
-export const IRON_RECIPES=['smeltIron','consolidateIron'] as const;
+export {IRON_METALLURGY_RULES,IRON_RECIPES} from './ironMetallurgyRules';
 export function ironOreEnabled(g:Game,team:number){return g.tribe(team)?.ironMetallurgyVersion===1;}
 export function knownIronSources(g:Game,team=0){return g.state.iron.filter(n=>n.amount>0&&(team===0?g.exploredAt(n.x,n.z):rivalKnows(g,team,n.x,n.z)));}
 export function ironAdoptionIssue(g:Game,team=0){

@@ -1,0 +1,52 @@
+{
+  "runtimeSource": "7a2e43b",
+  "branch": "work/iron-chain-2026-11-12",
+  "date": "2026-11-12",
+  "status": "native-qualified-source-not-built-or-live",
+  "native": {
+    "file": "scripts/iron-metallurgy-chain.test.mjs",
+    "passed": 4,
+    "failed": 0,
+    "durationMilliseconds": 57854.707792,
+    "seed": 42,
+    "generation": 18,
+    "initialAge": 2,
+    "initialEndowment": "Authored finished legal forge and existing hearth, surveyed ground, crop/seed knowledge, food/water/logs; actual enlarged field placement pays seeds. Zero initial iron ore/bloom/usable iron/charcoal.",
+    "measured": {
+      "oreConsumed": 16,
+      "charcoalLogsUsed": 40,
+      "charcoalBatches": 5,
+      "smeltBatches": 2,
+      "consolidationBatches": 2,
+      "usableIronProduced": 8,
+      "ironToolsMade": 1,
+      "actualFieldWearThenRepairs": 1,
+      "usableIronRemaining": 3
+    },
+    "otherCases": [
+      "legacy metal/cargo/paid tool preservation and invalid schema rejection",
+      "one forge production slot, atomic rejected second batch and original packet load views",
+      "actual loose mined ore death parcel, strict reload and physical recovery exactly once"
+    ]
+  },
+  "affectedRegressions": {
+    "uniquePassed": 30,
+    "files": [
+      "scripts/copper-metallurgy-chain.test.mjs",
+      "scripts/material-study.test.mjs",
+      "scripts/production-ownership.test.mjs",
+      "scripts/knowledge.test.mjs"
+    ],
+    "initialResult": "29/30; one pre-existing copper knowledge assertion expected immediate debit",
+    "baseline": "Exact b0e70ef reproduces16!=8. Harness now checks assignment leaves stock and actual cache arrival loads/debits samples. Named correction passes; copper runtime unchanged."
+  },
+  "typecheck": "PASS",
+  "notQualified": [
+    "built owner UI and publication",
+    "autonomous rival iron adoption",
+    "ore/bloom trade pricing",
+    "steel, bronze and tin",
+    "paid internal carrying/returning corpse-packet recovery",
+    "full metallurgy or all-executor goods gate"
+  ]
+}
