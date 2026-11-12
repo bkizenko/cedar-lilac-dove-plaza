@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {writeFileSync} from 'node:fs';
+import {isAbsolute} from 'node:path';
+import {boardRiverboat,commandRiverboat,riverboatWaterPoint,riverboatDestination} from '../src/game/boats.ts';
 import {Game} from '../src/game/sim.ts';
 import {encodeGame,decodeGame,validateGameSave} from '../src/game/persistence.ts';
 import {beginPortWork,resumePortWork,ensureNaval,navalState,NAVAL_RULES,resupplyVessel,validNaval,vesselOf} from '../src/game/navalPorts.ts';
@@ -25,7 +28,7 @@ function fixture(){
  const worker=()=>{const anchor=g.state.units.find(u=>u.team===0);const p=g.nearestWalk({...anchor,x:point.x,z:point.z,y:g.height(point.x,point.z)},point.x+10,point.z+10);assert.ok(p);const u=g.spawnUnit('worker',p.x,p.z,0);u.order='hold';return u;};
  const u=worker(),replacement=worker();
  Object.assign(g.tribe(0),{wood:900,stone:600,copper:100,food:1000,foodLots:{bread:400,driedFish:600}});g.tribe(0).items={...g.tribe(0).items,cordage:200};
- g.state.autoWorkEnabled=false;g.state.raidT=10000;g.state.scoutTimer=10000;g.state.paused=false;
+ g.state.autoWorkEnabled=false;g.state.raidT=10000;g.state.scoutTimer=1000;g.state.paused=false;
  return {g,dock,u,replacement,point};
 }
 function stepUntil(g,predicate,seconds=400){for(let t=0;t<seconds&&!predicate();t+=.25)g.step(.25);assert.deepEqual(g.simulationErrors,[]);assert.ok(predicate(),'actual executor reaches milestone');}
@@ -46,6 +49,7 @@ test('native paid port and hull work interrupt, reload and resume with real repl
  const hull=commissionVessel(g,dockId,'riverPatrol',rid);assert.equal(hull.accepted,true,hull.reason);
  stepUntil(g,()=>navalState(g).commissions[0]?.progress>=3);
  const c=navalState(g).commissions[0],work=c.progress;replacement.hp=0;g.step(.25);assert.equal(c.phase,'paused');assert.equal(replacement.portWorkId,undefined);
+ if(process.env.NAVAL_NATIVE_MID_SAVE){assert.ok(isAbsolute(process.env.NAVAL_NATIVE_MID_SAVE));const raw=structuredClone(encodeGame(g));validateGameSave(raw);writeFileSync(process.env.NAVAL_NATIVE_MID_SAVE,JSON.stringify(raw));console.log(JSON.stringify({navalPaidFixture:process.env.NAVAL_NATIVE_MID_SAVE,projectId:c.id,replacementId:uid,dockId,progress:c.progress,paid:c.paid,camera:{x:dock.x,z:dock.z},seed:42,version:14,initialEndowment:{wood:900,stone:600,copper:100,cordage:200,bread:400,driedFish:600},initialSites:'one authored finished dock on native shore'}));}
  g=restore(g);g.state.paused=false;const beforeHull=stocks(g);assert.equal(isEngineDispatchCommand({kind:'naval-order',action:'resume-commission',projectId:c.id,builderId:uid}),true);
  assert.equal(applyEngineCommand(g,{kind:'naval-order',action:'resume-commission',projectId:c.id,builderId:uid}).accepted,true);assert.deepEqual(stocks(g),beforeHull);assert.equal(navalState(g).commissions[0].progress,work);
  stepUntil(g,()=>navalState(g).vessels.length===1,240);assert.equal(navalState(g).commissions.length,0);assert.equal(g.state.boats.filter(b=>b.id===navalState(g).vessels[0].boatId).length,1);assert.equal(validNaval(g.state),true);
@@ -75,27 +79,28 @@ test('capacity rejection is atomic; typed harbour food leaves pantry once and su
 });
 
 test('native boarding preserves the actual prize rations and missiles; at-sea crew eat finite hull food instead of home food',()=>{
- let {g,dock}=fixture();let sea;
- // Author initial vessels on genuine navigable water, away from the home feeding radius.
- for(let z=-480;z<=480&&!sea;z+=8)for(let x=-480;x<=480;x+=8){
-  if(Math.hypot(x-dock.x,z-dock.z)<80)continue;
-  if([-3,0,3].every(dx=>g.height(x+dx,z)<g.waterAt(x+dx,z)-.5)&&[-3,0,3].every(dz=>g.height(x,z+dz)<g.waterAt(x,z+dz)-.5)){sea={x,z};break;}
- }
- assert.ok(sea);const state=ensureNaval(g),baseDemand=foodDemand(g,0),boats=[];
- for(const [team,dx,food,missiles] of [[0,0,3,6],[2,3,7,12]]){
-  const b={id:g.id(),team,dock:dock.id,x:sea.x+dx,z:sea.z,y:g.waterAt(sea.x+dx,sea.z)+.16,hp:300,facing:0,capacity:5};(g.state.boats??=[]).push(b);boats.push(b);
+ let {g,dock,u,replacement}=fixture();const water=riverboatWaterPoint(g,dock.x,dock.z);assert.ok(water);
+ const state=ensureNaval(g),boats=[];
+ // Finite initial moored hulls. Crew must board and sail through ordinary APIs.
+ for(const [team,food,missiles] of [[0,30,6],[2,7,12]]){
+  const b={id:g.id(),team,dock:dock.id,...water,y:g.waterAt(water.x,water.z)+.16,hp:300,facing:0,capacity:5};(g.state.boats??=[]).push(b);boats.push(b);
   state.vessels.push({boatId:b.id,team,design:'riverPatrol',commissionedAt:g.state.time,stores:{food,missiles,foodLots:{driedFish:food}},atSeaSeconds:0,captures:0,rams:0});
  }
- const crew=[];for(let i=0;i<2;i++){const u=g.spawnUnit('spearman',sea.x,sea.z,0);u.boat={id:boats[0].id,phase:'aboard'};u.order='hold';u.jobLock=true;crew.push(u);}
- boats[0].captain=crew[0].id;assert.equal(navalIndependentFood(g,crew[0]),true);assert.equal(foodDemand(g,0),baseDemand,'actual sea rations replace the home meal obligation');
+ assert.equal(boardRiverboat(g,boats[0].id,[u,replacement]),2);stepUntil(g,()=>[u,replacement].every(p=>p.boat?.phase==='aboard'),60);
+ let destination;
+ for(const radius of [100,140,200]){for(let i=0;i<16&&!destination;i++){const a=i*Math.PI/8,p=riverboatDestination(g,boats[0],water.x+Math.cos(a)*radius,water.z+Math.sin(a)*radius);if(p&&Math.hypot(p.x-dock.x,p.z-dock.z)>80)destination=p;}if(destination)break;}
+ assert.ok(destination,'native connected water has an actual away destination');
+ const initialFood=vesselOf(g,boats[0].id).stores.food;assert.equal(commandRiverboat(g,boats[0].id,destination.x,destination.z),true);
+ stepUntil(g,()=>Math.hypot(u.x-dock.x,u.z-dock.z)>70,160);assert.equal(navalIndependentFood(g,u),true);
+ assert.ok(vesselOf(g,boats[0].id).stores.food<initialFood,'real at-sea bodies eat actual loaded rations');
+ assert.equal(commandRiverboat(g,boats[0].id,water.x,water.z),true);stepUntil(g,()=>Math.hypot(boats[0].x-water.x,boats[0].z-water.z)<5,160);
  declareSocietyHostility(g,0,2);const prizeId=boats[1].id,owner=boats[0].id;
  g=restore(g);g.state.paused=false;const beforeFood=vesselOf(g,prizeId).stores.food;
  const boarded=beginBoarding(g,owner,prizeId,0);assert.equal(boarded.accepted,true,boarded.reason);
  stepUntil(g,()=>g.state.boats.find(b=>b.id===prizeId).team===0,3);
  const prize=g.state.boats.find(b=>b.id===prizeId),stored=vesselOf(g,prizeId).stores;
- assert.ok(stored.food>0&&stored.food<=beforeFood,'captured food remains aboard, with only real crew consumption');assert.equal(stored.missiles,12);
+ assert.equal(stored.food,beforeFood,'unconsumed prize cargo is retained at the home harbour');assert.equal(stored.missiles,12);
  assert.ok(Math.abs(Object.values(stored.foodLots).reduce((n,x)=>n+x,0)-stored.food)<1e-8);
- assert.equal(g.state.units.find(u=>u.id===prize.captain).boat.id,prizeId);assert.equal(g.state.naval.vessels.length,2);assert.equal(g.state.boats.length,2);
- const food=stored.food;for(let i=0;i<4;i++)g.step(.25);assert.ok(stored.food<food,'real at-sea crew consumes the conserved prize ration');
+ assert.equal(g.state.units.find(p=>p.id===prize.captain).boat.id,prizeId);assert.equal(g.state.naval.vessels.length,2);assert.equal(g.state.boats.length,2);
  const restored=restore(g);assert.deepEqual(vesselOf(restored,prizeId).stores,stored);assert.equal(restored.state.boats.find(b=>b.id===prizeId).captain,prize.captain);
 });
