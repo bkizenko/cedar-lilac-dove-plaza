@@ -148,6 +148,13 @@ function MatchupChip({engine,hud}:{engine:Engine;hud:HudSnapshot}){
  const tone=m.multiplier>1.02?'t-good':m.multiplier<.98?'t-bad':'';
  return <GameTooltip title={`Against nearest foe ×${m.multiplier.toFixed(2)}`} description={m.reasons.length?m.reasons.join(' · '):'No edge either way'}><span className={cx('hw-chip',tone)} tabIndex={0} aria-label={`Matchup ×${m.multiplier.toFixed(2)}. ${m.reasons.join('. ')}`}><Swords size={18}/>×{m.multiplier.toFixed(2)}</span></GameTooltip>;
 }
+/** One chip per player formation: size, how tightly it holds together (cohesion) and nerve (morale), in words first, numbers in the tip. */
+export function GroupChips({groups}:{groups:{id:number;kind:string;members:number;cohesion:number;morale:number;casualties:number;commander:boolean}[]}){
+ if(!groups.length)return null;
+ const word=(n:number)=>n>=70?'steady':n>=40?'wavering':'breaking';
+ return <div className="hw-row" role="group" aria-label="Fighting groups">{groups.map(g=>{const worst=Math.min(g.cohesion,g.morale),tone=worst>=70?'t-good':worst<40?'t-bad':'';
+  return <GameTooltip key={g.id} title={`${g.kind} of ${g.members}`} description={`Cohesion ${g.cohesion}% · Morale ${g.morale}% · ${g.casualties} fallen${g.commander?' · has a commander':' · no commander'}`}><span className={cx('hw-chip',tone)} tabIndex={0} aria-label={`${g.kind} group of ${g.members}, ${word(g.cohesion)} cohesion, ${word(g.morale)} morale`}><Users size={18}/>{g.members} <em>{word(worst)}</em></span></GameTooltip>;})}</div>;
+}
 function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
  const Q={kind:'combat-doctrine'} as const;
  const read=useOwnerReadModels(engine,[Q]),c=read(Q).model?.combat;
@@ -169,6 +176,7 @@ function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
    <IconBtn label="Stand down" tip="Back to ordinary work" disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
    {units.some(u=>duty(u.id)==='escort')&&<span className="hw-chip">Escort</span>}</div>}
   </div>
+  {c?.enabled&&<GroupChips groups={c.groups}/>}
  </div>;
 }
 /** One selection card for every kind (person, crowd, building, tree/fish, boat): medal + name + hp bar, up to four icon stats,

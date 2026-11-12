@@ -16,3 +16,8 @@ test('stock rows group under stores, rot is flagged, and reading changes nothing
  const html=renderToStaticMarkup(h(WildCraftSheet,{rows:m.rows}));assert.match(html,/Hides, fat and what is rotting/);assert.match(html,/rots per 10 min/);assert.match(html,/Needs attention/);
  assert.match(renderToStaticMarkup(h(WildCraftSheet,{rows:[]})),/Nothing is being hunted/);
 });
+test('fighting group chips say steady, wavering or breaking in words',async()=>{
+ const {GroupChips}=await import('../src/ui/hearth/parts.tsx');
+ const html=renderToStaticMarkup(h(GroupChips,{groups:[{id:1,kind:'line',members:6,cohesion:90,morale:80,casualties:0,commander:true},{id:2,kind:'wedge',members:4,cohesion:30,morale:60,casualties:2,commander:false}]}));
+ assert.match(html,/line group of 6, steady cohesion, steady morale/);assert.match(html,/wedge group of 4, breaking cohesion, wavering morale/);assert.equal(renderToStaticMarkup(h(GroupChips,{groups:[]})),'');
+});
