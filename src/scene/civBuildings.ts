@@ -254,9 +254,12 @@ HOUSE.sandrill=g=>{const {w,d,r}=g;
  for(const s of[-1,1])P(g,'wedge','roof',[.3,range(r,4.1,4.7),1.1],[s*w*.2,2.6,-d*.05],[0,Math.PI/2*s,0],undefined,1);
  for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
 CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
- for(const s of[-1,1])P(g,'box','wall',[w*.34,s<0?7:5.9,d*.7],[s*(w*.17+gap/2),0,-d*.05]);
+ // split monolith as two wind-worn 10-sided drums (not crates) with a talus skirt each; the slot between them still catches the sun
+ for(const s of[-1,1]){const mh=s<0?7:5.9,cx=s*(w*.17+gap/2);P(g,'cylinder','wall',[w*.34*1.12,mh,d*.7*1.12],[cx,0,-d*.05],[0,s*.18,0],10);
+  P(g,'cylinder','trim',[w*.34*1.12+.5,.18,d*.7*1.12+.5],[cx,mh*.55,-d*.05],[0,s*.18,0],10,1);P(g,'hip','wall2',[w*.34*1.5,.7,d*.7*1.5],[cx,0,-d*.05],undefined,undefined,1);
+  P(g,'sphere','wall2',[w*.34*1.0,.9,d*.7*1.0],[cx,mh,-d*.05],undefined,undefined,1);}
  P(g,'box','wall2',[gap+.4,1.4,d*.7],[0,0,-d*.05]);P(g,'cylinder','accent',[1.5,.18,1.5],[0,4.2,-d*.05],[Math.PI/2,0,0],14);
- for(let i=0;i<5;i++)P(g,'box',i%2?'wall2':'wall',[w*(.9-i*.1),.35,1.4+i*.1],[(i%2?1:-1)*i*.3,5.9+i*.4+(i<1?1.1:0),-d*.05+((i%3)-1)*.5],[0,(i-2)*.22,0],undefined,1);
+ for(let i=0;i<5;i++)P(g,'cylinder',i%2?'wall2':'wall',[w*(.9-i*.1),.35,1.4+i*.1],[(i%2?1:-1)*i*.3,5.9+i*.4+(i<1?1.1:0),-d*.05+((i%3)-1)*.5],[0,(i-2)*.22,0],10,1);
  for(let i=0;i<9;i++)g.B('trim',[2.2,.3,.6],[-w*.36-.6,i*.65,d*.34-i*.0-i*.55*(d/9/.55)*.5],1);
  P(g,'box','trim',[w*.9,.4,.8],[0,0,d*.32],undefined,undefined,1);g.B('accent',[1,2,.1],[-gap/2-w*.17,0,d*.3+.03],0);g.banner(w*.4,d*.34,6.4);return {entry:{x:-w*.2,z:d*.34,width:1.3}};};
 /** Kaaltun: plaster-platform houses under palm-thatch gables with carved lintels; the civic hall is a terraced plaster platform carrying a thatched hall, flanked by stelae. */
@@ -347,7 +350,10 @@ CIVIC.tigrane=g=>{const {w,d,r}=g;let y=0;
  for(let i=0;i<3;i++){const k=1-i*.22;g.B(i%2?'wall2':'wall',[w*.94*k,1.5,d*.9*k],[0,y,-d*.04*i],2);g.B('trim',[w*.94*k+.1,.16,d*.9*k+.1],[0,y+1.5,-d*.04*i],1);
   if(i<2)for(let j=0;j<7;j++)g.B('wall2',[.34,1.5,.3],[-w*.94*k*.45+j*w*.94*k*.15,y,d*.9*k*.5-d*.04*i],1);y+=1.66;}
  for(let i=0;i<10;i++)g.B('wall',[w*.22,.3,.55],[0,i*.5*(3.1/4.9)*1.0,d*.44+.1+(10-i)*.34],1);
- const W=w*.4,D=d*.4,h=2.4,zc=-d*.1;g.B('wall',[W,h,D],[0,y,zc],2);P(g,'sphere','wall',[W*.98,1.9,D*1.02],[0,y+h-.5,zc]);g.B('trim',[W+.06,.28,D+.06],[0,y+h*.55,zc],1);g.B('accent',[1.3,1.9,.1],[0,y,zc+D*.5+.03],0);
+ const W=w*.4,D=d*.4,h=1.7,vh=1.6,zc=-d*.1;g.B('wall',[W,h,D],[0,y,zc],2);
+ // true barrel vault: an elliptical drum on its side (axis along the hall), springing from the walls, with glazed-band rib hoops and a lit arched mouth
+ P(g,'cylinder','wall',[W*1.02,D*1.04,vh*2],[0,y+h,zc-D*.52],[Math.PI/2,0,0],14);for(let i=0;i<5;i++)P(g,'cylinder','trim',[W*1.05,.14,vh*2.06],[0,y+h,zc-D*.42+i*D*.21],[Math.PI/2,0,0],14,0);
+ g.B('trim',[W+.06,.28,D+.06],[0,y+h*.5,zc],1);g.B('accent',[1.3,1.9,.1],[0,y,zc+D*.5+.03],0);P(g,'cylinder','accent',[1.3,.12,1.7],[0,y+1.5,zc+D*.52+.02],[Math.PI/2,0,0],10,0);
  for(const s of[-1,1]){g.B('wall',[1.1,4,1.1],[s*w*.44,0,d*.36],2);g.B('trim',[1.3,.25,1.3],[s*w*.44,4,d*.36],1);g.banner(s*w*.44,d*.36,6);}
  return {entry:{x:0,z:d*.46,width:1.8}};};
 /** Rusvolt: crossed-gable log halls with carved vermilion ridge-tips; the civic hall is a spruce-tier tent: stacked log tiers, each turned 45 degrees under a steep pyramid cap, ringed by horn spikes. */
