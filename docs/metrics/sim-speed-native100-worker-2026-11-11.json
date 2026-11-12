@@ -1,0 +1,67 @@
+{
+  "sourceCodeHashes": {
+    "simulationWorkerRuntime.ts": "a09539657de30450162ef2c71ea50984154b8ef2ff047e76b5e9b3a79429bec3",
+    "simulationWorkerClient.ts": "4019bcb43c6cbf8fe1e0203186a638f40f725992c41f6a92c4a99255e4fe7a6d",
+    "simulationWorkerProtocol.ts": "358b83c10bfb8e1c4a6d125bc5a26c27185925cc34a228ebfc710deaddd14d5f",
+    "simulationRenderProjection.ts": "de0f412dc0c574050db5cb8a59d759f82a3c0acef7e7ed60ade50044352aafc3",
+    "engineDispatch.ts": "8a53a339bf9e87d98d75b319a6740e40952aba9b817fa623b949b4af3d1a0a30",
+    "engineReadModels.ts": "e8556fd9ba7ddc9f0efcd75258db550f6b971bfc6f48015b7d9194bc894a5759",
+    "sim.ts": "f6c9b039f7b6ab7cd8ae033004d852289eb5f35b927cfb4346aeb72668a4da3d",
+    "settlement.ts": "7fd62ba159ab228083225e9f6b658f5cfceb28e2cde41cb0d3afae1325c6b1ec",
+    "haulage.ts": "4ac76670c0ba988c28231a07a931514d802b38f9a7f417ce9b4bbfcc9bdfdae6",
+    "defense.ts": "9d7075a279c8a6322603626331d14734120212d7400aa478df5d5bc06ef61239",
+    "defenseNeighbors.ts": "b9499244b5d7554ca7d03db4557f44728c5231bea70c1b0b2fae66cfbc2e10ac"
+  },
+  "scope": "Actual Node moduleWorker native100 CPU and transport, with owner presentation every6ticks. No renderer, no browser FPS or Low-profile visual claim. Private preauthored scale fixture; no resident/terrain/resource edits during run. Legacy Worker RNG is nonreplayable: not an AB parity comparison.",
+  "inputSha256": "c41f954c8895f80f2cf0fb923e616501e4d47ab8ff2e8647dda8ba860a72a9c8",
+  "inputUnchanged": true,
+  "warmSteps": 20,
+  "measuredSteps": 180,
+  "ticks": 200,
+  "stepSeconds": 0.03333333333333333,
+  "simulationSeconds": 6.666666666751553,
+  "bootstrapMs": 2662.173834,
+  "measuredWallMs": 8159.106875,
+  "countsBefore": {
+    "player": 100,
+    "all": 348,
+    "buildings": 404
+  },
+  "countsAfter": {
+    "player": 100,
+    "all": 348,
+    "buildings": 404
+  },
+  "ownerStep": {
+    "samples": 180,
+    "meanMs": 42.46608843333335,
+    "p95Ms": 67.74387500000012,
+    "maxMs": 191.19633299999987
+  },
+  "requestRoundTrip": {
+    "samples": 180,
+    "meanMs": 42.65548798333338,
+    "p95Ms": 67.96337499999936,
+    "maxMs": 191.3774170000006
+  },
+  "presentationCapture": {
+    "samples": 30,
+    "meanMs": 2.1509582999999717,
+    "p95Ms": 4.443457999999737,
+    "maxMs": 4.50879199999963
+  },
+  "presentationPreviousPostMessage": {
+    "samples": 29,
+    "meanMs": 3.893944103448309,
+    "p95Ms": 4.41308299999946,
+    "maxMs": 7.318417000000409
+  },
+  "targetP95Ms": 33,
+  "meetsOwnerStepTarget": false,
+  "simulationErrors": [],
+  "rng": {
+    "mode": "legacy-worker-random",
+    "replayable": false,
+    "persisted": false
+  }
+}

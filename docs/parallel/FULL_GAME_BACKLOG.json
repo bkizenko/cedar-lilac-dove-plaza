@@ -56,7 +56,52 @@
       "Measured native100residentLow sim p95<33ms and authoritative WebWorker",
       "Whole normal merges of societies>=55fc655,experience>=9992fe9,world with game options and board hooks",
       "Knowledge provenance/states; livestock/horses/cheese; crafting; saves"
-    ]
+    ],
+    "latest_platform_execution": {
+      "recordedAtUtc": "2026-11-12T00:07:22.303064+00:00",
+      "liveCommit": "d86d7da6dcd0d452928bb2967dc10a8212798153",
+      "liveRelease": "2026-11-12T00-03-38-084Z-d86d7da",
+      "publishedBatch": {
+        "passed": 37,
+        "total": 37
+      },
+      "matchedNative100MeanReductionPercent": 15.409048623518007,
+      "built100LowRollingSimulationP95RangeMs": [
+        20.199999999254942,
+        23.5
+      ],
+      "scopeLimits": "Matched Node p95s34.93/33.92stillabove33; shortbuiltM1Metal/headless run is scoped, not universalFPS or completedWorker phase.",
+      "workerCore": {
+        "branch": "work/sim-worker-2026-11-11",
+        "commit": "d13dd2326bf5587edf5f9a836c90b1f8e4391867",
+        "nativeTestsPassed": 7,
+        "nativeTestsTotal": 7,
+        "typecheck": "passed",
+        "activation": "disabled",
+        "fullBridge": "in progress, not source-qualified yet"
+      },
+      "externalIntegration": "WHOLE normal3branch merges behindoptions remain phase2 afterphase1",
+      "fixedGateCreditDelta": 0,
+      "evidence": "docs/metrics/sim-speed-native100-performance-release-2026-11-11.json"
+    },
+    "latest_integration_handoff": {
+      "at": "2026-11-12T00:55:57.075993+00:00",
+      "execution_lead": "Grok",
+      "conflict_resolution_owner": "Claude",
+      "worker_source_head": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "review_branches_pushed": 5,
+      "whole_branch_pair_checks": 26,
+      "textually_clean": 25,
+      "conflict_files": [
+        "src/ui/CraftSiteQueue.tsx",
+        "src/ui/ProductionControls.tsx"
+      ],
+      "worker_native100_p95_ms": 67.74387500000012,
+      "worker_target_met": false,
+      "worker_active_by_default": false,
+      "gate_credit_added": 0,
+      "details": "docs/parallel/GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md"
+    }
   },
   "counts": {
     "astra_tasks": 25,
@@ -8993,7 +9038,9 @@
       "sourceCommit": "7bfc943",
       "liveCommit": null,
       "evidence": "docs/parallel/reviews/trade-cargo-5d9051c.json; original cap/ownership/preemption/physical-pickup defects unchanged",
-      "scope": "Finite dropped carried-resource parcels and bounded pursuit/recovery; task-commitment seam, deep-water cargo and items/animals remain"
+      "scope": "Finite dropped carried-resource parcels and bounded pursuit/recovery; task-commitment seam, deep-water cargo and items/animals remain",
+      "historicalReviewState": "source-review-blocked at recorded earlier commit",
+      "currentHeadDisposition": "Current1f77972 pending whole-branch integration and native/built verification; historical findings retained as acceptance checklist."
     },
     {
       "id": "CLAUDE-CULTURAL-NAMES",
@@ -9023,7 +9070,9 @@
       "sourceCommit": "5d9051c",
       "liveCommit": null,
       "evidence": "docs/parallel/reviews/trade-cargo-5d9051c.json",
-      "scope": "Actual armor/tool/animal holders, interruption, physical cache loading and strict escrow save checks need repair; player proposals and diverse boat journeys still pending"
+      "scope": "Actual armor/tool/animal holders, interruption, physical cache loading and strict escrow save checks need repair; player proposals and diverse boat journeys still pending",
+      "historicalReviewState": "source-review-blocked at recorded earlier commit",
+      "currentHeadDisposition": "Current1f77972 pending whole-branch integration and native/built verification; historical findings retained as acceptance checklist."
     },
     {
       "id": "CODEX-WATER-CLOCK-EXPERIMENT",

@@ -1,0 +1,1148 @@
+{
+  "sourceCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+  "scope": "Postwarm actual unwrapped100resident Game.step V8samples; raw profile localonly",
+  "warmSteps": 20,
+  "measuredSteps": 180,
+  "samplingIntervalUs": 1000,
+  "allSamples": 4928,
+  "stepAncestrySamples": 4773,
+  "excludedSamples": 155,
+  "estimatedStepSampleMs": 5873.123,
+  "fixtureUnchanged": true,
+  "controlParity": {
+    "inputSha256": true,
+    "initial": true,
+    "warm": true,
+    "final": true,
+    "seed": true,
+    "draws": true,
+    "playerPeople": true,
+    "allLivingPeople": true,
+    "livingBuildings": true
+  },
+  "top20Self": [
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4291,
+      "column": 11,
+      "selfSamples": 380,
+      "selfPercent": 7.961449821914939,
+      "estimatedSelfMs": 476.079,
+      "inclusiveSamples": 1838,
+      "inclusivePercent": 38.508275717578044,
+      "dominantSelfPathSamples": 380,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        }
+      ]
+    },
+    {
+      "function": "separate",
+      "file": "src/game/sim.ts",
+      "line": 4207,
+      "column": 11,
+      "selfSamples": 354,
+      "selfPercent": 7.416719044626022,
+      "estimatedSelfMs": 443.629,
+      "inclusiveSamples": 466,
+      "inclusivePercent": 9.76325162371674,
+      "dominantSelfPathSamples": 354,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "separate",
+          "file": "src/game/sim.ts",
+          "line": 4207,
+          "column": 11
+        }
+      ]
+    },
+    {
+      "function": "assign",
+      "file": "src/game/settlement.ts",
+      "line": 356,
+      "column": 9,
+      "selfSamples": 231,
+      "selfPercent": 4.8397234443746076,
+      "estimatedSelfMs": 287.831,
+      "inclusiveSamples": 778,
+      "inclusivePercent": 16.30002095118374,
+      "dominantSelfPathSamples": 226,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "assign",
+          "file": "src/game/settlement.ts",
+          "line": 356,
+          "column": 9
+        }
+      ]
+    },
+    {
+      "function": "step",
+      "file": "src/game/sim.ts",
+      "line": 5650,
+      "column": 7,
+      "selfSamples": 216,
+      "selfPercent": 4.525455688246386,
+      "estimatedSelfMs": 247.24,
+      "inclusiveSamples": 4773,
+      "inclusivePercent": 100.0,
+      "dominantSelfPathSamples": 216,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "function": "defenseNeighbors",
+      "file": "src/game/defenseNeighbors.ts",
+      "line": 53,
+      "column": 33,
+      "selfSamples": 167,
+      "selfPercent": 3.498847684894196,
+      "estimatedSelfMs": 208.879,
+      "inclusiveSamples": 195,
+      "inclusivePercent": 4.085480829666876,
+      "dominantSelfPathSamples": 167,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "emergencyResponse",
+          "file": "src/game/defense.ts",
+          "line": 102,
+          "column": 34
+        },
+        {
+          "function": "defenseNeighbors",
+          "file": "src/game/defenseNeighbors.ts",
+          "line": 53,
+          "column": 33
+        }
+      ]
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 102,
+      "column": 34,
+      "selfSamples": 132,
+      "selfPercent": 2.765556253928347,
+      "estimatedSelfMs": 163.956,
+      "inclusiveSamples": 474,
+      "inclusivePercent": 9.93086109365179,
+      "dominantSelfPathSamples": 132,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "emergencyResponse",
+          "file": "src/game/defense.ts",
+          "line": 102,
+          "column": 34
+        }
+      ]
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/defense.ts",
+      "line": 114,
+      "column": 34,
+      "selfSamples": 129,
+      "selfPercent": 2.7027027027027026,
+      "estimatedSelfMs": 163.21,
+      "inclusiveSamples": 129,
+      "inclusivePercent": 2.7027027027027026,
+      "dominantSelfPathSamples": 129,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "emergencyResponse",
+          "file": "src/game/defense.ts",
+          "line": 102,
+          "column": 34
+        },
+        {
+          "function": "(anonymous)",
+          "file": "src/game/defense.ts",
+          "line": 114,
+          "column": 34
+        }
+      ]
+    },
+    {
+      "function": "hasTaskCommitment",
+      "file": "src/game/workCommitments.ts",
+      "line": 5,
+      "column": 34,
+      "selfSamples": 115,
+      "selfPercent": 2.4093861303163626,
+      "estimatedSelfMs": 142.206,
+      "inclusiveSamples": 115,
+      "inclusivePercent": 2.4093861303163626,
+      "dominantSelfPathSamples": 54,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "shareLocalTransport",
+          "file": "src/game/haulage.ts",
+          "line": 354,
+          "column": 36
+        },
+        {
+          "function": "(anonymous)",
+          "file": "src/game/haulage.ts",
+          "line": 357,
+          "column": 36
+        },
+        {
+          "function": "safe",
+          "file": "src/game/haulage.ts",
+          "line": 356,
+          "column": 13
+        },
+        {
+          "function": "available",
+          "file": "src/game/haulage.ts",
+          "line": 133,
+          "column": 19
+        },
+        {
+          "function": "hasTaskCommitment",
+          "file": "src/game/workCommitments.ts",
+          "line": 5,
+          "column": 34
+        }
+      ]
+    },
+    {
+      "function": "interactionSpot",
+      "file": "src/game/sim.ts",
+      "line": 3750,
+      "column": 18,
+      "selfSamples": 114,
+      "selfPercent": 2.388434946574481,
+      "estimatedSelfMs": 142.379,
+      "inclusiveSamples": 203,
+      "inclusivePercent": 4.2530902996019275,
+      "dominantSelfPathSamples": 60,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "deliverProductionCargo",
+          "file": "src/game/production.ts",
+          "line": 306,
+          "column": 39
+        },
+        {
+          "function": "atCache",
+          "file": "src/game/production.ts",
+          "line": 104,
+          "column": 17
+        },
+        {
+          "function": "(anonymous)",
+          "file": "src/game/production.ts",
+          "line": 104,
+          "column": 67
+        },
+        {
+          "function": "supplyApproach",
+          "file": "src/game/campAnchor.ts",
+          "line": 22,
+          "column": 31
+        },
+        {
+          "function": "interactionSpot",
+          "file": "src/game/sim.ts",
+          "line": 3750,
+          "column": 18
+        }
+      ]
+    },
+    {
+      "function": "canStep",
+      "file": "src/game/sim.ts",
+      "line": 1024,
+      "column": 10,
+      "selfSamples": 109,
+      "selfPercent": 2.2836790278650745,
+      "estimatedSelfMs": 137.169,
+      "inclusiveSamples": 119,
+      "inclusivePercent": 2.493190865283889,
+      "dominantSelfPathSamples": 101,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "separate",
+          "file": "src/game/sim.ts",
+          "line": 4207,
+          "column": 11
+        },
+        {
+          "function": "canStep",
+          "file": "src/game/sim.ts",
+          "line": 1024,
+          "column": 10
+        }
+      ]
+    },
+    {
+      "function": "add",
+      "file": "src/game/settlement.ts",
+      "line": 312,
+      "column": 19,
+      "selfSamples": 96,
+      "selfPercent": 2.011313639220616,
+      "estimatedSelfMs": 119.375,
+      "inclusiveSamples": 144,
+      "inclusivePercent": 3.016970458830924,
+      "dominantSelfPathSamples": 72,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "rivalTick",
+          "file": "src/game/sim.ts",
+          "line": 5229,
+          "column": 12
+        },
+        {
+          "function": "rebalanceRivalLabor",
+          "file": "src/game/rivalDevelopment.ts",
+          "line": 231,
+          "column": 36
+        },
+        {
+          "function": "assign",
+          "file": "src/game/settlement.ts",
+          "line": 356,
+          "column": 9
+        },
+        {
+          "function": "refresh",
+          "file": "src/game/settlement.ts",
+          "line": 301,
+          "column": 10
+        },
+        {
+          "function": "add",
+          "file": "src/game/settlement.ts",
+          "line": 312,
+          "column": 19
+        }
+      ]
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/settlement.ts",
+      "line": 51,
+      "column": 13,
+      "selfSamples": 93,
+      "selfPercent": 1.9484600879949718,
+      "estimatedSelfMs": 118.126,
+      "inclusiveSamples": 193,
+      "inclusivePercent": 4.043578462183113,
+      "dominantSelfPathSamples": 27,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "preserveFood",
+          "file": "src/game/pantry.ts",
+          "line": 145,
+          "column": 29
+        },
+        {
+          "function": "preservationAvailable",
+          "file": "src/game/pantry.ts",
+          "line": 141,
+          "column": 38
+        },
+        {
+          "function": "reserveSeconds",
+          "file": "src/game/settlement.ts",
+          "line": 61,
+          "column": 31
+        },
+        {
+          "function": "foodDemand",
+          "file": "src/game/settlement.ts",
+          "line": 49,
+          "column": 27
+        },
+        {
+          "function": "(anonymous)",
+          "file": "src/game/settlement.ts",
+          "line": 51,
+          "column": 13
+        }
+      ]
+    },
+    {
+      "function": "foodDemand",
+      "file": "src/game/settlement.ts",
+      "line": 49,
+      "column": 27,
+      "selfSamples": 86,
+      "selfPercent": 1.8018018018018018,
+      "estimatedSelfMs": 107.455,
+      "inclusiveSamples": 370,
+      "inclusivePercent": 7.751937984496124,
+      "dominantSelfPathSamples": 31,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "assign",
+          "file": "src/game/settlement.ts",
+          "line": 356,
+          "column": 9
+        },
+        {
+          "function": "preservationAvailable",
+          "file": "src/game/pantry.ts",
+          "line": 141,
+          "column": 38
+        },
+        {
+          "function": "reserveSeconds",
+          "file": "src/game/settlement.ts",
+          "line": 61,
+          "column": 31
+        },
+        {
+          "function": "foodDemand",
+          "file": "src/game/settlement.ts",
+          "line": 49,
+          "column": 27
+        }
+      ]
+    },
+    {
+      "function": "reserveSeconds",
+      "file": "src/game/settlement.ts",
+      "line": 61,
+      "column": 31,
+      "selfSamples": 65,
+      "selfPercent": 1.361826943222292,
+      "estimatedSelfMs": 82.084,
+      "inclusiveSamples": 363,
+      "inclusivePercent": 7.605279698302954,
+      "dominantSelfPathSamples": 20,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "assign",
+          "file": "src/game/settlement.ts",
+          "line": 356,
+          "column": 9
+        },
+        {
+          "function": "preservationAvailable",
+          "file": "src/game/pantry.ts",
+          "line": 141,
+          "column": 38
+        },
+        {
+          "function": "reserveSeconds",
+          "file": "src/game/settlement.ts",
+          "line": 61,
+          "column": 31
+        }
+      ]
+    },
+    {
+      "function": "steer",
+      "file": "src/game/sim.ts",
+      "line": 4008,
+      "column": 8,
+      "selfSamples": 59,
+      "selfPercent": 1.2361198407710037,
+      "estimatedSelfMs": 70.874,
+      "inclusiveSamples": 199,
+      "inclusivePercent": 4.169285564634402,
+      "dominantSelfPathSamples": 47,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "steer",
+          "file": "src/game/sim.ts",
+          "line": 4008,
+          "column": 8
+        }
+      ]
+    },
+    {
+      "function": "placementIssue",
+      "file": "src/game/sim.ts",
+      "line": 1130,
+      "column": 17,
+      "selfSamples": 58,
+      "selfPercent": 1.2151686570291222,
+      "estimatedSelfMs": 69.458,
+      "inclusiveSamples": 65,
+      "inclusivePercent": 1.361826943222292,
+      "dominantSelfPathSamples": 58,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "rivalTick",
+          "file": "src/game/sim.ts",
+          "line": 5229,
+          "column": 12
+        },
+        {
+          "function": "findOpenSpot",
+          "file": "src/game/sim.ts",
+          "line": 5187,
+          "column": 15
+        },
+        {
+          "function": "placementValid",
+          "file": "src/game/sim.ts",
+          "line": 1228,
+          "column": 17
+        },
+        {
+          "function": "placementIssue",
+          "file": "src/game/sim.ts",
+          "line": 1130,
+          "column": 17
+        }
+      ]
+    },
+    {
+      "function": "shareLocalTransport",
+      "file": "src/game/haulage.ts",
+      "line": 354,
+      "column": 36,
+      "selfSamples": 55,
+      "selfPercent": 1.152315105803478,
+      "estimatedSelfMs": 67.709,
+      "inclusiveSamples": 311,
+      "inclusivePercent": 6.51581814372512,
+      "dominantSelfPathSamples": 55,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "shareLocalTransport",
+          "file": "src/game/haulage.ts",
+          "line": 354,
+          "column": 36
+        }
+      ]
+    },
+    {
+      "function": "acquireTarget",
+      "file": "src/game/sim.ts",
+      "line": 4665,
+      "column": 16,
+      "selfSamples": 54,
+      "selfPercent": 1.1313639220615965,
+      "estimatedSelfMs": 65.75,
+      "inclusiveSamples": 88,
+      "inclusivePercent": 1.8437041692855645,
+      "dominantSelfPathSamples": 54,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "barbarianAI",
+          "file": "src/game/sim.ts",
+          "line": 4955,
+          "column": 14
+        },
+        {
+          "function": "acquireTarget",
+          "file": "src/game/sim.ts",
+          "line": 4665,
+          "column": 16
+        }
+      ]
+    },
+    {
+      "function": "blockedResource",
+      "file": "src/game/settlement.ts",
+      "line": 271,
+      "column": 26,
+      "selfSamples": 48,
+      "selfPercent": 1.005656819610308,
+      "estimatedSelfMs": 60.0,
+      "inclusiveSamples": 48,
+      "inclusivePercent": 1.005656819610308,
+      "dominantSelfPathSamples": 41,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "rivalTick",
+          "file": "src/game/sim.ts",
+          "line": 5229,
+          "column": 12
+        },
+        {
+          "function": "rebalanceRivalLabor",
+          "file": "src/game/rivalDevelopment.ts",
+          "line": 231,
+          "column": 36
+        },
+        {
+          "function": "assign",
+          "file": "src/game/settlement.ts",
+          "line": 356,
+          "column": 9
+        },
+        {
+          "function": "refresh",
+          "file": "src/game/settlement.ts",
+          "line": 301,
+          "column": 10
+        },
+        {
+          "function": "add",
+          "file": "src/game/settlement.ts",
+          "line": 312,
+          "column": 19
+        },
+        {
+          "function": "blockedResource",
+          "file": "src/game/settlement.ts",
+          "line": 271,
+          "column": 26
+        }
+      ]
+    },
+    {
+      "function": "map",
+      "file": "src/game/trails.ts",
+      "line": 13,
+      "column": 13,
+      "selfSamples": 47,
+      "selfPercent": 0.9847056358684266,
+      "estimatedSelfMs": 58.878,
+      "inclusiveSamples": 47,
+      "inclusivePercent": 0.9847056358684266,
+      "dominantSelfPathSamples": 47,
+      "dominantSelfPath": [
+        {
+          "function": "step",
+          "file": "src/game/sim.ts",
+          "line": 5650,
+          "column": 7
+        },
+        {
+          "function": "workerAI",
+          "file": "src/game/sim.ts",
+          "line": 4291,
+          "column": 11
+        },
+        {
+          "function": "steer",
+          "file": "src/game/sim.ts",
+          "line": 4008,
+          "column": 8
+        },
+        {
+          "function": "travelSpeed",
+          "file": "src/game/sim.ts",
+          "line": 3998,
+          "column": 14
+        },
+        {
+          "function": "pathPace",
+          "file": "src/game/trails.ts",
+          "line": 22,
+          "column": 25
+        },
+        {
+          "function": "map",
+          "file": "src/game/trails.ts",
+          "line": 13,
+          "column": 13
+        }
+      ]
+    }
+  ],
+  "top20Inclusive": [
+    {
+      "function": "step",
+      "file": "src/game/sim.ts",
+      "line": 5650,
+      "column": 7,
+      "samples": 4773,
+      "percent": 100.0,
+      "estimatedMs": 5873.123
+    },
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4291,
+      "column": 11,
+      "samples": 1838,
+      "percent": 38.508275717578044,
+      "estimatedMs": 2296.25
+    },
+    {
+      "function": "assign",
+      "file": "src/game/settlement.ts",
+      "line": 356,
+      "column": 9,
+      "samples": 778,
+      "percent": 16.30002095118374,
+      "estimatedMs": 965.701
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 102,
+      "column": 34,
+      "samples": 474,
+      "percent": 9.93086109365179,
+      "estimatedMs": 594.253
+    },
+    {
+      "function": "separate",
+      "file": "src/game/sim.ts",
+      "line": 4207,
+      "column": 11,
+      "samples": 466,
+      "percent": 9.76325162371674,
+      "estimatedMs": 584.674
+    },
+    {
+      "function": "foodDemand",
+      "file": "src/game/settlement.ts",
+      "line": 49,
+      "column": 27,
+      "samples": 370,
+      "percent": 7.751937984496124,
+      "estimatedMs": 462.25
+    },
+    {
+      "function": "reserveSeconds",
+      "file": "src/game/settlement.ts",
+      "line": 61,
+      "column": 31,
+      "samples": 363,
+      "percent": 7.605279698302954,
+      "estimatedMs": 453.964
+    },
+    {
+      "function": "shareLocalTransport",
+      "file": "src/game/haulage.ts",
+      "line": 354,
+      "column": 36,
+      "samples": 311,
+      "percent": 6.51581814372512,
+      "estimatedMs": 381.748
+    },
+    {
+      "function": "rivalTick",
+      "file": "src/game/sim.ts",
+      "line": 5229,
+      "column": 12,
+      "samples": 286,
+      "percent": 5.992038550178085,
+      "estimatedMs": 337.416
+    },
+    {
+      "function": "supplyApproach",
+      "file": "src/game/campAnchor.ts",
+      "line": 22,
+      "column": 31,
+      "samples": 218,
+      "percent": 4.567358055730149,
+      "estimatedMs": 273.462
+    },
+    {
+      "function": "safe",
+      "file": "src/game/haulage.ts",
+      "line": 356,
+      "column": 13,
+      "samples": 214,
+      "percent": 4.483553320762623,
+      "estimatedMs": 262.454
+    },
+    {
+      "function": "preservationAvailable",
+      "file": "src/game/pantry.ts",
+      "line": 141,
+      "column": 38,
+      "samples": 214,
+      "percent": 4.483553320762623,
+      "estimatedMs": 268.163
+    },
+    {
+      "function": "refresh",
+      "file": "src/game/settlement.ts",
+      "line": 301,
+      "column": 10,
+      "samples": 208,
+      "percent": 4.357846218311335,
+      "estimatedMs": 257.622
+    },
+    {
+      "function": "interactionSpot",
+      "file": "src/game/sim.ts",
+      "line": 3750,
+      "column": 18,
+      "samples": 203,
+      "percent": 4.2530902996019275,
+      "estimatedMs": 252.421
+    },
+    {
+      "function": "steer",
+      "file": "src/game/sim.ts",
+      "line": 4008,
+      "column": 8,
+      "samples": 199,
+      "percent": 4.169285564634402,
+      "estimatedMs": 252.999
+    },
+    {
+      "function": "defenseNeighbors",
+      "file": "src/game/defenseNeighbors.ts",
+      "line": 53,
+      "column": 33,
+      "samples": 195,
+      "percent": 4.085480829666876,
+      "estimatedMs": 244.503
+    },
+    {
+      "function": "(anonymous)",
+      "file": "src/game/settlement.ts",
+      "line": 51,
+      "column": 13,
+      "samples": 193,
+      "percent": 4.043578462183113,
+      "estimatedMs": 243.296
+    },
+    {
+      "function": "rebalanceRivalLabor",
+      "file": "src/game/rivalDevelopment.ts",
+      "line": 231,
+      "column": 36,
+      "samples": 174,
+      "percent": 3.6455059710873665,
+      "estimatedMs": 211.206
+    },
+    {
+      "function": "advanceGeographicInfluence",
+      "file": "src/game/influenceField.ts",
+      "line": 229,
+      "column": 43,
+      "samples": 155,
+      "percent": 3.24743347999162,
+      "estimatedMs": 171.089
+    },
+    {
+      "function": "available",
+      "file": "src/game/haulage.ts",
+      "line": 133,
+      "column": 19,
+      "samples": 154,
+      "percent": 3.226482296249738,
+      "estimatedMs": 189.289
+    }
+  ],
+  "stepDirectBranches": [
+    {
+      "function": "workerAI",
+      "file": "src/game/sim.ts",
+      "line": 4291,
+      "column": 11,
+      "samples": 1838,
+      "percent": 38.508275717578044
+    },
+    {
+      "function": "emergencyResponse",
+      "file": "src/game/defense.ts",
+      "line": 102,
+      "column": 34,
+      "samples": 474,
+      "percent": 9.93086109365179
+    },
+    {
+      "function": "separate",
+      "file": "src/game/sim.ts",
+      "line": 4207,
+      "column": 11,
+      "samples": 466,
+      "percent": 9.76325162371674
+    },
+    {
+      "function": "shareLocalTransport",
+      "file": "src/game/haulage.ts",
+      "line": 354,
+      "column": 36,
+      "samples": 311,
+      "percent": 6.51581814372512
+    },
+    {
+      "function": "rivalTick",
+      "file": "src/game/sim.ts",
+      "line": 5229,
+      "column": 12,
+      "samples": 286,
+      "percent": 5.992038550178085
+    },
+    {
+      "function": "advanceGeographicInfluence",
+      "file": "src/game/influenceField.ts",
+      "line": 229,
+      "column": 43,
+      "samples": 155,
+      "percent": 3.24743347999162
+    },
+    {
+      "function": "tickPeople",
+      "file": "src/game/sim.ts",
+      "line": 3458,
+      "column": 13,
+      "samples": 123,
+      "percent": 2.576995600251414
+    },
+    {
+      "function": "barbarianAI",
+      "file": "src/game/sim.ts",
+      "line": 4955,
+      "column": 14,
+      "samples": 114,
+      "percent": 2.388434946574481
+    },
+    {
+      "function": "tickRegen",
+      "file": "src/game/sim.ts",
+      "line": 3409,
+      "column": 12,
+      "samples": 93,
+      "percent": 1.9484600879949718
+    },
+    {
+      "function": "routineRest",
+      "file": "src/game/journeys.ts",
+      "line": 79,
+      "column": 28,
+      "samples": 89,
+      "percent": 1.864655353027446
+    },
+    {
+      "function": "tickWildlife",
+      "file": "src/game/sim.ts",
+      "line": 2403,
+      "column": 15,
+      "samples": 37,
+      "percent": 0.7751937984496124
+    },
+    {
+      "function": "tickRegions",
+      "file": "src/game/sim.ts",
+      "line": 2295,
+      "column": 14,
+      "samples": 34,
+      "percent": 0.7123402472239682
+    },
+    {
+      "function": "tickLumber",
+      "file": "src/game/sim.ts",
+      "line": 5628,
+      "column": 13,
+      "samples": 31,
+      "percent": 0.6494866959983239
+    },
+    {
+      "function": "tickInfluence",
+      "file": "src/game/sim.ts",
+      "line": 2345,
+      "column": 16,
+      "samples": 31,
+      "percent": 0.6494866959983239
+    },
+    {
+      "function": "tickGates",
+      "file": "src/game/fortifications.ts",
+      "line": 22,
+      "column": 26,
+      "samples": 31,
+      "percent": 0.6494866959983239
+    },
+    {
+      "function": "waitForTradeEscort",
+      "file": "src/game/caravans.ts",
+      "line": 70,
+      "column": 35,
+      "samples": 29,
+      "percent": 0.6075843285145611
+    },
+    {
+      "function": "updateVision",
+      "file": "src/game/sim.ts",
+      "line": 3597,
+      "column": 15,
+      "samples": 27,
+      "percent": 0.5656819610307983
+    },
+    {
+      "function": "reviewAutomaticFoodProcessing",
+      "file": "src/game/cerealProcessing.ts",
+      "line": 129,
+      "column": 46,
+      "samples": 24,
+      "percent": 0.502828409805154
+    },
+    {
+      "function": "coastalTradeAI",
+      "file": "src/game/coastalTrade.ts",
+      "line": 57,
+      "column": 31,
+      "samples": 23,
+      "percent": 0.4818772260632726
+    },
+    {
+      "function": "tickRaiders",
+      "file": "src/game/sim.ts",
+      "line": 2106,
+      "column": 14,
+      "samples": 18,
+      "percent": 0.3771213073538655
+    }
+  ],
+  "limits": [
+    "V8sampleestimates, not actualmethodcallcounts; only Game.step ancestry attributed",
+    "No sampling/method/prototype wrappers or phaseprofiling; no save mutation/content/names exported",
+    "Inspectorprofiletimings diagnostic only, not newp95speedgate or builtFPS evidence",
+    "20warmsteps precede capture;180samples only, not campaign/scalability beyond declaredfixture"
+  ],
+  "privateContentExported": false
+}
