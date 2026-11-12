@@ -30,3 +30,9 @@ test('action feedback list marks accepted and refused outcomes by glyph and tone
  const html=renderToStaticMarkup(h(FeedbackList,{items:[{id:2,ok:false,text:'They refuse'},{id:1,ok:true,text:'Marriage arranged'}]}));
  assert.match(html,/aria-live="polite"/);assert.match(html,/data-ok="false"[^>]*>.*✕.*They refuse/);assert.match(html,/data-ok="true"[^>]*>.*✓.*Marriage arranged/);
 });
+test('diplomacy sheet shows the wards ledger: who is held where, years left and the effect',()=>{
+ const w=[{name:'Little Ines',age:9,kind:'foster',heldByUs:true,sinceYear:3,endsIn:7,effect:'Goes home at sixteen and the bond rises.'},{name:'Tam',age:22,kind:'hostage',heldByUs:false,sinceYear:2,endsIn:0,effect:'Held for eight years.'}];
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],wards:w}],onAct(){}}));
+ assert.match(html,/Kin in each other/);assert.match(html,/Little Ines/);assert.match(html,/fostered with us; home in 7 yr/);assert.match(html,/a hostage in Marsh Folk; home in under a year/);
+ assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/Kin in each other/);
+});
