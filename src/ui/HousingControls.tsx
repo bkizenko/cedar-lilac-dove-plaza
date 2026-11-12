@@ -8,6 +8,7 @@ export function HousingControls({ engine, buildingId }: { engine: Engine; buildi
   if (!b || b.team !== 0 || b.hp <= 0 || !["hut", "house"].includes(b.type)) return null;
   const p = b.renovation,
     issue = housingPlanIssue(g, b);
+  if (p?.mode === "rebuild" || p?.mode === "extend") return null;
   if (p)
     return (
       <div className="space-y-1 text-xs">

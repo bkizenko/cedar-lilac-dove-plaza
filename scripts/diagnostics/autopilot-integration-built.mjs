@@ -27,6 +27,30 @@ async function run(){
  stage='actual checkpoint and strict restore';
  report.save=await page.evaluate(()=>window.__engine.saveNow());assert.equal(report.save.saved,true,report.save.message);
  report.restore=await page.evaluate(async()=>{const e=window.__engine,old=e.game,a=window.__autopilotOpening;await e.resumeSaved();const g=e.game;return{replaced:g!==old,paused:g.state.paused,time:g.state.time,residents:g.state.units.filter(u=>u.team===0&&u.hp>0).length,workplacePresent:g.state.buildings.some(b=>b.id===a.id&&b.type===a.type),errors:[...g.simulationErrors]};});assert.equal(report.restore.replaced,true);assert.equal(report.restore.paused,true);assert.equal(report.restore.time,opening.time);assert.equal(report.restore.residents,opening.residents);assert.equal(report.restore.workplacePresent,true);assert.deepEqual(report.restore.errors,[]);assert.deepEqual(errors,[]);report.passed=1;report.total=1;
+ if(process.env.ERA_UPGRADE==='1'){
+  stage='actual selected-building extension controls';
+  const candidate=await page.evaluate(async()=>{
+   const e=window.__engine,g=e.game;
+   for(const b of g.state.buildings.filter(b=>b.team===0&&b.hp>0&&g.finished(b)&&['hearth','hut','house','dryrack','smokehouse','butcher','tanner','tailor','kiln'].includes(b.type)).slice(0,48)){
+    const reply=await e.readModel({kind:'building-fabric',buildingId:b.id}),choice=reply.model.choices.find(c=>c.mode==='extend'&&!c.issue);
+    if(!choice)continue;
+    g.clearSelect();g.selectEntity(b);e.pushHud();return{id:b.id,side:choice.side,target:choice.target,hp:b.hp,maxHp:b.maxHp,wood:g.tribe(0).wood,stone:g.tribe(0).stone};
+   }
+   throw Error('No physically eligible existing native building; fixture must not be modified to fabricate one');
+  });
+  const controls=page.getByRole('region',{name:'Building upgrade',exact:true});await controls.waitFor();
+  await controls.getByLabel('Extension side',{exact:true}).selectOption(candidate.side);
+  const extend=controls.getByRole('button',{name:'Extend',exact:true});await extend.waitFor();await page.waitForFunction(()=>{const b=[...document.querySelectorAll('[aria-label="Building upgrade"] button')].find(b=>b.textContent==='Extend');return b&&!b.disabled;},{},{timeout:10000});await extend.click();
+  await controls.getByRole('progressbar',{name:'Building upgrade progress',exact:true}).waitFor();
+  report.eraUpgrade=await page.evaluate(({id,target,hp,maxHp,wood,stone})=>{
+   const g=window.__engine.game,b=g.state.buildings.find(b=>b.id===id),p=b.renovation;
+   return{id,mode:p?.mode,paid:p?.paid,progress:p?.progress,target:p?.eraChange?.target,hpUnchanged:b.hp===hp,maximumUnchanged:b.maxHp===maxHp,stockUnchanged:g.tribe(0).wood===wood&&g.tribe(0).stone===stone,paused:g.state.paused};
+  },candidate);
+  const r=report.eraUpgrade;assert.equal(r.mode,'extend');assert.equal(r.paid,false);assert.equal(r.progress,0);assert.deepEqual(r.target,candidate.target);assert.ok(r.hpUnchanged&&r.maximumUnchanged&&r.stockUnchanged&&r.paused);
+  assert.equal((await page.evaluate(()=>window.__engine.saveNow())).saved,true);
+  report.eraUpgrade.reload=await page.evaluate(async id=>{const e=window.__engine;await e.resumeSaved();const p=e.game.state.buildings.find(b=>b.id===id)?.renovation;return{mode:p?.mode,paid:p?.paid,progress:p?.progress,target:p?.eraChange?.target};},candidate.id);
+  assert.equal(report.eraUpgrade.reload.mode,'extend');assert.equal(report.eraUpgrade.reload.paid,false);assert.equal(report.eraUpgrade.reload.progress,0);assert.deepEqual(report.eraUpgrade.reload.target,candidate.target);report.passed=report.total=2;
+ }
  if(process.env.SAVE_FAILURE==='1'){
   stage='actual failed durable checkpoint refuses Test Lab';
   report.failedCheckpoint=await page.evaluate(async()=>{
