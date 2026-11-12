@@ -140,3 +140,16 @@ test('rival societies appoint a commander from real soldiers, deterministically,
  assert.equal(ra.length,1);assert.equal(ra[0].memberIds.length,5);assert.deepEqual(ra.map(c=>[c.traits,c.memberIds.length]),rb.map(c=>[c.traits,c.memberIds.length]));
  const few=world();few.g.state.tribes[1].alive=true;few.soldier('warden',200,200,1);enableCommanders(few.g,true);tick(few.g,70);assert.equal(commandersState(few.g).roster.length,0);
 });
+
+test('replacement never exceeds the new commander capacity; overflow people stay free, not deleted',()=>{
+ const {g,soldier}=world();const lead=soldier('swordsman',50,50),second=soldier('warden',55,50);
+ appointCommander(g,lead.id,'army');const c=commandersState(g).roster[0];
+ const crew=[];for(let i=0;i<14;i++)crew.push(soldier('spearman',60+i,50));
+ c.memberIds=crew.map(u=>u.id);c.level=9;c.status='captured';c.capturedBy=1;
+ const before=g.state.units.length;
+ const r=appointCommander(g,second.id,'army',{replaces:c.id,free:true});
+ assert.equal(r.accepted,true,r.reason);
+ const n=commandersState(g).roster.find(x=>x.id===r.commanderId);
+ assert.ok(n.memberIds.length<=commanderCapacity(n));assert.equal(g.state.units.length,before,'nobody removed');
+ for(const u of crew)assert.ok(g.state.units.includes(u));
+});
