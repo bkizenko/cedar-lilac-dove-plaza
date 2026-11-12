@@ -1,5 +1,5 @@
 import {packedItemStorageUnits,packedFoodLiters,FOOD_PACKED_LITERS,INVENTORY_VOLUME_RULES} from './inventoryVolume';
-import {bindCharcoalLoad,bindCopperSmeltLoad} from './carriedLoad';
+import {bindCharcoalLoad,bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import type{ProductionProject}from'./production';
@@ -32,7 +32,7 @@ function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{k
 export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(p.charcoal&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCharcoalLoad(u,p);}if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,x.capacity])]);
  if(c.claims.get(p.id)!==signature){if(!c.jobs.job(id))c.jobs.propose({id,kind:`production:${p.recipe}`,owner:p.team,actors:[],target:p.workplace});
  if(!c.jobs.amend(id,p.actorId===null?[]:[p.actorId],claims)){c.conflicts++;return false;}c.claims.set(p.id,signature);c.amendments++;c.jobs.retarget(id,p.workplace);}
- const phase=effective(p);c.jobs.transition(id,p.phase==='paused'||phase==='stored'||phase==='ready'&&p.actorId===null?'reserved':phase==='returning'||phase==='unloading'?'returning':phase==='working'||phase==='curing'?'working':'traveling',p.progress);if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId),owned=g.state.production?.projects.find(q=>q.id===p.id)??p;if(u)bindCopperSmeltLoad(u,owned);}return true;
+ const phase=effective(p);c.jobs.transition(id,p.phase==='paused'||phase==='stored'||phase==='ready'&&p.actorId===null?'reserved':phase==='returning'||phase==='unloading'?'returning':phase==='working'||phase==='curing'?'working':'traveling',p.progress);if((p.recipe==='smeltCopper'||p.recipe==='smeltIron'||p.recipe==='consolidateIron')&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId),owned=g.state.production?.projects.find(q=>q.id===p.id)??p;if(u){if(p.recipe==='smeltCopper')bindCopperSmeltLoad(u,owned);else bindIronSmeltLoad(u,owned);}}return true;
 }
 export function productionOwnershipReason(g:Game,p:ProductionProject){const reason=workRuntime(g).job(productionJobId(p.id))?.blockedReason;return reason?.includes(':slots')?'All physical processing slots at this workplace are reserved':reason?.includes(':cache:')?'Material storage has no room to park this paid batch':reason?.includes('Resident')?'This resident already owns another active job':reason||'Paid batch ownership is unavailable';}
 export function releaseProductionOwnership(g:Game,p:ProductionProject){const c=context(g);if(!c.claims.has(p.id)&&!c.jobs.job(productionJobId(p.id)))return;c.jobs.finish(productionJobId(p.id),p.phase==='lost');c.jobs.forget(productionJobId(p.id));c.claims.delete(p.id);}
