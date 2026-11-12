@@ -424,11 +424,11 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-34 | catalogue | Fleeing/aggressive wildlife and sustainable reproduction. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
 | CAT-35 | catalogue | Carcass transport, butchery and useful hides/bone. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
 | CAT-36 | catalogue | Seasonal wild foods, fishing and traps. | Codex | — (done) | done/live | hunting/carcass/fishing covered by verified M1-10/11; leftovers on audit |
-| CAT-37 | catalogue | Animal capture/taming and species-specific domestic uses. | Codex | Codex W1 | source-pushed-not-live | sheep capture live 5f1b5e9; old-map import and other species remain |
-| CAT-38 | catalogue | Pens, fodder, pasture, veterinary care and breeding. | Codex | Codex W1 | source-pushed-not-live | sheep breeding/feed live; veterinary/seasonal grazing remain |
+| CAT-37 | catalogue | Animal capture/taming and species-specific domestic uses. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
+| CAT-38 | catalogue | Pens, fodder, pasture, veterinary care and breeding. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | CAT-39 | catalogue | Milk, meat, wool, transport and animal traction where species permit. | Codex | Codex T7 | live-partial | wool/dairy vessel live; cultured curd confirmed41f5870 with7native/focused+1built flow, same2pots/cloth return; meat/transport/traction remain W1 |
 | CAT-4 | catalogue | Local shortages that encourage exploration, exchange or migration. | Grok | Grok W7 | not started | local shortages encouraging migration |
-| CAT-40 | catalogue | **Accepted extension:** selective breeding, pack dogs and working horses. | Codex | Codex W1 | not started | selective breeding, pack dogs, horses; chariots later L4 |
+| CAT-40 | catalogue | **Accepted extension:** selective breeding, pack dogs and working horses. | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | CAT-41 | catalogue | Land clearing and viable low-timber fields. | Grok | Grok W9 | not started | land clearing / site prep |
 | CAT-42 | catalogue | Sowing, tending and time-limited harvest labor. | Codex | — (done) | done/live | historical source-struck: sowing/tending/harvest labor |
 | CAT-43 | catalogue | Seeds, soil exhaustion, fallow, manure and crop rotation. | Codex | Codex W8 | not started | soil exhaustion / fallow / manure / rotation |
@@ -775,7 +775,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-GEO-INFLUENCE | incentive | Influence decays along real routes; mountains/seas block until transport | Grok | Grok W14 | not started |  |
 | INC-GOAT-FIND | incentive | Find-goat is a persistent order: search, capture, escort, pen, bounded failures | Codex | Codex W1 | not started | diagnose existing path; no invented animals |
 | INC-GRAPHICS-QUALITY | incentive | Low/Medium/High remembered; no color shift from pipeline swaps | Codex | Codex W10 | source-pushed-not-live | settings exist; remember/pipeline leftovers |
-| INC-HORSES | incentive | Stables, horses, burden animals, riding; chariots later | Codex | Codex W1 | not started | chariots are Codex L4 |
+| INC-HORSES | incentive | Stables, horses, burden animals, riding; chariots later | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | INC-HOUSE-VARIATION | incentive | Valid footprint/frame/roof variation fitted to terrain; identity saved | Claude | Claude W1 | source-pushed-not-live |  |
 | INC-HUNT-PREP | incentive | Hunting with real weapons; carcass transport, butchery, hide curing | Codex | — (done) | done/live | covered by verified M1-10 |
 | INC-IRRIGATION | incentive | Crops/cisterns from real channels; finite throughput; no universal bonus | Grok | Grok W3 | not started |  |
@@ -795,7 +795,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-TRIBE-FLAG | incentive | Player names tribe, symbol, flag, palette; persist on diplomacy and gear | Claude | Claude W6 | not started |  |
 | INC-UNBUILT-CAMP | incentive | Fresh society starts with people and supplies, no completed structures | Codex | — (done) | done/live | M1-01 verified |
 | INC-WATER-HEARTH | incentive | Collected water; hearths consume real fuel; cooking/curing fuel | Codex | Codex W9 | source-pushed-not-live | M1-06/07 live; cooking/curing chain leftovers |
-| INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | source-pushed-not-live | sheep/goats partial; broader species open |
+| INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | live-partial | 455cd37 actual native horses→paid capture→pen→stable→same-ID pack;3× care/places,3.5× healthy capacity,25/25scoped; riding/traction/broader species remain open; no98gatecredit |
 | INC-WILDFIRE | incentive | Player and rival fires/disasters with causes, mitigation, recoverable loss | Grok | Grok W7 | not started | wildfire/flood; building fire is INC-BUILDING-FIRE |
 | INC-WONDERS | incentive | Six wonder grammars as seeded 3D paid construction with function/prestige | Claude | Claude W1 | source-pushed-not-live | wonderKit 9992fe9; earthworks labour is Grok W15 |
 | PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | done/live | Normal whole-branch merges landed339d9b8; release2026-11-12T01-58-40-150Z-339d9b8 on8086/8101;24/24focused+1/1built native53save/queue/restore;tsc+buildPASS; no gate credit |
