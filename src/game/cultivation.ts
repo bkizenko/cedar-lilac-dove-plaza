@@ -35,6 +35,8 @@ export function initializeCultivation(g:Game,legacy=false){
     t.cropSamples??={};
     t.cultivated??=g.state.buildings.some(b=>b.team===t.id&&b.type==="farm")||legacy&&t.age>0?["grain"]:[];
   }
+  // Candidate identity is initial/migration data, never a reward for reloading.
+  if(g.state.cultivationVersion!==1){
   for(const n of g.state.forage){
     if(n.cropCandidate)continue;
     let hash=Math.imul(g.state.seed^n.id,0x45d9f3b);hash=(hash^(hash>>>16))>>>0;
@@ -46,6 +48,7 @@ export function initializeCultivation(g:Game,legacy=false){
   // A viable starter patch is still unknown until somebody actually gathers it.
   const home=g.campOf(0),near=g.state.forage.filter(n=>Math.hypot(n.x-home.x,n.z-home.z)<35);
   if(near.length&&!near.some(n=>n.cropCandidate))near[0].cropCandidate=habitatKindAt(g,near[0].x,near[0].z)==='forest'?"tubers":"grain";
+  }
   g.state.cultivationVersion=1;
 }
 export function collectSamples(u:Unit,n:ResourceNode,food:number){
