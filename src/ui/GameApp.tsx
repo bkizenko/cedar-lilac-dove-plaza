@@ -8,7 +8,7 @@ import { PlayTools } from "./PlayTools";
 import { useEffect, useRef, useState } from "react";
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot } from "@/game/types";
-import { Hud } from "./Hud";
+import { HudRoot } from "./HudRoot";
 
 const EMPTY: HudSnapshot = {
   food: 0,
@@ -156,7 +156,7 @@ export function GameApp() {
           }}
         />
       )}
-      <Hud hud={hud} engine={engineRef.current} />
+      <HudRoot hud={hud} engine={engineRef.current} />
       <PlayTools engine={engineRef.current} />
       <SettlementLedger engine={engineRef.current} hud={hud} />
       <EncounterDialog engine={engineRef.current} />
