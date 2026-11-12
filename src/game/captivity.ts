@@ -1,3 +1,4 @@
+import {snapshotCapturedMethods,type CapturedMethodSnapshot} from './capturedKnowledge';
 import {reconcileArmorHolders} from './armor';
 import{validHandoverProvenance}from'./communityHandoverValidation';
 import{reconcileWaterCargoEvidence}from'./boatPractice';
@@ -111,7 +112,7 @@ export function captiveKnowledgeSnapshot(g:Game,u:Unit,origin:number):CaptiveKno
  const t=g.tribe(origin),round5=(n:number)=>Math.max(0,Math.round((Number.isFinite(n)?n:0)/5)*5);
  return{team:origin,asOf:g.state.time,homeHallId:hall?.id,home:hall?{x:hall.x,z:hall.z}:undefined,homeArmed:near.filter(p=>p.militia||!['worker','leader'].includes(p.type)).length,homeResidents:near.length,homeFood:round5(t?.food||0),homeWood:round5(t?.wood||0)};
 }
-export type PrisonerCustody={knows?:CaptiveKnowledge;rejoinedTeam?:number;rejoinedHandoverId?:number;originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
+export type PrisonerCustody={methods?:CapturedMethodSnapshot;knows?:CaptiveKnowledge;rejoinedTeam?:number;rejoinedHandoverId?:number;originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
 export type PrisonerUnit=Unit&{prisoner?:PrisonerCustody};
 export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,defenderRadiusMeters:12,superiorityRatio:2,escortSeparationMeters:8,unguardedEscapeSeconds:30,localSupplyRadiusMeters:3,foodPerSecond:.036,waterLitersPerSecond:.008,foodGraceSeconds:60,foodFatalSeconds:160,waterGraceSeconds:180,waterFatalSeconds:1800} as const;
 export const prisonerIndependentNeeds=(u:Unit)=>!!(u as PrisonerUnit).prisoner&&(u as PrisonerUnit).prisoner!.phase!=='custody';
@@ -126,9 +127,10 @@ export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  if(!captors.length||captors.length<defenders.length*PRISONER_RULES.superiorityRatio)return {accepted:false,reason:'Reach the person with enough local force to obtain surrender'};
  const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
  if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
+ const methods=snapshotCapturedMethods(g.state,u);
  const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);interruptForTeamTransfer(g,u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
  const knows=captiveKnowledgeSnapshot(g,u,origin);
- u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0,knows};invalidatePrisonerGuardQueries(g);
+ u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0,knows,methods};invalidatePrisonerGuardQueries(g);
  u.team=captorTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.selected=false;u.homeHall=undefined;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.order='hold';u.workReason='Surrendered — waiting for a guarded route to custody';
  guard.order='hold';guard.target=null;guard.node=null;guard.pillage=-1;guard.returnAfterCombat=undefined;guard.escortId=u.id;
  recordConflict(g,'surrender',captorTeam,1,{actorId:guard.id,targetId:u.id});g.workBoard.reset();

@@ -1,4 +1,5 @@
 import type {Game} from './sim';
+import type {CapturedMethodSnapshot} from './capturedKnowledge';
 import type {GameState,Unit} from './types';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
@@ -25,7 +26,7 @@ export type CaptiveIntel={id:number;captorTeam:number;originTeam:number;prisoner
 export type Interrogation={prisonerId:number;captorTeam:number;progressSeconds:number;startedAt:number};
 export type RansomPhase='proposed'|'pickup'|'carrying'|'paid'|'refused'|'failed';
 export type Ransom={id:number;prisonerId:number;captorTeam:number;originTeam:number;kind:'wood'|'food';amount:number;phase:RansomPhase;proposedAt:number;answerAt:number;carrierId?:number;carried:number;reason:string};
-export type CaptiveIntegration={unitId:number;originTeam:number;captorTeam:number;at:number};
+export type CaptiveIntegration={methods?:CapturedMethodSnapshot;unitId:number;originTeam:number;captorTeam:number;at:number};
 export type RevoltPressure={prisonerId:number;pressure:number};
 export type CaptiveDealingsState={version:1;revolt?:RevoltPressure[];custodySince:{prisonerId:number;since:number}[];interrogations:Interrogation[];intel:CaptiveIntel[];ransoms:Ransom[];integrations:CaptiveIntegration[]};
 export const CAPTIVE_DEALINGS_RULES={version:1,interrogationSeconds:45,ransomAfterSeconds:120,integrateAfterSeconds:600,npcIntegrateAfterSeconds:900,ransomAnswerSeconds:20,playerAnswerSeconds:600,ransomJourneySeconds:900,ransomWood:15,ransomFood:12,originReserveWood:10,
@@ -86,8 +87,8 @@ export function integrateCaptive(g:Game,id:number,actorTeam=0){
  if(custodySeconds(g,id)<R.integrateAfterSeconds)return{accepted:false,reason:`They need more time in custody (${Math.ceil(R.integrateAfterSeconds-custodySeconds(g,id))}s)`};
  if(g.popNow(actorTeam)>=g.popCap(actorTeam))return{accepted:false,reason:'Housing is needed for another free resident'};
  if(st(g).captiveDealings?.ransoms.some(r=>r.prisonerId===id&&OPEN_RANSOM.includes(r.phase)))return{accepted:false,reason:'A ransom is under way'};
- const origin=u.prisoner!.originTeam;endCustodyGuard(g,u);u.prisoner=undefined;invalidatePrisonerGuardQueries(g);u.order='idle';u.workReason='Joined the village as a free resident';
- const s=root(g);s.integrations.push({unitId:id,originTeam:origin,captorTeam:actorTeam,at:g.state.time});if(s.integrations.length>R.maximumIntegrations)s.integrations.shift();
+ const origin=u.prisoner!.originTeam,methods=u.prisoner!.methods;endCustodyGuard(g,u);u.prisoner=undefined;invalidatePrisonerGuardQueries(g);u.order='idle';u.workReason='Joined the village as a free resident';
+ const s=root(g);s.integrations.push({unitId:id,originTeam:origin,captorTeam:actorTeam,at:g.state.time,...(methods?{methods}: {})});if(s.integrations.length>R.maximumIntegrations)s.integrations.shift();
  s.custodySince=s.custodySince.filter(c=>c.prisonerId!==id);recordConflict(g,'captive_integrated',actorTeam,1,{actorId:id});g.workBoard.reset();
  return{accepted:true,reason:'Now a free member of the village'};
 }
