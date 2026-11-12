@@ -10,6 +10,7 @@ import {fishMarkerHeight} from './resourceSurface';
 import {BankTerrainLayer} from './bankTerrainLayer';
 import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from './renderMetrics';
 import{HullFleet}from'./hullFleet';
+import {bindSnowCap,carvedSnowUniform} from './roofSnow';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
 import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
 import type {CameraGround} from './cameraClearance';
@@ -391,6 +392,7 @@ export class WorldView {
   private grassRegion: Uint8Array | null = null;
   private seasonAcc = 0.4;
   private lastSnow = -1;
+  private carvedSnow = 0;
   private litSun = 1.2;
   private litHemi = 0.55;
   private litFogD = 0.003;
@@ -1074,6 +1076,7 @@ export class WorldView {
       timber.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
       roof.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       roof.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+      if(type!=='cornerstone'&&type!=='pen'&&!terrainLaidWorkplace(type))bindSnowCap(roof.material as THREE.Material);
       (roof.material as THREE.MeshStandardMaterial).vertexColors = false;
       (roof.material as THREE.MeshStandardMaterial).color.set("#ffffff");
       timber.castShadow = true;
@@ -1945,6 +1948,7 @@ export class WorldView {
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
+    layer.setSnow(this.carvedSnow);
     layer.sync(list,this.camera.position);
     for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
@@ -2762,6 +2766,7 @@ export class WorldView {
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
+    this.carvedSnow = this.styleId==='village'||this.renderStyle==='carved'?sn.snow:0;this.carvedLayer?.setSnow(this.carvedSnow);carvedSnowUniform.value=this.carvedSnow<.02?0:this.carvedSnow;
     if(this.terrainSurface){this.terrainSurface.snow.value=sn.snow;this.terrainSurface.heights.needsUpdate=true;}
     const geo = this.terrain.geometry as THREE.BufferGeometry;
     const colAttr = geo.getAttribute("color") as THREE.BufferAttribute | undefined;
