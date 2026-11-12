@@ -33,6 +33,7 @@ import{planAdvancedHome,housingAI,pauseHousingWorker,tickHousing,homeUseAI,knows
 import type {SimulationPhaseProfile} from './simulationPhaseProfile';
 import{tickBuildingMaintenance,buildingRepairAI,pauseBuildingRepair,repairPacketSpeed}from'./buildingMaintenance';
 import{campSupportAI,finishCampTrip}from'./finiteCamp';
+import {tickRaidDefense,noteRaidDefenseDamage} from './warPrestige';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
 import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
@@ -4861,6 +4862,7 @@ export class Game {
     else if(attackerTeam!==3&&target.team!==3)declareSocietyHostility(this,attackerTeam,target.team);
     target.hp -= dmg;
     noteRaidCombat(this,attackerTeam,target,source,target.hp<=0);
+    noteRaidDefenseDamage(this,evidenceSource,target,target.hp<=0);
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
     if (attackerTeam === 0 && target.team !== 0 && target.team !== 3)
@@ -5984,6 +5986,7 @@ export class Game {
         reconcileFarmToolCargo(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
+        tickRaidDefense(this);
         finishCommandFrame(this,sdt);
         this.checkVictory();
       } catch (err) {

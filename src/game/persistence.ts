@@ -23,6 +23,7 @@ import{validHousingState}from'./housingValidation';
 import{relinkHousingViews}from'./housing';
 import{validBuildingMaintenance}from'./buildingMaintenance';
 import{validFiniteCamps}from'./finiteCamp';
+import {validRaidDefense} from './warPrestige';
 import{validRaidIntents}from'./raidIntent';
 import{validCommunityHandovers,validHandoverAssets,handedOver}from'./communityHandoverValidation';
 import{validCerealState}from'./cerealRules';
@@ -186,7 +187,7 @@ function validateGamePayload(raw: unknown) {
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
   if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
-  if(!validFiniteCamps(s)||!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
+  if(!validFiniteCamps(s)||!validRaidIntents(s)||!validRaidDefense(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s)||!validPenBeddingState(s))fail();

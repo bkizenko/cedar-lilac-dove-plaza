@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "baselineId": "hearthwild-first-release-gates-v1",
-  "auditDate": "2026-11-03",
+  "auditDate": "2026-11-12",
   "scope": "Stone, Bronze, Iron, Classical first release; desktop only",
   "scopeSources": [
     "docs/INCENTIVE_FIRST_MASTER_PLAN.md",
@@ -11,8 +11,8 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "d86d7da6dcd0d452928bb2967dc10a8212798153 published as 2026-11-12T00-03-38-084Z-d86d7da on8086/8101. Performancebatch37/37; scoped native/built100evidence, Workerinactive/fullcoveragepending.34/98unchanged; no newgatecredit.",
-  "planningHeadAtAudit": "75ad233",
+  "verifiedPublishedCodeBaseline": "2d31e94d62e3ed5cc1ef32993fe7251d4c7c8de9 published as 2026-11-12T14-10-08-201Z-2d31e94 on8086/8101.55/55scoped incoming village/Council/audio checks; inherited prior verified37/98 unchanged. Full suite/performance target not claimed; Worker parked; later main source pending.",
+  "planningHeadAtAudit": "ba2f2e2",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
     "Long-running and fast-forward frame-tail smoothness, the100-visible-person performance target, and connected campaign/holdout qualification",
@@ -29,15 +29,15 @@
     "evidenceRule": "Source files/test definitions and design briefs alone are not proof of passed execution; older narrow scenarios are not generalized to current connected campaign."
   },
   "overall": {
-    "verifiedGates": 34,
+    "verifiedGates": 37,
     "totalGates": 98,
-    "verifiedGatePercent": 34.69
+    "verifiedGatePercent": 37.76
   },
   "milestones": {
     "M0": {
-      "verifiedGates": 8,
+      "verifiedGates": 9,
       "totalGates": 12,
-      "verifiedGatePercent": 66.67
+      "verifiedGatePercent": 75
     },
     "M1": {
       "verifiedGates": 17,
@@ -50,9 +50,9 @@
       "verifiedGatePercent": 6.25
     },
     "M3": {
-      "verifiedGates": 3,
+      "verifiedGates": 5,
       "totalGates": 18,
-      "verifiedGatePercent": 16.67
+      "verifiedGatePercent": 27.78
     },
     "M4": {
       "verifiedGates": 2,
@@ -157,7 +157,7 @@
     "bankFishing20261102": {
       "path": "docs/INTEGRATED_BANK_FISHING_2026-11-02.md",
       "kind": "executed connected ordinary Game.step scenario with exact accounting",
-      "scope": "Frozen c66304c; two actual V16 bank catch\u2192carry\u2192save\u2192recall\u2192physical home-delivery scenarios. Not hardship campaign balance."
+      "scope": "Frozen c66304c; two actual V16 bank catch→carry→save→recall→physical home-delivery scenarios. Not hardship campaign balance."
     },
     "survivalMaintenance20261102": {
       "path": "docs/TOOLS_CAMERA_SURVIVAL_2026-11-02.md",
@@ -177,7 +177,7 @@
     "finalMatureProfileNov2": {
       "path": "docs/FINAL_MATURE_VILLAGE_PROFILE_2026-11-02.md",
       "kind": "Actual foreground browser stress profile on target Apple M1/8GiB, original/final exported aggregate counts and final-source build",
-      "scope": "M5-07 reporting only:245\u2192273 people,363\u2192364 standing structures, Medium1\u00d7, CPU/navigation-included/render/memory/save pipeline. No fast-forward/FPS target acceptance."
+      "scope": "M5-07 reporting only:245→273 people,363→364 standing structures, Medium1×, CPU/navigation-included/render/memory/save pipeline. No fast-forward/FPS target acceptance."
     },
     "occupationProductionRegressionNov2": {
       "path": "docs/metrics/occupation-production-gap-2026-11-02.json",
@@ -226,6 +226,18 @@
     "native100Performance20261111": {
       "file": "docs/metrics/sim-speed-native100-performance-release-2026-11-11.json",
       "gateCredit": 0
+    },
+    "commandDominationNativeBuilt20261112": {
+      "path": "docs/metrics/command-domination-release-2026-11-12.json",
+      "passed": 104,
+      "total": 104,
+      "newGateCredit": 3
+    },
+    "villageCouncilAudio20261112": {
+      "path": "docs/metrics/village-council-audio-release-2026-11-12.json",
+      "passed": 55,
+      "total": 55,
+      "newGateCredit": 0
     }
   },
   "gates": [
@@ -367,10 +379,12 @@
         "11-20",
         "111-120"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "commandDominationNativeBuilt20261112"
+      ],
+      "remainingNotes": "Native8 plus ownership case and built actual move/readout verify execution, useful-work/delivery milestones, blocked vs normal waiting, ownership handovers/denials and failed reservations. Session-only bounded telemetry; fields/planting/hunting/store tending remain explicitly untraced; Worker parked."
     },
     {
       "id": "M0-11",
@@ -666,7 +680,7 @@
       "evidence": [
         "v18c4b-published"
       ],
-      "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1\u201317 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
+      "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1–17 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
     },
     {
       "id": "M1-19",
@@ -1098,10 +1112,12 @@
         "81-90",
         "101-120"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Remote strength-ratio treaty acceptance is not actual local sustained domination."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "commandDominationNativeBuilt20261112"
+      ],
+      "remainingNotes": "Native ordinary-step tribute/puppet/autonomy hold real local leverage and deliver two continuing finite installments per term through original saved carriers. Built three real term controls and20-log paid readout. Authored pre-existing outposts/party and built hall visibility; no earned-army/campaign claim."
     },
     {
       "id": "M3-13",
@@ -1111,10 +1127,12 @@
         "21-30",
         "81-110"
       ],
-      "status": "pending",
-      "credit": 0,
-      "evidence": [],
-      "remainingNotes": "Natural withdrawal/custody/control integration unpublished; zero credit."
+      "status": "verified",
+      "credit": 1,
+      "evidence": [
+        "commandDominationNativeBuilt20261112"
+      ],
+      "remainingNotes": "Native ordinary-step withdrawal and custody release preserve original surviving bodies and finite possessions, save mid-return, physically arrive and unload, free guards and update local control/custody. Built release retains loaded cargo through save/reload and physically returns the same carrier. No ransom/exchange/revolt credit."
     },
     {
       "id": "M3-14",
@@ -1546,7 +1564,7 @@
       "evidence": [
         "finalMatureProfileNov2"
       ],
-      "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245\u2192273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
+      "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245→273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
     },
     {
       "id": "M5-08",

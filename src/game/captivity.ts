@@ -1,3 +1,4 @@
+import {noteRaidDefenseResidentHome} from './warPrestige';
 import {snapshotCapturedMethods,type CapturedMethodSnapshot} from './capturedKnowledge';
 import {reconcileArmorHolders} from './armor';
 import{validHandoverProvenance}from'./communityHandoverValidation';
@@ -192,6 +193,7 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
   const home=g.nearestDrop(u.x,u.z,homeTeam),spot=home?supplyApproach(g,u,home):null;
   if(!home||!spot){u.order='hold';u.workReason='Released — no reachable home cache for return';return true;}
   if(supplyReached(g,u,home,spot)){
+   noteRaidDefenseResidentHome(g,u,homeTeam);
    if(p.food>0)receiveFood(g,homeTeam,p.food);const stock=g.tribe(homeTeam).survival;if(stock)stock.waterLiters+=p.waterLiters;
    p.food=0;p.waterLiters=0;u.prisoner=undefined;finishRepatriation(g,u);if(u.repatriating){const origin=g.tribe(u.team);origin.trust=Math.min(1,(origin.trust||0)+.15);u.repatriating=undefined;}
    // We are physically at an owned cache. Finish the ordinary recalled-cargo

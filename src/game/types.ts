@@ -505,6 +505,7 @@ export type GameState = {
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
+  raidDefense?:import('./warPrestige').RaidDefenseState;
   raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
   diplomaticReports?:import('./diplomaticKnowledge').DiplomaticReport[];

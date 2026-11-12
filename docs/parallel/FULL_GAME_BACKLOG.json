@@ -7295,9 +7295,9 @@
   "release_gate_snapshot": {
     "baseline": "hearthwild-first-release-gates-v1",
     "overall": {
-      "verifiedGates": 34,
+      "verifiedGates": 37,
       "totalGates": 98,
-      "verifiedGatePercent": 34.69
+      "verifiedGatePercent": 37.76
     },
     "gates": [
       {
@@ -7438,10 +7438,12 @@
           "11-20",
           "111-120"
         ],
-        "status": "pending",
-        "credit": 0,
-        "evidence": [],
-        "remainingNotes": "Current integrated acceptance evidence is missing or narrower than this gate; existing modules/test-source alone earn no credit."
+        "status": "verified",
+        "credit": 1,
+        "evidence": [
+          "commandDominationNativeBuilt20261112"
+        ],
+        "remainingNotes": "Native8 plus ownership case and built actual move/readout verify execution, useful-work/delivery milestones, blocked vs normal waiting, ownership handovers/denials and failed reservations. Session-only bounded telemetry; fields/planting/hunting/store tending remain explicitly untraced; Worker parked."
       },
       {
         "id": "M0-11",
@@ -8169,10 +8171,12 @@
           "81-90",
           "101-120"
         ],
-        "status": "pending",
-        "credit": 0,
-        "evidence": [],
-        "remainingNotes": "Remote strength-ratio treaty acceptance is not actual local sustained domination."
+        "status": "verified",
+        "credit": 1,
+        "evidence": [
+          "commandDominationNativeBuilt20261112"
+        ],
+        "remainingNotes": "Native ordinary-step tribute/puppet/autonomy hold real local leverage and deliver two continuing finite installments per term through original saved carriers. Built three real term controls and20-log paid readout. Authored pre-existing outposts/party and built hall visibility; no earned-army/campaign claim."
       },
       {
         "id": "M3-13",
@@ -8182,10 +8186,12 @@
           "21-30",
           "81-110"
         ],
-        "status": "pending",
-        "credit": 0,
-        "evidence": [],
-        "remainingNotes": "Natural withdrawal/custody/control integration unpublished; zero credit."
+        "status": "verified",
+        "credit": 1,
+        "evidence": [
+          "commandDominationNativeBuilt20261112"
+        ],
+        "remainingNotes": "Native ordinary-step withdrawal and custody release preserve original surviving bodies and finite possessions, save mid-return, physically arrive and unload, free guards and update local control/custody. Built release retains loaded cargo through save/reload and physically returns the same carrier. No ransom/exchange/revolt credit."
       },
       {
         "id": "M3-14",
