@@ -1,0 +1,33 @@
+{
+  "commit": "5a8db6b97d8057b0c6afb1c8ee42ac65a2b21c8c",
+  "source": "b7fcd52",
+  "release": "2026-11-12T11-07-42-385Z-5a8db6b",
+  "livePorts": [
+    8086,
+    8101
+  ],
+  "scoped": {
+    "passed": 26,
+    "total": 26,
+    "uniqueNativeAndSharedChecks": 24,
+    "builtChecks": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Built native-earned armor repair controls/payment/same asset/save; original village compatibility. Not campaign or FPS proof.",
+      "originalPopulation": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "pass",
+  "productionBuild": "pass",
+  "firstReleaseGates": {
+    "id": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69387755102041,
+    "unchanged": true
+  },
+  "scope": "Same original padded armor: paid cloth2/cordage1 at real cache,45 base work seconds at real tailor, target90percent condition. Original actor travels; shared actor/slot reservations; pause/resume/cancel; carried armor has burden and no protection; no refund, duplication or new crafted asset. Immediate-save death/removal reconciles once. Native fixture declares finite cloth and completed legal tailor, then actually sews/delivers/equips/wears/repairs armor without moving actors or terrain. Not broad campaign/performance/hide/shield/helmet acceptance.",
+  "housekeeping": "Removed29 obsolete completed local release copies and disposable Vite cache after disk-full failure. Preserved current release, rollback and two additional recent builds, original saves and artwork; no screenshots generated."
+}

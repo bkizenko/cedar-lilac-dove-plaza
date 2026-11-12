@@ -1,3 +1,4 @@
+import {ARMOR_REPAIR_RULES} from '../game/armorRepair';
 import {ArmorControls} from './ArmorControls';
 import {BREWING_RULES} from '../game/brewing';
 import {garmentRepairRemainingWork,GARMENT_REPAIR_RULES,GARMENT_PATCH} from '../game/garmentRepair';
@@ -23,7 +24,7 @@ export function ProductionControls({engine}:{engine:Engine}){
   try{const result=await engine.dispatch(command,selection);if(!current()||result.epoch!==engine.dispatchEpoch)return;setFeedback(result.reason);setRevision(n=>n+1);engine.pushHud();engine.canvas?.focus();}
   catch(error){if(current())setFeedback(error instanceof Error?error.message:'The production request could not be completed');}
  },button='min-h-11 rounded-md border border-bronze/40 px-3 py-2 text-left text-sm disabled:opacity-50';
- return<section className="mt-3 space-y-2" aria-label="Physical production">{!!people.length&&<ArmorControls engine={engine} people={people} run={run}/>}{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
+ return<section className="mt-3 space-y-2" aria-label="Physical production">{!!people.length&&<><ArmorControls engine={engine} people={people} run={run}/><ArmorRepairPersonControls engine={engine} people={people} run={run} button={button}/></>}{craftSite&&<CraftSiteQueue engine={engine}/>}{!!recipes.length&&<>
  <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-medium">Make a batch</h3><GameTooltip title="Physical processing" description="An adult loads real inputs, works, and carries the batch home. Inputs are paid once; passive batches need later pickup."><span tabIndex={0} className="text-xs text-parchment-dim">{recipes.length} recipes</span></GameTooltip></div>
  <div className="grid grid-cols-2 gap-2" aria-label="Workplace recipes">{recipes.map(r=>{
  const brewingStage=r.id==='sproutGrain'?'malt':r.id==='brewSmallBeer'?'smallBeer':r.id==='brewBeer'?'beer':null,brewing=brewingStage?BREWING_RULES.stages[brewingStage]:null,firing=!!r.outputs.pottery&&r.preservation!=='brewing';
@@ -66,4 +67,22 @@ function ClothingPersonControls({engine,people,run,button}:PersonControlsProps){
   {u.spareGarment&&<GameTooltip title="Change clothing" description="Change only at a real camp or store. Both garments keep their condition; the carried spare adds load."><button className={button} disabled={u.spareGarment.condition<=0||!!u.garmentRepair} onClick={()=>run({kind:'swap-clothing',unitId:u.id})}>Change into {ITEM_NAMES[u.spareGarment.item]} ({Math.round(u.spareGarment.condition*100)}%)</button></GameTooltip>}
   {(!u.garment||u.garment.condition<=0||!u.spareGarment||u.spareGarment.condition<=0)&&<div className="flex flex-wrap gap-2">{clothingChoices.map(([item,label,description])=><GameTooltip key={item} title={ITEM_NAMES[item]} description={description+' Take one delivered garment at the cache; a serviceable old garment becomes your single carried spare. Worn-out clothing is discarded.'}><button className={button} disabled={(status.items[item]||0)<1||!!u.garmentRepair} onClick={()=>run({kind:'equip-clothing',unitId:u.id,item})}>Wear {label} ({status.items[item]||0})</button></GameTooltip>)}</div>}
  </div>)}</>;
+}
+
+function ArmorRepairPersonControls({engine,people,run,button}:PersonControlsProps){
+ const g=engine.game,workplaceId=g.state.selBld?.type==='tailor'?g.state.selBld.id:undefined,queries=people.map(u=>({kind:'armor-repair-issue' as const,unitId:u.id,...(workplaceId!==undefined?{workplaceId}:{})})),read=useOwnerReadModels(engine,queries);
+ return <div className="space-y-1 text-xs" aria-label="Armor repair">{people.map(u=>{
+  const repair=u.armorRepair,asset=repair?g.state.armor?.assets.find(a=>a.team===u.team&&a.id===repair.armorId):g.state.armor?.assets.find(a=>a.team===u.team&&a.holder.kind==='unit'&&a.holder.id===u.id)||g.state.armor?.assets.find(a=>a.team===u.team&&a.id===u.armorCargoId&&a.holder.kind==='carried'&&a.holder.id===u.id);
+  if(!asset&&!repair)return null;
+  const availability=read({kind:'armor-repair-issue',unitId:u.id,...(workplaceId!==undefined?{workplaceId}:{})}),issue=availability.model?availability.model.issue:availability.issue||'Actual repair availability is unavailable';
+  if(repair)return <div key={u.id} className="space-y-1 rounded border border-parchment/15 p-2">
+   <p>{personName(u)} · Armor repair · {repair.phase==='paused'?'paused':repair.phase==='traveling'?'walking to tailor':'working'}</p>
+   <progress aria-label={`${personName(u)} armor repair progress`} max={ARMOR_REPAIR_RULES.workSeconds} value={repair.progress} className="h-1.5 w-full"/>
+   <p className="text-parchment-dim">Same armor carried · no worn protection · cloth and cordage paid once</p>
+   {u.workReason&&<p className="text-parchment-dim">{u.workReason}</p>}
+   <div className="flex flex-wrap gap-2"><button type="button" className={button} disabled={!!g.state.ended} onClick={()=>run({kind:'armor-repair-control',unitId:u.id,action:repair.phase==='paused'?'resume':'pause'})}>{repair.phase==='paused'?'Resume repair':'Pause repair'}</button><GameTooltip title="Cancel armor repair" description="Same armor stays carried. Paid cloth and cordage are not refunded; wearing it again requires normal equipment handling."><button type="button" className={button} disabled={!!g.state.ended} onClick={()=>run({kind:'armor-repair-control',unitId:u.id,action:'cancel'})}>Cancel repair</button></GameTooltip></div>
+  </div>;
+  if(!asset||asset.condition>=1)return null;
+  return <GameTooltip key={u.id} title="Repair armor" description={`${issue?issue+' · ':''}${ARMOR_REPAIR_RULES.cloth} cloth + ${ARMOR_REPAIR_RULES.cordage} cordage · ${ARMOR_REPAIR_RULES.workSeconds}s base work at a tailor · restore the same armor to ${Math.round(ARMOR_REPAIR_RULES.targetCondition*100)}% · carried throughout, no worn protection`}><button type="button" className={button} disabled={!!issue||!!g.state.ended} onClick={()=>run({kind:'armor-repair',unitId:u.id,...(workplaceId!==undefined?{workplaceId}:{})})}>Repair armor · {Math.round(asset.condition*100)}%{people.length>1&&<span className="block text-xs text-parchment-dim">{personName(u)}</span>}</button></GameTooltip>;
+ })}</div>;
 }

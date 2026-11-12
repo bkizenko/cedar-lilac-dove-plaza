@@ -30,6 +30,7 @@ export function workerActivity(state:GameState,u:Unit) {
  if(p&&b&&['carrying','working','ready','curing'].includes(p.phase))destination=`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`;
  if(['move','explore','return','attackmove'].includes(u.order)||p&&['collecting','returning','unloading'].includes(p.phase))destination=`Current waypoint · ${point({x:u.tx,z:u.tz})}`;
  if(u.garmentRepair&&u.garmentRepair.phase!=='paused'){const w=u.garmentRepair,b=state.buildings.find(b=>b.id===w.workplaceId);stage=w.phase==='paused'?'Garment repair paused':w.phase==='working'?'Repairing original garment':'Carrying garment to tailor';destination=b?`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`:undefined;}
+ if(u.armorRepair){const w=u.armorRepair,b=state.buildings.find(b=>b.id===w.workplaceId);stage=w.phase==='paused'?'Armor repair paused':w.phase==='working'?'Repairing original armor':'Carrying armor to tailor';destination=b?`${BUILDINGS[b.type].name} #${b.id} · ${point(b)}`:undefined;}
  if(u.tradedTeaching){const offer=state.teachingOffers?.find(o=>o.id===u.tradedTeaching!.offerId);if(offer){stage=offer.phase==='returning'?'Bringing learned method home':offer.phase==='observing'?'Observing foreign artisan':offer.phase==='armed'?'Waiting for agreed demonstration':'Carrying teaching payment';destination=`${offer.phase==='returning'?'Home cache':'Teaching workshop'} · ${point({x:u.tx,z:u.tz})}`;}}
  if(u.copperStudy){const w=u.copperStudy;stage=w.paused?'Copper trial paused':w.phase==='loading'?'Loading prototype inputs':w.phase==='working'?'Testing copper prototype':'Carrying prototype inputs';destination=`Crafting shelter #${w.workplace}`;}
  const warmth=fireWarmingVisit(state,u);
@@ -40,6 +41,7 @@ export function workerActivity(state:GameState,u:Unit) {
   if(p.phase==='carrying'||p.phase==='unloading'||p.phase==='paused'&&['carrying','unloading'].includes(p.resumePhase))batchCargo=[...bundle(recipe.inputs),...Object.entries(recipe.foodInputs||{}).map(([k,n])=>`${quantity(n!)} ${k}`),...(recipe.grain?[`${recipe.grain} clean grain`]:[]),...(recipe.wood?[`${recipe.wood} logs`]:[]),...(recipe.water?[`${recipe.water} L water`]:[])];
   if(p.phase==='returning')batchCargo=[...bundle(productionOutputs(p)),...Object.entries(productionFoodOutputs(p)).filter(([,n])=>(n||0)>0).map(([kind,n])=>`${quantity(n!)} ${kind}`)];
  }
+ if(u.armorRepair)batchCargo.push(`Original padded armor #${u.armorRepair.armorId}`,...bundle(u.armorRepair.paid));
  if(u.garmentRepair)batchCargo.push(`Original ${ITEM_NAMES[u.garmentRepair.garment.item]}`,...bundle(u.garmentRepair.paid));
  return {stage,source,destination,cargo,batchCargo,blocked,recipe:recipe?.name,projectId:p?.id,progress:p&&recipe?Math.min(1,p.progress/recipe.workSeconds):undefined,workSeconds:p?.progress,requiredWorkSeconds:recipe?.workSeconds,batchAgeSeconds:p?Math.max(0,state.time-p.started):undefined};
 }

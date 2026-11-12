@@ -170,7 +170,7 @@ export function productionOutputStorageIssue(g:Game,p:ProductionProject,u?:Unit)
  const outputs=productionOutputs(p);if(outputs.paddedArmor&&armorDeliveryIssue(g))return armorDeliveryIssue(g);if(!sum(outputs)||isCerealRecipe(p.recipe)||nonExpandingItemBatch(p.recipe)||canLeaveFlourOutside(g,p.team,p.recipe,u))return null;
  return storedItemUnits(g,p.team)+sum(outputs)+cachedProductionUnits(g,p.team)+cerealReservedMaterials(g,p.team,p.id)>itemCapacity(g,p.team)?'Material storage is full; carrier is keeping the finished batch':null;
 }
-export function occupiedProductionSlots(g:Game,b:Building){return g.state.units.filter(u=>u.hp>0&&u.garmentRepair?.workplaceId===b.id&&u.garmentRepair.phase!=='paused').length+(g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
+export function occupiedProductionSlots(g:Game,b:Building){return g.state.units.filter(u=>u.hp>0&&u.armorRepair?.workplaceId===b.id&&u.armorRepair.phase!=='paused').length+g.state.units.filter(u=>u.hp>0&&u.garmentRepair?.workplaceId===b.id&&u.garmentRepair.phase!=='paused').length+(g.state.production?.projects||[]).filter(p=>p.workplace===b.id&&live(p)&&!['returning','unloading','stored'].includes(p.phase)&&!(p.phase==='paused'&&['returning','unloading'].includes(p.resumePhase))).length;}
 export const DOUBLE_GRAIN_BATCH_RULES={minimumDemonstrations:3} as const;
 const bulkGrainPrerequisites: Partial<Record<ProductionRecipe,ProductionRecipe>> = {
  grindGrainBulk:'grindGrainDouble', bakeBreadBulk:'bakeBreadDouble',

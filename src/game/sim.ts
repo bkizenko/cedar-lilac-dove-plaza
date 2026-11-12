@@ -1,4 +1,5 @@
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
+import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
@@ -1831,6 +1832,7 @@ export class Game {
     pauseConstructionQueue(this,u);
     releaseConstructionWorker(this,u);
     pauseCoastalTrade(this,u);
+    pauseArmorRepair(this,u);
     pauseGarmentRepair(this,u);
     pauseProduction(this,u);
     pauseFibreWork(this,u);
@@ -5771,6 +5773,7 @@ export class Game {
         tickFibre(this);
         tickClay(this);
         tickCopperStudies(this);
+        tickArmorRepairs(this);
         tickGarmentRepairs(this);
         tickProduction(this,sdt);
         tickBuildingMaintenance(this,sdt);
@@ -5830,6 +5833,7 @@ export class Game {
             if(practicalHelperAI(this,u,sdt))continue;
             if(tradedTeachingAI(this,u,sdt))continue;
             if(productionApprenticeAI(this,u,sdt))continue;
+            if(armorRepairAI(this,u,sdt))continue;
             if(garmentRepairAI(this,u,sdt))continue;
             if(productionAI(this,u,sdt))continue;
             if(campRelocationAI(this,u,sdt))continue;
@@ -5932,6 +5936,7 @@ export class Game {
         tickTradeIntel(this);
         tickPracticalHelpers(this);
         tickCopperStudies(this);
+        tickArmorRepairs(this);
         tickGarmentRepairs(this);
         tickProduction(this,0);
         tickBuildingMaintenance(this,0);
