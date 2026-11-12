@@ -4,12 +4,13 @@ import {KINDS,type Kind,type Plan} from './societyDecisions';
 import {validDirector,type Director} from './strategicDirector';
 import {validIntel,type IntelRecord} from './societyIntel';
 import {validBreakaway,type Breakaway} from './breakaways';
+import {validCivic,type CivicState} from './societyCivic';
 import {validAgreement,validHistory,HISTORY_CAP,type Agreement,type HistoryEntry} from './succession';
 
 export type Outcome={plans:number;completed:number;abandoned:number;expired:number;interrupted:number;switched:number;raids:number;settles:number;pacts:number;held:Record<Kind,number>};
 export type LastDecision={t:number;kind:Kind;change:string;why:string[];alternatives:{kind:Kind;score:number;feasible:boolean;blocked?:string;reasons:string[];target?:number}[]};
 export type DecisionState={version:1;nextId:number;reviewAt:Record<string,number>;plans:Record<string,Plan>;director:Record<string,Director>;last:Record<string,LastDecision>;
- intel:IntelRecord[];agreements:Agreement[];history:Record<string,HistoryEntry[]>;outcomes:Record<string,Outcome>;breakaways:Breakaway[];lastRuler?:Record<string,string>};
+ intel:IntelRecord[];agreements:Agreement[];history:Record<string,HistoryEntry[]>;outcomes:Record<string,Outcome>;breakaways:Breakaway[];lastRuler?:Record<string,string>;civic?:CivicState};
 export const DECISION_LIMITS={intel:64,agreements:64,breakaways:32,history:HISTORY_CAP} as const;
 export const emptyOutcome=():Outcome=>({plans:0,completed:0,abandoned:0,expired:0,interrupted:0,switched:0,raids:0,settles:0,pacts:0,held:Object.fromEntries(KINDS.map(k=>[k,0])) as Record<Kind,number>});
 export const emptyDecisions=():DecisionState=>({version:1,nextId:1,reviewAt:{},plans:{},director:{},last:{},intel:[],agreements:[],history:{},outcomes:{},breakaways:[]});
@@ -31,5 +32,6 @@ export function validDecisionState(x:unknown):x is DecisionState{
  for(const h of Object.values(s.history))if(!Array.isArray(h)||h.length>DECISION_LIMITS.history||h.some(e=>!validHistory(e)))return false;
  for(const o of Object.values(s.outcomes))if(!o||![o.plans,o.completed,o.abandoned,o.expired,o.interrupted,o.switched,o.raids,o.settles,o.pacts].every(num)||!rec(o.held))return false;
  if(s.lastRuler!==undefined&&!rec(s.lastRuler))return false;
+ if(s.civic!==undefined&&!validCivic(s.civic))return false;
  return true;
 }

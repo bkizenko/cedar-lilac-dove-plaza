@@ -18,6 +18,8 @@ import {direct,type Director} from './strategicDirector';
 import {recordFromSightings,targetView,exposure,type IntelRecord,type Sighting} from './societyIntel';
 import {emptyDecisions,emptyOutcome,DECISION_LIMITS,type DecisionState,type LastDecision} from './societyState';
 import {STAGES,BREAKAWAY_RULES,pressureOf,stageStep,options as breakawayOptions,pickOption,coerceSucceeds,type Breakaway,type SettlementView} from './breakaways';
+import {foundSocietyFromBreakaway} from './societyBreakaway';
+import {noteDepartures,civicLegitimacy,politicsLoss,outpostGrievance,civicEffects} from './societyCivicRuntime';
 import {inherit,inheritGrievance,addHistory,boundTo,kinCloseness,type Agreement,type AgreementKind,type HistoryKind} from './succession';
 
 type S={rulers?:{seed:number;year:number;societies:Record<string,{civ:{polity:{legitimacy:Record<string,number>}};dynasty:import('./dynasty').Dynasty}>;weary?:Record<string,number>;decisions?:DecisionState};worldOptions?:{rulersVersion?:number};time:number;seed:number};
@@ -38,7 +40,7 @@ export const historyOf=(g:Game,team:number)=>peek(g)?.history[String(team)]??[];
 export const agreementsOf=(g:Game,team?:number):Agreement[]=>(peek(g)?.agreements??[]).filter(a=>team===undefined||a.a===team||a.b===team);
 export const breakawaysOf=(g:Game,team?:number):Breakaway[]=>(peek(g)?.breakaways??[]).filter(b=>team===undefined||b.parent===team);
 
-function remember(g:Game,team:number,kind:HistoryKind,text:string,withTeam?:number){
+export function remember(g:Game,team:number,kind:HistoryKind,text:string,withTeam?:number){
  const d=ensureDecisions(g);if(!d)return;const key=String(team);
  d.history[key]=addHistory(d.history[key],{year:st(g).rulers?.year??0,kind,text,...(withTeam!==undefined?{with:withTeam}:{})});
 }
@@ -142,7 +144,7 @@ const summary=(dec:Decision,time:number):LastDecision=>({t:time,kind:dec.choice.
 export function reviewSociety(g:Game,team:number):Decision|null{
  const d=ensureDecisions(g);if(!d||team===0||team===3||!g.tribe(team)?.alive)return null;
  const key=String(team),time=g.state.time;if((d.reviewAt[key]??0)>time)return null;
- d.reviewAt[key]=time+DECISION_RULES.reviewSeconds;
+ d.reviewAt[key]=time+DECISION_RULES.reviewSeconds*civicEffects(g,team).decisionDelay;
  observeSociety(g,team);
  const n=measureNeeds(g,team);if(!n)return null;
  const o=outcome(d,team),seed=st(g).seed;
@@ -203,16 +205,16 @@ function signPact(g:Game,a:number,b:number){
 export function noteRaid(g:Game,team:number,target:number){
  const d=ensureDecisions(g);if(!d)return;outcome(d,team).raids++;remember(g,team,'raid',`sent a raiding party against ${g.tribe(target)?.name??target}`,target);remember(g,target,'raid',`was struck by ${g.tribe(team)?.name??team}`,team);
 }
-export function noteSettlement(g:Game,team:number){const d=ensureDecisions(g);if(!d)return;outcome(d,team).settles++;remember(g,team,'settle','sent families to a new hearth');}
+export function noteSettlement(g:Game,team:number,crew=0){const d=ensureDecisions(g);if(!d)return;noteDepartures(g,team,crew);outcome(d,team).settles++;remember(g,team,'settle','sent families to a new hearth');}
 
 // ---------- breakaways ----------
-const legitimacyOf=(g:Game,team:number)=>{const me=st(g).rulers?.societies[String(team)];return me?Math.min(100,30+100*Math.max(0,...Object.values(me.civ.polity.legitimacy))):50;};
+export const legitimacyOf=(g:Game,team:number)=>{const me=st(g).rulers?.societies[String(team)];return me?Math.min(100,30+100*Math.max(0,...Object.values(me.civ.polity.legitimacy))):50;};
 /** Unrest pressure (0..100) a society feels from autonomous or broken-away hearths. Feeds unrestOf's coalitionLoss. 0 when the layer is off. */
 export function breakawayLoss(g:Game,team:number):number{
  let v=0;for(const b of breakawaysOf(g,team)){if(b.resolution==='reintegrated')continue;v+=b.resolution==='tributary'?8:b.resolution==='recognised'?12:b.stage==='breakaway'?45:b.stage==='autonomous'?20:b.stage==='restive'?6:0;}
- return Math.min(80,v);
+ return Math.min(80,v+politicsLoss(g,team));
 }
-function settlementsOf(g:Game,team:number):SettlementView[]{
+export function settlementsOf(g:Game,team:number):SettlementView[]{
  const recs=(g.state.communities??[]).filter(c=>c.team===team&&c.status!=='abandoned').sort((a,b)=>a.founded-b.founded||a.hall-b.hall);
  if(recs.length<2)return [];const home=g.state.buildings.find(b=>b.id===recs[0].hall);if(!home)return [];
  const out:SettlementView[]=[];
@@ -220,14 +222,14 @@ function settlementsOf(g:Game,team:number):SettlementView[]{
   const hall=g.state.buildings.find(b=>b.id===c.hall&&b.hp>0&&g.finished(b));if(!hall)continue;
   const residents=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.homeHall===c.hall).length;
   const sf=clamp01(residents/10)*(c.status==='thriving'?1:c.status==='struggling'?.3:.7);
-  out.push({hall:c.hall,parent:team,distance:dist(hall,home),ageSeconds:Math.max(0,g.state.time-c.founded),residents,selfSufficiency:sf,localGrievance:clamp01(.5*(g.tribe(team).tension||0)+(c.status==='struggling'?.3:0))});
+  out.push({hall:c.hall,parent:team,distance:dist(hall,home),ageSeconds:Math.max(0,g.state.time-c.founded),residents,selfSufficiency:sf,localGrievance:clamp01(.5*(g.tribe(team).tension||0)+(c.status==='struggling'?.3:0)+outpostGrievance(g,c.hall))});
  }
  return out;
 }
 export function reviewBreakaways(g:Game,team:number,n:Needs){
  const d=ensureDecisions(g),bk='b'+team;if(!d||(d.reviewAt[bk]??0)>g.state.time)return;
  d.reviewAt[bk]=g.state.time+BREAKAWAY_RULES.reviewSeconds;
- const views=settlementsOf(g,team),unrest=n.unrest,legit=legitimacyOf(g,team),epoch=Math.floor(g.state.time/BREAKAWAY_RULES.reviewSeconds),seed=st(g).seed;
+ const views=settlementsOf(g,team),unrest=n.unrest,legit=Math.max(0,Math.min(100,legitimacyOf(g,team)+civicLegitimacy(g,team))),epoch=Math.floor(g.state.time/BREAKAWAY_RULES.reviewSeconds),seed=st(g).seed;
  for(const v of views){
   if(v.residents<BREAKAWAY_RULES.minResidents&&!d.breakaways.some(b=>b.hall===v.hall))continue;
   let b=d.breakaways.find(x=>x.hall===v.hall);
@@ -242,7 +244,7 @@ export function reviewBreakaways(g:Game,team:number,n:Needs){
    const parentPower=Math.max(1,n.readyFighters*(.5+n.defence)),res=coerceSucceeds(seed,v.hall,epoch,parentPower,v);
    b.conflictUntil=undefined;b.resolvedAt=g.state.time;
    if(res.ok){b.resolution='reintegrated';b.stage='loyal';remember(g,team,'reintegration',`brought ${name} back under the hall by force`);if(hall)lifeEvent(g,team,`${name} was brought back by force`,hall.x,hall.z);}
-   else{b.resolution='recognised';b.stage='breakaway';remember(g,team,'breakaway',`failed to retake ${name}; it stands apart`);if(hall)lifeEvent(g,team,`${name} stands apart; the hall could not retake it`,hall.x,hall.z);}
+   else{b.resolution='recognised';b.stage='breakaway';remember(g,team,'breakaway',`failed to retake ${name}; it stands apart`);if(hall)lifeEvent(g,team,`${name} stands apart; the hall could not retake it`,hall.x,hall.z);const nt=foundSocietyFromBreakaway(g,v.hall);if(nt!==null)b.newTeam=nt;}
    continue;
   }
   b.stage=stageStep(b.stage,eff);
@@ -257,7 +259,7 @@ export function reviewBreakaways(g:Game,team:number,n:Needs){
    b.choice=pick.kind;b.choiceAt=g.state.time;
    if(pick.kind==='concede'){t.food=Math.max(0,t.food-pick.cost.food);t.wood=Math.max(0,t.wood-pick.cost.wood);b.stage='restive';b.relief=Math.min(.5,(b.relief??0)+.25);remember(g,team,'reintegration',`conceded to ${name}: gifts and a hearing`);}
    else if(pick.kind==='tribute'){b.resolution='tributary';b.stage='autonomous';remember(g,team,'reintegration',`let ${name} govern itself for tribute`);}
-   else if(pick.kind==='recognise'){b.resolution='recognised';b.stage='breakaway';b.resolvedAt=g.state.time;remember(g,team,'breakaway',`recognised ${name} as its own`);if(hall)lifeEvent(g,team,`${name} is recognised as independent`,hall.x,hall.z);}
+   else if(pick.kind==='recognise'){b.resolution='recognised';b.stage='breakaway';b.resolvedAt=g.state.time;remember(g,team,'breakaway',`recognised ${name} as its own`);if(hall)lifeEvent(g,team,`${name} is recognised as independent`,hall.x,hall.z);const nt=foundSocietyFromBreakaway(g,v.hall);if(nt!==null)b.newTeam=nt;}
    else if(pick.kind==='coerce'){b.conflictUntil=g.state.time+BREAKAWAY_RULES.conflictSeconds;t.recoveryUntil=Math.max(t.recoveryUntil||0,b.conflictUntil);
     const r=st(g).rulers;if(r){r.weary={...(r.weary??{}),[String(team)]:Math.min(100,(r.weary?.[String(team)]??0)+10)};}
     remember(g,team,'breakaway',`marched on ${name}`);}

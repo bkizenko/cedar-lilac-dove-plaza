@@ -51,3 +51,9 @@ export function validRulersState(x:unknown):x is RulersState{
 }
 /** Old saves: absent field => feature off, nothing breaks. */
 export const rulersOf=(state:{rulers?:unknown}):RulersState|null=>validRulersState(state.rulers)?state.rulers:null;
+/** A society founded mid-game (a recognised breakaway): same generators as the opening cast, keyed by its new team id. Deterministic per (seed,id). */
+export function addSociety(s:RulersState,id:string,gameSeed:number):void{
+ if(s.societies[id])return;
+ const n=Object.keys(s.societies).length,civ=generateCast(gameSeed+n*7919,1)[0];
+ s.societies[id]={civ,dynasty:foundDynasty(civ.ruler.seed,id),ledger:emptyLedger(),greatEmerged:0};
+}
