@@ -111,6 +111,7 @@ import {turnableBuilding,turnedFootprint} from "./footprints";
 import {flowPath} from "./flowFields";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
+import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -1473,6 +1474,15 @@ export class Game {
     }
     return true;
   }
+
+  /** Preview and commit share `planAqueductWorks` / `executeAqueductWorks` (same checks). */
+  commissionAqueduct(source:{x:number;z:number},target:{x:number;z:number},team=0){
+    const plan=planAqueductWorks(this,source,target,team);if(plan.issues.length){if(team===0)this.banner(plan.issues[0],3);return{ok:false as const,reason:plan.issues[0],buildingIds:[] as number[]};}
+    const r=executeAqueductWorks(this,plan);if(!r.ok&&team===0)this.banner(r.reason??'A dig could not be laid out',3);return r;}
+  /** Preview and commit share `planCanalWorks` / `executeCanalWorks` (same checks). */
+  commissionCanal(a:{x:number;z:number},b:{x:number;z:number},team=0,line?:{x:number;z:number}[]){
+    const plan=planCanalWorks(this,a,b,team,line);if(plan.issues.length){if(team===0)this.banner(plan.issues[0],3);return{ok:false as const,reason:plan.issues[0],buildingIds:[] as number[],canalId:undefined};}
+    const r=executeCanalWorks(this,plan);if(!r.ok&&team===0)this.banner(r.reason??'A dig could not be laid out',3);return r;}
 
   orderConstruction(b:Building){return orderConstruction(this,b);}
   queueConstruction(b:Building){const result=queueConstruction(this,b);this.banner(result.reason,3);return result.accepted;}
