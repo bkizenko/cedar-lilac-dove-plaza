@@ -1,3 +1,4 @@
+import {millWorkRate} from './millPower';
 import {breadRecipes,grindingRecipes} from './cerealProcessing';
 import {garmentRepairRemainingWork} from './garmentRepair';
 import {ITEM_NAMES} from './production';
@@ -227,7 +228,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   }
  }
  const craft=(id:string,label:string,u:Unit|undefined,job:{progress:number;duration:number;workplace:number;paused?:boolean},blocker?:string,strengthWork=true)=>{
-  const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b);
+  const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===team&&g.finished(b)),experience=u?1+Math.min(.3,(u.craftingXP||0)/1200):1,effort=(strengthWork?(u?predisposition(u).strength:meanStrength):1)*experience*craftingWorkplaceRate(b)*millWorkRate(g,b);
   const row:WorkloadTask={id,label,category:'Crafting',personSeconds:Math.max(0,job.duration-job.progress)/effort+(u&&b?travel(u,b.x,b.z):0),status:job.paused?'paused':!b?'blocked':u&&!outsideRole(g,u)&&!claimed.has(u.id)?'active':'queued',actorIds:u?[u.id]:[],priority:450,blocker:job.paused?blocker||'Paid project paused':!b?'Compatible workplace missing':blocker||null};add(row);
  };
  const projects=(g.state as WorkState).haulageProjects??[],projectIds=new Set<number>();

@@ -574,3 +574,8 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 05:14 ET Claude: shipped lane A per-era machinery gating (ERA_REACH: bands small/slow parties and no organised explore/trade speed-up, chiefdom modest, state full; behind rulersVersion) (7b5d5bc, on integration/2026-11-11) / now on UI hook for claims/unrest + diplomatic flavour / blocked: none. rulers 41/41, tsc diff 0 new vs baseline
 
 - 2026-11-12 05:20 ET (Grok World): LIVE 56cd841 R-key / Rotate ↻ button turns non-square buildings (barracks etc.) a quarter turn while placing; ghost and commit share the turn. Shared files: engine.ts, world.ts (setGhost quarterTurn arg), Hud.tsx.
+
+- 2026-11-12 05:28 ET (Grok World): LIVE 13af620 watermills/windmills grind grain — 16-grain mill batch, miller works at real power (watermill: river current or millrace head; windmill: site exposure × weather; up to 3× a hand stone), auto food picks mills first, idle mills say why in the building panel. Shared files: production.ts, cerealProcessing.ts, villageWorkload.ts, pantry.ts, practiceKnowledge.ts, sim.ts (selection info).
+
+- 2026-11-12 05:31 ET (Grok World): LIVE 9d902a7 farm drag wider than one field lays out several fields with headlands (preview markers == commit, seeds counted, blocked plots red) and the placement banner shows soil + grain-yield factor from fertilityPreview. Shared file: engine.ts.
+- 05:28 ET Claude: shipped lane B ruler-death/succession toast (RulerEventToast: chronicle line, regent/new ruler, sound cue) + 'Traded/Taught from <society>' knowledge label (council-ui 8/8, tsc 0 errors) (441ee5d, on integration/2026-11-11) / now on food/brew completion cue (needs engine event from Codex) + 390px panel pass / blocked: none

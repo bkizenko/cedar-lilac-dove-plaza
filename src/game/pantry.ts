@@ -119,7 +119,7 @@ export function consumeAndSpoilFood(g:Game,team:number,demand:number,dt:number) 
     // raw while rough grain/sheaves can cover this same emergency ration.
     const roughNutrition=(t.items?.roughGrain||0)*EMERGENCY_RATIONS.nourishment+(t.items?.grainSheaves||0)*EMERGENCY_RATIONS.nourishment*.5;
     let hearth=false,mill=false,oven=false;
-    if(lots.grain>0&&roughNutrition>=deficit)for(const b of g.state.buildings)if(b.team===team&&g.finished(b)){hearth||=b.type==='hearth';mill||=b.type==='grindingStone';oven||=b.type==='oven';}
+    if(lots.grain>0&&roughNutrition>=deficit)for(const b of g.state.buildings)if(b.team===team&&g.finished(b)){hearth||=b.type==='hearth';mill||=b.type==='grindingStone'||b.type==='watermill'||b.type==='windmill';oven||=b.type==='oven';}
     const workingGrain=roughNutrition>=deficit&&(hearth||mill&&oven)?Math.min(lots.grain,EMERGENCY_RATIONS.processingGrainBuffer):0;
     lots.grain-=consumeEmergency(Math.max(0,lots.grain-workingGrain),EMERGENCY_RATIONS.nourishment);
     for(const kind of ['roughGrain','grainSheaves'] as const){
