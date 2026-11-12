@@ -47,8 +47,10 @@ test('dynasty runs 300 years without extinction crash and always has a living ru
 });
 test('no marriage in a band-era dynasty unless adults are free',()=>{
  const a=foundDynasty(1,'a'),b=foundDynasty(2,'b');
- const m=marry(a,a.rulerId,b,b.rulerId);assert.ok(m);
- assert.equal(marry(m[0],a.rulerId,b,b.rulerId),null);
+ assert.equal(marry(a,a.rulerId,b,b.rulerId),null,'already wed');
+ const free=d=>{const p=d.people[d.rulerId];return {...d,people:{...d.people,[p.id]:{...p,spouse:undefined}}};};
+ const m=marry(free(a),a.rulerId,free(b),b.rulerId);assert.ok(m);
+ assert.equal(marry(m[0],a.rulerId,free(b),b.rulerId),null);
 });
 
 import {award,emptyLedger,score,appetite,utility} from '../src/game/glory.ts';
@@ -68,4 +70,44 @@ test('fame: small deeds stay home, distance and age fade, notices only on upgrad
  assert.ok(near&&far!==near);
  assert.equal(perceive(p,{society:'y',hops:3,reliability:1},5000),null);
  assert.equal(nextNotice({'x:wonder':'renown'},p,'rumor'),null);
+});
+
+import {rollGreatPerson,emergenceChance,ARCHETYPES} from '../src/game/greatPersons.ts';
+import {unrest,stageOf,integrationStep} from '../src/game/unrest.ts';
+test('great persons: rare overall, more likely in crisis with weak institutions',()=>{
+ const count=(crisis,opp,inst)=>{let n=0;for(let g=0;g<2000;g++)if(rollGreatPerson(9,g,crisis,opp,inst))n++;return n;};
+ const calm=count(.1,.2,80),crisis=count(.6,.8,20);
+ assert.ok(crisis>calm*2);assert.ok(crisis<1000);
+ for(const a of ARCHETYPES)assert.ok(emergenceChance(.5,.5,50,a)>=0);
+ const g=rollGreatPerson(9,1,.6,.9,10)||rollGreatPerson(9,2,.6,.9,10)||rollGreatPerson(9,3,.6,.9,10);
+ if(g)assert.deepEqual(validateRuler(g.ruler),[]);
+});
+test('revolutions escalate in stages and conquest never annexes instantly',()=>{
+ const pol=generatePolity(4,eco());
+ const calm=unrest({legitimacy:90,warWeariness:5,foodShortage:0,taxBurden:10,faithDivergence:0,coalitionLoss:0,rulerPopularity:80},pol);
+ const bad=unrest({legitimacy:10,warWeariness:90,foodShortage:80,taxBurden:80,faithDivergence:70,coalitionLoss:80,rulerPopularity:10},pol);
+ assert.ok(bad>calm&&stageOf(calm)!==stageOf(bad));
+ assert.ok(integrationStep(0,.5,.5,0)<.01);
+});
+
+import {generateCast,generateCiv} from '../src/game/civGenerator.ts';
+test('casts are new every game, unique within a game, and valid',()=>{
+ const a=generateCast(1,8),b=generateCast(2,8),a2=generateCast(1,8);
+ assert.deepEqual(a,a2);assert.equal(a.length,8);
+ assert.notDeepEqual(a.map(c=>c.name),b.map(c=>c.name));
+ assert.equal(new Set(a.map(c=>c.name)).size,8);
+ for(const c of [...a,...b]){assert.deepEqual(validatePolity(c.polity),[]);assert.deepEqual(validateRuler(c.ruler),[]);assert.ok(c.faith.doctrines.length>=2);}
+ assert.equal(generateCiv(1,0,'free').preset,undefined);
+});
+
+import {initRulers,stepRulersYear,validRulersState,rulersOf} from '../src/game/rulersState.ts';
+test('rulers state: old saves load, JSON round-trips, 200 years stay valid',()=>{
+ assert.equal(rulersOf({}),null);assert.equal(validRulersState({version:1}),false);
+ let s=initRulers(42,['a','b','c','d']);
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(s))));
+ for(let i=0;i<200;i++)s=stepRulersYear(s);
+ assert.equal(s.year,200);
+ const gens=Object.values(s.societies).map(x=>x.dynasty.generation);
+ assert.ok(gens.some(g=>g>=1),'some succession happened');
+ assert.deepEqual(stepRulersYear(initRulers(42,['a','b','c','d'])),stepRulersYear(initRulers(42,['a','b','c','d'])));
 });

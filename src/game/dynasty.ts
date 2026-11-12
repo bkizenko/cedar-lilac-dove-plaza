@@ -17,7 +17,9 @@ function personFrom(r:Ruler,house:string,sex:'f'|'m',parent?:string,legit=true):
 export function foundDynasty(seed:number,house:string):Dynasty{
  const r=makeRng(hash32('dyn',seed)),head=generateRuler(hash32('dyn-head',seed),{age:30+Math.floor(r()*14),id:`${house}-0`});
  const sex=r()<.7?'m':'f',p=personFrom(head,house,sex);
- return {id:`dyn-${house}`,house,people:{[p.id]:p},rulerId:p.id,generation:0,log:[]};
+ const sp=generateRuler(hash32('dyn-spouse',seed),{age:24+Math.floor(r()*10),id:`${house}-sp`}),spouse=personFrom(sp,house,sex==='m'?'f':'m');
+ p.spouse=spouse.id;spouse.spouse=p.id;
+ return {id:`dyn-${house}`,house,people:{[p.id]:p,[spouse.id]:spouse},rulerId:p.id,generation:0,log:[]};
 }
 /** Mortality per year: infancy risk, flat adult risk, rising after OLD. Pure of (rng, age). */
 export function yearlyDeathChance(age:number):number{return age<2?.12:age<ADULT?.01:age<OLD?.012+(age-ADULT)*.0004:.04+(age-OLD)*.012;}
@@ -33,11 +35,20 @@ export function stepYear(d0:Dynasty,seed:number,tier:'band'|'chiefdom'|'state',l
   if(r()<yearlyDeathChance(np.age)){np.alive=false;d.log.push(`${year}: ${np.name} died aged ${np.age}`);}
   d.people[id]=np;
  }
+ if(f.marriageExchange){ // court arranges a match for unmarried adult rulers/heirs (outside spouse, same polity)
+  for(const p of Object.values(d.people)){
+   if(!p.alive||p.spouse||p.age<ADULT||p.age>45||r()>.35)continue;
+   if(p.id!==d.rulerId&&p.parent===undefined)continue;
+   const sr=generateRuler(hash32('match',seed,year,p.id),{age:p.age-2+Math.floor(r()*5),id:`${d.house}-m${year}-${p.id.slice(-3)}`}),sp=personFrom(sr,d.house+'~',p.sex==='m'?'f':'m');
+   sp.spouse=p.id;d.people[sp.id]=sp;d.people[p.id]={...d.people[p.id],spouse:sp.id};d.log.push(`${year}: ${p.name} wed ${sp.name}`);
+  }
+ }
  if(f.heirs){
   for(const p of Object.values(d.people)){
-   if(!p.alive||p.sex!=='f'||!p.spouse||p.age<ADULT||p.age>42)continue;
+   if(!p.alive||p.sex!=='f'||!p.spouse||p.age<ADULT||p.age>42||!d.people[p.spouse]?.alive)continue;
    const kids=Object.values(d.people).filter(c=>c.parent===p.id).length;
-   if(kids<6&&r()<.22){
+   const living=Object.values(d.people).filter(q=>q.alive).length;
+   if(kids<6&&r()<.22*(living>14?.15:1)){
     const father=d.people[p.spouse],cr=generateRuler(hash32('child',seed,year,p.id),{age:0,id:`${d.house}-${year}-${kids}-${p.id.slice(-3)}`,shift:inherit(father?.ruler,p.ruler)});
     d.people[cr.id]=personFrom(cr,d.house,r()<.5?'m':'f',p.spouse??p.id);d.log.push(`${year}: ${cr.name} born`);
    }
@@ -45,7 +56,11 @@ export function stepYear(d0:Dynasty,seed:number,tier:'band'|'chiefdom'|'state',l
  }
  const cur=d.people[d.rulerId];
  if(!cur||!cur.alive){
-  const next=heir(d,law,r);
+  let next=heir(d,law,r);
+  if(!next){ // line extinct: a distant claimant is raised by the court; weaker claim, flagged illegitimate
+   const cl=generateRuler(hash32('claimant',seed,year,d.house),{age:22+Math.floor(r()*20),id:`${d.house}-cl-${year}`});
+   next={...personFrom(cl,d.house,r()<.6?'m':'f',undefined,false)};d.people[next.id]=next;d.log.push(`${year}: the line failed; ${next.name} is raised as claimant`);
+  }
   if(next){d.rulerId=next.id;d.generation++;d.regent=next.age<ADULT&&f.regency?regentFor(d,next):undefined;d.log.push(`${year}: ${next.name} succeeds (${law})`);}
  }
  return d;
