@@ -1,0 +1,190 @@
+{
+  "release": "2026-11-12T21-54-40-640Z-9555f70",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T21-54-40-640Z-9555f70",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T21-42-15-876Z-c480569",
+  "commit": "9555f7028b0636e04b6f5f6176313ca3361c44cd",
+  "retained": {
+    "linked": 1421,
+    "copied": 0,
+    "existing": 13
+  },
+  "buildSourceCommit": "5be7a58",
+  "productSourceParity": "Release commit differs from built source only in diagnostics/tests/board; src, package and Vite inputs match exactly.",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 38,
+    "total": 38,
+    "nativeAndShared": 34,
+    "uniqueNativeGroups": {
+      "peopleLook": 4,
+      "characterRig": 12,
+      "civPeople": 7,
+      "peopleAdapter": 3,
+      "characterRigLayer": 5,
+      "voiceTraitDeterminism": 1,
+      "fullSaveKnownUnmetReadPrivacy": 1,
+      "councilVoiceRealPackageSSR": 1
+    },
+    "built": {
+      "passed": 4,
+      "total": 4,
+      "diplomaticVoice": {
+        "passed": 2,
+        "total": 2,
+        "scope": "Actual Hearth neighbour greeting/manner/conditional tooltip and archived Diplomacy sheet over an AUTHORED contact-only story from an earned ruler base; legacy original53 absent read purity+durable restore. No dialogue grants, earned contact/gifts/campaign/FPS/gate credit.",
+        "known": {
+          "team": 1,
+          "unmetExcluded": 2,
+          "manner": "stern",
+          "hearthGreetingAndHover": true,
+          "archivedGreetingAndConditionalTitle": true,
+          "fullReadPurity": true,
+          "strictDurable": true,
+          "fixtureScope": "AUTHORED initial contact-only read-model story; no earned diplomacy or campaign credit"
+        },
+        "legacy": {
+          "population": 53,
+          "absentVoiceAndRulersPreserved": true,
+          "hearthAndArchived": true,
+          "strictDurable": true
+        },
+        "inputsUnchanged": true,
+        "errors": []
+      },
+      "rigAndArchivedStyles": {
+        "passed": 2,
+        "total": 2,
+        "scope": "Actual old53 rigv2/painterly linked shaders, geometry/draw/memory/picking/read purity, strict durable restore and Classic+legacy switch. Private ~6Hz presentation only; no100-person FPS or campaign/visual-design acceptance.",
+        "rigPainterly": {
+          "style": "painterly",
+          "rigActive": true,
+          "rigV1": false,
+          "stats": {
+            "people": 52,
+            "corpses": 0,
+            "variants": 66,
+            "draws": 62,
+            "triangles": 34200,
+            "tiers": [
+              20,
+              29,
+              3
+            ],
+            "fallbacks": 0
+          },
+          "looks": [
+            "civ:steppan"
+          ],
+          "rigMeshes": 62,
+          "geometryBytes": 34057876,
+          "metrics": {
+            "calls": 152,
+            "triangles": 1254410,
+            "lines": 0,
+            "points": 24,
+            "geometries": 359,
+            "textures": 26,
+            "programs": 45
+          },
+          "memory": {
+            "geometries": 359,
+            "textures": 26
+          },
+          "allLinked": true,
+          "geoPrograms": 1,
+          "geoAttributes": {
+            "rock": 148225,
+            "state": 148225
+          },
+          "lost": false,
+          "errors": [],
+          "picked": 12287,
+          "strictDurable": true
+        },
+        "classicLegacy": {
+          "style": "classic",
+          "rigActive": false,
+          "rigV1": false,
+          "looks": [],
+          "rigMeshes": 0,
+          "geometryBytes": 28044596,
+          "metrics": {
+            "calls": 91,
+            "triangles": 944586,
+            "lines": 0,
+            "points": 24,
+            "geometries": 278,
+            "textures": 24,
+            "programs": 35
+          },
+          "memory": {
+            "geometries": 278,
+            "textures": 24
+          },
+          "allLinked": true,
+          "geoPrograms": 0,
+          "geoAttributes": {
+            "rock": 0,
+            "state": 0
+          },
+          "lost": false,
+          "errors": [],
+          "picked": 12287,
+          "strictDurable": true
+        },
+        "originalUnchanged": true,
+        "errors": [],
+        "shaderErrors": []
+      }
+    }
+  },
+  "typecheck": "PASS",
+  "productionBuild": "PASS",
+  "compatibilityRecheck": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-12T21-54-40-640Z-9555f70",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "scope": [
+    "Known rival ruler greeting/manner and hypothetical refusal/gift tone in Hearth and archived Diplomacy. No free goods, new contact, decisions or conversations invented.",
+    "Near-only rounded hands/shoulder yoke; source geometry delta44 triangles/person, near ceiling2400. Middle/far remain unchanged at source.",
+    "Actual original53 linked GPU programs, three LOD tiers, repeated paused memory/draw stability, actual proxy picking, durable restore and Classic/legacy switch."
+  ],
+  "limits": [
+    "Diplomatic story fixture authors only an initial known-contact receipt atop a real earned ruler checkpoint; no earned diplomacy, actual gifts or full conversation/campaign credit.",
+    "No100-visible-resident performance/FPS or complete visual-fidelity acceptance.",
+    "Full first-release baseline remains37/98."
+  ],
+  "frozenAcceptance": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  }
+}
