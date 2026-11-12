@@ -170,7 +170,7 @@ export function painterFarNeedle(){
 export function contactShadowGeometry(){const g=new THREE.CircleGeometry(1,20);g.rotateX(-Math.PI/2);g.translate(0,0,0);return g;}
 
 // ---- undergrowth ------------------------------------------------------------------------------------------------
-export type PainterDressing='grass'|'tallgrass'|'flowers'|'bloom'|'reeds'|'scrub'|'pebbles'|'fern'|'shrub'|'rocks'|'log';
+export type PainterDressing='grass'|'tallgrass'|'flowers'|'bloom'|'reeds'|'scrub'|'pebbles'|'fern'|'shrub'|'rocks'|'log'|'cattail'|'agave'|'drygrass'|'cushion';
 export function blade(x:number,z:number,h:number,w:number,lean:number,angle:number,base:V3,tip:V3,bend=.5){
  const dx=Math.cos(angle),dz=Math.sin(angle),nx=-dz,nz=dx,pos:number[]=[],col:number[]=[];
  const pts=[[0,0],[.5,.55],[1,1]];
@@ -194,7 +194,7 @@ function tuft(count:number,radius:number,hMin:number,hMax:number,seed:number,bas
  return mergeParts(parts);
 }
 function solid(g:THREE.BufferGeometry,color:V3){const n=g.attributes.position.count,c=new Float32Array(n*3);for(let i=0;i<n;i++)c.set(color,i*3);g.setAttribute('color',new THREE.BufferAttribute(c,3));return g;}
-const DRESSING_ALBEDO:Record<PainterDressing,number>={grass:.58,tallgrass:.62,flowers:.55,bloom:1,reeds:.6,scrub:.45,pebbles:.9,fern:.5,shrub:.5,rocks:.85,log:.9};
+const DRESSING_ALBEDO:Record<PainterDressing,number>={grass:.58,tallgrass:.62,flowers:.55,bloom:1,reeds:.6,scrub:.45,pebbles:.9,fern:.5,shrub:.5,rocks:.85,log:.9,cattail:.6,agave:.5,drygrass:.6,cushion:.5};
 /** Geometry colours above are authored as friendly 0..1.3 sRGB-ish values; the material works in linear light, so scale per kind. */
 export function painterDressing(form:PainterDressing):THREE.BufferGeometry{
  const g=dressingRaw(form),k=DRESSING_ALBEDO[form],col=g.attributes.color,pos=g.attributes.position;
@@ -236,6 +236,25 @@ function dressingRaw(form:PainterDressing):THREE.BufferGeometry{
   const rnd=rngFrom(430),parts:THREE.BufferGeometry[]=[];
   for(let i=0;i<5;i++){const s=.1+rnd()*.14,g=new THREE.IcosahedronGeometry(1,0);g.scale(s*1.25,s*.65,s);g.rotateY(rnd()*6.28);g.translate((rnd()-.5)*.6,s*.3,(rnd()-.5)*.6);
    const c:V3=mix([.72,.7,.65],[.95,.88,.78],rnd());parts.push(solid(g,c));}
+  return mergeParts(parts);}
+ case 'cattail':{ // wetland: tall broad-bladed stand with brown sausage heads on bare stalks
+  const rnd=rngFrom(440),parts:THREE.BufferGeometry[]=[];
+  for(let i=0;i<7;i++){const a=rnd()*6.28,r=Math.sqrt(rnd())*.36,h=1.25+rnd()*.85,x=Math.cos(a)*r,z=Math.sin(a)*r,lean=(rnd()-.5)*.28;
+   parts.push(tube([[x,0,z],[x+lean*.5,h*.5,z],[x+lean,h,z]],[.022,.018,.011],4,t=>mix([.42,.56,.28],[.86,.9,.52],t),i));
+   const head=new THREE.CylinderGeometry(.05,.05,.3,6);head.translate(x+lean,h-.16,z);parts.push(solid(head,[.36,.22,.13]));
+   const spike=new THREE.ConeGeometry(.012,.14,4);spike.translate(x+lean,h+.06,z);parts.push(solid(spike,[.6,.5,.3]));}
+  for(let i=0;i<6;i++){const a=rnd()*6.28;parts.push(blade(Math.cos(a)*.1,Math.sin(a)*.1,1.1+rnd()*.5,.09,.55,a,[.4,.58,.26],[.95,1.1,.55]));}
+  return mergeParts(parts);}
+ case 'agave':{ // arid: rosette of stiff upswept blue-green leaves, pale tips
+  const parts:THREE.BufferGeometry[]=[],tint:Tint={top:[.95,1.05,.9],bottom:[.4,.62,.5]};
+  for(let i=0;i<11;i++){parts.push(frond([0,.05,0],i/11*Math.PI*2+.4*Math.sin(i*2.3),.55+((i*17)%4)*.07,.9,.1,.1,tint,4));}
+  const cone=new THREE.ConeGeometry(.07,.38,5);cone.translate(0,.22,0);parts.push(solid(cone,[.36,.58,.46]));
+  return mergeParts(parts);}
+ case 'drygrass':return tuft(14,.5,.5,1,441,[.46,.4,.2],[1.05,.92,.5],.05,i=>i%3===0?[.95,.72,.38]:[1.05,.94,.52]);
+ case 'cushion':{ // alpine: low hard cushion with tiny bloom flecks, hugging the scree
+  const cc:V3=[0,.12,0],t:Tint={top:[.9,1.12,.78],bottom:[.38,.55,.42]};
+  const parts:THREE.BufferGeometry[]=[lump([0,.12,0],[.34,.17,.3],450,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1),lump([.3,.09,.08],[.2,.11,.18],451,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1),lump([-.26,.08,-.1],[.18,.1,.16],452,{center:cc,radius:.5,top:t.top,bottom:t.bottom},.1,1)];
+  for(const [x,z] of [[.05,.08],[-.1,-.04],[.2,.14],[-.2,-.12]]){const f=new THREE.IcosahedronGeometry(.03,0);f.translate(x,.25-.05*Math.abs(x),z);parts.push(solid(f,[1.2,1.1,.5]));}
   return mergeParts(parts);}
  case 'rocks':return painterRock(432,true);
  case 'log':{
