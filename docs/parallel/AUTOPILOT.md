@@ -673,7 +673,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WQ-11 | wiring-queue | Option H world.ts call site, light-rig, H-only daylight lerp; default renderStyle current | Claude | Claude T8 | source-pushed-not-live | Option H adapter; Claude drives including world.ts |
 | WQ-12 | wiring-queue | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer bucket eviction |
 | WQ-13 | wiring-queue | Capitulation / domination / captive / trade UI and dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | conquest/trade/captive UI; specs exist, not wired |
-| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | not started | six trade primitives |
+| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | in progress | Codex branch work/codex-autopilot-2026-11-11: cargo/death/recovery, armor, tool, livestock adapters;18focusedPASS+tsc before final weapon/burden fold; not yet live |
 | WQ-2 | wiring-queue | Validator for optional worldOptions.tideVersion === 1\|2 | Grok | Grok T2 | not started | tideVersion validator — moved to Grok |
 | WQ-3 | wiring-queue | Validator for optional worldOptions.landformLabelVersion === 2 | Grok | Grok T2 | not started | landformLabelVersion validator — moved to Grok |
 | WQ-4 | wiring-queue | Water-works as real building types: well, cistern, watermill, windmill, aqueduct, canal | Grok | Grok T4 | source-pushed-not-live | site rules source-pushed; buildings/recipes not live — Grok wires end to end |
@@ -862,3 +862,23 @@ Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus th
 - **Codex** = platform, economy, saves, integration, knowledge/tech, performance.
 - **Full utilization rule:** each agent always keeps at least 5 unstarted items in its queue. If an agent's queue drops below 5, it immediately audits its lane and adds items; Grok also tops it up every hour. If an agent has no commits for 3+ hours while work is queued, Grok reassigns its next items to whoever is active. No agent ever waits idle on another; take the next independent item.
 - **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
+
+
+## Suite triage — 2026-11-11 21:10 ET (Grok PM)
+
+Full game suites were started on `integration/2026-11-11` `a7c343d` and `origin/main` `4aa1cfd` (still running when these rows were filed). World-caused failures found so far were fixed on `agents/grok-world` (not yet on main): geographic influence flush `6b63db5`, water-works scene/carved registry `b89a5bb`, grain-preview + farm-slope tests `c4a2fa1`, wells/cisterns in `sourceFor` `880c848`. Integration tip after those merges: `8820693`. T1–T7 remain **not** done/live on main until PR #1 lands.
+
+Other-lane failures below are player-facing or suite-blocking; owners should take them **before new features**. Bugs first, then keep at least 5 unstarted items.
+
+| ID | Track | Summary | Owner | Queue | Status | Evidence |
+|---|---|---|---|---|---|---|
+| BUG-ANNEX-HULL | suite-triage | Native paid hull with afloat loaded crew and a second paid hull must transfer intact, save, and physically return after annexation | Claude | Claude Tonight (bugs first) | not started | `scripts/annexation-transport-culture.test.mjs` fails on main `4aa1cfd` and integration `a7c343d` |
+| BUG-ERA-DETAILS | suite-triage | Era details must appear only on completed discovered buildings, stay bounded, and not change the simulation footprint | Claude | Claude Tonight (bugs first) | not started | `scripts/architecture.test.mjs` (`syncEraDetails` count 0 !== 4 on a mock that always reports unexplored); Experience/visuals |
+| BUG-ARMOR-UI | suite-triage | Compact selected-resident armor controls must render real condition and local action without mutating stock | Codex | Codex Tonight (bugs first) | not started | `scripts/armor-production.test.mjs` failed on integration `a7c343d` (passed in isolation on grok-world; treat as flaky HUD/WQ-14). Claude assists if it is a compact-UI issue |
+| BUG-WORKER-CLONE | suite-triage | Off-main-thread module must process its immutable clone without DOM, terrain reconstruction, or random draws | Codex | Codex Tonight (bugs first) | not started | `scripts/autosave-worker-payload.test.mjs` failed on integration `a7c343d` (~254s) |
+| BUG-LEGACY-HUNT | suite-triage | Legacy absent-rule keeps historical fresh-kill mode; prepared cargo is never reclassified. Own paid station completion adopts raw rules without undoing via another society or station destruction | Codex | Codex Tonight (bugs first) | not started | `scripts/camp-animal-processing.test.mjs` (two cases) fails on main and integration |
+| BUG-CLIMATE-FUEL | suite-triage | Local climate temperatures are correct, but `survivalStatus.fuelDemandWoodPerSecond` is 0.003 not 0 in the climate exposure case | Codex | Codex Tonight (bugs first) | not started | `scripts/camp-animal-processing.test.mjs` “local climate determines cold exposure…”; `localAirTemperature` asserts passed (−1°C / 11°C) |
+| BUG-CARAVAN-TRADE | suite-triage | Visiting traders, planned convoys, multi-carrier delivery, capacity/guard waits, pause-and-return, and armed carriers vs away-from-home workforce limits | Codex | Codex Tonight (bugs first) | not started | `scripts/caravan-equipment.test.mjs` and `scripts/caravan-routes.test.mjs` — six failing cases on main and integration |
+| BUG-HUNT-PREY | suite-triage | Hunters must take moving prey and bring actual food home (prey HP stayed 2, expected 0) | Codex | Codex Tonight (bugs first) | not started | `scripts/carrier-recovery.test.mjs`; hunting economy is Codex (Grok N5 leftover is habitat only) |
+| BUG-BARTER-SURPLUS | suite-triage | A local trader must negotiate a small surplus without exporting winter necessities (`quoteShipment` returned no deal) | Codex | Codex Tonight (bugs first) | not started | `scripts/carrier-recovery.test.mjs` / `src/game/barter.ts` |
+| BUG-CEREAL-CYCLE | suite-triage | A three-adult grain/pulse holding must complete marked cereal harvest, paid processing/bread, and a second contour crop cycle | Codex | Codex Tonight (bugs first) | not started | `scripts/cereal-contour-cycle.test.mjs` fails on main and integration |
