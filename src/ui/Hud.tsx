@@ -421,6 +421,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               {hud.placing==='trench'&&engine&&<ExcavationControls engine={engine}/>}
               {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
               {hud.placing==='gate'&&engine&&<><GateRotationControl facing={engine.gateFacing} onChange={facing=>engine.setGateFacing(facing)}/><span className="text-xs text-parchment-dim">R rotates · Shift+R reverses</span></>}
+              {hud.placing&&hud.placing!=='gate'&&engine?.canRotatePlacement()&&<><button type="button" className="rounded border border-bronze/40 px-2 py-1" title="Turn the building a quarter turn (R)" aria-pressed={engine.quarterTurn} onClick={()=>engine.rotatePlacement()}>Rotate ↻</button><span className="text-xs text-parchment-dim">R turns a quarter</span></>}
               <div>{founding ? "Choose open ground near food and timber."
                 : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
                 : ["palisade","stonewall","trench","moat"].includes(hud.placing) ? "Drag a joined line · leave space for a gate"

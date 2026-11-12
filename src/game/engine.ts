@@ -6,6 +6,7 @@ import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type Engi
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
+import {turnableBuilding} from "./footprints";
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -259,6 +260,11 @@ export class Engine {
   private nextHoverAt=0;
   private onPointerLeave=()=>{this.view.hoveredUnitId=null;this.canvas.title="";};
   gateFacing:GateFacing="north";
+  /** GW-08 / T8 (Grok): quarter-turn for the current placement; preview and commit both read it. */
+  quarterTurn=false;
+  /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
+  rotatePlacement(){const t=this.game.state.placing;if(!t||!turnableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.quarterTurn=!this.quarterTurn;this.updateGhost(true);this.pushHud();return true;}
+  canRotatePlacement(){const t=this.game.state.placing;return !!t&&t!=='gate'&&turnableBuilding(t);}
   private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
   plotStart: {x:number;z:number}|null=null;
@@ -489,6 +495,9 @@ export class Engine {
     if(e.code==='KeyR'&&this.game.state.placing==='gate'&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
       e.preventDefault();if(!e.repeat)this.setGateFacing(rotateGateFacing(this.gateFacing,e.shiftKey?-1:1));return;
     }
+    if(e.code==='KeyR'&&this.canRotatePlacement()&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
+      e.preventDefault();if(!e.repeat)this.rotatePlacement();return;
+    }
     this.keyboard.key(e);
   };
 
@@ -673,7 +682,7 @@ export class Engine {
         this.pushHud();return;
       }
       if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
-      else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan);
+      else this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn());
       this.updateGhost();
       this.pushHud();
       return;
@@ -793,14 +802,16 @@ export class Engine {
       const snap=this.gateFacingExplicit?snapGate(this.game.state.buildings,{x,z},this.gateFacing):suggestGateSnap(this.game.state.buildings,{x,z},this.gateFacing);
       if(snap){x=snap.x;z=snap.z;this.gateFacing=snap.facing;}
     }
-    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan);
+    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan,this.placementTurn());
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
-    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined);
+    this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined,this.placementTurn());
   }
+  /** The quarter turn only applies to turnable, unsized placements (same rule as placementIssue). */
+  private placementTurn(){const t=this.game.state.placing;return this.quarterTurn&&!!t&&!this.plotSize&&turnableBuilding(t);}
 
   setGateFacing(facing:GateFacing){
     this.gateFacing=normalizeGateFacing(facing);this.gateFacingExplicit=true;this.updateGhost();this.pushHud();
@@ -823,6 +834,7 @@ export class Engine {
     this.nextFieldPreviewAt=0;this.waterDraft=null;
     this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
+    if(type!==this.game.state.placing)this.quarterTurn=false;
     this.loggingMode = false;
     if (type && this.game.state.ended) return;
     if(type==="house"&&housingAdoptionIssue(this.game)){this.game.banner(housingAdoptionIssue(this.game)!,5);this.pushHud();return;}
