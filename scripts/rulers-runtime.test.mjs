@@ -297,3 +297,18 @@ test('neighbourNews: real agreements only, player-known, newest first, old saves
  assert.equal(neighbourNews(g).some(n=>n.a===1&&n.b===2),false,'meeting both societies cannot reveal their private agreement');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
 });
+test('lane A: citing a casus belli strains the holder (unrest), fades yearly, round-trips; old saves without cbDebt load',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState,rulersOf}=await import('../src/game/rulersState.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
+ const r=rulersOf(g.state);assert.equal(r.cbDebt,undefined,'old shape: no debt field');assert.equal(R.cbDebtOf(g,2),0);
+ g.state.rulers={...r,claims:[{holder:'2',target:'1',kind:'raid',strength:60,expiresTick:r.year+20}]};
+ const u0=R.unrestOf(g,2).value;
+ const c=R.citeClaim(g,2,1,'raid');assert.ok(c&&c.cost>0);
+ assert.equal(R.cbDebtOf(g,2),Math.min(100,c.cost*2));
+ const u1=R.unrestOf(g,2);assert.ok(u1.value>=u0,'strain never lowers unrest');assert.ok(u1.why.includes('the house spent its standing on a cause'));
+ assert.equal(R.cbDebtOf(g,1),0,'the target pays nothing');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'debt round-trips');
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.cbDebt={2:500};assert.equal(validRulersState(bad),false);
+ const d0=R.cbDebtOf(g,2);R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),Math.max(0,d0-4));
+ for(let i=0;i<40;i++)R.fadeCbDebt(g);assert.equal(R.cbDebtOf(g,2),0);assert.ok(!('2' in g.state.rulers.cbDebt),'faded entries are dropped');
+});
