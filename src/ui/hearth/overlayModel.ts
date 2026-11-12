@@ -67,7 +67,7 @@ export function paintOverlays(src:OverlaySources,active:ReadonlySet<OverlayKey>,
    if(!src.explored(r.x,r.z))continue;
    const px=Math.floor((r.x/S+.5)*N),py=Math.floor((r.z/S+.5)*N);if(px<0||py<0||px>=N||py>=N)continue;
    const c=RESOURCE_COLOR[r.kind],a=RESOURCE_ALPHA[r.kind],w=BIG.has(r.kind)?2:1;
-   for(let dy=0;dy<w;dy++)for(let dx=0;dx<w;dx++){const X=Math.min(N-1,px+dx),Y=Math.min(N-1,py+dy);blend(out,(Y*N+X)*4,c[0],c[1],c[2],a);}
+   for(let dy=0;dy<w;dy++)for(let dx=0;dx<w;dx++){const X=Math.min(N-1,px+dx),Y=Math.min(N-1,py+dy);if(!seen[Y*N+X])continue;blend(out,(Y*N+X)*4,c[0],c[1],c[2],a);}
    drew=true;
   }
  }

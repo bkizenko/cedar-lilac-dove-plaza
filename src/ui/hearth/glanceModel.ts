@@ -38,9 +38,11 @@ export type Sample={t:number;v:number};
 /** Rolling stock history in simulated seconds. Reset when time goes backwards (restart, load). */
 export class TrendTracker{
  samples:Sample[]=[];
+ private source:unknown;
  daySeconds:number;
  constructor(daySeconds:number){this.daySeconds=daySeconds;}
- push(t:number,v:number){
+ push(t:number,v:number,source?:unknown){
+  if(this.source!==source){this.samples.length=0;this.source=source;}
   const last=this.samples[this.samples.length-1];
   if(last&&t<last.t){this.samples.length=0;}
   const tail=this.samples[this.samples.length-1];
