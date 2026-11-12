@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "coordinator": "Codex",
+  "coordinator": "Grok",
   "providers": [
     "Codex",
     "Claude",
@@ -43,6 +43,18 @@
     }
   ],
   "commitPolicy": "coherent checkpoints; target30-60 active minutes, never empty commits",
-  "mergeOwner": "Codex serial integration",
-  "template": "docs/parallel/BATCH_HANDOFF_TEMPLATE.md"
+  "mergeOwner": "Any provider under Grok sequencing; Claude owns conflict resolution",
+  "template": "docs/parallel/BATCH_HANDOFF_TEMPLATE.md",
+  "sharedWritePolicy": {
+    "providers": [
+      "Claude",
+      "Grok",
+      "Codex"
+    ],
+    "allSourceFiles": true,
+    "codexApprovalRequired": false,
+    "claims": "temporary collision coordination, not permission gates",
+    "productionPublisher": "Grok assigns; one at a time, preserve villages and rollback"
+  },
+  "executionPriority": "Ship clean integration and wire waiting gameplay hooks; Worker expansion deferred"
 }
