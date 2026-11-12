@@ -40,6 +40,7 @@ import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
+import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
 import {foundationProfile,terrainLaidWorkplace} from './foundations';
@@ -694,7 +695,7 @@ export class WorldView {
     const waterMaterial=this.makeWaterMat(),fallMaterial=makeDepthWater(this.terrainSurface!,this.timeU,true);
     this.waterMaterials=[waterMaterial,fallMaterial];
     this.water = new THREE.Mesh(wgeo, waterMaterial);
-    this.water.position.y = game.world.waterY;
+    this.water.position.y = seaSurfaceY(game.world);
     this.water.renderOrder = 1;
     this.scene.add(this.water);
     const localWater=new THREE.Group();localWater.name='local-water-bodies';this.localWater=localWater;
@@ -1250,7 +1251,7 @@ export class WorldView {
     this.paintSeason(game, dt);
     if(this.localWater)this.localWater.position.y=game.world.waterY-game.world.baseWaterY;
     if (this.water)
-      this.water.position.y = game.world.waterY + Math.sin(game.state.time * 0.6) * 0.03;
+      this.water.position.y = seaSurfaceY(game.world) + Math.sin(game.state.time * 0.6) * 0.03;
   }
 
   private updateDay(game: Game, dt = 0.016) {
