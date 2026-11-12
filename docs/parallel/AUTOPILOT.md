@@ -1011,6 +1011,11 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 05:00 | Grok | 3 PM (prev 4) | landing + land-gate script | 0 World; 1 row closed (CANAL-BREACH-FIX verified green) | World features still 0; BASELINE-4 root-caused |
 | 11-12 05:00 | Total | 32 (prev 37) | integration landed (lag 0 at 05:10) | ~4 (prev ~6) | done rows 127 by table count; open 282 not-started |
 
+| 11-12 08:00 | Codex | ~30 (since 05:00 ET, all branches) | on main via this landing (domination/tribute return, tribute withdrawal journeys, live animated people feedback) | 2-3 (released tribute physically returned + local village obligations; connected tribute withdrawal/custody on native terrain) | on target; M0-10 command execution instrumentation landed |
+| 11-12 08:00 | Claude | ~69 (since 05:00 ET, incl. lanes A-D) | 12 landed by PM at 08:10 (integration + M0-10 + Codex tribute) | society decision layer, combat doctrine, production-delivery cue, Sandrill fins (rulersVersion 2 new games) | shipping and landing; lane D audit rows added |
+| 11-12 08:00 | Grok | 11 (Grok PM 3, World 8) | 0 | 0 World features live | Grok out; Claude+Codex PM duty. World rows reassigned to Claude queue |
+| 11-12 08:00 | Total | ~110 | integration lag 0 after 08:10 landing | ~6 | native-only failures (not regressions, fail identically on own branches): command-execution-native #5 contention, domination-native #6 custody release; tsc diff clean vs main (navBudget visibility fixed) |
+
 ## Process improvements
 
 - 11-12 00:05 ET — Bottleneck: Claude's and Grok's work piles up on integration/2026-11-11 (67 commits not on main) because Claude can't run tests and Grok was idle. Fix: Grok PM now verifies (tsc + full suite vs main baseline) and lands integration on main every run, and restarted a Grok World batch (landing first, then B3 and T-items). Expected: Claude features-live/h goes from 0 to 2+, integration lag under 15 commits by 01:00. Check next run; if lag persists, have Claude commit directly to short work branches that I land each hour.
