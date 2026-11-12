@@ -24,7 +24,7 @@ import {predisposition} from './people';
 import {farmToolRate,FARM_TOOLS} from './farmTools';
 import {craftingBenches,craftingWorkplaceRate} from './crafting';
 import {carryingCapacity,loadedHaulSpeed} from './haulage';
-import {plotArea,expansionCost} from './plots';
+import {plotArea,fieldCrewSlots,expansionCost} from './plots';
 import {planMissing} from './construction';
 import {supplyDrops} from './campAnchor';
 import {survivalStatus,SURVIVAL_RULES} from './survivalNeeds';
@@ -134,10 +134,10 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   if(b.expansion){const e=b.expansion;if(!e.paid){const cost=expansionCost(b,e);for(const kind of ['wood','stone'] as const)planned[kind]=(planned[kind]||0)+(cost[kind]||0);}const area=plotArea({...b,...e})-plotArea(b);add({id:`expand:${b.id}`,label:`Extend ${BUILDINGS[b.type].name}`,category:'Construction',personSeconds:(1-e.progress)*(BUILD_TIME[b.type]||16)*area,status:e.paid?assigned.length?'active':'queued':'blocked',actorIds:assigned,priority:380,blocker:e.paid?null:'Extension materials not yet paid'});}
   if(!g.finished(b)||b.plannedCost)continue;
   if(b.type==='farm'&&b.fallowYear!==cal.year){const c=b.crop?.year===cal.year?b.crop:undefined,area=plotArea(b),crew=workersAt(b.id),pool=crew.length?crew:ratePeople,phase=cal.phase;
-   const tools=pool.map(u=>farmToolRate(u,phase)).sort((a,b)=>b-a).slice(0,Math.min(12,Math.ceil(3*area))),toolRate=tools.length?tools.reduce((n,v)=>n+v,0)/tools.length:1,econ=team===0&&g.state.agePicks[3]==='econ'?1.4:1;
+   const tools=pool.map(u=>farmToolRate(u,phase)).sort((a,b)=>b-a).slice(0,fieldCrewSlots(b)),toolRate=tools.length?tools.reduce((n,v)=>n+v,0)/tools.length:1,econ=team===0&&g.state.agePicks[3]==='econ'?1.4:1;
    const harvest=phase===2?(c?.ripened?c.remaining:farmHarvestEstimate(g,b,c?.planted??0,c?.tended??0,c?.water??1)):0;
    const base=phase===0?(1-(c?.planted??0))*r.fieldSowWorkSeconds*area:phase===1&&(c?.planted??0)>0?(1-(c?.tended??0))*r.fieldTendWorkSeconds*area:phase===2?harvest*r.fieldHarvestSecondsPerTwoFood/2:0;
-   const work=base/(GATHER_WORK_RATE*econ*toolRate),person=pool[0],slots=Math.min(12,Math.ceil(3*area)),cols=Math.min(slots,Math.max(1,Math.floor((b.w-2.4)/1.8))),rows=Math.ceil(slots/cols),rowTravel=Math.max(0,(b.d-2.4)/rows*.32-1)/speed(person)*Math.floor(work/r.fieldRowWorkSeconds),haul=harvest?Math.ceil(harvest*(rawCerealField(b)?CEREAL_RULES.sheavesPerPotentialGrain:1)/carry('food',person))*trip(b.x,b.z,person)*2:0;
+   const work=base/(GATHER_WORK_RATE*econ*toolRate),person=pool[0],slots=fieldCrewSlots(b),cols=Math.min(slots,Math.max(1,Math.floor((b.w-2.4)/1.8))),rows=Math.ceil(slots/cols),rowTravel=Math.max(0,(b.d-2.4)/rows*.32-1)/speed(person)*Math.floor(work/r.fieldRowWorkSeconds),haul=harvest?Math.ceil(harvest*(rawCerealField(b)?CEREAL_RULES.sheavesPerPotentialGrain:1)/carry('food',person))*trip(b.x,b.z,person)*2:0;
    // Raw cereal requires another paid chain; only directly edible crops offset
    // future collection, and remaining field stock excludes already carried loads.
    if(harvest>0&&(team!==0||(c?.kind||b.cropType||'grain')!=='grain'))readyFieldHarvest+=harvest;
