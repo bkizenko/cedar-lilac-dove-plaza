@@ -1,3 +1,4 @@
+import {beginHullLossRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {seaExplorationOwnsBoat} from './seaExplorationReservations';
 import {SAILING_RULES} from './sailingRules';
 import {sailForce,sailRigProject} from './boatSailing';
@@ -128,9 +129,10 @@ export function landRiverboat(g:Game,id:number,preferred?:{x:number;z:number}){
  return n>0;
 }
 export function riverboatAI(g:Game,u:Unit,dt:number){
+ if(hullLossRecoveryAI(g,u,dt))return true;
  const ride=u.boat;if(!ride)return false;
  const b=g.state.boats?.find(b=>b.id===ride.id&&b.hp>0);
- if(!b){u.boat=undefined;u.haulage=undefined;u.order='idle';return false;}
+ if(!b){beginHullLossRecovery(g,u,ride.id);return hullLossRecoveryAI(g,u,dt);}
  if(ride.phase==='boarding'){
   u.tx=b.x;u.tz=b.z;u.workReason='Boarding riverboat';
   if(Math.hypot(u.x-b.x,u.z-b.z)>1.5){g.steer(u,dt);return true;}

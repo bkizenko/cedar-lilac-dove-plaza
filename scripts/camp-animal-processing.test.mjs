@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {animalProcessingEnabled,productionEnabled,beginProduction,productionIssue,equipClothing,clothingWarmth} from '../src/game/production.ts';
-import {localAirTemperature,survivalStatus,tickSurvival} from '../src/game/survivalNeeds.ts';
+import {localAirTemperature,survivalStatus,tickSurvival,SURVIVAL_RULES} from '../src/game/survivalNeeds.ts';
 import {TEXTILE_RULES,garmentHeatBurden} from '../src/game/textiles.ts';
 function fixture(version=14){const g=new Game();g.reset(345,version);g.enterIsland();g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.waterBodies=[];g.world.waterHeights=undefined;g.world.ecology=undefined;g.state.units=[];g.state.buildings=[];g.state.wildlife=[];for(const k of ['trees','stones','forage','copper','iron','fish'])g.state[k]=[];g.state.campSites=[{team:0,x:0,z:60}];g.state.autoWorkEnabled=false;g.state.conflict='quiet';g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.birthT=10000;g.calamityT=10000;for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(0),{food:100,foodLots:{provisions:100},wood:100,stone:50,items:{}});g.tribe(0).survival.waterLiters=100;const u=g.spawnUnit('worker',0,38,0);u.order='hold';g.clearSelect();g.selectEntity(u);g.rebuildWalk();g.vision.fill(2);return{g,u};}
 function prey(g){const c={id:g.id(),species:'boar',x:3,z:38,y:4,hp:4,maxHp:4,facing:0,vx:0,vz:0,wanderT:10000,fly:0,scale:1};g.state.wildlife=[c];return c;}
@@ -89,7 +89,19 @@ test('local climate determines cold exposure and warm work burden',()=>{
  assert.ok(u.coldSeconds>0);
  assert.equal(coated.coldSeconds,0);
  assert.equal(warm.coldSeconds,0);
- assert.equal(survivalStatus(g).fuelDemandWoodPerSecond,0);
+ // One genuinely cold uncoated resident requests heating even though the
+ // warm camp and the other residents do not. Empty wood cannot burn fuel.
+ const heatingRate=SURVIVAL_RULES.woodPerPersonColdSecond;
+ assert.equal(survivalStatus(g).fuelDemandWoodPerSecond,heatingRate);
+ assert.equal(g.tribe(0).survival.fuelBurnedWood,0);
+ assert.equal(g.tribe(0).wood,0);
+ const cookingLogs=g.state.production?.metrics.logsUsed??0;
+ g.tribe(0).wood=1;
+ tickSurvival(g,10);
+ assert.ok(Math.abs(g.tribe(0).wood-(1-10*heatingRate))<1e-10);
+ assert.ok(Math.abs(g.tribe(0).survival.fuelBurnedWood-10*heatingRate)<1e-10);
+ assert.equal(u.coldSeconds,0,'finite heating fuel protects the exposed resident');
+ assert.equal(g.state.production?.metrics.logsUsed??0,cookingLogs,'heating is separate from paid cooking logs');
  weather='Drought · 24°C';
  const warmTemp=localAirTemperature(g,warm.x,warm.z);
  assert.equal(garmentHeatBurden(coated,localAirTemperature(g,coated.x,coated.z)),0);

@@ -139,6 +139,8 @@ export type Critter = {
 
 export type Livestock = Critter & {
   team: number; pen: number; sex: 'female' | 'male';
+  /** Exclusive live escort custody; ownership changes only on physical pen delivery. */
+  ledBy?:number;
   born: number; tamedAt: number; hunger: number; milk: number;
   thirstSeconds?:number; pregnancy: number; lactatingUntil?: number; stuckT?: number;
 };
@@ -154,6 +156,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   coastalCommissionId?:number;
   seaExplorationId?:number;
   tradeNeedsId?:number;
+  cargoRecoveryId?:number;
+  tradeCargoPending?:true;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;
@@ -162,6 +166,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   productionProjectId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
+  weaponCargo?:import('./weaponCargo').WeaponCargo;
+  armorCargoId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
   garment?:import('./textiles').Garment;
@@ -237,6 +243,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   carryFood?: FoodKind;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
+  farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;
   farmToolWork?: FarmToolWork;
@@ -251,6 +258,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   craftingXP?: number;
   copperStudy?: {workplace:number;progress:number;paused?:boolean};
   caravanRoute?:number;
+  hullRecovery?:import('./hullLossRecovery').HullLossRecovery;
   boat?: {id:number;phase:'boarding'|'aboard'|'landing';x?:number;z?:number};
   plantingWork?: {treeId:number;progress:number};
   weaponWork?: {kind: "spear" | "bow" | "blade"; progress:number; duration:number; workplace:number; paused?:boolean};
@@ -472,6 +480,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
   armor?:import('./armor').ArmorState;
   siegeRams?:import('./siegeRam').SiegeRamState;
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
@@ -495,6 +504,7 @@ export type GameState = {
   coastalTradeReviewAt?:number;
   coastalCommissions?:import('./coastalCommission').CoastalCommission[];
   seaExploration?:import('./seaExploration').SeaExplorationState;
+  farmToolCargo?:import('./farmToolCargo').FarmToolCargoState;
   droppedCargo?:import('./stolenCargo').DroppedCargoState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];

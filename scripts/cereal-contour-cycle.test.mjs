@@ -11,7 +11,8 @@ import { calendar } from "../src/game/settlement.ts";
 import { setFieldRest,setFieldCrop } from "../src/game/cultivation.ts";
 import { foodInventory, foodSpoilage } from "../src/game/pantry.ts";
 import {
-  beginProduction,
+  PRODUCTION_RECIPES,
+  recipeFoodOutputs,
   productionIssue,
   pauseProductionProject,
   resumeProduction,
@@ -33,6 +34,10 @@ const report = {
     assets: ["townhall", "hut", "four warehouses"],
   },
 };
+// Runtime retains only100 finished projects. Keep observed immutable facts so
+// the full-cycle ledger still includes paid batches pruned from the live UI list.
+const productionHistory=new Map();
+function observeProduction(g){for(const p of g.state.production?.projects||[])if(p.team===0)productionHistory.set(p.id,{id:p.id,recipe:p.recipe,phase:p.phase});}
 const hash = (a) => createHash("sha256").update(new Uint8Array(a.buffer)).digest("hex");
 function terrain(g) {
   const n = g.world.segs + 1,
@@ -123,6 +128,7 @@ function status(g) {
         hp: u.hp,
       })),
     items:g.tribe(0).items,cereal:g.state.cerealProcessing,
+    foodLots:foodInventory(g.tribe(0)),production:g.state.production,
     fields: g.state.buildings
       .filter((b) => b.type === "farm")
       .map((b) => ({ id: b.id, crop: b.crop, fertility: b.fertility })),
@@ -135,9 +141,10 @@ function drive(g, seconds, until = () => false) {
     g.state.paused = false;
     const before = g.state.time,
       wood = g.tribe(0).wood,
-      fuel = g.tribe(0).survival.fuelBurnedWood;
-    g.step(0.2);
-    const careLogs = wood - g.tribe(0).wood - (g.tribe(0).survival.fuelBurnedWood - fuel);
+      fuel = g.tribe(0).survival.fuelBurnedWood,
+      processingLogs = g.state.production?.metrics.logsUsed||0;
+    g.step(0.2);observeProduction(g);
+    const careLogs = wood - g.tribe(0).wood - (g.tribe(0).survival.fuelBurnedWood - fuel) - ((g.state.production?.metrics.logsUsed||0)-processingLogs);
     if (careLogs > 1e-7) {
       assert.ok(Math.abs(careLogs - Math.round(careLogs)) < 1e-6, JSON.stringify({ careLogs }));
       report.preservationLogs = (report.preservationLogs || 0) + Math.round(careLogs);
@@ -153,7 +160,7 @@ function untilTime(g, time) {
 function build(g, type, x, z) {
   const t = g.tribe(0),
     wood = t.wood,
-    stone = t.stone,careBefore=report.preservationLogs||0,fuelBefore=t.survival.fuelBurnedWood;
+    stone = t.stone,careBefore=report.preservationLogs||0,fuelBefore=t.survival.fuelBurnedWood,processingBefore=g.state.production?.metrics.logsUsed||0;
   assert.equal(g.placeBuilding(type, x, z), true, g.state.banner);
   const b = g.state.buildings.find((b) => b.type === type&&b.x===x&&b.z===z);
   assert.equal(b.build, 0);
@@ -162,13 +169,15 @@ function build(g, type, x, z) {
   g.orderConstruction(b);
   drive(g, 180, () => g.finished(b));
   assert.ok(g.finished(b), status(g));
-  assert.ok(Math.abs(t.wood-(wood-BUILDINGS[type].wood-((report.preservationLogs||0)-careBefore)-(t.survival.fuelBurnedWood-fuelBefore)))<1e-6);report.paidBuildings??={wood:0,stone:0};report.paidBuildings.wood+=BUILDINGS[type].wood;report.paidBuildings.stone+=BUILDINGS[type].stone;
+  assert.ok(Math.abs(t.wood-(wood-BUILDINGS[type].wood-((report.preservationLogs||0)-careBefore)-(t.survival.fuelBurnedWood-fuelBefore)-((g.state.production?.metrics.logsUsed||0)-processingBefore)))<1e-6);report.paidBuildings??={wood:0,stone:0};report.paidBuildings.wood+=BUILDINGS[type].wood;report.paidBuildings.stone+=BUILDINGS[type].stone;
   assert.equal(t.stone, stone - BUILDINGS[type].stone);
   return b;
 }
 function gather(g, b, people = g.state.units.filter((u) => u.team === 0)) {
-  people=people.map(p=>g.state.units.find(u=>u.id===p.id)).filter(u=>u&&!u.productionProjectId);
-  if(!people.length) people=g.state.units.filter(u=>u.team===0&&!u.productionProjectId&&!u.buildOrder).slice(0,1);
+  // A direct player order selects the requested real adults even when a paid
+  // job is active; the native command gateway owns safe pause/unload admission.
+  people=people.map(p=>g.state.units.find(u=>u.id===p.id)).filter(u=>u&&u.hp>0);
+  assert.ok(people.length,status(g));
   g.clearSelect();
   for (const u of people) u.selected = true;
   g.issueGather(b);
@@ -185,32 +194,31 @@ function restore(g) {
   assert.equal(hash(loaded.world.heights), before);
   return loaded;
 }
-function batch(g, recipe, b, interrupt = false) {
-  const before = g.state.time;
-  assert.equal(beginProduction(g, recipe, b.id), true, productionIssue(g, recipe, b.id));
-  let p = g.state.production.projects.at(-1);
-  if (interrupt) {
-    drive(g, 120, () => p.phase === "working" && p.progress > 2);
-    assert.equal(p.phase, "working");
-    const progress = p.progress,
-      grain = g.state.production.metrics.grainUsed;
-    assert.equal(pauseProductionProject(g, p.id), true);
-    const id = p.id;
-    g = restore(g);
-    p = g.state.production.projects.find((p) => p.id === id);
-    assert.equal(p.progress, progress);
-    assert.equal(resumeProduction(g, id), true, JSON.stringify(p));
-    assert.equal(g.state.production.metrics.grainUsed, grain);
-  }
-  drive(g, 180, () => p.phase === "complete" || p.phase === "lost");
-  assert.equal(p.phase, "complete", JSON.stringify(p));
-  report.stages.push({
-    recipe,
-    elapsed: g.state.time - before,
-    projectId: p.id,
-    progress: p.progress,
-  });
-  return g;
+function assertPaidProduction(g) {
+  observeProduction(g);const projects=[...productionHistory.values()],m=g.state.production.metrics;
+  const paid=key=>projects.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe][key]||0),0);
+  const completed=projects.filter(p=>p.phase==='complete');
+  assert.ok(projects.every(p=>p.phase!=='lost'),status(g));
+  assert.equal(m.grainUsed,paid('grain'));assert.equal(m.logsUsed,paid('wood'));assert.equal(m.waterUsedLiters,paid('water'));
+  assert.equal(m.consumed.flour||0,projects.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].inputs.flour||0),0));
+  assert.equal(m.produced.flour||0,completed.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].outputs.flour||0),0));
+  const output=completed.reduce((n,p)=>n+Object.values(recipeFoodOutputs(PRODUCTION_RECIPES[p.recipe])).reduce((sum,v)=>sum+(v||0),0),0);
+  assert.ok(Math.abs(m.edibleFoodProduced-output)<1e-7,status(g));
+}
+function interruptAutomaticBatch(g) {
+  // Automatic mill/oven jobs have already paid for the harvested grain. Observe
+  // and interrupt that real batch, rather than demanding the same inputs again.
+  const working=()=>g.state.production.projects.find(p=>p.team===0&&p.phase==='working'&&p.progress>2&&
+    (PRODUCTION_RECIPES[p.recipe].outputs.flour||PRODUCTION_RECIPES[p.recipe].foodKind==='bread'));
+  drive(g,120,()=>!!working());let p=working();assert.ok(p,status(g));
+  const before={id:p.id,recipe:p.recipe,progress:p.progress,grain:g.state.production.metrics.grainUsed,
+    flour:g.state.production.metrics.consumed.flour,logs:g.state.production.metrics.logsUsed,water:g.state.production.metrics.waterUsedLiters};
+  assert.equal(pauseProductionProject(g,p.id),true);g=restore(g);p=g.state.production.projects.find(p=>p.id===before.id);
+  assert.equal(p.progress,before.progress);assert.equal(resumeProduction(g,p.id),true,JSON.stringify(p));
+  assert.equal(g.state.production.metrics.grainUsed,before.grain);assert.equal(g.state.production.metrics.consumed.flour,before.flour);
+  assert.equal(g.state.production.metrics.logsUsed,before.logs);assert.equal(g.state.production.metrics.waterUsedLiters,before.water);
+  drive(g,180,()=>p.phase==='complete'||p.phase==='lost');assert.equal(p.phase,'complete',JSON.stringify(p));
+  report.stages.push({stage:'actual-paid-batch-reload',...before,finished:p.finished});return g;
 }
 test("a three-adult grain/pulse holding completes marked cereal harvest, paid processing/bread and a second contour crop cycle", () => {
   let g = fixture();
@@ -325,34 +333,14 @@ test("a three-adult grain/pulse holding completes marked cereal harvest, paid pr
     contourRange: survey.heightRangeMeters,
     plants: visual.grain,
   });
-  g = batch(
-    g,
-    "grindGrain",
-    g.state.buildings.find((b) => b.id === hearth.id),
-    true,
-  );
-  g = batch(
-    g,
-    "bakeBread",
-    g.state.buildings.find((b) => b.id === hearth.id),
-  );
-  g = batch(
-    g,
-    "grindGrainStation",
-    g.state.buildings.find((b) => b.id === grinding.id),
-  );
-  g = batch(
-    g,
-    "bakeBreadOven",
-    g.state.buildings.find((b) => b.id === oven.id),
-  );
-  assert.equal(g.state.production.metrics.grainUsed, 8);
-  assert.equal(g.state.production.metrics.consumed.flour, 8);
-  assert.equal(g.state.production.metrics.logsUsed, 2);
-  assert.equal(g.state.production.metrics.waterUsedLiters, 4);
-  assert.ok(Math.abs(g.state.production.metrics.edibleFoodProduced-(8+g.state.cerealProcessing.cleanedGrain*.92))<1e-7);
-  assert.ok(foodInventory(g.tribe(0)).bread > 0);
-  assert.equal(g.state.production.metrics.produced.flour, 8);
+  // The normal automatic chain uses the finite harvested inputs while the
+  // farmers gather pulses. Those paid jobs are the processing/bread proof.
+  const completed=g.state.production.projects.filter(p=>p.team===0&&p.phase==='complete');
+  assert.ok(completed.some(p=>p.recipe==='grindGrain'),status(g));
+  assert.ok(completed.some(p=>PRODUCTION_RECIPES[p.recipe].workplace==='grindingStone'&&PRODUCTION_RECIPES[p.recipe].outputs.flour>0),status(g));
+  assert.ok(completed.some(p=>PRODUCTION_RECIPES[p.recipe].foodKind==='bread'),status(g));
+  assert.ok(foodInventory(g.tribe(0)).bread>0,status(g));
+  assertPaidProduction(g);g=interruptAutomaticBatch(g);assertPaidProduction(g);
   untilTime(g, 1801);
   field = g.state.buildings.find((b) => b.id === fieldId);
   control = g.state.buildings.find((b) => b.id === controlId);
@@ -385,16 +373,17 @@ test("a three-adult grain/pulse holding completes marked cereal harvest, paid pr
   });
   assert.equal(hash(g.world.heights), terrainBefore);
   assert.doesNotThrow(() => decodeGame(encodeGame(g)));
+  assertPaidProduction(g);
   const totals = g.state.simulationEvents.totals,
     received = totals["food_received:0:food"] || 0,
     consumed = totals["food_consumed:0:food"] || 0,
     spoiled = totals["food_spoiled:0:food"] || 0;
   assert.ok(Math.abs(g.tribe(0).seeds - (16 + g.state.cerealProcessing.seedsAllocated+pulseYield0*.08)) < 1e-6);
   assert.ok(
-    Math.abs(g.tribe(0).food - (900 + received - consumed - spoiled - 8)) < 1e-6,
+    Math.abs(g.tribe(0).food - (900 + received - consumed - spoiled - g.state.production.metrics.grainUsed)) < 1e-6,
     JSON.stringify({
       food: g.tribe(0).food,
-      expected: 900 + received - consumed - spoiled - 8,
+      expected: 900 + received - consumed - spoiled - g.state.production.metrics.grainUsed,
       received,
       consumed,
       spoiled,
@@ -405,7 +394,7 @@ test("a three-adult grain/pulse holding completes marked cereal harvest, paid pr
   assert.ok(
     Math.abs(
       g.tribe(0).wood -
-        (200 - report.paidBuildings.wood - 2 - report.preservationLogs - g.tribe(0).survival.fuelBurnedWood),
+        (200 - report.paidBuildings.wood - g.state.production.metrics.logsUsed - report.preservationLogs - g.tribe(0).survival.fuelBurnedWood),
     ) < 1e-6,
   );
   assert.equal(g.tribe(0).stone,80-report.paidBuildings.stone);
@@ -416,7 +405,7 @@ test("a three-adult grain/pulse holding completes marked cereal harvest, paid pr
           g.tribe(0).survival.waterDeliveredLiters -
           g.tribe(0).survival.waterConsumedLiters -
           g.tribe(0).survival.waterLostLiters -
-          4),
+          g.state.production.metrics.waterUsedLiters),
     ) < 1e-6,
   );
   report.cerealJobs=g.state.production.projects.filter(p=>p.recipe.includes("Cereal")).map(p=>({id:p.id,recipe:p.recipe,phase:p.phase,actor:p.actorId,reason:p.blockedReason}));report.cereal=g.state.cerealProcessing;report.remainingCerealItems={grainSheaves:g.tribe(0).items?.grainSheaves||0,roughGrain:g.tribe(0).items?.roughGrain||0,straw:g.tribe(0).items?.straw||0,chaff:g.tribe(0).items?.chaff||0};
