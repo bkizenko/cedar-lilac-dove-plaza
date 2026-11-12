@@ -1,4 +1,6 @@
 import { peacefulMusic, AcousticScore } from "./music";
+import { ProceduralAudio, type WorldAudio } from "./proceduralAudio";
+import { LEGACY_SFX, loadSettings, saveSettings, type AudioSettings, type Bus } from "../scene/audioMix";
 export class GameAudio {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -7,6 +9,10 @@ export class GameAudio {
   muted = false;
   unlocked = false;
   score = new AcousticScore();
+  /** Procedural score, environment and spatial SFX (asset-free); replaces the recorded score while active. */
+  proc = new ProceduralAudio();
+  seed = 1;
+  settings: AudioSettings = loadSettings(typeof localStorage === "undefined" ? null : localStorage);
   private noise: AudioBuffer | null = null;
   unlock() {
     if (this.unlocked) {
@@ -31,11 +37,17 @@ export class GameAudio {
     void this.ctx.resume();
     this.unlocked = true;
     this.score.unlock();
+    this.proc.attach(this.ctx, this.master, this.seed);
+    this.proc.setSettings(this.settings);
+    if (this.proc.active) this.score.setMuted(true);
   }
 
   setMuted(m: boolean) {
     this.muted = m;
-    this.score.setMuted(m);
+    this.score.setMuted(m || this.proc.active);
+    this.settings = { ...this.settings, muted: m };
+    saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
+    this.proc.setSettings(this.settings);
     if (this.master && this.ctx) {
       this.master.gain.setTargetAtTime(m ? 0 : 0.58, this.ctx.currentTime, 0.04);
     }
@@ -83,6 +95,14 @@ export class GameAudio {
 
   play(name: string) {
     if (!this.ctx) return;
+    if (this.proc.active) {
+      const kind = LEGACY_SFX[name];
+      if (kind !== undefined) {
+        // positional work sounds come from the world probe; only whole-village cues route here
+        if (kind === "horn" || kind === "thunder" || kind === "splash" || kind === "click") this.proc.playSfx(kind);
+        return;
+      }
+    }
     const now = this.ctx.currentTime;
     const gap = name === "fish" || name === "rustle" ? 2.5 : name === "chop" || name === "hammer" ? .6 : name === "drop" ? .8 : name === "hit" ? .18 : .04;
     if (this.lastSfx[name] !== undefined && this.lastSfx[name] + gap > now) return;
@@ -214,19 +234,34 @@ export class GameAudio {
     paused = false,
     season = "Spring",
   ) {
+    if (this.proc.active) return;
     const battle = mood !== "peace";
     const stage = battle ? "battle" : peacefulMusic(age,season,this.score.calm);
     const duck = (season === "Winter" ? 0.5 : season === "Autumn" ? 0.62 : 0.7) * (population > 30 || age > 3 ? 0.9 : 1);
     this.score.update(stage, dt, paused, duck);
   }
+  /** Per-frame world feed for the procedural mix (the caller throttles the probe). */
+  updateWorld(dt: number, world: WorldAudio) {
+    this.proc.update(dt, world);
+  }
+  setVolume(bus: Bus, v: number) {
+    if (bus === "master" || bus === "music" || bus === "sfx" || bus === "ambience") {
+      this.settings = { ...this.settings, [bus]: Math.max(0, Math.min(1, v)) };
+      saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
+      this.proc.setSettings(this.settings);
+    }
+  }
   setMusicVolume(v: number) {
     this.score.setVolume(v);
+    this.setVolume("music", v);
   }
   setSfxVolume(v: number) {
+    this.setVolume("sfx", v);
     if (this.sfx && this.ctx) this.sfx.gain.setTargetAtTime(Math.max(0, Math.min(1, v)),this.ctx.currentTime,.025);
   }
   dispose() {
     this.score.dispose();
+    this.proc.dispose();
     this.unlocked = false;
     void this.ctx?.close();
     this.ctx = null;

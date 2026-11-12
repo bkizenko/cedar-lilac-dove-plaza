@@ -151,6 +151,10 @@ export function AgesScreen({hud,engine,onClose}:{hud:HudSnapshot;engine:Engine|n
 }
 
 /* ---------- menu ---------- */
+function AudioSliders({engine}:{engine:Engine|null}){
+ const [,bump]=useState(0);const st=engine?.audio.settings;if(!engine||!st)return null;
+ return <>{(['master','music','sfx','ambience'] as const).map(b=><label key={b}>{b==='sfx'?'Effects':b[0].toUpperCase()+b.slice(1)}<input type="range" min={0} max={100} value={Math.round(st[b]*100)} aria-label={b+' volume'} onChange={e=>{engine.audio.setVolume(b,+e.target.value/100);bump(n=>n+1);}}/></label>)}</>;
+}
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
@@ -164,7 +168,8 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
     <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
-    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>Sound</label></div>
+    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>Sound</label>
+    <AudioSliders engine={engine}/></div>
     <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}>Skip music</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
   </div>}
   {tab==='world'&&<div className="hw-stack">
