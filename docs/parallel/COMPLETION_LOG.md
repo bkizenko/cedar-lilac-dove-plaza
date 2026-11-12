@@ -61,3 +61,8 @@ Pushed5pendingCodexsourcebranches; qualifiedscopedWorker/save/UI/keyboardevidenc
 ## 2026-11-12T09:57:50.124731+00:00 — paid foreign teaching published
 
 LIVEbb5947a / 2026-11-12T09-56-19-892Z-bb5947a, verified8086/8101.31/31scoped (5newnative teaching+24shared+2actualbuilt including original53person restore),tsc/buildPASS. Learner carries payment, observes exact qualified foreign paid work/useful output and physically reports home before traded knowledge. Shared reservations/save receipts survive old batch pruning; compact command/readmodel/contact controls; no free goods/skill, source team/work/output preserved. Full34/98unchanged; general holders/boat learning/pricing/full W2 remain open. Evidence docs/metrics/traded-teaching-release-2026-11-12.json.
+
+
+## 2026-11-12T10:48:35.249069+00:00 — charcoal and physical copper trial published
+
+LIVE2051c07 / 2026-11-12T10-44-36-919Z-2051c07, verified8086/8101.108/108unique scoped =105native/shared (duplicates across100/4/29 reruns excluded)+3actualbuilt;tsc/buildPASS. Actual native timber->closed char/cool->pickup/delivery->paid cache-loaded copper prototype->used/worn tool, with declared existing infrastructure/workable copper. Original fuel/actor/inputs survive pause/reload, no equipped-tool overwrite, paid losses logged. Full current main retained including Grok powered mills/multi-field drag; mechanical productionAI conflict kept both features. Original53 save unchanged; no screenshots retained. Full34/98unchanged; actual smelting/alloys/catalogue remain open. docs/metrics/charcoal-copper-release-2026-11-12.json.
