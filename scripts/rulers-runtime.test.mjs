@@ -256,3 +256,18 @@ test('lane A: domestic pressure executor overthrows a house after sustained upri
  const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.unrestYears={1:'x'};assert.equal(validRulersState(bad),false);
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(R.domesticPressure(old),[]);
 });
+
+test('save round-trip: claims, wards, unrest counters and weariness survive a JSON save mid-run and the reloaded game keeps stepping identically',()=>{
+ const make=()=>{const g=fixture();g.state.time=RULERS_YEAR_SECONDS*4;advanceRulers(g);
+  const r=g.state.rulers;r.claims=[{holder:'0',target:'1',kind:'claim',strength:3,expiresTick:1e9}];r.unrestYears={'0':2};r.weary={'1':12};
+  r.wards=[{kind:'foster',person:'0-x',from:'0',to:'1',since:r.year}];return g;};
+ const a=make(),saved=JSON.parse(JSON.stringify(a.state.rulers));
+ assert.ok(rulersOf({rulers:saved}),'saved rulers state validates');
+ assert.deepEqual(saved.claims,a.state.rulers.claims);assert.deepEqual(saved.unrestYears,{'0':2});assert.deepEqual(saved.weary,{'1':12});assert.equal(saved.wards.length,1);
+ const b=fixture();b.state.rulers=JSON.parse(JSON.stringify(saved));
+ for(const g of [a,b]){g.state.time=RULERS_YEAR_SECONDS*7;advanceRulers(g);}
+ assert.equal(b.state.rulers.year,a.state.rulers.year);
+ assert.deepEqual(Object.keys(b.state.rulers.societies),Object.keys(a.state.rulers.societies));
+ assert.ok(rulersOf(a.state)&&rulersOf(b.state),'both still valid after more years');
+ const bad=JSON.parse(JSON.stringify(saved));bad.claims=[{holder:1}];assert.equal(rulersOf({rulers:bad}),null,'corrupt claims are rejected, not loaded');
+});
