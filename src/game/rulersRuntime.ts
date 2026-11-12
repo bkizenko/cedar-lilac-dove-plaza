@@ -77,7 +77,7 @@ export function expansionInputs(g:Game,team:number):DriverInputs|null{
  const myPop=pop,myFortune=g.tribeFortune(team);
  let weak=0,rich=0,fort=0;
  for(const i of known){weak=Math.max(weak,c01((myPop-livingPeople(g,i))/myPop));rich=Math.max(rich,c01((g.tribeFortune(i)-myFortune)/3));
-  fort=Math.max(fort,c01(s.buildings.filter(b=>b.team===i&&b.hp>0&&(b.type==='barracks'||b.type==='tower')).length*.3));}
+  fort=Math.max(fort,c01(s.buildings.filter(b=>b.team===i&&b.hp>0&&(b.type==='barracks'||b.type==='watchtower')).length*.3));}
  const boats=g.tribe(team).boatPractice,built=boats?Object.values(boats.built).reduce((t:number,n)=>t+(n||0),0):0;
  const d=me.dynasty,cadets=Object.values(d.people).filter(p=>p.alive&&!p.spouse&&p.age>=16&&p.id!==d.rulerId).length;
  return {
