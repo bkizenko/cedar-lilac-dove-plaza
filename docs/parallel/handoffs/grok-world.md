@@ -1,6 +1,107 @@
 # Grok W-World handoff
 
-Updated 11 November 2026, W5 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+Updated 11 November 2026, W6 ready (ET). Lane **W-World** (Grok): geography, biomes/ecology, hydrology, navigation/local routing, placement/plots, territory, civil engineering, biome dressing data and terrain-to-building grounding constraints. Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first. Rules: [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md).
+
+## Batch W6 — ready (sea-only tides, routed aqueducts/canals, extension footprint checks, water-works hooks, merge map)
+
+Shored cuts were left out as instructed (pending Boris). The trench bank rule (`maximumNaturalGrade` 0.24) is unchanged.
+
+- **Base:** latest main `8f8e692` (already merged; no new main commits since). Nobody else has pushed to `agents/grok-world` (head was my `3541a67` before this handoff).
+- **Commits (each small and self-contained):**
+  - `2ff347a`: sea-only tides (`tideVersion: 2`).
+  - `3ff32bf`: aqueducts and canals routed around terrain (`waterRoutes.ts`).
+  - `3541a67`: terrain checks for eraMode extension footprints (`extensionFootprints.ts`).
+  - The handoff commit (this section), with a one-comment `sim.ts` touch (see the shared-file list).
+
+### Merge map for Codex (verified, not estimated)
+Each group below was cherry-picked onto a clean `origin/main` (`8f8e692`) in a scratch worktree. Then `tsc --noEmit` and the group's own tests were run there.
+
+| Group | Commits (in order) | Depends on | On main alone |
+|---|---|---|---|
+| Extension footprint checks | `3541a67` | nothing | ✅ tsc clean, 2/2 tests |
+| Deep-water extents | `b7bb032` | nothing | ✅ 4/4 |
+| Site sampling | `aad71a0` | nothing | ✅ 5/5 |
+| River sections | `cfcf3a8` | nothing | ✅ 5/5 |
+| Observed water routes | `26bd1c8` | nothing | ✅ 5/5 |
+| Land value + dominated territory | `10d6d81` → `3dae8b0` | `dominatedTerritory` imports `landValue` | ✅ 5/5 |
+| Mountains + town capacity | `1b7cade` → `70ed21c` | `townCapacity` imports `mountains` | ✅ 7/7 |
+| Landform metrics + river profile v2 | `2ee0fa2` → `e158781` | — | ✅ 3/3 |
+| Wonder earthworks | `aad71a0` → `0fb6099` | siteSample | ✅ 3/3 |
+| Wonder sites | `aad71a0`, `cfcf3a8`, `b7bb032` → `096b111` | siteSample, waterSections, deepWater | ✅ 4/4 |
+| Water works + routed aqueducts/canals | `cfcf3a8` → `c7c9039` → `3ff32bf` | waterSections; `3ff32bf` needs `c7c9039` | ✅ 8/8 |
+| Sim-wired features: quarter turn `346faad`, flow fields `d2929b5`/`dacc651`/`0d98101`/`19d9eed`/`7fd6b6b`, tides `a3ae419` → hills labels `f66b7b1` → sea-only tides `2ff347a`, W1/W2 routing and fog | — | `sim.ts` hunks written on older mains | ❌ cherry-pick conflicts in `sim.ts` (and `worldOptions.ts`/`worldVariety.ts` for the option chain). Take these by **merging the branch** (it already contains main, so it merges cleanly), or reapply the listed `sim.ts` lines by hand. |
+
+- The option-key chain (`e158781` → `a3ae419` → `f66b7b1` → `2ff347a`) touches the same lines of `worldOptions.ts`/`worldVariety.ts`, so it must go in that order.
+- `2ff347a` needs `a3ae419`; it is not useful alone.
+- Docs-only handoff commits (`74b3433`, `004107a`, `152d82f`, `b3174e2`, `145c4ef`, `c44d50f`, `5e618fd`, `b910e04`, this one) carry no code.
+
+### Save impact (exact)
+- **Unchanged without the new options.** Unflagged generation is byte-identical to main on all 48 hash worlds (same hash list as main, re-run on this head).
+- **One new optional value:** `worldOptions.tideVersion: 2`, inside the already optional `worldOptions` key (W5 added `1`). **Codex:** the validator becomes `tideVersion === 1 || tideVersion === 2` when present (plus `landformLabelVersion === 2`, `riverProfileVersion === 2`).
+- `world.seaTideY` is **runtime-only**, never saved. It is recomputed from saved game time on the first tick after load (tested: same sea level after save and reload).
+- Routes and extension checks are pure queries with no save state.
+
+### Shared-file edits this batch
+- **`sim.ts`:** the comment on the existing `advanceTide(this)` line now says it runs for version 1 or 2. No code change.
+- **`worldgen.ts` (world lane):** an optional `seaTideY?: number` on `WorldData`, runtime-only.
+- **World-lane files:** `localWater.ts` (`seaSurfaceY`), `deepWater.ts` and `terrainWalkCache.ts` (cache keys include the tide), `tides.ts`, `worldOptions.ts`/`worldVariety.ts` (`tideVersion: 1|2`).
+- No edits to `types.ts`, `persistence.ts`, `save.ts`, `src/scene/world.ts` or camera code.
+
+### What landed (native evidence for each)
+1. **Sea-only tides (`tideVersion: 2`, `2ff347a`).**
+   - `world.waterY` stays the weather level, and a runtime `world.seaTideY` offset applies only where the background sea is the surface (`seaSurfaceY(world)` in all three `waterSurfaceAt` branches). Rivers and lakes stay at the weather level.
+   - **Why an offset, not a separate inland level:** sim formulas that subtract `waterY` (placement margins, excavation water clearance) become stricter at the coast during a high tide and never looser inland. A separate inland channel would have loosened them inland and moved the rendered rivers.
+   - Caches are keyed on the tide: the walk-grid level key is `waterY|seaTideY`, and deep water includes `seaTideY`.
+   - **Native, archipelago 2:**
+     - Sea levels over a cycle: +0.15, +0.30, −0.15, −0.18 m.
+     - Walkable cells: 75,868 at low tide → 71,999 at high.
+     - Every sampled inland water surface stayed constant through the cycle.
+     - The walk grid matches a fresh build at every level.
+   - v1 (shared channel) behaves exactly as in W5. `tideFacts` reports `seaOnly`.
+2. **Aqueducts and canals routed around terrain (`waterRoutes.ts`, `3ff32bf`).**
+   - Dijkstra on an 8 m grid (160 m padding, at most 40,000 cells). The routes obey the same limits as the W5 straight checks: aqueduct cut ≤ 2 m (one dig), arcade ≤ 12 m, canal locks every 2.5 m of rise, no embankment fill. Unexplored cells are skipped for team 0.
+   - `routeAqueduct` uses one fixed grade, `max(minimum grade, fall / (1.25 × straight distance))`, in both the search and `measureAqueduct`. The returned polyline is re-measured on real ground.
+   - `routeCanal` costs water cells at 0.15 and land by height above the lower water. It reports `alreadyJoinedByWater` when the two waters already connect, so only land crossings count as canals.
+   - **Native:**
+     - Aqueducts, 77 source–target pairs: 6 feasible straight → 15 feasible routed. Routed length is 1.15–1.21× the straight line, 1–5 ms per route.
+     - Canals, 36 pairs: 15 feasible straight → 12 real routed canals, plus 23 pairs already joined by water.
+3. **Terrain checks for eraMode extension footprints (`extensionFootprints.ts`, `3541a67`).**
+   - Builds on footprint expansion (`b.expansion`, which grows symmetrically and only for plots). An eraMode extension upgrade is a **one-sided wing** on any finished building: `extensionFootprint(b, side, grow)` returns the full and added rectangles (north = −z, east = +x).
+   - `extensionTerrainCheck(g, b, side, {growMetres, team})` returns issues, the footprint, the added area, the centre shift, the foundation (step, cut, fill, levelling work-seconds) and the open approach sides. It checks that:
+     - the building is finished, has no pending expansion, and stays within 3× its original size;
+     - the wing is inside the map, on a dry foundation, and on explored ground;
+     - it is not in another team's territory;
+     - it keeps 0.5 m clearance from other buildings, including their reserved expansions;
+     - no trench is being dug next to it (`excavationConstructionIssue`) and it covers no resources;
+     - its foundation step versus the building floor is at most 1 m (no free earthworks: levelling volume and work are reported);
+     - at least one approach side stays open.
+   - `extensionOptions(g, b)` returns every side, sorted best first.
+   - **Native, after 900 sim-seconds of settlement:**
+     - Pangaea 4: 15 buildings, 8 of 60 side options pass.
+     - Continents 7: 32 pass and 92 are refused.
+     - Applying every passing option left each building reachable through `interactionSpot` and overlapping nothing.
+     - A neighbouring building, resources, a pending expansion and an oversized wing each block the sides they affect (tested).
+
+### Water-works hooks proposed to Codex (recipes, inventories and jobs stay Codex's)
+1. **Well building:** `placementIssue` for `type === 'well'` returns `wellSite(g, x, z, team).issues[0]`. Build time = `excavationWorkNeed` for the shaft (`depth` × 1.5 m²). In `survivalNeeds`, `sourceFor` also offers finished wells (source = well centre, bank = `interactionSpot`). `sourceWet` stays true while `depth` is at or below the drought table (`wellSite` already digs to the dry-season level). That gives inland villages water without walking to a river.
+2. **Watermill / windmill:** placement validated by `watermillSite` / `windmillSite`. The returned power index (head × width class for mills; exposure for windmills) multiplies the grinding recipe rate. Watermills are idle while `sourceWet` fails (drought) and windmills during calm weather if Codex adds wind.
+3. **Aqueduct / canal construction:** the player commits a polyline from `routeAqueduct` / `routeCanal`. Construction is a sequence of ordinary excavation digs along it, batched like wonder earthworks (`continueWonderEarthwork` pattern), plus arcade materials per metre over 0.5 m. **Rule question for Codex/Boris (not changed):** excavation refuses any dig that reaches water (`waterClearanceMeters` 0.35), so a canal's last metre to the river or sea can't be dug today. Canals need a "breach" step allowed only at the end of a finished channel. That is not the trench bank rule, but it is still a rule change, so I left it.
+4. **Cistern:** `cisternCatchment(g, x, z)` litres per season feed the cistern's storage. The pit is a wonder-style earthwork (already labour-real).
+5. **Sea mesh (tide v2):** in `src/scene/world.ts`, sea plane y = `world.waterY + (world.seaTideY ?? 0)`, and the same on the minimap shoreline. Without this, the v2 sim tide is correct but invisible (river/lake meshes must not move).
+6. **Validators:** `tideVersion` 1|2, `landformLabelVersion` 2, `riverProfileVersion` 2.
+
+### Checks (W6)
+- All 23 branch test files (W1–W6): **93/93 pass**.
+- Walk-cache, v17-water, deep-water, excavation-live and wonder-sites tests: 15/15 with tide v2 present.
+- Unflagged hashes are identical to main on 48/48 worlds.
+- `tsc` and eslint are clean on all new and touched files.
+
+### Next (W7 proposal)
+- Shored cuts once Boris decides.
+- Canal breach rule (if approved).
+- Linear-earthwork job helper for committed aqueduct/canal polylines.
+- Dominated-territory wiring after the Societies merge.
+- Extension shapes beyond rectangles (L-wings) if eraMode wants them.
 
 ## Batch W5 — ready (earthworks as labour, water works, tides, hills labels, flow fields at 120 residents)
 
@@ -431,4 +532,5 @@ Each item has a source pointer (`file#message`, where `#` is the `## N. user` he
 - **W3:** done (above). Follow-ups awaiting other owners: the `quarterTurn` control and mesh yaw; a decision on a section stock cap; `observedVision()` in saves.
 - **W4:** done (above). Awaiting other owners: `riverProfileVersion` in new-world requests plus a validator; enabling flow fields; a ruling on the W1/W2 steer switch; Societies adopting `deepWaterAt` / `pickDeepWaterPoint` and `dominationSpheres`; Claude adopting `wonderSiteRules` / `wonderTerrainCut`.
 - **W5:** done (above). Awaiting other owners: validators for `tideVersion` and `landformLabelVersion`; a shored-cut rule decision; building-type hooks for water works; enabling flow fields.
-- **W6:** shored cuts, sea-only tide, routed aqueducts and canals, water-works building hooks, dominated-territory wiring after the Societies merge.
+- **W6:** done (above). Awaiting other owners: sea-mesh wiring for tide v2; validators (`tideVersion` 1|2); the water-works building hooks; a canal breach rule decision; adopting `extensionTerrainCheck` in eraMode upgrades. The merge map above says which commits can land alone.
+- **W7:** shored cuts (after Boris decides), linear-earthwork jobs for aqueducts/canals, dominated-territory wiring after the Societies merge.

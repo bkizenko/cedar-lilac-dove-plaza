@@ -3113,7 +3113,7 @@ export class Game {
 
   tickEvents(dt: number) {
     this.tickWeather(dt);
-    advanceTide(this); // Grok W5: no-op unless worldOptions.tideVersion===1
+    advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
     if (this.state.event === "herd") this.state.event = "none";
     this.state.eventT = 120;
     this.tickCalamity(dt);
