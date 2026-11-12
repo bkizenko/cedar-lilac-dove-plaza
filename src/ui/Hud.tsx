@@ -377,7 +377,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   {hud.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
                 </IconBtn>
                 <IconBtn title="Skip music" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}><SkipForward className="size-3.5"/></IconBtn>
-                <IconBtn title="Restart" onClick={() => void lifecycle.run(()=>engine!.restart())}>
+                <IconBtn title="Restart" onClick={() => void lifecycle.run(()=>engine!.restart(undefined,21,true))}>
                   <RotateCcw className="size-3.5" />
                 </IconBtn>
               </div>
@@ -775,7 +775,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <p className="text-parchment max-w-md text-center px-6">{hud.endReason}</p>
           <button
             type="button"
-            onClick={() => void lifecycle.run(()=>engine!.restart())}
+            onClick={() => void lifecycle.run(()=>engine!.restart(undefined,21,true))}
             className="rounded-lg border border-bronze/40 bg-ink-soft px-5 py-2 text-sm text-bronze-bright hover:bg-ink"
           >
             Begin again

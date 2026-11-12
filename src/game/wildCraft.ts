@@ -118,7 +118,7 @@ function recipeKnown(g:Game,team:number,r:WildRecipe){
 }
 const wildKey=(id:number)=>`wild-craft:${id}`;
 function wildBodyPacket(p:WildProject){return !p.packet&&(Object.values(p.held.items).some(n=>(n||0)>0)||Object.values(p.held.goods).some(n=>(n||0)>0)||Object.values(p.held.food).some(n=>(n||0)>0)||p.held.wood>0||p.held.water>0||Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0));}
-function wildAdult(g:Game,u:Unit,own=false){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.boat&&!u.resting&&!u.shelterId&&!u.expedition&&!u.visit&&!u.trade&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u,own?'wildWorkId':undefined);}
+export function wildAdult(g:Game,u:Unit,own=false){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.boat&&!u.resting&&!u.shelterId&&!u.expedition&&!u.visit&&!u.trade&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u,own?'wildWorkId':undefined);}
 function sameWildCache(h:NonNullable<WildProject['cache']>,d:SupplyDrop){return Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.kind==='camp':h.kind==='building'&&h.id===d.id);}
 function actualWildCache(g:Game,u:Unit){return supplyDrops(g,u.team).find(d=>{const spot=supplyApproach(g,u,d);return spot&&supplyReached(g,u,d,spot);});}
 function wildReservations(g:Game,p:WildProject){const b=p.stationId===undefined?undefined:g.state.buildings.find(b=>b.id===p.stationId&&b.team===p.team&&g.finished(b));return b&&p.phase!=='back'?[{key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)}]:[];}
@@ -397,7 +397,7 @@ export function wildCraftFeedback(g:Game,team:number):WildFeedbackRow[]{
  for(const t of w.traps.filter(t=>t.team===team))rows.push({icon:HUNT_METHOD_ICON[t.kind],kind:'trap',text:`${t.catches} caught`,why:t.kind});
  for(const[id,wd]of Object.entries(w.wounds)){const c=g.state.wildlife.find(c=>String(c.id)===id);if(c&&c.hp>0&&(team!==0||g.visibleAt(c.x,c.z)))rows.push({icon:'🩸',kind:'wound',text:`${c.species} bleeding`,amount:wd.trail.length});}
  const stock=w.stock[String(team)]||{},camp=g.campOf(team);
- for(const k of WILD_GOODS){const n=stock[k]||0;if(n<=0)continue;const rate=wildSpoilRate(g,k,camp.x,camp.z);rows.push({icon:WILD_GOOD_ICON[k],kind:rate*600>.1?'rot':'stock',text:`${n.toFixed(1)}`,why:rate>0?`${(rate*600*100).toFixed(0)}% rots per 10 min`:'keeps',amount:n});}
+ for(const k of WILD_GOODS){const n=stock[k]||0;if(n<=0)continue;const rate=wildSpoilRate(g,k,camp.x,camp.z);rows.push({icon:WILD_GOOD_ICON[k],kind:rate*600>.1?'rot':'stock',text:`${n.toFixed(1)}`,why:rate>0?`${Math.min(100,rate*600*100).toFixed(0)}% rots per 10 min`:'keeps',amount:n});}
  const food=foodInventory(g.tribe(team));
  if(food.berries>0)rows.push({icon:'🍇',kind:'rot',text:food.berries.toFixed(0),why:'berries rot fastest; dry or boil them'});
  return rows;
