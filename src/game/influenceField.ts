@@ -234,7 +234,8 @@ function* paintField(g:Game,c:Cache,teams:number[]):Generator<void>{
  const n=Math.sqrt(g.territory.length),cell=g.world.size/n,territory=new Uint8Array(g.territory.length).fill(255),strength=new Float32Array(g.territoryStrength.length);
  for(let iz=0;iz<n;iz++){yield;for(let ix=0;ix<n;ix++){if(ix%16===0)yield;
   const x=-g.world.size/2+(ix+.5)*cell,z=-g.world.size/2+(iz+.5)*cell,i=iz*n+ix;
-  for(const team of teams){const v=strengthAt(g,c,c.fields.get(team)!,x,z);if(v<=.0001)continue;strength[i]=Math.max(strength[i],v);territory[i]=territory[i]===255?team:territory[i]===team?team:254;}
+  // A source can be invalidated while a cooperative paint is pending. Missing authority paints nothing.
+  for(const team of teams){const f=c.fields.get(team);if(!f)continue;const v=strengthAt(g,c,f,x,z);if(v<=.0001)continue;strength[i]=Math.max(strength[i],v);territory[i]=territory[i]===255?team:territory[i]===team?team:254;}
  }}
  g.territory.set(territory);g.territoryStrength.set(strength);c.paintedTerritory=g.territory;c.paintedStrength=g.territoryStrength;
 }
