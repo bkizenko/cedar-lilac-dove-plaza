@@ -134,7 +134,7 @@ export class EffectPool{
   for(const kind of Object.keys(this.pools) as EffectKind[]){this.tokens[kind]=Math.min(EFFECT_RULES.globalPerSecond[kind],this.tokens[kind]+EFFECT_RULES.globalPerSecond[kind]*dt);
    for(const p of this.pools[kind]){if(!p.alive)continue;p.age+=dt;if(p.age>=p.life){p.alive=false;continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;}}
  }
- count(kind?:EffectKind){return kind?this.pools[kind].filter(p=>p.alive).length:(Object.keys(this.pools) as EffectKind[]).reduce((n,k)=>n+this.count(k),0);}
+ count(kind?:EffectKind):number{return kind?this.pools[kind].filter(p=>p.alive).length:(Object.keys(this.pools) as EffectKind[]).reduce((n,k)=>n+this.count(k),0);}
  get capacity(){return Object.values(EFFECT_CAPS).reduce((a,b)=>a+b,0);}
  alive(){return (Object.keys(this.pools) as EffectKind[]).flatMap(k=>this.pools[k].filter(p=>p.alive));}
 }

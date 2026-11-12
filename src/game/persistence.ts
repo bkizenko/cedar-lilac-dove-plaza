@@ -1,3 +1,5 @@
+import {validWaterEngineering} from './waterEngineering';
+import {advanceTide} from './tides';
 import {validSailingState,reconcileSailRigProjects} from './boatSailing';
 import {validFleece} from './sheep';
 import {validSiegeRamState,reconcileSiegeRams} from './siegeRam';
@@ -136,7 +138,12 @@ function validateGamePayload(raw: unknown) {
   if([7,8,9,10,11,12,13,14,15,16,17,18,19].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
+  if(s.worldOptions?.tideVersion!==undefined&&![1,2].includes(s.worldOptions.tideVersion))fail();
+  if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
+  if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
+  if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
+  if(!validWaterEngineering(s,HALF*2))fail();
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
@@ -708,6 +715,8 @@ export function decodeGame(raw:unknown):Game {
     particles: [],
     floaters: [],
   } as GameState;
+  if(g.world.options&&s.worldOptions?.flowFieldVersion===1)g.world.options={...g.world.options,flowFieldVersion:1};
+  g.configureFlowFields();
   // Existing actual own stations are legacy adoption evidence, never a phantom building.
   for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
   syncHaulageProjects(g);relinkHousingViews(g);
@@ -725,7 +734,7 @@ export function decodeGame(raw:unknown):Game {
   g.awaitingStart = false;
   g.world.waterY=weatherWaterLevel(g.world.baseWaterY,g.state.weather);
   migratePaidTrenches(g);
-  g.rebuildWalk();
+  if(!advanceTide(g))g.rebuildWalk();
   discountTownhallPlans(g);
   discountQuarryPlans(g);
   return g;

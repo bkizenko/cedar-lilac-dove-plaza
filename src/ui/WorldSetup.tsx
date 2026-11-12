@@ -7,6 +7,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
   const [busy, setBusy] = useState(false);
+  const [sharedRoutes,setSharedRoutes]=useState(true),[seaTides,setSeaTides]=useState(true);
   const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
     <div className="world-setup">
@@ -60,6 +61,8 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         <input type="checkbox" checked={previewRiverbanks} onChange={e=>setPreviewRiverbanks(e.target.checked)}/>
         Experimental riverbanks
       </label>}
+      <label><input type="checkbox" checked={sharedRoutes} onChange={e=>setSharedRoutes(e.target.checked)}/> Shared routes</label>
+      <label><input type="checkbox" checked={seaTides} onChange={e=>setSeaTides(e.target.checked)}/> Sea tides</label>
       <button
         type="button"
         disabled={busy}
@@ -67,7 +70,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
           setBusy(true);
           requestAnimationFrame(() => {
             try {
-              engine.configureNewWorld({ layout, size, difficulty: preset },previewRiverbanks);
+              engine.configureNewWorld({layout,size,difficulty:preset,...(sharedRoutes?{flowFieldVersion:1 as const}:{}),...(seaTides?{tideVersion:2 as const}:{})},previewRiverbanks);
             } finally {
               setBusy(false);
             }

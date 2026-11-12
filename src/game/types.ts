@@ -471,6 +471,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  aqueductWorks?: import('./waterLineWorks').AqueductWorksPlan[];
+  canalWorks?: import('./canalBreach').CanalWork[];
   armor?:import('./armor').ArmorState;
   siegeRams?:import('./siegeRam').SiegeRamState;
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];

@@ -1,3 +1,4 @@
+import {tickWaterEngineering} from './waterEngineering';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -108,7 +109,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
-import {flowPath} from "./flowFields";
+import {flowPath,resetFlowFields,setFlowFieldsEnabled} from "./flowFields";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
@@ -364,6 +365,12 @@ export class Game {
     return best;
   }
 
+  /** Apply once per world/reset/load. WeakMap route caches never survive a village replacement. */
+  configureFlowFields(){
+    resetFlowFields(this);
+    setFlowFieldsEnabled(this,this.world.options?.flowFieldVersion===1);
+  }
+
   reset(seed?: number, worldgenVersion = seed === undefined ? 18 : 1, request:WorldRequest={}) {
     const preset=difficultyId(request.difficulty);
     this.selectedBoat = null;
@@ -373,6 +380,7 @@ export class Game {
     this.chopMarks.clear();
     const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
+    this.configureFlowFields();
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
     this.state.difficulty=preset;
@@ -3113,6 +3121,7 @@ export class Game {
   }
 
   tickEvents(dt: number) {
+    tickWaterEngineering(this);
     this.tickWeather(dt);
     advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
     if (this.state.event === "herd") this.state.event = "none";
