@@ -123,7 +123,7 @@ T5. WQ-9 / IFACE-G8 / GW-04 visual: mesh yaw = buildingQuarterTurns(b)*π/2; dra
 T6. WQ-13 / E1 / G4: capitulation terms picker, domination status, captive panel, trade dialog (proposePlayerTrade / tradeAnswerBlocker / observedPartnerStock), dropped-parcel visual, LeaderPortrait beside LeaderConversation with actual relations and observed goods only.
 T7. WQ-12 / C13: CarvedBuildingLayer lifetime bucket eviction so near buildings are not stuck as impostors.
 T8. WQ-11 / C10 Option H adapter in world.ts: call site, light-rig swap/restore, H-only golden-hour daylight lerp (CHAT-G2); default renderStyle stays 'current'. Wire C12 lit from survivalNeeds.hearthHeating. Fix Experience tsc errors on the integration branch. **DONE 56cd841 (11-12 05:20 ET)**
-T9. Architect: publish any missing contracts Codex/Grok need tonight (eraMode benefits shape, trade-holder fields, water-works admission UI). Do not block them — they wire end to end.
+T9. Architect: publish any missing contracts Codex/Grok need tonight (eraMode benefits shape, trade-holder fields, water-works admission UI). Do not block them — they wire end to end. **DONE 9d902a7 (11-12 05:31 ET); optional per-section fish cap not done**
 
 THIS WEEK
 W1. Visual overhaul live behind Option H (CP-5, CP-3, ASTRA-18, M4-11/12/13): wire biomeTerrain, civBuildings/civShowcase, civPeople, wonderKit (unique per game, presets). Postfx: baked AO, haze/fog, bloom, grade. Ground buildings with sampleSite — no generic platforms (QA-006, QA-017). House/workshop variation and original cultural identities (INC-HOUSE-VARIATION, INC-CULTURAL-IDENTITIES, QA-007, QA-050 wonders). Check it in real three.js against the concept art yourself, then turn Option H on by default once performance holds, keeping the current style as a settings fallback. Blender only for hero assets later. Visuals are pre-approved by Boris; no review wait.
@@ -680,7 +680,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | BOARD-G8 | board-gap | Periodic stutter / lag at 30+ people | Codex | Codex L1 | explicitly later/out of scope | periodic stutter; sim Worker parked until Codex N3; do not start L1 early |
 | BOARD-G9 | board-gap | Test lab: one click to enter, restart without leaving, save inside it | Codex | — (done) | done/live | same as CHAT-G9 lab flow |
 | WQ-1 | wiring-queue | Validator for optional worldOptions.riverProfileVersion === 2 | Grok | Grok T2 | not started | riverProfileVersion validator — moved to Grok |
-| WQ-10 | wiring-queue | Wire planFieldArea / fertilityPreview; optional per-section fish cap | Grok | Grok T9 | source-pushed-not-live | planFieldArea / fertilityPreview source-pushed; not in placement UI |
+| WQ-10 | wiring-queue | Wire planFieldArea / fertilityPreview; optional per-section fish cap | Grok | Grok T9 | done/live | 9d902a7 engine farm drag → planFieldArea preview/commit + fertilityPreview banner; field-area-placement-control 2/2; optional per-section fish cap not done |
 | WQ-11 | wiring-queue | Option H world.ts call site, light-rig, H-only daylight lerp; default renderStyle current | Claude | Claude T8 | source-pushed-not-live | Option H adapter; Claude drives including world.ts |
 | WQ-12 | wiring-queue | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer bucket eviction |
 | WQ-13 | wiring-queue | Capitulation / domination / captive / trade UI and dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | conquest/trade/captive UI; specs exist, not wired |
@@ -694,7 +694,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WQ-8 | wiring-queue | Placement rotate: R-key/ghost passes quarterTurn to preview and commit | Grok | Grok T8 | done/live | 56cd841 R-key + Rotate button; preview (placementIssue+ghost yaw) and commit share quarterTurn; placement-rotate-control 3/3, quarter-turn-footprints 3/3 |
 | WQ-9 | wiring-queue | Mesh yaw = buildingQuarterTurns * π/2; draw river section.corners and fishRecoveryPerMinute | Claude | Claude T5 | source-pushed-not-live | mesh yaw + river section draw + fish remaining |
 | GW-01 | grok-world | Tight-space stuck/loop navigation | Grok | Grok T1 | source-pushed-not-live | tight-space nav 2a9fa79 / 5f2b1b2 on agents/grok-world; land with T1 |
-| GW-02 | grok-world | Whole drawn area plants as one field; fields roll over hills | Grok | Grok T9 | source-pushed-not-live | planFieldArea b789597; engine/UI wiring tonight |
+| GW-02 | grok-world | Whole drawn area plants as one field; fields roll over hills | Grok | Grok T9 | done/live | planFieldArea b789597 wired in engine 9d902a7 (multi-field drag, headlands, preview == commit) |
 | GW-03 | grok-world | Stable camera over mountains and while zooming | Codex | Claude T2 | source-pushed-not-live | dolly-before-lift withdrawn; fixed-angle collision b86507f in PR #1, needs Claude review; flat zoom already live 3ec1beb |
 | GW-04 | grok-world | River fish/clay finite per clickable rectangular reach section | Grok | Grok T9 | source-pushed-not-live | sections/rates cfcf3a8; optional stock cap + Claude T5 draw/panel |
 | GW-05 | grok-world | Wells as a building; automatic water collection from wells and freshwater | Grok | Grok T4 | source-pushed-not-live | well site rules source-pushed; building not live |
@@ -702,7 +702,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | GW-07 | grok-world | Moves to unseen ground go, or go as close as possible, without hinting | Grok | Grok T1 | source-pushed-not-live | unseen moves 403f506; land with T1 |
 | GW-08 | grok-world | Buildings fit tighter gaps and can rotate during construction | Grok | Grok T8 | done/live | footprints 346faad + control 56cd841 (R-key/Rotate button live); mesh yaw live via buildingQuarterTurns |
 | GW-09 | grok-world | Territory borders at rivers; contested flag claims; valuable land scores more | Grok | Grok W1 | source-pushed-not-live | landValue 10d6d81; domination hook W1; score formula is Codex T6 |
-| GW-10 | grok-world | Fertility visible and water-proximate in placement | Grok | Grok T9 | source-pushed-not-live | fertilityPreview b789597; wire in placement UI |
+| GW-10 | grok-world | Fertility visible and water-proximate in placement | Grok | Grok T9 | done/live | fertilityPreview wired 9d902a7 (banner soil + grain ×factor, partial when partly explored; ghost tint soilQuality). Per-cell green overlay not drawn (Claude visual, optional) |
 | GW-11 | grok-world | Landforms distributed, never clustered; no gentle-land bias | Grok | Grok W11 | source-pushed-not-live | measured; landformLabelVersion 2 source-pushed; turn on with T2 and finish distribution defects |
 | GW-12 | grok-world | Smooth non-blocky rivers and smoother, less pronounced trails | Claude | Claude T4 | source-pushed-not-live | profile v2 e158781 + display polylines ee34c8c; Claude must draw; physics unchanged |
 | GW-13 | grok-world | Mountains are hikeable; assign people to prospect | Grok | — (done) | done/live | hikeable mountains 1b7cade; mining economy leftovers are Codex W4 |
@@ -736,7 +736,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | IFACE-G6 | interface | Tide range, exposure, flow, river width, bank height, harbour/market terrain levels | Claude | Claude W4 | source-pushed-not-live | Grok delivered wonderSites/tides/width/banks; Claude must consume |
 | IFACE-G7 | interface | engine.ts R-key / rotate ghost passing quarterTurn | Grok | Grok T8 | not started | R-key rotate — same as WQ-8 |
 | IFACE-G8 | interface | Mesh yaw; draw river section.corners and fishRecoveryPerMinute | Claude | Claude T5 | not started | mesh yaw + river corners + fish — same as WQ-9 |
-| IFACE-G9 | interface | Wire planFieldArea / fertilityPreview; optional per-section fish cap | Grok | Grok T9 | not started | planFieldArea / fertility / fish cap — same as WQ-10 |
+| IFACE-G9 | interface | Wire planFieldArea / fertilityPreview; optional per-section fish cap | Grok | Grok T9 | done/live | same as WQ-10 (9d902a7) |
 | GOV-ART-HOLD | governing | H/E are proposals; preserve current art and original references. New runtime overhaul needs approval/performance proof. | Claude | Claude W1 | done/live | superseded 2026-11-11: Boris pre-approved visuals; Option H ships default-on once performance holds, current style kept as fallback |
 | GOV-CONTEXTUAL-CONFLICT | governing | Raid/capture/intact occupation/tribute emerge contextually; no compulsory predeparture wizard. | Claude | Claude W2 | source-pushed-not-live | no compulsory pre-raid wizard |
 | GOV-DESKTOP | governing | Desktop only supersedes Astra08 mobile rendering; preserve keyboard accessibility. | Claude | Claude W10 | done/live | desktop-only supersedes Astra-08 mobile; keep keyboard access (Claude W10 / Codex audit) |
