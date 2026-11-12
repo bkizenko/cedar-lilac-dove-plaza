@@ -66,3 +66,21 @@ test('M2-16 chapter: surplus -> wider access -> exposed routes -> independent so
  const surplus=R.civicModel(g).chapter.links.find(l=>l.id==='surplus');assert.equal(surplus.met,after.foodSeconds>=900,surplus.evidence);
  t0.food=0;assert.equal(R.civicModel(g).chapter.broken,'surplus','breaking the surplus breaks the chain at its first link');
 });
+import {foundSocietyFromBreakaway} from '../src/game/societyBreakaway.ts';
+test('CAT-118 finish: a recognised breakaway becomes a new society, conserving goods and surviving a save',()=>{
+ const g=game();run(g,100);const t1=g.tribe(1),home=g.state.buildings.find(b=>b.team===1&&b.type==='townhall')??g.makeBld('townhall',g.campOf(1).x,g.campOf(1).z,1);
+ if(!g.state.buildings.includes(home)){home.progress=1;g.state.buildings.push(home);}
+ const h2=g.makeBld('townhall',home.x+160,home.z,1);h2.progress=1;g.state.buildings.push(h2);const house=g.makeBld('hut',h2.x+8,h2.z+8,1);house.progress=1;g.state.buildings.push(house);
+ for(let i=0;i<6;i++){const u=g.spawnUnit('worker',h2.x+i,h2.z+3,1);u.homeHall=h2.id;}
+ (g.state.communities??=[]).push({hall:h2.id,team:1,name:'Far Hearth',founded:0,emptySince:null,status:'thriving'});
+ t1.food=1000;t1.wood=400;const before={food:t1.food,wood:t1.wood},n=g.state.tribes.length,peopleBefore=g.state.units.length;
+ assert.equal(foundSocietyFromBreakaway(g,999999),null,'unknown hall is refused');
+ const id=foundSocietyFromBreakaway(g,h2.id);assert.equal(id,n);assert.equal(g.state.tribes.length,n+1);
+ const nt=g.tribe(id);assert.equal(nt.name,'Far Hearth');assert.ok(nt.food>0&&nt.food<before.food*.5);assert.equal(nt.food+t1.food,before.food,'food is conserved');assert.equal(nt.wood+t1.wood,before.wood,'wood is conserved');
+ assert.equal(g.state.units.length,peopleBefore,'no one teleports or vanishes');assert.equal(g.state.units.filter(u=>u.team===id&&u.homeHall===h2.id).length,6);
+ assert.equal(h2.team,id);assert.equal(house.team,id);assert.ok(g.state.buildings.some(b=>b.team===1&&b.type==='townhall'),'the parent keeps its own hall');
+ assert.equal(g.state.communities.find(c=>c.hall===h2.id).team,id);
+ assert.equal(foundSocietyFromBreakaway(g,h2.id),null,'cannot be founded twice');
+ run(g,200);assert.ok(g.tribe(id).alive);assert.ok(S.ensureDecisions(g).history[String(id)].length>0);
+ const raw=JSON.parse(JSON.stringify(encodeGame(g)));const g2=decodeGame(raw);assert.equal(g2.state.tribes.length,n+1);run(g2,60);
+});

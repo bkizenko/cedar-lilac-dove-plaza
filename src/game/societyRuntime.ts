@@ -18,6 +18,7 @@ import {direct,type Director} from './strategicDirector';
 import {recordFromSightings,targetView,exposure,type IntelRecord,type Sighting} from './societyIntel';
 import {emptyDecisions,emptyOutcome,DECISION_LIMITS,type DecisionState,type LastDecision} from './societyState';
 import {STAGES,BREAKAWAY_RULES,pressureOf,stageStep,options as breakawayOptions,pickOption,coerceSucceeds,type Breakaway,type SettlementView} from './breakaways';
+import {foundSocietyFromBreakaway} from './societyBreakaway';
 import {noteDepartures,civicLegitimacy,politicsLoss,outpostGrievance,civicEffects} from './societyCivicRuntime';
 import {inherit,inheritGrievance,addHistory,boundTo,kinCloseness,type Agreement,type AgreementKind,type HistoryKind} from './succession';
 
@@ -243,7 +244,7 @@ export function reviewBreakaways(g:Game,team:number,n:Needs){
    const parentPower=Math.max(1,n.readyFighters*(.5+n.defence)),res=coerceSucceeds(seed,v.hall,epoch,parentPower,v);
    b.conflictUntil=undefined;b.resolvedAt=g.state.time;
    if(res.ok){b.resolution='reintegrated';b.stage='loyal';remember(g,team,'reintegration',`brought ${name} back under the hall by force`);if(hall)lifeEvent(g,team,`${name} was brought back by force`,hall.x,hall.z);}
-   else{b.resolution='recognised';b.stage='breakaway';remember(g,team,'breakaway',`failed to retake ${name}; it stands apart`);if(hall)lifeEvent(g,team,`${name} stands apart; the hall could not retake it`,hall.x,hall.z);}
+   else{b.resolution='recognised';b.stage='breakaway';remember(g,team,'breakaway',`failed to retake ${name}; it stands apart`);if(hall)lifeEvent(g,team,`${name} stands apart; the hall could not retake it`,hall.x,hall.z);const nt=foundSocietyFromBreakaway(g,v.hall);if(nt!==null)b.newTeam=nt;}
    continue;
   }
   b.stage=stageStep(b.stage,eff);
@@ -258,7 +259,7 @@ export function reviewBreakaways(g:Game,team:number,n:Needs){
    b.choice=pick.kind;b.choiceAt=g.state.time;
    if(pick.kind==='concede'){t.food=Math.max(0,t.food-pick.cost.food);t.wood=Math.max(0,t.wood-pick.cost.wood);b.stage='restive';b.relief=Math.min(.5,(b.relief??0)+.25);remember(g,team,'reintegration',`conceded to ${name}: gifts and a hearing`);}
    else if(pick.kind==='tribute'){b.resolution='tributary';b.stage='autonomous';remember(g,team,'reintegration',`let ${name} govern itself for tribute`);}
-   else if(pick.kind==='recognise'){b.resolution='recognised';b.stage='breakaway';b.resolvedAt=g.state.time;remember(g,team,'breakaway',`recognised ${name} as its own`);if(hall)lifeEvent(g,team,`${name} is recognised as independent`,hall.x,hall.z);}
+   else if(pick.kind==='recognise'){b.resolution='recognised';b.stage='breakaway';b.resolvedAt=g.state.time;remember(g,team,'breakaway',`recognised ${name} as its own`);if(hall)lifeEvent(g,team,`${name} is recognised as independent`,hall.x,hall.z);const nt=foundSocietyFromBreakaway(g,v.hall);if(nt!==null)b.newTeam=nt;}
    else if(pick.kind==='coerce'){b.conflictUntil=g.state.time+BREAKAWAY_RULES.conflictSeconds;t.recoveryUntil=Math.max(t.recoveryUntil||0,b.conflictUntil);
     const r=st(g).rulers;if(r){r.weary={...(r.weary??{}),[String(team)]:Math.min(100,(r.weary?.[String(team)]??0)+10)};}
     remember(g,team,'breakaway',`marched on ${name}`);}
