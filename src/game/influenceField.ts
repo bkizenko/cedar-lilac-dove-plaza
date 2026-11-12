@@ -211,8 +211,25 @@ function strengthAt(g:Game,c:Cache,f:Field,x:number,z:number):number{
 function activeTeams(g:Game){return [...new Set(g.state.buildings.filter(b=>b.team!==3&&g.finished(b)&&!FORTIFICATIONS.includes(b.type)).map(b=>b.team))];}
 export function geographicInfluenceReady(g:Game,team?:number){const c=cacheFor(g),teams=team===undefined?activeTeams(g):[team];for(const team of teams)field(g,c,team);return teams.every(team=>c.fields.has(team));}
 export function geographicInfluenceAt(g:Game,x:number,z:number,team:number):number{
- if(!Number.isFinite(x)||!Number.isFinite(z)||team===3)return 0;const c=cacheFor(g),f=field(g,c,team);return f?strengthAt(g,c,f,x,z):NaN;
+ if(!Number.isFinite(x)||!Number.isFinite(z)||team===3)return 0;const c=cacheFor(g),f=field(g,c,team);return f?strengthAt(g,c,f,x,z):0;
 }
+/** Run pending geographic-influence jobs to completion. For tests and rare
+ * sync readers — not the per-frame vision paint (that stays time-sliced). */
+export function flushGeographicInfluence(g:Game){
+ let guard=0;
+ while(guard++<250000){
+  const c=cacheFor(g);
+  for(const team of activeTeams(g))field(g,c,team);
+  const pending=!!c.waterJob||c.jobs.size>0||!!c.paintJob||!!c.paintTeams;
+  if(!pending&&(activeTeams(g).every(team=>c.fields.has(team)))&&(c.paintedTerritory===g.territory||!c.paintTeams&&!c.paintJob)){
+   if(c.paintedTerritory!==g.territory&&c.fields.size){c.paintTeams=activeTeams(g);continue;}
+   if(c.paintedTerritory===g.territory)return;
+  }
+  slices.delete(g);
+  advanceGeographicInfluence(g, performance.now()+guard*1000);
+ }
+}
+
 function* paintField(g:Game,c:Cache,teams:number[]):Generator<void>{
  const n=Math.sqrt(g.territory.length),cell=g.world.size/n,territory=new Uint8Array(g.territory.length).fill(255),strength=new Float32Array(g.territoryStrength.length);
  for(let iz=0;iz<n;iz++){yield;for(let ix=0;ix<n;ix++){if(ix%16===0)yield;

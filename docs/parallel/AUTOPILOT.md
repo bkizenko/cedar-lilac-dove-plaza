@@ -791,14 +791,14 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | source-pushed-not-live | sheep/goats partial; broader species open |
 | INC-WILDFIRE | incentive | Player and rival fires/disasters with causes, mitigation, recoverable loss | Grok | Grok W7 | not started | wildfire/flood; building fire is INC-BUILDING-FIRE |
 | INC-WONDERS | incentive | Six wonder grammars as seeded 3D paid construction with function/prestige | Claude | Claude W1 | source-pushed-not-live | wonderKit 9992fe9; earthworks labour is Grok W15 |
-| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | not started | https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1 head cbffbc8; after Claude T1–T2 |
+| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | done/live | Normal whole-branch merges landed339d9b8; release2026-11-12T01-58-40-150Z-339d9b8 on8086/8101;24/24focused+1/1built native53save/queue/restore;tsc+buildPASS; no gate credit |
 | SCENIC-START-HOOK | incentive | scenicStartReport feeds new-game town-hall pick | Grok | Grok T7 | source-pushed-not-live | 59f0e24 |
 | SIEGE-S1 | incentive | Staffed timber ram: paid build, crew, reachable gate/wall, recovery | Claude | Claude W2 | source-pushed-not-live | rivalSiege.ts 0d1713a |
 | SIEGE-S2 | incentive | Projectile siege engine: ammo, crew, reload, range, collision | Claude | Claude N3 | not started | after S1 is live |
 | SIEGE-S3 | incentive | Societies choose siege from observed defenses; surrender/occupation alternatives | Claude | Claude W2 | source-pushed-not-live |  |
 | WONDER-EARTHWORKS | incentive | Wonder cuts as ordinary excavation labour | Grok | Grok W15 | source-pushed-not-live | wonderEarthworks.ts on agents/grok-world; wire into live wonder jobs |
 | CP-1 | completion-plan | Phase 1 Speed: profile hot paths, Worker, p95 <33ms Low @ 100 residents | Codex | Codex N3 | not started | Worker parked (C2); unpark after N3 |
-| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | not started | PR #1 is the vehicle |
+| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | live-partial | Whole Societies/Experience/World +curd landed/live339d9b8; remaining named hook rows stay open;25/25batch checks, tsc+buildPASS |
 | CP-3 | completion-plan | Phase 3 See the real game: desktop three.js screenshots vs concept art | Claude | Claude W1 | not started | Claude self-reviews against concept art; pre-approved |
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
@@ -855,3 +855,10 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
 | RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | wired behind worldOptions.rulersVersion | Game.step advanceRulers; new games carry rulersVersion:1; persistence validates; UI panels still to do |
 | RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | done (source+wired) | familyScale.ts gates heirs/claims/great persons by population; rulers-runtime tests 3/3 |
+
+## Roles update — 2026-11-11 20:51 ET (Boris)
+- **Grok = PM of everything.** Owns triage and coordination of all fixes, bugs and improvements across every lane. Grok files each bug or fix as an AUTOPILOT row with one owner, and fixes World/nav/placement/water bugs itself.
+- **Claude = UI/UX** (all screens, HUD, controls, feedback, onboarding, readability) plus its current systems (diplomacy, leaders, succession, international, visual overhaul) and architecture/conflict lead.
+- **Codex** = platform, economy, saves, integration, knowledge/tech, performance.
+- **Full utilization rule:** each agent always keeps at least 5 unstarted items in its queue. If an agent's queue drops below 5, it immediately audits its lane and adds items; Grok also tops it up every hour. If an agent has no commits for 3+ hours while work is queued, Grok reassigns its next items to whoever is active. No agent ever waits idle on another; take the next independent item.
+- **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
