@@ -557,6 +557,50 @@ export function goatGeo() {
   ]);
 }
 
+/** Shared stock-style horse silhouette; wild herds face +X like other fauna.
+ * Pack horses face +Z towards their handler and carry actual panniers. */
+export function horseGeo(pack = false) {
+  const parts: THREE.BufferGeometry[] = [];
+  const add = (geo: THREE.BufferGeometry, color: string) => {
+    const c = new THREE.Color(color), n = geo.getAttribute('position').count;
+    const colors = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) c.toArray(colors, i * 3);
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    parts.push(geo);
+  };
+  const coat = '#966448', dark = '#342a25', hoof = '#292825';
+  const body = new THREE.CapsuleGeometry(.31, .82, 3, 7);
+  body.rotateZ(Math.PI / 2); body.scale(1, 1.08, .86); body.translate(0, 1.05, 0); add(body, coat);
+  const neck = new THREE.CylinderGeometry(.15, .24, .65, 6);
+  neck.rotateZ(-.42); neck.translate(.46, 1.43, 0); add(neck, coat);
+  const head = new THREE.CapsuleGeometry(.14, .30, 2, 6);
+  head.rotateZ(-1.05); head.translate(.76, 1.73, 0); add(head, coat);
+  const muzzle = new THREE.SphereGeometry(.15, 6, 4);
+  muzzle.scale(1.15, .78, .95); muzzle.translate(.96, 1.65, 0); add(muzzle, dark);
+  for (const side of [-1, 1]) {
+    add(cone(.065, .22, .63, 1.83, side * .11, 4), coat);
+    for (const x of [-.43, .42]) {
+      add(cyl(.065, .05, .88, x, .1, side * .20, 5), coat);
+      add(box(.13, .12, .14, x, 0, side * .20), hoof);
+    }
+    const eye = new THREE.SphereGeometry(.027, 4, 3);
+    eye.translate(.79, 1.80, side * .135); add(eye, hoof);
+  }
+  // Short continuous mane and a hanging tail make a horse readable without antlers.
+  const mane = new THREE.BoxGeometry(.11, .67, .12);
+  mane.rotateZ(-.42); mane.translate(.27, 1.44, 0); add(mane, dark);
+  const tail = new THREE.CylinderGeometry(.07, .10, .73, 5);
+  tail.rotateZ(-.25); tail.translate(-.70, .78, 0); add(tail, dark);
+  if (pack) {
+    for (const side of [-1, 1]) add(box(.62, .42, .23, -.04, .94, side * .38), '#746244');
+    add(box(.46, .07, .68, -.04, 1.34, 0), '#44382c');
+  }
+  const geo = merge(parts);
+  if (pack) geo.rotateY(-Math.PI / 2);
+  geo.computeBoundingBox(); geo.computeBoundingSphere();
+  return geo;
+}
+
 export function deerGeo() {
   const body = new THREE.CapsuleGeometry(0.2, 0.72, 3, 6);
   body.rotateZ(Math.PI / 2);
