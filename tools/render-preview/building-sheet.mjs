@@ -21,15 +21,17 @@ const hexf=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
 const types=!flags.types||flags.types==='all'?style.CARVED_TYPES:flags.types.split(',');
 const eras=(flags.eras||'2').split(',').map(Number),lod=+(flags.lod??0),cols=+(flags.cols||4),cell=+(flags.cell||13),habitat=flags.habitat||'plains';
 const W=+(flags.w||1600),H=+(flags.h||1000),pitch=+(flags.pitch||40)*Math.PI/180,yaw=+(flags.yaw??-.55);
-const cells=[];for(const t of types)for(const e of eras)cells.push([t,e]);
+const skinsApi=await import('../../src/scene/civSkin.ts'),skinIds=flags.skins?String(flags.skins).split(','):[null];
+const joins=flags.join?String(flags.join).split(',').map(Number):[undefined];
+const cells=[];for(const t of types)for(const e of eras)for(const sk of skinIds)for(const j of joins)cells.push([t,e,sk,j]);
 const rows=Math.ceil(cells.length/cols),soup=new Soup('buildings'),base=new Soup('plinths'),labels=[];
 const totalW=cols*cell,totalD=rows*cell;
 // Terrain: simple natural slab so contrast against grass/ground reads like the game.
 base.add(slab(totalW+4,totalD+4,.6,'#6f7f48',.0),{x:0,z:0});
 let tris=0;const stats=[];
-cells.forEach(([type,era],i)=>{
+cells.forEach(([type,era,skinId,joinMask],i)=>{
   const c=i%cols,rw=Math.floor(i/cols),x=-totalW/2+cell*(c+.5),z=-totalD/2+cell*(rw+.5);
-  const fp=BUILDINGS[type],input={worldSeed:1207,type,id:11+(flags.id?+flags.id:0),era,habitat,footprint:{w:fp.w,d:fp.d},prosperity:flags.prosperity?+flags.prosperity:.5,settlementSeed:3,...(type==='dock'||type==='aqueduct'?{waterSide:'-z'}:{}),...(['palisade','stonewall','trench','moat'].includes(type)?{wallAxis:'x'}:{})};
+  const fp=BUILDINGS[type],input={worldSeed:1207,type,id:11+(flags.id?+flags.id:0),era,habitat,footprint:{w:fp.w,d:fp.d},prosperity:flags.prosperity?+flags.prosperity:.5,settlementSeed:3,...(type==='dock'||type==='aqueduct'?{waterSide:'-z'}:{}),...(['palisade','stonewall','trench','moat'].includes(type)?{wallAxis:'x'}:{}),...(skinId?{skin:skinsApi.skinById(skinId)}:{}),...(joinMask!==undefined?{join:joinMask}:{}),...(flags.open?{gateOpen:true}:{})};
   let spec=style.carvedBuildingSpec(input);if(!spec)return;
   if(flags.only==='anim')spec={...spec,parts:spec.parts.filter(p=>p.anim)};
   const m=specMesh(spec,lod),tri=PT.specTriangles(spec,lod);
@@ -37,7 +39,7 @@ cells.forEach(([type,era],i)=>{
   base.add(slab(cell-.8,cell-.8,.18,'#7a8b4d',.0),{x,z,y:.18});
   soup.add(m,{x,y:.18,z,yaw});
   const near=PT.specTriangles(spec,0),mid=PT.specTriangles(spec,1),farT=PT.specTriangles(spec,2);stats.push(`${type} e${era} ${spec.family}: ${near}/${mid}/${farT} tris`);
-  labels.push({world:[x-cell*.46,.3,z+cell*.46],text:`${type} · ${spec.family} · e${era}${flags.legend===false?'':'  '+near+'/'+mid+'/'+farT}`,align:'left',size:11});
+  labels.push({world:[x-cell*.46,.3,z+cell*.46],text:`${type}${skinId?' · '+skinId.replace('civ:',''):''}${joinMask!==undefined?' · j'+joinMask:''} · ${spec.family} · e${era}${flags.legend===false?'':'  '+near+'/'+mid+'/'+farT}`,align:'left',size:11});
   tris+=tri;
 });
 console.error(stats.join('\n'));
