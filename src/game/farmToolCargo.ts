@@ -59,7 +59,7 @@ export function depositFarmTool(g:Game,carrierId:number,targetTeam?:number){
 export function equipCarriedFarmTool(g:Game,carrierId:number,receiverId:number){
  const u=live(g,carrierId),receiver=live(g,receiverId),t=u&&held(g,u);
  if(!u||!receiver||!t||u.farmToolCargoId!==t.id)return no('Need an actual carried tool and living receiver');
- if(receiver.type!=='worker'||receiver.militia||isDependent(g,receiver)||receiver.farmTool||receiver.farmToolWork)return no('Receiver must be a farmer with no tool or paid tool project');
+ if(receiver.type!=='worker'||receiver.militia||isDependent(g,receiver)||receiver.farmTool||receiver.farmToolWork||receiver.copperStudy)return no('Receiver must be a farmer with no tool or paid tool project');
  if(!clearApproach(g,u,receiver))return no('Walk the actual tool to the receiver');
  receiver.farmTool=t.kind;receiver.farmToolCondition=t.condition;delete u.farmToolCargoId;remove(g,t);
  return{accepted:true as const,reason:'Existing tool equipped without repairing or crafting it'};

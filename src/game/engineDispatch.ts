@@ -1,3 +1,4 @@
+import {beginCopperStudy,copperStudyIssue} from './materialStudy';
 import {beginTradedTeaching,cancelTradedTeaching,TRADED_TEACHING_RULES} from './tradedTeaching';
 import type {ResKind} from './types';
 import {beginGarmentRepair,garmentRepairIssue,pauseGarmentRepair,resumeGarmentRepair,cancelGarmentRepair,type GarmentSlot} from './garmentRepair';
@@ -26,6 +27,7 @@ export type EngineDispatchCommand=
  |{kind:'move';unitIds:number[];x:number;z:number;attackMove?:boolean}
  |{kind:'begin-traded-teaching';learnerId:number;teacherId:number;siteId:number;methodId:ProductionRecipe;good:ResKind;qty:number}
  |{kind:'cancel-traded-teaching';learnerId:number}
+ |{kind:'begin-copper-study';workplaceId:number;fuel:'logs'|'charcoal'}
  |{kind:'begin-production';recipe:ProductionRecipe;workplaceId:number;unitId?:number}
  |{kind:'pause-production';projectId:number}|{kind:'resume-production';projectId:number;unitId?:number}
  |{kind:'survey-fibre';unitId:number}
@@ -63,6 +65,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'begin-copper-study':{const issue=copperStudyIssue(g,command.workplaceId,0,command.fuel);if(issue)return no(issue);const accepted=beginCopperStudy(g,command.workplaceId,0,command.fuel);return{accepted,reason:accepted?'Copper trial assigned; materials load at storage, original payment retained on resume':copperStudyIssue(g,command.workplaceId,0,command.fuel)||'Copper trial unavailable'};}
    case 'begin-traded-teaching':{
     if(!g.state.units.some(u=>u.id===command.learnerId&&u.team===0&&u.hp>0))return no('Original owned learner unavailable');
     return beginTradedTeaching(g,{learnerId:command.learnerId,teacherId:command.teacherId,siteId:command.siteId,methodId:command.methodId,good:command.good,qty:command.qty});
@@ -174,6 +177,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'cancel-interaction':{},'hold-selected':{unitIds:v=>Array.isArray(v)&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length},
   pause:{paused:bool},speed:{speed:v=>v===1||v===2||v===4,resume:v=>v===undefined||bool(v)},
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
+  'begin-copper-study':{workplaceId:id,fuel:v=>v==='logs'||v==='charcoal'},
   'begin-traded-teaching':{learnerId:id,teacherId:id,siteId:id,methodId:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),good:v=>['food','wood','stone','copper','iron'].includes(v as string),qty:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=TRADED_TEACHING_RULES.maximumPayment},
   'cancel-traded-teaching':{learnerId:id},
   'begin-production':{recipe:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),workplaceId:id,unitId:optionalId},

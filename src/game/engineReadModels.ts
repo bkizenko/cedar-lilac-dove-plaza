@@ -1,3 +1,4 @@
+import {copperStudyIssue} from './materialStudy';
 import {teachingOffers,TRADED_TEACHING_RULES} from './tradedTeaching';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
@@ -18,6 +19,7 @@ import {capitulationOffers} from './capitulation';
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
  |{kind:'traded-teaching-offers';teacherId:number;learnerIds:number[]}
+ |{kind:'copper-study-issues';workplaceId:number}
  |{kind:'building-fabric';buildingId:number}
  |{kind:'construction-status';buildingIds:number[]}
  |{kind:'recipe-issues';workplaceId:number}
@@ -30,6 +32,7 @@ export type EngineReadQuery=
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
  |{kind:'traded-teaching-offers';teacherId:number;offers:ReturnType<typeof teachingOffers>;learner:{id:number;good:ResKind}|null;issue:string|null}
+ |{kind:'copper-study-issues';workplaceId:number;logs:string|null;charcoal:string|null}
  |{kind:'building-fabric';buildingId:number;context:ReturnType<typeof fabricContext>;benefits:ReturnType<typeof eraUpgradeBenefits>;work?:{mode:EraUpgradeMode;phase:string;progress:number;duration:number;paid:boolean;paused:boolean;blockedReason?:string};choices:FabricUpgradeChoice[]}
  |{kind:'construction-status';statuses:{buildingId:number;status:string}[]}
  |{kind:'recipe-issues';workplaceId:number;issues:{recipe:ProductionRecipe;issue:string|null}[]}
@@ -47,6 +50,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
  if(q.kind==='rulers-council'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
+ if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
  if(q.kind==='construction-status')return Object.keys(q).every(k=>['kind','buildingIds'].includes(k))&&list(q.buildingIds);
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
@@ -59,6 +63,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
 /** Authoritative native read model. Routing/ownership caches never initialize on the display copy. */
 export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadModel{
  if(!isEngineReadQuery(query))throw new Error('Unsupported or malformed owner read query');
+ if(query.kind==='copper-study-issues')return{kind:query.kind,workplaceId:query.workplaceId,logs:copperStudyIssue(g,query.workplaceId,0,'logs'),charcoal:copperStudyIssue(g,query.workplaceId,0,'charcoal')};
  if(query.kind==='traded-teaching-offers'){
   const teacher=g.state.units.find(u=>u.id===query.teacherId&&u.hp>0),owned=g.state.units.filter(u=>u.team===0&&u.hp>0);
   const preferred=query.learnerIds.flatMap(id=>{const u=owned.find(u=>u.id===id);return u?[u]:[];});
