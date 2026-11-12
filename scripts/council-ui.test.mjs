@@ -45,3 +45,11 @@ test('ruler change reads as an event: mourning toast with the chronicle line, si
  assert.equal(describeRulerChange({ruler:'Orm',generation:1,house:'Ash'},{...c,log:[]}).tone,'rise');
  assert.match(describeRulerChange({ruler:'Orm',generation:1,house:'Ash'},{...c,handover:{regent:'Dara'}}).body,/Dara rules as regent/);
 });
+test('hearth capitulation terms group outcomes by severity, show will and clock, and send valid commands',async()=>{
+ const {TermsOffers}=await import('../src/ui/hearth/councilCards.tsx');const {TERMS}=await import('../src/ui/council/CapitulationTerms.tsx');
+ const sent=[],o={id:4,defenderName:'Ridge Clan',score:.82,expiresIn:7.2,measured:{casualties:5,captured:2,lostArmed:3,buildingLoss:1}};
+ const html=renderToStaticMarkup(h(TermsOffers,{offers:[o],send:c=>sent.push(c),feedback:[]}));
+ assert.match(html,/Ridge Clan offers terms/);assert.match(html,/82%/);assert.match(html,/8s/);assert.match(html,/tier-ruinous/);assert.match(html,/1 building lost/);assert.match(html,/Refuse and press the attack/);
+ for(const t of TERMS)assert.ok(html.includes(t.label),t.label);assert.equal((html.match(/class="hw-term"/g)||[]).length,TERMS.length);
+ assert.equal(renderToStaticMarkup(h(TermsOffers,{offers:[],send(){},feedback:[]})),'');
+});
