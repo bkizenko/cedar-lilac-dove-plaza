@@ -52,6 +52,7 @@ import {expandedGrainWorkplace} from '../game/plots';
 import {compactGrainWorkplace} from '../game/cerealRules';
 import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID} from "@/game/trails";
+import {trailRibbons} from "@/game/trailRibbons";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -1428,15 +1429,19 @@ export class WorldView {
   }
 
   private syncTrails(game:Game) {
-    if(this.trailSyncAt===Math.floor(game.state.time))return;this.trailSyncAt=Math.floor(game.state.time);
-    let i=0;
-    const TRAIL_CELL=game.world.size/TRAIL_GRID;
-    for(const t of game.state.trails||[]) {
-      if(t.wear<0.55||i>=4096)continue;
-      const x=t.x??(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-(this.mapSize/2),z=t.z??(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-(this.mapSize/2);
-      if(!game.exploredAt(x,z))continue;
-      _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
-      _s.set(0.3+t.wear*0.2,TRAIL_CELL*0.65,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+    // GW-12/QA-013: continuous ribbons from the saved trail cells (display only; pace and state untouched).
+    const stamp=Math.floor(game.state.time/4);
+    if(this.trailSyncAt===stamp)return;this.trailSyncAt=stamp;
+    let i=0;const CAP=4096;
+    for(const ribbon of trailRibbons(game)){
+      const pts=ribbon.points;
+      for(let k=1;k<pts.length&&i<CAP;k++){
+        const a=pts[k-1],b=pts[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-3)continue;
+        const x=(a.x+b.x)/2,z=(a.z+b.z)/2;if(!game.exploredAt(x,z))continue;
+        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45));
+        _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-Math.atan2(dx,dz));_q.setFromEuler(_e);
+        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+      }
     }
     this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
   }
