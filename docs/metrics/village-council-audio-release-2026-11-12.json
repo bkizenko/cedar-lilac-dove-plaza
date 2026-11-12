@@ -1,0 +1,133 @@
+{
+  "commit": "2d31e94d62e3ed5cc1ef32993fe7251d4c7c8de9",
+  "release": "2026-11-12T14-10-08-201Z-2d31e94",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "publication": "Exact frozen reviewed ancestor on main; later painter-map/defense source remains next batch.",
+  "scopedChecks": {
+    "passed": 55,
+    "total": 55,
+    "nativeAndShared": 51,
+    "groups": {
+      "incomingAudioGeometryGraphicsRulersCouncil": 47,
+      "audioRoutingRegression": 4
+    },
+    "built": {
+      "passed": 4,
+      "total": 4,
+      "scope": "Built new-game own Council, actual audio sliders/routing/persistence, original53 village geometry and archived styles, durable save. No full-campaign, audio listening or100-resident performance claim.",
+      "newGame": {
+        "seed": 2036250302,
+        "rulersVersion": 2,
+        "rulerVisible": true,
+        "realmVisible": true
+      },
+      "audio": {
+        "settings": {
+          "master": 0.6,
+          "music": 0.3,
+          "sfx": 0.4,
+          "ambience": 0.2,
+          "muted": false
+        },
+        "recordedVolume": 0.032,
+        "proceduralActive": true,
+        "context": "AudioContext",
+        "master": 0.5,
+        "proceduralSettings": {
+          "master": 0.6,
+          "music": 0.3,
+          "sfx": 0.4,
+          "ambience": 0.2,
+          "muted": false
+        }
+      },
+      "styles": {
+        "village": {
+          "style": "village",
+          "quality": "low",
+          "calls": 106,
+          "triangles": 934836,
+          "geometries": 265,
+          "buildings": {
+            "buckets": 28,
+            "drawCalls": 28,
+            "triangles": 8022
+          }
+        },
+        "current": {
+          "style": "current",
+          "quality": "low",
+          "calls": 116,
+          "triangles": 942866,
+          "geometries": 265,
+          "buildings": {
+            "buckets": 28,
+            "drawCalls": 0,
+            "triangles": 0
+          }
+        },
+        "optionH": {
+          "style": "optionH",
+          "quality": "low",
+          "calls": 106,
+          "triangles": 931766,
+          "geometries": 265,
+          "buildings": {
+            "buckets": 28,
+            "drawCalls": 28,
+            "triangles": 4952
+          }
+        }
+      },
+      "restored": {
+        "audio": {
+          "master": 0.6,
+          "music": 0.3,
+          "sfx": 0.4,
+          "ambience": 0.2,
+          "muted": true
+        },
+        "quality": "low",
+        "style": "village"
+      },
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typescript": "PASS",
+  "productionBuild": "PASS",
+  "fullSuiteRun": false,
+  "newVerifiedGateCredit": 0,
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "improvements": [
+    "Default differentiated village building grammar, powered mill rotor meshes, original blocks and carved honey retained as settings.",
+    "New own Council ruler portrait/Realm UI; handover/factions/renown component data/render checks and domestic-pressure executor regressions. Mature succession cards are gated by real society stage, not forced into a five-person household.",
+    "Audio settings now route to recorded score, procedural mix and legacy fallback; same quadratic curve, no duplicate master factor; mute checkbox updates immediately and preferences survive reload. Recorded score remains default; procedural music remains opt-in."
+  ],
+  "limits": [
+    "No listening evaluation or guarantee of subjective sound quality.",
+    "Paused Low-profile53-person scene comparison only:106draw calls in village look vs116original; not median/p95 frame-time or100-visible-resident acceptance.",
+    "Existing saves preserve original gameplay/world-version options. New society layer remains option-versioned.",
+    "Painter map and later defense art now on main are not in this reviewed ancestor.",
+    "Raider outcome prestige branch remains native qualification in progress."
+  ],
+  "preservation": {
+    "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "playerStorageTouched": false,
+    "rollback": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T13-45-25-912Z-74c8791",
+    "oldAssets": {
+      "linked": 1327,
+      "copied": 0,
+      "existing": 13
+    },
+    "reviewScreenshot": "Reviewed then deleted; original H/E concept assets retained."
+  }
+}

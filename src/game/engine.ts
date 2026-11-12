@@ -34,6 +34,7 @@ import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
+import { probeWorld } from "./audioProbe";
 import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, loadTestLabGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
@@ -301,6 +302,7 @@ export class Engine {
     this.game = new Game();
     this.view = new WorldView(canvas);
     this.audio = new GameAudio();
+    this.game.muted = this.audio.settings.muted;
     this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed&&!this.workerHost&&!this.workerBridgeTransition&&!this.lifecycleBusy&&!this.closing,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
@@ -1053,9 +1055,28 @@ export class Engine {
     this.pushHud();
   }
 
+  private audioProbeAt = 0;
+  private audioWorld: ReturnType<typeof probeWorld> | null = null;
+  /** Procedural score and environment: probe real state at ~2 Hz, feed the mixer every frame. Fails silent. */
+  private updateProceduralAudio(dt: number) {
+    if (!this.audio.proc.active) return;
+    try {
+      const now = performance.now();
+      const paused = !!this.game.state.paused;
+      if (!this.audioWorld || now - this.audioProbeAt > 500) {
+        this.audioProbeAt = now;
+        this.audioWorld = probeWorld(this.game, { x: this.view.look.x, z: this.view.look.z, yaw: this.view.yaw, dist: this.view.dist }, this.game.state.seed, paused, this.game.musicMood(), false);
+      }
+      this.audio.updateWorld(dt, { ...this.audioWorld, paused });
+    } catch {
+      /* audio must never break the frame */
+    }
+  }
+
   toggleMute() {
     this.game.muted = !this.game.muted;
     this.audio.setMuted(this.game.muted);
+    this.pushHud();
   }
 
   setRenderStyle(style:RenderStyle) {
@@ -1129,6 +1150,7 @@ export class Engine {
         this.game.state.paused,
         this.game.seasonMix().name,
       );
+      this.updateProceduralAudio(dt);
       if (this.keys.has("PageUp")) this.view.dist *= Math.exp(-dt);
       if (this.keys.has("PageDown")) this.view.dist *= Math.exp(dt);
       this.view.updateCamera(dt);

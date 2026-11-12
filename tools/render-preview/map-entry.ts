@@ -1,0 +1,76 @@
+/** Browser entry for the whole-map render harness (bundled by map.mjs with esbuild; REAL three.js, SwiftShader headless).
+ * Builds the real Game world and the real WorldView, so every pixel is game output: terrain, water, vegetation, fields, sky, light, post. */
+import {Game} from '@/game/sim';
+import {WorldView} from '@/scene/world';
+import {wearTrail} from '@/game/trails';
+type Spec={seed:number;version?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
+ prep?:{farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ probe?:[number,number][];
+ fov?:number;lookY?:number;mapStyle?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
+const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
+{const g=HTMLCanvasElement.prototype.getContext as (this:HTMLCanvasElement,k:string,o?:object)=>unknown;
+ (HTMLCanvasElement.prototype as unknown as {getContext:unknown}).getContext=function(this:HTMLCanvasElement,k:string,o?:object){return g.call(this,k,k.startsWith('webgl')?{...(o||{}),preserveDrawingBuffer:true}:o);};}
+let cache:{key:string;game:Game;view:WorldView}|null=null;
+w.renderMap=async(S:Spec)=>{
+ (globalThis as {__PAINTER_DEBUG?:string}).__PAINTER_DEBUG=(S as {debug?:string}).debug;
+ const key=`${S.seed}/${S.version??''}/${S.style??''}/${S.quality??''}/${S.mapStyle??''}/${JSON.stringify(S.prep??null)}`;
+ let canvas=document.getElementById('c') as HTMLCanvasElement|null;
+ if(!canvas){canvas=document.createElement('canvas');canvas.id='c';document.body.appendChild(canvas);}
+ canvas.style.cssText=`width:${S.width}px;height:${S.height}px;display:block`;canvas.width=S.width;canvas.height=S.height;
+ const t0=performance.now();
+ if(!cache||cache.key!==key){
+  try{if(S.mapStyle)localStorage.setItem('hearthwild:map-style',S.mapStyle);else localStorage.removeItem('hearthwild:map-style');}catch{/* ok */}
+  const game=new Game();game.testMode=true;game.revealMap=true;
+  game.reset(S.seed,S.version);game.enterIsland();game.state.paused=true;
+  const view=new WorldView(canvas);
+  if(S.quality)view.applyQuality(S.quality);
+  if(S.prep){
+   const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   for(const f of S.prep.farms??[]){
+    const before=game.state.buildings.length;
+    const ok=game.placeBuilding('farm',f.x,f.z);
+    const b=game.state.buildings.slice(before).find(q=>q.type==='farm')??game.state.buildings.filter(q=>q.type==='farm').at(-1);
+    if(!ok||!b){console.warn('farm placement failed',f.x,f.z,game.state.banner);continue;}
+    const st=f.stage??'mature',bb=b as unknown as {build:number;hp:number;plannedCost?:unknown;crop?:Record<string,unknown>;cropType?:string;w:number;d:number;fallowYear?:number};
+    bb.build=1;delete bb.plannedCost;if(f.w)bb.w=f.w;if(f.d)bb.d=f.d;bb.cropType=f.kind??'grain';
+    const stages:Record<string,[number,number,boolean,number]>={bare:[0,0,false,1],sprout:[.12,0,false,1],young:[.45,.2,false,1],mature:[1,.7,false,1],ripe:[1,1,true,1],stubble:[1,1,true,0]};
+    const [planted,tended,ripened,remaining]=stages[st];bb.crop={kind:f.kind??'grain',planted,tended,ripened,remaining};
+   }
+   for(const tr of S.prep.trails??[]){const [ax,az]=tr.from,[bx,bz]=tr.to,len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.5);
+    for(let rep=0;rep<Math.ceil((tr.wear??.7)*2.7);rep++)for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,z=az+(bz-az)*i/n;wearTrail(game,x,z,(bx-ax)/len*1.5,(bz-az)/len*1.5);}}
+  }
+  view.rebuild(game);
+  cache={key,game,view};w.__game=game;w.__view=view;
+ }
+ const {game,view}=cache;
+ const t1=performance.now();
+ if(S.time!==undefined)game.state.time=S.time;
+ if(S.hour!==undefined||S.season){const g=game as unknown as Record<string,unknown>,hour=S.hour??15.5,season=S.season??'summer',winter=season==='winter';
+  g.dayPhase=()=>hour/24;g.daylight=()=>winter?{sunrise:7.9,sunset:16.3,hours:8.4}:{sunrise:5.7,sunset:19.7,hours:14};g.isNight=()=>{const d=winter?[7.9,16.3]:[5.7,19.7];return hour<d[0]||hour>=d[1];};
+  const mix={spring:{spring:1,summer:0,autumn:0,winter:0,snow:0},summer:{spring:0,summer:1,autumn:0,winter:0,snow:0},autumn:{spring:0,summer:0,autumn:1,winter:0,snow:0},winter:{spring:0,summer:0,autumn:0,winter:1,snow:.9}}[season];
+  g.seasonMix=()=>({name:season,yearFrac:0,...mix});view.seasonDirty();}
+ if(S.weather)game.state.weather=S.weather as never;
+ if(view.fowMesh)view.fowMesh.visible=false;
+ view.renderer.setSize(S.width,S.height,false);view.renderer.setPixelRatio(1);view.camera.aspect=S.width/S.height;if(S.fov)view.camera.fov=S.fov;view.camera.updateProjectionMatrix();
+ view.composer?.setSize(S.width,S.height);
+ const c0=game.world.camps.find(c=>c.team===0)||game.world.camps[0]||{x:0,z:0};
+ const lx=S.look?S.look[0]:c0.x,lz=S.look?S.look[1]:c0.z;
+(view as unknown as {cameraGround:unknown}).cameraGround=null;
+ view.look.set(lx,game.height(lx,lz)+(S.lookY??.55),lz);view.yaw=S.yaw;view.pitch=S.pitch;view.dist=S.dist;
+ for(let i=0;i<(S.settle??3);i++){view.updateCamera(0);view.sync(game,.5);}
+ // The harness has no camera-vs-terrain collision (it must be deterministic): lift the pitch until the eye clears the ground, like the in-game orbit camera does.
+ for(let k=0;k<30;k++){view.updateCamera(0);const cp=view.camera.position;if(cp.y>game.height(cp.x,cp.z)+4||view.pitch>=1.3)break;view.pitch+=.05;}
+ view.updateCamera(0);
+ view.sync(game,5);view.sync(game,5);
+ if((S as {hide?:string[]}).hide)view.scene.traverse(o=>{if((S as {hide?:string[]}).hide!.some(h=>(h[0]==='='?o.name===h.slice(1):o.name.includes(h))))o.visible=false;});
+ if(S.bloom!==undefined&&view.bloom)view.bloom.strength=S.bloom;
+ if(S.passes!==undefined&&view.composer)view.composer.passes=view.composer.passes.slice(0,S.passes);
+ if(S.keep&&view.composer)view.composer.passes=view.composer.passes.filter((_,i)=>S.keep!.includes(i));
+ view.render();
+ const info=view.renderer.info;
+ const near=(a:{x:number;z:number}[])=>a.map(n=>({x:Math.round(n.x),z:Math.round(n.z),d:Math.hypot(n.x-c0.x,n.z-c0.z)})).sort((p,q)=>p.d-q.d).slice(0,3).map(n=>[n.x,n.z]);
+ const probes=(S.probe??[]).map(([px,pz])=>{const geo=(view as unknown as {terrain:{geometry:{attributes:Record<string,{count:number;getX:(i:number)=>number;getY:(i:number)=>number;getZ:(i:number)=>number;array:Float32Array}>}}}).terrain.geometry,pos=geo.attributes.position;let best=0,bd=1e9;for(let i=0;i<pos.count;i++){const d=Math.hypot(pos.getX(i)-px,pos.getZ(i)-pz);if(d<bd){bd=d;best=i;}}
+  const c=geo.attributes.color.array,r=geo.attributes.surfaceRock?.array,sd=geo.attributes.surfaceSand?.array;return {at:[px,pz],h:+pos.getY(best).toFixed(2),color:[c[best*3],c[best*3+1],c[best*3+2]].map(v=>+v.toFixed(3)),rock:r?+r[best].toFixed(2):null,sand:sd?+sd[best].toFixed(2):null};});
+ return {probes,nodes:{stone:near(game.state.stones),copper:near(game.state.copper),iron:near(game.state.iron)},build:Math.round(t1-t0),frame:Math.round(performance.now()-t1),calls:info.render.calls,tris:info.render.triangles,camp:[Math.round(c0.x),Math.round(c0.z)],size:game.world.size,waterY:game.world.waterY,
+  camps:game.world.camps.map(c=>[Math.round(c.x),Math.round(c.z),c.team]),features:(game.world.features||[]).map((f:any)=>[f.kind,Math.round(f.x),Math.round(f.z)]).slice(0,40)};
+};
