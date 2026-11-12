@@ -1,3 +1,4 @@
+import {validFabricState,validEraRenovation} from './buildingFabric';
 import type { GameState } from "./types";
 import type { HousingMaterials, HousingRenovation } from "./housingTypes";
 import { HOUSING_MATERIAL_KEYS, housingMaterialsEqual } from "./housingMaterials";
@@ -19,6 +20,7 @@ function materials(v: unknown): v is HousingMaterials {
 /** Structural/finite-ledger validation only. A duplicated Unit cargo view is not
  * counted as extra inventory; it must exactly equal its one project packet. */
 export function validHousingState(s: GameState) {
+  if(!validFabricState(s))return false;
   const units = new Map(s.units.map((u) => [u.id, u])),
     buildings = new Map(s.buildings.map((b) => [b.id, b])),
     teams = new Set(s.tribes.map((t) => t.id)),
@@ -34,9 +36,11 @@ export function validHousingState(s: GameState) {
   const project = (p: HousingRenovation, buildingId: number, retained = false) => {
     if (
       !obj(p) ||
+      !validEraRenovation(p,s) ||
       !only(p, [
         "version",
         "mode",
+        "eraChange",
         "actorId",
         "phase",
         "progress",
@@ -57,7 +61,7 @@ export function validHousingState(s: GameState) {
         "blockedReason",
       ]) ||
       p.version !== 1 ||
-      !["upgrade", "new"].includes(p.mode) ||
+      !["upgrade", "new", "rebuild", "extend"].includes(p.mode) ||
       !["planned", "fetching", "carrying", "working", "paused"].includes(p.phase) ||
       !num(p.duration, 100000) ||
       p.duration <= 0 ||
@@ -121,7 +125,7 @@ export function validHousingState(s: GameState) {
     if (p) {
       if (
         !project(p, b.id) ||
-        !["hut", "house"].includes(b.type) ||
+        (!p.eraChange&&!["hut", "house"].includes(b.type)) ||
         (p.mode === "upgrade" && (b.type !== "hut" || b.build !== 1)) ||
         (p.mode === "new" && (b.type !== "house" || b.build >= 1))
       )

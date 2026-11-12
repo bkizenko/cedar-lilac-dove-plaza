@@ -68,15 +68,16 @@ function garmentParts(item:GarmentId,cut:Dress['cut'],v:number,motif:Motif|'none
  out.push(...trimBand(motif,dia/2+.005,hem+.04,rich));
  return out;
 }
-function headwearParts(kind:Dress['headwear'],item:GarmentId):UnitPart[]{
- const hood=(item==='hideCoat'||item==='woolCoat'||item==='skinClothes')&&kind==='hood';
+function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):UnitPart[]{
+ // Headwear is cut from the owned garment (never free gear); era only adds trim richness, near-LOD only.
+ const hood=(item==='hideCoat'||item==='woolCoat'||item==='skinClothes')&&kind==='hood',side=v%2?1:-1;
  switch(kind){
-  case 'wrap':return [P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
-  case 'cap':return [P('garment','sphere',[.29,.16,.29],[0,1.1,.02],1)];
-  case 'hood':return hood?[P('garment','sphere',[.34,.34,.36],[0,.94,0],1),P('garment','cone',[.22,.2,.22],[0,.82,-.16],0,[.9,0,0],6)]:[P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
-  case 'brim':return [P('leather','cylinder',[.5,.02,.5],[0,1.12,.02],1,undefined,10),P('leather','cylinder',[.24,.09,.24],[0,1.12,.02],1,undefined,8)];
-  case 'band':return [P('trim','cylinder',[.29,.03,.29],[0,1.1,.02],0,undefined,8)];
-  case 'braids':return [-1,1].map(s=>P('hair','cylinder',[.05,.32,.05],[s*.08,.74,-.13],0,undefined,5));
+  case 'wrap':return [P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8),...(rich>=1?[P('garment','cylinder',[.27,.07,.27],[side*.012,1.135,.0],0,[0,.4,0],8)]:[]),...(rich>=2?[P('trim','sphere',[.09,.09,.09],[side*.14,1.08,.1],0),P('trim','cylinder',[.31,.02,.31],[0,1.055,.02],0,undefined,8)]:[])];
+  case 'cap':return [P('garment','sphere',[.29,.16,.29],[0,1.1,.02],1),...(rich>=1?[P('trim','cylinder',[.295,.025,.295],[0,1.062,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','sphere',[.05,.05,.05],[0,1.19,.02],0)]:[])];
+  case 'hood':return hood?[P('garment','sphere',[.34,.34,.36],[0,.94,0],1),P('garment','cone',[.22,.2,.22],[0,.82,-.16],0,[.9,0,0],6),...(rich>=1?[P('trim','cylinder',[.31,.025,.31],[0,.8,.0],0,undefined,8)]:[])]:[P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
+  case 'brim':return [P('leather','cylinder',[.5,.02,.5],[0,1.12,.02],1,undefined,10),P('leather','cylinder',[.24,.09,.24],[0,1.12,.02],1,undefined,8),...(rich>=1?[P('trim','cylinder',[.245,.025,.245],[0,1.13,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','box',[.02,.14,.05],[side*.13,1.2,.0],0,[0,0,side*.5])]:[])];
+  case 'band':return [P('trim','cylinder',[.29,.03,.29],[0,1.1,.02],0,undefined,8),...(rich>=2?[P('trim','box',[.045,.06,.02],[0,1.12,.15],0,[0,0,Math.PI/4])]:[])];
+  case 'braids':return [-1,1].flatMap(sd=>[P('hair','cylinder',[.05,.32,.05],[sd*.08,.74,-.13],0,undefined,5),...(rich>=1?[P('trim','cylinder',[.065,.03,.065],[sd*.08,.6,-.13],0,undefined,5)]:[])]);
   default:return [];}
 }
 function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
@@ -97,7 +98,7 @@ export function unitAppearance(input:UnitAppearanceInput):UnitAppearance{
  const v=hashSeed(input.seed,'variant')%4,tr=seededRandom(hashSeed(input.seed,'tint'));
  const g=gear.garment&&Number.isFinite(gear.garment.condition)&&gear.garment.condition>0?gear.garment:undefined;
  const dress=g?dressFor(culture,season,g.item):dressFor(culture,season);
- if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}}
+ if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item,rich,v);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}}
  else if(gear.garment)ignored.push('garment with no condition left is not drawn');
  if(gear.armor){if(gear.armor.kind==='paddedTorso'&&gear.armor.condition>0){rendered.armor='paddedTorso';parts.push(...armorParts(culture.flag.border,rich));}else ignored.push(`armor kind '${gear.armor.kind}' is not a known asset kind`);}
  const w=weaponParts(type);if(w.weapon){rendered.weapon=w.weapon;parts.push(...w.parts);}

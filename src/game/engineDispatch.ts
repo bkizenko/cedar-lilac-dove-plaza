@@ -1,3 +1,5 @@
+import {beginEraUpgrade,setHousingPaused} from './housing';
+import type {ExtensionSide} from './extensionFootprints';
 import {equipArmor,unequipArmor} from './armor';
 import {surveyFibre,beginFibreGather,returnFibreLoad,equipBasket} from './fibre';
 import {surveyClay,beginClayGather,equipWaterVessel} from './pottery';
@@ -12,6 +14,9 @@ import {orderConstruction} from './construction';
 import {marryHouses} from './rulersRuntime';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
+ |{kind:'begin-era-upgrade';buildingId:number;mode:'rebuild'}
+ |{kind:'begin-era-upgrade';buildingId:number;mode:'extend';side:ExtensionSide}
+ |{kind:'era-upgrade-pause';buildingId:number;paused:boolean}
  |{kind:'cancel-interaction'}|{kind:'hold-selected';unitIds:number[]}
  |{kind:'pause';paused:boolean}|{kind:'speed';speed:1|2|4;resume?:boolean}
  |{kind:'move';unitIds:number[];x:number;z:number;attackMove?:boolean}
@@ -49,6 +54,16 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'begin-era-upgrade':{
+    if(selectedOwnedPeople(g,selection).length!==selection.selectedUnitIds.length)return no('An explicitly selected original resident is unavailable');
+    applyEngineSelection(g,selection);
+    return beginEraUpgrade(g,command.buildingId,command.mode,command.mode==='extend'?command.side:undefined);
+   }
+   case 'era-upgrade-pause':{
+    const b=g.state.buildings.find(b=>b.id===command.buildingId&&b.team===0&&b.hp>0);
+    if(!b?.renovation||!['rebuild','extend'].includes(b.renovation.mode))return no('Original owned fabric upgrade unavailable');
+    const accepted=setHousingPaused(g,b.id,command.paused);return{accepted,reason:accepted?'Paid fabric work updated; physical inputs retained':'Fabric work cannot make that transition'};
+   }
    case 'cancel-interaction':g.state.placing=null;g.state.pendingAge=false;g.clearSelect();return{accepted:true,reason:'Interaction cancelled'};
    case 'hold-selected':{
     const people=command.unitIds.map(id=>g.state.units.find(u=>u.id===id&&u.team===0&&u.hp>0));if(people.some(u=>!u))return no('An original selected resident is unavailable');
@@ -128,6 +143,8 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
  const bool=(v:unknown)=>typeof v==='boolean',id=(v:unknown)=>integer(v),optionalId=(v:unknown)=>v===undefined||id(v);
  const action=(v:unknown)=>v==='pause'||v==='resume'||v==='unload';
  const schema:Record<string,Record<string,(v:unknown)=>boolean>>={
+  'begin-era-upgrade':{buildingId:id,mode:v=>v==='rebuild'||v==='extend',side:v=>v===undefined||['north','south','east','west'].includes(v as string)},
+  'era-upgrade-pause':{buildingId:id,paused:bool},
   'cancel-interaction':{},'hold-selected':{unitIds:v=>Array.isArray(v)&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length},
   pause:{paused:bool},speed:{speed:v=>v===1||v===2||v===4,resume:v=>v===undefined||bool(v)},
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
@@ -143,6 +160,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'construction-queue-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='up'||v==='down'||v==='remove',siteId:optionalId},
   'craft-site-control':{buildingId:id,jobKind:v=>['production','haulage','weapon','tool','copper','helper'].includes(v as string),projectId:optionalId,actorId:v=>v===null||id(v),action},
  };
+ if(value.kind==='begin-era-upgrade'&&(value.mode==='extend'&&value.side===undefined||value.mode==='rebuild'&&value.side!==undefined))return false;
  const fields=Object.hasOwn(schema,value.kind)?schema[value.kind]:undefined;
  return !!fields&&Object.keys(value).every(k=>k==='kind'||Object.hasOwn(fields,k))&&Object.entries(fields).every(([k,validate])=>validate(value[k]));
 }

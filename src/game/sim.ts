@@ -1,4 +1,5 @@
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
 import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
@@ -769,6 +770,7 @@ export class Game {
       d: bridge?Math.abs(bridge.bz-bridge.az)+5.2:d.d,
       hp,
       maxHp: hp,
+      ...(supportsEraUpgrade(type)?{fabric:newBuildingFabric(this.state.tribes[team]?.age??this.state.age,hp)}:{}),
       selected: false,
       queue: [],
       rally: null,
@@ -1173,6 +1175,7 @@ export class Game {
     if(size&&!validPlot(type,size))return "Invalid plot size";
     if(quarterTurn&&(size||!turnableBuilding(type)))return "That building can't be turned"; // GW-08 (Grok): quarter turn = swapped footprint
     const d = size??(quarterTurn?turnedFootprint(type):BUILDINGS[type]);
+    if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&b.renovation?.mode==='extend'&&rectanglesOverlap({x,z,w:d.w,d:d.d},reservedBuildingFootprint(b),.5)))return 'A paid building wing reserves that full footprint';
     const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
     if(prep?.issue)return prep.issue;
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';

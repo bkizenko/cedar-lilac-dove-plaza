@@ -4,10 +4,10 @@
 
 Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
 
-- Latest LIVE release: **687e82a**, **2026-11-12T03-16-12-212Z-687e82a** verified on8086/8101. Hull-loss survivors swim/wade physically to reachable shore and return cargo to actual cache; incremental search handles native270400-cell grids with bounded work. Actual native107m recovery and strict midwater reload pass. Offshore captive rescue remains unsupported.
-- Current batch14/14(100percent):12focused +2actualbuilt native53 render/queue/save/restore/failed-write safety; tsc/buildPASS. C11 advisory hull dimensions + bounded authoring-preset storage included; Experience UI consumers remain open. Priorbd1667a release and villages retained. Frozen acceptance unchanged34/98(34.69percent).
-- WQ14 custody backends remain live; gear/animal trade consumer is still open/off. Prior test-only follow-up51/52 remains scoped evidence; World survey fixture belongs to Grok.
-- AUTOPILOT governs: Worker parked; Codex now T5 paid era rebuild/extensions then T6 prestige. Grok PM/World; Claude architect/UI/visuals/diplomacy. Any provider may edit any file under collision coordination.
+- Latest LIVE release: **5ba10a1**, **2026-11-12T03-36-53-531Z-5ba10a1** verified on8086/8101. Paid rebuild/extension owner commands and compact selected-building controls; exact cache/body/site materials, shifted full-wing reservations, bounded repairable durability without healing, strict saved receipts. Capture/release clears unpaid old construction intent while retaining physical paid materials; a replacement may resume normally.
+- Batch **27/27 scoped checks (100percent)** across focused runs:17era/capture/owner-adapter/basic-housing cases,1native paid-rebuild case,7hull-recovery regressions,2actualbuilt native53 import/render/save plus Extend-click/queued-progress/strict-reload checks. tsc/buildPASS. Native rebuild56.2simseconds,41.82m physical travel,24logs+8stone,carrying reload,180HPunchanged/207maxHP,terrain/radii unchanged. No campaign/gate claim; frozen34/98(34.69percent).
+- Includes previous687e82a physical hull-loss swim/wade→shore→actual cache and C11 dimensions/preset primitives. Offshore captive rescue and Experience preset/mesh consumers remain open; fixed-era appearance rendering is Claude's consumer. Prior releases/villages retained.
+- WQ14 custody backends remain live; gear/animal trade consumer remains open/off. T6 prestige source checkpoint286be39 is prepared, UNQUALIFIED/not live. Worker parked. Grok PM/World; Claude architect/UI/visuals/diplomacy; Codex platform/economy/saves/integration/knowledge. All providers may edit any file under collision coordination.
 
 ## Historical pre-integration evidence (superseded where AUTOPILOT differs)
 

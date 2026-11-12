@@ -11,6 +11,7 @@ import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
 import { VillageHistory } from './VillageHistory';
 import {HousingControls} from './HousingControls';
+import {EraUpgradeControls} from './EraUpgradeControls';
 import {housingAdoptionIssue,HOUSING_RULES} from '../game/housing';
 import{BuildingMaintenanceControls}from'./BuildingMaintenanceControls';
 import {WorldSetup} from './WorldSetup';
@@ -580,6 +581,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
                 {engine&&sel.buildingId&&<HousingControls engine={engine} buildingId={sel.buildingId}/>}
+                {sel.completed&&engine&&sel.buildingId&&<EraUpgradeControls engine={engine} buildingId={sel.buildingId}/>}
                 {engine&&sel.buildingId&&<BuildingMaintenanceControls engine={engine} buildingId={sel.buildingId}/>}
                 {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
                 {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
