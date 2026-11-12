@@ -1,3 +1,4 @@
+import {reviewRivalMethodRecords} from './rivalMethodRecords';
 import {cancelMethodRecordPickup,methodRecordPickupAI} from './methodRecordPickup';
 import {reconcileMethodRecords} from './methodRecords';
 import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
@@ -5429,6 +5430,7 @@ export class Game {
     developRivalInstitutions(this,team);
     developRivalEquipment(this,team);
     developRivalCopper(this,team);
+    reviewRivalMethodRecords(this,team);
     const pop = this.popNow(team);
     if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
       for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}
@@ -5884,7 +5886,10 @@ export class Game {
             if(prisonerAI(this,u,sdt))continue;
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
-            if (emergencyResponse(this, u, sdt)) continue;
+            if (emergencyResponse(this, u, sdt)) {
+              cancelMethodRecordPickup(this,u,'Record pickup stopped — this resident is answering a local alarm');
+              continue;
+            }
             if(methodRecordPickupAI(this,u,sdt))continue;
             if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
