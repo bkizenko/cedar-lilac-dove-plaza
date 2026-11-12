@@ -143,6 +143,7 @@
 .hw-chip-soft{background:rgba(255,236,190,.05);font-weight:550}
 .hw-voice{margin:2px 0 0;padding:2px 0 2px 10px;border-left:3px solid var(--hw-line);font-style:italic;font-size:var(--hw-fs-s);color:var(--hw-dim);line-height:1.4}
 .hw-voice[data-manner="warm"]{border-left-color:rgba(180,217,140,.6)}.hw-voice[data-manner="stern"]{border-left-color:rgba(244,162,135,.6)}.hw-voice[data-manner="proud"],.hw-voice[data-manner="guarded"]{border-left-color:rgba(242,199,107,.6)}
+.hw-court{margin:2px 0 0;font-size:var(--hw-fs-s);color:var(--hw-dim);line-height:1.4}
 .hw-chip.f-fresh{border-color:rgba(180,217,140,.6)}.hw-chip.f-aging{border-color:rgba(242,199,107,.6)}.hw-chip.f-stale{border-color:var(--hw-line);color:var(--hw-dim)}
 .hw-chip.t-bad{border-color:rgba(244,162,135,.55)}.hw-chip.t-good{border-color:rgba(180,217,140,.55)}.hw-chip.t-warn{border-color:rgba(242,199,107,.55)}
 .hw-stat{display:inline-flex;align-items:center;gap:6px}

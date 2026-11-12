@@ -393,3 +393,17 @@ test('AUD-SOC-DIPLO-FLAVOUR: voice differs by ruler traits, is deterministic and
  assert.equal(diplomaticVoice(undefined,'Ash').manner,'plain');
  assert.ok(Object.keys(warm).sort().join()==='gift,greeting,manner,refusal');
 });
+test('lane A rival court read model: known neighbours show ruler, heir and regent only; read-only, goods-free, JSON-safe; old saves empty',async()=>{
+ const {councilModel}=await import('../src/game/rulersView.ts');
+ const {societyRelation}=await import('../src/game/societyRelations.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*3;advanceRulers(g);
+ const m0=councilModel(g,0);
+ for(const n of m0.neighbours){assert.ok(societyRelation(g,0,n.team).known,'only known neighbours listed');}
+ for(const t of [1,2])if(t<g.state.tribes.length)societyRelation(g,0,t).known=true;
+ const snap=JSON.stringify(g.state);const m=councilModel(g,0);assert.equal(JSON.stringify(g.state),snap,'read model must not mutate state');
+ const withCourt=m.neighbours.filter(n=>n.court);
+ if(m.neighbours.length)assert.ok(withCourt.length>0,'each known neighbour has a court line');
+ for(const n of withCourt){const o=g.state.rulers.societies[String(n.team)].dynasty;assert.equal(n.court.ruler,o.people[o.rulerId].name);assert.equal(n.court.house,o.house);if(n.court.heir)assert.ok(n.court.heir.name&&n.court.heir.age>=0);assert.deepEqual(Object.keys(n.court).filter(k=>!['ruler','rulerAge','house','law','heir','regent','extinct','lastEvent'].includes(k)),[]);}
+ JSON.parse(JSON.stringify(m));
+ delete g.state.worldOptions.rulersVersion;delete g.state.rulers;assert.equal(councilModel(g,0).neighbours.length,0);
+});
