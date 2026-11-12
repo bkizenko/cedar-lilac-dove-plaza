@@ -88,3 +88,12 @@ test('neighbour news feed renders only supplied agreements, newest first, and no
  const news=[{time:9,kind:'marriage',with:1,text:'12: A marriage joins the houses'},{time:3,kind:'truce',with:2,text:'4: A truce is sworn'}],nameOf=t=>t===1?'Marsh Folk':'Ridge Clan';
  for(const C of [NeighbourNews,NeighbourNewsFeed]){const html=renderToStaticMarkup(h(C,{news,nameOf}));assert.match(html,/Neighbour news/);assert.ok(html.indexOf('Marsh Folk')<html.indexOf('Ridge Clan'));assert.doesNotMatch(html,/12:|4:/);assert.equal(renderToStaticMarkup(h(C,{news:[],nameOf})),'');}
 });
+
+test('rival ruler voice renders as a quoted greeting in the diplomacy sheet and is absent on old data',async()=>{
+ const {DiplomacySheet}=await import('../src/ui/council/DiplomacySheet.tsx');
+ const base={team:1,name:'Marsh Folk',bond:'Friendly',trust:70,canMarry:false,means:[]};
+ const voice={manner:'warm',greeting:'Marsh Folk meets you at the door.',refusal:'Marsh Folk declines kindly.',gift:'Marsh Folk gives freely.'};
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...base,voice}],onAct(){}}));
+ assert.match(html,/Marsh Folk meets you at the door/);assert.match(html,/data-manner="warm"/);assert.match(html,/If refused: Marsh Folk declines kindly/);
+ assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[base],onAct(){}})),/data-manner/);
+});

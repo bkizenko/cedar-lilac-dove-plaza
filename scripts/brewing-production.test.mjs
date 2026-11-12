@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {writeFileSync} from 'node:fs';
 import {nativeDairyVillage} from './helpers/native-dairy-village.mjs';
 import {decodeGame,encodeGame} from '../src/game/persistence.ts';
-import {beginProduction,productionIssue,productionOutputs,productionFoodOutputs,occupiedProductionSlots,discardDairyProject,productionRecovery,queueDairyVesselCleaning} from '../src/game/production.ts';
+import {beginProduction,productionIssue,productionOutputs,productionFoodOutputs,occupiedProductionSlots,discardDairyProject,productionRecovery,queueDairyVesselCleaning,itemCapacity,storedItemUnits} from '../src/game/production.ts';
 import {foodInventory,FOOD_NOURISHMENT} from '../src/game/pantry.ts';
 import {BREWING_RULES as R} from '../src/game/brewing.ts';
 import {craftSiteReport} from '../src/game/craftSiteReport.ts';
@@ -34,7 +34,7 @@ test('deliberate spoiled malt keeps its dirty vessel, paid cleanup returns only 
  assert.doesNotThrow(()=>decodeGame(encodeGame(g)));assert.equal(queueDairyVesselCleaning(g,p.id),true);drive(g,140,()=>p.phase==='complete');assert.equal(g.tribe(0).items.pottery,1);assert.equal(g.tribe(0).items.greenMalt||0,0);assert.equal(g.state.production.metrics.waterUsedLiters,4);assert.equal(g.tribe(0).productionPractice?.sproutGrain,undefined);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 test('missing grain, vessel, fuel or water rejects atomically and strict saves reject fabricated brewing progress',()=>{
- for(const missing of ['grain','pottery','water','storage']){const{g,hearth}=fixture(),t=g.tribe(0);if(missing==='grain'){t.food=300;t.foodLots={provisions:300};}if(missing==='pottery')t.items={};if(missing==='water')t.survival.waterLiters=0;if(missing==='storage')t.items.bone=97;const before=JSON.stringify(t);assert.equal(beginProduction(g,'sproutGrain',hearth),false);assert.equal(JSON.stringify(t),before);assert.equal(g.state.production?.projects?.length||0,0);}
+ for(const missing of ['grain','pottery','water','storage']){const{g,hearth}=fixture(),t=g.tribe(0);if(missing==='grain'){t.food=300;t.foodLots={provisions:300};}if(missing==='pottery')t.items={};if(missing==='water')t.survival.waterLiters=0;if(missing==='storage'){t.items.bone=0;while(storedItemUnits(g,0)<=itemCapacity(g,0))t.items.bone+=10;}const before=JSON.stringify(t);assert.equal(beginProduction(g,'sproutGrain',hearth),false);assert.equal(JSON.stringify(t),before);assert.equal(g.state.production?.projects?.length||0,0);}
  const{g,hearth}=fixture();g.tribe(0).items.greenMalt=3;g.tribe(0).wood=0;const before=JSON.stringify(g.tribe(0));assert.equal(beginProduction(g,'brewBeer',hearth),false);assert.equal(JSON.stringify(g.tribe(0)),before);
  g.tribe(0).wood=10;const p=begin(g,'sproutGrain',hearth);for(const mutate of [b=>b.stage='beer',b=>b.exposureSeconds=100,b=>b.elapsedSeconds=100,b=>b.inputAgeSeconds=601,b=>b.recovery={version:1,failedAt:g.state.time+10}]){const save=structuredClone(encodeGame(g));mutate(save.state.production.projects.find(q=>q.id===p.id).brewing);assert.throws(()=>decodeGame(save));}
 });

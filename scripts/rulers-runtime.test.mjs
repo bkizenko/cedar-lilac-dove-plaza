@@ -382,3 +382,14 @@ test('neighbourNews: only witnessed losses and observed reciprocal replacements 
  const unknown=g.state.units.find(u=>u.team===1&&u.hp>0&&u.id!==far.id);assert.ok(unknown);Object.assign(unknown,{x:home.x,z:home.z,y:home.y});const hiddenRep=appointCommander(g,unknown.id,'army',{team:1,free:true,replaces:a.commanderId});assert.ok(hiddenRep.accepted,hiddenRep.reason);g.updateVision(0);assert.equal(neighbourNews(g).filter(n=>n.kind==='commander-replaced').length,1,'seeing a new commander cannot reveal an unknown predecessor loss');
  const rt=decodeGame(encodeGame(g));assert.deepEqual(neighbourNews(rt),neighbourNews(g));const oldSave=fixture();assert.deepEqual(neighbourNews(oldSave).filter(n=>n.kind.startsWith('commander')),[]);
 });
+
+test('AUD-SOC-DIPLO-FLAVOUR: voice differs by ruler traits, is deterministic and goods-free; old callers without traits get the plain voice',async()=>{
+ const {diplomaticVoice}=await import('../src/game/diplomaticVoice.ts');
+ const base=Object.fromEntries(['ambition','piety','innovation','tradition','boldness','prudence','cruelty','mercy','generosity','paranoia','charisma','pride','honor'].map(k=>[k,50]));
+ const warm=diplomaticVoice({...base,generosity:80},'Ash'),guarded=diplomaticVoice({...base,paranoia:80,generosity:30},'Ash'),proud=diplomaticVoice({...base,pride:80},'Ash'),stern=diplomaticVoice({...base,cruelty:80},'Ash');
+ assert.deepEqual([warm.manner,guarded.manner,proud.manner,stern.manner],['warm','guarded','proud','stern']);
+ assert.equal(new Set([warm,guarded,proud,stern].map(v=>v.greeting)).size,4);
+ assert.deepEqual(diplomaticVoice({...base,generosity:80},'Ash'),warm);
+ assert.equal(diplomaticVoice(undefined,'Ash').manner,'plain');
+ assert.ok(Object.keys(warm).sort().join()==='gift,greeting,manner,refusal');
+});
