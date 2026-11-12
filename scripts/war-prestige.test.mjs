@@ -1,3 +1,4 @@
+import {writeFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
@@ -16,7 +17,7 @@ test('only uniquely identified settled aims score once; pending/refusal/stalemat
  const before=JSON.stringify(s),random=Math.random;let draws=0;Math.random=()=>{draws++;return .5;};let report;
  try{report=settledWarPrestige(s);}finally{Math.random=random;}
  assert.deepEqual(report,{value:1,achieved:1,held:0,frontIds:[1]});assert.equal(JSON.stringify(s),before);assert.equal(draws,0);
- assert.equal(settledWarPrestige({...s,capitulation:undefined}).value,0);assert.equal(settledWarPrestige({...s,capitulation:{version:1,fronts:[]},conflictJournal:{kills:10000}}).value,0);
+ assert.equal(settledWarPrestige({...s,capitulation:undefined}).value,0);assert.equal(settledWarPrestige(pureState([pureFront({attackerTeam:3,defenderTeam:0,phase:'relieved'})])).value,0,'a band returning with stolen goods is not a defended hall victory');assert.equal(settledWarPrestige({...s,capitulation:{version:1,fronts:[]},conflictJournal:{kills:10000}}).value,0);
  for(const outcome of ['occupy','annex','raze','loot','captives'])assert.equal(settledWarPrestige(pureState([pureFront({outcome})])).value,WAR_PRESTIGE_RULES.weights[outcome]);
 });
 
@@ -78,4 +79,37 @@ test('native unchanged terrain opens a real pressure front and resolves relief o
  for(let i=0;i<1400&&front.phase==='pressed';i++){g.state.time+=.2;g.navBudget=40;if(Math.hypot(attacker.x-route.to.x,attacker.z-route.to.z)>1){attacker.tx=route.to.x;attacker.tz=route.to.z;g.steer(attacker,.2);}tickCapitulation(g);}
  assert.ok(Math.hypot(attacker.x-initial.x,attacker.z-initial.z)>20,'the real body must leave local pressure range');assert.equal(front.phase,'relieved',JSON.stringify({phase:front.phase,reason:front.reason,absent:front.absentSeconds,x:attacker.x,z:attacker.z}));assert.ok(front.absentSeconds>=CAPITULATION_RULES.relievedAfterAbsentSeconds);assert.equal(hall.team,1);assert.equal(settledWarPrestige(g.state,1).held,1);assert.equal(settledWarPrestige(g.state,0).value,0);assert.equal(hash(g),terrain);
  const saved=decodeGame(encodeGame(g));assert.equal(hash(saved),terrain);assert.equal(settledWarPrestige(saved.state,1).held,1);
+});
+
+test('an actual player-hall front records overwhelming pressure without surrendering or yielding the player community',()=>{
+ // Controlled declared forces and subsequent measured losses test decision
+ // authority; this is not evidence of a complete tactical combat simulation.
+ const g=new Game();g.reset(42,10);g.enterIsland();g.world.heights.fill(4);g.world.waterBodies=[];g.world.rivers=[];g.world.features=[];g.world.ecology=undefined;
+ for(const k of ['trees','stones','forage','fish','wildlife','copper','iron'])g.state[k]=[];
+ g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,30,0),g.makeBld('townhall',200,30,1)];g.state.campSites=[{team:0,x:0,z:30}];g.state.time=100;
+ Object.assign(g.tribe(0),{alive:true,food:0,foodLots:{}});const hall=g.state.buildings[0];
+ const residents=Array.from({length:8},(_,i)=>g.spawnUnit('worker',4+i,42,0)),guards=[g.spawnUnit('spearman',1,40,0),g.spawnUnit('spearman',2,40,0)];
+ for(const u of [...residents,...guards]){u.homeHall=hall.id;u.order='hold';}
+ for(let i=0;i<12;i++){const u=g.spawnUnit('spearman',10+i*.5,44,1);u.order='hold';}
+ const band=g.spawnUnit('spearman',10,47,3);band.order='hold';
+ g.rebuildWalk();g.makeHostile(1);tickCapitulation(g);const front=g.state.capitulation.fronts.find(f=>f.hallId===hall.id&&f.attackerTeam===1);assert.ok(front);assert.equal(front.defenderTeam,0);assert.ok(!g.state.capitulation.fronts.some(f=>f.hallId===hall.id&&f.attackerTeam===3),'raider theft/capture goals do not establish a defended hall objective');
+ for(const u of [...residents,...guards])u.hp=0;hall.hp=hall.maxHp*.1;g.state.time+=200;tickCapitulation(g);
+ assert.ok(front.score>=front.threshold,'test must actually exceed the NPC surrender threshold');assert.ok(front.ratio>=CAPITULATION_RULES.minimumRatio);assert.equal(front.phase,'pressed','player surrender is never automatic');assert.deepEqual(front.yieldedIds,[]);assert.equal(front.capitulatedAt,undefined);assert.equal(front.outcome,undefined);assert.equal(hall.team,0);assert.equal(acceptCapitulation(g,front.id,'annex',1).accepted,false);assert.equal(collectOwnPrestige(g).defendedWarAims,0);assert.ok(!g.state.capitulation.fronts.some(f=>f.attackerTeam===3));assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+
+test('native hostile-society pressure at the player hall yields own held prestige only after physical departure and the real relief timeout',()=>{
+ const g=new Game();g.reset(42,18,{size:1040,layout:'pangaea'});g.enterIsland();const terrain=hash(g),camp=g.campOf(0);g.state.weather='clear';g.vision.fill(2);
+ // One finite authored opening hall at a legal native site and one attacker;
+ // the actual resident bodies, remaining terrain and inventories are preserved.
+ let hall=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b));
+ if(!hall){const site=g.findDryFoundation('townhall',camp.x,camp.z,80,(x,z)=>g.placementIssue('townhall',x,z,0)===null);assert.ok(site,'legal native player-hall site required');hall=g.makeBld('townhall',site.x,site.z,0);g.state.buildings.push(hall);g.rebuildWalk();}
+ const probe=g.state.units.find(u=>u.team===0&&u.type==='worker');assert.ok(probe);const standable=p=>g.walkable(p.x,p.z)&&g.canStep({...probe,x:p.x,z:p.z,y:g.height(p.x,p.z)},p.x,p.z);
+ let route;for(let i=0;i<32&&!route;i++){const angle=i*Math.PI/16,point=r=>({x:hall.x+Math.sin(angle)*r,z:hall.z+Math.cos(angle)*r}),from=point(35),to=point(90);if(standable(from)&&standable(to)&&g.workBoard.connected(g,from.x,from.z,to.x,to.z))route={from,to};}
+ assert.ok(route,'a genuine dry connected retreat route is required');const attacker=g.spawnUnit('spearman',route.from.x,route.from.z,1);attacker.order='hold';g.makeHostile(1);assert.equal(g.isFoe(1,0),true);tickCapitulation(g);
+ const front=g.state.capitulation.fronts.find(f=>f.hallId===hall.id&&f.attackerTeam===1&&f.defenderTeam===0);assert.ok(front);assert.equal(front.phase,'pressed');assert.equal(collectOwnPrestige(g).defendedWarAims,0);assert.equal(front.outcome,undefined);
+ const initial={x:attacker.x,z:attacker.z};attacker.order='move';attacker.tx=route.to.x;attacker.tz=route.to.z;
+ for(let i=0;i<1400&&front.phase==='pressed';i++){g.state.time+=.2;g.navBudget=40;if(Math.hypot(attacker.x-route.to.x,attacker.z-route.to.z)>1)g.steer(attacker,.2);tickCapitulation(g);}
+ assert.ok(Math.hypot(attacker.x-initial.x,attacker.z-initial.z)>20);assert.equal(front.phase,'relieved',JSON.stringify({phase:front.phase,reason:front.reason,absent:front.absentSeconds,x:attacker.x,z:attacker.z}));assert.ok(front.absentSeconds>=CAPITULATION_RULES.relievedAfterAbsentSeconds);assert.equal(hall.team,0);assert.ok(hall.hp>0);assert.equal(settledWarPrestige(g.state,0).held,1);assert.equal(collectOwnPrestige(g).defendedWarAims,1);assert.equal(hash(g),terrain);
+ const saved=decodeGame(encodeGame(g));assert.equal(hash(saved),terrain);assert.equal(collectOwnPrestige(saved).defendedWarAims,1);assert.equal(saved.state.capitulation.fronts.find(f=>f.id===front.id).phase,'relieved');
+ if(process.env.WAR_NATIVE_SAVE)writeFileSync(process.env.WAR_NATIVE_SAVE,JSON.stringify(encodeGame(g)));
 });

@@ -14,7 +14,7 @@ export function settledWarPrestige(state:WarState,team=0):SettledWarPrestige{
  if(!Number.isSafeInteger(team)||team<0||!Number.isFinite(state.time)||!state.capitulation)return result;
  const fronts=state.capitulation.fronts;if(!fronts.length)return result;
  const settled=fronts.slice(0,CAPITULATION_RULES.maximumFronts).filter(f=>
-  (f.attackerTeam===team||f.defenderTeam===team)&&Number.isSafeInteger(f.id)&&f.id>0&&f.attackerTeam!==f.defenderTeam&&
+  (f.attackerTeam===team||f.defenderTeam===team)&&f.attackerTeam!==3&&f.defenderTeam!==3&&Number.isSafeInteger(f.id)&&f.id>0&&f.attackerTeam!==f.defenderTeam&&
   Number.isFinite(f.openedAt)&&f.openedAt>=0&&f.resolvedAt!==undefined&&Number.isFinite(f.resolvedAt)&&f.resolvedAt>=f.openedAt&&f.resolvedAt<=state.time&&
   (f.phase==='accepted'||f.phase==='relieved'));
  if(!settled.length)return result;
