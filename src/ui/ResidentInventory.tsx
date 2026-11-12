@@ -33,6 +33,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       }
       const water = resident.waterWork?.liters ?? 0;
       if (water > 0) carried.push(`${amount(water)} L water`);
+      if(resident.packJourneySupplies){for(const[k,n]of Object.entries(resident.packJourneySupplies.feed))if(n&&n>0)carried.push(`${amount(n)} ${k} · animal feed`);if(resident.packJourneySupplies.waterLiters>0)carried.push(`${amount(resident.packJourneySupplies.waterLiters)} L · animal water`);}
       if (resident.expedition) carried.push(`${amount(resident.expedition.food)} journey food`);
       if (resident.scoutProvisions) {
         carried.push(`${amount(resident.scoutProvisions.food)} journey food`);
