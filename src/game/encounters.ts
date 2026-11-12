@@ -154,7 +154,12 @@ function beginContactDemand(g:Game,u:Unit):ContactOutcome{
  for(const p of party){g.interruptMission(p);p.contactDemand={targetId:u.id,lastTimeSeconds:g.state.time};p.order='hold';p.pillage=-1;p.node=null;p.target=null;p.huntOnly=false;p.workReason='Approaching to demand the actual carried goods';}
  return {accepted:true,reason:`${party.length} armed ${party.length===1?'adult is':'adults are'} approaching; the person may refuse or yield their carried goods`};
 }
-export function contactYieldingTo(g:Game,u:Unit,team:number){return u.contactSurrender?.team===team&&u.contactSurrender.until>g.state.time&&!(u.order==='attack'&&u.target?.team===team);}
+export function contactYieldingTo(g:Game,u:Unit,team:number){
+ // Explicit repatriation grants safe conduct from the releasing society until
+ // home arrival. Escapes clear repatriating; a new explicit attack revokes it.
+ const released=u.repatriating===true&&(u.prisoner?u.prisoner.phase==='released'&&u.prisoner.captorTeam===team:team===0);
+ return (released||u.contactSurrender?.team===team&&u.contactSurrender.until>g.state.time)&&!(u.order==='attack'&&u.target?.team===team);
+}
 /** Called by the existing per-step encounter hook, including already-known
  * contacts. Jobs remain on real actors and survive interruption/save/load. */
 function tickContactOrders(g:Game){

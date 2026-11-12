@@ -119,6 +119,8 @@ export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,d
 export const prisonerIndependentNeeds=(u:Unit)=>!!(u as PrisonerUnit).prisoner&&(u as PrisonerUnit).prisoner!.phase!=='custody';
 const armedPrisonerGuard=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>0&&!isDependent(g,u)&&!(u as PrisonerUnit).prisoner&&u.enslavedFrom===undefined&&(u.militia||!['worker','leader'].includes(u.type));
 function guardLoad(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&(u as PrisonerUnit).prisoner?.phase!=='released'&&(u as PrisonerUnit).prisoner?.guardId===id).length;}
+/** The assigned guard protects custody only while actually present and eligible. */
+export function presentPrisonerGuard(g:Game,u:PrisonerUnit){const p=u.prisoner;if(!p||p.phase==='released')return undefined;return g.state.units.find(guard=>guard.id===p.guardId&&armedPrisonerGuard(g,guard,p.captorTeam)&&!guard.emergency&&Math.hypot(guard.x-u.x,guard.z-u.z)<=18&&g.workBoard.connected(g,guard.x,guard.z,u.x,u.z));}
 /** Called only after the surrender decision, with nearby actual captors. */
 export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  const u=target as PrisonerUnit;
@@ -204,7 +206,7 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
   u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Released — walking home with carried provisions';return true;
  }
  if(p.phase==='escorting')prisonerTravelNeeds(g,u,Math.max(0,dt));if(u.hp<=0){clearPrisonerGuard(g,u);return true;}
- const guard=g.state.units.find(guard=>guard.id===p.guardId&&armedPrisonerGuard(g,guard,p.captorTeam)&&!guard.emergency&&Math.hypot(guard.x-u.x,guard.z-u.z)<=18&&g.workBoard.connected(g,guard.x,guard.z,u.x,u.z));
+ const guard=presentPrisonerGuard(g,u);
  if(!guard){
   p.unguardedSeconds+=Math.max(0,dt);u.order='hold';u.node=null;u.target=null;u.workReason='Prisoner unguarded — escape risk rising';
   if(p.unguardedSeconds>=PRISONER_RULES.unguardedEscapeSeconds){releasePrisoner(g,u.id,true);u.repatriating=undefined;}

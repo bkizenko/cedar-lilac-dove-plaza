@@ -1,5 +1,5 @@
 import {freePeople} from './peace';
-import {repatriateCaptive} from './captivity';
+import {repatriateCaptive,releasePrisoner,assignPrisonerGuard} from './captivity';
 import {sendCaptiveEscort} from './caravans';
 import {armorRepairIssue,beginArmorRepair,pauseArmorRepair,resumeArmorRepair,cancelArmorRepair} from './armorRepair';
 import {beginCopperStudy,copperStudyIssue} from './materialStudy';
@@ -158,9 +158,9 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
     return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
    }
-   case 'free-captives':{if(!g.state.units.some(u=>u.team===0&&u.hp>0&&u.enslavedFrom===command.team))return no('No captives from that society');freePeople(g,command.team);return{accepted:true,reason:'The captives are free'};}
-   case 'repatriate-captive':return repatriateCaptive(g,command.unitId)?{accepted:true,reason:'Sent home'}:no('That captive cannot be sent home now');
-   case 'escort-captive':return sendCaptiveEscort(g,command.unitId)?{accepted:true,reason:'A guard will escort them'}:no('No spare guard to escort');
+   case 'free-captives':{const held=g.state.units.filter(u=>u.team===0&&u.hp>0&&(u.enslavedFrom===command.team||u.prisoner?.captorTeam===0&&u.prisoner.phase!=='released'&&u.prisoner.originTeam===command.team));if(!held.length)return no('No captives from that society');for(const u of held)if(u.prisoner)releasePrisoner(g,u.id);if(held.some(u=>u.enslavedFrom===command.team))freePeople(g,command.team);return{accepted:true,reason:'Captives released; people in custody walk home with their belongings'};}
+   case 'repatriate-captive':{const u=g.state.units.find(u=>u.id===command.unitId),p=u?.prisoner;if(p)return p.captorTeam===0&&p.phase!=='released'&&releasePrisoner(g,command.unitId)?{accepted:true,reason:'Released; walking home with belongings'}:no('That person is not held in your custody');return repatriateCaptive(g,command.unitId)?{accepted:true,reason:'Released; walking home with belongings'}:no('That captive cannot be sent home now');}
+   case 'escort-captive':{const u=g.state.units.find(u=>u.id===command.unitId),p=u?.prisoner;if(p)return p.captorTeam===0&&p.phase!=='released'?assignPrisonerGuard(g,command.unitId):no('That person is not held in your custody');return sendCaptiveEscort(g,command.unitId)?{accepted:true,reason:'A guard will escort them'}:no('No spare guard to escort');}
    case 'set-formation':return setPreferredFormation(g,command.formation)?{accepted:true,reason:'Groups of four or more will form up this way when ordered to move'}:no('Combat doctrine is not enabled for this save');
    case 'guard-duty':{
     const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');

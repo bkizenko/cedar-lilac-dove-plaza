@@ -1,5 +1,5 @@
 import {personName} from './people';
-import {captiveGuardCoverage} from './captivity';
+import {captiveGuardCoverage,presentPrisonerGuard,PRISONER_RULES} from './captivity';
 import {armorRepairIssue} from './armorRepair';
 import {copperStudyIssue} from './materialStudy';
 import {teachingOffers,TRADED_TEACHING_RULES} from './tradedTeaching';
@@ -59,7 +59,7 @@ export type EngineReadModel=
  |{kind:'combat-doctrine';combat:CombatModel}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]}
- |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean}[]};
+ |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number}[]};
 export type EngineReadReply={model:EngineReadModel;epoch:number;requestId:number;stateRevision:number;navigationRevision:number;cpuMilliseconds:number};
 export type EngineReadReplyFor<Q extends EngineReadQuery>=Omit<EngineReadReply,'model'>&{model:Extract<EngineReadModel,{kind:Q['kind']}>};
 const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0;
@@ -98,7 +98,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};
- if(query.kind==='captives'){const guards=captiveGuardCoverage(g);return{kind:query.kind,captives:g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom!==undefined).map(u=>({id:u.id,name:personName(u),fromTeam:u.enslavedFrom!,fromName:g.tribe(u.enslavedFrom!)?.name||'a former settlement',resistance:Math.round(u.captivityUnrest||0),guarded:guards.has(u.id),canEscort:!!u.recalled}))};}
+ if(query.kind==='captives'){const guards=captiveGuardCoverage(g);return{kind:query.kind,captives:g.state.units.filter(u=>u.team===0&&u.hp>0&&(u.enslavedFrom!==undefined||u.prisoner?.captorTeam===0&&u.prisoner.phase!=='released')).map(u=>{const p=u.prisoner,from=p?.originTeam??u.enslavedFrom!;return{id:u.id,name:personName(u),fromTeam:from,fromName:g.tribe(from)?.name||'a former settlement',resistance:p?Math.min(100,Math.round(p.unguardedSeconds/PRISONER_RULES.unguardedEscapeSeconds*100)):Math.round(u.captivityUnrest||0),guarded:p?!!presentPrisonerGuard(g,u):guards.has(u.id),canEscort:p?true:!!u.recalled,...(p&&p.phase!=='released'?{custody:p.phase,food:p.food,waterLiters:p.waterLiters}:{})};})};}
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){
   const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');

@@ -310,13 +310,13 @@ export function domesticPressure(g:Game):string[]{
 }
 
 /** Feed lines for the player: agreements between societies (marriages, pacts, truces, fosterage) and hostage/foster wards that the player can
- * legitimately know of, i.e. the player is a party, or knows (has met) both parties. Read-only; invents nothing, and old saves (no decision
+ * legitimately know of: the player is a party. Meeting both parties does not reveal their private pact. Future third-party reports require an actual information receipt. Read-only; invents nothing, and old saves (no decision
  * state or rulers) give []. Newest first. `sinceTime` filters by sim time of the agreement. */
 export type NeighbourNews={time:number;kind:string;a:number;b:number;text:string};
 export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
  const d=(st(g).rulers as unknown as {decisions?:{agreements?:{kind:string;a:number;b:number;since:number;note:string}[]}}|undefined)?.decisions;
  const out:NeighbourNews[]=[];
- const sees=(a:number,b:number)=>a===0||b===0||(societyRelation(g,0,a).known&&societyRelation(g,0,b).known);
+ const sees=(a:number,b:number)=>a===0||b===0;
  for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
  return out.sort((x,y)=>y.time-x.time).slice(0,Math.max(0,limit));
 }
