@@ -10,6 +10,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CapitulationTerms} from '../council/CapitulationTerms';
+import {HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -96,28 +97,24 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
  const tabs=[{id:'ruler',label:'Ruler',icon:<Crown size={20}/>},{id:'realm',label:'Realm',icon:<Scale size={20}/>},{id:'neighbours',label:'Neighbours',icon:<Handshake size={20}/>,badge:c.neighbours.length||undefined},{id:'chronicle',label:'Chronicle',icon:<Scroll size={20}/>},...(terms.length?[{id:'terms',label:'Terms',icon:<Swords size={20}/>,badge:terms.length}]:[])];
  return <Screen title={c.house?`House ${c.house.name}`:'Council'} icon={<Crown size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   {tab==='ruler'&&<div className="hw-grid-2">
-   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><span className="hw-medal hw-medal-l"><Crown size={40}/></span><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${nice(c.polity.form)}`:''}</p></div></div>
+   {c.ruler&&<section className="hw-card hw-ruler"><div className="hw-card-head"><RulerPortrait engine={engine} name={c.ruler.name} fallback={<span className="hw-medal hw-medal-l"><Crown size={40}/></span>}/><div><h2>{c.ruler.name}</h2><p className="hw-sub">Age {c.ruler.age}{c.house?` · generation ${c.house.generation+1}`:''}{c.polity?` · ${nice(c.polity.form)}`:''}</p></div></div>
     <p className="hw-quote">{c.ruler.headline}{c.ruler.contradiction?`. ${c.ruler.contradiction}`:''}</p>
     {c.ruler.wants.length>0&&<div className="hw-chips"><span className="hw-row-label"><Target size={18}/>Wants</span>{c.ruler.wants.map(w=><span key={w} className="hw-chip">{w}</span>)}</div>}
     <div className="hw-chips"><span className="hw-row-label"><TriangleAlert size={18}/>Fears</span><span className="hw-chip t-warn">{c.ruler.fears}</span></div>
     <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{k} · {v}</span>)}</div>
    </section>}
-   {c.handover&&<section className="hw-card"><div className="hw-card-head"><h3>Successor</h3><GameTooltip title="Yearly risk the seat passes"><span className={cx('hw-chip',(c.handover.yearlyRisk>=10||c.handover.rulerAge>=55)&&'t-warn')}><Skull size={18}/>{c.handover.yearlyRisk}%/y</span></GameTooltip></div>
-    {c.handover.extinct?<p className="t-bad hw-sub">No living kin</p>:c.handover.heir?<><h4>{c.handover.heir.name}</h4><p className="hw-sub">{c.handover.heir.role}, {c.handover.heir.age}. {c.handover.heir.headline}</p><div className="hw-chips"><span className={cx('hw-chip',c.handover.heir.adult?'t-good':'t-warn')}>{c.handover.heir.adult?'Of age':'Too young'}</span>{!c.handover.heir.legit&&<span className="hw-chip t-warn">Contested {c.handover.heir.claim}</span>}</div></>:<p className="hw-sub">Regent{c.handover.regent?`: ${c.handover.regent}`:''}</p>}
-    <p className="hw-sub">{lawLabel(c.handover.law)}</p>
-    {c.handover.others.length>0&&<div className="hw-chips">{c.handover.others.map(o=><span key={o.name} className="hw-chip hw-chip-soft">{o.name} · {o.age}</span>)}</div>}
-   </section>}
+   {c.handover&&<HandoverCard h={c.handover}/>}
    {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
   </div>}
   {tab==='realm'&&<div className="hw-grid-2">
-   {c.showFactions&&c.factions.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Factions</h3>{c.coalitionLoss>0&&<span className="hw-chip t-bad">{c.coalitionLoss}% restless</span>}</div><ul className="hw-list">{c.factions.map(f=><li key={f.kind}><GameTooltip title={FACTION_LABEL[f.kind]??f.kind} description={`Wants ${f.demand}`}><span className="hw-meter-row"><b className="hw-lbl">{FACTION_LABEL[f.kind]??f.kind}</b>{bar(f.power,tone(f.loyalty))}<em className={'t-'+tone(f.loyalty)}>{loyaltyWord(f.loyalty)}</em></span></GameTooltip></li>)}</ul></section>}
-   {c.glory.some(g=>g.value>0)&&<section className="hw-card"><div className="hw-card-head"><h3>Renown</h3><span className="hw-chip"><Crown size={18}/>{c.gloryScore}</span></div><ul className="hw-list">{[...c.glory].filter(g=>g.value>0).sort((a,b)=>b.value-a.value).map(g=><li key={g.stream}><span className="hw-meter-row"><b className="hw-lbl">{g.stream}</b>{bar(Math.min(100,g.value*4))}<em>{g.value}</em></span></li>)}</ul></section>}
+   {c.showFactions&&c.factions.length>0&&<FactionsCard factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
+   <RenownCard glory={c.glory} score={c.gloryScore}/>
    {c.expansion&&<section className="hw-card"><div className="hw-card-head"><h3>Expansion</h3><span className="hw-chip">{c.expansion.mode}</span></div>{c.expansion.why.length>0&&<ul className="hw-chips">{c.expansion.why.map(w=><li key={w} className="hw-chip hw-chip-soft">{w}</li>)}</ul>}</section>}
    {(s?.own.length||0)>0&&<section className="hw-card"><div className="hw-card-head"><h3>Our outlying halls</h3></div><ul className="hw-chips">{s!.own.map((o,i)=><li key={i} className="hw-chip"><StageMeter stage={o.stage} label="Outlying hall"/>{o.resolution?<em>{o.resolution}</em>:<small>{o.pressure}%</small>}</li>)}</ul></section>}
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
   </div>}
   {tab==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
-  {tab==='chronicle'&&<ol className="hw-chron">{[...c.log].reverse().map((l,i)=><li key={i}>{l.replace(/^\d+:\s*/,'')}</li>)}</ol>}
+  {tab==='chronicle'&&<FameFeed log={c.log}/>}
   {tab==='terms'&&<CapitulationTerms engine={engine}/>}
  </Screen>;
 }
@@ -154,6 +151,10 @@ export function AgesScreen({hud,engine,onClose}:{hud:HudSnapshot;engine:Engine|n
 }
 
 /* ---------- menu ---------- */
+function AudioSliders({engine}:{engine:Engine|null}){
+ const [,bump]=useState(0);const st=engine?.audio.settings;if(!engine||!st)return null;
+ return <>{(['master','music','sfx','ambience'] as const).map(b=><label key={b}>{b==='sfx'?'Effects':b[0].toUpperCase()+b.slice(1)}<input type="range" min={0} max={100} value={Math.round(st[b]*100)} aria-label={b+' volume'} onChange={e=>{engine.audio.setVolume(b,+e.target.value/100);bump(n=>n+1);}}/></label>)}</>;
+}
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
@@ -164,10 +165,11 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
    <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}</section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <label>Graphics<select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
-    <label>World style<select aria-label="World visual style" value={engine?.view.getRenderStyle()==='carved'?'optionH':'current'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH');engine?.pushHud();}}><option value="current">Original</option><option value="optionH">Carved · Option H</option></select></label>
+    <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
-    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>Sound</label></div>
+    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>Sound</label>
+    <AudioSliders engine={engine}/></div>
     <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}>Skip music</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
   </div>}
   {tab==='world'&&<div className="hw-stack">

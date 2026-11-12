@@ -2,6 +2,8 @@ import {BankSurface} from './bankSurface';
 import {ExcavationSurface} from './excavationSurface';
 import type {BankTerrain} from '../game/bankTerrain';
 import * as THREE from 'three';
+import {TerrainLightmap} from './terrainLight';
+import {PAINTER_FRAGMENT_PARS,painterColor,painterLight,painterRoughness,painterNormal} from './painterTerrainShader';
 /** Original seamless packed surface texture. Channels encode mineral grain,
  * fracture edges, fine ground cover and roughness; never changes collision. */
 export const SURFACE_RULES={textureSize:128,detailMetres:9,provinceMetres:42,normalStrength:.055,rockNormalStrength:.15,fadeStartMetres:70,fadeEndMetres:240} as const;
@@ -36,6 +38,9 @@ export class TerrainSurface {
  readonly heights:THREE.DataTexture;
  readonly size:number;readonly segments:number;
  readonly snow={value:0};
+ /** Painterly map look: baked light field (AO, soft hill shadow, shore distance) shared by terrain, vegetation and props. */
+ lightmap?:TerrainLightmap;
+ readonly painter={terrainLight:{value:null as THREE.Texture|null},pCloud:{value:new THREE.Vector4(.2,0,0,0)},pSunDir:{value:new THREE.Vector3(.4,.7,.3)},pSunColor:{value:new THREE.Color('#fff0cf')}};
  constructor(heights:Float32Array,size:number,seed:number,banks?:BankTerrain,colors?:Float32Array){
   if(banks){this.banks=new BankSurface(size);this.banks.update(banks);this.bankCuts=new ExcavationSurface(size);if(colors){this.bankColors=new THREE.DataTexture(colors,Math.round(Math.sqrt(heights.length)),Math.round(Math.sqrt(heights.length)),THREE.RGBFormat,THREE.FloatType);this.bankColors.minFilter=this.bankColors.magFilter=THREE.NearestFilter;this.bankColors.generateMipmaps=false;this.bankColors.needsUpdate=true;}}
   this.size=size;this.segments=Math.round(Math.sqrt(heights.length))-1;
@@ -44,22 +49,28 @@ export class TerrainSurface {
   this.heights=new THREE.DataTexture(heights,this.segments+1,this.segments+1,THREE.RedFormat,THREE.FloatType);
   this.heights.magFilter=this.heights.minFilter=THREE.NearestFilter;this.heights.generateMipmaps=false;this.heights.needsUpdate=true;
  }
- bind(material:THREE.MeshStandardMaterial,biomes=false){
+ /** Per-frame atmosphere feed (painterly only): sun direction drives the baked hill shadow, cloud shadows drift with time. */
+ setAtmosphere(sunDir:THREE.Vector3,cloudShadow:number,time:number,sunColor:string,haze:number){
+  this.painter.pSunDir.value.copy(sunDir).normalize();this.painter.pCloud.value.set(cloudShadow,time,haze,0);this.painter.pSunColor.value.set(sunColor);
+  if(this.lightmap){this.lightmap.setSun(sunDir);this.lightmap.step();}
+ }
+ bind(material:THREE.MeshStandardMaterial,biomes=false,painterly=false){
+  painterly=painterly&&!!this.lightmap;if(painterly)this.painter.terrainLight.value=this.lightmap!.texture;
   if(this.banks||material.userData.hearthBankSurface){material.userData.hearthBankSurface=!!this.banks;material.needsUpdate=true;}
   material.flatShading=false;
-  material.customProgramCacheKey=()=>`hearth-terrain-surface-v3-${biomes?'ecology':'legacy'}${this.bankColors?`-banks-v19-${this.size}-${this.segments}`:''}`;
+  material.customProgramCacheKey=()=>`hearth-terrain-surface-v3-${biomes?'ecology':'legacy'}${painterly?'-painter-v1':''}${this.bankColors?`-banks-v19-${this.size}-${this.segments}`:''}`;
   material.onBeforeCompile=shader=>{
    if(this.bankColors){shader.uniforms.bankColors={value:this.bankColors};shader.vertexShader=`attribute float surfaceBank;uniform sampler2D bankColors;
 vec3 bankGroundColor(vec2 p){vec2 grid=clamp((p/${this.size.toFixed(1)}+.5)*${this.segments.toFixed(1)},vec2(0.),vec2(${this.segments.toFixed(1)}));vec2 cell=min(floor(grid),vec2(${(this.segments-1).toFixed(1)})),f=grid-cell,uv=(cell+.5)/${(this.segments+1).toFixed(1)},d=vec2(1./${(this.segments+1).toFixed(1)});vec3 a=texture2D(bankColors,uv).rgb,b=texture2D(bankColors,uv+vec2(d.x,0.)).rgb,c=texture2D(bankColors,uv+vec2(0.,d.y)).rgb,e=texture2D(bankColors,uv+d).rgb;return f.x+f.y<=1.?a+(b-a)*f.x+(c-a)*f.y:e+(c-e)*(1.-f.x)+(b-e)*(1.-f.y);}
-`+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <color_vertex>','#include <color_vertex>\n#ifdef USE_COLOR\nif(surfaceBank>.5)vColor.rgb=bankGroundColor(position.xz);\n#endif');}
-   shader.uniforms.surfaceDetail={value:this.detail};shader.uniforms.surfaceSnow=this.snow;
+`+shader.vertexShader;if(!painterly)shader.vertexShader=shader.vertexShader.replace('#include <color_vertex>','#include <color_vertex>\n#ifdef USE_COLOR\nif(surfaceBank>.5)vColor.rgb=bankGroundColor(position.xz);\n#endif');}
+   shader.uniforms.surfaceDetail={value:this.detail};shader.uniforms.surfaceSnow=this.snow;if(painterly)Object.assign(shader.uniforms,this.painter);
    shader.vertexShader=(biomes?'attribute vec4 biomeCover;attribute vec4 biomeMaterial;attribute vec3 biomeTint;varying vec4 vBiomeCover;varying vec4 vBiomeMaterial;varying vec3 vBiomeTint;\n':'')+'attribute float surfaceRock;attribute float surfaceSand; varying vec3 vSurfaceWorld; varying vec3 vSurfaceNormal; varying float vSurfaceRock;varying float vSurfaceSand;\n'+shader.vertexShader;
    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
      vSurfaceWorld=(modelMatrix*vec4(position,1.)).xyz;
      vSurfaceNormal=normalize(mat3(modelMatrix)*normal);vSurfaceRock=surfaceRock;vSurfaceSand=surfaceSand;
      ${biomes?'vBiomeCover=biomeCover;vBiomeMaterial=biomeMaterial;vBiomeTint=biomeTint;':''}`);
    shader.fragmentShader=`${biomes?'varying vec4 vBiomeCover;varying vec4 vBiomeMaterial;varying vec3 vBiomeTint;':''}
-    uniform sampler2D surfaceDetail;uniform float surfaceSnow;
+    uniform sampler2D surfaceDetail;uniform float surfaceSnow;${painterly?PAINTER_FRAGMENT_PARS:''}
     varying vec3 vSurfaceWorld;varying vec3 vSurfaceNormal;varying float vSurfaceRock;varying float vSurfaceSand;
     vec3 surfacePerturb(vec3 eyePosition,vec3 normalIn,float height){
      vec3 sigmaX=dFdx(eyePosition),sigmaY=dFdy(eyePosition);
@@ -67,6 +78,12 @@ vec3 bankGroundColor(vec2 p){vec2 grid=clamp((p/${this.size.toFixed(1)}+.5)*${th
      return normalize(abs(determinant)*normalIn-sign(determinant)*(dFdx(height)*r1+dFdy(height)*r2));
     }
    `+shader.fragmentShader;
+   if(painterly){
+    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>${painterColor(this.size,biomes)}`);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>',painterLight);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',painterRoughness);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',painterNormal(SURFACE_RULES.rockNormalStrength*1.1,SURFACE_RULES.normalStrength*.8));
+   }else{
    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     vec3 weights=pow(abs(normalize(vSurfaceNormal)),vec3(4.));weights/=max(.001,weights.x+weights.y+weights.z);
     vec3 p=vSurfaceWorld/${SURFACE_RULES.detailMetres.toFixed(1)};
@@ -106,8 +123,9 @@ vec3 bankGroundColor(vec2 p){vec2 grid=clamp((p/${this.size.toFixed(1)}+.5)*${th
      ${biomes?'roughnessFactor=mix(roughnessFactor,clamp(vBiomeMaterial.x+(surface.a-.8)*.05-vBiomeCover.w*.08,.52,1.),.9*(1.-rock));':''}`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
      normal=surfacePerturb(-vViewPosition,normal,surfaceHeight*mix(${SURFACE_RULES.normalStrength.toFixed(3)},${SURFACE_RULES.rockNormalStrength.toFixed(3)},rock)*(1.-surfaceSnow*.65)*${biomes?'mix(clamp(vBiomeMaterial.y/0.055,.2,2.5),1.,rock)':'1.'});`);
+   }
   };
   material.needsUpdate=true;
  }
- dispose(){this.detail.dispose();this.heights.dispose();this.banks?.dispose();this.bankCuts?.dispose();this.bankColors?.dispose();}
+ dispose(){this.lightmap?.dispose();this.detail.dispose();this.heights.dispose();this.banks?.dispose();this.bankCuts?.dispose();this.bankColors?.dispose();}
 }

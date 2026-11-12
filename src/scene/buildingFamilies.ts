@@ -281,6 +281,7 @@ const hearth:Generator=(ctx,r)=>{
 };
 
 import {EXTRA_FAMILIES} from './buildingFamiliesExtra';
+import {VILLAGE_FAMILIES} from './buildingFamiliesVillage';
 const CORE_FAMILIES:Record<CoreFamilyId,{reference:string;generate:Generator}>={
  roundhouse:{reference:'Iron Age roundhouse reconstructions (Butser Ancient Farm, Castell Henllys): wattle-and-daub drum, conical thatch, porch',generate:roundhouse},
  cottage:{reference:'English cruck/box-frame cottages and Germanic Fachwerk houses: bays, side door, chimney, lean-to outshot',generate:cottage},
@@ -298,14 +299,24 @@ const CORE_FAMILIES:Record<CoreFamilyId,{reference:string;generate:Generator}>={
  hearth:{reference:'Open cooking hearth: stone ring, fire, spit',generate:hearth},
 };
 
-export const BUILDING_FAMILIES:Record<FamilyId,{reference:string;generate:Generator}>={...CORE_FAMILIES,...EXTRA_FAMILIES};
+/** LEGACY grammar set: the original Option H generators, kept exactly as authored (never deleted). */
+export const LEGACY_FAMILIES:Record<FamilyId,{reference:string;generate:Generator}>={...CORE_FAMILIES,...EXTRA_FAMILIES};
+/** Grammar sets: 'village' (default, buildingFamiliesVillage.ts, detailed machines and structure) overrides the families it
+ * rebuilds and falls through to the legacy generator for the rest; 'legacy' is the original look, selectable in the world style menu. */
+export type BuildingGrammar='village'|'legacy';
+let grammar:BuildingGrammar='village';
+export function setBuildingGrammar(g:BuildingGrammar){grammar=g==='legacy'?'legacy':'village';}
+export function getBuildingGrammar():BuildingGrammar{return grammar;}
+function activeDef(family:FamilyId):{reference:string;generate:Generator}{return (grammar==='village'&&VILLAGE_FAMILIES[family])||LEGACY_FAMILIES[family];}
+/** Registry of the ACTIVE grammar (entries resolve at access time, so switching the grammar switches every consumer). */
+export const BUILDING_FAMILIES=Object.fromEntries((Object.keys(LEGACY_FAMILIES) as FamilyId[]).map(k=>[k,{get reference(){return activeDef(k).reference;},get generate(){return activeDef(k).generate;}}])) as Record<FamilyId,{reference:string;generate:Generator}>;
 
 /** Rotate every part of a spec about Y by quarter turns (used for waterSide).
  * Beam endpoints are rotated too, so a later fitToFootprint rebuilds them in place. */
 export function rotateParts(parts:Part[],quarterTurns:number):Part[]{
  const q=((quarterTurns%4)+4)%4;if(!q)return parts;const a=q*Math.PI/2,c=Math.round(Math.cos(a)),s=Math.round(Math.sin(a));
  const rp=(v:readonly [number,number,number]):[number,number,number]=>[v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];
- return parts.map(p=>{const rot=p.rot??[0,0,0];return {...p,pos:rp(p.pos),rot:[rot[0],rot[1]+a,rot[2]] as [number,number,number],...(p.ends?{ends:[rp(p.ends[0]),rp(p.ends[1])] as const}:{})};});
+ return parts.map(p=>{const rot=p.rot??[0,0,0];return {...p,...(p.anim?{anim:{...p.anim,pivot:rp(p.anim.pivot),axis:rp(p.anim.axis)}}:{}),pos:rp(p.pos),rot:[rot[0],rot[1]+a,rot[2]] as [number,number,number],...(p.ends?{ends:[rp(p.ends[0]),rp(p.ends[1])] as const}:{})};});
 }
 const waterTurns={'+x':0,'-z':1,'-x':2,'+z':3} as const;
 /** Piers are authored facing +Z water; quarter turns that bring +Z onto the real side. */
@@ -327,7 +338,7 @@ export function ensureTierSupport(parts:Part[],footprint:{w:number;d:number}):Pa
 }
 
 export function generateFamily(family:FamilyId,ctx:FamilyContext,variantKey:string):BuildingSpec{
- const def=BUILDING_FAMILIES[family],r=seededRandom(ctx.seed);
+ const def=activeDef(family),r=seededRandom(ctx.seed);
  // Families authored along one axis: turn them to the real water side / span axis.
  let q=0,gctx=ctx;
  if(family==='watermill'&&ctx.waterSide)q=waterTurns[ctx.waterSide];

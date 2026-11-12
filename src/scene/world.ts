@@ -41,11 +41,20 @@ import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
-import {currentRenderStyle} from './renderStyle';
+import {currentRenderStyle,type RenderStyle} from './renderStyle';
+import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
+import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
+import {setBuildingGrammar} from './buildingFamilies';
+import {millPowerKw,MILL_RULES} from '@/game/millPower';
+import {watermillSite} from '@/game/waterWorks';
+import {setCarvedPalette} from './carvedPalette';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
+import {TerrainLightmap} from './terrainLight';
+import {PainterGround,blurGrid,smoothTileNormals,smoothGridNormals} from './painterGround';
+import {trailStampTexture,painterNodeRock} from './painterTrees';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
@@ -156,6 +165,7 @@ const _q = new THREE.Quaternion();
 const _s = new THREE.Vector3();
 const _e = new THREE.Euler();
 const _c = new THREE.Color();
+const _trailColor = new THREE.Color(), _trailColorB = new THREE.Color(), _trailColorC = new THREE.Color();
 const _ray = new THREE.Raycaster();
 const _ndc = new THREE.Vector2();
 const _ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -226,10 +236,26 @@ export class WorldView {
   /** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
    * finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
    * buildings always keep the current renderer so footprints, collision and terrain stay exact. */
-  private renderStyle:'current'|'carved'=currentRenderStyle()==='optionH'?'carved':'current';
+  private styleId:RenderStyle=currentRenderStyle();
+  private renderStyle:'current'|'carved'=this.styleId==='current'?'current':'carved';
+  /** Map look (2026-11 overhaul). 'painterly' is the default; 'classic' is the archived Codex-era map look. Changing it needs a rebuild(game). */
+  mapStyle:MapStyle=loadMapStyle();
+  private classicSky:THREE.Material|null=null;
+  private painterSky:THREE.ShaderMaterial|null=null;
+  private gradePass:ShaderPass|null=null;
+  setMapStyle(style:MapStyle,remember=true){if(style!==this.mapStyle){this.mapStyle=style;if(remember)rememberMapStyle(style);this.applyMapStyleScene();this.setupComposer();}}
+  getMapStyle(){return this.mapStyle;}
+  /** Force the next sync to repaint the season-dependent ground and plant colours (used by render tools and style switches). */
+  seasonDirty(){this.seasonAcc=1;this.lastSnow=-1;}
   private carvedLayer:CarvedBuildingLayer|null=null;
   private carvedOwners=new Map<THREE.Object3D,import("@/game/types").Building[]>();
-  setRenderStyle(style:'current'|'carved'){this.renderStyle=style==='carved'?'carved':'current';}
+  /** Select the world look: 'village' (new default grammar + natural palette), 'optionH' (legacy carved honey) or 'current' (original blocks). */
+  setStyle(style:RenderStyle){
+    this.styleId=style;this.renderStyle=style==='current'?'current':'carved';
+    setBuildingGrammar(style==='optionH'?'legacy':'village');setCarvedPalette(style==='optionH'?'honey':'village');
+  }
+  getStyle():RenderStyle{return this.styleId;}
+  setRenderStyle(style:'current'|'carved'){this.setStyle(style==='carved'?'optionH':'current');}
   getRenderStyle(){return this.renderStyle;}
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
@@ -268,6 +294,7 @@ export class WorldView {
   private housingPackets:HousingPacketLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
+  private trailHalo: THREE.InstancedMesh | null = null;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
   rings!: THREE.InstancedMesh;
@@ -328,6 +355,7 @@ export class WorldView {
   private biomeScene: BiomeSceneLayer | null = null;
   private localWater: THREE.Group | null = null;
   private terrainSurface: TerrainSurface | null = null;
+  private painterGround: PainterGround | null = null;
   private waterMaterials: THREE.Material[] = [];
   private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
@@ -345,6 +373,7 @@ export class WorldView {
 
   constructor(canvas: HTMLCanvasElement) {
     this.quality = loadGraphicsQuality();
+    this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: this.quality === "high",
@@ -453,6 +482,8 @@ export class WorldView {
     this.sunDisc.renderOrder = -19;
     this.sunGlow.renderOrder = -19;
     this.scene.add(this.sunDisc, this.sunGlow);
+    this.classicSky=this.sky.material as THREE.Material;
+    this.applyMapStyleScene();
 
     this.terrain = new THREE.Mesh();
     this.water = new THREE.Mesh();
@@ -523,6 +554,13 @@ export class WorldView {
 
     this.trailMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),new THREE.MeshStandardMaterial({color:"#756d52",alphaMap:this.trailAlpha(),transparent:true,opacity:0.12,depthWrite:false,roughness:1,side:THREE.DoubleSide}),4096);
     this.trailMesh.count=0;this.trailMesh.frustumCulled=false;this.trailMesh.raycast=()=>{};this.scene.add(this.trailMesh);
+    if(this.mapStyle==='painterly'){
+     // Worn-earth ribbons read clearly: a packed-earth core over a flattened-grass halo, both soft at the rim. Colour follows wear.
+     const stamp=trailStampTexture(),core=this.trailMesh.material as THREE.MeshStandardMaterial;core.alphaMap?.dispose();core.alphaMap=stamp;core.color.set('#ffffff');core.opacity=.78;core.polygonOffset=true;core.polygonOffsetFactor=-3;core.polygonOffsetUnits=-3;core.needsUpdate=true;
+     this.trailMesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(4096*3).fill(1),3);
+     const haloMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',alphaMap:stamp,transparent:true,opacity:.42,depthWrite:false,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+     this.trailHalo=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),haloMaterial,4096);this.trailHalo.count=0;this.trailHalo.frustumCulled=false;this.trailHalo.raycast=()=>{};this.trailHalo.renderOrder=-1;this.trailHalo.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(4096*3).fill(1),3);this.scene.add(this.trailHalo);
+    }
     this.rings = new THREE.InstancedMesh(
       new THREE.RingGeometry(0.7, 0.88, 20),
       new THREE.MeshBasicMaterial({
@@ -561,6 +599,23 @@ export class WorldView {
 
     this.setupFow();
     this.setupComposer();
+  }
+
+  /** Scene-level pieces that differ between the painterly and the archived classic map look (sky dome, sun sprites, shadow softness). */
+  private applyMapStyleScene() {
+    const painterly=this.mapStyle==='painterly';
+    if(painterly){
+      this.painterSky??=makePainterSky();
+      this.sky.material=this.painterSky;
+      this.sunDisc.visible=false;this.sunGlow.visible=false;
+      this.hemi.groundColor.set('#8a7a55');
+      this.sun.shadow.bias=-0.0003;this.sun.shadow.normalBias=0.05;
+      if(this.sun.shadow.radius!==undefined)this.sun.shadow.radius=2.2;
+    }else{
+      if(this.classicSky)this.sky.material=this.classicSky;
+      this.sunDisc.visible=true;this.sunGlow.visible=true;
+      this.sun.shadow.bias=-0.0004;this.sun.shadow.normalBias=0.04;this.sun.shadow.radius=1;
+    }
   }
 
   resize() {
@@ -627,9 +682,9 @@ export class WorldView {
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
-    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
+    if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(this.mapStyle==='painterly')smoothTileNormals(geometry,game.world.bankTerrain!.subdivisions);if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
-    if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface);
+    if((game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology)this.contourFields=new ContourFields(this.scene,this.fieldSurface,this.mapStyle==='painterly'?'painterly':'classic');
     this.buildNature(game);
     if(game.state&&wildPlantsEnabled(game)){this.wildPlantLayer=new WildPlantLayer(this.scene,game);if(this.bushes)this.bushes.count=0;}
     this.buildBuildings();
@@ -717,6 +772,7 @@ export class WorldView {
     this.terrainBiome = biome;
     this.terrainRegion = region;
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    if(this.mapStyle==="painterly"){blurGrid(surfaceRock,3);blurGrid(surfaceSand,2);}
     geo.setAttribute("surfaceRock",new THREE.BufferAttribute(surfaceRock,1));
     geo.setAttribute("surfaceSand",new THREE.BufferAttribute(surfaceSand,1));
     if(game.world.bankTerrain)geo.setAttribute('surfaceBank',new THREE.BufferAttribute(new Float32Array(pos.count),1));
@@ -727,8 +783,15 @@ export class WorldView {
       geo.setAttribute('biomeMaterial',new THREE.BufferAttribute(attributes.material,4));
       geo.setAttribute('biomeTint',new THREE.BufferAttribute(attributes.tint,3));
     }
-    this.terrainSurface.bind(this.mats.ground,!!ecology);
+    const painterly=this.mapStyle==='painterly';
+    this.painterGround=null;
+    if(painterly){
+      this.terrainSurface.lightmap=new TerrainLightmap({size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z)});
+      this.painterGround=new PainterGround(game as never,pos as THREE.BufferAttribute,landscape,biome,region);
+    }
+    this.terrainSurface.bind(this.mats.ground,!!ecology,painterly);
     geo.computeVertexNormals();
+    if(painterly)smoothGridNormals(geo,game.world.segs,2);
     geo.computeBoundingBox();
     geo.computeBoundingSphere();
     this.terrain = new THREE.Mesh(geo, this.mats.ground);
@@ -738,8 +801,9 @@ export class WorldView {
 
     const wgeo = new THREE.PlaneGeometry(this.mapSize, this.mapSize, 48, 48);
     wgeo.rotateX(-Math.PI / 2);
-    const waterMaterial=this.makeWaterMat(),fallMaterial=makeDepthWater(this.terrainSurface!,this.timeU,true);
-    this.waterMaterials=[waterMaterial,fallMaterial];
+    const waterMaterial=this.makeWaterMat(),fallMaterial=makeDepthWater(this.terrainSurface!,this.timeU,true,painterly?'painterly':'classic');
+    const riverMaterial=painterly?makeDepthWater(this.terrainSurface!,this.timeU,false,'painterly','river'):waterMaterial;
+    this.waterMaterials=painterly?[waterMaterial,fallMaterial,riverMaterial]:[waterMaterial,fallMaterial];
     this.water = new THREE.Mesh(wgeo, waterMaterial);
     this.water.position.y = seaSurfaceY(game.world);
     this.water.renderOrder = 1;
@@ -747,7 +811,7 @@ export class WorldView {
     const localWater=new THREE.Group();localWater.name='local-water-bodies';this.localWater=localWater;
     localWater.position.y=game.world.waterY-game.world.baseWaterY;
     const hydrology=game.world as typeof game.world&{waterBodies?:RenderWaterBody[];waterfalls?:RenderWaterfall[]};
-    addLocalWaters(localWater,hydrology.waterBodies??[],hydrology.waterfalls??[],waterMaterial,fallMaterial);this.scene.add(localWater);
+    addLocalWaters(localWater,hydrology.waterBodies??[],hydrology.waterfalls??[],waterMaterial,fallMaterial,riverMaterial);this.scene.add(localWater);
     this.buildBankRibbons(game);
     this.seasonAcc = 1;
   }
@@ -782,7 +846,7 @@ export class WorldView {
 
   private buildNature(game: Game) {
     const ecology=(game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology;
-    if(ecology){this.biomeScene=new BiomeSceneLayer(this.scene,game,ecology);this.biomeScene.sync(game,this.camera.position,this.quality,1);this.treeCount=game.state.trees.length;}
+    if(ecology){this.biomeScene=new BiomeSceneLayer(this.scene,game,ecology,this.mapStyle==='painterly'?'painterly':'classic');this.biomeScene.sync(game,this.camera.position,this.quality,1);this.treeCount=game.state.trees.length;}
     else {
     const pine = pineGeo();
     const nTree = game.state.trees.length;
@@ -821,7 +885,8 @@ export class WorldView {
     }
 
     const nRock = game.state.stones.length;
-    this.rocks = new THREE.InstancedMesh(rockGeo(), this.mats.rock, Math.max(nRock, 1));
+    const painterRocks=this.mapStyle==='painterly',painterRockMat=painterRocks?new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.96,metalness:0}):null;
+    this.rocks = new THREE.InstancedMesh(painterRocks?painterNodeRock('stone'):rockGeo(), painterRockMat??this.mats.rock, Math.max(nRock, 1));
     this.rocks.castShadow = true;
     this.rocks.receiveShadow = true;
     game.state.stones.forEach((s, i) => {
@@ -841,7 +906,8 @@ export class WorldView {
     cuMat.color.set("#b87333");
     cuMat.emissive.set("#6a3a10");
     cuMat.emissiveIntensity = 0.22;
-    this.copper = new THREE.InstancedMesh(rockGeo(), cuMat, Math.max(nCu, 1));
+    if(painterRocks){cuMat.color.set('#ffffff');cuMat.vertexColors=true;cuMat.emissiveIntensity=.1;}
+    this.copper = new THREE.InstancedMesh(painterRocks?painterNodeRock('copper',3):rockGeo(), cuMat, Math.max(nCu, 1));
     this.copper.castShadow = true;
     game.state.copper.forEach((s, i) => {
       _p.set(s.x, s.y, s.z);
@@ -859,7 +925,8 @@ export class WorldView {
     feMat.color.set("#4a4a52");
     feMat.metalness = 0.55;
     feMat.roughness = 0.4;
-    this.iron = new THREE.InstancedMesh(rockGeo(), feMat, Math.max(nFe, 1));
+    if(painterRocks){feMat.color.set('#ffffff');feMat.vertexColors=true;feMat.metalness=.25;feMat.roughness=.62;}
+    this.iron = new THREE.InstancedMesh(painterRocks?painterNodeRock('iron',5):rockGeo(), feMat, Math.max(nFe, 1));
     this.iron.castShadow = true;
     game.state.iron.forEach((s, i) => {
       _p.set(s.x, s.y, s.z);
@@ -961,7 +1028,7 @@ export class WorldView {
       if(type==='farm'){timberMaterial.map=null;timberMaterial.bumpMap=null;timberMaterial.roughnessMap=null;}
       timberMaterial.color.set("#ffffff"); // Instance palette supplies the actual era material color.
       if(type === "farm") timberMaterial.vertexColors = true;
-      if(type === "farm" || type === "pen" || terrainLaidWorkplace(type)) this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields});
+      if(type === "farm" || type === "pen" || terrainLaidWorkplace(type)) this.fieldSurface?.bind(timberMaterial,{furrows:type==='farm'&&!!this.contourFields,painterly:type==='farm'&&this.mapStyle==='painterly'});
       if(type==='farm'&&this.contourFields){
         g.timber.setAttribute('fieldRows',new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
         const positions=g.timber.attributes.position,colors=g.timber.attributes.color,soilColor=new THREE.Color('#795632');
@@ -1326,12 +1393,13 @@ export class WorldView {
     this.bankLayer?.sync(game);
     if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);
-    this.biomeScene?.sync(game,this.camera.position,this.quality,dt);
+    this.biomeScene?.sync(game,this.camera.position,this.quality,dt);this.biomeScene?.setTime(game.state.time);
     this.wildPlantLayer?.sync(game);
     this.syncNature(game);
     this.syncWildlife(game);
     this.buildingSyncIn-=dt;
     if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
+    this.carvedLayer?.animate(game.state.paused?0:dt);
     this.syncUnits(game);
     this.siegeRamLayer?.sync(game,this.camera,this.quality,this.shadowsEnabled);
     this.syncTrails(game);
@@ -1384,7 +1452,7 @@ export class WorldView {
     else if (wx === "golden") sunI *= 0.9;
     else if (wx === "drought") sunI *= 1.08;
     sunI *= 1 - sn.winter * 0.12 + sn.summer * 0.06;
-    const hemiI = night
+    let hemiI = night
       ? 0.7
       : (0.52 + elev * 0.32) * (wx === "storm" ? 0.75 : 1) * (1 - sn.winter * 0.08);
     const sunCol = new THREE.Color(
@@ -1450,7 +1518,13 @@ export class WorldView {
     // Option H only: warm the skylight and distance haze a little toward the golden grade (scaled by its own warmth, so winter/storm stay cool).
     if(hGrade&&clearDay){this.hemi.color.lerp(_c.set(hGrade.hemiSky),.3*hGrade.warmth);fog.lerp(_c.set(hGrade.sun),.12*hGrade.warmth);}
     this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
-    const dens=atmosphericDensity(wx,night,sn.snow);
+    let dens=atmosphericDensity(wx,night,sn.snow);
+    const painter=this.mapStyle==='painterly'?painterAtmosphere({elev,dawn,dusk,night,weather:wx,winter:sn.winter,autumn:sn.autumn,spring:sn.spring,snow:sn.snow,day}):null;
+    if(painter){
+      sunI=painter.sunIntensity;hemiI=painter.hemiIntensity/1.2;dens=painter.fogDensity;
+      sunCol.set(painter.sun);fog.set(painter.fog);
+      this.hemi.color.set(painter.hemiSky);this.hemi.groundColor.set(painter.hemiGround);
+    }
     const k = dt > 0.4 ? 1 : 1 - Math.exp(-dt * 0.38);
     this.litSun += (sunI - this.litSun) * k;
     this.litHemi += (hemiI - this.litHemi) * k;
@@ -1460,12 +1534,12 @@ export class WorldView {
     this.sun.intensity = this.litSun;
     this.sun.color.copy(this.litSunCol);
     this.hemi.intensity = this.litHemi * 1.2;
-    this.fill.intensity = night ? 0.45 : ATMOSPHERE_RULES.daylightFill + elev * ATMOSPHERE_RULES.elevatedFill;
+    this.fill.intensity = painter?painter.fillIntensity:night ? 0.45 : ATMOSPHERE_RULES.daylightFill + elev * ATMOSPHERE_RULES.elevatedFill;
     this.bounce.intensity = night ? 0.22 : 0.12 + elev * 0.12;
     (this.scene.fog as THREE.FogExp2).color.copy(this.litFog);
     this.scene.background = this.litFog;
     (this.scene.fog as THREE.FogExp2).density = this.litFogD;
-    this.renderer.toneMappingExposure =
+    this.renderer.toneMappingExposure = painter?painter.exposure:
       (night ? 1.08 : 1.02 + elev * 0.20 + dawn * 0.08 + sn.winter * 0.06) *
       (wx === "storm" || wx === "flood" ? 0.88 : 1);
 
@@ -1483,6 +1557,16 @@ export class WorldView {
     (this.sunGlow.material as THREE.MeshBasicMaterial).opacity =
       (wx === "golden" ? 0.55 : 0.38) * vis;
     this.sky.position.copy(this.camera.position);
+    if(painter&&this.painterSky){
+      const u=this.painterSky.uniforms;
+      u.uZenith.value.set(painter.skyZenith);u.uMid.value.set(painter.skyMid);u.uHorizon.value.set(painter.skyHorizon);u.uGround.value.set(painter.skyGround);u.uSun.value.set(painter.sun);
+      u.uSunDir.value.copy(sunDir);u.uTime.value=game.state.time;u.uCover.value=painter.cloudCover;u.uNight.value=night?1:0;
+      for(const material of this.waterMaterials){const w=(material as THREE.ShaderMaterial).uniforms;if(w?.uSkyHorizon){(w.uSkyHorizon.value as THREE.Color).set(painter.skyHorizon);(w.uSkyZenith.value as THREE.Color).set(painter.skyZenith);(w.uSunColor.value as THREE.Color).set(painter.sun);}}
+      if(this.terrainSurface)this.terrainSurface.setAtmosphere(sunDir,painter.cloudShadow,game.state.time,painter.sun,painter.haze);
+      this.biomeScene?.setSun(sunDir,night?0:Math.min(1,painter.sunIntensity/2.2)*(1-.6*(painter.cloudCover>.8?1:0)),this.renderer.shadowMap.enabled);
+      const g=this.gradePass?.uniforms;
+      if(g){g.uSat.value=painter.saturation;g.uContrast.value=painter.contrast;g.uWarm.value=painter.warmth;g.uHaze.value=painter.haze;}
+    }
   }
 
   private syncWildlife(game: Game) {
@@ -1552,12 +1636,17 @@ export class WorldView {
       for(let k=1;k<pts.length&&i<CAP;k++){
         const a=pts[k-1],b=pts[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-3)continue;
         const x=(a.x+b.x)/2,z=(a.z+b.z)/2;if(!game.exploredAt(x,z))continue;
-        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45));
+        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45))*(this.trailHalo?2.7:1);
         _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-Math.atan2(dx,dz));_q.setFromEuler(_e);
-        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);
+        if(this.trailHalo){const wear=Math.min(1,(a.displayWear+b.displayWear)/2/.45),core=_trailColor.set('#7d5f3c').lerp(_trailColorB.set('#b79a6c'),Math.max(0,1-wear*1.1)*.7);this.trailMesh.setColorAt(i,core);
+         _s.set(w*(.8+.6*wear)+.9,len*1.3+.5,1);_m.compose(_p,_q,_s);this.trailHalo.setMatrixAt(i,_m);this.trailHalo.setColorAt(i,_trailColorC.set('#9b9a52').lerp(_trailColorB.set('#a8955c'),wear*.6));
+         _s.set(w*.92,len*1.3,1);_m.compose(_p,_q,_s);}
+        this.trailMesh.setMatrixAt(i++,_m);
       }
     }
-    this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
+    this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;if(this.trailMesh.instanceColor)this.trailMesh.instanceColor.needsUpdate=true;
+    if(this.trailHalo){this.trailHalo.count=i;this.trailHalo.instanceMatrix.needsUpdate=true;if(this.trailHalo.instanceColor)this.trailHalo.instanceColor.needsUpdate=true;}
   }
 
   private syncNature(game: Game) {
@@ -1719,9 +1808,10 @@ export class WorldView {
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
         if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
-          const fab=fabricContext(b);
+          const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
           carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,yaw:buildingQuarterTurns(b)*Math.PI/2,progress:ys,b});
+            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+            yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
           continue;
         }
         const scalable=type==="farm"||modular;
@@ -1775,12 +1865,29 @@ export class WorldView {
     this.foundations?.sync(game);
   }
 
+  private millYaw=new Map<string,number>();
+  /** Quarter turn that puts the mill's wheel side (+X in the family frame) toward the river the wheel actually stands in
+   * (watermillSite.wheel); a mill with no river in range keeps the placed turn. */
+  private millFacing(game:Game,b:import("@/game/types").Building){
+    const k=b.id+':'+b.x+':'+b.z,hit=this.millYaw.get(k);if(hit!==undefined)return hit;
+    const wheel=watermillSite(game,b.x,b.z).wheel;let yaw=buildingQuarterTurns(b)*Math.PI/2;
+    if(wheel&&Math.hypot(wheel.x-b.x,wheel.z-b.z)>.5)yaw=Math.round(Math.atan2(-(wheel.z-b.z),wheel.x-b.x)/(Math.PI/2))*(Math.PI/2);
+    this.millYaw.set(k,yaw);return yaw;
+  }
+  /** Rotor speed (rad/s) from the live mill power (CURRENT-POWER-HOOK): the wheel turns with the real river current and head,
+   * the sails with the measured wind at the site and the weather; below the grinding threshold the machine stands still. */
+  private millSpin(game:Game,b:import("@/game/types").Building){
+    const kw=millPowerKw(game,b);if(kw<MILL_RULES.minKw)return 0;
+    if(b.type==='watermill')return Math.min(2.4,.45+.6*Math.sqrt(kw/MILL_RULES.referenceKw));
+    return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);
+  }
+
   private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
     layer.sync(list,this.camera.position);
-    for(const [mesh,owners] of layer.sources()){
+    for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
       this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
     }
@@ -2374,7 +2481,7 @@ export class WorldView {
   };
 
   private makeWaterMat() {
-    return makeDepthWater(this.terrainSurface!,this.timeU);
+    return makeDepthWater(this.terrainSurface!,this.timeU,false,this.mapStyle==='painterly'?'painterly':'classic','sea');
   }
 
   private setupGodrays() {
@@ -2470,7 +2577,8 @@ export class WorldView {
       this.composer.addPass(new RenderPass(this.scene, this.camera));
       this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.14, 0.28, 0.92);
       this.composer.addPass(this.bloom);
-      const vig = new ShaderPass({
+      this.gradePass=null;
+      const vig = this.mapStyle==='painterly'?(this.gradePass=new ShaderPass({uniforms:THREE.UniformsUtils.clone(PAINTER_GRADE_SHADER.uniforms),vertexShader:PAINTER_GRADE_SHADER.vertexShader,fragmentShader:PAINTER_GRADE_SHADER.fragmentShader})):new ShaderPass({
         uniforms: {
           tDiffuse: { value: null },
           offset: { value: 0.85 },
@@ -2487,7 +2595,7 @@ export class WorldView {
           }`,
       });
       this.composer.addPass(vig);
-      this.composer.addPass(new FilmPass(0.025, false));
+      this.composer.addPass(new FilmPass(this.mapStyle==='painterly'?0.012:0.025, false));
       // Match the direct renderer's display color conversion at every quality.
       this.composer.addPass(new OutputPass());
       this.composer.setSize(w, h);
@@ -2599,6 +2707,8 @@ export class WorldView {
     if (!colAttr || !biome) return;
     const arr = colAttr.array as Float32Array;
     const c = _c;
+    if(this.painterGround)this.painterGround.paint(arr,sn);
+    else {
     for (let i = 0; i < pos.count; i++) {
       const h = pos.getY(i);
       const b = biome[i];
@@ -2693,6 +2803,7 @@ export class WorldView {
           arr[o+channel]=sum/count;
         }
       }
+    }
     }
     colAttr.needsUpdate = true;if(this.terrainSurface?.bankColors)this.terrainSurface.bankColors.needsUpdate=true;
 
@@ -2792,7 +2903,11 @@ export class WorldView {
     }
 
     const waterMat = this.water?.material as THREE.ShaderMaterial | undefined;
-    if (waterMat?.uniforms?.uColor) {
+    if(this.mapStyle==='painterly'){
+      const shallow=_c.set('#62b9ae').lerp(new THREE.Color('#6cc1b3'),sn.spring).lerp(new THREE.Color('#68aea4'),sn.autumn).lerp(new THREE.Color('#a3c0c4'),Math.min(1,sn.winter*1.2)).clone();
+      const deep=_c.set('#1a5a7a').lerp(new THREE.Color('#1c6482'),sn.spring).lerp(new THREE.Color('#1d5470'),sn.autumn).lerp(new THREE.Color('#33505f'),Math.min(1,sn.winter*1.2)).clone();
+      for(const material of this.waterMaterials){const u=(material as THREE.ShaderMaterial).uniforms;if(u?.uColor){(u.uColor.value as THREE.Color).copy(shallow);(u.uDeep.value as THREE.Color).copy(deep);}}
+    }else if (waterMat?.uniforms?.uColor) {
       (waterMat.uniforms.uColor.value as THREE.Color).set(sn.winter > 0.5 ? "#8baeb9" : "#53b5b8");
       (waterMat.uniforms.uDeep.value as THREE.Color).set(sn.winter > 0.5 ? "#2a4450" : "#123d61");
     }

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {surveyFieldTopography} from '../game/plotTopography';
 import type {FieldSurface} from './fieldSurface';
+import {painterCropGeometry,painterCropColor,painterCropScale} from './painterCrops';
+import {addPainterSway,painterSway} from './painterVegetationMaterial';
 export type FieldCrop='grain'|'pulses'|'tubers';
 export const CROP_ART_RULES={maxPlantInstances:8192,maximumPlantsPerField:512,edgeMarginMetres:.45,maxDistanceMetres:320,
  rows:{grain:{rowMetres:.95,plantMetres:.82},pulses:{rowMetres:1.3,plantMetres:1.15},tubers:{rowMetres:1.45,plantMetres:1.3}}} as const;
@@ -54,12 +56,12 @@ export function cropPlantGeometry(kind:FieldCrop){
  const flattened=parts.map(g=>{if(!g.index)return g;const n=g.toNonIndexed();g.dispose();return n;}),geo=mergeGeometries(flattened,false);for(const g of flattened)g.dispose();if(!geo)throw new Error('Crop geometry attributes differ');geo.computeBoundingBox();geo.computeBoundingSphere();return geo;
 }
 export class ContourFields {
- private scene:THREE.Scene;private surface:FieldSurface;private meshes=new Map<FieldCrop,THREE.InstancedMesh>();
+ private style:'classic'|'painterly';private scene:THREE.Scene;private surface:FieldSurface;private meshes=new Map<FieldCrop,THREE.InstancedMesh>();
  private cache=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;angle:number;sites:{x:number;z:number}[]}>();
  private position=new THREE.Vector3();private scale=new THREE.Vector3();private rotation=new THREE.Quaternion();private matrix=new THREE.Matrix4();private color=new THREE.Color();private up=new THREE.Vector3(0,1,0);private lastSurfaceRevision=-1;
- constructor(scene:THREE.Scene,surface:FieldSurface){this.scene=scene;this.surface=surface;
-  for(const kind of ['grain','pulses','tubers'] as const){const mat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9,side:THREE.DoubleSide});surface.bind(mat);
-   const mesh=new THREE.InstancedMesh(cropPlantGeometry(kind),mat,CROP_ART_RULES.maxPlantInstances);mesh.customDepthMaterial=surface.depth;mesh.name=`contour-crop-${kind}`;mesh.count=0;mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.raycast=()=>{};scene.add(mesh);this.meshes.set(kind,mesh);}
+ constructor(scene:THREE.Scene,surface:FieldSurface,style:'classic'|'painterly'='classic'){this.scene=scene;this.surface=surface;this.style=style;
+  for(const kind of ['grain','pulses','tubers'] as const){const mat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9,side:THREE.DoubleSide});surface.bind(mat);if(style==='painterly')addPainterSway(mat,painterSway(),`crop-${kind}`,.12);
+   const mesh=new THREE.InstancedMesh(style==='painterly'?painterCropGeometry(kind):cropPlantGeometry(kind),mat,CROP_ART_RULES.maxPlantInstances);mesh.customDepthMaterial=surface.depth;mesh.name=`contour-crop-${kind}`;mesh.count=0;mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.raycast=()=>{};scene.add(mesh);this.meshes.set(kind,mesh);}
  }
  orientation(ground:FieldGround,field:RenderField){
   const kind=fieldCropKind(field),key=`${field.x}/${field.z}/${field.w}/${field.d}/${kind}`,revision=ground.navigationRevision?.()??0,old=this.cache.get(field);
@@ -73,7 +75,10 @@ export class ContourFields {
   for(const field of fields){const kind=fieldCropKind(field),mesh=this.meshes.get(kind)!,plan=this.orientation(ground,field),growth=fieldCropGrowth(field);
    this.rotation.setFromAxisAngle(this.up,-plan.angle);
    this.color.set(kind==='grain'?(field.crop?.ripened?'#e2c15a':'#a8c17c'):kind==='pulses'?(field.crop?.ripened?'#bac183':'#9aba86'):'#91b887');
-   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,ground.height(site.x,site.z),site.z);this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);mesh.setColorAt(counts[kind]++,this.color);total++;}
+   const painter=this.style==='painterly',ps=painterCropScale(growth);
+   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,ground.height(site.x,site.z),site.z);if(painter)this.scale.set(ps.xz,ps.y,ps.xz);else this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);
+    if(painter){const j=Math.abs(Math.sin(site.x*12.9898+site.z*78.233)*43758.5453)%1;painterCropColor(kind,field.crop,growth,j,this.color);}
+    mesh.setColorAt(counts[kind]++,this.color);total++;}
   }
   for(const [kind,mesh]of this.meshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
   const revision=ground.navigationRevision?.()??0;if(this.lastSurfaceRevision!==revision){this.surface.texture.needsUpdate=true;this.lastSurfaceRevision=revision;}return {plants:total,...counts};

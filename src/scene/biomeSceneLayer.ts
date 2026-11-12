@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {provinceAt,ecologicalConditionsAt,PROVINCE_KINDS,type EcologicalProvinceGrid,type ProvinceKind} from '../game/ecologicalProvinces';
-import {BiomeVegetation,BiomeDressing,type ResourceTree,type DressingPoint,type VegetationContext} from './biomeVegetation';
+import {BiomeVegetation,BiomeDressing,type ResourceTree,type DressingPoint,type VegetationContext,type VegetationStyle} from './biomeVegetation';
 import type {DressingForm} from './vegetationKit';
 /** Read-only adapter contract. Integrator can pass Game directly after the
  * versioned ecology grid is attached to its generated world. */
@@ -8,7 +8,7 @@ export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number};s
  height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;
  seasonMix:()=>{winter:number;autumn:number;snow:number}};
 export const BIOME_SCENE_RULES={treeRefreshSeconds:.1,dressingRefreshSeconds:.5,dressingCellMetres:6,dressingRadiusMetres:65,
- dressingMaxCandidates:1024,dryClearanceMetres:.3,maximumDressingGrade:.65,bankSearchMetres:11,buildingMarginMetres:.7} as const;
+ dressingMaxCandidates:1024,painterCellMetres:3.6,painterMaxCandidates:1500,dryClearanceMetres:.3,maximumDressingGrade:.65,bankSearchMetres:11,buildingMarginMetres:.7} as const;
 /** All coefficients affect an actual surface channel, not an independent flat
  * biome paint layer. The active terrain shader is intentionally untouched here. */
 export const BIOME_SURFACE_PROFILES:Record<ProvinceKind,{organic:number;litter:number;grit:number;damp:number;roughness:number;microHeightMetres:number;detailScaleMetres:number;tint:[number,number,number];dressingDensity:number}>={
@@ -61,8 +61,41 @@ function dressingForm(kind:ProvinceKind,random:number,bank:boolean):DressingForm
  if(kind==='conifer-forest')return random<.36?'scrub':'grass';
  return random<.2?'scrub':'grass';
 }
-export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},quality:VegetationContext['quality']){
+/** Painterly undergrowth: a denser jittered grid, forms chosen per province and moisture, coloured flower patches, nearest-first so the
+ * instance cap always keeps what is around the camera. Same eligibility rules as the classic scatter (dry, gentle, outside buildings). */
+function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number):DressingPoint['kind']{
+ const pick=(table:[DressingPoint['kind'],number][])=>{let t=0;for(const [,w] of table)t+=w;let v=r*t;for(const [k,w] of table){v-=w;if(v<0)return k;}return table[0][0];};
+ if(bank&&(kind==='wetland'||moisture>.6))return pick([['reeds',5],['tallgrass',2],['grass',1]]);
+ switch(kind){
+  case 'meadow':return pick([['grass',50],['tallgrass',14],['flowers',22],['shrub',3],['pebbles',3],['rocks',1.2]]);
+  case 'mixed-woodland':return pick([['grass',36],['fern',22],['shrub',12],['tallgrass',8],['flowers',6],['log',2.4],['rocks',2.6],['pebbles',3]]);
+  case 'conifer-forest':return pick([['fern',24],['grass',24],['shrub',7],['log',3.4],['rocks',5],['pebbles',4]]);
+  case 'alpine':return pick([['pebbles',32],['rocks',14],['grass',30],['tallgrass',8],['flowers',5]]);
+  case 'wetland':return pick([['tallgrass',32],['grass',28],['flowers',10],['reeds',12],['fern',6]]);
+  case 'dry-scrub':return pick([['scrub',30],['tallgrass',26],['pebbles',16],['rocks',7],['grass',14],['shrub',5]]);
+  case 'arid':return pick([['pebbles',38],['scrub',24],['rocks',14],['tallgrass',9]]);
+  default:return pick([['grass',38],['shrub',16],['flowers',12],['fern',8],['tallgrass',12],['pebbles',5],['rocks',2]]);
+ }
+}
+function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number}){
+ const rules=BIOME_SCENE_RULES,cell=rules.painterCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
+ for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
+  const ix=cx+dx,iz=cz+dz,x=(ix+.12+hash(ix,iz,game.state.seed,7)*.76)*cell,z=(iz+.12+hash(ix,iz,game.state.seed,61)*.76)*cell,d=Math.hypot(x-camera.x,z-camera.z);
+  if(d>rules.dressingRadiusMetres||!game.exploredAt(x,z)||!dressingGroundAllowed(game,x,z))continue;
+  const profile=provinceAt(grid,x,z),art=BIOME_SURFACE_PROFILES[profile.kind],cond=ecologicalConditionsAt(grid,x,z);
+  // density falls with distance so the far ring thins out instead of ending on a hard line
+  const density=Math.min(1,art.dressingDensity*1.1)*(1-.55*Math.pow(d/rules.dressingRadiusMetres,2));
+  if(hash(ix,iz,game.state.seed,103)>density)continue;
+  let bank=false;
+  if(cond.moisture>.45)for(const [ax,az] of [[1,0],[-1,0],[0,1],[0,-1],[.7,.7],[-.7,-.7]]){const px=x+ax*rules.bankSearchMetres*.6,pz=z+az*rules.bankSearchMetres*.6;if(game.height(px,pz)<game.waterAt(px,pz)+.12){bank=true;break;}}
+  const patch=hash(Math.floor(x/11),Math.floor(z/11),game.state.seed,977);
+  points.push({x,y:game.height(x,z),z,kind:painterForm(profile.kind,hash(ix,iz,game.state.seed,157),bank,cond.moisture),scale:.72+hash(ix,iz,game.state.seed,211)*.5,tone:Math.pow(Math.max(0,Math.min(1,.95-cond.moisture*1.5+(hash(ix,iz,game.state.seed,331)-.5)*.3)),1.4),hue:patch*.82+hash(ix,iz,game.state.seed,401)*.18});
+ }
+ return points.sort((a,b)=>Math.hypot(a.x-camera.x,a.z-camera.z)-Math.hypot(b.x-camera.x,b.z-camera.z)).slice(0,rules.painterMaxCandidates);
+}
+export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},quality:VegetationContext['quality'],style:VegetationStyle='classic'){
  if(quality==='low')return [];
+ if(style==='painterly')return painterCandidates(game,grid,camera);
  const rules=BIOME_SCENE_RULES,cell=rules.dressingCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
  for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
   if(points.length>=rules.dressingMaxCandidates)return points;
@@ -82,13 +115,16 @@ export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvi
 export class BiomeSceneLayer {
  private grid:EcologicalProvinceGrid;private trees:BiomeVegetation;private dressing:BiomeDressing;
  private treeIn=0;private dressingIn=0;private lastQuality='';
- constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid){this.grid=grid;this.trees=new BiomeVegetation(scene,game.state.seed,(x,z)=>provinceAt(grid,x,z));this.dressing=new BiomeDressing(scene);}
+ private style:VegetationStyle;
+ constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid,style:VegetationStyle='classic'){this.grid=grid;this.style=style;this.trees=new BiomeVegetation(scene,game.state.seed,(x,z)=>provinceAt(grid,x,z),1,style);this.dressing=new BiomeDressing(scene,style);}
+ setTime(t:number){this.trees.setTime(t);this.dressing.setTime(t);}
+ setSun(dir:THREE.Vector3,strength:number,realShadows=false){this.trees.setSun(dir,strength,realShadows);}
  sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number){
   this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const changed=quality!==this.lastQuality;this.lastQuality=quality;
   let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined;
   const context:VegetationContext={quality,camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
   if(this.treeIn<=0||changed){treeReport=this.trees.sync(game.state.trees,context);this.treeIn=BIOME_SCENE_RULES.treeRefreshSeconds;}
-  if(this.dressingIn<=0||changed){const points=biomeDressingCandidates(game,this.grid,camera,quality);dressingCount=this.dressing.sync(points,context,(x,z)=>dressingGroundAllowed(game,x,z));this.dressingIn=BIOME_SCENE_RULES.dressingRefreshSeconds;}
+  if(this.dressingIn<=0||changed){const points=biomeDressingCandidates(game,this.grid,camera,quality,this.style);dressingCount=this.dressing.sync(points,context,(x,z)=>dressingGroundAllowed(game,x,z));this.dressingIn=BIOME_SCENE_RULES.dressingRefreshSeconds;}
   return {treeReport,dressingCount};
  }
  pickingSources(){return this.trees.pickingSources();}

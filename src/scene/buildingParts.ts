@@ -20,6 +20,10 @@ export type PartShape='box'|'cylinder'|'cone'|'prism'|'wedge'|'sphere'|'pyramid'
 /** Coarsest LOD tier at which a part is still drawn: 2 = core massing
  * (near, mid and far), 1 = near and mid, 0 = near-only detail. */
 export type LodTier=0|1|2;
+/** A part that turns about a pivot in the building frame while the building stands still: a water wheel turning with the live river
+ * current, windmill sails turning with the wind. Parts sharing an `id` form one rotor; the static pose is the rest pose, so footprint,
+ * floating and budget checks see them like any other part. `axis` is a unit vector in the building frame. */
+export type PartAnim={id:string;kind:'wheel'|'sails';pivot:readonly [number,number,number];axis:readonly [number,number,number]};
 export type Part={shape:PartShape;size:readonly [number,number,number];pos:readonly [number,number,number];
  rot?:readonly [number,number,number];mat:CarvedMaterialId;lod:LodTier;sides?:number;
  /** Impostor parts drawn only at tiers >= onlyFrom (e.g. a far palisade wall). */
@@ -27,7 +31,9 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
  /** Hip roof: ridge shortening at each end in metres (shape 'hip' only). */
  inset?:number;
  /** Beam endpoints, kept so footprint fitting can rebuild the beam exactly. */
- ends?:readonly [readonly [number,number,number],readonly [number,number,number]]};
+ ends?:readonly [readonly [number,number,number],readonly [number,number,number]];
+ /** Present when this part belongs to a rotor that the layer turns (water wheel, sails). */
+ anim?:PartAnim};
 export type BuildingSpec={family:string;variantKey:string;footprint:{w:number;d:number};parts:Part[];
  entry?:{x:number;z:number;width:number};notes:{reference:string}};
 
@@ -41,6 +47,8 @@ export const range=(r:Rng,lo:number,hi:number)=>lo+(hi-lo)*r();
 export const pick=<T,>(r:Rng,items:readonly T[])=>items[Math.min(items.length-1,Math.floor(r()*items.length))];
 export const chance=(r:Rng,p:number)=>r()<p;
 
+/** Mark parts as one rotor (see PartAnim). */
+export function rotor(parts:Part[],anim:PartAnim):Part[]{return parts.map(p=>({...p,anim}));}
 export function part(shape:PartShape,mat:CarvedMaterialId,size:[number,number,number],pos:[number,number,number],lod:LodTier=2,rot?:[number,number,number],sides?:number):Part{
  return rot?{shape,mat,size,pos,lod,rot,...(sides?{sides}:{})}:{shape,mat,size,pos,lod,...(sides?{sides}:{})};
 }
@@ -99,13 +107,14 @@ export function fitToFootprint(spec:BuildingSpec,margin=.1,marginZ=margin):Build
  const s=Math.min(1,hw/Math.max(1e-6,Math.abs(b.minX),Math.abs(b.maxX)),hd/Math.max(1e-6,Math.abs(b.minZ),Math.abs(b.maxZ)));
  if(s>=1)return spec;
  const parts=spec.parts.map(p=>{
-  if(p.ends){const [a,b]=p.ends;return {...beam(p.mat,[a[0]*s,a[1],a[2]*s],[b[0]*s,b[1],b[2]*s],p.size[0],p.lod),...(p.onlyFrom!==undefined?{onlyFrom:p.onlyFrom}:{})};}
+  const anim=p.anim?{anim:{...p.anim,pivot:[p.anim.pivot[0]*s,p.anim.pivot[1],p.anim.pivot[2]*s] as const}}:{};
+  if(p.ends){const [a,b]=p.ends;return {...beam(p.mat,[a[0]*s,a[1],a[2]*s],[b[0]*s,b[1],b[2]*s],p.size[0],p.lod),...(p.onlyFrom!==undefined?{onlyFrom:p.onlyFrom}:{}),...anim};}
   // Scale the part's extents in its own frame only along axes that map to world X/Z.
   // Yaw-only or unrotated parts scale exactly; tilted beams scale conservatively.
   const tilted=p.rot&&(Math.abs(p.rot[0])>1e-6||Math.abs(p.rot[2])>1e-6);
   const size:[number,number,number]=tilted?[p.size[0]*s,p.size[1]*s,p.size[2]*s]:[p.size[0]*s,p.size[1],p.size[2]*s];
   const pos:[number,number,number]=[p.pos[0]*s,tilted?p.pos[1]:p.pos[1],p.pos[2]*s];
-  return {...p,size,pos,...(p.inset!==undefined?{inset:p.inset*s}:{})};
+  return {...p,size,pos,...anim,...(p.inset!==undefined?{inset:p.inset*s}:{})};
  });
  const entry=spec.entry?{x:spec.entry.x*s,z:spec.entry.z*s,width:spec.entry.width*s}:undefined;
  return {...spec,parts,...(entry?{entry}:{})};
