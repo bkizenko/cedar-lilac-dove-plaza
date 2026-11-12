@@ -1030,6 +1030,11 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 10:00 | Grok | 0 | 0 | 0 | out (4th+ hour); World rows with Claude queue |
 | 11-12 10:00 | Total | 95 | main == integration content; sweep 106/109 pass, 0 fail, 3 skip | ~4 | no stale agent branches ahead of main except old 18-29-commit held ones |
 
+| 11-12 11:00 | Codex | 28 (since 10:00 ET, all branches) | 28 | 3 (casus-belli known-pair grievance readout + strict saved-claim admission; V20 published-generator compat; toolmaking/breakaway safety live) | on target; QA-037 toolmaking follow-ups next |
+| 11-12 11:00 | Claude | 31 (since 10:00 ET, all branches) | 25 | 2 (casus belli in Hearth neighbour cards + Diplomacy sheet; conifer drooping-skirt boughs) | shipping and landing; lane D audit rows added |
+| 11-12 11:00 | Grok | 0 | 0 | 0 | out (6th+ hour); World rows with Claude queue; no board lines to miss |
+| 11-12 11:00 | Total | 59 | integration lag 0 after 11:15 PM landing | ~5 | focused sweep 116/116 pass, 0 fail; tsc diff nil (2-line carvedTrees addition; tsc7 needs baseUrl-free config) |
+
 ## Process improvements
 
 - 11-12 00:05 ET — Bottleneck: Claude's and Grok's work piles up on integration/2026-11-11 (67 commits not on main) because Claude can't run tests and Grok was idle. Fix: Grok PM now verifies (tsc + full suite vs main baseline) and lands integration on main every run, and restarted a Grok World batch (landing first, then B3 and T-items). Expected: Claude features-live/h goes from 0 to 2+, integration lag under 15 commits by 01:00. Check next run; if lag persists, have Claude commit directly to short work branches that I land each hour.
@@ -1095,3 +1100,5 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-VIS-WEATHER-LIGHT-VILLAGE | audit | Visual gap: rain, fog and overcast should dim and tint carved villages and civ buildings with the existing weather state (wet roofs, mist at river edges); no new goods, default renderStyle unchanged | Claude | Claude lane C | not started | audit 11-12 lane D |
 | AUD-UI-SAVE-SLOTS-OLD-VILLAGES | audit | UI gap: Hearth menu should list saved villages with age, map style and generator version (V18/V20/V21) so players pick old saves confidently; loading never alters terrain (published V20 hash guard) | Claude | Claude lane B | not started | audit 11-12 lane D |
 | AUD-SOC-NEIGHBOUR-VISIT-EVENTS | audit | Societies gap: neighbour envoys, traders and raiders should be visible walking bodies with banners and a short feed line on arrival, from real marryHouses/trade/raid state; no teleport, no free gifts | Claude | Claude lane A | not started | audit 11-12 lane D |
+
+| AUD-CASUS-READOUT-SAVE | audit | Known-pair grievance readout and strict saved-claim admission | Codex integration / Claude readout | Existing pending integration first | done/live | 4e5ce86:9/9 scoped native/shared+built; both Hearth/Classic, durable restore and rejected malformed import; authored prior history only. No earned-war/full-gate credit. docs/metrics/casus-readout-release-2026-11-12.json |
