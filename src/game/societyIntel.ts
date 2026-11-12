@@ -31,7 +31,7 @@ export const defenceSigns=(r:IntelRecord)=>clamp01(r.defensePower/DECISION_RULES
 export const confidenceAt=(r:IntelRecord,time:number)=>r.observedAt<=0?0:Math.max(.15,Math.pow(.5,Math.max(0,time-r.observedAt)/DECISION_RULES.intelHalfLifeSeconds));
 export function targetView(r:IntelRecord,time:number,me:{x:number;z:number},rel:{hostile:boolean;trust:number;grievance:number},allied:boolean):TargetView{
  return {id:r.subject,observedAt:r.observedAt,ageSeconds:Math.max(0,time-r.observedAt),confidence:confidenceAt(r,time),defence:defenceSigns(r),wealth:wealthSigns(r),
-  distance:r.observedAt>0?Math.hypot(r.x-me.x,r.z-me.z):600,hostile:rel.hostile,allied,trust:rel.trust,grievance:rel.grievance};
+  distance:r.observedAt>0?Math.hypot(r.x-me.x,r.z-me.z):600,hostile:rel.hostile,allied,trust:rel.trust,grievance:rel.grievance,contactAge:r.contactAt>0?Math.max(0,time-r.contactAt):99999};
 }
 /** Learned risk: how exposed my wealth is. I know who has met me (contact is mutual), not what they saw; recent contacts weigh more. */
 export function exposure(ownWealth:number,contacts:{lastContact:number;hostile:boolean}[],time:number):number{

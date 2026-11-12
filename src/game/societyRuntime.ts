@@ -183,7 +183,7 @@ function fortify(g:Game,team:number){
 function treat(g:Game,team:number,other:number){
  const d=ensureDecisions(g);if(!d||!g.tribe(other)?.alive)return;
  const r=societyRelation(g,team,other),rr=societyRelation(g,other,team);
- if(!r.known||g.state.time-r.lastContactSeconds>1200||r.hostile||rr.hostile)return;
+ if(!r.known||g.state.time-r.lastContactSeconds>DECISION_RULES.contactFreshSeconds||r.hostile||rr.hostile)return;
  nudgeSocietyRelation(g,team,other,{trust:.04,grievance:-.01});nudgeSocietyRelation(g,other,team,{trust:.04,grievance:-.01});
  if(societyRelation(g,team,other).trust>=.5&&societyRelation(g,other,team).trust>=.5)signPact(g,team,other);
 }

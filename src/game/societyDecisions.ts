@@ -9,7 +9,7 @@ export const KINDS=['grow','stockpile','settle','trade','raid','ally','fortify',
 export type Kind=typeof KINDS[number];
 export type Cost={food:number;wood:number;stone:number;people:number;seconds:number};
 /** What a society has learned about one neighbour. Built from dated reports only (societyIntel.ts); absent neighbours are not listed. */
-export type TargetView={id:number;observedAt:number;ageSeconds:number;confidence:number;defence:number;wealth:number;distance:number;hostile:boolean;allied:boolean;trust:number;grievance:number};
+export type TargetView={id:number;observedAt:number;ageSeconds:number;confidence:number;defence:number;wealth:number;distance:number;hostile:boolean;allied:boolean;trust:number;grievance:number;contactAge:number};
 export type Needs={
  time:number;foodSeconds:number;food:number;foodPerSecond:number;housing:number;pop:number;adults:number;wood:number;stone:number;
  wealth:number;defence:number;threat:number;unrest:number;weariness:number;recoveryLeft:number;openLand:number;climate:number;aggro:number;exposure:number;
@@ -23,7 +23,7 @@ export type Decision={choice:Alternative;change:'start'|'keep'|'switch'|'interru
 
 export const DECISION_RULES={version:1,reviewSeconds:30,minHoldSeconds:120,planSeconds:600,switchMargin:14,incumbentBonus:8,jitter:3,
  interruptFoodSeconds:150,interruptThreat:.75,growWood:36,settleCrew:3,settleWood:100,fortifyWood:40,fortifyStone:10,raidFighters:3,raidFoodSeconds:180,
- intelHalfLifeSeconds:1500,defenceScalePower:6,maximumTargets:6,reasonThreshold:6} as const;
+ intelHalfLifeSeconds:1500,contactFreshSeconds:1200,defenceScalePower:6,maximumTargets:6,reasonThreshold:6} as const;
 
 const NEUTRAL:Record<Posture,Partial<Record<Kind,number>>>={
  develop:{},
@@ -75,8 +75,8 @@ export function enumerate(n:Needs,posture:Posture='develop'):Alternative[]{
  {const ts=raidTargets(n),best=ts[0],a=build('raid',0,best?[{label:'visible wealth',delta:100*best.reward*(.45+.55*n.aggro)},{label:'their defences deter',delta:-85*best.reward*best.deterrence*(.45+.55*n.aggro)},{label:'risk',delta:-40*best.risk},{label:'hunger drives it',delta:25*hunger*best.reward},{label:'own weakness at home',delta:-40*n.threat*(1-n.defence)}]:[],{...noCost(),people:R.raidFighters,food:Math.round(n.foodPerSecond*300),seconds:600},best?.risk??1,{target:best?.target,redirects:ts.slice(1,4).map(t=>({target:t.target,score:Math.round(Math.max(0,t.score)*10)/10}))});
   out.push(!best?block(a,'no known target to strike'):n.readyFighters<R.raidFighters?block(a,'too few armed adults to spare'):n.foodSeconds<R.raidFoodSeconds?block(a,'food reserve is below the departure minimum'):n.recoveryLeft>0?block(a,'still recovering from the last strike'):a);}
  // ally: pact with a known neighbour; a common danger raises it
- {const c=n.targets.filter(t=>!t.hostile&&!t.allied&&t.trust>=.15).sort((x,y)=>y.trust-x.trust||x.id-y.id)[0],a=build('ally',15,[{label:'danger near',delta:45*n.threat},{label:'unrest at home',delta:15*unrest},{label:'warm relations',delta:15*(c?.trust??0)}],{...noCost(),people:1,seconds:120},.1,{target:c?.id});
-  out.push(c?a:block(a,'no known neighbour is warm enough to treat with'));}
+ {const c=n.targets.filter(t=>!t.hostile&&!t.allied&&t.contactAge<=DECISION_RULES.contactFreshSeconds).sort((x,y)=>y.trust-x.trust||x.id-y.id)[0],a=build('ally',15,[{label:'danger near',delta:45*n.threat},{label:'unrest at home',delta:15*unrest},{label:'warm relations',delta:15*(c?.trust??0)}],{...noCost(),people:1,seconds:120},.1,{target:c?.id});
+  out.push(c?a:block(a,'no neighbour met recently enough to carry an envoy to'));}
  // fortify: spend timber, stone and drill on defences
  {const a=build('fortify',12,[{label:'enemies near',delta:60*n.threat},{label:'wealth others may covet',delta:40*n.exposure},{label:'already defended',delta:-45*n.defence},{label:'own holdings',delta:10*clamp01(n.wealth)}],{...noCost(),wood:R.fortifyWood,stone:R.fortifyStone,people:2,seconds:600},.1);
   out.push(n.defence>=.95?block(a,'already well defended'):n.wood-n.reserved.wood<R.fortifyWood?block(a,'not enough timber for defences'):a);}
