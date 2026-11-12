@@ -223,3 +223,16 @@ test('era gating: bands send small slow parties and get no organised explore/tra
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
  assert.equal(R.expansionParty(old,1),null);assert.equal(R.journeyPermit(old,1,'explore'),null);
 });
+
+test('expansion parties: read model shows real founding units, supplies and position; empty when rulers off',async()=>{
+ const {expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const {councilModel}=await import('../src/game/rulersView.ts');
+ const g=fixture();assert.deepEqual(expansionParties(g),[]);
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0).slice(0,3);assert.ok(us.length>=2);
+ const dx=us[0].x+40,dz=us[0].z+10;us.forEach((u,i)=>{u.foundingJourney={x:dx,z:dz,leader:i===0,timber:20};if(i===0){u.carry=20;u.carryType='wood';}});
+ const ps=expansionParties(g,1);assert.equal(ps.length,1);assert.equal(ps[0].crew,us.length);assert.equal(ps[0].carrying,'20 wood');assert.ok(ps[0].distance>0);
+ assert.deepEqual(JSON.parse(JSON.stringify(councilModel(g,1).parties)),ps);
+ const before=g.state.units.length;expansionParties(g);assert.equal(g.state.units.length,before,'pure read');
+ us[0].stuckT=9;assert.match(expansionParties(g,1)[0].status,/struggling/);
+ delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
+});
