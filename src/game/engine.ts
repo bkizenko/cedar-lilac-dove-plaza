@@ -1,3 +1,4 @@
+import {enableWildCraft} from './wildCraft';
 import {draftCartChoices} from './draftCart';
 import {ProductionDeliveryChannel,type ProductionDelivery} from './productionDelivery';
 import {storedVillageCandidates,chooseStoredVillage,type StoredVillageCandidate} from './simulationLifecycle';
@@ -374,9 +375,9 @@ export class Engine {
     this.pushHud();
   }
 
-  async configureNewWorld(request:WorldRequest,previewRiverbanks=false):Promise<boolean>{
+  async configureNewWorld(request:WorldRequest,previewRiverbanks=false,wildCraft=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
+    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21,wildCraft); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
   }
 
   enterIsland() {
@@ -448,11 +449,11 @@ export class Engine {
       this.lastLifecycle={operation:'restore',mode:next.host?'worker':'main'};this.presentationNotice('Village restored · P to resume',4);
     }catch(error){if(this.currentLifecycle(t))this.presentationNotice(error instanceof Error?error.message:'Cannot restore save',4);throw error;}finally{if(!applied)next?.host?.dispose();this.finishLifecycle(t);}
   }
-  async restart(request?:WorldRequest,generation:18|19|20|21=21):Promise<boolean>{
+  async restart(request?:WorldRequest,generation:18|19|20|21=21,wildCraft=false):Promise<boolean>{
     const t=this.beginLifecycle();let applied=false;
     try{await this.pauseLifecycleOwner(t);
       if(t.game.started&&!t.game.awaitingStart){const saved=await this.checkpointService.save(t.game.testMode?'test-lab':'protected',true);if(!this.currentLifecycle(t))return false;if(saved.status!=='committed')throw new Error('Could not protect this village. Export it before starting another world.');}
-      const game=new Game();game.reset(undefined,generation,{...request,difficulty:request?.difficulty??t.game.state.difficulty??'normal'});game.enterIsland();game.state.paused=true;game.testMode=t.game.testMode;
+      const game=new Game();game.reset(undefined,generation,{...request,difficulty:request?.difficulty??t.game.state.difficulty??'normal'});game.enterIsland();game.state.paused=true;game.testMode=t.game.testMode;if(wildCraft===true)enableWildCraft(game);
       if(!this.currentLifecycle(t))return false;
       // Explicit fresh-world MAIN-mode replacement. Worker world creation is not implemented.
       this.installVillage({game,host:null});applied=true;this.lastLifecycle={operation:'new-world',mode:'main'};this.pushHud();return true;
