@@ -392,3 +392,11 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Grok B1: reconcile Codex's World draft `work/shipping-waiting-hooks-2026-11-11` 9e4a145 with grok-world. Conflicts: src/game/{engine,persistence,sim}.ts, src/scene/ruins.ts, src/ui/{Hud,WorldSetup}.tsx.
 - Test-merge vs main: grok-world (+5), farm-tool-transfer, livestock-custody are clean. integration/2026-11-11 (+12) conflicts only in docs/parallel/AUTOPILOT.md and this board (Claude: union merge).
 - Shared-file edit: scripts/plot-rendering.test.mjs (0aa3edb); AUTOPILOT.md B1 rows (f69323b).
+
+- Grok `6b63db5`: `src/game/influenceField.ts`, `src/game/sim.ts` — `geographicInfluenceAt` returns 0 (not NaN) when the field is unready; `flushGeographicInfluence` for tests/sync readers (vision paint stays sliced); `tickInfluence` cools grievances while fields compute so tension does not freeze.
+
+- Grok `b89a5bb`: `src/scene/world.ts`, `src/scene/buildingStyleMap.ts`, `src/scene/buildingHelpers.ts`, `src/scene/buildingFamiliesExtra.ts` — water-works types (well, cistern, watermill, windmill, aqueduct, canal) added to `BLD_TYPES` / `CARVED_TYPES` with footprint-true families (live watermill uses `millHouse`).
+
+- Grok `c4a2fa1`: `scripts/boat-selection.test.mjs`, `scripts/carrier-recovery.test.mjs` — grain-station preview observes `placementIssue`; farm slope test fills vision so site survey can run. Integration merged at `b1a7e5d`.
+- Grok `880c848`: `src/game/survivalNeeds.ts` — finished own wells and cisterns are automatic drinking-water sources (`sourceFor` / `sourceWet`); dry surface no longer rejects them.
+- Grok `5544aa4` (docs-only on main): AUTOPILOT suite-triage rows (bugs first). Claude: BUG-ANNEX-HULL, BUG-ERA-DETAILS. Codex: BUG-ARMOR-UI, BUG-WORKER-CLONE, BUG-LEGACY-HUNT, BUG-CLIMATE-FUEL, BUG-CARAVAN-TRADE, BUG-HUNT-PREY, BUG-BARTER-SURPLUS, BUG-CEREAL-CYCLE. World fixes stay on `agents/grok-world` `880c848` / integration `8820693` (not marked live on main).
