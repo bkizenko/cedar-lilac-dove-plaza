@@ -12,7 +12,7 @@ import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
-import {rememberGraphicsQuality} from './graphics';
+import {rememberGraphicsQuality,rememberRenderStyle,type RenderStyle} from './graphics';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
@@ -982,6 +982,12 @@ export class Engine {
   toggleMute() {
     this.game.muted = !this.game.muted;
     this.audio.setMuted(this.game.muted);
+  }
+
+  setRenderStyle(style:RenderStyle) {
+    if(style!=='current'&&style!=='optionH')return;
+    this.view.setRenderStyle(style==='optionH'?'carved':'current');
+    rememberRenderStyle(style);
   }
 
   setQuality(q: "low" | "med" | "high") {

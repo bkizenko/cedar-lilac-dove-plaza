@@ -40,6 +40,7 @@ import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
+import {currentRenderStyle} from './renderStyle';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
@@ -224,7 +225,7 @@ export class WorldView {
   /** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
    * finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
    * buildings always keep the current renderer so footprints, collision and terrain stay exact. */
-  private renderStyle:'current'|'carved'='current';
+  private renderStyle:'current'|'carved'=currentRenderStyle()==='optionH'?'carved':'current';
   private carvedLayer:CarvedBuildingLayer|null=null;
   private carvedOwners=new Map<THREE.Object3D,import("@/game/types").Building[]>();
   setRenderStyle(style:'current'|'carved'){this.renderStyle=style==='carved'?'carved':'current';}
