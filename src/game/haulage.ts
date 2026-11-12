@@ -354,10 +354,10 @@ export function validHaulageTribe(v: unknown) {
 export function shareLocalTransport(g:Game){
  if(g.clockState().period==='Night'||g.state.weather==='storm')return 0;
  const safe=(u:HaulageUnit)=>civilian(g,u)&&available(g,u)&&!u.haulageWork&&!u.jobLock&&!u.buildOrder&&!u.selected&&!u.resting&&!u.shelterId&&!u.tributeJourney;
- const donors=g.state.units.filter(u=>safe(u)&&u.order==='idle'&&(u.haulage==='sled'||u.haulage==='cart'));
+ const donors=g.state.units.filter(u=>u.order==='idle'&&(u.haulage==='sled'||u.haulage==='cart')&&safe(u));
  if(!donors.length)return 0;
- const recipients=g.state.units.filter(u=>safe(u)&&!u.haulage&&u.order==='gather'&&u.node&&
-  Math.hypot(u.node.x-u.x,u.node.z-u.z)>12);
+ const recipients=g.state.units.filter(u=>!u.haulage&&u.order==='gather'&&u.node&&
+  Math.hypot(u.node.x-u.x,u.node.z-u.z)>12&&safe(u));
  let shared=0;
  for(const donor of donors){
   const depot=g.state.buildings.find(b=>b.team===donor.team&&g.finished(b)&&['townhall','warehouse','cornerstone'].includes(b.type)&&g.buildingWorkReached(donor,b));
