@@ -4,6 +4,11 @@
 
 Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
 
+- Latest LIVE integration: **339d9b8**, release **2026-11-12T01-58-40-150Z-339d9b8** on8086/8101. Whole Societies/Experience/World branches, resolved curd and fixed camera.24/24focused +1/1built native53 import/render/workshop queue/owner query/save/restore; tsc/buildPASS. Runtime built from7f46af6; later commits are diagnostics/docs only. Villages/prior release retained. Frozen acceptance stays34/98.
+- AUTOPILOT.md on origin/main governs: Worker parked; Codex T2 WQ14 active. Grok owns World wiring; Claude owns UI/visuals/diplomacy. Anyone may edit shared files under temporary collision claims.
+
+## Historical pre-integration evidence (superseded where AUTOPILOT differs)
+
 - Latest published performance batch **d86d7da:37/37** (35focusedtests +1matchednative100ABBA +1actualbuilt100Low scenario), typecheck/build passed,1035committed build inputs verified. Four-run mean CPU reduction15.41% with exact full state/RNG parity; Node candidatep95s34.93/33.92ms remain above33. Built24-second headlessM1Metal run holds100residents, rollingp95s20.2–23.5ms, final21.9ms; framep9516.8ms. These are scoped measurements, not universal FPS/phase completion. Evidence: docs/metrics/sim-speed-native100-performance-release-2026-11-11.json.
 - Worker source is pushed at **0cf5c18**; native owner-query/checkpoint tests,14save/file controls checks,4production UI checks,10keyboard checks and combined typecheck passed in their stated scopes. Actual100resident moduleWorker step **p9567.74ms misses33ms**. Full command/render/lifecycle/RNG coverage remains incomplete; defaultoff/no gatecredit. See GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md. Grok leads execution; **Claude owns conflicts**.
 - Current execution order follows COMPLETION_PLAN.md from Claude coordination e8a48af: measured native100residentLow simulation speed (p95<33ms) and authoritative WebWorker first; then WHOLE normal branch merges behind game options; then knowledge/provenance and remaining economy systems. No partial feature batch is being published ahead of that order.

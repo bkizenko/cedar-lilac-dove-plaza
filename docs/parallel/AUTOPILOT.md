@@ -673,7 +673,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WQ-11 | wiring-queue | Option H world.ts call site, light-rig, H-only daylight lerp; default renderStyle current | Claude | Claude T8 | source-pushed-not-live | Option H adapter; Claude drives including world.ts |
 | WQ-12 | wiring-queue | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer bucket eviction |
 | WQ-13 | wiring-queue | Capitulation / domination / captive / trade UI and dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | conquest/trade/captive UI; specs exist, not wired |
-| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | not started | six trade primitives |
+| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | in progress | Codex branch work/codex-autopilot-2026-11-11: cargo/death/recovery, armor, tool, livestock adapters;18focusedPASS+tsc before final weapon/burden fold; not yet live |
 | WQ-2 | wiring-queue | Validator for optional worldOptions.tideVersion === 1\|2 | Grok | Grok T2 | not started | tideVersion validator — moved to Grok |
 | WQ-3 | wiring-queue | Validator for optional worldOptions.landformLabelVersion === 2 | Grok | Grok T2 | not started | landformLabelVersion validator — moved to Grok |
 | WQ-4 | wiring-queue | Water-works as real building types: well, cistern, watermill, windmill, aqueduct, canal | Grok | Grok T4 | source-pushed-not-live | site rules source-pushed; buildings/recipes not live — Grok wires end to end |
