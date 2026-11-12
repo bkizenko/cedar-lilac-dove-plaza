@@ -1,3 +1,4 @@
+import {societyMaySpend} from './societyRuntime';
 import{rawCerealField,CEREAL_RULES}from'./cerealRules';
 import {rivalTradeReserve} from './rivalTrade';
 import {knownRivalExportDemand} from './tradeIntel';
@@ -90,6 +91,7 @@ export function rivalDevelopmentPlan(g:Game,team:number){
 /** Ordinary expansion may spend a surplus, not repeatedly consume the same age reserve.
  * Necessary shelter, food infrastructure and resource access still take precedence. */
 export function rivalCanInvest(g:Game,team:number,type:BldType){
+  if(!societyMaySpend(g,team,type))return false; // a committed plan's reserve is not spent on something else
   const t=g.tribe(team),d=BUILDINGS[type],p=rivalDevelopmentPlan(g,team);
   if(!g.canAfford(team,buildingCost(type,g,team)))return false;
   const pending=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&(!g.finished(b)||b.expansion||b.renovation));

@@ -1,4 +1,5 @@
 import {journeyPermit,spendRaidClaim} from './rulersRuntime';
+import {raidGate,militaryBonus} from './societyRuntime';
 import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './rivalActivity';
 import {AGE_STAT,UNITS} from './constants';
 import {beginWeaponWork} from './warfare';
@@ -14,7 +15,7 @@ const strength=(u:Unit)=>Math.max(.2,u.dmg/10)*Math.min(1,u.hp/Math.max(1,u.maxH
 export function rivalMilitaryTarget(g:Game,team:number){
  const t=g.tribe(team),pop=g.state.units.filter(u=>u.team===team&&u.hp>0&&adult(g,u)).length;
  // Equipment and training still cost real goods and take an existing adult out of work.
- return Math.min(Math.max(0,pop-4),Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension))));
+ return Math.min(Math.max(0,pop-4),Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension)))+militaryBonus(g,team));
 }
 export const OPERATION_RULES={militaryReadinessHealthRatio:.6,minFoodSeconds:180,guardFraction:.06,raidFraction:.3,localDefenseRadius:55,maxTargets:8,minUtility:1,travelCostPerMeter:.01,defenseWeight:7,nightBonus:.4};
 export type RaidMetrics={reward:number;grievance:number;travelCost:number;defenseCost:number;structureCost:number;nightBonus:number;observedDefenders:number;power:number;guards:number};
@@ -40,7 +41,11 @@ export function prepareRivalDefense(g:Game,team:number,reserve:number){
 }
 /** Value known, reachable opportunities against local observed opposition.
  * No remote inventory inspection, global defender count, new troops or free cargo. */
-export function planRivalRaid(g:Game,team:number,reserve:number):RivalRaidPlan|null{return planRivalPairRaid(g,team,reserve);}
+export function planRivalRaid(g:Game,team:number,reserve:number):RivalRaidPlan|null{
+ const gate=raidGate(g,team); // society decision layer: only a raid plan strikes, and only its named target
+ if(gate&&!gate.allow)return null;
+ return planRivalPairRaid(g,team,reserve,gate?.target);
+}
 export function rivalOperationIntent(g:Game,team:number,reserve:number):'recover'|'trade'|'defend'|'raid'{
  const t=g.tribe(team);
  if(g.state.time<(t.recoveryUntil||0))return 'recover';
