@@ -26,7 +26,7 @@ Boris's goal: send these prompts once and the whole game gets built over several
 - **Claude** is architect: owns system design, interfaces and cross-lane contracts, and resolves design disputes. Claude also leads merge-conflict resolution when the dispute is about design, and builds diplomacy, leaders, succession, international systems, the visual overhaul, and the Worker/curd UI conflict.
 - **Codex** is the platform, economy, saves, integration, and knowledge/tech builder (knowledge/tech stays with Codex until Boris decides otherwise). Codex parks the sim Worker until the speed/wiring work in its queue says otherwise.
 
-**Anyone may edit or wire any file.** The agent that owns a feature builds it end to end, including parts outside its lane. Others only review. Every shared-file edit gets a one-line board entry (file, hunk intent, SHA).
+**Anyone may read, edit, commit, push and normally merge any repository file**, including core source, saves, backlog and coordination documents. No Codex approval is required. GitHub authentication in each external session is separate from these project permissions. **Anyone may edit or wire any file.** The agent that owns a feature builds it end to end, including parts outside its lane. Others only review. Every shared-file edit gets a one-line board entry (file, hunk intent, SHA).
 
 **Continuous loop** (every agent, all day): pull `origin/main` → take the next queue item → build it → one focused test + `tsc` → merge to main (normal merge) → post one board line with the SHA → repeat. Never stop to wait for Boris. If blocked more than 15 minutes, skip, pick the next item, and log the block on the daily decision card. Ship behind a switch if unsure. Target 45–90 minutes per item. Features turned on in the built game are the only progress that counts. No evidence novels.
 
@@ -58,6 +58,7 @@ LOOP: pull origin/main → next item → build → focused test + tsc → merge 
 WORK QUEUE — do in order, one at a time. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean. Do not re-do items marked done/live.
 
 TONIGHT
+B1 (PM bug 2026-11-11 21:40 ET, player-facing saves, do first). scripts/play-flow.test.mjs regressed at T1 integration d657e26: Engine.beginLifecycle calls this.autosave.invalidate() (engine.ts:63, from Worker lifecycle 27dafd9) and startTestSession is now async, so 'a failed durable save never creates a disposable copy or reports test entry success' fails (pass at de24669). Confirm a failed durable save still refuses test entry in the built game, then fix code or fixture. Done: play-flow green.
 T1. Integration: review and merge PR #1 (https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1, head integration/2026-11-11) and LAND the whole agents/claude-societies branch after Claude finishes the curd UI conflict and the fixed-camera world.ts review. Normal merge, no partial hunks. Restore green tests (canal-breach fix is Grok's). Done: those branches are on main without dropping naming, storms, conquest, World W7, or Worker/curd behavior.
 T2. WQ-14 Societies primitives in types/persistence/production/husbandry/workCommitments: do not wipe itemCargo on trade carriers (or call dropTradeCargoItems); moveArmorAsset; weapon body-bundle holder; transferable farm-tool record with condition; Livestock.ledBy honoured by husbandry/pens; Unit.cargoRecoveryId + COMMITTED_TASKS. Done: armor/weapons/tools/animals can be traded without ghost inventory.
 T3. C6: real wade/swim-to-shore after hull loss (steer/deep water), not a 120s release. Coastal trade must not pause forever. Done: stranded crew reach a connected shore or another hull on a native water test.
@@ -82,7 +83,7 @@ W11. Disable-to-migrate food-custody prototype (26fe69b) only after every transp
 THEN
 N1. Victory scenarios M4-16..20 (prosperity, commerce, dominion without compulsory extinction, knowledge, legacy) plus continuation; run with Claude's AI goals already hooked to T6.
 N2. CAT-116 administrators (competence, policy scope, reports). M4-04/05 Bronze/Iron/Classical population + sustainable reserves and small specialized societies.
-N3. Release acceptance you own: M5-01 full campaign; M5-06 8GB median≤33ms / p95≤50ms at 100 visible residents (after this queue; then unpark Worker); M5-08 named parameters/metrics; M5-09 holdouts; M5-10 + ASTRA-25 packaging. Only you flip FULL_GAME_BACKLOG.json / COMPLETION_LOG from native/built evidence (CP-7). M5-02/03/07 are already verified — do not re-queue.
+N3. Release acceptance you own: M5-01 full campaign; M5-06 8GB median≤33ms / p95≤50ms at 100 visible residents (after this queue; then unpark Worker); M5-08 named parameters/metrics; M5-09 holdouts; M5-10 + ASTRA-25 packaging. Codex maintains FULL_GAME_BACKLOG.json / COMPLETION_LOG; Claude and Grok may also update them under Grok sequencing, using matching native/built evidence (CP-7). This assignment is not an exclusive write permission. M5-02/03/07 are already verified — do not re-queue.
 N4. ASTRA-04/05 save/cadence gaps if any remain vs acceptance; ASTRA-09 spatial query budget; ASTRA-08 vertical-slice gate (desktop; mobile is out); ASTRA-11 survival leftovers; ASTRA-24 perf/balance soak.
 N5. Remaining hull classes, sail repair, naval-warfare economy (CAT-93/99 remainder). CAT-100 warehouses.
 N6. MS-2/MS-4 integrated scenarios (priority override during paid work; boat/caravan delivery + interception + save). You run the connected scenario; Claude owns raid/treaty scenarios.
@@ -170,6 +171,7 @@ LOOP: pull origin/main → next item → build → focused test + tsc → merge 
 WORK QUEUE — do in order. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean.
 
 TONIGHT
+B1 (PM 2026-11-11 21:40 ET). Reconcile Codex's World handoff work/shipping-waiting-hooks-2026-11-11 9e4a145 with agents/grok-world: normal merge conflicts in src/game/{engine,persistence,sim}.ts, src/scene/ruins.ts, src/ui/{Hud,WorldSetup}.tsx; keep both behaviours, then land on main. Done: draft wiring is live or explicitly superseded on the board.
 T1. Land World W7 (agents/grok-world c0b54fa, already in PR #1) and fix the merge-induced canal-breach failure (scripts/canal-breach.test.mjs on integration cbffbc8: breach.length actual 8, expected 9). Done: canal-breach 3/3 on the landed tree; a finished channel can breach, an unfinished one cannot.
 T2. WQ-1..3 validators in persistence.ts: optional worldOptions.riverProfileVersion===2, tideVersion===1|2, landformLabelVersion===2; absent = historic. Done: old saves load; flagged worlds persist.
 T3. Canal/aqueduct commission UI: planAqueductWorks/planCanalWorks, same plan for preview and commit; validCanalWorks in persistence (INC-CANALS, GW-06 jobs). Done: the player can commit a line as ordinary digs in the built game.
@@ -647,7 +649,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | GAP-VILLAGE-REQUESTS | master-gap | Neighboring villages offer need-based quests/requests with actual goods, relationships and consequences, not repeatable free rewards. | Claude | Claude W2 | not started |  |
 | GAP-WOODLAND-RESIDENTS | master-gap | Scattered independent woodland inhabitants with homes, inventories and contextual conversations. | Grok | Grok N1 | not started | driver including conversations; Claude reviews dialog |
 | CHAT-G10-FOG-PROVENANCE | chat |  | Grok | Grok W13 | source-pushed-not-live | overlay live 39115987; exact-radius attribution open |
-| CHAT-G13-BOAT-DIMENSIONS | chat |  | Codex | Codex T4 | not started | C11 hull length/beam |
+| CHAT-G13-BOAT-DIMENSIONS | chat |  | Codex | Codex T4 | done/live | 687e82a advisory class metre dimensions match measured mesh envelopes;1focusedPASS; no collision/seat changes |
 | CHAT-G14-DEEPWATER-PORTS | chat |  | Grok | Grok W10 | not started | Grok drives depth/admission; Codex hulls already in T4/N5 |
 | CHAT-G15-TRADE-DIVERSITY | chat |  | Claude | Claude W2 | source-pushed-not-live | Claude drives offers/frequency/UI; Codex W7 prices |
 | CHAT-G16-DEEPWATER-STORMS | chat |  | Claude | Claude W2 | source-pushed-not-live | storms source-pushed; consume Grok deepWater; Codex weather/hull effects if needed |
@@ -673,7 +675,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WQ-11 | wiring-queue | Option H world.ts call site, light-rig, H-only daylight lerp; default renderStyle current | Claude | Claude T8 | source-pushed-not-live | Option H adapter; Claude drives including world.ts |
 | WQ-12 | wiring-queue | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer bucket eviction |
 | WQ-13 | wiring-queue | Capitulation / domination / captive / trade UI and dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | conquest/trade/captive UI; specs exist, not wired |
-| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | not started | six trade primitives |
+| WQ-14 | wiring-queue | Six Societies primitives that block armor/weapons/tools/animal trade | Codex | Codex T2 | live-partial | Six backend primitives livebd1667a;56/56focused+1/1built native53 import/render/save/restore;tsc/buildPASS. Physical tradeNeeds gear/animal consumer journeys remain off/pending; no gate credit |
 | WQ-2 | wiring-queue | Validator for optional worldOptions.tideVersion === 1\|2 | Grok | Grok T2 | not started | tideVersion validator — moved to Grok |
 | WQ-3 | wiring-queue | Validator for optional worldOptions.landformLabelVersion === 2 | Grok | Grok T2 | not started | landformLabelVersion validator — moved to Grok |
 | WQ-4 | wiring-queue | Water-works as real building types: well, cistern, watermill, windmill, aqueduct, canal | Grok | Grok T4 | source-pushed-not-live | site rules source-pushed; buildings/recipes not live — Grok wires end to end |
@@ -700,7 +702,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | E1 | interface | Capitulation terms, domination status, captive panel, trade dialog, dropped-parcel visual | Claude | Claude T6 | source-pushed-not-live | same as WQ-13 |
 | IFACE-C1 | interface | Persist renderStyle current \| optionH | Codex | — (done) | done/live | graphics.ts renderStyle live 860863a |
 | IFACE-C10 | interface | world.ts Option H adapter, light-rig, H-only daylight lerp, render-check | Claude | Claude T8 | not started | Option H world.ts adapter — Claude drives |
-| IFACE-C11 | interface | Hull length/beam per class; h-good icons; wonder-kit preset save location | Codex | Codex T4 | not started | hull length/beam; h-good icons / wonder-kit preset save if still missing |
+| IFACE-C11 | interface | Hull length/beam per class; h-good icons; wonder-kit preset save location | Codex | Codex T4 | live-partial | 687e82a dimensions and bounded injected wonder preset store5/5focused; Experience mesh/preset UI consumers and icons still require own wiring |
 | IFACE-C12 | interface | Wire lit from real fire | Claude | Claude T8 | source-pushed-not-live | lit input is survivalNeeds.hearthHeating; H adapter not wired |
 | IFACE-C13 | interface | CarvedBuildingLayer lifetime bucket eviction | Claude | Claude T7 | not started | CarvedBuildingLayer eviction |
 | IFACE-C14 | interface | Repair stolen-cargo conservation / custody | Claude | Claude W2 | source-pushed-not-live | stolen-cargo conservation; last review 9a40164 blocked, P1 fixes claimed b4386e8 / 1f77972 |
@@ -709,7 +711,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | IFACE-C3 | interface | LOD / frustum hooks | Codex | — (done) | done/live | InstanceCameraCull.query live d4d3cba |
 | IFACE-C4 | interface | Hull / crew / sail API confirmation | Codex | — (done) | done/live | hull/crew/sail seams confirmed; sea exploration live f09578d |
 | IFACE-C5 | interface | sim.ts phase-registry decomposition | Codex | Codex W10 | source-pushed-not-live | small hooks yes, no generic phase registry; only if it unblocks a hook |
-| IFACE-C6 | interface | Real stranded-crew rescue after hull loss | Codex | Codex T3 | not started | real wade/swim-to-shore after hull loss |
+| IFACE-C6 | interface | Real stranded-crew rescue after hull loss | Codex | Codex T3 | done/live | 687e82a on8086/8101; native original survivor swims107m, strict midwater reload, physical cache cargo delivery; bounded planner; offshore captive rescue remains unsupported |
 | IFACE-C7 | interface | Quiet NPC toggleSail | Codex | — (done) | done/live | quiet NPC toggleSail 1a6e71e |
 | IFACE-C8 | interface | Sail-rig / hull-service eligibility during sea muster | Codex | — (done) | done/live | sail-rig / hull-service eligibility during sea muster f09578d / 01e6f66 |
 | IFACE-C9 | interface | Sign-off optional types.ts trade/cargo/storm fields and conquest wiring | Codex | Codex T2 | not started | optional types.ts trade/cargo/storm fields; single-owner rule lifted — still implement/wire with T2 |
@@ -803,7 +805,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
 | CP-6 | completion-plan | Phase 6 Scale: hundreds of residents, LOD, BatchedMesh, per-chunk sim, 8GB | Codex | Codex N3 | not started | world-side scale is Grok L2 after this |
-| CP-7 | completion-plan | Phase 7 Acceptance: re-run frozen checklist; Codex reconciles backlog/log | Codex | Codex N3 | not started | only Codex flips 34/98 |
+| CP-7 | completion-plan | Phase 7 Acceptance: re-run frozen checklist; Codex reconciles backlog/log | Codex | Codex N3 | not started | Any provider may reconcile verified native/built acceptance under Grok sequencing; frozen denominator 98, no unsupported credit |
 | MS-1 | milestone | Unbuilt camp → first winter → sustainable surplus | Codex | — (done) | done/live | M1-20 verified |
 | MS-2 | milestone | Priority change/direct override during hauling and paid work | Codex | Codex N6 | source-pushed-not-live | M0 construction gates live; connected scenario still to re-run |
 | MS-3 | milestone | Rival–rival trade, conflict, treaty and recovery | Claude | Claude N7 | not started |  |
@@ -864,3 +866,35 @@ Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus th
 - **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
 | RULERS-MARRIAGE | Claude | done | marryHouses applies signed kinship ties to society relations, population-gated | tests in rulers-runtime |
 | EXPANSION-DRIVERS | Claude | done | push/pull/enable/brake model (crowding, hunger, climate memory, cadet kin, open land, weak/rich neighbours, boats, faith, ruler drive, cohesion) drives NPC settlement odds behind rulersVersion; expansionOf() gives stated reasons for UI | tests in rulers-runtime |
+| RULERS-UI-COUNCIL | Claude | done | Council and house panel (ruler, family, factions, expansion why, renown, neighbours) via read model 'rulers-council'; 'marry-houses' command validated and gated by house size | tests in rulers-runtime; mounted in Hud tech panel |
+
+
+## Suite triage — 2026-11-11 21:10 ET (Grok PM)
+
+Full game suites were started on `integration/2026-11-11` `a7c343d` and `origin/main` `4aa1cfd` (still running when these rows were filed). World-caused failures found so far were fixed on `agents/grok-world` (not yet on main): geographic influence flush `6b63db5`, water-works scene/carved registry `b89a5bb`, grain-preview + farm-slope tests `c4a2fa1`, wells/cisterns in `sourceFor` `880c848`. Integration tip after those merges: `8820693`. T1–T7 remain **not** done/live on main until PR #1 lands.
+
+Other-lane failures below are player-facing or suite-blocking; owners should take them **before new features**. Bugs first, then keep at least 5 unstarted items.
+
+| ID | Track | Summary | Owner | Queue | Status | Evidence |
+|---|---|---|---|---|---|---|
+| BUG-ANNEX-HULL | suite-triage | Native paid hull with afloat loaded crew and a second paid hull must transfer intact, save, and physically return after annexation | Claude | Claude Tonight (bugs first) | not started | `scripts/annexation-transport-culture.test.mjs` fails on main `4aa1cfd` and integration `a7c343d` |
+| BUG-ERA-DETAILS | suite-triage | Era details must appear only on completed discovered buildings, stay bounded, and not change the simulation footprint | Claude | Claude Tonight (bugs first) | not started | `scripts/architecture.test.mjs` (`syncEraDetails` count 0 !== 4 on a mock that always reports unexplored); Experience/visuals |
+| BUG-ARMOR-UI | suite-triage | Compact selected-resident armor controls must render real condition and local action without mutating stock | Codex | Codex Tonight (bugs first) | done/verified | bd1667a: stale SSR expectation corrected; real ReactDOM owner-query/equip/90percent wear/putaway and read-only projection passed; complete armor suite10/10 |
+| BUG-WORKER-CLONE | suite-triage | Off-main-thread module must process its immutable clone without DOM, terrain reconstruction, or random draws | Codex | Codex Tonight (bugs first) | triaged/awaiting original failure stack | bd1667a actual autosaveWorker clone6/6 plus bounded response lifecycle8/8; no runtime failure reproduced or speculative runtime patch; see board decision card |
+| BUG-LEGACY-HUNT | suite-triage | Legacy absent-rule keeps historical fresh-kill mode; prepared cargo is never reclassified. Own paid station completion adopts raw rules without undoing via another society or station destruction | Codex | Codex Tonight (bugs first) | done/live | bd1667a removes only redundant terrain-version fallback;6/6camp-animal-processing including fresh/legacy/adoption/strict load and real hide chain |
+| BUG-CLIMATE-FUEL | suite-triage | Local climate temperatures are correct, but `survivalStatus.fuelDemandWoodPerSecond` is 0.003 not 0 in the climate exposure case | Codex | Codex Tonight (bugs first) | done/test contract corrected | bd1667a: local exposed resident correctly demands0.003wood/s; test checks zero burn without fuel and finite0.03wood/10s; no runtime cost rebalance |
+| BUG-CARAVAN-TRADE | suite-triage | Visiting traders, planned convoys, multi-carrier delivery, capacity/guard waits, pause-and-return, and armed carriers vs away-from-home workforce limits | Codex | Codex Tonight (bugs first) | verified/test contract corrected | 14/14caravan cases pass: actual witness/frontage/loading/payment, finite guards/stock/away cap; runtime unchanged from livebd1667a; broader carrierfile has one unrelated knownWorldsurvey fixture failure |
+| BUG-HUNT-PREY | suite-triage | Hunters must take moving prey and bring actual food home (prey HP stayed 2, expected 0) | Codex | Codex Tonight (bugs first) | verified/test contract corrected | Moving prey receives actual hunting projectiles and finite raw meat returns; fresh raw/cooking rules retained. Target2/2 with barter, full carrierfile31/32; remaining failure is Worldsurvey fixture |
+| BUG-BARTER-SURPLUS | suite-triage | A local trader must negotiate a small surplus without exporting winter necessities (`quoteShipment` returned no deal) | Codex | Codex Tonight (bugs first) | verified/test contract corrected | Actual local carrier/contact; four wood quoted from28 with24reserve retained; unit price and pure-query stock checks pass; no runtime pricing change |
+| BUG-CEREAL-CYCLE | suite-triage | A three-adult grain/pulse holding must complete marked cereal harvest, paid processing/bread, and a second contour crop cycle | Codex | Codex Tonight (bugs first) | verified/test contract corrected | Two full contour crop cycles pass with actual automatic paid work:1172sheaves/220bread, finite input/food/water/fuel ledgers, paid pause/save/resume and actual direct orders; controlled authored terrain, no gate credit |
+| B1-PLAY-FLOW-SAVE | suite-triage | Failed durable save refuses disposable Test Lab entry and preserves main village | Codex | Codex B1 | done/verified | 4/4actual lifecycle tests +1/1built failed-write case: actual dawn-of-empire storage write blocked, no Lab/owner replacement or gameplay/durable-slot changes; tscPASS; runtimebd1667a already correct, async fixture repaired |
+
+## Hourly status rule — 2026-11-11 21:56 ET (Boris)
+Every agent (Codex, Claude, Grok) posts one status line at least hourly on docs/parallel/handoffs/claude-coordination.md: `HH:MM ET <agent>: shipped <what> (SHA) / now on <item> / blocked: <none|what>`. Grok rolls these into an hourly update for Boris. An agent that misses two hourly lines in a row is treated as stalled and its next items get reassigned.
+
+## Save-compatibility relaxed — 2026-11-11 22:09 ET (Boris)
+Boris has no past villages he cares about. Old-save compatibility is no longer a guardrail: agents may change save formats freely, with no migrations, historic-mode switches, or "old saves load unchanged" tests required. New games must still save and load correctly, and the live deployment must keep running. Features previously hidden behind switches only to protect old saves can be turned on by default once tested.
+
+## Claude status — 22:09 ET
+Claude is active: marriage alliances (marryHouses) and expansion drivers (expansionDrivers.ts: push/pull/enablers/brakes feeding NPC settle/migrate/conquer/trade/explore modes with plain-language reasons) are pushed to integration (72cf269). Next: UI panels (council dossier, handover card, factions strip, diplomacy sheet, expansion "why"), then a player marriage button. Codex: run the full suite natively on the merged integration tree (Claude's sandbox lacks node_modules). The reassignment of Claude's river/trail drawing is cancelled.
+| UI-COUNCIL-LANE-B | Claude | in progress | handover card, factions strip, glory bars, chronicle done (60c7bd1); next diplomacy sheet, LeaderPortrait, capitulation/trade UI, theme variant behind setting | council/CouncilParts.tsx, councilLayout.ts |

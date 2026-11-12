@@ -1,4 +1,8 @@
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {reconcileWeaponCargo} from './weaponCargo';
+import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
+import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
+import {recoverySurfaceHeight,steerHullRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -1057,9 +1061,9 @@ export class Game {
 
   canStep(u: Unit, x: number, z: number) {
     if (!this.withinWorld(x, z, 1)) return false;
-    const h = canoeHeight(this,u,x,z);
+    const h = u.hullRecovery?recoverySurfaceHeight(this,x,z):canoeHeight(this,u,x,z);
     if(u.boat?.phase==='aboard'&&this.height(x,z)>=this.waterAt(x,z)+.3)return false;
-    if ((u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
+    if ((!u.hullRecovery&&u.haulage!=="canoe"&&h < this.waterAt(x,z) + WALK_CLEARANCE) || Math.abs(h - u.y) > 2.55) return false;
     for (const b of nearbyStepBuildings(this,x,z,u.r,this.navRevision)) {
       const w = b.w * 0.4 + u.r,
         d = b.d * 0.4 + u.r;
@@ -4050,6 +4054,7 @@ export class Game {
 
   steer(u: Unit, dt: number) {
     if (this.state.walkDirty) this.rebuildWalk();
+    if(u.hullRecovery)return steerHullRecovery(this,u,dt);
     // Coarse navigation can mark a citizen's cell blocked after construction.
     // Walk out through a physically clear segment before asking A* to route.
     let tx = u.tx,
@@ -4366,6 +4371,7 @@ export class Game {
   sendDelegation(team:number,kind:"trade"|"peace"|"gift"|"compact",carrier?:Unit,term:PeaceTerm="whitePeace") {return sendDelegation(this,team,kind,carrier,term);}
 
   workerAI(u: Unit, dt: number) {
+    if(hullLossRecoveryAI(this,u,dt))return;
     if(prisonerAI(this,u,dt))return;
     if(societyMissionAI(this,u,dt))return;
     if(riverboatAI(this,u,dt))return;
@@ -5787,6 +5793,7 @@ export class Game {
           u.vz = 0;
           try {
             if(finishRaidEscortAtCamp(this,u))continue;
+            if(hullLossRecoveryAI(this,u,sdt))continue;
             if(prisonerAI(this,u,sdt))continue;
             if(seaRaiderReturnAI(this,u,sdt))continue;
             if(riverboatAI(this,u,sdt))continue;
@@ -5905,7 +5912,10 @@ export class Game {
         reconcileWaterCargoEvidence(this);
         reconcileArmorHolders(this);
         reconcileSiegeRams(this);
-        this.state.units = this.state.units.filter((u) => u.hp > 0);
+        tickStolenCargo(this,0);
+        reconcileFarmToolCargo(this);
+        reconcileWeaponCargo(this);
+        this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         this.checkVictory();
       } catch (err) {
         endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);

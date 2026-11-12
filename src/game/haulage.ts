@@ -3,7 +3,7 @@ import {validSailRigOrder,sailRigPhysicalIssue,finishSailRig} from './boatSailin
 import{inheritedHaulageEvidence}from'./inheritedKnowledge';
 import{recordWaterCargoDelivery}from'./boatPractice';
 import{BOAT_CLASSES,BOAT_PRACTICE_RULES,validHullOrder,type HullOrder}from'./boatClasses';
-import{carriedLoadFraction,burdenPace}from'./carriedLoad';
+import{carriedLoadFraction,burdenPace,equipmentLoadUnits,CARRIED_LOAD_RULES}from'./carriedLoad';
 import{basketCapacityMultiplier,recordBasketDelivery}from'./fibre';
 import {workRuntime} from './workRuntime';
 import {releaseTreeWorker} from './workAllocation';
@@ -303,12 +303,13 @@ function usesTransport(u: HaulageUnit) {
 }
 
 /** One real transport belongs to one civilian; no village-wide passive bonus. */
+function loadCapacityMultiplier(u:HaulageUnit,kind:ResKind){return basketCapacityMultiplier(u,kind)*(u.boat?.phase==='aboard'?5:usesTransport(u)&&u.haulage?HAULAGE[u.haulage].capacity:1);}
 export function carryingCapacity(u: HaulageUnit, kind: ResKind) {
-  return GATHER[kind].carry * basketCapacityMultiplier(u,kind) * (u.boat?.phase==='aboard'?5:usesTransport(u) && u.haulage ? HAULAGE[u.haulage].capacity : 1);
+  return GATHER[kind].carry*Math.max(0,loadCapacityMultiplier(u,kind)-equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits);
 }
 
 export function loadedHaulSpeed(u: HaulageUnit) {
-  const capacity=carryingCapacity(u,u.carryType||'wood')/(GATHER[u.carryType||'wood']?.carry||GATHER.wood.carry);
+  const capacity=loadCapacityMultiplier(u,u.carryType||'wood');
   const fraction=carriedLoadFraction(u,capacity);
   return burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?HAULAGE[u.haulage].loadedSpeed:1);
 }

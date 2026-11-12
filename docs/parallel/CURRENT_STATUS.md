@@ -4,6 +4,13 @@
 
 Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
 
+- Latest LIVE release: **687e82a**, **2026-11-12T03-16-12-212Z-687e82a** verified on8086/8101. Hull-loss survivors swim/wade physically to reachable shore and return cargo to actual cache; incremental search handles native270400-cell grids with bounded work. Actual native107m recovery and strict midwater reload pass. Offshore captive rescue remains unsupported.
+- Current batch14/14(100percent):12focused +2actualbuilt native53 render/queue/save/restore/failed-write safety; tsc/buildPASS. C11 advisory hull dimensions + bounded authoring-preset storage included; Experience UI consumers remain open. Priorbd1667a release and villages retained. Frozen acceptance unchanged34/98(34.69percent).
+- WQ14 custody backends remain live; gear/animal trade consumer is still open/off. Prior test-only follow-up51/52 remains scoped evidence; World survey fixture belongs to Grok.
+- AUTOPILOT governs: Worker parked; Codex now T5 paid era rebuild/extensions then T6 prestige. Grok PM/World; Claude architect/UI/visuals/diplomacy. Any provider may edit any file under collision coordination.
+
+## Historical pre-integration evidence (superseded where AUTOPILOT differs)
+
 - Latest published performance batch **d86d7da:37/37** (35focusedtests +1matchednative100ABBA +1actualbuilt100Low scenario), typecheck/build passed,1035committed build inputs verified. Four-run mean CPU reduction15.41% with exact full state/RNG parity; Node candidatep95s34.93/33.92ms remain above33. Built24-second headlessM1Metal run holds100residents, rollingp95s20.2–23.5ms, final21.9ms; framep9516.8ms. These are scoped measurements, not universal FPS/phase completion. Evidence: docs/metrics/sim-speed-native100-performance-release-2026-11-11.json.
 - Worker source is pushed at **0cf5c18**; native owner-query/checkpoint tests,14save/file controls checks,4production UI checks,10keyboard checks and combined typecheck passed in their stated scopes. Actual100resident moduleWorker step **p9567.74ms misses33ms**. Full command/render/lifecycle/RNG coverage remains incomplete; defaultoff/no gatecredit. See GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md. Grok leads execution; **Claude owns conflicts**.
 - Current execution order follows COMPLETION_PLAN.md from Claude coordination e8a48af: measured native100residentLow simulation speed (p95<33ms) and authoritative WebWorker first; then WHOLE normal branch merges behind game options; then knowledge/provenance and remaining economy systems. No partial feature batch is being published ahead of that order.

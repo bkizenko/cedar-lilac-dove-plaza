@@ -64,7 +64,7 @@ test('a terrain-conforming field can be selected on its ground footprint without
 });
 
 test('territory and fog overlay follows every terrain vertex on enlarged maps',()=>{
- const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();v.scene=new THREE.Scene();v.cameraClearance={invalidate(){}};
+ const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();v.scene=new THREE.Scene();v.cameraClearance={invalidate(){}};v.cameraCollision={invalidate(){}};
  v.fowMesh=new THREE.Mesh(new THREE.PlaneGeometry(1040,1040,2,2),new THREE.ShaderMaterial({uniforms:{uHalf:{value:520},uSize:{value:1040}}}));
  for(const name of ['disposeWorld','buildTerrain','buildNature','buildBuildings','buildUnits','buildHearths','buildWildlife','updateCamera'])v[name]=()=>{};
  const height=(x,z)=>Math.abs(x)<1&&Math.abs(z)<1?45:4;
