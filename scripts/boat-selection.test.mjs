@@ -92,7 +92,7 @@ test('grain station pointer placement keeps quarter-metre gaps on the actual bui
  e.view={setLinePreview:()=>{},groundAt:()=>({x:11.28,z:-14.49}),
   setGhost:(type,x,z,y,ok)=>{drawn={type,x,z,ok};}};
  g.state.placing='oven';
- g.placementValid=(type,x,z)=>{validated={type,x,z};return true;};
+ g.placementIssue=(type,x,z)=>{validated={type,x,z};return null;};
  e.updateGhost();
  assert.deepEqual(validated,{type:'oven',x:11.25,z:-14.5});
  assert.deepEqual(drawn,{...validated,ok:true});
