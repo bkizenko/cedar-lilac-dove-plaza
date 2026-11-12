@@ -36,11 +36,11 @@ Boris's goal: send these prompts once and the whole game gets built over several
 
 **Stop:** run until Boris says stop, or until two consecutive full audits by all three agents find no meaningful issues. Then post a final report: what's live, what's gated, remaining later/out-of-scope items, and SHAs.
 
-**Guardrails:** preserve the live deployment and Boris's village/saves; old saves must keep loading. No render PNGs pushed (Boris reviews visuals first). Gated decisions (shored cuts, knowledge/tech ownership, and any new ones) go on a single daily decision card; work everything else in the meantime. Desktop only; no mobile scope. Do not migrate engines. Do not invent free goods, teleport, shrink collision, or flatten terrain indiscriminately.
+**Guardrails:** preserve the live deployment and Boris's village/saves; old saves must keep loading. Visuals are pre-approved by Boris (2026-11-11 20:40 ET): Claude ships visual work without waiting for review; keep screenshots small and only where useful. Gated decisions (shored cuts, knowledge/tech ownership, and any new ones) go on a single daily decision card; work everything else in the meantime. Desktop only; no mobile scope. Do not migrate engines. Do not invent free goods, teleport, shrink collision, or flatten terrain indiscriminately.
 
 **Daily (Grok posts):** one merge to main, and one short summary for Boris — what's newly playable, and decisions needed. Judge agents by features on in the game.
 
-**Velocity rules (every item):** normal merge from main; one focused test; `tsc`; push; merge to main daily; 45–90 min; 15-minute block rule; ship behind a switch; one board line with the SHA; no render PNGs until Boris reviews; no rebase/force-push; native-terrain evidence is one short note, not a report.
+**Velocity rules (every item):** normal merge from main; one focused test; `tsc`; push; merge to main daily; 45–90 min; 15-minute block rule; ship behind a switch; one board line with the SHA; no rebase/force-push; native-terrain evidence is one short note, not a report.
 
 ---
 
@@ -53,7 +53,7 @@ GOAL: features turned on in the built game. Docs and evidence write-ups are not 
 
 ROLE: platform, economy, saves, integration, and knowledge/tech builder. You merge integration work to main (normal merges). You do not take World core wiring — Grok is doing W7, the canal-breach fix, validators, canal commission, water-works buildings, the flow-field switch, the sea-tide mesh, driftAt and scenicStartReport. Claude is architect (contracts, design disputes, conflict-resolution lead) and owns diplomacy/leaders/succession/visuals and the curd UI conflict.
 
-LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; Claude decides design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. No render PNGs. When your queue empties, audit platform/economy (headless play, perf, bugs, balance), add items to your queue and the traceability table, and continue.
+LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; Claude decides design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. When your queue empties, audit platform/economy (headless play, perf, bugs, balance), add items to your queue and the traceability table, and continue.
 
 WORK QUEUE — do in order, one at a time. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean. Do not re-do items marked done/live.
 
@@ -108,7 +108,7 @@ GOAL: features turned on in the built game. Docs and render reports are not want
 
 ROLE: architect — you own system design, interfaces and cross-lane contracts, and you resolve design disputes. You also lead conflict resolution, and you build diplomacy, leaders, succession, international systems, the visual overhaul, and the Worker/curd UI conflict. Grok is PM and World (and is wiring World core). Codex is platform/economy/integration. Knowledge/tech stays Codex until Boris decides.
 
-LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; you decide design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. No render PNGs until Boris reviews. When your queue empties, audit societies + visuals (headless + real three.js when the desktop is linked), add items to your queue and the traceability table, and continue.
+LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; you decide design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. Visuals are pre-approved: ship them. When your queue empties, audit societies + visuals (headless + real three.js when the desktop is linked), add items to your queue and the traceability table, and continue.
 
 WORK QUEUE — do in order. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean.
 
@@ -124,7 +124,7 @@ T8. WQ-11 / C10 Option H adapter in world.ts: call site, light-rig swap/restore,
 T9. Architect: publish any missing contracts Codex/Grok need tonight (eraMode benefits shape, trade-holder fields, water-works admission UI). Do not block them — they wire end to end.
 
 THIS WEEK
-W1. Visual overhaul live behind Option H (CP-5, CP-3, ASTRA-18, M4-11/12/13): wire biomeTerrain, civBuildings/civShowcase, civPeople, wonderKit (unique per game, presets). Postfx: baked AO, haze/fog, bloom, grade. Ground buildings with sampleSite — no generic platforms (QA-006, QA-017). House/workshop variation and original cultural identities (INC-HOUSE-VARIATION, INC-CULTURAL-IDENTITIES, QA-007, QA-050 wonders). Screenshot in real three.js against concept art for Boris; push no PNGs until he says so. Blender only for hero assets later. ART-HOLD: keep current art until he approves the overhaul.
+W1. Visual overhaul live behind Option H (CP-5, CP-3, ASTRA-18, M4-11/12/13): wire biomeTerrain, civBuildings/civShowcase, civPeople, wonderKit (unique per game, presets). Postfx: baked AO, haze/fog, bloom, grade. Ground buildings with sampleSite — no generic platforms (QA-006, QA-017). House/workshop variation and original cultural identities (INC-HOUSE-VARIATION, INC-CULTURAL-IDENTITIES, QA-007, QA-050 wonders). Check it in real three.js against the concept art yourself, then turn Option H on by default once performance holds, keeping the current style as a settings fallback. Blender only for hero assets later. Visuals are pre-approved by Boris; no review wait.
 W2. Diplomacy, leaders, succession, international — playable in the built game (M2-01..03, 05..16; CAT-25–27, 81–90, 97–98, 101–110, 111–115, 117–118, 120; CONTEXTUAL-CONFLICT). After societies lands: turn on G6 names, G11 personalities, G16 storms (use Grok deepWater, not an ad-hoc 2.5m test), stolen cargo (C14 conservation), armed caravans, market-driven trade frequency (CHAT-G15), siege (S1/S3, rivalSiege.ts), annex escalation, captive revolt (M3-16), raider camps that can settle (INC-RAIDER, QA-010, CAT-107). Call planObservedWaterRoute for NPC voyages. G5 rise and fall (collapse, refound, game continues with zero rivals). VILLAGE-REQUESTS. TRADE-NEEDS, TRADE-LABOR. Defense horn, militia stand-down (INC-MILITIA). Player-initiated and NPC↔NPC alliances, treaties, war/recovery. Succession keeps agreements (M2-13).
 W3. Audio: ASTRA-03 adaptive score, ASTRA-22 natural SFX, M4-15, Experience ambientMix. Licensed credits; no oscillator music; mute/dispose clean.
 W4. Consume Grok site facts (IFACE-G6 tides/exposure/flow/width/banks/harbour levels) in harbour/market/wonder grounding.
@@ -148,7 +148,7 @@ N7. M5-04 new map gallery (you drive desktop visual review with Grok's terrain).
 LATER
 L1. Blender hero assets (wonders, ships, portraits) and baked detail only after the overhaul is approved.
 L2. BOARD-G12 fun-loop metric — only if Boris approves it on the decision card. Until then, skip.
-L3. QA-025: discard review screenshots after Boris has judged them.
+L3. QA-025: discard temporary review screenshots once fixes are verified.
 
 DONE — do not re-queue: NPC docked-hull sea exploration live at f09578d / 01e6f66; C1 renderStyle live 860863a; C3 LOD live d4d3cba; C4/C7/C8 sail/hull seams live. Experience batches 1–8 and Societies conquest/names/storms/trade are source-pushed (9992fe9, e69b8f8) — turn them on in W1–W2, do not rewrite them.
 ```
@@ -165,7 +165,7 @@ GOAL: features turned on in the built game. Docs and extra coordination files ar
 ROLE (PM): sequencing, assignment, unblocking, the board, the daily merge to main, and one short daily summary for Boris (what's newly playable, decisions needed). Re-audit this whole plan for gaps every day. Collect one decision card per day (open now: shored cuts; knowledge/tech ownership; G12 fun-loop only if someone asks). Do not wait on those cards — agents work everything else.
 ROLE (World): terrain, navigation, placement, civil engineering, water, territory — and you wire your features end to end, including persistence, UI, buildings and scene hooks. Tonight you own W7 plus the canal-breach integration fix and World core wiring (validators, canal commission, water-works buildings, flow-field switch for new games, sea-tide mesh, driftAt, scenicStartReport). Claude is architect. Codex is platform/economy/integration.
 
-LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; Claude decides design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. No render PNGs. No camera code (cameraClearance.ts included) — Codex's fixed-angle collision (b86507f / 3ec1beb) is the decided approach. When World queue empties, audit terrain/nav/placement/water in the built game, add items, and continue. World status lives only in docs/parallel/handoffs/grok-world.md; the board stays short.
+LOOP: pull origin/main → next item → build → focused test + tsc → merge to main → one board line (what's live, SHA) → repeat. Never wait for Boris. Blocked >15 min: skip, log it on the daily decision card, continue. Ship behind a switch if unsure. 45–90 min per item. Anyone may edit any file; list shared-file edits on the board. Conflicts: resolve immediately, keep both sides' behavior; Claude decides design disputes. No rebase/force-push. Restore green tests before moving on. Preserve the live deployment and Boris's villages/saves; old saves must load. No camera code (cameraClearance.ts included) — Codex's fixed-angle collision (b86507f / 3ec1beb) is the decided approach. When World queue empties, audit terrain/nav/placement/water in the built game, add items, and continue. World status lives only in docs/parallel/handoffs/grok-world.md; the board stays short.
 
 WORK QUEUE — do in order. Done = merged to main, on in the built game (or behind a named switch), one focused test, tsc clean.
 
@@ -222,7 +222,7 @@ DONE — do not re-queue as new design: GW-01 tight-space nav (2a9fa79 / 5f2b1b2
 1. Play the live/published build for 10 minutes; send one list of what feels wrong if you want to steer. If you send nothing, agents keep going.
 2. Answer the one decision card when you can (open now: shored cuts; knowledge/tech ownership; G12 fun-loop only if raised). Everything else proceeds without you.
 3. Expect one merge to main per day and one short summary: what's newly playable, and any decisions needed.
-4. Review visuals when Claude sends screenshots; say yes before any PNG is pushed.
+4. (Removed: visuals are pre-approved; no review step.)
 5. Target: about 15 minutes a day, or zero. Agents stop only when you say stop, or when two consecutive full audits by all three find no meaningful issues.
 
 ---
@@ -554,7 +554,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | QA-022 | qa | - Reproduce residents oscillating beside crowded workstations. Inspect the selected residents' order, physical path, inventory and blocki… | Codex | Codex W8 | not started | workstation oscillation / blocked residents |
 | QA-023 | qa | - Expand farm tools and weapons through the ages with distinct uses and real material, fuel, labor and maintenance costs. Audit current p… | Codex | Codex W4 | not started | farm tools and weapons through ages |
 | QA-024 | qa | - Inspect river-edge borders and overlays at bends, junctions and lakes. Separate territory lines from visible terrain seams, align both … | Grok | Grok W1 | source-pushed-not-live | territory at river bends; claims source 10d6d81 |
-| QA-025 | qa | - Discard generated review screenshots and shut down temporary previews once fixes are verified. Keep reproducible source and test results. | Claude | Claude L3 | not started | discard review screenshots after Boris judges |
+| QA-025 | qa | - Discard generated review screenshots and shut down temporary previews once fixes are verified. Keep reproducible source and test results. | Claude | Claude L3 | not started | discard temporary screenshots after fixes are verified |
 | QA-029 | qa | - Preserve the existing finite clay survey, hauling, forming, drying and firing chain. Extend it with individual filled containers alongs… | Codex | Codex W5 | not started | clay chain + individual containers |
 | QA-030 | qa | - Track container form, liters of usable volume, tare mass, contents, seal, condition and maker provenance. Each vessel has one owner and… | Codex | Codex W5 | not started | container identity |
 | QA-031 | qa | - Build mechanical milling on the existing grain-to-flour chain. Prototype a current-driven wheel using a connected river reach, then a m… | Grok | Grok T4 | source-pushed-not-live | mechanical milling site/current; wire as water-works buildings |
@@ -726,7 +726,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | IFACE-G7 | interface | engine.ts R-key / rotate ghost passing quarterTurn | Grok | Grok T8 | not started | R-key rotate — same as WQ-8 |
 | IFACE-G8 | interface | Mesh yaw; draw river section.corners and fishRecoveryPerMinute | Claude | Claude T5 | not started | mesh yaw + river corners + fish — same as WQ-9 |
 | IFACE-G9 | interface | Wire planFieldArea / fertilityPreview; optional per-section fish cap | Grok | Grok T9 | not started | planFieldArea / fertility / fish cap — same as WQ-10 |
-| GOV-ART-HOLD | governing | H/E are proposals; preserve current art and original references. New runtime overhaul needs approval/performance proof. | Claude | Claude W1 | done/live | current art preserved; Option H stays off until Boris reviews screenshots |
+| GOV-ART-HOLD | governing | H/E are proposals; preserve current art and original references. New runtime overhaul needs approval/performance proof. | Claude | Claude W1 | done/live | superseded 2026-11-11: Boris pre-approved visuals; Option H ships default-on once performance holds, current style kept as fallback |
 | GOV-CONTEXTUAL-CONFLICT | governing | Raid/capture/intact occupation/tribute emerge contextually; no compulsory predeparture wizard. | Claude | Claude W2 | source-pushed-not-live | no compulsory pre-raid wizard |
 | GOV-DESKTOP | governing | Desktop only supersedes Astra08 mobile rendering; preserve keyboard accessibility. | Claude | Claude W10 | done/live | desktop-only supersedes Astra-08 mobile; keep keyboard access (Claude W10 / Codex audit) |
 | GOV-ENGINE-LATER-AGES | governing | Godot/custom-engine migration and1700s/firearms/mounted armies deferred, not deleted; current game keeps shipping. | Codex | Codex L3 | explicitly later/out of scope | no engine migration now; 1700s/firearms/mounted deferred to L4 |
@@ -799,7 +799,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | WONDER-EARTHWORKS | incentive | Wonder cuts as ordinary excavation labour | Grok | Grok W15 | source-pushed-not-live | wonderEarthworks.ts on agents/grok-world; wire into live wonder jobs |
 | CP-1 | completion-plan | Phase 1 Speed: profile hot paths, Worker, p95 <33ms Low @ 100 residents | Codex | Codex N3 | not started | Worker parked (C2); unpark after N3 |
 | CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | not started | PR #1 is the vehicle |
-| CP-3 | completion-plan | Phase 3 See the real game: desktop three.js screenshots vs concept art | Claude | Claude W1 | not started | no PNGs until Boris reviews |
+| CP-3 | completion-plan | Phase 3 See the real game: desktop three.js screenshots vs concept art | Claude | Claude W1 | not started | Claude self-reviews against concept art; pre-approved |
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
 | CP-6 | completion-plan | Phase 6 Scale: hundreds of residents, LOD, BatchedMesh, per-chunk sim, 8GB | Codex | Codex N3 | not started | world-side scale is Grok L2 after this |
