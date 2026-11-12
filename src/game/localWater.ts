@@ -35,15 +35,18 @@ export function localWaterAt(bodies:LocalWaterBody[],x:number,z:number):number|n
  }
  return surface;
 }
-export function waterSurfaceAt(world:{waterY:number;baseWaterY?:number;size?:number;waterBodies?:LocalWaterBody[];waterfalls?:Waterfall[];waterHeights?:Float32Array;localWaterVersion?:number},x:number,z:number){
- if(world.localWaterVersion===17&&world.size){prepareOwnedWaterWorld(world);const index=ownedWaterIndexValue(world.waterBodies||[],world.size,world.waterfalls),surface=exactWaterMemoAt(world,index,x,z,lakeContains);return Math.max(world.waterY,surface===null?-Infinity:surface+world.waterY-(world.baseWaterY??world.waterY));}
+/** The background sea's surface: the weather level plus the sea-only tide
+ * (tides v2, runtime-only `seaTideY`). Inland water never carries the tide. */
+export function seaSurfaceY(world:{waterY:number;seaTideY?:number}){return world.waterY+(world.seaTideY??0);}
+export function waterSurfaceAt(world:{waterY:number;seaTideY?:number;baseWaterY?:number;size?:number;waterBodies?:LocalWaterBody[];waterfalls?:Waterfall[];waterHeights?:Float32Array;localWaterVersion?:number},x:number,z:number){
+ if(world.localWaterVersion===17&&world.size){prepareOwnedWaterWorld(world);const index=ownedWaterIndexValue(world.waterBodies||[],world.size,world.waterfalls),surface=exactWaterMemoAt(world,index,x,z,lakeContains);return Math.max(seaSurfaceY(world),surface===null?-Infinity:surface+world.waterY-(world.baseWaterY??world.waterY));}
  const grid=world.waterHeights,size=world.size;
  if(grid&&size){
   const segs=Math.round(Math.sqrt(grid.length))-1,n=segs+1,gx=(x/size+.5)*segs,gz=(z/size+.5)*segs;
   const ix=Math.max(0,Math.min(segs-1,Math.floor(gx))),iz=Math.max(0,Math.min(segs-1,Math.floor(gz)));
   const fx=Math.max(0,Math.min(1,gx-ix)),fz=Math.max(0,Math.min(1,gz-iz));
   const y=grid[iz*n+ix]*(1-fx)*(1-fz)+grid[iz*n+ix+1]*fx*(1-fz)+grid[(iz+1)*n+ix]*(1-fx)*fz+grid[(iz+1)*n+ix+1]*fx*fz;
-  return Math.max(world.waterY,y+world.waterY-(world.baseWaterY??world.waterY));
+  return Math.max(seaSurfaceY(world),y+world.waterY-(world.baseWaterY??world.waterY));
  }
- return Math.max(world.waterY,localWaterAt(world.waterBodies??[],x,z)??-Infinity);
+ return Math.max(seaSurfaceY(world),localWaterAt(world.waterBodies??[],x,z)??-Infinity);
 }
