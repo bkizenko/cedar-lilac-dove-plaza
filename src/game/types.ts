@@ -251,6 +251,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
   methodRecordCargoId?:number;
+  methodRecordPickupId?:number;
   farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;

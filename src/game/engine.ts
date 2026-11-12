@@ -757,6 +757,12 @@ export class Engine {
       return;
     }
     if(this.game.selectedBoat!==null){this.game.issueMove(g.x,g.z);this.pushHud();return;}
+    const record=this.view.pickMethodRecord?.(cx,cy,this.game);
+    if(record){
+      const actor=this.game.selectedUnits().find(u=>u.team===0&&u.hp>0);
+      if(!actor){this.presentationNotice('Select a resident to collect this method record',3);return;}
+      const original=this.game,epoch=this.sessionEpoch;void this.dispatch({kind:'method-record-pickup',unitId:actor.id,recordId:record.id},{selectedUnitIds:[actor.id]}).then(result=>{if(this.game===original&&this.sessionEpoch===epoch&&!this.disposed)this.presentationNotice(result.reason,result.accepted?2:4);}).catch(error=>{if(this.game===original&&this.sessionEpoch===epoch&&!this.disposed)this.presentationNotice(error instanceof Error?error.message:String(error),4);});return;
+    }
     const looseCart=this.view.pickDraftCart?.(cx,cy,this.game);
     if(looseCart){
       const selected=this.game.selectedUnits().filter(u=>u.team===0&&u.hp>0),actor=selected.find(u=>draftCartChoices(this.game,u.id).loose.some(c=>c.id===looseCart.cart.id&&!c.issue))??selected[0];
