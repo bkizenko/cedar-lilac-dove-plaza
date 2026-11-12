@@ -35,11 +35,21 @@ page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')console.error(
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
 await page.goto(`http://127.0.0.1:${server.address().port}/`);
 await page.waitForFunction(()=>window.hwLive===true,null,{timeout:120000});
-const opts={shot,style:flags.style||'village',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null};
+const opts={shot,style:flags.style||'village',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null,...(flags.skins?{skins:String(flags.skins).split(',')}:{})};
 const info=await page.evaluate(o=>window.hwShot(o),opts);
-console.error('[live]',JSON.stringify(info));
-const raw=await page.locator('#c').screenshot();
-let buf=raw;if(sharp)buf=await sharp(raw).png({compressionLevel:9}).toBuffer();
+if(info&&info.steps){info.images=[];for(const st of info.steps){const meta=await page.evaluate(id=>window.hwStep(id),st);if(!meta)continue;const raw=await page.locator('#c').screenshot();info.images.push({...meta,url:'data:image/png;base64,'+raw.toString('base64')});}}
+console.error('[live]',JSON.stringify({...info,images:info.images?.map(i=>({...i,url:undefined}))}));
+let buf;
+if(info&&info.images){// contact sheet: one tile per skin/society, labelled, laid out in a grid (--cols, --tile width)
+  const tw=+(flags.tile||640),cols=+(flags.cols||3),th=Math.round(tw*H/W),tiles=[];
+  for(const [i,im] of info.images.entries()){
+    const png=Buffer.from(im.url.split(',')[1],'base64'),esc=t=>String(t).replace(/[<&>]/g,'');
+    const label=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${tw}" height="${th}"><rect x="8" y="${th-34}" width="${Math.min(tw-16,28+8*(esc(im.name).length+esc(im.mode).length+(im.team!==undefined?9:0)+(im.grammar?String(im.grammar).length+10:0)))}" height="26" rx="4" fill="#14110eCC"/><text x="18" y="${th-16}" font-family="DejaVu Sans,sans-serif" font-size="14" fill="#f4ecd8">${im.team!==undefined?'team '+im.team+'  ':''}${esc(im.name)}  ·  ${esc(im.mode)}${im.grammar?' · grammar '+esc(im.grammar):''}</text></svg>`);
+    tiles.push({input:await sharp(png).resize(tw,th).composite([{input:label}]).png().toBuffer(),left:(i%cols)*tw,top:Math.floor(i/cols)*th});
+  }
+  const rows=Math.ceil(tiles.length/cols);
+  buf=await sharp({create:{width:cols*tw,height:rows*th,channels:3,background:'#111'}}).composite(tiles).png({compressionLevel:9}).toBuffer();
+}else{const raw=await page.locator('#c').screenshot();buf=raw;if(sharp)buf=await sharp(raw).png({compressionLevel:9}).toBuffer();}
 fs.mkdirSync(path.dirname(path.resolve(out)),{recursive:true});fs.writeFileSync(out,buf);
 console.error(`[live] wrote ${out} (${(buf.length/1024).toFixed(0)} KB)`);
 await browser.close();server.close();
