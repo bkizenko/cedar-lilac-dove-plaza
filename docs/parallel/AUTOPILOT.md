@@ -368,7 +368,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ASTRA-18 | astra | Cohesive environment pack pass | Claude | Claude W1 | source-pushed-not-live | Option H / biomeTerrain / civ packs source-pushed 9992fe9; not live |
 | ASTRA-19 | astra | Wildlife and seasonal habitat | Grok | Grok N5 | source-pushed-not-live | hunting/wildlife live (M1-10); habitat/offscreen bounds leftovers |
 | ASTRA-20 | astra | Fog and scouting audit | Grok | Grok W13 | source-pushed-not-live | G10 overlay live 39115987; exact-radius attribution still open |
-| ASTRA-21 | astra | HUD and teaching pass | Claude | Claude N1 | source-pushed-not-live | Hearth UI (src/ui/hearth) is the new default HUD with a New/Classic switch in Menu; renders in docs/renders/ui; teaching pass not live |
+| ASTRA-21 | astra | HUD and teaching pass | Claude | Claude N1 | source-pushed-not-live | Hearth UI (src/ui/hearth) is the new default HUD with a New/Classic switch in Menu; Council now has handover card (rivals/pressure/regency), fame feed, ruler LeaderPortrait, factions strip, shared-scale renown bars (docs/renders/ui/hearth-council-handover.png); teaching pass not live |
 | ASTRA-22 | astra | Natural SFX and environment mix | Claude | Claude W3 | not started |  |
 | ASTRA-23 | astra | Save migration and deterministic replay | Codex | Codex W8 | not started | same work as M0-09 |
 | ASTRA-24 | astra | Performance and balance gate | Codex | Codex N4 | not started |  |
