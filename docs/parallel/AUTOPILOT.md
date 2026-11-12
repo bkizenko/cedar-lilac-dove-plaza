@@ -944,3 +944,21 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-HORSE-SPRING-TRACTION | audit | Crafted ard uses a real trained horse; only productive spring work earns practice/wear, with paid repairs and conserved saves | Codex | Codex W1 | done/live | 46217d4,28/28scoped,tsc/buildPASS,native originalterrain+2built traction checks+existing-village regression; docs/metrics/horse-traction-release-2026-11-12.json |
 | AUD-WORKING-HERD-RETURN | audit | Return an actual working pack/draft animal to a physical pen without losing identity, harness, condition or reproductive reserves | Codex | Codex W1 | not started | Cattle conversion preserves optional milk/pregnancy/lactation/adultScale in0106f88; actual unharness/return workflow remains open. No free road products. |
 | AUD-PACK-MESH-INDIVIDUAL-SCALE | audit | Preserve actual individual animal size in working meshes and fitting harness/ard transforms | Claude | Claude W1 | not started | Wild/domestic size varies and identity retains scale; current working vehicle meshes normalize scale. Coordinate clearance and visual identity; no gameplay collision shrink. |
+
+## Throughput (Grok PM, hourly)
+
+| Hour ending (ET) | Agent | Commits (all branches) | Commits on main | Features live on main | Note |
+|---|---|---|---|---|---|
+| 11-12 00:00 | Codex | 20 (prev 39) | 20 | 3 (goat reservations/handover, real pack-animal care, knowledge provenance) | steady; on target (target 3/h) |
+| 11-12 00:00 | Claude | 24 (prev 26) | 5 (board/docs only) | 0 on main (~10 features waiting on integration) | shipping, but not landing — target 2 live/h |
+| 11-12 00:00 | Grok | 0 (prev 11) | 0 | 0 | idle — no World batch running |
+| 11-12 00:00 | Total | 44 | 25 | 3 | integration 67 commits ahead of main |
+| 11-12 01:00 | Codex | 16 (prev 20) | 16 | 2 (real horse herds/pasture/stable pack training; settled-war prestige + player townhall defense) | on target (3/h target, 2 big items) |
+| 11-12 01:00 | Claude | 16 on integration (prev 24) | 4 (board/docs only) | 0 on main (lanes A/B/C shipped to integration) | shipping, still not landing |
+| 11-12 01:00 | Grok | 0 (prev 0) | 0 | 0 | idle 2nd hour — 00:05 landing never ran |
+| 11-12 01:00 | Total | 36 | 20 | 2 (prev 3) | integration 77 ahead of main (prev 67); 247 rows open, 107 done |
+
+## Process improvements
+
+- 11-12 00:05 ET — Bottleneck: Claude's and Grok's work piles up on integration/2026-11-11 (67 commits not on main) because Claude can't run tests and Grok was idle. Fix: Grok PM now verifies (tsc + full suite vs main baseline) and lands integration on main every run, and restarted a Grok World batch (landing first, then B3 and T-items). Expected: Claude features-live/h goes from 0 to 2+, integration lag under 15 commits by 01:00. Check next run; if lag persists, have Claude commit directly to short work branches that I land each hour.
+- 11-12 01:05 ET — Check of 00:05 fix: FAILED (integration lag 67→77, Claude live/h still 0, Grok still idle) because the landing was attempted inside the hourly PM run and died with it. Fix: landing now runs as a dedicated background Grok executor (merge integration→main, tsc + full suite vs main baseline, push, then merge main back into integration), followed by a World batch in the same executor. Expected: lag <10 and Claude features-live ≥3 by 02:00. If it fails again: Claude switches to per-lane short work branches that I land each hour.

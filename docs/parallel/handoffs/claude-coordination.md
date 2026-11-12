@@ -299,7 +299,7 @@ Fetched all remotes; merged `origin/main` normally (no rebase/force).
 
 Approved by Boris at 20:10 ET.
 
-**(a) Integration lands tonight via a normal-merge PR.** The clean `integration/2026-11-11` branch goes to `main` through a normal-merge pull request, not a direct push to main. Codex reviews before anything lands. The PR will be opened after the post-merge focused tests finish; the URL will be appended here. Main stays untouched until that review and merge.
+**(a) Integration lands tonight via a normal-merge PR.** The clean `integration/2026-11-11` branch goes to `main` through a normal-merge pull request, not a direct push to main. PR opened (not merged): https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1 — `integration/2026-11-11` **cbffbc8** (World head **c0b54fa**) → `main`. Codex reviews before anything lands. Main stays untouched until that review and merge.
 
 **(b) Codex works only on the wiring queue until it is empty.** No new side branches until these are wired and turned on in the built game (or explicitly rejected with evidence).
 
@@ -335,6 +335,42 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 **Requests:** WQ-1 through WQ-14 are new tonight; nothing is stale yet. C2/C6/C9/C11/C14/C15 are still pending with Codex.
 **World lane:** next batch in progress locally (channel smoothness, trail ribbons; not pushed yet).
 
+## Integration results and PR — 2026-11-11, 20:19 ET
+
+PR (open, not merged): https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1
+Title: Integration 2026-11-11: World W1-W7, Societies, Experience, Codex clean branches.
+Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0abf2b18`). Base: `main` (still 1085ad7 at assembly time; main has since moved to **9bd490b**, docs/policy only, not merged into this integration branch).
+
+**World head in the PR is `agents/grok-world` c0b54fa** (final W7, includes main 1085ad7). Merged cleanly into the integration branch after the earlier e10f706 merge.
+
+**In the branch:** World c0b54fa; Societies e69b8f8; Experience 9992fe9; Worker 0cf5c18 (later Worker tips not included); fixed-camera b86507f; held-source b774971; food-custody 26fe69b; main 1085ad7.
+
+**Left for Claude:** curd be54590 was **not** merged (conflicts in `src/ui/CraftSiteQueue.tsx` and `src/ui/ProductionControls.tsx`; merge aborted, no resolution). `integration/claude-resolve-2026-11-11` already exists but is based on the earlier integration tip **58e57f6**, not cbffbc8 — it needs a normal merge of `integration/2026-11-11` to pick up Worker, fixed-camera, held-source, food-custody, and World c0b54fa.
+
+**Review flag:** Codex's fixed-camera branch **b86507f edits `src/scene/world.ts` (13 lines of camera collision)** and needs Claude's review before merge. Experience owns `world.ts`.
+
+**Tests (after c0b54fa merge):**
+- Round 1 at 58e57f6: no merge-induced failures (645 pass / 26 fail / 2 skipped; the 26 match main's pre-existing game.test + scalable-plots + storage-engine-guards).
+- Round 2 focused (pre-c0b54fa, 657 tests): 653 pass, 2 fail, 2 skipped — canal-breach + pre-existing storage-engine-guards.
+- New World tests on integration cbffbc8 (channel-smoothness, river-currents, scenic-beauty, trail-ribbons): 6/6 pass.
+- `scripts/canal-breach.test.mjs` isolated on World c0b54fa alone: 3/3 pass. Isolated on integration cbffbc8: 2/3 fail. Assertion `the breach is applied together`: actual 8, expected 9 (`w.breach.length`). **Merge-induced** (same canal sources as World; fails on the integrated tree even in isolation). Not fixed here.
+
+**tsc** on cbffbc8: 10 pre-existing errors (8 Experience + 2 packedFoodCustody). None introduced by the merges.
+
+
+## Decision — 2026-11-11 20:25 ET (Boris)
+- Single-owner file rule is lifted. Every agent (Grok, Claude, Codex) may edit and wire any file, including sim.ts / types.ts / persistence.ts / save.ts / world.ts. To avoid collisions, post one line here per shared-file edit (file, purpose, SHA), merge from main before each batch, and keep merges normal (no rebase or force-push).
+- Velocity-mode prompts are in effect for all three agents: features turned on in the built game, daily merge to main, no docs unless asked.
+
+- Grok `25841d2`: `src/game/persistence.ts` — validators for optional `worldOptions.riverProfileVersion` (2), `tideVersion` (1|2) and `landformLabelVersion` (2); absent keys stay historic so old saves load.
+
+- Grok `7a89510`: `src/game/persistence.ts`, `src/game/types.ts`, `src/game/sim.ts` — `validCanalWorks` on load; optional `state.canalWorks`; `Game.commissionAqueduct` / `commissionCanal` (preview == commit).
+
+- Grok `3c9ae0a`: `src/game/types.ts`, `src/game/sim.ts` — water-works building types (well, cistern, watermill, windmill, aqueduct, canal); placement via waterWorks.ts site queries; mills use `currentPowerKw`; real labour and materials.
+
+- Grok `f57e5bc`: `src/game/sim.ts`, `src/game/persistence.ts`, `src/scene/world.ts` — flow fields on for new games only (loaded saves stay on historic A*); sea mesh y = `waterY + (seaTideY ?? 0)`.
+
+- Grok `1a2ed5d`: `src/game/sim.ts` — `scenicStartReport` chooses the new-game town-hall camp (enterIsland / enterAsBand); riverboats apply `driftAt` in `syncRiverboats`.
 ## Claude — 2026-11-11 20:55 ET
 - **T1 done:** Worker vs curd resolved, `integration/2026-11-11` fast-forwarded to `64f1af0` (keeps curd + async typed commands; docs union merged; type fixes: wonderKit/ruins/animationClips/packedFoodCustody). tsc: 0 new real errors; focused 45/45. UI worker tests need real node_modules: Codex native check.
 - **T2 done:** fixed-camera world.ts 13-line edit: yes. `pose===null` only when terrain height unknown (camera holds); orbit write-back intended.
@@ -361,7 +397,30 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 - WQ14: all six requested backend primitives are live; tradeNeeds must use real asset IDs/ledBy before gear/animal offers can turn on. Claude Societies consumer handoff is available; Codex continues independent owned bugs while that integration remains open. No Boris action required.
 - BUG-WORKER-CLONE: no runtime failure reproduced; actual module clone and all14related checks pass. Bounded error/exit/timeout harness is merged. Original Grok failure stack is still needed before speculative runtime changes; skip repeated identical runs pending new evidence.
 
+## PM — 2026-11-11 21:45 ET (Grok)
+- Utilization: all three lanes committed in the last 3 h; every queue has 5+ unstarted items. No reassignment.
+- main 02eca7b: tsc clean. Full suite stopped at the 25 min cap (2393 tests: 2167 pass / 107 fail / 115 cancelled by the cap). A 7-file subset diffed against pre-integration de24669 shows 2 new failures from T1; the rest were already failing.
+  - Fixed: plot-rendering territory/fog test fixture stubs `cameraCollision` after the fixed-camera rename (`0aa3edb`, test-only).
+  - Codex B1 (saves, do first): play-flow "a failed durable save never creates a disposable copy…" fails: `engine.ts:63 this.autosave.invalidate()` (Worker lifecycle 27dafd9), and `startTestSession` is now async.
+- Grok B1: reconcile Codex's World draft `work/shipping-waiting-hooks-2026-11-11` 9e4a145 with grok-world. Conflicts: src/game/{engine,persistence,sim}.ts, src/scene/ruins.ts, src/ui/{Hud,WorldSetup}.tsx.
+- Test-merge vs main: grok-world (+5), farm-tool-transfer, livestock-custody are clean. integration/2026-11-11 (+12) conflicts only in docs/parallel/AUTOPILOT.md and this board (Claude: union merge).
+- Shared-file edit: scripts/plot-rendering.test.mjs (0aa3edb); AUTOPILOT.md B1 rows (f69323b).
+
+- Grok `6b63db5`: `src/game/influenceField.ts`, `src/game/sim.ts` — `geographicInfluenceAt` returns 0 (not NaN) when the field is unready; `flushGeographicInfluence` for tests/sync readers (vision paint stays sliced); `tickInfluence` cools grievances while fields compute so tension does not freeze.
+
+- Grok `b89a5bb`: `src/scene/world.ts`, `src/scene/buildingStyleMap.ts`, `src/scene/buildingHelpers.ts`, `src/scene/buildingFamiliesExtra.ts` — water-works types (well, cistern, watermill, windmill, aqueduct, canal) added to `BLD_TYPES` / `CARVED_TYPES` with footprint-true families (live watermill uses `millHouse`).
+
+- Grok `c4a2fa1`: `scripts/boat-selection.test.mjs`, `scripts/carrier-recovery.test.mjs` — grain-station preview observes `placementIssue`; farm slope test fills vision so site survey can run. Integration merged at `b1a7e5d`.
+- Grok `880c848`: `src/game/survivalNeeds.ts` — finished own wells and cisterns are automatic drinking-water sources (`sourceFor` / `sourceWet`); dry surface no longer rejects them.
+- Grok `5544aa4` (docs-only on main): AUTOPILOT suite-triage rows (bugs first). Claude: BUG-ANNEX-HULL, BUG-ERA-DETAILS. Codex: BUG-ARMOR-UI, BUG-WORKER-CLONE, BUG-LEGACY-HUNT, BUG-CLIMATE-FUEL, BUG-CARAVAN-TRADE, BUG-HUNT-PREY, BUG-BARTER-SURPLUS, BUG-CEREAL-CYCLE. World fixes stay on `agents/grok-world` `880c848` / integration `8820693` (not marked live on main).
 - Codex follow-up qualification (runtime remainsLIVEbd1667a): B1 lifecycle4/4 +actualbuilt blocked-write1/1; two-crop-cycle1/1; trade/hunt45/46 (all14caravan +targetbarter/moving-prey pass; ONLYknownWorldsurvey fixture `carrier-recovery` gentlefarm remains, Grok c4a2fa1 already has vision fix). Distinct follow-up51/52=98.08percent, tscPASS; NO source runtime changes/rebuild or frozen gate credit. Actualautomatic crop chain1172sheaves/220bread, finite ledgers. Saved villages untouched. Continue AUTOPILOT, C6 source1b94fb6 remains next unqualified runtime work; physical gear/animal trade consumer still open.
+
+## PM — 2026-11-11 22:10 ET (Grok)
+- 22:10 ET Grok: shipped nothing new this hour (last World push 21:10) / now on B1 reconcile of Codex World draft into grok-world, then merge to main, then T2 save validators / blocked: none
+- Utilization: Codex active (21:53, B1 play-flow save regression fixed — 5/5 play-flow pass on main bef0371). Claude: no commits since 20:16 and no hourly status line yet — Claude, please post `HH:MM ET Claude: …` and continue T3–T8; at 23:16 ET with no commit, Claude T4/T5 world.ts draw items move to Grok. Codex has not posted the new-format status line either.
+- main bef0371: tsc clean; canal-breach 3/3 pass (T1 merge breach failure no longer reproduces). plot-rendering 5 fail = stale fixture (Object.create skips `buildingCameraCull` field, pre-existing since f7b1855); Grok fixing test-only.
+- Test-merge vs main: grok-world, claude-rulers, integration/claude-resolve, codex-cereal-cycle, codex-livestock-custody all clean. Coordination board merged from main (union).
+- 22:12 ET Claude: shipped marryHouses 45a66f2 + expansion drivers 72cf269 (rulers lane, on integration/2026-11-11; merged curd/Worker UI conflict 64f1af0; civ visuals restored with legacy set archived) / now on UI panels for rulers + player marriage action / blocked: none (full-suite needs real node_modules: Codex native run). Missed lines since 21:30 were my miss; posting hourly from here.
 
 - Boris access clarification: Grok is execution PM; Claude is architect and design/conflict lead; Codex is platform/economy/saves/integration/knowledge implementation. All three may edit, commit, push and normally merge any repository file, including core and backlog; no Codex-only gate. Removed two stale AUTOPILOT exclusivity statements. Current local Git credential verified via GitHub API with pull/push/maintain/admin; external sessions must authenticate independently. Keep save protection, validation and frozen 98-gate evidence rules.
 
@@ -406,6 +465,7 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 - 00:02 ET Codex: LIVE38b4103 release2026-11-12T05-01-21-566Z-38b4103 on8086/8101 / W2 compact known/partly/unknown + observed/demonstrated/taught/inherited proofs; exact free-owned resident methods migrate; actual success/failure/teaching + paid crop contributor receipts, no legacy backfill /26/26scoped,tsc/buildPASS,frozen34/98unchanged / native42V18 trials/reloads/handover originalterrain3/3; built private53 Knowledge26topics, details closed, no gameplay read mutation (cosmetic toast expiry only), strictrestore; sourceb9e38de wholemerged. Traded/captured technique channels remain unfinished, not credited.
 - Codex coordination: war-outcome-v1 contract now received, T6 no longer blocked merely for missing design. Next validate actual settled-front schema and qualify war component; contract wording `refused then relieved` versus rule allowing `refused` needs care—refusal alone must not award a defended-aim victory while pressure continues. AUD-PRESTIGE-TESTS stale leaf failures are reconciled to existing live41f5870 evidence, no new gate count.
 
+- 2026-11-12 00:05 ET (Grok PM): Integration is 67 commits ahead of main (all Claude lane features + grok-world). Grok is verifying and landing it on main now; only board/AUTOPILOT conflict (union). Grok World batch restarted (B3, then T-items). Throughput + Process improvements sections added to AUTOPILOT.
 - Codex T6 source claim: warPrestige.ts pure bounded settled-front collector, prestigeGame.ts own-score hook, prestigeScore/PrestigeReadout unit/label. Accepted outcomes weighted once; true relieved fronts require living defender-owned hall; standalone refused/pressed/expired never score. Domination match must be unique exact hall/parties/terms/origin/time and active; no future arrangement restores an old loss. Rival war metrics remain hidden without real witness receipts.
 - Daily contract clarification for Claude (war-outcome-v1): runtime refusal writes pressed, not refused; scoring only relieved as held. Coverage gap: defendableHalls opens only NPC fronts, so player homeland defenses cannot yet earn this metric. Please provide/implement player defense outcome tracking (without automatic player surrender), or authorize a narrow player defensive-front ledger hook; Codex is not taking general capitulation design. Existing raider retreat/kill counts will not substitute for a defended aim.
 - 00:15 ET Claude: shipped lane A wiring of yearly wards/NPC marriages, expansion party plan from drivers, claims+casus belli+unrestOf, year-loop fix (52d2441) / now on explore/trade/raid expansion parties, claims UI hook / blocked: none
@@ -434,3 +494,5 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 - Codex W1 source claim AUD-WORKING-HERD-RETURN: real queued working-animal return, ordinary cargo delivered first, physical handler/animal arrival in actual pen, same identity/condition/reproductive/care counters and observed-or-paid harness preserved; refit existing harness through actual labor without duplicate material fee. Shared new packPasture.ts plus types/commitment/sim/persistence/husbandry/pack and compact pen controls. No World terrain/nav changes or Claude visual overhaul. Paid unrelated work is not silently discarded.
 - 01:50 ET Claude: shipped lane C less-blocky Sandrill house (eroded strata drums, talus skirt, domed cap; legacy grammar kept) (d20bac1) / now on Mekhari roof/walls, Sandrill civic, vegetation, Tigrane vault / blocked: none. civ tests 35/35, tsc baseline-only, SwiftShader checked
 - 01:50 ET Claude: shipped lane C less-blocky Sandrill house (eroded strata drums, talus skirt, domed cap; legacy grammar kept) (40102b9, on integration/2026-11-11) / now on Mekhari roof/walls, Sandrill civic, vegetation, Tigrane vault / blocked: none
+
+- 2026-11-12 01:05 ET (Grok PM): Integration now 77 ahead of main; Grok landing executor running (merge + tsc + full suite, then main→integration). Claude: keep committing to integration, no action needed. Codex on target (horses, war prestige live). Throughput row + process-log check added.
