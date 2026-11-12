@@ -103,9 +103,9 @@ export function TermsOffers({offers,send,feedback}:{offers:Offer[];send:(c:{kind
   </article>;})}<FeedbackList items={feedback}/></section>;
 }
 
-type Captive={id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean};
-/** People held from a conquered society. Resistance rises with hunger and forced work; a guard watches up to three. Every action is a typed
- * owner command, so the card works with and without the Worker. Absent when nobody is held. */
+type Captive={id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number};
+/** Display owner-reported physical custody or legacy captivity. Actions stay
+ * typed owner commands; rendering never assigns guards, supplies or work. */
 export function HearthCaptiveCard({engine}:{engine:Engine}){
  const Q={kind:'captives'} as const,read=useOwnerReadModels(engine,[Q]),list=read(Q).model?.captives??[],fb=useActionFeedback(engine);
  return <CaptiveList captives={list} send={c=>void fb.send(c)} feedback={fb.items}/>;
@@ -115,13 +115,14 @@ export function CaptiveList({captives,send,feedback}:{captives:Captive[];send:(c
  const teams=[...new Map(captives.map(c=>[c.fromTeam,c.fromName])).entries()];
  return <section className="hw-card hw-captives" aria-label="Captives">
   <div className="hw-card-head"><h3>Held captive</h3><span className="hw-chip hw-chip-soft"><Users size={16}/>{captives.length}</span></div>
-  <p className="hw-sub">Hunger and forced work build resistance; at 100% a captive may escape with carried goods. One idle guard watches three.</p>
-  <ul className="hw-captive-list">{captives.map(c=>{const tone=c.resistance>=70?'bad':c.resistance>=40?'mid':'good';return <li key={c.id}>
+  <p className="hw-sub">{captives.some(c=>c.custody)?'People in custody need guards, food and water. Release sends them walking home.':'Unguarded people may escape. A guard can watch up to three.'}</p>
+  <ul className="hw-captive-list">{captives.map(c=>{const tone=c.resistance>=70?'bad':c.resistance>=40?'mid':'good',modern=c.custody!==undefined;return <li key={c.id}>
    <div className="hw-captive-name"><b>{c.name}</b><span className="hw-sub">from {c.fromName}</span></div>
-   <span className={cx('hw-meter',tone)} role="img" aria-label={`Resistance ${c.resistance} percent`}><i style={{width:Math.min(100,c.resistance)+'%'}}/></span>
+   <span className={cx('hw-meter',tone)} role="img" aria-label={`${modern?'Escape risk':'Resistance'} ${c.resistance} percent`}><i style={{width:Math.min(100,c.resistance)+'%'}}/></span>
    <span className={cx('hw-chip',c.guarded?'t-good':'t-warn')}><Shield size={16}/>{c.guarded?'Guarded':'Unguarded'}</span>
-   <span className="hw-captive-acts">{c.canEscort&&<button type="button" className="hw-btn-wide" onClick={()=>send({kind:'escort-captive',unitId:c.id})}><Shield size={18}/>Escort</button>}
-    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'repatriate-captive',unitId:c.id})}><Home size={18}/>Send home</button></span></li>;})}</ul>
+   {modern&&<span className="hw-chip hw-chip-soft">{c.custody==='escorting'?'Under escort':'In custody'}{typeof c.food==='number'&&` · Food ${Number(c.food.toFixed(1))}`}{typeof c.waterLiters==='number'&&` · Water ${Number(c.waterLiters.toFixed(1))} L`}</span>}
+   <span className="hw-captive-acts">{c.canEscort&&<button type="button" className="hw-btn-wide" onClick={()=>send({kind:'escort-captive',unitId:c.id})}><Shield size={18}/>{modern?(c.guarded?'Replace guard':'Assign guard'):'Escort'}</button>}
+    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'repatriate-captive',unitId:c.id})}><Home size={18}/>{modern?'Release to walk home':'Send home'}</button></span></li>;})}</ul>
   {teams.map(([t,n])=><button key={t} type="button" className="hw-btn-wide" onClick={()=>send({kind:'free-captives',team:t})}><Unlock size={18}/>Free everyone from {n}</button>)}
   <FeedbackList items={feedback}/></section>;
 }

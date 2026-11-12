@@ -68,3 +68,18 @@ test('hearth captive card shows resistance and guard state, offers typed command
  assert.ok(isEngineReadQuery({kind:'captives'}));assert.equal(isEngineReadQuery({kind:'captives',x:1}),false);
  assert.ok(isEngineDispatchCommand({kind:'free-captives',team:2}));assert.ok(isEngineDispatchCommand({kind:'repatriate-captive',unitId:9}));assert.ok(isEngineDispatchCommand({kind:'escort-captive',unitId:9}));assert.equal(isEngineDispatchCommand({kind:'free-captives',team:'x'}),false);
 });
+
+test('hearth captive card distinguishes physical custody needs and guard replacement from legacy escort',async()=>{
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');
+ const people=[{id:11,name:'Ada',fromTeam:2,fromName:'Ridge Clan',resistance:60,guarded:false,canEscort:true,custody:'escorting',food:2,waterLiters:1.5},{id:12,name:'Bren',fromTeam:2,fromName:'Ridge Clan',resistance:0,guarded:true,canEscort:true,custody:'custody',food:1,waterLiters:.5},{id:13,name:'Legacy',fromTeam:2,fromName:'Ridge Clan',resistance:72,guarded:false,canEscort:true}];
+ const html=renderToStaticMarkup(h(CaptiveList,{captives:people,send(){},feedback:[]}));
+ assert.match(html,/Escape risk 60 percent/);assert.match(html,/Escape risk 0 percent/);assert.match(html,/Resistance 72 percent/);assert.match(html,/Under escort/);assert.match(html,/In custody/);assert.match(html,/Food 2/);assert.match(html,/Water 1.5 L/);assert.match(html,/Water 0.5 L/);assert.match(html,/Assign guard/);assert.match(html,/Replace guard/);assert.equal((html.match(/Release to walk home/g)||[]).length,2);assert.match(html,/>Escort<\/button>/);assert.match(html,/Send home/);assert.doesNotMatch(html,/forced work|forced labor/);assert.equal((html.match(/Free everyone from Ridge Clan/g)||[]).length,1);
+});
+test('captives navigation exists without offers and the no-house fallback still shows real custody controls',async()=>{
+ const {councilTermsTab,CouncilWithoutHouse,Screen}=await import('../src/ui/hearth/screens.tsx');
+ const {CaptiveList}=await import('../src/ui/hearth/councilCards.tsx');
+ const captive={id:11,name:'Ada',fromTeam:2,fromName:'Ridge Clan',resistance:0,guarded:false,canEscort:true,custody:'custody',food:0,waterLiters:0};
+ const only=councilTermsTab(0,1),both=councilTermsTab(2,1);assert.equal(only.label,'Captives');assert.equal(only.badge,1);assert.equal(both.label,'Terms');assert.equal(both.badge,3);assert.equal(councilTermsTab(0,0),null);
+ const nav=renderToStaticMarkup(h(Screen,{title:'Council',onClose(){},tabs:[only],tab:'terms',setTab(){}},h(CaptiveList,{captives:[captive],send(){},feedback:[]})));assert.match(nav,/role="tab"/);assert.match(nav,/>Captives<\/span>/);
+ const fallback=renderToStaticMarkup(h(CouncilWithoutHouse,{onClose(){},terms:null,captives:h(CaptiveList,{captives:[captive],send(){},feedback:[]})}));assert.match(fallback,/No ruling house yet/);assert.match(fallback,/Held captive/);assert.match(fallback,/Assign guard/);assert.match(fallback,/Release to walk home/);assert.match(fallback,/Food 0/);assert.match(fallback,/Water 0 L/);
+});
