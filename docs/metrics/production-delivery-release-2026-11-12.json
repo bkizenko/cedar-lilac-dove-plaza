@@ -1,0 +1,28 @@
+{
+  "commit": "645254a502c116a904c22fabe212a93e614fe1be",
+  "source": "a332071",
+  "release": "2026-11-12T11-15-33-873Z-645254a",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 18,
+    "total": 18,
+    "actualNativeProductionAndChannelChecks": 3,
+    "playFlowAndEngineFilterChecks": 5,
+    "workerAndVillageLifecycleChecks": 10,
+    "builtUIChecks": 0
+  },
+  "typecheck": "pass",
+  "productionBuild": "pass",
+  "scope": "Native actual cooked-meat delivery emits immutable quantities after storage receipt; pause/reload and completed saves never fabricate or replay completion. Engine subscription filters foreign/stale villages and supports unsubscribe/disposal. Meal/brew/material classification uses real output quantities; unfinished grain is not ready food. No retained receipt queue, default notification or sound. Claude owns visible food/brew feedback. Experimental Worker remains parked and this callback path is explicitly native-only.",
+  "baselineTestCorrection": "Renderer-failure fixture failed identically on current main before these changes; aligned it with existing transactional renderer preparation: preserve original authoritative Game and report applied=false. New assertion also checks same Game identity.",
+  "firstReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69387755102041,
+    "unchanged": true
+  },
+  "housekeeping": "Current645254a and rollback5a8db6b retained. Four more obsolete completed release copies removed; no saves, reference art or user browser storage touched. Native scratch fixture deleted; generated worktree build output restored after freezing."
+}
