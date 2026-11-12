@@ -1,8 +1,12 @@
 import type {ProductionDelivery} from './productionDelivery';
+import {onGuardDuty,guardDutyAI,tickGuardDuties} from './guardDuty';
+import {tickTransit} from './transit';
+import {noteRaidCombat,noteRaidExposed,tickRaidReports} from './raidReports';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {reviewSociety} from './societyRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
@@ -18,6 +22,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
+import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
@@ -397,6 +402,7 @@ export class Game {
     this.world = generateWorld(s,worldgenVersion,request);
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
+    enableCombatDoctrine(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
@@ -404,7 +410,7 @@ export class Game {
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
     this.state.autoWorkEnabled=worldgenVersion>=CAMP_RULES.unbuiltGeneration?false:true;
-    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:1}; // new games carry the rulers lane
+    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:request?.rulersVersion===1?1:2}; // new games carry the rulers lane; 2 adds the society decision layer
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
@@ -1771,6 +1777,8 @@ export class Game {
   }
 
   slotOffsets(units: Unit[], x: number, z: number) {
+    const formed = assignFormation(this, units, x, z);
+    if (formed) return formed;
     const line =
       units.length >= 4 && units.every((u) => u.type !== "worker" && u.type !== "leader");
     if (!line) {
@@ -2848,7 +2856,7 @@ export class Game {
       return;
     }
     const capacity="species" in node&&node.hp>0?1:"type" in node&&node.type==="farm"?fieldCrewSlots(node):2;
-    let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather").length);
+    let slots = Math.max(0, capacity - this.state.units.filter(u => !workers.includes(u) && u.hp > 0 && u.node === node && u.order === "gather" && !onGuardDuty(this, u)).length);
     this.workBoard.reset();
     for (const u of workers) {
       this.interruptMission(u);
@@ -4069,7 +4077,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return siegeRamMovementMultiplier(this,u)*armorMovementMultiplier(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return siegeRamMovementMultiplier(this,u)*armorMovementMultiplier(this,u)*formationPace(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&
@@ -4820,7 +4828,8 @@ export class Game {
     const skill=attacker.kind==="unit"?combatPractice(attacker):1;
     const dmg = ("dmg" in attacker ? attacker.dmg * predisposition(attacker).fighting * predisposition(attacker).strength * skill : 8) * this.dmgMul(attacker.team,attacker.x,attacker.z);
     if(attacker.kind==="unit")attacker.combatXP=Math.min(150,(attacker.combatXP||0)+.2);
-    this.applyCombatDamage(attacker.team,target,dmg,attacker.id,attacker.kind==='unit'?attacker.conflictIntent:undefined);
+    const matchup=combatMatchup(this,attacker,target);noteMatchup(this,matchup);
+    this.applyCombatDamage(attacker.team,target,dmg*matchup.multiplier,attacker.id,attacker.kind==='unit'?attacker.conflictIntent:undefined);
   }
 
   applyCombatDamage(attackerTeam:number,target:Unit|Building,dmg:number,sourceId?:number,sourceIntent?:import('./conflictIntent').ConflictIntent) {
@@ -4838,6 +4847,7 @@ export class Game {
     if(evidenceSource)recordSocietyAttack(this,evidenceSource,target,Math.min(dmg,target.hp));
     else if(attackerTeam!==3&&target.team!==3)declareSocietyHostility(this,attackerTeam,target.team);
     target.hp -= dmg;
+    noteRaidCombat(this,attackerTeam,target,source,target.hp<=0);
     this.addBurst(target.x, ("y" in target ? target.y : 0) + 1, target.z, "#c44", 3);
     if (attackerTeam === 0 || target.team === 0) this.onSfx("hit");
     if (attackerTeam === 0 && target.team !== 0 && target.team !== 3)
@@ -4882,6 +4892,7 @@ export class Game {
     if(from.kind==='unit'&&!(to.kind==='building'?missionMayTargetBuilding(this,from,to):missionMayTargetCivilian(this,from,to)))return;
     const releaseY=(from.kind==='building'?towerProjectileBase(this,from):from.y)+(from.kind==='building'?towerProjectileHeight(from):1.4);
     const flightSeconds=Math.hypot(to.x-from.x,to.z-from.z,to.y+1-releaseY)/22;
+    const arrowMatchup=combatMatchup(this,from,to);noteMatchup(this,arrowMatchup);
     const p: Projectile = {
       x: from.x,
       y: releaseY,
@@ -4893,7 +4904,7 @@ export class Game {
       attackerId:from.id,...(from.kind==='unit'?{conflictIntent:from.conflictIntent}:{}),
       speed: 22,
       life: Math.max(1.1,flightSeconds+.15),
-      dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z),
+      dmg: ("dmg" in from ? from.dmg * predisposition(from).fighting * predisposition(from).strength * combatPractice(from) : 8) * this.dmgMul(from.team, from.x, from.z) * arrowMatchup.multiplier,
       team: from.team,
     };
     if(from.kind==="unit")from.combatXP=Math.min(150,(from.combatXP||0)+.2);
@@ -4937,6 +4948,7 @@ export class Game {
       copper = take("copper", 0.5, 12);
       iron = take("iron", 0.5, 8);
     } else food = take("food", 0.05, 12);
+    noteRaidExposed(this,attackerTeam,b.team,{food,wood,stone,copper,iron});
     if (attackerTeam !== 0) return;
     const bits = [
       food ? food + " food" : "",
@@ -5350,6 +5362,7 @@ export class Game {
       return;
     }
     if(!hall)return;
+    reviewSociety(this,team); // society decision layer (rulersVersion 2): plans, posture, intel; no-op otherwise
     tr.thinkT -= dt;
     if (tr.thinkT > 0) return;
     tr.thinkT = (1.6 + Math.random())*difficulty(this).decisionInterval;
@@ -5848,6 +5861,7 @@ export class Game {
             if(u.recalled){this.workerAI(u,sdt);continue;}
             if(tributeJourneyAI(this,u,sdt))continue;
             if(escortAI(this,u,sdt))continue;
+            guardDutyAI(this,u,sdt);
             if(waitForTradeEscort(this,u)||waitForCaravan(this,u))continue;
             if(raidLootAI(this,u,sdt))continue;
             if(u.societyMissionId&&(u.order==='attack'||u.order==='attackmove')){this.combatAI(u,sdt);continue;}
@@ -5876,6 +5890,10 @@ export class Game {
         tickOccupation(this,sdt);
         syncRiverboats(this,sdt);
         this.separate(sdt);
+        tickFormations(this,sdt);
+        tickGuardDuties(this);
+        tickRaidReports(this,sdt);
+        tickTransit(this,sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
         this.updateTowers(sdt);

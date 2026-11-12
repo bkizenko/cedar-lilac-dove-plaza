@@ -1,4 +1,5 @@
 import type {Game} from './sim';
+import {onGuardDuty} from './guardDuty';
 import type {Building,Unit} from './types';
 import {calendar,farmAvailable,farmWork} from './settlement';
 import {plotArea,fieldCrewSlots} from './plots';
@@ -44,7 +45,7 @@ export function fieldWorkStep(g:Game,u:Unit,b:Building,dt:number){
 export function staffField(g:Game,b:Building){
  if(b.team!==0||b.type!=='farm'||!g.finished(b)||!farmAvailable(g,b)){g.banner('No field work this season',3);return 0;}
  const slots=fieldCrewSlots(b);
- const existing=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length;
+ const existing=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather'&&!onGuardDuty(g,u)).length;
  const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.emergency&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.foundingJourney&&u.node!==b&&['idle','hold','gather'].includes(u.order))
    .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
  let sent=0;
