@@ -26,7 +26,7 @@ Boris's goal: send these prompts once and the whole game gets built over several
 - **Claude** is architect: owns system design, interfaces and cross-lane contracts, and resolves design disputes. Claude also leads merge-conflict resolution when the dispute is about design, and builds diplomacy, leaders, succession, international systems, the visual overhaul, and the Worker/curd UI conflict.
 - **Codex** is the platform, economy, saves, integration, and knowledge/tech builder (knowledge/tech stays with Codex until Boris decides otherwise). Codex parks the sim Worker until the speed/wiring work in its queue says otherwise.
 
-**Anyone may edit or wire any file.** The agent that owns a feature builds it end to end, including parts outside its lane. Others only review. Every shared-file edit gets a one-line board entry (file, hunk intent, SHA).
+**Anyone may read, edit, commit, push and normally merge any repository file**, including core source, saves, backlog and coordination documents. No Codex approval is required. GitHub authentication in each external session is separate from these project permissions. **Anyone may edit or wire any file.** The agent that owns a feature builds it end to end, including parts outside its lane. Others only review. Every shared-file edit gets a one-line board entry (file, hunk intent, SHA).
 
 **Continuous loop** (every agent, all day): pull `origin/main` → take the next queue item → build it → one focused test + `tsc` → merge to main (normal merge) → post one board line with the SHA → repeat. Never stop to wait for Boris. If blocked more than 15 minutes, skip, pick the next item, and log the block on the daily decision card. Ship behind a switch if unsure. Target 45–90 minutes per item. Features turned on in the built game are the only progress that counts. No evidence novels.
 
@@ -83,7 +83,7 @@ W11. Disable-to-migrate food-custody prototype (26fe69b) only after every transp
 THEN
 N1. Victory scenarios M4-16..20 (prosperity, commerce, dominion without compulsory extinction, knowledge, legacy) plus continuation; run with Claude's AI goals already hooked to T6.
 N2. CAT-116 administrators (competence, policy scope, reports). M4-04/05 Bronze/Iron/Classical population + sustainable reserves and small specialized societies.
-N3. Release acceptance you own: M5-01 full campaign; M5-06 8GB median≤33ms / p95≤50ms at 100 visible residents (after this queue; then unpark Worker); M5-08 named parameters/metrics; M5-09 holdouts; M5-10 + ASTRA-25 packaging. Only you flip FULL_GAME_BACKLOG.json / COMPLETION_LOG from native/built evidence (CP-7). M5-02/03/07 are already verified — do not re-queue.
+N3. Release acceptance you own: M5-01 full campaign; M5-06 8GB median≤33ms / p95≤50ms at 100 visible residents (after this queue; then unpark Worker); M5-08 named parameters/metrics; M5-09 holdouts; M5-10 + ASTRA-25 packaging. Codex maintains FULL_GAME_BACKLOG.json / COMPLETION_LOG; Claude and Grok may also update them under Grok sequencing, using matching native/built evidence (CP-7). This assignment is not an exclusive write permission. M5-02/03/07 are already verified — do not re-queue.
 N4. ASTRA-04/05 save/cadence gaps if any remain vs acceptance; ASTRA-09 spatial query budget; ASTRA-08 vertical-slice gate (desktop; mobile is out); ASTRA-11 survival leftovers; ASTRA-24 perf/balance soak.
 N5. Remaining hull classes, sail repair, naval-warfare economy (CAT-93/99 remainder). CAT-100 warehouses.
 N6. MS-2/MS-4 integrated scenarios (priority override during paid work; boat/caravan delivery + interception + save). You run the connected scenario; Claude owns raid/treaty scenarios.
@@ -805,7 +805,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
 | CP-6 | completion-plan | Phase 6 Scale: hundreds of residents, LOD, BatchedMesh, per-chunk sim, 8GB | Codex | Codex N3 | not started | world-side scale is Grok L2 after this |
-| CP-7 | completion-plan | Phase 7 Acceptance: re-run frozen checklist; Codex reconciles backlog/log | Codex | Codex N3 | not started | only Codex flips 34/98 |
+| CP-7 | completion-plan | Phase 7 Acceptance: re-run frozen checklist; Codex reconciles backlog/log | Codex | Codex N3 | not started | Any provider may reconcile verified native/built acceptance under Grok sequencing; frozen denominator 98, no unsupported credit |
 | MS-1 | milestone | Unbuilt camp → first winter → sustainable surplus | Codex | — (done) | done/live | M1-20 verified |
 | MS-2 | milestone | Priority change/direct override during hauling and paid work | Codex | Codex N6 | source-pushed-not-live | M0 construction gates live; connected scenario still to re-run |
 | MS-3 | milestone | Rival–rival trade, conflict, treaty and recovery | Claude | Claude N7 | not started |  |
