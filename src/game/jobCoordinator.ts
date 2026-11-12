@@ -1,3 +1,4 @@
+import type{OwnershipObservation}from'./commandExecution';
 import {ReservationLedger,type ReservationRequest} from './reservationLedger';
 export type JobPhase='proposed'|'reserved'|'traveling'|'working'|'returning'|'suspended'|'completed'|'canceled';
 export type CoordinatedJob={id:string;kind:string;owner:number;actors:number[];target:number|null;phase:JobPhase;progress:number;blockedReason:string|null};
@@ -6,6 +7,8 @@ const terminal=(phase:JobPhase)=>phase==='completed'||phase==='canceled';
 export class JobCoordinator {
  readonly reservations=new ReservationLedger();
  readonly metrics={proposed:0,accepted:0,ownershipConflicts:0,suspended:0,resumed:0,completed:0,canceled:0};
+ private observe?: (event:OwnershipObservation)=>void;
+ constructor(observe?:(event:OwnershipObservation)=>void){this.observe=observe;}
  private jobs=new Map<string,CoordinatedJob>();
  private actors=new Map<number,string>();
  job(id:string){const job=this.jobs.get(id);return job?{...job,actors:[...job.actors]}:undefined;}
@@ -16,9 +19,9 @@ export class JobCoordinator {
  }
  reserve(id:string,requests:ReservationRequest[]=[]){
   const job=this.jobs.get(id);if(!job||terminal(job.phase))return false;
-  for(const actor of job.actors)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;return false;}
+  for(const actor of job.actors)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;this.observe?.({type:'owner_conflict',jobId:id,actorId:actor,previousOwner:this.actors.get(actor),reason:job.blockedReason});return false;}
   const result=this.reservations.reserve(id,requests);
-  if(!result.accepted){job.blockedReason=result.reason;return false;}
+  if(!result.accepted){job.blockedReason=result.reason;this.observe?.({type:'reservation_failure',jobId:id,actorId:job.actors[0],reason:result.reason||'Reservation failed'});return false;}
   for(const actor of job.actors)this.actors.set(actor,id);
   job.phase='reserved';job.blockedReason=null;this.metrics.accepted++;return true;
  }
@@ -28,8 +31,8 @@ export class JobCoordinator {
   const job=this.jobs.get(id);if(!job||terminal(job.phase))return false;
   const next=[...new Set(actors)];
   if(next.some(actor=>!Number.isSafeInteger(actor)||actor<1)){job.blockedReason='Invalid resident ownership';return false;}
-  for(const actor of next)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;return false;}
-  const result=this.reservations.reserve(id,requests);if(!result.accepted){job.blockedReason=result.reason;return false;}
+  for(const actor of next)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;this.observe?.({type:'owner_conflict',jobId:id,actorId:actor,previousOwner:this.actors.get(actor),reason:job.blockedReason});return false;}
+  const result=this.reservations.reserve(id,requests);if(!result.accepted){job.blockedReason=result.reason;this.observe?.({type:'reservation_failure',jobId:id,actorId:job.actors[0],reason:result.reason||'Reservation failed'});return false;}
   for(const actor of job.actors)if(!next.includes(actor)&&this.actors.get(actor)===id)this.actors.delete(actor);
   for(const actor of next)this.actors.set(actor,id);
   job.actors=next;if(job.phase==='proposed')this.metrics.accepted++;if(job.phase==='suspended')this.metrics.resumed++;if(job.phase==='proposed'||job.phase==='suspended')job.phase='reserved';job.blockedReason=null;return true;

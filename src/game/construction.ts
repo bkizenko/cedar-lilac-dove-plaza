@@ -1,3 +1,4 @@
+import{commandIssued,commandOwnerBefore}from'./commandExecution';
 import {pendingSitePreparation,assignSitePreparation,sitePreparationStatus} from './sitePreparation';
 import{housingStatus}from'./housing';
 import{hasConstructionWork}from'./constructionTargets';
@@ -124,8 +125,10 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     if(pendingSitePreparation(b)){g.interruptMission(u);recordImmediateConstruction(g,u,b);if(u.carry>0||Object.values(u.itemCargo||{}).some(n=>n>0)){u.sitePreparationId=b.id;u.order='return';u.node=null;}else assignSitePreparation(g,u,b);queueConstruction(g,b,[u]);continue;}
+    const priorOwner=commandOwnerBefore(g,u);
     g.interruptMission(u);recordImmediateConstruction(g,u,b);u.buildOrder=b.id;u.job=null;u.jobLock=false;u.huntOnly=false;
     u.order=u.carry>0?'return':'build';u.node=u.carry>0?null:b;reserveConstructionWorker(g,u,b,u.carry>0?'returning':'reserved');u.workReason=u.carry>0?'Delivering cargo, then building':'Assigned to this construction';
+    if(!b.expansion&&!b.renovation)commandIssued(g,u,'build',b,priorOwner);
   }
   g.workBoard.reset();g.banner(`${chosen.length} builders assigned to ${BUILDINGS[b.type].name}. ${planStatus(g,b)}`,4);return true;
 }

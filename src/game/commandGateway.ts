@@ -1,3 +1,4 @@
+import{resetCommandExecution}from'./commandExecution';
 import{fibreOrderIssue}from'./fibre';
 import{productionOwnershipIssue}from'./productionOwnership';
 import type {Game} from './sim';
@@ -9,7 +10,7 @@ export type CommandOutcome = {timeSeconds:number; actorId:number; kind:string; a
 type Diagnostics = {attempted:number; accepted:number; rejected:number; outcomes:CommandOutcome[]};
 const diagnostics = new WeakMap<Game,Diagnostics>();
 /** Session diagnostics are bounded and deliberately separate from legacy saves. */
-export function resetCommandDiagnostics(g:Game){diagnostics.delete(g);}
+export function resetCommandDiagnostics(g:Game){diagnostics.delete(g);resetCommandExecution(g);}
 export function commandDiagnostics(g:Game):Diagnostics {
   let d=diagnostics.get(g);
   if(!d){d={attempted:0,accepted:0,rejected:0,outcomes:[]};diagnostics.set(g,d);}
