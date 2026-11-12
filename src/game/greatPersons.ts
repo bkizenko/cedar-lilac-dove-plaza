@@ -27,7 +27,8 @@ export function rollGreatPerson(seed:number,gen:number,crisis:number,opportunity
  const r=makeRng(hash32('great',seed,gen));
  const cands=ARCHETYPES.map(a=>[a,emergenceChance(crisis,opportunity,inst,a)] as const);
  const total=cands.reduce((s,c)=>s+c[1],0);
- if(r()>=Math.min(.5,total))return null;
+ const peak=Math.max(...cands.map(c=>c[1]));
+ if(r()>=Math.min(.18,peak*1.15))return null;
  let x=r()*total,chosen=cands[0][0];for(const [a,p] of cands){x-=p;if(x<=0){chosen=a;break;}}
  return {archetype:chosen,ruler:generateRuler(hash32('great-ruler',seed,gen),{shift:chosen.shift,age:22+Math.floor(r()*12)})};
 }

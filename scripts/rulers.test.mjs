@@ -155,3 +155,13 @@ test('player handover explains what changed when the ruler changes',()=>{
  assert.ok(h.traitShifts.length>=1&&h.headline.includes(b.name));
  assert.ok(handover(a,b,fs,false).headline.includes('weaker claim'));
 });
+
+import {tieEffectsFor,onGameEvent,dossier,opener} from '../src/game/kinshipBridge.ts';
+import {emptyLedger as _el} from '../src/game/glory.ts';
+test('bridge maps known actions/events, ignores unknown, dossier is plain language',()=>{
+ assert.ok(tieEffectsFor('allianceMarriage',ctx).length>0);assert.equal(tieEffectsFor('nonsense',ctx).length,0);
+ assert.ok(onGameEvent(_el(),'wonder.complete').building>0);assert.equal(onGameEvent(_el(),'zzz').building,0);
+ const d=dossier(generateRuler(12));assert.ok(d.headline.length>3&&Object.keys(d.competences).length===5);
+ const r=generateRuler(12);
+ assert.notEqual(opener(r,{...noTies(),bond:40}),opener(r,{...noTies(),grievance:60}));
+});
