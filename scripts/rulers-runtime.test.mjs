@@ -253,6 +253,17 @@ test('expansion party provisions: organised eras carry real pantry stores, retur
  assert.equal(t.food,food0,'turned back: the same provisions come home, none gained or lost');assert.equal(us[0].foundingJourney,undefined);
 });
 
+test('party rations save round-trip: valid rations load, negative or absurd rations reject, absent field (old save) loads',async()=>{
+ const {encodeGame,validateGameSave}=await import('../src/game/persistence.ts');
+ const g=fixture();const u=g.state.units.find(x=>x.team===1&&x.hp>0);
+ u.foundingJourney={x:u.x+30,z:u.z,leader:true,timber:20};
+ const save=()=>JSON.parse(JSON.stringify(encodeGame(g)));
+ validateGameSave(save());
+ u.foundingJourney.rations=9;validateGameSave(save());
+ u.foundingJourney.rations=-1;assert.throws(()=>validateGameSave(save()));
+ u.foundingJourney.rations=1e6;assert.throws(()=>validateGameSave(save()));
+});
+
 test('lane A: domestic pressure executor overthrows a house after sustained uprising, through heir(); counter saved; old saves untouched',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
  const g=fixture();R.ensureRulers(g);const t=1,id='1';
