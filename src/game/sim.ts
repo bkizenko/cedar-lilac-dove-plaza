@@ -27,6 +27,7 @@ import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction
 import {combatMusicMood} from './combatMusic';
 import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
+import {tickNaval} from './navalFleet';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -5924,6 +5925,7 @@ export class Game {
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
         tickCommanders(this,sdt);
+        tickNaval(this,sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
         this.updateTowers(sdt);

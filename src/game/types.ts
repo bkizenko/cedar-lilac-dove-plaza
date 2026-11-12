@@ -160,6 +160,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaExplorationId?:number;
   tradeNeedsId?:number;
   cargoRecoveryId?:number;
+  portWorkId?:number;
   tradeCargoPending?:true;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
@@ -528,6 +529,7 @@ export type GameState = {
   transit?:import('./transit').TransitState;
   terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;
   commanders?:import('./commanders').CommandersState;
+  naval?:import('./navalPorts').NavalState;
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
   coastalTradeReviewAt?:number;

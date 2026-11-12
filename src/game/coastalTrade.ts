@@ -1,3 +1,4 @@
+import {portBlockaded} from './navalPorts';
 import {beginHullLossRecovery,recoveryAshore} from './hullLossRecovery';
 import{handedOver,handoverReturn}from'./communityHandoverValidation';
 import{boatServiceProject}from'./boatClasses';
@@ -25,6 +26,7 @@ const free=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>=u.maxHp*.6&&u.type=
 function dryLanding(g:Game,near:Point,hall:Building,team:number){for(let r=0;r<=16;r+=2)for(let i=0;i<24;i++){const a=i*Math.PI/12,p={x:near.x+Math.cos(a)*r,z:near.z+Math.sin(a)*r};if(!rivalKnows(g,team,p.x,p.z)||!g.walkable(p.x,p.z)||g.height(p.x,p.z)<=g.waterAt(p.x,p.z)+.3||!g.workBoard.connected(g,p.x,p.z,hall.x,hall.z))continue;if([[-1,0],[1,0],[0,-1],[0,1]].every(([x,z])=>g.walkable(p.x+x,p.z+z)))return p;}return null;}
 export function dispatchCoastalTrade(g:Game,team:number,boatId:number,partner:number,give:ResKind='wood',get:ResKind='stone',amount=12){
  const reject=(reason:string)=>({accepted:false as const,reason});if(!isRivalTeam(team)||!g.tribe(team)?.alive||!g.tribe(partner)?.alive||team===partner||partner===3||g.isFoe(team,partner))return reject('Need two living non-hostile societies');
+ if(portBlockaded(g,team)||portBlockaded(g,partner))return reject('A blockading fleet holds a harbour; no coastal cargo can sail');
  if(g.state.coastalVoyages?.some(v=>active(v)&&(v.boatId===boatId||v.team===team)))return reject('An existing coastal voyage owns this boat or society crew');
  const boat=g.state.boats?.find(b=>b.id===boatId&&b.team===team&&b.hp>0),dock=boat&&g.state.buildings.find(b=>b.id===boat.dock&&b.team===team&&g.finished(b));if(boat&&boatServiceProject(g,boat.id))return reject('The actual hull is reserved for paid dock service');if(seaExplorationOwnsBoat(g,boatId))return reject('A sea exploration crew owns this hull');if(!boat||!dock||boatCrew(g,boatId).length)return reject('Need an existing owned paid boat moored at its working home dock');
  const home=g.campOf(team),adults=g.state.units.filter(u=>u.team===team&&u.type==='worker'&&u.hp>=u.maxHp*.6&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.boat&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.societyMissionId&&!u.seaExplorationId&&Math.hypot(u.x-home.x,u.z-home.z)<=70);if(adults.length<COASTAL_TRADE_RULES.minimumAdults)return reject('Retain at least four working adults ashore');

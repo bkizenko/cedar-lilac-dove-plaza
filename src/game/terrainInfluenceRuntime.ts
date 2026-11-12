@@ -8,7 +8,7 @@ import {isDependent} from './settlement';
 import {PROVINCE_KINDS} from './ecologicalProvinces';
 import {computeTerrainInfluence,detectPasses,sampleStrength,TERRAIN_INFLUENCE_RULES,emptyLayers,type InfluenceSource,type TerrainInfluenceField,type TerrainLayers} from './terrainInfluence';
 import {influenceGradientModel,type InfluenceGradientModel} from './terrainInfluenceView';
-import {portInfluenceReachMeters} from './navalPorts';
+import {portInfluenceReachMeters,dockBlockaded} from './navalPorts';
 
 /**
  * Adapter between the live Game and the pure terrain-influence function.
@@ -59,6 +59,7 @@ function activeTeams(g:Game){return [...new Set(g.state.buildings.filter(b=>b.te
 
 /** Ships that can really sail from this dock: hulls moored within port reach with a healthy adult captain aboard, plus canoes whose owner stands at it. */
 function shipsAtDock(g:Game,d:Building){
+ if(dockBlockaded(g,d))return 0;
  const reach=24;let n=0;
  for(const b of g.state.boats??[])if(b.team===d.team&&b.hp>0&&Math.hypot(b.x-d.x,b.z-d.z)<=reach&&g.state.units.some(u=>u.id===b.captain&&u.team===d.team&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.emergency&&u.boat?.id===b.id&&u.boat.phase==='aboard'))n++;
  for(const u of g.state.units)if(u.team===d.team&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.emergency&&u.haulage==='canoe'&&!u.boat&&!u.expedition&&!u.scout&&!u.visit&&!u.envoy&&!u.haulageWork&&Math.hypot(u.x-d.x,u.z-d.z)<=reach)n++;
