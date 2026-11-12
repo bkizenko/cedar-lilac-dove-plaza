@@ -4,7 +4,7 @@ import {rulerOf,advanceRulers,RULERS_YEAR_SECONDS} from '../src/game/rulersRunti
 import {rulersOf} from '../src/game/rulersState.ts';
 function fixture(){const g=new Game();g.reset(123456,10);g.enterIsland();return g;}
 test('new games carry rulers; dynastic years advance with sim time; every society has a ruling house',()=>{
- const g=fixture();assert.equal(g.state.worldOptions?.rulersVersion,1);
+ const g=fixture();assert.equal(g.state.worldOptions?.rulersVersion,2);
  g.state.time=RULERS_YEAR_SECONDS*5+1;advanceRulers(g);
  const r=rulersOf(g.state);assert.ok(r,'rulers state valid');assert.equal(r.year,5);
  for(let i=0;i<g.state.tribes.length;i++){const o=rulerOf(g,i);assert.ok(o&&o.name&&o.house,'society '+i);}
@@ -107,7 +107,7 @@ test('lane A: yearly step settles wards and weds rivals; expansion party plan fo
  const g=fixture();
  // expansion party plan: null when rulers off, otherwise a stated, bounded plan
  const p=R.expansionParty(g,1);assert.ok(p&&p.crew>=2&&p.crew<=4&&p.cooldown>=900&&p.cooldown<=3600&&Array.isArray(p.why));
- assert.equal(p.allow,p.mode==='settle'||p.mode==='migrate');
+ assert.equal(R.expansionParty(g,1,true).allow,p.mode==='settle'||p.mode==='migrate');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.equal(R.expansionParty(old,1),null);
  // wards settle inside the yearly step: a foster child aged to 16 goes home with no manual call
  for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9500+i+t*100});}
@@ -235,4 +235,24 @@ test('expansion parties: read model shows real founding units, supplies and posi
  const before=g.state.units.length;expansionParties(g);assert.equal(g.state.units.length,before,'pure read');
  us[0].stuckT=9;assert.match(expansionParties(g,1)[0].status,/struggling/);
  delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
+});
+
+test('lane A: domestic pressure executor overthrows a house after sustained uprising, through heir(); counter saved; old saves untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);const t=1,id='1';
+ const d0=g.state.rulers.societies[id].dynasty;const kid={...Object.values(d0.people).find(p=>p.alive),id:'heirx',name:'Heirx',age:30,parent:d0.rulerId,spouse:undefined,legit:true,claimStrength:80};d0.people.heirx=kid;
+ // press the house: heavy claims against it, full weariness, no legitimacy pillar
+ g.state.rulers.claims=Array.from({length:6},(_,i)=>({holder:'2',target:id,kind:'claim',strength:100,expiresTick:1e9,since:0}));
+ g.state.rulers.weary={...(g.state.rulers.weary??{}),[id]:100};
+ const pol=g.state.rulers.societies[id].civ.polity;pol.institutionalization=0;
+ g.tribe(t).food=0;g.state.tribes[t].food=0;
+ const u=R.unrestOf(g,t);
+ assert.ok(u.stage==='uprising'||u.stage==='civilWar','fixture reaches uprising: '+u.stage);
+ const before=g.state.rulers.societies[id].dynasty.rulerId;let fell=[];
+ for(let y=0;y<R.UPRISING_YEARS&&!fell.length;y++)fell=R.domesticPressure(g);
+ assert.equal(fell.length,1,'house falls after the streak');
+ const d=g.state.rulers.societies[id].dynasty;assert.notEqual(d.rulerId,before);assert.ok(d.people[before].alive,'the old ruler is not killed');assert.equal(d.people[d.rulerId].legit,false);
+ assert.equal(g.state.rulers.unrestYears[id],0);assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'save round-trip');
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.unrestYears={1:'x'};assert.equal(validRulersState(bad),false);
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(R.domesticPressure(old),[]);
 });

@@ -117,7 +117,7 @@ import type { HudSnapshot, ResKind, TradeDeal } from "@/game/types";
 import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
 import { YEAR_SECONDS } from "@/game/settlement";
 
-const BLD_ICON: Record<string, ReactNode> = {
+export const BLD_ICON: Record<string, ReactNode> = {
   hearth: <Flame className="size-4" />, butcher: <Scissors className="size-4" />,
   dryrack: <Layers className="size-4" />, tanner: <Layers className="size-4" />, tailor: <Scissors className="size-4" />,
   potter: <CookingPot className="size-4" />, kiln: <Flame className="size-4" />, fibreWorkshop: <Package className="size-4" />,
@@ -145,7 +145,7 @@ const BLD_ICON: Record<string, ReactNode> = {
   university: <GraduationCap className="size-4" />,
 };
 
-function resWord(k: ResKind) {
+export function resWord(k: ResKind) {
   if (k === "food") return "food";
   if (k === "wood") return "logs";
   if (k === "copper") return "copper";
@@ -255,7 +255,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           {engine&&<p className="px-2 py-2 select-text">World seed {engine.game.state.seed} · generation {engine.game.state.worldgenVersion??1}</p>}
           <p className="px-2 py-2 text-xs" title={difficultyEffects(engine?.game.state.difficulty??'normal')}>Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
           <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
-          <label className="px-2 py-2">Style <select aria-label="World visual style" value={engine?.view.getRenderStyle()==='carved'?'optionH':'current'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH');engine?.pushHud();}}><option value="current">Original</option><option value="optionH">Carved · Option H</option></select></label>
+          <label className="px-2 py-2">Style <select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
           <button className="px-2 py-2" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),opened=>{if(opened)setTestOpen(true);})}>Test lab</button>
@@ -548,262 +548,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             {!selMin&&sel.kind!=='boat'&&sel.type!=='waterReach' ? (
               <details className="selection-info mt-1"><summary>Details</summary><p>{sel.info}</p></details>
             ) : null}
-        {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
-          <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
-          {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
-        </div>}
-        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
-        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
-        {!selMin&&engine&&sel.kind!=='none'&&<SiegeRamControls engine={engine}/>}
-        {!selMin && engine && sel.kind==='unit' && sel.team===0 &&
-          <GameDisclosure label="Inventory & activity"><ResidentInventory game={engine.game} residents={engine.game.selectedUnits().filter(u=>u.team===0)}/></GameDisclosure>}
-        {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
-        {sel.type==='waterReach' ? (!selMin&&engine?.game.selectedWaterReach&&
-          <WaterReachPanel engine={engine} reach={engine.game.selectedWaterReach}/>) : selMin ? (
-          sel.kind !== "none" ? (
-            <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
-              <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />
-            </div>
-          ) : null
-        ) : (
-          <>
-            {sel.carry ? <div className="text-[11px] text-dawn mt-1">{sel.carry}</div> : null}
-            {sel.kind !== "none" ? (
-              <>
-                <div className="mt-1.5 text-[11px] text-parchment-dim">{sel.kind==="resource"&&sel.type==="fish"?`${sel.hp} / ${sel.maxHp} fish`:`Condition ${hpPct}%`}</div>
-                <div className="mt-1 h-1.5 rounded-full bg-ink overflow-hidden border border-parchment/10">
-                  <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />
-                </div>
-              </>
-            ) : (
-              <p className="mt-1.5 text-[11px] leading-snug text-parchment-dim">
-                People join through birth or migration. Select adults to drill; right-click an enemy to fight.
-              </p>
-            )}
-            {sel.kind==="resource"&&sel.type==="tree"&&engine&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>{
-              const tree=engine.game.selectedResource;
-              if(tree?.kind==="tree"){engine.game.markChop([tree.id],false);engine.pushHud();}
-            }}>Fell tree</button>}
-            {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-9 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
-            {sel.kind === "building" && sel.team === 0 && (
-              <div className="building-actions mt-2 flex flex-col gap-2">
-                {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
-                {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
-                {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
-                {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
-                {engine&&sel.buildingId&&<HousingControls engine={engine} buildingId={sel.buildingId}/>}
-                {sel.completed&&engine&&sel.buildingId&&<EraUpgradeControls engine={engine} buildingId={sel.buildingId}/>}
-                {engine&&sel.buildingId&&<BuildingMaintenanceControls engine={engine} buildingId={sel.buildingId}/>}
-                {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
-                {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
-                {sel.completed&&sel.type==="dock"&&<GameTooltip title="Boat orders" description="Select a boat or its captain, then choose a reachable point on the water."><span className="text-xs text-parchment-dim">Boats &amp; fishing</span></GameTooltip>}
-                {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
-                {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
-                {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Post guards</button>}
-                {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Mine stone</button>}
-                {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
-                {sel.completed&&sel.type==='pen'&&engine&&<HusbandryControls engine={engine} pen={sel.buildingId!}/>}
-                {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
-                {sel.completed&&sel.type==="townhall"&&engine&&<button type="button"
-                  className="min-h-10 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
-                  disabled={!engine.game.state.units.some(u=>u.team===0&&u.hp>0&&u.militia&&!u.prisoner)}
-                  onClick={()=>engine.standDown()}>Stand down militia</button>}
-                {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
-                {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
-                {engine&&sel.buildingId&&sel.completed&&sel.team===0&&["townhall","workshop","dock"].includes(sel.type||"")&&<PaidProjects engine={engine} workplaceId={sel.buildingId}/>}
-                {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
-                {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="pack"?false:kind==="canoe"?sel.type==="dock":sel.type!=="dock"&&(kind==="sled"||sel.type==="workshop")).map(([kind,h])=>{
-                  const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;
-                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<h.wood||hud.stone<h.stone||!!hud.ended} onClick={()=>engine?.craftHaulage(kind as keyof typeof HAULAGE,sel.buildingId)}>
-                    <strong>{h.name}</strong><span>{h.wood} logs · {h.stone} stone · ×{h.capacity} load</span>
-                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
-                })}
-                </div></details>}
-                {sel.completed&&["hearth","townhall","workshop","forge"].includes(sel.type||"")&&<details className="craft-group" key={`tools-${sel.buildingId}`}><summary>Farm tools</summary><div className="craft-options">
-                {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>!!sel.type&&farmToolWorkplace(kind as keyof typeof FARM_TOOLS,sel.type,!!engine?.game.tribe(0).copperExperiment)).map(([kind,f])=>{
-                  const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
-                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
-                    <strong>{f.name}</strong><span>{f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {kind==='woodenArd'?'Animal traction · spring only · replaces hand tool':`+${Math.round((f.harvest-1)*100)}% harvest`}</span>
-                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
-                })}
-                {engine&&<FarmToolRepairControls engine={engine} workplaceId={sel.buildingId}/>}
-                </div></details>}
-                {sel.completed&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<details className="craft-group" key={`weapons-${sel.buildingId}`} open={sel.type==="barracks"}><summary>Weapons</summary><div className="craft-options">
-                {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
-                  <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={hud.age<w.age||hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper||!!hud.ended} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>
-                    <strong>{w.name}</strong><span>{w.wood} logs{w.stone?` · ${w.stone} stone`:""}{w.copper?` · ${w.copper} copper`:""} · {w.seconds*(sel.type==="townhall"?3:sel.type==="barracks"?2:1)}s</span>
-                  </button>
-                ))}
-                {sel.completed&&["townhall","barracks","workshop"].includes(sel.type||"")?<button className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>engine?.callToArms()}>Arm villagers</button>:null}
-                </div></details>}
-                {hud.trainOptions
-                  .filter((option) => UNITS[option.type].from === sel.type)
-                  .map((option) => (
-                    <button
-                      key={option.type}
-                      className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
-                      disabled={hud.age < option.age || !!hud.ended}
-                      onClick={() => engine?.train(option.type)}
-                    >
-                      Equip adult as {option.name} · {option.cost.food || 0} food
-                      {option.cost.wood ? ` · ${option.cost.wood} logs` : ""}
-                      {hud.age < option.age ? " · later age required" : ""}
-                    </button>
-                  ))}
-                {sel.queue && <p className="text-xs">Queue: {sel.queue}</p>}
-
-              </div>
-            )}
-            {sel.canRecycle ? (
-              <button
-                type="button"
-                onClick={() => engine?.recycle()}
-                className="mt-1.5 min-h-8 w-full rounded-md border border-parchment/25 bg-ink-soft px-2 text-[11px] text-parchment hover:border-bronze"
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  <Recycle className="size-3.5" />
-                  {sel.planned ? "Cancel plan" : "Recycle building"}
-                </span>
-              </button>
-            ) : null}
-            {(sel.kind === "unit" || hud.workerSelected > 0 || hud.militarySelected > 0) && <div className="mt-1.5 flex gap-1">
-              <button className="min-h-8 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
-              <button className="min-h-8 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
-            </div>}
-            {hud.idleWorkers > 0&&sel.kind!=='boat' ? (
-              <button
-                type="button"
-                onClick={() => engine?.focusIdle()}
-                className="mt-1.5 min-h-8 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-[11px] text-bronze-bright hover:border-bronze"
-              >
-                {hud.idleWorkers} idle · cycle to them (I)
-              </button>
-            ) : null}
-            {engine&&!selMin&&sel.kind!=='building'&&<BuilderQueueControls engine={engine}/>}
-            {engine&&!selMin&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
-            {showJobs ? (
-              <div className="mt-1.5 grid grid-cols-4 gap-1">
-                <JobBtn
-                  active={hud.job === "food"}
-                  label="Food"
-                  title="Gather berries and fish"
-                  onClick={() => engine?.assignJob("food")}
-                >
-                  <Wheat className="size-3.5 text-blood" />
-                </JobBtn>
-                <JobBtn
-                  active={hud.job === "wood"}
-                  label="Logs"
-                  title="Cut logs"
-                  onClick={() => engine?.assignJob("wood")}
-                >
-                  <TreePine className="size-3.5 text-ok" />
-                </JobBtn>
-                <JobBtn
-                  active={hud.job === "stone"}
-                  label="Stone"
-                  title="Quarry stone"
-                  onClick={() => engine?.assignJob("stone")}
-                >
-                  <Mountain className="size-3.5 text-parchment-dim" />
-                </JobBtn>
-                {(hud.age >= 1||engine?.game.state.copper.some(n=>n.amount>0&&engine.game.exploredAt(n.x,n.z))) ? (
-                  <JobBtn
-                    active={hud.job === "copper"}
-                    label="Copper"
-                    title="Gather discovered copper for tools and experiments"
-                    onClick={() => engine?.assignJob("copper")}
-                  >
-                    <Coins className="size-3.5 text-bronze" />
-                  </JobBtn>
-                ) : null}
-                {hud.age >= 2 ? (
-                  <JobBtn
-                    active={hud.job === "iron"}
-                    label="Iron"
-                    title="Gather iron (Iron Age)"
-                    onClick={() => engine?.assignJob("iron")}
-                  >
-                    <Mountain className="size-3.5 text-parchment" />
-                  </JobBtn>
-                ) : null}
-                <JobBtn
-                  active={hud.job === "hunt"}
-                  label="Hunt"
-                  title="Hunt deer, boar, and goats for food"
-                  onClick={() => engine?.assignJob("hunt")}
-                >
-                  <PawPrint className="size-3.5 text-blood" />
-                </JobBtn>
-                {hud.age >= 1 && <JobBtn
-                  active={hud.job === "drill"}
-                  label="Drill"
-                  title="Practice at a completed barracks: improves this adult’s combat skill and takes time away from work."
-                  onClick={() => engine?.assignJob("drill")}
-                >
-                  <Sword className="size-3.5 text-bronze" />
-                </JobBtn>}
-                <JobBtn active={false} label="Auto work" title="Enable village-wide Auto work and release the selected workers’ job locks" onClick={() => engine?.assignJob("auto")}>
-                  <Play className="size-3.5 text-parchment" />
-                </JobBtn>
-                <JobBtn
-                  active={false}
-                  label="Rest"
-                  title="Recover fatigue, then automatically resume village work"
-                  onClick={() => engine?.assignJob("rest")}
-                >
-                  <Hand className="size-3.5 text-parchment-dim" />
-                </JobBtn>
-              </div>
-            ) : null}
-            {hud.militiaSelected>0 && hud.workerSelected===0 && <button type="button"
-              className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm"
-              title="Armed villagers hunt with their spears or bows, butcher the catch and carry meat home"
-              onClick={()=>engine?.assignJob("hunt")}>Hunt with weapons</button>}
-            {sel.kind!=='boat'&&(hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none") ? (
-              <button
-                type="button"
-                title="Keep scouting unknown ground until stopped, blocked or threatened. Select scouts and press period to stop. (X)"
-                onClick={() => engine?.explore()}
-                className="mt-1.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-md border border-dawn/30 bg-ink-soft px-2 text-[11px] text-dawn hover:border-dawn"
-              >
-                <Compass className="size-3.5" />
-                Explore (X)
-              </button>
-            ) : null}
-            {showFight && hud.workerSelected>0 ? <button className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm" onClick={()=>engine?.callToArms()}>Arm selected adults · {hud.spears+hud.bows+hud.blades} weapons</button> : null}
-            {showFight ? (
-              <div className="mt-1.5 flex gap-1">
-                <button
-                  type="button"
-                  title={
-                    hud.raidName
-                      ? `Raid ${hud.raidName} with the selected adults. Move or stop to withdraw.`
-                      : "Explore a rival settlement and select adults with empty hands to raid."
-                  }
-                  onClick={() => engine?.raidRival()}
-                  className="flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-blood/40 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-blood"
-                >
-                  <Swords className="size-3.5 text-blood" />
-                  {hud.raidName ? `Pillage ${hud.raidName}` : "Pillage camp"}
-                </button>
-                <button
-                  type="button"
-                  title="Halt"
-                  onClick={() => engine?.halt()}
-                  className="min-h-8 rounded-md border border-parchment/20 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-bronze/40"
-                >
-                  Halt
-                </button>
-              </div>
-            ) : null}
-            {sel.kind === "none" ? (
-              <div className="hud-trade-mobile mt-1.5">
-                <TradeBlock hud={hud} engine={engine} onOffer={setTradeOpen} />
-              </div>
-            ) : null}
-          </>
-        )}
+        <SelectionDetails hud={hud} engine={engine} selMin={selMin} onOffer={setTradeOpen} />
       </div>
       )}
 
@@ -1039,7 +784,274 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
   );
 }
 
-function TradeBlock({ hud, engine, onOffer }: { hud: HudSnapshot; engine: Engine | null; onOffer:(team:number)=>void }) {
+/** Everything the selection can be ordered to do. Shared by the archived HUD and the Hearth "More orders" sheet; `hideJobs` lets Hearth show the job grid itself. */
+export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs }: { hud: HudSnapshot; engine: Engine | null; selMin: boolean; onOffer: (team: number) => void; hideJobs?: boolean }) {
+  const setTradeOpen = onOffer;
+  const sel = hud.selection;
+  const hpPct = sel.maxHp > 0 ? Math.round((100 * sel.hp) / sel.maxHp) : 0;
+  const showJobs = !selMin && hud.workerSelected > 0;
+  const showFight = !selMin && (hud.militarySelected > 0 || hud.workerSelected > 0);
+  return (<>
+        {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
+          <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
+          {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
+        </div>}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
+        {!selMin&&engine&&sel.kind!=='none'&&<SiegeRamControls engine={engine}/>}
+        {!selMin && engine && sel.kind==='unit' && sel.team===0 &&
+          <GameDisclosure label="Inventory & activity"><ResidentInventory game={engine.game} residents={engine.game.selectedUnits().filter(u=>u.team===0)}/></GameDisclosure>}
+        {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
+        {sel.type==='waterReach' ? (!selMin&&engine?.game.selectedWaterReach&&
+          <WaterReachPanel engine={engine} reach={engine.game.selectedWaterReach}/>) : selMin ? (
+          sel.kind !== "none" ? (
+            <div className="mt-1.5 h-1 rounded-full bg-ink overflow-hidden border border-parchment/10">
+              <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />
+            </div>
+          ) : null
+        ) : (
+          <>
+            {sel.carry ? <div className="text-[11px] text-dawn mt-1">{sel.carry}</div> : null}
+            {sel.kind !== "none" ? (
+              <>
+                <div className="mt-1.5 text-[11px] text-parchment-dim">{sel.kind==="resource"&&sel.type==="fish"?`${sel.hp} / ${sel.maxHp} fish`:`Condition ${hpPct}%`}</div>
+                <div className="mt-1 h-1.5 rounded-full bg-ink overflow-hidden border border-parchment/10">
+                  <div className="h-full rounded-full bg-ok" style={{ width: `${hpPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="mt-1.5 text-[11px] leading-snug text-parchment-dim">
+                People join through birth or migration. Select adults to drill; right-click an enemy to fight.
+              </p>
+            )}
+            {sel.kind==="resource"&&sel.type==="tree"&&engine&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>{
+              const tree=engine.game.selectedResource;
+              if(tree?.kind==="tree"){engine.game.markChop([tree.id],false);engine.pushHud();}
+            }}>Fell tree</button>}
+            {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-9 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
+            {sel.kind === "building" && sel.team === 0 && (
+              <div className="building-actions mt-2 flex flex-col gap-2">
+                {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
+                {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
+                {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
+                {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
+                {engine&&sel.buildingId&&<HousingControls engine={engine} buildingId={sel.buildingId}/>}
+                {sel.completed&&engine&&sel.buildingId&&<EraUpgradeControls engine={engine} buildingId={sel.buildingId}/>}
+                {engine&&sel.buildingId&&<BuildingMaintenanceControls engine={engine} buildingId={sel.buildingId}/>}
+                {engine&&sel.buildingId&&<ConstructionSiteControls engine={engine} buildingId={sel.buildingId}/>}
+                {sel.completed&&sel.type==="workshop"&&engine&&sel.buildingId&&<CopperStudyControl engine={engine} workplace={sel.buildingId}/>}
+                {sel.completed&&sel.type==="dock"&&<GameTooltip title="Boat orders" description="Select a boat or its captain, then choose a reachable point on the water."><span className="text-xs text-parchment-dim">Boats &amp; fishing</span></GameTooltip>}
+                {sel.completed&&["lumber","townhall"].includes(sel.type||"")&&<button onClick={()=>{if(engine&&sel.buildingId){replantStand(engine.game,sel.buildingId);engine.pushHud();}}}>Replant nearby trees · 1 seed basket each</button>}
+                {sel.completed&&sel.type==="gate"&&<><p className="text-xs">Gate: {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateMode||"auto"} · {engine?.game.state.buildings.find(b=>b.id===sel.buildingId)?.gateOpen?"open":"closed"}</p>{(["auto","open","closed"] as const).map(mode=><button key={mode} className="rounded-md border border-bronze/40 p-2 text-xs" onClick={()=>{const b=engine?.game.state.buildings.find(b=>b.id===sel.buildingId);if(engine&&b){setGateMode(engine.game,b,mode);engine.pushHud();}}}>{mode==="auto"?"Open in peace, close for enemies":mode==="open"?"Hold open":"Lock gate"}</button>)}</>}
+                {sel.completed&&sel.type==="cornerstone"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){guardFrontier(engine.game,sel.buildingId);engine.pushHud();}}}>Post guards</button>}
+                {sel.completed&&sel.type==="quarry"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId);engine.pushHud();}}}>Mine stone</button>}
+                {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
+                {sel.completed&&sel.type==='pen'&&engine&&<HusbandryControls engine={engine} pen={sel.buildingId!}/>}
+                {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
+                {sel.completed&&sel.type==="townhall"&&engine&&<button type="button"
+                  className="min-h-10 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
+                  disabled={!engine.game.state.units.some(u=>u.team===0&&u.hp>0&&u.militia&&!u.prisoner)}
+                  onClick={()=>engine.standDown()}>Stand down militia</button>}
+                {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
+                {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&<details className="craft-group" key={`transport-${sel.buildingId}`} open={sel.type==="dock"}><summary>Transport</summary><div className="craft-options">
+                {engine&&sel.buildingId&&sel.completed&&sel.team===0&&["townhall","workshop","dock"].includes(sel.type||"")&&<PaidProjects engine={engine} workplaceId={sel.buildingId}/>}
+                {sel.completed&&["townhall","workshop"].includes(sel.type||"")&&<button className="rounded-md border border-bronze/40 p-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){beginPackTaming(engine.game,sel.buildingId);engine.pushHud();}}}>Tame pack goat · 10 food + 2 logs</button>}
+                {sel.completed&&["townhall","workshop","dock"].includes(sel.type||"")&&Object.entries(HAULAGE).filter(([kind])=>kind==="pack"?false:kind==="canoe"?sel.type==="dock":sel.type!=="dock"&&(kind==="sled"||sel.type==="workshop")).map(([kind,h])=>{
+                  const issue=engine?haulageRequirement(engine.game,kind as keyof typeof HAULAGE):null;
+                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<h.wood||hud.stone<h.stone||!!hud.ended} onClick={()=>engine?.craftHaulage(kind as keyof typeof HAULAGE,sel.buildingId)}>
+                    <strong>{h.name}</strong><span>{h.wood} logs · {h.stone} stone · ×{h.capacity} load</span>
+                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
+                })}
+                </div></details>}
+                {sel.completed&&["hearth","townhall","workshop","forge"].includes(sel.type||"")&&<details className="craft-group" key={`tools-${sel.buildingId}`}><summary>Farm tools</summary><div className="craft-options">
+                {sel.completed&&Object.entries(FARM_TOOLS).filter(([kind])=>!!sel.type&&farmToolWorkplace(kind as keyof typeof FARM_TOOLS,sel.type,!!engine?.game.tribe(0).copperExperiment)).map(([kind,f])=>{
+                  const issue=engine?farmToolRequirement(engine.game,kind as keyof typeof FARM_TOOLS):null;
+                  return <div key={kind}><button type="button" className="w-full rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!issue||hud.wood<f.wood||hud.stone<f.stone||hud.copper<f.copper||hud.iron<f.iron||!!hud.ended} onClick={()=>engine?.craftFarmTool(kind as keyof typeof FARM_TOOLS,sel.buildingId)}>
+                    <strong>{f.name}</strong><span>{f.wood} logs{f.stone?` · ${f.stone} stone`:""}{f.copper?` · ${f.copper} copper`:""}{f.iron?` · ${f.iron} iron`:""} · {kind==='woodenArd'?'Animal traction · spring only · replaces hand tool':`+${Math.round((f.harvest-1)*100)}% harvest`}</span>
+                  </button>{issue&&<p className="text-[11px] text-parchment-dim">{issue}</p>}</div>;
+                })}
+                {engine&&<FarmToolRepairControls engine={engine} workplaceId={sel.buildingId}/>}
+                </div></details>}
+                {sel.completed&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<details className="craft-group" key={`weapons-${sel.buildingId}`} open={sel.type==="barracks"}><summary>Weapons</summary><div className="craft-options">
+                {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
+                  <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={hud.age<w.age||hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper||!!hud.ended} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>
+                    <strong>{w.name}</strong><span>{w.wood} logs{w.stone?` · ${w.stone} stone`:""}{w.copper?` · ${w.copper} copper`:""} · {w.seconds*(sel.type==="townhall"?3:sel.type==="barracks"?2:1)}s</span>
+                  </button>
+                ))}
+                {sel.completed&&["townhall","barracks","workshop"].includes(sel.type||"")?<button className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>engine?.callToArms()}>Arm villagers</button>:null}
+                </div></details>}
+                {hud.trainOptions
+                  .filter((option) => UNITS[option.type].from === sel.type)
+                  .map((option) => (
+                    <button
+                      key={option.type}
+                      className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
+                      disabled={hud.age < option.age || !!hud.ended}
+                      onClick={() => engine?.train(option.type)}
+                    >
+                      Equip adult as {option.name} · {option.cost.food || 0} food
+                      {option.cost.wood ? ` · ${option.cost.wood} logs` : ""}
+                      {hud.age < option.age ? " · later age required" : ""}
+                    </button>
+                  ))}
+                {sel.queue && <p className="text-xs">Queue: {sel.queue}</p>}
+
+              </div>
+            )}
+            {sel.canRecycle ? (
+              <button
+                type="button"
+                onClick={() => engine?.recycle()}
+                className="mt-1.5 min-h-8 w-full rounded-md border border-parchment/25 bg-ink-soft px-2 text-[11px] text-parchment hover:border-bronze"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Recycle className="size-3.5" />
+                  {sel.planned ? "Cancel plan" : "Recycle building"}
+                </span>
+              </button>
+            ) : null}
+            {(sel.kind === "unit" || hud.workerSelected > 0 || hud.militarySelected > 0) && <div className="mt-1.5 flex gap-1">
+              <button className="min-h-8 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
+              <button className="min-h-8 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
+            </div>}
+            {hud.idleWorkers > 0&&sel.kind!=='boat' ? (
+              <button
+                type="button"
+                onClick={() => engine?.focusIdle()}
+                className="mt-1.5 min-h-8 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-[11px] text-bronze-bright hover:border-bronze"
+              >
+                {hud.idleWorkers} idle · cycle to them (I)
+              </button>
+            ) : null}
+            {engine&&!selMin&&sel.kind!=='building'&&<BuilderQueueControls engine={engine}/>}
+            {engine&&!selMin&&sel.kind!=='building'&&<BoatControls engine={engine}/>}
+            {showJobs&&!hideJobs ? (
+              <div className="mt-1.5 grid grid-cols-4 gap-1">
+                <JobBtn
+                  active={hud.job === "food"}
+                  label="Food"
+                  title="Gather berries and fish"
+                  onClick={() => engine?.assignJob("food")}
+                >
+                  <Wheat className="size-3.5 text-blood" />
+                </JobBtn>
+                <JobBtn
+                  active={hud.job === "wood"}
+                  label="Logs"
+                  title="Cut logs"
+                  onClick={() => engine?.assignJob("wood")}
+                >
+                  <TreePine className="size-3.5 text-ok" />
+                </JobBtn>
+                <JobBtn
+                  active={hud.job === "stone"}
+                  label="Stone"
+                  title="Quarry stone"
+                  onClick={() => engine?.assignJob("stone")}
+                >
+                  <Mountain className="size-3.5 text-parchment-dim" />
+                </JobBtn>
+                {(hud.age >= 1||engine?.game.state.copper.some(n=>n.amount>0&&engine.game.exploredAt(n.x,n.z))) ? (
+                  <JobBtn
+                    active={hud.job === "copper"}
+                    label="Copper"
+                    title="Gather discovered copper for tools and experiments"
+                    onClick={() => engine?.assignJob("copper")}
+                  >
+                    <Coins className="size-3.5 text-bronze" />
+                  </JobBtn>
+                ) : null}
+                {hud.age >= 2 ? (
+                  <JobBtn
+                    active={hud.job === "iron"}
+                    label="Iron"
+                    title="Gather iron (Iron Age)"
+                    onClick={() => engine?.assignJob("iron")}
+                  >
+                    <Mountain className="size-3.5 text-parchment" />
+                  </JobBtn>
+                ) : null}
+                <JobBtn
+                  active={hud.job === "hunt"}
+                  label="Hunt"
+                  title="Hunt deer, boar, and goats for food"
+                  onClick={() => engine?.assignJob("hunt")}
+                >
+                  <PawPrint className="size-3.5 text-blood" />
+                </JobBtn>
+                {hud.age >= 1 && <JobBtn
+                  active={hud.job === "drill"}
+                  label="Drill"
+                  title="Practice at a completed barracks: improves this adult’s combat skill and takes time away from work."
+                  onClick={() => engine?.assignJob("drill")}
+                >
+                  <Sword className="size-3.5 text-bronze" />
+                </JobBtn>}
+                <JobBtn active={false} label="Auto work" title="Enable village-wide Auto work and release the selected workers’ job locks" onClick={() => engine?.assignJob("auto")}>
+                  <Play className="size-3.5 text-parchment" />
+                </JobBtn>
+                <JobBtn
+                  active={false}
+                  label="Rest"
+                  title="Recover fatigue, then automatically resume village work"
+                  onClick={() => engine?.assignJob("rest")}
+                >
+                  <Hand className="size-3.5 text-parchment-dim" />
+                </JobBtn>
+              </div>
+            ) : null}
+            {hud.militiaSelected>0 && hud.workerSelected===0 && <button type="button"
+              className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm"
+              title="Armed villagers hunt with their spears or bows, butcher the catch and carry meat home"
+              onClick={()=>engine?.assignJob("hunt")}>Hunt with weapons</button>}
+            {sel.kind!=='boat'&&(hud.workerSelected > 0 || hud.idleWorkers > 0 || sel.kind === "none") ? (
+              <button
+                type="button"
+                title="Keep scouting unknown ground until stopped, blocked or threatened. Select scouts and press period to stop. (X)"
+                onClick={() => engine?.explore()}
+                className="mt-1.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-md border border-dawn/30 bg-ink-soft px-2 text-[11px] text-dawn hover:border-dawn"
+              >
+                <Compass className="size-3.5" />
+                Explore (X)
+              </button>
+            ) : null}
+            {showFight && hud.workerSelected>0 ? <button className="mt-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-2 text-sm" onClick={()=>engine?.callToArms()}>Arm selected adults · {hud.spears+hud.bows+hud.blades} weapons</button> : null}
+            {showFight ? (
+              <div className="mt-1.5 flex gap-1">
+                <button
+                  type="button"
+                  title={
+                    hud.raidName
+                      ? `Raid ${hud.raidName} with the selected adults. Move or stop to withdraw.`
+                      : "Explore a rival settlement and select adults with empty hands to raid."
+                  }
+                  onClick={() => engine?.raidRival()}
+                  className="flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-blood/40 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-blood"
+                >
+                  <Swords className="size-3.5 text-blood" />
+                  {hud.raidName ? `Pillage ${hud.raidName}` : "Pillage camp"}
+                </button>
+                <button
+                  type="button"
+                  title="Halt"
+                  onClick={() => engine?.halt()}
+                  className="min-h-8 rounded-md border border-parchment/20 bg-ink-soft px-2 py-1.5 text-[11px] text-parchment hover:border-bronze/40"
+                >
+                  Halt
+                </button>
+              </div>
+            ) : null}
+            {sel.kind === "none" ? (
+              <div className="hud-trade-mobile mt-1.5">
+                <TradeBlock hud={hud} engine={engine} onOffer={setTradeOpen} />
+              </div>
+            ) : null}
+          </>
+        )}
+  </>);
+}
+
+export function TradeBlock({ hud, engine, onOffer }: { hud: HudSnapshot; engine: Engine | null; onOffer:(team:number)=>void }) {
   const t = hud.trade;
   const rival=engine?.game.pickTradeRival();
   const journeys=rival?engine!.game.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeTeam===rival.id&&tradeJourney(u)):[];
@@ -1178,7 +1190,7 @@ function BankBtn({
   );
 }
 
-function JobBtn({
+export function JobBtn({
   children,
   label,
   title,
@@ -1264,7 +1276,7 @@ function IconBtn({
   );
 }
 
-function shortName(n: string) {
+export function shortName(n: string) {
   if (n === "Frontier outpost") return "Outpost";
   if (n === "Town Hall") return "Town Hall";
   if (n === "Lumber Camp") return "Lumber";

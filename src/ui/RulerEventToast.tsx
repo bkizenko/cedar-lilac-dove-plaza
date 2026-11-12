@@ -24,7 +24,7 @@ export function RulerEventToast({engine}:{engine:Engine}){
     const c=reply.model.council;if(!c.enabled||!c.ruler||!c.house)return;
     const prev=seen.current;seen.current={ruler:c.ruler.name,generation:c.house.generation,house:c.house.name};
     const d=prev&&prev.house===c.house.name?describeRulerChange(prev,c):null;
-    if(d){try{engine.audio?.play('invalid');}catch{/* cue is optional */}setEv({id:++n.current,...d});}
+    if(d){try{engine.audio?.play('invalid');engine.audio?.proc.rulerEvent(d.tone);}catch{/* cue is optional */}setEv({id:++n.current,...d});}
    }catch{/* council optional on old saves */}finally{busy=false;}
   };
   void poll();const t=globalThis.setInterval(()=>void poll(),2000);return()=>{alive=false;globalThis.clearInterval(t);};

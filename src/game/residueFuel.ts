@@ -1,7 +1,8 @@
 import type{Game}from'./sim';
 /** Game-balance equivalents per abstract inventory unit, not measured calorific values.
  * Crop residues compete with bedding/fodder: https://www.fao.org/4/q1085e/q1085e04.htm
- * This outlet is household WARMTH only; it never substitutes recipe wood/charcoal. */
+ * This outlet is household heat; eligible meals explicitly opt in via mealFuel.
+ * It never substitutes charcoal feedstock or industrial fuel. */
 export const RESIDUE_FUEL_RULES={version:1,chaffPerWoodEquivalent:8,strawPerWoodEquivalent:4,strawReservePerAnimal:4,maximumCounter:1e12}as const;
 export type ResidueFuelLedger={version:1;chaffBurned:number;strawBurned:number;woodEquivalentDelivered:number};
 export function residueFuelAvailable(g:Game,team:number){const t=g.tribe(team),chaff=Math.max(0,t?.items?.chaff||0),straw=Math.max(0,t?.items?.straw||0);let animals=0;if(straw>0){animals=(g.state.livestock||[]).filter(a=>a.team===team&&a.hp>0).length+g.state.units.filter(u=>u.team===team&&u.hp>0&&u.packAnimal&&u.packAnimal.hp>0).length;}const strawReserved=animals*RESIDUE_FUEL_RULES.strawReservePerAnimal,usableStraw=Math.max(0,straw-strawReserved);return{chaff,straw,strawReserved:Math.min(straw,strawReserved),availableWoodEquivalent:chaff/RESIDUE_FUEL_RULES.chaffPerWoodEquivalent+usableStraw/RESIDUE_FUEL_RULES.strawPerWoodEquivalent};}

@@ -8,10 +8,11 @@ import {validateRuler} from './rulerGenome';
 import {rollGreatPerson} from './greatPersons';
 import type {Tier} from './fame';
 import {familyFeatures} from './familyScale';
+import {validDecisionState} from './societyState';
 
 export type SocietyRulers={civ:CivSeed;dynasty:Dynasty;ledger:Ledger;greatEmerged:number};
 export type Ward={kind:'foster'|'hostage';person:string;from:string;to:string;since:number};
-export type RulersState={version:1;wards?:Ward[];claims?:import('./unrest').Claim[];seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>;ties?:Record<string,import('./ties').Ties>;climate?:number;climateT?:number;weary?:Record<string,number>};
+export type RulersState={version:1;/** consecutive dynastic years a society has sat at 'uprising' or worse (domestic-pressure executor) */unrestYears?:Record<string,number>;wards?:Ward[];claims?:import('./unrest').Claim[];seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>;ties?:Record<string,import('./ties').Ties>;climate?:number;climateT?:number;weary?:Record<string,number>;decisions?:import('./societyState').DecisionState};
 
 export function initRulers(gameSeed:number,ids:string[]):RulersState{
  const cast=generateCast(gameSeed,ids.length),societies:Record<string,SocietyRulers>={};
@@ -43,7 +44,9 @@ export function validRulersState(x:unknown):x is RulersState{
  }
  if(s.claims!==undefined&&(!Array.isArray(s.claims)||s.claims.some(c=>!c||typeof c.holder!=='string'||typeof c.target!=='string'||!Number.isFinite(c.strength)||!Number.isFinite(c.expiresTick))))return false;
  if(s.weary!==undefined&&(!s.weary||typeof s.weary!=='object'||Array.isArray(s.weary)||Object.values(s.weary).some(v=>!Number.isFinite(v)||v<0||v>100)))return false;
+ if(s.unrestYears!==undefined&&(!s.unrestYears||typeof s.unrestYears!=='object'||Array.isArray(s.unrestYears)||Object.values(s.unrestYears).some(v=>!Number.isInteger(v)||v<0||v>1000)))return false;
  if(s.wards!==undefined&&(!Array.isArray(s.wards)||s.wards.some(w=>!w||(w.kind!=='foster'&&w.kind!=='hostage')||typeof w.person!=='string'||typeof w.from!=='string'||typeof w.to!=='string'||!Number.isFinite(w.since))))return false;
+ if(s.decisions!==undefined&&!validDecisionState(s.decisions))return false;
  return true;
 }
 /** Old saves: absent field => feature off, nothing breaks. */

@@ -1,3 +1,4 @@
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import {isDependent} from './settlement';
@@ -5,7 +6,7 @@ import {hasTaskCommitment} from './workCommitments';
 import {queueStandDown} from './demobilization';
 import {declareSocietyHostility} from './societyRelations';
 import {recordConflict} from './conflictMetrics';
-import {integrateOccupiedVillage,type ConflictUnit} from './conflictIntent';
+import {integrateOccupiedVillage,type ConflictUnit,type OccupationControl} from './conflictIntent';
 import {isRivalTeam} from './factions';
 import {villagePersonality} from './villagePersonality';
 import type {PrisonerUnit} from './captivity';
@@ -73,6 +74,7 @@ export function measureLeverage(g:Game,d:Domination){
 }
 function end(g:Game,d:Domination,phase:Exclude<DominationPhase,'active'>,reason:string){
  d.phase=phase;d.endedAt=g.state.time;d.endReason=reason;d.reason=reason;
+ for(const control of (g.state as Game['state']&{occupations?:OccupationControl[]}).occupations||[])if(control.hallId===d.hallId&&control.controllerTeam===d.overlord&&control.phase==='dominated')control.phase='withdrawn';
  if(d.obligation.owed>0){d.obligation.forgiven+=d.obligation.owed;d.obligation.owed=0;}
  if(d.overlord===0&&d.terms==='puppet'){const sub=g.tribe(d.subject);if(sub)sub.ally=false;}
  releaseGarrison(g,d);
@@ -135,19 +137,22 @@ function reconcileCarry(g:Game,d:Domination,hall:Building){
 /** Physical installment: pick up at the subject hall, deliver to the overlord hall, walk home. */
 export function dominationCarrierAI(g:Game,u:Unit,dt:number){
  const list=st(g).dominations?.list;if(!list?.length)return false;
- const d=list.find(d=>d.phase==='active'&&d.carry?.unitId===u.id);if(!d){
-  const stale=list.find(d=>d.phase!=='active'&&d.carry?.unitId===u.id);
-  if(stale){const c=stale.carry!;stale.carry=undefined;if(u.carryType==='wood'&&c.phase==='deliver'){g.tribe(stale.subject).wood+=u.carry;u.carry=0;u.carryType=null;}u.order='idle';}
-  return false;}
+ const d=list.find(d=>d.carry?.unitId===u.id);if(!d)return false;
+ // Release/lapse cancels the obligation, never the physical return journey.
+ // A captured carrier keeps its actual cargo under the new ownership path.
+ if(u.team!==d.subject){d.carry=undefined;d.reason='Tribute carrier changed allegiance with its possessions';return false;}
  if(u.emergency)return false;
- const c=d.carry!,home=g.state.buildings.find(b=>b.id===d.hallId)!;
+ const c=d.carry!,home=g.state.buildings.find(b=>b.id===d.hallId&&b.team===d.subject&&b.hp>0&&g.finished(b));
+ if(d.phase!=='active'||!home)c.phase='return';
  const dest=c.phase==='deliver'?overlordStore(g,d,u):home;
- if(!dest){c.phase='return';u.workReason='Tribute road blocked — bringing goods home';}
- const target=dest??home,spot=g.interactionSpot(u,target);
- if(!spot){u.order='hold';u.workReason='No reachable route for tribute';return true;}
+ if(!dest)c.phase='return';
+ const target=c.phase==='return'?home:dest;
+ const drop=!target&&c.phase==='return'?supplyDrops(g,d.subject).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).filter(v=>v.spot).sort((a,b)=>dist(u,a.drop)-dist(u,b.drop))[0]:undefined;
+ const spot=target?g.interactionSpot(u,target):drop?.spot;
+ if(!spot){u.order='hold';u.workReason='No reachable home cache for tribute; keeping the carried goods';return true;}
  u.tx=spot.x;u.tz=spot.z;u.job=null;
- u.workReason=c.phase==='pickup'?'Collecting tribute at the hall':c.phase==='deliver'?`Carrying ${c.amount} tribute logs to the overlord`:'Tribute duty — walking home';
- if(!g.buildingWorkReached(u,target)){u.order='move';g.steer(u,dt);return true;}
+ u.workReason=c.phase==='pickup'?'Collecting tribute at the hall':c.phase==='deliver'?`Carrying ${c.amount} tribute logs to the overlord`:'Tribute duty — walking home with possessions';
+ if(!(target?g.buildingWorkReached(u,target):drop&&supplyReached(g,u,drop.drop,spot))){u.order='move';g.steer(u,dt);return true;}
  const sub=g.tribe(d.subject);
  if(c.phase==='pickup'){
   const amount=Math.floor(Math.min(R.maximumCarry,d.obligation.owed,Math.max(0,sub.wood||0)));

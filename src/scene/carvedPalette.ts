@@ -25,7 +25,9 @@ export type CarvedMaterialId=
  |'thatch'|'shingle'|'tile'
  |'stone'|'stoneDark'|'plaster'
  |'foliage'|'foliageDark'|'trunk'
- |'water'|'fire'|'cloth'|'iron';
+ |'water'|'fire'|'cloth'|'iron'
+ /** Added with the village palette: roofing and finish materials that need their own hue once stone, thatch and tile stop sharing one wood family. */
+ |'slate'|'moss'|'clothRed'|'clothBlue'|'straw'|'mud';
 export type CarvedSwatch={hex:string;roughness:number;
  /** Wood-grain strength multiplier for this surface (0 = no grain). */
  grain:number};
@@ -55,7 +57,51 @@ export const CARVED_MATERIALS:Record<CarvedMaterialId,CarvedSwatch>={
  fire:{hex:'#f0a03a',roughness:.6,grain:0},
  cloth:{hex:'#ecd2a4',roughness:.9,grain:0},
  iron:{hex:'#5a4c40',roughness:.6,grain:0},
+ slate:{hex:'#b27846',roughness:.88,grain:.8},
+ moss:{hex:'#9d9a58',roughness:.92,grain:0},
+ clothRed:{hex:'#d0713a',roughness:.9,grain:0},
+ clothBlue:{hex:'#b99a74',roughness:.9,grain:0},
+ straw:{hex:'#dca75f',roughness:.92,grain:.8},
+ mud:{hex:'#d9a877',roughness:.94,grain:.3},
 };
+/** LEGACY honey palette (Option H "carved honey-wood diorama", unchanged). */
+export const HONEY_MATERIALS=CARVED_MATERIALS;
+/** Village palette (the default look): the same material ids with their own hues, so
+ * thatch reads as straw, stone as grey limestone, tile as terracotta, plaster as limewash.
+ * Foliage, trunk, water and fire are identical to the honey palette (vegetation and water belong to other lanes). */
+export const VILLAGE_MATERIALS:Record<CarvedMaterialId,CarvedSwatch>={
+ woodLight:{hex:'#c7a06f',roughness:.86,grain:1},
+ woodMid:{hex:'#9b7149',roughness:.88,grain:1},
+ woodDark:{hex:'#6b4a2d',roughness:.9,grain:1},
+ woodEdge:{hex:'#43301e',roughness:.9,grain:.7},
+ woodInlay:{hex:'#dcc294',roughness:.84,grain:.6},
+ recess:{hex:'#2a1e14',roughness:.95,grain:0},
+ thatch:{hex:'#b79a52',roughness:.95,grain:.8},
+ shingle:{hex:'#85735a',roughness:.9,grain:1},
+ tile:{hex:'#b4573a',roughness:.88,grain:.5},
+ stone:{hex:'#a8a396',roughness:.94,grain:.25},
+ stoneDark:{hex:'#767267',roughness:.95,grain:.25},
+ plaster:{hex:'#e3d6b8',roughness:.94,grain:.2},
+ foliage:CARVED_MATERIALS.foliage,foliageDark:CARVED_MATERIALS.foliageDark,trunk:CARVED_MATERIALS.trunk,
+ water:{hex:'#6f97a8',roughness:.3,grain:0},
+ fire:CARVED_MATERIALS.fire,
+ cloth:{hex:'#e2d3ae',roughness:.9,grain:0},
+ iron:{hex:'#4b4d54',roughness:.55,grain:0},
+ slate:{hex:'#5d6670',roughness:.8,grain:.3},
+ moss:{hex:'#6f8247',roughness:.95,grain:0},
+ clothRed:{hex:'#a8432f',roughness:.9,grain:0},
+ clothBlue:{hex:'#3f6a8c',roughness:.9,grain:0},
+ straw:{hex:'#d8bd6a',roughness:.95,grain:.8},
+ mud:{hex:'#a98c66',roughness:.96,grain:.3},
+};
+export type CarvedPaletteName='village'|'honey';
+export const CARVED_PALETTES:Record<CarvedPaletteName,Record<CarvedMaterialId,CarvedSwatch>>={village:VILLAGE_MATERIALS,honey:HONEY_MATERIALS};
+let activePalette:CarvedPaletteName='village';
+/** Palette used by every mesh/impostor builder. The default is the village palette; the legacy honey look is selected with the
+ * 'Carved honey (legacy)' world style. Callers that switch it must rebuild cached meshes (carvedBuildingLayer does). */
+export function setCarvedPalette(name:CarvedPaletteName){activePalette=name==='honey'?'honey':'village';}
+export function getCarvedPalette():CarvedPaletteName{return activePalette;}
+export function carvedSwatch(id:CarvedMaterialId):CarvedSwatch{return CARVED_PALETTES[activePalette][id];}
 export const CARVED_MATERIAL_IDS=Object.keys(CARVED_MATERIALS) as CarvedMaterialId[];
 export const WOOD_FAMILY:readonly CarvedMaterialId[]=['woodLight','woodMid','woodDark','thatch','shingle','tile','plaster','stone','stoneDark','trunk'];
 

@@ -41,9 +41,13 @@ import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
-import {currentRenderStyle} from './renderStyle';
+import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
+import {setBuildingGrammar} from './buildingFamilies';
+import {millPowerKw,MILL_RULES} from '@/game/millPower';
+import {watermillSite} from '@/game/waterWorks';
+import {setCarvedPalette} from './carvedPalette';
 import {ContourFields} from './contourFields';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
@@ -232,7 +236,8 @@ export class WorldView {
   /** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
    * finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
    * buildings always keep the current renderer so footprints, collision and terrain stay exact. */
-  private renderStyle:'current'|'carved'=currentRenderStyle()==='optionH'?'carved':'current';
+  private styleId:RenderStyle=currentRenderStyle();
+  private renderStyle:'current'|'carved'=this.styleId==='current'?'current':'carved';
   /** Map look (2026-11 overhaul). 'painterly' is the default; 'classic' is the archived Codex-era map look. Changing it needs a rebuild(game). */
   mapStyle:MapStyle=loadMapStyle();
   private classicSky:THREE.Material|null=null;
@@ -244,7 +249,13 @@ export class WorldView {
   seasonDirty(){this.seasonAcc=1;this.lastSnow=-1;}
   private carvedLayer:CarvedBuildingLayer|null=null;
   private carvedOwners=new Map<THREE.Object3D,import("@/game/types").Building[]>();
-  setRenderStyle(style:'current'|'carved'){this.renderStyle=style==='carved'?'carved':'current';}
+  /** Select the world look: 'village' (new default grammar + natural palette), 'optionH' (legacy carved honey) or 'current' (original blocks). */
+  setStyle(style:RenderStyle){
+    this.styleId=style;this.renderStyle=style==='current'?'current':'carved';
+    setBuildingGrammar(style==='optionH'?'legacy':'village');setCarvedPalette(style==='optionH'?'honey':'village');
+  }
+  getStyle():RenderStyle{return this.styleId;}
+  setRenderStyle(style:'current'|'carved'){this.setStyle(style==='carved'?'optionH':'current');}
   getRenderStyle(){return this.renderStyle;}
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
@@ -362,6 +373,7 @@ export class WorldView {
 
   constructor(canvas: HTMLCanvasElement) {
     this.quality = loadGraphicsQuality();
+    this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: this.quality === "high",
@@ -1387,6 +1399,7 @@ export class WorldView {
     this.syncWildlife(game);
     this.buildingSyncIn-=dt;
     if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
+    this.carvedLayer?.animate(game.state.paused?0:dt);
     this.syncUnits(game);
     this.siegeRamLayer?.sync(game,this.camera,this.quality,this.shadowsEnabled);
     this.syncTrails(game);
@@ -1795,9 +1808,10 @@ export class WorldView {
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
         if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
-          const fab=fabricContext(b);
+          const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
           carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,yaw:buildingQuarterTurns(b)*Math.PI/2,progress:ys,b});
+            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+            yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
           continue;
         }
         const scalable=type==="farm"||modular;
@@ -1851,12 +1865,29 @@ export class WorldView {
     this.foundations?.sync(game);
   }
 
+  private millYaw=new Map<string,number>();
+  /** Quarter turn that puts the mill's wheel side (+X in the family frame) toward the river the wheel actually stands in
+   * (watermillSite.wheel); a mill with no river in range keeps the placed turn. */
+  private millFacing(game:Game,b:import("@/game/types").Building){
+    const k=b.id+':'+b.x+':'+b.z,hit=this.millYaw.get(k);if(hit!==undefined)return hit;
+    const wheel=watermillSite(game,b.x,b.z).wheel;let yaw=buildingQuarterTurns(b)*Math.PI/2;
+    if(wheel&&Math.hypot(wheel.x-b.x,wheel.z-b.z)>.5)yaw=Math.round(Math.atan2(-(wheel.z-b.z),wheel.x-b.x)/(Math.PI/2))*(Math.PI/2);
+    this.millYaw.set(k,yaw);return yaw;
+  }
+  /** Rotor speed (rad/s) from the live mill power (CURRENT-POWER-HOOK): the wheel turns with the real river current and head,
+   * the sails with the measured wind at the site and the weather; below the grinding threshold the machine stands still. */
+  private millSpin(game:Game,b:import("@/game/types").Building){
+    const kw=millPowerKw(game,b);if(kw<MILL_RULES.minKw)return 0;
+    if(b.type==='watermill')return Math.min(2.4,.45+.6*Math.sqrt(kw/MILL_RULES.referenceKw));
+    return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);
+  }
+
   private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
     layer.sync(list,this.camera.position);
-    for(const [mesh,owners] of layer.sources()){
+    for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
       this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
     }
