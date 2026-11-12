@@ -9,7 +9,7 @@ export const PRESTIGE_SCORE_RULES={version:1,components:{
  foodSecurity:{cap:120,half:8,unit:'simulation days of actual edible reserve'},
  demonstratedPractices:{cap:140,half:12,unit:'distinct demonstrated methods'},
  usefulTrade:{cap:100,half:10,unit:'distinct paid and delivered offers'},
- defendedWarAims:{cap:120,half:3,unit:'documented defended aims'},
+ defendedWarAims:{cap:120,half:3,unit:'weighted settled war aims'},
  civicWorks:{cap:120,half:50,unit:'condition-weighted civic points'},
 }} as const;
 export type PrestigeFacts={usableArea?:number;resourcesAndChokepoints?:number;healthyPopulation:number;foodSecurity:number;demonstratedPractices:readonly string[];usefulTrade:number;defendedWarAims?:number;civicWorks:number};
