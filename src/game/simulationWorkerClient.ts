@@ -1,3 +1,4 @@
+import type {EngineSelection} from './engineDispatch';
 import {SIMULATION_WORKER_RULES,type SimulationCommand,type SimulationPoseFrame,type SimulationWorkerRequest,type SimulationWorkerResponse} from './simulationWorkerProtocol';
 
 type Port=Pick<Worker,'postMessage'|'terminate'|'onmessage'|'onerror'|'onmessageerror'>;
@@ -27,16 +28,17 @@ export class SimulationWorkerClient {
   this.epoch++;this.requestId=0;this.sequence=0;this.faulted=false;this.advanceToken=null;this.releasedFrames=new WeakSet();
   return this.send({type:'initialize',protocolVersion:1,snapshot,rngMode:'legacy-worker-random'},'ready');
  }
- command(command:SimulationCommand){const blocked=this.admissionError();if(blocked)return Promise.reject(blocked);return this.send({type:'command',sequence:++this.sequence,command},'command-result');}
+ command(command:SimulationCommand,selection?:EngineSelection){const blocked=this.admissionError();if(blocked)return Promise.reject(blocked);return this.send({type:'command',sequence:++this.sequence,command,selection},'command-result');}
  /** Retry the identical existing sequence; worker returns its bounded prior outcome without replay. */
- retryCommand(sequence:number,command:SimulationCommand){return this.send({type:'command',sequence,command},'command-result');}
+ retryCommand(sequence:number,command:SimulationCommand,selection?:EngineSelection){return this.send({type:'command',sequence,command,selection},'command-result');}
  /** The host retains unsubmitted tick debt when this rejects with backpressure. */
- advance(ticks:number,afterSequence=this.sequence){
+ advance(ticks:number,afterSequence=this.sequence,selection?:EngineSelection){
   if(this.advanceToken)return Promise.reject(new SimulationWorkerError('advance-busy','One authoritative advance is already pending; retain host tick debt'));
   const blocked=this.admissionError();if(blocked)return Promise.reject(blocked);
   const token={};this.advanceToken=token;
-  return this.send({type:'advance',ticks,afterSequence},'advanced').finally(()=>{if(this.advanceToken===token)this.advanceToken=null;});
+  return this.send({type:'advance',ticks,afterSequence,selection},'advanced').finally(()=>{if(this.advanceToken===token)this.advanceToken=null;});
  }
+ presentation(includeWorld=false,selection?:EngineSelection){return this.send({type:'presentation',afterSequence:this.sequence,includeWorld,selection},'presentation');}
  checkpoint(afterSequence=this.sequence){return this.send({type:'checkpoint',afterSequence},'checkpoint');}
  inspect(query:Extract<SimulationWorkerRequest,{type:'inspect'}>['query']){return this.send({type:'inspect',query},'inspection');}
  recycle(frame:SimulationPoseFrame){

@@ -1,3 +1,7 @@
+import {shareLocalTransport} from '../src/game/haulage.ts';
+import {applyEngineSelection} from '../src/game/engineDispatch.ts';
+import {SimulationWorkerHost} from '../src/game/simulationWorkerHost.ts';
+import {SimulationRenderProjection} from '../src/game/simulationRenderProjection.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Worker} from 'node:worker_threads';
@@ -113,4 +117,72 @@ test('actual Worker preserves above32bit entity IDs in Float64 pose packets and 
   const unsafe=await client.command({kind:'move',unitIds:[Number.MAX_SAFE_INTEGER+1],x:high.x,z:high.z});assert.equal(unsafe.outcome.accepted,false);
   const saved=await checkpoint(client);assert.ok(saved.state.units.some(u=>u.id===high.id));
  }finally{client.dispose();}
+});
+
+
+test('actual Worker publishes owned membership/fog/paid goods and owner HUD; main projection rejects mutations',async()=>{
+ const f=fixture(),{client}=connection(),projection=new SimulationRenderProjection();
+ try{
+  await client.initialize(f.save);
+  const initial=await client.presentation(true,{selectedUnitIds:[f.worker],selectedBuildingId:f.hearth});
+  assert.ok(initial.presentation.world);assert.ok(initial.presentation.vision instanceof Uint8Array);assert.ok(initial.presentation.hud);
+  projection.apply(initial.presentation,initial.clock);
+  assert.equal(projection.game.state.units.length,f.save.state.units.length);
+  assert.equal(projection.game.vision.length,initial.presentation.vision.length);
+  assert.equal(projection.game.exploredAt(f.save.state.units[0].x,f.save.state.units[0].z),true);
+  assert.throws(()=>projection.game.step(1/30),/unavailable/);
+  assert.throws(()=>projection.game.tribe(0).food--,/read-only/);
+  assert.throws(()=>projection.game.snapshot(),/unavailable/);
+  assert.throws(()=>projection.game.vision.fill(2),/read-only/);
+  const paid=await client.command({kind:'begin-production',recipe:'fermentMilk',workplaceId:f.hearth});
+  assert.equal(paid.outcome.accepted,true,paid.outcome.reason);assert.ok(paid.outcome.projectId,'native autoselection reports actual new paid project');
+  const update=await client.presentation(false);assert.equal(update.presentation.world,undefined,'periodic presentation does not resend terrain or a saved world');
+  projection.apply(update.presentation,update.clock);
+  assert.equal(projection.game.tribe(0).items.pottery,0);assert.equal(projection.game.state.production.projects.find(p=>p.id===paid.outcome.projectId).recipe,'fermentMilk');
+  assert.equal(projection.hud.quality,update.presentation.hud.quality);
+  const raw=await checkpoint(client);assert.equal(raw.state.production.projects.filter(p=>p.id===paid.outcome.projectId).length,1);
+ }finally{client.dispose();}
+});
+
+test('actual WorkerHost retains owed ticks, syncs selection before advance, and checkpoints owner state without main step',async()=>{
+ const f=fixture(),{client,sent}=connection(),host=new SimulationWorkerHost({client}),step=Game.prototype.step;
+ Game.prototype.step=()=>{throw Error('Host must never run a main-thread simulation');};
+ try{
+  await host.initialize(f.save);const selected={selectedUnitIds:[f.worker]};host.select(selected);
+  const result=await host.dispatch({kind:'pause',paused:false},selected);assert.equal(result.accepted,true);
+  host.advanceWallTime(.2);
+  const deadline=performance.now()+10000;
+  while(host.report.pendingSimulationSeconds>1e-8||host.report.pendingOperations){assert.ok(performance.now()<deadline);await new Promise(resolve=>setTimeout(resolve,5));}
+  assert.equal(host.report.clock.tick,6);assert.equal(host.report.pendingSimulationSeconds,0);
+  const advances=sent.filter(m=>m.type==='advance');assert.equal(advances.length,2);for(const request of advances){assert.deepEqual(request.selection.selectedUnitIds,selected.selectedUnitIds);assert.equal(request.selection.selectedBuildingId,undefined);assert.equal(request.selection.selectedBoatId,undefined);}
+  const state=(await client.presentation(false)).presentation.state;assert.equal(state.units.find(u=>u.id===f.worker).selected,true,'selected is native eligibility input before actual simulation ticks');
+  const saved=parseStoredSave((await host.checkpoint()).serialized);validateGameSave(saved);assert.ok(saved.state.time>f.save.state.time);
+  assert.equal('serialized' in host.report,false);
+ }finally{Game.prototype.step=step;host.dispose();}
+});
+
+
+test('actual Worker selected sled donor stays owned; unselected positive control physically hands off the same sled',async()=>{
+ const f=fixture(),g=decodeGame(clone(f.save)),home=g.campOf(0);let location;
+ for(let radius=16;radius<=48&&!location;radius+=4)for(let i=0;i<24&&!location;i++){const x=home.x+Math.cos(i*Math.PI/12)*radius,z=home.z+Math.sin(i*Math.PI/12)*radius;if(g.placementIssue('warehouse',x,z,0)===null)location={x,z};}
+ assert.ok(location,'native legal depot footprint; terrain remains unchanged');
+ // Declared finite transport fixture: one completed depot, one real sled, two adult
+ // bodies placed on a real reachable exterior workspot BEFORE worker ownership starts.
+ // No body is repositioned, granted goods, or redirected by the test after start.
+ const depot=g.makeBld('warehouse',location.x,location.z,0);g.state.buildings.push(depot);g.rebuildWalk();
+ const donor=g.spawnUnit('worker',home.x,home.z,0),spot=g.interactionSpot(donor,depot);assert.ok(spot,'ordinary reachable depot workspot');
+ donor.x=spot.x;donor.z=spot.z;donor.y=g.height(spot.x,spot.z);donor.order='idle';donor.haulage='sled';donor.tx=spot.x;donor.tz=spot.z;
+ const receiver=g.spawnUnit('worker',spot.x+.6,spot.z,0),source=g.state.trees.find(n=>n.amount>0&&Math.hypot(n.x-receiver.x,n.z-receiver.z)>12);
+ assert.ok(source);Object.assign(receiver,{order:'gather',job:'wood',node:source,tx:source.x,tz:source.z});
+ assert.ok(g.buildingWorkReached(donor,depot));assert.ok(Math.hypot(receiver.x-donor.x,receiver.z-donor.z)<=2.4);assert.ok(g.canStep(donor,receiver.x,receiver.z));
+ const raw=encodeGame(g),probe=decodeGame(clone(raw));applyEngineSelection(probe,{selectedUnitIds:[donor.id]});assert.equal(shareLocalTransport(probe),0);applyEngineSelection(probe,{selectedUnitIds:[]});assert.equal(shareLocalTransport(probe),1,'fixture has an actual physically admissible native handoff');
+ for(const selected of [true,false]){
+  const {client}=connection();try{
+   await client.initialize(raw);await client.command({kind:'pause',paused:false});
+   const advanced=await client.advance(1,undefined,{selectedUnitIds:selected?[donor.id]:[]});await client.recycle(advanced.frame);
+   const state=(await client.presentation(false)).presentation.state,d=state.units.find(u=>u.id===donor.id),r=state.units.find(u=>u.id===receiver.id);
+   assert.equal(d.haulage,selected?'sled':undefined,'selected digest is applied before ordinary native eligibility');assert.equal(r.haulage,selected?undefined:'sled');
+   const strict=await checkpoint(client);assert.equal(strict.state.units.filter(u=>u.haulage==='sled').length,raw.state.units.filter(u=>u.haulage==='sled').length,'no transport duplicated or erased');
+  }finally{client.dispose();}
+ }
 });
