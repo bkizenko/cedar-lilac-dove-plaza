@@ -1,5 +1,5 @@
-import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validDraftCarts} from './draftCart';
+import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
 import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';

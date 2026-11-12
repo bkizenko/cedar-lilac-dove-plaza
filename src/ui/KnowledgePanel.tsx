@@ -11,7 +11,7 @@ export function primaryKnowledgeAction(topic:KnowledgeTopic){
  // remains available in Details rather than displacing the practical action.
  return (topic.stage!=='need'&&available.find(action=>action.id.startsWith('trial:')))||(['proven','adoption'].includes(topic.stage)&&topic.id.startsWith('crop:')&&available.find(action=>action.id==='place:farm'))||available[0]||topic.actions[0];
 }
-function topicIcon(topic:KnowledgeTopic){return topic.id.startsWith('crop:')?Wheat:/boat|transport|haul/i.test(topic.id)?Ship:/house|housing|shelter/i.test(topic.id)?House:/copper|tool|craft/i.test(topic.id)?Hammer:/fibre|plant|pasture/i.test(topic.id)?Leaf:/war|defen/i.test(topic.id)?Shield:topic.stage==='experiment'?FlaskConical:BookOpen;}
+function topicIcon(topic:KnowledgeTopic){return topic.id.startsWith('crop:')?Wheat:/boat|transport|haul/i.test(topic.id)?Ship:/house|housing|shelter/i.test(topic.id)?House:/copper|iron|tool|craft/i.test(topic.id)?Hammer:/fibre|plant|pasture/i.test(topic.id)?Leaf:/war|defen/i.test(topic.id)?Shield:topic.stage==='experiment'?FlaskConical:BookOpen;}
 function shortAction(label:string){return label.replace(/^Try /,'Make ').replace(/^Choose (?:a )?/,'Place ').replace(/ site$/,'');}
 export function KnowledgeTopicRow({topic,onAction}:{topic:KnowledgeTopic;onAction:(id:string)=>void}){
  const [details,setDetails]=useState(false),primary=primaryKnowledgeAction(topic),progress=topic.progress,Icon=topicIcon(topic);

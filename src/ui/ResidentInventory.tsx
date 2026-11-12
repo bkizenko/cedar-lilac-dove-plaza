@@ -1,3 +1,4 @@
+import {draftCartCapacity} from '../game/draftCart';
 import {toolmakingPracticeRate} from "../game/crafting";
 import {packCapacityMultiplier} from '../game/packAnimalState';
 import {siegeRamCarriedMaterials} from '../game/siegeRam';
@@ -45,7 +46,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       if(resident.cartIdentity)equipped.push(`Handcart #${resident.cartIdentity.id}`);
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
-      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`Pack ${resident.packAnimal.species??'goat'} · capacity ×${packCapacityMultiplier(resident).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);
+      if (resident.haulage) equipped.push(resident.haulage === 'pack' ? (resident.packAnimal?`${resident.draftCart?'Draft':'Pack'} ${resident.packAnimal.species??'goat'} · capacity ×${(draftCartCapacity(resident)??packCapacityMultiplier(resident)).toFixed(2)}`:'Pack harness · no animal') : resident.haulage);
       const armor=game&&wornArmor(game,resident);if(armor)equipped.push(`Padded armor (${Math.round(armor.condition*100)}%)`);
       if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
       if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
