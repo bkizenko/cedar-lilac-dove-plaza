@@ -1,7 +1,7 @@
 import {ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply} from './engineReadModels';
 import {SimulationWorkerClient,SimulationWorkerError} from './simulationWorkerClient';
 import {SimulationRenderProjection} from './simulationRenderProjection';
-import {SIMULATION_WORKER_RULES as R,type SimulationClock} from './simulationWorkerProtocol';
+import {SIMULATION_WORKER_RULES as R,type SimulationClock,type SimulationSessionContext} from './simulationWorkerProtocol';
 import type {EngineDispatchCommand,EngineDispatchResult,EngineSelection} from './engineDispatch';
 
 export const SIMULATION_HOST_RULES={maximumQueuedOperations:128,presentationIntervalSeconds:.2} as const;
@@ -24,11 +24,11 @@ export class SimulationWorkerHost{
  get hud(){return this.projection.hud;}
  /** Retained debt is observable and NEVER discarded as a performance optimization. */
  get report(){return{epoch:this.epoch,ready:this.ready,pendingOperations:this.queued,pendingSimulationSeconds:this.debt,clock:this.clock,measurements:this.measurements.map(m=>({...m}))};}
- async initialize(snapshot:unknown){
+ async initialize(snapshot:unknown,context?:SimulationSessionContext){
   if(this.disposed)throw new Error('Worker host is disposed');
   if(this.initialized||this.queued)throw new Error('Replace the host for a new village; never mix session operations');
   const epoch=++this.generation;
-  const result=await this.client.initialize(snapshot);if(epoch!==this.generation)throw new Error('Worker session superseded');
+  const result=await this.client.initialize(snapshot,context);if(epoch!==this.generation)throw new Error('Worker session superseded');
   this.clock=result.clock;
   const presentation=await this.client.presentation(true,this.selection);
   this.recordPresentation(presentation);this.projection.apply(presentation.presentation,presentation.clock);this.clock=presentation.clock;this.initialized=true;this.onPresentation();

@@ -1,3 +1,7 @@
+import {prepareOwnedWaterWorld} from './indexedLocalWater';
+import {waterSurfaceAt} from './localWater';
+import {hearthHeating,survivalFireActive} from './survivalNeeds';
+import {setPresentationSurvivalView} from './presentationSurvivalView';
 import {Game} from './sim';
 import type {GameState,HudSnapshot,Unit} from './types';
 import type {WorldData} from './worldgen';
@@ -7,14 +11,14 @@ import type {SimulationClock,SimulationPoseFrame} from './simulationWorkerProtoc
 export type SimulationPresentation={
  world?:WorldData;state:GameState;vision:Game['vision'];territory:Game['territory'];territoryStrength:Game['territoryStrength'];
  navigationRevision:number;started:boolean;awaitingStart:boolean;testMode:boolean;revealMap:boolean;
- chopMarks:number[];looted:number[];worldWaterY:number;worldCamps:WorldData['camps'];hud:HudSnapshot;
+ heatingHearthIds:number[];burningFireTeams:number[];chopMarks:number[];looted:number[];worldWaterY:number;worldCamps:WorldData['camps'];hud:HudSnapshot;
 };
 /** Called only by authoritative runtime; postMessage clones without detaching Game arrays. */
 export function captureSimulationPresentation(g:Game,includeWorld:boolean):SimulationPresentation{
  if(g.state.units.length>20000||g.state.buildings.length>20000)throw new Error('Presentation membership exceeds the explicit transport bound');
  // snapshot may update native dialog-focus/selection caches: intentionally owner-side only.
  const hud=g.snapshot();
- return{...(includeWorld?{world:g.world}:{}),state:g.state,vision:g.vision,territory:g.territory,territoryStrength:g.territoryStrength,navigationRevision:g.navigationRevision(),started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap,chopMarks:[...g.chopMarks],looted:[...g.looted],worldWaterY:g.world.waterY,worldCamps:g.world.camps,hud};
+ return{...(includeWorld?{world:g.world}:{}),state:g.state,vision:g.vision,territory:g.territory,territoryStrength:g.territoryStrength,navigationRevision:g.navigationRevision(),started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap,heatingHearthIds:g.state.buildings.filter(b=>hearthHeating(g,b.id)).map(b=>b.id),burningFireTeams:g.state.tribes.filter(t=>survivalFireActive(g,t.id)).map(t=>t.id),chopMarks:[...g.chopMarks],looted:[...g.looted],worldWaterY:g.world.waterY,worldCamps:g.world.camps,hud};
 }
 /** Reviewed presentation queries only. Unknown methods fail rather than execute a gameplay method. */
 export const RENDER_QUERY_ALLOWLIST=[
@@ -56,11 +60,13 @@ export class SimulationRenderProjection{
  readonly game:Game;
  private raw=Object.create(Game.prototype) as Game;
  private wrap=readOnlyGraph();private packet:SimulationPresentation|null=null;
+ private samplerWorld:WorldData|null=null;
  private revision=-1;private units=new Map<number,Unit>();
  private selection=new Set<number>();private selectedBuilding:number|undefined;private selectedBoat:number|undefined;
  constructor(){
   this.game=new Proxy(this.raw,{
    get:(target,key)=>{
+    if(key==='waterAt')return(x:number,z:number)=>{if(!this.samplerWorld)throw new Error('Presentation water is not ready');return waterSurfaceAt(this.samplerWorld,x,z);};
     if(key==='selectedBoat')return this.selectedBoat??null;
     if(key==='selectedUnits')return()=>this.wrap([...this.units.values()].filter(u=>this.selection.has(u.id)&&u.hp>0&&u.team===0));
     if(key==='navigationRevision')return()=>this.packet?.navigationRevision??0;
@@ -80,8 +86,15 @@ export class SimulationRenderProjection{
  apply(packet:SimulationPresentation,clock:SimulationClock){
   if(clock.stateRevision<this.revision)return;
   if(!this.packet&&!packet.world)throw new Error('First presentation requires owned terrain');
-  if(packet.world)this.raw.world=packet.world;
+  if(packet.world){
+   this.raw.world=packet.world;
+   // WeakMap ownership cannot cross structured clone. Register only a private sampler,
+   // preserving mutable plain descriptors on the separately guarded render world.
+   this.samplerWorld={...packet.world};prepareOwnedWaterWorld(this.samplerWorld,true);
+  }
   this.packet=packet;this.revision=clock.stateRevision;this.raw.state=packet.state;
+  if(this.samplerWorld)this.samplerWorld.waterY=packet.worldWaterY;
+  setPresentationSurvivalView(this.game,packet.heatingHearthIds,packet.burningFireTeams);
   this.raw.world.waterY=packet.worldWaterY;this.raw.world.camps=packet.worldCamps;
   this.raw.vision=packet.vision;this.raw.territory=packet.territory;this.raw.territoryStrength=packet.territoryStrength;
   this.raw.started=packet.started;this.raw.awaitingStart=packet.awaitingStart;this.raw.testMode=packet.testMode;this.raw.revealMap=packet.revealMap;

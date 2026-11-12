@@ -1,6 +1,6 @@
 import type {EngineReadQuery} from './engineReadModels';
 import type {EngineSelection} from './engineDispatch';
-import {SIMULATION_WORKER_RULES,type SimulationCommand,type SimulationPoseFrame,type SimulationWorkerRequest,type SimulationWorkerResponse} from './simulationWorkerProtocol';
+import {SIMULATION_WORKER_RULES,type SimulationCommand,type SimulationSessionContext,type SimulationPoseFrame,type SimulationWorkerRequest,type SimulationWorkerResponse} from './simulationWorkerProtocol';
 
 type Port=Pick<Worker,'postMessage'|'terminate'|'onmessage'|'onerror'|'onmessageerror'>;
 type Kind=SimulationWorkerResponse['type'];
@@ -23,11 +23,11 @@ export class SimulationWorkerClient {
   this.worker.onerror=event=>{event.preventDefault();this.fail('worker-error','Authoritative worker failed; no stale main-thread fallback was attempted');};
   this.worker.onmessageerror=()=>this.fail('message-error','Authoritative worker response could not be decoded');
  }
- initialize(snapshot:unknown){
+ initialize(snapshot:unknown,context?:SimulationSessionContext){
   if(this.disposed)return Promise.reject(new SimulationWorkerError('disposed','Simulation worker client is disposed'));
   this.rejectPending(new SimulationWorkerError('session-replaced','A new session superseded this request'));
   this.epoch++;this.requestId=0;this.sequence=0;this.faulted=false;this.advanceToken=null;this.releasedFrames=new WeakSet();
-  return this.send({type:'initialize',protocolVersion:1,snapshot,rngMode:'legacy-worker-random'},'ready');
+  return this.send({type:'initialize',protocolVersion:1,snapshot,rngMode:'legacy-worker-random',context},'ready');
  }
  command(command:SimulationCommand,selection?:EngineSelection){const blocked=this.admissionError();if(blocked)return Promise.reject(blocked);return this.send({type:'command',sequence:++this.sequence,command,selection},'command-result');}
  /** Retry the identical existing sequence; worker returns its bounded prior outcome without replay. */

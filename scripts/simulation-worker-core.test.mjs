@@ -209,3 +209,35 @@ test('actual Worker computes bounded native availability read models; stale advi
   console.log(JSON.stringify({scope:'actual moduleWorker owner-read telemetry; single authored native fixture, not a100resident performance benchmark',queries:timings,bootstrapPresentationCaptureMilliseconds:initial.captureMilliseconds,bootstrapPresentationPostMessageMilliseconds:refresh.previousDispatch.cpuMilliseconds}));
  }finally{Game.prototype.interactionSpot=mainRoute;client.dispose();}
 });
+
+test('actual Worker checkpoints stamp owner time and preserve paid state and isolated Lab reveal namespace',async()=>{
+ const f=fixture(),sourceBytes=JSON.stringify(f.save),sparse=decodeGame(clone(f.save));
+ // Authored initial knowledge is real native observation only; terrain, people and goods are retained.
+ sparse.vision.fill(0);sparse.visAge.fill(0);sparse.updateVision();const sparseSave=encodeGame(sparse);assert.ok(sparseSave.vision.some(v=>v===0));
+ const probePoints=[[sparse.state.units[0].x,sparse.state.units[0].z],[0,0],[sparse.world.size/4,sparse.world.size/4]],nativeWater=probePoints.map(([x,z])=>sparse.waterAt(x,z));
+ const {SimulationCheckpointSaver}=await import('../src/game/simulationCheckpointSave.ts');
+ const {serializeStoredSave}=await import('../src/game/storageCodec.ts');const {SAVE_KEY}=await import('../src/game/constants.ts');
+ const entries=new Map([[SAVE_KEY,serializeStoredSave({...f.save,savedAt:1})],[SAVE_KEY+':protected','original protected bytes']]);
+ const storage={getItem:key=>entries.get(key)??null,setItem:(key,value)=>entries.set(key,value),removeItem:key=>entries.delete(key)};
+ const {client}=connection();let sessionEpoch=1;const wall=Date.now();
+ const authority={currentEpoch:()=>sessionEpoch,allowed:()=>true,checkpoint:async()=>{const owner=await client.checkpoint();return{source:'worker',sessionEpoch,serialized:owner.serialized,clock:owner.clock,rng:owner.rng,context:owner.context};}};
+ const saver=new SimulationCheckpointSaver(authority,storage);
+ try{
+  await client.initialize(f.save);
+  const paid=await client.command({kind:'begin-production',recipe:'fermentMilk',workplaceId:f.hearth});assert.equal(paid.outcome.accepted,true);
+  const saved=await saver.save('village');assert.equal(saved.status,'committed',saved.reason);assert.equal(saved.checkpoint.context.testMode,false);
+  const raw=parseStoredSave(storage.getItem(SAVE_KEY));assert.ok(raw.savedAt>=wall);assert.equal(raw.state.tribes[0].items.pottery,0);assert.equal(raw.state.tribes[0].wood,99);assert.equal(raw.state.production.projects.find(p=>p.id===paid.outcome.projectId).recipe,'fermentMilk');
+  const primary=storage.getItem(SAVE_KEY),backup=storage.getItem(SAVE_KEY+':bak'),protectedCopy=storage.getItem(SAVE_KEY+':protected');
+  sessionEpoch++;
+  const context={started:true,awaitingStart:false,testMode:true,revealMap:true};await client.initialize(sparseSave,context);
+  const presentation=await client.presentation(true);assert.ok(presentation.presentation.vision.every(v=>v===2),'visual Lab overlay is actually restored on owner initialization');
+  const view=new SimulationRenderProjection();view.apply(presentation.presentation,presentation.clock);for(let i=0;i<probePoints.length;i++)assert.equal(view.game.waterAt(...probePoints[i]),nativeWater[i],'real native water samples survive guarded world clone');
+  assert.doesNotThrow(()=>Array.from(view.game.world.waterBodies||[]));assert.throws(()=>{view.game.world.waterY=0;},/read-only/);
+  const refused=await saver.save('village');assert.equal(refused.status,'failed','Lab authority cannot replace ordinary village namespace');
+  const lab=await saver.save('test-lab');assert.equal(lab.status,'committed',lab.reason);assert.deepEqual(lab.checkpoint.context,context);
+  const labRaw=parseStoredSave(storage.getItem(SAVE_KEY+':test-lab'));validateGameSave(labRaw);assert.equal(labRaw.testLabRevealMap,true);assert.ok(labRaw.savedAt>=wall);assert.ok(labRaw.vision.some(v=>v===0),'checkpoint stores earned vision underneath visual overlay');
+  assert.equal(storage.getItem(SAVE_KEY),primary);assert.equal(storage.getItem(SAVE_KEY+':bak'),backup);assert.equal(storage.getItem(SAVE_KEY+':protected'),protectedCopy);
+  assert.equal(JSON.stringify(f.save),sourceBytes,'original native source village remains byte-identical');
+  sessionEpoch++;await assert.rejects(client.initialize(sparseSave,{...context,testMode:false}),errors('invalid-save'));
+ }finally{client.dispose();}
+});

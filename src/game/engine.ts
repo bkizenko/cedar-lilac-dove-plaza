@@ -1,3 +1,6 @@
+import {SimulationCheckpointSaver} from './simulationCheckpointSave';
+import type {AuthoritativeCheckpoint} from './simulationCheckpoint';
+import {serializeStoredSave} from './storageCodec';
 import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
@@ -20,7 +23,7 @@ import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
-import { encodeGame, decodeGame } from "./persistence";
+import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
@@ -29,6 +32,7 @@ import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, l
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
+export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
 
 type HudFn = (s: HudSnapshot) => void;
@@ -41,6 +45,8 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 }
 
 export class Engine {
+  private checkpointSaver=new SimulationCheckpointSaver({checkpoint:()=>this.authoritativeCheckpoint(),currentEpoch:()=>this.dispatchEpoch,allowed:()=>this.commandReady});
+  private presentationFeedback:{message:string;expires:number}|null=null;
   private workerHost:SimulationWorkerHost|null=null;
   private workerBridgeTransition=false;
   private dispatchGeneration=1;
@@ -95,17 +101,37 @@ export class Engine {
   async startWorkerBridgeForTestLab(){
     if(!this.originalGame||!this.game.testMode)throw new Error('Worker experiment requires an isolated Test Lab session');
     if(this.workerHost||this.workerBridgeTransition)throw new Error('A worker session already exists');
-    const original=this.game,snapshot=encodeGame(original);this.autosave.invalidate();
+    const original=this.game,snapshot=encodeGame(original),context={started:original.started,awaitingStart:original.awaitingStart,testMode:original.testMode,revealMap:original.revealMap};this.autosave.invalidate();
     this.workerBridgeTransition=true;this.dispatchGeneration++;
     const host=new SimulationWorkerHost({onPresentation:()=>{if(this.workerHost===host)this.pushHud();},onFault:error=>console.error(error)});
     try{
-      await host.initialize(snapshot);if(this.disposed)throw new Error('Engine was disposed during worker startup');
+      await host.initialize(snapshot,context);if(this.disposed)throw new Error('Engine was disposed during worker startup');
       host.projection.setDisplaySettings(this.view.quality,this.fps);this.workerHost=host;this.game=host.game;
       this.simAccumulator=0;this.view.rebuild(this.game);this.view.resize();
       this.workerBridgeTransition=false;this.pushHud();return host.report;
     }catch(error){host.dispose();this.workerHost=null;this.game=original;this.workerBridgeTransition=false;throw error;}
   }
   workerBridgeReport(){return this.workerHost?.report??null;}
+  get isWorkerSession(){return !!this.workerHost;}
+  presentationNotice(message:string,seconds=2){
+    if(!Number.isFinite(seconds)||seconds<0)throw new RangeError('Invalid notice duration');
+    if(this.workerHost)this.presentationFeedback={message,expires:performance.now()+seconds*1000};
+    else this.game.banner(message,seconds);this.pushHud();
+  }
+  cancelPresentationInteraction(){
+    this.moveMode=false;this.loggingMode=false;this.plotStart=null;this.plotPointerStart=null;
+    this.view.setGhost(null,0,0,0,false);this.view.setLinePreview([]);
+    if(this.workerHost)this.workerHost.select({selectedUnitIds:[]});
+    void this.dispatch({kind:'cancel-interaction'}).catch(error=>this.presentationNotice(error instanceof Error?error.message:String(error),4));
+  }
+  async authoritativeCheckpoint():Promise<AuthoritativeCheckpoint>{
+    if(!this.commandReady)throw new Error('No authoritative session is ready');
+    const sessionEpoch=this.dispatchEpoch;
+    if(this.workerHost){const result=await this.workerHost.checkpoint();return{source:'worker',sessionEpoch,serialized:result.serialized,clock:result.clock,rng:result.rng,context:result.context};}
+    const g=this.game,context={started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap};
+    const snapshot={...encodeGame(g),savedAt:Date.now(),...(g.testMode?{testLabRevealMap:g.revealMap}:{})};validateGameSave(snapshot);
+    return{source:'main',sessionEpoch,serialized:serializeStoredSave(snapshot),clock:{tick:0,time:g.state.time,paused:g.state.paused,speed:g.state.speed,stateRevision:this.dispatchRevision,appliedSequence:this.dispatchSequence},rng:null,context};
+  }
   checkpointWorker(){if(!this.workerHost)throw new Error('No authoritative worker');return this.workerHost.checkpoint();}
   /** Selection is local presentation plus validated digest before worker ticks. */
   setWorkerSelection(selection:EngineSelection){if(!this.workerHost)throw new Error('No authoritative worker');this.workerHost.select(selection);}
@@ -281,37 +307,43 @@ export class Engine {
   hasSavedGame() {
     return hasSave();
   }
-  saveNow() {
-    if (this.game.testMode) {
-      this.game.banner(saveTestLabGame(this.game) ? "Test Lab run saved" : "Could not save the Test Lab run. Browser storage may be full.", 5);
-      this.pushHud();
-      return;
-    }
-    const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
-    this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
-    this.pushHud();
+  async saveNow():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch,lab=this.game.testMode;
+    const result=await this.checkpointSaver.save(lab?'test-lab':'village',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};
+    let saved=result.status==='committed',message=saved?(lab?'Test Lab run saved':'Village saved'):result.reason;
+    if(saved&&!lab){const protectedCopy=await this.checkpointSaver.save('protected',true);if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};if(protectedCopy.status!=='committed')message+=' · extra copy unavailable';}
+    if(!this.workerHost){this.game.banner(message,5);this.pushHud();}
+    return{saved,message};
   }
-  protectVillage() {
-    this.game.banner(protectGame(this.game)?"Backup copy saved — automatic saves will not overwrite this copy":"Could not protect the village; storage may be full",4);
-    this.pushHud();
+  async protectVillage():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch,result=await this.checkpointSaver.save('protected',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before protection finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Protected village saved':result.reason};
   }
-  exportVillage() {this.protectVillage();exportGame(this.game);}
+  async exportVillage():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch;
+    // Export remains available for storage recovery; its payload comes from the owner.
+    const result=await this.checkpointSaver.save('export',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before export finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Village file prepared':result.reason,...(result.checkpoint?{serialized:result.checkpoint.serialized}:{})};
+  }
   async importVillage(file:File):Promise<VillageImportResult> {
-    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,state=game.state;
-    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&game.state===state&&!this.originalGame;
+    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,host=this.workerHost,epoch=this.dispatchEpoch;
+    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&this.workerHost===host&&this.dispatchEpoch===epoch&&!this.originalGame;
     const cancelled=():VillageImportResult=>({applied:false,saved:false,message:"Import cancelled — the active village changed."});
     if(this.disposed)return cancelled();
     this.autosave.invalidate();
-    if(this.originalGame){const message="Leave test mode before importing a village";this.game.banner(message,4);this.pushHud();return{applied:false,saved:false,message};}
+    if(this.originalGame){const message="Leave test mode before importing a village";this.presentationNotice(message,4);return{applied:false,saved:false,message};}
     let restored:Game|undefined;
     try {
       const text=await file.text();
       if(!current())return cancelled();
       restored=decodeGame(JSON.parse(text));
       if(!current())return cancelled();
-      if(game.started&&!game.awaitingStart&&!protectGame(game))throw new Error("Could not protect your current village. Download it before importing another save.");
+      if(game.started&&!game.awaitingStart){const protectedCopy=await this.protectVillage();if(!protectedCopy.saved)throw new Error("Could not protect your current village. Download it before importing another save.");}
       if(!current())return cancelled();
-      saveGame(game);
+      if(!host)saveGame(game);
       if(!current())return cancelled();
       this.restoreVillage(restored);
       const saved=saveGame(restored,true),message=saved?"Village imported; previous village kept as a protected checkpoint":"Village imported but local saving failed. Keep the original file.";
@@ -321,7 +353,7 @@ export class Engine {
       const applied=!!restored&&this.game===restored;
       if(!applied&&!current())return cancelled();
       const detail=error instanceof Error?error.message:"Invalid village backup",message=applied?`Village loaded, but could not finish: ${detail}`:detail;
-      this.game.banner(message,5);this.pushHud();
+      this.presentationNotice(message,5);
       return{applied,saved:false,message};
     }
   }
@@ -1056,7 +1088,7 @@ export class Engine {
   }
 
   pushHud() {
-    if(this.workerHost){if(this.workerHost.ready)this.hud({...this.workerHost.hud,fps:this.fps});return;}
+    if(this.workerHost){if(this.workerHost.ready){const notice=this.presentationFeedback&&this.presentationFeedback.expires>performance.now()?this.presentationFeedback.message:this.workerHost.hud.banner;this.hud({...this.workerHost.hud,fps:this.fps,banner:notice});}return;}
     try {
       const type=this.game.state.placing;
       const cost=type?buildingCost(type,this.game,0,this.plotSize,this.bridgeSpan):null;

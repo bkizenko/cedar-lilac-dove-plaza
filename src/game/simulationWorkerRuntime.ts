@@ -28,7 +28,11 @@ export class SimulationWorkerRuntime {
    if(input.protocolVersion!==R.version){this.error(epoch,requestId,'protocol-version','Unsupported simulation worker protocol');return;}
    if(epoch<=this.epoch){this.error(epoch,requestId,'stale-epoch','Initialization requires a new session epoch');return;}
    if(input.rngMode!=='legacy-worker-random'){this.error(epoch,requestId,'rng-policy','Legacy RNG limitation must be explicitly acknowledged');return;}
-   try{const game=decodeGame(input.snapshot);
+   try{
+    const context=input.context;
+    if(context!==undefined&&(!object(context)||Object.keys(context).some(k=>!['started','awaitingStart','testMode','revealMap'].includes(k))||['started','awaitingStart','testMode','revealMap'].some(k=>typeof context[k]!=='boolean')||context.revealMap&&!context.testMode))throw new Error('Invalid authoritative session context');
+    const game=decodeGame(input.snapshot);
+    if(object(input.context)){game.started=input.context.started as boolean;game.awaitingStart=input.context.awaitingStart as boolean;game.testMode=input.context.testMode as boolean;game.revealMap=input.context.revealMap as boolean;if(game.testMode)game.updateVision();}
     if(!integer(game.state.nextId)||[...game.state.units,...game.state.buildings,...(game.state.production?.projects||[])].some(e=>!integer(e.id)))throw new Error('Worker core requires positive safe-integer entity identities');
     this.game=game;this.epoch=epoch;this.lastRequestId=requestId;this.sequence=0;this.tick=0;this.revision=0;this.commandOutcomes.clear();this.slots=[];this.nextFrameId=0;this.droppedFrames=0;this.previousPresentationDispatch=undefined;
     this.send({type:'ready',protocolVersion:1,epoch,requestId,clock:this.clock(),rng:LEGACY_WORKER_RNG});
@@ -56,8 +60,8 @@ export class SimulationWorkerRuntime {
     this.send({type:'presentation',epoch,requestId,clock:this.clock(),presentation,captureMilliseconds:Math.max(0,this.now()-start),previousDispatch:this.previousPresentationDispatch});return;
    }
    if(message.type==='checkpoint'){
-    const snapshot=encodeGame(this.game);validateGameSave(snapshot);
-    this.send({type:'checkpoint',epoch,requestId,clock:this.clock(),serialized:serializeStoredSave(snapshot),rng:LEGACY_WORKER_RNG});return;
+    const snapshot={...encodeGame(this.game),savedAt:Date.now(),...(this.game.testMode?{testLabRevealMap:this.game.revealMap}:{})};validateGameSave(snapshot);
+    this.send({type:'checkpoint',epoch,requestId,clock:this.clock(),serialized:serializeStoredSave(snapshot),rng:LEGACY_WORKER_RNG,context:{started:this.game.started,awaitingStart:this.game.awaitingStart,testMode:this.game.testMode,revealMap:this.game.revealMap}});return;
    }
    if(!Number.isSafeInteger(message.ticks)||message.ticks<0||message.ticks>R.maximumTicksPerRequest){this.error(epoch,requestId,'tick-budget','Tick batch exceeds the bounded core request');return;}
    if(message.selection!==undefined){if(!isEngineSelection(message.selection)){this.error(epoch,requestId,'selection-payload','Invalid selection digest');return;}applyEngineSelection(this.game,message.selection);}

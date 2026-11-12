@@ -11,6 +11,7 @@ import {setSitePreparationPaused} from './sitePreparation';
 import {orderConstruction} from './construction';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
+ |{kind:'cancel-interaction'}|{kind:'hold-selected';unitIds:number[]}
  |{kind:'pause';paused:boolean}|{kind:'speed';speed:1|2|4;resume?:boolean}
  |{kind:'move';unitIds:number[];x:number;z:number;attackMove?:boolean}
  |{kind:'begin-production';recipe:ProductionRecipe;workplaceId:number;unitId?:number}
@@ -46,6 +47,11 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'cancel-interaction':g.state.placing=null;g.state.pendingAge=false;g.clearSelect();return{accepted:true,reason:'Interaction cancelled'};
+   case 'hold-selected':{
+    const people=command.unitIds.map(id=>g.state.units.find(u=>u.id===id&&u.team===0&&u.hp>0));if(people.some(u=>!u))return no('An original selected resident is unavailable');
+    for(const u of people){u!.order='hold';u!.pillage=-1;u!.target=null;u!.attackDestination=null;}return{accepted:true,reason:'Selected residents holding'};
+   }
    case 'pause':if(typeof command.paused!=='boolean')return no('Invalid pause value');g.state.paused=command.paused;return{accepted:true,reason:'Pause applied'};
    case 'speed':if(![1,2,4].includes(command.speed))return no('Invalid simulation speed');g.state.speed=command.speed;if(command.resume===true)g.state.paused=false;return{accepted:true,reason:'Speed applied'};
    case 'move':{
@@ -116,6 +122,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
  const bool=(v:unknown)=>typeof v==='boolean',id=(v:unknown)=>integer(v),optionalId=(v:unknown)=>v===undefined||id(v);
  const action=(v:unknown)=>v==='pause'||v==='resume'||v==='unload';
  const schema:Record<string,Record<string,(v:unknown)=>boolean>>={
+  'cancel-interaction':{},'hold-selected':{unitIds:v=>Array.isArray(v)&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length},
   pause:{paused:bool},speed:{speed:v=>v===1||v===2||v===4,resume:v=>v===undefined||bool(v)},
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
   'begin-production':{recipe:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),workplaceId:id,unitId:optionalId},
