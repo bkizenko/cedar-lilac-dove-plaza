@@ -621,6 +621,48 @@ export function horseGeo(pack = false) {
   return geo;
 }
 
+/** Sturdy horned cattle, distinct from long-necked horses. One merged draw.
+ * Fauna faces +X; working cattle faces +Z towards the actual handler. */
+export function cattleGeo(pack = false) {
+  const parts: THREE.BufferGeometry[] = [];
+  const add = (geo: THREE.BufferGeometry, color: string) => {
+    const c = new THREE.Color(color), colors = new Float32Array(geo.getAttribute('position').count * 3);
+    for (let i = 0; i < colors.length; i += 3) c.toArray(colors, i);
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3)); parts.push(geo);
+  };
+  const coat = '#78604a', dark = '#40372e', horn = '#c6b9a0';
+  const body = new THREE.CapsuleGeometry(.39, .80, 3, 7);
+  body.rotateZ(Math.PI / 2); body.scale(1, 1.03, .92); body.translate(0, .99, 0); add(body, coat);
+  add(box(.37, .44, .48, .43, .78, 0), coat);
+  const head = new THREE.SphereGeometry(.25, 7, 5);
+  head.scale(1.15, 1.17, .82); head.translate(.73, 1.05, 0); add(head, coat);
+  const muzzle = new THREE.SphereGeometry(.21, 6, 4);
+  muzzle.scale(1.05, .70, 1.06); muzzle.translate(.93, .93, 0); add(muzzle, dark);
+  for (const side of [-1, 1]) {
+    for (const x of [-.46, .45]) {
+      add(cyl(.085, .07, .72, x, .10, side * .24, 5), coat);
+      add(box(.17, .13, .18, x, 0, side * .24), dark);
+    }
+    const ear = new THREE.SphereGeometry(.13, 5, 3);
+    ear.scale(.75, .45, 1); ear.translate(.65, 1.22, side * .28); add(ear, coat);
+    const cattleHorn = new THREE.ConeGeometry(.055, .31, 5);
+    cattleHorn.rotateX(side * .75); cattleHorn.translate(.65, 1.42, side * .27); add(cattleHorn, horn);
+    const eye = new THREE.SphereGeometry(.028, 4, 3);
+    eye.translate(.84, 1.16, side * .19); add(eye, dark);
+  }
+  const udder = new THREE.SphereGeometry(.15, 6, 4);
+  udder.scale(1.15, .75, 1); udder.translate(-.34, .57, 0); add(udder, '#a18b78');
+  for (const side of [-1, 1]) add(cyl(.022, .024, .09, -.34, .40, side * .07, 4), '#a18b78');
+  add(cyl(.035, .035, .71, -.76, .25, 0, 5), coat);
+  const tuft = new THREE.SphereGeometry(.085, 5, 3); tuft.scale(.75, 1.6, .75); tuft.translate(-.76, .25, 0); add(tuft, dark);
+  if (pack) {
+    for (const side of [-1, 1]) add(box(.64, .40, .23, -.04, .99, side * .43), '#6e6045');
+    add(box(.48, .07, .78, -.04, 1.39, 0), dark);
+  }
+  const geo = merge(parts); if (pack) geo.rotateY(-Math.PI / 2);
+  geo.computeBoundingBox(); geo.computeBoundingSphere(); return geo;
+}
+
 export function deerGeo() {
   const body = new THREE.CapsuleGeometry(0.2, 0.72, 3, 6);
   body.rotateZ(Math.PI / 2);

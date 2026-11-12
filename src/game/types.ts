@@ -115,7 +115,7 @@ export type Region = {
   clusterName: string;
 };
 
-export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "bird";
+export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird";
 
 export type Critter = {
   huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
@@ -597,6 +597,7 @@ export type GameState = {
   wildlife: Critter[];
   sheepVersion?:1;
   horseVersion?:1;
+  cattleVersion?:1;
   livestock?: Livestock[];
   routes: TradeRoute[];
   routeOffer: RouteOffer | null;

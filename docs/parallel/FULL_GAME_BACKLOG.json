@@ -9195,6 +9195,15 @@
       "liveCommit": "46217d49627cf02971332eaa4bc3a3938915ba6a",
       "evidence": "docs/metrics/horse-traction-release-2026-11-12.json",
       "scope": "Paid wooden ard at real workshop; existing trained horse required; physical spring row work earns individual practice, wears tool, and accelerates labor only. Real finite repair, asset-cargo condition and strict saves. Draft carts/riding/broader animals remain open."
+    },
+    {
+      "id": "CODEX-CATTLE-HUSBANDRY-DRAFT",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "badf1d6",
+      "liveCommit": "0106f88dac20d8e76c71ac2a37ad3939e70dedad",
+      "evidence": "docs/metrics/cattle-husbandry-release-2026-11-12.json",
+      "scope": "Finite fresh-map cattle;150s paid capture and physical pen/stable journeys; actual same-ID trained working cattle, species care/breeding/milk, local keeper withdrawal and dairy delivery; real ard labor consumer; retained biological metadata and strict saved identity. Other species and advanced husbandry remain open."
     }
   ],
   "status_update_policy": {

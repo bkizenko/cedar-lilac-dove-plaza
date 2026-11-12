@@ -1,0 +1,302 @@
+{
+  "sourceCommit": "badf1d6",
+  "liveCommit": "0106f88dac20d8e76c71ac2a37ad3939e70dedad",
+  "release": "2026-11-12T06-36-11-712Z-0106f88",
+  "scope": "Finite fresh-map cattle;150s paid capture and physical pen/stable journeys; actual same-ID trained working cattle, species care/breeding/milk, local keeper withdrawal and dairy delivery; real ard labor consumer; retained biological metadata and strict saved identity.",
+  "batch": {
+    "passed": 37,
+    "total": 37,
+    "distinctFocused": 33,
+    "builtCattle": 3,
+    "builtExistingVillage": 1
+  },
+  "focusedEvidence": {
+    "regression": "25/25 cattle/horse fauna, horse capture/traction, pack welfare and sheep/wool cases",
+    "additional": "7/7 cattle cases plus one new native cattle paid ard/field case; duplicate three horse-traction cases are not counted twice"
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "built": {
+    "scope": "Two built checks on native earned capture/leading/stable-trained cattle: visible actual welfare-adjusted inventory and exclusive cattle draw ownership; pen controls, physical stable and strict save/reload. Same actual record qualifies source draft eligibility, but no ard/fieldwork, milk yield, historical balance, campaign or performance acceptance.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 3,
+    "total": 3,
+    "cattleId": 6360,
+    "handlerId": 6223,
+    "actualCapacity": 2.9504166666666745,
+    "nominalHealthyCapacity": 3,
+    "sourceDraftEligible": true,
+    "originalHash": "d90710691974f1b3ad1285a4e2eea6dc406c4361441956b362177293a369ac5f",
+    "tractionOriginalHash": "97bf1fe611db762be23d000d396c03f2c5ab28520cea7cafd6282a02b3f91055",
+    "tractionScope": "Separate declared trained native cattle opening; source-proven paid ard making and physical field journey, actual built cultivation/practice/wear and strict metadata reload. No capture/training credit for this third opening.",
+    "scene": {
+      "pack": 1,
+      "expectedPack": 1,
+      "horsePack": 0,
+      "expectedHorsePack": 0,
+      "goatPack": 0,
+      "expectedGoatPack": 0,
+      "horseDuplicate": false,
+      "position": [
+        162.70181274414062,
+        2.963655948638916,
+        -205.60890197753906
+      ],
+      "expected": [
+        162.70180801436527,
+        -205.60890326236708
+      ],
+      "vertices": 1698,
+      "bounds": {
+        "min": [
+          -0.5450000166893005,
+          2.38418573772492e-09,
+          -0.815209150314331
+        ],
+        "max": [
+          0.5450000166893005,
+          1.5334117412567139,
+          1.150499939918518
+        ]
+      },
+      "wild": 0,
+      "wildOwned": 0,
+      "validWild": true,
+      "domestic": 0,
+      "expectedDomestic": 0,
+      "uniqueCustody": true,
+      "packAnimal": {
+        "milk": 0,
+        "pregnancy": 0,
+        "adultScale": 1.339733385911677,
+        "id": 6360,
+        "hp": 5.9440000000000115,
+        "maxHp": 6,
+        "scale": 1.339733385911677,
+        "species": "cattle",
+        "sex": "male",
+        "born": -700.4000000000028,
+        "tamedAt": 199.5999999999972,
+        "hunger": 15.266999999999488,
+        "thirstSeconds": 196.99999999999736,
+        "foodConsumed": 0,
+        "waterConsumedLiters": 0
+      },
+      "drawCalls": 53,
+      "projectedOwner": 6223,
+      "errors": []
+    },
+    "pen": {
+      "hit": 6363,
+      "selected": 6363,
+      "selectedThroughNativeInput": true
+    },
+    "stable": [
+      {
+        "role": "timber",
+        "count": 1,
+        "owner": true,
+        "vertices": 108,
+        "span": [
+          7,
+          2.200000071525574,
+          6.400000095367432
+        ],
+        "inScene": true
+      },
+      {
+        "role": "roof",
+        "count": 1,
+        "owner": true,
+        "vertices": 72,
+        "span": [
+          8.975600242614746,
+          0.2200000286102295,
+          7.274343490600586
+        ],
+        "inScene": true
+      }
+    ],
+    "saved": {
+      "identical": true,
+      "packAnimal": {
+        "milk": 0,
+        "pregnancy": 0,
+        "adultScale": 1.339733385911677,
+        "id": 6360,
+        "hp": 5.9440000000000115,
+        "maxHp": 6,
+        "scale": 1.339733385911677,
+        "species": "cattle",
+        "sex": "male",
+        "born": -700.4000000000028,
+        "tamedAt": 199.5999999999972,
+        "hunger": 15.266999999999488,
+        "thirstSeconds": 196.99999999999736,
+        "foodConsumed": 0,
+        "waterConsumedLiters": 0
+      },
+      "id": 6360,
+      "species": "cattle",
+      "haulage": "pack",
+      "duplicates": 0,
+      "errors": []
+    },
+    "tractionScene": {
+      "count": 1,
+      "cattleCount": 1,
+      "owners": [
+        6223
+      ],
+      "cattleOwners": [
+        6223
+      ],
+      "horseDuplicate": false,
+      "sameCattleTransform": true,
+      "position": [
+        164.242919921875,
+        2.6888084411621094,
+        -216.50022888183594
+      ],
+      "vertices": 396,
+      "bounds": {
+        "min": [
+          -0.5099999904632568,
+          0.019999999552965164,
+          -2.359999895095825
+        ],
+        "max": [
+          0.5099999904632568,
+          1.159999966621399,
+          0.2549999952316284
+        ]
+      },
+      "fieldId": 6364,
+      "spring": true,
+      "packAnimal": {
+        "id": 6359,
+        "hp": 6,
+        "maxHp": 6,
+        "scale": 1.3211245524929836,
+        "species": "cattle",
+        "sex": "male",
+        "born": -900,
+        "tamedAt": 0,
+        "hunger": 2.794,
+        "thirstSeconds": 50.80000000000018,
+        "foodConsumed": 0,
+        "waterConsumedLiters": 0
+      },
+      "drawCalls": 51,
+      "errors": []
+    },
+    "tractionWork": {
+      "before": {
+        "practice": 0.2,
+        "condition": 0.9997777777777778,
+        "planted": 0.006222222222222222,
+        "time": 50.80000000000018
+      },
+      "after": {
+        "practice": 0.4,
+        "condition": 0.9995555555555555,
+        "planted": 0.012449973991769548,
+        "time": 51.000000000000185
+      },
+      "sameCattle": 6359,
+      "terrainUnchanged": true,
+      "errors": []
+    },
+    "tractionSaved": {
+      "identical": true,
+      "before": {
+        "cattle": {
+          "id": 6359,
+          "hp": 6,
+          "maxHp": 6,
+          "scale": 1.3211245524929836,
+          "species": "cattle",
+          "sex": "male",
+          "born": -900,
+          "tamedAt": 0,
+          "hunger": 2.805,
+          "thirstSeconds": 51.000000000000185,
+          "foodConsumed": 0,
+          "waterConsumedLiters": 0
+        },
+        "haulage": "pack",
+        "tool": "woodenArd",
+        "condition": 0.9995555555555555,
+        "practice": 0.4
+      },
+      "after": {
+        "cattle": {
+          "id": 6359,
+          "hp": 6,
+          "maxHp": 6,
+          "scale": 1.3211245524929836,
+          "species": "cattle",
+          "sex": "male",
+          "born": -900,
+          "tamedAt": 0,
+          "hunger": 2.805,
+          "thirstSeconds": 51.000000000000185,
+          "foodConsumed": 0,
+          "waterConsumedLiters": 0
+        },
+        "haulage": "pack",
+        "tool": "woodenArd",
+        "condition": 0.9995555555555555,
+        "practice": 0.4
+      },
+      "duplicates": 0,
+      "errors": []
+    },
+    "originalUnchanged": true,
+    "tractionOriginalUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "passed": 1,
+    "total": 1,
+    "originalFileUnchanged": true
+  },
+  "gameplayParameters": {
+    "maximumFreshWild": 8,
+    "pasturePlaces": 4,
+    "careMultiplier": 4,
+    "tamingFood": 18,
+    "tamingWorkSeconds": 150,
+    "stableHarnessWood": 8,
+    "stableHarnessWorkSeconds": 90,
+    "healthyPackCapacityMultiplier": 3,
+    "baseWalkingPace": 2.4,
+    "maturitySeconds": 900,
+    "gestationWorkSeconds": 900,
+    "milkCapacity": 12,
+    "milkPerEligibleSecond": 0.06
+  },
+  "researchBasis": [
+    {
+      "url": "https://www.fao.org/4/t0690e/t0690e05.htm",
+      "applied": "Milk requires a lactating mother, feed and drinking water; pasture is a managed finite feed source."
+    },
+    {
+      "url": "https://www.fao.org/dairy-production-products/dairy/en",
+      "applied": "Multipurpose cattle provide milk, meat and draught power. Species coefficients here are tunable game values, not modern milk yield or historical calendar claims."
+    }
+  ],
+  "acceptanceLimits": [
+    "Native capture/stable scenario and native paid-ard scenario are separate declared openings, not a full earned campaign",
+    "Existing saved worlds retain exact fauna; no load-time cattle gifts",
+    "No herd-return/unharness workflow yet; working reproductive reserves are preserved but do not produce road milk or accrue pen breeding progress",
+    "Selective breeding, veterinary care, other animal species, riding, draft carts and full M3-06 remain open",
+    "Stock-style animal meshes do not constitute the approved full visual overhaul"
+  ],
+  "frozenGates": {
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041,
+    "newCredit": 0
+  }
+}

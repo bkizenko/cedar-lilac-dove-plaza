@@ -5,6 +5,7 @@ import {writeFileSync} from 'node:fs';
 import {isAbsolute} from 'node:path';
 import {Game} from '../src/game/sim.ts';
 import {mulberry32} from '../src/game/rng.ts';
+import {herdRules} from '../src/game/animalSpecies.ts';
 import {packAnimalFrom} from '../src/game/packAnimalState.ts';
 import {draftTractionReady,farmToolRate,farmToolCondition,beginFarmToolWork,beginFarmToolRepair,pauseFarmToolWork,resumeFarmToolWork,farmToolWorkAI,validFarmToolUnit,FARM_TOOLS,FARM_TOOL_MAINTENANCE} from '../src/game/farmTools.ts';
 import {recordDraftTractionWork} from '../src/game/draftTraction.ts';
@@ -52,18 +53,18 @@ function legalPoint(g,type,origin,accept=()=>true){
 }
 function drive(g,seconds,until){const end=g.state.time+seconds;while(g.state.time<end&&!until()){g.step(.2);assert.deepEqual(g.simulationErrors,[]);assert.equal(g.state.ended,null);}assert.ok(until(),JSON.stringify({time:g.state.time,phase:calendar(g).phase,units:g.state.units.filter(u=>u.team===0).map(u=>({id:u.id,order:u.order,reason:u.workReason,tool:u.farmTool,work:u.farmToolWork,practice:u.draftPracticeSeconds}))}));}
 
-test('native terrain paid ard crafting reloads once, walks to spring rows and changes labor rather than soil or finite yield',()=>{
+for(const species of ['horse','cattle'])test(`native ${species} traction: paid ard crafting reloads once, walks to spring rows and changes labor rather than soil or finite yield`,()=>{
  const randomBefore=Math.random;Math.random=mulberry32(42);
  try{
   let g=new Game();g.reset(42,18,{size:1040,layout:'pangaea'});g.enterIsland();g.vision.fill(2);
   g.state.paused=false;g.state.autoWorkEnabled=false;g.state.conflict='quiet';g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.birthT=10000;g.state.nightWork=true;g.calamityT=10000;for(const t of g.state.tribes)t.thinkT=10000;
   for(const u of g.state.units.filter(u=>u.team===0)){u.order='hold';u.jobLock=true;}
   let u=g.state.units.find(u=>u.team===0&&u.type==='worker');assert.ok(u);u.jobLock=false;const uid=u.id;
-  const horse=g.state.wildlife.find(a=>a.species==='horse'&&a.hp>0);assert.ok(horse,'actual seed42 generated horse identity');
+  const horse=g.state.wildlife.find(a=>a.species===species&&a.hp>0);assert.ok(horse,`actual seed42 generated ${species} identity`);
   // Explicit bounded opening: the native individual is already trained, as
   // independently qualified by horse-native.test.mjs. This does not claim a
   // second capture/training journey. Residents and terrain stay where generated.
-  u.packAnimal=packAnimalFrom({...horse,sex:'male',born:-600,tamedAt:0,hunger:0,thirstSeconds:0});u.haulage='pack';const horseMetadata=structuredClone(u.packAnimal);g.state.wildlife=g.state.wildlife.filter(a=>a.id!==horse.id);
+  u.packAnimal=packAnimalFrom({...horse,sex:'male',born:-herdRules(species).maturity,tamedAt:0,hunger:0,thirstSeconds:0});u.haulage='pack';const horseMetadata=structuredClone(u.packAnimal);g.state.wildlife=g.state.wildlife.filter(a=>a.id!==horse.id);
   Object.assign(g.tribe(0),{wood:300,stone:120,food:2000,foodLots:{provisions:2000},seeds:50,cultivated:['grain']});g.tribe(0).survival.waterLiters=400;
   const originalTerrain=terrainHash(g),home=g.campOf(0),shopPoint=legalPoint(g,'workshop',home,(x,z)=>g.workBoard.connected(g,u.x,u.z,x,z));assert.ok(shopPoint);
   // Completed legally sited workshop/field and finite stock are declared opening
@@ -78,7 +79,7 @@ test('native terrain paid ard crafting reloads once, walks to spring rows and ch
   crop(g,field);g.clearSelect();g.selectEntity(u);g.issueGather(field);const unworkedPractice=u.draftPracticeSeconds??0,conditionBefore=u.farmToolCondition;
   while(!field.crop.planted){const practice=u.draftPracticeSeconds,condition=u.farmToolCondition;g.step(.2);assert.deepEqual(g.simulationErrors,[]);if(!field.crop.planted){assert.equal(u.draftPracticeSeconds,practice,'travel is not traction practice');assert.equal(u.farmToolCondition,condition,'travel does not wear the ard');}assert.ok(g.state.time<YEAR_SECONDS/4,'native maker must reach spring rows before summer');}
   assert.equal(u.order,'gather');assert.equal(u.node,field);assert.ok((u.draftPracticeSeconds??0)>unworkedPractice);assert.ok(u.farmToolCondition<conditionBefore);assert.equal(terrainHash(g),originalTerrain);assert.equal(u.packAnimal.id,horseMetadata.id);assert.equal(u.packAnimal.maxHp,horseMetadata.maxHp);assert.equal(u.packAnimal.scale,horseMetadata.scale);
-  if(process.env.HORSE_TRACTION_SAVE){assert.ok(isAbsolute(process.env.HORSE_TRACTION_SAVE));writeFileSync(process.env.HORSE_TRACTION_SAVE,JSON.stringify(encodeGame(g)));}
+  const exportPath=species==='horse'?process.env.HORSE_TRACTION_SAVE:process.env.CATTLE_TRACTION_SAVE;if(exportPath){assert.ok(isAbsolute(exportPath));writeFileSync(exportPath,JSON.stringify(encodeGame(g)));}
   const soil=JSON.stringify(fieldTerrain(g,field)),yieldBefore=farmHarvestEstimate(g,field,1,1,1),baseCrop=structuredClone(field.crop),baseUnit={...u,packAnimal:structuredClone(u.packAnimal)},beforePlant=field.crop.planted;
   u.draftPracticeSeconds=120;u.farmToolCondition=1;const rate=farmToolRate(u,0);assert.ok(rate>1);farmWork(g,u,field,1);const draftedGain=field.crop.planted-beforePlant;
   field.crop=structuredClone(baseCrop);const hand={...baseUnit,farmTool:undefined,farmToolCondition:undefined,draftPracticeSeconds:0};farmWork(g,hand,field,1);const handGain=field.crop.planted-beforePlant;close(draftedGain/handGain,rate);assert.equal(hand.draftPracticeSeconds,0);assert.equal(JSON.stringify(fieldTerrain(g,field)),soil);assert.equal(farmHarvestEstimate(g,field,1,1,1),yieldBefore);
