@@ -12,6 +12,11 @@ import type {Unit} from './types';
 import {isDependent} from './settlement';
 import {capitulationYielded} from './capitulation';
 
+/** Team transfer ends the former owner's construction intent. Interrupt first:
+ * existing executors retain/drop actual paid packets and release actor claims.
+ * A paused queue is only player intent and cannot follow a different owner. */
+function interruptForTeamTransfer(g:Game,u:Unit){g.interruptMission(u);delete u.constructionQueue;}
+
 /** Stationed guards have finite capacity; the same guard cannot cover every camp. */
 export function captiveGuardCoverage(g:Game){
  const coverage=new Set<number>();
@@ -47,7 +52,7 @@ export function tickCaptivity(g:Game,dt:number){
    u.enslavedFrom=undefined;u.captivityUnrest=undefined;
    g.banner('An enslaved resident refuses further forced service and joins as a free villager.',6);continue;
   }
-  g.interruptMission(u);u.team=origin;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.enslavedFrom=undefined;u.captivityUnrest=undefined;u.selected=false;
+  interruptForTeamTransfer(g,u);u.team=origin;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.enslavedFrom=undefined;u.captivityUnrest=undefined;u.selected=false;
   u.target=null;u.node=null;u.pillage=-1;u.attackDestination=null;u.job=null;u.jobLock=false;
   u.recalled=true;u.stationOnArrival=false;u.order='return';u.workReason='Escaping captivity — returning to the home settlement';
   g.workBoard.reset();g.banner(`An enslaved resident has escaped toward ${g.tribe(origin).name}, carrying what was in their hands.`,7);
@@ -66,7 +71,7 @@ export function tryCivilianSurrender(g:Game,u:Unit,attackerTeam:number,damage:nu
  const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b)&&g.interactionSpot(u,b));
  if(!home)return false;
  const origin=u.team,health=u.hp;
- g.makeHostile(origin);g.interruptMission(u);
+ g.makeHostile(origin);interruptForTeamTransfer(g,u);
  u.team=0;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.enslavedFrom=origin;u.captivityUnrest=40;u.homeHall=home.id;
  u.hp=Math.max(1,Math.min(health,u.maxHp*.2));u.selected=false;u.pillage=-1;u.attackDestination=null;
  u.target=null;u.node=null;u.job=null;u.jobLock=false;u.recalled=true;u.stationOnArrival=false;u.order='return';
@@ -84,7 +89,7 @@ export function repatriateCaptive(g:Game,id:number){
  const origin=u.enslavedFrom!;
  const home=g.state.buildings.find(b=>b.team===origin&&b.type==='townhall'&&g.finished(b)&&g.interactionSpot(u,b));
  if(!g.tribe(origin)?.alive||!home){g.banner('No reachable home settlement. You can still free this person to join your village.',5);return false;}
- g.interruptMission(u);u.team=origin;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.enslavedFrom=undefined;u.captivityUnrest=undefined;u.repatriating=true;
+ interruptForTeamTransfer(g,u);u.team=origin;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.enslavedFrom=undefined;u.captivityUnrest=undefined;u.repatriating=true;
  u.selected=false;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.attackDestination=null;
  u.recalled=true;u.stationOnArrival=false;u.order='return';u.workReason='Released from captivity — walking home';
  g.workBoard.reset();g.banner('Released to return home with their belongings. Goodwill follows their safe arrival.',5);return true;
@@ -121,7 +126,7 @@ export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  if(!captors.length||captors.length<defenders.length*PRISONER_RULES.superiorityRatio)return {accepted:false,reason:'Reach the person with enough local force to obtain surrender'};
  const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
  if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
- const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);g.interruptMission(u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
+ const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);interruptForTeamTransfer(g,u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
  const knows=captiveKnowledgeSnapshot(g,u,origin);
  u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0,knows};invalidatePrisonerGuardQueries(g);
  u.team=captorTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.selected=false;u.homeHall=undefined;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.order='hold';u.workReason='Surrendered — waiting for a guarded route to custody';
@@ -152,7 +157,7 @@ function clearPrisonerGuard(g:Game,u:PrisonerUnit){const guard=g.state.units.fin
 /** Release preserves bodily state, origin and possessions; the person walks home. */
 export function releasePrisoner(g:Game,id:number,escaped=false){
  const u=g.state.units.find(u=>u.id===id&&u.hp>0) as PrisonerUnit|undefined;if(!u?.prisoner||u.prisoner.phase==='released')return false;
- const p=u.prisoner;clearPrisonerGuard(g,u);g.interruptMission(u);u.team=p.originTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.homeHall=p.originHomeHall;if(g.tribe(p.originTeam))g.tribe(p.originTeam).alive=true;
+ const p=u.prisoner;clearPrisonerGuard(g,u);interruptForTeamTransfer(g,u);u.team=p.originTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.homeHall=p.originHomeHall;if(g.tribe(p.originTeam))g.tribe(p.originTeam).alive=true;
  p.phase='released';u.recalled=true;u.repatriating=true;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.workReason='Released prisoner — returning home with belongings';
  recordConflict(g,escaped?'prisoner_escape':'prisoner_release',p.captorTeam,1,{actorId:u.id});g.workBoard.reset();return true;
 }
