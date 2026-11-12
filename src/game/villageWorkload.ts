@@ -19,6 +19,7 @@ import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
 import type {HaulageProject} from './haulage';
 import {BUILDINGS,BUILD_TIME,GATHER,GATHER_WORK_RATE} from './constants';
+import {waterWorksLabour} from './waterWorksBuildings';
 import {calendar,isDependent,foodDemand,farmHarvestEstimate,reserveSeconds} from './settlement';
 import {predisposition} from './people';
 import {farmToolRate,FARM_TOOLS} from './farmTools';
@@ -127,7 +128,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
    add({id:`housing:${b.id}`,label:p.mode==='upgrade'?'Upgrade an existing hut':'Build an adopted timber home',category:'Construction',personSeconds:Math.max(0,p.duration-p.progress)/(u?predisposition(u).strength:meanStrength)+walk,status:b.planPaused?'paused':blocked?'blocked':u?'active':'queued',actorIds:u?[u.id]:[],priority:400+(b.constructionPriority??1)*100,blocker:b.planPaused?'Housing paused':blocked?housingStatus(g,b):null,units:housingMaterialTotal(p.quote)},true);
    if(!p.paid&&!b.planPaused&&p.custodyTeam===team){planned.wood=(planned.wood||0)+p.quote.wood;planned.stone=(planned.stone||0)+p.quote.stone;}
   }
-  if(b.build<1&&!b.renovation){const need=(b as Building&{excavationWorkSeconds?:number}).excavationWorkSeconds??(BUILD_TIME[b.type]||16)*plotArea(b);
+  if(b.build<1&&!b.renovation){const need=(b as Building&{excavationWorkSeconds?:number}).excavationWorkSeconds??waterWorksLabour(g,b)??(BUILD_TIME[b.type]||16)*plotArea(b);
    add({id:`build:${b.id}`,label:`Build ${BUILDINGS[b.type].name}`,category:'Construction',personSeconds:(1-b.build)*need/meanStrength,status:b.planPaused?'paused':missing.length?'blocked':assigned.length?'active':'queued',actorIds:assigned,priority:400,blocker:b.planPaused?'Plan paused':missing.length?'Materials missing: '+missing.map(n=>`${n.amount} ${n.kind}`).join(', '):null});
    if(b.plannedCost&&!b.planPaused)for(const kind of['food','wood','stone','copper','iron'] as const)planned[kind]=(planned[kind]||0)+(b.plannedCost[kind]||0);
   }

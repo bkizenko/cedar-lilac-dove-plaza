@@ -114,6 +114,7 @@ import {flowPath} from "./flowFields";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
+import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
@@ -1151,6 +1152,7 @@ export class Game {
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
     const excavation=type==='trench'?excavationIssue(this,{id:ignoreId??-1,team:_team,x,z,w:d.w,d:d.d}):excavationConstructionIssue(this,type,x,z,d.w,d.d);
     if(excavation)return excavation;
+    if(type==='canal')return waterWorksPlacementIssue(this,type,x,z,_team);
     if(type==="bridge"){
       const span=drawnSpan??planBridge(this,x,z);
       if(drawnSpan&&!validBridgeSpan(this,drawnSpan))return "Drag between clear, gentle banks across shallow water (5–28 m)";
@@ -1162,7 +1164,7 @@ export class Game {
     if (!this.withinWorld(x, z, Math.max(d.w, d.d) * 0.5 + 1)) return "Too close to the shore";
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
-    if (type !== "dock" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts)
+    if (type !== "dock" && type !== "aqueduct" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts). Aqueducts may finish on low delivery ground; the route query refuses a submerged target.
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
@@ -1234,6 +1236,7 @@ export class Game {
       }
       if (!shore) return "Put the dock on the white posts by the water";
     }
+    if(isWaterWorksType(type))return waterWorksPlacementIssue(this,type,x,z,_team);
     return null;
   }
 
@@ -1548,7 +1551,7 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = b.type==='trench'?excavationWorkNeed(this,b):towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
+    const need = b.type==='trench'?excavationWorkNeed(this,b):waterWorksLabour(this,b)??towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
