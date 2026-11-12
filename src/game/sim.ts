@@ -1,3 +1,4 @@
+import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
@@ -4613,14 +4614,15 @@ export class Game {
           else if (roll > 0.93) gained = 2;
         }
         if("kind" in node&&node.kind==="fish")gained=Math.min(gained,Math.floor(node.amount));
-        if("kind" in node&&(node.kind==="stone"||node.kind==="copper"&&copperOreEnabled(this,u.team)))gained=Math.min(gained,node.amount);
+        if("kind" in node&&(node.kind==="stone"||node.kind==="copper"&&copperOreEnabled(this,u.team)||node.kind==="iron"&&ironOreEnabled(this,u.team)))gained=Math.min(gained,node.amount);
         if(t==="copper"&&copperOreEnabled(this,u.team))gained=Math.min(gained,Math.max(0,Math.min(40,carryingCapacity(u,"copper"))-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
+        if(t==="iron"&&ironOreEnabled(this,u.team))gained=Math.min(gained,Math.max(0,Math.min(IRON.oreCarryUnits,carryingCapacity(u,"iron"))-Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)));
         const seasonalForage="kind" in node&&node.kind==="forage"&&wildPlantsEnabled(this);
         if(seasonalForage)gained=harvestWildPlant(this,node as ResourceNode,gained);
         if (gained <= 0) {
           if (u.team === 0) this.addFloater(u.x, u.y + 1.8, u.z, "thin", "#b8a888");
         } else {
-          if(t==="copper"&&copperOreEnabled(this,u.team)){u.itemCargo??={};u.itemCargo.copperOre=(u.itemCargo.copperOre||0)+gained;}else{u.carry += gained;u.carryType = t;}
+          if(t==="copper"&&copperOreEnabled(this,u.team)){u.itemCargo??={};u.itemCargo.copperOre=(u.itemCargo.copperOre||0)+gained;}else if(t==="iron"&&ironOreEnabled(this,u.team)){u.itemCargo??={};u.itemCargo.ironOre=(u.itemCargo.ironOre||0)+gained;}else{u.carry += gained;u.carryType = t;}
           u.carryFood=t==="food"?("type" in node&&node.type==="dock"||"kind" in node&&node.kind==="fish"?"fish":"berries"):undefined;
           if("kind" in node&&node.kind==="forage"){
             if(node.cropCandidate)u.carryFood=node.cropCandidate;
@@ -4633,7 +4635,7 @@ export class Game {
           }
         }
         if ("amount" in node && !seasonalForage) {
-          if(node.kind==='fish')consumeFishStock(node,gained);else node.amount-=node.kind==='stone'||node.kind==='copper'&&copperOreEnabled(this,u.team)?gained:1;
+          if(node.kind==='fish')consumeFishStock(node,gained);else node.amount-=node.kind==='stone'||node.kind==='copper'&&copperOreEnabled(this,u.team)||node.kind==='iron'&&ironOreEnabled(this,u.team)?gained:1;
           if(node.kind==="forage")applyForagePressure(node);
           if (node.amount <= 0) {
             node.amount = 0;
@@ -4653,7 +4655,7 @@ export class Game {
             );
           }
         }
-        if (u.carry >= carryingCapacity(u,t) || (u.itemCargo?.copperOre||0)>0&&Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)>=Math.min(40,carryingCapacity(u,"copper")) || (t === "food" && u.carry >= 8 && reserveSeconds(this,u.team) < 90) || ("amount" in node && node.amount <= 0)) {
+        if (u.carry >= carryingCapacity(u,t) || (u.itemCargo?.copperOre||0)>0&&Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)>=Math.min(40,carryingCapacity(u,"copper")) || (u.itemCargo?.ironOre||0)>0&&Object.values(u.itemCargo||{}).reduce((n,v)=>n+(v||0),0)>=Math.min(IRON.oreCarryUnits,carryingCapacity(u,"iron")) || (t === "food" && u.carry >= 8 && reserveSeconds(this,u.team) < 90) || ("amount" in node && node.amount <= 0)) {
           const drop = this.nearestDrop(u.x, u.z, u.team);
           if (drop) {
             u.order = "return";
