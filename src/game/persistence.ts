@@ -1,5 +1,6 @@
 import {validCopperStudies} from './materialStudy';
 import {validTradedTeaching} from './tradedTeaching';
+import {validArmorRepairs,tickArmorRepairs} from './armorRepair';
 import {validGarmentRepairs} from './garmentRepair';
 import {validFoodExperience} from './foodExperience';
 import {validPackPastureOrders} from './packPasture';
@@ -84,6 +85,7 @@ const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.
 export function encodeGame(g: Game) {
   reconcileSitePreparationWorkers(g);
   reconcileSailRigProjects(g);
+  tickArmorRepairs(g);
   reconcileArmorHolders(g);
   reconcileFarmToolCargo(g);
   reconcileWeaponCargo(g);
@@ -168,7 +170,7 @@ function validateGamePayload(raw: unknown) {
   if(!validPackPastureOrders(s))fail();
   if(s.cattleVersion!==undefined&&s.cattleVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
-  if(!validCopperStudies(s)||!validTradedTeaching(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
+  if(!validCopperStudies(s)||!validTradedTeaching(s)||!validArmorRepairs(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
   if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
