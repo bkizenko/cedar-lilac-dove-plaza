@@ -162,6 +162,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   productionProjectId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
+  weaponCargo?:import('./weaponCargo').WeaponCargo;
   armorCargoId?:number;
   itemCargo?:import('./production').ItemStock;
   rawHuntMeat?:true;
@@ -473,6 +474,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
   armor?:import('./armor').ArmorState;
   siegeRams?:import('./siegeRam').SiegeRamState;
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
