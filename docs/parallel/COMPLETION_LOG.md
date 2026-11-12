@@ -48,3 +48,7 @@ At the precedingf095 checkpoint, G10 had34/34+typecheck and build passed; it sub
 ## Published G10 overlay/save repair — 39115987
 
 Release2026-11-11T22-25-07-816Z-3911598 verified on8086/8101 with health+HTML200;35/35=34regressions+1actualbuiltpublicTestLabUI, typecheck/build passed. Native seed0 sparse fog, actual checkbox/save/load/off/return controls and original isolated village/localStorage preservation are recorded in docs/metrics/test-lab-observed-fog-release-2026-11-11.json. Earlier menu-toggle harness error was fixed only in the test; source and build unchanged. Precedingf095138/138 remains a separate batch. Overall34/98 unchanged. Cultured curd still requires broader regression/build/UI/publication; correct observer-radius tracer remains open.
+
+## 2026-11-12T00:05:18.805235+00:00 — performance d86d7da published
+
+Release 2026-11-12T00-03-38-084Z-d86d7da verified both8086/8101 health+HTML200.37/37 scopedchecks, typecheck/build,1035exact committed inputs.15.41%mean reduction in matched native100ABBA, fullstate/RNGparity; Nodep9534.93/33.92stillmiss33. Actualbuilt100Low24sM1Metal/headless rollingp9520.2–23.5ms,100residentsthroughout, noerrors. No universalFPSclaim, Workerphaseunfinished. Evidence docs/metrics/sim-speed-native100-performance-release-2026-11-11.json.34/98unchanged. SevenCHATproposals accepted into scope, not credited. Wholebranchmerges queued afterphase1.

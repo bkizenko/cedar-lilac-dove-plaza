@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-11",
+  "sourceCommit": "39115987e6c6488462be93d8226fb629aefbc96e",
+  "release": "2026-11-11T22-25-07-816Z-3911598",
+  "scope": "Short actual built native100-resident Low/speed1 run using normal Engine animation scheduling. Declared scale fixture, not an earned100-resident campaign. Headless measurement; no general user-visible hardware FPS or acceptance-gate claim.",
+  "fixture": {
+    "sha256": "c41f954c8895f80f2cf0fb923e616501e4d47ab8ff2e8647dda8ba860a72a9c8",
+    "unchanged": true,
+    "declaredPlayerResidents": 100,
+    "authoredAdditionalResidents": 29,
+    "originalPlayerResidents": 71,
+    "privateContentIncluded": false,
+    "harnessTerrainOverrides": false
+  },
+  "environment": {
+    "browserVersion": "157.0.8103.52",
+    "headless": true,
+    "isolatedBrowserContext": true,
+    "viewportCssPixels": {
+      "width": 1440,
+      "height": 900
+    },
+    "canvas": {
+      "width": 1131,
+      "height": 707,
+      "pixelRatio": 0.7856742013183862
+    },
+    "renderer": {
+      "vendor": "Google Inc. (Apple)",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "maskedVendor": "WebKit",
+      "maskedRenderer": "WebKit WebGL",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+      "software": false,
+      "classification": "driver-reported hardware (headless; not user hardware FPS proof)"
+    },
+    "quality": "low",
+    "speed": 1,
+    "phaseProbes": false,
+    "personProbes": false,
+    "manualSimulationSteps": false,
+    "screenshots": false
+  },
+  "timing": {
+    "setup": {
+      "browserLaunchMilliseconds": 7730.427500000001,
+      "bootMilliseconds": 2287.038875,
+      "importMilliseconds": 2769.327959
+    },
+    "requestedWarmMilliseconds": 6000,
+    "actualWarmMilliseconds": 6000.699999999255,
+    "requestedSamplingMilliseconds": 24000,
+    "actualSamplingMilliseconds": 24002.5,
+    "simulationAdvancedSeconds": 23.966666666971832
+  },
+  "population": {
+    "start": {
+      "playerResidents": 100,
+      "allLivingUnits": 348,
+      "allBuildings": 449,
+      "livingBuildings": 404
+    },
+    "minimumPlayerResidents": 100,
+    "end": {
+      "playerResidents": 100,
+      "allLivingUnits": 348,
+      "allBuildings": 449,
+      "livingBuildings": 404
+    }
+  },
+  "frames": {
+    "scope": "Independent requestAnimationFrame gaps across full sampling window; animation callback cadence, not GPU completion timing.",
+    "summary": {
+      "samples": 1367,
+      "meanMs": 17.543818580833943,
+      "p50Ms": 16.69999999999891,
+      "p95Ms": 16.80000000000291,
+      "p99Ms": 33.400000000001455,
+      "maxMs": 66.59999999999854
+    }
+  },
+  "simulationAndStageTails": {
+    "scope": "Existing RuntimeProfile rolling arrays: latest240stage samples, not a full-window simulation-step aggregate. Windows overlap; their percentiles must not be averaged or combined as an independent full-run sample.",
+    "sampleLimit": 240,
+    "final": {
+      "simulation": {
+        "samples": 240,
+        "meanMs": 18.78875000003415,
+        "p50Ms": 17.5,
+        "p95Ms": 25.5,
+        "p99Ms": 51.600000001490116,
+        "maxMs": 66
+      },
+      "scene": {
+        "samples": 240,
+        "meanMs": 1.4487500000434617,
+        "p50Ms": 1,
+        "p95Ms": 1.800000000745058,
+        "p99Ms": 20.699999999254942,
+        "maxMs": 26
+      },
+      "draw": {
+        "samples": 240,
+        "meanMs": 1.4583333334109436,
+        "p50Ms": 1.3999999985098839,
+        "p95Ms": 2.099999997764826,
+        "p99Ms": 2.899999998509884,
+        "maxMs": 3.5
+      },
+      "interface": {
+        "samples": 180,
+        "meanMs": 0.8722222223877907,
+        "p50Ms": 0.8000000007450581,
+        "p95Ms": 1.1000000014901161,
+        "p99Ms": 1.3999999985098839,
+        "maxMs": 1.800000000745058
+      },
+      "map": {
+        "samples": 48,
+        "meanMs": 0.6145833333333334,
+        "p50Ms": 0.6999999992549419,
+        "p95Ms": 0.9000000022351742,
+        "p99Ms": 1,
+        "maxMs": 1
+      },
+      "save": {
+        "samples": 1,
+        "meanMs": 6.400000002235174,
+        "p50Ms": 6.400000002235174,
+        "p95Ms": 6.400000002235174,
+        "p99Ms": 6.400000002235174,
+        "maxMs": 6.400000002235174
+      }
+    },
+    "periodic": [
+      {
+        "wallMilliseconds": 5002.60000000149,
+        "stages": {
+          "simulation": {
+            "samples": 150,
+            "meanMs": 18.301333333378036,
+            "p95Ms": 24.899999998509884,
+            "maxMs": 32.5
+          },
+          "scene": {
+            "samples": 240,
+            "meanMs": 1.4470833332743496,
+            "p95Ms": 1.800000000745058,
+            "maxMs": 22.299999997019768
+          },
+          "draw": {
+            "samples": 240,
+            "meanMs": 1.401666666707024,
+            "p95Ms": 2,
+            "maxMs": 3.600000001490116
+          },
+          "interface": {
+            "samples": 38,
+            "meanMs": 0.8500000000196067,
+            "p95Ms": 1.199999999254942,
+            "maxMs": 1.2000000029802322
+          },
+          "map": {
+            "samples": 10,
+            "meanMs": 0.5900000002235174,
+            "p95Ms": 1,
+            "maxMs": 1
+          }
+        }
+      },
+      {
+        "wallMilliseconds": 10001.5,
+        "stages": {
+          "simulation": {
+            "samples": 240,
+            "meanMs": 18.90750000011176,
+            "p95Ms": 26.5,
+            "maxMs": 56.5
+          },
+          "scene": {
+            "samples": 240,
+            "meanMs": 1.4054166667008152,
+            "p95Ms": 1.800000000745058,
+            "maxMs": 27
+          },
+          "draw": {
+            "samples": 240,
+            "meanMs": 1.3741666666697712,
+            "p95Ms": 1.9000000022351742,
+            "maxMs": 3.199999999254942
+          },
+          "interface": {
+            "samples": 75,
+            "meanMs": 0.8666666667660078,
+            "p95Ms": 1.1000000014901161,
+            "maxMs": 1.800000000745058
+          },
+          "map": {
+            "samples": 20,
+            "meanMs": 0.590000000409782,
+            "p95Ms": 0.9000000022351742,
+            "maxMs": 1
+          }
+        }
+      },
+      {
+        "wallMilliseconds": 15002,
+        "stages": {
+          "simulation": {
+            "samples": 240,
+            "meanMs": 18.67125000008382,
+            "p95Ms": 26.599999997764826,
+            "maxMs": 56.5
+          },
+          "scene": {
+            "samples": 240,
+            "meanMs": 1.4275000000527749,
+            "p95Ms": 1.699999999254942,
+            "maxMs": 25.5
+          },
+          "draw": {
+            "samples": 240,
+            "meanMs": 1.3770833333333334,
+            "p95Ms": 2.099999997764826,
+            "maxMs": 3.600000001490116
+          },
+          "interface": {
+            "samples": 113,
+            "meanMs": 0.8690265487319073,
+            "p95Ms": 1.1000000014901161,
+            "maxMs": 1.800000000745058
+          },
+          "map": {
+            "samples": 30,
+            "meanMs": 0.5933333332339923,
+            "p95Ms": 0.9000000022351742,
+            "maxMs": 1
+          },
+          "save": {
+            "samples": 1,
+            "meanMs": 6.400000002235174,
+            "p95Ms": 6.400000002235174,
+            "maxMs": 6.400000002235174
+          }
+        }
+      },
+      {
+        "wallMilliseconds": 20001.900000002235,
+        "stages": {
+          "simulation": {
+            "samples": 240,
+            "meanMs": 18.605416666762903,
+            "p95Ms": 25.699999999254942,
+            "maxMs": 32.899999998509884
+          },
+          "scene": {
+            "samples": 240,
+            "meanMs": 1.409583333460614,
+            "p95Ms": 1.699999999254942,
+            "maxMs": 22.699999999254942
+          },
+          "draw": {
+            "samples": 240,
+            "meanMs": 1.4308333333116026,
+            "p95Ms": 2,
+            "maxMs": 4
+          },
+          "interface": {
+            "samples": 150,
+            "meanMs": 0.8713333335270484,
+            "p95Ms": 1.0999999977648258,
+            "maxMs": 1.800000000745058
+          },
+          "map": {
+            "samples": 40,
+            "meanMs": 0.6125000000931322,
+            "p95Ms": 0.8999999985098839,
+            "maxMs": 1
+          },
+          "save": {
+            "samples": 1,
+            "meanMs": 6.400000002235174,
+            "p95Ms": 6.400000002235174,
+            "maxMs": 6.400000002235174
+          }
+        }
+      }
+    ]
+  },
+  "renderer": {
+    "latest": {
+      "calls": 53,
+      "triangles": 1430208,
+      "lines": 0,
+      "points": 0,
+      "geometries": 157,
+      "textures": 22,
+      "programs": 27
+    },
+    "calls": {
+      "samples": 240,
+      "mean": 53,
+      "p95": 53,
+      "max": 53
+    },
+    "triangles": {
+      "samples": 240,
+      "mean": 1429971.55,
+      "p95": 1430268,
+      "max": 1430268
+    },
+    "lines": {
+      "samples": 240,
+      "mean": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "points": {
+      "samples": 240,
+      "mean": 0,
+      "p95": 0,
+      "max": 0
+    }
+  },
+  "culling": {
+    "scope": "Latest actual building-review snapshot, not cumulative work or pixel visibility.",
+    "start": {
+      "tested": 499,
+      "skipped": 237
+    },
+    "end": {
+      "tested": 499,
+      "skipped": 237
+    }
+  },
+  "scene": {
+    "scope": "Object submission flags; not occlusion or number of residents actually visible in pixels.",
+    "start": {
+      "objects": 198,
+      "meshes": 179,
+      "visibleMeshes": 162,
+      "instancedMeshes": 172,
+      "submittedInstances": 13340
+    },
+    "end": {
+      "objects": 198,
+      "meshes": 179,
+      "visibleMeshes": 162,
+      "instancedMeshes": 172,
+      "submittedInstances": 13368
+    }
+  },
+  "longTasks": {
+    "supported": true,
+    "count": 9,
+    "totalMilliseconds": 498,
+    "maximumMilliseconds": 69
+  },
+  "scheduling": {
+    "frames": 1368,
+    "limitedFrames": 2,
+    "discardedWallSeconds": 0.03226666666666647,
+    "maximumSteps": 1
+  },
+  "errors": {
+    "page": 0,
+    "console": 0,
+    "simulation": 0
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "result": "FAILED before fixture import or measurement",
+      "failure": "Engine exposure wait exceeded30000ms. Original attempt did not capture boot root-cause diagnostics; cause remains undetermined.",
+      "performanceMeasurement": false
+    },
+    {
+      "attempt": 2,
+      "result": "PASSED",
+      "correction": "Bounded45000ms boot wait plus failure-only boot/context diagnostics; unchanged6s warm and24s sample request.",
+      "bootMilliseconds": 2287.038875,
+      "performanceMeasurement": true
+    }
+  ],
+  "interpretation": {
+    "observedRollingSimulationP95RangeMilliseconds": [
+      24.899999998509884,
+      26.599999997764826
+    ],
+    "targetMilliseconds": 33,
+    "scope": "Observed rolling p95 windows are below33ms in this short built run. No full-window simulation-step p95 was retained; this is not universal performance acceptance.",
+    "separateNativeNodeBaselineP95Milliseconds": 45.29966699999932,
+    "nativeNodeBaselineTargetMissRemainsRecorded": true,
+    "webWorkerCompletion": false,
+    "acceptanceGateCredit": 0
+  },
+  "limitations": [
+    "Headless Chrome with driver-reported AppleM1Metal hardware; not a user-visible browser session or general hardware FPS proof.",
+    "Simulation-stage samples are the profiler final rolling240 plus overlapping summaries; full frame-gap sampling is a different metric.",
+    "Warm/sample only approximately30seconds, not long-term stability or campaign qualification.",
+    "No claim that this completed an authoritative simulation WebWorker or the overall speed phase.",
+    "Original first startup failure remains recorded; retry success does not establish its root cause."
+  ]
+}
