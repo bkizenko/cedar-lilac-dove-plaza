@@ -9158,6 +9158,15 @@
       "liveCommit": "38b41033352f06dacf15aa7d22e3cdf763c5d463",
       "evidence": "docs/metrics/knowledge-provenance-release-2026-11-12.json",
       "scope": "Known/partly/unknown + real observed/demonstrated/taught/inherited provenance, paid successful/failed/teaching and crop receipts, physically owned free resident exact-method migration. Trading/captured techniques and full M4-03 acceptance remain open."
+    },
+    {
+      "id": "CODEX-SETTLED-WAR-PRESTIGE",
+      "owner": "Codex Platform",
+      "state": "live",
+      "sourceCommit": "1ca3d7a",
+      "liveCommit": "a6e8cbd824b03b10ed2280ec77821f7a7466577b",
+      "evidence": "docs/metrics/war-prestige-release-2026-11-12.json",
+      "scope": "Weighted accepted political outcomes and defense-only player townhall relief. Correct active obligation linkage, idempotent strict reload, no forced player surrender, unknown foreign war values. Raider-band objective scoring remains separate/open."
     }
   ],
   "status_update_policy": {

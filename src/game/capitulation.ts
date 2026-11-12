@@ -86,8 +86,9 @@ function openFront(g:Game,hall:Building,attacker:number){
  const s=root(g);while(s.fronts.length>=R.maximumFronts){const i=s.fronts.findIndex(x=>!OPEN.includes(x.phase));if(i<0)return null;s.fronts.splice(i,1);}
  s.fronts.push(f);return f;
 }
-/** NPC communities only: the player decides its own surrender. Raiders (team 3) are not a society that capitulates. */
-function defendableHalls(g:Game){return g.state.buildings.filter(b=>b.type==='townhall'&&b.hp>0&&g.finished(b)&&isRivalTeam(b.team)&&g.tribe(b.team)?.alive);}
+/** Player halls record defensive objectives only; surrender stays the player’s decision.
+ * NPC communities can yield. Raider camps never yield as a society. */
+function defendableHalls(g:Game){return g.state.buildings.filter(b=>b.type==='townhall'&&b.hp>0&&g.finished(b)&&(b.team===0||isRivalTeam(b.team))&&g.tribe(b.team)?.alive);}
 /** Call at most about once per simulated second; each front integrates its own elapsed time. */
 export function tickCapitulation(g:Game){
  const halls=defendableHalls(g);
@@ -114,6 +115,7 @@ export function tickCapitulation(g:Game){
   if(m.siege)f.siegeSeconds=(f.siegeSeconds||0)+dt;
   if(m.reliefPower<m.attackPower*R.reliefShare)f.unrelievedSeconds+=dt;else f.unrelievedSeconds=Math.max(0,f.unrelievedSeconds-dt);
   f.score=frontScore(f);
+  if(f.defenderTeam===0){f.reason='The community is defending its hall';continue;}
   if(f.phase==='capitulated'){if(g.state.time>=(f.expiresAt??Infinity)){f.phase='expired';f.resolvedAt=g.state.time;f.yieldedIds=[];f.reason='Terms were not accepted in time';}continue;}
   const pressedFor=g.state.time-f.openedAt;
   f.reason=pressedFor<R.minimumPressureSeconds?'Fighting has only begun':f.ratio<R.minimumRatio?'Local defenders still hold their own':f.score<f.threshold?'Losses not yet decisive':'Ready to yield';

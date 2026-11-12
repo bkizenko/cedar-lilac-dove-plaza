@@ -1,0 +1,47 @@
+{
+  "release": "2026-11-12T05-27-08-582Z-a6e8cbd",
+  "commit": "a6e8cbd824b03b10ed2280ec77821f7a7466577b",
+  "builtSource": "1ca3d7a",
+  "portsVerified": [
+    8086,
+    8101
+  ],
+  "scope": "Existing prestige war component now uses bounded canonical settled-front outcomes. Player townhall fronts are defense-only; player never auto-capitulates. Accepted outcomes are weighted once; formal relief requires a living defender-owned hall. Active tribute/puppet/autonomy must match one exact accepted arrangement. Unrelated or ended obligations cannot revive old credit.",
+  "rules": {
+    "occupy": 1,
+    "annex": 1.2,
+    "raze": 0.5,
+    "loot": 0.5,
+    "captives": 0.6,
+    "tribute": 0.8,
+    "puppet": 1,
+    "autonomy": 0.8,
+    "heldAim": 1,
+    "cap": 120,
+    "half": 3
+  },
+  "checks": {
+    "passed": 37,
+    "total": 37,
+    "existingPrestigeFocused": 13,
+    "warCapitulationDominationFocused": 22,
+    "builtNativeHeldMeterReload": 1,
+    "builtNative53ImportMenuQueueRestore": 1,
+    "typecheck": "pass",
+    "productionBuild": "pass"
+  },
+  "nativeEvidence": "Original seed42V18 terrain remains unchanged. Finite authored legal opening hall and hostile actor; normal physical steering moves attacker35m->90m; actual120s absence resolves relief. Own held=1 through strict reload. A separate controlled pressure case exceeds the NPC surrender threshold while player front stays pressed without yielding units. No complete combat/campaign claim.",
+  "builtEvidence": {
+    "ownWeightedAims": 1,
+    "points": 30,
+    "sameAfterDurableReload": true,
+    "twoRivalsWarValuesHidden": true,
+    "savedVillageSourceBytesUnchanged": true
+  },
+  "privacyAndConservation": "No new score counters/save migration, RNG draws, free goods or direct kills/retreat totals. Rival metrics remain unavailable without witness receipts. Existing native village compatibility checked on a copied file.",
+  "remaining": "Raider-band victory/defeat requires actual theft/captive/destruction objective outcomes and retained witness evidence; keeping a hall is not proof against a theft raid. Broader trade histories, AI/victory integration and full campaign/performance acceptance remain open.",
+  "frozenChecklist": {
+    "passed": 34,
+    "total": 98
+  }
+}
