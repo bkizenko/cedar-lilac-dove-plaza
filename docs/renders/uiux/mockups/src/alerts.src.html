@@ -1,0 +1,48 @@
+<!-- size 1440x900 -->
+<!doctype html><html><head><meta charset="utf-8"><title>World-anchored alerts</title><link rel="stylesheet" href="mock.css">
+<style>
+body{background:#5f7a43 url(terrain-close.jpg) center/cover}
+.pin{position:absolute;display:grid;justify-items:center;transform:translate(-50%,-100%)}
+.pin .b{width:64px;height:64px;border-radius:50% 50% 50% 8px;transform:rotate(-45deg);display:grid;place-items:center;border:3px solid var(--parch);box-shadow:0 5px 0 rgba(0,0,0,.45),0 0 0 6px rgba(244,162,135,.25)}
+.pin .b svg{transform:rotate(45deg);width:34px;height:34px}
+.pin.bad .b{background:#b94a30;color:#fff}.pin.warn .b{background:#c98f2b;color:#2b2016}.pin.info .b{background:#4d7ea0;color:#fff}
+.pin .d{margin-top:14px;background:rgba(0,0,0,.6);color:#fff;font:700 15px/1 system-ui;padding:5px 9px;border-radius:7px}
+.ring{position:absolute;border-radius:50%;border:3px dashed rgba(244,162,135,.85);transform:translate(-50%,-50%)}
+.fig{position:absolute;width:20px;height:34px;border-radius:10px 10px 4px 4px;background:#2a2016;transform:translate(-50%,-100%);box-shadow:0 0 0 3px rgba(244,162,135,.6)}
+.edge{position:absolute;display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:#b94a30;color:#fff;border:3px solid var(--parch);box-shadow:0 5px 0 rgba(0,0,0,.45)}
+.edge small{position:absolute;bottom:-26px;background:rgba(0,0,0,.65);color:#fff;font:700 15px/1 system-ui;padding:4px 8px;border-radius:6px}
+.stack{position:absolute;right:14px;top:178px;width:340px;display:grid;gap:10px}
+.n{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--parch);color:var(--ink);border-left:8px solid var(--gold);box-shadow:var(--shadow);font-weight:750;font-size:20px}
+.n.crit{border-left-color:#b94a30;padding:14px 12px}.n.crit .medal{background:#b94a30;border-color:#7d2c18;color:#fff}
+.n .medal{width:48px;height:48px;background:var(--wood-800)}.n .medal svg{width:28px;height:28px}
+.n .go{margin-left:auto;background:var(--wood-800);color:var(--text);border-radius:10px;min-height:48px;padding:0 16px;display:grid;place-items:center}
+.n.ghost{opacity:.62;position:relative;overflow:hidden}.n.ghost:after{content:"";position:absolute;left:0;bottom:0;height:4px;width:60%;background:var(--gold)}
+.tray{display:flex;gap:8px;justify-content:flex-end}.tray .chip{background:var(--parch);color:var(--ink);border-color:rgba(43,32,22,.3)}
+.k{position:absolute;font:700 16px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 12px;border-radius:8px}
+.foot{position:absolute;left:14px;bottom:14px;width:760px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:17px}
+.foot div{background:rgba(0,0,0,.66);border-radius:10px;padding:10px 14px;color:#fff}.foot b{color:var(--gold-2)}
+.top{position:absolute;left:14px;top:14px;right:14px;height:60px;border-radius:16px;opacity:.9}
+</style></head><body>
+<div class="panel top row" style="padding:0 20px;gap:30px;font-size:30px;font-weight:750"><span style="color:#f1cf6e;display:flex;gap:8px;align-items:center">{{Wheat:34}}11</span><span style="color:#d0a36c;display:flex;gap:8px;align-items:center">{{TreePine:34}}98</span><span style="color:#cfcabd;display:flex;gap:8px;align-items:center">{{Mountain:34}}16</span><span style="color:var(--bad);display:flex;gap:8px;align-items:center">{{Droplets:34}}2</span><span style="display:flex;gap:8px;align-items:center">{{Users:34}}5/5</span></div>
+
+<div class="ring" style="left:520px;top:520px;width:170px;height:170px"></div>
+<div class="fig" style="left:520px;top:540px"></div>
+<div class="pin bad" style="left:520px;top:488px"><span class="b">{{Wheat:34}}</span><span class="d">Thetzeat is starving</span></div>
+
+<div class="fig" style="left:300px;top:700px;box-shadow:0 0 0 3px rgba(242,199,107,.7)"></div>
+<div class="pin warn" style="left:300px;top:668px"><span class="b">{{Package:34}}</span><span class="d">Store full</span></div>
+
+<div class="pin info" style="left:860px;top:380px"><span class="b">{{Footprints:34}}</span><span class="d">Trader</span></div>
+
+<div class="edge" style="right:40px;top:560px">{{Swords:42}}<small>Raiders 140 m</small></div>
+<div class="k" style="right:150px;top:578px">tap: jump  ·  hold: horn</div>
+
+<div class="stack">
+ <div class="n crit"><span class="medal">{{Shield:28}}</span>Raiders<span class="go">{{Megaphone:28}}</span></div>
+ <div class="tray"><span class="chip warn">{{BookOpen:24}}Bronze</span><span class="chip">{{Users:24}}5</span><span class="chip">{{Handshake:24}}</span></div>
+ <div class="n ghost"><span class="medal">{{Wheat:28}}</span>Harvest stored</div>
+</div>
+
+<div class="k" style="left:14px;top:88px">PINS IN THE WORLD</div><div class="k" style="right:14px;top:150px">PRIORITY STACK</div>
+<div class="foot"><div><b>Pin</b> sits on the person or place. Tap to jump; the ring shows the problem area.</div><div><b>One critical card</b> at a time, sticky, one button. Warnings collapse to icon chips.</div><div><b>Info</b> fades on a timer and lands in the chronicle. No sentences about keys.</div></div>
+</body></html>

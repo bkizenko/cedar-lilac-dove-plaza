@@ -1,0 +1,58 @@
+<!-- size 1440x900 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Proposed HUD</title><link rel="stylesheet" href="mock.css">
+<style>
+body{background:#5f7a43 url(terrain-close.jpg) center/cover}
+.top{position:absolute;left:14px;top:14px;display:flex;gap:8px}
+.cell{display:flex;align-items:center;gap:10px;padding:8px 14px;min-width:116px;position:relative}
+.cell svg{width:40px;height:40px}.cell b{font-size:32px;font-weight:750;font-variant-numeric:tabular-nums;line-height:1}
+.cell .m{position:absolute;left:14px;right:14px;bottom:5px;height:5px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}.cell .m i{display:block;height:100%}
+.tr{position:absolute;right:14px;top:14px;display:flex;gap:8px;align-items:center;padding:8px 12px}
+.pin{position:absolute;display:grid;justify-items:center;transform:translate(-50%,-100%)}
+.pin .b{width:60px;height:60px;border-radius:50% 50% 50% 8px;transform:rotate(-45deg);display:grid;place-items:center;border:3px solid var(--parch);box-shadow:0 5px 0 rgba(0,0,0,.45)}
+.pin .b svg{transform:rotate(45deg);width:32px;height:32px}.pin.bad .b{background:#b94a30;color:#fff}.pin.warn .b{background:#c98f2b;color:#2b2016}
+.fig{position:absolute;width:18px;height:32px;border-radius:9px 9px 4px 4px;background:#2a2016;transform:translate(-50%,-100%)}
+.fig.s{box-shadow:0 0 0 3px var(--gold-2)}
+.sel{position:absolute;left:14px;bottom:112px;width:440px;padding:14px;display:grid;gap:12px}
+.hd{display:flex;align-items:center;gap:12px}.hd .t{flex:1;display:grid;gap:8px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.act{display:flex;gap:10px;align-items:center}.sp{flex:1}
+.dock{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:6px;padding:8px}
+.d{width:92px;height:76px;border-radius:14px;display:grid;place-items:center;align-content:center;gap:3px;font-weight:700;font-size:16px;color:var(--text)}
+.d svg{width:38px;height:38px;color:var(--gold-2)}.d.on{background:var(--gold);color:var(--ink);box-shadow:0 3px 0 #8a5c1f}.d.on svg{color:var(--ink)}
+.rt{position:absolute;right:14px;top:178px;width:330px;display:grid;gap:10px}
+.n{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--parch);color:var(--ink);border-left:8px solid #b94a30;box-shadow:var(--shadow);font-weight:750;font-size:20px}
+.n .medal{width:48px;height:48px;background:#b94a30;border-color:#7d2c18;color:#fff}.n .medal svg{width:28px;height:28px}
+.n .go{margin-left:auto;background:var(--wood-800);color:var(--text);border-radius:10px;min-height:48px;width:56px;display:grid;place-items:center}
+.tray{display:flex;gap:8px;justify-content:flex-end}.tray .chip{background:var(--parch);color:var(--ink);border-color:rgba(43,32,22,.3)}
+.ov{position:absolute;right:14px;bottom:14px;display:grid;gap:8px}
+.mm{width:300px;height:230px;padding:8px}.mm div{width:100%;height:100%;border-radius:12px;border:2px solid rgba(227,173,79,.6);background:#2a3a2c url(terrain-wide.jpg) center/cover;position:relative}
+.ovt{display:flex;gap:8px;justify-content:flex-end}.ovt .btn{width:56px;height:56px}
+.hot{position:absolute;left:14px;top:96px;display:grid;gap:8px;padding:6px}
+.ring{position:absolute;border-radius:50%;border:3px dashed rgba(244,162,135,.85);transform:translate(-50%,-50%)}
+</style></head><body>
+<div class="top">
+ <div class="panel cell" style="padding:6px 14px"><span class="medal" style="width:50px;height:50px">{{Flag:28}}</span></div>
+ <div class="panel row" style="padding:0 6px">
+  <div class="cell" style="color:#f1cf6e">{{Wheat:40}}<b>276</b><span class="m"><i style="width:72%;background:#f1cf6e"></i></span></div>
+  <div class="cell" style="color:#d0a36c">{{TreePine:40}}<b>100</b><span class="m"><i style="width:40%;background:#d0a36c"></i></span></div>
+  <div class="cell" style="color:#cfcabd">{{Mountain:40}}<b>40</b><span class="m"><i style="width:20%;background:#cfcabd"></i></span></div>
+  <div class="cell" style="color:var(--bad)">{{Droplets:40}}<b>4</b><span class="m"><i style="width:8%;background:var(--bad)"></i></span></div>
+  <div class="cell">{{Users:40}}<b>5<span style="font-size:22px;color:var(--dim)">/6</span></b><span class="m"><i style="width:83%;background:var(--text)"></i></span></div></div></div>
+<div class="panel tr"><span class="medal" style="width:56px;height:56px">{{Sun:32}}</span><b style="font-size:30px">06:42</b><span class="btn">{{Pause:28}}</span><span class="btn on">{{Play:28}}</span><span class="btn">{{FastForward:28}}</span><span class="btn">{{Menu:28}}</span></div>
+
+<div class="panel hot"><span class="btn">{{Repeat:30}}</span><span class="btn">{{ClipboardList:30}}</span><span class="btn">{{Axe:30}}</span><span class="btn">{{House:30}}</span></div>
+
+<div class="ring" style="left:640px;top:470px;width:160px;height:160px"></div><div class="fig" style="left:640px;top:488px"></div>
+<div class="pin bad" style="left:640px;top:440px"><span class="b">{{Droplets:32}}</span></div>
+<div class="fig s" style="left:330px;top:640px"></div><div class="fig s" style="left:362px;top:632px"></div><div class="fig s" style="left:346px;top:664px"></div>
+
+<div class="rt"><div class="n"><span class="medal">{{Shield:28}}</span>Raiders<span class="go">{{Megaphone:28}}</span></div>
+ <div class="tray"><span class="chip warn">{{BookOpen:24}}Bronze</span><span class="chip">{{Users:24}}5</span></div></div>
+
+<div class="panel sel">
+ <div class="hd"><span class="medal">{{Users:38}}</span><div class="t"><h2>3 people</h2><div class="bar"><i style="width:100%"></i></div></div><span class="btn" style="width:44px;height:44px">{{X:24}}</span></div>
+ <div class="stats"><span class="chip">{{Package:24}}9 logs</span><span class="chip">{{Axe:24}}Felling</span><span class="chip good">{{Wheat:24}}Fed</span></div>
+ <div class="act"><span class="btn on">{{TreePine:30}}</span><span class="btn">{{Mountain:30}}</span><span class="btn">{{Wheat:30}}</span><span class="btn">{{Footprints:30}}</span><span class="btn">{{Hand:30}}</span><span class="sp"></span><span class="btn">{{Ellipsis:30}}</span></div>
+</div>
+<div class="panel dock"><span class="d on">{{Hammer:38}}Build</span><span class="d">{{Users:38}}Village</span><span class="d">{{BookOpen:38}}Ages</span><span class="d">{{Crown:38}}Council</span><span class="d">{{House:38}}Home</span></div>
+<div class="ov"><div class="ovt panel" style="padding:6px"><span class="btn on">{{Flag:30}}</span><span class="btn on">{{Layers:30}}</span><span class="btn">{{Gem:30}}</span><span class="btn">{{Droplets:30}}</span></div><div class="panel mm"><div></div></div></div>
+</body></html>

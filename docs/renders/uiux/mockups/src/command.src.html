@@ -1,0 +1,46 @@
+<!-- size 1440x900 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Radial and hotbar</title><link rel="stylesheet" href="mock.css">
+<style>
+body{background:#5f7a43 url(terrain-close.jpg) center/cover}
+.wheel{position:absolute;left:760px;top:360px;width:0;height:0}
+.wheel .hub{position:absolute;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:var(--wood-900);border:3px solid var(--gold);display:grid;place-items:center;color:var(--gold-2);box-shadow:var(--shadow)}
+.w{position:absolute;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:var(--panel);border:2px solid var(--line-strong);display:grid;place-items:center;justify-items:center;box-shadow:var(--shadow);transform:rotate(var(--a)) translateY(-150px) rotate(calc(-1 * var(--a)))}
+.w svg{width:44px;height:44px}
+.w.hot{background:var(--gold);color:var(--ink);border-color:var(--gold-2);box-shadow:0 4px 0 #8a5c1f;width:104px;height:104px;margin:-52px 0 0 -52px}
+.w small{position:absolute;bottom:-30px;font:700 16px/1 system-ui;background:rgba(0,0,0,.7);color:#fff;padding:4px 9px;border-radius:7px;white-space:nowrap}
+.ringbg{position:absolute;left:-190px;top:-190px;width:380px;height:380px;border-radius:50%;background:rgba(20,14,9,.42);border:2px dashed rgba(246,226,184,.28)}
+.dot{position:absolute;left:760px;top:360px;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--gold-2)}
+.sel{position:absolute;left:14px;bottom:128px;width:330px;padding:12px;display:grid;gap:10px}
+.hot{}
+.bar2{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:8px;padding:8px}
+.slot{width:76px;height:76px;border-radius:14px;border:1px solid var(--line);background:rgba(255,236,190,.07);display:grid;place-items:center;position:relative}
+.slot svg{width:40px;height:40px}
+.slot i{position:absolute;left:7px;top:5px;font:800 15px/1 system-ui;color:var(--gold-2);font-style:normal}
+.slot.on{background:var(--gold);color:var(--ink);box-shadow:0 3px 0 #8a5c1f}.slot.on i{color:var(--ink)}
+.slot.off{opacity:.42}
+.slot .cd{position:absolute;inset:0;border-radius:14px;background:conic-gradient(rgba(0,0,0,.55) 0 35%,transparent 0)}
+.sep{width:2px;background:var(--line);margin:6px 4px;border-radius:1px}
+.k{position:absolute;font:700 16px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 12px;border-radius:8px}
+.foot{position:absolute;right:14px;top:14px;width:430px;display:grid;gap:10px;font-size:17px}
+.foot div{background:rgba(0,0,0,.66);border-radius:10px;padding:10px 14px;color:#fff}.foot b{color:var(--gold-2)}
+.army{position:absolute;display:flex}
+.army i{position:absolute;width:16px;height:30px;border-radius:8px 8px 3px 3px;background:#2a2016;box-shadow:0 0 0 3px var(--gold-2)}
+</style></head><body>
+<div class="army" style="left:700px;top:430px"><i style="left:0;top:0"></i><i style="left:34px;top:-8px"></i><i style="left:68px;top:2px"></i><i style="left:16px;top:44px"></i><i style="left:52px;top:40px"></i></div>
+<div class="dot"></div>
+<div class="wheel"><div class="ringbg"></div><div class="hub">{{Crosshair:44}}</div>
+ <span class="w" style="--a:0deg">{{Footprints:44}}<small>Move</small></span>
+ <span class="w hot" style="--a:60deg">{{Swords:50}}<small>Attack</small></span>
+ <span class="w" style="--a:120deg">{{Shield:44}}<small>Guard here</small></span>
+ <span class="w" style="--a:180deg">{{Hand:44}}<small>Halt</small></span>
+ <span class="w" style="--a:240deg">{{Grid3X3:44}}<small>Formation</small></span>
+ <span class="w" style="--a:300deg">{{Flame:44}}<small>Raid</small></span></div>
+<div class="panel sel"><div class="row"><span class="medal" style="width:56px;height:56px">{{Flag:34}}<i class="badge" style="right:-4px;top:auto;bottom:-4px;background:var(--gold);color:var(--ink)">2</i></span><div class="col" style="flex:1;gap:6px"><h2 style="font-size:24px">Veirailia</h2><div class="bar" style="height:8px"><i style="width:46%;background:var(--gold)"></i></div></div></div>
+ <div class="row"><span class="chip">{{Users:24}}6/6</span><span class="chip">{{Crown:24}}1/1</span><span class="chip good">{{Swords:24}}×1.15</span></div></div>
+<div class="panel bar2">
+ <span class="slot on"><i>1</i>{{Swords:40}}</span><span class="slot"><i>2</i>{{Shield:40}}</span><span class="slot"><i>3</i>{{Footprints:40}}</span><span class="slot"><i>4</i>{{Grid3X3:40}}</span><span class="slot"><i>5</i>{{Hand:40}}</span><span class="sep"></span>
+ <span class="slot"><i>6</i>{{Megaphone:40}}</span><span class="slot"><i>7</i>{{Flag:40}}</span><span class="slot off"><i>8</i>{{Anchor:40}}</span><span class="slot"><i>9</i>{{Hammer:40}}<span class="cd"></span></span><span class="slot"><i>0</i>{{House:40}}</span>
+</div>
+<div class="k" style="left:14px;top:14px">RADIAL (hold right mouse / long-press) + HOTBAR (keys 1 to 0)</div>
+<div class="foot"><div><b>Radial</b>: six wedges, always the same order. The likely verb is larger and gold. Release on a wedge to issue it.</div><div><b>Hotbar</b>: the same verbs on number keys. Context fills the slots: army, hull, builder. Unavailable verbs dim and say why on hover.</div><div><b>Replaces</b> the Military rows (Raid / Halt / Arm, formation, guard) that today stack inside the card.</div></div>
+</body></html>

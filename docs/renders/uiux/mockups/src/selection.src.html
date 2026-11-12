@@ -1,0 +1,32 @@
+<!-- size 1440x640 -->
+<!doctype html><html><head><meta charset="utf-8"><title>One selection card</title><link rel="stylesheet" href="mock.css">
+<style>
+body{height:640px;background:#5f7a43 url(terrain-close.jpg) center/cover}
+.card{position:absolute;top:84px;width:440px;padding:14px;display:grid;gap:12px}
+.hd{display:flex;align-items:center;gap:12px}
+.hd .t{flex:1;min-width:0;display:grid;gap:8px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.act{display:flex;gap:10px;align-items:center}
+.act .sp{flex:1}
+.k{position:absolute;top:22px;font:700 16px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 12px;border-radius:8px}
+.foot{position:absolute;left:14px;right:14px;bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;font-size:17px}
+.foot div{background:rgba(0,0,0,.62);border-radius:10px;padding:10px 14px;color:#fff}.foot b{color:var(--gold-2)}
+</style></head><body>
+<div class="k" style="left:14px">PERSON</div><div class="k" style="left:490px">BUILDING</div><div class="k" style="left:966px">ANIMAL</div>
+<div class="panel card" style="left:14px">
+ <div class="hd"><span class="medal">{{User:38}}</span><div class="t"><h2>Thetzeat</h2><div class="bar"><i style="width:100%"></i></div></div><span class="btn" style="width:44px;height:44px">{{Info:24}}</span><span class="btn" style="width:44px;height:44px">{{X:24}}</span></div>
+ <div class="stats"><span class="chip">{{Wheat:24}}<span style="color:var(--good)">Fed</span></span><span class="chip">{{Package:24}}3 logs</span><span class="chip">{{Axe:24}}Felling</span><span class="chip" title="Warm">{{Snowflake:24}}</span></div>
+ <div class="act"><span class="btn on">{{TreePine:30}}</span><span class="btn">{{Mountain:30}}</span><span class="btn">{{Wheat:30}}</span><span class="btn">{{Footprints:30}}</span><span class="btn">{{Hand:30}}</span><span class="sp"></span><span class="btn">{{Ellipsis:30}}</span></div>
+</div>
+<div class="panel card" style="left:490px">
+ <div class="hd"><span class="medal">{{Flame:38}}</span><div class="t"><h2>Hearth</h2><div class="bar"><i style="width:80%"></i></div></div><span class="btn" style="width:44px;height:44px">{{Info:24}}</span><span class="btn" style="width:44px;height:44px">{{X:24}}</span></div>
+ <div class="stats"><span class="chip">{{Flame:24}}62%</span><span class="chip">{{Users:24}}3/4</span><span class="chip warn">{{ClipboardList:24}}2 queued</span><span class="chip">{{Wheat:24}}18</span></div>
+ <div class="act"><span class="btn primary">{{Hammer:28}}Craft</span><span class="btn">{{ArrowUpDown:30}}</span><span class="btn">{{Pause:30}}</span><span class="sp"></span><span class="btn">{{Recycle:30}}</span><span class="btn">{{Ellipsis:30}}</span></div>
+</div>
+<div class="panel card" style="left:966px">
+ <div class="hd"><span class="medal">{{PawPrint:38}}</span><div class="t"><h2>Goat</h2><div class="bar"><i style="width:92%"></i></div></div><span class="btn" style="width:44px;height:44px">{{Info:24}}</span><span class="btn" style="width:44px;height:44px">{{X:24}}</span></div>
+ <div class="stats"><span class="chip">{{Milk:24}}Milk 2</span><span class="chip">{{House:24}}Pen 3/6</span><span class="chip">{{Heart:24}}</span><span class="chip">{{Leaf:24}}</span></div>
+ <div class="act"><span class="btn primary">{{House:28}}Lead home</span><span class="btn">{{Milk:30}}</span><span class="btn">{{Beef:30}}</span><span class="sp"></span><span class="btn">{{Hand:30}}</span><span class="btn">{{Ellipsis:30}}</span></div>
+</div>
+<div class="foot"><div><b>One anatomy</b>: medal, name, condition bar, four icon stats, one action row.</div><div><b>Icons carry the state</b>; words only where a number would be ambiguous.</div><div><b>One gold action</b> per card: the thing you most likely want next.</div><div><b>Everything else</b> is behind the last button, never a second panel.</div></div>
+</body></html>

@@ -786,7 +786,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 }
 
 /** Everything the selection can be ordered to do. Shared by the archived HUD and the Hearth "More orders" sheet; `hideJobs` lets Hearth show the job grid itself. */
-export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs }: { hud: HudSnapshot; engine: Engine | null; selMin: boolean; onOffer: (team: number) => void; hideJobs?: boolean }) {
+export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideCommand }: { hud: HudSnapshot; engine: Engine | null; selMin: boolean; onOffer: (team: number) => void; hideJobs?: boolean; hideCommand?: boolean }) {
   const setTradeOpen = onOffer;
   const sel = hud.selection;
   const hpPct = sel.maxHp > 0 ? Math.round((100 * sel.hp) / sel.maxHp) : 0;
@@ -800,7 +800,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs }: { h
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
         {!selMin&&engine&&sel.kind!=='none'&&<SiegeRamControls engine={engine}/>}
-        {!selMin&&engine&&((sel.kind==='unit'||sel.kind==='units')&&engine.game.selectedUnits().some(u=>u.team===0)||sel.kind==='boat'&&sel.team===0)&&<GameDisclosure label="Command"><CommanderControls engine={engine}/></GameDisclosure>}
+        {!hideCommand&&!selMin&&engine&&((sel.kind==='unit'||sel.kind==='units')&&engine.game.selectedUnits().some(u=>u.team===0)||sel.kind==='boat'&&sel.team===0)&&<GameDisclosure label="Command"><CommanderControls engine={engine}/></GameDisclosure>}
         {!selMin && engine && sel.kind==='unit' && sel.team===0 &&
           <GameDisclosure label="Inventory & activity"><ResidentInventory game={engine.game} residents={engine.game.selectedUnits().filter(u=>u.team===0)}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}

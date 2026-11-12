@@ -1,0 +1,41 @@
+<!-- size 1440x520 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Top bar: icon first</title><link rel="stylesheet" href="mock.css">
+<style>
+body{height:520px;background:#5f7a43 url(terrain-close.jpg) center/cover}
+.strip{position:absolute;left:0;right:0;height:96px}
+.cap{position:absolute;left:14px;font:700 15px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 11px;border-radius:8px}
+.old{top:30px;height:78px;overflow:hidden}.old img{width:1440px;display:block;margin-top:-4px}
+.res{position:absolute;left:14px;top:176px;display:flex;gap:6px;padding:6px;align-items:stretch}
+.cell{display:grid;grid-template-columns:auto auto;grid-template-rows:auto 8px;column-gap:10px;row-gap:5px;align-items:center;padding:8px 14px 8px 10px;border-radius:12px;min-width:118px;position:relative}
+.cell svg{width:42px;height:42px;grid-row:1/3}
+.cell b{font-size:32px;line-height:1;font-weight:750;font-variant-numeric:tabular-nums}
+.cell .m{grid-column:2;height:7px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden}.cell .m i{display:block;height:100%;border-radius:4px}
+.cell.hot{background:rgba(244,162,135,.14);outline:2px solid rgba(244,162,135,.6)}
+.trend{font-size:15px;font-weight:700;margin-left:4px;vertical-align:middle}
+.flag{display:flex;align-items:center;gap:10px;padding:0 16px;height:78px;font-size:22px;font-weight:700;position:absolute;left:14px;top:176px}
+.time{position:absolute;right:14px;top:176px;display:flex;align-items:center;gap:14px;padding:10px 14px}
+.time .dial{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) 0 38%,rgba(0,0,0,.4) 0);position:relative}
+.time .dial span{width:52px;height:52px;border-radius:50%;background:var(--wood-800);display:grid;place-items:center;color:var(--gold-2)}
+.time .t{font-size:32px;font-weight:750;line-height:1}.time .s{font-size:16px;color:var(--dim)}
+.sp{display:flex;gap:6px}
+.tipbox{position:absolute;left:132px;top:290px}
+.tipbox:before{content:"";position:absolute;left:36px;top:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--parch)}
+.legend{position:absolute;left:14px;bottom:14px;right:14px;display:flex;gap:30px;font-size:17px}
+.legend b{color:var(--gold-2)}
+</style></head><body>
+<div class="cap" style="top:8px">TODAY (Hearth top bar, before)</div>
+<div class="strip old"><img src="../before/worker.jpg" alt=""></div>
+<div class="cap" style="top:150px;left:14px">PROPOSED: icon first, bigger glyphs, a meter under every number, no words</div>
+<div class="panel flag" style="left:14px"><span class="medal" style="width:52px;height:52px"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="30" width="30" xmlns="http://www.w3.org/2000/svg"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg></span></div>
+<div class="panel res" style="left:110px">
+ <div class="cell"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="42" width="42" xmlns="http://www.w3.org/2000/svg"><path d="M2 22 16 8"></path><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"></path><path d="M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"></path><path d="M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"></path><path d="M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"></path></svg><b style="color:#f1cf6e">276<span class="trend good">▲</span></b><span class="m"><i style="width:72%;background:#f1cf6e"></i></span></div>
+ <div class="cell"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="42" width="42" xmlns="http://www.w3.org/2000/svg"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"></path><path d="M12 22v-3"></path></svg><b style="color:#d0a36c">100</b><span class="m"><i style="width:40%;background:#d0a36c"></i></span></div>
+ <div class="cell"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="42" width="42" xmlns="http://www.w3.org/2000/svg"><path d="m8 3 4 8 5-5 5 15H2L8 3z"></path></svg><b style="color:#cfcabd">40</b><span class="m"><i style="width:20%;background:#cfcabd"></i></span></div>
+ <div class="cell hot"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="42" width="42" xmlns="http://www.w3.org/2000/svg"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path></svg><b style="color:var(--bad)">4<span class="trend bad">▼</span></b><span class="m"><i style="width:8%;background:var(--bad)"></i></span></div>
+ <div class="cell"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="42" width="42" xmlns="http://www.w3.org/2000/svg"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><b>5<span style="font-size:22px;color:var(--dim)">/6</span></b><span class="m"><i style="width:83%;background:var(--text)"></i></span></div>
+</div>
+<div class="panel time"><div class="dial"><span><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="30" width="30" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></span></div><div><div class="t">06:42</div><div class="s">Spring · Y1</div></div>
+ <div class="sp"><span class="btn"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="28" width="28" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="4" width="4" height="16" rx="1"></rect><rect x="6" y="4" width="4" height="16" rx="1"></rect></svg></span><span class="btn on"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="28" width="28" xmlns="http://www.w3.org/2000/svg"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span><span class="btn"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="28" width="28" xmlns="http://www.w3.org/2000/svg"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></span><span class="btn"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="28" width="28" xmlns="http://www.w3.org/2000/svg"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></span></div></div>
+<div class="tip tipbox"><b>Water 4 L</b>Lasts about 1 day. Build a well or dig near the river.</div>
+<div class="legend"><span><b>Glyph 42 px</b> (was 28), number 32 px (was 22)</span><span><b>Meter</b> = days of supply; red when under 3 days</span><span><b>Words</b> only in the hover tooltip</span></div>
+</body></html>

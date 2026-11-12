@@ -1,0 +1,49 @@
+<!-- size 1440x900 -->
+<!doctype html><html><head><meta charset="utf-8"><title>Map overlays</title><link rel="stylesheet" href="mock.css">
+<style>
+body{background:#5f7a43 url(terrain-wide.jpg) center/cover}
+svg.ov{position:absolute;inset:0;width:1440px;height:900px;stroke:none;fill:none}
+.tog{position:absolute;right:14px;top:196px;display:grid;gap:8px;padding:8px}
+.tog .t{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;min-width:240px;min-height:56px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,236,190,.06);font-weight:650;font-size:18px}
+.tog .t.on{background:rgba(227,173,79,.2);border-color:var(--gold);color:var(--gold-2)}
+.tog .t em{font-style:normal;width:46px;height:26px;border-radius:13px;background:rgba(0,0,0,.45);position:relative}
+.tog .t em:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--dim)}
+.tog .t.on em{background:var(--gold)}.tog .t.on em:after{left:23px;background:var(--ink)}
+.lab{position:absolute;font:750 18px/1 system-ui;color:#fff;background:rgba(0,0,0,.6);padding:6px 10px;border-radius:8px;display:flex;gap:8px;align-items:center}
+.lab svg{width:22px;height:22px}
+.mm{position:absolute;right:14px;bottom:14px;width:300px;height:300px;padding:8px}
+.mm div{width:100%;height:100%;border-radius:12px;border:2px solid rgba(227,173,79,.6);background:#2a3a2c url(terrain-wide.jpg) center/cover;position:relative;overflow:hidden}
+.mm div:after{content:"";position:absolute;left:30px;top:70px;width:140px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(246,213,140,.55),rgba(246,213,140,0) 70%)}
+.k{position:absolute;font:700 16px/1 system-ui;background:rgba(0,0,0,.66);color:#fff;padding:7px 12px;border-radius:8px}
+.foot{position:absolute;left:14px;bottom:14px;width:900px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:17px}
+.foot div{background:rgba(0,0,0,.66);border-radius:10px;padding:10px 14px;color:#fff}.foot b{color:var(--gold-2)}
+</style></head><body>
+<svg class="ov" viewBox="0 0 1440 900">
+ <defs><radialGradient id="inf" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f6d58c" stop-opacity=".62"/><stop offset=".55" stop-color="#f6d58c" stop-opacity=".25"/><stop offset="1" stop-color="#f6d58c" stop-opacity="0"/></radialGradient>
+ <radialGradient id="rinf" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#d96a4c" stop-opacity=".5"/><stop offset="1" stop-color="#d96a4c" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="470" cy="520" rx="380" ry="280" fill="url(#inf)"/>
+ <ellipse cx="470" cy="520" rx="300" ry="210" fill="none" stroke="#f6d58c" stroke-opacity=".45" stroke-width="2" stroke-dasharray="3 7"/>
+ <ellipse cx="470" cy="520" rx="200" ry="140" fill="none" stroke="#f6d58c" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 7"/>
+ <ellipse cx="1090" cy="250" rx="260" ry="190" fill="url(#rinf)"/>
+ <path d="M130 420 C180 270 420 230 640 300 C800 350 840 520 770 650 C690 790 420 820 250 760 C120 700 90 520 130 420 Z" fill="rgba(246,213,140,.10)" stroke="#f6d58c" stroke-width="5" stroke-dasharray="16 10"/>
+ <path d="M840 170 C920 110 1180 100 1300 180 C1390 260 1340 360 1220 400 C1060 440 880 360 840 260 Z" fill="rgba(217,106,76,.12)" stroke="#d96a4c" stroke-width="5" stroke-dasharray="16 10"/>
+ <path d="M770 650 C850 600 930 560 1010 470" stroke="#f6d58c" stroke-width="4" stroke-opacity=".7" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>
+ <path d="M130 420 C180 270 420 230 640 300" fill="none"/>
+</svg>
+<div class="lab" style="left:200px;top:320px">{{Flag:22}}Dawnfolk</div>
+<div class="lab" style="left:1000px;top:130px;background:rgba(150,52,32,.85)">{{Flag:22}}Ashmark · hostile</div>
+<div class="lab" style="left:620px;top:626px;background:rgba(246,213,140,.9);color:#2b2016">{{Waypoints:22}}route holds influence</div>
+<div class="lab" style="left:430px;top:470px;background:rgba(40,70,40,.8)">{{TreePine:22}}412</div>
+<div class="lab" style="left:560px;top:590px;background:rgba(60,60,60,.8)">{{Mountain:22}}96</div>
+<div class="lab" style="left:300px;top:640px;background:rgba(40,80,110,.85)">{{Fish:22}}60</div>
+<div class="panel tog">
+ <div class="t on">{{Flag:30}}Territory<em></em></div>
+ <div class="t on">{{Layers:30}}Influence<em></em></div>
+ <div class="t on">{{Gem:30}}Resources<em></em></div>
+ <div class="t">{{Droplets:30}}Water<em></em></div>
+ <div class="t">{{Eye:30}}Fog<em></em></div>
+</div>
+<div class="panel mm"><div></div></div>
+<div class="k" style="right:14px;top:156px">OVERLAYS (key M cycles, same toggles on the minimap)</div>
+<div class="foot"><div><b>Influence</b> uses the real terrainInfluence field: it fades with route cost, stops at mountains and sea until a ship or road carries it.</div><div><b>Territory</b> is the owned border, dashed, in the society colour. A rival's is red only when hostile.</div><div><b>Resources</b> shows only what the village knows: counts, not exact hidden stock.</div></div>
+</body></html>
