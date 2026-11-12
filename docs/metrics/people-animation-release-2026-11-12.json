@@ -1,0 +1,68 @@
+{
+  "commit": "004ffee7a3a7f1dacd0f288ae0e2aae970e8778c",
+  "release": "2026-11-12T12-39-37-682Z-004ffee",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "integrationThrough": "46b28fa",
+  "scopedChecks": {
+    "passed": 38,
+    "total": 38,
+    "uniqueFocusedNativeAndShared": 35,
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Built original native household cooking drives visible shared rig, pause freezes progress/pose, real delivery produces cue; original53 durable restore and archived renderer switch. No100-resident FPS or full visual-overhaul acceptance.",
+      "meal": {
+        "delivered": 4,
+        "clip": "tend",
+        "pauseFrozen": true,
+        "stats": {
+          "people": 5,
+          "corpses": 0,
+          "variants": 27,
+          "draws": 14,
+          "triangles": 1708,
+          "tiers": [
+            4,
+            1,
+            0
+          ],
+          "fallbacks": 0
+        }
+      },
+      "population": 53,
+      "originalRig": {
+        "people": 52,
+        "corpses": 0,
+        "variants": 16,
+        "draws": 16,
+        "triangles": 17196,
+        "tiers": [
+          22,
+          30,
+          0
+        ],
+        "fallbacks": 0
+      },
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "visualReview": "Native actual cooking pose rendered, geometry visible; temporary screenshot deleted. Archived legacy renderer retained.",
+  "originalVillageUnchanged": true,
+  "limits": [
+    "No100-resident frame-time claim",
+    "No full campaign or complete visual-overhaul claim",
+    "Geometry allocation limit restores legacy people for session"
+  ],
+  "fullReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "unchanged": true,
+    "auditStatus": "Prior verified baseline; no full-gate credit from scoped animation acceptance"
+  }
+}
