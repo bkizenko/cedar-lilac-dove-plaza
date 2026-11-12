@@ -65,6 +65,7 @@ import { FOOD_KINDS } from "./pantry";
 import {CROPS,CROP_TRIAL_RULES,initializeCultivation} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
+import {setFlowFieldsEnabled} from './flowFields';
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
@@ -733,5 +734,6 @@ export function decodeGame(raw:unknown):Game {
   g.rebuildWalk();
   discountTownhallPlans(g);
   discountQuarryPlans(g);
+  setFlowFieldsEnabled(g,false);
   return g;
 }

@@ -108,7 +108,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
-import {flowPath} from "./flowFields";
+import {flowPath,setFlowFieldsEnabled} from "./flowFields";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
@@ -388,6 +388,7 @@ export class Game {
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
+    setFlowFieldsEnabled(this,true); // new games only; decodeGame turns this off so old saves keep historic A*
     this.state.trees = this.world.trees.map((t) => ({
       ...t,
       maxAmt: t.maxAmt || t.amount,
