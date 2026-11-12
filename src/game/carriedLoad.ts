@@ -1,3 +1,4 @@
+import type {WildProject} from './wildCraft';
 import {METHOD_RECORD_RULES} from './methodRecordRules';
 import {IRON_METALLURGY_RULES as IRON} from './ironMetallurgyRules';
 import type {ProductionProject} from './production';
@@ -11,6 +12,9 @@ import type{Unit}from'./types';
 import{GATHER}from'./constants';
 const charcoalLoads=new WeakMap<Unit,ProductionProject>();
 const copperSmeltLoads=new WeakMap<Unit,ProductionProject>();
+const wildLoads=new WeakMap<Unit,WildProject>();
+export function bindWildCraftLoad(u:Unit,p:WildProject){wildLoads.set(u,p);}
+function wildCraftLoad(u:Unit){const p=wildLoads.get(u);if(!p||u.wildWorkId!==p.id||p.actorId!==u.id||p.team!==u.team||p.packet)return 0;return(Object.values(p.held.items).reduce((n,v)=>n+(v||0),0)+Object.values(p.held.goods).reduce((n,v)=>n+(v||0),0)+Object.values(p.held.food).reduce((n,v)=>n+(v||0),0)+Object.values(p.carried.items).reduce((n,v)=>n+(v||0),0)+Object.values(p.carried.goods).reduce((n,v)=>n+(v||0),0)+Object.values(p.carried.food).reduce((n,v)=>n+(v||0),0))/CARRIED_LOAD_RULES.itemBatchUnits+p.held.wood/GATHER.wood.carry+p.held.water/CARRIED_LOAD_RULES.waterLiters;}
 /** A view of the original project, never copied itemCargo or another packet. */
 export function bindCopperSmeltLoad(u:Unit,p:ProductionProject){if(p.recipe==='smeltCopper')copperSmeltLoads.set(u,p);}
 function copperSmeltLoad(u:Unit){const p=copperSmeltLoads.get(u);if(!p||p.recipe!=='smeltCopper'||p.actorId!==u.id||p.team!==u.team)return 0;const phase=p.phase==='paused'?p.resumePhase:p.phase;return phase==='carrying'||phase==='unloading'?(COPPER_METALLURGY_RULES.orePerBatch+COPPER_METALLURGY_RULES.charcoalPerBatch)/CARRIED_LOAD_RULES.itemBatchUnits:phase==='returning'?COPPER_METALLURGY_RULES.metalPerBatch/CARRIED_LOAD_RULES.itemBatchUnits:0;}
@@ -30,7 +34,7 @@ export function carriedLoadUnits(u:Unit){
  const copper=copperStudyHeld(u),prototype=copper.copper/GATHER.copper.carry+copper.wood/GATHER.wood.carry+copper.charcoal/CARRIED_LOAD_RULES.itemBatchUnits;
  const house=u.housingCargo?.materials;const housing=house?house.wood/GATHER.wood.carry+house.stone/GATHER.stone.carry+house.plantFibre/CARRIED_LOAD_RULES.itemBatchUnits:0;
  const items=Object.values(u.itemCargo||{}).reduce((sum,n)=>sum+(n||0),0),water=(u.waterWork?.liters||0)+(u.husbandryWork?.waterLiters||0);
- return (u.methodRecordCargoId===undefined?0:METHOD_RECORD_RULES.loadUnits/CARRIED_LOAD_RULES.itemBatchUnits)+(u.armorRepair?(u.armorRepair.paid.cloth+u.armorRepair.paid.cordage)/CARRIED_LOAD_RULES.itemBatchUnits:0)+charcoalLoad(u)+copperSmeltLoad(u)+ironSmeltLoad(u)+prototype+equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits+housing+Math.max(0,u.carry)/(GATHER[u.carryType||'wood']?.carry||GATHER.wood.carry)+items/CARRIED_LOAD_RULES.itemBatchUnits+water/CARRIED_LOAD_RULES.waterLiters+(u.expedition?.food||0)/CARRIED_LOAD_RULES.provisionFood+(u.spareGarment?TEXTILE_RULES.spareLoadUnits[u.spareGarment.item]:0)+(u.garmentRepair?TEXTILE_RULES.spareLoadUnits[u.garmentRepair.garment.item]+Object.values(u.garmentRepair.paid).reduce((n,v)=>n+(v||0),0)/CARRIED_LOAD_RULES.itemBatchUnits:0);
+ return wildCraftLoad(u)+(u.methodRecordCargoId===undefined?0:METHOD_RECORD_RULES.loadUnits/CARRIED_LOAD_RULES.itemBatchUnits)+(u.armorRepair?(u.armorRepair.paid.cloth+u.armorRepair.paid.cordage)/CARRIED_LOAD_RULES.itemBatchUnits:0)+charcoalLoad(u)+copperSmeltLoad(u)+ironSmeltLoad(u)+prototype+equipmentLoadUnits(u)/CARRIED_LOAD_RULES.itemBatchUnits+housing+Math.max(0,u.carry)/(GATHER[u.carryType||'wood']?.carry||GATHER.wood.carry)+items/CARRIED_LOAD_RULES.itemBatchUnits+water/CARRIED_LOAD_RULES.waterLiters+(u.expedition?.food||0)/CARRIED_LOAD_RULES.provisionFood+(u.spareGarment?TEXTILE_RULES.spareLoadUnits[u.spareGarment.item]:0)+(u.garmentRepair?TEXTILE_RULES.spareLoadUnits[u.garmentRepair.garment.item]+Object.values(u.garmentRepair.paid).reduce((n,v)=>n+(v||0),0)/CARRIED_LOAD_RULES.itemBatchUnits:0);
 }
 export function carriedLoadFraction(u:Unit,capacityMultiplier=1){return Math.min(CARRIED_LOAD_RULES.maximumBurdenFraction,carriedLoadUnits(u)/Math.max(1,capacityMultiplier));}
 export function burdenPace(fraction:number){return Math.max(CARRIED_LOAD_RULES.minimumPersonPace,1-CARRIED_LOAD_RULES.personMaximumPenalty*Math.max(0,fraction));}

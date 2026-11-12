@@ -131,7 +131,7 @@ import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction,assignPlacedConstruction} from "./construction";
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
-import {wildCraftAI,tickWildCraft} from './wildCraft';
+import {wildCraftAI,tickWildCraft,pauseWildWork,wildBodyMustRemain} from './wildCraft';
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
@@ -1871,6 +1871,7 @@ export class Game {
     pauseArmorRepair(this,u);
     pauseGarmentRepair(this,u);
     pauseProduction(this,u);
+    pauseWildWork(this,u);
     pauseFibreWork(this,u);
     if(u.clayWork)u.clayWork.paused=true;
     u.exploreAfterDelivery=undefined;
@@ -6020,7 +6021,7 @@ export class Game {
         reconcileFarmToolCargo(this);
         reconcileMethodRecords(this);
         reconcileWeaponCargo(this);
-        this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
+        this.state.units = this.state.units.filter((u) => u.hp > 0||wildBodyMustRemain(u)||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         tickRaidDefense(this);
         finishCommandFrame(this,sdt);
         this.checkVictory();
