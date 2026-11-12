@@ -9,7 +9,7 @@ export function CopperStudyControl({engine,workplace}:{engine:Engine;workplace:n
  const query={kind:'copper-study-issues' as const,workplaceId:workplace},read=useOwnerReadModels(engine,[query]),availability=read(query),model=availability.model;
  const [busy,setBusy]=useState(false),[feedback,setFeedback]=useState(''),mounted=useRef(true),requestId=useRef(0),epoch=engine.dispatchEpoch;
  useEffect(()=>{mounted.current=true;setBusy(false);setFeedback('');return()=>{mounted.current=false;requestId.current++;};},[engine,workplace,epoch]);
- if(t.copperExperiment)return <p className="text-sm text-parchment">Copper prototype established · {g.state.units.filter(u=>u.team===0&&u.hp>0&&u.farmTool==='copperTools').length} residents equipped</p>;
+ if(t.copperExperiment&&!work)return <p className="text-sm text-parchment">Copper prototype established · {g.state.units.filter(u=>u.team===0&&u.hp>0&&u.farmTool==='copperTools').length} residents equipped</p>;
  const issue=availability.issue||model?.logs,charcoalIssue=availability.issue||model?.charcoal,helpers=person?practicalHelperReport(g,person.id):null,helperIssue=person?copperHelperIssue(g,person.id):'Start a paid trial first';
  const help=()=>{if(person){const result=beginCopperHelper(g,person.id);g.banner(result.reason,4);engine.pushHud();}};
  const start=async(fuel:'logs'|'charcoal'='logs')=>{

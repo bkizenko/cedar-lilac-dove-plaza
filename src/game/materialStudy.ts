@@ -26,8 +26,9 @@ function experimenterFree(g:Game,u:Unit,team:number,resuming=false){return u.tea
 const enough=(g:Game,team:number,fuel:CopperFuel)=>{const t=g.tribe(team);return t.copper>=COPPER_STUDY_RULES.copperUnits&&(fuel==='charcoal'?(t.items?.charcoal||0)>=COPPER_STUDY_RULES.charcoalUnits:t.wood>=COPPER_STUDY_RULES.woodLogs);};
 function copperStudyProposal(g:Game,workplace:number,team=0,fuel:CopperFuel='logs'){
  const b=g.state.buildings.find(b=>b.id===workplace&&b.team===team&&b.type==='workshop'&&g.finished(b));if(!b)return{reason:'Finish a crafting shelter for physical copper trials'};
- const t=g.tribe(team);if(t.copperExperiment)return{reason:'A workable copper prototype is already established'};
- const paused=g.state.units.find(u=>u.copperStudy?.paused&&(u.copperStudy.version!==1||u.copperStudy.team===team)&&experimenterFree(g,u,team,true)&&!!g.interactionSpot(u,b));if(paused)return{b,u:paused,resuming:true,reason:null};
+ const t=g.tribe(team);
+ const paused=g.state.units.find(u=>u.copperStudy?.paused&&(u.copperStudy.version!==1||u.copperStudy.team===team)&&experimenterFree(g,u,team,true)&&!!g.interactionSpot(u,b));if(paused){if(paused.farmTool||paused.farmToolCargoId!==undefined)return{reason:'Put away the existing tool before finishing this paid prototype'};return{b,u:paused,resuming:true,reason:null};}
+ if(t.copperExperiment)return{reason:'A workable copper prototype is already established'};
  if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.copperStudy&&(u.copperStudy.version!==1||u.copperStudy.team===team)))return{reason:'The existing experimenter is busy; resume their original trial'};
  if(!['logs','charcoal'].includes(fuel)||!enough(g,team,fuel))return{reason:`Bring ${COPPER_STUDY_RULES.copperUnits} copper and ${fuel==='charcoal'?COPPER_STUDY_RULES.charcoalUnits+' charcoal':COPPER_STUDY_RULES.woodLogs+' logs'} home for one prototype`};
  const u=g.state.units.filter(u=>experimenterFree(g,u,team)).sort((a,c)=>Number(c.selected)-Number(a.selected)||Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).find(u=>!!g.interactionSpot(u,b)&&!!cacheFor(g,u));if(!u)return{reason:'Need an available adult without tools, empty cargo and routes to storage and shelter'};return{b,u,resuming:false,reason:null};
