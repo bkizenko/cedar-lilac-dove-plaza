@@ -3,7 +3,7 @@ import type {FoodKind,Tribe} from './types';
 /** Tunable game preferences, not a universal historical ranking or calories.
  * One hedon is enjoyment per nourishment unit actually eaten. Raw grain is an
  * emergency ration; eating it never grants the pleasure of a prepared dish. */
-export const FOOD_TASTE:Record<FoodKind,number>={provisions:5,berries:6,fish:2,meat:9,grain:0,pulses:5,tubers:5,milk:5,bread:6,driedMeat:7,driedFish:3,smokedMeat:8,smokedFish:4,cookedFish:7,porridge:3,fermentedMilk:6,freshCurd:7,whey:2,smallBeer:5,beer:7};
+export const FOOD_TASTE:Record<FoodKind,number>={provisions:5,berries:6,fish:2,meat:9,grain:0,pulses:5,tubers:5,milk:5,bread:6,driedMeat:7,driedFish:3,smokedMeat:8,smokedFish:4,cookedFish:7,porridge:3,fermentedMilk:6,freshCurd:7,whey:2,smallBeer:5,beer:7,driedBerries:7,jam:8,tallow:4};
 export const RAW_ITEM_TASTE={rawMeat:1,roughGrain:0,grainSheaves:0} as const;
 export const FOOD_EXPERIENCE_RULES={version:1,memorySeconds:180,neutralTaste:5,maximumTaste:10,appealWeight:.04,maximumTotal:1e12} as const;
 export type FoodExperience={version:1;lastAt:number;nourishmentEaten:number;hedons:number;rawUnits:number;recentSatiety:number;recentPleasure:number};

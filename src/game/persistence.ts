@@ -62,6 +62,7 @@ import {validRivalActivityState} from './rivalActivity';
 import {validWildPlantState} from "./ecology";
 import {validTowerPlatformState} from './towerPlatforms';
 import {validProductionState,PRODUCTION_RECIPES} from './production';
+import {validWildCraftState} from './wildCraft';
 import {discountQuarryPlans} from "./mining";
 import {validCampMoveState} from './nomadicCamp';
 import {validContactState} from './encounters';
@@ -194,7 +195,7 @@ function validateGamePayload(raw: unknown) {
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validCopperStudies(s)||!validTradedTeaching(s)||!validArmorRepairs(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
-  if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
+  if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validWildCraftState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
   if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validRaidDefense(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();

@@ -35,7 +35,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey" | "smallBeer" | "beer";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey" | "smallBeer" | "beer" | "driedBerries" | "jam" | "tallow";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
@@ -168,6 +168,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   waterVessel?:import('./pottery').WaterVessel;
   sitePreparationId?:number;
   productionProjectId?:number;
+  wildWorkId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
   tradedTeaching?:import('./tradedTeaching').TradedTeachingOrder;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
@@ -552,6 +553,7 @@ export type GameState = {
   clay?:import('./pottery').ClayState;
   cerealProcessing?:import('./cerealRules').CerealLedger;
   production?:import('./production').ProductionState;
+  wildCraft?:import('./wildCraft').WildCraftState;
   campSites?:{team:number;x:number;z:number}[];
   campMove?:import('./nomadicCamp').CampMove;
   autoWorkEnabled?:boolean;
