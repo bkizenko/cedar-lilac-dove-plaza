@@ -267,16 +267,18 @@ export function placeWorld(ctx: PlacementCtx): Placed {
   for (const c of lattice) capacity.set(c.landmass, (capacity.get(c.landmass) || 0) + 1);
   const landmasses = [...capacity.entries()].filter(([, n]) => n >= 6).sort((a, b) => b[1] - a[1]);
   const camps: Camp[] = [], reports: StartReport[] = [], used: StartCharacter[] = [];
-  const spacingMin = 130, spacingWant = 0.2 * size;
+  let spacingMin = 130; const spacingWant = 0.2 * size;
+  let qRelax = 0;
   const pickFor = (team: number, preferLandmass: number | undefined, qTarget: number | undefined) => {
     let best: Cand | undefined, bestScore = -Infinity;
-    const pool = lattice.filter(c => (preferLandmass === undefined || c.landmass === preferLandmass) && camps.every(k => Math.hypot(k.x - c.x, k.z - c.z) >= spacingMin));
-    const withBeauty = team === 0 ? pool.map(c => ({ ...c, beauty: scenicBeautyAt(sample, waterY, c.x, c.z, level, SCENERY_RULES.backdropRadiusMeters).score })) : pool;
-    const beauties = team === 0 ? [...withBeauty].map(c => c.beauty).sort((a, b) => a - b) : [];
+    const qMin = 0.78 - preset.plateau * 0.3 - qRelax;
+    const pool = lattice.filter(c => c.q >= qMin && (preferLandmass === undefined || c.landmass === preferLandmass) && camps.every(k => Math.hypot(k.x - c.x, k.z - c.z) >= spacingMin));
+    // scenic scoring is the dearest call here: only the player pays for it, once per candidate, and only for viable sites
+    const withBeauty = team === 0 ? pool.map(c => { if (c.beauty === 0) c.beauty = scenicBeautyAt(sample, waterY, c.x, c.z, level, SCENERY_RULES.backdropRadiusMeters).score || 1e-6; return c; }) : pool;
+    const beauties = team === 0 ? withBeauty.map(c => c.beauty).sort((a, b) => a - b) : [];
     const floor = team === 0 ? beauties[Math.floor((beauties.length - 1) * 0.55)] ?? 0 : 0;
     for (const c of withBeauty) {
       if (team === 0 && c.beauty < floor) continue;
-      if (c.q < 0.78 - preset.plateau * 0.3) continue;
       const nearest = camps.length ? Math.min(...camps.map(k => Math.hypot(k.x - c.x, k.z - c.z))) : spacingWant;
       const distinct = used.includes(c.character) ? 0 : 0.55;
       const fair = qTarget === undefined ? c.q : -Math.abs(c.q - qTarget) * 1.2 + c.q * 0.3;
@@ -306,7 +308,24 @@ export function placeWorld(ctx: PlacementCtx): Placed {
   };
   // the player's landmass is the largest viable one; societies spread over landmasses by area
   const primary = landmasses[0]?.[0];
-  if (!tryTeam(0, primary, undefined)) throw new Error('V20 no viable start for the player');
+  if (!tryTeam(0, primary, undefined)) {
+    // the lattice is 20 m wide, so it can step over the narrow strip where a surveyed bank is reachable;
+    // snap candidates onto real banks and re-run the same measured checks instead of rejecting the whole map
+    const near = landmasses.length ? [{ x: 0, z: 0 }, { x: -half / 2, z: -half / 2 }, { x: half / 2, z: -half / 2 }, { x: -half / 2, z: half / 2 }, { x: half / 2, z: half / 2 }] : [];
+    const seenSnap = new Set<string>(), snapped: Cand[] = [];
+    for (const o of near) for (const p of survey.candidates(o)) {
+      const key = `${p.x},${p.z}`;
+      if (seenSnap.has(key)) continue;
+      seenSnap.add(key);
+      if (primary !== undefined && landmassOf(p.x, p.z) !== primary) continue;
+      const c = evalSite(p.x, p.z);
+      if (c && c.q >= 0.78 - preset.plateau * 0.3 && c.f.wood >= 8 && c.f.stone >= 1) snapped.push(c);
+    }
+    snapped.sort((a, b) => b.q - a.q);
+    let ok = false;
+    for (const c of snapped.slice(0, 60)) if (verify(c, true)) { lattice.push(c); ok = tryTeam(0, primary, undefined); if (ok) break; }
+    if (!ok) throw new Error('V20 no viable start for the player');
+  }
   const qPlayer = reports[0].quality;
   const share = new Map<number, number>();
   const planLand = (k: number) => {
@@ -325,6 +344,14 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     }
     if (!placed && tryTeam(team, undefined, qPlayer)) placed = true;
     if (!placed) break;
+  }
+  // thin lattices (highland, narrow isthmuses): fill the missing societies from the best remaining sites
+  // within a fairness band of the player rather than rejecting the whole map
+  if (camps.length < 3) for (const team of teamIds.slice(1)) {
+    qRelax = 0.12; spacingMin = 100;
+    if (camps.some(c => c.team === team)) continue;
+    if (!tryTeam(team, primary, qPlayer) && !tryTeam(team, undefined, undefined)) break;
+    if (camps.length >= 3) break;
   }
   if (camps.length < 3) throw new Error('V20 lacks three physically spaced fair starts');
   // ---- clear and dress around the starts (ecologically bounded top-ups) ---------------------------------------
@@ -361,13 +388,16 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     fish.push(n);
   };
   for (const body of ctx.waterBodies) {
-    if (body.kind === 'river') for (let i = 0; i < body.pts.length; i += 1) { const p = body.pts[i]; tryFish(p.x + (rand() - 0.5) * 3, p.z + (rand() - 0.5) * 3); }
+    // fish follow productivity: lively water in moist, fertile provinces, sparse fishing in arid or alpine country
+    const lively = (x: number, z: number) => clamp(0.3 + 0.75 * ecology.moisture[cellIndex(ecology, x, z)] * (0.55 + 0.45 * prov(x, z).forage / 1.2), 0.2, 1);
+    if (body.kind === 'river') for (let i = 0; i < body.pts.length; i += 1) { const p = body.pts[i]; if (rand() > lively(p.x, p.z)) continue; tryFish(p.x + (rand() - 0.5) * 3, p.z + (rand() - 0.5) * 3); }
     else {
       const shore = body.shoreline ?? [];
       for (let i = 0; i < shore.length; i++) {
         const a = shore[i], b = shore[(i + 1) % shore.length], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / SHALLOW_FISH_SITE_RULES.lakeShoreSpacingMetres));
         for (let j = 0; j < n; j++) {
           const x = a.x + ((b.x - a.x) * j) / n, z = a.z + ((b.z - a.z) * j) / n, dx = body.x - x, dz = body.z - z, len = Math.hypot(dx, dz) || 1;
+          if (rand() > lively(x, z)) continue;
           for (const inset of SHALLOW_FISH_SITE_RULES.lakeInsetsMetres) { const before = fish.length; tryFish(x + (dx / len) * inset, z + (dz / len) * inset); if (fish.length > before) break; }
         }
       }
@@ -379,8 +409,9 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     const i = zi * wn + xi;
     if (!terrain.sea[i] && (terrain.sea[i - 1] || terrain.sea[i + 1] || terrain.sea[i - wn] || terrain.sea[i + wn])) coastPts.push({ x: xi * wCell - half, z: zi * wCell - half });
   }
-  for (let a = 0; a < 3000 && fish.length < 300 && coastPts.length; a++) {
+  for (let a = 0; a < 1500 && fish.length < 300 && coastPts.length; a++) {
     const c = coastPts[Math.floor(rand() * coastPts.length)], r = R(-9, 9), t = rand() * Math.PI * 2;
+    if (rand() > clamp((prov(c.x, c.z).forage - 0.3) / 0.9, 0.25, 1)) continue;
     tryFish(c.x + Math.cos(t) * Math.abs(r), c.z + Math.sin(t) * Math.abs(r));
   }
   // ---- docks near the player's hall -------------------------------------------------------------------------

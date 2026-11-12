@@ -98,7 +98,7 @@ export class CarvedBuildingLayer{
  }
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
-  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
+  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
   if(!this.keys.has(k)){const v=carvedVariantFor(b);this.keys.set(k,v?v.key:null);if(v&&!this.specs.has(v.key))this.specs.set(v.key,variantSpec(v));}
   return this.keys.get(k)??null;
  }

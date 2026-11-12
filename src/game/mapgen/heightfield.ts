@@ -30,6 +30,10 @@ export class HeightField {
   private grid = new Map<number, Seg[]>();
   private gw: number;
   lakes: LakeShape[] = [];
+  private oe = new Float64Array(64);
+  private ok = new Float64Array(64);
+  private od = new Float64Array(64);
+  private growScratch() { const n = this.oe.length * 2; for (const k of ['oe', 'ok', 'od'] as const) { const a = new Float64Array(n); a.set(this[k]); this[k] = a; } }
   constructor(t: Terrain, hy: Hydrology, seed: number) {
     this.t = t;
     this.hy = hy;
@@ -68,7 +72,7 @@ export class HeightField {
     return h;
   }
   /** World height (water level = WATER_Y). */
-  at(x: number, z: number) {
+  at(x: number, z: number): number {
     let h = this.base(x, z);
     const half = this.size / 2;
     const list = this.grid.get(clamp(Math.floor((z + half) / CELL), 0, this.gw - 1) * this.gw + clamp(Math.floor((x + half) / CELL), 0, this.gw - 1));
@@ -76,10 +80,11 @@ export class HeightField {
       // Every nearby segment offers a continuous valley profile (bed inside the channel, soft bank
       // outside); the offers are blended by proximity so there are no Voronoi seams or terraces.
       let emin = Infinity;
-      const offers: { e: number; k: number; delta: number }[] = [];
+      let count = 0;
+      const oe = this.oe, ok = this.ok, od = this.od;
       for (const s of list) {
         const dx = s.bx - s.ax, dz = s.bz - s.az, tt = clamp(((x - s.ax) * dx + (z - s.az) * dz) / (dx * dx + dz * dz || 1));
-        const d = Math.hypot(x - s.ax - dx * tt, z - s.az - dz * tt), w = s.aw + (s.bw - s.aw) * tt, e = d - w * 0.5, fp = s.afp + (s.bfp - s.afp) * tt;
+        const px = x - s.ax - dx * tt, pz = z - s.az - dz * tt, d = Math.sqrt(px * px + pz * pz), w = s.aw + (s.bw - s.aw) * tt, e = d - w * 0.5, fp = s.afp + (s.bfp - s.afp) * tt;
         const reach = fp * 2.1 + 20;
         if (e >= reach) continue;
         const y = s.ay + (s.by - s.ay) * tt;
@@ -89,14 +94,15 @@ export class HeightField {
           target = y - depthMax * (1 - (1 - q) * (1 - q));
         } else target = y + 0.42 * smoothstep(0, 3, e) + 0.032 * e * (1 + e / (fp * 1.2));
         const k = 1 - smoothstep(fp, reach, e);
-        offers.push({ e, k, delta: target - h });
+        if (count >= oe.length) { this.growScratch(); return this.at(x, z); }
+        oe[count] = e; ok[count] = k; od[count] = target - h; count++;
         if (e < emin) emin = e;
       }
-      if (offers.length) {
+      if (count) {
         let wsum = 0, dsum = 0, keep = 1;
-        for (const o of offers) {
-          const near = Math.max(0, o.e - emin) / 3, wt = o.k / (1 + near * near * near * near);
-          wsum += wt; dsum += wt * o.delta; keep *= 1 - o.k;
+        for (let q = 0; q < count; q++) {
+          const near = Math.max(0, oe[q] - emin) / 3, wt = ok[q] / (1 + near * near * near * near);
+          wsum += wt; dsum += wt * od[q]; keep *= 1 - ok[q];
         }
         if (wsum > 1e-6) {
           const raw = dsum / wsum, capUp = 1.2 + 40 * (1 - smoothstep(0, 4, emin));

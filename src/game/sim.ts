@@ -2244,6 +2244,9 @@ export class Game {
       { species: "goat", n: 16 + ((random() * 11) | 0), hp: 2, scale: 0.95, near: habitatCamp("hills") },
       { species: "bird", n: 10 + ((random() * 8) | 0), hp: 1, scale: 0.7, near: -1 },
     ];
+    // generated maps (v20) size each wild group from the matching biome area; older worlds keep the fixed counts
+    const plan = this.world.mapgen?.wildlife?.counts;
+    if (plan) for (const kind of kinds) { const n = plan[kind.species as keyof typeof plan]; if (n !== undefined) kind.n = n; }
     const playerCamp = camps.findIndex(camp => camp.team === 0);
     const goats = kinds.find(kind => kind.species === 'goat');
     if ((this.state.worldgenVersion ?? 1) >= 18 && goats && playerCamp >= 0 && goats.near !== playerCamp) {

@@ -34,7 +34,7 @@ export const PRESETS: Record<MapPreset, PresetSpec> = {
     id: 'archipelago', name: 'Archipelago', layout: 'archipelago',
     blurb: 'Several large wooded islands and many islets; every society lives on its own shore and trades by boat.',
     land: [0.16, 0.26], relief: 0.8, hills: 1, ranges: { count: [1, 2], length: [0.1, 0.18], width: [0.035, 0.05], height: [32, 55], inland: true },
-    plateau: 0.05, temp: { base: [12, 20], span: [3, 6] }, wet: [0.05, 0.2], riverDensity: 0.7, lakes: [0, 2], meander: 0.8, delta: 0.3, landmasses: [3, 5],
+    plateau: 0.05, temp: { base: [12, 20], span: [3, 6] }, wet: [0.05, 0.2], riverDensity: 0.7, lakes: [0, 2], meander: 0.8, delta: 0.3, landmasses: [4, 14],
   },
   island: {
     id: 'island', name: 'Island', layout: 'archipelago',

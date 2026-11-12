@@ -1,7 +1,8 @@
 /** CivSkin DATA (pure objects, no logic): the extra registry skins, the generator's material swatches and the grammar affinity table.
  * To add a skin: append ONE SkinSpec to SKIN_SPECS (see civSkin.ts for the shape). Nothing else changes. */
 import type {SkinSpec} from './civSkin';
-import type {CivId,Emblem,Prim,Swatch} from './civStyles';
+import type {HallForm,SkinForms,WallStyle} from './buildingHelpers';
+import type {CivId,Emblem,Prim,RoofForm,Swatch} from './civStyles';
 import type {Material} from '../game/civGenerator';
 
 const S=(hex:string,roughness:number,course?:Swatch['course']):Swatch=>({hex,roughness,...(course?{course}:{})});
@@ -47,3 +48,35 @@ export const SKIN_SPECS:SkinSpec[]=[
  {id:'turquoise-brick',name:'Glazed Plain',base:'tigrane',palette:{wall:'#b97d52',wall2:'#7a4f30',roof:'#8a6a48',trim:'#2a8a8a',accent:'#e0b030',cloth:'#2a8a8a'},banner:'pennant',emblem:'stepStar',dress:{body:'#2a8a8a',trim:'#e0b030'},note:'baked brick with turquoise glazed bands'},
  {id:'saffron-lime',name:'Saffron Delta',base:'nilemark',palette:{wall:'#efd9a0',wall2:'#d6b86a',roof:'#a58a55',trim:'#c0542a',accent:'#2e7a6a',cloth:'#e0902a'},banner:'swallow',emblem:'sunDisc',dress:{body:'#f0e0b0',trim:'#c0542a'},note:'saffron-washed mudbrick with madder trim'},
 ];
+
+/** CULTURAL FORMS per civ bible: how walls, gates and the great hall are built, not just coloured. One row per civ; a SkinSpec may override any field with `forms`.
+ *  wall: palisade (log stockade) / dry stone / mud brick (rammed earth, adobe) / ashlar. The wall style is the society's HEAVY wall (stone wall type);
+ *  the light palisade type takes a lighter cousin of it (hurdle-topped dyke, thorn-topped adobe, stone-footed stockade).
+ *  gate: stockade towers / round arch / trabeated lintel / battered pylon / tiled gate pavilion. hall: the roof form of town halls and barracks. */
+export const CIV_FORMS:Record<CivId,SkinForms>={
+ aureline:{wall:'ashlar',gate:'arch',hall:'gable',cap:'plain'},
+ hanrei:{wall:'mudbrick',gate:'pavilion',hall:'upturned',cap:'tile'},
+ steppan:{wall:'log',gate:'stockade',hall:'felt',cap:'plain'},
+ sandrill:{wall:'drystone',gate:'lintel',hall:'terrace',cap:'plain'},
+ kaaltun:{wall:'drystone',gate:'lintel',hall:'vault',cap:'plain'},
+ mekhari:{wall:'log',gate:'stockade',hall:'saddle',cap:'thatch'},
+ skoldar:{wall:'drystone',gate:'stockade',hall:'turf',cap:'turf'},
+ nilemark:{wall:'mudbrick',gate:'pylon',hall:'terrace',cap:'plain'},
+ tigrane:{wall:'mudbrick',gate:'arch',hall:'vault',cap:'plain'},
+ rusvolt:{wall:'log',gate:'stockade',hall:'stave',cap:'plain'},
+ vedara:{wall:'ashlar',gate:'pylon',hall:'upturned',cap:'plain'},
+ sahelan:{wall:'mudbrick',gate:'pylon',hall:'terrace',cap:'plain'},
+ quillan:{wall:'drystone',gate:'lintel',hall:'thatchHip',cap:'thatch'},
+ brythen:{wall:'drystone',gate:'stockade',hall:'thatchHip',cap:'thatch'},
+};
+/** Hall roof form implied by a roof form (remix and free skins that changed their roof keep a matching hall). */
+export const HALL_OF_ROOF:Record<RoofForm,HallForm>={
+ flatParapet:'terrace',flatPalm:'terrace',flatSpiked:'terrace',vault:'vault',upturnedHip:'upturned',chhatri:'upturned',terracottaGable:'gable',
+ conicalThatch:'thatchHip',steepThatch:'thatchHip',palmGable:'thatchHip',roundCone:'thatchHip',saddle:'saddle',plankGable:'stave',feltDome:'felt',turfLow:'turf',
+};
+/** Wall style implied by a wall swatch's construction course (free skins build their walls from the generator's materials). */
+export const WALL_OF_COURSE:Record<string,WallStyle>={
+ ashlar:'ashlar',laterite:'ashlar',polygonal:'drystone',stucco:'drystone',rockcut:'drystone',turf:'drystone',rubble:'drystone',
+ rammed:'mudbrick',brick:'mudbrick',smooth:'mudbrick',earth:'mudbrick',timberPaper:'mudbrick',
+ log:'log',plank:'log',weave:'log',wattle:'log',felt:'log',thatch:'log',beam:'log',cloth:'log',
+};

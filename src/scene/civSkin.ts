@@ -15,7 +15,8 @@ import {hashSeed,seededRandom,type Rng} from './buildingParts';
 import {CIVS,CIV_IDS,paletteTable,type CivDress,type CivId,type CivLook,type CivMaterials,type CivStyle,type Emblem,type RoofForm,type Swatch} from './civStyles';
 import {BANNER_STYLE,type BannerStyle,type CivRole} from './civBuildings';
 import type {CivSeed,Material} from '../game/civGenerator';
-import {SKIN_SPECS,AFFINITY,MATERIAL_SWATCH,MATERIAL_ROOF,EXTRA_EMBLEMS} from './civSkinData';
+import {SKIN_SPECS,AFFINITY,MATERIAL_SWATCH,MATERIAL_ROOF,EXTRA_EMBLEMS,CIV_FORMS,HALL_OF_ROOF,WALL_OF_COURSE} from './civSkinData';
+import {NEUTRAL_FORMS,type SkinForms} from './buildingHelpers';
 
 export const SKIN_VERSION=1;
 export type SkinMode='preset'|'remix'|'free'|'neutral';
@@ -30,12 +31,13 @@ export type CivSkin={v:1;id:string;name:string;mode:SkinMode;
  roof:RoofForm;granary:Granary;banner:{style:BannerStyle;emblem:string};
  /** wonder piece style: which civ's signature landmark stands in the wonder, painted with the palette */wonder:{signature:CivId};
  garb:SkinGarb;silhouette:string;hueShift:number;
+ /** cultural forms (wall style, gate shape, hall roof); absent = derived from the grammar, roof and wall course by formsOf */forms?:SkinForms;
  /** generator provenance (civ id and society slot), absent for registry skins */origin?:{civ:string;slot:number}};
 
 /** Compact data object for one registry skin: every omitted field inherits from `base` (a civ bible id). One of these per skin is ALL it takes to add one. */
 export type SkinSpec={id:string;name:string;base:CivId;
  /** partial palette over the base civ's swatches: a hex string keeps the base roughness/course, or a full swatch */palette?:Partial<Record<keyof CivMaterials,string|Swatch>>;
- roof?:RoofForm;granary?:Granary;banner?:BannerStyle;emblem?:string;dress?:Partial<Pick<CivDress,'cut'|'headwear'|'body'|'trim'|'motif'>>;approved?:boolean;note?:string};
+ roof?:RoofForm;granary?:Granary;banner?:BannerStyle;emblem?:string;forms?:Partial<SkinForms>;dress?:Partial<Pick<CivDress,'cut'|'headwear'|'body'|'trim'|'motif'>>;approved?:boolean;note?:string};
 
 /** Garb material class per civ (people's culture grammar input). */
 export const GARB_MATERIAL:Record<CivId,GarbMaterial>={sandrill:'stone',nilemark:'mudbrick',tigrane:'mudbrick',hanrei:'timber',vedara:'stone',aureline:'stone',sahelan:'mudbrick',quillan:'stone',kaaltun:'stone',mekhari:'wattle',brythen:'wattle',rusvolt:'timber',steppan:'wattle',skoldar:'timber'};
@@ -74,7 +76,7 @@ export const isCivId=(x:unknown):x is CivId=>typeof x==='string'&&(CIV_IDS as st
 function civPresetSkin(id:CivId):CivSkin{
  const c=CIVS[id];
  return {v:1,id:`civ:${id}`,name:c.name,mode:'preset',grammar:id,preset:id,palette:{...c.materials},roof:c.roof,granary:c.granary,banner:{style:BANNER_STYLE[id],emblem:c.emblem.id},wonder:{signature:id},
-  garb:{cut:c.dress.cut,headwear:c.dress.headwear,body:c.dress.body,trim:c.dress.trim,motif:c.dress.motif,climate:c.climate,coastal:c.coastal,material:GARB_MATERIAL[id]},silhouette:c.plan,hueShift:0};
+  garb:{cut:c.dress.cut,headwear:c.dress.headwear,body:c.dress.body,trim:c.dress.trim,motif:c.dress.motif,climate:c.climate,coastal:c.coastal,material:GARB_MATERIAL[id]},silhouette:c.plan,hueShift:0,forms:{...CIV_FORMS[id]}};
 }
 /** Build a skin from a compact SkinSpec (inherits everything it omits from the base civ). */
 export function skinFromSpec(spec:SkinSpec):CivSkin{
@@ -82,7 +84,7 @@ export function skinFromSpec(spec:SkinSpec):CivSkin{
  for(const [k,v] of Object.entries(spec.palette??{}) as [keyof CivMaterials,string|Swatch][])pal[k]=typeof v==='string'?sw(v,pal[k]):v;
  const d=spec.dress??{};
  return {...base,id:spec.id,name:spec.name,mode:'preset',palette:pal,roof:spec.roof??base.roof,granary:spec.granary??base.granary,banner:{style:spec.banner??base.banner.style,emblem:spec.emblem??base.banner.emblem},
-  garb:{...base.garb,...d}};
+  garb:{...base.garb,...d},forms:{...(spec.roof&&spec.roof!==base.roof?{...base.forms!,hall:HALL_OF_ROOF[spec.roof]}:base.forms!),...(spec.forms??{})}};
 }
 export function registerSkin(skin:CivSkin|SkinSpec,approved=false):CivSkin{
  const s=(skin as SkinSpec).base!==undefined?skinFromSpec(skin as SkinSpec):skin as CivSkin;
@@ -116,13 +118,21 @@ export function validSkin(x:unknown):x is CivSkin{
 }
 
 // ---------------------------------------------------------------- what the renderer reads
+/** The cultural forms a skin builds with: its own `forms` when it carries them, otherwise derived (grammar's bible forms, hall from the roof, wall from the wall course).
+ *  The neutral skin and a null skin build the plain Village forms. Pure and cheap: callers may call it per building. */
+export function formsOf(skin:CivSkin|null|undefined):SkinForms{
+ if(!skin||!skin.grammar||!skin.palette)return NEUTRAL_FORMS;
+ if(skin.forms)return skin.forms;
+ const base=CIV_FORMS[skin.grammar],course=skin.palette.wall.course??'',w=WALL_OF_COURSE[course];
+ return {...base,hall:HALL_OF_ROOF[skin.roof]??base.hall,wall:skin.preset&&skin.mode==='preset'?base.wall:(w??base.wall)};
+}
 /** Overrides handed to generateCivBuilding (ctx.look). Undefined for the neutral skin. */
 export function lookOf(skin:CivSkin|null|undefined):CivLook|undefined{
  if(!skin||!skin.grammar||!skin.palette)return undefined;
  return {palette:skin.palette,roof:skin.roof,granary:skin.granary,banner:skin.banner.style};
 }
 /** Which per-civ building role a live building type is drawn as under a skin; other types keep their Village family, repainted. */
-export const ROLE_OF_TYPE:Record<string,CivRole>={hut:'house',house:'house',barracks:'house',townhall:'civic',temple:'civic',university:'civic',market:'market'};
+export const ROLE_OF_TYPE:Record<string,CivRole>={hut:'house',house:'house',townhall:'civic',temple:'civic',university:'civic',market:'market',warehouse:'granary'};
 export const roleForType=(type:string):CivRole|null=>ROLE_OF_TYPE[type]??null;
 
 type Table=Record<string,{hex:string;roughness:number;grain?:number;course?:string}>;
@@ -144,7 +154,7 @@ export function villageRetint(skin:CivSkin|null|undefined):Table|undefined{
 export function skinMaterials(skin:CivSkin|null|undefined,grammar:CivId){return skin?.palette?paletteTable(grammar,skin.palette):undefined;}
 /** Four swatches that read as the skin at a glance (picker chips, minimap, debug). */
 /** Stable cache key for a skin's look: id plus the fields that change the geometry or colours. */
-export const skinSignature=(skin:CivSkin)=>skin.id+'~'+(hashSeed(skin.grammar??'-',skin.roof,skin.granary,skin.banner.style,skin.palette?(['wall','wall2','roof','trim','accent','cloth'] as const).map(k=>skin.palette![k].hex).join(''):'')>>>0).toString(36);
+export const skinSignature=(skin:CivSkin)=>skin.id+'~'+(hashSeed(skin.grammar??'-',skin.roof,skin.granary,skin.banner.style,...Object.values(formsOf(skin)),skin.palette?(['wall','wall2','roof','trim','accent','cloth'] as const).map(k=>skin.palette![k].hex).join(''):'')>>>0).toString(36);
 export const skinChips=(skin:CivSkin):string[]=>skin.palette?[skin.palette.wall.hex,skin.palette.roof.hex,skin.palette.accent.hex,skin.palette.cloth.hex]:['#e3d6b8','#b79a52','#6b4a2d','#a8a396'];
 
 // ---------------------------------------------------------------- generation from civGenerator output

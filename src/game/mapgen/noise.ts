@@ -26,14 +26,13 @@ export class Noise {
   at(x: number, z: number) {
     const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi;
     const s = this.seed;
-    const g = (ix: number, iz: number, dx: number, dz: number) => {
-      const k = (hash2i(ix, iz, s) & 255) * 2;
-      return GRAD[k] * dx + GRAD[k + 1] * dz;
-    };
     const u = fade(xf), v = fade(zf);
-    const a = g(xi, zi, xf, zf), b = g(xi + 1, zi, xf - 1, zf);
-    const c = g(xi, zi + 1, xf, zf - 1), d = g(xi + 1, zi + 1, xf - 1, zf - 1);
-    return (a + (b - a) * u + (c + (d - c) * u - (a + (b - a) * u)) * v) * 1.41;
+    const xj = xi + 1, zj = zi + 1;
+    const ka = (hash2i(xi, zi, s) & 255) * 2, kb = (hash2i(xj, zi, s) & 255) * 2, kc = (hash2i(xi, zj, s) & 255) * 2, kd = (hash2i(xj, zj, s) & 255) * 2;
+    const a = GRAD[ka] * xf + GRAD[ka + 1] * zf, b = GRAD[kb] * (xf - 1) + GRAD[kb + 1] * zf;
+    const c = GRAD[kc] * xf + GRAD[kc + 1] * (zf - 1), d = GRAD[kd] * (xf - 1) + GRAD[kd + 1] * (zf - 1);
+    const ab = a + (b - a) * u;
+    return (ab + (c + (d - c) * u - ab) * v) * 1.41;
   }
   fbm(x: number, z: number, octaves = 4, lacunarity = 2.02, gain = 0.5) {
     let amp = 1, freq = 1, sum = 0, norm = 0;

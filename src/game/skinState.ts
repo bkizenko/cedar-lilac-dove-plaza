@@ -47,7 +47,15 @@ export function validSkinsState(x:unknown,teams?:number):boolean{
 export function ensureSkins(state:S):SkinsState{
  const n=state.tribes.length;
  const prior=state.skins as SkinsState|undefined;
- if(!validSkinsState(prior,n))state.skins=buildSkins(state.seed,n,prior&&validSkinRequest(prior.request)?prior.request:undefined);
+ if(validSkinsState(prior)){
+  // Growing the society array must not redraw any existing civilisation.
+  const used=new Set(Object.values(prior!.slots).map(s=>s.id));
+  for(let i=0;i<n;i++)if(!prior!.slots[String(i)]){
+   let slot=i,skin=skinFromCiv(generateCiv(state.seed,slot,'free'));
+   while(used.has(skin.id)){slot+=n+1;skin=skinFromCiv(generateCiv(state.seed,slot,'free'));}
+   prior!.slots[String(i)]=skin;used.add(skin.id);
+  }
+ }else state.skins=buildSkins(state.seed,n,prior&&validSkinRequest(prior.request)?prior.request:undefined);
  return state.skins!;
 }
 /** The skin a team wears (null = the plain Village grammar). Read-only: never mutates state. */

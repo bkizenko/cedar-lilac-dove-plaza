@@ -50,7 +50,7 @@ export type WorldData = {
   scenery?: ReturnType<typeof scenerySummary> & {dryLandMean:number;dryLandSampleCount:number};
   options?: WorldOptions;
   /** Map generation v2 (worldgenVersion 20) summary: preset, climate, start report. */
-  mapgen?: {version:number;preset:string;name:string;landFraction:number;rivers:number;lakes:number;starts:unknown[];fairness:{spread:number;minimum:number};wind:{x:number;z:number};seaTemperatureC:number};
+  mapgen?: {version:number;preset:string;name:string;landFraction:number;rivers:number;lakes:number;starts:unknown[];fairness:{spread:number;minimum:number};wind:{x:number;z:number};seaTemperatureC:number;wildlife?:{counts:{deer:number;boar:number;goat:number;bird:number};basisHectares:Record<string,number>;waterBirdHabitatHectares:number};fords?:{chain:string;x:number;z:number;width:number;depthMetres:number;channelGrade:number;approachRiseMetres:number}[];deltas?:number};
   features?: LandFeature[];
   segs: number;
   heights: Float32Array;

@@ -127,3 +127,95 @@ test('terrain keeps buildable ground (no cliff-steep majority)', () => {
     assert.ok(steep / land < 0.18, `${preset} ${steep / land} of land is cliff-steep`);
   }
 });
+
+test('generation stays inside a loose time budget (CPU seconds, retries included)', () => {
+  // measured ~1.5-3 s per 1040 map on a loaded 2-core box; the guard is ~4x that so it only catches regressions
+  for (const [preset, seed] of [['highland', 41], ['pangaea', 41], ['archipelago', 41]]) {
+    const before = process.cpuUsage();
+    const w = generateWorld(seed, 20, { size: SIZE, preset });
+    const used = process.cpuUsage(before), ms = (used.user + used.system) / 1000;
+    assert.ok(ms < 12000, `${preset}/${seed} took ${Math.round(ms)} ms CPU`);
+    assert.ok(w.generation.attempt <= 1, `${preset}/${seed} needed ${w.generation.attempt + 1} candidates`);
+  }
+});
+
+test('deltas split into distributaries across a low wet plain', () => {
+  let deltas = 0;
+  for (const [preset, seed] of [['river-valley', 3], ['pangaea', 3], ['river-valley', 41]]) {
+    const w = build(preset, seed);
+    deltas += w.mapgen.deltas;
+    const mouths = w.waterBodies.filter(b => b.kind === 'river' && b.pts[b.pts.length - 1].y <= w.waterY + 0.05);
+    assert.ok(mouths.length >= 2, `${preset}/${seed} river mouths`);
+  }
+  assert.ok(deltas >= 3, `only ${deltas} deltas`);
+});
+
+test('fords are wadable and most starts have a crossing within a short walk of their river', () => {
+  let camps = 0, crossed = 0;
+  for (const preset of ['pangaea', 'river-valley', 'continents', 'island', 'lakeland', 'highland']) for (const seed of SEEDS) {
+    const w = build(preset, seed);
+    for (const f of w.mapgen.fords) {
+      assert.ok(f.depthMetres <= 0.5, `${preset}/${seed} ford depth ${f.depthMetres}`);
+      assert.ok(f.channelGrade <= 0.12, `${preset}/${seed} ford grade ${f.channelGrade}`);
+      assert.ok(f.approachRiseMetres <= 2.6, `${preset}/${seed} ford banks ${f.approachRiseMetres}`);
+    }
+    for (const c of w.camps) { camps++; if (w.mapgen.fords.some(f => Math.hypot(f.x - c.x, f.z - c.z) <= 320)) crossed++; }
+  }
+  assert.ok(crossed / camps >= 0.7, `only ${crossed}/${camps} starts have a ford within 320 m`);
+});
+
+test('wildlife follows ecology: grazers on grass, goats on rock, anchors cover all habitats', () => {
+  const steppe = build('steppe', 3).mapgen.wildlife.counts, high = build('highland', 3).mapgen.wildlife.counts;
+  assert.ok(steppe.deer > high.deer, `deer steppe ${steppe.deer} vs highland ${high.deer}`);
+  assert.ok(high.goat > steppe.goat, `goats highland ${high.goat} vs steppe ${steppe.goat}`);
+  for (const preset of Object.keys(PRESETS)) for (const seed of SEEDS) {
+    const w = build(preset, seed);
+    assert.deepEqual([...new Set(w.biomes.map(b => b.kind))].sort(), ['forest', 'hills', 'plains'], `${preset}/${seed} habitat anchors`);
+    for (const b of w.biomes) assert.ok(w.camps.some(c => c.x === b.x && c.z === b.z), `${preset}/${seed} anchor is not at a camp`);
+    for (const v of Object.values(w.mapgen.wildlife.counts)) assert.ok(v >= 4 && v <= 60, `${preset}/${seed} wildlife count ${v}`);
+  }
+  for (const preset of Object.keys(PRESETS)) assert.ok(build(preset, 3).fish.length >= 40, `${preset} fish`);
+});
+
+test('archipelagos break into several islands of varied size', () => {
+  for (const seed of [3, 41]) {
+    const lm = landmasses(build('archipelago', seed), 8).sizes.filter(a => a > 3000).sort((a, b) => b - a);
+    assert.ok(lm.length >= 5, `archipelago/${seed} has ${lm.length} islands`);
+    assert.ok(lm[0] / lm[lm.length - 1] >= 4, `archipelago/${seed} islands are all alike: ${lm.join(',')}`);
+  }
+});
+
+test('rivers rise in high headwaters and run long on big landmasses', () => {
+  for (const preset of ['highland', 'continents', 'pangaea', 'river-valley']) for (const seed of SEEDS) {
+    const w = build(preset, seed), rivers = w.waterBodies.filter(b => b.kind === 'river');
+    const length = (b) => { let L = 0; for (let i = 1; i < b.pts.length; i++) L += Math.hypot(b.pts[i].x - b.pts[i - 1].x, b.pts[i].z - b.pts[i - 1].z); return L; };
+    assert.ok(Math.max(...rivers.map(length)) >= 180, `${preset}/${seed} longest river ${Math.max(...rivers.map(length))}`);
+    assert.ok(Math.max(...rivers.map(b => b.pts[0].y - w.waterY)) >= 28, `${preset}/${seed} no high headwater`);
+  }
+});
+
+test('province tints come from smooth boundaries, not speckle or single-cell rectangles', () => {
+  for (const preset of Object.keys(PRESETS)) {
+    const e = build(preset, 3).ecology, n = e.width;
+    let land = 0, lonely = 0;
+    for (let z = 1; z < n - 1; z++) for (let x = 1; x < n - 1; x++) {
+      const k = e.kinds[z * n + x];
+      if (k === 255) continue;
+      land++;
+      let same = 0;
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if ((dx || dz) && e.kinds[(z + dz) * n + x + dx] === k) same++;
+      if (same < 2) lonely++;
+    }
+    assert.ok(lonely / land < 0.02, `${preset} ${lonely}/${land} province cells are speckle`);
+  }
+});
+
+test('coastlines are smooth at 1 m: no cell-sized teeth along the waterline', () => {
+  for (const preset of ['island', 'pangaea', 'archipelago']) {
+    const w = build(preset, 3), n = Math.round(Math.sqrt(w.heights.length));
+    // sign flips of (height - sea level) along rows: a toothed coast flips again and again within a short run
+    let flips = 0, rows = 0;
+    for (let z = 2; z < n - 2; z += 2) { rows++; let prev = 0; for (let x = 0; x < n; x++) { const s = w.heights[z * n + x] > w.waterY + 0.02 ? 1 : -1; if (prev && s !== prev) flips++; prev = s; } }
+    assert.ok(flips / rows < 9, `${preset} ${flips / rows} coast crossings per row`);
+  }
+});

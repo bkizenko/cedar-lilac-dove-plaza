@@ -98,3 +98,11 @@ test('a blocked nearest shelter does not prevent using the next reachable room',
  const checked=[];g.interactionSpot=(person,b)=>{checked.push(b.id);return b===near?null:{x:u.x,z:u.z}};
  assert.equal(routineRest(g,u,.1),true);assert.deepEqual(checked,[near.id,far.id]);assert.equal(u.shelterId,far.id);
 });
+
+test('versioned forage identities survive strict reload without turning saved berries into grain',()=>{
+ const g=new Game();g.reset(42,18,{size:1040,layout:'pangaea'});g.enterIsland();
+ const patch=g.state.forage.find(n=>n.cropCandidate);assert.ok(patch);delete patch.cropCandidate;
+ const save=JSON.parse(JSON.stringify(encodeGame(g))),before=structuredClone(save.state.forage);
+ assert.equal(save.state.cultivationVersion,1);const back=decodeGame(save);assert.deepEqual(back.state.forage,before);
+ const legacy=structuredClone(save);delete legacy.state.cultivationVersion;assert.ok(decodeGame(legacy).state.forage.find(n=>n.id===patch.id).cropCandidate,'unversioned legacy state still receives its deterministic migration');
+});

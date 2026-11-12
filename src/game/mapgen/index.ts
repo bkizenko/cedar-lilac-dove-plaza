@@ -17,6 +17,8 @@ import { buildHydrology, type Hydrology } from './hydro';
 import { HeightField, carveLakes, riverBodies } from './heightfield';
 import { buildBiomes } from './biomes';
 import { placeWorld } from './placement';
+import { checkFords, type FordReport } from './fords';
+import { planWildlife, assignHabitatAnchors } from './wildlife';
 export const MAPGEN_VERSION = 1;
 /** Same diagonal split as the published terrain mesh (a copy of worldgen's sampler, to avoid an import cycle). */
 function sampleTriangleHeight(heights: Float32Array, x: number, z: number, size: number) {
@@ -81,15 +83,22 @@ function buildOnce(seed: number, requestedSeed: number, size: number, segs: numb
   // keep the river budget within the shared bank-tile budget by pruning the weakest tributaries
   while (hydro.chains.length > 1 && bankTileKeys(hydro.chains, probe.lakes, size) > 1850) {
     const referenced = new Set(hydro.chains.map(c => c.into));
-    const leaves = hydro.chains.filter(c => !referenced.has(c.id)).sort((a, b) => a.flow - b.flow);
+    const leaves = hydro.chains.filter(c => !referenced.has(c.id) && c.source !== 'delta').sort((a, b) => a.flow - b.flow);
     if (!leaves.length) break;
     hydro.chains.splice(hydro.chains.indexOf(leaves[0]), 1);
   }
-  const hf = new HeightField(terrain, hydro, seed);
+  let hf = new HeightField(terrain, hydro, seed);
   hf.lakes = probe.lakes;
-  return finish(seed, requestedSeed, size, segs, n, half, spec, random, request, terrain, climate, hydro, hf);
+  // a ford that is not truly wadable (shallow, gentle, with walkable banks) is turned back into a normal channel
+  let fordCheck = checkFords(hf, hydro);
+  if (fordCheck.dropped) {
+    hf = new HeightField(terrain, hydro, seed);
+    hf.lakes = probe.lakes;
+    fordCheck = checkFords(hf, hydro);
+  }
+  return finish(seed, requestedSeed, size, segs, n, half, spec, random, request, terrain, climate, hydro, hf, fordCheck.fords);
 }
-function finish(seed: number, requestedSeed: number, size: number, segs: number, n: number, half: number, spec: typeof PRESETS[MapPreset], random: boolean, request: WorldRequest, terrain: ReturnType<typeof buildTerrain>, climate: ReturnType<typeof buildClimate>, hydro: Hydrology, hf: HeightField): WorldData {
+function finish(seed: number, requestedSeed: number, size: number, segs: number, n: number, half: number, spec: typeof PRESETS[MapPreset], random: boolean, request: WorldRequest, terrain: ReturnType<typeof buildTerrain>, climate: ReturnType<typeof buildClimate>, hydro: Hydrology, hf: HeightField, fords: FordReport[]): WorldData {
   const waterY = WATER_Y;
   const heights = new Float32Array(n * n);
   for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) heights[iz * n + ix] = Math.min(144, hf.at((ix / segs) * size - half, (iz / segs) * size - half));
@@ -120,20 +129,11 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
   const riverList = (rivers as Extract<LocalWaterBody, { kind: "river" }>[]).map(r => ({ pts: r.pts.map(p => ({ x: p.x, z: p.z })), w: r.width }));
   // ---- resources and starts ------------------------------------------------------------------------------------
   const placed = placeWorld({ seed, size, waterY, preset: spec, terrain, hydro, ecology, waterBodies: bodies, sample, level, rivers: riverList, features });
-  // legacy three-habitat anchors: each habitat sits at the start whose neighbourhood matches it best
-  const habitatOf = (x: number, z: number): 'plains' | 'forest' | 'hills' => {
-    let counts = { plains: 0, forest: 0, hills: 0 };
-    for (let dz = -90; dz <= 90; dz += 15) for (let dx = -90; dx <= 90; dx += 15) {
-      const i = Math.max(0, Math.min(ecology.width - 1, Math.floor(((z + dz) / size + 0.5) * ecology.width))) * ecology.width + Math.max(0, Math.min(ecology.width - 1, Math.floor(((x + dx) / size + 0.5) * ecology.width)));
-      const profile = ecology.kinds[i] === 255 ? undefined : { plains: ['meadow', 'wetland'], forest: ['mixed-woodland', 'conifer-forest', 'warm-coast'] }, kind = ['meadow', 'mixed-woodland', 'conifer-forest', 'alpine', 'wetland', 'dry-scrub', 'arid', 'warm-coast'][ecology.kinds[i]];
-      if (profile?.plains.includes(kind)) counts.plains++; else if (profile?.forest.includes(kind)) counts.forest++; else counts.hills++;
-    }
-    return counts.plains >= counts.forest && counts.plains >= counts.hills ? 'plains' : counts.forest >= counts.hills ? 'forest' : 'hills';
-  };
-  const biomes: WorldData['biomes'] = placed.camps.map(c => ({ kind: habitatOf(c.x, c.z), x: c.x, z: c.z }));
-  // make sure every habitat is represented so wildlife has a home camp for each
-  const missing = (['plains', 'hills', 'forest'] as const).filter(k => !biomes.some(b => b.kind === k));
-  for (const k of missing) { const spare = biomes.map((b, i) => ({ b, i })).filter(o => biomes.filter(x => x.kind === o.b.kind).length > 1 && o.i > 0)[0]; if (spare) spare.b.kind = k; }
+  // legacy three-habitat anchors: the spawner sends each wild group to the camp whose anchor matches, so the
+  // anchors tag the camps whose surroundings really suit grazers, woodland game and upland goats
+  const habitats = assignHabitatAnchors(ecology, placed.camps, size);
+  const biomes: WorldData['biomes'] = placed.camps.map((c, i) => ({ kind: habitats[i], x: c.x, z: c.z }));
+  const wildlife = planWildlife(ecology, hf.lakes.length, size);
   const mainRange = terrain.ranges[0], axis = terrain.axis;
   const nx = Math.cos(axis), nzr = Math.sin(axis);
   void mainRange;
@@ -186,6 +186,9 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
       rivers: hydro.chains.length,
       lakes: hf.lakes.length,
       starts: placed.starts,
+      wildlife,
+      fords,
+      deltas: hydro.deltas.length,
       fairness: placed.fairness,
       wind: climate.wind,
       seaTemperatureC: climate.seaTemp,

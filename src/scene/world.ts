@@ -37,6 +37,7 @@ import {carvedDaylightGrade} from './carvedPalette';
 import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
 import {provinceAt} from '../game/ecologicalProvinces';
 import {CARVED_TYPES} from './buildingStyleMap';
+import {lineIndex,joinMaskFor,LINE_OF_TYPE,waterSideFor} from './carvedLines';
 import {fabricContext} from '@/game/buildingFabric';
 import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
@@ -164,7 +165,8 @@ export const BLD_TYPES: BldType[] = [
 ];
 
 /** Types whose shipped look is terrain-laid or modular; Option H never replaces them. */
-const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','gate','palisade','stonewall','trench','moat','dock','warehouse','bridge','aqueduct','lumber','quarry','cornerstone','cairn','grove']);
+/** Types still drawn by the current (non-carved) path: field/pen crop and fence layers, the lumber yard's stacks, terrain-carving earthworks and the pitched bridge. Everything else is carved. */
+const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','trench','moat','bridge','lumber']);
 const _m = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -1813,6 +1815,7 @@ export class WorldView {
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
     this.updateMourning(game);
     const carvedList:(CarvedInstance&{b:import("@/game/types").Building})[]=[];
+    const lineIdx=lineIndex(game.state.buildings);
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
     for (const b of game.state.buildings) if(b.hp>0)grouped.get(b.type)?.push(b);
@@ -1830,6 +1833,19 @@ export class WorldView {
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
+        if(this.renderStyle==='carved'&&!b.bridge&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)&&(!modular||type==='warehouse')&&(fort||type==='warehouse'||['dock','aqueduct','quarry','cornerstone','cairn','grove'].includes(type))){
+          const lineSkin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,lineEra=fabricContext(b)?.built.era??(game.tribe(b.team)?.age||0);
+          if(type==='warehouse'){
+            for(const m of plotModules(b))carvedList.push({worldSeed:game.state.seed,type,id:b.id*16+Math.abs(Math.round(m.x*3+m.z*7))%13,era:lineEra,footprint:{w:BUILDINGS.warehouse.w*m.sx,d:BUILDINGS.warehouse.d*m.sz},settlementSeed:b.team,
+              x:b.x+m.x,y:foundationProfile(game,b).level,z:b.z+m.z,...(lineSkin?{skin:lineSkin}:{}),yaw:0,progress:ys,b});
+            continue;
+          }
+          const inLine=!!LINE_OF_TYPE[type],join=inLine?joinMaskFor(lineIdx,b):0,gYaw=type==='gate'&&!join?gateOrientation(b.gateFacing).yawRadians:0;
+          const side=type==='dock'?waterSideFor(b.x,b.z,(x,z)=>game.height(x,z)<game.waterAt(x,z)+.1):undefined;
+          carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:lineEra,footprint:{w:b.w,d:b.d},settlementSeed:b.team,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+            ...(inLine?{join}:{}),...(type==='gate'&&b.gateOpen?{gateOpen:true}:{}),...(side?{waterSide:side}:{}),...(lineSkin?{skin:lineSkin}:{}),yaw:gYaw,progress:ys,b});
+          continue;
+        }
         if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
           const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
           const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;

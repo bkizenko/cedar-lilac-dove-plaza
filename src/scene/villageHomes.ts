@@ -3,6 +3,7 @@ import {beam,chance,part,pick,range,type Part} from './buildingParts';
 import {roofMaterial,roofPitch,type FamilyContext,type Generator} from './buildingHelpers';
 import {barrel,box,bucket,chimney,crate,cyl,doorway,fenceX,ladder,post,quoins,roofGable,sack,stoneWall,timberFrame,window2,woodpile} from './buildingKit';
 import type {CarvedMaterialId as M} from './carvedPalette';
+import {hallRoof,yurtHall} from './villageHall';
 
 const TAU=Math.PI*2;
 /** Roof material in the village palette: straw thatch while poor/early, shingle then tile or slate as wealth and era rise. */
@@ -104,6 +105,7 @@ export const cottage:Generator=(ctx,r)=>{
  * hipped roof with smoke louvres and gable finials, porch with carved posts and a hanging shield, banner pole, benches and weapon racks. */
 export const longhouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large',k=Math.min(w,d)/(large?10:8.2);
+  if(ctx.form?.hall==='felt'){const y=yurtHall(parts,ctx,r,{w,d,large,k});return {parts,entry:y.entry};}
   const L=w*range(r,.78,.86),D=d*range(r,large?.5:.42,large?.58:.5),cz=-d/2+D/2+.9*k,wallH=range(r,1.55,1.9)*(large?1.2:1);
   const stone=ctx.material==='stone',pitch=roofPitch(ctx,r)+.05,rm=roofFor(ctx),wall:M=stone?'stone':'woodMid';
   box(parts,'stoneDark',[L+.3,.34,D+.3],[0,0,cz],1);
@@ -114,13 +116,9 @@ export const longhouse:Generator=(ctx,r)=>{
   // buttress posts along both long sides and a tie-beam course
   for(const s of[-1,1])for(let i=0;i<7;i++){const x=-L/2+.35+i*(L-.7)/6;post(parts,'woodDark',x,cz+s*(D/2+.06),wallH+.1,.18,1,.2);parts.push(beam('woodMid',[x,.2,cz+s*(D/2+.55)],[x,wallH*.75,cz+s*(D/2+.08)],.1,0));}
   box(parts,'woodDark',[L+.2,.14,D+.3],[0,wallH+.2,cz],1);
-  // roof: one hipped roof, ridge board, smoke louvres, crossed gable finials
-  const hip=range(r,.7,1.1),rise=D/2*Math.tan(pitch),span=D+.8,len=L+.8;
-  parts.push({...part('hip',rm,[span,rise,len],[0,wallH+.2,cz],2,[0,Math.PI/2,0]),inset:hip+.3});
-  const rows=rm==='straw'||rm==='thatch'?3:4;for(const s of[-1,1])for(let i=0;i<rows;i++){const t=.2+i*.2,y=wallH+.2+rise*t,lz=s*span/2*(1-t);box(parts,'woodDark',[len*(1-t*.55),.035,.1],[0,y+.01,cz+lz],0,[s*Math.atan2(rise,span/2)*-1,0,0]);}
-  box(parts,'woodEdge',[L-2*hip,.15,.18],[0,wallH+.2+rise-.04,cz],1);
-  for(const sx of[-1,1]){parts.push(beam('woodEdge',[sx*(L/2-hip*.5),wallH+rise+.1,cz-.28],[sx*(L/2-hip*.5),wallH+rise+.8,cz+.28],.1,0),beam('woodEdge',[sx*(L/2-hip*.5),wallH+rise+.1,cz+.28],[sx*(L/2-hip*.5),wallH+rise+.8,cz-.28],.1,0));}
-  for(const x of large?[-L*.22,L*.22]:[0]){box(parts,'woodEdge',[.7,.35,.7],[x,wallH+.2+rise*.55,cz],1);parts.push(part('prism','woodDark',[.9,.28,.9],[x,wallH+.2+rise*.55+.35,cz],0));}
+  // roof: the society's hall form (villageHall.ts): plain hip/gable by default, thatch hip, terrace, vault, stave, turf, upturned or saddle from the skin
+  const hip=range(r,.7,1.1),form=ctx.form?.hall??'gable',rise=hallRoof(parts,ctx,r,form,{L,D,cz,eave:wallH+.2,pitch,mat:rm,large,span:D+.8,len:L+.8,hip,k});
+  void rise;
   // porch with carved posts, steps and shield; door(s)
   const dx=large?0:range(r,-L*.2,L*.2),pz=cz+D/2+.15,pw=large?3.2:2.0,pd=Math.min(d/2-pz-.1,large?1.6:1.1);
   doorway(parts,{x:dx,z:cz+D/2+.12,wall:0,w:large?1.5:1.0,h:Math.min(1.9,wallH*1.1),double:large,leaf:'woodMid',step:true});
