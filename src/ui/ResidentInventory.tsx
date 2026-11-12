@@ -38,7 +38,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');
       }
       if (resident.farmTool) {
-        equipped.push(resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
+        equipped.push(resident.farmTool==='woodenArd'?`Wooden ard · ${Math.round(resident.draftPracticeSeconds??0)}s draft practice`:resident.farmTool.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
       }
       if (resident.basket) equipped.push('Woven basket');
       if (resident.waterVessel) equipped.push('Water vessel');
@@ -50,7 +50,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         <strong>{personName(resident)}</strong>
         <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
         {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
-        {resident.packAnimal&&<div title={`Feed consumed ${amount(resident.packAnimal.foodConsumed??0)} · Water drunk ${amount(resident.packAnimal.waterConsumedLiters??0)} L. Feed and water are available at a reached village cache.`}>{resident.packAnimal.species==='horse'?'Horse':'Goat'} · Health {Math.round(resident.packAnimal.hp/resident.packAnimal.maxHp*100)}% · Hunger {Math.round(resident.packAnimal.hunger??0)}%{game?.state.survivalVersion===1?` · Thirst ${Math.round(resident.packAnimal.thirstSeconds??0)}s`:''}</div>}
+        {resident.packAnimal&&<div title={`Feed consumed ${amount(resident.packAnimal.foodConsumed??0)} · Water drunk ${amount(resident.packAnimal.waterConsumedLiters??0)} L. Feed and water are available at a reached village cache.`}>{resident.packAnimal.species==='cattle'?'Cattle':resident.packAnimal.species==='horse'?'Horse':'Goat'} · Health {Math.round(resident.packAnimal.hp/resident.packAnimal.maxHp*100)}% · Hunger {Math.round(resident.packAnimal.hunger??0)}%{game?.state.survivalVersion===1?` · Thirst ${Math.round(resident.packAnimal.thirstSeconds??0)}s`:''}</div>}
         {game?<WorkerActivity state={game.state} resident={resident}/>:resident.workReason&&<div>{resident.workReason}</div>}
         <details>
           <summary>Aptitudes & practice</summary>

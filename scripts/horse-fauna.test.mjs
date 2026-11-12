@@ -38,8 +38,9 @@ test('horse search rejects water, forest, disconnected and invalid sites within 
 });
 
 test('species rules retain small herd costs and give horses explicit larger care, pack and finite meat values',()=>{
- assert.deepEqual(herdRules('goat'),herdRules('sheep'));
- assert.deepEqual(herdRules('horse'),{places:3,maturity:600,gestation:600,tamingFood:12,tamingSeconds:120,careMultiplier:3,radius:.55,speed:3.4,packMultiplier:3.5,harnessSeconds:60,harnessWood:6});
+ const {milkCapacity:goatMilk,milkPerSecond:goatMilkRate,...goat}=herdRules('goat'),{milkCapacity:sheepMilk,milkPerSecond:sheepMilkRate,...sheep}=herdRules('sheep');
+ assert.deepEqual(goat,sheep);assert.equal(goatMilk,6);assert.equal(goatMilkRate,.025);assert.equal(sheepMilk,0);assert.equal(sheepMilkRate,0);
+ assert.deepEqual(herdRules('horse'),{places:3,maturity:600,gestation:600,tamingFood:12,tamingSeconds:120,careMultiplier:3,radius:.55,speed:3.4,packMultiplier:3.5,harnessSeconds:60,harnessWood:6,milkCapacity:0,milkPerSecond:0});
  assert.equal(CARCASS_MEAT.horse,48);
  assert.equal(wildlifeFleeSpeed({species:'horse',hp:4,maxHp:4}),4.6);
  assert.ok(wildlifeFleeSpeed({species:'horse',hp:1,maxHp:4})<4.6);

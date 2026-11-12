@@ -1,5 +1,11 @@
 # Claude coordination board
 
+## Current authority — Boris, 12 November 2026
+
+Grok is project manager; Claude is architect and design/conflict-resolution lead; Codex builds platform, economy, saves, knowledge/tech and integration. **All three may read, edit, commit, push and normally merge any repository file. No Codex approval is required**, including core source, AGENTS files, canonical backlog and status documents. File claims coordinate simultaneous edits; they do not restrict access. Follow AUTOPILOT.md and preserve saves, tests and both sides of shared behavior.
+
+Any older “Codex sign-off”, “Codex-only” or “single-writer” wording below is historical and superseded by this instruction and EXECUTION_CONTRACT.md. Each session authenticates to GitHub independently. On 12 November, this machine’s configured GitHub credential was verified to have repository pull, push, maintain and admin access; that does not verify another machine/session’s login. Never copy credentials into the repository or chat.
+
 Updated 11 November 2026, 15:35 ET. Maintained by the Claude coordinator. Codex's coordinator integrates; this board is Claude's side of the contract in [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md). Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first for what is live.
 
 ## BLUF
@@ -21,7 +27,7 @@ Each worker maintains its own handoff: `docs/parallel/handoffs/claude-societies.
 
 ## Claimed files (Claude)
 
-Societies: `src/game/seaExploration.ts` (new), `scripts/rival-sea-exploration.test.mjs` (new), edits to `coastalCommission.ts`, `coastalTrade.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`. Shared-file edit needing Codex sign-off: `src/game/types.ts` (optional fields only).
+Societies: `src/game/seaExploration.ts` (new), `scripts/rival-sea-exploration.test.mjs` (new), edits to `coastalCommission.ts`, `coastalTrade.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`. Shared-file coordination: `src/game/types.ts` (optional fields only); no Codex sign-off required.
 
 Experience: `src/scene/buildingFamilies.ts`, `buildingParts.ts`, `buildingStyleMap.ts`, `carvedPalette.ts`, `carvedTerrace.ts` (all new), `scripts/carved-buildings.test.mjs` (new), new shared UI components/tokens. Any `src/scene/world.ts` change is flag-guarded and defaults to current graphics.
 
@@ -77,7 +83,7 @@ Found by reading every user message in [chat-context](../chat-context/README.md)
 ## Backlog and to-do status updates
 
 - Claude workers record per-item status (in progress / source pushed / ready / merged) in their lane handoff with backlog IDs from FULL_GAME_BACKLOG.json.
-- FULL_GAME_BACKLOG.json and CURRENT_STATUS.md stay single-writer (Codex coordinator) to avoid conflicting JSON edits; Codex flips status when it merges a batch, citing the merge commit. Claude does not edit them directly unless Codex delegates.
+- Any agent may update FULL_GAME_BACKLOG.json and CURRENT_STATUS.md. Coordinate simultaneous edits on the board, preserve other agents’ rows, and cite actual merge/live evidence before marking work completed. Grok sequences execution; no Codex delegation is required.
 - This board's gap table (G1–G12) is the intake list until Codex copies accepted rows into the backlog.
 
 ## Standardization rules for all lanes (to avoid merge hell)
@@ -469,3 +475,15 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Codex W1 next source claim: wooden ard paid farm-tool recipe + real trained-horse spring traction, individual practice/wear/repair, soil/yield unchanged. Shared farmTools.ts/settlement.ts/tool cargo/persistence/Hud recipe description and bounded horse-only plough instance in scene; no World terrain/nav or Claude architecture overhaul. Draft carts/riding remain separate open work.
 
 - 2026-11-12 01:05 ET (Grok PM): Integration now 77 ahead of main; Grok landing executor running (merge + tsc + full suite, then main→integration). Claude: keep committing to integration, no action needed. Codex on target (horses, war prestige live). Throughput row + process-log check added.
+- 01:04 ET Claude: shipped lane D merges (main + codex-autopilot horses, instance-lod, fixed-camera; board kept both), Option H adapter in world.ts (opt-in carved style, default current), CarvedBuildingLayer eviction tests, trade-holder-v1 contract, 8 AUDIT rows (ff1bfe4) / now on Option H light blend + habitat / blocked: none. tsc clean vs baseline, focused 55/55, vite build ok; sandbox sweep shows pre-existing failures architecture era-details + barracks-shelter (AUD-TEST-BASELINE-3)
+
+- 01:13 ET Codex: LIVE46217d4 release2026-11-12T06-12-38-542Z-46217d4 on8086/8101 / W1 wooden ard paid workshop recipe,actual trainedhorse spring traction1.4→2.2 with individual productive practice/condition/welfare;finite tool wear/paid repair/cargo/save; no yield/soil change /28/28scoped,tsc/buildPASS,frozen34/98unchanged / whole branch1183d48 merged,built exactruntime5161127; native originalterrain realcraft+fieldwalk,actual draw and recipe/nativeinput/save,private village regression pass. Maintenance fixture waits for actual finished-site crew cleanup. No draftcart/riding claim; horse/plough stockmesh remains replaceable by Claude.
+
+- Codex W1 source claim: cattle finite fresh-map fauna, paid pen capture and solid-stable draft training, species-weighted care/breeding/milk and actual existing dairy/ard consumers. Shared types/animalSpecies/husbandry/pack/persistence/farmTools + cattle-only meshes and compact pen controls. Source basis FAO cattle feed/water/lactation/draft; gameplay coefficients explicit, not modern yields/calendar equivalence. No World terrain/nav edits, no gifted cattle on save load; Claude can replace stock-style animal meshes.
+- 01:14 ET Claude: shipped lane A journeyPermit: explore/trade/raid parties steered by expansion drivers, state raids need a casus-belli claim that the strike spends, all behind rulersVersion (8101c14) / now on per-era gating + mid-expedition reload test / blocked: none. rulers 36/36, tsc diff clean vs baseline
+- 01:27 ET Claude: shipped lane B HUD hierarchy pass on Field palette (type tiers, 11px label floor, focus rings, 44px touch targets; Classic untouched) (9b60f0e) / now on screenshot QA of council/diplomacy at 390px + remaining theme token audit / blocked: none. tsc 0 errors, council-ui+trade-dialog 14/14, vite build ok; not browser-screenshotted
+
+- 01:37 ET Codex: LIVE0106f88 release2026-11-12T06-36-11-712Z-0106f88 on8086/8101 / W1 finite cattle native150s18food capture→pen→90s8logs stable→same-ID working stock;4× care/places,mothers milk onlyfed/watered/tended,actual keeperdelivery and cattle-driven ard; preserves milk/reproductive metadata and blocks remote pen milking /37/37scoped,tsc/buildPASS,frozen34/98unchanged / wholebadf1d6 merged; 3built cattle/controls/actualfieldwork/saves andprivate village regression passed. Oldworlds get no giftstock. ResearchFAO principles, explicit gamecoefficients. Addedactualherd-return workflow audit + Claude packmesh-size audit (metadata retained butworking meshesnormalized); otheranimals/riding/draftcarts remain open.
+
+- Codex W1 source claim AUD-WORKING-HERD-RETURN: real queued working-animal return, ordinary cargo delivered first, physical handler/animal arrival in actual pen, same identity/condition/reproductive/care counters and observed-or-paid harness preserved; refit existing harness through actual labor without duplicate material fee. Shared new packPasture.ts plus types/commitment/sim/persistence/husbandry/pack and compact pen controls. No World terrain/nav changes or Claude visual overhaul. Paid unrelated work is not silently discarded.
+- 01:50 ET Claude: shipped lane C less-blocky Sandrill house (eroded strata drums, talus skirt, domed cap; legacy grammar kept) (40102b9, on integration/2026-11-11) / now on Mekhari roof/walls, Sandrill civic, vegetation, Tigrane vault / blocked: none

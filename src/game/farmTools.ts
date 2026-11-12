@@ -1,3 +1,5 @@
+import {herdRules,isDraftSpecies} from './animalSpecies';
+import {packCapacityMultiplier} from './packAnimalState';
 import{claimFarmToolOwnership,releaseFarmToolOwnership}from'./farmToolOwnership';
 import{releaseTreeWorker}from'./workAllocation';
 import {hasTaskCommitment} from './workCommitments';
@@ -8,12 +10,13 @@ import { isDependent } from './settlement';
 import { predisposition } from './people';
 
 export const FARM_TOOLS = {
+  woodenArd: { name: 'Wooden ard', wood: 10, stone: 2, copper: 0, iron: 0, age: 0, seconds: 60, cultivation: 2.2, harvest: 1 },
   stoneHoe: { name: 'Stone hoe', wood: 3, stone: 2, copper: 0, iron: 0, age: 0, seconds: 24, cultivation: 1.25, harvest: 1.1 },
   copperTools: { name: 'Copper farming tools', wood: 3, stone: 0, copper: 4, iron: 0, age: 1, seconds: 45, cultivation: 1.5, harvest: 1.25 },
   ironTools: { name: 'Iron farming tools', wood: 3, stone: 0, copper: 0, iron: 4, age: 2, seconds: 60, cultivation: 1.7, harvest: 1.4 },
 } as const;
 export type FarmToolKind = keyof typeof FARM_TOOLS;
-export const FARM_TOOL_MAINTENANCE={version:1,repairBelowCondition:.9,lifeWorkSeconds:{stoneHoe:600,copperTools:900,ironTools:1200},repair:{stoneHoe:{wood:1,stone:1,copper:0,iron:0,seconds:12},copperTools:{wood:1,stone:0,copper:1,iron:0,seconds:18},ironTools:{wood:1,stone:0,copper:0,iron:1,seconds:24}}}as const;
+export const FARM_TOOL_MAINTENANCE={version:1,repairBelowCondition:.9,lifeWorkSeconds:{woodenArd:900,stoneHoe:600,copperTools:900,ironTools:1200},repair:{woodenArd:{wood:3,stone:1,copper:0,iron:0,seconds:30},stoneHoe:{wood:1,stone:1,copper:0,iron:0,seconds:12},copperTools:{wood:1,stone:0,copper:1,iron:0,seconds:18},ironTools:{wood:1,stone:0,copper:0,iron:1,seconds:24}}}as const;
 export function farmToolCondition(u:Pick<Unit,'farmTool'|'farmToolCondition'>){return u.farmTool?u.farmToolCondition??1:0;}
 export function wearFarmTool(u:Unit,seconds:number){const before=farmToolCondition(u);if(!u.farmTool||u.type!=='worker'||u.militia||u.farmToolWork?.mode==='repair'||!(seconds>0)||!Number.isFinite(seconds))return false;u.farmToolCondition=Math.max(0,before-seconds/FARM_TOOL_MAINTENANCE.lifeWorkSeconds[u.farmTool]);return before>0&&u.farmToolCondition===0;}
 
@@ -42,7 +45,7 @@ function available(g: Game, u: FarmToolUnit) {
 
 /** Shared by workplace validation and visible recipe controls. */
 export function farmToolWorkplace(kind:FarmToolKind,type:string,copperExperiment=false){
- return kind==='stoneHoe'?['hearth','townhall','workshop'].includes(type):kind==='copperTools'&&copperExperiment?['workshop','forge'].includes(type):type==='forge';
+ return kind==='woodenArd'?type==='workshop':kind==='stoneHoe'?['hearth','townhall','workshop'].includes(type):kind==='copperTools'&&copperExperiment?['workshop','forge'].includes(type):type==='forge';
 }
 
 function workplaces(g: Game, team: number, kind: FarmToolKind, id?: number) {
@@ -63,7 +66,8 @@ function improvement(u: FarmToolUnit, kind: FarmToolKind) {
 export function farmToolRequirement(g: Game, kind: FarmToolKind, team = 0): string | null {
   const spec = FARM_TOOLS[kind], t = g.tribe(team);
   if (t.age < spec.age && !(kind==='copperTools'&&t.copperExperiment)) return kind === 'ironTools' ? 'Iron farming tools need the Iron Age and four iron' : 'Copper farming tools need the Bronze Age and four copper';
-  if (!workplaces(g, team, kind).length) return kind === 'stoneHoe' ? 'Make stone hoes at a completed hearth, town hall or crafting shelter' : 'Finish a forge to shape metal farming tools';
+  if (!workplaces(g, team, kind).length) return kind==='woodenArd'?'Finish a crafting shelter to make a wooden ard':kind === 'stoneHoe' ? 'Make stone hoes at a completed hearth, town hall or crafting shelter' : 'Finish a forge to shape metal farming tools';
+  if(kind==='woodenArd'&&!g.state.units.some(u=>u.team===team&&draftTractionReady(u)))return 'Train a real draft animal at a stable, then choose its adult handler to make an ard';
   return null;
 }
 
@@ -78,13 +82,13 @@ export function beginFarmToolWork(g: Game, kind: FarmToolKind, team = 0, workpla
   const issue = farmToolRequirement(g, kind, team);
   if (issue) return reject(issue);
   const sites = workplaces(g, team, kind, workplaceId);
-  if (!sites.length) return reject(kind === 'stoneHoe' ? 'Choose a completed hearth, town hall or crafting shelter' : 'Metal toolmaking needs a completed forge');
+  if (!sites.length) return reject(kind==='woodenArd'?'Choose a completed crafting shelter for the wooden ard':kind === 'stoneHoe' ? 'Choose a completed hearth, town hall or crafting shelter' : 'Metal toolmaking needs a completed forge');
   const isFarmer = (u: Unit) => !!u.node && 'type' in u.node && u.node.type === 'farm';
   const u = (g.state.units as FarmToolUnit[]).filter(p => p.team === team &&
-    (unitId === undefined || p.id === unitId) && available(g, p) && !p.farmToolWork && improvement(p, kind))
+    (unitId === undefined || p.id === unitId) && (kind!=='woodenArd'||draftTractionReady(p)) && available(g, p) && !p.farmToolWork && improvement(p, kind))
     .sort((a, b) => Number(b.selected) - Number(a.selected) || Number(isFarmer(b)) - Number(isFarmer(a)))
     .find(p => reachableWorkplace(g, p, sites));
-  if (!u) return reject('Need an available adult with empty hands who can benefit from these tools and reach the workplace');
+  if (!u) return reject(kind==='woodenArd'?'Choose a free adult handler with their living trained draft animal, empty hands and a route to the crafting shelter':'Need an available adult with empty hands who can benefit from these tools and reach the workplace');
   if (t.wood < spec.wood || t.stone < spec.stone || t.copper < spec.copper || t.iron < spec.iron)
     return reject(`Need ${spec.wood} logs${spec.stone ? ` and ${spec.stone} stone` : ''}${spec.copper ? ` and ${spec.copper} copper` : ''}${spec.iron ? ` and ${spec.iron} iron` : ''}`);
   const b = reachableWorkplace(g, u, sites)!;
@@ -142,22 +146,37 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
   u.workReason = `${job.mode==='repair'?'Repairing':'Making'} ${FARM_TOOLS[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;
   if (job.progress >= job.duration) {
     u.farmTool = job.kind;u.farmToolCondition=1;releaseFarmToolOwnership(g,u,true); u.farmToolWork = undefined; u.order = 'idle';
-    u.workReason = `${FARM_TOOLS[job.kind].name} ready — faster sowing, tending and harvest work`;
+    u.workReason = job.kind==='woodenArd'?'Wooden ard ready — spring preparation with a trained draft animal; hand tending and harvest':`${FARM_TOOLS[job.kind].name} ready — faster sowing, tending and harvest work`;
     g.workBoard.reset();
     if (u.team === 0) { g.banner(u.workReason, 4); g.onSfx('place'); }
   }
   return true;
 }
 
+export const DRAFT_TRACTION_RULES={practiceSeconds:120,startingMultiplier:1.4,maximumMultiplier:2.2} as const;
+/** Physical actor/horse eligibility, shared by crafting and actual traction work.
+ * Tool ownership, condition and cultivation phase are checked by farmToolRate. */
+export function draftTractionReady(u:Unit):boolean{
+ return u.type==='worker'&&u.hp>0&&!u.militia&&u.haulage==='pack'&&isDraftSpecies(u.packAnimal?.species)&&!!u.packAnimal&&u.packAnimal.hp>0&&
+  !u.boat&&!u.prisoner&&!u.emergency&&!u.shelterId&&!u.resting;
+}
+
 /** Multiply farm labor speed only. Soil, crop water, seasons and finite harvest remain unchanged. */
 export function farmToolRate(u: FarmToolUnit, phase: number) {
   if (!u.farmTool || u.type !== 'worker' || u.militia||u.farmToolWork?.mode==='repair') return 1;
+  if(u.farmTool==='woodenArd'){
+   if(phase!==0||!draftTractionReady(u))return 1;
+   const practice=Number.isFinite(u.draftPracticeSeconds)?Math.max(0,Math.min(1,(u.draftPracticeSeconds??0)/DRAFT_TRACTION_RULES.practiceSeconds)):0;
+   const full=DRAFT_TRACTION_RULES.startingMultiplier+(DRAFT_TRACTION_RULES.maximumMultiplier-DRAFT_TRACTION_RULES.startingMultiplier)*practice;
+   const welfare=Math.max(0,Math.min(1,(packCapacityMultiplier(u)-1.25)/(herdRules(u.packAnimal?.species).packMultiplier-1.25)));
+   return 1+(full-1)*farmToolCondition(u)*welfare;
+  }
   const full=phase === 0 || phase === 1 ? FARM_TOOLS[u.farmTool].cultivation : phase === 2 ? FARM_TOOLS[u.farmTool].harvest : 1;return 1+(full-1)*farmToolCondition(u);
 }
 
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-const kind = (v: unknown): v is FarmToolKind => v === 'stoneHoe' || v === 'copperTools' || v === 'ironTools';
+const kind = (v: unknown): v is FarmToolKind => v === 'woodenArd' || v === 'stoneHoe' || v === 'copperTools' || v === 'ironTools';
 export function validFarmToolUnit(v: unknown) {
  if(!record(v)||v.farmTool!==undefined&&!kind(v.farmTool)||v.farmToolCondition!==undefined&&(!kind(v.farmTool)||!finite(v.farmToolCondition)||v.farmToolCondition<0||v.farmToolCondition>1))return false;
  if(v.farmToolWork===undefined)return true;const w=v.farmToolWork;if(!record(w)||!kind(w.kind)||w.mode!==undefined&&w.mode!=='repair')return false;

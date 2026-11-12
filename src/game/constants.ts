@@ -250,7 +250,7 @@ export const BUILDINGS: Record<
     pop: 0,
     hp: 400,
     age: 1,
-    hint: "Train an adult pasture horse to carry packs. Six logs and a minute of handling at the stable entrance; cavalry still needs its later equipment.",
+    hint: "Train adult horses or cattle for carrying and field work. Each animal needs paid handling at the stable entrance; cavalry needs its later equipment.",
   },
   university: {
     name: "Academy",
