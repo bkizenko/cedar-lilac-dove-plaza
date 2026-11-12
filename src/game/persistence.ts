@@ -1,3 +1,4 @@
+import {herdRules} from './animalSpecies';
 import {validPackAnimal} from './packAnimalState';
 import {validWeaponCargoState,reconcileWeaponCargo} from './weaponCargo';
 import {restoreCargoRecoveryCommitments} from './stolenCargo';
@@ -157,6 +158,7 @@ function validateGamePayload(raw: unknown) {
   if(!validCanalWorks(s,HALF*2))fail();
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
+  if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
   if(s.autoWorkEnabled!==undefined&&typeof s.autoWorkEnabled!=='boolean')fail();
   if(!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
@@ -427,8 +429,8 @@ function validateGamePayload(raw: unknown) {
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
-    if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack","shear"].includes(w.action)||!["pen","fetch","feed","deliver","waterFetch","waterDeliver","waterReturn"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
-    if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>60||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||(w.stable!==undefined&&(!Number.isSafeInteger(w.stable)||w.stable<1||w.stable>=s.nextId||w.action!=='pack'||s.buildings.some((b:any)=>b.id===w.stable&&b.type!=='stables')))||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack","shear"].includes(w.action)||!["pen","fetch","feed","deliver","waterFetch","waterDeliver","waterReturn"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
+    if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>(w.pen!==undefined?herdRules(s.wildlife.find((a:any)=>a.id===w.animal)?.species??s.livestock?.find((a:any)=>a.id===w.animal)?.species??'horse').tamingSeconds:60)||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
     if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
       const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);
@@ -566,11 +568,12 @@ function validateGamePayload(raw: unknown) {
     for(const a of s.livestock){
       add(a);numbers(a,["team","pen","hp","maxHp","facing","vx","vz","wanderT","fly","scale","born","tamedAt","hunger","milk","pregnancy"]);
       const pen=s.buildings.find((b:any)=>b.id===a.pen&&b.type==='pen'&&b.team===a.team);
+      if(a.adultScale!==undefined&&(!num(a.adultScale)||a.adultScale<.3||a.adultScale>3))fail();
       const led=a.ledBy!==undefined;
       if(led&&(!Number.isSafeInteger(a.ledBy)||a.hp<=0||!s.units.some((u:any)=>u.id===a.ledBy&&u.hp>0&&!u.prisoner)||s.units.some((u:any)=>u.hp>0&&(u.tamingWork?.animal===a.id||u.husbandryWork?.animal===a.id))))fail();
-      if(!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||!pen&&!led||!['goat','sheep'].includes(a.species)||!validFleece(a,s.time)||a.species==='sheep'&&s.sheepVersion!==1||!['female','male'].includes(a.sex)||a.born< -300||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>6||a.pregnancy<0||a.pregnancy>240||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail();
+      if(!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||!pen&&!led||!['goat','sheep','horse'].includes(a.species)||!validFleece(a,s.time)||a.species==='sheep'&&s.sheepVersion!==1||!['female','male'].includes(a.sex)||a.born< -herdRules(a.species).maturity||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>6||a.pregnancy<0||a.pregnancy>herdRules(a.species).gestation||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail();
       if(a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lactatingUntil>s.time+901))fail();
-      if(a.hp>0&&pen){perPen.set(a.pen,(perPen.get(a.pen)||0)+1);if((perPen.get(a.pen)||0)>penHousingCapacity(pen))fail();}
+      if(a.hp>0&&pen){perPen.set(a.pen,(perPen.get(a.pen)||0)+herdRules(a.species).places);if((perPen.get(a.pen)||0)>penHousingCapacity(pen))fail();}
     }
   }
   for (const c of s.wildlife) {
@@ -578,12 +581,12 @@ function validateGamePayload(raw: unknown) {
     if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>Math.max(1000,HALF+40)||Math.abs(c.grazing.z)>Math.max(1000,HALF+40)))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
     if(c.huntDefense!==undefined){const h=c.huntDefense;if(c.species!=='boar'||c.hp<=0||!obj(h)||!Number.isSafeInteger(h.hunterId)||h.hunterId<1||h.hunterId>=s.nextId||![h.expiresAt,h.nextAttackAt,h.lastX,h.lastZ].every(num)||h.expiresAt<0||h.expiresAt>s.time+HUNTING_HAZARD_RULES.alertSeconds+.001||h.nextAttackAt<0||h.nextAttackAt>s.time+HUNTING_HAZARD_RULES.attackCooldownSeconds+.001||Math.abs(h.lastX)>HALF+40||Math.abs(h.lastZ)>HALF+40)fail();}
-    if (!["deer", "boar", "goat", "sheep", "bird"].includes(c.species)||!validFleece(c,s.time)||c.species==='sheep'&&s.sheepVersion!==1||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
+    if (!["deer", "boar", "goat", "sheep", "horse", "bird"].includes(c.species)||!validFleece(c,s.time)||c.species==='sheep'&&s.sheepVersion!==1||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
   for(const b of s.buildings)if(b.goatSearch!==undefined&&(b.type!=='pen'||b.team!==0||!validGoatSearchOrder(b.goatSearch,s.time,s.nextId)))fail();
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}
   for(const u of s.units){
-    if(u.husbandryWork?.animal!==undefined){const w=u.husbandryWork,a=s.livestock?.find((a:any)=>a.id===w.animal);if(a&&(w.action==='pack'&&a.species!=='goat'||w.action==='shear'&&a.species!=='sheep'))fail();}
+    if(u.husbandryWork?.animal!==undefined){const w=u.husbandryWork,a=s.livestock?.find((a:any)=>a.id===w.animal);if(a&&(w.action==='pack'&&(!['goat','horse'].includes(a.species)||a.species==='horse'&&w.stable===undefined||a.species!=='horse'&&w.stable!==undefined)||w.action==='shear'&&a.species!=='sheep'))fail();}
     for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team)&&!(w===u.husbandryWork&&w.phase==='waterReturn'&&(w.waterLiters??0)>0&&w.releaseAfterWater===true))fail();
   }
   for (const r of s.routes) {
