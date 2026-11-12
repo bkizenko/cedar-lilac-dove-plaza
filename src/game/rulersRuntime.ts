@@ -329,12 +329,19 @@ export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
  const out:NeighbourNews[]=[];
  const sees=(a:number,b:number)=>a===0||b===0;
  for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
- for(const c of (st(g) as unknown as {commanders?:{roster:{id:number;team:number;name:string;status:string;fellAt?:number;capturedAt?:number;capturedBy?:number;replacedBy?:number;replaces?:number;seenByPlayer?:boolean;appointedAt:number}[]}}).commanders?.roster??[]){
-  if(c.team===0||!c.seenByPlayer)continue;
+ const roster=(st(g) as unknown as {commanders?:{roster:{id:number;unitId:number;team:number;name:string;status:string;fellAt?:number;capturedAt?:number;capturedBy?:number;replacedBy?:number;replaces?:number;seenByPlayer?:boolean;appointedAt:number}[]}}).commanders?.roster??[];
+ for(const c of roster){
+  if(c.team===0)continue;
   const who=(t:number)=>(st(g).tribes as {name?:string}[])[t]?.name??`Society ${t}`,house=who(c.team);
-  if(c.status==='fallen'&&c.fellAt!==undefined&&c.fellAt>=sinceTime)out.push({time:c.fellAt,kind:'commander-fell',a:c.team,b:c.team,text:`${c.name}, commander of ${house}, fell`});
-  if(c.capturedAt!==undefined&&c.capturedAt>=sinceTime&&c.capturedBy===0)out.push({time:c.capturedAt,kind:'commander-captured',a:c.team,b:0,text:`${c.name}, commander of ${house}, was taken captive`});
-  if(c.replaces!==undefined&&c.appointedAt>=sinceTime){const old=(st(g) as any).commanders.roster.find((o:{id:number;seenByPlayer?:boolean})=>o.id===c.replaces);if(old?.seenByPlayer)out.push({time:c.appointedAt,kind:'commander-replaced',a:c.team,b:c.team,text:`${house} named ${c.name} to replace ${old.name}`});}
+  if(c.seenByPlayer&&c.status==='fallen'&&c.fellAt!==undefined&&c.fellAt>=sinceTime)out.push({time:c.fellAt,kind:'commander-fell',a:c.team,b:c.team,text:`${c.name}, commander of ${house}, fell`});
+  if(c.seenByPlayer&&c.capturedAt!==undefined&&c.capturedAt>=sinceTime&&c.capturedBy===0)out.push({time:c.capturedAt,kind:'commander-captured',a:c.team,b:0,text:`${c.name}, commander of ${house}, was taken captive`});
+  if(c.replaces!==undefined&&c.appointedAt>=sinceTime){
+   const old=roster.find(o=>o.id===c.replaces&&o.team===c.team&&o.replacedBy===c.id&&o.seenByPlayer&&(o.fellAt!==undefined||o.capturedAt!==undefined));
+   const body=g.state.units.find(u=>u.id===c.unitId&&u.team===c.team&&u.hp>0);
+   // A known predecessor's loss is not a remote receipt for a private appointment.
+   // Fresh successors have no loss-witness flag: real current sight is sufficient.
+   if(old&&(c.seenByPlayer||body&&g.visibleAt(body.x,body.z)))out.push({time:c.appointedAt,kind:'commander-replaced',a:c.team,b:c.team,text:`${house} named ${c.name} to replace ${old.name}`});
+  }
  }
  return out.sort((x,y)=>y.time-x.time).slice(0,Math.max(0,limit));
 }
