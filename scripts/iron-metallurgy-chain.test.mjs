@@ -10,13 +10,15 @@ import {IRON_METALLURGY_RULES as R,ironOreEnabled} from '../src/game/ironMetallu
 import {knowledgeReport,runKnowledgeAction} from '../src/game/knowledge.ts';
 import {ironKnowledgeTopic} from '../src/game/ironKnowledge.ts';
 import {beginFarmToolWork,beginFarmToolRepair,farmToolRate,farmToolRequirement} from '../src/game/farmTools.ts';
+import {BUILDINGS} from '../src/game/constants.ts';
+import {sitePreparationSurvey} from '../src/game/sitePreparation.ts';
 import {calendar,crop,YEAR_SECONDS} from '../src/game/settlement.ts';
 import {bindIronSmeltLoad,carriedLoadUnits} from '../src/game/carriedLoad.ts';
 import {droppedParcels,claimParcel} from '../src/game/stolenCargo.ts';
 const hash=g=>createHash('sha256').update(Buffer.from(g.world.heights.buffer)).digest('hex');
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 let setupSave,workerId,forgeId,hearthId,fieldId,minedCarrierSave,completedSave;
-function legal(g,type,origin){for(let r=12;r<=84;r+=4)for(let i=0;i<24;i++){const x=origin.x+Math.cos(i*Math.PI/12)*r,z=origin.z+Math.sin(i*Math.PI/12)*r;if(g.placementIssue(type,x,z,0)===null&&g.workBoard.connected(g,origin.x,origin.z,x,z))return{x,z};}}
+function legal(g,type,origin,size){for(let r=12;r<=84;r+=4)for(let i=0;i<24;i++){const x=origin.x+Math.cos(i*Math.PI/12)*r,z=origin.z+Math.sin(i*Math.PI/12)*r;if(g.placementIssue(type,x,z,0,size)===null&&g.workBoard.connected(g,origin.x,origin.z,x,z)&&!sitePreparationSurvey(g,{x,z,w:size?.w??BUILDINGS[type].w,d:size?.d??BUILDINGS[type].d}).clearable.length)return{x,z};}}
 function drive(g,seconds,done){const end=g.state.time+seconds;while(!done()&&g.state.time<end){g.state.paused=false;g.step(.2);assert.deepEqual(g.simulationErrors,[]);assert.ok(!g.state.ended);}assert.ok(done(),JSON.stringify({time:g.state.time,iron:g.tribe(0).iron,items:g.tribe(0).items,workers:g.state.units.filter(u=>u.team===0).map(u=>({id:u.id,order:u.order,reason:u.workReason,cargo:u.itemCargo,carry:u.carry})),projects:g.state.production?.projects}));}
 function strict(g){const raw=encodeGame(g);validateGameSave(raw);return decodeGame(raw);}
 test.before(()=>{
@@ -25,7 +27,7 @@ test.before(()=>{
  // initial food/water/logs and seed knowledge. NO ore, bloom, usable iron,
  // charcoal, iron technique, successful metallurgy or equipped tools granted.
  const t=g.tribe(0);t.age=2;g.state.age=2;t.cultivated=['grain'];t.seeds=40;
- for(const type of ['forge','farm']){const p=legal(g,type,home);assert.ok(p,`native legal ${type}`);const b=g.makeBld(type,p.x,p.z,0);g.state.buildings.push(b);g.rebuildWalk();if(type==='forge')forgeId=b.id;else fieldId=b.id;}
+ for(const type of ['forge','farm']){const size=type==='farm'?{w:24.6,d:16.4}:undefined;const p=legal(g,type,home,size);assert.ok(p,`native legal ${type}`);if(type==='farm'){const seeds=t.seeds;assert.equal(g.placeBuilding(type,p.x,p.z,0,size),true,g.state.banner);const b=g.state.buildings.at(-1);fieldId=b.id;assert.ok(t.seeds<seeds,'actual enlarged field marking pays its seed quote');}else{const b=g.makeBld(type,p.x,p.z,0);g.state.buildings.push(b);forgeId=b.id;}g.rebuildWalk();}
  Object.assign(t,{food:20000,foodLots:{provisions:20000},wood:300,stone:200,copper:0,iron:0,items:{...t.items,charcoal:0}});t.survival.waterLiters=1500;
  setupSave=encodeGame(g);validateGameSave(setupSave);
 });
