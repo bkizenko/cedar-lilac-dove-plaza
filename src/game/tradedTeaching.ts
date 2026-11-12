@@ -14,6 +14,38 @@ export type TeachingHolder={kind:'resident'|'caravan';id:number;team:number};
 export type TeachingTerm={good:ResKind;qty:number;from:TeachingHolder;to:{kind:'faction';team:number};foodKind?:FoodKind};
 export type TeachingOffer={version:1;id:string;methodId:ProductionRecipe;teacher:{id:number;team:number;siteId:number};learner:{id:number;team:number};consideration:TeachingTerm[];validUntil:number;agreedAt:number;qualifiedBatches:number;delivery?:{projectId:number;teacherWork:number;usefulOutputs:number;at:number};phase:'traveling'|'armed'|'observing'|'returning'|'reported'|'cancelled'|'lost';paidAt?:number;projectId?:number;observedSeconds:number;lastProgress:number;usefulAt?:number;reportedAt?:number;reason?:string};
 export type TradedTeachingOrder={offerId:string};
+export type TradedMethodSource={version:1;kind:'traded';offerId:string;teacherId:number;sourceTeam:number;siteId:number;originLearnerId:number;reportedAt:number;learnedAt:number;taughtById:number;lessonProjectId:number};
+export const TRADED_METHOD_SOURCE_LIMIT=8;
+const sourceKey=(r:TradedMethodSource)=>r.offerId;
+function originalSource(o:TeachingOffer):TradedMethodSource{return{version:1,kind:'traded',offerId:o.id,teacherId:o.teacher.id,sourceTeam:o.teacher.team,siteId:o.teacher.siteId,originLearnerId:o.learner.id,reportedAt:o.reportedAt!,learnedAt:o.reportedAt!,taughtById:o.teacher.id,lessonProjectId:o.delivery!.projectId};}
+/** Receipts describe an actually reported paid offer, not a technology grant.
+ * A retained successor project corroborates its maker; ordinary pruning does
+ * not erase the original paid/report record or invent another lesson. */
+export function validTradedMethodSource(s:GameState,method:string,v:unknown):v is TradedMethodSource{
+ const r=v as TradedMethodSource,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0&&Number(n)<s.nextId,at=(n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=s.time;
+ if(!r||typeof r!=='object'||Array.isArray(r)||Object.keys(r).some(k=>!['version','kind','offerId','teacherId','sourceTeam','siteId','originLearnerId','reportedAt','learnedAt','taughtById','lessonProjectId'].includes(k))||r.version!==1||r.kind!=='traded'||typeof r.offerId!=='string'||![r.teacherId,r.siteId,r.originLearnerId,r.taughtById,r.lessonProjectId].every(id)||!s.tribes.some(t=>t.id===r.sourceTeam)||!at(r.reportedAt)||!at(r.learnedAt)||r.learnedAt<r.reportedAt)return false;
+ const o=s.teachingOffers?.find(o=>o.id===r.offerId);
+ if(!o||o.phase!=='reported'||o.methodId!==method||o.reportedAt!==r.reportedAt||o.teacher.id!==r.teacherId||o.teacher.team!==r.sourceTeam||o.teacher.siteId!==r.siteId||o.learner.id!==r.originLearnerId||!o.delivery)return false;
+ if(r.learnedAt===r.reportedAt)return r.taughtById===r.teacherId&&r.lessonProjectId===o.delivery.projectId;
+ const p=s.production?.projects.find(p=>p.id===r.lessonProjectId);
+ return !p||p.phase==='complete'&&p.practiceRecorded===true&&p.recipe===method&&p.finished===r.learnedAt&&!!p.practiceWorkers?.some(w=>w.id===r.taughtById&&w.work+1e-8>=PRODUCTION_RECIPES[p.recipe].workSeconds*PRODUCTION_PRACTICE_RULES.minimumContributionFraction);
+}
+export function retainTradedMethodSources(skill:NonNullable<Unit['productionSkills']>[ProductionRecipe],sources:TradedMethodSource[],at:number,teacherId:number,projectId:number){
+ if(!skill||!sources.length)return;const rows=new Map((skill.tradedSources||[]).map(r=>[sourceKey(r),{...r}]));
+ for(const r of sources)if(!rows.has(sourceKey(r)))rows.set(sourceKey(r),{...r,learnedAt:at,taughtById:teacherId,lessonProjectId:projectId});
+ skill.tradedSources=[...rows.values()].sort((a,b)=>a.learnedAt-b.learnedAt||a.offerId.localeCompare(b.offerId)).slice(0,TRADED_METHOD_SOURCE_LIMIT);
+}
+/** The same living person keeps their paid method when lawfully joining a new
+ * community. Queries are pure; old reported offers require no migration write. */
+export function tradedMethodSourcesForPerson(s:GameState,u:Unit,method:ProductionRecipe):TradedMethodSource[]{
+ const owner=s.units.find(p=>p.id===u.id),skill=owner?.productionSkills?.[method];if(!owner||owner.hp<=0||owner.prisoner||owner.enslavedFrom!==undefined||!skill||skill.successfulBatches+skill.taughtBatches<=0)return [];
+ const rows=new Map<string,TradedMethodSource>();
+ for(const r of skill.tradedSources||[])if(skill.taughtBatches>0&&skill.lastTaughtAt!==undefined&&r.learnedAt<=skill.lastTaughtAt&&validTradedMethodSource(s,method,r))rows.set(sourceKey(r),{...r});
+ for(const o of s.teachingOffers||[])if(o.phase==='reported'&&o.learner.id===owner.id&&o.methodId===method&&o.delivery){const r=originalSource(o);if(validTradedMethodSource(s,method,r))rows.set(sourceKey(r),r);}
+ return [...rows.values()];
+}
+export function tradedPersonalRecipeSources(s:GameState,team:number,methods:readonly ProductionRecipe[]){const rows=new Map<string,TradedMethodSource>();for(const u of s.units)if(u.team===team)for(const method of methods)for(const r of tradedMethodSourcesForPerson(s,u,method))if(!rows.has(sourceKey(r)))rows.set(sourceKey(r),r);return [...rows.values()];}
+
 const free=(g:Game,u:Unit)=>u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u);
 const terminal=(o:TeachingOffer)=>['reported','cancelled','lost'].includes(o.phase);
 const job=(o:TeachingOffer)=>`traded-teaching:${o.id}`;
@@ -55,7 +87,7 @@ export function tradedTeachingAI(g:Game,u:Unit,dt:number){if(!u.tradedTeaching)r
  if(o.phase==='returning'){
   const home=supplyDrops(g,u.team).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).filter(x=>x.spot).sort((a,b)=>Math.hypot(u.x-a.spot!.x,u.z-a.spot!.z)-Math.hypot(u.x-b.spot!.x,u.z-b.spot!.z))[0];
   if(!home){u.workReason='Bringing learned method home; no reachable home cache';return true;}u.tx=home.spot!.x;u.tz=home.spot!.z;u.order='return';
-  if(!u.boat&&g.height(u.x,u.z)>=g.waterAt(u.x,u.z)+.05&&supplyReached(g,u,home.drop,home.spot!)){release(g,o);o.phase='reported';o.reportedAt=g.state.time;u.productionSkills??={};const s=u.productionSkills[o.methodId]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};s.taughtBatches++;s.observedSeconds+=o.observedSeconds;s.lastTaughtAt=g.state.time;s.lastTeacherId=o.teacher.id;delete u.tradedTeaching;u.order='idle';u.workReason='Learned method reported home';u.jobLock=false;return true;}
+  if(!u.boat&&g.height(u.x,u.z)>=g.waterAt(u.x,u.z)+.05&&supplyReached(g,u,home.drop,home.spot!)){release(g,o);o.phase='reported';o.reportedAt=g.state.time;u.productionSkills??={};const s=u.productionSkills[o.methodId]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};s.taughtBatches++;s.observedSeconds+=o.observedSeconds;s.lastTaughtAt=g.state.time;s.lastTeacherId=o.teacher.id;retainTradedMethodSources(s,[originalSource(o)],g.state.time,o.teacher.id,o.delivery!.projectId);delete u.tradedTeaching;u.order='idle';u.workReason='Learned method reported home';u.jobLock=false;return true;}
   u.workReason='Returning home with an observed foreign method';g.steer(u,dt);return true;
  }
  const teacher=g.state.units.find(t=>t.id===o.teacher.id&&t.team===o.teacher.team),site=siteFor(g,o);
@@ -80,6 +112,7 @@ export function recordTradedTeachingDelivery(g:Game,p:ProductionProject,useful:n
 export function tickTradedTeaching(g:Game){for(const o of g.state.teachingOffers||[]){if(terminal(o))continue;const u=g.state.units.find(u=>u.id===o.learner.id);if(!u||u.hp<=0||u.team!==o.learner.team||u.prisoner||u.enslavedFrom!==undefined)finish(g,o,'lost','Learner lost before reporting home');}}
 export function tradedRecipeSources(s:GameState,team:number,methods:readonly ProductionRecipe[]){return(s.teachingOffers||[]).filter(o=>o.phase==='reported'&&o.learner.team===team&&methods.includes(o.methodId));}
 export function validTradedTeaching(s:GameState){
+ for(const u of s.units)for(const [method,skill]of Object.entries(u.productionSkills||{})){if(skill?.tradedSources===undefined)continue;if(!Array.isArray(skill.tradedSources)||skill.tradedSources.length>TRADED_METHOD_SOURCE_LIMIT||skill.taughtBatches<=0||skill.lastTaughtAt===undefined)return false;const seen=new Set<string>();for(const r of skill.tradedSources){if(!validTradedMethodSource(s,method,r)||r.learnedAt>skill.lastTaughtAt||(r.learnedAt===r.reportedAt?u.id!==r.originLearnerId:u.id===r.taughtById)||r.learnedAt===skill.lastTaughtAt&&skill.lastTeacherId!==r.taughtById||seen.has(sourceKey(r)))return false;seen.add(sourceKey(r));}}
  if(s.teachingOffers===undefined)return !s.units.some(u=>u.tradedTeaching);if(!Array.isArray(s.teachingOffers)||s.teachingOffers.length>TRADED_TEACHING_RULES.maximumOffers)return false;
  const ids=new Set<string>(),learners=new Set<number>(),observers=new Set<number>();const at=(v:unknown,max=s.time)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=max;const id=(v:unknown)=>Number.isSafeInteger(v)&&Number(v)>0&&Number(v)<s.nextId;
  for(const o of s.teachingOffers){if(!o||o.version!==1||typeof o.id!=='string'||o.id.length>80||ids.has(o.id)||!recipe(o.methodId)||!o.teacher||!o.learner||!id(o.teacher.id)||!id(o.teacher.siteId)||!id(o.learner.id)||o.teacher.id===o.learner.id||!s.tribes.some(t=>t.id===o.teacher.team)||!s.tribes.some(t=>t.id===o.learner.team)||o.teacher.team===o.learner.team||!at(o.agreedAt)||!Number.isSafeInteger(o.qualifiedBatches)||o.qualifiedBatches<PRODUCTION_PRACTICE_RULES.mentorSuccessfulBatches||!at(o.validUntil,1e12)||o.validUntil!==o.agreedAt+TRADED_TEACHING_RULES.validSeconds||!['traveling','armed','observing','returning','reported','cancelled','lost'].includes(o.phase)||!at(o.observedSeconds,PRODUCTION_RECIPES[o.methodId].workSeconds)||!at(o.lastProgress,PRODUCTION_RECIPES[o.methodId].workSeconds))return false;ids.add(o.id);
