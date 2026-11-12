@@ -296,7 +296,7 @@ export function tickSurvival(g:Game,dt:number){
    for(const hearth of fires)if(Math.hypot(u.x-hearth.x,u.z-hearth.z)<=8)fire=Math.max(fire,cooking.has(hearth.id)?1:fireFraction);
    const localTemp=localAirTemperature(g,u.x,u.z,temp);
    if(u.garment||u.spareGarment||u.garmentRepair){
-    const weather={raining:['rain','storm','flood'].includes(g.state.weather),immersed:u.boat?.phase!=='aboard'&&g.waterAt(u.x,u.z)>u.y+GARMENT_WEATHER_RULES.immersionDepthMetres,covered:garmentRoofCovered(g,u),fireFraction:fire};
+    const weather={raining:['rain','storm','flood'].includes(g.state.weather),immersed:u.boat?.phase!=='aboard'&&g.waterAt(u.x,u.z)>u.y+GARMENT_WEATHER_RULES.immersionDepthMetres,covered:['rain','storm','flood'].includes(g.state.weather)&&garmentRoofCovered(g,u),fireFraction:fire};
     tickGarmentWetness(u,dt,weather);
     if(u.garmentRepair)tickGarmentWetness({hp:u.hp,spareGarment:u.garmentRepair.garment},dt,weather);
    }
