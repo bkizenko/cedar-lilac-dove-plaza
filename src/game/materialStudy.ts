@@ -1,8 +1,12 @@
+import {COPPER_METALLURGY_RULES as SMELT,copperOreEnabled,adoptCopperMetallurgy} from './copperMetallurgy';
+import {copperIndustrySupply} from './copperIndustrySupply';
+import {CHARCOAL_RULES} from './charcoal';
+import {beginProduction,resumeProduction,productionIssue} from './production';
 import {releaseTreeWorker} from './workAllocation';
 import{copperHelperWork,beginCopperHelper,PRACTICAL_HELPER_RULES}from'./practicalHelpers';
 import {hasTaskCommitment} from './workCommitments';
 import {isRivalTeam} from './factions';
-import {rivalKnows} from './rivalDevelopment';
+import {rivalKnows,rivalMaterialReserves} from './rivalDevelopment';
 import type {Game} from './sim';import type {GameState,Unit} from './types';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {workRuntime} from './workRuntime';import type {JobCoordinator} from './jobCoordinator';
@@ -60,9 +64,50 @@ export function validCopperStudies(s:GameState){const n=(v:unknown,max=1e12)=>ty
  const m=s.copperTrials;if(m===undefined)return newTrials===0;if(!m||m.version!==1||['started','paid','completed','lost','workSeconds','copperAllocated','woodAllocated','charcoalAllocated','copperLost','woodLost','charcoalLost'].some(k=>!n(m[k as keyof CopperTrials])))return false;for(const k of ['started','paid','completed','lost']as const)if(!Number.isSafeInteger(m[k]))return false;return m.started===newTrials+m.completed+m.lost&&m.paid>=paid+m.completed&&m.paid<=m.started&&m.completed+m.lost<=m.started&&m.woodAllocated/COPPER_STUDY_RULES.woodLogs+m.charcoalAllocated/COPPER_STUDY_RULES.charcoalUnits===m.paid&&Number.isSafeInteger(m.woodAllocated/COPPER_STUDY_RULES.woodLogs)&&Number.isSafeInteger(m.charcoalAllocated/COPPER_STUDY_RULES.charcoalUnits)&&m.copperAllocated===m.paid*COPPER_STUDY_RULES.copperUnits&&m.copperLost<=m.copperAllocated&&m.woodLost<=m.woodAllocated&&m.charcoalLost<=m.charcoalAllocated;
 }
 
+export const RIVAL_COPPER_CHAIN_RULES={reviewSeconds:5,foodReserveSeconds:600,maximumReviews:1000000,resourceMeters:160} as const;
+type IndustryReview={at:number;reviews:number;reason:string;handled:boolean};
+const industryReviews=new WeakMap<Game,{state:GameState;owners:Map<number,IndustryReview>}>();
+function industryContext(g:Game){let c=industryReviews.get(g);if(!c||c.state!==g.state){c={state:g.state,owners:new Map()};industryReviews.set(g,c);}return c;}
+/** Bounded runtime diagnostics; inventory, paid work and practice remain saved in
+ * their existing authoritative records. Reading this never starts work. */
+export function rivalCopperChainStatus(g:Game,team:number){const c=industryReviews.get(g);return c?.state===g.state&&c.owners.has(team)?Object.freeze({...c.owners.get(team)!}):null;}
+function reviewRivalCopperIndustry(g:Game,team:number){
+ const c=industryContext(g),prior=c.owners.get(team),R=RIVAL_COPPER_CHAIN_RULES;
+ if(prior&&g.state.time>=prior.at&&g.state.time-prior.at<R.reviewSeconds)return{handled:prior.handled,changed:false};
+ const note=(reason:string,handled=true,changed=false)=>{c.owners.set(team,{at:g.state.time,reviews:Math.min(R.maximumReviews,(prior?.reviews||0)+1),reason,handled});return{handled,changed};};
+ const t=g.tribe(team),sites=g.state.buildings.filter(b=>b.team===team&&g.finished(b)),kiln=sites.find(b=>b.type==='kiln'),hearth=sites.find(b=>b.type==='hearth'),shop=sites.find(b=>b.type==='workshop');
+ if(!kiln||!hearth||!shop)return note('missing-infrastructure',copperOreEnabled(g,team));
+ if(reserveSeconds(g,team)<R.foodReserveSeconds)return note('food-reserve');
+ const trial=g.state.units.find(u=>u.team===team&&u.hp>0&&u.copperStudy);
+ if(trial)return note('existing-prototype',false); // existing helper/resume logic owns this paid trial
+ const spare=(u:Unit)=>experimenterFree(g,u,team,true)&&!u.copperStudy&&!u.jobLock&&!(u.order==='gather'&&u.job==='food');
+ const paid=(g.state.production?.projects||[]).filter(p=>p.team===team&&['makeCharcoal','smeltCopper'].includes(p.recipe)&&!['complete','lost'].includes(p.phase));
+ if(paid.length){const p=paid[0];if(p.phase==='paused'&&p.pauseCause==='manual')return note('manual-paid-pause');if(p.phase==='paused'||p.phase==='stored'){const owner=p.actorId??g.state.units.find(spare)?.id;if(owner===undefined)return note('paid-batch-blocked');const accepted=resumeProduction(g,p.id,owner);return note(accepted?'resumed-paid-batch':'paid-batch-blocked',true,accepted);}return note('paid-batch-active');}
+ if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.farmToolWork?.kind==='copperTools'))return note('owned-tool-work');
+ const returningLoader=g.state.units.find(u=>u.team===team&&u.hp>0&&u.order==='return'&&u.workReason==='Returning to load copper industry inputs'),emptyReturn=!!returningLoader;if(returningLoader)returningLoader.workCheckAt=g.state.time+R.reviewSeconds*3;
+ const candidates=g.state.units.filter(spare)
+  .filter(u=>!!cacheFor(g,u)&&!!g.interactionSpot(u,kiln)&&!!g.interactionSpot(u,hearth)&&!!g.interactionSpot(u,shop));
+ if(!candidates.length)return note(returningLoader?'returning-to-load':'no-spare-actor');
+ if(!copperOreEnabled(g,team)&&!adoptCopperMetallurgy(g,team))return note('adoption-blocked');
+ const supply=copperIndustrySupply(g,team),target=Math.max(t.copperExperiment?0:COPPER_STUDY_RULES.copperUnits,rivalMaterialReserves(g,team).copper);
+ const prototypeReady=!t.copperExperiment&&t.copper>=COPPER_STUDY_RULES.copperUnits;
+ if(!prototypeReady&&supply.effectiveMetal>=target&&(t.copper>=target||supply.oreAtCache<SMELT.orePerBatch))return note(t.copper>=target?'demand-satisfied':'supply-in-transit');
+
+ const atCache=(u:Unit)=>{const p=cacheFor(g,u);return !!p?.spot&&supplyReached(g,u,p.drop,p.spot);};
+ const pay=(recipe:'makeCharcoal'|'smeltCopper',site:NonNullable<typeof kiln>)=>{const maker=candidates.find(atCache);if(!maker){if(!emptyReturn){const maker=candidates[0],home=cacheFor(g,maker);if(home?.spot){g.interruptMission(maker);maker.order='return';maker.node=null;maker.target=null;maker.tx=home.spot.x;maker.tz=home.spot.z;maker.workReason='Returning to load copper industry inputs';maker.workCheckAt=g.state.time+R.reviewSeconds*3;g.invalidateRoute(maker);return note('returning-to-load',true,true);}}return note('waiting-for-loader');}const issue=productionIssue(g,recipe,site.id,maker.id);if(issue)return note('production-admission-blocked');return note('paid-'+recipe,true,beginProduction(g,recipe,site.id,maker.id));};
+ const gather=(kind:'wood'|'copper')=>{if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.job===kind&&u.order==='gather'||u.team===team&&u.hp>0&&u.order==='return'&&(kind==='copper'?(u.itemCargo?.copperOre||0)>0:u.carryType==='wood'&&u.carry>0)))return note(kind+'-in-transit');const maker=candidates[0],list=kind==='wood'?g.state.trees:g.state.copper;
+  const n=list.filter(n=>n.amount>0&&Math.hypot(n.x-shop.x,n.z-shop.z)<R.resourceMeters&&rivalKnows(g,team,n.x,n.z)&&g.workBoard.connected(g,maker.x,maker.z,n.x,n.z)).sort((a,b)=>Math.hypot(a.x-maker.x,a.z-maker.z)-Math.hypot(b.x-maker.x,b.z-maker.z))[0];if(!n)return note('no-known-'+kind);
+  g.interruptMission(maker);maker.node=n;maker.job=kind;maker.jobLock=false;maker.order='gather';maker.tx=n.x;maker.tz=n.z;maker.workReason=kind==='wood'?'Collecting finite timber for charcoal smelting':'Collecting finite ore for measured metal demand';g.workBoard.reset();return note('gathering-'+kind,true,true);};
+ if(prototypeReady){if(t.wood<COPPER_STUDY_RULES.woodLogs)return gather('wood');return note('prototype-metal-ready',false);}
+ if(supply.oreAtCache>=SMELT.orePerBatch){if((t.items?.charcoal||0)>=SMELT.charcoalPerBatch)return pay('smeltCopper',kiln);if(t.wood>=CHARCOAL_RULES.woodLogs)return pay('makeCharcoal',hearth);return gather('wood');}
+ if(supply.effectiveMetal>=target)return note('supply-in-transit');
+ return gather('copper');
+}
+
 /** Rivals use known finite ore and actual workers, never a research-income bonus. */
 export function developRivalCopper(g:Game,team:number){
- if(!isRivalTeam(team)||reserveSeconds(g,team)<600||g.tribe(team).copperExperiment)return false;
+ if(!isRivalTeam(team)||!g.tribe(team)?.alive)return false;const industry=reviewRivalCopperIndustry(g,team);if(industry.handled)return industry.changed;
+ if(reserveSeconds(g,team)<600||g.tribe(team).copperExperiment)return false;
  const b=g.state.buildings.find(b=>b.team===team&&b.type==='workshop'&&g.finished(b));if(!b)return false;
  const trial=g.state.units.find(u=>u.team===team&&u.hp>0&&u.copperStudy&&!u.copperStudy.paused);
  if(trial){const pop=g.popNow(team),limit=pop>=PRACTICAL_HELPER_RULES.nativeTwoHelperPopulation?2:pop>=PRACTICAL_HELPER_RULES.nativeOneHelperPopulation?1:0,assigned=g.state.units.filter(u=>u.hp>0&&u.practicalHelper?.leaderId===trial.id&&u.practicalHelper.phase!=='paused').length;return assigned<limit&&beginCopperHelper(g,trial.id,true).accepted;}
