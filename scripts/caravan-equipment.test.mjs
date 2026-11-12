@@ -21,7 +21,10 @@ test('missing equipment, distant stores and death never manufacture or refund a 
 });
 test('an armed visiting trader reaches the player through the real dispatcher and returns goods and equipment',()=>{
  const {g,u}=fixture();equipCaravan(g,u);u.visit={phase:'outbound',wait:0};u.order='move';u.carry=12;u.carryType='wood';u.x=88;u.z=40;
- g.state.paused=false;g.step(.1);assert.equal(u.visit.phase,'waiting');assert.equal(u.type,'spearman');
+ // Being eight metres from the hall centre is not the physical frontage.
+ // Exercise the dispatcher until the same real trader actually walks there.
+ for(let i=0;i<100&&u.visit?.phase==='outbound';i++){g.state.paused=false;g.step(.1);}
+ assert.equal(u.visit?.phase,'waiting',JSON.stringify({x:u.x,z:u.z,visit:u.visit,reason:u.workReason,errors:g.simulationErrors}));assert.equal(u.type,'spearman');
  u.visit.phase='return';u.order='move';const before=g.tribe(1).wood;
  for(let i=0;i<1500&&u.visit;i++){g.state.time+=.1;g.navBudget=10;visitorAI(g,u,.1);}
  assert.equal(u.visit,undefined);assert.equal(u.carry,0);assert.equal(g.tribe(1).wood,before+12);
