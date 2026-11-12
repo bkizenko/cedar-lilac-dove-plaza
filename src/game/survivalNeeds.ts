@@ -117,9 +117,13 @@ function fireDemand(g:Game,team:number,ambient:number){
  const cold=residents(g,team).filter(u=>localAirTemperature(g,u.x,u.z,ambient)+clothingWarmth(u)+shelterWarmth(g,u)<SURVIVAL_RULES.coldThresholdCelsius);
  return cold.length*SURVIVAL_RULES.woodPerPersonColdSecond;
 }
+/** Shared read of the existing household draw; no stock or body state changes. */
+export function collectedWaterDemand(g:Game,team=0,people=residents(g,team)){
+ return people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team)+g.state.units.filter(u=>u.team===team&&u.hp>0&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0).reduce((n,u)=>n+herdRules(u.packAnimal?.species??'goat').careMultiplier,0)*PACK_ANIMAL_RULES.waterPerSecond;
+}
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),home=g.campOf(team),homeTemp=localAirTemperature(g,home.x,home.z),temp=Math.round(homeTemp);
- const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*SURVIVAL_RULES.waterLitersPerPersonSecond+herdWaterDemand(g,team)+g.state.units.filter(u=>u.team===team&&u.hp>0&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0).reduce((n,u)=>n+herdRules(u.packAnimal?.species??'goat').careMultiplier,0)*PACK_ANIMAL_RULES.waterPerSecond,fuelDemand=fireDemand(g,team,ambientTemperature(g));
+ const demand=collectedWaterDemand(g,team,people),fuelDemand=fireDemand(g,team,ambientTemperature(g));
  const residueFuel=residueFuelAvailable(g,team),water=stock?.waterLiters??0,fuel=t?.wood??0,fuelAvailableWoodEquivalent=fuel+residueFuel.availableWoodEquivalent,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuelAvailableWoodEquivalent/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];

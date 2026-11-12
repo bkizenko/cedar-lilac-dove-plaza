@@ -10,6 +10,6 @@ export function StartupHint({onOpenMenu,onOpenHelp}:{onOpenMenu:()=>void;onOpenH
  const dismiss=()=>{remember();setShow(false);};
  return <div className="hw-hint" role="note" aria-label="Display options hint">
   <span>Interface style and graphics: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenMenu();}}>Menu</button>{onOpenHelp&&<> · Keys: <button type="button" className="hw-hint-link" onClick={()=>{dismiss();onOpenHelp();}}>Help</button></>}</span>
-  <button type="button" className="hw-hint-x" aria-label="Dismiss hint" onClick={dismiss}><X size={22}/></button>
+  <button type="button" className="hw-hint-x" aria-label="Dismiss hint" onClick={dismiss}><X size={24}/></button>
  </div>;
 }
