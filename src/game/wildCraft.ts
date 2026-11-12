@@ -115,6 +115,7 @@ function recipeKnown(g:Game,team:number,r:WildRecipe){
  return hasDeliveredMethod(g,team,r.gate)||(w.practice[String(team)]?.[r.id]||0)>0;
 }
 const wildKey=(id:number)=>`wild-craft:${id}`;
+function wildBodyPacket(p:WildProject){return !p.packet&&(Object.values(p.held.items).some(n=>(n||0)>0)||Object.values(p.held.goods).some(n=>(n||0)>0)||Object.values(p.held.food).some(n=>(n||0)>0)||p.held.wood>0||p.held.water>0||Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0));}
 function wildAdult(g:Game,u:Unit,own=false){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.boat&&!u.resting&&!u.shelterId&&!u.expedition&&!u.visit&&!u.trade&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u,own?'wildWorkId':undefined);}
 function sameWildCache(h:NonNullable<WildProject['cache']>,d:SupplyDrop){return Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.kind==='camp':h.kind==='building'&&h.id===d.id);}
 function actualWildCache(g:Game,u:Unit){return supplyDrops(g,u.team).find(d=>{const spot=supplyApproach(g,u,d);return spot&&supplyReached(g,u,d,spot);});}
@@ -124,7 +125,7 @@ function claimWild(g:Game,p:WildProject,jobs=workRuntime(g)){
 }
 function releaseWild(g:Game,p:WildProject){const jobs=workRuntime(g),id=wildKey(p.id);jobs.finish(id);jobs.forget(id);}
 export function rebuildWildCraftOwnership(g:Game,jobs:JobCoordinator){for(const p of g.state.wildCraft?.projects||[])claimWild(g,p,jobs);}
-export function pauseWildWork(g:Game,u:Unit){const p=g.state.wildCraft?.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);if(!p)return false;p.paused=true;u.wildWorkPaused=p.packet?true:undefined;claimWild(g,p);return true;}
+export function pauseWildWork(g:Game,u:Unit){const p=g.state.wildCraft?.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);if(!p)return false;p.paused=true;u.wildWorkPaused=!wildBodyPacket(p)?true:undefined;claimWild(g,p);return true;}
 export function resumeWildWork(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId),p=g.state.wildCraft?.projects.find(p=>p.id===u?.wildWorkId&&p.actorId===unitId);if(!u||!p?.paused||!wildAdult(g,u,true))return false;const job=workRuntime(g).activeJob(u.id);if(job&&job.id!==wildKey(p.id)&&job.kind!=='gather:wood')return false;g.interruptMission(u);releaseTreeWorker(g,u);delete p.paused;if(!claimWild(g,p)){p.paused=true;return false;}delete u.wildWorkPaused;if(p.phase==='work')p.phase='go';u.order='move';u.node=null;g.invalidateRoute(u);return true;}
 /** A dead holder remains the physical location of its finite paid packet until recovered. */
 export function wildBodyMustRemain(u:Unit){return u.hp<=0&&u.wildWorkId!==undefined;}
@@ -138,6 +139,7 @@ export function wildIssue(g:Game,team:number,id:WildRecipeId,opts:{stationId?:nu
   const id2=opts.stationId,pick=id2!==undefined?sts.find(b=>b.id===id2):sts.find(b=>slotsInUse(w,b.id)<WILD_STATION_SLOTS);
   if(!pick)return `All ${r.station} slots are busy`;if(slotsInUse(w,pick.id)>=WILD_STATION_SLOTS)return `${r.station} slots are full`;
  }
+ if((id==='setSnare'||id==='digPitfall')&&w.traps.length+w.projects.filter(p=>p.trapKind).length>=WILD_RULES.maxTraps)return 'Trap capacity is fully reserved';
  const stock=wildStock(g,team);
  for(const[k,n]of Object.entries(r.goods||{}))if((stock[k as WildGood]||0)<n!)return `Need ${n} ${k} in store`;
  for(const[k,n]of Object.entries(r.items||{}))if(((t.items||{})[k as ItemKind]||0)<n!)return `Need ${n} ${k} at the camp cache`;
@@ -206,7 +208,7 @@ function refund(g:Game,p:WildProject){
  p.carried={goods:{},items:{},food:{}};
 }
 function dropProject(g:Game,u:Unit|undefined,p?:WildProject){
- const w=g.state.wildCraft!;if(p)w.projects=w.projects.filter(q=>q!==p);
+ const w=g.state.wildCraft!;if(p){releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);}
  if(u){const other=hasTaskCommitment(u,'wildWorkId');delete u.wildWorkId;delete u.wildWorkPaused;if(!other){u.order='idle';u.workReason='Finished wild-craft job';g.invalidateRoute?.(u);}}
  g.workBoard.invalidateTasks();
 }
@@ -256,7 +258,7 @@ function finishWork(g:Game,u:Unit,p:WildProject){
   let cap=room;for(const k of['fat','sinew','brain','horn'] as const){const take=Math.min(left[k],cap);left[k]-=take;cap-=take;if(take>0)p.carried.goods[k]=(p.carried.goods[k]||0)+take;}
   p.packet=undefined;p.phase='back';u.workReason='🔪 Carrying parts home';return true;
  }
- if(p.trapKind){const kind=p.trapKind;if(w.traps.length>=WILD_RULES.maxTraps){refund(g,p);dropProject(g,u,p);return true;}
+ if(p.trapKind){const kind=p.trapKind;if(w.traps.length>=WILD_RULES.maxTraps){pauseWildWork(g,u);u.workReason='Trap capacity full; paid materials retained, no remote refund';return true;}
   w.traps.push({id:w.nextId++,team:p.team,kind,x:p.x??u.x,z:p.z??u.z,placedAt:g.state.time,uses:kind==='snare'?WILD_RULES.snareUses:1e6,catches:0,nextCheck:g.state.time+WILD_RULES.trapCheckSeconds,setBy:u.id});
   bump(w.metrics.consumed,'trapMaterials',Object.values(p.held.items).reduce((n,v)=>n+(v||0),0)+p.held.wood);p.held={items:{},goods:{},food:{},wood:0,water:0};
   w.metrics.completed++;dropProject(g,u,p);return true;}
@@ -280,9 +282,9 @@ function credit(g:Game,p:WildProject){
 /** Follow a wound's blood trail point by point, then take the carcass through the ordinary hunting flow. */
 function trackAI(g:Game,u:Unit,p:WildProject,dt:number){
  const w=g.state.wildCraft!,c=critter(g,p.critterId),wound=w.wounds[p.critterId!];
- const end=()=>{w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='idle';g.workBoard.invalidateTasks();return true;};
+ const end=()=>{releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='idle';g.workBoard.invalidateTasks();return true;};
  if(!c){return end();}
- if(c.hp<=0&&carcassAvailable(g,c)){w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='gather';u.node=c as any;u.workReason='🩸 Found the kill';return true;}
+ if(c.hp<=0&&carcassAvailable(g,c)){releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='gather';u.node=c as any;u.workReason='🩸 Found the kill';return true;}
  if(c.hp<=0)return end();
  const trail=wound?.trail||[];const i=p.trailIndex??0;
  if(i<trail.length){const pt=trail[i];if(near(u,pt.x,pt.z,2.2))p.trailIndex=i+1;else walkTo(g,u,pt.x,pt.z,dt,'🩸 Following the blood trail');return true;}
@@ -391,7 +393,7 @@ export function wildCraftFeedback(g:Game,team:number):WildFeedbackRow[]{
 /** Strict save validation: finite, bounded, no unknown keys; absent = legacy (no wild-craft). */
 export function validWildCraftState(s:{wildCraft?:unknown;units:Unit[]}&Partial<Omit<GameState,'wildCraft'|'units'>>):boolean{
  const v=s.wildCraft as WildCraftState|undefined;if(v===undefined)return s.units.every(u=>u.wildWorkId===undefined&&u.wildWorkPaused===undefined);
- const obj=(o:unknown):o is Record<string,unknown>=>!!o&&typeof o==='object'&&!Array.isArray(o),num=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0,when=(n:unknown)=>num(n,s.time??1e12),team=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>=0&&Number(n)<64&&(!s.tribes||s.tribes.some(t=>t.id===n)),keys=(o:unknown,allowed:readonly string[])=>obj(o)&&Object.keys(o).every(k=>allowed.includes(k));
+ const obj=(o:unknown):o is Record<string,unknown>=>!!o&&typeof o==='object'&&!Array.isArray(o),num=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0,ref=(n:unknown)=>id(n)&&(s.nextId===undefined||Number(n)<s.nextId),when=(n:unknown)=>num(n,s.time??1e12),team=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>=0&&Number(n)<64&&(!s.tribes||s.tribes.some(t=>t.id===n)),keys=(o:unknown,allowed:readonly string[])=>obj(o)&&Object.keys(o).every(k=>allowed.includes(k));
  const point=(o:unknown)=>obj(o)&&keys(o,['x','z'])&&['x','z'].every(k=>typeof o[k]==='number'&&Number.isFinite(o[k])&&Math.abs(o[k] as number)<=(s.worldOptions?.size??1040)/2);
  const stock=(o:unknown,allowed:readonly string[],caps?:Record<string,number>)=>obj(o)&&Object.entries(o).every(([k,n])=>allowed.includes(k)&&num(n,caps?caps[k]??0:WILD_RULES.maxGood));
  const goods=(o:unknown)=>stock(o,WILD_GOODS),items=(o:unknown,caps?:Record<string,number>)=>stock(o,ITEM_KINDS,caps),food=(o:unknown,caps?:Record<string,number>)=>stock(o,FOOD_KINDS,caps);
@@ -402,16 +404,16 @@ export function validWildCraftState(s:{wildCraft?:unknown;units:Unit[]}&Partial<
  for(const[k,p]of Object.entries(v.parts)){const c=s.wildlife?.find(c=>String(c.id)===k);if(!id(Number(k))||!keys(p,['fat','sinew','brain','horn'])||Object.keys(p).length!==4||s.wildlife&&(!c||c.hp>0||!c.carcass?.prepared))return false;for(const good of['fat','sinew','brain','horn']as const)if(!num(p[good],c?BUTCHERY_PARTS[c.species][good]:20))return false;}
  if(!obj(v.wounds)||Object.keys(v.wounds).length>10000)return false;for(const[k,w]of Object.entries(v.wounds)){if(!id(Number(k))||!keys(w,['since','trail','bleed'])||!when(w.since)||!num(w.bleed,1e4)||!Array.isArray(w.trail)||w.trail.length>WILD_RULES.maxTrail||!w.trail.every(point)||s.wildlife&&!s.wildlife.some(c=>String(c.id)===k))return false;}
  const ids=new Set<number>(),actors=new Set<number>();if(!Array.isArray(v.traps)||v.traps.length>WILD_RULES.maxTraps)return false;
- for(const t of v.traps){if(!keys(t,['id','team','kind','x','z','placedAt','uses','catches','nextCheck','setBy'])||!id(t.id)||t.id>=v.nextId||ids.has(t.id)||!team(t.team)||!['snare','pitfall'].includes(t.kind)||!point({x:t.x,z:t.z})||!when(t.placedAt)||!num(t.uses,t.kind==='snare'?WILD_RULES.snareUses:1e6)||!Number.isInteger(t.uses)||!num(t.catches,1e6)||!Number.isInteger(t.catches)||!num(t.nextCheck,(s.time??1e12)+WILD_RULES.trapCheckSeconds)||!id(t.setBy))return false;ids.add(t.id);}
+ for(const t of v.traps){if(!keys(t,['id','team','kind','x','z','placedAt','uses','catches','nextCheck','setBy'])||!id(t.id)||t.id>=v.nextId||ids.has(t.id)||!team(t.team)||!['snare','pitfall'].includes(t.kind)||!point({x:t.x,z:t.z})||!when(t.placedAt)||!num(t.uses,t.kind==='snare'?WILD_RULES.snareUses:1e6)||!Number.isInteger(t.uses)||!num(t.catches,1e6)||!Number.isInteger(t.catches)||!num(t.nextCheck,(s.time??1e12)+WILD_RULES.trapCheckSeconds)||!ref(t.setBy))return false;ids.add(t.id);}
  if(!Array.isArray(v.projects)||v.projects.length>WILD_RULES.maxProjects)return false;
  for(const p of v.projects){if(!keys(p,['id','team','recipe','actorId','phase','progress','startedAt','stationId','critterId','x','z','trapKind','trailIndex','trailWait','held','carried','exposure','paused','cache','packet'])||!id(p.id)||p.id>=v.nextId||ids.has(p.id)||!Object.hasOwn(WILD_RECIPES,p.recipe)||!team(p.team)||!['fetch','go','work','dry','ready','collect','back'].includes(p.phase)||!when(p.startedAt)||p.paused!==undefined&&p.paused!==true)return false;ids.add(p.id);const r=WILD_RECIPES[p.recipe];if(!num(p.progress,r.workSeconds)||!Number.isInteger(p.actorId)||p.actorId<0)return false;
-  const passive=['dry','ready'].includes(p.phase),u=s.units.find(u=>u.id===p.actorId);if(passive?p.actorId!==0||p.paused!==undefined:!u||u.team!==p.team||u.wildWorkId!==p.id||actors.has(u.id)||u.wildWorkPaused!==(p.paused&&p.packet?true:undefined))return false;if(u)actors.add(u.id);
+  const passive=['dry','ready'].includes(p.phase),u=s.units.find(u=>u.id===p.actorId);if(passive?p.actorId!==0||p.paused!==undefined:!u||u.team!==p.team||u.wildWorkId!==p.id||actors.has(u.id)||u.wildWorkPaused!==(p.paused&&!wildBodyPacket(p)?true:undefined))return false;if(u)actors.add(u.id);
   if(!keys(p.held,['items','goods','food','wood','water'])||!keys(p.carried,['items','goods','food'])||!items(p.held.items,r.items as Record<string,number>||{})||!stock(p.held.goods,WILD_GOODS,r.goods as Record<string,number>||{})||!food(p.held.food,r.foodIn as Record<string,number>||{})||!num(p.held.wood,r.wood||0)||!num(p.held.water,r.water||0)||!items(p.carried.items,{...r.outItems,...r.retain})||!food(p.carried.food,r.outFood as Record<string,number>||{}))return false;
   if(p.recipe==='dressParts'){const c=s.wildlife?.find(c=>c.id===p.critterId),caps=c?BUTCHERY_PARTS[c.species]:{fat:8,sinew:4,brain:1,horn:2};if(!stock(p.carried.goods,WILD_GOODS,caps)||Object.values(p.carried.goods).reduce((n,v)=>n+(v||0),0)>6)return false;}else if(!stock(p.carried.goods,WILD_GOODS,r.outGoods as Record<string,number>||{}))return false;
   const carried=Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0);if(carried&&p.phase!=='back')return false;
-  if(p.packet!==undefined&&!point(p.packet)||p.cache!==undefined&&(!keys(p.cache,['kind','id','x','z'])||!['camp','building'].includes(p.cache.kind)||!point({x:p.cache.x,z:p.cache.z})||p.cache.kind==='building'&&!id(p.cache.id)||p.cache.kind==='camp'&&p.cache.id!==undefined)||p.phase==='fetch'&&!p.cache)return false;
-  if(typeof r.station==='string'&&!['carcass','field','trail'].includes(r.station)){const b=s.buildings?.find(b=>b.id===p.stationId);if(!id(p.stationId)||s.buildings&&(!b&&!p.paused||b&&(b.team!==p.team||b.type!==r.station||b.build<1)))return false;}else if(p.stationId!==undefined)return false;
-  if(['carcass','trail'].includes(r.station)){if(!id(p.critterId)||s.wildlife&&!s.wildlife.some(c=>c.id===p.critterId)&&!p.paused)return false;}else if(p.critterId!==undefined)return false;
+  if(p.packet!==undefined&&!point(p.packet)||p.cache!==undefined&&(!keys(p.cache,['kind','id','x','z'])||!['camp','building'].includes(p.cache.kind)||!point({x:p.cache.x,z:p.cache.z})||p.cache.kind==='building'&&!ref(p.cache.id)||p.cache.kind==='camp'&&p.cache.id!==undefined)||p.phase==='fetch'&&!p.cache)return false;
+  if(typeof r.station==='string'&&!['carcass','field','trail'].includes(r.station)){const b=s.buildings?.find(b=>b.id===p.stationId);if(!ref(p.stationId)||s.buildings&&(!b&&!p.paused||b&&(b.team!==p.team||b.type!==r.station||b.build<1)))return false;}else if(p.stationId!==undefined)return false;
+  if(['carcass','trail'].includes(r.station)){if(!ref(p.critterId)||s.wildlife&&!s.wildlife.some(c=>c.id===p.critterId)&&!p.paused)return false;}else if(p.critterId!==undefined)return false;
   if(r.station==='field'&&(!point({x:p.x,z:p.z})||p.trapKind!==(p.recipe==='setSnare'?'snare':'pitfall'))||p.trailIndex!==undefined&&(!Number.isInteger(p.trailIndex)||!num(p.trailIndex,WILD_RULES.maxTrail))||p.trailWait!==undefined&&!num(p.trailWait,21))return false;
   if(r.drying?p.exposure===undefined||!validDryingExposure(p.exposure,r.drying):p.exposure!==undefined)return false;
  }
