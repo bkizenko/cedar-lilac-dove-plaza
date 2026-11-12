@@ -10,6 +10,8 @@ const t0 = Date.now();
 const w = generateWorld(seed, 20, request);
 const dt = Date.now() - t0;
 fs.mkdirSync(outDir, { recursive: true });
+// ZOOM=cx,cz,span (metres) renders a close-up window instead of the whole map
+const zoom = (process.env.ZOOM || '').split(',').map(Number), span = zoom.length === 3 && zoom.every(Number.isFinite) ? zoom[2] : size, zcx = span !== size ? zoom[0] : 0, zcz = span !== size ? zoom[1] : 0;
 const px = 3, W = Math.round(size / 1040 * 256) * 2, S = W * px;
 const rgb = new Uint8Array(S * S * 3);
 const PAL = { meadow: [150, 178, 92], 'mixed-woodland': [74, 128, 70], 'conifer-forest': [48, 96, 80], alpine: [150, 146, 140], wetland: [96, 150, 120], 'dry-scrub': [190, 168, 104], arid: [214, 188, 128], 'warm-coast': [102, 156, 84] };
@@ -17,7 +19,7 @@ const KINDS = ['meadow', 'mixed-woodland', 'conifer-forest', 'alpine', 'wetland'
 const eco = w.ecology;
 const H = (x, z) => sampleHeight(w.heights, x, z, size);
 for (let zi = 0; zi < S; zi++) for (let xi = 0; xi < S; xi++) {
-  const x = (xi / S - 0.5) * size, z = (zi / S - 0.5) * size, h = H(x, z), e = 1.5;
+  const x = zcx + (xi / S - 0.5) * span, z = zcz + (zi / S - 0.5) * span, h = H(x, z), e = 1.5;
   const sx = (H(x + e, z) - H(x - e, z)) / (2 * e), sz = (H(x, z + e) - H(x, z - e)) / (2 * e);
   let nx = -sx * 2.4, ny = 1, nz = -sz * 2.4; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
   const shade = 0.42 + 0.7 * Math.max(0, nx * -0.55 + ny * 0.7 + nz * -0.45);
@@ -36,12 +38,16 @@ for (let zi = 0; zi < S; zi++) for (let xi = 0; xi < S; xi++) {
   } else if (mode === 'height') {
     const t = Math.min(1, (h - w.waterY) / 100); r = (90 + 150 * t) * shade; g = (150 - 20 * t + 60 * t * t) * shade; b = (80 + 120 * t * t) * shade;
   } else {
-    const c = PAL[KINDS[eco.kinds[gi]]] || [150, 150, 150];
+    // bilinear blend of the four nearest province cells, as the in-game surface does
+    const gx = Math.max(0, Math.min(eco.width - 1.001, (x / size + 0.5) * eco.width - 0.5)), gz = Math.max(0, Math.min(eco.width - 1.001, (z / size + 0.5) * eco.width - 0.5)), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+    const c = [0, 0, 0];
+    for (const [ox, oz, wt] of [[0, 0, (1 - fx) * (1 - fz)], [1, 0, fx * (1 - fz)], [0, 1, (1 - fx) * fz], [1, 1, fx * fz]]) { const k = PAL[KINDS[eco.kinds[(iz + oz) * eco.width + ix + ox]]] || [150, 150, 150]; c[0] += k[0] * wt; c[1] += k[1] * wt; c[2] += k[2] * wt; }
+    void gi;
     r = c[0] * shade * 1.05; g = c[1] * shade * 1.05; b = c[2] * shade * 1.05;
   }
   rgb[o] = Math.min(255, r); rgb[o + 1] = Math.min(255, g); rgb[o + 2] = Math.min(255, b);
 }
-const dot = (x, z, rad, col) => { const cx = (x / size + 0.5) * S, cz = (z / size + 0.5) * S; for (let dz = -rad; dz <= rad; dz++) for (let dx = -rad; dx <= rad; dx++) { if (dx * dx + dz * dz > rad * rad) continue; const X = Math.round(cx + dx), Z = Math.round(cz + dz); if (X < 0 || Z < 0 || X >= S || Z >= S) continue; const o = (Z * S + X) * 3; rgb[o] = col[0]; rgb[o + 1] = col[1]; rgb[o + 2] = col[2]; } };
+const dot = (x, z, rad, col) => { const cx = ((x - zcx) / span + 0.5) * S, cz = ((z - zcz) / span + 0.5) * S; for (let dz = -rad; dz <= rad; dz++) for (let dx = -rad; dx <= rad; dx++) { if (dx * dx + dz * dz > rad * rad) continue; const X = Math.round(cx + dx), Z = Math.round(cz + dz); if (X < 0 || Z < 0 || X >= S || Z >= S) continue; const o = (Z * S + X) * 3; rgb[o] = col[0]; rgb[o + 1] = col[1]; rgb[o + 2] = col[2]; } };
 const T = { 0: [255, 255, 255], 1: [220, 40, 40], 2: [240, 180, 30], 4: [160, 60, 200], 5: [40, 200, 200] };
 for (const f of w.copper) dot(f.x, f.z, 1, [200, 100, 40]);
 for (const f of w.iron) dot(f.x, f.z, 1, [60, 60, 70]);

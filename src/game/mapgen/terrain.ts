@@ -43,19 +43,21 @@ export function buildBlobs(preset: PresetSpec, rand: () => number, attempt: numb
   let gulf: Blob | undefined;
   switch (preset.id) {
     case 'archipelago': {
-      const major = 4 + ((rand() * 3) | 0);
-      for (let tries = 0; blobs.length < major && tries < 200; tries++) {
-        const r = R(0.075, 0.155) * (blobs.length === 0 ? 1.25 : 1);
-        const ang = rand() * Math.PI * 2, d = blobs.length === 0 ? R(0, 0.08) : R(0.12, 0.31);
-        const b = { x: Math.cos(ang) * d, z: Math.sin(ang) * d, rx: r * R(0.85, 1.35), rz: r * R(0.7, 1.1), a: rand() * Math.PI };
-        // keep a navigable channel between the big islands
-        if (blobs.every(o => Math.hypot(o.x - b.x, o.z - b.z) > (Math.max(o.rx, o.rz) + Math.max(b.rx, b.rz)) * 0.92 + 0.045)) blobs.push(b);
-      }
-      for (let i = 0; i < 6; i++) {
-        const ang = rand() * Math.PI * 2, d = R(0.1, 0.38), r = R(0.018, 0.045);
-        const b = { x: Math.cos(ang) * d, z: Math.sin(ang) * d, rx: r, rz: r * R(0.7, 1), a: rand() * Math.PI };
-        if (blobs.every(o => Math.hypot(o.x - b.x, o.z - b.z) > Math.max(o.rx, o.rz) + r + 0.03)) blobs.push(b);
-      }
+      // size classes: a few big islands, several mid-size ones and a scatter of islets, each kept apart by a navigable channel
+      const classes: { count: number; r: [number, number]; d: [number, number]; gap: number }[] = [
+        { count: 3 + ((rand() * 2) | 0), r: [0.075, 0.135], d: [0.1, 0.3], gap: 0.05 },
+        { count: 4 + ((rand() * 3) | 0), r: [0.04, 0.07], d: [0.08, 0.36], gap: 0.035 },
+        { count: 7 + ((rand() * 5) | 0), r: [0.012, 0.03], d: [0.08, 0.4], gap: 0.028 },
+      ];
+      classes.forEach((cls, ci) => {
+        let made = 0;
+        for (let tries = 0; made < cls.count && tries < 260; tries++) {
+          const r = R(cls.r[0], cls.r[1]) * (ci === 0 && made === 0 ? 1.25 : 1);
+          const ang = rand() * Math.PI * 2, d = ci === 0 && made === 0 ? R(0, 0.07) : R(cls.d[0], cls.d[1]);
+          const b = { x: Math.cos(ang) * d, z: Math.sin(ang) * d, rx: r * R(0.85, 1.35), rz: r * R(0.7, 1.1), a: rand() * Math.PI };
+          if (blobs.every(o => Math.hypot(o.x - b.x, o.z - b.z) > Math.max(o.rx, o.rz) + Math.max(b.rx, b.rz) + cls.gap)) { blobs.push(b); made++; }
+        }
+      });
       break;
     }
     case 'island': {
@@ -158,7 +160,7 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
           const cg = Math.cos(gulf.a), sg = Math.sin(gulf.a), dx = wu - gulf.x, dz = wv - gulf.z, px = dx * cg + dz * sg, pz = -dx * sg + dz * cg;
           c -= 0.16 * smoothstep(1, 0.35, Math.hypot(px / gulf.rx, pz / gulf.rz));
         }
-        c += detail.fbm(u * 3.2, v * 3.2, 3) * 0.075 + detail.fbm(u * 8.5 + 11, v * 8.5, 3) * 0.04 + detail.fbm(u * 21 + 5, v * 21 - 3, 2) * 0.016;
+        c += detail.fbm(u * 3.2, v * 3.2, 3) * 0.075 + detail.fbm(u * 8.5 + 11, v * 8.5, 3) * 0.034 + detail.fbm(u * 21 + 5, v * 21 - 3, 2) * 0.005;
         const m = Math.hypot(u, v) * 0.9 + Math.max(Math.abs(u), Math.abs(v)) * 0.1;
         c -= 1.2 * smoothstep(0.41, 0.48, m);
         out[z * grid + x] = c;
@@ -322,6 +324,19 @@ export function buildTerrain(seed: number, size: number, n: number, preset: Pres
         const avg = (tmp[i - 1] + tmp[i + 1] + tmp[i - n] + tmp[i + n]) * 0.25;
         h[i] = Math.max(0.3, tmp[i] + (avg - tmp[i]) * kd);
       }
+    }
+  }
+  // ---- 6. sub-cell coastline: place the waterline from the continuous land potential, not the cell mask,
+  // so shores are smooth curves at 1 m scale (bays and capes survive; staircase teeth do not)
+  const coast0 = h.slice();
+  for (let z = 1; z < n - 1; z++) {
+    for (let x = 1; x < n - 1; x++) {
+      const i = at(x, z), gx = (C[i + 1] - C[i - 1]) / (2 * cell), gz = (C[i + n] - C[i - n]) / (2 * cell), g = Math.hypot(gx, gz);
+      if (g < 1e-7 || (C[i] > 0) === !!sea[i]) continue;
+      const d = C[i] / g;
+      if (Math.abs(d) > 2.4 * cell) continue;
+      const w = smoothstep(1.2 * cell, 2.4 * cell, Math.abs(d)), v = d * 0.08 * (1 - w) + coast0[i] * w;
+      h[i] = sea[i] ? Math.min(-0.04, v) : Math.max(0.04, v);
     }
   }
   return { n, size, cell, h, sea, signed, ranges, uplift, axis, landFraction };

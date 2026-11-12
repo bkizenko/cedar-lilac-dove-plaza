@@ -388,13 +388,16 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     fish.push(n);
   };
   for (const body of ctx.waterBodies) {
-    if (body.kind === 'river') for (let i = 0; i < body.pts.length; i += 1) { const p = body.pts[i]; tryFish(p.x + (rand() - 0.5) * 3, p.z + (rand() - 0.5) * 3); }
+    // fish follow productivity: lively water in moist, fertile provinces, sparse fishing in arid or alpine country
+    const lively = (x: number, z: number) => clamp(0.3 + 0.75 * ecology.moisture[cellIndex(ecology, x, z)] * (0.55 + 0.45 * prov(x, z).forage / 1.2), 0.2, 1);
+    if (body.kind === 'river') for (let i = 0; i < body.pts.length; i += 1) { const p = body.pts[i]; if (rand() > lively(p.x, p.z)) continue; tryFish(p.x + (rand() - 0.5) * 3, p.z + (rand() - 0.5) * 3); }
     else {
       const shore = body.shoreline ?? [];
       for (let i = 0; i < shore.length; i++) {
         const a = shore[i], b = shore[(i + 1) % shore.length], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / SHALLOW_FISH_SITE_RULES.lakeShoreSpacingMetres));
         for (let j = 0; j < n; j++) {
           const x = a.x + ((b.x - a.x) * j) / n, z = a.z + ((b.z - a.z) * j) / n, dx = body.x - x, dz = body.z - z, len = Math.hypot(dx, dz) || 1;
+          if (rand() > lively(x, z)) continue;
           for (const inset of SHALLOW_FISH_SITE_RULES.lakeInsetsMetres) { const before = fish.length; tryFish(x + (dx / len) * inset, z + (dz / len) * inset); if (fish.length > before) break; }
         }
       }
@@ -406,8 +409,9 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     const i = zi * wn + xi;
     if (!terrain.sea[i] && (terrain.sea[i - 1] || terrain.sea[i + 1] || terrain.sea[i - wn] || terrain.sea[i + wn])) coastPts.push({ x: xi * wCell - half, z: zi * wCell - half });
   }
-  for (let a = 0; a < 3000 && fish.length < 300 && coastPts.length; a++) {
+  for (let a = 0; a < 1500 && fish.length < 300 && coastPts.length; a++) {
     const c = coastPts[Math.floor(rand() * coastPts.length)], r = R(-9, 9), t = rand() * Math.PI * 2;
+    if (rand() > clamp((prov(c.x, c.z).forage - 0.3) / 0.9, 0.25, 1)) continue;
     tryFish(c.x + Math.cos(t) * Math.abs(r), c.z + Math.sin(t) * Math.abs(r));
   }
   // ---- docks near the player's hall -------------------------------------------------------------------------

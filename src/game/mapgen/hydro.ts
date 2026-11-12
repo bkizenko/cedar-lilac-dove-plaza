@@ -130,10 +130,18 @@ export function buildHydrology(seed: number, t: Terrain, c: Climate, preset: Pre
   const density = clamp(0.03 * preset.riverDensity, 0.012, 0.07);
   const threshold = accSorted[Math.max(0, Math.floor(accSorted.length * (1 - density)))] ?? 1e12;
   const riverCells = new Uint8Array(total);
-  for (const i of landCells) if (acc[i] >= threshold) riverCells[i] = 1;
+  // streams are born higher up in ranges and uplands (orographic rain, steep catchments), so mountain
+  // rivers have real headwaters instead of appearing mid-slope
+  const upland = (i: number) => Math.max(smoothstep(0.1, 0.5, t.uplift[i]), 0.7 * smoothstep(22, 60, h[i]));
+  for (const i of landCells) if (acc[i] >= threshold * (1 - 0.62 * upland(i))) riverCells[i] = 1;
+  // a lowered threshold upstream must still connect to the sea: carry channels down to the first marked cell
+  for (let k = flow.order.length - 1; k >= 0; k--) {
+    const i = flow.order[k], r = flow.rec[i];
+    if (riverCells[i] && r >= 0 && !sea[r] && lakeMask[r] < 0 && !riverCells[r] && t.signed[r] > cell * 0.8) riverCells[r] = 1;
+  }
   // length to the sea along river cells, to decide trunks
   const lengthToEnd = new Float32Array(total);
-  for (let k = flow.order.length - 1; k >= 0; k--) {
+  for (let k = 0; k < flow.order.length; k++) {
     const i = flow.order[k];
     if (!riverCells[i]) continue;
     const r = rec[i];
@@ -287,22 +295,99 @@ export function buildHydrology(seed: number, t: Terrain, c: Climate, preset: Pre
     const len = ch.pts.length;
     for (let i = Math.max(0, len - 7); i < len; i++) ch.pts[i].w *= 1 + 0.55 * smoothstep(len - 8, len - 1, i);
   }
-  // ---- fords: broad, gentle, shallow reaches away from joins and mouths ----------------------------
-  const fordSpacing = 170;
+  // ---- deltas: a lowland trunk splits into distributaries that fan out across the coastal plain ---------
+  const deltas: Delta[] = [];
+  const cellAt = (x: number, z: number) => Math.max(0, Math.min(n - 1, Math.round((z + half) / cell))) * n + Math.max(0, Math.min(n - 1, Math.round((x + half) / cell)));
+  const isSea = (x: number, z: number) => sea[cellAt(x, z)] === 1 || Math.abs(x) > half - 2 || Math.abs(z) > half - 2;
+  let nextId = chains.length;
+  const trunks = chains.filter(c => c.mouth === 'sea').sort((a, b) => b.flow - a.flow).slice(0, 3);
+  for (const ch of trunks) {
+    if (rand() > preset.delta || ch.pts.length < 16) continue;
+    let m = ch.pts.length - 1;
+    while (m > 0 && isSea(ch.pts[m].x, ch.pts[m].z)) m--;
+    m++; // first point already at sea
+    // the split sits where the plain is low and flat enough for the river to wander
+    let k = Math.min(22, m - 4);
+    while (k >= 8) {
+      let flat = true;
+      for (let i = m - k; i <= m; i++) { const p = ch.pts[Math.min(i, ch.pts.length - 1)]; if (h[cellAt(p.x, p.z)] > 11) { flat = false; break; } }
+      if (flat) break;
+      k--;
+    }
+    if (k < 8) continue;
+    const s0 = ch.pts[m - k], seaPt = ch.pts[Math.min(m, ch.pts.length - 1)], dirx0 = seaPt.x - s0.x, dirz0 = seaPt.z - s0.z, dl = Math.hypot(dirx0, dirz0) || 1;
+    const base = Math.atan2(dirz0, dirx0), reachM = Math.max(110, dl * 1.15), branches: Chain[] = [];
+    const angles = ch.pts[m - k].w > 8.5 ? [-0.62, 0.62, -0.24, 0.3] : [-0.5, 0.5, 0.05];
+    for (const ang of angles) {
+      if (branches.length >= 2 + (ch.pts[m - k].w > 8.5 ? 1 : 0)) break;
+      const pts: RiverPoint[] = [];
+      let x = s0.x, z = s0.z, heading = base + ang, ok = false, travelled = 0, phase = rand() * 6.28;
+      pts.push({ x, z, y: s0.y, w: s0.w * 0.62, fp: 16 });
+      for (let step = 1; step <= 60; step++) {
+        heading += (base + ang * 0.55 - heading) * 0.06 + Math.sin(phase + step * 0.55) * 0.07;
+        x += Math.cos(heading) * ds; z += Math.sin(heading) * ds; travelled += ds;
+        if (travelled > reachM * 1.8) break;
+        pts.push({ x, z, y: 0, w: s0.w * (0.62 + 0.25 * Math.min(1, travelled / reachM)), fp: 16 });
+        if (isSea(x, z)) { ok = true; break; }
+      }
+      if (!ok || pts.length < 6) continue;
+      // two more points seaward so the channel opens into the water
+      const e = pts[pts.length - 1], q = pts[pts.length - 2];
+      pts.push({ x: e.x + (e.x - q.x) * 1.2, z: e.z + (e.z - q.z) * 1.2, y: 0, w: e.w * 1.25, fp: 10 });
+      // surface runs from the trunk level down to the sea; it must never cross land that stands above it
+      const last = pts.length - 1;
+      let rises = false;
+      pts.forEach((p, i) => { const f = i / last; p.y = s0.y * Math.pow(1 - f, 1.15); if (!isSea(p.x, p.z) && h[cellAt(p.x, p.z)] > p.y + 3.2) rises = true; });
+      if (rises) continue;
+      // keep distributaries apart from each other and from the trunk's own mouth
+      const mid = pts[Math.floor(pts.length * 0.7)];
+      if (branches.some(b => { const o = b.pts[Math.floor(b.pts.length * 0.7)]; return Math.hypot(o.x - mid.x, o.z - mid.z) < 26; })) continue;
+      if (Math.hypot(seaPt.x - e.x, seaPt.z - e.z) < 24) continue;
+      branches.push({ id: `river-${nextId++}`, pts, mouth: 'sea', flow: ch.flow * 0.35, source: 'delta' });
+    }
+    if (!branches.length) continue;
+    // the plain itself: low, gently rising ground around the fan so the distributaries really spread out,
+    // and the trunk's own surface follows it down (never above the ground it crosses)
+    const plain = (cx2: number, cz2: number) => 0.55 + 0.034 * Math.max(0, t.signed[cellAt(cx2, cz2)]);
+    const all = [ch, ...branches], fx = all.reduce((sum, b) => sum + b.pts[b.pts.length - 1].x, 0) / all.length, fz = all.reduce((sum, b) => sum + b.pts[b.pts.length - 1].z, 0) / all.length;
+    const cxm = (s0.x + fx) / 2, czm = (s0.z + fz) / 2, R0 = Math.max(70, Math.hypot(fx - s0.x, fz - s0.z) * 0.75 + 40);
+    // lowering ground beside a lake would flood its rim into the plain: leave deltas away from lakes
+    if (lakes.some(l => l.cells.some(i => Math.hypot(px(i) - cxm, pz(i) - czm) < R0 + 70))) continue;
+    for (let zz = Math.max(0, Math.floor((czm - R0 + half) / cell)); zz <= Math.min(n - 1, Math.ceil((czm + R0 + half) / cell)); zz++) {
+      for (let xx = Math.max(0, Math.floor((cxm - R0 + half) / cell)); xx <= Math.min(n - 1, Math.ceil((cxm + R0 + half) / cell)); xx++) {
+        const j = zz * n + xx;
+        if (sea[j] || lakeMask[j] >= 0) continue;
+        const wgt = 1 - smoothstep(0.5 * R0, R0, Math.hypot(xx * cell - half - cxm, zz * cell - half - czm)), target = plain(xx * cell - half, zz * cell - half);
+        if (h[j] > target) h[j] -= (h[j] - target) * wgt;
+      }
+    }
+    for (let i = m - k; i < ch.pts.length; i++) { const p = ch.pts[i]; p.y = Math.min(p.y, plain(p.x, p.z) + 0.08); }
+    for (let i = 1; i < ch.pts.length; i++) ch.pts[i].y = Math.min(ch.pts[i].y, ch.pts[i - 1].y);
+    for (const b of branches) { b.pts[0].y = ch.pts[m - k].y; b.pts.forEach((p, i) => { const f = i / (b.pts.length - 1); p.y = ch.pts[m - k].y * Math.pow(1 - f, 1.15); }); }
+    const cx = branches.reduce((sum, b) => sum + b.pts[b.pts.length - 1].x, seaPt.x) / (branches.length + 1), cz = branches.reduce((sum, b) => sum + b.pts[b.pts.length - 1].z, seaPt.z) / (branches.length + 1);
+    deltas.push({ x: (cx + s0.x) / 2, z: (cz + s0.z) / 2, dx: Math.cos(base), dz: Math.sin(base), radius: Math.max(60, Math.hypot(cx - s0.x, cz - s0.z) * 0.75 + 30), chain: ch.id });
+    // the trunk narrows below the split because it now shares its water
+    for (let i = m - k; i < ch.pts.length; i++) ch.pts[i].w *= 0.8;
+    for (const b of branches) chains.push(b);
+  }
+  // ---- fords: broad, gentle, shallow reaches away from joins and mouths ----------------------------------
+  // dense enough that a river between two parts of an island is usually crossable within a few minutes' walk
+  const fordSpacing = 70;
   const fords: { x: number; z: number }[] = [];
   for (const ch of chains) {
+    if (ch.source === 'delta') continue;
     const len = ch.pts.length;
-    for (let i = 8; i < len - 8; i++) {
+    for (let i = 8; i < len - 9; i++) {
       const p = ch.pts[i];
-      if (p.w < 6.5 || p.w > 17) continue;
+      if (p.w < 4 || p.w > 20) continue;
       const a = ch.pts[i - 4], b = ch.pts[i + 4], dist = Math.hypot(b.x - a.x, b.z - a.z) || 1, slope = (a.y - b.y) / dist;
-      if (slope > 0.03) continue;
+      if (slope > 0.11) continue;
       if (fords.some(f => Math.hypot(f.x - p.x, f.z - p.z) < fordSpacing)) continue;
-      if (t.signed[Math.round((p.z + half) / cell) * n + Math.round((p.x + half) / cell)] < 22) continue;
+      if (t.signed[Math.round((p.z + half) / cell) * n + Math.round((p.x + half) / cell)] < 14) continue;
       fords.push({ x: p.x, z: p.z });
-      for (let d = -2; d <= 2; d++) ch.pts[i + d].ford = true;
+      for (let d = -3; d <= 3; d++) ch.pts[i + d].ford = true;
     }
   }
-  return { chains, lakes, deltas: [], filled, acc, rec, lakeMask, riverCells };
+  return { chains, lakes, deltas, filled, acc, rec, lakeMask, riverCells };
 }
 const k0 = (id: string) => Number(id.slice(6)) || 0;

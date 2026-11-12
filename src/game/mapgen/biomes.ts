@@ -78,7 +78,9 @@ export function buildBiomes(inp: BiomeInputs): EcologicalProvinceGrid & { treeli
     const T = temperatureC[id] + jitT, P = rain[id] + jitR, h = elev[id], g = slope[id], fd = freshM[id], cd = coastDist[id] * cell;
     let kind: ProvinceKind;
     const swamp = wetness[id] > 0.22 + (mosaic - 0.05) * 0.25 && P > 0.3 + 0.1 * (g > 0.1 ? 1 : 0) && (aboveWater[id] < 3.2);
-    const coastalMarsh = cd < 90 && h < 3.4 && g < 0.08 && fd < 70 && P > 0.35 && mosaic > 0.04;
+    let inDelta = false;
+    for (const d of hydro.deltas) if (Math.hypot(x - d.x, z - d.z) < d.radius && h < 3.2 && g < 0.1 && mosaic > -0.12) inDelta = true;
+    const coastalMarsh = inDelta || cd < 90 && h < 3.4 && g < 0.08 && fd < 70 && P > 0.35 && mosaic > 0.04;
     if (swamp || coastalMarsh) kind = 'wetland';
     else if (T < 2.8 || h > 72 || (g > 0.78 && h > 38)) kind = 'alpine';
     else if (P < 0.2) kind = T > 11 ? 'arid' : 'dry-scrub';
@@ -103,6 +105,30 @@ export function buildBiomes(inp: BiomeInputs): EcologicalProvinceGrid & { treeli
       let top = copy[id], best = counts.get(top) || 0;
       for (const [k, cnt] of counts) if (cnt > best + 2) { best = cnt; top = k; }
       kinds[id] = top;
+    }
+  }
+  // province borders come out of a 12 m grid as staircases and rectangles; two Gaussian-weighted votes turn
+  // them into smooth curves (wetland strips along water are kept as they are, they are meant to be thin)
+  const wetlandK = K('wetland'), kernel: number[] = [];
+  for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) kernel.push(Math.exp(-(dx * dx + dz * dz) / (2 * 1.25 * 1.25)));
+  for (let pass = 0; pass < 2; pass++) {
+    const src = kinds.slice(), votes = new Float32Array(8);
+    for (let z = 0; z < width; z++) {
+      for (let x = 0; x < width; x++) {
+        const id = z * width + x;
+        if (src[id] === 255 || src[id] === wetlandK) continue;
+        votes.fill(0);
+        let k = 0;
+        for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++, k++) {
+          const X = x + dx, Z = z + dz;
+          if (X < 0 || Z < 0 || X >= width || Z >= width) continue;
+          const kind = src[Z * width + X];
+          if (kind !== 255) votes[kind] += kernel[k];
+        }
+        let top = src[id], best = votes[top] * 1.08;
+        for (let q = 0; q < 8; q++) if (q !== wetlandK && votes[q] > best) { best = votes[q]; top = q; }
+        kinds[id] = top;
+      }
     }
   }
   for (let id = 0; id < total; id++) if (kinds[id] === 255) kinds[id] = seaMask[id] ? K('warm-coast') : K('meadow');
