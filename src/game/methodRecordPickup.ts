@@ -28,6 +28,7 @@ export function beginMethodRecordPickup(g:Game,unitId:number,recordId:number){
  const p=g.state.production?.projects.find(p=>p.id===u.productionProjectId),phase=p?.phase==='paused'?p.resumePhase:p?.phase;
  const releasable=!!p&&['working','curing','ready'].includes(phase||'')&&!hasTaskCommitment(u,'productionProjectId');
  if(hasTaskCommitment(u,'methodRecordPickupId')&&!releasable)return no('Finish retained paid work or use its physical unload action before picking up a record');
+ if(workRuntime(g).reservations.used(assetKey(r.id),key(u))>=1)return no('Another resident already reserves this record');
  if(!approach(g,u,r))return no('No reachable dry approach to this actual record or its cache');
  g.interruptMission(u);
  if(hasTaskCommitment(u))return no('The original paid commitment remains with this resident; finish or unload it first');
