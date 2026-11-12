@@ -1,0 +1,98 @@
+{
+  "release": "2026-11-12T15-18-42-322Z-714b47e",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T15-18-42-322Z-714b47e",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T14-53-46-940Z-95978dd",
+  "commit": "714b47eb7025896e308a13756afcdc3560c7502d",
+  "retained": {
+    "linked": 1343,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "sourceScope": "All incoming source through0dd7c2a plus toolmaking, breakaway ownership containment, compiler contracts and actual-player opening/save fixes. Later0af9ec7/bb9d8eb source is excluded from this reviewed frozen artifact.",
+  "scopedChecks": {
+    "passed": 67,
+    "total": 67,
+    "nativeAndShared": 63,
+    "uniqueGroups": {
+      "incomingMapgenCivicSkinsPainter": 51,
+      "newRulersCouncilCases": 2,
+      "toolmaking": 4,
+      "newBreakawaySafety": 3,
+      "forageMigrationAndVersionedIdentity": 2,
+      "actualPlayerOpening": 1
+    },
+    "rerunsNotDoubleCounted": "Existing CAT118 case repeated with safety;16skin cases repeated afterappend fix.",
+    "built": {
+      "passed": 4,
+      "total": 4,
+      "scope": "Original53 post-migration save continuity; real Menu World V20 river-valley and approved skin; actual resident movement; saved physical map survives archived Classic reload; optional actually earned toolmaking readout. No campaign, frame-rate or full-era credit.",
+      "original": {
+        "population": 53,
+        "version": 18,
+        "heights": "ee8e5a39ba3a83913c36eb95193ff34fb3f9acd469a9193046dca313a80c8f5f",
+        "mapStyle": "painterly",
+        "triangles": 1220840
+      },
+      "originalCivic": {
+        "skipped": "No civic record earned yet; no time jump or injected civic state"
+      },
+      "toolmaking": {
+        "actor": 6223,
+        "line": "Toolmaking \u00b7 0.46 min \u00b7 1 tools \u00b7 1 repairs \u00b7 +0% work rate",
+        "workSeconds": 27.88728061095553
+      },
+      "toolCivic": {
+        "skipped": "No civic record earned yet; no time jump or injected civic state"
+      },
+      "newMap": {
+        "seed": 1454491798,
+        "version": 20,
+        "preset": "river-valley",
+        "size": 1040,
+        "skin": "civ:aureline",
+        "homeDry": true,
+        "movedMetres": 7.921233714985476,
+        "heights": "7467c9768d2e1db2170d45a2324d6e80f55961d6e02468487756974be3305dc6",
+        "triangles": 994182
+      },
+      "newMapCivic": {
+        "passed": true,
+        "knownSocieties": 0
+      },
+      "classic": {
+        "mapStyle": "classic",
+        "triangles": 987984,
+        "physicalStateUnchanged": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "visualReview": "Actual temporary V20 opening image reviewed: five visible people and known land at physical camp, following fix for unseen scenic relocation. Temporary image deleted; no retained previews.",
+  "working": [
+    "V20 eight seeded map presets and selectable society skins",
+    "Painterly map with archived Classic reload option; legacy building styles retained",
+    "Civic identity/prehistory/early Society panel after actual ordinary yearly review",
+    "Distinct personal paid toolmaking and repairs, bounded20percent specialization, compact earned inventory history",
+    "Breakaway food/weapon/seed conservation, atomic refusal of unsupported paid/owned custody transfers, prior skin continuity",
+    "Versioned forage identity stable onload; unversioned legacy migration retained",
+    "V20 actual player entry keeps known physical generated camp and band rather than focusing unseen land"
+  ],
+  "limits": [
+    "Full campaign, complete QA037 families and full independent breakaway ownership transfer not qualified",
+    "100-visible-resident p95/FPS target not claimed; Worker remains parked",
+    "Later V21 world and hall/land/defense art source onmain awaits separate saved-world compatibility and built review"
+  ],
+  "fullReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "changed": false
+  }
+}
