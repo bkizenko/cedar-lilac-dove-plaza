@@ -1,0 +1,66 @@
+{
+  "release": "2026-11-12T08-40-44-492Z-ab32806",
+  "commit": "ab3280648b53ba43e96e3053af4f6ead464b7b53",
+  "sourceCommit": "e316e53",
+  "livePorts": [
+    8086,
+    8101
+  ],
+  "scopedBatch": {
+    "passed": 16,
+    "total": 16,
+    "focusedMeal": 5,
+    "compactHud": 5,
+    "migration": 5,
+    "built": 1
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "builtEvidence": {
+    "scope": "One built check: import existing village without invented meal history, ordinary simulation consumes existing finite foods, compact Stores meal readout, durable restoration; no campaign, historical-balance or performance credit.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 1,
+    "total": 1,
+    "evidence": {
+      "openingPopulation": 53,
+      "secondsAdvanced": 3.400000000001455,
+      "nourishmentEaten": 6.568848726353757,
+      "hedons": 15.50696704113107,
+      "uiVisible": true,
+      "durableRestore": true
+    },
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "frozenChecklist": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041
+  },
+  "rules": {
+    "tasteUnits": "hedons per nourishment actually eaten; game tuning, not historical universal taste",
+    "memorySeconds": 180,
+    "maxAppealEffect": 0.04,
+    "breadTaste": 6,
+    "porridgeTaste": 3,
+    "breadNourishment": 1.2,
+    "recipeBaseWorkSeconds": {
+      "hearthBread": 45,
+      "ovenBread": 24,
+      "porridge": 18
+    }
+  },
+  "validationNotes": [
+    "Legacy saves do not invent prior meals. Spoilage, production and trade do not earn hedons.",
+    "Raw emergency food uses its own taste; existing nutrition, risk, recipes and dispatch order unchanged.",
+    "Existing growth-policy eager test failed on unchanged main: two-mouth 220-second reserve was below independent 16-food minimum. Fixture now has three mouths; no runtime migration constraints relaxed.",
+    "Source review caught and corrected emergency raw-fish taste omission and impossible zero-meal feast metadata before final build."
+  ],
+  "remaining": [
+    "Full morale from safety/family/variety/community events",
+    "Brewing chain",
+    "Heat/wet/repair/dye clothing",
+    "Campaign and hardware performance acceptance"
+  ]
+}

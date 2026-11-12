@@ -9231,6 +9231,15 @@
       "liveCommit": "45421a4260fd281ca1144f60af9dc84994746ea5",
       "evidence": "docs/metrics/captured-knowledge-release-2026-11-12.json",
       "scope": "Captured artisan personal methods are frozen before surrender, retained through actual custody and free integration, and copied to local learners only after real observation and useful paid delivery. Optional strict saves, compact source identities and measured counts; homeward custody uses existing bounded return routing; missing influence paint field no longer throws."
+    },
+    {
+      "id": "CODEX-FOOD-ENJOYMENT",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "e316e53",
+      "liveCommit": "ab3280648b53ba43e96e3053af4f6ead464b7b53",
+      "evidence": "docs/metrics/food-enjoyment-release-2026-11-12.json",
+      "scope": "Meals actually eaten earn separate hedons and bounded food mood; compact Stores readout, strict old/new saves. No calorie, production recipe, dispatch or disease changes. Brewing/full morale remain open."
     }
   ],
   "status_update_policy": {
