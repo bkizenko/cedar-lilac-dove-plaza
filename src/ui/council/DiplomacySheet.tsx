@@ -2,6 +2,7 @@ import type {CouncilModel} from '../../game/rulersView';
 import {SocietyFlag} from '../SocietyFlag';
 import {Card} from './CouncilParts';
 type Neighbour=CouncilModel['neighbours'][number];
+import {courtLine} from './courtLine';
 export type DiplomacyAction='marry-houses'|'foster-houses'|'exchange-hostages';
 const mood=(n:Neighbour)=>n.hostile?{word:'At odds',cls:'text-red-300'}:n.atPeace?{word:'At peace',cls:'text-green-200'}:n.trust>=60?{word:'Friendly',cls:'text-green-200'}:n.trust>=25?{word:'Cordial',cls:'text-parchment'}:{word:'Reserved',cls:'text-parchment-dim'};
 /** One card per known neighbour: flag, mood, a trust bar over a grievance bar, what the bond implies, and the family-diplomacy actions. */
@@ -12,6 +13,7 @@ export function DiplomacySheet({neighbours,onAct,feedback}:{neighbours:Neighbour
   <ul className="space-y-2">{sorted.map(n=>{const m=mood(n),g=n.grievance??0;return <li key={n.team} className="rounded border border-parchment/10 bg-black/20 p-2">
    <div className="flex items-center gap-2">{n.identity&&<SocietyFlag identity={n.identity} label={`${n.name} flag`}/>}<div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-parchment">{n.name}</div><div className="text-parchment-dim">{n.bond}</div></div><span className={'text-[10px] font-semibold uppercase tracking-wide '+m.cls}>{m.word}</span></div>
    {n.voice&&<blockquote data-manner={n.voice.manner} className="mt-1.5 border-l-2 border-bronze/50 pl-2 text-[12px] italic text-parchment-dim" title={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}>{n.voice.greeting}<span className="ml-1 not-italic uppercase tracking-wide text-[10px]">{n.voice.manner}</span></blockquote>}
+   {courtLine(n.court)&&<p className="mt-1.5 text-[12px] text-parchment-dim" data-court="1">{courtLine(n.court)}</p>}
    <div className="mt-1.5 grid grid-cols-[3.5rem_1fr_2rem] items-center gap-x-2 gap-y-1">
     <span className="text-parchment-dim">Trust</span><span className="h-1.5 rounded bg-black/40"><span className="block h-1.5 rounded" style={{width:Math.min(100,n.trust)+'%',background:'var(--hw-good,#a9c98a)'}}/></span><span className="text-right tabular-nums">{n.trust}</span>
     <span className="text-parchment-dim">Grudge</span><span className="h-1.5 rounded bg-black/40"><span className="block h-1.5 rounded" style={{width:Math.min(100,g)+'%',background:'var(--hw-bad,#d88a7a)'}}/></span><span className="text-right tabular-nums">{g}</span>
