@@ -45,3 +45,9 @@ test('a loaded rack is collected by a typed command and the dry batch comes home
  const c=applyEngineCommand(g,{kind:'wild-collect',projectId:p.id});assert.equal(c.accepted,true,c.reason);
  drive(g,600,()=>!g.state.wildCraft.projects.length);assert.equal(g.state.wildCraft.projects.length,0);assert.ok((foodInventory(g.tribe(0)).driedBerries||0)>=2.99);
 });
+test('world pin: a visible bleeding animal first, then a finished batch; silent without wild-craft',async()=>{
+ const{wildAlert}=await import('../src/game/wildCraftControl.ts');const{detectAlerts}=await import('../src/ui/hearth/glanceReads.ts');
+ const g=fixture();assert.equal(wildAlert(g),null);assert.equal(detectAlerts(g).some(a=>a.kind==='wild'),false);enableWildCraft(g);g.vision.fill(2);assert.equal(wildAlert(g),null);
+ const c=campAnchor(g,0),a={id:g.id(),species:'deer',x:c.x+9,z:c.z+9,y:0,hp:3,maxHp:6,facing:0,vx:0,vz:0,wanderT:1e4,fly:0,scale:1};g.state.wildlife.push(a);g.state.wildCraft.wounds[a.id]={since:0,trail:[{x:a.x,z:a.z},{x:a.x+2,z:a.z}],bleed:.01};
+ const w=wildAlert(g);assert.equal(w.count,1);assert.equal(w.x,a.x);const pin=detectAlerts(g).find(x=>x.kind==='wild');assert.ok(pin&&pin.at&&pin.severity==='warning');
+});

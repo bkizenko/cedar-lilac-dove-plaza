@@ -53,3 +53,12 @@ export function applyWildCommand(g:Game,command:WildBeginCommand|WildCollectComm
  return{accepted:false,reason};
 }
 export const WILD_METHOD_ICONS=HUNT_METHOD_ICON;
+/** One world pin for the Hearth glance layer: a visible bleeding animal to follow, else a finished batch waiting on its rack. Pure; null without wild-craft. */
+export function wildAlert(g:Game):{count:number;tip:string;x:number;z:number}|null{
+ const w=g.state.wildCraft;if(!w)return null;const camp=g.campOf(0);
+ const bleeding=Object.keys(w.wounds).map(id=>g.state.wildlife.find(c=>String(c.id)===id)).filter(c=>!!c&&c.hp>0&&g.visibleAt(c.x,c.z)&&!w.projects.some(p=>p.critterId===c.id)).sort((a,b)=>Math.hypot(a!.x-camp.x,a!.z-camp.z)-Math.hypot(b!.x-camp.x,b!.z-camp.z));
+ if(bleeding.length)return{count:bleeding.length,tip:`${bleeding.length} wounded animal${bleeding.length===1?'':'s'} leaving a blood trail`,x:bleeding[0]!.x,z:bleeding[0]!.z};
+ const ready=w.projects.filter(p=>p.team===0&&p.phase==='ready'&&p.actorId===0);
+ for(const p of ready){const b=g.state.buildings.find(b=>b.id===p.stationId);if(b)return{count:ready.length,tip:`${ready.length} finished batch${ready.length===1?'':'es'} waiting to be collected`,x:b.x,z:b.z};}
+ return null;
+}
