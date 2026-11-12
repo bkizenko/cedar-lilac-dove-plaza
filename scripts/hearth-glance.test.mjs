@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS} from '../src/ui/hearth/glanceModel.ts';
+import {avoidPinControls,SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS} from '../src/ui/hearth/glanceModel.ts';
 import {paintOverlays,TERRITORY_NONE,TERRITORY_CONTESTED,RESOURCE_COLOR} from '../src/ui/hearth/overlayModel.ts';
 import {influenceGradientModel} from '../src/game/terrainInfluenceView.ts';
 // Docs: docs/UIUX_PROPOSAL.md changes 7 (supply meters), 8 (priority stack), 9 (map overlays), 10 (pins and edge arrows). Pure models only: no DOM, no lucide.
@@ -174,3 +174,6 @@ test('wiring: no new key bindings (existing keys are untouched, there is no hotb
 
 test('supply history belongs to one actual village even when replacement time moves forward',()=>{const a={},b={},t=new TrendTracker(DAY);t.push(0,20,a);t.push(DAY,100,a);assert.equal(t.trend(),'up');t.push(DAY*4,500,b);assert.equal(t.samples.length,1);assert.equal(t.trend(),null,'a different village cannot inherit the previous society trend');t.push(DAY*5,200,b);assert.equal(t.trend(),'down');});
 test('large resource marks never paint their neighbouring unexplored pixels',()=>{const out=new Uint8ClampedArray(4*4*4),src={worldSize:4,pixels:4,explored:(x,z)=>x>=0&&x<1&&z>=0&&z<1,color:()=>[255,255,255],resources:[{x:.1,z:.1,kind:'iron'}]};assert.equal(paintOverlays(src,new Set(['resources']),out),true);for(let y=0;y<4;y++)for(let x=0;x<4;x++)assert.equal(out[(y*4+x)*4+3]>0,x===2&&y===2,`pixel ${x}/${y}`);});
+
+
+test('world pin chips avoid actual notification/control rectangles using their whole measured extent',()=>{const desired={x:1331.5,y:172.5,width:73,height:52},controls=[{x:1048,y:164,width:380,height:190},{x:1128,y:632,width:300,height:356},{x:12,y:12,width:1416,height:132}],before=structuredClone(desired),safe=avoidPinControls(desired,1440,1000,controls),overlaps=(a,b)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;assert.ok(safe);assert.ok(controls.every(b=>!overlaps(safe,b)));assert.ok(safe.x>=8&&safe.y>=8&&safe.x+safe.width<=1432&&safe.y+safe.height<=992);assert.deepEqual(desired,before,'only chip presentation shifts; caller world point remains unchanged');const second=avoidPinControls(desired,1440,1000,[...controls,safe]);assert.ok(second);assert.equal(overlaps(safe,second),false);assert.equal(avoidPinControls(desired,1440,1000,[{x:0,y:0,width:1440,height:1000}]),null,'fully covered viewport hides the chip instead of overlaying controls');assert.deepEqual(avoidPinControls({x:400,y:400,width:80,height:52},1440,1000,controls),{x:400,y:400,width:80,height:52});});

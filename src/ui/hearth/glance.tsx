@@ -7,7 +7,7 @@ import {GameTooltip} from '../GameTooltip';
 import {SocietyFlag} from '../SocietyFlag';
 import {cx,IconBtn} from './kit';
 import {RES_ICON,RES_NAME} from './icons';
-import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
+import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf} from './glanceReads';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
@@ -126,12 +126,20 @@ export function AlertPins({engine,alerts}:{engine:Engine|null;alerts:readonly Al
  const pins=useMemo(()=>pinSet(alerts),[alerts]);
  const box=useRef<HTMLDivElement>(null),els=useRef(new Map<AlertKind,HTMLButtonElement>()),arrows=useRef(new Map<AlertKind,HTMLElement>());
  useEffect(()=>{
-  if(!engine||!pins.length)return;let raf=0;
+  if(!engine||!pins.length)return;let raf=0,nextMeasure=0,lastWidth=0,lastHeight=0;let controls:PinRect[]=[];const sizes=new Map<AlertKind,{width:number;height:number}>();
   const frame=()=>{
    raf=requestAnimationFrame(frame);
    const host=box.current,cam=engine.view?.camera as any;if(!host||!cam?.projectionMatrix?.elements||!cam.matrixWorldInverse?.elements)return;
    const r=host.getBoundingClientRect(),W=r.width,H=r.height;if(!W||!H)return;const inset=pinInset(W);
-   const placed:{x:number;y:number}[]=[];
+   // Measure the explicit HUD panels/chips once per layout interval, never a
+   // full DOM scan for each pin/frame. Resize invalidates this small cache.
+   const now=performance.now();if(now>=nextMeasure||W!==lastWidth||H!==lastHeight){
+    controls=[];const root=host.closest('[data-hw="hearth"]');
+    for(const panel of root?.querySelectorAll<HTMLElement>('.hw-top,.hw-rail,.hw-notes,.hw-map,.hw-sel,.hw-tray,.hw-place,.hw-dock,.hw-hint,.hw-paused')??[]){if(controls.length>=PIN_LAYOUT_RULES.maximumBlockers-5)break;const b=panel.getBoundingClientRect();if(b.width>0&&b.height>0)controls.push({x:b.left-r.left,y:b.top-r.top,width:b.width,height:b.height});}
+    for(const a of pins){const chip=els.current.get(a.kind)?.querySelector<HTMLElement>('.hw-pin-chip'),b=chip?.getBoundingClientRect();if(b&&b.width>0&&b.height>0)sizes.set(a.kind,{width:b.width,height:b.height});}
+    nextMeasure=now+PIN_LAYOUT_RULES.measureMilliseconds;lastWidth=W;lastHeight=H;
+   }
+   const placed:{x:number;y:number}[]=[],placedChips:PinRect[]=[];
    for(const a of pins){
     const el=els.current.get(a.kind);if(!el||!a.at)continue;
     const p=projectToScreen(cam,{x:a.at.x,y:a.at.y+1.2,z:a.at.z},W,H);
@@ -141,7 +149,10 @@ export function AlertPins({engine,alerts}:{engine:Engine|null;alerts:readonly Al
     el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;el.classList.toggle('is-edge',edge);el.style.visibility='visible';
     let lift=0;for(const q of placed)if(Math.abs(q.x-x)<84&&Math.abs(q.y-y)<60)lift+=54;
     placed.push({x,y});el.style.setProperty('--lift',`${lift}px`);
-    const ar=arrows.current.get(a.kind);if(ar)ar.style.transform=`rotate(${angle.toFixed(3)}rad) translateX(46px)`;
+    const size=sizes.get(a.kind)??{width:80,height:52},desired={x:x-size.width/2,y:edge?y-size.height/2:y-size.height-38-lift,...size},safe=avoidPinControls(desired,W,H,[...controls,...placedChips]);
+    if(!safe){el.style.setProperty('--pin-chip-visible','hidden');const ar=arrows.current.get(a.kind);if(ar)ar.style.visibility='hidden';continue;}
+    el.style.setProperty('--pin-chip-visible','visible');const ax=safe.x-desired.x,ay=safe.y-desired.y;placedChips.push(safe);el.style.setProperty('--avoid-x',`${ax.toFixed(1)}px`);el.style.setProperty('--avoid-y',`${ay.toFixed(1)}px`);
+    const ar=arrows.current.get(a.kind);if(ar){ar.style.visibility='visible';ar.style.transform=`translate(${ax.toFixed(1)}px,${ay.toFixed(1)}px) rotate(${angle.toFixed(3)}rad) translateX(46px)`;}
    }
   };
   frame();return()=>cancelAnimationFrame(raf);

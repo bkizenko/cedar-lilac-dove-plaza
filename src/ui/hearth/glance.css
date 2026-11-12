@@ -36,7 +36,7 @@
 .hw-pin{position:absolute;left:0;top:0;width:0;height:0;padding:0;border:0;background:none;pointer-events:none;will-change:transform}
 .hw-pin-ring{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%;border:3px dashed var(--hw-warn);background:rgba(242,199,107,.12);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .hw-pin.is-crit .hw-pin-ring{border-color:var(--hw-bad);background:rgba(244,162,135,.14)}
-.hw-pin-chip{position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 38px - var(--lift,0px)));display:inline-flex;align-items:center;gap:6px;min-height:var(--hw-hit);padding:0 12px;border-radius:999px;pointer-events:auto;cursor:pointer;background:var(--hw-wood-800);color:var(--hw-text);border:3px solid var(--hw-warn);box-shadow:0 2px 0 rgba(0,0,0,.4),0 8px 18px rgba(0,0,0,.45);font-size:var(--hw-fs-m);font-weight:800;white-space:nowrap}
+.hw-pin-chip{visibility:var(--pin-chip-visible,visible);position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 38px - var(--lift,0px))) translate(var(--avoid-x,0px),var(--avoid-y,0px));display:inline-flex;align-items:center;gap:6px;min-height:var(--hw-hit);padding:0 12px;border-radius:999px;pointer-events:auto;cursor:pointer;background:var(--hw-wood-800);color:var(--hw-text);border:3px solid var(--hw-warn);box-shadow:0 2px 0 rgba(0,0,0,.4),0 8px 18px rgba(0,0,0,.45);font-size:var(--hw-fs-m);font-weight:800;white-space:nowrap}
 .hw-pin.is-crit .hw-pin-chip{border-color:var(--hw-bad)}
 .hw-pin-chip svg{width:26px;height:26px}
 .hw-pin:focus-visible .hw-pin-chip{outline:3px solid var(--hw-gold-2);outline-offset:2px}
@@ -44,7 +44,7 @@
 .hw-pin.is-crit .hw-pin-arrow{color:var(--hw-bad)}.hw-pin:not(.is-crit) .hw-pin-arrow{color:var(--hw-warn)}
 .hw-pin-arrow svg{width:26px;height:26px;stroke-width:3.5}
 .hw-pin.is-edge .hw-pin-ring{display:none}
-.hw-pin.is-edge .hw-pin-chip{transform:translate(-50%,-50%)}
+.hw-pin.is-edge .hw-pin-chip{transform:translate(-50%,-50%) translate(var(--avoid-x,0px),var(--avoid-y,0px))}
 .hw-pin.is-edge .hw-pin-arrow{display:block}
 
 /* ---------- minimap layers ---------- */
