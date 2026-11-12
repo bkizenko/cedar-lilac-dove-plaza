@@ -1,9 +1,9 @@
 import { i as __toESM, n as __exportAll } from "../_runtime.mjs";
-import { I as require_jsx_runtime, L as require_react, _ as useRouter, f as createRouter, g as createRootRoute, h as createFileRoute, l as Scripts, m as lazyRouteComponent, p as Outlet, u as HeadContent } from "../_libs/@tanstack/react-router+[...].mjs";
-import { o as TriangleAlert } from "../_libs/lucide-react.mjs";
+import { L as require_jsx_runtime, R as require_react, _ as useRouter, f as createRouter, g as createRootRoute, h as createFileRoute, l as Scripts, m as lazyRouteComponent, p as Outlet, u as HeadContent } from "../_libs/@tanstack/react-router+[...].mjs";
+import { c as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { a as union, i as string, n as number, r as object, t as literal } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CYY6VUNG.js
-var router_CYY6VUNG_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CUNnph9A.js
+var router_CUNnph9A_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AppErrorComponent({ error }) {
@@ -272,8 +272,9 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-BSTTAYuj.css";
-var APP_NAME = "Dawn of Empire";
+var styles_default = "/assets/styles-C2OC5mzJ.css";
+var APP_NAME = "Hearthwild";
+var stylesheet = styles_default;
 var Route$1 = createRootRoute({
 	head: () => ({
 		meta: [
@@ -285,7 +286,7 @@ var Route$1 = createRootRoute({
 			{ title: APP_NAME },
 			{
 				name: "description",
-				content: "A 3D real-time civilization. Raise a Stone Age camp into a Renaissance realm while a rival tribe contests the valley."
+				content: "A band on open ground. Plant a hall on berries or timber, then found another where the stone sits."
 			},
 			{
 				name: "theme-color",
@@ -300,7 +301,7 @@ var Route$1 = createRootRoute({
 			},
 			{
 				rel: "stylesheet",
-				href: styles_default
+				href: stylesheet
 			},
 			{
 				rel: "manifest",
@@ -328,7 +329,7 @@ var Route$1 = createRootRoute({
 	component: () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("html", {
 		lang: "en",
 		suppressHydrationWarning: true,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("head", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", {
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("head", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { dangerouslySetInnerHTML: { __html: "html,body{margin:0;height:100%;overflow:hidden;background:#1a1610;color:#e8dcc4}#game-root{position:relative;width:100%;height:100dvh;min-height:100vh;overflow:hidden}#game-root canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#boot{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 70% 20%,#6a4a20 0%,#1a160e 55%,#0c0e0a 100%);color:#e8dcc4;font-family:Georgia,'Times New Roman',serif}" } }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", {
 			className: "bg-ink text-parchment antialiased",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewHostBridge, {}),
@@ -338,7 +339,7 @@ var Route$1 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-COMMjb-l.mjs").then((n) => n.t);
+var $$splitComponentImporter = () => import("./routes-pyt_G5Ai.mjs").then((n) => n.t);
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
 	id: "/",
 	path: "/",
@@ -352,4 +353,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_CYY6VUNG_exports as t };
+export { getRouter, router_CUNnph9A_exports as t };

@@ -21,7 +21,7 @@ export type UnitPart=Part&{slot:Slot};
 export type OwnedGear={garment?:{item:GarmentId;condition:number};armor?:{kind:string;condition:number}};
 export type UnitAppearanceInput={type:UnitKind;seed:number;gear:OwnedGear;culture:Culture;season:Season;era?:number;/** armorAffiliationColor(g,team) from the game, for the stitching */affiliation?:string};
 export type UnitAppearance={parts:UnitPart[];slotColors:Record<Slot,string>;/** shared-geometry key: same key, same mesh */geometryKey:string;tint:[number,number,number];
- brightness:{garment:number;armor:number};/** what was drawn and why */rendered:{garment?:GarmentId;cut?:Dress['cut'];headwear?:Dress['headwear'];armor?:'paddedTorso';weapon?:'spear'|'bow'|'blade'};ignored:string[];fit:{scale:[number,number,number];y:number}};
+ brightness:{garment:number;armor:number};/** what was drawn and why */rendered:{garment?:GarmentId;cut?:Dress['cut'];headwear?:Dress['headwear'];insignia?:UnitKind;armor?:'paddedTorso';weapon?:'spear'|'bow'|'blade'};ignored:string[];fit:{scale:[number,number,number];y:number}};
 
 const SLOT_MAT:Record<Slot,CarvedMaterialId>={garment:'cloth',trim:'woodInlay',leather:'woodDark',padding:'woodMid',stitch:'woodEdge',wood:'trunk',metal:'iron',hair:'recess'};
 /** Same constants as src/scene/wornGarments.ts / wornArmor.ts so culture styling stays consistent with what is live. */
@@ -68,15 +68,27 @@ function garmentParts(item:GarmentId,cut:Dress['cut'],v:number,motif:Motif|'none
  out.push(...trimBand(motif,dia/2+.005,hem+.04,rich));
  return out;
 }
-function headwearParts(kind:Dress['headwear'],item:GarmentId):UnitPart[]{
- const hood=(item==='hideCoat'||item==='woolCoat'||item==='skinClothes')&&kind==='hood';
+function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):UnitPart[]{
+ // Headwear is cut from the owned garment (never free gear); era only adds trim richness, near-LOD only.
+ const hood=(item==='hideCoat'||item==='woolCoat'||item==='skinClothes')&&kind==='hood',side=v%2?1:-1;
  switch(kind){
-  case 'wrap':return [P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
-  case 'cap':return [P('garment','sphere',[.29,.16,.29],[0,1.1,.02],1)];
-  case 'hood':return hood?[P('garment','sphere',[.34,.34,.36],[0,.94,0],1),P('garment','cone',[.22,.2,.22],[0,.82,-.16],0,[.9,0,0],6)]:[P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
-  case 'brim':return [P('leather','cylinder',[.5,.02,.5],[0,1.12,.02],1,undefined,10),P('leather','cylinder',[.24,.09,.24],[0,1.12,.02],1,undefined,8)];
-  case 'band':return [P('trim','cylinder',[.29,.03,.29],[0,1.1,.02],0,undefined,8)];
-  case 'braids':return [-1,1].map(s=>P('hair','cylinder',[.05,.32,.05],[s*.08,.74,-.13],0,undefined,5));
+  case 'wrap':return [P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8),...(rich>=1?[P('garment','cylinder',[.27,.07,.27],[side*.012,1.135,.0],0,[0,.4,0],8)]:[]),...(rich>=2?[P('trim','sphere',[.09,.09,.09],[side*.14,1.08,.1],0),P('trim','cylinder',[.31,.02,.31],[0,1.055,.02],0,undefined,8)]:[])];
+  case 'cap':return [P('garment','sphere',[.29,.16,.29],[0,1.1,.02],1),...(rich>=1?[P('trim','cylinder',[.295,.025,.295],[0,1.062,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','sphere',[.05,.05,.05],[0,1.19,.02],0)]:[])];
+  case 'hood':return hood?[P('garment','sphere',[.34,.34,.36],[0,.94,0],1),P('garment','cone',[.22,.2,.22],[0,.82,-.16],0,[.9,0,0],6),...(rich>=1?[P('trim','cylinder',[.31,.025,.31],[0,.8,.0],0,undefined,8)]:[])]:[P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
+  case 'brim':return [P('leather','cylinder',[.5,.02,.5],[0,1.12,.02],1,undefined,10),P('leather','cylinder',[.24,.09,.24],[0,1.12,.02],1,undefined,8),...(rich>=1?[P('trim','cylinder',[.245,.025,.245],[0,1.13,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','box',[.02,.14,.05],[side*.13,1.2,.0],0,[0,0,side*.5])]:[])];
+  case 'band':return [P('trim','cylinder',[.29,.03,.29],[0,1.1,.02],0,undefined,8),...(rich>=2?[P('trim','box',[.045,.06,.02],[0,1.12,.15],0,[0,0,Math.PI/4])]:[])];
+  case 'braids':return [-1,1].flatMap(sd=>[P('hair','cylinder',[.05,.32,.05],[sd*.08,.74,-.13],0,undefined,5),...(rich>=1?[P('trim','cylinder',[.065,.03,.065],[sd*.08,.6,-.13],0,undefined,5)]:[])]);
+  default:return [];}
+}
+/** Insignia and banners are cut from the owned garment's cloth (a sash, shoulder cloth, chest patch, a leader's standard);
+ * they are never free gear, appear only on a drawn garment, and only at near LOD. Era only adds richness. */
+function insigniaParts(type:UnitKind,rich:number,v:number):UnitPart[]{
+ const side=v%2?1:-1;
+ switch(type){
+  case 'worker':return rich>=1?[P('trim','box',[.5,.05,.03],[0,.7,.19],0,[0,0,side*.65])]:[];
+  case 'spearman':case 'archer':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
+  case 'swordsman':case 'warden':return [P('trim','box',[.15,.15,.02],[0,.72,.265],0)];
+  case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[])];
   default:return [];}
 }
 function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
@@ -97,14 +109,14 @@ export function unitAppearance(input:UnitAppearanceInput):UnitAppearance{
  const v=hashSeed(input.seed,'variant')%4,tr=seededRandom(hashSeed(input.seed,'tint'));
  const g=gear.garment&&Number.isFinite(gear.garment.condition)&&gear.garment.condition>0?gear.garment:undefined;
  const dress=g?dressFor(culture,season,g.item):dressFor(culture,season);
- if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}}
+ if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item,rich,v);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}const ins=insigniaParts(type,rich,v);if(ins.length){rendered.insignia=type;parts.push(...ins);}}
  else if(gear.garment)ignored.push('garment with no condition left is not drawn');
  if(gear.armor){if(gear.armor.kind==='paddedTorso'&&gear.armor.condition>0){rendered.armor='paddedTorso';parts.push(...armorParts(culture.flag.border,rich));}else ignored.push(`armor kind '${gear.armor.kind}' is not a known asset kind`);}
  const w=weaponParts(type);if(w.weapon){rendered.weapon=w.weapon;parts.push(...w.parts);}
  const base=g?APPEARANCE_RULES.baseColor[g.item]:'#a88b61',dye=g?APPEARANCE_RULES.dye[g.item]:0,garmentColor=mix(base,dress.body,dye),trimColor=mix(garmentColor,dress.trim,.9);
  const slotColors:Record<Slot,string>={garment:garmentColor,trim:trimColor,leather:mix(APPEARANCE_RULES.baseColor.leatherClothes,culture.palette.shadow,.25),padding:mix(APPEARANCE_RULES.paddedBase,culture.palette.field,.22),stitch:input.affiliation??APPEARANCE_RULES.paddedStitchDefault,wood:APPEARANCE_RULES.wood,metal:APPEARANCE_RULES.metal,hair:APPEARANCE_RULES.hair};
  const tint:[number,number,number]=[1+(tr()-.5)*.1,1+(tr()-.5)*.1,1+(tr()-.5)*.1],bright=(base:number,c:number)=>Math.round((base+(1-base)*Math.max(0,Math.min(1,c)))*1000)/1000;
- return {parts,slotColors,geometryKey:[type,rendered.garment??'-',rendered.cut??'-',rendered.headwear??'-',rendered.armor??'-',dress.trimMotif,rich,v,rendered.armor?culture.flag.border:'-'].join('|'),tint,
+ return {parts,slotColors,geometryKey:[type,rendered.garment??'-',rendered.cut??'-',rendered.headwear??'-',rendered.insignia??'-',rendered.armor??'-',dress.trimMotif,rich,v,rendered.armor?culture.flag.border:'-'].join('|'),tint,
   brightness:{garment:bright(APPEARANCE_RULES.garmentBrightness,g?.condition??0),armor:bright(APPEARANCE_RULES.armorBrightness,gear.armor?.condition??0)},rendered,ignored,fit:unitFit(type)};
 }
 export const appearanceTriangles=(a:UnitAppearance,tier:LodTier)=>a.parts.filter(p=>p.lod>=tier&&(p.onlyFrom??0)<=tier).reduce((s,p)=>s+partTriangles(p),0);

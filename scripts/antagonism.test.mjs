@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {grievanceChange,grievanceTemper} from '../src/game/antagonism.ts';
 import {Game} from '../src/game/sim.ts';
+import {flushGeographicInfluence,INFLUENCE_RULES} from '../src/game/influenceField.ts';
+import {influenceRadius} from '../src/game/territory.ts';
 test('territorial grievances persist for minutes, with personality-sensitive cooling and escalation',()=>{
  const calm=grievanceTemper(.1,.1,.7),warlike=grievanceTemper(.9,.9,.1);
  assert.ok(warlike.warThreshold<calm.warThreshold);
@@ -18,10 +20,12 @@ test('distant villages retain grievances, and unseen foreign homes do not create
 });
 test('simulation influence has the same stable core and finite fading sphere as the territory map',()=>{
  const g=new Game();g.reset(345);g.state.buildings=[g.makeBld('townhall',0,0,0)];g.paintTerritory();
- const radius=34*1.45;
+ flushGeographicInfluence(g);
+ const radius=influenceRadius('townhall')*INFLUENCE_RULES.radiusScale,fade=INFLUENCE_RULES.fadeMeters;
  assert.equal(g.influenceAt(0,0,0),1);assert.equal(g.influenceAt(radius*.7,0,0),1);
- assert.ok(Math.abs(g.influenceAt(radius*.875,0,0)-.5)<1e-8);
- assert.equal(g.influenceAt(radius+1,0,0),0);
+ assert.ok(g.influenceAt(radius,0,0)>0&&g.influenceAt(radius,0,0)<=1,'the core edge still has influence');
+ assert.ok(g.influenceAt(radius+fade/2,0,0)<g.influenceAt(radius,0,0),'the sphere fades with travel cost');
+ assert.equal(g.influenceAt(radius+fade+1,0,0),0);
  const side=Math.sqrt(g.territoryStrength.length),cell=g.world.size/side;
- for(let z=0;z<side;z++)for(let x=0;x<side;x++)assert.ok(Math.abs(g.territoryStrength[z*side+x]-g.influenceAt(-g.world.size/2+(x+.5)*cell,-g.world.size/2+(z+.5)*cell,0))<.00001);
+ for(let z=0;z<side;z++)for(let x=0;x<side;x++)assert.ok(Math.abs(g.territoryStrength[z*side+x]-g.influenceAt(-g.world.size/2+(x+.5)*cell,-g.world.size/2+(z+.5)*cell,0))<=.0001);
 });

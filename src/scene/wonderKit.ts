@@ -9,9 +9,9 @@ import {CIVS,CIV_IDS,matId,materialTable,type CivId,type CivMaterials,type Swatc
 import {groundSite,plinthSpec,type SiteSampleLike} from './siteGrounding';
 export type WonderFunction='observatory'|'terraceGarden'|'harbor'|'millMarket'|'cistern'|'assembly';
 export const WONDER_FUNCTIONS:WonderFunction[]=['observatory','terraceGarden','harbor','millMarket','cistern','assembly'];
-export type KitId='baseTerrace'|'plinth'|'causeway'|'colonnade'|'tholos'|'arch'|'dome'|'spire'|'pylonPair'|'zigguratTiers'|'pagodaTiers'|'statue'|'gate'|'wall'|'brazier'|'relief'|'waterFeature'|'bannerPair';
+export type KitId='baseTerrace'|'plinth'|'causeway'|'colonnade'|'tholos'|'arch'|'dome'|'spire'|'pylonPair'|'zigguratTiers'|'pagodaTiers'|'statue'|'gate'|'wall'|'brazier'|'relief'|'waterFeature'|'bannerPair'|'signature';
 export type CoreId='sightRing'|'cascadeTerraces'|'basinQuay'|'millRace'|'cisternPit'|'bemaTiers';
-export const KIT_IDS:KitId[]=['baseTerrace','plinth','causeway','colonnade','tholos','arch','dome','spire','pylonPair','zigguratTiers','pagodaTiers','statue','gate','wall','brazier','relief','waterFeature','bannerPair'];
+export const KIT_IDS:KitId[]=['baseTerrace','plinth','causeway','colonnade','tholos','arch','dome','spire','pylonPair','zigguratTiers','pagodaTiers','statue','gate','wall','brazier','relief','waterFeature','bannerPair','signature'];
 export const CORE_OF:Record<WonderFunction,CoreId>={observatory:'sightRing',terraceGarden:'cascadeTerraces',harbor:'basinQuay',millMarket:'millRace',cistern:'cisternPit',assembly:'bemaTiers'};
 export type Size='S'|'M'|'L'|'XL';const K:Record<Size,number>={S:.6,M:1,L:1.6,XL:2.4};
 export const SHARED_MATERIALS:Record<string,Swatch>={'shared.water':{hex:'#5d8fa8',roughness:.2},'shared.fire':{hex:'#f0a03a',roughness:.6},'shared.foliage':{hex:'#5a7d3a',roughness:.95}};
@@ -42,7 +42,26 @@ const PIECES:Record<KitId,{variants:number;radius:number;gen:Gen}>={
  brazier:{variants:3,radius:.9,gen:c=>{if(c.v===0){for(let i=0;i<3;i++){const a=i*2.1;c.cy('wall2',.15,1.3,[Math.cos(a)*.4,0,Math.sin(a)*.4],1,5);}c.cy('trim',1,.35,[0,1.3,0],1,8);}else if(c.v===1){c.cy('wall',.8,1.2,[0,0,0],1,8,.5);c.cy('trim',1.1,.3,[0,1.2,0],1,8);}else{c.b('wall2',[.9,.9,.9],[0,0,0],1);c.cy('trim',.9,.3,[0,.9,0],1,6);}c.x('cone','fire',[.6,.7,.6],[0,v1(c),0],0,undefined,5);}},
  relief:{variants:3,radius:2.6,gen:c=>{c.b('wall',[5,3.4,.5],[0,0,0],2);for(let i=0;i<(2+c.v);i++)c.b('wall2',[1,2.4-i*.4,.12],[-1.6+i*(3.2/(1+c.v)),.5,.31],0);c.b('cloth',[1.4,1.9,.05],[0,.7,.34],1);}},
  waterFeature:{variants:3,radius:3.2,gen:c=>{if(c.v===0){c.cy('wall',6,.6,[0,0,0],2,16);c.cy('water',5.2,.1,[0,.5,0],1,16);c.x('cone','water',[.5,1.6,.5],[0,.6,0],0,undefined,6);}else if(c.v===1){c.b('wall',[2.4,.5,8],[0,0,0],2);c.b('water',[1.6,.08,7.6],[0,.45,0],1);}else{for(let i=0;i<3;i++){c.b('wall',[4-i*1,.5,3],[0,i*.5,-i*.0],2);c.b('water',[3-i*.8,.06,2.6],[0,i*.5+.45,0],1);}}}},
+ signature:{variants:3,radius:2.2,gen:c=>{SIGNATURE[c.civ](c);if(c.v===1)c.b('wall2',[3.2,.2,3.2],[0,0,0],0);else if(c.v===2)for(const s of[-1,1])c.cy('trim',.14,.9,[s*1.5,0,s*1.5],0,5);}},
  bannerPair:{variants:3,radius:1.4,gen:c=>{for(const s of[-1,1]){c.cy('trim',.14,6,[s*1.1,0,0],1,5);c.b('cloth',[.9,1.6,.04],[s*1.1+.5,3.8,0],1);if(c.v>0)c.x('cone','accent',[.3,.4,.3],[s*1.1,6,0],0,undefined,5);}}},
+};
+
+/** One civ-specific landmark per wonder (cheap, near-clear silhouette): the thing a player names the civ by. Variant picks a minor dressing only. */
+const SIGNATURE:Record<CivId,Gen>={
+ sandrill:c=>{c.b('wall2',[3.4,.5,1.6],[0,0,0],2);for(const s of[-1,1])c.cy('wall',.55,3.4,[s*1.2,.5,0],2,8,.45);c.x('sphere','accent',[2.2,2.2,.3],[0,3.4,0],1);c.b('trim',[3,.25,1],[0,3.2,0],1);},
+ nilemark:c=>{c.b('wall2',[1.6,.4,1.6],[0,0,0],2);c.cy('wall',1.1,5.6,[0,.4,0],2,4,.45);c.x('pyramid','accent',[.7,.9,.7],[0,6,0],1);for(const s of[-1,1])c.b('wall',[.5,.9,.5],[s*1.2,.4,0],1);},
+ tigrane:c=>{c.b('wall2',[2.4,.5,2.4],[0,0,0],2);c.cy('wall',.8,3,[0,.5,0],2,8,.6);c.b('trim',[1,.7,1],[0,3.5,0],2);for(const s of[-1,1])c.x('wedge','accent',[1.5,.5,.3],[s*.9,3.8,0],1,[0,s>0?0:Math.PI,0]);c.x('sphere','wall',[.7,.6,.7],[0,4.2,0],1);},
+ hanrei:c=>{c.b('wall2',[2.2,.4,2.2],[0,0,0],2);c.cy('wall',.4,2.4,[-.7,.4,-.7],2,6);c.cy('wall',.4,2.4,[.7,.4,.7],2,6);c.b('wall',[1.8,1.4,1.8],[0,.4,0],2);c.x('hip','roof',[3,.8,3],[0,1.8,0],2);c.cy('trim',.5,.6,[0,2.6,0],1,8);c.x('cone','accent',[.4,1,.4],[0,3.2,0],0,undefined,5);},
+ vedara:c=>{c.cy('wall2',2.4,.5,[0,0,0],2,12);c.cy('wall',1.2,.8,[0,.5,0],2,12);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;c.x('cone','accent',[.5,1.5,.5],[Math.cos(a)*.7,1.3,Math.sin(a)*.7],1,[.35*Math.cos(a),0,.35*Math.sin(a)],6);}c.x('sphere','trim',[.6,.8,.6],[0,1.5,0],1);},
+ aureline:c=>{c.cy('wall2',1.8,.4,[0,0,0],2,10);c.cy('wall',.7,4.2,[0,.4,0],2,12,.55);c.cy('trim',1.2,.35,[0,4.6,0],2,12);c.cy('trim',1,.3,[0,4.95,0],1,8);c.x('sphere','accent',[.7,.7,.7],[0,5.25,0],1);},
+ sahelan:c=>{c.b('wall2',[2.6,.5,2.6],[0,0,0],2);c.cy('wall',2,4,[0,.5,0],2,8,1.4);for(let i=0;i<5;i++)for(const s of[-1,1])c.b('trim',[.2,.2,2.2],[s*.5,1.3+i*.7,0],0);c.x('cone','roof',[1.5,.9,1.5],[0,4.5,0],1,undefined,8);},
+ quillan:c=>{c.b('wall2',[2,.5,1.4],[0,0,0],2);c.b('wall',[1.3,2.6,.6],[0,.5,0],2);c.b('wall',[.9,.6,.5],[0,3.1,0],2);c.b('cloth',[.9,1.4,.05],[0,1,.34],1);c.x('cone','accent',[.5,.5,.5],[0,3.7,0],0,undefined,5);},
+ kaaltun:c=>{c.b('wall2',[2,.4,2],[0,0,0],2);for(let i=0;i<4;i++)c.b(i%2?'wall':'wall2',[1.6-i*.25,.9,1.3-i*.2],[0,.4+i*.9,0],2);c.b('accent',[.9,.9,.3],[0,4,0],1);c.b('trim',[1.3,.2,.5],[0,4.9,0],1);},
+ mekhari:c=>{c.b('wall2',[2.2,.4,2.2],[0,0,0],2);for(let i=0;i<3;i++){c.b('wall',[1.3-i*.2,1,1.3-i*.2],[0,.4+i*1.7,0],2);c.x('hip','roof',[2.2-i*.35,.55,2.2-i*.35],[0,1.4+i*1.7,0],2);}c.cy('accent',.25,.9,[0,5.5,0],1,6);},
+ brythen:c=>{for(let i=0;i<5;i++){const a=i/5*Math.PI*2;c.b('wall',[.7,1.9+(i%2)*.6,.5],[Math.cos(a)*1.4,0,Math.sin(a)*1.4],2,[0,-a,0]);}c.b('wall2',[2.2,.3,.6],[0,2.1,0],1);c.cy('wall2',1,.3,[0,0,0],1,8);},
+ rusvolt:c=>{c.cy('wall2',2.2,.5,[0,0,0],2,8);c.cy('wall',1.6,3,[0,.5,0],2,8);c.cy('trim',1.9,.3,[0,3.5,0],2,8);c.x('sphere','accent',[1.7,2,1.7],[0,3.8,0],2);c.x('cone','trim',[.3,1,.3],[0,5.7,0],1,undefined,5);},
+ steppan:c=>{c.cy('wall2',1.8,.4,[0,0,0],1,8);c.cy('trim',.18,5,[0,.4,0],1,5);c.b('trim',[1.5,.12,.12],[0,4.6,0],1);for(let i=0;i<5;i++)c.b('cloth',[.12,1.3+(i%2)*.4,.05],[-.6+i*.3,3.2-(i%2)*.2,0],0);c.x('sphere','accent',[.5,.5,.5],[0,5.4,0],1);},
+ skoldar:c=>{c.b('wall2',[2.4,.5,1.6],[0,0,0],2);c.cy('wall',.45,3.2,[0,.5,0],2,6,.35);c.x('wedge','wall',[.7,1.3,.5],[0,3.4,.3],1,[0,0,0]);c.x('cone','accent',[.45,1.2,.45],[0,4.3,.3],1,[.5,0,0],5);for(const s of[-1,1])c.b('cloth',[.8,1.4,.05],[s*.9,1.6,0],0);},
 };
 const v1=(c:C)=>c.v===0?1.65:1.5;
 const CORES:Record<CoreId,{variants:number;radius:number;gen:Gen}>={
@@ -93,6 +112,8 @@ export function generateWonderKit(preset:WonderPreset,site?:SiteSampleLike):Wond
  if(o.water??chance(r,.55)){const g=free.shift()??[hw*.5,hd*.6,0];put('waterFeature','water',g[0],g[1],'M',Math.floor(r()*3),g[2]);}
  if(chance(r,.7))put('relief','relief',0,-hd*.98,'M',Math.floor(r()*3),0);put('bannerPair','banner',(r()<.5?-1:1)*hw*.5,hd*.85,'M',Math.floor(r()*3),0);
  for(let i=0;i<pick(r,[0,2,4]);i++){const x=(i%2?1:-1)*hw*(.3+.1*i),z=hd*.62;put('brazier','flank',x,z,'S',Math.floor(r()*3));}
+ // civ signature landmark: one per wonder, never traded off against the seed's own crown (placed last, tried at a few offsets)
+ {const ts:[number,number,number][]=[[.5,-.5,0],[-.5,-.5,0],[.55,.5,0],[-.55,.5,0],[0,.55,0],[.3,-.3,0]];for(const [tx,tz] of ts)if(put('signature','crown',tx*hw,tz*hd,'M',Math.floor(r()*3),0))break;}
  // flatten to world parts: canonical mesh, quarter turn, translate; floor lifted to the site's floor
  // LOD by role: base, core and crown carry the far silhouette; flanks, enclosure and water stop at mid; relief and banners are near-only.
  const CAP:Record<PlacedPiece['role'],LodTier>={base:2,core:2,crown:2,flank:1,enclosure:1,water:1,relief:0,banner:0};

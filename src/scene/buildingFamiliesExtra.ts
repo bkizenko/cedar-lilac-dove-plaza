@@ -332,7 +332,93 @@ const moat:Generator=(ctx,r)=>{
  return {parts};
 };
 
+/** Hand-dug village well (Near Eastern and European wellheads): stone kerb,
+ * still water, two posts and a windlass bar, optional bucket. */
+const well:Generator=(ctx,r)=>{
+ const parts:Part[]=[],R=Math.min(ctx.footprint.w,ctx.footprint.d)/2*range(r,.28,.36);
+ parts.push(part('cylinder','stoneDark',[2*R,.45,2*R],[0,0,0],2,undefined,10));
+ parts.push(part('cylinder','stone',[2*R*.82,.18,2*R*.82],[0,.45,0],1,undefined,10));
+ parts.push(part('cylinder','water',[2*R*.7,.08,2*R*.7],[0,.08,0],2,undefined,10));
+ const postH=range(r,1.15,1.45);
+ for(const s of[-1,1] as const)parts.push(part('box','woodDark',[.08,postH,.08],[s*R*.85,.45,0],1));
+ parts.push(part('box','woodMid',[R*2+.2,.08,.08],[0,.45+postH,0],1));
+ if(chance(r,.7))parts.push(part('cylinder','woodEdge',[.16,.2,.16],[0,.2,0],0,undefined,6));
+ return {parts,entry:{x:0,z:R+.2,width:.6}};
+};
+
+/** Stone catchment cistern (Nabataean rock cisterns, Mediterranean farm tanks):
+ * four low walls, an open water sheet, corner posts and caps sitting on the rim. */
+const cistern:Generator=(ctx,r)=>{
+ const parts:Part[]=[],{w,d}=ctx.footprint,W=w*range(r,.82,.9),D=d*range(r,.82,.9),wall=.35,h=range(r,.55,.85);
+ const walls:[[number,number,number,number],[number,number,number,number],[number,number,number,number],[number,number,number,number]]=[
+  [0,-(D-wall)/2,W,wall],[0,(D-wall)/2,W,wall],[-(W-wall)/2,0,wall,D-2*wall],[(W-wall)/2,0,wall,D-2*wall]];
+ for(const [sx,sz,lw,ld] of walls)parts.push(part('box','stone',[lw,h,ld],[sx,0,sz],2));
+ parts.push(part('box','water',[W-2*wall-.1,.1,D-2*wall-.1],[0,.12,0],2));
+ for(const sx of[-1,1] as const)for(const sz of[-1,1] as const)parts.push(part('box','stoneDark',[.22,h+.35,.22],[sx*(W/2-.1),0,sz*(D/2-.1)],2));
+ // Rim caps stay on the walls at every LOD that keeps them (lod 1 sits on lod 2 walls).
+ for(const [sx,sz,lw,ld] of walls)parts.push(part('box','stone',[lw+.04,.1,ld+.04],[sx,h-.02,sz],1));
+ if(ctx.era>=1)parts.push(part('box','woodMid',[.35,.45,.12],[0,0,D/2-wall/2],0)); // draw-off
+ return {parts,entry:{x:0,z:D/2,width:.8}};
+};
+
+/** Post mill (medieval European windmills): trestle, buck, thatched cap and
+ * four cloth-backed sails that stay above ground and inside the plot. */
+const windmill:Generator=(ctx,r)=>{
+ const parts:Part[]=[],{w,d}=ctx.footprint,bw=Math.min(w,d)*range(r,.42,.5),legH=range(r,.7,.95),bh=range(r,1.8,2.3);
+ for(const sx of[-1,1] as const)for(const sz of[-1,1] as const)parts.push(beam('woodDark',[sx*bw*.4,0,sz*bw*.35],[0,legH,0],.12,2));
+ parts.push(part('box','woodMid',[bw,bh,bw*.9],[0,legH,0],2));
+ parts.push(part('prism','thatch',[bw+.3,bw*.5,bw+.25],[0,legH+bh,0],2,[0,Math.PI/2,0]));
+ const hubY=legH+bh*.65,hubZ=Math.min(d/2-.2,bw*.45),Ls=Math.min(hubY-.25,Math.min(w,d)/2-.3);
+ parts.push(part('cylinder','woodEdge',[.22,.3,.22],[0,hubY,hubZ],2,undefined,6));
+ for(let i=0;i<4;i++){
+  const a=i*Math.PI/2+Math.PI/8;let ex=Math.sin(a)*Ls,ey=Math.cos(a)*Ls;
+  if(hubY+ey<.1){const s=(.1-hubY)/ey;ex*=s;ey*=s;}
+  if(Math.abs(ex)>w/2-.2){const s=(w/2-.2)/Math.abs(ex);ex*=s;ey*=s;}
+  parts.push(beam('woodDark',[0,hubY,hubZ],[ex,hubY+ey,hubZ],.08,1));
+ }
+ return {parts,entry:{x:0,z:bw*.45,width:.7}};
+};
+
+/** Undershot mill house with the wheel kept inside the plot on the +X bank
+ * (Roman/medieval mills). A dedicated family so the live watermill footprint
+ * is not forced through the larger review watermill kit. */
+const millHouse:Generator=(ctx,r)=>{
+ const parts:Part[]=[],{w,d}=ctx.footprint,L=w*range(r,.46,.56),D=d*range(r,.52,.64),h=range(r,1.7,2.2),cx=-w/2+L/2+.18;
+ parts.push(part('box','woodMid',[L,h,D],[cx,0,0],2));
+ parts.push(part('prism','thatch',[L+.25,L*.32,D+.2],[cx,h,0],2,[0,Math.PI/2,0]));
+ parts.push(part('box','woodDark',[.7,1.4,.12],[cx+L/2+.02,0,0],1)); // door wall
+ const wr=Math.min(h*.42,w/2-cx-L/2-.2,d/2-.25),wx=cx+L/2+wr*.55;
+ parts.push(part('cylinder','woodDark',[wr*2,.18,wr*2],[wx,wr+.08,0],2,[0,0,Math.PI/2],10));
+ for(const s of[-1,1] as const)parts.push(part('box','woodEdge',[.1,h*.75,.1],[wx-wr*.15,0,s*wr*.55],1));
+ return {parts,entry:{x:cx,z:D/2,width:.8}};
+};
+
+/** Short arcade bay (Roman/medieval aqueducts, e.g. Pont du Gard / Segovia):
+ * two piers, a channel bed, a water sheet and parapets. */
+const aqueduct:Generator=(ctx,r)=>{
+ const parts:Part[]=[],{w,d}=ctx.footprint,pierW=range(r,.55,.75),h=range(r,1.8,2.4),chan=range(r,.7,.95);
+ for(const s of[-1,1] as const)parts.push(part('box','stone',[pierW,h,Math.min(d*.55,1.1)],[s*(w/2-pierW/2-.15),0,0],2));
+ parts.push(part('box','stone',[w*.88,.28,chan+.2],[0,h,0],2));
+ parts.push(part('box','water',[w*.76,.08,chan],[0,h+.28,0],2));
+ for(const s of[-1,1] as const)parts.push(part('box','stoneDark',[w*.88,.22,.12],[0,h+.28,s*(chan/2+.1)],1));
+ return {parts,entry:{x:0,z:d/2,width:.8}};
+};
+
+/** A 4 m canal cut with a water sheet, stone kerbs and grassy banks, as in
+ * small irrigation and navigation cuts. */
+const canal:Generator=(ctx,r)=>{
+ const parts:Part[]=[],{w,d}=ctx.footprint,ww=Math.min(w*.55,range(r,1.4,1.9)),bank=range(r,.4,.6);
+ parts.push(part('box','water',[ww,.12,d*.9],[0,0,0],2));
+ for(const s of[-1,1] as const){
+  parts.push(part('box','stoneDark',[.22,.4,d*.9],[s*(ww/2+.11),0,0],1));
+  parts.push(part('prism','foliageDark',[bank,.35,d*.9],[s*(ww/2+.22+bank/2),0,0],1));
+ }
+ if(ctx.era>=2)for(const s of[-1,1] as const)parts.push(part('box','woodMid',[.08,.7,.08],[s*(ww/2+bank*.3),.4,d*.3],0));
+ return {parts};
+};
+
 export const EXTRA_FAMILIES:Record<ExtraFamilyId,Def>={
+
  fieldPlot:{reference:'Midland open-field ridge-and-furrow strips (Laxton) with headland, hurdle or clearance-stone edging, scarecrow and tool shed; irrigated plots in arid lands',generate:fieldPlot},
  pen:{reference:'Wattle-hurdle folds (Butser) and dry-stone sheepfolds: gate, lean-to shelter on the back wall, trough',generate:pen},
  pier:{reference:'Timber fishing jetty on pile bents (Baltic and North Sea harbours): deck on stringers, T-head, bollards, net-drying rack, shore hut',generate:pier},
@@ -348,5 +434,11 @@ export const EXTRA_FAMILIES:Record<ExtraFamilyId,Def>={
  stoneWall:{reference:'Coursed curtain walls (Roman and medieval town walls): batter, courses, coping, crenellation',generate:stoneWall},
  trench:{reference:'Field-fortification ditches with spoil banks, plank revetment and sharpened stakes',generate:trench},
  moat:{reference:'Stone-kerbed water-filled moats (Bodiam, moated manors) with grassed banks',generate:moat},
+ well:{reference:'Hand-dug village wellheads with a stone kerb, still water, windlass posts and a bucket (Near Eastern and European farm wells)',generate:well},
+ cistern:{reference:'Open stone catchment cisterns (Nabataean rock tanks, Mediterranean farm cisterns) with rim walls, water and cover beams',generate:cistern},
+ millHouse:{reference:'Undershot mill houses (Barbegal, Domesday-era mills) with the wheel on the stream side, kept inside the paid footprint',generate:millHouse},
+ windmill:{reference:'Post mills (medieval European windmills) with a trestle, buck, thatched cap and four cloth-backed sails',generate:windmill},
+ aqueduct:{reference:'A single arcade bay of a Roman or medieval aqueduct (Pont du Gard, Segovia) with piers, channel and parapets',generate:aqueduct},
+ canal:{reference:'A short irrigation or navigation canal cut with a water sheet, stone kerbs and grassy banks',generate:canal},
 };
 void maxStoreys;

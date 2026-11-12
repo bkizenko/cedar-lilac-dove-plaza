@@ -7,9 +7,11 @@ import {validatePolity} from './polityModel';
 import {validateRuler} from './rulerGenome';
 import {rollGreatPerson} from './greatPersons';
 import type {Tier} from './fame';
+import {familyFeatures} from './familyScale';
 
 export type SocietyRulers={civ:CivSeed;dynasty:Dynasty;ledger:Ledger;greatEmerged:number};
-export type RulersState={version:1;seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>};
+export type Ward={kind:'foster'|'hostage';person:string;from:string;to:string;since:number};
+export type RulersState={version:1;wards?:Ward[];claims?:import('./unrest').Claim[];seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>;ties?:Record<string,import('./ties').Ties>;climate?:number;climateT?:number};
 
 export function initRulers(gameSeed:number,ids:string[]):RulersState{
  const cast=generateCast(gameSeed,ids.length),societies:Record<string,SocietyRulers>={};
@@ -17,12 +19,13 @@ export function initRulers(gameSeed:number,ids:string[]):RulersState{
  return {version:1,seed:gameSeed,year:0,societies,notices:{}};
 }
 /** Advance one compressed year for every society. Pure: returns a new state. */
-export function stepRulersYear(s:RulersState,crisisOf:(id:string)=>number=()=>.3):RulersState{
+/** popOf: living people per society (default 120 = full dynasty mechanics, so tests/headless runs keep prior behaviour). */
+export function stepRulersYear(s:RulersState,crisisOf:(id:string)=>number=()=>.3,popOf:(id:string)=>number=()=>120):RulersState{
  const year=s.year+1,societies:Record<string,SocietyRulers>={};
  for(const [id,sr] of Object.entries(s.societies)){
-  const p=sr.civ.polity,before=sr.dynasty.generation;
-  let dyn=stepYear(sr.dynasty,s.seed,p.tier,p.succession,year),great=sr.greatEmerged;
-  if(dyn.generation>before){
+  const p=sr.civ.polity,before=sr.dynasty.generation,ff=familyFeatures(p.tier,popOf(id));
+  let dyn=stepYear(sr.dynasty,s.seed,ff.heirs?p.tier:'band',p.succession,year),great=sr.greatEmerged;
+  if(dyn.generation>before&&ff.greatPersons){
    const g=rollGreatPerson(s.seed+year,dyn.generation,crisisOf(id),sr.civ.ecology.surplus,p.institutionalization);
    if(g){great++;const cur=dyn.people[dyn.rulerId];if(cur)dyn={...dyn,people:{...dyn.people,[cur.id]:{...cur,ruler:{...g.ruler,id:cur.id},name:g.ruler.name}}};}
   }
@@ -38,6 +41,8 @@ export function validRulersState(x:unknown):x is RulersState{
   if(validatePolity(sr.civ.polity).length||validateRuler(sr.civ.ruler).length||validateLedger(sr.ledger).length)return false;
   if(validateDynasty(sr.dynasty).length&&sr.dynasty.people[sr.dynasty.rulerId]?.alive)return false;
  }
+ if(s.claims!==undefined&&(!Array.isArray(s.claims)||s.claims.some(c=>!c||typeof c.holder!=='string'||typeof c.target!=='string'||!Number.isFinite(c.strength)||!Number.isFinite(c.expiresTick))))return false;
+ if(s.wards!==undefined&&(!Array.isArray(s.wards)||s.wards.some(w=>!w||(w.kind!=='foster'&&w.kind!=='hostage')||typeof w.person!=='string'||typeof w.from!=='string'||typeof w.to!=='string'||!Number.isFinite(w.since))))return false;
  return true;
 }
 /** Old saves: absent field => feature off, nothing breaks. */

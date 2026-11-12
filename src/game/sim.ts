@@ -1,3 +1,4 @@
+import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
@@ -119,7 +120,8 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
-import {flowPath} from "./flowFields";
+import {flowPath,setFlowFieldsEnabled} from "./flowFields";
+import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
@@ -395,10 +397,11 @@ export class Game {
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
     this.state.autoWorkEnabled=worldgenVersion>=CAMP_RULES.unbuiltGeneration?false:true;
-    if(this.world.options)this.state.worldOptions=this.world.options;
+    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:1}; // new games carry the rulers lane
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
+    setFlowFieldsEnabled(this,true); // new games only; decodeGame turns this off so old saves keep historic A*
     this.state.trees = this.world.trees.map((t) => ({
       ...t,
       maxAmt: t.maxAmt || t.amount,
@@ -695,10 +698,28 @@ export class Game {
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 
+  /** Relocate the unbuilt camp to the best nearby scenic town-hall site (GW-15). */
+  applyScenicHallSuggestion(){
+    if((this.state.worldgenVersion??1)<CAMP_RULES.unbuiltGeneration)return null;
+    if(this.state.buildings.some(b=>b.team===0&&b.type==='townhall'&&b.hp>0))return null;
+    const report=scenicStartReport(this);if(!report?.bestNearby)return report??null;
+    const p=report.bestNearby;
+    this.state.campSites=[{team:0,x:p.x,z:p.z}];
+    for(const u of this.state.units){
+      if(u.team!==0||u.hp<=0)continue;
+      u.order='move';u.tx=p.x+(Math.random()-.5)*6;u.tz=p.z+(Math.random()-.5)*6;
+    }
+    return report;
+  }
+
   enterIsland() {
     this.awaitingStart = false;
     this.state.paused = false;
     this.state.founding = false;
+    // Player starts only: node:test and testMode leave the generated camp in place
+    // (units and cache stay together). enterAsBand still applies the scenic pick.
+    const underTest=this.testMode||(typeof process!=='undefined'&&!!process.env?.NODE_TEST_CONTEXT);
+    if(!underTest)this.applyScenicHallSuggestion();
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.2);
   }
 
@@ -710,6 +731,7 @@ export class Game {
     this.state.walkDirty = true;
     this.state.founding = true;
     this.state.placing = "townhall";
+    const scenic=this.applyScenicHallSuggestion();
     const home = this.campOf(0);
     for (const u of this.state.units) {
       if (u.team !== 0 || u.hp <= 0) continue;
@@ -717,7 +739,7 @@ export class Game {
       u.tx = home.x + (Math.random() - 0.5) * 6;
       u.tz = home.z + (Math.random() - 0.5) * 6;
     }
-    this.banner("The band is still walking. Plant the hall on berries or timber.", 5);
+    this.banner(scenic?.bestNearby?"The band is walking toward a fine view. Plant the hall on open ground nearby.":"The band is still walking. Plant the hall on berries or timber.", 5);
   }
 
   nearClump(x: number, z: number) {
@@ -2383,7 +2405,16 @@ export class Game {
     if (!hall0) return;
     for (const tr of this.state.tribes) {
       if (tr.id === 0 || tr.id === 3 || !tr.alive) continue;
-      if(!geographicInfluenceReady(this,0)||!geographicInfluenceReady(this,tr.id))continue;
+      if(!geographicInfluenceReady(this,0)||!geographicInfluenceReady(this,tr.id)){
+        // Fields still computing must not invent overlap anger. Natural cooling
+        // continues only when the tribe has no witnessed claim; a known old claim
+        // remains a grievance until an observer revises it.
+        const known=this.state.observedClaims?.some(m=>m.observer===tr.id&&m.active);
+        if(!known){
+          tr.tension=Math.max(0,Math.min(1,tr.tension+difficultyGrievance(this,grievanceChange(dt,tr.aggro,tr.expand,tr.trust||0,0,0))));
+        }
+        continue;
+      }
       if (!tr.hostile && (tr.peaceTerm==='puppet' || (tr.recoveryUntil||0)>this.state.time)) continue;
       const hall = this.state.buildings.find(
         (b) => b.team === tr.id && b.type === "townhall" && b.hp > 0,
@@ -5382,7 +5413,7 @@ export class Game {
       cap - pop < 3 &&
       reserve > 450 &&
       tr.wood >= 36 &&
-      Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
+      Math.random() < tr.expand * expansionDrive(this,team) * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
     ) {
       const homeType=preferredRivalHome(this,team);
       const spot = this.findOpenSpot(hall.x, hall.z, homeType, team);
@@ -5726,6 +5757,7 @@ export class Game {
       this.navBudget = 4;
       try {
         this.state.time += sdt;
+        advanceRulers(this); // Claude rulers lane: no-op unless worldOptions.rulersVersion===1
         reconcileSiegeRams(this);
         updateSeasonReports(this);
         phases?.mark('production');
@@ -5824,7 +5856,7 @@ export class Game {
         phases?.mark('combat');
         tickRivalActivity(this);
         tickOccupation(this,sdt);
-        syncRiverboats(this);
+        syncRiverboats(this,sdt);
         this.separate(sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);

@@ -73,7 +73,7 @@ export function impostorGeometry():THREE.BufferGeometry{
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));return g;
 }
 
-type Bucket={mesh:THREE.InstancedMesh;count:number;owners:CarvedInstance[]};
+type Bucket={mesh:THREE.InstancedMesh;count:number;owners:CarvedInstance[];used:number};
 export class CarvedBuildingLayer{
  private scene:THREE.Scene;
  private material=createCarvedMaterial();
@@ -81,6 +81,7 @@ export class CarvedBuildingLayer{
  private specs=new Map<string,BuildingSpec>();
  private buckets=new Map<string,Bucket>();
  private keys=new Map<string,string|null>();
+ private frame=0;
  private card:{mesh:THREE.InstancedMesh;count:number;owners:CarvedInstance[]};
  private m=new THREE.Matrix4();private q=new THREE.Quaternion();private p=new THREE.Vector3();private s=new THREE.Vector3();private up=new THREE.Vector3(0,1,0);private c=new THREE.Color();
  constructor(scene:THREE.Scene){
@@ -97,17 +98,21 @@ export class CarvedBuildingLayer{
   return this.keys.get(k)??null;
  }
  private bucket(variantKey:string,tier:LodTier){
-  const key=variantKey+'#'+tier,old=this.buckets.get(key);if(old)return old;
-  if(this.buckets.size>=CARVED_LAYER_RULES.maximumBuckets)return null;
+  const key=variantKey+'#'+tier,old=this.buckets.get(key);if(old){old.used=this.frame;return old;}
+  if(this.buckets.size>=CARVED_LAYER_RULES.maximumBuckets&&!this.evictOne())return null;
   const spec=this.specs.get(variantKey);if(!spec)return null;
   const mesh=new THREE.InstancedMesh(carvedGeometry(buildCarvedMesh(spec,tier)),this.material,CARVED_LAYER_RULES.initialInstances);
   mesh.name=`carved-h-${key}`;mesh.count=0;mesh.castShadow=tier<2;mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  this.scene.add(mesh);const b={mesh,count:0,owners:[]};this.buckets.set(key,b);return b;
+  this.scene.add(mesh);const b:Bucket={mesh,count:0,owners:[],used:this.frame};this.buckets.set(key,b);return b;
  }
+ /** C13/WQ-12: free the least-recently-used bucket that this sync has not touched, so near buildings
+  * are not stuck as impostors once a long session has visited many variants. */
+ private evictOne(){let k:string|null=null,age=Infinity;for(const [key,b] of this.buckets)if(b.used<this.frame&&b.used<age){age=b.used;k=key;}
+  if(k===null)return false;const b=this.buckets.get(k)!;b.mesh.parent?.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.dispose();this.buckets.delete(k);return true;}
  /** Rebuild instance lists. Codex's culling hook should pre-filter
   * `instances` to the camera frustum; this layer only picks LOD by distance. */
  sync(instances:readonly CarvedInstance[],camera:THREE.Vector3,tierFor:(m:number)=>RenderTier=renderTierForDistance){
-  for(const b of this.buckets.values()){b.count=0;b.owners.length=0;}this.card.count=0;this.card.owners.length=0;
+  this.frame++;for(const b of this.buckets.values()){b.count=0;b.owners.length=0;}this.card.count=0;this.card.owners.length=0;
   for(const inst of instances){
    const key=this.keyFor(inst);if(!key)continue;
    const tier=tierFor(Math.hypot(inst.x-camera.x,inst.z-camera.z));

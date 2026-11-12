@@ -3,6 +3,7 @@ import type { Game } from "./sim";
 import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
 import { soilQuality } from "./ecology";
+import { expansionParty } from './rulersRuntime';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
   const history = (g.state.lifeHistory ??= []);
   history.push({ team, text, time: g.state.time });
@@ -122,13 +123,15 @@ export function tickCommunities(g: Game, dt: number) {
     if (!survivors.length || g.state.units.some((u) => u.team === t.id && u.foundingJourney))
       continue;
     const expansion = halls.length > 0;
+    const plan = expansion ? expansionParty(g, t.id) : null; // null (old behaviour) unless worldOptions.rulersVersion===1
     if (
       expansion &&
       (halls.length >= 5 ||
         g.popNow(t.id) < 12 ||
-        reserveSeconds(g, t.id) < 600 ||
+        reserveSeconds(g, t.id) < (plan?.minReserve ?? 600) ||
         t.wood < 100 ||
-        g.state.time - (t.lastSettlement || 0) < 1800)
+        g.state.time - (t.lastSettlement || 0) < (plan?.cooldown ?? 1800) ||
+        (plan && !plan.allow))
     )
       continue;
     const timber=buildingCost("townhall",g,t.id).wood||20;
@@ -144,7 +147,7 @@ export function tickCommunities(g: Game, dt: number) {
           !u.recalled && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.studyCrop &&
           !u.emergency,
       )
-      .slice(0, 3);
+      .slice(0, plan?.crew ?? 3);
     if (!crew.length) continue;
     const site = settlementSite(g, crew[0], expansion);
     if (!site) continue;
@@ -168,7 +171,7 @@ export function tickCommunities(g: Game, dt: number) {
       g,
       t.id,
       expansion
-        ? t.name + " sends families to a new hearth"
+        ? t.name + " sends families to a new hearth" + (plan?.why.length ? " (" + plan.why.slice(0, 2).join("; ") + ")" : "")
         : t.name + " survivors set out to rebuild",
       crew[0].x,
       crew[0].z,

@@ -1,3 +1,4 @@
+import {journeyPermit} from './rulersRuntime';
 import {knownSettlementSite,localSettlementHall,beginSettlementJourney} from './barter';
 import{observePartnerTrade,tradeIntelAdvice}from'./tradeIntel';
 import{hasTaskCommitment}from'./workCommitments';
@@ -35,8 +36,9 @@ const reviews=new WeakMap<Game,Map<number,number>>();
 export function dispatchRivalBarter(g:Game,team:number){
   if(!isRivalTeam(team)||!g.tribe(team).alive||g.popNow(team)<6||reserveSeconds(g,team)<600)return false;
   let clock=reviews.get(g);if(!clock){clock=new Map();reviews.set(g,clock);}
-  const due=clock.get(team)||0;if(due>g.state.time&&due<=g.state.time+120)return false;
-  clock.set(team,g.state.time+120);
+  const due=clock.get(team)||0;const cadence=journeyPermit(g,team,'trade')?.cadence??120;
+  if(due>g.state.time&&due<=g.state.time+cadence)return false;
+  clock.set(team,g.state.time+cadence);
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.visit))return false;
   const t=g.tribe(team);
   const wants=goods.filter(k=>usable(g,team,k)&&t[k]<rivalTradeReserve(g,team,k))
