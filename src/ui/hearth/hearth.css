@@ -154,7 +154,7 @@
 .hw-note-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .hw-note .hw-chip{background:rgba(43,32,22,.08);border-color:rgba(43,32,22,.25);color:var(--hw-ink)}
 .hw-note .hw-chip.t-bad,.hw-note .t-bad{color:#a23a20}
-.hw-note-act{min-height:var(--hw-hit);padding:0 var(--hw-s4);border-radius:var(--hw-r-s);background:var(--hw-wood-800);color:var(--hw-text);font-weight:750;border:0;cursor:pointer}
+.hw .hw-note-act{min-height:var(--hw-hit);padding:0 var(--hw-s4);border-radius:var(--hw-r-s);background:var(--hw-wood-800);color:var(--hw-text);font-weight:750;border:0;cursor:pointer}
 .hw-note-x{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--hw-r-s);background:transparent;border:0;color:var(--hw-ink);cursor:pointer}
 .hw-note-x:hover{background:rgba(43,32,22,.1)}
 .hw-legacy-note{display:grid;gap:var(--hw-s2)}
