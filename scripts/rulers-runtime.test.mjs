@@ -281,3 +281,18 @@ test('casus belli is visible in the council neighbour view, both directions, and
  assert.ok(l.find(x=>!x.byUs&&x.kind==='tribute'&&x.endsIn===2&&/They hold/.test(x.reason)));
  assert.equal(casusLines({year:10},0,1).length,0);
 });
+
+test('neighbourNews: real agreements only, player-known, newest first, old saves empty',async()=>{
+ const {neighbourNews,marryHouses}=await import('../src/game/rulersRuntime.ts');
+ const {recordAgreement}=await import('../src/game/societyRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2;advanceRulers(g);
+ assert.deepEqual(neighbourNews(g),[],'nothing agreed, nothing reported');
+ g.state.time=100;recordAgreement(g,0,1,'pact','Hearth and Rivals swore a pact');
+ g.state.time=200;const ag=recordAgreement(g,1,2,'marriage','Rivals and Others wed their houses');
+ const news=neighbourNews(g);assert.ok(news.length>=1&&news[0].time>=news[news.length-1].time);
+ assert.ok(news.some(n=>n.a===0||n.b===0),'player is party to the pact');
+ assert.equal(neighbourNews(g,150).every(n=>n.time>=150),true);
+ const unseen=news.some(n=>n.a===1&&n.b===2);
+ assert.equal(unseen,ag?neighbourNews(g).some(n=>n.a===1&&n.b===2):false);
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
+});

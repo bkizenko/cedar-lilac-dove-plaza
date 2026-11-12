@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {Crown,Skull,Users,Swords,TriangleAlert,Scroll,Hourglass} from 'lucide-react';
+import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass} from 'lucide-react';
 import type {Engine} from '../../game/engine';
 import type {CouncilModel} from '../../game/rulersView';
 import {societyIdentity} from '../../game/societyIdentity';
@@ -101,4 +101,27 @@ export function TermsOffers({offers,send,feedback}:{offers:Offer[];send:(c:{kind
     <ul>{t.ids.map(id=>{const term=TERMS.find(x=>x.id===id)!;return <li key={id}><button type="button" className="hw-term" onClick={()=>send({kind:'accept-capitulation',frontId:o.id,outcome:id})}><b>{term.label}</b><span>{term.note}</span></button></li>;})}</ul></div>)}
    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'refuse-capitulation',frontId:o.id})}><Swords size={18}/>Refuse and press the attack</button>
   </article>;})}<FeedbackList items={feedback}/></section>;
+}
+
+type Captive={id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean};
+/** People held from a conquered society. Resistance rises with hunger and forced work; a guard watches up to three. Every action is a typed
+ * owner command, so the card works with and without the Worker. Absent when nobody is held. */
+export function HearthCaptiveCard({engine}:{engine:Engine}){
+ const Q={kind:'captives'} as const,read=useOwnerReadModels(engine,[Q]),list=read(Q).model?.captives??[],fb=useActionFeedback(engine);
+ return <CaptiveList captives={list} send={c=>void fb.send(c)} feedback={fb.items}/>;
+}
+export function CaptiveList({captives,send,feedback}:{captives:Captive[];send:(c:{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number})=>void;feedback:Parameters<typeof FeedbackList>[0]['items']}){
+ if(!captives.length)return null;
+ const teams=[...new Map(captives.map(c=>[c.fromTeam,c.fromName])).entries()];
+ return <section className="hw-card hw-captives" aria-label="Captives">
+  <div className="hw-card-head"><h3>Held captive</h3><span className="hw-chip hw-chip-soft"><Users size={16}/>{captives.length}</span></div>
+  <p className="hw-sub">Hunger and forced work build resistance; at 100% a captive may escape with carried goods. One idle guard watches three.</p>
+  <ul className="hw-captive-list">{captives.map(c=>{const tone=c.resistance>=70?'bad':c.resistance>=40?'mid':'good';return <li key={c.id}>
+   <div className="hw-captive-name"><b>{c.name}</b><span className="hw-sub">from {c.fromName}</span></div>
+   <span className={cx('hw-meter',tone)} role="img" aria-label={`Resistance ${c.resistance} percent`}><i style={{width:Math.min(100,c.resistance)+'%'}}/></span>
+   <span className={cx('hw-chip',c.guarded?'t-good':'t-warn')}><Shield size={16}/>{c.guarded?'Guarded':'Unguarded'}</span>
+   <span className="hw-captive-acts">{c.canEscort&&<button type="button" className="hw-btn-wide" onClick={()=>send({kind:'escort-captive',unitId:c.id})}><Shield size={18}/>Escort</button>}
+    <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'repatriate-captive',unitId:c.id})}><Home size={18}/>Send home</button></span></li>;})}</ul>
+  {teams.map(([t,n])=><button key={t} type="button" className="hw-btn-wide" onClick={()=>send({kind:'free-captives',team:t})}><Unlock size={18}/>Free everyone from {n}</button>)}
+  <FeedbackList items={feedback}/></section>;
 }
