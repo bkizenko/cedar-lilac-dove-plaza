@@ -35,7 +35,7 @@ export function methodRecordWorkIssue(g:Game,recipe:string,u:Unit|undefined,w:Me
 export function startMethodRecordWork(g:Game,p:ProductionProject,u:Unit,w:MethodRecordWork){root(g);p.methodRecordWork=structuredClone(w);if(w.kind==='study'){const r=record(g,w.recordId)!;take(r,u);p.methodRecordAssetId=r.id;}}
 /** A fired record becomes an actual asset only after all paid hands-on work. */
 export function materializeMethodRecord(g:Game,p:ProductionProject,u:Unit){if(p.methodRecordWork?.kind!=='author'||p.methodRecordAssetId!==undefined)return;const r:MethodRecord={id:g.id(),source:structuredClone(p.methodRecordWork.source),authoredAt:g.state.time,authorProjectId:p.id,team:p.team,holder:{kind:'carrier',unitId:u.id,x:u.x,z:u.z},studies:[]};root(g).records.push(r);take(r,u);p.methodRecordAssetId=r.id;}
-export function methodRecordDeliveryIssue(g:Game,p:ProductionProject,u:Unit){if(p.methodRecordWork?.kind==='replicate'||!p.methodRecordWork)return null;const r=p.methodRecordAssetId===undefined?undefined:record(g,p.methodRecordAssetId);return !r||r.holder.kind!=='carrier'||r.holder.unitId!==u.id||u.methodRecordCargoId!==r.id?'Recover the same physical method record before completing this paid return':null;}
+export function methodRecordDeliveryIssue(g:Game,p:ProductionProject,u:Unit){if(p.methodRecordWork&&p.methodRecordWork.kind!=='author'&&p.methodRecordWork.learnerId!==u.id)return 'The original reader must perform and return this paid study or replication';if(p.methodRecordWork?.kind==='replicate'||!p.methodRecordWork)return null;const r=p.methodRecordAssetId===undefined?undefined:record(g,p.methodRecordAssetId);return !r||r.holder.kind!=='carrier'||r.holder.unitId!==u.id||u.methodRecordCargoId!==r.id?'Recover the same physical method record before completing this paid return':null;}
 export function finishMethodRecordWork(g:Game,p:ProductionProject,u:Unit){const w=p.methodRecordWork;if(!w)return;const r=w.kind==='author'?record(g,p.methodRecordAssetId!):record(g,w.recordId);if(!r)return;
  if(w.kind!=='replicate'){const drop=reachedCargoCache(g,u,p.team);if(!drop)throw Error('Method record delivery must reach an actual cache');r.team=p.team;r.holder=cargoCacheHolder(drop,p.team);r.deliveredAt??=g.state.time;delete u.methodRecordCargoId;}
  if(w.kind==='study'&&!r.studies.some(s=>s.personId===w.learnerId))r.studies.push({personId:w.learnerId,studiedAt:g.state.time,studyProjectId:p.id});
@@ -65,3 +65,12 @@ export function settleMethodRecordHandover(s:GameState,handover:CommunityHandove
 
 /** An unpaid walking claim remains with its current actor/owner until canceled or picked up. */
 export function methodRecordPickupHandoverIssue(s:GameState,personIds:Set<number>){return s.units.some(u=>personIds.has(u.id)&&(u as Unit&{methodRecordPickupId?:number}).methodRecordPickupId!==undefined)?'Finish or cancel the physical method-record pickup before transferring its carrier':null;}
+
+/** Pure exact-actor admission for retained personal learning, never a generic replacement. */
+export function methodRecordResumeActor(g:Game,p:ProductionProject,requested?:number){
+ const w=p.methodRecordWork;if(!w)return{unitId:requested,issue:null};
+ let unitId:number|undefined;if(w.kind!=='author')unitId=w.learnerId;else if(p.methodRecordAssetId===undefined)unitId=w.source.makerId;else{const r=methodRecords(g).find(r=>r.id===p.methodRecordAssetId);if(r?.holder.kind==='carrier')unitId=r.holder.unitId;}
+ if(unitId===undefined||requested!==undefined&&requested!==unitId)return{unitId,issue:'Resume with the actual retained reader, maker or physical record carrier'};
+ if(w.kind==='study'){const r=methodRecords(g).find(r=>r.id===w.recordId);if(!r||r.holder.kind!=='carrier'||r.holder.unitId!==unitId||g.state.units.find(u=>u.id===unitId)?.methodRecordCargoId!==r.id)return{unitId,issue:'Recover the same physical study record with its original reader first'};}
+ return{unitId,issue:null};
+}

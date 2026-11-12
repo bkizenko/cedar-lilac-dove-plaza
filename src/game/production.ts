@@ -1,5 +1,5 @@
 import {METHOD_RECORD_RULES} from './methodRecordRules';
-import {methodRecordWorkIssue,startMethodRecordWork,materializeMethodRecord,methodRecordDeliveryIssue,finishMethodRecordWork,type MethodRecordWork} from './methodRecords';
+import {methodRecordResumeActor,methodRecordWorkIssue,startMethodRecordWork,materializeMethodRecord,methodRecordDeliveryIssue,finishMethodRecordWork,type MethodRecordWork} from './methodRecords';
 import {IRON_METALLURGY_RULES as IRON} from './ironMetallurgyRules';
 import {ironOreEnabled} from './ironMetallurgy';
 import {COPPER_METALLURGY_RULES,copperOreEnabled} from './copperMetallurgy';
@@ -268,6 +268,7 @@ export function pauseProduction(g:Game,u:Unit,cause:ProductionProject['pauseCaus
 }
 export function pauseProductionProject(g:Game,id:number){const p=g.state.production?.projects.find(p=>p.id===id&&live(p));if(!p)return false;p.pauseCause='manual';if(p.phase==='paused'||p.phase==='stored')return true;if(p.actorId===null&&['curing','ready'].includes(p.phase)){p.resumePhase=p.phase as ProductionProject['resumePhase'];p.phase='paused';p.blockedReason=p.charcoal?'Pickup paused; the covered clamp keeps carbonising and cooling':p.dairy?'Pickup paused; fermentation and milk aging continue':'Pickup paused; weather and food aging continue';state(g).metrics.interrupted++;claimProductionOwnership(g,p);return true;}const u=g.state.units.find(u=>u.id===p.actorId);return !!u&&pauseProduction(g,u,'manual');}
 export function resumeProduction(g:Game,id:number,unitId?:number):boolean{const p=g.state.production?.projects.find(p=>p.id===id&&(p.phase==='paused'||p.phase==='stored'));if(!p)return false;
+ const methodActor=methodRecordResumeActor(g,p,unitId);if(methodActor.issue)return false;unitId=methodActor.unitId;
  const b=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===p.team);if(!b&&!['returning','unloading'].includes(p.resumePhase)){p.blockedReason='The original workplace was destroyed or changed ownership';return false;}
  if(productionRecovery(p)&&!productionRecovery(p)!.waterPaid)return queueDairyVesselCleaning(g,id,unitId);
  if(p.resumePhase==='curing'){const next={...p,phase:'curing' as const};if(!claimProductionOwnership(g,next)){p.blockedReason=productionOwnershipReason(g,p);return false;}p.phase='curing';delete p.pauseCause;p.blockedReason='';return true;}
