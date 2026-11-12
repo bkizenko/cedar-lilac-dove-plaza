@@ -18,7 +18,7 @@ export const workshop:Generator=(ctx,r)=>{
   const W=w*range(r,.8,.9),D=d*range(r,.56,.66),h=range(r,2.05,2.4)*Math.min(1.2,k+.15),z0=-d/2+.18+D/2;
   const wall:M=stoneShed?'stone':'woodMid',rm=trade==='forge'||trade==='oven'?(ctx.era>=2?'shingle':'thatch'):roofFor(ctx),zb=z0-D/2,zf=z0+D/2;
   // footing, back wall, side walls (full for smokehouse, half-open elsewhere)
-  box(parts,'stoneDark',[W+.14,.22,D+.14],[0,0,z0],1);
+  box(parts,'stone',[W+.14,.22,D+.14],[0,0,z0],1);box(parts,'woodLight',[W-.1,.04,D-.1],[0,.22,z0],0);
   if(stoneShed)stoneWall(parts,{x:0,z:zb+.12,w:W,d:.24,h:h,y0:.1,faces:['+z'],course:.4});else{box(parts,wall,[W,h,.22],[0,.1,zb+.11],2);for(let i=0;i<8;i++)box(parts,'woodDark',[.04,h,.03],[-W/2+.3+i*(W-.6)/7,.1,zb+.24],0);}
   for(const s of[-1,1]){
     const sd=closed?D:D*.62;
@@ -96,6 +96,16 @@ export const workshop:Generator=(ctx,r)=>{
       sack(parts,W*.34,0,zf-.4,1,.2);sack(parts,W*.36,.34,zf-.4,1,.5);crate(parts,W*.18,0,zf-.4,1);
       woodpile(parts,-W/2+.65,zf-.2,.8,3,.45);
       box(parts,'woodMid',[1.0,.88,.4],[W*.3,0,zf-.25],1);for(let i=0;i<3;i++)cyl(parts,'tile',.3,.14,[W*.3-.3+i*.3,.88,zf-.25],0,8,undefined,.26);
+      break;}
+    case 'saw':{
+      // saw trestles with a log on them and a pit saw, plank stacks, a log pile and a chopping block
+      for(const x of[-W*.3,W*.02])for(const sz of[-1,1]){parts.push(beam('woodDark',[x+sz*.34,0,fz-.3],[x,.95,fz-.1],.12,1),beam('woodDark',[x+sz*.34,0,fz+.3],[x,.95,fz+.1],.12,1));}
+      parts.push(part('cylinder','woodLight',[.55,W*.55,.55],[W*.12,1.0,fz+.0],1,[0,0,Math.PI/2],8));
+      parts.push(beam('iron',[-W*.2,1.55,fz-.28],[-W*.2,.55,fz-.28],.05,0),part('box','woodDark',[.06,.8,.06],[-W*.2+.4,.5,fz-.28],0));
+      for(let i=0;i<5;i++)box(parts,'woodLight',[1.3*k,.07,.3],[W*.3,.08+i*.1,zb+.55],0);
+      for(let i=0;i<4;i++)box(parts,'woodMid',[1.3*k,.07,.3],[W*.3,.08+i*.1,zb+.95],0);
+      for(let r2=0;r2<3;r2++)for(let i=0;i<3-r2;i++)parts.push(part('cylinder',(i+r2)%2?'woodMid':'woodLight',[.34,1.5*k,.34],[-W*.36+i*.36+r2*.18,.17+r2*.3,zf-.4-1.5*k],0,[Math.PI/2,0,0],6));
+      cyl(parts,'woodMid',.5,.4,[W*.4,0,zf-.3],0,6);box(parts,'iron',[.1,.5,.06],[W*.4,.4,zf-.3],0,[0,0,.5]);
       break;}
     default:{ // bench: carpenter/tailor/general workshop
       box(parts,'woodMid',[1.8*k,.1,.65*k],[-W*.18,.82,fz],1);for(const x of[-W*.18-.8*k,-W*.18+.8*k])for(const z of[fz-.22,fz+.22])post(parts,'woodDark',x,z,.82,.08,0);

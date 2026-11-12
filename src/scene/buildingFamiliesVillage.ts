@@ -8,6 +8,8 @@ import {barrel,box,bucket,chimney,crate,cyl,doorway,millstoneUpright,post,radial
 
 import {cottage,longhouse,quernShelter,roofFor,roundhouse} from './villageHomes';
 import {cistern,hearth,threshing,well,workshop} from './villageWorks';
+import {church,college,keep,tower} from './villageCivic';
+import {granary,marketStalls,stables} from './villageTrade';
 export type VillageDef={reference:string;generate:Generator};
 const TAU=Math.PI*2;
 
@@ -162,6 +164,14 @@ export const VILLAGE_FAMILIES:Partial<Record<FamilyId,VillageDef>>={
   threshing:{reference:'Mediterranean threshing floor (aloni): paved circle with kerb, centre post, sledge, straw heaps, baskets',generate:threshing},
   well:{reference:'Farm well: stone kerb, A-frame windlass with rope and bucket, gabled hood, trough',generate:well},
   cistern:{reference:'Open stone cistern: dressed rim, step stair, plank cover over half, bucket windlass',generate:cistern},
+  tower:{reference:'Stone and timber watchtowers (Hadrian Wall milecastle towers, Norman peel towers, Iron Age stilt lookouts): battered ashlar shaft with hoarding gallery, merlons and slate cap; or splayed log legs, braced platform with railing and a signal fire basket',generate:tower},
+  church:{reference:'Parish churches and shrines (Romanesque nave-and-tower churches, Norse stave churches, Near Eastern domed shrines): buttressed nave, west tower with spire, apse and cross; stepped timber roofs with dragon finials; or a whitewashed dome on a square drum',generate:church},
+  keep:{reference:'Norman tower keeps (Rochester, Hedingham) and motte-and-bailey timber towers: battered plinth, quoined ashlar with string courses, corbelled crown, corner turrets and an external stair; or a stockaded motte with a hoarded log tower',generate:keep},
+  college:{reference:'Classical lecture halls and medieval colleges (Roman schola, Oxford quadrangle halls): pedimented hall behind a columned stylobate arcade, lantern cupola with bell, courtyard well and benches',generate:college},
+  marketStalls:{reference:'Medieval market squares and agora stalls: stepped market cross or well, four striped-awning stalls with counters, hanging goods and crates, a hand cart',generate:marketStalls},
+  stables:{reference:'Manor stables and horse barns: stone or framed range with half doors and horse heads, hayloft hoist, trough, hitching rail, haystack and paddock fence',generate:stables},
+  granary:{reference:'Raised plank granaries on staddle stones with mouse caps (English and Nordic); later stone-floored storehouses with timber lofts and hoist beams',generate:granary},
+  storehouse:{reference:'Stone-floored storehouses with timber lofts, wide loading doors and hoist beams (Hanseatic and Roman horrea)',generate:granary},
   millHouse:{reference:'Overshot timber-and-stone water mills (Barbegal, English Domesday and Cotswold mills): stone mill floor, timber grain loft with sack hoist, spoked bucket wheel in a stone wheel pit, trestle launder and sluice',generate:millHouse},
   windmill:{reference:'Stone tower windmills (Dutch polder and Norfolk tower mills): tapered tower with coursing, gallery stage, rotating cap with tail pole, four latticed sails on a windshaft',generate:windmill},
 };

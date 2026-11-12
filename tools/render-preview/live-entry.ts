@@ -4,7 +4,7 @@ import {WorldView} from '@/scene/world';
 import {BUILDINGS} from '@/game/constants';
 import {watermillSite,windmillSite} from '@/game/waterWorks';
 const w=window as any;
-type Opts={shot:string;style:'current'|'optionH';seed:number;age:number;dist:number|null;yaw:number|null;pitch:number|null;frames:number;time:number|null;x:number|null;z:number|null};
+type Opts={shot:string;style:'village'|'current'|'optionH';seed:number;age:number;dist:number|null;yaw:number|null;pitch:number|null;frames:number;time:number|null;x:number|null;z:number|null};
 const dry=(g:Game,x:number,z:number)=>g.height(x,z)>g.waterAt(x,z)+.02;
 function findSite(g:Game,type:'watermill'|'windmill',step:number){
   for(let z=-460;z<=460;z+=step)for(let x=-460;x<=460;x+=step){if(!dry(g,x,z))continue;if(g.placementIssue(type,x,z,0))continue;return{x,z};}
@@ -31,7 +31,7 @@ w.hwShot=async(o:Opts)=>{
   if(o.x!=null&&o.z!=null)focus={x:o.x,z:o.z};
   if(focus)for(const tr of g.state.trees){if(Math.hypot(tr.x-focus.x,tr.z-focus.z)<(o.shot==='village'?9:22))tr.amount=0;}
   const view=new WorldView(canvas);
-  view.setRenderStyle(o.style==='optionH'?'carved':'current');
+  view.setStyle(o.style);
   view.applyQuality('low');
   view.resize();
   view.rebuild(g);
@@ -39,8 +39,10 @@ w.hwShot=async(o:Opts)=>{
   if(focus)view.look.set(focus.x,g.height(focus.x,focus.z)+1,focus.z);
   view.dist=o.dist??34;view.yaw=o.yaw??.9;view.pitch=o.pitch??.5;
   view.updateCamera(0);
+  g.state.paused=false;
   for(let i=0;i<o.frames;i++){if(o.time!=null)g.state.time=o.time+i*.05;view.sync(g,.05);view.render();await new Promise(r=>setTimeout(r,16));}
-  info.style=view.getRenderStyle();info.cam=[view.camera.position.x,view.camera.position.y,view.camera.position.z].map(v=>+v.toFixed(1));info.look=[view.look.x,view.look.y,view.look.z].map(v=>+v.toFixed(1));info.dist=view.dist;info.tris=view.renderer.info.render.triangles;info.calls=view.renderer.info.render.calls;
+  {const L=(view as any).carvedLayer,rs=L?[...L.pickSources().keys()].filter((m:any)=>m.name.includes('~')):[];const mm=rs[0]?new (rs[0].matrix.constructor)():null;if(mm)rs[0].getMatrixAt(0,mm);info.rotors=rs.length;info.rotorM=mm?Array.from(mm.elements as number[]).slice(0,3).map(v=>+v.toFixed(3)):null;info.paused=g.state.paused;}
+  info.style=view.getStyle();info.cam=[view.camera.position.x,view.camera.position.y,view.camera.position.z].map(v=>+v.toFixed(1));info.look=[view.look.x,view.look.y,view.look.z].map(v=>+v.toFixed(1));info.dist=view.dist;info.tris=view.renderer.info.render.triangles;info.calls=view.renderer.info.render.calls;
   void BUILDINGS;
   return info;
 };

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // REAL in-game renderer shots: bundles the actual WorldView + Game (esbuild, no Vite) and renders them in headless
 // Chromium (SwiftShader). Unlike the generator-only sheets this shows terrain, water, lighting and the live render path.
-//   node tools/render-preview/live-shot.mjs <shot> <out.png> [--style=current|optionH] [--seed=4] [--age=3] [--dist=34] [--yaw=.9] [--pitch=.5]
+//   node tools/render-preview/live-shot.mjs <shot> <out.png> [--style=village|optionH|current] [--seed=4] [--age=3] [--dist=34] [--yaw=.9] [--pitch=.5]
 // Shots: watermill | windmill | village  (see SHOTS below). three must resolve from ./node_modules (build/ only is enough: post-processing is stubbed).
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
@@ -35,7 +35,7 @@ page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')console.error(
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
 await page.goto(`http://127.0.0.1:${server.address().port}/`);
 await page.waitForFunction(()=>window.hwLive===true,null,{timeout:120000});
-const opts={shot,style:flags.style||'optionH',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null};
+const opts={shot,style:flags.style||'village',seed:+(flags.seed||4),age:+(flags.age||3),dist:flags.dist?+flags.dist:null,yaw:flags.yaw?+flags.yaw:null,pitch:flags.pitch?+flags.pitch:null,frames:+(flags.frames||3),time:flags.time?+flags.time:null,x:flags.x?+flags.x:null,z:flags.z?+flags.z:null};
 const info=await page.evaluate(o=>window.hwShot(o),opts);
 console.error('[live]',JSON.stringify(info));
 const raw=await page.locator('#c').screenshot();
