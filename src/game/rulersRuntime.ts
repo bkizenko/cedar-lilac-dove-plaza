@@ -37,7 +37,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -223,7 +223,17 @@ export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{c
  const r=ensureRulers(g);if(!r?.claims)return null;
  const i=r.claims.findIndex(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind&&c.expiresTick>r.year);if(i<0)return null;
  st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
- return {cost:cbLegitimacyCost(kind)};
+ const cost=cbLegitimacyCost(kind),cur=st(g).rulers!,debt={...(cur.cbDebt??{})};
+ if(cost>0)debt[String(holder)]=Math.min(100,(debt[String(holder)]??0)+cost*2); // using a cause spends the house's standing: it feels the strain as unrest until it fades
+ st(g).rulers={...cur,cbDebt:debt};
+ return {cost};
+}
+export const cbDebtOf=(g:Game,team:number):number=>rulersOf(st(g))?.cbDebt?.[String(team)]??0;
+/** Yearly: casus-belli strain fades (-4 a year, never below 0). */
+export function fadeCbDebt(g:Game){
+ const r=rulersOf(st(g));if(!r?.cbDebt)return;
+ const next:Record<string,number>={};for(const [k,v] of Object.entries(r.cbDebt)){const n=Math.max(0,v-4);if(n>0)next[k]=n;}
+ st(g).rulers={...r,cbDebt:next};
 }
 /** War-weariness: a society that stays at war grows tired (+9 a dynastic year per hostile neighbour) and recovers at peace (-6 a year).
  * Stored per society in rulers.weary (0..100, optional so old saves load). It feeds unrestOf and, through warPeaceBonus, the pace at which
@@ -247,9 +257,9 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const others=g.state.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
- const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.min(100,30+100*Math.max(0,...lg)); // source weights sum to ~1; the strongest pillar carries the house
+ const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg))-cbDebtOf(g,team)); // source weights sum to ~1; the strongest pillar carries the house
  const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
- const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
+ const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(cbDebtOf(g,team)>0)why.push('the house spent its standing on a cause');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
 
