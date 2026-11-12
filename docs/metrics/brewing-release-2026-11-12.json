@@ -1,0 +1,129 @@
+{
+  "release": "2026-11-12T08-57-55-362Z-c60c128",
+  "commit": "c60c1281445f4abca3e65405b76db6fe53fc0229",
+  "sourceCommit": "c17e722",
+  "livePorts": [
+    8086,
+    8101
+  ],
+  "scopedBatch": {
+    "passed": 36,
+    "total": 36,
+    "brewingClock": 4,
+    "brewingProductionNative": 5,
+    "sharedChainRegressions": 25,
+    "built": 2
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "native": {
+    "scope": "Finite authored grain/pottery/log/water opening on unchanged V18 native terrain, actual original people and climate. No earned crop harvest or whole-campaign claim.",
+    "worldTime": 436.1999999999838,
+    "projects": [
+      {
+        "recipe": "sproutGrain",
+        "phase": "complete",
+        "exposureSeconds": 60,
+        "inputAgeSeconds": null,
+        "started": 0,
+        "finished": 83.40000000000065,
+        "vesselOrigin": {
+          "version": 1,
+          "team": 0,
+          "site": 6363,
+          "style": "Village 1 \u00b7 incised chevrons"
+        }
+      },
+      {
+        "recipe": "sproutGrain",
+        "phase": "complete",
+        "exposureSeconds": 60,
+        "inputAgeSeconds": null,
+        "started": 83.40000000000065,
+        "finished": 164.7999999999992,
+        "vesselOrigin": {
+          "version": 1,
+          "team": 0,
+          "site": 6363,
+          "style": "Village 1 \u00b7 incised chevrons"
+        }
+      },
+      {
+        "recipe": "brewSmallBeer",
+        "phase": "complete",
+        "exposureSeconds": 90,
+        "inputAgeSeconds": 82.59999999999856,
+        "started": 164.7999999999992,
+        "finished": 285.79999999999234,
+        "vesselOrigin": {
+          "version": 1,
+          "team": 0,
+          "site": 6363,
+          "style": "Village 1 \u00b7 incised chevrons"
+        }
+      },
+      {
+        "recipe": "brewBeer",
+        "phase": "complete",
+        "exposureSeconds": 120,
+        "inputAgeSeconds": 203.59999999999172,
+        "started": 285.79999999999234,
+        "finished": 436.1999999999838,
+        "vesselOrigin": {
+          "version": 1,
+          "team": 0,
+          "site": 6363,
+          "style": "Village 1 \u00b7 incised chevrons"
+        }
+      }
+    ],
+    "grainPaid": 8,
+    "logsPaid": 2,
+    "waterPaidLiters": 12,
+    "potteryHeldConsumed": 4,
+    "potteryReturned": 4,
+    "maltProduced": 6,
+    "maltPaid": 5,
+    "beerProduced": {
+      "smallBeer": 2,
+      "beer": 2
+    }
+  },
+  "built": {
+    "scope": "2 desktop built checks: native-earned two-strength brewing history, compact knowledge/recipe costs and strict restore; unchanged existing village import/save/restore. No fresh brewing journey, campaign or hardware performance claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "originalPopulation": 53,
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "frozenChecklist": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041
+  },
+  "rules": {
+    "grainToMalt": "4 clean grain + 2 collected water + one held actual vessel \u2192 3 fresh malt after20 staffed +60 passive warm seconds",
+    "smallBeer": "2 fresh malt +4 water +1 log +same vessel \u21922 food units at0.6 nourishment each;30 staffed +90 passive seconds",
+    "beer": "3 fresh malt +4 water +1 log +same vessel \u21922 food units at0.9 nourishment each;30 staffed +120 passive seconds",
+    "waterTreatment": false,
+    "automaticEmergencyGrainDiversion": false,
+    "realAlcoholPercentageClaim": false,
+    "historicalInspiration": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6838334/"
+  },
+  "fixes": [
+    "Paid input/output freshness never resets at loading, pickup or whole-community transfer",
+    "Expired/discarded carried work releases only its surviving still-owned current maker",
+    "Dirty vessel cleanup reuses actual paid water/travel/work and returns only original tools",
+    "Known overheated ready/completed batches rejected by strict save validator",
+    "New malting admission reserves room for the returning held vessel too"
+  ],
+  "limits": [
+    "Gameplay quantities and clocks, not a reconstructed historical yield or real preparation guide",
+    "Dedicated breweries, fruit fermentation, measured filled-drink containers and service remain separate work",
+    "Broader morale/clothing and traded-method agreement remain open",
+    "No new full-game release gate or performance claim"
+  ]
+}

@@ -764,7 +764,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | GRAPHIFY-WORKFLOW | incentive | Use Graphify to navigate the repo and save tokens | Grok | Grok T10 | done/live | docs/parallel/GRAPHIFY_WORKFLOW.md on main c619d08; standing practice |
 | INC-ARCH-REFERENCES | incentive | Each production family has a cited historic structure/photo reference | Claude | Claude W7 | not started |  |
 | INC-AUTO-WORK | incentive | Manual opening vs Auto work; drinking water stays automatic | Codex | — (done) | done/live | Auto work toggle and automatic water exist on main; re-check on audit |
-| INC-BREWING | incentive | Beer with real grain/malt/water/fuel/vessel/labor; not a water sterilizer | Codex | Codex W3 | not started |  |
+| INC-BREWING | incentive | Beer with real grain/malt/water/fuel/vessel/labor; not a water sterilizer | Codex | Codex W3 | done/live | c60c128 paid grain→fresh malt→small beer/beer, realwater/fuel/vessel/work/passive climate/spoilage/pickup/cleanup, no drinking-water credit;36/36scoped,tsc/build; docs/metrics/brewing-release-2026-11-12.json. Dedicated/fruit brewing remains catalogue scope. |
 | INC-BUILDING-FIRE | incentive | Building fire, repair, recoverable loss | Codex | Codex W9 | not started |  |
 | INC-CANALS | incentive | Drag route/width/depth; real excavation; finished channel carries water | Grok | Grok T3 | source-pushed-not-live | W7 jobs + approved breach; commission UI tonight; integration test fix T1 |
 | INC-CLAIM-CONTROL | incentive | Flags claim; control from settlement/fort/garrison; contested incompatible claims | Grok | Grok W1 | source-pushed-not-live | landValue source; hook domination W1 |
