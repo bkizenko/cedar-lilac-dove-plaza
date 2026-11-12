@@ -9,6 +9,12 @@ test('diplomacy sheet lists hostile neighbours first, shows bars and only offers
  assert.ok(html.indexOf('Ridge Clan')<html.indexOf('Marsh Folk'));assert.match(html,/At odds/);assert.match(html,/At peace/);
  assert.equal((html.match(/Exchange hostages/g)||[]).length,1);assert.match(html,/role="status"/);assert.equal(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[],onAct(){}})),'');
 });
+test('diplomacy sheet lists standing grievances in both directions with lapse and legitimacy cost',()=>{
+ const casus=[{byUs:true,kind:'raid',strength:40,endsIn:3,cost:2,reason:'We hold raids and cattle-lifting; citing it costs the holder 2 legitimacy.'},{byUs:false,kind:'claim',strength:30,endsIn:0,cost:5,reason:'They hold a claim on their lands; citing it costs the holder 5 legitimacy.'}];
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],casus}],onAct(){}}));
+ assert.match(html,/Standing grievances/);assert.match(html,/We hold<\/span> raids and cattle-lifting; lapses in 3 yr/);assert.match(html,/They hold<\/span> a claim on their lands; lapses in under a year/);assert.match(html,/costs 5 legitimacy/);
+ assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/Standing grievances/);
+});
 test('leader portrait is deterministic and stays unknown without a recorded relation',()=>{
  const p={leaderId:7,worldSeed:5,era:2,name:'Ada',society:'Marsh Folk',colors:{primary:'#315847',secondary:'#733d35'}};
  const a=renderToStaticMarkup(h(LeaderPortrait,p)),b=renderToStaticMarkup(h(LeaderPortrait,p));assert.equal(a,b);assert.match(a,/know little of their mind/);assert.match(renderToStaticMarkup(h(LeaderPortrait,{...p,relation:60})),/known friend/);
