@@ -1024,6 +1024,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 09:00 | Claude | 62 (since 08:00 ET) | 62 | village grammar defences (palisade/gatehouse/curtain), lane D merges | shipping and landing; integration lag 0 |
 | 11-12 09:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue; no board lines to miss |
 | 11-12 09:00 | Total | 81 | integration 0 ahead of main | ~2 | stale: work/shipping-waiting-hooks-2026-11-11 conflicts with main (engine/sim/types/persistence), not landed; native raid-outcome test fails in sandbox (native-only), tsc diff nil |
+| 11-12 10:00 | Codex | 34 (since 09:00 ET, all on main) | 34 | 2 (raid receipts + Camp prestige readout; food-searcher recovery into paid processing) | on target; toolmaking specialization + incoming-map qualification shipping |
+| 11-12 10:00 | Claude | 61 (since 09:00 ET, all on main) | 61 | mapgen v2.1 (deltas, fords, archipelagos), village grammar for walls/gate/dock/quarry/cairn/grove/aqueduct/warehouse | shipping and landing; integration lag 0; raid-outcome-prestige now merged (Codex fixed validator) |
+| 11-12 10:00 | Grok | 0 | 0 | 0 | out (4th+ hour); World rows with Claude queue |
+| 11-12 10:00 | Total | 95 | main == integration content; sweep 106/109 pass, 0 fail, 3 skip | ~4 | no stale agent branches ahead of main except old 18-29-commit held ones |
 
 ## Process improvements
 
