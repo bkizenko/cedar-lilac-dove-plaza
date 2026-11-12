@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVariant,stableUnit,type BaseForm,type BotanicalSpecies,type TreeSite} from './botanicalSpecies';
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
 import {makeBotanicalMaterial,makeBotanicalFarMaterial} from './botanicalMaterial';
-import {painterFarRound,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
+import {painterFarClustered,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
 import {painterSway,type PainterSway} from './painterVegetationMaterial';
 /** Instanced botanical forest (the painterly default). One mesh per (species, variant, LOD tier), all sharing one material: tier 0 full leaf-card
  * trees, tier 1 mid trees (same skeleton, cores plus sparse cards), then far crowns and rooted far trunks. Each living tree is a real resource node; nothing here
@@ -27,7 +27,7 @@ export class BotanicalForest{
   const farGeo=new THREE.CylinderGeometry(1,1,1,5).translate(0,.5,0),a=new Float32Array(farGeo.attributes.position.count*3);for(let i=0;i<a.length;i+=3)a.set([.2,.12,.07],i);farGeo.setAttribute('color',new THREE.BufferAttribute(a,3));
   this.farTrunk=new THREE.InstancedMesh(farGeo,this.farMat,1);this.farTrunk.name='resource-far-rooted-trunk';this.farTrunk.count=0;this.farTrunk.frustumCulled=false;scene.add(this.farTrunk);
   const unit=(g:THREE.BufferGeometry)=>{g.computeBoundingBox();const b=g.boundingBox!,c=b.getCenter(new THREE.Vector3()),h=b.getSize(new THREE.Vector3()).multiplyScalar(.5);g.translate(-c.x,-c.y,-c.z);g.scale(1/h.x,1/h.y,1/h.z);g.computeBoundingBox();return g;};
-  this.far=[unit(painterFarRound()),unit(painterFarNeedle())].map((geo,i)=>{const m=new THREE.InstancedMesh(geo,this.farMat,1);m.name=i?'resource-far-needle':'resource-far-crown';m.count=0;m.frustumCulled=false;scene.add(m);return m;});
+  this.far=[unit(painterFarClustered()),unit(painterFarNeedle())].map((geo,i)=>{const m=new THREE.InstancedMesh(geo,this.farMat,1);m.name=i?'resource-far-needle':'resource-far-crown';m.count=0;m.frustumCulled=false;scene.add(m);return m;});
   this.shadowMat=new THREE.MeshBasicMaterial({color:0x10140a,map:null,alphaMap:radialShadowTexture(),transparent:true,opacity:this.shadowOpacity,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   this.shadows=this.makeShadows(1);
  }

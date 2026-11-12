@@ -163,6 +163,11 @@ export function painterTreeKit(form:PainterForm){
 export function painterFarRound(){
  return mergeParts([lump([0,0,0],[1,.92,1],301,{center:[0,0,0],radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom},.22),lump([.38,.28,.1],[.62,.55,.6],302,{center:[0,0,0],radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom},.2,0)]);
 }
+/** Botanical far crown: one big lump plus three satellites so a far canopy keeps a clustered, lobed outline (about 380 triangles). */
+export function painterFarClustered(){
+ const crown={center:[0,0,0] as V3,radius:1.1,top:FOLIAGE.top,bottom:FOLIAGE.bottom};
+ return mergeParts([lump([0,0,0],[1,.88,1],301,crown,.24),lump([.52,.22,.1],[.55,.5,.55],302,crown,.22,0),lump([-.48,.16,-.2],[.52,.46,.5],303,crown,.22,0),lump([.04,.5,-.34],[.46,.4,.44],304,crown,.2,0)]);
+}
 export function painterFarNeedle(){
  return mergeParts([skirt(-1,1,.9,311,NEEDLE,.2,8),skirt(-.15,.75,.9,312,NEEDLE,.2,8),skirt(.55,.45,.6,313,NEEDLE,.15,7)]);
 }

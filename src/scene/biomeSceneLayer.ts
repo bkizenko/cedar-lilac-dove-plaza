@@ -81,7 +81,7 @@ export function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:num
  if(site.soil<.22)return pick([['pebbles',30],['rocks',12],['cushion',kind==='alpine'?14:4],['drygrass',16],['grass',8],['bush',2]]);
  if(site.cover>.3){ // under canopy: a forest floor of ferns, moss, fungi and deadwood, drier kinds keep grass and bushes
   const dry=kind==='dry-scrub'||kind==='arid',wet=moisture>.45&&!dry;
-  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2],['sapling',3]]):pick([['fern',22],['bracken',wet?12:3],['moss',wet?5:2],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',8],['bush',5],['sapling',11],['pinelet',kind==='conifer-forest'||kind==='alpine'?14:4],['rocks',3]]);
+  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2],['sapling',3]]):pick([['fern',22],['bracken',wet?12:3],['moss',wet?2:0],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',8],['bush',5],['sapling',11],['pinelet',kind==='conifer-forest'||kind==='alpine'?14:4],['rocks',3]]);
  }
  if(site.cover>.07||site.edge>.25)return kind==='dry-scrub'||kind==='arid'?pick([['bush',14],['drygrass',22],['pebbles',10],['rocks',4]]):pick([['bush',15],['tallgrass',16],['bracken',moisture>.45?9:3],['flowers',10],['grass',24],['fern',8],['stump',1.5],['sapling',7],['rocks',2]]);
  switch(kind){
