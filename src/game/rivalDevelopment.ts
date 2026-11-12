@@ -1,3 +1,5 @@
+import {copperOreEnabled} from './copperMetallurgy';
+import {copperIndustrySupply} from './copperIndustrySupply';
 import {societyMaySpend} from './societyRuntime';
 import{rawCerealField,CEREAL_RULES}from'./cerealRules';
 import {rivalTradeReserve} from './rivalTrade';
@@ -150,9 +152,12 @@ export function rivalMaterialTargets(g:Game,team:number):RivalMaterialTargets{
 export function rivalMaterialPriority(g:Game,u:Unit,kind:ResKind,targets?:RivalMaterialTargets){
   if(!isRivalTeam(u.team)||kind==='food'||reserveSeconds(g,u.team)<360)return 0;
   const t=g.tribe(u.team),target=(targets||rivalMaterialTargets(g,u.team))[kind as RivalMaterialKind];
-  if(!target||t[kind]>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
+  const supplied=kind==='copper'&&copperOreEnabled(g,u.team)?copperIndustrySupply(g,u.team).effectiveMetal:t[kind];
+  if(!target||supplied>=target||kind==='copper'&&t.age<1||kind==='iron'&&t.age<2)return 0;
+  if(kind==='copper'&&copperOreEnabled(g,u.team)&&!g.state.buildings.some(b=>b.team===u.team&&b.type==='kiln'&&g.finished(b)))return 0;
   const workers=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.type==='worker'&&!isDependent(g,v));
   const already=workers.filter(v=>v!==u&&v.order==='gather'&&v.job===kind).length;
+  if(kind==='copper'&&copperOreEnabled(g,u.team)&&already>=1)return 0;
   const materialCrew=workers.filter(v=>v!==u&&v.order==='gather'&&v.job&&v.job!=='food').length;
   if(already>=Math.max(1,Math.floor(workers.length/4))||materialCrew>=Math.max(1,Math.floor(workers.length/3)))return 0;
   return kind==='wood'?250:240;
