@@ -25,6 +25,8 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
+import {enableTerrainInfluence} from './terrainInfluenceRuntime';
+import {enableCommanders,tickCommanders} from './commanders';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -407,6 +409,8 @@ export class Game {
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);
+    enableTerrainInfluence(this);
+    enableCommanders(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
     this.workBoard.reset();
@@ -5919,6 +5923,7 @@ export class Game {
         tickGuardDuties(this);
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
+        tickCommanders(this,sdt);
         this.updateProjectiles(sdt);
         this.updateTraining(sdt);
         this.updateTowers(sdt);

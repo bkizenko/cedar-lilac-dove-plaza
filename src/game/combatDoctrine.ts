@@ -2,6 +2,7 @@ import type {Game} from './sim';
 import type {Unit} from './types';
 import {wornArmor} from './armor';
 import {combinedMatchup,roleOfType,type CombatFacts,type Matchup} from './combatCounters';
+import {commanderMatchup} from './commanders';
 import {FORMATION_PROFILES,FORMATION_RULES,formationSlots,rotateSlot,validFormationKind,type FormationKind,type Slot} from './formations';
 /** Combat doctrine switch plus formation groups. Absent state means the legacy combat rules, so old saves are unchanged. */
 export type CombatDoctrine={version:1;counters:boolean;formations:boolean;guardDuty:boolean;raidReports:boolean;transit:boolean;preferred:FormationKind;/** reason -> hits, bounded, so the interface can say why fights went as they did */tally:Record<string,number>};
@@ -101,7 +102,7 @@ export function combatMatchup(g:Game,attacker:Unit|{kind:string},target:Unit|{ki
  const d=st(g).combatDoctrine;
  if(!d?.counters&&!d?.formations||attacker.kind!=='unit'||target.kind!=='unit')return {multiplier:1,reasons:[]};
  const a=attacker as Unit,t=target as Unit,ranged=a.range>=8;
- return combinedMatchup(factsFor(g,a,ranged),factsFor(g,t,false),{counters:d.counters,formations:d.formations});
+ return commanderMatchup(g,a,t,combinedMatchup(factsFor(g,a,ranged),factsFor(g,t,false),{counters:d.counters,formations:d.formations}));
 }
 /** Tally the reasons behind applied hits; bounded so the save stays small. */
 export function noteMatchup(g:Game,m:Matchup){

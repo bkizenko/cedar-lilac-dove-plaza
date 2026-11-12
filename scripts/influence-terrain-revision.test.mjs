@@ -4,7 +4,7 @@ import{advanceGeographicInfluence,geographicInfluenceReady,geographicInfluenceAt
 let wall=100000;
 function settle(g){for(let i=0;i<10000;i++){advanceGeographicInfluence(g,wall+=17);if(geographicInfluenceReady(g)&&geographicInfluenceDiagnostics(g).pendingJobs===0)return;}throw Error('Influence wave did not finish');}
 test('a completed shallow cut changes route cost and revokes pending authority even when every walk bit stays the same',()=>{
- const g=new Game();g.reset(42,1);g.enterIsland();g.world.heights.fill(8);g.world.waterHeights=undefined;g.world.waterY=0;g.world.baseWaterY=0;g.state.buildings=[];g.state.units=[];g.state.boats=[];g.state.trails=[];g.state.excavations=[];
+ const g=new Game();g.reset(42,1);delete g.state.terrainInfluence;g.enterIsland();g.world.heights.fill(8);g.world.waterHeights=undefined;g.world.waterY=0;g.world.baseWaterY=0;g.state.buildings=[];g.state.units=[];g.state.boats=[];g.state.trails=[];g.state.excavations=[];
  for(const k of['trees','stones','forage','copper','iron'])g.state[k]=[];
  const hall=g.makeBld('townhall',-30,0,0),cut=g.makeBld('trench',0,0,0);cut.excavationDepth=.5;cut.build=.99;g.state.buildings.push(hall,cut);configureExcavation(g,cut);g.rebuildWalk();
  settle(g);const before=geographicInfluenceSample(g,25,0),mask=g.walk.slice(),heightFunction=g.height,baseHeights=g.world.heights,revision=geographicInfluenceDiagnostics(g).cacheBuild;assert.equal(g.terrainRevision(),0);assert.ok(before.routeCostMeters>0);

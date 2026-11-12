@@ -526,6 +526,8 @@ export type GameState = {
   guardDuties?:import('./guardDuty').GuardDuty[];
   raidReports?:import('./raidReports').RaidReports;
   transit?:import('./transit').TransitState;
+  terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;
+  commanders?:import('./commanders').CommandersState;
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
   coastalTradeReviewAt?:number;
