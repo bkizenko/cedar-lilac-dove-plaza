@@ -101,6 +101,19 @@
       "worker_active_by_default": false,
       "gate_credit_added": 0,
       "details": "docs/parallel/GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md"
+    },
+    "shared_write_permission": {
+      "at": "2026-11-12T01:17:51.112292+00:00",
+      "all_providers": [
+        "Claude",
+        "Grok",
+        "Codex"
+      ],
+      "all_source_files": true,
+      "codex_approval_required": false,
+      "execution_lead": "Grok",
+      "conflict_resolution_owner": "Claude",
+      "latest_priority": "wire waiting features and ship clean integration; defer Worker expansion"
     }
   },
   "counts": {
