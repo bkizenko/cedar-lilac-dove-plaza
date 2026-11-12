@@ -31,6 +31,7 @@ export type BldType =
   | "university"
   | "cairn"
   | "grove"
+  | "well" | "cistern" | "watermill" | "windmill" | "aqueduct" | "canal"
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
