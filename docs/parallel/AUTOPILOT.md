@@ -1057,6 +1057,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 15:00 | Claude | 55 (since 14:00 ET, all branches) | integration 5 landed by PM 15:1x | 3 (Hearth UI/UX floor + selection card + commander/hull panels; opt-in wild-craft v1; surface geology / mid-LOD headwear) | shipping and landing; lanes A-D all posted <1h |
 | 11-12 15:00 | Grok | 0 | 0 | 0 | out (hours 15+); World rows with Claude/PM queue; no board lines to miss |
 | 11-12 15:00 | Total | 113 | integration lag 0 after 15:1x landing | ~6 | focused sweep 132 tests: 128 pass, 1 fail (method-record-visibility needs `three`, absent in sandbox, passes in Codex native), 3 skip; tsc: peopleKit TS2367 fixed, no new errors; rows ~735 total, ~210 done/live; idle agents: Grok only |
+| 11-12 16:00 | Codex | ~47 (since 15:00 ET, all branches) | ~40 on main | 3 (LIVE 2128ed7 People2/geology/UI published; server retained-text pack; LIVE 3f1b219 wild-craft safety + paid cordage) | active, on target; wild-craft-consumers owner controls in progress |
+| 11-12 16:00 | Claude | ~17 (since 15:00 ET, all branches) | 2 via PM landing 16:1x (ui2 glance-trend village-local + minimap footprint fixes) | 2 (UI/UX phase 2: supply meters, priority stack, pins, minimap layers, Help; lane A rival commander news) | shipping; lanes A-D posted <1h |
+| 11-12 16:00 | Grok | 0 | 0 | 0 | out (hours 16+); World rows with Claude/PM queue |
+| 11-12 16:00 | Total | ~64 | main ahead of integration; integration to be synced to main | ~5 | focused sweep 142/142 pass; tsc diff nil (4 ImportMeta only); work/shipping-waiting-hooks-2026-11-11 still held (19h, conflicting); open rows ~4 not-started by grep, ~7 done-marked by table grep |
 
 ## Process improvements
 
