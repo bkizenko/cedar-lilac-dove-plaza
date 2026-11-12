@@ -1,4 +1,4 @@
-import {draftCartAI,cancelDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
+import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
@@ -1846,7 +1846,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
-    cancelDraftCartOrder(this,u);
+    interruptDraftCartOrder(this,u);
     pauseNavalWork(this,u);
     cancelPackPasture(this,u);
     interruptSiegeRam(this,u);
