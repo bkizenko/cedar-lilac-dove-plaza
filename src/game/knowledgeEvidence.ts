@@ -4,7 +4,7 @@ import {SIM_CALENDAR_RULES} from './calendarPacing';
 import type {KnowledgeTopic} from './knowledge';
 import {inheritedKnowledgeProofs} from './inheritedKnowledge';
 export type KnowledgeState='unknown'|'partly'|'known';
-export type KnowledgeProvenance={kind:'observed'|'experimented'|'demonstrated'|'taught'|'inherited'|'traded'|'captured'|'unrecorded';summary:string;at?:number;sourceTeam?:number;sourceName?:string;sourcePersonId?:number;method?:string};
+export type KnowledgeProvenance={kind:'observed'|'experimented'|'demonstrated'|'taught'|'inherited'|'traded'|'captured'|'unrecorded';summary:string;at?:number;sourceTeam?:number;sourceName?:string;sourcePersonId?:number;contributorIds?:number[];method?:string};
 export const KNOWLEDGE_STATE_LABELS:Record<KnowledgeState,string>={unknown:'Unknown',partly:'Partly known',known:'Known'};
 export const KNOWLEDGE_SOURCE_LABELS:Record<KnowledgeProvenance['kind'],string>={observed:'Observed',experimented:'Experiment',demonstrated:'Demonstrated',taught:'Taught',inherited:'Inherited',traded:'Traded',captured:'Captured',unrecorded:'Earlier practice'};
 /** Read models carry no authority: a badge cannot establish a technique or create a receipt. */
