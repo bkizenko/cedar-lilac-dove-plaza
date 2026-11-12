@@ -175,10 +175,10 @@ const garbFor=(r:Rng,g:CivId,pal:CivMaterials,keep?:SkinGarb):SkinGarb=>{
 function remixSkin(civ:CivSeed,base:CivSkin):CivSkin{
  const r=seededRandom(hashSeed('skin-remix',civ.id)),g=base.grammar!,deg=civ.hueShift*2+(r()<.5?-1:1)*(18+r()*20),ds=(r()-.5)*.16,dl=(r()-.5)*.1;
  const pal={...base.palette!} as CivMaterials;
- (Object.keys(pal) as (keyof CivMaterials)[]).forEach(k=>{const dye=k==='accent'||k==='cloth';pal[k]=sw(tweak(pal[k].hex,dye?deg:deg*.28,dye?ds:ds*.4,dye?dl:dl*.6),pal[k]);});
+ (Object.keys(pal) as (keyof CivMaterials)[]).forEach(k=>{const dye=k==='accent'||k==='cloth',roofy=k==='roof',d=dye?deg:roofy?deg*1.15:k==='ground'?deg*.3:deg*.45;pal[k]=sw(tweak(pal[k].hex,d,dye||roofy?ds*1.6:ds*.5,dye||roofy?dl:dl*.7),pal[k]);});
  // a different local material changes the main wall (and sometimes its second course) while the grammar stays
  const prior=new Set(AFFINITY[g].mat);civ.materials.forEach((m,i)=>{if(i>1||prior.has(m))return;const ms=MATERIAL_SWATCH[m];pal[i?'wall2':'wall']={hex:mixHex(pal[i?'wall2':'wall'].hex,ms.hex,.55),roughness:ms.roughness,course:ms.course};});
- if(r()<.45){const m=civ.materials[civ.materials.length-1],rs=MATERIAL_ROOF[m];if(rs&&r()<.7)pal.roof={hex:mixHex(pal.roof.hex,rs.hex,.45),roughness:rs.roughness,course:rs.course};}
+ if(r()<.55){const m=r()<.6?civ.materials[civ.materials.length-1]:pickOf(r,Object.keys(MATERIAL_ROOF) as Material[]),rs=MATERIAL_ROOF[m];if(rs)pal.roof={hex:mixHex(pal.roof.hex,rs.hex,.6),roughness:rs.roughness,course:rs.course};}
  const style=r()<.55?pickOf(r,BANNER_STYLES.filter(s=>s!==base.banner.style)):base.banner.style,emblem=r()<.5?pickOf(r,EMBLEM_IDS().filter(e=>e!==base.banner.emblem)):base.banner.emblem;
  const roof=r()<.3?pickOf(r,ROOFS_BY_CLIMATE[CIVS[g].climate]):base.roof;
  const garb=garbFor(r,g,pal,{...base.garb,...(r()<.4?{cut:pickOf(r,CUTS)}:{}),...(r()<.4?{headwear:pickOf(r,HEADS)}:{})} as SkinGarb);
@@ -192,6 +192,7 @@ function freeSkin(civ:CivSeed):CivSkin{
  const roof:Swatch={hex:tweak(R0.hex,shift),roughness:R0.roughness,course:R0.course};
  const accent:Swatch={hex:hslHex(h+shift,sat+.1,.46+r()*.08),roughness:.6},cloth:Swatch={hex:hslHex(h+pickOf(r,[0,0,24,180,-30]),sat,.4+r()*.06),roughness:.9,course:'cloth'};
  const trim:Swatch={hex:mixHex(shade(wall2.hex,.78),accent.hex,.18),roughness:.75,course:c.materials.trim.course},ground:Swatch={hex:mixHex(wall.hex,'#6f7a4a',.5),roughness:1};
+ if(Math.abs(toHsl(roof.hex)[2]-toHsl(wall.hex)[2])<.14&&Math.abs(toHsl(roof.hex)[0]-toHsl(wall.hex)[0])<40)roof.hex=shade(roof.hex,toHsl(roof.hex)[2]>.45?.7:1.35);
  const pal:CivMaterials={wall,wall2,roof,trim,accent,cloth,ground};
  const garb=garbFor(r,g,pal);
  return {v:1,id:'gen:'+civ.id,name:civ.name,mode:'free',grammar:g,preset:g,palette:pal,roof:r()<.65?c.roof:pickOf(r,ROOFS_BY_CLIMATE[c.climate]),granary:r()<.6?c.granary:pickOf(r,['bins','raised','cone','cellar'] as Granary[]),

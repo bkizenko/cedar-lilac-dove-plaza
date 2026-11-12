@@ -48,7 +48,7 @@ if(info&&info.images){// contact sheet: one tile per skin/society, labelled, lai
     tiles.push({input:await sharp(png).resize(tw,th).composite([{input:label}]).png().toBuffer(),left:(i%cols)*tw,top:Math.floor(i/cols)*th});
   }
   const rows=Math.ceil(tiles.length/cols);
-  buf=await sharp({create:{width:cols*tw,height:rows*th,channels:3,background:'#111'}}).composite(tiles).png({compressionLevel:9}).toBuffer();
+  buf=await sharp({create:{width:cols*tw,height:rows*th,channels:3,background:'#111'}}).composite(tiles).png({compressionLevel:9,palette:true,quality:+(flags.q||80),effort:9}).toBuffer();
 }else{const raw=await page.locator('#c').screenshot();buf=raw;if(sharp)buf=await sharp(raw).png({compressionLevel:9}).toBuffer();}
 fs.mkdirSync(path.dirname(path.resolve(out)),{recursive:true});fs.writeFileSync(out,buf);
 console.error(`[live] wrote ${out} (${(buf.length/1024).toFixed(0)} KB)`);
