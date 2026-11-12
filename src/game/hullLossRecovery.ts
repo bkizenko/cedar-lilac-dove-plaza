@@ -1,9 +1,9 @@
 import type {Game} from './sim';
 import type {GameState,Unit} from './types';
-import {requestWaterNavigation} from './waterTravel';
+import {requestWaterNavigation,type WaterNavigation} from './waterTravel';
 import {supplyDrops,supplyApproach} from './campAnchor';
 
-export const HULL_RECOVERY_RULES={version:1,swimMetresPerSecond:.85,wadeMetresPerSecond:1.1,swimFeetDepthMetres:1.1,verticalMetresPerSecond:1.5,probeMetres:.35,maximumPathPoints:1024,maximumCells:65536,maximumShoreCandidates:32,retrySeconds:3} as const;
+export const HULL_RECOVERY_RULES={version:1,swimMetresPerSecond:.85,wadeMetresPerSecond:1.1,swimFeetDepthMetres:1.1,verticalMetresPerSecond:1.5,probeMetres:.35,maximumPathPoints:1024,maximumCells:65536,maximumSearches:8,nodesPerCall:32,nodesPerStep:128,retrySeconds:3} as const;
 type Point={x:number;z:number};
 export type HullLossRecovery={version:1;hullId:number;startedAt:number;nextSearchAt:number;revision:number;path:Point[]};
 const R=HULL_RECOVERY_RULES;
@@ -23,30 +23,41 @@ function segmentClear(g:Game,u:Unit,a:Point,b:Point){
  for(let j=1;j<=n;j++){const x=a.x+(b.x-a.x)*j/n,z=a.z+(b.z-a.z)*j/n;if(!g.canStep(probe,x,z))return false;probe={...probe,x,z,y:recoverySurfaceHeight(g,x,z)};}return true;
 }
 function reachesHome(g:Game,u:Unit,p:Point){const probe={...u,...p,y:g.travelHeight(p.x,p.z)};return supplyDrops(g,u.team).some(d=>!!supplyApproach(g,probe,d));}
-/** Bounded component traversal through the existing mixed water/land navigation
- * API. Every selected segment is then validated for this actual body. Initial
- * cell membership is never permission to cross a wall, waterfall or cliff. */
+type ShoreSearch={nav:WaterNavigation;revision:number;team:number;x:number;z:number;parents:Map<number,number>;queue:number[];head:number;fallback?:Point[];hasHome:boolean};
+type SearchContext={world:Game['world'];state:GameState;time:number;remaining:number;searches:Map<Unit,ShoreSearch>};
+const searches=new WeakMap<Game,SearchContext>();
+function searchContext(g:Game){let c=searches.get(g);if(!c||c.world!==g.world||c.state!==g.state){c={world:g.world,state:g.state,time:g.state.time,remaining:R.nodesPerStep,searches:new Map()};searches.set(g,c);}if(c.time!==g.state.time){c.time=g.state.time;c.remaining=R.nodesPerStep;}return c;}
+/** Incremental, bounded component traversal through the existing navigation API.
+ * A large world grid is not a failed route: only visited cells consume this
+ * recovery's budget. Every admitted edge uses the original physical body test.
+ * Derived searches reset on world/state/nav revision and are never saved. */
 function plan(g:Game,u:Unit):Point[]|undefined{
  const request=requestWaterNavigation(g,false);if(request.status==='pending')return undefined;
- const nav=request.navigation,n=nav.width,N=nav.grid.length;if(N>R.maximumCells)return [];
- const cell=g.world.size/n,half=g.world.size/2,ix=Math.floor((u.x+half)/cell),iz=Math.floor((u.z+half)/cell);
+ const nav=request.navigation,n=nav.width,cell=g.world.size/n,half=g.world.size/2,ix=Math.floor((u.x+half)/cell),iz=Math.floor((u.z+half)/cell);
  if(ix<0||iz<0||ix>=n||iz>=n)return [];
- const start=iz*n+ix,parents=new Int32Array(N).fill(-2),queue=new Int32Array(N);let head=0,tail=1,candidates=0;queue[0]=start;parents[start]=-1;
- const point=(i:number)=>({x:(i%n+.5)*cell-half,z:(Math.floor(i/n)+.5)*cell-half});
- let fallback:Point[]|undefined;
- while(head<tail){
-  const at=queue[head++],p=point(at);
+ const c=searchContext(g),revision=g.navigationRevision(),point=(i:number)=>({x:(i%n+.5)*cell-half,z:(Math.floor(i/n)+.5)*cell-half});
+ let search=c.searches.get(u);
+ if(!search||search.nav!==nav||search.revision!==revision||search.team!==u.team||search.x!==u.x||search.z!==u.z){
+  c.searches.delete(u);for(const [body]of c.searches)if(body.hp<=0||!body.hullRecovery||!g.state.units.includes(body))c.searches.delete(body);
+  if(c.searches.size>=R.maximumSearches)return undefined;
+  const start=iz*n+ix;if(!segmentClear(g,u,u,point(start)))return [];
+  search={nav,revision,team:u.team,x:u.x,z:u.z,parents:new Map([[start,-1]]),queue:[start],head:0,hasHome:supplyDrops(g,u.team).length>0};c.searches.set(u,search);
+ }
+ let processed=0;
+ while(search.head<search.queue.length&&processed<R.nodesPerCall&&c.remaining>0){
+  processed++;c.remaining--;const at=search.queue[search.head++],p=point(at);
   if(nav.grid[at]&&g.walkable(p.x,p.z)&&g.travelHeight(p.x,p.z)>g.waterAt(p.x,p.z)+.3){
-   const reverse:Point[]=[];for(let k=at;k>=0;k=parents[k]){reverse.push(point(k));if(reverse.length>R.maximumPathPoints)break;}
-   if(reverse.length<=R.maximumPathPoints){const path=reverse.reverse();let a:Point=u,clear=true;for(const b of path){if(!segmentClear(g,u,a,b)){clear=false;break;}a=b;}
-    if(clear){fallback??=path;if(reachesHome(g,u,p))return path;}
-   }
-   if(++candidates>=R.maximumShoreCandidates)break;
+   const reverse:Point[]=[];for(let k=at;k>=0;k=search.parents.get(k)!){reverse.push(point(k));if(reverse.length>R.maximumPathPoints)break;}
+   if(reverse.length<=R.maximumPathPoints){const path=reverse.reverse();search.fallback??=path;if(!search.hasHome||reachesHome(g,u,p)){c.searches.delete(u);return path;}}
   }
   const x=at%n,z=Math.floor(at/n);
-  for(const next of [z>0?at-n:-1,x+1<n?at+1:-1,z+1<n?at+n:-1,x>0?at-1:-1])if(next>=0&&parents[next]===-2&&nav.grid[next]){parents[next]=at;queue[tail++]=next;}
+  for(const next of [z>0?at-n:-1,x+1<n?at+1:-1,z+1<n?at+n:-1,x>0?at-1:-1]){
+   if(next<0||search.parents.has(next)||!nav.grid[next]||search.parents.size>=R.maximumCells)continue;
+   if(!segmentClear(g,u,p,point(next)))continue;search.parents.set(next,at);search.queue.push(next);
+  }
  }
- return fallback??[];
+ if(search.head<search.queue.length)return undefined;
+ c.searches.delete(u);return search.fallback??[];
 }
 /** Called only by Game.steer's explicit recovery seam. No ordinary actor gains
  * swimming permission; the same canStep solid/radius/boundary rules still apply. */
