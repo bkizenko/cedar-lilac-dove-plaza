@@ -1,0 +1,52 @@
+{
+  "release": "2026-11-12T14-47-48-619Z-2424c08",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T14-47-48-619Z-2424c08",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T14-10-08-201Z-2d31e94",
+  "commit": "2424c08b917f1e28dec6d835e80a43d7f94d669f",
+  "retained": {
+    "linked": 1332,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 27,
+    "total": 27,
+    "nativeAndShared": 26,
+    "built": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Untouched original53 copy: real automatic processing and legacy paid winnowing completion, durable save; no campaign or full gate credit.",
+      "result": {
+        "seconds": 25.500000000010914,
+        "population": 53,
+        "originalFloorPhase": "complete",
+        "completedNew": [
+          "cookFish",
+          "threshCerealFloorDouble"
+        ],
+        "outputs": {
+          "grain": 7.36,
+          "cookedFish": 8,
+          "bread": 8,
+          "meat": 4
+        },
+        "errors": []
+      },
+      "originalUnchanged": true,
+      "errors": []
+    },
+    "regressions": "25/26 initial sweep; stale logs-only expectation corrected to actual finite residue heat, affected case rerun1/1 PASS. No game balance changed for test."
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "original53": "unchanged SHA61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6; actual copy53alive, automatic search reclaimed, original paid project13205 completed",
+  "limits": [
+    "No full seasonal campaign or historical rebalance claim",
+    "M1-14 remains partial; no new full gate credit",
+    "Later Claude source on main remains next-release work"
+  ]
+}
