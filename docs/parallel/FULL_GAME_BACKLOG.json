@@ -9267,6 +9267,15 @@
       "liveCommit": "bb5947a5c1845e5a23ca2eea92f3d01e3ec718cd",
       "evidence": "docs/metrics/traded-teaching-release-2026-11-12.json",
       "scope": "Physical carried consideration -> qualified actual paid foreign batch -> real observation/useful delivery -> dry-ground report home. Compact authoritative controls, saved owner/observer custody, historical provenance. General holders, boat visiting learners, pricing and full knowledge gate remain open."
+    },
+    {
+      "id": "CODEX-CHARCOAL-COPPER",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "fad8d44b9cd0f94592f17efae728b34a29044a4a",
+      "liveCommit": "2051c074bebdb52101fccd7ffc6315dc2164020f",
+      "evidence": "docs/metrics/charcoal-copper-release-2026-11-12.json",
+      "scope": "Finite paid timber -> covered clamp charring/cooling -> real charcoal delivery -> physically loaded copper prototype -> owned tool used/worn. Paid inputs, actor, resume/custody/loss and old saves conserved; no existing tool overwritten. Ore refining, tin/bronze/iron chains and clamp mesh remain open."
     }
   ],
   "status_update_policy": {

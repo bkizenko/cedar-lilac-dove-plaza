@@ -80,7 +80,7 @@ import {tickCaravanRoutes,recordCaravanDelivery,waitForCaravan} from './caravanR
 import {hasTaskCommitment} from './workCommitments';
 import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
 import {commandRiverboat,riverboatAI,syncRiverboats,riverboatLoadSpeed,recallRiverboat} from './boats';
-import {copperStudyAI,developRivalCopper} from './materialStudy';
+import {copperStudyAI,developRivalCopper,pauseCopperStudy,tickCopperStudies} from './materialStudy';
 import {difficulty} from './difficulty';
 import {manageRivalFields} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
@@ -1843,7 +1843,7 @@ export class Game {
     releaseTreeWorker(this,u);
     pauseWaterCollection(u);
     cancelPlanting(this,u);
-    if(u.copperStudy)u.copperStudy.paused=true;
+    if(u.copperStudy)pauseCopperStudy(this,u);
     u.repatriating=undefined;
     u.tributeJourney=undefined;u.buildOrder=undefined;u.escortId=undefined;u.demobilizing=undefined;u.returnAfterCombat=undefined;u.massRaidTarget=undefined;
     releaseTradeReservation(this,u);
@@ -5770,6 +5770,7 @@ export class Game {
         phases?.mark('production');
         tickFibre(this);
         tickClay(this);
+        tickCopperStudies(this);
         tickGarmentRepairs(this);
         tickProduction(this,sdt);
         tickBuildingMaintenance(this,sdt);
@@ -5930,6 +5931,7 @@ export class Game {
         reconcileFibreDeaths(this);
         tickTradeIntel(this);
         tickPracticalHelpers(this);
+        tickCopperStudies(this);
         tickGarmentRepairs(this);
         tickProduction(this,0);
         tickBuildingMaintenance(this,0);

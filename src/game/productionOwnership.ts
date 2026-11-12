@@ -1,3 +1,4 @@
+import {bindCharcoalLoad} from './carriedLoad';
 import type{Game}from'./sim';
 import type{Unit}from'./types';
 import type{ProductionProject}from'./production';
@@ -7,7 +8,7 @@ import{workRuntime}from'./workRuntime';
 export const productionJobId=(id:number)=>`production:${id}`;
 const effective=(p:ProductionProject)=>p.phase==='paused'?p.resumePhase:p.phase;
 const live=(p:ProductionProject)=>p.phase!=='complete'&&p.phase!=='lost';
-export function paidInputUnits(p:ProductionProject){const r=PRODUCTION_RECIPES[p.recipe];return Object.values(r.inputs).reduce((n,v)=>n+(v||0),0)+r.grain+Object.values(r.foodInputs).reduce((n,v)=>n+(v||0),0);}
+export function paidInputUnits(p:ProductionProject){const r=PRODUCTION_RECIPES[p.recipe];return (p.charcoal?p.charcoal.woodLogs:0)+Object.values(r.inputs).reduce((n,v)=>n+(v||0),0)+r.grain+Object.values(r.foodInputs).reduce((n,v)=>n+(v||0),0);}
 export function cachedProductionUnits(g:Game,team:number){let total=0;for(const p of g.state.production?.projects||[])if(p.team===team&&['stored','collecting'].includes(effective(p)))total+=paidInputUnits(p);return total;}
 type Context={state:Game['state'];jobs:JobCoordinator;claims:Map<number,string>;rebuilds:number;amendments:number;conflicts:number};
 const contexts=new WeakMap<Game,Context>();
@@ -26,7 +27,7 @@ function requests(g:Game,p:ProductionProject){const phase=effective(p),claims:{k
  return claims;
 }
 /** Saved project owns goods. This runtime claims only hands and physical space. */
-export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,...(g.state.cerealProcessing?[x.capacity]:[])])]);
+export function claimProductionOwnership(g:Game,p:ProductionProject,jobs?:JobCoordinator){const c=context(g,jobs),id=productionJobId(p.id);if(p.charcoal&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCharcoalLoad(u,p);}if(!live(p)){releaseProductionOwnership(g,p);return true;}const claims=requests(g,p),signature=JSON.stringify([p.actorId,p.workplace,...claims.map(x=>[x.key,x.amount,...(g.state.cerealProcessing?[x.capacity]:[])])]);
  if(c.claims.get(p.id)!==signature){if(!c.jobs.job(id))c.jobs.propose({id,kind:`production:${p.recipe}`,owner:p.team,actors:[],target:p.workplace});
  if(!c.jobs.amend(id,p.actorId===null?[]:[p.actorId],claims)){c.conflicts++;return false;}c.claims.set(p.id,signature);c.amendments++;c.jobs.retarget(id,p.workplace);}
  const phase=effective(p);c.jobs.transition(id,p.phase==='paused'||phase==='stored'||phase==='ready'&&p.actorId===null?'reserved':phase==='returning'||phase==='unloading'?'returning':phase==='working'||phase==='curing'?'working':'traveling',p.progress);return true;
