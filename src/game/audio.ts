@@ -1,6 +1,6 @@
 import { peacefulMusic, AcousticScore } from "./music";
 import { ProceduralAudio, proceduralMusicOn, type WorldAudio } from "./proceduralAudio";
-import { LEGACY_SFX, loadSettings, saveSettings, type AudioSettings, type Bus } from "../scene/audioMix";
+import { LEGACY_SFX, busGain, loadSettings, saveSettings, type AudioSettings, type Bus } from "../scene/audioMix";
 export class GameAudio {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -36,21 +36,29 @@ export class GameAudio {
     this.noise = this.makeNoise(this.ctx);
     void this.ctx.resume();
     this.unlocked = true;
-    this.score.unlock();
     this.proc.attach(this.ctx, this.master, this.seed);
-    this.proc.setSettings(this.settings);
-    if (this.proc.active && proceduralMusicOn()) this.score.setMuted(true);
+    this.applySettings();
+    this.score.unlock();
   }
 
+  /** Shared settings reach both the recorded score and procedural/fallback audio.
+   * The context master stays at its calibrated gain: procedural busGain already
+   * includes the user's master slider, so applying it here again would apply the slider twice. */
+  private applySettings() {
+    this.muted = this.settings.muted;
+    this.score.setVolume(busGain(this.settings, 'music'));
+    this.score.setMuted(this.muted || (this.proc.active && proceduralMusicOn()));
+    this.proc.setSettings(this.settings);
+    if (this.ctx) {
+      this.master?.gain.setTargetAtTime(this.muted ? 0 : .5, this.ctx.currentTime, .04);
+      this.sfx?.gain.setTargetAtTime(.45 * busGain(this.settings, 'sfx'), this.ctx.currentTime, .025);
+      this.music?.gain.setTargetAtTime(.2 * busGain(this.settings, 'music'), this.ctx.currentTime, .025);
+    }
+  }
   setMuted(m: boolean) {
-    this.muted = m;
-    this.score.setMuted(m || (this.proc.active && proceduralMusicOn()));
     this.settings = { ...this.settings, muted: m };
     saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
-    this.proc.setSettings(this.settings);
-    if (this.master && this.ctx) {
-      this.master.gain.setTargetAtTime(m ? 0 : 0.58, this.ctx.currentTime, 0.04);
-    }
+    this.applySettings();
   }
 
   private makeNoise(ctx: AudioContext) {
@@ -246,18 +254,17 @@ export class GameAudio {
   }
   setVolume(bus: Bus, v: number) {
     if (bus === "master" || bus === "music" || bus === "sfx" || bus === "ambience") {
+      if (!Number.isFinite(v)) return;
       this.settings = { ...this.settings, [bus]: Math.max(0, Math.min(1, v)) };
       saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
-      this.proc.setSettings(this.settings);
+      this.applySettings();
     }
   }
   setMusicVolume(v: number) {
-    this.score.setVolume(v);
     this.setVolume("music", v);
   }
   setSfxVolume(v: number) {
     this.setVolume("sfx", v);
-    if (this.sfx && this.ctx) this.sfx.gain.setTargetAtTime(Math.max(0, Math.min(1, v)),this.ctx.currentTime,.025);
   }
   dispose() {
     this.score.dispose();
