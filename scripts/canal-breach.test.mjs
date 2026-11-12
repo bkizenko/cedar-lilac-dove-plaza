@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {planCanalWorks,executeCanalWorks,continueCanalWorks,canalWorksProgress,lineStageIssue} from '../src/game/waterLineWorks.ts';
 import {canalWorks,canalPhase,canalBreachPermit,validCanalWorks,withBreachPermit} from '../src/game/canalBreach.ts';
-import {excavationCuts,excavationIssue} from '../src/game/excavation.ts';
+import {excavationCuts,excavationIssue,commitExcavation} from '../src/game/excavation.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 
 function world(){const g=new Game();g.reset(13,18,{size:1560,layout:'archipelago'});g.enterIsland();g.testMode=true;g.revealMap=true;g.updateVision(0);Object.assign(g.state,{weather:'clear',weatherT:1e5,raidT:1e5});return g;}
@@ -28,13 +28,18 @@ test('native canal: dug through the ordinary dig job; no ground changes below th
     // before anything below the water is applied, every breach dig must already be laboured
     const committed=()=>w.breach.filter(st=>{const b=g.state.buildings.find(k=>k.type==='trench'&&Math.abs(k.x-st.x)<.01&&Math.abs(k.z-st.z)<.01);return b&&excavationCuts(g).some(c=>c.buildingId===b.id);}).length;
     const pre=committed();if(pre>0&&pre<w.breach.length)order.push({partial:pre,labourDone:canalPhase(g,w).breachLabourDone});
-    if(pre===0&&canalPhase(g,w).breachLabourDone)order.push({labourDoneAt:s});
+    if(pre===0&&canalPhase(g,w).breachLabourDone){order.push({labourDoneAt:s});
+      // the sim's ordinary per-trench commit (integration race) must not open the water
+      const nCuts=excavationCuts(g).length;
+      for(const st of w.breach){const b=g.state.buildings.find(k=>k.type==='trench'&&Math.abs(k.x-st.x)<.01&&Math.abs(k.z-st.z)<.01);if(!b||excavationCuts(g).some(c=>c.buildingId===b.id))continue;const prev=b.build;b.build=1;if(!commitExcavation(g,b))b.build=prev;}
+      if(excavationCuts(g).length!==nCuts)order.push({simLeaked:excavationCuts(g).length-nCuts});}
     continueCanalWorks(g,w.id);const post=committed();if(post>0)order.push({after:post,labourDone:pre>0||canalPhase(g,w).complete});
     p=canalWorksProgress(g,w.id);if(p.complete)break;
     const live=units.filter(u=>u.hp>0),cx=live.reduce((a,u)=>a+u.x,0)/Math.max(1,live.length),cz=live.reduce((a,u)=>a+u.z,0)/Math.max(1,live.length);const open=p.buildingIds.map(id=>g.state.buildings.find(b=>b.id===id)).filter(b=>b.build<1-1e-5).sort((a,b)=>Math.hypot(a.x-cx,a.z-cz)-Math.hypot(b.x-cx,b.z-cz))[0];if(open)for(const u of units)if(u.order!=='build'||u.buildOrder!==open.id){u.order='build';u.buildOrder=open.id;}}
   assert.equal(p.complete,true,JSON.stringify(p));assert.deepEqual(g.simulationErrors,[]);
   // any partially applied breach was only ever seen after all breach labour was done, and the rest followed in the same call
   assert.ok(order.every(o=>o.partial===undefined||o.labourDone),JSON.stringify(order));
+  assert.ok(order.every(o=>o.simLeaked===undefined),JSON.stringify(order));
   const firstAfter=order.find(o=>o.after!==undefined);assert.ok(firstAfter);assert.equal(firstAfter.after,w.breach.length,'the breach is applied together');
   // labour is the ordinary excavation labour of the union volume
   const cuts=excavationCuts(g).filter(c=>p.buildingIds.includes(c.buildingId)),work=cuts.reduce((a,c)=>a+c.workSeconds,0),vol=cuts.reduce((a,c)=>a+c.volumeCubicMeters,0);

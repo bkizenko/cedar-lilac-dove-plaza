@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import type {Building} from './types';
 import {sampleWorldHeight} from './worldgen';
-import {canalBreachPermit,breachPredecessorCuts} from './canalBreach';
+import {canalBreachPermit,breachPredecessorCuts,canalBreachCommitAllowed} from './canalBreach';
 export const EXCAVATION_RULES={version:1,depths:[.5,1,1.5,2] as readonly number[],defaultDepth:1,maximumBankGrade:.30,subdivisions:16,coarseCellsPerTile:2,maximumTiles:512,maximumCuts:512,workSecondsPerCubicMeter:6,minimumWorkSeconds:18,waterClearanceMeters:.35,maximumNaturalGrade:.24} as const;
 export type TerrainCut={version:1;id:number;buildingId:number;team:number;x:number;z:number;w:number;d:number;depth:number;volumeCubicMeters:number;workSeconds:number;legacyPaid?:boolean};
 type ExcavationState={excavations?:TerrainCut[];excavationDepth?:number};
@@ -81,6 +81,7 @@ export function excavationIssue(g:Game,b:Pick<Building,'id'|'team'|'x'|'z'|'w'|'
 }
 export function commitExcavation(g:Game,b:Building){
  if(b.type!=='trench'||b.build<1||b.hp<=0||b.plannedCost)return false;if(excavationCuts(g).some(c=>c.buildingId===b.id))return true;
+ if(!canalBreachCommitAllowed(g,b))return false;
  configureExcavation(g,b);if(excavationIssue(g,b))return false;const cut=proposal(g,b);cut.volumeCubicMeters=excavationVolume(g,cut);cut.workSeconds=excavationWorkNeed(g,b);(state(g).excavations??=[]).push(cut);
  for(const u of g.state.units)if(u.hp>0&&cutAmount(cut,u.x,u.z)>.001)u.y=excavationHeightAt(g,u.x,u.z,raw(g,u.x,u.z));
  for(const list of [g.state.trees,g.state.forage,g.state.stones,g.state.copper,g.state.iron])for(const node of list)if(cutAmount(cut,node.x,node.z)>.001)node.y=excavationHeightAt(g,node.x,node.z,raw(g,node.x,node.z));
