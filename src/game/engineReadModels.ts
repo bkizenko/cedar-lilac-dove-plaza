@@ -22,6 +22,7 @@ import {councilModel} from './rulersView';
 import {civicModel,type CivicModel} from './societyCivicRuntime';
 import {societyDecisionsModel,type SocietyDecisionsModel} from './societyView';
 import {wildCraftModel,type WildCraftModel} from './wildCraftView';
+import {wildPlan,type WildPlan} from './wildCraftControl';
 import {combatModel,matchupModel,type CombatModel} from './combatView';
 import {armorEquipIssue,wornArmor} from './armor';
 import {capitulationOffers} from './capitulation';
@@ -68,7 +69,7 @@ export type EngineReadModel=
  |{kind:'society-decisions';societies:SocietyDecisionsModel}
  |{kind:'society-civic';civic:CivicModel}
  |{kind:'combat-doctrine';combat:CombatModel}
- |{kind:'wild-craft';wild:WildCraftModel}
+ |{kind:'wild-craft';wild:WildCraftModel&{plan:WildPlan}}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]}
  |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number}[]};
@@ -112,7 +113,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='commander-controls')return{kind:query.kind,...commanderControlsModel(g,query.unitIds,query.boatIds)};
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
  if(query.kind==='combat-doctrine')return{kind:query.kind,combat:combatModel(g)};
- if(query.kind==='wild-craft')return{kind:query.kind,wild:wildCraftModel(g)};
+ if(query.kind==='wild-craft')return{kind:query.kind,wild:{...wildCraftModel(g),plan:wildPlan(g)}};
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};
