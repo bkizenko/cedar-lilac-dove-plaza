@@ -1,3 +1,4 @@
+import {ProductionDeliveryChannel,type ProductionDelivery} from './productionDelivery';
 import {storedVillageCandidates,chooseStoredVillage,type StoredVillageCandidate} from './simulationLifecycle';
 import {SimulationCheckpointSaver} from './simulationCheckpointSave';
 import type {AuthoritativeCheckpoint} from './simulationCheckpoint';
@@ -53,6 +54,11 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 }
 
 export class Engine {
+  private productionDeliveries=new ProductionDeliveryChannel();
+  /** Native authoritative owner only while the experimental Worker remains parked. */
+  subscribeProductionDeliveries(listener:(delivery:ProductionDelivery)=>void){return this.productionDeliveries.subscribe(listener);}
+  get productionDeliveryAvailable(){return this.ownerReady&&!this.workerHost;}
+  private bindNativeCallbacks(game:Game){game.onSfx=n=>this.audio.play(n);game.onProductionDelivery=delivery=>{if(this.game===game&&!this.disposed&&!this.closing&&delivery.team===0)this.productionDeliveries.emit(delivery);};}
   private checkpointSaver?:SimulationCheckpointSaver;
   private get checkpointService(){return this.checkpointSaver??=new SimulationCheckpointSaver({checkpoint:()=>this.authoritativeCheckpoint(),currentEpoch:()=>this.dispatchEpoch,allowed:()=>this.ownerReady});}
   private lifecycleSequence=0;
@@ -76,7 +82,7 @@ export class Engine {
   }
   private installVillage(next:PreparedVillage,retainPrevious=false){
     const previous={game:this.game,host:this.workerHost??null},quality=this.game.quality,muted=this.game.muted;
-    if(next.host)next.host.projection.setDisplaySettings(quality,this.fps);else{next.game.quality=quality;next.game.muted=muted;next.game.onSfx=n=>this.audio.play(n);}
+    if(next.host)next.host.projection.setDisplaySettings(quality,this.fps);else{next.game.quality=quality;next.game.muted=muted;this.bindNativeCallbacks(next.game);}
     // Renderer preparation may fail. Keep the real paused owner alive until it succeeds.
     try{this.view.rebuild(next.game);const c=next.game.campOf(0);this.view.look.set(c.x,next.game.height(c.x,c.z)+.55,c.z);this.audio.unlock();this.canvas.focus();if(!next.host)this.profile?.personMethods.attach(next.game);}catch(error){if(next.host&&next.host!==previous.host)next.host.dispose();try{this.view.rebuild(previous.game);}catch{/* Existing owner and durable checkpoint remain; never construct a fallback village. */}throw error;}
     this.workerHost=next.host;this.game=next.game;this.workerBridgeTransition=false;this.dispatchGeneration=(this.dispatchGeneration??1)+1;
@@ -298,7 +304,7 @@ export class Engine {
     this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed&&!this.workerHost&&!this.workerBridgeTransition&&!this.lifecycleBusy&&!this.closing,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
-    this.game.onSfx = (n) => this.audio.play(n);
+    this.bindNativeCallbacks(this.game);
     this.view.onContextLost = () => {
       if (this.game.quality !== "low")
         this.setQuality(this.game.quality === "high" ? "med" : "low");
@@ -335,7 +341,7 @@ export class Engine {
     const saved=loadRaw(),storedVillage=hasSave();
     try {
       if(!saved&&storedVillage)throw new Error('Your saved village could not be restored. Its saved copies have been kept.');
-      if(saved){this.game=decodeGame(saved);this.profile.personMethods.attach(this.game);this.game.quality=this.view.quality;this.game.onSfx=n=>this.audio.play(n);}
+      if(saved){this.game=decodeGame(saved);this.profile.personMethods.attach(this.game);this.game.quality=this.view.quality;this.bindNativeCallbacks(this.game);}
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
       this.game.state.paused = true;
@@ -1209,6 +1215,7 @@ export class Engine {
     if(this.disposal)return this.disposal;if(this.disposed)return Promise.resolve();
     const source=this.game,owner=this.workerHost??null,retained=this.originalWorkerHost??null;
     this.closing=true;this.lifecycleBusy=true;this.lifecycleSequence=(this.lifecycleSequence??0)+1;this.dispatchGeneration=(this.dispatchGeneration??1)+1;
+    this.productionDeliveries?.clear();
     this.running=false;this.profile?.personMethods.dispose();if(this.profile)this.profile.simulationPhases.enabled=false;this.autosave.dispose();
     this.view.renderer.setAnimationLoop(null);
     this.ro?.disconnect();

@@ -1,3 +1,4 @@
+import type {ProductionDelivery} from './productionDelivery';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
@@ -252,6 +253,7 @@ export class Game {
   workBoard = new WorkBoard();
   tradeTeam = 1;
   onSfx: (name: string) => void = () => {};
+  onProductionDelivery:(delivery:ProductionDelivery)=>void=()=>{};
   private navRevision = 0;
   private navBudget = 4;
   private paths = new Map<
