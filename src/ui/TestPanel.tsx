@@ -1,4 +1,6 @@
-import {hasTestLabSave, saveTestLabGame} from '../game/save';
+import {useLifecycleAction} from './useLifecycleAction';
+import {hasTestLabSave} from '../game/save';
+import {VillageSaveButton} from './VillageSaveButton';
 import{herdWaterAccounting}from'../game/penWater';
 import {supplyAccounting} from '../game/simulationEvents';
 import {workAllocationDiagnostics} from '../game/workAllocation';
@@ -14,6 +16,7 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),[,refresh]=useState(0);
  useEffect(()=>{dialog.current?.showModal();return()=>dialog.current?.close();},[]);
  const [saveStatus,setSaveStatus]=useState("");
+ const lifecycle=useLifecycleAction(engine);
  const g=engine.game;
  const terrain=useMemo(()=>terrainMetrics(g.world),[g.world]),scenery=g.world.scenery;
  const commands=commandDiagnostics(g),jobs=workAllocationDiagnostics(g),supplies=supplyAccounting(g),herdWater=herdWaterAccounting(g);
@@ -25,10 +28,10 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <fieldset><legend>Saved test run</legend>
  <p>One local save slot for the Test Lab.</p>
  <div className="test-actions">
- <button onClick={()=>setSaveStatus(saveTestLabGame(g) ? "Test Lab run saved." : "Could not save the Test Lab run. Browser storage may be full.")}>Save test run</button>
- <button disabled={!hasTestLabSave()} title="Replaces the current test run with the saved one" onClick={()=>setSaveStatus(engine.loadTestSession())}>Load test run</button>
+ <VillageSaveButton engine={engine} onResult={setSaveStatus}/>
+ <button disabled={lifecycle.busy||!hasTestLabSave()} title="Replaces the current test run with the saved one" onClick={()=>void lifecycle.run(()=>engine.loadTestSession(),setSaveStatus)}>Load test run</button>
  </div>
- {saveStatus&&<p role="status">{saveStatus}</p>}
+ {(saveStatus||lifecycle.error)&&<p role="status">{lifecycle.error||saveStatus}</p>}
  </fieldset>
  <WorldSetup engine={engine}/>
  <fieldset><legend>Landscape measurements</legend>
@@ -52,7 +55,7 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <fieldset><legend>Command measurements</legend><p>{commands.attempted} assessed · {commands.accepted} accepted · {commands.rejected} blocked</p><p>Current session · latest 128 outcomes retained</p>{commands.outcomes.slice(-5).reverse().map((o,i)=><p key={i}>{o.timeSeconds.toFixed(1)} s · resident {o.actorId} · {o.kind}: {o.accepted?'accepted':o.reason}</p>)}</fieldset>
  <fieldset><legend>Village</legend><div className="test-actions">{([['supplies','Add supplies & seeds'],['weapons','Add weapons'],['heal','Heal & rest people'],['cultivation','Unlock crops'],['finish','Complete construction'],['raid','Land a sea raid'],['transport','Try canoe & pack goat'],['ferry','Try passenger ferry']] as [TestAction,string][]).map(([action,label])=><button key={action} onClick={()=>run(()=>{testAction(g,action);if(action==='ferry'&&g.state.selBld){engine.view.look.x=g.state.selBld.x;engine.view.look.z=g.state.selBld.z;}})}>{label}</button>)}</div></fieldset>
  <fieldset><legend>Relations</legend>{g.state.tribes.filter(t=>t.id!==0&&t.id!==3&&t.alive).map(t=><div className="test-relation" key={t.id}><span>{t.name}</span><button aria-pressed={t.hostile} onClick={()=>run(()=>{t.recoveryUntil=0;g.makeHostile(t.id);})}>War</button><button aria-pressed={!t.hostile} onClick={()=>run(()=>g.agreeTruce(t.id))}>Peace</button></div>)}</fieldset>
- <button className="test-primary" onClick={()=>{engine.endTestSession();close();}}>Return to my village</button>
+ <button className="test-primary" disabled={lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine.endTestSession(),close)}>Return to my village</button>
  </>}
  </dialog>;
 }

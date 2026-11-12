@@ -1,3 +1,10 @@
+import {storedVillageCandidates,chooseStoredVillage,type StoredVillageCandidate} from './simulationLifecycle';
+import {SimulationCheckpointSaver} from './simulationCheckpointSave';
+import type {AuthoritativeCheckpoint} from './simulationCheckpoint';
+import {parseStoredSave,serializeStoredSave} from './storageCodec';
+import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
+import {SimulationWorkerHost} from './simulationWorkerHost';
+import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -17,16 +24,20 @@ import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
-import { encodeGame, decodeGame } from "./persistence";
+import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
-import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
+import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
 import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, loadTestLabGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
+export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
+
+type PreparedVillage={game:Game;host:SimulationWorkerHost|null};
+type LifecycleToken={sequence:number;game:Game;host:SimulationWorkerHost|null;epoch:number};
 
 type HudFn = (s: HudSnapshot) => void;
 
@@ -38,32 +49,164 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 }
 
 export class Engine {
+  private checkpointSaver?:SimulationCheckpointSaver;
+  private get checkpointService(){return this.checkpointSaver??=new SimulationCheckpointSaver({checkpoint:()=>this.authoritativeCheckpoint(),currentEpoch:()=>this.dispatchEpoch,allowed:()=>this.ownerReady});}
+  private lifecycleSequence=0;
+  private lifecycleBusy=false;
+  private closing=false;
+  private disposal:Promise<void>|null=null;
+  private lastLifecycle:{operation:string;mode:'main'|'worker';save?:string}|null=null;
+  private get ownerReady(){return !this.disposed&&!this.workerBridgeTransition&&(!this.workerHost||this.workerHost.ready);}
+  private beginLifecycle():LifecycleToken{
+    if(this.disposed||this.closing)throw new Error('The village is closing');
+    const token={sequence:this.lifecycleSequence=(this.lifecycleSequence??0)+1,game:this.game,host:this.workerHost??null,epoch:this.dispatchEpoch};
+    this.lifecycleBusy=true;this.autosave.invalidate();return token;
+  }
+  private currentLifecycle(t:LifecycleToken){return !this.disposed&&!this.closing&&this.lifecycleSequence===t.sequence&&this.game===t.game&&(this.workerHost??null)===t.host&&this.dispatchEpoch===t.epoch;}
+  private finishLifecycle(t:LifecycleToken){if(this.lifecycleSequence===t.sequence){this.lifecycleBusy=false;if(!this.disposed&&!this.closing)this.pushHud();}}
+  private async pauseLifecycleOwner(t:LifecycleToken){if(!this.currentLifecycle(t))throw new Error('Village changed during transition');if(t.host)await t.host.dispatch({kind:'pause',paused:true});else t.game.state.paused=true;if(!this.currentLifecycle(t))throw new Error('Village changed during transition');}
+  private createLifecycleWorker(){const host=new SimulationWorkerHost({onPresentation:()=>{if(this.workerHost===host)this.pushHud();},onFault:error=>console.error(error)});return host;}
+  private async prepareVillage(snapshot:unknown,worker:boolean,testMode=false,revealMap=false):Promise<PreparedVillage>{
+    if(worker){const host=this.createLifecycleWorker();try{await host.initialize(snapshot,{started:true,awaitingStart:false,testMode,revealMap});host.projection.setDisplaySettings(this.game.quality,this.fps);return{game:host.game,host};}catch(error){host.dispose();throw error;}}
+    const game=decodeGame(snapshot);game.testMode=testMode;game.revealMap=testMode&&revealMap;game.state.paused=true;if(testMode)game.updateVision();return{game,host:null};
+  }
+  private installVillage(next:PreparedVillage,retainPrevious=false){
+    const previous={game:this.game,host:this.workerHost??null},quality=this.game.quality,muted=this.game.muted;
+    if(next.host)next.host.projection.setDisplaySettings(quality,this.fps);else{next.game.quality=quality;next.game.muted=muted;next.game.onSfx=n=>this.audio.play(n);}
+    // Renderer preparation may fail. Keep the real paused owner alive until it succeeds.
+    try{this.view.rebuild(next.game);const c=next.game.campOf(0);this.view.look.set(c.x,next.game.height(c.x,c.z)+.55,c.z);this.audio.unlock();this.canvas.focus();if(!next.host)this.profile?.personMethods.attach(next.game);}catch(error){if(next.host&&next.host!==previous.host)next.host.dispose();try{this.view.rebuild(previous.game);}catch{/* Existing owner and durable checkpoint remain; never construct a fallback village. */}throw error;}
+    this.workerHost=next.host;this.game=next.game;this.workerBridgeTransition=false;this.dispatchGeneration=(this.dispatchGeneration??1)+1;
+    this.dispatchObservedState=next.host?undefined:next.game.state;this.dispatchRevision=0;this.dispatchSequence=0;this.readModelCache?.clear();this.presentationFeedback=null;
+    this.autosave.invalidate();this.simAccumulator=0;this.keyboard.groups.clear();
+    if(!retainPrevious&&previous.host&&previous.host!==next.host)previous.host.dispose();
+  }
+  private async savedVillage(worker:boolean,protectedOnly=false):Promise<PreparedVillage>{
+    if(!worker){const raw=loadRaw(protectedOnly);if(!raw)throw new Error('No compatible save. Older partial saves cannot be restored.');return this.prepareVillage(raw,false);}
+    const validated:StoredVillageCandidate[]=[];
+    for(const candidate of storedVillageCandidates(protectedOnly)){let probe:PreparedVillage|undefined;try{probe=await this.prepareVillage(candidate.snapshot,true);validated.push(candidate);}catch{/* Match native loadRaw terrain reconstruction fallback. */}finally{probe?.host?.dispose();}}
+    const chosen=chooseStoredVillage(validated);if(!chosen)throw new Error('No compatible save. Older partial saves cannot be restored.');return this.prepareVillage(chosen.snapshot,true);
+  }
+  lifecycleReport(){return{busy:this.lifecycleBusy,closing:this.closing,last:this.lastLifecycle};}
+  private presentationFeedback:{message:string;expires:number}|null=null;
+  private workerHost:SimulationWorkerHost|null=null;
+  private workerBridgeTransition=false;
+  private dispatchGeneration=1;
+  private dispatchObservedState:Game['state']|undefined;
+  /** Main resets can replace state without replacing the Game identity. */
+  get dispatchEpoch(){
+    this.dispatchGeneration??=1;
+    if(this.workerHost||this.workerBridgeTransition)return this.dispatchGeneration;
+    if(this.dispatchObservedState!==this.game.state){this.dispatchObservedState=this.game.state;this.dispatchGeneration++;}
+    return this.dispatchGeneration;
+  }
+  get sessionEpoch(){return this.dispatchEpoch;}
+  get commandReady(){return this.ownerReady&&!this.lifecycleBusy&&!this.closing;}
+  private readModelRequest=0;
+  private readModelCache=new Map<string,{epoch:number;at:number;completed:boolean;promise:Promise<EngineReadReply>}>();
+  private readModelMeasurements:{kind:EngineReadQuery['kind'];cpuMilliseconds:number}[]=[];
+  /** Bounded asynchronous owner reads. Cached results are advisory; commands revalidate. */
+  readModel<Q extends EngineReadQuery>(query:Q):Promise<EngineReadReplyFor<Q>>{
+    if(!isEngineReadQuery(query))return Promise.reject(new Error('Unsupported or malformed owner read query'));
+    if(!this.commandReady)return Promise.reject(new Error('No authoritative session is ready'));
+    const captured=structuredClone(query);
+    const epoch=this.dispatchEpoch,key=JSON.stringify(captured),cached=this.readModelCache.get(key),now=performance.now();
+    if(cached&&cached.epoch===epoch&&(!cached.completed||now-cached.at<ENGINE_READ_MODEL_RULES.cacheMilliseconds))return cached.promise as Promise<EngineReadReplyFor<Q>>;
+    const requestId=++this.readModelRequest;
+    const entry={epoch,at:now,completed:false,promise:null as unknown as Promise<EngineReadReply>};
+    const task=async():Promise<EngineReadReply>=>{
+      if(this.workerHost){const result=await this.workerHost.readModel(captured);return{...result,epoch};}
+      const start=performance.now(),model=applyEngineReadQuery(this.game,captured),cpuMilliseconds=Math.max(0,performance.now()-start);
+      return{model,epoch,requestId,stateRevision:this.dispatchRevision,navigationRevision:this.game.navigationRevision(),cpuMilliseconds};
+    };
+    entry.promise=task().then(result=>{this.readModelMeasurements.push({kind:query.kind,cpuMilliseconds:result.cpuMilliseconds});if(this.readModelMeasurements.length>ENGINE_READ_MODEL_RULES.maximumMeasurements)this.readModelMeasurements.shift();return result;}).finally(()=>{entry.completed=true;entry.at=performance.now();});
+    this.readModelCache.delete(key);this.readModelCache.set(key,entry);
+    while(this.readModelCache.size>ENGINE_READ_MODEL_RULES.maximumCacheEntries)this.readModelCache.delete(this.readModelCache.keys().next().value!);
+    return entry.promise as Promise<EngineReadReplyFor<Q>>;
+  }
+  ownerReadModelReport(){return{cacheEntries:this.readModelCache.size,measurements:this.readModelMeasurements.map(m=>({...m}))};}
+  private dispatchSequence=0;
+  private dispatchRevision=0;
+  /** Captures IDs at the click; native handlers revalidate original entities. */
+  async dispatch(command:EngineDispatchCommand,selection?:EngineSelection):Promise<EngineDispatchResult>{
+    const captured=selection??{selectedUnitIds:this.game.selectedUnits().map(u=>u.id),selectedBuildingId:this.game.state.selBld?.id,selectedBoatId:this.game.selectedBoat??undefined};
+    const epoch=this.dispatchEpoch;
+    if(!this.commandReady)throw new Error('No authoritative session is ready');
+    if(this.workerHost){const result=await this.workerHost.dispatch(command,captured);this.readModelCache.clear();return{...result,epoch};}
+    const sequence=++this.dispatchSequence;
+    const outcome=applyEngineCommand(this.game,command,captured);
+    this.readModelCache.clear();
+    const result={...outcome,sequence,stateRevision:++this.dispatchRevision,epoch};
+    this.pushHud();return result;
+  }
+
+  /** Isolated Test Lab harness only. No public worker option until all UI/save bridges qualify. */
+  async startWorkerBridgeForTestLab(){
+    if(!this.originalGame||!this.game.testMode)throw new Error('Worker experiment requires an isolated Test Lab session');
+    if(this.workerHost||this.workerBridgeTransition)throw new Error('A worker session already exists');
+    const original=this.game,snapshot=encodeGame(original),context={started:original.started,awaitingStart:original.awaitingStart,testMode:original.testMode,revealMap:original.revealMap};this.autosave.invalidate();
+    this.dispatchEpoch;this.workerBridgeTransition=true;this.dispatchGeneration++;const transitionEpoch=this.dispatchGeneration;
+    const host=new SimulationWorkerHost({onPresentation:()=>{if(this.workerHost===host)this.pushHud();},onFault:error=>console.error(error)});
+    try{
+      await host.initialize(snapshot,context);if(this.disposed||this.closing||this.game!==original||this.dispatchGeneration!==transitionEpoch)throw new Error('Worker startup was superseded by a village transition');
+      host.projection.setDisplaySettings(this.view.quality,this.fps);this.workerHost=host;this.game=host.game;
+      this.simAccumulator=0;this.view.rebuild(this.game);this.view.resize();
+      this.workerBridgeTransition=false;this.pushHud();return host.report;
+    }catch(error){host.dispose();if(this.game===original&&this.dispatchGeneration===transitionEpoch){this.workerHost=null;this.workerBridgeTransition=false;}throw error;}
+  }
+  workerBridgeReport(){return this.workerHost?.report??null;}
+  get isWorkerSession(){return !!this.workerHost;}
+  presentationNotice(message:string,seconds=2){
+    if(!Number.isFinite(seconds)||seconds<0)throw new RangeError('Invalid notice duration');
+    if(this.workerHost)this.presentationFeedback={message,expires:performance.now()+seconds*1000};
+    else this.game.banner(message,seconds);this.pushHud();
+  }
+  cancelPresentationInteraction(){
+    this.moveMode=false;this.loggingMode=false;this.plotStart=null;this.plotPointerStart=null;
+    this.view.setGhost(null,0,0,0,false);this.view.setLinePreview([]);
+    if(this.workerHost)this.workerHost.select({selectedUnitIds:[]});
+    void this.dispatch({kind:'cancel-interaction'}).catch(error=>this.presentationNotice(error instanceof Error?error.message:String(error),4));
+  }
+  async authoritativeCheckpoint():Promise<AuthoritativeCheckpoint>{
+    if(!this.ownerReady)throw new Error('No authoritative session is ready');
+    const sessionEpoch=this.dispatchEpoch;
+    if(this.workerHost){const result=await this.workerHost.checkpoint();return{source:'worker',sessionEpoch,serialized:result.serialized,clock:result.clock,rng:result.rng,context:result.context};}
+    const g=this.game,context={started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap};
+    const snapshot={...encodeGame(g),savedAt:Date.now(),...(g.testMode?{testLabRevealMap:g.revealMap}:{})};validateGameSave(snapshot);
+    return{source:'main',sessionEpoch,serialized:serializeStoredSave(snapshot),clock:{tick:0,time:g.state.time,paused:g.state.paused,speed:g.state.speed,stateRevision:this.dispatchRevision,appliedSequence:this.dispatchSequence},rng:null,context};
+  }
+  checkpointWorker(){if(!this.workerHost)throw new Error('No authoritative worker');return this.workerHost.checkpoint();}
+  /** Selection is local presentation plus validated digest before worker ticks. */
+  setWorkerSelection(selection:EngineSelection){if(!this.workerHost)throw new Error('No authoritative worker');this.workerHost.select(selection);}
+
   readonly profile = new RuntimeProfile();
   entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
   setPerformanceExpanded(open:boolean){this.profile.simulationPhases.enabled=open;this.profile.personMethods.setEnabled(open,this.game);}
   game: Game;
   readonly autosave:AutosaveController;
   private originalGame: Game | null = null;
-  startTestSession(){
-    if(this.originalGame)return true;
-    if(!saveGame(this.game,true)){this.game.banner("Save your village successfully before entering test mode",5);return false;}
-    const copy=decodeGame(encodeGame(this.game));copy.testMode=true;copy.state.paused=true;
-    this.originalGame=this.game;this.restoreVillage(copy);this.pushHud();return true;
+  private originalWorkerHost:SimulationWorkerHost|null=null;
+  async startTestSession():Promise<boolean>{
+    if(this.originalGame)return true;const t=this.beginLifecycle();let next:PreparedVillage|undefined;
+    try{
+      await this.pauseLifecycleOwner(t);const saved=await this.checkpointService.save('village',true);
+      if(!this.currentLifecycle(t))return false;if(saved.status!=='committed'||!saved.checkpoint)throw new Error('Save your village successfully before entering test mode');
+      next=await this.prepareVillage(parseStoredSave(saved.checkpoint.serialized),!!t.host,true,false);if(!this.currentLifecycle(t)){next.host?.dispose();return false;}
+      this.installVillage(next,true);this.originalGame=t.game;this.originalWorkerHost=t.host;this.lastLifecycle={operation:'enter-lab',mode:next.host?'worker':'main'};this.pushHud();return true;
+    }catch(error){if(this.currentLifecycle(t))this.presentationNotice(error instanceof Error?error.message:String(error),5);return false;}finally{this.finishLifecycle(t);}
   }
-  loadTestSession() {
-    if (!this.originalGame || !this.game.testMode) return "Open the Test Lab first.";
-    try {
-      this.restoreVillage(loadTestLabGame());
-      this.pushHud();
-      return "Test Lab run loaded.";
-    } catch (error) {
-      return error instanceof Error ? error.message : "Could not load the Test Lab run.";
-    }
+  async loadTestSession():Promise<string>{
+    if(!this.originalGame||!this.game.testMode)return 'Open the Test Lab first.';const t=this.beginLifecycle();let next:PreparedVillage|undefined;
+    try{const raw=localStorage.getItem(SAVE_KEY+':test-lab');if(!raw)throw new Error('There is no saved Test Lab run');const snapshot=parseStoredSave(raw);validateGameSave(snapshot);const reveal=(snapshot as {testLabRevealMap?:boolean}).testLabRevealMap===true;
+      await this.pauseLifecycleOwner(t);next=await this.prepareVillage(snapshot,!!t.host,true,reveal);if(!this.currentLifecycle(t)){next.host?.dispose();return 'Test Lab load cancelled: village changed';}
+      this.installVillage(next);this.lastLifecycle={operation:'load-lab',mode:next.host?'worker':'main'};this.pushHud();return 'Test Lab run loaded.';
+    }catch(error){return error instanceof Error?error.message:'Could not load the Test Lab run.';}finally{this.finishLifecycle(t);}
   }
-  endTestSession(){
-    if(!this.originalGame)return;
-    const original=this.originalGame;this.originalGame=null;original.state.paused=true;
-    this.restoreVillage(original);this.pushHud();
+  async endTestSession():Promise<void>{
+    if(!this.originalGame)return;const t=this.beginLifecycle(),original={game:this.originalGame,host:this.originalWorkerHost??null};
+    try{await this.pauseLifecycleOwner(t);if(!this.currentLifecycle(t))throw new Error('Return cancelled: active village changed');
+      if(original.host)await original.host.dispatch({kind:'pause',paused:true});else original.game.state.paused=true;
+      if(!this.currentLifecycle(t))throw new Error('Return cancelled: active village changed');this.installVillage(original);this.originalGame=null;this.originalWorkerHost=null;this.lastLifecycle={operation:'return-from-lab',mode:original.host?'worker':'main'};this.pushHud();
+    }finally{this.finishLifecycle(t);}
   }
   view: WorldView;
   audio: GameAudio;
@@ -113,7 +256,7 @@ export class Engine {
     this.game = new Game();
     this.view = new WorldView(canvas);
     this.audio = new GameAudio();
-    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
+    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed&&!this.workerHost&&!this.workerBridgeTransition&&!this.lifecycleBusy&&!this.closing,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.game.onSfx = (n) => this.audio.play(n);
@@ -183,13 +326,9 @@ export class Engine {
     this.pushHud();
   }
 
-  configureNewWorld(request:WorldRequest,previewRiverbanks=false) {
+  async configureNewWorld(request:WorldRequest,previewRiverbanks=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    if(!this.game.awaitingStart&&!this.game.testMode){
-      if(!protectGame(this.game)){this.game.banner("Could not protect this village. Export it before starting another world.",5);this.pushHud();return false;}
-      saveGame(this.game);
-    }
-    this.restart(request,previewRiverbanks&&this.game.testMode?19:18);return true;
+    return this.restart(request,previewRiverbanks&&this.game.testMode?19:18);
   }
 
   enterIsland() {
@@ -209,94 +348,67 @@ export class Engine {
   hasSavedGame() {
     return hasSave();
   }
-  saveNow() {
-    if (this.game.testMode) {
-      this.game.banner(saveTestLabGame(this.game) ? "Test Lab run saved" : "Could not save the Test Lab run. Browser storage may be full.", 5);
-      this.pushHud();
-      return;
-    }
-    const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
-    this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
-    this.pushHud();
+  async saveNow():Promise<VillageSaveResult>{
+    if(!this.commandReady)return{saved:false,message:'Village transition is still in progress'};
+    const epoch=this.dispatchEpoch,lab=this.game.testMode;
+    const result=await this.checkpointService.save(lab?'test-lab':'village',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};
+    let saved=result.status==='committed',message=saved?(lab?'Test Lab run saved':'Village saved'):result.reason;
+    if(saved&&!lab){const protectedCopy=await this.checkpointService.save('protected',true);if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};if(protectedCopy.status!=='committed')message+=' · extra copy unavailable';}
+    if(!this.workerHost){this.game.banner(message,5);this.pushHud();}
+    return{saved,message};
   }
-  protectVillage() {
-    this.game.banner(protectGame(this.game)?"Backup copy saved — automatic saves will not overwrite this copy":"Could not protect the village; storage may be full",4);
-    this.pushHud();
+  async protectVillage():Promise<VillageSaveResult>{
+    if(!this.commandReady)return{saved:false,message:'Village transition is still in progress'};
+    const epoch=this.dispatchEpoch,result=await this.checkpointService.save('protected',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before protection finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Protected village saved':result.reason};
   }
-  exportVillage() {this.protectVillage();exportGame(this.game);}
-  async importVillage(file:File):Promise<VillageImportResult> {
-    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,state=game.state;
-    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&game.state===state&&!this.originalGame;
-    const cancelled=():VillageImportResult=>({applied:false,saved:false,message:"Import cancelled — the active village changed."});
-    if(this.disposed)return cancelled();
-    this.autosave.invalidate();
-    if(this.originalGame){const message="Leave test mode before importing a village";this.game.banner(message,4);this.pushHud();return{applied:false,saved:false,message};}
-    let restored:Game|undefined;
-    try {
-      const text=await file.text();
-      if(!current())return cancelled();
-      restored=decodeGame(JSON.parse(text));
-      if(!current())return cancelled();
-      if(game.started&&!game.awaitingStart&&!protectGame(game))throw new Error("Could not protect your current village. Download it before importing another save.");
-      if(!current())return cancelled();
-      saveGame(game);
-      if(!current())return cancelled();
-      this.restoreVillage(restored);
-      const saved=saveGame(restored,true),message=saved?"Village imported; previous village kept as a protected checkpoint":"Village imported but local saving failed. Keep the original file.";
-      this.game.banner(message,5);this.pushHud();
-      return{applied:true,saved,message};
-    } catch(error) {
-      const applied=!!restored&&this.game===restored;
-      if(!applied&&!current())return cancelled();
-      const detail=error instanceof Error?error.message:"Invalid village backup",message=applied?`Village loaded, but could not finish: ${detail}`:detail;
-      this.game.banner(message,5);this.pushHud();
-      return{applied,saved:false,message};
-    }
+  async exportVillage():Promise<VillageSaveResult>{
+    if(!this.commandReady)return{saved:false,message:'Village transition is still in progress'};
+    const epoch=this.dispatchEpoch;
+    // Export remains available for storage recovery; its payload comes from the owner.
+    const result=await this.checkpointService.save('export',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before export finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Village file prepared':result.reason,...(result.checkpoint?{serialized:result.checkpoint.serialized}:{})};
   }
-  private restoreVillage(restored:Game) {
-    this.autosave.invalidate();
-    restored.onSfx=(n)=>this.audio.play(n);restored.quality=this.game.quality;restored.muted=this.game.muted;
-    this.game=restored;this.profile.personMethods.attach(restored);this.simAccumulator=0;this.keyboard.groups.clear();
-    this.view.rebuild(restored);this.homeLook();this.audio.unlock();this.canvas.focus();
+  async importVillage(file:File):Promise<VillageImportResult>{
+    const cancelled=():VillageImportResult=>({applied:false,saved:false,message:'Import cancelled — the active village changed.'});
+    if(this.disposed||this.closing)return cancelled();
+    if(this.originalGame){const message='Leave test mode before importing a village';this.presentationNotice(message,4);return{applied:false,saved:false,message};}
+    const t=this.beginLifecycle();let next:PreparedVillage|undefined,applied=false;
+    try{
+      const text=await file.text();if(!this.currentLifecycle(t))return cancelled();const raw=JSON.parse(text);validateGameSave(raw);
+      next=await this.prepareVillage(raw,!!t.host);if(!this.currentLifecycle(t)){next.host?.dispose();return cancelled();}
+      await this.pauseLifecycleOwner(t);
+      if(t.game.started&&!t.game.awaitingStart){const protectedCopy=await this.checkpointService.save('protected',true);if(!this.currentLifecycle(t))return cancelled();if(protectedCopy.status!=='committed')throw new Error('Could not protect your current village. Download it before importing another save.');}
+      // Keep the outgoing village's recoverable primary too; never encode a projection.
+      if(t.game.started&&!t.game.awaitingStart){await this.checkpointService.save('village',true);if(!this.currentLifecycle(t))return cancelled();}
+      this.installVillage(next);applied=true;const appliedEpoch=this.dispatchEpoch;
+      const saved=await this.checkpointService.save('village',true);if(this.lifecycleSequence!==t.sequence||this.disposed||this.closing||this.game!==next.game||this.dispatchEpoch!==appliedEpoch)return{applied:true,saved:false,message:'Import completed; a newer village transition superseded saving'};const message=saved.status==='committed'?'Village imported; previous village kept as a protected checkpoint':'Village imported but local saving failed. Keep the original file.';
+      this.lastLifecycle={operation:'import',mode:next.host?'worker':'main',save:saved.status};this.presentationNotice(message,5);return{applied:true,saved:saved.status==='committed',message};
+    }catch(error){if(!applied&&!this.currentLifecycle(t))return cancelled();const detail=error instanceof Error?error.message:'Invalid village backup';this.presentationNotice(detail,5);return{applied,saved:false,message:detail};}
+    finally{if(!applied&&next?.host)next.host.dispose();this.finishLifecycle(t);}
   }
-  resumeSaved(protectedOnly=false) {
-    if(this.originalGame){this.endTestSession();return;}
-    try {
-      if(protectedOnly && this.game.started && !this.game.awaitingStart && !saveGame(this.game))throw new Error("Could not save the current village before restoring. Download it first.");
-      const raw = loadRaw(protectedOnly);
-      if (!raw) throw new Error("No compatible save. Older partial saves cannot be restored.");
-      const restored = decodeGame(raw);
-      this.restoreVillage(restored);
-      if(protectedOnly)saveGame(restored,true);
-      restored.banner("Village restored · P to resume", 4);
-    } catch (error) {
-      this.game.banner(error instanceof Error ? error.message : "Cannot restore save", 4);
-    }
-    this.pushHud();
+  private restoreVillage(restored:Game){this.installVillage({game:restored,host:null});}
+  async resumeSaved(protectedOnly=false):Promise<void>{
+    if(this.originalGame){await this.endTestSession();return;}const t=this.beginLifecycle();let next:PreparedVillage|undefined,applied=false;
+    try{await this.pauseLifecycleOwner(t);next=await this.savedVillage(!!t.host,protectedOnly);if(!this.currentLifecycle(t)){next.host?.dispose();throw new Error('Restore cancelled: active village changed');}
+      if(protectedOnly&&t.game.started&&!t.game.awaitingStart){const saved=await this.checkpointService.save('village',true);if(!this.currentLifecycle(t))throw new Error('Restore cancelled: active village changed');if(saved.status!=='committed')throw new Error('Could not save the current village before restoring. Download it first.');}
+      this.installVillage(next);applied=true;const appliedEpoch=this.dispatchEpoch;if(protectedOnly)await this.checkpointService.save('village',true);
+      if(this.lifecycleSequence!==t.sequence||this.disposed||this.closing||this.game!==next.game||this.dispatchEpoch!==appliedEpoch)throw new Error('Restore superseded by a newer transition');
+      this.lastLifecycle={operation:'restore',mode:next.host?'worker':'main'};this.presentationNotice('Village restored · P to resume',4);
+    }catch(error){if(this.currentLifecycle(t))this.presentationNotice(error instanceof Error?error.message:'Cannot restore save',4);throw error;}finally{if(!applied)next?.host?.dispose();this.finishLifecycle(t);}
   }
-
-  restart(request?:WorldRequest,generation:18|19=18) {
-    const nextRequest={...request,difficulty:request?.difficulty??this.game.state.difficulty??'normal'};
-    this.autosave.invalidate();
-    this.simAccumulator = 0;
-    this.keyboard.groups.clear();
-    try {
-      this.game.reset(undefined,generation,nextRequest);
-      this.game.enterIsland();
-      this.game.state.paused = true;
-      this.view.rebuild(this.game);
-      this.homeLook();
-    } catch (err) {
-      console.error(err);
-      this.setQuality("low");
-      this.game.reset(undefined,generation,nextRequest);
-      this.game.enterIsland();
-      this.game.state.paused = true;
-      this.view.rebuild(this.game);
-      this.homeLook();
-    }
-    this.audio.unlock();
-    this.pushHud();
+  async restart(request?:WorldRequest,generation:18|19=18):Promise<boolean>{
+    const t=this.beginLifecycle();let applied=false;
+    try{await this.pauseLifecycleOwner(t);
+      if(t.game.started&&!t.game.awaitingStart){const saved=await this.checkpointService.save(t.game.testMode?'test-lab':'protected',true);if(!this.currentLifecycle(t))return false;if(saved.status!=='committed')throw new Error('Could not protect this village. Export it before starting another world.');}
+      const game=new Game();game.reset(undefined,generation,{...request,difficulty:request?.difficulty??t.game.state.difficulty??'normal'});game.enterIsland();game.state.paused=true;game.testMode=t.game.testMode;
+      if(!this.currentLifecycle(t))return false;
+      // Explicit fresh-world MAIN-mode replacement. Worker world creation is not implemented.
+      this.installVillage({game,host:null});applied=true;this.lastLifecycle={operation:'new-world',mode:'main'};this.pushHud();return true;
+    }catch(error){if(this.currentLifecycle(t))this.presentationNotice(error instanceof Error?error.message:'Could not create world',5);return false;}finally{this.finishLifecycle(t);}
   }
 
   private homeLook() {
@@ -328,17 +440,19 @@ export class Engine {
     this.keys.clear();
     this.simAccumulator = 0;
   };
-  private onPageHide = () => {if(!this.disposed)saveGame(this.game);};
-
-  private onVis = () => {
-    this.keys.clear();
-    this.simAccumulator = 0;
-    this.last = 0;
-    if (document.visibilityState === "hidden") saveGame(this.game);
-    if (document.visibilityState === "visible") {
-      this.view.resize();
-      if (this.audio.ctx?.state === "suspended") void this.audio.ctx.resume();
-    }
+  private backgroundCheckpoint:Promise<void>|null=null;
+  private requestBackgroundCheckpoint(){
+    if(this.disposed||this.closing||this.lifecycleBusy||this.workerBridgeTransition)return;
+    if(!this.workerHost){if(this.game.testMode)void this.checkpointService.save('test-lab',false);else saveGame(this.game);return;}
+    if(this.backgroundCheckpoint)return;
+    const owner=this.workerHost,epoch=this.dispatchEpoch;
+    this.backgroundCheckpoint=(async()=>{const saved=await this.checkpointService.save(this.game.testMode?'test-lab':'village',false);if(this.workerHost===owner&&this.dispatchEpoch===epoch)this.lastLifecycle={operation:'background-checkpoint',mode:'worker',save:saved.status};})().catch(error=>console.error(error)).finally(()=>{this.backgroundCheckpoint=null;});
+  }
+  private onPageHide=()=>{this.requestBackgroundCheckpoint();};
+  private onVis=()=>{
+    this.keys.clear();this.simAccumulator=0;this.last=0;
+    if(document.visibilityState==='hidden')this.requestBackgroundCheckpoint();
+    if(document.visibilityState==='visible'){this.view.resize();if(this.audio.ctx?.state==='suspended')void this.audio.ctx.resume();}
   };
 
   private onKeyDown = (e: KeyboardEvent) => {
@@ -458,6 +572,11 @@ export class Engine {
       const dx = this.drag.x - this.drag.sx;
       const dy = this.drag.y - this.drag.sy;
       if (Math.hypot(dx, dy) > 8) {
+        if(this.workerHost){
+          const ids=e.shiftKey?this.game.selectedUnits().map(u=>u.id):[];
+          for(const u of this.game.state.units){if(u.team!==0||u.hp<=0)continue;const point=this.view.project(u.x,u.y+.6,u.z);if(!point.behind&&point.x>=Math.min(this.drag.sx,this.drag.x)&&point.x<=Math.max(this.drag.sx,this.drag.x)&&point.y>=Math.min(this.drag.sy,this.drag.y)&&point.y<=Math.max(this.drag.sy,this.drag.y)&&!ids.includes(u.id))ids.push(u.id);}
+          this.workerHost.select({selectedUnitIds:ids});this.drag=null;this.pushHud();return;
+        }
         if (!e.shiftKey && !this.loggingMode) this.game.clearSelect();
         const minx = Math.min(this.drag.sx, this.drag.x),
           maxx = Math.max(this.drag.sx, this.drag.x);
@@ -499,6 +618,16 @@ export class Engine {
   }
 
   leftClick(cx: number, cy: number, additive: boolean) {
+    if(this.workerHost){
+      const entity=this.view.pickEntity(cx,cy,this.game);
+      if(entity?.kind==='building'){this.workerHost.select({selectedUnitIds:[],selectedBuildingId:entity.id});return;}
+      if(entity&&entity.team===0){
+        const ids=additive?this.game.selectedUnits().map(u=>u.id):[];
+        this.workerHost.select({selectedUnitIds:ids.includes(entity.id)?ids.filter(id=>id!==entity.id):[...ids,entity.id]});return;
+      }
+      const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length){void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);}
+      return;
+    }
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
     const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) {
@@ -558,6 +687,7 @@ export class Engine {
   }
 
   rightClick(cx: number, cy: number,queue=false) {
+    if(this.workerHost){const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length)void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);return;}
     const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
@@ -831,12 +961,14 @@ export class Engine {
   }
 
   setPaused(p: boolean) {
+    if(this.workerHost)return this.dispatch({kind:'pause',paused:p});
     this.game.state.paused = p;
     if(p)saveGame(this.game);
     this.pushHud();
   }
 
   setSpeed(s: number) {
+    if(this.workerHost)return this.dispatch({kind:'speed',speed:s===4||s===3?4:s===2?2:1,resume:true});
     this.game.state.speed = s === 4 || s === 3 ? 4 : s === 2 ? 2 : 1;
     this.game.state.paused = false;
     this.pushHud();
@@ -848,7 +980,7 @@ export class Engine {
   }
 
   setQuality(q: "low" | "med" | "high") {
-    this.game.quality = q;
+    if(this.workerHost)this.workerHost.projection.setDisplaySettings(q,this.fps);else this.game.quality = q;
     this.view.applyQuality(q);
     rememberGraphicsQuality(q);
   }
@@ -863,13 +995,14 @@ export class Engine {
     if (this.disposed) return;
     try {
       const frameGap=this.profile.frame(t);
+      const workerWallDt=Number.isFinite(t)&&Number.isFinite(this.last)&&this.last>0?Math.max(0,(t-this.last)/1000):0;
       const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
       this.fpsAcc += frameGap/1000;
       if (this.fpsAcc >= 0.4) {
         this.fps = this.profile.frameRate(RUNTIME_PROFILE_RULES.displayRateWindowMilliseconds);
-        this.game.fps = Math.round(this.fps);
+        if(this.workerHost)this.workerHost.projection.setDisplaySettings(this.view.quality,Math.round(this.fps));else this.game.fps = Math.round(this.fps);
         this.frames = 0;
         this.fpsAcc = 0;
       }
@@ -892,7 +1025,9 @@ export class Engine {
         return;
       }
 
-      if (document.hidden) {
+      if(this.workerHost){if(!document.hidden&&!this.lifecycleBusy&&!this.closing)this.workerHost.advanceWallTime(workerWallDt);}
+      else if(this.workerBridgeTransition||this.lifecycleBusy||this.closing){/* Sole authority is transferring; main never steps. */}
+      else if (document.hidden) {
         this.simAccumulator = 0;
       } else {
         if(this.profile.personMethods.enabled)this.profile.personMethods.attach(this.game);
@@ -917,7 +1052,7 @@ export class Engine {
       this.profile.measure('scene',()=>this.view.sync(this.game, dt));
       this.profile.measure('draw',()=>this.view.render());
       this.profile.recordRenderer(this.view.latestRenderMetrics);
-      this.tuneQuality(dt);
+      if(!this.workerHost)this.tuneQuality(dt);
 
       this.hudAcc += dt;
       if (this.hudAcc > 0.12) {
@@ -936,7 +1071,7 @@ export class Engine {
       if (this.failFrames >= 2 && this.game.quality !== "low") {
         this.failFrames = 0;
         this.setQuality(this.game.quality === "high" ? "med" : "low");
-        this.game.banner("The valley eases", 1.8);
+        if(!this.workerHost)this.game.banner("The valley eases", 1.8);
       }
     }
   };
@@ -959,6 +1094,7 @@ export class Engine {
   }
 
   pushHud() {
+    if(this.workerHost){if(this.workerHost.ready){const notice=this.presentationFeedback&&this.presentationFeedback.expires>performance.now()?this.presentationFeedback.message:this.workerHost.hud.banner;this.hud({...this.workerHost.hud,fps:this.fps,banner:notice});}return;}
     try {
       const type=this.game.state.placing;
       const cost=type?buildingCost(type,this.game,0,this.plotSize,this.bridgeSpan):null;
@@ -990,13 +1126,11 @@ export class Engine {
     (window as unknown as { __engine?: Engine }).__engine = this;
   }
 
-  dispose() {
-    if(this.disposed)return;
-    this.profile.personMethods.dispose();this.profile.simulationPhases.enabled=false;
-    this.autosave.dispose();
-    saveGame(this.game);
-    this.disposed = true;
-    this.running = false;
+  dispose():Promise<void>{
+    if(this.disposal)return this.disposal;if(this.disposed)return Promise.resolve();
+    const source=this.game,owner=this.workerHost??null,retained=this.originalWorkerHost??null;
+    this.closing=true;this.lifecycleBusy=true;this.lifecycleSequence=(this.lifecycleSequence??0)+1;this.dispatchGeneration=(this.dispatchGeneration??1)+1;
+    this.running=false;this.profile?.personMethods.dispose();if(this.profile)this.profile.simulationPhases.enabled=false;this.autosave.dispose();
     this.view.renderer.setAnimationLoop(null);
     this.ro?.disconnect();
     window.removeEventListener("resize", this.onResize);
@@ -1014,7 +1148,17 @@ export class Engine {
     window.removeEventListener("wheel", this.onWheel);
     this.view.dispose();
     this.audio.dispose();
+
+    this.disposal=(async()=>{
+      try{
+        if(owner?.ready)await owner.dispatch({kind:'pause',paused:true});
+        const saved=await this.checkpointService.save(source.testMode?'test-lab':'village',false);
+        this.lastLifecycle={operation:'dispose',mode:owner?'worker':'main',save:saved.status};
+      }catch(error){this.lastLifecycle={operation:'dispose',mode:owner?'worker':'main',save:'failed'};console.error(error);}
+      finally{owner?.dispose();if(retained&&retained!==owner)retained.dispose();this.workerHost=null;this.originalWorkerHost=null;this.disposed=true;this.lifecycleBusy=false;}
+    })();return this.disposal;
   }
+
 }
 
 declare global {
