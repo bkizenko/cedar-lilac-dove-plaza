@@ -1,11 +1,15 @@
 import type {ReactNode} from 'react';
 import {Crown,Skull,Users,Swords,TriangleAlert,Scroll,Hourglass} from 'lucide-react';
-import type {Engine} from '@/game/engine';
-import type {CouncilModel} from '@/game/rulersView';
-import {societyIdentity} from '@/game/societyIdentity';
+import type {Engine} from '../../game/engine';
+import type {CouncilModel} from '../../game/rulersView';
+import {societyIdentity} from '../../game/societyIdentity';
 import {LeaderPortrait} from '../h/LeaderPortrait';
 import {GameTooltip} from '../GameTooltip';
 import {lawLabel} from '../council/CouncilParts';
+import type {CapitulationOutcome} from '../../game/capitulation';
+import {TERMS} from '../council/CapitulationTerms';
+import {useOwnerReadModels} from '../useOwnerReadModels';
+import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 
 const cx=(...a:(string|false|undefined|null)[])=>a.filter(Boolean).join(' ');
 const sentence=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
@@ -69,4 +73,32 @@ export function RenownCard({glory,score}:{glory:CouncilModel['glory'];score:numb
  const rows=glory.filter(g=>g.value>0).sort((a,b)=>b.value-a.value);if(!rows.length)return null;const top=rows[0].value;
  return <section className="hw-card hw-renown" aria-label="Renown"><div className="hw-card-head"><h3>Renown</h3><span className="hw-chip"><Crown size={18}/>{score}</span></div>
   <ul className="hw-list">{rows.map((g,i)=><li key={g.stream}><span className="hw-meter-row"><b className="hw-lbl">{g.stream}</b><span className={cx('hw-meter',i===0&&'is-top')} role="img" aria-label={`${g.stream} ${g.value}`}><i style={{width:Math.max(6,g.value/top*100)+'%'}}/></span><b>{g.value}</b></span></li>)}</ul></section>;
+}
+
+/** Capitulation terms in the Hearth style: a beaten community's offer, its clock and will, and the eight outcomes grouped by
+ * how hard they bear on the defeated (gentle / firm / ruinous). Same engine commands as the classic picker; the harsh tier is
+ * set apart and marked so it is never one mis-tap away from "tribute". */
+const TIERS:{key:string;label:string;ids:CapitulationOutcome[]}[]=[
+ {key:'gentle',label:'Keep them as a people',ids:['autonomy','tribute','puppet']},
+ {key:'firm',label:'Hold or take what they have',ids:['occupy','annex','loot']},
+ {key:'ruinous',label:'Ruinous',ids:['captives','raze']}];
+type Offer={id:number;defenderName:string;score:number;expiresIn:number;measured:{casualties:number;captured:number;lostArmed:number;buildingLoss:number}};
+export function HearthCapitulationTerms({engine}:{engine:Engine}){
+ const QUERY={kind:'capitulation-offers'} as const,read=useOwnerReadModels(engine,[QUERY]),offers=read(QUERY).model?.offers??[];
+ const fb=useActionFeedback(engine);
+ return <TermsOffers offers={offers} send={c=>void fb.send(c)} feedback={fb.items}/>;
+}
+export function TermsOffers({offers,send,feedback}:{offers:Offer[];send:(c:{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number})=>void;feedback:Parameters<typeof FeedbackList>[0]['items']}){
+ if(!offers.length)return null;
+ return <section aria-label="Terms offered" className="hw-terms">{offers.map(o=>{
+  const will=Math.round(o.score*100),left=Math.max(0,Math.ceil(o.expiresIn)),m=o.measured;
+  return <article key={o.id} className="hw-card hw-terms-card is-now">
+   <div className="hw-card-head"><Scroll size={26}/><h3>{o.defenderName} offers terms</h3><span className={cx('hw-chip',left<=10?'t-bad':'t-warn')}><Hourglass size={16}/>{left}s</span></div>
+   <div className="hw-meter-row"><span className="hw-lbl">Their will</span><span className="hw-bar" style={{flex:1}} role="img" aria-label={`Will broken ${will}%`}><i className="t-bad" style={{width:Math.min(100,will)+'%'}}/></span><b>{will}%</b></div>
+   <ul className="hw-chips"><li className="hw-chip hw-chip-soft"><Skull size={16}/>{m.casualties} fallen</li><li className="hw-chip hw-chip-soft"><Users size={16}/>{m.captured} taken</li><li className="hw-chip hw-chip-soft"><Swords size={16}/>{m.lostArmed} armed lost</li><li className="hw-chip hw-chip-soft">{m.buildingLoss} {m.buildingLoss===1?"building":"buildings"} lost</li></ul>
+   <p className="hw-sub">The offer lapses if your force leaves. Refusing hardens them.</p>
+   {TIERS.map(t=><div key={t.key} className={cx('hw-term-tier','tier-'+t.key)}><h4>{t.label}</h4>
+    <ul>{t.ids.map(id=>{const term=TERMS.find(x=>x.id===id)!;return <li key={id}><button type="button" className="hw-term" onClick={()=>send({kind:'accept-capitulation',frontId:o.id,outcome:id})}><b>{term.label}</b><span>{term.note}</span></button></li>;})}</ul></div>)}
+   <button type="button" className="hw-btn-wide" onClick={()=>send({kind:'refuse-capitulation',frontId:o.id})}><Swords size={18}/>Refuse and press the attack</button>
+  </article>;})}<FeedbackList items={feedback}/></section>;
 }
