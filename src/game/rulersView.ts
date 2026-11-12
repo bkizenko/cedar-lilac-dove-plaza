@@ -3,7 +3,7 @@ import {societyIdentity} from './societyIdentity';
 import type {Game} from './sim';
 import {rulersOf} from './rulersState';
 import {liveClaims,cbLegitimacyCost} from './unrest';
-import {expansionParties,type PartyLine,ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf} from './rulersRuntime';
+import {expansionParties,type PartyLine,ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf,neighbourNews} from './rulersRuntime';
 import {familyFeatures} from './familyScale';
 import {dossier,relationWord,traitWord} from './kinshipBridge';
 import {generateFactions,stepFactions,coalitionLoss,type FactionKind} from './houses';
@@ -25,6 +25,8 @@ export type CouncilModel={
  parties?:PartyLine[];
  neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[];casus?:CasusLine[]}[];
  log:string[];
+ /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
+ news?:{time:number;kind:string;with:number;text:string}[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
 /** A standing grievance between two houses, in plain words: who holds it, the cause, how strong, when it lapses and what citing it costs the holder. */
@@ -70,7 +72,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
   factions:factions.map(x=>({kind:x.kind,power:Math.round(x.power*100),loyalty:x.loyalty,demand:x.demand})),coalitionLoss:coalitionLoss(factions),
   glory:STREAMS.map(s=>({stream:s,value:Math.round(me.ledger[s])})),gloryScore:Math.round(score(me.ledger)),
-  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),
+  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),news:neighbourNews(g,0,6).map(n=>({time:n.time,kind:n.kind,with:n.a===0?n.b:n.a,text:n.text})),
  };
 }
 void traitWord;void dominantTraits;
