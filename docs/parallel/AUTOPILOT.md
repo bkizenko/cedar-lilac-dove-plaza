@@ -350,7 +350,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | M5-10 | gate | Packaged published first release preserves saves/preview/later-era content and records exact evidence/remaining expansion scope | Codex | Codex N3 | not started | A maintained preview/batch push is not the completed first release. |
 | ASTRA-01 | astra | Audit and freeze contracts | Grok | Grok T10 | not started | contracts freeze maintained in AUTOPILOT.md once this lands on main |
 | ASTRA-02 | astra | Keyboard world commands | Codex | — (done) | done/live | keyboard world commands exist in engine.ts / GameApp / Hud on main; patch leftovers on audit (Codex W10 / Claude W10) |
-| ASTRA-03 | astra | Acoustic adaptive score | Claude | Claude W3 | not started |  |
+| ASTRA-03 | astra | Acoustic adaptive score | Claude | Claude W3 | shipped (procedural music is OPT-IN via localStorage hearthwild.proceduralMusic=1; recorded score stays default per W3 rule; procedural ambience+SFX on; asset-free: scale-seeded lute/drum/flute/drone/strings/horn/bells layers crossfading on peace/work/danger/night/season/era/ruler events; src/scene/audioMix.ts + src/game/proceduralAudio.ts, scripts/audio-mix.test.mjs; replaces recorded score while active, supersedes the W3 "no oscillator music" note per Boris) |  |
 | ASTRA-04 | astra | Reliable save and resume | Codex | Codex N4 | source-pushed-not-live | saves are live; remaining acceptance is corrupt-save / full-state restore vs ASTRA criteria |
 | ASTRA-05 | astra | Fixed simulation cadence | Codex | Codex N4 | source-pushed-not-live | fixed tick exists; confirm 30Hz equal-elapsed and hidden-tab catchup |
 | ASTRA-06 | astra | Route around obstacles | Grok | — (done) | done/live | bounded A* plus tight-space work GW-01 2a9fa79 / 5f2b1b2; no teleport unsticking — already a hard rule |
@@ -369,7 +369,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ASTRA-19 | astra | Wildlife and seasonal habitat | Grok | Grok N5 | source-pushed-not-live | hunting/wildlife live (M1-10); habitat/offscreen bounds leftovers |
 | ASTRA-20 | astra | Fog and scouting audit | Grok | Grok W13 | source-pushed-not-live | G10 overlay live 39115987; exact-radius attribution still open |
 | ASTRA-21 | astra | HUD and teaching pass | Claude | Claude N1 | source-pushed-not-live | Hearth UI (src/ui/hearth) is the new default HUD with a New/Classic switch in Menu; Council now has handover card (rivals/pressure/regency), fame feed, ruler LeaderPortrait, factions strip, shared-scale renown bars (docs/renders/ui/hearth-council-handover.png); teaching pass not live |
-| ASTRA-22 | astra | Natural SFX and environment mix | Claude | Claude W3 | not started |  |
+| ASTRA-22 | astra | Natural SFX and environment mix | Claude | Claude W3 | shipped (wind/rain/storm/river/surf/birds by biome+hour/fire/mill/livestock/crowd beds, spatial tools/footsteps/clash/animals, 20-voice budget, master/music/sfx/ambience sliders + mute in Menu, persisted) |  |
 | ASTRA-23 | astra | Save migration and deterministic replay | Codex | Codex W8 | not started | same work as M0-09 |
 | ASTRA-24 | astra | Performance and balance gate | Codex | Codex N4 | not started |  |
 | ASTRA-25 | astra | Playable alpha packaging | Codex | Codex N3 | not started | same work as M5-10 |

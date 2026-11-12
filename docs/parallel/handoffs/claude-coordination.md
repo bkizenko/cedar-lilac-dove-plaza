@@ -663,3 +663,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 08:31 ET Claude: shipped lane B Hearth Council cards: handover card (rivals/unrest pressure/regency), fame feed, ruler LeaderPortrait, factions strip, shared-scale renown bars, render docs/renders/ui/hearth-council-handover.png (b0acd5d on integration/2026-11-11) / now on trade/capitulation sheet polish + theme setting audit / blocked: none. tsc 0 errors, council-ui 8/8
 
 08:42 ET Claude(PM): landed 82f69d8 (7 commits: integration b0acd5d Hearth council cards) / focused sweep 105 pass 0 fail 3 skip / blocked: none
+08:38 ET Claude: shipped procedural adaptive score + natural SFX\/environment mix (ASTRA-03\/22): pure state->mix in src/scene/audioMix.ts, thin WebAudio wiring, Menu volume sliders+mute, 12 deterministic tests, tsc diff nil / now on: nothing queued / blocked: none; leftover: no ear-test in a real browser, unit-level positions for animal calls
