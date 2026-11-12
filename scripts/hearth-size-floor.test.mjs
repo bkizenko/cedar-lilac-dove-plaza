@@ -9,6 +9,7 @@ test('floor tokens are declared and not below the floor (last declaration wins)'
  assert.ok(token('hw-fs')>=token('hw-fs-s'));
  assert.ok(token('hw-ico-s')>=24,'smallest control icon');
  assert.ok(token('hw-hit')>=48,'tap target');
+ assert.match(css,/\.hw-btn-s\{width:var\(--hw-hit\);height:var\(--hw-hit\);/,'compact controls share the minimum target');
 });
 test('no literal font size below 16px anywhere in the Hearth stylesheet',()=>{
  const bad=[];

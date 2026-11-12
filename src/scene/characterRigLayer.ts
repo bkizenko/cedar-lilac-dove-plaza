@@ -23,7 +23,7 @@ export type PeopleWorld={time:number;season:Season;era:number;identity(team:numb
  /** real gear: garment, armor asset, optional helmet/shield */gearOf(u:UnitLike):RigGear;
  projectFor(u:UnitLike):AnimContext['project'];farmFor(u:UnitLike):AnimContext['farm'];fireLitNear(u:UnitLike):boolean;loadOf(u:UnitLike):number;
  aliveIds():ReadonlySet<number>;visible(x:number,z:number):boolean;/** role from real unit state (peopleLook.roleOf); absent = derived from type and age class */roleOf?(u:UnitLike):Role};
-type Variant={mesh:THREE.InstancedMesh;count:number};
+type Variant={mesh:THREE.InstancedMesh;count:number;lastUsed:number};
 const linear=(c:Float32Array)=>{const o=new Float32Array(c.length),k=new THREE.Color();for(let i=0;i<c.length;i+=3){k.setRGB(c[i],c[i+1],c[i+2],THREE.SRGBColorSpace);o[i]=k.r;o[i+1]=k.g;o[i+2]=k.b;}return o;};
 function toGeometry(parts:readonly RigPart[],pivot:readonly number[],colors:Record<RigSlot,string>,tier:LodTier){
  const d=rigMeshData(parts,pivot,colors,tier),g=new THREE.BufferGeometry();
@@ -81,14 +81,22 @@ export class CharacterRigLayer{
  /** Bone signatures are pure per outfit and tier: computed once, not every frame. */
  private sigOf(o:RigOutfit,tier:LodTier,b:RigBone,parts:readonly RigPart[]){let m=SIGS.get(o);if(!m){m=new Map();SIGS.set(o,m);}const k=tier+b;let s=m.get(k);if(s===undefined){s=boneSignature(parts,o.colors,tier);m.set(k,s);}return s;}
  private variant(key:string,make:()=>THREE.BufferGeometry):Variant|null{
-  let v=this.variants.get(key);if(v)return v;if(this.variants.size>=PEOPLE_RULES.maxVariants){this.stats.fallbacks++;return null;}
+  let v=this.variants.get(key);if(v)return v;
+  if(this.variants.size>=PEOPLE_RULES.maxVariants){
+   // Retire only an unused draw. Anything already written this frame stays pinned,
+   // so gear/season/LOD changes cannot erase a currently visible person.
+   let oldestKey:string|undefined,oldest:Variant|undefined;
+   for(const [k,candidate]of this.variants)if(candidate.count===0&&(!oldest||candidate.lastUsed<oldest.lastUsed)){oldestKey=k;oldest=candidate;}
+   if(oldest&&oldestKey!==undefined){this.root.remove(oldest.mesh);oldest.mesh.geometry.dispose();oldest.mesh.dispose();this.variants.delete(oldestKey);}
+   else{this.stats.fallbacks++;return null;}
+  }
   const mesh=new THREE.InstancedMesh(make(),this.material,PEOPLE_RULES.startCapacity);mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PEOPLE_RULES.startCapacity*3),3);mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);mesh.name='people:'+key;mesh.receiveShadow=true;
-  this.root.add(mesh);v={mesh,count:0};this.variants.set(key,v);return v;
+  this.root.add(mesh);v={mesh,count:0,lastUsed:this.frame};this.variants.set(key,v);return v;
  }
  private push(v:Variant,m:ArrayLike<number>,c:THREE.Color){
   if(v.count>=v.mesh.instanceMatrix.count){v.mesh=ensureInstanceCapacity(this.scene,v.mesh,v.count+1);this.root.add(v.mesh);}
-  v.mesh.instanceMatrix.array.set(m as number[],v.count*16);const ic=v.mesh.instanceColor!.array as Float32Array;ic[v.count*3]=c.r;ic[v.count*3+1]=c.g;ic[v.count*3+2]=c.b;v.count++;
+  v.mesh.instanceMatrix.array.set(m as number[],v.count*16);const ic=v.mesh.instanceColor!.array as Float32Array;ic[v.count*3]=c.r;ic[v.count*3+1]=c.g;ic[v.count*3+2]=c.b;v.count++;v.lastUsed=this.frame;
  }
  /** Draw one person (or a corpse when `pose` is given). `scale` is the legacy body scale so the rig matches the old size. Returns false if not drawn. */
  write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;/** held items to show with a review pose (render sheets) */items?:{itemR?:ItemId;itemL?:ItemId}}){
