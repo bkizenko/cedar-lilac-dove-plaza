@@ -318,3 +318,13 @@ Approved by Boris at 20:10 ET.
 
 **(d) Progress measure.** Progress is measured in features turned on in the built game, not in docs. Source-pushed or fixture-only work does not count until it is visible or playable on a published build (and, per the Completion Plan, has native-terrain or built-UI evidence). Frozen acceptance stays 34/98 until then.
 
+
+## PM check-in — 2026-11-11, 20:15 ET (main `1085ad7`)
+
+Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
+
+**Changed since 19:10:** main `1085ad7` (Boris: Grok/Claude merge handoff, native100 Worker measurement, Graphify workflow doc). Codex preserved five `work/codex-*` branches (held-source `b774971`, fixed-camera `b86507f`, curd `be54590`, food-custody `26fe69b`) and `work/sim-worker-2026-11-11` is at `a180ed2`. `integration/2026-11-11` now holds world, societies, experience, Worker, fixed-camera, held-source and food-custody (normal merges). Curd is still out: the conflict is left for Claude (see the velocity plan above). `agents/grok-world` `59f0e24`: W7 aqueduct/canal commission as ordinary digs, plus a native commission test; GW-06 river currents; GW-15 scenic beauty and start report. `grok-world.md` still says "W6 ready", so the W7/GW-06/GW-15 handoff entry is owed (World).
+**Overlaps / shared files:** new non-owner edit not on the board before now: `work/codex-fixed-camera-2026-11-11` changes `src/scene/world.ts` (13 lines, camera orbit collision via the new `fixedOrbitCollision.ts`). It is already in `integration/2026-11-11`. Experience should review it before the PR lands. Held-source `sim.ts` (Codex is the integration owner) and curd `types.ts` are owner edits. World's `sim.ts` delta since 19:10 is 5 lines inside the listed seams. Societies `types.ts` is still +4 (listed).
+**Rule violations:** none (no force-push, no pushed PNGs).
+**Requests:** WQ-1 through WQ-14 are new tonight; nothing is stale yet. C2/C6/C9/C11/C14/C15 are still pending with Codex.
+**World lane:** next batch in progress locally (channel smoothness, trail ribbons; not pushed yet).
